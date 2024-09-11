@@ -1,4 +1,4 @@
-import { streamToBytes } from '@atproto/common'
+import { omit, streamToBytes } from '@atproto/common'
 import { jsonToLex } from '@atproto/lexicon'
 import { HeadersMap } from '@atproto/xrpc'
 import {
@@ -95,19 +95,7 @@ export async function bufferizePipeThroughStream(
 
   return {
     buffer,
-    headers:
-      input.headers?.['content-encoding'] != null ||
-      input.headers?.['content-length'] != null ||
-      input.headers?.['transfer-encoding'] != null
-        ? Object.fromEntries(
-            Object.entries(input.headers).filter(
-              ([name]) =>
-                name !== 'content-length' &&
-                name !== 'content-encoding' &&
-                name !== 'transfer-encoding',
-            ),
-          )
-        : input.headers,
+    headers: omit(input.headers, ['content-encoding', 'content-length']),
     encoding: input.encoding,
   }
 }

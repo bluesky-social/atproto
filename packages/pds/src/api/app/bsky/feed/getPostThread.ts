@@ -42,7 +42,13 @@ export default function (server: Server, ctx: AppContext) {
         if (err instanceof XRPCError && err.error === 'NotFound') {
           const { auth, params } = reqCtx
           const requester = auth.credentials.did
-          const headers = err.headers
+
+          const rev = err.headers && getRepoRev(err.headers)
+          if (!rev) throw err
+
+          const uri = new AtUri(params.uri)
+          if (uri.hostname !== requester) throw err
+
           const local = await ctx.actorStore.read(requester, (store) => {
             const localViewer = ctx.localViewer(store)
             return readAfterWriteNotFound(
@@ -50,7 +56,7 @@ export default function (server: Server, ctx: AppContext) {
               localViewer,
               params,
               requester,
-              headers,
+              rev,
             )
           })
           if (local === null) {
@@ -164,11 +170,8 @@ const readAfterWriteNotFound = async (
   localViewer: LocalViewer,
   params: QueryParams,
   requester: string,
-  headers?: Headers,
+  rev: string,
 ): Promise<{ data: OutputSchema; lag?: number } | null> => {
-  if (!headers) return null
-  const rev = getRepoRev(headers)
-  if (!rev) return null
   const uri = new AtUri(params.uri)
   if (uri.hostname !== requester) {
     return null

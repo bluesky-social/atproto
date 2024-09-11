@@ -6,7 +6,6 @@ import {
   HandlerPipeThroughStream,
   InternalServerError,
   InvalidRequestError,
-  parseContentEncoding,
   parseReqNsid,
   XRPCError as XRPCServerError,
 } from '@atproto/xrpc-server'
@@ -61,13 +60,12 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
       const headers: IncomingHttpHeaders = {
         'accept-encoding': req.headers['accept-encoding'],
         'accept-language': req.headers['accept-language'],
-        'atproto-accept-labelers': req.headers['accept-language'],
-        'x-bsky-topics': req.headers['accept-language'],
+        'atproto-accept-labelers': req.headers['atproto-accept-labelers'],
+        'x-bsky-topics': req.headers['x-bsky-topics'],
 
-        'content-type': req.headers['content-type'],
-        'content-encoding': req.headers['content-encoding'],
-        'content-length': req.headers['content-length'],
-        'transfer-encoding': body != null ? 'chunked' : undefined,
+        'content-type': body && req.headers['content-type'],
+        'content-encoding': body && req.headers['content-encoding'],
+        'content-length': body && req.headers['content-length'],
 
         authorization: auth.credentials.did
           ? `Bearer ${await ctx.serviceAuthJwt(auth.credentials.did, aud, lxm)}`
@@ -160,8 +158,8 @@ export async function pipethrough(
 
   const headers: IncomingHttpHeaders = {
     'accept-language': req.headers['accept-language'],
-    'atproto-accept-labelers': req.headers['accept-language'],
-    'x-bsky-topics': req.headers['accept-language'],
+    'atproto-accept-labelers': req.headers['proto-accept-labeler'],
+    'x-bsky-topics': req.headers['x-bsky-topics'],
 
     'accept-encoding': `${acceptEncoding}, *;q=0`, // Reject anything else (q=0)
 
@@ -226,7 +224,7 @@ async function pipethroughInternal(
               data.statusCode,
               safeString(errInfo?.['error']),
               safeString(errInfo?.['message']),
-              Object.fromEntries(responseHeaders(data.headers)),
+              Object.fromEntries(responseHeaders(data.headers, false)),
             )
           },
         )
@@ -410,13 +408,14 @@ const RES_HEADERS_TO_FORWARD = [
 
 function* responseHeaders(
   headers: IncomingHttpHeaders,
+  includeContentHeaders = true,
 ): Generator<[string, string]> {
-  const length = headers['content-length']
-  const codings = parseContentEncoding(headers['content-encoding'])
-  if (length && !codings.length) {
-    yield ['content-length', length]
-  } else {
-    yield ['content-encoding', codings.join(', ') || 'identity']
+  if (includeContentHeaders) {
+    const length = headers['content-length']
+    if (length) yield ['content-length', length]
+
+    const encoding = headers['content-encoding']
+    if (encoding) yield ['content-encoding', encoding]
   }
 
   for (let i = 0; i < RES_HEADERS_TO_FORWARD.length; i++) {
