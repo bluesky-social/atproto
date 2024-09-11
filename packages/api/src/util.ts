@@ -97,12 +97,14 @@ export const asDid = (value: string): Did => {
   throw new TypeError(`Invalid DID: ${value}`)
 }
 
-export const nuxSchema = zod.object({
-  name: zod.string(),
-  completed: zod.boolean(),
-  data: zod.string().optional(),
-  expiresAt: zod.string().optional(),
-}).strict()
+export const nuxSchema = zod
+  .object({
+    id: zod.string().max(64),
+    completed: zod.boolean(),
+    data: zod.string().max(300).optional(),
+    expiresAt: zod.string().datetime().optional(),
+  })
+  .strict()
 
 export function validateNux(nux: Nux) {
   nuxSchema.parse(nux)

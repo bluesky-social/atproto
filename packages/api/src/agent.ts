@@ -1394,15 +1394,14 @@ export class Agent extends XrpcClient {
       bskyAppStatePref.nuxs = bskyAppStatePref.nuxs || []
 
       const existing = bskyAppStatePref.nuxs?.find((n) => {
-        return n.name === nux.name
+        return n.id === nux.id
       })
 
       let next: AppBskyActorDefs.Nux
 
       if (existing) {
         next = {
-          // name does not update
-          name: existing.name,
+          id: existing.id,
           completed: nux.completed,
           data: nux.data,
           expiresAt: nux.expiresAt,
@@ -1413,7 +1412,7 @@ export class Agent extends XrpcClient {
 
       // remove duplicates and append
       bskyAppStatePref.nuxs = bskyAppStatePref.nuxs
-        .filter((n) => n.name !== nux.name)
+        .filter((n) => n.id !== nux.id)
         .concat(next)
 
       return prefs
@@ -1430,7 +1429,7 @@ export class Agent extends XrpcClient {
   /**
    * Removes NUXs from user preferences.
    */
-  async bskyAppRemoveNuxs(nuxs: Nux[]) {
+  async bskyAppRemoveNuxs(ids: string[]) {
     await this.updatePreferences((prefs: AppBskyActorDefs.Preferences) => {
       let bskyAppStatePref: AppBskyActorDefs.BskyAppStatePref = prefs.findLast(
         (pref) =>
@@ -1441,9 +1440,9 @@ export class Agent extends XrpcClient {
       bskyAppStatePref = bskyAppStatePref || {}
       bskyAppStatePref.nuxs = bskyAppStatePref.nuxs || []
 
-      for (const nux of nuxs) {
+      for (const id of ids) {
         const index = bskyAppStatePref.nuxs.findIndex((n) => {
-          return n.name === nux.name
+          return n.id === id
         })
         if (index !== -1) {
           bskyAppStatePref.nuxs.splice(index, 1)

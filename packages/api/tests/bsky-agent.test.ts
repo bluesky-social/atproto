@@ -3276,7 +3276,7 @@ describe('agent', () => {
       let agent: BskyAgent
 
       const nux = {
-        name: 'a',
+        id: 'a',
         completed: false,
         data: '{}',
         expiresAt: new Date(Date.now() + 6e3).toISOString(),
@@ -3302,7 +3302,7 @@ describe('agent', () => {
         const nuxs = prefs.bskyAppState.nuxs
 
         expect(nuxs.length).toEqual(1)
-        expect(nuxs.find((n) => n.name === nux.name)).toEqual(nux)
+        expect(nuxs.find((n) => n.id === nux.id)).toEqual(nux)
       })
 
       it('bskyAppUpsertNux completed', async () => {
@@ -3316,11 +3316,11 @@ describe('agent', () => {
         const nuxs = prefs.bskyAppState.nuxs
 
         expect(nuxs.length).toEqual(1)
-        expect(nuxs.find((n) => n.name === nux.name)?.completed).toEqual(true)
+        expect(nuxs.find((n) => n.id === nux.id)?.completed).toEqual(true)
       })
 
       it('bskyAppRemoveNuxs', async () => {
-        await agent.bskyAppRemoveNuxs([nux])
+        await agent.bskyAppRemoveNuxs([nux.id])
 
         const prefs = await agent.getPreferences()
         const nuxs = prefs.bskyAppState.nuxs
@@ -3330,9 +3330,9 @@ describe('agent', () => {
 
       it('bskyAppUpsertNux validates nux', async () => {
         // @ts-expect-error
-        expect(() => agent.bskyAppUpsertNux({ id: 'a' })).rejects.toThrow()
+        expect(() => agent.bskyAppUpsertNux({ name: 'a' })).rejects.toThrow()
         expect(() =>
-          agent.bskyAppUpsertNux({ name: 'a', completed: false, foo: 'bar' }),
+          agent.bskyAppUpsertNux({ id: 'a', completed: false, foo: 'bar' }),
         ).rejects.toThrow()
       })
     })
