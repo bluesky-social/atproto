@@ -124,8 +124,10 @@ describe('Bodies', () => {
   server.method(
     'io.example.validationTest',
     (ctx: { params: xrpcServer.Params; input?: xrpcServer.HandlerInput }) => {
-      if (ctx.input?.body instanceof Readable)
+      if (ctx.input?.body instanceof Readable) {
         throw new Error('Input is readable')
+      }
+
       return {
         encoding: 'json',
         body: ctx.input?.body ?? null,
