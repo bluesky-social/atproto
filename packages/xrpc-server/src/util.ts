@@ -1,7 +1,7 @@
-import assert from 'assert'
-import { Readable, Transform } from 'stream'
-import { IncomingMessage } from 'http'
-import { createDeflate, createGunzip } from 'zlib'
+import assert from 'node:assert'
+import { Duplex, PassThrough, pipeline, Readable } from 'node:stream'
+import { IncomingMessage } from 'node:http'
+import * as zlib from 'node:zlib'
 import express from 'express'
 import mime from 'mime-types'
 import {
@@ -11,7 +11,9 @@ import {
   LexXrpcQuery,
   LexXrpcSubscription,
 } from '@atproto/lexicon'
-import { forwardStreamErrors, MaxSizeChecker } from '@atproto/common'
+import { MaxSizeChecker } from '@atproto/common'
+import { ResponseType } from '@atproto/xrpc'
+
 import {
   UndecodedParams,
   Params,
@@ -237,40 +239,90 @@ function decodeBodyStream(
   req: express.Request,
   maxSize: number | undefined,
 ): Readable {
-  let stream: Readable = req
   const contentEncoding = req.headers['content-encoding']
   const contentLength = req.headers['content-length']
 
+  const contentLengthParsed = contentLength
+    ? parseInt(contentLength, 10)
+    : undefined
+
+  if (Number.isNaN(contentLengthParsed)) {
+    throw new XRPCError(ResponseType.InvalidRequest, 'invalid content-length')
+  }
+
   if (
     maxSize !== undefined &&
-    contentLength &&
-    parseInt(contentLength, 10) > maxSize
+    contentLengthParsed !== undefined &&
+    contentLengthParsed > maxSize
   ) {
-    throw new XRPCError(413, 'request entity too large')
+    throw new XRPCError(
+      ResponseType.PayloadTooLarge,
+      'request entity too large',
+    )
   }
 
-  let decoder: Transform | undefined
-  if (contentEncoding === 'gzip') {
-    decoder = createGunzip()
-  } else if (contentEncoding === 'deflate') {
-    decoder = createDeflate()
-  }
-
-  if (decoder) {
-    forwardStreamErrors(stream, decoder)
-    stream = stream.pipe(decoder)
-  }
+  const transforms: Duplex[] = createDecoders(contentEncoding)
 
   if (maxSize !== undefined) {
     const maxSizeChecker = new MaxSizeChecker(
       maxSize,
-      () => new XRPCError(413, 'request entity too large'),
+      () =>
+        new XRPCError(ResponseType.PayloadTooLarge, 'request entity too large'),
     )
-    forwardStreamErrors(stream, maxSizeChecker)
-    stream = stream.pipe(maxSizeChecker)
+    transforms.push(maxSizeChecker)
   }
 
-  return stream
+  return transforms.length > 0
+    ? (pipeline([req, ...transforms], () => {}) as Duplex)
+    : req
+}
+
+export function createDecoders(contentEncoding?: string | string[]): Duplex[] {
+  return parseContentEncoding(contentEncoding).reverse().map(createDecoder)
+}
+
+export function parseContentEncoding(
+  contentEncoding?: string | string[],
+): string[] {
+  // undefined, empty string, and empty array
+  if (!contentEncoding?.length) return []
+
+  // Non empty string
+  if (typeof contentEncoding === 'string') {
+    return contentEncoding
+      .split(',')
+      .map((x) => x.trim().toLowerCase())
+      .filter((x) => x && x !== 'identity')
+  }
+
+  // content-encoding should never be an array
+  return contentEncoding.flatMap(parseContentEncoding)
+}
+
+export function createDecoder(encoding: string): Duplex {
+  // https://www.rfc-editor.org/rfc/rfc7231#section-3.1.2.1
+  // > All content-coding values are case-insensitive...
+  switch (encoding.trim().toLowerCase()) {
+    // https://www.rfc-editor.org/rfc/rfc9112.html#section-7.2
+    case 'gzip':
+    case 'x-gzip':
+      return zlib.createGunzip({
+        // using Z_SYNC_FLUSH (cURL default) to be less strict when decoding
+        flush: zlib.constants.Z_SYNC_FLUSH,
+        finishFlush: zlib.constants.Z_SYNC_FLUSH,
+      })
+    case 'deflate':
+      return zlib.createInflate()
+    case 'br':
+      return zlib.createBrotliDecompress()
+    case 'identity':
+      return new PassThrough()
+    default:
+      throw new XRPCError(
+        ResponseType.UnsupportedMediaType,
+        'unsupported content-encoding',
+      )
+  }
 }
 
 export function serverTimingHeader(timings: ServerTiming[]) {
