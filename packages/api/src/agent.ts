@@ -14,7 +14,7 @@ import {
   ToolsNS,
 } from './client/index'
 import { schemas } from './client/lexicons'
-import { MutedWord } from './client/types/app/bsky/actor/defs'
+import { MutedWord, Nux } from './client/types/app/bsky/actor/defs'
 import { BSKY_LABELER_DID } from './const'
 import { interpretLabelValueDefinitions } from './moderation'
 import { DEFAULT_LABEL_SETTINGS } from './moderation/const/labels'
@@ -40,6 +40,7 @@ import {
   sanitizeMutedWordValue,
   savedFeedsToUriArrays,
   validateSavedFeed,
+  validateNux,
 } from './util'
 
 const FEED_VIEW_PREF_DEFAULTS = {
@@ -570,6 +571,7 @@ export class Agent extends XrpcClient {
       bskyAppState: {
         queuedNudges: [],
         activeProgressGuide: undefined,
+        nuxs: [],
       },
     }
     const res = await this.app.bsky.actor.getPreferences({})
@@ -674,6 +676,7 @@ export class Agent extends XrpcClient {
         const { $type, ...v } = pref
         prefs.bskyAppState.queuedNudges = v.queuedNudges || []
         prefs.bskyAppState.activeProgressGuide = v.activeProgressGuide
+        prefs.bskyAppState.nuxs = v.nuxs || []
       }
     }
 
@@ -1362,6 +1365,94 @@ export class Agent extends XrpcClient {
 
       bskyAppStatePref = bskyAppStatePref || {}
       bskyAppStatePref.activeProgressGuide = guide
+
+      return prefs
+        .filter((p) => !AppBskyActorDefs.isBskyAppStatePref(p))
+        .concat([
+          {
+            ...bskyAppStatePref,
+            $type: 'app.bsky.actor.defs#bskyAppStatePref',
+          },
+        ])
+    })
+  }
+
+  /**
+   * Insert or update a NUX in user prefs
+   */
+  async upsertNux(
+    nux: Nux & {
+      id?: Nux['id']
+    },
+  ) {
+    validateNux(nux)
+
+    const isInsert = !nux.id
+    const isUpdate = !!nux.id
+
+    await this.updatePreferences((prefs: AppBskyActorDefs.Preferences) => {
+      let bskyAppStatePref: AppBskyActorDefs.BskyAppStatePref = prefs.findLast(
+        (pref) =>
+          AppBskyActorDefs.isBskyAppStatePref(pref) &&
+          AppBskyActorDefs.validateBskyAppStatePref(pref).success,
+      )
+
+      bskyAppStatePref = bskyAppStatePref || {}
+      bskyAppStatePref.nuxs = bskyAppStatePref.nuxs || []
+
+      if (isInsert) {
+        bskyAppStatePref.nuxs.push({
+          ...nux,
+          id: TID.nextStr(),
+        })
+      } else if (isUpdate) {
+        const existing = bskyAppStatePref.nuxs?.find((n) => {
+          return n.id === nux.id
+        })
+
+        if (existing) {
+          // only update certain fields
+          Object.assign(existing, {
+            completed: nux.completed,
+            data: nux.data,
+            expiresAt: nux.expiresAt,
+          })
+        }
+      }
+
+      return prefs
+        .filter((p) => !AppBskyActorDefs.isBskyAppStatePref(p))
+        .concat([
+          {
+            ...bskyAppStatePref,
+            $type: 'app.bsky.actor.defs#bskyAppStatePref',
+          },
+        ])
+    })
+  }
+
+  /**
+   * Remove a NUX from user preferences.
+   */
+  async removeNuxs(nuxs: Nux[]) {
+    await this.updatePreferences((prefs: AppBskyActorDefs.Preferences) => {
+      let bskyAppStatePref: AppBskyActorDefs.BskyAppStatePref = prefs.findLast(
+        (pref) =>
+          AppBskyActorDefs.isBskyAppStatePref(pref) &&
+          AppBskyActorDefs.validateBskyAppStatePref(pref).success,
+      )
+
+      bskyAppStatePref = bskyAppStatePref || {}
+      bskyAppStatePref.nuxs = bskyAppStatePref.nuxs || []
+
+      for (const nux of nuxs) {
+        const index = bskyAppStatePref.nuxs.findIndex((n) => {
+          return n.id === nux.id
+        })
+        if (index !== -1) {
+          bskyAppStatePref.nuxs.splice(index, 1)
+        }
+      }
 
       return prefs
         .filter((p) => !AppBskyActorDefs.isBskyAppStatePref(p))
