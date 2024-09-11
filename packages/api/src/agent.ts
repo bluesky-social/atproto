@@ -1380,7 +1380,7 @@ export class Agent extends XrpcClient {
   /**
    * Insert or update a NUX in user prefs
    */
-  async upsertNux(
+  async bskyAppUpsertNux(
     nux: Nux & {
       id?: Nux['id']
     },
@@ -1432,9 +1432,9 @@ export class Agent extends XrpcClient {
   }
 
   /**
-   * Remove a NUX from user preferences.
+   * Removes NUXs from user preferences.
    */
-  async removeNuxs(nuxs: Nux[]) {
+  async bskyAppRemoveNuxs(nuxs: Nux[]) {
     await this.updatePreferences((prefs: AppBskyActorDefs.Preferences) => {
       let bskyAppStatePref: AppBskyActorDefs.BskyAppStatePref = prefs.findLast(
         (pref) =>
