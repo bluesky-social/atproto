@@ -89,6 +89,9 @@ importers:
       tlds:
         specifier: ^1.234.0
         version: 1.234.0
+      zod:
+        specifier: ^3.23.8
+        version: 3.23.8
     devDependencies:
       '@atproto/lex-cli':
         specifier: workspace:^

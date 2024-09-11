@@ -84,6 +84,7 @@ describe('agent', () => {
       bskyAppState: {
         activeProgressGuide: undefined,
         queuedNudges: [],
+        nuxs: [],
       },
     })
   })
@@ -133,6 +134,7 @@ describe('agent', () => {
       bskyAppState: {
         activeProgressGuide: undefined,
         queuedNudges: [],
+        nuxs: [],
       },
     })
     expect(agent.labelers).toStrictEqual(['did:plc:other'])
@@ -167,6 +169,7 @@ describe('agent', () => {
       bskyAppState: {
         activeProgressGuide: undefined,
         queuedNudges: [],
+        nuxs: [],
       },
     })
     expect(agent.labelers).toStrictEqual([])
@@ -223,6 +226,7 @@ describe('agent', () => {
       bskyAppState: {
         activeProgressGuide: undefined,
         queuedNudges: [],
+        nuxs: [],
       },
     })
   })
