@@ -9,13 +9,13 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["identifier", "password"],
+          "required": ["identifier", "siweSignature"],
           "properties": {
             "identifier": {
               "type": "string",
               "description": "Handle or other identifier supported by the server for the authenticating user."
             },
-            "password": { "type": "string" },
+            "siweSignature": { "type": "string" },
             "authFactorToken": { "type": "string" }
           }
         }
@@ -32,6 +32,7 @@
             "did": { "type": "string", "format": "did" },
             "didDoc": { "type": "unknown" },
             "email": { "type": "string" },
+            "ethAddress": { "type": "string" },
             "emailConfirmed": { "type": "boolean" },
             "emailAuthFactor": { "type": "boolean" },
             "active": { "type": "boolean" },

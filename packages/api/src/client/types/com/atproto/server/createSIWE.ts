@@ -10,9 +10,14 @@ import { CID } from 'multiformats/cid'
 export interface QueryParams {}
 
 export interface InputSchema {
-  did: string
-  password: string
-  token: string
+  /** Handle or other identifier supported by the server for the authenticating user. */
+  identifier: string
+  [k: string]: unknown
+}
+
+export interface OutputSchema {
+  /** The SIWE message to be signed by the user's wallet. */
+  siweMessage: string
   [k: string]: unknown
 }
 
@@ -26,25 +31,9 @@ export interface CallOptions {
 export interface Response {
   success: boolean
   headers: HeadersMap
-}
-
-export class ExpiredTokenError extends XRPCError {
-  constructor(src: XRPCError) {
-    super(src.status, src.error, src.message, src.headers, { cause: src })
-  }
-}
-
-export class InvalidTokenError extends XRPCError {
-  constructor(src: XRPCError) {
-    super(src.status, src.error, src.message, src.headers, { cause: src })
-  }
+  data: OutputSchema
 }
 
 export function toKnownErr(e: any) {
-  if (e instanceof XRPCError) {
-    if (e.error === 'ExpiredToken') return new ExpiredTokenError(e)
-    if (e.error === 'InvalidToken') return new InvalidTokenError(e)
-  }
-
   return e
 }

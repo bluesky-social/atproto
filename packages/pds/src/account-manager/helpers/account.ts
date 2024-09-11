@@ -126,6 +126,7 @@ export const registerAccount = async (
   },
 ) => {
   const { did, email, ethAddress } = opts
+  console.log("REGISTERING ACCOUNT", ethAddress)
   const [registered] = await db.executeWithRetry(
     db.db
       .insertInto('account')

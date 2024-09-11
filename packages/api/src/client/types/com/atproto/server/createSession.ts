@@ -24,6 +24,7 @@ export interface OutputSchema {
   did: string
   didDoc?: {}
   email?: string
+  ethAddress?: string
   emailConfirmed?: boolean
   emailAuthFactor?: boolean
   active?: boolean

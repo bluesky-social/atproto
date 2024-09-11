@@ -49,6 +49,7 @@ import * as ComAtprotoServerCreateAccount from './types/com/atproto/server/creat
 import * as ComAtprotoServerCreateAppPassword from './types/com/atproto/server/createAppPassword'
 import * as ComAtprotoServerCreateInviteCode from './types/com/atproto/server/createInviteCode'
 import * as ComAtprotoServerCreateInviteCodes from './types/com/atproto/server/createInviteCodes'
+import * as ComAtprotoServerCreateSIWE from './types/com/atproto/server/createSIWE'
 import * as ComAtprotoServerCreateSession from './types/com/atproto/server/createSession'
 import * as ComAtprotoServerDeactivateAccount from './types/com/atproto/server/deactivateAccount'
 import * as ComAtprotoServerDefs from './types/com/atproto/server/defs'
@@ -255,6 +256,7 @@ export * as ComAtprotoServerCreateAccount from './types/com/atproto/server/creat
 export * as ComAtprotoServerCreateAppPassword from './types/com/atproto/server/createAppPassword'
 export * as ComAtprotoServerCreateInviteCode from './types/com/atproto/server/createInviteCode'
 export * as ComAtprotoServerCreateInviteCodes from './types/com/atproto/server/createInviteCodes'
+export * as ComAtprotoServerCreateSIWE from './types/com/atproto/server/createSIWE'
 export * as ComAtprotoServerCreateSession from './types/com/atproto/server/createSession'
 export * as ComAtprotoServerDeactivateAccount from './types/com/atproto/server/deactivateAccount'
 export * as ComAtprotoServerDefs from './types/com/atproto/server/defs'
@@ -1012,6 +1014,18 @@ export class ComAtprotoServerNS {
   ): Promise<ComAtprotoServerCreateInviteCodes.Response> {
     return this._client.call(
       'com.atproto.server.createInviteCodes',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
+  createSIWE(
+    data?: ComAtprotoServerCreateSIWE.InputSchema,
+    opts?: ComAtprotoServerCreateSIWE.CallOptions,
+  ): Promise<ComAtprotoServerCreateSIWE.Response> {
+    return this._client.call(
+      'com.atproto.server.createSIWE',
       opts?.qp,
       data,
       opts,

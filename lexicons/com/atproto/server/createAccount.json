@@ -25,9 +25,9 @@
             "inviteCode": { "type": "string" },
             "verificationCode": { "type": "string" },
             "verificationPhone": { "type": "string" },
-            "password": {
+            "ethAddress": {
               "type": "string",
-              "description": "Initial account password. May need to meet instance-specific password strength requirements."
+              "description": "Initial ethereum address to be associated with the account."
             },
             "recoveryKey": {
               "type": "string",

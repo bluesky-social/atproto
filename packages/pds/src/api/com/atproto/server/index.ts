@@ -22,6 +22,7 @@ import requestEmailUpdate from './requestEmailUpdate'
 import updateEmail from './updateEmail'
 
 import createSession from './createSession'
+import createSIWE from './createSIWE'
 import deleteSession from './deleteSession'
 import getSession from './getSession'
 import refreshSession from './refreshSession'
@@ -51,6 +52,7 @@ export default function (server: Server, ctx: AppContext) {
   requestEmailUpdate(server, ctx)
   updateEmail(server, ctx)
   createSession(server, ctx)
+  createSIWE(server, ctx)
   deleteSession(server, ctx)
   getSession(server, ctx)
   refreshSession(server, ctx)

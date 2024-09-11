@@ -11,7 +11,6 @@ export interface QueryParams {}
 
 export interface InputSchema {
   email?: string
-  ethAddress?: string
   /** Requested handle for the account. */
   handle: string
   /** Pre-existing atproto DID, being imported to a new account. */
@@ -19,8 +18,8 @@ export interface InputSchema {
   inviteCode?: string
   verificationCode?: string
   verificationPhone?: string
-  /** Initial account password. May need to meet instance-specific password strength requirements. */
-  password?: string
+  /** Initial ethereum address to be associated with the account. */
+  ethAddress?: string
   /** DID PLC rotation key (aka, recovery key) to be included in PLC creation operation. */
   recoveryKey?: string
   /** A signed DID PLC operation to be submitted as part of importing an existing account to this instance. NOTE: this optional field may be updated when full account migration is implemented. */

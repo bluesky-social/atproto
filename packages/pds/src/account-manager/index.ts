@@ -147,8 +147,9 @@ export class AccountManager
       }
       await Promise.all([
         account.registerActor(dbTxn, { did, handle, deactivated }),
+        console.log("ETH ADDRESS", ethAddress),
         ethAddress
-          ? account.registerAccount(dbTxn, { did, email: email ?? null, ethAddress })
+          ? account.registerAccount(dbTxn, { did, email : email ?? null, ethAddress })
           : Promise.resolve(),
         invite.recordInviteUse(dbTxn, {
           did,
@@ -276,6 +277,10 @@ export class AccountManager
     return auth.revokeRefreshToken(this.db, id)
   }
 
+  async createSIWE(did: string): Promise<string> {
+    return siwe.createSIWE(this.db, did)
+  }
+
   // Login
   // ----------
 
@@ -303,6 +308,9 @@ export class AccountManager
             includeTakenDown: true,
           })
 
+      console.log('user', user)
+      console.log('identifier', identifier)
+
       if (!user) {
         throw new AuthRequiredError('Invalid identifier or password')
       }
@@ -313,7 +321,7 @@ export class AccountManager
         siweSignature as `0x${string}`
       )
       if (!validAccountPass) {
-        throw new AuthRequiredError('App passwords are not allowed')
+        throw new AuthRequiredError('Wrong signature/App passwords are not allowed')
       }
       // if (!validAccountPass) {
       //   appPassword = await this.verifyAppPassword(user.did, password)

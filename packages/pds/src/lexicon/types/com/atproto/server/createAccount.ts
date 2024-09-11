@@ -19,7 +19,7 @@ export interface InputSchema {
   inviteCode?: string
   verificationCode?: string
   verificationPhone?: string
-  /** Initial account password. May need to meet instance-specific password strength requirements. */
+  /** Initial ethereum address to be associated with the account. */
   ethAddress?: string
   /** DID PLC rotation key (aka, recovery key) to be included in PLC creation operation. */
   recoveryKey?: string

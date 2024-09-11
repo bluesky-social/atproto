@@ -49,6 +49,7 @@ import * as ComAtprotoServerCreateAccount from './types/com/atproto/server/creat
 import * as ComAtprotoServerCreateAppPassword from './types/com/atproto/server/createAppPassword'
 import * as ComAtprotoServerCreateInviteCode from './types/com/atproto/server/createInviteCode'
 import * as ComAtprotoServerCreateInviteCodes from './types/com/atproto/server/createInviteCodes'
+import * as ComAtprotoServerCreateSIWE from './types/com/atproto/server/createSIWE'
 import * as ComAtprotoServerCreateSession from './types/com/atproto/server/createSession'
 import * as ComAtprotoServerDeactivateAccount from './types/com/atproto/server/deactivateAccount'
 import * as ComAtprotoServerDeleteAccount from './types/com/atproto/server/deleteAccount'
@@ -758,6 +759,17 @@ export class ComAtprotoServerNS {
     >,
   ) {
     const nsid = 'com.atproto.server.createInviteCodes' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  createSIWE<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoServerCreateSIWE.Handler<ExtractAuth<AV>>,
+      ComAtprotoServerCreateSIWE.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.server.createSIWE' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

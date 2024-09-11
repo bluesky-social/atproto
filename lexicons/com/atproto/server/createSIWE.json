@@ -1,0 +1,38 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.server.createSIWE",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Creates a SIWE (Sign-In with Ethereum) message.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["identifier"],
+          "properties": {
+            "identifier": {
+              "type": "string",
+              "description": "Handle or other identifier supported by the server for the authenticating user."
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["siweMessage"],
+          "properties": {
+            "siweMessage": {
+              "type": "string",
+              "description": "The SIWE message to be signed by the user's wallet."
+            }
+          }
+        }
+      },
+      "errors": []
+    }
+  }
+}
+  

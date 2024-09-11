@@ -48,6 +48,7 @@ export default function (server: Server, ctx: AppContext) {
           didDoc,
           handle: user.handle ?? INVALID_HANDLE,
           email: user.email ?? undefined,
+          ethAddress: user.ethAddress ?? undefined,
           emailConfirmed: !!user.emailConfirmedAt,
           accessJwt,
           refreshJwt,

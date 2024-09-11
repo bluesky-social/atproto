@@ -2375,14 +2375,14 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['identifier', 'password'],
+            required: ['identifier', 'siweSignature'],
             properties: {
               identifier: {
                 type: 'string',
                 description:
                   'Handle or other identifier supported by the server for the authenticating user.',
               },
-              password: {
+              siweSignature: {
                 type: 'string',
               },
               authFactorToken: {
