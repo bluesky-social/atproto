@@ -1,8 +1,10 @@
 import { jsonToLex } from '@atproto/lexicon'
 import { HeadersMap } from '@atproto/xrpc'
 import {
+  createDecoders,
   HandlerPipeThrough,
   HandlerPipeThroughBuffer,
+  HandlerPipeThroughStream,
 } from '@atproto/xrpc-server'
 import express from 'express'
 
@@ -12,6 +14,7 @@ import { readStickyLogger as log } from '../logger'
 import { pipethrough, safeParseJson } from '../pipethrough'
 import { HandlerResponse, LocalRecords, MungeFn } from './types'
 import { getRecordsSinceRev } from './viewer'
+import { Duplex, pipeline, Readable } from 'node:stream'
 
 const REPO_REV_HEADER = 'atproto-repo-rev'
 
@@ -54,18 +57,14 @@ export const pipethroughReadAfterWrite = async <T>(
       }
       const localViewer = ctx.localViewer(store)
 
-      const buffer = Buffer.concat(await upstreamRes.stream.toArray())
-
       // if the munging fails, we can't return the original response because the
       // stream has already been read. In that case, we'll return a buffered
       // response instead.
-      bufferedRes = {
-        encoding: upstreamRes.encoding,
-        headers: upstreamRes.headers,
-        buffer: buffer.buffer,
-      }
+      bufferedRes = await bufferizePipeThroughStream(upstreamRes)
 
-      const value = safeParseJson(buffer.toString('utf8'))
+      const value = safeParseJson(
+        Buffer.from(bufferedRes!.buffer).toString('utf8'),
+      )
       const lex = value && jsonToLex(value)
 
       const parsedRes = lexicons.assertValidXrpcOutput(nsid, lex) as T
@@ -79,6 +78,34 @@ export const pipethroughReadAfterWrite = async <T>(
 
     log.warn({ err, requester }, 'error in read after write munge')
     return bufferedRes ?? upstreamRes
+  }
+}
+
+export async function bufferizePipeThroughStream(
+  input: HandlerPipeThroughStream,
+): Promise<HandlerPipeThroughBuffer> {
+  const decoders = createDecoders(input.headers?.['content-encoding'])
+
+  const readable: Readable = decoders.length
+    ? (pipeline([input.stream, ...decoders], () => {}) as Duplex)
+    : input.stream
+
+  return {
+    buffer: Buffer.from(await readable.toArray()).buffer,
+    headers:
+      input.headers?.['content-encoding'] != null ||
+      input.headers?.['content-length'] != null ||
+      input.headers?.['transfer-encoding'] != null
+        ? Object.fromEntries(
+            Object.entries(input.headers).filter(
+              ([name]) =>
+                name !== 'content-length' &&
+                name !== 'content-encoding' &&
+                name !== 'transfer-encoding',
+            ),
+          )
+        : input.headers,
+    encoding: input.encoding,
   }
 }
 

@@ -12,6 +12,7 @@ import {
   RateLimiterCreator,
   RateLimiterOpts,
   createServiceAuthHeaders,
+  createServiceJwt,
 } from '@atproto/xrpc-server'
 import {
   Fetch,
@@ -381,6 +382,16 @@ export class AppContext {
   async serviceAuthHeaders(did: string, aud: string, lxm: string) {
     const keypair = await this.actorStore.keypair(did)
     return createServiceAuthHeaders({
+      iss: did,
+      aud,
+      lxm,
+      keypair,
+    })
+  }
+
+  async serviceAuthJwt(did: string, aud: string, lxm: string) {
+    const keypair = await this.actorStore.keypair(did)
+    return createServiceJwt({
       iss: did,
       aud,
       lxm,
