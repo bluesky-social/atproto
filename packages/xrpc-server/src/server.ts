@@ -365,7 +365,7 @@ export class Server {
             // authenticate request
             const auth = await config.auth?.({ req })
             if (isHandlerError(auth)) {
-              throw XRPCError.fromError(auth)
+              throw XRPCError.fromHandlerError(auth)
             }
             // validate request
             let params = decodeQueryParams(def, getQueryParams(req.url))
@@ -523,7 +523,7 @@ function createAuthMiddleware(verifier: AuthVerifier): RequestHandler {
     try {
       const result = await verifier({ req, res })
       if (isHandlerError(result)) {
-        throw XRPCError.fromError(result)
+        throw XRPCError.fromHandlerError(result)
       }
       const locals: RequestLocals = req[kRequestLocals]
       locals.auth = result
