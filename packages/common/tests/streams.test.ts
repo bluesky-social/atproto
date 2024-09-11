@@ -69,6 +69,33 @@ describe('streams', () => {
       expect(bytes[0]).toBe('f'.charCodeAt(0))
       expect(bytes[1]).toBe('o'.charCodeAt(0))
       expect(bytes[2]).toBe('o'.charCodeAt(0))
+      expect(bytes.length).toBe(3)
+    })
+
+    it('converts async iterable to byte array', async () => {
+      const iterable = (async function* () {
+        yield Buffer.from('b')
+        yield Buffer.from('a')
+        yield new Uint8Array(['r'.charCodeAt(0)])
+      })()
+      const bytes = await streams.streamToBytes(iterable)
+
+      expect(bytes[0]).toBe('b'.charCodeAt(0))
+      expect(bytes[1]).toBe('a'.charCodeAt(0))
+      expect(bytes[2]).toBe('r'.charCodeAt(0))
+      expect(bytes.length).toBe(3)
+    })
+
+    it('throws error for non Uint8Array chunks', async () => {
+      const iterable: AsyncIterable<any> = (async function* () {
+        yield Buffer.from('b')
+        yield Buffer.from('a')
+        yield 'r'
+      })()
+
+      await expect(streams.streamToBytes(iterable)).rejects.toThrow(
+        'expected Uint8Array',
+      )
     })
   })
 

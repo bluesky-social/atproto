@@ -29,12 +29,21 @@ export const streamSize = async (stream: Readable): Promise<number> => {
   return size
 }
 
-export const streamToBytes = async (stream: Readable): Promise<Uint8Array> => {
-  const bufs: Buffer[] = []
-  for await (const bytes of stream) {
-    bufs.push(bytes)
+export const streamToBytes = async (
+  stream: Iterable<Uint8Array> | AsyncIterable<Uint8Array>,
+): Promise<Buffer> => {
+  const chunks: Uint8Array[] = []
+  let totalLength = 0 // keep track of total length for Buffer.concat
+  for await (const chunk of stream) {
+    if (chunk instanceof Uint8Array) {
+      chunks.push(chunk)
+    } else {
+      throw new TypeError('expected Uint8Array')
+    }
+    totalLength += Buffer.byteLength(chunk)
   }
-  return new Uint8Array(Buffer.concat(bufs))
+  // Note Buffer is a subclass of Uint8Array
+  return Buffer.concat(chunks, totalLength)
 }
 
 export const byteIterableToStream = (
