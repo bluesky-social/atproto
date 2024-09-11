@@ -19,7 +19,7 @@ import {
   LexXrpcSubscription,
 } from '@atproto/lexicon'
 import { ZodSchema } from 'zod'
-import { check, forwardStreamErrors, schema } from '@atproto/common'
+import { check, schema } from '@atproto/common'
 
 import { ErrorFrame, Frame, MessageFrame, XrpcStreamServer } from './stream'
 import {
@@ -301,8 +301,10 @@ export class Server {
 
         if (isHandlerPipeThroughStream(outputUnvalidated)) {
           setHeaders(res, outputUnvalidated)
-          res.status(200).header('Content-Type', outputUnvalidated.encoding)
-          return pipeline(outputUnvalidated.stream, res)
+          res.status(200)
+          res.header('Content-Type', outputUnvalidated.encoding)
+          await pipeline(outputUnvalidated.stream, res)
+          return
         }
 
         if (!outputUnvalidated || isHandlerSuccess(outputUnvalidated)) {
@@ -320,9 +322,7 @@ export class Server {
           } else if (output?.body instanceof Readable) {
             res.header('Content-Type', output.encoding)
             res.status(200)
-            res.once('error', (err) => res.destroy(err))
-            forwardStreamErrors(output.body, res)
-            output.body.pipe(res)
+            await pipeline(output.body, res)
           } else if (output) {
             res
               .header('Content-Type', output.encoding)
