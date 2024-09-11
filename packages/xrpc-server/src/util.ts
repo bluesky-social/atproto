@@ -360,20 +360,25 @@ export interface ServerTiming {
   description?: string
 }
 
+const XRPC_PATH_PREFIX = '/xrpc/'
+
 export const parseReqNsid = (
   req: express.Request | IncomingMessage,
 ): string => {
   // /!\ Hot path
-  const originalUrl =
-    ('originalUrl' in req && req.originalUrl) || req.url || '/'
 
-  // Before the code was doing:
+  const originalUrl = ('originalUrl' in req && req.originalUrl) || req.url
+
+  // Optimized version of:
 
   // const nsid = originalUrl.split('?')[0].replace('/xrpc/', '')
   // return nsid.endsWith('/') ? nsid.slice(0, -1) : nsid
 
-  // Backwards compatibility: strings without an /xrpc/ prefix used to be allowed
-  const startOfNsid = originalUrl.startsWith('/xrpc/') ? 6 : 0
+  if (!originalUrl?.startsWith(XRPC_PATH_PREFIX)) {
+    throw new InvalidRequestError('invalid xrpc path')
+  }
+
+  const startOfNsid = XRPC_PATH_PREFIX.length
 
   const queryIdx = originalUrl.indexOf('?', startOfNsid)
   const endOfPath = queryIdx === -1 ? originalUrl.length : queryIdx
@@ -383,9 +388,9 @@ export const parseReqNsid = (
   const endOfNsid =
     slashIdx !== -1 && slashIdx < endOfPath ? slashIdx : endOfPath
 
-  // Allow trailing slash (only)
+  // Allow trailing slash
   if (endOfNsid !== endOfPath && slashIdx !== endOfPath - 1) {
-    throw new InvalidRequestError('invalid request path')
+    throw new InvalidRequestError('invalid xrpc path')
   }
 
   return originalUrl.slice(startOfNsid, endOfNsid)

@@ -37,10 +37,10 @@ export const streamToBytes = async (
   for await (const chunk of stream) {
     if (chunk instanceof Uint8Array) {
       chunks.push(chunk)
+      totalLength += Buffer.byteLength(chunk)
     } else {
       throw new TypeError('expected Uint8Array')
     }
-    totalLength += Buffer.byteLength(chunk)
   }
   // Note Buffer is a subclass of Uint8Array
   return Buffer.concat(chunks, totalLength)

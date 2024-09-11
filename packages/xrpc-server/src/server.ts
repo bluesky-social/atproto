@@ -500,7 +500,7 @@ function setHeaders(
   const headers = result?.headers
   if (headers) {
     for (const [name, val] of Object.entries(headers)) {
-      res.header(name, val)
+      if (val != null) res.header(name, val)
     }
   }
 }
