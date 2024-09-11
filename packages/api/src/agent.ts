@@ -1380,15 +1380,8 @@ export class Agent extends XrpcClient {
   /**
    * Insert or update a NUX in user prefs
    */
-  async bskyAppUpsertNux(
-    nux: Nux & {
-      id?: Nux['id']
-    },
-  ) {
+  async bskyAppUpsertNux(nux: Nux) {
     validateNux(nux)
-
-    const isInsert = !nux.id
-    const isUpdate = !!nux.id
 
     await this.updatePreferences((prefs: AppBskyActorDefs.Preferences) => {
       let bskyAppStatePref: AppBskyActorDefs.BskyAppStatePref = prefs.findLast(
@@ -1400,25 +1393,28 @@ export class Agent extends XrpcClient {
       bskyAppStatePref = bskyAppStatePref || {}
       bskyAppStatePref.nuxs = bskyAppStatePref.nuxs || []
 
-      if (isInsert) {
-        bskyAppStatePref.nuxs.push({
-          ...nux,
-          id: TID.nextStr(),
-        })
-      } else if (isUpdate) {
-        const existing = bskyAppStatePref.nuxs?.find((n) => {
-          return n.id === nux.id
-        })
+      const existing = bskyAppStatePref.nuxs?.find((n) => {
+        return n.name === nux.name
+      })
 
-        if (existing) {
-          // only update certain fields
-          Object.assign(existing, {
-            completed: nux.completed,
-            data: nux.data,
-            expiresAt: nux.expiresAt,
-          })
+      let next: AppBskyActorDefs.Nux
+
+      if (existing) {
+        next = {
+          // name does not update
+          name: existing.name,
+          completed: nux.completed,
+          data: nux.data,
+          expiresAt: nux.expiresAt,
         }
+      } else {
+        next = nux
       }
+
+      // remove duplicates and append
+      bskyAppStatePref.nuxs = bskyAppStatePref.nuxs
+        .filter((n) => n.name !== nux.name)
+        .concat(next)
 
       return prefs
         .filter((p) => !AppBskyActorDefs.isBskyAppStatePref(p))
@@ -1447,7 +1443,7 @@ export class Agent extends XrpcClient {
 
       for (const nux of nuxs) {
         const index = bskyAppStatePref.nuxs.findIndex((n) => {
-          return n.id === nux.id
+          return n.name === nux.name
         })
         if (index !== -1) {
           bskyAppStatePref.nuxs.splice(index, 1)

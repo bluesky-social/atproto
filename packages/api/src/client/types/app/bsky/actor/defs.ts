@@ -506,7 +506,6 @@ export function validateBskyAppProgressGuide(v: unknown): ValidationResult {
 
 /** A new user experiences (NUX) storage object */
 export interface Nux {
-  id: string
   name: string
   completed: boolean
   /** Arbitrary data for the NUX. The structure is defined by the NUX itself. Limited to 300 characters. */

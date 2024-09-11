@@ -4598,11 +4598,8 @@ export const schemaDict = {
       nux: {
         type: 'object',
         description: 'A new user experiences (NUX) storage object',
-        required: ['id', 'name', 'completed'],
+        required: ['name', 'completed'],
         properties: {
-          id: {
-            type: 'string',
-          },
           name: {
             type: 'string',
           },

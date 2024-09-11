@@ -98,17 +98,12 @@ export const asDid = (value: string): Did => {
 }
 
 export const NuxSchema = zod.object({
-  id: zod.string().optional(),
   name: zod.string(),
   completed: zod.boolean(),
   data: zod.string().optional(),
   expiresAt: zod.string().optional(),
 })
 
-export function validateNux(
-  nux: Nux & {
-    id?: Nux['id']
-  },
-) {
+export function validateNux(nux: Nux) {
   NuxSchema.parse(nux)
 }
