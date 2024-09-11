@@ -158,7 +158,7 @@ export async function pipethrough(
 
   const headers: IncomingHttpHeaders = {
     'accept-language': req.headers['accept-language'],
-    'atproto-accept-labelers': req.headers['proto-accept-labeler'],
+    'atproto-accept-labelers': req.headers['atproto-accept-labelers'],
     'x-bsky-topics': req.headers['x-bsky-topics'],
 
     'accept-encoding': `${acceptEncoding}, *;q=0`, // Reject anything else (q=0)
