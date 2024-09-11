@@ -6,9 +6,10 @@ export * from './rate-limiter'
 
 export type { ServerTiming } from './util'
 export {
-  createDecoders,
+  ServerTimer,
   createDecoder,
+  createDecoders,
+  parseContentEncoding,
   parseReqNsid,
   serverTimingHeader,
-  ServerTimer,
 } from './util'
