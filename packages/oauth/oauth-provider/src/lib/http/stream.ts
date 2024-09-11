@@ -1,4 +1,4 @@
-import { Duplex, Readable } from 'node:stream'
+import { Duplex, Readable, pipeline } from 'node:stream'
 import * as zlib from 'node:zlib'
 
 import createHttpError from 'http-errors'
@@ -50,8 +50,13 @@ export function createDecoders(contentEncoding?: string): Duplex[] {
   if (!contentEncoding) return []
   return contentEncoding
     .split(',')
+    .reverse()
     .map(createDecoder)
-    .filter(Boolean as unknown as <T>(x: T) => x is NonNullable<T>)
+    .filter(isNonNullable)
+}
+
+function isNonNullable<T>(x: T): x is NonNullable<T> {
+  return x != null
 }
 
 export function decodeStream(
@@ -60,8 +65,7 @@ export function decodeStream(
 ): Readable {
   const decoders = createDecoders(contentEncoding)
   if (decoders.length === 0) return readable
-  // @ts-expect-error
-  return pipeline(readable, ...decoders, () => {})
+  return pipeline([readable, ...decoders], () => {}) as Duplex
 }
 
 export async function parseStream<

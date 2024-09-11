@@ -2,4 +2,4 @@
 "@atproto/pds": patch
 ---
 
-Refactor pipethrough to work with streams
+Improve performances of request proxying by avoiding un-necessary content decoding & buffering.

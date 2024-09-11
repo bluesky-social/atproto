@@ -1,9 +1,5 @@
 import { getServiceEndpoint } from '@atproto/common'
-import {
-  ResponseType,
-  XRPCError as XRPCClientError,
-  XRPCError,
-} from '@atproto/xrpc'
+import { ResponseType } from '@atproto/xrpc'
 import {
   CatchallHandler,
   createDecoders,
@@ -12,16 +8,14 @@ import {
   InvalidRequestError,
   parseContentEncoding,
   parseReqNsid,
-  XRPCError as XRPCServerError,
+  XRPCError,
 } from '@atproto/xrpc-server'
 import express from 'express'
 import { IncomingHttpHeaders } from 'node:http'
 import {
   // @ts-expect-error compose was added in Node v16.9.0
   compose,
-  Duplex,
   PassThrough,
-  pipeline,
 } from 'node:stream'
 import { Dispatcher } from 'undici'
 
@@ -40,7 +34,7 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
         req.method !== 'HEAD' &&
         req.method !== 'POST'
       ) {
-        throw new XRPCServerError(
+        throw new XRPCError(
           ResponseType.InvalidRequest,
           'XRPC requests only supports GET and POST',
         )
@@ -226,22 +220,20 @@ async function pipethroughInternal(
 
             // Throwing here will cause the promise returned by stream() to
             // reject. This will cause the `.catch` block below to be triggered.
-            throw new XRPCClientError(
+            throw new XRPCError(
               data.statusCode,
-              safeString(errInfo?.['error']),
               safeString(errInfo?.['message']),
-              Object.fromEntries(responseHeaders(data.headers)),
+              safeString(errInfo?.['error']),
             )
           },
         )
       } catch (err) {
-        if (err instanceof XRPCClientError) throw err
-        if (err instanceof XRPCServerError) throw err
+        if (err instanceof XRPCError) throw err
 
         // Assume any error thrown from successStreamFactory() is due to an
         // unsupported or invalid value in "data" (statusCode or headers).
         // This will allow to distinguish undici/network errors bellow.
-        throw new XRPCServerError(
+        throw new XRPCError(
           ResponseType.UpstreamFailure,
           undefined,
           'unable to process upstream response',
@@ -250,13 +242,12 @@ async function pipethroughInternal(
       }
     })
     .catch((err) => {
-      if (err instanceof XRPCClientError) throw err
-      if (err instanceof XRPCServerError) throw err
+      if (err instanceof XRPCError) throw err
 
       // Any other error here was caused by undici, the network or the writable
       // stream returned by the function above (e.g. decoding error).
       httpLogger.warn({ err }, 'pipethrough network error')
-      throw new XRPCServerError(
+      throw new XRPCError(
         ResponseType.UpstreamFailure,
         undefined,
         'pipethrough network error',
@@ -353,7 +344,11 @@ function negotiateAccepted(
 
   // There must be at least one common encoding with a non-zero q value
   if (!common.some(isNotRejected)) {
-    throw new XRPCError(406, 'NotAcceptable', 'No common encoding')
+    throw new XRPCError(
+      ResponseType.NotAcceptable,
+      'NotAcceptable',
+      'No common encoding',
+    )
   }
 
   return formatAccepted(common)

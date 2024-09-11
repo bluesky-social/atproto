@@ -90,8 +90,11 @@ export async function bufferizePipeThroughStream(
     ? (pipeline([input.stream, ...decoders], () => {}) as Duplex)
     : input.stream
 
+  // HandlerPipeThroughBuffer expects an ArrayBuffer
+  const { buffer } = Buffer.concat(await readable.toArray())
+
   return {
-    buffer: Buffer.from(await readable.toArray()).buffer,
+    buffer,
     headers:
       input.headers?.['content-encoding'] != null ||
       input.headers?.['content-length'] != null ||
