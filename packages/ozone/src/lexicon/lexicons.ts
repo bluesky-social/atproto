@@ -10920,6 +10920,11 @@ export const schemaDict = {
             description:
               'Indicates how long the takedown should be in effect before automatically expiring.',
           },
+          acknowledgeAccountSubjects: {
+            type: 'boolean',
+            description:
+              'If true, all other reports on content authored by this account will be resolved (acknowledged).',
+          },
         },
       },
       modEventReverseTakedown: {
@@ -11731,9 +11736,15 @@ export const schemaDict = {
         parameters: {
           type: 'params',
           properties: {
+            includeAllUserRecords: {
+              type: 'boolean',
+              description:
+                "All subjects belonging to the account specified in the 'subject' param will be returned.",
+            },
             subject: {
               type: 'string',
               format: 'uri',
+              description: 'The subject to get the status for.',
             },
             comment: {
               type: 'string',
