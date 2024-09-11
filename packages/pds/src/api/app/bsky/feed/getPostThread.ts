@@ -1,6 +1,7 @@
 import assert from 'node:assert'
 import { AtUri } from '@atproto/syntax'
-import { Headers, XRPCError } from '@atproto/xrpc'
+import { XRPCError } from '@atproto/xrpc'
+
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import {
