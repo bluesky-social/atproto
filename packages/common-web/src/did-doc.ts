@@ -90,7 +90,6 @@ export const getServiceEndpoint = (
 
   const services = doc.service
   if (!services) return undefined
-  if (typeof services !== 'object') return undefined
 
   // Using for loop instead of .find() as an optimization
   for (let i = 0; i < services.length; i++) {
