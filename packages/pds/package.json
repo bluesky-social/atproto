@@ -1,16 +1,16 @@
 {
-  "name": "@atproto/pds",
-  "version": "0.4.58",
+  "name": "@cproto/pds",
+  "version": "0.5.0",
   "license": "MIT",
   "description": "Reference implementation of atproto Personal Data Server (PDS)",
   "keywords": [
-    "atproto",
+    "cproto",
     "pds"
   ],
-  "homepage": "https://atproto.com",
+  "homepage": "https://creaton.social",
   "repository": {
     "type": "git",
-    "url": "https://github.com/bluesky-social/atproto",
+    "url": "https://github.com/creaton-io/cproto",
     "directory": "packages/pds"
   },
   "main": "dist/index.js",
