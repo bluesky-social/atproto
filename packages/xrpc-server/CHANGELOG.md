@@ -1,5 +1,16 @@
 # @atproto/xrpc-server
 
+## 0.6.4
+
+### Patch Changes
+
+- [#2464](https://github.com/bluesky-social/atproto/pull/2464) [`98711a147`](https://github.com/bluesky-social/atproto/commit/98711a147a8674337f605c6368f39fc10c2fae93) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Properly decode request body encoding
+
+- Updated dependencies [[`98711a147`](https://github.com/bluesky-social/atproto/commit/98711a147a8674337f605c6368f39fc10c2fae93), [`98711a147`](https://github.com/bluesky-social/atproto/commit/98711a147a8674337f605c6368f39fc10c2fae93)]:
+  - @atproto/common@0.4.2
+  - @atproto/xrpc@0.6.2
+  - @atproto/crypto@0.4.1
+
 ## 0.6.3
 
 ### Patch Changes

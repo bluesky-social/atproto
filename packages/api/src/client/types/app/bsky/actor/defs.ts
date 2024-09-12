@@ -469,6 +469,8 @@ export interface BskyAppStatePref {
   activeProgressGuide?: BskyAppProgressGuide
   /** An array of tokens which identify nudges (modals, popups, tours, highlight dots) that should be shown to the user. */
   queuedNudges?: string[]
+  /** Storage for NUXs the user has encountered. */
+  nuxs?: Nux[]
   [k: string]: unknown
 }
 
@@ -500,4 +502,25 @@ export function isBskyAppProgressGuide(v: unknown): v is BskyAppProgressGuide {
 
 export function validateBskyAppProgressGuide(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.actor.defs#bskyAppProgressGuide', v)
+}
+
+/** A new user experiences (NUX) storage object */
+export interface Nux {
+  id: string
+  completed: boolean
+  /** Arbitrary data for the NUX. The structure is defined by the NUX itself. Limited to 300 characters. */
+  data?: string
+  /** The date and time at which the NUX will expire and should be considered completed. */
+  expiresAt?: string
+  [k: string]: unknown
+}
+
+export function isNux(v: unknown): v is Nux {
+  return (
+    isObj(v) && hasProp(v, '$type') && v.$type === 'app.bsky.actor.defs#nux'
+  )
+}
+
+export function validateNux(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.actor.defs#nux', v)
 }

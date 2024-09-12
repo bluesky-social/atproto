@@ -119,15 +119,17 @@ export class ModeratorClient {
       subject: TakeActionInput['subject']
       subjectBlobCids?: TakeActionInput['subjectBlobCids']
       durationInHours?: number
+      acknowledgeAccountSubjects?: boolean
       reason?: string
     },
     role?: ModLevel,
   ) {
-    const { durationInHours, ...rest } = opts
+    const { durationInHours, acknowledgeAccountSubjects, ...rest } = opts
     return this.emitEvent(
       {
         event: {
           $type: 'tools.ozone.moderation.defs#modEventTakedown',
+          acknowledgeAccountSubjects,
           durationInHours,
         },
         ...rest,

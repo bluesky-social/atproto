@@ -162,6 +162,8 @@ export interface ModEventTakedown {
   comment?: string
   /** Indicates how long the takedown should be in effect before automatically expiring. */
   durationInHours?: number
+  /** If true, all other reports on content authored by this account will be resolved (acknowledged). */
+  acknowledgeAccountSubjects?: boolean
   [k: string]: unknown
 }
 
