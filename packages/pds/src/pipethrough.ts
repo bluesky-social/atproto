@@ -179,7 +179,13 @@ export async function pipethrough(
 
   return new Promise<HandlerPipeThroughStream>((resolve, reject) => {
     void pipethroughInternal(ctx, dispatchOptions, (upstream) => {
-      const stream = new PassThrough()
+      const stream = new PassThrough({
+        autoDestroy: true,
+        // Use a high water mark to buffer more data while performing async
+        // operations before this stream is consumed. This is especially useful
+        // while processing read-after-write operations.
+        highWaterMark: 4 * 16384, // 4 times the default (64kb)
+      })
 
       // This will resolve the promise before the stream starts flowing. If an
       // error occurs after that, pipethroughInternal() will reject causing the
