@@ -2,4 +2,4 @@
 "@atproto/common": patch
 ---
 
-Return Buffer instance from streamToBytes
+streamToBytes now returns Buffer instances instead of Uint8Array

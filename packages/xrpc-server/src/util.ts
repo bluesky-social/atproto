@@ -1,7 +1,6 @@
 import assert from 'node:assert'
-import { Duplex, PassThrough, pipeline, Readable } from 'node:stream'
+import { Duplex, pipeline, Readable } from 'node:stream'
 import { IncomingMessage } from 'node:http'
-import * as zlib from 'node:zlib'
 import express from 'express'
 import mime from 'mime-types'
 import {
@@ -11,7 +10,7 @@ import {
   LexXrpcQuery,
   LexXrpcSubscription,
 } from '@atproto/lexicon'
-import { MaxSizeChecker } from '@atproto/common'
+import { createDecoders, MaxSizeChecker } from '@atproto/common'
 import { ResponseType } from '@atproto/xrpc'
 
 import {
@@ -261,7 +260,17 @@ function decodeBodyStream(
     )
   }
 
-  const transforms: Duplex[] = createDecoders(contentEncoding)
+  let transforms: Duplex[]
+  try {
+    transforms = createDecoders(contentEncoding)
+  } catch (cause) {
+    throw new XRPCError(
+      ResponseType.UnsupportedMediaType,
+      'unsupported content-encoding',
+      undefined,
+      { cause },
+    )
+  }
 
   if (maxSize !== undefined) {
     const maxSizeChecker = new MaxSizeChecker(
@@ -275,54 +284,6 @@ function decodeBodyStream(
   return transforms.length > 0
     ? (pipeline([req, ...transforms], () => {}) as Duplex)
     : req
-}
-
-export function createDecoders(contentEncoding?: string | string[]): Duplex[] {
-  return parseContentEncoding(contentEncoding).reverse().map(createDecoder)
-}
-
-export function parseContentEncoding(
-  contentEncoding?: string | string[],
-): string[] {
-  // undefined, empty string, and empty array
-  if (!contentEncoding?.length) return []
-
-  // Non empty string
-  if (typeof contentEncoding === 'string') {
-    return contentEncoding
-      .split(',')
-      .map((x) => x.trim().toLowerCase())
-      .filter((x) => x && x !== 'identity')
-  }
-
-  // content-encoding should never be an array
-  return contentEncoding.flatMap(parseContentEncoding)
-}
-
-export function createDecoder(encoding: string): Duplex {
-  // https://www.rfc-editor.org/rfc/rfc7231#section-3.1.2.1
-  // > All content-coding values are case-insensitive...
-  switch (encoding.trim().toLowerCase()) {
-    // https://www.rfc-editor.org/rfc/rfc9112.html#section-7.2
-    case 'gzip':
-    case 'x-gzip':
-      return zlib.createGunzip({
-        // using Z_SYNC_FLUSH (cURL default) to be less strict when decoding
-        flush: zlib.constants.Z_SYNC_FLUSH,
-        finishFlush: zlib.constants.Z_SYNC_FLUSH,
-      })
-    case 'deflate':
-      return zlib.createInflate()
-    case 'br':
-      return zlib.createBrotliDecompress()
-    case 'identity':
-      return new PassThrough()
-    default:
-      throw new XRPCError(
-        ResponseType.UnsupportedMediaType,
-        'unsupported content-encoding',
-      )
-  }
 }
 
 export function serverTimingHeader(timings: ServerTiming[]) {

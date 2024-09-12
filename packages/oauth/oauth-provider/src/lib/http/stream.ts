@@ -1,7 +1,5 @@
-import { Duplex, Readable, pipeline } from 'node:stream'
-import * as zlib from 'node:zlib'
-
-import createHttpError from 'http-errors'
+import { streamToBytes } from '@atproto/common'
+import { Readable } from 'node:stream'
 
 import {
   KnownNames,
@@ -12,61 +10,6 @@ import {
   ParserResult,
   parsers,
 } from './parser.js'
-
-export async function readStream(readable: Readable): Promise<Buffer> {
-  const chunks: Buffer[] = []
-  let totalLength = 0
-  for await (const chunk of readable) {
-    chunks.push(chunk)
-    totalLength += chunk.length
-  }
-  return Buffer.concat(chunks, totalLength)
-}
-
-export function createDecoder(coding: string): Duplex | null {
-  // https://www.rfc-editor.org/rfc/rfc7231#section-3.1.2.1
-  // "All content-coding values are case-insensitive..."
-  switch (coding.toLowerCase().trim()) {
-    // https://www.rfc-editor.org/rfc/rfc9112.html#section-7.2
-    case 'gzip':
-    case 'x-gzip':
-      return zlib.createGunzip({
-        // using Z_SYNC_FLUSH (cURL default) to be less strict when decoding
-        flush: zlib.constants.Z_SYNC_FLUSH,
-        finishFlush: zlib.constants.Z_SYNC_FLUSH,
-      })
-    case 'deflate':
-      return zlib.createInflate()
-    case 'br':
-      return zlib.createBrotliDecompress()
-    case 'identity':
-      return null // new PassThrough()
-    default:
-      throw createHttpError(415, 'Unsupported content-encoding')
-  }
-}
-
-export function createDecoders(contentEncoding?: string): Duplex[] {
-  if (!contentEncoding) return []
-  return contentEncoding
-    .split(',')
-    .reverse()
-    .map(createDecoder)
-    .filter(isNonNullable)
-}
-
-function isNonNullable<T>(x: T): x is NonNullable<T> {
-  return x != null
-}
-
-export function decodeStream(
-  readable: Readable,
-  contentEncoding?: string,
-): Readable {
-  const decoders = createDecoders(contentEncoding)
-  if (decoders.length === 0) return readable
-  return pipeline([readable, ...decoders], () => {}) as Duplex
-}
 
 export async function parseStream<
   T extends KnownTypes,
@@ -91,7 +34,9 @@ export async function parseStream(
   allow?: string[],
 ): Promise<ParserResult<KnownParser>> {
   if (typeof contentType !== 'string') {
-    throw createHttpError(400, 'Invalid content-type')
+    throw new TypeError(
+      `Invalid content-type: ${contentType == null ? String(contentType) : typeof contentType}`,
+    )
   }
 
   const type = parseContentType(contentType)
@@ -102,9 +47,9 @@ export async function parseStream(
   )
 
   if (!parser) {
-    throw createHttpError(400, 'Unsupported content-type')
+    throw new TypeError(`Unsupported content-type: ${type.mime}`)
   }
 
-  const buffer = await readStream(req)
+  const buffer = await streamToBytes(req)
   return parser.parse(buffer, type)
 }

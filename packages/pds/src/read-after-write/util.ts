@@ -1,19 +1,15 @@
-import { omit, streamToBytes } from '@atproto/common'
 import { jsonToLex } from '@atproto/lexicon'
 import { HeadersMap } from '@atproto/xrpc'
 import {
-  createDecoders,
   HandlerPipeThrough,
   HandlerPipeThroughBuffer,
-  HandlerPipeThroughStream,
 } from '@atproto/xrpc-server'
 import express from 'express'
-import { Duplex, pipeline, Readable } from 'node:stream'
 
 import AppContext from '../context'
 import { lexicons } from '../lexicon/lexicons'
 import { readStickyLogger as log } from '../logger'
-import { pipethrough, safeParseJson } from '../pipethrough'
+import { asPipeThroughBuffer, pipethrough, safeParseJson } from '../pipethrough'
 import { HandlerResponse, LocalRecords, MungeFn } from './types'
 import { getRecordsSinceRev } from './viewer'
 
@@ -61,11 +57,9 @@ export const pipethroughReadAfterWrite = async <T>(
       // if the munging fails, we can't return the original response because the
       // stream has already been read. In that case, we'll return a buffered
       // response instead.
-      bufferedRes = await bufferizePipeThroughStream(upstreamRes)
+      bufferedRes = await asPipeThroughBuffer(upstreamRes)
 
-      const value = safeParseJson(
-        Buffer.from(bufferedRes!.buffer).toString('utf8'),
-      )
+      const value = safeParseJson(bufferedRes!.buffer.toString('utf8'))
       const lex = value && jsonToLex(value)
 
       const parsedRes = lexicons.assertValidXrpcOutput(nsid, lex) as T
@@ -79,24 +73,6 @@ export const pipethroughReadAfterWrite = async <T>(
 
     log.warn({ err, requester }, 'error in read after write munge')
     return bufferedRes ?? upstreamRes
-  }
-}
-
-export async function bufferizePipeThroughStream(
-  input: HandlerPipeThroughStream,
-): Promise<HandlerPipeThroughBuffer> {
-  const decoders = createDecoders(input.headers?.['content-encoding'])
-
-  const readable: Readable = decoders.length
-    ? (pipeline([input.stream, ...decoders], () => {}) as Duplex)
-    : input.stream
-
-  const buffer = await streamToBytes(readable)
-
-  return {
-    buffer,
-    headers: omit(input.headers, ['content-encoding', 'content-length']),
-    encoding: input.encoding,
   }
 }
 

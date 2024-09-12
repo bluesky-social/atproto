@@ -1,10 +1,13 @@
 import {
-  Stream,
-  Readable,
+  Duplex,
   PassThrough,
+  pipeline,
+  Readable,
+  Stream,
   Transform,
   TransformCallback,
-} from 'stream'
+} from 'node:stream'
+import { createBrotliDecompress, createGunzip, createInflate } from 'node:zlib'
 
 export const forwardStreamErrors = (...streams: Stream[]) => {
   for (let i = 1; i < streams.length; ++i) {
@@ -74,5 +77,67 @@ export class MaxSizeChecker extends Transform {
     } else {
       cb(null, chunk)
     }
+  }
+}
+
+export function decodeStream(
+  stream: Readable,
+  contentEncoding?: string,
+): Readable
+export function decodeStream(
+  stream: AsyncIterable<Uint8Array>,
+  contentEncoding?: string,
+): AsyncIterable<Uint8Array> | Readable
+export function decodeStream(
+  stream: Readable | AsyncIterable<Uint8Array>,
+  contentEncoding?: string,
+): Readable | AsyncIterable<Uint8Array> {
+  const decoders = createDecoders(contentEncoding)
+  if (decoders.length === 0) return stream
+  return pipeline([stream as Readable, ...decoders], () => {}) as Duplex
+}
+
+/**
+ * Create a series of decoding streams based on the content-encoding header. The
+ * resulting streams should be piped together to decode the content.
+ */
+export function createDecoders(contentEncoding?: string): Duplex[] {
+  const decoders: Duplex[] = []
+
+  if (contentEncoding) {
+    const encodings = contentEncoding.split(',')
+    for (const encoding of encodings) {
+      const normalizedEncoding = normalizeEncoding(encoding)
+      if (normalizedEncoding === 'identity') continue
+
+      decoders.push(createDecoder(normalizedEncoding))
+    }
+  }
+
+  return decoders.reverse()
+}
+
+function normalizeEncoding(encoding: string) {
+  // https://www.rfc-editor.org/rfc/rfc7231#section-3.1.2.1
+  // > All content-coding values are case-insensitive...
+  return encoding.trim().toLowerCase()
+}
+
+function createDecoder(normalizedEncoding: string): Duplex {
+  switch (normalizedEncoding) {
+    // https://www.rfc-editor.org/rfc/rfc9112.html#section-7.2
+    case 'gzip':
+    case 'x-gzip':
+      return createGunzip()
+    case 'deflate':
+      return createInflate()
+    case 'br':
+      return createBrotliDecompress()
+    case 'identity':
+      return new PassThrough()
+    default:
+      throw new TypeError(
+        `Unsupported content-encoding: "${normalizedEncoding}"`,
+      )
   }
 }

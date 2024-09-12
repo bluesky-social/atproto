@@ -5,11 +5,4 @@ export * from './stream'
 export * from './rate-limiter'
 
 export type { ServerTiming } from './util'
-export {
-  ServerTimer,
-  createDecoder,
-  createDecoders,
-  parseContentEncoding,
-  parseReqNsid,
-  serverTimingHeader,
-} from './util'
+export { ServerTimer, parseReqNsid, serverTimingHeader } from './util'

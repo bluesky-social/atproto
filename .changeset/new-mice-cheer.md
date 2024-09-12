@@ -2,4 +2,4 @@
 "@atproto/common": patch
 ---
 
-Minor optimization
+Small performance improvements

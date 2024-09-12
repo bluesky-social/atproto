@@ -1,8 +1,13 @@
-import { getServiceEndpoint, streamToBytes } from '@atproto/common'
+import {
+  decodeStream,
+  getServiceEndpoint,
+  omit,
+  streamToBytes,
+} from '@atproto/common'
 import { ResponseType, XRPCError as XRPCClientError } from '@atproto/xrpc'
 import {
   CatchallHandler,
-  createDecoders,
+  HandlerPipeThroughBuffer,
   HandlerPipeThroughStream,
   InternalServerError,
   InvalidRequestError,
@@ -11,11 +16,7 @@ import {
 } from '@atproto/xrpc-server'
 import express from 'express'
 import { IncomingHttpHeaders } from 'node:http'
-import {
-  // @ts-expect-error compose was added in Node v16.9.0
-  compose,
-  PassThrough,
-} from 'node:stream'
+import { Duplex, PassThrough, Readable } from 'node:stream'
 import { Dispatcher } from 'undici'
 
 import AppContext from './context'
@@ -117,9 +118,6 @@ export type PipethroughOptions = {
   lxm?: string
 }
 
-// Because we sometimes need to interpret the response (e.g. during
-// read-after-write), we need to ask the upstream server for an encoding
-// that both the requester and the PDS can understand.
 const PIPETHROUGH_ACCEPTED_ENCODINGS = [
   // Because proxying occurs between data centers, where connectivity is
   // supposedly stable & good, prefer encoding that are fast (gzip, deflate,
@@ -151,7 +149,11 @@ export async function pipethrough(
 
   const { url: origin, did: aud } = await parseProxyInfo(ctx, req, lxm)
 
-  const acceptEncoding = negotiateAccepted(
+  // Because we sometimes need to interpret the response (e.g. during
+  // read-after-write, through asPipeThroughBuffer()), we need to ask the
+  // upstream server for an encoding that both the requester and the PDS can
+  // understand.
+  const acceptEncoding = negotiateAccept(
     req.headers['accept-encoding'],
     PIPETHROUGH_ACCEPTED_ENCODINGS,
   )
@@ -161,7 +163,7 @@ export async function pipethrough(
     'atproto-accept-labelers': req.headers['atproto-accept-labelers'],
     'x-bsky-topics': req.headers['x-bsky-topics'],
 
-    'accept-encoding': `${acceptEncoding}, *;q=0`, // Reject anything else (q=0)
+    'accept-encoding': `${formatAccepted(acceptEncoding)}, *;q=0`, // Reject anything else (q=0)
 
     authorization: options?.iss
       ? `Bearer ${await ctx.serviceAuthJwt(options.iss, options.aud ?? aud, options.lxm ?? lxm)}`
@@ -210,24 +212,24 @@ async function pipethroughInternal(
 
         // Upstream resulted in an error, create a writable stream for undici
         // that will decode & parse the error message and construct an XRPCError
-        return compose(
-          ...createDecoders(data.headers?.['content-encoding']),
-          async function (
-            res: AsyncGenerator<Buffer, void, unknown>,
-          ): Promise<void> {
-            const buffer = await streamToBytes(res)
-            const errInfo = safeParseJson(buffer.toString('utf8'))
+        return Duplex.from(async function (
+          res: AsyncGenerator<Buffer, void, unknown>,
+        ): Promise<void> {
+          const buffer = await bufferUpstreamResponse(
+            res,
+            data.headers['content-encoding'],
+          )
+          const errInfo = safeParseJson(buffer.toString('utf8'))
 
-            // Throwing here will cause the promise returned by stream() to
-            // reject. This will cause the `.catch` block below to be triggered.
-            throw new XRPCClientError(
-              data.statusCode,
-              safeString(errInfo?.['error']),
-              safeString(errInfo?.['message']),
-              Object.fromEntries(responseHeaders(data.headers, false)),
-            )
-          },
-        )
+          // Throwing here will cause the promise returned by stream() to
+          // reject. This will cause the `.catch` block below to be triggered.
+          throw new XRPCClientError(
+            data.statusCode,
+            safeString(errInfo?.['error']),
+            safeString(errInfo?.['message']),
+            Object.fromEntries(responseHeaders(data.headers, false)),
+          )
+        })
       } catch (err) {
         if (err instanceof XRPCServerError) throw err
         if (err instanceof XRPCClientError) throw err
@@ -331,13 +333,13 @@ export const parseProxyHeader = async (
 
 type Accept = [name: string, flags: { q: string }]
 
-function negotiateAccepted(
+function negotiateAccept(
   acceptHeader: undefined | string | string[],
-  supported: Accept[],
-): string {
+  supported: readonly Accept[],
+): readonly Accept[] {
   // Optimization: if no accept-encoding header is present, skip negotiation
   if (!acceptHeader?.length) {
-    return formatAccepted(supported)
+    return supported
   }
 
   const acceptNames = extractAcceptedNames(acceptHeader)
@@ -350,14 +352,14 @@ function negotiateAccepted(
     throw new XRPCServerError(
       ResponseType.NotAcceptable,
       'NotAcceptable',
-      'No common encoding',
+      'this service does not support any of the requested encodings',
     )
   }
 
-  return formatAccepted(common)
+  return common
 }
 
-function formatAccepted(accept: Accept[]): string {
+function formatAccepted(accept: readonly Accept[]): string {
   return accept.map(formatEncodingDev).join(', ')
 }
 
@@ -365,7 +367,7 @@ function formatEncodingDev([enc, { q }]: Accept): string {
   return q != null ? `${enc};q=${q}` : enc
 }
 
-function nameIncludedIn(this: string[], accept: Accept): boolean {
+function nameIncludedIn(this: readonly string[], accept: Accept): boolean {
   return this.includes(accept[0])
 }
 
@@ -394,6 +396,43 @@ function extractAcceptedName(def: string): string | undefined {
 
 function isNonNullable<T>(val: T): val is NonNullable<T> {
   return val != null
+}
+
+export async function bufferUpstreamResponse(
+  stream: Readable | AsyncIterable<Uint8Array>,
+  contentEncoding?: string | string[],
+) {
+  // Needed for type-safety (should never happen irl)
+  if (Array.isArray(contentEncoding)) {
+    throw new XRPCServerError(
+      ResponseType.UpstreamFailure,
+      'upstream service returned multiple content-encoding headers',
+    )
+  }
+
+  try {
+    return streamToBytes(decodeStream(stream, contentEncoding))
+  } catch (err) {
+    throw new XRPCServerError(
+      ResponseType.UpstreamFailure,
+      err instanceof TypeError ? err.message : 'unable to decode request body',
+      undefined,
+      { cause: err },
+    )
+  }
+}
+
+export async function asPipeThroughBuffer(
+  input: HandlerPipeThroughStream,
+): Promise<HandlerPipeThroughBuffer> {
+  return {
+    buffer: await bufferUpstreamResponse(
+      input.stream,
+      input.headers?.['content-encoding'],
+    ),
+    headers: omit(input.headers, ['content-encoding', 'content-length']),
+    encoding: input.encoding,
+  }
 }
 
 // Response parsing/forwarding

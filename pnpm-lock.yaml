@@ -945,6 +945,9 @@ importers:
       '@atproto-labs/simple-store-memory':
         specifier: workspace:*
         version: link:../../internal/simple-store-memory
+      '@atproto/common':
+        specifier: workspace:^
+        version: link:../../common
       '@atproto/jwk':
         specifier: workspace:*
         version: link:../jwk
