@@ -1,0 +1,10 @@
+jaja
+.
+123
+JA
+j
+ja-
+a-DE
+
+# technically not valid, but allowing in naive parser
+#de-419-DE
