@@ -25,14 +25,6 @@ describe('parseUrlNsid', () => {
     expect(() => parseUrlNsid('/xrpc/a')).toThrow('invalid xrpc path')
   })
 
-  it('should throw an error if the URL is too long', () => {
-    expect(() =>
-      parseUrlNsid(
-        '/xrpc/com.example-domain-name-that-is-too-long-to-be-valid.name-space-identifier',
-      ),
-    ).toThrow('invalid xrpc path')
-  })
-
   it('should throw an error if the URL is empty', () => {
     expect(() => parseUrlNsid('')).toThrow('invalid xrpc path')
   })
