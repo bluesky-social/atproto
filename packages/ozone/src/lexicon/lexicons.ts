@@ -8236,6 +8236,12 @@ export const schemaDict = {
                   ref: 'lex:app.bsky.actor.defs#profileView',
                 },
               },
+              isFallback: {
+                type: 'boolean',
+                description:
+                  'If true, response has fallen-back to generic results, and is not scoped using relativeToDid',
+                default: false,
+              },
             },
           },
         },
@@ -9191,6 +9197,12 @@ export const schemaDict = {
                   type: 'ref',
                   ref: 'lex:app.bsky.unspecced.defs#skeletonSearchActor',
                 },
+              },
+              relativeToDid: {
+                type: 'string',
+                format: 'did',
+                description:
+                  'DID of the account these suggestions are relative to. If this is returned undefined, suggestions are based on the viewer.',
               },
             },
           },
