@@ -41,7 +41,6 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
     } catch (err) {
       return next(err)
     }
-    return next()
   }
 }
 

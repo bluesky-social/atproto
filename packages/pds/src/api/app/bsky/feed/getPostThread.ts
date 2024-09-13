@@ -29,6 +29,7 @@ const METHOD_NSID = 'app.bsky.feed.getPostThread'
 export default function (server: Server, ctx: AppContext) {
   const { bskyAppView } = ctx.cfg
   if (!bskyAppView) return
+  if (ctx.cfg.service.disableReadAfterWrite) return
   server.app.bsky.feed.getPostThread({
     auth: ctx.authVerifier.accessStandard(),
     handler: async ({ req, auth, params }) => {

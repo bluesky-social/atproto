@@ -40,14 +40,14 @@ export const getCarStream = async (
     const storage = new SqlRepoReader(actorDb)
     carStream = await storage.getCarStream(since)
   } catch (err) {
-    await actorDb.close()
+    // await actorDb.close()
     if (err instanceof RepoRootNotFoundError) {
       throw new InvalidRequestError(`Could not find repo for DID: ${did}`)
     }
     throw err
   }
-  const closeDb = () => actorDb.close()
-  carStream.on('error', closeDb)
-  carStream.on('close', closeDb)
+  // const closeDb = () => actorDb.close()
+  // carStream.on('error', closeDb)
+  // carStream.on('close', closeDb)
   return carStream
 }

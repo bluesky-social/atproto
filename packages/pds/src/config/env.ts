@@ -16,6 +16,7 @@ export const readEnv = (): ServerEnvironment => {
     contactEmailAddress: envStr('PDS_CONTACT_EMAIL_ADDRESS'),
     acceptingImports: envBool('PDS_ACCEPTING_REPO_IMPORTS'),
     blobUploadLimit: envInt('PDS_BLOB_UPLOAD_LIMIT'),
+    disableReadAfterWrite: envBool('PDS_DISABLE_READ_AFTER_WRITE'),
     devMode: envBool('PDS_DEV_MODE'),
 
     // branding
@@ -32,7 +33,10 @@ export const readEnv = (): ServerEnvironment => {
 
     // actor store
     actorStoreDirectory: envStr('PDS_ACTOR_STORE_DIRECTORY'),
-    actorStoreCacheSize: envInt('PDS_ACTOR_STORE_CACHE_SIZE'),
+    actorStoreKeyCacheSize: envInt('PDS_ACTOR_STORE_KEY_CACHE_SIZE'),
+    actorStoreKeyCacheTTL: envInt('PDS_ACTOR_STORE_KEY_CACHE_TTL'),
+    actorStoreDbCacheSize: envInt('PDS_ACTOR_STORE_DB_CACHE_SIZE'),
+    actorStoreDbCacheTTL: envInt('PDS_ACTOR_STORE_DB_CACHE_TTL'),
 
     // blobstore: one required
     // s3
@@ -137,6 +141,7 @@ export type ServerEnvironment = {
   contactEmailAddress?: string
   acceptingImports?: boolean
   blobUploadLimit?: number
+  disableReadAfterWrite?: boolean
   devMode?: boolean
 
   // branding
@@ -153,7 +158,10 @@ export type ServerEnvironment = {
 
   // actor store
   actorStoreDirectory?: string
-  actorStoreCacheSize?: number
+  actorStoreKeyCacheSize?: number
+  actorStoreKeyCacheTTL?: number
+  actorStoreDbCacheSize?: number
+  actorStoreDbCacheTTL?: number
 
   // blobstore: one required
   blobstoreS3Bucket?: string

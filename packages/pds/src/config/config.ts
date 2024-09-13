@@ -1,6 +1,6 @@
 import path from 'node:path'
 import assert from 'node:assert'
-import { DAY, HOUR, SECOND } from '@atproto/common'
+import { DAY, HOUR, MINUTE, SECOND } from '@atproto/common'
 import { Customization } from '@atproto/oauth-provider'
 import { ServerEnvironment } from './env'
 
@@ -26,6 +26,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     contactEmailAddress: env.contactEmailAddress,
     acceptingImports: env.acceptingImports ?? true,
     blobUploadLimit: env.blobUploadLimit ?? 5 * 1024 * 1024, // 5mb
+    disableReadAfterWrite: env.disableReadAfterWrite ?? false,
     devMode: env.devMode ?? false,
   }
 
@@ -44,7 +45,10 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
 
   const actorStoreCfg: ServerConfig['actorStore'] = {
     directory: env.actorStoreDirectory ?? dbLoc('actors'),
-    cacheSize: env.actorStoreCacheSize ?? 100,
+    keyCacheSize: env.actorStoreKeyCacheSize ?? 1000,
+    keyCacheTTL: env.actorStoreKeyCacheTTL ?? 10 * MINUTE,
+    dbCacheSize: env.actorStoreDbCacheSize ?? 100,
+    dbCacheTTL: env.actorStoreDbCacheTTL ?? MINUTE,
     disableWalAutoCheckpoint,
   }
 
@@ -337,6 +341,7 @@ export type ServiceConfig = {
   termsOfServiceUrl?: string
   acceptingImports: boolean
   blobUploadLimit: number
+  disableReadAfterWrite: boolean
   contactEmailAddress?: string
   devMode: boolean
 }
@@ -350,7 +355,10 @@ export type DatabaseConfig = {
 
 export type ActorStoreConfig = {
   directory: string
-  cacheSize: number
+  dbCacheSize: number
+  dbCacheTTL: number
+  keyCacheSize: number
+  keyCacheTTL: number
   disableWalAutoCheckpoint: boolean
 }
 

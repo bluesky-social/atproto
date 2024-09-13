@@ -13,6 +13,7 @@ const METHOD_NSID = 'app.bsky.actor.getProfile'
 export default function (server: Server, ctx: AppContext) {
   const { bskyAppView } = ctx.cfg
   if (!bskyAppView) return
+  if (ctx.cfg.service.disableReadAfterWrite) return
   server.app.bsky.actor.getProfile({
     auth: ctx.authVerifier.accessStandard(),
     handler: async ({ req, auth }) => {

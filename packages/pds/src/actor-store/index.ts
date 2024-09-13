@@ -24,6 +24,7 @@ import DiskBlobStore from '../disk-blobstore'
 import { mkdir } from 'fs/promises'
 import { ActorStoreConfig } from '../config'
 import { retrySqlite } from '../db'
+import { LRUCache } from 'lru-cache'
 
 type ActorStoreResources = {
   blobstore: (did: string) => BlobStore
@@ -33,12 +34,51 @@ type ActorStoreResources = {
 
 export class ActorStore {
   reservedKeyDir: string
+  keyCache: LRUCache<string, Keypair>
+  dbCache: LRUCache<string, ActorDb>
 
   constructor(
     public cfg: ActorStoreConfig,
     public resources: ActorStoreResources,
   ) {
     this.reservedKeyDir = path.join(cfg.directory, 'reserved_keys')
+    this.keyCache = new LRUCache<string, Keypair>({
+      max: cfg.keyCacheSize,
+      ttl: cfg.keyCacheTTL,
+      fetchMethod: async (did: string) => {
+        const { keyLocation } = await this.getLocation(did)
+        const privKey = await fs.readFile(keyLocation)
+        return crypto.Secp256k1Keypair.import(privKey)
+      },
+    })
+    this.dbCache = new LRUCache<string, ActorDb>({
+      max: cfg.keyCacheSize,
+      ttl: cfg.keyCacheTTL,
+      fetchMethod: async (did: string) => {
+        const { dbLocation } = await this.getLocation(did)
+        const exists = await fileExists(dbLocation)
+        if (!exists) {
+          throw new InvalidRequestError('Repo not found', 'NotFound')
+        }
+
+        const db = getDb(dbLocation, this.cfg.disableWalAutoCheckpoint)
+
+        // run a simple select with retry logic to ensure the db is ready (not in wal recovery mode)
+        try {
+          await retrySqlite(() =>
+            db.db.selectFrom('repo_root').selectAll().execute(),
+          )
+        } catch (err) {
+          db.close()
+          throw err
+        }
+
+        return db
+      },
+      dispose: (db) => {
+        db.close()
+      },
+    })
   }
 
   async getLocation(did: string) {
@@ -55,31 +95,19 @@ export class ActorStore {
   }
 
   async keypair(did: string): Promise<Keypair> {
-    const { keyLocation } = await this.getLocation(did)
-    const privKey = await fs.readFile(keyLocation)
-    return crypto.Secp256k1Keypair.import(privKey)
+    const got = await this.keyCache.fetch(did)
+    if (!got) {
+      throw new Error('Could not load key')
+    }
+    return got
   }
 
   async openDb(did: string): Promise<ActorDb> {
-    const { dbLocation } = await this.getLocation(did)
-    const exists = await fileExists(dbLocation)
-    if (!exists) {
+    const got = await this.dbCache.fetch(did)
+    if (!got) {
       throw new InvalidRequestError('Repo not found', 'NotFound')
     }
-
-    const db = getDb(dbLocation, this.cfg.disableWalAutoCheckpoint)
-
-    // run a simple select with retry logic to ensure the db is ready (not in wal recovery mode)
-    try {
-      await retrySqlite(() =>
-        db.db.selectFrom('repo_root').selectAll().execute(),
-      )
-    } catch (err) {
-      db.close()
-      throw err
-    }
-
-    return db
+    return got
   }
 
   async read<T>(did: string, fn: ActorStoreReadFn<T>) {
@@ -90,7 +118,7 @@ export class ActorStore {
       )
       return await fn(reader)
     } finally {
-      db.close()
+      // db.close()
     }
   }
 
@@ -103,7 +131,7 @@ export class ActorStore {
         return fn(store)
       })
     } finally {
-      db.close()
+      // db.close()
     }
   }
 
@@ -127,7 +155,7 @@ export class ActorStore {
         },
       })
     } finally {
-      db.close()
+      // db.close()
     }
   }
 
@@ -217,6 +245,10 @@ export class ActorStore {
     const { directory } = await this.getLocation(did)
     const opLoc = path.join(directory, `did-op`)
     await rmIfExists(opLoc)
+  }
+
+  close() {
+    this.dbCache.clear()
   }
 }
 
