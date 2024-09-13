@@ -120,17 +120,11 @@ const validateUrl = (urlStr: string): string | undefined => {
     return undefined
   }
 
-  try {
-    const url = new URL(urlStr)
-
-    if (!url.hostname) {
-      return undefined
-    }
-
-    return urlStr
-  } catch {
+  if (!URL.canParse(urlStr)) {
     return undefined
   }
+
+  return urlStr
 }
 
 // Types

@@ -117,12 +117,17 @@ export const readEnv = (): ServerEnvironment => {
       'PDS_PLC_ROTATION_KEY_K256_PRIVATE_KEY_HEX',
     ),
 
+    // user provided url http requests
+    disableSsrfProtection: envBool('PDS_DISABLE_SSRF_PROTECTION'),
+
     // fetch
-    fetchAllowHTTP2: envBool('PDS_FETCH_ALLOW_HTTP2'),
-    fetchDisableSsrfProtection: envBool('PDS_DISABLE_SSRF_PROTECTION'),
-    fetchHeadersTimeout: envInt('PDS_FETCH_HEADERS_TIMEOUT'),
-    fetchBodyTimeout: envInt('PDS_FETCH_BODY_TIMEOUT'),
     fetchMaxResponseSize: envInt('PDS_FETCH_MAX_RESPONSE_SIZE'),
+
+    // proxy
+    proxyAllowHTTP2: envBool('PDS_PROXY_ALLOW_HTTP2'),
+    proxyHeadersTimeout: envInt('PDS_PROXY_HEADERS_TIMEOUT'),
+    proxyBodyTimeout: envInt('PDS_PROXY_BODY_TIMEOUT'),
+    proxyMaxResponseSize: envInt('PDS_PROXY_MAX_RESPONSE_SIZE'),
   }
 }
 
@@ -237,10 +242,15 @@ export type ServerEnvironment = {
   plcRotationKeyKmsKeyId?: string
   plcRotationKeyK256PrivateKeyHex?: string
 
+  // user provided url http requests
+  disableSsrfProtection?: boolean
+
   // fetch
-  fetchAllowHTTP2?: boolean
-  fetchDisableSsrfProtection?: boolean
-  fetchHeadersTimeout?: number
-  fetchBodyTimeout?: number
   fetchMaxResponseSize?: number
+
+  // proxy
+  proxyAllowHTTP2?: boolean
+  proxyHeadersTimeout?: number
+  proxyBodyTimeout?: number
+  proxyMaxResponseSize?: number
 }

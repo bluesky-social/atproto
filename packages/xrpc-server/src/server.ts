@@ -1,15 +1,4 @@
-import { Readable } from 'node:stream'
-import { pipeline } from 'node:stream/promises'
-import express, {
-  Application,
-  Express,
-  Router,
-  Request,
-  Response,
-  ErrorRequestHandler,
-  NextFunction,
-  RequestHandler,
-} from 'express'
+import { check, schema } from '@atproto/common'
 import {
   LexiconDoc,
   Lexicons,
@@ -18,34 +7,45 @@ import {
   LexXrpcQuery,
   LexXrpcSubscription,
 } from '@atproto/lexicon'
-import { ZodSchema } from 'zod'
-import { check, schema } from '@atproto/common'
+import express, {
+  Application,
+  ErrorRequestHandler,
+  Express,
+  NextFunction,
+  Request,
+  RequestHandler,
+  Response,
+  Router,
+} from 'express'
+import { Readable } from 'node:stream'
+import { pipeline } from 'node:stream/promises'
 
+import log from './logger'
+import { consumeMany } from './rate-limiter'
 import { ErrorFrame, Frame, MessageFrame, XrpcStreamServer } from './stream'
 import {
-  XRPCHandler,
-  XRPCError,
-  InvalidRequestError,
-  HandlerSuccess,
-  handlerSuccess,
-  XRPCHandlerConfig,
-  MethodNotImplementedError,
-  HandlerAuth,
   AuthVerifier,
-  isHandlerError,
-  Options,
-  XRPCStreamHandlerConfig,
-  XRPCStreamHandler,
-  Params,
-  InternalServerError,
-  XRPCReqContext,
-  RateLimiterI,
-  RateLimiterConsume,
-  isShared,
-  RateLimitExceededError,
-  handlerPipeThroughStream,
-  handlerPipeThroughBuffer,
+  HandlerAuth,
   HandlerPipeThrough,
+  HandlerSuccess,
+  InternalServerError,
+  InvalidRequestError,
+  isHandlerError,
+  isHandlerPipeThroughBuffer,
+  isHandlerPipeThroughStream,
+  isShared,
+  MethodNotImplementedError,
+  Options,
+  Params,
+  RateLimiterConsume,
+  RateLimiterI,
+  RateLimitExceededError,
+  XRPCError,
+  XRPCHandler,
+  XRPCHandlerConfig,
+  XRPCReqContext,
+  XRPCStreamHandler,
+  XRPCStreamHandlerConfig,
 } from './types'
 import {
   decodeQueryParams,
@@ -53,8 +53,6 @@ import {
   validateInput,
   validateOutput,
 } from './util'
-import log from './logger'
-import { consumeMany } from './rate-limiter'
 
 export function createServer(lexicons?: LexiconDoc[], options?: Options) {
   return new Server(lexicons, options)
@@ -247,8 +245,8 @@ export class Server {
       validateInput(nsid, def, req, routeOpts, this.lex)
     const validateResOutput =
       this.options.validateResponse === false
-        ? (output?: HandlerSuccess) => output
-        : (output?: HandlerSuccess) =>
+        ? null
+        : (output: undefined | HandlerSuccess) =>
             validateOutput(nsid, def, output, this.lex)
     const assertValidXrpcParams = (params: unknown) =>
       this.lex.assertValidXrpcParams(nsid, params)
@@ -284,58 +282,48 @@ export class Server {
         }
 
         // run the handler
-        const outputUnvalidated = await routeCfg.handler(reqCtx)
+        const output = await routeCfg.handler(reqCtx)
 
-        if (isHandlerError(outputUnvalidated)) {
-          throw XRPCError.fromError(outputUnvalidated)
-        }
-
-        if (isHandlerPipeThroughBuffer(outputUnvalidated)) {
-          setHeaders(res, outputUnvalidated)
-          res
-            .status(200)
-            .header('Content-Type', outputUnvalidated.encoding)
-            .end(outputUnvalidated.buffer)
-          return
-        }
-
-        if (isHandlerPipeThroughStream(outputUnvalidated)) {
-          setHeaders(res, outputUnvalidated)
+        if (!output) {
+          validateResOutput?.(output)
           res.status(200)
-          res.header('Content-Type', outputUnvalidated.encoding)
-          await pipeline(outputUnvalidated.stream, res)
-          return
-        }
-
-        if (!outputUnvalidated || isHandlerSuccess(outputUnvalidated)) {
-          // validate response
-          const output = validateResOutput(outputUnvalidated)
-          // set headers
+          res.end()
+        } else if (isHandlerPipeThroughStream(output)) {
           setHeaders(res, output)
-          // send response
+          res.status(200)
+          res.header('Content-Type', output.encoding)
+          await pipeline(output.stream, res)
+        } else if (isHandlerPipeThroughBuffer(output)) {
+          setHeaders(res, output)
+          res.status(200)
+          res.header('Content-Type', output.encoding)
+          res.end(output.buffer)
+        } else if (isHandlerError(output)) {
+          next(XRPCError.fromError(output))
+        } else {
+          validateResOutput?.(output)
+
+          res.status(200)
+          setHeaders(res, output)
+
           if (
-            output?.encoding === 'application/json' ||
-            output?.encoding === 'json'
+            output.encoding === 'application/json' ||
+            output.encoding === 'json'
           ) {
             const json = lexToJson(output.body)
-            res.status(200).json(json)
-          } else if (output?.body instanceof Readable) {
+            res.json(json)
+          } else if (output.body instanceof Readable) {
             res.header('Content-Type', output.encoding)
-            res.status(200)
             await pipeline(output.body, res)
-          } else if (output) {
-            res
-              .header('Content-Type', output.encoding)
-              .status(200)
-              .send(
-                Buffer.isBuffer(output.body)
-                  ? output.body
-                  : output.body instanceof Uint8Array
-                    ? Buffer.from(output.body)
-                    : output.body,
-              )
           } else {
-            res.status(200).end()
+            res.header('Content-Type', output.encoding)
+            res.send(
+              Buffer.isBuffer(output.body)
+                ? output.body
+                : output.body instanceof Uint8Array
+                  ? Buffer.from(output.body)
+                  : output.body,
+            )
           }
         }
       } catch (err: unknown) {
@@ -484,20 +472,11 @@ export class Server {
   }
 }
 
-const createValidator =
-  <T>(schema: ZodSchema<T>) =>
-  (v: unknown): v is T =>
-    schema.safeParse(v).success
-
-const isHandlerSuccess = createValidator(handlerSuccess)
-const isHandlerPipeThroughStream = createValidator(handlerPipeThroughStream)
-const isHandlerPipeThroughBuffer = createValidator(handlerPipeThroughBuffer)
-
 function setHeaders(
   res: Response,
-  result?: HandlerSuccess | HandlerPipeThrough,
+  result: HandlerSuccess | HandlerPipeThrough,
 ) {
-  const headers = result?.headers
+  const { headers } = result
   if (headers) {
     for (const [name, val] of Object.entries(headers)) {
       if (val != null) res.header(name, val)

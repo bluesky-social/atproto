@@ -7,20 +7,13 @@ import {
   LocalRecords,
 } from '../../../../read-after-write'
 
-const METHOD_NSID = 'app.bsky.actor.getProfiles'
-
 export default function (server: Server, ctx: AppContext) {
   const { bskyAppView } = ctx.cfg
   if (!bskyAppView) return
   server.app.bsky.actor.getProfiles({
     auth: ctx.authVerifier.accessStandard(),
     handler: async (reqCtx) => {
-      return pipethroughReadAfterWrite(
-        ctx,
-        reqCtx,
-        METHOD_NSID,
-        getProfilesMunge,
-      )
+      return pipethroughReadAfterWrite(ctx, reqCtx, getProfilesMunge)
     },
   })
 }

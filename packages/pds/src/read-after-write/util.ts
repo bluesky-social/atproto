@@ -3,6 +3,7 @@ import { HeadersMap } from '@atproto/xrpc'
 import {
   HandlerPipeThrough,
   HandlerPipeThroughBuffer,
+  parseReqNsid,
 } from '@atproto/xrpc-server'
 import express from 'express'
 
@@ -33,7 +34,6 @@ export const getLocalLag = (local: LocalRecords): number | undefined => {
 export const pipethroughReadAfterWrite = async <T>(
   ctx: AppContext,
   reqCtx: { req: express.Request; auth: { credentials: { did: string } } },
-  nsid: string,
   munge: MungeFn<T>,
 ): Promise<HandlerResponse<T> | HandlerPipeThrough> => {
   const { req, auth } = reqCtx
@@ -44,24 +44,24 @@ export const pipethroughReadAfterWrite = async <T>(
   const rev = upstreamRes.headers && getRepoRev(upstreamRes.headers)
   if (!rev) return upstreamRes
 
+  // if the munging fails, we can't return the original response because the
+  // stream will already have been read. If we end-up buffering the response,
+  // we'll return the buffered response in case of an error.
   let bufferedRes: HandlerPipeThroughBuffer | undefined
 
   try {
     return await ctx.actorStore.read(requester, async (store) => {
       const local = await getRecordsSinceRev(store, rev)
-      if (local.count === 0) {
-        return upstreamRes
-      }
+      if (local.count === 0) return upstreamRes
+
       const localViewer = ctx.localViewer(store)
 
-      // if the munging fails, we can't return the original response because the
-      // stream has already been read. In that case, we'll return a buffered
-      // response instead.
       bufferedRes = await asPipeThroughBuffer(upstreamRes)
 
       const value = safeParseJson(bufferedRes!.buffer.toString('utf8'))
       const lex = value && jsonToLex(value)
 
+      const nsid = parseReqNsid(req)
       const parsedRes = lexicons.assertValidXrpcOutput(nsid, lex) as T
 
       const data = await munge(localViewer, parsedRes, local, requester)

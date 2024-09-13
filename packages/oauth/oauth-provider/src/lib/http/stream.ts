@@ -1,4 +1,4 @@
-import { streamToBytes } from '@atproto/common'
+import { streamToNodeBuffer } from '@atproto/common'
 import { Readable } from 'node:stream'
 
 import {
@@ -11,6 +11,12 @@ import {
   parsers,
 } from './parser.js'
 
+/**
+ * Generic method that parses a stream of unknown nature (HTTP request/response,
+ * socket, file, etc.), but of known mime type, into a parsed object.
+ *
+ * @throws {TypeError} If the content-type is not valid or supported.
+ */
 export async function parseStream<
   T extends KnownTypes,
   A extends readonly KnownNames[] = readonly KnownNames[],
@@ -33,12 +39,6 @@ export async function parseStream(
   contentType: unknown = 'application/octet-stream',
   allow?: string[],
 ): Promise<ParserResult<KnownParser>> {
-  if (typeof contentType !== 'string') {
-    throw new TypeError(
-      `Invalid content-type: ${contentType == null ? String(contentType) : typeof contentType}`,
-    )
-  }
-
   const type = parseContentType(contentType)
 
   const parser = parsers.find(
@@ -50,6 +50,6 @@ export async function parseStream(
     throw new TypeError(`Unsupported content-type: ${type.mime}`)
   }
 
-  const buffer = await streamToBytes(req)
+  const buffer = await streamToNodeBuffer(req)
   return parser.parse(buffer, type)
 }

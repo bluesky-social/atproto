@@ -27,12 +27,19 @@ export const cloneStream = (stream: Readable): Readable => {
 export const streamSize = async (stream: Readable): Promise<number> => {
   let size = 0
   for await (const chunk of stream) {
-    size += chunk.length
+    size += Buffer.byteLength(chunk)
   }
   return size
 }
 
-export const streamToBytes = async (
+export const streamToBytes = async (stream: AsyncIterable<Uint8Array>) =>
+  // @NOTE Though Buffer is a sub-class of Uint8Array, we have observed
+  // inconsistencies when using a Buffer in place of Uint8Array. For this
+  // reason, we convert the Buffer to a Uint8Array.
+  new Uint8Array(await streamToNodeBuffer(stream))
+
+// streamToBuffer identifier name already taken by @atproto/common-web
+export const streamToNodeBuffer = async (
   stream: Iterable<Uint8Array> | AsyncIterable<Uint8Array>,
 ): Promise<Buffer> => {
   const chunks: Uint8Array[] = []
@@ -45,7 +52,6 @@ export const streamToBytes = async (
       throw new TypeError('expected Uint8Array')
     }
   }
-  // Note Buffer is a subclass of Uint8Array
   return Buffer.concat(chunks, totalLength)
 }
 

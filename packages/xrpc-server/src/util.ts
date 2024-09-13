@@ -156,7 +156,7 @@ export function validateOutput(
   def: LexXrpcProcedure | LexXrpcQuery,
   output: HandlerSuccess | undefined,
   lexicons: Lexicons,
-): HandlerSuccess | undefined {
+): void {
   // initial validation
   if (output) {
     handlerSuccess.parse(output)
@@ -196,8 +196,6 @@ export function validateOutput(
       throw new InternalServerError(e instanceof Error ? e.message : String(e))
     }
   }
-
-  return output
 }
 
 export function normalizeMime(v: string) {
@@ -321,38 +319,70 @@ export interface ServerTiming {
   description?: string
 }
 
-const XRPC_PATH_PREFIX = '/xrpc/'
+export const parseReqNsid = (req: express.Request | IncomingMessage) =>
+  parseUrlNsid('originalUrl' in req ? req.originalUrl : req.url || '/')
 
-export const parseReqNsid = (
-  req: express.Request | IncomingMessage,
-): string => {
+/**
+ * Validates and extracts the nsid from an xrpc path
+ */
+export const parseUrlNsid = (url: string): string => {
   // /!\ Hot path
 
-  const originalUrl = ('originalUrl' in req && req.originalUrl) || req.url
-
-  // Optimized version of:
-
-  // const nsid = originalUrl.split('?')[0].replace('/xrpc/', '')
-  // return nsid.endsWith('/') ? nsid.slice(0, -1) : nsid
-
-  if (!originalUrl?.startsWith(XRPC_PATH_PREFIX)) {
+  if (
+    // Ordered by likelihood of failure
+    url.length <= 6 ||
+    url[5] !== '/' ||
+    url[4] !== 'c' ||
+    url[3] !== 'p' ||
+    url[2] !== 'r' ||
+    url[1] !== 'x' ||
+    url[0] !== '/'
+  ) {
     throw new InvalidRequestError('invalid xrpc path')
   }
 
-  const startOfNsid = XRPC_PATH_PREFIX.length
+  const startOfNsid = 6
 
-  const queryIdx = originalUrl.indexOf('?', startOfNsid)
-  const endOfPath = queryIdx === -1 ? originalUrl.length : queryIdx
+  let curr = startOfNsid
+  let char: number
+  let alphaNumRequired = true
+  for (; curr < url.length; curr++) {
+    char = url.charCodeAt(curr)
+    if (
+      (char >= 48 && char <= 57) || // 0-9
+      (char >= 65 && char <= 90) || // A-Z
+      (char >= 97 && char <= 122) // a-z
+    ) {
+      alphaNumRequired = false
+    } else if (char === 45 /* "-" */ || char === 46 /* "." */) {
+      if (alphaNumRequired) {
+        throw new InvalidRequestError('invalid xrpc path')
+      }
+      alphaNumRequired = true
+    } else if (char === 47 /* "/" */) {
+      // Allow trailing slash (next char is either EOS or "?")
+      if (curr === url.length - 1 || url.charCodeAt(curr + 1) === 63) {
+        break
+      }
+      throw new InvalidRequestError('invalid xrpc path')
+    } else if (char === 63 /* "?"" */) {
+      break
+    } else {
+      throw new InvalidRequestError('invalid xrpc path')
+    }
+  }
 
-  const slashIdx = originalUrl.indexOf('/', startOfNsid)
-
-  const endOfNsid =
-    slashIdx !== -1 && slashIdx < endOfPath ? slashIdx : endOfPath
-
-  // Allow trailing slash
-  if (endOfNsid !== endOfPath && slashIdx !== endOfPath - 1) {
+  // last char was one of: '-', '.', '/'
+  if (alphaNumRequired) {
     throw new InvalidRequestError('invalid xrpc path')
   }
 
-  return originalUrl.slice(startOfNsid, endOfNsid)
+  // A domain name consists of minimum two characters
+  if (curr - startOfNsid < 2) {
+    throw new InvalidRequestError('invalid xrpc path')
+  }
+
+  // @TODO is there a max ?
+
+  return url.slice(startOfNsid, curr)
 }

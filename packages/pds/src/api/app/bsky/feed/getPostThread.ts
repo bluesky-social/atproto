@@ -24,8 +24,6 @@ import {
 } from '../../../../read-after-write'
 import { ids } from '../../../../lexicon/lexicons'
 
-const METHOD_NSID = 'app.bsky.feed.getPostThread'
-
 export default function (server: Server, ctx: AppContext) {
   const { bskyAppView } = ctx.cfg
   if (!bskyAppView) return
@@ -33,12 +31,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.accessStandard(),
     handler: async (reqCtx) => {
       try {
-        return await pipethroughReadAfterWrite(
-          ctx,
-          reqCtx,
-          METHOD_NSID,
-          getPostThreadMunge,
-        )
+        return await pipethroughReadAfterWrite(ctx, reqCtx, getPostThreadMunge)
       } catch (err) {
         if (err instanceof XRPCError && err.error === 'NotFound') {
           const { auth, params } = reqCtx

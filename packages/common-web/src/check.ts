@@ -17,6 +17,11 @@ export const is = <T>(obj: unknown, def: Checkable<T>): obj is T => {
   return def.safeParse(obj).success
 }
 
+export const create =
+  <T>(def: Checkable<T>) =>
+  (v: unknown): v is T =>
+    def.safeParse(v).success
+
 export const assure = <T>(def: Checkable<T>, obj: unknown): T => {
   return def.parse(obj)
 }

@@ -1,14 +1,14 @@
-import { IncomingMessage } from 'http'
-import express from 'express'
-import { isHttpError } from 'http-errors'
-import zod from 'zod'
 import {
   ResponseType,
-  ResponseTypeStrings,
   ResponseTypeNames,
+  ResponseTypeStrings,
   XRPCError as XRPCClientError,
 } from '@atproto/xrpc'
+import express from 'express'
+import { IncomingMessage } from 'http'
+import { isHttpError } from 'http-errors'
 import { Readable } from 'stream'
+import zod from 'zod'
 
 export type CatchallHandler = (
   req: express.Request,
@@ -274,6 +274,20 @@ export function isHandlerError(v: unknown): v is HandlerError {
     (v['error'] === undefined || typeof v['error'] === 'string') &&
     (v['message'] === undefined || typeof v['message'] === 'string')
   )
+}
+
+export function isHandlerPipeThroughBuffer(
+  v: HandlerOutput,
+): v is HandlerPipeThroughBuffer {
+  // We only need to discriminate between possible HandlerOutput values
+  return v['buffer'] !== undefined
+}
+
+export function isHandlerPipeThroughStream(
+  v: HandlerOutput,
+): v is HandlerPipeThroughStream {
+  // We only need to discriminate between possible HandlerOutput values
+  return v['stream'] !== undefined
 }
 
 export class InvalidRequestError extends XRPCError {

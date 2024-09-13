@@ -7,7 +7,7 @@ import {
   decodeStream,
   getServiceEndpoint,
   omit,
-  streamToBytes,
+  streamToNodeBuffer,
 } from '@atproto/common'
 import { ResponseType, XRPCError as XRPCClientError } from '@atproto/xrpc'
 import {
@@ -89,6 +89,7 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
           res.setHeader(name, val)
         }
 
+        // Tell undici to write the upstream response directly to the response
         return res
       })
     } catch (err) {
@@ -269,7 +270,7 @@ async function pipethroughStream(
   dispatchOptions: Dispatcher.RequestOptions,
   successStreamFactory: Dispatcher.StreamFactory,
 ): Promise<void> {
-  await ctx.safeAgent
+  await ctx.proxyAgent
     .stream(dispatchOptions, (upstream) => {
       // Upstream resulted in an error, create a writable stream for undici
       // that will decode & parse the error message and construct an XRPCError
@@ -312,7 +313,10 @@ async function pipethroughRequest(
   ctx: AppContext,
   dispatchOptions: Dispatcher.RequestOptions,
 ) {
-  const upstream = await ctx.safeAgent
+  // HandlerPipeThroughStream requires a readable stream to be returned, so we
+  // use the (less efficient) request() function instead.
+
+  const upstream = await ctx.proxyAgent
     .request(dispatchOptions)
     .catch((err) => handleUpstreamRequestError(err, dispatchOptions))
 
@@ -443,7 +447,7 @@ function isNonNullable<T>(val: T): val is NonNullable<T> {
 export async function bufferUpstreamResponse(
   stream: Readable | AsyncIterable<Uint8Array>,
   contentEncoding?: string | string[],
-) {
+): Promise<Buffer> {
   // Needed for type-safety (should never happen irl)
   if (Array.isArray(contentEncoding)) {
     throw new XRPCServerError(
@@ -453,7 +457,7 @@ export async function bufferUpstreamResponse(
   }
 
   try {
-    return streamToBytes(decodeStream(stream, contentEncoding))
+    return streamToNodeBuffer(decodeStream(stream, contentEncoding))
   } catch (err) {
     throw new XRPCServerError(
       ResponseType.UpstreamFailure,

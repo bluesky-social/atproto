@@ -236,11 +236,16 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
   const crawlersCfg: ServerConfig['crawlers'] = env.crawlers ?? []
 
   const fetchCfg: ServerConfig['fetch'] = {
-    allowHTTP2: env.fetchAllowHTTP2 ?? false,
-    disableSsrfProtection: env.fetchDisableSsrfProtection ?? false,
-    headersTimeout: env.fetchHeadersTimeout ?? 10e3,
-    bodyTimeout: env.fetchBodyTimeout ?? 30e3,
+    disableSsrfProtection: env.disableSsrfProtection ?? env.devMode ?? false,
     maxResponseSize: env.fetchMaxResponseSize ?? 512 * 1024, // 512kb
+  }
+
+  const proxyCfg: ServerConfig['proxy'] = {
+    disableSsrfProtection: env.disableSsrfProtection ?? env.devMode ?? false,
+    allowHTTP2: env.proxyAllowHTTP2 ?? false,
+    headersTimeout: env.proxyHeadersTimeout ?? 10e3,
+    bodyTimeout: env.proxyBodyTimeout ?? 30e3,
+    maxResponseSize: env.proxyMaxResponseSize ?? 10 * 1024 * 1024, // 10mb
   }
 
   const oauthCfg: ServerConfig['oauth'] = entrywayCfg
@@ -306,6 +311,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     rateLimits: rateLimitsCfg,
     crawlers: crawlersCfg,
     fetch: fetchCfg,
+    proxy: proxyCfg,
     oauth: oauthCfg,
   }
 }
@@ -328,6 +334,7 @@ export type ServerConfig = {
   rateLimits: RateLimitsConfig
   crawlers: string[]
   fetch: FetchConfig
+  proxy: ProxyConfig
   oauth: OAuthConfig
 }
 
@@ -396,8 +403,13 @@ export type EntrywayConfig = {
 }
 
 export type FetchConfig = {
-  allowHTTP2: boolean
   disableSsrfProtection: boolean
+  maxResponseSize: number
+}
+
+export type ProxyConfig = {
+  disableSsrfProtection: boolean
+  allowHTTP2: boolean
   headersTimeout: number
   bodyTimeout: number
   maxResponseSize: number

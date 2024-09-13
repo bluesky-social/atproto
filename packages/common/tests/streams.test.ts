@@ -61,10 +61,10 @@ describe('streams', () => {
     })
   })
 
-  describe('streamToBytes', () => {
+  describe('streamToNodeBuffer', () => {
     it('converts stream to byte array', async () => {
       const stream = Readable.from(Buffer.from('foo'))
-      const bytes = await streams.streamToBytes(stream)
+      const bytes = await streams.streamToNodeBuffer(stream)
 
       expect(bytes[0]).toBe('f'.charCodeAt(0))
       expect(bytes[1]).toBe('o'.charCodeAt(0))
@@ -78,7 +78,7 @@ describe('streams', () => {
         yield Buffer.from('a')
         yield new Uint8Array(['r'.charCodeAt(0)])
       })()
-      const bytes = await streams.streamToBytes(iterable)
+      const bytes = await streams.streamToNodeBuffer(iterable)
 
       expect(bytes[0]).toBe('b'.charCodeAt(0))
       expect(bytes[1]).toBe('a'.charCodeAt(0))
@@ -93,7 +93,7 @@ describe('streams', () => {
         yield 'r'
       })()
 
-      await expect(streams.streamToBytes(iterable)).rejects.toThrow(
+      await expect(streams.streamToNodeBuffer(iterable)).rejects.toThrow(
         'expected Uint8Array',
       )
     })

@@ -5,16 +5,25 @@ import createHttpError from 'http-errors'
 export type JsonScalar = string | number | boolean | null
 export type Json = JsonScalar | Json[] | { [_ in string]?: Json }
 
-export const parseContentType = (type: string): ContentType => {
+/**
+ * Parse a content-type string into its components.
+ *
+ * @throws {TypeError} If the content-type is invalid.
+ */
+export const parseContentType = (type: unknown): ContentType => {
+  if (typeof type !== 'string') {
+    throw new TypeError(
+      `Invalid content-type: ${type == null ? String(type) : typeof type}`,
+    )
+  }
+
   try {
     return hapiContentType(type)
   } catch (err) {
     // De-boomify the error
-    if (err?.['isBoom']) {
-      throw createHttpError(err['output']['statusCode'], err['message'])
-    }
-
-    throw err
+    throw new TypeError(
+      err instanceof Error ? err.message : 'Invalid content-type',
+    )
   }
 }
 

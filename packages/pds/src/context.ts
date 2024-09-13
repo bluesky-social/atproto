@@ -63,7 +63,7 @@ export type AppContextOptions = {
   moderationAgent?: AtpAgent
   reportingAgent?: AtpAgent
   entrywayAgent?: AtpAgent
-  safeAgent: undici.Agent
+  proxyAgent: undici.Agent
   safeFetch: Fetch
   authProvider?: PdsOAuthProvider
   authVerifier: AuthVerifier
@@ -90,7 +90,7 @@ export class AppContext {
   public moderationAgent: AtpAgent | undefined
   public reportingAgent: AtpAgent | undefined
   public entrywayAgent: AtpAgent | undefined
-  public safeAgent: undici.Agent
+  public proxyAgent: undici.Agent
   public safeFetch: Fetch
   public authVerifier: AuthVerifier
   public authProvider?: PdsOAuthProvider
@@ -116,7 +116,7 @@ export class AppContext {
     this.moderationAgent = opts.moderationAgent
     this.reportingAgent = opts.reportingAgent
     this.entrywayAgent = opts.entrywayAgent
-    this.safeAgent = opts.safeAgent
+    this.proxyAgent = opts.proxyAgent
     this.safeFetch = opts.safeFetch
     this.authVerifier = opts.authVerifier
     this.authProvider = opts.authProvider
@@ -263,27 +263,27 @@ export class AppContext {
       appviewCdnUrlPattern: cfg.bskyAppView?.cdnUrlPattern,
     })
 
-    const safeAgent = new undici.Agent({
-      allowH2: cfg.fetch.allowHTTP2, // This is experimental
-      headersTimeout: cfg.fetch.headersTimeout,
-      maxResponseSize: cfg.fetch.maxResponseSize,
-      bodyTimeout: cfg.fetch.bodyTimeout,
-      factory:
-        cfg.fetch.disableSsrfProtection || cfg.service.devMode
-          ? undefined
-          : (origin, opts) => {
-              const { protocol, hostname } =
-                origin instanceof URL ? origin : new URL(origin)
-              if (protocol !== 'https:') {
-                throw new Error(`Forbidden protocol "${protocol}"`)
-              }
-              if (isUnicastIp(hostname) === false) {
-                throw new Error('Hostname resolved to non-unicast address')
-              }
-              return new undici.Pool(origin, opts)
-            },
+    // An agent for performing HTTP requests based on user provided URLs.
+    const proxyAgent = new undici.Agent({
+      allowH2: cfg.proxy.allowHTTP2, // This is experimental
+      headersTimeout: cfg.proxy.headersTimeout,
+      maxResponseSize: cfg.proxy.maxResponseSize,
+      bodyTimeout: cfg.proxy.bodyTimeout,
+      factory: cfg.proxy.disableSsrfProtection
+        ? undefined
+        : (origin, opts) => {
+            const { protocol, hostname } =
+              origin instanceof URL ? origin : new URL(origin)
+            if (protocol !== 'https:') {
+              throw new Error(`Forbidden protocol "${protocol}"`)
+            }
+            if (isUnicastIp(hostname) === false) {
+              throw new Error('Hostname resolved to non-unicast address')
+            }
+            return new undici.Pool(origin, opts)
+          },
       connect: {
-        lookup: cfg.fetch.disableSsrfProtection ? undefined : unicastLookup,
+        lookup: cfg.proxy.disableSsrfProtection ? undefined : unicastLookup,
       },
     })
 
@@ -291,7 +291,6 @@ export class AppContext {
     // known bad domains. This function can safely be used to fetch user
     // provided URLs (unless "disableSsrfProtection" is true, of course).
     const safeFetch = safeFetchWrap({
-      allowHttp: cfg.fetch.disableSsrfProtection,
       responseMaxSize: cfg.fetch.maxResponseSize,
       ssrfProtection: !cfg.fetch.disableSsrfProtection,
       fetch: async (input, init) => {
@@ -364,7 +363,7 @@ export class AppContext {
       moderationAgent,
       reportingAgent,
       entrywayAgent,
-      safeAgent,
+      proxyAgent,
       safeFetch,
       authVerifier,
       authProvider,
