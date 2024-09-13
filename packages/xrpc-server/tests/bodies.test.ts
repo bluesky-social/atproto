@@ -1,9 +1,9 @@
 import * as http from 'http'
 import { Readable } from 'stream'
-import { gzipSync } from 'zlib'
+import { brotliCompressSync, deflateSync, gzipSync } from 'zlib'
 import getPort from 'get-port'
 import { LexiconDoc } from '@atproto/lexicon'
-import { XrpcClient } from '@atproto/xrpc'
+import { ResponseType, XrpcClient } from '@atproto/xrpc'
 import { cidForCbor } from '@atproto/common'
 import { randomBytes } from '@atproto/crypto'
 import { createServer, closeServer } from './_util'
@@ -91,13 +91,25 @@ const BLOB_LIMIT = 5000
 async function consumeInput(
   input: Readable | string | object,
 ): Promise<Buffer> {
-  if (typeof input === 'string') return Buffer.from(input)
+  if (Buffer.isBuffer(input)) {
+    return input
+  }
+  if (typeof input === 'string') {
+    return Buffer.from(input)
+  }
   if (input instanceof Readable) {
-    const buffers: Buffer[] = []
-    for await (const data of input) {
-      buffers.push(data)
+    try {
+      return Buffer.concat(await input.toArray())
+    } catch (err) {
+      if (err instanceof xrpcServer.XRPCError) {
+        throw err
+      } else {
+        throw new xrpcServer.XRPCError(
+          ResponseType.InvalidRequest,
+          'unable to read input',
+        )
+      }
     }
-    return Buffer.concat(buffers)
   }
   throw new Error('Invalid input')
 }
@@ -111,10 +123,16 @@ describe('Bodies', () => {
   })
   server.method(
     'io.example.validationTest',
-    (ctx: { params: xrpcServer.Params; input?: xrpcServer.HandlerInput }) => ({
-      encoding: 'json',
-      body: ctx.input?.body,
-    }),
+    (ctx: { params: xrpcServer.Params; input?: xrpcServer.HandlerInput }) => {
+      if (ctx.input?.body instanceof Readable) {
+        throw new Error('Input is readable')
+      }
+
+      return {
+        encoding: 'json',
+        body: ctx.input?.body ?? null,
+      }
+    },
   )
   server.method('io.example.validationTestTwo', () => ({
     encoding: 'json',
@@ -338,21 +356,32 @@ describe('Bodies', () => {
     expect(streamResponse.data.cid).toEqual(expectedCid.toString())
   })
 
-  it('supports blobs and compression', async () => {
+  it('supports blob uploads', async () => {
     const bytes = randomBytes(1024)
     const expectedCid = await cidForCbor(bytes)
 
-    const { data: uncompressed } = await client.call(
-      'io.example.blobTest',
-      {},
-      bytes,
-      {
-        encoding: 'application/octet-stream',
-      },
-    )
-    expect(uncompressed.cid).toEqual(expectedCid.toString())
+    const { data } = await client.call('io.example.blobTest', {}, bytes, {
+      encoding: 'application/octet-stream',
+    })
+    expect(data.cid).toEqual(expectedCid.toString())
+  })
 
-    const { data: compressed } = await client.call(
+  it(`supports identity encoding`, async () => {
+    const bytes = randomBytes(1024)
+    const expectedCid = await cidForCbor(bytes)
+
+    const { data } = await client.call('io.example.blobTest', {}, bytes, {
+      encoding: 'application/octet-stream',
+      headers: { 'content-encoding': 'identity' },
+    })
+    expect(data.cid).toEqual(expectedCid.toString())
+  })
+
+  it('supports gzip encoding', async () => {
+    const bytes = randomBytes(1024)
+    const expectedCid = await cidForCbor(bytes)
+
+    const { data } = await client.call(
       'io.example.blobTest',
       {},
       gzipSync(bytes),
@@ -363,7 +392,79 @@ describe('Bodies', () => {
         },
       },
     )
-    expect(compressed.cid).toEqual(expectedCid.toString())
+    expect(data.cid).toEqual(expectedCid.toString())
+  })
+
+  it('supports deflate encoding', async () => {
+    const bytes = randomBytes(1024)
+    const expectedCid = await cidForCbor(bytes)
+
+    const { data } = await client.call(
+      'io.example.blobTest',
+      {},
+      deflateSync(bytes),
+      {
+        encoding: 'application/octet-stream',
+        headers: {
+          'content-encoding': 'deflate',
+        },
+      },
+    )
+    expect(data.cid).toEqual(expectedCid.toString())
+  })
+
+  it('supports br encoding', async () => {
+    const bytes = randomBytes(1024)
+    const expectedCid = await cidForCbor(bytes)
+
+    const { data } = await client.call(
+      'io.example.blobTest',
+      {},
+      brotliCompressSync(bytes),
+      {
+        encoding: 'application/octet-stream',
+        headers: {
+          'content-encoding': 'br',
+        },
+      },
+    )
+    expect(data.cid).toEqual(expectedCid.toString())
+  })
+
+  it('supports multiple encodings', async () => {
+    const bytes = randomBytes(1024)
+    const expectedCid = await cidForCbor(bytes)
+
+    const { data } = await client.call(
+      'io.example.blobTest',
+      {},
+      brotliCompressSync(deflateSync(gzipSync(bytes))),
+      {
+        encoding: 'application/octet-stream',
+        headers: {
+          'content-encoding': 'gzip, identity, deflate, identity, br, identity',
+        },
+      },
+    )
+    expect(data.cid).toEqual(expectedCid.toString())
+  })
+
+  it('fails gracefully on invalid encodings', async () => {
+    const bytes = randomBytes(1024)
+
+    const promise = client.call(
+      'io.example.blobTest',
+      {},
+      brotliCompressSync(bytes),
+      {
+        encoding: 'application/octet-stream',
+        headers: {
+          'content-encoding': 'gzip',
+        },
+      },
+    )
+
+    await expect(promise).rejects.toThrow('unable to read input')
   })
 
   it('supports empty payload', async () => {
@@ -428,9 +529,7 @@ describe('Bodies', () => {
     })
   })
 
-  // @TODO: figure out why this is failing dependent on the prev test being run
-  // https://github.com/bluesky-social/atproto/pull/550/files#r1106400413
-  it.skip('errors on an empty Content-type on blob upload', async () => {
+  it('errors on an empty Content-type on blob upload', async () => {
     // empty mimetype, but correct syntax
     const res = await fetch(`${url}/xrpc/io.example.blobTest`, {
       method: 'post',

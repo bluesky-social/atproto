@@ -50,15 +50,31 @@ export const addAccountInfoToRepoViewDetail = (
   includeEmail = false,
 ): RepoViewDetail => {
   if (!accountInfo) return repoView
+  const {
+    email,
+    deactivatedAt,
+    emailConfirmedAt,
+    inviteNote,
+    invitedBy,
+    invites,
+    invitesDisabled,
+    // pick some duplicate/unwanted details out
+    did: _did,
+    handle: _handle,
+    indexedAt: _indexedAt,
+    relatedRecords: _relatedRecords,
+    ...otherAccountInfo
+  } = accountInfo
   return {
+    ...otherAccountInfo,
     ...repoView,
-    email: includeEmail ? accountInfo.email : undefined,
-    invitedBy: accountInfo.invitedBy,
-    invitesDisabled: accountInfo.invitesDisabled,
-    inviteNote: accountInfo.inviteNote,
-    invites: accountInfo.invites,
-    emailConfirmedAt: accountInfo.emailConfirmedAt,
-    deactivatedAt: accountInfo.deactivatedAt,
+    email: includeEmail ? email : undefined,
+    invitedBy,
+    invitesDisabled,
+    inviteNote,
+    invites,
+    emailConfirmedAt,
+    deactivatedAt,
   }
 }
 

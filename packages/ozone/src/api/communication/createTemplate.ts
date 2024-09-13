@@ -1,6 +1,7 @@
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../lexicon'
 import AppContext from '../../context'
+import { isDuplicateTemplateNameError } from '../../communication-service/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.tools.ozone.communication.createTemplate({
@@ -8,7 +9,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ input, auth }) => {
       const access = auth.credentials
       const db = ctx.db
-      const { createdBy, ...template } = input.body
+      const { createdBy, lang, ...template } = input.body
 
       if (!access.isModerator) {
         throw new AuthRequiredError(
@@ -22,15 +23,28 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const communicationTemplate = ctx.communicationTemplateService(db)
-      const newTemplate = await communicationTemplate.create({
-        ...template,
-        disabled: false,
-        lastUpdatedBy: createdBy,
-      })
 
-      return {
-        encoding: 'application/json',
-        body: communicationTemplate.view(newTemplate),
+      try {
+        const newTemplate = await communicationTemplate.create({
+          ...template,
+          // We are not using ?? here because we want to use null instead of potentially empty string
+          lang: lang || null,
+          disabled: false,
+          lastUpdatedBy: createdBy,
+        })
+
+        return {
+          encoding: 'application/json',
+          body: communicationTemplate.view(newTemplate),
+        }
+      } catch (err) {
+        if (isDuplicateTemplateNameError(err)) {
+          throw new InvalidRequestError(
+            `${template.name} already exists. Please choose a different name.`,
+            'DuplicateTemplateName',
+          )
+        }
+        throw err
       }
     },
   })

@@ -8,6 +8,7 @@ export interface ServerConfigValues {
   publicUrl?: string
   serverDid: string
   alternateAudienceDids: string[]
+  entrywayJwtPublicKeyHex?: string
   // external services
   dataplaneUrls: string[]
   dataplaneHttpVersion?: '1.1' | '2'
@@ -56,6 +57,8 @@ export class ServerConfig {
     const alternateAudienceDids = process.env.BSKY_ALT_AUDIENCE_DIDS
       ? process.env.BSKY_ALT_AUDIENCE_DIDS.split(',')
       : []
+    const entrywayJwtPublicKeyHex =
+      process.env.BSKY_ENTRYWAY_JWT_PUBLIC_KEY_HEX || undefined
     const handleResolveNameservers = process.env.BSKY_HANDLE_RESOLVE_NAMESERVERS
       ? process.env.BSKY_HANDLE_RESOLVE_NAMESERVERS.split(',')
       : []
@@ -126,6 +129,7 @@ export class ServerConfig {
       publicUrl,
       serverDid,
       alternateAudienceDids,
+      entrywayJwtPublicKeyHex,
       dataplaneUrls,
       dataplaneHttpVersion,
       dataplaneIgnoreBadTls,
@@ -192,6 +196,10 @@ export class ServerConfig {
 
   get alternateAudienceDids() {
     return this.cfg.alternateAudienceDids
+  }
+
+  get entrywayJwtPublicKeyHex() {
+    return this.cfg.entrywayJwtPublicKeyHex
   }
 
   get dataplaneUrls() {

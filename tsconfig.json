@@ -33,6 +33,7 @@
     { "path": "./packages/ozone" },
     { "path": "./packages/pds" },
     { "path": "./packages/repo" },
+    { "path": "./packages/sync" },
     { "path": "./packages/syntax" },
     { "path": "./packages/xrpc" },
     { "path": "./packages/xrpc-server" }

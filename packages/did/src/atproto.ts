@@ -1,12 +1,11 @@
 import { InvalidDidError } from './did-error.js'
 import { Did } from './did.js'
 import {
-  checkDidPlc,
-  checkDidWeb,
+  assertDidPlc,
+  assertDidWeb,
   DID_PLC_PREFIX,
   DID_WEB_PREFIX,
   isDidPlc,
-  isDidWeb,
 } from './methods.js'
 
 // This file contains atproto-specific DID validation utilities.
@@ -30,17 +29,17 @@ export function isAtprotoDid(input: unknown): input is AtprotoDid {
 }
 
 export function asAtprotoDid(input: unknown): AtprotoDid {
-  checkAtprotoDid(input)
+  assertAtprotoDid(input)
   return input
 }
 
-export function checkAtprotoDid(input: unknown): asserts input is AtprotoDid {
+export function assertAtprotoDid(input: unknown): asserts input is AtprotoDid {
   if (typeof input !== 'string') {
     throw new InvalidDidError(typeof input, `DID must be a string`)
   } else if (input.startsWith(DID_PLC_PREFIX)) {
-    checkDidPlc(input)
+    assertDidPlc(input)
   } else if (input.startsWith(DID_WEB_PREFIX)) {
-    checkDidWeb(input)
+    assertAtprotoDidWeb(input)
   } else {
     throw new InvalidDidError(
       input,
@@ -49,27 +48,37 @@ export function checkAtprotoDid(input: unknown): asserts input is AtprotoDid {
   }
 }
 
-/**
- * @see {@link https://atproto.com/specs/did#blessed-did-methods}
- */
-export function isAtprotoDidWeb(input: unknown): input is Did<'web'> {
-  // Optimization: make cheap checks first
-  if (typeof input !== 'string') {
-    return false
-  }
+export function assertAtprotoDidWeb(
+  input: unknown,
+): asserts input is Did<'web'> {
+  assertDidWeb(input)
 
-  // Path are not allowed
   if (input.includes(':', DID_WEB_PREFIX.length)) {
-    return false
+    throw new InvalidDidError(
+      input,
+      `Atproto does not allow path components in Web DIDs`,
+    )
   }
 
-  // Port numbers are not allowed, except for localhost
   if (
     input.includes('%3A', DID_WEB_PREFIX.length) &&
     !input.startsWith('did:web:localhost%3A')
   ) {
+    throw new InvalidDidError(
+      input,
+      `Atproto does not allow port numbers in Web DIDs, except for localhost`,
+    )
+  }
+}
+
+/**
+ * @see {@link https://atproto.com/specs/did#blessed-did-methods}
+ */
+export function isAtprotoDidWeb(input: unknown): input is Did<'web'> {
+  try {
+    assertAtprotoDidWeb(input)
+    return true
+  } catch {
     return false
   }
-
-  return isDidWeb(input)
 }

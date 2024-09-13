@@ -10466,6 +10466,11 @@ export const schemaDict = {
                 type: 'string',
                 description: 'Subject of the message, used in emails.',
               },
+              lang: {
+                type: 'string',
+                format: 'language',
+                description: 'Message language.',
+              },
               createdBy: {
                 type: 'string',
                 format: 'did',
@@ -10481,6 +10486,11 @@ export const schemaDict = {
             ref: 'lex:tools.ozone.communication.defs#templateView',
           },
         },
+        errors: [
+          {
+            name: 'DuplicateTemplateName',
+          },
+        ],
       },
     },
   },
@@ -10518,6 +10528,11 @@ export const schemaDict = {
           },
           disabled: {
             type: 'boolean',
+          },
+          lang: {
+            type: 'string',
+            format: 'language',
+            description: 'Message language.',
           },
           lastUpdatedBy: {
             type: 'string',
@@ -10606,6 +10621,11 @@ export const schemaDict = {
                 type: 'string',
                 description: 'Name of the template.',
               },
+              lang: {
+                type: 'string',
+                format: 'language',
+                description: 'Message language.',
+              },
               contentMarkdown: {
                 type: 'string',
                 description:
@@ -10633,6 +10653,11 @@ export const schemaDict = {
             ref: 'lex:tools.ozone.communication.defs#templateView',
           },
         },
+        errors: [
+          {
+            name: 'DuplicateTemplateName',
+          },
+        ],
       },
     },
   },
@@ -11432,6 +11457,7 @@ export const schemaDict = {
                   'lex:tools.ozone.moderation.defs#modEventMuteReporter',
                   'lex:tools.ozone.moderation.defs#modEventUnmuteReporter',
                   'lex:tools.ozone.moderation.defs#modEventReverseTakedown',
+                  'lex:tools.ozone.moderation.defs#modEventResolveAppeal',
                   'lex:tools.ozone.moderation.defs#modEventEmail',
                   'lex:tools.ozone.moderation.defs#modEventTag',
                 ],

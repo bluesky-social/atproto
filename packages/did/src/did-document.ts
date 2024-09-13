@@ -117,34 +117,26 @@ export type DidDocument<Method extends string = string> = z.infer<
 
 // @TODO: add other refinements ?
 export const didDocumentValidator = didDocumentSchema
-  .superRefine((data, ctx) => {
-    if (data.service) {
-      for (let i = 0; i < data.service.length; i++) {
-        if (data.service[i].id === data.id) {
+  // Ensure that every service id is unique
+  .superRefine(({ id: did, service }, ctx) => {
+    if (service) {
+      const visited = new Set()
+
+      for (let i = 0; i < service.length; i++) {
+        const current = service[i]
+
+        const serviceId = current.id.startsWith('#')
+          ? `${did}${current.id}`
+          : current.id
+
+        if (!visited.has(serviceId)) {
+          visited.add(serviceId)
+        } else {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            message: `Service id must be different from the document id`,
+            message: `Duplicate service id (${current.id}) found in the document`,
             path: ['service', i, 'id'],
           })
-        }
-      }
-    }
-  })
-  .superRefine((data, ctx) => {
-    if (data.service) {
-      const normalizedIds = data.service.map((s) =>
-        s.id?.startsWith('#') ? `${data.id}${s.id}` : s.id,
-      )
-
-      for (let i = 0; i < normalizedIds.length; i++) {
-        for (let j = i + 1; j < normalizedIds.length; j++) {
-          if (normalizedIds[i] === normalizedIds[j]) {
-            ctx.addIssue({
-              code: z.ZodIssueCode.custom,
-              message: `Duplicate service id (${normalizedIds[j]}) found in the document`,
-              path: ['service', j, 'id'],
-            })
-          }
         }
       }
     }

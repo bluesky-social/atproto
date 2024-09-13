@@ -83,7 +83,7 @@ type AsDidMethodInternal<
  * Check if the input is a valid DID method name, at the position between
  * `start` (inclusive) and `end` (exclusive).
  */
-export function checkDidMethod(
+export function assertDidMethod(
   input: string,
   start = 0,
   end = input.length,
@@ -130,7 +130,7 @@ export function extractDidMethod<D extends Did>(did: D) {
  * Check if the input is a valid DID method-specific identifier, at the position
  * between `start` (inclusive) and `end` (exclusive).
  */
-export function checkDidMsid(
+export function assertDidMsid(
   input: string,
   start = 0,
   end = input.length,
@@ -207,7 +207,7 @@ export function checkDidMsid(
   }
 }
 
-export function checkDid(input: unknown): asserts input is Did {
+export function assertDid(input: unknown): asserts input is Did {
   if (typeof input !== 'string') {
     throw new InvalidDidError(typeof input, `DID must be a string`)
   }
@@ -226,13 +226,13 @@ export function checkDid(input: unknown): asserts input is Did {
     throw new InvalidDidError(input, `Missing colon after method name`)
   }
 
-  checkDidMethod(input, DID_PREFIX_LENGTH, idSep)
-  checkDidMsid(input, idSep + 1, length)
+  assertDidMethod(input, DID_PREFIX_LENGTH, idSep)
+  assertDidMsid(input, idSep + 1, length)
 }
 
 export function isDid(input: unknown): input is Did {
   try {
-    checkDid(input)
+    assertDid(input)
     return true
   } catch (err) {
     if (err instanceof DidError) {
@@ -245,7 +245,7 @@ export function isDid(input: unknown): input is Did {
 }
 
 export function asDid(input: unknown): Did {
-  checkDid(input)
+  assertDid(input)
   return input
 }
 
@@ -253,7 +253,7 @@ export const didSchema = z
   .string()
   .superRefine((value: string, ctx: z.RefinementCtx): value is Did => {
     try {
-      checkDid(value)
+      assertDid(value)
       return true
     } catch (err) {
       ctx.addIssue({
