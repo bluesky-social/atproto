@@ -276,6 +276,7 @@ describe('agent', () => {
         bskyAppState: {
           activeProgressGuide: undefined,
           queuedNudges: [],
+          nuxs: [],
         },
       })
 
@@ -317,6 +318,7 @@ describe('agent', () => {
         bskyAppState: {
           activeProgressGuide: undefined,
           queuedNudges: [],
+          nuxs: [],
         },
       })
 
@@ -358,6 +360,7 @@ describe('agent', () => {
         bskyAppState: {
           activeProgressGuide: undefined,
           queuedNudges: [],
+          nuxs: [],
         },
       })
 
@@ -399,6 +402,7 @@ describe('agent', () => {
         bskyAppState: {
           activeProgressGuide: undefined,
           queuedNudges: [],
+          nuxs: [],
         },
       })
 
@@ -444,6 +448,7 @@ describe('agent', () => {
         bskyAppState: {
           activeProgressGuide: undefined,
           queuedNudges: [],
+          nuxs: [],
         },
       })
 
@@ -492,6 +497,7 @@ describe('agent', () => {
         bskyAppState: {
           activeProgressGuide: undefined,
           queuedNudges: [],
+          nuxs: [],
         },
       })
 
@@ -540,6 +546,7 @@ describe('agent', () => {
         bskyAppState: {
           activeProgressGuide: undefined,
           queuedNudges: [],
+          nuxs: [],
         },
       })
 
@@ -588,6 +595,7 @@ describe('agent', () => {
         bskyAppState: {
           activeProgressGuide: undefined,
           queuedNudges: [],
+          nuxs: [],
         },
       })
 
@@ -636,6 +644,7 @@ describe('agent', () => {
         bskyAppState: {
           activeProgressGuide: undefined,
           queuedNudges: [],
+          nuxs: [],
         },
       })
 
@@ -684,6 +693,7 @@ describe('agent', () => {
         bskyAppState: {
           activeProgressGuide: undefined,
           queuedNudges: [],
+          nuxs: [],
         },
       })
 
@@ -738,6 +748,7 @@ describe('agent', () => {
         bskyAppState: {
           activeProgressGuide: undefined,
           queuedNudges: [],
+          nuxs: [],
         },
       })
 
@@ -786,6 +797,7 @@ describe('agent', () => {
         bskyAppState: {
           activeProgressGuide: undefined,
           queuedNudges: [],
+          nuxs: [],
         },
       })
 
@@ -834,6 +846,7 @@ describe('agent', () => {
         bskyAppState: {
           activeProgressGuide: undefined,
           queuedNudges: [],
+          nuxs: [],
         },
       })
 
@@ -882,6 +895,7 @@ describe('agent', () => {
         bskyAppState: {
           activeProgressGuide: undefined,
           queuedNudges: [],
+          nuxs: [],
         },
       })
 
@@ -930,6 +944,7 @@ describe('agent', () => {
         bskyAppState: {
           activeProgressGuide: undefined,
           queuedNudges: [],
+          nuxs: [],
         },
       })
 
@@ -985,6 +1000,7 @@ describe('agent', () => {
         bskyAppState: {
           activeProgressGuide: undefined,
           queuedNudges: [],
+          nuxs: [],
         },
       })
 
@@ -1040,6 +1056,7 @@ describe('agent', () => {
         bskyAppState: {
           activeProgressGuide: undefined,
           queuedNudges: [],
+          nuxs: [],
         },
       })
 
@@ -1095,6 +1112,7 @@ describe('agent', () => {
         bskyAppState: {
           activeProgressGuide: undefined,
           queuedNudges: [],
+          nuxs: [],
         },
       })
 
@@ -1150,6 +1168,7 @@ describe('agent', () => {
         bskyAppState: {
           activeProgressGuide: undefined,
           queuedNudges: [],
+          nuxs: [],
         },
       })
     })
@@ -1332,6 +1351,7 @@ describe('agent', () => {
         bskyAppState: {
           activeProgressGuide: undefined,
           queuedNudges: ['two'],
+          nuxs: [],
         },
       })
 
@@ -1389,6 +1409,7 @@ describe('agent', () => {
         bskyAppState: {
           activeProgressGuide: undefined,
           queuedNudges: ['two'],
+          nuxs: [],
         },
       })
 
@@ -1447,6 +1468,7 @@ describe('agent', () => {
         bskyAppState: {
           activeProgressGuide: undefined,
           queuedNudges: ['two'],
+          nuxs: [],
         },
       })
 
@@ -1501,6 +1523,7 @@ describe('agent', () => {
         bskyAppState: {
           activeProgressGuide: undefined,
           queuedNudges: ['two'],
+          nuxs: [],
         },
       })
 
@@ -1555,6 +1578,7 @@ describe('agent', () => {
         bskyAppState: {
           activeProgressGuide: undefined,
           queuedNudges: ['two'],
+          nuxs: [],
         },
       })
 
@@ -1609,6 +1633,7 @@ describe('agent', () => {
         bskyAppState: {
           activeProgressGuide: undefined,
           queuedNudges: ['two'],
+          nuxs: [],
         },
       })
 
@@ -1675,6 +1700,7 @@ describe('agent', () => {
         bskyAppState: {
           activeProgressGuide: undefined,
           queuedNudges: ['two', 'three'],
+          nuxs: [],
         },
       })
 
@@ -3243,6 +3269,71 @@ describe('agent', () => {
           'bskyAppState.activeProgressGuide',
           undefined,
         )
+      })
+    })
+
+    describe('nuxs', () => {
+      let agent: BskyAgent
+
+      const nux = {
+        id: 'a',
+        completed: false,
+        data: '{}',
+        expiresAt: new Date(Date.now() + 6e3).toISOString(),
+      }
+
+      beforeAll(async () => {
+        agent = new BskyAgent({ service: network.pds.url })
+
+        await agent.createAccount({
+          handle: 'nuxs.test',
+          email: 'nuxs@test.com',
+          password: 'password',
+        })
+      })
+
+      it('bskyAppUpsertNux', async () => {
+        // never duplicates
+        await agent.bskyAppUpsertNux(nux)
+        await agent.bskyAppUpsertNux(nux)
+        await agent.bskyAppUpsertNux(nux)
+
+        const prefs = await agent.getPreferences()
+        const nuxs = prefs.bskyAppState.nuxs
+
+        expect(nuxs.length).toEqual(1)
+        expect(nuxs.find((n) => n.id === nux.id)).toEqual(nux)
+      })
+
+      it('bskyAppUpsertNux completed', async () => {
+        // never duplicates
+        await agent.bskyAppUpsertNux({
+          ...nux,
+          completed: true,
+        })
+
+        const prefs = await agent.getPreferences()
+        const nuxs = prefs.bskyAppState.nuxs
+
+        expect(nuxs.length).toEqual(1)
+        expect(nuxs.find((n) => n.id === nux.id)?.completed).toEqual(true)
+      })
+
+      it('bskyAppRemoveNuxs', async () => {
+        await agent.bskyAppRemoveNuxs([nux.id])
+
+        const prefs = await agent.getPreferences()
+        const nuxs = prefs.bskyAppState.nuxs
+
+        expect(nuxs.length).toEqual(0)
+      })
+
+      it('bskyAppUpsertNux validates nux', async () => {
+        // @ts-expect-error
+        expect(() => agent.bskyAppUpsertNux({ name: 'a' })).rejects.toThrow()
+        expect(() =>
+          agent.bskyAppUpsertNux({ id: 'a', completed: false, foo: 'bar' }),
+        ).rejects.toThrow()
       })
     })
 

@@ -1,5 +1,11 @@
 # @atproto/common
 
+## 0.4.2
+
+### Patch Changes
+
+- [#2464](https://github.com/bluesky-social/atproto/pull/2464) [`98711a147`](https://github.com/bluesky-social/atproto/commit/98711a147a8674337f605c6368f39fc10c2fae93) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Minor optimization
+
 ## 0.4.1
 
 ### Patch Changes

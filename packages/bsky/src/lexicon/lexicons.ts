@@ -4572,6 +4572,15 @@ export const schemaDict = {
               maxLength: 100,
             },
           },
+          nuxs: {
+            description: 'Storage for NUXs the user has encountered.',
+            type: 'array',
+            maxLength: 100,
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.actor.defs#nux',
+            },
+          },
         },
       },
       bskyAppProgressGuide: {
@@ -4583,6 +4592,34 @@ export const schemaDict = {
           guide: {
             type: 'string',
             maxLength: 100,
+          },
+        },
+      },
+      nux: {
+        type: 'object',
+        description: 'A new user experiences (NUX) storage object',
+        required: ['id', 'completed'],
+        properties: {
+          id: {
+            type: 'string',
+            maxLength: 100,
+          },
+          completed: {
+            type: 'boolean',
+            default: false,
+          },
+          data: {
+            description:
+              'Arbitrary data for the NUX. The structure is defined by the NUX itself. Limited to 300 characters.',
+            type: 'string',
+            maxLength: 3000,
+            maxGraphemes: 300,
+          },
+          expiresAt: {
+            type: 'string',
+            format: 'datetime',
+            description:
+              'The date and time at which the NUX will expire and should be considered completed.',
           },
         },
       },
