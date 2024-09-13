@@ -1,3 +1,8 @@
+import express from 'express'
+import { IncomingHttpHeaders } from 'node:http'
+import { Duplex, Readable } from 'node:stream'
+import { Dispatcher } from 'undici'
+
 import {
   decodeStream,
   getServiceEndpoint,
@@ -14,10 +19,6 @@ import {
   parseReqNsid,
   XRPCError as XRPCServerError,
 } from '@atproto/xrpc-server'
-import express from 'express'
-import { IncomingHttpHeaders } from 'node:http'
-import { Duplex, PassThrough, Readable } from 'node:stream'
-import { Dispatcher } from 'undici'
 
 import AppContext from './context'
 import { ids } from './lexicon/lexicons'
@@ -73,25 +74,23 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
           : undefined,
       }
 
-      await pipethroughInternal(
-        ctx,
-        {
-          origin,
-          method: req.method,
-          path: req.originalUrl,
-          body,
-          headers,
-        },
-        (upstream) => {
-          res.status(upstream.statusCode)
+      const dispatchOptions: Dispatcher.RequestOptions = {
+        origin,
+        method: req.method,
+        path: req.originalUrl,
+        body,
+        headers,
+      }
 
-          for (const [name, val] of responseHeaders(upstream.headers)) {
-            res.setHeader(name, val)
-          }
+      await pipethroughStream(ctx, dispatchOptions, (upstream) => {
+        res.status(upstream.statusCode)
 
-          return res
-        },
-      )
+        for (const [name, val] of responseHeaders(upstream.headers)) {
+          res.setHeader(name, val)
+        }
+
+        return res
+      })
     } catch (err) {
       next(err)
     }
@@ -175,96 +174,21 @@ export async function pipethrough(
     method: req.method,
     path: req.originalUrl,
     headers,
+
+    // Use a high water mark to buffer more data while performing async
+    // operations before this stream is consumed. This is especially useful
+    // while processing read-after-write operations.
+    highWaterMark: 2 * 65536, // twice the default (64KiB)
   }
 
-  return new Promise<HandlerPipeThroughStream>((resolve, reject) => {
-    void pipethroughInternal(ctx, dispatchOptions, (upstream) => {
-      const stream = new PassThrough({
-        autoDestroy: true,
-        // Use a high water mark to buffer more data while performing async
-        // operations before this stream is consumed. This is especially useful
-        // while processing read-after-write operations.
-        highWaterMark: 4 * 16384, // 4 times the default (64kb)
-      })
+  const upstream = await pipethroughRequest(ctx, dispatchOptions)
 
-      // This will resolve the promise before the stream starts flowing. If an
-      // error occurs after that, pipethroughInternal() will reject causing the
-      // `.catch` callback below to be triggered. Since the promise will have
-      // already resolved, this will have no effect. Once the promise is
-      // resolved, any error must be handled through the returned stream.
-      resolve({
-        stream,
-        headers: Object.fromEntries(responseHeaders(upstream.headers)),
-        encoding:
-          safeString(upstream.headers['content-type']) ?? 'application/json',
-      })
-
-      return stream
-    }).catch(reject)
-  })
-}
-
-async function pipethroughInternal(
-  ctx: AppContext,
-  options: Dispatcher.RequestOptions,
-  successStreamFactory: Dispatcher.StreamFactory,
-): Promise<void> {
-  await ctx.safeAgent
-    .stream(options, (data) => {
-      try {
-        if (data.statusCode === ResponseType.Success) {
-          return successStreamFactory(data)
-        }
-
-        // Upstream resulted in an error, create a writable stream for undici
-        // that will decode & parse the error message and construct an XRPCError
-        return Duplex.from(async function (
-          res: AsyncGenerator<Buffer, void, unknown>,
-        ): Promise<void> {
-          const buffer = await bufferUpstreamResponse(
-            res,
-            data.headers['content-encoding'],
-          )
-          const errInfo = safeParseJson(buffer.toString('utf8'))
-
-          // Throwing here will cause the promise returned by stream() to
-          // reject. This will cause the `.catch` block below to be triggered.
-          throw new XRPCClientError(
-            data.statusCode,
-            safeString(errInfo?.['error']),
-            safeString(errInfo?.['message']),
-            Object.fromEntries(responseHeaders(data.headers, false)),
-          )
-        })
-      } catch (err) {
-        if (err instanceof XRPCServerError) throw err
-        if (err instanceof XRPCClientError) throw err
-
-        // Assume any error thrown from successStreamFactory() is due to an
-        // unsupported or invalid value in "data" (statusCode or headers).
-        // This will allow to distinguish undici/network errors bellow.
-        throw new XRPCServerError(
-          ResponseType.UpstreamFailure,
-          undefined,
-          'unable to process upstream response',
-          { cause: err },
-        )
-      }
-    })
-    .catch((err) => {
-      if (err instanceof XRPCServerError) throw err
-      if (err instanceof XRPCClientError) throw err
-
-      // Any other error here was caused by undici, the network or the writable
-      // stream returned by the function above (e.g. decoding error).
-      httpLogger.warn({ err }, 'pipethrough network error')
-      throw new XRPCServerError(
-        ResponseType.UpstreamFailure,
-        undefined,
-        'pipethrough network error',
-        { cause: err },
-      )
-    })
+  return {
+    stream: upstream.body,
+    headers: Object.fromEntries(responseHeaders(upstream.headers)),
+    encoding:
+      safeString(upstream.headers['content-type']) ?? 'application/json',
+  }
 }
 
 // Request setup/formatting
@@ -334,6 +258,119 @@ export const parseProxyHeader = async (
   return { did, serviceUrl }
 }
 
+/**
+ * Utility function that wraps the undici stream() function and handles request
+ * and response errors by wrapping them in XRPCError instances. This function is
+ * more efficient than "pipethroughRequest" when a writable stream to pipe the
+ * upstream response to is available.
+ */
+async function pipethroughStream(
+  ctx: AppContext,
+  dispatchOptions: Dispatcher.RequestOptions,
+  successStreamFactory: Dispatcher.StreamFactory,
+): Promise<void> {
+  await ctx.safeAgent
+    .stream(dispatchOptions, (upstream) => {
+      // Upstream resulted in an error, create a writable stream for undici
+      // that will decode & parse the error message and construct an XRPCError
+      if (upstream.statusCode !== ResponseType.Success) {
+        return Duplex.from(async function (
+          res: AsyncGenerator<Buffer, void, unknown>,
+        ): Promise<void> {
+          return handleUpstreamResponseError(dispatchOptions, upstream, res)
+        })
+      }
+
+      try {
+        return successStreamFactory(upstream)
+      } catch (err) {
+        // Assume any error thrown from successStreamFactory() is due to an
+        // unsupported or invalid value in "upstream" (statusCode or headers).
+        // This will allow to distinguish requests errors bellow.
+        return handleUpstreamRequestError(
+          err,
+          dispatchOptions,
+          'unable to process upstream response',
+        )
+      }
+    })
+    .catch((err) => {
+      if (err instanceof XRPCServerError) throw err
+      if (err instanceof XRPCClientError) throw err
+
+      // Any other error here was caused by undici, the network or the writable
+      // stream returned by the function above (e.g. decoding error).
+      return handleUpstreamRequestError(err, dispatchOptions)
+    })
+}
+
+/**
+ * Utility function that wraps the undici request() function and handles request
+ * and response errors by wrapping them in XRPCError instances.
+ */
+async function pipethroughRequest(
+  ctx: AppContext,
+  dispatchOptions: Dispatcher.RequestOptions,
+) {
+  const upstream = await ctx.safeAgent
+    .request(dispatchOptions)
+    .catch((err) => handleUpstreamRequestError(err, dispatchOptions))
+
+  if (upstream.statusCode !== ResponseType.Success) {
+    return handleUpstreamResponseError(dispatchOptions, upstream)
+  }
+
+  return upstream
+}
+
+async function handleUpstreamResponseError(
+  dispatchOptions: Dispatcher.RequestOptions,
+  data: Dispatcher.ResponseData,
+): Promise<never>
+async function handleUpstreamResponseError(
+  dispatchOptions: Dispatcher.RequestOptions,
+  data: Dispatcher.StreamFactoryData,
+  body: Readable | AsyncGenerator<Buffer, void, unknown>,
+): Promise<never>
+async function handleUpstreamResponseError(
+  dispatchOptions: Dispatcher.RequestOptions,
+  data: Dispatcher.StreamFactoryData | Dispatcher.ResponseData,
+  body?: Readable | AsyncGenerator<Buffer, void, unknown>,
+): Promise<never> {
+  const stream = body ?? ('body' in data ? data.body : undefined)
+
+  // Type-safety, should never happen
+  if (!stream) throw new TypeError('body is required')
+
+  const buffer = await bufferUpstreamResponse(
+    stream,
+    data.headers['content-encoding'],
+  )
+
+  const errInfo = safeParseJson(buffer.toString('utf8'))
+
+  // Throwing here will cause the promise returned by stream() to
+  // reject. This will cause the `.catch` block below to be triggered.
+  throw new XRPCClientError(
+    data.statusCode,
+    safeString(errInfo?.['error']),
+    safeString(errInfo?.['message']),
+    Object.fromEntries(responseHeaders(data.headers, false)),
+    { cause: dispatchOptions },
+  )
+}
+
+function handleUpstreamRequestError(
+  err: unknown,
+  dispatchOptions: Dispatcher.RequestOptions,
+  message = 'pipethrough network error',
+): never {
+  httpLogger.warn({ err }, message)
+  throw new XRPCServerError(ResponseType.UpstreamFailure, message, undefined, {
+    cause: [err, dispatchOptions],
+  })
+}
+
 // Request parsing/forwarding
 // -------------------
 
@@ -357,7 +394,6 @@ function negotiateAccept(
   if (!common.some(isNotRejected)) {
     throw new XRPCServerError(
       ResponseType.NotAcceptable,
-      'NotAcceptable',
       'this service does not support any of the requested encodings',
     )
   }
