@@ -9,7 +9,7 @@ import {
 } from '@atproto-labs/fetch'
 import ipaddr from 'ipaddr.js'
 import { isValid as isValidDomain } from 'psl'
-import { Agent } from 'undici'
+import { Agent, Client } from 'undici'
 
 import { isUnicastIp } from './util.js'
 
@@ -25,8 +25,7 @@ export type SsrfFetchWrapOptions<C = FetchContext> = {
 /**
  * @see {@link https://owasp.org/Top10/A10_2021-Server-Side_Request_Forgery_%28SSRF%29/}
  */
-export function ssrfFetchWrap<C = FetchContext>({
-  allowCustomPort = false,
+export function unicastFetchWrap<C = FetchContext>({
   fetch = globalThis.fetch,
 }: SsrfFetchWrapOptions<C>): Fetch<C> {
   const ssrfAgent = new Agent({ connect: { lookup: unicastLookup } })
@@ -37,30 +36,7 @@ export function ssrfFetchWrap<C = FetchContext>({
   ): Promise<Response> {
     const url = new URL(request.url)
 
-    if (url.protocol === 'data:') {
-      // No SSRF issue
-      return fetch.call(this, request)
-    }
-
     if (url.protocol === 'http:' || url.protocol === 'https:') {
-      // Check port (OWASP)
-      if (url.port && !allowCustomPort) {
-        throw new FetchRequestError(
-          request,
-          400,
-          'Request port must be omitted or standard when SSRF is enabled',
-        )
-      }
-
-      // Disable HTTP redirections (OWASP)
-      if (request.redirect === 'follow') {
-        throw new FetchRequestError(
-          request,
-          500,
-          'Request redirect must be "error" or "manual" when SSRF is enabled',
-        )
-      }
-
       switch (isUnicastIp(url.hostname)) {
         case true:
           // Safe to proceed
@@ -70,7 +46,7 @@ export function ssrfFetchWrap<C = FetchContext>({
           throw new FetchRequestError(
             request,
             400,
-            'Hostname resolved to non-unicast address',
+            'Hostname is a non-unicast address',
           )
 
         case undefined:
@@ -96,7 +72,7 @@ export function ssrfFetchWrap<C = FetchContext>({
         }
 
         let didLookup = false
-        const dispatcher = new Agent({
+        const dispatcher = new Client(url, {
           connect: {
             lookup(...args) {
               didLookup = true
@@ -118,8 +94,8 @@ export function ssrfFetchWrap<C = FetchContext>({
 
           if (!didLookup) {
             // If you encounter this error, either upgrade to Node.js >=21 or
-            // make sure that the requestInit object is passed as second
-            // argument to the global fetch function.
+            // make sure that the dispatcher passed through the requestInit
+            // object ends up being used to make the request.
 
             // eslint-disable-next-line no-unsafe-finally
             throw new FetchRequestError(
@@ -132,15 +108,10 @@ export function ssrfFetchWrap<C = FetchContext>({
       }
 
       // @ts-expect-error non-standard option
-      return fetch(new Request(request, { dispatcher: ssrfAgent }))
+      return fetch.call(this, new Request(request, { dispatcher: ssrfAgent }))
     }
 
-    // blob: about: file: all should be rejected
-    throw new FetchRequestError(
-      request,
-      400,
-      `Forbidden protocol "${url.protocol}"`,
-    )
+    return fetch.call(this, request)
   })
 }
 
