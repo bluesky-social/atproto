@@ -3,13 +3,14 @@ import { parse, ParsedDomain } from 'psl'
 export function isInternetUrl(url: URL): boolean {
   return parseUrlPublicSuffix(url) !== null
 }
+
 export function isInternetHost(host: string): boolean {
   return parseDomainPublicSuffix(host) !== null
 }
 
 export function parseUrlPublicSuffix(input: string | URL): ParsedDomain | null {
-  const url = new URL(input)
-  return parseDomainPublicSuffix(url.hostname)
+  const { hostname } = new URL(input)
+  return parseDomainPublicSuffix(hostname)
 }
 
 export function parseDomainPublicSuffix(domain: string): ParsedDomain | null {

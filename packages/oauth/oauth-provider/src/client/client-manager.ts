@@ -16,7 +16,6 @@ import {
 import { Jwks, jwksSchema, Keyset } from '@atproto/jwk'
 import {
   isLoopbackHost,
-  isLoopbackUrl,
   isOAuthClientIdDiscoverable,
   isOAuthClientIdLoopback,
   OAuthAuthorizationServerMetadata,
@@ -452,34 +451,6 @@ export class ClientManager {
       }
     }
 
-    // The following restriction from OIDC is *not* enforced for clients as it
-    // prevents "App Links" / "Apple Universal Links" from being used as
-    // redirect URIs.
-    //
-    // https://openid.net/specs/openid-connect-registration-1_0.html#rfc.section.2
-    //
-    // > Native Clients [as defined by "application_type"] MUST only
-    // > register redirect_uris using custom URI schemes or loopback URLs
-    // > using the http scheme; loopback URLs use localhost or the IP
-    // > loopback literals 127.0.0.1 or [::1] as the hostname.
-
-    if (metadata.application_type === 'native') {
-      // https://openid.net/specs/openid-connect-registration-1_0.html#rfc.section.2
-      //
-      // > Authorization Servers MAY reject Redirection URI values using
-      // > the http scheme, other than the loopback case for Native
-      // > Clients.
-
-      for (const redirectUri of metadata.redirect_uris) {
-        const url = parseRedirectUri(redirectUri)
-        if (url.protocol === 'http:' && !isLoopbackUrl(url)) {
-          throw new InvalidRedirectUriError(
-            `Native clients must not use HTTP redirect URIs (got ${url})`,
-          )
-        }
-      }
-    }
-
     for (const redirectUri of metadata.redirect_uris) {
       const url = parseRedirectUri(redirectUri)
 
@@ -508,16 +479,10 @@ export class ClientManager {
             `Loopback redirect URI ${url} is not allowed (use explicit IPs instead)`,
           )
         }
-        // falls through
+
         case url.hostname === '127.0.0.1':
         case url.hostname === '[::1]': {
-          // https://datatracker.ietf.org/doc/html/rfc8252#section-7.3
-          //
-          // > Loopback redirect URIs use the "http" scheme and are constructed
-          // > with the loopback IP literal and whatever port the client is
-          // > listening on. That is, "http://127.0.0.1:{port}/{path}" for IPv4,
-          // > and "http://[::1]:{port}/{path}" for IPv6.
-
+          // Only allowed for native apps
           if (metadata.application_type !== 'native') {
             throw new InvalidRedirectUriError(
               `Loopback redirect URIs are only allowed for native apps`,
@@ -540,6 +505,12 @@ export class ClientManager {
           }
 
           if (url.protocol !== 'http:') {
+            // https://datatracker.ietf.org/doc/html/rfc8252#section-7.3
+            //
+            // > Loopback redirect URIs use the "http" scheme and are constructed
+            // > with the loopback IP literal and whatever port the client is
+            // > listening on. That is, "http://127.0.0.1:{port}/{path}" for IPv4,
+            // > and "http://[::1]:{port}/{path}" for IPv6.
             throw new InvalidRedirectUriError(
               `Loopback redirect URI ${url} must use HTTP`,
             )
@@ -559,6 +530,12 @@ export class ClientManager {
           //
           // OIDC/Request Object are not supported. ATproto spec should not
           // allow HTTP redirect URIs either.
+
+          // https://openid.net/specs/openid-connect-registration-1_0.html#rfc.section.2
+          //
+          // > Authorization Servers MAY reject Redirection URI values using
+          // > the http scheme, other than the loopback case for Native
+          // > Clients.
           throw new InvalidRedirectUriError(
             'Only loopback redirect URIs are allowed to use the "http" scheme',
           )
@@ -571,7 +548,6 @@ export class ClientManager {
             )
           }
 
-          //
           // https://datatracker.ietf.org/doc/html/rfc8252#section-8.4
           //
           // > In addition to the collision-resistant properties, requiring a
@@ -586,6 +562,23 @@ export class ClientManager {
           // Discoverable clients, however, will have this check covered in the
           // `validateDiscoverableClientMetadata`, by using the client_id's
           // domain as "proven ownership".
+
+          // The following restriction from OIDC is *not* enforced for clients
+          // as it prevents "App Links" / "Apple Universal Links" from being
+          // used as redirect URIs.
+          //
+          // https://openid.net/specs/openid-connect-registration-1_0.html#rfc.section.2
+          //
+          // > Native Clients [as defined by "application_type"] MUST only
+          // > register redirect_uris using custom URI schemes or loopback URLs
+          // > using the http scheme; loopback URLs use localhost or the IP
+          // > loopback literals 127.0.0.1 or [::1] as the hostname.
+          //
+          // if (metadata.application_type === 'native') {
+          //   throw new InvalidRedirectUriError(
+          //     `Native clients must use custom URI schemes or loopback URLs`,
+          //   )
+          // }
 
           break
         }
