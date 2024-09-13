@@ -1,3 +1,4 @@
+import { SimpleStore } from '@atproto-labs/simple-store'
 import { HOUR, wait } from '@atproto/common'
 import {
   AccountInfo,
@@ -55,6 +56,7 @@ export class AccountManager
     private jwtKey: KeyObject,
     private serviceDid: string,
     disableWalAutoCheckpoint = false,
+    private repoRevCache?: SimpleStore<string, string>,
   ) {
     this.db = getDb(dbLocation, disableWalAutoCheckpoint)
   }
@@ -187,7 +189,8 @@ export class AccountManager
   }
 
   async updateRepoRoot(did: string, cid: CID, rev: string) {
-    return repo.updateRoot(this.db, did, cid, rev)
+    await repo.updateRoot(this.db, did, cid, rev)
+    await this.repoRevCache?.set(did, rev)
   }
 
   async deactivateAccount(did: string, deleteAfter: string | null) {

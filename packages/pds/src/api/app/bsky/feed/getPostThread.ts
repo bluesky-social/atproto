@@ -170,7 +170,6 @@ const readAfterWriteNotFound = async (
   requester: string,
   headers?: Headers,
 ): Promise<{ data: OutputSchema; lag?: number } | null> => {
-  if (!headers) return null
   const rev = getRepoRev(headers)
   if (!rev) return null
   const uri = new AtUri(params.uri)

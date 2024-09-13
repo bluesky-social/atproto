@@ -19,6 +19,11 @@ describe('proxy read after write', () => {
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'proxy_read_after_write',
+      pds: {
+        redisScratchAddress: process.env.REDIS_HOST,
+        redisScratchPassword: process.env.REDIS_PASSWORD,
+        repoRevCacheMaxTTL: 60000,
+      },
     })
     agent = network.pds.getClient()
     sc = network.getSeedClient()
@@ -30,7 +35,7 @@ describe('proxy read after write', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('handles read after write on profiles', async () => {
@@ -266,4 +271,76 @@ describe('proxy read after write', () => {
     const parsed = parseInt(lag)
     expect(parsed > 0).toBe(true)
   })
+
+  it('does not open a database connection when reading cached profile', async () => {
+    await usingNewNetwork(async (network, sc) => {
+      const alice = sc.pdsAgent(sc.dids.alice)
+
+      // Initialize the cache
+      await alice.app.bsky.actor.getProfile({ actor: alice.assertDid })
+
+      // Mock the openDb method to check if it's called
+      const openDbMock = mockPdsActorStoreOpenDb(network)
+
+      await alice.app.bsky.actor.getProfile({ actor: alice.assertDid })
+      await alice.app.bsky.actor.getProfile({ actor: alice.assertDid })
+
+      expect(openDbMock).not.toHaveBeenCalled()
+    })
+  })
+
+  it('avoids read after write after write was processed by appview', async () => {
+    await usingNewNetwork(async (network, sc) => {
+      const openDbMock = mockPdsActorStoreOpenDb(network)
+
+      await sc.updateProfile(sc.dids.alice, { displayName: 'blah' })
+
+      // Writing a new profile requires opening a database connection
+      expect(openDbMock).toHaveBeenCalled()
+      openDbMock.mockClear()
+
+      // Wait for the app-view to process the update
+      await network.bsky.sub.background.processAll()
+
+      const alice = sc.pdsAgent(sc.dids.alice)
+
+      await alice.app.bsky.actor.getProfile({ actor: alice.assertDid })
+
+      expect(openDbMock).not.toHaveBeenCalled()
+    })
+  })
 })
+
+function mockPdsActorStoreOpenDb(network: TestNetwork) {
+  const { actorStore } = network.pds.ctx
+  const openDbOrig = actorStore.openDb
+  const openDbMock = jest.fn((...args: Parameters<typeof openDbOrig>) => {
+    return openDbOrig.call(actorStore, ...args)
+  })
+  actorStore.openDb = openDbMock
+
+  return openDbMock
+}
+
+async function usingNewNetwork<T>(
+  fn: (network: TestNetwork, sc: SeedClient) => T | PromiseLike<T>,
+): Promise<T> {
+  const network = await TestNetwork.create({
+    dbPostgresSchema: 'proxy_read_after_write',
+    pds: {
+      redisScratchAddress: process.env.REDIS_HOST,
+      redisScratchPassword: process.env.REDIS_PASSWORD,
+      repoRevCacheMaxTTL: 60000,
+    },
+  })
+
+  try {
+    const sc = network.getSeedClient()
+    await basicSeed(sc, { addModLabels: network.bsky })
+    await network.processAll()
+
+    return await fn(network, sc)
+  } finally {
+    await network.close()
+  }
+}
