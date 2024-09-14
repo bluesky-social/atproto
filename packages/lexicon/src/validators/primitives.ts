@@ -229,26 +229,44 @@ export function string(
 
   // maxGraphemes
   if (typeof def.maxGraphemes === 'number') {
-    const len = cachedGraphemeLen ?? (cachedGraphemeLen = graphemeLen(value))
-    if (len > def.maxGraphemes) {
-      return {
-        success: false,
-        error: new ValidationError(
-          `${path} must not be longer than ${def.maxGraphemes} graphemes`,
-        ),
+    if (value.length <= def.maxGraphemes) {
+      // If the JavaScript string length is within the maximum limit,
+      // its grapheme length (which <= .length) will also be within.
+      // Skip validation.
+    } else {
+      const len = cachedGraphemeLen ?? (cachedGraphemeLen = graphemeLen(value))
+      if (len > def.maxGraphemes) {
+        return {
+          success: false,
+          error: new ValidationError(
+            `${path} must not be longer than ${def.maxGraphemes} graphemes`,
+          ),
+        }
       }
     }
   }
 
   // minGraphemes
   if (typeof def.minGraphemes === 'number') {
-    const len = cachedGraphemeLen ?? (cachedGraphemeLen = graphemeLen(value))
-    if (len < def.minGraphemes) {
+    if (value.length < def.minGraphemes) {
+      // If the JavaScript string length is below the minimal limit,
+      // its grapheme length (which <= .length) will also be below.
+      // Fail early.
       return {
         success: false,
         error: new ValidationError(
           `${path} must not be shorter than ${def.minGraphemes} graphemes`,
         ),
+      }
+    } else {
+      const len = cachedGraphemeLen ?? (cachedGraphemeLen = graphemeLen(value))
+      if (len < def.minGraphemes) {
+        return {
+          success: false,
+          error: new ValidationError(
+            `${path} must not be shorter than ${def.minGraphemes} graphemes`,
+          ),
+        }
       }
     }
   }
