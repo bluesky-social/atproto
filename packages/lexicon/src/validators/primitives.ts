@@ -197,9 +197,14 @@ export function string(
     }
   }
 
+  // Lazily calculated and reused between checks.
+  let cachedUtf8Len: number | undefined
+  let cachedGraphemeLen: number | undefined
+
   // maxLength
   if (typeof def.maxLength === 'number') {
-    if (utf8Len(value) > def.maxLength) {
+    const len = cachedUtf8Len ?? (cachedUtf8Len = utf8Len(value))
+    if (len > def.maxLength) {
       return {
         success: false,
         error: new ValidationError(
@@ -211,7 +216,8 @@ export function string(
 
   // minLength
   if (typeof def.minLength === 'number') {
-    if (utf8Len(value) < def.minLength) {
+    const len = cachedUtf8Len ?? (cachedUtf8Len = utf8Len(value))
+    if (len < def.minLength) {
       return {
         success: false,
         error: new ValidationError(
@@ -223,7 +229,8 @@ export function string(
 
   // maxGraphemes
   if (typeof def.maxGraphemes === 'number') {
-    if (graphemeLen(value) > def.maxGraphemes) {
+    const len = cachedGraphemeLen ?? (cachedGraphemeLen = graphemeLen(value))
+    if (len > def.maxGraphemes) {
       return {
         success: false,
         error: new ValidationError(
@@ -235,7 +242,8 @@ export function string(
 
   // minGraphemes
   if (typeof def.minGraphemes === 'number') {
-    if (graphemeLen(value) < def.minGraphemes) {
+    const len = cachedGraphemeLen ?? (cachedGraphemeLen = graphemeLen(value))
+    if (len < def.minGraphemes) {
       return {
         success: false,
         error: new ValidationError(
