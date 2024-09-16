@@ -5,7 +5,7 @@ import { isLoopbackHost, safeUrl } from './util.js'
 const OAUTH_CLIENT_ID_LOOPBACK_URL = 'http://localhost/'
 
 export type OAuthClientIdLoopback = OAuthClientId &
-  `http://localhost/${'' | `?${string}`}`
+  `${typeof OAUTH_CLIENT_ID_LOOPBACK_URL}${'' | `?${string}`}`
 
 export function isOAuthClientIdLoopback(
   clientId: string,
@@ -37,7 +37,9 @@ export function parseOAuthLoopbackClientId(clientId: string): {
   if (clientId === OAUTH_CLIENT_ID_LOOPBACK_URL) {
     return {} // No query parameters, nothing to parse
   } else if (!clientId.startsWith(OAUTH_CLIENT_ID_LOOPBACK_URL)) {
-    throw new TypeError('Loopback ClientID must start with "http://localhost/"')
+    throw new TypeError(
+      `Loopback ClientID must start with "${OAUTH_CLIENT_ID_LOOPBACK_URL}"`,
+    )
   } else if (clientId.includes('#', OAUTH_CLIENT_ID_LOOPBACK_URL.length)) {
     throw new TypeError('Loopback ClientID must not contain a hash component')
   } else if (clientId.charAt(OAUTH_CLIENT_ID_LOOPBACK_URL.length) !== '?') {

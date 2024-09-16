@@ -90,6 +90,13 @@ export class RequestManager {
     parameters: Readonly<OAuthAuthenticationRequestParameters>,
     dpopJkt: null | string,
   ): Promise<Readonly<OAuthAuthenticationRequestParameters>> {
+    if (parameters.client_id !== client.id) {
+      throw new InvalidParametersError(
+        parameters,
+        'The "client_id" parameter field does not match the value used to authenticate the client',
+      )
+    }
+
     for (const k of [
       // Known unsupported OIDC parameters
       'claims',
