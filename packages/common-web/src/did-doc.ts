@@ -95,7 +95,7 @@ export const getServiceEndpoint = (
   for (let i = 0; i < services.length; i++) {
     const service = services[i]
     if (
-      service.id.startsWith('#')
+      service.id[0] === '#'
         ? service.id === opts.id
         : // Optimized version of: service.id === `${did}${opts.id}`
           service.id.length === did.length + opts.id.length &&
