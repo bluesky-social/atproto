@@ -118,10 +118,13 @@ export type PipethroughOptions = {
   lxm?: string
 }
 
-const PIPETHROUGH_ACCEPTED_ENCODINGS = [
-  // Because proxying occurs between data centers, where connectivity is
-  // supposedly stable & good, prefer encoding that are fast (gzip, deflate,
-  // identity) over heavier encodings (Brotli).
+// List of content encodings that are supported by the PDS. Because proxying
+// occurs between data centers, where connectivity is supposedly stable & good,
+// and because payloads are small, we prefer encoding that are fast (gzip,
+// deflate, identity) over heavier encodings (Brotli). Upstream servers should
+// be configured to prefer any encoding over identity in case of big,
+// uncompressed payloads.
+const SUPPORTED_ENCODINGS = [
   ['gzip', { q: '1.0' }],
   ['deflate', { q: '0.9' }],
   ['identity', { q: '0.3' }],
@@ -155,7 +158,7 @@ export async function pipethrough(
   // understand.
   const acceptEncoding = negotiateAccept(
     req.headers['accept-encoding'],
-    PIPETHROUGH_ACCEPTED_ENCODINGS,
+    SUPPORTED_ENCODINGS,
   )
 
   const headers: IncomingHttpHeaders = {
@@ -203,17 +206,10 @@ async function parseProxyInfo(
   // /!\ Hot path
 
   const proxyToHeader = req.header('atproto-proxy')
-  if (proxyToHeader) {
-    const proxyTo = await parseProxyHeader(ctx, proxyToHeader)
-    const url = proxyTo.serviceUrl
-    const did = proxyTo.did
-    return { url, did }
-  }
+  if (proxyToHeader) return parseProxyHeader(ctx, proxyToHeader)
 
   const defaultProxy = defaultService(ctx, lxm)
-  if (defaultProxy) {
-    return defaultProxy
-  }
+  if (defaultProxy) return defaultProxy
 
   throw new InvalidRequestError(`No service configured for ${lxm}`)
 }
@@ -222,7 +218,7 @@ export const parseProxyHeader = async (
   // Using subset of AppContext for testing purposes
   ctx: Pick<AppContext, 'idResolver'>,
   proxyTo: string,
-): Promise<{ did: string; serviceUrl: string }> => {
+): Promise<{ did: string; url: string }> => {
   // /!\ Hot path
 
   const hashIndex = proxyTo.indexOf('#')
@@ -246,17 +242,18 @@ export const parseProxyHeader = async (
   }
 
   const did = proxyTo.slice(0, hashIndex)
-  const serviceId = proxyTo.slice(hashIndex + 1)
-
   const didDoc = await ctx.idResolver.did.resolve(did)
   if (!didDoc) {
     throw new InvalidRequestError('could not resolve proxy did')
   }
-  const serviceUrl = getServiceEndpoint(didDoc, { id: `#${serviceId}` })
-  if (!serviceUrl) {
+
+  const serviceId = proxyTo.slice(hashIndex)
+  const url = getServiceEndpoint(didDoc, { id: serviceId })
+  if (!url) {
     throw new InvalidRequestError('could not resolve proxy did service url')
   }
-  return { did, serviceUrl }
+
+  return { did, url }
 }
 
 /**
@@ -378,7 +375,7 @@ function handleUpstreamRequestError(
 // Request parsing/forwarding
 // -------------------
 
-type Accept = [name: string, flags: { q: string }]
+type Accept = [name: string, flags: Record<string, string>]
 
 function negotiateAccept(
   acceptHeader: undefined | string | string[],
@@ -409,8 +406,10 @@ function formatAccepted(accept: readonly Accept[]): string {
   return accept.map(formatEncodingDev).join(', ')
 }
 
-function formatEncodingDev([enc, { q }]: Accept): string {
-  return q != null ? `${enc};q=${q}` : enc
+function formatEncodingDev([enc, flags]: Accept): string {
+  let ret = enc
+  for (const name in flags) ret += `;${name}=${flags[name]}`
+  return ret
 }
 
 function nameIncludedIn(this: readonly string[], accept: Accept): boolean {
@@ -436,8 +435,12 @@ function extractAcceptedNames(
 function extractAcceptedName(def: string): string | undefined {
   // No need to fully parse since we only care about allowed values
   const parts = def.split(';')
-  if (parts[1]?.trim() === 'q=0') return undefined
+  if (parts.some(isQzero)) return undefined
   return parts[0].trim()
+}
+
+function isQzero(def: string): boolean {
+  return def.trim() === 'q=0'
 }
 
 function isNonNullable<T>(val: T): val is NonNullable<T> {

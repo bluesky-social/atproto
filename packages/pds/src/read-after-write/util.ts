@@ -54,15 +54,16 @@ export const pipethroughReadAfterWrite = async <T>(
       const local = await getRecordsSinceRev(store, rev)
       if (local.count === 0) return upstreamRes
 
-      const localViewer = ctx.localViewer(store)
+      const lxm = parseReqNsid(req)
 
       bufferedRes = await asPipeThroughBuffer(upstreamRes)
 
       const value = safeParseJson(bufferedRes!.buffer.toString('utf8'))
       const lex = value && jsonToLex(value)
 
-      const nsid = parseReqNsid(req)
-      const parsedRes = lexicons.assertValidXrpcOutput(nsid, lex) as T
+      const parsedRes = lexicons.assertValidXrpcOutput(lxm, lex) as T
+
+      const localViewer = ctx.localViewer(store)
 
       const data = await munge(localViewer, parsedRes, local, requester)
       return formatMungedResponse(data, getLocalLag(local))

@@ -3,10 +3,19 @@ import * as undici from 'undici'
 import * as nodemailer from 'nodemailer'
 import { Redis } from 'ioredis'
 import * as plc from '@did-plc/lib'
+import {
+  Fetch,
+  isUnicastIp,
+  loggedFetch,
+  safeFetchWrap,
+  unicastLookup,
+} from '@atproto-labs/fetch-node'
 import * as crypto from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
 import { AtpAgent } from '@atproto/api'
 import { KmsKeypair, S3BlobStore } from '@atproto/aws'
+import { JoseKey, OAuthVerifier } from '@atproto/oauth-provider'
+import { BlobStore } from '@atproto/repo'
 import {
   RateLimiter,
   RateLimiterCreator,
@@ -14,15 +23,6 @@ import {
   createServiceAuthHeaders,
   createServiceJwt,
 } from '@atproto/xrpc-server'
-import {
-  Fetch,
-  JoseKey,
-  OAuthVerifier,
-  isUnicastIp,
-  loggedFetch,
-  safeFetchWrap,
-  unicastLookup,
-} from '@atproto/oauth-provider'
 
 import { ServerConfig, ServerSecrets } from './config'
 import { PdsOAuthProvider } from './oauth/provider'
@@ -34,7 +34,6 @@ import {
 import { fetchLogger } from './logger'
 import { ServerMailer } from './mailer'
 import { ModerationMailer } from './mailer/moderation'
-import { BlobStore } from '@atproto/repo'
 import { AccountManager } from './account-manager'
 import { Sequencer } from './sequencer'
 import { BackgroundQueue } from './background'

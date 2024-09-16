@@ -77,7 +77,7 @@ describe('proxy header', () => {
       parseProxyHeader(network.pds.ctx, `${proxyServer.did}#atproto_test`),
     ).resolves.toEqual({
       did: proxyServer.did,
-      serviceUrl: proxyServer.url,
+      url: proxyServer.url,
     })
   })
 

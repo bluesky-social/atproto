@@ -95,11 +95,13 @@ export const getServiceEndpoint = (
   for (let i = 0; i < services.length; i++) {
     const service = services[i]
     if (
-      service.id === opts.id ||
-      // Optimized version of: service.id === `${did}${opts.id}`
-      (service.id.length === did.length + opts.id.length &&
-        service.id.startsWith(did) &&
-        service.id.endsWith(opts.id))
+      service.id.startsWith('#')
+        ? service.id === opts.id
+        : // Optimized version of: service.id === `${did}${opts.id}`
+          service.id.length === did.length + opts.id.length &&
+          service.id.charAt(did.length) === '#' &&
+          service.id.endsWith(opts.id) &&
+          service.id.startsWith(did)
     ) {
       if (opts.type && service.type !== opts.type) {
         return undefined
