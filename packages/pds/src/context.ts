@@ -19,6 +19,7 @@ import {
   JoseKey,
   OAuthVerifier,
   isUnicastIp,
+  loggedFetch,
   safeFetchWrap,
   unicastLookup,
 } from '@atproto/oauth-provider'
@@ -290,16 +291,20 @@ export class AppContext {
     // A fetch() function that protects against SSRF attacks, large responses &
     // known bad domains. This function can safely be used to fetch user
     // provided URLs (unless "disableSsrfProtection" is true, of course).
-    const safeFetch = safeFetchWrap({
-      responseMaxSize: cfg.fetch.maxResponseSize,
-      ssrfProtection: !cfg.fetch.disableSsrfProtection,
-      fetch: async (input, init) => {
-        const request = input instanceof Request ? input : null
-        const method = init?.method ?? request?.method ?? 'GET'
-        const uri = request?.url ?? String(input)
-        fetchLogger.debug({ method, uri }, 'fetch')
-        return globalThis.fetch(input, init)
+    const safeFetch = loggedFetch({
+      fetch: safeFetchWrap({
+        // Using globalThis.fetch allows safeFetchWrap to use keep-alive. See
+        // unicastFetchWrap().
+        fetch: globalThis.fetch,
+        allowIpHost: false,
+        responseMaxSize: cfg.fetch.maxResponseSize,
+        ssrfProtection: !cfg.fetch.disableSsrfProtection,
+      }),
+      logRequest: ({ method, url }) => {
+        fetchLogger.debug({ method, uri: url }, 'fetch')
       },
+      logResponse: false,
+      logError: false,
     })
 
     const authProvider = cfg.oauth.provider

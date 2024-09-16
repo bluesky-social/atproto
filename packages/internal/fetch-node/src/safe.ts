@@ -22,16 +22,16 @@ export type SafeFetchWrapOptions = NonNullable<
  * Wrap a fetch function with safety checks so that it can be safely used
  * with user provided input (URL).
  *
- * @see {@link https://www.acunetix.com/blog/articles/server-side-request-forgery-vulnerability/}
+ * @see {@link https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html}
  */
 export function safeFetchWrap({
   fetch = globalThis.fetch as Fetch,
   responseMaxSize = 512 * 1024, // 512kB
   ssrfProtection = true,
-  allowHttp = !ssrfProtection,
-  allowData = !ssrfProtection,
   allowCustomPort = !ssrfProtection,
-  allowIpHost = !ssrfProtection,
+  allowData = false,
+  allowHttp = !ssrfProtection,
+  allowIpHost = true,
   allowPrivateIps = !ssrfProtection,
   timeout = 10e3,
   forbiddenDomainNames = DEFAULT_FORBIDDEN_DOMAIN_NAMES as Iterable<string>,
@@ -52,7 +52,9 @@ export function safeFetchWrap({
        * Prevent using http:, file: or data: protocols.
        */
       protocolCheckRequestTransform({
+        'about:': false,
         'data:': allowData,
+        'file:': false,
         'http:': allowHttp && { allowCustomPort },
         'https:': { allowCustomPort },
       }),

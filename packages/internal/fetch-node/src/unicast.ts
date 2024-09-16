@@ -2,10 +2,10 @@ import dns, { LookupAddress } from 'node:dns'
 import { LookupFunction } from 'node:net'
 
 import {
+  asRequest,
   Fetch,
   FetchContext,
   FetchRequestError,
-  toRequestTransformer,
 } from '@atproto-labs/fetch'
 import ipaddr from 'ipaddr.js'
 import { isValid as isValidDomain } from 'psl'
@@ -15,10 +15,7 @@ import { isUnicastIp } from './util.js'
 
 const { IPv4, IPv6 } = ipaddr
 
-const [NODE_VERSION] = process.versions.node.split('.').map(Number)
-
 export type SsrfFetchWrapOptions<C = FetchContext> = {
-  allowCustomPort?: boolean
   fetch?: Fetch<C>
 }
 
@@ -28,91 +25,133 @@ export type SsrfFetchWrapOptions<C = FetchContext> = {
 export function unicastFetchWrap<C = FetchContext>({
   fetch = globalThis.fetch,
 }: SsrfFetchWrapOptions<C>): Fetch<C> {
-  const ssrfAgent = new Agent({ connect: { lookup: unicastLookup } })
+  // In order to enforce the SSRF protection, we need to use a custom dispatcher
+  // that uses "unicastLookup" to resolve the hostname to a unicast IP address.
 
-  return toRequestTransformer(async function (
-    this: C,
-    request,
-  ): Promise<Response> {
-    const url = new URL(request.url)
+  // In case a custom "fetch" function is passed here, we have no assurance that
+  // the dispatcher will be used to make the request. Because of this, in case a
+  // custom fetch method is passed, we will use a on-time use dispatcher that
+  // ensures that "unicastLookup" gets called to resolve the hostname to an IP
+  // address and ensure that it is a unicast address.
 
-    if (url.protocol === 'http:' || url.protocol === 'https:') {
-      switch (isUnicastIp(url.hostname)) {
-        case true:
-          // Safe to proceed
-          return fetch.call(this, request)
+  // Sadly, this means that we cannot use "keepAlive" connections, as the method
+  // used to ensure that "unicastLookup" gets called requires to create a new
+  // dispatcher for each request.
 
-        case false:
-          throw new FetchRequestError(
-            request,
-            400,
-            'Hostname is a non-unicast address',
-          )
+  // @TODO: find a way to use a re-usable dispatcher with a custom fetch method.
 
-        case undefined:
-          // hostname is a domain name, use DNS lookup to check if it resolves
-          // to a unicast address (see bellow)
-          break
+  if (fetch === globalThis.fetch) {
+    const dispatcher = new Agent({
+      allowH2: true,
+      connect: { keepAlive: true, lookup: unicastLookup },
+    })
+
+    return async function (input, init): Promise<Response> {
+      const inputRequest = input instanceof Request ? input : null
+      const url = new URL(inputRequest?.url ?? input)
+
+      if (init?.dispatcher) {
+        throw new FetchRequestError(
+          inputRequest ?? asRequest(input, init),
+          500,
+          'SSRF protection cannot be used with a custom request dispatcher',
+        )
       }
 
-      if (NODE_VERSION < 21) {
-        // Note: due to the issue nodejs/undici#2828 (fixed in undici >=6.7.0,
-        // Node >=21), the "dispatcher" property of the request object will not
-        // be used by fetch(). As a workaround, we pass the dispatcher as second
-        // argument to fetch() here, and make sure it is used (which might not be
-        // the case if a custom fetch() function is used).
-
-        if (fetch === globalThis.fetch) {
-          // If the global fetch function is used, we can pass the dispatcher
-          // singleton directly to the fetch function as we know it will be
-          // used.
-
-          // @ts-expect-error non-standard option
-          return fetch.call(this, request, { dispatcher: ssrfAgent })
-        }
-
-        let didLookup = false
-        const dispatcher = new Client(url, {
-          connect: {
-            lookup(...args) {
-              didLookup = true
-              unicastLookup(...args)
-            },
-          },
-        })
-
-        try {
-          // @ts-expect-error non-standard option
-          return await fetch.call(this, request, { dispatcher })
-        } finally {
-          // Free resources (we cannot await here since the response was not
-          // consumed yet).
-          void dispatcher.close().catch((err) => {
-            // No biggie, but let's still log it
-            console.warn('Failed to close dispatcher', err)
-          })
-
-          if (!didLookup) {
-            // If you encounter this error, either upgrade to Node.js >=21 or
-            // make sure that the dispatcher passed through the requestInit
-            // object ends up being used to make the request.
-
-            // eslint-disable-next-line no-unsafe-finally
-            throw new FetchRequestError(
-              request,
-              500,
-              'Unable to enforce SSRF protection',
-            )
-          }
-        }
+      if (url.hostname && isUnicastIp(url.hostname) === false) {
+        throw new FetchRequestError(
+          inputRequest ?? asRequest(input, init),
+          400,
+          'Hostname is a non-unicast address',
+        )
       }
 
       // @ts-expect-error non-standard option
-      return fetch.call(this, new Request(request, { dispatcher: ssrfAgent }))
+      return fetch.call(this, input, { ...init, dispatcher })
     }
+  } else {
+    return async function (input, init): Promise<Response> {
+      const inputRequest = input instanceof Request ? input : null
+      const url = new URL(inputRequest?.url ?? input)
 
-    return fetch.call(this, request)
-  })
+      if (init?.dispatcher) {
+        throw new FetchRequestError(
+          inputRequest ?? asRequest(input, init),
+          500,
+          'SSRF protection cannot be used with a custom request dispatcher',
+        )
+      }
+
+      if (!url.hostname) {
+        return fetch.call(this, input, init)
+      }
+
+      switch (isUnicastIp(url.hostname)) {
+        case true: {
+          // hostname is a unicast address, safe to proceed.
+          return fetch.call(this, input, init)
+        }
+
+        case false: {
+          throw new FetchRequestError(
+            inputRequest ?? asRequest(input, init),
+            400,
+            'Hostname is a non-unicast address',
+          )
+        }
+
+        case undefined: {
+          // hostname is a domain name, using the dispatcher defined above
+          // will result in the DNS lookup being performed, ensuring that the
+          // hostname resolves to a unicast address.
+
+          let didLookup = false
+          const dispatcher = new Client(url.origin, {
+            allowH2: true,
+            connect: {
+              keepAlive: false, // Client will be used once
+              lookup(...args) {
+                didLookup = true
+                unicastLookup(...args)
+              },
+            },
+          })
+
+          const headers = new Headers(init?.headers)
+          headers.set('connection', 'close') // Proactively close the connection
+
+          try {
+            return await fetch.call(this, input, {
+              ...init,
+              headers,
+              // @ts-expect-error non-standard option
+              dispatcher,
+            })
+          } finally {
+            // Free resources (we cannot await here since the response was not
+            // consumed yet).
+            void dispatcher.close().catch((err) => {
+              // No biggie, but let's still log it
+              console.warn('Failed to close dispatcher', err)
+            })
+
+            if (!didLookup) {
+              // If you encounter this error, either upgrade to Node.js >=21 or
+              // make sure that the dispatcher passed through the requestInit
+              // object ends up being used to make the request.
+
+              // eslint-disable-next-line no-unsafe-finally
+              throw new FetchRequestError(
+                inputRequest ?? asRequest(input, init),
+                500,
+                'Unable to enforce SSRF protection',
+              )
+            }
+          }
+        }
+      }
+    }
+  }
 }
 
 export function unicastLookup(
