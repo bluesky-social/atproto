@@ -2,4 +2,4 @@
 "@atproto/xrpc-server": patch
 ---
 
-Properly parse multiple content-encoding
+Properly decompress requests with more than one content encoding

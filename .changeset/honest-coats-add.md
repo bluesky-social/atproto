@@ -2,4 +2,4 @@
 "@atproto/xrpc-server": minor
 ---
 
-Use Buffer instead of ArrayBuffer form pipe through handler result
+Use Buffer instead of ArrayBuffer in pipe through handler result

@@ -2,4 +2,4 @@
 "@atproto/xrpc-server": patch
 ---
 
-Request NSID parsing optimization
+Optimize extraction of NSID from url

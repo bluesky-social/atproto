@@ -2,4 +2,5 @@
 "@atproto-labs/fetch": patch
 ---
 
-Add redirectCheckRequestTransform utility to control request redirects
+Add redirectCheckRequestTransform utility to prevent request redirects
+
