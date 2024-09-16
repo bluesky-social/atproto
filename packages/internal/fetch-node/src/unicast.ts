@@ -3,6 +3,7 @@ import { LookupFunction } from 'node:net'
 
 import {
   asRequest,
+  extractUrl,
   Fetch,
   FetchContext,
   FetchRequestError,
@@ -47,20 +48,19 @@ export function unicastFetchWrap<C = FetchContext>({
     })
 
     return async function (input, init): Promise<Response> {
-      const inputRequest = input instanceof Request ? input : null
-      const url = new URL(inputRequest?.url ?? input)
-
       if (init?.dispatcher) {
         throw new FetchRequestError(
-          inputRequest ?? asRequest(input, init),
+          asRequest(input, init),
           500,
           'SSRF protection cannot be used with a custom request dispatcher',
         )
       }
 
+      const url = extractUrl(input)
+
       if (url.hostname && isUnicastIp(url.hostname) === false) {
         throw new FetchRequestError(
-          inputRequest ?? asRequest(input, init),
+          asRequest(input, init),
           400,
           'Hostname is a non-unicast address',
         )
@@ -71,16 +71,15 @@ export function unicastFetchWrap<C = FetchContext>({
     }
   } else {
     return async function (input, init): Promise<Response> {
-      const inputRequest = input instanceof Request ? input : null
-      const url = new URL(inputRequest?.url ?? input)
-
       if (init?.dispatcher) {
         throw new FetchRequestError(
-          inputRequest ?? asRequest(input, init),
+          asRequest(input, init),
           500,
           'SSRF protection cannot be used with a custom request dispatcher',
         )
       }
+
+      const url = extractUrl(input)
 
       if (!url.hostname) {
         return fetch.call(this, input, init)
@@ -94,7 +93,7 @@ export function unicastFetchWrap<C = FetchContext>({
 
         case false: {
           throw new FetchRequestError(
-            inputRequest ?? asRequest(input, init),
+            asRequest(input, init),
             400,
             'Hostname is a non-unicast address',
           )
@@ -142,7 +141,7 @@ export function unicastFetchWrap<C = FetchContext>({
 
               // eslint-disable-next-line no-unsafe-finally
               throw new FetchRequestError(
-                inputRequest ?? asRequest(input, init),
+                asRequest(input, init),
                 500,
                 'Unable to enforce SSRF protection',
               )

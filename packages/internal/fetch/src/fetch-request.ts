@@ -1,6 +1,6 @@
 import { FetchError } from './fetch-error.js'
 import { asRequest } from './fetch.js'
-import { isIp } from './util.js'
+import { extractUrl, isIp } from './util.js'
 
 export class FetchRequestError extends FetchError {
   constructor(
@@ -17,13 +17,6 @@ export class FetchRequestError extends FetchError {
     return new FetchRequestError(request, undefined, undefined, { cause })
   }
 }
-
-const extractUrl = (input: Request | string | URL) =>
-  typeof input === 'string'
-    ? new URL(input)
-    : input instanceof URL
-      ? input
-      : new URL(input.url)
 
 export function protocolCheckRequestTransform(protocols: {
   'about:'?: boolean
