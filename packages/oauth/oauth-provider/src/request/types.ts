@@ -21,14 +21,11 @@ export type AuthorizationRequestJar = z.infer<
   typeof authorizationRequestJarSchema
 >
 
-export const pushedAuthorizationRequestSchema = z.intersection(
-  oauthClientIdentificationSchema,
-  z.union([
-    oauthAuthenticationRequestParametersSchema,
-    authorizationRequestJarSchema,
-    //
-  ]),
-)
+export const pushedAuthorizationRequestSchema = z.union([
+  oauthAuthenticationRequestParametersSchema,
+  authorizationRequestJarSchema,
+  //
+])
 
 export type PushedAuthorizationRequest = z.infer<
   typeof pushedAuthorizationRequestSchema

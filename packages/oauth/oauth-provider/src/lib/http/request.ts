@@ -1,35 +1,22 @@
 import { parse as parseCookie, serialize as serializeCookie } from 'cookie'
 import { randomBytes } from 'crypto'
 import createHttpError from 'http-errors'
-import { z } from 'zod'
 
 import { KnownNames } from './parser.js'
 import { appendHeader } from './response.js'
 import { decodeStream, parseStream } from './stream.js'
 import { IncomingMessage, ServerResponse } from './types.js'
-import { UrlReference, urlMatch } from './url.js'
+import { urlMatch, UrlReference } from './url.js'
 
-export function parseRequestPayload<
-  A extends readonly KnownNames[] = readonly ['json', 'urlencoded'],
->(req: IncomingMessage, allow?: A)
-export function parseRequestPayload(
+export function parseRequestPayload<A extends readonly KnownNames[]>(
   req: IncomingMessage,
-  allow: readonly KnownNames[] = ['json', 'urlencoded'],
+  allow: A,
 ) {
   return parseStream(
     decodeStream(req, req.headers['content-encoding']),
-    req.headers['content-type'],
+    req.headers['content-type'] ?? 'application/octet-stream',
     allow,
   )
-}
-
-export async function validateRequestPayload<S extends z.ZodTypeAny>(
-  req: IncomingMessage,
-  schema: S,
-  allow?: readonly KnownNames[],
-): Promise<z.infer<S>> {
-  const payload = await parseRequestPayload(req, allow)
-  return schema.parseAsync(payload, { path: ['body'] })
 }
 
 export function validateHeaderValue(

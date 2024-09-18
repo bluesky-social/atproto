@@ -1,8 +1,12 @@
 import { isSignedJwt } from '@atproto/jwk'
 import {
-  AccessToken,
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
+  OAuthAccessToken,
   OAuthAuthenticationRequestParameters,
+  OAuthAuthorizationCodeGrantTokenRequest,
+  OAuthClientCredentialsGrantTokenRequest,
+  OAuthPasswordGrantTokenRequest,
+  OAuthRefreshTokenGrantTokenRequest,
   OAuthTokenResponse,
   OAuthTokenType,
 } from '@atproto/oauth-types'
@@ -28,9 +32,13 @@ import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { InvalidTokenError } from '../errors/invalid-token-error.js'
 import { dateToEpoch, dateToRelativeSeconds } from '../lib/util/date.js'
 import { OAuthHooks } from '../oauth-hooks.js'
-import { isCode } from '../request/code.js'
+import { Code, isCode } from '../request/code.js'
 import { Signer } from '../signer/signer.js'
-import { generateRefreshToken, isRefreshToken } from './refresh-token.js'
+import {
+  generateRefreshToken,
+  isRefreshToken,
+  refreshTokenSchema,
+} from './refresh-token.js'
 import { TokenClaims } from './token-claims.js'
 import { TokenData } from './token-data.js'
 import {
@@ -40,12 +48,6 @@ import {
   tokenIdSchema,
 } from './token-id.js'
 import { TokenInfo, TokenStore } from './token-store.js'
-import {
-  ClientCredentialsGrantParameters,
-  CodeGrantParameters,
-  PasswordGrantParameters,
-  RefreshGrantParameters,
-} from './types.js'
 import {
   VerifyTokenClaimsOptions,
   VerifyTokenClaimsResult,
@@ -84,9 +86,9 @@ export class TokenManager {
     device: null | { id: DeviceId; info: DeviceAccountInfo },
     parameters: OAuthAuthenticationRequestParameters,
     input:
-      | CodeGrantParameters
-      | PasswordGrantParameters
-      | ClientCredentialsGrantParameters,
+      | OAuthAuthorizationCodeGrantTokenRequest
+      | OAuthClientCredentialsGrantTokenRequest
+      | OAuthPasswordGrantTokenRequest,
     dpopJkt: null | string,
   ): Promise<OAuthTokenResponse> {
     // @NOTE the atproto specific DPoP requirement is enforced though the
@@ -120,13 +122,21 @@ export class TokenManager {
       )
     }
 
+    let code: Code | null = null
+
     switch (input.grant_type) {
       case 'authorization_code': {
+        if (!isCode(input.code)) {
+          throw new InvalidGrantError('Invalid code')
+        }
+
         const tokenInfo = await this.store.findTokenByCode(input.code)
         if (tokenInfo) {
           await this.store.deleteToken(tokenInfo.id)
           throw new InvalidGrantError(`Code replayed`)
         }
+
+        code = input.code
 
         if (parameters.redirect_uri !== input.redirect_uri) {
           throw new InvalidGrantError(
@@ -212,13 +222,13 @@ export class TokenManager {
       sub: account.sub,
       parameters,
       details: authorizationDetails ?? null,
-      code: input.code ?? null,
+      code,
     }
 
     await this.store.createToken(tokenId, tokenData, refreshToken)
 
     try {
-      const accessToken: AccessToken = !this.useJwtAccessToken(account)
+      const accessToken: OAuthAccessToken = !this.useJwtAccessToken(account)
         ? tokenId
         : await this.signer.accessToken(client, parameters, {
             // We don't specify the alg here. We suppose the Resource server will be
@@ -252,7 +262,7 @@ export class TokenManager {
 
   protected async buildTokenResponse(
     client: Client,
-    accessToken: AccessToken,
+    accessToken: OAuthAccessToken,
     refreshToken: string | undefined,
     expiresAt: Date,
     parameters: OAuthAuthenticationRequestParameters,
@@ -303,12 +313,12 @@ export class TokenManager {
   async refresh(
     client: Client,
     clientAuth: ClientAuth,
-    input: RefreshGrantParameters,
+    input: OAuthRefreshTokenGrantTokenRequest,
     dpopJkt: null | string,
   ): Promise<OAuthTokenResponse> {
-    const tokenInfo = await this.store.findTokenByRefreshToken(
-      input.refresh_token,
-    )
+    const refreshToken = refreshTokenSchema.parse(input.refresh_token)
+
+    const tokenInfo = await this.store.findTokenByRefreshToken(refreshToken)
     if (!tokenInfo?.currentRefreshToken) {
       throw new InvalidGrantError(`Invalid refresh token`)
     }
@@ -317,7 +327,7 @@ export class TokenManager {
     const { parameters } = data
 
     try {
-      if (tokenInfo.currentRefreshToken !== input.refresh_token) {
+      if (tokenInfo.currentRefreshToken !== refreshToken) {
         throw new InvalidGrantError(`refresh token replayed`)
       }
 
@@ -396,7 +406,7 @@ export class TokenManager {
         },
       )
 
-      const accessToken: AccessToken = !this.useJwtAccessToken(account)
+      const accessToken: OAuthAccessToken = !this.useJwtAccessToken(account)
         ? nextTokenId
         : await this.signer.accessToken(client, parameters, {
             // We don't specify the alg here. We suppose the Resource server will be

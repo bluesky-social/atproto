@@ -6,9 +6,7 @@ import createHttpError from 'http-errors'
 import {
   KnownNames,
   KnownParser,
-  KnownTypes,
   parseContentType,
-  ParserForType,
   ParserResult,
   parsers,
 } from './parser.js'
@@ -39,28 +37,11 @@ export function decodeStream(
   }
 }
 
-export async function parseStream<
-  T extends KnownTypes,
-  A extends readonly KnownNames[] = readonly KnownNames[],
->(
-  req: Readable,
-  contentType: T,
-  allow?: A,
-): Promise<
-  ParserResult<ParserForType<Extract<KnownParser, { name: A[number] }>, T>>
->
-export async function parseStream<
-  A extends readonly KnownNames[] = readonly KnownNames[],
->(
+export async function parseStream<A extends readonly KnownNames[]>(
   req: Readable,
   contentType: unknown,
-  allow?: A,
-): Promise<ParserResult<Extract<KnownParser, { name: A[number] }>>>
-export async function parseStream(
-  req: Readable,
-  contentType: unknown = 'application/octet-stream',
-  allow?: string[],
-): Promise<ParserResult<KnownParser>> {
+  allow: A,
+) {
   if (typeof contentType !== 'string') {
     throw createHttpError(400, 'Invalid content-type')
   }
@@ -68,8 +49,7 @@ export async function parseStream(
   const type = parseContentType(contentType)
 
   const parser = parsers.find(
-    (parser) =>
-      allow?.includes(parser.name) !== false && parser.test(type.mime),
+    (parser) => allow.includes(parser.name) && parser.test(type.mime),
   )
 
   if (!parser) {
@@ -77,5 +57,7 @@ export async function parseStream(
   }
 
   const buffer = await readStream(req)
-  return parser.parse(buffer, type)
+  return parser.parse(buffer, type) as ParserResult<
+    Extract<KnownParser, { name: A[number] }>
+  >
 }

@@ -14,7 +14,7 @@ export const oauthClientCredentialsJwtBearerSchema = z.object({
    * - The JWT MAY contain a "jti" (JWT ID) claim that provides a unique identifier for the token.
    * - Note that the authorization server may reject JWTs with an "exp" claim value that is unreasonably far in the future.
    *
-   * @see {@link https://datatracker.ietf.org/doc/html/draft-ietf-oauth-jwt-bearer-11#section-3}
+   * @see {@link https://datatracker.ietf.org/doc/html/rfc7523#section-3}
    */
   client_assertion: signedJwtSchema,
 })

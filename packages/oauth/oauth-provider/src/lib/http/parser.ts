@@ -61,13 +61,15 @@ export const parsers = [
     test: (mime): mime is 'application/x-www-form-urlencoded' => {
       return mime === 'application/x-www-form-urlencoded'
     },
-    parse: (buffer, { charset }): Partial<Record<string, string>> => {
+    parse: (buffer, { charset }): { [_ in string]?: string } => {
       if (charset != null && !/^utf-?8$/i.test(charset)) {
         throw createHttpError(415, 'Unsupported charset')
       }
       try {
         if (!buffer.length) return {}
-        return Object.fromEntries(new URLSearchParams(buffer.toString()))
+        const params = new URLSearchParams(buffer.toString())
+        if (params.has('__proto__')) throw new TypeError('Invalid key')
+        return Object.fromEntries(params)
       } catch (err) {
         throw createHttpError(400, 'Invalid URL-encoded data', { cause: err })
       }

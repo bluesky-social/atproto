@@ -3,17 +3,25 @@ import { SimpleStore } from '@atproto-labs/simple-store'
 import { SimpleStoreMemory } from '@atproto-labs/simple-store-memory'
 import { Jwks, Keyset } from '@atproto/jwk'
 import {
-  AccessToken,
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
+  OAuthAccessToken,
   OAuthAuthenticationRequestParameters,
+  OAuthAuthorizationCodeGrantTokenRequest,
   OAuthAuthorizationServerMetadata,
+  OAuthClientIdentification,
   OAuthClientMetadata,
+  OAuthIntrospectionResponse,
   OAuthParResponse,
+  OAuthRefreshTokenGrantTokenRequest,
+  OAuthTokenIdentification,
+  OAuthTokenRequest,
   OAuthTokenResponse,
   OAuthTokenType,
   atprotoLoopbackClientMetadata,
   oauthAuthenticationRequestParametersSchema,
   oauthClientIdentificationSchema,
+  oauthTokenIdentificationSchema,
+  oauthTokenRequestSchema,
 } from '@atproto/oauth-types'
 import { Redis, type RedisOptions } from 'ioredis'
 import z, { ZodError } from 'zod'
@@ -67,7 +75,6 @@ import {
   validateFetchMode,
   validateFetchSite,
   validateReferer,
-  validateRequestPayload,
   validateSameOrigin,
   writeJson,
 } from './lib/http/index.js'
@@ -88,6 +95,7 @@ import {
   sendAuthorizeRedirect,
 } from './output/send-authorize-redirect.js'
 import { ReplayStore, ifReplayStore } from './replay/replay-store.js'
+import { codeSchema } from './request/code.js'
 import { RequestInfo } from './request/request-info.js'
 import { RequestManager } from './request/request-manager.js'
 import { RequestStoreMemory } from './request/request-store-memory.js'
@@ -104,16 +112,6 @@ import {
 import { isTokenId } from './token/token-id.js'
 import { TokenManager } from './token/token-manager.js'
 import { TokenStore, asTokenStore } from './token/token-store.js'
-import {
-  CodeGrantParameters,
-  Introspect,
-  IntrospectionResponse,
-  RefreshGrantParameters,
-  Revoke,
-  grantParametersSchema,
-  introspectSchema,
-  revokeSchema,
-} from './token/types.js'
 import { VerifyTokenClaimsOptions } from './token/verify-token-claims.js'
 
 export type OAuthProviderStore = Partial<
@@ -328,16 +326,8 @@ export class OAuthProvider extends OAuthVerifier {
   }
 
   protected async authenticateClient(
-    input: unknown,
+    credentials: OAuthClientIdentification,
   ): Promise<[Client, ClientAuth]> {
-    const credentials = await oauthClientIdentificationSchema
-      .parseAsync(input)
-      .catch((err) => {
-        throw err instanceof ZodError
-          ? new InvalidRequestError(err.errors[0].message, err)
-          : err
-      })
-
     const client = await this.clientManager.getClient(credentials.client_id)
     const { clientAuth, nonce } = await client.verifyCredentials(credentials, {
       audience: this.issuer,
@@ -357,7 +347,7 @@ export class OAuthProvider extends OAuthVerifier {
       // > registration details in order to identify and process requests
       // > accordingly.
 
-      throw new InvalidClientError(
+      throw new InvalidGrantError(
         'Native clients must authenticate using "none" method',
       )
     }
@@ -365,7 +355,7 @@ export class OAuthProvider extends OAuthVerifier {
     if (nonce != null) {
       const unique = await this.replayManager.uniqueAuth(nonce, client.id)
       if (!unique) {
-        throw new InvalidClientError(`${clientAuth.method} jti reused`)
+        throw new InvalidGrantError(`${clientAuth.method} jti reused`)
       }
     }
 
@@ -433,16 +423,17 @@ export class OAuthProvider extends OAuthVerifier {
    * @see {@link https://datatracker.ietf.org/doc/html/rfc9126}
    */
   protected async pushedAuthorizationRequest(
-    input: PushedAuthorizationRequest,
+    credentials: OAuthClientIdentification,
+    authorizationRequest: PushedAuthorizationRequest,
     dpopJkt: null | string,
   ): Promise<OAuthParResponse> {
     try {
-      const [client, clientAuth] = await this.authenticateClient(input)
+      const [client, clientAuth] = await this.authenticateClient(credentials)
 
       const { payload: parameters } =
-        'request' in input // Handle JAR
-          ? await this.decodeJAR(client, input)
-          : { payload: input }
+        'request' in authorizationRequest // Handle JAR
+          ? await this.decodeJAR(client, authorizationRequest)
+          : { payload: authorizationRequest }
 
       const { uri, expiresAt } =
         await this.requestManager.createAuthorizationRequest(
@@ -809,53 +800,50 @@ export class OAuthProvider extends OAuthVerifier {
   }
 
   protected async token(
-    input: unknown,
+    credentials: OAuthClientIdentification,
+    request: OAuthTokenRequest,
     dpopJkt: null | string,
   ): Promise<OAuthTokenResponse> {
-    const [client, clientAuth] = await this.authenticateClient(input)
+    const [client, clientAuth] = await this.authenticateClient(credentials)
 
-    const grant = await grantParametersSchema.parseAsync(input).catch((err) => {
-      throw err instanceof ZodError
-        ? new InvalidRequestError(err.errors[0].message, err)
-        : err
-    })
-
-    if (!this.metadata.grant_types_supported?.includes(grant.grant_type)) {
+    if (!this.metadata.grant_types_supported?.includes(request.grant_type)) {
       throw new InvalidGrantError(
-        `Grant type "${grant.grant_type}" is not supported by the server`,
+        `Grant type "${request.grant_type}" is not supported by the server`,
       )
     }
 
-    if (!client.metadata.grant_types.includes(grant.grant_type)) {
+    if (!client.metadata.grant_types.includes(request.grant_type)) {
       throw new InvalidGrantError(
-        `"${grant.grant_type}" grant type is not allowed for this client`,
+        `"${request.grant_type}" grant type is not allowed for this client`,
       )
     }
 
-    if (grant.grant_type === 'authorization_code') {
-      return this.codeGrant(client, clientAuth, grant, dpopJkt)
+    if (request.grant_type === 'authorization_code') {
+      return this.codeGrant(client, clientAuth, request, dpopJkt)
     }
 
-    if (grant.grant_type === 'refresh_token') {
-      return this.refreshTokenGrant(client, clientAuth, grant, dpopJkt)
+    if (request.grant_type === 'refresh_token') {
+      return this.refreshTokenGrant(client, clientAuth, request, dpopJkt)
     }
 
     throw new InvalidGrantError(
-      `Grant type "${grant.grant_type}" not supported`,
+      `Grant type "${request.grant_type}" not supported`,
     )
   }
 
   protected async codeGrant(
     client: Client,
     clientAuth: ClientAuth,
-    input: CodeGrantParameters,
+    input: OAuthAuthorizationCodeGrantTokenRequest,
     dpopJkt: null | string,
   ): Promise<OAuthTokenResponse> {
     try {
+      const code = codeSchema.parse(input.code)
+
       const { sub, deviceId, parameters } = await this.requestManager.findCode(
         client,
         clientAuth,
-        input.code,
+        code,
       )
 
       // the following check prevents re-use of PKCE challenges, enforcing the
@@ -911,7 +899,7 @@ export class OAuthProvider extends OAuthVerifier {
   async refreshTokenGrant(
     client: Client,
     clientAuth: ClientAuth,
-    input: RefreshGrantParameters,
+    input: OAuthRefreshTokenGrantTokenRequest,
     dpopJkt: null | string,
   ): Promise<OAuthTokenResponse> {
     return this.tokenManager.refresh(client, clientAuth, input, dpopJkt)
@@ -920,19 +908,20 @@ export class OAuthProvider extends OAuthVerifier {
   /**
    * @see {@link https://datatracker.ietf.org/doc/html/rfc7009#section-2.1 rfc7009}
    */
-  protected async revoke(input: Revoke) {
+  protected async revoke({ token }: OAuthTokenIdentification) {
     // @TODO this should also remove the account-device association (or, at
     // least, mark it as expired)
-    await this.tokenManager.revoke(input.token)
+    await this.tokenManager.revoke(token)
   }
 
   /**
    * @see {@link https://datatracker.ietf.org/doc/html/rfc7662#section-2.1 rfc7662}
    */
   protected async introspect(
-    input: Introspect,
-  ): Promise<IntrospectionResponse> {
-    const [client, clientAuth] = await this.authenticateClient(input)
+    credentials: OAuthClientIdentification,
+    { token }: OAuthTokenIdentification,
+  ): Promise<OAuthIntrospectionResponse> {
+    const [client, clientAuth] = await this.authenticateClient(credentials)
 
     // RFC7662 states the following:
     //
@@ -951,7 +940,7 @@ export class OAuthProvider extends OAuthVerifier {
       const tokenInfo = await this.tokenManager.clientTokenInfo(
         client,
         clientAuth,
-        input.token,
+        token,
       )
 
       return {
@@ -982,7 +971,7 @@ export class OAuthProvider extends OAuthVerifier {
 
   protected override async authenticateToken(
     tokenType: OAuthTokenType,
-    token: AccessToken,
+    token: OAuthAccessToken,
     dpopJkt: string | null,
     verifyOptions?: VerifyTokenClaimsOptions,
   ) {
@@ -1175,10 +1164,15 @@ export class OAuthProvider extends OAuthVerifier {
     router.post(
       '/oauth/par',
       jsonHandler(async function (req, _res) {
-        const input = await validateRequest(
-          req,
-          pushedAuthorizationRequestSchema,
-        )
+        const payload = await parseRequestPayload(req, ['json', 'urlencoded'])
+
+        const credentials = await oauthClientIdentificationSchema
+          .parseAsync(payload, { path: ['body'] })
+          .catch(throwInvalidClient)
+
+        const authorizationRequest = await pushedAuthorizationRequestSchema
+          .parseAsync(payload, { path: ['body'] })
+          .catch(throwInvalidRequest)
 
         const dpopJkt = await server.checkDpopProof(
           req.headers['dpop'],
@@ -1186,7 +1180,11 @@ export class OAuthProvider extends OAuthVerifier {
           this.url,
         )
 
-        return server.pushedAuthorizationRequest(input, dpopJkt)
+        return server.pushedAuthorizationRequest(
+          credentials,
+          authorizationRequest,
+          dpopJkt,
+        )
       }, 201),
     )
 
@@ -1202,7 +1200,15 @@ export class OAuthProvider extends OAuthVerifier {
     router.post(
       '/oauth/token',
       jsonHandler(async function (req, _res) {
-        const input: unknown = await parseRequestPayload(req)
+        const payload = await parseRequestPayload(req, ['json', 'urlencoded'])
+
+        const credentials = await oauthClientIdentificationSchema
+          .parseAsync(payload, { path: ['body'] })
+          .catch(throwInvalidClient)
+
+        const tokenRequest = await oauthTokenRequestSchema
+          .parseAsync(payload, { path: ['body'] })
+          .catch(throwInvalidGrant)
 
         const dpopJkt = await server.checkDpopProof(
           req.headers['dpop'],
@@ -1210,7 +1216,7 @@ export class OAuthProvider extends OAuthVerifier {
           this.url,
         )
 
-        return server.token(input, dpopJkt)
+        return server.token(credentials, tokenRequest, dpopJkt)
       }),
     )
 
@@ -1218,10 +1224,14 @@ export class OAuthProvider extends OAuthVerifier {
     router.post(
       '/oauth/revoke',
       jsonHandler(async function (req, res) {
-        const input = await validateRequest(req, revokeSchema)
+        const payload = await parseRequestPayload(req, ['json', 'urlencoded'])
+
+        const tokenIdentification = await oauthTokenIdentificationSchema
+          .parseAsync(payload, { path: ['body'] })
+          .catch(throwInvalidRequest)
 
         try {
-          await server.revoke(input)
+          await server.revoke(tokenIdentification)
         } catch (err) {
           onError?.(req, res, err, 'Failed to revoke token')
         }
@@ -1233,10 +1243,13 @@ export class OAuthProvider extends OAuthVerifier {
       '/oauth/revoke',
       navigationHandler(async function (req, res) {
         const query = Object.fromEntries(this.url.searchParams)
-        const input = revokeSchema.parse(query, { path: ['query'] })
+
+        const tokenIdentification = await oauthTokenIdentificationSchema
+          .parseAsync(query, { path: ['query'] })
+          .catch(throwInvalidRequest)
 
         try {
-          await server.revoke(input)
+          await server.revoke(tokenIdentification)
         } catch (err) {
           onError?.(req, res, err, 'Failed to revoke token')
         }
@@ -1253,8 +1266,17 @@ export class OAuthProvider extends OAuthVerifier {
     router.post(
       '/oauth/introspect',
       jsonHandler(async function (req, _res) {
-        const input = await validateRequest(req, introspectSchema)
-        return server.introspect(input)
+        const payload = await parseRequestPayload(req, ['json', 'urlencoded'])
+
+        const credentials = await oauthClientIdentificationSchema
+          .parseAsync(payload, { path: ['body'] })
+          .catch(throwInvalidClient)
+
+        const tokenIdentification = await oauthTokenIdentificationSchema
+          .parseAsync(payload, { path: ['body'] })
+          .catch(throwInvalidRequest)
+
+        return server.introspect(credentials, tokenIdentification)
       }),
     )
 
@@ -1268,12 +1290,13 @@ export class OAuthProvider extends OAuthVerifier {
         validateFetchSite(req, res, ['cross-site', 'none'])
 
         const query = Object.fromEntries(this.url.searchParams)
-        const input = await authorizationRequestQuerySchema.parseAsync(query, {
-          path: ['query'],
-        })
+
+        const authorizationRequest = await authorizationRequestQuerySchema
+          .parseAsync(query, { path: ['query'] })
+          .catch(throwInvalidRequest)
 
         const { deviceId } = await deviceManager.load(req, res)
-        const data = await server.authorize(deviceId, input)
+        const data = await server.authorize(deviceId, authorizationRequest)
 
         switch (true) {
           case 'redirect' in data: {
@@ -1306,7 +1329,10 @@ export class OAuthProvider extends OAuthVerifier {
         validateFetchSite(req, res, ['same-origin'])
         validateSameOrigin(req, res, issuerOrigin)
 
-        const input = await validateRequest(req, signInPayloadSchema)
+        const payload = await parseRequestPayload(req, ['json'])
+        const input = await signInPayloadSchema.parseAsync(payload, {
+          path: ['body'],
+        })
 
         validateReferer(req, res, {
           origin: issuerOrigin,
@@ -1442,25 +1468,36 @@ export class OAuthProvider extends OAuthVerifier {
   }
 }
 
-async function validateRequest<S extends z.ZodTypeAny>(
-  req: IncomingMessage,
-  schema: S,
-): Promise<z.TypeOf<S>> {
-  try {
-    return await validateRequestPayload(req, schema)
-  } catch (err) {
-    if (err instanceof ZodError) {
-      const issue = err.issues[0]
-      if (issue?.path.length) {
-        // "part" will typically be
-        const [part, ...path] = issue.path
-        throw new InvalidRequestError(
-          `Validation of ${part}'s "${path.join('.')}" with error: ${issue.message}`,
-          err,
-        )
-      }
-    }
+function throwInvalidGrant(err: unknown): never {
+  throw new InvalidGrantError(
+    extractZodErrorMessage(err) || 'Invalid grant',
+    err,
+  )
+}
 
-    throw new InvalidRequestError('Input validation error', err)
+function throwInvalidClient(err: unknown): never {
+  throw new InvalidClientError(
+    extractZodErrorMessage(err) || 'Client authentication failed',
+    err,
+  )
+}
+
+function throwInvalidRequest(err: unknown): never {
+  throw new InvalidRequestError(
+    extractZodErrorMessage(err) || 'Input validation error',
+    err,
+  )
+}
+
+function extractZodErrorMessage(err: unknown): string | undefined {
+  if (err instanceof ZodError) {
+    const issue = err.issues[0]
+    if (issue?.path.length) {
+      // "part" will typically be "body" or "query"
+      const [part, ...path] = issue.path
+      return `Validation of "${path.join('.')}" ${part} parameter failed: ${issue.message}`
+    }
   }
+
+  return undefined
 }

@@ -107,7 +107,7 @@ export class Client {
 
   /**
    * @see {@link https://datatracker.ietf.org/doc/html/rfc6749#section-2.3.1}
-   * @see {@link https://datatracker.ietf.org/doc/html/draft-ietf-oauth-jwt-bearer-11#section-3}
+   * @see {@link https://datatracker.ietf.org/doc/html/rfc7523#section-3}
    * @see {@link https://www.iana.org/assignments/oauth-parameters/oauth-parameters.xhtml#token-endpoint-auth-method}
    */
   public async verifyCredentials(
