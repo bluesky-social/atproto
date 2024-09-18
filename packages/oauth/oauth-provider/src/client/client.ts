@@ -1,6 +1,7 @@
 import { Jwks } from '@atproto/jwk'
 import {
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
+  OAuthAuthenticationRequestParameters,
   OAuthClientIdentification,
   OAuthClientMetadata,
 } from '@atproto/oauth-types'
@@ -20,9 +21,13 @@ import {
 } from 'jose'
 
 import { CLIENT_ASSERTION_MAX_AGE, JAR_MAX_AGE } from '../constants.js'
+import { InvalidAuthorizationDetailsError } from '../errors/invalid-authorization-details-error.js'
 import { InvalidClientError } from '../errors/invalid-client-error.js'
 import { InvalidClientMetadataError } from '../errors/invalid-client-metadata-error.js'
+import { InvalidGrantError } from '../errors/invalid-grant-error.js'
+import { InvalidParametersError } from '../errors/invalid-parameters-error.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
+import { compareRedirectUri } from '../lib/util/redirect-uri.js'
 import { ClientAuth, authJwkThumbprint } from './client-auth.js'
 import { ClientId } from './client-id.js'
 import { ClientInfo } from './client-info.js'
@@ -217,5 +222,101 @@ export class Client {
 
     // @ts-expect-error
     throw new Error(`Invalid method "${clientAuth.method}"`)
+  }
+
+  /**
+   * Validates the request parameters against the client metadata.
+   */
+  public validateRequest(
+    parameters: Readonly<OAuthAuthenticationRequestParameters>,
+  ): Readonly<OAuthAuthenticationRequestParameters> {
+    if (parameters.client_id !== this.id) {
+      throw new InvalidParametersError(
+        parameters,
+        'The "client_id" parameter field does not match the value used to authenticate the client',
+      )
+    }
+
+    if (parameters.scope !== undefined) {
+      // Any scope requested by the client must be registered in the client
+      // metadata.
+      const declaredScopes = this.metadata.scope?.split(' ')
+
+      if (!declaredScopes) {
+        throw new InvalidParametersError(
+          parameters,
+          'Client has no declared scopes in its metadata',
+        )
+      }
+
+      for (const scope of parameters.scope.split(' ')) {
+        if (!declaredScopes.includes(scope)) {
+          throw new InvalidParametersError(
+            parameters,
+            `Invalid scope "${scope}" requested by the client`,
+          )
+        }
+      }
+    }
+
+    if (!this.metadata.response_types.includes(parameters.response_type)) {
+      throw new InvalidParametersError(
+        parameters,
+        `Invalid response_type "${parameters.response_type}" requested by the client`,
+      )
+    }
+
+    if (parameters.response_type.includes('code')) {
+      if (!this.metadata.grant_types.includes('authorization_code')) {
+        throw new InvalidGrantError(
+          `This client is not allowed to use the "authorization_code" grant type`,
+        )
+      }
+    }
+
+    const { redirect_uri } = parameters
+    if (redirect_uri) {
+      if (
+        !this.metadata.redirect_uris.some((uri) =>
+          compareRedirectUri(uri, redirect_uri),
+        )
+      ) {
+        throw new InvalidParametersError(
+          parameters,
+          `Invalid redirect_uri ${redirect_uri}`,
+        )
+      }
+    } else if (this.metadata.redirect_uris.length === 1) {
+      const defaultRedirectUri = this.metadata.redirect_uris[0]
+      parameters = { ...parameters, redirect_uri: defaultRedirectUri }
+    } else {
+      // https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-10#authorization-request
+      //
+      // > "redirect_uri": OPTIONAL if only one redirect URI is registered for
+      // > this client. REQUIRED if multiple redirect URIs are registered for this
+      // > client.
+      throw new InvalidParametersError(parameters, 'redirect_uri is required')
+    }
+
+    if (parameters.authorization_details) {
+      const { authorization_details_types } = this.metadata
+      if (!authorization_details_types) {
+        throw new InvalidAuthorizationDetailsError(
+          parameters,
+          'Client Metadata does not declare any "authorization_details"',
+        )
+      }
+
+      for (const detail of parameters.authorization_details) {
+        if (!authorization_details_types?.includes(detail.type)) {
+          throw new InvalidAuthorizationDetailsError(
+            parameters,
+            `Client Metadata does not declare any "authorization_details" of type "${detail.type}"`,
+          )
+        }
+      }
+    }
+
+    return parameters
   }
 }

@@ -7,13 +7,13 @@ import {
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
   OAuthAuthenticationRequestParameters,
   OAuthAuthorizationServerMetadata,
-  OAuthClientIdentification,
   OAuthClientMetadata,
   OAuthParResponse,
   OAuthTokenResponse,
   OAuthTokenType,
   atprotoLoopbackClientMetadata,
   oauthAuthenticationRequestParametersSchema,
+  oauthClientIdentificationSchema,
 } from '@atproto/oauth-types'
 import { Redis, type RedisOptions } from 'ioredis'
 import z, { ZodError } from 'zod'
@@ -59,6 +59,7 @@ import {
   Router,
   ServerResponse,
   combineMiddlewares,
+  parseRequestPayload,
   setupCsrfToken,
   staticJsonHandler,
   validateCsrfToken,
@@ -104,15 +105,14 @@ import { isTokenId } from './token/token-id.js'
 import { TokenManager } from './token/token-manager.js'
 import { TokenStore, asTokenStore } from './token/token-store.js'
 import {
-  CodeGrantRequest,
+  CodeGrantParameters,
   Introspect,
   IntrospectionResponse,
-  RefreshGrantRequest,
+  RefreshGrantParameters,
   Revoke,
-  TokenRequest,
+  grantParametersSchema,
   introspectSchema,
   revokeSchema,
-  tokenRequestSchema,
 } from './token/types.js'
 import { VerifyTokenClaimsOptions } from './token/verify-token-claims.js'
 
@@ -328,12 +328,39 @@ export class OAuthProvider extends OAuthVerifier {
   }
 
   protected async authenticateClient(
-    client: Client,
-    credentials: OAuthClientIdentification,
-  ): Promise<ClientAuth> {
+    input: unknown,
+  ): Promise<[Client, ClientAuth]> {
+    const credentials = await oauthClientIdentificationSchema
+      .parseAsync(input)
+      .catch((err) => {
+        throw err instanceof ZodError
+          ? new InvalidRequestError(err.errors[0].message, err)
+          : err
+      })
+
+    const client = await this.clientManager.getClient(credentials.client_id)
     const { clientAuth, nonce } = await client.verifyCredentials(credentials, {
       audience: this.issuer,
     })
+
+    if (
+      client.metadata.application_type === 'native' &&
+      clientAuth.method !== 'none'
+    ) {
+      // https://datatracker.ietf.org/doc/html/rfc8252#section-8.4
+      //
+      // > Except when using a mechanism like Dynamic Client Registration
+      // > [RFC7591] to provision per-instance secrets, native apps are
+      // > classified as public clients, as defined by Section 2.1 of OAuth 2.0
+      // > [RFC6749]; they MUST be registered with the authorization server as
+      // > such. Authorization servers MUST record the client type in the client
+      // > registration details in order to identify and process requests
+      // > accordingly.
+
+      throw new InvalidClientError(
+        'Native clients must authenticate using "none" method',
+      )
+    }
 
     if (nonce != null) {
       const unique = await this.replayManager.uniqueAuth(nonce, client.id)
@@ -342,7 +369,7 @@ export class OAuthProvider extends OAuthVerifier {
       }
     }
 
-    return clientAuth
+    return [client, clientAuth]
   }
 
   protected async decodeJAR(
@@ -410,8 +437,7 @@ export class OAuthProvider extends OAuthVerifier {
     dpopJkt: null | string,
   ): Promise<OAuthParResponse> {
     try {
-      const client = await this.clientManager.getClient(input.client_id)
-      const clientAuth = await this.authenticateClient(client, input)
+      const [client, clientAuth] = await this.authenticateClient(input)
 
       const { payload: parameters } =
         'request' in input // Handle JAR
@@ -783,36 +809,46 @@ export class OAuthProvider extends OAuthVerifier {
   }
 
   protected async token(
-    input: TokenRequest,
+    input: unknown,
     dpopJkt: null | string,
   ): Promise<OAuthTokenResponse> {
-    const client = await this.clientManager.getClient(input.client_id)
-    const clientAuth = await this.authenticateClient(client, input)
+    const [client, clientAuth] = await this.authenticateClient(input)
 
-    if (!client.metadata.grant_types.includes(input.grant_type)) {
+    const grant = await grantParametersSchema.parseAsync(input).catch((err) => {
+      throw err instanceof ZodError
+        ? new InvalidRequestError(err.errors[0].message, err)
+        : err
+    })
+
+    if (!this.metadata.grant_types_supported?.includes(grant.grant_type)) {
       throw new InvalidGrantError(
-        `"${input.grant_type}" grant type is not allowed for this client`,
+        `Grant type "${grant.grant_type}" is not supported by the server`,
       )
     }
 
-    if (input.grant_type === 'authorization_code') {
-      return this.codeGrant(client, clientAuth, input, dpopJkt)
+    if (!client.metadata.grant_types.includes(grant.grant_type)) {
+      throw new InvalidGrantError(
+        `"${grant.grant_type}" grant type is not allowed for this client`,
+      )
     }
 
-    if (input.grant_type === 'refresh_token') {
-      return this.refreshTokenGrant(client, clientAuth, input, dpopJkt)
+    if (grant.grant_type === 'authorization_code') {
+      return this.codeGrant(client, clientAuth, grant, dpopJkt)
+    }
+
+    if (grant.grant_type === 'refresh_token') {
+      return this.refreshTokenGrant(client, clientAuth, grant, dpopJkt)
     }
 
     throw new InvalidGrantError(
-      // @ts-expect-error: fool proof
-      `Grant type "${input.grant_type}" not supported`,
+      `Grant type "${grant.grant_type}" not supported`,
     )
   }
 
   protected async codeGrant(
     client: Client,
     clientAuth: ClientAuth,
-    input: CodeGrantRequest,
+    input: CodeGrantParameters,
     dpopJkt: null | string,
   ): Promise<OAuthTokenResponse> {
     try {
@@ -875,7 +911,7 @@ export class OAuthProvider extends OAuthVerifier {
   async refreshTokenGrant(
     client: Client,
     clientAuth: ClientAuth,
-    input: RefreshGrantRequest,
+    input: RefreshGrantParameters,
     dpopJkt: null | string,
   ): Promise<OAuthTokenResponse> {
     return this.tokenManager.refresh(client, clientAuth, input, dpopJkt)
@@ -896,8 +932,7 @@ export class OAuthProvider extends OAuthVerifier {
   protected async introspect(
     input: Introspect,
   ): Promise<IntrospectionResponse> {
-    const client = await this.clientManager.getClient(input.client_id)
-    const clientAuth = await this.authenticateClient(client, input)
+    const [client, clientAuth] = await this.authenticateClient(input)
 
     // RFC7662 states the following:
     //
@@ -1167,7 +1202,7 @@ export class OAuthProvider extends OAuthVerifier {
     router.post(
       '/oauth/token',
       jsonHandler(async function (req, _res) {
-        const input = await validateRequest(req, tokenRequestSchema)
+        const input: unknown = await parseRequestPayload(req)
 
         const dpopJkt = await server.checkDpopProof(
           req.headers['dpop'],

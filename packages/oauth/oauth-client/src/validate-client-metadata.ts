@@ -50,6 +50,10 @@ export function validateClientMetadata(
     throw new TypeError(`"response_types" must include "code"`)
   }
 
+  if (!metadata.grant_types.includes('authorization_code')) {
+    throw new TypeError(`"grant_types" must include "authorization_code"`)
+  }
+
   const method = metadata[TOKEN_ENDPOINT_AUTH_METHOD]
   switch (method) {
     case undefined:

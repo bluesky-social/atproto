@@ -27,7 +27,6 @@ import {
 } from '@atproto/oauth-types'
 import { ZodError } from 'zod'
 
-import { ALLOW_LOOPBACK_CLIENT_REFRESH_TOKEN } from '../constants.js'
 import { InvalidClientMetadataError } from '../errors/invalid-client-metadata-error.js'
 import { InvalidRedirectUriError } from '../errors/invalid-redirect-uri-error.js'
 import { OAuthError } from '../errors/oauth-error.js'
@@ -112,12 +111,7 @@ export class ClientManager {
       })
 
       const isFirstParty = partialInfo?.isFirstParty ?? false
-      const isTrusted =
-        partialInfo?.isTrusted ??
-        (isFirstParty ||
-          // If the client was loaded from the store, we consider it trusted:
-          (!isOAuthClientIdLoopback(clientId) &&
-            !isOAuthClientIdDiscoverable(clientId)))
+      const isTrusted = partialInfo?.isTrusted ?? isFirstParty
 
       return new Client(clientId, metadata, jwks, { isFirstParty, isTrusted })
     } catch (err) {
@@ -277,14 +271,24 @@ export class ClientManager {
 
     for (const grantType of metadata.grant_types) {
       switch (grantType) {
-        case 'authorization_code':
-        case 'refresh_token':
-          continue
         case 'implicit':
-        case 'password':
+          // Never allowed (unsafe)
           throw new InvalidClientMetadataError(
             `Grant type "${grantType}" is not allowed`,
           )
+
+        // @TODO: Add support (e.g. for first party client)
+        // case 'client_credentials':
+        // case 'password':
+        case 'authorization_code':
+        case 'refresh_token':
+          if (!this.serverMetadata.grant_types_supported?.includes(grantType)) {
+            throw new InvalidClientMetadataError(
+              `Unsupported grant type "${grantType}"`,
+            )
+          }
+          break
+
         default:
           throw new InvalidClientMetadataError(
             `Grant type "${grantType}" is not supported`,
@@ -377,18 +381,6 @@ export class ClientManager {
       throw new InvalidClientMetadataError(
         `The "code" response type requires that "grant_types" contains "authorization_code"`,
       )
-    }
-
-    if (metadata.application_type === 'native') {
-      // https://datatracker.ietf.org/doc/html/rfc8252#section-8.4
-      //
-      // > Except when using a mechanism like Dynamic Client Registration
-      // > [RFC7591] to provision per-instance secrets, native apps are
-      // > classified as public clients, as defined by Section 2.1 of OAuth 2.0
-      // > [RFC6749]; they MUST be registered with the authorization server as
-      // > such.  Authorization servers MUST record the client type in the
-      // > client registration details in order to identify and process requests
-      // > accordingly.
     }
 
     if (metadata.authorization_details_types?.length) {
@@ -670,15 +662,6 @@ export class ClientManager {
     if (metadata.application_type !== 'native') {
       throw new InvalidClientMetadataError(
         'Loopback clients must have application_type "native"',
-      )
-    }
-
-    if (
-      !ALLOW_LOOPBACK_CLIENT_REFRESH_TOKEN &&
-      metadata.grant_types.includes('refresh_token')
-    ) {
-      throw new InvalidClientMetadataError(
-        'Loopback clients are not allowed to use the "refresh_token" grant type',
       )
     }
 

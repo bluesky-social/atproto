@@ -10,8 +10,12 @@ import { IncomingMessage, ServerResponse } from './types.js'
 import { UrlReference, urlMatch } from './url.js'
 
 export function parseRequestPayload<
-  A extends readonly KnownNames[] = readonly KnownNames[],
->(req: IncomingMessage, allow?: A) {
+  A extends readonly KnownNames[] = readonly ['json', 'urlencoded'],
+>(req: IncomingMessage, allow?: A)
+export function parseRequestPayload(
+  req: IncomingMessage,
+  allow: readonly KnownNames[] = ['json', 'urlencoded'],
+) {
   return parseStream(
     decodeStream(req, req.headers['content-encoding']),
     req.headers['content-type'],
@@ -22,7 +26,7 @@ export function parseRequestPayload<
 export async function validateRequestPayload<S extends z.ZodTypeAny>(
   req: IncomingMessage,
   schema: S,
-  allow: readonly KnownNames[] = ['json', 'urlencoded'],
+  allow?: readonly KnownNames[],
 ): Promise<z.infer<S>> {
   const payload = await parseRequestPayload(req, allow)
   return schema.parseAsync(payload, { path: ['body'] })
