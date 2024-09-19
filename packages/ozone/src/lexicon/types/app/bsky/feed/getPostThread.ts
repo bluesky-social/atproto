@@ -26,6 +26,7 @@ export interface OutputSchema {
     | AppBskyFeedDefs.NotFoundPost
     | AppBskyFeedDefs.BlockedPost
     | { $type: string; [k: string]: unknown }
+  threadgate?: AppBskyFeedDefs.ThreadgateView
   [k: string]: unknown
 }
 

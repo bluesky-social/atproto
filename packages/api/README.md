@@ -88,17 +88,21 @@ are available:
   Lower lever; compatible with most JS engines.
 
 Every `@atproto/oauth-client-*` implementation has a different way to obtain an
-OAuth based API agent instance. Here is an example restoring a previously
-saved session:
+`OAuthSession` instance that can be used to instantiate an `Agent` (from
+`@atproto/api`). Here is an example restoring a previously saved session:
 
 ```typescript
+import { Agent } from '@atproto/api'
 import { OAuthClient } from '@atproto/oauth-client'
 
 const oauthClient = new OAuthClient({
   // ...
 })
 
-const agent = await oauthClient.restore('did:plc:123')
+const oauthSession = await oauthClient.restore('did:plc:123')
+
+// Instantiate the api Agent using an OAuthSession
+const agent = new Agent(oauthSession)
 ```
 
 ### API calls
@@ -106,6 +110,10 @@ const agent = await oauthClient.restore('did:plc:123')
 The agent includes methods for many common operations, including:
 
 ```typescript
+// The DID of the user currently authenticated (or undefined)
+agent.did
+agent.accountDid // Throws if the user is not authenticated
+
 // Feeds and content
 await agent.getTimeline(params, opts)
 await agent.getAuthorFeed(params, opts)
@@ -151,11 +159,13 @@ await agent.updateSeenNotifications()
 await agent.resolveHandle(params, opts)
 await agent.updateHandle(params, opts)
 
-// Session management (OAuth based agent instances have a different set of methods)
+// Legacy: Session management should be performed through the SessionManager
+// rather than the Agent instance.
 if (agent instanceof AtpAgent) {
-  await agent.createAccount(params)
-  await agent.login(params)
-  await agent.resumeSession(session)
+  // AtpAgent instances support using different sessions during their lifetime
+  await agent.createAccount({ ... }) // session a
+  await agent.login({ ... }) // session b
+  await agent.resumeSession(savedSession) // session c
 }
 ```
 

@@ -1,6 +1,6 @@
 {
   "name": "@atproto/bsky",
-  "version": "0.0.78",
+  "version": "0.0.83",
   "license": "MIT",
   "description": "Reference implementation of app.bsky App View (Bluesky API)",
   "keywords": [
@@ -33,6 +33,7 @@
     "@atproto/identity": "workspace:^",
     "@atproto/lexicon": "workspace:^",
     "@atproto/repo": "workspace:^",
+    "@atproto/sync": "workspace:^",
     "@atproto/syntax": "workspace:^",
     "@atproto/xrpc-server": "workspace:^",
     "@bufbuild/protobuf": "^1.5.0",
@@ -47,6 +48,7 @@
     "http-terminator": "^3.2.0",
     "ioredis": "^5.3.2",
     "jose": "^5.0.1",
+    "key-encoder": "^2.0.3",
     "kysely": "^0.22.0",
     "multiformats": "^9.9.0",
     "p-queue": "^6.6.2",

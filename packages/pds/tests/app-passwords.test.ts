@@ -118,7 +118,7 @@ describe('app_passwords', () => {
       lxm: 'com.atproto.server.createAccount',
     })
     await expect(attempt).rejects.toThrow(
-      /cannot request a service auth token for the following method with an app password/,
+      /insufficient access to request a service auth token for the following method/,
     )
   })
 
@@ -159,7 +159,7 @@ describe('app_passwords', () => {
       lxm: 'com.atproto.server.createAccount',
     })
     await expect(priviAttempt).rejects.toThrow(
-      /cannot request a service auth token for the following method with an app password/,
+      /insufficient access to request a service auth token for the following method/,
     )
 
     // allows only full access auth

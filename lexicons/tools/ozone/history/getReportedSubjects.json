@@ -33,42 +33,12 @@
               "type": "array",
               "items": {
                 "type": "ref",
-                "ref": "#reportView"
+                "ref": "tools.ozone.history.defs#subjectBasicView"
               }
             },
             "cursor": { "type": "string" }
           }
         }
-      }
-    },
-    "reportView": {
-      "type": "object",
-      "required": ["subject", "report"],
-      "properties": {
-        "subject": {
-          "type": "ref",
-          "ref": "tools.ozone.history.defs#subjectBasicView"
-        },
-        "report": {
-          "type": "ref",
-          "ref": "#report"
-        }
-      }
-    },
-    "report": {
-      "type": "object",
-      "required": ["reasonType", "reason", "createdAt"],
-      "properties": {
-        "reasonType": {
-          "type": "ref",
-          "ref": "com.atproto.moderation.defs#reasonType"
-        },
-        "reason": {
-          "type": "string",
-          "maxGraphemes": 2000,
-          "maxLength": 20000
-        },
-        "createdAt": { "type": "string", "format": "datetime" }
       }
     }
   }

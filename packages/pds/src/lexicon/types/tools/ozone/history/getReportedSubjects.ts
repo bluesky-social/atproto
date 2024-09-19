@@ -8,7 +8,6 @@ import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as ToolsOzoneHistoryDefs from './defs'
-import * as ComAtprotoModerationDefs from '../../../com/atproto/moderation/defs'
 
 export interface QueryParams {
   account?: string
@@ -20,7 +19,7 @@ export interface QueryParams {
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  subjects: ReportView[]
+  subjects: ToolsOzoneHistoryDefs.SubjectBasicView[]
   cursor?: string
   [k: string]: unknown
 }
@@ -49,43 +48,3 @@ export type HandlerReqCtx<HA extends HandlerAuth = never> = {
 export type Handler<HA extends HandlerAuth = never> = (
   ctx: HandlerReqCtx<HA>,
 ) => Promise<HandlerOutput> | HandlerOutput
-
-export interface ReportView {
-  subject: ToolsOzoneHistoryDefs.SubjectBasicView
-  report: Report
-  [k: string]: unknown
-}
-
-export function isReportView(v: unknown): v is ReportView {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'tools.ozone.history.getReportedSubjects#reportView'
-  )
-}
-
-export function validateReportView(v: unknown): ValidationResult {
-  return lexicons.validate(
-    'tools.ozone.history.getReportedSubjects#reportView',
-    v,
-  )
-}
-
-export interface Report {
-  reasonType: ComAtprotoModerationDefs.ReasonType
-  reason: string
-  createdAt: string
-  [k: string]: unknown
-}
-
-export function isReport(v: unknown): v is Report {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'tools.ozone.history.getReportedSubjects#report'
-  )
-}
-
-export function validateReport(v: unknown): ValidationResult {
-  return lexicons.validate('tools.ozone.history.getReportedSubjects#report', v)
-}

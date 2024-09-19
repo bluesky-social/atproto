@@ -1,6 +1,8 @@
 import { AppBskyFeedPost, AtpAgent } from '@atproto/api'
 import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
 import { forSnapshot, stripViewerFromPost } from '../_util'
+import { RecordEmbed, VideoEmbed } from '../../src/views/types'
+import { RecordWithMedia } from '../../dist/views/types'
 import { ids } from '../../src/lexicon/lexicons'
 
 describe('pds posts views', () => {
@@ -113,5 +115,78 @@ describe('pds posts views', () => {
     expect(data.posts.length).toBe(1)
     // @ts-ignore we know it's a post record
     expect(data.posts[0].record.tags).toEqual(['javascript', 'hehe'])
+  })
+
+  it('embeds video.', async () => {
+    const { data: video } = await pdsAgent.api.com.atproto.repo.uploadBlob(
+      Buffer.from('notarealvideo'),
+      {
+        headers: sc.getHeaders(sc.dids.alice),
+        encoding: 'image/mp4',
+      },
+    )
+    const { uri } = await pdsAgent.api.app.bsky.feed.post.create(
+      { repo: sc.dids.alice },
+      {
+        text: 'video',
+        createdAt: new Date().toISOString(),
+        embed: {
+          $type: 'app.bsky.embed.video',
+          video: video.blob,
+          alt: 'alt text',
+          aspectRatio: { height: 3, width: 4 },
+        } satisfies VideoEmbed,
+      },
+      sc.getHeaders(sc.dids.alice),
+    )
+    await network.processAll()
+    const { data } = await agent.app.bsky.feed.getPosts({ uris: [uri] })
+    expect(data.posts.length).toBe(1)
+    expect(forSnapshot(data.posts[0])).toMatchSnapshot()
+  })
+
+  it('embeds video with record.', async () => {
+    const { data: video } = await pdsAgent.api.com.atproto.repo.uploadBlob(
+      Buffer.from('notarealvideo'),
+      {
+        headers: sc.getHeaders(sc.dids.alice),
+        encoding: 'image/mp4',
+      },
+    )
+    const embedRecord = await pdsAgent.api.app.bsky.feed.post.create(
+      { repo: sc.dids.alice },
+      {
+        text: 'embedded',
+        createdAt: new Date().toISOString(),
+      },
+      sc.getHeaders(sc.dids.alice),
+    )
+    const { uri } = await pdsAgent.api.app.bsky.feed.post.create(
+      { repo: sc.dids.alice },
+      {
+        text: 'video',
+        createdAt: new Date().toISOString(),
+        embed: {
+          $type: 'app.bsky.embed.recordWithMedia',
+          record: {
+            record: {
+              uri: embedRecord.uri,
+              cid: embedRecord.cid,
+            },
+          } satisfies RecordEmbed,
+          media: {
+            $type: 'app.bsky.embed.video',
+            video: video.blob,
+            alt: 'alt text',
+            aspectRatio: { height: 3, width: 4 },
+          } satisfies VideoEmbed,
+        } satisfies RecordWithMedia,
+      },
+      sc.getHeaders(sc.dids.alice),
+    )
+    await network.processAll()
+    const { data } = await agent.app.bsky.feed.getPosts({ uris: [uri] })
+    expect(data.posts.length).toBe(1)
+    expect(forSnapshot(data.posts[0])).toMatchSnapshot()
   })
 })

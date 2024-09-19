@@ -36,8 +36,7 @@ export type OAuthVerifierOptions = Override<
     issuer: URL | string
 
     /**
-     * The keyset used to sign tokens. Note that OIDC requires that at least one
-     * RS256 key is present in the keyset. ATPROTO requires ES256.
+     * The keyset used to sign access tokens.
      */
     keyset: Keyset | Iterable<Key | undefined | null | false>
 

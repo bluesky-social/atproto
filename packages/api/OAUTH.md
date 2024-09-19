@@ -40,7 +40,7 @@ Here is an example client metadata.
   "tos_uri": "https://example.com/tos",
   "policy_uri": "https://example.com/policy",
   "redirect_uris": ["https://example.com/callback"],
-  "scope": "offline_access",
+  "scope": "atproto",
   "grant_types": ["authorization_code", "refresh_token"],
   "response_types": ["code"],
   "token_endpoint_auth_method": "none",
@@ -73,8 +73,7 @@ Here is an example client metadata.
   the user during the authentication process.
 
 - If you don't want or need the user to stay authenticated for long periods
-  (better for security), you can remove the `offline_access` scope, and
-  `refresh_token` from the `grant_types`.
+  (better for security), you can remove `refresh_token` from the `grant_types`.
 
 > [!NOTE]
 >
@@ -168,6 +167,7 @@ ngrok as the `client_id`:
 Replace the content of the `src/app.ts` file, with the following content:
 
 ```typescript
+import { Agent } from '@atproto/api'
 import { BrowserOAuthClient } from '@atproto/oauth-client-browser'
 
 async function main() {
@@ -200,19 +200,28 @@ following code:
 
 ```typescript
 const result = await oauthClient.init()
-const agent = result?.agent
+
+if (result) {
+  if ('state' in result) {
+    console.log('The user was just redirected back from the authorization page')
+  }
+
+  console.log(`The user is currently signed in as ${result.session.did}`)
+}
+
+const session = result?.session
 
 // TO BE CONTINUED
 ```
 
 At this point you can detect if the user is already authenticated or not (by
-checking if `agent` is `undefined`).
+checking if `session` is `undefined`).
 
 Let's initiate an authentication flow if the user is not authenticated. Replace
 the `// TO BE CONTINUED` comment with the following code:
 
 ```typescript
-if (!agent) {
+if (!session) {
   const handle = prompt('Enter your atproto handle to authenticate')
   if (!handle) throw new Error('Authentication process canceled by the user')
 
@@ -234,14 +243,16 @@ if (!agent) {
 // TO BE CONTINUED
 ```
 
-At this point in the script, the user **will** be authenticated. API calls can
-be made using the `agent`. The `agent` is an instance of a sub-class of the
-`Agent` from `@atproto/api`. Let's make a simple call to the API to retrieve the
-user's profile. Replace the `// TO BE CONTINUED` comment with the following
-code:
+At this point in the script, the user **will** be authenticated. Authenticated
+API calls can be made using the `session`. The `session` can be used to instantiate the
+`Agent` class from `@atproto/api`. Let's make a simple call to the API to
+retrieve the user's profile. Replace the `// TO BE CONTINUED` comment with the
+following code:
 
 ```typescript
-if (agent) {
+if (session) {
+  const agent = new Agent(session)
+
   const fetchProfile = async () => {
     const profile = await agent.getProfile({ actor: agent.did })
     return profile.data
@@ -263,7 +274,7 @@ if (agent) {
   document.body.appendChild(logoutBtn)
   logoutBtn.textContent = 'Logout'
   logoutBtn.onclick = async () => {
-    await oauthAgent.signOut()
+    await session.signOut()
     window.location.reload()
   }
 

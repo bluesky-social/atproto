@@ -40,7 +40,7 @@ export default function (server: Server, ctx: AppContext) {
         'reset_password',
       )
       await ctx.mailer.sendResetPassword(
-        { identifier: account.handle ?? account.email, token },
+        { handle: account.handle ?? account.email, token },
         { to: account.email },
       )
     },

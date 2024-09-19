@@ -11,6 +11,7 @@ describe('pds quote views', () => {
   // account dids, for convenience
   let alice: string
   let bob: string
+  let carol: string
   let eve: string
 
   beforeAll(async () => {
@@ -23,6 +24,7 @@ describe('pds quote views', () => {
     await network.processAll()
     alice = sc.dids.alice
     bob = sc.dids.bob
+    carol = sc.dids.carol
     eve = sc.dids.eve
   })
 
@@ -38,6 +40,21 @@ describe('pds quote views', () => {
 
     expect(alicePostQuotes.data.posts.length).toBe(2)
     expect(forSnapshot(alicePostQuotes.data)).toMatchSnapshot()
+  })
+
+  it('does not return post in list when the quote author has a block', async () => {
+    await sc.block(eve, carol)
+    await network.processAll()
+
+    const quotes = await agent.api.app.bsky.feed.getQuotes(
+      { uri: sc.posts[alice][0].ref.uriStr, limit: 30 },
+      {
+        headers: await network.serviceHeaders(carol, ids.AppBskyFeedGetQuotes),
+      },
+    )
+
+    expect(quotes.data.posts.length).toBe(0)
+    await sc.unblock(eve, carol)
   })
 
   it('utilizes limit parameter and cursor', async () => {
@@ -101,5 +118,17 @@ describe('pds quote views', () => {
 
     expect(bobPost.data.posts[0].quoteCount).toEqual(0)
     expect(forSnapshot(bobPost.data)).toMatchSnapshot()
+  })
+
+  it('does not return post in list when the embed is blocked', async () => {
+    await sc.block(carol, eve)
+    await network.processAll()
+
+    const quotes = await agent.api.app.bsky.feed.getQuotes(
+      { uri: sc.posts[carol][1].ref.uriStr },
+      { headers: await network.serviceHeaders(bob, ids.AppBskyFeedGetQuotes) },
+    )
+
+    expect(quotes.data.posts.length).toBe(0)
   })
 })

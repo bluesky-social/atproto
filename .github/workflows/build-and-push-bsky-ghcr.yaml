@@ -3,7 +3,7 @@ on:
   push:
     branches:
       - main
-      - service-auth-scopes
+      - bsky-tweaks
 env:
   REGISTRY: ghcr.io
   USERNAME: ${{ github.actor }}

@@ -1,5 +1,5 @@
 import { InvalidDidError } from '../did-error.js'
-import { Did, checkDidMsid } from '../did.js'
+import { Did, assertDidMsid } from '../did.js'
 
 export const DID_WEB_PREFIX = `did:web:` satisfies Did<'web'>
 
@@ -11,7 +11,7 @@ export function isDidWeb(input: unknown): input is Did<'web'> {
   if (typeof input !== 'string') return false
 
   try {
-    checkDidWeb(input)
+    assertDidWeb(input)
     return true
   } catch {
     return false
@@ -19,11 +19,11 @@ export function isDidWeb(input: unknown): input is Did<'web'> {
 }
 
 export function asDidWeb(input: unknown): Did<'web'> {
-  checkDidWeb(input)
+  assertDidWeb(input)
   return input
 }
 
-export function checkDidWeb(input: unknown): asserts input is Did<'web'> {
+export function assertDidWeb(input: unknown): asserts input is Did<'web'> {
   if (typeof input !== 'string') {
     throw new InvalidDidError(typeof input, `DID must be a string`)
   }
@@ -41,12 +41,16 @@ export function didWebToUrl(did: string): URL {
   }
 
   // Make sure every char is valid (per DID spec)
-  checkDidMsid(did, DID_WEB_PREFIX.length)
+  assertDidMsid(did, DID_WEB_PREFIX.length)
 
   try {
     const msid = did.slice(DID_WEB_PREFIX.length)
     const parts = msid.split(':').map(decodeURIComponent)
-    return new URL(`https://${parts.join('/')}`)
+    const url = new URL(`https://${parts.join('/')}`)
+    if (url.hostname === 'localhost') {
+      url.protocol = 'http:'
+    }
+    return url
   } catch (cause) {
     throw new InvalidDidError(did, 'Invalid Web DID', cause)
   }

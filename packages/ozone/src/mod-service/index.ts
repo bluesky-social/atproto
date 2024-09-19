@@ -3,7 +3,7 @@ import { Insertable, sql } from 'kysely'
 import { CID } from 'multiformats/cid'
 import { AtUri, INVALID_HANDLE } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { addHoursToDate } from '@atproto/common'
+import { addHoursToDate, chunkArray } from '@atproto/common'
 import { Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
 import { AtpAgent } from '@atproto/api'
@@ -18,6 +18,8 @@ import {
   isModEventTakedown,
   isModEventEmail,
   isModEventTag,
+  REVIEWESCALATED,
+  REVIEWOPEN,
 } from '../lexicon/types/tools/ozone/moderation/defs'
 import { RepoRef, RepoBlobRef } from '../lexicon/types/com/atproto/admin/defs'
 import {
@@ -168,26 +170,22 @@ export class ModerationService {
     } = opts
     const { ref } = this.db.db.dynamic
     let builder = this.db.db.selectFrom('moderation_event').selectAll()
+
     if (subject) {
-      builder = builder.where((qb) => {
-        if (includeAllUserRecords) {
-          // If subject is an at-uri, we need to extract the DID from the at-uri
-          // otherwise, subject is probably a DID already
-          if (subject.startsWith('at://')) {
-            const uri = new AtUri(subject)
-            return qb.where('subjectDid', '=', uri.hostname)
-          }
-          return qb.where('subjectDid', '=', subject)
-        }
-        return qb
-          .where((subQb) =>
-            subQb
-              .where('subjectDid', '=', subject)
-              .where('subjectUri', 'is', null),
-          )
-          .orWhere('subjectUri', '=', subject)
-      })
+      const isSubjectAtUri = subject.startsWith('at://')
+      const subjectDid = isSubjectAtUri ? new AtUri(subject).hostname : subject
+      const subjectUri = isSubjectAtUri ? subject : null
+      // regardless of subjectUri check, we always want to query against subjectDid column since that's indexed
+      builder = builder.where('subjectDid', '=', subjectDid)
+
+      // if requester wants to include all user records, let's ignore matching on subjectUri
+      if (!includeAllUserRecords) {
+        builder = builder
+          .if(!subjectUri, (q) => q.where('subjectUri', 'is', null))
+          .if(!!subjectUri, (q) => q.where('subjectUri', '=', subjectUri))
+      }
     }
+
     if (types.length) {
       builder = builder.where((qb) => {
         if (types.length === 1) {
@@ -286,6 +284,52 @@ export class ModerationService {
     return await builder.execute()
   }
 
+  async resolveSubjectsForAccount(did: string, createdBy: string) {
+    const subjectsToBeResolved = await this.db.db
+      .selectFrom('moderation_subject_status')
+      .where('did', '=', did)
+      .where('recordPath', '!=', '')
+      .where('reviewState', 'in', [REVIEWESCALATED, REVIEWOPEN])
+      .selectAll()
+      .execute()
+
+    if (subjectsToBeResolved.length === 0) {
+      return
+    }
+
+    // Process subjects in chunks of 100 since each of these will trigger multiple db queries
+    for (const subjects of chunkArray(subjectsToBeResolved, 100)) {
+      await Promise.all(
+        subjects.map(async (subject) => {
+          const eventData = {
+            createdBy,
+            subject: subjectFromStatusRow(subject),
+          }
+          // For consistency's sake, when acknowledging appealed subjects, we should first resolve the appeal
+          if (subject.appealed) {
+            await this.logEvent({
+              event: {
+                $type: 'tools.ozone.moderation.defs#modEventResolveAppeal',
+                comment:
+                  '[AUTO_RESOLVE_FOR_TAKENDOWN_ACCOUNT]: Automatically resolving all appealed content for a takendown account',
+              },
+              ...eventData,
+            })
+          }
+
+          await this.logEvent({
+            event: {
+              $type: 'tools.ozone.moderation.defs#modEventAcknowledge',
+              comment:
+                '[AUTO_RESOLVE_FOR_TAKENDOWN_ACCOUNT]: Automatically resolving all reported content for a takendown account',
+            },
+            ...eventData,
+          })
+        }),
+      )
+    }
+  }
+
   async logEvent(info: {
     event: ModEventType
     subject: ModSubject
@@ -325,6 +369,10 @@ export class ModerationService {
       if (event.content) {
         meta.content = event.content
       }
+    }
+
+    if (isModEventTakedown(event) && event.acknowledgeAccountSubjects) {
+      meta.acknowledgeAccountSubjects = true
     }
 
     // Keep trace of reports that came in while the reporter was in muted stated
@@ -683,6 +731,7 @@ export class ModerationService {
   }
 
   async getSubjectStatuses({
+    includeAllUserRecords,
     cursor,
     limit = 50,
     takendown,
@@ -702,10 +751,11 @@ export class ModerationService {
     tags,
     excludeTags,
   }: {
+    includeAllUserRecords?: boolean
     cursor?: string
     limit?: number
     takendown?: boolean
-    appealed?: boolean | null
+    appealed?: boolean
     reviewedBefore?: string
     reviewState?: ModerationSubjectStatusRow['reviewState']
     reviewedAfter?: string
@@ -726,13 +776,19 @@ export class ModerationService {
 
     if (subject) {
       const subjectInfo = getStatusIdentifierFromSubject(subject)
-      builder = builder
-        .where('moderation_subject_status.did', '=', subjectInfo.did)
-        .where((qb) =>
+      builder = builder.where(
+        'moderation_subject_status.did',
+        '=',
+        subjectInfo.did,
+      )
+
+      if (!includeAllUserRecords) {
+        builder = builder.where((qb) =>
           subjectInfo.recordPath
             ? qb.where('recordPath', '=', subjectInfo.recordPath)
             : qb.where('recordPath', '=', ''),
         )
+      }
     }
 
     if (ignoreSubjects?.length) {
@@ -771,7 +827,7 @@ export class ModerationService {
 
     if (appealed !== undefined) {
       builder =
-        appealed === null
+        appealed === false
           ? builder.where('appealed', 'is', null)
           : builder.where('appealed', '=', appealed)
     }

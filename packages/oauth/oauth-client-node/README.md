@@ -36,7 +36,6 @@ const client = new NodeOAuthClientOptions({
     tos_uri: 'https://my-app.com/tos',
     policy_uri: 'https://my-app.com/policy',
     redirect_uris: ['https://my-app.com/callback'],
-    scope: 'profile email offline_access',
     grant_types: ['authorization_code', 'refresh_token'],
     response_types: ['code'],
     application_type: 'web',
@@ -105,12 +104,14 @@ app.get('/atproto-oauth-callback', async (req, res, next) => {
   try {
     const params = new URLSearchParams(req.url.split('?')[1])
 
-    const { agent, state } = await client.callback(params)
+    const { session, state } = await client.callback(params)
 
     // Process successful authentication here
     console.log('authorize() was called with state:', state)
 
-    console.log('User authenticated as:', agent.did)
+    console.log('User authenticated as:', session.did)
+
+    const agent = new Agent(session)
 
     // Make Authenticated API calls
     const profile = await agent.getProfile({ actor: agent.did })
@@ -126,11 +127,13 @@ app.get('/atproto-oauth-callback', async (req, res, next) => {
 async function worker() {
   const userDid = 'did:plc:123'
 
-  const agent = await client.restore(userDid)
+  const oauthSession = await client.restore(userDid)
 
-  // Note: If the current access_token is expired, the agent will automatically
+  // Note: If the current access_token is expired, the session will automatically
   // (and transparently) refresh it. The new token set will be saved though
   // the client's session store.
+
+  const agent = new Agent(oauthSession)
 
   // Make Authenticated API calls
   const profile = await agent.getProfile({ actor: agent.did })
@@ -154,7 +157,7 @@ The client metadata will typically contain:
   "tos_uri": "https://my-app.com/tos",
   "policy_uri": "https://my-app.com/policy",
   "redirect_uris": ["https://my-app.com/atproto-oauth-callback"],
-  "scope": "profile email offline_access",
+  "scope": "atproto",
   "grant_types": ["authorization_code", "refresh_token"],
   "response_types": ["code"],
   "application_type": "native",
@@ -290,7 +293,8 @@ list of examples below). Any refresh of the credentials will happen under the
 hood, and the new tokens will be saved in the session store.
 
 ```ts
-const agent = await client.restore('did:plc:123')
+const session = await client.restore('did:plc:123')
+const agent = new Agent(session)
 
 // Feeds and content
 await agent.getTimeline(params, opts)
@@ -339,9 +343,8 @@ await agent.updateHandle(params, opts)
 
 // etc.
 
-if (agent instanceof OAuthAtpAgent) {
-  agent.signOut()
-}
+// Always remember to revoke the credentials when you are done
+await session.signOut()
 ```
 
 ## Advances use-cases
@@ -379,7 +382,7 @@ client.addEventListener(
       // - session data does not match expected values returned by the OAuth server
     } else if (cause instanceof TokenRevokedError) {
       // Session was revoked through:
-      // - agent.signOut()
+      // - session.signOut()
       // - client.revoke(sub)
     } else {
       // An unexpected error occurred, causing the session to be deleted
@@ -415,9 +418,15 @@ app.get('/atproto-oauth-callback', async (req, res) => {
   const params = new URLSearchParams(req.url.split('?')[1])
   try {
     try {
-      const { agent, state } = await client.callback(params)
+      const { session, state } = await client.callback(params)
 
-      // Process successful authentication here
+      // Process successful authentication here. For example:
+
+      const agent = new Agent(session)
+
+      const profile = await agent.getProfile({ actor: agent.did })
+
+      console.log('Bsky profile:', profile.data)
     } catch (err) {
       // Silent sign-in failed, retry without prompt=none
       if (

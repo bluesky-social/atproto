@@ -8,12 +8,18 @@ import { Account } from '../account/account.js'
 import { Client } from '../client/client.js'
 import { RequestUri } from '../request/request-uri.js'
 
+export type ScopeDetail = {
+  scope: string
+  description?: string
+}
+
 export type AuthorizationResultAuthorize = {
   issuer: string
   client: Client
   parameters: OAuthAuthenticationRequestParameters
   authorize: {
     uri: RequestUri
+    scopeDetails?: ScopeDetail[]
     sessions: readonly {
       account: Account
       info: DeviceAccountInfo
@@ -44,6 +50,7 @@ export type AuthorizeData = {
   requestUri: string
   csrfCookie: string
   loginHint?: string
+  scopeDetails?: ScopeDetail[]
   newSessionsRequireConsent: boolean
   sessions: Session[]
 }
@@ -59,6 +66,7 @@ export function buildAuthorizeData(
     csrfCookie: `csrf-${data.authorize.uri}`,
     loginHint: data.parameters.login_hint,
     newSessionsRequireConsent: data.parameters.prompt === 'consent',
+    scopeDetails: data.authorize.scopeDetails,
     sessions: data.authorize.sessions.map(
       (session): Session => ({
         account: session.account,

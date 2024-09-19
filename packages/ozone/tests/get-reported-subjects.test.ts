@@ -154,21 +154,6 @@ describe('get-reported-subjects', () => {
     expect(carolsReportedSubjects.subjects.length).toBe(1)
   })
 
-  it('returns reported subjects for a specific account and their content', async () => {
-    const alicesReportsOnBob = await getSubjects(alice, {
-      account: sc.dids.bob,
-    })
-
-    const dids = new Set([
-      ...alicesReportsOnBob.subjects.map(
-        (item) => new AtUri(item.subject.subject).host,
-      ),
-    ])
-    expect(alicesReportsOnBob.subjects.length).toBe(2)
-    expect(dids.size).toBe(1)
-    expect(dids.has(sc.dids.bob)).toBe(true)
-  })
-
   it('returns updated subject status after mod action', async () => {
     await modClient.emitEvent(
       {
@@ -192,11 +177,11 @@ describe('get-reported-subjects', () => {
     ])
 
     const modActionForAlice = alicesReportedSubjects.subjects.find(
-      (item) => item.subject.subject === sc.posts[sc.dids.bob][0].ref.uriStr,
-    )?.subject.modAction
+      (item) => item.subject === sc.posts[sc.dids.bob][0].ref.uriStr,
+    )?.modAction
     const modActionForCarol = carolsReportedSubjects.subjects.find(
-      (item) => item.subject.subject === sc.posts[sc.dids.bob][0].ref.uriStr,
-    )?.subject.modAction
+      (item) => item.subject === sc.posts[sc.dids.bob][0].ref.uriStr,
+    )?.modAction
 
     expect(modActionForAlice).toEqual(modActionForCarol)
     expect(modActionForAlice).toEqual(MODACTIONLABEL)
@@ -220,11 +205,11 @@ describe('get-reported-subjects', () => {
     ])
 
     const modActionForAlice = alicesReportedSubjects.subjects.find(
-      (item) => item.subject.subject === sc.posts[sc.dids.bob][0].ref.uriStr,
-    )?.subject.modAction
+      (item) => item.subject === sc.posts[sc.dids.bob][0].ref.uriStr,
+    )?.modAction
     const modActionForBob = bobsReportedSubjects.subjects.find(
-      (item) => item.subject.subject === sc.posts[sc.dids.bob][0].ref.uriStr,
-    )?.subject.modAction
+      (item) => item.subject === sc.posts[sc.dids.bob][0].ref.uriStr,
+    )?.modAction
 
     expect(modActionForAlice).toEqual(MODACTIONLABEL)
     expect(modActionForBob).toEqual(MODACTIONPENDING)

@@ -23,6 +23,8 @@ export type InputSchema = undefined
 export interface OutputSchema {
   cursor?: string
   actors: AppBskyUnspeccedDefs.SkeletonSearchActor[]
+  /** DID of the account these suggestions are relative to. If this is returned undefined, suggestions are based on the viewer. */
+  relativeToDid?: string
   [k: string]: unknown
 }
 

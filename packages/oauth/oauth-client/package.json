@@ -1,6 +1,6 @@
 {
   "name": "@atproto/oauth-client",
-  "version": "0.1.7",
+  "version": "0.2.1",
   "license": "MIT",
   "description": "OAuth client for ATPROTO PDS. This package serves as common base for environment-specific implementations (NodeJS, Browser, React-Native).",
   "keywords": [
@@ -31,7 +31,6 @@
     "@atproto-labs/identity-resolver": "workspace:*",
     "@atproto-labs/simple-store": "workspace:*",
     "@atproto-labs/simple-store-memory": "workspace:*",
-    "@atproto/api": "workspace:*",
     "@atproto/did": "workspace:*",
     "@atproto/jwk": "workspace:*",
     "@atproto/oauth-types": "workspace:*",

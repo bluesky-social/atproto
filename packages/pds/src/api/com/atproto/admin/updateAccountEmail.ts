@@ -1,7 +1,7 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { authPassthru } from '../../../proxy'
+import { authPassthru } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.updateAccountEmail({

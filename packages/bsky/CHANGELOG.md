@@ -1,5 +1,56 @@
 # @atproto/bsky
 
+## 0.0.83
+
+### Patch Changes
+
+- [#2810](https://github.com/bluesky-social/atproto/pull/2810) [`33aa0c722`](https://github.com/bluesky-social/atproto/commit/33aa0c722226a18215af0ae1833c7c552fc7aaa7) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add NUX API
+
+- Updated dependencies [[`e6bd5aecc`](https://github.com/bluesky-social/atproto/commit/e6bd5aecce7954d60e5fb263297e697ab7aab98e), [`98711a147`](https://github.com/bluesky-social/atproto/commit/98711a147a8674337f605c6368f39fc10c2fae93), [`98711a147`](https://github.com/bluesky-social/atproto/commit/98711a147a8674337f605c6368f39fc10c2fae93), [`33aa0c722`](https://github.com/bluesky-social/atproto/commit/33aa0c722226a18215af0ae1833c7c552fc7aaa7)]:
+  - @atproto/api@0.13.7
+  - @atproto/common@0.4.2
+  - @atproto/xrpc-server@0.6.4
+  - @atproto/crypto@0.4.1
+  - @atproto/repo@0.5.1
+  - @atproto/sync@0.1.1
+
+## 0.0.82
+
+### Patch Changes
+
+- Updated dependencies [[`b15dec2f4`](https://github.com/bluesky-social/atproto/commit/b15dec2f4feb25ac91b169c83ccff1adbb5a9442), [`b15dec2f4`](https://github.com/bluesky-social/atproto/commit/b15dec2f4feb25ac91b169c83ccff1adbb5a9442)]:
+  - @atproto/sync@0.1.0
+  - @atproto/repo@0.5.0
+
+## 0.0.81
+
+### Patch Changes
+
+- Updated dependencies [[`e4d41d66f`](https://github.com/bluesky-social/atproto/commit/e4d41d66fa4757a696363f39903562458967b63d)]:
+  - @atproto/api@0.13.6
+
+## 0.0.80
+
+### Patch Changes
+
+- [#2751](https://github.com/bluesky-social/atproto/pull/2751) [`80ada8f47`](https://github.com/bluesky-social/atproto/commit/80ada8f47628f55f3074cd16a52857e98d117e14) Thanks [@devinivy](https://github.com/devinivy)! - Lexicons and support for video embeds within bsky posts.
+
+- Updated dependencies [[`80ada8f47`](https://github.com/bluesky-social/atproto/commit/80ada8f47628f55f3074cd16a52857e98d117e14)]:
+  - @atproto/api@0.13.5
+
+## 0.0.79
+
+### Patch Changes
+
+- [#2737](https://github.com/bluesky-social/atproto/pull/2737) [`a8e1f9000`](https://github.com/bluesky-social/atproto/commit/a8e1f9000d9617c4df9d9f0e74ae0e0b73fcfd66) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add `threadgate: ThreadgateView` to response from `getPostThread`
+
+- Updated dependencies [[`ebb318325`](https://github.com/bluesky-social/atproto/commit/ebb318325b6e80c4ea1a93a617569da2698afe31), [`ebb318325`](https://github.com/bluesky-social/atproto/commit/ebb318325b6e80c4ea1a93a617569da2698afe31), [`d9ffa3c46`](https://github.com/bluesky-social/atproto/commit/d9ffa3c460924010d7002b616cb7a0c66111cc6c), [`d9ffa3c46`](https://github.com/bluesky-social/atproto/commit/d9ffa3c460924010d7002b616cb7a0c66111cc6c), [`bbca17bc5`](https://github.com/bluesky-social/atproto/commit/bbca17bc5388e0b2af26fb107347c8ab507ee42f), [`a8e1f9000`](https://github.com/bluesky-social/atproto/commit/a8e1f9000d9617c4df9d9f0e74ae0e0b73fcfd66), [`ebb318325`](https://github.com/bluesky-social/atproto/commit/ebb318325b6e80c4ea1a93a617569da2698afe31), [`d9ffa3c46`](https://github.com/bluesky-social/atproto/commit/d9ffa3c460924010d7002b616cb7a0c66111cc6c)]:
+  - @atproto/xrpc-server@0.6.3
+  - @atproto/api@0.13.4
+  - @atproto/crypto@0.4.1
+  - @atproto/identity@0.4.1
+  - @atproto/repo@0.4.3
+
 ## 0.0.78
 
 ### Patch Changes

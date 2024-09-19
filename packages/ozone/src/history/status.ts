@@ -131,44 +131,13 @@ export class ModerationStatusHistory {
     const { ref } = this.db.db.dynamic
 
     const builder = this.db.db
-      .selectFrom('moderation_event')
-      .where('action', '=', 'tools.ozone.moderation.defs#modEventReport')
-      .where('createdBy', '=', reporterDid)
-      .if(!!account, (query) => query.where('subjectDid', '=', `${account}`))
-      // Looks a bit complex but essentially, we want to join based on the fact that subjectUri is essentially at://<did>/<recordPath> from the subject_status table
-      .innerJoin('public_subject_status', (join) => {
-        return join
-          .on((on) =>
-            on
-              .on(
-                sql`${sql.ref('moderation_event.subjectUri')} IS NULL AND ${sql.ref('public_subject_status.recordPath')} = ''`,
-              )
-              .orOn(
-                sql`${sql.ref('moderation_event.subjectUri')} = 'at://' || ${sql.ref('public_subject_status.did')} || '/' || ${sql.ref('public_subject_status.recordPath')}`,
-              ),
-          )
-          .onRef(
-            'moderation_event.subjectDid',
-            '=',
-            'public_subject_status.did',
-          )
-          .onRef(
-            'moderation_event.createdBy',
-            '=',
-            'public_subject_status.reporterDid',
-          )
-      })
-      .selectAll('public_subject_status')
-      .select([
-        'moderation_event.id',
-        'moderation_event.createdAt',
-        'moderation_event.comment',
-        'moderation_event.meta',
-      ])
+      .selectFrom('public_subject_status')
+      .where('reporterDid', '=', reporterDid)
+      .selectAll()
 
     const keyset = new TimeIdKeyset(
-      ref(`moderation_event.createdAt`),
-      ref('moderation_event.id'),
+      ref(`public_subject_status.createdAt`),
+      ref('public_subject_status.id'),
     )
     const paginatedBuilder = paginate(builder, {
       limit,
