@@ -4,7 +4,7 @@ import { Key, Keyset } from '@atproto/jwk'
 import {
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
   OAuthAuthorizationServerMetadata,
-  OAuthClientIdentification,
+  OAuthClientCredentials,
   OAuthEndpointName,
   OAuthParResponse,
   OAuthTokenResponse,
@@ -211,7 +211,7 @@ export class OAuthServerAgent {
 
   async buildClientAuth(endpoint: OAuthEndpointName): Promise<{
     headers?: Record<string, string>
-    payload: OAuthClientIdentification
+    payload: OAuthClientCredentials
   }> {
     const methodSupported =
       this.serverMetadata[`token_endpoint_auth_methods_supported`]

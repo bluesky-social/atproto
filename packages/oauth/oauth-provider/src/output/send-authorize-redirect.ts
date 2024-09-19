@@ -1,11 +1,12 @@
 import {
-  OAuthAuthenticationRequestParameters,
+  OAuthAuthorizationRequestParameters,
   OAuthTokenType,
 } from '@atproto/oauth-types'
 import { ServerResponse } from 'node:http'
 
 import { Client } from '../client/client.js'
 import { html, js } from '../lib/html/index.js'
+import { InvalidRequestError } from '../oauth-errors.js'
 import { Code } from '../request/code.js'
 import { sendWebPage } from './send-web-page.js'
 
@@ -35,8 +36,8 @@ export type AuthorizationResponseParameters = {
 
 export type AuthorizationResultRedirect = {
   issuer: string
-  client: Client
-  parameters: OAuthAuthenticationRequestParameters
+  client?: Client
+  parameters: OAuthAuthorizationRequestParameters
   redirect: AuthorizationResponseParameters
 }
 
@@ -46,7 +47,9 @@ export async function sendAuthorizeRedirect(
 ): Promise<void> {
   const { issuer, parameters, redirect, client } = result
 
-  const uri = parameters.redirect_uri || client.metadata.redirect_uris[0]
+  const uri = parameters.redirect_uri || client?.defaultRedirectUri
+  if (!uri) throw new InvalidRequestError('No redirect_uri')
+
   const mode = parameters.response_mode || 'query' // @TODO: default should depend on response_type
 
   const entries: [string, string][] = Object.entries({

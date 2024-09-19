@@ -257,6 +257,7 @@ export function useOAuth(options: UseOAuthOptions) {
 
       signIn,
       signOut: () => session?.signOut(),
+      refresh: () => session?.getTokenInfo(true),
 
       client,
       agent: session ? new Agent(session) : null,

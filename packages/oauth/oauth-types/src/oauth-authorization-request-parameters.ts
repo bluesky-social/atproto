@@ -13,7 +13,7 @@ import { oidcEntityTypeSchema } from './oidc-entity-type.js'
 /**
  * @see {@link https://openid.net/specs/openid-connect-core-1_0.html#AuthRequest | OIDC}
  */
-export const oauthAuthenticationRequestParametersSchema = z.object({
+export const oauthAuthorizationRequestParametersSchema = z.object({
   client_id: oauthClientIdSchema,
   state: z.string().optional(),
   redirect_uri: z.string().url().optional(),
@@ -88,8 +88,8 @@ export const oauthAuthenticationRequestParametersSchema = z.object({
 })
 
 /**
- * @see {oauthAuthenticationRequestParametersSchema}
+ * @see {oauthAuthorizationRequestParametersSchema}
  */
-export type OAuthAuthenticationRequestParameters = z.infer<
-  typeof oauthAuthenticationRequestParametersSchema
+export type OAuthAuthorizationRequestParameters = z.infer<
+  typeof oauthAuthorizationRequestParametersSchema
 >

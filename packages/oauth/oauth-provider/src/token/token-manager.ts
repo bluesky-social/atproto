@@ -2,7 +2,7 @@ import { isSignedJwt } from '@atproto/jwk'
 import {
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
   OAuthAccessToken,
-  OAuthAuthenticationRequestParameters,
+  OAuthAuthorizationRequestParameters,
   OAuthAuthorizationCodeGrantTokenRequest,
   OAuthClientCredentialsGrantTokenRequest,
   OAuthPasswordGrantTokenRequest,
@@ -84,7 +84,7 @@ export class TokenManager {
     clientAuth: ClientAuth,
     account: Account,
     device: null | { id: DeviceId; info: DeviceAccountInfo },
-    parameters: OAuthAuthenticationRequestParameters,
+    parameters: OAuthAuthorizationRequestParameters,
     input:
       | OAuthAuthorizationCodeGrantTokenRequest
       | OAuthClientCredentialsGrantTokenRequest
@@ -265,7 +265,7 @@ export class TokenManager {
     accessToken: OAuthAccessToken,
     refreshToken: string | undefined,
     expiresAt: Date,
-    parameters: OAuthAuthenticationRequestParameters,
+    parameters: OAuthAuthorizationRequestParameters,
     account: Account,
     authorizationDetails: null | any,
   ): Promise<OAuthTokenResponse> {

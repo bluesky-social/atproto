@@ -1,6 +1,6 @@
 import {
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
-  OAuthAuthenticationRequestParameters,
+  OAuthAuthorizationRequestParameters,
   OAuthAuthorizationServerMetadata,
 } from '@atproto/oauth-types'
 
@@ -35,6 +35,7 @@ import {
   encodeRequestUri,
   RequestUri,
 } from './request-uri.js'
+import { InvalidScopeError } from '../errors/invalid-scope-error.js'
 
 export class RequestManager {
   constructor(
@@ -52,7 +53,7 @@ export class RequestManager {
   async createAuthorizationRequest(
     client: Client,
     clientAuth: ClientAuth,
-    input: Readonly<OAuthAuthenticationRequestParameters>,
+    input: Readonly<OAuthAuthorizationRequestParameters>,
     deviceId: null | DeviceId,
     dpopJkt: null | string,
   ): Promise<RequestInfo> {
@@ -63,7 +64,7 @@ export class RequestManager {
   protected async create(
     client: Client,
     clientAuth: ClientAuth,
-    parameters: Readonly<OAuthAuthenticationRequestParameters>,
+    parameters: Readonly<OAuthAuthorizationRequestParameters>,
     deviceId: null | DeviceId = null,
   ): Promise<RequestInfo> {
     const expiresAt = new Date(Date.now() + PAR_EXPIRES_IN)
@@ -86,9 +87,9 @@ export class RequestManager {
   protected async validate(
     client: Client,
     clientAuth: ClientAuth,
-    parameters: Readonly<OAuthAuthenticationRequestParameters>,
+    parameters: Readonly<OAuthAuthorizationRequestParameters>,
     dpop_jkt: null | string,
-  ): Promise<Readonly<OAuthAuthenticationRequestParameters>> {
+  ): Promise<Readonly<OAuthAuthorizationRequestParameters>> {
     // -------------------------------
     // Validate unsupported parameters
     // -------------------------------
@@ -266,12 +267,9 @@ export class RequestManager {
     }
 
     if (!scopes.has('atproto')) {
-      throw new InvalidParametersError(
-        parameters,
-        'The "atproto" scope is required',
-      )
+      throw new InvalidScopeError(parameters, 'The "atproto" scope is required')
     } else if (scopes.has('openid')) {
-      throw new InvalidParametersError(
+      throw new InvalidScopeError(
         parameters,
         'OpenID Connect is not compatible with atproto',
       )

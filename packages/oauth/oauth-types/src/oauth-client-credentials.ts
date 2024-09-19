@@ -19,14 +19,34 @@ export const oauthClientCredentialsJwtBearerSchema = z.object({
   client_assertion: signedJwtSchema,
 })
 
+export type OAuthClientCredentialsJwtBearer = z.infer<
+  typeof oauthClientCredentialsJwtBearerSchema
+>
+
 export const oauthClientCredentialsSecretPostSchema = z.object({
   client_id: oauthClientIdSchema,
   client_secret: z.string(),
 })
 
+export type OAuthClientCredentialsSecretPost = z.infer<
+  typeof oauthClientCredentialsSecretPostSchema
+>
+
+export const oauthClientCredentialsNoneSchema = z.object({
+  client_id: oauthClientIdSchema,
+})
+
+export type OAuthClientCredentialsNone = z.infer<
+  typeof oauthClientCredentialsNoneSchema
+>
+
+//
+
 export const oauthClientCredentialsSchema = z.union([
   oauthClientCredentialsJwtBearerSchema,
   oauthClientCredentialsSecretPostSchema,
+  // Must be last since it is less specific
+  oauthClientCredentialsNoneSchema,
 ])
 
 export type OAuthClientCredentials = z.infer<

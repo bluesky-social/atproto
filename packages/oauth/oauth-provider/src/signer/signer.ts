@@ -7,7 +7,7 @@ import {
   VerifyOptions,
 } from '@atproto/jwk'
 import {
-  OAuthAuthenticationRequestParameters,
+  OAuthAuthorizationRequestParameters,
   OAuthAuthorizationDetails,
 } from '@atproto/oauth-types'
 
@@ -51,7 +51,7 @@ export class Signer {
 
   async accessToken(
     client: Client,
-    parameters: OAuthAuthenticationRequestParameters,
+    parameters: OAuthAuthorizationRequestParameters,
     claims: {
       aud: string | [string, ...string[]]
       sub: string

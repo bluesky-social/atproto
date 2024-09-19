@@ -1,8 +1,8 @@
 import { Jwks } from '@atproto/jwk'
 import {
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
-  OAuthAuthenticationRequestParameters,
-  OAuthClientIdentification,
+  OAuthAuthorizationRequestParameters,
+  OAuthClientCredentials,
   OAuthClientMetadata,
 } from '@atproto/oauth-types'
 import {
@@ -24,9 +24,9 @@ import { CLIENT_ASSERTION_MAX_AGE, JAR_MAX_AGE } from '../constants.js'
 import { InvalidAuthorizationDetailsError } from '../errors/invalid-authorization-details-error.js'
 import { InvalidClientError } from '../errors/invalid-client-error.js'
 import { InvalidClientMetadataError } from '../errors/invalid-client-metadata-error.js'
-import { InvalidGrantError } from '../errors/invalid-grant-error.js'
 import { InvalidParametersError } from '../errors/invalid-parameters-error.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
+import { InvalidScopeError } from '../errors/invalid-scope-error.js'
 import { compareRedirectUri } from '../lib/util/redirect-uri.js'
 import { ClientAuth, authJwkThumbprint } from './client-auth.js'
 import { ClientId } from './client-id.js'
@@ -111,7 +111,7 @@ export class Client {
    * @see {@link https://www.iana.org/assignments/oauth-parameters/oauth-parameters.xhtml#token-endpoint-auth-method}
    */
   public async verifyCredentials(
-    input: OAuthClientIdentification,
+    input: OAuthClientCredentials,
     checks: {
       audience: string
     },
@@ -228,8 +228,8 @@ export class Client {
    * Validates the request parameters against the client metadata.
    */
   public validateRequest(
-    parameters: Readonly<OAuthAuthenticationRequestParameters>,
-  ): Readonly<OAuthAuthenticationRequestParameters> {
+    parameters: Readonly<OAuthAuthorizationRequestParameters>,
+  ): Readonly<OAuthAuthorizationRequestParameters> {
     if (parameters.client_id !== this.id) {
       throw new InvalidParametersError(
         parameters,
@@ -243,7 +243,7 @@ export class Client {
       const declaredScopes = this.metadata.scope?.split(' ')
 
       if (!declaredScopes) {
-        throw new InvalidParametersError(
+        throw new InvalidScopeError(
           parameters,
           'Client has no declared scopes in its metadata',
         )
@@ -251,9 +251,9 @@ export class Client {
 
       for (const scope of parameters.scope.split(' ')) {
         if (!declaredScopes.includes(scope)) {
-          throw new InvalidParametersError(
+          throw new InvalidScopeError(
             parameters,
-            `Invalid scope "${scope}" requested by the client`,
+            `Scope "${scope}" is not declared in the client metadata`,
           )
         }
       }
@@ -268,7 +268,8 @@ export class Client {
 
     if (parameters.response_type.includes('code')) {
       if (!this.metadata.grant_types.includes('authorization_code')) {
-        throw new InvalidGrantError(
+        throw new InvalidParametersError(
+          parameters,
           `This client is not allowed to use the "authorization_code" grant type`,
         )
       }
@@ -286,16 +287,18 @@ export class Client {
           `Invalid redirect_uri ${redirect_uri}`,
         )
       }
-    } else if (this.metadata.redirect_uris.length === 1) {
-      const defaultRedirectUri = this.metadata.redirect_uris[0]
-      parameters = { ...parameters, redirect_uri: defaultRedirectUri }
     } else {
-      // https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-10#authorization-request
-      //
-      // > "redirect_uri": OPTIONAL if only one redirect URI is registered for
-      // > this client. REQUIRED if multiple redirect URIs are registered for this
-      // > client.
-      throw new InvalidParametersError(parameters, 'redirect_uri is required')
+      const { defaultRedirectUri } = this
+      if (defaultRedirectUri) {
+        parameters = { ...parameters, redirect_uri: defaultRedirectUri }
+      } else {
+        // https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-10#authorization-request
+        //
+        // > "redirect_uri": OPTIONAL if only one redirect URI is registered for
+        // > this client. REQUIRED if multiple redirect URIs are registered for this
+        // > client.
+        throw new InvalidParametersError(parameters, 'redirect_uri is required')
+      }
     }
 
     if (parameters.authorization_details) {
@@ -318,5 +321,10 @@ export class Client {
     }
 
     return parameters
+  }
+
+  get defaultRedirectUri(): string | undefined {
+    const { redirect_uris } = this.metadata
+    return redirect_uris.length === 1 ? redirect_uris[0] : undefined
   }
 }

@@ -1,10 +1,10 @@
-import { OAuthAuthenticationRequestParameters } from '@atproto/oauth-types'
+import { OAuthAuthorizationRequestParameters } from '@atproto/oauth-types'
 import { buildErrorPayload } from '../output/build-error-payload.js'
 import { OAuthError } from './oauth-error.js'
 
 export class AccessDeniedError extends OAuthError {
   constructor(
-    public readonly parameters: OAuthAuthenticationRequestParameters,
+    public readonly parameters: OAuthAuthorizationRequestParameters,
     error_description: string,
     error = 'access_denied',
     cause?: unknown,
@@ -13,7 +13,7 @@ export class AccessDeniedError extends OAuthError {
   }
 
   static from(
-    parameters: OAuthAuthenticationRequestParameters,
+    parameters: OAuthAuthorizationRequestParameters,
     cause?: unknown,
   ) {
     if (cause && cause instanceof AccessDeniedError) {
