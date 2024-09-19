@@ -16,6 +16,8 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   suggestions: AppBskyActorDefs.ProfileView[]
+  /** If true, response has fallen-back to generic results, and is not scoped using relativeToDid */
+  isFallback: boolean
   [k: string]: unknown
 }
 

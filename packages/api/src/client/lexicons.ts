@@ -4572,6 +4572,15 @@ export const schemaDict = {
               maxLength: 100,
             },
           },
+          nuxs: {
+            description: 'Storage for NUXs the user has encountered.',
+            type: 'array',
+            maxLength: 100,
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.actor.defs#nux',
+            },
+          },
         },
       },
       bskyAppProgressGuide: {
@@ -4583,6 +4592,34 @@ export const schemaDict = {
           guide: {
             type: 'string',
             maxLength: 100,
+          },
+        },
+      },
+      nux: {
+        type: 'object',
+        description: 'A new user experiences (NUX) storage object',
+        required: ['id', 'completed'],
+        properties: {
+          id: {
+            type: 'string',
+            maxLength: 100,
+          },
+          completed: {
+            type: 'boolean',
+            default: false,
+          },
+          data: {
+            description:
+              'Arbitrary data for the NUX. The structure is defined by the NUX itself. Limited to 300 characters.',
+            type: 'string',
+            maxLength: 3000,
+            maxGraphemes: 300,
+          },
+          expiresAt: {
+            type: 'string',
+            format: 'datetime',
+            description:
+              'The date and time at which the NUX will expire and should be considered completed.',
           },
         },
       },
@@ -8199,6 +8236,12 @@ export const schemaDict = {
                   ref: 'lex:app.bsky.actor.defs#profileView',
                 },
               },
+              isFallback: {
+                type: 'boolean',
+                description:
+                  'If true, response has fallen-back to generic results, and is not scoped using relativeToDid',
+                default: false,
+              },
             },
           },
         },
@@ -9154,6 +9197,12 @@ export const schemaDict = {
                   type: 'ref',
                   ref: 'lex:app.bsky.unspecced.defs#skeletonSearchActor',
                 },
+              },
+              relativeToDid: {
+                type: 'string',
+                format: 'did',
+                description:
+                  'DID of the account these suggestions are relative to. If this is returned undefined, suggestions are based on the viewer.',
               },
             },
           },
@@ -10920,6 +10969,11 @@ export const schemaDict = {
             description:
               'Indicates how long the takedown should be in effect before automatically expiring.',
           },
+          acknowledgeAccountSubjects: {
+            type: 'boolean',
+            description:
+              'If true, all other reports on content authored by this account will be resolved (acknowledged).',
+          },
         },
       },
       modEventReverseTakedown: {
@@ -11731,9 +11785,15 @@ export const schemaDict = {
         parameters: {
           type: 'params',
           properties: {
+            includeAllUserRecords: {
+              type: 'boolean',
+              description:
+                "All subjects belonging to the account specified in the 'subject' param will be returned.",
+            },
             subject: {
               type: 'string',
               format: 'uri',
+              description: 'The subject to get the status for.',
             },
             comment: {
               type: 'string',

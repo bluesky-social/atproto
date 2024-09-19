@@ -92,7 +92,7 @@ describe('email confirmation', () => {
       }),
     )
     expect(mail.to).toEqual(alice.email)
-    expect(mail.html).toContain('Confirm your Bluesky email')
+    expect(mail.html).toContain('Confirm your email')
     confirmToken = getTokenFromMail(mail)
     expect(confirmToken).toBeDefined()
   })
@@ -164,7 +164,7 @@ describe('email confirmation', () => {
     }
     const mail = await getMailFrom(reqUpdate())
     expect(mail.to).toEqual(alice.email)
-    expect(mail.html).toContain('Update your Bluesky email')
+    expect(mail.html).toContain('Update your email')
     updateToken = getTokenFromMail(mail)
     expect(updateToken).toBeDefined()
   })

@@ -10,6 +10,9 @@ import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as ToolsOzoneModerationDefs from './defs'
 
 export interface QueryParams {
+  /** All subjects belonging to the account specified in the 'subject' param will be returned. */
+  includeAllUserRecords?: boolean
+  /** The subject to get the status for. */
   subject?: string
   /** Search subjects by keyword from comments */
   comment?: string

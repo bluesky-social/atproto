@@ -7,12 +7,11 @@ import {
 } from 'stream'
 
 export const forwardStreamErrors = (...streams: Stream[]) => {
-  for (let i = 0; i < streams.length; ++i) {
-    const stream = streams[i]
-    const next = streams[i + 1]
-    if (next) {
-      stream.once('error', (err) => next.emit('error', err))
-    }
+  for (let i = 1; i < streams.length; ++i) {
+    const prev = streams[i - 1]
+    const next = streams[i]
+
+    prev.once('error', (err) => next.emit('error', err))
   }
 }
 
