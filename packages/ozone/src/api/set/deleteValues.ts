@@ -10,7 +10,7 @@ export default function (server: Server, ctx: AppContext) {
       const db = ctx.db
       const { name, values } = input.body
 
-      if (!access.isAdmin) {
+      if (!access.isModerator) {
         throw new AuthRequiredError(
           'Must be a moderator to remove values from a set',
         )

@@ -145,7 +145,6 @@ export class SetService {
       .values({
         name,
         description,
-        updatedAt: new Date(),
       })
       .onConflict((oc) => {
         // if description is provided as a string, even an empty one, update it
@@ -171,7 +170,6 @@ export class SetService {
           values.map((value) => ({
             setId,
             value,
-            createdAt: now.toISOString(),
           })),
         )
         .onConflict((oc) => oc.columns(['setId', 'value']).doNothing())

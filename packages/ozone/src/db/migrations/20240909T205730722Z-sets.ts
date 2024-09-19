@@ -40,6 +40,11 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .alterTable('set_value')
     .addUniqueConstraint('set_value_setid_value_unique', ['setId', 'value'])
     .execute()
+  await db.schema
+    .createIndex('set_value_created_at_idx')
+    .on('set_value')
+    .column('createdAt')
+    .execute()
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {
