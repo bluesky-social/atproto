@@ -1,22 +1,31 @@
+import { decodeStream } from '@atproto/common'
 import { parse as parseCookie, serialize as serializeCookie } from 'cookie'
 import { randomBytes } from 'crypto'
 import createHttpError from 'http-errors'
+import { Readable } from 'node:stream'
 import { z } from 'zod'
 
 import { KnownNames } from './parser.js'
 import { appendHeader } from './response.js'
-import { decodeStream, parseStream } from './stream.js'
+import { parseStream } from './stream.js'
 import { IncomingMessage, ServerResponse } from './types.js'
 import { UrlReference, urlMatch } from './url.js'
 
-export function parseRequestPayload<
+export async function parseRequestPayload<
   A extends readonly KnownNames[] = readonly KnownNames[],
 >(req: IncomingMessage, allow?: A) {
-  return parseStream(
-    decodeStream(req, req.headers['content-encoding']),
-    req.headers['content-type'],
-    allow,
-  )
+  let readable: Readable
+  try {
+    readable = decodeStream(req, req.headers['content-encoding'])
+  } catch (err) {
+    throw createHttpError(415, err, { expose: err instanceof TypeError })
+  }
+
+  try {
+    return await parseStream(readable, req.headers['content-type'], allow)
+  } catch (err) {
+    throw createHttpError(400, err, { expose: err instanceof TypeError })
+  }
 }
 
 export async function validateRequestPayload<S extends z.ZodTypeAny>(

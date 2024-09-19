@@ -9,6 +9,21 @@ export const noUndefinedVals = <T>(
   return obj as Record<string, T>
 }
 
+export function omit<
+  T extends undefined | Record<string, unknown>,
+  K extends keyof NonNullable<T>,
+>(obj: T, keys: readonly K[]): T extends undefined ? undefined : Omit<T, K>
+export function omit(
+  obj: Record<string, unknown>,
+  keys: readonly string[],
+): undefined | Record<string, unknown> {
+  if (!obj) return obj
+
+  return Object.fromEntries(
+    Object.entries(obj).filter((entry) => !keys.includes(entry[0])),
+  )
+}
+
 export const jitter = (maxMs: number) => {
   return Math.round((Math.random() - 0.5) * maxMs * 2)
 }

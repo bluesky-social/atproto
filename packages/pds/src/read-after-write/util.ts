@@ -1,14 +1,22 @@
-import { Headers } from '@atproto/xrpc'
-import { readStickyLogger as log } from '../logger'
+import { jsonToLex } from '@atproto/lexicon'
+import { HeadersMap } from '@atproto/xrpc'
+import {
+  HandlerPipeThrough,
+  HandlerPipeThroughBuffer,
+  parseReqNsid,
+} from '@atproto/xrpc-server'
+import express from 'express'
+
 import AppContext from '../context'
+import { lexicons } from '../lexicon/lexicons'
+import { readStickyLogger as log } from '../logger'
+import { asPipeThroughBuffer, pipethrough, safeParseJson } from '../pipethrough'
 import { HandlerResponse, LocalRecords, MungeFn } from './types'
 import { getRecordsSinceRev } from './viewer'
-import { HandlerPipeThrough } from '@atproto/xrpc-server'
-import { parseRes } from '../pipethrough'
 
 const REPO_REV_HEADER = 'atproto-repo-rev'
 
-export const getRepoRev = (headers: Headers): string | undefined => {
+export const getRepoRev = (headers: HeadersMap): string | undefined => {
   return headers[REPO_REV_HEADER]
 }
 
@@ -23,40 +31,50 @@ export const getLocalLag = (local: LocalRecords): number | undefined => {
   return Date.now() - new Date(oldest).getTime()
 }
 
-export const handleReadAfterWrite = async <T>(
+export const pipethroughReadAfterWrite = async <T>(
   ctx: AppContext,
-  nsid: string,
-  requester: string,
-  res: HandlerPipeThrough,
+  reqCtx: { req: express.Request; auth: { credentials: { did: string } } },
   munge: MungeFn<T>,
 ): Promise<HandlerResponse<T> | HandlerPipeThrough> => {
-  try {
-    return await readAfterWriteInternal(ctx, nsid, requester, res, munge)
-  } catch (err) {
-    log.warn({ err, requester }, 'error in read after write munge')
-    return res
-  }
-}
+  const { req, auth } = reqCtx
+  const requester = auth.credentials.did
 
-export const readAfterWriteInternal = async <T>(
-  ctx: AppContext,
-  nsid: string,
-  requester: string,
-  res: HandlerPipeThrough,
-  munge: MungeFn<T>,
-): Promise<HandlerResponse<T> | HandlerPipeThrough> => {
-  const rev = getRepoRev(res.headers ?? {})
-  if (!rev) return res
-  return ctx.actorStore.read(requester, async (store) => {
-    const local = await getRecordsSinceRev(store, rev)
-    if (local.count === 0) {
-      return res
-    }
-    const localViewer = ctx.localViewer(store)
-    const parsedRes = parseRes<T>(nsid, res)
-    const data = await munge(localViewer, parsedRes, local, requester)
-    return formatMungedResponse(data, getLocalLag(local))
-  })
+  const upstreamRes = await pipethrough(ctx, req, { iss: requester })
+
+  const rev = upstreamRes.headers && getRepoRev(upstreamRes.headers)
+  if (!rev) return upstreamRes
+
+  // if the munging fails, we can't return the original response because the
+  // stream will already have been read. If we end-up buffering the response,
+  // we'll return the buffered response in case of an error.
+  let bufferedRes: HandlerPipeThroughBuffer | undefined
+
+  try {
+    return await ctx.actorStore.read(requester, async (store) => {
+      const local = await getRecordsSinceRev(store, rev)
+      if (local.count === 0) return upstreamRes
+
+      const lxm = parseReqNsid(req)
+
+      bufferedRes = await asPipeThroughBuffer(upstreamRes)
+
+      const value = safeParseJson(bufferedRes!.buffer.toString('utf8'))
+      const lex = value && jsonToLex(value)
+
+      const parsedRes = lexicons.assertValidXrpcOutput(lxm, lex) as T
+
+      const localViewer = ctx.localViewer(store)
+
+      const data = await munge(localViewer, parsedRes, local, requester)
+      return formatMungedResponse(data, getLocalLag(local))
+    })
+  } catch (err) {
+    // The error occurred while reading the stream, this is non-recoverable
+    if (!bufferedRes && !upstreamRes.stream.readable) throw err
+
+    log.warn({ err, requester }, 'error in read after write munge')
+    return bufferedRes ?? upstreamRes
+  }
 }
 
 export const formatMungedResponse = <T>(

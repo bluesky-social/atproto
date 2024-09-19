@@ -1,7 +1,5 @@
-import { PassThrough, Readable } from 'node:stream'
-import { createGunzip, createInflate } from 'node:zlib'
-
-import createHttpError from 'http-errors'
+import { streamToNodeBuffer } from '@atproto/common'
+import { Readable } from 'node:stream'
 
 import {
   KnownNames,
@@ -13,32 +11,12 @@ import {
   parsers,
 } from './parser.js'
 
-export async function readStream(req: Readable): Promise<Buffer> {
-  const chunks: Buffer[] = []
-  let totalLength = 0
-  for await (const chunk of req) {
-    chunks.push(chunk)
-    totalLength += chunk.length
-  }
-  return Buffer.concat(chunks, totalLength)
-}
-
-export function decodeStream(
-  req: Readable,
-  encoding: string = 'identity',
-): Readable {
-  switch (encoding) {
-    case 'deflate':
-      return req.compose(createInflate())
-    case 'gzip':
-      return req.compose(createGunzip())
-    case 'identity':
-      return req.compose(new PassThrough())
-    default:
-      throw createHttpError(415, 'Unsupported content-encoding')
-  }
-}
-
+/**
+ * Generic method that parses a stream of unknown nature (HTTP request/response,
+ * socket, file, etc.), but of known mime type, into a parsed object.
+ *
+ * @throws {TypeError} If the content-type is not valid or supported.
+ */
 export async function parseStream<
   T extends KnownTypes,
   A extends readonly KnownNames[] = readonly KnownNames[],
@@ -61,10 +39,6 @@ export async function parseStream(
   contentType: unknown = 'application/octet-stream',
   allow?: string[],
 ): Promise<ParserResult<KnownParser>> {
-  if (typeof contentType !== 'string') {
-    throw createHttpError(400, 'Invalid content-type')
-  }
-
   const type = parseContentType(contentType)
 
   const parser = parsers.find(
@@ -73,9 +47,9 @@ export async function parseStream(
   )
 
   if (!parser) {
-    throw createHttpError(400, 'Unsupported content-type')
+    throw new TypeError(`Unsupported content-type: ${type.mime}`)
   }
 
-  const buffer = await readStream(req)
+  const buffer = await streamToNodeBuffer(req)
   return parser.parse(buffer, type)
 }

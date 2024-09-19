@@ -3,29 +3,57 @@ import { Fetch, FetchContext, toRequestTransformer } from './fetch.js'
 import { TransformedResponse } from './transformed-response.js'
 import { padLines, stringifyMessage } from './util.js'
 
-export function loggedFetch<C = FetchContext>(
-  fetch: Fetch<C> = globalThis.fetch,
-) {
+type LogFn<Args extends unknown[]> = (...args: Args) => void | PromiseLike<void>
+
+export function loggedFetch<C = FetchContext>({
+  fetch = globalThis.fetch as Fetch<C>,
+  logRequest = true as boolean | LogFn<[request: Request]>,
+  logResponse = true as boolean | LogFn<[response: Response, request: Request]>,
+  logError = true as boolean | LogFn<[error: unknown, request: Request]>,
+}) {
+  const onRequest =
+    logRequest === true
+      ? async (request) => {
+          const requestMessage = await stringifyMessage(request)
+          console.info(
+            `> ${request.method} ${request.url}\n${padLines(requestMessage, '  ')}`,
+          )
+        }
+      : logRequest || undefined
+
+  const onResponse =
+    logResponse === true
+      ? async (response) => {
+          const responseMessage = await stringifyMessage(response.clone())
+          console.info(
+            `< HTTP/1.1 ${response.status} ${response.statusText}\n${padLines(responseMessage, '  ')}`,
+          )
+        }
+      : logResponse || undefined
+
+  const onError =
+    logError === true
+      ? async (error) => {
+          console.error(`< Error:`, error)
+        }
+      : logError || undefined
+
+  if (!onRequest && !onResponse && !onError) return fetch
+
   return toRequestTransformer(async function (
     this: C,
     request,
   ): Promise<Response> {
-    const requestMessage = await stringifyMessage(request)
-    console.info(
-      `> ${request.method} ${request.url}\n${padLines(requestMessage, '  ')}`,
-    )
+    if (onRequest) await onRequest(request)
 
     try {
       const response = await fetch.call(this, request)
 
-      const responseMessage = await stringifyMessage(response.clone())
-      console.info(
-        `< HTTP/1.1 ${response.status} ${response.statusText}\n${padLines(responseMessage, '  ')}`,
-      )
+      if (onResponse) await onResponse(response, request)
 
       return response
     } catch (error) {
-      console.error(`< Error:`, error)
+      if (onError) await onError(error, request)
 
       throw error
     }
