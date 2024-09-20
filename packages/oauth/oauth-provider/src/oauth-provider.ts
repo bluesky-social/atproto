@@ -996,12 +996,7 @@ export class OAuthProvider extends OAuthVerifier {
     T = void,
     Req extends IncomingMessage = IncomingMessage,
     Res extends ServerResponse = ServerResponse,
-  >({
-    onError = process.env['NODE_ENV'] === 'development'
-      ? (req, res, err, msg): void =>
-          console.error(`OAuthProvider error (${msg}):`, err)
-      : undefined,
-  }: RouterOptions<Req, Res> = {}) {
+  >(options?: RouterOptions<Req, Res>) {
     const deviceManager = new DeviceManager(this.deviceStore)
     const outputManager = new OutputManager(this.customization)
 
@@ -1014,6 +1009,12 @@ export class OAuthProvider extends OAuthVerifier {
     // Utils
 
     const csrfCookie = (uri: RequestUri) => `csrf-${uri}`
+    const onError =
+      options?.onError ??
+      (process.env['NODE_ENV'] === 'development'
+        ? (req, res, err, msg): void =>
+            console.error(`OAuthProvider error (${msg}):`, err)
+        : undefined)
 
     /**
      * Creates a middleware that will serve static JSON content.
@@ -1074,7 +1075,7 @@ export class OAuthProvider extends OAuthVerifier {
           // OAuthError are used to build expected responses, so we don't log
           // them as errors.
           if (!(err instanceof OAuthError) || err.statusCode >= 500) {
-            await onError?.(req, res, err, 'Unexpected error')
+            onError?.(req, res, err, 'Unexpected error')
           }
         }
       }
@@ -1101,7 +1102,7 @@ export class OAuthProvider extends OAuthVerifier {
             throw new Error('Navigation handler did not send a response')
           }
         } catch (err) {
-          await onError?.(
+          onError?.(
             req,
             res,
             err,
@@ -1125,9 +1126,8 @@ export class OAuthProvider extends OAuthVerifier {
       err: unknown,
     ): AuthorizationResultRedirect => {
       if (err instanceof AccessDeniedError && err.parameters.redirect_uri) {
-        if (err.cause) {
-          onError?.(req, res, err.cause, 'Failed to accept request')
-        }
+        const { cause } = err
+        if (cause) onError?.(req, res, cause, 'Access denied')
 
         return {
           issuer: server.issuer,
