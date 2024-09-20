@@ -33,6 +33,7 @@
     "@atproto-labs/pipe": "workspace:*",
     "@atproto-labs/simple-store": "workspace:*",
     "@atproto-labs/simple-store-memory": "workspace:*",
+    "@atproto/common": "workspace:^",
     "@atproto/jwk": "workspace:*",
     "@atproto/jwk-jose": "workspace:*",
     "@atproto/oauth-types": "workspace:*",

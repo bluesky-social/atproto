@@ -73,7 +73,7 @@ import {
   Router,
   ServerResponse,
   combineMiddlewares,
-  parseRequestPayload,
+  parseHttpRequest,
   setupCsrfToken,
   staticJsonHandler,
   validateCsrfToken,
@@ -1196,7 +1196,7 @@ export class OAuthProvider extends OAuthVerifier {
     router.post(
       '/oauth/par',
       jsonHandler(async function (req, _res) {
-        const payload = await parseRequestPayload(req, ['json', 'urlencoded'])
+        const payload = await parseHttpRequest(req, ['json', 'urlencoded'])
 
         const credentials = await oauthClientCredentialsSchema
           .parseAsync(payload, { path: ['body'] })
@@ -1232,7 +1232,7 @@ export class OAuthProvider extends OAuthVerifier {
     router.post(
       '/oauth/token',
       jsonHandler(async function (req, _res) {
-        const payload = await parseRequestPayload(req, ['json', 'urlencoded'])
+        const payload = await parseHttpRequest(req, ['json', 'urlencoded'])
 
         const credentials = await oauthClientCredentialsSchema
           .parseAsync(payload, { path: ['body'] })
@@ -1256,7 +1256,7 @@ export class OAuthProvider extends OAuthVerifier {
     router.post(
       '/oauth/revoke',
       jsonHandler(async function (req, res) {
-        const payload = await parseRequestPayload(req, ['json', 'urlencoded'])
+        const payload = await parseHttpRequest(req, ['json', 'urlencoded'])
 
         const tokenIdentification = await oauthTokenIdentificationSchema
           .parseAsync(payload, { path: ['body'] })
@@ -1298,7 +1298,7 @@ export class OAuthProvider extends OAuthVerifier {
     router.post(
       '/oauth/introspect',
       jsonHandler(async function (req, _res) {
-        const payload = await parseRequestPayload(req, ['json', 'urlencoded'])
+        const payload = await parseHttpRequest(req, ['json', 'urlencoded'])
 
         const credentials = await oauthClientCredentialsSchema
           .parseAsync(payload, { path: ['body'] })
@@ -1374,7 +1374,7 @@ export class OAuthProvider extends OAuthVerifier {
         validateFetchSite(req, res, ['same-origin'])
         validateSameOrigin(req, res, issuerOrigin)
 
-        const payload = await parseRequestPayload(req, ['json'])
+        const payload = await parseHttpRequest(req, ['json'])
         const input = await signInPayloadSchema.parseAsync(payload, {
           path: ['body'],
         })

@@ -2,22 +2,9 @@ import { parse as parseCookie, serialize as serializeCookie } from 'cookie'
 import { randomBytes } from 'crypto'
 import createHttpError from 'http-errors'
 
-import { KnownNames } from './parser.js'
 import { appendHeader } from './response.js'
-import { decodeStream, parseStream } from './stream.js'
 import { IncomingMessage, ServerResponse } from './types.js'
 import { urlMatch, UrlReference } from './url.js'
-
-export function parseRequestPayload<A extends readonly KnownNames[]>(
-  req: IncomingMessage,
-  allow: A,
-) {
-  return parseStream(
-    decodeStream(req, req.headers['content-encoding']),
-    req.headers['content-type'] ?? 'application/octet-stream',
-    allow,
-  )
-}
 
 export function validateHeaderValue(
   req: IncomingMessage,
