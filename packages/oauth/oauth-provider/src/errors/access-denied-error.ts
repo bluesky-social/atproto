@@ -15,12 +15,18 @@ export class AccessDeniedError extends OAuthError {
   static from(
     parameters: OAuthAuthorizationRequestParameters,
     cause?: unknown,
+    fallbackError?: string,
   ) {
     if (cause && cause instanceof AccessDeniedError) {
       return cause
     }
 
     const { error, error_description } = buildErrorPayload(cause)
-    return new AccessDeniedError(parameters, error_description, error, cause)
+    return new AccessDeniedError(
+      parameters,
+      error_description,
+      fallbackError ?? error,
+      cause,
+    )
   }
 }

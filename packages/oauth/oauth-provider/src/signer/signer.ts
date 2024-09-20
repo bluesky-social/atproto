@@ -52,7 +52,7 @@ export class Signer {
   async accessToken(
     client: Client,
     parameters: OAuthAuthorizationRequestParameters,
-    claims: {
+    options: {
       aud: string | [string, ...string[]]
       sub: string
       jti: TokenId
@@ -66,20 +66,20 @@ export class Signer {
     return this.sign(
       {
         // https://datatracker.ietf.org/doc/html/rfc9068#section-2.1
-        alg: claims.alg,
+        alg: options.alg,
         typ: 'at+jwt',
       },
       {
-        aud: claims.aud,
-        iat: dateToEpoch(claims?.iat),
-        exp: dateToEpoch(claims.exp),
-        sub: claims.sub,
-        jti: claims.jti,
-        cnf: claims.cnf,
+        aud: options.aud,
+        iat: dateToEpoch(options?.iat),
+        exp: dateToEpoch(options.exp),
+        sub: options.sub,
+        jti: options.jti,
+        cnf: options.cnf,
         // https://datatracker.ietf.org/doc/html/rfc8693#section-4.3
         client_id: client.id,
         scope: parameters.scope,
-        authorization_details: claims.authorization_details,
+        authorization_details: options.authorization_details,
       },
     )
   }

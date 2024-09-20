@@ -533,38 +533,67 @@ export class OAuthProvider extends OAuthVerifier {
     query: OAuthAuthorizationRequestQuery,
   ): Promise<AuthorizationResultRedirect | AuthorizationResultAuthorize> {
     const { issuer } = this
+
+    // If there is a chance to redirect the user to the client, let's do
+    // it by wrapping the error in an AccessDeniedError.
+    const accessDeniedCatcher =
+      'redirect_uri' in query
+        ? (err: unknown): never => {
+            // https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-11#section-4.1.2.1
+            throw AccessDeniedError.from(query, err, 'invalid_request')
+          }
+        : null
+
+    const client = await this.clientManager
+      .getClient(credentials.client_id)
+      .catch(accessDeniedCatcher)
+
+    const { clientAuth, parameters, uri } =
+      await this.processAuthorizationRequest(client, deviceId, query).catch(
+        accessDeniedCatcher,
+      )
+
     try {
-      const client = await this.clientManager.getClient(credentials.client_id)
+      const sessions = await this.getSessions(
+        client,
+        clientAuth,
+        deviceId,
+        parameters,
+      )
 
-      try {
-        const { uri, parameters, clientAuth } =
-          await this.processAuthorizationRequest(client, deviceId, query)
+      if (parameters.prompt === 'none') {
+        const ssoSessions = sessions.filter((s) => s.matchesHint)
+        if (ssoSessions.length > 1) {
+          throw new AccountSelectionRequiredError(parameters)
+        }
+        if (ssoSessions.length < 1) {
+          throw new LoginRequiredError(parameters)
+        }
 
-        try {
-          const sessions = await this.getSessions(
-            client,
-            clientAuth,
-            deviceId,
-            parameters,
-          )
+        const ssoSession = ssoSessions[0]!
+        if (ssoSession.loginRequired) {
+          throw new LoginRequiredError(parameters)
+        }
+        if (ssoSession.consentRequired) {
+          throw new ConsentRequiredError(parameters)
+        }
 
-          if (parameters.prompt === 'none') {
-            const ssoSessions = sessions.filter((s) => s.matchesHint)
-            if (ssoSessions.length > 1) {
-              throw new AccountSelectionRequiredError(parameters)
-            }
-            if (ssoSessions.length < 1) {
-              throw new LoginRequiredError(parameters)
-            }
+        const code = await this.requestManager.setAuthorized(
+          client,
+          uri,
+          deviceId,
+          ssoSession.account,
+        )
 
-            const ssoSession = ssoSessions[0]!
-            if (ssoSession.loginRequired) {
-              throw new LoginRequiredError(parameters)
-            }
-            if (ssoSession.consentRequired) {
-              throw new ConsentRequiredError(parameters)
-            }
+        return { issuer, client, parameters, redirect: { code } }
+      }
 
+      // Automatic SSO when a did was provided
+      if (parameters.prompt == null && parameters.login_hint != null) {
+        const ssoSessions = sessions.filter((s) => s.matchesHint)
+        if (ssoSessions.length === 1) {
+          const ssoSession = ssoSessions[0]!
+          if (!ssoSession.loginRequired && !ssoSession.consentRequired) {
             const code = await this.requestManager.setAuthorized(
               client,
               uri,
@@ -574,89 +603,34 @@ export class OAuthProvider extends OAuthVerifier {
 
             return { issuer, client, parameters, redirect: { code } }
           }
-
-          // Automatic SSO when a did was provided
-          if (parameters.prompt == null && parameters.login_hint != null) {
-            const ssoSessions = sessions.filter((s) => s.matchesHint)
-            if (ssoSessions.length === 1) {
-              const ssoSession = ssoSessions[0]!
-              if (!ssoSession.loginRequired && !ssoSession.consentRequired) {
-                const code = await this.requestManager.setAuthorized(
-                  client,
-                  uri,
-                  deviceId,
-                  ssoSession.account,
-                )
-
-                return { issuer, client, parameters, redirect: { code } }
-              }
-            }
-          }
-
-          return {
-            issuer,
-            client,
-            parameters,
-            authorize: {
-              uri,
-              sessions,
-              scopeDetails: parameters.scope
-                ?.split(/\s+/)
-                .filter(Boolean)
-                .sort((a, b) => a.localeCompare(b))
-                .map((scope) => ({
-                  scope,
-                  // @TODO Allow to customize the scope descriptions (e.g.
-                  // using a hook)
-                  description: undefined,
-                })),
-            },
-          }
-        } catch (err) {
-          await this.deleteRequest(uri, parameters)
-
-          // Transform into an AccessDeniedError to allow redirecting the user
-          // to the client with the error details.
-          throw AccessDeniedError.from(parameters, err)
         }
-      } catch (err) {
-        if (err instanceof AccessDeniedError) {
-          // https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-11#section-4.1.2.1
-          return {
-            issuer,
-            client,
-            parameters: err.parameters,
-            redirect: err.toJSON(),
-          }
-        }
+      }
 
-        throw err
+      return {
+        issuer,
+        client,
+        parameters,
+        authorize: {
+          uri,
+          sessions,
+          scopeDetails: parameters.scope
+            ?.split(/\s+/)
+            .filter(Boolean)
+            .sort((a, b) => a.localeCompare(b))
+            .map((scope) => ({
+              scope,
+              // @TODO Allow to customize the scope descriptions (e.g.
+              // using a hook)
+              description: undefined,
+            })),
+        },
       }
     } catch (err) {
-      if (err instanceof InvalidClientError && 'redirect_uri' in query) {
-        // There is no point in supporting invalid client when the authorization
-        // request was initiated with PAR (because the error would have already
-        // been reported to the client during PAR). We *could* support JAR here,
-        // but only if the JWT is not signed. Since that is such a rare case, we
-        // simply do not support it.
-        //
-        // https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-11#section-4.1.2.1
-        return {
-          issuer,
-          redirect: {
-            error: 'invalid_request',
-            error_description: err.error_description,
-          },
-          parameters: {
-            client_id: credentials.client_id,
-            redirect_uri: query.redirect_uri,
-            response_type: query.response_type,
-            response_mode: query.response_mode,
-          },
-        }
-      }
+      await this.deleteRequest(uri, parameters)
 
-      throw err
+      // Not using accessDeniedCatcher here because "parameters" will most
+      // likely contain the redirect_uri (using the client default).
+      throw AccessDeniedError.from(parameters, err)
     }
   }
 
@@ -753,51 +727,42 @@ export class OAuthProvider extends OAuthVerifier {
     const { issuer } = this
     const client = await this.clientManager.getClient(clientId)
 
+    const { parameters, clientAuth } = await this.requestManager.get(
+      uri,
+      clientId,
+      deviceId,
+    )
+
     try {
-      const { parameters, clientAuth } = await this.requestManager.get(
+      const { account, info } = await this.accountManager.get(deviceId, sub)
+
+      // The user is trying to authorize without a fresh login
+      if (this.loginRequired(client, parameters, info)) {
+        throw new LoginRequiredError(
+          parameters,
+          'Account authentication required.',
+        )
+      }
+
+      const code = await this.requestManager.setAuthorized(
+        client,
         uri,
-        clientId,
         deviceId,
+        account,
       )
 
-      try {
-        const { account, info } = await this.accountManager.get(deviceId, sub)
+      await this.accountManager.addAuthorizedClient(
+        deviceId,
+        account,
+        client,
+        clientAuth,
+      )
 
-        // The user is trying to authorize without a fresh login
-        if (this.loginRequired(client, parameters, info)) {
-          throw new LoginRequiredError(
-            parameters,
-            'Account authentication required.',
-          )
-        }
-
-        const code = await this.requestManager.setAuthorized(
-          client,
-          uri,
-          deviceId,
-          account,
-        )
-
-        await this.accountManager.addAuthorizedClient(
-          deviceId,
-          account,
-          client,
-          clientAuth,
-        )
-
-        return { issuer, client, parameters, redirect: { code } }
-      } catch (err) {
-        await this.deleteRequest(uri, parameters)
-
-        throw AccessDeniedError.from(parameters, err)
-      }
+      return { issuer, parameters, redirect: { code } }
     } catch (err) {
-      if (err instanceof AccessDeniedError) {
-        const { parameters } = err
-        return { issuer, client, parameters, redirect: err.toJSON() }
-      }
+      await this.deleteRequest(uri, parameters)
 
-      throw err
+      throw AccessDeniedError.from(parameters, err)
     }
   }
 
@@ -806,28 +771,21 @@ export class OAuthProvider extends OAuthVerifier {
     uri: RequestUri,
     clientId: ClientId,
   ): Promise<AuthorizationResultRedirect> {
-    try {
-      const { parameters } = await this.requestManager.get(
-        uri,
-        clientId,
-        deviceId,
-      )
+    const { parameters } = await this.requestManager.get(
+      uri,
+      clientId,
+      deviceId,
+    )
 
-      await this.deleteRequest(uri, parameters)
+    await this.deleteRequest(uri, parameters)
 
-      // Trigger redirect (see catch block)
-      throw new AccessDeniedError(parameters, 'Access denied')
-    } catch (err) {
-      if (err instanceof AccessDeniedError) {
-        return {
-          issuer: this.issuer,
-          client: await this.clientManager.getClient(clientId),
-          parameters: err.parameters,
-          redirect: err.toJSON(),
-        }
-      }
-
-      throw err
+    return {
+      issuer: this.issuer,
+      parameters: parameters,
+      redirect: {
+        error: 'access_denied',
+        error_description: 'Access denied',
+      },
     }
   }
 
@@ -1156,6 +1114,31 @@ export class OAuthProvider extends OAuthVerifier {
         }
       }
 
+    /**
+     * Provides a better UX when a request is denied by redirecting to the
+     * client with the error details. This will also log any error that caused
+     * the access to be denied (such as system errors).
+     */
+    const accessDeniedToRedirectCatcher = (
+      req: Req,
+      res: Res,
+      err: unknown,
+    ): AuthorizationResultRedirect => {
+      if (err instanceof AccessDeniedError && err.parameters.redirect_uri) {
+        if (err.cause) {
+          onError?.(req, res, err.cause, 'Failed to accept request')
+        }
+
+        return {
+          issuer: server.issuer,
+          parameters: err.parameters,
+          redirect: err.toJSON(),
+        }
+      }
+
+      throw err
+    }
+
     //- Public OAuth endpoints
 
     router.get(
@@ -1337,11 +1320,9 @@ export class OAuthProvider extends OAuthVerifier {
 
         const { deviceId } = await deviceManager.load(req, res)
 
-        const data = await server.authorize(
-          deviceId,
-          credentials,
-          authorizationRequest,
-        )
+        const data = await server
+          .authorize(deviceId, credentials, authorizationRequest)
+          .catch((err) => accessDeniedToRedirectCatcher(req, res, err))
 
         switch (true) {
           case 'redirect' in data: {
@@ -1445,12 +1426,14 @@ export class OAuthProvider extends OAuthVerifier {
 
         const { deviceId } = await deviceManager.load(req, res)
 
-        const data = await server.acceptRequest(
-          deviceId,
-          input.request_uri,
-          input.client_id,
-          input.account_sub,
-        )
+        const data = await server
+          .acceptRequest(
+            deviceId,
+            input.request_uri,
+            input.client_id,
+            input.account_sub,
+          )
+          .catch((err) => accessDeniedToRedirectCatcher(req, res, err))
 
         return await sendAuthorizeRedirect(res, data)
       }),
@@ -1499,11 +1482,9 @@ export class OAuthProvider extends OAuthVerifier {
 
         const { deviceId } = await deviceManager.load(req, res)
 
-        const data = await server.rejectRequest(
-          deviceId,
-          input.request_uri,
-          input.client_id,
-        )
+        const data = await server
+          .rejectRequest(deviceId, input.request_uri, input.client_id)
+          .catch((err) => accessDeniedToRedirectCatcher(req, res, err))
 
         return await sendAuthorizeRedirect(res, data)
       }),

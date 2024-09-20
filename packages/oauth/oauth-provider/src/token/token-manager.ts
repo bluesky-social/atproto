@@ -316,7 +316,11 @@ export class TokenManager {
     input: OAuthRefreshTokenGrantTokenRequest,
     dpopJkt: null | string,
   ): Promise<OAuthTokenResponse> {
-    const refreshToken = refreshTokenSchema.parse(input.refresh_token)
+    const refreshTokenParsed = refreshTokenSchema.safeParse(input.refresh_token)
+    if (!refreshTokenParsed.success) {
+      throw new InvalidRequestError('Invalid refresh token')
+    }
+    const refreshToken = refreshTokenParsed.data
 
     const tokenInfo = await this.store.findTokenByRefreshToken(refreshToken)
     if (!tokenInfo?.currentRefreshToken) {
