@@ -2,18 +2,14 @@ import { OAuthClientId } from './oauth-client-id.js'
 import { OAuthScope, oauthScopeSchema } from './oauth-scope.js'
 import { isLoopbackHost, safeUrl } from './util.js'
 
-const OAUTH_CLIENT_ID_LOOPBACK_URL = 'http://localhost/'
+const OAUTH_CLIENT_ID_LOOPBACK_URL = 'http://localhost'
 
 export type OAuthClientIdLoopback = OAuthClientId &
-  `${typeof OAUTH_CLIENT_ID_LOOPBACK_URL}${'' | `?${string}`}`
+  `${typeof OAUTH_CLIENT_ID_LOOPBACK_URL}${'' | '/'}${'' | `?${string}`}`
 
 export function isOAuthClientIdLoopback(
   clientId: string,
 ): clientId is OAuthClientIdLoopback {
-  // Optimization: avoid parsing the URL if the client ID is not a loopback URL
-  if (clientId === OAUTH_CLIENT_ID_LOOPBACK_URL) return true
-  if (!clientId.startsWith(OAUTH_CLIENT_ID_LOOPBACK_URL)) return false
-
   try {
     parseOAuthLoopbackClientId(clientId)
     return true
@@ -34,21 +30,29 @@ export function parseOAuthLoopbackClientId(clientId: string): {
   scope?: OAuthScope
   redirect_uris?: [string, ...string[]]
 } {
-  if (clientId === OAUTH_CLIENT_ID_LOOPBACK_URL) {
-    return {} // No query parameters, nothing to parse
-  } else if (!clientId.startsWith(OAUTH_CLIENT_ID_LOOPBACK_URL)) {
+  if (!clientId.startsWith(OAUTH_CLIENT_ID_LOOPBACK_URL)) {
     throw new TypeError(
       `Loopback ClientID must start with "${OAUTH_CLIENT_ID_LOOPBACK_URL}"`,
     )
   } else if (clientId.includes('#', OAUTH_CLIENT_ID_LOOPBACK_URL.length)) {
     throw new TypeError('Loopback ClientID must not contain a hash component')
-  } else if (clientId.charAt(OAUTH_CLIENT_ID_LOOPBACK_URL.length) !== '?') {
+  }
+
+  const queryStringIdx =
+    clientId.length > OAUTH_CLIENT_ID_LOOPBACK_URL.length &&
+    clientId[OAUTH_CLIENT_ID_LOOPBACK_URL.length] === '/'
+      ? OAUTH_CLIENT_ID_LOOPBACK_URL.length + 1
+      : OAUTH_CLIENT_ID_LOOPBACK_URL.length
+
+  if (clientId.length === queryStringIdx) {
+    return {} // no query string to parse
+  }
+
+  if (clientId[queryStringIdx] !== '?') {
     throw new TypeError('Loopback ClientID must not contain a path component')
   }
 
-  const searchParams = new URLSearchParams(
-    clientId.slice(OAUTH_CLIENT_ID_LOOPBACK_URL.length + 1),
-  )
+  const searchParams = new URLSearchParams(clientId.slice(queryStringIdx + 1))
 
   for (const name of searchParams.keys()) {
     if (name !== 'redirect_uri' && name !== 'scope') {
