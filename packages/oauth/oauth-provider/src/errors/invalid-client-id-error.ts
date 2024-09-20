@@ -15,8 +15,8 @@ export class InvalidClientIdError extends OAuthError {
   static from(
     cause: unknown,
     fallbackMessage = 'Invalid client identifier',
-  ): OAuthError {
-    if (cause instanceof OAuthError) {
+  ): InvalidClientIdError {
+    if (cause instanceof InvalidClientIdError) {
       return cause
     }
     if (cause instanceof TypeError) {

@@ -15,8 +15,8 @@ export class InvalidClientMetadataError extends OAuthError {
   static from(
     cause: unknown,
     fallbackMessage = 'Invalid client metadata document',
-  ): OAuthError {
-    if (cause instanceof OAuthError) {
+  ): InvalidClientMetadataError {
+    if (cause instanceof InvalidClientMetadataError) {
       return cause
     }
     if (cause instanceof TypeError) {
