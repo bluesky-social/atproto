@@ -134,8 +134,8 @@ const noBlocksOrMutedReposts = (inputs: {
   const checkBlocksAndMutes = (item: FeedItem) => {
     const bam = ctx.views.feedItemBlocksAndMutes(item, hydration)
     return (
-      !bam.authorBlocked &&
-      !bam.originatorBlocked &&
+      (!bam.authorBlocked ||
+      !bam.originatorBlocked) &&
       (!bam.authorMuted || bam.originatorMuted) // repost of muted content
     )
   }
