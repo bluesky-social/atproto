@@ -41,9 +41,9 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addUniqueConstraint('set_value_setid_value_unique', ['setId', 'value'])
     .execute()
   await db.schema
-    .createIndex('set_value_created_at_idx')
+    .createIndex('set_value_setid_created_at_idx')
     .on('set_value')
-    .column('createdAt')
+    .columns(['setId', 'createdAt'])
     .execute()
 }
 
