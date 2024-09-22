@@ -10,7 +10,11 @@ import express from 'express'
 import AppContext from '../context'
 import { lexicons } from '../lexicon/lexicons'
 import { readStickyLogger as log } from '../logger'
-import { asPipeThroughBuffer, pipethrough, safeParseJson } from '../pipethrough'
+import {
+  asPipeThroughBuffer,
+  isJsonContentType,
+  pipethrough,
+} from '../pipethrough'
 import { HandlerResponse, LocalRecords, MungeFn } from './types'
 import { getRecordsSinceRev } from './viewer'
 
@@ -41,8 +45,19 @@ export const pipethroughReadAfterWrite = async <T>(
 
   const upstreamRes = await pipethrough(ctx, req, { iss: requester })
 
-  const rev = upstreamRes.headers && getRepoRev(upstreamRes.headers)
-  if (!rev) return upstreamRes
+  if (!upstreamRes.headers) {
+    return upstreamRes
+  }
+
+  const rev = getRepoRev(upstreamRes.headers)
+  if (!rev) {
+    return upstreamRes
+  }
+
+  if (isJsonContentType(upstreamRes.headers['content-type']) ?? false) {
+    // content-type is present but not JSON, we can't munge this
+    return upstreamRes
+  }
 
   // if the munging fails, we can't return the original response because the
   // stream will already have been read. If we end-up buffering the response,
@@ -56,9 +71,9 @@ export const pipethroughReadAfterWrite = async <T>(
 
       const lxm = parseReqNsid(req)
 
-      bufferedRes = await asPipeThroughBuffer(upstreamRes)
+      const { buffer } = (bufferedRes = await asPipeThroughBuffer(upstreamRes))
 
-      const value = safeParseJson(bufferedRes!.buffer.toString('utf8'))
+      const value = JSON.parse(buffer.toString('utf8'))
       const lex = value && jsonToLex(value)
 
       const parsedRes = lexicons.assertValidXrpcOutput(lxm, lex) as T

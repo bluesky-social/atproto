@@ -267,39 +267,50 @@ async function pipethroughStream(
   dispatchOptions: Dispatcher.RequestOptions,
   successStreamFactory: Dispatcher.StreamFactory,
 ): Promise<void> {
-  await ctx.proxyAgent
-    .stream(dispatchOptions, (upstream) => {
-      // Upstream resulted in an error, create a writable stream for undici
-      // that will decode & parse the error message and construct an XRPCError
-      if (upstream.statusCode !== ResponseType.Success) {
-        return Duplex.from(async function (
-          res: AsyncGenerator<Buffer, void, unknown>,
-        ): Promise<void> {
-          return handleUpstreamResponseError(dispatchOptions, upstream, res)
-        })
-      }
+  return new Promise<void>((resolve, reject) => {
+    void ctx.proxyAgent
+      .stream(dispatchOptions, (upstream) => {
+        if (upstream.statusCode >= 400) {
+          return Duplex.from(async function (
+            res: AsyncGenerator<Buffer, void, unknown>,
+          ): Promise<void> {
+            const parsed = await tryParsingError(upstream.headers, res)
 
-      try {
-        return successStreamFactory(upstream)
-      } catch (err) {
-        // Assume any error thrown from successStreamFactory() is due to an
-        // unsupported or invalid value in "upstream" (statusCode or headers).
-        // This will allow to distinguish requests errors bellow.
-        return handleUpstreamRequestError(
-          err,
-          dispatchOptions,
-          'unable to process upstream response',
-        )
-      }
-    })
-    .catch((err) => {
-      if (err instanceof XRPCServerError) throw err
-      if (err instanceof XRPCClientError) throw err
+            // Using an XRPCClientError instead of an XRPCServerError to allow
+            // headers to be propagated to the client (is this needed though?)
+            const error = new XRPCClientError(
+              upstream.statusCode === 500
+                ? ResponseType.UpstreamFailure
+                : upstream.statusCode,
+              parsed.error,
+              parsed.message,
+              Object.fromEntries(responseHeaders(upstream.headers, false)),
+              { cause: dispatchOptions },
+            )
 
-      // Any other error here was caused by undici, the network or the writable
-      // stream returned by the function above (e.g. decoding error).
-      return handleUpstreamRequestError(err, dispatchOptions)
-    })
+            reject(error)
+          })
+        }
+
+        const writable = successStreamFactory(upstream)
+
+        // As soon as the control was passed to the writable stream (i.e. by
+        // returning the writable hereafter), pipethroughStream() is considered
+        // to have succeeded. Any error occurring while writing upstream data to
+        // the writable stream should be handled through the stream's error
+        // state (i.e. successStreamFactory() must ensure that error events on
+        // the returned writable will be handled).
+        resolve()
+
+        return writable
+      })
+      // The following catch block will be triggered with either network errors
+      // or writable stream errors. In the latter case, the promise will already
+      // be resolved, and reject()ing it there after will have no effect. Those
+      // error would still be logged by the successStreamFactory() function.
+      .catch(handleUpstreamRequestError)
+      .catch(reject)
+  })
 }
 
 /**
@@ -315,60 +326,35 @@ async function pipethroughRequest(
 
   const upstream = await ctx.proxyAgent
     .request(dispatchOptions)
-    .catch((err) => handleUpstreamRequestError(err, dispatchOptions))
+    .catch(handleUpstreamRequestError)
 
-  if (upstream.statusCode !== ResponseType.Success) {
-    return handleUpstreamResponseError(dispatchOptions, upstream)
+  if (upstream.statusCode >= 400) {
+    const parsed = await tryParsingError(upstream.headers, upstream.body)
+
+    // Note "XRPCClientError" is used instead of "XRPCServerError" in order to
+    // allow users of this function to capture & handle these errors (namely in
+    // "app.bsky.feed.getPostThread").
+    throw new XRPCClientError(
+      upstream.statusCode === 500
+        ? ResponseType.UpstreamFailure
+        : upstream.statusCode,
+      parsed.error,
+      parsed.message,
+      Object.fromEntries(responseHeaders(upstream.headers, false)),
+      { cause: dispatchOptions },
+    )
   }
 
   return upstream
 }
 
-async function handleUpstreamResponseError(
-  dispatchOptions: Dispatcher.RequestOptions,
-  data: Dispatcher.ResponseData,
-): Promise<never>
-async function handleUpstreamResponseError(
-  dispatchOptions: Dispatcher.RequestOptions,
-  data: Dispatcher.StreamFactoryData,
-  body: Readable | AsyncGenerator<Buffer, void, unknown>,
-): Promise<never>
-async function handleUpstreamResponseError(
-  dispatchOptions: Dispatcher.RequestOptions,
-  data: Dispatcher.StreamFactoryData | Dispatcher.ResponseData,
-  body?: Readable | AsyncGenerator<Buffer, void, unknown>,
-): Promise<never> {
-  const stream = body ?? ('body' in data ? data.body : undefined)
-
-  // Type-safety, should never happen
-  if (!stream) throw new TypeError('body is required')
-
-  const buffer = await bufferUpstreamResponse(
-    stream,
-    data.headers['content-encoding'],
-  )
-
-  const errInfo = safeParseJson(buffer.toString('utf8'))
-
-  // Throwing here will cause the promise returned by stream() to
-  // reject. This will cause the `.catch` block below to be triggered.
-  throw new XRPCClientError(
-    data.statusCode,
-    safeString(errInfo?.['error']),
-    safeString(errInfo?.['message']),
-    Object.fromEntries(responseHeaders(data.headers, false)),
-    { cause: dispatchOptions },
-  )
-}
-
 function handleUpstreamRequestError(
   err: unknown,
-  dispatchOptions: Dispatcher.RequestOptions,
   message = 'pipethrough network error',
 ): never {
   httpLogger.warn({ err }, message)
   throw new XRPCServerError(ResponseType.UpstreamFailure, message, undefined, {
-    cause: [err, dispatchOptions],
+    cause: err,
   })
 }
 
@@ -447,6 +433,69 @@ function isNonNullable<T>(val: T): val is NonNullable<T> {
   return val != null
 }
 
+export function isJsonContentType(contentType?: string): boolean | undefined {
+  if (contentType == null) return undefined
+  return /application\/(?:\w+\+)?json/i.test(contentType)
+}
+
+async function tryParsingError(
+  headers: IncomingHttpHeaders,
+  stream: Readable | AsyncIterable<Uint8Array>,
+): Promise<{ error?: string; message?: string }> {
+  // If the content-type is JSON (or not present), we'll try to parse the
+  // response payload.
+  if (isJsonContentType(headers['content-type']) ?? true) {
+    try {
+      const buffer = await bufferUpstreamResponse(
+        stream,
+        headers['content-encoding'],
+      )
+
+      const errInfo = JSON.parse(buffer.toString('utf8'))
+      return {
+        error: safeString(errInfo?.['error']),
+        message: safeString(errInfo?.['message']),
+      }
+    } catch {
+      // Failed to read, decode, buffer or parse. No big deal.
+      return {}
+    }
+  }
+
+  // The payload is not JSON, we don't know how to extract an error & message
+  // from it. Also, we don't care about any error that might occur while reading
+  // the stream (e.g. the upstream server closes the socket early).
+  void drain(stream).catch(noop)
+
+  return {}
+}
+
+function noop(): void {}
+
+function drain(stream: Readable | AsyncIterable<Uint8Array>): Promise<void> {
+  return stream instanceof Readable
+    ? drainStream(stream)
+    : drainIterable(stream)
+}
+
+function drainStream(stream: Readable) {
+  if (!stream.readable) return Promise.resolve()
+  return new Promise<void>((resolve, reject) => {
+    stream.on('data', noop)
+    stream.on('end', resolve)
+    stream.on('error', reject)
+    stream.resume()
+  })
+}
+
+async function drainIterable(
+  stream: Iterable<unknown> | AsyncIterable<unknown>,
+): Promise<void> {
+  for await (const _ of stream) {
+    // noop
+  }
+}
+
 export async function bufferUpstreamResponse(
   stream: Readable | AsyncIterable<Uint8Array>,
   contentEncoding?: string | string[],
@@ -487,12 +536,7 @@ export async function asPipeThroughBuffer(
 // Response parsing/forwarding
 // -------------------
 
-const RES_HEADERS_TO_FORWARD = [
-  'content-type',
-  'content-language',
-  'atproto-repo-rev',
-  'atproto-content-labelers',
-]
+const RES_HEADERS_TO_FORWARD = ['atproto-repo-rev', 'atproto-content-labelers']
 
 function* responseHeaders(
   headers: IncomingHttpHeaders,
@@ -504,6 +548,12 @@ function* responseHeaders(
 
     const encoding = headers['content-encoding']
     if (encoding) yield ['content-encoding', encoding]
+
+    const type = headers['content-type']
+    if (type) yield ['content-type', type]
+
+    const language = headers['content-language']
+    if (language) yield ['content-language', language]
   }
 
   for (let i = 0; i < RES_HEADERS_TO_FORWARD.length; i++) {
@@ -585,12 +635,4 @@ const defaultService = (
 
 const safeString = (str: unknown): string | undefined => {
   return typeof str === 'string' ? str : undefined
-}
-
-export const safeParseJson = (json: string): unknown => {
-  try {
-    return JSON.parse(json)
-  } catch {
-    return null
-  }
 }
