@@ -1,6 +1,6 @@
 import express from 'express'
 import { IncomingHttpHeaders, ServerResponse } from 'node:http'
-import { Duplex, Readable } from 'node:stream'
+import { PassThrough, Readable } from 'node:stream'
 import { Dispatcher } from 'undici'
 
 import {
@@ -279,14 +279,10 @@ async function pipethroughStream(
     void ctx.proxyAgent
       .stream(dispatchOptions, (upstream) => {
         if (upstream.statusCode >= 400) {
-          return Duplex.from(async function (
-            res: AsyncGenerator<Buffer, void, unknown>,
-          ): Promise<void> {
-            const parsed = await tryParsingError(upstream.headers, res)
+          const passThrough = new PassThrough()
 
-            // Using an XRPCClientError instead of an XRPCServerError to allow
-            // headers to be propagated to the client (is this needed though?)
-            const error = new XRPCClientError(
+          void tryParsingError(upstream.headers, passThrough).then((parsed) => {
+            const xrpcError = new XRPCClientError(
               upstream.statusCode === 500
                 ? ResponseType.UpstreamFailure
                 : upstream.statusCode,
@@ -296,8 +292,10 @@ async function pipethroughStream(
               { cause: dispatchOptions },
             )
 
-            reject(error)
-          })
+            reject(xrpcError)
+          }, reject)
+
+          return passThrough
         }
 
         const writable = successStreamFactory(upstream)
@@ -448,77 +446,57 @@ export function isJsonContentType(contentType?: string): boolean | undefined {
 
 async function tryParsingError(
   headers: IncomingHttpHeaders,
-  stream: Readable | AsyncIterable<Uint8Array>,
+  readable: Readable,
 ): Promise<{ error?: string; message?: string }> {
-  // If the content-type is JSON (or not present), we'll try to parse the
-  // response payload.
-  if (isJsonContentType(headers['content-type']) ?? true) {
-    try {
-      const buffer = await bufferUpstreamResponse(
-        stream,
-        headers['content-encoding'],
-      )
+  if (isJsonContentType(headers['content-type']) === false) {
+    // We don't known how to parse non JSON content types so we can discard the
+    // whole response.
+    //
+    // @NOTE we could also simply "drain" the stream here. This would prevent
+    // the upstream HTTP/1.1 connection from getting destroyed (closed). This
+    // would however imply to read the whole upstream response, which would be
+    // costly in terms of bandwidth and I/O processing. It is recommended to use
+    // HTTP/2 to avoid this issue (be able to destroy a single response stream
+    // without resetting the whole connection). This is not expected to happen
+    // too much as 4xx and 5xx responses are expected to be JSON.
+    readable.destroy()
 
-      const errInfo = JSON.parse(buffer.toString('utf8'))
-      return {
-        error: safeString(errInfo?.['error']),
-        message: safeString(errInfo?.['message']),
-      }
-    } catch {
-      // Failed to read, decode, buffer or parse. No big deal.
-      return {}
-    }
+    return {}
   }
 
-  // The payload is not JSON, we don't know how to extract an error & message
-  // from it. Also, we don't care about any error that might occur while reading
-  // the stream (e.g. invalid encoding or early socket termination).
-  void drain(stream).catch(noop)
+  try {
+    const buffer = await bufferUpstreamResponse(
+      readable,
+      headers['content-encoding'],
+    )
 
-  return {}
-}
-
-function noop(): void {}
-
-function drain(stream: Readable | AsyncIterable<Uint8Array>): Promise<void> {
-  return stream instanceof Readable
-    ? drainStream(stream)
-    : drainIterable(stream)
-}
-
-function drainStream(stream: Readable) {
-  if (!stream.readable) return Promise.resolve()
-  return new Promise<void>((resolve, reject) => {
-    stream.on('data', noop)
-    stream.on('end', resolve)
-    stream.on('error', reject)
-    stream.resume()
-  })
-}
-
-async function drainIterable(
-  stream: Iterable<unknown> | AsyncIterable<unknown>,
-): Promise<void> {
-  for await (const _ of stream) {
-    // noop
+    const errInfo: unknown = JSON.parse(buffer.toString('utf8'))
+    return {
+      error: safeString(errInfo?.['error']),
+      message: safeString(errInfo?.['message']),
+    }
+  } catch (err) {
+    // Failed to read, decode, buffer or parse. No big deal.
+    return {}
   }
 }
 
 export async function bufferUpstreamResponse(
-  stream: Readable | AsyncIterable<Uint8Array>,
+  readable: Readable,
   contentEncoding?: string | string[],
 ): Promise<Buffer> {
-  // Needed for type-safety (should never happen irl)
-  if (Array.isArray(contentEncoding)) {
-    throw new XRPCServerError(
-      ResponseType.UpstreamFailure,
-      'upstream service returned multiple content-encoding headers',
-    )
-  }
-
   try {
-    return streamToNodeBuffer(decodeStream(stream, contentEncoding))
+    // Needed for type-safety (should never happen irl)
+    if (Array.isArray(contentEncoding)) {
+      throw new TypeError(
+        'upstream service returned multiple content-encoding headers',
+      )
+    }
+
+    return await streamToNodeBuffer(decodeStream(readable, contentEncoding))
   } catch (err) {
+    if (!readable.destroyed) readable.destroy()
+
     throw new XRPCServerError(
       ResponseType.UpstreamFailure,
       err instanceof TypeError ? err.message : 'unable to decode request body',
