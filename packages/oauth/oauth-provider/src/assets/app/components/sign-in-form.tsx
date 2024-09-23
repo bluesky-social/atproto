@@ -155,7 +155,11 @@ export function SignInForm({
       if (secondFactor) {
         const element = event.currentTarget.secondFactor
         if (!element) throw new Error('Second factor input not found')
-        credentials[secondFactor.type] = element.value
+        let value = element.value
+        if (secondFactor.type === 'emailOtp') {
+          value = value.toUpperCase()
+        }
+        credentials[secondFactor.type] = value
       }
 
       setLoading(true)
