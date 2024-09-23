@@ -106,7 +106,7 @@ export function SignInForm({
   secondFactorLabel = 'Confirmation code',
   secondFactorAria = secondFactorLabel,
   secondFactorPlaceholder = secondFactorLabel,
-  secondFactorPattern = '^[A-Z0-9]{5}-[A-Z0-9]{5}$',
+  secondFactorPattern = '^[A-Z2-7]{5}-[A-Z2-7]{5}$',
   secondFactorFormat = 'XXXXX-XXXXX',
   secondFactorHint = 'Check your $1 email for a login code and enter it here.',
   secondFactorParseValue = checkAndFormatResetCode,
