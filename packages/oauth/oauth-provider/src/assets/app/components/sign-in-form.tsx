@@ -109,7 +109,7 @@ export function SignInForm({
   secondFactorPattern = '^[A-Z2-7]{5}-[A-Z2-7]{5}$',
   secondFactorFormat = 'XXXXX-XXXXX',
   secondFactorHint = 'Check your $1 email for a login code and enter it here.',
-  secondFactorParseValue = checkAndFormatResetCode,
+  secondFactorParseValue = checkAndFormatEmailOtpCode,
 
   rememberVisible = true,
   rememberDefault = false,
@@ -317,7 +317,7 @@ function parseErrorMessage(err: unknown): string {
   return 'An unknown error occurred'
 }
 
-export function checkAndFormatResetCode(code: string): string | false {
+export function checkAndFormatEmailOtpCode(code: string): string | false {
   const EMAIL_CODE_REGEX = /^[A-Z2-7]{5}-[A-Z2-7]{5}$/
 
   // Trim the reset code
