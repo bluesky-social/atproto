@@ -7,6 +7,7 @@ import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
 import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
 import * as AppBskyGraphDefs from '../graph/defs'
+import * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef'
 
 export interface ProfileViewBasic {
   did: string
@@ -74,6 +75,7 @@ export interface ProfileViewDetailed {
   createdAt?: string
   viewer?: ViewerState
   labels?: ComAtprotoLabelDefs.Label[]
+  pinnedPost?: ComAtprotoRepoStrongRef.Main
   [k: string]: unknown
 }
 

@@ -170,6 +170,7 @@ export class Views {
       joinedViaStarterPack: actor.profile?.joinedViaStarterPack
         ? this.starterPackBasic(actor.profile.joinedViaStarterPack.uri, state)
         : undefined,
+      pinnedPost: actor.profile?.pinnedPost,
     }
   }
 
