@@ -1,5 +1,5 @@
 import express from 'express'
-import { IncomingHttpHeaders } from 'node:http'
+import { IncomingHttpHeaders, ServerResponse } from 'node:http'
 import { Duplex, Readable } from 'node:stream'
 import { Dispatcher } from 'undici'
 
@@ -89,6 +89,10 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
           res.setHeader(name, val)
         }
 
+        // Note that we should not need to manually handle errors here (e.g. by
+        // destroying the response), as the http server will handle them for us.
+        res.on('error', logResponseError)
+
         // Tell undici to write the upstream response directly to the response
         return res
       })
@@ -135,7 +139,11 @@ export async function pipethrough(
   ctx: AppContext,
   req: express.Request,
   options?: PipethroughOptions,
-): Promise<HandlerPipeThroughStream> {
+): Promise<{
+  stream: Readable
+  headers: Record<string, string>
+  encoding: string
+}> {
   if (req.method !== 'GET' && req.method !== 'HEAD') {
     // pipethrough() is used from within xrpcServer handlers, which means that
     // the request body either has been parsed or is a readable stream that has
@@ -192,7 +200,7 @@ export async function pipethrough(
     headers: Object.fromEntries(responseHeaders(upstream.headers)),
     encoding:
       safeString(upstream.headers['content-type']) ?? 'application/json',
-  }
+  } satisfies HandlerPipeThroughStream
 }
 
 // Request setup/formatting
@@ -464,7 +472,7 @@ async function tryParsingError(
 
   // The payload is not JSON, we don't know how to extract an error & message
   // from it. Also, we don't care about any error that might occur while reading
-  // the stream (e.g. the upstream server closes the socket early).
+  // the stream (e.g. invalid encoding or early socket termination).
   void drain(stream).catch(noop)
 
   return {}
@@ -635,4 +643,8 @@ const defaultService = (
 
 const safeString = (str: unknown): string | undefined => {
   return typeof str === 'string' ? str : undefined
+}
+
+function logResponseError(this: ServerResponse, err: unknown): void {
+  httpLogger.warn({ err }, 'error forwarding upstream response')
 }

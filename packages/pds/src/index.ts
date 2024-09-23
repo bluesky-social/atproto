@@ -127,6 +127,7 @@ export class PDS {
     await this.ctx.backgroundQueue.destroy()
     await this.ctx.accountManager.close()
     await this.ctx.redisScratch?.quit()
+    await this.ctx.proxyAgent.destroy()
     clearInterval(this.dbStatsInterval)
     clearInterval(this.sequencerStatsInterval)
   }

@@ -43,38 +43,31 @@ export const pipethroughReadAfterWrite = async <T>(
   const { req, auth } = reqCtx
   const requester = auth.credentials.did
 
-  const upstreamRes = await pipethrough(ctx, req, { iss: requester })
+  const streamRes = await pipethrough(ctx, req, { iss: requester })
 
-  if (!upstreamRes.headers) {
-    return upstreamRes
-  }
+  const rev = getRepoRev(streamRes.headers)
+  if (!rev) return streamRes
 
-  const rev = getRepoRev(upstreamRes.headers)
-  if (!rev) {
-    return upstreamRes
-  }
-
-  if (isJsonContentType(upstreamRes.headers['content-type']) ?? false) {
+  if (isJsonContentType(streamRes.headers['content-type']) === false) {
     // content-type is present but not JSON, we can't munge this
-    return upstreamRes
+    return streamRes
   }
 
   // if the munging fails, we can't return the original response because the
   // stream will already have been read. If we end-up buffering the response,
   // we'll return the buffered response in case of an error.
-  let bufferedRes: HandlerPipeThroughBuffer | undefined
+  let bufferRes: HandlerPipeThroughBuffer | undefined
 
   try {
+    const lxm = parseReqNsid(req)
+
     return await ctx.actorStore.read(requester, async (store) => {
       const local = await getRecordsSinceRev(store, rev)
-      if (local.count === 0) return upstreamRes
+      if (local.count === 0) return streamRes
 
-      const lxm = parseReqNsid(req)
+      const { buffer } = (bufferRes = await asPipeThroughBuffer(streamRes))
 
-      const { buffer } = (bufferedRes = await asPipeThroughBuffer(upstreamRes))
-
-      const value = JSON.parse(buffer.toString('utf8'))
-      const lex = value && jsonToLex(value)
+      const lex = jsonToLex(JSON.parse(buffer.toString('utf8')))
 
       const parsedRes = lexicons.assertValidXrpcOutput(lxm, lex) as T
 
@@ -85,10 +78,10 @@ export const pipethroughReadAfterWrite = async <T>(
     })
   } catch (err) {
     // The error occurred while reading the stream, this is non-recoverable
-    if (!bufferedRes && !upstreamRes.stream.readable) throw err
+    if (!bufferRes && !streamRes.stream.readable) throw err
 
     log.warn({ err, requester }, 'error in read after write munge')
-    return bufferedRes ?? upstreamRes
+    return bufferRes ?? streamRes
   }
 }
 
