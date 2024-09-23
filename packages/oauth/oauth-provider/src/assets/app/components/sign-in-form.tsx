@@ -58,6 +58,7 @@ export type SignInFormProps = Override<
     secondFactorPattern?: string
     secondFactorFormat?: string
     secondFactorHint?: string
+    secondFactorParseValue?: (value: string) => string | false
 
     rememberVisible?: boolean
     rememberDefault?: boolean
@@ -108,6 +109,7 @@ export function SignInForm({
   secondFactorPattern = '^[A-Z0-9]{5}-[A-Z0-9]{5}$',
   secondFactorFormat = 'XXXXX-XXXXX',
   secondFactorHint = 'Check your $1 email for a login code and enter it here.',
+  secondFactorParseValue = checkAndFormatResetCode,
 
   rememberVisible = true,
   rememberDefault = false,
@@ -155,9 +157,13 @@ export function SignInForm({
       if (secondFactor) {
         const element = event.currentTarget.secondFactor
         if (!element) throw new Error('Second factor input not found')
-        let value = element.value
-        if (secondFactor.type === 'emailOtp') {
-          value = value.toUpperCase()
+        const value = secondFactorParseValue(element.value)
+        if (!value) {
+          setSecondFactor({
+            type: secondFactor.type,
+            hint: `Make sure to matches the format: ${secondFactorFormat}`,
+          })
+          return
         }
         credentials[secondFactor.type] = value
       }
@@ -309,4 +315,23 @@ function parseErrorMessage(err: unknown): string {
   }
 
   return 'An unknown error occurred'
+}
+
+export function checkAndFormatResetCode(code: string): string | false {
+  const EMAIL_CODE_REGEX = /^[A-Z2-7]{5}-[A-Z2-7]{5}$/
+
+  // Trim the reset code
+  let fixed = code.trim().toUpperCase()
+
+  // Add a dash if needed
+  if (fixed.length === 10) {
+    fixed = `${fixed.slice(0, 5)}-${fixed.slice(5, 10)}`
+  }
+
+  // Check that it is a valid format
+  if (!EMAIL_CODE_REGEX.test(fixed)) {
+    return false
+  }
+
+  return fixed
 }
