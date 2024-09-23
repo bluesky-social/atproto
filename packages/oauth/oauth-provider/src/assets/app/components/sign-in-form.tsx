@@ -161,7 +161,7 @@ export function SignInForm({
         if (!value) {
           setSecondFactor({
             type: secondFactor.type,
-            hint: `Make sure to matches the format: ${secondFactorFormat}`,
+            hint: `Make sure to match the format: ${secondFactorFormat}`,
           })
           return
         }
