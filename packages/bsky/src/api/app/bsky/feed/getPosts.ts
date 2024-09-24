@@ -1,20 +1,24 @@
 import { dedupeStrs, mapDefined } from '@atproto/common'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getPosts'
 import AppContext from '../../../../context'
-import { createPipeline } from '../../../../pipeline'
 import {
   HydrateCtx,
   HydrationState,
   Hydrator,
 } from '../../../../hydration/hydrator'
-import { Views } from '../../../../views'
-import { uriToDid as creatorFromUri } from '../../../../util/uris'
-import { resHeaders } from '../../../util'
+import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getPosts'
+import { uriToDid as creatorFromUri } from '../../../../util/uris'
+import { Views } from '../../../../views'
+import { resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
-  const getPosts = createPipeline(skeleton, hydration, noBlocks, presentation)
+  const getPosts = ctx.createPipeline(
+    skeleton,
+    hydration,
+    noBlocks,
+    presentation,
+  )
   server.app.bsky.feed.getPosts({
     auth: ctx.authVerifier.standardOptionalParameterized({
       lxmCheck: (method) => {
@@ -29,7 +33,7 @@ export default function (server: Server, ctx: AppContext) {
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
 
-      const results = await getPosts({ ...params, hydrateCtx }, ctx)
+      const results = await getPosts(hydrateCtx, params)
 
       return {
         encoding: 'application/json',
@@ -49,10 +53,10 @@ const hydration = async (inputs: {
   params: Params
   skeleton: Skeleton
 }) => {
-  const { ctx, params, skeleton } = inputs
+  const { ctx, skeleton } = inputs
   return ctx.hydrator.hydratePosts(
     skeleton.posts.map((uri) => ({ uri })),
-    params.hydrateCtx,
+    ctx.hydrateCtx,
   )
 }
 
@@ -85,9 +89,10 @@ const presentation = (inputs: {
 type Context = {
   hydrator: Hydrator
   views: Views
+  hydrateCtx: HydrateCtx
 }
 
-type Params = QueryParams & { hydrateCtx: HydrateCtx }
+type Params = QueryParams
 
 type Skeleton = {
   posts: string[]

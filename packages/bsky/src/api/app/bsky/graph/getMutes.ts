@@ -1,30 +1,33 @@
 import { mapDefined } from '@atproto/common'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getMutes'
-import AppContext from '../../../../context'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
-import { Views } from '../../../../views'
+
+import AppContext from '../../../../context.js'
+import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator.js'
+import { Server } from '../../../../lexicon/index.js'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getMutes.js'
 import {
   HydrationFnInput,
   PresentationFnInput,
   SkeletonFnInput,
-  createPipeline,
   noRules,
-} from '../../../../pipeline'
-import { clearlyBadCursor, resHeaders } from '../../../util'
+} from '../../../../pipeline.js'
+import { Views } from '../../../../views/index.js'
+import { clearlyBadCursor, resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
-  const getMutes = createPipeline(skeleton, hydration, noRules, presentation)
+  const getMutes = ctx.createPipeline(
+    skeleton,
+    hydration,
+    noRules,
+    presentation,
+  )
+
   server.app.bsky.graph.getMutes({
     auth: ctx.authVerifier.standard,
     handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
-      const result = await getMutes(
-        { ...params, hydrateCtx: hydrateCtx.copy({ viewer }) },
-        ctx,
-      )
+      const result = await getMutes(hydrateCtx, params)
       return {
         encoding: 'application/json',
         body: result,
@@ -40,7 +43,7 @@ const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
     return { mutedDids: [] }
   }
   const { dids, cursor } = await ctx.hydrator.dataplane.getMutes({
-    actorDid: params.hydrateCtx.viewer,
+    actorDid: ctx.hydrateCtx.viewer,
     cursor: params.cursor,
     limit: params.limit,
   })
@@ -53,9 +56,9 @@ const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
 const hydration = async (
   input: HydrationFnInput<Context, Params, SkeletonState>,
 ) => {
-  const { ctx, params, skeleton } = input
+  const { ctx, skeleton } = input
   const { mutedDids } = skeleton
-  return ctx.hydrator.hydrateProfiles(mutedDids, params.hydrateCtx)
+  return ctx.hydrator.hydrateProfiles(mutedDids, ctx.hydrateCtx)
 }
 
 const presentation = (
@@ -72,11 +75,10 @@ const presentation = (
 type Context = {
   hydrator: Hydrator
   views: Views
-}
-
-type Params = QueryParams & {
   hydrateCtx: HydrateCtx & { viewer: string }
 }
+
+type Params = QueryParams
 
 type SkeletonState = {
   mutedDids: string[]

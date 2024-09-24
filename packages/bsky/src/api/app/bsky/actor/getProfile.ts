@@ -1,18 +1,24 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/actor/getProfile'
-import AppContext from '../../../../context'
-import { resHeaders } from '../../../util'
-import { createPipeline, noRules } from '../../../../pipeline'
+
+import AppContext from '../../../../context.js'
 import {
   HydrateCtx,
   HydrationState,
   Hydrator,
-} from '../../../../hydration/hydrator'
-import { Views } from '../../../../views'
+} from '../../../../hydration/hydrator.js'
+import { Server } from '../../../../lexicon/index.js'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/actor/getProfile.js'
+import { noRules } from '../../../../pipeline.js'
+import { Views } from '../../../../views/index.js'
+import { resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
-  const getProfile = createPipeline(skeleton, hydration, noRules, presentation)
+  const getProfile = ctx.createPipeline(
+    skeleton,
+    hydration,
+    noRules,
+    presentation,
+  )
   server.app.bsky.actor.getProfile({
     auth: ctx.authVerifier.optionalStandardOrRole,
     handler: async ({ auth, params, req }) => {
@@ -24,7 +30,7 @@ export default function (server: Server, ctx: AppContext) {
         includeTakedowns,
       })
 
-      const result = await getProfile({ ...params, hydrateCtx }, ctx)
+      const result = await getProfile(hydrateCtx, params)
 
       const repoRev = await ctx.hydrator.actor.getRepoRevSafe(viewer)
 
@@ -57,10 +63,10 @@ const hydration = async (input: {
   params: Params
   skeleton: SkeletonState
 }) => {
-  const { ctx, params, skeleton } = input
+  const { ctx, skeleton } = input
   return ctx.hydrator.hydrateProfilesDetailed(
     [skeleton.did],
-    params.hydrateCtx.copy({ includeTakedowns: true }),
+    ctx.hydrateCtx.copy({ includeTakedowns: true }),
   )
 }
 
@@ -70,11 +76,11 @@ const presentation = (input: {
   skeleton: SkeletonState
   hydration: HydrationState
 }) => {
-  const { ctx, params, skeleton, hydration } = input
+  const { ctx, skeleton, hydration } = input
   const profile = ctx.views.profileDetailed(skeleton.did, hydration)
   if (!profile) {
     throw new InvalidRequestError('Profile not found')
-  } else if (!params.hydrateCtx.includeTakedowns) {
+  } else if (!ctx.hydrateCtx.includeTakedowns) {
     if (ctx.views.actorIsTakendown(skeleton.did, hydration)) {
       throw new InvalidRequestError(
         'Account has been suspended',
@@ -91,12 +97,11 @@ const presentation = (input: {
 }
 
 type Context = {
+  hydrateCtx: HydrateCtx
   hydrator: Hydrator
   views: Views
 }
 
-type Params = QueryParams & {
-  hydrateCtx: HydrateCtx
-}
+type Params = QueryParams
 
 type SkeletonState = { did: string }

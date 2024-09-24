@@ -1,21 +1,20 @@
-import { Server } from '../../../../lexicon'
+import { mapDefined } from '@atproto/common'
 import AppContext from '../../../../context'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getTimeline'
-import { clearlyBadCursor, resHeaders } from '../../../util'
-import { createPipeline } from '../../../../pipeline'
+import { DataPlaneClient } from '../../../../data-plane'
+import { FeedItem } from '../../../../hydration/feed'
 import {
   HydrateCtx,
   HydrationState,
   Hydrator,
 } from '../../../../hydration/hydrator'
-import { Views } from '../../../../views'
-import { DataPlaneClient } from '../../../../data-plane'
 import { parseString } from '../../../../hydration/util'
-import { mapDefined } from '@atproto/common'
-import { FeedItem } from '../../../../hydration/feed'
+import { Server } from '../../../../lexicon'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getTimeline'
+import { Views } from '../../../../views'
+import { clearlyBadCursor, resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
-  const getTimeline = createPipeline(
+  const getTimeline = ctx.createPipeline(
     skeleton,
     hydration,
     noBlocksOrMutes,
@@ -28,10 +27,7 @@ export default function (server: Server, ctx: AppContext) {
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
 
-      const result = await getTimeline(
-        { ...params, hydrateCtx: hydrateCtx.copy({ viewer }) },
-        ctx,
-      )
+      const result = await getTimeline(hydrateCtx, params)
 
       const repoRev = await ctx.hydrator.actor.getRepoRevSafe(viewer)
 
@@ -53,7 +49,7 @@ export const skeleton = async (inputs: {
     return { items: [] }
   }
   const res = await ctx.dataplane.getTimeline({
-    actorDid: params.hydrateCtx.viewer,
+    actorDid: ctx.hydrateCtx.viewer,
     limit: params.limit,
     cursor: params.cursor,
   })
@@ -73,8 +69,8 @@ const hydration = async (inputs: {
   params: Params
   skeleton: Skeleton
 }): Promise<HydrationState> => {
-  const { ctx, params, skeleton } = inputs
-  return ctx.hydrator.hydrateFeedItems(skeleton.items, params.hydrateCtx)
+  const { ctx, skeleton } = inputs
+  return ctx.hydrator.hydrateFeedItems(skeleton.items, ctx.hydrateCtx)
 }
 
 const noBlocksOrMutes = (inputs: {
@@ -112,9 +108,10 @@ type Context = {
   hydrator: Hydrator
   views: Views
   dataplane: DataPlaneClient
+  hydrateCtx: HydrateCtx & { viewer: string }
 }
 
-type Params = QueryParams & { hydrateCtx: HydrateCtx & { viewer: string } }
+type Params = QueryParams
 
 type Skeleton = {
   items: FeedItem[]

@@ -1,26 +1,26 @@
 import { mapDefined } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getFollowers'
-import AppContext from '../../../../context'
+
+import AppContext from '../../../../context.js'
+import {
+  HydrateCtx,
+  Hydrator,
+  mergeStates,
+} from '../../../../hydration/hydrator.js'
+import { Server } from '../../../../lexicon/index.js'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getFollowers.js'
 import {
   HydrationFnInput,
   PresentationFnInput,
   RulesFnInput,
   SkeletonFnInput,
-  createPipeline,
-} from '../../../../pipeline'
-import { uriToDid as didFromUri } from '../../../../util/uris'
-import {
-  HydrateCtx,
-  Hydrator,
-  mergeStates,
-} from '../../../../hydration/hydrator'
-import { Views } from '../../../../views'
-import { clearlyBadCursor, resHeaders } from '../../../util'
+} from '../../../../pipeline.js'
+import { uriToDid as didFromUri } from '../../../../util/uris.js'
+import { Views } from '../../../../views/index.js'
+import { clearlyBadCursor, resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
-  const getFollowers = createPipeline(
+  const getFollowers = ctx.createPipeline(
     skeleton,
     hydration,
     noBlocks,
@@ -37,7 +37,7 @@ export default function (server: Server, ctx: AppContext) {
         includeTakedowns,
       })
 
-      const result = await getFollowers({ ...params, hydrateCtx }, ctx)
+      const result = await getFollowers(hydrateCtx, params)
 
       return {
         encoding: 'application/json',
@@ -72,7 +72,7 @@ const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
 const hydration = async (
   input: HydrationFnInput<Context, Params, SkeletonState>,
 ) => {
-  const { ctx, params, skeleton } = input
+  const { ctx, skeleton } = input
   const { followUris, subjectDid } = skeleton
   const followState = await ctx.hydrator.hydrateFollows(followUris)
   const dids = [subjectDid]
@@ -83,16 +83,13 @@ const hydration = async (
       }
     }
   }
-  const profileState = await ctx.hydrator.hydrateProfiles(
-    dids,
-    params.hydrateCtx,
-  )
+  const profileState = await ctx.hydrator.hydrateProfiles(dids, ctx.hydrateCtx)
   return mergeStates(followState, profileState)
 }
 
 const noBlocks = (input: RulesFnInput<Context, Params, SkeletonState>) => {
-  const { skeleton, params, hydration, ctx } = input
-  const viewer = params.hydrateCtx.viewer
+  const { skeleton, hydration, ctx } = input
+  const viewer = ctx.hydrateCtx.viewer
   skeleton.followUris = skeleton.followUris.filter((followUri) => {
     const followerDid = didFromUri(followUri)
     return (
@@ -113,14 +110,14 @@ const presentation = (
   const subject = ctx.views.profile(subjectDid, hydration)
   if (
     !subject ||
-    (!params.hydrateCtx.includeTakedowns && isNoHosted(subjectDid))
+    (!ctx.hydrateCtx.includeTakedowns && isNoHosted(subjectDid))
   ) {
     throw new InvalidRequestError(`Actor not found: ${params.actor}`)
   }
 
   const followers = mapDefined(followUris, (followUri) => {
     const followerDid = didFromUri(followUri)
-    if (!params.hydrateCtx.includeTakedowns && isNoHosted(followerDid)) {
+    if (!ctx.hydrateCtx.includeTakedowns && isNoHosted(followerDid)) {
       return
     }
     return ctx.views.profile(didFromUri(followUri), hydration)
@@ -132,11 +129,10 @@ const presentation = (
 type Context = {
   hydrator: Hydrator
   views: Views
-}
-
-type Params = QueryParams & {
   hydrateCtx: HydrateCtx
 }
+
+type Params = QueryParams
 
 type SkeletonState = {
   subjectDid: string

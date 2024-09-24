@@ -1,20 +1,20 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getStarterPack'
-import AppContext from '../../../../context'
+
+import AppContext from '../../../../context.js'
+import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator.js'
+import { Server } from '../../../../lexicon/index.js'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getStarterPack.js'
 import {
-  createPipeline,
   HydrationFnInput,
   noRules,
   PresentationFnInput,
   SkeletonFnInput,
-} from '../../../../pipeline'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
-import { Views } from '../../../../views'
-import { resHeaders } from '../../../util'
+} from '../../../../pipeline.js'
+import { Views } from '../../../../views/index.js'
+import { resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
-  const getStarterPack = createPipeline(
+  const getStarterPack = ctx.createPipeline(
     skeleton,
     hydration,
     noRules,
@@ -30,7 +30,7 @@ export default function (server: Server, ctx: AppContext) {
         viewer,
         includeTakedowns,
       })
-      const result = await getStarterPack({ ...params, hydrateCtx }, ctx)
+      const result = await getStarterPack(hydrateCtx, params)
       return {
         encoding: 'application/json',
         body: result,
@@ -51,8 +51,8 @@ const skeleton = async (
 const hydration = async (
   input: HydrationFnInput<Context, Params, SkeletonState>,
 ) => {
-  const { ctx, params, skeleton } = input
-  return ctx.hydrator.hydrateStarterPacks([skeleton.uri], params.hydrateCtx)
+  const { ctx, skeleton } = input
+  return ctx.hydrator.hydrateStarterPacks([skeleton.uri], ctx.hydrateCtx)
 }
 
 const presentation = (
@@ -69,11 +69,10 @@ const presentation = (
 type Context = {
   hydrator: Hydrator
   views: Views
-}
-
-type Params = QueryParams & {
   hydrateCtx: HydrateCtx
 }
+
+type Params = QueryParams
 
 type SkeletonState = {
   uri: string

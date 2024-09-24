@@ -2,6 +2,7 @@ import assert from 'node:assert'
 import { randomInt } from 'node:crypto'
 import * as ui8 from 'uint8arrays'
 import {
+  AnyClient,
   Code,
   ConnectError,
   PromiseClient,
@@ -50,6 +51,29 @@ export const createDataPlaneClient = (
       throw error
     }
   }) as DataPlaneClient
+}
+
+export function withHeaders<C extends AnyClient>(
+  client: C,
+  headers: Record<string, string>,
+): C {
+  const newClient: AnyClient = {}
+  for (const [key, method] of Object.entries(client)) {
+    if (typeof method !== 'function') throw new TypeError('invalid client')
+    newClient[key] = (request, options) =>
+      method(
+        request,
+        options
+          ? {
+              ...options,
+              headers: options.headers
+                ? { ...options.headers, ...headers }
+                : headers,
+            }
+          : { headers },
+      )
+  }
+  return newClient as C
 }
 
 export { Code }

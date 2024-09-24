@@ -1,21 +1,23 @@
-import { mapDefined, noUndefinedVals } from '@atproto/common'
-import AppContext from '../../../../context'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/actor/getSuggestions'
-import { createPipeline } from '../../../../pipeline'
-import {
-  HydrateCtx,
-  HydrationState,
-  Hydrator,
-} from '../../../../hydration/hydrator'
-import { Views } from '../../../../views'
-import { DataPlaneClient } from '../../../../data-plane'
-import { parseString } from '../../../../hydration/util'
-import { resHeaders } from '../../../util'
 import { AtpAgent } from '@atproto/api'
+import { mapDefined, noUndefinedVals } from '@atproto/common'
+
+import AppContext from '../../../../context.js'
+import { DataPlaneClient } from '../../../../data-plane/index.js'
+import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator.js'
+import { parseString } from '../../../../hydration/util.js'
+import { Server } from '../../../../lexicon/index.js'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/actor/getSuggestions.js'
+import {
+  HydrationFn,
+  PresentationFnInput,
+  RulesFn,
+  SkeletonFn,
+} from '../../../../pipeline.js'
+import { Views } from '../../../../views/index.js'
+import { resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
-  const getSuggestions = createPipeline(
+  const getSuggestions = ctx.createPipeline(
     skeleton,
     hydration,
     noBlocksOrMutes,
@@ -34,8 +36,9 @@ export default function (server: Server, ctx: AppContext) {
           : req.headers['x-bsky-topics'],
       })
       const { resHeaders: resultHeaders, ...result } = await getSuggestions(
-        { ...params, hydrateCtx, headers },
-        ctx,
+        hydrateCtx,
+        params,
+        headers,
       )
       const suggestionsResHeaders = noUndefinedVals({
         'content-language': resultHeaders?.['content-language'],
@@ -52,12 +55,12 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton = async (input: {
-  ctx: Context
-  params: Params
-}): Promise<Skeleton> => {
-  const { ctx, params } = input
-  const viewer = params.hydrateCtx.viewer
+const skeleton: SkeletonFn<Context, Params, Skeleton> = async ({
+  ctx,
+  params,
+  headers,
+}) => {
+  const viewer = ctx.hydrateCtx.viewer
   if (ctx.suggestionsAgent) {
     const res =
       await ctx.suggestionsAgent.api.app.bsky.unspecced.getSuggestionsSkeleton(
@@ -66,7 +69,7 @@ const skeleton = async (input: {
           limit: params.limit,
           cursor: params.cursor,
         },
-        { headers: params.headers },
+        { headers },
       )
     return {
       dids: res.data.actors.map((a) => a.did),
@@ -92,22 +95,18 @@ const skeleton = async (input: {
   }
 }
 
-const hydration = async (input: {
-  ctx: Context
-  params: Params
-  skeleton: Skeleton
+const hydration: HydrationFn<Context, Params, Skeleton> = async ({
+  ctx,
+  skeleton,
 }) => {
-  const { ctx, params, skeleton } = input
-  return ctx.hydrator.hydrateProfilesDetailed(skeleton.dids, params.hydrateCtx)
+  return ctx.hydrator.hydrateProfilesDetailed(skeleton.dids, ctx.hydrateCtx)
 }
 
-const noBlocksOrMutes = (input: {
-  ctx: Context
-  params: Params
-  skeleton: Skeleton
-  hydration: HydrationState
+const noBlocksOrMutes: RulesFn<Context, Params, Skeleton> = ({
+  ctx,
+  skeleton,
+  hydration,
 }) => {
-  const { ctx, skeleton, hydration } = input
   skeleton.dids = skeleton.dids.filter(
     (did) =>
       !ctx.views.viewerBlockExists(did, hydration) &&
@@ -116,13 +115,11 @@ const noBlocksOrMutes = (input: {
   return skeleton
 }
 
-const presentation = (input: {
-  ctx: Context
-  params: Params
-  skeleton: Skeleton
-  hydration: HydrationState
-}) => {
-  const { ctx, skeleton, hydration } = input
+const presentation = ({
+  ctx,
+  skeleton,
+  hydration,
+}: PresentationFnInput<Context, Params, Skeleton>) => {
   const actors = mapDefined(skeleton.dids, (did) =>
     ctx.views.profileKnownFollowers(did, hydration),
   )
@@ -134,16 +131,14 @@ const presentation = (input: {
 }
 
 type Context = {
-  suggestionsAgent: AtpAgent | undefined
+  suggestionsAgent?: AtpAgent
   dataplane: DataPlaneClient
   hydrator: Hydrator
   views: Views
+  hydrateCtx: HydrateCtx
 }
 
-type Params = QueryParams & {
-  hydrateCtx: HydrateCtx
-  headers: Record<string, string>
-}
+type Params = QueryParams
 
 type Skeleton = {
   dids: string[]

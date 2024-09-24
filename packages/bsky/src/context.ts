@@ -1,22 +1,42 @@
-import express from 'express'
-import * as plc from '@did-plc/lib'
-import { IdResolver } from '@atproto/identity'
 import { AtpAgent } from '@atproto/api'
 import { Keypair } from '@atproto/crypto'
-import { ServerConfig } from './config'
-import { DataPlaneClient } from './data-plane/client'
-import { Hydrator } from './hydration/hydrator'
-import { Views } from './views'
-import { AuthVerifier } from './auth-verifier'
-import { BsyncClient } from './bsync'
-import { CourierClient } from './courier'
-import { FeatureGates } from './feature-gates'
+import { IdResolver } from '@atproto/identity'
+import * as plc from '@did-plc/lib'
+import express from 'express'
+
+import { AuthVerifier } from './auth-verifier.js'
+import { BsyncClient } from './bsync.js'
+import { ServerConfig } from './config.js'
+import { CourierClient } from './courier.js'
+import { createDataPlaneClient, DataPlaneClient } from './data-plane/client.js'
+import { FeatureGates } from './feature-gates.js'
+import { HydrateCtx, Hydrator } from './hydration/hydrator.js'
+import { httpLogger as log } from './logger.js'
 import {
-  ParsedLabelers,
+  createPipeline,
+  HydrationFn,
+  PresentationFn,
+  RulesFn,
+  SkeletonFn,
+} from './pipeline.js'
+import {
   defaultLabelerHeader,
+  ParsedLabelers,
   parseLabelerHeader,
-} from './util'
-import { httpLogger as log } from './logger'
+} from './util.js'
+import { Views } from './views/index.js'
+
+export type AppPipelineContext<
+  H extends { viewer: null | string } = HydrateCtx,
+> = {
+  hydrateCtx: H
+  hydrator: Hydrator
+  views: Views
+  dataplane: DataPlaneClient
+  suggestionsAgent?: AtpAgent
+  searchAgent?: AtpAgent
+  featureGates: FeatureGates
+}
 
 export class AppContext {
   constructor(
@@ -99,6 +119,84 @@ export class AppContext {
     }
     if (!parsed) return defaultLabelerHeader(this.cfg.labelsFromIssuerDids)
     return parsed
+  }
+
+  createPipeline<
+    Params,
+    Skeleton,
+    View,
+    H extends { viewer: null | string } = HydrateCtx,
+  >(
+    skeletonFn: SkeletonFn<AppPipelineContext<H>, Params, Skeleton>,
+    hydrationFn: HydrationFn<AppPipelineContext<H>, Params, Skeleton>,
+    rulesFn: RulesFn<AppPipelineContext<H>, Params, Skeleton>,
+    presentationFn: PresentationFn<
+      AppPipelineContext<H>,
+      Params,
+      Skeleton,
+      View
+    >,
+  ) {
+    const {
+      cfg: config,
+      hydrator: globalHydrator,
+      dataplane: globalDataplane,
+      views,
+      suggestionsAgent,
+      searchAgent,
+      featureGates,
+    } = this
+
+    const pipeline = createPipeline(
+      skeletonFn,
+      hydrationFn,
+      rulesFn,
+      presentationFn,
+    )
+
+    const buildContext = (hydrateCtx: H): AppPipelineContext<H> => {
+      if (hydrateCtx.viewer) {
+        const dataplane = createDataPlaneClient(config.dataplaneUrls, {
+          httpVersion: config.dataplaneHttpVersion,
+          rejectUnauthorized: !config.dataplaneIgnoreBadTls,
+        })
+        const hydrator = new Hydrator(dataplane, config.labelsFromIssuerDids)
+
+        return {
+          hydrateCtx,
+          hydrator,
+          dataplane: dataplane.clearActorMutes(
+            { actorDid: hydrateCtx.viewer },
+            {
+              httpVersion,
+            },
+          ),
+          views,
+          suggestionsAgent,
+          searchAgent,
+          featureGates,
+        }
+      } else {
+        return {
+          hydrateCtx,
+          hydrator: globalHydrator,
+          dataplane: globalDataplane,
+          views,
+          suggestionsAgent,
+          searchAgent,
+          featureGates,
+        }
+      }
+    }
+
+    return async (
+      hydrateCtx: H,
+      params: Params,
+      headers: Record<string, string> = {},
+    ) => {
+      const ctx = buildContext(hydrateCtx)
+      return pipeline(ctx, params, headers)
+    }
   }
 }
 

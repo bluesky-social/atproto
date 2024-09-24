@@ -1,26 +1,26 @@
 import { mapDefined } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import AppContext from '../../../../context'
+import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getKnownFollowers'
-import AppContext from '../../../../context'
 import {
   HydrationFnInput,
   PresentationFnInput,
   RulesFnInput,
   SkeletonFnInput,
-  createPipeline,
 } from '../../../../pipeline'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 import { clearlyBadCursor, resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
-  const getKnownFollowers = createPipeline(
+  const getKnownFollowers = ctx.createPipeline(
     skeleton,
     hydration,
     noBlocks,
     presentation,
   )
+
   server.app.bsky.graph.getKnownFollowers({
     auth: ctx.authVerifier.standard,
     handler: async ({ params, auth, req }) => {
@@ -31,10 +31,7 @@ export default function (server: Server, ctx: AppContext) {
         viewer,
       })
 
-      const result = await getKnownFollowers(
-        { ...params, hydrateCtx: hydrateCtx.copy({ viewer }) },
-        ctx,
-      )
+      const result = await getKnownFollowers(hydrateCtx, params)
 
       return {
         encoding: 'application/json',
@@ -56,7 +53,7 @@ const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
   }
 
   const res = await ctx.hydrator.dataplane.getFollowsFollowing({
-    actorDid: params.hydrateCtx.viewer,
+    actorDid: ctx.hydrateCtx.viewer,
     targetDids: [subjectDid],
   })
   const result = res.results.at(0)
@@ -72,11 +69,11 @@ const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
 const hydration = async (
   input: HydrationFnInput<Context, Params, SkeletonState>,
 ) => {
-  const { ctx, params, skeleton } = input
+  const { ctx, skeleton } = input
   const { knownFollowers } = skeleton
   const profilesState = await ctx.hydrator.hydrateProfiles(
     knownFollowers.concat(skeleton.subjectDid),
-    params.hydrateCtx,
+    ctx.hydrateCtx,
   )
   return profilesState
 }
@@ -106,11 +103,10 @@ const presentation = (
 type Context = {
   hydrator: Hydrator
   views: Views
-}
-
-type Params = QueryParams & {
   hydrateCtx: HydrateCtx & { viewer: string }
 }
+
+type Params = QueryParams
 
 type SkeletonState = {
   subjectDid: string

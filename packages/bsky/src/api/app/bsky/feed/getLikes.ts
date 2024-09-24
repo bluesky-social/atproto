@@ -1,22 +1,26 @@
 import { mapDefined } from '@atproto/common'
 import { normalizeDatetimeAlways } from '@atproto/syntax'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getLikes'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import AppContext from '../../../../context'
-import { createPipeline } from '../../../../pipeline'
 import {
   HydrateCtx,
   HydrationState,
   Hydrator,
 } from '../../../../hydration/hydrator'
-import { Views } from '../../../../views'
 import { parseString } from '../../../../hydration/util'
+import { Server } from '../../../../lexicon'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getLikes'
 import { uriToDid as creatorFromUri } from '../../../../util/uris'
+import { Views } from '../../../../views'
 import { clearlyBadCursor, resHeaders } from '../../../util'
-import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export default function (server: Server, ctx: AppContext) {
-  const getLikes = createPipeline(skeleton, hydration, noBlocks, presentation)
+  const getLikes = ctx.createPipeline(
+    skeleton,
+    hydration,
+    noBlocks,
+    presentation,
+  )
   server.app.bsky.feed.getLikes({
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ params, auth, req }) => {
@@ -27,7 +31,7 @@ export default function (server: Server, ctx: AppContext) {
         viewer,
         includeTakedowns,
       })
-      const result = await getLikes({ ...params, hydrateCtx }, ctx)
+      const result = await getLikes(hydrateCtx, params)
 
       return {
         encoding: 'application/json',
@@ -67,8 +71,8 @@ const hydration = async (inputs: {
   params: Params
   skeleton: Skeleton
 }) => {
-  const { ctx, params, skeleton } = inputs
-  return await ctx.hydrator.hydrateLikes(skeleton.likes, params.hydrateCtx)
+  const { ctx, skeleton } = inputs
+  return await ctx.hydrator.hydrateLikes(skeleton.likes, ctx.hydrateCtx)
 }
 
 const noBlocks = (inputs: {
@@ -118,9 +122,10 @@ const presentation = (inputs: {
 type Context = {
   hydrator: Hydrator
   views: Views
+  hydrateCtx: HydrateCtx
 }
 
-type Params = QueryParams & { hydrateCtx: HydrateCtx }
+type Params = QueryParams
 
 type Skeleton = {
   likes: string[]

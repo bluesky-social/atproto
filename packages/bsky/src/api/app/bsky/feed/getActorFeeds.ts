@@ -1,21 +1,21 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
 import { mapDefined } from '@atproto/common'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getActorFeeds'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import AppContext from '../../../../context'
-import { createPipeline, noRules } from '../../../../pipeline'
+import { DataPlaneClient } from '../../../../data-plane'
 import {
   HydrateCtx,
   HydrationState,
   Hydrator,
 } from '../../../../hydration/hydrator'
-import { Views } from '../../../../views'
-import { DataPlaneClient } from '../../../../data-plane'
 import { parseString } from '../../../../hydration/util'
+import { Server } from '../../../../lexicon'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getActorFeeds'
+import { noRules } from '../../../../pipeline'
+import { Views } from '../../../../views'
 import { clearlyBadCursor, resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
-  const getActorFeeds = createPipeline(
+  const getActorFeeds = ctx.createPipeline(
     skeleton,
     hydration,
     noRules,
@@ -27,7 +27,7 @@ export default function (server: Server, ctx: AppContext) {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
-      const result = await getActorFeeds({ ...params, hydrateCtx }, ctx)
+      const result = await getActorFeeds(hydrateCtx, params)
       return {
         encoding: 'application/json',
         body: result,
@@ -65,11 +65,8 @@ const hydration = async (inputs: {
   params: Params
   skeleton: Skeleton
 }) => {
-  const { ctx, params, skeleton } = inputs
-  return await ctx.hydrator.hydrateFeedGens(
-    skeleton.feedUris,
-    params.hydrateCtx,
-  )
+  const { ctx, skeleton } = inputs
+  return await ctx.hydrator.hydrateFeedGens(skeleton.feedUris, ctx.hydrateCtx)
 }
 
 const presentation = (inputs: {
@@ -91,9 +88,10 @@ type Context = {
   hydrator: Hydrator
   views: Views
   dataplane: DataPlaneClient
+  hydrateCtx: HydrateCtx
 }
 
-type Params = QueryParams & { hydrateCtx: HydrateCtx }
+type Params = QueryParams
 
 type Skeleton = {
   feedUris: string[]

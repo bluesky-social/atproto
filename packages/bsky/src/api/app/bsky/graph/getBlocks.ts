@@ -1,30 +1,32 @@
 import { mapDefined } from '@atproto/common'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getBlocks'
-import AppContext from '../../../../context'
+
+import AppContext from '../../../../context.js'
+import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator.js'
+import { Server } from '../../../../lexicon/index.js'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getBlocks.js'
 import {
-  createPipeline,
   HydrationFnInput,
   noRules,
   PresentationFnInput,
   SkeletonFnInput,
-} from '../../../../pipeline'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
-import { Views } from '../../../../views'
-import { clearlyBadCursor, resHeaders } from '../../../util'
+} from '../../../../pipeline.js'
+import { Views } from '../../../../views/index.js'
+import { clearlyBadCursor, resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
-  const getBlocks = createPipeline(skeleton, hydration, noRules, presentation)
+  const getBlocks = ctx.createPipeline(
+    skeleton,
+    hydration,
+    noRules,
+    presentation,
+  )
   server.app.bsky.graph.getBlocks({
     auth: ctx.authVerifier.standard,
     handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
-      const result = await getBlocks(
-        { ...params, hydrateCtx: hydrateCtx.copy({ viewer }) },
-        ctx,
-      )
+      const result = await getBlocks(hydrateCtx, params)
       return {
         encoding: 'application/json',
         body: result,
@@ -40,7 +42,7 @@ const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
     return { blockedDids: [] }
   }
   const { blockUris, cursor } = await ctx.hydrator.dataplane.getBlocks({
-    actorDid: params.hydrateCtx.viewer,
+    actorDid: ctx.hydrateCtx.viewer,
     cursor: params.cursor,
     limit: params.limit,
   })
@@ -58,8 +60,8 @@ const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
 const hydration = async (
   input: HydrationFnInput<Context, Params, SkeletonState>,
 ) => {
-  const { ctx, params, skeleton } = input
-  return ctx.hydrator.hydrateProfiles(skeleton.blockedDids, params.hydrateCtx)
+  const { ctx, skeleton } = input
+  return ctx.hydrator.hydrateProfiles(skeleton.blockedDids, ctx.hydrateCtx)
 }
 
 const presentation = (
@@ -76,11 +78,10 @@ const presentation = (
 type Context = {
   hydrator: Hydrator
   views: Views
-}
-
-type Params = QueryParams & {
   hydrateCtx: HydrateCtx & { viewer: string }
 }
+
+type Params = QueryParams
 
 type SkeletonState = {
   blockedDids: string[]

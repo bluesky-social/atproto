@@ -1,20 +1,20 @@
 import { mapDefined } from '@atproto/common'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getListBlocks'
-import AppContext from '../../../../context'
+
+import AppContext from '../../../../context.js'
+import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator.js'
+import { Server } from '../../../../lexicon/index.js'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getListBlocks.js'
 import {
-  createPipeline,
   HydrationFnInput,
   noRules,
   PresentationFnInput,
   SkeletonFnInput,
-} from '../../../../pipeline'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
-import { Views } from '../../../../views'
-import { clearlyBadCursor, resHeaders } from '../../../util'
+} from '../../../../pipeline.js'
+import { Views } from '../../../../views/index.js'
+import { clearlyBadCursor, resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
-  const getListBlocks = createPipeline(
+  const getListBlocks = ctx.createPipeline(
     skeleton,
     hydration,
     noRules,
@@ -26,10 +26,7 @@ export default function (server: Server, ctx: AppContext) {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
-      const result = await getListBlocks(
-        { ...params, hydrateCtx: hydrateCtx.copy({ viewer }) },
-        ctx,
-      )
+      const result = await getListBlocks(hydrateCtx, params)
       return {
         encoding: 'application/json',
         body: result,
@@ -48,7 +45,7 @@ const skeleton = async (
   }
   const { listUris, cursor } =
     await ctx.hydrator.dataplane.getBlocklistSubscriptions({
-      actorDid: params.hydrateCtx.viewer,
+      actorDid: ctx.hydrateCtx.viewer,
       cursor: params.cursor,
       limit: params.limit,
     })
@@ -58,8 +55,8 @@ const skeleton = async (
 const hydration = async (
   input: HydrationFnInput<Context, Params, SkeletonState>,
 ) => {
-  const { ctx, params, skeleton } = input
-  return await ctx.hydrator.hydrateLists(skeleton.listUris, params.hydrateCtx)
+  const { ctx, skeleton } = input
+  return await ctx.hydrator.hydrateLists(skeleton.listUris, ctx.hydrateCtx)
 }
 
 const presentation = (
@@ -74,11 +71,10 @@ const presentation = (
 type Context = {
   hydrator: Hydrator
   views: Views
-}
-
-type Params = QueryParams & {
   hydrateCtx: HydrateCtx & { viewer: string }
 }
+
+type Params = QueryParams
 
 type SkeletonState = {
   listUris: string[]

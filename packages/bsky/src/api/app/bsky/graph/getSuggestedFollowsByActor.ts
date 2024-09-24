@@ -1,22 +1,23 @@
+import AtpAgent from '@atproto/api'
 import { mapDefined, noUndefinedVals } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import AtpAgent from '@atproto/api'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getSuggestedFollowsByActor'
-import AppContext from '../../../../context'
+
+import AppContext from '../../../../context.js'
+import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator.js'
+import { Server } from '../../../../lexicon/index.js'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getSuggestedFollowsByActor.js'
 import {
   HydrationFnInput,
   PresentationFnInput,
   RulesFnInput,
   SkeletonFnInput,
-  createPipeline,
-} from '../../../../pipeline'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
-import { Views } from '../../../../views'
-import { resHeaders } from '../../../util'
+} from '../../../../pipeline.js'
+import { Views } from '../../../../views/index.js'
+import { resHeaders } from '../../../util.js'
+import { FeatureGates } from '../../../../feature-gates.js'
 
 export default function (server: Server, ctx: AppContext) {
-  const getSuggestedFollowsByActor = createPipeline(
+  const getSuggestedFollowsByActor = ctx.createPipeline(
     skeleton,
     hydration,
     noBlocksOrMutes,
@@ -35,10 +36,7 @@ export default function (server: Server, ctx: AppContext) {
           : req.headers['x-bsky-topics'],
       })
       const { headers: resultHeaders, ...result } =
-        await getSuggestedFollowsByActor(
-          { ...params, hydrateCtx: hydrateCtx.copy({ viewer }), headers },
-          ctx,
-        )
+        await getSuggestedFollowsByActor(hydrateCtx, params, headers)
       const responseHeaders = noUndefinedVals({
         'content-language': resultHeaders?.['content-language'],
       })
@@ -54,8 +52,11 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
-  const { params, ctx } = input
+const skeleton = async ({
+  params,
+  ctx,
+  headers,
+}: SkeletonFnInput<Context, Params>) => {
   const [relativeToDid] = await ctx.hydrator.actor.getDids([params.actor])
   if (!relativeToDid) {
     throw new InvalidRequestError('Actor not found')
@@ -65,10 +66,10 @@ const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
     const res =
       await ctx.suggestionsAgent.api.app.bsky.unspecced.getSuggestionsSkeleton(
         {
-          viewer: params.hydrateCtx.viewer ?? undefined,
+          viewer: ctx.hydrateCtx.viewer ?? undefined,
           relativeToDid,
         },
-        { headers: params.headers },
+        { headers },
       )
     return {
       isFallback: !res.data.relativeToDid,
@@ -77,7 +78,7 @@ const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
     }
   } else {
     const { dids } = await ctx.hydrator.dataplane.getFollowSuggestions({
-      actorDid: params.hydrateCtx.viewer,
+      actorDid: ctx.hydrateCtx.viewer,
       relativeToDid,
     })
     return {
@@ -87,18 +88,19 @@ const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
   }
 }
 
-const hydration = async (
-  input: HydrationFnInput<Context, Params, SkeletonState>,
-) => {
-  const { ctx, params, skeleton } = input
+const hydration = async ({
+  ctx,
+  skeleton,
+}: HydrationFnInput<Context, Params, SkeletonState>) => {
   const { suggestedDids } = skeleton
-  return ctx.hydrator.hydrateProfilesDetailed(suggestedDids, params.hydrateCtx)
+  return ctx.hydrator.hydrateProfilesDetailed(suggestedDids, ctx.hydrateCtx)
 }
 
-const noBlocksOrMutes = (
-  input: RulesFnInput<Context, Params, SkeletonState>,
-) => {
-  const { ctx, skeleton, hydration } = input
+const noBlocksOrMutes = ({
+  ctx,
+  skeleton,
+  hydration,
+}: RulesFnInput<Context, Params, SkeletonState>) => {
   skeleton.suggestedDids = skeleton.suggestedDids.filter(
     (did) =>
       !ctx.views.viewerBlockExists(did, hydration) &&
@@ -107,10 +109,11 @@ const noBlocksOrMutes = (
   return skeleton
 }
 
-const presentation = (
-  input: PresentationFnInput<Context, Params, SkeletonState>,
-) => {
-  const { ctx, hydration, skeleton } = input
+const presentation = ({
+  ctx,
+  hydration,
+  skeleton,
+}: PresentationFnInput<Context, Params, SkeletonState>) => {
   const { suggestedDids, headers } = skeleton
   const suggestions = mapDefined(suggestedDids, (did) =>
     ctx.views.profileDetailed(did, hydration),
@@ -121,14 +124,12 @@ const presentation = (
 type Context = {
   hydrator: Hydrator
   views: Views
-  suggestionsAgent: AtpAgent | undefined
-  featureGates: AppContext['featureGates']
+  suggestionsAgent?: AtpAgent
+  featureGates: FeatureGates
+  hydrateCtx: HydrateCtx & { viewer: string }
 }
 
-type Params = QueryParams & {
-  hydrateCtx: HydrateCtx & { viewer: string }
-  headers: Record<string, string>
-}
+type Params = QueryParams
 
 type SkeletonState = {
   isFallback: boolean

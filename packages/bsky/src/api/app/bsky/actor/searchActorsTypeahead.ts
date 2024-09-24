@@ -1,23 +1,22 @@
-import AppContext from '../../../../context'
-import { Server } from '../../../../lexicon'
 import { AtpAgent } from '@atproto/api'
 import { mapDefined } from '@atproto/common'
+import AppContext from '../../../../context'
+import { DataPlaneClient } from '../../../../data-plane'
+import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
+import { parseString } from '../../../../hydration/util'
+import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/actor/searchActorsTypeahead'
 import {
   HydrationFnInput,
   PresentationFnInput,
   RulesFnInput,
   SkeletonFnInput,
-  createPipeline,
 } from '../../../../pipeline'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
-import { DataPlaneClient } from '../../../../data-plane'
-import { parseString } from '../../../../hydration/util'
 import { resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
-  const searchActorsTypeahead = createPipeline(
+  const searchActorsTypeahead = ctx.createPipeline(
     skeleton,
     hydration,
     noBlocks,
@@ -29,10 +28,7 @@ export default function (server: Server, ctx: AppContext) {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
-      const results = await searchActorsTypeahead(
-        { ...params, hydrateCtx },
-        ctx,
-      )
+      const results = await searchActorsTypeahead(hydrateCtx, params)
       return {
         encoding: 'application/json',
         body: results,
@@ -56,7 +52,7 @@ const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
         typeahead: true,
         q: term,
         limit: params.limit,
-        viewer: params.hydrateCtx.viewer ?? undefined,
+        viewer: ctx.hydrateCtx.viewer ?? undefined,
       })
     return {
       dids: res.actors.map(({ did }) => did),
@@ -78,7 +74,7 @@ const hydration = async (
   inputs: HydrationFnInput<Context, Params, Skeleton>,
 ) => {
   const { ctx, params, skeleton } = inputs
-  return ctx.hydrator.hydrateProfilesBasic(skeleton.dids, params.hydrateCtx)
+  return ctx.hydrator.hydrateProfilesBasic(skeleton.dids, ctx.hydrateCtx)
 }
 
 const noBlocks = (inputs: RulesFnInput<Context, Params, Skeleton>) => {
@@ -111,9 +107,10 @@ type Context = {
   hydrator: Hydrator
   views: Views
   searchAgent?: AtpAgent
+  hydrateCtx: HydrateCtx
 }
 
-type Params = QueryParams & { hydrateCtx: HydrateCtx }
+type Params = QueryParams
 
 type Skeleton = {
   dids: string[]

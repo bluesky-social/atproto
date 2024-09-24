@@ -1,18 +1,19 @@
 import { dedupeStrs, mapDefined } from '@atproto/common'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getStarterPacks'
-import AppContext from '../../../../context'
-import { resHeaders } from '../../../util'
-import { createPipeline, noRules } from '../../../../pipeline'
+
+import AppContext from '../../../../context.js'
 import {
   HydrateCtx,
   HydrationState,
   Hydrator,
-} from '../../../../hydration/hydrator'
-import { Views } from '../../../../views'
+} from '../../../../hydration/hydrator.js'
+import { Server } from '../../../../lexicon/index.js'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getStarterPacks.js'
+import { noRules } from '../../../../pipeline.js'
+import { Views } from '../../../../views/index.js'
+import { resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
-  const getStarterPacks = createPipeline(
+  const getStarterPacks = ctx.createPipeline(
     skeleton,
     hydration,
     noRules,
@@ -29,7 +30,7 @@ export default function (server: Server, ctx: AppContext) {
         includeTakedowns,
       })
 
-      const result = await getStarterPacks({ ...params, hydrateCtx }, ctx)
+      const result = await getStarterPacks(hydrateCtx, params)
 
       return {
         encoding: 'application/json',
@@ -49,10 +50,10 @@ const hydration = async (input: {
   params: Params
   skeleton: SkeletonState
 }) => {
-  const { ctx, params, skeleton } = input
+  const { ctx, skeleton } = input
   return ctx.hydrator.hydrateStarterPacksBasic(
     dedupeStrs(skeleton.uris),
-    params.hydrateCtx,
+    ctx.hydrateCtx,
   )
 }
 
@@ -72,10 +73,9 @@ const presentation = (input: {
 type Context = {
   hydrator: Hydrator
   views: Views
-}
-
-type Params = QueryParams & {
   hydrateCtx: HydrateCtx
 }
+
+type Params = QueryParams
 
 type SkeletonState = { uris: string[] }

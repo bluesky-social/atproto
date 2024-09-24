@@ -1,19 +1,25 @@
 import { mapDefined } from '@atproto/common'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/actor/getProfiles'
+
 import AppContext from '../../../../context'
-import { resHeaders } from '../../../util'
-import { createPipeline, noRules } from '../../../../pipeline'
 import {
   HydrateCtx,
   HydrationState,
   Hydrator,
 } from '../../../../hydration/hydrator'
-import { Views } from '../../../../views'
+import { Server } from '../../../../lexicon/index'
 import { ids } from '../../../../lexicon/lexicons'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/actor/getProfiles'
+import { noRules } from '../../../../pipeline'
+import { Views } from '../../../../views/index'
+import { resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
-  const getProfile = createPipeline(skeleton, hydration, noRules, presentation)
+  const getProfile = ctx.createPipeline(
+    skeleton,
+    hydration,
+    noRules,
+    presentation,
+  )
   server.app.bsky.actor.getProfiles({
     auth: ctx.authVerifier.standardOptionalParameterized({
       lxmCheck: (method) => {
@@ -29,7 +35,7 @@ export default function (server: Server, ctx: AppContext) {
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({ viewer, labelers })
 
-      const result = await getProfile({ ...params, hydrateCtx }, ctx)
+      const result = await getProfile(hydrateCtx, params)
 
       const repoRev = await ctx.hydrator.actor.getRepoRevSafe(viewer)
 
@@ -59,8 +65,8 @@ const hydration = async (input: {
   params: Params
   skeleton: SkeletonState
 }) => {
-  const { ctx, params, skeleton } = input
-  return ctx.hydrator.hydrateProfilesDetailed(skeleton.dids, params.hydrateCtx)
+  const { ctx, skeleton } = input
+  return ctx.hydrator.hydrateProfilesDetailed(skeleton.dids, ctx.hydrateCtx)
 }
 
 const presentation = (input: {
@@ -79,10 +85,9 @@ const presentation = (input: {
 type Context = {
   hydrator: Hydrator
   views: Views
-}
-
-type Params = QueryParams & {
   hydrateCtx: HydrateCtx
 }
+
+type Params = QueryParams
 
 type SkeletonState = { dids: string[] }

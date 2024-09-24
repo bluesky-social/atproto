@@ -1,30 +1,25 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { Server } from '../../../../lexicon'
-import {
-  isNotFoundPost,
-  isThreadViewPost,
-} from '../../../../lexicon/types/app/bsky/feed/defs'
-import { isRecord as isPostRecord } from '../../../../lexicon/types/app/bsky/feed/post'
-import {
-  QueryParams,
-  OutputSchema,
-} from '../../../../lexicon/types/app/bsky/feed/getPostThread'
 import AppContext from '../../../../context'
-import { ATPROTO_REPO_REV, resHeaders } from '../../../util'
+import { Code, DataPlaneClient, isDataplaneError } from '../../../../data-plane'
+import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
+import { Server } from '../../../../lexicon'
+import { isNotFoundPost } from '../../../../lexicon/types/app/bsky/feed/defs'
+import {
+  OutputSchema,
+  QueryParams,
+} from '../../../../lexicon/types/app/bsky/feed/getPostThread'
 import {
   HydrationFnInput,
   PresentationFnInput,
   SkeletonFnInput,
-  createPipeline,
   noRules,
 } from '../../../../pipeline'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
-import { Views } from '../../../../views'
-import { DataPlaneClient, isDataplaneError, Code } from '../../../../data-plane'
 import { postUriToThreadgateUri } from '../../../../util/uris'
+import { Views } from '../../../../views'
+import { ATPROTO_REPO_REV, resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
-  const getPostThread = createPipeline(
+  const getPostThread = ctx.createPipeline(
     skeleton,
     hydration,
     noRules, // handled in presentation: 3p block-violating replies are turned to #blockedPost, viewer blocks turned to #notFoundPost.
@@ -45,7 +40,7 @@ export default function (server: Server, ctx: AppContext) {
 
       let result: OutputSchema
       try {
-        result = await getPostThread({ ...params, hydrateCtx }, ctx)
+        result = await getPostThread(hydrateCtx, params)
       } catch (err) {
         const repoRev = await ctx.hydrator.actor.getRepoRevSafe(viewer)
         if (repoRev) {
@@ -96,10 +91,10 @@ const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
 const hydration = async (
   inputs: HydrationFnInput<Context, Params, Skeleton>,
 ) => {
-  const { ctx, params, skeleton } = inputs
+  const { ctx, skeleton } = inputs
   return ctx.hydrator.hydrateThreadPosts(
     skeleton.uris.map((uri) => ({ uri })),
-    params.hydrateCtx,
+    ctx.hydrateCtx,
   )
 }
 
@@ -132,9 +127,10 @@ type Context = {
   dataplane: DataPlaneClient
   hydrator: Hydrator
   views: Views
+  hydrateCtx: HydrateCtx
 }
 
-type Params = QueryParams & { hydrateCtx: HydrateCtx }
+type Params = QueryParams
 
 type Skeleton = {
   anchor: string

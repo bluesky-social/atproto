@@ -1,24 +1,24 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
 import { mapDefined } from '@atproto/common'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/notification/listNotifications'
-import { isRecord as isPostRecord } from '../../../../lexicon/types/app/bsky/feed/post'
-import AppContext from '../../../../context'
+import { InvalidRequestError } from '@atproto/xrpc-server'
+
+import AppContext from '../../../../context.js'
+import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator.js'
+import { Server } from '../../../../lexicon/index.js'
+import { isRecord as isPostRecord } from '../../../../lexicon/types/app/bsky/feed/post.js'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/notification/listNotifications.js'
 import {
-  createPipeline,
   HydrationFnInput,
   PresentationFnInput,
   RulesFnInput,
   SkeletonFnInput,
-} from '../../../../pipeline'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
-import { Views } from '../../../../views'
-import { Notification } from '../../../../proto/bsky_pb'
-import { uriToDid as didFromUri } from '../../../../util/uris'
-import { clearlyBadCursor, resHeaders } from '../../../util'
+} from '../../../../pipeline.js'
+import { Notification } from '../../../../proto/bsky_pb.js'
+import { uriToDid as didFromUri } from '../../../../util/uris.js'
+import { Views } from '../../../../views/index.js'
+import { clearlyBadCursor, resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
-  const listNotifications = createPipeline(
+  const listNotifications = ctx.createPipeline(
     skeleton,
     hydration,
     noBlockOrMutes,
@@ -30,10 +30,7 @@ export default function (server: Server, ctx: AppContext) {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
-      const result = await listNotifications(
-        { ...params, hydrateCtx: hydrateCtx.copy({ viewer }) },
-        ctx,
-      )
+      const result = await listNotifications(hydrateCtx, params)
       return {
         encoding: 'application/json',
         body: result,
@@ -50,7 +47,7 @@ const skeleton = async (
   if (params.seenAt) {
     throw new InvalidRequestError('The seenAt parameter is unsupported')
   }
-  const viewer = params.hydrateCtx.viewer
+  const viewer = ctx.hydrateCtx.viewer
   const priority = params.priority ?? (await getPriority(ctx, viewer))
   if (clearlyBadCursor(params.cursor)) {
     return { notifs: [], priority }
@@ -84,14 +81,14 @@ const skeleton = async (
 const hydration = async (
   input: HydrationFnInput<Context, Params, SkeletonState>,
 ) => {
-  const { skeleton, params, ctx } = input
-  return ctx.hydrator.hydrateNotifications(skeleton.notifs, params.hydrateCtx)
+  const { skeleton, ctx } = input
+  return ctx.hydrator.hydrateNotifications(skeleton.notifs, ctx.hydrateCtx)
 }
 
 const noBlockOrMutes = (
   input: RulesFnInput<Context, Params, SkeletonState>,
 ) => {
-  const { skeleton, hydration, ctx, params } = input
+  const { skeleton, hydration, ctx } = input
   skeleton.notifs = skeleton.notifs.filter((item) => {
     const did = didFromUri(item.uri)
     if (
@@ -109,7 +106,7 @@ const noBlockOrMutes = (
           ? post.record.reply?.root.uri
           : undefined
         const isRootPostByViewer =
-          rootPostUri && didFromUri(rootPostUri) === params.hydrateCtx?.viewer
+          rootPostUri && didFromUri(rootPostUri) === ctx.hydrateCtx?.viewer
         const isHiddenReply = isRootPostByViewer
           ? ctx.views.replyIsHiddenByThreadgate(
               item.uri,
@@ -146,11 +143,10 @@ const presentation = (
 type Context = {
   hydrator: Hydrator
   views: Views
-}
-
-type Params = QueryParams & {
   hydrateCtx: HydrateCtx & { viewer: string }
 }
+
+type Params = QueryParams
 
 type SkeletonState = {
   notifs: Notification[]

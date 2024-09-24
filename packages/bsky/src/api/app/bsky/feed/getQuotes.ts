@@ -1,21 +1,24 @@
-import { AtUri } from '@atproto/syntax'
-import { Server } from '../../../../lexicon'
+import { mapDefined } from '@atproto/common'
 import AppContext from '../../../../context'
-import { createPipeline } from '../../../../pipeline'
-import { clearlyBadCursor, resHeaders } from '../../../util'
 import {
   HydrateCtx,
   HydrationState,
   Hydrator,
 } from '../../../../hydration/hydrator'
-import { Views } from '../../../../views'
-import { mapDefined } from '@atproto/common'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getQuotes'
 import { parseString } from '../../../../hydration/util'
+import { Server } from '../../../../lexicon'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getQuotes'
 import { uriToDid } from '../../../../util/uris'
+import { Views } from '../../../../views'
+import { clearlyBadCursor, resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
-  const getQuotes = createPipeline(skeleton, hydration, noBlocks, presentation)
+  const getQuotes = ctx.createPipeline(
+    skeleton,
+    hydration,
+    noBlocks,
+    presentation,
+  )
   server.app.bsky.feed.getQuotes({
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ params, auth, req }) => {
@@ -26,7 +29,7 @@ export default function (server: Server, ctx: AppContext) {
         viewer,
         includeTakedowns,
       })
-      const result = await getQuotes({ ...params, hydrateCtx }, ctx)
+      const result = await getQuotes(hydrateCtx, params)
       return {
         encoding: 'application/json',
         body: result,
@@ -60,10 +63,10 @@ const hydration = async (inputs: {
   params: Params
   skeleton: Skeleton
 }) => {
-  const { ctx, params, skeleton } = inputs
+  const { ctx, skeleton } = inputs
   return await ctx.hydrator.hydratePosts(
     skeleton.uris.map((uri) => ({ uri })),
-    params.hydrateCtx,
+    ctx.hydrateCtx,
   )
 }
 
@@ -102,9 +105,10 @@ const presentation = (inputs: {
 type Context = {
   hydrator: Hydrator
   views: Views
+  hydrateCtx: HydrateCtx
 }
 
-type Params = QueryParams & { hydrateCtx: HydrateCtx }
+type Params = QueryParams
 
 type Skeleton = {
   uris: string[]

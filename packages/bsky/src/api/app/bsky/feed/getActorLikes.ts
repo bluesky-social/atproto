@@ -1,23 +1,22 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
 import { mapDefined } from '@atproto/common'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getActorLikes'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import AppContext from '../../../../context'
-import { clearlyBadCursor, resHeaders } from '../../../util'
-import { createPipeline } from '../../../../pipeline'
+import { DataPlaneClient } from '../../../../data-plane'
+import { FeedItem } from '../../../../hydration/feed'
 import {
   HydrateCtx,
   HydrationState,
   Hydrator,
 } from '../../../../hydration/hydrator'
-import { Views } from '../../../../views'
-import { DataPlaneClient } from '../../../../data-plane'
 import { parseString } from '../../../../hydration/util'
+import { Server } from '../../../../lexicon'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getActorLikes'
 import { uriToDid as creatorFromUri } from '../../../../util/uris'
-import { FeedItem } from '../../../../hydration/feed'
+import { Views } from '../../../../views'
+import { clearlyBadCursor, resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
-  const getActorLikes = createPipeline(
+  const getActorLikes = ctx.createPipeline(
     skeleton,
     hydration,
     noPostBlocks,
@@ -30,7 +29,7 @@ export default function (server: Server, ctx: AppContext) {
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
 
-      const result = await getActorLikes({ ...params, hydrateCtx }, ctx)
+      const result = await getActorLikes(hydrateCtx, params)
 
       const repoRev = await ctx.hydrator.actor.getRepoRevSafe(viewer)
 
@@ -52,7 +51,7 @@ const skeleton = async (inputs: {
 }): Promise<Skeleton> => {
   const { ctx, params } = inputs
   const { actor, limit, cursor } = params
-  const viewer = params.hydrateCtx.viewer
+  const viewer = ctx.hydrateCtx.viewer
   if (clearlyBadCursor(cursor)) {
     return { items: [] }
   }
@@ -80,8 +79,8 @@ const hydration = async (inputs: {
   params: Params
   skeleton: Skeleton
 }) => {
-  const { ctx, params, skeleton } = inputs
-  return await ctx.hydrator.hydrateFeedItems(skeleton.items, params.hydrateCtx)
+  const { ctx, skeleton } = inputs
+  return await ctx.hydrator.hydrateFeedItems(skeleton.items, ctx.hydrateCtx)
 }
 
 const noPostBlocks = (inputs: {
@@ -116,9 +115,10 @@ type Context = {
   hydrator: Hydrator
   views: Views
   dataplane: DataPlaneClient
+  hydrateCtx: HydrateCtx
 }
 
-type Params = QueryParams & { hydrateCtx: HydrateCtx }
+type Params = QueryParams
 
 type Skeleton = {
   items: FeedItem[]

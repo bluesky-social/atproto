@@ -1,21 +1,21 @@
 import { mapDefined } from '@atproto/common'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getLists'
-import { REFERENCELIST } from '../../../../lexicon/types/app/bsky/graph/defs'
-import AppContext from '../../../../context'
+
+import AppContext from '../../../../context.js'
+import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator.js'
+import { Server } from '../../../../lexicon/index.js'
+import { REFERENCELIST } from '../../../../lexicon/types/app/bsky/graph/defs.js'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getLists.js'
 import {
-  createPipeline,
   HydrationFnInput,
   PresentationFnInput,
   RulesFnInput,
   SkeletonFnInput,
-} from '../../../../pipeline'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
-import { Views } from '../../../../views'
-import { clearlyBadCursor, resHeaders } from '../../../util'
+} from '../../../../pipeline.js'
+import { Views } from '../../../../views/index.js'
+import { clearlyBadCursor, resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
-  const getLists = createPipeline(
+  const getLists = ctx.createPipeline(
     skeleton,
     hydration,
     noReferenceLists,
@@ -31,7 +31,7 @@ export default function (server: Server, ctx: AppContext) {
         viewer,
         includeTakedowns,
       })
-      const result = await getLists({ ...params, hydrateCtx }, ctx)
+      const result = await getLists(hydrateCtx, params)
 
       return {
         encoding: 'application/json',
@@ -60,9 +60,9 @@ const skeleton = async (
 const hydration = async (
   input: HydrationFnInput<Context, Params, SkeletonState>,
 ) => {
-  const { ctx, params, skeleton } = input
+  const { ctx, skeleton } = input
   const { listUris } = skeleton
-  return ctx.hydrator.hydrateLists(listUris, params.hydrateCtx)
+  return ctx.hydrator.hydrateLists(listUris, ctx.hydrateCtx)
 }
 
 const noReferenceLists = (
@@ -90,11 +90,10 @@ const presentation = (
 type Context = {
   hydrator: Hydrator
   views: Views
-}
-
-type Params = QueryParams & {
   hydrateCtx: HydrateCtx
 }
+
+type Params = QueryParams
 
 type SkeletonState = {
   listUris: string[]

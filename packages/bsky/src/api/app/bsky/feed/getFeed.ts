@@ -1,43 +1,45 @@
-import { mapDefined } from '@atproto/common'
+import { AppBskyFeedGetFeedSkeleton, AtpAgent } from '@atproto/api'
+import { mapDefined, noUndefinedVals } from '@atproto/common'
+import { ResponseType, XRPCError } from '@atproto/xrpc'
 import {
   InvalidRequestError,
-  UpstreamFailureError,
   ServerTimer,
+  UpstreamFailureError,
   serverTimingHeader,
 } from '@atproto/xrpc-server'
-import { ResponseType, XRPCError } from '@atproto/xrpc'
-import { AtpAgent, AppBskyFeedGetFeedSkeleton } from '@atproto/api'
-import { noUndefinedVals } from '@atproto/common'
-import { QueryParams as GetFeedParams } from '../../../../lexicon/types/app/bsky/feed/getFeed'
-import { OutputSchema as SkeletonOutput } from '../../../../lexicon/types/app/bsky/feed/getFeedSkeleton'
-import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
+
+import AppContext from '../../../../context.js'
+import {
+  Code,
+  DataPlaneClient,
+  getServiceEndpoint,
+  isDataplaneError,
+  unpackIdentityServices,
+} from '../../../../data-plane/index.js'
+import { FeedItem } from '../../../../hydration/feed.js'
+import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator.js'
+import { Server } from '../../../../lexicon/index.js'
+import { ids } from '../../../../lexicon/lexicons.js'
+import { QueryParams as GetFeedParams } from '../../../../lexicon/types/app/bsky/feed/getFeed.js'
+import { OutputSchema as SkeletonOutput } from '../../../../lexicon/types/app/bsky/feed/getFeedSkeleton.js'
 import {
   HydrationFnInput,
   PresentationFnInput,
   RulesFnInput,
   SkeletonFnInput,
-  createPipeline,
-} from '../../../../pipeline'
-import { HydrateCtx } from '../../../../hydration/hydrator'
-import { FeedItem } from '../../../../hydration/feed'
-import { GetIdentityByDidResponse } from '../../../../proto/bsky_pb'
-import {
-  Code,
-  getServiceEndpoint,
-  isDataplaneError,
-  unpackIdentityServices,
-} from '../../../../data-plane'
-import { resHeaders } from '../../../util'
-import { ids } from '../../../../lexicon/lexicons'
+} from '../../../../pipeline.js'
+import { GetIdentityByDidResponse } from '../../../../proto/bsky_pb.js'
+import { Views } from '../../../../views/index.js'
+import { resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
-  const getFeed = createPipeline(
+  const getFeed = ctx.createPipeline(
     skeleton,
     hydration,
     noBlocksOrMutes,
     presentation,
   )
+
   server.app.bsky.feed.getFeed({
     auth: ctx.authVerifier.standardOptionalParameterized({
       lxmCheck: (method) => {
@@ -67,7 +69,7 @@ export default function (server: Server, ctx: AppContext) {
         timerHydr,
         resHeaders: feedResHeaders,
         ...result
-      } = await getFeed({ ...params, hydrateCtx, headers }, ctx)
+      } = await getFeed(hydrateCtx, params, headers)
 
       return {
         encoding: 'application/json',
@@ -85,14 +87,14 @@ export default function (server: Server, ctx: AppContext) {
 const skeleton = async (
   inputs: SkeletonFnInput<Context, Params>,
 ): Promise<Skeleton> => {
-  const { ctx, params } = inputs
+  const { ctx, params, headers } = inputs
   const timerSkele = new ServerTimer('skele').start()
   const {
     feedItems: algoItems,
     cursor,
     resHeaders,
     ...passthrough
-  } = await skeletonFromFeedGen(ctx, params)
+  } = await skeletonFromFeedGen(ctx, params, headers)
 
   return {
     cursor,
@@ -107,11 +109,11 @@ const skeleton = async (
 const hydration = async (
   inputs: HydrationFnInput<Context, Params, Skeleton>,
 ) => {
-  const { ctx, params, skeleton } = inputs
+  const { ctx, skeleton } = inputs
   const timerHydr = new ServerTimer('hydr').start()
   const hydration = await ctx.hydrator.hydrateFeedItems(
     skeleton.items,
-    params.hydrateCtx,
+    ctx.hydrateCtx,
   )
   skeleton.timerHydr = timerHydr.stop()
   return hydration
@@ -154,12 +156,14 @@ const presentation = (
   }
 }
 
-type Context = AppContext
-
-type Params = GetFeedParams & {
+type Context = {
+  hydrator: Hydrator
+  views: Views
+  dataplane: DataPlaneClient
   hydrateCtx: HydrateCtx
-  headers: Record<string, string>
 }
+
+type Params = GetFeedParams
 
 type Skeleton = {
   items: AlgoResponseItem[]
@@ -173,8 +177,9 @@ type Skeleton = {
 const skeletonFromFeedGen = async (
   ctx: Context,
   params: Params,
+  headers: Record<string, string>,
 ): Promise<AlgoResponse> => {
-  const { feed, headers } = params
+  const { feed } = params
   const found = await ctx.hydrator.feed.getFeedGens([feed], true)
   const feedDid = await found.get(feed)?.record.did
   if (!feedDid) {

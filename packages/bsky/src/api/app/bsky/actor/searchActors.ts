@@ -8,7 +8,6 @@ import {
   PresentationFnInput,
   RulesFnInput,
   SkeletonFnInput,
-  createPipeline,
 } from '../../../../pipeline'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
@@ -17,7 +16,7 @@ import { parseString } from '../../../../hydration/util'
 import { resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
-  const searchActors = createPipeline(
+  const searchActors = ctx.createPipeline(
     skeleton,
     hydration,
     noBlocks,
@@ -33,7 +32,7 @@ export default function (server: Server, ctx: AppContext) {
         labelers,
         includeTakedowns,
       })
-      const results = await searchActors({ ...params, hydrateCtx }, ctx)
+      const results = await searchActors(hydrateCtx, params)
       return {
         encoding: 'application/json',
         body: results,
@@ -57,7 +56,7 @@ const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
         q: term,
         cursor: params.cursor,
         limit: params.limit,
-        viewer: params.hydrateCtx.viewer ?? undefined,
+        viewer: ctx.hydrateCtx.viewer ?? undefined,
       })
     return {
       dids: res.actors.map(({ did }) => did),
@@ -79,8 +78,8 @@ const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
 const hydration = async (
   inputs: HydrationFnInput<Context, Params, Skeleton>,
 ) => {
-  const { ctx, params, skeleton } = inputs
-  return ctx.hydrator.hydrateProfiles(skeleton.dids, params.hydrateCtx)
+  const { ctx, skeleton } = inputs
+  return ctx.hydrator.hydrateProfiles(skeleton.dids, ctx.hydrateCtx)
 }
 
 const noBlocks = (inputs: RulesFnInput<Context, Params, Skeleton>) => {
@@ -109,9 +108,10 @@ type Context = {
   hydrator: Hydrator
   views: Views
   searchAgent?: AtpAgent
+  hydrateCtx: HydrateCtx
 }
 
-type Params = QueryParams & { hydrateCtx: HydrateCtx }
+type Params = QueryParams
 
 type Skeleton = {
   dids: string[]

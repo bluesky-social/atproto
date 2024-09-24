@@ -1,18 +1,19 @@
 import { mapDefined } from '@atproto/common'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getFeedGenerators'
-import AppContext from '../../../../context'
-import { createPipeline, noRules } from '../../../../pipeline'
+
+import AppContext from '../../../../context.js'
 import {
   HydrateCtx,
   HydrationState,
   Hydrator,
-} from '../../../../hydration/hydrator'
-import { Views } from '../../../../views'
-import { resHeaders } from '../../../util'
+} from '../../../../hydration/hydrator.js'
+import { Server } from '../../../../lexicon/index.js'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getFeedGenerators.js'
+import { noRules } from '../../../../pipeline.js'
+import { Views } from '../../../../views/index.js'
+import { resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
-  const getFeedGenerators = createPipeline(
+  const getFeedGenerators = ctx.createPipeline(
     skeleton,
     hydration,
     noRules,
@@ -24,7 +25,7 @@ export default function (server: Server, ctx: AppContext) {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
-      const view = await getFeedGenerators({ ...params, hydrateCtx }, ctx)
+      const view = await getFeedGenerators(hydrateCtx, params)
       return {
         encoding: 'application/json',
         body: view,
@@ -45,11 +46,8 @@ const hydration = async (inputs: {
   params: Params
   skeleton: Skeleton
 }) => {
-  const { ctx, params, skeleton } = inputs
-  return await ctx.hydrator.hydrateFeedGens(
-    skeleton.feedUris,
-    params.hydrateCtx,
-  )
+  const { ctx, skeleton } = inputs
+  return await ctx.hydrator.hydrateFeedGens(skeleton.feedUris, ctx.hydrateCtx)
 }
 
 const presentation = (inputs: {
@@ -69,9 +67,10 @@ const presentation = (inputs: {
 type Context = {
   hydrator: Hydrator
   views: Views
+  hydrateCtx: HydrateCtx
 }
 
-type Params = QueryParams & { hydrateCtx: HydrateCtx }
+type Params = QueryParams
 
 type Skeleton = {
   feedUris: string[]

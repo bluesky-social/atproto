@@ -1,24 +1,24 @@
-import AppContext from '../../../../context'
-import { Server } from '../../../../lexicon'
 import { AtpAgent } from '@atproto/api'
 import { mapDefined } from '@atproto/common'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/searchPosts'
+
+import AppContext from '../../../../context.js'
+import { DataPlaneClient } from '../../../../data-plane/index.js'
+import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator.js'
+import { parseString } from '../../../../hydration/util.js'
+import { Server } from '../../../../lexicon/index.js'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/searchPosts.js'
 import {
   HydrationFnInput,
   PresentationFnInput,
   RulesFnInput,
   SkeletonFnInput,
-  createPipeline,
-} from '../../../../pipeline'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
-import { Views } from '../../../../views'
-import { DataPlaneClient } from '../../../../data-plane'
-import { parseString } from '../../../../hydration/util'
-import { uriToDid as creatorFromUri } from '../../../../util/uris'
-import { resHeaders } from '../../../util'
+} from '../../../../pipeline.js'
+import { uriToDid as creatorFromUri } from '../../../../util/uris.js'
+import { Views } from '../../../../views/index.js'
+import { resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
-  const searchPosts = createPipeline(
+  const searchPosts = ctx.createPipeline(
     skeleton,
     hydration,
     noBlocks,
@@ -30,7 +30,7 @@ export default function (server: Server, ctx: AppContext) {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
-      const results = await searchPosts({ ...params, hydrateCtx }, ctx)
+      const results = await searchPosts(hydrateCtx, params)
       return {
         encoding: 'application/json',
         body: results,
@@ -59,7 +59,7 @@ const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
         tag: params.tag,
         until: params.until,
         url: params.url,
-        viewer: params.hydrateCtx.viewer ?? undefined,
+        viewer: ctx.hydrateCtx.viewer ?? undefined,
       })
     return {
       posts: res.posts.map(({ uri }) => uri),
@@ -81,10 +81,10 @@ const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
 const hydration = async (
   inputs: HydrationFnInput<Context, Params, Skeleton>,
 ) => {
-  const { ctx, params, skeleton } = inputs
+  const { ctx, skeleton } = inputs
   return ctx.hydrator.hydratePosts(
     skeleton.posts.map((uri) => ({ uri })),
-    params.hydrateCtx,
+    ctx.hydrateCtx,
   )
 }
 
@@ -116,9 +116,10 @@ type Context = {
   hydrator: Hydrator
   views: Views
   searchAgent?: AtpAgent
+  hydrateCtx: HydrateCtx
 }
 
-type Params = QueryParams & { hydrateCtx: HydrateCtx }
+type Params = QueryParams
 
 type Skeleton = {
   posts: string[]

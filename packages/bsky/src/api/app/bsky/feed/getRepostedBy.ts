@@ -1,20 +1,19 @@
 import { mapDefined } from '@atproto/common'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getRepostedBy'
 import AppContext from '../../../../context'
-import { createPipeline } from '../../../../pipeline'
 import {
   HydrateCtx,
   HydrationState,
   Hydrator,
 } from '../../../../hydration/hydrator'
-import { Views } from '../../../../views'
 import { parseString } from '../../../../hydration/util'
+import { Server } from '../../../../lexicon'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getRepostedBy'
 import { uriToDid as creatorFromUri } from '../../../../util/uris'
+import { Views } from '../../../../views'
 import { clearlyBadCursor, resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
-  const getRepostedBy = createPipeline(
+  const getRepostedBy = ctx.createPipeline(
     skeleton,
     hydration,
     noBlocks,
@@ -30,7 +29,7 @@ export default function (server: Server, ctx: AppContext) {
         viewer,
         includeTakedowns,
       })
-      const result = await getRepostedBy({ ...params, hydrateCtx }, ctx)
+      const result = await getRepostedBy(hydrateCtx, params)
 
       return {
         encoding: 'application/json',
@@ -66,7 +65,7 @@ const hydration = async (inputs: {
   skeleton: Skeleton
 }) => {
   const { ctx, params, skeleton } = inputs
-  return await ctx.hydrator.hydrateReposts(skeleton.reposts, params.hydrateCtx)
+  return await ctx.hydrator.hydrateReposts(skeleton.reposts, ctx.hydrateCtx)
 }
 
 const noBlocks = (inputs: {
@@ -108,9 +107,10 @@ const presentation = (inputs: {
 type Context = {
   hydrator: Hydrator
   views: Views
+  hydrateCtx: HydrateCtx
 }
 
-type Params = QueryParams & { hydrateCtx: HydrateCtx }
+type Params = QueryParams
 
 type Skeleton = {
   reposts: string[]

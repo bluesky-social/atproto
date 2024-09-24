@@ -1,19 +1,19 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/notification/getUnreadCount'
-import AppContext from '../../../../context'
+
+import AppContext from '../../../../context.js'
+import { Hydrator } from '../../../../hydration/hydrator.js'
+import { Server } from '../../../../lexicon/index.js'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/notification/getUnreadCount.js'
 import {
-  HydrationFnInput,
+  HydrationFn,
   PresentationFnInput,
-  SkeletonFnInput,
-  createPipeline,
+  SkeletonFn,
   noRules,
-} from '../../../../pipeline'
-import { Hydrator } from '../../../../hydration/hydrator'
-import { Views } from '../../../../views'
+} from '../../../../pipeline.js'
+import { Views } from '../../../../views/index.js'
 
 export default function (server: Server, ctx: AppContext) {
-  const getUnreadCount = createPipeline(
+  const getUnreadCount = ctx.createPipeline(
     skeleton,
     hydration,
     noRules,
@@ -23,7 +23,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.standard,
     handler: async ({ auth, params }) => {
       const viewer = auth.credentials.iss
-      const result = await getUnreadCount({ ...params, viewer }, ctx)
+      const result = await getUnreadCount({ viewer }, params)
       return {
         encoding: 'application/json',
         body: result,
@@ -32,16 +32,17 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton = async (
-  input: SkeletonFnInput<Context, Params>,
-): Promise<SkeletonState> => {
-  const { params, ctx } = input
+const skeleton: SkeletonFn<Context, Params, SkeletonState> = async ({
+  params,
+  ctx,
+}) => {
   if (params.seenAt) {
     throw new InvalidRequestError('The seenAt parameter is unsupported')
   }
-  const priority = params.priority ?? (await getPriority(ctx, params.viewer))
+  const priority =
+    params.priority ?? (await getPriority(ctx, ctx.hydrateCtx.viewer))
   const res = await ctx.hydrator.dataplane.getUnreadNotificationCount({
-    actorDid: params.viewer,
+    actorDid: ctx.hydrateCtx.viewer,
     priority,
   })
   return {
@@ -49,8 +50,8 @@ const skeleton = async (
   }
 }
 
-const hydration = async (
-  _input: HydrationFnInput<Context, Params, SkeletonState>,
+const hydration: HydrationFn<Context, Params, SkeletonState> = async (
+  _input,
 ) => {
   return {}
 }
@@ -65,11 +66,10 @@ const presentation = (
 type Context = {
   hydrator: Hydrator
   views: Views
+  hydrateCtx: { viewer: string }
 }
 
-type Params = QueryParams & {
-  viewer: string
-}
+type Params = QueryParams
 
 type SkeletonState = {
   count: number

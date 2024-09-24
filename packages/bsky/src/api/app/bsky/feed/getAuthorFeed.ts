@@ -1,25 +1,24 @@
 import { mapDefined } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getAuthorFeed'
 import AppContext from '../../../../context'
-import { clearlyBadCursor, resHeaders } from '../../../util'
-import { createPipeline } from '../../../../pipeline'
+import { DataPlaneClient } from '../../../../data-plane'
+import { Actor } from '../../../../hydration/actor'
+import { FeedItem, Post } from '../../../../hydration/feed'
 import {
   HydrateCtx,
   HydrationState,
   Hydrator,
   mergeStates,
 } from '../../../../hydration/hydrator'
-import { Views } from '../../../../views'
-import { DataPlaneClient } from '../../../../data-plane'
 import { parseString } from '../../../../hydration/util'
-import { Actor } from '../../../../hydration/actor'
-import { FeedItem, Post } from '../../../../hydration/feed'
+import { Server } from '../../../../lexicon'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getAuthorFeed'
 import { FeedType } from '../../../../proto/bsky_pb'
+import { Views } from '../../../../views'
+import { clearlyBadCursor, resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
-  const getAuthorFeed = createPipeline(
+  const getAuthorFeed = ctx.createPipeline(
     skeleton,
     hydration,
     noBlocksOrMutedReposts,
@@ -36,7 +35,7 @@ export default function (server: Server, ctx: AppContext) {
         includeTakedowns,
       })
 
-      const result = await getAuthorFeed({ ...params, hydrateCtx }, ctx)
+      const result = await getAuthorFeed(hydrateCtx, params)
 
       const repoRev = await ctx.hydrator.actor.getRepoRevSafe(viewer)
 
@@ -70,7 +69,7 @@ export const skeleton = async (inputs: {
   }
   const actors = await ctx.hydrator.actor.getActors(
     [did],
-    params.hydrateCtx.includeTakedowns,
+    ctx.hydrateCtx.includeTakedowns,
   )
   const actor = actors.get(did)
   if (!actor) {
@@ -103,10 +102,10 @@ const hydration = async (inputs: {
   params: Params
   skeleton: Skeleton
 }): Promise<HydrationState> => {
-  const { ctx, params, skeleton } = inputs
+  const { ctx, skeleton } = inputs
   const [feedPostState, profileViewerState] = await Promise.all([
-    ctx.hydrator.hydrateFeedItems(skeleton.items, params.hydrateCtx),
-    ctx.hydrator.hydrateProfileViewers([skeleton.actor.did], params.hydrateCtx),
+    ctx.hydrator.hydrateFeedItems(skeleton.items, ctx.hydrateCtx),
+    ctx.hydrator.hydrateProfileViewers([skeleton.actor.did], ctx.hydrateCtx),
   ])
   return mergeStates(feedPostState, profileViewerState)
 }
@@ -173,11 +172,10 @@ type Context = {
   hydrator: Hydrator
   views: Views
   dataplane: DataPlaneClient
-}
-
-type Params = QueryParams & {
   hydrateCtx: HydrateCtx
 }
+
+type Params = QueryParams
 
 type Skeleton = {
   actor: Actor

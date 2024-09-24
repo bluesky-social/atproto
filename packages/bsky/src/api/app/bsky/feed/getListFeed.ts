@@ -1,23 +1,22 @@
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getListFeed'
+import { mapDefined } from '@atproto/common'
 import AppContext from '../../../../context'
-import { clearlyBadCursor, resHeaders } from '../../../util'
-import { createPipeline } from '../../../../pipeline'
+import { DataPlaneClient } from '../../../../data-plane'
+import { FeedItem } from '../../../../hydration/feed'
 import {
   HydrateCtx,
   HydrationState,
   Hydrator,
   mergeStates,
 } from '../../../../hydration/hydrator'
-import { Views } from '../../../../views'
-import { DataPlaneClient } from '../../../../data-plane'
-import { mapDefined } from '@atproto/common'
 import { parseString } from '../../../../hydration/util'
-import { FeedItem } from '../../../../hydration/feed'
+import { Server } from '../../../../lexicon'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getListFeed'
 import { uriToDid } from '../../../../util/uris'
+import { Views } from '../../../../views'
+import { clearlyBadCursor, resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
-  const getListFeed = createPipeline(
+  const getListFeed = ctx.createPipeline(
     skeleton,
     hydration,
     noBlocksOrMutes,
@@ -30,7 +29,7 @@ export default function (server: Server, ctx: AppContext) {
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
 
-      const result = await getListFeed({ ...params, hydrateCtx }, ctx)
+      const result = await getListFeed(hydrateCtx, params)
 
       const repoRev = await ctx.hydrator.actor.getRepoRevSafe(viewer)
 
@@ -74,7 +73,7 @@ const hydration = async (inputs: {
 }): Promise<HydrationState> => {
   const { ctx, params, skeleton } = inputs
   const [feedItemsState, bidirectionalBlocks] = await Promise.all([
-    ctx.hydrator.hydrateFeedItems(skeleton.items, params.hydrateCtx),
+    ctx.hydrator.hydrateFeedItems(skeleton.items, ctx.hydrateCtx),
     getBlocks({ ctx, params, skeleton }),
   ])
   return mergeStates(feedItemsState, {
@@ -136,9 +135,10 @@ type Context = {
   hydrator: Hydrator
   views: Views
   dataplane: DataPlaneClient
+  hydrateCtx: HydrateCtx
 }
 
-type Params = QueryParams & { hydrateCtx: HydrateCtx }
+type Params = QueryParams
 
 type Skeleton = {
   items: FeedItem[]
