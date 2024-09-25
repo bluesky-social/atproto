@@ -592,20 +592,97 @@ describe('Record validation', () => {
   })
 
   it('Applies grapheme string length constraint', () => {
-    lex.assertValidRecord('com.example.stringLengthGrapheme', {
-      $type: 'com.example.stringLengthGrapheme',
-      string: '12👨‍👩‍👧‍👧',
-    })
+    // Shorter than two graphemes
+    expect(() =>
+      lex.assertValidRecord('com.example.stringLengthGrapheme', {
+        $type: 'com.example.stringLengthGrapheme',
+        string: '',
+      }),
+    ).toThrow('Record/string must not be shorter than 2 graphemes')
+    expect(() =>
+      lex.assertValidRecord('com.example.stringLengthGrapheme', {
+        $type: 'com.example.stringLengthGrapheme',
+        string: '\u0301\u0301\u0301', // Three combining acute accents
+      }),
+    ).toThrow('Record/string must not be shorter than 2 graphemes')
+    expect(() =>
+      lex.assertValidRecord('com.example.stringLengthGrapheme', {
+        $type: 'com.example.stringLengthGrapheme',
+        string: 'a',
+      }),
+    ).toThrow('Record/string must not be shorter than 2 graphemes')
+    expect(() =>
+      lex.assertValidRecord('com.example.stringLengthGrapheme', {
+        $type: 'com.example.stringLengthGrapheme',
+        string: 'a\u0301\u0301\u0301\u0301', // 'á́́́' ('a' with four combining acute accents)
+      }),
+    ).toThrow('Record/string must not be shorter than 2 graphemes')
+    expect(() =>
+      lex.assertValidRecord('com.example.stringLengthGrapheme', {
+        $type: 'com.example.stringLengthGrapheme',
+        string: '5\uFE0F', // '5️' with emoji presentation
+      }),
+    ).toThrow('Record/string must not be shorter than 2 graphemes')
     expect(() =>
       lex.assertValidRecord('com.example.stringLengthGrapheme', {
         $type: 'com.example.stringLengthGrapheme',
         string: '👨‍👩‍👧‍👧',
       }),
     ).toThrow('Record/string must not be shorter than 2 graphemes')
+
+    // Two to four graphemes
+    lex.assertValidRecord('com.example.stringLengthGrapheme', {
+      $type: 'com.example.stringLengthGrapheme',
+      string: 'ab',
+    })
+    lex.assertValidRecord('com.example.stringLengthGrapheme', {
+      $type: 'com.example.stringLengthGrapheme',
+      string: 'a\u0301b', // 'áb' with combining accent
+    })
+    lex.assertValidRecord('com.example.stringLengthGrapheme', {
+      $type: 'com.example.stringLengthGrapheme',
+      string: 'a\u0301b\u0301', // 'áb́'
+    })
+    lex.assertValidRecord('com.example.stringLengthGrapheme', {
+      $type: 'com.example.stringLengthGrapheme',
+      string: '😀😀',
+    })
+    lex.assertValidRecord('com.example.stringLengthGrapheme', {
+      $type: 'com.example.stringLengthGrapheme',
+      string: '12👨‍👩‍👧‍👧',
+    })
+    lex.assertValidRecord('com.example.stringLengthGrapheme', {
+      $type: 'com.example.stringLengthGrapheme',
+      string: 'abcd',
+    })
+    lex.assertValidRecord('com.example.stringLengthGrapheme', {
+      $type: 'com.example.stringLengthGrapheme',
+      string: 'a\u0301b\u0301c\u0301d\u0301', // 'áb́ćd́'
+    })
+
+    // Longer than four graphemes
     expect(() =>
       lex.assertValidRecord('com.example.stringLengthGrapheme', {
         $type: 'com.example.stringLengthGrapheme',
-        string: '12345',
+        string: 'abcde',
+      }),
+    ).toThrow('Record/string must not be longer than 4 graphemes')
+    expect(() =>
+      lex.assertValidRecord('com.example.stringLengthGrapheme', {
+        $type: 'com.example.stringLengthGrapheme',
+        string: 'a\u0301b\u0301c\u0301d\u0301e\u0301', // 'áb́ćd́é'
+      }),
+    ).toThrow('Record/string must not be longer than 4 graphemes')
+    expect(() =>
+      lex.assertValidRecord('com.example.stringLengthGrapheme', {
+        $type: 'com.example.stringLengthGrapheme',
+        string: '😀😀😀😀😀',
+      }),
+    ).toThrow('Record/string must not be longer than 4 graphemes')
+    expect(() =>
+      lex.assertValidRecord('com.example.stringLengthGrapheme', {
+        $type: 'com.example.stringLengthGrapheme',
+        string: 'ab😀de',
       }),
     ).toThrow('Record/string must not be longer than 4 graphemes')
   })
