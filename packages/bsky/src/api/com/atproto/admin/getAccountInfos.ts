@@ -6,11 +6,18 @@ import { INVALID_HANDLE } from '@atproto/syntax'
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getAccountInfos({
     auth: ctx.authVerifier.optionalStandardOrRole,
-    handler: async ({ params, auth }) => {
+    handler: async ({ req, auth, params }) => {
       const { dids } = params
-      const { includeTakedowns } = ctx.authVerifier.parseCreds(auth)
+      const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
 
-      const actors = await ctx.hydrator.actor.getActors(dids, true)
+      const labelers = ctx.reqLabelers(req)
+
+      const { hydrator } = await ctx.createRequestContent({
+        viewer,
+        labelers,
+      })
+
+      const actors = await hydrator.actor.getActors(dids, true)
 
       const infos = mapDefined(dids, (did) => {
         const info = actors.get(did)

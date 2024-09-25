@@ -6,8 +6,17 @@ import { OutputSchema } from '../../../../lexicon/types/com/atproto/admin/getSub
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getSubjectStatus({
     auth: ctx.authVerifier.roleOrModService,
-    handler: async ({ params }) => {
+    handler: async ({ auth, params, req }) => {
       const { did, uri, blob } = params
+
+      const labelers = ctx.reqLabelers(req)
+      const viewer =
+        auth.credentials.type === 'mod_service' ? auth.credentials.iss : null
+
+      const { dataplane, hydrator } = await ctx.createRequestContent({
+        viewer,
+        labelers,
+      })
 
       let body: OutputSchema | null = null
       if (blob) {
@@ -16,7 +25,7 @@ export default function (server: Server, ctx: AppContext) {
             'Must provide a did to request blob state',
           )
         }
-        const res = await ctx.dataplane.getBlobTakedown({
+        const res = await dataplane.getBlobTakedown({
           did,
           cid: blob,
         })
@@ -32,7 +41,7 @@ export default function (server: Server, ctx: AppContext) {
           },
         }
       } else if (uri) {
-        const res = await ctx.hydrator.getRecord(uri, true)
+        const res = await hydrator.getRecord(uri, true)
         if (res) {
           body = {
             subject: {
@@ -47,7 +56,7 @@ export default function (server: Server, ctx: AppContext) {
           }
         }
       } else if (did) {
-        const res = (await ctx.hydrator.actor.getActors([did], true)).get(did)
+        const res = (await hydrator.actor.getActors([did], true)).get(did)
         if (res) {
           body = {
             subject: {

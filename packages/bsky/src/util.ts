@@ -6,12 +6,14 @@ export type ParsedLabelers = {
 }
 
 export const parseLabelerHeader = (
-  header: string | undefined,
+  header: undefined | string | string[],
 ): ParsedLabelers | null => {
   if (!header) return null
   const labelerDids = new Set<string>()
   const redactDids = new Set<string>()
-  const parsed = parseList(header)
+  const parsed = Array.isArray(header)
+    ? header.flatMap(parseList)
+    : parseList(header)
   for (const item of parsed) {
     const did = item[0].toString()
     if (!did) {

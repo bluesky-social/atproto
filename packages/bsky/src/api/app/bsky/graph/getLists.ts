@@ -1,18 +1,24 @@
 import { mapDefined } from '@atproto/common'
 
 import AppContext from '../../../../context.js'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator.js'
 import { Server } from '../../../../lexicon/index.js'
 import { REFERENCELIST } from '../../../../lexicon/types/app/bsky/graph/defs.js'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getLists.js'
 import {
-  HydrationFnInput,
-  PresentationFnInput,
-  RulesFnInput,
-  SkeletonFnInput,
+  OutputSchema,
+  QueryParams,
+} from '../../../../lexicon/types/app/bsky/graph/getLists.js'
+import {
+  HydrationFn,
+  PresentationFn,
+  RulesFn,
+  SkeletonFn,
 } from '../../../../pipeline.js'
-import { Views } from '../../../../views/index.js'
-import { clearlyBadCursor, resHeaders } from '../../../util.js'
+import { clearlyBadCursor } from '../../../util.js'
+
+type Skeleton = {
+  listUris: string[]
+  cursor?: string
+}
 
 export default function (server: Server, ctx: AppContext) {
   const getLists = ctx.createPipeline(
@@ -21,31 +27,19 @@ export default function (server: Server, ctx: AppContext) {
     noReferenceLists,
     presentation,
   )
+
   server.app.bsky.graph.getLists({
     auth: ctx.authVerifier.optionalStandardOrRole,
     handler: async ({ params, auth, req }) => {
-      const labelers = ctx.reqLabelers(req)
       const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
-      const hydrateCtx = await ctx.hydrator.createContext({
-        labelers,
-        viewer,
-        includeTakedowns,
-      })
-      const result = await getLists(hydrateCtx, params)
+      const labelers = ctx.reqLabelers(req)
 
-      return {
-        encoding: 'application/json',
-        body: result,
-        headers: resHeaders({ labelers: hydrateCtx.labelers }),
-      }
+      return getLists({ viewer, labelers, includeTakedowns }, params)
     },
   })
 }
 
-const skeleton = async (
-  input: SkeletonFnInput<Context, Params>,
-): Promise<SkeletonState> => {
-  const { ctx, params } = input
+const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({ ctx, params }) => {
   if (clearlyBadCursor(params.cursor)) {
     return { listUris: [] }
   }
@@ -57,18 +51,17 @@ const skeleton = async (
   return { listUris, cursor: cursor || undefined }
 }
 
-const hydration = async (
-  input: HydrationFnInput<Context, Params, SkeletonState>,
-) => {
-  const { ctx, skeleton } = input
-  const { listUris } = skeleton
-  return ctx.hydrator.hydrateLists(listUris, ctx.hydrateCtx)
+const hydration: HydrationFn<Skeleton, QueryParams> = async ({
+  ctx,
+  skeleton,
+}) => {
+  return ctx.hydrator.hydrateLists(skeleton.listUris, ctx.hydrateCtx)
 }
 
-const noReferenceLists = (
-  input: RulesFnInput<Context, Params, SkeletonState>,
-) => {
-  const { skeleton, hydration } = input
+const noReferenceLists: RulesFn<Skeleton, QueryParams> = ({
+  skeleton,
+  hydration,
+}) => {
   skeleton.listUris = skeleton.listUris.filter((uri) => {
     const list = hydration.lists?.get(uri)
     return list?.record.purpose !== REFERENCELIST
@@ -76,26 +69,14 @@ const noReferenceLists = (
   return skeleton
 }
 
-const presentation = (
-  input: PresentationFnInput<Context, Params, SkeletonState>,
-) => {
-  const { ctx, skeleton, hydration } = input
+const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
+  ctx,
+  skeleton,
+  hydration,
+}) => {
   const { listUris, cursor } = skeleton
   const lists = mapDefined(listUris, (uri) => {
     return ctx.views.list(uri, hydration)
   })
   return { lists, cursor }
-}
-
-type Context = {
-  hydrator: Hydrator
-  views: Views
-  hydrateCtx: HydrateCtx
-}
-
-type Params = QueryParams
-
-type SkeletonState = {
-  listUris: string[]
-  cursor?: string
 }

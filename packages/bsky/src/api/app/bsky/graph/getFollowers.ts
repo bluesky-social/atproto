@@ -2,22 +2,26 @@ import { mapDefined } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 
 import AppContext from '../../../../context.js'
-import {
-  HydrateCtx,
-  Hydrator,
-  mergeStates,
-} from '../../../../hydration/hydrator.js'
+import { mergeStates } from '../../../../hydration/hydrator.js'
 import { Server } from '../../../../lexicon/index.js'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getFollowers.js'
 import {
-  HydrationFnInput,
-  PresentationFnInput,
-  RulesFnInput,
-  SkeletonFnInput,
+  OutputSchema,
+  QueryParams,
+} from '../../../../lexicon/types/app/bsky/graph/getFollowers.js'
+import {
+  HydrationFn,
+  PresentationFn,
+  RulesFn,
+  SkeletonFn,
 } from '../../../../pipeline.js'
 import { uriToDid as didFromUri } from '../../../../util/uris.js'
-import { Views } from '../../../../views/index.js'
-import { clearlyBadCursor, resHeaders } from '../../../util.js'
+import { clearlyBadCursor } from '../../../util.js'
+
+type Skeleton = {
+  subjectDid: string
+  followUris: string[]
+  cursor?: string
+}
 
 export default function (server: Server, ctx: AppContext) {
   const getFollowers = ctx.createPipeline(
@@ -26,30 +30,18 @@ export default function (server: Server, ctx: AppContext) {
     noBlocks,
     presentation,
   )
+
   server.app.bsky.graph.getFollowers({
     auth: ctx.authVerifier.optionalStandardOrRole,
     handler: async ({ params, auth, req }) => {
       const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({
-        labelers,
-        viewer,
-        includeTakedowns,
-      })
 
-      const result = await getFollowers(hydrateCtx, params)
-
-      return {
-        encoding: 'application/json',
-        body: result,
-        headers: resHeaders({ labelers: hydrateCtx.labelers }),
-      }
+      return getFollowers({ viewer, labelers, includeTakedowns }, params)
     },
   })
 }
-
-const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
-  const { params, ctx } = input
+const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({ ctx, params }) => {
   const [subjectDid] = await ctx.hydrator.actor.getDidsDefined([params.actor])
   if (!subjectDid) {
     throw new InvalidRequestError(`Actor not found: ${params.actor}`)
@@ -69,10 +61,10 @@ const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
   }
 }
 
-const hydration = async (
-  input: HydrationFnInput<Context, Params, SkeletonState>,
-) => {
-  const { ctx, skeleton } = input
+const hydration: HydrationFn<Skeleton, QueryParams> = async ({
+  ctx,
+  skeleton,
+}) => {
   const { followUris, subjectDid } = skeleton
   const followState = await ctx.hydrator.hydrateFollows(followUris)
   const dids = [subjectDid]
@@ -87,8 +79,11 @@ const hydration = async (
   return mergeStates(followState, profileState)
 }
 
-const noBlocks = (input: RulesFnInput<Context, Params, SkeletonState>) => {
-  const { skeleton, hydration, ctx } = input
+const noBlocks: RulesFn<Skeleton, QueryParams> = ({
+  skeleton,
+  hydration,
+  ctx,
+}) => {
   const viewer = ctx.hydrateCtx.viewer
   skeleton.followUris = skeleton.followUris.filter((followUri) => {
     const followerDid = didFromUri(followUri)
@@ -100,10 +95,12 @@ const noBlocks = (input: RulesFnInput<Context, Params, SkeletonState>) => {
   return skeleton
 }
 
-const presentation = (
-  input: PresentationFnInput<Context, Params, SkeletonState>,
-) => {
-  const { ctx, hydration, skeleton, params } = input
+const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
+  ctx,
+  params,
+  skeleton,
+  hydration,
+}) => {
   const { subjectDid, followUris, cursor } = skeleton
   const isNoHosted = (did: string) => ctx.views.actorIsNoHosted(did, hydration)
 
@@ -124,18 +121,4 @@ const presentation = (
   })
 
   return { followers, subject, cursor }
-}
-
-type Context = {
-  hydrator: Hydrator
-  views: Views
-  hydrateCtx: HydrateCtx
-}
-
-type Params = QueryParams
-
-type SkeletonState = {
-  subjectDid: string
-  followUris: string[]
-  cursor?: string
 }

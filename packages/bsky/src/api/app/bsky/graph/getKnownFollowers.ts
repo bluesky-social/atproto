@@ -1,17 +1,24 @@
 import { mapDefined } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import AppContext from '../../../../context'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getKnownFollowers'
 import {
-  HydrationFnInput,
-  PresentationFnInput,
-  RulesFnInput,
-  SkeletonFnInput,
+  OutputSchema,
+  QueryParams,
+} from '../../../../lexicon/types/app/bsky/graph/getKnownFollowers'
+import {
+  HydrationFn,
+  PresentationFn,
+  RulesFn,
+  SkeletonFn,
 } from '../../../../pipeline'
-import { Views } from '../../../../views'
-import { clearlyBadCursor, resHeaders } from '../../../util'
+import { clearlyBadCursor } from '../../../util'
+
+type Skeleton = {
+  subjectDid: string
+  knownFollowers: string[]
+  cursor?: string
+}
 
 export default function (server: Server, ctx: AppContext) {
   const getKnownFollowers = ctx.createPipeline(
@@ -26,34 +33,27 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({
-        labelers,
-        viewer,
-      })
 
-      const result = await getKnownFollowers(hydrateCtx, params)
-
-      return {
-        encoding: 'application/json',
-        body: result,
-        headers: resHeaders({ labelers: hydrateCtx.labelers }),
-      }
+      return getKnownFollowers({ labelers, viewer }, params)
     },
   })
 }
 
-const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
-  const { params, ctx } = input
+const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({ ctx, params }) => {
   const [subjectDid] = await ctx.hydrator.actor.getDidsDefined([params.actor])
   if (!subjectDid) {
     throw new InvalidRequestError(`Actor not found: ${params.actor}`)
   }
+
+  const actorDid = ctx.hydrateCtx.viewer
+  if (!actorDid) throw new InvalidRequestError('Unauthorized')
+
   if (clearlyBadCursor(params.cursor)) {
     return { subjectDid, knownFollowers: [], cursor: undefined }
   }
 
   const res = await ctx.hydrator.dataplane.getFollowsFollowing({
-    actorDid: ctx.hydrateCtx.viewer,
+    actorDid,
     targetDids: [subjectDid],
   })
   const result = res.results.at(0)
@@ -66,10 +66,10 @@ const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
   }
 }
 
-const hydration = async (
-  input: HydrationFnInput<Context, Params, SkeletonState>,
-) => {
-  const { ctx, skeleton } = input
+const hydration: HydrationFn<Skeleton, QueryParams> = async ({
+  ctx,
+  skeleton,
+}) => {
   const { knownFollowers } = skeleton
   const profilesState = await ctx.hydrator.hydrateProfiles(
     knownFollowers.concat(skeleton.subjectDid),
@@ -78,18 +78,22 @@ const hydration = async (
   return profilesState
 }
 
-const noBlocks = (input: RulesFnInput<Context, Params, SkeletonState>) => {
-  const { skeleton, hydration, ctx } = input
+const noBlocks: RulesFn<Skeleton, QueryParams> = ({
+  skeleton,
+  hydration,
+  ctx,
+}) => {
   skeleton.knownFollowers = skeleton.knownFollowers.filter((did) => {
     return !ctx.views.viewerBlockExists(did, hydration)
   })
   return skeleton
 }
 
-const presentation = (
-  input: PresentationFnInput<Context, Params, SkeletonState>,
-) => {
-  const { ctx, hydration, skeleton } = input
+const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
+  ctx,
+  skeleton,
+  hydration,
+}) => {
   const { knownFollowers } = skeleton
 
   const followers = mapDefined(knownFollowers, (did) => {
@@ -98,18 +102,4 @@ const presentation = (
   const subject = ctx.views.profile(skeleton.subjectDid, hydration)!
 
   return { subject, followers, cursor: undefined }
-}
-
-type Context = {
-  hydrator: Hydrator
-  views: Views
-  hydrateCtx: HydrateCtx & { viewer: string }
-}
-
-type Params = QueryParams
-
-type SkeletonState = {
-  subjectDid: string
-  knownFollowers: string[]
-  cursor?: string
 }

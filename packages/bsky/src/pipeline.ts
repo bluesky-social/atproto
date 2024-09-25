@@ -1,72 +1,120 @@
-import { HydrationState } from './hydration/hydrator'
+import { AtpAgent } from '@atproto/api'
+import { DataPlaneClient } from './data-plane/index.js'
+import { FeatureGates } from './feature-gates.js'
+import { HydrateCtx, HydrationState, Hydrator } from './hydration/hydrator.js'
+import { Views } from './views/index.js'
+import { resHeaders } from './api/util.js'
 
-export type Pipeline<Params, View, Context> = (
-  ctx: Context,
-  params: Params,
-  headers?: Record<string, string>,
-) => Promise<View>
+export type RequestContext = {
+  hydrateCtx: HydrateCtx
+  hydrator: Hydrator
+  views: Views
+  dataplane: DataPlaneClient
+  suggestionsAgent?: AtpAgent
+  searchAgent?: AtpAgent
+  featureGates: FeatureGates
+}
 
-export function createPipeline<Params, Skeleton, View, Context>(
-  skeletonFn: SkeletonFn<Context, Params, Skeleton>,
-  hydrationFn: HydrationFn<Context, Params, Skeleton>,
-  rulesFn: RulesFn<Context, Params, Skeleton>,
-  presentationFn: PresentationFn<Context, Params, Skeleton, View>,
-): Pipeline<Params, View, Context> {
-  return async (ctx, params, headers = {}) => {
+export type PipelineOptions<Skeleton, Params> = DefaultHeadersOptions & {
+  extraHeaders?: HeadersFn<Skeleton, Params>
+}
+
+export function createPipeline<Skeleton, Params, View>(
+  skeletonFn: SkeletonFn<Skeleton, Params>,
+  hydrationFn: HydrationFn<Skeleton, Params>,
+  rulesFn: RulesFn<Skeleton, Params>,
+  presentationFn: PresentationFn<Skeleton, Params, View>,
+  options: PipelineOptions<Skeleton, Params> = {},
+) {
+  const extraHeaders = options.extraHeaders
+
+  return async (
+    ctx: RequestContext,
+    params: Params,
+    headers?: Record<string, string>,
+  ): Promise<{
+    body: View
+    headers?: Record<string, string>
+    encoding: 'application/json'
+  }> => {
     const skeleton = await skeletonFn({ ctx, params, headers })
     const hydration = await hydrationFn({ ctx, params, headers, skeleton })
-    const appliedRules = rulesFn({ ctx, params, headers, skeleton, hydration })
-    return presentationFn({
+    const rules = await rulesFn({ ctx, params, headers, skeleton, hydration })
+    const view = await presentationFn({
       ctx,
       params,
       headers,
-      skeleton: appliedRules,
+      skeleton: rules,
       hydration,
     })
+
+    return {
+      encoding: 'application/json',
+      headers: {
+        ...(await extraHeaders?.({ ctx, params, skeleton: rules })),
+        ...(await defaultHeaders(ctx, options)),
+      },
+      body: view,
+    }
   }
 }
 
-export type SkeletonFn<Context, Params, Skeleton> = (
-  input: SkeletonFnInput<Context, Params>,
-) => Skeleton | PromiseLike<Skeleton>
-export type SkeletonFnInput<Context, Params> = {
-  ctx: Context
-  params: Params
-  headers: Record<string, string>
-}
+type Awaitable<T> = T | PromiseLike<T>
 
-export type HydrationFn<Context, Params, Skeleton> = (
-  input: HydrationFnInput<Context, Params, Skeleton>,
-) => HydrationState | PromiseLike<HydrationState>
-export type HydrationFnInput<Context, Params, Skeleton> = {
-  ctx: Context
+export type SkeletonFn<Skeleton, Params> = (input: {
+  ctx: RequestContext
   params: Params
-  headers: Record<string, string>
+  headers?: Record<string, string>
+}) => Awaitable<Skeleton>
+
+export type HydrationFn<Skeleton, Params> = (input: {
+  ctx: RequestContext
+  params: Params
+  headers?: Record<string, string>
   skeleton: Skeleton
-}
+}) => Awaitable<HydrationState>
 
-export type RulesFn<Context, Params, Skeleton> = (
-  input: RulesFnInput<Context, Params, Skeleton>,
-) => Skeleton
-export type RulesFnInput<Context, Params, Skeleton> = {
-  ctx: Context
+export type RulesFn<Skeleton, Params> = (input: {
+  ctx: RequestContext
   params: Params
-  headers: Record<string, string>
+  headers?: Record<string, string>
   skeleton: Skeleton
   hydration: HydrationState
-}
+}) => Skeleton
 
-export type PresentationFn<Context, Params, Skeleton, View> = (
-  input: PresentationFnInput<Context, Params, Skeleton>,
-) => View
-export type PresentationFnInput<Context, Params, Skeleton> = {
-  ctx: Context
+export type PresentationFn<Skeleton, Params, View> = (input: {
+  ctx: RequestContext
   params: Params
-  headers: Record<string, string>
+  headers?: Record<string, string>
   skeleton: Skeleton
   hydration: HydrationState
-}
+}) => View
+
+export type HeadersFn<Skeleton, Params> = (input: {
+  ctx: RequestContext
+  params: Params
+  skeleton: Skeleton
+}) => Awaitable<Record<string, string>>
 
 export function noRules<S>(input: { skeleton: S }) {
   return input.skeleton
+}
+
+export type DefaultHeadersOptions = {
+  exposeRepoRev?: boolean
+  exposeLabelers?: boolean
+}
+
+export async function defaultHeaders(
+  ctx: RequestContext,
+  options?: DefaultHeadersOptions,
+) {
+  return resHeaders({
+    repoRev:
+      options?.exposeRepoRev === true
+        ? await ctx.hydrator.actor.getRepoRevSafe(ctx.hydrateCtx.viewer)
+        : undefined,
+    labelers:
+      options?.exposeLabelers !== false ? ctx.hydrateCtx.labelers : undefined,
+  })
 }

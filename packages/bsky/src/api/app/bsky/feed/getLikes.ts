@@ -2,17 +2,25 @@ import { mapDefined } from '@atproto/common'
 import { normalizeDatetimeAlways } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import AppContext from '../../../../context'
-import {
-  HydrateCtx,
-  HydrationState,
-  Hydrator,
-} from '../../../../hydration/hydrator'
 import { parseString } from '../../../../hydration/util'
 import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getLikes'
+import {
+  OutputSchema,
+  QueryParams,
+} from '../../../../lexicon/types/app/bsky/feed/getLikes'
+import {
+  HydrationFn,
+  PresentationFn,
+  RulesFn,
+  SkeletonFn,
+} from '../../../../pipeline'
 import { uriToDid as creatorFromUri } from '../../../../util/uris'
-import { Views } from '../../../../views'
-import { clearlyBadCursor, resHeaders } from '../../../util'
+import { clearlyBadCursor } from '../../../util'
+
+type Skeleton = {
+  likes: string[]
+  cursor?: string
+}
 
 export default function (server: Server, ctx: AppContext) {
   const getLikes = ctx.createPipeline(
@@ -21,32 +29,19 @@ export default function (server: Server, ctx: AppContext) {
     noBlocks,
     presentation,
   )
+
   server.app.bsky.feed.getLikes({
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ params, auth, req }) => {
       const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({
-        labelers,
-        viewer,
-        includeTakedowns,
-      })
-      const result = await getLikes(hydrateCtx, params)
 
-      return {
-        encoding: 'application/json',
-        body: result,
-        headers: resHeaders({ labelers: hydrateCtx.labelers }),
-      }
+      return getLikes({ labelers, viewer, includeTakedowns }, params)
     },
   })
 }
 
-const skeleton = async (inputs: {
-  ctx: Context
-  params: Params
-}): Promise<Skeleton> => {
-  const { ctx, params } = inputs
+const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({ ctx, params }) => {
   if (clearlyBadCursor(params.cursor)) {
     return { likes: [] }
   }
@@ -66,21 +61,18 @@ const skeleton = async (inputs: {
   }
 }
 
-const hydration = async (inputs: {
-  ctx: Context
-  params: Params
-  skeleton: Skeleton
+const hydration: HydrationFn<Skeleton, QueryParams> = async ({
+  ctx,
+  skeleton,
 }) => {
-  const { ctx, skeleton } = inputs
-  return await ctx.hydrator.hydrateLikes(skeleton.likes, ctx.hydrateCtx)
+  return ctx.hydrator.hydrateLikes(skeleton.likes, ctx.hydrateCtx)
 }
 
-const noBlocks = (inputs: {
-  ctx: Context
-  skeleton: Skeleton
-  hydration: HydrationState
+const noBlocks: RulesFn<Skeleton, QueryParams> = ({
+  ctx,
+  skeleton,
+  hydration,
 }) => {
-  const { ctx, skeleton, hydration } = inputs
   skeleton.likes = skeleton.likes.filter((uri) => {
     const creator = creatorFromUri(uri)
     return !ctx.views.viewerBlockExists(creator, hydration)
@@ -88,13 +80,12 @@ const noBlocks = (inputs: {
   return skeleton
 }
 
-const presentation = (inputs: {
-  ctx: Context
-  params: Params
-  skeleton: Skeleton
-  hydration: HydrationState
+const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
+  ctx,
+  params,
+  skeleton,
+  hydration,
 }) => {
-  const { ctx, params, skeleton, hydration } = inputs
   const likeViews = mapDefined(skeleton.likes, (uri) => {
     const like = hydration.likes?.get(uri)
     if (!like || !like.record) {
@@ -111,25 +102,13 @@ const presentation = (inputs: {
       indexedAt: like.sortedAt.toISOString(),
     }
   })
+
   return {
     likes: likeViews,
     cursor: skeleton.cursor,
     uri: params.uri,
     cid: params.cid,
   }
-}
-
-type Context = {
-  hydrator: Hydrator
-  views: Views
-  hydrateCtx: HydrateCtx
-}
-
-type Params = QueryParams
-
-type Skeleton = {
-  likes: string[]
-  cursor?: string
 }
 
 const looksLikeNonSortedCursor = (cursor: string | undefined) => {

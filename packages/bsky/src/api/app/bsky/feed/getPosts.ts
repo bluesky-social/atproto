@@ -1,16 +1,23 @@
 import { dedupeStrs, mapDefined } from '@atproto/common'
-import AppContext from '../../../../context'
+
+import AppContext from '../../../../context.js'
+import { Server } from '../../../../lexicon/index.js'
+import { ids } from '../../../../lexicon/lexicons.js'
 import {
-  HydrateCtx,
-  HydrationState,
-  Hydrator,
-} from '../../../../hydration/hydrator'
-import { Server } from '../../../../lexicon'
-import { ids } from '../../../../lexicon/lexicons'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getPosts'
-import { uriToDid as creatorFromUri } from '../../../../util/uris'
-import { Views } from '../../../../views'
-import { resHeaders } from '../../../util'
+  OutputSchema,
+  QueryParams,
+} from '../../../../lexicon/types/app/bsky/feed/getPosts.js'
+import {
+  HydrationFn,
+  PresentationFn,
+  RulesFn,
+  SkeletonFn,
+} from '../../../../pipeline.js'
+import { uriToDid as creatorFromUri } from '../../../../util/uris.js'
+
+type Skeleton = {
+  posts: string[]
+}
 
 export default function (server: Server, ctx: AppContext) {
   const getPosts = ctx.createPipeline(
@@ -19,6 +26,7 @@ export default function (server: Server, ctx: AppContext) {
     noBlocks,
     presentation,
   )
+
   server.app.bsky.feed.getPosts({
     auth: ctx.authVerifier.standardOptionalParameterized({
       lxmCheck: (method) => {
@@ -31,41 +39,31 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
 
-      const results = await getPosts(hydrateCtx, params)
-
-      return {
-        encoding: 'application/json',
-        body: results,
-        headers: resHeaders({ labelers: hydrateCtx.labelers }),
-      }
+      return getPosts({ labelers, viewer }, params)
     },
   })
 }
 
-const skeleton = async (inputs: { params: Params }) => {
-  return { posts: dedupeStrs(inputs.params.uris) }
+const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({ params }) => {
+  return { posts: dedupeStrs(params.uris) }
 }
 
-const hydration = async (inputs: {
-  ctx: Context
-  params: Params
-  skeleton: Skeleton
+const hydration: HydrationFn<Skeleton, QueryParams> = async ({
+  ctx,
+  skeleton,
 }) => {
-  const { ctx, skeleton } = inputs
   return ctx.hydrator.hydratePosts(
     skeleton.posts.map((uri) => ({ uri })),
     ctx.hydrateCtx,
   )
 }
 
-const noBlocks = (inputs: {
-  ctx: Context
-  skeleton: Skeleton
-  hydration: HydrationState
+const noBlocks: RulesFn<Skeleton, QueryParams> = ({
+  ctx,
+  skeleton,
+  hydration,
 }) => {
-  const { ctx, skeleton, hydration } = inputs
   skeleton.posts = skeleton.posts.filter((uri) => {
     const creator = creatorFromUri(uri)
     return !ctx.views.viewerBlockExists(creator, hydration)
@@ -73,27 +71,13 @@ const noBlocks = (inputs: {
   return skeleton
 }
 
-const presentation = (inputs: {
-  ctx: Context
-  params: Params
-  skeleton: Skeleton
-  hydration: HydrationState
+const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
+  ctx,
+  skeleton,
+  hydration,
 }) => {
-  const { ctx, skeleton, hydration } = inputs
   const posts = mapDefined(skeleton.posts, (uri) =>
     ctx.views.post(uri, hydration),
   )
   return { posts }
-}
-
-type Context = {
-  hydrator: Hydrator
-  views: Views
-  hydrateCtx: HydrateCtx
-}
-
-type Params = QueryParams
-
-type Skeleton = {
-  posts: string[]
 }

@@ -1,8 +1,8 @@
 import { mapDefined } from '@atproto/common'
-import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { parseString } from '../../../../hydration/util'
-import { clearlyBadCursor, resHeaders } from '../../../util'
+import { Server } from '../../../../lexicon'
+import { clearlyBadCursor } from '../../../util'
 
 // THIS IS A TEMPORARY UNSPECCED ROUTE
 // @TODO currently mirrors getSuggestedFeeds and ignores the "query" param.
@@ -10,16 +10,9 @@ import { clearlyBadCursor, resHeaders } from '../../../util'
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.unspecced.getPopularFeedGenerators({
     auth: ctx.authVerifier.standardOptional,
-    handler: async ({ auth, params, req }) => {
-      const viewer = auth.credentials.iss
-      const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({ viewer, labelers })
-
+    handler: ctx.createHandler(async (ctx, params) => {
       if (clearlyBadCursor(params.cursor)) {
-        return {
-          encoding: 'application/json',
-          body: { feeds: [] },
-        }
+        return { feeds: [] }
       }
 
       let uris: string[]
@@ -34,7 +27,7 @@ export default function (server: Server, ctx: AppContext) {
         uris = res.uris
       } else {
         const res = await ctx.dataplane.getSuggestedFeeds({
-          actorDid: viewer ?? undefined,
+          actorDid: ctx.hydrateCtx.viewer ?? undefined,
           limit: params.limit,
           cursor: params.cursor,
         })
@@ -42,19 +35,15 @@ export default function (server: Server, ctx: AppContext) {
         cursor = parseString(res.cursor)
       }
 
-      const hydration = await ctx.hydrator.hydrateFeedGens(uris, hydrateCtx)
+      const hydration = await ctx.hydrator.hydrateFeedGens(uris, ctx.hydrateCtx)
       const feedViews = mapDefined(uris, (uri) =>
         ctx.views.feedGenerator(uri, hydration),
       )
 
       return {
-        encoding: 'application/json',
-        body: {
-          feeds: feedViews,
-          cursor,
-        },
-        headers: resHeaders({ labelers: hydrateCtx.labelers }),
+        feeds: feedViews,
+        cursor,
       }
-    },
+    }),
   })
 }

@@ -1,19 +1,22 @@
-import { AtpAgent } from '@atproto/api'
 import { mapDefined } from '@atproto/common'
-import AppContext from '../../../../context'
-import { DataPlaneClient } from '../../../../data-plane'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
-import { parseString } from '../../../../hydration/util'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/actor/searchActorsTypeahead'
+
+import AppContext from '../../../../context.js'
+import { parseString } from '../../../../hydration/util.js'
+import { Server } from '../../../../lexicon/index.js'
 import {
-  HydrationFnInput,
-  PresentationFnInput,
-  RulesFnInput,
-  SkeletonFnInput,
-} from '../../../../pipeline'
-import { Views } from '../../../../views'
-import { resHeaders } from '../../../util'
+  OutputSchema,
+  QueryParams,
+} from '../../../../lexicon/types/app/bsky/actor/searchActorsTypeahead.js'
+import {
+  HydrationFn,
+  PresentationFn,
+  RulesFn,
+  SkeletonFn,
+} from '../../../../pipeline.js'
+
+type Skeleton = {
+  dids: string[]
+}
 
 export default function (server: Server, ctx: AppContext) {
   const searchActorsTypeahead = ctx.createPipeline(
@@ -22,24 +25,19 @@ export default function (server: Server, ctx: AppContext) {
     noBlocks,
     presentation,
   )
+
   server.app.bsky.actor.searchActorsTypeahead({
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
-      const results = await searchActorsTypeahead(hydrateCtx, params)
-      return {
-        encoding: 'application/json',
-        body: results,
-        headers: resHeaders({ labelers: hydrateCtx.labelers }),
-      }
+
+      return searchActorsTypeahead({ labelers, viewer }, params)
     },
   })
 }
 
-const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
-  const { ctx, params } = inputs
+const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({ ctx, params }) => {
   const term = params.q ?? params.term ?? ''
 
   // @TODO
@@ -70,15 +68,19 @@ const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
   }
 }
 
-const hydration = async (
-  inputs: HydrationFnInput<Context, Params, Skeleton>,
-) => {
-  const { ctx, params, skeleton } = inputs
+const hydration: HydrationFn<Skeleton, QueryParams> = async ({
+  ctx,
+  skeleton,
+}) => {
   return ctx.hydrator.hydrateProfilesBasic(skeleton.dids, ctx.hydrateCtx)
 }
 
-const noBlocks = (inputs: RulesFnInput<Context, Params, Skeleton>) => {
-  const { ctx, skeleton, hydration, params } = inputs
+const noBlocks: RulesFn<Skeleton, QueryParams> = ({
+  ctx,
+  skeleton,
+  hydration,
+  params,
+}) => {
   skeleton.dids = skeleton.dids.filter((did) => {
     const actor = hydration.actors?.get(did)
     if (!actor) return false
@@ -90,28 +92,13 @@ const noBlocks = (inputs: RulesFnInput<Context, Params, Skeleton>) => {
   return skeleton
 }
 
-const presentation = (
-  inputs: PresentationFnInput<Context, Params, Skeleton>,
-) => {
-  const { ctx, skeleton, hydration } = inputs
+const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
+  ctx,
+  skeleton,
+  hydration,
+}) => {
   const actors = mapDefined(skeleton.dids, (did) =>
     ctx.views.profileBasic(did, hydration),
   )
-  return {
-    actors,
-  }
-}
-
-type Context = {
-  dataplane: DataPlaneClient
-  hydrator: Hydrator
-  views: Views
-  searchAgent?: AtpAgent
-  hydrateCtx: HydrateCtx
-}
-
-type Params = QueryParams
-
-type Skeleton = {
-  dids: string[]
+  return { actors }
 }

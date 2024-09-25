@@ -1,18 +1,25 @@
 import { mapDefined } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import AppContext from '../../../../context'
-import { DataPlaneClient } from '../../../../data-plane'
+
+import AppContext from '../../../../context.js'
+import { parseString } from '../../../../hydration/util.js'
+import { Server } from '../../../../lexicon/index.js'
 import {
-  HydrateCtx,
-  HydrationState,
-  Hydrator,
-} from '../../../../hydration/hydrator'
-import { parseString } from '../../../../hydration/util'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getActorFeeds'
-import { noRules } from '../../../../pipeline'
-import { Views } from '../../../../views'
-import { clearlyBadCursor, resHeaders } from '../../../util'
+  OutputSchema,
+  QueryParams,
+} from '../../../../lexicon/types/app/bsky/feed/getActorFeeds.js'
+import {
+  HydrationFn,
+  noRules,
+  PresentationFn,
+  SkeletonFn,
+} from '../../../../pipeline.js'
+import { clearlyBadCursor } from '../../../util.js'
+
+type Skeleton = {
+  feedUris: string[]
+  cursor?: string
+}
 
 export default function (server: Server, ctx: AppContext) {
   const getActorFeeds = ctx.createPipeline(
@@ -21,27 +28,18 @@ export default function (server: Server, ctx: AppContext) {
     noRules,
     presentation,
   )
+
   server.app.bsky.feed.getActorFeeds({
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ auth, params, req }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
-      const result = await getActorFeeds(hydrateCtx, params)
-      return {
-        encoding: 'application/json',
-        body: result,
-        headers: resHeaders({ labelers: hydrateCtx.labelers }),
-      }
+      return getActorFeeds({ labelers, viewer }, params)
     },
   })
 }
 
-const skeleton = async (inputs: {
-  ctx: Context
-  params: Params
-}): Promise<Skeleton> => {
-  const { ctx, params } = inputs
+const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({ ctx, params }) => {
   if (clearlyBadCursor(params.cursor)) {
     return { feedUris: [] }
   }
@@ -60,21 +58,18 @@ const skeleton = async (inputs: {
   }
 }
 
-const hydration = async (inputs: {
-  ctx: Context
-  params: Params
-  skeleton: Skeleton
+const hydration: HydrationFn<Skeleton, QueryParams> = async ({
+  ctx,
+  skeleton,
 }) => {
-  const { ctx, skeleton } = inputs
   return await ctx.hydrator.hydrateFeedGens(skeleton.feedUris, ctx.hydrateCtx)
 }
 
-const presentation = (inputs: {
-  ctx: Context
-  skeleton: Skeleton
-  hydration: HydrationState
+const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
+  ctx,
+  skeleton,
+  hydration,
 }) => {
-  const { ctx, skeleton, hydration } = inputs
   const feeds = mapDefined(skeleton.feedUris, (uri) =>
     ctx.views.feedGenerator(uri, hydration),
   )
@@ -82,18 +77,4 @@ const presentation = (inputs: {
     feeds,
     cursor: skeleton.cursor,
   }
-}
-
-type Context = {
-  hydrator: Hydrator
-  views: Views
-  dataplane: DataPlaneClient
-  hydrateCtx: HydrateCtx
-}
-
-type Params = QueryParams
-
-type Skeleton = {
-  feedUris: string[]
-  cursor?: string
 }

@@ -1,24 +1,25 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
-import { GetIdentityByDidResponse } from '../../../../proto/bsky_pb'
+
+import AppContext from '../../../../context.js'
 import {
   Code,
   getServiceEndpoint,
   isDataplaneError,
   unpackIdentityServices,
-} from '../../../../data-plane'
-import { resHeaders } from '../../../util'
+} from '../../../../data-plane/index.js'
+import { Server } from '../../../../lexicon/index.js'
+import { GetIdentityByDidResponse } from '../../../../proto/bsky_pb.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getFeedGenerator({
     auth: ctx.authVerifier.standardOptional,
-    handler: async ({ params, auth, req }) => {
+    handler: ctx.createHandler(async (ctx, params) => {
       const { feed } = params
-      const viewer = auth.credentials.iss
-      const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
-      const hydration = await ctx.hydrator.hydrateFeedGens([feed], hydrateCtx)
+
+      const hydration = await ctx.hydrator.hydrateFeedGens(
+        [feed],
+        ctx.hydrateCtx,
+      )
       const feedInfo = hydration.feedgens?.get(feed)
       if (!feedInfo) {
         throw new InvalidRequestError('could not find feed')
@@ -54,15 +55,11 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       return {
-        encoding: 'application/json',
-        body: {
-          view: feedView,
-          // @TODO temporarily hard-coding to true while external feedgens catch-up on describeFeedGenerator
-          isOnline: true,
-          isValid: true,
-        },
-        headers: resHeaders({ labelers: hydrateCtx.labelers }),
+        view: feedView,
+        // @TODO temporarily hard-coding to true while external feedgens catch-up on describeFeedGenerator
+        isOnline: true,
+        isValid: true,
       }
-    },
+    }),
   })
 }

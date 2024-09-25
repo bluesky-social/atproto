@@ -62,6 +62,8 @@ type ModServiceOutput = {
   }
 }
 
+export type Creds = StandardOutput | RoleOutput | ModServiceOutput | NullOutput
+
 const ALLOWED_AUTH_SCOPES = new Set([
   'com.atproto.access',
   'com.atproto.appPass',
@@ -371,9 +373,7 @@ export class AuthVerifier {
     }
   }
 
-  parseCreds(
-    creds: StandardOutput | RoleOutput | ModServiceOutput | NullOutput,
-  ) {
+  parseCreds(creds: Creds) {
     const viewer =
       creds.credentials.type === 'standard' ? creds.credentials.iss : null
     const includeTakedownsAnd3pBlocks =

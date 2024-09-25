@@ -1,21 +1,25 @@
-import { AtpAgent } from '@atproto/api'
 import { mapDefined } from '@atproto/common'
 
 import AppContext from '../../../../context.js'
-import { DataPlaneClient } from '../../../../data-plane/index.js'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator.js'
 import { parseString } from '../../../../hydration/util.js'
 import { Server } from '../../../../lexicon/index.js'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/searchPosts.js'
 import {
-  HydrationFnInput,
-  PresentationFnInput,
-  RulesFnInput,
-  SkeletonFnInput,
+  OutputSchema,
+  QueryParams,
+} from '../../../../lexicon/types/app/bsky/feed/searchPosts.js'
+import {
+  HydrationFn,
+  PresentationFn,
+  RulesFn,
+  SkeletonFn,
 } from '../../../../pipeline.js'
 import { uriToDid as creatorFromUri } from '../../../../util/uris.js'
-import { Views } from '../../../../views/index.js'
-import { resHeaders } from '../../../util.js'
+
+type Skeleton = {
+  posts: string[]
+  hitsTotal?: number
+  cursor?: string
+}
 
 export default function (server: Server, ctx: AppContext) {
   const searchPosts = ctx.createPipeline(
@@ -24,25 +28,18 @@ export default function (server: Server, ctx: AppContext) {
     noBlocks,
     presentation,
   )
+
   server.app.bsky.feed.searchPosts({
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ auth, params, req }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
-      const results = await searchPosts(hydrateCtx, params)
-      return {
-        encoding: 'application/json',
-        body: results,
-        headers: resHeaders({ labelers: hydrateCtx.labelers }),
-      }
+
+      return searchPosts({ labelers, viewer }, params)
     },
   })
 }
-
-const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
-  const { ctx, params } = inputs
-
+const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({ ctx, params }) => {
   if (ctx.searchAgent) {
     // @NOTE cursors won't change on appview swap
     const { data: res } =
@@ -78,18 +75,21 @@ const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
   }
 }
 
-const hydration = async (
-  inputs: HydrationFnInput<Context, Params, Skeleton>,
-) => {
-  const { ctx, skeleton } = inputs
+const hydration: HydrationFn<Skeleton, QueryParams> = async ({
+  ctx,
+  skeleton,
+}) => {
   return ctx.hydrator.hydratePosts(
     skeleton.posts.map((uri) => ({ uri })),
     ctx.hydrateCtx,
   )
 }
 
-const noBlocks = (inputs: RulesFnInput<Context, Params, Skeleton>) => {
-  const { ctx, skeleton, hydration } = inputs
+const noBlocks: RulesFn<Skeleton, QueryParams> = ({
+  ctx,
+  skeleton,
+  hydration,
+}) => {
   skeleton.posts = skeleton.posts.filter((uri) => {
     const creator = creatorFromUri(uri)
     return !ctx.views.viewerBlockExists(creator, hydration)
@@ -97,10 +97,11 @@ const noBlocks = (inputs: RulesFnInput<Context, Params, Skeleton>) => {
   return skeleton
 }
 
-const presentation = (
-  inputs: PresentationFnInput<Context, Params, Skeleton>,
-) => {
-  const { ctx, skeleton, hydration } = inputs
+const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
+  ctx,
+  skeleton,
+  hydration,
+}) => {
   const posts = mapDefined(skeleton.posts, (uri) =>
     ctx.views.post(uri, hydration),
   )
@@ -109,20 +110,4 @@ const presentation = (
     cursor: skeleton.cursor,
     hitsTotal: skeleton.hitsTotal,
   }
-}
-
-type Context = {
-  dataplane: DataPlaneClient
-  hydrator: Hydrator
-  views: Views
-  searchAgent?: AtpAgent
-  hydrateCtx: HydrateCtx
-}
-
-type Params = QueryParams
-
-type Skeleton = {
-  posts: string[]
-  hitsTotal?: number
-  cursor?: string
 }

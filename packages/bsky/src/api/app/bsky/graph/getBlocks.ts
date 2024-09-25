@@ -1,17 +1,24 @@
 import { mapDefined } from '@atproto/common'
 
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import AppContext from '../../../../context.js'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator.js'
 import { Server } from '../../../../lexicon/index.js'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getBlocks.js'
 import {
-  HydrationFnInput,
+  OutputSchema,
+  QueryParams,
+} from '../../../../lexicon/types/app/bsky/graph/getBlocks.js'
+import {
+  HydrationFn,
   noRules,
-  PresentationFnInput,
-  SkeletonFnInput,
+  PresentationFn,
+  SkeletonFn,
 } from '../../../../pipeline.js'
-import { Views } from '../../../../views/index.js'
-import { clearlyBadCursor, resHeaders } from '../../../util.js'
+import { clearlyBadCursor } from '../../../util.js'
+
+type Skeleton = {
+  blockedDids: string[]
+  cursor?: string
+}
 
 export default function (server: Server, ctx: AppContext) {
   const getBlocks = ctx.createPipeline(
@@ -20,29 +27,28 @@ export default function (server: Server, ctx: AppContext) {
     noRules,
     presentation,
   )
+
   server.app.bsky.graph.getBlocks({
     auth: ctx.authVerifier.standard,
     handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
-      const result = await getBlocks(hydrateCtx, params)
-      return {
-        encoding: 'application/json',
-        body: result,
-        headers: resHeaders({ labelers: hydrateCtx.labelers }),
-      }
+
+      return getBlocks({ labelers, viewer }, params)
     },
   })
 }
 
-const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
-  const { params, ctx } = input
+const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({ ctx, params }) => {
   if (clearlyBadCursor(params.cursor)) {
     return { blockedDids: [] }
   }
+
+  const actorDid = ctx.hydrateCtx.viewer
+  if (!actorDid) throw new InvalidRequestError('Unauthorized')
+
   const { blockUris, cursor } = await ctx.hydrator.dataplane.getBlocks({
-    actorDid: ctx.hydrateCtx.viewer,
+    actorDid,
     cursor: params.cursor,
     limit: params.limit,
   })
@@ -57,33 +63,21 @@ const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
   }
 }
 
-const hydration = async (
-  input: HydrationFnInput<Context, Params, SkeletonState>,
-) => {
-  const { ctx, skeleton } = input
+const hydration: HydrationFn<Skeleton, QueryParams> = async ({
+  ctx,
+  skeleton,
+}) => {
   return ctx.hydrator.hydrateProfiles(skeleton.blockedDids, ctx.hydrateCtx)
 }
 
-const presentation = (
-  input: PresentationFnInput<Context, Params, SkeletonState>,
-) => {
-  const { ctx, hydration, skeleton } = input
+const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
+  ctx,
+  skeleton,
+  hydration,
+}) => {
   const { blockedDids, cursor } = skeleton
   const blocks = mapDefined(blockedDids, (did) => {
     return ctx.views.profile(did, hydration)
   })
   return { blocks, cursor }
-}
-
-type Context = {
-  hydrator: Hydrator
-  views: Views
-  hydrateCtx: HydrateCtx & { viewer: string }
-}
-
-type Params = QueryParams
-
-type SkeletonState = {
-  blockedDids: string[]
-  cursor?: string
 }

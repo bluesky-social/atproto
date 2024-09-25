@@ -1,16 +1,24 @@
 import { mapDefined } from '@atproto/common'
 import AppContext from '../../../../context'
-import {
-  HydrateCtx,
-  HydrationState,
-  Hydrator,
-} from '../../../../hydration/hydrator'
 import { parseString } from '../../../../hydration/util'
 import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getRepostedBy'
+import {
+  OutputSchema,
+  QueryParams,
+} from '../../../../lexicon/types/app/bsky/feed/getRepostedBy'
+import {
+  HydrationFn,
+  PresentationFn,
+  RulesFn,
+  SkeletonFn,
+} from '../../../../pipeline'
 import { uriToDid as creatorFromUri } from '../../../../util/uris'
-import { Views } from '../../../../views'
-import { clearlyBadCursor, resHeaders } from '../../../util'
+import { clearlyBadCursor } from '../../../util'
+
+type Skeleton = {
+  reposts: string[]
+  cursor?: string
+}
 
 export default function (server: Server, ctx: AppContext) {
   const getRepostedBy = ctx.createPipeline(
@@ -19,32 +27,19 @@ export default function (server: Server, ctx: AppContext) {
     noBlocks,
     presentation,
   )
+
   server.app.bsky.feed.getRepostedBy({
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ params, auth, req }) => {
       const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({
-        labelers,
-        viewer,
-        includeTakedowns,
-      })
-      const result = await getRepostedBy(hydrateCtx, params)
 
-      return {
-        encoding: 'application/json',
-        body: result,
-        headers: resHeaders({ labelers: hydrateCtx.labelers }),
-      }
+      return getRepostedBy({ labelers, viewer, includeTakedowns }, params)
     },
   })
 }
 
-const skeleton = async (inputs: {
-  ctx: Context
-  params: Params
-}): Promise<Skeleton> => {
-  const { ctx, params } = inputs
+const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({ ctx, params }) => {
   if (clearlyBadCursor(params.cursor)) {
     return { reposts: [] }
   }
@@ -59,21 +54,18 @@ const skeleton = async (inputs: {
   }
 }
 
-const hydration = async (inputs: {
-  ctx: Context
-  params: Params
-  skeleton: Skeleton
+const hydration: HydrationFn<Skeleton, QueryParams> = async ({
+  ctx,
+  skeleton,
 }) => {
-  const { ctx, params, skeleton } = inputs
   return await ctx.hydrator.hydrateReposts(skeleton.reposts, ctx.hydrateCtx)
 }
 
-const noBlocks = (inputs: {
-  ctx: Context
-  skeleton: Skeleton
-  hydration: HydrationState
+const noBlocks: RulesFn<Skeleton, QueryParams> = ({
+  ctx,
+  skeleton,
+  hydration,
 }) => {
-  const { ctx, skeleton, hydration } = inputs
   skeleton.reposts = skeleton.reposts.filter((uri) => {
     const creator = creatorFromUri(uri)
     return !ctx.views.viewerBlockExists(creator, hydration)
@@ -81,13 +73,12 @@ const noBlocks = (inputs: {
   return skeleton
 }
 
-const presentation = (inputs: {
-  ctx: Context
-  params: Params
-  skeleton: Skeleton
-  hydration: HydrationState
+const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
+  ctx,
+  skeleton,
+  hydration,
+  params,
 }) => {
-  const { ctx, params, skeleton, hydration } = inputs
   const repostViews = mapDefined(skeleton.reposts, (uri) => {
     const repost = hydration.reposts?.get(uri)
     if (!repost?.record) {
@@ -102,17 +93,4 @@ const presentation = (inputs: {
     uri: params.uri,
     cid: params.cid,
   }
-}
-
-type Context = {
-  hydrator: Hydrator
-  views: Views
-  hydrateCtx: HydrateCtx
-}
-
-type Params = QueryParams
-
-type Skeleton = {
-  reposts: string[]
-  cursor?: string
 }

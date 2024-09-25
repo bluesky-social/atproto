@@ -1,19 +1,27 @@
 import { mapDefined } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import AppContext from '../../../../context'
-import { DataPlaneClient } from '../../../../data-plane'
-import { FeedItem } from '../../../../hydration/feed'
+
+import AppContext from '../../../../context.js'
+import { FeedItem } from '../../../../hydration/feed.js'
+import { parseString } from '../../../../hydration/util.js'
+import { Server } from '../../../../lexicon/index.js'
 import {
-  HydrateCtx,
-  HydrationState,
-  Hydrator,
-} from '../../../../hydration/hydrator'
-import { parseString } from '../../../../hydration/util'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getActorLikes'
-import { uriToDid as creatorFromUri } from '../../../../util/uris'
-import { Views } from '../../../../views'
-import { clearlyBadCursor, resHeaders } from '../../../util'
+  OutputSchema,
+  QueryParams,
+} from '../../../../lexicon/types/app/bsky/feed/getActorLikes.js'
+import {
+  HydrationFn,
+  PresentationFn,
+  RulesFn,
+  SkeletonFn,
+} from '../../../../pipeline.js'
+import { uriToDid as creatorFromUri } from '../../../../util/uris.js'
+import { clearlyBadCursor } from '../../../util.js'
+
+type Skeleton = {
+  items: FeedItem[]
+  cursor?: string
+}
 
 export default function (server: Server, ctx: AppContext) {
   const getActorLikes = ctx.createPipeline(
@@ -21,36 +29,23 @@ export default function (server: Server, ctx: AppContext) {
     hydration,
     noPostBlocks,
     presentation,
+    { exposeRepoRev: true },
   )
   server.app.bsky.feed.getActorLikes({
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
 
-      const result = await getActorLikes(hydrateCtx, params)
-
-      const repoRev = await ctx.hydrator.actor.getRepoRevSafe(viewer)
-
-      return {
-        encoding: 'application/json',
-        body: result,
-        headers: resHeaders({
-          repoRev,
-          labelers: hydrateCtx.labelers,
-        }),
-      }
+      return getActorLikes({ labelers, viewer }, params)
     },
   })
 }
 
-const skeleton = async (inputs: {
-  ctx: Context
-  params: Params
-}): Promise<Skeleton> => {
-  const { ctx, params } = inputs
-  const { actor, limit, cursor } = params
+const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({
+  ctx,
+  params: { actor, limit, cursor },
+}) => {
   const viewer = ctx.hydrateCtx.viewer
   if (clearlyBadCursor(cursor)) {
     return { items: [] }
@@ -74,21 +69,18 @@ const skeleton = async (inputs: {
   }
 }
 
-const hydration = async (inputs: {
-  ctx: Context
-  params: Params
-  skeleton: Skeleton
+const hydration: HydrationFn<Skeleton, QueryParams> = async ({
+  ctx,
+  skeleton,
 }) => {
-  const { ctx, skeleton } = inputs
-  return await ctx.hydrator.hydrateFeedItems(skeleton.items, ctx.hydrateCtx)
+  return ctx.hydrator.hydrateFeedItems(skeleton.items, ctx.hydrateCtx)
 }
 
-const noPostBlocks = (inputs: {
-  ctx: Context
-  skeleton: Skeleton
-  hydration: HydrationState
+const noPostBlocks: RulesFn<Skeleton, QueryParams> = ({
+  ctx,
+  skeleton,
+  hydration,
 }) => {
-  const { ctx, skeleton, hydration } = inputs
   skeleton.items = skeleton.items.filter((item) => {
     const creator = creatorFromUri(item.post.uri)
     return !ctx.views.viewerBlockExists(creator, hydration)
@@ -96,12 +88,11 @@ const noPostBlocks = (inputs: {
   return skeleton
 }
 
-const presentation = (inputs: {
-  ctx: Context
-  skeleton: Skeleton
-  hydration: HydrationState
+const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
+  ctx,
+  skeleton,
+  hydration,
 }) => {
-  const { ctx, skeleton, hydration } = inputs
   const feed = mapDefined(skeleton.items, (item) =>
     ctx.views.feedViewPost(item, hydration),
   )
@@ -109,18 +100,4 @@ const presentation = (inputs: {
     feed,
     cursor: skeleton.cursor,
   }
-}
-
-type Context = {
-  hydrator: Hydrator
-  views: Views
-  dataplane: DataPlaneClient
-  hydrateCtx: HydrateCtx
-}
-
-type Params = QueryParams
-
-type Skeleton = {
-  items: FeedItem[]
-  cursor?: string
 }

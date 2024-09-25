@@ -2,20 +2,28 @@ import { mapDefined } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 
 import AppContext from '../../../../context.js'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator.js'
 import { Server } from '../../../../lexicon/index.js'
 import { isRecord as isPostRecord } from '../../../../lexicon/types/app/bsky/feed/post.js'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/notification/listNotifications.js'
 import {
-  HydrationFnInput,
-  PresentationFnInput,
-  RulesFnInput,
-  SkeletonFnInput,
+  OutputSchema,
+  QueryParams,
+} from '../../../../lexicon/types/app/bsky/notification/listNotifications.js'
+import {
+  HydrationFn,
+  PresentationFn,
+  RulesFn,
+  SkeletonFn,
 } from '../../../../pipeline.js'
 import { Notification } from '../../../../proto/bsky_pb.js'
 import { uriToDid as didFromUri } from '../../../../util/uris.js'
-import { Views } from '../../../../views/index.js'
-import { clearlyBadCursor, resHeaders } from '../../../util.js'
+import { clearlyBadCursor } from '../../../util.js'
+
+type Skeleton = {
+  notifs: Notification[]
+  priority: boolean
+  lastSeenNotifs?: string
+  cursor?: string
+}
 
 export default function (server: Server, ctx: AppContext) {
   const listNotifications = ctx.createPipeline(
@@ -29,38 +37,36 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
-      const result = await listNotifications(hydrateCtx, params)
-      return {
-        encoding: 'application/json',
-        body: result,
-        headers: resHeaders({ labelers: hydrateCtx.labelers }),
-      }
+
+      return listNotifications({ labelers, viewer }, params)
     },
   })
 }
 
-const skeleton = async (
-  input: SkeletonFnInput<Context, Params>,
-): Promise<SkeletonState> => {
-  const { params, ctx } = input
+const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({ ctx, params }) => {
   if (params.seenAt) {
     throw new InvalidRequestError('The seenAt parameter is unsupported')
   }
-  const viewer = ctx.hydrateCtx.viewer
-  const priority = params.priority ?? (await getPriority(ctx, viewer))
+
+  const actorDid = ctx.hydrateCtx.viewer
+  if (!actorDid) throw new InvalidRequestError('An actor is required')
+
+  const priority =
+    params.priority ??
+    !!(await ctx.hydrator.actor.getActors([actorDid])).get(actorDid)
+      ?.priorityNotifications
   if (clearlyBadCursor(params.cursor)) {
     return { notifs: [], priority }
   }
   const [res, lastSeenRes] = await Promise.all([
     ctx.hydrator.dataplane.getNotifications({
-      actorDid: viewer,
+      actorDid,
       priority,
       cursor: params.cursor,
       limit: params.limit,
     }),
     ctx.hydrator.dataplane.getNotificationSeen({
-      actorDid: viewer,
+      actorDid,
       priority,
     }),
   ])
@@ -78,17 +84,18 @@ const skeleton = async (
   }
 }
 
-const hydration = async (
-  input: HydrationFnInput<Context, Params, SkeletonState>,
-) => {
-  const { skeleton, ctx } = input
+const hydration: HydrationFn<Skeleton, QueryParams> = async ({
+  ctx,
+  skeleton,
+}) => {
   return ctx.hydrator.hydrateNotifications(skeleton.notifs, ctx.hydrateCtx)
 }
 
-const noBlockOrMutes = (
-  input: RulesFnInput<Context, Params, SkeletonState>,
-) => {
-  const { skeleton, hydration, ctx } = input
+const noBlockOrMutes: RulesFn<Skeleton, QueryParams> = ({
+  ctx,
+  skeleton,
+  hydration,
+}) => {
   skeleton.notifs = skeleton.notifs.filter((item) => {
     const did = didFromUri(item.uri)
     if (
@@ -124,10 +131,11 @@ const noBlockOrMutes = (
   return skeleton
 }
 
-const presentation = (
-  input: PresentationFnInput<Context, Params, SkeletonState>,
-) => {
-  const { skeleton, hydration, ctx } = input
+const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
+  skeleton,
+  hydration,
+  ctx,
+}) => {
   const { notifs, lastSeenNotifs, cursor } = skeleton
   const notifications = mapDefined(notifs, (notif) =>
     ctx.views.notification(notif, lastSeenNotifs, hydration),
@@ -138,24 +146,4 @@ const presentation = (
     priority: skeleton.priority,
     seenAt: skeleton.lastSeenNotifs,
   }
-}
-
-type Context = {
-  hydrator: Hydrator
-  views: Views
-  hydrateCtx: HydrateCtx & { viewer: string }
-}
-
-type Params = QueryParams
-
-type SkeletonState = {
-  notifs: Notification[]
-  priority: boolean
-  lastSeenNotifs?: string
-  cursor?: string
-}
-
-const getPriority = async (ctx: Context, did: string) => {
-  const actors = await ctx.hydrator.actor.getActors([did])
-  return !!actors.get(did)?.priorityNotifications
 }

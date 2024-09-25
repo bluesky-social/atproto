@@ -1,19 +1,27 @@
 import { mapDefined } from '@atproto/common'
-import AppContext from '../../../../context'
-import { DataPlaneClient } from '../../../../data-plane'
-import { FeedItem } from '../../../../hydration/feed'
+
+import AppContext from '../../../../context.js'
+import { FeedItem } from '../../../../hydration/feed.js'
+import { mergeStates } from '../../../../hydration/hydrator.js'
+import { parseString } from '../../../../hydration/util.js'
+import { Server } from '../../../../lexicon/index.js'
 import {
-  HydrateCtx,
-  HydrationState,
-  Hydrator,
-  mergeStates,
-} from '../../../../hydration/hydrator'
-import { parseString } from '../../../../hydration/util'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getListFeed'
-import { uriToDid } from '../../../../util/uris'
-import { Views } from '../../../../views'
-import { clearlyBadCursor, resHeaders } from '../../../util'
+  OutputSchema,
+  QueryParams,
+} from '../../../../lexicon/types/app/bsky/feed/getListFeed.js'
+import {
+  HydrationFn,
+  PresentationFn,
+  RulesFn,
+  SkeletonFn,
+} from '../../../../pipeline.js'
+import { uriToDid } from '../../../../util/uris.js'
+import { clearlyBadCursor } from '../../../util.js'
+
+type Skeleton = {
+  items: FeedItem[]
+  cursor?: string
+}
 
 export default function (server: Server, ctx: AppContext) {
   const getListFeed = ctx.createPipeline(
@@ -21,32 +29,23 @@ export default function (server: Server, ctx: AppContext) {
     hydration,
     noBlocksOrMutes,
     presentation,
+    { exposeRepoRev: true },
   )
   server.app.bsky.feed.getListFeed({
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
 
-      const result = await getListFeed(hydrateCtx, params)
-
-      const repoRev = await ctx.hydrator.actor.getRepoRevSafe(viewer)
-
-      return {
-        encoding: 'application/json',
-        body: result,
-        headers: resHeaders({ labelers: hydrateCtx.labelers, repoRev }),
-      }
+      return getListFeed({ labelers, viewer }, params)
     },
   })
 }
 
-export const skeleton = async (inputs: {
-  ctx: Context
-  params: Params
-}): Promise<Skeleton> => {
-  const { ctx, params } = inputs
+export const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({
+  ctx,
+  params,
+}) => {
   if (clearlyBadCursor(params.cursor)) {
     return { items: [] }
   }
@@ -66,28 +65,32 @@ export const skeleton = async (inputs: {
   }
 }
 
-const hydration = async (inputs: {
-  ctx: Context
-  params: Params
-  skeleton: Skeleton
-}): Promise<HydrationState> => {
-  const { ctx, params, skeleton } = inputs
+const hydration: HydrationFn<Skeleton, QueryParams> = async ({
+  ctx,
+  params,
+  skeleton,
+}) => {
   const [feedItemsState, bidirectionalBlocks] = await Promise.all([
     ctx.hydrator.hydrateFeedItems(skeleton.items, ctx.hydrateCtx),
-    getBlocks({ ctx, params, skeleton }),
+    ctx.hydrator.hydrateBidirectionalBlocks([
+      [
+        uriToDid(params.list),
+        skeleton.items.map((item) => uriToDid(item.post.uri)),
+      ],
+    ]),
   ])
+
   return mergeStates(feedItemsState, {
     bidirectionalBlocks,
   })
 }
 
-const noBlocksOrMutes = (inputs: {
-  ctx: Context
-  params: Params
-  skeleton: Skeleton
-  hydration: HydrationState
-}): Skeleton => {
-  const { ctx, params, skeleton, hydration } = inputs
+const noBlocksOrMutes: RulesFn<Skeleton, QueryParams> = ({
+  ctx,
+  params,
+  skeleton,
+  hydration,
+}) => {
   skeleton.items = skeleton.items.filter((item) => {
     const bam = ctx.views.feedItemBlocksAndMutes(item, hydration)
     const creatorBlocks = hydration.bidirectionalBlocks?.get(
@@ -105,42 +108,15 @@ const noBlocksOrMutes = (inputs: {
   return skeleton
 }
 
-const presentation = (inputs: {
-  ctx: Context
-  skeleton: Skeleton
-  hydration: HydrationState
+const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
+  ctx,
+  skeleton,
+  hydration,
 }) => {
-  const { ctx, skeleton, hydration } = inputs
-  const feed = mapDefined(skeleton.items, (item) =>
-    ctx.views.feedViewPost(item, hydration),
-  )
-  return { feed, cursor: skeleton.cursor }
-}
-
-const getBlocks = async (input: {
-  ctx: Context
-  skeleton: Skeleton
-  params: Params
-}) => {
-  const { ctx, skeleton, params } = input
-  const pairs: Map<string, string[]> = new Map()
-  pairs.set(
-    uriToDid(params.list),
-    skeleton.items.map((item) => uriToDid(item.post.uri)),
-  )
-  return await ctx.hydrator.hydrateBidirectionalBlocks(pairs)
-}
-
-type Context = {
-  hydrator: Hydrator
-  views: Views
-  dataplane: DataPlaneClient
-  hydrateCtx: HydrateCtx
-}
-
-type Params = QueryParams
-
-type Skeleton = {
-  items: FeedItem[]
-  cursor?: string
+  return {
+    feed: mapDefined(skeleton.items, (item) =>
+      ctx.views.feedViewPost(item, hydration),
+    ),
+    cursor: skeleton.cursor,
+  }
 }

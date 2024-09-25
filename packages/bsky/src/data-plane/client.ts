@@ -60,6 +60,7 @@ export function withHeaders<C extends AnyClient>(
   const newClient: AnyClient = {}
   for (const [key, method] of Object.entries(client)) {
     if (typeof method !== 'function') throw new TypeError('invalid client')
+
     newClient[key] = (request, options) =>
       method(
         request,

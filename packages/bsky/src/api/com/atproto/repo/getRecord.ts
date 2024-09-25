@@ -6,21 +6,28 @@ import AppContext from '../../../../context'
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.getRecord({
     auth: ctx.authVerifier.optionalStandardOrRole,
-    handler: async ({ auth, params }) => {
+    handler: async ({ req, auth, params }) => {
       const { repo, collection, rkey, cid } = params
-      const { includeTakedowns } = ctx.authVerifier.parseCreds(auth)
-      const [did] = await ctx.hydrator.actor.getDids([repo])
+      const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
+      const labelers = ctx.reqLabelers(req)
+
+      const { hydrator } = await ctx.createRequestContent({
+        viewer,
+        labelers,
+      })
+
+      const [did] = await hydrator.actor.getDids([repo])
       if (!did) {
         throw new InvalidRequestError(`Could not find repo: ${repo}`)
       }
 
-      const actors = await ctx.hydrator.actor.getActors([did], includeTakedowns)
+      const actors = await hydrator.actor.getActors([did], includeTakedowns)
       if (!actors.get(did)) {
         throw new InvalidRequestError(`Could not find repo: ${repo}`)
       }
 
       const uri = AtUri.make(did, collection, rkey).toString()
-      const result = await ctx.hydrator.getRecord(uri, includeTakedowns)
+      const result = await hydrator.getRecord(uri, includeTakedowns)
 
       if (!result || (cid && result.cid !== cid)) {
         throw new InvalidRequestError(`Could not locate record: ${uri}`)

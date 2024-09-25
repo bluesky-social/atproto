@@ -2,20 +2,24 @@ import { AtpAgent } from '@atproto/api'
 import { Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
 import * as plc from '@did-plc/lib'
-import express from 'express'
 
-import { AuthVerifier } from './auth-verifier.js'
+import { IncomingMessage } from 'http'
+import { AuthVerifier, Creds } from './auth-verifier.js'
 import { BsyncClient } from './bsync.js'
 import { ServerConfig } from './config.js'
 import { CourierClient } from './courier.js'
-import { createDataPlaneClient, DataPlaneClient } from './data-plane/client.js'
+import { DataPlaneClient, withHeaders } from './data-plane/client.js'
 import { FeatureGates } from './feature-gates.js'
-import { HydrateCtx, Hydrator } from './hydration/hydrator.js'
+import { HydrateCtxVals, Hydrator } from './hydration/hydrator.js'
 import { httpLogger as log } from './logger.js'
 import {
   createPipeline,
+  defaultHeaders,
+  DefaultHeadersOptions,
   HydrationFn,
+  PipelineOptions,
   PresentationFn,
+  RequestContext,
   RulesFn,
   SkeletonFn,
 } from './pipeline.js'
@@ -25,18 +29,6 @@ import {
   parseLabelerHeader,
 } from './util.js'
 import { Views } from './views/index.js'
-
-export type AppPipelineContext<
-  H extends { viewer: null | string } = HydrateCtx,
-> = {
-  hydrateCtx: H
-  hydrator: Hydrator
-  views: Views
-  dataplane: DataPlaneClient
-  suggestionsAgent?: AtpAgent
-  searchAgent?: AtpAgent
-  featureGates: FeatureGates
-}
 
 export class AppContext {
   constructor(
@@ -108,8 +100,20 @@ export class AppContext {
     return this.opts.featureGates
   }
 
-  reqLabelers(req: express.Request): ParsedLabelers {
-    const val = req.header('atproto-accept-labelers')
+  dataplaneForViewer(viewer: null | string) {
+    if (viewer) {
+      const dataplane = withHeaders(this.opts.dataplane, {
+        'bsky-caller-did': viewer,
+      })
+      const hydrator = new Hydrator(dataplane, this.cfg.labelsFromIssuerDids)
+      return { dataplane, hydrator }
+    } else {
+      return { dataplane: this.opts.dataplane, hydrator: this.opts.hydrator }
+    }
+  }
+
+  reqLabelers(req: IncomingMessage): ParsedLabelers {
+    const val = req.headers['atproto-accept-labelers']
     let parsed: ParsedLabelers | null
     try {
       parsed = parseLabelerHeader(val)
@@ -121,80 +125,114 @@ export class AppContext {
     return parsed
   }
 
-  createPipeline<
-    Params,
-    Skeleton,
-    View,
-    H extends { viewer: null | string } = HydrateCtx,
-  >(
-    skeletonFn: SkeletonFn<AppPipelineContext<H>, Params, Skeleton>,
-    hydrationFn: HydrationFn<AppPipelineContext<H>, Params, Skeleton>,
-    rulesFn: RulesFn<AppPipelineContext<H>, Params, Skeleton>,
-    presentationFn: PresentationFn<
-      AppPipelineContext<H>,
-      Params,
-      Skeleton,
-      View
-    >,
-  ) {
-    const {
-      cfg: config,
-      hydrator: globalHydrator,
-      dataplane: globalDataplane,
-      views,
-      suggestionsAgent,
-      searchAgent,
-      featureGates,
-    } = this
+  async createRequestContent(vals: HydrateCtxVals): Promise<RequestContext> {
+    const { dataplane, hydrator } = this.dataplaneForViewer(vals.viewer)
+    return {
+      hydrateCtx: await hydrator.createContext(vals),
+      hydrator,
+      dataplane,
+      views: this.views,
+      suggestionsAgent: this.suggestionsAgent,
+      searchAgent: this.searchAgent,
+      featureGates: this.featureGates,
+    }
+  }
 
+  createHandler<Auth extends Creds, Params, View>(
+    view: (ctx: RequestContext, params: Params) => View | PromiseLike<View>,
+    options?: DefaultHeadersOptions,
+  ) {
+    return async ({
+      auth,
+      params,
+      req,
+    }: {
+      auth: Auth
+      params: Params
+      req: IncomingMessage
+    }): Promise<{
+      body: View
+      headers?: Record<string, string>
+      encoding: 'application/json'
+    }> => {
+      const viewer = auth.credentials.iss
+      const labelers = this.reqLabelers(req)
+
+      const ctx = await this.createRequestContent({
+        viewer,
+        labelers,
+      })
+
+      const body = await view(ctx, params)
+
+      return {
+        encoding: 'application/json',
+        headers: await defaultHeaders(ctx, options),
+        body,
+      }
+    }
+  }
+
+  createPipelineHandler<Auth extends Creds, Params, View, Skeleton>(
+    skeletonFn: SkeletonFn<Skeleton, Params>,
+    hydrationFn: HydrationFn<Skeleton, Params>,
+    rulesFn: RulesFn<Skeleton, Params>,
+    presentationFn: PresentationFn<Skeleton, Params, View>,
+    options?: PipelineOptions<Skeleton, Params>,
+  ) {
+    const pipeline = this.createPipeline(
+      skeletonFn,
+      hydrationFn,
+      rulesFn,
+      presentationFn,
+      options,
+    )
+
+    return async ({
+      auth,
+      params,
+      req,
+    }: {
+      auth: Auth
+      params: Params
+      req: IncomingMessage
+    }): Promise<{
+      body: View
+      headers?: Record<string, string>
+      encoding: 'application/json'
+    }> => {
+      const { viewer } = this.authVerifier.parseCreds(auth)
+      const labelers = this.reqLabelers(req)
+
+      return pipeline({ viewer, labelers }, params)
+    }
+  }
+
+  createPipeline<Skeleton, Params, View>(
+    skeletonFn: SkeletonFn<Skeleton, Params>,
+    hydrationFn: HydrationFn<Skeleton, Params>,
+    rulesFn: RulesFn<Skeleton, Params>,
+    presentationFn: PresentationFn<Skeleton, Params, View>,
+    options?: PipelineOptions<Skeleton, Params>,
+  ) {
     const pipeline = createPipeline(
       skeletonFn,
       hydrationFn,
       rulesFn,
       presentationFn,
+      options,
     )
 
-    const buildContext = (hydrateCtx: H): AppPipelineContext<H> => {
-      if (hydrateCtx.viewer) {
-        const dataplane = createDataPlaneClient(config.dataplaneUrls, {
-          httpVersion: config.dataplaneHttpVersion,
-          rejectUnauthorized: !config.dataplaneIgnoreBadTls,
-        })
-        const hydrator = new Hydrator(dataplane, config.labelsFromIssuerDids)
-
-        return {
-          hydrateCtx,
-          hydrator,
-          dataplane: dataplane.clearActorMutes(
-            { actorDid: hydrateCtx.viewer },
-            {
-              httpVersion,
-            },
-          ),
-          views,
-          suggestionsAgent,
-          searchAgent,
-          featureGates,
-        }
-      } else {
-        return {
-          hydrateCtx,
-          hydrator: globalHydrator,
-          dataplane: globalDataplane,
-          views,
-          suggestionsAgent,
-          searchAgent,
-          featureGates,
-        }
-      }
-    }
-
     return async (
-      hydrateCtx: H,
+      vals: HydrateCtxVals,
       params: Params,
-      headers: Record<string, string> = {},
-    ) => {
-      const ctx = buildContext(hydrateCtx)
+      headers?: Record<string, string>,
+    ): Promise<{
+      body: View
+      headers?: Record<string, string>
+      encoding: 'application/json'
+    }> => {
+      const ctx = await this.createRequestContent(vals)
       return pipeline(ctx, params, headers)
     }
   }

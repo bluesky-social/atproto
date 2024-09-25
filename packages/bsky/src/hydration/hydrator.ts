@@ -838,7 +838,7 @@ export class Hydrator {
   }
 
   async hydrateBidirectionalBlocks(
-    didMap: Map<string, string[]>, // DID -> DID[]
+    didMap: Iterable<[string, string[]]>, // DID -> DID[]
   ): Promise<BidirectionalBlocks> {
     const pairs: RelationshipPair[] = []
     for (const [source, targets] of didMap) {

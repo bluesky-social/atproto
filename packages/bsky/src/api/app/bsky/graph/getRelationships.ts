@@ -3,7 +3,8 @@ import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.getRelationships({
-    handler: async ({ params }) => {
+    auth: ctx.authVerifier.standardOptional,
+    handler: async ({ req, auth, params }) => {
       const { actor, others = [] } = params
       if (others.length < 1) {
         return {
@@ -14,7 +15,16 @@ export default function (server: Server, ctx: AppContext) {
           },
         }
       }
-      const res = await ctx.hydrator.actor.getProfileViewerStatesNaive(
+
+      const viewer = auth.credentials.iss
+      const labelers = ctx.reqLabelers(req)
+
+      const { hydrator } = await ctx.createRequestContent({
+        viewer,
+        labelers,
+      })
+
+      const res = await hydrator.actor.getProfileViewerStatesNaive(
         others,
         actor,
       )

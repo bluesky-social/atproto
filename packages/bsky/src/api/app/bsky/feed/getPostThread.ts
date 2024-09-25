@@ -1,22 +1,25 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import AppContext from '../../../../context'
-import { Code, DataPlaneClient, isDataplaneError } from '../../../../data-plane'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
-import { Server } from '../../../../lexicon'
-import { isNotFoundPost } from '../../../../lexicon/types/app/bsky/feed/defs'
+import AppContext from '../../../../context.js'
+import { Code, isDataplaneError } from '../../../../data-plane/index.js'
+import { Server } from '../../../../lexicon/index.js'
+import { isNotFoundPost } from '../../../../lexicon/types/app/bsky/feed/defs.js'
 import {
   OutputSchema,
   QueryParams,
-} from '../../../../lexicon/types/app/bsky/feed/getPostThread'
+} from '../../../../lexicon/types/app/bsky/feed/getPostThread.js'
 import {
-  HydrationFnInput,
-  PresentationFnInput,
-  SkeletonFnInput,
+  HydrationFn,
   noRules,
-} from '../../../../pipeline'
-import { postUriToThreadgateUri } from '../../../../util/uris'
-import { Views } from '../../../../views'
-import { ATPROTO_REPO_REV, resHeaders } from '../../../util'
+  PresentationFn,
+  SkeletonFn,
+} from '../../../../pipeline.js'
+import { postUriToThreadgateUri } from '../../../../util/uris.js'
+import { ATPROTO_REPO_REV } from '../../../util.js'
+
+type Skeleton = {
+  anchor: string
+  uris: string[]
+}
 
 export default function (server: Server, ctx: AppContext) {
   const getPostThread = ctx.createPipeline(
@@ -24,47 +27,41 @@ export default function (server: Server, ctx: AppContext) {
     hydration,
     noRules, // handled in presentation: 3p block-violating replies are turned to #blockedPost, viewer blocks turned to #notFoundPost.
     presentation,
+    { exposeRepoRev: true },
   )
+
   server.app.bsky.feed.getPostThread({
     auth: ctx.authVerifier.optionalStandardOrRole,
     handler: async ({ params, auth, req, res }) => {
       const { viewer, includeTakedowns, include3pBlocks } =
         ctx.authVerifier.parseCreds(auth)
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({
-        labelers,
-        viewer,
-        includeTakedowns,
-        include3pBlocks,
-      })
 
-      let result: OutputSchema
       try {
-        result = await getPostThread(hydrateCtx, params)
+        return await getPostThread(
+          { labelers, viewer, includeTakedowns, include3pBlocks },
+          params,
+        )
       } catch (err) {
-        const repoRev = await ctx.hydrator.actor.getRepoRevSafe(viewer)
+        const { hydrator } = await ctx.createRequestContent({
+          labelers,
+          viewer,
+          includeTakedowns,
+          include3pBlocks,
+        })
+
+        const repoRev = await hydrator.actor.getRepoRevSafe(viewer)
         if (repoRev) {
           res.setHeader(ATPROTO_REPO_REV, repoRev)
         }
+
         throw err
-      }
-
-      const repoRev = await ctx.hydrator.actor.getRepoRevSafe(viewer)
-
-      return {
-        encoding: 'application/json',
-        body: result,
-        headers: resHeaders({
-          repoRev,
-          labelers: hydrateCtx.labelers,
-        }),
       }
     },
   })
 }
 
-const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
-  const { ctx, params } = inputs
+const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({ ctx, params }) => {
   const anchor = await ctx.hydrator.resolveUri(params.uri)
   try {
     const res = await ctx.dataplane.getThread({
@@ -88,20 +85,22 @@ const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
   }
 }
 
-const hydration = async (
-  inputs: HydrationFnInput<Context, Params, Skeleton>,
-) => {
-  const { ctx, skeleton } = inputs
+const hydration: HydrationFn<Skeleton, QueryParams> = async ({
+  ctx,
+  skeleton,
+}) => {
   return ctx.hydrator.hydrateThreadPosts(
     skeleton.uris.map((uri) => ({ uri })),
     ctx.hydrateCtx,
   )
 }
 
-const presentation = (
-  inputs: PresentationFnInput<Context, Params, Skeleton>,
-) => {
-  const { ctx, params, skeleton, hydration } = inputs
+const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
+  ctx,
+  params,
+  skeleton,
+  hydration,
+}) => {
   const thread = ctx.views.thread(skeleton, hydration, {
     height: params.parentHeight,
     depth: params.depth,
@@ -120,19 +119,6 @@ const presentation = (
     postUriToThreadgateUri(rootUri),
     hydration,
   )
+
   return { thread, threadgate }
-}
-
-type Context = {
-  dataplane: DataPlaneClient
-  hydrator: Hydrator
-  views: Views
-  hydrateCtx: HydrateCtx
-}
-
-type Params = QueryParams
-
-type Skeleton = {
-  anchor: string
-  uris: string[]
 }
