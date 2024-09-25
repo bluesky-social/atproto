@@ -81,7 +81,7 @@ export const skeleton = async (inputs: {
   }
 
   const isFirstPageRequest = !params.cursor
-  const hasPinnedPost =
+  const shouldInsertPinnedPost =
     isFirstPageRequest && params.includePins && !!actor.profile?.pinnedPost
 
   const res = await ctx.dataplane.getAuthorFeed({
@@ -98,7 +98,7 @@ export const skeleton = async (inputs: {
       : undefined,
   }))
 
-  if (hasPinnedPost && actor.profile?.pinnedPost) {
+  if (shouldInsertPinnedPost && actor.profile?.pinnedPost) {
     const pinnedItem = {
       post: {
         uri: actor.profile.pinnedPost.uri,
