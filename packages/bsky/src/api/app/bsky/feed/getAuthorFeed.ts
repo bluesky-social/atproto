@@ -173,7 +173,7 @@ const noBlocksOrMutedReposts = (inputs: {
     skeleton.items = skeleton.items.filter((item) => {
       return (
         checkBlocksAndMutes(item) &&
-        (item.repost || selfThread.ok(item.post.uri))
+        (item.repost || item.authorPinned || selfThread.ok(item.post.uri))
       )
     })
   } else {
