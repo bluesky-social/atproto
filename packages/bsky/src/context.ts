@@ -15,14 +15,13 @@ import { HydrateCtxVals, Hydrator } from './hydration/hydrator.js'
 import { httpLogger as log } from './logger.js'
 import {
   createPipeline,
-  defaultHeaders,
-  DefaultHeadersOptions,
   HydrationFn,
   PipelineOptions,
   PresentationFn,
-  RequestContext,
+  HandlerContext,
   RulesFn,
   SkeletonFn,
+  Awaitable,
 } from './pipeline.js'
 import {
   defaultLabelerHeader,
@@ -30,6 +29,33 @@ import {
   parseLabelerHeader,
 } from './util.js'
 import { Views } from './views/index.js'
+import { resHeaders } from './api/util.js'
+
+export type DefaultHeadersOptions = {
+  /**
+   * Expose the current repo revision in the response headers.
+   */
+  exposeRepoRev?: boolean
+
+  /**
+   * Expose the labelers that were used to generate the response.
+   */
+  exposeLabelers?: boolean
+}
+
+export async function defaultHeaders(
+  ctx: HandlerContext,
+  options?: DefaultHeadersOptions,
+) {
+  return resHeaders({
+    repoRev:
+      options?.exposeRepoRev === true
+        ? await ctx.hydrator.actor.getRepoRevSafe(ctx.hydrateCtx.viewer)
+        : undefined,
+    labelers:
+      options?.exposeLabelers !== false ? ctx.hydrateCtx.labelers : undefined,
+  })
+}
 
 export type HandlerFactoryOptions = {
   /**
@@ -140,15 +166,9 @@ export class AppContext {
     return parsed
   }
 
-  async createRequestContent(
-    req: IncomingMessage,
-    res: ServerResponse,
-    vals: HydrateCtxVals,
-  ): Promise<RequestContext> {
+  async createHandlerContext(vals: HydrateCtxVals): Promise<HandlerContext> {
     const { dataplane, hydrator } = this.dataplaneForViewer(vals.viewer)
     return {
-      req,
-      res,
       hydrateCtx: await hydrator.createContext(vals),
       hydrator,
       dataplane,
@@ -160,32 +180,40 @@ export class AppContext {
     }
   }
 
-  createHandler<Auth extends Creds, Params, View>(
-    view: (ctx: RequestContext, params: Params) => View | PromiseLike<View>,
-    options: DefaultHeadersOptions & HandlerFactoryOptions = {},
-  ) {
-    const { allowIncludeTakedowns = false, allowInclude3pBlocks = false } =
-      options
-
-    return async ({
-      auth,
-      params,
-      req,
-      res,
-    }: {
-      auth: Auth
-      params: Params
+  createHandler<
+    ReqCtx extends {
+      auth: Creds
+      params: unknown
       req: IncomingMessage
       res: ServerResponse
-    }): Promise<{
-      body: View
+    },
+    Output extends void | {
+      body: unknown
       headers?: Record<string, string>
       encoding: 'application/json'
-    }> => {
-      const creds = this.authVerifier.parseCreds(auth)
-      const labelers = this.reqLabelers(req)
+    },
+  >(
+    view: (ctx: HandlerContext, reqCtx: ReqCtx) => Awaitable<Output>,
+    options: DefaultHeadersOptions &
+      HandlerFactoryOptions & {
+        onPipelineError?: (
+          ctx: HandlerContext,
+          reqCtx: ReqCtx,
+          err: unknown,
+        ) => Promise<Output>
+      } = {},
+  ) {
+    const {
+      allowIncludeTakedowns = false,
+      allowInclude3pBlocks = false,
+      onPipelineError,
+    } = options
 
-      const ctx = await this.createRequestContent(req, res, {
+    return async (reqCtx: ReqCtx): Promise<Output> => {
+      const creds = this.authVerifier.parseCreds(reqCtx.auth)
+      const labelers = this.reqLabelers(reqCtx.req)
+
+      const ctx = await this.createHandlerContext({
         viewer: creds.viewer,
         labelers,
         includeTakedowns: allowIncludeTakedowns
@@ -196,13 +224,20 @@ export class AppContext {
           : undefined,
       })
 
-      const body = await view(ctx, params)
+      const result = await Promise.resolve(view(ctx, reqCtx)).catch(
+        onPipelineError ? (err) => onPipelineError(ctx, reqCtx, err) : null,
+      )
+
+      if (!result) return undefined as Output
 
       return {
-        encoding: 'application/json',
-        headers: await defaultHeaders(ctx, options),
-        body,
-      }
+        encoding: result.encoding,
+        headers: {
+          ...result.headers,
+          ...(await defaultHeaders(ctx, options)),
+        },
+        body: result.body,
+      } as Output
     }
   }
 
@@ -211,7 +246,8 @@ export class AppContext {
     hydrationFn: HydrationFn<Skeleton, Params>,
     rulesFn: RulesFn<Skeleton, Params>,
     presentationFn: PresentationFn<Skeleton, Params, View>,
-    options: PipelineOptions<Skeleton, Params, View> &
+    options: PipelineOptions<Skeleton, Params> &
+      DefaultHeadersOptions &
       HandlerFactoryOptions & {
         /**
          * Parse incoming headers and expose the result to the pipeline
@@ -219,62 +255,25 @@ export class AppContext {
         parseHeaders?: (
           req: IncomingMessage,
         ) => Record<string, undefined | string>
+
+        onPipelineError?: (
+          ctx: HandlerContext,
+          reqCtx: {
+            auth: Auth
+            params: Params
+            req: IncomingMessage
+            res: ServerResponse
+          },
+          err: unknown,
+        ) => Promise<{
+          body: View
+          headers?: Record<string, string>
+          encoding: 'application/json'
+        }>
       } = {},
   ) {
-    const {
-      allowIncludeTakedowns = false,
-      allowInclude3pBlocks = false,
-      parseHeaders,
-    } = options
+    const { parseHeaders } = options
 
-    const pipeline = this.createPipeline(
-      skeletonFn,
-      hydrationFn,
-      rulesFn,
-      presentationFn,
-      options,
-    )
-
-    return async ({
-      auth,
-      params,
-      req,
-    }: {
-      auth: Auth
-      params: Params
-      req: IncomingMessage
-    }): Promise<{
-      body: View
-      headers?: Record<string, string>
-      encoding: 'application/json'
-    }> => {
-      const creds = this.authVerifier.parseCreds(auth)
-      const labelers = this.reqLabelers(req)
-
-      const vals: HydrateCtxVals = {
-        viewer: creds.viewer,
-        labelers,
-        includeTakedowns: allowIncludeTakedowns
-          ? creds.includeTakedowns
-          : undefined,
-        include3pBlocks: allowInclude3pBlocks
-          ? creds.include3pBlocks
-          : undefined,
-      }
-
-      const headers = parseHeaders && noUndefinedVals(parseHeaders(req))
-
-      return pipeline(vals, params, headers)
-    }
-  }
-
-  createPipeline<Skeleton, Params, View>(
-    skeletonFn: SkeletonFn<Skeleton, Params>,
-    hydrationFn: HydrationFn<Skeleton, Params>,
-    rulesFn: RulesFn<Skeleton, Params>,
-    presentationFn: PresentationFn<Skeleton, Params, View>,
-    options?: PipelineOptions<Skeleton, Params, View>,
-  ) {
     const pipeline = createPipeline(
       skeletonFn,
       hydrationFn,
@@ -283,20 +282,23 @@ export class AppContext {
       options,
     )
 
-    return async (
-      req: IncomingMessage,
-      res: ServerResponse,
-      vals: HydrateCtxVals,
-      params: Params,
-      headers?: Record<string, string>,
-    ): Promise<{
-      body: View
-      headers?: Record<string, string>
-      encoding: 'application/json'
-    }> => {
-      const ctx = await this.createRequestContent(req, res, vals)
-      return pipeline(ctx, params, headers)
-    }
+    return this.createHandler(
+      (
+        ctx,
+        reqCtx: {
+          auth: Auth
+          params: Params
+          req: IncomingMessage
+          res: ServerResponse
+        },
+      ) => {
+        return pipeline(
+          ctx,
+          reqCtx.params,
+          parseHeaders && noUndefinedVals(parseHeaders(reqCtx.req)),
+        )
+      },
+    )
   }
 }
 

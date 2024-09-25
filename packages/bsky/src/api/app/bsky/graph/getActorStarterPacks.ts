@@ -21,26 +21,18 @@ type Skeleton = {
 }
 
 export default function (server: Server, ctx: AppContext) {
-  const getActorStarterPacks = ctx.createPipeline(
-    skeleton,
-    hydration,
-    noRules,
-    presentation,
-  )
-
   server.app.bsky.graph.getActorStarterPacks({
     auth: ctx.authVerifier.standardOptional,
-    handler: async ({ params, auth, req }) => {
-      const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
-      const labelers = ctx.reqLabelers(req)
-
-      return getActorStarterPacks(
-        { viewer, labelers, includeTakedowns },
-        params,
-      )
-    },
+    handler: ctx.createPipelineHandler(
+      skeleton,
+      hydration,
+      noRules,
+      presentation,
+      { allowIncludeTakedowns: true },
+    ),
   })
 }
+
 const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({ ctx, params }) => {
   const [did] = await ctx.hydrator.actor.getDids([params.actor])
   if (!did) {

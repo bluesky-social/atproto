@@ -6,17 +6,8 @@ import { OutputSchema } from '../../../../lexicon/types/com/atproto/admin/getSub
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getSubjectStatus({
     auth: ctx.authVerifier.roleOrModService,
-    handler: async ({ auth, params, req }) => {
+    handler: ctx.createHandler(async ({ dataplane, hydrator }, { params }) => {
       const { did, uri, blob } = params
-
-      const labelers = ctx.reqLabelers(req)
-      const viewer =
-        auth.credentials.type === 'mod_service' ? auth.credentials.iss : null
-
-      const { dataplane, hydrator } = await ctx.createRequestContent({
-        viewer,
-        labelers,
-      })
 
       let body: OutputSchema | null = null
       if (blob) {
@@ -79,6 +70,6 @@ export default function (server: Server, ctx: AppContext) {
         encoding: 'application/json',
         body,
       }
-    },
+    }),
   })
 }

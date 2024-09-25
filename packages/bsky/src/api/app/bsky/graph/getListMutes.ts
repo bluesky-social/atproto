@@ -21,21 +21,14 @@ type Skeleton = {
 }
 
 export default function (server: Server, ctx: AppContext) {
-  const getListMutes = ctx.createPipeline(
-    skeleton,
-    hydration,
-    noRules,
-    presentation,
-  )
-
   server.app.bsky.graph.getListMutes({
     auth: ctx.authVerifier.standard,
-    handler: async ({ params, auth, req }) => {
-      const viewer = auth.credentials.iss
-      const labelers = ctx.reqLabelers(req)
-
-      return getListMutes({ labelers, viewer }, params)
-    },
+    handler: ctx.createPipelineHandler(
+      skeleton,
+      hydration,
+      noRules,
+      presentation,
+    ),
   })
 }
 

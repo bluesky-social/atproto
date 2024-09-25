@@ -22,21 +22,14 @@ type Skeleton = {
 }
 
 export default function (server: Server, ctx: AppContext) {
-  const searchPosts = ctx.createPipeline(
-    skeleton,
-    hydration,
-    noBlocks,
-    presentation,
-  )
-
   server.app.bsky.feed.searchPosts({
     auth: ctx.authVerifier.standardOptional,
-    handler: async ({ auth, params, req }) => {
-      const viewer = auth.credentials.iss
-      const labelers = ctx.reqLabelers(req)
-
-      return searchPosts({ labelers, viewer }, params)
-    },
+    handler: ctx.createPipelineHandler(
+      skeleton,
+      hydration,
+      noBlocks,
+      presentation,
+    ),
   })
 }
 const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({ ctx, params }) => {

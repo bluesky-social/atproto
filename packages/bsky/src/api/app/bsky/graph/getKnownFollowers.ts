@@ -21,21 +21,14 @@ type Skeleton = {
 }
 
 export default function (server: Server, ctx: AppContext) {
-  const getKnownFollowers = ctx.createPipeline(
-    skeleton,
-    hydration,
-    noBlocks,
-    presentation,
-  )
-
   server.app.bsky.graph.getKnownFollowers({
     auth: ctx.authVerifier.standard,
-    handler: async ({ params, auth, req }) => {
-      const viewer = auth.credentials.iss
-      const labelers = ctx.reqLabelers(req)
-
-      return getKnownFollowers({ labelers, viewer }, params)
-    },
+    handler: ctx.createPipelineHandler(
+      skeleton,
+      hydration,
+      noBlocks,
+      presentation,
+    ),
   })
 }
 

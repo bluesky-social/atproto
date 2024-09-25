@@ -18,20 +18,15 @@ type Skeleton = {
 }
 
 export default function (server: Server, ctx: AppContext) {
-  const getStarterPack = ctx.createPipeline(
-    skeleton,
-    hydration,
-    noRules,
-    presentation,
-  )
   server.app.bsky.graph.getStarterPack({
     auth: ctx.authVerifier.standardOptional,
-    handler: async ({ params, auth, req }) => {
-      const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
-      const labelers = ctx.reqLabelers(req)
-
-      return getStarterPack({ labelers, viewer, includeTakedowns }, params)
-    },
+    handler: ctx.createPipelineHandler(
+      skeleton,
+      hydration,
+      noRules,
+      presentation,
+      { allowIncludeTakedowns: true },
+    ),
   })
 }
 

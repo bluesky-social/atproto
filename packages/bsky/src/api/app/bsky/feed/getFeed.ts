@@ -25,7 +25,7 @@ import {
 import {
   HydrationFn,
   PresentationFn,
-  RequestContext,
+  HandlerContext,
   RulesFn,
   SkeletonFn,
 } from '../../../../pipeline.js'
@@ -147,15 +147,15 @@ const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
     }
   }).slice(0, params.limit)
   return {
+    feed,
     // @NOTE feed cursors should not be affected by appview swap
     cursor: skeleton.cursor,
-    feed,
     ...skeleton.passthrough,
   }
 }
 
 async function skeletonFromFeedGen(
-  ctx: RequestContext,
+  ctx: HandlerContext,
   params: QueryParams,
   headers?: Record<string, string>,
 ): Promise<AlgoResponse> {

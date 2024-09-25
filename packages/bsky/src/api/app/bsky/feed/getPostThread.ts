@@ -8,7 +8,6 @@ import {
   QueryParams,
 } from '../../../../lexicon/types/app/bsky/feed/getPostThread.js'
 import {
-  createPipeline,
   HydrationFn,
   noRules,
   PresentationFn,
@@ -32,8 +31,10 @@ export default function (server: Server, ctx: AppContext) {
       presentation,
       {
         exposeRepoRev: true,
-        onPipelineError: async ({ res, hydrator, hydrateCtx }, err) => {
-          const repoRev = await hydrator.actor.getRepoRevSafe(hydrateCtx.viewer)
+        onPipelineError: async (ctx, { res }, err) => {
+          const repoRev = await ctx.hydrator.actor.getRepoRevSafe(
+            ctx.hydrateCtx.viewer,
+          )
           if (repoRev) {
             res.setHeader(ATPROTO_REPO_REV, repoRev)
           }

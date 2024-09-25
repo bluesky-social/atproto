@@ -13,7 +13,7 @@ import { GetIdentityByDidResponse } from '../../../../proto/bsky_pb.js'
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getFeedGenerator({
     auth: ctx.authVerifier.standardOptional,
-    handler: ctx.createHandler(async (ctx, params) => {
+    handler: ctx.createHandler(async (ctx, { params }) => {
       const { feed } = params
 
       const hydration = await ctx.hydrator.hydrateFeedGens(
@@ -55,10 +55,13 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       return {
-        view: feedView,
-        // @TODO temporarily hard-coding to true while external feedgens catch-up on describeFeedGenerator
-        isOnline: true,
-        isValid: true,
+        encoding: 'application/json',
+        body: {
+          view: feedView,
+          // @TODO temporarily hard-coding to true while external feedgens catch-up on describeFeedGenerator
+          isOnline: true,
+          isValid: true,
+        },
       }
     }),
   })

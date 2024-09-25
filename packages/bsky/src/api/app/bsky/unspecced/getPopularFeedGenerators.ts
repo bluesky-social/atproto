@@ -10,9 +10,12 @@ import { clearlyBadCursor } from '../../../util'
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.unspecced.getPopularFeedGenerators({
     auth: ctx.authVerifier.standardOptional,
-    handler: ctx.createHandler(async (ctx, params) => {
+    handler: ctx.createHandler(async (ctx, { params }) => {
       if (clearlyBadCursor(params.cursor)) {
-        return { feeds: [] }
+        return {
+          encoding: 'application/json',
+          body: { feeds: [] },
+        }
       }
 
       let uris: string[]
@@ -41,8 +44,11 @@ export default function (server: Server, ctx: AppContext) {
       )
 
       return {
-        feeds: feedViews,
-        cursor,
+        encoding: 'application/json',
+        body: {
+          feeds: feedViews,
+          cursor,
+        },
       }
     }),
   })

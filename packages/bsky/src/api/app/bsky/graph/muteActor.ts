@@ -6,23 +6,16 @@ import { MuteOperation_Type } from '../../../../proto/bsync_pb'
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.muteActor({
     auth: ctx.authVerifier.standard,
-    handler: async ({ req, res, auth, input }) => {
+    handler: ctx.createHandler(async ({ hydrator, hydrateCtx }, { input }) => {
       const { actor } = input.body
-      const viewer = auth.credentials.iss
-      const labelers = ctx.reqLabelers(req)
-
-      const { hydrator } = await ctx.createRequestContent(req, res, {
-        viewer,
-        labelers,
-      })
 
       const [did] = await hydrator.actor.getDids([actor])
       if (!did) throw new InvalidRequestError('Actor not found')
       await ctx.bsyncClient.addMuteOperation({
         type: MuteOperation_Type.ADD,
-        actorDid: viewer,
+        actorDid: hydrateCtx.viewer ?? undefined,
         subject: did,
       })
-    },
+    }),
   })
 }

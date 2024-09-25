@@ -21,21 +21,15 @@ type Skeleton = {
 }
 
 export default function (server: Server, ctx: AppContext) {
-  const getLists = ctx.createPipeline(
-    skeleton,
-    hydration,
-    noReferenceLists,
-    presentation,
-  )
-
   server.app.bsky.graph.getLists({
     auth: ctx.authVerifier.optionalStandardOrRole,
-    handler: async ({ params, auth, req }) => {
-      const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
-      const labelers = ctx.reqLabelers(req)
-
-      return getLists({ viewer, labelers, includeTakedowns }, params)
-    },
+    handler: ctx.createPipelineHandler(
+      skeleton,
+      hydration,
+      noReferenceLists,
+      presentation,
+      { allowIncludeTakedowns: true },
+    ),
   })
 }
 

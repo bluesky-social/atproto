@@ -6,42 +6,37 @@ import { INVALID_HANDLE } from '@atproto/syntax'
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getAccountInfos({
     auth: ctx.authVerifier.optionalStandardOrRole,
-    handler: async ({ req, auth, params }) => {
-      const { dids } = params
-      const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
+    handler: ctx.createHandler(
+      async (ctx, { params }) => {
+        const { dids } = params
 
-      const labelers = ctx.reqLabelers(req)
+        const actors = await ctx.hydrator.actor.getActors(dids, true)
 
-      const { hydrator } = await ctx.createRequestContent({
-        viewer,
-        labelers,
-      })
+        const infos = mapDefined(dids, (did) => {
+          const info = actors.get(did)
+          if (!info) return
+          if (info.takedownRef && !ctx.hydrateCtx.includeTakedowns) return
+          const profileRecord =
+            !info.profileTakedownRef || ctx.hydrateCtx.includeTakedowns
+              ? info.profile
+              : undefined
 
-      const actors = await hydrator.actor.getActors(dids, true)
-
-      const infos = mapDefined(dids, (did) => {
-        const info = actors.get(did)
-        if (!info) return
-        if (info.takedownRef && !includeTakedowns) return
-        const profileRecord =
-          !info.profileTakedownRef || includeTakedowns
-            ? info.profile
-            : undefined
+          return {
+            did,
+            handle: info.handle ?? INVALID_HANDLE,
+            relatedRecords: profileRecord ? [profileRecord] : undefined,
+            indexedAt: (info.sortedAt ?? new Date(0)).toISOString(),
+          }
+        })
 
         return {
-          did,
-          handle: info.handle ?? INVALID_HANDLE,
-          relatedRecords: profileRecord ? [profileRecord] : undefined,
-          indexedAt: (info.sortedAt ?? new Date(0)).toISOString(),
+          encoding: 'application/json',
+          body: {
+            infos,
+          },
         }
-      })
-
-      return {
-        encoding: 'application/json',
-        body: {
-          infos,
-        },
-      }
-    },
+      },
+      { allowIncludeTakedowns: true },
+    ),
   })
 }

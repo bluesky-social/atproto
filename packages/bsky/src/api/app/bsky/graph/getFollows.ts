@@ -23,22 +23,15 @@ type Skeleton = {
 }
 
 export default function (server: Server, ctx: AppContext) {
-  const getFollows = ctx.createPipeline(
-    skeleton,
-    hydration,
-    noBlocks,
-    presentation,
-  )
-
   server.app.bsky.graph.getFollows({
     auth: ctx.authVerifier.optionalStandardOrRole,
-    handler: async ({ params, auth, req }) => {
-      const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
-      const labelers = ctx.reqLabelers(req)
-
-      // @TODO ensure canViewTakedowns gets threaded through and applied properly
-      return getFollows({ labelers, viewer, includeTakedowns }, params)
-    },
+    handler: ctx.createPipelineHandler(
+      skeleton,
+      hydration,
+      noBlocks,
+      presentation,
+      { allowIncludeTakedowns: true },
+    ),
   })
 }
 

@@ -5,27 +5,21 @@ import AppContext from '../../../../context'
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.unspecced.getTaggedSuggestions({
     auth: ctx.authVerifier.standardOptional,
-    handler: async ({ auth, req }) => {
-      const viewer = auth.credentials.iss
-      const labelers = ctx.reqLabelers(req)
+    handler: ctx.createHandler(async (ctx) => {
+      const res = await ctx.dataplane.getSuggestedEntities({})
 
-      const { dataplane } = await ctx.createRequestContent({
-        viewer,
-        labelers,
-      })
-
-      const res = await dataplane.getSuggestedEntities({})
       const suggestions = res.entities.map((entity) => ({
         tag: entity.tag,
         subjectType: entity.subjectType,
         subject: entity.subject,
       }))
+
       return {
         encoding: 'application/json',
         body: {
           suggestions,
         },
       }
-    },
+    }),
   })
 }

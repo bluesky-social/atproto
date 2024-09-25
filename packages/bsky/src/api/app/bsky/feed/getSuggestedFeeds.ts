@@ -6,7 +6,7 @@ import { Server } from '../../../../lexicon'
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getSuggestedFeeds({
     auth: ctx.authVerifier.standardOptional,
-    handler: ctx.createHandler(async (ctx, params) => {
+    handler: ctx.createHandler(async (ctx, { params }) => {
       // @NOTE no need to coordinate the cursor for appview swap, as v1 doesn't use the cursor
       const suggestedRes = await ctx.dataplane.getSuggestedFeeds({
         actorDid: ctx.hydrateCtx.viewer ?? undefined,
@@ -22,8 +22,11 @@ export default function (server: Server, ctx: AppContext) {
       )
 
       return {
-        feeds: feedViews,
-        cursor: parseString(suggestedRes.cursor),
+        encoding: 'application/json',
+        body: {
+          feeds: feedViews,
+          cursor: parseString(suggestedRes.cursor),
+        },
       }
     }),
   })
