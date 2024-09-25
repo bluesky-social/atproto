@@ -18,21 +18,14 @@ type Skeleton = {
 }
 
 export default function (server: Server, ctx: AppContext) {
-  const getUnreadCount = ctx.createPipeline(
-    skeleton,
-    hydration,
-    noRules,
-    presentation,
-  )
-
   server.app.bsky.notification.getUnreadCount({
     auth: ctx.authVerifier.standard,
-    handler: async ({ auth, params, req }) => {
-      const viewer = auth.credentials.iss
-      const labelers = ctx.reqLabelers(req)
-
-      return getUnreadCount({ viewer, labelers }, params)
-    },
+    handler: ctx.createPipelineHandler(
+      skeleton,
+      hydration,
+      noRules,
+      presentation,
+    ),
   })
 }
 

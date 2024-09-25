@@ -1,5 +1,5 @@
 import { AppBskyFeedGetFeedSkeleton, AtpAgent } from '@atproto/api'
-import { mapDefined, noUndefinedVals } from '@atproto/common'
+import { mapDefined } from '@atproto/common'
 import { ResponseType, XRPCError } from '@atproto/xrpc'
 import {
   InvalidRequestError,
@@ -23,12 +23,11 @@ import {
   QueryParams,
 } from '../../../../lexicon/types/app/bsky/feed/getFeed.js'
 import {
-  RequestContext,
   HydrationFn,
   PresentationFn,
+  RequestContext,
   RulesFn,
   SkeletonFn,
-  HeadersFn,
 } from '../../../../pipeline.js'
 import { GetIdentityByDidResponse } from '../../../../proto/bsky_pb.js'
 
@@ -42,14 +41,6 @@ type Skeleton = {
 }
 
 export default function (server: Server, ctx: AppContext) {
-  const getFeed = ctx.createPipeline(
-    skeleton,
-    hydration,
-    noBlocksOrMutes,
-    presentation,
-    { extraHeaders },
-  )
-
   server.app.bsky.feed.getFeed({
     auth: ctx.authVerifier.standardOptionalParameterized({
       lxmCheck: (method) => {
@@ -62,19 +53,28 @@ export default function (server: Server, ctx: AppContext) {
       },
       skipAudCheck: true,
     }),
-    handler: async ({ params, auth, req }) => {
-      const viewer = auth.credentials.iss
-      const labelers = ctx.reqLabelers(req)
-      const headers = noUndefinedVals({
-        authorization: req.headers['authorization'],
-        'accept-language': req.headers['accept-language'],
-        'x-bsky-topics': Array.isArray(req.headers['x-bsky-topics'])
-          ? req.headers['x-bsky-topics'].join(',')
-          : req.headers['x-bsky-topics'],
-      })
-
-      return getFeed({ labelers, viewer }, params, headers)
-    },
+    handler: ctx.createPipelineHandler(
+      skeleton,
+      hydration,
+      noBlocksOrMutes,
+      presentation,
+      {
+        parseHeaders: (req) => ({
+          authorization: req.headers['authorization'],
+          'accept-language': req.headers['accept-language'],
+          'x-bsky-topics': Array.isArray(req.headers['x-bsky-topics'])
+            ? req.headers['x-bsky-topics'].join(',')
+            : req.headers['x-bsky-topics'],
+        }),
+        extraHeaders: ({ skeleton }) => ({
+          ...skeleton.resHeaders,
+          'server-timing': serverTimingHeader([
+            skeleton.timerSkele,
+            skeleton.timerHydr,
+          ]),
+        }),
+      },
+    ),
   })
 }
 
@@ -151,16 +151,6 @@ const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
     cursor: skeleton.cursor,
     feed,
     ...skeleton.passthrough,
-  }
-}
-
-const extraHeaders: HeadersFn<Skeleton, QueryParams> = ({ skeleton }) => {
-  return {
-    ...skeleton.resHeaders,
-    'server-timing': serverTimingHeader([
-      skeleton.timerSkele,
-      skeleton.timerHydr,
-    ]),
   }
 }
 

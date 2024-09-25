@@ -16,22 +16,18 @@ import {
 type Skeleton = { did: string }
 
 export default function (server: Server, ctx: AppContext) {
-  const getProfile = ctx.createPipeline(
-    skeleton,
-    hydration,
-    noRules,
-    presentation,
-    { exposeRepoRev: true },
-  )
-
   server.app.bsky.actor.getProfile({
     auth: ctx.authVerifier.optionalStandardOrRole,
-    handler: async ({ auth, params, req }) => {
-      const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
-      const labelers = ctx.reqLabelers(req)
-
-      return getProfile({ labelers, viewer, includeTakedowns }, params)
-    },
+    handler: ctx.createPipelineHandler(
+      skeleton,
+      hydration,
+      noRules,
+      presentation,
+      {
+        exposeRepoRev: true,
+        allowIncludeTakedowns: true,
+      },
+    ),
   })
 }
 

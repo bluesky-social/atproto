@@ -19,21 +19,14 @@ type Skeleton = {
 }
 
 export default function (server: Server, ctx: AppContext) {
-  const searchActorsTypeahead = ctx.createPipeline(
-    skeleton,
-    hydration,
-    noBlocks,
-    presentation,
-  )
-
   server.app.bsky.actor.searchActorsTypeahead({
     auth: ctx.authVerifier.standardOptional,
-    handler: async ({ params, auth, req }) => {
-      const viewer = auth.credentials.iss
-      const labelers = ctx.reqLabelers(req)
-
-      return searchActorsTypeahead({ labelers, viewer }, params)
-    },
+    handler: ctx.createPipelineHandler(
+      skeleton,
+      hydration,
+      noBlocks,
+      presentation,
+    ),
   })
 }
 

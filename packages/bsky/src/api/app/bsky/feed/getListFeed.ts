@@ -24,21 +24,15 @@ type Skeleton = {
 }
 
 export default function (server: Server, ctx: AppContext) {
-  const getListFeed = ctx.createPipeline(
-    skeleton,
-    hydration,
-    noBlocksOrMutes,
-    presentation,
-    { exposeRepoRev: true },
-  )
   server.app.bsky.feed.getListFeed({
     auth: ctx.authVerifier.standardOptional,
-    handler: async ({ params, auth, req }) => {
-      const viewer = auth.credentials.iss
-      const labelers = ctx.reqLabelers(req)
-
-      return getListFeed({ labelers, viewer }, params)
-    },
+    handler: ctx.createPipelineHandler(
+      skeleton,
+      hydration,
+      noBlocksOrMutes,
+      presentation,
+      { exposeRepoRev: true },
+    ),
   })
 }
 

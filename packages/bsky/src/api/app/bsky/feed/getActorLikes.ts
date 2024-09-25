@@ -24,21 +24,15 @@ type Skeleton = {
 }
 
 export default function (server: Server, ctx: AppContext) {
-  const getActorLikes = ctx.createPipeline(
-    skeleton,
-    hydration,
-    noPostBlocks,
-    presentation,
-    { exposeRepoRev: true },
-  )
   server.app.bsky.feed.getActorLikes({
     auth: ctx.authVerifier.standardOptional,
-    handler: async ({ params, auth, req }) => {
-      const viewer = auth.credentials.iss
-      const labelers = ctx.reqLabelers(req)
-
-      return getActorLikes({ labelers, viewer }, params)
-    },
+    handler: ctx.createPipelineHandler(
+      skeleton,
+      hydration,
+      noPostBlocks,
+      presentation,
+      { exposeRepoRev: true },
+    ),
   })
 }
 

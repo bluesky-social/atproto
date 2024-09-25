@@ -3,7 +3,8 @@ import { Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
 import * as plc from '@did-plc/lib'
 
-import { IncomingMessage } from 'http'
+import { noUndefinedVals } from '@atproto/common'
+import { IncomingMessage, ServerResponse } from 'http'
 import { AuthVerifier, Creds } from './auth-verifier.js'
 import { BsyncClient } from './bsync.js'
 import { ServerConfig } from './config.js'
@@ -29,6 +30,20 @@ import {
   parseLabelerHeader,
 } from './util.js'
 import { Views } from './views/index.js'
+
+export type HandlerFactoryOptions = {
+  /**
+   * Use the credential's "includeTakedowns" value when building the
+   * {@link HydrateCtxVals} (use to build the {@link HydrateCtx}).
+   */
+  allowIncludeTakedowns?: boolean
+
+  /**
+   * Use the credential's "include3pBlocks" value when building the
+   * {@link HydrateCtxVals} (use to build the {@link HydrateCtx}).
+   */
+  allowInclude3pBlocks?: boolean
+}
 
 export class AppContext {
   constructor(
@@ -125,9 +140,15 @@ export class AppContext {
     return parsed
   }
 
-  async createRequestContent(vals: HydrateCtxVals): Promise<RequestContext> {
+  async createRequestContent(
+    req: IncomingMessage,
+    res: ServerResponse,
+    vals: HydrateCtxVals,
+  ): Promise<RequestContext> {
     const { dataplane, hydrator } = this.dataplaneForViewer(vals.viewer)
     return {
+      req,
+      res,
       hydrateCtx: await hydrator.createContext(vals),
       hydrator,
       dataplane,
@@ -135,32 +156,44 @@ export class AppContext {
       suggestionsAgent: this.suggestionsAgent,
       searchAgent: this.searchAgent,
       featureGates: this.featureGates,
+      bsyncClient: this.bsyncClient,
     }
   }
 
   createHandler<Auth extends Creds, Params, View>(
     view: (ctx: RequestContext, params: Params) => View | PromiseLike<View>,
-    options?: DefaultHeadersOptions,
+    options: DefaultHeadersOptions & HandlerFactoryOptions = {},
   ) {
+    const { allowIncludeTakedowns = false, allowInclude3pBlocks = false } =
+      options
+
     return async ({
       auth,
       params,
       req,
+      res,
     }: {
       auth: Auth
       params: Params
       req: IncomingMessage
+      res: ServerResponse
     }): Promise<{
       body: View
       headers?: Record<string, string>
       encoding: 'application/json'
     }> => {
-      const viewer = auth.credentials.iss
+      const creds = this.authVerifier.parseCreds(auth)
       const labelers = this.reqLabelers(req)
 
-      const ctx = await this.createRequestContent({
-        viewer,
+      const ctx = await this.createRequestContent(req, res, {
+        viewer: creds.viewer,
         labelers,
+        includeTakedowns: allowIncludeTakedowns
+          ? creds.includeTakedowns
+          : undefined,
+        include3pBlocks: allowInclude3pBlocks
+          ? creds.include3pBlocks
+          : undefined,
       })
 
       const body = await view(ctx, params)
@@ -173,13 +206,27 @@ export class AppContext {
     }
   }
 
-  createPipelineHandler<Auth extends Creds, Params, View, Skeleton>(
+  createPipelineHandler<Params, View, Skeleton, Auth extends Creds>(
     skeletonFn: SkeletonFn<Skeleton, Params>,
     hydrationFn: HydrationFn<Skeleton, Params>,
     rulesFn: RulesFn<Skeleton, Params>,
     presentationFn: PresentationFn<Skeleton, Params, View>,
-    options?: PipelineOptions<Skeleton, Params>,
+    options: PipelineOptions<Skeleton, Params, View> &
+      HandlerFactoryOptions & {
+        /**
+         * Parse incoming headers and expose the result to the pipeline
+         */
+        parseHeaders?: (
+          req: IncomingMessage,
+        ) => Record<string, undefined | string>
+      } = {},
   ) {
+    const {
+      allowIncludeTakedowns = false,
+      allowInclude3pBlocks = false,
+      parseHeaders,
+    } = options
+
     const pipeline = this.createPipeline(
       skeletonFn,
       hydrationFn,
@@ -201,10 +248,23 @@ export class AppContext {
       headers?: Record<string, string>
       encoding: 'application/json'
     }> => {
-      const { viewer } = this.authVerifier.parseCreds(auth)
+      const creds = this.authVerifier.parseCreds(auth)
       const labelers = this.reqLabelers(req)
 
-      return pipeline({ viewer, labelers }, params)
+      const vals: HydrateCtxVals = {
+        viewer: creds.viewer,
+        labelers,
+        includeTakedowns: allowIncludeTakedowns
+          ? creds.includeTakedowns
+          : undefined,
+        include3pBlocks: allowInclude3pBlocks
+          ? creds.include3pBlocks
+          : undefined,
+      }
+
+      const headers = parseHeaders && noUndefinedVals(parseHeaders(req))
+
+      return pipeline(vals, params, headers)
     }
   }
 
@@ -213,7 +273,7 @@ export class AppContext {
     hydrationFn: HydrationFn<Skeleton, Params>,
     rulesFn: RulesFn<Skeleton, Params>,
     presentationFn: PresentationFn<Skeleton, Params, View>,
-    options?: PipelineOptions<Skeleton, Params>,
+    options?: PipelineOptions<Skeleton, Params, View>,
   ) {
     const pipeline = createPipeline(
       skeletonFn,
@@ -224,6 +284,8 @@ export class AppContext {
     )
 
     return async (
+      req: IncomingMessage,
+      res: ServerResponse,
       vals: HydrateCtxVals,
       params: Params,
       headers?: Record<string, string>,
@@ -232,7 +294,7 @@ export class AppContext {
       headers?: Record<string, string>
       encoding: 'application/json'
     }> => {
-      const ctx = await this.createRequestContent(vals)
+      const ctx = await this.createRequestContent(req, res, vals)
       return pipeline(ctx, params, headers)
     }
   }

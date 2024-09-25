@@ -20,13 +20,6 @@ type Skeleton = {
 }
 
 export default function (server: Server, ctx: AppContext) {
-  const getPosts = ctx.createPipeline(
-    skeleton,
-    hydration,
-    noBlocks,
-    presentation,
-  )
-
   server.app.bsky.feed.getPosts({
     auth: ctx.authVerifier.standardOptionalParameterized({
       lxmCheck: (method) => {
@@ -36,12 +29,12 @@ export default function (server: Server, ctx: AppContext) {
         )
       },
     }),
-    handler: async ({ params, auth, req }) => {
-      const viewer = auth.credentials.iss
-      const labelers = ctx.reqLabelers(req)
-
-      return getPosts({ labelers, viewer }, params)
-    },
+    handler: ctx.createPipelineHandler(
+      skeleton,
+      hydration,
+      noBlocks,
+      presentation,
+    ),
   })
 }
 

@@ -1,4 +1,4 @@
-import { mapDefined, noUndefinedVals } from '@atproto/common'
+import { mapDefined } from '@atproto/common'
 
 import AppContext from '../../../../context.js'
 import { parseString } from '../../../../hydration/util.js'
@@ -8,7 +8,6 @@ import {
   QueryParams,
 } from '../../../../lexicon/types/app/bsky/actor/getSuggestions.js'
 import {
-  HeadersFn,
   HydrationFn,
   PresentationFn,
   RulesFn,
@@ -22,28 +21,25 @@ type Skeleton = {
 }
 
 export default function (server: Server, ctx: AppContext) {
-  const getSuggestions = ctx.createPipeline(
-    skeleton,
-    hydration,
-    noBlocksOrMutes,
-    presentation,
-    { extraHeaders },
-  )
-
   server.app.bsky.actor.getSuggestions({
     auth: ctx.authVerifier.standardOptional,
-    handler: async ({ params, auth, req }) => {
-      const viewer = auth.credentials.iss
-      const labelers = ctx.reqLabelers(req)
-      const headers = noUndefinedVals({
-        'accept-language': req.headers['accept-language'],
-        'x-bsky-topics': Array.isArray(req.headers['x-bsky-topics'])
-          ? req.headers['x-bsky-topics'].join(',')
-          : req.headers['x-bsky-topics'],
-      })
-
-      return getSuggestions({ viewer, labelers }, params, headers)
-    },
+    handler: ctx.createPipelineHandler(
+      skeleton,
+      hydration,
+      noBlocksOrMutes,
+      presentation,
+      {
+        parseHeaders: (req) => ({
+          'accept-language': req.headers['accept-language'],
+          'x-bsky-topics': Array.isArray(req.headers['x-bsky-topics'])
+            ? req.headers['x-bsky-topics'].join(',')
+            : req.headers['x-bsky-topics'],
+        }),
+        extraHeaders: ({ skeleton }) => ({
+          'content-language': skeleton.resHeaders?.['content-language'],
+        }),
+      },
+    ),
   })
 }
 
@@ -55,7 +51,7 @@ const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({
   const viewer = ctx.hydrateCtx.viewer
   if (ctx.suggestionsAgent) {
     const res =
-      await ctx.suggestionsAgent.api.app.bsky.unspecced.getSuggestionsSkeleton(
+      await ctx.suggestionsAgent.app.bsky.unspecced.getSuggestionsSkeleton(
         {
           viewer: viewer ?? undefined,
           limit: params.limit,
@@ -119,9 +115,4 @@ const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
     actors,
     cursor: skeleton.cursor,
   }
-}
-
-const extraHeaders: HeadersFn<Skeleton, QueryParams> = ({ skeleton }) => {
-  const lang = skeleton.resHeaders?.['content-language']
-  return lang ? ({ 'content-language': lang } as Record<string, string>) : {}
 }

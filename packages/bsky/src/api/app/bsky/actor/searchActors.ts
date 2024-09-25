@@ -21,21 +21,15 @@ type Skeleton = {
 }
 
 export default function (server: Server, ctx: AppContext) {
-  const searchActors = ctx.createPipeline(
-    skeleton,
-    hydration,
-    noBlocks,
-    presentation,
-  )
-
   server.app.bsky.actor.searchActors({
     auth: ctx.authVerifier.standardOptional,
-    handler: async ({ auth, params, req }) => {
-      const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
-      const labelers = ctx.reqLabelers(req)
-
-      return searchActors({ viewer, labelers, includeTakedowns }, params)
-    },
+    handler: ctx.createPipelineHandler(
+      skeleton,
+      hydration,
+      noBlocks,
+      presentation,
+      { allowIncludeTakedowns: true },
+    ),
   })
 }
 

@@ -8,6 +8,7 @@ import {
   QueryParams,
 } from '../../../../lexicon/types/app/bsky/feed/getPostThread.js'
 import {
+  createPipeline,
   HydrationFn,
   noRules,
   PresentationFn,
@@ -22,42 +23,25 @@ type Skeleton = {
 }
 
 export default function (server: Server, ctx: AppContext) {
-  const getPostThread = ctx.createPipeline(
-    skeleton,
-    hydration,
-    noRules, // handled in presentation: 3p block-violating replies are turned to #blockedPost, viewer blocks turned to #notFoundPost.
-    presentation,
-    { exposeRepoRev: true },
-  )
-
   server.app.bsky.feed.getPostThread({
     auth: ctx.authVerifier.optionalStandardOrRole,
-    handler: async ({ params, auth, req, res }) => {
-      const { viewer, includeTakedowns, include3pBlocks } =
-        ctx.authVerifier.parseCreds(auth)
-      const labelers = ctx.reqLabelers(req)
+    handler: ctx.createPipelineHandler(
+      skeleton,
+      hydration,
+      noRules, // handled in presentation: 3p block-violating replies are turned to #blockedPost, viewer blocks turned to #notFoundPost.
+      presentation,
+      {
+        exposeRepoRev: true,
+        onPipelineError: async ({ res, hydrator, hydrateCtx }, err) => {
+          const repoRev = await hydrator.actor.getRepoRevSafe(hydrateCtx.viewer)
+          if (repoRev) {
+            res.setHeader(ATPROTO_REPO_REV, repoRev)
+          }
 
-      try {
-        return await getPostThread(
-          { labelers, viewer, includeTakedowns, include3pBlocks },
-          params,
-        )
-      } catch (err) {
-        const { hydrator } = await ctx.createRequestContent({
-          labelers,
-          viewer,
-          includeTakedowns,
-          include3pBlocks,
-        })
-
-        const repoRev = await hydrator.actor.getRepoRevSafe(viewer)
-        if (repoRev) {
-          res.setHeader(ATPROTO_REPO_REV, repoRev)
-        }
-
-        throw err
-      }
-    },
+          throw err
+        },
+      },
+    ),
   })
 }
 

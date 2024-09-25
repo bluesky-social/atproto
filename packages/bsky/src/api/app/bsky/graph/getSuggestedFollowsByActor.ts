@@ -1,4 +1,4 @@
-import { mapDefined, noUndefinedVals } from '@atproto/common'
+import { mapDefined } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 
 import AppContext from '../../../../context.js'
@@ -8,7 +8,6 @@ import {
   QueryParams,
 } from '../../../../lexicon/types/app/bsky/graph/getSuggestedFollowsByActor.js'
 import {
-  HeadersFn,
   HydrationFn,
   PresentationFn,
   RulesFn,
@@ -22,28 +21,23 @@ type Skeleton = {
 }
 
 export default function (server: Server, ctx: AppContext) {
-  const getSuggestedFollowsByActor = ctx.createPipeline(
-    skeleton,
-    hydration,
-    noBlocksOrMutes,
-    presentation,
-    { extraHeaders },
-  )
-
   server.app.bsky.graph.getSuggestedFollowsByActor({
     auth: ctx.authVerifier.standard,
-    handler: async ({ auth, params, req }) => {
-      const viewer = auth.credentials.iss
-      const labelers = ctx.reqLabelers(req)
-      const headers = noUndefinedVals({
-        'accept-language': req.headers['accept-language'],
-        'x-bsky-topics': Array.isArray(req.headers['x-bsky-topics'])
-          ? req.headers['x-bsky-topics'].join(',')
-          : req.headers['x-bsky-topics'],
-      })
-
-      return getSuggestedFollowsByActor({ labelers, viewer }, params, headers)
-    },
+    handler: ctx.createPipelineHandler(
+      skeleton,
+      hydration,
+      noBlocksOrMutes,
+      presentation,
+      {
+        parseHeaders: (req) => ({
+          'accept-language': req.headers['accept-language'],
+          'x-bsky-topics': Array.isArray(req.headers['x-bsky-topics'])
+            ? req.headers['x-bsky-topics'].join(',')
+            : req.headers['x-bsky-topics'],
+        }),
+        extraHeaders: ({ skeleton: { headers } }) => headers ?? {},
+      },
+    ),
   })
 }
 
@@ -118,9 +112,4 @@ const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
     isFallback: skeleton.isFallback,
     suggestions,
   }
-}
-
-const extraHeaders: HeadersFn<Skeleton, QueryParams> = ({ skeleton }) => {
-  const lang = skeleton.headers?.['content-language']
-  return lang ? ({ 'content-language': lang } as Record<string, string>) : {}
 }
