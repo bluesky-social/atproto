@@ -27,6 +27,7 @@ import { FeatureGates } from './feature-gates'
 import { VideoUriBuilder } from './views/util'
 
 export * from './data-plane'
+export * from './lexicon';
 export type { ServerConfigValues } from './config'
 export { ServerConfig } from './config'
 export { Database } from './data-plane/server/db'
