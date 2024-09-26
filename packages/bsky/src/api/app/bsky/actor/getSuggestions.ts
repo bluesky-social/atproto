@@ -1,19 +1,19 @@
 import { mapDefined } from '@atproto/common'
 import { HeadersMap } from '@atproto/xrpc'
 
-import AppContext from '../../../../context.js'
-import { parseString } from '../../../../hydration/util.js'
-import { Server } from '../../../../lexicon/index.js'
+import AppContext from '../../../../context'
+import { parseString } from '../../../../hydration/util'
+import { Server } from '../../../../lexicon/index'
 import {
   OutputSchema,
   QueryParams,
-} from '../../../../lexicon/types/app/bsky/actor/getSuggestions.js'
+} from '../../../../lexicon/types/app/bsky/actor/getSuggestions'
 import {
   HydrationFn,
   PresentationFn,
   RulesFn,
   SkeletonFn,
-} from '../../../../pipeline.js'
+} from '../../../../pipeline'
 
 type Skeleton = {
   dids: string[]

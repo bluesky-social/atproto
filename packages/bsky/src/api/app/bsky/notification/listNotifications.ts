@@ -1,22 +1,22 @@
 import { mapDefined } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 
-import AppContext from '../../../../context.js'
-import { Server } from '../../../../lexicon/index.js'
-import { isRecord as isPostRecord } from '../../../../lexicon/types/app/bsky/feed/post.js'
+import AppContext from '../../../../context'
+import { Server } from '../../../../lexicon/index'
+import { isRecord as isPostRecord } from '../../../../lexicon/types/app/bsky/feed/post'
 import {
   OutputSchema,
   QueryParams,
-} from '../../../../lexicon/types/app/bsky/notification/listNotifications.js'
+} from '../../../../lexicon/types/app/bsky/notification/listNotifications'
 import {
   HydrationFn,
   PresentationFn,
   RulesFn,
   SkeletonFn,
-} from '../../../../pipeline.js'
-import { Notification } from '../../../../proto/bsky_pb.js'
-import { uriToDid as didFromUri } from '../../../../util/uris.js'
-import { clearlyBadCursor } from '../../../util.js'
+} from '../../../../pipeline'
+import { Notification } from '../../../../proto/bsky_pb'
+import { uriToDid as didFromUri } from '../../../../util/uris'
+import { clearlyBadCursor } from '../../../util'
 
 type Skeleton = {
   notifs: Notification[]

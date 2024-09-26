@@ -1,21 +1,21 @@
 import { mapDefined } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 
-import AppContext from '../../../../context.js'
-import { mergeStates } from '../../../../hydration/hydrator.js'
-import { Server } from '../../../../lexicon/index.js'
+import AppContext from '../../../../context'
+import { mergeStates } from '../../../../hydration/hydrator'
+import { Server } from '../../../../lexicon/index'
 import {
   OutputSchema,
   QueryParams,
-} from '../../../../lexicon/types/app/bsky/graph/getFollowers.js'
+} from '../../../../lexicon/types/app/bsky/graph/getFollowers'
 import {
   HydrationFn,
   PresentationFn,
   RulesFn,
   SkeletonFn,
-} from '../../../../pipeline.js'
-import { uriToDid as didFromUri } from '../../../../util/uris.js'
-import { clearlyBadCursor } from '../../../util.js'
+} from '../../../../pipeline'
+import { uriToDid as didFromUri } from '../../../../util/uris'
+import { clearlyBadCursor } from '../../../util'
 
 type Skeleton = {
   subjectDid: string

@@ -8,28 +8,28 @@ import {
   serverTimingHeader,
 } from '@atproto/xrpc-server'
 
-import AppContext from '../../../../context.js'
+import AppContext from '../../../../context'
 import {
   Code,
   getServiceEndpoint,
   isDataplaneError,
   unpackIdentityServices,
-} from '../../../../data-plane/index.js'
-import { FeedItem } from '../../../../hydration/feed.js'
-import { Server } from '../../../../lexicon/index.js'
-import { ids } from '../../../../lexicon/lexicons.js'
+} from '../../../../data-plane/index'
+import { FeedItem } from '../../../../hydration/feed'
+import { Server } from '../../../../lexicon/index'
+import { ids } from '../../../../lexicon/lexicons'
 import {
   OutputSchema,
   QueryParams,
-} from '../../../../lexicon/types/app/bsky/feed/getFeed.js'
+} from '../../../../lexicon/types/app/bsky/feed/getFeed'
 import {
   HydrationFn,
   PresentationFn,
   RulesFn,
   SkeletonFn,
-} from '../../../../pipeline.js'
-import { GetIdentityByDidResponse } from '../../../../proto/bsky_pb.js'
-import { HydrateCtx } from '../../../../hydration/hydrate-ctx.js'
+} from '../../../../pipeline'
+import { GetIdentityByDidResponse } from '../../../../proto/bsky_pb'
+import { HydrateCtx } from '../../../../hydration/hydrate-ctx'
 
 type Skeleton = {
   items: AlgoResponseItem[]

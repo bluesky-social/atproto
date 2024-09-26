@@ -1,22 +1,22 @@
 import { mapDefined } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 
-import AppContext from '../../../../context.js'
-import { mergeManyStates } from '../../../../hydration/hydrator.js'
-import { Server } from '../../../../lexicon/index.js'
+import AppContext from '../../../../context'
+import { mergeManyStates } from '../../../../hydration/hydrator'
+import { Server } from '../../../../lexicon/index'
 import {
   OutputSchema,
   QueryParams,
-} from '../../../../lexicon/types/app/bsky/graph/getList.js'
+} from '../../../../lexicon/types/app/bsky/graph/getList'
 import {
   HydrationFn,
   PresentationFn,
   RulesFn,
   SkeletonFn,
-} from '../../../../pipeline.js'
-import { ListItemInfo } from '../../../../proto/bsky_pb.js'
-import { uriToDid as didFromUri } from '../../../../util/uris.js'
-import { clearlyBadCursor } from '../../../util.js'
+} from '../../../../pipeline'
+import { ListItemInfo } from '../../../../proto/bsky_pb'
+import { uriToDid as didFromUri } from '../../../../util/uris'
+import { clearlyBadCursor } from '../../../util'
 
 type Skeleton = {
   listUri: string

@@ -1,21 +1,21 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import AppContext from '../../../../context.js'
-import { Code, isDataplaneError } from '../../../../data-plane/index.js'
-import { Server } from '../../../../lexicon/index.js'
-import { isNotFoundPost } from '../../../../lexicon/types/app/bsky/feed/defs.js'
+import AppContext from '../../../../context'
+import { Code, isDataplaneError } from '../../../../data-plane/index'
+import { Server } from '../../../../lexicon/index'
+import { isNotFoundPost } from '../../../../lexicon/types/app/bsky/feed/defs'
 import {
   OutputSchema,
   QueryParams,
-} from '../../../../lexicon/types/app/bsky/feed/getPostThread.js'
+} from '../../../../lexicon/types/app/bsky/feed/getPostThread'
 import {
   createPipeline,
   HydrationFn,
   noRules,
   PresentationFn,
   SkeletonFn,
-} from '../../../../pipeline.js'
-import { postUriToThreadgateUri } from '../../../../util/uris.js'
-import { ATPROTO_REPO_REV } from '../../../util.js'
+} from '../../../../pipeline'
+import { postUriToThreadgateUri } from '../../../../util/uris'
+import { ATPROTO_REPO_REV } from '../../../util'
 
 type Skeleton = {
   anchor: string

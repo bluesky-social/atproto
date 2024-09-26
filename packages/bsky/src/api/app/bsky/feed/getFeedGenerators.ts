@@ -1,17 +1,17 @@
 import { mapDefined } from '@atproto/common'
 
-import AppContext from '../../../../context.js'
-import { Server } from '../../../../lexicon/index.js'
+import AppContext from '../../../../context'
+import { Server } from '../../../../lexicon/index'
 import {
   OutputSchema,
   QueryParams,
-} from '../../../../lexicon/types/app/bsky/feed/getFeedGenerators.js'
+} from '../../../../lexicon/types/app/bsky/feed/getFeedGenerators'
 import {
   HydrationFn,
   noRules,
   PresentationFn,
   SkeletonFn,
-} from '../../../../pipeline.js'
+} from '../../../../pipeline'
 
 type Skeleton = {
   feedUris: string[]

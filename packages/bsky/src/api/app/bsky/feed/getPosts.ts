@@ -1,19 +1,19 @@
 import { dedupeStrs, mapDefined } from '@atproto/common'
 
-import AppContext from '../../../../context.js'
-import { Server } from '../../../../lexicon/index.js'
-import { ids } from '../../../../lexicon/lexicons.js'
+import AppContext from '../../../../context'
+import { Server } from '../../../../lexicon/index'
+import { ids } from '../../../../lexicon/lexicons'
 import {
   OutputSchema,
   QueryParams,
-} from '../../../../lexicon/types/app/bsky/feed/getPosts.js'
+} from '../../../../lexicon/types/app/bsky/feed/getPosts'
 import {
   HydrationFn,
   PresentationFn,
   RulesFn,
   SkeletonFn,
-} from '../../../../pipeline.js'
-import { uriToDid as creatorFromUri } from '../../../../util/uris.js'
+} from '../../../../pipeline'
+import { uriToDid as creatorFromUri } from '../../../../util/uris'
 
 type Skeleton = {
   posts: string[]

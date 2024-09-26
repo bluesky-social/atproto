@@ -1,20 +1,20 @@
 import { mapDefined } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 
-import AppContext from '../../../../context.js'
-import { parseString } from '../../../../hydration/util.js'
-import { Server } from '../../../../lexicon/index.js'
+import AppContext from '../../../../context'
+import { parseString } from '../../../../hydration/util'
+import { Server } from '../../../../lexicon/index'
 import {
   OutputSchema,
   QueryParams,
-} from '../../../../lexicon/types/app/bsky/feed/getActorFeeds.js'
+} from '../../../../lexicon/types/app/bsky/feed/getActorFeeds'
 import {
   HydrationFn,
   noRules,
   PresentationFn,
   SkeletonFn,
-} from '../../../../pipeline.js'
-import { clearlyBadCursor } from '../../../util.js'
+} from '../../../../pipeline'
+import { clearlyBadCursor } from '../../../util'
 
 type Skeleton = {
   feedUris: string[]

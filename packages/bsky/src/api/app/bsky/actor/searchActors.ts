@@ -1,18 +1,18 @@
 import { mapDefined } from '@atproto/common'
 
-import AppContext from '../../../../context.js'
-import { parseString } from '../../../../hydration/util.js'
-import { Server } from '../../../../lexicon/index.js'
+import AppContext from '../../../../context'
+import { parseString } from '../../../../hydration/util'
+import { Server } from '../../../../lexicon/index'
 import {
   OutputSchema,
   QueryParams,
-} from '../../../../lexicon/types/app/bsky/actor/searchActors.js'
+} from '../../../../lexicon/types/app/bsky/actor/searchActors'
 import {
   HydrationFn,
   PresentationFn,
   RulesFn,
   SkeletonFn,
-} from '../../../../pipeline.js'
+} from '../../../../pipeline'
 
 type Skeleton = {
   dids: string[]

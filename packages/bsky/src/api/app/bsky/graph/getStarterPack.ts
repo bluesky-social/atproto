@@ -1,17 +1,17 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 
-import AppContext from '../../../../context.js'
-import { Server } from '../../../../lexicon/index.js'
+import AppContext from '../../../../context'
+import { Server } from '../../../../lexicon/index'
 import {
   OutputSchema,
   QueryParams,
-} from '../../../../lexicon/types/app/bsky/graph/getStarterPack.js'
+} from '../../../../lexicon/types/app/bsky/graph/getStarterPack'
 import {
   HydrationFn,
   noRules,
   PresentationFn,
   SkeletonFn,
-} from '../../../../pipeline.js'
+} from '../../../../pipeline'
 
 type Skeleton = {
   uri: string

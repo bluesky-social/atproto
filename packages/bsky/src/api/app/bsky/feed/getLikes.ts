@@ -1,21 +1,21 @@
 import { mapDefined } from '@atproto/common'
 import { normalizeDatetimeAlways } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import AppContext from '../../../../context.js'
-import { parseString } from '../../../../hydration/util.js'
-import { Server } from '../../../../lexicon/index.js'
+import AppContext from '../../../../context'
+import { parseString } from '../../../../hydration/util'
+import { Server } from '../../../../lexicon/index'
 import {
   OutputSchema,
   QueryParams,
-} from '../../../../lexicon/types/app/bsky/feed/getLikes.js'
+} from '../../../../lexicon/types/app/bsky/feed/getLikes'
 import {
   HydrationFn,
   PresentationFn,
   RulesFn,
   SkeletonFn,
-} from '../../../../pipeline.js'
-import { uriToDid as creatorFromUri } from '../../../../util/uris.js'
-import { clearlyBadCursor } from '../../../util.js'
+} from '../../../../pipeline'
+import { uriToDid as creatorFromUri } from '../../../../util/uris'
+import { clearlyBadCursor } from '../../../util'
 
 type Skeleton = {
   likes: string[]

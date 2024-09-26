@@ -1,17 +1,17 @@
 import { dedupeStrs, mapDefined } from '@atproto/common'
 
-import AppContext from '../../../../context.js'
-import { Server } from '../../../../lexicon/index.js'
+import AppContext from '../../../../context'
+import { Server } from '../../../../lexicon/index'
 import {
   OutputSchema,
   QueryParams,
-} from '../../../../lexicon/types/app/bsky/graph/getStarterPacks.js'
+} from '../../../../lexicon/types/app/bsky/graph/getStarterPacks'
 import {
   HydrationFn,
   noRules,
   PresentationFn,
   SkeletonFn,
-} from '../../../../pipeline.js'
+} from '../../../../pipeline'
 
 type Skeleton = { uris: string[] }
 

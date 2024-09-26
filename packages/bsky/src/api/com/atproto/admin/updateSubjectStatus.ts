@@ -1,13 +1,13 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Timestamp } from '@bufbuild/protobuf'
 
-import AppContext from '../../../../context.js'
-import { Server } from '../../../../lexicon/index.js'
+import AppContext from '../../../../context'
+import { Server } from '../../../../lexicon/index'
 import {
   isRepoBlobRef,
   isRepoRef,
-} from '../../../../lexicon/types/com/atproto/admin/defs.js'
-import { isMain as isStrongRef } from '../../../../lexicon/types/com/atproto/repo/strongRef.js'
+} from '../../../../lexicon/types/com/atproto/admin/defs'
+import { isMain as isStrongRef } from '../../../../lexicon/types/com/atproto/repo/strongRef'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.updateSubjectStatus({

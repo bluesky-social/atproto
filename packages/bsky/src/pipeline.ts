@@ -1,8 +1,8 @@
 import { noUndefinedVals } from '@atproto/common'
 import { IncomingMessage, ServerResponse } from 'http'
-import { Creds } from './auth-verifier.js'
-import { HydrateCtx } from './hydration/hydrate-ctx.js'
-import { HydrationState } from './hydration/hydrator.js'
+import { Creds } from './auth-verifier'
+import { HydrateCtx } from './hydration/hydrate-ctx'
+import { HydrationState } from './hydration/hydrator'
 
 export type HandlerRequestContext<Params> = {
   params: Params

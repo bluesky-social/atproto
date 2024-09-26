@@ -1,24 +1,24 @@
 import { mapDefined } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 
-import AppContext from '../../../../context.js'
-import { Actor } from '../../../../hydration/actor.js'
-import { FeedItem, Post } from '../../../../hydration/feed.js'
-import { HydrationState, mergeStates } from '../../../../hydration/hydrator.js'
-import { parseString } from '../../../../hydration/util.js'
-import { Server } from '../../../../lexicon/index.js'
+import AppContext from '../../../../context'
+import { Actor } from '../../../../hydration/actor'
+import { FeedItem, Post } from '../../../../hydration/feed'
+import { HydrationState, mergeStates } from '../../../../hydration/hydrator'
+import { parseString } from '../../../../hydration/util'
+import { Server } from '../../../../lexicon/index'
 import {
   OutputSchema,
   QueryParams,
-} from '../../../../lexicon/types/app/bsky/feed/getAuthorFeed.js'
+} from '../../../../lexicon/types/app/bsky/feed/getAuthorFeed'
 import {
   HydrationFn,
   PresentationFn,
   RulesFn,
   SkeletonFn,
-} from '../../../../pipeline.js'
-import { FeedType } from '../../../../proto/bsky_pb.js'
-import { clearlyBadCursor } from '../../../util.js'
+} from '../../../../pipeline'
+import { FeedType } from '../../../../proto/bsky_pb'
+import { clearlyBadCursor } from '../../../util'
 
 type Skeleton = {
   actor: Actor

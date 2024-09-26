@@ -1,18 +1,18 @@
 import { mapDefined } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import AppContext from '../../../../context.js'
-import { Server } from '../../../../lexicon/index.js'
+import AppContext from '../../../../context'
+import { Server } from '../../../../lexicon/index'
 import {
   OutputSchema,
   QueryParams,
-} from '../../../../lexicon/types/app/bsky/graph/getMutes.js'
+} from '../../../../lexicon/types/app/bsky/graph/getMutes'
 import {
   HydrationFn,
   PresentationFn,
   SkeletonFn,
   noRules,
-} from '../../../../pipeline.js'
-import { clearlyBadCursor } from '../../../util.js'
+} from '../../../../pipeline'
+import { clearlyBadCursor } from '../../../util'
 
 type Skeleton = {
   mutedDids: string[]

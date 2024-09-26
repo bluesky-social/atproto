@@ -1,19 +1,19 @@
 import { mapDefined } from '@atproto/common'
 
-import AppContext from '../../../../context.js'
-import { Server } from '../../../../lexicon/index.js'
-import { REFERENCELIST } from '../../../../lexicon/types/app/bsky/graph/defs.js'
+import AppContext from '../../../../context'
+import { Server } from '../../../../lexicon/index'
+import { REFERENCELIST } from '../../../../lexicon/types/app/bsky/graph/defs'
 import {
   OutputSchema,
   QueryParams,
-} from '../../../../lexicon/types/app/bsky/graph/getLists.js'
+} from '../../../../lexicon/types/app/bsky/graph/getLists'
 import {
   HydrationFn,
   PresentationFn,
   RulesFn,
   SkeletonFn,
-} from '../../../../pipeline.js'
-import { clearlyBadCursor } from '../../../util.js'
+} from '../../../../pipeline'
+import { clearlyBadCursor } from '../../../util'
 
 type Skeleton = {
   listUris: string[]

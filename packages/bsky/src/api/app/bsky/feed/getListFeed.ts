@@ -1,22 +1,22 @@
 import { mapDefined } from '@atproto/common'
 
-import AppContext from '../../../../context.js'
-import { FeedItem } from '../../../../hydration/feed.js'
-import { mergeStates } from '../../../../hydration/hydrator.js'
-import { parseString } from '../../../../hydration/util.js'
-import { Server } from '../../../../lexicon/index.js'
+import AppContext from '../../../../context'
+import { FeedItem } from '../../../../hydration/feed'
+import { mergeStates } from '../../../../hydration/hydrator'
+import { parseString } from '../../../../hydration/util'
+import { Server } from '../../../../lexicon/index'
 import {
   OutputSchema,
   QueryParams,
-} from '../../../../lexicon/types/app/bsky/feed/getListFeed.js'
+} from '../../../../lexicon/types/app/bsky/feed/getListFeed'
 import {
   HydrationFn,
   PresentationFn,
   RulesFn,
   SkeletonFn,
-} from '../../../../pipeline.js'
-import { uriToDid } from '../../../../util/uris.js'
-import { clearlyBadCursor } from '../../../util.js'
+} from '../../../../pipeline'
+import { uriToDid } from '../../../../util/uris'
+import { clearlyBadCursor } from '../../../util'
 
 type Skeleton = {
   items: FeedItem[]

@@ -3,16 +3,16 @@ import { Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
 import { IncomingMessage } from 'http'
 
-import { resHeaders } from './api/util.js'
-import { AuthVerifier } from './auth-verifier.js'
-import { BsyncClient } from './bsync.js'
-import { ServerConfig } from './config.js'
-import { CourierClient } from './courier.js'
-import { DataPlaneClient, withHeaders } from './data-plane/client.js'
-import { FeatureGates } from './feature-gates.js'
-import { HydrateCtx, HydrateCtxVals } from './hydration/hydrate-ctx.js'
-import { Hydrator } from './hydration/hydrator.js'
-import { httpLogger as log } from './logger.js'
+import { resHeaders } from './api/util'
+import { AuthVerifier } from './auth-verifier'
+import { BsyncClient } from './bsync'
+import { ServerConfig } from './config'
+import { CourierClient } from './courier'
+import { DataPlaneClient, withHeaders } from './data-plane/client'
+import { FeatureGates } from './feature-gates'
+import { HydrateCtx, HydrateCtxVals } from './hydration/hydrate-ctx'
+import { Hydrator } from './hydration/hydrator'
+import { httpLogger as log } from './logger'
 import {
   Awaitable,
   createPipeline,
@@ -23,13 +23,13 @@ import {
   PresentationFn,
   RulesFn,
   SkeletonFn,
-} from './pipeline.js'
+} from './pipeline'
 import {
   defaultLabelerHeader,
   ParsedLabelers,
   parseLabelerHeader,
-} from './util.js'
-import { Views } from './views/index.js'
+} from './util'
+import { Views } from './views/index'
 import { AuthRequiredError } from '@atproto/xrpc-server'
 
 export type HandlerFactoryOptions = {
@@ -160,16 +160,13 @@ export class AppContext {
 
     const hydrator = new Hydrator(dataplane, this.cfg.labelsFromIssuerDids)
 
+    const availableLabelers = await hydrator.filterUnavailableLabelers(
+      vals.labelers,
+      vals.includeTakedowns,
+    )
+
     return new HydrateCtx(
-      {
-        labelers: await hydrator.filterUnavailableLabelers(
-          vals.labelers,
-          vals.includeTakedowns,
-        ),
-        viewer: vals.viewer,
-        includeTakedowns: vals.includeTakedowns,
-        include3pBlocks: vals.include3pBlocks,
-      },
+      { ...vals, labelers: availableLabelers },
       dataplane,
       hydrator,
       this.opts.views,

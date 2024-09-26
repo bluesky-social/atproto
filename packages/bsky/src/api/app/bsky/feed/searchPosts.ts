@@ -1,19 +1,19 @@
 import { mapDefined } from '@atproto/common'
 
-import AppContext from '../../../../context.js'
-import { parseString } from '../../../../hydration/util.js'
-import { Server } from '../../../../lexicon/index.js'
+import AppContext from '../../../../context'
+import { parseString } from '../../../../hydration/util'
+import { Server } from '../../../../lexicon/index'
 import {
   OutputSchema,
   QueryParams,
-} from '../../../../lexicon/types/app/bsky/feed/searchPosts.js'
+} from '../../../../lexicon/types/app/bsky/feed/searchPosts'
 import {
   HydrationFn,
   PresentationFn,
   RulesFn,
   SkeletonFn,
-} from '../../../../pipeline.js'
-import { uriToDid as creatorFromUri } from '../../../../util/uris.js'
+} from '../../../../pipeline'
+import { uriToDid as creatorFromUri } from '../../../../util/uris'
 
 type Skeleton = {
   posts: string[]
