@@ -91,7 +91,7 @@ export const skeleton = async (inputs: {
     feedType: FILTER_TO_FEED_TYPE[params.filter],
   })
 
-  let items = res.items.map((item) => ({
+  let items: FeedItem[] = res.items.map((item) => ({
     post: { uri: item.uri, cid: item.cid || undefined },
     repost: item.repost
       ? { uri: item.repost, cid: item.repostCid || undefined }
@@ -104,7 +104,6 @@ export const skeleton = async (inputs: {
         uri: actor.profile.pinnedPost.uri,
         cid: actor.profile.pinnedPost.cid,
       },
-      repost: undefined,
       authorPinned: true,
     }
     if (params.limit === 1) {
