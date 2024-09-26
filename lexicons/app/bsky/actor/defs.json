@@ -91,6 +91,10 @@
         "labels": {
           "type": "array",
           "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
+        },
+        "pinnedPost": {
+          "type": "ref",
+          "ref": "com.atproto.repo.strongRef"
         }
       }
     },
