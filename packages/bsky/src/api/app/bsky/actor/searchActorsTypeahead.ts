@@ -43,7 +43,7 @@ const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({ ctx, params }) => {
         typeahead: true,
         q: term,
         limit: params.limit,
-        viewer: ctx.hydrateCtx.viewer ?? undefined,
+        viewer: ctx.viewer ?? undefined,
       })
     return {
       dids: res.actors.map(({ did }) => did),
@@ -65,7 +65,7 @@ const hydration: HydrationFn<Skeleton, QueryParams> = async ({
   ctx,
   skeleton,
 }) => {
-  return ctx.hydrator.hydrateProfilesBasic(skeleton.dids, ctx.hydrateCtx)
+  return ctx.hydrator.hydrateProfilesBasic(skeleton.dids, ctx)
 }
 
 const noBlocks: RulesFn<Skeleton, QueryParams> = ({

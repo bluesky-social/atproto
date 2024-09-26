@@ -69,7 +69,7 @@ const hydration: HydrationFn<Skeleton, QueryParams> = async ({
       }
     }
   }
-  const profileState = await ctx.hydrator.hydrateProfiles(dids, ctx.hydrateCtx)
+  const profileState = await ctx.hydrator.hydrateProfiles(dids, ctx)
   return mergeStates(followState, profileState)
 }
 
@@ -78,7 +78,7 @@ const noBlocks: RulesFn<Skeleton, QueryParams> = ({
   hydration,
   ctx,
 }) => {
-  const { viewer } = ctx.hydrateCtx
+  const { viewer } = ctx
   skeleton.followUris = skeleton.followUris.filter((followUri) => {
     const followerDid = didFromUri(followUri)
     return (
@@ -99,16 +99,13 @@ const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
   const isNoHosted = (did: string) => ctx.views.actorIsNoHosted(did, hydration)
 
   const subject = ctx.views.profile(subjectDid, hydration)
-  if (
-    !subject ||
-    (!ctx.hydrateCtx.includeTakedowns && isNoHosted(subjectDid))
-  ) {
+  if (!subject || (!ctx.includeTakedowns && isNoHosted(subjectDid))) {
     throw new InvalidRequestError(`Actor not found: ${params.actor}`)
   }
 
   const followers = mapDefined(followUris, (followUri) => {
     const followerDid = didFromUri(followUri)
-    if (!ctx.hydrateCtx.includeTakedowns && isNoHosted(followerDid)) {
+    if (!ctx.includeTakedowns && isNoHosted(followerDid)) {
       return
     }
     return ctx.views.profile(didFromUri(followUri), hydration)

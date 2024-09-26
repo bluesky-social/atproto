@@ -53,10 +53,7 @@ const hydration: HydrationFn<Skeleton, QueryParams> = async ({
   ctx,
   skeleton,
 }) => {
-  return ctx.hydrator.hydrateStarterPacksBasic(
-    skeleton.starterPackUris,
-    ctx.hydrateCtx,
-  )
+  return ctx.hydrator.hydrateStarterPacksBasic(skeleton.starterPackUris, ctx)
 }
 
 const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({

@@ -28,7 +28,7 @@ export class HydrateCtx {
     readonly searchAgent: AtpAgent | undefined,
   ) {}
 
-  copy<V extends Partial<HydrateCtxVals>>(vals?: V): HydrateCtx & V {
+  copy(vals?: Partial<HydrateCtxVals>) {
     return new HydrateCtx(
       { ...this.vals, ...vals },
       this.dataplane,
@@ -40,12 +40,7 @@ export class HydrateCtx {
       this.idResolver,
       this.suggestionsAgent,
       this.searchAgent,
-    ) as HydrateCtx & V
-  }
-
-  /** @deprecated use the context itself instead */
-  get hydrateCtx() {
-    return this
+    )
   }
 }
 

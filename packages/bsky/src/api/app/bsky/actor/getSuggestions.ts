@@ -50,7 +50,7 @@ const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({
   params,
   headers,
 }) => {
-  const { viewer } = ctx.hydrateCtx
+  const { viewer } = ctx
   if (ctx.suggestionsAgent) {
     const res =
       await ctx.suggestionsAgent.app.bsky.unspecced.getSuggestionsSkeleton(
@@ -89,7 +89,7 @@ const hydration: HydrationFn<Skeleton, QueryParams> = async ({
   ctx,
   skeleton,
 }) => {
-  return ctx.hydrator.hydrateProfilesDetailed(skeleton.dids, ctx.hydrateCtx)
+  return ctx.hydrator.hydrateProfilesDetailed(skeleton.dids, ctx)
 }
 
 const noBlocksOrMutes: RulesFn<Skeleton, QueryParams> = ({

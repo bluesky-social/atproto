@@ -65,7 +65,7 @@ const hydration: HydrationFn<Skeleton, QueryParams> = async ({
   skeleton,
 }) => {
   const [feedItemsState, bidirectionalBlocks] = await Promise.all([
-    ctx.hydrator.hydrateFeedItems(skeleton.items, ctx.hydrateCtx),
+    ctx.hydrator.hydrateFeedItems(skeleton.items, ctx),
     ctx.hydrator.hydrateBidirectionalBlocks([
       [
         uriToDid(params.list),

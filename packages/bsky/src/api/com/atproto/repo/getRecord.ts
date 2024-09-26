@@ -17,17 +17,14 @@ export default function (server: Server, ctx: AppContext) {
 
         const actors = await ctx.hydrator.actor.getActors(
           [did],
-          ctx.hydrateCtx.includeTakedowns,
+          ctx.includeTakedowns,
         )
         if (!actors.get(did)) {
           throw new InvalidRequestError(`Could not find repo: ${repo}`)
         }
 
         const uri = AtUri.make(did, collection, rkey).toString()
-        const result = await ctx.hydrator.getRecord(
-          uri,
-          ctx.hydrateCtx.includeTakedowns,
-        )
+        const result = await ctx.hydrator.getRecord(uri, ctx.includeTakedowns)
 
         if (!result || (cid && result.cid !== cid)) {
           throw new InvalidRequestError(`Could not locate record: ${uri}`)

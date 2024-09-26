@@ -14,7 +14,7 @@ export default function (server: Server, ctx: AppContext) {
 
       await ctx.bsyncClient.addMuteOperation({
         type: MuteOperation_Type.REMOVE,
-        actorDid: ctx.hydrateCtx.viewer ?? undefined,
+        actorDid: ctx.viewer ?? undefined,
         subject: did,
       })
     }),

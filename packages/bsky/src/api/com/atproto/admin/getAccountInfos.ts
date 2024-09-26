@@ -15,9 +15,9 @@ export default function (server: Server, ctx: AppContext) {
         const infos = mapDefined(dids, (did) => {
           const info = actors.get(did)
           if (!info) return
-          if (info.takedownRef && !ctx.hydrateCtx.includeTakedowns) return
+          if (info.takedownRef && !ctx.includeTakedowns) return
           const profileRecord =
-            !info.profileTakedownRef || ctx.hydrateCtx.includeTakedowns
+            !info.profileTakedownRef || ctx.includeTakedowns
               ? info.profile
               : undefined
 

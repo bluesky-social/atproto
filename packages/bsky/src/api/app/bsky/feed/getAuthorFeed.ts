@@ -55,10 +55,7 @@ export const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({
   if (!did) {
     throw new InvalidRequestError('Profile not found')
   }
-  const actors = await ctx.hydrator.actor.getActors(
-    [did],
-    ctx.hydrateCtx.includeTakedowns,
-  )
+  const actors = await ctx.hydrator.actor.getActors([did], ctx.includeTakedowns)
   const actor = actors.get(did)
   if (!actor) {
     throw new InvalidRequestError('Profile not found')
@@ -90,8 +87,8 @@ const hydration: HydrationFn<Skeleton, QueryParams> = async ({
   skeleton,
 }) => {
   const [feedPostState, profileViewerState] = await Promise.all([
-    ctx.hydrator.hydrateFeedItems(skeleton.items, ctx.hydrateCtx),
-    ctx.hydrator.hydrateProfileViewers([skeleton.actor.did], ctx.hydrateCtx),
+    ctx.hydrator.hydrateFeedItems(skeleton.items, ctx),
+    ctx.hydrator.hydrateProfileViewers([skeleton.actor.did], ctx),
   ])
   return mergeStates(feedPostState, profileViewerState)
 }

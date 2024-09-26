@@ -49,7 +49,7 @@ const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({ ctx, params }) => {
         tag: params.tag,
         until: params.until,
         url: params.url,
-        viewer: ctx.hydrateCtx.viewer ?? undefined,
+        viewer: ctx.viewer ?? undefined,
       })
     return {
       posts: res.posts.map(({ uri }) => uri),
@@ -74,7 +74,7 @@ const hydration: HydrationFn<Skeleton, QueryParams> = async ({
 }) => {
   return ctx.hydrator.hydratePosts(
     skeleton.posts.map((uri) => ({ uri })),
-    ctx.hydrateCtx,
+    ctx,
   )
 }
 

@@ -110,6 +110,10 @@ export class AppContext {
     return this.opts.featureGates
   }
 
+  get views() {
+    return this.opts.views
+  }
+
   dataplaneForViewer(viewer: null | string): DataPlaneClient {
     if (viewer) {
       return withHeaders(this.opts.dataplane, { 'bsky-caller-did': viewer })

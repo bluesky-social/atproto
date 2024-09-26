@@ -30,7 +30,7 @@ export default function (server: Server, ctx: AppContext) {
         uris = res.uris
       } else {
         const res = await ctx.dataplane.getSuggestedFeeds({
-          actorDid: ctx.hydrateCtx.viewer ?? undefined,
+          actorDid: ctx.viewer ?? undefined,
           limit: params.limit,
           cursor: params.cursor,
         })
@@ -38,7 +38,7 @@ export default function (server: Server, ctx: AppContext) {
         cursor = parseString(res.cursor)
       }
 
-      const hydration = await ctx.hydrator.hydrateFeedGens(uris, ctx.hydrateCtx)
+      const hydration = await ctx.hydrator.hydrateFeedGens(uris, ctx)
       const feedViews = mapDefined(uris, (uri) =>
         ctx.views.feedGenerator(uri, hydration),
       )

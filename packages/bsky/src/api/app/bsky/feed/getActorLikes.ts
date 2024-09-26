@@ -40,7 +40,7 @@ const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({
   ctx,
   params: { actor, limit, cursor },
 }) => {
-  const viewer = ctx.hydrateCtx.viewer
+  const viewer = ctx.viewer
   if (clearlyBadCursor(cursor)) {
     return { items: [] }
   }
@@ -67,7 +67,7 @@ const hydration: HydrationFn<Skeleton, QueryParams> = async ({
   ctx,
   skeleton,
 }) => {
-  return ctx.hydrator.hydrateFeedItems(skeleton.items, ctx.hydrateCtx)
+  return ctx.hydrator.hydrateFeedItems(skeleton.items, ctx)
 }
 
 const noPostBlocks: RulesFn<Skeleton, QueryParams> = ({

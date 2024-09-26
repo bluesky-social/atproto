@@ -54,7 +54,7 @@ const hydration: HydrationFn<Skeleton, QueryParams> = async ({
 }) => {
   return ctx.hydrator.hydratePosts(
     skeleton.uris.map((uri) => ({ uri })),
-    ctx.hydrateCtx,
+    ctx,
   )
 }
 

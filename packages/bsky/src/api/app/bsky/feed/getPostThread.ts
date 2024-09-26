@@ -39,9 +39,7 @@ export default function (server: Server, ctx: AppContext) {
         } catch (err) {
           const { res } = reqCtx
           if (!res.headersSent && !res.hasHeader(ATPROTO_REPO_REV)) {
-            const repoRev = await ctx.hydrator.actor.getRepoRevSafe(
-              ctx.hydrateCtx.viewer,
-            )
+            const repoRev = await ctx.hydrator.actor.getRepoRevSafe(ctx.viewer)
             if (repoRev) {
               res.setHeader(ATPROTO_REPO_REV, repoRev)
             }
@@ -89,7 +87,7 @@ const hydration: HydrationFn<Skeleton, QueryParams> = async ({
 }) => {
   return ctx.hydrator.hydrateThreadPosts(
     skeleton.uris.map((uri) => ({ uri })),
-    ctx.hydrateCtx,
+    ctx,
   )
 }
 

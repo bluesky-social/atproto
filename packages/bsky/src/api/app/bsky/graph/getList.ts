@@ -59,17 +59,17 @@ const hydration: HydrationFn<Skeleton, QueryParams> = async ({
 }) => {
   const { listUri, listitems } = skeleton
   const [listState, profileState] = await Promise.all([
-    ctx.hydrator.hydrateLists([listUri], ctx.hydrateCtx),
+    ctx.hydrator.hydrateLists([listUri], ctx),
     ctx.hydrator.hydrateProfiles(
       listitems.map(({ did }) => did),
-      ctx.hydrateCtx,
+      ctx,
     ),
   ])
 
   const creator = didFromUri(list)
 
   const bidirectionalBlocks =
-    ctx.hydrateCtx.viewer === creator ||
+    ctx.viewer === creator ||
     listState.lists?.get(list)?.record.purpose === 'app.bsky.graph.defs#modlist'
       ? undefined
       : await ctx.hydrator.hydrateBidirectionalBlocks([

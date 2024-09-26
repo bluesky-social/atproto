@@ -34,7 +34,7 @@ const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({ params, ctx }) => {
     throw new InvalidRequestError('The seenAt parameter is unsupported')
   }
 
-  const actorDid = ctx.hydrateCtx.viewer
+  const actorDid = ctx.viewer
   if (!actorDid) {
     throw new InvalidRequestError('Viewer not found')
   }

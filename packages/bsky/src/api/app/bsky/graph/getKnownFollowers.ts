@@ -38,7 +38,7 @@ const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({ ctx, params }) => {
     throw new InvalidRequestError(`Actor not found: ${params.actor}`)
   }
 
-  const actorDid = ctx.hydrateCtx.viewer
+  const actorDid = ctx.viewer
   if (!actorDid) throw new InvalidRequestError('Unauthorized')
 
   if (clearlyBadCursor(params.cursor)) {
@@ -66,7 +66,7 @@ const hydration: HydrationFn<Skeleton, QueryParams> = async ({
   const { knownFollowers } = skeleton
   const profilesState = await ctx.hydrator.hydrateProfiles(
     knownFollowers.concat(skeleton.subjectDid),
-    ctx.hydrateCtx,
+    ctx,
   )
   return profilesState
 }

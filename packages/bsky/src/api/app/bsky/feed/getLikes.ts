@@ -59,7 +59,7 @@ const hydration: HydrationFn<Skeleton, QueryParams> = async ({
   ctx,
   skeleton,
 }) => {
-  return ctx.hydrator.hydrateLikes(skeleton.likes, ctx.hydrateCtx)
+  return ctx.hydrator.hydrateLikes(skeleton.likes, ctx)
 }
 
 const noBlocks: RulesFn<Skeleton, QueryParams> = ({

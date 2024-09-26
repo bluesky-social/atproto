@@ -56,7 +56,7 @@ const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({
     const res =
       await ctx.suggestionsAgent.app.bsky.unspecced.getSuggestionsSkeleton(
         {
-          viewer: ctx.hydrateCtx.viewer ?? undefined,
+          viewer: ctx.viewer ?? undefined,
           relativeToDid,
         },
         { headers },
@@ -67,7 +67,7 @@ const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({
       headers: res.headers,
     }
   } else {
-    const actorDid = ctx.hydrateCtx.viewer
+    const actorDid = ctx.viewer
     if (!actorDid) throw new InvalidRequestError('An actor is required')
 
     const { dids } = await ctx.hydrator.dataplane.getFollowSuggestions({
@@ -85,7 +85,7 @@ const hydration: HydrationFn<Skeleton, QueryParams> = async ({
   ctx,
   skeleton: { suggestedDids },
 }) => {
-  return ctx.hydrator.hydrateProfilesDetailed(suggestedDids, ctx.hydrateCtx)
+  return ctx.hydrator.hydrateProfilesDetailed(suggestedDids, ctx)
 }
 
 const noBlocksOrMutes: RulesFn<Skeleton, QueryParams> = ({

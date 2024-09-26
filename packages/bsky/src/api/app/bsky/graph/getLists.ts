@@ -49,7 +49,7 @@ const hydration: HydrationFn<Skeleton, QueryParams> = async ({
   ctx,
   skeleton,
 }) => {
-  return ctx.hydrator.hydrateLists(skeleton.listUris, ctx.hydrateCtx)
+  return ctx.hydrator.hydrateLists(skeleton.listUris, ctx)
 }
 
 const noReferenceLists: RulesFn<Skeleton, QueryParams> = ({

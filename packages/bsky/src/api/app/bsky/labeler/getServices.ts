@@ -8,7 +8,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: ctx.createHandler(async (ctx, { params }) => {
       const { dids, detailed } = params
 
-      const hydration = await ctx.hydrator.hydrateLabelers(dids, ctx.hydrateCtx)
+      const hydration = await ctx.hydrator.hydrateLabelers(dids, ctx)
 
       const views = mapDefined(dids, (did) => {
         if (detailed) {

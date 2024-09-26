@@ -106,10 +106,7 @@ const hydration: HydrationFn<Skeleton, QueryParams> = async ({
   skeleton,
 }) => {
   const timerHydr = new ServerTimer('hydr').start()
-  const hydration = await ctx.hydrator.hydrateFeedItems(
-    skeleton.items,
-    ctx.hydrateCtx,
-  )
+  const hydration = await ctx.hydrator.hydrateFeedItems(skeleton.items, ctx)
   skeleton.timerHydr = timerHydr.stop()
   return hydration
 }

@@ -37,7 +37,7 @@ const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({ ctx, params }) => {
     return { blockedDids: [] }
   }
 
-  const actorDid = ctx.hydrateCtx.viewer
+  const actorDid = ctx.viewer
   if (!actorDid) throw new InvalidRequestError('Unauthorized')
 
   const { blockUris, cursor } = await ctx.hydrator.dataplane.getBlocks({
@@ -60,7 +60,7 @@ const hydration: HydrationFn<Skeleton, QueryParams> = async ({
   ctx,
   skeleton,
 }) => {
-  return ctx.hydrator.hydrateProfiles(skeleton.blockedDids, ctx.hydrateCtx)
+  return ctx.hydrator.hydrateProfiles(skeleton.blockedDids, ctx)
 }
 
 const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({

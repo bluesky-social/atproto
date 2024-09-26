@@ -16,10 +16,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: ctx.createHandler(async (ctx, { params }) => {
       const { feed } = params
 
-      const hydration = await ctx.hydrator.hydrateFeedGens(
-        [feed],
-        ctx.hydrateCtx,
-      )
+      const hydration = await ctx.hydrator.hydrateFeedGens([feed], ctx)
       const feedInfo = hydration.feedgens?.get(feed)
       if (!feedInfo) {
         throw new InvalidRequestError('could not find feed')

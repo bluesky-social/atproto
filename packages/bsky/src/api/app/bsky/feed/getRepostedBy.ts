@@ -52,7 +52,7 @@ const hydration: HydrationFn<Skeleton, QueryParams> = async ({
   ctx,
   skeleton,
 }) => {
-  return await ctx.hydrator.hydrateReposts(skeleton.reposts, ctx.hydrateCtx)
+  return await ctx.hydrator.hydrateReposts(skeleton.reposts, ctx)
 }
 
 const noBlocks: RulesFn<Skeleton, QueryParams> = ({

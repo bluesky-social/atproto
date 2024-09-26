@@ -45,7 +45,7 @@ const hydration: HydrationFn<Skeleton, QueryParams> = async ({
 }) => {
   return ctx.hydrator.hydrateProfilesDetailed(
     [skeleton.did],
-    ctx.hydrateCtx.copy({ includeTakedowns: true }),
+    ctx.copy({ includeTakedowns: true }),
   )
 }
 
@@ -57,7 +57,7 @@ const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
   const profile = ctx.views.profileDetailed(skeleton.did, hydration)
   if (!profile) {
     throw new InvalidRequestError('Profile not found')
-  } else if (!ctx.hydrateCtx.includeTakedowns) {
+  } else if (!ctx.includeTakedowns) {
     if (ctx.views.actorIsTakendown(skeleton.did, hydration)) {
       throw new InvalidRequestError(
         'Account has been suspended',

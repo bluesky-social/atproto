@@ -39,7 +39,7 @@ const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({ ctx, params }) => {
     return { items: [] }
   }
 
-  const actorDid = ctx.hydrateCtx.viewer
+  const actorDid = ctx.viewer
   if (!actorDid) throw new InvalidRequestError('An actor is required')
 
   const res = await ctx.dataplane.getTimeline({
@@ -62,7 +62,7 @@ const hydration: HydrationFn<Skeleton, QueryParams> = async ({
   ctx,
   skeleton,
 }) => {
-  return ctx.hydrator.hydrateFeedItems(skeleton.items, ctx.hydrateCtx)
+  return ctx.hydrator.hydrateFeedItems(skeleton.items, ctx)
 }
 
 const noBlocksOrMutes: RulesFn<Skeleton, QueryParams> = ({

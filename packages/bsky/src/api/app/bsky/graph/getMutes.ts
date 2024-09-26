@@ -36,7 +36,7 @@ const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({ ctx, params }) => {
     return { mutedDids: [] }
   }
 
-  const actorDid = ctx.hydrateCtx.viewer
+  const actorDid = ctx.viewer
   if (!actorDid) throw new InvalidRequestError('An actor is required')
 
   const { dids, cursor } = await ctx.hydrator.dataplane.getMutes({
@@ -54,7 +54,7 @@ const hydration: HydrationFn<Skeleton, QueryParams> = async ({
   ctx,
   skeleton,
 }) => {
-  return ctx.hydrator.hydrateProfiles(skeleton.mutedDids, ctx.hydrateCtx)
+  return ctx.hydrator.hydrateProfiles(skeleton.mutedDids, ctx)
 }
 
 const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({

@@ -11,12 +11,12 @@ export default function (server: Server, ctx: AppContext) {
       // For now we keep separate seen times behind the scenes for priority, but treat them as a single seen time.
       await Promise.all([
         ctx.dataplane.updateNotificationSeen({
-          actorDid: ctx.hydrateCtx.viewer ?? undefined,
+          actorDid: ctx.viewer ?? undefined,
           timestamp: Timestamp.fromDate(seenAt),
           priority: false,
         }),
         ctx.dataplane.updateNotificationSeen({
-          actorDid: ctx.hydrateCtx.viewer ?? undefined,
+          actorDid: ctx.viewer ?? undefined,
           timestamp: Timestamp.fromDate(seenAt),
           priority: true,
         }),

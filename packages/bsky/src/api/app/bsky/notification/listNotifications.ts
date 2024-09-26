@@ -42,7 +42,7 @@ const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({ ctx, params }) => {
     throw new InvalidRequestError('The seenAt parameter is unsupported')
   }
 
-  const actorDid = ctx.hydrateCtx.viewer
+  const actorDid = ctx.viewer
   if (!actorDid) throw new InvalidRequestError('An actor is required')
 
   const priority =
@@ -82,7 +82,7 @@ const hydration: HydrationFn<Skeleton, QueryParams> = async ({
   ctx,
   skeleton,
 }) => {
-  return ctx.hydrator.hydrateNotifications(skeleton.notifs, ctx.hydrateCtx)
+  return ctx.hydrator.hydrateNotifications(skeleton.notifs, ctx)
 }
 
 const noBlockOrMutes: RulesFn<Skeleton, QueryParams> = ({
@@ -107,7 +107,7 @@ const noBlockOrMutes: RulesFn<Skeleton, QueryParams> = ({
           ? post.record.reply?.root.uri
           : undefined
         const isRootPostByViewer =
-          rootPostUri && didFromUri(rootPostUri) === ctx.hydrateCtx?.viewer
+          rootPostUri && didFromUri(rootPostUri) === ctx?.viewer
         const isHiddenReply = isRootPostByViewer
           ? ctx.views.replyIsHiddenByThreadgate(
               item.uri,
