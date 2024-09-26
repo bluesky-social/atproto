@@ -60,7 +60,9 @@ export function buildMetadata(
     code_challenge_methods_supported: [
       // https://www.iana.org/assignments/oauth-parameters/oauth-parameters.xhtml#pkce-code-challenge-method
       'S256',
-      'plain',
+
+      // atproto does not allow "plain"
+      // 'plain',
     ],
     ui_locales_supported: [
       //

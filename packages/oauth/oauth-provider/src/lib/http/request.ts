@@ -1,41 +1,10 @@
-import { decodeStream } from '@atproto/common'
 import { parse as parseCookie, serialize as serializeCookie } from 'cookie'
 import { randomBytes } from 'crypto'
 import createHttpError from 'http-errors'
-import { Readable } from 'node:stream'
-import { z } from 'zod'
 
-import { KnownNames } from './parser.js'
 import { appendHeader } from './response.js'
-import { parseStream } from './stream.js'
 import { IncomingMessage, ServerResponse } from './types.js'
-import { UrlReference, urlMatch } from './url.js'
-
-export async function parseRequestPayload<
-  A extends readonly KnownNames[] = readonly KnownNames[],
->(req: IncomingMessage, allow?: A) {
-  let readable: Readable
-  try {
-    readable = decodeStream(req, req.headers['content-encoding'])
-  } catch (err) {
-    throw createHttpError(415, err, { expose: err instanceof TypeError })
-  }
-
-  try {
-    return await parseStream(readable, req.headers['content-type'], allow)
-  } catch (err) {
-    throw createHttpError(400, err, { expose: err instanceof TypeError })
-  }
-}
-
-export async function validateRequestPayload<S extends z.ZodTypeAny>(
-  req: IncomingMessage,
-  schema: S,
-  allow: readonly KnownNames[] = ['json', 'urlencoded'],
-): Promise<z.infer<S>> {
-  const payload = await parseRequestPayload(req, allow)
-  return schema.parseAsync(payload, { path: ['body'] })
-}
+import { urlMatch, UrlReference } from './url.js'
 
 export function validateHeaderValue(
   req: IncomingMessage,

@@ -23,8 +23,10 @@ export function authorizeAssetsMiddleware(): Middleware {
     if (!asset) return next()
 
     try {
-      validateFetchSite(req, res, ['same-origin'])
-      validateFetchDest(req, res, ['style', 'script'])
+      // Allow "null" (ie. no header) to allow loading assets outside of a
+      // fetch context (not from a web page).
+      validateFetchSite(req, res, [null, 'same-origin'])
+      validateFetchDest(req, res, [null, 'style', 'script'])
     } catch (err) {
       return next(err)
     }

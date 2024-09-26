@@ -3,17 +3,15 @@ import {
   AuthorizeOptions,
   ClientMetadata,
   Fetch,
-  OAuthSession,
   OAuthCallbackError,
   OAuthClient,
+  OAuthSession,
   SessionEventMap,
 } from '@atproto/oauth-client'
 import {
+  assertOAuthDiscoverableClientId,
   atprotoLoopbackClientMetadata,
-  isOAuthClientIdDiscoverable,
   isOAuthClientIdLoopback,
-  OAuthClientIdDiscoverable,
-  OAuthClientIdLoopback,
   OAuthClientMetadataInput,
 } from '@atproto/oauth-types'
 
@@ -63,16 +61,17 @@ export type BrowserOAuthClientLoadOptions = Omit<
   BrowserOAuthClientOptions,
   'clientMetadata'
 > & {
-  clientId: OAuthClientIdDiscoverable | OAuthClientIdLoopback
+  clientId: string
   signal?: AbortSignal
 }
 
 export class BrowserOAuthClient extends OAuthClient implements Disposable {
   static async load({ clientId, ...options }: BrowserOAuthClientLoadOptions) {
-    if (isOAuthClientIdLoopback(clientId)) {
+    if (clientId.startsWith('http:')) {
       const clientMetadata = atprotoLoopbackClientMetadata(clientId)
       return new BrowserOAuthClient({ clientMetadata, ...options })
-    } else if (isOAuthClientIdDiscoverable(clientId)) {
+    } else if (clientId.startsWith('https:')) {
+      assertOAuthDiscoverableClientId(clientId)
       const clientMetadata = await OAuthClient.fetchMetadata({
         clientId,
         ...options,
@@ -349,7 +348,11 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
 
     // Replace the current history entry without the params (this will prevent
     // the following code to run again if the user refreshes the page)
-    history.replaceState(null, '', location.pathname)
+    if (this.responseMode === 'fragment') {
+      history.replaceState(null, '', location.pathname + location.search)
+    } else if (this.responseMode === 'query') {
+      history.replaceState(null, '', location.pathname)
+    }
 
     // Utility function to send the result of the popup to the parent window
     const sendPopupResult = (message: PopupChannelResultData) => {
