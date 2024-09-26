@@ -39,7 +39,7 @@ const hydration: HydrationFn<Skeleton, QueryParams> = async ({
   ctx,
   skeleton,
 }) => {
-  return await ctx.hydrator.hydrateFeedGens(skeleton.feedUris, ctx)
+  return ctx.hydrator.hydrateFeedGens(skeleton.feedUris, ctx)
 }
 
 const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({

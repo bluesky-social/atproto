@@ -5,7 +5,7 @@ import type { BsyncClient } from '../bsync'
 import type { ServerConfig } from '../config'
 import type { DataPlaneClient } from '../data-plane/index'
 import type { FeatureGates } from '../feature-gates'
-import type { ParsedLabelers } from '../util'
+import type { ParsedLabelers } from '../util/labeler-header'
 import type { Views } from '../views/index'
 import type { Hydrator } from './hydrator'
 
@@ -47,8 +47,8 @@ export class HydrateCtx {
 export type HydrateCtxVals = {
   labelers: ParsedLabelers
   viewer: string | null
-  includeTakedowns?: boolean
-  include3pBlocks?: boolean
+  includeTakedowns: boolean
+  include3pBlocks: boolean
 }
 
 // service refs may look like "did:plc:example#service_id". we want to extract the did part "did:plc:example".

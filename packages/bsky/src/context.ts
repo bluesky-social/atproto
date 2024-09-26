@@ -3,8 +3,9 @@ import { Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
 import { IncomingMessage } from 'http'
 
-import { resHeaders } from './api/util'
-import { AuthVerifier } from './auth-verifier'
+import { AuthRequiredError } from '@atproto/xrpc-server'
+import { ATPROTO_CONTENT_LABELERS, ATPROTO_REPO_REV } from './api/util'
+import { AuthVerifier, Creds } from './auth-verifier'
 import { BsyncClient } from './bsync'
 import { ServerConfig } from './config'
 import { CourierClient } from './courier'
@@ -26,40 +27,35 @@ import {
 } from './pipeline'
 import {
   defaultLabelerHeader,
+  formatLabelerHeader,
   ParsedLabelers,
   parseLabelerHeader,
-} from './util'
+} from './util/labeler-header'
 import { Views } from './views/index'
-import { AuthRequiredError } from '@atproto/xrpc-server'
 
-export type HandlerFactoryOptions = {
-  /**
-   * Causes an error if the `canPerformTakedown` field is not present in the
-   * credential.
-   */
-  enforceCanPerformTakedown?: boolean
-
+export type CreateHandlerOptions = {
   /**
    * Use the credential's "include3pBlocks" value when building the
    * {@link HydrateCtxVals} use to instantiate the {@link HydrateCtx}
    */
-  enforceInclude3pBlocks?: boolean
+  allowInclude3pBlocks?: boolean
 
   /**
    * Use the credential's "includeTakedowns" value when building the
    * {@link HydrateCtxVals} use to instantiate the {@link HydrateCtx}
    */
-  enforceIncludeTakedowns?: boolean
+  allowIncludeTakedowns?: boolean
+
+  /**
+   * Causes an error if the `canPerformTakedown` field is not present in the
+   * credential.
+   */
+  canPerformTakedownRequired?: boolean
 
   /**
    * Expose the current repo revision in the response headers.
    */
   exposeRepoRev?: boolean
-
-  /**
-   * Expose the labelers that were used to generate the response.
-   */
-  exposeLabelers?: boolean
 }
 
 export class AppContext {
@@ -124,18 +120,7 @@ export class AppContext {
     return this.opts.idResolver
   }
 
-  dataplaneForViewer(viewer: null | string): DataPlaneClient {
-    // Optimization: avoid creating a new client. Simply create a "proxy" that
-    // adds the viewer header, or return the global data plane client if there
-    // is no viewer.
-    if (viewer) {
-      return withHeaders(this.opts.dataplane, { 'bsky-caller-did': viewer })
-    } else {
-      return this.opts.dataplane
-    }
-  }
-
-  reqLabelers(req: IncomingMessage): ParsedLabelers {
+  private reqLabelers(req: IncomingMessage): ParsedLabelers {
     const val = req.headers['atproto-accept-labelers']
     let parsed: ParsedLabelers | null
     try {
@@ -148,7 +133,18 @@ export class AppContext {
     return parsed
   }
 
-  async createHydrateCtx(vals: HydrateCtxVals): Promise<HydrateCtx> {
+  private dataplaneForViewer(viewer: null | string): DataPlaneClient {
+    // Optimization: avoid creating a new client. Simply create a "proxy" that
+    // adds the viewer header, or return the global data plane client if there
+    // is no viewer.
+    if (viewer) {
+      return withHeaders(this.opts.dataplane, { 'bsky-caller-did': viewer })
+    } else {
+      return this.opts.dataplane
+    }
+  }
+
+  private async createHydrateCtx(vals: HydrateCtxVals): Promise<HydrateCtx> {
     const dataplane = this.dataplaneForViewer(vals.viewer)
 
     // @TODO Refactor the Hydrator and HydrateCtx into a single class. For
@@ -184,66 +180,63 @@ export class AppContext {
     Output extends void | HandlerOutput<unknown>,
   >(
     view: (ctx: HydrateCtx, reqCtx: ReqCtx) => Awaitable<Output>,
-    {
-      enforceCanPerformTakedown = false,
-      enforceInclude3pBlocks = false,
-      enforceIncludeTakedowns = false,
-      exposeLabelers = true,
-      exposeRepoRev = false,
-    }: HandlerFactoryOptions = {},
+    options: CreateHandlerOptions = {},
   ) {
     const { authVerifier } = this
+    const {
+      // Store as const to allow code path optimizations by compiler
+      allowInclude3pBlocks = false,
+      allowIncludeTakedowns = false,
+      canPerformTakedownRequired = false,
+      exposeRepoRev = false,
+    } = options
 
     /**
      * Returns an XRPC handler that wraps the view function.
      */
     return async (reqCtx: ReqCtx): Promise<Output> => {
-      const { viewer, includeTakedowns, include3pBlocks, canPerformTakedown } =
-        authVerifier.parseCreds(reqCtx.auth)
+      const credentials = authVerifier.parseCreds(reqCtx.auth)
 
-      if (enforceCanPerformTakedown && !canPerformTakedown) {
-        throw new AuthRequiredError(
-          'Must be a full moderator to update subject state',
-        )
+      if (canPerformTakedownRequired && !credentials.canPerformTakedown) {
+        throw new AuthRequiredError('Must be a full moderator')
       }
 
       const ctx = await this.createHydrateCtx({
         labelers: this.reqLabelers(reqCtx.req),
-        viewer,
-        includeTakedowns: enforceIncludeTakedowns
-          ? includeTakedowns
-          : undefined,
-        include3pBlocks: enforceInclude3pBlocks ? include3pBlocks : undefined,
+        viewer: credentials.viewer,
+        include3pBlocks: allowInclude3pBlocks && credentials.include3pBlocks,
+        includeTakedowns: allowIncludeTakedowns && credentials.includeTakedowns,
       })
 
-      const output = await view(ctx, reqCtx)
+      try {
+        return await view(ctx, reqCtx)
+      } finally {
+        const { res } = reqCtx
 
-      return output
-        ? ({
-            encoding: output.encoding,
-            headers: {
-              ...output.headers,
-              ...resHeaders({
-                repoRev: exposeRepoRev
-                  ? await ctx.hydrator.actor.getRepoRevSafe(ctx.viewer)
-                  : undefined,
-                labelers: exposeLabelers ? ctx.labelers : undefined,
-              }),
-            },
-            body: output.body,
-          } as Output)
-        : (undefined as Output)
+        res.setHeader(
+          ATPROTO_CONTENT_LABELERS,
+          formatLabelerHeader(ctx.labelers),
+        )
+
+        if (exposeRepoRev) {
+          const repoRev = await ctx.hydrator.actor.getRepoRevSafe(ctx.viewer)
+          if (repoRev) {
+            res.setHeader(ATPROTO_REPO_REV, repoRev)
+          }
+        }
+      }
     }
   }
 
-  createPipelineHandler<Params, View, Skeleton>(
+  createPipelineHandler<Skeleton, Params, View, Auth extends Creds = Creds>(
     skeletonFn: SkeletonFn<Skeleton, Params>,
     hydrationFn: HydrationFn<Skeleton, Params>,
     rulesFn: RulesFn<Skeleton, Params>,
     presentationFn: PresentationFn<Skeleton, Params, View>,
-    options: PipelineOptions<Skeleton, Params> & HandlerFactoryOptions = {},
+    options: PipelineOptions<Skeleton, Params, Auth> &
+      CreateHandlerOptions = {},
   ) {
-    const pipeline = createPipeline(
+    const pipeline = createPipeline<Skeleton, Params, View, Auth>(
       skeletonFn,
       hydrationFn,
       rulesFn,

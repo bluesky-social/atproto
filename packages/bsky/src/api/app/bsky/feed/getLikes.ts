@@ -30,7 +30,7 @@ export default function (server: Server, ctx: AppContext) {
       hydration,
       noBlocks,
       presentation,
-      { enforceIncludeTakedowns: true },
+      { allowIncludeTakedowns: true },
     ),
   })
 }
@@ -96,7 +96,6 @@ const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
       indexedAt: like.sortedAt.toISOString(),
     }
   })
-
   return {
     likes: likeViews,
     cursor: skeleton.cursor,

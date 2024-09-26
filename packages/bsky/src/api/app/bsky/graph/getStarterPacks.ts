@@ -23,7 +23,7 @@ export default function (server: Server, ctx: AppContext) {
       hydration,
       noRules,
       presentation,
-      { enforceIncludeTakedowns: true },
+      { allowIncludeTakedowns: true },
     ),
   })
 }

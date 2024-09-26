@@ -30,13 +30,13 @@ export default function (server: Server, ctx: AppContext) {
       noBlocksOrMutes,
       presentation,
       {
-        inputHeaders: (req) => ({
+        inputHeaders: ({ req }) => ({
           'accept-language': req.headers['accept-language'],
           'x-bsky-topics': Array.isArray(req.headers['x-bsky-topics'])
             ? req.headers['x-bsky-topics'].join(',')
             : req.headers['x-bsky-topics'],
         }),
-        outputHeaders: ({ skeleton: { headers } }) => headers,
+        outputHeaders: ({ skeleton }) => skeleton.headers,
       },
     ),
   })

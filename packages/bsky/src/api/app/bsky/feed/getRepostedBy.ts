@@ -28,7 +28,7 @@ export default function (server: Server, ctx: AppContext) {
       hydration,
       noBlocks,
       presentation,
-      { enforceIncludeTakedowns: true },
+      { allowIncludeTakedowns: true },
     ),
   })
 }
@@ -52,7 +52,7 @@ const hydration: HydrationFn<Skeleton, QueryParams> = async ({
   ctx,
   skeleton,
 }) => {
-  return await ctx.hydrator.hydrateReposts(skeleton.reposts, ctx)
+  return ctx.hydrator.hydrateReposts(skeleton.reposts, ctx)
 }
 
 const noBlocks: RulesFn<Skeleton, QueryParams> = ({

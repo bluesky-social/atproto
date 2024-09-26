@@ -8,14 +8,12 @@ import {
   QueryParams,
 } from '../../../../lexicon/types/app/bsky/feed/getPostThread'
 import {
-  createPipeline,
   HydrationFn,
   noRules,
   PresentationFn,
   SkeletonFn,
 } from '../../../../pipeline'
 import { postUriToThreadgateUri } from '../../../../util/uris'
-import { ATPROTO_REPO_REV } from '../../../util'
 
 type Skeleton = {
   anchor: string
@@ -23,35 +21,17 @@ type Skeleton = {
 }
 
 export default function (server: Server, ctx: AppContext) {
-  const getPostThread = createPipeline(
-    skeleton,
-    hydration,
-    noRules, // handled in presentation: 3p block-violating replies are turned to #blockedPost, viewer blocks turned to #notFoundPost.
-    presentation,
-  )
-
   server.app.bsky.feed.getPostThread({
     auth: ctx.authVerifier.optionalStandardOrRole,
-    handler: ctx.createHandler(
-      async (ctx, reqCtx) => {
-        try {
-          return await getPostThread(ctx, reqCtx)
-        } catch (err) {
-          const { res } = reqCtx
-          if (!res.headersSent && !res.hasHeader(ATPROTO_REPO_REV)) {
-            const repoRev = await ctx.hydrator.actor.getRepoRevSafe(ctx.viewer)
-            if (repoRev) {
-              res.setHeader(ATPROTO_REPO_REV, repoRev)
-            }
-          }
-
-          throw err
-        }
-      },
+    handler: ctx.createPipelineHandler(
+      skeleton,
+      hydration,
+      noRules, // handled in presentation: 3p block-violating replies are turned to #blockedPost, viewer blocks turned to #notFoundPost.
+      presentation,
       {
         exposeRepoRev: true,
-        enforceInclude3pBlocks: true,
-        enforceIncludeTakedowns: true,
+        allowInclude3pBlocks: true,
+        allowIncludeTakedowns: true,
       },
     ),
   })

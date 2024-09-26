@@ -59,7 +59,7 @@ export default function (server: Server, ctx: AppContext) {
       noBlocksOrMutes,
       presentation,
       {
-        inputHeaders: (req) => ({
+        inputHeaders: ({ req }) => ({
           authorization: req.headers['authorization'],
           'accept-language': req.headers['accept-language'],
           'x-bsky-topics': Array.isArray(req.headers['x-bsky-topics'])

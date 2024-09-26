@@ -25,7 +25,7 @@ export default function (server: Server, ctx: AppContext) {
       presentation,
       {
         exposeRepoRev: true,
-        enforceIncludeTakedowns: true,
+        allowIncludeTakedowns: true,
       },
     ),
   })

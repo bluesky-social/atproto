@@ -60,7 +60,7 @@ import {
   FeedItem,
 } from './feed'
 import type { HydrateCtx } from './hydrate-ctx'
-import { ParsedLabelers } from '../util'
+import { ParsedLabelers } from '../util/labeler-header'
 
 export type HydrationState = {
   ctx?: HydrateCtx
