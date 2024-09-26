@@ -412,18 +412,8 @@ describe('pds author feed views', () => {
         },
       }
 
-      await pdsAgent.com.atproto.repo.putRecord(
-        {
-          repo: alice,
-          collection: 'app.bsky.actor.profile',
-          rkey: 'self',
-          record: newProfile,
-          swapRecord: profile?.data.cid || null,
-        },
-        {
-          headers: sc.getHeaders(alice),
-        },
-      )
+      await sc.updateProfile(alice, newProfile)
+
       await network.processAll()
 
       return post
