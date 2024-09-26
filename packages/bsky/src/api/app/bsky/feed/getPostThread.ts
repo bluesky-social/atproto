@@ -52,8 +52,8 @@ export default function (server: Server, ctx: AppContext) {
       },
       {
         exposeRepoRev: true,
-        allowInclude3pBlocks: true,
-        allowIncludeTakedowns: true,
+        enforceInclude3pBlocks: true,
+        enforceIncludeTakedowns: true,
       },
     ),
   })

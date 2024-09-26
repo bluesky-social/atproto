@@ -35,7 +35,7 @@ export default function (server: Server, ctx: AppContext) {
       hydration,
       noBlocksOrMutedReposts,
       presentation,
-      { allowIncludeTakedowns: true, exposeRepoRev: true },
+      { enforceIncludeTakedowns: true, exposeRepoRev: true },
     ),
   })
 }

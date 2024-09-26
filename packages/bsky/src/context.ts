@@ -16,7 +16,6 @@ import { httpLogger as log } from './logger.js'
 import {
   Awaitable,
   createPipeline,
-  HandlerContext,
   HandlerOutput,
   HandlerRequestContext,
   HydrationFn,
@@ -35,6 +34,24 @@ import { AuthRequiredError } from '@atproto/xrpc-server'
 
 export type HandlerFactoryOptions = {
   /**
+   * Causes an error if the `canPerformTakedown` field is not present in the
+   * credential.
+   */
+  enforceCanPerformTakedown?: boolean
+
+  /**
+   * Use the credential's "include3pBlocks" value when building the
+   * {@link HydrateCtxVals} use to instantiate the {@link HydrateCtx}
+   */
+  enforceInclude3pBlocks?: boolean
+
+  /**
+   * Use the credential's "includeTakedowns" value when building the
+   * {@link HydrateCtxVals} use to instantiate the {@link HydrateCtx}
+   */
+  enforceIncludeTakedowns?: boolean
+
+  /**
    * Expose the current repo revision in the response headers.
    */
   exposeRepoRev?: boolean
@@ -43,24 +60,6 @@ export type HandlerFactoryOptions = {
    * Expose the labelers that were used to generate the response.
    */
   exposeLabelers?: boolean
-
-  /**
-   * Use the credential's "includeTakedowns" value when building the
-   * {@link HydrateCtxVals} (use to build the {@link HydrateCtx}).
-   */
-  allowIncludeTakedowns?: boolean
-
-  /**
-   * Use the credential's "include3pBlocks" value when building the
-   * {@link HydrateCtxVals} (use to build the {@link HydrateCtx}).
-   */
-  allowInclude3pBlocks?: boolean
-
-  /**
-   * Causes an error if the `canPerformTakedown` field is not present in the
-   * credential.
-   */
-  enforceCanPerformTakedown?: boolean
 }
 
 export class AppContext {
@@ -132,65 +131,51 @@ export class AppContext {
     return parsed
   }
 
-  async createHandlerContext(vals: HydrateCtxVals): Promise<HandlerContext> {
+  async createHydrateCtx(vals: HydrateCtxVals): Promise<HydrateCtx> {
     const dataplane = this.dataplaneForViewer(vals.viewer)
 
-    // @TODO Refactor the Hydrator, HydrateCtx and HandlerContext into a single
-    // class. For historic reasons, "hydrator" used to be a singleton. Then we
-    // added the ability to send the caller DID to the data plane, which
-    // required to create a new dataplane instance per request.
+    // @TODO Refactor the Hydrator and HydrateCtx into a single class. For
+    // historic reasons, "hydrator" used to be a singleton. Then we added the
+    // ability to send the caller DID to the data plane, which required to
+    // create a new dataplane instance (and thus a new hydrator) per request.
+    // Since the hydrator is now bound the the viewer, we should merge the two
+    // classes.
 
     const hydrator = new Hydrator(dataplane, this.cfg.labelsFromIssuerDids)
 
-    // ensures we're only apply labelers that exist and are not taken down
-    const labelers = vals.labelers.dids
-    const nonServiceLabelers = labelers.filter(
-      (did) => !hydrator.serviceLabelers.has(did),
-    )
-    const labelerActors = await hydrator.actor.getActors(
-      nonServiceLabelers,
-      vals.includeTakedowns,
-    )
-    const availableDids = labelers.filter(
-      (did) => hydrator.serviceLabelers.has(did) || !!labelerActors.get(did),
-    )
-    const availableLabelers = {
-      dids: availableDids,
-      redact: vals.labelers.redact,
-    }
-
-    const hydrateCtx = new HydrateCtx({
-      labelers: availableLabelers,
-      viewer: vals.viewer,
-      includeTakedowns: vals.includeTakedowns,
-      include3pBlocks: vals.include3pBlocks,
-    })
-
-    return {
-      hydrateCtx,
-      hydrator,
+    return new HydrateCtx(
+      {
+        labelers: await hydrator.filterUnavailableLabelers(
+          vals.labelers,
+          vals.includeTakedowns,
+        ),
+        viewer: vals.viewer,
+        includeTakedowns: vals.includeTakedowns,
+        include3pBlocks: vals.include3pBlocks,
+      },
       dataplane,
-      cfg: this.opts.cfg,
-      views: this.opts.views,
-      suggestionsAgent: this.opts.suggestionsAgent,
-      searchAgent: this.opts.searchAgent,
-      idResolver: this.opts.idResolver,
-      featureGates: this.opts.featureGates,
-      bsyncClient: this.opts.bsyncClient,
-    }
+      hydrator,
+      this.opts.views,
+      this.cfg,
+      this.opts.featureGates,
+      this.opts.bsyncClient,
+      this.opts.idResolver,
+      this.opts.suggestionsAgent,
+      this.opts.searchAgent,
+    )
   }
 
   createHandler<
     ReqCtx extends HandlerRequestContext<unknown>,
     Output extends void | HandlerOutput<unknown>,
   >(
-    view: (ctx: HandlerContext, reqCtx: ReqCtx) => Awaitable<Output>,
+    view: (ctx: HydrateCtx, reqCtx: ReqCtx) => Awaitable<Output>,
     {
-      exposeRepoRev = false,
-      exposeLabelers = true,
-      allowIncludeTakedowns = false,
-      allowInclude3pBlocks = false,
       enforceCanPerformTakedown = false,
+      enforceInclude3pBlocks = false,
+      enforceIncludeTakedowns = false,
+      exposeLabelers = true,
+      exposeRepoRev = false,
     }: HandlerFactoryOptions = {},
   ) {
     const { authVerifier } = this
@@ -199,7 +184,6 @@ export class AppContext {
      * Returns an XRPC handler that wraps the view function.
      */
     return async (reqCtx: ReqCtx): Promise<Output> => {
-      const labelers = this.reqLabelers(reqCtx.req)
       const { viewer, includeTakedowns, include3pBlocks, canPerformTakedown } =
         authVerifier.parseCreds(reqCtx.auth)
 
@@ -209,11 +193,13 @@ export class AppContext {
         )
       }
 
-      const ctx = await this.createHandlerContext({
-        labelers,
+      const ctx = await this.createHydrateCtx({
+        labelers: this.reqLabelers(reqCtx.req),
         viewer,
-        includeTakedowns: allowIncludeTakedowns ? includeTakedowns : undefined,
-        include3pBlocks: allowInclude3pBlocks ? include3pBlocks : undefined,
+        includeTakedowns: enforceIncludeTakedowns
+          ? includeTakedowns
+          : undefined,
+        include3pBlocks: enforceInclude3pBlocks ? include3pBlocks : undefined,
       })
 
       const output = await view(ctx, reqCtx)
@@ -225,11 +211,9 @@ export class AppContext {
               ...output.headers,
               ...resHeaders({
                 repoRev: exposeRepoRev
-                  ? await ctx.hydrator.actor.getRepoRevSafe(
-                      ctx.hydrateCtx.viewer,
-                    )
+                  ? await ctx.hydrator.actor.getRepoRevSafe(ctx.viewer)
                   : undefined,
-                labelers: exposeLabelers ? ctx.hydrateCtx.labelers : undefined,
+                labelers: exposeLabelers ? ctx.labelers : undefined,
               }),
             },
             body: output.body,

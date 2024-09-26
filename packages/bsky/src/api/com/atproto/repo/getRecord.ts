@@ -42,7 +42,7 @@ export default function (server: Server, ctx: AppContext) {
           },
         }
       },
-      { allowIncludeTakedowns: true },
+      { enforceIncludeTakedowns: true },
     ),
   })
 }

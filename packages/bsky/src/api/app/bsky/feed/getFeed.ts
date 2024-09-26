@@ -25,11 +25,11 @@ import {
 import {
   HydrationFn,
   PresentationFn,
-  HandlerContext,
   RulesFn,
   SkeletonFn,
 } from '../../../../pipeline.js'
 import { GetIdentityByDidResponse } from '../../../../proto/bsky_pb.js'
+import { HydrateCtx } from '../../../../hydration/hydrate-ctx.js'
 
 type Skeleton = {
   items: AlgoResponseItem[]
@@ -155,7 +155,7 @@ const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
 }
 
 async function skeletonFromFeedGen(
-  ctx: HandlerContext,
+  ctx: HydrateCtx,
   params: QueryParams,
   headers?: HeadersMap,
 ): Promise<AlgoResponse> {

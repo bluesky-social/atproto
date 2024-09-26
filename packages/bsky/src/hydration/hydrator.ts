@@ -59,7 +59,8 @@ import {
   Postgates,
   FeedItem,
 } from './feed'
-import { HydrateCtx, HydrateCtxVals } from './hydrate-ctx'
+import { HydrateCtx } from './hydrate-ctx.js'
+import { ParsedLabelers } from '../util'
 
 export type HydrationState = {
   ctx?: HydrateCtx
@@ -963,34 +964,25 @@ export class Hydrator {
     }
   }
 
-  async createContext(
-    vals: HydrateCtxVals & { viewer: string },
-  ): Promise<HydrateCtx & { viewer: string }>
-  async createContext(vals: HydrateCtxVals): Promise<HydrateCtx>
-
-  async createContext(vals: HydrateCtxVals): Promise<HydrateCtx> {
-    // ensures we're only apply labelers that exist and are not taken down
-    const labelers = vals.labelers.dids
+  /**
+   * Ensures we're only apply labelers that exist and are not taken down
+   */
+  async filterUnavailableLabelers(
+    { dids: labelers, redact }: ParsedLabelers,
+    includeTakedowns?: boolean,
+  ): Promise<ParsedLabelers> {
     const nonServiceLabelers = labelers.filter(
       (did) => !this.serviceLabelers.has(did),
     )
     const labelerActors = await this.actor.getActors(
       nonServiceLabelers,
-      vals.includeTakedowns,
+      includeTakedowns,
     )
     const availableDids = labelers.filter(
       (did) => this.serviceLabelers.has(did) || !!labelerActors.get(did),
     )
-    const availableLabelers = {
-      dids: availableDids,
-      redact: vals.labelers.redact,
-    }
-    return new HydrateCtx({
-      labelers: availableLabelers,
-      viewer: vals.viewer,
-      includeTakedowns: vals.includeTakedowns,
-      include3pBlocks: vals.include3pBlocks,
-    })
+
+    return { dids: availableDids, redact }
   }
 
   async resolveUri(uriStr: string) {

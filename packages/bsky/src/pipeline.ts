@@ -1,28 +1,8 @@
-import { AtpAgent } from '@atproto/api'
 import { noUndefinedVals } from '@atproto/common'
-import { IdResolver } from '@atproto/identity'
 import { IncomingMessage, ServerResponse } from 'http'
 import { Creds } from './auth-verifier.js'
-import { BsyncClient } from './bsync.js'
-import { DataPlaneClient } from './data-plane/index.js'
-import { FeatureGates } from './feature-gates.js'
 import { HydrateCtx } from './hydration/hydrate-ctx.js'
-import { HydrationState, Hydrator } from './hydration/hydrator.js'
-import { Views } from './views/index.js'
-import { ServerConfig } from './config.js'
-
-export type HandlerContext = {
-  readonly cfg: ServerConfig
-  readonly hydrateCtx: HydrateCtx
-  readonly hydrator: Hydrator
-  readonly views: Views
-  readonly dataplane: DataPlaneClient
-  readonly suggestionsAgent?: AtpAgent
-  readonly searchAgent?: AtpAgent
-  readonly featureGates: FeatureGates
-  readonly bsyncClient: BsyncClient
-  readonly idResolver: IdResolver
-}
+import { HydrationState } from './hydration/hydrator.js'
 
 export type HandlerRequestContext<Params> = {
   params: Params
@@ -60,7 +40,7 @@ export function createPipeline<Skeleton, Params, View>(
   const { inputHeaders, outputHeaders } = options
 
   return async (
-    ctx: HandlerContext,
+    ctx: HydrateCtx,
     reqCtx: HandlerRequestContext<Params>,
   ): Promise<HandlerOutput<View>> => {
     const { req, params } = reqCtx
@@ -90,20 +70,20 @@ export function createPipeline<Skeleton, Params, View>(
 export type Awaitable<T> = T | PromiseLike<T>
 
 export type SkeletonFn<Skeleton, Params> = (input: {
-  ctx: HandlerContext
+  ctx: HydrateCtx
   params: Params
   headers?: Record<string, string>
 }) => Awaitable<Skeleton>
 
 export type HydrationFn<Skeleton, Params> = (input: {
-  ctx: HandlerContext
+  ctx: HydrateCtx
   params: Params
   headers?: Record<string, string>
   skeleton: Skeleton
 }) => Awaitable<HydrationState>
 
 export type RulesFn<Skeleton, Params> = (input: {
-  ctx: HandlerContext
+  ctx: HydrateCtx
   params: Params
   headers?: Record<string, string>
   skeleton: Skeleton
@@ -111,7 +91,7 @@ export type RulesFn<Skeleton, Params> = (input: {
 }) => Skeleton
 
 export type PresentationFn<Skeleton, Params, View> = (input: {
-  ctx: HandlerContext
+  ctx: HydrateCtx
   params: Params
   headers?: Record<string, string>
   skeleton: Skeleton
@@ -119,7 +99,7 @@ export type PresentationFn<Skeleton, Params, View> = (input: {
 }) => View
 
 export type HeadersFn<Skeleton, Params> = (input: {
-  ctx: HandlerContext
+  ctx: HydrateCtx
   params: Params
   skeleton: Skeleton
 }) => Awaitable<undefined | Record<string, string>>
