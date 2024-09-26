@@ -59,7 +59,7 @@ import {
   Postgates,
   FeedItem,
 } from './feed'
-import { HydrateCtx } from './hydrate-ctx.js'
+import type { HydrateCtx } from './hydrate-ctx.js'
 import { ParsedLabelers } from '../util'
 
 export type HydrationState = {

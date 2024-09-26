@@ -1,13 +1,13 @@
 import { AtpAgent } from '@atproto/api'
 import { IdResolver } from '@atproto/identity'
 
-import { BsyncClient } from '../bsync.js'
-import { ServerConfig } from '../config.js'
-import { DataPlaneClient } from '../data-plane/index.js'
-import { FeatureGates } from '../feature-gates.js'
-import { ParsedLabelers } from '../util.js'
-import { Views } from '../views/index.js'
-import { Hydrator } from './hydrator.js'
+import type { BsyncClient } from '../bsync.js'
+import type { ServerConfig } from '../config.js'
+import type { DataPlaneClient } from '../data-plane/index.js'
+import type { FeatureGates } from '../feature-gates.js'
+import type { ParsedLabelers } from '../util.js'
+import type { Views } from '../views/index.js'
+import type { Hydrator } from './hydrator.js'
 
 export class HydrateCtx {
   labelers = this.vals.labelers

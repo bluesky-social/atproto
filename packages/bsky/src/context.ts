@@ -110,11 +110,24 @@ export class AppContext {
     return this.opts.featureGates
   }
 
-  get views() {
+  /**
+   * @deprecated (used in tests)
+   */
+  get views(): Views {
     return this.opts.views
   }
 
+  /**
+   * @deprecated (used by dev-env)
+   */
+  get idResolver(): IdResolver {
+    return this.opts.idResolver
+  }
+
   dataplaneForViewer(viewer: null | string): DataPlaneClient {
+    // Optimization: avoid creating a new client. Simply create a "proxy" that
+    // adds the viewer header, or return the global data plane client if there
+    // is no viewer.
     if (viewer) {
       return withHeaders(this.opts.dataplane, { 'bsky-caller-did': viewer })
     } else {
