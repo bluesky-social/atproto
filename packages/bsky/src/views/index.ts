@@ -608,7 +608,7 @@ export class Views {
             threadMuted: viewer.threadMuted,
             replyDisabled: this.userReplyDisabled(uri, state),
             embeddingDisabled: this.userPostEmbeddingDisabled(uri, state),
-            pinned: this.viewerPinned(uri, state),
+            pinned: this.viewerPinned(uri, state, authorDid),
           }
         : undefined,
       labels,
@@ -1139,8 +1139,7 @@ export class Views {
     return true
   }
 
-  viewerPinned(uri: string, state: HydrationState) {
-    const authorDid = creatorFromUri(uri)
+  viewerPinned(uri: string, state: HydrationState, authorDid: string) {
     if (!state.ctx?.viewer || state.ctx.viewer !== authorDid) return
     const actor = state.actors?.get(authorDid)
     if (!actor) return
