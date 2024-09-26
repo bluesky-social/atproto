@@ -8,6 +8,7 @@ import {
   QueryParams,
 } from '../../../../lexicon/types/app/bsky/feed/getPostThread.js'
 import {
+  createPipeline,
   HydrationFn,
   noRules,
   PresentationFn,
@@ -22,25 +23,37 @@ type Skeleton = {
 }
 
 export default function (server: Server, ctx: AppContext) {
+  const getPostThread = createPipeline(
+    skeleton,
+    hydration,
+    noRules, // handled in presentation: 3p block-violating replies are turned to #blockedPost, viewer blocks turned to #notFoundPost.
+    presentation,
+  )
+
   server.app.bsky.feed.getPostThread({
     auth: ctx.authVerifier.optionalStandardOrRole,
-    handler: ctx.createPipelineHandler(
-      skeleton,
-      hydration,
-      noRules, // handled in presentation: 3p block-violating replies are turned to #blockedPost, viewer blocks turned to #notFoundPost.
-      presentation,
-      {
-        exposeRepoRev: true,
-        onPipelineError: async (ctx, { res }, err) => {
-          const repoRev = await ctx.hydrator.actor.getRepoRevSafe(
-            ctx.hydrateCtx.viewer,
-          )
-          if (repoRev) {
-            res.setHeader(ATPROTO_REPO_REV, repoRev)
+    handler: ctx.createHandler(
+      async (ctx, reqCtx) => {
+        try {
+          return await getPostThread(ctx, reqCtx)
+        } catch (err) {
+          const { res } = reqCtx
+          if (!res.headersSent && !res.hasHeader(ATPROTO_REPO_REV)) {
+            const repoRev = await ctx.hydrator.actor.getRepoRevSafe(
+              ctx.hydrateCtx.viewer,
+            )
+            if (repoRev) {
+              res.setHeader(ATPROTO_REPO_REV, repoRev)
+            }
           }
 
           throw err
-        },
+        }
+      },
+      {
+        exposeRepoRev: true,
+        allowInclude3pBlocks: true,
+        allowIncludeTakedowns: true,
       },
     ),
   })

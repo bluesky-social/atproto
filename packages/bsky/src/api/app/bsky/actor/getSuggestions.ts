@@ -1,4 +1,5 @@
 import { mapDefined } from '@atproto/common'
+import { HeadersMap } from '@atproto/xrpc'
 
 import AppContext from '../../../../context.js'
 import { parseString } from '../../../../hydration/util.js'
@@ -17,7 +18,7 @@ import {
 type Skeleton = {
   dids: string[]
   cursor?: string
-  resHeaders?: Record<string, string>
+  resHeaders?: HeadersMap
 }
 
 export default function (server: Server, ctx: AppContext) {
@@ -29,15 +30,16 @@ export default function (server: Server, ctx: AppContext) {
       noBlocksOrMutes,
       presentation,
       {
-        parseHeaders: (req) => ({
+        inputHeaders: (req) => ({
           'accept-language': req.headers['accept-language'],
           'x-bsky-topics': Array.isArray(req.headers['x-bsky-topics'])
             ? req.headers['x-bsky-topics'].join(',')
             : req.headers['x-bsky-topics'],
         }),
-        extraHeaders: ({ skeleton }) => ({
-          'content-language': skeleton.resHeaders?.['content-language'],
-        }),
+        outputHeaders: ({ skeleton }) =>
+          skeleton.resHeaders?.['content-language']
+            ? { 'content-language': skeleton.resHeaders['content-language'] }
+            : undefined,
       },
     ),
   })
@@ -48,7 +50,7 @@ const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({
   params,
   headers,
 }) => {
-  const viewer = ctx.hydrateCtx.viewer
+  const { viewer } = ctx.hydrateCtx
   if (ctx.suggestionsAgent) {
     const res =
       await ctx.suggestionsAgent.app.bsky.unspecced.getSuggestionsSkeleton(

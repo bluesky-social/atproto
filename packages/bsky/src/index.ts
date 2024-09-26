@@ -18,7 +18,6 @@ import { BlobDiskCache, ImageProcessingServer } from './image/server'
 import AppContext from './context'
 import { Keypair } from '@atproto/crypto'
 import { createDataPlaneClient } from './data-plane/client'
-import { Hydrator } from './hydration/hydrator'
 import { Views } from './views'
 import { AuthVerifier, createPublicKeyObject } from './auth-verifier'
 import { authWithApiKey as bsyncAuth, createBsyncClient } from './bsync'
@@ -100,7 +99,6 @@ export class BskyAppView {
       httpVersion: config.dataplaneHttpVersion,
       rejectUnauthorized: !config.dataplaneIgnoreBadTls,
     })
-    const hydrator = new Hydrator(dataplane, config.labelsFromIssuerDids)
     const views = new Views(imgUriBuilder, videoUriBuilder)
 
     const bsyncClient = createBsyncClient({
@@ -140,7 +138,6 @@ export class BskyAppView {
       dataplane,
       searchAgent,
       suggestionsAgent,
-      hydrator,
       views,
       signingKey,
       idResolver,

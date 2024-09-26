@@ -1,6 +1,6 @@
 import { AppBskyFeedGetFeedSkeleton, AtpAgent } from '@atproto/api'
 import { mapDefined } from '@atproto/common'
-import { ResponseType, XRPCError } from '@atproto/xrpc'
+import { HeadersMap, ResponseType, XRPCError } from '@atproto/xrpc'
 import {
   InvalidRequestError,
   ServerTimer,
@@ -59,14 +59,14 @@ export default function (server: Server, ctx: AppContext) {
       noBlocksOrMutes,
       presentation,
       {
-        parseHeaders: (req) => ({
+        inputHeaders: (req) => ({
           authorization: req.headers['authorization'],
           'accept-language': req.headers['accept-language'],
           'x-bsky-topics': Array.isArray(req.headers['x-bsky-topics'])
             ? req.headers['x-bsky-topics'].join(',')
             : req.headers['x-bsky-topics'],
         }),
-        extraHeaders: ({ skeleton }) => ({
+        outputHeaders: ({ skeleton }) => ({
           ...skeleton.resHeaders,
           'server-timing': serverTimingHeader([
             skeleton.timerSkele,
@@ -157,7 +157,7 @@ const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
 async function skeletonFromFeedGen(
   ctx: HandlerContext,
   params: QueryParams,
-  headers?: Record<string, string>,
+  headers?: HeadersMap,
 ): Promise<AlgoResponse> {
   const { feed } = params
   const found = await ctx.hydrator.feed.getFeedGens([feed], true)

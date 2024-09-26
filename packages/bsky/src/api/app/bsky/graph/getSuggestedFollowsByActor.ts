@@ -1,4 +1,5 @@
 import { mapDefined } from '@atproto/common'
+import { HeadersMap } from '@atproto/xrpc'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 
 import AppContext from '../../../../context.js'
@@ -17,7 +18,7 @@ import {
 type Skeleton = {
   isFallback: boolean
   suggestedDids: string[]
-  headers?: Record<string, string>
+  headers?: HeadersMap
 }
 
 export default function (server: Server, ctx: AppContext) {
@@ -29,13 +30,13 @@ export default function (server: Server, ctx: AppContext) {
       noBlocksOrMutes,
       presentation,
       {
-        parseHeaders: (req) => ({
+        inputHeaders: (req) => ({
           'accept-language': req.headers['accept-language'],
           'x-bsky-topics': Array.isArray(req.headers['x-bsky-topics'])
             ? req.headers['x-bsky-topics'].join(',')
             : req.headers['x-bsky-topics'],
         }),
-        extraHeaders: ({ skeleton: { headers } }) => headers ?? {},
+        outputHeaders: ({ skeleton: { headers } }) => headers,
       },
     ),
   })
@@ -53,7 +54,7 @@ const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({
 
   if (ctx.suggestionsAgent) {
     const res =
-      await ctx.suggestionsAgent.api.app.bsky.unspecced.getSuggestionsSkeleton(
+      await ctx.suggestionsAgent.app.bsky.unspecced.getSuggestionsSkeleton(
         {
           viewer: ctx.hydrateCtx.viewer ?? undefined,
           relativeToDid,

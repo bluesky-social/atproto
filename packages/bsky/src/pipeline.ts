@@ -1,27 +1,53 @@
 import { AtpAgent } from '@atproto/api'
 import { noUndefinedVals } from '@atproto/common'
+import { IdResolver } from '@atproto/identity'
+import { IncomingMessage, ServerResponse } from 'http'
+import { Creds } from './auth-verifier.js'
 import { BsyncClient } from './bsync.js'
 import { DataPlaneClient } from './data-plane/index.js'
 import { FeatureGates } from './feature-gates.js'
-import { HydrateCtx, HydrationState, Hydrator } from './hydration/hydrator.js'
+import { HydrateCtx } from './hydration/hydrate-ctx.js'
+import { HydrationState, Hydrator } from './hydration/hydrator.js'
 import { Views } from './views/index.js'
+import { ServerConfig } from './config.js'
 
 export type HandlerContext = {
-  hydrateCtx: HydrateCtx
-  hydrator: Hydrator
-  views: Views
-  dataplane: DataPlaneClient
-  suggestionsAgent?: AtpAgent
-  searchAgent?: AtpAgent
-  featureGates: FeatureGates
-  bsyncClient: BsyncClient
+  readonly cfg: ServerConfig
+  readonly hydrateCtx: HydrateCtx
+  readonly hydrator: Hydrator
+  readonly views: Views
+  readonly dataplane: DataPlaneClient
+  readonly suggestionsAgent?: AtpAgent
+  readonly searchAgent?: AtpAgent
+  readonly featureGates: FeatureGates
+  readonly bsyncClient: BsyncClient
+  readonly idResolver: IdResolver
+}
+
+export type HandlerRequestContext<Params> = {
+  params: Params
+  req: IncomingMessage
+  res: ServerResponse
+  auth: Creds
+}
+
+export type HandlerOutput<View> = {
+  body: View
+  headers?: Record<string, string>
+  encoding: 'application/json'
 }
 
 export type PipelineOptions<Skeleton, Params> = {
   /**
+   * Parse incoming headers and expose the result as `header` input to the
+   * pipeline functions.
+   */
+  inputHeaders?: (req: IncomingMessage) => Record<string, undefined | string>
+
+  /**
    * Extra headers to include in the response.
    */
-  extraHeaders?: HeadersFn<Skeleton, Params>
+  outputHeaders?: HeadersFn<Skeleton, Params>
 }
 
 export function createPipeline<Skeleton, Params, View>(
@@ -31,21 +57,19 @@ export function createPipeline<Skeleton, Params, View>(
   presentationFn: PresentationFn<Skeleton, Params, View>,
   options: PipelineOptions<Skeleton, Params> = {},
 ) {
-  const { extraHeaders } = options
+  const { inputHeaders, outputHeaders } = options
 
   return async (
     ctx: HandlerContext,
-    params: Params,
-    headers?: Record<string, string>,
-  ): Promise<{
-    body: View
-    headers?: Record<string, string>
-    encoding: 'application/json'
-  }> => {
+    reqCtx: HandlerRequestContext<Params>,
+  ): Promise<HandlerOutput<View>> => {
+    const { req, params } = reqCtx
+    const headers = inputHeaders && noUndefinedVals(inputHeaders(req))
+
     const skeleton = await skeletonFn({ ctx, params, headers })
     const hydration = await hydrationFn({ ctx, params, headers, skeleton })
     const rules = await rulesFn({ ctx, params, headers, skeleton, hydration })
-    const view = await presentationFn({
+    const body = await presentationFn({
       ctx,
       params,
       headers,
@@ -55,14 +79,10 @@ export function createPipeline<Skeleton, Params, View>(
 
     return {
       encoding: 'application/json',
-      headers: {
-        ...(extraHeaders
-          ? noUndefinedVals(
-              await extraHeaders({ ctx, params, skeleton: rules }),
-            )
-          : undefined),
-      },
-      body: view,
+      headers: outputHeaders
+        ? await outputHeaders({ ctx, params, skeleton: rules })
+        : undefined,
+      body,
     }
   }
 }
@@ -102,7 +122,7 @@ export type HeadersFn<Skeleton, Params> = (input: {
   ctx: HandlerContext
   params: Params
   skeleton: Skeleton
-}) => Awaitable<Record<string, undefined | string>>
+}) => Awaitable<undefined | Record<string, string>>
 
 export function noRules<S>(input: { skeleton: S }) {
   return input.skeleton

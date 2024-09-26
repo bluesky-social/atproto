@@ -1,27 +1,29 @@
 import { AtpAgent } from '@atproto/api'
 import { Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
-import * as plc from '@did-plc/lib'
+import { IncomingMessage } from 'http'
 
-import { noUndefinedVals } from '@atproto/common'
-import { IncomingMessage, ServerResponse } from 'http'
-import { AuthVerifier, Creds } from './auth-verifier.js'
+import { resHeaders } from './api/util.js'
+import { AuthVerifier } from './auth-verifier.js'
 import { BsyncClient } from './bsync.js'
 import { ServerConfig } from './config.js'
 import { CourierClient } from './courier.js'
 import { DataPlaneClient, withHeaders } from './data-plane/client.js'
 import { FeatureGates } from './feature-gates.js'
-import { HydrateCtxVals, Hydrator } from './hydration/hydrator.js'
+import { HydrateCtx, HydrateCtxVals } from './hydration/hydrate-ctx.js'
+import { Hydrator } from './hydration/hydrator.js'
 import { httpLogger as log } from './logger.js'
 import {
+  Awaitable,
   createPipeline,
+  HandlerContext,
+  HandlerOutput,
+  HandlerRequestContext,
   HydrationFn,
   PipelineOptions,
   PresentationFn,
-  HandlerContext,
   RulesFn,
   SkeletonFn,
-  Awaitable,
 } from './pipeline.js'
 import {
   defaultLabelerHeader,
@@ -29,9 +31,9 @@ import {
   parseLabelerHeader,
 } from './util.js'
 import { Views } from './views/index.js'
-import { resHeaders } from './api/util.js'
+import { AuthRequiredError } from '@atproto/xrpc-server'
 
-export type DefaultHeadersOptions = {
+export type HandlerFactoryOptions = {
   /**
    * Expose the current repo revision in the response headers.
    */
@@ -41,23 +43,7 @@ export type DefaultHeadersOptions = {
    * Expose the labelers that were used to generate the response.
    */
   exposeLabelers?: boolean
-}
 
-export async function defaultHeaders(
-  ctx: HandlerContext,
-  options?: DefaultHeadersOptions,
-) {
-  return resHeaders({
-    repoRev:
-      options?.exposeRepoRev === true
-        ? await ctx.hydrator.actor.getRepoRevSafe(ctx.hydrateCtx.viewer)
-        : undefined,
-    labelers:
-      options?.exposeLabelers !== false ? ctx.hydrateCtx.labelers : undefined,
-  })
-}
-
-export type HandlerFactoryOptions = {
   /**
    * Use the credential's "includeTakedowns" value when building the
    * {@link HydrateCtxVals} (use to build the {@link HydrateCtx}).
@@ -69,6 +55,12 @@ export type HandlerFactoryOptions = {
    * {@link HydrateCtxVals} (use to build the {@link HydrateCtx}).
    */
   allowInclude3pBlocks?: boolean
+
+  /**
+   * Causes an error if the `canPerformTakedown` field is not present in the
+   * credential.
+   */
+  enforceCanPerformTakedown?: boolean
 }
 
 export class AppContext {
@@ -78,7 +70,6 @@ export class AppContext {
       dataplane: DataPlaneClient
       searchAgent: AtpAgent | undefined
       suggestionsAgent: AtpAgent | undefined
-      hydrator: Hydrator
       views: Views
       signingKey: Keypair
       idResolver: IdResolver
@@ -93,36 +84,15 @@ export class AppContext {
     return this.opts.cfg
   }
 
+  /**
+   * Global data plane client that is not scoped to any particular viewer.
+   */
   get dataplane(): DataPlaneClient {
     return this.opts.dataplane
   }
 
-  get searchAgent(): AtpAgent | undefined {
-    return this.opts.searchAgent
-  }
-
-  get suggestionsAgent(): AtpAgent | undefined {
-    return this.opts.suggestionsAgent
-  }
-
-  get hydrator(): Hydrator {
-    return this.opts.hydrator
-  }
-
-  get views(): Views {
-    return this.opts.views
-  }
-
   get signingKey(): Keypair {
     return this.opts.signingKey
-  }
-
-  get plcClient(): plc.Client {
-    return new plc.Client(this.cfg.didPlcUrl)
-  }
-
-  get idResolver(): IdResolver {
-    return this.opts.idResolver
   }
 
   get bsyncClient(): BsyncClient {
@@ -141,15 +111,11 @@ export class AppContext {
     return this.opts.featureGates
   }
 
-  dataplaneForViewer(viewer: null | string) {
+  dataplaneForViewer(viewer: null | string): DataPlaneClient {
     if (viewer) {
-      const dataplane = withHeaders(this.opts.dataplane, {
-        'bsky-caller-did': viewer,
-      })
-      const hydrator = new Hydrator(dataplane, this.cfg.labelsFromIssuerDids)
-      return { dataplane, hydrator }
+      return withHeaders(this.opts.dataplane, { 'bsky-caller-did': viewer })
     } else {
-      return { dataplane: this.opts.dataplane, hydrator: this.opts.hydrator }
+      return this.opts.dataplane
     }
   }
 
@@ -167,113 +133,118 @@ export class AppContext {
   }
 
   async createHandlerContext(vals: HydrateCtxVals): Promise<HandlerContext> {
-    const { dataplane, hydrator } = this.dataplaneForViewer(vals.viewer)
+    const dataplane = this.dataplaneForViewer(vals.viewer)
+
+    // @TODO Refactor the Hydrator, HydrateCtx and HandlerContext into a single
+    // class. For historic reasons, "hydrator" used to be a singleton. Then we
+    // added the ability to send the caller DID to the data plane, which
+    // required to create a new dataplane instance per request.
+
+    const hydrator = new Hydrator(dataplane, this.cfg.labelsFromIssuerDids)
+
+    // ensures we're only apply labelers that exist and are not taken down
+    const labelers = vals.labelers.dids
+    const nonServiceLabelers = labelers.filter(
+      (did) => !hydrator.serviceLabelers.has(did),
+    )
+    const labelerActors = await hydrator.actor.getActors(
+      nonServiceLabelers,
+      vals.includeTakedowns,
+    )
+    const availableDids = labelers.filter(
+      (did) => hydrator.serviceLabelers.has(did) || !!labelerActors.get(did),
+    )
+    const availableLabelers = {
+      dids: availableDids,
+      redact: vals.labelers.redact,
+    }
+
+    const hydrateCtx = new HydrateCtx({
+      labelers: availableLabelers,
+      viewer: vals.viewer,
+      includeTakedowns: vals.includeTakedowns,
+      include3pBlocks: vals.include3pBlocks,
+    })
+
     return {
-      hydrateCtx: await hydrator.createContext(vals),
+      hydrateCtx,
       hydrator,
       dataplane,
-      views: this.views,
-      suggestionsAgent: this.suggestionsAgent,
-      searchAgent: this.searchAgent,
-      featureGates: this.featureGates,
-      bsyncClient: this.bsyncClient,
+      cfg: this.opts.cfg,
+      views: this.opts.views,
+      suggestionsAgent: this.opts.suggestionsAgent,
+      searchAgent: this.opts.searchAgent,
+      idResolver: this.opts.idResolver,
+      featureGates: this.opts.featureGates,
+      bsyncClient: this.opts.bsyncClient,
     }
   }
 
   createHandler<
-    ReqCtx extends {
-      auth: Creds
-      params: unknown
-      req: IncomingMessage
-      res: ServerResponse
-    },
-    Output extends void | {
-      body: unknown
-      headers?: Record<string, string>
-      encoding: 'application/json'
-    },
+    ReqCtx extends HandlerRequestContext<unknown>,
+    Output extends void | HandlerOutput<unknown>,
   >(
     view: (ctx: HandlerContext, reqCtx: ReqCtx) => Awaitable<Output>,
-    options: DefaultHeadersOptions &
-      HandlerFactoryOptions & {
-        onPipelineError?: (
-          ctx: HandlerContext,
-          reqCtx: ReqCtx,
-          err: unknown,
-        ) => Promise<Output>
-      } = {},
-  ) {
-    const {
+    {
+      exposeRepoRev = false,
+      exposeLabelers = true,
       allowIncludeTakedowns = false,
       allowInclude3pBlocks = false,
-      onPipelineError,
-    } = options
+      enforceCanPerformTakedown = false,
+    }: HandlerFactoryOptions = {},
+  ) {
+    const { authVerifier } = this
 
+    /**
+     * Returns an XRPC handler that wraps the view function.
+     */
     return async (reqCtx: ReqCtx): Promise<Output> => {
-      const creds = this.authVerifier.parseCreds(reqCtx.auth)
       const labelers = this.reqLabelers(reqCtx.req)
+      const { viewer, includeTakedowns, include3pBlocks, canPerformTakedown } =
+        authVerifier.parseCreds(reqCtx.auth)
+
+      if (enforceCanPerformTakedown && !canPerformTakedown) {
+        throw new AuthRequiredError(
+          'Must be a full moderator to update subject state',
+        )
+      }
 
       const ctx = await this.createHandlerContext({
-        viewer: creds.viewer,
         labelers,
-        includeTakedowns: allowIncludeTakedowns
-          ? creds.includeTakedowns
-          : undefined,
-        include3pBlocks: allowInclude3pBlocks
-          ? creds.include3pBlocks
-          : undefined,
+        viewer,
+        includeTakedowns: allowIncludeTakedowns ? includeTakedowns : undefined,
+        include3pBlocks: allowInclude3pBlocks ? include3pBlocks : undefined,
       })
 
-      const result = await Promise.resolve(view(ctx, reqCtx)).catch(
-        onPipelineError ? (err) => onPipelineError(ctx, reqCtx, err) : null,
-      )
+      const output = await view(ctx, reqCtx)
 
-      if (!result) return undefined as Output
-
-      return {
-        encoding: result.encoding,
-        headers: {
-          ...result.headers,
-          ...(await defaultHeaders(ctx, options)),
-        },
-        body: result.body,
-      } as Output
+      return output
+        ? ({
+            encoding: output.encoding,
+            headers: {
+              ...output.headers,
+              ...resHeaders({
+                repoRev: exposeRepoRev
+                  ? await ctx.hydrator.actor.getRepoRevSafe(
+                      ctx.hydrateCtx.viewer,
+                    )
+                  : undefined,
+                labelers: exposeLabelers ? ctx.hydrateCtx.labelers : undefined,
+              }),
+            },
+            body: output.body,
+          } as Output)
+        : (undefined as Output)
     }
   }
 
-  createPipelineHandler<Params, View, Skeleton, Auth extends Creds>(
+  createPipelineHandler<Params, View, Skeleton>(
     skeletonFn: SkeletonFn<Skeleton, Params>,
     hydrationFn: HydrationFn<Skeleton, Params>,
     rulesFn: RulesFn<Skeleton, Params>,
     presentationFn: PresentationFn<Skeleton, Params, View>,
-    options: PipelineOptions<Skeleton, Params> &
-      DefaultHeadersOptions &
-      HandlerFactoryOptions & {
-        /**
-         * Parse incoming headers and expose the result to the pipeline
-         */
-        parseHeaders?: (
-          req: IncomingMessage,
-        ) => Record<string, undefined | string>
-
-        onPipelineError?: (
-          ctx: HandlerContext,
-          reqCtx: {
-            auth: Auth
-            params: Params
-            req: IncomingMessage
-            res: ServerResponse
-          },
-          err: unknown,
-        ) => Promise<{
-          body: View
-          headers?: Record<string, string>
-          encoding: 'application/json'
-        }>
-      } = {},
+    options: PipelineOptions<Skeleton, Params> & HandlerFactoryOptions = {},
   ) {
-    const { parseHeaders } = options
-
     const pipeline = createPipeline(
       skeletonFn,
       hydrationFn,
@@ -282,23 +253,7 @@ export class AppContext {
       options,
     )
 
-    return this.createHandler(
-      (
-        ctx,
-        reqCtx: {
-          auth: Auth
-          params: Params
-          req: IncomingMessage
-          res: ServerResponse
-        },
-      ) => {
-        return pipeline(
-          ctx,
-          reqCtx.params,
-          parseHeaders && noUndefinedVals(parseHeaders(reqCtx.req)),
-        )
-      },
-    )
+    return this.createHandler(pipeline, options)
   }
 }
 

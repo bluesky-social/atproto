@@ -78,7 +78,7 @@ const noBlocks: RulesFn<Skeleton, QueryParams> = ({
   hydration,
   ctx,
 }) => {
-  const viewer = ctx.hydrateCtx.viewer
+  const { viewer } = ctx.hydrateCtx
   skeleton.followUris = skeleton.followUris.filter((followUri) => {
     const follow = hydration.follows?.get(followUri)
     if (!follow) return false
