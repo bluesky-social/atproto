@@ -12,8 +12,20 @@ export class InvalidClientMetadataError extends OAuthError {
     super('invalid_client_metadata', error_description, 400, cause)
   }
 
-  static from(cause: unknown): InvalidClientMetadataError {
-    if (cause instanceof InvalidClientMetadataError) return cause
-    return new InvalidClientMetadataError('Invalid client configuration', cause)
+  static from(
+    cause: unknown,
+    fallbackMessage = 'Invalid client metadata document',
+  ): InvalidClientMetadataError {
+    if (cause instanceof InvalidClientMetadataError) {
+      return cause
+    }
+    if (cause instanceof TypeError) {
+      // This method is meant to be used in the context of parsing & validating
+      // a client client metadata. In that context, a TypeError would more
+      // likely represent a problem with the data (e.g. invalid URL constructor
+      // arg) and not a programming error.
+      return new InvalidClientMetadataError(cause.message, cause)
+    }
+    return new InvalidClientMetadataError(fallbackMessage, cause)
   }
 }

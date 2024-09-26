@@ -4,19 +4,27 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { Agent } from '@atproto/api'
 import {
-  AuthorizeOptions,
   BrowserOAuthClient,
   BrowserOAuthClientLoadOptions,
-  BrowserOAuthClientOptions,
   LoginContinuedInParentWindowError,
   OAuthSession,
 } from '@atproto/oauth-client-browser'
 
-type Gettable<T> = () => PromiseLike<T> | T
+type Simplify<T> = { [K in keyof T]: T[K] } & NonNullable<unknown>
 
 export type OnRestored = (session: OAuthSession | null) => void
 export type OnSignedIn = (session: OAuthSession, state: null | string) => void
 export type OnSignedOut = () => void
+
+type OAuthSignIn = (input: string) => Promise<void>
+
+function useValueRef<T>(value: T) {
+  const valueRef = useRef(value)
+  useEffect(() => {
+    valueRef.current = value
+  }, [value])
+  return valueRef
+}
 
 function useCallbackRef<T extends (this: any, ...args: any[]) => any>(
   fn: T,
@@ -27,10 +35,7 @@ function useCallbackRef<T extends (this: any, ...args: any[]) => any>(
 ): (this: ThisParameterType<T>, ...args: Parameters<T>) => void | ReturnType<T>
 
 function useCallbackRef<T extends (this: any, ...args: any[]) => any>(fn?: T) {
-  const fnRef = useRef(fn)
-  useEffect(() => {
-    fnRef.current = fn
-  }, [fn])
+  const fnRef = useValueRef(fn)
   return useCallback(function (
     this: ThisParameterType<T>,
     ...args: Parameters<T>
@@ -42,34 +47,26 @@ function useCallbackRef<T extends (this: any, ...args: any[]) => any>(fn?: T) {
 
 type ClientOptions =
   | { client: BrowserOAuthClient }
-  | Pick<
-      BrowserOAuthClientLoadOptions,
-      | 'clientId'
-      | 'handleResolver'
-      | 'responseMode'
-      | 'plcDirectoryUrl'
-      | 'fetch'
-    >
-  | Pick<
-      BrowserOAuthClientOptions,
-      | 'clientMetadata'
-      | 'handleResolver'
-      | 'responseMode'
-      | 'plcDirectoryUrl'
-      | 'fetch'
+  | Simplify<
+      Pick<
+        BrowserOAuthClientLoadOptions,
+        | 'clientId'
+        | 'handleResolver'
+        | 'responseMode'
+        | 'plcDirectoryUrl'
+        | 'fetch'
+      >
     >
 
 function useOAuthClient(options: ClientOptions): null | BrowserOAuthClient
 function useOAuthClient(
   options: Partial<
-    { client: BrowserOAuthClient } & BrowserOAuthClientLoadOptions &
-      BrowserOAuthClientOptions
+    { client: BrowserOAuthClient } & BrowserOAuthClientLoadOptions
   >,
 ) {
   const {
     client: clientInput,
     clientId,
-    clientMetadata,
     handleResolver,
     responseMode,
     plcDirectoryUrl,
@@ -83,19 +80,7 @@ function useOAuthClient(
   useEffect(() => {
     if (clientInput) {
       setClient(clientInput)
-    } else if (!handleResolver) {
-      throw new TypeError('handleResolver is required')
-    } else if (clientMetadata || !clientId) {
-      const client = new BrowserOAuthClient({
-        clientMetadata,
-        handleResolver,
-        responseMode,
-        plcDirectoryUrl,
-        fetch,
-      })
-      setClient(client)
-      return () => client.dispose()
-    } else {
+    } else if (clientId && handleResolver) {
       const ac = new AbortController()
       const { signal } = ac
 
@@ -125,11 +110,12 @@ function useOAuthClient(
       )
 
       return () => ac.abort()
+    } else {
+      setClient(null)
     }
   }, [
     clientInput,
     clientId,
-    clientMetadata,
     handleResolver,
     responseMode,
     plcDirectoryUrl,
@@ -143,18 +129,20 @@ export type UseOAuthOptions = ClientOptions & {
   onRestored?: OnRestored
   onSignedIn?: OnSignedIn
   onSignedOut?: OnSignedOut
-  getScope?: Gettable<undefined | string>
-  getState?: Gettable<undefined | string>
+
+  state?: string
+  scope?: string
 }
 
 export function useOAuth(options: UseOAuthOptions) {
   const onRestored = useCallbackRef(options.onRestored)
   const onSignedIn = useCallbackRef(options.onSignedIn)
   const onSignedOut = useCallbackRef(options.onSignedOut)
-  const getScope = useCallbackRef(options.getScope)
-  const getState = useCallbackRef(options.getState)
 
   const clientForInit = useOAuthClient(options)
+
+  const scopeRef = useValueRef(options.scope)
+  const stateRef = useValueRef(options.state)
 
   const [session, setSession] = useState<null | OAuthSession>(null)
   const [client, setClient] = useState<BrowserOAuthClient | null>(null)
@@ -248,18 +236,16 @@ export function useOAuth(options: UseOAuthOptions) {
     }
   }, [client, session, onSignedOut])
 
-  const signIn = useCallback(
-    async (input: string, options?: AuthorizeOptions) => {
+  const signIn = useCallback<OAuthSignIn>(
+    async (input) => {
       if (!client) throw new Error('Client not initialized')
-
-      const state = options?.state ?? (await getState()) ?? undefined
-      const scope = options?.scope ?? (await getScope()) ?? 'atproto'
-
-      const session = await client.signIn(input, { ...options, scope, state })
+      const state = stateRef.current
+      const scope = scopeRef.current
+      const session = await client.signIn(input, { scope, state })
       setSession(session)
       await onSignedIn(session, state ?? null)
     },
-    [client, getScope, getState, onSignedIn],
+    [client, onSignedIn],
   )
 
   // Memoize the return value to avoid re-renders in consumers
@@ -271,6 +257,7 @@ export function useOAuth(options: UseOAuthOptions) {
 
       signIn,
       signOut: () => session?.signOut(),
+      refresh: () => session?.getTokenInfo(true),
 
       client,
       agent: session ? new Agent(session) : null,

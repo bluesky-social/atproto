@@ -1,15 +1,23 @@
-import { streamToNodeBuffer } from '@atproto/common'
+import { decodeStream, streamToNodeBuffer } from '@atproto/common'
+import createHttpError from 'http-errors'
+import { IncomingMessage } from 'node:http'
 import { Readable } from 'node:stream'
 
 import {
   KnownNames,
   KnownParser,
-  KnownTypes,
   parseContentType,
-  ParserForType,
   ParserResult,
   parsers,
 } from './parser.js'
+
+export function decodeHttpRequest(req: IncomingMessage): Readable {
+  try {
+    return decodeStream(req, req.headers['content-encoding'])
+  } catch (err) {
+    throw createHttpError(415, err, { expose: err instanceof TypeError })
+  }
+}
 
 /**
  * Generic method that parses a stream of unknown nature (HTTP request/response,
@@ -17,39 +25,26 @@ import {
  *
  * @throws {TypeError} If the content-type is not valid or supported.
  */
-export async function parseStream<
-  T extends KnownTypes,
-  A extends readonly KnownNames[] = readonly KnownNames[],
->(
-  req: Readable,
-  contentType: T,
-  allow?: A,
-): Promise<
-  ParserResult<ParserForType<Extract<KnownParser, { name: A[number] }>, T>>
->
-export async function parseStream<
-  A extends readonly KnownNames[] = readonly KnownNames[],
->(
-  req: Readable,
-  contentType: unknown,
-  allow?: A,
-): Promise<ParserResult<Extract<KnownParser, { name: A[number] }>>>
-export async function parseStream(
-  req: Readable,
-  contentType: unknown = 'application/octet-stream',
-  allow?: string[],
-): Promise<ParserResult<KnownParser>> {
-  const type = parseContentType(contentType)
+
+export async function parseHttpRequest<A extends readonly KnownNames[]>(
+  req: IncomingMessage,
+  allow: A,
+) {
+  const type = parseContentType(
+    req.headers['content-type'] ?? 'application/octet-stream',
+  )
 
   const parser = parsers.find(
-    (parser) =>
-      allow?.includes(parser.name) !== false && parser.test(type.mime),
+    (parser) => allow.includes(parser.name) && parser.test(type.mime),
   )
 
   if (!parser) {
-    throw new TypeError(`Unsupported content-type: ${type.mime}`)
+    throw createHttpError(415, `Unsupported content-type: ${type.mime}`)
   }
 
-  const buffer = await streamToNodeBuffer(req)
-  return parser.parse(buffer, type)
+  const stream = decodeHttpRequest(req)
+  const buffer = await streamToNodeBuffer(stream)
+  return parser.parse(buffer, type) as ParserResult<
+    Extract<KnownParser, { name: A[number] }>
+  >
 }

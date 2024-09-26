@@ -1,9 +1,9 @@
-import { OAuthAuthenticationRequestParameters } from '@atproto/oauth-types'
+import { OAuthAuthorizationRequestParameters } from '@atproto/oauth-types'
 import { AccessDeniedError } from './access-denied-error.js'
 
 export class ConsentRequiredError extends AccessDeniedError {
   constructor(
-    parameters: OAuthAuthenticationRequestParameters,
+    parameters: OAuthAuthorizationRequestParameters,
     error_description = 'User consent required',
     cause?: unknown,
   ) {

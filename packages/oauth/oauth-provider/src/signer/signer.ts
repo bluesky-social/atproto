@@ -7,11 +7,10 @@ import {
   VerifyOptions,
 } from '@atproto/jwk'
 import {
-  OAuthAuthenticationRequestParameters,
+  OAuthAuthorizationRequestParameters,
   OAuthAuthorizationDetails,
 } from '@atproto/oauth-types'
 
-import { Account } from '../account/account.js'
 import { Client } from '../client/client.js'
 import { dateToEpoch } from '../lib/util/date.js'
 import { TokenId } from '../token/token-id.js'
@@ -52,9 +51,10 @@ export class Signer {
 
   async accessToken(
     client: Client,
-    parameters: OAuthAuthenticationRequestParameters,
-    account: Account,
-    extra: {
+    parameters: OAuthAuthorizationRequestParameters,
+    options: {
+      aud: string | [string, ...string[]]
+      sub: string
       jti: TokenId
       exp: Date
       iat?: Date
@@ -63,26 +63,25 @@ export class Signer {
       authorization_details?: OAuthAuthorizationDetails
     },
   ): Promise<SignedJwt> {
-    const header: JwtSignHeader = {
-      // https://datatracker.ietf.org/doc/html/rfc9068#section-2.1
-      alg: extra.alg,
-      typ: 'at+jwt',
-    }
-
-    const payload: Omit<SignedTokenPayload, 'iss'> = {
-      aud: account.aud,
-      iat: dateToEpoch(extra?.iat),
-      exp: dateToEpoch(extra.exp),
-      sub: account.sub,
-      jti: extra.jti,
-      cnf: extra.cnf,
-      // https://datatracker.ietf.org/doc/html/rfc8693#section-4.3
-      client_id: client.id,
-      scope: parameters.scope || client.metadata.scope,
-      authorization_details: extra.authorization_details,
-    }
-
-    return this.sign(header, payload)
+    return this.sign(
+      {
+        // https://datatracker.ietf.org/doc/html/rfc9068#section-2.1
+        alg: options.alg,
+        typ: 'at+jwt',
+      },
+      {
+        aud: options.aud,
+        iat: dateToEpoch(options?.iat),
+        exp: dateToEpoch(options.exp),
+        sub: options.sub,
+        jti: options.jti,
+        cnf: options.cnf,
+        // https://datatracker.ietf.org/doc/html/rfc8693#section-4.3
+        client_id: client.id,
+        scope: parameters.scope,
+        authorization_details: options.authorization_details,
+      },
+    )
   }
 
   async verifyAccessToken(token: SignedJwt) {
