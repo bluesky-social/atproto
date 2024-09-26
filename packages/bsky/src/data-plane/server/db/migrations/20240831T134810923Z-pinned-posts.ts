@@ -3,11 +3,11 @@ import { Kysely } from 'kysely'
 export async function up(db: Kysely<unknown>): Promise<void> {
   await db.schema
     .alterTable('profile')
-    .addColumn('pinnedPost', 'boolean')
+    .addColumn('pinnedPost', 'varchar')
     .execute()
   await db.schema
     .alterTable('profile')
-    .addColumn('pinnedPostCid', 'boolean')
+    .addColumn('pinnedPostCid', 'varchar')
     .execute()
 }
 
