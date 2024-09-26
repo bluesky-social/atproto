@@ -420,7 +420,10 @@ describe('pds author feed views', () => {
     }
 
     it('params.includePins = true, pin is in first page of results', async () => {
+      await sc.post(alice, 'not pinned post')
       const post = await createAndPinPost()
+      await sc.post(alice, 'not pinned post')
+
       const { data } = await agent.api.app.bsky.feed.getAuthorFeed(
         { actor: sc.accounts[alice].handle, includePins: true },
         {
