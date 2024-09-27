@@ -1,11 +1,12 @@
 import {
   SeedClient,
   TestNetwork,
-  TestOzone,
   basicSeed,
+  TestOzone,
   ModeratorClient,
 } from '@atproto/dev-env'
 import { AtpAgent } from '@atproto/api'
+import { AtUri } from '@atproto/syntax'
 import {
   REASONOTHER,
   REASONSPAM,
@@ -13,28 +14,22 @@ import {
 import { forSnapshot } from './_util'
 import { ids } from '../src/lexicon/lexicons'
 
-describe('admin get multiple repos', () => {
+describe('admin get record view', () => {
   let network: TestNetwork
   let ozone: TestOzone
   let agent: AtpAgent
-  let pdsAgent: AtpAgent
   let sc: SeedClient
   let modClient: ModeratorClient
 
   beforeAll(async () => {
     network = await TestNetwork.create({
-      dbPostgresSchema: 'ozone_admin_get_repos',
+      dbPostgresSchema: 'ozone_admin_get_record',
     })
     ozone = network.ozone
     agent = ozone.getClient()
-    pdsAgent = network.pds.getClient()
     sc = network.getSeedClient()
     modClient = ozone.getModClient()
     await basicSeed(sc)
-    await pdsAgent.com.atproto.server.deactivateAccount(
-      {},
-      { encoding: 'application/json', headers: sc.getHeaders(sc.dids.dan) },
-    )
     await network.processAll()
   })
 
@@ -43,19 +38,13 @@ describe('admin get multiple repos', () => {
   })
 
   beforeAll(async () => {
-    await modClient.emitEvent({
-      event: { $type: 'tools.ozone.moderation.defs#modEventAcknowledge' },
-      subject: {
-        $type: 'com.atproto.admin.defs#repoRef',
-        did: sc.dids.alice,
-      },
-    })
     await sc.createReport({
       reportedBy: sc.dids.bob,
       reasonType: REASONSPAM,
       subject: {
-        $type: 'com.atproto.admin.defs#repoRef',
-        did: sc.dids.alice,
+        $type: 'com.atproto.repo.strongRef',
+        uri: sc.posts[sc.dids.alice][0].ref.uriStr,
+        cid: sc.posts[sc.dids.alice][0].ref.cidStr,
       },
     })
     await sc.createReport({
@@ -63,23 +52,35 @@ describe('admin get multiple repos', () => {
       reasonType: REASONOTHER,
       reason: 'defamation',
       subject: {
-        $type: 'com.atproto.admin.defs#repoRef',
-        did: sc.dids.alice,
+        $type: 'com.atproto.repo.strongRef',
+        uri: sc.posts[sc.dids.alice][0].ref.uriStr,
+        cid: sc.posts[sc.dids.alice][0].ref.cidStr,
       },
     })
     await modClient.emitEvent({
       event: { $type: 'tools.ozone.moderation.defs#modEventTakedown' },
       subject: {
-        $type: 'com.atproto.admin.defs#repoRef',
-        did: sc.dids.alice,
+        $type: 'com.atproto.repo.strongRef',
+        uri: sc.posts[sc.dids.alice][0].ref.uriStr,
+        cid: sc.posts[sc.dids.alice][0].ref.cidStr,
       },
+    })
+    await network.bsky.ctx.dataplane.takedownRecord({
+      recordUri: sc.posts[sc.dids.alice][0].ref.uriStr,
     })
   })
 
-  it('gets multiple repos by did', async () => {
-    const { data } = await agent.tools.ozone.moderation.getRepos(
-      { dids: [sc.dids.alice, sc.dids.bob, 'did:web:xyz'] },
-      { headers: await ozone.modHeaders(ids.ToolsOzoneModerationGetRepos) },
+  it('gets a records by uris', async () => {
+    const { data } = await agent.tools.ozone.moderation.getRecords(
+      {
+        uris: [
+          sc.posts[sc.dids.alice][0].ref.uriStr,
+          sc.posts[sc.dids.bob][0].ref.uriStr,
+          //     create a uri for a non-existent collection
+          sc.posts[sc.dids.bob][0].ref.uriStr.replace('.post', '.test'),
+        ],
+      },
+      { headers: await ozone.modHeaders(ids.ToolsOzoneModerationGetRecords) },
     )
 
     expect(forSnapshot(data)).toMatchSnapshot()

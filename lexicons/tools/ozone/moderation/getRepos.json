@@ -28,8 +28,11 @@
             "repos": {
               "type": "array",
               "items": {
-                "type": "ref",
-                "ref": "tools.ozone.moderation.defs#repoViewDetail"
+                "type": "union",
+                "refs": [
+                  "tools.ozone.moderation.defs#repoViewDetail",
+                  "tools.ozone.moderation.defs#repoViewNotFound"
+                ]
               }
             }
           }

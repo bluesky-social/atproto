@@ -30,9 +30,13 @@ export default function (server: Server, ctx: AppContext) {
       params.uris.forEach((uri) => {
         const record = records.get(uri)
         if (!record) {
-          results.push({ uri })
+          results.push({
+            uri,
+            $type: 'tools.ozone.moderation.defs#recordViewNotFound',
+          })
         } else {
           results.push({
+            $type: 'tools.ozone.moderation.defs#recordView',
             ...record,
             repo: addAccountInfoToRepoView(
               record.repo,

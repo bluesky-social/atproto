@@ -1,7 +1,10 @@
 import { Server } from '../../lexicon'
 import AppContext from '../../context'
 import { addAccountInfoToRepoViewDetail, getPdsAccountInfo } from '../util'
-import { RepoViewDetail } from '../../lexicon/types/tools/ozone/moderation/defs'
+import {
+  RepoViewDetail,
+  RepoViewNotFound,
+} from '../../lexicon/types/tools/ozone/moderation/defs'
 
 export default function (server: Server, ctx: AppContext) {
   server.tools.ozone.moderation.getRepos({
@@ -15,17 +18,26 @@ export default function (server: Server, ctx: AppContext) {
         getPdsAccountInfo(ctx, dids),
       ])
 
-      const repos: RepoViewDetail[] = []
+      const repos: (RepoViewDetail | RepoViewNotFound)[] = []
 
-      partialRepos.forEach((partialRepo, did) =>
-        repos.push(
-          addAccountInfoToRepoViewDetail(
+      dids.forEach((did) => {
+        const partialRepo = partialRepos.get(did)
+        if (!partialRepo) {
+          repos.push({
+            did,
+            $type: 'tools.ozone.moderation.defs#repoViewNotFound',
+          })
+          return
+        }
+        repos.push({
+          $type: 'tools.ozone.moderation.defs#repoView',
+          ...addAccountInfoToRepoViewDetail(
             partialRepo,
             accountInfo.get(did) || null,
             auth.credentials.isModerator,
           ),
-        ),
-      )
+        })
+      })
 
       return {
         encoding: 'application/json',

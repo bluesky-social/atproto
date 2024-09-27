@@ -15,7 +15,11 @@ export interface QueryParams {
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  repos: ToolsOzoneModerationDefs.RepoViewDetail[]
+  repos: (
+    | ToolsOzoneModerationDefs.RepoViewDetail
+    | ToolsOzoneModerationDefs.RepoViewNotFound
+    | { $type: string; [k: string]: unknown }
+  )[]
   [k: string]: unknown
 }
 

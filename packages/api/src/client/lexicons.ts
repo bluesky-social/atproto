@@ -11748,8 +11748,11 @@ export const schemaDict = {
               repos: {
                 type: 'array',
                 items: {
-                  type: 'ref',
-                  ref: 'lex:tools.ozone.moderation.defs#repoViewDetail',
+                  type: 'union',
+                  refs: [
+                    'lex:tools.ozone.moderation.defs#repoViewDetail',
+                    'lex:tools.ozone.moderation.defs#repoViewNotFound',
+                  ],
                 },
               },
             },
