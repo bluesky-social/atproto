@@ -38,7 +38,7 @@ export const getPdsAccountInfo = async (
   const agent = ctx.pdsAgent
   if (!agent) return results
 
-  const auth = await ctx.pdsAuth(ids.ComAtprotoAdminGetAccountInfo)
+  const auth = await ctx.pdsAuth(ids.ComAtprotoAdminGetAccountInfos)
   if (!auth) return results
 
   try {

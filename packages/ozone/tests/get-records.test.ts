@@ -6,7 +6,6 @@ import {
   ModeratorClient,
 } from '@atproto/dev-env'
 import { AtpAgent } from '@atproto/api'
-import { AtUri } from '@atproto/syntax'
 import {
   REASONOTHER,
   REASONSPAM,
@@ -23,7 +22,7 @@ describe('admin get record view', () => {
 
   beforeAll(async () => {
     network = await TestNetwork.create({
-      dbPostgresSchema: 'ozone_admin_get_record',
+      dbPostgresSchema: 'ozone_admin_get_records',
     })
     ozone = network.ozone
     agent = ozone.getClient()
