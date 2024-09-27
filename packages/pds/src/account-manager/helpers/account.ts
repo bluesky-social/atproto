@@ -64,6 +64,41 @@ export const getAccount = async (
   return found || null
 }
 
+export const getAccounts = async (
+  db: AccountDb,
+  handlesAndDids: string[],
+  flags?: AvailabilityFlags,
+): Promise<Map<string, ActorAccount>> => {
+  const results = new Map<string, ActorAccount>()
+  const handles = new Set<string>()
+  const dids = new Set<string>()
+  for (const handleOrDid of handlesAndDids) {
+    if (handleOrDid.startsWith('did:')) {
+      dids.add(handleOrDid)
+    } else {
+      handles.add(handleOrDid)
+    }
+  }
+
+  const accounts = await selectAccountQB(db, flags)
+    .if(handles.size > 0, (qb) =>
+      qb.where('actor.handle', 'in', Array.from(handles)),
+    )
+    .if(dids.size > 0, (qb) => qb.where('actor.did', 'in', Array.from(dids)))
+    .execute()
+
+  accounts.forEach((account) => {
+    if (dids.has(account.did)) {
+      results.set(account.did, account)
+    }
+    if (account.handle && handles.has(account.handle)) {
+      results.set(account.handle, account)
+    }
+  })
+
+  return results
+}
+
 export const getAccountByEmail = async (
   db: AccountDb,
   email: string,

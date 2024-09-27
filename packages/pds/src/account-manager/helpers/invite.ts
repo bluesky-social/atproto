@@ -155,6 +155,30 @@ export const getAccountInviteCodes = async (
   }))
 }
 
+export const getAccountsInviteCodes = async (
+  db: AccountDb,
+  dids: string[],
+): Promise<Map<string, CodeDetail[]>> => {
+  const results = new Map<string, CodeDetail[]>()
+  const res = await selectInviteCodesQb(db)
+    .where('forAccount', 'in', dids)
+    .execute()
+  const codes = res.map((row) => row.code)
+  const uses = await getInviteCodesUses(db, codes)
+  res.forEach((row) => {
+    const existing = results.get(row.forAccount) ?? []
+    results.set(row.forAccount, [
+      ...existing,
+      {
+        ...row,
+        uses: uses[row.code] ?? [],
+        disabled: row.disabled === 1,
+      },
+    ])
+  })
+  return results
+}
+
 export const getInviteCodesUses = async (
   db: AccountDb,
   codes: string[],
