@@ -246,8 +246,8 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     headersTimeout: env.proxyHeadersTimeout ?? 10e3,
     bodyTimeout: env.proxyBodyTimeout ?? 30e3,
     maxResponseSize: env.proxyMaxResponseSize ?? 10 * 1024 * 1024, // 10mb
-    decodeResponses: env.proxyDecodeResponses ?? false,
-    preferUncompressed: env.proxyPreferUncompressed ?? false,
+    decodeResponses: env.proxyDecodeResponses ?? true,
+    preferCompressed: env.proxyPreferCompressed ?? false,
   }
 
   const oauthCfg: ServerConfig['oauth'] = entrywayCfg
@@ -429,7 +429,7 @@ export type ProxyConfig = {
    * uncompressed responses, or it can decode the response itself. The former
    * saves CPU time on the PDS, at the cost of bandwidth.
    */
-  preferUncompressed: boolean
+  preferCompressed: boolean
 }
 
 export type OAuthConfig = {

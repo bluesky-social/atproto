@@ -63,9 +63,9 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
       const headers: IncomingHttpHeaders = {
         'accept-encoding':
           req.headers['accept-encoding'] ||
-          (ctx.cfg.proxy.preferUncompressed
-            ? 'identity'
-            : formatAccepted(SUPPORTED_ENCODINGS)),
+          (ctx.cfg.proxy.preferCompressed
+            ? formatAccepted(SUPPORTED_ENCODINGS)
+            : 'identity'),
         'accept-language': req.headers['accept-language'],
         'atproto-accept-labelers': req.headers['atproto-accept-labelers'],
         'x-bsky-topics': req.headers['x-bsky-topics'],
@@ -188,7 +188,7 @@ export async function pipethrough(
   // understand.
   const acceptEncoding = negotiateAccept(
     req.headers['accept-encoding'] ||
-      (ctx.cfg.proxy.preferUncompressed ? 'identity' : '*'),
+      (ctx.cfg.proxy.preferCompressed ? '*' : 'identity'),
     SUPPORTED_ENCODINGS,
   )
 

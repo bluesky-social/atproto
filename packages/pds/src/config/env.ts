@@ -129,7 +129,7 @@ export const readEnv = (): ServerEnvironment => {
     proxyBodyTimeout: envInt('PDS_PROXY_BODY_TIMEOUT'),
     proxyMaxResponseSize: envInt('PDS_PROXY_MAX_RESPONSE_SIZE'),
     proxyDecodeResponses: envBool('PDS_PROXY_DECODE_RESPONSES'),
-    proxyPreferUncompressed: envBool('PDS_PROXY_PREFER_UNCOMPRESSED'),
+    proxyPreferCompressed: envBool('PDS_PROXY_PREFER_COMPRESSED'),
   }
 }
 
@@ -256,5 +256,5 @@ export type ServerEnvironment = {
   proxyBodyTimeout?: number
   proxyMaxResponseSize?: number
   proxyDecodeResponses?: boolean
-  proxyPreferUncompressed?: boolean
+  proxyPreferCompressed?: boolean
 }
