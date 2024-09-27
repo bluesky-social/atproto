@@ -246,6 +246,8 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     headersTimeout: env.proxyHeadersTimeout ?? 10e3,
     bodyTimeout: env.proxyBodyTimeout ?? 30e3,
     maxResponseSize: env.proxyMaxResponseSize ?? 10 * 1024 * 1024, // 10mb
+    decodeResponses: env.proxyDecodeResponses ?? false,
+    preferUncompressed: env.proxyPreferUncompressed ?? false,
   }
 
   const oauthCfg: ServerConfig['oauth'] = entrywayCfg
@@ -413,6 +415,21 @@ export type ProxyConfig = {
   headersTimeout: number
   bodyTimeout: number
   maxResponseSize: number
+
+  /**
+   * If true, the PDS will decode proxied responses to clients not specifying an
+   * "accept-encoding" header.
+   */
+  decodeResponses: boolean
+
+  /**
+   * When {@link ProxyConfig.decodeResponses} is true, the PDS will
+   * decode proxied responses to clients not specifying an "accept-encoding"
+   * header. In order to do this, it can either ask upstream servers to send
+   * uncompressed responses, or it can decode the response itself. The former
+   * saves CPU time on the PDS, at the cost of bandwidth.
+   */
+  preferUncompressed: boolean
 }
 
 export type OAuthConfig = {

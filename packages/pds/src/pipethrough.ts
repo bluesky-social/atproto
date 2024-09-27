@@ -1,9 +1,10 @@
 import express from 'express'
 import { IncomingHttpHeaders, ServerResponse } from 'node:http'
-import { PassThrough, Readable } from 'node:stream'
+import { PassThrough, pipeline, Readable } from 'node:stream'
 import { Dispatcher } from 'undici'
 
 import {
+  createDecoders,
   decodeStream,
   getServiceEndpoint,
   omit,
@@ -60,7 +61,11 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
       const { url: origin, did: aud } = await parseProxyInfo(ctx, req, lxm)
 
       const headers: IncomingHttpHeaders = {
-        'accept-encoding': req.headers['accept-encoding'],
+        'accept-encoding':
+          req.headers['accept-encoding'] ||
+          (ctx.cfg.proxy.preferUncompressed
+            ? 'identity'
+            : formatAccepted(SUPPORTED_ENCODINGS)),
         'accept-language': req.headers['accept-language'],
         'atproto-accept-labelers': req.headers['atproto-accept-labelers'],
         'x-bsky-topics': req.headers['x-bsky-topics'],
@@ -92,6 +97,21 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
         // Note that we should not need to manually handle errors here (e.g. by
         // destroying the response), as the http server will handle them for us.
         res.on('error', logResponseError)
+
+        if (ctx.cfg.proxy.decodeResponses && !req.headers['content-encoding']) {
+          try {
+            const decoders = createDecoders(
+              upstream.headers['content-encoding'],
+            )
+            if (decoders.length) {
+              pipeline([...decoders, res], (_err: Error | null) => {})
+              res.setHeader('content-encoding', 'identity')
+              return decoders[0]
+            }
+          } catch {
+            // Upstream encoding not supported / not valid, do not decode.
+          }
+        }
 
         // Tell undici to write the upstream response directly to the response
         return res
@@ -139,11 +159,13 @@ export async function pipethrough(
   ctx: AppContext,
   req: express.Request,
   options?: PipethroughOptions,
-): Promise<{
-  stream: Readable
-  headers: Record<string, string>
-  encoding: string
-}> {
+): Promise<
+  HandlerPipeThroughStream & {
+    stream: Readable
+    headers: Record<string, string>
+    encoding: string
+  }
+> {
   if (req.method !== 'GET' && req.method !== 'HEAD') {
     // pipethrough() is used from within xrpcServer handlers, which means that
     // the request body either has been parsed or is a readable stream that has
@@ -165,27 +187,26 @@ export async function pipethrough(
   // upstream server for an encoding that both the requester and the PDS can
   // understand.
   const acceptEncoding = negotiateAccept(
-    req.headers['accept-encoding'],
+    req.headers['accept-encoding'] ||
+      (ctx.cfg.proxy.preferUncompressed ? 'identity' : '*'),
     SUPPORTED_ENCODINGS,
   )
-
-  const headers: IncomingHttpHeaders = {
-    'accept-language': req.headers['accept-language'],
-    'atproto-accept-labelers': req.headers['atproto-accept-labelers'],
-    'x-bsky-topics': req.headers['x-bsky-topics'],
-
-    'accept-encoding': `${formatAccepted(acceptEncoding)}, *;q=0`, // Reject anything else (q=0)
-
-    authorization: options?.iss
-      ? `Bearer ${await ctx.serviceAuthJwt(options.iss, options.aud ?? aud, options.lxm ?? lxm)}`
-      : undefined,
-  }
 
   const dispatchOptions: Dispatcher.RequestOptions = {
     origin,
     method: req.method,
     path: req.originalUrl,
-    headers,
+    headers: {
+      'accept-language': req.headers['accept-language'],
+      'atproto-accept-labelers': req.headers['atproto-accept-labelers'],
+      'x-bsky-topics': req.headers['x-bsky-topics'],
+
+      'accept-encoding': `${formatAccepted(acceptEncoding)}, *;q=0`, // Reject anything else (q=0)
+
+      authorization: options?.iss
+        ? `Bearer ${await ctx.serviceAuthJwt(options.iss, options.aud ?? aud, options.lxm ?? lxm)}`
+        : undefined,
+    },
 
     // Use a high water mark to buffer more data while performing async
     // operations before this stream is consumed. This is especially useful
@@ -194,13 +215,23 @@ export async function pipethrough(
   }
 
   const upstream = await pipethroughRequest(ctx, dispatchOptions)
+  const encoding =
+    safeString(upstream.headers['content-type']) ?? 'application/json'
+  const headers = Object.fromEntries(responseHeaders(upstream.headers))
+
+  if (ctx.cfg.proxy.decodeResponses && !req.headers['accept-encoding']) {
+    return {
+      encoding,
+      headers: { ...headers, 'content-encoding': 'identity' },
+      stream: decodeStream(upstream.body, upstream.headers['content-encoding']),
+    }
+  }
 
   return {
+    encoding,
+    headers,
     stream: upstream.body,
-    headers: Object.fromEntries(responseHeaders(upstream.headers)),
-    encoding:
-      safeString(upstream.headers['content-type']) ?? 'application/json',
-  } satisfies HandlerPipeThroughStream
+  }
 }
 
 // Request setup/formatting
@@ -374,7 +405,7 @@ function negotiateAccept(
   supported: readonly Accept[],
 ): readonly Accept[] {
   // Optimization: if no accept-encoding header is present, skip negotiation
-  if (!acceptHeader?.length) {
+  if (!acceptHeader?.length || acceptHeader === '*') {
     return supported
   }
 
@@ -439,8 +470,11 @@ function isNonNullable<T>(val: T): val is NonNullable<T> {
   return val != null
 }
 
-export function isJsonContentType(contentType?: string): boolean | undefined {
+export function isJsonContentType(
+  contentType?: string | string[],
+): boolean | undefined {
   if (contentType == null) return undefined
+  if (typeof contentType !== 'string') return undefined
   return /application\/(?:\w+\+)?json/i.test(contentType)
 }
 

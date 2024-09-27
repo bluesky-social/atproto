@@ -88,15 +88,15 @@ export class MaxSizeChecker extends Transform {
 
 export function decodeStream(
   stream: Readable,
-  contentEncoding?: string,
+  contentEncoding?: string | string[],
 ): Readable
 export function decodeStream(
   stream: AsyncIterable<Uint8Array>,
-  contentEncoding?: string,
+  contentEncoding?: string | string[],
 ): AsyncIterable<Uint8Array> | Readable
 export function decodeStream(
   stream: Readable | AsyncIterable<Uint8Array>,
-  contentEncoding?: string,
+  contentEncoding?: string | string[],
 ): Readable | AsyncIterable<Uint8Array> {
   const decoders = createDecoders(contentEncoding)
   if (decoders.length === 0) return stream
@@ -107,8 +107,12 @@ export function decodeStream(
  * Create a series of decoding streams based on the content-encoding header. The
  * resulting streams should be piped together to decode the content.
  */
-export function createDecoders(contentEncoding?: string): Duplex[] {
+export function createDecoders(contentEncoding?: string | string[]): Duplex[] {
   const decoders: Duplex[] = []
+
+  if (Array.isArray(contentEncoding)) {
+    throw new TypeError('content-encoding must be a comma separated string')
+  }
 
   if (contentEncoding) {
     const encodings = contentEncoding.split(',')
