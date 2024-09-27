@@ -1,5 +1,16 @@
 # @atproto/api
 
+## 0.13.8
+
+### Patch Changes
+
+- [#2771](https://github.com/bluesky-social/atproto/pull/2771) [`2676206e4`](https://github.com/bluesky-social/atproto/commit/2676206e422233fefbf2d9d182e8d462f0957c93) Thanks [@mozzius](https://github.com/mozzius)! - Add pinned posts to profile record and getAuthorFeed
+
+- Updated dependencies [[`a07b21151`](https://github.com/bluesky-social/atproto/commit/a07b21151f1850340c4b7797ebb11521b1a6cdf3), [`a07b21151`](https://github.com/bluesky-social/atproto/commit/a07b21151f1850340c4b7797ebb11521b1a6cdf3), [`a07b21151`](https://github.com/bluesky-social/atproto/commit/a07b21151f1850340c4b7797ebb11521b1a6cdf3), [`eb20ff64a`](https://github.com/bluesky-social/atproto/commit/eb20ff64a2d8e3061c652e1e247bf9b0fe3c41a6), [`87a1f2426`](https://github.com/bluesky-social/atproto/commit/87a1f24262e0e644b6cf31cc7a0446d9127ffa94)]:
+  - @atproto/xrpc@0.6.3
+  - @atproto/common-web@0.3.1
+  - @atproto/lexicon@0.4.2
+
 ## 0.13.7
 
 ### Patch Changes
