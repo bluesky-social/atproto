@@ -10,17 +10,19 @@ export default function (server: Server, ctx: AppContext) {
       const { did } = params
       const db = ctx.db
       const labelers = ctx.reqLabelers(req)
-      const [partialRepo, accountInfo] = await Promise.all([
+      const [partialRepos, accountInfo] = await Promise.all([
         ctx.modService(db).views.repoDetail(did, labelers),
         getPdsAccountInfo(ctx, did),
       ])
+
+      const partialRepo = partialRepos.get(did)
       if (!partialRepo) {
         throw new InvalidRequestError('Repo not found', 'RepoNotFound')
       }
 
       const repo = addAccountInfoToRepoViewDetail(
         partialRepo,
-        accountInfo,
+        accountInfo.get(did) || null,
         auth.credentials.isModerator,
       )
       return {

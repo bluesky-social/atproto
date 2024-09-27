@@ -11,10 +11,12 @@ export default function (server: Server, ctx: AppContext) {
       const db = ctx.db
       const labelers = ctx.reqLabelers(req)
 
-      const [record, accountInfo] = await Promise.all([
-        ctx.modService(db).views.recordDetail(params, labelers),
+      const [records, accountInfos] = await Promise.all([
+        ctx.modService(db).views.recordDetail([params], labelers),
         getPdsAccountInfo(ctx, new AtUri(params.uri).hostname),
       ])
+
+      const record = records.get(params.uri)
 
       if (!record) {
         throw new InvalidRequestError('Record not found', 'RecordNotFound')
@@ -22,7 +24,7 @@ export default function (server: Server, ctx: AppContext) {
 
       record.repo = addAccountInfoToRepoView(
         record.repo,
-        accountInfo,
+        accountInfos.get(record.repo.did) || null,
         auth.credentials.isModerator,
       )
 

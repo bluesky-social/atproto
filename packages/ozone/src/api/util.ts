@@ -30,17 +30,28 @@ import { ids } from '../lexicon/lexicons'
 
 export const getPdsAccountInfo = async (
   ctx: AppContext,
-  did: string,
-): Promise<AccountView | null> => {
+  did: string | string[],
+): Promise<Map<string, AccountView | null>> => {
+  const didItems = Array.isArray(did) ? did : [did]
+  const results = new Map<string, AccountView | null>()
+
   const agent = ctx.pdsAgent
-  if (!agent) return null
+  if (!agent) return results
+
   const auth = await ctx.pdsAuth(ids.ComAtprotoAdminGetAccountInfo)
-  if (!auth) return null
+  if (!auth) return results
+
   try {
-    const res = await agent.api.com.atproto.admin.getAccountInfo({ did }, auth)
-    return res.data
+    const res = await agent.com.atproto.admin.getAccountInfos(
+      { dids: didItems },
+      auth,
+    )
+    res.data.infos.forEach((info) => {
+      results.set(info.did, info)
+    })
+    return results
   } catch {
-    return null
+    return results
   }
 }
 
