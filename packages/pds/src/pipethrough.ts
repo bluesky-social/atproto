@@ -25,6 +25,25 @@ import AppContext from './context'
 import { ids } from './lexicon/lexicons'
 import { httpLogger } from './logger'
 
+// List of content encodings that are supported by the PDS. Because proxying
+// occurs between data centers, where connectivity is supposedly stable & good,
+// and because payloads are small, we prefer encoding that are fast (gzip,
+// deflate, identity) over heavier encodings (Brotli).
+
+const ACCEPT_ENCODING_COMPRESSED = [
+  ['gzip', { q: '1.0' }],
+  ['deflate', { q: '0.9' }],
+  ['identity', { q: '0.3' }],
+  ['br', { q: '0.1' }],
+] as const satisfies Accept[]
+
+const ACCEPT_ENCODING_UNCOMPRESSED = [
+  ['identity', { q: '1.0' }],
+  ['gzip', { q: '0.3' }],
+  ['deflate', { q: '0.2' }],
+  ['br', { q: '0.1' }],
+] as const satisfies Accept[]
+
 export const proxyHandler = (ctx: AppContext): CatchallHandler => {
   const accessStandard = ctx.authVerifier.accessStandard()
   return async (req, res, next) => {
@@ -63,9 +82,12 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
       const headers: IncomingHttpHeaders = {
         'accept-encoding':
           req.headers['accept-encoding'] ||
-          (ctx.cfg.proxy.preferCompressed
-            ? formatAccepted(SUPPORTED_ENCODINGS)
-            : 'identity'),
+          formatAccept(
+            ctx.cfg.proxy.preferCompressed
+              ? ACCEPT_ENCODING_COMPRESSED
+              : ACCEPT_ENCODING_UNCOMPRESSED,
+            true,
+          ),
         'accept-language': req.headers['accept-language'],
         'atproto-accept-labelers': req.headers['atproto-accept-labelers'],
         'x-bsky-topics': req.headers['x-bsky-topics'],
@@ -109,7 +131,10 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
               return decoders[0]
             }
           } catch {
-            // Upstream encoding not supported / not valid, do not decode.
+            // Upstream encoding not supported, return the response as-is. Note
+            // that in this case we could also throw an UpstreamFailure since
+            // the upstream server is misbehaving (it should have returned a 406
+            // if it dod not support any of the default encoding we provided).
           }
         }
 
@@ -141,19 +166,6 @@ export type PipethroughOptions = {
    */
   lxm?: string
 }
-
-// List of content encodings that are supported by the PDS. Because proxying
-// occurs between data centers, where connectivity is supposedly stable & good,
-// and because payloads are small, we prefer encoding that are fast (gzip,
-// deflate, identity) over heavier encodings (Brotli). Upstream servers should
-// be configured to prefer any encoding over identity in case of big,
-// uncompressed payloads.
-const SUPPORTED_ENCODINGS = [
-  ['gzip', { q: '1.0' }],
-  ['deflate', { q: '0.9' }],
-  ['identity', { q: '0.3' }],
-  ['br', { q: '0.1' }],
-] as const satisfies Accept[]
 
 export async function pipethrough(
   ctx: AppContext,
@@ -187,9 +199,10 @@ export async function pipethrough(
   // upstream server for an encoding that both the requester and the PDS can
   // understand.
   const acceptEncoding = negotiateAccept(
-    req.headers['accept-encoding'] ||
-      (ctx.cfg.proxy.preferCompressed ? '*' : 'identity'),
-    SUPPORTED_ENCODINGS,
+    req.headers['accept-encoding'],
+    ctx.cfg.proxy.preferCompressed
+      ? ACCEPT_ENCODING_COMPRESSED
+      : ACCEPT_ENCODING_UNCOMPRESSED,
   )
 
   const dispatchOptions: Dispatcher.RequestOptions = {
@@ -201,7 +214,7 @@ export async function pipethrough(
       'atproto-accept-labelers': req.headers['atproto-accept-labelers'],
       'x-bsky-topics': req.headers['x-bsky-topics'],
 
-      'accept-encoding': `${formatAccepted(acceptEncoding)}, *;q=0`, // Reject anything else (q=0)
+      'accept-encoding': formatAccept(acceptEncoding),
 
       authorization: options?.iss
         ? `Bearer ${await ctx.serviceAuthJwt(options.iss, options.aud ?? aud, options.lxm ?? lxm)}`
@@ -402,8 +415,8 @@ type Accept = [name: string, flags: Record<string, string>]
 
 function negotiateAccept(
   acceptHeader: undefined | string | string[],
-  supported: readonly Accept[],
-): readonly Accept[] {
+  supported: readonly [Accept, ...Accept[]],
+): readonly [Accept, ...Accept[]] {
   // Optimization: if no accept-encoding header is present, skip negotiation
   if (!acceptHeader?.length || acceptHeader === '*') {
     return supported
@@ -422,11 +435,17 @@ function negotiateAccept(
     )
   }
 
-  return common
+  return common as [Accept, ...Accept[]]
 }
 
-function formatAccepted(accept: readonly Accept[]): string {
-  return accept.map(formatEncodingDev).join(', ')
+function formatAccept(
+  accept: readonly [Accept, ...Accept[]],
+  allowAny: boolean = false,
+): string {
+  const formatted = accept.map(formatEncodingDev)
+  // https://developer.mozilla.org/en-US/docs/Glossary/Quality_values
+  if (allowAny) formatted.push(`*;q=0.001`)
+  return formatted.join(', ')
 }
 
 function formatEncodingDev([enc, flags]: Accept): string {
