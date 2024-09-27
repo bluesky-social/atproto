@@ -31,17 +31,17 @@ import { httpLogger } from './logger'
 // deflate, identity) over heavier encodings (Brotli).
 
 const ACCEPT_ENCODING_COMPRESSED = [
-  ['gzip', { q: '1.0' }],
-  ['deflate', { q: '0.9' }],
-  ['identity', { q: '0.3' }],
-  ['br', { q: '0.1' }],
+  ['gzip', { q: 1.0 }],
+  ['deflate', { q: 0.9 }],
+  ['identity', { q: 0.3 }],
+  ['br', { q: 0.1 }],
 ] as const satisfies Accept[]
 
 const ACCEPT_ENCODING_UNCOMPRESSED = [
-  ['identity', { q: '1.0' }],
-  ['gzip', { q: '0.3' }],
-  ['deflate', { q: '0.2' }],
-  ['br', { q: '0.1' }],
+  ['identity', { q: 1.0 }],
+  ['gzip', { q: 0.3 }],
+  ['deflate', { q: 0.2 }],
+  ['br', { q: 0.1 }],
 ] as const satisfies Accept[]
 
 export const proxyHandler = (ctx: AppContext): CatchallHandler => {
@@ -82,11 +82,10 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
       const headers: IncomingHttpHeaders = {
         'accept-encoding':
           req.headers['accept-encoding'] ||
-          formatAccept(
+          formatAcceptHeader(
             ctx.cfg.proxy.preferCompressed
               ? ACCEPT_ENCODING_COMPRESSED
               : ACCEPT_ENCODING_UNCOMPRESSED,
-            true,
           ),
         'accept-language': req.headers['accept-language'],
         'atproto-accept-labelers': req.headers['atproto-accept-labelers'],
@@ -120,15 +119,16 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
         // destroying the response), as the http server will handle them for us.
         res.on('error', logResponseError)
 
-        if (ctx.cfg.proxy.decodeResponses && !req.headers['content-encoding']) {
+        // The default is "identity" meaning that if no encoding is specified,
+        // the response should be sent as-is.
+        // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Encoding
+        if (!req.headers['content-encoding']) {
           try {
-            const decoders = createDecoders(
-              upstream.headers['content-encoding'],
-            )
-            if (decoders.length) {
-              pipeline([...decoders, res], (_err: Error | null) => {})
+            const dec = createDecoders(upstream.headers['content-encoding'])
+            if (dec.length) {
+              pipeline([...dec, res], (_err: Error | null) => {})
               res.setHeader('content-encoding', 'identity')
-              return decoders[0]
+              return dec[0]
             }
           } catch {
             // Upstream encoding not supported, return the response as-is. Note
@@ -194,17 +194,6 @@ export async function pipethrough(
 
   const { url: origin, did: aud } = await parseProxyInfo(ctx, req, lxm)
 
-  // Because we sometimes need to interpret the response (e.g. during
-  // read-after-write, through asPipeThroughBuffer()), we need to ask the
-  // upstream server for an encoding that both the requester and the PDS can
-  // understand.
-  const acceptEncoding = negotiateAccept(
-    req.headers['accept-encoding'],
-    ctx.cfg.proxy.preferCompressed
-      ? ACCEPT_ENCODING_COMPRESSED
-      : ACCEPT_ENCODING_UNCOMPRESSED,
-  )
-
   const dispatchOptions: Dispatcher.RequestOptions = {
     origin,
     method: req.method,
@@ -214,7 +203,16 @@ export async function pipethrough(
       'atproto-accept-labelers': req.headers['atproto-accept-labelers'],
       'x-bsky-topics': req.headers['x-bsky-topics'],
 
-      'accept-encoding': formatAccept(acceptEncoding),
+      // Because we sometimes need to interpret the response (e.g. during
+      // read-after-write, through asPipeThroughBuffer()), we need to ask the
+      // upstream server for an encoding that both the requester and the PDS can
+      // understand.
+      'accept-encoding': negotiateContentEncoding(
+        req.headers['accept-encoding'],
+        ctx.cfg.proxy.preferCompressed
+          ? ACCEPT_ENCODING_COMPRESSED
+          : ACCEPT_ENCODING_UNCOMPRESSED,
+      ),
 
       authorization: options?.iss
         ? `Bearer ${await ctx.serviceAuthJwt(options.iss, options.aud ?? aud, options.lxm ?? lxm)}`
@@ -232,7 +230,10 @@ export async function pipethrough(
     safeString(upstream.headers['content-type']) ?? 'application/json'
   const headers = Object.fromEntries(responseHeaders(upstream.headers))
 
-  if (ctx.cfg.proxy.decodeResponses && !req.headers['accept-encoding']) {
+  // The default is "identity" meaning that if no encoding is specified, the
+  // response should be sent as-is.
+  // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Encoding
+  if (!req.headers['accept-encoding']) {
     return {
       encoding,
       headers: { ...headers, 'content-encoding': 'identity' },
@@ -411,78 +412,100 @@ function handleUpstreamRequestError(
 // Request parsing/forwarding
 // -------------------
 
-type Accept = [name: string, flags: Record<string, string>]
+type Accept = [name: string, flags: { q: number }]
 
-function negotiateAccept(
+function negotiateContentEncoding(
   acceptHeader: undefined | string | string[],
-  supported: readonly [Accept, ...Accept[]],
-): readonly [Accept, ...Accept[]] {
-  // Optimization: if no accept-encoding header is present, skip negotiation
-  if (!acceptHeader?.length || acceptHeader === '*') {
-    return supported
+  preferences: readonly [Accept, ...Accept[]],
+): string {
+  const acceptMap = Object.fromEntries(
+    // Default is identity with lowest priority
+    parseAcceptHeader(acceptHeader) ?? [['identity', { q: 0.001 }]],
+  )
+
+  const common = preferences.filter((accept) => {
+    const accepted = acceptMap[accept[0]] ?? acceptMap['*']
+    if (accepted?.q === 0) return false
+    return true
+  })
+
+  const identityNotAccepted = (acceptMap['identity'] ?? acceptMap['*'])?.q === 0
+
+  if (!common.some(isAllowedAccept)) {
+    // Per HTTP/1.1, identity must always be accepted unless explicitly rejected
+    if (identityNotAccepted) {
+      throw new XRPCServerError(
+        ResponseType.NotAcceptable,
+        'this service does not support any of the requested encodings',
+      )
+    }
+
+    return 'identity'
   }
 
-  const acceptNames = extractAcceptedNames(acceptHeader)
-  const common = acceptNames.includes('*')
-    ? supported
-    : supported.filter(nameIncludedIn, acceptNames)
-
-  // There must be at least one common encoding with a non-zero q value
-  if (!common.some(isNotRejected)) {
-    throw new XRPCServerError(
-      ResponseType.NotAcceptable,
-      'this service does not support any of the requested encodings',
-    )
+  if (identityNotAccepted && !common.some((accept) => accept[0] === '*')) {
+    // make sure upstream does not respond with identity
+    common.push(['*', { q: 0 }])
   }
 
-  return common as [Accept, ...Accept[]]
+  return formatAcceptHeader(common as [Accept, ...Accept[]])
 }
 
-function formatAccept(
-  accept: readonly [Accept, ...Accept[]],
-  allowAny: boolean = false,
-): string {
-  const formatted = accept.map(formatEncodingDev)
-  // https://developer.mozilla.org/en-US/docs/Glossary/Quality_values
-  if (allowAny) formatted.push(`*;q=0.001`)
+function isAllowedAccept(accept: Accept): boolean {
+  return accept[1].q > 0
+}
+
+/**
+ * @param fallbackQ - Adds a "*;q=fallbackQ" to the end of the list. There is no need to specify "0" here.
+ * @see {@link https://developer.mozilla.org/en-US/docs/Glossary/Quality_values}
+ */
+function formatAcceptHeader(accept: readonly [Accept, ...Accept[]]): string {
+  const formatted = accept.map(formatAcceptPart)
   return formatted.join(', ')
 }
 
-function formatEncodingDev([enc, flags]: Accept): string {
-  let ret = enc
-  for (const name in flags) ret += `;${name}=${flags[name]}`
-  return ret
+function formatAcceptPart([enc, flags]: Accept): string {
+  return `${enc};q=${flags.q}`
 }
 
-function nameIncludedIn(this: readonly string[], accept: Accept): boolean {
-  return this.includes(accept[0])
-}
-
-function isNotRejected(accept: Accept): boolean {
-  return accept[1]['q'] !== '0'
-}
-
-function extractAcceptedNames(
+function parseAcceptHeader(
   acceptHeader: undefined | string | string[],
-): string[] {
-  if (!acceptHeader?.length) {
-    return ['*']
-  }
+): undefined | Accept[] {
+  if (!acceptHeader?.length) return undefined
 
   return Array.isArray(acceptHeader)
-    ? acceptHeader.flatMap(extractAcceptedNames)
-    : acceptHeader.split(',').map(extractAcceptedName).filter(isNonNullable)
+    ? acceptHeader.flatMap(parseAcceptHeader).filter(isNonNullable)
+    : acceptHeader.split(',').map(parseAcceptPart)
 }
 
-function extractAcceptedName(def: string): string | undefined {
-  // No need to fully parse since we only care about allowed values
-  const parts = def.split(';')
-  if (parts.some(isQzero)) return undefined
-  return parts[0].trim()
-}
+function parseAcceptPart(part: string): Accept {
+  const flags = { q: 1 }
 
-function isQzero(def: string): boolean {
-  return def.trim() === 'q=0'
+  const params = part.trim().split(';')
+  if (params.length > 2) {
+    throw new InvalidRequestError(`Invalid accept header`)
+  }
+
+  const token = params[0].toLowerCase()
+  if (!token) {
+    throw new InvalidRequestError(`Invalid accept header`)
+  }
+
+  if (params.length === 2) {
+    const param = params[1]
+    const { 0: key, 1: value, length } = param.split('=')
+
+    if (length !== 2 || !value || (key !== 'q' && key !== 'Q')) {
+      throw new InvalidRequestError(`Invalid accept header`)
+    }
+
+    const q = parseFloat(value)
+    if (q === 0 || (Number.isFinite(q) && q <= 1 && q >= 0.001)) {
+      flags.q = q
+    }
+  }
+
+  return [token, flags]
 }
 
 function isNonNullable<T>(val: T): val is NonNullable<T> {

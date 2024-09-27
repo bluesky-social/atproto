@@ -246,7 +246,6 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     headersTimeout: env.proxyHeadersTimeout ?? 10e3,
     bodyTimeout: env.proxyBodyTimeout ?? 30e3,
     maxResponseSize: env.proxyMaxResponseSize ?? 10 * 1024 * 1024, // 10mb
-    decodeResponses: env.proxyDecodeResponses ?? true,
     preferCompressed: env.proxyPreferCompressed ?? false,
   }
 
@@ -415,12 +414,6 @@ export type ProxyConfig = {
   headersTimeout: number
   bodyTimeout: number
   maxResponseSize: number
-
-  /**
-   * If true, the PDS will decode proxied responses to clients not specifying an
-   * "accept-encoding" header.
-   */
-  decodeResponses: boolean
 
   /**
    * When {@link ProxyConfig.decodeResponses} is true, the PDS will
