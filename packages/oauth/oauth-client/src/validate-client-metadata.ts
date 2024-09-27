@@ -1,5 +1,9 @@
 import { Keyset } from '@atproto/jwk'
-import { OAuthClientMetadataInput } from '@atproto/oauth-types'
+import {
+  OAuthClientMetadataInput,
+  assertOAuthDiscoverableClientId,
+  assertOAuthLoopbackClientId,
+} from '@atproto/oauth-types'
 
 import { ClientMetadata, clientMetadataSchema } from './types.js'
 
@@ -30,11 +34,24 @@ export function validateClientMetadata(
 
   const metadata = clientMetadataSchema.parse(input)
 
-  // ATPROTO uses client metadata discovery
-  try {
-    new URL(metadata.client_id)
-  } catch (cause) {
-    throw new TypeError(`client_id must be a valid URL`, { cause })
+  // Validate client ID
+  if (metadata.client_id.startsWith('http:')) {
+    assertOAuthLoopbackClientId(metadata.client_id)
+  } else {
+    assertOAuthDiscoverableClientId(metadata.client_id)
+  }
+
+  const scopes = metadata.scope?.split(' ')
+  if (!scopes?.includes('atproto')) {
+    throw new TypeError(`Client metadata must include the "atproto" scope`)
+  }
+
+  if (!metadata.response_types.includes('code')) {
+    throw new TypeError(`"response_types" must include "code"`)
+  }
+
+  if (!metadata.grant_types.includes('authorization_code')) {
+    throw new TypeError(`"grant_types" must include "authorization_code"`)
   }
 
   const method = metadata[TOKEN_ENDPOINT_AUTH_METHOD]

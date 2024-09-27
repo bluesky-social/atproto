@@ -18,8 +18,6 @@ export const REQUEST_ID_BYTES_LENGTH = 16 // 128 bits
 export const CODE_PREFIX = 'cod-'
 export const CODE_BYTES_LENGTH = 32
 
-export const ALLOW_LOOPBACK_CLIENT_REFRESH_TOKEN = true
-
 const SECOND = 1e3
 const MINUTE = 60 * SECOND
 const HOUR = 60 * MINUTE

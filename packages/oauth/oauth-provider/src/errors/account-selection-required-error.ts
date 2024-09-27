@@ -1,9 +1,9 @@
-import { OAuthAuthenticationRequestParameters } from '@atproto/oauth-types'
+import { OAuthAuthorizationRequestParameters } from '@atproto/oauth-types'
 import { AccessDeniedError } from './access-denied-error.js'
 
 export class AccountSelectionRequiredError extends AccessDeniedError {
   constructor(
-    parameters: OAuthAuthenticationRequestParameters,
+    parameters: OAuthAuthorizationRequestParameters,
     error_description = 'Account selection required',
     cause?: unknown,
   ) {
