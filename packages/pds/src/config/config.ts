@@ -416,11 +416,9 @@ export type ProxyConfig = {
   maxResponseSize: number
 
   /**
-   * When {@link ProxyConfig.decodeResponses} is true, the PDS will
-   * decode proxied responses to clients not specifying an "accept-encoding"
-   * header. In order to do this, it can either ask upstream servers to send
-   * uncompressed responses, or it can decode the response itself. The former
-   * saves CPU time on the PDS, at the cost of bandwidth.
+   * Prefers compressed responses when proxying requests. Might cause additional
+   * CPU usage on the server (since the payload will need to decompressed when
+   * the client does not specify an "accept-encoding"), but can save bandwidth.
    */
   preferCompressed: boolean
 }

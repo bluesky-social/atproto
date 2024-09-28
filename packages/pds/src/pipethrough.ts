@@ -25,16 +25,19 @@ import AppContext from './context'
 import { ids } from './lexicon/lexicons'
 import { httpLogger } from './logger'
 
-// List of content encodings that are supported by the PDS. Because proxying
-// occurs between data centers, where connectivity is supposedly stable & good,
-// and because payloads are small, we prefer encoding that are fast (gzip,
-// deflate, identity) over heavier encodings (Brotli).
+// List of content encodings that are supported by the PDS. One to use when
+// cfg.proxy.preferCompressed is true, and one to use when it is false.
+//
+// Make sure to:
+// 1) Explicitly define "identity" as this is the default encoding.
+// 2) Define all the encoding actually supported by the PDS and that might be
+//    requested by clients.
 
 const ACCEPT_ENCODING_COMPRESSED = [
   ['gzip', { q: 1.0 }],
   ['deflate', { q: 0.9 }],
-  ['identity', { q: 0.3 }],
-  ['br', { q: 0.1 }],
+  ['br', { q: 0.8 }],
+  ['identity', { q: 0.1 }],
 ] as const satisfies Accept[]
 
 const ACCEPT_ENCODING_UNCOMPRESSED = [
@@ -119,10 +122,12 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
         // destroying the response), as the http server will handle them for us.
         res.on('error', logResponseError)
 
-        // The default is "identity" meaning that if no encoding is specified,
-        // the response should be sent as-is.
+        // Default accept-encoding is "identity" meaning that if no value was
+        // provided, the response should be sent as "identity". Since in that
+        // case, our preferences (that may allow compressed payloads) were used,
+        // we might need to decode the response.
         // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Encoding
-        if (!req.headers['content-encoding']) {
+        if (!req.headers['accept-encoding']) {
           try {
             const dec = createDecoders(upstream.headers['content-encoding'])
             if (dec.length) {
@@ -206,7 +211,8 @@ export async function pipethrough(
       // Because we sometimes need to interpret the response (e.g. during
       // read-after-write, through asPipeThroughBuffer()), we need to ask the
       // upstream server for an encoding that both the requester and the PDS can
-      // understand.
+      // understand. Since we might have to do the decoding ourselves, we will
+      // use our own preferences (and weight) to negotiate the encoding.
       'accept-encoding': negotiateContentEncoding(
         req.headers['accept-encoding'],
         ctx.cfg.proxy.preferCompressed
@@ -414,41 +420,62 @@ function handleUpstreamRequestError(
 
 type Accept = [name: string, flags: { q: number }]
 
+// accept-encoding defaults to "identity with lowest priority"
+const DEFAULT_ACCEPT_ENC = ['identity', { q: 0.001 }] as const satisfies Accept
+const ACCEPT_FORBID_IDENTITY = ['identity', { q: 0 }] as const satisfies Accept
+
 function negotiateContentEncoding(
   acceptHeader: undefined | string | string[],
   preferences: readonly [Accept, ...Accept[]],
 ): string {
-  const acceptMap = Object.fromEntries(
-    // Default is identity with lowest priority
-    parseAcceptHeader(acceptHeader) ?? [['identity', { q: 0.001 }]],
+  if (!acceptHeader) {
+    // If no accept-encoding header is provided, we will use our own preferences
+    // and decode the response if needed.
+    return formatAcceptHeader(preferences)
+  }
+
+  const acceptMap = Object.fromEntries<undefined | Accept[1]>(
+    parseAcceptHeader(acceptHeader) ?? [DEFAULT_ACCEPT_ENC],
   )
 
-  const common = preferences.filter((accept) => {
-    const accepted = acceptMap[accept[0]] ?? acceptMap['*']
-    if (accepted?.q === 0) return false
-    return true
+  // The logic hereafter assumes that the preferences includes "identity". Let's
+  // make sure it does.
+  if (!preferences.some(isIdentityAccept)) {
+    preferences = [...preferences, ACCEPT_FORBID_IDENTITY]
+  }
+
+  const common = preferences.filter(([name]) => {
+    const acceptFlags = acceptMap[name] ?? acceptMap['*']
+    if (name === 'identity') {
+      // Per HTTP/1.1, identity must always be accepted unless explicitly rejected
+      return acceptFlags?.q !== 0
+    } else {
+      return acceptFlags ? acceptFlags.q > 0 : false
+    }
   })
 
-  const identityNotAccepted = (acceptMap['identity'] ?? acceptMap['*'])?.q === 0
-
+  // Since preferences included "identity" we are sure that if common is empty,
+  // then the downstream client explicitly rejected it, and we can indeed throw
+  // a 406 here.
   if (!common.some(isAllowedAccept)) {
-    // Per HTTP/1.1, identity must always be accepted unless explicitly rejected
-    if (identityNotAccepted) {
-      throw new XRPCServerError(
-        ResponseType.NotAcceptable,
-        'this service does not support any of the requested encodings',
-      )
-    }
-
-    return 'identity'
+    throw new XRPCServerError(
+      ResponseType.NotAcceptable,
+      'this service does not support any of the requested encodings',
+    )
   }
 
-  if (identityNotAccepted && !common.some((accept) => accept[0] === '*')) {
-    // make sure upstream does not respond with identity
-    common.push(['*', { q: 0 }])
-  }
+  return formatAcceptHeader(
+    // Because "identity" is always accepted unless explicitly rejected, and
+    // because preferences do contain "identity", we need to make sure that
+    // "identity" is explicitly defined in the proxied accept-encoding header.
+    common.some(isIdentityAccept)
+      ? (common as [Accept, ...Accept[]])
+      : [ACCEPT_FORBID_IDENTITY, ...common],
+  )
+}
 
-  return formatAcceptHeader(common as [Accept, ...Accept[]])
+function isIdentityAccept(accept: Accept): boolean {
+  return accept[0] === 'identity'
 }
 
 function isAllowedAccept(accept: Accept): boolean {
@@ -471,7 +498,7 @@ function formatAcceptPart([enc, flags]: Accept): string {
 function parseAcceptHeader(
   acceptHeader: undefined | string | string[],
 ): undefined | Accept[] {
-  if (!acceptHeader?.length) return undefined
+  if (acceptHeader == null) return undefined
 
   return Array.isArray(acceptHeader)
     ? acceptHeader.flatMap(parseAcceptHeader).filter(isNonNullable)
