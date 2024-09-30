@@ -489,12 +489,11 @@ function isAllowedAccept(accept: Accept): boolean {
  * @see {@link https://developer.mozilla.org/en-US/docs/Glossary/Quality_values}
  */
 function formatAcceptHeader(accept: readonly [Accept, ...Accept[]]): string {
-  const formatted = accept.map(formatAcceptPart)
-  return formatted.join(', ')
+  return accept.map(formatAcceptPart).join(',')
 }
 
-function formatAcceptPart([enc, flags]: Accept): string {
-  return `${enc};q=${flags.q}`
+function formatAcceptPart(accept: Accept): string {
+  return `${accept[0]};q=${accept[1].q}`
 }
 
 function parseAcceptEncoding(
@@ -503,46 +502,44 @@ function parseAcceptEncoding(
   if (acceptEncodings == null) return undefined
 
   if (typeof acceptEncodings !== 'string') {
-    // For type-safety, we should never get here
-    throw new TypeError('invalid accept-encoding header')
+    // For type-safety. We should never get here
+    throw new InvalidRequestError('accept-encoding must be a string')
   }
 
-  return acceptEncodings.split(',').map(parseAcceptEncodingPart)
+  return acceptEncodings.split(',').map(parseAcceptEncodingDefinition)
 }
 
-function parseAcceptEncodingPart(encoding: string): Accept {
-  const flags = { q: 1 }
-
-  const { length, 0: token, 1: params } = encoding.trim().split(';', 3)
-  if (!token) {
-    throw new InvalidRequestError(`Invalid accept-encoding: "${encoding}"`)
-  }
+function parseAcceptEncodingDefinition(def: string): Accept {
+  const { length, 0: encoding, 1: params } = def.trim().split(';', 3)
 
   if (length > 2) {
-    throw new InvalidRequestError(`Invalid accept-encoding: "${encoding}"`)
+    throw new InvalidRequestError(`Invalid accept-encoding: "${def}"`)
   }
 
+  if (!encoding || encoding.includes('=')) {
+    throw new InvalidRequestError(`Invalid accept-encoding: "${def}"`)
+  }
+
+  const flags = { q: 1 }
   if (length === 2) {
     const { length, 0: key, 1: value } = params.split('=', 3)
     if (length !== 2) {
-      throw new InvalidRequestError(`Invalid accept-encoding: "${encoding}"`)
+      throw new InvalidRequestError(`Invalid accept-encoding: "${def}"`)
     }
 
     if (key === 'q' || key === 'Q') {
-      if (!value) {
-        throw new InvalidRequestError(`Invalid accept-encoding: "${encoding}"`)
-      }
-
       const q = parseFloat(value)
       if (q === 0 || (Number.isFinite(q) && q <= 1 && q >= 0.001)) {
         flags.q = q
+      } else {
+        throw new InvalidRequestError(`Invalid accept-encoding: "${def}"`)
       }
     } else {
-      throw new InvalidRequestError(`Invalid accept-encoding: "${encoding}"`)
+      throw new InvalidRequestError(`Invalid accept-encoding: "${def}"`)
     }
   }
 
-  return [token.toLowerCase(), flags]
+  return [encoding.toLowerCase(), flags]
 }
 
 export function isJsonContentType(
