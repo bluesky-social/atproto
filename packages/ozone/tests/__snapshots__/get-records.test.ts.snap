@@ -4,7 +4,7 @@ exports[`admin get record view gets a records by uris 1`] = `
 Object {
   "records": Array [
     Object {
-      "$type": "tools.ozone.moderation.defs#recordView",
+      "$type": "tools.ozone.moderation.defs#recordViewDetail",
       "blobCids": Array [],
       "blobs": Array [],
       "cid": "cids(0)",
@@ -32,7 +32,7 @@ Object {
       "moderation": Object {
         "subjectStatus": Object {
           "createdAt": "1970-01-01T00:00:00.000Z",
-          "id": 1,
+          "id": 5,
           "lastReportedAt": "1970-01-01T00:00:00.000Z",
           "lastReviewedAt": "1970-01-01T00:00:00.000Z",
           "lastReviewedBy": "user(1)",
@@ -102,7 +102,7 @@ Object {
       },
     },
     Object {
-      "$type": "tools.ozone.moderation.defs#recordView",
+      "$type": "tools.ozone.moderation.defs#recordViewDetail",
       "blobCids": Array [],
       "blobs": Array [],
       "cid": "cids(2)",
