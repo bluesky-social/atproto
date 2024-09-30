@@ -236,8 +236,7 @@ export async function pipethrough(
     safeString(upstream.headers['content-type']) ?? 'application/json'
   const headers = Object.fromEntries(responseHeaders(upstream.headers))
 
-  // The default is "identity" meaning that if no encoding is specified, the
-  // response should be sent as-is.
+  // If no accept-encoded header was provided, we should return a decoded stream
   // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Encoding
   if (!req.headers['accept-encoding']) {
     return {
@@ -421,8 +420,8 @@ function handleUpstreamRequestError(
 type Accept = [name: string, flags: { q: number }]
 
 // accept-encoding defaults to "identity with lowest priority"
-const DEFAULT_ACCEPT_ENC = ['identity', { q: 0.001 }] as const satisfies Accept
-const ACCEPT_FORBID_IDENTITY = ['identity', { q: 0 }] as const satisfies Accept
+const ACCEPT_ENC_DEFAULT = ['identity', { q: 0.001 }] as const satisfies Accept
+const ACCEPT_FORBID_STAR = ['*', { q: 0 }] as const satisfies Accept
 
 function negotiateContentEncoding(
   acceptHeader: undefined | string | string[],
@@ -435,28 +434,27 @@ function negotiateContentEncoding(
   }
 
   const acceptMap = Object.fromEntries<undefined | Accept[1]>(
-    parseAcceptHeader(acceptHeader) ?? [DEFAULT_ACCEPT_ENC],
+    parseAcceptEncoding(acceptHeader) ?? [ACCEPT_ENC_DEFAULT],
   )
 
-  // The logic hereafter assumes that the preferences includes "identity". Let's
-  // make sure it does.
-  if (!preferences.some(isIdentityAccept)) {
-    preferences = [...preferences, ACCEPT_FORBID_IDENTITY]
+  // Make sure that the preferences cover "identity" (the default encoding).
+  if (!preferences.some(coversIdentityAccept)) {
+    preferences = [...preferences, ACCEPT_ENC_DEFAULT]
   }
 
   const common = preferences.filter(([name]) => {
-    const acceptFlags = acceptMap[name] ?? acceptMap['*']
+    const acceptQ = (acceptMap[name] ?? acceptMap['*'])?.q
+    // Per HTTP/1.1, "identity" is always acceptable unless explicitly rejected
     if (name === 'identity') {
-      // Per HTTP/1.1, identity must always be accepted unless explicitly rejected
-      return acceptFlags?.q !== 0
+      return acceptQ == null || acceptQ > 0
     } else {
-      return acceptFlags ? acceptFlags.q > 0 : false
+      return acceptQ != null && acceptQ > 0
     }
   })
 
-  // Since preferences included "identity" we are sure that if common is empty,
-  // then the downstream client explicitly rejected it, and we can indeed throw
-  // a 406 here.
+  // Since preferences cover "identity" we are sure that if common is empty,
+  // then the downstream client explicitly rejected "identity", and the
+  // negotiation failed.
   if (!common.some(isAllowedAccept)) {
     throw new XRPCServerError(
       ResponseType.NotAcceptable,
@@ -464,18 +462,22 @@ function negotiateContentEncoding(
     )
   }
 
+  // https://github.com/microsoft/TypeScript/issues/60103
+  const commonTyped = common as [Accept, ...Accept[]]
+
   return formatAcceptHeader(
     // Because "identity" is always accepted unless explicitly rejected, and
     // because preferences do contain "identity", we need to make sure that
     // "identity" is explicitly defined in the proxied accept-encoding header.
-    common.some(isIdentityAccept)
-      ? (common as [Accept, ...Accept[]])
-      : [ACCEPT_FORBID_IDENTITY, ...common],
+    commonTyped.some(coversIdentityAccept)
+      ? commonTyped
+      : [...commonTyped, ACCEPT_FORBID_STAR],
   )
 }
 
-function isIdentityAccept(accept: Accept): boolean {
-  return accept[0] === 'identity'
+function coversIdentityAccept(accept: Accept): boolean {
+  const name = accept[0]
+  return name === 'identity' || name === '*'
 }
 
 function isAllowedAccept(accept: Accept): boolean {
@@ -483,7 +485,6 @@ function isAllowedAccept(accept: Accept): boolean {
 }
 
 /**
- * @param fallbackQ - Adds a "*;q=fallbackQ" to the end of the list. There is no need to specify "0" here.
  * @see {@link https://developer.mozilla.org/en-US/docs/Glossary/Quality_values}
  */
 function formatAcceptHeader(accept: readonly [Accept, ...Accept[]]): string {
@@ -495,48 +496,52 @@ function formatAcceptPart([enc, flags]: Accept): string {
   return `${enc};q=${flags.q}`
 }
 
-function parseAcceptHeader(
-  acceptHeader: undefined | string | string[],
+function parseAcceptEncoding(
+  acceptEncodings: undefined | string | string[],
 ): undefined | Accept[] {
-  if (acceptHeader == null) return undefined
+  if (acceptEncodings == null) return undefined
 
-  return Array.isArray(acceptHeader)
-    ? acceptHeader.flatMap(parseAcceptHeader).filter(isNonNullable)
-    : acceptHeader.split(',').map(parseAcceptPart)
+  if (typeof acceptEncodings !== 'string') {
+    // For type-safety, we should never get here
+    throw new TypeError('invalid accept-encoding header')
+  }
+
+  return acceptEncodings.split(',').map(parseAcceptEncodingPart)
 }
 
-function parseAcceptPart(part: string): Accept {
+function parseAcceptEncodingPart(encoding: string): Accept {
   const flags = { q: 1 }
 
-  const params = part.trim().split(';')
-  if (params.length > 2) {
-    throw new InvalidRequestError(`Invalid accept header`)
-  }
-
-  const token = params[0].toLowerCase()
+  const { length, 0: token, 1: params } = encoding.trim().split(';', 3)
   if (!token) {
-    throw new InvalidRequestError(`Invalid accept header`)
+    throw new InvalidRequestError(`Invalid accept-encoding: "${encoding}"`)
   }
 
-  if (params.length === 2) {
-    const param = params[1]
-    const { 0: key, 1: value, length } = param.split('=')
+  if (length > 2) {
+    throw new InvalidRequestError(`Invalid accept-encoding: "${encoding}"`)
+  }
 
-    if (length !== 2 || !value || (key !== 'q' && key !== 'Q')) {
-      throw new InvalidRequestError(`Invalid accept header`)
+  if (length === 2) {
+    const { length, 0: key, 1: value } = params.split('=', 3)
+    if (length !== 2) {
+      throw new InvalidRequestError(`Invalid accept-encoding: "${encoding}"`)
     }
 
-    const q = parseFloat(value)
-    if (q === 0 || (Number.isFinite(q) && q <= 1 && q >= 0.001)) {
-      flags.q = q
+    if (key === 'q' || key === 'Q') {
+      if (!value) {
+        throw new InvalidRequestError(`Invalid accept-encoding: "${encoding}"`)
+      }
+
+      const q = parseFloat(value)
+      if (q === 0 || (Number.isFinite(q) && q <= 1 && q >= 0.001)) {
+        flags.q = q
+      }
+    } else {
+      throw new InvalidRequestError(`Invalid accept-encoding: "${encoding}"`)
     }
   }
 
-  return [token, flags]
-}
-
-function isNonNullable<T>(val: T): val is NonNullable<T> {
-  return val != null
+  return [token.toLowerCase(), flags]
 }
 
 export function isJsonContentType(
