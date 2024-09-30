@@ -3,7 +3,7 @@ import { useAuthContext } from './auth/auth-provider'
 import { OAuthSession } from '@atproto/oauth-client'
 
 function App() {
-  const { pdsAgent, signOut } = useAuthContext()
+  const { pdsAgent, signOut, refresh } = useAuthContext()
 
   const hasTokenInfo = pdsAgent.sessionManager instanceof OAuthSession
 
@@ -69,6 +69,8 @@ function App() {
         </pre>
       </code>
 
+      <button onClick={refresh}>Refresh tokens</button>
+      <br />
       <button onClick={signOut}>Sign-out</button>
     </div>
   )

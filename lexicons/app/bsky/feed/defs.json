@@ -44,7 +44,8 @@
         "like": { "type": "string", "format": "at-uri" },
         "threadMuted": { "type": "boolean" },
         "replyDisabled": { "type": "boolean" },
-        "embeddingDisabled": { "type": "boolean" }
+        "embeddingDisabled": { "type": "boolean" },
+        "pinned": { "type": "boolean" }
       }
     },
     "feedViewPost": {
@@ -53,7 +54,7 @@
       "properties": {
         "post": { "type": "ref", "ref": "#postView" },
         "reply": { "type": "ref", "ref": "#replyRef" },
-        "reason": { "type": "union", "refs": ["#reasonRepost"] },
+        "reason": { "type": "union", "refs": ["#reasonRepost", "#reasonPin"] },
         "feedContext": {
           "type": "string",
           "description": "Context provided by feed generator that may be passed back alongside interactions.",
@@ -87,6 +88,10 @@
         "by": { "type": "ref", "ref": "app.bsky.actor.defs#profileViewBasic" },
         "indexedAt": { "type": "string", "format": "datetime" }
       }
+    },
+    "reasonPin": {
+      "type": "object",
+      "properties": {}
     },
     "threadViewPost": {
       "type": "object",
@@ -171,7 +176,10 @@
       "required": ["post"],
       "properties": {
         "post": { "type": "string", "format": "at-uri" },
-        "reason": { "type": "union", "refs": ["#skeletonReasonRepost"] },
+        "reason": {
+          "type": "union",
+          "refs": ["#skeletonReasonRepost", "#skeletonReasonPin"]
+        },
         "feedContext": {
           "type": "string",
           "description": "Context that will be passed through to client and may be passed to feed generator back alongside interactions.",
@@ -185,6 +193,10 @@
       "properties": {
         "repost": { "type": "string", "format": "at-uri" }
       }
+    },
+    "skeletonReasonPin": {
+      "type": "object",
+      "properties": {}
     },
     "threadgateView": {
       "type": "object",

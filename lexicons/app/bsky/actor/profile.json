@@ -41,6 +41,10 @@
             "type": "ref",
             "ref": "com.atproto.repo.strongRef"
           },
+          "pinnedPost": {
+            "type": "ref",
+            "ref": "com.atproto.repo.strongRef"
+          },
           "createdAt": { "type": "string", "format": "datetime" }
         }
       }

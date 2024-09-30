@@ -20,7 +20,9 @@ export default function (server: Server, ctx: AppContext) {
             ids.AppBskyFeedGetFeedGenerator,
           ),
         )
-      return pipethrough(ctx, req, requester, {
+
+      return pipethrough(ctx, req, {
+        iss: requester,
         aud: feed.view.did,
         lxm: ids.AppBskyFeedGetFeedSkeleton,
       })

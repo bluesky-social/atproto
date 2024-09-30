@@ -3,7 +3,7 @@ on:
   push:
     branches:
       - main
-      - divy/fix-pds-calls-no-body
+      - msieben/micro-optimizations
 env:
   REGISTRY: ghcr.io
   USERNAME: ${{ github.actor }}

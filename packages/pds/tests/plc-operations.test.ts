@@ -172,7 +172,7 @@ describe('plc operations', () => {
     )
 
     expect(mail.to).toEqual(sc.accounts[alice].email)
-    expect(mail.html).toContain('PLC Update Requested')
+    expect(mail.html).toContain('PLC update requested')
 
     const gotToken = getTokenFromMail(mail)
     assert(gotToken)
