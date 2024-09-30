@@ -1,5 +1,22 @@
 # @atproto/dev-env
 
+## 0.3.51
+
+### Patch Changes
+
+- Updated dependencies [[`a07b21151`](https://github.com/bluesky-social/atproto/commit/a07b21151f1850340c4b7797ebb11521b1a6cdf3), [`2676206e4`](https://github.com/bluesky-social/atproto/commit/2676206e422233fefbf2d9d182e8d462f0957c93), [`922b94ce3`](https://github.com/bluesky-social/atproto/commit/922b94ce379d861faaa5cf8448b7a44f04e474d3), [`a07b21151`](https://github.com/bluesky-social/atproto/commit/a07b21151f1850340c4b7797ebb11521b1a6cdf3), [`a07b21151`](https://github.com/bluesky-social/atproto/commit/a07b21151f1850340c4b7797ebb11521b1a6cdf3), [`a07b21151`](https://github.com/bluesky-social/atproto/commit/a07b21151f1850340c4b7797ebb11521b1a6cdf3), [`a07b21151`](https://github.com/bluesky-social/atproto/commit/a07b21151f1850340c4b7797ebb11521b1a6cdf3), [`eb20ff64a`](https://github.com/bluesky-social/atproto/commit/eb20ff64a2d8e3061c652e1e247bf9b0fe3c41a6), [`a07b21151`](https://github.com/bluesky-social/atproto/commit/a07b21151f1850340c4b7797ebb11521b1a6cdf3), [`87a1f2426`](https://github.com/bluesky-social/atproto/commit/87a1f24262e0e644b6cf31cc7a0446d9127ffa94), [`a07b21151`](https://github.com/bluesky-social/atproto/commit/a07b21151f1850340c4b7797ebb11521b1a6cdf3), [`a07b21151`](https://github.com/bluesky-social/atproto/commit/a07b21151f1850340c4b7797ebb11521b1a6cdf3), [`a07b21151`](https://github.com/bluesky-social/atproto/commit/a07b21151f1850340c4b7797ebb11521b1a6cdf3), [`a07b21151`](https://github.com/bluesky-social/atproto/commit/a07b21151f1850340c4b7797ebb11521b1a6cdf3), [`a07b21151`](https://github.com/bluesky-social/atproto/commit/a07b21151f1850340c4b7797ebb11521b1a6cdf3), [`a07b21151`](https://github.com/bluesky-social/atproto/commit/a07b21151f1850340c4b7797ebb11521b1a6cdf3), [`a06634ae5`](https://github.com/bluesky-social/atproto/commit/a06634ae576217d53ef7ea7f8cbfa9faa8662634), [`b298bfd28`](https://github.com/bluesky-social/atproto/commit/b298bfd280c5de8b38b843fd852e6d2739a776d8), [`a07b21151`](https://github.com/bluesky-social/atproto/commit/a07b21151f1850340c4b7797ebb11521b1a6cdf3)]:
+  - @atproto/common-web@0.3.1
+  - @atproto/api@0.13.8
+  - @atproto/pds@0.4.60
+  - @atproto/xrpc-server@0.7.0
+  - @atproto/lexicon@0.4.2
+  - @atproto/bsky@0.0.84
+  - @atproto/ozone@0.1.46
+  - @atproto/identity@0.4.2
+  - @atproto/sync@0.1.2
+  - @atproto/bsync@0.0.7
+  - @atproto/crypto@0.4.1
+
 ## 0.3.50
 
 ### Patch Changes

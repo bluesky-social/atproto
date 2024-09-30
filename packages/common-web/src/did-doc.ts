@@ -145,12 +145,24 @@ const validateUrl = (urlStr: string): string | undefined => {
     return undefined
   }
 
-  if (!URL.canParse(urlStr)) {
+  if (!canParseUrl(urlStr)) {
     return undefined
   }
 
   return urlStr
 }
+
+const canParseUrl =
+  URL.canParse ??
+  // URL.canParse is not available in Node.js < 18.17.0
+  ((urlStr: string): boolean => {
+    try {
+      new URL(urlStr)
+      return true
+    } catch {
+      return false
+    }
+  })
 
 // Types
 // --------
