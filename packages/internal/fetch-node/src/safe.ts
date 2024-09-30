@@ -1,16 +1,18 @@
 import {
+  asRequest,
   DEFAULT_FORBIDDEN_DOMAIN_NAMES,
   Fetch,
   fetchMaxSizeProcessor,
   forbiddenDomainNameRequestTransform,
   protocolCheckRequestTransform,
-  requireHostHeaderTranform,
+  redirectCheckRequestTransform,
+  requireHostHeaderTransform,
   timedFetch,
   toRequestTransformer,
 } from '@atproto-labs/fetch'
 import { pipe } from '@atproto-labs/pipe'
 
-import { ssrfFetchWrap } from './ssrf.js'
+import { unicastFetchWrap } from './unicast.js'
 
 export type SafeFetchWrapOptions = NonNullable<
   Parameters<typeof safeFetchWrap>[0]
@@ -19,31 +21,43 @@ export type SafeFetchWrapOptions = NonNullable<
 /**
  * Wrap a fetch function with safety checks so that it can be safely used
  * with user provided input (URL).
+ *
+ * @see {@link https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html}
  */
 export function safeFetchWrap({
   fetch = globalThis.fetch as Fetch,
   responseMaxSize = 512 * 1024, // 512kB
-  allowHttp = false,
-  allowData = false,
   ssrfProtection = true,
+  allowCustomPort = !ssrfProtection,
+  allowData = false,
+  allowHttp = !ssrfProtection,
+  allowIpHost = true,
+  allowPrivateIps = !ssrfProtection,
   timeout = 10e3,
   forbiddenDomainNames = DEFAULT_FORBIDDEN_DOMAIN_NAMES as Iterable<string>,
 } = {}): Fetch<unknown> {
   return toRequestTransformer(
     pipe(
       /**
-       * Prevent using http:, file: or data: protocols.
+       * Disable HTTP redirects
        */
-      protocolCheckRequestTransform(
-        ['https:']
-          .concat(allowHttp ? ['http:'] : [])
-          .concat(allowData ? ['data:'] : []),
-      ),
+      redirectCheckRequestTransform(),
 
       /**
        * Only requests that will be issued with a "Host" header are allowed.
        */
-      requireHostHeaderTranform(),
+      allowIpHost ? asRequest : requireHostHeaderTransform(),
+
+      /**
+       * Prevent using http:, file: or data: protocols.
+       */
+      protocolCheckRequestTransform({
+        'about:': false,
+        'data:': allowData,
+        'file:': false,
+        'http:': allowHttp && { allowCustomPort },
+        'https:': { allowCustomPort },
+      }),
 
       /**
        * Disallow fetching from domains we know are not atproto/OIDC client
@@ -65,7 +79,7 @@ export function safeFetchWrap({
          * input, we need to make sure that the request is not vulnerable to SSRF
          * attacks.
          */
-        ssrfProtection ? ssrfFetchWrap({ fetch }) : fetch,
+        allowPrivateIps ? fetch : unicastFetchWrap({ fetch }),
       ),
 
       /**

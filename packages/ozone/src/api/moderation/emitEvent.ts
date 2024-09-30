@@ -162,6 +162,10 @@ const handleModerationEvent = async ({
       }
     }
 
+    if (isTakedownEvent && result.event.meta?.acknowledgeAccountSubjects) {
+      await moderationTxn.resolveSubjectsForAccount(subject.did, createdBy)
+    }
+
     if (isLabelEvent) {
       await moderationTxn.formatAndCreateLabels(
         result.event.subjectUri ?? result.event.subjectDid,

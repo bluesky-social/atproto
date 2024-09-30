@@ -79,21 +79,46 @@ export const skeleton = async (inputs: {
   if (clearlyBadCursor(params.cursor)) {
     return { actor, filter: params.filter, items: [] }
   }
+
+  const isFirstPageRequest = !params.cursor
+  const shouldInsertPinnedPost =
+    isFirstPageRequest && params.includePins && !!actor.profile?.pinnedPost
+
   const res = await ctx.dataplane.getAuthorFeed({
     actorDid: did,
     limit: params.limit,
     cursor: params.cursor,
     feedType: FILTER_TO_FEED_TYPE[params.filter],
   })
+
+  let items: FeedItem[] = res.items.map((item) => ({
+    post: { uri: item.uri, cid: item.cid || undefined },
+    repost: item.repost
+      ? { uri: item.repost, cid: item.repostCid || undefined }
+      : undefined,
+  }))
+
+  if (shouldInsertPinnedPost && actor.profile?.pinnedPost) {
+    const pinnedItem = {
+      post: {
+        uri: actor.profile.pinnedPost.uri,
+        cid: actor.profile.pinnedPost.cid,
+      },
+      authorPinned: true,
+    }
+    if (params.limit === 1) {
+      items[0] = pinnedItem
+    } else {
+      // filter pinned post from first page only
+      items = items.filter((item) => item.post.uri !== pinnedItem.post.uri)
+      items.unshift(pinnedItem)
+    }
+  }
+
   return {
     actor,
     filter: params.filter,
-    items: res.items.map((item) => ({
-      post: { uri: item.uri, cid: item.cid || undefined },
-      repost: item.repost
-        ? { uri: item.repost, cid: item.repostCid || undefined }
-        : undefined,
-    })),
+    items,
     cursor: parseString(res.cursor),
   }
 }
@@ -147,7 +172,7 @@ const noBlocksOrMutedReposts = (inputs: {
     skeleton.items = skeleton.items.filter((item) => {
       return (
         checkBlocksAndMutes(item) &&
-        (item.repost || selfThread.ok(item.post.uri))
+        (item.repost || item.authorPinned || selfThread.ok(item.post.uri))
       )
     })
   } else {

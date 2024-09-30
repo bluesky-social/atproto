@@ -122,6 +122,16 @@ export class ModerationViews {
       }
     }
 
+    if (
+      event.action === 'tools.ozone.moderation.defs#modEventTakedown' &&
+      event.meta?.acknowledgeAccountSubjects
+    ) {
+      eventView.event = {
+        ...eventView.event,
+        acknowledgeAccountSubjects: event.meta?.acknowledgeAccountSubjects,
+      }
+    }
+
     if (event.action === 'tools.ozone.moderation.defs#modEventLabel') {
       eventView.event = {
         ...eventView.event,

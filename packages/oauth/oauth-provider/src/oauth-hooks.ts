@@ -1,7 +1,7 @@
 import { Jwks } from '@atproto/jwk'
 import {
-  OAuthAuthenticationRequestParameters,
   OAuthAuthorizationDetails,
+  OAuthAuthorizationRequestParameters,
   OAuthClientMetadata,
   OAuthTokenResponse,
 } from '@atproto/oauth-types'
@@ -23,8 +23,8 @@ export type {
   ClientInfo,
   InvalidAuthorizationDetailsError,
   Jwks,
-  OAuthAuthenticationRequestParameters,
   OAuthAuthorizationDetails,
+  OAuthAuthorizationRequestParameters,
   OAuthClientMetadata,
   OAuthTokenResponse,
 }
@@ -50,7 +50,7 @@ export type OAuthHooks = {
    */
   onAuthorizationDetails?: (data: {
     client: Client
-    parameters: OAuthAuthenticationRequestParameters
+    parameters: OAuthAuthorizationRequestParameters
     account: Account
   }) => Awaitable<undefined | OAuthAuthorizationDetails>
 }

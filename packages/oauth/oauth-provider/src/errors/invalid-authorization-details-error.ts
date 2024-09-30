@@ -1,4 +1,4 @@
-import { OAuthAuthenticationRequestParameters } from '@atproto/oauth-types'
+import { OAuthAuthorizationRequestParameters } from '@atproto/oauth-types'
 import { AccessDeniedError } from './access-denied-error.js'
 
 /**
@@ -18,7 +18,7 @@ import { AccessDeniedError } from './access-denied-error.js'
  */
 export class InvalidAuthorizationDetailsError extends AccessDeniedError {
   constructor(
-    parameters: OAuthAuthenticationRequestParameters,
+    parameters: OAuthAuthorizationRequestParameters,
     error_description: string,
     cause?: unknown,
   ) {
