@@ -9,6 +9,11 @@ export const noUndefinedVals = <T>(
   return obj as Record<string, T>
 }
 
+/**
+ * Creates a copy of the object with the specified keys omitted. If the object
+ * is `undefined`, it returns `undefined`. If the object did not have any of the
+ * keys to omit, it returns the same object.
+ */
 export function omit<
   T extends undefined | Record<string, unknown>,
   K extends keyof NonNullable<T>,
@@ -17,11 +22,35 @@ export function omit(
   obj: Record<string, unknown>,
   keys: readonly string[],
 ): undefined | Record<string, unknown> {
-  if (!obj) return obj
+  // Hot path
+  if (obj) {
+    const objKeys = Object.keys(obj)
+    for (let i = 0; i < objKeys.length; i++) {
+      // If the key at position i must be excluded
+      if (keys.includes(keys[i])) {
+        // Create a copy
+        const newObj = {}
 
-  return Object.fromEntries(
-    Object.entries(obj).filter((entry) => !keys.includes(entry[0])),
-  )
+        // Copy all the keys already visited (that did not have to be excluded),
+        // without re-checking if they need to be excluded.
+        for (let j = 0; j < i; j++) {
+          const key = objKeys[j]
+          newObj[key] = obj[key]
+        }
+
+        // Copy all the remaining keys, excluding the ones that need to be
+        // excluded.
+        for (let j = i + 1; j < objKeys.length; j++) {
+          const key = objKeys[j]
+          if (!keys.includes(key)) newObj[key] = obj[key]
+        }
+
+        return newObj
+      }
+    }
+  }
+
+  return obj
 }
 
 export const jitter = (maxMs: number) => {

@@ -132,7 +132,8 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
             const dec = createDecoders(upstream.headers['content-encoding'])
             if (dec.length) {
               pipeline([...dec, res], (_err: Error | null) => {})
-              res.setHeader('content-encoding', 'identity')
+              res.removeHeader('content-encoding')
+              res.removeHeader('content-length')
               return dec[0]
             }
           } catch {
@@ -241,7 +242,7 @@ export async function pipethrough(
   if (!req.headers['accept-encoding']) {
     return {
       encoding,
-      headers: { ...headers, 'content-encoding': 'identity' },
+      headers: omit(headers, ['content-encoding', 'content-length']),
       stream: decodeStream(upstream.body, upstream.headers['content-encoding']),
     }
   }
