@@ -13,7 +13,7 @@ import { DataPlaneClient, withHeaders } from './data-plane/client'
 import { FeatureGates } from './feature-gates'
 import { HydrateCtx, HydrateCtxVals } from './hydration/hydrate-ctx'
 import { Hydrator } from './hydration/hydrator'
-import { httpLogger as log } from './logger'
+import { hydrationLogger, httpLogger as log } from './logger'
 import {
   Awaitable,
   createPipeline,
@@ -195,36 +195,39 @@ export class AppContext {
      * Returns an XRPC handler that wraps the view function.
      */
     return async (reqCtx: ReqCtx): Promise<Output> => {
-      const credentials = authVerifier.parseCreds(reqCtx.auth)
+      const { auth, req, res } = reqCtx
+
+      const credentials = authVerifier.parseCreds(auth)
 
       if (canPerformTakedownRequired && !credentials.canPerformTakedown) {
         throw new AuthRequiredError('Must be a full moderator')
       }
 
+      // Create the context that to use in the controller
       const ctx = await this.createHydrateCtx({
-        labelers: this.reqLabelers(reqCtx.req),
+        labelers: this.reqLabelers(req),
         viewer: credentials.viewer,
         include3pBlocks: allowInclude3pBlocks && credentials.include3pBlocks,
         includeTakedowns: allowIncludeTakedowns && credentials.includeTakedowns,
       })
 
-      try {
-        return await view(ctx, reqCtx)
-      } finally {
-        const { res } = reqCtx
+      // Always expose the labelers that were actually used to process the request
+      res.setHeader(ATPROTO_CONTENT_LABELERS, formatLabelerHeader(ctx.labelers))
 
-        res.setHeader(
-          ATPROTO_CONTENT_LABELERS,
-          formatLabelerHeader(ctx.labelers),
-        )
-
-        if (exposeRepoRev) {
-          const repoRev = await ctx.hydrator.actor.getRepoRevSafe(ctx.viewer)
-          if (repoRev) {
-            res.setHeader(ATPROTO_REPO_REV, repoRev)
-          }
+      // Conditionally expose the repo revision
+      if (exposeRepoRev && ctx.viewer) {
+        try {
+          const repoRev = await ctx.hydrator.actor.getRepoRev(ctx.viewer)
+          if (repoRev) res.setHeader(ATPROTO_REPO_REV, repoRev)
+        } catch (err) {
+          hydrationLogger.error(
+            { err, viewer: ctx.viewer },
+            `Failed to get viewer repo rev`,
+          )
         }
       }
+
+      return view(ctx, reqCtx)
     }
   }
 
