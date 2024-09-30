@@ -9,12 +9,14 @@ import type { ParsedLabelers } from '../util/labeler-header'
 import type { Views } from '../views/index'
 import type { Hydrator } from './hydrator'
 
-export class HydrateCtx {
-  labelers = this.vals.labelers
-  viewer = this.vals.viewer !== null ? serviceRefToDid(this.vals.viewer) : null
-  includeTakedowns = this.vals.includeTakedowns
-  include3pBlocks = this.vals.include3pBlocks
+export type HydrateCtxVals = {
+  labelers: ParsedLabelers
+  viewer: string | null
+  includeTakedowns: boolean
+  include3pBlocks: boolean
+}
 
+export class HydrateCtx {
   constructor(
     private vals: HydrateCtxVals,
     readonly dataplane: DataPlaneClient,
@@ -27,6 +29,22 @@ export class HydrateCtx {
     readonly suggestionsAgent: AtpAgent | undefined,
     readonly searchAgent: AtpAgent | undefined,
   ) {}
+
+  get labelers(): ParsedLabelers {
+    return this.vals.labelers
+  }
+
+  get viewer(): string | null {
+    return this.vals.viewer
+  }
+
+  get includeTakedowns(): boolean {
+    return this.vals.includeTakedowns
+  }
+
+  get include3pBlocks(): boolean {
+    return this.vals.include3pBlocks
+  }
 
   copy(vals?: Partial<HydrateCtxVals>) {
     return new HydrateCtx(
@@ -42,17 +60,4 @@ export class HydrateCtx {
       this.searchAgent,
     )
   }
-}
-
-export type HydrateCtxVals = {
-  labelers: ParsedLabelers
-  viewer: string | null
-  includeTakedowns: boolean
-  include3pBlocks: boolean
-}
-
-// service refs may look like "did:plc:example#service_id". we want to extract the did part "did:plc:example".
-export function serviceRefToDid(serviceRef: string) {
-  const idx = serviceRef.indexOf('#')
-  return idx !== -1 ? serviceRef.slice(0, idx) : serviceRef
 }

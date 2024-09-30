@@ -133,19 +133,26 @@ export class AppContext {
     return parsed
   }
 
-  private dataplaneForViewer(viewer: null | string): DataPlaneClient {
+  private dataplaneForCaller(auth: Creds): DataPlaneClient {
     // Optimization: avoid creating a new client. Simply create a "proxy" that
-    // adds the viewer header, or return the global data plane client if there
-    // is no viewer.
-    if (viewer) {
-      return withHeaders(this.opts.dataplane, { 'bsky-caller-did': viewer })
+    // adds the did header, or return the global data plane client if there
+    // is no did.
+    if (
+      auth.credentials.type === 'standard' ||
+      auth.credentials.type === 'mod_service'
+    ) {
+      const did = serviceRefToDid(auth.credentials.iss)
+      return withHeaders(this.opts.dataplane, { 'bsky-caller-did': did })
     } else {
       return this.opts.dataplane
     }
   }
 
-  private async createHydrateCtx(vals: HydrateCtxVals): Promise<HydrateCtx> {
-    const dataplane = this.dataplaneForViewer(vals.viewer)
+  private async createHydrateCtx(
+    auth: Creds,
+    vals: HydrateCtxVals,
+  ): Promise<HydrateCtx> {
+    const dataplane = this.dataplaneForCaller(auth)
 
     // @TODO Refactor the Hydrator and HydrateCtx into a single class. For
     // historic reasons, "hydrator" used to be a singleton. Then we added the
@@ -156,13 +163,13 @@ export class AppContext {
 
     const hydrator = new Hydrator(dataplane, this.cfg.labelsFromIssuerDids)
 
-    const availableLabelers = await hydrator.filterUnavailableLabelers(
+    vals.labelers = await hydrator.filterUnavailableLabelers(
       vals.labelers,
       vals.includeTakedowns,
     )
 
     return new HydrateCtx(
-      { ...vals, labelers: availableLabelers },
+      vals,
       dataplane,
       hydrator,
       this.opts.views,
@@ -195,20 +202,26 @@ export class AppContext {
      * Returns an XRPC handler that wraps the view function.
      */
     return async (reqCtx: ReqCtx): Promise<Output> => {
-      const { auth, req, res } = reqCtx
+      const { req, res, auth } = reqCtx
 
-      const credentials = authVerifier.parseCreds(auth)
+      const authInfo = authVerifier.parseCreds(auth)
 
-      if (canPerformTakedownRequired && !credentials.canPerformTakedown) {
+      if (canPerformTakedownRequired && !authInfo.canPerformTakedown) {
         throw new AuthRequiredError('Must be a full moderator')
       }
 
-      // Create the context that to use in the controller
-      const ctx = await this.createHydrateCtx({
+      // @TODO Refactor the Hydrator and HydrateCtx into a single class. For
+      // historic reasons, "hydrator" used to be a singleton. Then we added the
+      // ability to send the caller DID to the data plane, which required to
+      // create a new dataplane instance (and thus a new hydrator) per request.
+      // Since the hydrator is now bound the the viewer, we should merge the two
+      // classes.
+
+      const ctx = await this.createHydrateCtx(auth, {
         labelers: this.reqLabelers(req),
-        viewer: credentials.viewer,
-        include3pBlocks: allowInclude3pBlocks && credentials.include3pBlocks,
-        includeTakedowns: allowIncludeTakedowns && credentials.includeTakedowns,
+        viewer: authInfo.viewer ? serviceRefToDid(authInfo.viewer) : null,
+        include3pBlocks: allowInclude3pBlocks && authInfo.include3pBlocks,
+        includeTakedowns: allowIncludeTakedowns && authInfo.includeTakedowns,
       })
 
       // Always expose the labelers that were actually used to process the request
@@ -252,3 +265,9 @@ export class AppContext {
 }
 
 export default AppContext
+
+// service refs may look like "did:plc:example#service_id". we want to extract the did part "did:plc:example".
+function serviceRefToDid(serviceRef: string) {
+  const idx = serviceRef.indexOf('#')
+  return idx !== -1 ? serviceRef.slice(0, idx) : serviceRef
+}
