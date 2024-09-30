@@ -36,7 +36,7 @@ export default function (server: Server, ctx: AppContext) {
           })
         } else {
           results.push({
-            $type: 'tools.ozone.moderation.defs#recordView',
+            $type: 'tools.ozone.moderation.defs#recordViewDetail',
             ...record,
             repo: addAccountInfoToRepoView(
               record.repo,

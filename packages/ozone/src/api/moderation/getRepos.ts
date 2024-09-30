@@ -30,7 +30,7 @@ export default function (server: Server, ctx: AppContext) {
           return
         }
         repos.push({
-          $type: 'tools.ozone.moderation.defs#repoView',
+          $type: 'tools.ozone.moderation.defs#repoViewDetail',
           ...addAccountInfoToRepoViewDetail(
             partialRepo,
             accountInfo.get(did) || null,
