@@ -246,6 +246,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     headersTimeout: env.proxyHeadersTimeout ?? 10e3,
     bodyTimeout: env.proxyBodyTimeout ?? 30e3,
     maxResponseSize: env.proxyMaxResponseSize ?? 10 * 1024 * 1024, // 10mb
+    preferCompressed: env.proxyPreferCompressed ?? false,
   }
 
   const oauthCfg: ServerConfig['oauth'] = entrywayCfg
@@ -413,6 +414,15 @@ export type ProxyConfig = {
   headersTimeout: number
   bodyTimeout: number
   maxResponseSize: number
+
+  /**
+   * When proxying requests that might get intercepted (for read-after-write) we
+   * negotiate the encoding based on the client's preferences. We will however
+   * use or own weights in order to be able to better control if the PDS will
+   * need to perform content decoding. This settings allows to prefer compressed
+   * content over uncompressed one.
+   */
+  preferCompressed: boolean
 }
 
 export type OAuthConfig = {
