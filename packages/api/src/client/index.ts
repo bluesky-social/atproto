@@ -866,12 +866,11 @@ export class ComAtprotoRepoNS {
     params?: ComAtprotoRepoGetRecord.QueryParams,
     opts?: ComAtprotoRepoGetRecord.CallOptions,
   ): Promise<ComAtprotoRepoGetRecord.Response> {
-    return this._client.call(
-      'com.atproto.repo.getRecord',
-      params,
-      undefined,
-      opts,
-    )
+    return this._client
+      .call('com.atproto.repo.getRecord', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoRepoGetRecord.toKnownErr(e)
+      })
   }
 
   importRepo(

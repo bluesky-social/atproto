@@ -1686,6 +1686,11 @@ export const schemaDict = {
             },
           },
         },
+        errors: [
+          {
+            name: 'RecordNotFound',
+          },
+        ],
       },
     },
   },
