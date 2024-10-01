@@ -88,15 +88,15 @@ export class MaxSizeChecker extends Transform {
 
 export function decodeStream(
   stream: Readable,
-  contentEncoding?: string,
+  contentEncoding?: string | string[],
 ): Readable
 export function decodeStream(
   stream: AsyncIterable<Uint8Array>,
-  contentEncoding?: string,
+  contentEncoding?: string | string[],
 ): AsyncIterable<Uint8Array> | Readable
 export function decodeStream(
   stream: Readable | AsyncIterable<Uint8Array>,
-  contentEncoding?: string,
+  contentEncoding?: string | string[],
 ): Readable | AsyncIterable<Uint8Array> {
   const decoders = createDecoders(contentEncoding)
   if (decoders.length === 0) return stream
@@ -106,14 +106,23 @@ export function decodeStream(
 /**
  * Create a series of decoding streams based on the content-encoding header. The
  * resulting streams should be piped together to decode the content.
+ *
+ * @see {@link https://datatracker.ietf.org/doc/html/rfc9110#section-8.4.1}
  */
-export function createDecoders(contentEncoding?: string): Duplex[] {
+export function createDecoders(contentEncoding?: string | string[]): Duplex[] {
   const decoders: Duplex[] = []
 
-  if (contentEncoding) {
-    const encodings = contentEncoding.split(',')
+  if (contentEncoding?.length) {
+    const encodings: string[] = Array.isArray(contentEncoding)
+      ? contentEncoding.flatMap(commaSplit)
+      : contentEncoding.split(',')
     for (const encoding of encodings) {
       const normalizedEncoding = normalizeEncoding(encoding)
+
+      // @NOTE
+      // > The default (identity) encoding [...] is used only in the
+      // > Accept-Encoding header, and SHOULD NOT be used in the
+      // > Content-Encoding header.
       if (normalizedEncoding === 'identity') continue
 
       decoders.push(createDecoder(normalizedEncoding))
@@ -121,6 +130,10 @@ export function createDecoders(contentEncoding?: string): Duplex[] {
   }
 
   return decoders.reverse()
+}
+
+function commaSplit(header: string): string[] {
+  return header.split(',')
 }
 
 function normalizeEncoding(encoding: string) {
