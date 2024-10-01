@@ -416,9 +416,11 @@ export type ProxyConfig = {
   maxResponseSize: number
 
   /**
-   * Prefers compressed responses when proxying requests. Might cause additional
-   * CPU usage on the server (since the payload will need to decompressed when
-   * the client does not specify an "accept-encoding"), but can save bandwidth.
+   * When proxying requests that might get intercepted (for read-after-write) we
+   * negotiate the encoding based on the client's preferences. We will however
+   * use or own weights in order to be able to better control if the PDS will
+   * need to perform content decoding. This settings allows to prefer compressed
+   * content over uncompressed one.
    */
   preferCompressed: boolean
 }

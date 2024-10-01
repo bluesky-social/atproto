@@ -1,10 +1,9 @@
 import express from 'express'
 import { IncomingHttpHeaders, ServerResponse } from 'node:http'
-import { PassThrough, pipeline, Readable } from 'node:stream'
+import { PassThrough, Readable } from 'node:stream'
 import { Dispatcher } from 'undici'
 
 import {
-  createDecoders,
   decodeStream,
   getServiceEndpoint,
   omit,
@@ -24,28 +23,6 @@ import {
 import AppContext from './context'
 import { ids } from './lexicon/lexicons'
 import { httpLogger } from './logger'
-
-// List of content encodings that are supported by the PDS. One to use when
-// cfg.proxy.preferCompressed is true, and one to use when it is false.
-//
-// Make sure to:
-// 1) Explicitly define "identity" as this is the default encoding.
-// 2) Define all the encoding actually supported by the PDS and that might be
-//    requested by clients.
-
-const ACCEPT_ENCODING_COMPRESSED = [
-  ['gzip', { q: 1.0 }],
-  ['deflate', { q: 0.9 }],
-  ['br', { q: 0.8 }],
-  ['identity', { q: 0.1 }],
-] as const satisfies Accept[]
-
-const ACCEPT_ENCODING_UNCOMPRESSED = [
-  ['identity', { q: 1.0 }],
-  ['gzip', { q: 0.3 }],
-  ['deflate', { q: 0.2 }],
-  ['br', { q: 0.1 }],
-] as const satisfies Accept[]
 
 export const proxyHandler = (ctx: AppContext): CatchallHandler => {
   const accessStandard = ctx.authVerifier.accessStandard()
@@ -83,13 +60,7 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
       const { url: origin, did: aud } = await parseProxyInfo(ctx, req, lxm)
 
       const headers: IncomingHttpHeaders = {
-        'accept-encoding':
-          req.headers['accept-encoding'] ||
-          formatAcceptHeader(
-            ctx.cfg.proxy.preferCompressed
-              ? ACCEPT_ENCODING_COMPRESSED
-              : ACCEPT_ENCODING_UNCOMPRESSED,
-          ),
+        'accept-encoding': req.headers['accept-encoding'] || 'identity',
         'accept-language': req.headers['accept-language'],
         'atproto-accept-labelers': req.headers['atproto-accept-labelers'],
         'x-bsky-topics': req.headers['x-bsky-topics'],
@@ -122,28 +93,6 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
         // destroying the response), as the http server will handle them for us.
         res.on('error', logResponseError)
 
-        // Default accept-encoding is "identity" meaning that if no value was
-        // provided, the response should be sent as "identity". Since in that
-        // case, our preferences (that may allow compressed payloads) were used,
-        // we might need to decode the response.
-        // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Encoding
-        if (!req.headers['accept-encoding']) {
-          try {
-            const dec = createDecoders(upstream.headers['content-encoding'])
-            if (dec.length) {
-              pipeline([...dec, res], (_err: Error | null) => {})
-              res.removeHeader('content-encoding')
-              res.removeHeader('content-length')
-              return dec[0]
-            }
-          } catch {
-            // Upstream encoding not supported, return the response as-is. Note
-            // that in this case we could also throw an UpstreamFailure since
-            // the upstream server is misbehaving (it should have returned a 406
-            // if it dod not support any of the default encoding we provided).
-          }
-        }
-
         // Tell undici to write the upstream response directly to the response
         return res
       })
@@ -152,6 +101,20 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
     }
   }
 }
+
+const ACCEPT_ENCODING_COMPRESSED = [
+  ['gzip', { q: 1.0 }],
+  ['deflate', { q: 0.9 }],
+  ['br', { q: 0.8 }],
+  ['identity', { q: 0.1 }],
+] as const satisfies Accept[]
+
+const ACCEPT_ENCODING_UNCOMPRESSED = [
+  ['identity', { q: 1.0 }],
+  ['gzip', { q: 0.3 }],
+  ['deflate', { q: 0.2 }],
+  ['br', { q: 0.1 }],
+] as const satisfies Accept[]
 
 export type PipethroughOptions = {
   /**
@@ -232,25 +195,12 @@ export async function pipethrough(
     highWaterMark: 2 * 65536, // twice the default (64KiB)
   }
 
-  const upstream = await pipethroughRequest(ctx, dispatchOptions)
-  const encoding =
-    safeString(upstream.headers['content-type']) ?? 'application/json'
-  const headers = Object.fromEntries(responseHeaders(upstream.headers))
-
-  // If no accept-encoded header was provided, we should return a decoded stream
-  // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Encoding
-  if (!req.headers['accept-encoding']) {
-    return {
-      encoding,
-      headers: omit(headers, ['content-encoding', 'content-length']),
-      stream: decodeStream(upstream.body, upstream.headers['content-encoding']),
-    }
-  }
+  const { headers, body } = await pipethroughRequest(ctx, dispatchOptions)
 
   return {
-    encoding,
-    headers,
-    stream: upstream.body,
+    encoding: safeString(headers['content-type']) ?? 'application/json',
+    headers: Object.fromEntries(responseHeaders(headers)),
+    stream: body,
   }
 }
 
@@ -418,7 +368,8 @@ function handleUpstreamRequestError(
 // Request parsing/forwarding
 // -------------------
 
-type Accept = [name: string, flags: { q: number }]
+type AcceptFlags = { q: number }
+type Accept = [name: string, flags: AcceptFlags]
 
 // accept-encoding defaults to "identity with lowest priority"
 const ACCEPT_ENC_DEFAULT = ['identity', { q: 0.001 }] as const satisfies Accept
@@ -426,19 +377,13 @@ const ACCEPT_FORBID_STAR = ['*', { q: 0 }] as const satisfies Accept
 
 function negotiateContentEncoding(
   acceptHeader: undefined | string | string[],
-  preferences: readonly [Accept, ...Accept[]],
+  preferences: readonly Accept[],
 ): string {
-  if (!acceptHeader) {
-    // If no accept-encoding header is provided, we will use our own preferences
-    // and decode the response if needed.
-    return formatAcceptHeader(preferences)
-  }
-
-  const acceptMap = Object.fromEntries<undefined | Accept[1]>(
-    parseAcceptEncoding(acceptHeader) ?? [ACCEPT_ENC_DEFAULT],
+  const acceptMap = Object.fromEntries<undefined | AcceptFlags>(
+    parseAcceptEncoding(acceptHeader),
   )
 
-  // Make sure that the preferences cover "identity" (the default encoding).
+  // Make sure the default (identity) is covered by the preferences
   if (!preferences.some(coversIdentityAccept)) {
     preferences = [...preferences, ACCEPT_ENC_DEFAULT]
   }
@@ -453,9 +398,14 @@ function negotiateContentEncoding(
     }
   })
 
-  // Since preferences cover "identity" we are sure that if common is empty,
-  // then the downstream client explicitly rejected "identity", and the
-  // negotiation failed.
+  // Since "identity" was present in the preferences, a missing "identity" in
+  // the common array means that the client explicitly rejected it. Let's reflect
+  // this by adding it to the common array.
+  if (!common.some(coversIdentityAccept)) {
+    common.push(ACCEPT_FORBID_STAR)
+  }
+
+  // If no common encodings are acceptable, throw a 406 Not Acceptable error
   if (!common.some(isAllowedAccept)) {
     throw new XRPCServerError(
       ResponseType.NotAcceptable,
@@ -463,26 +413,15 @@ function negotiateContentEncoding(
     )
   }
 
-  // https://github.com/microsoft/TypeScript/issues/60103
-  const commonTyped = common as [Accept, ...Accept[]]
-
-  return formatAcceptHeader(
-    // Because "identity" is always accepted unless explicitly rejected, and
-    // because preferences do contain "identity", we need to make sure that
-    // "identity" is explicitly defined in the proxied accept-encoding header.
-    commonTyped.some(coversIdentityAccept)
-      ? commonTyped
-      : [...commonTyped, ACCEPT_FORBID_STAR],
-  )
+  return formatAcceptHeader(common as [Accept, ...Accept[]])
 }
 
-function coversIdentityAccept(accept: Accept): boolean {
-  const name = accept[0]
+function coversIdentityAccept([name]: Accept): boolean {
   return name === 'identity' || name === '*'
 }
 
-function isAllowedAccept(accept: Accept): boolean {
-  return accept[1].q > 0
+function isAllowedAccept([, flags]: Accept): boolean {
+  return flags.q > 0
 }
 
 /**
@@ -492,21 +431,18 @@ function formatAcceptHeader(accept: readonly [Accept, ...Accept[]]): string {
   return accept.map(formatAcceptPart).join(',')
 }
 
-function formatAcceptPart(accept: Accept): string {
-  return `${accept[0]};q=${accept[1].q}`
+function formatAcceptPart([name, flags]: Accept): string {
+  return `${name};q=${flags.q}`
 }
 
 function parseAcceptEncoding(
   acceptEncodings: undefined | string | string[],
-): undefined | Accept[] {
-  if (acceptEncodings == null) return undefined
+): Accept[] {
+  if (!acceptEncodings?.length) return []
 
-  if (typeof acceptEncodings !== 'string') {
-    // For type-safety. We should never get here
-    throw new InvalidRequestError('accept-encoding must be a string')
-  }
-
-  return acceptEncodings.split(',').map(parseAcceptEncodingDefinition)
+  return Array.isArray(acceptEncodings)
+    ? acceptEncodings.flatMap(parseAcceptEncoding)
+    : acceptEncodings.split(',').map(parseAcceptEncodingDefinition)
 }
 
 function parseAcceptEncodingDefinition(def: string): Accept {
@@ -542,11 +478,8 @@ function parseAcceptEncodingDefinition(def: string): Accept {
   return [encoding.toLowerCase(), flags]
 }
 
-export function isJsonContentType(
-  contentType?: string | string[],
-): boolean | undefined {
-  if (contentType == null) return undefined
-  if (typeof contentType !== 'string') return undefined
+export function isJsonContentType(contentType?: string): boolean | undefined {
+  if (!contentType) return undefined
   return /application\/(?:\w+\+)?json/i.test(contentType)
 }
 
