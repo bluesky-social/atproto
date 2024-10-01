@@ -77,8 +77,12 @@ export function AcceptForm({
         </div>
       )}
       <p>
-        <ClientName clientId={clientId} clientMetadata={clientMetadata} /> is
-        asking for permission to access your account (
+        <ClientName
+          clientId={clientId}
+          clientMetadata={clientMetadata}
+          clientTrusted={clientTrusted}
+        />{' '}
+        is asking for permission to access your account (
         <AccountIdentifier account={account} />
         ).
       </p>

@@ -10,29 +10,28 @@ import { UrlViewer } from './url-viewer'
 export type ClientNameProps = {
   clientId: string
   clientMetadata: OAuthClientMetadata
+  clientTrusted: boolean
+  loopbackClientName?: string
 } & HTMLAttributes<Element>
 
 export function ClientName({
   clientId,
   clientMetadata,
+  clientTrusted,
+  loopbackClientName = 'An application on your device',
   ...attrs
 }: ClientNameProps) {
+  if (clientTrusted && clientMetadata.client_name) {
+    return <span {...attrs}>{clientMetadata.client_name}</span>
+  }
+
   if (isOAuthClientIdLoopback(clientId)) {
-    return <span {...attrs}>An application on your device</span>
+    return <span {...attrs}>{loopbackClientName}</span>
   }
 
   if (isOAuthClientIdDiscoverable(clientId)) {
-    if (clientMetadata.client_name) {
-      return (
-        <span {...attrs}>
-          {clientMetadata.client_name} (
-          <UrlViewer url={clientId} path />)
-        </span>
-      )
-    }
-
     return <UrlViewer {...attrs} url={clientId} path />
   }
 
-  return <span {...attrs}>{clientMetadata.client_name || clientId}</span>
+  return <span {...attrs}>{clientId}</span>
 }
