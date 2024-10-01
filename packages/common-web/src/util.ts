@@ -21,7 +21,7 @@ export function omit<
   rejectedKeys: readonly K[],
 ): T extends undefined ? undefined : T extends null ? null : Omit<T, K>
 export function omit(
-  src: Record<string, unknown>,
+  src: undefined | null | Record<string, unknown>,
   rejectedKeys: readonly string[],
 ): undefined | null | Record<string, unknown> {
   // Hot path
