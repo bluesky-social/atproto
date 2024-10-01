@@ -223,22 +223,21 @@ export class ModerationViews {
     }
   }
 
-  async repoDetail(
-    dids: string | string[],
+  async repoDetails(
+    dids: string[],
     labelers?: ParsedLabelers,
   ): Promise<Map<string, RepoView>> {
     const results = new Map<string, RepoView>()
-    const didList = Array.isArray(dids) ? dids : [dids]
     const [repos, localLabels, externalLabels] = await Promise.all([
-      this.repos(didList),
-      this.labels(didList),
-      this.getExternalLabels(didList, labelers),
+      this.repos(dids),
+      this.labels(dids),
+      this.getExternalLabels(dids, labelers),
     ])
 
     repos.forEach((repo, did) => {
       const labels = [
         ...(localLabels.get(did) || []),
-        ...externalLabels.filter((label) => label.uri === did),
+        ...(externalLabels.get(did) || []),
       ]
       const repoView = {
         ...repo,
@@ -317,7 +316,7 @@ export class ModerationViews {
     }, new Map<string, RecordView>())
   }
 
-  async recordDetail(
+  async recordDetails(
     subjects: RecordSubject[],
     labelers?: ParsedLabelers,
   ): Promise<Map<string, RecordViewDetail>> {
@@ -332,30 +331,34 @@ export class ModerationViews {
 
     const results = new Map<string, RecordViewDetail>()
 
-    records.forEach(async (record, uri) => {
-      const selfLabels = getSelfLabels({
-        uri: record.uri,
-        cid: record.cid,
-        record: record.value,
-      })
+    await Promise.all(
+      Array.from(records.entries()).map(async ([uri, record]) => {
+        const selfLabels = getSelfLabels({
+          uri: record.uri,
+          cid: record.cid,
+          record: record.value,
+        })
 
-      const status = subjectStatusesResult.get(uri)
-      const blobs = await this.blob(findBlobRefs(record.value))
+        const status = subjectStatusesResult.get(uri)
+        const blobs = await this.blob(findBlobRefs(record.value))
 
-      results.set(uri, {
-        ...record,
-        blobs,
-        moderation: {
-          ...record.moderation,
-          subjectStatus: status ? this.formatSubjectStatus(status) : undefined,
-        },
-        labels: [
-          ...(localLabels.get(uri) || []),
-          ...selfLabels,
-          ...(externalLabels.filter((label) => label.uri === uri) || []),
-        ],
-      })
-    })
+        results.set(uri, {
+          ...record,
+          blobs,
+          moderation: {
+            ...record.moderation,
+            subjectStatus: status
+              ? this.formatSubjectStatus(status)
+              : undefined,
+          },
+          labels: [
+            ...(localLabels.get(uri) || []),
+            ...selfLabels,
+            ...(externalLabels.get(uri) || []),
+          ],
+        })
+      }),
+    )
 
     return results
   }
@@ -363,8 +366,9 @@ export class ModerationViews {
   async getExternalLabels(
     subjects: string[],
     labelers?: ParsedLabelers,
-  ): Promise<Label[]> {
-    if (!labelers?.dids.length && !labelers?.redact.size) return []
+  ): Promise<Map<string, Label[]>> {
+    const results = new Map<string, Label[]>()
+    if (!labelers?.dids.length && !labelers?.redact.size) return results
     try {
       const {
         data: { labels },
@@ -372,13 +376,20 @@ export class ModerationViews {
         uriPatterns: subjects,
         sources: labelers.dids,
       })
-      return labels
+      labels.forEach((label) => {
+        if (!results.has(label.uri)) {
+          results.set(label.uri, [label])
+          return
+        }
+        results.get(label.uri)?.push(label)
+      })
+      return results
     } catch (err) {
       httpLogger.error(
         { err, subjects, labelers },
         'failed to resolve labels from appview',
       )
-      return []
+      return results
     }
   }
 

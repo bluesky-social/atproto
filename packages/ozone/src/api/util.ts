@@ -28,11 +28,10 @@ import {
 } from '../lexicon/types/tools/ozone/team/defs'
 import { ids } from '../lexicon/lexicons'
 
-export const getPdsAccountInfo = async (
+export const getPdsAccountInfos = async (
   ctx: AppContext,
-  did: string | string[],
+  dids: string[],
 ): Promise<Map<string, AccountView | null>> => {
-  const didItems = Array.isArray(did) ? did : [did]
   const results = new Map<string, AccountView | null>()
 
   const agent = ctx.pdsAgent
@@ -42,10 +41,7 @@ export const getPdsAccountInfo = async (
   if (!auth) return results
 
   try {
-    const res = await agent.com.atproto.admin.getAccountInfos(
-      { dids: didItems },
-      auth,
-    )
+    const res = await agent.com.atproto.admin.getAccountInfos({ dids }, auth)
     res.data.infos.forEach((info) => {
       results.set(info.did, info)
     })

@@ -79,10 +79,10 @@ export class AccountManager
   }
 
   async getAccounts(
-    handlesAndDids: string[],
+    dids: string[],
     flags?: account.AvailabilityFlags,
   ): Promise<Map<string, ActorAccount>> {
-    return account.getAccounts(this.db, handlesAndDids, flags)
+    return account.getAccounts(this.db, dids, flags)
   }
 
   async getAccountByEmail(
@@ -404,7 +404,8 @@ export class AccountManager
   }
 
   async getAccountInvitesCodes(did: string) {
-    return invite.getAccountInviteCodes(this.db, did)
+    const inviteCodes = await invite.getAccountsInviteCodes(this.db, [did])
+    return inviteCodes.get(did) ?? []
   }
 
   async getAccountsInvitesCodes(dids: string[]) {

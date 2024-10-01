@@ -1,6 +1,5 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { AccountView } from '../../../../lexicon/types/com/atproto/admin/defs'
 import { formatAccountInfo } from './util'
 
 export default function (server: Server, ctx: AppContext) {
@@ -17,12 +16,12 @@ export default function (server: Server, ctx: AppContext) {
       ])
 
       const managesOwnInvites = !ctx.cfg.entryway
-      const infos: AccountView[] = []
-
-      accounts.forEach((account) => {
-        infos.push(
-          formatAccountInfo(account, { managesOwnInvites, invitedBy, invites }),
-        )
+      const infos = Array.from(accounts.values()).map((account) => {
+        return formatAccountInfo(account, {
+          managesOwnInvites,
+          invitedBy,
+          invites,
+        })
       })
 
       return {

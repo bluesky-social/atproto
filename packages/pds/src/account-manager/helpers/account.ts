@@ -66,34 +66,21 @@ export const getAccount = async (
 
 export const getAccounts = async (
   db: AccountDb,
-  handlesAndDids: string[],
+  dids: string[],
   flags?: AvailabilityFlags,
 ): Promise<Map<string, ActorAccount>> => {
   const results = new Map<string, ActorAccount>()
-  const handles = new Set<string>()
-  const dids = new Set<string>()
-  for (const handleOrDid of handlesAndDids) {
-    if (handleOrDid.startsWith('did:')) {
-      dids.add(handleOrDid)
-    } else {
-      handles.add(handleOrDid)
-    }
+
+  if (!dids.length) {
+    return results
   }
 
   const accounts = await selectAccountQB(db, flags)
-    .if(handles.size > 0, (qb) =>
-      qb.where('actor.handle', 'in', Array.from(handles)),
-    )
-    .if(dids.size > 0, (qb) => qb.where('actor.did', 'in', Array.from(dids)))
+    .where('actor.did', 'in', dids)
     .execute()
 
   accounts.forEach((account) => {
-    if (dids.has(account.did)) {
-      results.set(account.did, account)
-    }
-    if (account.handle && handles.has(account.handle)) {
-      results.set(account.handle, account)
-    }
+    results.set(account.did, account)
   })
 
   return results

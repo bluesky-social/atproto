@@ -13,7 +13,7 @@ import {
 import { forSnapshot } from './_util'
 import { ids } from '../src/lexicon/lexicons'
 
-describe('admin get record view', () => {
+describe('admin get records view', () => {
   let network: TestNetwork
   let ozone: TestOzone
   let agent: AtpAgent
@@ -69,7 +69,7 @@ describe('admin get record view', () => {
     })
   })
 
-  it('gets a records by uris', async () => {
+  it('get multiple records by uris', async () => {
     const { data } = await agent.tools.ozone.moderation.getRecords(
       {
         uris: [

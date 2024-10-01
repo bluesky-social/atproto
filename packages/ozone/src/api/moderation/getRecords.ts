@@ -1,11 +1,7 @@
 import { Server } from '../../lexicon'
 import AppContext from '../../context'
-import { addAccountInfoToRepoView, getPdsAccountInfo } from '../util'
+import { addAccountInfoToRepoView, getPdsAccountInfos } from '../util'
 import { AtUri } from '@atproto/syntax'
-import {
-  RecordViewDetail,
-  RecordViewNotFound,
-} from '../../lexicon/types/tools/ozone/moderation/defs'
 
 export default function (server: Server, ctx: AppContext) {
   server.tools.ozone.moderation.getRecords({
@@ -15,35 +11,33 @@ export default function (server: Server, ctx: AppContext) {
       const labelers = ctx.reqLabelers(req)
 
       const [records, accountInfos] = await Promise.all([
-        ctx.modService(db).views.recordDetail(
+        ctx.modService(db).views.recordDetails(
           params.uris.map((uri) => ({ uri })),
           labelers,
         ),
-        getPdsAccountInfo(
+        getPdsAccountInfos(
           ctx,
           params.uris.map((uri) => new AtUri(uri).hostname),
         ),
       ])
 
-      const results: (RecordViewDetail | RecordViewNotFound)[] = []
-
-      params.uris.forEach((uri) => {
+      const results = params.uris.map((uri) => {
         const record = records.get(uri)
         if (!record) {
-          results.push({
+          return {
             uri,
             $type: 'tools.ozone.moderation.defs#recordViewNotFound',
-          })
-        } else {
-          results.push({
-            $type: 'tools.ozone.moderation.defs#recordViewDetail',
-            ...record,
-            repo: addAccountInfoToRepoView(
-              record.repo,
-              accountInfos.get(record.repo.did) || null,
-              auth.credentials.isModerator,
-            ),
-          })
+          }
+        }
+
+        return {
+          $type: 'tools.ozone.moderation.defs#recordViewDetail',
+          ...record,
+          repo: addAccountInfoToRepoView(
+            record.repo,
+            accountInfos.get(record.repo.did) || null,
+            auth.credentials.isModerator,
+          ),
         }
       })
 
