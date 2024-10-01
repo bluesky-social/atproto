@@ -106,13 +106,9 @@ export const skeleton = async (inputs: {
       },
       authorPinned: true,
     }
-    if (params.limit === 1) {
-      items[0] = pinnedItem
-    } else {
-      // filter pinned post from first page only
-      items = items.filter((item) => item.post.uri !== pinnedItem.post.uri)
-      items.unshift(pinnedItem)
-    }
+
+    items = items.filter((item) => item.post.uri !== pinnedItem.post.uri)
+    items.unshift(pinnedItem)
   }
 
   return {
