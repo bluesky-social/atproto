@@ -14,6 +14,7 @@ import {
 import { Views } from '../../../../views'
 import { DataPlaneClient } from '../../../../data-plane'
 import { parseString } from '../../../../hydration/util'
+import { uriToDid } from '../../../../util/uris'
 import { Actor } from '../../../../hydration/actor'
 import { FeedItem, Post } from '../../../../hydration/feed'
 import { FeedType } from '../../../../proto/bsky_pb'
@@ -82,7 +83,10 @@ export const skeleton = async (inputs: {
 
   const isFirstPageRequest = !params.cursor
   const shouldInsertPinnedPost =
-    isFirstPageRequest && params.includePins && !!actor.profile?.pinnedPost
+    isFirstPageRequest &&
+    params.includePins &&
+    !!actor.profile?.pinnedPost &&
+    uriToDid(actor.profile.pinnedPost.uri) === actor.did
 
   const res = await ctx.dataplane.getAuthorFeed({
     actorDid: did,

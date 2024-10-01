@@ -516,6 +516,50 @@ describe('pds author feed views', () => {
       expect(AppBskyFeedDefs.isReasonPin(pinnedPost?.reason)).toBeFalsy()
       expect(forSnapshot(data.feed)).toMatchSnapshot()
     })
+
+    it("cannot pin someone else's post", async () => {
+      const bobPost = await sc.post(bob, 'pinned post')
+      await sc.post(alice, 'not pinned post')
+      await network.processAll()
+
+      const profile = await pdsAgent.com.atproto.repo.getRecord({
+        repo: alice,
+        collection: 'app.bsky.actor.profile',
+        rkey: 'self',
+      })
+
+      if (!AppBskyActorProfile.isRecord(profile.data.value)) {
+        throw new Error('')
+      }
+
+      const newProfile: AppBskyActorProfile.Record = {
+        ...profile,
+        pinnedPost: {
+          uri: bobPost.ref.uriStr,
+          cid: bobPost.ref.cid.toString(),
+        },
+      }
+
+      await sc.updateProfile(alice, newProfile)
+
+      await network.processAll()
+
+      const { data } = await agent.api.app.bsky.feed.getAuthorFeed(
+        { actor: sc.accounts[alice].handle },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyFeedGetAuthorFeed,
+          ),
+        },
+      )
+
+      const pinnedPost = data.feed.find(
+        (item) => item.post.uri === bobPost.ref.uriStr,
+      )
+      expect(pinnedPost).toBeUndefined()
+      expect(forSnapshot(data.feed)).toMatchSnapshot()
+    })
   })
 })
 
