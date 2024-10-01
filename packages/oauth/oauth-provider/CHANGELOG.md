@@ -1,5 +1,14 @@
 # @atproto/oauth-provider
 
+## 0.2.3
+
+### Patch Changes
+
+- [#2847](https://github.com/bluesky-social/atproto/pull/2847) [`1226ed268`](https://github.com/bluesky-social/atproto/commit/1226ed2682970a58ae433b9deb11290333988ddd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Do not display the client_name of untrusted clients
+
+- Updated dependencies [[`4098d9890`](https://github.com/bluesky-social/atproto/commit/4098d9890173f4d6c6512f2d8994eebbf12b5e13)]:
+  - @atproto/common@0.4.4
+
 ## 0.2.2
 
 ### Patch Changes

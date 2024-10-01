@@ -1,5 +1,11 @@
 # @atproto/common
 
+## 0.4.4
+
+### Patch Changes
+
+- [#2834](https://github.com/bluesky-social/atproto/pull/2834) [`4098d9890`](https://github.com/bluesky-social/atproto/commit/4098d9890173f4d6c6512f2d8994eebbf12b5e13) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow contentEncoding to be an array for consistency with typing of headers
+
 ## 0.4.3
 
 ### Patch Changes
