@@ -12,11 +12,13 @@ import updateAccountEmail from './updateAccountEmail'
 import updateAccountPassword from './updateAccountPassword'
 import sendEmail from './sendEmail'
 import deleteAccount from './deleteAccount'
+import getAccountInfos from './getAccountInfos'
 
 export default function (server: Server, ctx: AppContext) {
   updateSubjectStatus(server, ctx)
   getSubjectStatus(server, ctx)
   getAccountInfo(server, ctx)
+  getAccountInfos(server, ctx)
   enableAccountInvites(server, ctx)
   disableAccountInvites(server, ctx)
   disableInviteCodes(server, ctx)

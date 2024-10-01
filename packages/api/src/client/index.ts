@@ -199,7 +199,9 @@ import * as ToolsOzoneModerationDefs from './types/tools/ozone/moderation/defs'
 import * as ToolsOzoneModerationEmitEvent from './types/tools/ozone/moderation/emitEvent'
 import * as ToolsOzoneModerationGetEvent from './types/tools/ozone/moderation/getEvent'
 import * as ToolsOzoneModerationGetRecord from './types/tools/ozone/moderation/getRecord'
+import * as ToolsOzoneModerationGetRecords from './types/tools/ozone/moderation/getRecords'
 import * as ToolsOzoneModerationGetRepo from './types/tools/ozone/moderation/getRepo'
+import * as ToolsOzoneModerationGetRepos from './types/tools/ozone/moderation/getRepos'
 import * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents'
 import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses'
 import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos'
@@ -405,7 +407,9 @@ export * as ToolsOzoneModerationDefs from './types/tools/ozone/moderation/defs'
 export * as ToolsOzoneModerationEmitEvent from './types/tools/ozone/moderation/emitEvent'
 export * as ToolsOzoneModerationGetEvent from './types/tools/ozone/moderation/getEvent'
 export * as ToolsOzoneModerationGetRecord from './types/tools/ozone/moderation/getRecord'
+export * as ToolsOzoneModerationGetRecords from './types/tools/ozone/moderation/getRecords'
 export * as ToolsOzoneModerationGetRepo from './types/tools/ozone/moderation/getRepo'
+export * as ToolsOzoneModerationGetRepos from './types/tools/ozone/moderation/getRepos'
 export * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents'
 export * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses'
 export * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos'
@@ -862,12 +866,11 @@ export class ComAtprotoRepoNS {
     params?: ComAtprotoRepoGetRecord.QueryParams,
     opts?: ComAtprotoRepoGetRecord.CallOptions,
   ): Promise<ComAtprotoRepoGetRecord.Response> {
-    return this._client.call(
-      'com.atproto.repo.getRecord',
-      params,
-      undefined,
-      opts,
-    )
+    return this._client
+      .call('com.atproto.repo.getRecord', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoRepoGetRecord.toKnownErr(e)
+      })
   }
 
   importRepo(
@@ -3499,6 +3502,18 @@ export class ToolsOzoneModerationNS {
       })
   }
 
+  getRecords(
+    params?: ToolsOzoneModerationGetRecords.QueryParams,
+    opts?: ToolsOzoneModerationGetRecords.CallOptions,
+  ): Promise<ToolsOzoneModerationGetRecords.Response> {
+    return this._client.call(
+      'tools.ozone.moderation.getRecords',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
   getRepo(
     params?: ToolsOzoneModerationGetRepo.QueryParams,
     opts?: ToolsOzoneModerationGetRepo.CallOptions,
@@ -3508,6 +3523,18 @@ export class ToolsOzoneModerationNS {
       .catch((e) => {
         throw ToolsOzoneModerationGetRepo.toKnownErr(e)
       })
+  }
+
+  getRepos(
+    params?: ToolsOzoneModerationGetRepos.QueryParams,
+    opts?: ToolsOzoneModerationGetRepos.CallOptions,
+  ): Promise<ToolsOzoneModerationGetRepos.Response> {
+    return this._client.call(
+      'tools.ozone.moderation.getRepos',
+      params,
+      undefined,
+      opts,
+    )
   }
 
   queryEvents(

@@ -1,7 +1,7 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../lexicon'
 import AppContext from '../../context'
-import { addAccountInfoToRepoViewDetail, getPdsAccountInfo } from '../util'
+import { addAccountInfoToRepoViewDetail, getPdsAccountInfos } from '../util'
 
 export default function (server: Server, ctx: AppContext) {
   server.tools.ozone.moderation.getRepo({
@@ -10,17 +10,19 @@ export default function (server: Server, ctx: AppContext) {
       const { did } = params
       const db = ctx.db
       const labelers = ctx.reqLabelers(req)
-      const [partialRepo, accountInfo] = await Promise.all([
-        ctx.modService(db).views.repoDetail(did, labelers),
-        getPdsAccountInfo(ctx, did),
+      const [partialRepos, accountInfo] = await Promise.all([
+        ctx.modService(db).views.repoDetails([did], labelers),
+        getPdsAccountInfos(ctx, [did]),
       ])
+
+      const partialRepo = partialRepos.get(did)
       if (!partialRepo) {
         throw new InvalidRequestError('Repo not found', 'RepoNotFound')
       }
 
       const repo = addAccountInfoToRepoViewDetail(
         partialRepo,
-        accountInfo,
+        accountInfo.get(did) || null,
         auth.credentials.isModerator,
       )
       return {
