@@ -1686,6 +1686,11 @@ export const schemaDict = {
             },
           },
         },
+        errors: [
+          {
+            name: 'RecordNotFound',
+          },
+        ],
       },
     },
   },
@@ -11643,6 +11648,49 @@ export const schemaDict = {
       },
     },
   },
+  ToolsOzoneModerationGetRecords: {
+    lexicon: 1,
+    id: 'tools.ozone.moderation.getRecords',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get details about some records.',
+        parameters: {
+          type: 'params',
+          required: ['uris'],
+          properties: {
+            uris: {
+              type: 'array',
+              maxLength: 100,
+              items: {
+                type: 'string',
+                format: 'at-uri',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['records'],
+            properties: {
+              records: {
+                type: 'array',
+                items: {
+                  type: 'union',
+                  refs: [
+                    'lex:tools.ozone.moderation.defs#recordViewDetail',
+                    'lex:tools.ozone.moderation.defs#recordViewNotFound',
+                  ],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ToolsOzoneModerationGetRepo: {
     lexicon: 1,
     id: 'tools.ozone.moderation.getRepo',
@@ -11672,6 +11720,49 @@ export const schemaDict = {
             name: 'RepoNotFound',
           },
         ],
+      },
+    },
+  },
+  ToolsOzoneModerationGetRepos: {
+    lexicon: 1,
+    id: 'tools.ozone.moderation.getRepos',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get details about some repositories.',
+        parameters: {
+          type: 'params',
+          required: ['dids'],
+          properties: {
+            dids: {
+              type: 'array',
+              maxLength: 100,
+              items: {
+                type: 'string',
+                format: 'did',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['repos'],
+            properties: {
+              repos: {
+                type: 'array',
+                items: {
+                  type: 'union',
+                  refs: [
+                    'lex:tools.ozone.moderation.defs#repoViewDetail',
+                    'lex:tools.ozone.moderation.defs#repoViewNotFound',
+                  ],
+                },
+              },
+            },
+          },
+        },
       },
     },
   },
@@ -12491,7 +12582,9 @@ export const ids = {
   ToolsOzoneModerationEmitEvent: 'tools.ozone.moderation.emitEvent',
   ToolsOzoneModerationGetEvent: 'tools.ozone.moderation.getEvent',
   ToolsOzoneModerationGetRecord: 'tools.ozone.moderation.getRecord',
+  ToolsOzoneModerationGetRecords: 'tools.ozone.moderation.getRecords',
   ToolsOzoneModerationGetRepo: 'tools.ozone.moderation.getRepo',
+  ToolsOzoneModerationGetRepos: 'tools.ozone.moderation.getRepos',
   ToolsOzoneModerationQueryEvents: 'tools.ozone.moderation.queryEvents',
   ToolsOzoneModerationQueryStatuses: 'tools.ozone.moderation.queryStatuses',
   ToolsOzoneModerationSearchRepos: 'tools.ozone.moderation.searchRepos',

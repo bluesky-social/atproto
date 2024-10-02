@@ -7,24 +7,20 @@ import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
+import * as ToolsOzoneModerationDefs from './defs'
 
 export interface QueryParams {
-  /** The handle or DID of the repo. */
-  repo: string
-  /** The NSID of the record collection. */
-  collection: string
-  /** The Record Key. */
-  rkey: string
-  /** The CID of the version of the record. If not specified, then return the most recent version. */
-  cid?: string
+  dids: string[]
 }
 
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  uri: string
-  cid?: string
-  value: {}
+  repos: (
+    | ToolsOzoneModerationDefs.RepoViewDetail
+    | ToolsOzoneModerationDefs.RepoViewNotFound
+    | { $type: string; [k: string]: unknown }
+  )[]
   [k: string]: unknown
 }
 
@@ -39,7 +35,6 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
-  error?: 'RecordNotFound'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess | HandlerPipeThrough

@@ -223,25 +223,33 @@ export class ModerationViews {
     }
   }
 
-  async repoDetail(
-    did: string,
+  async repoDetails(
+    dids: string[],
     labelers?: ParsedLabelers,
-  ): Promise<RepoViewDetail | undefined> {
+  ): Promise<Map<string, RepoView>> {
+    const results = new Map<string, RepoView>()
     const [repos, localLabels, externalLabels] = await Promise.all([
-      this.repos([did]),
-      this.labels(did),
-      this.getExternalLabels([did], labelers),
+      this.repos(dids),
+      this.labels(dids),
+      this.getExternalLabels(dids, labelers),
     ])
-    const repo = repos.get(did)
-    if (!repo) return
 
-    return {
-      ...repo,
-      moderation: {
-        ...repo.moderation,
-      },
-      labels: [...localLabels, ...externalLabels],
-    }
+    repos.forEach((repo, did) => {
+      const labels = [
+        ...(localLabels.get(did) || []),
+        ...(externalLabels.get(did) || []),
+      ]
+      const repoView = {
+        ...repo,
+        labels,
+        moderation: {
+          ...repo.moderation,
+        },
+      }
+      results.set(did, repoView)
+    })
+
+    return results
   }
 
   async fetchRecords(
@@ -308,47 +316,59 @@ export class ModerationViews {
     }, new Map<string, RecordView>())
   }
 
-  async recordDetail(
-    subject: RecordSubject,
+  async recordDetails(
+    subjects: RecordSubject[],
     labelers?: ParsedLabelers,
-  ): Promise<RecordViewDetail | undefined> {
-    const [records, subjectStatusesResult] = await Promise.all([
-      this.records([subject]),
-      this.getSubjectStatus([subject.uri]),
-    ])
-    const record = records.get(subject.uri)
-    if (!record) return undefined
+  ): Promise<Map<string, RecordViewDetail>> {
+    const subjectUris = subjects.map((s) => s.uri)
+    const [records, subjectStatusesResult, localLabels, externalLabels] =
+      await Promise.all([
+        this.records(subjects),
+        this.getSubjectStatus(subjectUris),
+        this.labels(subjectUris),
+        this.getExternalLabels(subjectUris, labelers),
+      ])
 
-    const status = subjectStatusesResult.get(subject.uri)
+    const results = new Map<string, RecordViewDetail>()
 
-    const [blobs, labels, externalLabels, subjectStatus] = await Promise.all([
-      this.blob(findBlobRefs(record.value)),
-      this.labels(record.uri),
-      this.getExternalLabels([record.uri], labelers),
-      status ? this.formatSubjectStatus(status) : Promise.resolve(undefined),
-    ])
-    const selfLabels = getSelfLabels({
-      uri: record.uri,
-      cid: record.cid,
-      record: record.value,
-    })
+    await Promise.all(
+      Array.from(records.entries()).map(async ([uri, record]) => {
+        const selfLabels = getSelfLabels({
+          uri: record.uri,
+          cid: record.cid,
+          record: record.value,
+        })
 
-    return {
-      ...record,
-      blobs,
-      moderation: {
-        ...record.moderation,
-        subjectStatus,
-      },
-      labels: [...labels, ...selfLabels, ...externalLabels],
-    }
+        const status = subjectStatusesResult.get(uri)
+        const blobs = await this.blob(findBlobRefs(record.value))
+
+        results.set(uri, {
+          ...record,
+          blobs,
+          moderation: {
+            ...record.moderation,
+            subjectStatus: status
+              ? this.formatSubjectStatus(status)
+              : undefined,
+          },
+          labels: [
+            ...(localLabels.get(uri) || []),
+            ...selfLabels,
+            ...(externalLabels.get(uri) || []),
+          ],
+        })
+      }),
+    )
+
+    return results
   }
 
   async getExternalLabels(
     subjects: string[],
     labelers?: ParsedLabelers,
-  ): Promise<Label[]> {
-    if (!labelers?.dids.length && !labelers?.redact.size) return []
+  ): Promise<Map<string, Label[]>> {
+    const results = new Map<string, Label[]>()
+    if (!labelers?.dids.length && !labelers?.redact.size) return results
     try {
       const {
         data: { labels },
@@ -356,13 +376,20 @@ export class ModerationViews {
         uriPatterns: subjects,
         sources: labelers.dids,
       })
-      return labels
+      labels.forEach((label) => {
+        if (!results.has(label.uri)) {
+          results.set(label.uri, [label])
+          return
+        }
+        results.get(label.uri)?.push(label)
+      })
+      return results
     } catch (err) {
       httpLogger.error(
         { err, subjects, labelers },
         'failed to resolve labels from appview',
       )
-      return []
+      return results
     }
   }
 
@@ -452,14 +479,28 @@ export class ModerationViews {
     })
   }
 
-  async labels(subject: string, includeNeg?: boolean): Promise<Label[]> {
+  async labels(
+    subjects: string[],
+    includeNeg?: boolean,
+  ): Promise<Map<string, Label[]>> {
+    const labels = new Map<string, Label[]>()
     const res = await this.db.db
       .selectFrom('label')
-      .where('label.uri', '=', subject)
+      .where('label.uri', 'in', subjects)
       .if(!includeNeg, (qb) => qb.where('neg', '=', false))
       .selectAll()
       .execute()
-    return Promise.all(res.map((l) => this.formatLabelAndEnsureSig(l)))
+
+    await Promise.all(
+      res.map(async (labelRow) => {
+        const signedLabel = await this.formatLabelAndEnsureSig(labelRow)
+        if (!labels.has(labelRow.uri)) {
+          labels.set(labelRow.uri, [])
+        }
+        labels.get(labelRow.uri)?.push(signedLabel)
+      }),
+    )
+    return labels
   }
 
   async formatLabelAndEnsureSig(row: LabelRow) {

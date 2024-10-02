@@ -4,6 +4,7 @@ import createReport from './report/createReport'
 import emitEvent from './moderation/emitEvent'
 import searchRepos from './moderation/searchRepos'
 import adminGetRecord from './moderation/getRecord'
+import adminGetRecords from './moderation/getRecords'
 import getRepo from './moderation/getRepo'
 import queryStatuses from './moderation/queryStatuses'
 import queryEvents from './moderation/queryEvents'
@@ -22,6 +23,7 @@ import listMembers from './team/listMembers'
 import getConfig from './server/getConfig'
 import chat from './chat'
 import proxied from './proxied'
+import getRepos from './moderation/getRepos'
 
 export * as health from './health'
 
@@ -32,7 +34,9 @@ export default function (server: Server, ctx: AppContext) {
   emitEvent(server, ctx)
   searchRepos(server, ctx)
   adminGetRecord(server, ctx)
+  adminGetRecords(server, ctx)
   getRepo(server, ctx)
+  getRepos(server, ctx)
   getEvent(server, ctx)
   queryEvents(server, ctx)
   queryStatuses(server, ctx)

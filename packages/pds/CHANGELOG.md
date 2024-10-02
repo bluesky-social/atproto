@@ -1,5 +1,22 @@
 # @atproto/pds
 
+## 0.4.61
+
+### Patch Changes
+
+- [#2834](https://github.com/bluesky-social/atproto/pull/2834) [`4098d9890`](https://github.com/bluesky-social/atproto/commit/4098d9890173f4d6c6512f2d8994eebbf12b5e13) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow defaulting to unencoded responses when proxying client requests that do not specify accept-encoding
+
+- [#2836](https://github.com/bluesky-social/atproto/pull/2836) [`a2bad977a`](https://github.com/bluesky-social/atproto/commit/a2bad977a8d941b4075ea3ffee3d6f7a0c0f467c) Thanks [@foysalit](https://github.com/foysalit)! - Add getRepos and getRecords endpoints for bulk fetching
+
+- Updated dependencies [[`4098d9890`](https://github.com/bluesky-social/atproto/commit/4098d9890173f4d6c6512f2d8994eebbf12b5e13), [`a2bad977a`](https://github.com/bluesky-social/atproto/commit/a2bad977a8d941b4075ea3ffee3d6f7a0c0f467c), [`1226ed268`](https://github.com/bluesky-social/atproto/commit/1226ed2682970a58ae433b9deb11290333988ddd)]:
+  - @atproto/common@0.4.4
+  - @atproto/api@0.13.9
+  - @atproto/oauth-provider@0.2.3
+  - @atproto/aws@0.2.7
+  - @atproto/crypto@0.4.1
+  - @atproto/repo@0.5.3
+  - @atproto/xrpc-server@0.7.1
+
 ## 0.4.60
 
 ### Patch Changes

@@ -166,7 +166,9 @@ import * as ToolsOzoneCommunicationUpdateTemplate from './types/tools/ozone/comm
 import * as ToolsOzoneModerationEmitEvent from './types/tools/ozone/moderation/emitEvent'
 import * as ToolsOzoneModerationGetEvent from './types/tools/ozone/moderation/getEvent'
 import * as ToolsOzoneModerationGetRecord from './types/tools/ozone/moderation/getRecord'
+import * as ToolsOzoneModerationGetRecords from './types/tools/ozone/moderation/getRecords'
 import * as ToolsOzoneModerationGetRepo from './types/tools/ozone/moderation/getRepo'
+import * as ToolsOzoneModerationGetRepos from './types/tools/ozone/moderation/getRepos'
 import * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents'
 import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses'
 import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos'
@@ -2262,6 +2264,17 @@ export class ToolsOzoneModerationNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  getRecords<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneModerationGetRecords.Handler<ExtractAuth<AV>>,
+      ToolsOzoneModerationGetRecords.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.moderation.getRecords' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   getRepo<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -2270,6 +2283,17 @@ export class ToolsOzoneModerationNS {
     >,
   ) {
     const nsid = 'tools.ozone.moderation.getRepo' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getRepos<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneModerationGetRepos.Handler<ExtractAuth<AV>>,
+      ToolsOzoneModerationGetRepos.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.moderation.getRepos' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
