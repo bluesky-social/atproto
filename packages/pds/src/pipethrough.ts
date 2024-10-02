@@ -520,18 +520,11 @@ async function tryParsingError(
   }
 }
 
-export async function bufferUpstreamResponse(
+async function bufferUpstreamResponse(
   readable: Readable,
   contentEncoding?: string | string[],
 ): Promise<Buffer> {
   try {
-    // Needed for type-safety (should never happen irl)
-    if (Array.isArray(contentEncoding)) {
-      throw new TypeError(
-        'upstream service returned multiple content-encoding headers',
-      )
-    }
-
     return await streamToNodeBuffer(decodeStream(readable, contentEncoding))
   } catch (err) {
     if (!readable.destroyed) readable.destroy()
