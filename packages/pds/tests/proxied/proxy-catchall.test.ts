@@ -116,7 +116,7 @@ describe('proxy header', () => {
     for (const lex of lexicons) client.lex.add(lex)
 
     await expect(client.call('com.example.ok')).rejects.toThrow(
-      'pipethrough network error',
+      'Upstream service unreachable',
     )
   })
 
