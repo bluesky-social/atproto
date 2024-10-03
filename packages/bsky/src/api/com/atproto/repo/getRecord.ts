@@ -7,8 +7,8 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.getRecord({
     auth: ctx.authVerifier.optionalStandardOrRole,
     handler: ctx.createHandler(
-      async (ctx, { params }) => {
-        const { repo, collection, rkey, cid } = params
+      async (ctx) => {
+        const { repo, collection, rkey, cid } = ctx.params
 
         const [did] = await ctx.hydrator.actor.getDids([repo])
         if (!did) {

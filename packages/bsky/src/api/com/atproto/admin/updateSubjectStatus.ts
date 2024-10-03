@@ -12,7 +12,8 @@ import { isMain as isStrongRef } from '../../../../lexicon/types/com/atproto/rep
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.updateSubjectStatus({
     auth: ctx.authVerifier.roleOrModService,
-    handler: ctx.createHandler(async (ctx, { input, auth }) => {
+    handler: ctx.createHandler(async (ctx) => {
+      const { auth } = ctx
       const canPerformTakedown =
         (auth.credentials.type === 'role' && auth.credentials.admin) ||
         auth.credentials.type === 'mod_service'
@@ -22,7 +23,7 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const now = new Date()
-      const { subject, takedown } = input.body
+      const { subject, takedown } = ctx.input.body
       if (takedown) {
         if (isRepoRef(subject)) {
           if (takedown.applied) {

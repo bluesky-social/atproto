@@ -3,21 +3,19 @@ import { Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
 import { IncomingMessage } from 'http'
 
-import { ATPROTO_CONTENT_LABELERS, ATPROTO_REPO_REV } from './api/util'
 import { AuthVerifier, Creds } from './auth-verifier'
 import { BsyncClient } from './bsync'
 import { ServerConfig } from './config'
 import { CourierClient } from './courier'
 import { DataPlaneClient, withHeaders } from './data-plane/client'
 import { FeatureGates } from './feature-gates'
-import { HydrateCtx } from './hydration/hydrate-ctx'
+import { HandlerRequestContext, HydrateCtx } from './hydration/hydrate-ctx'
 import { Hydrator } from './hydration/hydrator'
-import { hydrationLogger, httpLogger as log } from './logger'
+import { httpLogger as log } from './logger'
 import {
   Awaitable,
   createPipeline,
   HandlerOutput,
-  HandlerRequestContext,
   HydrationFn,
   PresentationFn,
   RulesFn,
@@ -25,7 +23,6 @@ import {
 } from './pipeline'
 import {
   defaultLabelerHeader,
-  formatLabelerHeader,
   ParsedLabelers,
   parseLabelerHeader,
 } from './util/labeler-header'
@@ -142,11 +139,11 @@ export class AppContext {
     }
   }
 
-  private async createHydrateCtx(
-    { req, auth }: HandlerRequestContext<unknown>,
-    options: CreateHydrateCtxOptions,
-  ): Promise<HydrateCtx> {
-    const dataplane = this.dataplaneForCaller(auth)
+  private async createHydrateCtx<Params, Auth extends Creds, Input>(
+    reqCtx: HandlerRequestContext<Params, Auth, Input>,
+    options?: CreateHydrateCtxOptions,
+  ) {
+    const dataplane = this.dataplaneForCaller(reqCtx.auth)
 
     // @TODO Refactor the Hydrator and HydrateCtx into a single class. For
     // historic reasons, "hydrator" used to be a singleton. Then we added the
@@ -157,24 +154,25 @@ export class AppContext {
 
     const hydrator = new Hydrator(dataplane, this.cfg.labelsFromIssuerDids)
 
-    const authInfo = this.authVerifier.parseCreds(auth)
+    const authInfo = this.authVerifier.parseCreds(reqCtx.auth)
 
     const viewer = authInfo.viewer ? serviceRefToDid(authInfo.viewer) : null
 
-    const include3pBlocks = options.allowInclude3pBlocks
+    const include3pBlocks = options?.allowInclude3pBlocks
       ? authInfo.include3pBlocks
       : false
 
-    const includeTakedowns = options.allowIncludeTakedowns
+    const includeTakedowns = options?.allowIncludeTakedowns
       ? authInfo.includeTakedowns
       : false
 
     const labelers = await hydrator.filterUnavailableLabelers(
-      this.reqLabelers(req),
+      this.reqLabelers(reqCtx.req),
       includeTakedowns,
     )
 
-    return new HydrateCtx(
+    return new HydrateCtx<Params, Auth, Input>(
+      reqCtx,
       { viewer, labelers, include3pBlocks, includeTakedowns },
       dataplane,
       hydrator,
@@ -189,10 +187,12 @@ export class AppContext {
   }
 
   createHandler<
-    ReqCtx extends HandlerRequestContext<unknown>,
+    Params,
+    Auth extends Creds,
+    Input,
     Output extends void | HandlerOutput<unknown>,
   >(
-    view: (ctx: HydrateCtx, reqCtx: ReqCtx) => Awaitable<Output>,
+    view: (ctx: HydrateCtx<Params, Auth, Input>) => Awaitable<Output>,
     options: CreateHandlerOptions = {},
   ) {
     const {
@@ -203,46 +203,29 @@ export class AppContext {
     /**
      * Returns an XRPC handler that wraps the view function.
      */
-    return async (reqCtx: ReqCtx): Promise<Output> => {
-      const { res } = reqCtx
-
-      // @TODO Refactor the Hydrator and HydrateCtx into a single class. For
-      // historic reasons, "hydrator" used to be a singleton. Then we added the
-      // ability to send the caller DID to the data plane, which required to
-      // create a new dataplane instance (and thus a new hydrator) per request.
-      // Since the hydrator is now bound the the viewer, we should merge the two
-      // classes.
-
+    return async (
+      reqCtx: HandlerRequestContext<Params, Auth, Input>,
+    ): Promise<Output> => {
       const ctx = await this.createHydrateCtx(reqCtx, options)
 
       // Always expose the labelers that were actually used to process the request
-      res.setHeader(ATPROTO_CONTENT_LABELERS, formatLabelerHeader(ctx.labelers))
+      ctx.setLabelersHeader()
 
       // Conditionally expose the repo revision
-      if (exposeRepoRev && ctx.viewer) {
-        try {
-          const repoRev = await ctx.hydrator.actor.getRepoRev(ctx.viewer)
-          if (repoRev) res.setHeader(ATPROTO_REPO_REV, repoRev)
-        } catch (err) {
-          hydrationLogger.error(
-            { err, viewer: ctx.viewer },
-            `Failed to get viewer repo rev`,
-          )
-        }
-      }
+      if (exposeRepoRev) await ctx.setRepoRevHeader()
 
-      return view(ctx, reqCtx)
+      return view(ctx)
     }
   }
 
-  createPipelineHandler<Skeleton, Params, View, Auth extends Creds = Creds>(
+  createPipelineHandler<Skeleton, Params, Auth extends Creds, Input, Output>(
     skeletonFn: SkeletonFn<Skeleton, Params>,
     hydrationFn: HydrationFn<Skeleton, Params>,
     rulesFn: RulesFn<Skeleton, Params>,
-    presentationFn: PresentationFn<Skeleton, Params, View>,
+    presentationFn: PresentationFn<Skeleton, Params, Output>,
     options: CreateHandlerOptions = {},
   ) {
-    const pipeline = createPipeline<Skeleton, Params, View, Auth>(
+    const pipeline = createPipeline<Skeleton, Params, Auth, Input, Output>(
       skeletonFn,
       hydrationFn,
       rulesFn,

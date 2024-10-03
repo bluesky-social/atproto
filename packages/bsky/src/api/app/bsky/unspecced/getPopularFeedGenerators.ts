@@ -10,8 +10,8 @@ import { clearlyBadCursor } from '../../../util'
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.unspecced.getPopularFeedGenerators({
     auth: ctx.authVerifier.standardOptional,
-    handler: ctx.createHandler(async (ctx, { params }) => {
-      if (clearlyBadCursor(params.cursor)) {
+    handler: ctx.createHandler(async (ctx) => {
+      if (clearlyBadCursor(ctx.params.cursor)) {
         return {
           encoding: 'application/json',
           body: { feeds: [] },
@@ -21,18 +21,18 @@ export default function (server: Server, ctx: AppContext) {
       let uris: string[]
       let cursor: string | undefined
 
-      const query = params.query?.trim() ?? ''
+      const query = ctx.params.query?.trim() ?? ''
       if (query) {
         const res = await ctx.dataplane.searchFeedGenerators({
           query,
-          limit: params.limit,
+          limit: ctx.params.limit,
         })
         uris = res.uris
       } else {
         const res = await ctx.dataplane.getSuggestedFeeds({
           actorDid: ctx.viewer ?? undefined,
-          limit: params.limit,
-          cursor: params.cursor,
+          limit: ctx.params.limit,
+          cursor: ctx.params.cursor,
         })
         uris = res.uris
         cursor = parseString(res.cursor)

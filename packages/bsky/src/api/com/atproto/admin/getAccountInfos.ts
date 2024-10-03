@@ -7,8 +7,8 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getAccountInfos({
     auth: ctx.authVerifier.optionalStandardOrRole,
     handler: ctx.createHandler(
-      async (ctx, { params }) => {
-        const { dids } = params
+      async (ctx) => {
+        const { dids } = ctx.params
 
         const actors = await ctx.hydrator.actor.getActors(dids, true)
 

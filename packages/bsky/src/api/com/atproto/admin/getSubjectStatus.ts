@@ -6,8 +6,8 @@ import { OutputSchema } from '../../../../lexicon/types/com/atproto/admin/getSub
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getSubjectStatus({
     auth: ctx.authVerifier.roleOrModService,
-    handler: ctx.createHandler(async (ctx, { params }) => {
-      const { did, uri, blob } = params
+    handler: ctx.createHandler(async (ctx) => {
+      const { did, uri, blob } = ctx.params
 
       let body: OutputSchema | null = null
       if (blob) {

@@ -5,8 +5,8 @@ import AppContext from '../../../../context'
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.notification.updateSeen({
     auth: ctx.authVerifier.standard,
-    handler: ctx.createHandler(async (ctx, { input }) => {
-      const seenAt = new Date(input.body.seenAt)
+    handler: ctx.createHandler(async (ctx) => {
+      const seenAt = new Date(ctx.input.body.seenAt)
 
       // For now we keep separate seen times behind the scenes for priority, but treat them as a single seen time.
       await Promise.all([

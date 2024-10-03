@@ -5,8 +5,8 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.label.queryLabels({
     auth: ctx.authVerifier.nullCreds,
-    handler: ctx.createHandler(async (ctx, { params }) => {
-      const { uriPatterns, sources } = params
+    handler: ctx.createHandler(async (ctx) => {
+      const { uriPatterns, sources } = ctx.params
 
       if (uriPatterns.find((uri) => uri.includes('*'))) {
         throw new InvalidRequestError('wildcards not supported')

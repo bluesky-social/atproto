@@ -1,6 +1,7 @@
 import { DataPlaneClient } from '../data-plane/client'
 import { Record as ProfileRecord } from '../lexicon/types/app/bsky/actor/profile'
 import { Record as ChatDeclarationRecord } from '../lexicon/types/chat/bsky/actor/declaration'
+import { hydrationLogger } from '../logger'
 import {
   HydrationMap,
   RecordInfo,
@@ -67,6 +68,15 @@ export class ActorHydrator {
   async getRepoRev(did: string): Promise<string | null> {
     const res = await this.dataplane.getLatestRev({ actorDid: did })
     return res.rev || null
+  }
+
+  async getRepoRevSafe(did: string): Promise<string | null> {
+    try {
+      return await this.getRepoRev(did)
+    } catch (err) {
+      hydrationLogger.error({ err, did }, `Failed to get viewer repo rev`)
+      return null
+    }
   }
 
   async getDids(handleOrDids: string[]): Promise<(string | undefined)[]> {

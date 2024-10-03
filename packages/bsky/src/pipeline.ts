@@ -1,16 +1,7 @@
-import { IncomingMessage, ServerResponse } from 'http'
 import { IncomingHttpHeaders } from 'node:http'
 import { Creds } from './auth-verifier'
 import { HydrateCtx } from './hydration/hydrate-ctx'
 import { HydrationState } from './hydration/hydrator'
-
-export type HandlerRequestContext<Params, Auth extends Creds = Creds> = {
-  auth: Auth
-  params: Params
-  input: unknown
-  req: IncomingMessage
-  res: ServerResponse
-}
 
 export type HandlerOutput<Output> = {
   body: Output
@@ -21,8 +12,9 @@ export type HandlerOutput<Output> = {
 export function createPipeline<
   Skeleton,
   Params,
+  Auth extends Creds,
+  Input,
   Output,
-  Auth extends Creds = Creds,
 >(
   skeletonFn: SkeletonFn<Skeleton, Params>,
   hydrationFn: HydrationFn<Skeleton, Params>,
@@ -30,11 +22,9 @@ export function createPipeline<
   presentationFn: PresentationFn<Skeleton, Params, Output>,
 ) {
   return async (
-    ctx: HydrateCtx,
-    reqCtx: HandlerRequestContext<Params, Auth>,
+    ctx: HydrateCtx<Params, Auth, Input>,
   ): Promise<HandlerOutput<Output>> => {
-    const { params } = reqCtx
-    const { headers } = reqCtx.req
+    const { params, headers } = ctx
 
     const skeleton = await skeletonFn({ ctx, params, headers })
     const hydration = await hydrationFn({ ctx, params, headers, skeleton })
@@ -58,20 +48,20 @@ export function createPipeline<
 export type Awaitable<T> = T | PromiseLike<T>
 
 export type SkeletonFn<Skeleton, Params> = (input: {
-  ctx: HydrateCtx
+  ctx: HydrateCtx<Params>
   params: Params
   headers: IncomingHttpHeaders
 }) => Awaitable<Skeleton>
 
 export type HydrationFn<Skeleton, Params> = (input: {
-  ctx: HydrateCtx
+  ctx: HydrateCtx<Params>
   params: Params
   headers: IncomingHttpHeaders
   skeleton: Skeleton
 }) => Awaitable<HydrationState>
 
 export type RulesFn<Skeleton, Params> = (input: {
-  ctx: HydrateCtx
+  ctx: HydrateCtx<Params>
   params: Params
   headers: IncomingHttpHeaders
   skeleton: Skeleton
@@ -79,7 +69,7 @@ export type RulesFn<Skeleton, Params> = (input: {
 }) => Skeleton
 
 export type PresentationFn<Skeleton, Params, Output> = (input: {
-  ctx: HydrateCtx
+  ctx: HydrateCtx<Params>
   params: Params
   headers: IncomingHttpHeaders
   skeleton: Skeleton

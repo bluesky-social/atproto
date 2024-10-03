@@ -6,8 +6,8 @@ import AppContext from '../../../../context'
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.identity.resolveHandle({
     auth: ctx.authVerifier.optionalStandardOrRole,
-    handler: ctx.createHandler(async (ctx, { req, params }) => {
-      const handle = ident.normalizeHandle(params.handle || req.hostname)
+    handler: ctx.createHandler(async (ctx) => {
+      const handle = ident.normalizeHandle(ctx.params.handle || ctx.hostname)
 
       let [did] = await ctx.hydrator.actor.getDids([handle])
 

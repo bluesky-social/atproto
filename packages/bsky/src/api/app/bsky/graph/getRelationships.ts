@@ -4,8 +4,8 @@ import { Server } from '../../../../lexicon'
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.getRelationships({
     auth: ctx.authVerifier.optionalStandardOrRole,
-    handler: ctx.createHandler(async (ctx, { params }) => {
-      const { actor, others = [] } = params
+    handler: ctx.createHandler(async (ctx) => {
+      const { actor, others = [] } = ctx.params
       if (others.length < 1) {
         return {
           encoding: 'application/json',

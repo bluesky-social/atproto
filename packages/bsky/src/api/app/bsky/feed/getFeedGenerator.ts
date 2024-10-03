@@ -13,8 +13,8 @@ import { GetIdentityByDidResponse } from '../../../../proto/bsky_pb'
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getFeedGenerator({
     auth: ctx.authVerifier.standardOptional,
-    handler: ctx.createHandler(async (ctx, { params }) => {
-      const { feed } = params
+    handler: ctx.createHandler(async (ctx) => {
+      const { feed } = ctx.params
 
       const hydration = await ctx.hydrator.hydrateFeedGens([feed], ctx)
       const feedInfo = hydration.feedgens?.get(feed)
