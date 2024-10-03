@@ -1,4 +1,4 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { Timestamp } from '@bufbuild/protobuf'
 
 import AppContext from '../../../../context'
@@ -12,66 +12,71 @@ import { isMain as isStrongRef } from '../../../../lexicon/types/com/atproto/rep
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.updateSubjectStatus({
     auth: ctx.authVerifier.roleOrModService,
-    handler: ctx.createHandler(
-      async (ctx, { input }) => {
-        const now = new Date()
-        const { subject, takedown } = input.body
-        if (takedown) {
-          if (isRepoRef(subject)) {
-            if (takedown.applied) {
-              await ctx.dataplane.takedownActor({
-                did: subject.did,
-                ref: takedown.ref,
-                seen: Timestamp.fromDate(now),
-              })
-            } else {
-              await ctx.dataplane.untakedownActor({
-                did: subject.did,
-                seen: Timestamp.fromDate(now),
-              })
-            }
-          } else if (isStrongRef(subject)) {
-            if (takedown.applied) {
-              await ctx.dataplane.takedownRecord({
-                recordUri: subject.uri,
-                ref: takedown.ref,
-                seen: Timestamp.fromDate(now),
-              })
-            } else {
-              await ctx.dataplane.untakedownRecord({
-                recordUri: subject.uri,
-                seen: Timestamp.fromDate(now),
-              })
-            }
-          } else if (isRepoBlobRef(subject)) {
-            if (takedown.applied) {
-              await ctx.dataplane.takedownBlob({
-                did: subject.did,
-                cid: subject.cid,
-                ref: takedown.ref,
-                seen: Timestamp.fromDate(now),
-              })
-            } else {
-              await ctx.dataplane.untakedownBlob({
-                did: subject.did,
-                cid: subject.cid,
-                seen: Timestamp.fromDate(now),
-              })
-            }
-          } else {
-            throw new InvalidRequestError('Invalid subject')
-          }
-        }
+    handler: ctx.createHandler(async (ctx, { input, auth }) => {
+      const canPerformTakedown =
+        (auth.credentials.type === 'role' && auth.credentials.admin) ||
+        auth.credentials.type === 'mod_service'
 
-        return {
-          encoding: 'application/json',
-          body: {
-            subject,
-            takedown,
-          },
+      if (!canPerformTakedown) {
+        throw new AuthRequiredError('Must be a full moderator')
+      }
+
+      const now = new Date()
+      const { subject, takedown } = input.body
+      if (takedown) {
+        if (isRepoRef(subject)) {
+          if (takedown.applied) {
+            await ctx.dataplane.takedownActor({
+              did: subject.did,
+              ref: takedown.ref,
+              seen: Timestamp.fromDate(now),
+            })
+          } else {
+            await ctx.dataplane.untakedownActor({
+              did: subject.did,
+              seen: Timestamp.fromDate(now),
+            })
+          }
+        } else if (isStrongRef(subject)) {
+          if (takedown.applied) {
+            await ctx.dataplane.takedownRecord({
+              recordUri: subject.uri,
+              ref: takedown.ref,
+              seen: Timestamp.fromDate(now),
+            })
+          } else {
+            await ctx.dataplane.untakedownRecord({
+              recordUri: subject.uri,
+              seen: Timestamp.fromDate(now),
+            })
+          }
+        } else if (isRepoBlobRef(subject)) {
+          if (takedown.applied) {
+            await ctx.dataplane.takedownBlob({
+              did: subject.did,
+              cid: subject.cid,
+              ref: takedown.ref,
+              seen: Timestamp.fromDate(now),
+            })
+          } else {
+            await ctx.dataplane.untakedownBlob({
+              did: subject.did,
+              cid: subject.cid,
+              seen: Timestamp.fromDate(now),
+            })
+          }
+        } else {
+          throw new InvalidRequestError('Invalid subject')
         }
-      },
-      { canPerformTakedownRequired: true },
-    ),
+      }
+
+      return {
+        encoding: 'application/json',
+        body: {
+          subject,
+          takedown,
+        },
+      }
+    }),
   })
 }

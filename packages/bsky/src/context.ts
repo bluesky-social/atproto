@@ -3,7 +3,6 @@ import { Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
 import { IncomingMessage } from 'http'
 
-import { AuthRequiredError } from '@atproto/xrpc-server'
 import { ATPROTO_CONTENT_LABELERS, ATPROTO_REPO_REV } from './api/util'
 import { AuthVerifier, Creds } from './auth-verifier'
 import { BsyncClient } from './bsync'
@@ -45,12 +44,6 @@ export type CreateHandlerOptions = {
    * {@link HydrateCtxVals} use to instantiate the {@link HydrateCtx}
    */
   allowIncludeTakedowns?: boolean
-
-  /**
-   * Causes an error if the `canPerformTakedown` field is not present in the
-   * credential.
-   */
-  canPerformTakedownRequired?: boolean
 
   /**
    * Expose the current repo revision in the response headers.
@@ -194,7 +187,6 @@ export class AppContext {
       // Store as const to allow code path optimizations by compiler
       allowInclude3pBlocks = false,
       allowIncludeTakedowns = false,
-      canPerformTakedownRequired = false,
       exposeRepoRev = false,
     } = options
 
@@ -205,10 +197,6 @@ export class AppContext {
       const { req, res, auth } = reqCtx
 
       const authInfo = authVerifier.parseCreds(auth)
-
-      if (canPerformTakedownRequired && !authInfo.canPerformTakedown) {
-        throw new AuthRequiredError('Must be a full moderator')
-      }
 
       // @TODO Refactor the Hydrator and HydrateCtx into a single class. For
       // historic reasons, "hydrator" used to be a singleton. Then we added the
