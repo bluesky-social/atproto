@@ -51,5 +51,5 @@ const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
   if (!starterPack) {
     throw new InvalidRequestError('Starter pack not found')
   }
-  return { starterPack }
+  return { body: { starterPack } }
 }

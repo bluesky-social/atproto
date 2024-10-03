@@ -82,9 +82,11 @@ const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
     return ctx.views.profile(creatorDid, hydration)
   })
   return {
-    repostedBy: repostViews,
-    cursor: skeleton.cursor,
-    uri: params.uri,
-    cid: params.cid,
+    body: {
+      repostedBy: repostViews,
+      cursor: skeleton.cursor,
+      uri: params.uri,
+      cid: params.cid,
+    },
   }
 }

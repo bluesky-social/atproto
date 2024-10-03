@@ -19,7 +19,6 @@ import {
   HandlerOutput,
   HandlerRequestContext,
   HydrationFn,
-  PipelineOptions,
   PresentationFn,
   RulesFn,
   SkeletonFn,
@@ -241,15 +240,13 @@ export class AppContext {
     hydrationFn: HydrationFn<Skeleton, Params>,
     rulesFn: RulesFn<Skeleton, Params>,
     presentationFn: PresentationFn<Skeleton, Params, View>,
-    options: PipelineOptions<Skeleton, Params, Auth> &
-      CreateHandlerOptions = {},
+    options: CreateHandlerOptions = {},
   ) {
     const pipeline = createPipeline<Skeleton, Params, View, Auth>(
       skeletonFn,
       hydrationFn,
       rulesFn,
       presentationFn,
-      options,
     )
 
     return this.createHandler(pipeline, options)

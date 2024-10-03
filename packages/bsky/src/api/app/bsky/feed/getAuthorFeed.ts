@@ -171,7 +171,7 @@ const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
   const feed = mapDefined(skeleton.items, (item) =>
     ctx.views.feedViewPost(item, hydration),
   )
-  return { feed, cursor: skeleton.cursor }
+  return { body: { feed, cursor: skeleton.cursor } }
 }
 
 class SelfThreadTracker {

@@ -68,7 +68,9 @@ const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
     ctx.views.feedGenerator(uri, hydration),
   )
   return {
-    feeds,
-    cursor: skeleton.cursor,
+    body: {
+      feeds,
+      cursor: skeleton.cursor,
+    },
   }
 }

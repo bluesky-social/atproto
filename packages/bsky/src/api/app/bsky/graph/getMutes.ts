@@ -66,5 +66,5 @@ const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
   const mutes = mapDefined(mutedDids, (did) => {
     return ctx.views.profile(did, hydration)
   })
-  return { mutes, cursor }
+  return { body: { mutes, cursor } }
 }

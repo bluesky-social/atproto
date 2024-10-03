@@ -72,5 +72,5 @@ const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
   const blocks = mapDefined(blockedDids, (did) => {
     return ctx.views.profile(did, hydration)
   })
-  return { blocks, cursor }
+  return { body: { blocks, cursor } }
 }

@@ -1,4 +1,4 @@
-import { mapDefined } from '@atproto/common'
+import { mapDefined, noUndefinedVals } from '@atproto/common'
 import { HeadersMap } from '@atproto/xrpc'
 
 import AppContext from '../../../../context'
@@ -29,18 +29,6 @@ export default function (server: Server, ctx: AppContext) {
       hydration,
       noBlocksOrMutes,
       presentation,
-      {
-        inputHeaders: ({ req }) => ({
-          'accept-language': req.headers['accept-language'],
-          'x-bsky-topics': Array.isArray(req.headers['x-bsky-topics'])
-            ? req.headers['x-bsky-topics'].join(',')
-            : req.headers['x-bsky-topics'],
-        }),
-        outputHeaders: ({ skeleton }) =>
-          skeleton.resHeaders?.['content-language']
-            ? { 'content-language': skeleton.resHeaders['content-language'] }
-            : undefined,
-      },
     ),
   })
 }
@@ -59,7 +47,14 @@ const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({
           limit: params.limit,
           cursor: params.cursor,
         },
-        { headers },
+        {
+          headers: noUndefinedVals({
+            'accept-language': headers['accept-language'],
+            'x-bsky-topics': Array.isArray(headers['x-bsky-topics'])
+              ? headers['x-bsky-topics'].join(',')
+              : headers['x-bsky-topics'],
+          }),
+        },
       )
     return {
       dids: res.data.actors.map((a) => a.did),
@@ -114,7 +109,12 @@ const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
     ctx.views.profileKnownFollowers(did, hydration),
   )
   return {
-    actors,
-    cursor: skeleton.cursor,
+    headers: skeleton.resHeaders?.['content-language']
+      ? { 'content-language': skeleton.resHeaders['content-language'] }
+      : undefined,
+    body: {
+      actors,
+      cursor: skeleton.cursor,
+    },
   }
 }

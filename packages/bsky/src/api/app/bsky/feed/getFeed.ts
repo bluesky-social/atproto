@@ -1,6 +1,6 @@
 import { AppBskyFeedGetFeedSkeleton, AtpAgent } from '@atproto/api'
-import { mapDefined } from '@atproto/common'
-import { HeadersMap, ResponseType, XRPCError } from '@atproto/xrpc'
+import { mapDefined, noUndefinedVals } from '@atproto/common'
+import { ResponseType, XRPCError } from '@atproto/xrpc'
 import {
   InvalidRequestError,
   ServerTimer,
@@ -8,6 +8,7 @@ import {
   serverTimingHeader,
 } from '@atproto/xrpc-server'
 
+import { IncomingHttpHeaders } from 'node:http'
 import AppContext from '../../../../context'
 import {
   Code,
@@ -16,6 +17,7 @@ import {
   unpackIdentityServices,
 } from '../../../../data-plane/index'
 import { FeedItem } from '../../../../hydration/feed'
+import { HydrateCtx } from '../../../../hydration/hydrate-ctx'
 import { Server } from '../../../../lexicon/index'
 import { ids } from '../../../../lexicon/lexicons'
 import {
@@ -29,7 +31,6 @@ import {
   SkeletonFn,
 } from '../../../../pipeline'
 import { GetIdentityByDidResponse } from '../../../../proto/bsky_pb'
-import { HydrateCtx } from '../../../../hydration/hydrate-ctx'
 
 type Skeleton = {
   items: AlgoResponseItem[]
@@ -58,22 +59,6 @@ export default function (server: Server, ctx: AppContext) {
       hydration,
       noBlocksOrMutes,
       presentation,
-      {
-        inputHeaders: ({ req }) => ({
-          authorization: req.headers['authorization'],
-          'accept-language': req.headers['accept-language'],
-          'x-bsky-topics': Array.isArray(req.headers['x-bsky-topics'])
-            ? req.headers['x-bsky-topics'].join(',')
-            : req.headers['x-bsky-topics'],
-        }),
-        outputHeaders: ({ skeleton }) => ({
-          ...skeleton.resHeaders,
-          'server-timing': serverTimingHeader([
-            skeleton.timerSkele,
-            skeleton.timerHydr,
-          ]),
-        }),
-      },
     ),
   })
 }
@@ -144,17 +129,26 @@ const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
     }
   }).slice(0, params.limit)
   return {
-    feed,
-    // @NOTE feed cursors should not be affected by appview swap
-    cursor: skeleton.cursor,
-    ...skeleton.passthrough,
+    headers: {
+      ...skeleton.resHeaders,
+      'server-timing': serverTimingHeader([
+        skeleton.timerSkele,
+        skeleton.timerHydr,
+      ]),
+    },
+    body: {
+      feed,
+      // @NOTE feed cursors should not be affected by appview swap
+      cursor: skeleton.cursor,
+      ...skeleton.passthrough,
+    },
   }
 }
 
 async function skeletonFromFeedGen(
   ctx: HydrateCtx,
   params: QueryParams,
-  headers?: HeadersMap,
+  headers: IncomingHttpHeaders,
 ): Promise<AlgoResponse> {
   const { feed } = params
   const found = await ctx.hydrator.feed.getFeedGens([feed], true)
@@ -197,7 +191,13 @@ async function skeletonFromFeedGen(
         cursor: params.cursor,
       },
       {
-        headers,
+        headers: noUndefinedVals({
+          authorization: headers['authorization'],
+          'accept-language': headers['accept-language'],
+          'x-bsky-topics': Array.isArray(headers['x-bsky-topics'])
+            ? headers['x-bsky-topics'].join(',')
+            : headers['x-bsky-topics'],
+        }),
       },
     )
     skeleton = result.data

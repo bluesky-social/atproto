@@ -103,5 +103,5 @@ const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
   if (!list) {
     throw new InvalidRequestError('List not found')
   }
-  return { list, items, cursor }
+  return { body: { list, items, cursor } }
 }

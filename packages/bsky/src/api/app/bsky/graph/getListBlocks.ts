@@ -63,5 +63,5 @@ const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
 }) => {
   const { listUris, cursor } = skeleton
   const lists = mapDefined(listUris, (uri) => ctx.views.list(uri, hydration))
-  return { lists, cursor }
+  return { body: { lists, cursor } }
 }

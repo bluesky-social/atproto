@@ -81,9 +81,11 @@ const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
     return ctx.views.post(uri, hydration)
   })
   return {
-    posts: postViews,
-    cursor: skeleton.cursor,
-    uri: params.uri,
-    cid: params.cid,
+    body: {
+      posts: postViews,
+      cursor: skeleton.cursor,
+      uri: params.uri,
+      cid: params.cid,
+    },
   }
 }

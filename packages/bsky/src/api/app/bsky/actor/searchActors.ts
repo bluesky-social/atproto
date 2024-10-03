@@ -92,7 +92,9 @@ const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
     ctx.views.profile(did, hydration),
   )
   return {
-    actors,
-    cursor: skeleton.cursor,
+    body: {
+      actors,
+      cursor: skeleton.cursor,
+    },
   }
 }

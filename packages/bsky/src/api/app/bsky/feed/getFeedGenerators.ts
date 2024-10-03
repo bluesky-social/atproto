@@ -50,5 +50,5 @@ const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
   const feeds = mapDefined(skeleton.feedUris, (uri) =>
     ctx.views.feedGenerator(uri, hydration),
   )
-  return { feeds }
+  return { body: { feeds } }
 }

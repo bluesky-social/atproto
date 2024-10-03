@@ -94,5 +94,5 @@ const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
   })
   const subject = ctx.views.profile(skeleton.subjectDid, hydration)!
 
-  return { subject, followers, cursor: undefined }
+  return { body: { subject, followers, cursor: undefined } }
 }

@@ -108,9 +108,11 @@ const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
   hydration,
 }) => {
   return {
-    feed: mapDefined(skeleton.items, (item) =>
-      ctx.views.feedViewPost(item, hydration),
-    ),
-    cursor: skeleton.cursor,
+    body: {
+      feed: mapDefined(skeleton.items, (item) =>
+        ctx.views.feedViewPost(item, hydration),
+      ),
+      cursor: skeleton.cursor,
+    },
   }
 }

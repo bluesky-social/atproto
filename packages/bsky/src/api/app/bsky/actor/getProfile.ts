@@ -71,5 +71,5 @@ const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
     }
   }
 
-  return profile
+  return { body: profile }
 }

@@ -96,5 +96,5 @@ const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
     hydration,
   )
 
-  return { thread, threadgate }
+  return { body: { thread, threadgate } }
 }

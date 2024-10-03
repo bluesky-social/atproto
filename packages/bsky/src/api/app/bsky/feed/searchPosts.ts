@@ -99,8 +99,10 @@ const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
     ctx.views.post(uri, hydration),
   )
   return {
-    posts,
-    cursor: skeleton.cursor,
-    hitsTotal: skeleton.hitsTotal,
+    body: {
+      posts,
+      cursor: skeleton.cursor,
+      hitsTotal: skeleton.hitsTotal,
+    },
   }
 }

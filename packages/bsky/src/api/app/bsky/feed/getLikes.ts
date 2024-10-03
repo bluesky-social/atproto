@@ -97,10 +97,12 @@ const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
     }
   })
   return {
-    likes: likeViews,
-    cursor: skeleton.cursor,
-    uri: params.uri,
-    cid: params.cid,
+    body: {
+      likes: likeViews,
+      cursor: skeleton.cursor,
+      uri: params.uri,
+      cid: params.cid,
+    },
   }
 }
 

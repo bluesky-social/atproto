@@ -47,5 +47,5 @@ const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
   const starterPacks = mapDefined(skeleton.uris, (did) =>
     ctx.views.starterPackBasic(did, hydration),
   )
-  return { starterPacks }
+  return { body: { starterPacks } }
 }

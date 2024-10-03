@@ -61,5 +61,5 @@ const hydration: HydrationFn<Skeleton, QueryParams> = async (_input) => {
 const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
   skeleton,
 }) => {
-  return { count: skeleton.count }
+  return { body: { count: skeleton.count } }
 }

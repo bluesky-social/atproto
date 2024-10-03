@@ -93,5 +93,5 @@ const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
   const actors = mapDefined(skeleton.dids, (did) =>
     ctx.views.profileBasic(did, hydration),
   )
-  return { actors }
+  return { body: { actors } }
 }

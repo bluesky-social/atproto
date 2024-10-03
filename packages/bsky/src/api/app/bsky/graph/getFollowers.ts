@@ -111,5 +111,5 @@ const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
     return ctx.views.profile(didFromUri(followUri), hydration)
   })
 
-  return { followers, subject, cursor }
+  return { body: { followers, subject, cursor } }
 }

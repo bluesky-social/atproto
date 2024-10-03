@@ -65,7 +65,9 @@ const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
     ctx.views.starterPackBasic(uri, hydration),
   )
   return {
-    starterPacks,
-    cursor: skeleton.cursor,
+    body: {
+      starterPacks,
+      cursor: skeleton.cursor,
+    },
   }
 }

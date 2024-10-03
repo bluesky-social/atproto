@@ -133,10 +133,12 @@ const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
     ctx.views.notification(notif, lastSeenNotifs, hydration),
   )
   return {
-    notifications,
-    cursor,
-    priority: skeleton.priority,
-    seenAt: skeleton.lastSeenNotifs,
+    body: {
+      notifications,
+      cursor,
+      priority: skeleton.priority,
+      seenAt: skeleton.lastSeenNotifs,
+    },
   }
 }
 

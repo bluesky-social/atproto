@@ -72,5 +72,5 @@ const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
   const posts = mapDefined(skeleton.posts, (uri) =>
     ctx.views.post(uri, hydration),
   )
-  return { posts }
+  return { body: { posts } }
 }

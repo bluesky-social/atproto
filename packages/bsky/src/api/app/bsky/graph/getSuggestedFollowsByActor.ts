@@ -1,4 +1,4 @@
-import { mapDefined } from '@atproto/common'
+import { mapDefined, noUndefinedVals } from '@atproto/common'
 import { HeadersMap } from '@atproto/xrpc'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 
@@ -29,15 +29,6 @@ export default function (server: Server, ctx: AppContext) {
       hydration,
       noBlocksOrMutes,
       presentation,
-      {
-        inputHeaders: ({ req }) => ({
-          'accept-language': req.headers['accept-language'],
-          'x-bsky-topics': Array.isArray(req.headers['x-bsky-topics'])
-            ? req.headers['x-bsky-topics'].join(',')
-            : req.headers['x-bsky-topics'],
-        }),
-        outputHeaders: ({ skeleton }) => skeleton.headers,
-      },
     ),
   })
 }
@@ -59,7 +50,14 @@ const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({
           viewer: ctx.viewer ?? undefined,
           relativeToDid,
         },
-        { headers },
+        {
+          headers: noUndefinedVals({
+            'accept-language': headers['accept-language'],
+            'x-bsky-topics': Array.isArray(headers['x-bsky-topics'])
+              ? headers['x-bsky-topics'].join(',')
+              : headers['x-bsky-topics'],
+          }),
+        },
       )
     return {
       isFallback: !res.data.relativeToDid,
@@ -110,7 +108,10 @@ const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
     ctx.views.profileDetailed(did, hydration),
   )
   return {
-    isFallback: skeleton.isFallback,
-    suggestions,
+    headers: skeleton.headers,
+    body: {
+      isFallback: skeleton.isFallback,
+      suggestions,
+    },
   }
 }
