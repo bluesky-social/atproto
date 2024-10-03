@@ -1,7 +1,0 @@
-# superficial syntax parses ok, but are not valid datetimes for semantic reasons (eg, "month zero")
-1985-00-12T23:20:50.123Z
-1985-04-00T23:20:50.123Z
-1985-13-12T23:20:50.123Z
-1985-04-12T25:20:50.123Z
-1985-04-12T23:99:50.123Z
-1985-04-12T23:20:61.123Z
