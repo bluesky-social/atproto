@@ -204,15 +204,15 @@ export class AppContext {
     return async (
       reqCtx: HandlerRequestContext<Params, Auth, Input>,
     ): Promise<Output> => {
-      const ctx = await this.createHydrateCtx(reqCtx, options)
+      const hydrateCtx = await this.createHydrateCtx(reqCtx, options)
 
       // Always expose the labelers that were actually used to process the request
-      ctx.setLabelersHeader()
+      hydrateCtx.setLabelersHeader()
 
       // Conditionally expose the repo revision
-      if (exposeRepoRev) await ctx.setRepoRevHeader()
+      if (exposeRepoRev) await hydrateCtx.setRepoRevHeader()
 
-      return view(ctx)
+      return view(hydrateCtx)
     }
   }
 
