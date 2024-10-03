@@ -196,13 +196,8 @@ export class AppContext {
     Output extends void | HandlerOutput<unknown>,
   >(
     view: (ctx: HydrateCtx<Params, Auth, Input>) => Awaitable<Output>,
-    options: CreateHandlerOptions = {},
+    { exposeRepoRev = false, ...options }: CreateHandlerOptions = {},
   ) {
-    const {
-      // Store as const to allow code path optimizations by compiler
-      exposeRepoRev = false,
-    } = options
-
     /**
      * Returns an XRPC handler that wraps the view function.
      */
