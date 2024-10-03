@@ -53,7 +53,7 @@ export async function sendWebPage(
 
   const html = buildDocument(options)
 
-  return writeHtml(res, html.toString(), status)
+  return writeHtml(res, html.toString(), { status })
 }
 
 function assetToHash(asset: Html | AssetRef): string {
