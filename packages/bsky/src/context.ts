@@ -143,7 +143,8 @@ export class AppContext {
     reqCtx: HandlerRequestContext<Params, Auth, Input>,
     options?: CreateHydrateCtxOptions,
   ) {
-    const dataplane = this.dataplaneForCaller(reqCtx.auth)
+    const { auth } = reqCtx
+    const dataplane = this.dataplaneForCaller(auth)
 
     // @TODO Refactor the Hydrator and HydrateCtx into a single class. For
     // historic reasons, "hydrator" used to be a singleton. Then we added the
@@ -154,16 +155,18 @@ export class AppContext {
 
     const hydrator = new Hydrator(dataplane, this.cfg.labelsFromIssuerDids)
 
-    const authInfo = this.authVerifier.parseCreds(reqCtx.auth)
-
-    const viewer = authInfo.viewer ? serviceRefToDid(authInfo.viewer) : null
+    const includeTakedownsAnd3pBlocks =
+      (auth.credentials.type === 'role' && auth.credentials.admin) ||
+      auth.credentials.type === 'mod_service' ||
+      (auth.credentials.type === 'standard' &&
+        this.authVerifier.isModService(auth.credentials.iss))
 
     const include3pBlocks = options?.allowInclude3pBlocks
-      ? authInfo.include3pBlocks
+      ? includeTakedownsAnd3pBlocks
       : false
 
     const includeTakedowns = options?.allowIncludeTakedowns
-      ? authInfo.includeTakedowns
+      ? includeTakedownsAnd3pBlocks
       : false
 
     const labelers = await hydrator.filterUnavailableLabelers(
@@ -173,7 +176,7 @@ export class AppContext {
 
     return new HydrateCtx<Params, Auth, Input>(
       reqCtx,
-      { viewer, labelers, include3pBlocks, includeTakedowns },
+      { labelers, include3pBlocks, includeTakedowns },
       dataplane,
       hydrator,
       this.opts.views,
@@ -219,7 +222,7 @@ export class AppContext {
   }
 
   createPipelineHandler<Skeleton, Params, Auth extends Creds, Input, Output>(
-    skeletonFn: SkeletonFn<Skeleton, Params>,
+    skeletonFn: SkeletonFn<Skeleton, Params, Auth>,
     hydrationFn: HydrationFn<Skeleton, Params>,
     rulesFn: RulesFn<Skeleton, Params>,
     presentationFn: PresentationFn<Skeleton, Params, Output>,

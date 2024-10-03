@@ -16,7 +16,7 @@ export function createPipeline<
   Input,
   Output,
 >(
-  skeletonFn: SkeletonFn<Skeleton, Params>,
+  skeletonFn: SkeletonFn<Skeleton, Params, Auth>,
   hydrationFn: HydrationFn<Skeleton, Params>,
   rulesFn: RulesFn<Skeleton, Params>,
   presentationFn: PresentationFn<Skeleton, Params, Output>,
@@ -47,21 +47,25 @@ export function createPipeline<
 
 export type Awaitable<T> = T | PromiseLike<T>
 
-export type SkeletonFn<Skeleton, Params> = (input: {
-  ctx: HydrateCtx<Params>
+export type SkeletonFn<Skeleton, Params, Auth extends Creds = Creds> = (input: {
+  ctx: HydrateCtx<Params, Auth>
   params: Params
   headers: IncomingHttpHeaders
 }) => Awaitable<Skeleton>
 
-export type HydrationFn<Skeleton, Params> = (input: {
-  ctx: HydrateCtx<Params>
+export type HydrationFn<
+  Skeleton,
+  Params,
+  Auth extends Creds = Creds,
+> = (input: {
+  ctx: HydrateCtx<Params, Auth>
   params: Params
   headers: IncomingHttpHeaders
   skeleton: Skeleton
 }) => Awaitable<HydrationState>
 
-export type RulesFn<Skeleton, Params> = (input: {
-  ctx: HydrateCtx<Params>
+export type RulesFn<Skeleton, Params, Auth extends Creds = Creds> = (input: {
+  ctx: HydrateCtx<Params, Auth>
   params: Params
   headers: IncomingHttpHeaders
   skeleton: Skeleton

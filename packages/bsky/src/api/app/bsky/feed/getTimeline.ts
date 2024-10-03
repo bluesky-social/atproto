@@ -1,5 +1,5 @@
 import { mapDefined } from '@atproto/common'
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { StandardOutput } from '../../../../auth-verifier'
 import AppContext from '../../../../context'
 import { FeedItem } from '../../../../hydration/feed'
 import { parseString } from '../../../../hydration/util'
@@ -34,16 +34,16 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({ ctx, params }) => {
+const skeleton: SkeletonFn<Skeleton, QueryParams, StandardOutput> = async ({
+  ctx,
+  params,
+}) => {
   if (clearlyBadCursor(params.cursor)) {
     return { items: [] }
   }
 
-  const actorDid = ctx.viewer
-  if (!actorDid) throw new InvalidRequestError('An actor is required')
-
   const res = await ctx.dataplane.getTimeline({
-    actorDid,
+    actorDid: ctx.viewer,
     limit: params.limit,
     cursor: params.cursor,
   })

@@ -29,7 +29,6 @@ export type HandlerRequestContext<
 
 export type HydrateCtxVals = {
   labelers: ParsedLabelers
-  viewer: string | null
   includeTakedowns: boolean
   include3pBlocks: boolean
 }
@@ -57,8 +56,13 @@ export class HydrateCtx<
     return this.vals.labelers
   }
 
-  get viewer(): string | null {
-    return this.vals.viewer
+  get viewer() {
+    const { auth } = this
+    return (
+      auth.credentials.type === 'standard'
+        ? auth.credentials.iss.split('#')[0]
+        : null
+    ) as Auth extends { credentials: { type: 'standard' } } ? string : null
   }
 
   get includeTakedowns(): boolean {

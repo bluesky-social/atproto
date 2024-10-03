@@ -1,6 +1,6 @@
 import { mapDefined } from '@atproto/common'
 
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { StandardOutput } from '../../../../auth-verifier'
 import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon/index'
 import {
@@ -32,17 +32,17 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({ ctx, params }) => {
+const skeleton: SkeletonFn<Skeleton, QueryParams, StandardOutput> = async ({
+  ctx,
+  params,
+}) => {
   if (clearlyBadCursor(params.cursor)) {
     return { listUris: [] }
   }
 
-  const actorDid = ctx.viewer
-  if (!actorDid) throw new InvalidRequestError('An actor is required')
-
   const { listUris, cursor } =
     await ctx.hydrator.dataplane.getBlocklistSubscriptions({
-      actorDid,
+      actorDid: ctx.viewer,
       cursor: params.cursor,
       limit: params.limit,
     })

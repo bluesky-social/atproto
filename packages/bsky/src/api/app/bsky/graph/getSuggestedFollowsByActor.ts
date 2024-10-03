@@ -14,6 +14,7 @@ import {
   RulesFn,
   SkeletonFn,
 } from '../../../../pipeline'
+import { StandardOutput } from '../../../../auth-verifier'
 
 type Skeleton = {
   isFallback: boolean
@@ -33,7 +34,7 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({
+const skeleton: SkeletonFn<Skeleton, QueryParams, StandardOutput> = async ({
   ctx,
   params,
   headers,
@@ -47,7 +48,7 @@ const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({
     const res =
       await ctx.suggestionsAgent.app.bsky.unspecced.getSuggestionsSkeleton(
         {
-          viewer: ctx.viewer ?? undefined,
+          viewer: ctx.viewer,
           relativeToDid,
         },
         {
@@ -65,11 +66,8 @@ const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({
       headers: res.headers,
     }
   } else {
-    const actorDid = ctx.viewer
-    if (!actorDid) throw new InvalidRequestError('An actor is required')
-
     const { dids } = await ctx.hydrator.dataplane.getFollowSuggestions({
-      actorDid,
+      actorDid: ctx.viewer,
       relativeToDid,
     })
     return {

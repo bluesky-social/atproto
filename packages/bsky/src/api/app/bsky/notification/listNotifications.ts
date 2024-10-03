@@ -1,6 +1,7 @@
 import { mapDefined } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 
+import { StandardOutput } from '../../../../auth-verifier'
 import AppContext from '../../../../context'
 import { HydrateCtx } from '../../../../hydration/hydrate-ctx'
 import { Server } from '../../../../lexicon/index'
@@ -38,27 +39,27 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({ ctx, params }) => {
+const skeleton: SkeletonFn<Skeleton, QueryParams, StandardOutput> = async ({
+  ctx,
+  params,
+}) => {
   if (params.seenAt) {
     throw new InvalidRequestError('The seenAt parameter is unsupported')
   }
 
-  const { viewer } = ctx
-  if (!viewer) throw new InvalidRequestError('An actor is required')
-
-  const priority = params.priority ?? (await getPriority(ctx, viewer))
+  const priority = params.priority ?? (await getPriority(ctx, ctx.viewer))
   if (clearlyBadCursor(params.cursor)) {
     return { notifs: [], priority }
   }
   const [res, lastSeenRes] = await Promise.all([
     ctx.hydrator.dataplane.getNotifications({
-      actorDid: viewer,
+      actorDid: ctx.viewer,
       priority,
       cursor: params.cursor,
       limit: params.limit,
     }),
     ctx.hydrator.dataplane.getNotificationSeen({
-      actorDid: viewer,
+      actorDid: ctx.viewer,
       priority,
     }),
   ])
