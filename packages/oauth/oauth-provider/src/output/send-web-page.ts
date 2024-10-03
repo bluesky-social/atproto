@@ -18,11 +18,11 @@ export function declareBackendData(name: string, data: unknown) {
   return js`window[${name}]=${data};document.currentScript.remove();`
 }
 
-export type SendWepPageOptions = BuildDocumentOptions & WriteResponseOptions
+export type SendWebPageOptions = BuildDocumentOptions & WriteResponseOptions
 
 export async function sendWebPage(
   res: ServerResponse,
-  options: SendWepPageOptions,
+  options: SendWebPageOptions,
 ): Promise<void> {
   // @TODO: make these headers configurable (?)
   res.setHeader('Permissions-Policy', 'otp-credentials=*, document-domain=()')
