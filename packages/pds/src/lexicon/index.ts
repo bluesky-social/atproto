@@ -173,6 +173,9 @@ import * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation
 import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses'
 import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos'
 import * as ToolsOzoneServerGetConfig from './types/tools/ozone/server/getConfig'
+import * as ToolsOzoneSignautreFindCorrelation from './types/tools/ozone/signautre/findCorrelation'
+import * as ToolsOzoneSignatureFindRelatedAccounts from './types/tools/ozone/signature/findRelatedAccounts'
+import * as ToolsOzoneSignatureSearchAccounts from './types/tools/ozone/signature/searchAccounts'
 import * as ToolsOzoneTeamAddMember from './types/tools/ozone/team/addMember'
 import * as ToolsOzoneTeamDeleteMember from './types/tools/ozone/team/deleteMember'
 import * as ToolsOzoneTeamListMembers from './types/tools/ozone/team/listMembers'
@@ -2161,6 +2164,8 @@ export class ToolsOzoneNS {
   communication: ToolsOzoneCommunicationNS
   moderation: ToolsOzoneModerationNS
   server: ToolsOzoneServerNS
+  signautre: ToolsOzoneSignautreNS
+  signature: ToolsOzoneSignatureNS
   team: ToolsOzoneTeamNS
 
   constructor(server: Server) {
@@ -2168,6 +2173,8 @@ export class ToolsOzoneNS {
     this.communication = new ToolsOzoneCommunicationNS(server)
     this.moderation = new ToolsOzoneModerationNS(server)
     this.server = new ToolsOzoneServerNS(server)
+    this.signautre = new ToolsOzoneSignautreNS(server)
+    this.signature = new ToolsOzoneSignatureNS(server)
     this.team = new ToolsOzoneTeamNS(server)
   }
 }
@@ -2346,6 +2353,55 @@ export class ToolsOzoneServerNS {
     >,
   ) {
     const nsid = 'tools.ozone.server.getConfig' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class ToolsOzoneSignautreNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  findCorrelation<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneSignautreFindCorrelation.Handler<ExtractAuth<AV>>,
+      ToolsOzoneSignautreFindCorrelation.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.signautre.findCorrelation' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class ToolsOzoneSignatureNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  findRelatedAccounts<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneSignatureFindRelatedAccounts.Handler<ExtractAuth<AV>>,
+      ToolsOzoneSignatureFindRelatedAccounts.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.signature.findRelatedAccounts' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  searchAccounts<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneSignatureSearchAccounts.Handler<ExtractAuth<AV>>,
+      ToolsOzoneSignatureSearchAccounts.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.signature.searchAccounts' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }
