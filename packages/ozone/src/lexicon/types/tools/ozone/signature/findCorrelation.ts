@@ -7,7 +7,7 @@ import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
-import * as ToolsOzoneSignatureDefs from '../signature/defs'
+import * as ToolsOzoneSignatureDefs from './defs'
 
 export interface QueryParams {
   dids: string[]

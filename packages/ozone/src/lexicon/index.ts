@@ -173,7 +173,7 @@ import * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation
 import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses'
 import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos'
 import * as ToolsOzoneServerGetConfig from './types/tools/ozone/server/getConfig'
-import * as ToolsOzoneSignautreFindCorrelation from './types/tools/ozone/signautre/findCorrelation'
+import * as ToolsOzoneSignatureFindCorrelation from './types/tools/ozone/signature/findCorrelation'
 import * as ToolsOzoneSignatureFindRelatedAccounts from './types/tools/ozone/signature/findRelatedAccounts'
 import * as ToolsOzoneSignatureSearchAccounts from './types/tools/ozone/signature/searchAccounts'
 import * as ToolsOzoneTeamAddMember from './types/tools/ozone/team/addMember'
@@ -2164,7 +2164,6 @@ export class ToolsOzoneNS {
   communication: ToolsOzoneCommunicationNS
   moderation: ToolsOzoneModerationNS
   server: ToolsOzoneServerNS
-  signautre: ToolsOzoneSignautreNS
   signature: ToolsOzoneSignatureNS
   team: ToolsOzoneTeamNS
 
@@ -2173,7 +2172,6 @@ export class ToolsOzoneNS {
     this.communication = new ToolsOzoneCommunicationNS(server)
     this.moderation = new ToolsOzoneModerationNS(server)
     this.server = new ToolsOzoneServerNS(server)
-    this.signautre = new ToolsOzoneSignautreNS(server)
     this.signature = new ToolsOzoneSignatureNS(server)
     this.team = new ToolsOzoneTeamNS(server)
   }
@@ -2357,7 +2355,7 @@ export class ToolsOzoneServerNS {
   }
 }
 
-export class ToolsOzoneSignautreNS {
+export class ToolsOzoneSignatureNS {
   _server: Server
 
   constructor(server: Server) {
@@ -2367,20 +2365,12 @@ export class ToolsOzoneSignautreNS {
   findCorrelation<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
-      ToolsOzoneSignautreFindCorrelation.Handler<ExtractAuth<AV>>,
-      ToolsOzoneSignautreFindCorrelation.HandlerReqCtx<ExtractAuth<AV>>
+      ToolsOzoneSignatureFindCorrelation.Handler<ExtractAuth<AV>>,
+      ToolsOzoneSignatureFindCorrelation.HandlerReqCtx<ExtractAuth<AV>>
     >,
   ) {
-    const nsid = 'tools.ozone.signautre.findCorrelation' // @ts-ignore
+    const nsid = 'tools.ozone.signature.findCorrelation' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
-  }
-}
-
-export class ToolsOzoneSignatureNS {
-  _server: Server
-
-  constructor(server: Server) {
-    this._server = server
   }
 
   findRelatedAccounts<AV extends AuthVerifier>(

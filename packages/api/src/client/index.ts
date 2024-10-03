@@ -207,7 +207,7 @@ import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderati
 import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos'
 import * as ToolsOzoneServerGetConfig from './types/tools/ozone/server/getConfig'
 import * as ToolsOzoneSignatureDefs from './types/tools/ozone/signature/defs'
-import * as ToolsOzoneSignautreFindCorrelation from './types/tools/ozone/signautre/findCorrelation'
+import * as ToolsOzoneSignatureFindCorrelation from './types/tools/ozone/signature/findCorrelation'
 import * as ToolsOzoneSignatureFindRelatedAccounts from './types/tools/ozone/signature/findRelatedAccounts'
 import * as ToolsOzoneSignatureSearchAccounts from './types/tools/ozone/signature/searchAccounts'
 import * as ToolsOzoneTeamAddMember from './types/tools/ozone/team/addMember'
@@ -419,7 +419,7 @@ export * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderati
 export * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos'
 export * as ToolsOzoneServerGetConfig from './types/tools/ozone/server/getConfig'
 export * as ToolsOzoneSignatureDefs from './types/tools/ozone/signature/defs'
-export * as ToolsOzoneSignautreFindCorrelation from './types/tools/ozone/signautre/findCorrelation'
+export * as ToolsOzoneSignatureFindCorrelation from './types/tools/ozone/signature/findCorrelation'
 export * as ToolsOzoneSignatureFindRelatedAccounts from './types/tools/ozone/signature/findRelatedAccounts'
 export * as ToolsOzoneSignatureSearchAccounts from './types/tools/ozone/signature/searchAccounts'
 export * as ToolsOzoneTeamAddMember from './types/tools/ozone/team/addMember'
@@ -3404,7 +3404,6 @@ export class ToolsOzoneNS {
   communication: ToolsOzoneCommunicationNS
   moderation: ToolsOzoneModerationNS
   server: ToolsOzoneServerNS
-  signautre: ToolsOzoneSignautreNS
   signature: ToolsOzoneSignatureNS
   team: ToolsOzoneTeamNS
 
@@ -3413,7 +3412,6 @@ export class ToolsOzoneNS {
     this.communication = new ToolsOzoneCommunicationNS(client)
     this.moderation = new ToolsOzoneModerationNS(client)
     this.server = new ToolsOzoneServerNS(client)
-    this.signautre = new ToolsOzoneSignautreNS(client)
     this.signature = new ToolsOzoneSignatureNS(client)
     this.team = new ToolsOzoneTeamNS(client)
   }
@@ -3606,7 +3604,7 @@ export class ToolsOzoneServerNS {
   }
 }
 
-export class ToolsOzoneSignautreNS {
+export class ToolsOzoneSignatureNS {
   _client: XrpcClient
 
   constructor(client: XrpcClient) {
@@ -3614,23 +3612,15 @@ export class ToolsOzoneSignautreNS {
   }
 
   findCorrelation(
-    params?: ToolsOzoneSignautreFindCorrelation.QueryParams,
-    opts?: ToolsOzoneSignautreFindCorrelation.CallOptions,
-  ): Promise<ToolsOzoneSignautreFindCorrelation.Response> {
+    params?: ToolsOzoneSignatureFindCorrelation.QueryParams,
+    opts?: ToolsOzoneSignatureFindCorrelation.CallOptions,
+  ): Promise<ToolsOzoneSignatureFindCorrelation.Response> {
     return this._client.call(
-      'tools.ozone.signautre.findCorrelation',
+      'tools.ozone.signature.findCorrelation',
       params,
       undefined,
       opts,
     )
-  }
-}
-
-export class ToolsOzoneSignatureNS {
-  _client: XrpcClient
-
-  constructor(client: XrpcClient) {
-    this._client = client
   }
 
   findRelatedAccounts(

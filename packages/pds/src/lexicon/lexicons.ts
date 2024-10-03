@@ -12157,9 +12157,9 @@ export const schemaDict = {
       },
     },
   },
-  ToolsOzoneSignautreFindCorrelation: {
+  ToolsOzoneSignatureFindCorrelation: {
     lexicon: 1,
-    id: 'tools.ozone.signautre.findCorrelation',
+    id: 'tools.ozone.signature.findCorrelation',
     defs: {
       main: {
         type: 'query',
@@ -12765,7 +12765,7 @@ export const ids = {
   ToolsOzoneModerationSearchRepos: 'tools.ozone.moderation.searchRepos',
   ToolsOzoneServerGetConfig: 'tools.ozone.server.getConfig',
   ToolsOzoneSignatureDefs: 'tools.ozone.signature.defs',
-  ToolsOzoneSignautreFindCorrelation: 'tools.ozone.signautre.findCorrelation',
+  ToolsOzoneSignatureFindCorrelation: 'tools.ozone.signature.findCorrelation',
   ToolsOzoneSignatureFindRelatedAccounts:
     'tools.ozone.signature.findRelatedAccounts',
   ToolsOzoneSignatureSearchAccounts: 'tools.ozone.signature.searchAccounts',

@@ -6,7 +6,7 @@ import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
-import * as ToolsOzoneSignatureDefs from '../signature/defs'
+import * as ToolsOzoneSignatureDefs from './defs'
 
 export interface QueryParams {
   dids: string[]
