@@ -1,5 +1,14 @@
 # @atproto/ozone
 
+## 0.1.48
+
+### Patch Changes
+
+- [#2855](https://github.com/bluesky-social/atproto/pull/2855) [`df14df522`](https://github.com/bluesky-social/atproto/commit/df14df522bb7986e56ee1f6a0f5d862e1ea6f4d5) Thanks [@dholms](https://github.com/dholms)! - Add tools.ozone.signature lexicons
+
+- Updated dependencies [[`df14df522`](https://github.com/bluesky-social/atproto/commit/df14df522bb7986e56ee1f6a0f5d862e1ea6f4d5)]:
+  - @atproto/api@0.13.10
+
 ## 0.1.47
 
 ### Patch Changes
