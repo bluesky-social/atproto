@@ -1,5 +1,7 @@
+import createHttpError from 'http-errors'
 import { safeFetchWrap } from '@atproto-labs/fetch-node'
 import { SimpleStore } from '@atproto-labs/simple-store'
+import { mediaType } from '@hapi/accept'
 import { SimpleStoreMemory } from '@atproto-labs/simple-store-memory'
 import { Jwks, Keyset } from '@atproto/jwk'
 import {
@@ -73,6 +75,7 @@ import {
   Router,
   ServerResponse,
   combineMiddlewares,
+  negotiateEncoding,
   parseHttpRequest,
   setupCsrfToken,
   staticJsonMiddleware,
@@ -1056,9 +1059,21 @@ export class OAuthProvider extends OAuthVerifier {
         }
 
         try {
+          // Ensure we can agree on a content encoding & type before starting to
+          // build the JSON response.
+          if (!mediaType(req.headers['accept'], ['application/json'])) {
+            throw createHttpError(406, 'Unsupported media type')
+          }
+          const contentEncoding = negotiateEncoding(
+            req.headers['accept-encoding'],
+          )
+
           const result = await buildJson.call(this, req, res)
-          if (result !== undefined) writeJson(res, result, { status })
-          else if (!res.headersSent) res.writeHead(status ?? 204).end()
+          if (result !== undefined) {
+            writeJson(res, result, { status, contentEncoding })
+          } else if (!res.headersSent) {
+            res.writeHead(status ?? 204).end()
+          }
         } catch (err) {
           if (!res.headersSent) {
             if (err instanceof WWWAuthenticateError) {
@@ -1069,7 +1084,7 @@ export class OAuthProvider extends OAuthVerifier {
 
             const payload = buildErrorPayload(err)
             const status = buildErrorStatus(err)
-            writeJson(res, payload, { status })
+            writeJson(res, payload, { status, contentEncoding: 'identity' })
           } else {
             res.destroy()
           }

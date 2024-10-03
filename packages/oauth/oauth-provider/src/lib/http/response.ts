@@ -27,7 +27,7 @@ export function writeRedirect(
   res.writeHead(status, { Location: url }).end()
 }
 
-function negotiateEncoding(acceptEncoding?: string | string[]) {
+export function negotiateEncoding(acceptEncoding?: string | string[]) {
   const accept = Array.isArray(acceptEncoding)
     ? acceptEncoding.join(',')
     : acceptEncoding
@@ -60,7 +60,7 @@ function getEncoder(
 const ifString = (value: unknown): string | undefined =>
   typeof value === 'string' ? value : undefined
 
-type WriteResponseOptions = {
+export type WriteResponseOptions = {
   status?: number
   contentType?: string
   contentEncoding?: 'gzip' | 'br' | 'identity'
