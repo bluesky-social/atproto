@@ -10,7 +10,7 @@ import { ServerConfig } from './config'
 import { CourierClient } from './courier'
 import { DataPlaneClient, withHeaders } from './data-plane/client'
 import { FeatureGates } from './feature-gates'
-import { HydrateCtx, HydrateCtxVals } from './hydration/hydrate-ctx'
+import { HydrateCtx } from './hydration/hydrate-ctx'
 import { Hydrator } from './hydration/hydrator'
 import { hydrationLogger, httpLogger as log } from './logger'
 import {
@@ -32,7 +32,7 @@ import {
 } from './util/labeler-header'
 import { Views } from './views/index'
 
-export type CreateHandlerOptions = {
+export type CreateHydrateCtxOptions = {
   /**
    * Use the credential's "include3pBlocks" value when building the
    * {@link HydrateCtxVals} use to instantiate the {@link HydrateCtx}
@@ -44,7 +44,9 @@ export type CreateHandlerOptions = {
    * {@link HydrateCtxVals} use to instantiate the {@link HydrateCtx}
    */
   allowIncludeTakedowns?: boolean
+}
 
+export type CreateHandlerOptions = CreateHydrateCtxOptions & {
   /**
    * Expose the current repo revision in the response headers.
    */
@@ -142,8 +144,8 @@ export class AppContext {
   }
 
   private async createHydrateCtx(
-    auth: Creds,
-    vals: HydrateCtxVals,
+    { req, auth }: HandlerRequestContext<unknown>,
+    options: CreateHydrateCtxOptions,
   ): Promise<HydrateCtx> {
     const dataplane = this.dataplaneForCaller(auth)
 
@@ -156,13 +158,25 @@ export class AppContext {
 
     const hydrator = new Hydrator(dataplane, this.cfg.labelsFromIssuerDids)
 
-    vals.labelers = await hydrator.filterUnavailableLabelers(
-      vals.labelers,
-      vals.includeTakedowns,
+    const authInfo = this.authVerifier.parseCreds(auth)
+
+    const viewer = authInfo.viewer ? serviceRefToDid(authInfo.viewer) : null
+
+    const include3pBlocks = options.allowInclude3pBlocks
+      ? authInfo.include3pBlocks
+      : false
+
+    const includeTakedowns = options.allowIncludeTakedowns
+      ? authInfo.includeTakedowns
+      : false
+
+    const labelers = await hydrator.filterUnavailableLabelers(
+      this.reqLabelers(req),
+      includeTakedowns,
     )
 
     return new HydrateCtx(
-      vals,
+      { viewer, labelers, include3pBlocks, includeTakedowns },
       dataplane,
       hydrator,
       this.opts.views,
@@ -182,11 +196,8 @@ export class AppContext {
     view: (ctx: HydrateCtx, reqCtx: ReqCtx) => Awaitable<Output>,
     options: CreateHandlerOptions = {},
   ) {
-    const { authVerifier } = this
     const {
       // Store as const to allow code path optimizations by compiler
-      allowInclude3pBlocks = false,
-      allowIncludeTakedowns = false,
       exposeRepoRev = false,
     } = options
 
@@ -194,9 +205,7 @@ export class AppContext {
      * Returns an XRPC handler that wraps the view function.
      */
     return async (reqCtx: ReqCtx): Promise<Output> => {
-      const { req, res, auth } = reqCtx
-
-      const authInfo = authVerifier.parseCreds(auth)
+      const { res } = reqCtx
 
       // @TODO Refactor the Hydrator and HydrateCtx into a single class. For
       // historic reasons, "hydrator" used to be a singleton. Then we added the
@@ -205,12 +214,7 @@ export class AppContext {
       // Since the hydrator is now bound the the viewer, we should merge the two
       // classes.
 
-      const ctx = await this.createHydrateCtx(auth, {
-        labelers: this.reqLabelers(req),
-        viewer: authInfo.viewer ? serviceRefToDid(authInfo.viewer) : null,
-        include3pBlocks: allowInclude3pBlocks && authInfo.include3pBlocks,
-        includeTakedowns: allowIncludeTakedowns && authInfo.includeTakedowns,
-      })
+      const ctx = await this.createHydrateCtx(reqCtx, options)
 
       // Always expose the labelers that were actually used to process the request
       res.setHeader(ATPROTO_CONTENT_LABELERS, formatLabelerHeader(ctx.labelers))
