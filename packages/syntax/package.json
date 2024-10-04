@@ -27,5 +27,8 @@
   },
   "browser": {
     "dns/promises": false
-  }
+  },
+  "files": [
+    "dist"
+  ]
 }
