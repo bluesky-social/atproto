@@ -12139,6 +12139,181 @@ export const schemaDict = {
       },
     },
   },
+  ToolsOzoneSignatureDefs: {
+    lexicon: 1,
+    id: 'tools.ozone.signature.defs',
+    defs: {
+      sigDetail: {
+        type: 'object',
+        required: ['property', 'value'],
+        properties: {
+          property: {
+            type: 'string',
+          },
+          value: {
+            type: 'string',
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneSignatureFindCorrelation: {
+    lexicon: 1,
+    id: 'tools.ozone.signature.findCorrelation',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Find all correlated threat signatures between 2 or more accounts.',
+        parameters: {
+          type: 'params',
+          required: ['dids'],
+          properties: {
+            dids: {
+              type: 'array',
+              items: {
+                type: 'string',
+                format: 'did',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['details'],
+            properties: {
+              details: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.signature.defs#sigDetail',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneSignatureFindRelatedAccounts: {
+    lexicon: 1,
+    id: 'tools.ozone.signature.findRelatedAccounts',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get accounts that share some matching threat signatures with the root account.',
+        parameters: {
+          type: 'params',
+          required: ['did'],
+          properties: {
+            did: {
+              type: 'string',
+              format: 'did',
+            },
+            cursor: {
+              type: 'string',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['accounts'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              accounts: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.signature.findRelatedAccounts#relatedAccount',
+                },
+              },
+            },
+          },
+        },
+      },
+      relatedAccount: {
+        type: 'object',
+        required: ['account'],
+        properties: {
+          account: {
+            type: 'ref',
+            ref: 'lex:com.atproto.admin.defs#accountView',
+          },
+          similarities: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:tools.ozone.signature.defs#sigDetail',
+            },
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneSignatureSearchAccounts: {
+    lexicon: 1,
+    id: 'tools.ozone.signature.searchAccounts',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Search for accounts that match one or more threat signature values.',
+        parameters: {
+          type: 'params',
+          required: ['values'],
+          properties: {
+            values: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+            },
+            cursor: {
+              type: 'string',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['accounts'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              accounts: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.admin.defs#accountView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ToolsOzoneTeamAddMember: {
     lexicon: 1,
     id: 'tools.ozone.team.addMember',
@@ -12589,6 +12764,11 @@ export const ids = {
   ToolsOzoneModerationQueryStatuses: 'tools.ozone.moderation.queryStatuses',
   ToolsOzoneModerationSearchRepos: 'tools.ozone.moderation.searchRepos',
   ToolsOzoneServerGetConfig: 'tools.ozone.server.getConfig',
+  ToolsOzoneSignatureDefs: 'tools.ozone.signature.defs',
+  ToolsOzoneSignatureFindCorrelation: 'tools.ozone.signature.findCorrelation',
+  ToolsOzoneSignatureFindRelatedAccounts:
+    'tools.ozone.signature.findRelatedAccounts',
+  ToolsOzoneSignatureSearchAccounts: 'tools.ozone.signature.searchAccounts',
   ToolsOzoneTeamAddMember: 'tools.ozone.team.addMember',
   ToolsOzoneTeamDefs: 'tools.ozone.team.defs',
   ToolsOzoneTeamDeleteMember: 'tools.ozone.team.deleteMember',

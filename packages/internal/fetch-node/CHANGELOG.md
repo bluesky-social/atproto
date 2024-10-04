@@ -1,5 +1,11 @@
 # @atproto-labs/fetch-node
 
+## 0.1.2
+
+### Patch Changes
+
+- [#2854](https://github.com/bluesky-social/atproto/pull/2854) [`8943c1008`](https://github.com/bluesky-social/atproto/commit/8943c10082702bbc0fc150237c6cc421251afd51) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Disable use of HTTP2 when checking SSRF IP
+
 ## 0.1.1
 
 ### Patch Changes

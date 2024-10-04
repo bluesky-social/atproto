@@ -1,6 +1,6 @@
 {
   "name": "@atproto/bsky",
-  "version": "0.0.85",
+  "version": "0.0.87",
   "license": "MIT",
   "description": "Reference implementation of app.bsky App View (Bluesky API)",
   "keywords": [
@@ -77,6 +77,7 @@
     "@types/qs": "^6.9.7",
     "axios": "^0.27.2",
     "jest": "^28.1.2",
-    "ts-node": "^10.8.2"
+    "ts-node": "^10.8.2",
+    "typescript": "^5.4.4"
   }
 }

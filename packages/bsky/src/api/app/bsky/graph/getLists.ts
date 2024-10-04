@@ -1,5 +1,5 @@
 import { mapDefined } from '@atproto/common'
-
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon/index'
 import { REFERENCELIST } from '../../../../lexicon/types/app/bsky/graph/defs'
@@ -37,8 +37,12 @@ const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({ ctx, params }) => {
   if (clearlyBadCursor(params.cursor)) {
     return { listUris: [] }
   }
+
+  const [did] = await ctx.hydrator.actor.getDids([params.actor])
+  if (!did) throw new InvalidRequestError('Profile not found')
+
   const { listUris, cursor } = await ctx.hydrator.dataplane.getActorLists({
-    actorDid: params.actor,
+    actorDid: did,
     cursor: params.cursor,
     limit: params.limit,
   })
