@@ -1,5 +1,11 @@
 # @atproto/ozone
 
+## 0.1.50
+
+### Patch Changes
+
+- [#2862](https://github.com/bluesky-social/atproto/pull/2862) [`08ed0a5a9`](https://github.com/bluesky-social/atproto/commit/08ed0a5a916685b2aaea783706e6d6287a2aa287) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add proper typings
+
 ## 0.1.49
 
 ### Patch Changes
