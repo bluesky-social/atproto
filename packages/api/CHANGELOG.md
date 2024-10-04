@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.13.11
+
+### Patch Changes
+
+- [#2857](https://github.com/bluesky-social/atproto/pull/2857) [`a0531ce42`](https://github.com/bluesky-social/atproto/commit/a0531ce429f5139cb0e2cc19aa9b338599947e44) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Adds support for muting words within link cards attached to `RecordWithMedia` embeds.
+
 ## 0.13.10
 
 ### Patch Changes
