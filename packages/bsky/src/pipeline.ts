@@ -25,8 +25,8 @@ export function createPipeline<
   ): Promise<HandlerOutput<Output>> => {
     const skeleton = await skeletonFn(ctx)
     const hydration = await hydrationFn(ctx, skeleton)
-    const rulesSkeleton = await rulesFn(ctx, skeleton, hydration)
-    const presentation = await presentationFn(ctx, rulesSkeleton, hydration)
+    const rulesSkeleton = rulesFn(ctx, skeleton, hydration)
+    const presentation = presentationFn(ctx, rulesSkeleton, hydration)
 
     return {
       encoding: 'application/json',
