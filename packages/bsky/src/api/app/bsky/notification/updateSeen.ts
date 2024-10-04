@@ -1,4 +1,5 @@
-import { Timestamp } from '@bufbuild/protobuf'
+import murmur from 'murmurhash'
+import { Struct, Timestamp } from '@bufbuild/protobuf'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 
@@ -20,7 +21,29 @@ export default function (server: Server, ctx: AppContext) {
           timestamp: Timestamp.fromDate(seenAt),
           priority: true,
         }),
+        ctx.courierClient?.pushNotifications({
+          notifications: [
+            {
+              id: getNotifId(viewer, seenAt),
+              clientControlled: true,
+              recipientDid: viewer,
+              alwaysDeliver: false,
+              collapseKey: 'mark-read-generic',
+              timestamp: Timestamp.fromDate(new Date()),
+              additional: Struct.fromJson({
+                reason: 'mark-read-generic',
+              }),
+            },
+          ],
+        }),
       ])
     },
   })
+}
+
+function getNotifId(viewer: string, seenAt: Date) {
+  const key = ['mark-read-generic', viewer, seenAt.getTime().toString()].join(
+    '::',
+  )
+  return murmur.v3(key).toString(16)
 }

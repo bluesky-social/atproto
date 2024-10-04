@@ -216,6 +216,9 @@ importers:
       multiformats:
         specifier: ^9.9.0
         version: 9.9.0
+      murmurhash:
+        specifier: ^2.0.1
+        version: 2.0.1
       p-queue:
         specifier: ^6.6.2
         version: 6.6.2
@@ -10338,6 +10341,10 @@ packages:
 
   /multiformats@9.9.0:
     resolution: {integrity: sha512-HoMUjhH9T8DDBNT+6xzkrd9ga/XiBI4xLr58LJACwK6G3HTOPeMz4nB4KJs33L2BelrIJa7P0VuNaVF3hMYfjg==}
+
+  /murmurhash@2.0.1:
+    resolution: {integrity: sha512-5vQEh3y+DG/lMPM0mCGPDnyV8chYg/g7rl6v3Gd8WMF9S429ox3Xk8qrk174kWhG767KQMqqxLD1WnGd77hiew==}
+    dev: false
 
   /mz@2.7.0:
     resolution: {integrity: sha512-z81GNO7nnYMEhrGh9LeymoE4+Yr0Wn5McHIZMK5cfQCl+NDX08sCZgUc9/6MHni9IWuFLm1Z3HTCXu2z9fN62Q==}

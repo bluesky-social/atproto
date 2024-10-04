@@ -51,6 +51,7 @@
     "key-encoder": "^2.0.3",
     "kysely": "^0.22.0",
     "multiformats": "^9.9.0",
+    "murmurhash": "^2.0.1",
     "p-queue": "^6.6.2",
     "pg": "^8.10.0",
     "pino": "^8.21.0",
