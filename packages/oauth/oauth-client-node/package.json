@@ -39,7 +39,7 @@
     "@atproto/oauth-types": "workspace:*"
   },
   "devDependencies": {
-    "typescript": "^5.3.3"
+    "typescript": "^5.4.4"
   },
   "scripts": {
     "build": "tsc --build tsconfig.build.json"
