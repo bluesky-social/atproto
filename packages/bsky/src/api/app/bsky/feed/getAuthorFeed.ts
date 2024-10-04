@@ -48,10 +48,9 @@ const FILTER_TO_FEED_TYPE = {
   posts_and_author_threads: FeedType.POSTS_AND_AUTHOR_THREADS,
 }
 
-export const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({
-  ctx,
-  params,
-}) => {
+export const skeleton: SkeletonFn<Skeleton, QueryParams> = async (ctx) => {
+  const { params } = ctx
+
   const [did] = await ctx.hydrator.actor.getDids([params.actor])
   if (!did) {
     throw new InvalidRequestError('Profile not found')
@@ -107,10 +106,7 @@ export const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({
   }
 }
 
-const hydration: HydrationFn<Skeleton, QueryParams> = async ({
-  ctx,
-  skeleton,
-}) => {
+const hydration: HydrationFn<Skeleton, QueryParams> = async (ctx, skeleton) => {
   const [feedPostState, profileViewerState] = await Promise.all([
     ctx.hydrator.hydrateFeedItems(skeleton.items, ctx),
     ctx.hydrator.hydrateProfileViewers([skeleton.actor.did], ctx),
@@ -118,11 +114,11 @@ const hydration: HydrationFn<Skeleton, QueryParams> = async ({
   return mergeStates(feedPostState, profileViewerState)
 }
 
-const noBlocksOrMutedReposts: RulesFn<Skeleton, QueryParams> = ({
+const noBlocksOrMutedReposts: RulesFn<Skeleton, QueryParams> = (
   ctx,
   skeleton,
   hydration,
-}) => {
+) => {
   const relationship = hydration.profileViewers?.get(skeleton.actor.did)
   if (relationship?.blocking || relationship?.blockingByList) {
     throw new InvalidRequestError(
@@ -163,11 +159,11 @@ const noBlocksOrMutedReposts: RulesFn<Skeleton, QueryParams> = ({
   return skeleton
 }
 
-const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
+const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = (
   ctx,
   skeleton,
   hydration,
-}) => {
+) => {
   const feed = mapDefined(skeleton.items, (item) =>
     ctx.views.feedViewPost(item, hydration),
   )

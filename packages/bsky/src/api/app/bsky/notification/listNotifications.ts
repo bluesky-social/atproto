@@ -39,24 +39,23 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton: SkeletonFn<Skeleton, QueryParams, StandardOutput> = async ({
+const skeleton: SkeletonFn<Skeleton, QueryParams, StandardOutput> = async (
   ctx,
-  params,
-}) => {
-  if (params.seenAt) {
+) => {
+  if (ctx.params.seenAt) {
     throw new InvalidRequestError('The seenAt parameter is unsupported')
   }
 
-  const priority = params.priority ?? (await getPriority(ctx, ctx.viewer))
-  if (clearlyBadCursor(params.cursor)) {
+  const priority = ctx.params.priority ?? (await getPriority(ctx, ctx.viewer))
+  if (clearlyBadCursor(ctx.params.cursor)) {
     return { notifs: [], priority }
   }
   const [res, lastSeenRes] = await Promise.all([
     ctx.hydrator.dataplane.getNotifications({
       actorDid: ctx.viewer,
       priority,
-      cursor: params.cursor,
-      limit: params.limit,
+      cursor: ctx.params.cursor,
+      limit: ctx.params.limit,
     }),
     ctx.hydrator.dataplane.getNotificationSeen({
       actorDid: ctx.viewer,
@@ -66,7 +65,7 @@ const skeleton: SkeletonFn<Skeleton, QueryParams, StandardOutput> = async ({
   // @NOTE for the first page of results if there's no last-seen time, consider top notification unread
   // rather than all notifications. bit of a hack to be more graceful when seen times are out of sync.
   let lastSeenDate = lastSeenRes.timestamp?.toDate()
-  if (!lastSeenDate && !params.cursor) {
+  if (!lastSeenDate && !ctx.params.cursor) {
     lastSeenDate = res.notifications.at(0)?.timestamp?.toDate()
   }
   return {
@@ -77,18 +76,15 @@ const skeleton: SkeletonFn<Skeleton, QueryParams, StandardOutput> = async ({
   }
 }
 
-const hydration: HydrationFn<Skeleton, QueryParams> = async ({
-  ctx,
-  skeleton,
-}) => {
+const hydration: HydrationFn<Skeleton, QueryParams> = async (ctx, skeleton) => {
   return ctx.hydrator.hydrateNotifications(skeleton.notifs, ctx)
 }
 
-const noBlockOrMutes: RulesFn<Skeleton, QueryParams> = ({
+const noBlockOrMutes: RulesFn<Skeleton, QueryParams> = (
   ctx,
   skeleton,
   hydration,
-}) => {
+) => {
   skeleton.notifs = skeleton.notifs.filter((item) => {
     const did = didFromUri(item.uri)
     if (
@@ -124,11 +120,11 @@ const noBlockOrMutes: RulesFn<Skeleton, QueryParams> = ({
   return skeleton
 }
 
-const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
+const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = (
+  ctx,
   skeleton,
   hydration,
-  ctx,
-}) => {
+) => {
   const { notifs, lastSeenNotifs, cursor } = skeleton
   const notifications = mapDefined(notifs, (notif) =>
     ctx.views.notification(notif, lastSeenNotifs, hydration),

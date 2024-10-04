@@ -37,7 +37,9 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({ ctx, params }) => {
+const skeleton: SkeletonFn<Skeleton, QueryParams> = async (ctx) => {
+  const { params } = ctx
+
   const anchor = await ctx.hydrator.resolveUri(params.uri)
   try {
     const res = await ctx.dataplane.getThread({
@@ -61,25 +63,21 @@ const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({ ctx, params }) => {
   }
 }
 
-const hydration: HydrationFn<Skeleton, QueryParams> = async ({
-  ctx,
-  skeleton,
-}) => {
+const hydration: HydrationFn<Skeleton, QueryParams> = async (ctx, skeleton) => {
   return ctx.hydrator.hydrateThreadPosts(
     skeleton.uris.map((uri) => ({ uri })),
     ctx,
   )
 }
 
-const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
+const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = (
   ctx,
-  params,
   skeleton,
   hydration,
-}) => {
+) => {
   const thread = ctx.views.thread(skeleton, hydration, {
-    height: params.parentHeight,
-    depth: params.depth,
+    height: ctx.params.parentHeight,
+    depth: ctx.params.depth,
   })
   if (isNotFoundPost(thread)) {
     // @TODO technically this could be returned as a NotFoundPost based on lexicon

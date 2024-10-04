@@ -36,27 +36,23 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({ ctx, params }) => {
-  if (clearlyBadCursor(params.cursor)) {
-    return { listUri: params.list, listitems: [] }
+const skeleton: SkeletonFn<Skeleton, QueryParams> = async (ctx) => {
+  if (clearlyBadCursor(ctx.params.cursor)) {
+    return { listUri: ctx.params.list, listitems: [] }
   }
   const { listitems, cursor } = await ctx.hydrator.dataplane.getListMembers({
-    listUri: params.list,
-    limit: params.limit,
-    cursor: params.cursor,
+    listUri: ctx.params.list,
+    limit: ctx.params.limit,
+    cursor: ctx.params.cursor,
   })
   return {
-    listUri: params.list,
+    listUri: ctx.params.list,
     listitems,
     cursor: cursor || undefined,
   }
 }
 
-const hydration: HydrationFn<Skeleton, QueryParams> = async ({
-  ctx,
-  params: { list },
-  skeleton,
-}) => {
+const hydration: HydrationFn<Skeleton, QueryParams> = async (ctx, skeleton) => {
   const { listUri, listitems } = skeleton
   const [listState, profileState] = await Promise.all([
     ctx.hydrator.hydrateLists([listUri], ctx),
@@ -66,11 +62,12 @@ const hydration: HydrationFn<Skeleton, QueryParams> = async ({
     ),
   ])
 
-  const creator = didFromUri(list)
+  const creator = didFromUri(ctx.params.list)
 
   const bidirectionalBlocks =
     ctx.viewer === creator ||
-    listState.lists?.get(list)?.record.purpose === 'app.bsky.graph.defs#modlist'
+    listState.lists?.get(ctx.params.list)?.record.purpose ===
+      'app.bsky.graph.defs#modlist'
       ? undefined
       : await ctx.hydrator.hydrateBidirectionalBlocks([
           [creator, listitems.map(({ did }) => did)],
@@ -79,7 +76,7 @@ const hydration: HydrationFn<Skeleton, QueryParams> = async ({
   return mergeManyStates(listState, profileState, { bidirectionalBlocks })
 }
 
-const noBlocks: RulesFn<Skeleton, QueryParams> = ({ skeleton, hydration }) => {
+const noBlocks: RulesFn<Skeleton, QueryParams> = (ctx, skeleton, hydration) => {
   const creator = didFromUri(skeleton.listUri)
   const blocks = hydration.bidirectionalBlocks?.get(creator)
   skeleton.listitems = skeleton.listitems.filter(({ did }) => {
@@ -88,11 +85,11 @@ const noBlocks: RulesFn<Skeleton, QueryParams> = ({ skeleton, hydration }) => {
   return skeleton
 }
 
-const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
+const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = (
   ctx,
   skeleton,
   hydration,
-}) => {
+) => {
   const { listUri, listitems, cursor } = skeleton
   const list = ctx.views.list(listUri, hydration)
   const items = mapDefined(listitems, ({ uri, did }) => {

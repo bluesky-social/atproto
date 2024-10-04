@@ -33,7 +33,9 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({ ctx, params }) => {
+const skeleton: SkeletonFn<Skeleton, QueryParams> = async (ctx) => {
+  const { params } = ctx
+
   if (clearlyBadCursor(params.cursor)) {
     return { feedUris: [] }
   }
@@ -52,18 +54,15 @@ const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({ ctx, params }) => {
   }
 }
 
-const hydration: HydrationFn<Skeleton, QueryParams> = async ({
-  ctx,
-  skeleton,
-}) => {
+const hydration: HydrationFn<Skeleton, QueryParams> = async (ctx, skeleton) => {
   return ctx.hydrator.hydrateFeedGens(skeleton.feedUris, ctx)
 }
 
-const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
+const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = (
   ctx,
   skeleton,
   hydration,
-}) => {
+) => {
   const feeds = mapDefined(skeleton.feedUris, (uri) =>
     ctx.views.feedGenerator(uri, hydration),
   )

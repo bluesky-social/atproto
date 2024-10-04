@@ -38,25 +38,18 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({ params }) => {
-  return { posts: dedupeStrs(params.uris) }
+const skeleton: SkeletonFn<Skeleton, QueryParams> = async (ctx) => {
+  return { posts: dedupeStrs(ctx.params.uris) }
 }
 
-const hydration: HydrationFn<Skeleton, QueryParams> = async ({
-  ctx,
-  skeleton,
-}) => {
+const hydration: HydrationFn<Skeleton, QueryParams> = async (ctx, skeleton) => {
   return ctx.hydrator.hydratePosts(
     skeleton.posts.map((uri) => ({ uri })),
     ctx,
   )
 }
 
-const noBlocks: RulesFn<Skeleton, QueryParams> = ({
-  ctx,
-  skeleton,
-  hydration,
-}) => {
+const noBlocks: RulesFn<Skeleton, QueryParams> = (ctx, skeleton, hydration) => {
   skeleton.posts = skeleton.posts.filter((uri) => {
     const creator = creatorFromUri(uri)
     return !ctx.views.viewerBlockExists(creator, hydration)
@@ -64,11 +57,11 @@ const noBlocks: RulesFn<Skeleton, QueryParams> = ({
   return skeleton
 }
 
-const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
+const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = (
   ctx,
   skeleton,
   hydration,
-}) => {
+) => {
   const posts = mapDefined(skeleton.posts, (uri) =>
     ctx.views.post(uri, hydration),
   )

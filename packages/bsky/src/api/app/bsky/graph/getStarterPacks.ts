@@ -28,22 +28,19 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({ params }) => {
-  return { uris: params.uris }
+const skeleton: SkeletonFn<Skeleton, QueryParams> = async (ctx) => {
+  return { uris: ctx.params.uris }
 }
 
-const hydration: HydrationFn<Skeleton, QueryParams> = async ({
-  ctx,
-  skeleton,
-}) => {
+const hydration: HydrationFn<Skeleton, QueryParams> = async (ctx, skeleton) => {
   return ctx.hydrator.hydrateStarterPacksBasic(dedupeStrs(skeleton.uris), ctx)
 }
 
-const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
+const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = (
   ctx,
   skeleton,
   hydration,
-}) => {
+) => {
   const starterPacks = mapDefined(skeleton.uris, (did) =>
     ctx.views.starterPackBasic(did, hydration),
   )

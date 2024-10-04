@@ -35,18 +35,20 @@ export default function (server: Server, ctx: AppContext) {
     ),
   })
 }
-const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({ ctx, params }) => {
-  const [subjectDid] = await ctx.hydrator.actor.getDidsDefined([params.actor])
+const skeleton: SkeletonFn<Skeleton, QueryParams> = async (ctx) => {
+  const [subjectDid] = await ctx.hydrator.actor.getDidsDefined([
+    ctx.params.actor,
+  ])
   if (!subjectDid) {
-    throw new InvalidRequestError(`Actor not found: ${params.actor}`)
+    throw new InvalidRequestError(`Actor not found: ${ctx.params.actor}`)
   }
-  if (clearlyBadCursor(params.cursor)) {
+  if (clearlyBadCursor(ctx.params.cursor)) {
     return { subjectDid, followUris: [] }
   }
   const { followers, cursor } = await ctx.hydrator.graph.getActorFollowers({
     did: subjectDid,
-    cursor: params.cursor,
-    limit: params.limit,
+    cursor: ctx.params.cursor,
+    limit: ctx.params.limit,
   })
   return {
     subjectDid,
@@ -55,10 +57,7 @@ const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({ ctx, params }) => {
   }
 }
 
-const hydration: HydrationFn<Skeleton, QueryParams> = async ({
-  ctx,
-  skeleton,
-}) => {
+const hydration: HydrationFn<Skeleton, QueryParams> = async (ctx, skeleton) => {
   const { followUris, subjectDid } = skeleton
   const followState = await ctx.hydrator.hydrateFollows(followUris)
   const dids = [subjectDid]
@@ -73,11 +72,7 @@ const hydration: HydrationFn<Skeleton, QueryParams> = async ({
   return mergeStates(followState, profileState)
 }
 
-const noBlocks: RulesFn<Skeleton, QueryParams> = ({
-  skeleton,
-  hydration,
-  ctx,
-}) => {
+const noBlocks: RulesFn<Skeleton, QueryParams> = (ctx, skeleton, hydration) => {
   const { viewer } = ctx
   skeleton.followUris = skeleton.followUris.filter((followUri) => {
     const followerDid = didFromUri(followUri)
@@ -89,18 +84,17 @@ const noBlocks: RulesFn<Skeleton, QueryParams> = ({
   return skeleton
 }
 
-const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
+const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = (
   ctx,
-  params,
   skeleton,
   hydration,
-}) => {
+) => {
   const { subjectDid, followUris, cursor } = skeleton
   const isNoHosted = (did: string) => ctx.views.actorIsNoHosted(did, hydration)
 
   const subject = ctx.views.profile(subjectDid, hydration)
   if (!subject || (!ctx.includeTakedowns && isNoHosted(subjectDid))) {
-    throw new InvalidRequestError(`Actor not found: ${params.actor}`)
+    throw new InvalidRequestError(`Actor not found: ${ctx.params.actor}`)
   }
 
   const followers = mapDefined(followUris, (followUri) => {

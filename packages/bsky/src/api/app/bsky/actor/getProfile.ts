@@ -31,29 +31,26 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({ ctx, params }) => {
-  const [did] = await ctx.hydrator.actor.getDids([params.actor])
+const skeleton: SkeletonFn<Skeleton, QueryParams> = async (ctx) => {
+  const [did] = await ctx.hydrator.actor.getDids([ctx.params.actor])
   if (!did) {
     throw new InvalidRequestError('Profile not found')
   }
   return { did }
 }
 
-const hydration: HydrationFn<Skeleton, QueryParams> = async ({
-  ctx,
-  skeleton,
-}) => {
+const hydration: HydrationFn<Skeleton, QueryParams> = async (ctx, skeleton) => {
   return ctx.hydrator.hydrateProfilesDetailed(
     [skeleton.did],
     ctx.copy({ includeTakedowns: true }),
   )
 }
 
-const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
+const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = (
   ctx,
   skeleton,
   hydration,
-}) => {
+) => {
   const profile = ctx.views.profileDetailed(skeleton.did, hydration)
   if (!profile) {
     throw new InvalidRequestError('Profile not found')

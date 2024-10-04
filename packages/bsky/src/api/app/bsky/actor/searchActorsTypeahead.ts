@@ -30,7 +30,9 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({ ctx, params }) => {
+const skeleton: SkeletonFn<Skeleton, QueryParams> = async (ctx) => {
+  const { params } = ctx
+
   const term = params.q ?? params.term ?? ''
 
   // @TODO
@@ -61,35 +63,27 @@ const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({ ctx, params }) => {
   }
 }
 
-const hydration: HydrationFn<Skeleton, QueryParams> = async ({
-  ctx,
-  skeleton,
-}) => {
+const hydration: HydrationFn<Skeleton, QueryParams> = async (ctx, skeleton) => {
   return ctx.hydrator.hydrateProfilesBasic(skeleton.dids, ctx)
 }
 
-const noBlocks: RulesFn<Skeleton, QueryParams> = ({
-  ctx,
-  skeleton,
-  hydration,
-  params,
-}) => {
+const noBlocks: RulesFn<Skeleton, QueryParams> = (ctx, skeleton, hydration) => {
   skeleton.dids = skeleton.dids.filter((did) => {
     const actor = hydration.actors?.get(did)
     if (!actor) return false
     // Always display exact matches so that users can find profiles that they have blocked
-    const term = (params.q ?? params.term ?? '').toLowerCase()
+    const term = (ctx.params.q ?? ctx.params.term ?? '').toLowerCase()
     const isExactMatch = actor.handle?.toLowerCase() === term
     return isExactMatch || !ctx.views.viewerBlockExists(did, hydration)
   })
   return skeleton
 }
 
-const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
+const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = (
   ctx,
   skeleton,
   hydration,
-}) => {
+) => {
   const actors = mapDefined(skeleton.dids, (did) =>
     ctx.views.profileBasic(did, hydration),
   )

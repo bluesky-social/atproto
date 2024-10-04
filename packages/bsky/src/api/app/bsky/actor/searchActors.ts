@@ -33,7 +33,9 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({ ctx, params }) => {
+const skeleton: SkeletonFn<Skeleton, QueryParams> = async (ctx) => {
+  const { params } = ctx
+
   const term = params.q ?? params.term ?? ''
 
   // @TODO
@@ -65,29 +67,22 @@ const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({ ctx, params }) => {
   }
 }
 
-const hydration: HydrationFn<Skeleton, QueryParams> = async ({
-  ctx,
-  skeleton,
-}) => {
+const hydration: HydrationFn<Skeleton, QueryParams> = async (ctx, skeleton) => {
   return ctx.hydrator.hydrateProfiles(skeleton.dids, ctx)
 }
 
-const noBlocks: RulesFn<Skeleton, QueryParams> = ({
-  ctx,
-  skeleton,
-  hydration,
-}) => {
+const noBlocks: RulesFn<Skeleton, QueryParams> = (ctx, skeleton, hydration) => {
   skeleton.dids = skeleton.dids.filter(
     (did) => !ctx.views.viewerBlockExists(did, hydration),
   )
   return skeleton
 }
 
-const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
+const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = (
   ctx,
   skeleton,
   hydration,
-}) => {
+) => {
   const actors = mapDefined(skeleton.dids, (did) =>
     ctx.views.profile(did, hydration),
   )

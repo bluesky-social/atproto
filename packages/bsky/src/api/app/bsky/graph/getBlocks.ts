@@ -32,8 +32,8 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({ ctx, params }) => {
-  if (clearlyBadCursor(params.cursor)) {
+const skeleton: SkeletonFn<Skeleton, QueryParams> = async (ctx) => {
+  if (clearlyBadCursor(ctx.params.cursor)) {
     return { blockedDids: [] }
   }
 
@@ -42,8 +42,8 @@ const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({ ctx, params }) => {
 
   const { blockUris, cursor } = await ctx.hydrator.dataplane.getBlocks({
     actorDid,
-    cursor: params.cursor,
-    limit: params.limit,
+    cursor: ctx.params.cursor,
+    limit: ctx.params.limit,
   })
   const blocks = await ctx.hydrator.graph.getBlocks(blockUris)
   const blockedDids = mapDefined(
@@ -56,18 +56,15 @@ const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({ ctx, params }) => {
   }
 }
 
-const hydration: HydrationFn<Skeleton, QueryParams> = async ({
-  ctx,
-  skeleton,
-}) => {
+const hydration: HydrationFn<Skeleton, QueryParams> = async (ctx, skeleton) => {
   return ctx.hydrator.hydrateProfiles(skeleton.blockedDids, ctx)
 }
 
-const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
+const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = (
   ctx,
   skeleton,
   hydration,
-}) => {
+) => {
   const { blockedDids, cursor } = skeleton
   const blocks = mapDefined(blockedDids, (did) => {
     return ctx.views.profile(did, hydration)

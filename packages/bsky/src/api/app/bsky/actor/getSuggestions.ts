@@ -33,12 +33,9 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({
-  ctx,
-  params,
-  headers,
-}) => {
-  const { viewer } = ctx
+const skeleton: SkeletonFn<Skeleton, QueryParams> = async (ctx) => {
+  const { viewer, params, headers } = ctx
+
   if (ctx.suggestionsAgent) {
     const res =
       await ctx.suggestionsAgent.app.bsky.unspecced.getSuggestionsSkeleton(
@@ -80,18 +77,15 @@ const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({
   }
 }
 
-const hydration: HydrationFn<Skeleton, QueryParams> = async ({
-  ctx,
-  skeleton,
-}) => {
+const hydration: HydrationFn<Skeleton, QueryParams> = async (ctx, skeleton) => {
   return ctx.hydrator.hydrateProfilesDetailed(skeleton.dids, ctx)
 }
 
-const noBlocksOrMutes: RulesFn<Skeleton, QueryParams> = ({
+const noBlocksOrMutes: RulesFn<Skeleton, QueryParams> = (
   ctx,
   skeleton,
   hydration,
-}) => {
+) => {
   skeleton.dids = skeleton.dids.filter(
     (did) =>
       !ctx.views.viewerBlockExists(did, hydration) &&
@@ -100,11 +94,11 @@ const noBlocksOrMutes: RulesFn<Skeleton, QueryParams> = ({
   return skeleton
 }
 
-const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
+const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = (
   ctx,
   skeleton,
   hydration,
-}) => {
+) => {
   const actors = mapDefined(skeleton.dids, (did) =>
     ctx.views.profileKnownFollowers(did, hydration),
   )

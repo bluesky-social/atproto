@@ -1,4 +1,3 @@
-import { IncomingHttpHeaders } from 'node:http'
 import { Creds } from './auth-verifier'
 import { HydrateCtx } from './hydration/hydrate-ctx'
 import { HydrationState } from './hydration/hydrator'
@@ -24,18 +23,10 @@ export function createPipeline<
   return async (
     ctx: HydrateCtx<Params, Auth, Input>,
   ): Promise<HandlerOutput<Output>> => {
-    const { params, headers } = ctx
-
-    const skeleton = await skeletonFn({ ctx, params, headers })
-    const hydration = await hydrationFn({ ctx, params, headers, skeleton })
-    const rules = await rulesFn({ ctx, params, headers, skeleton, hydration })
-    const presentation = await presentationFn({
-      ctx,
-      params,
-      headers,
-      skeleton: rules,
-      hydration,
-    })
+    const skeleton = await skeletonFn(ctx)
+    const hydration = await hydrationFn(ctx, skeleton)
+    const rulesSkeleton = await rulesFn(ctx, skeleton, hydration)
+    const presentation = await presentationFn(ctx, rulesSkeleton, hydration)
 
     return {
       encoding: 'application/json',
@@ -47,42 +38,30 @@ export function createPipeline<
 
 export type Awaitable<T> = T | PromiseLike<T>
 
-export type SkeletonFn<Skeleton, Params, Auth extends Creds = Creds> = (input: {
-  ctx: HydrateCtx<Params, Auth>
-  params: Params
-  headers: IncomingHttpHeaders
-}) => Awaitable<Skeleton>
+export type SkeletonFn<Skeleton, Params, Auth extends Creds = Creds> = (
+  ctx: HydrateCtx<Params, Auth>,
+) => Awaitable<Skeleton>
 
-export type HydrationFn<
-  Skeleton,
-  Params,
-  Auth extends Creds = Creds,
-> = (input: {
-  ctx: HydrateCtx<Params, Auth>
-  params: Params
-  headers: IncomingHttpHeaders
-  skeleton: Skeleton
-}) => Awaitable<HydrationState>
+export type HydrationFn<Skeleton, Params, Auth extends Creds = Creds> = (
+  ctx: HydrateCtx<Params, Auth>,
+  skeleton: Skeleton,
+) => Awaitable<HydrationState>
 
-export type RulesFn<Skeleton, Params, Auth extends Creds = Creds> = (input: {
-  ctx: HydrateCtx<Params, Auth>
-  params: Params
-  headers: IncomingHttpHeaders
-  skeleton: Skeleton
-  hydration: HydrationState
-}) => Skeleton
+export type RulesFn<Skeleton, Params, Auth extends Creds = Creds> = (
+  ctx: HydrateCtx<Params, Auth>,
+  skeleton: Skeleton,
+  hydration: HydrationState,
+) => Skeleton
 
-export type PresentationFn<Skeleton, Params, Output> = (input: {
-  ctx: HydrateCtx<Params>
-  params: Params
-  headers: IncomingHttpHeaders
-  skeleton: Skeleton
-  hydration: HydrationState
-}) => {
+export type PresentationFn<Skeleton, Params, Output> = (
+  ctx: HydrateCtx<Params>,
+  skeleton: Skeleton,
+  hydration: HydrationState,
+) => {
   headers?: Record<string, string>
   body: Output
 }
 
-export function noRules<S>(input: { skeleton: S }) {
-  return input.skeleton
+export function noRules<S>(ctx: HydrateCtx, skeleton: S) {
+  return skeleton
 }

@@ -33,15 +33,15 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({ ctx, params }) => {
-  const [did] = await ctx.hydrator.actor.getDids([params.actor])
+const skeleton: SkeletonFn<Skeleton, QueryParams> = async (ctx) => {
+  const [did] = await ctx.hydrator.actor.getDids([ctx.params.actor])
   if (!did) {
     throw new InvalidRequestError('Profile not found')
   }
   const starterPacks = await ctx.dataplane.getActorStarterPacks({
     actorDid: did,
-    cursor: params.cursor,
-    limit: params.limit,
+    cursor: ctx.params.cursor,
+    limit: ctx.params.limit,
   })
   return {
     starterPackUris: starterPacks.uris,
@@ -49,18 +49,15 @@ const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({ ctx, params }) => {
   }
 }
 
-const hydration: HydrationFn<Skeleton, QueryParams> = async ({
-  ctx,
-  skeleton,
-}) => {
+const hydration: HydrationFn<Skeleton, QueryParams> = async (ctx, skeleton) => {
   return ctx.hydrator.hydrateStarterPacksBasic(skeleton.starterPackUris, ctx)
 }
 
-const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
+const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = (
   ctx,
   skeleton,
   hydration,
-}) => {
+) => {
   const starterPacks = mapDefined(skeleton.starterPackUris, (uri) =>
     ctx.views.starterPackBasic(uri, hydration),
   )

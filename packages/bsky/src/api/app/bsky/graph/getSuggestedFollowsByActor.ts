@@ -34,12 +34,10 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton: SkeletonFn<Skeleton, QueryParams, StandardOutput> = async ({
+const skeleton: SkeletonFn<Skeleton, QueryParams, StandardOutput> = async (
   ctx,
-  params,
-  headers,
-}) => {
-  const [relativeToDid] = await ctx.hydrator.actor.getDids([params.actor])
+) => {
+  const [relativeToDid] = await ctx.hydrator.actor.getDids([ctx.params.actor])
   if (!relativeToDid) {
     throw new InvalidRequestError('Actor not found')
   }
@@ -53,10 +51,10 @@ const skeleton: SkeletonFn<Skeleton, QueryParams, StandardOutput> = async ({
         },
         {
           headers: noUndefinedVals({
-            'accept-language': headers['accept-language'],
-            'x-bsky-topics': Array.isArray(headers['x-bsky-topics'])
-              ? headers['x-bsky-topics'].join(',')
-              : headers['x-bsky-topics'],
+            'accept-language': ctx.headers['accept-language'],
+            'x-bsky-topics': Array.isArray(ctx.headers['x-bsky-topics'])
+              ? ctx.headers['x-bsky-topics'].join(',')
+              : ctx.headers['x-bsky-topics'],
           }),
         },
       )
@@ -77,18 +75,15 @@ const skeleton: SkeletonFn<Skeleton, QueryParams, StandardOutput> = async ({
   }
 }
 
-const hydration: HydrationFn<Skeleton, QueryParams> = async ({
-  ctx,
-  skeleton: { suggestedDids },
-}) => {
-  return ctx.hydrator.hydrateProfilesDetailed(suggestedDids, ctx)
+const hydration: HydrationFn<Skeleton, QueryParams> = async (ctx, skeleton) => {
+  return ctx.hydrator.hydrateProfilesDetailed(skeleton.suggestedDids, ctx)
 }
 
-const noBlocksOrMutes: RulesFn<Skeleton, QueryParams> = ({
+const noBlocksOrMutes: RulesFn<Skeleton, QueryParams> = (
   ctx,
   skeleton,
   hydration,
-}) => {
+) => {
   skeleton.suggestedDids = skeleton.suggestedDids.filter(
     (did) =>
       !ctx.views.viewerBlockExists(did, hydration) &&
@@ -97,11 +92,11 @@ const noBlocksOrMutes: RulesFn<Skeleton, QueryParams> = ({
   return skeleton
 }
 
-const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
+const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = (
   ctx,
   skeleton,
   hydration,
-}) => {
+) => {
   const suggestions = mapDefined(skeleton.suggestedDids, (did) =>
     ctx.views.profileDetailed(did, hydration),
   )

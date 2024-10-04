@@ -37,23 +37,20 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({ ctx, params }) => {
-  const dids = await ctx.hydrator.actor.getDidsDefined(params.actors)
+const skeleton: SkeletonFn<Skeleton, QueryParams> = async (ctx) => {
+  const dids = await ctx.hydrator.actor.getDidsDefined(ctx.params.actors)
   return { dids }
 }
 
-const hydration: HydrationFn<Skeleton, QueryParams> = async ({
-  ctx,
-  skeleton,
-}) => {
+const hydration: HydrationFn<Skeleton, QueryParams> = async (ctx, skeleton) => {
   return ctx.hydrator.hydrateProfilesDetailed(skeleton.dids, ctx)
 }
 
-const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
+const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = (
   ctx,
   skeleton,
   hydration,
-}) => {
+) => {
   const profiles = mapDefined(skeleton.dids, (did) =>
     ctx.views.profileDetailed(did, hydration),
   )

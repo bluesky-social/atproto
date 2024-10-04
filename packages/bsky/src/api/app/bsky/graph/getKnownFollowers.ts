@@ -32,16 +32,18 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({ ctx, params }) => {
-  const [subjectDid] = await ctx.hydrator.actor.getDidsDefined([params.actor])
+const skeleton: SkeletonFn<Skeleton, QueryParams> = async (ctx) => {
+  const [subjectDid] = await ctx.hydrator.actor.getDidsDefined([
+    ctx.params.actor,
+  ])
   if (!subjectDid) {
-    throw new InvalidRequestError(`Actor not found: ${params.actor}`)
+    throw new InvalidRequestError(`Actor not found: ${ctx.params.actor}`)
   }
 
   const actorDid = ctx.viewer
   if (!actorDid) throw new InvalidRequestError('Unauthorized')
 
-  if (clearlyBadCursor(params.cursor)) {
+  if (clearlyBadCursor(ctx.params.cursor)) {
     return { subjectDid, knownFollowers: [], cursor: undefined }
   }
 
@@ -50,7 +52,7 @@ const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({ ctx, params }) => {
     targetDids: [subjectDid],
   })
   const result = res.results.at(0)
-  const knownFollowers = result ? result.dids.slice(0, params.limit) : []
+  const knownFollowers = result ? result.dids.slice(0, ctx.params.limit) : []
 
   return {
     subjectDid,
@@ -59,10 +61,7 @@ const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({ ctx, params }) => {
   }
 }
 
-const hydration: HydrationFn<Skeleton, QueryParams> = async ({
-  ctx,
-  skeleton,
-}) => {
+const hydration: HydrationFn<Skeleton, QueryParams> = async (ctx, skeleton) => {
   const { knownFollowers } = skeleton
   const profilesState = await ctx.hydrator.hydrateProfiles(
     knownFollowers.concat(skeleton.subjectDid),
@@ -71,22 +70,18 @@ const hydration: HydrationFn<Skeleton, QueryParams> = async ({
   return profilesState
 }
 
-const noBlocks: RulesFn<Skeleton, QueryParams> = ({
-  skeleton,
-  hydration,
-  ctx,
-}) => {
+const noBlocks: RulesFn<Skeleton, QueryParams> = (ctx, skeleton, hydration) => {
   skeleton.knownFollowers = skeleton.knownFollowers.filter((did) => {
     return !ctx.views.viewerBlockExists(did, hydration)
   })
   return skeleton
 }
 
-const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
+const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = (
   ctx,
   skeleton,
   hydration,
-}) => {
+) => {
   const { knownFollowers } = skeleton
 
   const followers = mapDefined(knownFollowers, (did) => {

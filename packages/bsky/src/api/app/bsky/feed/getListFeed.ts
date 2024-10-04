@@ -36,17 +36,14 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-export const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({
-  ctx,
-  params,
-}) => {
-  if (clearlyBadCursor(params.cursor)) {
+export const skeleton: SkeletonFn<Skeleton, QueryParams> = async (ctx) => {
+  if (clearlyBadCursor(ctx.params.cursor)) {
     return { items: [] }
   }
   const res = await ctx.dataplane.getListFeed({
-    listUri: params.list,
-    limit: params.limit,
-    cursor: params.cursor,
+    listUri: ctx.params.list,
+    limit: ctx.params.limit,
+    cursor: ctx.params.cursor,
   })
   return {
     items: res.items.map((item) => ({
@@ -59,16 +56,12 @@ export const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({
   }
 }
 
-const hydration: HydrationFn<Skeleton, QueryParams> = async ({
-  ctx,
-  params,
-  skeleton,
-}) => {
+const hydration: HydrationFn<Skeleton, QueryParams> = async (ctx, skeleton) => {
   const [feedItemsState, bidirectionalBlocks] = await Promise.all([
     ctx.hydrator.hydrateFeedItems(skeleton.items, ctx),
     ctx.hydrator.hydrateBidirectionalBlocks([
       [
-        uriToDid(params.list),
+        uriToDid(ctx.params.list),
         skeleton.items.map((item) => uriToDid(item.post.uri)),
       ],
     ]),
@@ -79,16 +72,15 @@ const hydration: HydrationFn<Skeleton, QueryParams> = async ({
   })
 }
 
-const noBlocksOrMutes: RulesFn<Skeleton, QueryParams> = ({
+const noBlocksOrMutes: RulesFn<Skeleton, QueryParams> = (
   ctx,
-  params,
   skeleton,
   hydration,
-}) => {
+) => {
   skeleton.items = skeleton.items.filter((item) => {
     const bam = ctx.views.feedItemBlocksAndMutes(item, hydration)
     const creatorBlocks = hydration.bidirectionalBlocks?.get(
-      uriToDid(params.list),
+      uriToDid(ctx.params.list),
     )
     return (
       !bam.authorBlocked &&
@@ -102,11 +94,11 @@ const noBlocksOrMutes: RulesFn<Skeleton, QueryParams> = ({
   return skeleton
 }
 
-const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
+const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = (
   ctx,
   skeleton,
   hydration,
-}) => {
+) => {
   return {
     body: {
       feed: mapDefined(skeleton.items, (item) =>

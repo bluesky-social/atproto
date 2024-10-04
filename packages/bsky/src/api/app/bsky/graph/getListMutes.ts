@@ -32,35 +32,31 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton: SkeletonFn<Skeleton, QueryParams, StandardOutput> = async ({
+const skeleton: SkeletonFn<Skeleton, QueryParams, StandardOutput> = async (
   ctx,
-  params,
-}) => {
-  if (clearlyBadCursor(params.cursor)) {
+) => {
+  if (clearlyBadCursor(ctx.params.cursor)) {
     return { listUris: [] }
   }
 
   const { listUris, cursor } =
     await ctx.hydrator.dataplane.getMutelistSubscriptions({
       actorDid: ctx.viewer,
-      cursor: params.cursor,
-      limit: params.limit,
+      cursor: ctx.params.cursor,
+      limit: ctx.params.limit,
     })
   return { listUris, cursor: cursor || undefined }
 }
 
-const hydration: HydrationFn<Skeleton, QueryParams> = async ({
-  ctx,
-  skeleton,
-}) => {
+const hydration: HydrationFn<Skeleton, QueryParams> = async (ctx, skeleton) => {
   return ctx.hydrator.hydrateLists(skeleton.listUris, ctx)
 }
 
-const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
+const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = (
   ctx,
   skeleton,
   hydration,
-}) => {
+) => {
   const { listUris, cursor } = skeleton
   const lists = mapDefined(listUris, (uri) => ctx.views.list(uri, hydration))
   return { body: { lists, cursor } }

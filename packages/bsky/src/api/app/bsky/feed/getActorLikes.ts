@@ -36,10 +36,8 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({
-  ctx,
-  params: { actor, limit, cursor },
-}) => {
+const skeleton: SkeletonFn<Skeleton, QueryParams> = async (ctx) => {
+  const { actor, limit, cursor } = ctx.params
   const viewer = ctx.viewer
   if (clearlyBadCursor(cursor)) {
     return { items: [] }
@@ -63,18 +61,15 @@ const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({
   }
 }
 
-const hydration: HydrationFn<Skeleton, QueryParams> = async ({
-  ctx,
-  skeleton,
-}) => {
+const hydration: HydrationFn<Skeleton, QueryParams> = async (ctx, skeleton) => {
   return ctx.hydrator.hydrateFeedItems(skeleton.items, ctx)
 }
 
-const noPostBlocks: RulesFn<Skeleton, QueryParams> = ({
+const noPostBlocks: RulesFn<Skeleton, QueryParams> = (
   ctx,
   skeleton,
   hydration,
-}) => {
+) => {
   skeleton.items = skeleton.items.filter((item) => {
     const creator = creatorFromUri(item.post.uri)
     return !ctx.views.viewerBlockExists(creator, hydration)
@@ -82,11 +77,11 @@ const noPostBlocks: RulesFn<Skeleton, QueryParams> = ({
   return skeleton
 }
 
-const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
+const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = (
   ctx,
   skeleton,
   hydration,
-}) => {
+) => {
   const feed = mapDefined(skeleton.items, (item) =>
     ctx.views.feedViewPost(item, hydration),
   )

@@ -33,7 +33,9 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({ ctx, params }) => {
+const skeleton: SkeletonFn<Skeleton, QueryParams> = async (ctx) => {
+  const { params } = ctx
+
   if (clearlyBadCursor(params.cursor)) {
     return { uris: [] }
   }
@@ -48,21 +50,14 @@ const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({ ctx, params }) => {
   }
 }
 
-const hydration: HydrationFn<Skeleton, QueryParams> = async ({
-  ctx,
-  skeleton,
-}) => {
+const hydration: HydrationFn<Skeleton, QueryParams> = async (ctx, skeleton) => {
   return ctx.hydrator.hydratePosts(
     skeleton.uris.map((uri) => ({ uri })),
     ctx,
   )
 }
 
-const noBlocks: RulesFn<Skeleton, QueryParams> = ({
-  ctx,
-  skeleton,
-  hydration,
-}) => {
+const noBlocks: RulesFn<Skeleton, QueryParams> = (ctx, skeleton, hydration) => {
   skeleton.uris = skeleton.uris.filter((uri) => {
     const embedBlock = hydration.postBlocks?.get(uri)?.embed
     const authorDid = uriToDid(uri)
@@ -71,12 +66,11 @@ const noBlocks: RulesFn<Skeleton, QueryParams> = ({
   return skeleton
 }
 
-const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
+const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = (
   ctx,
   skeleton,
   hydration,
-  params,
-}) => {
+) => {
   const postViews = mapDefined(skeleton.uris, (uri) => {
     return ctx.views.post(uri, hydration)
   })
@@ -84,8 +78,8 @@ const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
     body: {
       posts: postViews,
       cursor: skeleton.cursor,
-      uri: params.uri,
-      cid: params.cid,
+      uri: ctx.params.uri,
+      cid: ctx.params.cid,
     },
   }
 }

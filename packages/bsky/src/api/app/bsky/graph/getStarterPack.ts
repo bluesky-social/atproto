@@ -30,23 +30,20 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({ ctx, params }) => {
-  const uri = await ctx.hydrator.resolveUri(params.starterPack)
+const skeleton: SkeletonFn<Skeleton, QueryParams> = async (ctx) => {
+  const uri = await ctx.hydrator.resolveUri(ctx.params.starterPack)
   return { uri }
 }
 
-const hydration: HydrationFn<Skeleton, QueryParams> = async ({
-  ctx,
-  skeleton,
-}) => {
+const hydration: HydrationFn<Skeleton, QueryParams> = async (ctx, skeleton) => {
   return ctx.hydrator.hydrateStarterPacks([skeleton.uri], ctx)
 }
 
-const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
+const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = (
   ctx,
   skeleton,
   hydration,
-}) => {
+) => {
   const starterPack = ctx.views.starterPack(skeleton.uri, hydration)
   if (!starterPack) {
     throw new InvalidRequestError('Starter pack not found')

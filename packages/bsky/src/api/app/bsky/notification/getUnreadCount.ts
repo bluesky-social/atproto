@@ -29,8 +29,8 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({ params, ctx }) => {
-  if (params.seenAt) {
+const skeleton: SkeletonFn<Skeleton, QueryParams> = async (ctx) => {
+  if (ctx.params.seenAt) {
     throw new InvalidRequestError('The seenAt parameter is unsupported')
   }
 
@@ -40,7 +40,7 @@ const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({ params, ctx }) => {
   }
 
   const priority =
-    params.priority ??
+    ctx.params.priority ??
     !!(await ctx.hydrator.actor.getActors([actorDid])).get(actorDid)
       ?.priorityNotifications
 
@@ -58,8 +58,9 @@ const hydration: HydrationFn<Skeleton, QueryParams> = async (_input) => {
   return {}
 }
 
-const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
+const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = (
+  ctx,
   skeleton,
-}) => {
+) => {
   return { body: { count: skeleton.count } }
 }

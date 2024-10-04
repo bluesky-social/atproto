@@ -35,19 +35,19 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({ ctx, params }) => {
-  if (clearlyBadCursor(params.cursor)) {
+const skeleton: SkeletonFn<Skeleton, QueryParams> = async (ctx) => {
+  if (clearlyBadCursor(ctx.params.cursor)) {
     return { likes: [] }
   }
-  if (looksLikeNonSortedCursor(params.cursor)) {
+  if (looksLikeNonSortedCursor(ctx.params.cursor)) {
     throw new InvalidRequestError(
       'Cursor appear to be out of date, please try reloading.',
     )
   }
   const likesRes = await ctx.hydrator.dataplane.getLikesBySubjectSorted({
-    subject: { uri: params.uri, cid: params.cid },
-    cursor: params.cursor,
-    limit: params.limit,
+    subject: { uri: ctx.params.uri, cid: ctx.params.cid },
+    cursor: ctx.params.cursor,
+    limit: ctx.params.limit,
   })
   return {
     likes: likesRes.uris,
@@ -55,18 +55,11 @@ const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({ ctx, params }) => {
   }
 }
 
-const hydration: HydrationFn<Skeleton, QueryParams> = async ({
-  ctx,
-  skeleton,
-}) => {
+const hydration: HydrationFn<Skeleton, QueryParams> = async (ctx, skeleton) => {
   return ctx.hydrator.hydrateLikes(skeleton.likes, ctx)
 }
 
-const noBlocks: RulesFn<Skeleton, QueryParams> = ({
-  ctx,
-  skeleton,
-  hydration,
-}) => {
+const noBlocks: RulesFn<Skeleton, QueryParams> = (ctx, skeleton, hydration) => {
   skeleton.likes = skeleton.likes.filter((uri) => {
     const creator = creatorFromUri(uri)
     return !ctx.views.viewerBlockExists(creator, hydration)
@@ -74,12 +67,11 @@ const noBlocks: RulesFn<Skeleton, QueryParams> = ({
   return skeleton
 }
 
-const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
+const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = (
   ctx,
-  params,
   skeleton,
   hydration,
-}) => {
+) => {
   const likeViews = mapDefined(skeleton.likes, (uri) => {
     const like = hydration.likes?.get(uri)
     if (!like || !like.record) {
@@ -100,8 +92,8 @@ const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
     body: {
       likes: likeViews,
       cursor: skeleton.cursor,
-      uri: params.uri,
-      cid: params.cid,
+      uri: ctx.params.uri,
+      cid: ctx.params.cid,
     },
   }
 }

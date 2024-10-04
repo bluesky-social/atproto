@@ -31,18 +31,17 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton: SkeletonFn<Skeleton, QueryParams, StandardOutput> = async ({
+const skeleton: SkeletonFn<Skeleton, QueryParams, StandardOutput> = async (
   ctx,
-  params,
-}) => {
-  if (clearlyBadCursor(params.cursor)) {
+) => {
+  if (clearlyBadCursor(ctx.params.cursor)) {
     return { mutedDids: [] }
   }
 
   const { dids, cursor } = await ctx.hydrator.dataplane.getMutes({
     actorDid: ctx.viewer,
-    cursor: params.cursor,
-    limit: params.limit,
+    cursor: ctx.params.cursor,
+    limit: ctx.params.limit,
   })
   return {
     mutedDids: dids,
@@ -50,18 +49,15 @@ const skeleton: SkeletonFn<Skeleton, QueryParams, StandardOutput> = async ({
   }
 }
 
-const hydration: HydrationFn<Skeleton, QueryParams> = async ({
-  ctx,
-  skeleton,
-}) => {
+const hydration: HydrationFn<Skeleton, QueryParams> = async (ctx, skeleton) => {
   return ctx.hydrator.hydrateProfiles(skeleton.mutedDids, ctx)
 }
 
-const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
+const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = (
   ctx,
   skeleton,
   hydration,
-}) => {
+) => {
   const { mutedDids, cursor } = skeleton
   const mutes = mapDefined(mutedDids, (did) => {
     return ctx.views.profile(did, hydration)

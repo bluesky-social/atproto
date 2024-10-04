@@ -8,7 +8,6 @@ import {
   serverTimingHeader,
 } from '@atproto/xrpc-server'
 
-import { IncomingHttpHeaders } from 'node:http'
 import AppContext from '../../../../context'
 import {
   Code,
@@ -63,18 +62,14 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({
-  ctx,
-  params,
-  headers,
-}) => {
+const skeleton: SkeletonFn<Skeleton, QueryParams> = async (ctx) => {
   const timerSkele = new ServerTimer('skele').start()
   const {
     feedItems: algoItems,
     cursor,
     resHeaders,
     ...passthrough
-  } = await skeletonFromFeedGen(ctx, params, headers)
+  } = await skeletonFromFeedGen(ctx)
 
   return {
     cursor,
@@ -86,21 +81,18 @@ const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({
   }
 }
 
-const hydration: HydrationFn<Skeleton, QueryParams> = async ({
-  ctx,
-  skeleton,
-}) => {
+const hydration: HydrationFn<Skeleton, QueryParams> = async (ctx, skeleton) => {
   const timerHydr = new ServerTimer('hydr').start()
   const hydration = await ctx.hydrator.hydrateFeedItems(skeleton.items, ctx)
   skeleton.timerHydr = timerHydr.stop()
   return hydration
 }
 
-const noBlocksOrMutes: RulesFn<Skeleton, QueryParams> = ({
+const noBlocksOrMutes: RulesFn<Skeleton, QueryParams> = (
   ctx,
   skeleton,
   hydration,
-}) => {
+) => {
   skeleton.items = skeleton.items.filter((item) => {
     const bam = ctx.views.feedItemBlocksAndMutes(item, hydration)
     return (
@@ -114,12 +106,11 @@ const noBlocksOrMutes: RulesFn<Skeleton, QueryParams> = ({
   return skeleton
 }
 
-const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
+const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = (
   ctx,
-  params,
   skeleton,
   hydration,
-}) => {
+) => {
   const feed = mapDefined(skeleton.items, (item) => {
     const post = ctx.views.feedViewPost(item, hydration)
     if (!post) return
@@ -127,7 +118,7 @@ const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
       ...post,
       feedContext: item.feedContext,
     }
-  }).slice(0, params.limit)
+  }).slice(0, ctx.params.limit)
   return {
     headers: {
       ...skeleton.resHeaders,
@@ -146,11 +137,9 @@ const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
 }
 
 async function skeletonFromFeedGen(
-  ctx: HydrateCtx,
-  params: QueryParams,
-  headers: IncomingHttpHeaders,
+  ctx: HydrateCtx<QueryParams>,
 ): Promise<AlgoResponse> {
-  const { feed } = params
+  const { feed } = ctx.params
   const found = await ctx.hydrator.feed.getFeedGens([feed], true)
   const feedDid = await found.get(feed)?.record.did
   if (!feedDid) {
@@ -186,17 +175,17 @@ async function skeletonFromFeedGen(
     // @TODO currently passthrough auth headers from pds
     const result = await agent.api.app.bsky.feed.getFeedSkeleton(
       {
-        feed: params.feed,
-        limit: params.limit,
-        cursor: params.cursor,
+        feed: ctx.params.feed,
+        limit: ctx.params.limit,
+        cursor: ctx.params.cursor,
       },
       {
         headers: noUndefinedVals({
-          authorization: headers['authorization'],
-          'accept-language': headers['accept-language'],
-          'x-bsky-topics': Array.isArray(headers['x-bsky-topics'])
-            ? headers['x-bsky-topics'].join(',')
-            : headers['x-bsky-topics'],
+          authorization: ctx.headers['authorization'],
+          'accept-language': ctx.headers['accept-language'],
+          'x-bsky-topics': Array.isArray(ctx.headers['x-bsky-topics'])
+            ? ctx.headers['x-bsky-topics'].join(',')
+            : ctx.headers['x-bsky-topics'],
         }),
       },
     )

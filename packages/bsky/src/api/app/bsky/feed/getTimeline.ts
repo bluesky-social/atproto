@@ -34,10 +34,11 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton: SkeletonFn<Skeleton, QueryParams, StandardOutput> = async ({
+const skeleton: SkeletonFn<Skeleton, QueryParams, StandardOutput> = async (
   ctx,
-  params,
-}) => {
+) => {
+  const { params } = ctx
+
   if (clearlyBadCursor(params.cursor)) {
     return { items: [] }
   }
@@ -58,18 +59,15 @@ const skeleton: SkeletonFn<Skeleton, QueryParams, StandardOutput> = async ({
   }
 }
 
-const hydration: HydrationFn<Skeleton, QueryParams> = async ({
-  ctx,
-  skeleton,
-}) => {
+const hydration: HydrationFn<Skeleton, QueryParams> = async (ctx, skeleton) => {
   return ctx.hydrator.hydrateFeedItems(skeleton.items, ctx)
 }
 
-const noBlocksOrMutes: RulesFn<Skeleton, QueryParams> = ({
+const noBlocksOrMutes: RulesFn<Skeleton, QueryParams> = (
   ctx,
   skeleton,
   hydration,
-}) => {
+) => {
   skeleton.items = skeleton.items.filter((item) => {
     const bam = ctx.views.feedItemBlocksAndMutes(item, hydration)
     return (
@@ -83,11 +81,11 @@ const noBlocksOrMutes: RulesFn<Skeleton, QueryParams> = ({
   return skeleton
 }
 
-const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
+const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = (
   ctx,
   skeleton,
   hydration,
-}) => {
+) => {
   const feed = mapDefined(skeleton.items, (item) =>
     ctx.views.feedViewPost(item, hydration),
   )

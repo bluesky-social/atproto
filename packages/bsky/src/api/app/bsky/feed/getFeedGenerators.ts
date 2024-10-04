@@ -35,18 +35,15 @@ const skeleton: SkeletonFn<Skeleton, QueryParams> = async ({ params }) => {
   }
 }
 
-const hydration: HydrationFn<Skeleton, QueryParams> = async ({
-  ctx,
-  skeleton,
-}) => {
+const hydration: HydrationFn<Skeleton, QueryParams> = async (ctx, skeleton) => {
   return ctx.hydrator.hydrateFeedGens(skeleton.feedUris, ctx)
 }
 
-const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = ({
+const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = (
   ctx,
   skeleton,
   hydration,
-}) => {
+) => {
   const feeds = mapDefined(skeleton.feedUris, (uri) =>
     ctx.views.feedGenerator(uri, hydration),
   )
