@@ -116,7 +116,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
             .selectFrom('follow')
             .select(sql<boolean>`${true}`.as('val'))
             .where('creator', '=', actorDid)
-            .whereRef('subjectDid', '=', ref('notif.author')),
+            .whereRef('subjectDid', '=', ref('notification.author')),
         ),
       )
       .executeTakeFirst()

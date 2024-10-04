@@ -21,7 +21,7 @@ export default function (server: Server, ctx: AppContext) {
           timestamp: Timestamp.fromDate(seenAt),
           priority: true,
         }),
-        ctx.courierClient.pushNotifications({
+        ctx.courierClient?.pushNotifications({
           notifications: [
             {
               id: getNotifId(viewer, seenAt),
