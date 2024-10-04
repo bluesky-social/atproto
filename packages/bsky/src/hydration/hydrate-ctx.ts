@@ -56,13 +56,8 @@ export class HydrateCtx<
     return this.vals.labelers
   }
 
-  get viewer() {
-    const { auth } = this
-    return (
-      auth.credentials.type === 'standard'
-        ? auth.credentials.iss.split('#')[0]
-        : null
-    ) as Auth extends { credentials: { type: 'standard' } } ? string : null
+  get viewer(): Viewer<Auth> {
+    return viewer(this.auth)
   }
 
   get includeTakedowns(): boolean {
@@ -123,3 +118,14 @@ export class HydrateCtx<
     }
   }
 }
+
+export type Viewer<Auth extends Creds> = Auth extends {
+  credentials: { type: 'standard' }
+}
+  ? Auth['credentials']['iss']
+  : null
+export const viewer = <Auth extends Creds>(auth: Auth) =>
+  (auth.credentials.type === 'standard'
+    ? // @TODO: is there ever actually a service id in the "iss" when the type is "standard"?
+      auth.credentials.iss.split('#')[0]
+    : null) as Viewer<Auth>
