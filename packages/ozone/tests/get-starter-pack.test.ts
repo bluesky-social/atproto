@@ -8,6 +8,7 @@ import {
 import { AtpAgent } from '@atproto/api'
 import { forSnapshot } from './_util'
 import { TAKEDOWN_LABEL } from '../src/mod-service'
+import { ids } from '../src/lexicon/lexicons'
 
 describe('admin get starter pack view', () => {
   let network: TestNetwork
@@ -51,7 +52,7 @@ describe('admin get starter pack view', () => {
     it('gets a starterpack by uri', async () => {
       const result = await agent.api.app.bsky.graph.getStarterPack(
         { starterPack: sp1.uriStr },
-        { headers: await ozone.modHeaders() },
+        { headers: await ozone.modHeaders(ids.AppBskyGraphGetStarterPack) },
       )
       expect(forSnapshot(result.data)).toMatchSnapshot()
     })
@@ -62,7 +63,12 @@ describe('admin get starter pack view', () => {
       const beforeTakedownFromAppview =
         await appviewAgent.api.app.bsky.graph.getStarterPack(
           { starterPack: sp1.uriStr },
-          { headers: await network.serviceHeaders(sc.dids.alice) },
+          {
+            headers: await network.serviceHeaders(
+              sc.dids.alice,
+              ids.AppBskyGraphGetStarterPack,
+            ),
+          },
         )
 
       expect(
@@ -84,7 +90,7 @@ describe('admin get starter pack view', () => {
       const afterTakedownFromOzone =
         await agent.api.app.bsky.graph.getStarterPack(
           { starterPack: sp1.uriStr },
-          { headers: await ozone.modHeaders() },
+          { headers: await ozone.modHeaders(ids.AppBskyGraphGetStarterPack) },
         )
 
       // validate that ozone returns starterpacks after takedown
@@ -96,7 +102,12 @@ describe('admin get starter pack view', () => {
       await expect(
         appviewAgent.api.app.bsky.graph.getStarterPack(
           { starterPack: sp1.uriStr },
-          { headers: await network.serviceHeaders(sc.dids.alice) },
+          {
+            headers: await network.serviceHeaders(
+              sc.dids.alice,
+              ids.AppBskyGraphGetStarterPack,
+            ),
+          },
         ),
       ).rejects.toThrow('Starter pack not found')
     })

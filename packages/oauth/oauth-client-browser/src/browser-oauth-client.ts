@@ -3,17 +3,15 @@ import {
   AuthorizeOptions,
   ClientMetadata,
   Fetch,
-  OAuthAtpAgent,
   OAuthCallbackError,
   OAuthClient,
+  OAuthSession,
   SessionEventMap,
 } from '@atproto/oauth-client'
 import {
+  assertOAuthDiscoverableClientId,
   atprotoLoopbackClientMetadata,
-  isOAuthClientIdDiscoverable,
   isOAuthClientIdLoopback,
-  OAuthClientIdDiscoverable,
-  OAuthClientIdLoopback,
   OAuthClientMetadataInput,
 } from '@atproto/oauth-types'
 
@@ -63,16 +61,17 @@ export type BrowserOAuthClientLoadOptions = Omit<
   BrowserOAuthClientOptions,
   'clientMetadata'
 > & {
-  clientId: OAuthClientIdDiscoverable | OAuthClientIdLoopback
+  clientId: string
   signal?: AbortSignal
 }
 
 export class BrowserOAuthClient extends OAuthClient implements Disposable {
   static async load({ clientId, ...options }: BrowserOAuthClientLoadOptions) {
-    if (isOAuthClientIdLoopback(clientId)) {
+    if (clientId.startsWith('http:')) {
       const clientMetadata = atprotoLoopbackClientMetadata(clientId)
       return new BrowserOAuthClient({ clientMetadata, ...options })
-    } else if (isOAuthClientIdDiscoverable(clientId)) {
+    } else if (clientId.startsWith('https:')) {
+      assertOAuthDiscoverableClientId(clientId)
       const clientMetadata = await OAuthClient.fetchMetadata({
         clientId,
         ...options,
@@ -172,15 +171,15 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
 
     const signInResult = await this.signInCallback()
     if (signInResult) {
-      localStorage.setItem(`${NAMESPACE}(sub)`, signInResult.agent.did)
+      localStorage.setItem(`${NAMESPACE}(sub)`, signInResult.session.sub)
       return signInResult
     }
 
     const sub = localStorage.getItem(`${NAMESPACE}(sub)`)
     if (sub) {
       try {
-        const agent = await this.restore(sub, refresh)
-        return { agent }
+        const session = await this.restore(sub, refresh)
+        return { session }
       } catch (err) {
         localStorage.removeItem(`${NAMESPACE}(sub)`)
         throw err
@@ -188,10 +187,10 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
     }
   }
 
-  async restore(sub: string, refresh?: boolean) {
-    const agent = await super.restore(sub, refresh)
-    localStorage.setItem(`${NAMESPACE}(sub)`, agent.did)
-    return agent
+  async restore(sub: string, refresh?: boolean): Promise<OAuthSession> {
+    const session = await super.restore(sub, refresh)
+    localStorage.setItem(`${NAMESPACE}(sub)`, session.sub)
+    return session
   }
 
   async revoke(sub: string) {
@@ -202,7 +201,7 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
   signIn(
     input: string,
     options: AuthorizeOptions & { display: 'popup' },
-  ): Promise<OAuthAtpAgent>
+  ): Promise<OAuthSession>
   signIn(input: string, options?: AuthorizeOptions): Promise<never>
   async signIn(input: string, options?: AuthorizeOptions) {
     if (options?.display === 'popup') {
@@ -239,7 +238,7 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
   async signInPopup(
     input: string,
     options?: Omit<AuthorizeOptions, 'state'>,
-  ): Promise<OAuthAtpAgent> {
+  ): Promise<OAuthSession> {
     // Open new window asap to prevent popup busting by browsers
     const popupFeatures = 'width=600,height=600,menubar=no,toolbar=no'
     let popup: Window | null = window.open(
@@ -266,7 +265,7 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
 
     popup?.focus()
 
-    return new Promise<OAuthAtpAgent>((resolve, reject) => {
+    return new Promise<OAuthSession>((resolve, reject) => {
       const popupChannel = new BroadcastChannel(POPUP_CHANNEL_NAME)
 
       const cleanup = () => {
@@ -349,7 +348,11 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
 
     // Replace the current history entry without the params (this will prevent
     // the following code to run again if the user refreshes the page)
-    history.replaceState(null, '', location.pathname)
+    if (this.responseMode === 'fragment') {
+      history.replaceState(null, '', location.pathname + location.search)
+    } else if (this.responseMode === 'query') {
+      history.replaceState(null, '', location.pathname)
+    }
 
     // Utility function to send the result of the popup to the parent window
     const sendPopupResult = (message: PopupChannelResultData) => {
@@ -381,12 +384,12 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
             key: result.state.slice(POPUP_STATE_PREFIX.length),
             result: {
               status: 'fulfilled',
-              value: result.agent.did,
+              value: result.session.sub,
             },
           })
 
           // Revoke the credentials if the parent window was closed
-          if (!receivedByParent) await result.agent.signOut()
+          if (!receivedByParent) await result.session.signOut()
 
           throw new LoginContinuedInParentWindowError() // signInPopup
         }

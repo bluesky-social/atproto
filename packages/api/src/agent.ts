@@ -1,20 +1,20 @@
 import { TID } from '@atproto/common-web'
 import { AtUri, ensureValidDid } from '@atproto/syntax'
-import {
-  buildFetchHandler,
-  FetchHandler,
-  FetchHandlerOptions,
-} from '@atproto/xrpc'
+import { buildFetchHandler, FetchHandler, XrpcClient } from '@atproto/xrpc'
 import AwaitLock from 'await-lock'
 import {
   AppBskyActorDefs,
   AppBskyActorProfile,
   AppBskyFeedPost,
   AppBskyLabelerDefs,
-  AtpBaseClient,
+  AppNS,
+  ChatNS,
   ComAtprotoRepoPutRecord,
+  ComNS,
+  ToolsNS,
 } from './client/index'
-import { MutedWord } from './client/types/app/bsky/actor/defs'
+import { schemas } from './client/lexicons'
+import { MutedWord, Nux } from './client/types/app/bsky/actor/defs'
 import { BSKY_LABELER_DID } from './const'
 import { interpretLabelValueDefinitions } from './moderation'
 import { DEFAULT_LABEL_SETTINGS } from './moderation/const/labels'
@@ -23,6 +23,7 @@ import {
   LabelPreference,
   ModerationPrefs,
 } from './moderation/types'
+import { SessionManager } from './session-manager'
 import {
   AtpAgentGlobalOpts,
   AtprotoServiceType,
@@ -39,6 +40,7 @@ import {
   sanitizeMutedWordValue,
   savedFeedsToUriArrays,
   validateSavedFeed,
+  validateNux,
 } from './util'
 
 const FEED_VIEW_PREF_DEFAULTS = {
@@ -68,14 +70,13 @@ export type { FetchHandler }
 /**
  * An {@link Agent} is an {@link AtpBaseClient} with the following
  * additional features:
- * - Abstract session management utilities
  * - AT Protocol labelers configuration utilities
  * - AT Protocol proxy configuration utilities
  * - Cloning utilities
  * - `app.bsky` syntactic sugar
  * - `com.atproto` syntactic sugar
  */
-export abstract class Agent extends AtpBaseClient {
+export class Agent extends XrpcClient {
   //#region Static configuration
 
   /**
@@ -94,8 +95,18 @@ export abstract class Agent extends AtpBaseClient {
 
   //#endregion
 
-  constructor(fetchHandlerOpts: FetchHandler | FetchHandlerOptions) {
-    const fetchHandler = buildFetchHandler(fetchHandlerOpts)
+  com = new ComNS(this)
+  app = new AppNS(this)
+  chat = new ChatNS(this)
+  tools = new ToolsNS(this)
+
+  /** @deprecated use `this` instead */
+  get xrpc(): XrpcClient {
+    return this
+  }
+
+  constructor(readonly sessionManager: SessionManager) {
+    const fetchHandler = buildFetchHandler(sessionManager)
 
     super((url, init) => {
       const headers = new Headers(init?.headers)
@@ -118,16 +129,20 @@ export abstract class Agent extends AtpBaseClient {
       )
 
       return fetchHandler(url, { ...init, headers })
-    })
+    }, schemas)
   }
 
   //#region Cloning utilities
 
-  abstract clone(): Agent
+  clone(): Agent {
+    return this.copyInto(new Agent(this.sessionManager))
+  }
 
   copyInto<T extends Agent>(inst: T): T {
     inst.configureLabelers(this.labelers)
     inst.configureProxy(this.proxy ?? null)
+    inst.clearHeaders()
+    for (const [key, value] of this.headers) inst.setHeader(key, value)
     return inst
   }
 
@@ -185,12 +200,19 @@ export abstract class Agent extends AtpBaseClient {
   /**
    * Get the authenticated user's DID, if any.
    */
-  abstract readonly did?: string
+  get did() {
+    return this.sessionManager.did
+  }
+
+  /** @deprecated Use {@link Agent.assertDid} instead */
+  get accountDid() {
+    return this.assertDid
+  }
 
   /**
    * Get the authenticated user's DID, or throw an error if not authenticated.
    */
-  public get accountDid(): string {
+  get assertDid(): string {
     this.assertAuthenticated()
     return this.did
   }
@@ -549,6 +571,7 @@ export abstract class Agent extends AtpBaseClient {
       bskyAppState: {
         queuedNudges: [],
         activeProgressGuide: undefined,
+        nuxs: [],
       },
     }
     const res = await this.app.bsky.actor.getPreferences({})
@@ -653,6 +676,7 @@ export abstract class Agent extends AtpBaseClient {
         const { $type, ...v } = pref
         prefs.bskyAppState.queuedNudges = v.queuedNudges || []
         prefs.bskyAppState.activeProgressGuide = v.activeProgressGuide
+        prefs.bskyAppState.nuxs = v.nuxs || []
       }
     }
 
@@ -1341,6 +1365,82 @@ export abstract class Agent extends AtpBaseClient {
 
       bskyAppStatePref = bskyAppStatePref || {}
       bskyAppStatePref.activeProgressGuide = guide
+
+      return prefs
+        .filter((p) => !AppBskyActorDefs.isBskyAppStatePref(p))
+        .concat([
+          {
+            ...bskyAppStatePref,
+            $type: 'app.bsky.actor.defs#bskyAppStatePref',
+          },
+        ])
+    })
+  }
+
+  /**
+   * Insert or update a NUX in user prefs
+   */
+  async bskyAppUpsertNux(nux: Nux) {
+    validateNux(nux)
+
+    await this.updatePreferences((prefs: AppBskyActorDefs.Preferences) => {
+      let bskyAppStatePref: AppBskyActorDefs.BskyAppStatePref = prefs.findLast(
+        (pref) =>
+          AppBskyActorDefs.isBskyAppStatePref(pref) &&
+          AppBskyActorDefs.validateBskyAppStatePref(pref).success,
+      )
+
+      bskyAppStatePref = bskyAppStatePref || {}
+      bskyAppStatePref.nuxs = bskyAppStatePref.nuxs || []
+
+      const existing = bskyAppStatePref.nuxs?.find((n) => {
+        return n.id === nux.id
+      })
+
+      let next: AppBskyActorDefs.Nux
+
+      if (existing) {
+        next = {
+          id: existing.id,
+          completed: nux.completed,
+          data: nux.data,
+          expiresAt: nux.expiresAt,
+        }
+      } else {
+        next = nux
+      }
+
+      // remove duplicates and append
+      bskyAppStatePref.nuxs = bskyAppStatePref.nuxs
+        .filter((n) => n.id !== nux.id)
+        .concat(next)
+
+      return prefs
+        .filter((p) => !AppBskyActorDefs.isBskyAppStatePref(p))
+        .concat([
+          {
+            ...bskyAppStatePref,
+            $type: 'app.bsky.actor.defs#bskyAppStatePref',
+          },
+        ])
+    })
+  }
+
+  /**
+   * Removes NUXs from user preferences.
+   */
+  async bskyAppRemoveNuxs(ids: string[]) {
+    await this.updatePreferences((prefs: AppBskyActorDefs.Preferences) => {
+      let bskyAppStatePref: AppBskyActorDefs.BskyAppStatePref = prefs.findLast(
+        (pref) =>
+          AppBskyActorDefs.isBskyAppStatePref(pref) &&
+          AppBskyActorDefs.validateBskyAppStatePref(pref).success,
+      )
+
+      bskyAppStatePref = bskyAppStatePref || {}
+      bskyAppStatePref.nuxs = (bskyAppStatePref.nuxs || []).filter((nux) => {
+        return !ids.includes(nux.id)
+      })
 
       return prefs
         .filter((p) => !AppBskyActorDefs.isBskyAppStatePref(p))

@@ -56,19 +56,12 @@ export default function (server: Server, ctx: AppContext) {
 
 const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
   const { params, ctx } = input
-  const gates = ctx.featureGates
   const [relativeToDid] = await ctx.hydrator.actor.getDids([params.actor])
   if (!relativeToDid) {
     throw new InvalidRequestError('Actor not found')
   }
 
-  if (
-    ctx.suggestionsAgent &&
-    gates.check(
-      await gates.user({ did: params.hydrateCtx.viewer }),
-      gates.ids.NewSuggestedFollowsByActor,
-    )
-  ) {
+  if (ctx.suggestionsAgent) {
     const res =
       await ctx.suggestionsAgent.api.app.bsky.unspecced.getSuggestionsSkeleton(
         {
@@ -78,6 +71,7 @@ const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
         { headers: params.headers },
       )
     return {
+      isFallback: !res.data.relativeToDid,
       suggestedDids: res.data.actors.map((a) => a.did),
       headers: res.headers,
     }
@@ -87,6 +81,7 @@ const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
       relativeToDid,
     })
     return {
+      isFallback: true,
       suggestedDids: dids,
     }
   }
@@ -120,7 +115,7 @@ const presentation = (
   const suggestions = mapDefined(suggestedDids, (did) =>
     ctx.views.profileDetailed(did, hydration),
   )
-  return { suggestions, headers }
+  return { isFallback: skeleton.isFallback, suggestions, headers }
 }
 
 type Context = {
@@ -136,6 +131,7 @@ type Params = QueryParams & {
 }
 
 type SkeletonState = {
+  isFallback: boolean
   suggestedDids: string[]
   headers?: Record<string, string>
 }

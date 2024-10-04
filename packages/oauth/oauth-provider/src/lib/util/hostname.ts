@@ -1,15 +1,19 @@
 import { parse, ParsedDomain } from 'psl'
 
+export function isInternetUrl(url: URL): boolean {
+  return parseUrlPublicSuffix(url) !== null
+}
+
 export function isInternetHost(host: string): boolean {
-  return parseDomain(host) !== null
+  return parseDomainPublicSuffix(host) !== null
 }
 
-export function parseUrlDomain(input: string | URL): ParsedDomain | null {
-  const url = new URL(input)
-  return parseDomain(url.hostname)
+export function parseUrlPublicSuffix(input: string | URL): ParsedDomain | null {
+  const { hostname } = new URL(input)
+  return parseDomainPublicSuffix(hostname)
 }
 
-export function parseDomain(domain: string) {
+export function parseDomainPublicSuffix(domain: string): ParsedDomain | null {
   const parsed = parse(domain)
   if ('listed' in parsed && parsed.listed && parsed.domain) {
     return parsed

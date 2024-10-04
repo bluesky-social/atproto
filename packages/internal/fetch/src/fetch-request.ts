@@ -1,6 +1,6 @@
 import { FetchError } from './fetch-error.js'
 import { asRequest } from './fetch.js'
-import { isIp } from './util.js'
+import { extractUrl, isIp } from './util.js'
 
 export class FetchRequestError extends FetchError {
   constructor(
@@ -18,26 +18,35 @@ export class FetchRequestError extends FetchError {
   }
 }
 
-const extractUrl = (input: Request | string | URL) =>
-  typeof input === 'string'
-    ? new URL(input)
-    : input instanceof URL
-      ? input
-      : new URL(input.url)
-
-export function protocolCheckRequestTransform(protocols: Iterable<string>) {
-  const allowedProtocols = new Set<string>(protocols)
-
+export function protocolCheckRequestTransform(protocols: {
+  'about:'?: boolean
+  'blob:'?: boolean
+  'data:'?: boolean
+  'file:'?: boolean
+  'http:'?: boolean | { allowCustomPort: boolean }
+  'https:'?: boolean | { allowCustomPort: boolean }
+}) {
   return (input: Request | string | URL, init?: RequestInit) => {
-    const { protocol } = extractUrl(input)
+    const { protocol, port } = extractUrl(input)
 
     const request = asRequest(input, init)
 
-    if (!allowedProtocols.has(protocol)) {
+    const config: undefined | boolean | { allowCustomPort?: boolean } =
+      Object.hasOwn(protocols, protocol) ? protocols[protocol] : undefined
+
+    if (!config) {
       throw new FetchRequestError(
         request,
         400,
-        `"${protocol}" protocol is not allowed`,
+        `Forbidden protocol "${protocol}"`,
+      )
+    } else if (config === true) {
+      // Safe to proceed
+    } else if (!config['allowCustomPort'] && port !== '') {
+      throw new FetchRequestError(
+        request,
+        400,
+        `Custom ${protocol} ports not allowed`,
       )
     }
 
@@ -45,7 +54,23 @@ export function protocolCheckRequestTransform(protocols: Iterable<string>) {
   }
 }
 
-export function requireHostHeaderTranform() {
+export function redirectCheckRequestTransform() {
+  return (input: Request | string | URL, init?: RequestInit) => {
+    const request = asRequest(input, init)
+
+    if (request.redirect === 'follow') {
+      throw new FetchRequestError(
+        request,
+        500,
+        'Request redirect must be "error" or "manual"',
+      )
+    }
+
+    return request
+  }
+}
+
+export function requireHostHeaderTransform() {
   return (input: Request | string | URL, init?: RequestInit) => {
     // Note that fetch() will automatically add the Host header from the URL and
     // discard any Host header manually set in the request.
@@ -90,7 +115,7 @@ export function forbiddenDomainNameRequestTransform(
   // Optimization: if no forbidden domain names are provided, we can skip the
   // check entirely.
   if (denySet.size === 0) {
-    return async (request) => request
+    return asRequest
   }
 
   return async (input: Request | string | URL, init?: RequestInit) => {

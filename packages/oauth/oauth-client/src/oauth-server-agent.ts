@@ -1,10 +1,10 @@
 import { Fetch, Json, bindFetch, fetchJsonProcessor } from '@atproto-labs/fetch'
 import { SimpleStore } from '@atproto-labs/simple-store'
-import { Key, Keyset, SignedJwt } from '@atproto/jwk'
+import { Key, Keyset } from '@atproto/jwk'
 import {
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
   OAuthAuthorizationServerMetadata,
-  OAuthClientIdentification,
+  OAuthClientCredentials,
   OAuthEndpointName,
   OAuthParResponse,
   OAuthTokenResponse,
@@ -26,9 +26,8 @@ export type TokenSet = {
   iss: string
   sub: string
   aud: string
-  scope?: string
+  scope: string
 
-  id_token?: SignedJwt
   refresh_token?: string
   access_token: string
   token_type: OAuthTokenType
@@ -128,8 +127,17 @@ export class OAuthServerAgent {
     tokenResponse: OAuthTokenResponse,
   ): Promise<TokenSet> {
     const { sub } = tokenResponse
-    // ATPROTO requires that the "sub" is always present in the token response.
-    if (!sub) throw new TypeError(`Missing "sub" in token response`)
+
+    if (!sub || typeof sub !== 'string') {
+      throw new TypeError(`Unexpected ${typeof sub} "sub" in token response`)
+    }
+
+    // Using an array to check for the presence of the "atproto" scope (we don't
+    // want atproto to be a substring of another scope)
+    const scopes = tokenResponse.scope?.split(' ')
+    if (!scopes?.includes('atproto')) {
+      throw new TypeError('Missing "atproto" scope in token response')
+    }
 
     // @TODO (?) make timeout configurable
     using signal = timeoutSignal(10e3)
@@ -138,7 +146,7 @@ export class OAuthServerAgent {
       signal,
     })
 
-    if (resolved.metadata.issuer !== this.serverMetadata.issuer) {
+    if (this.serverMetadata.issuer !== resolved.metadata.issuer) {
       // Best case scenario; the user switched PDS. Worst case scenario; a bad
       // actor is trying to impersonate a user. In any case, we must not allow
       // this token to be used.
@@ -146,12 +154,12 @@ export class OAuthServerAgent {
     }
 
     return {
-      sub,
       aud: resolved.identity.pds.href,
       iss: resolved.metadata.issuer,
 
-      scope: tokenResponse.scope,
-      id_token: tokenResponse.id_token,
+      sub,
+
+      scope: tokenResponse.scope!,
       refresh_token: tokenResponse.refresh_token,
       access_token: tokenResponse.access_token,
       token_type: tokenResponse.token_type ?? 'Bearer',
@@ -203,15 +211,12 @@ export class OAuthServerAgent {
 
   async buildClientAuth(endpoint: OAuthEndpointName): Promise<{
     headers?: Record<string, string>
-    payload: OAuthClientIdentification
+    payload: OAuthClientCredentials
   }> {
     const methodSupported =
-      this.serverMetadata[`${endpoint}_endpoint_auth_methods_supported`] ||
       this.serverMetadata[`token_endpoint_auth_methods_supported`]
 
-    const method =
-      this.clientMetadata[`${endpoint}_endpoint_auth_method`] ||
-      this.clientMetadata[`token_endpoint_auth_method`]
+    const method = this.clientMetadata[`token_endpoint_auth_method`]
 
     if (
       method === 'private_key_jwt' ||
@@ -224,12 +229,8 @@ export class OAuthServerAgent {
       try {
         const alg =
           this.serverMetadata[
-            `${endpoint}_endpoint_auth_signing_alg_values_supported`
-          ] ??
-          this.serverMetadata[
             `token_endpoint_auth_signing_alg_values_supported`
-          ] ??
-          FALLBACK_ALG
+          ] ?? FALLBACK_ALG
 
         // If jwks is defined, make sure to only sign using a key that exists in
         // the jwks. If jwks_uri is defined, we can't be sure that the key we're

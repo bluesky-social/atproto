@@ -130,6 +130,13 @@ export default function (server: Server, ctx: AppContext) {
         body: {
           uri: write.uri.toString(),
           cid: write.cid.toString(),
+          commit: commit
+            ? {
+                cid: commit.cid.toString(),
+                rev: commit.rev,
+              }
+            : undefined,
+          validationStatus: write.validationStatus,
         },
       }
     },

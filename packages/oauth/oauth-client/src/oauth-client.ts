@@ -23,8 +23,6 @@ import {
 
 import { FALLBACK_ALG } from './constants.js'
 import { TokenRevokedError } from './errors/token-revoked-error.js'
-import { OAuthAgent } from './oauth-agent.js'
-import { OAuthAtpAgent } from './oauth-atp-agent.js'
 import {
   AuthorizationServerMetadataCache,
   OAuthAuthorizationServerMetadataResolver,
@@ -37,6 +35,7 @@ import {
 import { OAuthResolver } from './oauth-resolver.js'
 import { DpopNonceCache, OAuthServerAgent } from './oauth-server-agent.js'
 import { OAuthServerFactory } from './oauth-server-factory.js'
+import { OAuthSession } from './oauth-session.js'
 import { RuntimeImplementation } from './runtime-implementation.js'
 import { Runtime } from './runtime.js'
 import {
@@ -262,7 +261,6 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
       options,
     )
 
-    const nonce = await this.runtime.generateNonce()
     const pkce = await this.runtime.generatePKCE()
     const dpopKey = await this.runtime.generateKey(
       metadata.dpop_signing_alg_values_supported || [FALLBACK_ALG],
@@ -273,36 +271,25 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
     await this.stateStore.set(state, {
       iss: metadata.issuer,
       dpopKey,
-      nonce,
-      verifier: pkce?.verifier,
+      verifier: pkce.verifier,
       appState: options?.state,
     })
 
     const parameters = {
       client_id: this.clientMetadata.client_id,
       redirect_uri: redirectUri,
-      code_challenge: pkce?.challenge,
-      code_challenge_method: pkce?.method,
-      nonce,
+      code_challenge: pkce.challenge,
+      code_challenge_method: pkce.method,
       state,
       login_hint: identity
         ? input // If input is a handle or a DID, use it as a login_hint
         : undefined,
       response_mode: this.responseMode,
-      response_type:
-        // Negotiate by using the order in the client metadata
-        this.clientMetadata.response_types?.find((t) =>
-          metadata['response_types_supported']?.includes(t),
-        ) ?? 'code',
+      response_type: 'code',
 
       display: options?.display,
-      id_token_hint: options?.id_token_hint,
-      max_age: options?.max_age, // this.clientMetadata.default_max_age
       prompt: options?.prompt,
-      scope: options?.scope
-        ?.split(' ')
-        .filter((s) => metadata.scopes_supported?.includes(s))
-        .join(' '),
+      scope: options?.scope ?? this.clientMetadata.scope,
       ui_locales: options?.ui_locales,
     }
 
@@ -362,7 +349,7 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
   }
 
   async callback(params: URLSearchParams): Promise<{
-    agent: OAuthAtpAgent
+    session: OAuthSession
     state: string | null
   }> {
     const responseJwt = params.get('response')
@@ -435,26 +422,14 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
 
       const tokenSet = await server.exchangeCode(codeParam, stateData.verifier)
       try {
-        if (tokenSet.id_token) {
-          await this.runtime.validateIdTokenClaims(
-            tokenSet.id_token,
-            stateParam,
-            stateData.nonce,
-            codeParam,
-            tokenSet.access_token,
-          )
-        }
-
-        const { sub } = tokenSet
-
-        await this.sessionGetter.setStored(sub, {
+        await this.sessionGetter.setStored(tokenSet.sub, {
           dpopKey: stateData.dpopKey,
           tokenSet,
         })
 
-        const agent = this.createAgent(server, sub)
+        const session = this.createSession(server, tokenSet.sub)
 
-        return { agent, state: stateData.appState ?? null }
+        return { session, state: stateData.appState ?? null }
       } catch (err) {
         await server.revoke(tokenSet.access_token)
 
@@ -468,12 +443,12 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
   }
 
   /**
-   * Build an agent from a stored session. This will refresh the token only if
-   * needed (about to expire) by default.
+   * Load a stored session. This will refresh the token only if needed (about to
+   * expire) by default.
    *
    * @param refresh See {@link SessionGetter.getSession}
    */
-  async restore(sub: string, refresh?: boolean): Promise<OAuthAtpAgent> {
+  async restore(sub: string, refresh?: boolean): Promise<OAuthSession> {
     const { dpopKey, tokenSet } = await this.sessionGetter.getSession(
       sub,
       refresh,
@@ -484,7 +459,7 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
       allowStale: refresh === false,
     })
 
-    return this.createAgent(server, sub)
+    return this.createSession(server, sub)
   }
 
   async revoke(sub: string) {
@@ -504,14 +479,7 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
     }
   }
 
-  createAgent(server: OAuthServerAgent, sub: string): OAuthAtpAgent {
-    const oauthAgent = new OAuthAgent(
-      server,
-      sub,
-      this.sessionGetter,
-      this.fetch,
-    )
-
-    return new OAuthAtpAgent(oauthAgent)
+  protected createSession(server: OAuthServerAgent, sub: string): OAuthSession {
+    return new OAuthSession(server, sub, this.sessionGetter, this.fetch)
   }
 }

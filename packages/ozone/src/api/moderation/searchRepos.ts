@@ -1,6 +1,7 @@
 import { Server } from '../../lexicon'
 import AppContext from '../../context'
 import { mapDefined } from '@atproto/common'
+import { ids } from '../../lexicon/lexicons'
 
 export default function (server: Server, ctx: AppContext) {
   server.tools.ozone.moderation.searchRepos({
@@ -25,7 +26,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const res = await ctx.appviewAgent.api.app.bsky.actor.searchActors(
         params,
-        await ctx.appviewAuth(),
+        await ctx.appviewAuth(ids.AppBskyActorSearchActors),
       )
       const repoMap = await modService.views.repos(
         res.data.actors.map((a) => a.did),

@@ -40,6 +40,11 @@
                 "type": "ref",
                 "ref": "app.bsky.unspecced.defs#skeletonSearchActor"
               }
+            },
+            "relativeToDid": {
+              "type": "string",
+              "format": "did",
+              "description": "DID of the account these suggestions are relative to. If this is returned undefined, suggestions are based on the viewer."
             }
           }
         }

@@ -9,6 +9,7 @@ import {
 import { AtpAgent } from '@atproto/api'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import { LABELER_HEADER_NAME } from '../src/util'
+import { ids } from '../src/lexicon/lexicons'
 
 describe('labels from 3p labelers', () => {
   let network: TestNetwork
@@ -170,11 +171,17 @@ describe('labels from 3p labelers', () => {
       ] = await Promise.all([
         agent.api.tools.ozone.moderation.getRecord(
           { uri: sc.posts[sc.dids.alice][0].ref.uriStr },
-          { headers: await ozone.modHeaders() },
+          {
+            headers: await ozone.modHeaders(ids.ToolsOzoneModerationGetRecord),
+          },
         ),
         thirdPartyAgent.api.tools.ozone.moderation.getRecord(
           { uri: sc.posts[sc.dids.alice][0].ref.uriStr },
-          { headers: await thirdPartyLabeler.modHeaders() },
+          {
+            headers: await thirdPartyLabeler.modHeaders(
+              ids.ToolsOzoneModerationGetRecord,
+            ),
+          },
         ),
       ])
 
@@ -189,7 +196,9 @@ describe('labels from 3p labelers', () => {
     })
 
     it('includes labels from all authorities requested via header', async () => {
-      const authHeaders = await ozone.modHeaders()
+      const authHeaders = await ozone.modHeaders(
+        ids.ToolsOzoneModerationGetRecord,
+      )
       const { data: recordIncludingExternalLabels } =
         await agent.api.tools.ozone.moderation.getRecord(
           { uri: sc.posts[sc.dids.alice][0].ref.uriStr },
@@ -225,11 +234,17 @@ describe('labels from 3p labelers', () => {
         await Promise.all([
           agent.api.tools.ozone.moderation.getRepo(
             { did: sc.dids.alice },
-            { headers: await ozone.modHeaders() },
+            {
+              headers: await ozone.modHeaders(ids.ToolsOzoneModerationGetRepo),
+            },
           ),
           thirdPartyAgent.api.tools.ozone.moderation.getRepo(
             { did: sc.dids.alice },
-            { headers: await thirdPartyLabeler.modHeaders() },
+            {
+              headers: await thirdPartyLabeler.modHeaders(
+                ids.ToolsOzoneModerationGetRepo,
+              ),
+            },
           ),
         ])
 
@@ -244,7 +259,9 @@ describe('labels from 3p labelers', () => {
     })
 
     it('includes labels from all authorities requested via header', async () => {
-      const authHeaders = await ozone.modHeaders()
+      const authHeaders = await ozone.modHeaders(
+        ids.ToolsOzoneModerationGetRepo,
+      )
       const { data: recordIncludingExternalLabels } =
         await agent.api.tools.ozone.moderation.getRepo(
           { did: sc.dids.alice },

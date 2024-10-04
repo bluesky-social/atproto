@@ -10,7 +10,11 @@ export type Config = {
 }
 
 export enum GateID {
-  NewSuggestedFollowsByActor = 'new_sugg_foll_by_actor',
+  /**
+   * Left here ensure this is interpreted as a string enum and therefore
+   * appease TS
+   */
+  _ = '',
 }
 
 /**

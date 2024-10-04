@@ -4,8 +4,10 @@ import { ValidationError } from '@atproto/lexicon'
 export type QueryParams = Record<string, any>
 export type HeadersMap = Record<string, string>
 
-/** @deprecated not to be confused with the WHATWG Headers constructor */
-export type Headers = HeadersMap
+export type {
+  /** @deprecated not to be confused with the WHATWG Headers constructor */
+  HeadersMap as Headers,
+}
 
 export type Gettable<T> = T | (() => T)
 
@@ -29,7 +31,9 @@ export enum ResponseType {
   AuthRequired = 401,
   Forbidden = 403,
   XRPCNotSupported = 404,
+  NotAcceptable = 406,
   PayloadTooLarge = 413,
+  UnsupportedMediaType = 415,
   RateLimitExceeded = 429,
   InternalServerError = 500,
   MethodNotImplemented = 501,
@@ -63,6 +67,7 @@ export const ResponseTypeNames = {
   [ResponseType.Forbidden]: 'Forbidden',
   [ResponseType.XRPCNotSupported]: 'XRPCNotSupported',
   [ResponseType.PayloadTooLarge]: 'PayloadTooLarge',
+  [ResponseType.UnsupportedMediaType]: 'UnsupportedMediaType',
   [ResponseType.RateLimitExceeded]: 'RateLimitExceeded',
   [ResponseType.InternalServerError]: 'InternalServerError',
   [ResponseType.MethodNotImplemented]: 'MethodNotImplemented',
@@ -84,6 +89,7 @@ export const ResponseTypeStrings = {
   [ResponseType.Forbidden]: 'Forbidden',
   [ResponseType.XRPCNotSupported]: 'XRPC Not Supported',
   [ResponseType.PayloadTooLarge]: 'Payload Too Large',
+  [ResponseType.UnsupportedMediaType]: 'Unsupported Media Type',
   [ResponseType.RateLimitExceeded]: 'Rate Limit Exceeded',
   [ResponseType.InternalServerError]: 'Internal Server Error',
   [ResponseType.MethodNotImplemented]: 'Method Not Implemented',
@@ -101,7 +107,7 @@ export class XRPCResponse {
 
   constructor(
     public data: any,
-    public headers: Headers,
+    public headers: HeadersMap,
   ) {}
 }
 
@@ -114,7 +120,7 @@ export class XRPCError extends Error {
     statusCode: number,
     public error: string = httpResponseCodeToName(statusCode),
     message?: string,
-    public headers?: Headers,
+    public headers?: HeadersMap,
     options?: ErrorOptions,
   ) {
     super(message || error || httpResponseCodeToString(statusCode), options)
@@ -133,22 +139,37 @@ export class XRPCError extends Error {
       return cause
     }
 
-    // Extract status code from "http-errors" like errors
-    const statusCode: unknown =
-      cause instanceof Error
-        ? ('statusCode' in cause ? cause.statusCode : undefined) ??
-          ('status' in cause ? cause.status : undefined)
-        : undefined
+    // Type cast the cause to an Error if it is one
+    const causeErr = cause instanceof Error ? cause : undefined
 
+    // Try and find a Response object in the cause
+    const causeResponse: Response | undefined =
+      cause instanceof Response
+        ? cause
+        : cause?.['response'] instanceof Response
+          ? cause['response']
+          : undefined
+
+    const statusCode: unknown =
+      // Extract status code from "http-errors" like errors
+      causeErr?.['statusCode'] ??
+      causeErr?.['status'] ??
+      // Use the status code from the response object as fallback
+      causeResponse?.status
+
+    // Convert the status code to a ResponseType
     const status: ResponseType =
       typeof statusCode === 'number'
         ? httpResponseCodeToEnum(statusCode)
         : fallbackStatus ?? ResponseType.Unknown
 
-    const error = ResponseTypeNames[status]
-    const message = cause instanceof Error ? cause.message : String(cause)
+    const message = causeErr?.message ?? String(cause)
 
-    return new XRPCError(status, error, message, undefined, { cause })
+    const headers = causeResponse
+      ? Object.fromEntries(causeResponse.headers.entries())
+      : undefined
+
+    return new XRPCError(status, undefined, message, headers, { cause })
   }
 }
 

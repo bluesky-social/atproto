@@ -1,6 +1,6 @@
 import { Key, Keyset, isSignedJwt } from '@atproto/jwk'
 import {
-  AccessToken,
+  OAuthAccessToken,
   OAuthTokenType,
   oauthIssuerIdentifierSchema,
 } from '@atproto/oauth-types'
@@ -36,8 +36,7 @@ export type OAuthVerifierOptions = Override<
     issuer: URL | string
 
     /**
-     * The keyset used to sign tokens. Note that OIDC requires that at least one
-     * RS256 key is present in the keyset. ATPROTO requires ES256.
+     * The keyset used to sign access tokens.
      */
     keyset: Keyset | Iterable<Key | undefined | null | false>
 
@@ -155,7 +154,7 @@ export class OAuthVerifier {
 
   protected async authenticateToken(
     tokenType: OAuthTokenType,
-    token: AccessToken,
+    token: OAuthAccessToken,
     dpopJkt: string | null,
     verifyOptions?: VerifyTokenClaimsOptions,
   ): Promise<VerifyTokenClaimsResult> {

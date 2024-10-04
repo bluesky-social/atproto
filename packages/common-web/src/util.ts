@@ -9,6 +9,36 @@ export const noUndefinedVals = <T>(
   return obj as Record<string, T>
 }
 
+/**
+ * Returns a shallow copy of the object without the specified keys. If the input
+ * is nullish, it returns the input.
+ */
+export function omit<
+  T extends undefined | null | Record<string, unknown>,
+  K extends keyof NonNullable<T>,
+>(
+  object: T,
+  rejectedKeys: readonly K[],
+): T extends undefined ? undefined : T extends null ? null : Omit<T, K>
+export function omit(
+  src: undefined | null | Record<string, unknown>,
+  rejectedKeys: readonly string[],
+): undefined | null | Record<string, unknown> {
+  // Hot path
+
+  if (!src) return src
+
+  const dst = {}
+  const srcKeys = Object.keys(src)
+  for (let i = 0; i < srcKeys.length; i++) {
+    const key = srcKeys[i]
+    if (!rejectedKeys.includes(key)) {
+      dst[key] = src[key]
+    }
+  }
+  return dst
+}
+
 export const jitter = (maxMs: number) => {
   return Math.round((Math.random() - 0.5) * maxMs * 2)
 }

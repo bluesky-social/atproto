@@ -1,6 +1,6 @@
 {
   "name": "@atproto/api",
-  "version": "0.13.1",
+  "version": "0.13.11",
   "license": "MIT",
   "description": "Client library for atproto and Bluesky",
   "keywords": [
@@ -28,7 +28,8 @@
     "@atproto/xrpc": "workspace:^",
     "await-lock": "^2.2.2",
     "multiformats": "^9.9.0",
-    "tlds": "^1.234.0"
+    "tlds": "^1.234.0",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@atproto/lex-cli": "workspace:^",

@@ -1,5 +1,88 @@
 # @atproto/api
 
+## 0.13.11
+
+### Patch Changes
+
+- [#2857](https://github.com/bluesky-social/atproto/pull/2857) [`a0531ce42`](https://github.com/bluesky-social/atproto/commit/a0531ce429f5139cb0e2cc19aa9b338599947e44) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Adds support for muting words within link cards attached to `RecordWithMedia` embeds.
+
+## 0.13.10
+
+### Patch Changes
+
+- [#2855](https://github.com/bluesky-social/atproto/pull/2855) [`df14df522`](https://github.com/bluesky-social/atproto/commit/df14df522bb7986e56ee1f6a0f5d862e1ea6f4d5) Thanks [@dholms](https://github.com/dholms)! - Add tools.ozone.signature lexicons
+
+## 0.13.9
+
+### Patch Changes
+
+- [#2836](https://github.com/bluesky-social/atproto/pull/2836) [`a2bad977a`](https://github.com/bluesky-social/atproto/commit/a2bad977a8d941b4075ea3ffee3d6f7a0c0f467c) Thanks [@foysalit](https://github.com/foysalit)! - Add getRepos and getRecords endpoints for bulk fetching
+
+## 0.13.8
+
+### Patch Changes
+
+- [#2771](https://github.com/bluesky-social/atproto/pull/2771) [`2676206e4`](https://github.com/bluesky-social/atproto/commit/2676206e422233fefbf2d9d182e8d462f0957c93) Thanks [@mozzius](https://github.com/mozzius)! - Add pinned posts to profile record and getAuthorFeed
+
+- Updated dependencies [[`a07b21151`](https://github.com/bluesky-social/atproto/commit/a07b21151f1850340c4b7797ebb11521b1a6cdf3), [`a07b21151`](https://github.com/bluesky-social/atproto/commit/a07b21151f1850340c4b7797ebb11521b1a6cdf3), [`a07b21151`](https://github.com/bluesky-social/atproto/commit/a07b21151f1850340c4b7797ebb11521b1a6cdf3), [`eb20ff64a`](https://github.com/bluesky-social/atproto/commit/eb20ff64a2d8e3061c652e1e247bf9b0fe3c41a6), [`87a1f2426`](https://github.com/bluesky-social/atproto/commit/87a1f24262e0e644b6cf31cc7a0446d9127ffa94)]:
+  - @atproto/xrpc@0.6.3
+  - @atproto/common-web@0.3.1
+  - @atproto/lexicon@0.4.2
+
+## 0.13.7
+
+### Patch Changes
+
+- [#2807](https://github.com/bluesky-social/atproto/pull/2807) [`e6bd5aecc`](https://github.com/bluesky-social/atproto/commit/e6bd5aecce7954d60e5fb263297e697ab7aab98e) Thanks [@foysalit](https://github.com/foysalit)! - Introduce a acknowledgeAccountSubjects flag on takedown event to ack all subjects from the author that need review
+
+- [#2810](https://github.com/bluesky-social/atproto/pull/2810) [`33aa0c722`](https://github.com/bluesky-social/atproto/commit/33aa0c722226a18215af0ae1833c7c552fc7aaa7) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add NUX API
+
+- Updated dependencies [[`98711a147`](https://github.com/bluesky-social/atproto/commit/98711a147a8674337f605c6368f39fc10c2fae93)]:
+  - @atproto/xrpc@0.6.2
+
+## 0.13.6
+
+### Patch Changes
+
+- [#2780](https://github.com/bluesky-social/atproto/pull/2780) [`e4d41d66f`](https://github.com/bluesky-social/atproto/commit/e4d41d66fa4757a696363f39903562458967b63d) Thanks [@foysalit](https://github.com/foysalit)! - Add language property to communication templates
+
+## 0.13.5
+
+### Patch Changes
+
+- [#2751](https://github.com/bluesky-social/atproto/pull/2751) [`80ada8f47`](https://github.com/bluesky-social/atproto/commit/80ada8f47628f55f3074cd16a52857e98d117e14) Thanks [@devinivy](https://github.com/devinivy)! - Lexicons and support for video embeds within bsky posts.
+
+## 0.13.4
+
+### Patch Changes
+
+- [#2714](https://github.com/bluesky-social/atproto/pull/2714) [`d9ffa3c46`](https://github.com/bluesky-social/atproto/commit/d9ffa3c460924010d7002b616cb7a0c66111cc6c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Drop use of `AtpBaseClient` class
+
+- [#2714](https://github.com/bluesky-social/atproto/pull/2714) [`d9ffa3c46`](https://github.com/bluesky-social/atproto/commit/d9ffa3c460924010d7002b616cb7a0c66111cc6c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Expose the `CredentialSession` class that can be used to instantiate both `Agent` and `XrpcClient`, while internally managing credential based (username/password) sessions.
+
+- [`bbca17bc5`](https://github.com/bluesky-social/atproto/commit/bbca17bc5388e0b2af26fb107347c8ab507ee42f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Deprecate Agent.accountDid in favor of Agent.assertDid
+
+- [#2737](https://github.com/bluesky-social/atproto/pull/2737) [`a8e1f9000`](https://github.com/bluesky-social/atproto/commit/a8e1f9000d9617c4df9d9f0e74ae0e0b73fcfd66) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add `threadgate: ThreadgateView` to response from `getPostThread`
+
+- [#2714](https://github.com/bluesky-social/atproto/pull/2714) [`d9ffa3c46`](https://github.com/bluesky-social/atproto/commit/d9ffa3c460924010d7002b616cb7a0c66111cc6c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - `Agent` is no longer an abstract class. Instead it can be instantiated using object implementing a new `SessionManager` interface. If your project extends `Agent` and overrides the constructor or any method implementations, consider that you may want to call them from `super`.
+
+- Updated dependencies [[`d9ffa3c46`](https://github.com/bluesky-social/atproto/commit/d9ffa3c460924010d7002b616cb7a0c66111cc6c), [`d9ffa3c46`](https://github.com/bluesky-social/atproto/commit/d9ffa3c460924010d7002b616cb7a0c66111cc6c), [`d9ffa3c46`](https://github.com/bluesky-social/atproto/commit/d9ffa3c460924010d7002b616cb7a0c66111cc6c)]:
+  - @atproto/xrpc@0.6.1
+
+## 0.13.3
+
+### Patch Changes
+
+- [#2735](https://github.com/bluesky-social/atproto/pull/2735) [`4ab248354`](https://github.com/bluesky-social/atproto/commit/4ab2483547d5dabfba88ed4419a4f374bbd7cae7) Thanks [@haileyok](https://github.com/haileyok)! - add `quoteCount` to embed view
+
+## 0.13.2
+
+### Patch Changes
+
+- [#2658](https://github.com/bluesky-social/atproto/pull/2658) [`2a0c088cc`](https://github.com/bluesky-social/atproto/commit/2a0c088cc5d502ca70da9612a261186aa2f2e1fb) Thanks [@haileyok](https://github.com/haileyok)! - Adds `app.bsky.feed.getQuotes` lexicon and handlers
+
+- [#2675](https://github.com/bluesky-social/atproto/pull/2675) [`aba664fbd`](https://github.com/bluesky-social/atproto/commit/aba664fbdfbaddba321e96db2478e0bc8fc72d27) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Adds `postgate` records to power quote gating and detached quote posts, plus `hiddenReplies` to the `threadgate` record.
+
 ## 0.13.1
 
 ### Patch Changes

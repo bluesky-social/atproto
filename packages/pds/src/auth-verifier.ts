@@ -15,6 +15,7 @@ import {
   InvalidRequestError,
   StreamAuthVerifierContext,
   XRPCError,
+  parseReqNsid,
   verifyJwt as verifyServiceJwt,
 } from '@atproto/xrpc-server'
 import * as jose from 'jose'
@@ -319,10 +320,11 @@ export class AuthVerifier {
 
   protected async validateRefreshToken(
     ctx: ReqCtx,
-    verifyOptions?: Omit<jose.JWTVerifyOptions, 'audience'>,
+    verifyOptions?: Omit<jose.JWTVerifyOptions, 'audience' | 'typ'>,
   ): Promise<ValidatedRefreshBearer> {
     const result = await this.validateBearerToken(ctx, [AuthScope.Refresh], {
       ...verifyOptions,
+      typ: 'refresh+jwt',
       // when using entryway, proxying refresh credentials
       audience: this.dids.entryway ? this.dids.entryway : this.dids.pds,
     })
@@ -339,7 +341,8 @@ export class AuthVerifier {
   protected async validateBearerToken(
     ctx: ReqCtx,
     scopes: AuthScope[],
-    verifyOptions?: jose.JWTVerifyOptions,
+    verifyOptions: jose.JWTVerifyOptions &
+      Required<Pick<jose.JWTVerifyOptions, 'audience' | 'typ'>>,
   ): Promise<ValidatedBearer> {
     this.setAuthHeaders(ctx)
 
@@ -350,15 +353,26 @@ export class AuthVerifier {
 
     const { payload, protectedHeader } = await this.jwtVerify(
       token,
-      verifyOptions,
+      // @TODO: Once all access & refresh tokens have a "typ" claim (i.e. 90
+      // days after this code was deployed), replace the following line with
+      // "verifyOptions," (to re-enable the verification of the "typ" property
+      // from verifyJwt()). Once the change is made, the "if" block below that
+      // checks for "typ" can be removed.
+      {
+        ...verifyOptions,
+        typ: undefined,
+      },
     )
 
-    if (protectedHeader.typ === 'dpop+jwt') {
-      // @TODO we should make sure that bearer access tokens do have their "typ"
-      // claim, and allow list the possible value(s) here (typically "at+jwt"),
-      // instead of using a deny list. This would be more secure & future proof
-      // against new token types that would be introduced in the future
-      throw new InvalidRequestError('Malformed token', 'InvalidToken')
+    // @TODO: remove the next check once all access & refresh tokens have "typ"
+    // Note: when removing the check, make sure that the "verifyOptions"
+    // contains the "typ" property, so that the token is verified correctly by
+    // this.verifyJwt()
+    if (protectedHeader.typ && verifyOptions.typ !== protectedHeader.typ) {
+      // Temporarily allow historical tokens without "typ" to pass through. See:
+      // createAccessToken() and createRefreshToken() in
+      // src/account-manager/helpers/auth.ts
+      throw new InvalidRequestError('Invalid token type', 'InvalidToken')
     }
 
     const { sub, aud, scope } = payload
@@ -371,8 +385,9 @@ export class AuthVerifier {
     ) {
       throw new InvalidRequestError('Malformed token', 'InvalidToken')
     }
-    if ((payload.cnf as any)?.jkt) {
-      // DPoP bound tokens must not be usable as regular Bearer tokens
+    if (payload['cnf'] !== undefined) {
+      // Proof-of-Possession (PoP) tokens are not allowed here
+      // https://www.rfc-editor.org/rfc/rfc7800.html
       throw new InvalidRequestError('Malformed token', 'InvalidToken')
     }
     if (!isAuthScope(scope) || (scopes.length > 0 && !scopes.includes(scope))) {
@@ -451,13 +466,6 @@ export class AuthVerifier {
     ctx: ReqCtx,
     scopes: AuthScope[],
   ): Promise<AccessOutput> {
-    if (!scopes.includes(AuthScope.Access)) {
-      throw new InvalidRequestError(
-        'DPoP access token cannot be used for this request',
-        'InvalidToken',
-      )
-    }
-
     this.setAuthHeaders(ctx)
 
     const { req } = ctx
@@ -488,13 +496,48 @@ export class AuthVerifier {
         throw new InvalidRequestError('Malformed token', 'InvalidToken')
       }
 
+      const tokenScopes = new Set(result.claims.scope?.split(' '))
+
+      if (!tokenScopes.has('transition:generic')) {
+        throw new AuthRequiredError(
+          'Missing required scope: transition:generic',
+          'InvalidToken',
+        )
+      }
+
+      const scopeEquivalent: AuthScope = tokenScopes.has('transition:chat.bsky')
+        ? AuthScope.AppPassPrivileged
+        : AuthScope.AppPass
+
+      if (!scopes.includes(scopeEquivalent)) {
+        // AppPassPrivileged is sufficient but was not provided "transition:chat.bsky"
+        if (scopes.includes(AuthScope.AppPassPrivileged)) {
+          throw new InvalidRequestError(
+            'Missing required scope: transition:chat.bsky',
+            'InvalidToken',
+          )
+        }
+
+        // AuthScope.Access and AuthScope.SignupQueued do not have an OAuth
+        // scope equivalent.
+        throw new InvalidRequestError(
+          'DPoP access token cannot be used for this request',
+          'InvalidToken',
+        )
+      }
+
+      const isPrivileged = [
+        AuthScope.Access,
+        AuthScope.AppPassPrivileged,
+      ].includes(scopeEquivalent)
+
       return {
         credentials: {
           type: 'access',
           did: result.claims.sub,
-          scope: AuthScope.Access,
+          scope: scopeEquivalent,
           audience: this.dids.pds,
-          isPrivileged: true,
+          isPrivileged,
         },
         artifacts: result.token,
       }
@@ -521,7 +564,7 @@ export class AuthVerifier {
     const { did, scope, token, audience } = await this.validateBearerToken(
       ctx,
       scopes,
-      { audience: this.dids.pds },
+      { audience: this.dids.pds, typ: 'at+jwt' },
     )
     const isPrivileged = [
       AuthScope.Access,
@@ -574,10 +617,11 @@ export class AuthVerifier {
     if (!jwtStr) {
       throw new AuthRequiredError('missing jwt', 'MissingJwt')
     }
+    const nsid = parseReqNsid(ctx.req)
     const payload = await verifyServiceJwt(
       jwtStr,
       opts.aud,
-      null,
+      nsid,
       getSigningKey,
     )
     return { iss: payload.iss, aud: payload.aud }

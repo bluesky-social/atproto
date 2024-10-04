@@ -1,9 +1,9 @@
 import { Jwks } from '@atproto/jwk'
 import {
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
-  OAuthClientIdentification,
+  OAuthAuthorizationRequestParameters,
+  OAuthClientCredentials,
   OAuthClientMetadata,
-  OAuthEndpointName,
 } from '@atproto/oauth-types'
 import {
   UnsecuredJWT,
@@ -21,9 +21,13 @@ import {
 } from 'jose'
 
 import { CLIENT_ASSERTION_MAX_AGE, JAR_MAX_AGE } from '../constants.js'
+import { InvalidAuthorizationDetailsError } from '../errors/invalid-authorization-details-error.js'
 import { InvalidClientError } from '../errors/invalid-client-error.js'
 import { InvalidClientMetadataError } from '../errors/invalid-client-metadata-error.js'
+import { InvalidParametersError } from '../errors/invalid-parameters-error.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
+import { InvalidScopeError } from '../errors/invalid-scope-error.js'
+import { compareRedirectUri } from '../lib/util/redirect-uri.js'
 import { ClientAuth, authJwkThumbprint } from './client-auth.js'
 import { ClientId } from './client-id.js'
 import { ClientInfo } from './client-info.js'
@@ -101,21 +105,13 @@ export class Client {
     })
   }
 
-  protected getAuthMethod(endpoint: OAuthEndpointName) {
-    return (
-      this.metadata[`${endpoint}_endpoint_auth_method`] ||
-      this.metadata[`token_endpoint_auth_method`]
-    )
-  }
-
   /**
    * @see {@link https://datatracker.ietf.org/doc/html/rfc6749#section-2.3.1}
-   * @see {@link https://datatracker.ietf.org/doc/html/draft-ietf-oauth-jwt-bearer-11#section-3}
+   * @see {@link https://datatracker.ietf.org/doc/html/rfc7523#section-3}
    * @see {@link https://www.iana.org/assignments/oauth-parameters/oauth-parameters.xhtml#token-endpoint-auth-method}
    */
   public async verifyCredentials(
-    input: OAuthClientIdentification,
-    endpoint: OAuthEndpointName,
+    input: OAuthClientCredentials,
     checks: {
       audience: string
     },
@@ -124,7 +120,7 @@ export class Client {
     // for replay protection
     nonce?: string
   }> {
-    const method = this.getAuthMethod(endpoint)
+    const method = this.metadata[`token_endpoint_auth_method`]
 
     if (method === 'none') {
       const clientAuth: ClientAuth = { method: 'none' }
@@ -149,6 +145,7 @@ export class Client {
           audience: checks.audience,
           subject: this.id,
           maxTokenAge: CLIENT_ASSERTION_MAX_AGE / 1000,
+          requiredClaims: ['jti'],
         }).catch((err) => {
           if (err instanceof JOSEError) {
             const msg = `Validation of "client_assertion" failed: ${err.message}`
@@ -160,10 +157,6 @@ export class Client {
 
         if (!result.protectedHeader.kid) {
           throw new InvalidClientError(`"kid" required in client_assertion`)
-        }
-
-        if (!result.payload.jti) {
-          throw new InvalidClientError(`"jti" required in client_assertion`)
         }
 
         const clientAuth: ClientAuth = {
@@ -192,7 +185,7 @@ export class Client {
     }
 
     throw new InvalidClientMetadataError(
-      `Unsupported ${endpoint}_endpoint_auth_method "${method}"`,
+      `Unsupported token_endpoint_auth_method "${method}"`,
     )
   }
 
@@ -204,11 +197,11 @@ export class Client {
    */
   public async validateClientAuth(clientAuth: ClientAuth): Promise<boolean> {
     if (clientAuth.method === 'none') {
-      return this.getAuthMethod('token') === 'none'
+      return this.metadata[`token_endpoint_auth_method`] === 'none'
     }
 
     if (clientAuth.method === CLIENT_ASSERTION_TYPE_JWT_BEARER) {
-      if (this.getAuthMethod('token') !== 'private_key_jwt') {
+      if (this.metadata[`token_endpoint_auth_method`] !== 'private_key_jwt') {
         return false
       }
       try {
@@ -229,5 +222,109 @@ export class Client {
 
     // @ts-expect-error
     throw new Error(`Invalid method "${clientAuth.method}"`)
+  }
+
+  /**
+   * Validates the request parameters against the client metadata.
+   */
+  public validateRequest(
+    parameters: Readonly<OAuthAuthorizationRequestParameters>,
+  ): Readonly<OAuthAuthorizationRequestParameters> {
+    if (parameters.client_id !== this.id) {
+      throw new InvalidParametersError(
+        parameters,
+        'The "client_id" parameter field does not match the value used to authenticate the client',
+      )
+    }
+
+    if (parameters.scope !== undefined) {
+      // Any scope requested by the client must be registered in the client
+      // metadata.
+      const declaredScopes = this.metadata.scope?.split(' ')
+
+      if (!declaredScopes) {
+        throw new InvalidScopeError(
+          parameters,
+          'Client has no declared scopes in its metadata',
+        )
+      }
+
+      for (const scope of parameters.scope.split(' ')) {
+        if (!declaredScopes.includes(scope)) {
+          throw new InvalidScopeError(
+            parameters,
+            `Scope "${scope}" is not declared in the client metadata`,
+          )
+        }
+      }
+    }
+
+    if (!this.metadata.response_types.includes(parameters.response_type)) {
+      throw new InvalidParametersError(
+        parameters,
+        `Invalid response_type "${parameters.response_type}" requested by the client`,
+      )
+    }
+
+    if (parameters.response_type.includes('code')) {
+      if (!this.metadata.grant_types.includes('authorization_code')) {
+        throw new InvalidParametersError(
+          parameters,
+          `This client is not allowed to use the "authorization_code" grant type`,
+        )
+      }
+    }
+
+    const { redirect_uri } = parameters
+    if (redirect_uri) {
+      if (
+        !this.metadata.redirect_uris.some((uri) =>
+          compareRedirectUri(uri, redirect_uri),
+        )
+      ) {
+        throw new InvalidParametersError(
+          parameters,
+          `Invalid redirect_uri ${redirect_uri}`,
+        )
+      }
+    } else {
+      const { defaultRedirectUri } = this
+      if (defaultRedirectUri) {
+        parameters = { ...parameters, redirect_uri: defaultRedirectUri }
+      } else {
+        // https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-10#authorization-request
+        //
+        // > "redirect_uri": OPTIONAL if only one redirect URI is registered for
+        // > this client. REQUIRED if multiple redirect URIs are registered for this
+        // > client.
+        throw new InvalidParametersError(parameters, 'redirect_uri is required')
+      }
+    }
+
+    if (parameters.authorization_details) {
+      const { authorization_details_types } = this.metadata
+      if (!authorization_details_types) {
+        throw new InvalidAuthorizationDetailsError(
+          parameters,
+          'Client Metadata does not declare any "authorization_details"',
+        )
+      }
+
+      for (const detail of parameters.authorization_details) {
+        if (!authorization_details_types?.includes(detail.type)) {
+          throw new InvalidAuthorizationDetailsError(
+            parameters,
+            `Client Metadata does not declare any "authorization_details" of type "${detail.type}"`,
+          )
+        }
+      }
+    }
+
+    return parameters
+  }
+
+  get defaultRedirectUri(): string | undefined {
+    const { redirect_uris } = this.metadata
+    return redirect_uris.length === 1 ? redirect_uris[0] : undefined
   }
 }

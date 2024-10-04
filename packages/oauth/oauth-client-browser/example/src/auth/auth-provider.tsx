@@ -3,13 +3,14 @@
 import { Agent } from '@atproto/api'
 import { createContext, ReactNode, useContext, useMemo } from 'react'
 
-import { useAtpAuth } from './atp/use-atp-auth'
+import { useCredentialAuth } from './credential/use-credential-auth'
 import { AuthForm } from './auth-form'
 import { useOAuth, UseOAuthOptions } from './oauth/use-oauth'
 
 export type AuthContext = {
   pdsAgent: Agent
   signOut: () => void
+  refresh: () => void
 }
 
 const AuthContext = createContext<AuthContext | null>(null)
@@ -26,19 +27,43 @@ export const AuthProvider = ({
     client: oauthClient,
     agent: oauthAgent,
     signIn: oauthSignIn,
+    signOut: oauthSignOut,
+    refresh: oauthRefresh,
   } = useOAuth(options)
 
-  const { agent: atpAgent, signIn: atpSignIn } = useAtpAuth()
+  const {
+    agent: credentialAgent,
+    signIn: credentialSignIn,
+    signOut: credentialSignOut,
+    refresh: credentialRefresh,
+  } = useCredentialAuth()
 
-  const value = useMemo<AuthContext | null>(
-    () =>
-      oauthAgent
-        ? { pdsAgent: oauthAgent, signOut: () => oauthAgent.signOut() }
-        : atpAgent
-          ? { pdsAgent: atpAgent, signOut: () => atpAgent.logout() }
-          : null,
-    [atpAgent, oauthAgent],
-  )
+  const value = useMemo<AuthContext | null>(() => {
+    if (oauthAgent) {
+      return {
+        pdsAgent: oauthAgent,
+        signOut: oauthSignOut,
+        refresh: oauthRefresh,
+      }
+    }
+
+    if (credentialAgent) {
+      return {
+        pdsAgent: credentialAgent,
+        signOut: credentialSignOut,
+        refresh: credentialRefresh,
+      }
+    }
+
+    return null
+  }, [
+    oauthAgent,
+    oauthSignOut,
+    credentialAgent,
+    credentialSignOut,
+    oauthRefresh,
+    credentialRefresh,
+  ])
 
   if (isLoginPopup) {
     return <div>This window can be closed</div>
@@ -51,7 +76,7 @@ export const AuthProvider = ({
   if (!value) {
     return (
       <AuthForm
-        atpSignIn={atpSignIn}
+        atpSignIn={credentialSignIn}
         oauthSignIn={oauthClient ? oauthSignIn : undefined}
       />
     )

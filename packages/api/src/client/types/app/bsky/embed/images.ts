@@ -5,6 +5,7 @@ import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
+import * as AppBskyEmbedDefs from './defs'
 
 export interface Main {
   images: Image[]
@@ -28,7 +29,7 @@ export interface Image {
   image: BlobRef
   /** Alt text description of the image, for accessibility. */
   alt: string
-  aspectRatio?: AspectRatio
+  aspectRatio?: AppBskyEmbedDefs.AspectRatio
   [k: string]: unknown
 }
 
@@ -40,25 +41,6 @@ export function isImage(v: unknown): v is Image {
 
 export function validateImage(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.embed.images#image', v)
-}
-
-/** width:height represents an aspect ratio. It may be approximate, and may not correspond to absolute dimensions in any given unit. */
-export interface AspectRatio {
-  width: number
-  height: number
-  [k: string]: unknown
-}
-
-export function isAspectRatio(v: unknown): v is AspectRatio {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.embed.images#aspectRatio'
-  )
-}
-
-export function validateAspectRatio(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.embed.images#aspectRatio', v)
 }
 
 export interface View {
@@ -83,7 +65,7 @@ export interface ViewImage {
   fullsize: string
   /** Alt text description of the image, for accessibility. */
   alt: string
-  aspectRatio?: AspectRatio
+  aspectRatio?: AppBskyEmbedDefs.AspectRatio
   [k: string]: unknown
 }
 
