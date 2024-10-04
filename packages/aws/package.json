@@ -30,5 +30,8 @@
     "key-encoder": "^2.0.3",
     "multiformats": "^9.9.0",
     "uint8arrays": "3.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.2"
   }
 }
