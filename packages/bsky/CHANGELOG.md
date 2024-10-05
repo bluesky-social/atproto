@@ -1,5 +1,13 @@
 # @atproto/bsky
 
+## 0.0.88
+
+### Patch Changes
+
+- [#2853](https://github.com/bluesky-social/atproto/pull/2853) [`72549f442`](https://github.com/bluesky-social/atproto/commit/72549f442223c0c74594e111a9793e39b0c5ea2d) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow using a handle as "actor" param in app.bsky.graph.getLists
+
+- [#2862](https://github.com/bluesky-social/atproto/pull/2862) [`08ed0a5a9`](https://github.com/bluesky-social/atproto/commit/08ed0a5a916685b2aaea783706e6d6287a2aa287) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add missing dev-dependency
+
 ## 0.0.87
 
 ### Patch Changes

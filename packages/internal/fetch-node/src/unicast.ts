@@ -43,8 +43,7 @@ export function unicastFetchWrap<C = FetchContext>({
 
   if (fetch === globalThis.fetch) {
     const dispatcher = new Agent({
-      allowH2: true,
-      connect: { keepAlive: true, lookup: unicastLookup },
+      connect: { lookup: unicastLookup },
     })
 
     return async function (input, init): Promise<Response> {
