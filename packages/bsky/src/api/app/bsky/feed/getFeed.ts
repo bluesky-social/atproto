@@ -29,7 +29,6 @@ import {
   RulesFn,
   SkeletonFn,
 } from '../../../../pipeline'
-import { GetIdentityByDidResponse } from '../../../../proto/bsky_pb'
 
 type Skeleton = {
   items: AlgoResponseItem[]
@@ -139,22 +138,22 @@ const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = (
 async function skeletonFromFeedGen(
   ctx: HydrateCtx<QueryParams>,
 ): Promise<AlgoResponse> {
-  const { feed } = ctx.params
+  const { feed, limit, cursor } = ctx.params
+
   const found = await ctx.hydrator.feed.getFeedGens([feed], true)
   const feedDid = await found.get(feed)?.record.did
   if (!feedDid) {
     throw new InvalidRequestError('could not find feed')
   }
 
-  let identity: GetIdentityByDidResponse
-  try {
-    identity = await ctx.dataplane.getIdentityByDid({ did: feedDid })
-  } catch (err) {
-    if (isDataplaneError(err, Code.NotFound)) {
-      throw new InvalidRequestError(`could not resolve identity: ${feedDid}`)
-    }
-    throw err
-  }
+  const identity = await ctx.dataplane
+    .getIdentityByDid({ did: feedDid })
+    .catch((err) => {
+      if (isDataplaneError(err, Code.NotFound)) {
+        throw new InvalidRequestError(`could not resolve identity: ${feedDid}`)
+      }
+      throw err
+    })
 
   const services = unpackIdentityServices(identity.services)
   const fgEndpoint = getServiceEndpoint(services, {
@@ -172,22 +171,18 @@ async function skeletonFromFeedGen(
   let skeleton: AppBskyFeedGetFeedSkeleton.OutputSchema
   let resHeaders: Record<string, string> | undefined = undefined
   try {
-    // @TODO currently passthrough auth headers from pds
-    const result = await agent.api.app.bsky.feed.getFeedSkeleton(
-      {
-        feed: ctx.params.feed,
-        limit: ctx.params.limit,
-        cursor: ctx.params.cursor,
-      },
-      {
-        headers: noUndefinedVals({
-          authorization: ctx.headers['authorization'],
-          'accept-language': ctx.headers['accept-language'],
-          'x-bsky-topics': Array.isArray(ctx.headers['x-bsky-topics'])
-            ? ctx.headers['x-bsky-topics'].join(',')
-            : ctx.headers['x-bsky-topics'],
-        }),
-      },
+    const headers = noUndefinedVals({
+      // @TODO currently passthrough auth headers from pds
+      authorization: ctx.headers['authorization'],
+      'accept-language': ctx.headers['accept-language'],
+      'x-bsky-topics': Array.isArray(ctx.headers['x-bsky-topics'])
+        ? ctx.headers['x-bsky-topics'].join(',')
+        : ctx.headers['x-bsky-topics'],
+    })
+
+    const result = await agent.app.bsky.feed.getFeedSkeleton(
+      { feed, limit, cursor },
+      { headers },
     )
     skeleton = result.data
     if (result.headers['content-language']) {
