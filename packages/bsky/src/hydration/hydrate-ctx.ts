@@ -39,8 +39,8 @@ export class HydrateCtx<
   Input = unknown,
 > {
   constructor(
-    private reqCtx: HandlerRequestContext<Params, Auth, Input>,
-    private vals: HydrateCtxVals,
+    private readonly reqCtx: HandlerRequestContext<Params, Auth, Input>,
+    private readonly vals: HydrateCtxVals,
     readonly dataplane: DataPlaneClient,
     readonly hydrator: Hydrator,
     readonly views: Views,

@@ -139,7 +139,14 @@ export class AppContext {
     }
   }
 
-  private async createHydrateCtx<Params, Auth extends Creds, Input>(
+  /**
+   * Creates a new HydrateCtx instance that wraps an XrpcServer request context,
+   * and includes a user bound dataplane client and hydrator, as well as
+   * additional services used in XRPC method handlers. The HydrateCtx instance
+   * exposes the useful request context properties and methods, as well as the
+   * bound services.
+   */
+  public async createHydrateCtx<Params, Auth extends Creds, Input>(
     reqCtx: HandlerRequestContext<Params, Auth, Input>,
     options?: CreateHydrateCtxOptions,
   ) {
@@ -190,37 +197,39 @@ export class AppContext {
     )
   }
 
+  /**
+   * Utility that allows creating an XRPC method handler that works with an
+   * HydrateCtx instance instead of an XrpcServer request context. The utility
+   * will handle the creation of the Hydrate context, and will expose the
+   * labelers, and optionally the repo revision, in the response headers before
+   * invoking the handler with the HydrateCtx instance.
+   */
   createHandler<
     Params,
     Auth extends Creds,
     Input,
     Output extends void | HandlerOutput<unknown>,
   >(
-    view: (ctx: HydrateCtx<Params, Auth, Input>) => Awaitable<Output>,
+    handler: (ctx: HydrateCtx<Params, Auth, Input>) => Awaitable<Output>,
     { exposeRepoRev = false, ...options }: CreateHandlerOptions = {},
   ) {
-    /**
-     * Returns an XRPC handler that wraps the view function.
-     */
     return async (
       reqCtx: HandlerRequestContext<Params, Auth, Input>,
     ): Promise<Output> => {
       const hydrateCtx = await this.createHydrateCtx(reqCtx, options)
 
-      // Always expose the labelers that were actually used to process the request
       hydrateCtx.setLabelersHeader()
 
-      // Conditionally expose the repo revision
       if (exposeRepoRev) await hydrateCtx.setRepoRevHeader()
 
-      return view(hydrateCtx)
+      return handler(hydrateCtx)
     }
   }
 
   createPipelineHandler<Skeleton, Params, Auth extends Creds, Input, Output>(
-    skeletonFn: SkeletonFn<Skeleton, Params, Auth>,
-    hydrationFn: HydrationFn<Skeleton, Params>,
-    rulesFn: RulesFn<Skeleton, Params>,
+    skeletonFn: SkeletonFn<Skeleton, Params, Auth, Input>,
+    hydrationFn: HydrationFn<Skeleton, Params, Auth, Input>,
+    rulesFn: RulesFn<Skeleton, Params, Auth, Input>,
     presentationFn: PresentationFn<Skeleton, Params, Output>,
     options: CreateHandlerOptions = {},
   ) {

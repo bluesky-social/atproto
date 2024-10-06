@@ -17,9 +17,9 @@ export function createPipeline<
   Input,
   Output,
 >(
-  skeletonFn: SkeletonFn<Skeleton, Params, Auth>,
-  hydrationFn: HydrationFn<Skeleton, Params>,
-  rulesFn: RulesFn<Skeleton, Params>,
+  skeletonFn: SkeletonFn<Skeleton, Params, Auth, Input>,
+  hydrationFn: HydrationFn<Skeleton, Params, Auth, Input>,
+  rulesFn: RulesFn<Skeleton, Params, Auth, Input>,
   presentationFn: PresentationFn<Skeleton, Params, Output>,
 ) {
   return async (
