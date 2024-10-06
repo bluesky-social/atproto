@@ -31,7 +31,9 @@ export default function (server: Server, ctx: AppContext) {
       hydration,
       noBlocksOrMutes,
       presentation,
-      { exposeRepoRev: true },
+      {
+        exposeRepoRev: true,
+      },
     ),
   })
 }

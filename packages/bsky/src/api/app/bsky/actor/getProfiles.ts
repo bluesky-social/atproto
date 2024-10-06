@@ -32,7 +32,9 @@ export default function (server: Server, ctx: AppContext) {
       hydration,
       noRules,
       presentation,
-      { exposeRepoRev: true },
+      {
+        exposeRepoRev: true,
+      },
     ),
   })
 }

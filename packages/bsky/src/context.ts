@@ -33,13 +33,13 @@ export type CreateHydrateCtxOptions = {
    * Use the credential's "include3pBlocks" value when building the
    * {@link HydrateCtxVals} use to instantiate the {@link HydrateCtx}
    */
-  allowInclude3pBlocks?: boolean
+  include3pBlocks?: boolean
 
   /**
    * Use the credential's "includeTakedowns" value when building the
    * {@link HydrateCtxVals} use to instantiate the {@link HydrateCtx}
    */
-  allowIncludeTakedowns?: boolean
+  includeTakedowns?: boolean
 }
 
 export type CreateHandlerOptions = CreateHydrateCtxOptions & {
@@ -161,11 +161,11 @@ export class AppContext {
       (auth.credentials.type === 'standard' &&
         this.authVerifier.isModService(auth.credentials.iss))
 
-    const include3pBlocks = options?.allowInclude3pBlocks
+    const include3pBlocks = options?.include3pBlocks
       ? includeTakedownsAnd3pBlocks
       : false
 
-    const includeTakedowns = options?.allowIncludeTakedowns
+    const includeTakedowns = options?.includeTakedowns
       ? includeTakedownsAnd3pBlocks
       : false
 

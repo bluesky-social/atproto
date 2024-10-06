@@ -30,8 +30,8 @@ export default function (server: Server, ctx: AppContext) {
       presentation,
       {
         exposeRepoRev: true,
-        allowInclude3pBlocks: true,
-        allowIncludeTakedowns: true,
+        include3pBlocks: true,
+        includeTakedowns: true,
       },
     ),
   })
