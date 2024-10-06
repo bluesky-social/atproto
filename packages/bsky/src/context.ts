@@ -186,6 +186,7 @@ export class AppContext {
       this.opts.idResolver,
       this.opts.suggestionsAgent,
       this.opts.searchAgent,
+      this.opts.courierClient,
     )
   }
 

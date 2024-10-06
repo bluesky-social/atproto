@@ -3,17 +3,17 @@ import type { IdResolver } from '@atproto/identity'
 import type { Request, Response } from 'express'
 import type { IncomingHttpHeaders } from 'node:http'
 
+import { ATPROTO_CONTENT_LABELERS, ATPROTO_REPO_REV } from '../api/util'
 import type { Creds } from '../auth-verifier'
 import type { BsyncClient } from '../bsync'
 import type { ServerConfig } from '../config'
+import { CourierClient } from '../courier'
 import type { DataPlaneClient } from '../data-plane/index'
 import type { FeatureGates } from '../feature-gates'
 import type { ParsedLabelers } from '../util/labeler-header'
+import { formatLabelerHeader } from '../util/labeler-header'
 import type { Views } from '../views/index'
 import type { Hydrator } from './hydrator'
-
-import { ATPROTO_CONTENT_LABELERS, ATPROTO_REPO_REV } from '../api/util'
-import { formatLabelerHeader } from '../util/labeler-header'
 
 export type HandlerRequestContext<
   Params = unknown,
@@ -50,6 +50,7 @@ export class HydrateCtx<
     readonly idResolver: IdResolver,
     readonly suggestionsAgent: AtpAgent | undefined,
     readonly searchAgent: AtpAgent | undefined,
+    readonly courierClient: CourierClient | undefined,
   ) {}
 
   get labelers(): ParsedLabelers {
@@ -101,6 +102,7 @@ export class HydrateCtx<
       this.idResolver,
       this.suggestionsAgent,
       this.searchAgent,
+      this.courierClient,
     )
   }
 

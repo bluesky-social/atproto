@@ -12,21 +12,21 @@ export default function (server: Server, ctx: AppContext) {
       // For now we keep separate seen times behind the scenes for priority, but treat them as a single seen time.
       await Promise.all([
         ctx.dataplane.updateNotificationSeen({
-          actorDid: ctx.viewer ?? undefined,
+          actorDid: ctx.viewer,
           timestamp: Timestamp.fromDate(seenAt),
           priority: false,
         }),
         ctx.dataplane.updateNotificationSeen({
-          actorDid: ctx.viewer ?? undefined,
+          actorDid: ctx.viewer,
           timestamp: Timestamp.fromDate(seenAt),
           priority: true,
         }),
         ctx.courierClient?.pushNotifications({
           notifications: [
             {
-              id: getNotifId(viewer, seenAt),
+              id: getNotifId(ctx.viewer, seenAt),
               clientControlled: true,
-              recipientDid: viewer,
+              recipientDid: ctx.viewer,
               alwaysDeliver: false,
               collapseKey: 'mark-read-generic',
               timestamp: Timestamp.fromDate(new Date()),
