@@ -69,10 +69,14 @@ export class OAuthServerAgent {
     }
   }
 
-  async exchangeCode(code: string, verifier?: string): Promise<TokenSet> {
+  async exchangeCode(
+    code: string,
+    redirectUri: string,
+    verifier?: string,
+  ): Promise<TokenSet> {
     const tokenResponse = await this.request('token', {
       grant_type: 'authorization_code',
-      redirect_uri: this.clientMetadata.redirect_uris[0]!,
+      redirect_uri: redirectUri,
       code,
       code_verifier: verifier,
     })
