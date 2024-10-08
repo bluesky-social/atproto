@@ -31,7 +31,7 @@
     "@atproto/did": "workspace:*"
   },
   "devDependencies": {
-    "typescript": "^5.3.3"
+    "typescript": "^5.6.2"
   },
   "scripts": {
     "build": "tsc --build tsconfig.build.json"
