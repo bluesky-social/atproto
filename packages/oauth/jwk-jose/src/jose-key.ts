@@ -40,7 +40,7 @@ export class JoseKey extends Key {
 
   protected async getKey() {
     try {
-      return (this.#keyObj ||= await importJWK(this.jwk as JWK))
+      return (this.#keyObj ||= await importJWK(this.jwk as JWK, "ES256"))
     } catch (cause) {
       throw new JwkError('Failed to import JWK', undefined, { cause })
     }
