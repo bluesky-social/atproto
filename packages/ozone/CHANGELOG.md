@@ -1,5 +1,14 @@
 # @atproto/ozone
 
+## 0.1.51
+
+### Patch Changes
+
+- [#2636](https://github.com/bluesky-social/atproto/pull/2636) [`22d039a22`](https://github.com/bluesky-social/atproto/commit/22d039a229e3ef08a793e1c98b473b1b8e18ac5e) Thanks [@foysalit](https://github.com/foysalit)! - Sets api to manage lists of strings on ozone, mostly aimed for automod configuration
+
+- Updated dependencies [[`22d039a22`](https://github.com/bluesky-social/atproto/commit/22d039a229e3ef08a793e1c98b473b1b8e18ac5e)]:
+  - @atproto/api@0.13.12
+
 ## 0.1.50
 
 ### Patch Changes
