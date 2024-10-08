@@ -10780,6 +10780,9 @@ export const schemaDict = {
               'lex:tools.ozone.moderation.defs#modEventResolveAppeal',
               'lex:tools.ozone.moderation.defs#modEventDivert',
               'lex:tools.ozone.moderation.defs#modEventTag',
+              'lex:tools.ozone.moderation.defs#accountEvent',
+              'lex:tools.ozone.moderation.defs#identityEvent',
+              'lex:tools.ozone.moderation.defs#recordEvent',
             ],
           },
           subject: {
@@ -10844,6 +10847,9 @@ export const schemaDict = {
               'lex:tools.ozone.moderation.defs#modEventResolveAppeal',
               'lex:tools.ozone.moderation.defs#modEventDivert',
               'lex:tools.ozone.moderation.defs#modEventTag',
+              'lex:tools.ozone.moderation.defs#accountEvent',
+              'lex:tools.ozone.moderation.defs#identityEvent',
+              'lex:tools.ozone.moderation.defs#recordEvent',
             ],
           },
           subject: {
@@ -11205,6 +11211,79 @@ export const schemaDict = {
           },
         },
       },
+      accountEvent: {
+        type: 'object',
+        description:
+          'Logs account status related events on a repo subject. Normally captured by automod from the firehose and emitted to ozone for historical tracking.',
+        required: ['timestamp', 'status', 'active'],
+        properties: {
+          comment: {
+            type: 'string',
+          },
+          active: {
+            type: 'boolean',
+            description:
+              'Indicates that the account has a repository which can be fetched from the host that emitted this event.',
+          },
+          status: {
+            type: 'string',
+            knownValues: ['takendown', 'suspended', 'deleted', 'deactivated'],
+          },
+          timestamp: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
+      identityEvent: {
+        type: 'object',
+        description:
+          'Logs identity related events on a repo subject. Normally captured by automod from the firehose and emitted to ozone for historical tracking.',
+        required: ['timestamp'],
+        properties: {
+          comment: {
+            type: 'string',
+          },
+          handle: {
+            type: 'string',
+            format: 'handle',
+          },
+          pdsHost: {
+            type: 'string',
+            format: 'uri',
+          },
+          tombstone: {
+            type: 'boolean',
+          },
+          timestamp: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
+      recordEvent: {
+        type: 'object',
+        description:
+          'Logs lifecycle event on a record subject. Normally captured by automod from the firehose and emitted to ozone for historical tracking.',
+        required: ['timestamp', 'op'],
+        properties: {
+          comment: {
+            type: 'string',
+          },
+          op: {
+            type: 'string',
+            knownValues: ['create', 'update', 'delete'],
+          },
+          cid: {
+            type: 'string',
+            format: 'cid',
+          },
+          timestamp: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
       repoView: {
         type: 'object',
         required: [
@@ -11548,6 +11627,9 @@ export const schemaDict = {
                   'lex:tools.ozone.moderation.defs#modEventResolveAppeal',
                   'lex:tools.ozone.moderation.defs#modEventEmail',
                   'lex:tools.ozone.moderation.defs#modEventTag',
+                  'lex:tools.ozone.moderation.defs#accountEvent',
+                  'lex:tools.ozone.moderation.defs#identityEvent',
+                  'lex:tools.ozone.moderation.defs#recordEvent',
                 ],
               },
               subject: {

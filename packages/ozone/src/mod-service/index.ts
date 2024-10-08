@@ -18,6 +18,9 @@ import {
   isModEventTakedown,
   isModEventEmail,
   isModEventTag,
+  isAccountEvent,
+  isIdentityEvent,
+  isRecordEvent,
   REVIEWESCALATED,
   REVIEWOPEN,
 } from '../lexicon/types/tools/ozone/moderation/defs'
@@ -366,6 +369,25 @@ export class ModerationService {
       if (event.content) {
         meta.content = event.content
       }
+    }
+
+    if (isAccountEvent(event)) {
+      meta.active = event.active
+      meta.timestamp = event.timestamp
+      meta.status = event.status
+    }
+
+    if (isIdentityEvent(event)) {
+      meta.timestamp = event.timestamp
+      if (event.handle) meta.handle = event.handle
+      if (event.pdsHost) meta.pdsHost = event.pdsHost
+      if (event.tombstone) meta.tombstone = event.tombstone
+    }
+
+    if (isRecordEvent(event)) {
+      meta.timestamp = event.timestamp
+      meta.op = event.op
+      if (event.cid) meta.cid = event.cid
     }
 
     if (isModEventTakedown(event) && event.acknowledgeAccountSubjects) {
