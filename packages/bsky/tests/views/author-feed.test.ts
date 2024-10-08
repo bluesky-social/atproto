@@ -1,4 +1,4 @@
-import { AtpAgent } from '@atproto/api'
+import { AtpAgent, AppBskyActorProfile, AppBskyFeedDefs } from '@atproto/api'
 import { TestNetwork, SeedClient, authorFeedSeed } from '@atproto/dev-env'
 import {
   forSnapshot,
@@ -16,6 +16,7 @@ import { ids } from '../../src/lexicon/lexicons'
 describe('pds author feed views', () => {
   let network: TestNetwork
   let agent: AtpAgent
+  let pdsAgent: AtpAgent
   let sc: SeedClient
 
   // account dids, for convenience
@@ -30,6 +31,7 @@ describe('pds author feed views', () => {
       dbPostgresSchema: 'bsky_views_author_feed',
     })
     agent = network.bsky.getClient()
+    pdsAgent = network.pds.getClient()
     sc = network.getSeedClient()
     await authorFeedSeed(sc)
     await network.processAll()
@@ -385,6 +387,179 @@ describe('pds author feed views', () => {
         return repostOfOther
       }),
     ).toBeTruthy()
+  })
+
+  describe('pins', () => {
+    async function createAndPinPost() {
+      const post = await sc.post(alice, 'pinned post')
+      await network.processAll()
+
+      const profile = await pdsAgent.com.atproto.repo.getRecord({
+        repo: alice,
+        collection: 'app.bsky.actor.profile',
+        rkey: 'self',
+      })
+
+      if (!AppBskyActorProfile.isRecord(profile.data.value)) {
+        throw new Error('')
+      }
+
+      const newProfile: AppBskyActorProfile.Record = {
+        ...profile,
+        pinnedPost: {
+          uri: post.ref.uriStr,
+          cid: post.ref.cid.toString(),
+        },
+      }
+
+      await sc.updateProfile(alice, newProfile)
+
+      await network.processAll()
+
+      return post
+    }
+
+    it('params.includePins = true, pin is in first page of results', async () => {
+      await sc.post(alice, 'not pinned post')
+      const post = await createAndPinPost()
+      await sc.post(alice, 'not pinned post')
+
+      const { data } = await agent.api.app.bsky.feed.getAuthorFeed(
+        { actor: sc.accounts[alice].handle, includePins: true },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyFeedGetAuthorFeed,
+          ),
+        },
+      )
+
+      const pinnedPosts = data.feed.filter(
+        (item) => item.post.uri === post.ref.uriStr,
+      )
+      expect(pinnedPosts.length).toEqual(1)
+
+      const pinnedPost = data.feed.at(0)
+      expect(pinnedPost?.post?.uri).toEqual(post.ref.uriStr)
+      expect(pinnedPost?.post?.viewer?.pinned).toBeTruthy()
+      expect(AppBskyFeedDefs.isReasonPin(pinnedPost?.reason)).toBeTruthy()
+
+      const notPinnedPost = data.feed.at(1)
+      expect(notPinnedPost?.post?.viewer?.pinned).toBeFalsy()
+      expect(forSnapshot(data.feed)).toMatchSnapshot()
+    })
+
+    it('params.includePins = true, pin is NOT in first page of results', async () => {
+      const post = await createAndPinPost()
+      await sc.post(alice, 'not pinned post')
+      await sc.post(alice, 'not pinned post')
+      await network.processAll()
+      const { data: page1 } = await agent.api.app.bsky.feed.getAuthorFeed(
+        { actor: sc.accounts[alice].handle, includePins: true, limit: 2 },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyFeedGetAuthorFeed,
+          ),
+        },
+      )
+
+      // exists with `reason`
+      const pinnedPost = page1.feed.find(
+        (item) => item.post.uri === post.ref.uriStr,
+      )
+      expect(pinnedPost?.post?.uri).toEqual(post.ref.uriStr)
+      expect(pinnedPost?.post?.viewer?.pinned).toBeTruthy()
+      expect(AppBskyFeedDefs.isReasonPin(pinnedPost?.reason)).toBeTruthy()
+      expect(forSnapshot(page1.feed)).toMatchSnapshot()
+
+      const { data: page2 } = await agent.api.app.bsky.feed.getAuthorFeed(
+        {
+          actor: sc.accounts[alice].handle,
+          includePins: true,
+          cursor: page1.cursor,
+        },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyFeedGetAuthorFeed,
+          ),
+        },
+      )
+
+      // exists without `reason`
+      const laterPinnedPost = page2.feed.find(
+        (item) => item.post.uri === post.ref.uriStr,
+      )
+      expect(laterPinnedPost?.post?.uri).toEqual(post.ref.uriStr)
+      expect(laterPinnedPost?.post?.viewer?.pinned).toBeTruthy()
+      expect(AppBskyFeedDefs.isReasonPin(laterPinnedPost?.reason)).toBeFalsy()
+      expect(forSnapshot(page2.feed)).toMatchSnapshot()
+    })
+
+    it('params.includePins = false', async () => {
+      const post = await createAndPinPost()
+      const { data } = await agent.api.app.bsky.feed.getAuthorFeed(
+        { actor: sc.accounts[alice].handle },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyFeedGetAuthorFeed,
+          ),
+        },
+      )
+
+      // exists without `reason`
+      const pinnedPost = data.feed.find(
+        (item) => item.post.uri === post.ref.uriStr,
+      )
+      expect(AppBskyFeedDefs.isReasonPin(pinnedPost?.reason)).toBeFalsy()
+      expect(forSnapshot(data.feed)).toMatchSnapshot()
+    })
+
+    it("cannot pin someone else's post", async () => {
+      const bobPost = await sc.post(bob, 'pinned post')
+      await sc.post(alice, 'not pinned post')
+      await network.processAll()
+
+      const profile = await pdsAgent.com.atproto.repo.getRecord({
+        repo: alice,
+        collection: 'app.bsky.actor.profile',
+        rkey: 'self',
+      })
+
+      if (!AppBskyActorProfile.isRecord(profile.data.value)) {
+        throw new Error('')
+      }
+
+      const newProfile: AppBskyActorProfile.Record = {
+        ...profile,
+        pinnedPost: {
+          uri: bobPost.ref.uriStr,
+          cid: bobPost.ref.cid.toString(),
+        },
+      }
+
+      await sc.updateProfile(alice, newProfile)
+
+      await network.processAll()
+
+      const { data } = await agent.api.app.bsky.feed.getAuthorFeed(
+        { actor: sc.accounts[alice].handle },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyFeedGetAuthorFeed,
+          ),
+        },
+      )
+
+      const pinnedPost = data.feed.find(
+        (item) => item.post.uri === bobPost.ref.uriStr,
+      )
+      expect(pinnedPost).toBeUndefined()
+      expect(forSnapshot(data.feed)).toMatchSnapshot()
+    })
   })
 })
 

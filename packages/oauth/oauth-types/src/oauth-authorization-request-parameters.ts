@@ -3,7 +3,9 @@ import { z } from 'zod'
 
 import { oauthAuthorizationDetailsSchema } from './oauth-authorization-details.js'
 import { oauthClientIdSchema } from './oauth-client-id.js'
+import { oauthCodeChallengeMethodSchema } from './oauth-code-challenge-method.js'
 import { oauthResponseTypeSchema } from './oauth-response-type.js'
+import { oauthScopeSchema } from './oauth-scope.js'
 import { oidcClaimsParameterSchema } from './oidc-claims-parameter.js'
 import { oidcClaimsPropertiesSchema } from './oidc-claims-properties.js'
 import { oidcEntityTypeSchema } from './oidc-entity-type.js'
@@ -11,34 +13,31 @@ import { oidcEntityTypeSchema } from './oidc-entity-type.js'
 /**
  * @see {@link https://openid.net/specs/openid-connect-core-1_0.html#AuthRequest | OIDC}
  */
-export const oauthAuthenticationRequestParametersSchema = z.object({
+export const oauthAuthorizationRequestParametersSchema = z.object({
   client_id: oauthClientIdSchema,
-
   state: z.string().optional(),
-  nonce: z.string().optional(),
+  redirect_uri: z.string().url().optional(),
+  scope: oauthScopeSchema.optional(),
+  response_type: oauthResponseTypeSchema,
+
+  // PKCE
+
+  code_challenge: z.string().optional(),
+  code_challenge_method: oauthCodeChallengeMethodSchema
+    .default('S256')
+    .optional(),
+
+  // DPOP
+
+  // https://datatracker.ietf.org/doc/html/rfc9449#section-12.3
   dpop_jkt: z.string().optional(),
 
-  response_type: oauthResponseTypeSchema,
+  // OIDC
 
   // Default depend on response_type
   response_mode: z.enum(['query', 'fragment', 'form_post']).optional(),
 
-  // PKCE
-  code_challenge: z.string().optional(),
-  code_challenge_method: z.enum(['S256', 'plain']).default('S256').optional(),
-
-  redirect_uri: z.string().url().optional(),
-
-  // https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-11#section-1.4.1
-  // scope       = scope-token *( SP scope-token )
-  // scope-token = 1*( %x21 / %x23-5B / %x5D-7E )
-  // = Basically most ASCII characters except backslash and double quote
-  scope: z
-    .string()
-    .regex(/^[!\x23-\x5B\x5D-\x7E]+( [!\x23-\x5B\x5D-\x7E]+)*$/)
-    .optional(),
-
-  // OIDC
+  nonce: z.string().optional(),
 
   // Specifies the allowable elapsed time in seconds since the last time the
   // End-User was actively authenticated by the OP. If the elapsed time is
@@ -89,8 +88,8 @@ export const oauthAuthenticationRequestParametersSchema = z.object({
 })
 
 /**
- * @see {oauthAuthenticationRequestParametersSchema}
+ * @see {oauthAuthorizationRequestParametersSchema}
  */
-export type OAuthAuthenticationRequestParameters = z.infer<
-  typeof oauthAuthenticationRequestParametersSchema
+export type OAuthAuthorizationRequestParameters = z.infer<
+  typeof oauthAuthorizationRequestParametersSchema
 >

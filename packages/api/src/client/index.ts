@@ -199,7 +199,9 @@ import * as ToolsOzoneModerationDefs from './types/tools/ozone/moderation/defs'
 import * as ToolsOzoneModerationEmitEvent from './types/tools/ozone/moderation/emitEvent'
 import * as ToolsOzoneModerationGetEvent from './types/tools/ozone/moderation/getEvent'
 import * as ToolsOzoneModerationGetRecord from './types/tools/ozone/moderation/getRecord'
+import * as ToolsOzoneModerationGetRecords from './types/tools/ozone/moderation/getRecords'
 import * as ToolsOzoneModerationGetRepo from './types/tools/ozone/moderation/getRepo'
+import * as ToolsOzoneModerationGetRepos from './types/tools/ozone/moderation/getRepos'
 import * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents'
 import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses'
 import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos'
@@ -211,6 +213,10 @@ import * as ToolsOzoneSetDeleteValues from './types/tools/ozone/set/deleteValues
 import * as ToolsOzoneSetGetValues from './types/tools/ozone/set/getValues'
 import * as ToolsOzoneSetQuerySets from './types/tools/ozone/set/querySets'
 import * as ToolsOzoneSetUpsertSet from './types/tools/ozone/set/upsertSet'
+import * as ToolsOzoneSignatureDefs from './types/tools/ozone/signature/defs'
+import * as ToolsOzoneSignatureFindCorrelation from './types/tools/ozone/signature/findCorrelation'
+import * as ToolsOzoneSignatureFindRelatedAccounts from './types/tools/ozone/signature/findRelatedAccounts'
+import * as ToolsOzoneSignatureSearchAccounts from './types/tools/ozone/signature/searchAccounts'
 import * as ToolsOzoneTeamAddMember from './types/tools/ozone/team/addMember'
 import * as ToolsOzoneTeamDefs from './types/tools/ozone/team/defs'
 import * as ToolsOzoneTeamDeleteMember from './types/tools/ozone/team/deleteMember'
@@ -412,7 +418,9 @@ export * as ToolsOzoneModerationDefs from './types/tools/ozone/moderation/defs'
 export * as ToolsOzoneModerationEmitEvent from './types/tools/ozone/moderation/emitEvent'
 export * as ToolsOzoneModerationGetEvent from './types/tools/ozone/moderation/getEvent'
 export * as ToolsOzoneModerationGetRecord from './types/tools/ozone/moderation/getRecord'
+export * as ToolsOzoneModerationGetRecords from './types/tools/ozone/moderation/getRecords'
 export * as ToolsOzoneModerationGetRepo from './types/tools/ozone/moderation/getRepo'
+export * as ToolsOzoneModerationGetRepos from './types/tools/ozone/moderation/getRepos'
 export * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents'
 export * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses'
 export * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos'
@@ -424,6 +432,10 @@ export * as ToolsOzoneSetDeleteValues from './types/tools/ozone/set/deleteValues
 export * as ToolsOzoneSetGetValues from './types/tools/ozone/set/getValues'
 export * as ToolsOzoneSetQuerySets from './types/tools/ozone/set/querySets'
 export * as ToolsOzoneSetUpsertSet from './types/tools/ozone/set/upsertSet'
+export * as ToolsOzoneSignatureDefs from './types/tools/ozone/signature/defs'
+export * as ToolsOzoneSignatureFindCorrelation from './types/tools/ozone/signature/findCorrelation'
+export * as ToolsOzoneSignatureFindRelatedAccounts from './types/tools/ozone/signature/findRelatedAccounts'
+export * as ToolsOzoneSignatureSearchAccounts from './types/tools/ozone/signature/searchAccounts'
 export * as ToolsOzoneTeamAddMember from './types/tools/ozone/team/addMember'
 export * as ToolsOzoneTeamDefs from './types/tools/ozone/team/defs'
 export * as ToolsOzoneTeamDeleteMember from './types/tools/ozone/team/deleteMember'
@@ -876,12 +888,11 @@ export class ComAtprotoRepoNS {
     params?: ComAtprotoRepoGetRecord.QueryParams,
     opts?: ComAtprotoRepoGetRecord.CallOptions,
   ): Promise<ComAtprotoRepoGetRecord.Response> {
-    return this._client.call(
-      'com.atproto.repo.getRecord',
-      params,
-      undefined,
-      opts,
-    )
+    return this._client
+      .call('com.atproto.repo.getRecord', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoRepoGetRecord.toKnownErr(e)
+      })
   }
 
   importRepo(
@@ -3408,6 +3419,7 @@ export class ToolsOzoneNS {
   moderation: ToolsOzoneModerationNS
   server: ToolsOzoneServerNS
   set: ToolsOzoneSetNS
+  signature: ToolsOzoneSignatureNS
   team: ToolsOzoneTeamNS
 
   constructor(client: XrpcClient) {
@@ -3416,6 +3428,7 @@ export class ToolsOzoneNS {
     this.moderation = new ToolsOzoneModerationNS(client)
     this.server = new ToolsOzoneServerNS(client)
     this.set = new ToolsOzoneSetNS(client)
+    this.signature = new ToolsOzoneSignatureNS(client)
     this.team = new ToolsOzoneTeamNS(client)
   }
 }
@@ -3515,6 +3528,18 @@ export class ToolsOzoneModerationNS {
       })
   }
 
+  getRecords(
+    params?: ToolsOzoneModerationGetRecords.QueryParams,
+    opts?: ToolsOzoneModerationGetRecords.CallOptions,
+  ): Promise<ToolsOzoneModerationGetRecords.Response> {
+    return this._client.call(
+      'tools.ozone.moderation.getRecords',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
   getRepo(
     params?: ToolsOzoneModerationGetRepo.QueryParams,
     opts?: ToolsOzoneModerationGetRepo.CallOptions,
@@ -3524,6 +3549,18 @@ export class ToolsOzoneModerationNS {
       .catch((e) => {
         throw ToolsOzoneModerationGetRepo.toKnownErr(e)
       })
+  }
+
+  getRepos(
+    params?: ToolsOzoneModerationGetRepos.QueryParams,
+    opts?: ToolsOzoneModerationGetRepos.CallOptions,
+  ): Promise<ToolsOzoneModerationGetRepos.Response> {
+    return this._client.call(
+      'tools.ozone.moderation.getRepos',
+      params,
+      undefined,
+      opts,
+    )
   }
 
   queryEvents(
@@ -3647,6 +3684,50 @@ export class ToolsOzoneSetNS {
     opts?: ToolsOzoneSetUpsertSet.CallOptions,
   ): Promise<ToolsOzoneSetUpsertSet.Response> {
     return this._client.call('tools.ozone.set.upsertSet', opts?.qp, data, opts)
+  }
+}
+
+export class ToolsOzoneSignatureNS {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  findCorrelation(
+    params?: ToolsOzoneSignatureFindCorrelation.QueryParams,
+    opts?: ToolsOzoneSignatureFindCorrelation.CallOptions,
+  ): Promise<ToolsOzoneSignatureFindCorrelation.Response> {
+    return this._client.call(
+      'tools.ozone.signature.findCorrelation',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  findRelatedAccounts(
+    params?: ToolsOzoneSignatureFindRelatedAccounts.QueryParams,
+    opts?: ToolsOzoneSignatureFindRelatedAccounts.CallOptions,
+  ): Promise<ToolsOzoneSignatureFindRelatedAccounts.Response> {
+    return this._client.call(
+      'tools.ozone.signature.findRelatedAccounts',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  searchAccounts(
+    params?: ToolsOzoneSignatureSearchAccounts.QueryParams,
+    opts?: ToolsOzoneSignatureSearchAccounts.CallOptions,
+  ): Promise<ToolsOzoneSignatureSearchAccounts.Response> {
+    return this._client.call(
+      'tools.ozone.signature.searchAccounts',
+      params,
+      undefined,
+      opts,
+    )
   }
 }
 

@@ -1,8 +1,12 @@
 import { isSignedJwt } from '@atproto/jwk'
 import {
-  AccessToken,
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
-  OAuthAuthenticationRequestParameters,
+  OAuthAccessToken,
+  OAuthAuthorizationRequestParameters,
+  OAuthAuthorizationCodeGrantTokenRequest,
+  OAuthClientCredentialsGrantTokenRequest,
+  OAuthPasswordGrantTokenRequest,
+  OAuthRefreshTokenGrantTokenRequest,
   OAuthTokenResponse,
   OAuthTokenType,
 } from '@atproto/oauth-types'
@@ -27,11 +31,14 @@ import { InvalidGrantError } from '../errors/invalid-grant-error.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { InvalidTokenError } from '../errors/invalid-token-error.js'
 import { dateToEpoch, dateToRelativeSeconds } from '../lib/util/date.js'
-import { compareRedirectUri } from '../lib/util/redirect-uri.js'
 import { OAuthHooks } from '../oauth-hooks.js'
-import { isCode } from '../request/code.js'
+import { Code, isCode } from '../request/code.js'
 import { Signer } from '../signer/signer.js'
-import { generateRefreshToken, isRefreshToken } from './refresh-token.js'
+import {
+  generateRefreshToken,
+  isRefreshToken,
+  refreshTokenSchema,
+} from './refresh-token.js'
 import { TokenClaims } from './token-claims.js'
 import { TokenData } from './token-data.js'
 import {
@@ -41,7 +48,6 @@ import {
   tokenIdSchema,
 } from './token-id.js'
 import { TokenInfo, TokenStore } from './token-store.js'
-import { CodeGrantRequest, RefreshGrantRequest } from './types.js'
 import {
   VerifyTokenClaimsOptions,
   VerifyTokenClaimsResult,
@@ -78,18 +84,25 @@ export class TokenManager {
     clientAuth: ClientAuth,
     account: Account,
     device: null | { id: DeviceId; info: DeviceAccountInfo },
-    parameters: OAuthAuthenticationRequestParameters,
-    input: CodeGrantRequest,
+    parameters: OAuthAuthorizationRequestParameters,
+    input:
+      | OAuthAuthorizationCodeGrantTokenRequest
+      | OAuthClientCredentialsGrantTokenRequest
+      | OAuthPasswordGrantTokenRequest,
     dpopJkt: null | string,
   ): Promise<OAuthTokenResponse> {
+    // @NOTE the atproto specific DPoP requirement is enforced though the
+    // "dpop_bound_access_tokens" metadata, which is enforced by the
+    // ClientManager class.
     if (client.metadata.dpop_bound_access_tokens && !dpopJkt) {
       throw new InvalidDpopProofError('DPoP proof required')
     }
 
     if (!parameters.dpop_jkt) {
+      // Allow clients to bind their access tokens to a DPoP key during
+      // token request if they didn't provide a "dpop_jkt" during the
+      // authorization request.
       if (dpopJkt) parameters = { ...parameters, dpop_jkt: dpopJkt }
-    } else if (!dpopJkt) {
-      throw new InvalidDpopProofError('DPoP proof required')
     } else if (parameters.dpop_jkt !== dpopJkt) {
       throw new InvalidDpopKeyBindingError()
     }
@@ -109,78 +122,80 @@ export class TokenManager {
       )
     }
 
+    let code: Code | null = null
+
     switch (input.grant_type) {
-      case 'authorization_code':
-        if (!parameters.code_challenge || !parameters.code_challenge_method) {
-          throw new InvalidGrantError('PKCE is required')
+      case 'authorization_code': {
+        if (!isCode(input.code)) {
+          throw new InvalidGrantError('Invalid code')
         }
 
-        if (!parameters.redirect_uri) {
-          const redirect_uri = client.metadata.redirect_uris.find((uri) =>
-            compareRedirectUri(uri, input.redirect_uri),
-          )
-          if (redirect_uri) {
-            parameters = { ...parameters, redirect_uri }
-          } else {
-            throw new InvalidGrantError(`Invalid redirect_uri`)
-          }
-        } else if (parameters.redirect_uri !== input.redirect_uri) {
+        const tokenInfo = await this.store.findTokenByCode(input.code)
+        if (tokenInfo) {
+          await this.store.deleteToken(tokenInfo.id)
+          throw new InvalidGrantError(`Code replayed`)
+        }
+
+        code = input.code
+
+        if (parameters.redirect_uri !== input.redirect_uri) {
           throw new InvalidGrantError(
-            'This code was issued for another redirect_uri',
+            'The redirect_uri parameter must match the one used in the authorization request',
           )
+        }
+
+        if (parameters.code_challenge) {
+          if (!input.code_verifier) {
+            throw new InvalidGrantError('code_verifier is required')
+          }
+          if (input.code_verifier.length < 43) {
+            throw new InvalidGrantError('code_verifier too short')
+          }
+          switch (parameters.code_challenge_method ?? 'plain') {
+            case 'plain': {
+              if (parameters.code_challenge !== input.code_verifier) {
+                throw new InvalidGrantError('Invalid code_verifier')
+              }
+              break
+            }
+            case 'S256': {
+              const inputChallenge = Buffer.from(
+                parameters.code_challenge,
+                'base64',
+              )
+              const computedChallenge = createHash('sha256')
+                .update(input.code_verifier)
+                .digest()
+              if (inputChallenge.compare(computedChallenge) !== 0) {
+                throw new InvalidGrantError('Invalid code_verifier')
+              }
+              break
+            }
+            default: {
+              // Should never happen (because request validation should catch this)
+              throw new Error(`Unsupported code_challenge_method`)
+            }
+          }
+        } else if (input.code_verifier !== undefined) {
+          throw new InvalidRequestError(
+            "code_challenge parameter wasn't provided",
+          )
+        }
+
+        if (!device) {
+          // Fool-proofing (authorization_code grant should always have a device)
+          throw new InvalidRequestError('consent was not given for this device')
         }
 
         break
-
-      default:
-        throw new Error(`Unsupported grant type "${input.grant_type}"`)
-    }
-
-    if (parameters.code_challenge) {
-      if (!('code_verifier' in input) || !input.code_verifier) {
-        throw new InvalidGrantError('code_verifier is required')
       }
-      // Prevent client from generating too short code_verifiers
-      if (input.code_verifier.length < 43) {
-        throw new InvalidGrantError('code_verifier too short')
-      }
-      switch (parameters.code_challenge_method) {
-        case undefined: // Default is "plain" (per spec)
-        case 'plain': {
-          if (parameters.code_challenge !== input.code_verifier) {
-            throw new InvalidGrantError('Invalid code_verifier')
-          }
-          break
-        }
-        case 'S256': {
-          // Because the code_challenge is base64url-encoded, we will decode
-          // it in order to compare based on bytes.
-          const inputChallenge = Buffer.from(
-            parameters.code_challenge,
-            'base64',
-          )
-          const computedChallenge = createHash('sha256')
-            .update(input.code_verifier)
-            .digest()
-          if (inputChallenge.compare(computedChallenge) !== 0) {
-            throw new InvalidGrantError('Invalid code_verifier')
-          }
-          break
-        }
-        default: {
-          throw new InvalidRequestError(
-            `Unsupported code_challenge_method ${parameters.code_challenge_method}`,
-          )
-        }
-      }
-    }
 
-    const code = 'code' in input ? input.code : undefined
-    if (code) {
-      const tokenInfo = await this.store.findTokenByCode(code)
-      if (tokenInfo) {
-        await this.store.deleteToken(tokenInfo.id)
-        throw new InvalidGrantError(`Code replayed`)
+      default: {
+        // Other grants (e.g "password", "client_credentials") could be added
+        // here in the future...
+        throw new InvalidRequestError(
+          `Unsupported grant type "${input.grant_type}"`,
+        )
       }
     }
 
@@ -207,41 +222,50 @@ export class TokenManager {
       sub: account.sub,
       parameters,
       details: authorizationDetails ?? null,
-      code: code ?? null,
+      code,
     }
 
     await this.store.createToken(tokenId, tokenData, refreshToken)
 
-    const accessToken: AccessToken = !this.useJwtAccessToken(account)
-      ? tokenId
-      : await this.signer.accessToken(client, parameters, account, {
-          // We don't specify the alg here. We suppose the Resource server will be
-          // able to verify the token using any alg.
-          alg: undefined,
-          exp: expiresAt,
-          iat: now,
-          jti: tokenId,
-          cnf: parameters.dpop_jkt ? { jkt: parameters.dpop_jkt } : undefined,
-          authorization_details: authorizationDetails,
-        })
+    try {
+      const accessToken: OAuthAccessToken = !this.useJwtAccessToken(account)
+        ? tokenId
+        : await this.signer.accessToken(client, parameters, {
+            // We don't specify the alg here. We suppose the Resource server will be
+            // able to verify the token using any alg.
+            aud: account.aud,
+            sub: account.sub,
+            alg: undefined,
+            exp: expiresAt,
+            iat: now,
+            jti: tokenId,
+            cnf: parameters.dpop_jkt ? { jkt: parameters.dpop_jkt } : undefined,
+            authorization_details: authorizationDetails,
+          })
 
-    return this.buildTokenResponse(
-      client,
-      accessToken,
-      refreshToken,
-      expiresAt,
-      parameters,
-      account,
-      authorizationDetails,
-    )
+      return this.buildTokenResponse(
+        client,
+        accessToken,
+        refreshToken,
+        expiresAt,
+        parameters,
+        account,
+        authorizationDetails,
+      )
+    } catch (err) {
+      // Just in case the token could not be issued, we delete it from the store
+      await this.store.deleteToken(tokenId)
+
+      throw err
+    }
   }
 
   protected async buildTokenResponse(
     client: Client,
-    accessToken: AccessToken,
+    accessToken: OAuthAccessToken,
     refreshToken: string | undefined,
     expiresAt: Date,
-    parameters: OAuthAuthenticationRequestParameters,
+    parameters: OAuthAuthorizationRequestParameters,
     account: Account,
     authorizationDetails: null | any,
   ): Promise<OAuthTokenResponse> {
@@ -289,12 +313,16 @@ export class TokenManager {
   async refresh(
     client: Client,
     clientAuth: ClientAuth,
-    input: RefreshGrantRequest,
+    input: OAuthRefreshTokenGrantTokenRequest,
     dpopJkt: null | string,
   ): Promise<OAuthTokenResponse> {
-    const tokenInfo = await this.store.findTokenByRefreshToken(
-      input.refresh_token,
-    )
+    const refreshTokenParsed = refreshTokenSchema.safeParse(input.refresh_token)
+    if (!refreshTokenParsed.success) {
+      throw new InvalidRequestError('Invalid refresh token')
+    }
+    const refreshToken = refreshTokenParsed.data
+
+    const tokenInfo = await this.store.findTokenByRefreshToken(refreshToken)
     if (!tokenInfo?.currentRefreshToken) {
       throw new InvalidGrantError(`Invalid refresh token`)
     }
@@ -303,11 +331,23 @@ export class TokenManager {
     const { parameters } = data
 
     try {
-      if (tokenInfo.currentRefreshToken !== input.refresh_token) {
+      if (tokenInfo.currentRefreshToken !== refreshToken) {
         throw new InvalidGrantError(`refresh token replayed`)
       }
 
       await this.validateAccess(client, clientAuth, tokenInfo)
+
+      if (input.grant_type !== 'refresh_token') {
+        // Fool-proofing (should never happen)
+        throw new InvalidGrantError(`Invalid grant type`)
+      }
+
+      if (!client.metadata.grant_types.includes(input.grant_type)) {
+        // In case the client metadata was updated after the token was issued
+        throw new InvalidGrantError(
+          `This client is not allowed to use the "${input.grant_type}" grant type`,
+        )
+      }
 
       if (parameters.dpop_jkt) {
         if (!dpopJkt) {
@@ -370,11 +410,13 @@ export class TokenManager {
         },
       )
 
-      const accessToken: AccessToken = !this.useJwtAccessToken(account)
+      const accessToken: OAuthAccessToken = !this.useJwtAccessToken(account)
         ? nextTokenId
-        : await this.signer.accessToken(client, parameters, account, {
+        : await this.signer.accessToken(client, parameters, {
             // We don't specify the alg here. We suppose the Resource server will be
             // able to verify the token using any alg.
+            aud: account.aud,
+            sub: account.sub,
             alg: undefined,
             exp: expiresAt,
             iat: now,

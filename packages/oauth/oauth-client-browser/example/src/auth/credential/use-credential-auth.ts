@@ -48,7 +48,12 @@ export function useCredentialAuth() {
   )
 
   return useMemo(
-    () => ({ agent, signIn, signOut: () => agent?.logout() }),
+    () => ({
+      agent,
+      signIn,
+      signOut: () => agent?.logout(),
+      refresh: () => agent?.sessionManager.refreshSession(),
+    }),
     [signIn, agent],
   )
 }

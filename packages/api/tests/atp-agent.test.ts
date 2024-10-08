@@ -3,7 +3,7 @@ import { TID } from '@atproto/common-web'
 import {
   AppBskyActorDefs,
   AppBskyActorProfile,
-  BskyAgent,
+  AtpAgent,
   ComAtprotoRepoPutRecord,
   DEFAULT_LABEL_SETTINGS,
 } from '../src'
@@ -27,7 +27,7 @@ describe('agent', () => {
   })
 
   const getProfileDisplayName = async (
-    agent: BskyAgent,
+    agent: AtpAgent,
   ): Promise<string | undefined> => {
     try {
       const res = await agent.app.bsky.actor.profile.get({
@@ -41,14 +41,14 @@ describe('agent', () => {
   }
 
   it('clones correctly', () => {
-    const agent = new BskyAgent({ service: network.pds.url })
+    const agent = new AtpAgent({ service: network.pds.url })
     const agent2 = agent.clone()
-    expect(agent2 instanceof BskyAgent).toBeTruthy()
+    expect(agent2 instanceof AtpAgent).toBeTruthy()
     expect(agent.service).toEqual(agent2.service)
   })
 
   it('upsertProfile correctly creates and updates profiles.', async () => {
-    const agent = new BskyAgent({ service: network.pds.url })
+    const agent = new AtpAgent({ service: network.pds.url })
 
     await agent.createAccount({
       handle: 'user1.test',
@@ -80,7 +80,7 @@ describe('agent', () => {
   })
 
   it('upsertProfile correctly handles CAS failures.', async () => {
-    const agent = new BskyAgent({ service: network.pds.url })
+    const agent = new AtpAgent({ service: network.pds.url })
     await agent.createAccount({
       handle: 'user2.test',
       email: 'user2@test.com',
@@ -118,7 +118,7 @@ describe('agent', () => {
   })
 
   it('upsertProfile wont endlessly retry CAS failures.', async () => {
-    const agent = new BskyAgent({ service: network.pds.url })
+    const agent = new AtpAgent({ service: network.pds.url })
     await agent.createAccount({
       handle: 'user3.test',
       email: 'user3@test.com',
@@ -146,7 +146,7 @@ describe('agent', () => {
   })
 
   it('upsertProfile validates the record.', async () => {
-    const agent = new BskyAgent({ service: network.pds.url })
+    const agent = new AtpAgent({ service: network.pds.url })
     await agent.createAccount({
       handle: 'user4.test',
       email: 'user4@test.com',
@@ -163,7 +163,7 @@ describe('agent', () => {
 
   describe('app', () => {
     it('should retrieve the api app', () => {
-      const agent = new BskyAgent({ service: network.pds.url })
+      const agent = new AtpAgent({ service: network.pds.url })
       expect(agent.api).toBe(agent)
       expect(agent.app).toBeDefined()
     })
@@ -171,70 +171,70 @@ describe('agent', () => {
 
   describe('post', () => {
     it('should throw if no session', async () => {
-      const agent = new BskyAgent({ service: network.pds.url })
+      const agent = new AtpAgent({ service: network.pds.url })
       await expect(agent.post({ text: 'foo' })).rejects.toThrow('Not logged in')
     })
   })
 
   describe('deletePost', () => {
     it('should throw if no session', async () => {
-      const agent = new BskyAgent({ service: network.pds.url })
+      const agent = new AtpAgent({ service: network.pds.url })
       await expect(agent.deletePost('foo')).rejects.toThrow('Not logged in')
     })
   })
 
   describe('like', () => {
     it('should throw if no session', async () => {
-      const agent = new BskyAgent({ service: network.pds.url })
+      const agent = new AtpAgent({ service: network.pds.url })
       await expect(agent.like('foo', 'bar')).rejects.toThrow('Not logged in')
     })
   })
 
   describe('deleteLike', () => {
     it('should throw if no session', async () => {
-      const agent = new BskyAgent({ service: network.pds.url })
+      const agent = new AtpAgent({ service: network.pds.url })
       await expect(agent.deleteLike('foo')).rejects.toThrow('Not logged in')
     })
   })
 
   describe('repost', () => {
     it('should throw if no session', async () => {
-      const agent = new BskyAgent({ service: network.pds.url })
+      const agent = new AtpAgent({ service: network.pds.url })
       await expect(agent.repost('foo', 'bar')).rejects.toThrow('Not logged in')
     })
   })
 
   describe('deleteRepost', () => {
     it('should throw if no session', async () => {
-      const agent = new BskyAgent({ service: network.pds.url })
+      const agent = new AtpAgent({ service: network.pds.url })
       await expect(agent.deleteRepost('foo')).rejects.toThrow('Not logged in')
     })
   })
 
   describe('follow', () => {
     it('should throw if no session', async () => {
-      const agent = new BskyAgent({ service: network.pds.url })
+      const agent = new AtpAgent({ service: network.pds.url })
       await expect(agent.follow('foo')).rejects.toThrow('Not logged in')
     })
   })
 
   describe('deleteFollow', () => {
     it('should throw if no session', async () => {
-      const agent = new BskyAgent({ service: network.pds.url })
+      const agent = new AtpAgent({ service: network.pds.url })
       await expect(agent.deleteFollow('foo')).rejects.toThrow('Not logged in')
     })
   })
 
   describe('preferences methods', () => {
     it('gets and sets preferences correctly', async () => {
-      const agent = new BskyAgent({ service: network.pds.url })
+      const agent = new AtpAgent({ service: network.pds.url })
       await agent.createAccount({
         handle: 'user5.test',
         email: 'user5@test.com',
         password: 'password',
       })
 
-      const DEFAULT_LABELERS = BskyAgent.appLabelers.map((did) => ({
+      const DEFAULT_LABELERS = AtpAgent.appLabelers.map((did) => ({
         did,
         labels: {},
       }))
@@ -1174,7 +1174,7 @@ describe('agent', () => {
     })
 
     it('resolves duplicates correctly', async () => {
-      const agent = new BskyAgent({ service: network.pds.url })
+      const agent = new AtpAgent({ service: network.pds.url })
 
       await agent.createAccount({
         handle: 'user6.test',
@@ -1318,7 +1318,7 @@ describe('agent', () => {
             porn: 'warn',
           },
           labelers: [
-            ...BskyAgent.appLabelers.map((did) => ({ did, labels: {} })),
+            ...AtpAgent.appLabelers.map((did) => ({ did, labels: {} })),
             {
               did: 'did:plc:first-labeler',
               labels: {},
@@ -1376,7 +1376,7 @@ describe('agent', () => {
             porn: 'warn',
           },
           labelers: [
-            ...BskyAgent.appLabelers.map((did) => ({ did, labels: {} })),
+            ...AtpAgent.appLabelers.map((did) => ({ did, labels: {} })),
             {
               did: 'did:plc:first-labeler',
               labels: {},
@@ -1435,7 +1435,7 @@ describe('agent', () => {
             porn: 'ignore',
           },
           labelers: [
-            ...BskyAgent.appLabelers.map((did) => ({ did, labels: {} })),
+            ...AtpAgent.appLabelers.map((did) => ({ did, labels: {} })),
             {
               did: 'did:plc:first-labeler',
               labels: {},
@@ -1494,7 +1494,7 @@ describe('agent', () => {
             porn: 'ignore',
           },
           labelers: [
-            ...BskyAgent.appLabelers.map((did) => ({ did, labels: {} })),
+            ...AtpAgent.appLabelers.map((did) => ({ did, labels: {} })),
             {
               did: 'did:plc:first-labeler',
               labels: {},
@@ -1549,7 +1549,7 @@ describe('agent', () => {
             porn: 'ignore',
           },
           labelers: [
-            ...BskyAgent.appLabelers.map((did) => ({ did, labels: {} })),
+            ...AtpAgent.appLabelers.map((did) => ({ did, labels: {} })),
             {
               did: 'did:plc:first-labeler',
               labels: {},
@@ -1604,7 +1604,7 @@ describe('agent', () => {
             porn: 'ignore',
           },
           labelers: [
-            ...BskyAgent.appLabelers.map((did) => ({ did, labels: {} })),
+            ...AtpAgent.appLabelers.map((did) => ({ did, labels: {} })),
             {
               did: 'did:plc:first-labeler',
               labels: {},
@@ -1671,7 +1671,7 @@ describe('agent', () => {
             porn: 'ignore',
           },
           labelers: [
-            ...BskyAgent.appLabelers.map((did) => ({ did, labels: {} })),
+            ...AtpAgent.appLabelers.map((did) => ({ did, labels: {} })),
             {
               did: 'did:plc:first-labeler',
               labels: {},
@@ -1773,10 +1773,10 @@ describe('agent', () => {
     })
 
     describe('muted words', () => {
-      let agent: BskyAgent
+      let agent: AtpAgent
 
       beforeAll(async () => {
-        agent = new BskyAgent({ service: network.pds.url })
+        agent = new AtpAgent({ service: network.pds.url })
         await agent.createAccount({
           handle: 'user7.test',
           email: 'user7@test.com',
@@ -2196,10 +2196,10 @@ describe('agent', () => {
     })
 
     describe('legacy muted words', () => {
-      let agent: BskyAgent
+      let agent: AtpAgent
 
       async function updatePreferences(
-        agent: BskyAgent,
+        agent: AtpAgent,
         cb: (
           prefs: AppBskyActorDefs.Preferences,
         ) => AppBskyActorDefs.Preferences | false,
@@ -2252,7 +2252,7 @@ describe('agent', () => {
       }
 
       beforeAll(async () => {
-        agent = new BskyAgent({ service: network.pds.url })
+        agent = new AtpAgent({ service: network.pds.url })
         await agent.createAccount({
           handle: 'user7-1.test',
           email: 'user7-1@test.com',
@@ -2374,11 +2374,11 @@ describe('agent', () => {
     })
 
     describe('hidden posts', () => {
-      let agent: BskyAgent
+      let agent: AtpAgent
       const postUri = 'at://did:plc:fake/app.bsky.feed.post/fake'
 
       beforeAll(async () => {
-        agent = new BskyAgent({ service: network.pds.url })
+        agent = new AtpAgent({ service: network.pds.url })
         await agent.createAccount({
           handle: 'user8.test',
           email: 'user8@test.com',
@@ -2411,13 +2411,13 @@ describe('agent', () => {
     })
 
     describe(`saved feeds v2`, () => {
-      let agent: BskyAgent
+      let agent: AtpAgent
       let i = 0
       const feedUri = () => `at://bob.com/app.bsky.feed.generator/${i++}`
       const listUri = () => `at://bob.com/app.bsky.graph.list/${i++}`
 
       beforeAll(async () => {
-        agent = new BskyAgent({ service: network.pds.url })
+        agent = new AtpAgent({ service: network.pds.url })
         await agent.createAccount({
           handle: 'user9.test',
           email: 'user9@test.com',
@@ -2885,12 +2885,12 @@ describe('agent', () => {
     })
 
     describe(`saved feeds v2: migration scenarios`, () => {
-      let agent: BskyAgent
+      let agent: AtpAgent
       let i = 0
       const feedUri = () => `at://bob.com/app.bsky.feed.generator/${i++}`
 
       beforeAll(async () => {
-        agent = new BskyAgent({ service: network.pds.url })
+        agent = new AtpAgent({ service: network.pds.url })
         await agent.createAccount({
           handle: 'user10.test',
           email: 'user10@test.com',
@@ -3205,7 +3205,7 @@ describe('agent', () => {
 
     describe('queued nudges', () => {
       it('queueNudges & dismissNudges', async () => {
-        const agent = new BskyAgent({ service: network.pds.url })
+        const agent = new AtpAgent({ service: network.pds.url })
         await agent.createAccount({
           handle: 'user11.test',
           email: 'user11@test.com',
@@ -3236,7 +3236,7 @@ describe('agent', () => {
 
     describe('guided tours', () => {
       it('setActiveProgressGuide', async () => {
-        const agent = new BskyAgent({ service: network.pds.url })
+        const agent = new AtpAgent({ service: network.pds.url })
 
         await agent.createAccount({
           handle: 'user12.test',
@@ -3273,7 +3273,7 @@ describe('agent', () => {
     })
 
     describe('nuxs', () => {
-      let agent: BskyAgent
+      let agent: AtpAgent
 
       const nux = {
         id: 'a',
@@ -3283,7 +3283,7 @@ describe('agent', () => {
       }
 
       beforeAll(async () => {
-        agent = new BskyAgent({ service: network.pds.url })
+        agent = new AtpAgent({ service: network.pds.url })
 
         await agent.createAccount({
           handle: 'nuxs.test',

@@ -1,4 +1,4 @@
-import { AccessToken, OAuthTokenType } from '@atproto/oauth-types'
+import { OAuthAccessToken, OAuthTokenType } from '@atproto/oauth-types'
 
 import { InvalidDpopKeyBindingError } from '../errors/invalid-dpop-key-binding-error.js'
 import { InvalidDpopProofError } from '../errors/invalid-dpop-proof-error.js'
@@ -15,14 +15,14 @@ export type VerifyTokenClaimsOptions = {
 }
 
 export type VerifyTokenClaimsResult = {
-  token: AccessToken
+  token: OAuthAccessToken
   tokenId: TokenId
   tokenType: OAuthTokenType
   claims: TokenClaims
 }
 
 export function verifyTokenClaims(
-  token: AccessToken,
+  token: OAuthAccessToken,
   tokenId: TokenId,
   tokenType: OAuthTokenType,
   dpopJkt: string | null,

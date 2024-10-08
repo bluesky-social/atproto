@@ -1,14 +1,4 @@
-import { Readable } from 'stream'
-import express, {
-  Application,
-  Express,
-  Router,
-  Request,
-  Response,
-  ErrorRequestHandler,
-  NextFunction,
-  RequestHandler,
-} from 'express'
+import { check, schema } from '@atproto/common'
 import {
   LexiconDoc,
   Lexicons,
@@ -17,31 +7,45 @@ import {
   LexXrpcQuery,
   LexXrpcSubscription,
 } from '@atproto/lexicon'
-import { check, forwardStreamErrors, schema } from '@atproto/common'
+import express, {
+  Application,
+  ErrorRequestHandler,
+  Express,
+  NextFunction,
+  Request,
+  RequestHandler,
+  Response,
+  Router,
+} from 'express'
+import { Readable } from 'node:stream'
+import { pipeline } from 'node:stream/promises'
+
+import log from './logger'
+import { consumeMany } from './rate-limiter'
 import { ErrorFrame, Frame, MessageFrame, XrpcStreamServer } from './stream'
 import {
-  XRPCHandler,
-  XRPCError,
-  InvalidRequestError,
-  HandlerOutput,
-  HandlerSuccess,
-  handlerSuccess,
-  XRPCHandlerConfig,
-  MethodNotImplementedError,
-  HandlerAuth,
   AuthVerifier,
-  isHandlerError,
-  Options,
-  XRPCStreamHandlerConfig,
-  XRPCStreamHandler,
-  Params,
-  InternalServerError,
-  XRPCReqContext,
-  RateLimiterI,
-  RateLimiterConsume,
-  isShared,
-  RateLimitExceededError,
+  HandlerAuth,
   HandlerPipeThrough,
+  HandlerSuccess,
+  InternalServerError,
+  InvalidRequestError,
+  isHandlerError,
+  isHandlerPipeThroughBuffer,
+  isHandlerPipeThroughStream,
+  isShared,
+  MethodNotImplementedError,
+  Options,
+  Params,
+  RateLimiterConsume,
+  RateLimiterI,
+  RateLimitExceededError,
+  XRPCError,
+  XRPCHandler,
+  XRPCHandlerConfig,
+  XRPCReqContext,
+  XRPCStreamHandler,
+  XRPCStreamHandlerConfig,
 } from './types'
 import {
   decodeQueryParams,
@@ -49,8 +53,6 @@ import {
   validateInput,
   validateOutput,
 } from './util'
-import log from './logger'
-import { consumeMany } from './rate-limiter'
 
 export function createServer(lexicons?: LexiconDoc[], options?: Options) {
   return new Server(lexicons, options)
@@ -243,8 +245,8 @@ export class Server {
       validateInput(nsid, def, req, routeOpts, this.lex)
     const validateResOutput =
       this.options.validateResponse === false
-        ? (output?: HandlerSuccess) => output
-        : (output?: HandlerSuccess) =>
+        ? null
+        : (output: undefined | HandlerSuccess) =>
             validateOutput(nsid, def, output, this.lex)
     const assertValidXrpcParams = (params: unknown) =>
       this.lex.assertValidXrpcParams(nsid, params)
@@ -280,59 +282,48 @@ export class Server {
         }
 
         // run the handler
-        const outputUnvalidated = await routeCfg.handler(reqCtx)
+        const output = await routeCfg.handler(reqCtx)
 
-        if (isHandlerError(outputUnvalidated)) {
-          throw XRPCError.fromError(outputUnvalidated)
-        }
+        if (!output) {
+          validateResOutput?.(output)
+          res.status(200)
+          res.end()
+        } else if (isHandlerPipeThroughStream(output)) {
+          setHeaders(res, output)
+          res.status(200)
+          res.header('Content-Type', output.encoding)
+          await pipeline(output.stream, res)
+        } else if (isHandlerPipeThroughBuffer(output)) {
+          setHeaders(res, output)
+          res.status(200)
+          res.header('Content-Type', output.encoding)
+          res.end(output.buffer)
+        } else if (isHandlerError(output)) {
+          next(XRPCError.fromError(output))
+        } else {
+          validateResOutput?.(output)
 
-        if (outputUnvalidated && isHandlerPipeThrough(outputUnvalidated)) {
-          // set headers
-          if (outputUnvalidated?.headers) {
-            Object.entries(outputUnvalidated.headers).forEach(([name, val]) => {
-              res.header(name, val)
-            })
-          }
-          res
-            .header('Content-Type', outputUnvalidated.encoding)
-            .status(200)
-            .send(Buffer.from(outputUnvalidated.buffer))
-          return
-        }
+          res.status(200)
+          setHeaders(res, output)
 
-        if (!outputUnvalidated || isHandlerSuccess(outputUnvalidated)) {
-          // validate response
-          const output = validateResOutput(outputUnvalidated)
-          // set headers
-          if (output?.headers) {
-            Object.entries(output.headers).forEach(([name, val]) => {
-              res.header(name, val)
-            })
-          }
-          // send response
           if (
-            output?.encoding === 'application/json' ||
-            output?.encoding === 'json'
+            output.encoding === 'application/json' ||
+            output.encoding === 'json'
           ) {
             const json = lexToJson(output.body)
-            res.status(200).json(json)
-          } else if (output?.body instanceof Readable) {
+            res.json(json)
+          } else if (output.body instanceof Readable) {
             res.header('Content-Type', output.encoding)
-            res.status(200)
-            res.once('error', (err) => res.destroy(err))
-            forwardStreamErrors(output.body, res)
-            output.body.pipe(res)
-          } else if (output) {
-            res
-              .header('Content-Type', output.encoding)
-              .status(200)
-              .send(
-                output.body instanceof Uint8Array
+            await pipeline(output.body, res)
+          } else {
+            res.header('Content-Type', output.encoding)
+            res.send(
+              Buffer.isBuffer(output.body)
+                ? output.body
+                : output.body instanceof Uint8Array
                   ? Buffer.from(output.body)
                   : output.body,
-              )
-          } else {
-            res.status(200).end()
+            )
           }
         }
       } catch (err: unknown) {
@@ -364,7 +355,7 @@ export class Server {
             // authenticate request
             const auth = await config.auth?.({ req })
             if (isHandlerError(auth)) {
-              throw XRPCError.fromError(auth)
+              throw XRPCError.fromHandlerError(auth)
             }
             // validate request
             let params = decodeQueryParams(def, getQueryParams(req.url))
@@ -481,29 +472,17 @@ export class Server {
   }
 }
 
-function isHandlerSuccess(v: HandlerOutput): v is HandlerSuccess {
-  return handlerSuccess.safeParse(v).success
-}
-
-function isHandlerPipeThrough(v: HandlerOutput): v is HandlerPipeThrough {
-  if (v === null || typeof v !== 'object') {
-    return false
-  }
-  if (!isString(v['encoding']) || !(v['buffer'] instanceof ArrayBuffer)) {
-    return false
-  }
-  if (v['headers'] !== undefined) {
-    if (v['headers'] === null || typeof v['headers'] !== 'object') {
-      return false
-    }
-    if (!Object.values(v['headers']).every(isString)) {
-      return false
+function setHeaders(
+  res: Response,
+  result: HandlerSuccess | HandlerPipeThrough,
+) {
+  const { headers } = result
+  if (headers) {
+    for (const [name, val] of Object.entries(headers)) {
+      if (val != null) res.header(name, val)
     }
   }
-  return true
 }
-
-const isString = (val: unknown): val is string => typeof val === 'string'
 
 const kRequestLocals = Symbol('requestLocals')
 
@@ -525,7 +504,7 @@ function createAuthMiddleware(verifier: AuthVerifier): RequestHandler {
     try {
       const result = await verifier({ req, res })
       if (isHandlerError(result)) {
-        throw XRPCError.fromError(result)
+        throw XRPCError.fromHandlerError(result)
       }
       const locals: RequestLocals = req[kRequestLocals]
       locals.auth = result

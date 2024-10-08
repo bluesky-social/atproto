@@ -1686,6 +1686,11 @@ export const schemaDict = {
             },
           },
         },
+        errors: [
+          {
+            name: 'RecordNotFound',
+          },
+        ],
       },
     },
   },
@@ -4190,6 +4195,10 @@ export const schemaDict = {
               ref: 'lex:com.atproto.label.defs#label',
             },
           },
+          pinnedPost: {
+            type: 'ref',
+            ref: 'lex:com.atproto.repo.strongRef',
+          },
         },
       },
       profileAssociated: {
@@ -4809,6 +4818,10 @@ export const schemaDict = {
               refs: ['lex:com.atproto.label.defs#selfLabels'],
             },
             joinedViaStarterPack: {
+              type: 'ref',
+              ref: 'lex:com.atproto.repo.strongRef',
+            },
+            pinnedPost: {
               type: 'ref',
               ref: 'lex:com.atproto.repo.strongRef',
             },
@@ -5468,6 +5481,9 @@ export const schemaDict = {
           embeddingDisabled: {
             type: 'boolean',
           },
+          pinned: {
+            type: 'boolean',
+          },
         },
       },
       feedViewPost: {
@@ -5484,7 +5500,10 @@ export const schemaDict = {
           },
           reason: {
             type: 'union',
-            refs: ['lex:app.bsky.feed.defs#reasonRepost'],
+            refs: [
+              'lex:app.bsky.feed.defs#reasonRepost',
+              'lex:app.bsky.feed.defs#reasonPin',
+            ],
           },
           feedContext: {
             type: 'string',
@@ -5535,6 +5554,10 @@ export const schemaDict = {
             format: 'datetime',
           },
         },
+      },
+      reasonPin: {
+        type: 'object',
+        properties: {},
       },
       threadViewPost: {
         type: 'object',
@@ -5693,7 +5716,10 @@ export const schemaDict = {
           },
           reason: {
             type: 'union',
-            refs: ['lex:app.bsky.feed.defs#skeletonReasonRepost'],
+            refs: [
+              'lex:app.bsky.feed.defs#skeletonReasonRepost',
+              'lex:app.bsky.feed.defs#skeletonReasonPin',
+            ],
           },
           feedContext: {
             type: 'string',
@@ -5712,6 +5738,10 @@ export const schemaDict = {
             format: 'at-uri',
           },
         },
+      },
+      skeletonReasonPin: {
+        type: 'object',
+        properties: {},
       },
       threadgateView: {
         type: 'object',
@@ -6077,6 +6107,10 @@ export const schemaDict = {
                 'posts_and_author_threads',
               ],
               default: 'posts_with_replies',
+            },
+            includePins: {
+              type: 'boolean',
+              default: false,
             },
           },
         },
@@ -7162,7 +7196,7 @@ export const schemaDict = {
         type: 'record',
         key: 'tid',
         description:
-          "Record defining interaction gating rules for a thread (aka, reply controls). The record key (rkey) of the threadgate record must match the record key of the thread's root post, and that record must be in the same repository..",
+          "Record defining interaction gating rules for a thread (aka, reply controls). The record key (rkey) of the threadgate record must match the record key of the thread's root post, and that record must be in the same repository.",
         record: {
           type: 'object',
           required: ['post', 'createdAt'],
@@ -11614,6 +11648,49 @@ export const schemaDict = {
       },
     },
   },
+  ToolsOzoneModerationGetRecords: {
+    lexicon: 1,
+    id: 'tools.ozone.moderation.getRecords',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get details about some records.',
+        parameters: {
+          type: 'params',
+          required: ['uris'],
+          properties: {
+            uris: {
+              type: 'array',
+              maxLength: 100,
+              items: {
+                type: 'string',
+                format: 'at-uri',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['records'],
+            properties: {
+              records: {
+                type: 'array',
+                items: {
+                  type: 'union',
+                  refs: [
+                    'lex:tools.ozone.moderation.defs#recordViewDetail',
+                    'lex:tools.ozone.moderation.defs#recordViewNotFound',
+                  ],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ToolsOzoneModerationGetRepo: {
     lexicon: 1,
     id: 'tools.ozone.moderation.getRepo',
@@ -11643,6 +11720,49 @@ export const schemaDict = {
             name: 'RepoNotFound',
           },
         ],
+      },
+    },
+  },
+  ToolsOzoneModerationGetRepos: {
+    lexicon: 1,
+    id: 'tools.ozone.moderation.getRepos',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get details about some repositories.',
+        parameters: {
+          type: 'params',
+          required: ['dids'],
+          properties: {
+            dids: {
+              type: 'array',
+              maxLength: 100,
+              items: {
+                type: 'string',
+                format: 'did',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['repos'],
+            properties: {
+              repos: {
+                type: 'array',
+                items: {
+                  type: 'union',
+                  refs: [
+                    'lex:tools.ozone.moderation.defs#repoViewDetail',
+                    'lex:tools.ozone.moderation.defs#repoViewNotFound',
+                  ],
+                },
+              },
+            },
+          },
+        },
       },
     },
   },
@@ -12313,6 +12433,181 @@ export const schemaDict = {
       },
     },
   },
+  ToolsOzoneSignatureDefs: {
+    lexicon: 1,
+    id: 'tools.ozone.signature.defs',
+    defs: {
+      sigDetail: {
+        type: 'object',
+        required: ['property', 'value'],
+        properties: {
+          property: {
+            type: 'string',
+          },
+          value: {
+            type: 'string',
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneSignatureFindCorrelation: {
+    lexicon: 1,
+    id: 'tools.ozone.signature.findCorrelation',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Find all correlated threat signatures between 2 or more accounts.',
+        parameters: {
+          type: 'params',
+          required: ['dids'],
+          properties: {
+            dids: {
+              type: 'array',
+              items: {
+                type: 'string',
+                format: 'did',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['details'],
+            properties: {
+              details: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.signature.defs#sigDetail',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneSignatureFindRelatedAccounts: {
+    lexicon: 1,
+    id: 'tools.ozone.signature.findRelatedAccounts',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get accounts that share some matching threat signatures with the root account.',
+        parameters: {
+          type: 'params',
+          required: ['did'],
+          properties: {
+            did: {
+              type: 'string',
+              format: 'did',
+            },
+            cursor: {
+              type: 'string',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['accounts'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              accounts: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.signature.findRelatedAccounts#relatedAccount',
+                },
+              },
+            },
+          },
+        },
+      },
+      relatedAccount: {
+        type: 'object',
+        required: ['account'],
+        properties: {
+          account: {
+            type: 'ref',
+            ref: 'lex:com.atproto.admin.defs#accountView',
+          },
+          similarities: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:tools.ozone.signature.defs#sigDetail',
+            },
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneSignatureSearchAccounts: {
+    lexicon: 1,
+    id: 'tools.ozone.signature.searchAccounts',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Search for accounts that match one or more threat signature values.',
+        parameters: {
+          type: 'params',
+          required: ['values'],
+          properties: {
+            values: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+            },
+            cursor: {
+              type: 'string',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['accounts'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              accounts: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.admin.defs#accountView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ToolsOzoneTeamAddMember: {
     lexicon: 1,
     id: 'tools.ozone.team.addMember',
@@ -12756,7 +13051,9 @@ export const ids = {
   ToolsOzoneModerationEmitEvent: 'tools.ozone.moderation.emitEvent',
   ToolsOzoneModerationGetEvent: 'tools.ozone.moderation.getEvent',
   ToolsOzoneModerationGetRecord: 'tools.ozone.moderation.getRecord',
+  ToolsOzoneModerationGetRecords: 'tools.ozone.moderation.getRecords',
   ToolsOzoneModerationGetRepo: 'tools.ozone.moderation.getRepo',
+  ToolsOzoneModerationGetRepos: 'tools.ozone.moderation.getRepos',
   ToolsOzoneModerationQueryEvents: 'tools.ozone.moderation.queryEvents',
   ToolsOzoneModerationQueryStatuses: 'tools.ozone.moderation.queryStatuses',
   ToolsOzoneModerationSearchRepos: 'tools.ozone.moderation.searchRepos',
@@ -12768,6 +13065,11 @@ export const ids = {
   ToolsOzoneSetGetValues: 'tools.ozone.set.getValues',
   ToolsOzoneSetQuerySets: 'tools.ozone.set.querySets',
   ToolsOzoneSetUpsertSet: 'tools.ozone.set.upsertSet',
+  ToolsOzoneSignatureDefs: 'tools.ozone.signature.defs',
+  ToolsOzoneSignatureFindCorrelation: 'tools.ozone.signature.findCorrelation',
+  ToolsOzoneSignatureFindRelatedAccounts:
+    'tools.ozone.signature.findRelatedAccounts',
+  ToolsOzoneSignatureSearchAccounts: 'tools.ozone.signature.searchAccounts',
   ToolsOzoneTeamAddMember: 'tools.ozone.team.addMember',
   ToolsOzoneTeamDefs: 'tools.ozone.team.defs',
   ToolsOzoneTeamDeleteMember: 'tools.ozone.team.deleteMember',

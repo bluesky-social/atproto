@@ -1,5 +1,77 @@
 # @atproto/pds
 
+## 0.4.64
+
+### Patch Changes
+
+- Updated dependencies [[`80450cbf2`](https://github.com/bluesky-social/atproto/commit/80450cbf2ca27967ee9fe1a5f4bc590b26f1e6b2)]:
+  - @atproto-labs/fetch-node@0.1.3
+  - @atproto/oauth-provider@0.2.5
+
+## 0.4.63
+
+### Patch Changes
+
+- Updated dependencies [[`a0531ce42`](https://github.com/bluesky-social/atproto/commit/a0531ce429f5139cb0e2cc19aa9b338599947e44)]:
+  - @atproto/api@0.13.11
+
+## 0.4.62
+
+### Patch Changes
+
+- Updated dependencies [[`df14df522`](https://github.com/bluesky-social/atproto/commit/df14df522bb7986e56ee1f6a0f5d862e1ea6f4d5), [`8943c1008`](https://github.com/bluesky-social/atproto/commit/8943c10082702bbc0fc150237c6cc421251afd51)]:
+  - @atproto/api@0.13.10
+  - @atproto-labs/fetch-node@0.1.2
+  - @atproto/oauth-provider@0.2.4
+
+## 0.4.61
+
+### Patch Changes
+
+- [#2834](https://github.com/bluesky-social/atproto/pull/2834) [`4098d9890`](https://github.com/bluesky-social/atproto/commit/4098d9890173f4d6c6512f2d8994eebbf12b5e13) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow defaulting to unencoded responses when proxying client requests that do not specify accept-encoding
+
+- [#2836](https://github.com/bluesky-social/atproto/pull/2836) [`a2bad977a`](https://github.com/bluesky-social/atproto/commit/a2bad977a8d941b4075ea3ffee3d6f7a0c0f467c) Thanks [@foysalit](https://github.com/foysalit)! - Add getRepos and getRecords endpoints for bulk fetching
+
+- Updated dependencies [[`4098d9890`](https://github.com/bluesky-social/atproto/commit/4098d9890173f4d6c6512f2d8994eebbf12b5e13), [`a2bad977a`](https://github.com/bluesky-social/atproto/commit/a2bad977a8d941b4075ea3ffee3d6f7a0c0f467c), [`1226ed268`](https://github.com/bluesky-social/atproto/commit/1226ed2682970a58ae433b9deb11290333988ddd)]:
+  - @atproto/common@0.4.4
+  - @atproto/api@0.13.9
+  - @atproto/oauth-provider@0.2.3
+  - @atproto/aws@0.2.7
+  - @atproto/crypto@0.4.1
+  - @atproto/repo@0.5.3
+  - @atproto/xrpc-server@0.7.1
+
+## 0.4.60
+
+### Patch Changes
+
+- [#2767](https://github.com/bluesky-social/atproto/pull/2767) [`922b94ce3`](https://github.com/bluesky-social/atproto/commit/922b94ce379d861faaa5cf8448b7a44f04e474d3) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Update email templates
+
+- [#2770](https://github.com/bluesky-social/atproto/pull/2770) [`a07b21151`](https://github.com/bluesky-social/atproto/commit/a07b21151f1850340c4b7797ebb11521b1a6cdf3) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use a hardened, HTTP2 compatible, client to perform proxied requests
+
+- [#2770](https://github.com/bluesky-social/atproto/pull/2770) [`a07b21151`](https://github.com/bluesky-social/atproto/commit/a07b21151f1850340c4b7797ebb11521b1a6cdf3) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Enable keep-alive for hardened "safe" fetch() agent
+
+- [#2770](https://github.com/bluesky-social/atproto/pull/2770) [`a07b21151`](https://github.com/bluesky-social/atproto/commit/a07b21151f1850340c4b7797ebb11521b1a6cdf3) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve performances of request proxying by avoiding un-necessary content decoding & buffering.
+
+- [#2770](https://github.com/bluesky-social/atproto/pull/2770) [`a07b21151`](https://github.com/bluesky-social/atproto/commit/a07b21151f1850340c4b7797ebb11521b1a6cdf3) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add SSRF protection to request proxying
+
+- [#2813](https://github.com/bluesky-social/atproto/pull/2813) [`a06634ae5`](https://github.com/bluesky-social/atproto/commit/a06634ae576217d53ef7ea7f8cbfa9faa8662634) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Update email templates with @ for handles, copy
+
+- [#2824](https://github.com/bluesky-social/atproto/pull/2824) [`b298bfd28`](https://github.com/bluesky-social/atproto/commit/b298bfd280c5de8b38b843fd852e6d2739a776d8) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Prevent server crash when catchall proxy request are cancelled
+
+- Updated dependencies [[`ed325d863`](https://github.com/bluesky-social/atproto/commit/ed325d863ce8ea5986c5a45c3188aaa35288b7a8), [`a07b21151`](https://github.com/bluesky-social/atproto/commit/a07b21151f1850340c4b7797ebb11521b1a6cdf3), [`ed325d863`](https://github.com/bluesky-social/atproto/commit/ed325d863ce8ea5986c5a45c3188aaa35288b7a8), [`ed325d863`](https://github.com/bluesky-social/atproto/commit/ed325d863ce8ea5986c5a45c3188aaa35288b7a8), [`a07b21151`](https://github.com/bluesky-social/atproto/commit/a07b21151f1850340c4b7797ebb11521b1a6cdf3), [`2676206e4`](https://github.com/bluesky-social/atproto/commit/2676206e422233fefbf2d9d182e8d462f0957c93), [`ed325d863`](https://github.com/bluesky-social/atproto/commit/ed325d863ce8ea5986c5a45c3188aaa35288b7a8), [`a07b21151`](https://github.com/bluesky-social/atproto/commit/a07b21151f1850340c4b7797ebb11521b1a6cdf3), [`ed325d863`](https://github.com/bluesky-social/atproto/commit/ed325d863ce8ea5986c5a45c3188aaa35288b7a8), [`a07b21151`](https://github.com/bluesky-social/atproto/commit/a07b21151f1850340c4b7797ebb11521b1a6cdf3), [`ed325d863`](https://github.com/bluesky-social/atproto/commit/ed325d863ce8ea5986c5a45c3188aaa35288b7a8), [`87a1f2426`](https://github.com/bluesky-social/atproto/commit/87a1f24262e0e644b6cf31cc7a0446d9127ffa94), [`ed325d863`](https://github.com/bluesky-social/atproto/commit/ed325d863ce8ea5986c5a45c3188aaa35288b7a8), [`a07b21151`](https://github.com/bluesky-social/atproto/commit/a07b21151f1850340c4b7797ebb11521b1a6cdf3), [`ed325d863`](https://github.com/bluesky-social/atproto/commit/ed325d863ce8ea5986c5a45c3188aaa35288b7a8), [`ed325d863`](https://github.com/bluesky-social/atproto/commit/ed325d863ce8ea5986c5a45c3188aaa35288b7a8), [`a07b21151`](https://github.com/bluesky-social/atproto/commit/a07b21151f1850340c4b7797ebb11521b1a6cdf3), [`a07b21151`](https://github.com/bluesky-social/atproto/commit/a07b21151f1850340c4b7797ebb11521b1a6cdf3), [`ed325d863`](https://github.com/bluesky-social/atproto/commit/ed325d863ce8ea5986c5a45c3188aaa35288b7a8), [`a07b21151`](https://github.com/bluesky-social/atproto/commit/a07b21151f1850340c4b7797ebb11521b1a6cdf3), [`a07b21151`](https://github.com/bluesky-social/atproto/commit/a07b21151f1850340c4b7797ebb11521b1a6cdf3), [`ed325d863`](https://github.com/bluesky-social/atproto/commit/ed325d863ce8ea5986c5a45c3188aaa35288b7a8), [`ed325d863`](https://github.com/bluesky-social/atproto/commit/ed325d863ce8ea5986c5a45c3188aaa35288b7a8), [`a07b21151`](https://github.com/bluesky-social/atproto/commit/a07b21151f1850340c4b7797ebb11521b1a6cdf3), [`a07b21151`](https://github.com/bluesky-social/atproto/commit/a07b21151f1850340c4b7797ebb11521b1a6cdf3), [`a07b21151`](https://github.com/bluesky-social/atproto/commit/a07b21151f1850340c4b7797ebb11521b1a6cdf3)]:
+  - @atproto/oauth-provider@0.2.2
+  - @atproto/xrpc@0.6.3
+  - @atproto-labs/fetch-node@0.1.1
+  - @atproto/api@0.13.8
+  - @atproto/xrpc-server@0.7.0
+  - @atproto/lexicon@0.4.2
+  - @atproto/common@0.4.3
+  - @atproto/identity@0.4.2
+  - @atproto/repo@0.5.2
+  - @atproto/aws@0.2.6
+  - @atproto/crypto@0.4.1
+
 ## 0.4.59
 
 ### Patch Changes

@@ -115,7 +115,7 @@ export class SetService {
     if (!set) return undefined
 
     const { ref } = this.db.db.dynamic
-    let qb = this.db.db
+    const qb = this.db.db
       .selectFrom('set_value')
       .selectAll()
       .where('setId', '=', set.id)

@@ -31,6 +31,7 @@ export enum ResponseType {
   AuthRequired = 401,
   Forbidden = 403,
   XRPCNotSupported = 404,
+  NotAcceptable = 406,
   PayloadTooLarge = 413,
   UnsupportedMediaType = 415,
   RateLimitExceeded = 429,

@@ -166,7 +166,9 @@ import * as ToolsOzoneCommunicationUpdateTemplate from './types/tools/ozone/comm
 import * as ToolsOzoneModerationEmitEvent from './types/tools/ozone/moderation/emitEvent'
 import * as ToolsOzoneModerationGetEvent from './types/tools/ozone/moderation/getEvent'
 import * as ToolsOzoneModerationGetRecord from './types/tools/ozone/moderation/getRecord'
+import * as ToolsOzoneModerationGetRecords from './types/tools/ozone/moderation/getRecords'
 import * as ToolsOzoneModerationGetRepo from './types/tools/ozone/moderation/getRepo'
+import * as ToolsOzoneModerationGetRepos from './types/tools/ozone/moderation/getRepos'
 import * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents'
 import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses'
 import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos'
@@ -177,6 +179,9 @@ import * as ToolsOzoneSetDeleteValues from './types/tools/ozone/set/deleteValues
 import * as ToolsOzoneSetGetValues from './types/tools/ozone/set/getValues'
 import * as ToolsOzoneSetQuerySets from './types/tools/ozone/set/querySets'
 import * as ToolsOzoneSetUpsertSet from './types/tools/ozone/set/upsertSet'
+import * as ToolsOzoneSignatureFindCorrelation from './types/tools/ozone/signature/findCorrelation'
+import * as ToolsOzoneSignatureFindRelatedAccounts from './types/tools/ozone/signature/findRelatedAccounts'
+import * as ToolsOzoneSignatureSearchAccounts from './types/tools/ozone/signature/searchAccounts'
 import * as ToolsOzoneTeamAddMember from './types/tools/ozone/team/addMember'
 import * as ToolsOzoneTeamDeleteMember from './types/tools/ozone/team/deleteMember'
 import * as ToolsOzoneTeamListMembers from './types/tools/ozone/team/listMembers'
@@ -2166,6 +2171,7 @@ export class ToolsOzoneNS {
   moderation: ToolsOzoneModerationNS
   server: ToolsOzoneServerNS
   set: ToolsOzoneSetNS
+  signature: ToolsOzoneSignatureNS
   team: ToolsOzoneTeamNS
 
   constructor(server: Server) {
@@ -2174,6 +2180,7 @@ export class ToolsOzoneNS {
     this.moderation = new ToolsOzoneModerationNS(server)
     this.server = new ToolsOzoneServerNS(server)
     this.set = new ToolsOzoneSetNS(server)
+    this.signature = new ToolsOzoneSignatureNS(server)
     this.team = new ToolsOzoneTeamNS(server)
   }
 }
@@ -2270,6 +2277,17 @@ export class ToolsOzoneModerationNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  getRecords<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneModerationGetRecords.Handler<ExtractAuth<AV>>,
+      ToolsOzoneModerationGetRecords.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.moderation.getRecords' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   getRepo<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -2278,6 +2296,17 @@ export class ToolsOzoneModerationNS {
     >,
   ) {
     const nsid = 'tools.ozone.moderation.getRepo' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getRepos<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneModerationGetRepos.Handler<ExtractAuth<AV>>,
+      ToolsOzoneModerationGetRepos.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.moderation.getRepos' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -2404,6 +2433,47 @@ export class ToolsOzoneSetNS {
     >,
   ) {
     const nsid = 'tools.ozone.set.upsertSet' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class ToolsOzoneSignatureNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  findCorrelation<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneSignatureFindCorrelation.Handler<ExtractAuth<AV>>,
+      ToolsOzoneSignatureFindCorrelation.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.signature.findCorrelation' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  findRelatedAccounts<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneSignatureFindRelatedAccounts.Handler<ExtractAuth<AV>>,
+      ToolsOzoneSignatureFindRelatedAccounts.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.signature.findRelatedAccounts' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  searchAccounts<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneSignatureSearchAccounts.Handler<ExtractAuth<AV>>,
+      ToolsOzoneSignatureSearchAccounts.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.signature.searchAccounts' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }
