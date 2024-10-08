@@ -61,7 +61,10 @@ const client = new OAuthClient({
       throw new TypeError(`Unsupported algorithm: ${algorithm.name}`)
     },
 
-    requestLock: <T>(name: string, fn: () => T | PromiseLike<T>): Promise<T> => {
+    requestLock: <T>(
+      name: string,
+      fn: () => T | PromiseLike<T>,
+    ): Promise<T> => {
       // This function is used to prevent concurrent refreshes of the same
       // credentials. It is important to ensure that only one refresh is done at
       // a time to prevent the sessions from being revoked.
@@ -74,13 +77,16 @@ const client = new OAuthClient({
       declare const locks: Map<string, Promise<void>>
 
       const current = locks.get(name) || Promise.resolve()
-      const next = current.then(fn).catch(() => {}).finally(() => {
-        if (locks.get(name) === next) locks.delete(name)
-      })
+      const next = current
+        .then(fn)
+        .catch(() => {})
+        .finally(() => {
+          if (locks.get(name) === next) locks.delete(name)
+        })
 
       locks.set(name, next)
       return next
-    }
+    },
   },
 
   stateStore: {
