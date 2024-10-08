@@ -14,3 +14,4 @@ export * as _20240814T003647759Z from './20240814T003647759Z-event-created-at-in
 export * as _20240903T205730722Z from './20240903T205730722Z-add-template-lang'
 export * as _20240904T205730722Z from './20240904T205730722Z-add-subject-did-index'
 export * as _20241001T205730722Z from './20241001T205730722Z-subject-status-review-state-index'
+export * as _20241008T205730722Z from './20241008T205730722Z-sets'
