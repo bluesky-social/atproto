@@ -25,6 +25,9 @@ export interface ModerationSubjectStatus {
   lastReviewedAt: string | null
   lastReportedAt: string | null
   lastAppealedAt: string | null
+  recordUpdatedAt: string | null
+  recordDeletedAt: string | null
+  recordStatus: string | null
   muteUntil: string | null
   muteReportingUntil: string | null
   suspendUntil: string | null
