@@ -11,7 +11,7 @@ For a node specific implementation, see
 ### Configuration
 
 ```ts
-import { OAuthClient } from '@atproto/oauth-client'
+import { OAuthClient, Key, Session } from '@atproto/oauth-client'
 import { JoseKey } from '@atproto/jwk-jose' // NodeJS/Browser only
 
 const client = new OAuthClient({
@@ -104,13 +104,13 @@ const client = new OAuthClient({
     },
   },
 
-  tokenStore: {
+  sessionStore: {
     // A store for saving session data.
 
-    set(sub: string, tokenSet: TokenSet): Promise<void> {
+    set(sub: string, session: Session): Promise<void> {
       throw new Error('Not implemented')
     },
-    get(sub: string): Promise<TokenSet | undefined> {
+    get(sub: string): Promise<Session | undefined> {
       throw new Error('Not implemented')
     },
     del(sub: string): Promise<void> {
@@ -184,12 +184,12 @@ import { Agent } from '@atproto/api'
 const agent = new Agent(oauthSession)
 
 // Make an authenticated request to the server. New credentials will be
-// automatically fetched if needed (causing tokenStore.set() to be called).
+// automatically fetched if needed (causing sessionStore.set() to be called).
 await agent.post({
   text: 'Hello, world!',
 })
 
-// revoke credentials on the server (causing tokenStore.del() to be called)
+// revoke credentials on the server (causing sessionStore.del() to be called)
 await agent.signOut()
 ```
 
