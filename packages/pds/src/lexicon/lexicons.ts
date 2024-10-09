@@ -1798,16 +1798,6 @@ export const schemaDict = {
             cursor: {
               type: 'string',
             },
-            rkeyStart: {
-              type: 'string',
-              description:
-                'DEPRECATED: The lowest sort-ordered rkey to start from (exclusive)',
-            },
-            rkeyEnd: {
-              type: 'string',
-              description:
-                'DEPRECATED: The highest sort-ordered rkey to stop at (exclusive)',
-            },
             reverse: {
               type: 'boolean',
               description: 'Flag to reverse the order of the returned records.',
@@ -3340,12 +3330,6 @@ export const schemaDict = {
               type: 'string',
               description: 'Record Key',
             },
-            commit: {
-              type: 'string',
-              format: 'cid',
-              description:
-                'DEPRECATED: referenced a repo commit by CID, and retrieved record as of that commit',
-            },
           },
         },
         output: {
@@ -3740,11 +3724,6 @@ export const schemaDict = {
           commit: {
             type: 'cid-link',
             description: 'Repo commit object CID.',
-          },
-          prev: {
-            type: 'cid-link',
-            description:
-              'DEPRECATED -- unused. WARNING -- nullable and optional; stick with optional to ensure golang interoperability.',
           },
           rev: {
             type: 'string',
