@@ -249,7 +249,10 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
     return this.keyset?.publicJwks ?? ({ keys: [] as const } as const)
   }
 
-  async authorize(input: string, options?: AuthorizeOptions): Promise<URL> {
+  async authorize(
+    input: string,
+    { signal, ...options }: AuthorizeOptions = {},
+  ): Promise<URL> {
     const redirectUri =
       options?.redirect_uri ?? this.clientMetadata.redirect_uris[0]
     if (!this.clientMetadata.redirect_uris.includes(redirectUri)) {
@@ -257,10 +260,9 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
       throw new TypeError('Invalid redirect_uri')
     }
 
-    const { identity, metadata } = await this.oauthResolver.resolve(
-      input,
-      options,
-    )
+    const { identity, metadata } = await this.oauthResolver.resolve(input, {
+      signal,
+    })
 
     const pkce = await this.runtime.generatePKCE()
     const dpopKey = await this.runtime.generateKey(

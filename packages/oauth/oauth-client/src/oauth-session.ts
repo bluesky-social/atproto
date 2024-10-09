@@ -27,7 +27,7 @@ export class OAuthSession {
   constructor(
     public readonly server: OAuthServerAgent,
     public readonly sub: string,
-    private readonly tokenGetter: SessionGetter,
+    private readonly sessionGetter: SessionGetter,
     fetch: Fetch = globalThis.fetch,
   ) {
     this.dpopFetch = dpopFetchWrapper<void>({
@@ -56,7 +56,7 @@ export class OAuthSession {
    * if, and only if, they are (about to be) expired. Defaults to `undefined`.
    */
   protected async getTokenSet(refresh: boolean | 'auto'): Promise<TokenSet> {
-    const { tokenSet } = await this.tokenGetter.get(this.sub, {
+    const { tokenSet } = await this.sessionGetter.get(this.sub, {
       noCache: refresh === true,
       allowStale: refresh === false,
     })
@@ -88,7 +88,7 @@ export class OAuthSession {
       const tokenSet = await this.getTokenSet(false)
       await this.server.revoke(tokenSet.access_token)
     } finally {
-      await this.tokenGetter.delStored(
+      await this.sessionGetter.delStored(
         this.sub,
         new TokenRevokedError(this.sub),
       )
@@ -146,7 +146,7 @@ export class OAuthSession {
       // TODO: Is there a "softer" way to handle this, e.g. by marking the
       // session as "expired" in the session store, allowing the user to trigger
       // a new login (using login_hint)?
-      await this.tokenGetter.delStored(
+      await this.sessionGetter.delStored(
         this.sub,
         new TokenInvalidError(this.sub),
       )
