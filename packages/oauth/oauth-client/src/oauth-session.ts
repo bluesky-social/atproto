@@ -1,5 +1,5 @@
-import { asDid } from '@atproto/did'
 import { Fetch, bindFetch } from '@atproto-labs/fetch'
+import { asDid } from '@atproto/did'
 import { OAuthAuthorizationServerMetadata } from '@atproto/oauth-types'
 
 import { TokenInvalidError } from './errors/token-invalid-error.js'
@@ -27,7 +27,7 @@ export class OAuthSession {
   constructor(
     public readonly server: OAuthServerAgent,
     public readonly sub: string,
-    private readonly sessionGetter: SessionGetter,
+    private readonly tokenGetter: SessionGetter,
     fetch: Fetch = globalThis.fetch,
   ) {
     this.dpopFetch = dpopFetchWrapper<void>({
@@ -50,14 +50,21 @@ export class OAuthSession {
   }
 
   /**
-   * @param refresh See {@link SessionGetter.getSession}
+   * @param refresh When `true`, the credentials will be refreshed even if they
+   * are not expired. When `false`, the credentials will not be refreshed even
+   * if they are expired. When `undefined`, the credentials will be refreshed
+   * if, and only if, they are (about to be) expired. Defaults to `undefined`.
    */
-  public async getTokenSet(refresh?: boolean): Promise<TokenSet> {
-    const { tokenSet } = await this.sessionGetter.getSession(this.sub, refresh)
+  protected async getTokenSet(refresh: boolean | 'auto'): Promise<TokenSet> {
+    const { tokenSet } = await this.tokenGetter.get(this.sub, {
+      noCache: refresh === true,
+      allowStale: refresh === false,
+    })
+
     return tokenSet
   }
 
-  async getTokenInfo(refresh?: boolean): Promise<TokenInfo> {
+  async getTokenInfo(refresh: boolean | 'auto' = 'auto'): Promise<TokenInfo> {
     const tokenSet = await this.getTokenSet(refresh)
     const expiresAt =
       tokenSet.expires_at == null ? undefined : new Date(tokenSet.expires_at)
@@ -78,10 +85,10 @@ export class OAuthSession {
 
   async signOut(): Promise<void> {
     try {
-      const { tokenSet } = await this.sessionGetter.getSession(this.sub, false)
+      const tokenSet = await this.getTokenSet(false)
       await this.server.revoke(tokenSet.access_token)
     } finally {
-      await this.sessionGetter.delStored(
+      await this.tokenGetter.delStored(
         this.sub,
         new TokenRevokedError(this.sub),
       )
@@ -90,7 +97,7 @@ export class OAuthSession {
 
   async fetchHandler(pathname: string, init?: RequestInit): Promise<Response> {
     // This will try and refresh the token if it is known to be expired
-    const tokenSet = await this.getTokenSet(undefined)
+    const tokenSet = await this.getTokenSet('auto')
 
     const initialUrl = new URL(pathname, tokenSet.aud)
     const initialAuth = `${tokenSet.token_type} ${tokenSet.access_token}`
@@ -139,7 +146,7 @@ export class OAuthSession {
       // TODO: Is there a "softer" way to handle this, e.g. by marking the
       // session as "expired" in the session store, allowing the user to trigger
       // a new login (using login_hint)?
-      await this.sessionGetter.delStored(
+      await this.tokenGetter.delStored(
         this.sub,
         new TokenInvalidError(this.sub),
       )

@@ -1,4 +1,5 @@
 export type Awaitable<T> = T | PromiseLike<T>
+export type Simplify<T> = { [K in keyof T]: T[K] } & NonNullable<unknown>
 
 // @ts-expect-error
 Symbol.dispose ??= Symbol('@@dispose')
@@ -115,4 +116,53 @@ export class CustomEventTarget<EventDetailMap extends Record<string, unknown>> {
       new CustomEvent(type, { ...init, detail }),
     )
   }
+}
+
+export type SpaceSeparatedValue<Value extends string> =
+  | `${Value}`
+  | `${Value} ${string}`
+  | `${string} ${Value}`
+  | `${string} ${Value} ${string}`
+
+export const includesSpaceSeparatedValue = <Value extends string>(
+  input: string,
+  value: Value,
+): input is SpaceSeparatedValue<Value> => {
+  // Optimized version of:
+  // return input.split(' ').includes(value)
+
+  let idx = input.indexOf(value)
+  while (idx !== -1) {
+    const endIdx = idx + value.length
+    if (
+      // at beginning or preceded by space
+      (idx === 0 || input[idx - 1] === ' ') &&
+      // at end or followed by space
+      (endIdx === input.length || input[endIdx] === ' ')
+    ) {
+      return true
+    }
+    idx = input.indexOf(value, endIdx)
+  }
+
+  return false
+}
+
+export function combineSignals(
+  signals: readonly (AbortSignal | undefined)[],
+): undefined | AbortSignal {
+  const { length } = signals.filter(Boolean)
+  if (length === 0) return undefined
+  if (length === 1) return signals.find(Boolean)!
+
+  const controller = new AbortController()
+  const { signal } = controller
+
+  for (const signal of signals) {
+    if (signal) {
+      signal.addEventListener('abort', () => controller.abort(), { signal })
+    }
+  }
+
+  return signal
 }

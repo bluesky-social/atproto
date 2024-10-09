@@ -104,13 +104,13 @@ const client = new OAuthClient({
     },
   },
 
-  sessionStore: {
+  tokenStore: {
     // A store for saving session data.
 
-    set(sub: string, session: Session): Promise<void> {
+    set(sub: string, tokenSet: TokenSet): Promise<void> {
       throw new Error('Not implemented')
     },
-    get(sub: string): Promise<Session | undefined> {
+    get(sub: string): Promise<TokenSet | undefined> {
       throw new Error('Not implemented')
     },
     del(sub: string): Promise<void> {
@@ -184,12 +184,12 @@ import { Agent } from '@atproto/api'
 const agent = new Agent(oauthSession)
 
 // Make an authenticated request to the server. New credentials will be
-// automatically fetched if needed (causing sessionStore.set() to be called).
+// automatically fetched if needed (causing tokenStore.set() to be called).
 await agent.post({
   text: 'Hello, world!',
 })
 
-// revoke credentials on the server (causing sessionStore.del() to be called)
+// revoke credentials on the server (causing tokenStore.del() to be called)
 await agent.signOut()
 ```
 

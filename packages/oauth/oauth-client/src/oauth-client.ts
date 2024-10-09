@@ -14,6 +14,7 @@ import { IdentityResolver } from '@atproto-labs/identity-resolver'
 import { SimpleStoreMemory } from '@atproto-labs/simple-store-memory'
 import { Key, Keyset } from '@atproto/jwk'
 import {
+  OAuthAuthorizationRequestParameters,
   OAuthClientIdDiscoverable,
   OAuthClientMetadata,
   OAuthClientMetadataInput,
@@ -143,8 +144,8 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
   readonly serverFactory: OAuthServerFactory
 
   // Stores
-  readonly sessionGetter: SessionGetter
-  readonly stateStore: StateStore
+  protected readonly sessionGetter: SessionGetter
+  protected readonly stateStore: StateStore
 
   constructor({
     fetch = globalThis.fetch,
@@ -275,7 +276,9 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
       appState: options?.state,
     })
 
-    const parameters = {
+    const parameters: OAuthAuthorizationRequestParameters = {
+      ...options,
+
       client_id: this.clientMetadata.client_id,
       redirect_uri: redirectUri,
       code_challenge: pkce.challenge,
@@ -285,12 +288,8 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
         ? input // If input is a handle or a DID, use it as a login_hint
         : undefined,
       response_mode: this.responseMode,
-      response_type: 'code',
-
-      display: options?.display,
-      prompt: options?.prompt,
+      response_type: 'code' as const,
       scope: options?.scope ?? this.clientMetadata.scope,
-      ui_locales: options?.ui_locales,
     }
 
     if (metadata.pushed_authorization_request_endpoint) {
@@ -396,14 +395,14 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
       )
 
       if (issuerParam != null) {
-        if (!server.serverMetadata.issuer) {
+        if (!server.issuer) {
           throw new OAuthCallbackError(
             params,
             'Issuer not found in metadata',
             stateData.appState,
           )
         }
-        if (server.serverMetadata.issuer !== issuerParam) {
+        if (server.issuer !== issuerParam) {
           throw new OAuthCallbackError(
             params,
             'Issuer mismatch',
@@ -431,7 +430,7 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
 
         return { session, state: stateData.appState ?? null }
       } catch (err) {
-        await server.revoke(tokenSet.access_token)
+        await server.revoke(tokenSet.refresh_token || tokenSet.access_token)
 
         throw err
       }
@@ -448,11 +447,14 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
    *
    * @param refresh See {@link SessionGetter.getSession}
    */
-  async restore(sub: string, refresh?: boolean): Promise<OAuthSession> {
-    const { dpopKey, tokenSet } = await this.sessionGetter.getSession(
-      sub,
-      refresh,
-    )
+  async restore(
+    sub: string,
+    refresh: boolean | 'auto' = 'auto',
+  ): Promise<OAuthSession> {
+    const { dpopKey, tokenSet } = await this.sessionGetter.get(sub, {
+      noCache: refresh === true,
+      allowStale: refresh === false,
+    })
 
     const server = await this.serverFactory.fromIssuer(tokenSet.iss, dpopKey, {
       noCache: refresh === true,
@@ -463,10 +465,9 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
   }
 
   async revoke(sub: string) {
-    const { dpopKey, tokenSet } = await this.sessionGetter.getSession(
-      sub,
-      false,
-    )
+    const { dpopKey, tokenSet } = await this.sessionGetter.get(sub, {
+      allowStale: true,
+    })
 
     // NOT using `;(await this.restore(sub, false)).signOut()` because we want
     // the tokens to be deleted even if it was not possible to fetch the issuer

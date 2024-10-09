@@ -22,7 +22,7 @@ needs of your application, and must respect the [ATPROTO].
 The `client_metadata` object will typically be built by the backend at startup.
 
 ```ts
-import { NodeOAuthClient } from '@atproto/oauth-client-node'
+import { NodeOAuthClient, TokenSet } from '@atproto/oauth-client-node'
 import { JoseKey } from '@atproto/jwk-jose'
 
 const client = new NodeOAuthClient({
@@ -61,9 +61,9 @@ const client = new NodeOAuthClient({
   },
 
   // Interface to store authenticated session data
-  sessionStore: {
-    async set(sub: string, session: Session): Promise<void> {},
-    async get(sub: string): Promise<Session | undefined> {},
+  tokenStore: {
+    async set(sub: string, token: TokenSet): Promise<void> {},
+    async get(sub: string): Promise<TokenSet | undefined> {},
     async del(sub: string): Promise<void> {},
   },
 
@@ -182,9 +182,9 @@ const client = await NodeOAuthClient.fromClientId({
     async del(key: string): Promise<void> {},
   },
 
-  sessionStore: {
-    async set(sub: string, session: Session): Promise<void> {},
-    async get(sub: string): Promise<Session | undefined> {},
+  tokenStore: {
+    async set(sub: string, token: TokenSet): Promise<void> {},
+    async get(sub: string): Promise<TokenSet | undefined> {},
     async del(sub: string): Promise<void> {},
   },
 
@@ -212,14 +212,14 @@ expires.
 
 For this to work, the client must be configured with the following options:
 
-#### `sessionStore`
+#### `tokenStore`
 
 A simple key-value store to save the OAuth session data. This is used to save
 the access token, refresh token, and other session data.
 
 ```ts
-const sessionStore: NodeSavedSessionStore = {
-  async set(sub: string, sessionData: NodeSavedSession) {
+const tokenStore: NodeSavedTokenStore = {
+  async set(sub: string, sessionData: NodeSavedToken) {
     // Insert or update the session data in your database
     await saveSessionDataToDb(sub, sessionData)
   },
@@ -245,7 +245,7 @@ A simple key-value store to save the state of the OAuth
 authorization flow. This is used to prevent CSRF attacks.
 
 The implementation of the `StateStore` is similar to the
-[`sessionStore`](#sessionstore).
+[`tokenStore`](#tokenstore).
 
 ```ts
 interface NodeSavedStateStore {

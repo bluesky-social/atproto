@@ -12,7 +12,7 @@ import { OAuthResponseError } from './oauth-response-error.js'
 import { TokenSet } from './oauth-server-agent.js'
 import { OAuthServerFactory } from './oauth-server-factory.js'
 import { Runtime } from './runtime.js'
-import { CustomEventTarget, timeoutSignal } from './util.js'
+import { combineSignals, CustomEventTarget, timeoutSignal } from './util.js'
 
 export type Session = {
   dpopKey: Key
@@ -73,9 +73,15 @@ export class SessionGetter extends CachedGetter<string, Session> {
         // concurrent access (which, normally, should not happen if a proper
         // runtime lock was provided).
 
-        if (sub !== storedSession.tokenSet.sub) {
+        const { dpopKey, tokenSet } = storedSession
+
+        if (sub !== tokenSet.sub) {
           // Fool-proofing (e.g. against invalid session storage)
           throw new TokenRefreshError(sub, 'Stored session sub mismatch')
+        }
+
+        if (!tokenSet.refresh_token) {
+          throw new TokenRefreshError(sub, 'No refresh token available')
         }
 
         // Since refresh tokens can only be used once, we might run into
@@ -90,13 +96,12 @@ export class SessionGetter extends CachedGetter<string, Session> {
         // one in memory. If it isn't, then another instance has already
         // refreshed the token.
 
-        const { tokenSet, dpopKey } = storedSession
         const server = await serverFactory.fromIssuer(tokenSet.iss, dpopKey)
 
         // Because refresh tokens can only be used once, we must not use the
         // "signal" to abort the refresh, or throw any abort error beyond this
         // point. Any thrown error beyond this point will prevent the
-        // SessionGetter from obtaining, and storing, the new token set,
+        // TokenGetter from obtaining, and storing, the new token set,
         // effectively rendering the currently saved session unusable.
         options?.signal?.throwIfAborted()
 
@@ -140,7 +145,7 @@ export class SessionGetter extends CachedGetter<string, Session> {
                 stored.tokenSet.refresh_token !== tokenSet.refresh_token
               ) {
                 // A concurrent refresh occurred. Pretend this one succeeded.
-                return { dpopKey, tokenSet: stored.tokenSet }
+                return stored
               } else {
                 // There were no concurrent refresh. The token is (likely)
                 // simply no longer valid.
@@ -205,11 +210,15 @@ export class SessionGetter extends CachedGetter<string, Session> {
   }
 
   async setStored(sub: string, session: Session) {
+    // Prevent tempering with the stored value
+    if (sub !== session.tokenSet.sub) {
+      throw new TypeError('Token set does not match the expected sub')
+    }
     await super.setStored(sub, session)
     this.dispatchEvent('updated', { sub, ...session })
   }
 
-  async delStored(sub: string, cause?: unknown): Promise<void> {
+  override async delStored(sub: string, cause?: unknown): Promise<void> {
     await super.delStored(sub, cause)
     this.dispatchEvent('deleted', { sub, cause })
   }
@@ -221,10 +230,26 @@ export class SessionGetter extends CachedGetter<string, Session> {
    * if, and only if, they are (about to be) expired. Defaults to `undefined`.
    */
   async getSession(sub: string, refresh?: boolean) {
-    const session = await this.get(sub, {
+    return this.get(sub, {
       noCache: refresh === true,
       allowStale: refresh === false,
     })
+  }
+
+  async get(sub: string, options?: GetCachedOptions): Promise<Session> {
+    const session = await this.runtime.usingLock(
+      `@atproto-oauth-client-${sub}`,
+      async () => {
+        // Make sure, even if there is no signal in the options, that the
+        // request will be cancelled after at most 30 seconds.
+        using signal = timeoutSignal(30e3, options)
+
+        return await super.get(sub, {
+          ...options,
+          signal: combineSignals([options?.signal, signal]),
+        })
+      },
+    )
 
     if (sub !== session.tokenSet.sub) {
       // Fool-proofing (e.g. against invalid session storage)
@@ -232,15 +257,5 @@ export class SessionGetter extends CachedGetter<string, Session> {
     }
 
     return session
-  }
-
-  async get(sub: string, options?: GetCachedOptions): Promise<Session> {
-    return this.runtime.usingLock(`@atproto-oauth-client-${sub}`, async () => {
-      // Make sure, even if there is no signal in the options, that the request
-      // will be cancelled after at most 30 seconds.
-      using signal = timeoutSignal(30e3, options)
-
-      return await super.get(sub, { ...options, signal })
-    })
   }
 }
