@@ -1,3 +1,5 @@
+import { z } from 'zod'
+
 import { InvalidDidError } from './did-error.js'
 import { Did } from './did.js'
 import {
@@ -12,6 +14,10 @@ import {
 
 export type AtprotoIdentityDidMethods = 'plc' | 'web'
 export type AtprotoDid = Did<AtprotoIdentityDidMethods>
+
+export const atprotoDidSchema = z
+  .string()
+  .refine(isAtprotoDid, `Atproto only allows "plc" and "web" DID methods`)
 
 export function isAtprotoDid(input: unknown): input is AtprotoDid {
   // Optimized equivalent of:
