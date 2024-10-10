@@ -30,6 +30,7 @@ import {
   ModerationStatusHistory,
   ModerationStatusHistoryCreator,
 } from './history/status'
+import { SetService, SetServiceCreator } from './set/service'
 
 export type AppContextOptions = {
   db: Database
@@ -37,6 +38,7 @@ export type AppContextOptions = {
   modService: ModerationServiceCreator
   modStatusHistoryService: ModerationStatusHistoryCreator
   communicationTemplateService: CommunicationTemplateServiceCreator
+  setService: SetServiceCreator
   teamService: TeamServiceCreator
   appviewAgent: AtpAgent
   pdsAgent: AtpAgent | undefined
@@ -123,6 +125,7 @@ export class AppContext {
     const communicationTemplateService = CommunicationTemplateService.creator()
     const modStatusHistoryService = ModerationStatusHistory.creator()
     const teamService = TeamService.creator()
+    const setService = SetService.creator()
 
     const sequencer = new Sequencer(modService(db))
 
@@ -140,6 +143,7 @@ export class AppContext {
         modStatusHistoryService,
         communicationTemplateService,
         teamService,
+        setService,
         appviewAgent,
         pdsAgent,
         chatAgent,
@@ -191,6 +195,10 @@ export class AppContext {
 
   get teamService(): TeamServiceCreator {
     return this.opts.teamService
+  }
+
+  get setService(): SetServiceCreator {
+    return this.opts.setService
   }
 
   get appviewAgent(): AtpAgent {

@@ -19,6 +19,7 @@ export interface QueryParams {
     | 'posts_with_media'
     | 'posts_and_author_threads'
     | (string & {})
+  includePins?: boolean
 }
 
 export type InputSchema = undefined

@@ -55,6 +55,7 @@ export interface ViewerState {
   threadMuted?: boolean
   replyDisabled?: boolean
   embeddingDisabled?: boolean
+  pinned?: boolean
   [k: string]: unknown
 }
 
@@ -73,7 +74,7 @@ export function validateViewerState(v: unknown): ValidationResult {
 export interface FeedViewPost {
   post: PostView
   reply?: ReplyRef
-  reason?: ReasonRepost | { $type: string; [k: string]: unknown }
+  reason?: ReasonRepost | ReasonPin | { $type: string; [k: string]: unknown }
   /** Context provided by feed generator that may be passed back alongside interactions. */
   feedContext?: string
   [k: string]: unknown
@@ -132,6 +133,22 @@ export function isReasonRepost(v: unknown): v is ReasonRepost {
 
 export function validateReasonRepost(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.feed.defs#reasonRepost', v)
+}
+
+export interface ReasonPin {
+  [k: string]: unknown
+}
+
+export function isReasonPin(v: unknown): v is ReasonPin {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.feed.defs#reasonPin'
+  )
+}
+
+export function validateReasonPin(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.feed.defs#reasonPin', v)
 }
 
 export interface ThreadViewPost {
@@ -265,7 +282,10 @@ export function validateGeneratorViewerState(v: unknown): ValidationResult {
 
 export interface SkeletonFeedPost {
   post: string
-  reason?: SkeletonReasonRepost | { $type: string; [k: string]: unknown }
+  reason?:
+    | SkeletonReasonRepost
+    | SkeletonReasonPin
+    | { $type: string; [k: string]: unknown }
   /** Context that will be passed through to client and may be passed to feed generator back alongside interactions. */
   feedContext?: string
   [k: string]: unknown
@@ -298,6 +318,22 @@ export function isSkeletonReasonRepost(v: unknown): v is SkeletonReasonRepost {
 
 export function validateSkeletonReasonRepost(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.feed.defs#skeletonReasonRepost', v)
+}
+
+export interface SkeletonReasonPin {
+  [k: string]: unknown
+}
+
+export function isSkeletonReasonPin(v: unknown): v is SkeletonReasonPin {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.feed.defs#skeletonReasonPin'
+  )
+}
+
+export function validateSkeletonReasonPin(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.feed.defs#skeletonReasonPin', v)
 }
 
 export interface ThreadgateView {

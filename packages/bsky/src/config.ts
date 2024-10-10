@@ -17,7 +17,7 @@ export interface ServerConfigValues {
   bsyncApiKey?: string
   bsyncHttpVersion?: '1.1' | '2'
   bsyncIgnoreBadTls?: boolean
-  courierUrl: string
+  courierUrl?: string
   courierApiKey?: string
   courierHttpVersion?: '1.1' | '2'
   courierIgnoreBadTls?: boolean
@@ -92,7 +92,6 @@ export class ServerConfig {
     const bsyncIgnoreBadTls = process.env.BSKY_BSYNC_IGNORE_BAD_TLS === 'true'
     assert(bsyncHttpVersion === '1.1' || bsyncHttpVersion === '2')
     const courierUrl = process.env.BSKY_COURIER_URL || undefined
-    assert(courierUrl)
     const courierApiKey = process.env.BSKY_COURIER_API_KEY || undefined
     const courierHttpVersion = process.env.BSKY_COURIER_HTTP_VERSION || '2'
     const courierIgnoreBadTls =

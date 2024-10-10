@@ -1,5 +1,5 @@
 import {
-  OAuthAuthenticationRequestParameters,
+  OAuthAuthorizationRequestParameters,
   OAuthClientMetadata,
 } from '@atproto/oauth-types'
 
@@ -16,7 +16,7 @@ export type ScopeDetail = {
 export type AuthorizationResultAuthorize = {
   issuer: string
   client: Client
-  parameters: OAuthAuthenticationRequestParameters
+  parameters: OAuthAuthorizationRequestParameters
   authorize: {
     uri: RequestUri
     scopeDetails?: ScopeDetail[]

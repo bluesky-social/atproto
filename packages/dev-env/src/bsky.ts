@@ -62,7 +62,6 @@ export class TestBsky {
       dataplaneHttpVersion: '1.1',
       bsyncUrl: `http://localhost:${bsyncPort}`,
       bsyncHttpVersion: '1.1',
-      courierUrl: 'https://fake.example',
       modServiceDid: cfg.modServiceDid ?? 'did:example:invalidMod',
       labelsFromIssuerDids: [EXAMPLE_LABELER],
       ...cfg,

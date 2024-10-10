@@ -30,7 +30,7 @@ export class AppContext {
       signingKey: Keypair
       idResolver: IdResolver
       bsyncClient: BsyncClient
-      courierClient: CourierClient
+      courierClient: CourierClient | undefined
       authVerifier: AuthVerifier
       featureGates: FeatureGates
     },
@@ -76,7 +76,7 @@ export class AppContext {
     return this.opts.bsyncClient
   }
 
-  get courierClient(): CourierClient {
+  get courierClient(): CourierClient | undefined {
     return this.opts.courierClient
   }
 

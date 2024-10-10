@@ -10,6 +10,7 @@ import { useOAuth, UseOAuthOptions } from './oauth/use-oauth'
 export type AuthContext = {
   pdsAgent: Agent
   signOut: () => void
+  refresh: () => void
 }
 
 const AuthContext = createContext<AuthContext | null>(null)
@@ -27,23 +28,42 @@ export const AuthProvider = ({
     agent: oauthAgent,
     signIn: oauthSignIn,
     signOut: oauthSignOut,
+    refresh: oauthRefresh,
   } = useOAuth(options)
 
   const {
     agent: credentialAgent,
     signIn: credentialSignIn,
     signOut: credentialSignOut,
+    refresh: credentialRefresh,
   } = useCredentialAuth()
 
-  const value = useMemo<AuthContext | null>(
-    () =>
-      oauthAgent
-        ? { pdsAgent: oauthAgent, signOut: oauthSignOut }
-        : credentialAgent
-          ? { pdsAgent: credentialAgent, signOut: credentialSignOut }
-          : null,
-    [oauthAgent, oauthSignOut, credentialAgent, credentialSignOut],
-  )
+  const value = useMemo<AuthContext | null>(() => {
+    if (oauthAgent) {
+      return {
+        pdsAgent: oauthAgent,
+        signOut: oauthSignOut,
+        refresh: oauthRefresh,
+      }
+    }
+
+    if (credentialAgent) {
+      return {
+        pdsAgent: credentialAgent,
+        signOut: credentialSignOut,
+        refresh: credentialRefresh,
+      }
+    }
+
+    return null
+  }, [
+    oauthAgent,
+    oauthSignOut,
+    credentialAgent,
+    credentialSignOut,
+    oauthRefresh,
+    credentialRefresh,
+  ])
 
   if (isLoginPopup) {
     return <div>This window can be closed</div>

@@ -1,6 +1,6 @@
 import { Key, Keyset, isSignedJwt } from '@atproto/jwk'
 import {
-  AccessToken,
+  OAuthAccessToken,
   OAuthTokenType,
   oauthIssuerIdentifierSchema,
 } from '@atproto/oauth-types'
@@ -154,7 +154,7 @@ export class OAuthVerifier {
 
   protected async authenticateToken(
     tokenType: OAuthTokenType,
-    token: AccessToken,
+    token: OAuthAccessToken,
     dpopJkt: string | null,
     verifyOptions?: VerifyTokenClaimsOptions,
   ): Promise<VerifyTokenClaimsResult> {

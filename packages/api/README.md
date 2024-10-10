@@ -35,7 +35,7 @@ manage sessions:
 
 #### App password based session management
 
-Username / password based authentication van be performed using the `AtpAgent`
+Username / password based authentication can be performed using the `AtpAgent`
 class.
 
 > [!CAUTION]

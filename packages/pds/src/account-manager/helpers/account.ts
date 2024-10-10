@@ -64,6 +64,28 @@ export const getAccount = async (
   return found || null
 }
 
+export const getAccounts = async (
+  db: AccountDb,
+  dids: string[],
+  flags?: AvailabilityFlags,
+): Promise<Map<string, ActorAccount>> => {
+  const results = new Map<string, ActorAccount>()
+
+  if (!dids.length) {
+    return results
+  }
+
+  const accounts = await selectAccountQB(db, flags)
+    .where('actor.did', 'in', dids)
+    .execute()
+
+  accounts.forEach((account) => {
+    results.set(account.did, account)
+  })
+
+  return results
+}
+
 export const getAccountByEmail = async (
   db: AccountDb,
   email: string,

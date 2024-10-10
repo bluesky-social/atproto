@@ -1,5 +1,14 @@
 # @atproto/xrpc
 
+## 0.6.3
+
+### Patch Changes
+
+- [#2770](https://github.com/bluesky-social/atproto/pull/2770) [`a07b21151`](https://github.com/bluesky-social/atproto/commit/a07b21151f1850340c4b7797ebb11521b1a6cdf3) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add NotAcceptable response type
+
+- Updated dependencies [[`87a1f2426`](https://github.com/bluesky-social/atproto/commit/87a1f24262e0e644b6cf31cc7a0446d9127ffa94)]:
+  - @atproto/lexicon@0.4.2
+
 ## 0.6.2
 
 ### Patch Changes

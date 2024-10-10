@@ -20,6 +20,7 @@ export interface Record {
     | ComAtprotoLabelDefs.SelfLabels
     | { $type: string; [k: string]: unknown }
   joinedViaStarterPack?: ComAtprotoRepoStrongRef.Main
+  pinnedPost?: ComAtprotoRepoStrongRef.Main
   createdAt?: string
   [k: string]: unknown
 }
