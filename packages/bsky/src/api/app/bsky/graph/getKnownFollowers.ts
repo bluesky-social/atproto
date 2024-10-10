@@ -1,66 +1,58 @@
 import { mapDefined } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getKnownFollowers'
 import AppContext from '../../../../context'
+import { Server } from '../../../../lexicon'
 import {
-  HydrationFnInput,
-  PresentationFnInput,
-  RulesFnInput,
-  SkeletonFnInput,
-  createPipeline,
+  OutputSchema,
+  QueryParams,
+} from '../../../../lexicon/types/app/bsky/graph/getKnownFollowers'
+import {
+  HydrationFn,
+  PresentationFn,
+  RulesFn,
+  SkeletonFn,
 } from '../../../../pipeline'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
-import { Views } from '../../../../views'
-import { clearlyBadCursor, resHeaders } from '../../../util'
+import { clearlyBadCursor } from '../../../util'
+
+type Skeleton = {
+  subjectDid: string
+  knownFollowers: string[]
+  cursor?: string
+}
 
 export default function (server: Server, ctx: AppContext) {
-  const getKnownFollowers = createPipeline(
-    skeleton,
-    hydration,
-    noBlocks,
-    presentation,
-  )
   server.app.bsky.graph.getKnownFollowers({
     auth: ctx.authVerifier.standard,
-    handler: async ({ params, auth, req }) => {
-      const viewer = auth.credentials.iss
-      const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({
-        labelers,
-        viewer,
-      })
-
-      const result = await getKnownFollowers(
-        { ...params, hydrateCtx: hydrateCtx.copy({ viewer }) },
-        ctx,
-      )
-
-      return {
-        encoding: 'application/json',
-        body: result,
-        headers: resHeaders({ labelers: hydrateCtx.labelers }),
-      }
-    },
+    handler: ctx.createPipelineHandler(
+      skeleton,
+      hydration,
+      noBlocks,
+      presentation,
+    ),
   })
 }
 
-const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
-  const { params, ctx } = input
-  const [subjectDid] = await ctx.hydrator.actor.getDidsDefined([params.actor])
+const skeleton: SkeletonFn<Skeleton, QueryParams> = async (ctx) => {
+  const [subjectDid] = await ctx.hydrator.actor.getDidsDefined([
+    ctx.params.actor,
+  ])
   if (!subjectDid) {
-    throw new InvalidRequestError(`Actor not found: ${params.actor}`)
+    throw new InvalidRequestError(`Actor not found: ${ctx.params.actor}`)
   }
-  if (clearlyBadCursor(params.cursor)) {
+
+  const actorDid = ctx.viewer
+  if (!actorDid) throw new InvalidRequestError('Unauthorized')
+
+  if (clearlyBadCursor(ctx.params.cursor)) {
     return { subjectDid, knownFollowers: [], cursor: undefined }
   }
 
   const res = await ctx.hydrator.dataplane.getFollowsFollowing({
-    actorDid: params.hydrateCtx.viewer,
+    actorDid,
     targetDids: [subjectDid],
   })
   const result = res.results.at(0)
-  const knownFollowers = result ? result.dids.slice(0, params.limit) : []
+  const knownFollowers = result ? result.dids.slice(0, ctx.params.limit) : []
 
   return {
     subjectDid,
@@ -69,30 +61,27 @@ const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
   }
 }
 
-const hydration = async (
-  input: HydrationFnInput<Context, Params, SkeletonState>,
-) => {
-  const { ctx, params, skeleton } = input
+const hydration: HydrationFn<Skeleton, QueryParams> = async (ctx, skeleton) => {
   const { knownFollowers } = skeleton
   const profilesState = await ctx.hydrator.hydrateProfiles(
     knownFollowers.concat(skeleton.subjectDid),
-    params.hydrateCtx,
+    ctx,
   )
   return profilesState
 }
 
-const noBlocks = (input: RulesFnInput<Context, Params, SkeletonState>) => {
-  const { skeleton, hydration, ctx } = input
+const noBlocks: RulesFn<Skeleton, QueryParams> = (ctx, skeleton, hydration) => {
   skeleton.knownFollowers = skeleton.knownFollowers.filter((did) => {
     return !ctx.views.viewerBlockExists(did, hydration)
   })
   return skeleton
 }
 
-const presentation = (
-  input: PresentationFnInput<Context, Params, SkeletonState>,
+const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = (
+  ctx,
+  skeleton,
+  hydration,
 ) => {
-  const { ctx, hydration, skeleton } = input
   const { knownFollowers } = skeleton
 
   const followers = mapDefined(knownFollowers, (did) => {
@@ -100,20 +89,5 @@ const presentation = (
   })
   const subject = ctx.views.profile(skeleton.subjectDid, hydration)!
 
-  return { subject, followers, cursor: undefined }
-}
-
-type Context = {
-  hydrator: Hydrator
-  views: Views
-}
-
-type Params = QueryParams & {
-  hydrateCtx: HydrateCtx & { viewer: string }
-}
-
-type SkeletonState = {
-  subjectDid: string
-  knownFollowers: string[]
-  cursor?: string
+  return { body: { subject, followers, cursor: undefined } }
 }

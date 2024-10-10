@@ -59,25 +59,8 @@ import {
   Postgates,
   FeedItem,
 } from './feed'
-import { ParsedLabelers } from '../util'
-
-export class HydrateCtx {
-  labelers = this.vals.labelers
-  viewer = this.vals.viewer !== null ? serviceRefToDid(this.vals.viewer) : null
-  includeTakedowns = this.vals.includeTakedowns
-  include3pBlocks = this.vals.include3pBlocks
-  constructor(private vals: HydrateCtxVals) {}
-  copy<V extends Partial<HydrateCtxVals>>(vals?: V): HydrateCtx & V {
-    return new HydrateCtx({ ...this.vals, ...vals }) as HydrateCtx & V
-  }
-}
-
-export type HydrateCtxVals = {
-  labelers: ParsedLabelers
-  viewer: string | null
-  includeTakedowns?: boolean
-  include3pBlocks?: boolean
-}
+import type { HydrateCtx } from './hydrate-ctx'
+import { ParsedLabelers } from '../util/labeler-header'
 
 export type HydrationState = {
   ctx?: HydrateCtx
@@ -838,7 +821,7 @@ export class Hydrator {
   }
 
   async hydrateBidirectionalBlocks(
-    didMap: Map<string, string[]>, // DID -> DID[]
+    didMap: Iterable<[string, string[]]>, // DID -> DID[]
   ): Promise<BidirectionalBlocks> {
     const pairs: RelationshipPair[] = []
     for (const [source, targets] of didMap) {
@@ -981,29 +964,25 @@ export class Hydrator {
     }
   }
 
-  async createContext(vals: HydrateCtxVals) {
-    // ensures we're only apply labelers that exist and are not taken down
-    const labelers = vals.labelers.dids
+  /**
+   * Ensures we're only apply labelers that exist and are not taken down
+   */
+  async filterUnavailableLabelers(
+    { dids: labelers, redact }: ParsedLabelers,
+    includeTakedowns?: boolean,
+  ): Promise<ParsedLabelers> {
     const nonServiceLabelers = labelers.filter(
       (did) => !this.serviceLabelers.has(did),
     )
     const labelerActors = await this.actor.getActors(
       nonServiceLabelers,
-      vals.includeTakedowns,
+      includeTakedowns,
     )
     const availableDids = labelers.filter(
       (did) => this.serviceLabelers.has(did) || !!labelerActors.get(did),
     )
-    const availableLabelers = {
-      dids: availableDids,
-      redact: vals.labelers.redact,
-    }
-    return new HydrateCtx({
-      labelers: availableLabelers,
-      viewer: vals.viewer,
-      includeTakedowns: vals.includeTakedowns,
-      include3pBlocks: vals.include3pBlocks,
-    })
+
+    return { dids: availableDids, redact }
   }
 
   async resolveUri(uriStr: string) {
@@ -1013,12 +992,6 @@ export class Hydrator {
     uri.host = did
     return uri.toString()
   }
-}
-
-// service refs may look like "did:plc:example#service_id". we want to extract the did part "did:plc:example".
-const serviceRefToDid = (serviceRef: string) => {
-  const idx = serviceRef.indexOf('#')
-  return idx !== -1 ? serviceRef.slice(0, idx) : serviceRef
 }
 
 const listUrisFromProfileViewer = (item: ProfileViewerState | null) => {
