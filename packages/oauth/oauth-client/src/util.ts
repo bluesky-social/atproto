@@ -128,21 +128,32 @@ export const includesSpaceSeparatedValue = <Value extends string>(
   input: string,
   value: Value,
 ): input is SpaceSeparatedValue<Value> => {
+  if (value.includes(' ')) throw new TypeError('Value cannot contain spaces')
+
   // Optimized version of:
   // return input.split(' ').includes(value)
 
+  const inputLength = input.length
+  const valueLength = value.length
+
+  if (inputLength < valueLength) return false
+
   let idx = input.indexOf(value)
+  let idxEnd: number
+
   while (idx !== -1) {
-    const endIdx = idx + value.length
+    idxEnd = idx + valueLength
+
     if (
       // at beginning or preceded by space
       (idx === 0 || input[idx - 1] === ' ') &&
       // at end or followed by space
-      (endIdx === input.length || input[endIdx] === ' ')
+      (idxEnd === inputLength || input[idxEnd] === ' ')
     ) {
       return true
     }
-    idx = input.indexOf(value, endIdx)
+
+    idx = input.indexOf(value, idxEnd + 1)
   }
 
   return false
