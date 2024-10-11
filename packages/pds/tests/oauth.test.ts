@@ -30,9 +30,9 @@ describe('oauth', () => {
       browser: 'chrome',
 
       // For debugging:
-      headless: false,
-      devtools: true,
-      slowMo: 250,
+      // headless: false,
+      // devtools: true,
+      // slowMo: 250,
     })
 
     network = await TestNetworkNoAppView.create({
