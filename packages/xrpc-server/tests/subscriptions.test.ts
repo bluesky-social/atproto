@@ -1,6 +1,6 @@
-import * as http from 'http'
+import * as http from 'node:http'
+import { AddressInfo } from 'node:net'
 import { WebSocket, WebSocketServer, createWebSocketStream } from 'ws'
-import getPort from 'get-port'
 import { wait } from '@atproto/common'
 import { LexiconDoc } from '@atproto/lexicon'
 import { byFrame, MessageFrame, ErrorFrame, Frame, Subscription } from '../src'
@@ -11,6 +11,7 @@ import {
   basicAuthHeaders,
 } from './_util'
 import * as xrpcServer from '../src'
+import { once } from 'node:events'
 
 const LEXICONS: LexiconDoc[] = [
   {
@@ -117,8 +118,8 @@ describe('Subscriptions', () => {
   let port: number
 
   beforeAll(async () => {
-    port = await getPort()
-    s = await createServer(port, server)
+    s = await createServer(server)
+    port = (s.address() as AddressInfo).port
   })
   afterAll(async () => {
     await closeServer(s)
@@ -350,8 +351,10 @@ describe('Subscriptions', () => {
   it('uses a heartbeat to reconnect if a connection is dropped', async () => {
     // we run a server that, on first connection, pauses for longer than the heartbeat interval (doesn't return "pong"s)
     // on second connection, it returns a message frame and then closes
-    const port = await getPort()
-    const server = new WebSocketServer({ port })
+    const server = new WebSocketServer({
+      noServer: true,
+    })
+
     let firstConnection = true
     let firstWasClosed = false
     server.on('connection', async (socket) => {
@@ -378,6 +381,20 @@ describe('Subscriptions', () => {
           socket.close(xrpcServer.CloseCode.Normal)
         })
       }
+    })
+
+    const httpServer = http.createServer()
+
+    httpServer.listen(0)
+
+    await once(httpServer, 'listening')
+
+    const { port } = httpServer.address() as AddressInfo
+
+    httpServer.on('upgrade', (req, socket, head) => {
+      server.handleUpgrade(req, socket, head, (ws) => {
+        server.emit('connection', ws, req)
+      })
     })
 
     const subscription = new Subscription({

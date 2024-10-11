@@ -1,8 +1,7 @@
 /** @type {import('jest').Config} */
 module.exports = {
   displayName: 'Sync',
-  transform: { '^.+\\.(t|j)s$': '@swc/jest' },
-  transformIgnorePatterns: ['/node_modules/.pnpm/(?!(get-port)@)'],
+  transform: { '^.+\\.ts$': '@swc/jest' },
   testTimeout: 60000,
   setupFiles: ['<rootDir>/../../jest.setup.ts'],
 }
