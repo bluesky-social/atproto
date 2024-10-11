@@ -9,13 +9,15 @@ import { oauthTokenTypeSchema } from './oauth-token-type.js'
  */
 export const oauthTokenResponseSchema = z
   .object({
+    // https://www.rfc-editor.org/rfc/rfc6749.html#section-5.1
     access_token: z.string(),
     token_type: oauthTokenTypeSchema,
-    issuer: z.string().url().optional(),
     scope: z.string().optional(),
-    id_token: signedJwtSchema.optional(),
     refresh_token: z.string().optional(),
     expires_in: z.number().optional(),
+    // https://openid.net/specs/openid-connect-core-1_0.html#TokenResponse
+    id_token: signedJwtSchema.optional(),
+    // https://datatracker.ietf.org/doc/html/rfc9396#name-enriched-authorization-deta
     authorization_details: oauthAuthorizationDetailsSchema.optional(),
   })
   // https://www.rfc-editor.org/rfc/rfc6749.html#section-5.1

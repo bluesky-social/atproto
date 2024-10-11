@@ -1,7 +1,8 @@
-import { asDid } from '@atproto/did'
-import { Fetch, bindFetch } from '@atproto-labs/fetch'
+import { bindFetch, Fetch } from '@atproto-labs/fetch'
+import { AtprotoDid } from '@atproto/did'
 import { OAuthAuthorizationServerMetadata } from '@atproto/oauth-types'
 
+import { AtprotoScope } from './atproto-token-response.js'
 import { TokenInvalidError } from './errors/token-invalid-error.js'
 import { TokenRevokedError } from './errors/token-revoked-error.js'
 import { dpopFetchWrapper } from './fetch-dpop.js'
@@ -15,10 +16,10 @@ const ReadableStream = globalThis.ReadableStream as
 export type TokenInfo = {
   expiresAt?: Date
   expired?: boolean
-  scope?: string
+  scope: AtprotoScope
   iss: string
   aud: string
-  sub: string
+  sub: AtprotoDid
 }
 
 export class OAuthSession {
@@ -26,7 +27,7 @@ export class OAuthSession {
 
   constructor(
     public readonly server: OAuthServerAgent,
-    public readonly sub: string,
+    public readonly sub: AtprotoDid,
     private readonly sessionGetter: SessionGetter,
     fetch: Fetch = globalThis.fetch,
   ) {
@@ -41,8 +42,8 @@ export class OAuthSession {
     })
   }
 
-  get did() {
-    return asDid(this.sub)
+  get did(): AtprotoDid {
+    return this.sub
   }
 
   get serverMetadata(): Readonly<OAuthAuthorizationServerMetadata> {
@@ -50,14 +51,21 @@ export class OAuthSession {
   }
 
   /**
-   * @param refresh See {@link SessionGetter.getSession}
+   * @param refresh When `true`, the credentials will be refreshed even if they
+   * are not expired. When `false`, the credentials will not be refreshed even
+   * if they are expired. When `undefined`, the credentials will be refreshed
+   * if, and only if, they are (about to be) expired. Defaults to `undefined`.
    */
-  public async getTokenSet(refresh?: boolean): Promise<TokenSet> {
-    const { tokenSet } = await this.sessionGetter.getSession(this.sub, refresh)
+  protected async getTokenSet(refresh: boolean | 'auto'): Promise<TokenSet> {
+    const { tokenSet } = await this.sessionGetter.get(this.sub, {
+      noCache: refresh === true,
+      allowStale: refresh === false,
+    })
+
     return tokenSet
   }
 
-  async getTokenInfo(refresh?: boolean): Promise<TokenInfo> {
+  async getTokenInfo(refresh: boolean | 'auto' = 'auto'): Promise<TokenInfo> {
     const tokenSet = await this.getTokenSet(refresh)
     const expiresAt =
       tokenSet.expires_at == null ? undefined : new Date(tokenSet.expires_at)
@@ -78,7 +86,7 @@ export class OAuthSession {
 
   async signOut(): Promise<void> {
     try {
-      const { tokenSet } = await this.sessionGetter.getSession(this.sub, false)
+      const tokenSet = await this.getTokenSet(false)
       await this.server.revoke(tokenSet.access_token)
     } finally {
       await this.sessionGetter.delStored(
@@ -90,7 +98,7 @@ export class OAuthSession {
 
   async fetchHandler(pathname: string, init?: RequestInit): Promise<Response> {
     // This will try and refresh the token if it is known to be expired
-    const tokenSet = await this.getTokenSet(undefined)
+    const tokenSet = await this.getTokenSet('auto')
 
     const initialUrl = new URL(pathname, tokenSet.aud)
     const initialAuth = `${tokenSet.token_type} ${tokenSet.access_token}`

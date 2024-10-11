@@ -27,6 +27,6 @@
   "devDependencies": {
     "@atproto/common": "workspace:^",
     "jest": "^28.1.2",
-    "typescript": "^5.6.2"
+    "typescript": "^5.6.3"
   }
 }
