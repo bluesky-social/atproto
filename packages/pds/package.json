@@ -1,6 +1,6 @@
 {
   "name": "@atproto/pds",
-  "version": "0.4.64",
+  "version": "0.4.65",
   "license": "MIT",
   "description": "Reference implementation of atproto Personal Data Server (PDS)",
   "keywords": [
@@ -90,6 +90,7 @@
     "jest": "^28.1.2",
     "puppeteer": "^23.5.2",
     "ts-node": "^10.8.2",
+    "typescript": "^5.6.2",
     "ws": "^8.12.0"
   }
 }
