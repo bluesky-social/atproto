@@ -1,6 +1,9 @@
 const { searchParams } = new URL(window.location.href)
 
-export const ENV = searchParams.get('env') ?? process.env.NODE_ENV!
+// Inserted during build
+declare const process: { env: { NODE_ENV: string } }
+
+export const ENV = searchParams.get('env') ?? process.env.NODE_ENV
 
 export const PLC_DIRECTORY_URL: string | undefined =
   searchParams.get('plc_directory_url') ??
