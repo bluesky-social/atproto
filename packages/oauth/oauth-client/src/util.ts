@@ -128,6 +128,7 @@ export const includesSpaceSeparatedValue = <Value extends string>(
   input: string,
   value: Value,
 ): input is SpaceSeparatedValue<Value> => {
+  if (value.length === 0) throw new TypeError('Value cannot be empty')
   if (value.includes(' ')) throw new TypeError('Value cannot contain spaces')
 
   // Optimized version of:
