@@ -206,6 +206,13 @@ import * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation
 import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses'
 import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos'
 import * as ToolsOzoneServerGetConfig from './types/tools/ozone/server/getConfig'
+import * as ToolsOzoneSetAddValues from './types/tools/ozone/set/addValues'
+import * as ToolsOzoneSetDefs from './types/tools/ozone/set/defs'
+import * as ToolsOzoneSetDeleteSet from './types/tools/ozone/set/deleteSet'
+import * as ToolsOzoneSetDeleteValues from './types/tools/ozone/set/deleteValues'
+import * as ToolsOzoneSetGetValues from './types/tools/ozone/set/getValues'
+import * as ToolsOzoneSetQuerySets from './types/tools/ozone/set/querySets'
+import * as ToolsOzoneSetUpsertSet from './types/tools/ozone/set/upsertSet'
 import * as ToolsOzoneSignatureDefs from './types/tools/ozone/signature/defs'
 import * as ToolsOzoneSignatureFindCorrelation from './types/tools/ozone/signature/findCorrelation'
 import * as ToolsOzoneSignatureFindRelatedAccounts from './types/tools/ozone/signature/findRelatedAccounts'
@@ -418,6 +425,13 @@ export * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation
 export * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses'
 export * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos'
 export * as ToolsOzoneServerGetConfig from './types/tools/ozone/server/getConfig'
+export * as ToolsOzoneSetAddValues from './types/tools/ozone/set/addValues'
+export * as ToolsOzoneSetDefs from './types/tools/ozone/set/defs'
+export * as ToolsOzoneSetDeleteSet from './types/tools/ozone/set/deleteSet'
+export * as ToolsOzoneSetDeleteValues from './types/tools/ozone/set/deleteValues'
+export * as ToolsOzoneSetGetValues from './types/tools/ozone/set/getValues'
+export * as ToolsOzoneSetQuerySets from './types/tools/ozone/set/querySets'
+export * as ToolsOzoneSetUpsertSet from './types/tools/ozone/set/upsertSet'
 export * as ToolsOzoneSignatureDefs from './types/tools/ozone/signature/defs'
 export * as ToolsOzoneSignatureFindCorrelation from './types/tools/ozone/signature/findCorrelation'
 export * as ToolsOzoneSignatureFindRelatedAccounts from './types/tools/ozone/signature/findRelatedAccounts'
@@ -3404,6 +3418,7 @@ export class ToolsOzoneNS {
   communication: ToolsOzoneCommunicationNS
   moderation: ToolsOzoneModerationNS
   server: ToolsOzoneServerNS
+  set: ToolsOzoneSetNS
   signature: ToolsOzoneSignatureNS
   team: ToolsOzoneTeamNS
 
@@ -3412,6 +3427,7 @@ export class ToolsOzoneNS {
     this.communication = new ToolsOzoneCommunicationNS(client)
     this.moderation = new ToolsOzoneModerationNS(client)
     this.server = new ToolsOzoneServerNS(client)
+    this.set = new ToolsOzoneSetNS(client)
     this.signature = new ToolsOzoneSignatureNS(client)
     this.team = new ToolsOzoneTeamNS(client)
   }
@@ -3601,6 +3617,73 @@ export class ToolsOzoneServerNS {
       undefined,
       opts,
     )
+  }
+}
+
+export class ToolsOzoneSetNS {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  addValues(
+    data?: ToolsOzoneSetAddValues.InputSchema,
+    opts?: ToolsOzoneSetAddValues.CallOptions,
+  ): Promise<ToolsOzoneSetAddValues.Response> {
+    return this._client.call('tools.ozone.set.addValues', opts?.qp, data, opts)
+  }
+
+  deleteSet(
+    data?: ToolsOzoneSetDeleteSet.InputSchema,
+    opts?: ToolsOzoneSetDeleteSet.CallOptions,
+  ): Promise<ToolsOzoneSetDeleteSet.Response> {
+    return this._client
+      .call('tools.ozone.set.deleteSet', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ToolsOzoneSetDeleteSet.toKnownErr(e)
+      })
+  }
+
+  deleteValues(
+    data?: ToolsOzoneSetDeleteValues.InputSchema,
+    opts?: ToolsOzoneSetDeleteValues.CallOptions,
+  ): Promise<ToolsOzoneSetDeleteValues.Response> {
+    return this._client
+      .call('tools.ozone.set.deleteValues', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ToolsOzoneSetDeleteValues.toKnownErr(e)
+      })
+  }
+
+  getValues(
+    params?: ToolsOzoneSetGetValues.QueryParams,
+    opts?: ToolsOzoneSetGetValues.CallOptions,
+  ): Promise<ToolsOzoneSetGetValues.Response> {
+    return this._client
+      .call('tools.ozone.set.getValues', params, undefined, opts)
+      .catch((e) => {
+        throw ToolsOzoneSetGetValues.toKnownErr(e)
+      })
+  }
+
+  querySets(
+    params?: ToolsOzoneSetQuerySets.QueryParams,
+    opts?: ToolsOzoneSetQuerySets.CallOptions,
+  ): Promise<ToolsOzoneSetQuerySets.Response> {
+    return this._client.call(
+      'tools.ozone.set.querySets',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  upsertSet(
+    data?: ToolsOzoneSetUpsertSet.InputSchema,
+    opts?: ToolsOzoneSetUpsertSet.CallOptions,
+  ): Promise<ToolsOzoneSetUpsertSet.Response> {
+    return this._client.call('tools.ozone.set.upsertSet', opts?.qp, data, opts)
   }
 }
 
