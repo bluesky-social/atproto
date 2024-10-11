@@ -5,7 +5,7 @@ import { z } from 'zod'
 import { includesSpaceSeparatedValue, SpaceSeparatedValue } from './util'
 
 export type AtprotoScope = SpaceSeparatedValue<'atproto'>
-export const isAtprotoScope = (input: string) =>
+export const isAtprotoScope = (input: string): input is AtprotoScope =>
   includesSpaceSeparatedValue(input, 'atproto')
 export const atprotoScopeSchema = z
   .string()
