@@ -35,7 +35,7 @@ export function uriToDid(uri: string) {
 
 // @TODO temp fix for proliferation of invalid pinned post values
 export function safePinnedPost(value: unknown) {
-  if (!value) {
+  if (!value || typeof value !== 'object') {
     return
   }
   const validated = validateStrongRef(value)
