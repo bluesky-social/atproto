@@ -35,7 +35,7 @@ import {
   VideoUriBuilder,
   parsePostgate,
 } from './util'
-import { uriToDid as creatorFromUri } from '../util/uris'
+import { uriToDid as creatorFromUri, safePinnedPost } from '../util/uris'
 import { isListRule } from '../lexicon/types/app/bsky/feed/threadgate'
 import { isSelfLabels } from '../lexicon/types/com/atproto/label/defs'
 import {
@@ -170,7 +170,7 @@ export class Views {
       joinedViaStarterPack: actor.profile?.joinedViaStarterPack
         ? this.starterPackBasic(actor.profile.joinedViaStarterPack.uri, state)
         : undefined,
-      pinnedPost: actor.profile?.pinnedPost,
+      pinnedPost: safePinnedPost(actor.profile?.pinnedPost),
     }
   }
 
@@ -1143,7 +1143,7 @@ export class Views {
     if (!state.ctx?.viewer || state.ctx.viewer !== authorDid) return
     const actor = state.actors?.get(authorDid)
     if (!actor) return
-    const pinnedPost = actor.profile?.pinnedPost
+    const pinnedPost = safePinnedPost(actor.profile?.pinnedPost)
     if (!pinnedPost) return undefined
     return pinnedPost.uri === uri
   }
