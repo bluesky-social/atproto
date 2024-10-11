@@ -148,21 +148,37 @@ export const includesSpaceSeparatedValue = <Value extends string>(
   return false
 }
 
-export function combineSignals(
-  signals: readonly (AbortSignal | undefined)[],
-): undefined | AbortSignal {
-  const { length } = signals.filter(Boolean)
-  if (length === 0) return undefined
-  if (length === 1) return signals.find(Boolean)!
-
+export function combineSignals(signals: readonly (AbortSignal | undefined)[]) {
   const controller = new AbortController()
-  const { signal } = controller
 
-  for (const signal of signals) {
-    if (signal) {
-      signal.addEventListener('abort', () => controller.abort(), { signal })
-    }
+  const onAbort = function (this: AbortSignal, _event: Event) {
+    const reason = new Error('This operation was aborted', {
+      cause: this.reason,
+    })
+
+    controller.abort(reason)
   }
 
-  return signal
+  for (const sig of signals) {
+    if (!sig) continue
+
+    if (sig.aborted) {
+      // Remove "abort" listener that was added to sig in previous iterations
+      controller.abort()
+
+      throw new Error('One of the signals is already aborted', {
+        cause: sig.reason,
+      })
+    }
+
+    sig.addEventListener('abort', onAbort, { signal: controller.signal })
+  }
+
+  controller[Symbol.dispose] = () => {
+    const reason = new Error('AbortController was disposed')
+
+    controller.abort(reason)
+  }
+
+  return controller as AbortController & Disposable
 }

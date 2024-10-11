@@ -244,9 +244,11 @@ export class SessionGetter extends CachedGetter<string, Session> {
         // request will be cancelled after at most 30 seconds.
         using signal = timeoutSignal(30e3, options)
 
+        using abortController = combineSignals([options?.signal, signal])
+
         return await super.get(sub, {
           ...options,
-          signal: combineSignals([options?.signal, signal]),
+          signal: abortController.signal,
         })
       },
     )
