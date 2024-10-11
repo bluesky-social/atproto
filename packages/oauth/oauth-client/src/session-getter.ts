@@ -210,7 +210,7 @@ export class SessionGetter extends CachedGetter<string, Session> {
   }
 
   async setStored(sub: string, session: Session) {
-    // Prevent tempering with the stored value
+    // Prevent tampering with the stored value
     if (sub !== session.tokenSet.sub) {
       throw new TypeError('Token set does not match the expected sub')
     }
