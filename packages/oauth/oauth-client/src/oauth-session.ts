@@ -1,7 +1,8 @@
-import { Fetch, bindFetch } from '@atproto-labs/fetch'
-import { asDid } from '@atproto/did'
+import { bindFetch, Fetch } from '@atproto-labs/fetch'
+import { AtprotoDid } from '@atproto/did'
 import { OAuthAuthorizationServerMetadata } from '@atproto/oauth-types'
 
+import { AtprotoScope } from './atproto-token-response.js'
 import { TokenInvalidError } from './errors/token-invalid-error.js'
 import { TokenRevokedError } from './errors/token-revoked-error.js'
 import { dpopFetchWrapper } from './fetch-dpop.js'
@@ -15,10 +16,10 @@ const ReadableStream = globalThis.ReadableStream as
 export type TokenInfo = {
   expiresAt?: Date
   expired?: boolean
-  scope?: string
+  scope: AtprotoScope
   iss: string
   aud: string
-  sub: string
+  sub: AtprotoDid
 }
 
 export class OAuthSession {
@@ -26,7 +27,7 @@ export class OAuthSession {
 
   constructor(
     public readonly server: OAuthServerAgent,
-    public readonly sub: string,
+    public readonly sub: AtprotoDid,
     private readonly sessionGetter: SessionGetter,
     fetch: Fetch = globalThis.fetch,
   ) {
@@ -41,8 +42,8 @@ export class OAuthSession {
     })
   }
 
-  get did() {
-    return asDid(this.sub)
+  get did(): AtprotoDid {
+    return this.sub
   }
 
   get serverMetadata(): Readonly<OAuthAuthorizationServerMetadata> {

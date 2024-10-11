@@ -1,4 +1,6 @@
 import {
+  assertAtprotoDid,
+  AtprotoDid,
   DidCache,
   DidResolverCached,
   DidResolverCommon,
@@ -453,6 +455,9 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
     sub: string,
     refresh: boolean | 'auto' = 'auto',
   ): Promise<OAuthSession> {
+    // sub arg is lightly typed for convenience of library user
+    assertAtprotoDid(sub)
+
     const { dpopKey, tokenSet } = await this.sessionGetter.get(sub, {
       noCache: refresh === true,
       allowStale: refresh === false,
@@ -467,6 +472,9 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
   }
 
   async revoke(sub: string) {
+    // sub arg is lightly typed for convenience of library user
+    assertAtprotoDid(sub)
+
     const { dpopKey, tokenSet } = await this.sessionGetter.get(sub, {
       allowStale: true,
     })
@@ -482,7 +490,10 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
     }
   }
 
-  protected createSession(server: OAuthServerAgent, sub: string): OAuthSession {
+  protected createSession(
+    server: OAuthServerAgent,
+    sub: AtprotoDid,
+  ): OAuthSession {
     return new OAuthSession(server, sub, this.sessionGetter, this.fetch)
   }
 }

@@ -3,6 +3,7 @@ import {
   GetCachedOptions,
   SimpleStore,
 } from '@atproto-labs/simple-store'
+import { AtprotoDid } from '@atproto/did'
 import { Key } from '@atproto/jwk'
 
 import { TokenInvalidError } from './errors/token-invalid-error.js'
@@ -42,7 +43,7 @@ export type SessionEventListener<
  * contains the logic for reading from the cache which, if the cache is based on
  * localStorage/indexedDB, will sync across multiple tabs (for a given sub).
  */
-export class SessionGetter extends CachedGetter<string, Session> {
+export class SessionGetter extends CachedGetter<AtprotoDid, Session> {
   private readonly eventTarget = new CustomEventTarget<SessionEventMap>()
 
   constructor(
@@ -218,7 +219,7 @@ export class SessionGetter extends CachedGetter<string, Session> {
     this.dispatchEvent('updated', { sub, ...session })
   }
 
-  override async delStored(sub: string, cause?: unknown): Promise<void> {
+  override async delStored(sub: AtprotoDid, cause?: unknown): Promise<void> {
     await super.delStored(sub, cause)
     this.dispatchEvent('deleted', { sub, cause })
   }
@@ -229,14 +230,14 @@ export class SessionGetter extends CachedGetter<string, Session> {
    * if they are expired. When `undefined`, the credentials will be refreshed
    * if, and only if, they are (about to be) expired. Defaults to `undefined`.
    */
-  async getSession(sub: string, refresh?: boolean) {
+  async getSession(sub: AtprotoDid, refresh?: boolean) {
     return this.get(sub, {
       noCache: refresh === true,
       allowStale: refresh === false,
     })
   }
 
-  async get(sub: string, options?: GetCachedOptions): Promise<Session> {
+  async get(sub: AtprotoDid, options?: GetCachedOptions): Promise<Session> {
     const session = await this.runtime.usingLock(
       `@atproto-oauth-client-${sub}`,
       async () => {
