@@ -2,10 +2,21 @@ import assert from 'node:assert'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 // @ts-expect-error (json file)
 import files from '@atproto/oauth-client-browser-example'
-import { Browser, launch } from 'puppeteer'
+import { Browser, launch, Page } from 'puppeteer'
 import { once } from 'node:events'
 import { createServer, Server } from 'node:http'
 import { AddressInfo } from 'node:net'
+
+const getVisibleElement = async (page: Page, selector: string) => {
+  const elementHandle = await page.waitForSelector(selector)
+
+  expect(elementHandle).not.toBeNull()
+  assert(elementHandle)
+
+  await expect(elementHandle.isVisible()).resolves.toBe(true)
+
+  return elementHandle
+}
 
 describe('oauth', () => {
   let browser: Browser
@@ -54,12 +65,10 @@ describe('oauth', () => {
 
     await expect(page.title()).resolves.toBe('OAuth Client Example')
 
-    const handleInput = await page.waitForSelector(
+    const handleInput = await getVisibleElement(
+      page,
       'input[placeholder="@handle, DID or PDS url"]',
     )
-
-    expect(handleInput).not.toBeNull()
-    assert(handleInput)
 
     await handleInput.focus()
 
@@ -73,21 +82,33 @@ describe('oauth', () => {
 
     await expect(page.title()).resolves.toBe('Authorize')
 
-    const passwordInput = await page.waitForSelector('input[type="password"]')
-
-    expect(passwordInput).not.toBeNull()
-    assert(passwordInput)
+    const passwordInput = await getVisibleElement(
+      page,
+      'input[type="password"]',
+    )
 
     await passwordInput.focus()
 
+    // Make sure the warning is visible
+    await getVisibleElement(page, 'p::-p-text(Warning)')
+
     await passwordInput.type('alice-pass')
 
-    await passwordInput.press('Enter')
+    const rememberCheckbox = await getVisibleElement(
+      page,
+      'label::-p-text(Remember this account on this device)',
+    )
 
-    const acceptButton = await page.waitForSelector('button::-p-text(Accept)')
+    await rememberCheckbox.click()
 
-    expect(acceptButton).not.toBeNull()
-    assert(acceptButton)
+    const nextButton = await getVisibleElement(page, 'button::-p-text(Next)')
+
+    await nextButton.click()
+
+    const acceptButton = await getVisibleElement(
+      page,
+      'button::-p-text(Accept)',
+    )
 
     const navBackToApp = page.waitForNavigation()
 
@@ -97,10 +118,8 @@ describe('oauth', () => {
 
     await expect(page.title()).resolves.toBe('OAuth Client Example')
 
-    const loggedIn = await page.waitForSelector('p::-p-text(Logged in!)')
-
-    expect(loggedIn).not.toBeNull()
-    assert(loggedIn)
+    // Check that the "Logged in!" message is visible
+    await getVisibleElement(page, 'p::-p-text(Logged in!)')
   })
 })
 
