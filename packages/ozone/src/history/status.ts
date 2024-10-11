@@ -13,6 +13,12 @@ import {
 import { getStatusIdentifierFromSubject } from '../mod-service/status'
 import { ModerationEventRow } from '../mod-service/types'
 import { AtUri } from '@atproto/syntax'
+import { ModerationSubjectStatus } from '../db/schema/moderation_subject_status'
+import {
+  REVIEWCLOSED,
+  REVIEWESCALATED,
+  REVIEWOPEN,
+} from '../lexicon/types/tools/ozone/moderation/defs'
 
 const modEventsAssociatedWithPublicStatus = [
   'tools.ozone.moderation.defs#modEventAcknowledge',
@@ -116,13 +122,11 @@ export class ModerationStatusHistory {
   }
 
   async getStatusesForReporter({
-    account,
     reporterDid,
     limit = 50,
     cursor,
     sortDirection = 'desc',
   }: {
-    account?: string
     reporterDid: string
     limit: number
     cursor?: string
@@ -150,6 +154,39 @@ export class ModerationStatusHistory {
     return { statuses, cursor: keyset.packFromResult(statuses) }
   }
 
+  async getStatusesForAccount({
+    authorDid,
+    limit = 50,
+    cursor,
+    sortDirection = 'desc',
+  }: {
+    authorDid: string
+    limit: number
+    cursor?: string
+    sortDirection: 'asc' | 'desc'
+  }) {
+    const { ref } = this.db.db.dynamic
+
+    const builder = this.db.db
+      .selectFrom('moderation_subject_status')
+      .where('did', '=', authorDid)
+      .selectAll()
+
+    const keyset = new TimeIdKeyset(
+      ref(`moderation_subject_status.createdAt`),
+      ref('moderation_subject_status.id'),
+    )
+    const paginatedBuilder = paginate(builder, {
+      limit,
+      cursor,
+      keyset,
+      direction: sortDirection,
+    })
+
+    const statuses = await paginatedBuilder.execute()
+    return { statuses, cursor: keyset.packFromResult(statuses) }
+  }
+
   atUriFromStatus(
     status: Pick<PublicSubjectStatus, 'did' | 'recordPath'>,
   ): string {
@@ -158,11 +195,42 @@ export class ModerationStatusHistory {
       : status.did
   }
 
-  basicView(status: Selectable<PublicSubjectStatus>): SubjectBasicView {
+  basicViewFromPublicStatus(
+    status: Selectable<PublicSubjectStatus>,
+  ): SubjectBasicView {
     return {
       subject: this.atUriFromStatus(status),
       modAction: status.modAction,
       createdAt: status.createdAt,
+      // @TODO: Do we need status?
+      status: '',
+    }
+  }
+
+  basicViewFromModerationStatus(
+    status: Selectable<ModerationSubjectStatus>,
+  ): SubjectBasicView | null {
+    // Defaulting to resolve is not
+    let modAction: SubjectBasicView['modAction'] | undefined
+
+    if (status.takendown) {
+      modAction =
+        status.suspendUntil &&
+        new Date(status.suspendUntil).getTime() > Date.now()
+          ? MODACTIONSUSPEND
+          : MODACTIONTAKEDOWN
+    } else if (status.reviewState === REVIEWOPEN) {
+      modAction = MODACTIONPENDING
+    }
+
+    if (!modAction) {
+      return null
+    }
+
+    return {
+      subject: this.atUriFromStatus(status),
+      createdAt: status.createdAt,
+      modAction,
       // @TODO: Do we need status?
       status: '',
     }

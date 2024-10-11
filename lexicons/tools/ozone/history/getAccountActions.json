@@ -7,7 +7,6 @@
       "description": "Fetch all subjects from a single account with mod subjects.",
       "parameters": {
         "type": "params",
-        "required": ["account"],
         "properties": {
           "account": { "type": "string", "format": "did" },
           "limit": {
@@ -16,6 +15,11 @@
             "default": 50,
             "maximum": 100
           },
+          "sortDirection": {
+            "type": "string",
+            "knownValues": ["asc", "desc"],
+            "default": "desc"
+          },
           "cursor": { "type": "string" }
         }
       },
@@ -23,6 +27,7 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
+          "required": ["subjects"],
           "properties": {
             "subjects": {
               "type": "array",

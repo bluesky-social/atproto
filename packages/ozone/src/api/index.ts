@@ -31,6 +31,7 @@ import upsertSet from './set/upsertSet'
 import setDeleteValues from './set/deleteValues'
 import deleteSet from './set/deleteSet'
 import getRepos from './moderation/getRepos'
+import getAccountActions from './history/getAccountActions'
 
 export * as health from './health'
 
@@ -61,12 +62,13 @@ export default function (server: Server, ctx: AppContext) {
   chat(server, ctx)
   proxied(server, ctx)
   getConfig(server, ctx)
-  getReportedSubjects(server, ctx)
   setAddValues(server, ctx)
   setGetValues(server, ctx)
   querySets(server, ctx)
   upsertSet(server, ctx)
   setDeleteValues(server, ctx)
   deleteSet(server, ctx)
+  getReportedSubjects(server, ctx)
+  getAccountActions(server, ctx)
   return server
 }

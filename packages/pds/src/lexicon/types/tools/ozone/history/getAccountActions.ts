@@ -10,15 +10,16 @@ import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as ToolsOzoneHistoryDefs from './defs'
 
 export interface QueryParams {
-  account: string
+  account?: string
   limit: number
+  sortDirection: 'asc' | 'desc' | (string & {})
   cursor?: string
 }
 
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  subjects?: ToolsOzoneHistoryDefs.SubjectBasicView[]
+  subjects: ToolsOzoneHistoryDefs.SubjectBasicView[]
   cursor?: string
   [k: string]: unknown
 }

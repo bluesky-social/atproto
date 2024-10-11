@@ -10923,7 +10923,6 @@ export const schemaDict = {
           'Fetch all subjects from a single account with mod subjects.',
         parameters: {
           type: 'params',
-          required: ['account'],
           properties: {
             account: {
               type: 'string',
@@ -10935,6 +10934,11 @@ export const schemaDict = {
               default: 50,
               maximum: 100,
             },
+            sortDirection: {
+              type: 'string',
+              knownValues: ['asc', 'desc'],
+              default: 'desc',
+            },
             cursor: {
               type: 'string',
             },
@@ -10944,6 +10948,7 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
+            required: ['subjects'],
             properties: {
               subjects: {
                 type: 'array',
