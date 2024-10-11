@@ -1,11 +1,8 @@
+import assert from 'node:assert'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 // @ts-expect-error (json file)
 import files from '@atproto/oauth-client-browser-example'
-import {
-  Browser,
-  BrowserErrorCaptureEnum,
-  BrowserNavigationCrossOriginPolicyEnum,
-} from 'happy-dom'
+import { Browser, launch } from 'puppeteer'
 import { once } from 'node:events'
 import { createServer, Server } from 'node:http'
 import { AddressInfo } from 'node:net'
@@ -18,13 +15,13 @@ describe('oauth', () => {
   let appUrl: string
 
   beforeAll(async () => {
-    browser = new Browser({
-      settings: {
-        errorCapture: BrowserErrorCaptureEnum.disabled,
-        navigation: {
-          crossOriginPolicy: BrowserNavigationCrossOriginPolicyEnum.anyOrigin,
-        },
-      },
+    browser = await launch({
+      browser: 'chrome',
+
+      // For debugging:
+      headless: false,
+      devtools: true,
+      slowMo: 250,
     })
 
     network = await TestNetworkNoAppView.create({
@@ -51,18 +48,59 @@ describe('oauth', () => {
   })
 
   it('starts', async () => {
-    const page = browser.newPage()
-    try {
-      console.log('appUrl', appUrl)
+    const page = await browser.newPage()
 
-      await page.goto(appUrl)
+    await page.goto(appUrl)
 
-      const title = page.mainFrame.document.title
+    await expect(page.title()).resolves.toBe('OAuth Client Example')
 
-      expect(title).toBe('OAuth Client Example')
-    } finally {
-      await page.close()
-    }
+    const handleInput = await page.waitForSelector(
+      'input[placeholder="@handle, DID or PDS url"]',
+    )
+
+    expect(handleInput).not.toBeNull()
+    assert(handleInput)
+
+    await handleInput.focus()
+
+    await handleInput.type('alice.test')
+
+    const navToAuthorize = page.waitForNavigation()
+
+    await handleInput.press('Enter')
+
+    await navToAuthorize
+
+    await expect(page.title()).resolves.toBe('Authorize')
+
+    const passwordInput = await page.waitForSelector('input[type="password"]')
+
+    expect(passwordInput).not.toBeNull()
+    assert(passwordInput)
+
+    await passwordInput.focus()
+
+    await passwordInput.type('alice-pass')
+
+    await passwordInput.press('Enter')
+
+    const acceptButton = await page.waitForSelector('button::-p-text(Accept)')
+
+    expect(acceptButton).not.toBeNull()
+    assert(acceptButton)
+
+    const navBackToApp = page.waitForNavigation()
+
+    await acceptButton.click()
+
+    await navBackToApp
+
+    await expect(page.title()).resolves.toBe('OAuth Client Example')
+
+    const loggedIn = await page.waitForSelector('p::-p-text(Logged in!)')
+
+    expect(loggedIn).not.toBeNull()
+    assert(loggedIn)
   })
 })
 
