@@ -2,6 +2,6 @@
 module.exports = {
   displayName: 'XRPC Server',
   transform: { '^.+\\.(t|j)s$': '@swc/jest' },
-  transformIgnorePatterns: [`<rootDir>/node_modules/(?!get-port)`],
+  transformIgnorePatterns: ['/node_modules/.pnpm/(?!(get-port)@)'],
   setupFiles: ['<rootDir>/../../jest.setup.ts'],
 }
