@@ -86,16 +86,14 @@ export class SessionGetter extends CachedGetter<AtprotoDid, Session> {
         }
 
         // Since refresh tokens can only be used once, we might run into
-        // concurrency issues if multiple tabs/instances are trying to refresh
-        // the same token. The chances of this happening when multiple instances
-        // are started simultaneously is reduced by randomizing the expiry time
-        // (see isStale() below). Even so, There still exist chances that
-        // multiple tabs will try to refresh the token at the same time. The
-        // best solution would be to use a mutex/lock to ensure that only one
-        // instance is refreshing the token at a time. A simpler workaround is
-        // to check if the value stored in the session store is the same as the
-        // one in memory. If it isn't, then another instance has already
-        // refreshed the token.
+        // concurrency issues if multiple instances (e.g. browser tabs) are
+        // trying to refresh the same token simultaneously. The chances of this
+        // happening when multiple instances are started simultaneously is
+        // reduced by randomizing the expiry time (see isStale() below). The
+        // best solution is to use a mutex/lock to ensure that only one instance
+        // is refreshing the token at a time (runtime.usingLock) but that is not
+        // always possible. If no lock implementation is provided, we will use
+        // the store to check if a concurrent refresh occurred.
 
         const server = await serverFactory.fromIssuer(tokenSet.iss, dpopKey)
 
@@ -167,9 +165,13 @@ export class SessionGetter extends CachedGetter<AtprotoDid, Session> {
           return (
             tokenSet.expires_at != null &&
             new Date(tokenSet.expires_at).getTime() <
-              // Add some lee way to ensure the token is not expired when it
-              // reaches the server.
-              Date.now() + 60e3
+              Date.now() +
+                // Add some lee way to ensure the token is not expired when it
+                // reaches the server.
+                10e3 +
+                // Add some randomness to reduce the chances of multiple
+                // instances trying to refresh the token at the same.
+                30e3 * Math.random()
           )
         },
         onStoreError: async (err, sub, { tokenSet, dpopKey }) => {
