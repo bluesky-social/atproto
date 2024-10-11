@@ -1,6 +1,6 @@
 import http from 'node:http'
 
-export async function createHeaderEchoServer(port: number) {
+export async function createHeaderEchoServer(port: number = 0) {
   return new Promise<http.Server>((resolve) => {
     const server = http.createServer()
 
@@ -15,7 +15,7 @@ export async function createHeaderEchoServer(port: number) {
           }),
         )
       })
-      .on('listening', () => resolve(server))
+      .once('listening', () => resolve(server))
       .listen(port)
   })
 }
