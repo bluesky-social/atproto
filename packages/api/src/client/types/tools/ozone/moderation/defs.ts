@@ -30,6 +30,9 @@ export interface ModEventView {
     | ModEventResolveAppeal
     | ModEventDivert
     | ModEventTag
+    | AccountEvent
+    | IdentityEvent
+    | RecordEvent
     | { $type: string; [k: string]: unknown }
   subject:
     | ComAtprotoAdminDefs.RepoRef
@@ -74,6 +77,9 @@ export interface ModEventViewDetail {
     | ModEventResolveAppeal
     | ModEventDivert
     | ModEventTag
+    | AccountEvent
+    | IdentityEvent
+    | RecordEvent
     | { $type: string; [k: string]: unknown }
   subject:
     | RepoView
@@ -470,6 +476,71 @@ export function isModEventTag(v: unknown): v is ModEventTag {
 
 export function validateModEventTag(v: unknown): ValidationResult {
   return lexicons.validate('tools.ozone.moderation.defs#modEventTag', v)
+}
+
+/** Logs account status related events on a repo subject. Normally captured by automod from the firehose and emitted to ozone for historical tracking. */
+export interface AccountEvent {
+  comment?: string
+  /** Indicates that the account has a repository which can be fetched from the host that emitted this event. */
+  active: boolean
+  status: 'takendown' | 'suspended' | 'deleted' | 'deactivated' | (string & {})
+  timestamp: string
+  [k: string]: unknown
+}
+
+export function isAccountEvent(v: unknown): v is AccountEvent {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'tools.ozone.moderation.defs#accountEvent'
+  )
+}
+
+export function validateAccountEvent(v: unknown): ValidationResult {
+  return lexicons.validate('tools.ozone.moderation.defs#accountEvent', v)
+}
+
+/** Logs identity related events on a repo subject. Normally captured by automod from the firehose and emitted to ozone for historical tracking. */
+export interface IdentityEvent {
+  comment?: string
+  handle?: string
+  pdsHost?: string
+  tombstone?: boolean
+  timestamp: string
+  [k: string]: unknown
+}
+
+export function isIdentityEvent(v: unknown): v is IdentityEvent {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'tools.ozone.moderation.defs#identityEvent'
+  )
+}
+
+export function validateIdentityEvent(v: unknown): ValidationResult {
+  return lexicons.validate('tools.ozone.moderation.defs#identityEvent', v)
+}
+
+/** Logs lifecycle event on a record subject. Normally captured by automod from the firehose and emitted to ozone for historical tracking. */
+export interface RecordEvent {
+  comment?: string
+  op: 'create' | 'update' | 'delete' | (string & {})
+  cid?: string
+  timestamp: string
+  [k: string]: unknown
+}
+
+export function isRecordEvent(v: unknown): v is RecordEvent {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'tools.ozone.moderation.defs#recordEvent'
+  )
+}
+
+export function validateRecordEvent(v: unknown): ValidationResult {
+  return lexicons.validate('tools.ozone.moderation.defs#recordEvent', v)
 }
 
 export interface RepoView {
