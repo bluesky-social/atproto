@@ -14,9 +14,7 @@ export type VerifyOptions<C extends string = string> = {
   requiredClaims?: readonly C[]
 }
 
-export type VerifyPayload = Record<string, unknown>
-
-export type VerifyResult<P extends VerifyPayload, C extends string> = {
-  payload: RequiredKey<P & JwtPayload, C>
+export type VerifyResult<C extends string = string> = {
+  payload: RequiredKey<JwtPayload, C>
   protectedHeader: JwtHeader
 }

@@ -1,7 +1,7 @@
 import { jwkAlgorithms } from './alg.js'
 import { JwkError } from './errors.js'
 import { Jwk, jwkSchema } from './jwk.js'
-import { VerifyOptions, VerifyPayload, VerifyResult } from './jwt-verify.js'
+import { VerifyOptions, VerifyResult } from './jwt-verify.js'
 import { JwtHeader, JwtPayload, SignedJwt } from './jwt.js'
 import { cachedGetter } from './util.js'
 
@@ -86,8 +86,8 @@ export abstract class Key {
    *
    * @throws {JwtVerifyError} if the JWT is invalid
    */
-  abstract verifyJwt<
-    P extends VerifyPayload = JwtPayload,
-    C extends string = string,
-  >(token: SignedJwt, options?: VerifyOptions<C>): Promise<VerifyResult<P, C>>
+  abstract verifyJwt<C extends string = string>(
+    token: SignedJwt,
+    options?: VerifyOptions<C>,
+  ): Promise<VerifyResult<C>>
 }
