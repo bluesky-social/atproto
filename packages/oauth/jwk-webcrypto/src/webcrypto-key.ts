@@ -63,7 +63,11 @@ export class WebcryptoKey extends JoseKey {
     throw new Error('Private Webcrypto Key not exportable')
   }
 
-  protected override async getKey() {
+  protected override async getKeyObj(alg: string) {
+    // TODO: compare with this.cryptoKeyPair.privateKey.algorithm.name ?
+    if (this.jwk.alg !== alg) {
+      throw new TypeError('Invalid algorithm')
+    }
     return this.cryptoKeyPair.privateKey
   }
 }
