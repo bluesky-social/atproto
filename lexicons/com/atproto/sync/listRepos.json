@@ -42,7 +42,7 @@
           "format": "cid",
           "description": "Current repo commit CID"
         },
-        "rev": { "type": "string" },
+        "rev": { "type": "string", "format": "tid" },
         "active": { "type": "boolean" },
         "status": {
           "type": "string",
