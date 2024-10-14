@@ -68,7 +68,10 @@ export class JoseKey extends Key {
         alg,
         kid: this.kid,
       })
-      return (await jwtBuilder.sign(keyObj)) as SignedJwt
+
+      const signedJwt = await jwtBuilder.sign(keyObj)
+
+      return signedJwt as SignedJwt
     } catch (cause) {
       if (cause instanceof JOSEError) {
         throw new JwtCreateError(cause.message, cause.code, { cause })

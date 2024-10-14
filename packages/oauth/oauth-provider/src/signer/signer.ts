@@ -27,8 +27,11 @@ export class Signer {
     public readonly keyset: Keyset,
   ) {}
 
-  async verify(token: SignedJwt, options?: Omit<VerifyOptions, 'issuer'>) {
-    return this.keyset.verifyJwt(token, {
+  async verify<C extends string = string>(
+    token: SignedJwt,
+    options?: VerifyOptions<C> & { issuer?: never },
+  ) {
+    return this.keyset.verifyJwt<C>(token, {
       ...options,
       issuer: [this.issuer],
     })
