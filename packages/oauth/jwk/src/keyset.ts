@@ -213,7 +213,7 @@ export class Keyset<K extends Key = Key> implements Iterable<K> {
     }
   }
 
-  async verifyJwt<C extends string = string>(
+  async verifyJwt<C extends string = never>(
     token: SignedJwt,
     options?: VerifyOptions<C>,
   ): Promise<VerifyResult<C> & { key: K }> {

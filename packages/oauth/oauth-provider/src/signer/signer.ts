@@ -27,7 +27,7 @@ export class Signer {
     public readonly keyset: Keyset,
   ) {}
 
-  async verify<C extends string = string>(
+  async verify<C extends string = never>(
     token: SignedJwt,
     options?: VerifyOptions<C> & { issuer?: never },
   ) {

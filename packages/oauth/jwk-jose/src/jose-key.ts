@@ -81,7 +81,7 @@ export class JoseKey extends Key {
     }
   }
 
-  async verifyJwt<C extends string = string>(
+  async verifyJwt<C extends string = never>(
     token: SignedJwt,
     options?: VerifyOptions<C>,
   ): Promise<VerifyResult<C>> {

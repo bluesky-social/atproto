@@ -86,7 +86,7 @@ export abstract class Key {
    *
    * @throws {JwtVerifyError} if the JWT is invalid
    */
-  abstract verifyJwt<C extends string = string>(
+  abstract verifyJwt<C extends string = never>(
     token: SignedJwt,
     options?: VerifyOptions<C>,
   ): Promise<VerifyResult<C>>
