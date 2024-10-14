@@ -7,9 +7,9 @@ export type Override<T, V> = Simplify<V & Omit<T, keyof V>>
 
 export type RequiredKey<T, K extends keyof T = never> = Simplify<
   T & {
-    [L in K]-?: L extends keyof T
-      ? Exclude<T[L], undefined>
-      : NonNullable<unknown> | null
+    [L in K]-?: unknown extends T[L]
+      ? NonNullable<unknown> | null
+      : Exclude<T[L], undefined>
   }
 >
 
