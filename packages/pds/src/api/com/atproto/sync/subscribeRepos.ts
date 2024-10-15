@@ -6,7 +6,8 @@ import { httpLogger } from '../../../../logger'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.subscribeRepos(async function* ({ params, signal }) {
-    const { cursor } = params
+    let { cursor } = params
+
     const outbox = new Outbox(ctx.sequencer, {
       maxBufferSize: ctx.cfg.subscription.maxBuffer,
     })
@@ -21,6 +22,12 @@ export default function (server: Server, ctx: AppContext) {
         ctx.sequencer.next(cursor),
         ctx.sequencer.curr(),
       ])
+
+      //if cursor is a negative number, make it relative to curr
+      if (curr !== null && cursor < 0) {
+        cursor = curr + cursor
+      }
+
       if (cursor > (curr ?? 0)) {
         throw new InvalidRequestError('Cursor in the future.', 'FutureCursor')
       } else if (next && next.sequencedAt < backfillTime) {
