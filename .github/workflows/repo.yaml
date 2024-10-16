@@ -23,14 +23,13 @@ jobs:
         with:
           node-version: 18
           cache: 'pnpm'
-      - id: date
-        name: Get current month date
-        run: echo "::set-output name=date::$(date +'%Y-%m')"
+      - name: Get current month
+        run: echo "CURRENT_MONTH=$(date +'%Y-%m')" >> $GITHUB_ENV
       - uses: actions/cache@v4
         name: Cache Puppeteer browser binaries
         with:
           path: ~/.cache
-          key: ${{ steps.date.outputs.date }}-${{ runner.os }}
+          key: ${{ env.CURRENT_MONTH }}-${{ runner.os }}
       - run: pnpm i --frozen-lockfile
       - run: pnpm build
       - uses: actions/upload-artifact@v4
@@ -57,14 +56,13 @@ jobs:
         with:
           node-version: 18
           cache: 'pnpm'
-      - id: date
-        name: Get current month date
-        run: echo "::set-output name=date::$(date +'%Y-%m')"
+      - name: Get current month
+        run: echo "CURRENT_MONTH=$(date +'%Y-%m')" >> $GITHUB_ENV
       - uses: actions/cache@v4
         name: Cache Puppeteer browser binaries
         with:
           path: ~/.cache
-          key: ${{ steps.date.outputs.date }}-${{ runner.os }}
+          key: ${{ env.CURRENT_MONTH }}-${{ runner.os }}
       - run: pnpm i --frozen-lockfile
       - uses: actions/download-artifact@v4
         with:
@@ -85,14 +83,13 @@ jobs:
         with:
           node-version: 18
           cache: 'pnpm'
-      - id: date
-        name: Get current month date
-        run: echo "::set-output name=date::$(date +'%Y-%m')"
+      - name: Get current month
+        run: echo "CURRENT_MONTH=$(date +'%Y-%m')" >> $GITHUB_ENV
       - uses: actions/cache@v4
         name: Cache Puppeteer browser binaries
         with:
           path: ~/.cache
-          key: ${{ steps.date.outputs.date }}-${{ runner.os }}
+          key: ${{ env.CURRENT_MONTH }}-${{ runner.os }}
       - run: pnpm i --frozen-lockfile
       - uses: actions/download-artifact@v4
         with:
