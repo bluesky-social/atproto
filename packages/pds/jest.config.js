@@ -4,7 +4,9 @@ module.exports = {
   transform: { '^.+\\.(t|j)s$': '@swc/jest' },
   // Jest requires all ESM dependencies to be transpiled (even if they are
   // dynamically import()ed).
-  transformIgnorePatterns: [`/node_modules/.pnpm/(?!(get-port|lande|toygrad))`],
+  transformIgnorePatterns: [
+    `/node_modules/.pnpm/(?!(get-port|lande|toygrad)@)`,
+  ],
   testTimeout: 60000,
   setupFiles: ['<rootDir>/../../jest.setup.ts'],
 }
