@@ -1,55 +1,46 @@
 import { mapDefined } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getAuthorFeed'
+
 import AppContext from '../../../../context'
-import { clearlyBadCursor, resHeaders } from '../../../util'
-import { createPipeline } from '../../../../pipeline'
-import {
-  HydrateCtx,
-  HydrationState,
-  Hydrator,
-  mergeStates,
-} from '../../../../hydration/hydrator'
-import { Views } from '../../../../views'
-import { DataPlaneClient } from '../../../../data-plane'
-import { parseString } from '../../../../hydration/util'
-import { safePinnedPost, uriToDid } from '../../../../util/uris'
 import { Actor } from '../../../../hydration/actor'
 import { FeedItem, Post } from '../../../../hydration/feed'
+import { HydrationState, mergeStates } from '../../../../hydration/hydrator'
+import { parseString } from '../../../../hydration/util'
+import { Server } from '../../../../lexicon/index'
+import {
+  OutputSchema,
+  QueryParams,
+} from '../../../../lexicon/types/app/bsky/feed/getAuthorFeed'
+import {
+  HydrationFn,
+  PresentationFn,
+  RulesFn,
+  SkeletonFn,
+} from '../../../../pipeline'
 import { FeedType } from '../../../../proto/bsky_pb'
+import { safePinnedPost, uriToDid } from '../../../../util/uris'
+import { clearlyBadCursor } from '../../../util'
+
+type Skeleton = {
+  actor: Actor
+  items: FeedItem[]
+  filter: QueryParams['filter']
+  cursor?: string
+}
 
 export default function (server: Server, ctx: AppContext) {
-  const getAuthorFeed = createPipeline(
-    skeleton,
-    hydration,
-    noBlocksOrMutedReposts,
-    presentation,
-  )
   server.app.bsky.feed.getAuthorFeed({
     auth: ctx.authVerifier.optionalStandardOrRole,
-    handler: async ({ params, auth, req }) => {
-      const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
-      const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({
-        labelers,
-        viewer,
-        includeTakedowns,
-      })
-
-      const result = await getAuthorFeed({ ...params, hydrateCtx }, ctx)
-
-      const repoRev = await ctx.hydrator.actor.getRepoRevSafe(viewer)
-
-      return {
-        encoding: 'application/json',
-        body: result,
-        headers: resHeaders({
-          repoRev,
-          labelers: hydrateCtx.labelers,
-        }),
-      }
-    },
+    handler: ctx.createPipelineHandler(
+      skeleton,
+      hydration,
+      noBlocksOrMutedReposts,
+      presentation,
+      {
+        exposeRepoRev: true,
+        includeTakedowns: true,
+      },
+    ),
   })
 }
 
@@ -60,19 +51,14 @@ const FILTER_TO_FEED_TYPE = {
   posts_and_author_threads: FeedType.POSTS_AND_AUTHOR_THREADS,
 }
 
-export const skeleton = async (inputs: {
-  ctx: Context
-  params: Params
-}): Promise<Skeleton> => {
-  const { ctx, params } = inputs
+export const skeleton: SkeletonFn<Skeleton, QueryParams> = async (ctx) => {
+  const { params } = ctx
+
   const [did] = await ctx.hydrator.actor.getDids([params.actor])
   if (!did) {
     throw new InvalidRequestError('Profile not found')
   }
-  const actors = await ctx.hydrator.actor.getActors(
-    [did],
-    params.hydrateCtx.includeTakedowns,
-  )
+  const actors = await ctx.hydrator.actor.getActors([did], ctx.includeTakedowns)
   const actor = actors.get(did)
   if (!actor) {
     throw new InvalidRequestError('Profile not found')
@@ -124,25 +110,19 @@ export const skeleton = async (inputs: {
   }
 }
 
-const hydration = async (inputs: {
-  ctx: Context
-  params: Params
-  skeleton: Skeleton
-}): Promise<HydrationState> => {
-  const { ctx, params, skeleton } = inputs
+const hydration: HydrationFn<Skeleton, QueryParams> = async (ctx, skeleton) => {
   const [feedPostState, profileViewerState] = await Promise.all([
-    ctx.hydrator.hydrateFeedItems(skeleton.items, params.hydrateCtx),
-    ctx.hydrator.hydrateProfileViewers([skeleton.actor.did], params.hydrateCtx),
+    ctx.hydrator.hydrateFeedItems(skeleton.items, ctx),
+    ctx.hydrator.hydrateProfileViewers([skeleton.actor.did], ctx),
   ])
   return mergeStates(feedPostState, profileViewerState)
 }
 
-const noBlocksOrMutedReposts = (inputs: {
-  ctx: Context
-  skeleton: Skeleton
-  hydration: HydrationState
-}): Skeleton => {
-  const { ctx, skeleton, hydration } = inputs
+const noBlocksOrMutedReposts: RulesFn<Skeleton, QueryParams> = (
+  ctx,
+  skeleton,
+  hydration,
+) => {
   const relationship = hydration.profileViewers?.get(skeleton.actor.did)
   if (relationship?.blocking || relationship?.blockingByList) {
     throw new InvalidRequestError(
@@ -183,33 +163,15 @@ const noBlocksOrMutedReposts = (inputs: {
   return skeleton
 }
 
-const presentation = (inputs: {
-  ctx: Context
-  skeleton: Skeleton
-  hydration: HydrationState
-}) => {
-  const { ctx, skeleton, hydration } = inputs
+const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = (
+  ctx,
+  skeleton,
+  hydration,
+) => {
   const feed = mapDefined(skeleton.items, (item) =>
     ctx.views.feedViewPost(item, hydration),
   )
-  return { feed, cursor: skeleton.cursor }
-}
-
-type Context = {
-  hydrator: Hydrator
-  views: Views
-  dataplane: DataPlaneClient
-}
-
-type Params = QueryParams & {
-  hydrateCtx: HydrateCtx
-}
-
-type Skeleton = {
-  actor: Actor
-  items: FeedItem[]
-  filter: QueryParams['filter']
-  cursor?: string
+  return { body: { feed, cursor: skeleton.cursor } }
 }
 
 class SelfThreadTracker {

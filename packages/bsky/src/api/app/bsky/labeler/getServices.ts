@@ -1,20 +1,14 @@
-import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
 import { mapDefined } from '@atproto/common'
-import { resHeaders } from '../../../util'
+import AppContext from '../../../../context'
+import { Server } from '../../../../lexicon'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.labeler.getServices({
     auth: ctx.authVerifier.standardOptional,
-    handler: async ({ params, auth, req }) => {
-      const { dids, detailed } = params
-      const viewer = auth.credentials.iss
-      const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({
-        viewer,
-        labelers,
-      })
-      const hydration = await ctx.hydrator.hydrateLabelers(dids, hydrateCtx)
+    handler: ctx.createHandler(async (ctx) => {
+      const { dids, detailed } = ctx.params
+
+      const hydration = await ctx.hydrator.hydrateLabelers(dids, ctx)
 
       const views = mapDefined(dids, (did) => {
         if (detailed) {
@@ -36,11 +30,8 @@ export default function (server: Server, ctx: AppContext) {
 
       return {
         encoding: 'application/json',
-        body: {
-          views,
-        },
-        headers: resHeaders({ labelers: hydrateCtx.labelers }),
+        body: { views },
       }
-    },
+    }),
   })
 }

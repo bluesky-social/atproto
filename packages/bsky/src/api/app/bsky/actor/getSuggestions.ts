@@ -1,72 +1,57 @@
 import { mapDefined, noUndefinedVals } from '@atproto/common'
+import { HeadersMap } from '@atproto/xrpc'
+
 import AppContext from '../../../../context'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/actor/getSuggestions'
-import { createPipeline } from '../../../../pipeline'
-import {
-  HydrateCtx,
-  HydrationState,
-  Hydrator,
-} from '../../../../hydration/hydrator'
-import { Views } from '../../../../views'
-import { DataPlaneClient } from '../../../../data-plane'
 import { parseString } from '../../../../hydration/util'
-import { resHeaders } from '../../../util'
-import { AtpAgent } from '@atproto/api'
+import { Server } from '../../../../lexicon/index'
+import {
+  OutputSchema,
+  QueryParams,
+} from '../../../../lexicon/types/app/bsky/actor/getSuggestions'
+import {
+  HydrationFn,
+  PresentationFn,
+  RulesFn,
+  SkeletonFn,
+} from '../../../../pipeline'
+
+type Skeleton = {
+  dids: string[]
+  cursor?: string
+  resHeaders?: HeadersMap
+}
 
 export default function (server: Server, ctx: AppContext) {
-  const getSuggestions = createPipeline(
-    skeleton,
-    hydration,
-    noBlocksOrMutes,
-    presentation,
-  )
   server.app.bsky.actor.getSuggestions({
     auth: ctx.authVerifier.standardOptional,
-    handler: async ({ params, auth, req }) => {
-      const viewer = auth.credentials.iss
-      const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({ viewer, labelers })
-      const headers = noUndefinedVals({
-        'accept-language': req.headers['accept-language'],
-        'x-bsky-topics': Array.isArray(req.headers['x-bsky-topics'])
-          ? req.headers['x-bsky-topics'].join(',')
-          : req.headers['x-bsky-topics'],
-      })
-      const { resHeaders: resultHeaders, ...result } = await getSuggestions(
-        { ...params, hydrateCtx, headers },
-        ctx,
-      )
-      const suggestionsResHeaders = noUndefinedVals({
-        'content-language': resultHeaders?.['content-language'],
-      })
-      return {
-        encoding: 'application/json',
-        body: result,
-        headers: {
-          ...suggestionsResHeaders,
-          ...resHeaders({ labelers: hydrateCtx.labelers }),
-        },
-      }
-    },
+    handler: ctx.createPipelineHandler(
+      skeleton,
+      hydration,
+      noBlocksOrMutes,
+      presentation,
+    ),
   })
 }
 
-const skeleton = async (input: {
-  ctx: Context
-  params: Params
-}): Promise<Skeleton> => {
-  const { ctx, params } = input
-  const viewer = params.hydrateCtx.viewer
+const skeleton: SkeletonFn<Skeleton, QueryParams> = async (ctx) => {
+  const { viewer, params, headers } = ctx
+
   if (ctx.suggestionsAgent) {
     const res =
-      await ctx.suggestionsAgent.api.app.bsky.unspecced.getSuggestionsSkeleton(
+      await ctx.suggestionsAgent.app.bsky.unspecced.getSuggestionsSkeleton(
         {
           viewer: viewer ?? undefined,
           limit: params.limit,
           cursor: params.cursor,
         },
-        { headers: params.headers },
+        {
+          headers: noUndefinedVals({
+            'accept-language': headers['accept-language'],
+            'x-bsky-topics': Array.isArray(headers['x-bsky-topics'])
+              ? headers['x-bsky-topics'].join(',')
+              : headers['x-bsky-topics'],
+          }),
+        },
       )
     return {
       dids: res.data.actors.map((a) => a.did),
@@ -92,22 +77,15 @@ const skeleton = async (input: {
   }
 }
 
-const hydration = async (input: {
-  ctx: Context
-  params: Params
-  skeleton: Skeleton
-}) => {
-  const { ctx, params, skeleton } = input
-  return ctx.hydrator.hydrateProfilesDetailed(skeleton.dids, params.hydrateCtx)
+const hydration: HydrationFn<Skeleton, QueryParams> = async (ctx, skeleton) => {
+  return ctx.hydrator.hydrateProfilesDetailed(skeleton.dids, ctx)
 }
 
-const noBlocksOrMutes = (input: {
-  ctx: Context
-  params: Params
-  skeleton: Skeleton
-  hydration: HydrationState
-}) => {
-  const { ctx, skeleton, hydration } = input
+const noBlocksOrMutes: RulesFn<Skeleton, QueryParams> = (
+  ctx,
+  skeleton,
+  hydration,
+) => {
   skeleton.dids = skeleton.dids.filter(
     (did) =>
       !ctx.views.viewerBlockExists(did, hydration) &&
@@ -116,37 +94,21 @@ const noBlocksOrMutes = (input: {
   return skeleton
 }
 
-const presentation = (input: {
-  ctx: Context
-  params: Params
-  skeleton: Skeleton
-  hydration: HydrationState
-}) => {
-  const { ctx, skeleton, hydration } = input
+const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = (
+  ctx,
+  skeleton,
+  hydration,
+) => {
   const actors = mapDefined(skeleton.dids, (did) =>
     ctx.views.profileKnownFollowers(did, hydration),
   )
   return {
-    actors,
-    cursor: skeleton.cursor,
-    resHeaders: skeleton.resHeaders,
+    headers: skeleton.resHeaders?.['content-language']
+      ? { 'content-language': skeleton.resHeaders['content-language'] }
+      : undefined,
+    body: {
+      actors,
+      cursor: skeleton.cursor,
+    },
   }
-}
-
-type Context = {
-  suggestionsAgent: AtpAgent | undefined
-  dataplane: DataPlaneClient
-  hydrator: Hydrator
-  views: Views
-}
-
-type Params = QueryParams & {
-  hydrateCtx: HydrateCtx
-  headers: Record<string, string>
-}
-
-type Skeleton = {
-  dids: string[]
-  cursor?: string
-  resHeaders?: Record<string, string>
 }

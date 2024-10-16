@@ -1,80 +1,54 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getStarterPack'
+
 import AppContext from '../../../../context'
+import { Server } from '../../../../lexicon/index'
 import {
-  createPipeline,
-  HydrationFnInput,
+  OutputSchema,
+  QueryParams,
+} from '../../../../lexicon/types/app/bsky/graph/getStarterPack'
+import {
+  HydrationFn,
   noRules,
-  PresentationFnInput,
-  SkeletonFnInput,
+  PresentationFn,
+  SkeletonFn,
 } from '../../../../pipeline'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
-import { Views } from '../../../../views'
-import { resHeaders } from '../../../util'
+
+type Skeleton = {
+  uri: string
+}
 
 export default function (server: Server, ctx: AppContext) {
-  const getStarterPack = createPipeline(
-    skeleton,
-    hydration,
-    noRules,
-    presentation,
-  )
   server.app.bsky.graph.getStarterPack({
     auth: ctx.authVerifier.standardOptional,
-    handler: async ({ params, auth, req }) => {
-      const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
-      const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({
-        labelers,
-        viewer,
-        includeTakedowns,
-      })
-      const result = await getStarterPack({ ...params, hydrateCtx }, ctx)
-      return {
-        encoding: 'application/json',
-        body: result,
-        headers: resHeaders({ labelers: hydrateCtx.labelers }),
-      }
-    },
+    handler: ctx.createPipelineHandler(
+      skeleton,
+      hydration,
+      noRules,
+      presentation,
+      {
+        includeTakedowns: true,
+      },
+    ),
   })
 }
 
-const skeleton = async (
-  input: SkeletonFnInput<Context, Params>,
-): Promise<SkeletonState> => {
-  const { ctx, params } = input
-  const uri = await ctx.hydrator.resolveUri(params.starterPack)
+const skeleton: SkeletonFn<Skeleton, QueryParams> = async (ctx) => {
+  const uri = await ctx.hydrator.resolveUri(ctx.params.starterPack)
   return { uri }
 }
 
-const hydration = async (
-  input: HydrationFnInput<Context, Params, SkeletonState>,
-) => {
-  const { ctx, params, skeleton } = input
-  return ctx.hydrator.hydrateStarterPacks([skeleton.uri], params.hydrateCtx)
+const hydration: HydrationFn<Skeleton, QueryParams> = async (ctx, skeleton) => {
+  return ctx.hydrator.hydrateStarterPacks([skeleton.uri], ctx)
 }
 
-const presentation = (
-  input: PresentationFnInput<Context, Params, SkeletonState>,
+const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = (
+  ctx,
+  skeleton,
+  hydration,
 ) => {
-  const { ctx, skeleton, hydration } = input
   const starterPack = ctx.views.starterPack(skeleton.uri, hydration)
   if (!starterPack) {
     throw new InvalidRequestError('Starter pack not found')
   }
-  return { starterPack }
-}
-
-type Context = {
-  hydrator: Hydrator
-  views: Views
-}
-
-type Params = QueryParams & {
-  hydrateCtx: HydrateCtx
-}
-
-type SkeletonState = {
-  uri: string
+  return { body: { starterPack } }
 }
