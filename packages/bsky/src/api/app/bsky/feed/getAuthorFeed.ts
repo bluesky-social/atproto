@@ -18,7 +18,7 @@ import {
   SkeletonFn,
 } from '../../../../pipeline'
 import { FeedType } from '../../../../proto/bsky_pb'
-import { uriToDid } from '../../../../util/uris'
+import { safePinnedPost, uriToDid } from '../../../../util/uris'
 import { clearlyBadCursor } from '../../../util'
 
 type Skeleton = {
@@ -67,12 +67,13 @@ export const skeleton: SkeletonFn<Skeleton, QueryParams> = async (ctx) => {
     return { actor, filter: params.filter, items: [] }
   }
 
+  const pinnedPost = safePinnedPost(actor.profile?.pinnedPost)
   const isFirstPageRequest = !params.cursor
   const shouldInsertPinnedPost =
     isFirstPageRequest &&
     params.includePins &&
-    !!actor.profile?.pinnedPost &&
-    uriToDid(actor.profile.pinnedPost.uri) === actor.did
+    pinnedPost &&
+    uriToDid(pinnedPost.uri) === actor.did
 
   const res = await ctx.dataplane.getAuthorFeed({
     actorDid: did,
@@ -88,11 +89,11 @@ export const skeleton: SkeletonFn<Skeleton, QueryParams> = async (ctx) => {
       : undefined,
   }))
 
-  if (shouldInsertPinnedPost && actor.profile?.pinnedPost) {
+  if (shouldInsertPinnedPost && pinnedPost) {
     const pinnedItem = {
       post: {
-        uri: actor.profile.pinnedPost.uri,
-        cid: actor.profile.pinnedPost.cid,
+        uri: pinnedPost.uri,
+        cid: pinnedPost.cid,
       },
       authorPinned: true,
     }
