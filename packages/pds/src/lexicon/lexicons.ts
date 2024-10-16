@@ -5956,6 +5956,16 @@ export const schemaDict = {
               description: 'Self-label values',
               refs: ['lex:com.atproto.label.defs#selfLabels'],
             },
+            langs: {
+              type: 'array',
+              description:
+                'Indicates the human language for the intended audiences of the feed generator.',
+              maxLength: 3,
+              items: {
+                type: 'string',
+                format: 'language',
+              },
+            },
             createdAt: {
               type: 'string',
               format: 'datetime',
@@ -8514,6 +8524,16 @@ export const schemaDict = {
                 ref: 'lex:app.bsky.graph.starterpack#feedItem',
               },
             },
+            langs: {
+              type: 'array',
+              description:
+                'Indicates the human language for the intended audiences of the starter pack.',
+              maxLength: 3,
+              items: {
+                type: 'string',
+                format: 'language',
+              },
+            },
             createdAt: {
               type: 'string',
               format: 'datetime',
@@ -8784,6 +8804,16 @@ export const schemaDict = {
             labels: {
               type: 'union',
               refs: ['lex:com.atproto.label.defs#selfLabels'],
+            },
+            langs: {
+              type: 'array',
+              description:
+                'Indicates the human language for the intended audiences of the labeler.',
+              maxLength: 3,
+              items: {
+                type: 'string',
+                format: 'language',
+              },
             },
             createdAt: {
               type: 'string',
