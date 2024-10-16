@@ -36,6 +36,12 @@
             "maxLength": 3,
             "items": { "type": "ref", "ref": "#feedItem" }
           },
+          "langs": {
+            "type": "array",
+            "description": "Indicates the human language for the intended audiences of the starter pack.",
+            "maxLength": 3,
+            "items": { "type": "string", "format": "language" }
+          },
           "createdAt": { "type": "string", "format": "datetime" }
         }
       }
