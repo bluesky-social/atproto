@@ -74,11 +74,11 @@ describe('oauth', () => {
 
     await handleInput.type('alice.test')
 
-    const navToAuthorize = page.waitForNavigation()
-
-    await handleInput.press('Enter')
-
-    await navToAuthorize
+    await Promise.all([
+      //
+      handleInput.press('Enter'),
+      page.waitForNavigation(),
+    ])
 
     await expect(page.title()).resolves.toBe('Authorize')
 
@@ -110,11 +110,11 @@ describe('oauth', () => {
       'button::-p-text(Accept)',
     )
 
-    const navBackToApp = page.waitForNavigation()
-
-    await acceptButton.click()
-
-    await navBackToApp
+    await Promise.all([
+      //
+      acceptButton.click(),
+      page.waitForNavigation(),
+    ])
 
     await expect(page.title()).resolves.toBe('OAuth Client Example')
 
