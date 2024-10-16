@@ -84,14 +84,16 @@ export class Signer {
     )
   }
 
-  async verifyAccessToken(token: SignedJwt): Promise<{
-    protectedHeader: JwtSignHeader
-    payload: SignedTokenPayload
-  }> {
-    const result = await this.verify(token, { typ: 'at+jwt' })
+  async verifyAccessToken<C extends string = never>(
+    token: SignedJwt,
+    options?: VerifyOptions<C> & { issuer?: never; typ?: never },
+  ) {
+    const result = await this.verify<C>(token, { ...options, typ: 'at+jwt' })
+    type Payload = typeof result.payload // RequiredKey<JwtPayload, C>
     return {
       protectedHeader: result.protectedHeader,
-      payload: signedTokenPayloadSchema.parse(result.payload),
+      payload: signedTokenPayloadSchema.parse(result.payload) as Payload &
+        SignedTokenPayload,
     }
   }
 }
