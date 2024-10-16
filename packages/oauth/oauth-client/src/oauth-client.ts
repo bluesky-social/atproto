@@ -21,7 +21,7 @@ import {
   OAuthResponseMode,
 } from '@atproto/oauth-types'
 
-import { FALLBACK_ALG } from './constants.js'
+import { ALLOW_UNSECURE_ORIGINS, FALLBACK_ALG } from './constants.js'
 import { TokenRevokedError } from './errors/token-revoked-error.js'
 import {
   AuthorizationServerMetadataCache,
@@ -73,6 +73,7 @@ export type OAuthClientOptions = {
   responseMode: OAuthResponseMode
   clientMetadata: Readonly<OAuthClientMetadataInput>
   keyset?: Keyset | Iterable<Key | undefined | null | false>
+  allowUnsecure?: boolean
 
   // Stores
   stateStore: StateStore
@@ -148,6 +149,7 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
 
   constructor({
     fetch = globalThis.fetch,
+    allowUnsecure = ALLOW_UNSECURE_ORIGINS,
 
     stateStore,
     sessionStore,
@@ -197,10 +199,12 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
       new OAuthProtectedResourceMetadataResolver(
         protectedResourceMetadataCache,
         fetch,
+        { allowUnsecure },
       ),
       new OAuthAuthorizationServerMetadataResolver(
         authorizationServerMetadataCache,
         fetch,
+        { allowUnsecure },
       ),
     )
     this.serverFactory = new OAuthServerFactory(

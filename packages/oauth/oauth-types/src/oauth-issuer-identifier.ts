@@ -1,5 +1,4 @@
 import { z } from 'zod'
-import { ALLOW_UNSECURE_ORIGINS } from './constants.js'
 import { safeUrl } from './util.js'
 
 export const oauthIssuerIdentifierSchema = z
@@ -22,15 +21,11 @@ export const oauthIssuerIdentifierSchema = z
       })
     }
 
-    if (url.protocol !== 'https:') {
-      if (ALLOW_UNSECURE_ORIGINS && url.protocol === 'http:') {
-        // We'll allow HTTP in development mode
-      } else {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'Issuer must be an HTTPS URL',
-        })
-      }
+    if (url.protocol !== 'https:' && url.protocol !== 'http:') {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `Invalid issuer URL protocol "${url.protocol}"`,
+      })
     }
 
     if (url.username || url.password) {

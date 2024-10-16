@@ -10,11 +10,10 @@ import {
   SimpleStore,
 } from '@atproto-labs/simple-store'
 import {
-  ALLOW_UNSECURE_ORIGINS,
   OAuthProtectedResourceMetadata,
   oauthProtectedResourceMetadataSchema,
 } from '@atproto/oauth-types'
-import { contentMime } from './util'
+import { contentMime } from './util.js'
 
 export type { GetCachedOptions, OAuthProtectedResourceMetadata }
 
@@ -22,6 +21,10 @@ export type ProtectedResourceMetadataCache = SimpleStore<
   string,
   OAuthProtectedResourceMetadata
 >
+
+export type OAuthProtectedResourceMetadataResolverConfig = {
+  allowUnsecure?: boolean
+}
 
 /**
  * @see {@link https://datatracker.ietf.org/doc/html/draft-ietf-oauth-resource-metadata-05}
@@ -31,14 +34,17 @@ export class OAuthProtectedResourceMetadataResolver extends CachedGetter<
   OAuthProtectedResourceMetadata
 > {
   private readonly fetch: Fetch<unknown>
+  private readonly allowUnsecure: boolean
 
   constructor(
     cache: ProtectedResourceMetadataCache,
     fetch: Fetch = globalThis.fetch,
+    config?: OAuthProtectedResourceMetadataResolverConfig,
   ) {
     super(async (origin, options) => this.fetchMetadata(origin, options), cache)
 
     this.fetch = bindFetch(fetch)
+    this.allowUnsecure = config?.allowUnsecure === true
   }
 
   async get(
@@ -46,14 +52,23 @@ export class OAuthProtectedResourceMetadataResolver extends CachedGetter<
     options?: GetCachedOptions,
   ): Promise<OAuthProtectedResourceMetadata> {
     const { protocol, origin } = new URL(resource)
-    if (
-      protocol === 'https:' ||
-      (protocol === 'http:' && ALLOW_UNSECURE_ORIGINS)
-    ) {
+    if (protocol === 'https:') {
       return super.get(origin, options)
     }
 
-    throw new TypeError(`Forbidden resource sercure protocol "${protocol}"`)
+    if (protocol === 'http:') {
+      if (this.allowUnsecure) {
+        return super.get(origin, options)
+      }
+
+      throw new TypeError(
+        `Unsecure resource metadata URL (${protocol}) only allowed in development and test environments`,
+      )
+    }
+
+    throw new TypeError(
+      `Invalid protected resource metadata URL protocol: ${protocol}`,
+    )
   }
 
   private async fetchMetadata(

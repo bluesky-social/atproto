@@ -25,6 +25,7 @@ export type BrowserOAuthClientOptions = {
   handleResolver: HandleResolver | string | URL
   responseMode?: 'query' | 'fragment'
   plcDirectoryUrl?: string | URL
+  allowUnsecure?: boolean
 
   fetch?: Fetch
 }
@@ -93,6 +94,7 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
     responseMode = 'fragment',
     plcDirectoryUrl = undefined,
     fetch = undefined,
+    allowUnsecure = undefined,
   }: BrowserOAuthClientOptions) {
     if (!globalThis.crypto?.subtle) {
       throw new Error('WebCrypto API is required')
@@ -111,6 +113,7 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
       fetch,
       plcDirectoryUrl,
       handleResolver,
+      allowUnsecure,
 
       runtimeImplementation: new BrowserRuntimeImplementation(),
 

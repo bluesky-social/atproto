@@ -49,7 +49,13 @@ describe('oauth', () => {
 
     server = await createClientServer()
 
-    appUrl = `http://127.0.0.1:${(server.address() as AddressInfo).port}?plc_directory_url=${network.plc.url}&handle_resolver=${network.pds.url}`
+    const { port } = server.address() as AddressInfo
+
+    appUrl = `http://127.0.0.1:${port}?${new URLSearchParams({
+      plc_directory_url: network.plc.url,
+      handle_resolver: network.pds.url,
+      env: 'test',
+    })}`
   })
 
   afterAll(async () => {
