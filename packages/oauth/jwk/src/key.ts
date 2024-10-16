@@ -5,8 +5,8 @@ import { VerifyOptions, VerifyResult } from './jwt-verify.js'
 import { JwtHeader, JwtPayload, SignedJwt } from './jwt.js'
 import { cachedGetter } from './util.js'
 
-export abstract class Key {
-  constructor(protected readonly jwk: Readonly<Jwk>) {
+export abstract class Key<J extends Jwk = Jwk> {
+  constructor(protected readonly jwk: Readonly<J>) {
     // A key should always be used either for signing or encryption.
     if (!jwk.use) throw new JwkError('Missing "use" Parameter value')
   }
@@ -24,15 +24,15 @@ export abstract class Key {
     return false
   }
 
-  get privateJwk(): Jwk | undefined {
+  get privateJwk(): J | undefined {
     return this.isPrivate ? this.jwk : undefined
   }
 
   @cachedGetter
-  get publicJwk(): Jwk | undefined {
+  get publicJwk(): (J & { d?: never; k?: never }) | undefined {
     if (this.isSymetric) return undefined
     if (this.isPrivate) {
-      const { d: _, ...jwk } = this.jwk as any
+      const { d: _d, k: _k, ...jwk } = this.jwk as any
       return jwk
     }
     return this.jwk
@@ -64,7 +64,7 @@ export abstract class Key {
   }
 
   get crv() {
-    return (this.jwk as { crv: undefined } | Extract<Jwk, { crv: unknown }>).crv
+    return (this.jwk as { crv: undefined } | Extract<J, { crv: unknown }>).crv
   }
 
   /**

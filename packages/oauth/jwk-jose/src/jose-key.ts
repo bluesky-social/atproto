@@ -37,8 +37,11 @@ export type Importable = string | KeyLike | Jwk
 
 export type { GenerateKeyPairOptions, GenerateKeyPairResult }
 
-export class JoseKey extends Key {
+export class JoseKey<J extends Jwk = Jwk> extends Key<J> {
   protected async getKeyObj(alg: string) {
+    if (!this.algorithms.includes(alg)) {
+      throw new JwkError(`Key cannot be used with algorithm "${alg}"`)
+    }
     try {
       return await importJWK(this.jwk as JWK, alg)
     } catch (cause) {
@@ -56,10 +59,8 @@ export class JoseKey extends Key {
       }
 
       const { alg } = header
-      if (!alg || !this.algorithms.includes(alg)) {
-        throw new JwtCreateError(
-          `Invalid "alg" (${alg}) used to sign with key "${this.kid}"`,
-        )
+      if (!alg) {
+        throw new JwtCreateError('Missing "alg" in JWT header')
       }
 
       const keyObj = await this.getKeyObj(alg)
