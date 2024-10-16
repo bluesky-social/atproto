@@ -39,6 +39,7 @@
     "@types/express-serve-static-core": "^4.17.36",
     "@types/http-errors": "^2.0.1",
     "@types/ws": "^8.5.4",
+    "get-port": "^6.1.2",
     "jest": "^28.1.2",
     "jose": "^4.15.4",
     "key-encoder": "^2.0.3",

@@ -1547,6 +1547,9 @@ importers:
       '@types/ws':
         specifier: ^8.5.4
         version: 8.5.4
+      get-port:
+        specifier: ^6.1.2
+        version: 6.1.2
       jest:
         specifier: ^28.1.2
         version: 28.1.2(@types/node@18.19.50)(ts-node@10.8.2)
