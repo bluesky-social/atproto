@@ -1,0 +1,60 @@
+{
+  "name": "@atproto/oauth-client-browser-example",
+  "version": "0.0.0",
+  "license": "MIT",
+  "description": "Example single page application app using ATPROTO OAuth",
+  "keywords": [
+    "example",
+    "spa",
+    "atproto",
+    "oauth",
+    "browser",
+    "client"
+  ],
+  "homepage": "https://atproto.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto",
+    "directory": "packages/oauth/oauth-client-browser"
+  },
+  "type": "commonjs",
+  "exports": {
+    ".": {
+      "default": "./dist/files.json"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "dependencies": {},
+  "devDependencies": {
+    "@atproto-labs/rollup-plugin-bundle-manifest": "workspace:*",
+    "@atproto/api": "workspace:*",
+    "@atproto/oauth-client": "workspace:*",
+    "@atproto/oauth-client-browser": "workspace:*",
+    "@atproto/oauth-types": "workspace:*",
+    "@atproto/xrpc": "workspace:*",
+    "@rollup/plugin-commonjs": "^25.0.7",
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-html": "^1.0.4",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-replace": "^5.0.5",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^11.1.6",
+    "@types/react": "^18.2.50",
+    "@types/react-dom": "^18.2.18",
+    "autoprefixer": "^10.4.17",
+    "postcss": "^8.4.33",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "rollup": "^4.13.0",
+    "rollup-plugin-postcss": "^4.0.2",
+    "rollup-plugin-serve": "^1.1.1",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5.6.3"
+  },
+  "scripts": {
+    "build": "rollup --config rollup.config.js",
+    "dev": "rollup --config rollup.config.js --watch"
+  }
+}

@@ -1,16 +1,16 @@
-import * as http from 'http'
+import * as http from 'node:http'
+import { once } from 'node:events'
 import express from 'express'
 import * as xrpc from '../src'
 import { AuthRequiredError } from '../src'
 
-export async function createServer(
-  port: number,
-  server: xrpc.Server,
-): Promise<http.Server> {
+export async function createServer({
+  router,
+}: xrpc.Server): Promise<http.Server> {
   const app = express()
-  app.use(server.router)
-  const httpServer = app.listen(port)
-  await new Promise((r) => httpServer.on('listening', r))
+  app.use(router)
+  const httpServer = app.listen(0)
+  await once(httpServer, 'listening')
   return httpServer
 }
 

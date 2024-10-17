@@ -4,10 +4,11 @@ import express from 'express'
 import axios from 'axios'
 import * as plc from '@did-plc/lib'
 import { SeedClient, TestNetworkNoAppView, usersSeed } from '@atproto/dev-env'
-import getPort from 'get-port'
 import { Keypair } from '@atproto/crypto'
 import { verifyJwt } from '@atproto/xrpc-server'
 import { parseProxyHeader } from '../../src/pipethrough'
+import { once } from 'node:events'
+import { AddressInfo } from 'node:net'
 
 describe('proxy header', () => {
   let network: TestNetworkNoAppView
@@ -167,8 +168,12 @@ class ProxyServer {
       })
       res.sendStatus(200)
     })
-    const port = await getPort()
-    const server = app.listen(port)
+
+    const server = app.listen(0)
+    await once(server, 'listening')
+
+    const { port } = server.address() as AddressInfo
+
     const url = `http://localhost:${port}`
     const plcOp = await plc.signOperation(
       {

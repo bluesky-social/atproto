@@ -18,17 +18,30 @@ const fetchSuccessHandler = pipe(
 
 export type DidWebMethodOptions = {
   fetch?: Fetch
+  /** @default true */
+  allowHttp?: boolean
 }
 
 export class DidWebMethod implements DidMethod<'web'> {
   protected readonly fetch: Fetch<unknown>
+  protected readonly allowHttp: boolean
 
-  constructor({ fetch = globalThis.fetch }: DidWebMethodOptions = {}) {
+  constructor({
+    fetch = globalThis.fetch,
+    allowHttp = true,
+  }: DidWebMethodOptions = {}) {
     this.fetch = bindFetch(fetch)
+    this.allowHttp = allowHttp
   }
 
   async resolve(did: Did<'web'>, options?: ResolveDidOptions) {
     const didDocumentUrl = buildDidWebDocumentUrl(did)
+
+    if (!this.allowHttp && didDocumentUrl.protocol === 'http:') {
+      throw new Error(
+        `Cannot resolve DID document for localhost: ${didDocumentUrl}`,
+      )
+    }
 
     // Note we do not explicitly check for "localhost" here. Instead, we rely on
     // the injected 'fetch' function to handle the URL. If the URL is

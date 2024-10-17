@@ -442,7 +442,10 @@ export class RequestManager {
       }
 
       if (data.clientId !== client.id) {
-        throw new InvalidGrantError('This code was issued for another client')
+        // Note: do not reveal the original client ID to the client using an invalid id
+        throw new InvalidGrantError(
+          `The code was not issued to client "${client.id}"`,
+        )
       }
 
       if (data.expiresAt < new Date()) {

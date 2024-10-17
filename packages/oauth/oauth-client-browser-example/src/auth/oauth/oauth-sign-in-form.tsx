@@ -57,7 +57,6 @@ export function OAuthSignInForm({
       <fieldset className="rounded-md border border-solid border-slate-200 dark:border-slate-700 text-neutral-700 dark:text-neutral-100">
         <div className="relative p-1 flex flex-wrap items-center justify-stretch">
           <input
-            id="value"
             name="value"
             type="text"
             className="relative m-0 block w-[1px] min-w-0 flex-auto px-3 py-[0.25rem] leading-[1.6] bg-transparent bg-clip-padding text-base text-inherit outline-none dark:placeholder:text-neutral-100"

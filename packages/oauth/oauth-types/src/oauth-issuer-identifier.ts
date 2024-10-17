@@ -1,10 +1,9 @@
 import { z } from 'zod'
-import { ALLOW_UNSECURE_ORIGINS } from './constants.js'
 import { safeUrl } from './util.js'
 
 export const oauthIssuerIdentifierSchema = z
   .string()
-  .superRefine((value, ctx) => {
+  .superRefine((value, ctx): value is `${'http' | 'https'}://${string}` => {
     // Validate the issuer (MIX-UP attacks)
 
     if (value.endsWith('/')) {
@@ -12,25 +11,24 @@ export const oauthIssuerIdentifierSchema = z
         code: z.ZodIssueCode.custom,
         message: 'Issuer URL must not end with a slash',
       })
+      return false
     }
 
     const url = safeUrl(value)
     if (!url) {
-      return ctx.addIssue({
+      ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: 'Invalid url',
       })
+      return false
     }
 
-    if (url.protocol !== 'https:') {
-      if (ALLOW_UNSECURE_ORIGINS && url.protocol === 'http:') {
-        // We'll allow HTTP in development mode
-      } else {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'Issuer must be an HTTPS URL',
-        })
-      }
+    if (url.protocol !== 'https:' && url.protocol !== 'http:') {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `Invalid issuer URL protocol "${url.protocol}"`,
+      })
+      return false
     }
 
     if (url.username || url.password) {
@@ -38,6 +36,7 @@ export const oauthIssuerIdentifierSchema = z
         code: z.ZodIssueCode.custom,
         message: 'Issuer URL must not contain a username or password',
       })
+      return false
     }
 
     if (url.hash || url.search) {
@@ -45,6 +44,7 @@ export const oauthIssuerIdentifierSchema = z
         code: z.ZodIssueCode.custom,
         message: 'Issuer URL must not contain a query or fragment',
       })
+      return false
     }
 
     const canonicalValue = url.pathname === '/' ? url.origin : url.href
@@ -53,5 +53,10 @@ export const oauthIssuerIdentifierSchema = z
         code: z.ZodIssueCode.custom,
         message: 'Issuer URL must be in the canonical form',
       })
+      return false
     }
+
+    return true
   })
+
+export type OAuthIssuerIdentifier = z.infer<typeof oauthIssuerIdentifierSchema>

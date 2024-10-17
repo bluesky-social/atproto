@@ -1,10 +1,10 @@
-import { HandleResolver } from '@atproto-labs/handle-resolver'
 import {
   AuthorizeOptions,
   ClientMetadata,
   Fetch,
   OAuthCallbackError,
   OAuthClient,
+  OAuthClientOptions,
   OAuthSession,
   SessionEventMap,
 } from '@atproto/oauth-client'
@@ -13,21 +13,41 @@ import {
   atprotoLoopbackClientMetadata,
   isOAuthClientIdLoopback,
   OAuthClientMetadataInput,
+  OAuthResponseMode,
 } from '@atproto/oauth-types'
 
 import { BrowserOAuthDatabase } from './browser-oauth-database.js'
 import { BrowserRuntimeImplementation } from './browser-runtime-implementation.js'
 import { LoginContinuedInParentWindowError } from './errors.js'
-import { buildLoopbackClientId, TypedBroadcastChannel } from './util.js'
+import {
+  buildLoopbackClientId,
+  Simplify,
+  TypedBroadcastChannel,
+} from './util.js'
 
-export type BrowserOAuthClientOptions = {
-  clientMetadata?: OAuthClientMetadataInput
-  handleResolver: HandleResolver | string | URL
-  responseMode?: 'query' | 'fragment'
-  plcDirectoryUrl?: string | URL
-
-  fetch?: Fetch
-}
+export type BrowserOAuthClientOptions = Simplify<
+  {
+    clientMetadata?: Readonly<OAuthClientMetadataInput>
+    responseMode?: Exclude<OAuthResponseMode, 'form_post'>
+    fetch?: Fetch
+  } & Omit<
+    OAuthClientOptions,
+    // Overridden by this lib
+    | 'clientMetadata'
+    | 'responseMode'
+    | 'keyset'
+    | 'fetch'
+    // Provided by this lib
+    | 'runtimeImplementation'
+    | 'sessionStore'
+    | 'stateStore'
+    | 'didCache'
+    | 'handleCache'
+    | 'dpopNonceCache'
+    | 'authorizationServerMetadataCache'
+    | 'protectedResourceMetadataCache'
+  >
+>
 
 const NAMESPACE = `@@atproto/oauth-client-browser`
 
@@ -57,13 +77,12 @@ type SyncChannelMessage = {
 const syncChannel: TypedBroadcastChannel<SyncChannelMessage> =
   new BroadcastChannel(`${NAMESPACE}(synchronization-channel)`)
 
-export type BrowserOAuthClientLoadOptions = Omit<
-  BrowserOAuthClientOptions,
-  'clientMetadata'
-> & {
-  clientId: string
-  signal?: AbortSignal
-}
+export type BrowserOAuthClientLoadOptions = Simplify<
+  {
+    clientId: string
+    signal?: AbortSignal
+  } & Omit<BrowserOAuthClientOptions, 'clientMetadata'>
+>
 
 export class BrowserOAuthClient extends OAuthClient implements Disposable {
   static async load({ clientId, ...options }: BrowserOAuthClientLoadOptions) {
@@ -85,14 +104,12 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
   readonly [Symbol.dispose]: () => void
 
   constructor({
-    handleResolver,
     clientMetadata = atprotoLoopbackClientMetadata(
       buildLoopbackClientId(window.location),
     ),
     // "fragment" is a safer default as the query params will not be sent to the server
     responseMode = 'fragment',
-    plcDirectoryUrl = undefined,
-    fetch = undefined,
+    ...options
   }: BrowserOAuthClientOptions) {
     if (!globalThis.crypto?.subtle) {
       throw new Error('WebCrypto API is required')
@@ -106,11 +123,11 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
     const database = new BrowserOAuthDatabase()
 
     super({
+      ...options,
+
       clientMetadata,
       responseMode,
-      fetch,
-      plcDirectoryUrl,
-      handleResolver,
+      keyset: undefined,
 
       runtimeImplementation: new BrowserRuntimeImplementation(),
 

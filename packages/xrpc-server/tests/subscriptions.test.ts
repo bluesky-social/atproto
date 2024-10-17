@@ -1,4 +1,5 @@
-import * as http from 'http'
+import * as http from 'node:http'
+import { AddressInfo } from 'node:net'
 import { WebSocket, WebSocketServer, createWebSocketStream } from 'ws'
 import getPort from 'get-port'
 import { wait } from '@atproto/common'
@@ -117,11 +118,11 @@ describe('Subscriptions', () => {
   let port: number
 
   beforeAll(async () => {
-    port = await getPort()
-    s = await createServer(port, server)
+    s = await createServer(server)
+    port = (s.address() as AddressInfo).port
   })
   afterAll(async () => {
-    await closeServer(s)
+    if (s) await closeServer(s)
   })
 
   it('streams messages', async () => {

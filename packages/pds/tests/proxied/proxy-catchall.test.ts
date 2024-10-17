@@ -4,9 +4,9 @@ import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { LexiconDoc } from '@atproto/lexicon'
 import * as plc from '@did-plc/lib'
 import express from 'express'
-import getPort from 'get-port'
 import { once } from 'node:events'
 import http from 'node:http'
+import { AddressInfo } from 'node:net'
 import { setTimeout as sleep } from 'node:timers/promises'
 
 const lexicons = [
@@ -217,11 +217,11 @@ class ProxyServer {
       res.status(500).json({ error: 'FooBar', message: 'My message' })
     })
 
-    const port = await getPort()
-    const server = app.listen(port)
+    const server = app.listen(0)
     server.keepAliveTimeout = 30 * 1000
     server.headersTimeout = 35 * 1000
     await once(server, 'listening')
+    const { port } = server.address() as AddressInfo
 
     const plcOp = await plc.signOperation(
       {
