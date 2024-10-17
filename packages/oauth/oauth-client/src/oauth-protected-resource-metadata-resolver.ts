@@ -23,7 +23,7 @@ export type ProtectedResourceMetadataCache = SimpleStore<
 >
 
 export type OAuthProtectedResourceMetadataResolverConfig = {
-  allowUnsecure?: boolean
+  allowHttpResource?: boolean
 }
 
 /**
@@ -34,7 +34,7 @@ export class OAuthProtectedResourceMetadataResolver extends CachedGetter<
   OAuthProtectedResourceMetadata
 > {
   private readonly fetch: Fetch<unknown>
-  private readonly allowUnsecure: boolean
+  private readonly allowHttpResource: boolean
 
   constructor(
     cache: ProtectedResourceMetadataCache,
@@ -44,7 +44,7 @@ export class OAuthProtectedResourceMetadataResolver extends CachedGetter<
     super(async (origin, options) => this.fetchMetadata(origin, options), cache)
 
     this.fetch = bindFetch(fetch)
-    this.allowUnsecure = config?.allowUnsecure === true
+    this.allowHttpResource = config?.allowHttpResource === true
   }
 
   async get(
@@ -57,7 +57,7 @@ export class OAuthProtectedResourceMetadataResolver extends CachedGetter<
     }
 
     if (protocol === 'http:') {
-      if (this.allowUnsecure) {
+      if (this.allowHttpResource) {
         return super.get(origin, options)
       }
 

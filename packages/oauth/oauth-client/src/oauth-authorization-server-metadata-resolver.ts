@@ -24,7 +24,7 @@ export type AuthorizationServerMetadataCache = SimpleStore<
 >
 
 export type OAuthAuthorizationServerMetadataResolverConfig = {
-  allowUnsecure?: boolean
+  allowHttpIssuer?: boolean
 }
 
 /**
@@ -35,7 +35,7 @@ export class OAuthAuthorizationServerMetadataResolver extends CachedGetter<
   OAuthAuthorizationServerMetadata
 > {
   private readonly fetch: Fetch<unknown>
-  private readonly allowUnsecure: boolean
+  private readonly allowHttpIssuer: boolean
 
   constructor(
     cache: AuthorizationServerMetadataCache,
@@ -45,7 +45,7 @@ export class OAuthAuthorizationServerMetadataResolver extends CachedGetter<
     super(async (issuer, options) => this.fetchMetadata(issuer, options), cache)
 
     this.fetch = bindFetch(fetch)
-    this.allowUnsecure = config?.allowUnsecure === true
+    this.allowHttpIssuer = config?.allowHttpIssuer === true
   }
 
   async get(
@@ -53,7 +53,7 @@ export class OAuthAuthorizationServerMetadataResolver extends CachedGetter<
     options?: GetCachedOptions,
   ): Promise<OAuthAuthorizationServerMetadata> {
     const issuer = oauthIssuerIdentifierSchema.parse(input)
-    if (!this.allowUnsecure && !issuer.startsWith('https:')) {
+    if (!this.allowHttpIssuer && issuer.startsWith('http:')) {
       throw new TypeError(
         'Unsecure issuer URL protocol only allowed in development and test environments',
       )

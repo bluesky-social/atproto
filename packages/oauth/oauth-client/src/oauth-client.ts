@@ -2,6 +2,8 @@ import {
   DidCache,
   DidResolverCached,
   DidResolverCommon,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  type DidResolverCommonOptions,
 } from '@atproto-labs/did-resolver'
 import { Fetch } from '@atproto-labs/fetch'
 import {
@@ -21,7 +23,7 @@ import {
   OAuthResponseMode,
 } from '@atproto/oauth-types'
 
-import { ALLOW_UNSECURE_ORIGINS, FALLBACK_ALG } from './constants.js'
+import { FALLBACK_ALG } from './constants.js'
 import { TokenRevokedError } from './errors/token-revoked-error.js'
 import {
   AuthorizationServerMetadataCache,
@@ -73,7 +75,21 @@ export type OAuthClientOptions = {
   responseMode: OAuthResponseMode
   clientMetadata: Readonly<OAuthClientMetadataInput>
   keyset?: Keyset | Iterable<Key | undefined | null | false>
-  allowUnsecure?: boolean
+  /**
+   * Determines if the client will allow communicating with the OAuth Servers
+   * (Authorization & Resource), or to retrieve "did:web" documents, over
+   * unsafe HTTP connections. It is recommended to set this to `true` only for
+   * development purposes.
+   *
+   * @note This does not affect the identity resolution mechanism, which will
+   * allow HTTP connections to the PLC Directory (if the provided directory url
+   * is "http:" based).
+   * @default false
+   * @see {@link OAuthProtectedResourceMetadataResolver.allowHttpResource}
+   * @see {@link OAuthAuthorizationServerMetadataResolver.allowHttpIssuer}
+   * @see {@link DidResolverCommonOptions.allowHttp}
+   */
+  allowHttp?: boolean
 
   // Stores
   stateStore: StateStore
@@ -149,7 +165,7 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
 
   constructor({
     fetch = globalThis.fetch,
-    allowUnsecure = ALLOW_UNSECURE_ORIGINS,
+    allowHttp = false,
 
     stateStore,
     sessionStore,
@@ -188,7 +204,7 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
     this.oauthResolver = new OAuthResolver(
       new IdentityResolver(
         new DidResolverCached(
-          new DidResolverCommon({ fetch, plcDirectoryUrl }),
+          new DidResolverCommon({ fetch, plcDirectoryUrl, allowHttp }),
           didCache,
         ),
         new CachedHandleResolver(
@@ -199,12 +215,12 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
       new OAuthProtectedResourceMetadataResolver(
         protectedResourceMetadataCache,
         fetch,
-        { allowUnsecure },
+        { allowHttpResource: allowHttp },
       ),
       new OAuthAuthorizationServerMetadataResolver(
         authorizationServerMetadataCache,
         fetch,
-        { allowUnsecure },
+        { allowHttpIssuer: allowHttp },
       ),
     )
     this.serverFactory = new OAuthServerFactory(

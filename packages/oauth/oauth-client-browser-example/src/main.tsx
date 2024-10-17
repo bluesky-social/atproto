@@ -22,7 +22,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       clientId={`http://localhost?redirect_uri=${encodeURIComponent(redirectURI)}&scope=atproto+transition%3Ageneric`}
       plcDirectoryUrl={PLC_DIRECTORY_URL}
       handleResolver={HANDLE_RESOLVER_URL}
-      allowUnsecure={ENV === 'development' || ENV === 'test'}
+      allowHttp={ENV === 'development' || ENV === 'test'}
     >
       <App />
     </AuthProvider>

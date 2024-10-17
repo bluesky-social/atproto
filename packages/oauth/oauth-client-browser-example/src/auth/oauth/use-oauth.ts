@@ -54,8 +54,8 @@ type ClientOptions =
         | 'handleResolver'
         | 'responseMode'
         | 'plcDirectoryUrl'
-        | 'allowUnsecure'
         | 'fetch'
+        | 'allowHttp'
       >
     >
 
@@ -71,7 +71,7 @@ function useOAuthClient(
     handleResolver,
     responseMode,
     plcDirectoryUrl,
-    allowUnsecure,
+    allowHttp,
   } = options
 
   const [client, setClient] = useState<null | BrowserOAuthClient>(
@@ -94,7 +94,7 @@ function useOAuthClient(
         responseMode,
         plcDirectoryUrl,
         fetch,
-        allowUnsecure,
+        allowHttp,
         signal,
       }).then(
         (client) => {
