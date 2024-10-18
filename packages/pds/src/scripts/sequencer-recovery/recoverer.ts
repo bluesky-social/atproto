@@ -2,6 +2,7 @@ import {
   BlockMap,
   CidSet,
   CommitData,
+  WriteOpAction,
   cborToLexRecord,
   parseDataKey,
   readCar,
@@ -9,14 +10,16 @@ import {
 import AppContext from '../../context'
 import { CommitEvt, SeqEvt, AccountEvt } from '../../sequencer'
 import {
+  PreparedBlobRef,
   PreparedWrite,
   prepareCreate,
   prepareDelete,
   prepareUpdate,
 } from '../../repo'
-import { Secp256k1Keypair } from '@atproto/crypto'
+import { randomStr, Secp256k1Keypair } from '@atproto/crypto'
 import { UserQueues } from './user-queues'
 import { AccountStatus } from '../../account-manager'
+import { ActorStoreTransactor } from '../../actor-store'
 
 export class Recoverer {
   cursor: number
@@ -92,6 +95,7 @@ export class Recoverer {
         commit.newBlocks = blocks
         commit.cid = evt.commit
         commit.rev = evt.rev
+        await this.trackBlobInfos(actorTxn, writes)
         await Promise.all([
           actorTxn.repo.storage.applyCommit(commit),
           actorTxn.repo.indexWrites(writes, commit.rev),
@@ -99,6 +103,33 @@ export class Recoverer {
         ])
       })
     })
+  }
+
+  async trackBlobInfos(store: ActorStoreTransactor, writes: PreparedWrite[]) {
+    let blobs: PreparedBlobRef[] = []
+    for (const write of writes) {
+      if (
+        write.action === WriteOpAction.Create ||
+        write.action === WriteOpAction.Update
+      ) {
+        blobs = [...blobs, ...write.blobs]
+      }
+    }
+
+    if (blobs.length > 0) {
+      await Promise.all(
+        blobs.map((blob) =>
+          store.repo.blob.trackUntetheredBlob({
+            tempKey: randomStr(32, 'base32'),
+            size: blob.size,
+            cid: blob.cid,
+            mimeType: blob.mimeType,
+            width: null,
+            height: null,
+          }),
+        ),
+      )
+    }
   }
 
   async processRepoCreation(
