@@ -52,23 +52,20 @@ export class OAuthProtectedResourceMetadataResolver extends CachedGetter<
     options?: GetCachedOptions,
   ): Promise<OAuthProtectedResourceMetadata> {
     const { protocol, origin } = new URL(resource)
-    if (protocol === 'https:') {
-      return super.get(origin, options)
+
+    if (protocol !== 'https:' && protocol !== 'http:') {
+      throw new TypeError(
+        `Invalid protected resource metadata URL protocol: ${protocol}`,
+      )
     }
 
-    if (protocol === 'http:') {
-      if (this.allowHttpResource) {
-        return super.get(origin, options)
-      }
-
+    if (protocol === 'http:' && !this.allowHttpResource) {
       throw new TypeError(
         `Unsecure resource metadata URL (${protocol}) only allowed in development and test environments`,
       )
     }
 
-    throw new TypeError(
-      `Invalid protected resource metadata URL protocol: ${protocol}`,
-    )
+    return super.get(origin, options)
   }
 
   private async fetchMetadata(
