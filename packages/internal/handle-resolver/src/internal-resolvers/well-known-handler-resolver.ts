@@ -30,12 +30,9 @@ export class WellKnownHandleResolver implements HandleResolver {
   ): Promise<ResolvedHandle> {
     const url = new URL('/.well-known/atproto-did', `https://${handle}`)
 
-    const headers = new Headers()
-    if (options?.noCache) headers.set('cache-control', 'no-cache')
-
     try {
       const response = await this.fetch.call(null, url, {
-        headers,
+        cache: options?.noCache ? 'no-cache' : undefined,
         signal: options?.signal,
         redirect: 'error',
       })

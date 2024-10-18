@@ -65,13 +65,11 @@ export class OAuthAuthorizationServerMetadataResolver extends CachedGetter<
     issuer: string,
     options?: GetCachedOptions,
   ): Promise<OAuthAuthorizationServerMetadata> {
-    const headers = new Headers([['accept', 'application/json']])
-    if (options?.noCache) headers.set('cache-control', 'no-cache')
-
     const url = new URL(`/.well-known/oauth-authorization-server`, issuer)
     const request = new Request(url, {
+      headers: { accept: 'application/json' },
+      cache: options?.noCache ? 'no-cache' : undefined,
       signal: options?.signal,
-      headers,
       redirect: 'manual', // response must be 200 OK
     })
 

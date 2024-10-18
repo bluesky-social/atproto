@@ -90,7 +90,7 @@
     "jest": "^28.1.2",
     "puppeteer": "^23.5.2",
     "ts-node": "^10.8.2",
-    "typescript": "^5.6.2",
+    "typescript": "^5.6.3",
     "ws": "^8.12.0"
   }
 }

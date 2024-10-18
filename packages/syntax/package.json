@@ -23,7 +23,7 @@
   },
   "devDependencies": {
     "jest": "^28.1.2",
-    "typescript": "^5.6.2"
+    "typescript": "^5.6.3"
   },
   "browser": {
     "dns/promises": false
