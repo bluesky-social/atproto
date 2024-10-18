@@ -8,6 +8,7 @@ export interface ServerConfigValues {
   publicUrl?: string
   serverDid: string
   alternateAudienceDids: string[]
+  entrywayJwtPublicKeyHex?: string
   // external services
   dataplaneUrls: string[]
   dataplaneHttpVersion?: '1.1' | '2'
@@ -16,7 +17,7 @@ export interface ServerConfigValues {
   bsyncApiKey?: string
   bsyncHttpVersion?: '1.1' | '2'
   bsyncIgnoreBadTls?: boolean
-  courierUrl: string
+  courierUrl?: string
   courierApiKey?: string
   courierHttpVersion?: '1.1' | '2'
   courierIgnoreBadTls?: boolean
@@ -24,6 +25,8 @@ export interface ServerConfigValues {
   suggestionsUrl?: string
   suggestionsApiKey?: string
   cdnUrl?: string
+  videoPlaylistUrlPattern?: string
+  videoThumbnailUrlPattern?: string
   blobRateLimitBypassKey?: string
   blobRateLimitBypassHostname?: string
   // identity
@@ -35,6 +38,8 @@ export interface ServerConfigValues {
   labelsFromIssuerDids?: string[]
   // misc/dev
   blobCacheLocation?: string
+  statsigKey?: string
+  statsigEnv?: string
 }
 
 export class ServerConfig {
@@ -52,10 +57,17 @@ export class ServerConfig {
     const alternateAudienceDids = process.env.BSKY_ALT_AUDIENCE_DIDS
       ? process.env.BSKY_ALT_AUDIENCE_DIDS.split(',')
       : []
+    const entrywayJwtPublicKeyHex =
+      process.env.BSKY_ENTRYWAY_JWT_PUBLIC_KEY_HEX || undefined
     const handleResolveNameservers = process.env.BSKY_HANDLE_RESOLVE_NAMESERVERS
       ? process.env.BSKY_HANDLE_RESOLVE_NAMESERVERS.split(',')
       : []
     const cdnUrl = process.env.BSKY_CDN_URL || process.env.BSKY_IMG_URI_ENDPOINT
+    // e.g. https://video.invalid/watch/%s/%s/playlist.m3u8
+    const videoPlaylistUrlPattern = process.env.BSKY_VIDEO_PLAYLIST_URL_PATTERN
+    // e.g. https://video.invalid/watch/%s/%s/thumbnail.jpg
+    const videoThumbnailUrlPattern =
+      process.env.BSKY_VIDEO_THUMBNAIL_URL_PATTERN
     const blobCacheLocation = process.env.BSKY_BLOB_CACHE_LOC
     const searchUrl =
       process.env.BSKY_SEARCH_URL ||
@@ -80,7 +92,6 @@ export class ServerConfig {
     const bsyncIgnoreBadTls = process.env.BSKY_BSYNC_IGNORE_BAD_TLS === 'true'
     assert(bsyncHttpVersion === '1.1' || bsyncHttpVersion === '2')
     const courierUrl = process.env.BSKY_COURIER_URL || undefined
-    assert(courierUrl)
     const courierApiKey = process.env.BSKY_COURIER_API_KEY || undefined
     const courierHttpVersion = process.env.BSKY_COURIER_HTTP_VERSION || '2'
     const courierIgnoreBadTls =
@@ -102,6 +113,14 @@ export class ServerConfig {
     assert(modServiceDid)
     assert(dataplaneUrls.length)
     assert(dataplaneHttpVersion === '1.1' || dataplaneHttpVersion === '2')
+    const statsigKey =
+      process.env.NODE_ENV === 'test'
+        ? 'secret-key'
+        : process.env.BSKY_STATSIG_KEY || undefined
+    const statsigEnv =
+      process.env.NODE_ENV === 'test'
+        ? 'test'
+        : process.env.BSKY_STATSIG_ENV || 'development'
     return new ServerConfig({
       version,
       debugMode,
@@ -109,6 +128,7 @@ export class ServerConfig {
       publicUrl,
       serverDid,
       alternateAudienceDids,
+      entrywayJwtPublicKeyHex,
       dataplaneUrls,
       dataplaneHttpVersion,
       dataplaneIgnoreBadTls,
@@ -119,6 +139,8 @@ export class ServerConfig {
       labelsFromIssuerDids,
       handleResolveNameservers,
       cdnUrl,
+      videoPlaylistUrlPattern,
+      videoThumbnailUrlPattern,
       blobCacheLocation,
       bsyncUrl,
       bsyncApiKey,
@@ -132,6 +154,8 @@ export class ServerConfig {
       blobRateLimitBypassHostname,
       adminPasswords,
       modServiceDid,
+      statsigKey,
+      statsigEnv,
       ...stripUndefineds(overrides ?? {}),
     })
   }
@@ -171,6 +195,10 @@ export class ServerConfig {
 
   get alternateAudienceDids() {
     return this.cfg.alternateAudienceDids
+  }
+
+  get entrywayJwtPublicKeyHex() {
+    return this.cfg.entrywayJwtPublicKeyHex
   }
 
   get dataplaneUrls() {
@@ -233,6 +261,14 @@ export class ServerConfig {
     return this.cfg.cdnUrl
   }
 
+  get videoPlaylistUrlPattern() {
+    return this.cfg.videoPlaylistUrlPattern
+  }
+
+  get videoThumbnailUrlPattern() {
+    return this.cfg.videoThumbnailUrlPattern
+  }
+
   get blobRateLimitBypassKey() {
     return this.cfg.blobRateLimitBypassKey
   }
@@ -263,6 +299,14 @@ export class ServerConfig {
 
   get blobCacheLocation() {
     return this.cfg.blobCacheLocation
+  }
+
+  get statsigKey() {
+    return this.cfg.statsigKey
+  }
+
+  get statsigEnv() {
+    return this.cfg.statsigEnv
   }
 }
 

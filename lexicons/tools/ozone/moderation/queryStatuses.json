@@ -8,7 +8,15 @@
       "parameters": {
         "type": "params",
         "properties": {
-          "subject": { "type": "string", "format": "uri" },
+          "includeAllUserRecords": {
+            "type": "boolean",
+            "description": "All subjects belonging to the account specified in the 'subject' param will be returned."
+          },
+          "subject": {
+            "type": "string",
+            "format": "uri",
+            "description": "The subject to get the status for."
+          },
           "comment": {
             "type": "string",
             "description": "Search subjects by keyword from comments"
@@ -47,7 +55,10 @@
           },
           "ignoreSubjects": {
             "type": "array",
-            "items": { "type": "string", "format": "uri" }
+            "items": {
+              "type": "string",
+              "format": "uri"
+            }
           },
           "lastReviewedBy": {
             "type": "string",
@@ -80,13 +91,19 @@
           },
           "tags": {
             "type": "array",
-            "items": { "type": "string" }
+            "items": {
+              "type": "string"
+            }
           },
           "excludeTags": {
             "type": "array",
-            "items": { "type": "string" }
+            "items": {
+              "type": "string"
+            }
           },
-          "cursor": { "type": "string" }
+          "cursor": {
+            "type": "string"
+          }
         }
       },
       "output": {
@@ -95,7 +112,9 @@
           "type": "object",
           "required": ["subjectStatuses"],
           "properties": {
-            "cursor": { "type": "string" },
+            "cursor": {
+              "type": "string"
+            },
             "subjectStatuses": {
               "type": "array",
               "items": {

@@ -80,6 +80,15 @@ export const forSnapshot = (obj: unknown) => {
       const [, did, cid] = match
       return str.replace(did, take(users, did)).replace(cid, take(cids, cid))
     }
+    if (str.match(/\/vid\/did%3Aplc%3A[^/]+\/[^/]+\/[^/]+$/)) {
+      // Match video urls
+      const match = str.match(/\/vid\/(did%3Aplc%3A[^/]+)\/([^/]+)\/[^/]+$/)
+      if (!match) return str
+      const [, did, cid] = match
+      return str
+        .replace(did, take(users, decodeURIComponent(did)))
+        .replace(cid, take(cids, cid))
+    }
     let isCid: boolean
     try {
       CID.parse(str)

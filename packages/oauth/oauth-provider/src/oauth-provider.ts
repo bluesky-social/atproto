@@ -1,31 +1,45 @@
 import { safeFetchWrap } from '@atproto-labs/fetch-node'
 import { SimpleStore } from '@atproto-labs/simple-store'
 import { SimpleStoreMemory } from '@atproto-labs/simple-store-memory'
-import { Jwks, Keyset, SignedJwt, signedJwtSchema } from '@atproto/jwk'
+import { Jwks, Keyset } from '@atproto/jwk'
 import {
-  AccessToken,
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
-  OAuthAuthenticationRequestParameters,
+  OAuthAccessToken,
+  OAuthAuthorizationCodeGrantTokenRequest,
+  OAuthAuthorizationRequestJar,
+  OAuthAuthorizationRequestPar,
+  OAuthAuthorizationRequestParameters,
+  OAuthAuthorizationRequestQuery,
   OAuthAuthorizationServerMetadata,
-  OAuthClientIdentification,
+  OAuthClientCredentials,
+  OAuthClientCredentialsNone,
   OAuthClientMetadata,
-  OAuthEndpointName,
+  OAuthIntrospectionResponse,
+  OAuthParResponse,
+  OAuthRefreshTokenGrantTokenRequest,
+  OAuthTokenIdentification,
+  OAuthTokenRequest,
   OAuthTokenResponse,
   OAuthTokenType,
   atprotoLoopbackClientMetadata,
-  oauthAuthenticationRequestParametersSchema,
+  oauthAuthorizationRequestParSchema,
+  oauthAuthorizationRequestParametersSchema,
+  oauthAuthorizationRequestQuerySchema,
+  oauthClientCredentialsSchema,
+  oauthTokenIdentificationSchema,
+  oauthTokenRequestSchema,
 } from '@atproto/oauth-types'
 import { Redis, type RedisOptions } from 'ioredis'
-import { z } from 'zod'
+import z, { ZodError } from 'zod'
 
 import { AccessTokenType } from './access-token/access-token-type.js'
 import { AccountManager } from './account/account-manager.js'
 import {
-  AccountInfo,
   AccountStore,
   DeviceAccountInfo,
-  LoginCredentials,
+  SignInCredentials,
   asAccountStore,
+  signInCredentialsSchema,
 } from './account/account-store.js'
 import { Account } from './account/account.js'
 import { authorizeAssetsMiddleware } from './assets/assets-middleware.js'
@@ -58,14 +72,15 @@ import {
   Middleware,
   Router,
   ServerResponse,
-  acceptMiddleware,
   combineMiddlewares,
+  parseHttpRequest,
   setupCsrfToken,
   staticJsonHandler,
   validateCsrfToken,
+  validateFetchDest,
   validateFetchMode,
+  validateFetchSite,
   validateReferer,
-  validateRequestPayload,
   validateSameOrigin,
   writeJson,
 } from './lib/http/index.js'
@@ -74,50 +89,28 @@ import { Override } from './lib/util/type.js'
 import { CustomMetadata, buildMetadata } from './metadata/build-metadata.js'
 import { OAuthHooks } from './oauth-hooks.js'
 import { OAuthVerifier, OAuthVerifierOptions } from './oauth-verifier.js'
-import { Userinfo } from './oidc/userinfo.js'
+import { AuthorizationResultAuthorize } from './output/build-authorize-data.js'
 import {
   buildErrorPayload,
   buildErrorStatus,
 } from './output/build-error-payload.js'
 import { Customization } from './output/customization.js'
-import {
-  AuthorizationResultAuthorize,
-  sendAuthorizePage,
-} from './output/send-authorize-page.js'
+import { OutputManager } from './output/output-manager.js'
 import {
   AuthorizationResultRedirect,
   sendAuthorizeRedirect,
 } from './output/send-authorize-redirect.js'
-import { sendErrorPage } from './output/send-error-page.js'
-import { oidcPayload } from './parameters/oidc-payload.js'
 import { ReplayStore, ifReplayStore } from './replay/replay-store.js'
+import { codeSchema } from './request/code.js'
 import { RequestInfo } from './request/request-info.js'
 import { RequestManager } from './request/request-manager.js'
 import { RequestStoreMemory } from './request/request-store-memory.js'
 import { RequestStoreRedis } from './request/request-store-redis.js'
 import { RequestStore, ifRequestStore } from './request/request-store.js'
 import { RequestUri, requestUriSchema } from './request/request-uri.js'
-import {
-  AuthorizationRequestJar,
-  AuthorizationRequestQuery,
-  PushedAuthorizationRequest,
-  authorizationRequestQuerySchema,
-  pushedAuthorizationRequestSchema,
-} from './request/types.js'
 import { isTokenId } from './token/token-id.js'
 import { TokenManager } from './token/token-manager.js'
-import { TokenInfo, TokenStore, asTokenStore } from './token/token-store.js'
-import {
-  CodeGrantRequest,
-  Introspect,
-  IntrospectionResponse,
-  RefreshGrantRequest,
-  Revoke,
-  TokenRequest,
-  introspectSchema,
-  revokeSchema,
-  tokenRequestSchema,
-} from './token/types.js'
+import { TokenStore, asTokenStore } from './token/token-store.js'
 import { VerifyTokenClaimsOptions } from './token/verify-token-claims.js'
 
 export type OAuthProviderStore = Partial<
@@ -149,9 +142,7 @@ export type OAuthProviderOptions = Override<
   {
     /**
      * Maximum age a device/account session can be before requiring
-     * re-authentication. This can be overridden on a authorization request basis
-     * using the `max_age` parameter and on a client basis using the
-     * `default_max_age` client metadata.
+     * re-authentication.
      */
     authenticationMaxAge?: number
 
@@ -289,6 +280,7 @@ export class OAuthProvider extends OAuthVerifier {
 
     this.accountManager = new AccountManager(accountStore)
     this.clientManager = new ClientManager(
+      this.metadata,
       this.keyset,
       rest,
       clientStore || null,
@@ -312,13 +304,13 @@ export class OAuthProvider extends OAuthVerifier {
     )
   }
 
-  get jwks(): Jwks {
+  get jwks() {
     return this.keyset.publicJwks
   }
 
   protected loginRequired(
     client: Client,
-    parameters: OAuthAuthenticationRequestParameters,
+    parameters: OAuthAuthorizationRequestParameters,
     info: DeviceAccountInfo,
   ) {
     /** in seconds */
@@ -329,52 +321,61 @@ export class OAuthProvider extends OAuthVerifier {
       return true
     }
 
-    /** in seconds */
-    const maxAge = parameters.max_age ?? client.metadata.default_max_age
-
-    if (maxAge != null && maxAge < this.authenticationMaxAge) {
-      return authAge >= maxAge
-    } else {
-      return authAge >= this.authenticationMaxAge
-    }
+    return authAge >= this.authenticationMaxAge
   }
 
   protected async authenticateClient(
-    client: Client,
-    endpoint: OAuthEndpointName,
-    credentials: OAuthClientIdentification,
-  ): Promise<ClientAuth> {
-    const { clientAuth, nonce } = await client.verifyCredentials(
-      credentials,
-      endpoint,
-      { audience: this.issuer },
-    )
+    credentials: OAuthClientCredentials,
+  ): Promise<[Client, ClientAuth]> {
+    const client = await this.clientManager.getClient(credentials.client_id)
+    const { clientAuth, nonce } = await client.verifyCredentials(credentials, {
+      audience: this.issuer,
+    })
+
+    if (
+      client.metadata.application_type === 'native' &&
+      clientAuth.method !== 'none'
+    ) {
+      // https://datatracker.ietf.org/doc/html/rfc8252#section-8.4
+      //
+      // > Except when using a mechanism like Dynamic Client Registration
+      // > [RFC7591] to provision per-instance secrets, native apps are
+      // > classified as public clients, as defined by Section 2.1 of OAuth 2.0
+      // > [RFC6749]; they MUST be registered with the authorization server as
+      // > such. Authorization servers MUST record the client type in the client
+      // > registration details in order to identify and process requests
+      // > accordingly.
+
+      throw new InvalidGrantError(
+        'Native clients must authenticate using "none" method',
+      )
+    }
 
     if (nonce != null) {
       const unique = await this.replayManager.uniqueAuth(nonce, client.id)
       if (!unique) {
-        throw new InvalidClientError(`${clientAuth.method} jti reused`)
+        throw new InvalidGrantError(`${clientAuth.method} jti reused`)
       }
     }
 
-    return clientAuth
+    return [client, clientAuth]
   }
 
   protected async decodeJAR(
     client: Client,
-    input: AuthorizationRequestJar,
+    input: OAuthAuthorizationRequestJar,
   ): Promise<
     | {
-        payload: OAuthAuthenticationRequestParameters
+        payload: OAuthAuthorizationRequestParameters
       }
     | {
-        payload: OAuthAuthenticationRequestParameters
+        payload: OAuthAuthorizationRequestParameters
         protectedHeader: { kid: string; alg: string }
         jkt: string
       }
   > {
     const result = await client.decodeRequestObject(input.request)
-    const payload = oauthAuthenticationRequestParametersSchema.parse(
+    const payload = oauthAuthorizationRequestParametersSchema.parse(
       result.payload,
     )
 
@@ -421,21 +422,17 @@ export class OAuthProvider extends OAuthVerifier {
    * @see {@link https://datatracker.ietf.org/doc/html/rfc9126}
    */
   protected async pushedAuthorizationRequest(
-    input: PushedAuthorizationRequest,
+    credentials: OAuthClientCredentials,
+    authorizationRequest: OAuthAuthorizationRequestPar,
     dpopJkt: null | string,
-  ) {
+  ): Promise<OAuthParResponse> {
     try {
-      const client = await this.clientManager.getClient(input.client_id)
-      const clientAuth = await this.authenticateClient(
-        client,
-        'pushed_authorization_request',
-        input,
-      )
+      const [client, clientAuth] = await this.authenticateClient(credentials)
 
       const { payload: parameters } =
-        'request' in input // Handle JAR
-          ? await this.decodeJAR(client, input)
-          : { payload: input }
+        'request' in authorizationRequest // Handle JAR
+          ? await this.decodeJAR(client, authorizationRequest)
+          : { payload: authorizationRequest }
 
       const { uri, expiresAt } =
         await this.requestManager.createAuthorizationRequest(
@@ -463,19 +460,21 @@ export class OAuthProvider extends OAuthVerifier {
     }
   }
 
-  private async loadAuthorizationRequest(
+  private async processAuthorizationRequest(
     client: Client,
     deviceId: DeviceId,
-    input: AuthorizationRequestQuery,
+    query: OAuthAuthorizationRequestQuery,
   ): Promise<RequestInfo> {
-    // Load PAR
-    if ('request_uri' in input) {
-      return this.requestManager.get(input.request_uri, client.id, deviceId)
+    if ('request_uri' in query) {
+      const requestUri = await requestUriSchema
+        .parseAsync(query.request_uri, { path: ['query', 'request_uri'] })
+        .catch(throwInvalidRequest)
+
+      return this.requestManager.get(requestUri, client.id, deviceId)
     }
 
-    // Handle JAR
-    if ('request' in input) {
-      const requestObject = await this.decodeJAR(client, input)
+    if ('request' in query) {
+      const requestObject = await this.decodeJAR(client, query)
 
       if ('protectedHeader' in requestObject && requestObject.protectedHeader) {
         // Allow using signed JAR during "/authorize" as client authentication.
@@ -508,7 +507,7 @@ export class OAuthProvider extends OAuthVerifier {
     return this.requestManager.createAuthorizationRequest(
       client,
       { method: 'none' },
-      input,
+      query,
       deviceId,
       null,
     )
@@ -516,7 +515,7 @@ export class OAuthProvider extends OAuthVerifier {
 
   private async deleteRequest(
     uri: RequestUri,
-    parameters: OAuthAuthenticationRequestParameters,
+    parameters: OAuthAuthorizationRequestParameters,
   ) {
     try {
       await this.requestManager.delete(uri)
@@ -525,96 +524,113 @@ export class OAuthProvider extends OAuthVerifier {
     }
   }
 
+  /**
+   * @see {@link https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-11#section-4.1.1}
+   */
   protected async authorize(
     deviceId: DeviceId,
-    input: AuthorizationRequestQuery,
+    credentials: OAuthClientCredentialsNone,
+    query: OAuthAuthorizationRequestQuery,
   ): Promise<AuthorizationResultRedirect | AuthorizationResultAuthorize> {
     const { issuer } = this
-    const client = await this.clientManager.getClient(input.client_id)
+
+    // If there is a chance to redirect the user to the client, let's do
+    // it by wrapping the error in an AccessDeniedError.
+    const accessDeniedCatcher =
+      'redirect_uri' in query
+        ? (err: unknown): never => {
+            // https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-11#section-4.1.2.1
+            throw AccessDeniedError.from(query, err, 'invalid_request')
+          }
+        : null
+
+    const client = await this.clientManager
+      .getClient(credentials.client_id)
+      .catch(accessDeniedCatcher)
+
+    const { clientAuth, parameters, uri } =
+      await this.processAuthorizationRequest(client, deviceId, query).catch(
+        accessDeniedCatcher,
+      )
 
     try {
-      const { uri, parameters, clientAuth } =
-        await this.loadAuthorizationRequest(client, deviceId, input)
+      const sessions = await this.getSessions(
+        client,
+        clientAuth,
+        deviceId,
+        parameters,
+      )
 
-      try {
-        const sessions = await this.getSessions(
+      if (parameters.prompt === 'none') {
+        const ssoSessions = sessions.filter((s) => s.matchesHint)
+        if (ssoSessions.length > 1) {
+          throw new AccountSelectionRequiredError(parameters)
+        }
+        if (ssoSessions.length < 1) {
+          throw new LoginRequiredError(parameters)
+        }
+
+        const ssoSession = ssoSessions[0]!
+        if (ssoSession.loginRequired) {
+          throw new LoginRequiredError(parameters)
+        }
+        if (ssoSession.consentRequired) {
+          throw new ConsentRequiredError(parameters)
+        }
+
+        const code = await this.requestManager.setAuthorized(
           client,
-          clientAuth,
+          uri,
           deviceId,
-          parameters,
+          ssoSession.account,
         )
 
-        if (parameters.prompt === 'none') {
-          const ssoSessions = sessions.filter((s) => s.matchesHint)
-          if (ssoSessions.length > 1) {
-            throw new AccountSelectionRequiredError(parameters)
-          }
-          if (ssoSessions.length < 1) {
-            throw new LoginRequiredError(parameters)
-          }
+        return { issuer, client, parameters, redirect: { code } }
+      }
 
+      // Automatic SSO when a did was provided
+      if (parameters.prompt == null && parameters.login_hint != null) {
+        const ssoSessions = sessions.filter((s) => s.matchesHint)
+        if (ssoSessions.length === 1) {
           const ssoSession = ssoSessions[0]!
-          if (ssoSession.loginRequired) {
-            throw new LoginRequiredError(parameters)
-          }
-          if (ssoSession.consentRequired) {
-            throw new ConsentRequiredError(parameters)
-          }
+          if (!ssoSession.loginRequired && !ssoSession.consentRequired) {
+            const code = await this.requestManager.setAuthorized(
+              client,
+              uri,
+              deviceId,
+              ssoSession.account,
+            )
 
-          const redirect = await this.requestManager.setAuthorized(
-            client,
-            uri,
-            deviceId,
-            ssoSession.account,
-            ssoSession.info,
-          )
-
-          return { issuer, client, parameters, redirect }
-        }
-
-        // Automatic SSO when a did was provided
-        if (parameters.prompt == null && parameters.login_hint != null) {
-          const ssoSessions = sessions.filter((s) => s.matchesHint)
-          if (ssoSessions.length === 1) {
-            const ssoSession = ssoSessions[0]!
-            if (!ssoSession.loginRequired && !ssoSession.consentRequired) {
-              const redirect = await this.requestManager.setAuthorized(
-                client,
-                uri,
-                deviceId,
-                ssoSession.account,
-                ssoSession.info,
-              )
-
-              return { issuer, client, parameters, redirect }
-            }
+            return { issuer, client, parameters, redirect: { code } }
           }
         }
+      }
 
-        return {
-          issuer,
-          client,
-          parameters,
-          authorize: { uri, sessions },
-        }
-      } catch (err) {
-        await this.deleteRequest(uri, parameters)
-
-        // Transform into an AccessDeniedError to allow redirecting the user
-        // to the client with the error details.
-        throw AccessDeniedError.from(parameters, err)
+      return {
+        issuer,
+        client,
+        parameters,
+        authorize: {
+          uri,
+          sessions,
+          scopeDetails: parameters.scope
+            ?.split(/\s+/)
+            .filter(Boolean)
+            .sort((a, b) => a.localeCompare(b))
+            .map((scope) => ({
+              scope,
+              // @TODO Allow to customize the scope descriptions (e.g.
+              // using a hook)
+              description: undefined,
+            })),
+        },
       }
     } catch (err) {
-      if (err instanceof AccessDeniedError) {
-        return {
-          issuer,
-          client,
-          parameters: err.parameters,
-          redirect: err.toJSON(),
-        }
-      }
+      await this.deleteRequest(uri, parameters)
 
-      throw err
+      // Not using accessDeniedCatcher here because "parameters" will most
+      // likely contain the redirect_uri (using the client default).
+      throw AccessDeniedError.from(parameters, err)
     }
   }
 
@@ -622,7 +638,7 @@ export class OAuthProvider extends OAuthVerifier {
     client: Client,
     clientAuth: ClientAuth,
     deviceId: DeviceId,
-    parameters: OAuthAuthenticationRequestParameters,
+    parameters: OAuthAuthorizationRequestParameters,
   ): Promise<
     {
       account: Account
@@ -637,30 +653,69 @@ export class OAuthProvider extends OAuthVerifier {
   > {
     const accounts = await this.accountManager.list(deviceId)
 
+    const hint = parameters.login_hint
+    const matchesHint = (account: Account): boolean =>
+      (!!account.sub && account.sub === hint) ||
+      (!!account.preferred_username && account.preferred_username === hint)
+
     return accounts.map(({ account, info }) => ({
       account,
       info,
 
       selected:
         parameters.prompt !== 'select_account' &&
-        parameters.login_hint === account.sub,
+        matchesHint(account) &&
+        // If an account uses the sub of another account as preferred_username,
+        // there might be multiple accounts matching the hint. In that case,
+        // selecting the account automatically may have unexpected results (i.e.
+        // not able to login using desired account).
+        accounts.reduce(
+          (acc, a) => acc + (matchesHint(a.account) ? 1 : 0),
+          0,
+        ) === 1,
       loginRequired:
         parameters.prompt === 'login' ||
         this.loginRequired(client, parameters, info),
       consentRequired:
         parameters.prompt === 'consent' ||
+        // @TODO the "authorizedClients" should also include the scopes that
+        // were already authorized for the client. Otherwise a client could
+        // use silent authentication to get additional scopes without consent.
         !info.authorizedClients.includes(client.id),
 
-      matchesHint:
-        parameters.login_hint === account.sub || parameters.login_hint == null,
+      matchesHint: hint == null || matchesHint(account),
     }))
   }
 
   protected async signIn(
     deviceId: DeviceId,
-    credentials: LoginCredentials,
-  ): Promise<AccountInfo> {
-    return this.accountManager.signIn(credentials, deviceId)
+    uri: RequestUri,
+    clientId: ClientId,
+    credentials: SignInCredentials,
+  ): Promise<{
+    account: Account
+    consentRequired: boolean
+  }> {
+    const client = await this.clientManager.getClient(clientId)
+
+    // Ensure the request is still valid (and update the request expiration)
+    // @TODO use the returned scopes to determine if consent is required
+    await this.requestManager.get(uri, clientId, deviceId)
+
+    const { account, info } = await this.accountManager.signIn(
+      credentials,
+      deviceId,
+    )
+
+    return {
+      account,
+      consentRequired: client.info.isFirstParty
+        ? false
+        : // @TODO: the "authorizedClients" should also include the scopes that
+          // were already authorized for the client. Otherwise a client could
+          // use silent authentication to get additional scopes without consent.
+          !info.authorizedClients.includes(client.id),
+    }
   }
 
   protected async acceptRequest(
@@ -672,53 +727,42 @@ export class OAuthProvider extends OAuthVerifier {
     const { issuer } = this
     const client = await this.clientManager.getClient(clientId)
 
+    const { parameters, clientAuth } = await this.requestManager.get(
+      uri,
+      clientId,
+      deviceId,
+    )
+
     try {
-      const { parameters, clientAuth } = await this.requestManager.get(
+      const { account, info } = await this.accountManager.get(deviceId, sub)
+
+      // The user is trying to authorize without a fresh login
+      if (this.loginRequired(client, parameters, info)) {
+        throw new LoginRequiredError(
+          parameters,
+          'Account authentication required.',
+        )
+      }
+
+      const code = await this.requestManager.setAuthorized(
+        client,
         uri,
-        clientId,
         deviceId,
+        account,
       )
 
-      try {
-        const { account, info } = await this.accountManager.get(deviceId, sub)
+      await this.accountManager.addAuthorizedClient(
+        deviceId,
+        account,
+        client,
+        clientAuth,
+      )
 
-        // The user is trying to authorize without a fresh login
-        if (this.loginRequired(client, parameters, info)) {
-          throw new LoginRequiredError(
-            parameters,
-            'Account authentication required.',
-          )
-        }
-
-        const redirect = await this.requestManager.setAuthorized(
-          client,
-          uri,
-          deviceId,
-          account,
-          info,
-        )
-
-        await this.accountManager.addAuthorizedClient(
-          deviceId,
-          account,
-          client,
-          clientAuth,
-        )
-
-        return { issuer, client, parameters, redirect }
-      } catch (err) {
-        await this.deleteRequest(uri, parameters)
-
-        // throw AccessDeniedError.from(parameters, err)
-        throw err
-      }
+      return { issuer, parameters, redirect: { code } }
     } catch (err) {
-      if (err instanceof AccessDeniedError) {
-        const { parameters } = err
-        return { issuer, client, parameters, redirect: err.toJSON() }
-      }
+      await this.deleteRequest(uri, parameters)
 
-      throw err
+      throw AccessDeniedError.from(parameters, err)
     }
   }
 
@@ -727,70 +771,96 @@ export class OAuthProvider extends OAuthVerifier {
     uri: RequestUri,
     clientId: ClientId,
   ): Promise<AuthorizationResultRedirect> {
-    try {
-      const { parameters } = await this.requestManager.get(
-        uri,
-        clientId,
-        deviceId,
-      )
+    const { parameters } = await this.requestManager.get(
+      uri,
+      clientId,
+      deviceId,
+    )
 
-      await this.deleteRequest(uri, parameters)
+    await this.deleteRequest(uri, parameters)
 
-      // Trigger redirect (see catch block)
-      throw new AccessDeniedError(parameters, 'Access denied')
-    } catch (err) {
-      if (err instanceof AccessDeniedError) {
-        return {
-          issuer: this.issuer,
-          client: await this.clientManager.getClient(clientId),
-          parameters: err.parameters,
-          redirect: err.toJSON(),
-        }
-      }
-
-      throw err
+    return {
+      issuer: this.issuer,
+      parameters: parameters,
+      redirect: {
+        error: 'access_denied',
+        error_description: 'Access denied',
+      },
     }
   }
 
   protected async token(
-    input: TokenRequest,
+    credentials: OAuthClientCredentials,
+    request: OAuthTokenRequest,
     dpopJkt: null | string,
   ): Promise<OAuthTokenResponse> {
-    const client = await this.clientManager.getClient(input.client_id)
-    const clientAuth = await this.authenticateClient(client, 'token', input)
+    const [client, clientAuth] = await this.authenticateClient(credentials)
 
-    if (!client.metadata.grant_types.includes(input.grant_type)) {
+    if (!this.metadata.grant_types_supported?.includes(request.grant_type)) {
       throw new InvalidGrantError(
-        `"${input.grant_type}" grant type is not allowed for this client`,
+        `Grant type "${request.grant_type}" is not supported by the server`,
       )
     }
 
-    if (input.grant_type === 'authorization_code') {
-      return this.codeGrant(client, clientAuth, input, dpopJkt)
+    if (!client.metadata.grant_types.includes(request.grant_type)) {
+      throw new InvalidGrantError(
+        `"${request.grant_type}" grant type is not allowed for this client`,
+      )
     }
 
-    if (input.grant_type === 'refresh_token') {
-      return this.refreshTokenGrant(client, clientAuth, input, dpopJkt)
+    if (request.grant_type === 'authorization_code') {
+      return this.codeGrant(client, clientAuth, request, dpopJkt)
+    }
+
+    if (request.grant_type === 'refresh_token') {
+      return this.refreshTokenGrant(client, clientAuth, request, dpopJkt)
     }
 
     throw new InvalidGrantError(
-      // @ts-expect-error: fool proof
-      `Grant type "${input.grant_type}" not supported`,
+      `Grant type "${request.grant_type}" not supported`,
     )
   }
 
   protected async codeGrant(
     client: Client,
     clientAuth: ClientAuth,
-    input: CodeGrantRequest,
+    input: OAuthAuthorizationCodeGrantTokenRequest,
     dpopJkt: null | string,
   ): Promise<OAuthTokenResponse> {
     try {
+      const code = codeSchema.parse(input.code)
+
       const { sub, deviceId, parameters } = await this.requestManager.findCode(
         client,
         clientAuth,
-        input.code,
+        code,
       )
+
+      // the following check prevents re-use of PKCE challenges, enforcing the
+      // clients to generate a new challenge for each authorization request. The
+      // replay manager typically prevents replay over a certain time frame,
+      // which might not cover the entire lifetime of the token (depending on
+      // the implementation of the replay store). For this reason, we should
+      // ideally ensure that the code_challenge was not already used by any
+      // existing token or any other pending request.
+      //
+      // The current implementation will cause client devs not issuing a new
+      // code challenge for each authorization request to fail, which should be
+      // a good enough incentive to follow the best practices, until we have a
+      // better implementation.
+      //
+      // @TODO: Use tokenManager to ensure uniqueness of code_challenge
+      if (parameters.code_challenge) {
+        const unique = await this.replayManager.uniqueCodeChallenge(
+          parameters.code_challenge,
+        )
+        if (!unique) {
+          throw new InvalidGrantError(
+            'code_challenge',
+            'Code challenge already used',
+          )
+        }
+      }
 
       const { account, info } = await this.accountManager.get(deviceId, sub)
 
@@ -819,7 +889,7 @@ export class OAuthProvider extends OAuthVerifier {
   async refreshTokenGrant(
     client: Client,
     clientAuth: ClientAuth,
-    input: RefreshGrantRequest,
+    input: OAuthRefreshTokenGrantTokenRequest,
     dpopJkt: null | string,
   ): Promise<OAuthTokenResponse> {
     return this.tokenManager.refresh(client, clientAuth, input, dpopJkt)
@@ -828,24 +898,20 @@ export class OAuthProvider extends OAuthVerifier {
   /**
    * @see {@link https://datatracker.ietf.org/doc/html/rfc7009#section-2.1 rfc7009}
    */
-  protected async revoke(input: Revoke) {
+  protected async revoke({ token }: OAuthTokenIdentification) {
     // @TODO this should also remove the account-device association (or, at
     // least, mark it as expired)
-    await this.tokenManager.revoke(input.token)
+    await this.tokenManager.revoke(token)
   }
 
   /**
    * @see {@link https://datatracker.ietf.org/doc/html/rfc7662#section-2.1 rfc7662}
    */
   protected async introspect(
-    input: Introspect,
-  ): Promise<IntrospectionResponse> {
-    const client = await this.clientManager.getClient(input.client_id)
-    const clientAuth = await this.authenticateClient(
-      client,
-      'introspection',
-      input,
-    )
+    credentials: OAuthClientCredentials,
+    { token }: OAuthTokenIdentification,
+  ): Promise<OAuthIntrospectionResponse> {
+    const [client, clientAuth] = await this.authenticateClient(credentials)
 
     // RFC7662 states the following:
     //
@@ -864,7 +930,7 @@ export class OAuthProvider extends OAuthVerifier {
       const tokenInfo = await this.tokenManager.clientTokenInfo(
         client,
         clientAuth,
-        input.token,
+        token,
       )
 
       return {
@@ -893,34 +959,9 @@ export class OAuthProvider extends OAuthVerifier {
     }
   }
 
-  /**
-   * @see {@link https://openid.net/specs/openid-connect-core-1_0.html#rfc.section.5.3.2 Successful UserInfo Response}
-   */
-  protected async userinfo({ data, account }: TokenInfo): Promise<Userinfo> {
-    return {
-      ...oidcPayload(data.parameters, account),
-
-      sub: account.sub,
-
-      client_id: data.clientId,
-      username: account.preferred_username,
-    }
-  }
-
-  protected async signUserinfo(userinfo: Userinfo): Promise<SignedJwt> {
-    const client = await this.clientManager.getClient(userinfo.client_id)
-    return this.signer.sign(
-      {
-        alg: client.metadata.userinfo_signed_response_alg,
-        typ: 'JWT',
-      },
-      userinfo,
-    )
-  }
-
   protected override async authenticateToken(
     tokenType: OAuthTokenType,
-    token: AccessToken,
+    token: OAuthAccessToken,
     dpopJkt: string | null,
     verifyOptions?: VerifyTokenClaimsOptions,
   ) {
@@ -955,13 +996,9 @@ export class OAuthProvider extends OAuthVerifier {
     T = void,
     Req extends IncomingMessage = IncomingMessage,
     Res extends ServerResponse = ServerResponse,
-  >({
-    onError = process.env['NODE_ENV'] === 'development'
-      ? (req, res, err, msg): void =>
-          console.error(`OAuthProvider error (${msg}):`, err)
-      : undefined,
-  }: RouterOptions<Req, Res> = {}) {
+  >(options?: RouterOptions<Req, Res>) {
     const deviceManager = new DeviceManager(this.deviceStore)
+    const outputManager = new OutputManager(this.customization)
 
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const server = this
@@ -972,6 +1009,12 @@ export class OAuthProvider extends OAuthVerifier {
     // Utils
 
     const csrfCookie = (uri: RequestUri) => `csrf-${uri}`
+    const onError =
+      options?.onError ??
+      (process.env['NODE_ENV'] === 'development'
+        ? (req, res, err, msg): void =>
+            console.error(`OAuthProvider error (${msg}):`, err)
+        : undefined)
 
     /**
      * Creates a middleware that will serve static JSON content.
@@ -980,6 +1023,8 @@ export class OAuthProvider extends OAuthVerifier {
       combineMiddlewares([
         function (req, res, next) {
           res.setHeader('Access-Control-Allow-Origin', '*')
+          res.setHeader('Access-Control-Allow-Headers', '*')
+
           res.setHeader('Cache-Control', 'max-age=300')
           next()
         },
@@ -990,12 +1035,13 @@ export class OAuthProvider extends OAuthVerifier {
      * Wrap an OAuth endpoint in a middleware that will set the appropriate
      * response headers and format the response as JSON.
      */
-    const dynamicJson = <T, TReq extends Req, TRes extends Res, Json>(
+    const jsonHandler = <T, TReq extends Req, TRes extends Res, Json>(
       buildJson: (this: T, req: TReq, res: TRes) => Json | Promise<Json>,
       status?: number,
     ): Handler<T, TReq, TRes> =>
       async function (req, res) {
         res.setHeader('Access-Control-Allow-Origin', '*')
+        res.setHeader('Access-Control-Allow-Headers', '*')
 
         // https://www.rfc-editor.org/rfc/rfc6749.html#section-5.1
         res.setHeader('Cache-Control', 'no-store')
@@ -1029,26 +1075,71 @@ export class OAuthProvider extends OAuthVerifier {
           // OAuthError are used to build expected responses, so we don't log
           // them as errors.
           if (!(err instanceof OAuthError) || err.statusCode >= 500) {
-            await onError?.(req, res, err, 'Unexpected error')
+            onError?.(req, res, err, 'Unexpected error')
           }
         }
       }
 
-    //- Public OAuth endpoints
+    const navigationHandler = <T, TReq extends Req, TRes extends Res>(
+      handler: (this: T, req: TReq, res: TRes) => void | Promise<void>,
+    ): Handler<T, TReq, TRes> =>
+      async function (req, res) {
+        res.setHeader('Access-Control-Allow-Origin', '*')
+        res.setHeader('Access-Control-Allow-Headers', '*')
 
-    /*
-     * Although OpenID compatibility is not required to implement the Atproto
-     * OAuth2 specification, we do support OIDC discovery in this
-     * implementation as we believe this may:
-     * 1) Make the implementation of Atproto clients easier (since lots of
-     *    libraries support OIDC discovery)
-     * 2) Allow self hosted PDS' to not implement authentication themselves
-     *    but rely on a trusted Atproto actor to act as their OIDC providers.
-     *    By supporting OIDC in the current implementation, Bluesky's
-     *    Authorization Server server can be used as an OIDC provider for
-     *    these users.
+        res.setHeader('Cache-Control', 'no-store')
+        res.setHeader('Pragma', 'no-cache')
+
+        try {
+          validateFetchMode(req, res, ['navigate'])
+          validateFetchDest(req, res, ['document'])
+          validateSameOrigin(req, res, issuerOrigin)
+
+          await handler.call(this, req, res)
+
+          // Should never happen (fool proofing)
+          if (!res.headersSent) {
+            throw new Error('Navigation handler did not send a response')
+          }
+        } catch (err) {
+          onError?.(
+            req,
+            res,
+            err,
+            `Failed to handle navigation request to "${req.url}"`,
+          )
+
+          if (!res.headersSent) {
+            await outputManager.sendErrorPage(res, err)
+          }
+        }
+      }
+
+    /**
+     * Provides a better UX when a request is denied by redirecting to the
+     * client with the error details. This will also log any error that caused
+     * the access to be denied (such as system errors).
      */
-    router.get('/.well-known/openid-configuration', staticJson(server.metadata))
+    const accessDeniedToRedirectCatcher = (
+      req: Req,
+      res: Res,
+      err: unknown,
+    ): AuthorizationResultRedirect => {
+      if (err instanceof AccessDeniedError && err.parameters.redirect_uri) {
+        const { cause } = err
+        if (cause) onError?.(req, res, cause, 'Access denied')
+
+        return {
+          issuer: server.issuer,
+          parameters: err.parameters,
+          redirect: err.toJSON(),
+        }
+      }
+
+      throw err
+    }
+
+    //- Public OAuth endpoints
 
     router.get(
       '/.well-known/oauth-authorization-server',
@@ -1056,32 +1147,47 @@ export class OAuthProvider extends OAuthVerifier {
     )
 
     // CORS preflight
-    router.options<{
-      endpoint: 'jwks' | 'par' | 'token' | 'revoke' | 'introspect' | 'userinfo'
-    }>(
-      /^\/oauth\/(?<endpoint>jwks|par|token|revoke|introspect|userinfo)$/,
-      function (req, res, _next) {
-        res
-          .writeHead(204, {
-            'Access-Control-Allow-Origin': req.headers['origin'] || '*',
-            'Access-Control-Allow-Methods':
-              this.params.endpoint === 'jwks' ? 'GET' : 'POST',
-            'Access-Control-Allow-Headers': 'Content-Type,Authorization,DPoP',
-            'Access-Control-Max-Age': '86400', // 1 day
-          })
-          .end()
-      },
-    )
+    const corsPreflight: Middleware = function (req, res, _next) {
+      res
+        .writeHead(204, {
+          // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin
+          //
+          // > For requests without credentials, the literal value "*" can be
+          // > specified as a wildcard; the value tells browsers to allow
+          // > requesting code from any origin to access the resource.
+          // > Attempting to use the wildcard with credentials results in an
+          // > error.
+          //
+          // A "*" is safer to use than reflecting the request origin.
+          'Access-Control-Allow-Origin': '*',
+          // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Methods
+          // > The value "*" only counts as a special wildcard value for
+          // > requests without credentials (requests without HTTP cookies or
+          // > HTTP authentication information). In requests with credentials,
+          // > it is treated as the literal method name "*" without special
+          // > semantics.
+          'Access-Control-Allow-Methods': '*',
+          'Access-Control-Allow-Headers': 'Content-Type,Authorization,DPoP',
+          'Access-Control-Max-Age': '86400', // 1 day
+        })
+        .end()
+    }
 
     router.get('/oauth/jwks', staticJson(server.jwks))
 
+    router.options('/oauth/par', corsPreflight)
     router.post(
       '/oauth/par',
-      dynamicJson(async function (req, _res) {
-        const input = await validateRequestPayload(
-          req,
-          pushedAuthorizationRequestSchema,
-        )
+      jsonHandler(async function (req, _res) {
+        const payload = await parseHttpRequest(req, ['json', 'urlencoded'])
+
+        const credentials = await oauthClientCredentialsSchema
+          .parseAsync(payload, { path: ['body'] })
+          .catch(throwInvalidRequest)
+
+        const authorizationRequest = await oauthAuthorizationRequestParSchema
+          .parseAsync(payload, { path: ['body'] })
+          .catch(throwInvalidRequest)
 
         const dpopJkt = await server.checkDpopProof(
           req.headers['dpop'],
@@ -1089,19 +1195,35 @@ export class OAuthProvider extends OAuthVerifier {
           this.url,
         )
 
-        return server.pushedAuthorizationRequest(input, dpopJkt)
+        return server.pushedAuthorizationRequest(
+          credentials,
+          authorizationRequest,
+          dpopJkt,
+        )
       }, 201),
     )
 
     // https://datatracker.ietf.org/doc/html/rfc9126#section-2.3
-    router.addRoute('*', '/oauth/par', (req, res) => {
+    // > If the request did not use the POST method, the authorization server
+    // > responds with an HTTP 405 (Method Not Allowed) status code.
+    router.options('/oauth/par', corsPreflight)
+    router.all('/oauth/par', (req, res) => {
       res.writeHead(405).end()
     })
 
+    router.options('/oauth/token', corsPreflight)
     router.post(
       '/oauth/token',
-      dynamicJson(async function (req, _res) {
-        const input = await validateRequestPayload(req, tokenRequestSchema)
+      jsonHandler(async function (req, _res) {
+        const payload = await parseHttpRequest(req, ['json', 'urlencoded'])
+
+        const credentials = await oauthClientCredentialsSchema
+          .parseAsync(payload, { path: ['body'] })
+          .catch(throwInvalidClient)
+
+        const tokenRequest = await oauthTokenRequestSchema
+          .parseAsync(payload, { path: ['body'] })
+          .catch(throwInvalidGrant)
 
         const dpopJkt = await server.checkDpopProof(
           req.headers['dpop'],
@@ -1109,34 +1231,40 @@ export class OAuthProvider extends OAuthVerifier {
           this.url,
         )
 
-        return server.token(input, dpopJkt)
+        return server.token(credentials, tokenRequest, dpopJkt)
       }),
     )
 
+    router.options('/oauth/revoke', corsPreflight)
     router.post(
       '/oauth/revoke',
-      dynamicJson(async function (req, res) {
-        const input = await validateRequestPayload(req, revokeSchema)
+      jsonHandler(async function (req, res) {
+        const payload = await parseHttpRequest(req, ['json', 'urlencoded'])
+
+        const tokenIdentification = await oauthTokenIdentificationSchema
+          .parseAsync(payload, { path: ['body'] })
+          .catch(throwInvalidRequest)
 
         try {
-          await server.revoke(input)
+          await server.revoke(tokenIdentification)
         } catch (err) {
           onError?.(req, res, err, 'Failed to revoke token')
         }
       }),
     )
 
+    router.options('/oauth/revoke', corsPreflight)
     router.get(
       '/oauth/revoke',
-      dynamicJson(async function (req, res) {
-        validateFetchMode(req, res, ['navigate'])
-        validateSameOrigin(req, res, issuerOrigin)
-
+      navigationHandler(async function (req, res) {
         const query = Object.fromEntries(this.url.searchParams)
-        const input = revokeSchema.parse(query, { path: ['query'] })
+
+        const tokenIdentification = await oauthTokenIdentificationSchema
+          .parseAsync(query, { path: ['query'] })
+          .catch(throwInvalidRequest)
 
         try {
-          await server.revoke(input)
+          await server.revoke(tokenIdentification)
         } catch (err) {
           onError?.(req, res, err, 'Failed to revoke token')
         }
@@ -1152,151 +1280,107 @@ export class OAuthProvider extends OAuthVerifier {
 
     router.post(
       '/oauth/introspect',
-      dynamicJson(async function (req, _res) {
-        const input = await validateRequestPayload(req, introspectSchema)
-        return server.introspect(input)
+      jsonHandler(async function (req, _res) {
+        const payload = await parseHttpRequest(req, ['json', 'urlencoded'])
+
+        const credentials = await oauthClientCredentialsSchema
+          .parseAsync(payload, { path: ['body'] })
+          .catch(throwInvalidRequest)
+
+        const tokenIdentification = await oauthTokenIdentificationSchema
+          .parseAsync(payload, { path: ['body'] })
+          .catch(throwInvalidRequest)
+
+        return server.introspect(credentials, tokenIdentification)
       }),
-    )
-
-    const userinfoBodySchema = z.object({
-      access_token: signedJwtSchema.optional(),
-    })
-
-    router.addRoute(
-      ['GET', 'POST'],
-      '/oauth/userinfo',
-      acceptMiddleware(
-        async function (req, _res) {
-          const body =
-            req.method === 'POST'
-              ? await validateRequestPayload(req, userinfoBodySchema)
-              : null
-
-          if (body?.access_token && req.headers['authorization']) {
-            throw new InvalidRequestError(
-              'access token must be provided in either the authorization header or the request body',
-            )
-          }
-
-          const auth = await server.authenticateRequest(
-            req.method!,
-            this.url,
-            body?.access_token // Allow credentials to be parsed from body.
-              ? {
-                  authorization: `Bearer ${body.access_token}`,
-                  dpop: undefined, // DPoP can only be used with headers
-                }
-              : req.headers,
-            {
-              scope: ['profile'],
-            },
-          )
-
-          const tokenInfo: TokenInfo =
-            'tokenInfo' in auth
-              ? (auth.tokenInfo as TokenInfo)
-              : await server.tokenManager.getTokenInfo(
-                  auth.tokenType,
-                  auth.tokenId,
-                )
-
-          return server.userinfo(tokenInfo)
-        },
-        {
-          '': 'application/json',
-          'application/json': dynamicJson(async function (_req, _res) {
-            return this.data
-          }),
-          'application/jwt': dynamicJson(async function (_req, res) {
-            const jwt = await server.signUserinfo(this.data)
-            res.writeHead(200, { 'Content-Type': 'application/jwt' }).end(jwt)
-            return undefined
-          }),
-        },
-      ),
     )
 
     //- Private authorization endpoints
 
     router.use(authorizeAssetsMiddleware())
 
-    router.get('/oauth/authorize', async function (req, res) {
-      try {
-        res.setHeader('Cache-Control', 'no-store')
-
-        validateFetchMode(req, res, ['navigate'])
-        validateSameOrigin(req, res, issuerOrigin)
+    router.get(
+      '/oauth/authorize',
+      navigationHandler(async function (req, res) {
+        validateFetchSite(req, res, ['cross-site', 'none'])
 
         const query = Object.fromEntries(this.url.searchParams)
-        const input = await authorizationRequestQuerySchema.parseAsync(query, {
-          path: ['query'],
-        })
+
+        const credentials = await oauthClientCredentialsSchema
+          .parseAsync(query, { path: ['body'] })
+          .catch(throwInvalidRequest)
+
+        if ('client_secret' in credentials) {
+          throw new InvalidRequestError('Client secret must not be provided')
+        }
+
+        const authorizationRequest = await oauthAuthorizationRequestQuerySchema
+          .parseAsync(query, { path: ['query'] })
+          .catch(throwInvalidRequest)
 
         const { deviceId } = await deviceManager.load(req, res)
-        const data = await server.authorize(deviceId, input)
+
+        const data = await server
+          .authorize(deviceId, credentials, authorizationRequest)
+          .catch((err) => accessDeniedToRedirectCatcher(req, res, err))
 
         switch (true) {
           case 'redirect' in data: {
-            return await sendAuthorizeRedirect(res, data)
+            return sendAuthorizeRedirect(res, data)
           }
           case 'authorize' in data: {
             await setupCsrfToken(req, res, csrfCookie(data.authorize.uri))
-            return await sendAuthorizePage(res, data, server.customization)
+            return outputManager.sendAuthorizePage(res, data)
           }
           default: {
             // Should never happen
             throw new Error('Unexpected authorization result')
           }
         }
-      } catch (err) {
-        await onError?.(req, res, err, 'Failed to setup authorize')
-
-        if (!res.headersSent) {
-          await sendErrorPage(res, err, server.customization)
-        }
-      }
-    })
+      }),
+    )
 
     const signInPayloadSchema = z.object({
       csrf_token: z.string(),
       request_uri: requestUriSchema,
       client_id: clientIdSchema,
-      credentials: z.object({
-        username: z.string(),
-        password: z.string(),
-        remember: z.boolean().optional().default(false),
+      credentials: signInCredentialsSchema,
+    })
+
+    router.options('/oauth/authorize/sign-in', corsPreflight)
+    router.post(
+      '/oauth/authorize/sign-in',
+      jsonHandler(async function (req, res) {
+        validateFetchMode(req, res, ['same-origin'])
+        validateFetchSite(req, res, ['same-origin'])
+        validateSameOrigin(req, res, issuerOrigin)
+
+        const payload = await parseHttpRequest(req, ['json'])
+        const input = await signInPayloadSchema.parseAsync(payload, {
+          path: ['body'],
+        })
+
+        validateReferer(req, res, {
+          origin: issuerOrigin,
+          pathname: '/oauth/authorize',
+        })
+        validateCsrfToken(
+          req,
+          res,
+          input.csrf_token,
+          csrfCookie(input.request_uri),
+        )
+
+        const { deviceId } = await deviceManager.load(req, res, true)
+
+        return server.signIn(
+          deviceId,
+          input.request_uri,
+          input.client_id,
+          input.credentials,
+        )
       }),
-    })
-
-    router.post('/oauth/authorize/sign-in', async function (req, res) {
-      validateFetchMode(req, res, ['same-origin'])
-      validateSameOrigin(req, res, issuerOrigin)
-
-      const input = await validateRequestPayload(req, signInPayloadSchema)
-
-      validateReferer(req, res, {
-        origin: issuerOrigin,
-        pathname: '/oauth/authorize',
-      })
-      validateCsrfToken(
-        req,
-        res,
-        input.csrf_token,
-        csrfCookie(input.request_uri),
-      )
-
-      const { deviceId } = await deviceManager.load(req, res)
-
-      const { account, info } = await server.signIn(deviceId, input.credentials)
-
-      // Prevent fixation attacks
-      await deviceManager.rotate(req, res, deviceId)
-
-      return writeJson(res, {
-        account,
-        consentRequired: !info.authorizedClients.includes(input.client_id),
-      })
-    })
+    )
 
     const acceptQuerySchema = z.object({
       csrf_token: z.string(),
@@ -1305,12 +1389,19 @@ export class OAuthProvider extends OAuthVerifier {
       account_sub: z.string(),
     })
 
-    router.get('/oauth/authorize/accept', async function (req, res) {
-      try {
-        res.setHeader('Cache-Control', 'no-store')
-
-        validateFetchMode(req, res, ['navigate'])
-        validateSameOrigin(req, res, issuerOrigin)
+    // Though this is a "no-cors" request, meaning that the browser will allow
+    // any cross-origin request, with credentials, to be sent, the handler will
+    // 1) validate the request origin,
+    // 2) validate the CSRF token,
+    // 3) validate the referer,
+    // 4) validate the sec-fetch-site header,
+    // 4) validate the sec-fetch-mode header,
+    // 5) validate the sec-fetch-dest header (see navigationHandler).
+    // And will error if any of these checks fail.
+    router.get(
+      '/oauth/authorize/accept',
+      navigationHandler(async function (req, res) {
+        validateFetchSite(req, res, ['same-origin'])
 
         const query = Object.fromEntries(this.url.searchParams)
         const input = await acceptQuerySchema.parseAsync(query, {
@@ -1335,22 +1426,18 @@ export class OAuthProvider extends OAuthVerifier {
 
         const { deviceId } = await deviceManager.load(req, res)
 
-        const data = await server.acceptRequest(
-          deviceId,
-          input.request_uri,
-          input.client_id,
-          input.account_sub,
-        )
+        const data = await server
+          .acceptRequest(
+            deviceId,
+            input.request_uri,
+            input.client_id,
+            input.account_sub,
+          )
+          .catch((err) => accessDeniedToRedirectCatcher(req, res, err))
 
         return await sendAuthorizeRedirect(res, data)
-      } catch (err) {
-        await onError?.(req, res, err, 'Failed to accept authorization request')
-
-        if (!res.headersSent) {
-          await sendErrorPage(res, err, server.customization)
-        }
-      }
-    })
+      }),
+    )
 
     const rejectQuerySchema = z.object({
       csrf_token: z.string(),
@@ -1358,12 +1445,19 @@ export class OAuthProvider extends OAuthVerifier {
       client_id: clientIdSchema,
     })
 
-    router.get('/oauth/authorize/reject', async function (req, res) {
-      try {
-        res.setHeader('Cache-Control', 'no-store')
-
-        validateFetchMode(req, res, ['navigate'])
-        validateSameOrigin(req, res, issuerOrigin)
+    // Though this is a "no-cors" request, meaning that the browser will allow
+    // any cross-origin request, with credentials, to be sent, the handler will
+    // 1) validate the request origin,
+    // 2) validate the CSRF token,
+    // 3) validate the referer,
+    // 4) validate the sec-fetch-site header,
+    // 4) validate the sec-fetch-mode header,
+    // 5) validate the sec-fetch-dest header (see navigationHandler).
+    // And will error if any of these checks fail.
+    router.get(
+      '/oauth/authorize/reject',
+      navigationHandler(async function (req, res) {
+        validateFetchSite(req, res, ['same-origin'])
 
         const query = Object.fromEntries(this.url.searchParams)
         const input = await rejectQuerySchema.parseAsync(query, {
@@ -1388,22 +1482,48 @@ export class OAuthProvider extends OAuthVerifier {
 
         const { deviceId } = await deviceManager.load(req, res)
 
-        const data = await server.rejectRequest(
-          deviceId,
-          input.request_uri,
-          input.client_id,
-        )
+        const data = await server
+          .rejectRequest(deviceId, input.request_uri, input.client_id)
+          .catch((err) => accessDeniedToRedirectCatcher(req, res, err))
 
         return await sendAuthorizeRedirect(res, data)
-      } catch (err) {
-        await onError?.(req, res, err, 'Failed to reject authorization request')
-
-        if (!res.headersSent) {
-          await sendErrorPage(res, err, server.customization)
-        }
-      }
-    })
+      }),
+    )
 
     return router
   }
+}
+
+function throwInvalidGrant(err: unknown): never {
+  throw new InvalidGrantError(
+    extractZodErrorMessage(err) || 'Invalid grant',
+    err,
+  )
+}
+
+function throwInvalidClient(err: unknown): never {
+  throw new InvalidClientError(
+    extractZodErrorMessage(err) || 'Client authentication failed',
+    err,
+  )
+}
+
+function throwInvalidRequest(err: unknown): never {
+  throw new InvalidRequestError(
+    extractZodErrorMessage(err) || 'Input validation error',
+    err,
+  )
+}
+
+function extractZodErrorMessage(err: unknown): string | undefined {
+  if (err instanceof ZodError) {
+    const issue = err.issues[0]
+    if (issue?.path.length) {
+      // "part" will typically be "body" or "query"
+      const [part, ...path] = issue.path
+      return `Validation of "${path.join('.')}" ${part} parameter failed: ${issue.message}`
+    }
+  }
+
+  return undefined
 }

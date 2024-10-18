@@ -1,4 +1,7 @@
-import { accessTokenSchema, oauthTokenTypeSchema } from '@atproto/oauth-types'
+import {
+  oauthAccessTokenSchema,
+  oauthTokenTypeSchema,
+} from '@atproto/oauth-types'
 import { z } from 'zod'
 
 import { InvalidRequestError } from '../../errors/invalid-request-error.js'
@@ -6,7 +9,7 @@ import { WWWAuthenticateError } from '../../errors/www-authenticate-error.js'
 
 export const authorizationHeaderSchema = z.tuple([
   oauthTokenTypeSchema,
-  accessTokenSchema,
+  oauthAccessTokenSchema,
 ])
 
 export const parseAuthorizationHeader = (header?: string) => {
@@ -18,7 +21,7 @@ export const parseAuthorizationHeader = (header?: string) => {
     )
   }
 
-  const parsed = authorizationHeaderSchema.safeParse(header.split(' ', 2))
+  const parsed = authorizationHeaderSchema.safeParse(header.split(' '))
   if (!parsed.success) {
     throw new InvalidRequestError('Invalid authorization header')
   }

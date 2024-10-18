@@ -1,5 +1,5 @@
 import fs from 'fs/promises'
-import AtpAgent from '@atproto/api'
+import { AtpAgent } from '@atproto/api'
 import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
 import { forSnapshot, stripViewer } from '../_util'
 import { ids } from '../../src/lexicon/lexicons'
@@ -14,7 +14,6 @@ describe('pds profile views', () => {
   let alice: string
   let bob: string
   let dan: string
-  let carol: string
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -28,7 +27,6 @@ describe('pds profile views', () => {
     alice = sc.dids.alice
     bob = sc.dids.bob
     dan = sc.dids.dan
-    carol = sc.dids.carol
   })
 
   afterAll(async () => {
@@ -40,7 +38,12 @@ describe('pds profile views', () => {
   it('fetches own profile', async () => {
     const aliceForAlice = await agent.api.app.bsky.actor.getProfile(
       { actor: alice },
-      { headers: await network.serviceHeaders(alice) },
+      {
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyActorGetProfile,
+        ),
+      },
     )
 
     expect(forSnapshot(aliceForAlice.data)).toMatchSnapshot()
@@ -49,7 +52,9 @@ describe('pds profile views', () => {
   it('reflects self-labels', async () => {
     const aliceForBob = await agent.api.app.bsky.actor.getProfile(
       { actor: alice },
-      { headers: await network.serviceHeaders(bob) },
+      {
+        headers: await network.serviceHeaders(bob, ids.AppBskyActorGetProfile),
+      },
     )
 
     const labels = aliceForBob.data.labels
@@ -63,7 +68,9 @@ describe('pds profile views', () => {
   it("fetches other's profile, with a follow", async () => {
     const aliceForBob = await agent.api.app.bsky.actor.getProfile(
       { actor: alice },
-      { headers: await network.serviceHeaders(bob) },
+      {
+        headers: await network.serviceHeaders(bob, ids.AppBskyActorGetProfile),
+      },
     )
 
     expect(forSnapshot(aliceForBob.data)).toMatchSnapshot()
@@ -72,43 +79,12 @@ describe('pds profile views', () => {
   it("fetches other's profile, without a follow", async () => {
     const danForBob = await agent.api.app.bsky.actor.getProfile(
       { actor: dan },
-      { headers: await network.serviceHeaders(bob) },
+      {
+        headers: await network.serviceHeaders(bob, ids.AppBskyActorGetProfile),
+      },
     )
 
     expect(forSnapshot(danForBob.data)).toMatchSnapshot()
-  })
-
-  it('returns knownFollowers viewer data', async () => {
-    const carolForAlice = await agent.api.app.bsky.actor.getProfile(
-      { actor: carol },
-      { headers: await network.serviceHeaders(alice) },
-    )
-
-    const knownFollowers = carolForAlice.data.viewer?.knownFollowers
-    expect(knownFollowers?.count).toBe(1)
-    expect(knownFollowers?.followers).toHaveLength(1)
-    expect(knownFollowers?.followers[0].handle).toBe('bob.test')
-  })
-
-  it('does not return knownFollowers for basic profile views', async () => {
-    const { data } = await agent.api.app.bsky.graph.getFollows(
-      { actor: carol },
-      { headers: await network.serviceHeaders(alice) },
-    )
-    const follow = data.follows[0]
-
-    expect(follow.viewer?.knownFollowers).toBeFalsy()
-  })
-
-  it('getKnownFollowers works', async () => {
-    const { data } = await agent.api.app.bsky.graph.getKnownFollowers(
-      { actor: carol },
-      { headers: await network.serviceHeaders(alice) },
-    )
-
-    expect(data.subject.did).toBe(carol)
-    expect(data.followers.length).toBe(1)
-    expect(data.followers[0].handle).toBe('bob.test')
   })
 
   it('fetches multiple profiles', async () => {
@@ -125,7 +101,9 @@ describe('pds profile views', () => {
           'missing.test',
         ],
       },
-      { headers: await network.serviceHeaders(bob) },
+      {
+        headers: await network.serviceHeaders(bob, ids.AppBskyActorGetProfiles),
+      },
     )
 
     expect(profiles.map((p) => p.handle)).toEqual([
@@ -170,7 +148,12 @@ describe('pds profile views', () => {
 
     const aliceForAlice = await agent.api.app.bsky.actor.getProfile(
       { actor: alice },
-      { headers: await network.serviceHeaders(alice) },
+      {
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyActorGetProfile,
+        ),
+      },
     )
 
     expect(forSnapshot(aliceForAlice.data)).toMatchSnapshot()
@@ -180,13 +163,15 @@ describe('pds profile views', () => {
     const byDid = await agent.api.app.bsky.actor.getProfile(
       { actor: alice },
       {
-        headers: await network.serviceHeaders(bob),
+        headers: await network.serviceHeaders(bob, ids.AppBskyActorGetProfile),
       },
     )
 
     const byHandle = await agent.api.app.bsky.actor.getProfile(
       { actor: sc.accounts[alice].handle },
-      { headers: await network.serviceHeaders(bob) },
+      {
+        headers: await network.serviceHeaders(bob, ids.AppBskyActorGetProfile),
+      },
     )
 
     expect(byHandle.data).toEqual(byDid.data)
@@ -195,7 +180,9 @@ describe('pds profile views', () => {
   it('fetches profile unauthed', async () => {
     const { data: authed } = await agent.api.app.bsky.actor.getProfile(
       { actor: alice },
-      { headers: await network.serviceHeaders(bob) },
+      {
+        headers: await network.serviceHeaders(bob, ids.AppBskyActorGetProfile),
+      },
     )
     const { data: unauthed } = await agent.api.app.bsky.actor.getProfile({
       actor: alice,
@@ -208,7 +195,9 @@ describe('pds profile views', () => {
       {
         actors: [alice, 'bob.test', 'missing.test'],
       },
-      { headers: await network.serviceHeaders(bob) },
+      {
+        headers: await network.serviceHeaders(bob, ids.AppBskyActorGetProfiles),
+      },
     )
     const { data: unauthed } = await agent.api.app.bsky.actor.getProfiles({
       actors: [alice, 'bob.test', 'missing.test'],
@@ -223,7 +212,9 @@ describe('pds profile views', () => {
     })
     const promise = agent.api.app.bsky.actor.getProfile(
       { actor: alice },
-      { headers: await network.serviceHeaders(bob) },
+      {
+        headers: await network.serviceHeaders(bob, ids.AppBskyActorGetProfile),
+      },
     )
 
     await expect(promise).rejects.toThrow('Account has been suspended')

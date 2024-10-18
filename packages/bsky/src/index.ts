@@ -5,7 +5,7 @@ import events from 'events'
 import { createHttpTerminator, HttpTerminator } from 'http-terminator'
 import cors from 'cors'
 import compression from 'compression'
-import AtpAgent from '@atproto/api'
+import { AtpAgent } from '@atproto/api'
 import { IdResolver } from '@atproto/identity'
 import { DAY, SECOND } from '@atproto/common'
 import API, { health, wellKnown, blobResolver } from './api'
@@ -20,9 +20,11 @@ import { Keypair } from '@atproto/crypto'
 import { createDataPlaneClient } from './data-plane/client'
 import { Hydrator } from './hydration/hydrator'
 import { Views } from './views'
-import { AuthVerifier } from './auth-verifier'
+import { AuthVerifier, createPublicKeyObject } from './auth-verifier'
 import { authWithApiKey as bsyncAuth, createBsyncClient } from './bsync'
 import { authWithApiKey as courierAuth, createCourierClient } from './courier'
+import { FeatureGates } from './feature-gates'
+import { VideoUriBuilder } from './views/util'
 
 export * from './data-plane'
 export type { ServerConfigValues } from './config'
@@ -62,6 +64,14 @@ export class BskyAppView {
     const imgUriBuilder = new ImageUriBuilder(
       config.cdnUrl || `${config.publicUrl}/img`,
     )
+    const videoUriBuilder = new VideoUriBuilder({
+      playlistUrlPattern:
+        config.videoPlaylistUrlPattern ||
+        `${config.publicUrl}/vid/%s/%s/playlist.m3u8`,
+      thumbnailUrlPattern:
+        config.videoThumbnailUrlPattern ||
+        `${config.publicUrl}/vid/%s/%s/thumbnail.jpg`,
+    })
 
     let imgProcessingServer: ImageProcessingServer | undefined
     if (!config.cdnUrl) {
@@ -91,7 +101,7 @@ export class BskyAppView {
       rejectUnauthorized: !config.dataplaneIgnoreBadTls,
     })
     const hydrator = new Hydrator(dataplane, config.labelsFromIssuerDids)
-    const views = new Views(imgUriBuilder)
+    const views = new Views(imgUriBuilder, videoUriBuilder)
 
     const bsyncClient = createBsyncClient({
       baseUrl: config.bsyncUrl,
@@ -100,20 +110,31 @@ export class BskyAppView {
       interceptors: config.bsyncApiKey ? [bsyncAuth(config.bsyncApiKey)] : [],
     })
 
-    const courierClient = createCourierClient({
-      baseUrl: config.courierUrl,
-      httpVersion: config.courierHttpVersion ?? '2',
-      nodeOptions: { rejectUnauthorized: !config.courierIgnoreBadTls },
-      interceptors: config.courierApiKey
-        ? [courierAuth(config.courierApiKey)]
-        : [],
-    })
+    const courierClient = config.courierUrl
+      ? createCourierClient({
+          baseUrl: config.courierUrl,
+          httpVersion: config.courierHttpVersion ?? '2',
+          nodeOptions: { rejectUnauthorized: !config.courierIgnoreBadTls },
+          interceptors: config.courierApiKey
+            ? [courierAuth(config.courierApiKey)]
+            : [],
+        })
+      : undefined
 
+    const entrywayJwtPublicKey = config.entrywayJwtPublicKeyHex
+      ? createPublicKeyObject(config.entrywayJwtPublicKeyHex)
+      : undefined
     const authVerifier = new AuthVerifier(dataplane, {
       ownDid: config.serverDid,
       alternateAudienceDids: config.alternateAudienceDids,
       modServiceDid: config.modServiceDid,
       adminPasses: config.adminPasswords,
+      entrywayJwtPublicKey,
+    })
+
+    const featureGates = new FeatureGates({
+      apiKey: config.statsigKey,
+      env: config.statsigEnv,
     })
 
     const ctx = new AppContext({
@@ -128,6 +149,7 @@ export class BskyAppView {
       bsyncClient,
       courierClient,
       authVerifier,
+      featureGates,
     })
 
     let server = createServer({
@@ -154,6 +176,7 @@ export class BskyAppView {
   }
 
   async start(): Promise<http.Server> {
+    await this.ctx.featureGates.start()
     const server = this.app.listen(this.ctx.cfg.port)
     this.server = server
     server.keepAliveTimeout = 90000
@@ -166,6 +189,7 @@ export class BskyAppView {
 
   async destroy(): Promise<void> {
     await this.terminator?.terminate()
+    this.ctx.featureGates.destroy()
   }
 }
 

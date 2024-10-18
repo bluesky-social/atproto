@@ -1,5 +1,22 @@
 # @atproto/lexicon
 
+## 0.4.2
+
+### Patch Changes
+
+- [#2817](https://github.com/bluesky-social/atproto/pull/2817) [`87a1f2426`](https://github.com/bluesky-social/atproto/commit/87a1f24262e0e644b6cf31cc7a0446d9127ffa94) Thanks [@gaearon](https://github.com/gaearon)! - Add fast path skipping grapheme counting
+
+- Updated dependencies [[`a07b21151`](https://github.com/bluesky-social/atproto/commit/a07b21151f1850340c4b7797ebb11521b1a6cdf3), [`a07b21151`](https://github.com/bluesky-social/atproto/commit/a07b21151f1850340c4b7797ebb11521b1a6cdf3), [`eb20ff64a`](https://github.com/bluesky-social/atproto/commit/eb20ff64a2d8e3061c652e1e247bf9b0fe3c41a6)]:
+  - @atproto/common-web@0.3.1
+
+## 0.4.1
+
+### Patch Changes
+
+- [#2483](https://github.com/bluesky-social/atproto/pull/2483) [`b934b396b`](https://github.com/bluesky-social/atproto/commit/b934b396b13ba32bf2bf7e75ecdf6871e5f310dd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add the ability to instantiate a Lexicon from an iterable, and to use a Lexicon as iterable.
+
+- [#2707](https://github.com/bluesky-social/atproto/pull/2707) [`2bdf75d7a`](https://github.com/bluesky-social/atproto/commit/2bdf75d7a63924c10e7a311f16cb447d595b933e) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove internal circular dependency.
+
 ## 0.4.0
 
 ### Minor Changes

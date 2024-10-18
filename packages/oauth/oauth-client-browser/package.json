@@ -1,6 +1,6 @@
 {
   "name": "@atproto/oauth-client-browser",
-  "version": "0.1.0",
+  "version": "0.2.2",
   "license": "MIT",
   "description": "ATPROTO OAuth client for the browser (relies on WebCrypto & Indexed DB)",
   "keywords": [
@@ -63,7 +63,7 @@
     "rollup-plugin-postcss": "^4.0.2",
     "rollup-plugin-serve": "^1.1.1",
     "tailwindcss": "^3.4.1",
-    "typescript": "^5.3.3"
+    "typescript": "^5.6.2"
   },
   "scripts": {
     "build": "tsc --build tsconfig.build.json",

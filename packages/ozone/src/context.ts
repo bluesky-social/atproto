@@ -1,6 +1,6 @@
 import express from 'express'
 import * as plc from '@did-plc/lib'
-import { IdResolver } from '@atproto/identity'
+import { DidCache, IdResolver, MemoryCache } from '@atproto/identity'
 import { AtpAgent } from '@atproto/api'
 import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
@@ -26,12 +26,14 @@ import {
   ParsedLabelers,
   parseLabelerHeader,
 } from './util'
+import { SetService, SetServiceCreator } from './set/service'
 
 export type AppContextOptions = {
   db: Database
   cfg: OzoneConfig
   modService: ModerationServiceCreator
   communicationTemplateService: CommunicationTemplateServiceCreator
+  setService: SetServiceCreator
   teamService: TeamServiceCreator
   appviewAgent: AtpAgent
   pdsAgent: AtpAgent | undefined
@@ -39,6 +41,7 @@ export type AppContextOptions = {
   blobDiverter?: BlobDiverter
   signingKey: Keypair
   signingKeyId: number
+  didCache: DidCache
   idResolver: IdResolver
   imgInvalidator?: ImageInvalidator
   backgroundQueue: BackgroundQueue
@@ -74,14 +77,20 @@ export class AppContext {
       ? new AtpAgent({ service: cfg.chat.url })
       : undefined
 
+    const didCache = new MemoryCache(
+      cfg.identity.cacheStaleTTL,
+      cfg.identity.cacheMaxTTL,
+    )
     const idResolver = new IdResolver({
       plcUrl: cfg.identity.plcUrl,
+      didCache,
     })
 
-    const createAuthHeaders = (aud: string) =>
+    const createAuthHeaders = (aud: string, lxm: string) =>
       createServiceAuthHeaders({
         iss: `${cfg.service.did}#atproto_labeler`,
         aud,
+        lxm,
         keypair: signingKey,
       })
 
@@ -110,6 +119,7 @@ export class AppContext {
 
     const communicationTemplateService = CommunicationTemplateService.creator()
     const teamService = TeamService.creator()
+    const setService = SetService.creator()
 
     const sequencer = new Sequencer(modService(db))
 
@@ -126,11 +136,13 @@ export class AppContext {
         modService,
         communicationTemplateService,
         teamService,
+        setService,
         appviewAgent,
         pdsAgent,
         chatAgent,
         signingKey,
         signingKeyId,
+        didCache,
         idResolver,
         backgroundQueue,
         sequencer,
@@ -174,6 +186,10 @@ export class AppContext {
     return this.opts.teamService
   }
 
+  get setService(): SetServiceCreator {
+    return this.opts.setService
+  }
+
   get appviewAgent(): AtpAgent {
     return this.opts.appviewAgent
   }
@@ -198,6 +214,10 @@ export class AppContext {
     return new plc.Client(this.cfg.identity.plcUrl)
   }
 
+  get didCache(): DidCache {
+    return this.opts.didCache
+  }
+
   get idResolver(): IdResolver {
     return this.opts.idResolver
   }
@@ -214,31 +234,32 @@ export class AppContext {
     return this.opts.authVerifier
   }
 
-  async serviceAuthHeaders(aud: string) {
+  async serviceAuthHeaders(aud: string, lxm: string) {
     const iss = `${this.cfg.service.did}#atproto_labeler`
     return createServiceAuthHeaders({
       iss,
       aud,
+      lxm,
       keypair: this.signingKey,
     })
   }
 
-  async pdsAuth() {
+  async pdsAuth(lxm: string) {
     if (!this.cfg.pds) {
       return undefined
     }
-    return this.serviceAuthHeaders(this.cfg.pds.did)
+    return this.serviceAuthHeaders(this.cfg.pds.did, lxm)
   }
 
-  async appviewAuth() {
-    return this.serviceAuthHeaders(this.cfg.appview.did)
+  async appviewAuth(lxm: string) {
+    return this.serviceAuthHeaders(this.cfg.appview.did, lxm)
   }
 
-  async chatAuth() {
+  async chatAuth(lxm: string) {
     if (!this.cfg.chat) {
       throw new Error('No chat service configured')
     }
-    return this.serviceAuthHeaders(this.cfg.chat.did)
+    return this.serviceAuthHeaders(this.cfg.chat.did, lxm)
   }
 
   devOverride(overrides: Partial<AppContextOptions>) {

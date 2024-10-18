@@ -1,5 +1,94 @@
 # @atproto/xrpc-server
 
+## 0.7.1
+
+### Patch Changes
+
+- Updated dependencies [[`4098d9890`](https://github.com/bluesky-social/atproto/commit/4098d9890173f4d6c6512f2d8994eebbf12b5e13)]:
+  - @atproto/common@0.4.4
+  - @atproto/crypto@0.4.1
+
+## 0.7.0
+
+### Minor Changes
+
+- [#2770](https://github.com/bluesky-social/atproto/pull/2770) [`a07b21151`](https://github.com/bluesky-social/atproto/commit/a07b21151f1850340c4b7797ebb11521b1a6cdf3) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use Buffer instead of ArrayBuffer in pipe through handler result
+
+### Patch Changes
+
+- [#2770](https://github.com/bluesky-social/atproto/pull/2770) [`a07b21151`](https://github.com/bluesky-social/atproto/commit/a07b21151f1850340c4b7797ebb11521b1a6cdf3) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow HandlerPipeThrough to be used with streams
+
+- [#2770](https://github.com/bluesky-social/atproto/pull/2770) [`a07b21151`](https://github.com/bluesky-social/atproto/commit/a07b21151f1850340c4b7797ebb11521b1a6cdf3) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add ErrorOptions support to XRPCError and sub-classes
+
+- [#2770](https://github.com/bluesky-social/atproto/pull/2770) [`a07b21151`](https://github.com/bluesky-social/atproto/commit/a07b21151f1850340c4b7797ebb11521b1a6cdf3) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Expose parseContentEncoding() util
+
+- [#2770](https://github.com/bluesky-social/atproto/pull/2770) [`a07b21151`](https://github.com/bluesky-social/atproto/commit/a07b21151f1850340c4b7797ebb11521b1a6cdf3) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Properly decompress requests with more than one content encoding
+
+- [#2770](https://github.com/bluesky-social/atproto/pull/2770) [`a07b21151`](https://github.com/bluesky-social/atproto/commit/a07b21151f1850340c4b7797ebb11521b1a6cdf3) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve detection, and logging, of 500 server errors.
+
+- [#2770](https://github.com/bluesky-social/atproto/pull/2770) [`a07b21151`](https://github.com/bluesky-social/atproto/commit/a07b21151f1850340c4b7797ebb11521b1a6cdf3) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Optimize extraction of NSID from url
+
+- Updated dependencies [[`a07b21151`](https://github.com/bluesky-social/atproto/commit/a07b21151f1850340c4b7797ebb11521b1a6cdf3), [`87a1f2426`](https://github.com/bluesky-social/atproto/commit/87a1f24262e0e644b6cf31cc7a0446d9127ffa94), [`a07b21151`](https://github.com/bluesky-social/atproto/commit/a07b21151f1850340c4b7797ebb11521b1a6cdf3)]:
+  - @atproto/xrpc@0.6.3
+  - @atproto/lexicon@0.4.2
+  - @atproto/common@0.4.3
+  - @atproto/crypto@0.4.1
+
+## 0.6.4
+
+### Patch Changes
+
+- [#2464](https://github.com/bluesky-social/atproto/pull/2464) [`98711a147`](https://github.com/bluesky-social/atproto/commit/98711a147a8674337f605c6368f39fc10c2fae93) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Properly decode request body encoding
+
+- Updated dependencies [[`98711a147`](https://github.com/bluesky-social/atproto/commit/98711a147a8674337f605c6368f39fc10c2fae93), [`98711a147`](https://github.com/bluesky-social/atproto/commit/98711a147a8674337f605c6368f39fc10c2fae93)]:
+  - @atproto/common@0.4.2
+  - @atproto/xrpc@0.6.2
+  - @atproto/crypto@0.4.1
+
+## 0.6.3
+
+### Patch Changes
+
+- [#2743](https://github.com/bluesky-social/atproto/pull/2743) [`ebb318325`](https://github.com/bluesky-social/atproto/commit/ebb318325b6e80c4ea1a93a617569da2698afe31) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `iat` claim to service JWTs
+
+- [#2743](https://github.com/bluesky-social/atproto/pull/2743) [`ebb318325`](https://github.com/bluesky-social/atproto/commit/ebb318325b6e80c4ea1a93a617569da2698afe31) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Ensure that service auth JWT headers contain an `alg` claim, and ensure that `typ`, if present, is not an unexpected type (e.g. not an access or DPoP token).
+
+- Updated dependencies [[`d9ffa3c46`](https://github.com/bluesky-social/atproto/commit/d9ffa3c460924010d7002b616cb7a0c66111cc6c), [`ebb318325`](https://github.com/bluesky-social/atproto/commit/ebb318325b6e80c4ea1a93a617569da2698afe31), [`d9ffa3c46`](https://github.com/bluesky-social/atproto/commit/d9ffa3c460924010d7002b616cb7a0c66111cc6c), [`d9ffa3c46`](https://github.com/bluesky-social/atproto/commit/d9ffa3c460924010d7002b616cb7a0c66111cc6c)]:
+  - @atproto/xrpc@0.6.1
+  - @atproto/crypto@0.4.1
+
+## 0.6.2
+
+### Patch Changes
+
+- [#2711](https://github.com/bluesky-social/atproto/pull/2711) [`acbacbbd5`](https://github.com/bluesky-social/atproto/commit/acbacbbd5621473b14ee7a6a3132f675806d23b1) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Expose the request context for AuthVerifier and StreamAuthVerifier as distinct types
+
+- [#2663](https://github.com/bluesky-social/atproto/pull/2663) [`50c0ec176`](https://github.com/bluesky-social/atproto/commit/50c0ec176c223c90e7c86e1e0c059455fecfa9ae) Thanks [@dholms](https://github.com/dholms)! - Update lxm check error name to BadJwtLexiconMethod
+
+- [#2663](https://github.com/bluesky-social/atproto/pull/2663) [`50c0ec176`](https://github.com/bluesky-social/atproto/commit/50c0ec176c223c90e7c86e1e0c059455fecfa9ae) Thanks [@dholms](https://github.com/dholms)! - Support http.IncomingMessage input to parseReqNsid()
+
+## 0.6.1
+
+### Patch Changes
+
+- Updated dependencies [[`b934b396b`](https://github.com/bluesky-social/atproto/commit/b934b396b13ba32bf2bf7e75ecdf6871e5f310dd), [`2bdf75d7a`](https://github.com/bluesky-social/atproto/commit/2bdf75d7a63924c10e7a311f16cb447d595b933e), [`b934b396b`](https://github.com/bluesky-social/atproto/commit/b934b396b13ba32bf2bf7e75ecdf6871e5f310dd), [`b934b396b`](https://github.com/bluesky-social/atproto/commit/b934b396b13ba32bf2bf7e75ecdf6871e5f310dd)]:
+  - @atproto/lexicon@0.4.1
+  - @atproto/xrpc@0.6.0
+
+## 0.6.0
+
+### Minor Changes
+
+- [#2668](https://github.com/bluesky-social/atproto/pull/2668) [`dc471da26`](https://github.com/bluesky-social/atproto/commit/dc471da267955d0962a8affaf983df60d962d97c) Thanks [@dholms](https://github.com/dholms)! - Add lxm and nonce to signed service auth tokens.
+
+## 0.5.3
+
+### Patch Changes
+
+- Updated dependencies [[`acc9093d2`](https://github.com/bluesky-social/atproto/commit/acc9093d2845eba02b68fb2f9db33e4f1b59bb10)]:
+  - @atproto/common@0.4.1
+  - @atproto/crypto@0.4.0
+
 ## 0.5.2
 
 ### Patch Changes

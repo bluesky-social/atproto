@@ -1,6 +1,7 @@
 import assert from 'node:assert'
 import { AtUri } from '@atproto/syntax'
-import { Headers, XRPCError } from '@atproto/xrpc'
+import { XRPCError } from '@atproto/xrpc'
+
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import {
@@ -18,34 +19,30 @@ import {
   getRepoRev,
   LocalRecords,
   RecordDescript,
-  handleReadAfterWrite,
+  pipethroughReadAfterWrite,
   formatMungedResponse,
 } from '../../../../read-after-write'
-import { pipethrough } from '../../../../pipethrough'
-
-const METHOD_NSID = 'app.bsky.feed.getPostThread'
+import { ids } from '../../../../lexicon/lexicons'
 
 export default function (server: Server, ctx: AppContext) {
   const { bskyAppView } = ctx.cfg
   if (!bskyAppView) return
   server.app.bsky.feed.getPostThread({
     auth: ctx.authVerifier.accessStandard(),
-    handler: async ({ req, auth, params }) => {
-      const requester = auth.credentials.did
-
+    handler: async (reqCtx) => {
       try {
-        const res = await pipethrough(ctx, req, requester)
-
-        return await handleReadAfterWrite(
-          ctx,
-          METHOD_NSID,
-          requester,
-          res,
-          getPostThreadMunge,
-        )
+        return await pipethroughReadAfterWrite(ctx, reqCtx, getPostThreadMunge)
       } catch (err) {
         if (err instanceof XRPCError && err.error === 'NotFound') {
-          const headers = err.headers
+          const { auth, params } = reqCtx
+          const requester = auth.credentials.did
+
+          const rev = err.headers && getRepoRev(err.headers)
+          if (!rev) throw err
+
+          const uri = new AtUri(params.uri)
+          if (uri.hostname !== requester) throw err
+
           const local = await ctx.actorStore.read(requester, (store) => {
             const localViewer = ctx.localViewer(store)
             return readAfterWriteNotFound(
@@ -53,7 +50,7 @@ export default function (server: Server, ctx: AppContext) {
               localViewer,
               params,
               requester,
-              headers,
+              rev,
             )
           })
           if (local === null) {
@@ -167,11 +164,8 @@ const readAfterWriteNotFound = async (
   localViewer: LocalViewer,
   params: QueryParams,
   requester: string,
-  headers?: Headers,
+  rev: string,
 ): Promise<{ data: OutputSchema; lag?: number } | null> => {
-  if (!headers) return null
-  const rev = getRepoRev(headers)
-  if (!rev) return null
   const uri = new AtUri(params.uri)
   if (uri.hostname !== requester) {
     return null
@@ -189,7 +183,7 @@ const readAfterWriteNotFound = async (
       assert(ctx.appViewAgent)
       const parentsRes = await ctx.appViewAgent.api.app.bsky.feed.getPostThread(
         { uri: highestParent, parentHeight: params.parentHeight, depth: 0 },
-        await ctx.appviewAuthHeaders(requester),
+        await ctx.appviewAuthHeaders(requester, ids.AppBskyFeedGetPostThread),
       )
       thread.parent = parentsRes.data.thread
     } catch (err) {

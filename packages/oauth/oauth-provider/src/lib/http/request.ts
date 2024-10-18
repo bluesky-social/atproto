@@ -1,31 +1,30 @@
 import { parse as parseCookie, serialize as serializeCookie } from 'cookie'
 import { randomBytes } from 'crypto'
 import createHttpError from 'http-errors'
-import { z } from 'zod'
 
-import { KnownNames } from './parser.js'
 import { appendHeader } from './response.js'
-import { decodeStream, parseStream } from './stream.js'
 import { IncomingMessage, ServerResponse } from './types.js'
-import { UrlReference, urlMatch } from './url.js'
+import { urlMatch, UrlReference } from './url.js'
 
-export function parseRequestPayload<
-  A extends readonly KnownNames[] = readonly KnownNames[],
->(req: IncomingMessage, allow?: A) {
-  return parseStream(
-    decodeStream(req, req.headers['content-encoding']),
-    req.headers['content-type'],
-    allow,
-  )
-}
-
-export async function validateRequestPayload<S extends z.ZodTypeAny>(
+export function validateHeaderValue(
   req: IncomingMessage,
-  schema: S,
-  allow: readonly KnownNames[] = ['json', 'urlencoded'],
-): Promise<z.infer<S>> {
-  const payload = await parseRequestPayload(req, allow)
-  return schema.parseAsync(payload, { path: ['body'] })
+  name: keyof IncomingMessage['headers'],
+  allowedValues: readonly (string | null)[],
+) {
+  const value = req.headers[name] ?? null
+
+  if (Array.isArray(value)) {
+    throw createHttpError(400, `Invalid ${name} header`)
+  }
+
+  if (!allowedValues.includes(value)) {
+    throw createHttpError(
+      400,
+      value
+        ? `Forbidden ${name} header "${value}" (expected ${allowedValues})`
+        : `Missing ${name} header`,
+    )
+  }
 }
 
 export function validateFetchMode(
@@ -39,20 +38,45 @@ export function validateFetchMode(
     | 'cors'
   )[],
 ) {
-  const reqMode = req.headers['sec-fetch-mode'] ?? null
+  validateHeaderValue(req, 'sec-fetch-mode', expectedMode)
+}
 
-  if (Array.isArray(reqMode)) {
-    throw createHttpError(400, `Invalid sec-fetch-mode header`)
-  }
+export function validateFetchDest(
+  req: IncomingMessage,
+  res: ServerResponse,
+  expectedDest: readonly (
+    | null
+    | 'document'
+    | 'embed'
+    | 'font'
+    | 'image'
+    | 'manifest'
+    | 'media'
+    | 'object'
+    | 'report'
+    | 'script'
+    | 'serviceworker'
+    | 'sharedworker'
+    | 'style'
+    | 'worker'
+    | 'xslt'
+  )[],
+) {
+  validateHeaderValue(req, 'sec-fetch-dest', expectedDest)
+}
 
-  if (!(expectedMode as (string | null)[]).includes(reqMode)) {
-    throw createHttpError(
-      403,
-      reqMode
-        ? `Forbidden sec-fetch-mode "${reqMode}" (expected ${expectedMode})`
-        : `Missing sec-fetch-mode (expected ${expectedMode})`,
-    )
-  }
+export function validateFetchSite(
+  req: IncomingMessage,
+  res: ServerResponse,
+  expectedSite: readonly (
+    | null
+    | 'same-origin'
+    | 'same-site'
+    | 'cross-site'
+    | 'none'
+  )[],
+) {
+  validateHeaderValue(req, 'sec-fetch-site', expectedSite)
 }
 
 export function validateReferer(
@@ -64,7 +88,7 @@ export function validateReferer(
   const referer = req.headers['referer']
   const refererUrl = referer ? new URL(referer) : null
   if (refererUrl ? !urlMatch(refererUrl, reference) : !allowNull) {
-    throw createHttpError(403, `Invalid referer ${referer}`)
+    throw createHttpError(400, `Invalid referer ${referer}`)
   }
 }
 
@@ -95,7 +119,7 @@ export function validateSameOrigin(
 ) {
   const reqOrigin = req.headers['origin']
   if (reqOrigin ? reqOrigin !== origin : !allowNull) {
-    throw createHttpError(403, `Invalid origin ${reqOrigin}`)
+    throw createHttpError(400, `Invalid origin ${reqOrigin}`)
   }
 }
 
@@ -113,7 +137,7 @@ export function validateCsrfToken(
     !cookieName ||
     cookies[cookieName] !== csrfToken
   ) {
-    throw createHttpError(403, `Invalid CSRF token`)
+    throw createHttpError(400, `Invalid CSRF token`)
   }
 
   if (clearCookie) {

@@ -144,9 +144,9 @@ The label value definition are custom labels which only apply to that labeler. Y
 Here is how to do this:
 
 ```typescript
-import { BskyAgent } from '@atproto/api'
+import { AtpAgent } from '@atproto/api'
 
-const agent = new BskyAgent()
+const agent = new AtpAgent({ service: 'https://example.com' })
 // assume `agent` is a signed in session
 const prefs = await agent.getPreferences()
 const labelDefs = await agent.getLabelDefinitions(prefs)
@@ -182,7 +182,7 @@ const res = moderatePost(post, moderationOptions)
 The response object provides an API for figuring out what your UI should do in different contexts.
 
 ```typescript
-res.ui(context) /* => 
+res.ui(context) /* =>
 
 ModerationUI {
   filter: boolean // should the content be removed from the interface?
@@ -226,7 +226,7 @@ if (mod.ui('contentList').blur) {
   }
 }
 if (mod.ui('contentMedia').blur) {
-  // cover the post's embbedded images with the explanation from mod.ui('contentMedia').blurs[0]
+  // cover the post's embedded images with the explanation from mod.ui('contentMedia').blurs[0]
   if (mod.ui('contentMedia').noOverride) {
     // dont allow the cover to be removed
   }

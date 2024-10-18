@@ -107,7 +107,7 @@ export class BlobDiverter {
     subjectBlobCids,
   }: {
     subjectDid: string
-    subjectUri: string
+    subjectUri: string | null
     subjectBlobCids: string[]
   }): Promise<boolean> {
     const didDoc = await this.idResolver.did.resolve(subjectDid)

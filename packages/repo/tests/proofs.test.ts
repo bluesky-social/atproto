@@ -1,6 +1,6 @@
-import { TID, streamToBuffer } from '@atproto/common'
+import { TID, cidForCbor, streamToBuffer } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
-import { RecordClaim, Repo, RepoContents } from '../src'
+import { RecordCidClaim, RecordPath, Repo, RepoContents } from '../src'
 import { MemoryBlockstore } from '../src/storage'
 import * as sync from '../src/sync'
 
@@ -23,16 +23,32 @@ describe('Repo Proofs', () => {
     repoData = filled.data
   })
 
-  const getProofs = async (claims: RecordClaim[]) => {
+  const getProofs = async (claims: RecordPath[]) => {
     return streamToBuffer(sync.getRecords(storage, repo.cid, claims))
   }
 
-  const doVerify = (proofs: Uint8Array, claims: RecordClaim[]) => {
+  const doVerify = (proofs: Uint8Array, claims: RecordCidClaim[]) => {
     return sync.verifyProofs(proofs, claims, repoDid, keypair.did())
   }
 
+  const contentsToClaims = async (
+    contents: RepoContents,
+  ): Promise<RecordCidClaim[]> => {
+    const claims: RecordCidClaim[] = []
+    for (const coll of Object.keys(contents)) {
+      for (const rkey of Object.keys(contents[coll])) {
+        claims.push({
+          collection: coll,
+          rkey: rkey,
+          cid: await cidForCbor(contents[coll][rkey]),
+        })
+      }
+    }
+    return claims
+  }
+
   it('verifies valid records', async () => {
-    const claims = util.contentsToClaims(repoData)
+    const claims = await contentsToClaims(repoData)
     const proofs = await getProofs(claims)
     const results = await doVerify(proofs, claims)
     expect(results.verified.length).toBeGreaterThan(0)
@@ -41,11 +57,11 @@ describe('Repo Proofs', () => {
   })
 
   it('verifies record nonexistence', async () => {
-    const claims: RecordClaim[] = [
+    const claims: RecordCidClaim[] = [
       {
         collection: util.testCollections[0],
         rkey: TID.nextStr(), // does not exist
-        record: null,
+        cid: null,
       },
     ]
     const proofs = await getProofs(claims)
@@ -56,8 +72,8 @@ describe('Repo Proofs', () => {
   })
 
   it('does not verify a record that doesnt exist', async () => {
-    const realClaims = util.contentsToClaims(repoData)
-    const claims: RecordClaim[] = [
+    const realClaims = await contentsToClaims(repoData)
+    const claims: RecordCidClaim[] = [
       {
         ...realClaims[0],
         rkey: TID.nextStr(),
@@ -71,11 +87,11 @@ describe('Repo Proofs', () => {
   })
 
   it('does not verify an invalid record at a real path', async () => {
-    const realClaims = util.contentsToClaims(repoData)
-    const claims: RecordClaim[] = [
+    const realClaims = await contentsToClaims(repoData)
+    const claims: RecordCidClaim[] = [
       {
         ...realClaims[0],
-        record: util.generateObject(),
+        cid: await util.randomCid(),
       },
     ]
     const proofs = await getProofs(claims)
@@ -86,12 +102,12 @@ describe('Repo Proofs', () => {
   })
 
   it('does not verify a delete where the record does exist', async () => {
-    const realClaims = util.contentsToClaims(repoData)
-    const claims: RecordClaim[] = [
+    const realClaims = await contentsToClaims(repoData)
+    const claims: RecordCidClaim[] = [
       {
         collection: realClaims[0].collection,
         rkey: realClaims[0].rkey,
-        record: null,
+        cid: null,
       },
     ]
     const proofs = await getProofs(claims)
@@ -102,7 +118,7 @@ describe('Repo Proofs', () => {
   })
 
   it('can determine record proofs from car file', async () => {
-    const possible = util.contentsToClaims(repoData)
+    const possible = await contentsToClaims(repoData)
     const claims = [
       //random sampling of records
       possible[0],
@@ -120,15 +136,15 @@ describe('Repo Proofs', () => {
       if (!foundClaim) {
         throw new Error('Could not find record for claim')
       }
-      expect(foundClaim.record).toEqual(
-        repoData[record.collection][record.rkey],
+      expect(foundClaim.cid).toEqual(
+        await cidForCbor(repoData[record.collection][record.rkey]),
       )
     }
   })
 
   it('verifyProofs throws on a bad signature', async () => {
     const badRepo = await util.addBadCommit(repo, keypair)
-    const claims = util.contentsToClaims(repoData)
+    const claims = await contentsToClaims(repoData)
     const proofs = await streamToBuffer(
       sync.getRecords(storage, badRepo.cid, claims),
     )

@@ -920,7 +920,7 @@ export const schemaDict = {
       labelValueDefinition: {
         type: 'object',
         description:
-          'Declares a label value and its expected interpertations and behaviors.',
+          'Declares a label value and its expected interpretations and behaviors.',
         required: ['identifier', 'severity', 'blurs', 'locales'],
         properties: {
           identifier: {
@@ -1283,9 +1283,8 @@ export const schemaDict = {
               },
               validate: {
                 type: 'boolean',
-                default: true,
                 description:
-                  "Can be set to 'false' to skip Lexicon schema validation of record data, for all operations.",
+                  "Can be set to 'false' to skip Lexicon schema validation of record data across all operations, 'true' to require it, or leave unset to validate only for known Lexicons.",
               },
               writes: {
                 type: 'array',
@@ -1304,6 +1303,31 @@ export const schemaDict = {
                 description:
                   'If provided, the entire operation will fail if the current repo commit CID does not match this value. Used to prevent conflicting repo mutations.',
                 format: 'cid',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: [],
+            properties: {
+              commit: {
+                type: 'ref',
+                ref: 'lex:com.atproto.repo.defs#commitMeta',
+              },
+              results: {
+                type: 'array',
+                items: {
+                  type: 'union',
+                  refs: [
+                    'lex:com.atproto.repo.applyWrites#createResult',
+                    'lex:com.atproto.repo.applyWrites#updateResult',
+                    'lex:com.atproto.repo.applyWrites#deleteResult',
+                  ],
+                  closed: true,
+                },
               },
             },
           },
@@ -1365,6 +1389,47 @@ export const schemaDict = {
           },
         },
       },
+      createResult: {
+        type: 'object',
+        required: ['uri', 'cid'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          cid: {
+            type: 'string',
+            format: 'cid',
+          },
+          validationStatus: {
+            type: 'string',
+            knownValues: ['valid', 'unknown'],
+          },
+        },
+      },
+      updateResult: {
+        type: 'object',
+        required: ['uri', 'cid'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          cid: {
+            type: 'string',
+            format: 'cid',
+          },
+          validationStatus: {
+            type: 'string',
+            knownValues: ['valid', 'unknown'],
+          },
+        },
+      },
+      deleteResult: {
+        type: 'object',
+        required: [],
+        properties: {},
+      },
     },
   },
   ComAtprotoRepoCreateRecord: {
@@ -1399,9 +1464,8 @@ export const schemaDict = {
               },
               validate: {
                 type: 'boolean',
-                default: true,
                 description:
-                  "Can be set to 'false' to skip Lexicon schema validation of record data.",
+                  "Can be set to 'false' to skip Lexicon schema validation of record data, 'true' to require it, or leave unset to validate only for known Lexicons.",
               },
               record: {
                 type: 'unknown',
@@ -1430,6 +1494,14 @@ export const schemaDict = {
                 type: 'string',
                 format: 'cid',
               },
+              commit: {
+                type: 'ref',
+                ref: 'lex:com.atproto.repo.defs#commitMeta',
+              },
+              validationStatus: {
+                type: 'string',
+                knownValues: ['valid', 'unknown'],
+              },
             },
           },
         },
@@ -1440,6 +1512,25 @@ export const schemaDict = {
               "Indicates that 'swapCommit' didn't match current repo commit.",
           },
         ],
+      },
+    },
+  },
+  ComAtprotoRepoDefs: {
+    lexicon: 1,
+    id: 'com.atproto.repo.defs',
+    defs: {
+      commitMeta: {
+        type: 'object',
+        required: ['cid', 'rev'],
+        properties: {
+          cid: {
+            type: 'string',
+            format: 'cid',
+          },
+          rev: {
+            type: 'string',
+          },
+        },
       },
     },
   },
@@ -1483,6 +1574,18 @@ export const schemaDict = {
                 format: 'cid',
                 description:
                   'Compare and swap with the previous commit by CID.',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              commit: {
+                type: 'ref',
+                ref: 'lex:com.atproto.repo.defs#commitMeta',
               },
             },
           },
@@ -1612,6 +1715,11 @@ export const schemaDict = {
             },
           },
         },
+        errors: [
+          {
+            name: 'RecordNotFound',
+          },
+        ],
       },
     },
   },
@@ -1807,9 +1915,8 @@ export const schemaDict = {
               },
               validate: {
                 type: 'boolean',
-                default: true,
                 description:
-                  "Can be set to 'false' to skip Lexicon schema validation of record data.",
+                  "Can be set to 'false' to skip Lexicon schema validation of record data, 'true' to require it, or leave unset to validate only for known Lexicons.",
               },
               record: {
                 type: 'unknown',
@@ -1843,6 +1950,14 @@ export const schemaDict = {
               cid: {
                 type: 'string',
                 format: 'cid',
+              },
+              commit: {
+                type: 'ref',
+                ref: 'lex:com.atproto.repo.defs#commitMeta',
+              },
+              validationStatus: {
+                type: 'string',
+                knownValues: ['valid', 'unknown'],
               },
             },
           },
@@ -2636,6 +2751,17 @@ export const schemaDict = {
               description:
                 'The DID of the service that the token will be used to authenticate with',
             },
+            exp: {
+              type: 'integer',
+              description:
+                'The time in Unix Epoch seconds that the JWT expires. Defaults to 60 seconds in the future. The service may enforce certain time bounds on tokens depending on the requested scope.',
+            },
+            lxm: {
+              type: 'string',
+              format: 'nsid',
+              description:
+                'Lexicon (XRPC) method to bind the requested token to',
+            },
           },
         },
         output: {
@@ -2650,6 +2776,13 @@ export const schemaDict = {
             },
           },
         },
+        errors: [
+          {
+            name: 'BadExpiration',
+            description:
+              'Indicates that the requested expiration date is not a valid. May be in the past or may be reliant on the requested scopes.',
+          },
+        ],
       },
     },
   },
@@ -3372,7 +3505,7 @@ export const schemaDict = {
       main: {
         type: 'query',
         description:
-          'List blob CIDso for an account, since some repo revision. Does not require auth; implemented by PDS.',
+          'List blob CIDs for an account, since some repo revision. Does not require auth; implemented by PDS.',
         parameters: {
           type: 'params',
           required: ['did'],
@@ -4091,6 +4224,10 @@ export const schemaDict = {
               ref: 'lex:com.atproto.label.defs#label',
             },
           },
+          pinnedPost: {
+            type: 'ref',
+            ref: 'lex:com.atproto.repo.strongRef',
+          },
         },
       },
       profileAssociated: {
@@ -4195,6 +4332,8 @@ export const schemaDict = {
             'lex:app.bsky.actor.defs#interestsPref',
             'lex:app.bsky.actor.defs#mutedWordsPref',
             'lex:app.bsky.actor.defs#hiddenPostsPref',
+            'lex:app.bsky.actor.defs#bskyAppStatePref',
+            'lex:app.bsky.actor.defs#labelersPref',
           ],
         },
       },
@@ -4368,6 +4507,9 @@ export const schemaDict = {
         description: 'A word that the account owner has muted.',
         required: ['value', 'targets'],
         properties: {
+          id: {
+            type: 'string',
+          },
           value: {
             type: 'string',
             description: 'The muted word itself.',
@@ -4381,6 +4523,19 @@ export const schemaDict = {
               type: 'ref',
               ref: 'lex:app.bsky.actor.defs#mutedWordTarget',
             },
+          },
+          actorTarget: {
+            type: 'string',
+            description:
+              'Groups of users to apply the muted word to. If undefined, applies to all users.',
+            knownValues: ['all', 'exclude-following'],
+            default: 'all',
+          },
+          expiresAt: {
+            type: 'string',
+            format: 'datetime',
+            description:
+              'The date and time at which the muted word will expire and no longer be applied.',
           },
         },
       },
@@ -4433,6 +4588,76 @@ export const schemaDict = {
           did: {
             type: 'string',
             format: 'did',
+          },
+        },
+      },
+      bskyAppStatePref: {
+        description:
+          "A grab bag of state that's specific to the bsky.app program. Third-party apps shouldn't use this.",
+        type: 'object',
+        properties: {
+          activeProgressGuide: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#bskyAppProgressGuide',
+          },
+          queuedNudges: {
+            description:
+              'An array of tokens which identify nudges (modals, popups, tours, highlight dots) that should be shown to the user.',
+            type: 'array',
+            maxLength: 1000,
+            items: {
+              type: 'string',
+              maxLength: 100,
+            },
+          },
+          nuxs: {
+            description: 'Storage for NUXs the user has encountered.',
+            type: 'array',
+            maxLength: 100,
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.actor.defs#nux',
+            },
+          },
+        },
+      },
+      bskyAppProgressGuide: {
+        description:
+          'If set, an active progress guide. Once completed, can be set to undefined. Should have unspecced fields tracking progress.',
+        type: 'object',
+        required: ['guide'],
+        properties: {
+          guide: {
+            type: 'string',
+            maxLength: 100,
+          },
+        },
+      },
+      nux: {
+        type: 'object',
+        description: 'A new user experiences (NUX) storage object',
+        required: ['id', 'completed'],
+        properties: {
+          id: {
+            type: 'string',
+            maxLength: 100,
+          },
+          completed: {
+            type: 'boolean',
+            default: false,
+          },
+          data: {
+            description:
+              'Arbitrary data for the NUX. The structure is defined by the NUX itself. Limited to 300 characters.',
+            type: 'string',
+            maxLength: 3000,
+            maxGraphemes: 300,
+          },
+          expiresAt: {
+            type: 'string',
+            format: 'datetime',
+            description:
+              'The date and time at which the NUX will expire and should be considered completed.',
           },
         },
       },
@@ -4625,6 +4850,10 @@ export const schemaDict = {
               type: 'ref',
               ref: 'lex:com.atproto.repo.strongRef',
             },
+            pinnedPost: {
+              type: 'ref',
+              ref: 'lex:com.atproto.repo.strongRef',
+            },
             createdAt: {
               type: 'string',
               format: 'datetime',
@@ -4756,6 +4985,28 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyEmbedDefs: {
+    lexicon: 1,
+    id: 'app.bsky.embed.defs',
+    defs: {
+      aspectRatio: {
+        type: 'object',
+        description:
+          'width:height represents an aspect ratio. It may be approximate, and may not correspond to absolute dimensions in any given unit.',
+        required: ['width', 'height'],
+        properties: {
+          width: {
+            type: 'integer',
+            minimum: 1,
+          },
+          height: {
+            type: 'integer',
+            minimum: 1,
+          },
+        },
+      },
+    },
+  },
   AppBskyEmbedExternal: {
     lexicon: 1,
     id: 'app.bsky.embed.external',
@@ -4860,23 +5111,7 @@ export const schemaDict = {
           },
           aspectRatio: {
             type: 'ref',
-            ref: 'lex:app.bsky.embed.images#aspectRatio',
-          },
-        },
-      },
-      aspectRatio: {
-        type: 'object',
-        description:
-          'width:height represents an aspect ratio. It may be approximate, and may not correspond to absolute dimensions in any given unit.',
-        required: ['width', 'height'],
-        properties: {
-          width: {
-            type: 'integer',
-            minimum: 1,
-          },
-          height: {
-            type: 'integer',
-            minimum: 1,
+            ref: 'lex:app.bsky.embed.defs#aspectRatio',
           },
         },
       },
@@ -4917,7 +5152,7 @@ export const schemaDict = {
           },
           aspectRatio: {
             type: 'ref',
-            ref: 'lex:app.bsky.embed.images#aspectRatio',
+            ref: 'lex:app.bsky.embed.defs#aspectRatio',
           },
         },
       },
@@ -4949,9 +5184,11 @@ export const schemaDict = {
               'lex:app.bsky.embed.record#viewRecord',
               'lex:app.bsky.embed.record#viewNotFound',
               'lex:app.bsky.embed.record#viewBlocked',
+              'lex:app.bsky.embed.record#viewDetached',
               'lex:app.bsky.feed.defs#generatorView',
               'lex:app.bsky.graph.defs#listView',
               'lex:app.bsky.labeler.defs#labelerView',
+              'lex:app.bsky.graph.defs#starterPackViewBasic',
             ],
           },
         },
@@ -4992,12 +5229,16 @@ export const schemaDict = {
           likeCount: {
             type: 'integer',
           },
+          quoteCount: {
+            type: 'integer',
+          },
           embeds: {
             type: 'array',
             items: {
               type: 'union',
               refs: [
                 'lex:app.bsky.embed.images#view',
+                'lex:app.bsky.embed.video#view',
                 'lex:app.bsky.embed.external#view',
                 'lex:app.bsky.embed.record#view',
                 'lex:app.bsky.embed.recordWithMedia#view',
@@ -5042,6 +5283,20 @@ export const schemaDict = {
           },
         },
       },
+      viewDetached: {
+        type: 'object',
+        required: ['uri', 'detached'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          detached: {
+            type: 'boolean',
+            const: true,
+          },
+        },
+      },
     },
   },
   AppBskyEmbedRecordWithMedia: {
@@ -5060,7 +5315,11 @@ export const schemaDict = {
           },
           media: {
             type: 'union',
-            refs: ['lex:app.bsky.embed.images', 'lex:app.bsky.embed.external'],
+            refs: [
+              'lex:app.bsky.embed.images',
+              'lex:app.bsky.embed.video',
+              'lex:app.bsky.embed.external',
+            ],
           },
         },
       },
@@ -5076,8 +5335,88 @@ export const schemaDict = {
             type: 'union',
             refs: [
               'lex:app.bsky.embed.images#view',
+              'lex:app.bsky.embed.video#view',
               'lex:app.bsky.embed.external#view',
             ],
+          },
+        },
+      },
+    },
+  },
+  AppBskyEmbedVideo: {
+    lexicon: 1,
+    id: 'app.bsky.embed.video',
+    description: 'A video embedded in a Bluesky record (eg, a post).',
+    defs: {
+      main: {
+        type: 'object',
+        required: ['video'],
+        properties: {
+          video: {
+            type: 'blob',
+            accept: ['video/mp4'],
+            maxSize: 50000000,
+          },
+          captions: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.embed.video#caption',
+            },
+            maxLength: 20,
+          },
+          alt: {
+            type: 'string',
+            description:
+              'Alt text description of the video, for accessibility.',
+            maxGraphemes: 1000,
+            maxLength: 10000,
+          },
+          aspectRatio: {
+            type: 'ref',
+            ref: 'lex:app.bsky.embed.defs#aspectRatio',
+          },
+        },
+      },
+      caption: {
+        type: 'object',
+        required: ['lang', 'file'],
+        properties: {
+          lang: {
+            type: 'string',
+            format: 'language',
+          },
+          file: {
+            type: 'blob',
+            accept: ['text/vtt'],
+            maxSize: 20000,
+          },
+        },
+      },
+      view: {
+        type: 'object',
+        required: ['cid', 'playlist'],
+        properties: {
+          cid: {
+            type: 'string',
+            format: 'cid',
+          },
+          playlist: {
+            type: 'string',
+            format: 'uri',
+          },
+          thumbnail: {
+            type: 'string',
+            format: 'uri',
+          },
+          alt: {
+            type: 'string',
+            maxGraphemes: 1000,
+            maxLength: 10000,
+          },
+          aspectRatio: {
+            type: 'ref',
+            ref: 'lex:app.bsky.embed.defs#aspectRatio',
           },
         },
       },
@@ -5110,6 +5449,7 @@ export const schemaDict = {
             type: 'union',
             refs: [
               'lex:app.bsky.embed.images#view',
+              'lex:app.bsky.embed.video#view',
               'lex:app.bsky.embed.external#view',
               'lex:app.bsky.embed.record#view',
               'lex:app.bsky.embed.recordWithMedia#view',
@@ -5122,6 +5462,9 @@ export const schemaDict = {
             type: 'integer',
           },
           likeCount: {
+            type: 'integer',
+          },
+          quoteCount: {
             type: 'integer',
           },
           indexedAt: {
@@ -5164,6 +5507,12 @@ export const schemaDict = {
           replyDisabled: {
             type: 'boolean',
           },
+          embeddingDisabled: {
+            type: 'boolean',
+          },
+          pinned: {
+            type: 'boolean',
+          },
         },
       },
       feedViewPost: {
@@ -5180,7 +5529,10 @@ export const schemaDict = {
           },
           reason: {
             type: 'union',
-            refs: ['lex:app.bsky.feed.defs#reasonRepost'],
+            refs: [
+              'lex:app.bsky.feed.defs#reasonRepost',
+              'lex:app.bsky.feed.defs#reasonPin',
+            ],
           },
           feedContext: {
             type: 'string',
@@ -5231,6 +5583,10 @@ export const schemaDict = {
             format: 'datetime',
           },
         },
+      },
+      reasonPin: {
+        type: 'object',
+        properties: {},
       },
       threadViewPost: {
         type: 'object',
@@ -5389,7 +5745,10 @@ export const schemaDict = {
           },
           reason: {
             type: 'union',
-            refs: ['lex:app.bsky.feed.defs#skeletonReasonRepost'],
+            refs: [
+              'lex:app.bsky.feed.defs#skeletonReasonRepost',
+              'lex:app.bsky.feed.defs#skeletonReasonPin',
+            ],
           },
           feedContext: {
             type: 'string',
@@ -5408,6 +5767,10 @@ export const schemaDict = {
             format: 'at-uri',
           },
         },
+      },
+      skeletonReasonPin: {
+        type: 'object',
+        properties: {},
       },
       threadgateView: {
         type: 'object',
@@ -5459,7 +5822,7 @@ export const schemaDict = {
           feedContext: {
             type: 'string',
             description:
-              'Context on a feed item that was orginally supplied by the feed generator on getFeedSkeleton.',
+              'Context on a feed item that was originally supplied by the feed generator on getFeedSkeleton.',
             maxLength: 2000,
           },
         },
@@ -5687,7 +6050,7 @@ export const schemaDict = {
       main: {
         type: 'query',
         description:
-          'Get a list of posts liked by an actor. Does not require auth.',
+          'Get a list of posts liked by an actor. Requires auth, actor must be the requesting account.',
         parameters: {
           type: 'params',
           required: ['actor'],
@@ -5773,6 +6136,10 @@ export const schemaDict = {
                 'posts_and_author_threads',
               ],
               default: 'posts_with_replies',
+            },
+            includePins: {
+              type: 'boolean',
+              default: false,
             },
           },
         },
@@ -6186,6 +6553,10 @@ export const schemaDict = {
                   'lex:app.bsky.feed.defs#blockedPost',
                 ],
               },
+              threadgate: {
+                type: 'ref',
+                ref: 'lex:app.bsky.feed.defs#threadgateView',
+              },
             },
           },
         },
@@ -6226,6 +6597,69 @@ export const schemaDict = {
             type: 'object',
             required: ['posts'],
             properties: {
+              posts: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.feed.defs#postView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyFeedGetQuotes: {
+    lexicon: 1,
+    id: 'app.bsky.feed.getQuotes',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get a list of quotes for a given post.',
+        parameters: {
+          type: 'params',
+          required: ['uri'],
+          properties: {
+            uri: {
+              type: 'string',
+              format: 'at-uri',
+              description: 'Reference (AT-URI) of post record',
+            },
+            cid: {
+              type: 'string',
+              format: 'cid',
+              description:
+                'If supplied, filters to quotes of specific version (by CID) of the post record.',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['uri', 'posts'],
+            properties: {
+              uri: {
+                type: 'string',
+                format: 'at-uri',
+              },
+              cid: {
+                type: 'string',
+                format: 'cid',
+              },
+              cursor: {
+                type: 'string',
+              },
               posts: {
                 type: 'array',
                 items: {
@@ -6464,6 +6898,7 @@ export const schemaDict = {
               type: 'union',
               refs: [
                 'lex:app.bsky.embed.images',
+                'lex:app.bsky.embed.video',
                 'lex:app.bsky.embed.external',
                 'lex:app.bsky.embed.record',
                 'lex:app.bsky.embed.recordWithMedia',
@@ -6552,6 +6987,56 @@ export const schemaDict = {
             minimum: 0,
           },
         },
+      },
+    },
+  },
+  AppBskyFeedPostgate: {
+    lexicon: 1,
+    id: 'app.bsky.feed.postgate',
+    defs: {
+      main: {
+        type: 'record',
+        key: 'tid',
+        description:
+          'Record defining interaction rules for a post. The record key (rkey) of the postgate record must match the record key of the post, and that record must be in the same repository.',
+        record: {
+          type: 'object',
+          required: ['post', 'createdAt'],
+          properties: {
+            createdAt: {
+              type: 'string',
+              format: 'datetime',
+            },
+            post: {
+              type: 'string',
+              format: 'at-uri',
+              description: 'Reference (AT-URI) to the post record.',
+            },
+            detachedEmbeddingUris: {
+              type: 'array',
+              maxLength: 50,
+              items: {
+                type: 'string',
+                format: 'at-uri',
+              },
+              description:
+                'List of AT-URIs embedding this post that the author has detached from.',
+            },
+            embeddingRules: {
+              type: 'array',
+              maxLength: 5,
+              items: {
+                type: 'union',
+                refs: ['lex:app.bsky.feed.postgate#disableRule'],
+              },
+            },
+          },
+        },
+      },
+      disableRule: {
+        type: 'object',
+        description: 'Disables embedding of this post.',
+        properties: {},
       },
     },
   },
@@ -6740,7 +7225,7 @@ export const schemaDict = {
         type: 'record',
         key: 'tid',
         description:
-          "Record defining interaction gating rules for a thread (aka, reply controls). The record key (rkey) of the threadgate record must match the record key of the thread's root post, and that record must be in the same repository..",
+          "Record defining interaction gating rules for a thread (aka, reply controls). The record key (rkey) of the threadgate record must match the record key of the thread's root post, and that record must be in the same repository.",
         record: {
           type: 'object',
           required: ['post', 'createdAt'],
@@ -6765,6 +7250,15 @@ export const schemaDict = {
             createdAt: {
               type: 'string',
               format: 'datetime',
+            },
+            hiddenReplies: {
+              type: 'array',
+              maxLength: 50,
+              items: {
+                type: 'string',
+                format: 'at-uri',
+              },
+              description: 'List of hidden reply URIs.',
             },
           },
         },
@@ -7805,6 +8299,12 @@ export const schemaDict = {
                   ref: 'lex:app.bsky.actor.defs#profileView',
                 },
               },
+              isFallback: {
+                type: 'boolean',
+                description:
+                  'If true, response has fallen-back to generic results, and is not scoped using relativeToDid',
+                default: false,
+              },
             },
           },
         },
@@ -8334,6 +8834,9 @@ export const schemaDict = {
         parameters: {
           type: 'params',
           properties: {
+            priority: {
+              type: 'boolean',
+            },
             seenAt: {
               type: 'string',
               format: 'datetime',
@@ -8372,6 +8875,9 @@ export const schemaDict = {
               maximum: 100,
               default: 50,
             },
+            priority: {
+              type: 'boolean',
+            },
             cursor: {
               type: 'string',
             },
@@ -8396,6 +8902,9 @@ export const schemaDict = {
                   type: 'ref',
                   ref: 'lex:app.bsky.notification.listNotifications#notification',
                 },
+              },
+              priority: {
+                type: 'boolean',
               },
               seenAt: {
                 type: 'string',
@@ -8462,6 +8971,29 @@ export const schemaDict = {
             items: {
               type: 'ref',
               ref: 'lex:com.atproto.label.defs#label',
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyNotificationPutPreferences: {
+    lexicon: 1,
+    id: 'app.bsky.notification.putPreferences',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Set notification-related preferences for an account. Requires auth.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['priority'],
+            properties: {
+              priority: {
+                type: 'boolean',
+              },
             },
           },
         },
@@ -8705,6 +9237,12 @@ export const schemaDict = {
             cursor: {
               type: 'string',
             },
+            relativeToDid: {
+              type: 'string',
+              format: 'did',
+              description:
+                'DID of the account to get suggestions relative to. If not provided, suggestions will be based on the viewer.',
+            },
           },
         },
         output: {
@@ -8722,6 +9260,12 @@ export const schemaDict = {
                   type: 'ref',
                   ref: 'lex:app.bsky.unspecced.defs#skeletonSearchActor',
                 },
+              },
+              relativeToDid: {
+                type: 'string',
+                format: 'did',
+                description:
+                  'DID of the account these suggestions are relative to. If this is returned undefined, suggestions are based on the viewer.',
               },
             },
           },
@@ -8967,6 +9511,138 @@ export const schemaDict = {
             name: 'BadQueryString',
           },
         ],
+      },
+    },
+  },
+  AppBskyVideoDefs: {
+    lexicon: 1,
+    id: 'app.bsky.video.defs',
+    defs: {
+      jobStatus: {
+        type: 'object',
+        required: ['jobId', 'did', 'state'],
+        properties: {
+          jobId: {
+            type: 'string',
+          },
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          state: {
+            type: 'string',
+            description:
+              'The state of the video processing job. All values not listed as a known value indicate that the job is in process.',
+            knownValues: ['JOB_STATE_COMPLETED', 'JOB_STATE_FAILED'],
+          },
+          progress: {
+            type: 'integer',
+            minimum: 0,
+            maximum: 100,
+            description: 'Progress within the current processing state.',
+          },
+          blob: {
+            type: 'blob',
+          },
+          error: {
+            type: 'string',
+          },
+          message: {
+            type: 'string',
+          },
+        },
+      },
+    },
+  },
+  AppBskyVideoGetJobStatus: {
+    lexicon: 1,
+    id: 'app.bsky.video.getJobStatus',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get status details for a video processing job.',
+        parameters: {
+          type: 'params',
+          required: ['jobId'],
+          properties: {
+            jobId: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['jobStatus'],
+            properties: {
+              jobStatus: {
+                type: 'ref',
+                ref: 'lex:app.bsky.video.defs#jobStatus',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyVideoGetUploadLimits: {
+    lexicon: 1,
+    id: 'app.bsky.video.getUploadLimits',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get video upload limits for the authenticated user.',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['canUpload'],
+            properties: {
+              canUpload: {
+                type: 'boolean',
+              },
+              remainingDailyVideos: {
+                type: 'integer',
+              },
+              remainingDailyBytes: {
+                type: 'integer',
+              },
+              message: {
+                type: 'string',
+              },
+              error: {
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyVideoUploadVideo: {
+    lexicon: 1,
+    id: 'app.bsky.video.uploadVideo',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Upload a video to be processed then stored on the PDS.',
+        input: {
+          encoding: 'video/mp4',
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['jobStatus'],
+            properties: {
+              jobStatus: {
+                type: 'ref',
+                ref: 'lex:app.bsky.video.defs#jobStatus',
+              },
+            },
+          },
+        },
       },
     },
   },
@@ -9914,6 +10590,7 @@ export const ids = {
   ComAtprotoModerationDefs: 'com.atproto.moderation.defs',
   ComAtprotoRepoApplyWrites: 'com.atproto.repo.applyWrites',
   ComAtprotoRepoCreateRecord: 'com.atproto.repo.createRecord',
+  ComAtprotoRepoDefs: 'com.atproto.repo.defs',
   ComAtprotoRepoDeleteRecord: 'com.atproto.repo.deleteRecord',
   ComAtprotoRepoDescribeRepo: 'com.atproto.repo.describeRepo',
   ComAtprotoRepoGetRecord: 'com.atproto.repo.getRecord',
@@ -9979,10 +10656,12 @@ export const ids = {
   AppBskyActorPutPreferences: 'app.bsky.actor.putPreferences',
   AppBskyActorSearchActors: 'app.bsky.actor.searchActors',
   AppBskyActorSearchActorsTypeahead: 'app.bsky.actor.searchActorsTypeahead',
+  AppBskyEmbedDefs: 'app.bsky.embed.defs',
   AppBskyEmbedExternal: 'app.bsky.embed.external',
   AppBskyEmbedImages: 'app.bsky.embed.images',
   AppBskyEmbedRecord: 'app.bsky.embed.record',
   AppBskyEmbedRecordWithMedia: 'app.bsky.embed.recordWithMedia',
+  AppBskyEmbedVideo: 'app.bsky.embed.video',
   AppBskyFeedDefs: 'app.bsky.feed.defs',
   AppBskyFeedDescribeFeedGenerator: 'app.bsky.feed.describeFeedGenerator',
   AppBskyFeedGenerator: 'app.bsky.feed.generator',
@@ -9997,11 +10676,13 @@ export const ids = {
   AppBskyFeedGetListFeed: 'app.bsky.feed.getListFeed',
   AppBskyFeedGetPostThread: 'app.bsky.feed.getPostThread',
   AppBskyFeedGetPosts: 'app.bsky.feed.getPosts',
+  AppBskyFeedGetQuotes: 'app.bsky.feed.getQuotes',
   AppBskyFeedGetRepostedBy: 'app.bsky.feed.getRepostedBy',
   AppBskyFeedGetSuggestedFeeds: 'app.bsky.feed.getSuggestedFeeds',
   AppBskyFeedGetTimeline: 'app.bsky.feed.getTimeline',
   AppBskyFeedLike: 'app.bsky.feed.like',
   AppBskyFeedPost: 'app.bsky.feed.post',
+  AppBskyFeedPostgate: 'app.bsky.feed.postgate',
   AppBskyFeedRepost: 'app.bsky.feed.repost',
   AppBskyFeedSearchPosts: 'app.bsky.feed.searchPosts',
   AppBskyFeedSendInteractions: 'app.bsky.feed.sendInteractions',
@@ -10040,6 +10721,7 @@ export const ids = {
   AppBskyNotificationGetUnreadCount: 'app.bsky.notification.getUnreadCount',
   AppBskyNotificationListNotifications:
     'app.bsky.notification.listNotifications',
+  AppBskyNotificationPutPreferences: 'app.bsky.notification.putPreferences',
   AppBskyNotificationRegisterPush: 'app.bsky.notification.registerPush',
   AppBskyNotificationUpdateSeen: 'app.bsky.notification.updateSeen',
   AppBskyRichtextFacet: 'app.bsky.richtext.facet',
@@ -10053,6 +10735,10 @@ export const ids = {
   AppBskyUnspeccedSearchActorsSkeleton:
     'app.bsky.unspecced.searchActorsSkeleton',
   AppBskyUnspeccedSearchPostsSkeleton: 'app.bsky.unspecced.searchPostsSkeleton',
+  AppBskyVideoDefs: 'app.bsky.video.defs',
+  AppBskyVideoGetJobStatus: 'app.bsky.video.getJobStatus',
+  AppBskyVideoGetUploadLimits: 'app.bsky.video.getUploadLimits',
+  AppBskyVideoUploadVideo: 'app.bsky.video.uploadVideo',
   ChatBskyActorDeclaration: 'chat.bsky.actor.declaration',
   ChatBskyActorDefs: 'chat.bsky.actor.defs',
   ChatBskyActorDeleteAccount: 'chat.bsky.actor.deleteAccount',

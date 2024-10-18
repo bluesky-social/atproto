@@ -1,6 +1,6 @@
 {
   "name": "@atproto-labs/simple-store",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "license": "MIT",
   "description": "Simple store interfaces & utilities",
   "keywords": [
@@ -24,7 +24,7 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "typescript": "^5.3.3"
+    "typescript": "^5.6.2"
   },
   "scripts": {
     "build": "tsc --build tsconfig.build.json"

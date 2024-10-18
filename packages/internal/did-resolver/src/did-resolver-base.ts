@@ -2,10 +2,10 @@ import { FetchRequestError } from '@atproto-labs/fetch'
 import { Did, DidError, extractDidMethod } from '@atproto/did'
 import { ZodError } from 'zod'
 
-import { DidMethod, DidMethods, ResolveOptions } from './did-method.js'
+import { DidMethod, DidMethods, ResolveDidOptions } from './did-method.js'
 import { DidResolver, ResolvedDocument } from './did-resolver.js'
 
-export type { DidMethod, ResolveOptions, ResolvedDocument }
+export type { DidMethod, ResolvedDocument, ResolveDidOptions }
 
 export class DidResolverBase<M extends string = string>
   implements DidResolver<M>
@@ -18,7 +18,7 @@ export class DidResolverBase<M extends string = string>
 
   async resolve<D extends Did>(
     did: D,
-    options?: ResolveOptions,
+    options?: ResolveDidOptions,
   ): Promise<ResolvedDocument<D, M>> {
     options?.signal?.throwIfAborted()
 

@@ -13,6 +13,7 @@ import getPostThread from './app/bsky/feed/getPostThread'
 import getPosts from './app/bsky/feed/getPosts'
 import searchPosts from './app/bsky/feed/searchPosts'
 import getActorLikes from './app/bsky/feed/getActorLikes'
+import getQuotes from './app/bsky/feed/getQuotes'
 import getProfile from './app/bsky/actor/getProfile'
 import getProfiles from './app/bsky/actor/getProfiles'
 import getRepostedBy from './app/bsky/feed/getRepostedBy'
@@ -43,6 +44,7 @@ import getSuggestions from './app/bsky/actor/getSuggestions'
 import getUnreadCount from './app/bsky/notification/getUnreadCount'
 import listNotifications from './app/bsky/notification/listNotifications'
 import updateSeen from './app/bsky/notification/updateSeen'
+import putPreferences from './app/bsky/notification/putPreferences'
 import registerPush from './app/bsky/notification/registerPush'
 import getPopularFeedGenerators from './app/bsky/unspecced/getPopularFeedGenerators'
 import getTaggedSuggestions from './app/bsky/unspecced/getTaggedSuggestions'
@@ -71,6 +73,7 @@ export default function (server: Server, ctx: AppContext) {
   getFeedGenerators(server, ctx)
   getLikes(server, ctx)
   getListFeed(server, ctx)
+  getQuotes(server, ctx)
   getPostThread(server, ctx)
   getPosts(server, ctx)
   searchPosts(server, ctx)
@@ -105,6 +108,7 @@ export default function (server: Server, ctx: AppContext) {
   getUnreadCount(server, ctx)
   listNotifications(server, ctx)
   updateSeen(server, ctx)
+  putPreferences(server, ctx)
   registerPush(server, ctx)
   getPopularFeedGenerators(server, ctx)
   getTaggedSuggestions(server, ctx)

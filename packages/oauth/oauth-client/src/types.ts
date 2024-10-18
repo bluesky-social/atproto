@@ -11,11 +11,12 @@ import z from 'zod'
 export type AuthorizeOptions = {
   display?: 'page' | 'popup' | 'touch' | 'wap'
   redirect_uri?: string
-  id_token_hint?: string
-  max_age?: number
   prompt?: 'login' | 'none' | 'consent' | 'select_account'
   scope?: string
   state?: string
+  signal?: AbortSignal
+
+  // Borrowed from OIDC
   ui_locales?: string
 }
 

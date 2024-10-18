@@ -1,7 +1,7 @@
 /**
  * GENERATED CODE - DO NOT MODIFY
  */
-import { Headers, XRPCError } from '@atproto/xrpc'
+import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
@@ -24,18 +24,19 @@ export interface OutputSchema {
 }
 
 export interface CallOptions {
-  headers?: Headers
+  signal?: AbortSignal
+  headers?: HeadersMap
 }
 
 export interface Response {
   success: boolean
-  headers: Headers
+  headers: HeadersMap
   data: OutputSchema
 }
 
 export class UnknownListError extends XRPCError {
   constructor(src: XRPCError) {
-    super(src.status, src.error, src.message, src.headers)
+    super(src.status, src.error, src.message, src.headers, { cause: src })
   }
 }
 
@@ -43,5 +44,6 @@ export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
     if (e.error === 'UnknownList') return new UnknownListError(e)
   }
+
   return e
 }

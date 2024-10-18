@@ -1,5 +1,63 @@
 # @atproto/aws
 
+## 0.2.7
+
+### Patch Changes
+
+- Updated dependencies [[`4098d9890`](https://github.com/bluesky-social/atproto/commit/4098d9890173f4d6c6512f2d8994eebbf12b5e13)]:
+  - @atproto/common@0.4.4
+  - @atproto/crypto@0.4.1
+  - @atproto/repo@0.5.3
+
+## 0.2.6
+
+### Patch Changes
+
+- Updated dependencies [[`a07b21151`](https://github.com/bluesky-social/atproto/commit/a07b21151f1850340c4b7797ebb11521b1a6cdf3)]:
+  - @atproto/common@0.4.3
+  - @atproto/repo@0.5.2
+  - @atproto/crypto@0.4.1
+
+## 0.2.5
+
+### Patch Changes
+
+- Updated dependencies [[`98711a147`](https://github.com/bluesky-social/atproto/commit/98711a147a8674337f605c6368f39fc10c2fae93)]:
+  - @atproto/common@0.4.2
+  - @atproto/crypto@0.4.1
+  - @atproto/repo@0.5.1
+
+## 0.2.4
+
+### Patch Changes
+
+- Updated dependencies [[`b15dec2f4`](https://github.com/bluesky-social/atproto/commit/b15dec2f4feb25ac91b169c83ccff1adbb5a9442)]:
+  - @atproto/repo@0.5.0
+
+## 0.2.3
+
+### Patch Changes
+
+- Updated dependencies [[`ebb318325`](https://github.com/bluesky-social/atproto/commit/ebb318325b6e80c4ea1a93a617569da2698afe31)]:
+  - @atproto/crypto@0.4.1
+  - @atproto/repo@0.4.3
+
+## 0.2.2
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/repo@0.4.2
+
+## 0.2.1
+
+### Patch Changes
+
+- Updated dependencies [[`acc9093d2`](https://github.com/bluesky-social/atproto/commit/acc9093d2845eba02b68fb2f9db33e4f1b59bb10)]:
+  - @atproto/common@0.4.1
+  - @atproto/crypto@0.4.0
+  - @atproto/repo@0.4.1
+
 ## 0.2.0
 
 ### Minor Changes

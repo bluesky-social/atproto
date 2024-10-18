@@ -1,6 +1,6 @@
 {
   "name": "@atproto/api",
-  "version": "0.12.22",
+  "version": "0.13.12",
   "license": "MIT",
   "description": "Client library for atproto and Bluesky",
   "keywords": [
@@ -17,7 +17,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "codegen": "node ./scripts/generate-code.mjs && lex gen-api ./src/client ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/* ../../lexicons/chat/bsky/*/* ../../lexicons/tools/ozone/*/*",
+    "codegen": "node ./scripts/generate-code.mjs && lex gen-api --yes ./src/client ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/* ../../lexicons/chat/bsky/*/* ../../lexicons/tools/ozone/*/*",
     "build": "tsc --build tsconfig.build.json",
     "test": "jest"
   },
@@ -26,13 +26,16 @@
     "@atproto/lexicon": "workspace:^",
     "@atproto/syntax": "workspace:^",
     "@atproto/xrpc": "workspace:^",
+    "await-lock": "^2.2.2",
     "multiformats": "^9.9.0",
-    "tlds": "^1.234.0"
+    "tlds": "^1.234.0",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@atproto/lex-cli": "workspace:^",
     "get-port": "^6.1.2",
     "jest": "^28.1.2",
-    "prettier": "^3.2.5"
+    "prettier": "^3.2.5",
+    "typescript": "^5.6.2"
   }
 }

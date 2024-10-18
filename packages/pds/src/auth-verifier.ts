@@ -1,5 +1,8 @@
 import { KeyObject, createPublicKey, createSecretKey } from 'node:crypto'
+import { IncomingMessage, ServerResponse } from 'node:http'
 
+import { getVerificationMaterial } from '@atproto/common'
+import { IdResolver, getDidKeyFromMultibase } from '@atproto/identity'
 import {
   OAuthError,
   OAuthVerifier,
@@ -7,24 +10,20 @@ import {
 } from '@atproto/oauth-provider'
 import {
   AuthRequiredError,
+  AuthVerifierContext,
   ForbiddenError,
   InvalidRequestError,
+  StreamAuthVerifierContext,
   XRPCError,
+  parseReqNsid,
   verifyJwt as verifyServiceJwt,
 } from '@atproto/xrpc-server'
-import { IdResolver, getDidKeyFromMultibase } from '@atproto/identity'
-import express from 'express'
 import * as jose from 'jose'
 import KeyEncoder from 'key-encoder'
 import { AccountManager } from './account-manager'
 import { softDeleted } from './db'
-import { getVerificationMaterial } from '@atproto/common'
 
-type ReqCtx = {
-  req: express.Request
-  // StreamAuthVerifier does not have "res"
-  res?: express.Response
-}
+type ReqCtx = AuthVerifierContext | StreamAuthVerifierContext
 
 // @TODO sync-up with current method names, consider backwards compat.
 export enum AuthScope {
@@ -71,6 +70,7 @@ type AccessOutput = {
     did: string
     scope: AuthScope
     audience: string | undefined
+    isPrivileged: boolean
   }
   artifacts: string
 }
@@ -86,11 +86,11 @@ type RefreshOutput = {
   artifacts: string
 }
 
-type UserDidOutput = {
+type UserServiceAuthOutput = {
   credentials: {
-    type: 'user_did'
+    type: 'user_service_auth'
     aud: string
-    iss: string
+    did: string
   }
 }
 
@@ -221,29 +221,51 @@ export class AuthVerifier {
     }
   }
 
-  userDidAuth = async (ctx: ReqCtx): Promise<UserDidOutput> => {
+  userServiceAuth = async (ctx: ReqCtx): Promise<UserServiceAuthOutput> => {
     const payload = await this.verifyServiceJwt(ctx, {
-      aud: this.dids.entryway ?? this.dids.pds,
+      aud: null,
       iss: null,
     })
+    if (
+      payload.aud !== this.dids.pds &&
+      (!this.dids.entryway || payload.aud !== this.dids.entryway)
+    ) {
+      throw new AuthRequiredError(
+        'jwt audience does not match service did',
+        'BadJwtAudience',
+      )
+    }
     return {
       credentials: {
-        type: 'user_did',
+        type: 'user_service_auth',
         aud: payload.aud,
-        iss: payload.iss,
+        did: payload.iss,
       },
     }
   }
 
-  userDidAuthOptional = async (
+  userServiceAuthOptional = async (
     ctx: ReqCtx,
-  ): Promise<UserDidOutput | NullOutput> => {
+  ): Promise<UserServiceAuthOutput | NullOutput> => {
     if (isBearerToken(ctx.req)) {
-      return await this.userDidAuth(ctx)
+      return await this.userServiceAuth(ctx)
     } else {
       return this.null(ctx)
     }
   }
+
+  accessOrUserServiceAuth =
+    (opts: Partial<AccessOpts> = {}) =>
+    async (ctx: ReqCtx): Promise<UserServiceAuthOutput | AccessOutput> => {
+      const token = bearerTokenFromReq(ctx.req)
+      if (token) {
+        const payload = jose.decodeJwt(token)
+        if (payload['lxm']) {
+          return this.userServiceAuth(ctx)
+        }
+      }
+      return this.accessStandard(opts)(ctx)
+    }
 
   modService = async (ctx: ReqCtx): Promise<ModServiceOutput> => {
     if (!this.dids.modService) {
@@ -298,10 +320,11 @@ export class AuthVerifier {
 
   protected async validateRefreshToken(
     ctx: ReqCtx,
-    verifyOptions?: Omit<jose.JWTVerifyOptions, 'audience'>,
+    verifyOptions?: Omit<jose.JWTVerifyOptions, 'audience' | 'typ'>,
   ): Promise<ValidatedRefreshBearer> {
     const result = await this.validateBearerToken(ctx, [AuthScope.Refresh], {
       ...verifyOptions,
+      typ: 'refresh+jwt',
       // when using entryway, proxying refresh credentials
       audience: this.dids.entryway ? this.dids.entryway : this.dids.pds,
     })
@@ -318,7 +341,8 @@ export class AuthVerifier {
   protected async validateBearerToken(
     ctx: ReqCtx,
     scopes: AuthScope[],
-    verifyOptions?: jose.JWTVerifyOptions,
+    verifyOptions: jose.JWTVerifyOptions &
+      Required<Pick<jose.JWTVerifyOptions, 'audience' | 'typ'>>,
   ): Promise<ValidatedBearer> {
     this.setAuthHeaders(ctx)
 
@@ -329,15 +353,26 @@ export class AuthVerifier {
 
     const { payload, protectedHeader } = await this.jwtVerify(
       token,
-      verifyOptions,
+      // @TODO: Once all access & refresh tokens have a "typ" claim (i.e. 90
+      // days after this code was deployed), replace the following line with
+      // "verifyOptions," (to re-enable the verification of the "typ" property
+      // from verifyJwt()). Once the change is made, the "if" block below that
+      // checks for "typ" can be removed.
+      {
+        ...verifyOptions,
+        typ: undefined,
+      },
     )
 
-    if (protectedHeader.typ === 'dpop+jwt') {
-      // @TODO we should make sure that bearer access tokens do have their "typ"
-      // claim, and allow list the possible value(s) here (typically "at+jwt"),
-      // instead of using a deny list. This would be more secure & future proof
-      // against new token types that would be introduced in the future
-      throw new InvalidRequestError('Malformed token', 'InvalidToken')
+    // @TODO: remove the next check once all access & refresh tokens have "typ"
+    // Note: when removing the check, make sure that the "verifyOptions"
+    // contains the "typ" property, so that the token is verified correctly by
+    // this.verifyJwt()
+    if (protectedHeader.typ && verifyOptions.typ !== protectedHeader.typ) {
+      // Temporarily allow historical tokens without "typ" to pass through. See:
+      // createAccessToken() and createRefreshToken() in
+      // src/account-manager/helpers/auth.ts
+      throw new InvalidRequestError('Invalid token type', 'InvalidToken')
     }
 
     const { sub, aud, scope } = payload
@@ -350,8 +385,9 @@ export class AuthVerifier {
     ) {
       throw new InvalidRequestError('Malformed token', 'InvalidToken')
     }
-    if ((payload.cnf as any)?.jkt) {
-      // DPoP bound tokens must not be usable as regular Bearer tokens
+    if (payload['cnf'] !== undefined) {
+      // Proof-of-Possession (PoP) tokens are not allowed here
+      // https://www.rfc-editor.org/rfc/rfc7800.html
       throw new InvalidRequestError('Malformed token', 'InvalidToken')
     }
     if (!isAuthScope(scope) || (scopes.length > 0 && !scopes.includes(scope))) {
@@ -430,16 +466,10 @@ export class AuthVerifier {
     ctx: ReqCtx,
     scopes: AuthScope[],
   ): Promise<AccessOutput> {
-    if (!scopes.includes(AuthScope.Access)) {
-      throw new InvalidRequestError(
-        'DPoP access token cannot be used for this request',
-        'InvalidToken',
-      )
-    }
-
     this.setAuthHeaders(ctx)
 
-    const { req, res } = ctx
+    const { req } = ctx
+    const res = 'res' in ctx ? ctx.res : null
 
     // https://datatracker.ietf.org/doc/html/rfc9449#section-8.2
     if (res) {
@@ -451,9 +481,11 @@ export class AuthVerifier {
     }
 
     try {
-      const url = new URL(req.originalUrl || req.url, this._publicUrl)
+      const originalUrl =
+        ('originalUrl' in req && req.originalUrl) || req.url || '/'
+      const url = new URL(originalUrl, this._publicUrl)
       const result = await this.oauthVerifier.authenticateRequest(
-        req.method,
+        req.method || 'GET',
         url,
         req.headers,
         { audience: [this.dids.pds] },
@@ -464,12 +496,48 @@ export class AuthVerifier {
         throw new InvalidRequestError('Malformed token', 'InvalidToken')
       }
 
+      const tokenScopes = new Set(result.claims.scope?.split(' '))
+
+      if (!tokenScopes.has('transition:generic')) {
+        throw new AuthRequiredError(
+          'Missing required scope: transition:generic',
+          'InvalidToken',
+        )
+      }
+
+      const scopeEquivalent: AuthScope = tokenScopes.has('transition:chat.bsky')
+        ? AuthScope.AppPassPrivileged
+        : AuthScope.AppPass
+
+      if (!scopes.includes(scopeEquivalent)) {
+        // AppPassPrivileged is sufficient but was not provided "transition:chat.bsky"
+        if (scopes.includes(AuthScope.AppPassPrivileged)) {
+          throw new InvalidRequestError(
+            'Missing required scope: transition:chat.bsky',
+            'InvalidToken',
+          )
+        }
+
+        // AuthScope.Access and AuthScope.SignupQueued do not have an OAuth
+        // scope equivalent.
+        throw new InvalidRequestError(
+          'DPoP access token cannot be used for this request',
+          'InvalidToken',
+        )
+      }
+
+      const isPrivileged = [
+        AuthScope.Access,
+        AuthScope.AppPassPrivileged,
+      ].includes(scopeEquivalent)
+
       return {
         credentials: {
           type: 'access',
           did: result.claims.sub,
-          scope: AuthScope.Access,
+          scope: scopeEquivalent,
           audience: this.dids.pds,
+          isPrivileged,
         },
         artifacts: result.token,
       }
@@ -496,14 +564,19 @@ export class AuthVerifier {
     const { did, scope, token, audience } = await this.validateBearerToken(
       ctx,
       scopes,
-      { audience: this.dids.pds },
+      { audience: this.dids.pds, typ: 'at+jwt' },
     )
+    const isPrivileged = [
+      AuthScope.Access,
+      AuthScope.AppPassPrivileged,
+    ].includes(scope)
     return {
       credentials: {
         type: 'access',
         did,
         scope,
         audience,
+        isPrivileged,
       },
       artifacts: token,
     }
@@ -544,7 +617,13 @@ export class AuthVerifier {
     if (!jwtStr) {
       throw new AuthRequiredError('missing jwt', 'MissingJwt')
     }
-    const payload = await verifyServiceJwt(jwtStr, opts.aud, getSigningKey)
+    const nsid = parseReqNsid(ctx.req)
+    const payload = await verifyServiceJwt(
+      jwtStr,
+      opts.aud,
+      nsid,
+      getSigningKey,
+    )
     return { iss: payload.iss, aud: payload.aud }
   }
 
@@ -585,7 +664,8 @@ export class AuthVerifier {
     }
   }
 
-  protected setAuthHeaders({ res }: ReqCtx) {
+  protected setAuthHeaders(ctx: ReqCtx) {
+    const res = 'res' in ctx ? ctx.res : null
     if (res) {
       res.setHeader('Cache-Control', 'private')
       vary(res, 'Authorization')
@@ -605,35 +685,44 @@ enum AuthType {
 export const parseAuthorizationHeader = (
   authorization?: string,
 ): [type: null] | [type: AuthType, token: string] => {
-  const result = authorization?.split(' ', 3)
-  if (result?.length === 2) {
-    for (const [name, type] of Object.entries(AuthType)) {
-      // authorization type is case-insensitive
-      if (name === result[0].toUpperCase()) {
-        return [type, result[1]] as [type: AuthType, token: string]
-      }
-    }
+  if (!authorization) return [null]
+
+  const result = authorization.split(' ')
+  if (result.length !== 2) {
+    throw new InvalidRequestError(
+      'Malformed authorization header',
+      'InvalidToken',
+    )
   }
 
-  return [null] as [type: null]
+  // authorization type is case-insensitive
+  const authType = result[0].toUpperCase()
+
+  const type = Object.hasOwn(AuthType, authType) ? AuthType[authType] : null
+  if (type) return [type, result[1]]
+
+  throw new InvalidRequestError(
+    `Unsupported authorization type: ${result[0]}`,
+    'InvalidToken',
+  )
 }
 
-const isAccessToken = (req: express.Request): boolean => {
+const isAccessToken = (req: IncomingMessage): boolean => {
   const [type] = parseAuthorizationHeader(req.headers.authorization)
   return type === AuthType.BEARER || type === AuthType.DPOP
 }
 
-const isBearerToken = (req: express.Request): boolean => {
+const isBearerToken = (req: IncomingMessage): boolean => {
   const [type] = parseAuthorizationHeader(req.headers.authorization)
   return type === AuthType.BEARER
 }
 
-const isBasicToken = (req: express.Request): boolean => {
+const isBasicToken = (req: IncomingMessage): boolean => {
   const [type] = parseAuthorizationHeader(req.headers.authorization)
   return type === AuthType.BASIC
 }
 
-const bearerTokenFromReq = (req: express.Request) => {
+const bearerTokenFromReq = (req: IncomingMessage) => {
   const [type, token] = parseAuthorizationHeader(req.headers.authorization)
   return type === AuthType.BEARER ? token : null
 }
@@ -672,7 +761,7 @@ export const createPublicKeyObject = (publicKeyHex: string): KeyObject => {
 
 const keyEncoder = new KeyEncoder('secp256k1')
 
-function vary(res: express.Response, value: string) {
+function vary(res: ServerResponse, value: string) {
   const current = res.getHeader('Vary')
   if (current == null || typeof current === 'number') {
     res.setHeader('Vary', value)

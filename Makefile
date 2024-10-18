@@ -20,11 +20,11 @@ test: ## Run all tests
 
 .PHONY: run-dev-env
 run-dev-env: ## Run a "development environment" shell
-	cd packages/dev-env; pnpm run start
+	cd packages/dev-env; NODE_ENV=development pnpm run start
 
 .PHONY: run-dev-env-logged
 run-dev-env-logged: ## Run a "development environment" shell (with logging)
-	LOG_ENABLED=true cd packages/dev-env; pnpm run start | pnpm exec pino-pretty
+	cd packages/dev-env; LOG_ENABLED=true NODE_ENV=development pnpm run start | pnpm exec pino-pretty
 
 .PHONY: codegen
 codegen: ## Re-generate packages from lexicon/ files
@@ -51,4 +51,4 @@ deps: ## Installs dependent libs using 'pnpm install'
 nvm-setup: ## Use NVM to install and activate node+pnpm
 	nvm install 18
 	nvm use 18
-	npm install --global pnpm
+	corepack enable

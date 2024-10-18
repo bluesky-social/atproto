@@ -78,7 +78,7 @@ export function validateSelfLabel(v: unknown): ValidationResult {
   return lexicons.validate('com.atproto.label.defs#selfLabel', v)
 }
 
-/** Declares a label value and its expected interpertations and behaviors. */
+/** Declares a label value and its expected interpretations and behaviors. */
 export interface LabelValueDefinition {
   /** The value of the label being defined. Must only include lowercase ascii and the '-' character ([a-z-]+). */
   identifier: string

@@ -1,7 +1,7 @@
 /**
  * GENERATED CODE - DO NOT MODIFY
  */
-import { Headers, XRPCError } from '@atproto/xrpc'
+import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
@@ -17,6 +17,8 @@ export interface InputSchema {
   contentMarkdown: string
   /** Subject of the message, used in emails. */
   subject: string
+  /** Message language. */
+  lang?: string
   /** DID of the user who is creating the template. */
   createdBy?: string
   [k: string]: unknown
@@ -25,19 +27,29 @@ export interface InputSchema {
 export type OutputSchema = ToolsOzoneCommunicationDefs.TemplateView
 
 export interface CallOptions {
-  headers?: Headers
+  signal?: AbortSignal
+  headers?: HeadersMap
   qp?: QueryParams
-  encoding: 'application/json'
+  encoding?: 'application/json'
 }
 
 export interface Response {
   success: boolean
-  headers: Headers
+  headers: HeadersMap
   data: OutputSchema
+}
+
+export class DuplicateTemplateNameError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message, src.headers, { cause: src })
+  }
 }
 
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
+    if (e.error === 'DuplicateTemplateName')
+      return new DuplicateTemplateNameError(e)
   }
+
   return e
 }

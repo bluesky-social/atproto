@@ -5,6 +5,7 @@ import { oauthClientIdSchema } from './oauth-client-id.js'
 import { oauthEndpointAuthMethod } from './oauth-endpoint-auth-method.js'
 import { oauthGrantTypeSchema } from './oauth-grant-type.js'
 import { oauthResponseTypeSchema } from './oauth-response-type.js'
+import { oauthScopeSchema } from './oauth-scope.js'
 
 // https://openid.net/specs/openid-connect-registration-1_0.html
 // https://datatracker.ietf.org/doc/html/rfc7591
@@ -22,18 +23,11 @@ export const oauthClientMetadataSchema = z.object({
     // > If omitted, the default behavior is that the client will use only the
     // > "authorization_code" Grant Type.
     .default(['authorization_code']),
-  scope: z.string().optional(),
+  scope: oauthScopeSchema.optional(),
   token_endpoint_auth_method: oauthEndpointAuthMethod
     .default('none')
     .optional(),
   token_endpoint_auth_signing_alg: z.string().optional(),
-  introspection_endpoint_auth_method: oauthEndpointAuthMethod.optional(),
-  introspection_endpoint_auth_signing_alg: z.string().optional(),
-  revocation_endpoint_auth_method: oauthEndpointAuthMethod.optional(),
-  revocation_endpoint_auth_signing_alg: z.string().optional(),
-  pushed_authorization_request_endpoint_auth_method:
-    oauthEndpointAuthMethod.optional(),
-  pushed_authorization_request_endpoint_auth_signing_alg: z.string().optional(),
   userinfo_signed_response_alg: z.string().optional(),
   userinfo_encrypted_response_alg: z.string().optional(),
   jwks_uri: z.string().url().optional(),

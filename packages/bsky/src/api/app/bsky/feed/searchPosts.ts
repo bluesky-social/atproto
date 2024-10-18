@@ -1,6 +1,6 @@
 import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
-import AtpAgent from '@atproto/api'
+import { AtpAgent } from '@atproto/api'
 import { mapDefined } from '@atproto/common'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/searchPosts'
 import {
@@ -14,7 +14,7 @@ import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 import { DataPlaneClient } from '../../../../data-plane'
 import { parseString } from '../../../../hydration/util'
-import { creatorFromUri } from '../../../../views/util'
+import { uriToDid as creatorFromUri } from '../../../../util/uris'
 import { resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {

@@ -103,6 +103,7 @@ import * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes'
 import * as AppBskyFeedGetListFeed from './types/app/bsky/feed/getListFeed'
 import * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
 import * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts'
+import * as AppBskyFeedGetQuotes from './types/app/bsky/feed/getQuotes'
 import * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy'
 import * as AppBskyFeedGetSuggestedFeeds from './types/app/bsky/feed/getSuggestedFeeds'
 import * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
@@ -131,6 +132,7 @@ import * as AppBskyGraphUnmuteThread from './types/app/bsky/graph/unmuteThread'
 import * as AppBskyLabelerGetServices from './types/app/bsky/labeler/getServices'
 import * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount'
 import * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications'
+import * as AppBskyNotificationPutPreferences from './types/app/bsky/notification/putPreferences'
 import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
@@ -138,6 +140,9 @@ import * as AppBskyUnspeccedGetSuggestionsSkeleton from './types/app/bsky/unspec
 import * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions'
 import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton'
 import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
+import * as AppBskyVideoGetJobStatus from './types/app/bsky/video/getJobStatus'
+import * as AppBskyVideoGetUploadLimits from './types/app/bsky/video/getUploadLimits'
+import * as AppBskyVideoUploadVideo from './types/app/bsky/video/uploadVideo'
 import * as ChatBskyActorDeleteAccount from './types/chat/bsky/actor/deleteAccount'
 import * as ChatBskyActorExportAccountData from './types/chat/bsky/actor/exportAccountData'
 import * as ChatBskyConvoDeleteMessageForSelf from './types/chat/bsky/convo/deleteMessageForSelf'
@@ -162,11 +167,22 @@ import * as ToolsOzoneCommunicationUpdateTemplate from './types/tools/ozone/comm
 import * as ToolsOzoneModerationEmitEvent from './types/tools/ozone/moderation/emitEvent'
 import * as ToolsOzoneModerationGetEvent from './types/tools/ozone/moderation/getEvent'
 import * as ToolsOzoneModerationGetRecord from './types/tools/ozone/moderation/getRecord'
+import * as ToolsOzoneModerationGetRecords from './types/tools/ozone/moderation/getRecords'
 import * as ToolsOzoneModerationGetRepo from './types/tools/ozone/moderation/getRepo'
+import * as ToolsOzoneModerationGetRepos from './types/tools/ozone/moderation/getRepos'
 import * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents'
 import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses'
 import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos'
 import * as ToolsOzoneServerGetConfig from './types/tools/ozone/server/getConfig'
+import * as ToolsOzoneSetAddValues from './types/tools/ozone/set/addValues'
+import * as ToolsOzoneSetDeleteSet from './types/tools/ozone/set/deleteSet'
+import * as ToolsOzoneSetDeleteValues from './types/tools/ozone/set/deleteValues'
+import * as ToolsOzoneSetGetValues from './types/tools/ozone/set/getValues'
+import * as ToolsOzoneSetQuerySets from './types/tools/ozone/set/querySets'
+import * as ToolsOzoneSetUpsertSet from './types/tools/ozone/set/upsertSet'
+import * as ToolsOzoneSignatureFindCorrelation from './types/tools/ozone/signature/findCorrelation'
+import * as ToolsOzoneSignatureFindRelatedAccounts from './types/tools/ozone/signature/findRelatedAccounts'
+import * as ToolsOzoneSignatureSearchAccounts from './types/tools/ozone/signature/searchAccounts'
 import * as ToolsOzoneTeamAddMember from './types/tools/ozone/team/addMember'
 import * as ToolsOzoneTeamDeleteMember from './types/tools/ozone/team/deleteMember'
 import * as ToolsOzoneTeamListMembers from './types/tools/ozone/team/listMembers'
@@ -1179,6 +1195,7 @@ export class AppBskyNS {
   notification: AppBskyNotificationNS
   richtext: AppBskyRichtextNS
   unspecced: AppBskyUnspeccedNS
+  video: AppBskyVideoNS
 
   constructor(server: Server) {
     this._server = server
@@ -1190,6 +1207,7 @@ export class AppBskyNS {
     this.notification = new AppBskyNotificationNS(server)
     this.richtext = new AppBskyRichtextNS(server)
     this.unspecced = new AppBskyUnspeccedNS(server)
+    this.video = new AppBskyVideoNS(server)
   }
 }
 
@@ -1422,6 +1440,17 @@ export class AppBskyFeedNS {
     >,
   ) {
     const nsid = 'app.bsky.feed.getPosts' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getQuotes<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyFeedGetQuotes.Handler<ExtractAuth<AV>>,
+      AppBskyFeedGetQuotes.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.feed.getQuotes' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -1757,6 +1786,17 @@ export class AppBskyNotificationNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  putPreferences<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyNotificationPutPreferences.Handler<ExtractAuth<AV>>,
+      AppBskyNotificationPutPreferences.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.notification.putPreferences' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   registerPush<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -1847,6 +1887,47 @@ export class AppBskyUnspeccedNS {
     >,
   ) {
     const nsid = 'app.bsky.unspecced.searchPostsSkeleton' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class AppBskyVideoNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  getJobStatus<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyVideoGetJobStatus.Handler<ExtractAuth<AV>>,
+      AppBskyVideoGetJobStatus.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.video.getJobStatus' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getUploadLimits<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyVideoGetUploadLimits.Handler<ExtractAuth<AV>>,
+      AppBskyVideoGetUploadLimits.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.video.getUploadLimits' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  uploadVideo<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyVideoUploadVideo.Handler<ExtractAuth<AV>>,
+      AppBskyVideoUploadVideo.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.video.uploadVideo' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }
@@ -2101,6 +2182,8 @@ export class ToolsOzoneNS {
   communication: ToolsOzoneCommunicationNS
   moderation: ToolsOzoneModerationNS
   server: ToolsOzoneServerNS
+  set: ToolsOzoneSetNS
+  signature: ToolsOzoneSignatureNS
   team: ToolsOzoneTeamNS
 
   constructor(server: Server) {
@@ -2108,6 +2191,8 @@ export class ToolsOzoneNS {
     this.communication = new ToolsOzoneCommunicationNS(server)
     this.moderation = new ToolsOzoneModerationNS(server)
     this.server = new ToolsOzoneServerNS(server)
+    this.set = new ToolsOzoneSetNS(server)
+    this.signature = new ToolsOzoneSignatureNS(server)
     this.team = new ToolsOzoneTeamNS(server)
   }
 }
@@ -2204,6 +2289,17 @@ export class ToolsOzoneModerationNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  getRecords<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneModerationGetRecords.Handler<ExtractAuth<AV>>,
+      ToolsOzoneModerationGetRecords.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.moderation.getRecords' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   getRepo<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -2212,6 +2308,17 @@ export class ToolsOzoneModerationNS {
     >,
   ) {
     const nsid = 'tools.ozone.moderation.getRepo' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getRepos<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneModerationGetRepos.Handler<ExtractAuth<AV>>,
+      ToolsOzoneModerationGetRepos.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.moderation.getRepos' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -2264,6 +2371,121 @@ export class ToolsOzoneServerNS {
     >,
   ) {
     const nsid = 'tools.ozone.server.getConfig' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class ToolsOzoneSetNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  addValues<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneSetAddValues.Handler<ExtractAuth<AV>>,
+      ToolsOzoneSetAddValues.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.set.addValues' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  deleteSet<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneSetDeleteSet.Handler<ExtractAuth<AV>>,
+      ToolsOzoneSetDeleteSet.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.set.deleteSet' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  deleteValues<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneSetDeleteValues.Handler<ExtractAuth<AV>>,
+      ToolsOzoneSetDeleteValues.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.set.deleteValues' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getValues<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneSetGetValues.Handler<ExtractAuth<AV>>,
+      ToolsOzoneSetGetValues.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.set.getValues' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  querySets<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneSetQuerySets.Handler<ExtractAuth<AV>>,
+      ToolsOzoneSetQuerySets.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.set.querySets' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  upsertSet<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneSetUpsertSet.Handler<ExtractAuth<AV>>,
+      ToolsOzoneSetUpsertSet.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.set.upsertSet' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class ToolsOzoneSignatureNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  findCorrelation<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneSignatureFindCorrelation.Handler<ExtractAuth<AV>>,
+      ToolsOzoneSignatureFindCorrelation.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.signature.findCorrelation' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  findRelatedAccounts<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneSignatureFindRelatedAccounts.Handler<ExtractAuth<AV>>,
+      ToolsOzoneSignatureFindRelatedAccounts.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.signature.findRelatedAccounts' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  searchAccounts<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneSignatureSearchAccounts.Handler<ExtractAuth<AV>>,
+      ToolsOzoneSignatureSearchAccounts.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.signature.searchAccounts' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }

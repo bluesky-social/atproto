@@ -1,12 +1,13 @@
 import { createHash } from 'node:crypto'
 
-import { EmbeddedJWK, calculateJwkThumbprint, jwtVerify } from 'jose'
-import { JOSEError } from 'jose/errors'
+import { EmbeddedJWK, calculateJwkThumbprint, errors, jwtVerify } from 'jose'
 
 import { DPOP_NONCE_MAX_AGE } from '../constants.js'
 import { InvalidDpopProofError } from '../errors/invalid-dpop-proof-error.js'
 import { UseDpopNonceError } from '../errors/use-dpop-nonce-error.js'
 import { DpopNonce, DpopNonceInput } from './dpop-nonce.js'
+
+const { JOSEError } = errors
 
 export { DpopNonce, type DpopNonceInput }
 export type DpopManagerOptions = {
@@ -51,13 +52,12 @@ export class DpopManager {
 
     const { protectedHeader, payload } = await jwtVerify<{
       iat: number
-      exp: number
       jti: string
     }>(proof, EmbeddedJWK, {
       typ: 'dpop+jwt',
       maxTokenAge: 10,
       clockTolerance: DPOP_NONCE_MAX_AGE / 1e3,
-      requiredClaims: ['iat', 'exp', 'jti'],
+      requiredClaims: ['iat', 'jti'],
     }).catch((err) => {
       const message =
         err instanceof JOSEError
@@ -68,10 +68,6 @@ export class DpopManager {
 
     if (!payload.jti || typeof payload.jti !== 'string') {
       throw new InvalidDpopProofError('Invalid or missing jti property')
-    }
-
-    if (payload.exp - payload.iat > DPOP_NONCE_MAX_AGE / 3 / 1e3) {
-      throw new InvalidDpopProofError('DPoP proof validity too long')
     }
 
     // Note rfc9110#section-9.1 states that the method name is case-sensitive

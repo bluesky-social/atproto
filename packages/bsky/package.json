@@ -1,6 +1,6 @@
 {
   "name": "@atproto/bsky",
-  "version": "0.0.65",
+  "version": "0.0.89",
   "license": "MIT",
   "description": "Reference implementation of app.bsky App View (Bluesky API)",
   "keywords": [
@@ -17,12 +17,12 @@
   "types": "dist/index.d.ts",
   "bin": "dist/bin.js",
   "scripts": {
-    "codegen": "lex gen-server ./src/lexicon ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/* ../../lexicons/chat/bsky/*/*",
+    "codegen": "lex gen-server --yes ./src/lexicon ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/* ../../lexicons/chat/bsky/*/*",
     "build": "tsc --build tsconfig.build.json",
     "start": "node --enable-source-maps dist/bin.js",
     "test": "../dev-infra/with-test-redis-and-db.sh jest",
     "test:log": "tail -50 test.log | pino-pretty",
-    "test:updateSnapshot": "jest --updateSnapshot",
+    "test:updateSnapshot": "../dev-infra/with-test-redis-and-db.sh jest --updateSnapshot",
     "migration:create": "ts-node ./bin/migration-create.ts",
     "buf:gen": "buf generate ../bsync/proto && buf generate ./proto"
   },
@@ -33,6 +33,7 @@
     "@atproto/identity": "workspace:^",
     "@atproto/lexicon": "workspace:^",
     "@atproto/repo": "workspace:^",
+    "@atproto/sync": "workspace:^",
     "@atproto/syntax": "workspace:^",
     "@atproto/xrpc-server": "workspace:^",
     "@bufbuild/protobuf": "^1.5.0",
@@ -47,13 +48,16 @@
     "http-terminator": "^3.2.0",
     "ioredis": "^5.3.2",
     "jose": "^5.0.1",
+    "key-encoder": "^2.0.3",
     "kysely": "^0.22.0",
     "multiformats": "^9.9.0",
+    "murmurhash": "^2.0.1",
     "p-queue": "^6.6.2",
     "pg": "^8.10.0",
     "pino": "^8.21.0",
     "pino-http": "^8.2.1",
     "sharp": "^0.32.6",
+    "statsig-node": "^5.23.1",
     "structured-headers": "^1.0.1",
     "typed-emitter": "^2.1.0",
     "uint8arrays": "3.0.0"
@@ -74,6 +78,7 @@
     "@types/qs": "^6.9.7",
     "axios": "^0.27.2",
     "jest": "^28.1.2",
-    "ts-node": "^10.8.2"
+    "ts-node": "^10.8.2",
+    "typescript": "^5.6.2"
   }
 }

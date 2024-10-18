@@ -8,7 +8,7 @@ import {
 import { pipe } from '@atproto-labs/pipe'
 import { Did, didDocumentValidator, didWebToUrl } from '@atproto/did'
 
-import { DidMethod, ResolveOptions } from '../did-method.js'
+import { DidMethod, ResolveDidOptions } from '../did-method.js'
 
 const fetchSuccessHandler = pipe(
   fetchOkProcessor(),
@@ -27,8 +27,13 @@ export class DidWebMethod implements DidMethod<'web'> {
     this.fetch = bindFetch(fetch)
   }
 
-  async resolve(did: Did<'web'>, options?: ResolveOptions) {
+  async resolve(did: Did<'web'>, options?: ResolveDidOptions) {
     const didDocumentUrl = buildDidWebDocumentUrl(did)
+
+    // Note we do not explicitly check for "localhost" here. Instead, we rely on
+    // the injected 'fetch' function to handle the URL. If the URL is
+    // "localhost", or resolves to a private IP address, the fetch function is
+    // responsible for handling it.
 
     return this.fetch(didDocumentUrl, {
       redirect: 'error',

@@ -17,11 +17,16 @@ export const getDid = (doc: DidDocument): string => {
 
 export const getHandle = (doc: DidDocument): string | undefined => {
   const aka = doc.alsoKnownAs
-  if (!aka) return undefined
-  const found = aka.find((name) => name.startsWith('at://'))
-  if (!found) return undefined
-  // strip off at:// prefix
-  return found.slice(5)
+  if (aka) {
+    for (let i = 0; i < aka.length; i++) {
+      const alias = aka[i]
+      if (alias.startsWith('at://')) {
+        // strip off "at://" prefix
+        return alias.slice(5)
+      }
+    }
+  }
+  return undefined
 }
 
 // @NOTE we parse to type/publicKeyMultibase to avoid the dependency on @atproto/crypto
@@ -35,20 +40,20 @@ export const getVerificationMaterial = (
   doc: DidDocument,
   keyId: string,
 ): { type: string; publicKeyMultibase: string } | undefined => {
-  const did = getDid(doc)
-  let keys = doc.verificationMethod
-  if (!keys) return undefined
-  if (typeof keys !== 'object') return undefined
-  if (!Array.isArray(keys)) {
-    keys = [keys]
+  // /!\ Hot path
+
+  const key = findItemById(doc, 'verificationMethod', `#${keyId}`)
+  if (!key) {
+    return undefined
   }
-  const found = keys.find(
-    (key) => key.id === `#${keyId}` || key.id === `${did}#${keyId}`,
-  )
-  if (!found?.publicKeyMultibase) return undefined
+
+  if (!key.publicKeyMultibase) {
+    return undefined
+  }
+
   return {
-    type: found.type,
-    publicKeyMultibase: found.publicKeyMultibase,
+    type: key.type,
+    publicKeyMultibase: key.publicKeyMultibase,
   }
 }
 
@@ -83,42 +88,81 @@ export const getServiceEndpoint = (
   doc: DidDocument,
   opts: { id: string; type?: string },
 ) => {
-  const did = getDid(doc)
-  let services = doc.service
-  if (!services) return undefined
-  if (typeof services !== 'object') return undefined
-  if (!Array.isArray(services)) {
-    services = [services]
-  }
-  const found = services.find(
-    (service) => service.id === opts.id || service.id === `${did}${opts.id}`,
-  )
-  if (!found) return undefined
-  if (opts.type && found.type !== opts.type) {
+  // /!\ Hot path
+
+  const service = findItemById(doc, 'service', opts.id)
+  if (!service) {
     return undefined
   }
-  if (typeof found.serviceEndpoint !== 'string') {
+
+  if (opts.type && service.type !== opts.type) {
     return undefined
   }
-  return validateUrl(found.serviceEndpoint)
+
+  if (typeof service.serviceEndpoint !== 'string') {
+    return undefined
+  }
+
+  return validateUrl(service.serviceEndpoint)
+}
+
+function findItemById<
+  D extends DidDocument,
+  T extends 'verificationMethod' | 'service',
+>(doc: D, type: T, id: string): NonNullable<D[T]>[number] | undefined
+function findItemById(
+  doc: DidDocument,
+  type: 'verificationMethod' | 'service',
+  id: string,
+) {
+  // /!\ Hot path
+
+  const items = doc[type]
+  if (items) {
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i]
+      const itemId = item.id
+
+      if (
+        itemId[0] === '#'
+          ? itemId === id
+          : // Optimized version of: itemId === `${doc.id}${id}`
+            itemId.length === doc.id.length + id.length &&
+            itemId[doc.id.length] === '#' &&
+            itemId.endsWith(id) &&
+            itemId.startsWith(doc.id) // <== We could probably skip this check
+      ) {
+        return item
+      }
+    }
+  }
+  return undefined
 }
 
 // Check protocol and hostname to prevent potential SSRF
 const validateUrl = (urlStr: string): string | undefined => {
-  let url
-  try {
-    url = new URL(urlStr)
-  } catch {
+  if (!urlStr.startsWith('http://') && !urlStr.startsWith('https://')) {
     return undefined
   }
-  if (!['http:', 'https:'].includes(url.protocol)) {
+
+  if (!canParseUrl(urlStr)) {
     return undefined
-  } else if (!url.hostname) {
-    return undefined
-  } else {
-    return urlStr
   }
+
+  return urlStr
 }
+
+const canParseUrl =
+  URL.canParse ??
+  // URL.canParse is not available in Node.js < 18.17.0
+  ((urlStr: string): boolean => {
+    try {
+      new URL(urlStr)
+      return true
+    } catch {
+      return false
+    }
+  })
 
 // Types
 // --------

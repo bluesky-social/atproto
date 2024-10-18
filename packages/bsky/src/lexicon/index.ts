@@ -103,6 +103,7 @@ import * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes'
 import * as AppBskyFeedGetListFeed from './types/app/bsky/feed/getListFeed'
 import * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
 import * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts'
+import * as AppBskyFeedGetQuotes from './types/app/bsky/feed/getQuotes'
 import * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy'
 import * as AppBskyFeedGetSuggestedFeeds from './types/app/bsky/feed/getSuggestedFeeds'
 import * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
@@ -131,6 +132,7 @@ import * as AppBskyGraphUnmuteThread from './types/app/bsky/graph/unmuteThread'
 import * as AppBskyLabelerGetServices from './types/app/bsky/labeler/getServices'
 import * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount'
 import * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications'
+import * as AppBskyNotificationPutPreferences from './types/app/bsky/notification/putPreferences'
 import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
@@ -138,6 +140,9 @@ import * as AppBskyUnspeccedGetSuggestionsSkeleton from './types/app/bsky/unspec
 import * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions'
 import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton'
 import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
+import * as AppBskyVideoGetJobStatus from './types/app/bsky/video/getJobStatus'
+import * as AppBskyVideoGetUploadLimits from './types/app/bsky/video/getUploadLimits'
+import * as AppBskyVideoUploadVideo from './types/app/bsky/video/uploadVideo'
 import * as ChatBskyActorDeleteAccount from './types/chat/bsky/actor/deleteAccount'
 import * as ChatBskyActorExportAccountData from './types/chat/bsky/actor/exportAccountData'
 import * as ChatBskyConvoDeleteMessageForSelf from './types/chat/bsky/convo/deleteMessageForSelf'
@@ -1150,6 +1155,7 @@ export class AppBskyNS {
   notification: AppBskyNotificationNS
   richtext: AppBskyRichtextNS
   unspecced: AppBskyUnspeccedNS
+  video: AppBskyVideoNS
 
   constructor(server: Server) {
     this._server = server
@@ -1161,6 +1167,7 @@ export class AppBskyNS {
     this.notification = new AppBskyNotificationNS(server)
     this.richtext = new AppBskyRichtextNS(server)
     this.unspecced = new AppBskyUnspeccedNS(server)
+    this.video = new AppBskyVideoNS(server)
   }
 }
 
@@ -1393,6 +1400,17 @@ export class AppBskyFeedNS {
     >,
   ) {
     const nsid = 'app.bsky.feed.getPosts' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getQuotes<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyFeedGetQuotes.Handler<ExtractAuth<AV>>,
+      AppBskyFeedGetQuotes.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.feed.getQuotes' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -1728,6 +1746,17 @@ export class AppBskyNotificationNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  putPreferences<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyNotificationPutPreferences.Handler<ExtractAuth<AV>>,
+      AppBskyNotificationPutPreferences.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.notification.putPreferences' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   registerPush<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -1818,6 +1847,47 @@ export class AppBskyUnspeccedNS {
     >,
   ) {
     const nsid = 'app.bsky.unspecced.searchPostsSkeleton' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class AppBskyVideoNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  getJobStatus<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyVideoGetJobStatus.Handler<ExtractAuth<AV>>,
+      AppBskyVideoGetJobStatus.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.video.getJobStatus' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getUploadLimits<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyVideoGetUploadLimits.Handler<ExtractAuth<AV>>,
+      AppBskyVideoGetUploadLimits.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.video.getUploadLimits' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  uploadVideo<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyVideoUploadVideo.Handler<ExtractAuth<AV>>,
+      AppBskyVideoUploadVideo.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.video.uploadVideo' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }

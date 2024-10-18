@@ -1,11 +1,12 @@
 import assert from 'assert'
-import AtpAgent from '@atproto/api'
+import { AtpAgent } from '@atproto/api'
 import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
 import {
   isNotFoundPost,
   isThreadViewPost,
 } from '../../src/lexicon/types/app/bsky/feed/defs'
 import { forSnapshot } from '../_util'
+import { ids } from '../../src/lexicon/lexicons'
 
 describe('views with thread gating', () => {
   let network: TestNetwork
@@ -36,31 +37,38 @@ describe('views with thread gating', () => {
   ) => {
     const res = await agent.api.app.bsky.feed.getPosts(
       { uris: [uri] },
-      { headers: await network.serviceHeaders(user) },
+      { headers: await network.serviceHeaders(user, ids.AppBskyFeedGetPosts) },
     )
     expect(res.data.posts[0].viewer?.replyDisabled).toBe(blocked)
   }
 
   it('applies gate for empty rules.', async () => {
     const post = await sc.post(sc.dids.carol, 'empty rules')
-    await pdsAgent.api.app.bsky.feed.threadgate.create(
-      { repo: sc.dids.carol, rkey: post.ref.uri.rkey },
-      { post: post.ref.uriStr, createdAt: iso(), allow: [] },
-      sc.getHeaders(sc.dids.carol),
-    )
+    const { uri: threadgateUri } =
+      await pdsAgent.api.app.bsky.feed.threadgate.create(
+        { repo: sc.dids.carol, rkey: post.ref.uri.rkey },
+        { post: post.ref.uriStr, createdAt: iso(), allow: [] },
+        sc.getHeaders(sc.dids.carol),
+      )
     await network.processAll()
     await sc.reply(sc.dids.alice, post.ref, post.ref, 'empty rules reply')
     await network.processAll()
     const {
-      data: { thread },
+      data: { thread, threadgate },
     } = await agent.api.app.bsky.feed.getPostThread(
       { uri: post.ref.uriStr },
-      { headers: await network.serviceHeaders(sc.dids.alice) },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.alice,
+          ids.AppBskyFeedGetPostThread,
+        ),
+      },
     )
     assert(isThreadViewPost(thread))
     expect(forSnapshot(thread.post.threadgate)).toMatchSnapshot()
     expect(thread.post.viewer?.replyDisabled).toBe(true)
     expect(thread.replies?.length).toEqual(0)
+    expect(threadgate?.uri).toEqual(threadgateUri)
     await checkReplyDisabled(post.ref.uriStr, sc.dids.alice, true)
   })
 
@@ -83,7 +91,12 @@ describe('views with thread gating', () => {
       data: { notifications },
     } = await agent.api.app.bsky.notification.listNotifications(
       {},
-      { headers: await network.serviceHeaders(sc.dids.carol) },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.carol,
+          ids.AppBskyNotificationListNotifications,
+        ),
+      },
     )
     const notificationFromReply = notifications.find(
       (notif) => notif.uri === reply.ref.uriStr,
@@ -137,7 +150,12 @@ describe('views with thread gating', () => {
       data: { thread: aliceThread },
     } = await agent.api.app.bsky.feed.getPostThread(
       { uri: post.ref.uriStr },
-      { headers: await network.serviceHeaders(sc.dids.alice) },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.alice,
+          ids.AppBskyFeedGetPostThread,
+        ),
+      },
     )
     assert(isThreadViewPost(aliceThread))
     expect(aliceThread.post.viewer?.replyDisabled).toBe(true)
@@ -146,7 +164,12 @@ describe('views with thread gating', () => {
       data: { thread: danThread },
     } = await agent.api.app.bsky.feed.getPostThread(
       { uri: post.ref.uriStr },
-      { headers: await network.serviceHeaders(sc.dids.dan) },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.dan,
+          ids.AppBskyFeedGetPostThread,
+        ),
+      },
     )
     assert(isThreadViewPost(danThread))
     expect(forSnapshot(danThread.post.threadgate)).toMatchSnapshot()
@@ -188,7 +211,12 @@ describe('views with thread gating', () => {
       data: { thread: danThread },
     } = await agent.api.app.bsky.feed.getPostThread(
       { uri: post.ref.uriStr },
-      { headers: await network.serviceHeaders(sc.dids.dan) },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.dan,
+          ids.AppBskyFeedGetPostThread,
+        ),
+      },
     )
     assert(isThreadViewPost(danThread))
     expect(danThread.post.viewer?.replyDisabled).toBe(true)
@@ -197,7 +225,12 @@ describe('views with thread gating', () => {
       data: { thread: aliceThread },
     } = await agent.api.app.bsky.feed.getPostThread(
       { uri: post.ref.uriStr },
-      { headers: await network.serviceHeaders(sc.dids.alice) },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.alice,
+          ids.AppBskyFeedGetPostThread,
+        ),
+      },
     )
     assert(isThreadViewPost(aliceThread))
     expect(forSnapshot(aliceThread.post.threadgate)).toMatchSnapshot()
@@ -280,7 +313,12 @@ describe('views with thread gating', () => {
       data: { thread: bobThread },
     } = await agent.api.app.bsky.feed.getPostThread(
       { uri: post.ref.uriStr },
-      { headers: await network.serviceHeaders(sc.dids.bob) },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.bob,
+          ids.AppBskyFeedGetPostThread,
+        ),
+      },
     )
     assert(isThreadViewPost(bobThread))
     expect(bobThread.post.viewer?.replyDisabled).toBe(true)
@@ -289,7 +327,12 @@ describe('views with thread gating', () => {
       data: { thread: aliceThread },
     } = await agent.api.app.bsky.feed.getPostThread(
       { uri: post.ref.uriStr },
-      { headers: await network.serviceHeaders(sc.dids.alice) },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.alice,
+          ids.AppBskyFeedGetPostThread,
+        ),
+      },
     )
     assert(isThreadViewPost(aliceThread))
     expect(aliceThread.post.viewer?.replyDisabled).toBe(false)
@@ -298,7 +341,12 @@ describe('views with thread gating', () => {
       data: { thread: danThread },
     } = await agent.api.app.bsky.feed.getPostThread(
       { uri: post.ref.uriStr },
-      { headers: await network.serviceHeaders(sc.dids.dan) },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.dan,
+          ids.AppBskyFeedGetPostThread,
+        ),
+      },
     )
     assert(isThreadViewPost(danThread))
     expect(forSnapshot(danThread.post.threadgate)).toMatchSnapshot()
@@ -341,7 +389,12 @@ describe('views with thread gating', () => {
       data: { thread },
     } = await agent.api.app.bsky.feed.getPostThread(
       { uri: post.ref.uriStr },
-      { headers: await network.serviceHeaders(sc.dids.alice) },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.alice,
+          ids.AppBskyFeedGetPostThread,
+        ),
+      },
     )
     assert(isThreadViewPost(thread))
     expect(forSnapshot(thread.post.threadgate)).toMatchSnapshot()
@@ -391,7 +444,12 @@ describe('views with thread gating', () => {
       data: { thread: bobThread },
     } = await agent.api.app.bsky.feed.getPostThread(
       { uri: post.ref.uriStr },
-      { headers: await network.serviceHeaders(sc.dids.bob) },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.bob,
+          ids.AppBskyFeedGetPostThread,
+        ),
+      },
     )
     assert(isThreadViewPost(bobThread))
     expect(bobThread.post.viewer?.replyDisabled).toBe(true)
@@ -400,7 +458,12 @@ describe('views with thread gating', () => {
       data: { thread: aliceThread },
     } = await agent.api.app.bsky.feed.getPostThread(
       { uri: post.ref.uriStr },
-      { headers: await network.serviceHeaders(sc.dids.alice) },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.alice,
+          ids.AppBskyFeedGetPostThread,
+        ),
+      },
     )
     assert(isThreadViewPost(aliceThread))
     expect(aliceThread.post.viewer?.replyDisabled).toBe(false)
@@ -409,7 +472,12 @@ describe('views with thread gating', () => {
       data: { thread: danThread },
     } = await agent.api.app.bsky.feed.getPostThread(
       { uri: post.ref.uriStr },
-      { headers: await network.serviceHeaders(sc.dids.dan) },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.dan,
+          ids.AppBskyFeedGetPostThread,
+        ),
+      },
     )
     assert(isThreadViewPost(danThread))
     expect(forSnapshot(danThread.post.threadgate)).toMatchSnapshot()
@@ -443,7 +511,12 @@ describe('views with thread gating', () => {
       data: { thread },
     } = await agent.api.app.bsky.feed.getPostThread(
       { uri: post.ref.uriStr },
-      { headers: await network.serviceHeaders(sc.dids.alice) },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.alice,
+          ids.AppBskyFeedGetPostThread,
+        ),
+      },
     )
     assert(isThreadViewPost(thread))
     expect(forSnapshot(thread.post.threadgate)).toMatchSnapshot()
@@ -497,7 +570,12 @@ describe('views with thread gating', () => {
       data: { thread: danThread },
     } = await agent.api.app.bsky.feed.getPostThread(
       { uri: orphanedReply.ref.uriStr },
-      { headers: await network.serviceHeaders(sc.dids.dan) },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.dan,
+          ids.AppBskyFeedGetPostThread,
+        ),
+      },
     )
     assert(isThreadViewPost(danThread))
     expect(danThread.post.viewer?.replyDisabled).toBe(true)
@@ -506,7 +584,12 @@ describe('views with thread gating', () => {
       data: { thread: aliceThread },
     } = await agent.api.app.bsky.feed.getPostThread(
       { uri: orphanedReply.ref.uriStr },
-      { headers: await network.serviceHeaders(sc.dids.alice) },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.alice,
+          ids.AppBskyFeedGetPostThread,
+        ),
+      },
     )
     assert(isThreadViewPost(aliceThread))
     assert(
@@ -541,7 +624,12 @@ describe('views with thread gating', () => {
       data: { thread },
     } = await agent.api.app.bsky.feed.getPostThread(
       { uri: post.ref.uriStr },
-      { headers: await network.serviceHeaders(sc.dids.carol) },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.carol,
+          ids.AppBskyFeedGetPostThread,
+        ),
+      },
     )
     assert(isThreadViewPost(thread))
     expect(forSnapshot(thread.post.threadgate)).toMatchSnapshot()
@@ -580,7 +668,12 @@ describe('views with thread gating', () => {
       data: { thread },
     } = await agent.api.app.bsky.feed.getPostThread(
       { uri: badReply.ref.uriStr },
-      { headers: await network.serviceHeaders(sc.dids.alice) },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.alice,
+          ids.AppBskyFeedGetPostThread,
+        ),
+      },
     )
     assert(isThreadViewPost(thread))
     expect(thread.post.viewer?.replyDisabled).toBe(true) // nobody can reply to this, not even alice.
@@ -593,7 +686,12 @@ describe('views with thread gating', () => {
       data: { feed },
     } = await agent.api.app.bsky.feed.getAuthorFeed(
       { actor: sc.dids.dan },
-      { headers: await network.serviceHeaders(sc.dids.alice) },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.alice,
+          ids.AppBskyFeedGetAuthorFeed,
+        ),
+      },
     )
     const [feedItem] = feed
     expect(feedItem.post.uri).toEqual(badReply.ref.uriStr)
@@ -617,7 +715,12 @@ describe('views with thread gating', () => {
       data: { thread: threadA },
     } = await agent.api.app.bsky.feed.getPostThread(
       { uri: postA.ref.uriStr },
-      { headers: await network.serviceHeaders(sc.dids.alice) },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.alice,
+          ids.AppBskyFeedGetPostThread,
+        ),
+      },
     )
     assert(isThreadViewPost(threadA))
     expect(threadA.post.threadgate).toBeUndefined()
@@ -628,7 +731,12 @@ describe('views with thread gating', () => {
       data: { thread: threadB },
     } = await agent.api.app.bsky.feed.getPostThread(
       { uri: postB.ref.uriStr },
-      { headers: await network.serviceHeaders(sc.dids.alice) },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.alice,
+          ids.AppBskyFeedGetPostThread,
+        ),
+      },
     )
     assert(isThreadViewPost(threadB))
     expect(threadB.post.threadgate).toBeUndefined()

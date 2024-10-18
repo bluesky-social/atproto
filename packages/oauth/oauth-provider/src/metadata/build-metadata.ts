@@ -2,11 +2,9 @@ import { Keyset } from '@atproto/jwk'
 import { OAuthAuthorizationServerMetadata } from '@atproto/oauth-types'
 
 import { Client } from '../client/client.js'
-import { OIDC_STANDARD_CLAIMS } from '../oidc/claims.js'
 import { VERIFY_ALGOS } from '../lib/util/crypto.js'
 
 export type CustomMetadata = {
-  claims_supported?: string[]
   scopes_supported?: string[]
   authorization_details_types_supported?: string[]
   protected_resources?: string[]
@@ -25,34 +23,9 @@ export function buildMetadata(
     issuer,
 
     scopes_supported: [
-      'offline_access',
-      'openid',
-      'email',
-      'phone',
-      'profile',
-
+      'atproto',
+      //
       ...(customMetadata?.scopes_supported ?? []),
-    ],
-    claims_supported: [
-      /* IESG (Always provided) */
-
-      'sub', // did
-      'iss', // Authorization Server Origin
-      'aud',
-      'exp',
-      'iat',
-      'jti',
-      'client_id',
-
-      /* OpenID */
-
-      // 'acr', // "0"
-      // 'amr',
-      // 'azp',
-      'auth_time', // number - seconds since epoch
-      'nonce', // always required in "id_token", why would it not be supported?
-
-      ...(customMetadata?.claims_supported ?? OIDC_STANDARD_CLAIMS),
     ],
     subject_types_supported: [
       //
@@ -62,15 +35,15 @@ export function buildMetadata(
     response_types_supported: [
       // OAuth
       'code',
-      'token',
+      // 'token',
 
       // OpenID
-      'none',
-      'code id_token token',
-      'code id_token',
-      'code token',
-      'id_token token',
-      'id_token',
+      // 'none',
+      // 'code id_token token',
+      // 'code id_token',
+      // 'code token',
+      // 'id_token token',
+      // 'id_token',
     ],
     response_modes_supported: [
       // https://openid.net/specs/oauth-v2-multiple-response-types-1_0.html#ResponseModes
@@ -87,13 +60,14 @@ export function buildMetadata(
     code_challenge_methods_supported: [
       // https://www.iana.org/assignments/oauth-parameters/oauth-parameters.xhtml#pkce-code-challenge-method
       'S256',
-      'plain',
+
+      // atproto does not allow "plain"
+      // 'plain',
     ],
     ui_locales_supported: [
       //
       'en-US',
     ],
-    id_token_signing_alg_values_supported: [...keyset.signAlgorithms],
     display_values_supported: [
       //
       'page',
@@ -110,10 +84,6 @@ export function buildMetadata(
     request_object_encryption_alg_values_supported: [], // None
     request_object_encryption_enc_values_supported: [], // None
 
-    // No claim makes sense to be translated
-    claims_locales_supported: [],
-
-    claims_parameter_supported: true,
     request_parameter_supported: true,
     request_uri_parameter_supported: true,
     require_request_uri_registration: true,
@@ -127,28 +97,13 @@ export function buildMetadata(
     token_endpoint_auth_signing_alg_values_supported: [...VERIFY_ALGOS],
 
     revocation_endpoint: new URL('/oauth/revoke', issuer).href,
-    revocation_endpoint_auth_methods_supported: [
-      ...Client.AUTH_METHODS_SUPPORTED,
-    ],
-    revocation_endpoint_auth_signing_alg_values_supported: [...VERIFY_ALGOS],
 
     introspection_endpoint: new URL('/oauth/introspect', issuer).href,
-    introspection_endpoint_auth_methods_supported: [
-      ...Client.AUTH_METHODS_SUPPORTED,
-    ],
-    introspection_endpoint_auth_signing_alg_values_supported: [...VERIFY_ALGOS],
 
-    userinfo_endpoint: new URL('/oauth/userinfo', issuer).href,
     // end_session_endpoint: new URL('/oauth/logout', issuer).href,
 
     // https://datatracker.ietf.org/doc/html/rfc9126#section-5
     pushed_authorization_request_endpoint: new URL('/oauth/par', issuer).href,
-    pushed_authorization_request_endpoint_auth_methods_supported: [
-      ...Client.AUTH_METHODS_SUPPORTED,
-    ],
-    pushed_authorization_request_endpoint_auth_signing_alg_values_supported: [
-      ...VERIFY_ALGOS,
-    ],
 
     require_pushed_authorization_requests: true,
 
@@ -161,5 +116,8 @@ export function buildMetadata(
 
     // https://datatracker.ietf.org/doc/html/draft-ietf-oauth-resource-metadata-05#section-4
     protected_resources: customMetadata?.protected_resources,
+
+    // https://drafts.aaronpk.com/draft-parecki-oauth-client-id-metadata-document/draft-parecki-oauth-client-id-metadata-document.html
+    client_id_metadata_document_supported: true,
   }
 }

@@ -34,6 +34,7 @@ describe('feed generation', () => {
   let feedUriPrime: string // Taken-down
   let feedUriPrimeRef: RecordRef
   let feedUriNeedsAuth: string
+  let starterPackRef: { uri: string; cid: string }
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -190,7 +191,12 @@ describe('feed generation', () => {
     const paginator = async (cursor?: string) => {
       const res = await agent.api.app.bsky.feed.getActorFeeds(
         { actor: alice, cursor, limit: 2 },
-        { headers: await network.serviceHeaders(sc.dids.bob) },
+        {
+          headers: await network.serviceHeaders(
+            sc.dids.bob,
+            ids.AppBskyFeedGetActorFeeds,
+          ),
+        },
       )
       return res.data
     }
@@ -223,7 +229,12 @@ describe('feed generation', () => {
     await network.processAll()
     const view = await agent.api.app.bsky.feed.getPosts(
       { uris: [res.uri] },
-      { headers: await network.serviceHeaders(sc.dids.bob) },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.bob,
+          ids.AppBskyFeedGetPosts,
+        ),
+      },
     )
     expect(view.data.posts.length).toBe(1)
     expect(forSnapshot(view.data.posts[0])).toMatchSnapshot()
@@ -245,7 +256,101 @@ describe('feed generation', () => {
     await network.processAll()
     const view = await agent.api.app.bsky.feed.getPosts(
       { uris: [res.uri] },
-      { headers: await network.serviceHeaders(sc.dids.bob) },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.bob,
+          ids.AppBskyFeedGetPosts,
+        ),
+      },
+    )
+    expect(view.data.posts.length).toBe(1)
+    expect(forSnapshot(view.data.posts[0])).toMatchSnapshot()
+  })
+
+  it('embeds starter pack records in posts', async () => {
+    const listRes = await pdsAgent.api.app.bsky.graph.list.create(
+      {
+        repo: sc.dids.alice,
+      },
+      {
+        name: 'awesome starter pack!',
+        description: '',
+        descriptionFacets: [],
+        avatar: undefined,
+        createdAt: new Date().toISOString(),
+        purpose: 'app.bsky.graph.defs#referencelist',
+      },
+      sc.getHeaders(sc.dids.alice),
+    )
+    const starterPackRes = await pdsAgent.api.app.bsky.graph.starterpack.create(
+      {
+        repo: sc.dids.alice,
+      },
+      {
+        name: 'awesome starter pack!',
+        description: '',
+        descriptionFacets: [],
+        feeds: [],
+        list: listRes.uri,
+        createdAt: new Date().toISOString(),
+      },
+      sc.getHeaders(sc.dids.alice),
+    )
+    starterPackRef = {
+      uri: starterPackRes.uri,
+      cid: starterPackRes.cid,
+    }
+    const res = await pdsAgent.api.app.bsky.feed.post.create(
+      { repo: sc.dids.bob },
+      {
+        text: 'sick starter pack!',
+        embed: {
+          $type: 'app.bsky.embed.record',
+          record: starterPackRef,
+        },
+        createdAt: new Date().toISOString(),
+      },
+      sc.getHeaders(sc.dids.bob),
+    )
+    await network.processAll()
+    const view = await agent.api.app.bsky.feed.getPosts(
+      { uris: [res.uri] },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.bob,
+          ids.AppBskyFeedGetPosts,
+        ),
+      },
+    )
+    expect(view.data.posts.length).toBe(1)
+    expect(forSnapshot(view.data.posts[0])).toMatchSnapshot()
+  })
+
+  it('does not embed taken-down starter pack records in posts', async () => {
+    await network.bsky.ctx.dataplane.takedownRecord({
+      recordUri: starterPackRef.uri,
+    })
+    const res = await pdsAgent.api.app.bsky.feed.post.create(
+      { repo: sc.dids.bob },
+      {
+        text: 'annoying starter pack',
+        embed: {
+          $type: 'app.bsky.embed.record',
+          record: starterPackRef,
+        },
+        createdAt: new Date().toISOString(),
+      },
+      sc.getHeaders(sc.dids.bob),
+    )
+    await network.processAll()
+    const view = await agent.api.app.bsky.feed.getPosts(
+      { uris: [res.uri] },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.bob,
+          ids.AppBskyFeedGetPosts,
+        ),
+      },
     )
     expect(view.data.posts.length).toBe(1)
     expect(forSnapshot(view.data.posts[0])).toMatchSnapshot()
@@ -255,7 +360,12 @@ describe('feed generation', () => {
     it('describes a feed gen & returns online status', async () => {
       const resEven = await agent.api.app.bsky.feed.getFeedGenerator(
         { feed: feedUriAll },
-        { headers: await network.serviceHeaders(sc.dids.bob) },
+        {
+          headers: await network.serviceHeaders(
+            sc.dids.bob,
+            ids.AppBskyFeedGetFeedGenerator,
+          ),
+        },
       )
       expect(forSnapshot(resEven.data)).toMatchSnapshot()
       expect(resEven.data.isOnline).toBe(true)
@@ -265,7 +375,12 @@ describe('feed generation', () => {
     it('does not describe taken-down feed', async () => {
       const tryGetFeed = agent.api.app.bsky.feed.getFeedGenerator(
         { feed: feedUriPrime },
-        { headers: await network.serviceHeaders(sc.dids.bob) },
+        {
+          headers: await network.serviceHeaders(
+            sc.dids.bob,
+            ids.AppBskyFeedGetFeedGenerator,
+          ),
+        },
       )
       await expect(tryGetFeed).rejects.toThrow('could not find feed')
     })
@@ -274,7 +389,12 @@ describe('feed generation', () => {
     it.skip('handles an unsupported algo', async () => {
       const resOdd = await agent.api.app.bsky.feed.getFeedGenerator(
         { feed: feedUriOdd },
-        { headers: await network.serviceHeaders(sc.dids.bob) },
+        {
+          headers: await network.serviceHeaders(
+            sc.dids.bob,
+            ids.AppBskyFeedGetFeedGenerator,
+          ),
+        },
       )
       expect(resOdd.data.isOnline).toBe(true)
       expect(resOdd.data.isValid).toBe(false)
@@ -311,7 +431,12 @@ describe('feed generation', () => {
         {
           feed: allUriBob.toString(),
         },
-        { headers: await network.serviceHeaders(sc.dids.alice) },
+        {
+          headers: await network.serviceHeaders(
+            sc.dids.alice,
+            ids.AppBskyFeedGetFeedGenerator,
+          ),
+        },
       )
       expect(res.data.isOnline).toBe(false)
       expect(res.data.isValid).toBe(false)
@@ -322,7 +447,12 @@ describe('feed generation', () => {
     it('describes multiple feed gens', async () => {
       const resEven = await agent.api.app.bsky.feed.getFeedGenerators(
         { feeds: [feedUriEven, feedUriAll, feedUriPrime] },
-        { headers: await network.serviceHeaders(sc.dids.bob) },
+        {
+          headers: await network.serviceHeaders(
+            sc.dids.bob,
+            ids.AppBskyFeedGetFeedGenerators,
+          ),
+        },
       )
       expect(forSnapshot(resEven.data)).toMatchSnapshot()
       expect(resEven.data.feeds.map((fg) => fg.uri)).not.toContain(feedUriPrime) // taken-down
@@ -333,7 +463,12 @@ describe('feed generation', () => {
     it('returns list of suggested feed generators', async () => {
       const resEven = await agent.api.app.bsky.feed.getSuggestedFeeds(
         {},
-        { headers: await network.serviceHeaders(sc.dids.bob) },
+        {
+          headers: await network.serviceHeaders(
+            sc.dids.bob,
+            ids.AppBskyFeedGetSuggestedFeeds,
+          ),
+        },
       )
       expect(forSnapshot(resEven.data)).toMatchSnapshot()
       expect(resEven.data.feeds.map((fg) => fg.uri)).not.toContain(feedUriPrime) // taken-down
@@ -344,7 +479,12 @@ describe('feed generation', () => {
     it('gets popular feed generators', async () => {
       const res = await agent.api.app.bsky.unspecced.getPopularFeedGenerators(
         {},
-        { headers: await network.serviceHeaders(sc.dids.bob) },
+        {
+          headers: await network.serviceHeaders(
+            sc.dids.bob,
+            ids.AppBskyUnspeccedGetPopularFeedGenerators,
+          ),
+        },
       )
       expect(res.data.feeds.map((f) => f.uri)).not.toContain(feedUriPrime) // taken-down
       expect(res.data.feeds.map((f) => f.uri)).toEqual([
@@ -357,7 +497,12 @@ describe('feed generation', () => {
     it('searches feed generators', async () => {
       const res = await agent.api.app.bsky.unspecced.getPopularFeedGenerators(
         { query: 'all' },
-        { headers: await network.serviceHeaders(sc.dids.bob) },
+        {
+          headers: await network.serviceHeaders(
+            sc.dids.bob,
+            ids.AppBskyUnspeccedGetPopularFeedGenerators,
+          ),
+        },
       )
       expect(res.data.feeds.map((f) => f.uri)).toEqual([feedUriAll])
     })
@@ -366,17 +511,32 @@ describe('feed generation', () => {
       const resFull =
         await agent.api.app.bsky.unspecced.getPopularFeedGenerators(
           {},
-          { headers: await network.serviceHeaders(sc.dids.bob) },
+          {
+            headers: await network.serviceHeaders(
+              sc.dids.bob,
+              ids.AppBskyUnspeccedGetPopularFeedGenerators,
+            ),
+          },
         )
       const resOne =
         await agent.api.app.bsky.unspecced.getPopularFeedGenerators(
           { limit: 2 },
-          { headers: await network.serviceHeaders(sc.dids.bob) },
+          {
+            headers: await network.serviceHeaders(
+              sc.dids.bob,
+              ids.AppBskyUnspeccedGetPopularFeedGenerators,
+            ),
+          },
         )
       const resTwo =
         await agent.api.app.bsky.unspecced.getPopularFeedGenerators(
           { cursor: resOne.data.cursor },
-          { headers: await network.serviceHeaders(sc.dids.bob) },
+          {
+            headers: await network.serviceHeaders(
+              sc.dids.bob,
+              ids.AppBskyUnspeccedGetPopularFeedGenerators,
+            ),
+          },
         )
       expect([...resOne.data.feeds, ...resTwo.data.feeds]).toEqual(
         resFull.data.feeds,
@@ -388,7 +548,13 @@ describe('feed generation', () => {
     it('resolves basic feed contents.', async () => {
       const feed = await agent.api.app.bsky.feed.getFeed(
         { feed: feedUriEven },
-        { headers: await network.serviceHeaders(alice, gen.did) },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyFeedGetFeed,
+            gen.did,
+          ),
+        },
       )
       expect(feed.data.feed.map((item) => item.post.uri)).toEqual([
         sc.posts[sc.dids.alice][0].ref.uriStr,
@@ -413,7 +579,13 @@ describe('feed generation', () => {
       const paginator = async (cursor?: string) => {
         const res = await agent.api.app.bsky.feed.getFeed(
           { feed: feedUriAll, cursor, limit: 2 },
-          { headers: await network.serviceHeaders(alice, gen.did) },
+          {
+            headers: await network.serviceHeaders(
+              alice,
+              ids.AppBskyFeedGetFeed,
+              gen.did,
+            ),
+          },
         )
         return res.data
       }
@@ -434,7 +606,13 @@ describe('feed generation', () => {
     it('paginates, handling feed not respecting limit.', async () => {
       const res = await agent.api.app.bsky.feed.getFeed(
         { feed: feedUriBadPagination, limit: 3 },
-        { headers: await network.serviceHeaders(alice, gen.did) },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyFeedGetFeed,
+            gen.did,
+          ),
+        },
       )
       // refused to respect pagination limit, so it got cut short by appview but the cursor remains.
       expect(res.data.feed.length).toBeLessThanOrEqual(3)
@@ -449,7 +627,13 @@ describe('feed generation', () => {
     it('fails on unknown feed.', async () => {
       const tryGetFeed = agent.api.app.bsky.feed.getFeed(
         { feed: feedUriOdd },
-        { headers: await network.serviceHeaders(alice, gen.did) },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyFeedGetFeed,
+            gen.did,
+          ),
+        },
       )
       await expect(tryGetFeed).rejects.toMatchObject({
         error: 'UnknownFeed',
@@ -459,7 +643,9 @@ describe('feed generation', () => {
     it('resolves contents of taken-down feed.', async () => {
       const tryGetFeed = agent.api.app.bsky.feed.getFeed(
         { feed: feedUriPrime },
-        { headers: await network.serviceHeaders(alice) },
+        {
+          headers: await network.serviceHeaders(alice, ids.AppBskyFeedGetFeed),
+        },
       )
       await expect(tryGetFeed).resolves.toBeDefined()
     })
@@ -467,19 +653,19 @@ describe('feed generation', () => {
     it('receives proper auth details.', async () => {
       const feed = await agent.api.app.bsky.feed.getFeed(
         { feed: feedUriEven },
-        { headers: await network.serviceHeaders(alice, gen.did) },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyFeedGetFeedSkeleton,
+            gen.did,
+          ),
+        },
       )
       expect(feed.data['$auth']?.['aud']).toEqual(gen.did)
       expect(feed.data['$auth']?.['iss']).toEqual(alice)
-    })
-
-    it('receives proper auth details.', async () => {
-      const feed = await agent.api.app.bsky.feed.getFeed(
-        { feed: feedUriEven },
-        { headers: await network.serviceHeaders(alice, gen.did) },
+      expect(feed.data['$auth']?.['lxm']).toEqual(
+        ids.AppBskyFeedGetFeedSkeleton,
       )
-      expect(feed.data['$auth']?.['aud']).toEqual(gen.did)
-      expect(feed.data['$auth']?.['iss']).toEqual(alice)
     })
 
     it('passes through auth error from feed.', async () => {
@@ -495,7 +681,13 @@ describe('feed generation', () => {
     it('provides timing info in server-timing header.', async () => {
       const result = await agent.api.app.bsky.feed.getFeed(
         { feed: feedUriEven },
-        { headers: await network.serviceHeaders(alice, gen.did) },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyFeedGetFeed,
+            gen.did,
+          ),
+        },
       )
       expect(result.headers['server-timing']).toMatch(
         /^skele;dur=\d+, hydr;dur=\d+$/,
@@ -506,7 +698,13 @@ describe('feed generation', () => {
       await gen.close() // @NOTE must be last test
       const tryGetFeed = agent.api.app.bsky.feed.getFeed(
         { feed: feedUriEven },
-        { headers: await network.serviceHeaders(alice, gen.did) },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyFeedGetFeed,
+            gen.did,
+          ),
+        },
       )
       await expect(tryGetFeed).rejects.toThrow('feed unavailable')
     })

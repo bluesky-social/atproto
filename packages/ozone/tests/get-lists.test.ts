@@ -6,8 +6,9 @@ import {
   ModeratorClient,
   RecordRef,
 } from '@atproto/dev-env'
-import AtpAgent, { BSKY_LABELER_DID } from '@atproto/api'
+import { AtpAgent, BSKY_LABELER_DID } from '@atproto/api'
 import { TAKEDOWN_LABEL } from '../src/mod-service'
+import { ids } from '../src/lexicon/lexicons'
 
 describe('admin get lists', () => {
   let network: TestNetwork
@@ -42,7 +43,7 @@ describe('admin get lists', () => {
     const [{ data: fromOzone }, { data: fromAppview }] = await Promise.all([
       agent.api.app.bsky.graph.getLists(
         { actor: sc.dids.alice },
-        { headers: await ozone.modHeaders() },
+        { headers: await ozone.modHeaders(ids.AppBskyGraphGetLists) },
       ),
       appviewAgent.api.app.bsky.graph.getLists({ actor: sc.dids.alice }),
     ])

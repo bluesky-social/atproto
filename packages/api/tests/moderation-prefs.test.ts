@@ -1,5 +1,5 @@
 import { TestNetworkNoAppView } from '@atproto/dev-env'
-import { BskyAgent, DEFAULT_LABEL_SETTINGS } from '..'
+import { DEFAULT_LABEL_SETTINGS } from '../src'
 import './util/moderation-behavior'
 
 describe('agent', () => {
@@ -16,7 +16,7 @@ describe('agent', () => {
   })
 
   it('migrates legacy content-label prefs (no mutations)', async () => {
-    const agent = new BskyAgent({ service: network.pds.url })
+    const agent = network.pds.getClient()
 
     await agent.createAccount({
       handle: 'user1.test',
@@ -63,9 +63,7 @@ describe('agent', () => {
           sexual: 'ignore',
           'graphic-media': 'ignore',
         },
-        labelers: [
-          ...BskyAgent.appLabelers.map((did) => ({ did, labels: {} })),
-        ],
+        labelers: [...agent.appLabelers.map((did) => ({ did, labels: {} }))],
         hiddenPosts: [],
         mutedWords: [],
       },
@@ -83,11 +81,16 @@ describe('agent', () => {
         prioritizeFollowedUsers: true,
         sort: 'oldest',
       },
+      bskyAppState: {
+        activeProgressGuide: undefined,
+        queuedNudges: [],
+        nuxs: [],
+      },
     })
   })
 
   it('adds/removes moderation services', async () => {
-    const agent = new BskyAgent({ service: network.pds.url })
+    const agent = network.pds.getClient()
 
     await agent.createAccount({
       handle: 'user5.test',
@@ -96,7 +99,7 @@ describe('agent', () => {
     })
 
     await agent.addLabeler('did:plc:other')
-    expect(agent.labelersHeader).toStrictEqual(['did:plc:other'])
+    expect(agent.labelers).toStrictEqual(['did:plc:other'])
     await expect(agent.getPreferences()).resolves.toStrictEqual({
       feeds: { pinned: undefined, saved: undefined },
       savedFeeds: expect.any(Array),
@@ -105,7 +108,7 @@ describe('agent', () => {
         adultContentEnabled: false,
         labels: DEFAULT_LABEL_SETTINGS,
         labelers: [
-          ...BskyAgent.appLabelers.map((did) => ({ did, labels: {} })),
+          ...agent.appLabelers.map((did) => ({ did, labels: {} })),
           {
             did: 'did:plc:other',
             labels: {},
@@ -128,11 +131,16 @@ describe('agent', () => {
         sort: 'oldest',
         prioritizeFollowedUsers: true,
       },
+      bskyAppState: {
+        activeProgressGuide: undefined,
+        queuedNudges: [],
+        nuxs: [],
+      },
     })
-    expect(agent.labelersHeader).toStrictEqual(['did:plc:other'])
+    expect(agent.labelers).toStrictEqual(['did:plc:other'])
 
     await agent.removeLabeler('did:plc:other')
-    expect(agent.labelersHeader).toStrictEqual([])
+    expect(agent.labelers).toStrictEqual([])
     await expect(agent.getPreferences()).resolves.toStrictEqual({
       feeds: { pinned: undefined, saved: undefined },
       savedFeeds: expect.any(Array),
@@ -140,9 +148,7 @@ describe('agent', () => {
       moderationPrefs: {
         adultContentEnabled: false,
         labels: DEFAULT_LABEL_SETTINGS,
-        labelers: [
-          ...BskyAgent.appLabelers.map((did) => ({ did, labels: {} })),
-        ],
+        labelers: [...agent.appLabelers.map((did) => ({ did, labels: {} }))],
         hiddenPosts: [],
         mutedWords: [],
       },
@@ -160,12 +166,17 @@ describe('agent', () => {
         sort: 'oldest',
         prioritizeFollowedUsers: true,
       },
+      bskyAppState: {
+        activeProgressGuide: undefined,
+        queuedNudges: [],
+        nuxs: [],
+      },
     })
-    expect(agent.labelersHeader).toStrictEqual([])
+    expect(agent.labelers).toStrictEqual([])
   })
 
   it('sets label preferences globally and per-moderator', async () => {
-    const agent = new BskyAgent({ service: network.pds.url })
+    const agent = network.pds.getClient()
 
     await agent.createAccount({
       handle: 'user7.test',
@@ -186,7 +197,7 @@ describe('agent', () => {
         adultContentEnabled: false,
         labels: { ...DEFAULT_LABEL_SETTINGS, porn: 'ignore', nsfw: 'ignore' },
         labelers: [
-          ...BskyAgent.appLabelers.map((did) => ({ did, labels: {} })),
+          ...agent.appLabelers.map((did) => ({ did, labels: {} })),
           {
             did: 'did:plc:other',
             labels: {
@@ -212,11 +223,16 @@ describe('agent', () => {
         sort: 'oldest',
         prioritizeFollowedUsers: true,
       },
+      bskyAppState: {
+        activeProgressGuide: undefined,
+        queuedNudges: [],
+        nuxs: [],
+      },
     })
   })
 
   it(`updates label pref`, async () => {
-    const agent = new BskyAgent({ service: network.pds.url })
+    const agent = network.pds.getClient()
 
     await agent.createAccount({
       handle: 'user8.test',
@@ -240,7 +256,7 @@ describe('agent', () => {
   })
 
   it(`double-write for legacy: 'graphic-media' in sync with 'gore'`, async () => {
-    const agent = new BskyAgent({ service: network.pds.url })
+    const agent = network.pds.getClient()
 
     await agent.createAccount({
       handle: 'user9.test',
@@ -262,7 +278,7 @@ describe('agent', () => {
   })
 
   it(`double-write for legacy: 'porn' in sync with 'nsfw'`, async () => {
-    const agent = new BskyAgent({ service: network.pds.url })
+    const agent = network.pds.getClient()
 
     await agent.createAccount({
       handle: 'user10.test',
@@ -284,7 +300,7 @@ describe('agent', () => {
   })
 
   it(`double-write for legacy: 'sexual' in sync with 'suggestive'`, async () => {
-    const agent = new BskyAgent({ service: network.pds.url })
+    const agent = network.pds.getClient()
 
     await agent.createAccount({
       handle: 'user11.test',
@@ -306,7 +322,7 @@ describe('agent', () => {
   })
 
   it(`double-write for legacy: filters out existing old label pref if double-written`, async () => {
-    const agent = new BskyAgent({ service: network.pds.url })
+    const agent = network.pds.getClient()
 
     await agent.createAccount({
       handle: 'user12.test',
@@ -325,7 +341,7 @@ describe('agent', () => {
   })
 
   it(`remaps old values to new on read`, async () => {
-    const agent = new BskyAgent({ service: network.pds.url })
+    const agent = network.pds.getClient()
 
     await agent.createAccount({
       handle: 'user13.test',
