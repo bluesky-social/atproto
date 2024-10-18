@@ -4,7 +4,7 @@ import {
   OAuthTokenType,
   oauthIssuerIdentifierSchema,
 } from '@atproto/oauth-types'
-import { Redis, type RedisOptions } from 'ioredis'
+import type { Redis, RedisOptions } from 'ioredis'
 
 import { AccessTokenType } from './access-token/access-token-type.js'
 import { DpopManager, DpopManagerOptions } from './dpop/dpop-manager.js'

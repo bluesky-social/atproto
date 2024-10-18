@@ -11,7 +11,7 @@ For a node specific implementation, see
 ### Configuration
 
 ```ts
-import { OAuthClient } from '@atproto/oauth-client'
+import { OAuthClient, Key, Session } from '@atproto/oauth-client'
 import { JoseKey } from '@atproto/jwk-jose' // NodeJS/Browser only
 
 const client = new OAuthClient({
