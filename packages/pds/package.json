@@ -17,6 +17,7 @@
   "types": "dist/index.d.ts",
   "bin": "dist/bin.js",
   "scripts": {
+    "postinstall": "puppeteer browsers install chrome",
     "codegen": "lex gen-server --yes ./src/lexicon ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/* ../../lexicons/chat/bsky/*/* ../../lexicons/tools/ozone/*/*",
     "build": "tsc --build tsconfig.build.json",
     "postbuild": "node ./build.templates.js",
@@ -73,6 +74,7 @@
     "@atproto/api": "workspace:^",
     "@atproto/bsky": "workspace:^",
     "@atproto/lex-cli": "workspace:^",
+    "@atproto/oauth-client-browser-example": "workspace:*",
     "@atproto/pds-entryway": "npm:@atproto/pds@0.3.0-entryway.3",
     "@did-plc/server": "^0.0.1",
     "@types/cors": "^2.8.12",
@@ -86,6 +88,7 @@
     "esbuild-plugin-handlebars": "^1.0.3",
     "get-port": "^6.1.2",
     "jest": "^28.1.2",
+    "puppeteer": "^23.5.2",
     "ts-node": "^10.8.2",
     "typescript": "^5.6.2",
     "ws": "^8.12.0"
