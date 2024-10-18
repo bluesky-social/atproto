@@ -135,7 +135,10 @@ export class BlobTransactor extends BlobReader {
     }
   }
 
-  async deleteDereferencedBlobs(writes: PreparedWrite[]) {
+  async deleteDereferencedBlobs(
+    writes: PreparedWrite[],
+    skipBlobStore?: boolean,
+  ) {
     const deletes = writes.filter(
       (w) => w.action === WriteOpAction.Delete,
     ) as PreparedDelete[]
@@ -180,13 +183,15 @@ export class BlobTransactor extends BlobReader {
       .deleteFrom('blob')
       .where('cid', 'in', cidsToDelete)
       .execute()
-    this.db.onCommit(() => {
-      this.backgroundQueue.add(async () => {
-        await Promise.allSettled(
-          cidsToDelete.map((cid) => this.blobstore.delete(CID.parse(cid))),
-        )
+    if (!skipBlobStore) {
+      this.db.onCommit(() => {
+        this.backgroundQueue.add(async () => {
+          await Promise.allSettled(
+            cidsToDelete.map((cid) => this.blobstore.delete(CID.parse(cid))),
+          )
+        })
       })
-    })
+    }
   }
 
   async verifyBlobAndMakePermanent(blob: PreparedBlobRef): Promise<void> {

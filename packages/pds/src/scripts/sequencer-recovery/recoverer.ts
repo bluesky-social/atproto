@@ -20,6 +20,7 @@ import { randomStr, Secp256k1Keypair } from '@atproto/crypto'
 import { UserQueues } from './user-queues'
 import { AccountStatus } from '../../account-manager'
 import { ActorStoreTransactor } from '../../actor-store'
+import temp from '../../api/com/atproto/temp'
 
 export class Recoverer {
   cursor: number
@@ -95,40 +96,44 @@ export class Recoverer {
         commit.newBlocks = blocks
         commit.cid = evt.commit
         commit.rev = evt.rev
-        await this.trackBlobInfos(actorTxn, writes)
         await Promise.all([
           actorTxn.repo.storage.applyCommit(commit),
           actorTxn.repo.indexWrites(writes, commit.rev),
-          actorTxn.repo.blob.processWriteBlobs(commit.rev, writes),
+          this.trackBlobs(actorTxn, writes),
         ])
       })
     })
   }
 
-  async trackBlobInfos(store: ActorStoreTransactor, writes: PreparedWrite[]) {
-    let blobs: PreparedBlobRef[] = []
+  async trackBlobs(store: ActorStoreTransactor, writes: PreparedWrite[]) {
+    await store.repo.blob.deleteDereferencedBlobs(writes, true)
+
     for (const write of writes) {
       if (
         write.action === WriteOpAction.Create ||
         write.action === WriteOpAction.Update
       ) {
-        blobs = [...blobs, ...write.blobs]
+        for (const blob of write.blobs) {
+          await store.db.db
+            .insertInto('record_blob')
+            .values({
+              blobCid: blob.cid.toString(),
+              recordUri: write.uri.toString(),
+            })
+            .onConflict((oc) => oc.doNothing())
+            .execute()
+          await store.db.db
+            .insertInto('blob')
+            .values({
+              cid: blob.cid.toString(),
+              mimeType: blob.mimeType,
+              size: blob.size,
+              createdAt: store.repo.now,
+            })
+            .onConflict((oc) => oc.doNothing())
+            .execute()
+        }
       }
-    }
-
-    if (blobs.length > 0) {
-      await Promise.all(
-        blobs.map((blob) =>
-          store.repo.blob.trackUntetheredBlob({
-            tempKey: randomStr(32, 'base32'),
-            size: blob.size,
-            cid: blob.cid,
-            mimeType: blob.mimeType,
-            width: null,
-            height: null,
-          }),
-        ),
-      )
     }
   }
 
