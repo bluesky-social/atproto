@@ -7,27 +7,31 @@ import {
   parseDataKey,
   readCar,
 } from '@atproto/repo'
-import AppContext from '../../context'
-import { CommitEvt, SeqEvt, AccountEvt } from '../../sequencer'
+import { CommitEvt, SeqEvt, AccountEvt, Sequencer } from '../../sequencer'
 import {
-  PreparedBlobRef,
   PreparedWrite,
   prepareCreate,
   prepareDelete,
   prepareUpdate,
 } from '../../repo'
-import { randomStr, Secp256k1Keypair } from '@atproto/crypto'
+import { Secp256k1Keypair } from '@atproto/crypto'
 import { UserQueues } from './user-queues'
-import { AccountStatus } from '../../account-manager'
-import { ActorStoreTransactor } from '../../actor-store'
-import temp from '../../api/com/atproto/temp'
+import { AccountManager, AccountStatus } from '../../account-manager'
+import { ActorStore, ActorStoreTransactor } from '../../actor-store'
+import { rmIfExists } from '@atproto/common'
+
+type Context = {
+  sequencer: Sequencer
+  accountManager: AccountManager
+  actorStore: ActorStore
+}
 
 export class Recoverer {
   cursor: number
   queues: UserQueues
 
   constructor(
-    public ctx: AppContext,
+    public ctx: Context,
     opts: { cursor: number; concurrency: number },
   ) {
     this.cursor = opts.cursor
@@ -56,6 +60,7 @@ export class Recoverer {
       earliestSeq: this.cursor,
       limit: 5000,
     })
+    console.log('PAGE: ', page.at(-1)?.seq)
     page.forEach((evt) => this.processEvent(evt))
     const lastEvt = page.at(-1)
     if (!lastEvt) {
@@ -79,29 +84,34 @@ export class Recoverer {
   processCommit(evt: CommitEvt) {
     const did = evt.repo
     this.queues.addToUser(did, async () => {
-      const { writes, blocks } = await parseCommitEvt(evt)
-      if (evt.since === null) {
-        const actorExists = await this.ctx.actorStore.exists(did)
-        if (!actorExists) {
-          await this.processRepoCreation(evt, writes, blocks)
-          return
+      try {
+        const { writes, blocks } = await parseCommitEvt(evt)
+        if (evt.since === null) {
+          const actorExists = await this.ctx.actorStore.exists(did)
+          if (!actorExists) {
+            await this.processRepoCreation(evt, writes, blocks)
+            return
+          }
         }
+        await this.ctx.actorStore.transact(did, async (actorTxn) => {
+          const root = await actorTxn.repo.storage.getRootDetailed()
+          if (root.rev >= evt.rev) {
+            return
+          }
+          const commit = await actorTxn.repo.formatCommit(writes)
+          commit.newBlocks = blocks
+          commit.cid = evt.commit
+          commit.rev = evt.rev
+          await Promise.all([
+            actorTxn.repo.storage.applyCommit(commit),
+            actorTxn.repo.indexWrites(writes, commit.rev),
+            this.trackBlobs(actorTxn, writes),
+          ])
+        })
+      } catch (err) {
+        console.log('DID: ', did)
+        throw err
       }
-      await this.ctx.actorStore.transact(did, async (actorTxn) => {
-        const root = await actorTxn.repo.storage.getRootDetailed()
-        if (root.rev >= evt.rev) {
-          return
-        }
-        const commit = await actorTxn.repo.formatCommit(writes)
-        commit.newBlocks = blocks
-        commit.cid = evt.commit
-        commit.rev = evt.rev
-        await Promise.all([
-          actorTxn.repo.storage.applyCommit(commit),
-          actorTxn.repo.indexWrites(writes, commit.rev),
-          this.trackBlobs(actorTxn, writes),
-        ])
-      })
     })
   }
 
@@ -164,13 +174,20 @@ export class Recoverer {
   }
 
   processAccountEvt(evt: AccountEvt) {
+    // do not need to process deactivation/takedowns because we backup account DB as well
     if (evt.status !== AccountStatus.Deleted) {
       return
     }
     const did = evt.did
     this.queues.addToUser(did, async () => {
-      await this.ctx.actorStore.destroy(did)
-      await this.ctx.accountManager.deleteAccount(did)
+      try {
+        const { directory } = await this.ctx.actorStore.getLocation(did)
+        await rmIfExists(directory, true)
+        await this.ctx.accountManager.deleteAccount(did)
+      } catch (err) {
+        console.log('DID:', did)
+        throw err
+      }
     })
   }
 }
