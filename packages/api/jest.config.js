@@ -1,8 +1,7 @@
 /** @type {import('jest').Config} */
 module.exports = {
   displayName: 'API',
-  transform: { '^.+\\.(t|j)s$': '@swc/jest' },
-  transformIgnorePatterns: [`<rootDir>/node_modules/(?!get-port)`],
+  transform: { '^.+\\.ts$': '@swc/jest' },
   testTimeout: 60000,
   setupFiles: ['<rootDir>/../../jest.setup.ts'],
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],

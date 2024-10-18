@@ -1,5 +1,5 @@
+import { AddressInfo } from 'node:net'
 import assert from 'assert'
-import getPort from 'get-port'
 import {
   AtpAgent,
   AtpSessionEvent,
@@ -443,8 +443,8 @@ describe('AtpAgent', () => {
 
   describe('App labelers header', () => {
     it('adds the labelers header as expected', async () => {
-      const port = await getPort()
-      const server = await createHeaderEchoServer(port)
+      const server = await createHeaderEchoServer()
+      const port = (server.address() as AddressInfo).port
       const agent = new AtpAgent({ service: `http://localhost:${port}` })
       const agent2 = new AtpAgent({ service: `http://localhost:${port}` })
 
@@ -470,8 +470,8 @@ describe('AtpAgent', () => {
 
   describe('configureLabelers', () => {
     it('adds the labelers header as expected', async () => {
-      const port = await getPort()
-      const server = await createHeaderEchoServer(port)
+      const server = await createHeaderEchoServer()
+      const port = (server.address() as AddressInfo).port
       const agent = new AtpAgent({ service: `http://localhost:${port}` })
 
       agent.configureLabelers(['did:plc:test1'])
@@ -492,8 +492,8 @@ describe('AtpAgent', () => {
 
   describe('configureProxy', () => {
     it('adds the proxy header as expected', async () => {
-      const port = await getPort()
-      const server = await createHeaderEchoServer(port)
+      const server = await createHeaderEchoServer()
+      const port = (server.address() as AddressInfo).port
       const agent = new AtpAgent({ service: `http://localhost:${port}` })
 
       const res1 = await agent.com.atproto.server.describeServer()
