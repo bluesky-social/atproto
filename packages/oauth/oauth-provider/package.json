@@ -71,10 +71,6 @@
     "tailwindcss": "^3.4.1",
     "typescript": "^5.6.3"
   },
-  "optionalDependencies": {
-    "ioredis": "^5.3.2",
-    "keygrip": "^1.1.0"
-  },
   "scripts": {
     "build:frontend": "rollup --config rollup.config.js",
     "build:backend": "tsc --build --force tsconfig.backend.json",

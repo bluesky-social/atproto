@@ -1022,22 +1022,21 @@ importers:
       http-errors:
         specifier: ^2.0.0
         version: 2.0.0
+      ioredis:
+        specifier: ^5.3.2
+        version: 5.3.2
       jose:
         specifier: ^5.2.0
         version: 5.3.0
+      keygrip:
+        specifier: ^1.1.0
+        version: 1.1.0
       psl:
         specifier: ^1.9.0
         version: 1.9.0
       zod:
         specifier: ^3.23.8
         version: 3.23.8
-    optionalDependencies:
-      ioredis:
-        specifier: ^5.3.2
-        version: 5.3.2
-      keygrip:
-        specifier: ^1.1.0
-        version: 1.1.0
     devDependencies:
       '@atproto-labs/rollup-plugin-bundle-manifest':
         specifier: workspace:*
@@ -6151,7 +6150,7 @@ packages:
   /@types/node@18.19.56:
     resolution: {integrity: sha512-4EMJlWwwGnVPflJAtM14p9eVSa6BOv5b92mCsh5zcM1UagNtEtrbbtaE6WE1tw2TabavatnwqXjlIpcAEuJJNg==}
     dependencies:
-      undici-types: 5.28.4
+      undici-types: 5.26.5
 
   /@types/nodemailer@6.4.6:
     resolution: {integrity: sha512-pD6fL5GQtUKvD2WnPmg5bC2e8kWCAPDwMPmHe/ohQbW+Dy0EcHgZ2oCSuPlWNqk74LS5BVMig1SymQbFMPPK3w==}
@@ -10194,7 +10193,6 @@ packages:
     dependencies:
       tsscmp: 1.0.6
     dev: false
-    optional: true
 
   /kind-of@6.0.3:
     resolution: {integrity: sha512-dcS1ul+9tmeD95T+x28/ehLgd9mENa3LsvDTtzm3vyBEO7RPptvAD+t44WVXaUjTBRcrpFeFlC8WCruUR456hw==}
@@ -13190,7 +13188,6 @@ packages:
     engines: {node: '>=0.6.x'}
     requiresBuild: true
     dev: false
-    optional: true
 
   /tty-table@4.2.1:
     resolution: {integrity: sha512-xz0uKo+KakCQ+Dxj1D/tKn2FSyreSYWzdkL/BYhgN6oMW808g8QRMuh1atAV9fjTPbWBjfbkKQpI/5rEcnAc7g==}
@@ -13367,8 +13364,8 @@ packages:
       through: 2.3.8
     dev: true
 
-  /undici-types@5.28.4:
-    resolution: {integrity: sha512-3OeMF5Lyowe8VW0skf5qaIE7Or3yS9LS7fvMUI0gg4YxpIBVg0L8BxCmROw2CcYhSkpR68Epz7CGc8MPj94Uww==}
+  /undici-types@5.26.5:
+    resolution: {integrity: sha512-JlCMO+ehdEIKqlFxk6IfVoAUVmgz7cU7zD/h9XZ0qzeosSHmUJVOzSQvvYSYWXkFXC+IfLKSIffhv0sVZup6pA==}
 
   /undici@5.28.4:
     resolution: {integrity: sha512-72RFADWFqKmUb2hmmvNODKL3p9hcB6Gt2DOQMis1SEBaV6a4MH8soBvzg+95CYhCKPFedut2JY9bMfrDl9D23g==}
