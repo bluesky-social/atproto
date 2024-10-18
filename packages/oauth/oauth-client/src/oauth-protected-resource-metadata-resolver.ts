@@ -72,13 +72,11 @@ export class OAuthProtectedResourceMetadataResolver extends CachedGetter<
     origin: string,
     options?: GetCachedOptions,
   ): Promise<OAuthProtectedResourceMetadata> {
-    const headers = new Headers([['accept', 'application/json']])
-    if (options?.noCache) headers.set('cache-control', 'no-cache')
-
     const url = new URL(`/.well-known/oauth-protected-resource`, origin)
     const request = new Request(url, {
       signal: options?.signal,
-      headers,
+      headers: { accept: 'application/json' },
+      cache: options?.noCache ? 'no-cache' : undefined,
       redirect: 'manual', // response must be 200 OK
     })
 
