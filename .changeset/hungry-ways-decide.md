@@ -2,4 +2,4 @@
 "@atproto/oauth-client-node": patch
 ---
 
-Prevent override of options
+Bugfix: Prevent accidental override of `NodeOAuthClient` constructor options
