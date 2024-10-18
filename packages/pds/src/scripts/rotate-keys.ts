@@ -57,6 +57,7 @@ const rotateKeysForRepos = async (
       console.log(`successfully updated key for ${did}`)
     })
   }
+  await queue.onIdle()
 }
 
 const updatePlcSigningKey = async (ctx: AppContext, did: string) => {
