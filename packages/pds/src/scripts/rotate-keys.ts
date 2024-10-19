@@ -49,6 +49,12 @@ const rotateKeysForRepos = async (
         return
       }
       try {
+        await ctx.sequencer.sequenceIdentityEvt(did)
+      } catch (err) {
+        console.error(`failed to sequence new identity evt for ${did}: ${err}`)
+        return
+      }
+      try {
         await ctx.sequencer.sequenceCommit(did, commit, [])
       } catch (err) {
         console.error(`failed to sequence new commit for ${did}: ${err}`)
