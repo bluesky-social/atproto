@@ -8,7 +8,6 @@ import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { html, js } from '../lib/html/index.js'
 import { Code } from '../request/code.js'
 import { sendWebPage } from './send-web-page.js'
-import { negotiateEncoding } from '../lib/http/response.js'
 
 // https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-11#section-7.5.4
 const REDIRECT_STATUS_CODE = 303
@@ -111,9 +110,6 @@ async function writeFormPost(
   uri: string,
   entries: readonly [string, string][],
 ) {
-  // Make sure the encoding is compatible before building the page
-  const contentEncoding = negotiateEncoding(res.req.headers['accept-encoding'])
-
   // Prevent the Chrome from caching this page
   // see: https://latesthackingnews.com/2023/12/12/google-updates-chrome-bfcache-for-faster-page-viewing/
   res.setHeader('Set-Cookie', `bfCacheBypass=foo; max-age=1; SameSite=Lax`)
@@ -131,6 +127,5 @@ async function writeFormPost(
       </form>
     `,
     scripts: [js`document.forms[0].submit();`],
-    contentEncoding,
   })
 }

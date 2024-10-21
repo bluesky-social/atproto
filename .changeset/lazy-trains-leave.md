@@ -2,4 +2,4 @@
 "@atproto/oauth-provider": patch
 ---
 
-Properly negotiate response content-encoding
+Remove response content-encoding logic

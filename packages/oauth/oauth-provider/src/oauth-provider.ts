@@ -1,7 +1,5 @@
-import createHttpError from 'http-errors'
 import { safeFetchWrap } from '@atproto-labs/fetch-node'
 import { SimpleStore } from '@atproto-labs/simple-store'
-import { mediaType } from '@hapi/accept'
 import { SimpleStoreMemory } from '@atproto-labs/simple-store-memory'
 import { Jwks, Keyset } from '@atproto/jwk'
 import {
@@ -31,6 +29,8 @@ import {
   oauthTokenIdentificationSchema,
   oauthTokenRequestSchema,
 } from '@atproto/oauth-types'
+import { mediaType } from '@hapi/accept'
+import createHttpError from 'http-errors'
 import type { Redis, RedisOptions } from 'ioredis'
 import z, { ZodError } from 'zod'
 
@@ -75,7 +75,6 @@ import {
   Router,
   ServerResponse,
   combineMiddlewares,
-  negotiateEncoding,
   parseHttpRequest,
   setupCsrfToken,
   staticJsonMiddleware,
@@ -1064,13 +1063,10 @@ export class OAuthProvider extends OAuthVerifier {
           if (!mediaType(req.headers['accept'], ['application/json'])) {
             throw createHttpError(406, 'Unsupported media type')
           }
-          const contentEncoding = negotiateEncoding(
-            req.headers['accept-encoding'],
-          )
 
           const result = await buildJson.call(this, req, res)
           if (result !== undefined) {
-            writeJson(res, result, { status, contentEncoding })
+            writeJson(res, result, { status })
           } else if (!res.headersSent) {
             res.writeHead(status ?? 204).end()
           }
@@ -1084,7 +1080,7 @@ export class OAuthProvider extends OAuthVerifier {
 
             const payload = buildErrorPayload(err)
             const status = buildErrorStatus(err)
-            writeJson(res, payload, { status, contentEncoding: 'identity' })
+            writeJson(res, payload, { status })
           } else {
             res.destroy()
           }
@@ -1113,11 +1109,6 @@ export class OAuthProvider extends OAuthVerifier {
           validateSameOrigin(req, res, issuerOrigin)
 
           await handler.call(this, req, res)
-
-          // Should never happen (fool proofing)
-          if (!res.headersSent) {
-            throw new Error('Navigation handler did not send a response')
-          }
         } catch (err) {
           onError?.(
             req,

@@ -1,7 +1,4 @@
-import { encoding } from '@hapi/accept'
-import createHttpError from 'http-errors'
-import { Readable, Transform, pipeline } from 'node:stream'
-import { constants, createBrotliCompress, createGzip } from 'node:zlib'
+import { Readable, pipeline } from 'node:stream'
 
 import { Middleware, ServerResponse } from './types.js'
 
@@ -27,43 +24,12 @@ export function writeRedirect(
   res.writeHead(status, { Location: url }).end()
 }
 
-export function negotiateEncoding(acceptEncoding?: string | string[]) {
-  const accept = Array.isArray(acceptEncoding)
-    ? acceptEncoding.join(',')
-    : acceptEncoding
-
-  const result = encoding(accept, ['gzip', 'br', 'identity'])
-  if (!result) {
-    throw createHttpError(406, 'Unsupported encoding')
-  }
-
-  return result as 'gzip' | 'br' | 'identity'
-}
-
-function getEncoder(
-  encoding: 'gzip' | 'br' | 'identity' | undefined,
-): Transform | null {
-  if (encoding === 'gzip') {
-    return createGzip()
-  }
-
-  if (encoding === 'br') {
-    return createBrotliCompress({
-      // Default quality is too slow
-      params: { [constants.BROTLI_PARAM_QUALITY]: 5 },
-    })
-  }
-
-  return null
-}
-
 const ifString = (value: unknown): string | undefined =>
   typeof value === 'string' ? value : undefined
 
 export type WriteResponseOptions = {
   status?: number
   contentType?: string
-  contentEncoding?: 'gzip' | 'br' | 'identity'
 }
 
 export function writeStream(
@@ -73,35 +39,20 @@ export function writeStream(
     status = 200,
     contentType = ifString((stream as any).headers?.['content-type']) ||
       'application/octet-stream',
-    contentEncoding = negotiateEncoding(res.req.headers['accept-encoding']),
   }: WriteResponseOptions = {},
 ): void {
   res.statusCode = status
   res.setHeader('content-type', contentType)
   appendHeader(res, 'vary', 'accept-encoding')
 
-  if (contentEncoding !== 'identity') {
-    res.setHeader('content-encoding', contentEncoding)
-  } else {
-    res.removeHeader('content-encoding')
-  }
-
-  res.setHeader('transfer-encoding', 'chunked')
-
   if (res.req.method === 'HEAD') {
     res.end()
     stream.destroy()
-    return
-  }
-
-  const encoder = getEncoder(contentEncoding)
-
-  pipeline(
-    encoder ? [stream, encoder, res] : [stream, res],
-    (_err: Error | null) => {
+  } else {
+    pipeline([stream, res], (_err: Error | null) => {
       // The error will be propagated through the streams
-    },
-  )
+    })
+  }
 }
 
 export function writeBuffer(
