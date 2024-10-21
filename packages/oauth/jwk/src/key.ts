@@ -24,7 +24,7 @@ export abstract class Key<J extends Jwk = Jwk> {
     return false
   }
 
-  get privateJwk(): J | undefined {
+  get privateJwk(): Readonly<J> | undefined {
     return this.isPrivate ? this.jwk : undefined
   }
 

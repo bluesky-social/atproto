@@ -75,7 +75,7 @@ export class WebcryptoKey<
     return true
   }
 
-  get privateJwk(): J | undefined {
+  get privateJwk(): Readonly<J> | undefined {
     if (super.isPrivate) return this.jwk
     throw new Error('Private Webcrypto Key not exportable')
   }

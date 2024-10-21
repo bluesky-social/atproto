@@ -2,4 +2,4 @@
 "@atproto/jwk": patch
 ---
 
-Allow unknown properties in JWT payload & headers
+Allow (passthrough) unknown properties in JWT payload & headers
