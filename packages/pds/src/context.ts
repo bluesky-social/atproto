@@ -63,7 +63,7 @@ export type AppContextOptions = {
   moderationAgent?: AtpAgent
   reportingAgent?: AtpAgent
   entrywayAgent?: AtpAgent
-  proxyAgent: undici.Agent
+  proxyAgent: undici.Dispatcher
   safeFetch: Fetch
   authProvider?: PdsOAuthProvider
   authVerifier: AuthVerifier
@@ -90,7 +90,7 @@ export class AppContext {
   public moderationAgent: AtpAgent | undefined
   public reportingAgent: AtpAgent | undefined
   public entrywayAgent: AtpAgent | undefined
-  public proxyAgent: undici.Agent
+  public proxyAgent: undici.Dispatcher
   public safeFetch: Fetch
   public authVerifier: AuthVerifier
   public authProvider?: PdsOAuthProvider
@@ -264,7 +264,7 @@ export class AppContext {
     })
 
     // An agent for performing HTTP requests based on user provided URLs.
-    const proxyAgent = new undici.Agent({
+    const proxyAgentBase = new undici.Agent({
       allowH2: cfg.proxy.allowHTTP2, // This is experimental
       headersTimeout: cfg.proxy.headersTimeout,
       maxResponseSize: cfg.proxy.maxResponseSize,
@@ -286,6 +286,14 @@ export class AppContext {
         lookup: cfg.proxy.disableSsrfProtection ? undefined : unicastLookup,
       },
     })
+    const proxyAgent =
+      cfg.proxy.maxRetries > 0
+        ? new undici.RetryAgent(proxyAgentBase, {
+            statusCodes: [], // Only retry on socket errors
+            methods: ['GET', 'HEAD'],
+            maxRetries: cfg.proxy.maxRetries,
+          })
+        : proxyAgentBase
 
     // A fetch() function that protects against SSRF attacks, large responses &
     // known bad domains. This function can safely be used to fetch user

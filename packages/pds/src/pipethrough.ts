@@ -357,9 +357,9 @@ async function pipethroughRequest(
 
 function handleUpstreamRequestError(
   err: unknown,
-  message = 'pipethrough network error',
+  message = 'Upstream service unreachable',
 ): never {
-  httpLogger.warn({ err }, message)
+  httpLogger.error({ err }, message)
   throw new XRPCServerError(ResponseType.UpstreamFailure, message, undefined, {
     cause: err,
   })
@@ -520,18 +520,11 @@ async function tryParsingError(
   }
 }
 
-export async function bufferUpstreamResponse(
+async function bufferUpstreamResponse(
   readable: Readable,
   contentEncoding?: string | string[],
 ): Promise<Buffer> {
   try {
-    // Needed for type-safety (should never happen irl)
-    if (Array.isArray(contentEncoding)) {
-      throw new TypeError(
-        'upstream service returned multiple content-encoding headers',
-      )
-    }
-
     return await streamToNodeBuffer(decodeStream(readable, contentEncoding))
   } catch (err) {
     if (!readable.destroyed) readable.destroy()
@@ -561,7 +554,11 @@ export async function asPipeThroughBuffer(
 // Response parsing/forwarding
 // -------------------
 
-const RES_HEADERS_TO_FORWARD = ['atproto-repo-rev', 'atproto-content-labelers']
+const RES_HEADERS_TO_FORWARD = [
+  'atproto-repo-rev',
+  'atproto-content-labelers',
+  'retry-after',
+]
 
 function* responseHeaders(
   headers: IncomingHttpHeaders,
@@ -584,7 +581,11 @@ function* responseHeaders(
   for (let i = 0; i < RES_HEADERS_TO_FORWARD.length; i++) {
     const name = RES_HEADERS_TO_FORWARD[i]
     const val = headers[name]
-    if (typeof val === 'string') yield [name, val]
+
+    if (val != null) {
+      const value: string = Array.isArray(val) ? val.join(',') : val
+      yield [name, value]
+    }
   }
 }
 
