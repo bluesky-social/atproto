@@ -14,8 +14,10 @@ import {
 export function decodeHttpRequest(req: IncomingMessage): Readable {
   try {
     return decodeStream(req, req.headers['content-encoding'])
-  } catch (err) {
-    throw createHttpError(415, err, { expose: err instanceof TypeError })
+  } catch (cause) {
+    const message =
+      cause instanceof TypeError ? cause.message : `Invalid content-encoding`
+    throw createHttpError(415, message, { cause })
   }
 }
 
