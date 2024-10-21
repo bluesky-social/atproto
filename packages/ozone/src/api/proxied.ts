@@ -160,6 +160,57 @@ export default function (server: Server, ctx: AppContext) {
     },
   })
 
+  server.tools.ozone.signature.findRelatedAccounts({
+    auth: ctx.authVerifier.moderator,
+    handler: async (request) => {
+      if (!ctx.pdsAgent) {
+        throw new Error('PDS not configured')
+      }
+      const res = await ctx.pdsAgent.tools.ozone.signature.findRelatedAccounts(
+        request.params,
+        await ctx.pdsAuth(ids.ToolsOzoneSignatureFindRelatedAccounts),
+      )
+      return {
+        encoding: 'application/json',
+        body: res.data,
+      }
+    },
+  })
+
+  server.tools.ozone.signature.searchAccounts({
+    auth: ctx.authVerifier.moderator,
+    handler: async (request) => {
+      if (!ctx.pdsAgent) {
+        throw new Error('PDS not configured')
+      }
+      const res = await ctx.pdsAgent.tools.ozone.signature.searchAccounts(
+        request.params,
+        await ctx.pdsAuth(ids.ToolsOzoneSignatureSearchAccounts),
+      )
+      return {
+        encoding: 'application/json',
+        body: res.data,
+      }
+    },
+  })
+
+  server.tools.ozone.signature.findCorrelation({
+    auth: ctx.authVerifier.moderator,
+    handler: async (request) => {
+      if (!ctx.pdsAgent) {
+        throw new Error('PDS not configured')
+      }
+      const res = await ctx.pdsAgent.tools.ozone.signature.findCorrelation(
+        request.params,
+        await ctx.pdsAuth(ids.ToolsOzoneSignatureFindCorrelation),
+      )
+      return {
+        encoding: 'application/json',
+        body: res.data,
+      }
+    },
+  })
+
   server.app.bsky.graph.getStarterPack({
     auth: ctx.authVerifier.moderator,
     handler: async (request) => {

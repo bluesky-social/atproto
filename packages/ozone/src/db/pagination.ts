@@ -146,7 +146,7 @@ export class StatusKeyset extends GenericKeyset<StatusKeysetParam, Cursor> {
 
 type TimeIdKeysetParam = {
   id: number
-  createdAt: string
+  createdAt: string | Date
 }
 type TimeIdResult = TimeIdKeysetParam
 

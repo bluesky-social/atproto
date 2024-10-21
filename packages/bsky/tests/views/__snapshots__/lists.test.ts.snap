@@ -343,3 +343,36 @@ Array [
   },
 ]
 `;
+
+exports[`bsky actor likes feed views supports using a handle as getList actor param 1`] = `
+Array [
+  Object {
+    "cid": "cids(0)",
+    "creator": Object {
+      "did": "user(0)",
+      "handle": "eve.test",
+      "labels": Array [],
+    },
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
+    "listItemCount": 0,
+    "name": "cool curate list",
+    "purpose": "app.bsky.graph.defs#curatelist",
+    "uri": "record(0)",
+  },
+  Object {
+    "cid": "cids(1)",
+    "creator": Object {
+      "did": "user(0)",
+      "handle": "eve.test",
+      "labels": Array [],
+    },
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
+    "listItemCount": 3,
+    "name": "blah curate list!",
+    "purpose": "app.bsky.graph.defs#curatelist",
+    "uri": "record(1)",
+  },
+]
+`;

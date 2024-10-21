@@ -110,14 +110,16 @@ export class BskyAppView {
       interceptors: config.bsyncApiKey ? [bsyncAuth(config.bsyncApiKey)] : [],
     })
 
-    const courierClient = createCourierClient({
-      baseUrl: config.courierUrl,
-      httpVersion: config.courierHttpVersion ?? '2',
-      nodeOptions: { rejectUnauthorized: !config.courierIgnoreBadTls },
-      interceptors: config.courierApiKey
-        ? [courierAuth(config.courierApiKey)]
-        : [],
-    })
+    const courierClient = config.courierUrl
+      ? createCourierClient({
+          baseUrl: config.courierUrl,
+          httpVersion: config.courierHttpVersion ?? '2',
+          nodeOptions: { rejectUnauthorized: !config.courierIgnoreBadTls },
+          interceptors: config.courierApiKey
+            ? [courierAuth(config.courierApiKey)]
+            : [],
+        })
+      : undefined
 
     const entrywayJwtPublicKey = config.entrywayJwtPublicKeyHex
       ? createPublicKeyObject(config.entrywayJwtPublicKeyHex)
