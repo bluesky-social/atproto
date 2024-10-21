@@ -5,6 +5,8 @@ import { VerifyOptions, VerifyResult } from './jwt-verify.js'
 import { JwtHeader, JwtPayload, SignedJwt } from './jwt.js'
 import { cachedGetter } from './util.js'
 
+const jwkSchemaReadonly = jwkSchema.readonly()
+
 export abstract class Key<J extends Jwk = Jwk> {
   constructor(protected readonly jwk: Readonly<J>) {
     // A key should always be used either for signing or encryption.
@@ -29,20 +31,23 @@ export abstract class Key<J extends Jwk = Jwk> {
   }
 
   @cachedGetter
-  get publicJwk(): (J & { d?: never; k?: never }) | undefined {
+  get publicJwk():
+    | Readonly<Exclude<J, { kty: 'oct' }> & { d?: never }>
+    | undefined {
     if (this.isSymetric) return undefined
-    if (this.isPrivate) {
-      const { d: _d, k: _k, ...jwk } = this.jwk as any
-      return jwk
-    }
-    return this.jwk
+
+    return jwkSchemaReadonly.parse({
+      ...this.jwk,
+      d: undefined,
+      k: undefined,
+    }) as Exclude<J, { kty: 'oct' }> & { d?: never }
   }
 
   @cachedGetter
-  get bareJwk(): Jwk | undefined {
+  get bareJwk(): Readonly<Jwk> | undefined {
     if (this.isSymetric) return undefined
     const { kty, crv, e, n, x, y } = this.jwk as any
-    return jwkSchema.parse({ crv, e, kty, n, x, y })
+    return jwkSchemaReadonly.parse({ crv, e, kty, n, x, y })
   }
 
   get use() {
@@ -73,7 +78,7 @@ export abstract class Key<J extends Jwk = Jwk> {
    */
   @cachedGetter
   get algorithms(): readonly string[] {
-    return Array.from(jwkAlgorithms(this.jwk))
+    return Object.freeze(Array.from(jwkAlgorithms(this.jwk)))
   }
 
   /**
