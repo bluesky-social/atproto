@@ -20,8 +20,8 @@ import { getRecordsSinceRev } from './viewer'
 
 const REPO_REV_HEADER = 'atproto-repo-rev'
 
-export const getRepoRev = (headers: HeadersMap): string | undefined => {
-  return headers[REPO_REV_HEADER]
+export const getRepoRev = (headers?: HeadersMap): string | undefined => {
+  return headers?.[REPO_REV_HEADER]
 }
 
 export const getLocalLag = (local: LocalRecords): number | undefined => {
