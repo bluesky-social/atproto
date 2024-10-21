@@ -289,8 +289,8 @@ export class AppContext {
     const proxyAgent =
       cfg.proxy.maxRetries > 0
         ? new undici.RetryAgent(proxyAgentBase, {
-            statusCodes: [502, 503, 504], // Do *not* include 429 here.
-            methods: ['GET', 'HEAD', 'POST'],
+            statusCodes: [], // Only retry on socket errors
+            methods: ['GET', 'HEAD'],
             maxRetries: cfg.proxy.maxRetries,
           })
         : proxyAgentBase
