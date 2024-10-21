@@ -106,5 +106,6 @@ export interface BskyPreferences {
   bskyAppState: {
     queuedNudges: string[]
     activeProgressGuide: AppBskyActorDefs.BskyAppProgressGuide | undefined
+    nuxs: AppBskyActorDefs.Nux[]
   }
 }

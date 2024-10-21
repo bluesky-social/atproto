@@ -139,20 +139,30 @@ export const selectInviteCodesQb = (db: AccountDb) => {
   return db.db.selectFrom(builder.as('codes')).selectAll()
 }
 
-export const getAccountInviteCodes = async (
+export const getAccountsInviteCodes = async (
   db: AccountDb,
-  did: string,
-): Promise<CodeDetail[]> => {
+  dids: string[],
+): Promise<Map<string, CodeDetail[]>> => {
+  const results = new Map<string, CodeDetail[]>()
+  // We don't want to pass an empty array to kysely and let's avoid running a query entirely if there is nothing to match for
+  if (!dids.length) return results
   const res = await selectInviteCodesQb(db)
-    .where('forAccount', '=', did)
+    .where('forAccount', 'in', dids)
     .execute()
   const codes = res.map((row) => row.code)
   const uses = await getInviteCodesUses(db, codes)
-  return res.map((row) => ({
-    ...row,
-    uses: uses[row.code] ?? [],
-    disabled: row.disabled === 1,
-  }))
+  res.forEach((row) => {
+    const existing = results.get(row.forAccount) ?? []
+    results.set(row.forAccount, [
+      ...existing,
+      {
+        ...row,
+        uses: uses[row.code] ?? [],
+        disabled: row.disabled === 1,
+      },
+    ])
+  })
+  return results
 }
 
 export const getInviteCodesUses = async (

@@ -241,7 +241,17 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
       : null
 
   const fetchCfg: ServerConfig['fetch'] = {
-    disableSsrfProtection: env.fetchDisableSsrfProtection ?? false,
+    disableSsrfProtection: env.disableSsrfProtection ?? env.devMode ?? false,
+    maxResponseSize: env.fetchMaxResponseSize ?? 512 * 1024, // 512kb
+  }
+
+  const proxyCfg: ServerConfig['proxy'] = {
+    disableSsrfProtection: env.disableSsrfProtection ?? env.devMode ?? false,
+    allowHTTP2: env.proxyAllowHTTP2 ?? false,
+    headersTimeout: env.proxyHeadersTimeout ?? 10e3,
+    bodyTimeout: env.proxyBodyTimeout ?? 30e3,
+    maxResponseSize: env.proxyMaxResponseSize ?? 10 * 1024 * 1024, // 10mb
+    preferCompressed: env.proxyPreferCompressed ?? false,
   }
 
   const oauthCfg: ServerConfig['oauth'] = entrywayCfg
@@ -308,6 +318,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     crawlers: crawlersCfg,
     repoRevCache: repoRevCacheCfg,
     fetch: fetchCfg,
+    proxy: proxyCfg,
     oauth: oauthCfg,
   }
 }
@@ -331,6 +342,7 @@ export type ServerConfig = {
   crawlers: string[]
   repoRevCache: RepoRevCacheConfig | null
   fetch: FetchConfig
+  proxy: ProxyConfig
   oauth: OAuthConfig
 }
 
@@ -404,6 +416,24 @@ export type RepoRevCacheConfig = {
 
 export type FetchConfig = {
   disableSsrfProtection: boolean
+  maxResponseSize: number
+}
+
+export type ProxyConfig = {
+  disableSsrfProtection: boolean
+  allowHTTP2: boolean
+  headersTimeout: number
+  bodyTimeout: number
+  maxResponseSize: number
+
+  /**
+   * When proxying requests that might get intercepted (for read-after-write) we
+   * negotiate the encoding based on the client's preferences. We will however
+   * use or own weights in order to be able to better control if the PDS will
+   * need to perform content decoding. This settings allows to prefer compressed
+   * content over uncompressed one.
+   */
+  preferCompressed: boolean
 }
 
 export type OAuthConfig = {

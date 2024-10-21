@@ -4,9 +4,11 @@ import express from 'express'
 import axios from 'axios'
 import * as plc from '@did-plc/lib'
 import { SeedClient, TestNetworkNoAppView, usersSeed } from '@atproto/dev-env'
-import getPort from 'get-port'
 import { Keypair } from '@atproto/crypto'
 import { verifyJwt } from '@atproto/xrpc-server'
+import { parseProxyHeader } from '../../src/pipethrough'
+import { once } from 'node:events'
+import { AddressInfo } from 'node:net'
 
 describe('proxy header', () => {
   let network: TestNetworkNoAppView
@@ -51,6 +53,35 @@ describe('proxy header', () => {
     throw new Error('no error thrown')
   }
 
+  it('parses proxy header', async () => {
+    expect(parseProxyHeader(network.pds.ctx, `#atproto_test`)).rejects.toThrow(
+      'no did specified in proxy header',
+    )
+
+    expect(
+      parseProxyHeader(network.pds.ctx, `${proxyServer.did}#atproto_test#foo`),
+    ).rejects.toThrow('invalid proxy header format')
+
+    expect(
+      parseProxyHeader(network.pds.ctx, `${proxyServer.did}#atproto_test `),
+    ).rejects.toThrow('proxy header cannot contain spaces')
+
+    expect(
+      parseProxyHeader(network.pds.ctx, ` ${proxyServer.did}#atproto_test`),
+    ).rejects.toThrow('proxy header cannot contain spaces')
+
+    expect(parseProxyHeader(network.pds.ctx, `foo#bar`)).rejects.toThrow(
+      'Poorly formatted DID: foo',
+    )
+
+    expect(
+      parseProxyHeader(network.pds.ctx, `${proxyServer.did}#atproto_test`),
+    ).resolves.toEqual({
+      did: proxyServer.did,
+      url: proxyServer.url,
+    })
+  })
+
   it('proxies requests based on header', async () => {
     const path = `/xrpc/app.bsky.actor.getProfile?actor=${alice}`
     await axios.get(`${network.pds.url}${path}`, {
@@ -93,7 +124,7 @@ describe('proxy header', () => {
         'atproto-proxy': proxyServer.did,
       },
     })
-    await assertAxiosErr(attempt, 'no service id specified')
+    await assertAxiosErr(attempt, 'no service id specified in proxy header')
     expect(proxyServer.requests.length).toBe(1)
   })
 
@@ -137,8 +168,12 @@ class ProxyServer {
       })
       res.sendStatus(200)
     })
-    const port = await getPort()
-    const server = app.listen(port)
+
+    const server = app.listen(0)
+    await once(server, 'listening')
+
+    const { port } = server.address() as AddressInfo
+
     const url = `http://localhost:${port}`
     const plcOp = await plc.signOperation(
       {

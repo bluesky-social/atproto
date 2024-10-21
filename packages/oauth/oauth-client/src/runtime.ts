@@ -39,7 +39,7 @@ export class Runtime {
     return {
       verifier,
       challenge: await this.sha256(verifier),
-      method: 'S256',
+      method: 'S256' as const,
     }
   }
 

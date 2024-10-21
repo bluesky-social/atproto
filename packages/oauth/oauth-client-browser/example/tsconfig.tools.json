@@ -1,8 +1,0 @@
-{
-  "extends": "../../../../tsconfig/node.json",
-  "compilerOptions": {
-    "rootDir": ".",
-    "noEmit": true
-  },
-  "include": ["./*.js", "./*.ts"]
-}

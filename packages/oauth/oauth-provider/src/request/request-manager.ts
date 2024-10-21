@@ -1,6 +1,6 @@
 import {
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
-  OAuthAuthenticationRequestParameters,
+  OAuthAuthorizationRequestParameters,
   OAuthAuthorizationServerMetadata,
 } from '@atproto/oauth-types'
 
@@ -20,7 +20,6 @@ import { InvalidAuthorizationDetailsError } from '../errors/invalid-authorizatio
 import { InvalidGrantError } from '../errors/invalid-grant-error.js'
 import { InvalidParametersError } from '../errors/invalid-parameters-error.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
-import { compareRedirectUri } from '../lib/util/redirect-uri.js'
 import { OAuthHooks } from '../oauth-hooks.js'
 import { Signer } from '../signer/signer.js'
 import { Code, generateCode } from './code.js'
@@ -36,6 +35,7 @@ import {
   encodeRequestUri,
   RequestUri,
 } from './request-uri.js'
+import { InvalidScopeError } from '../errors/invalid-scope-error.js'
 
 export class RequestManager {
   constructor(
@@ -53,7 +53,7 @@ export class RequestManager {
   async createAuthorizationRequest(
     client: Client,
     clientAuth: ClientAuth,
-    input: Readonly<OAuthAuthenticationRequestParameters>,
+    input: Readonly<OAuthAuthorizationRequestParameters>,
     deviceId: null | DeviceId,
     dpopJkt: null | string,
   ): Promise<RequestInfo> {
@@ -64,7 +64,7 @@ export class RequestManager {
   protected async create(
     client: Client,
     clientAuth: ClientAuth,
-    parameters: Readonly<OAuthAuthenticationRequestParameters>,
+    parameters: Readonly<OAuthAuthorizationRequestParameters>,
     deviceId: null | DeviceId = null,
   ): Promise<RequestInfo> {
     const expiresAt = new Date(Date.now() + PAR_EXPIRES_IN)
@@ -84,19 +84,23 @@ export class RequestManager {
     return { id, uri, expiresAt, parameters, clientId: client.id, clientAuth }
   }
 
-  async validate(
+  protected async validate(
     client: Client,
     clientAuth: ClientAuth,
-    parameters: Readonly<OAuthAuthenticationRequestParameters>,
-    dpopJkt: null | string,
-  ): Promise<Readonly<OAuthAuthenticationRequestParameters>> {
+    parameters: Readonly<OAuthAuthorizationRequestParameters>,
+    dpop_jkt: null | string,
+  ): Promise<Readonly<OAuthAuthorizationRequestParameters>> {
+    // -------------------------------
+    // Validate unsupported parameters
+    // -------------------------------
+
     for (const k of [
       // Known unsupported OIDC parameters
       'claims',
       'id_token_hint',
       'nonce', // note that OIDC "nonce" is redundant with PKCE
     ] as const) {
-      if (parameters[k]) {
+      if (parameters[k] !== undefined) {
         throw new InvalidParametersError(
           parameters,
           `Unsupported "${k}" parameter`,
@@ -104,73 +108,48 @@ export class RequestManager {
       }
     }
 
-    if (parameters.response_type !== 'code') {
-      throw new InvalidParametersError(
+    // -----------------------
+    // Validate against server
+    // -----------------------
+
+    if (
+      !this.metadata.response_types_supported?.includes(
+        parameters.response_type,
+      )
+    ) {
+      throw new AccessDeniedError(
         parameters,
-        'Only "code" response type is allowed',
+        `Unsupported response_type "${parameters.response_type}"`,
+        'unsupported_response_type',
       )
     }
 
-    // https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-10#section-1.4.1
-    // > The authorization server MAY fully or partially ignore the scope
-    // > requested by the client, based on the authorization server policy or
-    // > the resource owner's instructions. If the issued access token scope is
-    // > different from the one requested by the client, the authorization
-    // > server MUST include the scope response parameter in the token response
-    // > (Section 3.2.3) to inform the client of the actual scope granted.
-
-    const cScopes = client.metadata.scope?.split(' ').filter(Boolean)
-    const sScopes = this.metadata.scopes_supported
-
-    const scopes = new Set(
-      parameters.scope?.split(' ').filter(Boolean) || cScopes,
-    )
-
-    if (scopes.has('openid')) {
-      throw new InvalidParametersError(
+    if (
+      parameters.response_type === 'code' &&
+      !this.metadata.grant_types_supported?.includes('authorization_code')
+    ) {
+      throw new AccessDeniedError(
         parameters,
-        'OpenID Connect is not supported',
+        `Unsupported grant_type "authorization_code"`,
+        'unsupported_grant_type',
       )
     }
 
-    if (!scopes.has('atproto')) {
-      throw new InvalidParametersError(
-        parameters,
-        'The "atproto" scope is required',
-      )
-    }
-
-    for (const scope of scopes) {
-      // Loopback clients do not define any scope in their metadata
-      if (cScopes && !cScopes.includes(scope)) {
-        throw new InvalidParametersError(
-          parameters,
-          `Scope "${scope}" is not registered for this client`,
-        )
-      }
-
-      // Currently, the implementation requires all the scopes to be statically
-      // defined in the server metadata. In the future, we might add support
-      // for dynamic scopes.
-      if (!sScopes?.includes(scope)) {
-        throw new InvalidParametersError(
-          parameters,
-          `Scope "${scope}" is not supported by this server`,
-        )
+    if (parameters.scope) {
+      for (const scope of parameters.scope.split(' ')) {
+        // Currently, the implementation requires all the scopes to be statically
+        // defined in the server metadata. In the future, we might add support
+        // for dynamic scopes.
+        if (!this.metadata.scopes_supported?.includes(scope)) {
+          throw new InvalidParametersError(
+            parameters,
+            `Scope "${scope}" is not supported by this server`,
+          )
+        }
       }
     }
-
-    parameters = { ...parameters, scope: [...scopes].join(' ') || undefined }
 
     if (parameters.authorization_details) {
-      const clientAuthDetailsTypes = client.metadata.authorization_details_types
-      if (!clientAuthDetailsTypes) {
-        throw new InvalidAuthorizationDetailsError(
-          parameters,
-          'Client Metadata does not declare any "authorization_details"',
-        )
-      }
-
       for (const detail of parameters.authorization_details) {
         if (
           !this.metadata.authorization_details_types_supported?.includes(
@@ -182,35 +161,45 @@ export class RequestManager {
             `Unsupported "authorization_details" type "${detail.type}"`,
           )
         }
-        if (!clientAuthDetailsTypes?.includes(detail.type)) {
-          throw new InvalidAuthorizationDetailsError(
-            parameters,
-            `Client Metadata does not declare any "authorization_details" of type "${detail.type}"`,
-          )
-        }
       }
     }
 
-    const { redirect_uri } = parameters
-    if (
-      redirect_uri &&
-      !client.metadata.redirect_uris.some((uri) =>
-        compareRedirectUri(uri, redirect_uri),
-      )
-    ) {
-      throw new InvalidParametersError(
-        parameters,
-        `Invalid redirect_uri ${redirect_uri} (allowed: ${client.metadata.redirect_uris.join(' ')})`,
-      )
+    // -----------------------
+    // Validate against client
+    // -----------------------
+
+    parameters = client.validateRequest(parameters)
+
+    // -------------------
+    // Validate parameters
+    // -------------------
+
+    if (!parameters.redirect_uri) {
+      // Should already be ensured by client.validateRequest(). Adding here for
+      // clarity & extra safety.
+      throw new InvalidParametersError(parameters, 'Missing "redirect_uri"')
     }
+
+    // https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-10#section-1.4.1
+    // > The authorization server MAY fully or partially ignore the scope
+    // > requested by the client, based on the authorization server policy or
+    // > the resource owner's instructions. If the issued access token scope is
+    // > different from the one requested by the client, the authorization
+    // > server MUST include the scope response parameter in the token response
+    // > (Section 3.2.3) to inform the client of the actual scope granted.
+
+    // Let's make sure the scopes are unique (to reduce the token & storage size)
+    const scopes = new Set(parameters.scope?.split(' '))
+
+    parameters = { ...parameters, scope: [...scopes].join(' ') || undefined }
 
     // https://datatracker.ietf.org/doc/html/rfc9449#section-10
     if (!parameters.dpop_jkt) {
-      if (dpopJkt) parameters = { ...parameters, dpop_jkt: dpopJkt }
-    } else if (parameters.dpop_jkt !== dpopJkt) {
+      if (dpop_jkt) parameters = { ...parameters, dpop_jkt }
+    } else if (parameters.dpop_jkt !== dpop_jkt) {
       throw new InvalidParametersError(
         parameters,
-        'DPoP header and dpop_jkt do not match',
+        '"dpop_jkt" parameters does not match the DPoP proof',
       )
     }
 
@@ -223,40 +212,77 @@ export class RequestManager {
       }
     }
 
-    if (!client.metadata.response_types.includes(parameters.response_type)) {
+    if (parameters.code_challenge) {
+      switch (parameters.code_challenge_method) {
+        case undefined:
+          // https://datatracker.ietf.org/doc/html/rfc7636#section-4.3
+          parameters = { ...parameters, code_challenge_method: 'plain' }
+        // falls through
+        case 'plain':
+        case 'S256':
+          break
+        default: {
+          throw new InvalidParametersError(
+            parameters,
+            `Unsupported code_challenge_method "${parameters.code_challenge_method}"`,
+          )
+        }
+      }
+    } else {
+      if (parameters.code_challenge_method) {
+        // https://datatracker.ietf.org/doc/html/rfc7636#section-4.4.1
+        throw new InvalidParametersError(
+          parameters,
+          'code_challenge is required when code_challenge_method is provided',
+        )
+      }
+
+      // https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-11#section-4.1.2.1
+      //
+      // > An AS MUST reject requests without a code_challenge from public
+      // > clients, and MUST reject such requests from other clients unless
+      // > there is reasonable assurance that the client mitigates
+      // > authorization code injection in other ways. See Section 7.5.1 for
+      // > details.
+      //
+      // > [...] In the specific deployment and the specific request, there is
+      // > reasonable assurance by the authorization server that the client
+      // > implements the OpenID Connect nonce mechanism properly.
+      //
+      // atproto does not implement the OpenID Connect nonce mechanism, so we
+      // require the use of PKCE for all clients.
+
+      throw new InvalidParametersError(parameters, 'Use of PKCE is required')
+    }
+
+    // -----------------
+    // atproto extension
+    // -----------------
+
+    if (parameters.response_type !== 'code') {
       throw new InvalidParametersError(
         parameters,
-        `Unsupported response_type "${parameters.response_type}"`,
-        'unsupported_response_type',
+        'atproto only supports the "code" response_type',
       )
     }
 
-    // https://datatracker.ietf.org/doc/html/rfc7636#section-4.4.1
-    // PKCE is mandatory
-    if (!parameters.code_challenge) {
-      throw new InvalidParametersError(parameters, 'code_challenge is required')
-    }
-
-    if (
-      parameters.code_challenge &&
-      clientAuth.method === 'none' &&
-      (parameters.code_challenge_method ?? 'plain') === 'plain'
-    ) {
-      throw new InvalidParametersError(
+    if (!scopes.has('atproto')) {
+      throw new InvalidScopeError(parameters, 'The "atproto" scope is required')
+    } else if (scopes.has('openid')) {
+      throw new InvalidScopeError(
         parameters,
-        'code_challenge_method=plain requires client authentication',
+        'OpenID Connect is not compatible with atproto',
       )
     }
 
-    // https://datatracker.ietf.org/doc/html/rfc7636#section-4.3
-    if (parameters.code_challenge_method && !parameters.code_challenge) {
+    if (parameters.code_challenge_method !== 'S256') {
       throw new InvalidParametersError(
         parameters,
-        'code_challenge_method requires code_challenge',
+        'atproto requires use of "S256" code_challenge_method',
       )
     }
 
-    // ATPROTO extension: if the client is not trusted, and not authenticated,
+    // atproto extension: if the client is not trusted, and not authenticated,
     // force users to consent to authorization requests. We do this to avoid
     // unauthenticated clients from being able to silently re-authenticate
     // users.
@@ -416,7 +442,10 @@ export class RequestManager {
       }
 
       if (data.clientId !== client.id) {
-        throw new InvalidGrantError('This code was issued for another client')
+        // Note: do not reveal the original client ID to the client using an invalid id
+        throw new InvalidGrantError(
+          `The code was not issued to client "${client.id}"`,
+        )
       }
 
       if (data.expiresAt < new Date()) {

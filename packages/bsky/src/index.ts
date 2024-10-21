@@ -20,7 +20,7 @@ import { Keypair } from '@atproto/crypto'
 import { createDataPlaneClient } from './data-plane/client'
 import { Hydrator } from './hydration/hydrator'
 import { Views } from './views'
-import { AuthVerifier } from './auth-verifier'
+import { AuthVerifier, createPublicKeyObject } from './auth-verifier'
 import { authWithApiKey as bsyncAuth, createBsyncClient } from './bsync'
 import { authWithApiKey as courierAuth, createCourierClient } from './courier'
 import { FeatureGates } from './feature-gates'
@@ -110,20 +110,26 @@ export class BskyAppView {
       interceptors: config.bsyncApiKey ? [bsyncAuth(config.bsyncApiKey)] : [],
     })
 
-    const courierClient = createCourierClient({
-      baseUrl: config.courierUrl,
-      httpVersion: config.courierHttpVersion ?? '2',
-      nodeOptions: { rejectUnauthorized: !config.courierIgnoreBadTls },
-      interceptors: config.courierApiKey
-        ? [courierAuth(config.courierApiKey)]
-        : [],
-    })
+    const courierClient = config.courierUrl
+      ? createCourierClient({
+          baseUrl: config.courierUrl,
+          httpVersion: config.courierHttpVersion ?? '2',
+          nodeOptions: { rejectUnauthorized: !config.courierIgnoreBadTls },
+          interceptors: config.courierApiKey
+            ? [courierAuth(config.courierApiKey)]
+            : [],
+        })
+      : undefined
 
+    const entrywayJwtPublicKey = config.entrywayJwtPublicKeyHex
+      ? createPublicKeyObject(config.entrywayJwtPublicKeyHex)
+      : undefined
     const authVerifier = new AuthVerifier(dataplane, {
       ownDid: config.serverDid,
       alternateAudienceDids: config.alternateAudienceDids,
       modServiceDid: config.modServiceDid,
       adminPasses: config.adminPasswords,
+      entrywayJwtPublicKey,
     })
 
     const featureGates = new FeatureGates({

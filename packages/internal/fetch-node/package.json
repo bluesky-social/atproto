@@ -1,6 +1,6 @@
 {
   "name": "@atproto-labs/fetch-node",
-  "version": "0.1.0",
+  "version": "0.1.3",
   "license": "MIT",
   "description": "SSRF protection for fetch() in Node.js",
   "keywords": [
@@ -32,7 +32,7 @@
   },
   "devDependencies": {
     "@types/psl": "1.1.3",
-    "typescript": "^5.3.3"
+    "typescript": "^5.6.3"
   },
   "scripts": {
     "build": "tsc --build tsconfig.json"

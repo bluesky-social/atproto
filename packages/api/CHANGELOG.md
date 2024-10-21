@@ -1,5 +1,51 @@
 # @atproto/api
 
+## 0.13.12
+
+### Patch Changes
+
+- [#2636](https://github.com/bluesky-social/atproto/pull/2636) [`22d039a22`](https://github.com/bluesky-social/atproto/commit/22d039a229e3ef08a793e1c98b473b1b8e18ac5e) Thanks [@foysalit](https://github.com/foysalit)! - Sets api to manage lists of strings on ozone, mostly aimed for automod configuration
+
+## 0.13.11
+
+### Patch Changes
+
+- [#2857](https://github.com/bluesky-social/atproto/pull/2857) [`a0531ce42`](https://github.com/bluesky-social/atproto/commit/a0531ce429f5139cb0e2cc19aa9b338599947e44) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Adds support for muting words within link cards attached to `RecordWithMedia` embeds.
+
+## 0.13.10
+
+### Patch Changes
+
+- [#2855](https://github.com/bluesky-social/atproto/pull/2855) [`df14df522`](https://github.com/bluesky-social/atproto/commit/df14df522bb7986e56ee1f6a0f5d862e1ea6f4d5) Thanks [@dholms](https://github.com/dholms)! - Add tools.ozone.signature lexicons
+
+## 0.13.9
+
+### Patch Changes
+
+- [#2836](https://github.com/bluesky-social/atproto/pull/2836) [`a2bad977a`](https://github.com/bluesky-social/atproto/commit/a2bad977a8d941b4075ea3ffee3d6f7a0c0f467c) Thanks [@foysalit](https://github.com/foysalit)! - Add getRepos and getRecords endpoints for bulk fetching
+
+## 0.13.8
+
+### Patch Changes
+
+- [#2771](https://github.com/bluesky-social/atproto/pull/2771) [`2676206e4`](https://github.com/bluesky-social/atproto/commit/2676206e422233fefbf2d9d182e8d462f0957c93) Thanks [@mozzius](https://github.com/mozzius)! - Add pinned posts to profile record and getAuthorFeed
+
+- Updated dependencies [[`a07b21151`](https://github.com/bluesky-social/atproto/commit/a07b21151f1850340c4b7797ebb11521b1a6cdf3), [`a07b21151`](https://github.com/bluesky-social/atproto/commit/a07b21151f1850340c4b7797ebb11521b1a6cdf3), [`a07b21151`](https://github.com/bluesky-social/atproto/commit/a07b21151f1850340c4b7797ebb11521b1a6cdf3), [`eb20ff64a`](https://github.com/bluesky-social/atproto/commit/eb20ff64a2d8e3061c652e1e247bf9b0fe3c41a6), [`87a1f2426`](https://github.com/bluesky-social/atproto/commit/87a1f24262e0e644b6cf31cc7a0446d9127ffa94)]:
+  - @atproto/xrpc@0.6.3
+  - @atproto/common-web@0.3.1
+  - @atproto/lexicon@0.4.2
+
+## 0.13.7
+
+### Patch Changes
+
+- [#2807](https://github.com/bluesky-social/atproto/pull/2807) [`e6bd5aecc`](https://github.com/bluesky-social/atproto/commit/e6bd5aecce7954d60e5fb263297e697ab7aab98e) Thanks [@foysalit](https://github.com/foysalit)! - Introduce a acknowledgeAccountSubjects flag on takedown event to ack all subjects from the author that need review
+
+- [#2810](https://github.com/bluesky-social/atproto/pull/2810) [`33aa0c722`](https://github.com/bluesky-social/atproto/commit/33aa0c722226a18215af0ae1833c7c552fc7aaa7) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add NUX API
+
+- Updated dependencies [[`98711a147`](https://github.com/bluesky-social/atproto/commit/98711a147a8674337f605c6368f39fc10c2fae93)]:
+  - @atproto/xrpc@0.6.2
+
 ## 0.13.6
 
 ### Patch Changes

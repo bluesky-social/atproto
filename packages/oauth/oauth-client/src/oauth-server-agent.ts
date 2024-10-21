@@ -1,18 +1,23 @@
 import { Fetch, Json, bindFetch, fetchJsonProcessor } from '@atproto-labs/fetch'
 import { SimpleStore } from '@atproto-labs/simple-store'
+import { AtprotoDid } from '@atproto/did'
 import { Key, Keyset } from '@atproto/jwk'
 import {
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
+  OAuthAuthorizationRequestPar,
   OAuthAuthorizationServerMetadata,
-  OAuthClientIdentification,
+  OAuthClientCredentials,
   OAuthEndpointName,
   OAuthParResponse,
-  OAuthTokenResponse,
-  OAuthTokenType,
+  OAuthTokenRequest,
   oauthParResponseSchema,
-  oauthTokenResponseSchema,
 } from '@atproto/oauth-types'
 
+import {
+  AtprotoScope,
+  AtprotoTokenResponse,
+  atprotoTokenResponseSchema,
+} from './atproto-token-response.js'
 import { FALLBACK_ALG } from './constants.js'
 import { TokenRefreshError } from './errors/token-refresh-error.js'
 import { dpopFetchWrapper } from './fetch-dpop.js'
@@ -24,13 +29,13 @@ import { timeoutSignal } from './util.js'
 
 export type TokenSet = {
   iss: string
-  sub: string
+  sub: AtprotoDid
   aud: string
-  scope: string
+  scope: AtprotoScope
 
   refresh_token?: string
   access_token: string
-  token_type: OAuthTokenType
+  token_type: 'DPoP'
   /** ISO Date */
   expires_at?: string
 }
@@ -61,6 +66,10 @@ export class OAuthServerAgent {
     })
   }
 
+  get issuer() {
+    return this.serverMetadata.issuer
+  }
+
   async revoke(token: string) {
     try {
       await this.request('revocation', { token })
@@ -69,16 +78,38 @@ export class OAuthServerAgent {
     }
   }
 
-  async exchangeCode(code: string, verifier?: string): Promise<TokenSet> {
+  async exchangeCode(code: string, codeVerifier?: string): Promise<TokenSet> {
+    const now = Date.now()
+
     const tokenResponse = await this.request('token', {
       grant_type: 'authorization_code',
       redirect_uri: this.clientMetadata.redirect_uris[0]!,
       code,
-      code_verifier: verifier,
+      code_verifier: codeVerifier,
     })
 
     try {
-      return this.processTokenResponse(tokenResponse)
+      // /!\ IMPORTANT /!\
+      //
+      // The tokenResponse MUST always be valid before the "sub" it contains
+      // can be trusted (see Atproto's OAuth spec for details).
+      const aud = await this.verifyIssuer(tokenResponse.sub)
+
+      return {
+        aud,
+        sub: tokenResponse.sub,
+        iss: this.issuer,
+
+        scope: tokenResponse.scope,
+        refresh_token: tokenResponse.refresh_token,
+        access_token: tokenResponse.access_token,
+        token_type: tokenResponse.token_type,
+
+        expires_at:
+          typeof tokenResponse.expires_in === 'number'
+            ? new Date(now + tokenResponse.expires_in * 1000).toISOString()
+            : undefined,
+      }
     } catch (err) {
       await this.revoke(tokenResponse.access_token)
 
@@ -91,27 +122,37 @@ export class OAuthServerAgent {
       throw new TokenRefreshError(tokenSet.sub, 'No refresh token available')
     }
 
+    // /!\ IMPORTANT /!\
+    //
+    // The "sub" MUST be a DID, whose issuer authority is indeed the server we
+    // are trying to obtain credentials from. Note that we are doing this
+    // *before* we actually try to refresh the token:
+    // 1) To avoid unnecessary refresh
+    // 2) So that the refresh is the last async operation, ensuring as few
+    //    async operations happen before the result gets a chance to be stored.
+    const aud = await this.verifyIssuer(tokenSet.sub)
+
+    const now = Date.now()
+
     const tokenResponse = await this.request('token', {
       grant_type: 'refresh_token',
       refresh_token: tokenSet.refresh_token,
     })
 
-    try {
-      if (tokenSet.sub !== tokenResponse.sub) {
-        throw new TokenRefreshError(
-          tokenSet.sub,
-          `Unexpected "sub" in token response (${tokenResponse.sub})`,
-        )
-      }
-      if (tokenSet.iss !== this.serverMetadata.issuer) {
-        throw new TokenRefreshError(tokenSet.sub, 'Issuer mismatch')
-      }
+    return {
+      aud,
+      sub: tokenSet.sub,
+      iss: this.issuer,
 
-      return this.processTokenResponse(tokenResponse)
-    } catch (err) {
-      await this.revoke(tokenResponse.access_token)
+      scope: tokenResponse.scope,
+      refresh_token: tokenResponse.refresh_token,
+      access_token: tokenResponse.access_token,
+      token_type: tokenResponse.token_type,
 
-      throw err
+      expires_at:
+        typeof tokenResponse.expires_in === 'number'
+          ? new Date(now + tokenResponse.expires_in * 1000).toISOString()
+          : undefined,
     }
   }
 
@@ -122,68 +163,46 @@ export class OAuthServerAgent {
    * "sub" is a DID, whose issuer authority is indeed the server we just
    * obtained credentials from. This check is a critical step to actually be
    * able to use the "sub" (DID) as being the actual user's identifier.
+   *
+   * @returns The user's PDS URL (the resource server for the user)
    */
-  private async processTokenResponse(
-    tokenResponse: OAuthTokenResponse,
-  ): Promise<TokenSet> {
-    const { sub } = tokenResponse
-
-    if (!sub || typeof sub !== 'string') {
-      throw new TypeError(`Unexpected ${typeof sub} "sub" in token response`)
-    }
-
-    // Using an array to check for the presence of the "atproto" scope (we don't
-    // want atproto to be a substring of another scope)
-    const scopes = tokenResponse.scope?.split(' ')
-    if (!scopes?.includes('atproto')) {
-      throw new TypeError('Missing "atproto" scope in token response')
-    }
-
-    // @TODO (?) make timeout configurable
+  protected async verifyIssuer(sub: AtprotoDid) {
     using signal = timeoutSignal(10e3)
 
     const resolved = await this.oauthResolver.resolveFromIdentity(sub, {
+      noCache: true,
+      allowStale: false,
       signal,
     })
 
-    if (this.serverMetadata.issuer !== resolved.metadata.issuer) {
+    if (this.issuer !== resolved.metadata.issuer) {
       // Best case scenario; the user switched PDS. Worst case scenario; a bad
       // actor is trying to impersonate a user. In any case, we must not allow
       // this token to be used.
       throw new TypeError('Issuer mismatch')
     }
 
-    return {
-      aud: resolved.identity.pds.href,
-      iss: resolved.metadata.issuer,
-
-      sub,
-
-      scope: tokenResponse.scope!,
-      refresh_token: tokenResponse.refresh_token,
-      access_token: tokenResponse.access_token,
-      token_type: tokenResponse.token_type ?? 'Bearer',
-      expires_at:
-        typeof tokenResponse.expires_in === 'number'
-          ? new Date(Date.now() + tokenResponse.expires_in * 1000).toISOString()
-          : undefined,
-    }
+    return resolved.identity.pds.href
   }
 
-  async request(
-    endpoint: 'token',
-    payload: Record<string, unknown>,
-  ): Promise<OAuthTokenResponse>
-  async request(
-    endpoint: 'pushed_authorization_request',
-    payload: Record<string, unknown>,
-  ): Promise<OAuthParResponse>
+  async request<Endpoint extends OAuthEndpointName>(
+    endpoint: Endpoint,
+    payload: Endpoint extends 'token'
+      ? OAuthTokenRequest
+      : Endpoint extends 'pushed_authorization_request'
+        ? OAuthAuthorizationRequestPar
+        : Record<string, unknown>,
+  ): Promise<
+    Endpoint extends 'token'
+      ? AtprotoTokenResponse
+      : Endpoint extends 'pushed_authorization_request'
+        ? OAuthParResponse
+        : Json
+  >
   async request(
     endpoint: OAuthEndpointName,
     payload: Record<string, unknown>,
-  ): Promise<Json>
-
-  async request(endpoint: OAuthEndpointName, payload: Record<string, unknown>) {
+  ): Promise<unknown> {
     const url = this.serverMetadata[`${endpoint}_endpoint`]
     if (!url) throw new Error(`No ${endpoint} endpoint available`)
 
@@ -198,7 +217,7 @@ export class OAuthServerAgent {
     if (response.ok) {
       switch (endpoint) {
         case 'token':
-          return oauthTokenResponseSchema.parse(json)
+          return atprotoTokenResponseSchema.parse(json)
         case 'pushed_authorization_request':
           return oauthParResponseSchema.parse(json)
         default:
@@ -211,7 +230,7 @@ export class OAuthServerAgent {
 
   async buildClientAuth(endpoint: OAuthEndpointName): Promise<{
     headers?: Record<string, string>
-    payload: OAuthClientIdentification
+    payload: OAuthClientCredentials
   }> {
     const methodSupported =
       this.serverMetadata[`token_endpoint_auth_methods_supported`]

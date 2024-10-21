@@ -1,6 +1,6 @@
 {
   "name": "@atproto/bsync",
-  "version": "0.0.5",
+  "version": "0.0.8",
   "license": "MIT",
   "description": "Sychronizing service for app.bsky App View (Bluesky API)",
   "keywords": [
@@ -43,6 +43,7 @@
     "@types/pg": "^8.6.6",
     "get-port": "^5.1.1",
     "jest": "^28.1.2",
-    "ts-node": "^10.8.2"
+    "ts-node": "^10.8.2",
+    "typescript": "^5.6.3"
   }
 }

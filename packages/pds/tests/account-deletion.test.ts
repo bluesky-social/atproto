@@ -78,7 +78,7 @@ describe('account deletion', () => {
     )
 
     expect(mail.to).toEqual(carol.email)
-    expect(mail.html).toContain('Delete your Bluesky account')
+    expect(mail.html).toContain('To permanently delete your account')
 
     token = getTokenFromMail(mail)
     if (!token) {

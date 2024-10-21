@@ -12,9 +12,20 @@ export class InvalidClientIdError extends OAuthError {
     super('invalid_client_id', error_description, 400, cause)
   }
 
-  static from(err: unknown): InvalidClientIdError {
-    if (err instanceof InvalidClientIdError) return err
-    if (err instanceof TypeError) return new InvalidClientIdError(err.message)
-    return new InvalidClientIdError('Invalid client identifier', err)
+  static from(
+    cause: unknown,
+    fallbackMessage = 'Invalid client identifier',
+  ): InvalidClientIdError {
+    if (cause instanceof InvalidClientIdError) {
+      return cause
+    }
+    if (cause instanceof TypeError) {
+      // This method is meant to be used in the context of parsing & validating
+      // a client client metadata. In that context, a TypeError would more
+      // likely represent a problem with the data (e.g. invalid URL constructor
+      // arg) and not a programming error.
+      return new InvalidClientIdError(cause.message, cause)
+    }
+    return new InvalidClientIdError(fallbackMessage, cause)
   }
 }

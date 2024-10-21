@@ -8,6 +8,7 @@ export interface ServerConfigValues {
   publicUrl?: string
   serverDid: string
   alternateAudienceDids: string[]
+  entrywayJwtPublicKeyHex?: string
   // external services
   dataplaneUrls: string[]
   dataplaneHttpVersion?: '1.1' | '2'
@@ -16,7 +17,7 @@ export interface ServerConfigValues {
   bsyncApiKey?: string
   bsyncHttpVersion?: '1.1' | '2'
   bsyncIgnoreBadTls?: boolean
-  courierUrl: string
+  courierUrl?: string
   courierApiKey?: string
   courierHttpVersion?: '1.1' | '2'
   courierIgnoreBadTls?: boolean
@@ -56,6 +57,8 @@ export class ServerConfig {
     const alternateAudienceDids = process.env.BSKY_ALT_AUDIENCE_DIDS
       ? process.env.BSKY_ALT_AUDIENCE_DIDS.split(',')
       : []
+    const entrywayJwtPublicKeyHex =
+      process.env.BSKY_ENTRYWAY_JWT_PUBLIC_KEY_HEX || undefined
     const handleResolveNameservers = process.env.BSKY_HANDLE_RESOLVE_NAMESERVERS
       ? process.env.BSKY_HANDLE_RESOLVE_NAMESERVERS.split(',')
       : []
@@ -89,7 +92,6 @@ export class ServerConfig {
     const bsyncIgnoreBadTls = process.env.BSKY_BSYNC_IGNORE_BAD_TLS === 'true'
     assert(bsyncHttpVersion === '1.1' || bsyncHttpVersion === '2')
     const courierUrl = process.env.BSKY_COURIER_URL || undefined
-    assert(courierUrl)
     const courierApiKey = process.env.BSKY_COURIER_API_KEY || undefined
     const courierHttpVersion = process.env.BSKY_COURIER_HTTP_VERSION || '2'
     const courierIgnoreBadTls =
@@ -126,6 +128,7 @@ export class ServerConfig {
       publicUrl,
       serverDid,
       alternateAudienceDids,
+      entrywayJwtPublicKeyHex,
       dataplaneUrls,
       dataplaneHttpVersion,
       dataplaneIgnoreBadTls,
@@ -192,6 +195,10 @@ export class ServerConfig {
 
   get alternateAudienceDids() {
     return this.cfg.alternateAudienceDids
+  }
+
+  get entrywayJwtPublicKeyHex() {
+    return this.cfg.entrywayJwtPublicKeyHex
   }
 
   get dataplaneUrls() {

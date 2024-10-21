@@ -5,16 +5,27 @@ import createHttpError from 'http-errors'
 export type JsonScalar = string | number | boolean | null
 export type Json = JsonScalar | Json[] | { [_ in string]?: Json }
 
-export const parseContentType = (type: string): ContentType => {
+/**
+ * Parse a content-type string into its components.
+ *
+ * @throws {TypeError} If the content-type is invalid.
+ */
+export function parseContentType(type: unknown): ContentType {
+  if (typeof type !== 'string') {
+    throw createHttpError(
+      415,
+      `Invalid content-type: ${type == null ? String(type) : typeof type}`,
+    )
+  }
+
   try {
     return hapiContentType(type)
   } catch (err) {
     // De-boomify the error
-    if (err?.['isBoom']) {
-      throw createHttpError(err['output']['statusCode'], err['message'])
-    }
-
-    throw err
+    throw createHttpError(
+      415,
+      err instanceof Error ? err.message : 'Invalid content-type',
+    )
   }
 }
 
@@ -61,13 +72,15 @@ export const parsers = [
     test: (mime): mime is 'application/x-www-form-urlencoded' => {
       return mime === 'application/x-www-form-urlencoded'
     },
-    parse: (buffer, { charset }): Partial<Record<string, string>> => {
+    parse: (buffer, { charset }): { [_ in string]?: string } => {
       if (charset != null && !/^utf-?8$/i.test(charset)) {
         throw createHttpError(415, 'Unsupported charset')
       }
       try {
         if (!buffer.length) return {}
-        return Object.fromEntries(new URLSearchParams(buffer.toString()))
+        const params = new URLSearchParams(buffer.toString())
+        if (params.has('__proto__')) throw new TypeError('Invalid key')
+        return Object.fromEntries(params)
       } catch (err) {
         throw createHttpError(400, 'Invalid URL-encoded data', { cause: err })
       }

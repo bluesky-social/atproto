@@ -28,19 +28,26 @@ import {
 } from '../lexicon/types/tools/ozone/team/defs'
 import { ids } from '../lexicon/lexicons'
 
-export const getPdsAccountInfo = async (
+export const getPdsAccountInfos = async (
   ctx: AppContext,
-  did: string,
-): Promise<AccountView | null> => {
+  dids: string[],
+): Promise<Map<string, AccountView | null>> => {
+  const results = new Map<string, AccountView | null>()
+
   const agent = ctx.pdsAgent
-  if (!agent) return null
-  const auth = await ctx.pdsAuth(ids.ComAtprotoAdminGetAccountInfo)
-  if (!auth) return null
+  if (!agent) return results
+
+  const auth = await ctx.pdsAuth(ids.ComAtprotoAdminGetAccountInfos)
+  if (!auth) return results
+
   try {
-    const res = await agent.api.com.atproto.admin.getAccountInfo({ did }, auth)
-    return res.data
+    const res = await agent.com.atproto.admin.getAccountInfos({ dids }, auth)
+    res.data.infos.forEach((info) => {
+      results.set(info.did, info)
+    })
+    return results
   } catch {
-    return null
+    return results
   }
 }
 
@@ -50,15 +57,31 @@ export const addAccountInfoToRepoViewDetail = (
   includeEmail = false,
 ): RepoViewDetail => {
   if (!accountInfo) return repoView
+  const {
+    email,
+    deactivatedAt,
+    emailConfirmedAt,
+    inviteNote,
+    invitedBy,
+    invites,
+    invitesDisabled,
+    // pick some duplicate/unwanted details out
+    did: _did,
+    handle: _handle,
+    indexedAt: _indexedAt,
+    relatedRecords: _relatedRecords,
+    ...otherAccountInfo
+  } = accountInfo
   return {
+    ...otherAccountInfo,
     ...repoView,
-    email: includeEmail ? accountInfo.email : undefined,
-    invitedBy: accountInfo.invitedBy,
-    invitesDisabled: accountInfo.invitesDisabled,
-    inviteNote: accountInfo.inviteNote,
-    invites: accountInfo.invites,
-    emailConfirmedAt: accountInfo.emailConfirmedAt,
-    deactivatedAt: accountInfo.deactivatedAt,
+    email: includeEmail ? email : undefined,
+    invitedBy,
+    invitesDisabled,
+    inviteNote,
+    invites,
+    emailConfirmedAt,
+    deactivatedAt,
   }
 }
 

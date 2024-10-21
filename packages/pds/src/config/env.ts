@@ -117,11 +117,21 @@ export const readEnv = (): ServerEnvironment => {
       'PDS_PLC_ROTATION_KEY_K256_PRIVATE_KEY_HEX',
     ),
 
-    // fetch
-    fetchDisableSsrfProtection: envBool('PDS_DISABLE_SSRF_PROTECTION'),
+    // user provided url http requests
+    disableSsrfProtection: envBool('PDS_DISABLE_SSRF_PROTECTION'),
 
     // Repo revision cache
-    repoRevCacheMaxTTL: envInt('PDS_REPO_REV_CACHE_MAX_TTL'), // milliseconds (use 0 to disable)
+    repoRevCacheMaxTTL: envInt('PDS_REPO_REV_CACHE_MAX_TTL'),
+
+    // fetch
+    fetchMaxResponseSize: envInt('PDS_FETCH_MAX_RESPONSE_SIZE'),
+
+    // proxy
+    proxyAllowHTTP2: envBool('PDS_PROXY_ALLOW_HTTP2'),
+    proxyHeadersTimeout: envInt('PDS_PROXY_HEADERS_TIMEOUT'),
+    proxyBodyTimeout: envInt('PDS_PROXY_BODY_TIMEOUT'),
+    proxyMaxResponseSize: envInt('PDS_PROXY_MAX_RESPONSE_SIZE'),
+    proxyPreferCompressed: envBool('PDS_PROXY_PREFER_COMPRESSED'),
   }
 }
 
@@ -236,9 +246,19 @@ export type ServerEnvironment = {
   plcRotationKeyKmsKeyId?: string
   plcRotationKeyK256PrivateKeyHex?: string
 
-  // fetch
-  fetchDisableSsrfProtection?: boolean
+  // user provided url http requests
+  disableSsrfProtection?: boolean
 
   // Repo revision cache
   repoRevCacheMaxTTL?: number
+
+  // fetch
+  fetchMaxResponseSize?: number
+
+  // proxy
+  proxyAllowHTTP2?: boolean
+  proxyHeadersTimeout?: number
+  proxyBodyTimeout?: number
+  proxyMaxResponseSize?: number
+  proxyPreferCompressed?: boolean
 }

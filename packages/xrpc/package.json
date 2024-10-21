@@ -1,6 +1,6 @@
 {
   "name": "@atproto/xrpc",
-  "version": "0.6.1",
+  "version": "0.6.3",
   "license": "MIT",
   "description": "atproto HTTP API (XRPC) client library",
   "keywords": [
@@ -23,6 +23,6 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "typescript": "^5.3.3"
+    "typescript": "^5.6.3"
   }
 }

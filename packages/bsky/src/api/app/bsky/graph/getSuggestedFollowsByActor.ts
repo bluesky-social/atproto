@@ -71,6 +71,7 @@ const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
         { headers: params.headers },
       )
     return {
+      isFallback: !res.data.relativeToDid,
       suggestedDids: res.data.actors.map((a) => a.did),
       headers: res.headers,
     }
@@ -80,6 +81,7 @@ const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
       relativeToDid,
     })
     return {
+      isFallback: true,
       suggestedDids: dids,
     }
   }
@@ -113,7 +115,7 @@ const presentation = (
   const suggestions = mapDefined(suggestedDids, (did) =>
     ctx.views.profileDetailed(did, hydration),
   )
-  return { suggestions, headers }
+  return { isFallback: skeleton.isFallback, suggestions, headers }
 }
 
 type Context = {
@@ -129,6 +131,7 @@ type Params = QueryParams & {
 }
 
 type SkeletonState = {
+  isFallback: boolean
   suggestedDids: string[]
   headers?: Record<string, string>
 }

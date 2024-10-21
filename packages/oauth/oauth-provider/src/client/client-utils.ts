@@ -1,7 +1,5 @@
 import {
   OAuthClientIdDiscoverable,
-  OAuthClientIdLoopback,
-  parseOAuthLoopbackClientId,
   parseOAuthDiscoverableClientId,
 } from '@atproto/oauth-types'
 
@@ -25,19 +23,16 @@ export function parseDiscoverableClientId(
 
     // Extra validation, prevent usage of invalid internet domain names.
     if (!isInternetHost(url.hostname)) {
-      throw new InvalidClientIdError('ClientID is not a valid internet address')
+      throw new InvalidClientIdError(
+        "The client_id's TLD must belong to the Public Suffix List (PSL)",
+      )
     }
 
     return url
   } catch (err) {
-    throw InvalidClientIdError.from(err)
-  }
-}
-
-export function parseLoopbackClientId(clientId: OAuthClientIdLoopback): URL {
-  try {
-    return parseOAuthLoopbackClientId(clientId)
-  } catch (err) {
-    throw InvalidClientIdError.from(err)
+    throw InvalidClientIdError.from(
+      err,
+      'Invalid discoverable client identifier',
+    )
   }
 }

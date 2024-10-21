@@ -1,6 +1,6 @@
 {
   "name": "@atproto-labs/fetch",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "license": "MIT",
   "description": "Isomorphic wrapper utilities for fetch API",
   "keywords": [
@@ -26,7 +26,7 @@
     "@atproto-labs/pipe": "workspace:*"
   },
   "devDependencies": {
-    "typescript": "^5.3.3"
+    "typescript": "^5.6.3"
   },
   "optionalDependencies": {
     "zod": "^3.23.8"

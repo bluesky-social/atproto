@@ -16,6 +16,7 @@ import {
   NotFoundPost,
   PostView,
   ReasonRepost,
+  ReasonPin,
   ReplyRef,
   ThreadViewPost,
   ThreadgateView,
@@ -34,7 +35,7 @@ import {
   VideoUriBuilder,
   parsePostgate,
 } from './util'
-import { uriToDid as creatorFromUri } from '../util/uris'
+import { uriToDid as creatorFromUri, safePinnedPost } from '../util/uris'
 import { isListRule } from '../lexicon/types/app/bsky/feed/threadgate'
 import { isSelfLabels } from '../lexicon/types/com/atproto/label/defs'
 import {
@@ -169,6 +170,7 @@ export class Views {
       joinedViaStarterPack: actor.profile?.joinedViaStarterPack
         ? this.starterPackBasic(actor.profile.joinedViaStarterPack.uri, state)
         : undefined,
+      pinnedPost: safePinnedPost(actor.profile?.pinnedPost),
     }
   }
 
@@ -606,6 +608,7 @@ export class Views {
             threadMuted: viewer.threadMuted,
             replyDisabled: this.userReplyDisabled(uri, state),
             embeddingDisabled: this.userPostEmbeddingDisabled(uri, state),
+            pinned: this.viewerPinned(uri, state, authorDid),
           }
         : undefined,
       labels,
@@ -620,8 +623,10 @@ export class Views {
     state: HydrationState,
   ): FeedViewPost | undefined {
     const postInfo = state.posts?.get(item.post.uri)
-    let reason: ReasonRepost | undefined
-    if (item.repost) {
+    let reason: ReasonRepost | ReasonPin | undefined
+    if (item.authorPinned) {
+      reason = this.reasonPin()
+    } else if (item.repost) {
       const repost = state.reposts?.get(item.repost.uri)
       if (!repost) return
       if (repost.record.subject.uri !== item.post.uri) return
@@ -720,6 +725,12 @@ export class Views {
       $type: 'app.bsky.feed.defs#reasonRepost',
       by: creator,
       indexedAt: repost.sortedAt.toISOString(),
+    }
+  }
+
+  reasonPin() {
+    return {
+      $type: 'app.bsky.feed.defs#reasonPin',
     }
   }
 
@@ -1126,6 +1137,15 @@ export class Views {
       return false
     }
     return true
+  }
+
+  viewerPinned(uri: string, state: HydrationState, authorDid: string) {
+    if (!state.ctx?.viewer || state.ctx.viewer !== authorDid) return
+    const actor = state.actors?.get(authorDid)
+    if (!actor) return
+    const pinnedPost = safePinnedPost(actor.profile?.pinnedPost)
+    if (!pinnedPost) return undefined
+    return pinnedPost.uri === uri
   }
 
   notification(
