@@ -29,6 +29,8 @@ import {
   oauthTokenIdentificationSchema,
   oauthTokenRequestSchema,
 } from '@atproto/oauth-types'
+import { mediaType } from '@hapi/accept'
+import createHttpError from 'http-errors'
 import type { Redis, RedisOptions } from 'ioredis'
 import z, { ZodError } from 'zod'
 
@@ -75,7 +77,7 @@ import {
   combineMiddlewares,
   parseHttpRequest,
   setupCsrfToken,
-  staticJsonHandler,
+  staticJsonMiddleware,
   validateCsrfToken,
   validateFetchDest,
   validateFetchMode,
@@ -1028,7 +1030,7 @@ export class OAuthProvider extends OAuthVerifier {
           res.setHeader('Cache-Control', 'max-age=300')
           next()
         },
-        staticJsonHandler(json),
+        staticJsonMiddleware(json),
       ])
 
     /**
@@ -1056,9 +1058,18 @@ export class OAuthProvider extends OAuthVerifier {
         }
 
         try {
+          // Ensure we can agree on a content encoding & type before starting to
+          // build the JSON response.
+          if (!mediaType(req.headers['accept'], ['application/json'])) {
+            throw createHttpError(406, 'Unsupported media type')
+          }
+
           const result = await buildJson.call(this, req, res)
-          if (result !== undefined) writeJson(res, result, status)
-          else if (!res.headersSent) res.writeHead(status ?? 204).end()
+          if (result !== undefined) {
+            writeJson(res, result, { status })
+          } else if (!res.headersSent) {
+            res.writeHead(status ?? 204).end()
+          }
         } catch (err) {
           if (!res.headersSent) {
             if (err instanceof WWWAuthenticateError) {
@@ -1067,7 +1078,9 @@ export class OAuthProvider extends OAuthVerifier {
               res.appendHeader('Access-Control-Expose-Headers', name)
             }
 
-            writeJson(res, buildErrorPayload(err), buildErrorStatus(err))
+            const payload = buildErrorPayload(err)
+            const status = buildErrorStatus(err)
+            writeJson(res, payload, { status })
           } else {
             res.destroy()
           }
@@ -1096,11 +1109,6 @@ export class OAuthProvider extends OAuthVerifier {
           validateSameOrigin(req, res, issuerOrigin)
 
           await handler.call(this, req, res)
-
-          // Should never happen (fool proofing)
-          if (!res.headersSent) {
-            throw new Error('Navigation handler did not send a response')
-          }
         } catch (err) {
           onError?.(
             req,
