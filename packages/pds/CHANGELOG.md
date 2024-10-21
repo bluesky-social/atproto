@@ -1,5 +1,36 @@
 # @atproto/pds
 
+## 0.4.65
+
+### Patch Changes
+
+- Updated dependencies [[`22d039a22`](https://github.com/bluesky-social/atproto/commit/22d039a229e3ef08a793e1c98b473b1b8e18ac5e)]:
+  - @atproto/api@0.13.12
+
+## 0.4.64
+
+### Patch Changes
+
+- Updated dependencies [[`80450cbf2`](https://github.com/bluesky-social/atproto/commit/80450cbf2ca27967ee9fe1a5f4bc590b26f1e6b2)]:
+  - @atproto-labs/fetch-node@0.1.3
+  - @atproto/oauth-provider@0.2.5
+
+## 0.4.63
+
+### Patch Changes
+
+- Updated dependencies [[`a0531ce42`](https://github.com/bluesky-social/atproto/commit/a0531ce429f5139cb0e2cc19aa9b338599947e44)]:
+  - @atproto/api@0.13.11
+
+## 0.4.62
+
+### Patch Changes
+
+- Updated dependencies [[`df14df522`](https://github.com/bluesky-social/atproto/commit/df14df522bb7986e56ee1f6a0f5d862e1ea6f4d5), [`8943c1008`](https://github.com/bluesky-social/atproto/commit/8943c10082702bbc0fc150237c6cc421251afd51)]:
+  - @atproto/api@0.13.10
+  - @atproto-labs/fetch-node@0.1.2
+  - @atproto/oauth-provider@0.2.4
+
 ## 0.4.61
 
 ### Patch Changes

@@ -2,7 +2,11 @@
 module.exports = {
   displayName: 'PDS',
   transform: { '^.+\\.(t|j)s$': '@swc/jest' },
-  transformIgnorePatterns: [`<rootDir>/node_modules/(?!get-port)`],
+  // Jest requires all ESM dependencies to be transpiled (even if they are
+  // dynamically import()ed).
+  transformIgnorePatterns: [
+    `/node_modules/.pnpm/(?!(get-port|lande|toygrad)@)`,
+  ],
   testTimeout: 60000,
   setupFiles: ['<rootDir>/../../jest.setup.ts'],
 }

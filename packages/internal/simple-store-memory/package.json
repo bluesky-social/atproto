@@ -28,7 +28,7 @@
     "lru-cache": "^10.2.0"
   },
   "devDependencies": {
-    "typescript": "^5.3.3"
+    "typescript": "^5.6.3"
   },
   "scripts": {
     "build": "tsc --build tsconfig.build.json"

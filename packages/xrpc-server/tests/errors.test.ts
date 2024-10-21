@@ -1,5 +1,5 @@
-import * as http from 'http'
-import getPort from 'get-port'
+import * as http from 'node:http'
+import { AddressInfo } from 'node:net'
 import { LexiconDoc } from '@atproto/lexicon'
 import { XRPCError, XRPCInvalidResponseError, XrpcClient } from '@atproto/xrpc'
 import { createServer, closeServer } from './_util'
@@ -129,8 +129,8 @@ describe('Errors', () => {
   let client: XrpcClient
   let badClient: XrpcClient
   beforeAll(async () => {
-    const port = await getPort()
-    s = await createServer(port, server)
+    s = await createServer(server)
+    const { port } = s.address() as AddressInfo
     client = new XrpcClient(`http://localhost:${port}`, LEXICONS)
     badClient = new XrpcClient(`http://localhost:${port}`, MISMATCHED_LEXICONS)
   })

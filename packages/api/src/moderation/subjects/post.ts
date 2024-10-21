@@ -321,6 +321,20 @@ function checkMutedWords(
           }
         }
       }
+
+      if (AppBskyEmbedExternal.isView(subject.embed.media)) {
+        const { external } = subject.embed.media
+        if (
+          hasMutedWord({
+            mutedWords,
+            text: external.title + ' ' + external.description,
+            languages: [],
+            actor: embedAuthor,
+          })
+        ) {
+          return true
+        }
+      }
     }
   }
   return false

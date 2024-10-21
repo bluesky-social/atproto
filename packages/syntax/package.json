@@ -21,9 +21,9 @@
     "test": "jest",
     "build": "tsc --build tsconfig.build.json"
   },
-  "dependencies": {},
   "devDependencies": {
-    "jest": "^28.1.2"
+    "jest": "^28.1.2",
+    "typescript": "^5.6.3"
   },
   "browser": {
     "dns/promises": false

@@ -1,6 +1,9 @@
-import assert from 'node:assert'
 import { AtUri } from '@atproto/syntax'
 import { ids } from '../lexicon/lexicons'
+import {
+  validateMain as validateStrongRef,
+  Main as StrongRef,
+} from '../lexicon/types/com/atproto/repo/strongRef'
 
 /**
  * Convert a post URI to a threadgate URI. If the URI is not a valid
@@ -28,4 +31,16 @@ export function postUriToPostgateUri(postUri: string) {
 
 export function uriToDid(uri: string) {
   return new AtUri(uri).hostname
+}
+
+// @TODO temp fix for proliferation of invalid pinned post values
+export function safePinnedPost(value: unknown) {
+  if (!value || typeof value !== 'object') {
+    return
+  }
+  const validated = validateStrongRef(value)
+  if (!validated.success) {
+    return
+  }
+  return validated.value as StrongRef
 }

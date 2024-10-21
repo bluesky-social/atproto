@@ -14,7 +14,7 @@ import {
 import { Views } from '../../../../views'
 import { DataPlaneClient } from '../../../../data-plane'
 import { parseString } from '../../../../hydration/util'
-import { uriToDid } from '../../../../util/uris'
+import { safePinnedPost, uriToDid } from '../../../../util/uris'
 import { Actor } from '../../../../hydration/actor'
 import { FeedItem, Post } from '../../../../hydration/feed'
 import { FeedType } from '../../../../proto/bsky_pb'
@@ -81,12 +81,13 @@ export const skeleton = async (inputs: {
     return { actor, filter: params.filter, items: [] }
   }
 
+  const pinnedPost = safePinnedPost(actor.profile?.pinnedPost)
   const isFirstPageRequest = !params.cursor
   const shouldInsertPinnedPost =
     isFirstPageRequest &&
     params.includePins &&
-    !!actor.profile?.pinnedPost &&
-    uriToDid(actor.profile.pinnedPost.uri) === actor.did
+    pinnedPost &&
+    uriToDid(pinnedPost.uri) === actor.did
 
   const res = await ctx.dataplane.getAuthorFeed({
     actorDid: did,
@@ -102,11 +103,11 @@ export const skeleton = async (inputs: {
       : undefined,
   }))
 
-  if (shouldInsertPinnedPost && actor.profile?.pinnedPost) {
+  if (shouldInsertPinnedPost && pinnedPost) {
     const pinnedItem = {
       post: {
-        uri: actor.profile.pinnedPost.uri,
-        cid: actor.profile.pinnedPost.cid,
+        uri: pinnedPost.uri,
+        cid: pinnedPost.cid,
       },
       authorPinned: true,
     }

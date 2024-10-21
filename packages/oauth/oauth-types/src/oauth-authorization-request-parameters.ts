@@ -73,7 +73,7 @@ export const oauthAuthorizationRequestParametersSchema = z.object({
   id_token_hint: signedJwtSchema.optional(),
 
   // Type of UI the AS is displayed on
-  display: z.enum(['page', 'popup', 'touch']).optional(),
+  display: z.enum(['page', 'popup', 'touch', 'wap']).optional(),
 
   /**
    * - "none" will only be allowed if the user already allowed the client on the same device
