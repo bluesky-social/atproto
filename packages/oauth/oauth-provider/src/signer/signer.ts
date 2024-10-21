@@ -29,7 +29,7 @@ export class Signer {
 
   async verify<C extends string = never>(
     token: SignedJwt,
-    options?: VerifyOptions<C> & { issuer?: never },
+    options?: Omit<VerifyOptions<C>, 'issuer'>,
   ) {
     return this.keyset.verifyJwt<C>(token, {
       ...options,
@@ -86,7 +86,7 @@ export class Signer {
 
   async verifyAccessToken<C extends string = never>(
     token: SignedJwt,
-    options?: VerifyOptions<C> & { issuer?: never; typ?: never },
+    options?: Omit<VerifyOptions<C>, 'issuer' | 'typ'>,
   ) {
     const result = await this.verify<C>(token, { ...options, typ: 'at+jwt' })
     type Payload = typeof result.payload // RequiredKey<JwtPayload, C>
