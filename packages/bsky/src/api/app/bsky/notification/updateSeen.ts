@@ -6,27 +6,27 @@ import AppContext from '../../../../context'
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.notification.updateSeen({
     auth: ctx.authVerifier.standard,
-    handler: async ({ input, auth }) => {
-      const viewer = auth.credentials.iss
-      const seenAt = new Date(input.body.seenAt)
+    handler: ctx.createHandler(async (ctx) => {
+      const seenAt = new Date(ctx.input.body.seenAt)
+
       // For now we keep separate seen times behind the scenes for priority, but treat them as a single seen time.
       await Promise.all([
         ctx.dataplane.updateNotificationSeen({
-          actorDid: viewer,
+          actorDid: ctx.viewer,
           timestamp: Timestamp.fromDate(seenAt),
           priority: false,
         }),
         ctx.dataplane.updateNotificationSeen({
-          actorDid: viewer,
+          actorDid: ctx.viewer,
           timestamp: Timestamp.fromDate(seenAt),
           priority: true,
         }),
         ctx.courierClient?.pushNotifications({
           notifications: [
             {
-              id: getNotifId(viewer, seenAt),
+              id: getNotifId(ctx.viewer, seenAt),
               clientControlled: true,
-              recipientDid: viewer,
+              recipientDid: ctx.viewer,
               alwaysDeliver: false,
               collapseKey: 'mark-read-generic',
               timestamp: Timestamp.fromDate(new Date()),
@@ -37,7 +37,7 @@ export default function (server: Server, ctx: AppContext) {
           ],
         }),
       ])
-    },
+    }),
   })
 }
 

@@ -1,59 +1,52 @@
-import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getTimeline'
-import { clearlyBadCursor, resHeaders } from '../../../util'
-import { createPipeline } from '../../../../pipeline'
-import {
-  HydrateCtx,
-  HydrationState,
-  Hydrator,
-} from '../../../../hydration/hydrator'
-import { Views } from '../../../../views'
-import { DataPlaneClient } from '../../../../data-plane'
-import { parseString } from '../../../../hydration/util'
 import { mapDefined } from '@atproto/common'
+import { StandardOutput } from '../../../../auth-verifier'
+import AppContext from '../../../../context'
 import { FeedItem } from '../../../../hydration/feed'
+import { parseString } from '../../../../hydration/util'
+import { Server } from '../../../../lexicon'
+import {
+  OutputSchema,
+  QueryParams,
+} from '../../../../lexicon/types/app/bsky/feed/getTimeline'
+import {
+  HydrationFn,
+  PresentationFn,
+  RulesFn,
+  SkeletonFn,
+} from '../../../../pipeline'
+import { clearlyBadCursor } from '../../../util'
+
+type Skeleton = {
+  items: FeedItem[]
+  cursor?: string
+}
 
 export default function (server: Server, ctx: AppContext) {
-  const getTimeline = createPipeline(
-    skeleton,
-    hydration,
-    noBlocksOrMutes,
-    presentation,
-  )
   server.app.bsky.feed.getTimeline({
     auth: ctx.authVerifier.standard,
-    handler: async ({ params, auth, req }) => {
-      const viewer = auth.credentials.iss
-      const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
-
-      const result = await getTimeline(
-        { ...params, hydrateCtx: hydrateCtx.copy({ viewer }) },
-        ctx,
-      )
-
-      const repoRev = await ctx.hydrator.actor.getRepoRevSafe(viewer)
-
-      return {
-        encoding: 'application/json',
-        body: result,
-        headers: resHeaders({ labelers: hydrateCtx.labelers, repoRev }),
-      }
-    },
+    handler: ctx.createPipelineHandler(
+      skeleton,
+      hydration,
+      noBlocksOrMutes,
+      presentation,
+      {
+        exposeRepoRev: true,
+      },
+    ),
   })
 }
 
-export const skeleton = async (inputs: {
-  ctx: Context
-  params: Params
-}): Promise<Skeleton> => {
-  const { ctx, params } = inputs
+const skeleton: SkeletonFn<Skeleton, QueryParams, StandardOutput> = async (
+  ctx,
+) => {
+  const { params } = ctx
+
   if (clearlyBadCursor(params.cursor)) {
     return { items: [] }
   }
+
   const res = await ctx.dataplane.getTimeline({
-    actorDid: params.hydrateCtx.viewer,
+    actorDid: ctx.viewer,
     limit: params.limit,
     cursor: params.cursor,
   })
@@ -68,21 +61,15 @@ export const skeleton = async (inputs: {
   }
 }
 
-const hydration = async (inputs: {
-  ctx: Context
-  params: Params
-  skeleton: Skeleton
-}): Promise<HydrationState> => {
-  const { ctx, params, skeleton } = inputs
-  return ctx.hydrator.hydrateFeedItems(skeleton.items, params.hydrateCtx)
+const hydration: HydrationFn<Skeleton, QueryParams> = async (ctx, skeleton) => {
+  return ctx.hydrator.hydrateFeedItems(skeleton.items, ctx)
 }
 
-const noBlocksOrMutes = (inputs: {
-  ctx: Context
-  skeleton: Skeleton
-  hydration: HydrationState
-}): Skeleton => {
-  const { ctx, skeleton, hydration } = inputs
+const noBlocksOrMutes: RulesFn<Skeleton, QueryParams> = (
+  ctx,
+  skeleton,
+  hydration,
+) => {
   skeleton.items = skeleton.items.filter((item) => {
     const bam = ctx.views.feedItemBlocksAndMutes(item, hydration)
     return (
@@ -96,27 +83,13 @@ const noBlocksOrMutes = (inputs: {
   return skeleton
 }
 
-const presentation = (inputs: {
-  ctx: Context
-  skeleton: Skeleton
-  hydration: HydrationState
-}) => {
-  const { ctx, skeleton, hydration } = inputs
+const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = (
+  ctx,
+  skeleton,
+  hydration,
+) => {
   const feed = mapDefined(skeleton.items, (item) =>
     ctx.views.feedViewPost(item, hydration),
   )
-  return { feed, cursor: skeleton.cursor }
-}
-
-type Context = {
-  hydrator: Hydrator
-  views: Views
-  dataplane: DataPlaneClient
-}
-
-type Params = QueryParams & { hydrateCtx: HydrateCtx & { viewer: string } }
-
-type Skeleton = {
-  items: FeedItem[]
-  cursor?: string
+  return { body: { feed, cursor: skeleton.cursor } }
 }

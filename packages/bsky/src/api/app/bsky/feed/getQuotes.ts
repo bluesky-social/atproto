@@ -1,46 +1,43 @@
-import { AtUri } from '@atproto/syntax'
-import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
-import { createPipeline } from '../../../../pipeline'
-import { clearlyBadCursor, resHeaders } from '../../../util'
-import {
-  HydrateCtx,
-  HydrationState,
-  Hydrator,
-} from '../../../../hydration/hydrator'
-import { Views } from '../../../../views'
 import { mapDefined } from '@atproto/common'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getQuotes'
+import AppContext from '../../../../context'
 import { parseString } from '../../../../hydration/util'
+import { Server } from '../../../../lexicon'
+import {
+  OutputSchema,
+  QueryParams,
+} from '../../../../lexicon/types/app/bsky/feed/getQuotes'
+import {
+  HydrationFn,
+  PresentationFn,
+  RulesFn,
+  SkeletonFn,
+} from '../../../../pipeline'
 import { uriToDid } from '../../../../util/uris'
+import { clearlyBadCursor } from '../../../util'
+
+type Skeleton = {
+  uris: string[]
+  cursor?: string
+}
 
 export default function (server: Server, ctx: AppContext) {
-  const getQuotes = createPipeline(skeleton, hydration, noBlocks, presentation)
   server.app.bsky.feed.getQuotes({
     auth: ctx.authVerifier.standardOptional,
-    handler: async ({ params, auth, req }) => {
-      const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
-      const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({
-        labelers,
-        viewer,
-        includeTakedowns,
-      })
-      const result = await getQuotes({ ...params, hydrateCtx }, ctx)
-      return {
-        encoding: 'application/json',
-        body: result,
-        headers: resHeaders({ labelers: hydrateCtx.labelers }),
-      }
-    },
+    handler: ctx.createPipelineHandler(
+      skeleton,
+      hydration,
+      noBlocks,
+      presentation,
+      {
+        includeTakedowns: true,
+      },
+    ),
   })
 }
 
-const skeleton = async (inputs: {
-  ctx: Context
-  params: Params
-}): Promise<Skeleton> => {
-  const { ctx, params } = inputs
+const skeleton: SkeletonFn<Skeleton, QueryParams> = async (ctx) => {
+  const { params } = ctx
+
   if (clearlyBadCursor(params.cursor)) {
     return { uris: [] }
   }
@@ -55,24 +52,14 @@ const skeleton = async (inputs: {
   }
 }
 
-const hydration = async (inputs: {
-  ctx: Context
-  params: Params
-  skeleton: Skeleton
-}) => {
-  const { ctx, params, skeleton } = inputs
-  return await ctx.hydrator.hydratePosts(
+const hydration: HydrationFn<Skeleton, QueryParams> = async (ctx, skeleton) => {
+  return ctx.hydrator.hydratePosts(
     skeleton.uris.map((uri) => ({ uri })),
-    params.hydrateCtx,
+    ctx,
   )
 }
 
-const noBlocks = (inputs: {
-  ctx: Context
-  skeleton: Skeleton
-  hydration: HydrationState
-}) => {
-  const { ctx, skeleton, hydration } = inputs
+const noBlocks: RulesFn<Skeleton, QueryParams> = (ctx, skeleton, hydration) => {
   skeleton.uris = skeleton.uris.filter((uri) => {
     const embedBlock = hydration.postBlocks?.get(uri)?.embed
     const authorDid = uriToDid(uri)
@@ -81,32 +68,20 @@ const noBlocks = (inputs: {
   return skeleton
 }
 
-const presentation = (inputs: {
-  ctx: Context
-  params: Params
-  skeleton: Skeleton
-  hydration: HydrationState
-}) => {
-  const { ctx, params, skeleton, hydration } = inputs
+const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = (
+  ctx,
+  skeleton,
+  hydration,
+) => {
   const postViews = mapDefined(skeleton.uris, (uri) => {
     return ctx.views.post(uri, hydration)
   })
   return {
-    posts: postViews,
-    cursor: skeleton.cursor,
-    uri: params.uri,
-    cid: params.cid,
+    body: {
+      posts: postViews,
+      cursor: skeleton.cursor,
+      uri: ctx.params.uri,
+      cid: ctx.params.cid,
+    },
   }
-}
-
-type Context = {
-  hydrator: Hydrator
-  views: Views
-}
-
-type Params = QueryParams & { hydrateCtx: HydrateCtx }
-
-type Skeleton = {
-  uris: string[]
-  cursor?: string
 }

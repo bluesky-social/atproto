@@ -1,50 +1,43 @@
-import AppContext from '../../../../context'
-import { Server } from '../../../../lexicon'
 import { mapDefined } from '@atproto/common'
-import { AtpAgent } from '@atproto/api'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/actor/searchActors'
-import {
-  HydrationFnInput,
-  PresentationFnInput,
-  RulesFnInput,
-  SkeletonFnInput,
-  createPipeline,
-} from '../../../../pipeline'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
-import { Views } from '../../../../views'
-import { DataPlaneClient } from '../../../../data-plane'
+
+import AppContext from '../../../../context'
 import { parseString } from '../../../../hydration/util'
-import { resHeaders } from '../../../util'
+import { Server } from '../../../../lexicon/index'
+import {
+  OutputSchema,
+  QueryParams,
+} from '../../../../lexicon/types/app/bsky/actor/searchActors'
+import {
+  HydrationFn,
+  PresentationFn,
+  RulesFn,
+  SkeletonFn,
+} from '../../../../pipeline'
+
+type Skeleton = {
+  dids: string[]
+  hitsTotal?: number
+  cursor?: string
+}
 
 export default function (server: Server, ctx: AppContext) {
-  const searchActors = createPipeline(
-    skeleton,
-    hydration,
-    noBlocks,
-    presentation,
-  )
   server.app.bsky.actor.searchActors({
     auth: ctx.authVerifier.standardOptional,
-    handler: async ({ auth, params, req }) => {
-      const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
-      const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({
-        viewer,
-        labelers,
-        includeTakedowns,
-      })
-      const results = await searchActors({ ...params, hydrateCtx }, ctx)
-      return {
-        encoding: 'application/json',
-        body: results,
-        headers: resHeaders({ labelers: hydrateCtx.labelers }),
-      }
-    },
+    handler: ctx.createPipelineHandler(
+      skeleton,
+      hydration,
+      noBlocks,
+      presentation,
+      {
+        includeTakedowns: true,
+      },
+    ),
   })
 }
 
-const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
-  const { ctx, params } = inputs
+const skeleton: SkeletonFn<Skeleton, QueryParams> = async (ctx) => {
+  const { params } = ctx
+
   const term = params.q ?? params.term ?? ''
 
   // @TODO
@@ -57,7 +50,7 @@ const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
         q: term,
         cursor: params.cursor,
         limit: params.limit,
-        viewer: params.hydrateCtx.viewer ?? undefined,
+        viewer: ctx.viewer ?? undefined,
       })
     return {
       dids: res.actors.map(({ did }) => did),
@@ -76,45 +69,29 @@ const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
   }
 }
 
-const hydration = async (
-  inputs: HydrationFnInput<Context, Params, Skeleton>,
-) => {
-  const { ctx, params, skeleton } = inputs
-  return ctx.hydrator.hydrateProfiles(skeleton.dids, params.hydrateCtx)
+const hydration: HydrationFn<Skeleton, QueryParams> = async (ctx, skeleton) => {
+  return ctx.hydrator.hydrateProfiles(skeleton.dids, ctx)
 }
 
-const noBlocks = (inputs: RulesFnInput<Context, Params, Skeleton>) => {
-  const { ctx, skeleton, hydration } = inputs
+const noBlocks: RulesFn<Skeleton, QueryParams> = (ctx, skeleton, hydration) => {
   skeleton.dids = skeleton.dids.filter(
     (did) => !ctx.views.viewerBlockExists(did, hydration),
   )
   return skeleton
 }
 
-const presentation = (
-  inputs: PresentationFnInput<Context, Params, Skeleton>,
+const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = (
+  ctx,
+  skeleton,
+  hydration,
 ) => {
-  const { ctx, skeleton, hydration } = inputs
   const actors = mapDefined(skeleton.dids, (did) =>
     ctx.views.profile(did, hydration),
   )
   return {
-    actors,
-    cursor: skeleton.cursor,
+    body: {
+      actors,
+      cursor: skeleton.cursor,
+    },
   }
-}
-
-type Context = {
-  dataplane: DataPlaneClient
-  hydrator: Hydrator
-  views: Views
-  searchAgent?: AtpAgent
-}
-
-type Params = QueryParams & { hydrateCtx: HydrateCtx }
-
-type Skeleton = {
-  dids: string[]
-  hitsTotal?: number
-  cursor?: string
 }
