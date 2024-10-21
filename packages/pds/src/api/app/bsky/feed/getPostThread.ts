@@ -37,7 +37,7 @@ export default function (server: Server, ctx: AppContext) {
           const { auth, params } = reqCtx
           const requester = auth.credentials.did
 
-          const rev = err.headers && getRepoRev(err.headers)
+          const rev = getRepoRev(err.headers)
           if (!rev) throw err
 
           const uri = new AtUri(params.uri)

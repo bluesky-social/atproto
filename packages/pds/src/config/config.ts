@@ -235,6 +235,11 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
 
   const crawlersCfg: ServerConfig['crawlers'] = env.crawlers ?? []
 
+  const repoRevCacheCfg: ServerConfig['repoRevCache'] =
+    env.repoRevCacheMaxTTL != null && env.repoRevCacheMaxTTL > 0
+      ? { maxTTL: env.repoRevCacheMaxTTL }
+      : null
+
   const fetchCfg: ServerConfig['fetch'] = {
     disableSsrfProtection: env.disableSsrfProtection ?? env.devMode ?? false,
     maxResponseSize: env.fetchMaxResponseSize ?? 512 * 1024, // 512kb
@@ -311,6 +316,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     redis: redisCfg,
     rateLimits: rateLimitsCfg,
     crawlers: crawlersCfg,
+    repoRevCache: repoRevCacheCfg,
     fetch: fetchCfg,
     proxy: proxyCfg,
     oauth: oauthCfg,
@@ -334,6 +340,7 @@ export type ServerConfig = {
   redis: RedisScratchConfig | null
   rateLimits: RateLimitsConfig
   crawlers: string[]
+  repoRevCache: RepoRevCacheConfig | null
   fetch: FetchConfig
   proxy: ProxyConfig
   oauth: OAuthConfig
@@ -401,6 +408,10 @@ export type EntrywayConfig = {
   did: string
   jwtPublicKeyHex: string
   plcRotationKey: string
+}
+
+export type RepoRevCacheConfig = {
+  maxTTL: number
 }
 
 export type FetchConfig = {

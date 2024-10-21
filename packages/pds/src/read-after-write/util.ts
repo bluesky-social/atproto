@@ -20,8 +20,8 @@ import { getRecordsSinceRev } from './viewer'
 
 const REPO_REV_HEADER = 'atproto-repo-rev'
 
-export const getRepoRev = (headers: HeadersMap): string | undefined => {
-  return headers[REPO_REV_HEADER]
+export const getRepoRev = (headers?: HeadersMap): string | undefined => {
+  return headers?.[REPO_REV_HEADER]
 }
 
 export const getLocalLag = (local: LocalRecords): number | undefined => {
@@ -48,6 +48,11 @@ export const pipethroughReadAfterWrite = async <T>(
   const rev = getRepoRev(streamRes.headers)
   if (!rev) return streamRes
 
+  // If the response's "atproto-repo-rev" header matches the current repo rev,
+  // we can skip the munge step and return the response as-is.
+  const repoRev = await ctx.repoRevCache?.get(requester)
+  if (repoRev === rev) return streamRes
+
   if (isJsonContentType(streamRes.headers['content-type']) === false) {
     // content-type is present but not JSON, we can't munge this
     return streamRes
@@ -62,6 +67,14 @@ export const pipethroughReadAfterWrite = async <T>(
     const lxm = parseReqNsid(req)
 
     return await ctx.actorStore.read(requester, async (store) => {
+      // Since we have a connection to the database, take the opportunity to
+      // update the repoRevCache with the current repo rev so that future requests
+      // from this requester can skip the munge step.
+      if (repoRev == null && ctx.repoRevCache) {
+        const { rev } = await store.repo.storage.getRootDetailed()
+        await ctx.repoRevCache.set(requester, rev)
+      }
+
       const local = await getRecordsSinceRev(store, rev)
       if (local.count === 0) return streamRes
 

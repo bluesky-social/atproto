@@ -14,7 +14,12 @@ import * as crypto from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
 import { AtpAgent } from '@atproto/api'
 import { KmsKeypair, S3BlobStore } from '@atproto/aws'
-import { JoseKey, OAuthVerifier } from '@atproto/oauth-provider'
+import {
+  JoseKey,
+  Fetch,
+  safeFetchWrap,
+  OAuthVerifier,
+} from '@atproto/oauth-provider'
 import { BlobStore } from '@atproto/repo'
 import {
   RateLimiter,
@@ -23,6 +28,7 @@ import {
   createServiceAuthHeaders,
   createServiceJwt,
 } from '@atproto/xrpc-server'
+import { SimpleStore } from '@atproto-labs/simple-store'
 
 import { ServerConfig, ServerSecrets } from './config'
 import { PdsOAuthProvider } from './oauth/provider'
@@ -43,6 +49,7 @@ import { DiskBlobStore } from './disk-blobstore'
 import { getRedisClient } from './redis'
 import { ActorStore } from './actor-store'
 import { LocalViewer, LocalViewerCreator } from './read-after-write/viewer'
+import { RepoRevCacheRedis } from './account-manager/repo-rev-cache-redis'
 
 export type AppContextOptions = {
   actorStore: ActorStore
@@ -57,6 +64,7 @@ export type AppContextOptions = {
   sequencer: Sequencer
   backgroundQueue: BackgroundQueue
   redisScratch?: Redis
+  repoRevCache?: SimpleStore<string, string>
   ratelimitCreator?: RateLimiterCreator
   crawlers: Crawlers
   appViewAgent?: AtpAgent
@@ -84,6 +92,7 @@ export class AppContext {
   public sequencer: Sequencer
   public backgroundQueue: BackgroundQueue
   public redisScratch?: Redis
+  public repoRevCache?: SimpleStore<string, string>
   public ratelimitCreator?: RateLimiterCreator
   public crawlers: Crawlers
   public appViewAgent: AtpAgent | undefined
@@ -110,6 +119,7 @@ export class AppContext {
     this.sequencer = opts.sequencer
     this.backgroundQueue = opts.backgroundQueue
     this.redisScratch = opts.redisScratch
+    this.repoRevCache = opts.repoRevCache
     this.ratelimitCreator = opts.ratelimitCreator
     this.crawlers = opts.crawlers
     this.appViewAgent = opts.appViewAgent
@@ -232,12 +242,19 @@ export class AppContext {
       ? createPublicKeyObject(cfg.entryway.jwtPublicKeyHex)
       : null
 
+    const repoRevCache =
+      redisScratch && cfg.repoRevCache
+        ? new RepoRevCacheRedis(redisScratch, cfg.repoRevCache.maxTTL)
+        : // Note: Single instance PDS that have no redis could use a memory cache
+          undefined
+
     const accountManager = new AccountManager(
       backgroundQueue,
       cfg.db.accountDbLoc,
       jwtSecretKey,
       cfg.service.did,
       cfg.db.disableWalAutoCheckpoint,
+      repoRevCache,
     )
     await accountManager.migrateOrThrow()
 
@@ -361,6 +378,7 @@ export class AppContext {
       sequencer,
       backgroundQueue,
       redisScratch,
+      repoRevCache,
       ratelimitCreator,
       crawlers,
       appViewAgent,

@@ -120,6 +120,9 @@ export const readEnv = (): ServerEnvironment => {
     // user provided url http requests
     disableSsrfProtection: envBool('PDS_DISABLE_SSRF_PROTECTION'),
 
+    // Repo revision cache
+    repoRevCacheMaxTTL: envInt('PDS_REPO_REV_CACHE_MAX_TTL'),
+
     // fetch
     fetchMaxResponseSize: envInt('PDS_FETCH_MAX_RESPONSE_SIZE'),
 
@@ -245,6 +248,9 @@ export type ServerEnvironment = {
 
   // user provided url http requests
   disableSsrfProtection?: boolean
+
+  // Repo revision cache
+  repoRevCacheMaxTTL?: number
 
   // fetch
   fetchMaxResponseSize?: number
