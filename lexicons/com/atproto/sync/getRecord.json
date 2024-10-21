@@ -15,12 +15,7 @@
             "description": "The DID of the repo."
           },
           "collection": { "type": "string", "format": "nsid" },
-          "rkey": { "type": "string", "description": "Record Key" },
-          "commit": {
-            "type": "string",
-            "format": "cid",
-            "description": "DEPRECATED: referenced a repo commit by CID, and retrieved record as of that commit"
-          }
+          "rkey": { "type": "string", "description": "Record Key" }
         }
       },
       "output": {
