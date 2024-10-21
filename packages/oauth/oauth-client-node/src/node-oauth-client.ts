@@ -24,17 +24,20 @@ export type { OAuthClientOptions, OAuthResponseMode, RuntimeLock }
 
 export type NodeOAuthClientOptions = Omit<
   OAuthClientOptions,
+  // Overridden by this lib
   | 'responseMode'
-  | 'runtimeImplementation'
-  | 'handleResolver'
-  | 'sessionStore'
   | 'stateStore'
+  | 'sessionStore'
+  // Provided by this lib
+  | 'runtimeImplementation' // only "requestLock" needed
+  | 'handleResolver' // Will be build based on "fallbackNameservers"
 > & {
-  fallbackNameservers?: AtprotoHandleResolverNodeOptions['fallbackNameservers']
-  responseMode?: OAuthResponseMode
+  responseMode?: Exclude<OAuthResponseMode, 'fragment'>
 
   stateStore: NodeSavedStateStore
   sessionStore: NodeSavedSessionStore
+
+  fallbackNameservers?: AtprotoHandleResolverNodeOptions['fallbackNameservers']
   requestLock?: RuntimeLock
 }
 
@@ -65,6 +68,8 @@ export class NodeOAuthClient extends OAuthClient {
     }
 
     super({
+      ...options,
+
       fetch,
       responseMode,
       handleResolver: new AtprotoHandleResolverNode({
@@ -81,8 +86,6 @@ export class NodeOAuthClient extends OAuthClient {
 
       stateStore: toDpopKeyStore(stateStore),
       sessionStore: toDpopKeyStore(sessionStore),
-
-      ...options,
     })
   }
 }

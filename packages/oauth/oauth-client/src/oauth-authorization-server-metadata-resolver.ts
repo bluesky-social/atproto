@@ -14,7 +14,7 @@ import {
   oauthAuthorizationServerMetadataValidator,
   oauthIssuerIdentifierSchema,
 } from '@atproto/oauth-types'
-import { contentMime } from './util'
+import { contentMime } from './util.js'
 
 export type { GetCachedOptions, OAuthAuthorizationServerMetadata }
 
@@ -22,6 +22,10 @@ export type AuthorizationServerMetadataCache = SimpleStore<
   string,
   OAuthAuthorizationServerMetadata
 >
+
+export type OAuthAuthorizationServerMetadataResolverConfig = {
+  allowHttpIssuer?: boolean
+}
 
 /**
  * @see {@link https://datatracker.ietf.org/doc/html/rfc8414}
@@ -31,31 +35,41 @@ export class OAuthAuthorizationServerMetadataResolver extends CachedGetter<
   OAuthAuthorizationServerMetadata
 > {
   private readonly fetch: Fetch<unknown>
+  private readonly allowHttpIssuer: boolean
 
-  constructor(cache: AuthorizationServerMetadataCache, fetch?: Fetch) {
+  constructor(
+    cache: AuthorizationServerMetadataCache,
+    fetch?: Fetch,
+    config?: OAuthAuthorizationServerMetadataResolverConfig,
+  ) {
     super(async (issuer, options) => this.fetchMetadata(issuer, options), cache)
 
     this.fetch = bindFetch(fetch)
+    this.allowHttpIssuer = config?.allowHttpIssuer === true
   }
 
   async get(
-    issuer: string,
+    input: string,
     options?: GetCachedOptions,
   ): Promise<OAuthAuthorizationServerMetadata> {
-    return super.get(oauthIssuerIdentifierSchema.parse(issuer), options)
+    const issuer = oauthIssuerIdentifierSchema.parse(input)
+    if (!this.allowHttpIssuer && issuer.startsWith('http:')) {
+      throw new TypeError(
+        'Unsecure issuer URL protocol only allowed in development and test environments',
+      )
+    }
+    return super.get(issuer, options)
   }
 
   private async fetchMetadata(
     issuer: string,
     options?: GetCachedOptions,
   ): Promise<OAuthAuthorizationServerMetadata> {
-    const headers = new Headers([['accept', 'application/json']])
-    if (options?.noCache) headers.set('cache-control', 'no-cache')
-
     const url = new URL(`/.well-known/oauth-authorization-server`, issuer)
     const request = new Request(url, {
+      headers: { accept: 'application/json' },
+      cache: options?.noCache ? 'no-cache' : undefined,
       signal: options?.signal,
-      headers,
       redirect: 'manual', // response must be 200 OK
     })
 

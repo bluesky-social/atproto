@@ -1,7 +1,7 @@
-import * as http from 'http'
-import { Readable } from 'stream'
-import { brotliCompressSync, deflateSync, gzipSync } from 'zlib'
-import getPort from 'get-port'
+import * as http from 'node:http'
+import { AddressInfo } from 'node:net'
+import { Readable } from 'node:stream'
+import { brotliCompressSync, deflateSync, gzipSync } from 'node:zlib'
 import { LexiconDoc } from '@atproto/lexicon'
 import { ResponseType, XrpcClient } from '@atproto/xrpc'
 import { cidForCbor } from '@atproto/common'
@@ -153,8 +153,8 @@ describe('Bodies', () => {
   let client: XrpcClient
   let url: string
   beforeAll(async () => {
-    const port = await getPort()
-    s = await createServer(port, server)
+    s = await createServer(server)
+    const { port } = s.address() as AddressInfo
     url = `http://localhost:${port}`
     client = new XrpcClient(url, LEXICONS)
   })

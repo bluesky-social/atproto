@@ -10,11 +10,10 @@ import {
   SimpleStore,
 } from '@atproto-labs/simple-store'
 import {
-  ALLOW_UNSECURE_ORIGINS,
   OAuthProtectedResourceMetadata,
   oauthProtectedResourceMetadataSchema,
 } from '@atproto/oauth-types'
-import { contentMime } from './util'
+import { contentMime } from './util.js'
 
 export type { GetCachedOptions, OAuthProtectedResourceMetadata }
 
@@ -22,6 +21,10 @@ export type ProtectedResourceMetadataCache = SimpleStore<
   string,
   OAuthProtectedResourceMetadata
 >
+
+export type OAuthProtectedResourceMetadataResolverConfig = {
+  allowHttpResource?: boolean
+}
 
 /**
  * @see {@link https://datatracker.ietf.org/doc/html/draft-ietf-oauth-resource-metadata-05}
@@ -31,14 +34,17 @@ export class OAuthProtectedResourceMetadataResolver extends CachedGetter<
   OAuthProtectedResourceMetadata
 > {
   private readonly fetch: Fetch<unknown>
+  private readonly allowHttpResource: boolean
 
   constructor(
     cache: ProtectedResourceMetadataCache,
     fetch: Fetch = globalThis.fetch,
+    config?: OAuthProtectedResourceMetadataResolverConfig,
   ) {
     super(async (origin, options) => this.fetchMetadata(origin, options), cache)
 
     this.fetch = bindFetch(fetch)
+    this.allowHttpResource = config?.allowHttpResource === true
   }
 
   async get(
@@ -46,27 +52,31 @@ export class OAuthProtectedResourceMetadataResolver extends CachedGetter<
     options?: GetCachedOptions,
   ): Promise<OAuthProtectedResourceMetadata> {
     const { protocol, origin } = new URL(resource)
-    if (
-      protocol === 'https:' ||
-      (protocol === 'http:' && ALLOW_UNSECURE_ORIGINS)
-    ) {
-      return super.get(origin, options)
+
+    if (protocol !== 'https:' && protocol !== 'http:') {
+      throw new TypeError(
+        `Invalid protected resource metadata URL protocol: ${protocol}`,
+      )
     }
 
-    throw new TypeError(`Forbidden resource sercure protocol "${protocol}"`)
+    if (protocol === 'http:' && !this.allowHttpResource) {
+      throw new TypeError(
+        `Unsecure resource metadata URL (${protocol}) only allowed in development and test environments`,
+      )
+    }
+
+    return super.get(origin, options)
   }
 
   private async fetchMetadata(
     origin: string,
     options?: GetCachedOptions,
   ): Promise<OAuthProtectedResourceMetadata> {
-    const headers = new Headers([['accept', 'application/json']])
-    if (options?.noCache) headers.set('cache-control', 'no-cache')
-
     const url = new URL(`/.well-known/oauth-protected-resource`, origin)
     const request = new Request(url, {
       signal: options?.signal,
-      headers,
+      headers: { accept: 'application/json' },
+      cache: options?.noCache ? 'no-cache' : undefined,
       redirect: 'manual', // response must be 200 OK
     })
 

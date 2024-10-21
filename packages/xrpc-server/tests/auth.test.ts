@@ -1,6 +1,6 @@
 import * as http from 'node:http'
 import { KeyObject, createPrivateKey } from 'node:crypto'
-import getPort from 'get-port'
+import { AddressInfo } from 'node:net'
 import * as jose from 'jose'
 import KeyEncoder from 'key-encoder'
 import * as ui8 from 'uint8arrays'
@@ -65,8 +65,8 @@ describe('Auth', () => {
 
   let client: XrpcClient
   beforeAll(async () => {
-    const port = await getPort()
-    s = await createServer(port, server)
+    s = await createServer(server)
+    const { port } = s.address() as AddressInfo
     client = new XrpcClient(`http://localhost:${port}`, LEXICONS)
   })
 
