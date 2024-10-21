@@ -1,6 +1,6 @@
 import { Readable, pipeline } from 'node:stream'
 
-import { Middleware, ServerResponse } from './types.js'
+import { Handler, ServerResponse } from './types.js'
 
 export function appendHeader(
   res: ServerResponse,
@@ -24,9 +24,6 @@ export function writeRedirect(
   res.writeHead(status, { Location: url }).end()
 }
 
-const ifString = (value: unknown): string | undefined =>
-  typeof value === 'string' ? value : undefined
-
 export type WriteResponseOptions = {
   status?: number
   contentType?: string
@@ -37,13 +34,11 @@ export function writeStream(
   stream: Readable,
   {
     status = 200,
-    contentType = ifString((stream as any).headers?.['content-type']) ||
-      'application/octet-stream',
+    contentType = 'application/octet-stream',
   }: WriteResponseOptions = {},
 ): void {
   res.statusCode = status
   res.setHeader('content-type', contentType)
-  appendHeader(res, 'vary', 'accept-encoding')
 
   if (res.req.method === 'HEAD') {
     res.end()
@@ -57,11 +52,15 @@ export function writeStream(
 
 export function writeBuffer(
   res: ServerResponse,
-  buffer: Buffer,
-  options?: WriteResponseOptions,
+  chunk: string | Buffer,
+  {
+    status = 200,
+    contentType = 'application/octet-stream',
+  }: WriteResponseOptions = {},
 ): void {
-  const stream = Readable.from([buffer])
-  writeStream(res, stream, options)
+  res.statusCode = status
+  res.setHeader('content-type', contentType)
+  res.end(chunk)
 }
 
 export function writeJson(
@@ -70,21 +69,17 @@ export function writeJson(
   { contentType = 'application/json', ...options }: WriteResponseOptions = {},
 ): void {
   const buffer = Buffer.from(JSON.stringify(payload))
-  writeBuffer(res, buffer, { contentType, ...options })
+  writeBuffer(res, buffer, { ...options, contentType })
 }
 
 export function staticJsonMiddleware(
   value: unknown,
   { contentType = 'application/json', ...options }: WriteResponseOptions = {},
-): Middleware<unknown> {
+): Handler<unknown> {
   const buffer = Buffer.from(JSON.stringify(value))
-  const staticOptions: WriteResponseOptions = { contentType, ...options }
-  return function (req, res, next) {
-    try {
-      writeBuffer(res, buffer, staticOptions)
-    } catch (err) {
-      next(err)
-    }
+  const staticOptions: WriteResponseOptions = { ...options, contentType }
+  return function (req, res) {
+    writeBuffer(res, buffer, staticOptions)
   }
 }
 
@@ -93,6 +88,5 @@ export function writeHtml(
   html: Buffer | string,
   { contentType = 'text/html', ...options }: WriteResponseOptions = {},
 ): void {
-  const buffer = Buffer.isBuffer(html) ? html : Buffer.from(html)
-  writeBuffer(res, buffer, { contentType, ...options })
+  writeBuffer(res, html, { ...options, contentType })
 }
