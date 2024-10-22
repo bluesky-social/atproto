@@ -36,7 +36,7 @@ export default function bundleManifest({
 } = {}): Plugin {
   return {
     name: 'bundle-manifest',
-    generateBundle(outputOptions, bundle) {
+    generateBundle(outupsertOptions, bundle) {
       const manifest: Manifest = {}
 
       for (const [fileName, chunk] of Object.entries(bundle)) {
