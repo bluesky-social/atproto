@@ -8,7 +8,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth }) => {
       const access = auth.credentials
       const db = ctx.db
-      const { prefix, scope, limit, cursor } = params
+      const { prefix, scope, keys, limit, cursor } = params
       let did = ctx.cfg.service.did
 
       if (scope === 'personal') {
@@ -26,6 +26,7 @@ export default function (server: Server, ctx: AppContext) {
       const result = await settingService.query({
         scope: scope === 'personal' ? 'personal' : 'instance',
         did,
+        keys,
         prefix,
         limit,
         cursor,

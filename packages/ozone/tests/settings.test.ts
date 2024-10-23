@@ -3,7 +3,6 @@ import AtpAgent, {
   ToolsOzoneSettingListOptions,
   ToolsOzoneSettingUpsertOption,
 } from '@atproto/api'
-import { forSnapshot } from './_util'
 import { ids } from '../src/lexicon/lexicons'
 import { SettingScope } from '../dist/db/schema/setting'
 
@@ -84,7 +83,7 @@ describe('ozone-settings', () => {
         key: 'tools.ozone.setting.upsertTest.labelers',
         value: { dids: ['did:plc:xyz'] },
         description: 'triage users can not update this',
-        managerRole: 'moderator',
+        managerRole: 'tools.ozone.team.defs#roleModerator',
       })
 
       await expect(
@@ -94,7 +93,7 @@ describe('ozone-settings', () => {
             key: 'tools.ozone.setting.upsertTest.labelers',
             value: { noDids: 'test' },
             description: 'triage users can not update this',
-            managerRole: 'moderator',
+            managerRole: 'tools.ozone.team.defs#roleModerator',
           },
           'triage',
         ),
@@ -107,7 +106,7 @@ describe('ozone-settings', () => {
           value: { noDids: 'test' },
           description:
             'My personal labelers that i want to use when browsing ozone',
-          managerRole: 'moderator',
+          managerRole: 'tools.ozone.team.defs#roleModerator',
         },
         'moderator',
       )
@@ -130,7 +129,7 @@ describe('ozone-settings', () => {
           value: { dids: 'test' },
           description:
             'My personal labelers that i want to use when browsing ozone',
-          managerRole: 'moderator',
+          managerRole: 'tools.ozone.team.defs#roleModerator',
         },
         'moderator',
       )
@@ -156,7 +155,7 @@ describe('ozone-settings', () => {
           value: { stratosphere: { name: 'Stratosphere' } },
           description:
             'This determines how many queues the client interface will show',
-          managerRole: 'admin',
+          managerRole: 'tools.ozone.team.defs#roleAdmin',
         }),
         upsertOption({
           scope: 'instance',
@@ -164,7 +163,7 @@ describe('ozone-settings', () => {
           value: { val: 10.5 },
           description:
             'This determines how each queue is balanced when sorted by oldest first',
-          managerRole: 'admin',
+          managerRole: 'tools.ozone.team.defs#roleAdmin',
         }),
         upsertOption({
           scope: 'instance',
@@ -172,7 +171,7 @@ describe('ozone-settings', () => {
           value: { dids: ['did:plc:xyz'] },
           description:
             'List of external labelers that will be plugged into the client views',
-          managerRole: 'admin',
+          managerRole: 'tools.ozone.team.defs#roleAdmin',
         }),
       ])
     })
@@ -191,6 +190,7 @@ describe('ozone-settings', () => {
     it('returns all personal settings', async () => {
       const result = await listOptions({ prefix: 'tools.ozone.setting.client' })
       expect(result.options.length).toBe(3)
+      // @TODO: once we're happy with the object definitions, we can snapshot the result
       // expect(forSnapshot(result.settings)).toMatchSnapshot()
     })
 
@@ -233,7 +233,7 @@ describe('ozone-settings', () => {
         value: { dids: ['did:plc:xyz'] },
         description:
           'My personal labelers that i want to use when browsing ozone',
-        managerRole: 'owner',
+        managerRole: 'tools.ozone.team.defs#roleOwner',
       })
 
       // one user can't remove personal setting of another
@@ -258,14 +258,14 @@ describe('ozone-settings', () => {
           key: 'tools.ozone.setting.only.mod',
           value: { dids: ['did:plc:xyz'] },
           description: 'Triage mods can not manage these',
-          managerRole: 'moderator',
+          managerRole: 'tools.ozone.team.defs#roleModerator',
         }),
         upsertOption({
           scope: 'instance',
           key: 'tools.ozone.setting.only.admin',
           value: { dids: ['did:plc:xyz'] },
           description: 'Moderators or triage mods can not manage these',
-          managerRole: 'admin',
+          managerRole: 'tools.ozone.team.defs#roleAdmin',
         }),
       ])
 

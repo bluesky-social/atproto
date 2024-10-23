@@ -2,7 +2,8 @@ import Database from '../db'
 import { Selectable } from 'kysely'
 import { Option } from '../lexicon/types/tools/ozone/setting/defs'
 import { paginate, TimeIdKeyset } from '../db/pagination'
-import { Setting, SettingManagerRole, SettingScope } from '../db/schema/setting'
+import { Setting, SettingScope } from '../db/schema/setting'
+import { Member } from '../db/schema/member'
 
 export type SettingServiceCreator = (db: Database) => SettingService
 
@@ -92,7 +93,7 @@ export class SettingService {
     filters: {
       did?: string
       scope: SettingScope
-      managerRole: SettingManagerRole[]
+      managerRole: Member['role'][]
     },
   ): Promise<void> {
     if (!keys.length) return
@@ -101,11 +102,12 @@ export class SettingService {
       .deleteFrom('setting')
       .where('key', 'in', keys)
       .where('scope', '=', filters.scope)
-      .where(
-        'managerRole',
-        'in',
-        filters.managerRole.length ? filters.managerRole : ['owner'],
-      )
+
+    if (filters.managerRole.length) {
+      qb = qb.where('managerRole', 'in', filters.managerRole)
+    } else {
+      qb = qb.where('managerRole', 'is', null)
+    }
 
     if (filters.did) {
       qb = qb.where('did', '=', filters.did)
@@ -132,10 +134,10 @@ export class SettingService {
       key,
       value,
       did,
-      managerRole,
       scope,
       createdBy,
       lastUpdatedBy,
+      managerRole: managerRole || undefined,
       description: description || undefined,
       createdAt: createdAt.toISOString(),
       updatedAt: updatedAt.toISOString(),

@@ -1,9 +1,9 @@
 import { AuthRequiredError } from '@atproto/xrpc-server'
 import { Server } from '../../lexicon'
 import AppContext from '../../context'
-import { SettingManagerRole } from '../../db/schema/setting'
 import { AdminTokenOutput, ModeratorOutput } from '../../auth-verifier'
 import { SettingService } from '../../setting/service'
+import { Member } from '../../db/schema/member'
 
 export default function (server: Server, ctx: AppContext) {
   server.tools.ozone.setting.upsertOption({
@@ -44,7 +44,7 @@ export default function (server: Server, ctx: AppContext) {
         await settingService.upsert({
           ...baseOption,
           scope: 'personal',
-          managerRole: 'owner',
+          managerRole: null,
         })
       } else {
         const manageableRoles = getRolesForInstanceOption(access)
@@ -55,7 +55,7 @@ export default function (server: Server, ctx: AppContext) {
         })
 
         if (
-          existingSetting.options[0] &&
+          existingSetting.options[0]?.managerRole &&
           !manageableRoles.includes(existingSetting.options[0].managerRole)
         ) {
           throw new AuthRequiredError(`Not permitted to update setting ${key}`)
@@ -100,7 +100,11 @@ const getExistingSetting = async (
 const getRolesForInstanceOption = (
   access: AdminTokenOutput['credentials'] | ModeratorOutput['credentials'],
 ) => {
-  const fullPermission = ['admin', 'moderator', 'triage']
+  const fullPermission = [
+    'tools.ozone.team.defs#roleAdmin',
+    'tools.ozone.team.defs#roleModerator',
+    'tools.ozone.team.defs#roleTriage',
+  ]
   if (access.type === 'admin_token') {
     return fullPermission
   }
@@ -110,20 +114,24 @@ const getRolesForInstanceOption = (
   }
 
   if (access.isModerator) {
-    return ['moderator', 'triage']
+    return [
+      'tools.ozone.team.defs#roleModerator',
+      'tools.ozone.team.defs#roleTriage',
+    ]
   }
 
-  return ['triage']
+  return ['tools.ozone.team.defs#roleTriage']
 }
 
 const getManagerRole = (role: string) => {
-  let managerRole: SettingManagerRole = 'triage'
-  if (role === 'admin') {
-    managerRole = 'admin'
-  } else if (role === 'moderator') {
-    managerRole = 'moderator'
-  } else if (role === 'triage') {
-    managerRole = 'triage'
+  let managerRole: Member['role'] | null = null
+
+  if (role === 'tools.ozone.team.defs#roleAdmin') {
+    managerRole = 'tools.ozone.team.defs#roleAdmin'
+  } else if (role === 'tools.ozone.team.defs#roleModerator') {
+    managerRole = 'tools.ozone.team.defs#roleModerator'
+  } else if (role === 'tools.ozone.team.defs#roleTriage') {
+    managerRole = 'tools.ozone.team.defs#roleTriage'
   }
 
   return managerRole

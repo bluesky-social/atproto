@@ -8,7 +8,6 @@
         "key",
         "value",
         "did",
-        "managerRole",
         "scope",
         "createdBy",
         "lastUpdatedBy"
@@ -40,7 +39,11 @@
         },
         "managerRole": {
           "type": "string",
-          "knownValues": ["owner", "moderator", "triage", "admin"]
+          "knownValues": [
+            "tools.ozone.team.defs#roleModerator",
+            "tools.ozone.team.defs#roleTriage",
+            "tools.ozone.team.defs#roleAdmin"
+          ]
         },
         "scope": {
           "type": "string",

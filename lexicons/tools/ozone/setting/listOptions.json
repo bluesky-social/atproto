@@ -25,6 +25,14 @@
           "prefix": {
             "type": "string",
             "description": "Filter keys by prefix"
+          },
+          "keys": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "nsid"
+            },
+            "description": "Filter for only the specified keys. Ignored if prefix is provided"
           }
         }
       },

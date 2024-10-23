@@ -14,7 +14,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('updatedAt', 'timestamptz', (col) =>
       col.defaultTo(sql`now()`).notNull(),
     )
-    .addColumn('managerRole', 'text', (col) => col.notNull())
+    .addColumn('managerRole', 'text')
     .addColumn('scope', 'text', (col) => col.notNull())
     .addColumn('createdBy', 'text', (col) => col.notNull())
     .addColumn('lastUpdatedBy', 'text', (col) => col.notNull())

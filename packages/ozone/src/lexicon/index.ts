@@ -179,8 +179,8 @@ import * as ToolsOzoneSetDeleteValues from './types/tools/ozone/set/deleteValues
 import * as ToolsOzoneSetGetValues from './types/tools/ozone/set/getValues'
 import * as ToolsOzoneSetQuerySets from './types/tools/ozone/set/querySets'
 import * as ToolsOzoneSetUpsertSet from './types/tools/ozone/set/upsertSet'
-import * as ToolsOzoneSettingRemoveOptions from './types/tools/ozone/setting/removeOptions'
 import * as ToolsOzoneSettingListOptions from './types/tools/ozone/setting/listOptions'
+import * as ToolsOzoneSettingRemoveOptions from './types/tools/ozone/setting/removeOptions'
 import * as ToolsOzoneSettingUpsertOption from './types/tools/ozone/setting/upsertOption'
 import * as ToolsOzoneSignatureFindCorrelation from './types/tools/ozone/signature/findCorrelation'
 import * as ToolsOzoneSignatureFindRelatedAccounts from './types/tools/ozone/signature/findRelatedAccounts'
@@ -2449,17 +2449,6 @@ export class ToolsOzoneSettingNS {
     this._server = server
   }
 
-  removeOptions<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      ToolsOzoneSettingRemoveOptions.Handler<ExtractAuth<AV>>,
-      ToolsOzoneSettingRemoveOptions.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'tools.ozone.setting.removeOptions' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
   listOptions<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -2468,6 +2457,17 @@ export class ToolsOzoneSettingNS {
     >,
   ) {
     const nsid = 'tools.ozone.setting.listOptions' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  removeOptions<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneSettingRemoveOptions.Handler<ExtractAuth<AV>>,
+      ToolsOzoneSettingRemoveOptions.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.setting.removeOptions' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

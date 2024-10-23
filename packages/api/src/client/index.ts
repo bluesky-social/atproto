@@ -214,8 +214,8 @@ import * as ToolsOzoneSetGetValues from './types/tools/ozone/set/getValues'
 import * as ToolsOzoneSetQuerySets from './types/tools/ozone/set/querySets'
 import * as ToolsOzoneSetUpsertSet from './types/tools/ozone/set/upsertSet'
 import * as ToolsOzoneSettingDefs from './types/tools/ozone/setting/defs'
-import * as ToolsOzoneSettingRemoveOptions from './types/tools/ozone/setting/removeOptions'
 import * as ToolsOzoneSettingListOptions from './types/tools/ozone/setting/listOptions'
+import * as ToolsOzoneSettingRemoveOptions from './types/tools/ozone/setting/removeOptions'
 import * as ToolsOzoneSettingUpsertOption from './types/tools/ozone/setting/upsertOption'
 import * as ToolsOzoneSignatureDefs from './types/tools/ozone/signature/defs'
 import * as ToolsOzoneSignatureFindCorrelation from './types/tools/ozone/signature/findCorrelation'
@@ -437,8 +437,8 @@ export * as ToolsOzoneSetGetValues from './types/tools/ozone/set/getValues'
 export * as ToolsOzoneSetQuerySets from './types/tools/ozone/set/querySets'
 export * as ToolsOzoneSetUpsertSet from './types/tools/ozone/set/upsertSet'
 export * as ToolsOzoneSettingDefs from './types/tools/ozone/setting/defs'
-export * as ToolsOzoneSettingRemoveOptions from './types/tools/ozone/setting/removeOptions'
 export * as ToolsOzoneSettingListOptions from './types/tools/ozone/setting/listOptions'
+export * as ToolsOzoneSettingRemoveOptions from './types/tools/ozone/setting/removeOptions'
 export * as ToolsOzoneSettingUpsertOption from './types/tools/ozone/setting/upsertOption'
 export * as ToolsOzoneSignatureDefs from './types/tools/ozone/signature/defs'
 export * as ToolsOzoneSignatureFindCorrelation from './types/tools/ozone/signature/findCorrelation'
@@ -3704,18 +3704,6 @@ export class ToolsOzoneSettingNS {
     this._client = client
   }
 
-  removeOptions(
-    data?: ToolsOzoneSettingRemoveOptions.InputSchema,
-    opts?: ToolsOzoneSettingRemoveOptions.CallOptions,
-  ): Promise<ToolsOzoneSettingRemoveOptions.Response> {
-    return this._client.call(
-      'tools.ozone.setting.removeOptions',
-      opts?.qp,
-      data,
-      opts,
-    )
-  }
-
   listOptions(
     params?: ToolsOzoneSettingListOptions.QueryParams,
     opts?: ToolsOzoneSettingListOptions.CallOptions,
@@ -3724,6 +3712,18 @@ export class ToolsOzoneSettingNS {
       'tools.ozone.setting.listOptions',
       params,
       undefined,
+      opts,
+    )
+  }
+
+  removeOptions(
+    data?: ToolsOzoneSettingRemoveOptions.InputSchema,
+    opts?: ToolsOzoneSettingRemoveOptions.CallOptions,
+  ): Promise<ToolsOzoneSettingRemoveOptions.Response> {
+    return this._client.call(
+      'tools.ozone.setting.removeOptions',
+      opts?.qp,
+      data,
       opts,
     )
   }

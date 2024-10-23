@@ -9,7 +9,7 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["key", "scope", "value", "managerRole"],
+          "required": ["key", "scope", "value"],
           "properties": {
             "key": {
               "type": "string",
@@ -29,7 +29,11 @@
             "managerRole": {
               "type": "string",
               "default": "owner",
-              "knownValues": ["owner", "moderator", "triage", "admin"]
+              "knownValues": [
+                "tools.ozone.team.defs#roleModerator",
+                "tools.ozone.team.defs#roleTriage",
+                "tools.ozone.team.defs#roleAdmin"
+              ]
             }
           }
         }

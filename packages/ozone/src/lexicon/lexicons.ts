@@ -12443,7 +12443,6 @@ export const schemaDict = {
           'key',
           'value',
           'did',
-          'managerRole',
           'scope',
           'createdBy',
           'lastUpdatedBy',
@@ -12475,7 +12474,11 @@ export const schemaDict = {
           },
           managerRole: {
             type: 'string',
-            knownValues: ['owner', 'moderator', 'triage', 'admin'],
+            knownValues: [
+              'tools.ozone.team.defs#roleModerator',
+              'tools.ozone.team.defs#roleTriage',
+              'tools.ozone.team.defs#roleAdmin',
+            ],
           },
           scope: {
             type: 'string',
@@ -12488,6 +12491,67 @@ export const schemaDict = {
           lastUpdatedBy: {
             type: 'string',
             format: 'did',
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneSettingListOptions: {
+    lexicon: 1,
+    id: 'tools.ozone.setting.listOptions',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'List settings with optional filtering',
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+            scope: {
+              type: 'string',
+              knownValues: ['instance', 'personal'],
+              default: 'instance',
+            },
+            prefix: {
+              type: 'string',
+              description: 'Filter keys by prefix',
+            },
+            keys: {
+              type: 'array',
+              items: {
+                type: 'string',
+                format: 'nsid',
+              },
+              description:
+                'Filter for only the specified keys. Ignored if prefix is provided',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['options'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              options: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.setting.defs#option',
+                },
+              },
+            },
           },
         },
       },
@@ -12525,58 +12589,6 @@ export const schemaDict = {
       },
     },
   },
-  ToolsOzoneSettingListOptions: {
-    lexicon: 1,
-    id: 'tools.ozone.setting.listOptions',
-    defs: {
-      main: {
-        type: 'query',
-        description: 'List settings with optional filtering',
-        parameters: {
-          type: 'params',
-          properties: {
-            limit: {
-              type: 'integer',
-              minimum: 1,
-              maximum: 100,
-              default: 50,
-            },
-            cursor: {
-              type: 'string',
-            },
-            scope: {
-              type: 'string',
-              knownValues: ['instance', 'personal'],
-              default: 'instance',
-            },
-            prefix: {
-              type: 'string',
-              description: 'Filter keys by prefix',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['options'],
-            properties: {
-              cursor: {
-                type: 'string',
-              },
-              options: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:tools.ozone.setting.defs#option',
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  },
   ToolsOzoneSettingUpsertOption: {
     lexicon: 1,
     id: 'tools.ozone.setting.upsertOption',
@@ -12588,7 +12600,7 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['key', 'scope', 'value', 'managerRole'],
+            required: ['key', 'scope', 'value'],
             properties: {
               key: {
                 type: 'string',
@@ -12608,7 +12620,11 @@ export const schemaDict = {
               managerRole: {
                 type: 'string',
                 default: 'owner',
-                knownValues: ['owner', 'moderator', 'triage', 'admin'],
+                knownValues: [
+                  'tools.ozone.team.defs#roleModerator',
+                  'tools.ozone.team.defs#roleTriage',
+                  'tools.ozone.team.defs#roleAdmin',
+                ],
               },
             },
           },
@@ -13262,8 +13278,8 @@ export const ids = {
   ToolsOzoneSetQuerySets: 'tools.ozone.set.querySets',
   ToolsOzoneSetUpsertSet: 'tools.ozone.set.upsertSet',
   ToolsOzoneSettingDefs: 'tools.ozone.setting.defs',
-  ToolsOzoneSettingRemoveOptions: 'tools.ozone.setting.removeOptions',
   ToolsOzoneSettingListOptions: 'tools.ozone.setting.listOptions',
+  ToolsOzoneSettingRemoveOptions: 'tools.ozone.setting.removeOptions',
   ToolsOzoneSettingUpsertOption: 'tools.ozone.setting.upsertOption',
   ToolsOzoneSignatureDefs: 'tools.ozone.signature.defs',
   ToolsOzoneSignatureFindCorrelation: 'tools.ozone.signature.findCorrelation',

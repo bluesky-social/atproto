@@ -1,15 +1,15 @@
 import { Generated } from 'kysely'
+import { Member } from './member'
 
 export const settingTableName = 'setting'
 
-export type SettingManagerRole = 'admin' | 'moderator' | 'triage' | 'owner'
 export type SettingScope = 'personal' | 'instance'
 
 export interface Setting {
   id: Generated<number>
   key: string
   value: any
-  managerRole: SettingManagerRole
+  managerRole: Member['role'] | null
   description: string | null
   did: string
   scope: SettingScope

@@ -15,6 +15,8 @@ export interface QueryParams {
   scope: 'instance' | 'personal' | (string & {})
   /** Filter keys by prefix */
   prefix?: string
+  /** Filter for only the specified keys. Ignored if prefix is provided */
+  keys?: string[]
 }
 
 export type InputSchema = undefined
