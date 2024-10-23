@@ -4,6 +4,7 @@ import AppContext from '../../context'
 import { AdminTokenOutput, ModeratorOutput } from '../../auth-verifier'
 import { SettingService } from '../../setting/service'
 import { Member } from '../../db/schema/member'
+import { ToolsOzoneTeamDefs } from '@atproto/api'
 
 export default function (server: Server, ctx: AppContext) {
   server.tools.ozone.setting.upsertOption({
@@ -101,9 +102,9 @@ const getRolesForInstanceOption = (
   access: AdminTokenOutput['credentials'] | ModeratorOutput['credentials'],
 ) => {
   const fullPermission = [
-    'tools.ozone.team.defs#roleAdmin',
-    'tools.ozone.team.defs#roleModerator',
-    'tools.ozone.team.defs#roleTriage',
+    ToolsOzoneTeamDefs.ROLEADMIN,
+    ToolsOzoneTeamDefs.ROLEMODERATOR,
+    ToolsOzoneTeamDefs.ROLETRIAGE,
   ]
   if (access.type === 'admin_token') {
     return fullPermission
@@ -114,24 +115,21 @@ const getRolesForInstanceOption = (
   }
 
   if (access.isModerator) {
-    return [
-      'tools.ozone.team.defs#roleModerator',
-      'tools.ozone.team.defs#roleTriage',
-    ]
+    return [ToolsOzoneTeamDefs.ROLEMODERATOR, ToolsOzoneTeamDefs.ROLETRIAGE]
   }
 
-  return ['tools.ozone.team.defs#roleTriage']
+  return [ToolsOzoneTeamDefs.ROLETRIAGE]
 }
 
 const getManagerRole = (role: string) => {
   let managerRole: Member['role'] | null = null
 
-  if (role === 'tools.ozone.team.defs#roleAdmin') {
-    managerRole = 'tools.ozone.team.defs#roleAdmin'
-  } else if (role === 'tools.ozone.team.defs#roleModerator') {
-    managerRole = 'tools.ozone.team.defs#roleModerator'
-  } else if (role === 'tools.ozone.team.defs#roleTriage') {
-    managerRole = 'tools.ozone.team.defs#roleTriage'
+  if (role === ToolsOzoneTeamDefs.ROLEADMIN) {
+    managerRole = ToolsOzoneTeamDefs.ROLEADMIN
+  } else if (role === ToolsOzoneTeamDefs.ROLEMODERATOR) {
+    managerRole = ToolsOzoneTeamDefs.ROLEMODERATOR
+  } else if (role === ToolsOzoneTeamDefs.ROLETRIAGE) {
+    managerRole = ToolsOzoneTeamDefs.ROLETRIAGE
   }
 
   return managerRole
