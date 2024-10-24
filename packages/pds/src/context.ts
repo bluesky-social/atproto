@@ -1,23 +1,28 @@
 import assert from 'node:assert'
+import * as undici from 'undici'
 import * as nodemailer from 'nodemailer'
 import { Redis } from 'ioredis'
 import * as plc from '@did-plc/lib'
+import {
+  Fetch,
+  isUnicastIp,
+  loggedFetch,
+  safeFetchWrap,
+  unicastLookup,
+} from '@atproto-labs/fetch-node'
 import * as crypto from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
 import { AtpAgent } from '@atproto/api'
 import { KmsKeypair, S3BlobStore } from '@atproto/aws'
+import { JoseKey, OAuthVerifier } from '@atproto/oauth-provider'
+import { BlobStore } from '@atproto/repo'
 import {
   RateLimiter,
   RateLimiterCreator,
   RateLimiterOpts,
   createServiceAuthHeaders,
+  createServiceJwt,
 } from '@atproto/xrpc-server'
-import {
-  JoseKey,
-  Fetch,
-  safeFetchWrap,
-  OAuthVerifier,
-} from '@atproto/oauth-provider'
 
 import { ServerConfig, ServerSecrets } from './config'
 import { PdsOAuthProvider } from './oauth/provider'
@@ -29,7 +34,6 @@ import {
 import { fetchLogger } from './logger'
 import { ServerMailer } from './mailer'
 import { ModerationMailer } from './mailer/moderation'
-import { BlobStore } from '@atproto/repo'
 import { AccountManager } from './account-manager'
 import { Sequencer } from './sequencer'
 import { BackgroundQueue } from './background'
@@ -59,6 +63,7 @@ export type AppContextOptions = {
   moderationAgent?: AtpAgent
   reportingAgent?: AtpAgent
   entrywayAgent?: AtpAgent
+  proxyAgent: undici.Agent
   safeFetch: Fetch
   authProvider?: PdsOAuthProvider
   authVerifier: AuthVerifier
@@ -85,6 +90,7 @@ export class AppContext {
   public moderationAgent: AtpAgent | undefined
   public reportingAgent: AtpAgent | undefined
   public entrywayAgent: AtpAgent | undefined
+  public proxyAgent: undici.Agent
   public safeFetch: Fetch
   public authVerifier: AuthVerifier
   public authProvider?: PdsOAuthProvider
@@ -110,6 +116,7 @@ export class AppContext {
     this.moderationAgent = opts.moderationAgent
     this.reportingAgent = opts.reportingAgent
     this.entrywayAgent = opts.entrywayAgent
+    this.proxyAgent = opts.proxyAgent
     this.safeFetch = opts.safeFetch
     this.authVerifier = opts.authVerifier
     this.authProvider = opts.authProvider
@@ -256,20 +263,47 @@ export class AppContext {
       appviewCdnUrlPattern: cfg.bskyAppView?.cdnUrlPattern,
     })
 
+    // An agent for performing HTTP requests based on user provided URLs.
+    const proxyAgent = new undici.Agent({
+      allowH2: cfg.proxy.allowHTTP2, // This is experimental
+      headersTimeout: cfg.proxy.headersTimeout,
+      maxResponseSize: cfg.proxy.maxResponseSize,
+      bodyTimeout: cfg.proxy.bodyTimeout,
+      factory: cfg.proxy.disableSsrfProtection
+        ? undefined
+        : (origin, opts) => {
+            const { protocol, hostname } =
+              origin instanceof URL ? origin : new URL(origin)
+            if (protocol !== 'https:') {
+              throw new Error(`Forbidden protocol "${protocol}"`)
+            }
+            if (isUnicastIp(hostname) === false) {
+              throw new Error('Hostname resolved to non-unicast address')
+            }
+            return new undici.Pool(origin, opts)
+          },
+      connect: {
+        lookup: cfg.proxy.disableSsrfProtection ? undefined : unicastLookup,
+      },
+    })
+
     // A fetch() function that protects against SSRF attacks, large responses &
     // known bad domains. This function can safely be used to fetch user
     // provided URLs (unless "disableSsrfProtection" is true, of course).
-    const safeFetch = safeFetchWrap({
-      allowHttp: cfg.fetch.disableSsrfProtection,
-      responseMaxSize: 512 * 1024, // 512kB
-      ssrfProtection: !cfg.fetch.disableSsrfProtection,
-      fetch: async (input, init) => {
-        const request = input instanceof Request ? input : null
-        const method = init?.method ?? request?.method ?? 'GET'
-        const uri = request?.url ?? String(input)
-        fetchLogger.debug({ method, uri }, 'fetch')
-        return globalThis.fetch(input, init)
+    const safeFetch = loggedFetch({
+      fetch: safeFetchWrap({
+        // Using globalThis.fetch allows safeFetchWrap to use keep-alive. See
+        // unicastFetchWrap().
+        fetch: globalThis.fetch,
+        allowIpHost: false,
+        responseMaxSize: cfg.fetch.maxResponseSize,
+        ssrfProtection: !cfg.fetch.disableSsrfProtection,
+      }),
+      logRequest: ({ method, url }) => {
+        fetchLogger.debug({ method, uri: url }, 'fetch')
       },
+      logResponse: false,
+      logError: false,
     })
 
     const authProvider = cfg.oauth.provider
@@ -333,6 +367,7 @@ export class AppContext {
       moderationAgent,
       reportingAgent,
       entrywayAgent,
+      proxyAgent,
       safeFetch,
       authVerifier,
       authProvider,
@@ -350,6 +385,16 @@ export class AppContext {
   async serviceAuthHeaders(did: string, aud: string, lxm: string) {
     const keypair = await this.actorStore.keypair(did)
     return createServiceAuthHeaders({
+      iss: did,
+      aud,
+      lxm,
+      keypair,
+    })
+  }
+
+  async serviceAuthJwt(did: string, aud: string, lxm: string) {
+    const keypair = await this.actorStore.keypair(did)
+    return createServiceJwt({
       iss: did,
       aud,
       lxm,

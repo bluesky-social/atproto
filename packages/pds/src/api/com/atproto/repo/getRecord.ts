@@ -16,7 +16,10 @@ export default function (server: Server, ctx: AppContext) {
         store.record.getRecord(uri, cid ?? null),
       )
       if (!record || record.takedownRef !== null) {
-        throw new InvalidRequestError(`Could not locate record: ${uri}`)
+        throw new InvalidRequestError(
+          `Could not locate record: ${uri}`,
+          'RecordNotFound',
+        )
       }
       return {
         encoding: 'application/json',
@@ -32,6 +35,6 @@ export default function (server: Server, ctx: AppContext) {
       throw new InvalidRequestError(`Could not locate record`)
     }
 
-    return await pipethrough(ctx, req, null)
+    return pipethrough(ctx, req)
   })
 }

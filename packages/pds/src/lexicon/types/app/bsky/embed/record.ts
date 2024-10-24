@@ -12,6 +12,7 @@ import * as AppBskyLabelerDefs from '../labeler/defs'
 import * as AppBskyActorDefs from '../actor/defs'
 import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
 import * as AppBskyEmbedImages from './images'
+import * as AppBskyEmbedVideo from './video'
 import * as AppBskyEmbedExternal from './external'
 import * as AppBskyEmbedRecordWithMedia from './recordWithMedia'
 
@@ -70,6 +71,7 @@ export interface ViewRecord {
   quoteCount?: number
   embeds?: (
     | AppBskyEmbedImages.View
+    | AppBskyEmbedVideo.View
     | AppBskyEmbedExternal.View
     | View
     | AppBskyEmbedRecordWithMedia.View

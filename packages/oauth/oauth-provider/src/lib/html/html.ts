@@ -6,7 +6,7 @@ const symbol = Symbol('Html.dangerouslyCreate')
  * This class represents trusted HTML that can be safely embedded in a web page,
  * or used as fragments to build a larger HTML document.
  */
-export class Html {
+export class Html implements Iterable<string> {
   #fragments: Iterable<Html | string>
 
   private constructor(fragments: Iterable<Html | string>, guard: symbol) {
@@ -22,22 +22,19 @@ export class Html {
   }
 
   toString(): string {
-    // Lazily compute & join the fragments when they are used, to avoid
-    // unnecessary intermediate strings when concatenating multiple Html as
-    // fragments.
+    let result = ''
+    for (const fragment of this) result += fragment
+
+    // Cache result for future calls
     if (
       !Array.isArray(this.#fragments) ||
       this.#fragments.length > 1 ||
       !this.#fragments.every(isString)
     ) {
-      // Will call `toString` recursively, as well as generating iterator
-      // results.
-      const fragment = Array.from(this.#fragments, String).join('')
-      this.#fragments = [fragment] // Cache result for future calls
-      return fragment
+      this.#fragments = result ? [result] : []
     }
 
-    return this.#fragments.join('')
+    return result
   }
 
   [Symbol.toPrimitive](hint): string {
@@ -51,8 +48,13 @@ export class Html {
   }
 
   *[Symbol.iterator](): IterableIterator<string> {
-    // Using toString() here to use the optimized path for string concatenation
-    yield this.toString()
+    for (const fragment of this.#fragments) {
+      if (typeof fragment === 'string') {
+        yield fragment
+      } else {
+        yield* fragment
+      }
+    }
   }
 
   static dangerouslyCreate(fragments: Iterable<Html | string>): Html {

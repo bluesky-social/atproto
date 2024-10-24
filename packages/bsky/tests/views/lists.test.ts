@@ -82,6 +82,14 @@ describe('bsky actor likes feed views', () => {
     expect(forSnapshot(view.data.lists)).toMatchSnapshot()
   })
 
+  it('supports using a handle as getList actor param', async () => {
+    const view = await agent.app.bsky.graph.getLists({
+      actor: 'eve.test',
+    })
+    expect(view.data.lists.length).toBe(2)
+    expect(forSnapshot(view.data.lists)).toMatchSnapshot()
+  })
+
   it('does not include users with creator block relationship in reference lists for non-creator, in-list viewers', async () => {
     const curView = await agent.api.app.bsky.graph.getList(
       {

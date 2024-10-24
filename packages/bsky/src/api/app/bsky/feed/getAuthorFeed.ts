@@ -14,6 +14,7 @@ import {
 import { Views } from '../../../../views'
 import { DataPlaneClient } from '../../../../data-plane'
 import { parseString } from '../../../../hydration/util'
+import { safePinnedPost, uriToDid } from '../../../../util/uris'
 import { Actor } from '../../../../hydration/actor'
 import { FeedItem, Post } from '../../../../hydration/feed'
 import { FeedType } from '../../../../proto/bsky_pb'
@@ -79,21 +80,46 @@ export const skeleton = async (inputs: {
   if (clearlyBadCursor(params.cursor)) {
     return { actor, filter: params.filter, items: [] }
   }
+
+  const pinnedPost = safePinnedPost(actor.profile?.pinnedPost)
+  const isFirstPageRequest = !params.cursor
+  const shouldInsertPinnedPost =
+    isFirstPageRequest &&
+    params.includePins &&
+    pinnedPost &&
+    uriToDid(pinnedPost.uri) === actor.did
+
   const res = await ctx.dataplane.getAuthorFeed({
     actorDid: did,
     limit: params.limit,
     cursor: params.cursor,
     feedType: FILTER_TO_FEED_TYPE[params.filter],
   })
+
+  let items: FeedItem[] = res.items.map((item) => ({
+    post: { uri: item.uri, cid: item.cid || undefined },
+    repost: item.repost
+      ? { uri: item.repost, cid: item.repostCid || undefined }
+      : undefined,
+  }))
+
+  if (shouldInsertPinnedPost && pinnedPost) {
+    const pinnedItem = {
+      post: {
+        uri: pinnedPost.uri,
+        cid: pinnedPost.cid,
+      },
+      authorPinned: true,
+    }
+
+    items = items.filter((item) => item.post.uri !== pinnedItem.post.uri)
+    items.unshift(pinnedItem)
+  }
+
   return {
     actor,
     filter: params.filter,
-    items: res.items.map((item) => ({
-      post: { uri: item.uri, cid: item.cid || undefined },
-      repost: item.repost
-        ? { uri: item.repost, cid: item.repostCid || undefined }
-        : undefined,
-    })),
+    items,
     cursor: parseString(res.cursor),
   }
 }
@@ -147,7 +173,7 @@ const noBlocksOrMutedReposts = (inputs: {
     skeleton.items = skeleton.items.filter((item) => {
       return (
         checkBlocksAndMutes(item) &&
-        (item.repost || selfThread.ok(item.post.uri))
+        (item.repost || item.authorPinned || selfThread.ok(item.post.uri))
       )
     })
   } else {

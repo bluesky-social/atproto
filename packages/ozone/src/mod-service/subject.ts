@@ -113,13 +113,13 @@ export class RepoSubject implements ModSubject {
   blobCids = undefined
   recordPath = undefined
   constructor(public did: string) {}
-  isRepo() {
+  isRepo(): this is RepoSubject {
     return true
   }
-  isRecord() {
+  isRecord(): this is RecordSubject {
     return false
   }
-  isMessage() {
+  isMessage(): this is MessageSubject {
     return false
   }
   info() {
@@ -154,13 +154,13 @@ export class RecordSubject implements ModSubject {
     this.did = this.parsedUri.hostname
     this.recordPath = `${this.parsedUri.collection}/${this.parsedUri.rkey}`
   }
-  isRepo() {
+  isRepo(): this is RepoSubject {
     return false
   }
-  isRecord() {
+  isRecord(): this is RecordSubject {
     return true
   }
-  isMessage() {
+  isMessage(): this is MessageSubject {
     return false
   }
   info() {
@@ -191,13 +191,13 @@ export class MessageSubject implements ModSubject {
     public convoId: string,
     public messageId: string,
   ) {}
-  isRepo() {
+  isRepo(): this is RepoSubject {
     return false
   }
-  isRecord() {
+  isRecord(): this is RecordSubject {
     return false
   }
-  isMessage() {
+  isMessage(): this is MessageSubject {
     return true
   }
   info() {

@@ -32,6 +32,7 @@ import * as ComAtprotoModerationCreateReport from './types/com/atproto/moderatio
 import * as ComAtprotoModerationDefs from './types/com/atproto/moderation/defs'
 import * as ComAtprotoRepoApplyWrites from './types/com/atproto/repo/applyWrites'
 import * as ComAtprotoRepoCreateRecord from './types/com/atproto/repo/createRecord'
+import * as ComAtprotoRepoDefs from './types/com/atproto/repo/defs'
 import * as ComAtprotoRepoDeleteRecord from './types/com/atproto/repo/deleteRecord'
 import * as ComAtprotoRepoDescribeRepo from './types/com/atproto/repo/describeRepo'
 import * as ComAtprotoRepoGetRecord from './types/com/atproto/repo/getRecord'
@@ -92,10 +93,12 @@ import * as AppBskyActorProfile from './types/app/bsky/actor/profile'
 import * as AppBskyActorPutPreferences from './types/app/bsky/actor/putPreferences'
 import * as AppBskyActorSearchActors from './types/app/bsky/actor/searchActors'
 import * as AppBskyActorSearchActorsTypeahead from './types/app/bsky/actor/searchActorsTypeahead'
+import * as AppBskyEmbedDefs from './types/app/bsky/embed/defs'
 import * as AppBskyEmbedExternal from './types/app/bsky/embed/external'
 import * as AppBskyEmbedImages from './types/app/bsky/embed/images'
 import * as AppBskyEmbedRecord from './types/app/bsky/embed/record'
 import * as AppBskyEmbedRecordWithMedia from './types/app/bsky/embed/recordWithMedia'
+import * as AppBskyEmbedVideo from './types/app/bsky/embed/video'
 import * as AppBskyFeedDefs from './types/app/bsky/feed/defs'
 import * as AppBskyFeedDescribeFeedGenerator from './types/app/bsky/feed/describeFeedGenerator'
 import * as AppBskyFeedGenerator from './types/app/bsky/feed/generator'
@@ -163,6 +166,10 @@ import * as AppBskyUnspeccedGetSuggestionsSkeleton from './types/app/bsky/unspec
 import * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions'
 import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton'
 import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
+import * as AppBskyVideoDefs from './types/app/bsky/video/defs'
+import * as AppBskyVideoGetJobStatus from './types/app/bsky/video/getJobStatus'
+import * as AppBskyVideoGetUploadLimits from './types/app/bsky/video/getUploadLimits'
+import * as AppBskyVideoUploadVideo from './types/app/bsky/video/uploadVideo'
 import * as ChatBskyActorDeclaration from './types/chat/bsky/actor/declaration'
 import * as ChatBskyActorDefs from './types/chat/bsky/actor/defs'
 import * as ChatBskyActorDeleteAccount from './types/chat/bsky/actor/deleteAccount'
@@ -192,11 +199,24 @@ import * as ToolsOzoneModerationDefs from './types/tools/ozone/moderation/defs'
 import * as ToolsOzoneModerationEmitEvent from './types/tools/ozone/moderation/emitEvent'
 import * as ToolsOzoneModerationGetEvent from './types/tools/ozone/moderation/getEvent'
 import * as ToolsOzoneModerationGetRecord from './types/tools/ozone/moderation/getRecord'
+import * as ToolsOzoneModerationGetRecords from './types/tools/ozone/moderation/getRecords'
 import * as ToolsOzoneModerationGetRepo from './types/tools/ozone/moderation/getRepo'
+import * as ToolsOzoneModerationGetRepos from './types/tools/ozone/moderation/getRepos'
 import * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents'
 import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses'
 import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos'
 import * as ToolsOzoneServerGetConfig from './types/tools/ozone/server/getConfig'
+import * as ToolsOzoneSetAddValues from './types/tools/ozone/set/addValues'
+import * as ToolsOzoneSetDefs from './types/tools/ozone/set/defs'
+import * as ToolsOzoneSetDeleteSet from './types/tools/ozone/set/deleteSet'
+import * as ToolsOzoneSetDeleteValues from './types/tools/ozone/set/deleteValues'
+import * as ToolsOzoneSetGetValues from './types/tools/ozone/set/getValues'
+import * as ToolsOzoneSetQuerySets from './types/tools/ozone/set/querySets'
+import * as ToolsOzoneSetUpsertSet from './types/tools/ozone/set/upsertSet'
+import * as ToolsOzoneSignatureDefs from './types/tools/ozone/signature/defs'
+import * as ToolsOzoneSignatureFindCorrelation from './types/tools/ozone/signature/findCorrelation'
+import * as ToolsOzoneSignatureFindRelatedAccounts from './types/tools/ozone/signature/findRelatedAccounts'
+import * as ToolsOzoneSignatureSearchAccounts from './types/tools/ozone/signature/searchAccounts'
 import * as ToolsOzoneTeamAddMember from './types/tools/ozone/team/addMember'
 import * as ToolsOzoneTeamDefs from './types/tools/ozone/team/defs'
 import * as ToolsOzoneTeamDeleteMember from './types/tools/ozone/team/deleteMember'
@@ -231,6 +251,7 @@ export * as ComAtprotoModerationCreateReport from './types/com/atproto/moderatio
 export * as ComAtprotoModerationDefs from './types/com/atproto/moderation/defs'
 export * as ComAtprotoRepoApplyWrites from './types/com/atproto/repo/applyWrites'
 export * as ComAtprotoRepoCreateRecord from './types/com/atproto/repo/createRecord'
+export * as ComAtprotoRepoDefs from './types/com/atproto/repo/defs'
 export * as ComAtprotoRepoDeleteRecord from './types/com/atproto/repo/deleteRecord'
 export * as ComAtprotoRepoDescribeRepo from './types/com/atproto/repo/describeRepo'
 export * as ComAtprotoRepoGetRecord from './types/com/atproto/repo/getRecord'
@@ -291,10 +312,12 @@ export * as AppBskyActorProfile from './types/app/bsky/actor/profile'
 export * as AppBskyActorPutPreferences from './types/app/bsky/actor/putPreferences'
 export * as AppBskyActorSearchActors from './types/app/bsky/actor/searchActors'
 export * as AppBskyActorSearchActorsTypeahead from './types/app/bsky/actor/searchActorsTypeahead'
+export * as AppBskyEmbedDefs from './types/app/bsky/embed/defs'
 export * as AppBskyEmbedExternal from './types/app/bsky/embed/external'
 export * as AppBskyEmbedImages from './types/app/bsky/embed/images'
 export * as AppBskyEmbedRecord from './types/app/bsky/embed/record'
 export * as AppBskyEmbedRecordWithMedia from './types/app/bsky/embed/recordWithMedia'
+export * as AppBskyEmbedVideo from './types/app/bsky/embed/video'
 export * as AppBskyFeedDefs from './types/app/bsky/feed/defs'
 export * as AppBskyFeedDescribeFeedGenerator from './types/app/bsky/feed/describeFeedGenerator'
 export * as AppBskyFeedGenerator from './types/app/bsky/feed/generator'
@@ -362,6 +385,10 @@ export * as AppBskyUnspeccedGetSuggestionsSkeleton from './types/app/bsky/unspec
 export * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions'
 export * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton'
 export * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
+export * as AppBskyVideoDefs from './types/app/bsky/video/defs'
+export * as AppBskyVideoGetJobStatus from './types/app/bsky/video/getJobStatus'
+export * as AppBskyVideoGetUploadLimits from './types/app/bsky/video/getUploadLimits'
+export * as AppBskyVideoUploadVideo from './types/app/bsky/video/uploadVideo'
 export * as ChatBskyActorDeclaration from './types/chat/bsky/actor/declaration'
 export * as ChatBskyActorDefs from './types/chat/bsky/actor/defs'
 export * as ChatBskyActorDeleteAccount from './types/chat/bsky/actor/deleteAccount'
@@ -391,11 +418,24 @@ export * as ToolsOzoneModerationDefs from './types/tools/ozone/moderation/defs'
 export * as ToolsOzoneModerationEmitEvent from './types/tools/ozone/moderation/emitEvent'
 export * as ToolsOzoneModerationGetEvent from './types/tools/ozone/moderation/getEvent'
 export * as ToolsOzoneModerationGetRecord from './types/tools/ozone/moderation/getRecord'
+export * as ToolsOzoneModerationGetRecords from './types/tools/ozone/moderation/getRecords'
 export * as ToolsOzoneModerationGetRepo from './types/tools/ozone/moderation/getRepo'
+export * as ToolsOzoneModerationGetRepos from './types/tools/ozone/moderation/getRepos'
 export * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents'
 export * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses'
 export * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos'
 export * as ToolsOzoneServerGetConfig from './types/tools/ozone/server/getConfig'
+export * as ToolsOzoneSetAddValues from './types/tools/ozone/set/addValues'
+export * as ToolsOzoneSetDefs from './types/tools/ozone/set/defs'
+export * as ToolsOzoneSetDeleteSet from './types/tools/ozone/set/deleteSet'
+export * as ToolsOzoneSetDeleteValues from './types/tools/ozone/set/deleteValues'
+export * as ToolsOzoneSetGetValues from './types/tools/ozone/set/getValues'
+export * as ToolsOzoneSetQuerySets from './types/tools/ozone/set/querySets'
+export * as ToolsOzoneSetUpsertSet from './types/tools/ozone/set/upsertSet'
+export * as ToolsOzoneSignatureDefs from './types/tools/ozone/signature/defs'
+export * as ToolsOzoneSignatureFindCorrelation from './types/tools/ozone/signature/findCorrelation'
+export * as ToolsOzoneSignatureFindRelatedAccounts from './types/tools/ozone/signature/findRelatedAccounts'
+export * as ToolsOzoneSignatureSearchAccounts from './types/tools/ozone/signature/searchAccounts'
 export * as ToolsOzoneTeamAddMember from './types/tools/ozone/team/addMember'
 export * as ToolsOzoneTeamDefs from './types/tools/ozone/team/defs'
 export * as ToolsOzoneTeamDeleteMember from './types/tools/ozone/team/deleteMember'
@@ -848,12 +888,11 @@ export class ComAtprotoRepoNS {
     params?: ComAtprotoRepoGetRecord.QueryParams,
     opts?: ComAtprotoRepoGetRecord.CallOptions,
   ): Promise<ComAtprotoRepoGetRecord.Response> {
-    return this._client.call(
-      'com.atproto.repo.getRecord',
-      params,
-      undefined,
-      opts,
-    )
+    return this._client
+      .call('com.atproto.repo.getRecord', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoRepoGetRecord.toKnownErr(e)
+      })
   }
 
   importRepo(
@@ -1421,6 +1460,7 @@ export class AppBskyNS {
   notification: AppBskyNotificationNS
   richtext: AppBskyRichtextNS
   unspecced: AppBskyUnspeccedNS
+  video: AppBskyVideoNS
 
   constructor(client: XrpcClient) {
     this._client = client
@@ -1432,6 +1472,7 @@ export class AppBskyNS {
     this.notification = new AppBskyNotificationNS(client)
     this.richtext = new AppBskyRichtextNS(client)
     this.unspecced = new AppBskyUnspeccedNS(client)
+    this.video = new AppBskyVideoNS(client)
   }
 }
 
@@ -3019,6 +3060,45 @@ export class AppBskyUnspeccedNS {
   }
 }
 
+export class AppBskyVideoNS {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  getJobStatus(
+    params?: AppBskyVideoGetJobStatus.QueryParams,
+    opts?: AppBskyVideoGetJobStatus.CallOptions,
+  ): Promise<AppBskyVideoGetJobStatus.Response> {
+    return this._client.call(
+      'app.bsky.video.getJobStatus',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getUploadLimits(
+    params?: AppBskyVideoGetUploadLimits.QueryParams,
+    opts?: AppBskyVideoGetUploadLimits.CallOptions,
+  ): Promise<AppBskyVideoGetUploadLimits.Response> {
+    return this._client.call(
+      'app.bsky.video.getUploadLimits',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  uploadVideo(
+    data?: AppBskyVideoUploadVideo.InputSchema,
+    opts?: AppBskyVideoUploadVideo.CallOptions,
+  ): Promise<AppBskyVideoUploadVideo.Response> {
+    return this._client.call('app.bsky.video.uploadVideo', opts?.qp, data, opts)
+  }
+}
+
 export class ChatNS {
   _client: XrpcClient
   bsky: ChatBskyNS
@@ -3338,6 +3418,8 @@ export class ToolsOzoneNS {
   communication: ToolsOzoneCommunicationNS
   moderation: ToolsOzoneModerationNS
   server: ToolsOzoneServerNS
+  set: ToolsOzoneSetNS
+  signature: ToolsOzoneSignatureNS
   team: ToolsOzoneTeamNS
 
   constructor(client: XrpcClient) {
@@ -3345,6 +3427,8 @@ export class ToolsOzoneNS {
     this.communication = new ToolsOzoneCommunicationNS(client)
     this.moderation = new ToolsOzoneModerationNS(client)
     this.server = new ToolsOzoneServerNS(client)
+    this.set = new ToolsOzoneSetNS(client)
+    this.signature = new ToolsOzoneSignatureNS(client)
     this.team = new ToolsOzoneTeamNS(client)
   }
 }
@@ -3360,12 +3444,11 @@ export class ToolsOzoneCommunicationNS {
     data?: ToolsOzoneCommunicationCreateTemplate.InputSchema,
     opts?: ToolsOzoneCommunicationCreateTemplate.CallOptions,
   ): Promise<ToolsOzoneCommunicationCreateTemplate.Response> {
-    return this._client.call(
-      'tools.ozone.communication.createTemplate',
-      opts?.qp,
-      data,
-      opts,
-    )
+    return this._client
+      .call('tools.ozone.communication.createTemplate', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ToolsOzoneCommunicationCreateTemplate.toKnownErr(e)
+      })
   }
 
   deleteTemplate(
@@ -3396,12 +3479,11 @@ export class ToolsOzoneCommunicationNS {
     data?: ToolsOzoneCommunicationUpdateTemplate.InputSchema,
     opts?: ToolsOzoneCommunicationUpdateTemplate.CallOptions,
   ): Promise<ToolsOzoneCommunicationUpdateTemplate.Response> {
-    return this._client.call(
-      'tools.ozone.communication.updateTemplate',
-      opts?.qp,
-      data,
-      opts,
-    )
+    return this._client
+      .call('tools.ozone.communication.updateTemplate', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ToolsOzoneCommunicationUpdateTemplate.toKnownErr(e)
+      })
   }
 }
 
@@ -3446,6 +3528,18 @@ export class ToolsOzoneModerationNS {
       })
   }
 
+  getRecords(
+    params?: ToolsOzoneModerationGetRecords.QueryParams,
+    opts?: ToolsOzoneModerationGetRecords.CallOptions,
+  ): Promise<ToolsOzoneModerationGetRecords.Response> {
+    return this._client.call(
+      'tools.ozone.moderation.getRecords',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
   getRepo(
     params?: ToolsOzoneModerationGetRepo.QueryParams,
     opts?: ToolsOzoneModerationGetRepo.CallOptions,
@@ -3455,6 +3549,18 @@ export class ToolsOzoneModerationNS {
       .catch((e) => {
         throw ToolsOzoneModerationGetRepo.toKnownErr(e)
       })
+  }
+
+  getRepos(
+    params?: ToolsOzoneModerationGetRepos.QueryParams,
+    opts?: ToolsOzoneModerationGetRepos.CallOptions,
+  ): Promise<ToolsOzoneModerationGetRepos.Response> {
+    return this._client.call(
+      'tools.ozone.moderation.getRepos',
+      params,
+      undefined,
+      opts,
+    )
   }
 
   queryEvents(
@@ -3507,6 +3613,117 @@ export class ToolsOzoneServerNS {
   ): Promise<ToolsOzoneServerGetConfig.Response> {
     return this._client.call(
       'tools.ozone.server.getConfig',
+      params,
+      undefined,
+      opts,
+    )
+  }
+}
+
+export class ToolsOzoneSetNS {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  addValues(
+    data?: ToolsOzoneSetAddValues.InputSchema,
+    opts?: ToolsOzoneSetAddValues.CallOptions,
+  ): Promise<ToolsOzoneSetAddValues.Response> {
+    return this._client.call('tools.ozone.set.addValues', opts?.qp, data, opts)
+  }
+
+  deleteSet(
+    data?: ToolsOzoneSetDeleteSet.InputSchema,
+    opts?: ToolsOzoneSetDeleteSet.CallOptions,
+  ): Promise<ToolsOzoneSetDeleteSet.Response> {
+    return this._client
+      .call('tools.ozone.set.deleteSet', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ToolsOzoneSetDeleteSet.toKnownErr(e)
+      })
+  }
+
+  deleteValues(
+    data?: ToolsOzoneSetDeleteValues.InputSchema,
+    opts?: ToolsOzoneSetDeleteValues.CallOptions,
+  ): Promise<ToolsOzoneSetDeleteValues.Response> {
+    return this._client
+      .call('tools.ozone.set.deleteValues', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ToolsOzoneSetDeleteValues.toKnownErr(e)
+      })
+  }
+
+  getValues(
+    params?: ToolsOzoneSetGetValues.QueryParams,
+    opts?: ToolsOzoneSetGetValues.CallOptions,
+  ): Promise<ToolsOzoneSetGetValues.Response> {
+    return this._client
+      .call('tools.ozone.set.getValues', params, undefined, opts)
+      .catch((e) => {
+        throw ToolsOzoneSetGetValues.toKnownErr(e)
+      })
+  }
+
+  querySets(
+    params?: ToolsOzoneSetQuerySets.QueryParams,
+    opts?: ToolsOzoneSetQuerySets.CallOptions,
+  ): Promise<ToolsOzoneSetQuerySets.Response> {
+    return this._client.call(
+      'tools.ozone.set.querySets',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  upsertSet(
+    data?: ToolsOzoneSetUpsertSet.InputSchema,
+    opts?: ToolsOzoneSetUpsertSet.CallOptions,
+  ): Promise<ToolsOzoneSetUpsertSet.Response> {
+    return this._client.call('tools.ozone.set.upsertSet', opts?.qp, data, opts)
+  }
+}
+
+export class ToolsOzoneSignatureNS {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  findCorrelation(
+    params?: ToolsOzoneSignatureFindCorrelation.QueryParams,
+    opts?: ToolsOzoneSignatureFindCorrelation.CallOptions,
+  ): Promise<ToolsOzoneSignatureFindCorrelation.Response> {
+    return this._client.call(
+      'tools.ozone.signature.findCorrelation',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  findRelatedAccounts(
+    params?: ToolsOzoneSignatureFindRelatedAccounts.QueryParams,
+    opts?: ToolsOzoneSignatureFindRelatedAccounts.CallOptions,
+  ): Promise<ToolsOzoneSignatureFindRelatedAccounts.Response> {
+    return this._client.call(
+      'tools.ozone.signature.findRelatedAccounts',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  searchAccounts(
+    params?: ToolsOzoneSignatureSearchAccounts.QueryParams,
+    opts?: ToolsOzoneSignatureSearchAccounts.CallOptions,
+  ): Promise<ToolsOzoneSignatureSearchAccounts.Response> {
+    return this._client.call(
+      'tools.ozone.signature.searchAccounts',
       params,
       undefined,
       opts,

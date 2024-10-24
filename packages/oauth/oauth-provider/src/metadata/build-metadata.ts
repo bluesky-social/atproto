@@ -1,5 +1,8 @@
 import { Keyset } from '@atproto/jwk'
-import { OAuthAuthorizationServerMetadata } from '@atproto/oauth-types'
+import {
+  OAuthAuthorizationServerMetadata,
+  oauthAuthorizationServerMetadataSchema,
+} from '@atproto/oauth-types'
 
 import { Client } from '../client/client.js'
 import { VERIFY_ALGOS } from '../lib/util/crypto.js'
@@ -19,7 +22,7 @@ export function buildMetadata(
   keyset: Keyset,
   customMetadata?: CustomMetadata,
 ): OAuthAuthorizationServerMetadata {
-  return {
+  return oauthAuthorizationServerMetadataSchema.parse({
     issuer,
 
     scopes_supported: [
@@ -60,7 +63,9 @@ export function buildMetadata(
     code_challenge_methods_supported: [
       // https://www.iana.org/assignments/oauth-parameters/oauth-parameters.xhtml#pkce-code-challenge-method
       'S256',
-      'plain',
+
+      // atproto does not allow "plain"
+      // 'plain',
     ],
     ui_locales_supported: [
       //
@@ -117,5 +122,5 @@ export function buildMetadata(
 
     // https://drafts.aaronpk.com/draft-parecki-oauth-client-id-metadata-document/draft-parecki-oauth-client-id-metadata-document.html
     client_id_metadata_document_supported: true,
-  }
+  })
 }

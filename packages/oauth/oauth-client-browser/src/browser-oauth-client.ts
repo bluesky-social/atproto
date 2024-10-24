@@ -1,35 +1,53 @@
-import { HandleResolver } from '@atproto-labs/handle-resolver'
 import {
   AuthorizeOptions,
   ClientMetadata,
   Fetch,
-  OAuthSession,
   OAuthCallbackError,
   OAuthClient,
+  OAuthClientOptions,
+  OAuthSession,
   SessionEventMap,
 } from '@atproto/oauth-client'
 import {
+  assertOAuthDiscoverableClientId,
   atprotoLoopbackClientMetadata,
-  isOAuthClientIdDiscoverable,
   isOAuthClientIdLoopback,
-  OAuthClientIdDiscoverable,
-  OAuthClientIdLoopback,
   OAuthClientMetadataInput,
+  OAuthResponseMode,
 } from '@atproto/oauth-types'
 
 import { BrowserOAuthDatabase } from './browser-oauth-database.js'
 import { BrowserRuntimeImplementation } from './browser-runtime-implementation.js'
 import { LoginContinuedInParentWindowError } from './errors.js'
-import { buildLoopbackClientId, TypedBroadcastChannel } from './util.js'
+import {
+  buildLoopbackClientId,
+  Simplify,
+  TypedBroadcastChannel,
+} from './util.js'
 
-export type BrowserOAuthClientOptions = {
-  clientMetadata?: OAuthClientMetadataInput
-  handleResolver: HandleResolver | string | URL
-  responseMode?: 'query' | 'fragment'
-  plcDirectoryUrl?: string | URL
-
-  fetch?: Fetch
-}
+export type BrowserOAuthClientOptions = Simplify<
+  {
+    clientMetadata?: Readonly<OAuthClientMetadataInput>
+    responseMode?: Exclude<OAuthResponseMode, 'form_post'>
+    fetch?: Fetch
+  } & Omit<
+    OAuthClientOptions,
+    // Overridden by this lib
+    | 'clientMetadata'
+    | 'responseMode'
+    | 'keyset'
+    | 'fetch'
+    // Provided by this lib
+    | 'runtimeImplementation'
+    | 'sessionStore'
+    | 'stateStore'
+    | 'didCache'
+    | 'handleCache'
+    | 'dpopNonceCache'
+    | 'authorizationServerMetadataCache'
+    | 'protectedResourceMetadataCache'
+  >
+>
 
 const NAMESPACE = `@@atproto/oauth-client-browser`
 
@@ -59,20 +77,20 @@ type SyncChannelMessage = {
 const syncChannel: TypedBroadcastChannel<SyncChannelMessage> =
   new BroadcastChannel(`${NAMESPACE}(synchronization-channel)`)
 
-export type BrowserOAuthClientLoadOptions = Omit<
-  BrowserOAuthClientOptions,
-  'clientMetadata'
-> & {
-  clientId: OAuthClientIdDiscoverable | OAuthClientIdLoopback
-  signal?: AbortSignal
-}
+export type BrowserOAuthClientLoadOptions = Simplify<
+  {
+    clientId: string
+    signal?: AbortSignal
+  } & Omit<BrowserOAuthClientOptions, 'clientMetadata'>
+>
 
 export class BrowserOAuthClient extends OAuthClient implements Disposable {
   static async load({ clientId, ...options }: BrowserOAuthClientLoadOptions) {
-    if (isOAuthClientIdLoopback(clientId)) {
+    if (clientId.startsWith('http:')) {
       const clientMetadata = atprotoLoopbackClientMetadata(clientId)
       return new BrowserOAuthClient({ clientMetadata, ...options })
-    } else if (isOAuthClientIdDiscoverable(clientId)) {
+    } else if (clientId.startsWith('https:')) {
+      assertOAuthDiscoverableClientId(clientId)
       const clientMetadata = await OAuthClient.fetchMetadata({
         clientId,
         ...options,
@@ -86,14 +104,12 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
   readonly [Symbol.dispose]: () => void
 
   constructor({
-    handleResolver,
     clientMetadata = atprotoLoopbackClientMetadata(
       buildLoopbackClientId(window.location),
     ),
     // "fragment" is a safer default as the query params will not be sent to the server
     responseMode = 'fragment',
-    plcDirectoryUrl = undefined,
-    fetch = undefined,
+    ...options
   }: BrowserOAuthClientOptions) {
     if (!globalThis.crypto?.subtle) {
       throw new Error('WebCrypto API is required')
@@ -107,11 +123,11 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
     const database = new BrowserOAuthDatabase()
 
     super({
+      ...options,
+
       clientMetadata,
       responseMode,
-      fetch,
-      plcDirectoryUrl,
-      handleResolver,
+      keyset: undefined,
 
       runtimeImplementation: new BrowserRuntimeImplementation(),
 
@@ -349,7 +365,11 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
 
     // Replace the current history entry without the params (this will prevent
     // the following code to run again if the user refreshes the page)
-    history.replaceState(null, '', location.pathname)
+    if (this.responseMode === 'fragment') {
+      history.replaceState(null, '', location.pathname + location.search)
+    } else if (this.responseMode === 'query') {
+      history.replaceState(null, '', location.pathname)
+    }
 
     // Utility function to send the result of the popup to the parent window
     const sendPopupResult = (message: PopupChannelResultData) => {

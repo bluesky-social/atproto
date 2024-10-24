@@ -1,10 +1,10 @@
 import { Key, Keyset, isSignedJwt } from '@atproto/jwk'
 import {
-  AccessToken,
+  OAuthAccessToken,
   OAuthTokenType,
   oauthIssuerIdentifierSchema,
 } from '@atproto/oauth-types'
-import { Redis, type RedisOptions } from 'ioredis'
+import type { Redis, RedisOptions } from 'ioredis'
 
 import { AccessTokenType } from './access-token/access-token-type.js'
 import { DpopManager, DpopManagerOptions } from './dpop/dpop-manager.js'
@@ -154,7 +154,7 @@ export class OAuthVerifier {
 
   protected async authenticateToken(
     tokenType: OAuthTokenType,
-    token: AccessToken,
+    token: OAuthAccessToken,
     dpopJkt: string | null,
     verifyOptions?: VerifyTokenClaimsOptions,
   ): Promise<VerifyTokenClaimsResult> {

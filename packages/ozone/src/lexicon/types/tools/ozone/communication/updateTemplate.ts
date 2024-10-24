@@ -16,6 +16,8 @@ export interface InputSchema {
   id: string
   /** Name of the template. */
   name?: string
+  /** Message language. */
+  lang?: string
   /** Content of the template, markdown supported, can contain variable placeholders. */
   contentMarkdown?: string
   /** Subject of the message, used in emails. */
@@ -42,6 +44,7 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
+  error?: 'DuplicateTemplateName'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess | HandlerPipeThrough

@@ -1,6 +1,6 @@
 {
   "name": "@atproto/common-web",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "license": "MIT",
   "description": "Shared web-platform-friendly code for atproto libraries",
   "keywords": [
@@ -25,6 +25,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "jest": "^28.1.2"
+    "jest": "^28.1.2",
+    "typescript": "^5.6.3"
   }
 }

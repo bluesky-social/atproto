@@ -6,6 +6,7 @@ import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
+import * as ComAtprotoRepoDefs from './defs'
 
 export interface QueryParams {}
 
@@ -16,7 +17,7 @@ export interface InputSchema {
   collection: string
   /** The Record Key. */
   rkey: string
-  /** Can be set to 'false' to skip Lexicon schema validation of record data. */
+  /** Can be set to 'false' to skip Lexicon schema validation of record data, 'true' to require it, or leave unset to validate only for known Lexicons. */
   validate?: boolean
   /** The record to write. */
   record: {}
@@ -30,6 +31,8 @@ export interface InputSchema {
 export interface OutputSchema {
   uri: string
   cid: string
+  commit?: ComAtprotoRepoDefs.CommitMeta
+  validationStatus?: 'valid' | 'unknown' | (string & {})
   [k: string]: unknown
 }
 
