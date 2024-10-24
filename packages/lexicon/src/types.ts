@@ -145,7 +145,21 @@ export const lexArray = z
   .object({
     type: z.literal('array'),
     description: z.string().optional(),
-    items: z.union([lexPrimitive, lexIpldType, lexBlob, lexRefVariant]),
+    items: z.discriminatedUnion('type', [
+      // lexPrimitive
+      lexBoolean,
+      lexInteger,
+      lexString,
+      lexUnknown,
+      // lexIpldType
+      lexBytes,
+      lexCidLink,
+      // lexRefVariant
+      lexRef,
+      lexRefUnion,
+      // other
+      lexBlob,
+    ]),
     minLength: z.number().int().optional(),
     maxLength: z.number().int().optional(),
   })
@@ -176,7 +190,23 @@ export const lexObject = z
     required: z.string().array().optional(),
     nullable: z.string().array().optional(),
     properties: z.record(
-      z.union([lexRefVariant, lexIpldType, lexArray, lexBlob, lexPrimitive]),
+      z.discriminatedUnion('type', [
+        lexArray,
+
+        // lexPrimitive
+        lexBoolean,
+        lexInteger,
+        lexString,
+        lexUnknown,
+        // lexIpldType
+        lexBytes,
+        lexCidLink,
+        // lexRefVariant
+        lexRef,
+        lexRefUnion,
+        // other
+        lexBlob,
+      ]),
     ),
   })
   .strict()
@@ -191,7 +221,17 @@ export const lexXrpcParameters = z
     type: z.literal('params'),
     description: z.string().optional(),
     required: z.string().array().optional(),
-    properties: z.record(z.union([lexPrimitive, lexPrimitiveArray])),
+    properties: z.record(
+      z.discriminatedUnion('type', [
+        lexPrimitiveArray,
+
+        // lexPrimitive
+        lexBoolean,
+        lexInteger,
+        lexString,
+        lexUnknown,
+      ]),
+    ),
   })
   .strict()
   .superRefine(requiredPropertiesRefinement)
@@ -201,6 +241,7 @@ export const lexXrpcBody = z
   .object({
     description: z.string().optional(),
     encoding: z.string(),
+    // @NOTE using discriminatedUnion with a refined schema requires zod >= 4
     schema: z.union([lexRefVariant, lexObject]).optional(),
   })
   .strict()
@@ -209,6 +250,7 @@ export type LexXrpcBody = z.infer<typeof lexXrpcBody>
 export const lexXrpcSubscriptionMessage = z
   .object({
     description: z.string().optional(),
+    // @NOTE using discriminatedUnion with a refined schema requires zod >= 4
     schema: z.union([lexRefVariant, lexObject]).optional(),
   })
   .strict()
@@ -349,6 +391,13 @@ export const lexUserType = z.custom<
     if (val['type'] === undefined) {
       return {
         message: 'Must have a type',
+        fatal: true,
+      }
+    }
+
+    if (typeof val['type'] !== 'string') {
+      return {
+        message: 'Type property must be a string',
         fatal: true,
       }
     }

@@ -1,0 +1,42 @@
+{
+  "name": "@atproto/jetstream",
+  "version": "0.0.0",
+  "license": "MIT",
+  "description": "Atproto jetstream client",
+  "keywords": [
+    "atproto",
+    "jetstream",
+    "client"
+  ],
+  "homepage": "https://atproto.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto",
+    "directory": "packages/jetstream"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dict",
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc --build tsconfig.build.json"
+  },
+  "dependencies": {
+    "@atproto/lexicon": "workspace:*",
+    "@toondepauw/node-zstd": "^1.2.0",
+    "bufferutil": "^4.0.8",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@atproto/api": "workspace:*",
+    "@types/ws": "^8.5.4",
+    "typescript": "^5.6.3"
+  }
+}
