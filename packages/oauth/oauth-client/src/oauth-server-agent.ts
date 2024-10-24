@@ -81,7 +81,7 @@ export class OAuthServerAgent {
   async exchangeCode(
     code: string,
     redirectUri: string,
-    codeverifier?: string,
+    codeVerifier?: string,
   ): Promise<TokenSet> {
     const now = Date.now()
 
