@@ -1,9 +1,17 @@
 import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
 import { randomStr } from '@atproto/crypto'
-import { cborEncode, readFromGenerator, wait } from '@atproto/common'
-import { Sequencer, SeqEvt } from '../src/sequencer'
+import {
+  cborDecode,
+  cborEncode,
+  readFromGenerator,
+  wait,
+} from '@atproto/common'
+import { Sequencer, SeqEvt, formatSeqCommit } from '../src/sequencer'
+import { sequencer, repoPrepare } from '../../pds'
 import Outbox from '../src/sequencer/outbox'
 import userSeed from './seeds/users'
+import { ids } from '../src/lexicon/lexicons'
+import { readCarWithRoot } from '@atproto/repo'
 
 describe('sequencer', () => {
   let network: TestNetworkNoAppView
@@ -206,5 +214,41 @@ describe('sequencer', () => {
       expect(evts.map(evtToDbRow)).toEqual(fromDb)
     }
     lastSeen = results[0].at(-1)?.seq ?? lastSeen
+  })
+
+  it('root block must be returned in tooBig seq commit', async () => {
+    // Create good records to exceed the event limit (the current limit is 200 events)
+    // it creates events completely locally, so it doesn't need to be in the network
+    const eventsToCreate = 250
+    const createPostRecord = () =>
+      repoPrepare.prepareCreate({
+        did: sc.dids.alice,
+        collection: ids.AppBskyFeedPost,
+        record: { text: 'valid', createdAt: new Date().toISOString() },
+      })
+    const writesPromises = Array.from(
+      { length: eventsToCreate },
+      createPostRecord,
+    )
+    const writes = await Promise.all(writesPromises)
+    // just format commit without processing writes
+    const writeCommit = await network.pds.ctx.actorStore.transact(
+      sc.dids.alice,
+      (store) => store.repo.formatCommit(writes),
+    )
+
+    const repoSeqInsert = await formatSeqCommit(
+      sc.dids.alice,
+      writeCommit,
+      writes,
+    )
+
+    const evt = cborDecode<sequencer.CommitEvt>(repoSeqInsert.event)
+    expect(evt.tooBig).toBe(true)
+
+    const car = await readCarWithRoot(evt.blocks)
+    expect(car.root.toString()).toBe(writeCommit.cid.toString())
+    // in the case of tooBig, the blocks must contain the root block only
+    expect(car.blocks.size).toBe(1)
   })
 })
