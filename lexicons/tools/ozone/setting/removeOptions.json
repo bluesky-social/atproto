@@ -1,0 +1,32 @@
+{
+  "lexicon": 1,
+  "id": "tools.ozone.setting.removeOptions",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Delete settings by key",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["keys", "scope"],
+          "properties": {
+            "keys": {
+              "type": "array",
+              "minLength": 1,
+              "items": {
+                "type": "string",
+                "format": "nsid"
+              }
+            },
+            "scope": {
+              "type": "string",
+              "knownValues": ["instance", "personal"],
+              "default": "personal"
+            }
+          }
+        }
+      }
+    }
+  }
+}

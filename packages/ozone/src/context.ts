@@ -27,6 +27,7 @@ import {
   parseLabelerHeader,
 } from './util'
 import { SetService, SetServiceCreator } from './set/service'
+import { SettingService, SettingServiceCreator } from './setting/service'
 
 export type AppContextOptions = {
   db: Database
@@ -34,6 +35,7 @@ export type AppContextOptions = {
   modService: ModerationServiceCreator
   communicationTemplateService: CommunicationTemplateServiceCreator
   setService: SetServiceCreator
+  settingService: SettingServiceCreator
   teamService: TeamServiceCreator
   appviewAgent: AtpAgent
   pdsAgent: AtpAgent | undefined
@@ -120,6 +122,7 @@ export class AppContext {
     const communicationTemplateService = CommunicationTemplateService.creator()
     const teamService = TeamService.creator()
     const setService = SetService.creator()
+    const settingService = SettingService.creator()
 
     const sequencer = new Sequencer(modService(db))
 
@@ -137,6 +140,7 @@ export class AppContext {
         communicationTemplateService,
         teamService,
         setService,
+        settingService,
         appviewAgent,
         pdsAgent,
         chatAgent,
@@ -188,6 +192,10 @@ export class AppContext {
 
   get setService(): SetServiceCreator {
     return this.opts.setService
+  }
+
+  get settingService(): SettingServiceCreator {
+    return this.opts.settingService
   }
 
   get appviewAgent(): AtpAgent {
