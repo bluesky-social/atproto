@@ -1,23 +1,18 @@
+/* eslint-env node */
 import { schemas } from '@atproto/api'
 import { jetstream } from '@atproto/jetstream'
 
-//
-;(async () => {
-  const ac = new AbortController()
-  process.on('SIGINT', () => ac.abort())
-
+/** @param {AbortSignal} signal */
+async function main(signal) {
   try {
     for await (const event of jetstream({
-      signal: ac.signal,
+      signal,
       schemas,
-      compress: true,
       wantedCollections: ['app.bsky.feed.post', 'app.bsky.feed.like'],
     })) {
-      if (
-        event.kind === 'commit' &&
-        (event.commit.operation === 'create' ||
-          event.commit.operation === 'update')
-      ) {
+      if (event.kind !== 'commit') continue
+
+      if (event.commit.operation === 'create') {
         const { record } = event.commit
 
         if (record.$type === 'app.bsky.feed.post') {
@@ -28,10 +23,12 @@ import { jetstream } from '@atproto/jetstream'
       }
     }
   } catch (err) {
-    if (!ac.signal.aborted || ac.signal.reason !== err?.['cause']) {
+    if (!signal.aborted || signal.reason !== err?.['cause']) {
       throw err
     }
   }
+}
 
-  console.log('cleanly shut down')
-})()
+const ac = new AbortController()
+process.on('SIGINT', () => (ac.signal.aborted ? process.exit(1) : ac.abort()))
+main(ac.signal)

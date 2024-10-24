@@ -45,6 +45,7 @@ export function jetstream<
 
 export async function* jetstream({
   schemas,
+  compress = true,
   wantedCollections = schemas
     .filter((l) => l['defs']?.['main']?.['type'] === 'record')
     .map((l) => l.id),
@@ -59,11 +60,11 @@ export async function* jetstream({
     lexicons.getDefOrThrow(collection)
   }
 
-  const decoder = options.compress ? await getDecoder() : null
+  const decoder = compress ? await getDecoder() : null
 
   // @TODO: add error handling
 
-  const url = buildUrl({ ...options, wantedCollections })
+  const url = buildUrl({ ...options, compress, wantedCollections })
   const ws = new WebSocket(url)
 
   for await (const bytes of createWebSocketStream(ws, {
