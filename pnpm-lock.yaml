@@ -700,6 +700,34 @@ importers:
         specifier: ^5.6.3
         version: 5.6.3
 
+  packages/jetstream:
+    dependencies:
+      '@atproto/lexicon':
+        specifier: workspace:*
+        version: link:../lexicon
+      '@toondepauw/node-zstd':
+        specifier: ^1.2.0
+        version: 1.2.0
+      bufferutil:
+        specifier: ^4.0.8
+        version: 4.0.8
+      multiformats:
+        specifier: ^9.9.0
+        version: 9.9.0
+      ws:
+        specifier: ^8.18.0
+        version: 8.18.0(bufferutil@4.0.8)
+    devDependencies:
+      '@atproto/api':
+        specifier: workspace:*
+        version: link:../api
+      '@types/ws':
+        specifier: ^8.5.4
+        version: 8.5.4
+      typescript:
+        specifier: ^5.6.3
+        version: 5.6.3
+
   packages/lex-cli:
     dependencies:
       '@atproto/lexicon':
@@ -5957,6 +5985,92 @@ packages:
   /@tokenizer/token@0.3.0:
     resolution: {integrity: sha512-OvjF+z51L3ov0OyAU0duzsYuvO01PH7x4t6DJx+guahgTnBHkhJdG7soQeTSFLWN3efnHyibZ4Z8l2EuWwJN3A==}
 
+  /@toondepauw/node-zstd-darwin-arm64@1.2.0:
+    resolution: {integrity: sha512-fdBGlRSrf19M1+IJ98aJCLK6/HKQRnRlhE5i6EZ7kVfD2r6h5Bq9NqHAmQ5MgwtmfB9VMmiIrQAMIxKVeT54pg==}
+    engines: {node: '>= 14'}
+    cpu: [arm64]
+    os: [darwin]
+    requiresBuild: true
+    dev: false
+    optional: true
+
+  /@toondepauw/node-zstd-darwin-x64@1.2.0:
+    resolution: {integrity: sha512-ZVu4zkQUgCQ8z1lLd7/LZzIYDKL48tPguIN8L4SRfLuWWlTq2/4OT6AmchztDbe5soLCDuw64t5X5otDvgsGJA==}
+    engines: {node: '>= 14'}
+    cpu: [x64]
+    os: [darwin]
+    requiresBuild: true
+    dev: false
+    optional: true
+
+  /@toondepauw/node-zstd-freebsd-x64@1.2.0:
+    resolution: {integrity: sha512-kDK+l3uP7htiWvM/klY32siEGIBk3K5Da4/DcXV2q/Vp+Ph86FWpQRzC46wJIpJB60xEU67pxFGLBH/8/RB02g==}
+    engines: {node: '>= 14'}
+    cpu: [x64]
+    os: [freebsd]
+    requiresBuild: true
+    dev: false
+    optional: true
+
+  /@toondepauw/node-zstd-linux-arm64-gnu@1.2.0:
+    resolution: {integrity: sha512-KteUWam7McA0moNiRgu7KSgPu3FE+KXuh3ObqWoco5JK53Sp4Pgr/q1IYsdN6TYYbgJMkJpof62NIbyi6tnVfg==}
+    engines: {node: '>= 14'}
+    cpu: [arm64]
+    os: [linux]
+    requiresBuild: true
+    dev: false
+    optional: true
+
+  /@toondepauw/node-zstd-linux-arm64-musl@1.2.0:
+    resolution: {integrity: sha512-KjbGOXvPmorhWGD4kEVjdBz/gJgUOw1Eu0xziBwsq03URrI0XSDAY6YiJZpZtGnSjm7XonEpnBZcVwXH1HZz3Q==}
+    engines: {node: '>= 14'}
+    cpu: [arm64]
+    os: [linux]
+    requiresBuild: true
+    dev: false
+    optional: true
+
+  /@toondepauw/node-zstd-linux-x64-gnu@1.2.0:
+    resolution: {integrity: sha512-qNJDZGd/jplK/1J+8V87dYdrviAxNt1iwI/SQ0JR3HTz5Jdbu+BnVB9oMklCc/bGWa8zTkiZkl/EwA3gtbpo+Q==}
+    engines: {node: '>= 14'}
+    cpu: [x64]
+    os: [linux]
+    requiresBuild: true
+    dev: false
+    optional: true
+
+  /@toondepauw/node-zstd-linux-x64-musl@1.2.0:
+    resolution: {integrity: sha512-Cw1qnMXde8caitDMbk0vWrqnVHTSK+JB/Dp3XnZghQjBrD7JLj2qNzh0eTkxNFa+nijbo8HyyslWGswCugYZCw==}
+    engines: {node: '>= 14'}
+    cpu: [x64]
+    os: [linux]
+    requiresBuild: true
+    dev: false
+    optional: true
+
+  /@toondepauw/node-zstd-win32-x64-msvc@1.2.0:
+    resolution: {integrity: sha512-7cD2/R7DLZHMxHTsQNtOX3vJCT4qd74a3nWjYYthJ89gqXwwEoC8BwttQxvHd0qCZ3S/cZ/BYoTikXMwMNmCEg==}
+    engines: {node: '>= 14'}
+    cpu: [x64]
+    os: [win32]
+    requiresBuild: true
+    dev: false
+    optional: true
+
+  /@toondepauw/node-zstd@1.2.0:
+    resolution: {integrity: sha512-vVDvPUstF9gKEX+Kqp654bL+4UNus6pkmY8mlcJQpIw/Sn6sO9fl1PEwxB0d0unH5PmVfBUicf1lOXu74OLrCg==}
+    engines: {node: '>= 14'}
+    optionalDependencies:
+      '@toondepauw/node-zstd-darwin-arm64': 1.2.0
+      '@toondepauw/node-zstd-darwin-x64': 1.2.0
+      '@toondepauw/node-zstd-freebsd-x64': 1.2.0
+      '@toondepauw/node-zstd-linux-arm64-gnu': 1.2.0
+      '@toondepauw/node-zstd-linux-arm64-musl': 1.2.0
+      '@toondepauw/node-zstd-linux-x64-gnu': 1.2.0
+      '@toondepauw/node-zstd-linux-x64-musl': 1.2.0
+      '@toondepauw/node-zstd-win32-x64-msvc': 1.2.0
+    dev: false
+
   /@tootallnate/once@2.0.0:
     resolution: {integrity: sha512-XCuKFP5PS55gnMVu3dty8KPatLqUoy/ZYzDzAGCQ8JNFCkLXzmI7vNHCR+XpbZaMWQK/vQubr7PkYq8g470J/A==}
     engines: {node: '>= 10'}
@@ -7045,6 +7159,13 @@ packages:
     dependencies:
       base64-js: 1.5.1
       ieee754: 1.2.1
+
+  /bufferutil@4.0.8:
+    resolution: {integrity: sha512-4T53u4PdgsXqKaIctwF8ifXlRTTmEPJ8iEPWFdGZvcf7sbwYo6FKFEX9eNNAnzFZ7EzJAQ3CJeOtCRA4rDp7Pw==}
+    engines: {node: '>=6.14.2'}
+    requiresBuild: true
+    dependencies:
+      node-gyp-build: 4.6.1
 
   /builtin-modules@3.3.0:
     resolution: {integrity: sha512-zhaCDicdLuWN5UbN5IMnFqNMhNfo919sH85y2/ea+5Yg9TsTkeZxpL+JLbp6cgYFS4sRLp3YV4S6yDuqVWHYOw==}
@@ -10758,7 +10879,6 @@ packages:
   /node-gyp-build@4.6.1:
     resolution: {integrity: sha512-24vnklJmyRS8ViBNI8KbtK/r/DmXQMRiOMXTNz2nrTnAYUwjmEEbnnpB/+kt+yWRv73bPsSPRFddrcIbAxSiMQ==}
     hasBin: true
-    dev: false
 
   /node-gyp@9.3.1:
     resolution: {integrity: sha512-4Q16ZCqq3g8awk6UplT7AuxQ35XN4R/yf/+wSAwcBUAjg7l58RTactWaP8fIDTi0FzI7YcVLujwExakZlfWkXg==}
@@ -11918,7 +12038,7 @@ packages:
       debug: 4.3.7
       devtools-protocol: 0.0.1342118
       typed-query-selector: 2.12.0
-      ws: 8.18.0
+      ws: 8.18.0(bufferutil@4.0.8)
     transitivePeerDependencies:
       - bufferutil
       - supports-color
@@ -13609,7 +13729,7 @@ packages:
       utf-8-validate:
         optional: true
 
-  /ws@8.18.0:
+  /ws@8.18.0(bufferutil@4.0.8):
     resolution: {integrity: sha512-8VbfWfHLbbwu3+N6OKsOMpBdT4kXPDDB9cJk2bJ6mh9ucxdlnNvH1e+roYkKmN9Nxw2yjz7VzeO9oOz2zJ04Pw==}
     engines: {node: '>=10.0.0'}
     peerDependencies:
@@ -13620,7 +13740,8 @@ packages:
         optional: true
       utf-8-validate:
         optional: true
-    dev: true
+    dependencies:
+      bufferutil: 4.0.8
 
   /xmlbuilder@13.0.2:
     resolution: {integrity: sha512-Eux0i2QdDYKbdbA6AM6xE4m6ZTZr4G4xF9kahI2ukSEMCzwce2eX9WlTI5J3s+NU7hpasFsr8hWIONae7LluAQ==}
