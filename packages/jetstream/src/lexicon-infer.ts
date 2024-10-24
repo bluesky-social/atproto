@@ -22,7 +22,15 @@ import {
   LexXrpcQuery,
   LexXrpcSubscription,
 } from '@atproto/lexicon'
-import { CID } from 'multiformats/cid'
+
+// multiformats is not typed
+// import { CID } from 'multiformats/cid'
+declare class CID {
+  static isCID(value: any): value is CID
+  static asCID(value: any): CID | null
+  toV0(): CID
+  toV1(): CID
+}
 
 export type CoreDefinition =
   | LexPrimitive // LexBoolean | LexInteger | LexString | LexUnknown
@@ -97,10 +105,14 @@ type InferProperties<
         -readonly [K in Exclude<keyof P, T>]?: InferLexCore<L, P[K]>
       } & {
         -readonly [K in Extract<keyof P, T>]-?: InferLexCore<L, P[K]>
+      } & {
+        [k: string]: unknown
       }
     >
   : {
       -readonly [K in keyof P]?: InferLexCore<L, P[K]>
+    } & {
+      [k: string]: unknown
     }
 
 // Definitions type inference

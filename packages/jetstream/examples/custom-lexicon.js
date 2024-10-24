@@ -13,23 +13,39 @@ async function main(signal) {
       // ...schemas,
       {
         lexicon: 1,
-        id: 'fo.bar.baz',
+        id: 'foo.bar',
         defs: {
           main: {
             type: 'record',
             record: {
               type: 'object',
-              required: ['foo'],
+              required: ['fooObject'],
               properties: {
-                foo: { type: 'string' },
-                bar: { type: 'integer' },
+                fooObject: { type: 'union', refs: ['foo.bar.defs#fooObject'] },
               },
             },
           },
         },
       },
+      {
+        lexicon: 1,
+        id: 'foo.bar.defs',
+        defs: {
+          fooObject: {
+            type: 'object',
+            required: ['foo'],
+            properties: {
+              foo: { type: 'ref', ref: '#fooProp' },
+              bar: { type: 'integer' },
+            },
+          },
+          fooProp: {
+            type: 'string',
+          },
+        },
+      },
     ],
-    wantedCollections: ['fo.bar.baz'],
+    wantedCollections: ['foo.bar'],
   })) {
     if (event.kind !== 'commit') continue
 
@@ -39,8 +55,8 @@ async function main(signal) {
     ) {
       const { record } = event.commit
 
-      if (record.$type === 'fo.bar.baz') {
-        record.foo
+      if (record.$type === 'foo.bar') {
+        record.fooObject
       }
     }
   }

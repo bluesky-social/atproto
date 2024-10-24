@@ -32,7 +32,6 @@
     "@atproto/lexicon": "workspace:*",
     "@toondepauw/node-zstd": "^1.2.0",
     "bufferutil": "^4.0.8",
-    "multiformats": "^9.9.0",
     "ws": "^8.18.0"
   },
   "devDependencies": {
