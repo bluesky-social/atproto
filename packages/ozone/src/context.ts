@@ -26,12 +26,17 @@ import {
   ParsedLabelers,
   parseLabelerHeader,
 } from './util'
+import {
+  ModerationStatusHistory,
+  ModerationStatusHistoryCreator,
+} from './history/status'
 import { SetService, SetServiceCreator } from './set/service'
 
 export type AppContextOptions = {
   db: Database
   cfg: OzoneConfig
   modService: ModerationServiceCreator
+  modStatusHistoryService: ModerationStatusHistoryCreator
   communicationTemplateService: CommunicationTemplateServiceCreator
   setService: SetServiceCreator
   teamService: TeamServiceCreator
@@ -118,6 +123,7 @@ export class AppContext {
     )
 
     const communicationTemplateService = CommunicationTemplateService.creator()
+    const modStatusHistoryService = ModerationStatusHistory.creator()
     const teamService = TeamService.creator()
     const setService = SetService.creator()
 
@@ -134,6 +140,7 @@ export class AppContext {
         db,
         cfg,
         modService,
+        modStatusHistoryService,
         communicationTemplateService,
         teamService,
         setService,
@@ -180,6 +187,10 @@ export class AppContext {
 
   get communicationTemplateService(): CommunicationTemplateServiceCreator {
     return this.opts.communicationTemplateService
+  }
+
+  get modStatusHistoryService(): ModerationStatusHistoryCreator {
+    return this.opts.modStatusHistoryService
   }
 
   get teamService(): TeamServiceCreator {
