@@ -2,4 +2,4 @@
 "@atproto/lexicon": patch
 ---
 
-Improve validation performances
+Improve validation performances by using discriminated unions where possible

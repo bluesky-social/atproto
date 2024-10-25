@@ -2,4 +2,4 @@
 "@atproto/api": patch
 ---
 
-Export `schemas` generated type
+Export the generated lexicons `schemas` definitions

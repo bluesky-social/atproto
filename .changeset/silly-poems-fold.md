@@ -2,4 +2,4 @@
 "@atproto/lex-cli": patch
 ---
 
-Retain schemas definition type instead of obscuring into a `LexiconDoc[]`
+Retain type of `schemas` using definition type instead of obscuring into a `LexiconDoc[]`
