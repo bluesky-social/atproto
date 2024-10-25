@@ -42,6 +42,12 @@ export type MainDef =
 
 export type Cid = string
 export type Did = `did:${string}`
+export type Uri = `${string}://${string}`
+export type AtUri = `at://${string}`
+export type Datetime =
+  `${string}-${string}-${string}T${string}:${string}:${string}${
+    | ''
+    | `.${string}`}Z`
 
 // Utilities
 
@@ -97,15 +103,13 @@ type InferLexString<D extends LexString> = D extends {
 }
   ? K
   : D extends { format: 'datetime' }
-    ? `${string}-${string}-${string}T${string}:${string}:${string}${
-        | ''
-        | `.${string}`}Z`
+    ? Datetime
     : D extends { format: 'did' }
       ? Did
       : D extends { format: 'at-uri' }
-        ? `at://${string}`
+        ? AtUri
         : D extends { format: 'uri' }
-          ? `${string}://${string}`
+          ? Uri
           : // @TODO: other formats ?
             string
 
@@ -208,6 +212,12 @@ type InferLexCore<
                 ? unknown
                 : never
 
+export type Infer<L extends readonly LexiconDoc[], R extends Ref> = InferRef<
+  L,
+  never,
+  R
+>
+
 //- Record extraction
 
 export type RecordId<L extends readonly LexiconDoc[]> = ExtractId<L, LexRecord>
@@ -272,7 +282,7 @@ type InferXrpcProcedureInput<
 type InferXrpcProcedureOutput<
   L extends readonly LexiconDoc[],
   C extends L[number]['id'],
-  D extends LexXrpcProcedure,
+  D extends LexXrpcProcedure | LexXrpcQuery,
 > = D extends {
   output: {
     encoding: 'application/json'
@@ -324,7 +334,7 @@ export type InferOutput<
     [I in Id]: InferXrpcProcedureOutput<
       L,
       I,
-      ExtractMain<L, I, LexXrpcProcedure>
+      ExtractMain<L, I, LexXrpcProcedure | LexXrpcQuery>
     >
   }[Id]
 >
