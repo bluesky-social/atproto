@@ -16,11 +16,11 @@ import {
   isCommitUpdate,
   isIdentityEvent,
 } from './events.js'
-import { ExtractIdentifiers, InferRecord } from './lexicon-infer.js'
+import { ExtractId, InferRecord } from './lexicon-infer.js'
 
 export type JetstreamOptions<
   Schemas extends readonly LexiconDoc[],
-  Collections extends ExtractIdentifiers<Schemas, LexRecord>,
+  Collections extends ExtractId<Schemas, LexRecord>,
 > = DuplexOptions &
   Omit<EndpointOptions, 'wantedCollections'> & {
     schemas: Schemas
@@ -32,10 +32,10 @@ export type JetstreamOptions<
 
 export function jetstream<
   const Schemas extends readonly LexiconDoc[],
-  Collections extends ExtractIdentifiers<
+  Collections extends ExtractId<Schemas, LexRecord> = ExtractId<
     Schemas,
     LexRecord
-  > = ExtractIdentifiers<Schemas, LexRecord>,
+  >,
 >(
   options: JetstreamOptions<Schemas, Collections>,
 ): AsyncGenerator<

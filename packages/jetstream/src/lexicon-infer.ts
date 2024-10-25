@@ -34,7 +34,11 @@ export type LexDef =
   | LexObject
   | LexRecord
 
-type MainDef = LexXrpcProcedure | LexXrpcQuery | LexXrpcSubscription | LexRecord
+export type MainDef =
+  | LexXrpcProcedure
+  | LexXrpcQuery
+  | LexXrpcSubscription
+  | LexRecord
 
 // Utilities
 
@@ -50,10 +54,10 @@ type Ref = string
 type ExtractDef<
   L extends readonly LexiconDoc[],
   C extends L[number]['id'],
-  M extends string = 'main',
+  M extends string,
 > = Extract<L[number], { id: C; defs: Record<M, LexDef> }>['defs'][M]
 
-export type ExtractIdentifiers<
+export type ExtractId<
   L extends readonly LexiconDoc[],
   Main extends MainDef = MainDef,
 > = Extract<L[number], { defs: { main: Main } }>['id']
@@ -199,9 +203,41 @@ type InferLexCore<
               ? InferLexBlob<D>
               : D extends LexToken
                 ? unknown
-                : unknown
+                : never
 
-export type InferXrpcParameters<
+//- Record extraction
+
+export type InferRecord<
+  L extends readonly LexiconDoc[],
+  Id extends ExtractId<L, LexRecord> = ExtractId<L, LexRecord>,
+> = Simplify<
+  {
+    [I in Id]: Simplify<
+      { $type: I } & InferLexRecord<L, I, ExtractMain<L, I, LexRecord>>
+    >
+  }[Id]
+>
+
+//- Xrpc extraction
+
+export type ExtractXrpcMethodIds<L extends readonly LexiconDoc[]> = ExtractId<
+  L,
+  LexXrpcProcedure | LexXrpcQuery | LexXrpcSubscription
+>
+
+export type ExtractMethodIds<L extends readonly LexiconDoc[]> = ExtractId<
+  L,
+  LexXrpcProcedure | LexXrpcQuery | LexXrpcSubscription
+>
+
+export type ExtractProcedureIds<L extends readonly LexiconDoc[]> = ExtractId<
+  L,
+  LexXrpcProcedure
+>
+
+//- Xrpc type inference
+
+type InferXrpcParameters<
   L extends readonly LexiconDoc[],
   C extends L[number]['id'],
   D extends LexXrpcParameters,
@@ -213,7 +249,7 @@ export type InferXrpcParameters<
   ? InferProperties<L, C, P, R>
   : undefined | Record<string, never>
 
-export type InferXrpcProcedureInput<
+type InferXrpcProcedureInput<
   L extends readonly LexiconDoc[],
   C extends L[number]['id'],
   D extends LexXrpcProcedure,
@@ -228,7 +264,7 @@ export type InferXrpcProcedureInput<
     ? Uint8Array
     : unknown
 
-export type InferXrpcProcedureOutput<
+type InferXrpcProcedureOutput<
   L extends readonly LexiconDoc[],
   C extends L[number]['id'],
   D extends LexXrpcProcedure,
@@ -243,53 +279,28 @@ export type InferXrpcProcedureOutput<
     ? Uint8Array
     : undefined
 
-export type ExtractXrpcMethodIds<L extends readonly LexiconDoc[]> =
-  ExtractIdentifiers<L, LexXrpcProcedure | LexXrpcQuery | LexXrpcSubscription>
-
-export type InferRecord<
+export type InferParams<
   L extends readonly LexiconDoc[],
-  Id extends ExtractIdentifiers<L, LexRecord> = ExtractIdentifiers<
-    L,
-    LexRecord
-  >,
-> = Simplify<
-  {
-    [I in Id]: Simplify<
-      { $type: I } & InferLexRecord<L, I, ExtractMain<L, I, LexRecord>>
-    >
-  }[Id]
->
-
-type LexXrpcParametrizedMethod = (
-  | LexXrpcProcedure
-  | LexXrpcQuery
-  | LexXrpcSubscription
-) & {
-  parameters: LexXrpcParameters
-}
-
-export type InferParameters<
-  L extends readonly LexiconDoc[],
-  Id extends ExtractIdentifiers<
-    L,
-    LexXrpcParametrizedMethod
-  > = ExtractIdentifiers<L, LexXrpcParametrizedMethod>,
+  Id extends ExtractMethodIds<L> = ExtractMethodIds<L>,
 > = Simplify<
   {
     [I in Id]: InferXrpcParameters<
       L,
       I,
-      ExtractMain<L, I, LexXrpcParametrizedMethod>['parameters']
+      ExtractMain<
+        L,
+        I,
+        (LexXrpcProcedure | LexXrpcQuery | LexXrpcSubscription) & {
+          parameters: LexXrpcParameters
+        }
+      >['parameters']
     >
   }[Id]
 >
 
-export type InferProcedureInput<
+export type InferInput<
   L extends readonly LexiconDoc[],
-  Id extends ExtractIdentifiers<L, LexXrpcProcedure> = ExtractIdentifiers<
-    L,
-    LexXrpcProcedure
-  >,
+  Id extends ExtractProcedureIds<L> = ExtractProcedureIds<L>,
 > = Simplify<
   {
     [I in Id]: InferXrpcProcedureInput<
@@ -300,12 +311,9 @@ export type InferProcedureInput<
   }[Id]
 >
 
-export type InferProcedureOutput<
+export type InferOutput<
   L extends readonly LexiconDoc[],
-  Id extends ExtractIdentifiers<L, LexXrpcProcedure> = ExtractIdentifiers<
-    L,
-    LexXrpcProcedure
-  >,
+  Id extends ExtractProcedureIds<L> = ExtractProcedureIds<L>,
 > = Simplify<
   {
     [I in Id]: InferXrpcProcedureOutput<
