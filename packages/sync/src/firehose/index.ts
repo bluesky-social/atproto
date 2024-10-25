@@ -178,8 +178,11 @@ export const parseCommitAuthenticated = async (
   forceKeyRefresh = false,
 ): Promise<CommitEvt[]> => {
   const did = evt.repo
-  const key = await idResolver.did.resolveAtprotoKey(did, forceKeyRefresh)
-  const claims = maybeFilterOps(evt.ops, filterCollections).map((op) => {
+  const ops = maybeFilterOps(evt.ops, filterCollections)
+  if (ops.length === 0) {
+    return []
+  }
+  const claims = ops.map((op) => {
     const { collection, rkey } = parseDataKey(op.path)
     return {
       collection,
@@ -187,6 +190,7 @@ export const parseCommitAuthenticated = async (
       cid: op.action === 'delete' ? null : op.cid,
     }
   })
+  const key = await idResolver.did.resolveAtprotoKey(did, forceKeyRefresh)
   const verifiedCids: Record<string, CID | null> = {}
   try {
     const results = await verifyProofs(evt.blocks, claims, did, key)
@@ -200,7 +204,7 @@ export const parseCommitAuthenticated = async (
     }
     throw err
   }
-  const verifiedOps: RepoOp[] = evt.ops.filter((op) => {
+  const verifiedOps: RepoOp[] = ops.filter((op) => {
     if (op.action === 'delete') {
       return verifiedCids[op.path] === null
     } else {
