@@ -1,4 +1,4 @@
-import { LexiconDoc, Lexicons, LexRecord } from '@atproto/lexicon'
+import { LexiconDoc, Lexicons } from '@atproto/lexicon'
 import { DuplexOptions } from 'node:stream'
 import { createWebSocketStream, WebSocket } from 'ws'
 
@@ -16,11 +16,11 @@ import {
   isCommitUpdate,
   isIdentityEvent,
 } from './events.js'
-import { ExtractId, InferRecord } from './lexicon-infer.js'
+import { RecordId, InferRecord } from './lexicon-infer.js'
 
 export type JetstreamOptions<
   Schemas extends readonly LexiconDoc[],
-  Collections extends ExtractId<Schemas, LexRecord>,
+  Collections extends RecordId<Schemas>,
 > = DuplexOptions &
   Omit<EndpointOptions, 'wantedCollections'> & {
     schemas: Schemas
@@ -32,10 +32,7 @@ export type JetstreamOptions<
 
 export function jetstream<
   const Schemas extends readonly LexiconDoc[],
-  Collections extends ExtractId<Schemas, LexRecord> = ExtractId<
-    Schemas,
-    LexRecord
-  >,
+  Collections extends RecordId<Schemas> = RecordId<Schemas>,
 >(
   options: JetstreamOptions<Schemas, Collections>,
 ): AsyncGenerator<

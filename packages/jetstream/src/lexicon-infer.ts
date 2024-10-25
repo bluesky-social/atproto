@@ -167,7 +167,7 @@ type InferLexRefVariant<
     ? InferRef<L, C, R>
     : never
 
-export type InferRef<
+type InferRef<
   L extends readonly LexiconDoc[],
   C extends L[number]['id'],
   R extends Ref,
@@ -207,9 +207,11 @@ type InferLexCore<
 
 //- Record extraction
 
+export type RecordId<L extends readonly LexiconDoc[]> = ExtractId<L, LexRecord>
+
 export type InferRecord<
   L extends readonly LexiconDoc[],
-  Id extends ExtractId<L, LexRecord> = ExtractId<L, LexRecord>,
+  Id extends RecordId<L>,
 > = Simplify<
   {
     [I in Id]: Simplify<
@@ -220,19 +222,19 @@ export type InferRecord<
 
 //- Xrpc extraction
 
-export type ExtractXrpcMethodIds<L extends readonly LexiconDoc[]> = ExtractId<
-  L,
-  LexXrpcProcedure | LexXrpcQuery | LexXrpcSubscription
->
-
-export type ExtractMethodIds<L extends readonly LexiconDoc[]> = ExtractId<
-  L,
-  LexXrpcProcedure | LexXrpcQuery | LexXrpcSubscription
->
-
-export type ExtractProcedureIds<L extends readonly LexiconDoc[]> = ExtractId<
+export type ProcedureId<L extends readonly LexiconDoc[]> = ExtractId<
   L,
   LexXrpcProcedure
+>
+
+export type QueryId<L extends readonly LexiconDoc[]> = ExtractId<
+  L,
+  LexXrpcQuery
+>
+
+export type SubscriptionId<L extends readonly LexiconDoc[]> = ExtractId<
+  L,
+  LexXrpcSubscription
 >
 
 //- Xrpc type inference
@@ -281,7 +283,7 @@ type InferXrpcProcedureOutput<
 
 export type InferParams<
   L extends readonly LexiconDoc[],
-  Id extends ExtractMethodIds<L> = ExtractMethodIds<L>,
+  Id extends ProcedureId<L> | QueryId<L> | SubscriptionId<L>,
 > = Simplify<
   {
     [I in Id]: InferXrpcParameters<
@@ -300,7 +302,7 @@ export type InferParams<
 
 export type InferInput<
   L extends readonly LexiconDoc[],
-  Id extends ExtractProcedureIds<L> = ExtractProcedureIds<L>,
+  Id extends ProcedureId<L>,
 > = Simplify<
   {
     [I in Id]: InferXrpcProcedureInput<
@@ -313,7 +315,7 @@ export type InferInput<
 
 export type InferOutput<
   L extends readonly LexiconDoc[],
-  Id extends ExtractProcedureIds<L> = ExtractProcedureIds<L>,
+  Id extends ProcedureId<L> | QueryId<L>,
 > = Simplify<
   {
     [I in Id]: InferXrpcProcedureOutput<
