@@ -51,15 +51,26 @@ export function atUri(path: string, value: string): ValidationResult {
 }
 
 export function did(path: string, value: string): ValidationResult {
-  try {
-    ensureValidDid(value)
-  } catch {
-    return {
-      success: false,
-      error: new ValidationError(`${path} must be a valid did`),
+  // Optimization
+  if (
+    value[3] === ':' &&
+    value[2] === 'd' &&
+    value[1] === 'i' &&
+    value[0] === 'd' &&
+    value.length >= 7 // did:x:y
+  ) {
+    try {
+      ensureValidDid(value)
+      return { success: true, value }
+    } catch {
+      // fall through
     }
   }
-  return { success: true, value }
+
+  return {
+    success: false,
+    error: new ValidationError(`${path} must be a valid did`),
+  }
 }
 
 export function handle(path: string, value: string): ValidationResult {
@@ -75,17 +86,16 @@ export function handle(path: string, value: string): ValidationResult {
 }
 
 export function atIdentifier(path: string, value: string): ValidationResult {
-  const isDid = did(path, value)
-  if (!isDid.success) {
-    const isHandle = handle(path, value)
-    if (!isHandle.success) {
-      return {
-        success: false,
-        error: new ValidationError(`${path} must be a valid did or a handle`),
-      }
-    }
+  const didResult = did(path, value)
+  if (didResult.success) return didResult
+
+  const handleResult = handle(path, value)
+  if (handleResult.success) return handleResult
+
+  return {
+    success: false,
+    error: new ValidationError(`${path} must be a valid did or a handle`),
   }
-  return { success: true, value }
 }
 
 export function nsid(path: string, value: string): ValidationResult {
