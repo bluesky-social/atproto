@@ -70,9 +70,9 @@ const indexTs = (
       { name: 'FetchHandler' },
       { name: 'FetchHandlerOptions' },
     ])
-    //= import {schemas} from './lexicons'
+    //= import {schemas} from './lexicons.js'
     file
-      .addImportDeclaration({ moduleSpecifier: './lexicons' })
+      .addImportDeclaration({ moduleSpecifier: './lexicons.js' })
       .addNamedImports([{ name: 'schemas' }])
     //= import {CID} from 'multiformats/cid'
     file
@@ -83,7 +83,7 @@ const indexTs = (
 
     // generate type imports and re-exports
     for (const lexicon of lexiconDocs) {
-      const moduleSpecifier = `./types/${lexicon.id.split('.').join('/')}`
+      const moduleSpecifier = `./types/${lexicon.id.split('.').join('/')}.js`
       file
         .addImportDeclaration({ moduleSpecifier })
         .setNamespaceImport(toTitleCase(lexicon.id))
@@ -452,22 +452,22 @@ const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
           moduleSpecifier: '@atproto/lexicon',
         })
         .addNamedImports([{ name: 'ValidationResult' }, { name: 'BlobRef' }])
-      //= import {isObj, hasProp} from '../../util.ts'
+      //= import {isObj, hasProp} from '../../util.js'
       file
         .addImportDeclaration({
           moduleSpecifier: `${lexiconDoc.id
             .split('.')
             .map((_str) => '..')
-            .join('/')}/util`,
+            .join('/')}/util.js`,
         })
         .addNamedImports([{ name: 'isObj' }, { name: 'hasProp' }])
-      //= import {lexicons} from '../../lexicons.ts'
+      //= import {lexicons} from '../../lexicons.js'
       file
         .addImportDeclaration({
           moduleSpecifier: `${lexiconDoc.id
             .split('.')
             .map((_str) => '..')
-            .join('/')}/lexicons`,
+            .join('/')}/lexicons.js`,
         })
         .addNamedImports([{ name: 'lexicons' }])
       //= import {CID} from 'multiformats/cid'
