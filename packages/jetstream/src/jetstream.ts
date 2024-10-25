@@ -30,7 +30,6 @@ export type JetstreamOptions<
     wantedCollections?: Collections[]
   }
 
-// @ts-expect-error it's fine
 export function jetstream<
   const Schemas extends readonly LexiconDoc[],
   Collections extends ExtractIdentifiers<
@@ -80,7 +79,7 @@ export async function* jetstream({
         yield event
       } else if (isCommitCreate(event.commit) || isCommitUpdate(event.commit)) {
         const { collection, record } = event.commit
-        if (lexicons.validate(collection, record)) {
+        if (lexicons.validate(collection, record).success) {
           yield event
         } else {
           // record does not match schema, ignore to ensure type safety

@@ -1,4 +1,5 @@
 /* eslint-env node */
+import { schemas } from '@atproto/api'
 import { jetstream } from '@atproto/jetstream'
 
 /** @param {AbortSignal} signal */
@@ -7,10 +8,10 @@ async function main(signal) {
     signal,
     schemas: [
       // If you also need Bluesky's official schemas in addition to yours,
-      // import `schemas` from '@atproto/api' then uncomment the following
+      // import {schemas} from '@atproto/api' then uncomment the following
       // line:
 
-      // ...schemas,
+      ...schemas,
       {
         lexicon: 1,
         id: 'foo.bar',
@@ -21,7 +22,10 @@ async function main(signal) {
               type: 'object',
               required: ['fooObject'],
               properties: {
-                fooObject: { type: 'union', refs: ['foo.bar.defs#fooObject'] },
+                fooObject: {
+                  type: 'union',
+                  refs: ['foo.bar.defs#fooObject', 'app.bsky.feed.post#main'],
+                },
               },
             },
           },
@@ -45,7 +49,7 @@ async function main(signal) {
         },
       },
     ],
-    wantedCollections: ['foo.bar'],
+    wantedCollections: ['foo.bar', 'app.bsky.feed.post'],
   })) {
     if (event.kind !== 'commit') continue
 
