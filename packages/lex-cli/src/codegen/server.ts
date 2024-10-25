@@ -73,10 +73,10 @@ const indexTs = (
         { name: 'StreamAuthVerifier' },
       ],
     })
-    //= import {schemas} from './lexicons'
+    //= import {schemas} from './lexicons.js'
     file
       .addImportDeclaration({
-        moduleSpecifier: './lexicons',
+        moduleSpecifier: './lexicons.js',
       })
       .addNamedImport({
         name: 'schemas',
@@ -93,7 +93,7 @@ const indexTs = (
       }
       file
         .addImportDeclaration({
-          moduleSpecifier: `./types/${lexiconDoc.id.split('.').join('/')}`,
+          moduleSpecifier: `./types/${lexiconDoc.id.split('.').join('/')}.js`,
         })
         .setNamespaceImport(toTitleCase(lexiconDoc.id))
     }
@@ -333,9 +333,9 @@ const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
           !main.input.schema
         const streamingOutput = main.output?.encoding && !main.output.schema
         if (streamingInput || streamingOutput) {
-          //= import stream from 'stream'
+          //= import stream from 'node:stream'
           file.addImportDeclaration({
-            moduleSpecifier: 'stream',
+            moduleSpecifier: 'node:stream',
             defaultImport: 'stream',
           })
         }
@@ -518,7 +518,7 @@ function genServerXrpcStreaming(
   })
 
   file.addImportDeclaration({
-    moduleSpecifier: 'http',
+    moduleSpecifier: 'node:http',
     namedImports: [{ name: 'IncomingMessage' }],
   })
 
