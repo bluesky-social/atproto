@@ -70,9 +70,9 @@ const indexTs = (
       { name: 'FetchHandler' },
       { name: 'FetchHandlerOptions' },
     ])
-    //= import {schemas} from './lexicons'
+    //= import {schemas} from './lexicons.js'
     file
-      .addImportDeclaration({ moduleSpecifier: './lexicons' })
+      .addImportDeclaration({ moduleSpecifier: './lexicons.js' })
       .addNamedImports([{ name: 'schemas' }])
     //= import {CID} from 'multiformats/cid'
     file
@@ -81,14 +81,14 @@ const indexTs = (
       })
       .addNamedImports([{ name: 'CID' }])
 
-    //= import {OmitKey} from './util'
+    //= import {OmitKey} from './util.js'
     file
-      .addImportDeclaration({ moduleSpecifier: `./util` })
+      .addImportDeclaration({ moduleSpecifier: `./util.js` })
       .addNamedImports([{ name: 'OmitKey' }, { name: 'Un$Typed' }])
 
     // generate type imports and re-exports
     for (const lexicon of lexiconDocs) {
-      const moduleSpecifier = `./types/${lexicon.id.split('.').join('/')}`
+      const moduleSpecifier = `./types/${lexicon.id.split('.').join('/')}.js`
       file
         .addImportDeclaration({ moduleSpecifier })
         .setNamespaceImport(toTitleCase(lexicon.id))
