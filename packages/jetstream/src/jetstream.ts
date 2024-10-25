@@ -56,7 +56,7 @@ export async function* jetstream({
 
   const decoder = compress ? await getDecoder() : null
 
-  // @TODO: add error handling
+  // @TODO: add error handling & retries
 
   const url = buildUrl({ ...options, compress, wantedCollections })
   const ws = new WebSocket(url)

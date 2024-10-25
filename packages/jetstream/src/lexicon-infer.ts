@@ -45,9 +45,16 @@ export type Did = `did:${string}`
 export type Uri = `${string}://${string}`
 export type AtUri = `at://${string}`
 export type Datetime =
-  `${string}-${string}-${string}T${string}:${string}:${string}${
+  `${number}-${number}-${number}T${number}:${number}:${number}${
     | ''
-    | `.${string}`}Z`
+    | `.${number}`}Z`
+
+declare global {
+  interface Date {
+    // Allows using date.toISOString() as a Datetime
+    toISOString(): `${number}-${number}-${number}T${number}:${number}:${number}.${number}Z`
+  }
+}
 
 // Utilities
 
@@ -59,6 +66,17 @@ type Failure<message extends string> = { [error]: message }
 // LexiconDoc definition extraction utilities
 
 type Ref = string
+
+export type ExtractRefs<L extends readonly LexiconDoc[]> = {
+  [I in L[number]['id']]: {
+    [H in keyof ExtractDefs<L, I>]: H extends string ? `${I}#${H}` : never
+  }[keyof ExtractDefs<L, I>]
+}[L[number]['id']]
+
+type ExtractDefs<
+  L extends readonly LexiconDoc[],
+  C extends L[number]['id'],
+> = Extract<L[number], { id: C }>['defs']
 
 type ExtractDef<
   L extends readonly LexiconDoc[],
@@ -212,11 +230,15 @@ type InferLexCore<
                 ? unknown
                 : never
 
-export type Infer<L extends readonly LexiconDoc[], R extends Ref> = InferRef<
-  L,
-  never,
-  R
->
+/**
+ * Infer a particular type from a lexicon, using a reference to a definition.
+ * Only supports inferring type of records and core types. Use
+ * {@link InferParams}, {@link InferInput}, {@link InferOutput} for Xrpc types.
+ */
+export type Infer<
+  L extends readonly LexiconDoc[],
+  R extends ExtractRefs<L>,
+> = InferRef<L, never, R>
 
 //- Record extraction
 
