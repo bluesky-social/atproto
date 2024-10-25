@@ -7,16 +7,14 @@ import { buildUrl, EndpointOptions } from './endpoint.js'
 import {
   AccountEvent,
   CommitEvent,
-  EventBase,
+  CommitOperation,
   IdentityEvent,
   isAccountEvent,
-  isCommitCreate,
-  isCommitDelete,
   isCommitEvent,
-  isCommitUpdate,
   isIdentityEvent,
+  UnknownEvent,
 } from './events.js'
-import { RecordId, InferRecord } from './lexicon-infer.js'
+import { InferRecord, RecordId } from './lexicon-infer.js'
 
 export type JetstreamOptions<
   Schemas extends readonly LexiconDoc[],
@@ -69,25 +67,26 @@ export async function* jetstream({
   })) {
     const decoded = decoder ? await decoder.decode(bytes) : bytes
 
-    const event = JSON.parse(decoded.toString()) as EventBase
+    const event = JSON.parse(decoded.toString()) as UnknownEvent
 
-    if (isCommitEvent(event)) {
-      if (isCommitDelete(event.commit)) {
-        yield event
-      } else if (isCommitCreate(event.commit) || isCommitUpdate(event.commit)) {
-        const { collection, record } = event.commit
-        if (lexicons.validate(collection, record).success) {
-          yield event
-        } else {
-          // record does not match schema, ignore to ensure type safety
-        }
-      } else {
-        // unknown operation (not supported)
-      }
-    } else if (isAccountEvent(event) || isIdentityEvent(event)) {
+    if (isAccountEvent(event)) {
       yield event
-    } else {
-      // unknown event (not supported)
+    } else if (isIdentityEvent(event)) {
+      yield event
+    } else if (isCommitEvent(event)) {
+      const { commit } = event
+
+      if (commit.operation === CommitOperation.Delete) {
+        yield event
+      } else if (
+        commit.operation === CommitOperation.Create ||
+        commit.operation === CommitOperation.Update
+      ) {
+        if (lexicons.validate(commit.collection, commit.record).success) {
+          // Only yield if the record is valid
+          yield event
+        }
+      }
     }
   }
 }

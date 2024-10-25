@@ -40,6 +40,9 @@ export type MainDef =
   | LexXrpcSubscription
   | LexRecord
 
+export type Cid = string
+export type Did = `did:${string}`
+
 // Utilities
 
 type Simplify<T> = { [K in keyof T]: T[K] } & NonNullable<unknown>
@@ -98,7 +101,7 @@ type InferLexString<D extends LexString> = D extends {
         | ''
         | `.${string}`}Z`
     : D extends { format: 'did' }
-      ? `did:${string}`
+      ? Did
       : D extends { format: 'at-uri' }
         ? `at://${string}`
         : D extends { format: 'uri' }
@@ -119,7 +122,7 @@ type InferLexPrimitive<D extends LexPrimitive> = D extends LexString
 type InferLexIpldType<D extends LexIpldType> = D extends LexBytes
   ? Uint8Array
   : D extends LexCidLink
-    ? string
+    ? Cid
     : never
 
 type InferLexBlob<D extends LexBlob> = Simplify<{

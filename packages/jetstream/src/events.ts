@@ -1,11 +1,7 @@
-export type Cid = string
-export type Did = `did:${string}`
+import { Cid, Did } from './lexicon-infer.js'
 
-export enum EventKind {
-  Commit = 'commit',
-  Account = 'account',
-  Identity = 'identity',
-}
+export type UnknownRecord = { $type: string } & { [k: string]: unknown }
+export type UnknownEvent = { kind: string }
 
 export interface EventBase {
   did: Did
@@ -13,7 +9,23 @@ export interface EventBase {
   kind: EventKind
 }
 
+export enum EventKind {
+  Commit = 'commit',
+  Account = 'account',
+  Identity = 'identity',
+}
+
 //- AccountEvent
+
+export interface AccountEvent extends EventBase {
+  kind: EventKind.Account
+  account: Account
+}
+
+export function isAccountEvent(event: UnknownEvent): event is AccountEvent {
+  // @TODO: validate event.account
+  return event.kind === EventKind.Account
+}
 
 export interface Account {
   seq: number
@@ -29,16 +41,17 @@ export interface Account {
   [k: string]: unknown
 }
 
-export interface AccountEvent extends EventBase {
-  kind: EventKind.Account
-  account: Account
-}
-
-export function isAccountEvent(event: EventBase): event is AccountEvent {
-  return event.kind === EventKind.Account
-}
-
 //- IdentityEvent
+
+export interface IdentityEvent extends EventBase {
+  kind: EventKind.Identity
+  identity: Identity
+}
+
+export function isIdentityEvent(event: UnknownEvent): event is IdentityEvent {
+  // @TODO: validate event.identity
+  return event.kind === EventKind.Identity
+}
 
 export interface Identity {
   seq: number
@@ -48,16 +61,17 @@ export interface Identity {
   [k: string]: unknown
 }
 
-export interface IdentityEvent extends EventBase {
-  kind: EventKind.Identity
-  identity: Identity
-}
-
-export function isIdentityEvent(event: EventBase): event is IdentityEvent {
-  return event.kind === EventKind.Identity
-}
-
 //- CommitEvent
+
+export interface CommitEvent<R extends UnknownRecord = UnknownRecord>
+  extends EventBase {
+  kind: EventKind.Commit
+  commit: CommitCreate<R> | CommitUpdate<R> | CommitDelete<R>
+}
+
+export function isCommitEvent(event: UnknownEvent): event is CommitEvent {
+  return event.kind === EventKind.Commit
+}
 
 export enum CommitOperation {
   Create = 'create',
@@ -72,39 +86,26 @@ export interface CommitBase {
   operation: CommitOperation
 }
 
-export interface CommitCreate<Record = unknown> extends CommitBase {
-  operation: CommitOperation.Create
-  record: Record
-  cid: Cid
-}
+export type CommitCreate<R extends UnknownRecord> = {
+  [T in R['$type']]: CommitBase & {
+    collection: T
+    operation: CommitOperation.Create
+    record: Extract<R, { $type: T }>
+  }
+}[R['$type']]
 
-export function isCommitCreate(commit: CommitBase): commit is CommitCreate {
-  return commit.operation === CommitOperation.Create
-}
+export type CommitUpdate<R extends UnknownRecord> = {
+  [T in R['$type']]: CommitBase & {
+    collection: T
+    operation: CommitOperation.Update
+    record: Extract<R, { $type: T }>
+    cid: Cid
+  }
+}[R['$type']]
 
-export interface CommitUpdate<Record = unknown> extends CommitBase {
-  operation: CommitOperation.Update
-  record: Record
-  cid: Cid
-}
-
-export function isCommitUpdate(commit: CommitBase): commit is CommitUpdate {
-  return commit.operation === CommitOperation.Update
-}
-
-export interface CommitDelete extends CommitBase {
-  operation: CommitOperation.Delete
-}
-
-export function isCommitDelete(commit: CommitBase): commit is CommitDelete {
-  return commit.operation === CommitOperation.Delete
-}
-
-export interface CommitEvent<Record = unknown> extends EventBase {
-  kind: EventKind.Commit
-  commit: CommitCreate<Record> | CommitUpdate<Record> | CommitDelete
-}
-
-export function isCommitEvent(event: EventBase): event is CommitEvent {
-  return event.kind === EventKind.Commit
-}
+export type CommitDelete<R extends UnknownRecord> = {
+  [T in R['$type']]: CommitBase & {
+    collection: T
+    operation: CommitOperation.Delete
+  }
+}[R['$type']]
