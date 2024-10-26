@@ -22,9 +22,10 @@ needs of your application, and must respect the [ATPROTO].
 The `client_metadata` object will typically be built by the backend at startup.
 
 ```ts
-import { NodeOAuthClientOptions } from '@atproto/oauth-client-node'
+import { NodeOAuthClient, Session } from '@atproto/oauth-client-node'
+import { JoseKey } from '@atproto/jwk-jose'
 
-const client = new NodeOAuthClientOptions({
+const client = new NodeOAuthClient({
   // This object will be used to build the payload of the /client-metadata.json
   // endpoint metadata, exposing the client metadata to the OAuth server.
   clientMetadata: {
@@ -54,16 +55,16 @@ const client = new NodeOAuthClientOptions({
 
   // Interface to store authorization state data (during authorization flows)
   stateStore: {
-    set(key: string, internalState: NodeSavedState): Promise<void> {},
-    get(key: string): Promise<NodeSavedState | undefined> {},
-    del(key: string): Promise<void> {},
+    async set(key: string, internalState: NodeSavedState): Promise<void> {},
+    async get(key: string): Promise<NodeSavedState | undefined> {},
+    async del(key: string): Promise<void> {},
   },
 
   // Interface to store authenticated session data
   sessionStore: {
-    set(sub: string, session: Session): Promise<void> {},
-    get(sub: string): Promise<Session | undefined> {},
-    del(sub: string): Promise<void> {},
+    async set(sub: string, session: Session): Promise<void> {},
+    async get(sub: string): Promise<Session | undefined> {},
+    async del(sub: string): Promise<void> {},
   },
 
   // A lock to prevent concurrent access to the session store. Optional if only one instance is running.
@@ -170,21 +171,21 @@ Instead of hard-coding the client metadata in your app, you can fetch it when
 the app starts:
 
 ```ts
-import { NodeOAuthClientOptions } from '@atproto/oauth-client-node'
+import { NodeOAuthClient } from '@atproto/oauth-client-node'
 
-const client = await NodeOAuthClientOptions.fromClientId({
+const client = await NodeOAuthClient.fromClientId({
   clientId: 'https://my-app.com/client-metadata.json',
 
   stateStore: {
-    set(key: string, internalState: NodeSavedState): Promise<void> {},
-    get(key: string): Promise<NodeSavedState | undefined> {},
-    del(key: string): Promise<void> {},
+    async set(key: string, internalState: NodeSavedState): Promise<void> {},
+    async get(key: string): Promise<NodeSavedState | undefined> {},
+    async del(key: string): Promise<void> {},
   },
 
   sessionStore: {
-    set(sub: string, session: Session): Promise<void> {},
-    get(sub: string): Promise<Session | undefined> {},
-    del(sub: string): Promise<void> {},
+    async set(sub: string, session: Session): Promise<void> {},
+    async get(sub: string): Promise<Session | undefined> {},
+    async del(sub: string): Promise<void> {},
   },
 
   // A lock to prevent concurrent access to the session store. Optional if only one instance is running.

@@ -1,5 +1,17 @@
 # @atproto-labs/fetch-node
 
+## 0.1.3
+
+### Patch Changes
+
+- [#2865](https://github.com/bluesky-social/atproto/pull/2865) [`80450cbf2`](https://github.com/bluesky-social/atproto/commit/80450cbf2ca27967ee9fe1a5f4bc590b26f1e6b2) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Do not use HTTP2 connection when performing "safe fetch" HTTP requests
+
+## 0.1.2
+
+### Patch Changes
+
+- [#2854](https://github.com/bluesky-social/atproto/pull/2854) [`8943c1008`](https://github.com/bluesky-social/atproto/commit/8943c10082702bbc0fc150237c6cc421251afd51) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Disable use of HTTP2 when checking SSRF IP
+
 ## 0.1.1
 
 ### Patch Changes

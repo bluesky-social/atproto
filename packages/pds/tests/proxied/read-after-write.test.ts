@@ -1,6 +1,7 @@
 import util from 'node:util'
 import assert from 'node:assert'
 import { AtpAgent } from '@atproto/api'
+import { request } from 'undici'
 import { TestNetwork, SeedClient, RecordRef } from '@atproto/dev-env'
 import basicSeed from '../seeds/basic'
 import { ThreadViewPost } from '../../src/lexicon/types/app/bsky/feed/defs'
@@ -265,5 +266,81 @@ describe('proxy read after write', () => {
     expect(lag).toBeDefined()
     const parsed = parseInt(lag)
     expect(parsed > 0).toBe(true)
+  })
+
+  it('negotiates encoding', async () => {
+    const identity = await agent.api.app.bsky.feed.getTimeline(
+      {},
+      { headers: { ...sc.getHeaders(alice), 'accept-encoding': 'identity' } },
+    )
+    expect(identity.headers['content-encoding']).toBeUndefined()
+
+    const gzip = await agent.api.app.bsky.feed.getTimeline(
+      {},
+      {
+        headers: { ...sc.getHeaders(alice), 'accept-encoding': 'gzip, *;q=0' },
+      },
+    )
+    expect(gzip.headers['content-encoding']).toBe('gzip')
+  })
+
+  it('defaults to identity encoding', async () => {
+    // Not using the "agent" because "fetch()" will add "accept-encoding: gzip,
+    // deflate" if not "accept-encoding" header is provided
+    const res = await request(
+      new URL(`/xrpc/app.bsky.feed.getTimeline`, agent.dispatchUrl),
+      {
+        headers: { ...sc.getHeaders(alice) },
+      },
+    )
+    expect(res.statusCode).toBe(200)
+    expect(res.headers['content-encoding']).toBeUndefined()
+  })
+
+  it('falls back to identity encoding', async () => {
+    const invalid = await agent.api.app.bsky.feed.getTimeline(
+      {},
+      { headers: { ...sc.getHeaders(alice), 'accept-encoding': 'invalid' } },
+    )
+
+    expect(invalid.headers['content-encoding']).toBeUndefined()
+  })
+
+  it('errors when failing to negotiate encoding', async () => {
+    await expect(
+      agent.api.app.bsky.feed.getTimeline(
+        {},
+        {
+          headers: {
+            ...sc.getHeaders(alice),
+            'accept-encoding': 'invalid, *;q=0',
+          },
+        },
+      ),
+    ).rejects.toThrow(
+      expect.objectContaining({
+        status: 406,
+        message: 'this service does not support any of the requested encodings',
+      }),
+    )
+  })
+
+  it('errors on invalid content-encoding format', async () => {
+    await expect(
+      agent.api.app.bsky.feed.getTimeline(
+        {},
+        {
+          headers: {
+            ...sc.getHeaders(alice),
+            'accept-encoding': ';q=1',
+          },
+        },
+      ),
+    ).rejects.toThrow(
+      expect.objectContaining({
+        status: 400,
+        message: 'Invalid accept-encoding: ";q=1"',
+      }),
+    )
   })
 })

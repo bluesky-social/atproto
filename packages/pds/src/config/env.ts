@@ -128,6 +128,7 @@ export const readEnv = (): ServerEnvironment => {
     proxyHeadersTimeout: envInt('PDS_PROXY_HEADERS_TIMEOUT'),
     proxyBodyTimeout: envInt('PDS_PROXY_BODY_TIMEOUT'),
     proxyMaxResponseSize: envInt('PDS_PROXY_MAX_RESPONSE_SIZE'),
+    proxyPreferCompressed: envBool('PDS_PROXY_PREFER_COMPRESSED'),
   }
 }
 
@@ -253,4 +254,5 @@ export type ServerEnvironment = {
   proxyHeadersTimeout?: number
   proxyBodyTimeout?: number
   proxyMaxResponseSize?: number
+  proxyPreferCompressed?: boolean
 }
