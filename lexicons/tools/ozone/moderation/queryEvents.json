@@ -10,7 +10,9 @@
         "properties": {
           "types": {
             "type": "array",
-            "items": { "type": "string" },
+            "items": {
+              "type": "string"
+            },
             "description": "The types of events (fully qualified string in the format of tools.ozone.moderation.defs#modEvent<name>) to filter by. If not specified, all events are returned."
           },
           "createdBy": {
@@ -33,11 +35,28 @@
             "format": "datetime",
             "description": "Retrieve events created before a given timestamp"
           },
-          "subject": { "type": "string", "format": "uri" },
+          "subject": {
+            "type": "string",
+            "format": "uri"
+          },
+          "collections": {
+            "type": "array",
+            "maxLength": 20,
+            "description": "If specified, only events where the subject belongs to the given collections will be returned. When subjectType is set to 'account', this will be ignored.",
+            "items": {
+              "type": "string",
+              "format": "nsid"
+            }
+          },
+          "subjectType": {
+            "type": "string",
+            "description": "If specified, only events where the subject is of the given type (account or record) will be returned. When this is set to 'account' the 'collections' parameter will be ignored. When includeAllUserRecords or subject is set, this will be ignored.",
+            "knownValues": ["account", "record"]
+          },
           "includeAllUserRecords": {
             "type": "boolean",
             "default": false,
-            "description": "If true, events on all record types (posts, lists, profile etc.) owned by the did are returned"
+            "description": "If true, events on all record types (posts, lists, profile etc.) or records from given 'collections' param, owned by the did are returned."
           },
           "limit": {
             "type": "integer",
@@ -55,22 +74,30 @@
           },
           "addedLabels": {
             "type": "array",
-            "items": { "type": "string" },
+            "items": {
+              "type": "string"
+            },
             "description": "If specified, only events where all of these labels were added are returned"
           },
           "removedLabels": {
             "type": "array",
-            "items": { "type": "string" },
+            "items": {
+              "type": "string"
+            },
             "description": "If specified, only events where all of these labels were removed are returned"
           },
           "addedTags": {
             "type": "array",
-            "items": { "type": "string" },
+            "items": {
+              "type": "string"
+            },
             "description": "If specified, only events where all of these tags were added are returned"
           },
           "removedTags": {
             "type": "array",
-            "items": { "type": "string" },
+            "items": {
+              "type": "string"
+            },
             "description": "If specified, only events where all of these tags were removed are returned"
           },
           "reportTypes": {
@@ -79,7 +106,9 @@
               "type": "string"
             }
           },
-          "cursor": { "type": "string" }
+          "cursor": {
+            "type": "string"
+          }
         }
       },
       "output": {
@@ -88,7 +117,9 @@
           "type": "object",
           "required": ["events"],
           "properties": {
-            "cursor": { "type": "string" },
+            "cursor": {
+              "type": "string"
+            },
             "events": {
               "type": "array",
               "items": {

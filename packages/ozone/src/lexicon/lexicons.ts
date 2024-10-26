@@ -11809,6 +11809,21 @@ export const schemaDict = {
               type: 'string',
               format: 'uri',
             },
+            collections: {
+              type: 'array',
+              description:
+                "If specified, only events where the subject belongs to the given collections will be returned. When subjectType is set to 'account', this will be ignored.",
+              items: {
+                type: 'string',
+                format: 'nsid',
+              },
+            },
+            subjectType: {
+              type: 'string',
+              description:
+                "If specified, only events where the subject is of the given type (account or record) will be returned. When this is set to 'account' the 'collections' parameter will be ignored.",
+              knownValues: ['account', 'record'],
+            },
             includeAllUserRecords: {
               type: 'boolean',
               default: false,
@@ -12004,6 +12019,21 @@ export const schemaDict = {
             },
             cursor: {
               type: 'string',
+            },
+            collections: {
+              type: 'array',
+              description:
+                "If specified, subjects belonging to the given collections will be returned. When subjectType is set to 'account', this will be ignored.",
+              items: {
+                type: 'string',
+                format: 'nsid',
+              },
+            },
+            subjectType: {
+              type: 'string',
+              description:
+                "If specified, subjects of the given type (account or record) will be returned. When this is set to 'account' the 'collections' parameter will be ignored.",
+              knownValues: ['account', 'record'],
             },
           },
         },
