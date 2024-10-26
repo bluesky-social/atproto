@@ -19,6 +19,10 @@ Object {
     "moderation": Object {
       "subjectStatus": Object {
         "createdAt": "1970-01-01T00:00:00.000Z",
+        "hosting": Object {
+          "$type": "tools.ozone.moderation.defs#accountHosting",
+          "status": "unknown",
+        },
         "id": 1,
         "lastReportedAt": "1970-01-01T00:00:00.000Z",
         "lastReviewedAt": "1970-01-01T00:00:00.000Z",
