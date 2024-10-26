@@ -133,5 +133,53 @@ describe('record and account events on moderation subjects', () => {
       expect(statusAfterReactivation?.hosting?.status).toEqual('active')
       expect(statusAfterReactivation?.hosting?.deletedAt).toBeFalsy()
     })
+
+    it('gets statuses by hosting properties', async () => {
+      await Promise.all([
+        emitAccountEvent(
+          {
+            $type: 'com.atproto.admin.defs#repoRef',
+            did: sc.dids.carol,
+          },
+          false,
+          'deactivated',
+        ),
+        emitAccountEvent(
+          {
+            $type: 'com.atproto.admin.defs#repoRef',
+            did: sc.dids.bob,
+          },
+          false,
+          'deleted',
+        ),
+      ])
+      const [
+        { subjectStatuses: deactivatedOrDeletedStatuses },
+        { subjectStatuses: deletedStatusesInPastDay },
+        { subjectStatuses: deletedStatusesBeforeYesterday },
+      ] = await Promise.all([
+        modClient.queryStatuses({
+          hostingStatuses: ['deactivated', 'deleted'],
+        }),
+        modClient.queryStatuses({
+          hostingDeletedAfter: new Date(
+            Date.now() - 1000 * 60 * 60 * 24,
+          ).toISOString(),
+        }),
+        modClient.queryStatuses({
+          hostingDeletedBefore: new Date(
+            Date.now() - 1000 * 60 * 60 * 24,
+          ).toISOString(),
+        }),
+      ])
+
+      expect(deactivatedOrDeletedStatuses.length).toEqual(3)
+      expect(deletedStatusesInPastDay.length).toEqual(2)
+      expect(deletedStatusesInPastDay[0]?.subject.uri).toEqual(
+        sc.posts[sc.dids.bob][1].ref.uriStr,
+      )
+      expect(deletedStatusesInPastDay[1]?.subject.did).toEqual(sc.dids.bob)
+      expect(deletedStatusesBeforeYesterday.length).toEqual(0)
+    })
   })
 })

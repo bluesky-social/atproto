@@ -30,13 +30,13 @@ export interface QueryParams {
   hostingUpdatedAfter?: string
   /** Search subjects where the associated record/account was updated before a given timestamp */
   hostingUpdatedBefore?: string
-  /** Search subjects by the status of the associated record/account */
-  hostingStatus?:
+  hostingStatuses?:
     | 'deactivated'
     | 'deleted'
     | 'takendown'
     | 'suspended'
-    | (string & {})
+    | 'tombstoned'
+    | (string & {})[]
   /** Search subjects reviewed before a given timestamp */
   reviewedBefore?: string
   /** By default, we don't include muted subjects in the results. Set this to true to include them. */

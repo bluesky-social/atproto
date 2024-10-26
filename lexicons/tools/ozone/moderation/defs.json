@@ -412,7 +412,14 @@
         },
         "status": {
           "type": "string",
-          "knownValues": ["unknown", "deactivated", "deleted", "takendown", "suspended", "tombstoned"]
+          "knownValues": [
+            "unknown",
+            "deactivated",
+            "deleted",
+            "takendown",
+            "suspended",
+            "tombstoned"
+          ]
         },
         "timestamp": {
           "type": "string",
