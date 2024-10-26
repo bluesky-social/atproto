@@ -43,8 +43,7 @@ export function unicastFetchWrap<C = FetchContext>({
 
   if (fetch === globalThis.fetch) {
     const dispatcher = new Agent({
-      allowH2: true,
-      connect: { keepAlive: true, lookup: unicastLookup },
+      connect: { lookup: unicastLookup },
     })
 
     return async function (input, init): Promise<Response> {
@@ -106,7 +105,9 @@ export function unicastFetchWrap<C = FetchContext>({
 
           let didLookup = false
           const dispatcher = new Client(url.origin, {
-            allowH2: true,
+            // Do *not* enable H2 here, as it will cause an error (the client
+            // will terminate the connection before the response is consumed).
+            // https://github.com/nodejs/undici/issues/3671
             connect: {
               keepAlive: false, // Client will be used once
               lookup(...args) {

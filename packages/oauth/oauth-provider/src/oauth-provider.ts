@@ -29,7 +29,7 @@ import {
   oauthTokenIdentificationSchema,
   oauthTokenRequestSchema,
 } from '@atproto/oauth-types'
-import { Redis, type RedisOptions } from 'ioredis'
+import type { Redis, RedisOptions } from 'ioredis'
 import z, { ZodError } from 'zod'
 
 import { AccessTokenType } from './access-token/access-token-type.js'

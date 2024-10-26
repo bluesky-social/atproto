@@ -1,5 +1,53 @@
 # @atproto/bsky
 
+## 0.0.90
+
+### Patch Changes
+
+- Updated dependencies [[`d605577c2`](https://github.com/bluesky-social/atproto/commit/d605577c25d3e69c7cc0a1e858a4f009d1ea3096)]:
+  - @atproto/sync@0.1.4
+
+## 0.0.89
+
+### Patch Changes
+
+- Updated dependencies [[`22d039a22`](https://github.com/bluesky-social/atproto/commit/22d039a229e3ef08a793e1c98b473b1b8e18ac5e)]:
+  - @atproto/api@0.13.12
+
+## 0.0.88
+
+### Patch Changes
+
+- [#2853](https://github.com/bluesky-social/atproto/pull/2853) [`72549f442`](https://github.com/bluesky-social/atproto/commit/72549f442223c0c74594e111a9793e39b0c5ea2d) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow using a handle as "actor" param in app.bsky.graph.getLists
+
+- [#2862](https://github.com/bluesky-social/atproto/pull/2862) [`08ed0a5a9`](https://github.com/bluesky-social/atproto/commit/08ed0a5a916685b2aaea783706e6d6287a2aa287) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add missing dev-dependency
+
+## 0.0.87
+
+### Patch Changes
+
+- Updated dependencies [[`a0531ce42`](https://github.com/bluesky-social/atproto/commit/a0531ce429f5139cb0e2cc19aa9b338599947e44)]:
+  - @atproto/api@0.13.11
+
+## 0.0.86
+
+### Patch Changes
+
+- Updated dependencies [[`df14df522`](https://github.com/bluesky-social/atproto/commit/df14df522bb7986e56ee1f6a0f5d862e1ea6f4d5)]:
+  - @atproto/api@0.13.10
+
+## 0.0.85
+
+### Patch Changes
+
+- Updated dependencies [[`4098d9890`](https://github.com/bluesky-social/atproto/commit/4098d9890173f4d6c6512f2d8994eebbf12b5e13), [`a2bad977a`](https://github.com/bluesky-social/atproto/commit/a2bad977a8d941b4075ea3ffee3d6f7a0c0f467c)]:
+  - @atproto/common@0.4.4
+  - @atproto/api@0.13.9
+  - @atproto/crypto@0.4.1
+  - @atproto/repo@0.5.3
+  - @atproto/sync@0.1.3
+  - @atproto/xrpc-server@0.7.1
+
 ## 0.0.84
 
 ### Patch Changes

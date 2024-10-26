@@ -2,6 +2,7 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { INVALID_HANDLE } from '@atproto/syntax'
+import { formatAccountInfo } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getAccountInfo({
@@ -21,19 +22,11 @@ export default function (server: Server, ctx: AppContext) {
       const managesOwnInvites = !ctx.cfg.entryway
       return {
         encoding: 'application/json',
-        body: {
-          did: account.did,
-          handle: account.handle ?? INVALID_HANDLE,
-          email: account.email ?? undefined,
-          indexedAt: account.createdAt,
-          emailConfirmedAt: account.emailConfirmedAt ?? undefined,
-          invitedBy: managesOwnInvites ? invitedBy[params.did] : undefined,
-          invites: managesOwnInvites ? invites : undefined,
-          invitesDisabled: managesOwnInvites
-            ? account.invitesDisabled === 1
-            : undefined,
-          deactivatedAt: account.deactivatedAt ?? undefined,
-        },
+        body: formatAccountInfo(account, {
+          managesOwnInvites,
+          invitedBy,
+          invites,
+        }),
       }
     },
   })

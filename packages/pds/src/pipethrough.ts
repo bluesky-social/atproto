@@ -60,7 +60,7 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
       const { url: origin, did: aud } = await parseProxyInfo(ctx, req, lxm)
 
       const headers: IncomingHttpHeaders = {
-        'accept-encoding': req.headers['accept-encoding'],
+        'accept-encoding': req.headers['accept-encoding'] || 'identity',
         'accept-language': req.headers['accept-language'],
         'atproto-accept-labelers': req.headers['atproto-accept-labelers'],
         'x-bsky-topics': req.headers['x-bsky-topics'],
@@ -102,6 +102,20 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
   }
 }
 
+const ACCEPT_ENCODING_COMPRESSED = [
+  ['gzip', { q: 1.0 }],
+  ['deflate', { q: 0.9 }],
+  ['br', { q: 0.8 }],
+  ['identity', { q: 0.1 }],
+] as const satisfies Accept[]
+
+const ACCEPT_ENCODING_UNCOMPRESSED = [
+  ['identity', { q: 1.0 }],
+  ['gzip', { q: 0.3 }],
+  ['deflate', { q: 0.2 }],
+  ['br', { q: 0.1 }],
+] as const satisfies Accept[]
+
 export type PipethroughOptions = {
   /**
    * Specify the issuer (requester) for service auth. If not provided, no
@@ -122,28 +136,17 @@ export type PipethroughOptions = {
   lxm?: string
 }
 
-// List of content encodings that are supported by the PDS. Because proxying
-// occurs between data centers, where connectivity is supposedly stable & good,
-// and because payloads are small, we prefer encoding that are fast (gzip,
-// deflate, identity) over heavier encodings (Brotli). Upstream servers should
-// be configured to prefer any encoding over identity in case of big,
-// uncompressed payloads.
-const SUPPORTED_ENCODINGS = [
-  ['gzip', { q: '1.0' }],
-  ['deflate', { q: '0.9' }],
-  ['identity', { q: '0.3' }],
-  ['br', { q: '0.1' }],
-] as const satisfies Accept[]
-
 export async function pipethrough(
   ctx: AppContext,
   req: express.Request,
   options?: PipethroughOptions,
-): Promise<{
-  stream: Readable
-  headers: Record<string, string>
-  encoding: string
-}> {
+): Promise<
+  HandlerPipeThroughStream & {
+    stream: Readable
+    headers: Record<string, string>
+    encoding: string
+  }
+> {
   if (req.method !== 'GET' && req.method !== 'HEAD') {
     // pipethrough() is used from within xrpcServer handlers, which means that
     // the request body either has been parsed or is a readable stream that has
@@ -160,32 +163,31 @@ export async function pipethrough(
 
   const { url: origin, did: aud } = await parseProxyInfo(ctx, req, lxm)
 
-  // Because we sometimes need to interpret the response (e.g. during
-  // read-after-write, through asPipeThroughBuffer()), we need to ask the
-  // upstream server for an encoding that both the requester and the PDS can
-  // understand.
-  const acceptEncoding = negotiateAccept(
-    req.headers['accept-encoding'],
-    SUPPORTED_ENCODINGS,
-  )
-
-  const headers: IncomingHttpHeaders = {
-    'accept-language': req.headers['accept-language'],
-    'atproto-accept-labelers': req.headers['atproto-accept-labelers'],
-    'x-bsky-topics': req.headers['x-bsky-topics'],
-
-    'accept-encoding': `${formatAccepted(acceptEncoding)}, *;q=0`, // Reject anything else (q=0)
-
-    authorization: options?.iss
-      ? `Bearer ${await ctx.serviceAuthJwt(options.iss, options.aud ?? aud, options.lxm ?? lxm)}`
-      : undefined,
-  }
-
   const dispatchOptions: Dispatcher.RequestOptions = {
     origin,
     method: req.method,
     path: req.originalUrl,
-    headers,
+    headers: {
+      'accept-language': req.headers['accept-language'],
+      'atproto-accept-labelers': req.headers['atproto-accept-labelers'],
+      'x-bsky-topics': req.headers['x-bsky-topics'],
+
+      // Because we sometimes need to interpret the response (e.g. during
+      // read-after-write, through asPipeThroughBuffer()), we need to ask the
+      // upstream server for an encoding that both the requester and the PDS can
+      // understand. Since we might have to do the decoding ourselves, we will
+      // use our own preferences (and weight) to negotiate the encoding.
+      'accept-encoding': negotiateContentEncoding(
+        req.headers['accept-encoding'],
+        ctx.cfg.proxy.preferCompressed
+          ? ACCEPT_ENCODING_COMPRESSED
+          : ACCEPT_ENCODING_UNCOMPRESSED,
+      ),
+
+      authorization: options?.iss
+        ? `Bearer ${await ctx.serviceAuthJwt(options.iss, options.aud ?? aud, options.lxm ?? lxm)}`
+        : undefined,
+    },
 
     // Use a high water mark to buffer more data while performing async
     // operations before this stream is consumed. This is especially useful
@@ -193,14 +195,13 @@ export async function pipethrough(
     highWaterMark: 2 * 65536, // twice the default (64KiB)
   }
 
-  const upstream = await pipethroughRequest(ctx, dispatchOptions)
+  const { headers, body } = await pipethroughRequest(ctx, dispatchOptions)
 
   return {
-    stream: upstream.body,
-    headers: Object.fromEntries(responseHeaders(upstream.headers)),
-    encoding:
-      safeString(upstream.headers['content-type']) ?? 'application/json',
-  } satisfies HandlerPipeThroughStream
+    encoding: safeString(headers['content-type']) ?? 'application/json',
+    headers: Object.fromEntries(responseHeaders(headers)),
+    stream: body,
+  }
 }
 
 // Request setup/formatting
@@ -367,80 +368,118 @@ function handleUpstreamRequestError(
 // Request parsing/forwarding
 // -------------------
 
-type Accept = [name: string, flags: Record<string, string>]
+type AcceptFlags = { q: number }
+type Accept = [name: string, flags: AcceptFlags]
 
-function negotiateAccept(
+// accept-encoding defaults to "identity with lowest priority"
+const ACCEPT_ENC_DEFAULT = ['identity', { q: 0.001 }] as const satisfies Accept
+const ACCEPT_FORBID_STAR = ['*', { q: 0 }] as const satisfies Accept
+
+function negotiateContentEncoding(
   acceptHeader: undefined | string | string[],
-  supported: readonly Accept[],
-): readonly Accept[] {
-  // Optimization: if no accept-encoding header is present, skip negotiation
-  if (!acceptHeader?.length) {
-    return supported
+  preferences: readonly Accept[],
+): string {
+  const acceptMap = Object.fromEntries<undefined | AcceptFlags>(
+    parseAcceptEncoding(acceptHeader),
+  )
+
+  // Make sure the default (identity) is covered by the preferences
+  if (!preferences.some(coversIdentityAccept)) {
+    preferences = [...preferences, ACCEPT_ENC_DEFAULT]
   }
 
-  const acceptNames = extractAcceptedNames(acceptHeader)
-  const common = acceptNames.includes('*')
-    ? supported
-    : supported.filter(nameIncludedIn, acceptNames)
+  const common = preferences.filter(([name]) => {
+    const acceptQ = (acceptMap[name] ?? acceptMap['*'])?.q
+    // Per HTTP/1.1, "identity" is always acceptable unless explicitly rejected
+    if (name === 'identity') {
+      return acceptQ == null || acceptQ > 0
+    } else {
+      return acceptQ != null && acceptQ > 0
+    }
+  })
 
-  // There must be at least one common encoding with a non-zero q value
-  if (!common.some(isNotRejected)) {
+  // Since "identity" was present in the preferences, a missing "identity" in
+  // the common array means that the client explicitly rejected it. Let's reflect
+  // this by adding it to the common array.
+  if (!common.some(coversIdentityAccept)) {
+    common.push(ACCEPT_FORBID_STAR)
+  }
+
+  // If no common encodings are acceptable, throw a 406 Not Acceptable error
+  if (!common.some(isAllowedAccept)) {
     throw new XRPCServerError(
       ResponseType.NotAcceptable,
       'this service does not support any of the requested encodings',
     )
   }
 
-  return common
+  return formatAcceptHeader(common as [Accept, ...Accept[]])
 }
 
-function formatAccepted(accept: readonly Accept[]): string {
-  return accept.map(formatEncodingDev).join(', ')
+function coversIdentityAccept([name]: Accept): boolean {
+  return name === 'identity' || name === '*'
 }
 
-function formatEncodingDev([enc, flags]: Accept): string {
-  let ret = enc
-  for (const name in flags) ret += `;${name}=${flags[name]}`
-  return ret
+function isAllowedAccept([, flags]: Accept): boolean {
+  return flags.q > 0
 }
 
-function nameIncludedIn(this: readonly string[], accept: Accept): boolean {
-  return this.includes(accept[0])
+/**
+ * @see {@link https://developer.mozilla.org/en-US/docs/Glossary/Quality_values}
+ */
+function formatAcceptHeader(accept: readonly [Accept, ...Accept[]]): string {
+  return accept.map(formatAcceptPart).join(',')
 }
 
-function isNotRejected(accept: Accept): boolean {
-  return accept[1]['q'] !== '0'
+function formatAcceptPart([name, flags]: Accept): string {
+  return `${name};q=${flags.q}`
 }
 
-function extractAcceptedNames(
-  acceptHeader: undefined | string | string[],
-): string[] {
-  if (!acceptHeader?.length) {
-    return ['*']
+function parseAcceptEncoding(
+  acceptEncodings: undefined | string | string[],
+): Accept[] {
+  if (!acceptEncodings?.length) return []
+
+  return Array.isArray(acceptEncodings)
+    ? acceptEncodings.flatMap(parseAcceptEncoding)
+    : acceptEncodings.split(',').map(parseAcceptEncodingDefinition)
+}
+
+function parseAcceptEncodingDefinition(def: string): Accept {
+  const { length, 0: encoding, 1: params } = def.trim().split(';', 3)
+
+  if (length > 2) {
+    throw new InvalidRequestError(`Invalid accept-encoding: "${def}"`)
   }
 
-  return Array.isArray(acceptHeader)
-    ? acceptHeader.flatMap(extractAcceptedNames)
-    : acceptHeader.split(',').map(extractAcceptedName).filter(isNonNullable)
-}
+  if (!encoding || encoding.includes('=')) {
+    throw new InvalidRequestError(`Invalid accept-encoding: "${def}"`)
+  }
 
-function extractAcceptedName(def: string): string | undefined {
-  // No need to fully parse since we only care about allowed values
-  const parts = def.split(';')
-  if (parts.some(isQzero)) return undefined
-  return parts[0].trim()
-}
+  const flags = { q: 1 }
+  if (length === 2) {
+    const { length, 0: key, 1: value } = params.split('=', 3)
+    if (length !== 2) {
+      throw new InvalidRequestError(`Invalid accept-encoding: "${def}"`)
+    }
 
-function isQzero(def: string): boolean {
-  return def.trim() === 'q=0'
-}
+    if (key === 'q' || key === 'Q') {
+      const q = parseFloat(value)
+      if (q === 0 || (Number.isFinite(q) && q <= 1 && q >= 0.001)) {
+        flags.q = q
+      } else {
+        throw new InvalidRequestError(`Invalid accept-encoding: "${def}"`)
+      }
+    } else {
+      throw new InvalidRequestError(`Invalid accept-encoding: "${def}"`)
+    }
+  }
 
-function isNonNullable<T>(val: T): val is NonNullable<T> {
-  return val != null
+  return [encoding.toLowerCase(), flags]
 }
 
 export function isJsonContentType(contentType?: string): boolean | undefined {
-  if (contentType == null) return undefined
+  if (!contentType) return undefined
   return /application\/(?:\w+\+)?json/i.test(contentType)
 }
 
