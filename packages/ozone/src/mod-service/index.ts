@@ -762,11 +762,11 @@ export class ModerationService {
     reportedAfter,
     reportedBefore,
     includeMuted,
-    recordDeletedBefore,
-    recordDeletedAfter,
-    recordUpdatedBefore,
-    recordUpdatedAfter,
-    recordStatus,
+    hostingDeletedBefore,
+    hostingDeletedAfter,
+    hostingUpdatedBefore,
+    hostingUpdatedAfter,
+    hostingStatus,
     onlyMuted,
     ignoreSubjects,
     sortDirection,
@@ -787,11 +787,11 @@ export class ModerationService {
     reportedAfter?: string
     reportedBefore?: string
     includeMuted?: boolean
-    recordDeletedBefore?: string
-    recordDeletedAfter?: string
-    recordUpdatedBefore?: string
-    recordUpdatedAfter?: string
-    recordStatus?: string
+    hostingDeletedBefore?: string
+    hostingDeletedAfter?: string
+    hostingUpdatedBefore?: string
+    hostingUpdatedAfter?: string
+    hostingStatus?: string
     onlyMuted?: boolean
     subject?: string
     ignoreSubjects?: string[]
@@ -843,24 +843,24 @@ export class ModerationService {
       builder = builder.where('lastReviewedAt', '<', reviewedBefore)
     }
 
-    if (recordUpdatedAfter) {
-      builder = builder.where('recordUpdatedAt', '>', recordUpdatedAfter)
+    if (hostingUpdatedAfter) {
+      builder = builder.where('hostingUpdatedAt', '>', hostingUpdatedAfter)
     }
 
-    if (recordUpdatedBefore) {
-      builder = builder.where('recordUpdatedAt', '<', recordUpdatedBefore)
+    if (hostingUpdatedBefore) {
+      builder = builder.where('hostingUpdatedAt', '<', hostingUpdatedBefore)
     }
 
-    if (recordDeletedAfter) {
-      builder = builder.where('recordDeletedAt', '>', recordDeletedAfter)
+    if (hostingDeletedAfter) {
+      builder = builder.where('hostingDeletedAt', '>', hostingDeletedAfter)
     }
 
-    if (recordDeletedBefore) {
-      builder = builder.where('recordDeletedAt', '<', recordDeletedBefore)
+    if (hostingDeletedBefore) {
+      builder = builder.where('hostingDeletedAt', '<', hostingDeletedBefore)
     }
 
-    if (recordStatus) {
-      builder = builder.where('recordStatus', '=', recordStatus)
+    if (hostingStatus) {
+      builder = builder.where('hostingStatus', '=', hostingStatus)
     }
 
     if (reportedAfter) {

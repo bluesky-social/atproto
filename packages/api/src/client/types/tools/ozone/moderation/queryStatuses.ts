@@ -22,15 +22,15 @@ export interface QueryParams {
   /** Search subjects reviewed after a given timestamp */
   reviewedAfter?: string
   /** Search subjects where the associated record/account was deleted after a given timestamp */
-  recordDeletedAfter?: string
+  hostingDeletedAfter?: string
   /** Search subjects where the associated record/account was deleted before a given timestamp */
-  recordDeletedBefore?: string
+  hostingDeletedBefore?: string
   /** Search subjects where the associated record/account was updated after a given timestamp */
-  recordUpdatedAfter?: string
+  hostingUpdatedAfter?: string
   /** Search subjects where the associated record/account was updated before a given timestamp */
-  recordUpdatedBefore?: string
+  hostingUpdatedBefore?: string
   /** Search subjects by the status of the associated record/account */
-  recordStatus?:
+  hostingStatus?:
     | 'deactivated'
     | 'deleted'
     | 'takendown'

@@ -10892,6 +10892,13 @@ export const schemaDict = {
               'lex:com.atproto.repo.strongRef',
             ],
           },
+          hosting: {
+            type: 'union',
+            refs: [
+              'lex:tools.ozone.moderation.defs#accountHosting',
+              'lex:tools.ozone.moderation.defs#recordHosting',
+            ],
+          },
           subjectBlobCids: {
             type: 'array',
             items: {
@@ -10913,24 +10920,6 @@ export const schemaDict = {
             format: 'datetime',
             description:
               'Timestamp referencing the first moderation status impacting event was emitted on the subject',
-          },
-          recordUpdatedAt: {
-            type: 'string',
-            format: 'datetime',
-            description:
-              'Last update timestamp of the record the subject is associated with',
-          },
-          recordDeletedAt: {
-            type: 'string',
-            format: 'datetime',
-            description:
-              'Timestamp referencing when the record the subject is associated with was deleted',
-          },
-          recordStatus: {
-            type: 'string',
-            description:
-              'Status of the record the subject is associated with. Statuses are different when the subject references an account vs. a record',
-            knownValues: ['takendown', 'suspended', 'deleted', 'deactivated'],
           },
           reviewState: {
             type: 'ref',
@@ -11613,6 +11602,58 @@ export const schemaDict = {
           },
         },
       },
+      accountHosting: {
+        type: 'object',
+        required: ['status'],
+        properties: {
+          status: {
+            type: 'string',
+            knownValues: ['takendown', 'suspended', 'deleted', 'deactivated'],
+          },
+          updatedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          deletedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          deactivatedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          reactivatedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
+      recordHosting: {
+        type: 'object',
+        required: ['status'],
+        properties: {
+          status: {
+            type: 'string',
+            knownValues: ['takendown', 'suspended', 'deleted', 'deactivated'],
+          },
+          updatedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          deletedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
     },
   },
   ToolsOzoneModerationEmitEvent: {
@@ -12034,31 +12075,31 @@ export const schemaDict = {
               format: 'datetime',
               description: 'Search subjects reviewed after a given timestamp',
             },
-            recordDeletedAfter: {
+            hostingDeletedAfter: {
               type: 'string',
               format: 'datetime',
               description:
                 'Search subjects where the associated record/account was deleted after a given timestamp',
             },
-            recordDeletedBefore: {
+            hostingDeletedBefore: {
               type: 'string',
               format: 'datetime',
               description:
                 'Search subjects where the associated record/account was deleted before a given timestamp',
             },
-            recordUpdatedAfter: {
+            hostingUpdatedAfter: {
               type: 'string',
               format: 'datetime',
               description:
                 'Search subjects where the associated record/account was updated after a given timestamp',
             },
-            recordUpdatedBefore: {
+            hostingUpdatedBefore: {
               type: 'string',
               format: 'datetime',
               description:
                 'Search subjects where the associated record/account was updated before a given timestamp',
             },
-            recordStatus: {
+            hostingStatus: {
               type: 'string',
               knownValues: ['deactivated', 'deleted', 'takendown', 'suspended'],
               description:

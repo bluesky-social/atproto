@@ -111,23 +111,16 @@ export interface SubjectStatusView {
     | ComAtprotoAdminDefs.RepoRef
     | ComAtprotoRepoStrongRef.Main
     | { $type: string; [k: string]: unknown }
+  hosting?:
+    | AccountHosting
+    | RecordHosting
+    | { $type: string; [k: string]: unknown }
   subjectBlobCids?: string[]
   subjectRepoHandle?: string
   /** Timestamp referencing when the last update was made to the moderation status of the subject */
   updatedAt: string
   /** Timestamp referencing the first moderation status impacting event was emitted on the subject */
   createdAt: string
-  /** Last update timestamp of the record the subject is associated with */
-  recordUpdatedAt?: string
-  /** Timestamp referencing when the record the subject is associated with was deleted */
-  recordDeletedAt?: string
-  /** Status of the record the subject is associated with. Statuses are different when the subject references an account vs. a record */
-  recordStatus?:
-    | 'takendown'
-    | 'suspended'
-    | 'deleted'
-    | 'deactivated'
-    | (string & {})
   reviewState: SubjectReviewState
   /** Sticky comment on the subject. */
   comment?: string
@@ -784,4 +777,46 @@ export function isVideoDetails(v: unknown): v is VideoDetails {
 
 export function validateVideoDetails(v: unknown): ValidationResult {
   return lexicons.validate('tools.ozone.moderation.defs#videoDetails', v)
+}
+
+export interface AccountHosting {
+  status: 'takendown' | 'suspended' | 'deleted' | 'deactivated' | (string & {})
+  updatedAt?: string
+  createdAt?: string
+  deletedAt?: string
+  deactivatedAt?: string
+  reactivatedAt?: string
+  [k: string]: unknown
+}
+
+export function isAccountHosting(v: unknown): v is AccountHosting {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'tools.ozone.moderation.defs#accountHosting'
+  )
+}
+
+export function validateAccountHosting(v: unknown): ValidationResult {
+  return lexicons.validate('tools.ozone.moderation.defs#accountHosting', v)
+}
+
+export interface RecordHosting {
+  status: 'takendown' | 'suspended' | 'deleted' | 'deactivated' | (string & {})
+  updatedAt?: string
+  createdAt?: string
+  deletedAt?: string
+  [k: string]: unknown
+}
+
+export function isRecordHosting(v: unknown): v is RecordHosting {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'tools.ozone.moderation.defs#recordHosting'
+  )
+}
+
+export function validateRecordHosting(v: unknown): ValidationResult {
+  return lexicons.validate('tools.ozone.moderation.defs#recordHosting', v)
 }

@@ -36,29 +36,29 @@
             "format": "datetime",
             "description": "Search subjects reviewed after a given timestamp"
           },
-          "recordDeletedAfter": {
+          "hostingDeletedAfter": {
             "type": "string",
             "format": "datetime",
             "description": "Search subjects where the associated record/account was deleted after a given timestamp"
           },
-          "recordDeletedBefore": {
+          "hostingDeletedBefore": {
             "type": "string",
             "format": "datetime",
             "description": "Search subjects where the associated record/account was deleted before a given timestamp"
           },
-          "recordUpdatedAfter": {
+          "hostingUpdatedAfter": {
             "type": "string",
             "format": "datetime",
             "description": "Search subjects where the associated record/account was updated after a given timestamp"
           },
-          "recordUpdatedBefore": {
+          "hostingUpdatedBefore": {
             "type": "string",
             "format": "datetime",
             "description": "Search subjects where the associated record/account was updated before a given timestamp"
           },
-          "recordStatus": {
+          "hostingStatus": {
             "type": "string",
-            "knownValues": ["deactivated", "deleted", "takendown", "suspended"],
+            "knownValues": ["deactivated", "deleted", "takendown", "suspended", "tombstoned"],
             "description": "Search subjects by the status of the associated record/account"
           },
           "reviewedBefore": {

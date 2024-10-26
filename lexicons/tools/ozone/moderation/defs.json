@@ -116,6 +116,10 @@
             "com.atproto.repo.strongRef"
           ]
         },
+        "hosting": {
+          "type": "union",
+          "refs": ["#accountHosting", "#recordHosting"]
+        },
         "subjectBlobCids": {
           "type": "array",
           "items": { "type": "string", "format": "cid" }
@@ -130,21 +134,6 @@
           "type": "string",
           "format": "datetime",
           "description": "Timestamp referencing the first moderation status impacting event was emitted on the subject"
-        },
-        "recordUpdatedAt": {
-          "type": "string",
-          "format": "datetime",
-          "description": "Last update timestamp of the record the subject is associated with"
-        },
-        "recordDeletedAt": {
-          "type": "string",
-          "format": "datetime",
-          "description": "Timestamp referencing when the record the subject is associated with was deleted"
-        },
-        "recordStatus": {
-          "type": "string",
-          "description": "Status of the record the subject is associated with. Statuses are different when the subject references an account vs. a record",
-          "knownValues": ["takendown", "suspended", "deleted", "deactivated"]
         },
         "reviewState": {
           "type": "ref",
@@ -423,7 +412,7 @@
         },
         "status": {
           "type": "string",
-          "knownValues": ["takendown", "suspended", "deleted", "deactivated"]
+          "knownValues": ["unknown", "deactivated", "deleted", "takendown", "suspended", "tombstoned"]
         },
         "timestamp": {
           "type": "string",
@@ -633,6 +622,58 @@
         "width": { "type": "integer" },
         "height": { "type": "integer" },
         "length": { "type": "integer" }
+      }
+    },
+    "accountHosting": {
+      "type": "object",
+      "required": ["status"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "knownValues": ["takendown", "suspended", "deleted", "deactivated"]
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "datetime"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "datetime"
+        },
+        "deletedAt": {
+          "type": "string",
+          "format": "datetime"
+        },
+        "deactivatedAt": {
+          "type": "string",
+          "format": "datetime"
+        },
+        "reactivatedAt": {
+          "type": "string",
+          "format": "datetime"
+        }
+      }
+    },
+    "recordHosting": {
+      "type": "object",
+      "required": ["status"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "knownValues": ["takendown", "suspended", "deleted", "deactivated"]
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "datetime"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "datetime"
+        },
+        "deletedAt": {
+          "type": "string",
+          "format": "datetime"
+        }
       }
     }
   }

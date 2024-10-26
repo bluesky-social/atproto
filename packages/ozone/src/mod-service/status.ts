@@ -126,7 +126,7 @@ const getSubjectStatusForModerationEvent = ({
   }
 }
 
-const recordEvents = [
+const hostingEvents = [
   'tools.ozone.moderation.defs#accountEvent',
   'tools.ozone.moderation.defs#identityEvent',
   'tools.ozone.moderation.defs#recordEvent',
@@ -139,18 +139,21 @@ const getSubjectStatusForRecordEvent = ({
   event: ModerationEventRow
   currentStatus?: ModerationSubjectStatusRow
 }): Partial<ModerationSubjectStatusRow> => {
-  const timestamp = event.meta?.timestamp
-    ? `${event.meta?.timestamp}`
-    : event.createdAt
+  const timestamp =
+    typeof event.meta?.timestamp === 'string'
+      ? event.meta?.timestamp
+      : event.createdAt
+
   if (event.action === 'tools.ozone.moderation.defs#recordEvent') {
     if (event.meta?.op === 'delete') {
       return {
-        recordStatus: 'deleted',
-        recordDeletedAt: timestamp,
+        hostingStatus: 'deleted',
+        hostingDeletedAt: timestamp,
       }
     } else if (event.meta?.op === 'update') {
       return {
-        recordUpdatedAt: timestamp,
+        hostingStatus: 'active',
+        hostingUpdatedAt: timestamp,
       }
     }
     return {}
@@ -158,18 +161,26 @@ const getSubjectStatusForRecordEvent = ({
 
   if (event.action === 'tools.ozone.moderation.defs#accountEvent') {
     const status: Partial<ModerationSubjectStatusRow> = {
-      recordStatus: `${event.meta?.status}`,
+      hostingUpdatedAt: timestamp,
+    }
+
+    if (event.meta?.status) {
+      status.hostingStatus = `${event.meta?.status}`
     }
 
     if (event.meta?.status === 'deleted') {
-      status.recordDeletedAt = timestamp
+      status.hostingDeletedAt = timestamp
+    } else if (event.meta?.status === 'deactivated') {
+      status.hostingDeactivatedAt = timestamp
     } else {
-      status.recordUpdatedAt = timestamp
       // When deactivated accounts are re-activated, we receive the event with just the active flag set to true
-      // so we want to make sure that the recordStatus is not set to an outdated value
-      if (currentStatus?.recordStatus !== 'active' && event.meta?.active) {
-        status.recordStatus = 'active'
-        status.recordDeletedAt = null
+      // so we want to make sure that the hostingStatus is not set to an outdated value
+      if (
+        currentStatus?.hostingStatus === 'deactivated' &&
+        event.meta?.active
+      ) {
+        status.hostingStatus = 'active'
+        status.hostingReactivatedAt = timestamp
       }
     }
 
@@ -178,12 +189,12 @@ const getSubjectStatusForRecordEvent = ({
 
   if (event.action === 'tools.ozone.moderation.defs#identityEvent') {
     const status: Partial<ModerationSubjectStatusRow> = {
-      recordUpdatedAt: timestamp,
+      hostingUpdatedAt: timestamp,
     }
 
     if (event.meta?.tombstone) {
-      status.recordStatus = 'tombstoned'
-      status.recordDeletedAt = timestamp
+      status.hostingStatus = 'tombstoned'
+      status.hostingDeletedAt = timestamp
     }
 
     return status
@@ -228,8 +239,11 @@ export const adjustModerationSubjectStatus = async (
     .selectAll()
     .executeTakeFirst()
 
-  if (recordEvents.includes(action)) {
-    const newStatus = getSubjectStatusForRecordEvent({ event: moderationEvent })
+  if (hostingEvents.includes(action)) {
+    const newStatus = getSubjectStatusForRecordEvent({
+      event: moderationEvent,
+      currentStatus,
+    })
     if (!Object.keys(newStatus).length) {
       return currentStatus || null
     }
@@ -259,6 +273,7 @@ export const adjustModerationSubjectStatus = async (
 
     return status || null
   }
+
   // If reporting is muted for this reporter, we don't want to update the subject status
   if (meta?.isReporterMuted) {
     return currentStatus || null

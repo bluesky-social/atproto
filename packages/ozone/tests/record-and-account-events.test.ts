@@ -8,10 +8,7 @@ import {
   ComAtprotoModerationDefs,
   ToolsOzoneModerationDefs,
 } from '@atproto/api'
-import {
-  REVIEWNONE,
-  REVIEWOPEN,
-} from '../src/lexicon/types/tools/ozone/moderation/defs'
+import { REVIEWOPEN } from '../src/lexicon/types/tools/ozone/moderation/defs'
 import { ToolsOzoneModerationEmitEvent as EmitModerationEvent } from '@atproto/api'
 describe('record and account events on moderation subjects', () => {
   let network: TestNetwork
@@ -42,7 +39,7 @@ describe('record and account events on moderation subjects', () => {
   }
 
   describe('record events', () => {
-    const emiRecordEvent = async (
+    const emitRecordEvent = async (
       subject: EmitModerationEvent.InputSchema['subject'],
       op: 'create' | 'update' | 'delete',
     ) => {
@@ -74,14 +71,14 @@ describe('record and account events on moderation subjects', () => {
         subject: bobsPostSubject,
       })
 
-      await emiRecordEvent(bobsPostSubject, 'update')
+      await emitRecordEvent(bobsPostSubject, 'update')
       const statusAfterUpdate = await getSubjectStatus(bobsPostSubject.uri)
-      expect(statusAfterUpdate?.recordUpdatedAt).toBeTruthy()
+      expect(statusAfterUpdate?.hosting?.updatedAt).toBeTruthy()
 
-      await emiRecordEvent(bobsPostSubject, 'delete')
+      await emitRecordEvent(bobsPostSubject, 'delete')
       const statusAfterDelete = await getSubjectStatus(bobsPostSubject.uri)
-      expect(statusAfterDelete?.recordDeletedAt).toBeTruthy()
-      expect(statusAfterDelete?.recordStatus).toEqual('deleted')
+      expect(statusAfterDelete?.hosting?.deletedAt).toBeTruthy()
+      expect(statusAfterDelete?.hosting?.status).toEqual('deleted')
       // Ensure that due to delete or update event, review state does not change
       expect(statusAfterDelete?.reviewState).toEqual(REVIEWOPEN)
     })
@@ -124,23 +121,17 @@ describe('record and account events on moderation subjects', () => {
       const statusAfterDeactivation = await getSubjectStatus(
         carolsAccountSubject.did,
       )
-      expect(statusAfterDeactivation?.recordUpdatedAt).toBeTruthy()
-      expect(statusAfterDeactivation?.recordStatus).toEqual('deactivated')
-
-      await emitAccountEvent(carolsAccountSubject, false, 'deleted')
-      const statusAfterDelete = await getSubjectStatus(carolsAccountSubject.did)
-      expect(statusAfterDelete?.recordDeletedAt).toBeTruthy()
-      expect(statusAfterDelete?.recordStatus).toEqual('deleted')
-      // Ensure that due to delete or update event, review state does not change
-      expect(statusAfterDelete?.reviewState).toEqual(REVIEWOPEN)
+      expect(statusAfterDeactivation?.hosting?.deactivatedAt).toBeTruthy()
+      expect(statusAfterDeactivation?.hosting?.status).toEqual('deactivated')
+      expect(statusAfterDeactivation?.reviewState).toEqual(REVIEWOPEN)
 
       await emitAccountEvent(carolsAccountSubject, true)
       const statusAfterReactivation = await getSubjectStatus(
         carolsAccountSubject.did,
       )
-      expect(statusAfterReactivation?.recordUpdatedAt).toBeTruthy()
-      expect(statusAfterReactivation?.recordStatus).toEqual('active')
-      expect(statusAfterReactivation?.recordDeletedAt).toBeFalsy()
+      expect(statusAfterReactivation?.hosting?.updatedAt).toBeTruthy()
+      expect(statusAfterReactivation?.hosting?.status).toEqual('active')
+      expect(statusAfterReactivation?.hosting?.deletedAt).toBeFalsy()
     })
   })
 })

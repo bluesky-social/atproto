@@ -1,6 +1,10 @@
 import { sql } from 'kysely'
 import { AtUri, INVALID_HANDLE, normalizeDatetimeAlways } from '@atproto/syntax'
-import { AtpAgent, AppBskyFeedDefs } from '@atproto/api'
+import {
+  AtpAgent,
+  AppBskyFeedDefs,
+  ToolsOzoneModerationDefs,
+} from '@atproto/api'
 import { dedupeStrs } from '@atproto/common'
 import { BlobRef } from '@atproto/lexicon'
 import { Keypair } from '@atproto/crypto'
@@ -593,7 +597,7 @@ export class ModerationViews {
   formatSubjectStatus(
     status: ModerationSubjectStatusRowWithHandle,
   ): SubjectStatusView {
-    return {
+    const statusView: SubjectStatusView = {
       id: status.id,
       reviewState: status.reviewState,
       createdAt: status.createdAt,
@@ -603,9 +607,6 @@ export class ModerationViews {
       lastReviewedAt: status.lastReviewedAt ?? undefined,
       lastReportedAt: status.lastReportedAt ?? undefined,
       lastAppealedAt: status.lastAppealedAt ?? undefined,
-      recordUpdatedAt: status.recordUpdatedAt ?? undefined,
-      recordDeletedAt: status.recordDeletedAt ?? undefined,
-      recordStatus: status.recordStatus ?? undefined,
       muteUntil: status.muteUntil ?? undefined,
       muteReportingUntil: status.muteReportingUntil ?? undefined,
       suspendUntil: status.suspendUntil ?? undefined,
@@ -616,6 +617,26 @@ export class ModerationViews {
       tags: status.tags || [],
       subject: subjectFromStatusRow(status).lex(),
     }
+
+    if (status.recordPath !== '') {
+      statusView.hosting = {
+        $type: 'tools.ozone.moderation.defs#recordHosting',
+        updatedAt: status.hostingUpdatedAt ?? undefined,
+        deletedAt: status.hostingDeletedAt ?? undefined,
+        status: status.hostingStatus ?? 'unknown',
+      }
+    } else {
+      statusView.hosting = {
+        $type: 'tools.ozone.moderation.defs#accountHosting',
+        updatedAt: status.hostingUpdatedAt ?? undefined,
+        deletedAt: status.hostingDeletedAt ?? undefined,
+        status: status.hostingStatus ?? 'unknown',
+        deactivatedAt: status.hostingDeactivatedAt ?? undefined,
+        reactivatedAt: status.hostingReactivatedAt ?? undefined,
+      }
+    }
+
+    return statusView
   }
 
   async fetchAuthorFeed(
