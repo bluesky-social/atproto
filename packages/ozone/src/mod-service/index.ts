@@ -766,7 +766,7 @@ export class ModerationService {
     hostingDeletedAfter,
     hostingUpdatedBefore,
     hostingUpdatedAfter,
-    hostingStatus,
+    hostingStatuses,
     onlyMuted,
     ignoreSubjects,
     sortDirection,
@@ -791,7 +791,7 @@ export class ModerationService {
     hostingDeletedAfter?: string
     hostingUpdatedBefore?: string
     hostingUpdatedAfter?: string
-    hostingStatus?: string
+    hostingStatuses?: string[]
     onlyMuted?: boolean
     subject?: string
     ignoreSubjects?: string[]
@@ -859,8 +859,8 @@ export class ModerationService {
       builder = builder.where('hostingDeletedAt', '<', hostingDeletedBefore)
     }
 
-    if (hostingStatus) {
-      builder = builder.where('hostingStatus', '=', hostingStatus)
+    if (hostingStatuses?.length) {
+      builder = builder.where('hostingStatus', 'in', hostingStatuses)
     }
 
     if (reportedAfter) {

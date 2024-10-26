@@ -12110,16 +12110,9 @@ export const schemaDict = {
               type: 'array',
               items: {
                 type: 'string',
-                knownValues: [
-                  'deactivated',
-                  'deleted',
-                  'takendown',
-                  'suspended',
-                  'tombstoned',
-                ],
-                description:
-                  'Search subjects by the status of the associated record/account',
               },
+              description:
+                'Search subjects by the status of the associated record/account',
             },
             reviewedBefore: {
               type: 'string',
