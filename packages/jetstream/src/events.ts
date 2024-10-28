@@ -1,6 +1,8 @@
 import { Cid, Did } from './lexicon-infer.js'
 
-export type UnknownRecord = { $type: string } & { [k: string]: unknown }
+export type UnknownRecord<T extends string = string> = { $type: T } & {
+  [k: string]: unknown
+}
 export type UnknownEvent = { kind: string }
 
 export interface EventBase {
@@ -90,17 +92,33 @@ export type CommitCreate<R extends UnknownRecord> = {
   [T in R['$type']]: CommitBase & {
     collection: T
     operation: CommitOperation.Create
-    record: Extract<R, { $type: T }>
-  }
+  } & (
+      | {
+          recordValid: true
+          record: Extract<R, { $type: T }>
+        }
+      | {
+          recordValid: false
+          record: UnknownRecord<T>
+        }
+    )
 }[R['$type']]
 
 export type CommitUpdate<R extends UnknownRecord> = {
   [T in R['$type']]: CommitBase & {
     collection: T
     operation: CommitOperation.Update
-    record: Extract<R, { $type: T }>
     cid: Cid
-  }
+  } & (
+      | {
+          recordValid: true
+          record: Extract<R, { $type: T }>
+        }
+      | {
+          recordValid: false
+          record: UnknownRecord<T>
+        }
+    )
 }[R['$type']]
 
 export type CommitDelete<R extends UnknownRecord> = {

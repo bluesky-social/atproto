@@ -37,14 +37,14 @@ async function main(signal) {
         defs: {
           fooObject: {
             type: 'object',
-            required: ['foo'],
+            required: ['text'],
             properties: {
-              foo: { type: 'ref', ref: '#fooProp' },
+              text: { type: 'ref', ref: '#textProp' },
               bar: { type: 'integer' },
             },
           },
-          fooProp: {
-            type: 'string',
+          textProp: {
+            type: 'integer',
           },
         },
       },
@@ -57,10 +57,11 @@ async function main(signal) {
       event.commit.operation === 'create' ||
       event.commit.operation === 'update'
     ) {
-      const { record } = event.commit
+      const { commit } = event
 
-      if (record.$type === 'foo.bar') {
-        record.fooObject
+      if (commit.collection === 'foo.bar' && commit.recordValid) {
+        commit.record.$type // 'foo.bar'
+        commit.record.fooObject.text // string | number
       }
     }
   }

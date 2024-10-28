@@ -51,7 +51,7 @@ export async function* jetstream({
   const lexicons = new Lexicons(schemas)
 
   for (const collection of wantedCollections) {
-    lexicons.getDefOrThrow(collection)
+    lexicons.getDefOrThrow(collection, ['record'])
   }
 
   const decoder = compress ? await getDecoder() : null
@@ -82,10 +82,9 @@ export async function* jetstream({
         commit.operation === CommitOperation.Create ||
         commit.operation === CommitOperation.Update
       ) {
-        if (lexicons.validate(commit.collection, commit.record).success) {
-          // Only yield if the record is valid
-          yield event
-        }
+        const result = lexicons.validate(commit.collection, commit.record)
+        commit.recordValid = result.success
+        yield event
       }
     }
   }

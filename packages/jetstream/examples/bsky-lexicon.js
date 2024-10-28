@@ -12,10 +12,13 @@ async function main(signal) {
     if (event.kind !== 'commit') continue
     if (event.commit.operation !== 'create') continue
 
-    const { record } = event.commit
+    const { record, recordValid } = event.commit
 
-    if (record.$type === 'app.bsky.feed.post') {
-      if (!record.langs || record.langs.includes('en')) {
+    if (recordValid && record.$type === 'app.bsky.feed.post') {
+      if (
+        !record.reply &&
+        record.langs?.some((l) => l === 'fr' || l === 'en')
+      ) {
         console.log(record.text)
       }
     }
