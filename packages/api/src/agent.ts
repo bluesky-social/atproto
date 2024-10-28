@@ -1,6 +1,11 @@
 import { TID } from '@atproto/common-web'
 import { AtUri, ensureValidDid } from '@atproto/syntax'
-import { buildFetchHandler, FetchHandler, XrpcClient } from '@atproto/xrpc'
+import {
+  buildFetchHandler,
+  BuildFetchHandlerOptions,
+  FetchHandler,
+  XrpcClient,
+} from '@atproto/xrpc'
 import AwaitLock from 'await-lock'
 import {
   AppBskyActorDefs,
@@ -105,8 +110,16 @@ export class Agent extends XrpcClient {
     return this
   }
 
-  constructor(readonly sessionManager: SessionManager) {
-    const fetchHandler = buildFetchHandler(sessionManager)
+  readonly sessionManager: SessionManager
+
+  constructor(options: string | URL | SessionManager) {
+    const sessionManager: SessionManager =
+      typeof options === 'string' || options instanceof URL
+        ? {
+            did: undefined,
+            fetchHandler: buildFetchHandler(options),
+          }
+        : options
 
     super((url, init) => {
       const headers = new Headers(init?.headers)
@@ -128,8 +141,10 @@ export class Agent extends XrpcClient {
           .join(', '),
       )
 
-      return fetchHandler(url, { ...init, headers })
+      return this.sessionManager.fetchHandler(url, { ...init, headers })
     }, schemas)
+
+    this.sessionManager = sessionManager
   }
 
   //#region Cloning utilities
