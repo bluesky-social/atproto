@@ -12,6 +12,16 @@
 //   - hard length limit of 8KBytes
 //   - not going to validate "percent encoding" here
 export const ensureValidDid = (did: string): void => {
+  if (
+    did.length < 7 || // did:x:y
+    did[3] !== ':' ||
+    did[2] !== 'd' ||
+    did[1] !== 'i' ||
+    did[0] !== 'd'
+  ) {
+    throw new InvalidDidError('DID requires "did:" prefix')
+  }
+
   // check that all chars are boring ASCII
   if (!/^[a-zA-Z0-9._:%-]*$/.test(did)) {
     throw new InvalidDidError(
@@ -19,18 +29,14 @@ export const ensureValidDid = (did: string): void => {
     )
   }
 
-  const parts = did.split(':')
-  if (parts.length < 3) {
+  const { length, 1: method } = did.split(':')
+  if (length < 3) {
     throw new InvalidDidError(
       'DID requires prefix, method, and method-specific content',
     )
   }
 
-  if (parts[0] !== 'did') {
-    throw new InvalidDidError('DID requires "did:" prefix')
-  }
-
-  if (!/^[a-z]+$/.test(parts[1])) {
+  if (!/^[a-z]+$/.test(method)) {
     throw new InvalidDidError('DID method must be lower-case letters')
   }
 
