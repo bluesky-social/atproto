@@ -9136,6 +9136,28 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyUnspeccedGetConfig: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.getConfig',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get miscellaneous runtime configuration.',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: [],
+            properties: {
+              checkEmailConfirmed: {
+                type: 'boolean',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyUnspeccedGetPopularFeedGenerators: {
     lexicon: 1,
     id: 'app.bsky.unspecced.getPopularFeedGenerators',
@@ -10695,6 +10717,7 @@ export const ids = {
   AppBskyNotificationUpdateSeen: 'app.bsky.notification.updateSeen',
   AppBskyRichtextFacet: 'app.bsky.richtext.facet',
   AppBskyUnspeccedDefs: 'app.bsky.unspecced.defs',
+  AppBskyUnspeccedGetConfig: 'app.bsky.unspecced.getConfig',
   AppBskyUnspeccedGetPopularFeedGenerators:
     'app.bsky.unspecced.getPopularFeedGenerators',
   AppBskyUnspeccedGetSuggestionsSkeleton:
