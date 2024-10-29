@@ -1,5 +1,11 @@
 # @atproto/pds
 
+## 0.4.67
+
+### Patch Changes
+
+- [#2924](https://github.com/bluesky-social/atproto/pull/2924) [`c1b0e176a`](https://github.com/bluesky-social/atproto/commit/c1b0e176adbc5108bff49d74fbae18de60e86732) Thanks [@dholms](https://github.com/dholms)! - Support alternate did mehtods in update handle
+
 ## 0.4.66
 
 ### Patch Changes
