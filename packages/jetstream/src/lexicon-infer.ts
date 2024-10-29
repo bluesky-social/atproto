@@ -315,44 +315,52 @@ type InferXrpcProcedureOutput<
 export type InferParams<
   L extends readonly LexiconDoc[],
   Id extends ProcedureId<L> | QueryId<L> | SubscriptionId<L>,
-> = Simplify<
-  {
-    [I in Id]: InferXrpcParameters<
+> = {
+  [I in Id]: InferXrpcParameters<
+    L,
+    I,
+    ExtractMain<
       L,
       I,
-      ExtractMain<
-        L,
-        I,
-        (LexXrpcProcedure | LexXrpcQuery | LexXrpcSubscription) & {
-          parameters: LexXrpcParameters
-        }
-      >['parameters']
-    >
-  }[Id]
->
+      (LexXrpcProcedure | LexXrpcQuery | LexXrpcSubscription) & {
+        parameters: LexXrpcParameters
+      }
+    >['parameters']
+  >
+}[Id]
 
 export type InferInput<
   L extends readonly LexiconDoc[],
   Id extends ProcedureId<L>,
-> = Simplify<
-  {
-    [I in Id]: InferXrpcProcedureInput<
-      L,
-      I,
-      ExtractMain<L, I, LexXrpcProcedure>
-    >
-  }[Id]
->
+> = {
+  [I in Id]: InferXrpcProcedureInput<L, I, ExtractMain<L, I, LexXrpcProcedure>>
+}[Id]
 
 export type InferOutput<
   L extends readonly LexiconDoc[],
   Id extends ProcedureId<L> | QueryId<L>,
-> = Simplify<
-  {
-    [I in Id]: InferXrpcProcedureOutput<
-      L,
-      I,
-      ExtractMain<L, I, LexXrpcProcedure | LexXrpcQuery>
-    >
-  }[Id]
->
+> = {
+  [I in Id]: InferXrpcProcedureOutput<
+    L,
+    I,
+    ExtractMain<L, I, LexXrpcProcedure | LexXrpcQuery>
+  >
+}[Id]
+
+export type InferMethodContext<
+  L extends readonly LexiconDoc[],
+  Id extends ProcedureId<L> | QueryId<L>,
+> = {
+  [I in Id]: {
+    params: InferParams<L, I>
+  } & (I extends ProcedureId<L>
+    ? { input: InferInput<L, I> }
+    : { input?: undefined })
+}[Id]
+
+export type InferMethod<
+  L extends readonly LexiconDoc[],
+  Id extends ProcedureId<L> | QueryId<L>,
+> = {
+  [I in Id]: (ctx: InferMethodContext<L, I>) => Promise<InferOutput<L, I>>
+}[Id]
