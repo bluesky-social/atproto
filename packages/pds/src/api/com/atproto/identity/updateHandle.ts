@@ -74,7 +74,7 @@ export default function (server: Server, ctx: AppContext) {
         await ctx.accountManager.updateHandle(requester, handle)
       } else {
         // if we found an account with matching handle, check if it is the same as requester
-        // is so, error. if not, then just emit an identity event
+        // if so emit an identity event, otherwise error.
         if (account.did !== requester) {
           throw new InvalidRequestError(`Handle already taken: ${handle}`)
         }
