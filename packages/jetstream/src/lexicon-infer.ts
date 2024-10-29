@@ -60,8 +60,8 @@ declare global {
 
 type Simplify<T> = { [K in keyof T]: T[K] } & NonNullable<unknown>
 
-declare const error: unique symbol
-type Failure<message extends string> = { [error]: message }
+declare const failure: unique symbol
+type Failure<Message extends string> = { [failure]: Message }
 
 // LexiconDoc definition extraction utilities
 
@@ -105,13 +105,13 @@ type InferProperties<
 > = R extends readonly (infer T extends string)[]
   ? Simplify<
       {
-        -readonly [K in Exclude<keyof P, T>]?: InferLexCore<L, C, P[K]>
+        -readonly [K in Exclude<keyof P, T>]?: InferDef<L, C, P[K]>
       } & {
-        -readonly [K in Extract<keyof P, T>]-?: InferLexCore<L, C, P[K]>
+        -readonly [K in Extract<keyof P, T>]-?: InferDef<L, C, P[K]>
       }
     >
   : {
-      -readonly [K in keyof P]?: InferLexCore<L, C, P[K]>
+      -readonly [K in keyof P]?: InferDef<L, C, P[K]>
     }
 
 // Definitions type inference
@@ -169,18 +169,13 @@ type InferLexArray<
   L extends readonly LexiconDoc[],
   C extends L[number]['id'],
   D extends { items: LexDef },
-> = InferLexCore<L, C, D['items']>[] & NonNullable<unknown>
+> = InferDef<L, C, D['items']>[] & NonNullable<unknown>
 
 type InferLexRecord<
   L extends readonly LexiconDoc[],
   C extends L[number]['id'],
   D extends { record: LexObject },
-> = Simplify<
-  InferLexObject<L, C, D['record']> & {
-    // Records can contain additional properties
-    [k: string]: unknown
-  }
->
+> = InferLexObject<L, C, D['record']>
 
 type InferLexRefVariant<
   L extends readonly LexiconDoc[],
@@ -197,29 +192,30 @@ type InferRef<
   C extends L[number]['id'],
   R extends Ref,
 > = R extends `lex:${infer N}#${infer H}`
-  ? InferLexCore<L, N, ExtractDef<L, N, H>>
+  ? InferDef<L, N, ExtractDef<L, N, H>>
   : R extends `lex:${infer N}`
-    ? InferLexCore<L, N, ExtractDef<L, N, 'main'>>
+    ? InferDef<L, N, ExtractDef<L, N, 'main'>>
     : R extends `#${infer H}`
-      ? InferLexCore<L, C, ExtractDef<L, C, H>>
+      ? InferDef<L, C, ExtractDef<L, C, H>>
       : R extends `${infer N}#${infer H}`
-        ? InferLexCore<L, N, ExtractDef<L, N, H>>
-        : // InferLexCore<L, R, ExtractDef<L, R, 'main'>>
-          // The previous line causes an "Type instantiation is excessively deep and possibly infinite." error.
-          Failure<"Unable to resolve namespace refs due to a Typescript limitation. Use a 'lex:' URI in your lexicon definition, or append '#main' to the ref.">
+        ? InferDef<L, N, ExtractDef<L, N, H>>
+        : R extends `${string}.${string}`
+          ? InferDef<L, R, ExtractDef<L, R, 'main'>>
+          : Failure<"ref must be in the form 'lex:<nsid>#<def>', 'lex:<nsid>', '<nsid>#<def>', '#<def>'. or '<nsid>'.">
 
-type InferLexCore<
+type InferDef<
   L extends readonly LexiconDoc[],
   C extends L[number]['id'],
   D extends LexDef,
-> = D extends LexRefVariant
-  ? InferLexRefVariant<L, C, D>
-  : D extends LexObject
-    ? InferLexObject<L, C, D>
-    : D extends LexArray | LexPrimitiveArray
-      ? InferLexArray<L, C, D>
-      : D extends LexRecord
-        ? InferLexRecord<L, C, D>
+> =
+  // Lexicon validator does not allow nested records.
+  // D extends LexRecord ? InferLexRecord<L, C, D> :
+  D extends LexRefVariant
+    ? InferLexRefVariant<L, C, D>
+    : D extends LexObject
+      ? InferLexObject<L, C, D>
+      : D extends LexArray | LexPrimitiveArray
+        ? InferLexArray<L, C, D>
         : D extends LexPrimitive
           ? InferLexPrimitive<D>
           : D extends LexIpldType
@@ -247,13 +243,13 @@ export type RecordId<L extends readonly LexiconDoc[]> = ExtractId<L, LexRecord>
 export type InferRecord<
   L extends readonly LexiconDoc[],
   Id extends RecordId<L>,
-> = Simplify<
-  {
-    [I in Id]: Simplify<
-      { $type: I } & InferLexRecord<L, I, ExtractMain<L, I, LexRecord>>
-    >
-  }[Id]
->
+> = {
+  [I in Id]: InferLexRecord<L, I, ExtractMain<L, I, LexRecord>> & {
+    $type: I
+    // Records can contain additional properties
+    [k: string]: unknown
+  }
+}[Id]
 
 //- Xrpc extraction
 
@@ -296,7 +292,7 @@ type InferXrpcProcedureInput<
     schema: infer S extends LexDef
   }
 }
-  ? InferLexCore<L, C, S>
+  ? InferDef<L, C, S>
   : D extends { input: { encoding: '*/*' } }
     ? Uint8Array
     : unknown
@@ -311,7 +307,7 @@ type InferXrpcProcedureOutput<
     schema: infer S extends LexDef
   }
 }
-  ? InferLexCore<L, C, S>
+  ? InferDef<L, C, S>
   : D extends { output: { encoding: '*/*' } }
     ? Uint8Array
     : undefined

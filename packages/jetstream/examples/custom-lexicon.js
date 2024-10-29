@@ -24,7 +24,7 @@ async function main(signal) {
               properties: {
                 fooObject: {
                   type: 'union',
-                  refs: ['foo.bar.defs#fooObject', 'app.bsky.feed.post#main'],
+                  refs: ['foo.bar.defs#fooObject'],
                 },
               },
             },
@@ -44,7 +44,7 @@ async function main(signal) {
             },
           },
           textProp: {
-            type: 'integer',
+            type: 'string',
           },
         },
       },
@@ -58,10 +58,11 @@ async function main(signal) {
       event.commit.operation === 'update'
     ) {
       const { commit } = event
+      commit.record // { $type: "foo.bar"; [x: string]: unknown } | { $type: "app.bsky.feed.post"; [x: string]: unknown }
 
       if (commit.collection === 'foo.bar' && commit.recordValid) {
         commit.record.$type // 'foo.bar'
-        commit.record.fooObject.text // string | number
+        commit.record.fooObject.text // string
       }
     }
   }
