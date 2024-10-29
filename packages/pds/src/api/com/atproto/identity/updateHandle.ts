@@ -61,8 +61,10 @@ export default function (server: Server, ctx: AppContext) {
             handle,
           )
         } else {
-          const resolved =
-            await ctx.idResolver.did.resolveAtprotoData(requester)
+          const resolved = await ctx.idResolver.did.resolveAtprotoData(
+            requester,
+            true,
+          )
           if (resolved.handle !== handle) {
             throw new InvalidRequestError(
               'DID is not properly configured for handle',
