@@ -53,13 +53,29 @@ export default function (server: Server, ctx: AppContext) {
         includeDeactivated: true,
       })
 
-      if (account) {
+      if (!account) {
+        if (requester.startsWith('did:plc')) {
+          await ctx.plcClient.updateHandle(
+            requester,
+            ctx.plcRotationKey,
+            handle,
+          )
+        } else {
+          const resolved =
+            await ctx.idResolver.did.resolveAtprotoData(requester)
+          if (resolved.handle !== handle) {
+            throw new InvalidRequestError(
+              'DID is not properly configured for handle',
+            )
+          }
+        }
+        await ctx.accountManager.updateHandle(requester, handle)
+      } else {
+        // if we found an account with matching handle, check if it is the same as requester
+        // is so, error. if not, then just emit an identity event
         if (account.did !== requester) {
           throw new InvalidRequestError(`Handle already taken: ${handle}`)
         }
-      } else {
-        await ctx.plcClient.updateHandle(requester, ctx.plcRotationKey, handle)
-        await ctx.accountManager.updateHandle(requester, handle)
       }
 
       try {
