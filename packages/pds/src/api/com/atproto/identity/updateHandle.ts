@@ -54,7 +54,7 @@ export default function (server: Server, ctx: AppContext) {
       })
 
       if (!account) {
-        if (requester.startsWith('did:plc')) {
+        if (requester.startsWith('did:plc:')) {
           await ctx.plcClient.updateHandle(
             requester,
             ctx.plcRotationKey,
