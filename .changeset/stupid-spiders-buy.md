@@ -2,4 +2,4 @@
 "@atproto/api": patch
 ---
 
-Allow instantiating an api Agent with a string or URL
+Allow instantiating an API Agent with a string or URL
