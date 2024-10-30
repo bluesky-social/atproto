@@ -11295,6 +11295,13 @@ export const schemaDict = {
             type: 'string',
             format: 'datetime',
           },
+          threatSignatures: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.admin.defs#threatSignature',
+            },
+          },
         },
       },
       repoViewDetail: {
@@ -11363,6 +11370,13 @@ export const schemaDict = {
           deactivatedAt: {
             type: 'string',
             format: 'datetime',
+          },
+          threatSignatures: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.admin.defs#threatSignature',
+            },
           },
         },
       },
