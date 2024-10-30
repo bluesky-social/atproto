@@ -39,6 +39,7 @@ type View<
  *      }
  *    )
  *  )
+ * ```
  */
 export function acceptMiddleware<
   D,
