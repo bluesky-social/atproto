@@ -1,5 +1,14 @@
 # @atproto/ozone
 
+## 0.1.52
+
+### Patch Changes
+
+- [#2914](https://github.com/bluesky-social/atproto/pull/2914) [`19e36afb2`](https://github.com/bluesky-social/atproto/commit/19e36afb2c13dbc7b1033eb3cab5e7fc6f496fdc) Thanks [@foysalit](https://github.com/foysalit)! - Add collections and subjectType filters to ozone's queryEvents and queryStatuses endpoints
+
+- Updated dependencies [[`19e36afb2`](https://github.com/bluesky-social/atproto/commit/19e36afb2c13dbc7b1033eb3cab5e7fc6f496fdc)]:
+  - @atproto/api@0.13.13
+
 ## 0.1.51
 
 ### Patch Changes
