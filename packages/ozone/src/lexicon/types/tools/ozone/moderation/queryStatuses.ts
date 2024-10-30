@@ -10,7 +10,7 @@ import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as ToolsOzoneModerationDefs from './defs'
 
 export interface QueryParams {
-  /** All subjects belonging to the account specified in the 'subject' param will be returned. */
+  /** All subjects, or subjects from given 'collections' param, belonging to the account specified in the 'subject' param will be returned. */
   includeAllUserRecords?: boolean
   /** The subject to get the status for. */
   subject?: string
@@ -45,7 +45,7 @@ export interface QueryParams {
   cursor?: string
   /** If specified, subjects belonging to the given collections will be returned. When subjectType is set to 'account', this will be ignored. */
   collections?: string[]
-  /** If specified, subjects of the given type (account or record) will be returned. When this is set to 'account' the 'collections' parameter will be ignored. */
+  /** If specified, subjects of the given type (account or record) will be returned. When this is set to 'account' the 'collections' parameter will be ignored. When includeAllUserRecords or subject is set, this will be ignored. */
   subjectType?: 'account' | 'record' | (string & {})
 }
 

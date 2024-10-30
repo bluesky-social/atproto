@@ -70,6 +70,13 @@ export const schemaDict = {
             type: 'string',
             format: 'datetime',
           },
+          threatSignatures: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.admin.defs#threatSignature',
+            },
+          },
         },
       },
       repoRef: {
@@ -97,6 +104,18 @@ export const schemaDict = {
           recordUri: {
             type: 'string',
             format: 'at-uri',
+          },
+        },
+      },
+      threatSignature: {
+        type: 'object',
+        required: ['property', 'value'],
+        properties: {
+          property: {
+            type: 'string',
+          },
+          value: {
+            type: 'string',
           },
         },
       },

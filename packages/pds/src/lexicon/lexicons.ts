@@ -70,6 +70,13 @@ export const schemaDict = {
             type: 'string',
             format: 'datetime',
           },
+          threatSignatures: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.admin.defs#threatSignature',
+            },
+          },
         },
       },
       repoRef: {
@@ -97,6 +104,18 @@ export const schemaDict = {
           recordUri: {
             type: 'string',
             format: 'at-uri',
+          },
+        },
+      },
+      threatSignature: {
+        type: 'object',
+        required: ['property', 'value'],
+        properties: {
+          property: {
+            type: 'string',
+          },
+          value: {
+            type: 'string',
           },
         },
       },
@@ -11811,6 +11830,7 @@ export const schemaDict = {
             },
             collections: {
               type: 'array',
+              maxLength: 20,
               description:
                 "If specified, only events where the subject belongs to the given collections will be returned. When subjectType is set to 'account', this will be ignored.",
               items: {
@@ -11821,14 +11841,14 @@ export const schemaDict = {
             subjectType: {
               type: 'string',
               description:
-                "If specified, only events where the subject is of the given type (account or record) will be returned. When this is set to 'account' the 'collections' parameter will be ignored.",
+                "If specified, only events where the subject is of the given type (account or record) will be returned. When this is set to 'account' the 'collections' parameter will be ignored. When includeAllUserRecords or subject is set, this will be ignored.",
               knownValues: ['account', 'record'],
             },
             includeAllUserRecords: {
               type: 'boolean',
               default: false,
               description:
-                'If true, events on all record types (posts, lists, profile etc.) owned by the did are returned',
+                "If true, events on all record types (posts, lists, profile etc.) or records from given 'collections' param, owned by the did are returned.",
             },
             limit: {
               type: 'integer',
@@ -11923,7 +11943,7 @@ export const schemaDict = {
             includeAllUserRecords: {
               type: 'boolean',
               description:
-                "All subjects belonging to the account specified in the 'subject' param will be returned.",
+                "All subjects, or subjects from given 'collections' param, belonging to the account specified in the 'subject' param will be returned.",
             },
             subject: {
               type: 'string',
@@ -12022,6 +12042,7 @@ export const schemaDict = {
             },
             collections: {
               type: 'array',
+              maxLength: 20,
               description:
                 "If specified, subjects belonging to the given collections will be returned. When subjectType is set to 'account', this will be ignored.",
               items: {
@@ -12032,7 +12053,7 @@ export const schemaDict = {
             subjectType: {
               type: 'string',
               description:
-                "If specified, subjects of the given type (account or record) will be returned. When this is set to 'account' the 'collections' parameter will be ignored.",
+                "If specified, subjects of the given type (account or record) will be returned. When this is set to 'account' the 'collections' parameter will be ignored. When includeAllUserRecords or subject is set, this will be ignored.",
               knownValues: ['account', 'record'],
             },
           },
