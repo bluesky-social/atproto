@@ -52,7 +52,7 @@ ENV NODE_ENV=production
 
 # https://github.com/nodejs/docker-node/blob/master/docs/BestPractices.md#non-root-user
 USER node
-CMD ["node", "--enable-source-maps", "api.js"]
+CMD ["node", "--heapsnapshot-signal=SIGUSR2", "--enable-source-maps", "api.js"]
 
 LABEL org.opencontainers.image.source=https://github.com/bluesky-social/atproto
 LABEL org.opencontainers.image.description="Bsky App View"
