@@ -116,6 +116,10 @@
             "com.atproto.repo.strongRef"
           ]
         },
+        "hosting": {
+          "type": "union",
+          "refs": ["#accountHosting", "#recordHosting"]
+        },
         "subjectBlobCids": {
           "type": "array",
           "items": { "type": "string", "format": "cid" }
@@ -399,7 +403,7 @@
     "accountEvent": {
       "type": "object",
       "description": "Logs account status related events on a repo subject. Normally captured by automod from the firehose and emitted to ozone for historical tracking.",
-      "required": ["timestamp", "status", "active"],
+      "required": ["timestamp", "active"],
       "properties": {
         "comment": { "type": "string" },
         "active": {
@@ -408,7 +412,14 @@
         },
         "status": {
           "type": "string",
-          "knownValues": ["takendown", "suspended", "deleted", "deactivated"]
+          "knownValues": [
+            "unknown",
+            "deactivated",
+            "deleted",
+            "takendown",
+            "suspended",
+            "tombstoned"
+          ]
         },
         "timestamp": {
           "type": "string",
@@ -618,6 +629,64 @@
         "width": { "type": "integer" },
         "height": { "type": "integer" },
         "length": { "type": "integer" }
+      }
+    },
+    "accountHosting": {
+      "type": "object",
+      "required": ["status"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "knownValues": [
+            "takendown",
+            "suspended",
+            "deleted",
+            "deactivated",
+            "unknown"
+          ]
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "datetime"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "datetime"
+        },
+        "deletedAt": {
+          "type": "string",
+          "format": "datetime"
+        },
+        "deactivatedAt": {
+          "type": "string",
+          "format": "datetime"
+        },
+        "reactivatedAt": {
+          "type": "string",
+          "format": "datetime"
+        }
+      }
+    },
+    "recordHosting": {
+      "type": "object",
+      "required": ["status"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "knownValues": ["deleted", "unknown"]
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "datetime"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "datetime"
+        },
+        "deletedAt": {
+          "type": "string",
+          "format": "datetime"
+        }
       }
     }
   }

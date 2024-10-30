@@ -10892,6 +10892,13 @@ export const schemaDict = {
               'lex:com.atproto.repo.strongRef',
             ],
           },
+          hosting: {
+            type: 'union',
+            refs: [
+              'lex:tools.ozone.moderation.defs#accountHosting',
+              'lex:tools.ozone.moderation.defs#recordHosting',
+            ],
+          },
           subjectBlobCids: {
             type: 'array',
             items: {
@@ -11215,7 +11222,7 @@ export const schemaDict = {
         type: 'object',
         description:
           'Logs account status related events on a repo subject. Normally captured by automod from the firehose and emitted to ozone for historical tracking.',
-        required: ['timestamp', 'status', 'active'],
+        required: ['timestamp', 'active'],
         properties: {
           comment: {
             type: 'string',
@@ -11227,7 +11234,14 @@ export const schemaDict = {
           },
           status: {
             type: 'string',
-            knownValues: ['takendown', 'suspended', 'deleted', 'deactivated'],
+            knownValues: [
+              'unknown',
+              'deactivated',
+              'deleted',
+              'takendown',
+              'suspended',
+              'tombstoned',
+            ],
           },
           timestamp: {
             type: 'string',
@@ -11592,6 +11606,64 @@ export const schemaDict = {
           },
           length: {
             type: 'integer',
+          },
+        },
+      },
+      accountHosting: {
+        type: 'object',
+        required: ['status'],
+        properties: {
+          status: {
+            type: 'string',
+            knownValues: [
+              'takendown',
+              'suspended',
+              'deleted',
+              'deactivated',
+              'unknown',
+            ],
+          },
+          updatedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          deletedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          deactivatedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          reactivatedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
+      recordHosting: {
+        type: 'object',
+        required: ['status'],
+        properties: {
+          status: {
+            type: 'string',
+            knownValues: ['deleted', 'unknown'],
+          },
+          updatedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          deletedAt: {
+            type: 'string',
+            format: 'datetime',
           },
         },
       },
@@ -12015,6 +12087,38 @@ export const schemaDict = {
               type: 'string',
               format: 'datetime',
               description: 'Search subjects reviewed after a given timestamp',
+            },
+            hostingDeletedAfter: {
+              type: 'string',
+              format: 'datetime',
+              description:
+                'Search subjects where the associated record/account was deleted after a given timestamp',
+            },
+            hostingDeletedBefore: {
+              type: 'string',
+              format: 'datetime',
+              description:
+                'Search subjects where the associated record/account was deleted before a given timestamp',
+            },
+            hostingUpdatedAfter: {
+              type: 'string',
+              format: 'datetime',
+              description:
+                'Search subjects where the associated record/account was updated after a given timestamp',
+            },
+            hostingUpdatedBefore: {
+              type: 'string',
+              format: 'datetime',
+              description:
+                'Search subjects where the associated record/account was updated before a given timestamp',
+            },
+            hostingStatuses: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+              description:
+                'Search subjects by the status of the associated record/account',
             },
             reviewedBefore: {
               type: 'string',

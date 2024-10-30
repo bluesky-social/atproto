@@ -374,7 +374,7 @@ export class ModerationService {
     if (isAccountEvent(event)) {
       meta.active = event.active
       meta.timestamp = event.timestamp
-      meta.status = event.status
+      if (event.status) meta.status = event.status
     }
 
     if (isIdentityEvent(event)) {
@@ -762,6 +762,11 @@ export class ModerationService {
     reportedAfter,
     reportedBefore,
     includeMuted,
+    hostingDeletedBefore,
+    hostingDeletedAfter,
+    hostingUpdatedBefore,
+    hostingUpdatedAfter,
+    hostingStatuses,
     onlyMuted,
     ignoreSubjects,
     sortDirection,
@@ -782,6 +787,11 @@ export class ModerationService {
     reportedAfter?: string
     reportedBefore?: string
     includeMuted?: boolean
+    hostingDeletedBefore?: string
+    hostingDeletedAfter?: string
+    hostingUpdatedBefore?: string
+    hostingUpdatedAfter?: string
+    hostingStatuses?: string[]
     onlyMuted?: boolean
     subject?: string
     ignoreSubjects?: string[]
@@ -831,6 +841,26 @@ export class ModerationService {
 
     if (reviewedBefore) {
       builder = builder.where('lastReviewedAt', '<', reviewedBefore)
+    }
+
+    if (hostingUpdatedAfter) {
+      builder = builder.where('hostingUpdatedAt', '>', hostingUpdatedAfter)
+    }
+
+    if (hostingUpdatedBefore) {
+      builder = builder.where('hostingUpdatedAt', '<', hostingUpdatedBefore)
+    }
+
+    if (hostingDeletedAfter) {
+      builder = builder.where('hostingDeletedAt', '>', hostingDeletedAfter)
+    }
+
+    if (hostingDeletedBefore) {
+      builder = builder.where('hostingDeletedAt', '<', hostingDeletedBefore)
+    }
+
+    if (hostingStatuses?.length) {
+      builder = builder.where('hostingStatus', 'in', hostingStatuses)
     }
 
     if (reportedAfter) {

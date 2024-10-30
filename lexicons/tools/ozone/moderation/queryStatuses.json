@@ -36,6 +36,33 @@
             "format": "datetime",
             "description": "Search subjects reviewed after a given timestamp"
           },
+          "hostingDeletedAfter": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Search subjects where the associated record/account was deleted after a given timestamp"
+          },
+          "hostingDeletedBefore": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Search subjects where the associated record/account was deleted before a given timestamp"
+          },
+          "hostingUpdatedAfter": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Search subjects where the associated record/account was updated after a given timestamp"
+          },
+          "hostingUpdatedBefore": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Search subjects where the associated record/account was updated before a given timestamp"
+          },
+          "hostingStatuses": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Search subjects by the status of the associated record/account"
+          },
           "reviewedBefore": {
             "type": "string",
             "format": "datetime",
