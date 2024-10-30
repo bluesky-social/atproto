@@ -194,12 +194,8 @@ export class ModerationService {
     // If subjectType is set to 'account' let that take priority and ignore collections filter
     if (collections.length && subjectType !== 'account') {
       builder = builder.where('subjectUri', 'is not', null).where((qb) => {
-        collections.forEach((collection, index) => {
-          if (index === 0) {
-            qb = qb.where('subjectUri', 'like', `%/${collection}/%`)
-          } else {
-            qb = qb.orWhere('subjectUri', 'like', `%/${collection}/%`)
-          }
+        collections.forEach((collection) => {
+          qb = qb.orWhere('subjectUri', 'like', `%/${collection}/%`)
         })
         return qb
       })
@@ -822,12 +818,8 @@ export class ModerationService {
     // If subjectType is set to 'account' let that take priority and ignore collections filter
     if (collections.length && subjectType !== 'account') {
       builder = builder.where('recordPath', '!=', '').where((qb) => {
-        collections.forEach((collection, index) => {
-          if (index === 0) {
-            qb = qb.where('recordPath', 'like', `${collection}/%`)
-          } else {
-            qb = qb.orWhere('recordPath', 'like', `${collection}/%`)
-          }
+        collections.forEach((collection) => {
+          qb = qb.orWhere('recordPath', 'like', `${collection}/%`)
         })
         return qb
       })
