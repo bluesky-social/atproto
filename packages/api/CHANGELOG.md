@@ -1,5 +1,13 @@
 # @atproto/api
 
+## 0.13.14
+
+### Patch Changes
+
+- [#2918](https://github.com/bluesky-social/atproto/pull/2918) [`209238769`](https://github.com/bluesky-social/atproto/commit/209238769c0bf38bf04f7fa9621eeb176b5c0ed8) Thanks [@devinivy](https://github.com/devinivy)! - add app.bsky.unspecced.getConfig endpoint
+
+- [#2931](https://github.com/bluesky-social/atproto/pull/2931) [`73f40e63a`](https://github.com/bluesky-social/atproto/commit/73f40e63abe3283efc0a27eef781c00b497caad1) Thanks [@dholms](https://github.com/dholms)! - Add threatSignatures to ozone repo views
+
 ## 0.13.13
 
 ### Patch Changes
