@@ -173,6 +173,95 @@ describe('moderation-statuses', () => {
       expect(listReviewedFirst[0].id).toEqual(list[1].id)
       expect(listReviewedFirst.length).toEqual(list.length)
     })
+
+    it('returns statuses for specified collections', async () => {
+      const sp = await sc.createStarterPack(
+        sc.dids.alice,
+        "alice's about to get blocked starter pack",
+        [sc.dids.bob, sc.dids.carol],
+        [],
+      )
+      await sc.createReport({
+        reasonType: REASONSPAM,
+        reason: 'X',
+        subject: {
+          $type: 'com.atproto.repo.strongRef',
+          ...sp.raw,
+        },
+        reportedBy: sc.dids.bob,
+      })
+
+      const [
+        onlyStarterPackStatuses,
+        onlyAlicesStarterPackStatuses,
+        onlyBobsStarterPackStatuses,
+        onlyPostStatuses,
+      ] = await Promise.all([
+        modClient.queryStatuses({
+          collections: ['app.bsky.graph.starterpack'],
+        }),
+        modClient.queryStatuses({
+          subject: sc.dids.alice,
+          includeAllUserRecords: true,
+          collections: ['app.bsky.graph.starterpack'],
+        }),
+        modClient.queryStatuses({
+          subject: sc.dids.bob,
+          includeAllUserRecords: true,
+          collections: ['app.bsky.graph.starterpack'],
+        }),
+        modClient.queryStatuses({
+          collections: ['app.bsky.feed.post'],
+        }),
+      ])
+
+      expect(onlyStarterPackStatuses.subjectStatuses.length).toEqual(1)
+      expect(onlyStarterPackStatuses.subjectStatuses[0].subject.uri).toContain(
+        'app.bsky.graph.starterpack',
+      )
+      expect(onlyAlicesStarterPackStatuses.subjectStatuses.length).toEqual(1)
+      expect(
+        onlyAlicesStarterPackStatuses.subjectStatuses[0].subject.uri,
+      ).toEqual(sp.uriStr)
+      expect(onlyBobsStarterPackStatuses.subjectStatuses.length).toEqual(0)
+      expect(onlyPostStatuses.subjectStatuses.length).toEqual(2)
+    })
+
+    it('returns statuses for account or records', async () => {
+      const [
+        onlyAccountStatuses,
+        onlyRecordStatuses,
+        onlyStatusesOnBobsAccount,
+      ] = await Promise.all([
+        modClient.queryStatuses({
+          subjectType: 'account',
+        }),
+        modClient.queryStatuses({
+          subjectType: 'record',
+        }),
+        modClient.queryStatuses({
+          subject: sc.dids.bob,
+          subjectType: 'record',
+        }),
+      ])
+
+      // only account statuses are returned, no event has a uri
+      expect(
+        onlyAccountStatuses.subjectStatuses.every((e) => !e.subject.uri),
+      ).toBeTruthy()
+
+      // only record statuses are returned, all events have a uri
+      expect(
+        onlyRecordStatuses.subjectStatuses.every((e) => e.subject.uri),
+      ).toBeTruthy()
+
+      // only bob's account statuses are returned, no events have a URI even though the subjectType is record
+      expect(
+        onlyStatusesOnBobsAccount.subjectStatuses.every(
+          (e) => !e.subject.uri && e.subject.did === sc.dids.bob,
+        ),
+      ).toBeTruthy()
+    })
   })
 
   describe('reviewState changes', () => {
