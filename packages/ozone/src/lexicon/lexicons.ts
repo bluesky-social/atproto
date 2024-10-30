@@ -11615,7 +11615,13 @@ export const schemaDict = {
         properties: {
           status: {
             type: 'string',
-            knownValues: ['takendown', 'suspended', 'deleted', 'deactivated'],
+            knownValues: [
+              'takendown',
+              'suspended',
+              'deleted',
+              'deactivated',
+              'unknown',
+            ],
           },
           updatedAt: {
             type: 'string',
@@ -11645,7 +11651,7 @@ export const schemaDict = {
         properties: {
           status: {
             type: 'string',
-            knownValues: ['takendown', 'suspended', 'deleted', 'deactivated'],
+            knownValues: ['deleted', 'unknown'],
           },
           updatedAt: {
             type: 'string',

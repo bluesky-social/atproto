@@ -787,7 +787,13 @@ export function validateVideoDetails(v: unknown): ValidationResult {
 }
 
 export interface AccountHosting {
-  status: 'takendown' | 'suspended' | 'deleted' | 'deactivated' | (string & {})
+  status:
+    | 'takendown'
+    | 'suspended'
+    | 'deleted'
+    | 'deactivated'
+    | 'unknown'
+    | (string & {})
   updatedAt?: string
   createdAt?: string
   deletedAt?: string
@@ -809,7 +815,7 @@ export function validateAccountHosting(v: unknown): ValidationResult {
 }
 
 export interface RecordHosting {
-  status: 'takendown' | 'suspended' | 'deleted' | 'deactivated' | (string & {})
+  status: 'deleted' | 'unknown' | (string & {})
   updatedAt?: string
   createdAt?: string
   deletedAt?: string
