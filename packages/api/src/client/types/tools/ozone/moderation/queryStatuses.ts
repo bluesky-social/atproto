@@ -42,6 +42,10 @@ export interface QueryParams {
   tags?: string[]
   excludeTags?: string[]
   cursor?: string
+  /** If specified, subjects belonging to the given collections will be returned. When subjectType is set to 'account', this will be ignored. */
+  collections?: string[]
+  /** If specified, subjects of the given type (account or record) will be returned. When this is set to 'account' the 'collections' parameter will be ignored. */
+  subjectType?: 'account' | 'record' | (string & {})
 }
 
 export type InputSchema = undefined
