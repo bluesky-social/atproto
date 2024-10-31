@@ -169,7 +169,7 @@ export class RichText {
       this.facets = entitiesToFacets(this.unicodeText, props.entities)
     }
     if (this.facets) {
-      this.facets.sort(facetSort)
+      this.facets = this.facets.filter(facetFilter).sort(facetSort)
     }
     if (opts?.cleanNewlines) {
       sanitizeRichText(this, { cleanNewlines: true }).copyInto(this)
@@ -378,7 +378,11 @@ export class RichText {
   }
 }
 
-const facetSort = (a, b) => a.index.byteStart - b.index.byteStart
+const facetSort = (a: Facet, b: Facet) => a.index.byteStart - b.index.byteStart
+
+const facetFilter = (facet: Facet) =>
+  // discard negative-length facets. zero-length facets are valid
+  facet.index.byteStart <= facet.index.byteEnd
 
 function entitiesToFacets(text: UnicodeString, entities: Entity[]): Facet[] {
   const facets: Facet[] = []
