@@ -1,8 +1,8 @@
 import { RichText, mock, moderatePost } from '../src/'
 
-import { hasMutedWord } from '../src/moderation/mutewords'
+import { matchMuteWord } from '../src/moderation/mutewords'
 
-describe(`hasMutedWord`, () => {
+describe(`matchMuteWord`, () => {
   describe(`tags`, () => {
     it(`match: outline tag`, () => {
       const rt = new RichText({
@@ -10,7 +10,7 @@ describe(`hasMutedWord`, () => {
       })
       rt.detectFacetsWithoutResolution()
 
-      const match = hasMutedWord({
+      const match = matchMuteWord({
         mutedWords: [
           { value: 'outlineTag', targets: ['tag'], actorTarget: 'all' },
         ],
@@ -19,7 +19,7 @@ describe(`hasMutedWord`, () => {
         outlineTags: ['outlineTag'],
       })
 
-      expect(match).toBe(true)
+      expect(match).toBeTruthy()
     })
 
     it(`match: inline tag`, () => {
@@ -28,7 +28,7 @@ describe(`hasMutedWord`, () => {
       })
       rt.detectFacetsWithoutResolution()
 
-      const match = hasMutedWord({
+      const match = matchMuteWord({
         mutedWords: [
           { value: 'inlineTag', targets: ['tag'], actorTarget: 'all' },
         ],
@@ -37,7 +37,7 @@ describe(`hasMutedWord`, () => {
         outlineTags: ['outlineTag'],
       })
 
-      expect(match).toBe(true)
+      expect(match).toBeTruthy()
     })
 
     it(`match: content target matches inline tag`, () => {
@@ -46,7 +46,7 @@ describe(`hasMutedWord`, () => {
       })
       rt.detectFacetsWithoutResolution()
 
-      const match = hasMutedWord({
+      const match = matchMuteWord({
         mutedWords: [
           { value: 'inlineTag', targets: ['content'], actorTarget: 'all' },
         ],
@@ -55,7 +55,7 @@ describe(`hasMutedWord`, () => {
         outlineTags: ['outlineTag'],
       })
 
-      expect(match).toBe(true)
+      expect(match).toBeTruthy()
     })
 
     it(`no match: only tag targets`, () => {
@@ -64,7 +64,7 @@ describe(`hasMutedWord`, () => {
       })
       rt.detectFacetsWithoutResolution()
 
-      const match = hasMutedWord({
+      const match = matchMuteWord({
         mutedWords: [
           { value: 'inlineTag', targets: ['tag'], actorTarget: 'all' },
         ],
@@ -73,7 +73,7 @@ describe(`hasMutedWord`, () => {
         outlineTags: [],
       })
 
-      expect(match).toBe(false)
+      expect(match).toBeFalsy()
     })
   })
 
@@ -87,14 +87,14 @@ describe(`hasMutedWord`, () => {
       })
       rt.detectFacetsWithoutResolution()
 
-      const match = hasMutedWord({
+      const match = matchMuteWord({
         mutedWords: [{ value: '希', targets: ['content'], actorTarget: 'all' }],
         text: rt.text,
         facets: rt.facets,
         outlineTags: [],
       })
 
-      expect(match).toBe(true)
+      expect(match).toBeTruthy()
     })
 
     it(`match: single char with length > 1 ☠︎`, () => {
@@ -103,7 +103,7 @@ describe(`hasMutedWord`, () => {
       })
       rt.detectFacetsWithoutResolution()
 
-      const match = hasMutedWord({
+      const match = matchMuteWord({
         mutedWords: [
           { value: '☠︎', targets: ['content'], actorTarget: 'all' },
         ],
@@ -112,7 +112,7 @@ describe(`hasMutedWord`, () => {
         outlineTags: [],
       })
 
-      expect(match).toBe(true)
+      expect(match).toBeTruthy()
     })
 
     it(`no match: long muted word, short post`, () => {
@@ -121,7 +121,7 @@ describe(`hasMutedWord`, () => {
       })
       rt.detectFacetsWithoutResolution()
 
-      const match = hasMutedWord({
+      const match = matchMuteWord({
         mutedWords: [
           { value: 'politics', targets: ['content'], actorTarget: 'all' },
         ],
@@ -130,7 +130,7 @@ describe(`hasMutedWord`, () => {
         outlineTags: [],
       })
 
-      expect(match).toBe(false)
+      expect(match).toBeFalsy()
     })
 
     it(`match: exact text`, () => {
@@ -139,7 +139,7 @@ describe(`hasMutedWord`, () => {
       })
       rt.detectFacetsWithoutResolution()
 
-      const match = hasMutedWord({
+      const match = matchMuteWord({
         mutedWords: [
           { value: 'javascript', targets: ['content'], actorTarget: 'all' },
         ],
@@ -148,7 +148,7 @@ describe(`hasMutedWord`, () => {
         outlineTags: [],
       })
 
-      expect(match).toBe(true)
+      expect(match).toBeTruthy()
     })
   })
 
@@ -159,7 +159,7 @@ describe(`hasMutedWord`, () => {
       })
       rt.detectFacetsWithoutResolution()
 
-      const match = hasMutedWord({
+      const match = matchMuteWord({
         mutedWords: [
           { value: 'javascript', targets: ['content'], actorTarget: 'all' },
         ],
@@ -168,7 +168,7 @@ describe(`hasMutedWord`, () => {
         outlineTags: [],
       })
 
-      expect(match).toBe(true)
+      expect(match).toBeTruthy()
     })
 
     it(`no match: partial word`, () => {
@@ -177,14 +177,14 @@ describe(`hasMutedWord`, () => {
       })
       rt.detectFacetsWithoutResolution()
 
-      const match = hasMutedWord({
+      const match = matchMuteWord({
         mutedWords: [{ value: 'ai', targets: ['content'], actorTarget: 'all' }],
         text: rt.text,
         facets: rt.facets,
         outlineTags: [],
       })
 
-      expect(match).toBe(false)
+      expect(match).toBeFalsy()
     })
 
     it(`match: multiline`, () => {
@@ -193,7 +193,7 @@ describe(`hasMutedWord`, () => {
       })
       rt.detectFacetsWithoutResolution()
 
-      const match = hasMutedWord({
+      const match = matchMuteWord({
         mutedWords: [
           { value: 'brain', targets: ['content'], actorTarget: 'all' },
         ],
@@ -202,7 +202,7 @@ describe(`hasMutedWord`, () => {
         outlineTags: [],
       })
 
-      expect(match).toBe(true)
+      expect(match).toBeTruthy()
     })
 
     it(`match: :)`, () => {
@@ -211,14 +211,14 @@ describe(`hasMutedWord`, () => {
       })
       rt.detectFacetsWithoutResolution()
 
-      const match = hasMutedWord({
+      const match = matchMuteWord({
         mutedWords: [{ value: `:)`, targets: ['content'], actorTarget: 'all' }],
         text: rt.text,
         facets: rt.facets,
         outlineTags: [],
       })
 
-      expect(match).toBe(true)
+      expect(match).toBeTruthy()
     })
   })
 
@@ -230,7 +230,7 @@ describe(`hasMutedWord`, () => {
       rt.detectFacetsWithoutResolution()
 
       it(`match: yay!`, () => {
-        const match = hasMutedWord({
+        const match = matchMuteWord({
           mutedWords: [
             { value: 'yay!', targets: ['content'], actorTarget: 'all' },
           ],
@@ -239,11 +239,11 @@ describe(`hasMutedWord`, () => {
           outlineTags: [],
         })
 
-        expect(match).toBe(true)
+        expect(match).toBeTruthy()
       })
 
       it(`match: yay`, () => {
-        const match = hasMutedWord({
+        const match = matchMuteWord({
           mutedWords: [
             { value: 'yay', targets: ['content'], actorTarget: 'all' },
           ],
@@ -252,7 +252,7 @@ describe(`hasMutedWord`, () => {
           outlineTags: [],
         })
 
-        expect(match).toBe(true)
+        expect(match).toBeTruthy()
       })
     })
 
@@ -263,7 +263,7 @@ describe(`hasMutedWord`, () => {
       rt.detectFacetsWithoutResolution()
 
       it(`match: y!ppee`, () => {
-        const match = hasMutedWord({
+        const match = matchMuteWord({
           mutedWords: [
             { value: 'y!ppee', targets: ['content'], actorTarget: 'all' },
           ],
@@ -272,12 +272,12 @@ describe(`hasMutedWord`, () => {
           outlineTags: [],
         })
 
-        expect(match).toBe(true)
+        expect(match).toBeTruthy()
       })
 
       // single exclamation point, source has double
       it(`no match: y!ppee!`, () => {
-        const match = hasMutedWord({
+        const match = matchMuteWord({
           mutedWords: [
             { value: 'y!ppee!', targets: ['content'], actorTarget: 'all' },
           ],
@@ -286,7 +286,7 @@ describe(`hasMutedWord`, () => {
           outlineTags: [],
         })
 
-        expect(match).toBe(true)
+        expect(match).toBeTruthy()
       })
     })
 
@@ -297,7 +297,7 @@ describe(`hasMutedWord`, () => {
       rt.detectFacetsWithoutResolution()
 
       it(`match: Bluesky's`, () => {
-        const match = hasMutedWord({
+        const match = matchMuteWord({
           mutedWords: [
             { value: `Bluesky's`, targets: ['content'], actorTarget: 'all' },
           ],
@@ -306,11 +306,11 @@ describe(`hasMutedWord`, () => {
           outlineTags: [],
         })
 
-        expect(match).toBe(true)
+        expect(match).toBeTruthy()
       })
 
       it(`match: Bluesky`, () => {
-        const match = hasMutedWord({
+        const match = matchMuteWord({
           mutedWords: [
             { value: 'Bluesky', targets: ['content'], actorTarget: 'all' },
           ],
@@ -319,11 +319,11 @@ describe(`hasMutedWord`, () => {
           outlineTags: [],
         })
 
-        expect(match).toBe(true)
+        expect(match).toBeTruthy()
       })
 
       it(`match: bluesky`, () => {
-        const match = hasMutedWord({
+        const match = matchMuteWord({
           mutedWords: [
             { value: 'bluesky', targets: ['content'], actorTarget: 'all' },
           ],
@@ -332,11 +332,11 @@ describe(`hasMutedWord`, () => {
           outlineTags: [],
         })
 
-        expect(match).toBe(true)
+        expect(match).toBeTruthy()
       })
 
       it(`match: blueskys`, () => {
-        const match = hasMutedWord({
+        const match = matchMuteWord({
           mutedWords: [
             { value: 'blueskys', targets: ['content'], actorTarget: 'all' },
           ],
@@ -345,7 +345,7 @@ describe(`hasMutedWord`, () => {
           outlineTags: [],
         })
 
-        expect(match).toBe(true)
+        expect(match).toBeTruthy()
       })
     })
 
@@ -356,7 +356,7 @@ describe(`hasMutedWord`, () => {
       rt.detectFacetsWithoutResolution()
 
       it(`match: S@assy`, () => {
-        const match = hasMutedWord({
+        const match = matchMuteWord({
           mutedWords: [
             { value: 'S@assy', targets: ['content'], actorTarget: 'all' },
           ],
@@ -365,11 +365,11 @@ describe(`hasMutedWord`, () => {
           outlineTags: [],
         })
 
-        expect(match).toBe(true)
+        expect(match).toBeTruthy()
       })
 
       it(`match: s@assy`, () => {
-        const match = hasMutedWord({
+        const match = matchMuteWord({
           mutedWords: [
             { value: 's@assy', targets: ['content'], actorTarget: 'all' },
           ],
@@ -378,7 +378,7 @@ describe(`hasMutedWord`, () => {
           outlineTags: [],
         })
 
-        expect(match).toBe(true)
+        expect(match).toBeTruthy()
       })
     })
 
@@ -390,7 +390,7 @@ describe(`hasMutedWord`, () => {
 
       // case insensitive
       it(`match: new york times`, () => {
-        const match = hasMutedWord({
+        const match = matchMuteWord({
           mutedWords: [
             {
               value: 'new york times',
@@ -403,7 +403,7 @@ describe(`hasMutedWord`, () => {
           outlineTags: [],
         })
 
-        expect(match).toBe(true)
+        expect(match).toBeTruthy()
       })
     })
 
@@ -414,7 +414,7 @@ describe(`hasMutedWord`, () => {
       rt.detectFacetsWithoutResolution()
 
       it(`match: !command`, () => {
-        const match = hasMutedWord({
+        const match = matchMuteWord({
           mutedWords: [
             { value: `!command`, targets: ['content'], actorTarget: 'all' },
           ],
@@ -423,11 +423,11 @@ describe(`hasMutedWord`, () => {
           outlineTags: [],
         })
 
-        expect(match).toBe(true)
+        expect(match).toBeTruthy()
       })
 
       it(`match: command`, () => {
-        const match = hasMutedWord({
+        const match = matchMuteWord({
           mutedWords: [
             { value: `command`, targets: ['content'], actorTarget: 'all' },
           ],
@@ -436,7 +436,7 @@ describe(`hasMutedWord`, () => {
           outlineTags: [],
         })
 
-        expect(match).toBe(true)
+        expect(match).toBeTruthy()
       })
 
       it(`no match: !command`, () => {
@@ -445,7 +445,7 @@ describe(`hasMutedWord`, () => {
         })
         rt.detectFacetsWithoutResolution()
 
-        const match = hasMutedWord({
+        const match = matchMuteWord({
           mutedWords: [
             { value: `!command`, targets: ['content'], actorTarget: 'all' },
           ],
@@ -454,7 +454,7 @@ describe(`hasMutedWord`, () => {
           outlineTags: [],
         })
 
-        expect(match).toBe(false)
+        expect(match).toBeFalsy()
       })
     })
 
@@ -465,7 +465,7 @@ describe(`hasMutedWord`, () => {
       rt.detectFacetsWithoutResolution()
 
       it(`match: e/acc`, () => {
-        const match = hasMutedWord({
+        const match = matchMuteWord({
           mutedWords: [
             { value: `e/acc`, targets: ['content'], actorTarget: 'all' },
           ],
@@ -474,11 +474,11 @@ describe(`hasMutedWord`, () => {
           outlineTags: [],
         })
 
-        expect(match).toBe(true)
+        expect(match).toBeTruthy()
       })
 
       it(`match: acc`, () => {
-        const match = hasMutedWord({
+        const match = matchMuteWord({
           mutedWords: [
             { value: `acc`, targets: ['content'], actorTarget: 'all' },
           ],
@@ -487,7 +487,7 @@ describe(`hasMutedWord`, () => {
           outlineTags: [],
         })
 
-        expect(match).toBe(true)
+        expect(match).toBeTruthy()
       })
     })
 
@@ -498,7 +498,7 @@ describe(`hasMutedWord`, () => {
       rt.detectFacetsWithoutResolution()
 
       it(`match: super-bad`, () => {
-        const match = hasMutedWord({
+        const match = matchMuteWord({
           mutedWords: [
             { value: `super-bad`, targets: ['content'], actorTarget: 'all' },
           ],
@@ -507,11 +507,11 @@ describe(`hasMutedWord`, () => {
           outlineTags: [],
         })
 
-        expect(match).toBe(true)
+        expect(match).toBeTruthy()
       })
 
       it(`match: super`, () => {
-        const match = hasMutedWord({
+        const match = matchMuteWord({
           mutedWords: [
             { value: `super`, targets: ['content'], actorTarget: 'all' },
           ],
@@ -520,11 +520,11 @@ describe(`hasMutedWord`, () => {
           outlineTags: [],
         })
 
-        expect(match).toBe(true)
+        expect(match).toBeTruthy()
       })
 
       it(`match: bad`, () => {
-        const match = hasMutedWord({
+        const match = matchMuteWord({
           mutedWords: [
             { value: `bad`, targets: ['content'], actorTarget: 'all' },
           ],
@@ -533,11 +533,11 @@ describe(`hasMutedWord`, () => {
           outlineTags: [],
         })
 
-        expect(match).toBe(true)
+        expect(match).toBeTruthy()
       })
 
       it(`match: super bad`, () => {
-        const match = hasMutedWord({
+        const match = matchMuteWord({
           mutedWords: [
             { value: `super bad`, targets: ['content'], actorTarget: 'all' },
           ],
@@ -546,11 +546,11 @@ describe(`hasMutedWord`, () => {
           outlineTags: [],
         })
 
-        expect(match).toBe(true)
+        expect(match).toBeTruthy()
       })
 
       it(`match: superbad`, () => {
-        const match = hasMutedWord({
+        const match = matchMuteWord({
           mutedWords: [
             { value: `superbad`, targets: ['content'], actorTarget: 'all' },
           ],
@@ -559,7 +559,7 @@ describe(`hasMutedWord`, () => {
           outlineTags: [],
         })
 
-        expect(match).toBe(true)
+        expect(match).toBeTruthy()
       })
     })
 
@@ -570,7 +570,7 @@ describe(`hasMutedWord`, () => {
       rt.detectFacetsWithoutResolution()
 
       it(`match: idk what this would be`, () => {
-        const match = hasMutedWord({
+        const match = matchMuteWord({
           mutedWords: [
             {
               value: `idk what this would be`,
@@ -583,12 +583,12 @@ describe(`hasMutedWord`, () => {
           outlineTags: [],
         })
 
-        expect(match).toBe(true)
+        expect(match).toBeTruthy()
       })
 
       it(`no match: idk what this would be for`, () => {
         // extra word
-        const match = hasMutedWord({
+        const match = matchMuteWord({
           mutedWords: [
             {
               value: `idk what this would be for`,
@@ -601,12 +601,12 @@ describe(`hasMutedWord`, () => {
           outlineTags: [],
         })
 
-        expect(match).toBe(false)
+        expect(match).toBeFalsy()
       })
 
       it(`match: idk`, () => {
         // extra word
-        const match = hasMutedWord({
+        const match = matchMuteWord({
           mutedWords: [
             { value: `idk`, targets: ['content'], actorTarget: 'all' },
           ],
@@ -615,11 +615,11 @@ describe(`hasMutedWord`, () => {
           outlineTags: [],
         })
 
-        expect(match).toBe(true)
+        expect(match).toBeTruthy()
       })
 
       it(`match: idkwhatthiswouldbe`, () => {
-        const match = hasMutedWord({
+        const match = matchMuteWord({
           mutedWords: [
             {
               value: `idkwhatthiswouldbe`,
@@ -632,7 +632,7 @@ describe(`hasMutedWord`, () => {
           outlineTags: [],
         })
 
-        expect(match).toBe(true)
+        expect(match).toBeTruthy()
       })
     })
 
@@ -643,7 +643,7 @@ describe(`hasMutedWord`, () => {
       rt.detectFacetsWithoutResolution()
 
       it(`match: context(iykyk)`, () => {
-        const match = hasMutedWord({
+        const match = matchMuteWord({
           mutedWords: [
             {
               value: `context(iykyk)`,
@@ -656,11 +656,11 @@ describe(`hasMutedWord`, () => {
           outlineTags: [],
         })
 
-        expect(match).toBe(true)
+        expect(match).toBeTruthy()
       })
 
       it(`match: context`, () => {
-        const match = hasMutedWord({
+        const match = matchMuteWord({
           mutedWords: [
             { value: `context`, targets: ['content'], actorTarget: 'all' },
           ],
@@ -669,11 +669,11 @@ describe(`hasMutedWord`, () => {
           outlineTags: [],
         })
 
-        expect(match).toBe(true)
+        expect(match).toBeTruthy()
       })
 
       it(`match: iykyk`, () => {
-        const match = hasMutedWord({
+        const match = matchMuteWord({
           mutedWords: [
             { value: `iykyk`, targets: ['content'], actorTarget: 'all' },
           ],
@@ -682,11 +682,11 @@ describe(`hasMutedWord`, () => {
           outlineTags: [],
         })
 
-        expect(match).toBe(true)
+        expect(match).toBeTruthy()
       })
 
       it(`match: (iykyk)`, () => {
-        const match = hasMutedWord({
+        const match = matchMuteWord({
           mutedWords: [
             { value: `(iykyk)`, targets: ['content'], actorTarget: 'all' },
           ],
@@ -695,7 +695,7 @@ describe(`hasMutedWord`, () => {
           outlineTags: [],
         })
 
-        expect(match).toBe(true)
+        expect(match).toBeTruthy()
       })
     })
 
@@ -706,7 +706,7 @@ describe(`hasMutedWord`, () => {
       rt.detectFacetsWithoutResolution()
 
       it(`match: 🦋`, () => {
-        const match = hasMutedWord({
+        const match = matchMuteWord({
           mutedWords: [
             { value: `🦋`, targets: ['content'], actorTarget: 'all' },
           ],
@@ -715,7 +715,7 @@ describe(`hasMutedWord`, () => {
           outlineTags: [],
         })
 
-        expect(match).toBe(true)
+        expect(match).toBeTruthy()
       })
     })
   })
@@ -728,7 +728,7 @@ describe(`hasMutedWord`, () => {
       rt.detectFacetsWithoutResolution()
 
       it(`match: stop worrying`, () => {
-        const match = hasMutedWord({
+        const match = matchMuteWord({
           mutedWords: [
             {
               value: 'stop worrying',
@@ -741,11 +741,11 @@ describe(`hasMutedWord`, () => {
           outlineTags: [],
         })
 
-        expect(match).toBe(true)
+        expect(match).toBeTruthy()
       })
 
       it(`match: turtles, or how`, () => {
-        const match = hasMutedWord({
+        const match = matchMuteWord({
           mutedWords: [
             {
               value: 'turtles, or how',
@@ -758,7 +758,7 @@ describe(`hasMutedWord`, () => {
           outlineTags: [],
         })
 
-        expect(match).toBe(true)
+        expect(match).toBeTruthy()
       })
     })
   })
@@ -773,7 +773,7 @@ describe(`hasMutedWord`, () => {
 
       // internet
       it(`match: インターネット`, () => {
-        const match = hasMutedWord({
+        const match = matchMuteWord({
           mutedWords: [
             {
               value: 'インターネット',
@@ -787,14 +787,14 @@ describe(`hasMutedWord`, () => {
           languages: ['ja'],
         })
 
-        expect(match).toBe(true)
+        expect(match).toBeTruthy()
       })
     })
   })
 
   describe(`facet with multiple features`, () => {
     it(`multiple tags`, () => {
-      const match = hasMutedWord({
+      const match = matchMuteWord({
         mutedWords: [
           { value: 'bad', targets: ['content'], actorTarget: 'all' },
         ],
@@ -818,11 +818,11 @@ describe(`hasMutedWord`, () => {
           },
         ],
       })
-      expect(match).toBe(true)
+      expect(match).toBeTruthy()
     })
 
     it(`other features`, () => {
-      const match = hasMutedWord({
+      const match = matchMuteWord({
         mutedWords: [
           { value: 'bad', targets: ['content'], actorTarget: 'all' },
         ],
@@ -846,7 +846,7 @@ describe(`hasMutedWord`, () => {
           },
         ],
       })
-      expect(match).toBe(true)
+      expect(match).toBeTruthy()
     })
   })
 
