@@ -27,7 +27,7 @@ export function decidePost(
   }
   acc.addHidden(checkHiddenPost(subject, opts.prefs.hiddenPosts))
   if (!acc.isMe) {
-    acc.addMutedWord(!!findFirstMuteWordMatch(subject, opts.prefs.mutedWords))
+    acc.addMutedWord(findFirstMuteWordMatch(subject, opts.prefs.mutedWords))
   }
 
   let embedAcc

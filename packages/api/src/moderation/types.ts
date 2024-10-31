@@ -6,6 +6,7 @@ import {
   ComAtprotoLabelDefs,
 } from '../client/index'
 import { KnownLabelValue } from './const/labels'
+import { MuteWordMatch } from './mutewords'
 
 // syntax
 // =
@@ -156,6 +157,7 @@ export type ModerationCause =
       source: ModerationCauseSource
       priority: 6
       downgraded?: boolean
+      match: MuteWordMatch
     }
   | {
       type: 'hidden'

@@ -15,6 +15,7 @@ import {
 } from './types'
 import { ModerationUI } from './ui'
 import { LABELS } from './const/labels'
+import { MuteWordMatch } from './mutewords'
 
 enum ModerationBehaviorSeverity {
   High,
@@ -197,12 +198,13 @@ export class ModerationDecision {
     }
   }
 
-  addMutedWord(mutedWord: boolean) {
-    if (mutedWord) {
+  addMutedWord(match: MuteWordMatch) {
+    if (match) {
       this.causes.push({
         type: 'mute-word',
         source: { type: 'user' },
         priority: 6,
+        match,
       })
     }
   }
