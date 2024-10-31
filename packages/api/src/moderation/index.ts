@@ -13,10 +13,15 @@ import { decidePost } from './subjects/post'
 import { decideFeedGenerator } from './subjects/feed-generator'
 import { decideUserList } from './subjects/user-list'
 import { ModerationDecision } from './decision'
+import { matchMuteWord } from './mutewords'
 
 export { ModerationUI } from './ui'
 export { ModerationDecision } from './decision'
 export { matchMuteWord } from './mutewords'
+/**
+ * @deprecated Use `matchMuteWord` instead.
+ */
+export const hasMutedWord = matchMuteWord
 export {
   interpretLabelValueDefinition,
   interpretLabelValueDefinitions,
