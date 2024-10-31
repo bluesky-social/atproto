@@ -659,60 +659,18 @@ describe('RichText#segments', () => {
     ])
   })
 
-  it("doesn't duplicate text when funky facets are present", () => {
+  it("doesn't duplicate text when negative-length facets are present", () => {
     const funky = {
+      text: 'hello world',
       facets: [
         {
           features: [],
           index: {
             byteEnd: 0,
-            byteStart: 300,
-          },
-        },
-        {
-          features: [],
-          index: {
-            byteEnd: 0,
-            byteStart: 300,
-          },
-        },
-        {
-          features: [],
-          index: {
-            byteEnd: 0,
-            byteStart: 300,
-          },
-        },
-        {
-          features: [],
-          index: {
-            byteEnd: 0,
-            byteStart: 300,
-          },
-        },
-        {
-          features: [],
-          index: {
-            byteEnd: 0,
-            byteStart: 300,
-          },
-        },
-        {
-          features: [],
-          index: {
-            byteEnd: 0,
-            byteStart: 300,
-          },
-        },
-        {
-          features: [],
-          index: {
-            byteEnd: 0,
-            byteStart: 300,
+            byteStart: 6,
           },
         },
       ],
-      text: ':3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 ',
     }
     const input = new RichText(funky)
 
