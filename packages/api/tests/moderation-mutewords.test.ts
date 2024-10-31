@@ -22,7 +22,7 @@ describe(`matchMuteWord`, () => {
         outlineTags: ['outlineTag'],
       })
 
-      expect(match).toEqual({ word: muteWord })
+      expect(match).toEqual([{ word: muteWord }])
     })
 
     it(`match: inline tag`, () => {
@@ -43,7 +43,7 @@ describe(`matchMuteWord`, () => {
         outlineTags: ['outlineTag'],
       })
 
-      expect(match).toEqual({ word: muteWord })
+      expect(match).toEqual([{ word: muteWord }])
     })
 
     it(`match: content target matches inline tag`, () => {
@@ -101,7 +101,7 @@ describe(`matchMuteWord`, () => {
         outlineTags: [],
       })
 
-      expect(match).toEqual({ word: muteWord })
+      expect(match).toEqual([{ word: muteWord }])
     })
 
     it(`match: single char with length > 1 ☠︎`, () => {
@@ -178,7 +178,7 @@ describe(`matchMuteWord`, () => {
         outlineTags: [],
       })
 
-      expect(match).toEqual({ word: muteWord })
+      expect(match).toEqual([{ word: muteWord }])
     })
 
     it(`no match: partial word`, () => {
@@ -1113,7 +1113,7 @@ describe(`matchMuteWord`, () => {
         outlineTags: [],
       })
 
-      expect(match).toEqual({ word: muteWord1 })
+      expect(match).toEqual([{ word: muteWord1 }, { word: muteWord2 }])
     })
   })
 })

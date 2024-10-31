@@ -199,7 +199,7 @@ export class ModerationDecision {
   }
 
   addMutedWord(match: MuteWordMatch) {
-    if (match) {
+    if (match !== null) {
       this.causes.push({
         type: 'mute-word',
         source: { type: 'user' },
