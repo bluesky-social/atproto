@@ -245,20 +245,14 @@ const skeletonFromFeedGen = async (
   }
 
   const { feed: feedSkele, ...skele } = skeleton
-  // Limit again in case the feedgen does not respect the limit.
-  // Leave some margin in case filtering removes more items.
-  const limitMargin = Math.ceil(params.limit * 0.3)
-
-  const feedItems = feedSkele
-    .slice(0, params.limit + limitMargin)
-    .map((item) => ({
-      post: { uri: item.post },
-      repost:
-        typeof item.reason?.repost === 'string'
-          ? { uri: item.reason.repost }
-          : undefined,
-      feedContext: item.feedContext,
-    }))
+  const feedItems = feedSkele.slice(0, params.limit).map((item) => ({
+    post: { uri: item.post },
+    repost:
+      typeof item.reason?.repost === 'string'
+        ? { uri: item.reason.repost }
+        : undefined,
+    feedContext: item.feedContext,
+  }))
 
   return { ...skele, resHeaders, feedItems }
 }
