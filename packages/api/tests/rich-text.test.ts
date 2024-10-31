@@ -660,25 +660,46 @@ describe('RichText#segments', () => {
   })
 
   it("doesn't duplicate text when negative-length facets are present", () => {
-    const funky = {
+    const input = {
       text: 'hello world',
       facets: [
+        // invalid zero-length
+        {
+          features: [],
+          index: {
+            byteStart: 6,
+            byteEnd: 0,
+          },
+        },
+        // valid normal facet
+        {
+          features: [],
+          index: {
+            byteEnd: 11,
+            byteStart: 6,
+          },
+        },
+        // valid zero-length
         {
           features: [],
           index: {
             byteEnd: 0,
-            byteStart: 6,
+            byteStart: 0,
           },
         },
       ],
     }
-    const input = new RichText(funky)
+
+    const rt = new RichText(input)
 
     let output = ''
-    for (const segment of input.segments()) {
+    for (const segment of rt.segments()) {
       output += segment.text
     }
 
-    expect(output).toEqual(funky.text)
+    expect(output).toEqual(input.text)
+
+    // invalid one should have been removed
+    expect(rt.facets?.length).toEqual(2)
   })
 })
