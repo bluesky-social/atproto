@@ -658,4 +658,69 @@ describe('RichText#segments', () => {
       },
     ])
   })
+
+  it("doesn't duplicate text when funky facets are present", () => {
+    const funky = {
+      facets: [
+        {
+          features: [],
+          index: {
+            byteEnd: 0,
+            byteStart: 300,
+          },
+        },
+        {
+          features: [],
+          index: {
+            byteEnd: 0,
+            byteStart: 300,
+          },
+        },
+        {
+          features: [],
+          index: {
+            byteEnd: 0,
+            byteStart: 300,
+          },
+        },
+        {
+          features: [],
+          index: {
+            byteEnd: 0,
+            byteStart: 300,
+          },
+        },
+        {
+          features: [],
+          index: {
+            byteEnd: 0,
+            byteStart: 300,
+          },
+        },
+        {
+          features: [],
+          index: {
+            byteEnd: 0,
+            byteStart: 300,
+          },
+        },
+        {
+          features: [],
+          index: {
+            byteEnd: 0,
+            byteStart: 300,
+          },
+        },
+      ],
+      text: ':3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 :3 ',
+    }
+    const input = new RichText(funky)
+
+    let output = ''
+    for (const segment of input.segments()) {
+      output += segment.text
+    }
+
+    expect(output).toEqual(funky.text)
+  })
 })
