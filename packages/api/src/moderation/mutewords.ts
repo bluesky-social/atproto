@@ -22,7 +22,7 @@ const LANGUAGE_EXCEPTIONS = [
 ]
 
 export type MuteWordMatch = {
-  word: string
+  word: AppBskyActorDefs.MutedWord
 } | null
 
 export function matchMuteWord({
@@ -64,24 +64,24 @@ export function matchMuteWord({
       continue
 
     // `content` applies to tags as well
-    if (tags.includes(mutedWord)) return { word: mutedWord }
+    if (tags.includes(mutedWord)) return { word: mute }
     // rest of the checks are for `content` only
     if (!mute.targets.includes('content')) continue
     // single character or other exception, has to use includes
     if ((mutedWord.length === 1 || exception) && postText.includes(mutedWord))
-      return { word: mutedWord }
+      return { word: mute }
     // too long
     if (mutedWord.length > postText.length) continue
     // exact match
-    if (mutedWord === postText) return { word: mutedWord }
+    if (mutedWord === postText) return { word: mute }
     // any muted phrase with space or punctuation
     if (/(?:\s|\p{P})+?/u.test(mutedWord) && postText.includes(mutedWord))
-      return { word: mutedWord }
+      return { word: mute }
 
     // check individual character groups
     const words = postText.split(REGEX.WORD_BOUNDARY)
     for (const word of words) {
-      if (word === mutedWord) return { word: mutedWord }
+      if (word === mutedWord) return { word: mute }
 
       // compare word without leading/trailing punctuation, but allow internal
       // punctuation (such as `s@ssy`)
@@ -90,19 +90,19 @@ export function matchMuteWord({
         '',
       )
 
-      if (mutedWord === wordTrimmedPunctuation) return { word: mutedWord }
+      if (mutedWord === wordTrimmedPunctuation) return { word: mute }
       if (mutedWord.length > wordTrimmedPunctuation.length) continue
 
       if (/\p{P}+/u.test(wordTrimmedPunctuation)) {
         const spacedWord = wordTrimmedPunctuation.replace(/\p{P}+/gu, ' ')
-        if (spacedWord === mutedWord) return { word: mutedWord }
+        if (spacedWord === mutedWord) return { word: mute }
 
         const contiguousWord = spacedWord.replace(/\s/gu, '')
-        if (contiguousWord === mutedWord) return { word: mutedWord }
+        if (contiguousWord === mutedWord) return { word: mute }
 
         const wordParts = wordTrimmedPunctuation.split(/\p{P}+/u)
         for (const wordPart of wordParts) {
-          if (wordPart === mutedWord) return { word: mutedWord }
+          if (wordPart === mutedWord) return { word: mute }
         }
       }
     }
