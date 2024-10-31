@@ -129,13 +129,14 @@ const noBlocksOrMutes = (inputs: RulesFnInput<Context, Params, Skeleton>) => {
       !bam.ancestorAuthorBlocked
     )
   })
+
   return skeleton
 }
 
 const presentation = (
   inputs: PresentationFnInput<Context, Params, Skeleton>,
 ) => {
-  const { ctx, params, skeleton, hydration } = inputs
+  const { ctx, skeleton, hydration } = inputs
   const feed = mapDefined(skeleton.items, (item) => {
     const post = ctx.views.feedViewPost(item, hydration)
     if (!post) return
@@ -143,7 +144,7 @@ const presentation = (
       ...post,
       feedContext: item.feedContext,
     }
-  }).slice(0, params.limit)
+  })
   return {
     feed,
     cursor: skeleton.cursor,
@@ -211,6 +212,7 @@ const skeletonFromFeedGen = async (
     const result = await agent.api.app.bsky.feed.getFeedSkeleton(
       {
         feed: params.feed,
+        // The feedgen is not guaranteed to honor the limit, but we try it.
         limit: params.limit,
         cursor: params.cursor,
       },
@@ -243,14 +245,20 @@ const skeletonFromFeedGen = async (
   }
 
   const { feed: feedSkele, ...skele } = skeleton
-  const feedItems = feedSkele.map((item) => ({
-    post: { uri: item.post },
-    repost:
-      typeof item.reason?.repost === 'string'
-        ? { uri: item.reason.repost }
-        : undefined,
-    feedContext: item.feedContext,
-  }))
+  // Limit again in case the feedgen does not respect the limit.
+  // Leave some margin in case filtering removes more items.
+  const limitMargin = Math.ceil(params.limit * 0.3)
+
+  const feedItems = feedSkele
+    .slice(0, params.limit + limitMargin)
+    .map((item) => ({
+      post: { uri: item.post },
+      repost:
+        typeof item.reason?.repost === 'string'
+          ? { uri: item.reason.repost }
+          : undefined,
+      feedContext: item.feedContext,
+    }))
 
   return { ...skele, resHeaders, feedItems }
 }
