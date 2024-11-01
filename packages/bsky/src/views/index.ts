@@ -78,6 +78,7 @@ export class Views {
   constructor(
     public imgUriBuilder: ImageUriBuilder,
     public videoUriBuilder: VideoUriBuilder,
+    public indexedAtEpoch: Date | undefined,
   ) {}
 
   // Actor
@@ -600,7 +601,7 @@ export class Views {
       repostCount: aggs?.reposts ?? 0,
       likeCount: aggs?.likes ?? 0,
       quoteCount: aggs?.quotes ?? 0,
-      indexedAt: post.sortedAt.toISOString(),
+      indexedAt: this.indexedAt(post).toISOString(),
       viewer: viewer
         ? {
             repost: viewer.repost,
@@ -1170,11 +1171,12 @@ export class Views {
     } else if (uri.collection === ids.AppBskyActorProfile) {
       const actor = state.actors?.get(authorDid)
       recordInfo =
-        actor && actor.profile && actor.profileCid && actor.sortedAt
+        actor && actor.profile && actor.profileCid
           ? {
               record: actor.profile,
               cid: actor.profileCid,
-              sortedAt: actor.sortedAt,
+              sortedAt: actor.sortedAt ?? new Date(0), // @NOTE will be present since profile record is present
+              indexedAt: actor.indexedAt ?? new Date(0), // @NOTE will be present since profile record is present
               takedownRef: actor.profileTakedownRef,
             }
           : null
@@ -1201,6 +1203,11 @@ export class Views {
       indexedAt: notif.timestamp.toDate().toISOString(),
       labels: [...labels, ...selfLabels],
     }
+  }
+
+  indexedAt({ sortedAt, indexedAt }: { sortedAt: Date; indexedAt: Date }) {
+    if (!this.indexedAtEpoch) return sortedAt
+    return indexedAt > this.indexedAtEpoch ? indexedAt : sortedAt
   }
 }
 
