@@ -1,10 +1,10 @@
 import Database from '../db'
 import { Selectable } from 'kysely'
 import { Option } from '../lexicon/types/tools/ozone/setting/defs'
-import { paginate, TimeIdKeyset } from '../db/pagination'
 import { Setting, SettingScope } from '../db/schema/setting'
 import { Member } from '../db/schema/member'
 import assert from 'node:assert'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export type SettingServiceCreator = (db: Database) => SettingService
 
@@ -34,7 +34,6 @@ export class SettingService {
     cursor?: string
   }> {
     let builder = this.db.db.selectFrom('setting').selectAll()
-    const { ref } = this.db.db.dynamic
 
     if (prefix) {
       builder = builder.where('key', 'like', `${prefix}%`)
@@ -50,21 +49,19 @@ export class SettingService {
       builder = builder.where('did', '=', did)
     }
 
-    const keyset = new TimeIdKeyset(ref(`setting.createdAt`), ref('setting.id'))
+    if (cursor) {
+      const cursorId = parseInt(cursor, 10)
+      if (isNaN(cursorId)) {
+        throw new InvalidRequestError('invalid cursor')
+      }
+      builder = builder.where('id', '<', cursorId)
+    }
 
-    const paginatedBuilder = paginate(builder, {
-      limit,
-      cursor,
-      keyset,
-      direction: 'desc',
-      tryIndex: true,
-    })
-
-    const options = await paginatedBuilder.execute()
+    const options = await builder.orderBy('id', 'desc').limit(limit).execute()
 
     return {
       options,
-      cursor: keyset.packFromResult(options),
+      cursor: options[options.length - 1]?.id.toString(),
     }
   }
 
