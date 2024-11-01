@@ -62,11 +62,19 @@ const jsonToB64Url = (json: Record<string, unknown>): string => {
   return common.utf8ToB64Url(JSON.stringify(json))
 }
 
+type VerifySignatureWithKeyFn = (
+  key: string,
+  msgBytes: Uint8Array,
+  sigBytes: Uint8Array,
+  alg: string,
+) => Promise<boolean>
+
 export const verifyJwt = async (
   jwtStr: string,
   ownDid: string | null, // null indicates to skip the audience check
   lxm: string | null, // null indicates to skip the lxm check
   getSigningKey: (iss: string, forceRefresh: boolean) => Promise<string>,
+  verifySignatureWithKey: VerifySignatureWithKeyFn = cryptoVerifySignatureWithKey,
 ): Promise<ServiceJwtPayload> => {
   const parts = jwtStr.split('.')
   if (parts.length !== 3) {
@@ -161,7 +169,7 @@ export const verifyJwt = async (
   return payload
 }
 
-const verifySignatureWithKey = async (
+const cryptoVerifySignatureWithKey: VerifySignatureWithKeyFn = async (
   key: string,
   msgBytes: Uint8Array,
   sigBytes: Uint8Array,
