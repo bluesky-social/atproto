@@ -62,7 +62,7 @@ const jsonToB64Url = (json: Record<string, unknown>): string => {
   return common.utf8ToB64Url(JSON.stringify(json))
 }
 
-type VerifySignatureWithKeyFn = (
+export type VerifySignatureWithKeyFn = (
   key: string,
   msgBytes: Uint8Array,
   sigBytes: Uint8Array,
@@ -169,7 +169,7 @@ export const verifyJwt = async (
   return payload
 }
 
-const cryptoVerifySignatureWithKey: VerifySignatureWithKeyFn = async (
+export const cryptoVerifySignatureWithKey: VerifySignatureWithKeyFn = async (
   key: string,
   msgBytes: Uint8Array,
   sigBytes: Uint8Array,
