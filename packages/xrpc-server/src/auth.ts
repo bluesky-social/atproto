@@ -116,18 +116,13 @@ export const verifyJwt = async (
 
   const msgBytes = ui8.fromString(parts.slice(0, 2).join('.'), 'utf8')
   const sigBytes = ui8.fromString(sig, 'base64url')
-  const verifySignatureWithKey = async (key: string) => {
-    return crypto.verifySignature(key, msgBytes, sigBytes, {
-      jwtAlg: header.alg,
-      allowMalleableSig: true,
-    })
-  }
 
   const signingKey = await getSigningKey(payload.iss, false)
+  const { alg } = header
 
   let validSig: boolean
   try {
-    validSig = await verifySignatureWithKey(signingKey)
+    validSig = await verifySignatureWithKey(signingKey, msgBytes, sigBytes, alg)
   } catch (err) {
     throw new AuthRequiredError(
       'could not verify jwt signature',
@@ -141,7 +136,12 @@ export const verifyJwt = async (
     try {
       validSig =
         freshSigningKey !== signingKey
-          ? await verifySignatureWithKey(freshSigningKey)
+          ? await verifySignatureWithKey(
+              freshSigningKey,
+              msgBytes,
+              sigBytes,
+              alg,
+            )
           : false
     } catch (err) {
       throw new AuthRequiredError(
@@ -159,6 +159,18 @@ export const verifyJwt = async (
   }
 
   return payload
+}
+
+const verifySignatureWithKey = async (
+  key: string,
+  msgBytes: Uint8Array,
+  sigBytes: Uint8Array,
+  alg: string,
+) => {
+  return crypto.verifySignature(key, msgBytes, sigBytes, {
+    jwtAlg: alg,
+    allowMalleableSig: true,
+  })
 }
 
 const parseB64UrlToJson = (b64: string) => {
