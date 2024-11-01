@@ -4,6 +4,7 @@ import { Option } from '../lexicon/types/tools/ozone/setting/defs'
 import { paginate, TimeIdKeyset } from '../db/pagination'
 import { Setting, SettingScope } from '../db/schema/setting'
 import { Member } from '../db/schema/member'
+import assert from 'node:assert'
 
 export type SettingServiceCreator = (db: Database) => SettingService
 
@@ -77,7 +78,7 @@ export class SettingService {
       .insertInto('setting')
       .values(option)
       .onConflict((oc) => {
-        return oc.columns(['key', 'scope']).doUpdateSet({
+        return oc.columns(['key', 'scope', 'did']).doUpdateSet({
           value: option.value,
           updatedAt: option.updatedAt,
           description: option.description,
@@ -97,6 +98,10 @@ export class SettingService {
     },
   ): Promise<void> {
     if (!keys.length) return
+
+    if (filters.scope === 'personal') {
+      assert(filters.did, 'did is required for personal scope')
+    }
 
     let qb = this.db.db
       .deleteFrom('setting')

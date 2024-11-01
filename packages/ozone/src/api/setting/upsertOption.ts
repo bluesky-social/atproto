@@ -5,6 +5,7 @@ import { AdminTokenOutput, ModeratorOutput } from '../../auth-verifier'
 import { SettingService } from '../../setting/service'
 import { Member } from '../../db/schema/member'
 import { ToolsOzoneTeamDefs } from '@atproto/api'
+import assert from 'node:assert'
 
 export default function (server: Server, ctx: AppContext) {
   server.tools.ozone.setting.upsertOption({
@@ -49,15 +50,15 @@ export default function (server: Server, ctx: AppContext) {
         })
       } else {
         const manageableRoles = getRolesForInstanceOption(access)
-        const existingSetting = await settingService.query({
-          scope: 'instance',
-          keys: [key],
-          limit: 1,
-        })
+        const existingSetting = await getExistingSetting(
+          settingService,
+          key,
+          'instance',
+        )
 
         if (
-          existingSetting.options[0]?.managerRole &&
-          !manageableRoles.includes(existingSetting.options[0].managerRole)
+          existingSetting?.managerRole &&
+          !manageableRoles.includes(existingSetting.managerRole)
         ) {
           throw new AuthRequiredError(`Not permitted to update setting ${key}`)
         }
@@ -69,10 +70,7 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const newOption = await getExistingSetting(settingService, key, scope)
-
-      if (!newOption) {
-        throw new Error('Failed to get the updated setting')
-      }
+      assert(newOption, 'Failed to get the updated setting')
 
       return {
         encoding: 'application/json',
@@ -121,7 +119,7 @@ const getRolesForInstanceOption = (
   return [ToolsOzoneTeamDefs.ROLETRIAGE]
 }
 
-const getManagerRole = (role: string) => {
+const getManagerRole = (role?: string) => {
   let managerRole: Member['role'] | null = null
 
   if (role === ToolsOzoneTeamDefs.ROLEADMIN) {

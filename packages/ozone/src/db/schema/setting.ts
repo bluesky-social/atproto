@@ -1,4 +1,4 @@
-import { Generated } from 'kysely'
+import { Generated, GeneratedAlways } from 'kysely'
 import { Member } from './member'
 
 export const settingTableName = 'setting'
@@ -6,9 +6,9 @@ export const settingTableName = 'setting'
 export type SettingScope = 'personal' | 'instance'
 
 export interface Setting {
-  id: Generated<number>
+  id: GeneratedAlways<number>
   key: string
-  value: any
+  value: Record<string, unknown>
   managerRole: Member['role'] | null
   description: string | null
   did: string

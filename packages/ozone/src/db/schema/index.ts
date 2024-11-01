@@ -9,7 +9,7 @@ import * as signingKey from './signing_key'
 import * as communicationTemplate from './communication_template'
 import * as set from './ozone_set'
 import * as member from './member'
-import * as Setting from './setting'
+import * as setting from './setting'
 
 export type DatabaseSchemaType = modEvent.PartialDB &
   modSubjectStatus.PartialDB &
@@ -21,7 +21,7 @@ export type DatabaseSchemaType = modEvent.PartialDB &
   communicationTemplate.PartialDB &
   set.PartialDB &
   member.PartialDB &
-  Setting.PartialDB
+  setting.PartialDB
 
 export type DatabaseSchema = Kysely<DatabaseSchemaType>
 

@@ -28,7 +28,6 @@
             },
             "managerRole": {
               "type": "string",
-              "default": "owner",
               "knownValues": [
                 "tools.ozone.team.defs#roleModerator",
                 "tools.ozone.team.defs#roleTriage",

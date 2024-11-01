@@ -14,6 +14,7 @@
             "keys": {
               "type": "array",
               "minLength": 1,
+              "maxLength": 200,
               "items": {
                 "type": "string",
                 "format": "nsid"
@@ -21,10 +22,16 @@
             },
             "scope": {
               "type": "string",
-              "knownValues": ["instance", "personal"],
-              "default": "personal"
+              "knownValues": ["instance", "personal"]
             }
           }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "properties": {}
         }
       }
     }

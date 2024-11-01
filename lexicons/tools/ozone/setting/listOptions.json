@@ -28,6 +28,7 @@
           },
           "keys": {
             "type": "array",
+            "maxLength": 100,
             "items": {
               "type": "string",
               "format": "nsid"

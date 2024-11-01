@@ -12613,6 +12613,7 @@ export const schemaDict = {
             },
             keys: {
               type: 'array',
+              maxLength: 100,
               items: {
                 type: 'string',
                 format: 'nsid',
@@ -12660,6 +12661,7 @@ export const schemaDict = {
               keys: {
                 type: 'array',
                 minLength: 1,
+                maxLength: 200,
                 items: {
                   type: 'string',
                   format: 'nsid',
@@ -12668,9 +12670,15 @@ export const schemaDict = {
               scope: {
                 type: 'string',
                 knownValues: ['instance', 'personal'],
-                default: 'personal',
               },
             },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
           },
         },
       },
@@ -12706,7 +12714,6 @@ export const schemaDict = {
               },
               managerRole: {
                 type: 'string',
-                default: 'owner',
                 knownValues: [
                   'tools.ozone.team.defs#roleModerator',
                   'tools.ozone.team.defs#roleTriage',

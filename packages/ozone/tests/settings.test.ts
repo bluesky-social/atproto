@@ -5,6 +5,7 @@ import AtpAgent, {
 } from '@atproto/api'
 import { ids } from '../src/lexicon/lexicons'
 import { SettingScope } from '../dist/db/schema/setting'
+import { forSnapshot } from './_util'
 
 describe('ozone-settings', () => {
   let network: TestNetwork
@@ -190,8 +191,7 @@ describe('ozone-settings', () => {
     it('returns all personal settings', async () => {
       const result = await listOptions({ prefix: 'tools.ozone.setting.client' })
       expect(result.options.length).toBe(3)
-      // @TODO: once we're happy with the object definitions, we can snapshot the result
-      // expect(forSnapshot(result.settings)).toMatchSnapshot()
+      expect(forSnapshot(result.settings)).toMatchSnapshot()
     })
 
     it('allows paginating options', async () => {

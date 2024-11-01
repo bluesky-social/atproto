@@ -53,6 +53,11 @@ export default function (server: Server, ctx: AppContext) {
         managerRole,
         did,
       })
+
+      return {
+        encoding: 'application/json',
+        body: {},
+      }
     },
   })
 }
