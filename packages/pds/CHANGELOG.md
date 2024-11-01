@@ -1,5 +1,34 @@
 # @atproto/pds
 
+## 0.4.69
+
+### Patch Changes
+
+- Updated dependencies [[`209238769`](https://github.com/bluesky-social/atproto/commit/209238769c0bf38bf04f7fa9621eeb176b5c0ed8), [`73f40e63a`](https://github.com/bluesky-social/atproto/commit/73f40e63abe3283efc0a27eef781c00b497caad1)]:
+  - @atproto/api@0.13.14
+
+## 0.4.68
+
+### Patch Changes
+
+- Updated dependencies [[`19e36afb2`](https://github.com/bluesky-social/atproto/commit/19e36afb2c13dbc7b1033eb3cab5e7fc6f496fdc)]:
+  - @atproto/api@0.13.13
+
+## 0.4.67
+
+### Patch Changes
+
+- [#2924](https://github.com/bluesky-social/atproto/pull/2924) [`c1b0e176a`](https://github.com/bluesky-social/atproto/commit/c1b0e176adbc5108bff49d74fbae18de60e86732) Thanks [@dholms](https://github.com/dholms)! - Support alternate did mehtods in update handle
+
+## 0.4.66
+
+### Patch Changes
+
+- [#2871](https://github.com/bluesky-social/atproto/pull/2871) [`9d40ccbb6`](https://github.com/bluesky-social/atproto/commit/9d40ccbb69103fae9aae7e3cec31e9b3116f3ba2) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add Access-Control-Allow-Headers to .well-known/oauth-protected-resource response
+
+- Updated dependencies [[`8f2b80a0d`](https://github.com/bluesky-social/atproto/commit/8f2b80a0dcf118652452ea09764a947b09991e0f), [`9d40ccbb6`](https://github.com/bluesky-social/atproto/commit/9d40ccbb69103fae9aae7e3cec31e9b3116f3ba2), [`9d40ccbb6`](https://github.com/bluesky-social/atproto/commit/9d40ccbb69103fae9aae7e3cec31e9b3116f3ba2), [`7f26b1765`](https://github.com/bluesky-social/atproto/commit/7f26b176526b9856a8f61faca6f065f0afd43abf)]:
+  - @atproto/oauth-provider@0.2.6
+
 ## 0.4.65
 
 ### Patch Changes

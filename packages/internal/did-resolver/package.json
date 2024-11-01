@@ -1,6 +1,6 @@
 {
   "name": "@atproto-labs/did-resolver",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "license": "MIT",
   "description": "DID resolution and verification library",
   "keywords": [
@@ -32,7 +32,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "typescript": "^5.6.2"
+    "typescript": "^5.6.3"
   },
   "scripts": {
     "build": "tsc --build tsconfig.build.json"

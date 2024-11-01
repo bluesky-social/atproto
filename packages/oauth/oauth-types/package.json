@@ -1,6 +1,6 @@
 {
   "name": "@atproto/oauth-types",
-  "version": "0.1.5",
+  "version": "0.2.0",
   "license": "MIT",
   "description": "OAuth typing & validation library",
   "keywords": [
@@ -29,7 +29,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "typescript": "^5.6.2"
+    "typescript": "^5.6.3"
   },
   "scripts": {
     "build": "tsc --build tsconfig.build.json"

@@ -70,6 +70,13 @@ export const schemaDict = {
             type: 'string',
             format: 'datetime',
           },
+          threatSignatures: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.admin.defs#threatSignature',
+            },
+          },
         },
       },
       repoRef: {
@@ -97,6 +104,18 @@ export const schemaDict = {
           recordUri: {
             type: 'string',
             format: 'at-uri',
+          },
+        },
+      },
+      threatSignature: {
+        type: 'object',
+        required: ['property', 'value'],
+        properties: {
+          property: {
+            type: 'string',
+          },
+          value: {
+            type: 'string',
           },
         },
       },
@@ -9136,6 +9155,28 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyUnspeccedGetConfig: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.getConfig',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get miscellaneous runtime configuration.',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: [],
+            properties: {
+              checkEmailConfirmed: {
+                type: 'boolean',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyUnspeccedGetPopularFeedGenerators: {
     lexicon: 1,
     id: 'app.bsky.unspecced.getPopularFeedGenerators',
@@ -10695,6 +10736,7 @@ export const ids = {
   AppBskyNotificationUpdateSeen: 'app.bsky.notification.updateSeen',
   AppBskyRichtextFacet: 'app.bsky.richtext.facet',
   AppBskyUnspeccedDefs: 'app.bsky.unspecced.defs',
+  AppBskyUnspeccedGetConfig: 'app.bsky.unspecced.getConfig',
   AppBskyUnspeccedGetPopularFeedGenerators:
     'app.bsky.unspecced.getPopularFeedGenerators',
   AppBskyUnspeccedGetSuggestionsSkeleton:

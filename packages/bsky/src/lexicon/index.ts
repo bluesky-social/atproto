@@ -134,6 +134,7 @@ import * as AppBskyNotificationListNotifications from './types/app/bsky/notifica
 import * as AppBskyNotificationPutPreferences from './types/app/bsky/notification/putPreferences'
 import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
+import * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig'
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
 import * as AppBskyUnspeccedGetSuggestionsSkeleton from './types/app/bsky/unspecced/getSuggestionsSkeleton'
 import * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions'
@@ -1781,6 +1782,17 @@ export class AppBskyUnspeccedNS {
 
   constructor(server: Server) {
     this._server = server
+  }
+
+  getConfig<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyUnspeccedGetConfig.Handler<ExtractAuth<AV>>,
+      AppBskyUnspeccedGetConfig.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.unspecced.getConfig' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
   getPopularFeedGenerators<AV extends AuthVerifier>(

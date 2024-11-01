@@ -5,9 +5,7 @@ export type { Redis, RedisOptions }
 export type CreateRedisOptions = Redis | RedisOptions | string
 
 export function createRedis(options: CreateRedisOptions): Redis {
-  if (options instanceof Redis) {
-    return options
-  } else if (typeof options === 'string') {
+  if (typeof options === 'string') {
     const url = new URL(
       options.startsWith('redis://') ? options : `redis://${options}`,
     )
@@ -17,6 +15,10 @@ export function createRedis(options: CreateRedisOptions): Redis {
       port: parseInt(url.port, 10),
       password: url.password,
     })
+  } else if ('on' in options && 'call' in options && 'acl' in options) {
+    // Not using "instanceof" here in case the options is an instance of another
+    // version of ioredis (Redis is both a class and an interface).
+    return options
   } else {
     return new Redis(options)
   }
