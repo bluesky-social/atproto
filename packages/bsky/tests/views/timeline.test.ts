@@ -10,6 +10,7 @@ import { forSnapshot, getOriginator, paginateAll } from '../_util'
 import { FeedViewPost } from '../../src/lexicon/types/app/bsky/feed/defs'
 import { Database } from '../../src'
 import { ids } from '../../src/lexicon/lexicons'
+import { createServiceJwt } from '@atproto/xrpc-server'
 
 const REVERSE_CHRON = 'reverse-chronological'
 
@@ -56,6 +57,26 @@ describe('timeline views', () => {
 
   // @TODO(bsky) blocks posts, reposts, replies by actor takedown via labels
   // @TODO(bsky) blocks posts, reposts, replies by record takedown via labels
+
+  it('throws if the user key is incorrect', async () => {
+    const bobKeypair = await network.pds.ctx.actorStore.keypair(bob)
+
+    const jwt = await createServiceJwt({
+      iss: alice,
+      aud: network.bsky.ctx.cfg.serverDid,
+      lxm: ids.AppBskyFeedGetTimeline,
+      keypair: bobKeypair,
+    })
+
+    await expect(
+      agent.api.app.bsky.feed.getTimeline(
+        { limit: 10 },
+        {
+          headers: { authorization: `Bearer ${jwt}` },
+        },
+      ),
+    ).rejects.toThrow()
+  })
 
   it("fetches authenticated user's home feed w/ reverse-chronological algorithm", async () => {
     const expectOriginatorFollowedBy = (did) => (item: FeedViewPost) => {
