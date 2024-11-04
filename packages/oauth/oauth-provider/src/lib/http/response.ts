@@ -1,6 +1,4 @@
-import { PassThrough, Readable, Transform } from 'node:stream'
-import { pipeline } from 'node:stream/promises'
-import { constants, createBrotliCompress, createGzip } from 'node:zlib'
+import { Readable, pipeline } from 'node:stream'
 
 import { Handler, ServerResponse } from './types.js'
 
@@ -26,108 +24,69 @@ export function writeRedirect(
   res.writeHead(status, { Location: url }).end()
 }
 
-function negotiateEncoding(accept?: string | string[]) {
-  if (accept?.includes('br')) return 'br'
-  if (accept?.includes('gzip')) return 'gzip'
-  return 'identity'
+export type WriteResponseOptions = {
+  status?: number
+  contentType?: string
 }
 
-function getEncoder(encoding: string): Transform {
-  switch (encoding) {
-    case 'br':
-      return createBrotliCompress({
-        // Default quality is too slow
-        params: { [constants.BROTLI_PARAM_QUALITY]: 5 },
-      })
-    case 'gzip':
-      return createGzip()
-    case 'identity':
-      return new PassThrough()
-    default:
-      throw new Error(`Unsupported encoding: ${encoding}`)
-  }
-}
-
-const ifString = (value: unknown): string | undefined =>
-  typeof value === 'string' ? value : undefined
-
-export async function writeStream(
+export function writeStream(
   res: ServerResponse,
   stream: Readable,
-  contentType = ifString((stream as any).headers?.['content-type']) ||
-    'application/octet-stream',
-  status = 200,
-): Promise<void> {
+  {
+    status = 200,
+    contentType = 'application/octet-stream',
+  }: WriteResponseOptions = {},
+): void {
   res.statusCode = status
   res.setHeader('content-type', contentType)
-  appendHeader(res, 'vary', 'accept-encoding')
-
-  const encoding = negotiateEncoding(res.req.headers['accept-encoding'])
-
-  res.setHeader('content-encoding', encoding)
-  res.setHeader('transfer-encoding', 'chunked')
 
   if (res.req.method === 'HEAD') {
     res.end()
     stream.destroy()
-    return
-  }
-
-  try {
-    await pipeline(stream, getEncoder(encoding), res)
-  } catch (err) {
-    // Prevent the socket from being left open in a bad state
-    res.socket?.destroy()
-
-    if (err != null && typeof err === 'object') {
-      // If an abort signal is used, we can consider this function's job successful
-      if ('name' in err && err.name === 'AbortError') return
-
-      // If the client closes the connection, we don't care about the error
-      if ('code' in err && err.code === 'ERR_STREAM_PREMATURE_CLOSE') return
-    }
-
-    throw err
+  } else {
+    pipeline([stream, res], (_err: Error | null) => {
+      // The error will be propagated through the streams
+    })
   }
 }
 
-export async function writeBuffer(
+export function writeBuffer(
   res: ServerResponse,
-  buffer: Buffer,
-  contentType?: string,
-  status = 200,
-): Promise<void> {
-  const stream = Readable.from([buffer])
-  return writeStream(res, stream, contentType, status)
+  chunk: string | Buffer,
+  {
+    status = 200,
+    contentType = 'application/octet-stream',
+  }: WriteResponseOptions = {},
+): void {
+  res.statusCode = status
+  res.setHeader('content-type', contentType)
+  res.end(chunk)
 }
 
-export async function writeJson(
+export function writeJson(
   res: ServerResponse,
   payload: unknown,
-  status = 200,
-  contentType = 'application/json',
-): Promise<void> {
+  { contentType = 'application/json', ...options }: WriteResponseOptions = {},
+): void {
   const buffer = Buffer.from(JSON.stringify(payload))
-  return writeBuffer(res, buffer, contentType, status)
+  writeBuffer(res, buffer, { ...options, contentType })
 }
 
-export function staticJsonHandler(
+export function staticJsonMiddleware(
   value: unknown,
-  contentType = 'application/json',
-  status = 200,
+  { contentType = 'application/json', ...options }: WriteResponseOptions = {},
 ): Handler<unknown> {
   const buffer = Buffer.from(JSON.stringify(value))
-  return function (req, res, next) {
-    void writeBuffer(res, buffer, contentType, status).catch(next)
+  const staticOptions: WriteResponseOptions = { ...options, contentType }
+  return function (req, res) {
+    writeBuffer(res, buffer, staticOptions)
   }
 }
 
-export async function writeHtml(
+export function writeHtml(
   res: ServerResponse,
   html: Buffer | string,
-  status = 200,
-  contentType = 'text/html',
-): Promise<void> {
-  const buffer = Buffer.isBuffer(html) ? html : Buffer.from(html)
-  return writeBuffer(res, buffer, contentType, status)
+  { contentType = 'text/html', ...options }: WriteResponseOptions = {},
+): void {
+  writeBuffer(res, html, { ...options, contentType })
 }
