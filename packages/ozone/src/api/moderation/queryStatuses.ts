@@ -26,6 +26,8 @@ export default function (server: Server, ctx: AppContext) {
         cursor,
         tags = [],
         excludeTags = [],
+        collections = [],
+        subjectType,
       } = params
       const db = ctx.db
       const modService = ctx.modService(db)
@@ -49,6 +51,8 @@ export default function (server: Server, ctx: AppContext) {
         cursor,
         tags,
         excludeTags,
+        collections,
+        subjectType,
       })
       const subjectStatuses = results.statuses.map((status) =>
         modService.views.formatSubjectStatus(status),

@@ -95,7 +95,7 @@ export function createFinalHandler(
     res.setHeader('Content-Security-Policy', "default-src 'none'")
     res.setHeader('X-Content-Type-Options', 'nosniff')
 
-    writeJson(res, payload, status)
+    writeJson(res, payload, { status })
   }
 }
 
