@@ -1,10 +1,11 @@
-import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
+import { Server } from '../../../../lexicon'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.getRelationships({
-    handler: async ({ params }) => {
-      const { actor, others = [] } = params
+    auth: ctx.authVerifier.optionalStandardOrRole,
+    handler: ctx.createHandler(async (ctx) => {
+      const { actor, others = [] } = ctx.params
       if (others.length < 1) {
         return {
           encoding: 'application/json',
@@ -14,10 +15,12 @@ export default function (server: Server, ctx: AppContext) {
           },
         }
       }
+
       const res = await ctx.hydrator.actor.getProfileViewerStatesNaive(
         others,
         actor,
       )
+
       const relationships = others.map((did) => {
         const subject = res.get(did)
         return subject
@@ -33,6 +36,7 @@ export default function (server: Server, ctx: AppContext) {
               notFound: true,
             }
       })
+
       return {
         encoding: 'application/json',
         body: {
@@ -40,6 +44,6 @@ export default function (server: Server, ctx: AppContext) {
           relationships,
         },
       }
-    },
+    }),
   })
 }

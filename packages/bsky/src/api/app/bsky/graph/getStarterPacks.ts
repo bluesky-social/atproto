@@ -1,81 +1,50 @@
 import { dedupeStrs, mapDefined } from '@atproto/common'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getStarterPacks'
+
 import AppContext from '../../../../context'
-import { resHeaders } from '../../../util'
-import { createPipeline, noRules } from '../../../../pipeline'
+import { Server } from '../../../../lexicon/index'
 import {
-  HydrateCtx,
-  HydrationState,
-  Hydrator,
-} from '../../../../hydration/hydrator'
-import { Views } from '../../../../views'
+  OutputSchema,
+  QueryParams,
+} from '../../../../lexicon/types/app/bsky/graph/getStarterPacks'
+import {
+  HydrationFn,
+  noRules,
+  PresentationFn,
+  SkeletonFn,
+} from '../../../../pipeline'
+
+type Skeleton = { uris: string[] }
 
 export default function (server: Server, ctx: AppContext) {
-  const getStarterPacks = createPipeline(
-    skeleton,
-    hydration,
-    noRules,
-    presentation,
-  )
   server.app.bsky.graph.getStarterPacks({
     auth: ctx.authVerifier.standardOptional,
-    handler: async ({ auth, params, req }) => {
-      const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
-      const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({
-        viewer,
-        labelers,
-        includeTakedowns,
-      })
-
-      const result = await getStarterPacks({ ...params, hydrateCtx }, ctx)
-
-      return {
-        encoding: 'application/json',
-        body: result,
-        headers: resHeaders({ labelers: hydrateCtx.labelers }),
-      }
-    },
+    handler: ctx.createPipelineHandler(
+      skeleton,
+      hydration,
+      noRules,
+      presentation,
+      {
+        includeTakedowns: true,
+      },
+    ),
   })
 }
 
-const skeleton = async (inputs: { params: Params }) => {
-  return { uris: inputs.params.uris }
+const skeleton: SkeletonFn<Skeleton, QueryParams> = async (ctx) => {
+  return { uris: ctx.params.uris }
 }
 
-const hydration = async (input: {
-  ctx: Context
-  params: Params
-  skeleton: SkeletonState
-}) => {
-  const { ctx, params, skeleton } = input
-  return ctx.hydrator.hydrateStarterPacksBasic(
-    dedupeStrs(skeleton.uris),
-    params.hydrateCtx,
-  )
+const hydration: HydrationFn<Skeleton, QueryParams> = async (ctx, skeleton) => {
+  return ctx.hydrator.hydrateStarterPacksBasic(dedupeStrs(skeleton.uris), ctx)
 }
 
-const presentation = (input: {
-  ctx: Context
-  params: Params
-  skeleton: SkeletonState
-  hydration: HydrationState
-}) => {
-  const { ctx, skeleton, hydration } = input
+const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = (
+  ctx,
+  skeleton,
+  hydration,
+) => {
   const starterPacks = mapDefined(skeleton.uris, (did) =>
     ctx.views.starterPackBasic(did, hydration),
   )
-  return { starterPacks }
+  return { body: { starterPacks } }
 }
-
-type Context = {
-  hydrator: Hydrator
-  views: Views
-}
-
-type Params = QueryParams & {
-  hydrateCtx: HydrateCtx
-}
-
-type SkeletonState = { uris: string[] }

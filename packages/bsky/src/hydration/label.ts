@@ -11,7 +11,7 @@ import {
 } from './util'
 import { AtUri } from '@atproto/syntax'
 import { ids } from '../lexicon/lexicons'
-import { ParsedLabelers } from '../util'
+import { ParsedLabelers } from '../util/labeler-header'
 
 export type { Label } from '../lexicon/types/com/atproto/label/defs'
 
