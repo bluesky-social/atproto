@@ -76,7 +76,7 @@ export function useApi(
   )
 
   const doSignUp = useCallback(
-    (data: SignUpData) => {
+    (_data: SignUpData) => {
       //
       throw new Error('Not implemented')
     },

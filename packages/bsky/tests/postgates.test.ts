@@ -1,4 +1,4 @@
-import { TestNetwork, SeedClient, RecordRef } from '@atproto/dev-env'
+import { TestNetwork, SeedClient } from '@atproto/dev-env'
 import AtpAgent, { AppBskyEmbedRecord } from '@atproto/api'
 
 import { ids } from '../src/lexicon/lexicons'

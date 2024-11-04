@@ -1,4 +1,3 @@
-import { AtUri } from '@atproto/syntax'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { createPipeline } from '../../../../pipeline'
