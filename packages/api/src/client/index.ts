@@ -161,6 +161,7 @@ import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 import * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet'
 import * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs'
+import * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig'
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
 import * as AppBskyUnspeccedGetSuggestionsSkeleton from './types/app/bsky/unspecced/getSuggestionsSkeleton'
 import * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions'
@@ -380,6 +381,7 @@ export * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/
 export * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 export * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet'
 export * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs'
+export * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig'
 export * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
 export * as AppBskyUnspeccedGetSuggestionsSkeleton from './types/app/bsky/unspecced/getSuggestionsSkeleton'
 export * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions'
@@ -2999,6 +3001,18 @@ export class AppBskyUnspeccedNS {
 
   constructor(client: XrpcClient) {
     this._client = client
+  }
+
+  getConfig(
+    params?: AppBskyUnspeccedGetConfig.QueryParams,
+    opts?: AppBskyUnspeccedGetConfig.CallOptions,
+  ): Promise<AppBskyUnspeccedGetConfig.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getConfig',
+      params,
+      undefined,
+      opts,
+    )
   }
 
   getPopularFeedGenerators(

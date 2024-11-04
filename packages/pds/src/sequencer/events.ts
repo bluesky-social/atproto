@@ -26,7 +26,10 @@ export const formatSeqCommit = async (
   if (writes.length > 200 || commitData.newBlocks.byteSize > 1000000) {
     tooBig = true
     const justRoot = new BlockMap()
-    justRoot.add(commitData.newBlocks.get(commitData.cid))
+    const rootBlock = commitData.newBlocks.get(commitData.cid)
+    if (rootBlock) {
+      justRoot.set(commitData.cid, rootBlock)
+    }
     carSlice = await blocksToCarFile(commitData.cid, justRoot)
   } else {
     tooBig = false
