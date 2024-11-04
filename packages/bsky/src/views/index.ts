@@ -183,7 +183,13 @@ export class Views {
     return {
       ...basicView,
       description: actor.profile?.description || undefined,
-      indexedAt: actor.sortedAt?.toISOString(),
+      indexedAt:
+        actor.indexedAt && actor.sortedAt
+          ? this.indexedAt({
+              sortedAt: actor.sortedAt,
+              indexedAt: actor.indexedAt,
+            }).toISOString()
+          : undefined,
     }
   }
 
@@ -331,7 +337,7 @@ export class Views {
       creator,
       description: list.record.description,
       descriptionFacets: list.record.descriptionFacets,
-      indexedAt: list.sortedAt.toISOString(),
+      indexedAt: this.indexedAt(list).toISOString(),
     }
   }
 
@@ -357,7 +363,7 @@ export class Views {
           )
         : undefined,
       listItemCount: listAgg?.listItems ?? 0,
-      indexedAt: list.sortedAt.toISOString(),
+      indexedAt: this.indexedAt(list).toISOString(),
       labels,
       viewer: listViewer
         ? {
@@ -387,7 +393,7 @@ export class Views {
       joinedAllTimeCount: agg?.joinedAllTime ?? 0,
       joinedWeekCount: agg?.joinedWeek ?? 0,
       labels,
-      indexedAt: sp.sortedAt.toISOString(),
+      indexedAt: this.indexedAt(sp).toISOString(),
     }
   }
 
@@ -464,7 +470,7 @@ export class Views {
             like: viewer.like,
           }
         : undefined,
-      indexedAt: labeler.sortedAt.toISOString(),
+      indexedAt: this.indexedAt(labeler).toISOString(),
       labels,
     }
   }
@@ -552,7 +558,7 @@ export class Views {
             like: viewer.like,
           }
         : undefined,
-      indexedAt: feedgen.sortedAt.toISOString(),
+      indexedAt: this.indexedAt(feedgen).toISOString(),
     }
   }
 
@@ -725,7 +731,7 @@ export class Views {
     return {
       $type: 'app.bsky.feed.defs#reasonRepost',
       by: creator,
-      indexedAt: repost.sortedAt.toISOString(),
+      indexedAt: this.indexedAt(repost).toISOString(),
     }
   }
 
@@ -1207,7 +1213,7 @@ export class Views {
 
   indexedAt({ sortedAt, indexedAt }: { sortedAt: Date; indexedAt: Date }) {
     if (!this.indexedAtEpoch) return sortedAt
-    return indexedAt > this.indexedAtEpoch ? indexedAt : sortedAt
+    return indexedAt && indexedAt > this.indexedAtEpoch ? indexedAt : sortedAt
   }
 }
 
