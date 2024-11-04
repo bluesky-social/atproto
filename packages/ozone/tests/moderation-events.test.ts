@@ -320,6 +320,98 @@ describe('moderation-events', () => {
       expect(addAndRemoveEvent.event.add).toEqual(['L3'])
       expect(addAndRemoveEvent.event.remove).toEqual(['L2'])
     })
+
+    it('returns events for specified collections', async () => {
+      const sp = await sc.createStarterPack(
+        sc.dids.alice,
+        "alice's about to get blocked starter pack",
+        [sc.dids.bob, sc.dids.carol],
+        [],
+      )
+      await sc.createReport({
+        reasonType: REASONSPAM,
+        reason: 'X',
+        subject: {
+          $type: 'com.atproto.repo.strongRef',
+          ...sp.raw,
+        },
+        reportedBy: sc.dids.bob,
+      })
+
+      const [
+        onlyStarterPackReports,
+        onlyAlicesStarterPackReports,
+        onlyBobsStarterPackReports,
+        onlyPostReports,
+      ] = await Promise.all([
+        modClient.queryEvents({
+          types: ['tools.ozone.moderation.defs#modEventReport'],
+          collections: ['app.bsky.graph.starterpack'],
+        }),
+        modClient.queryEvents({
+          subject: sc.dids.alice,
+          includeAllUserRecords: true,
+          types: ['tools.ozone.moderation.defs#modEventReport'],
+          collections: ['app.bsky.graph.starterpack'],
+        }),
+        modClient.queryEvents({
+          subject: sc.dids.bob,
+          includeAllUserRecords: true,
+          types: ['tools.ozone.moderation.defs#modEventReport'],
+          collections: ['app.bsky.graph.starterpack'],
+        }),
+        modClient.queryEvents({
+          types: ['tools.ozone.moderation.defs#modEventReport'],
+          collections: ['app.bsky.feed.post'],
+        }),
+      ])
+
+      expect(onlyStarterPackReports.events.length).toEqual(1)
+      expect(onlyStarterPackReports.events[0].subject.uri).toContain(
+        'app.bsky.graph.starterpack',
+      )
+
+      expect(onlyAlicesStarterPackReports.events.length).toEqual(1)
+      expect(onlyAlicesStarterPackReports.events[0].subject.uri).toContain(
+        sp.uriStr,
+      )
+      expect(onlyBobsStarterPackReports.events.length).toEqual(0)
+      expect(onlyPostReports.events.length).toEqual(4)
+    })
+
+    it('returns events for account or records', async () => {
+      const [onlyAccountReports, onlyRecordReports, onlyReportsOnBobsAccount] =
+        await Promise.all([
+          modClient.queryEvents({
+            types: ['tools.ozone.moderation.defs#modEventReport'],
+            subjectType: 'account',
+          }),
+          modClient.queryEvents({
+            types: ['tools.ozone.moderation.defs#modEventReport'],
+            subjectType: 'record',
+          }),
+          modClient.queryEvents({
+            subject: sc.dids.bob,
+            types: ['tools.ozone.moderation.defs#modEventReport'],
+            subjectType: 'record',
+          }),
+        ])
+
+      // only account reports are returned, no event has a uri
+      expect(
+        onlyAccountReports.events.every((e) => !e.subject.uri),
+      ).toBeTruthy()
+
+      // only record reports are returned, all events have a uri
+      expect(onlyRecordReports.events.every((e) => e.subject.uri)).toBeTruthy()
+
+      // only bob's account reports are returned, no events have a URI even though the subjectType is record
+      expect(
+        onlyReportsOnBobsAccount.events.every(
+          (e) => !e.subject.uri && e.subject.did === sc.dids.bob,
+        ),
+      ).toBeTruthy()
+    })
   })
 
   describe('get event', () => {

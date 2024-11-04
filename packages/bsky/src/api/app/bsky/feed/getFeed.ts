@@ -102,6 +102,7 @@ const noBlocksOrMutes: RulesFn<Skeleton, QueryParams> = (
       !bam.ancestorAuthorBlocked
     )
   })
+
   return skeleton
 }
 
@@ -117,7 +118,7 @@ const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = (
       ...post,
       feedContext: item.feedContext,
     }
-  }).slice(0, ctx.params.limit)
+  })
   return {
     headers: {
       ...skeleton.resHeaders,
@@ -181,7 +182,12 @@ async function skeletonFromFeedGen(
     })
 
     const result = await agent.app.bsky.feed.getFeedSkeleton(
-      { feed, limit, cursor },
+      {
+        feed,
+        // The feedgen is not guaranteed to honor the limit, but we try it.
+        limit,
+        cursor,
+      },
       { headers },
     )
     skeleton = result.data
@@ -209,7 +215,7 @@ async function skeletonFromFeedGen(
   }
 
   const { feed: feedSkele, ...skele } = skeleton
-  const feedItems = feedSkele.map((item) => ({
+  const feedItems = feedSkele.slice(0, limit).map((item) => ({
     post: { uri: item.post },
     repost:
       typeof item.reason?.repost === 'string'

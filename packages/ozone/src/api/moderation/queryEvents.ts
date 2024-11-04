@@ -23,6 +23,8 @@ export default function (server: Server, ctx: AppContext) {
         addedTags = [],
         removedTags = [],
         reportTypes,
+        collections = [],
+        subjectType,
       } = params
       const db = ctx.db
       const modService = ctx.modService(db)
@@ -43,6 +45,8 @@ export default function (server: Server, ctx: AppContext) {
         removedLabels,
         removedTags,
         reportTypes,
+        collections,
+        subjectType,
       })
       return {
         encoding: 'application/json',

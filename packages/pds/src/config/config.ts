@@ -246,6 +246,10 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     headersTimeout: env.proxyHeadersTimeout ?? 10e3,
     bodyTimeout: env.proxyBodyTimeout ?? 30e3,
     maxResponseSize: env.proxyMaxResponseSize ?? 10 * 1024 * 1024, // 10mb
+    maxRetries:
+      env.proxyMaxRetries != null && env.proxyMaxRetries > 0
+        ? env.proxyMaxRetries
+        : 0,
     preferCompressed: env.proxyPreferCompressed ?? false,
   }
 
@@ -414,6 +418,7 @@ export type ProxyConfig = {
   headersTimeout: number
   bodyTimeout: number
   maxResponseSize: number
+  maxRetries: number
 
   /**
    * When proxying requests that might get intercepted (for read-after-write) we
