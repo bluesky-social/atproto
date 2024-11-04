@@ -38,6 +38,18 @@
           }
         }
       },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "commit": {
+              "type": "ref",
+              "ref": "com.atproto.repo.defs#commitMeta"
+            }
+          }
+        }
+      },
       "errors": [{ "name": "InvalidSwap" }]
     }
   }

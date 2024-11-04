@@ -1,6 +1,6 @@
 {
   "name": "@atproto/common",
-  "version": "0.4.0",
+  "version": "0.4.4",
   "license": "MIT",
   "description": "Shared web-platform-friendly code for atproto libraries",
   "keywords": [
@@ -24,11 +24,11 @@
     "cbor-x": "^1.5.1",
     "iso-datestring-validator": "^2.2.2",
     "multiformats": "^9.9.0",
-    "pino": "^8.15.0"
+    "pino": "^8.21.0"
   },
   "devDependencies": {
     "jest": "^28.1.2",
-    "typescript": "^5.3.3",
+    "typescript": "^5.6.3",
     "uint8arrays": "3.0.0"
   }
 }

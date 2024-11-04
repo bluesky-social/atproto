@@ -11,6 +11,7 @@ import events from 'events'
 import { Options as XrpcServerOptions } from '@atproto/xrpc-server'
 import { DAY, HOUR, MINUTE, SECOND } from '@atproto/common'
 import API from './api'
+import * as authRoutes from './auth-routes'
 import * as basicRoutes from './basic-routes'
 import * as wellKnown from './well-known'
 import * as error from './error'
@@ -53,12 +54,6 @@ export class PDS {
     secrets: ServerSecrets,
     overrides?: Partial<AppContextOptions>,
   ): Promise<PDS> {
-    const app = express()
-    app.set('trust proxy', true)
-    app.use(cors({ maxAge: DAY / SECOND }))
-    app.use(loggerMiddleware)
-    app.use(compression())
-
     const ctx = await AppContext.fromConfig(cfg, secrets, overrides)
 
     const xrpcOpts: XrpcServerOptions = {
@@ -99,6 +94,12 @@ export class PDS {
 
     server = API(server, ctx)
 
+    const app = express()
+    app.set('trust proxy', true)
+    app.use(loggerMiddleware)
+    app.use(compression())
+    app.use(authRoutes.createRouter(ctx)) // Before CORS
+    app.use(cors({ maxAge: DAY / SECOND }))
     app.use(basicRoutes.createRouter(ctx))
     app.use(wellKnown.createRouter(ctx))
     app.use(server.xrpc.router)
@@ -126,6 +127,7 @@ export class PDS {
     await this.ctx.backgroundQueue.destroy()
     await this.ctx.accountManager.close()
     await this.ctx.redisScratch?.quit()
+    await this.ctx.proxyAgent.destroy()
     clearInterval(this.dbStatsInterval)
     clearInterval(this.sequencerStatsInterval)
   }

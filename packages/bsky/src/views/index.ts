@@ -16,20 +16,33 @@ import {
   NotFoundPost,
   PostView,
   ReasonRepost,
+  ReasonPin,
   ReplyRef,
   ThreadViewPost,
   ThreadgateView,
   isPostView,
 } from '../lexicon/types/app/bsky/feed/defs'
 import { isRecord as isPostRecord } from '../lexicon/types/app/bsky/feed/post'
-import { ListView, ListViewBasic } from '../lexicon/types/app/bsky/graph/defs'
-import { creatorFromUri, parseThreadGate, cidFromBlobJson } from './util'
+import {
+  ListView,
+  ListViewBasic,
+  StarterPackView,
+  StarterPackViewBasic,
+} from '../lexicon/types/app/bsky/graph/defs'
+import {
+  parseThreadGate,
+  cidFromBlobJson,
+  VideoUriBuilder,
+  parsePostgate,
+} from './util'
+import { uriToDid as creatorFromUri, safePinnedPost } from '../util/uris'
 import { isListRule } from '../lexicon/types/app/bsky/feed/threadgate'
 import { isSelfLabels } from '../lexicon/types/com/atproto/label/defs'
 import {
   Embed,
   EmbedBlocked,
   EmbedNotFound,
+  EmbedDetached,
   EmbedView,
   ExternalEmbed,
   ExternalEmbedView,
@@ -43,10 +56,13 @@ import {
   RecordEmbedViewInternal,
   RecordWithMedia,
   RecordWithMediaView,
+  VideoEmbed,
+  VideoEmbedView,
   isExternalEmbed,
   isImagesEmbed,
   isRecordEmbed,
   isRecordWithMedia,
+  isVideoEmbed,
 } from './types'
 import { Label } from '../hydration/label'
 import { FeedItem, Post, Repost } from '../hydration/feed'
@@ -56,9 +72,13 @@ import {
   LabelerViewDetailed,
 } from '../lexicon/types/app/bsky/labeler/defs'
 import { Notification } from '../proto/bsky_pb'
+import { postUriToThreadgateUri, postUriToPostgateUri } from '../util/uris'
 
 export class Views {
-  constructor(public imgUriBuilder: ImageUriBuilder) {}
+  constructor(
+    public imgUriBuilder: ImageUriBuilder,
+    public videoUriBuilder: VideoUriBuilder,
+  ) {}
 
   // Actor
   // ------------
@@ -99,6 +119,16 @@ export class Views {
     return actor.muted || !!actor.mutedByList
   }
 
+  replyIsHiddenByThreadgate(
+    replyUri: string,
+    rootPostUri: string,
+    state: HydrationState,
+  ) {
+    const threadgateUri = postUriToThreadgateUri(rootPostUri)
+    const threadgate = state.threadgates?.get(threadgateUri)
+    return !!threadgate?.record?.hiddenReplies?.includes(replyUri)
+  }
+
   profileDetailed(
     did: string,
     state: HydrationState,
@@ -107,9 +137,16 @@ export class Views {
     if (!actor) return
     const baseView = this.profile(did, state)
     if (!baseView) return
+    const knownFollowers = this.knownFollowers(did, state)
     const profileAggs = state.profileAggs?.get(did)
     return {
       ...baseView,
+      viewer: baseView.viewer
+        ? {
+            ...baseView.viewer,
+            knownFollowers,
+          }
+        : undefined,
       banner: actor.profile?.banner
         ? this.imgUriBuilder.getPresetUri(
             'banner',
@@ -123,12 +160,17 @@ export class Views {
       associated: {
         lists: profileAggs?.lists,
         feedgens: profileAggs?.feeds,
+        starterPacks: profileAggs?.starterPacks,
         labeler: actor.isLabeler,
         // @TODO apply default chat policy?
         chat: actor.allowIncomingChatsFrom
           ? { allowIncoming: actor.allowIncomingChatsFrom }
           : undefined,
       },
+      joinedViaStarterPack: actor.profile?.joinedViaStarterPack
+        ? this.starterPackBasic(actor.profile.joinedViaStarterPack.uri, state)
+        : undefined,
+      pinnedPost: safePinnedPost(actor.profile?.pinnedPost),
     }
   }
 
@@ -189,6 +231,27 @@ export class Views {
           : undefined,
       viewer: this.profileViewer(did, state),
       labels,
+      createdAt: actor.createdAt?.toISOString(),
+    }
+  }
+
+  profileKnownFollowers(
+    did: string,
+    state: HydrationState,
+  ): ProfileView | undefined {
+    const actor = state.actors?.get(did)
+    if (!actor) return
+    const baseView = this.profile(did, state)
+    if (!baseView) return
+    const knownFollowers = this.knownFollowers(did, state)
+    return {
+      ...baseView,
+      viewer: baseView.viewer
+        ? {
+            ...baseView.viewer,
+            knownFollowers,
+          }
+        : undefined,
     }
   }
 
@@ -216,6 +279,26 @@ export class Views {
     }
   }
 
+  knownFollowers(did: string, state: HydrationState) {
+    const knownFollowers = state.knownFollowers?.get(did)
+    if (!knownFollowers) return
+    const blocks = state.bidirectionalBlocks?.get(did)
+    const followers = mapDefined(knownFollowers.followers, (followerDid) => {
+      if (this.viewerBlockExists(followerDid, state)) {
+        return undefined
+      }
+      if (blocks?.get(followerDid) === true) {
+        return undefined
+      }
+      if (this.actorIsNoHosted(followerDid, state)) {
+        // @TODO only needed right now to work around getProfile's { includeTakedowns: true }
+        return undefined
+      }
+      return this.profileBasic(followerDid, state)
+    })
+    return { count: knownFollowers.count, followers }
+  }
+
   blockedProfileViewer(
     did: string,
     state: HydrationState,
@@ -234,7 +317,7 @@ export class Views {
   // ------------
 
   list(uri: string, state: HydrationState): ListView | undefined {
-    const creatorDid = new AtUri(uri).hostname
+    const creatorDid = creatorFromUri(uri)
     const list = state.lists?.get(uri)
     if (!list) return
     const creator = this.profile(creatorDid, state)
@@ -256,9 +339,10 @@ export class Views {
     if (!list) {
       return undefined
     }
+    const listAgg = state.listAggs?.get(uri)
     const listViewer = state.listViewers?.get(uri)
     const labels = state.labels?.getBySubject(uri) ?? []
-    const creator = new AtUri(uri).hostname
+    const creator = creatorFromUri(uri)
     return {
       uri,
       cid: list.cid,
@@ -271,6 +355,7 @@ export class Views {
             cidFromBlobJson(list.record.avatar),
           )
         : undefined,
+      listItemCount: listAgg?.listItems ?? 0,
       indexedAt: list.sortedAt.toISOString(),
       labels,
       viewer: listViewer
@@ -279,6 +364,53 @@ export class Views {
             blocked: listViewer.viewerListBlockUri,
           }
         : undefined,
+    }
+  }
+
+  starterPackBasic(
+    uri: string,
+    state: HydrationState,
+  ): StarterPackViewBasic | undefined {
+    const sp = state.starterPacks?.get(uri)
+    if (!sp) return
+    const parsedUri = new AtUri(uri)
+    const creator = this.profileBasic(parsedUri.hostname, state)
+    if (!creator) return
+    const agg = state.starterPackAggs?.get(uri)
+    const labels = state.labels?.getBySubject(uri) ?? []
+    return {
+      uri,
+      cid: sp.cid,
+      record: sp.record,
+      creator,
+      joinedAllTimeCount: agg?.joinedAllTime ?? 0,
+      joinedWeekCount: agg?.joinedWeek ?? 0,
+      labels,
+      indexedAt: sp.sortedAt.toISOString(),
+    }
+  }
+
+  starterPack(uri: string, state: HydrationState): StarterPackView | undefined {
+    const sp = state.starterPacks?.get(uri)
+    const basicView = this.starterPackBasic(uri, state)
+    if (!sp || !basicView) return
+    const agg = state.starterPackAggs?.get(uri)
+    const feeds = mapDefined(sp.record.feeds ?? [], (feed) =>
+      this.feedGenerator(feed.uri, state),
+    )
+    const list = this.listBasic(sp.record.list, state)
+    const listItemsSample = mapDefined(agg?.listItemSampleUris ?? [], (uri) => {
+      const li = state.listItems?.get(uri)
+      if (!li) return
+      const subject = this.profile(li.record.subject, state)
+      if (!subject) return
+      return { uri, subject }
+    })
+    return {
+      ...basicView,
+      feeds,
+      list,
+      listItemsSample,
     }
   }
 
@@ -293,7 +425,7 @@ export class Views {
     const { uri, cid, record } = details
     if (!uri || !cid || !record) return []
     if (!isSelfLabels(record.labels)) return []
-    const src = new AtUri(uri).host // record creator
+    const src = creatorFromUri(uri) // record creator
     const cts =
       typeof record.createdAt === 'string'
         ? normalizeDatetimeAlways(record.createdAt)
@@ -423,7 +555,7 @@ export class Views {
     }
   }
 
-  threadGate(uri: string, state: HydrationState): ThreadgateView | undefined {
+  threadgate(uri: string, state: HydrationState): ThreadgateView | undefined {
     const gate = state.threadgates?.get(uri)
     if (!gate) return
     return {
@@ -446,11 +578,7 @@ export class Views {
     if (!author) return
     const aggs = state.postAggs?.get(uri)
     const viewer = state.postViewers?.get(uri)
-    const gateUri = AtUri.make(
-      authorDid,
-      ids.AppBskyFeedThreadgate,
-      parsedUri.rkey,
-    ).toString()
+    const threadgateUri = postUriToThreadgateUri(uri)
     const labels = [
       ...(state.labels?.getBySubject(uri) ?? []),
       ...this.selfLabels({
@@ -471,17 +599,21 @@ export class Views {
       replyCount: aggs?.replies ?? 0,
       repostCount: aggs?.reposts ?? 0,
       likeCount: aggs?.likes ?? 0,
+      quoteCount: aggs?.quotes ?? 0,
       indexedAt: post.sortedAt.toISOString(),
       viewer: viewer
         ? {
             repost: viewer.repost,
             like: viewer.like,
+            threadMuted: viewer.threadMuted,
             replyDisabled: this.userReplyDisabled(uri, state),
+            embeddingDisabled: this.userPostEmbeddingDisabled(uri, state),
+            pinned: this.viewerPinned(uri, state, authorDid),
           }
         : undefined,
       labels,
       threadgate: !post.record.reply // only hydrate gate on root post
-        ? this.threadGate(gateUri, state)
+        ? this.threadgate(threadgateUri, state)
         : undefined,
     }
   }
@@ -491,8 +623,10 @@ export class Views {
     state: HydrationState,
   ): FeedViewPost | undefined {
     const postInfo = state.posts?.get(item.post.uri)
-    let reason: ReasonRepost | undefined
-    if (item.repost) {
+    let reason: ReasonRepost | ReasonPin | undefined
+    if (item.authorPinned) {
+      reason = this.reasonPin()
+    } else if (item.repost) {
       const repost = state.reposts?.get(item.repost.uri)
       if (!repost) return
       if (repost.record.subject.uri !== item.post.uri) return
@@ -501,12 +635,13 @@ export class Views {
     }
     const post = this.post(item.post.uri, state)
     if (!post) return
+    const reply = !postInfo?.violatesThreadGate
+      ? this.replyRef(item.post.uri, state)
+      : undefined
     return {
       post,
       reason,
-      reply: !postInfo?.violatesThreadGate
-        ? this.replyRef(item.post.uri, state)
-        : undefined,
+      reply,
     }
   }
 
@@ -515,11 +650,16 @@ export class Views {
     if (!postRecord?.reply) return
     let root = this.maybePost(postRecord.reply.root.uri, state)
     let parent = this.maybePost(postRecord.reply.parent.uri, state)
-    if (state.postBlocks?.get(uri)?.reply && isPostView(parent)) {
-      parent = this.blockedPost(parent.uri, parent.author.did, state)
-      // in a reply to the root of a thread, parent and root are the same post.
-      if (root.uri === parent.uri) {
-        root = parent
+    if (!state.ctx?.include3pBlocks) {
+      const childBlocks = state.postBlocks?.get(uri)
+      const parentBlocks = state.postBlocks?.get(parent.uri)
+      // if child blocks parent, block parent
+      if (isPostView(parent) && childBlocks?.parent) {
+        parent = this.blockedPost(parent.uri, parent.author.did, state)
+      }
+      // if child or parent blocks root, block root
+      if (isPostView(root) && (childBlocks?.root || parentBlocks?.root)) {
+        root = this.blockedPost(root.uri, root.author.did, state)
       }
     }
     let grandparentAuthor: ProfileViewBasic | undefined
@@ -588,6 +728,12 @@ export class Views {
     }
   }
 
+  reasonPin() {
+    return {
+      $type: 'app.bsky.feed.defs#reasonPin',
+    }
+  }
+
   // Threads
   // ------------
 
@@ -644,7 +790,10 @@ export class Views {
     if (height < 1) return undefined
     const parentUri = state.posts?.get(childUri)?.record.reply?.parent.uri
     if (!parentUri) return undefined
-    if (state.postBlocks?.get(childUri)?.reply) {
+    if (
+      !state.ctx?.include3pBlocks &&
+      state.postBlocks?.get(childUri)?.parent
+    ) {
       return this.blockedPost(parentUri, creatorFromUri(parentUri), state)
     }
     const post = this.post(parentUri, state)
@@ -675,7 +824,7 @@ export class Views {
       if (postInfo?.violatesThreadGate) {
         return undefined
       }
-      if (state.postBlocks?.get(uri)?.reply) {
+      if (!state.ctx?.include3pBlocks && state.postBlocks?.get(uri)?.parent) {
         return undefined
       }
       const post = this.post(uri, state)
@@ -714,6 +863,8 @@ export class Views {
   ): EmbedView | undefined {
     if (isImagesEmbed(embed)) {
       return this.imagesEmbed(creatorFromUri(postUri), embed)
+    } else if (isVideoEmbed(embed)) {
+      return this.videoEmbed(creatorFromUri(postUri), embed)
     } else if (isExternalEmbed(embed)) {
       return this.externalEmbed(creatorFromUri(postUri), embed)
     } else if (isRecordEmbed(embed)) {
@@ -746,6 +897,18 @@ export class Views {
     }
   }
 
+  videoEmbed(did: string, embed: VideoEmbed): VideoEmbedView {
+    const cid = cidFromBlobJson(embed.video)
+    return {
+      $type: 'app.bsky.embed.video#view',
+      cid,
+      playlist: this.videoUriBuilder.playlist({ did, cid }),
+      thumbnail: this.videoUriBuilder.thumbnail({ did, cid }),
+      alt: embed.alt,
+      aspectRatio: embed.aspectRatio,
+    }
+  }
+
   externalEmbed(did: string, embed: ExternalEmbed): ExternalEmbedView {
     const { uri, title, description, thumb } = embed.external
     return {
@@ -772,6 +935,17 @@ export class Views {
         $type: 'app.bsky.embed.record#viewNotFound',
         uri,
         notFound: true,
+      },
+    }
+  }
+
+  embedDetached(uri: string): { $type: string; record: EmbedDetached } {
+    return {
+      $type: 'app.bsky.embed.record#view',
+      record: {
+        $type: 'app.bsky.embed.record#viewDetached',
+        uri,
+        detached: true,
       },
     }
   }
@@ -812,6 +986,7 @@ export class Views {
       likeCount: postView.likeCount,
       replyCount: postView.replyCount,
       repostCount: postView.repostCount,
+      quoteCount: postView.quoteCount,
       indexedAt: postView.indexedAt,
       embeds: depth > 1 ? undefined : postView.embed ? [postView.embed] : [],
     }
@@ -828,14 +1003,24 @@ export class Views {
     const parsedUri = new AtUri(uri)
     if (
       this.viewerBlockExists(parsedUri.hostname, state) ||
-      state.postBlocks?.get(postUri)?.embed
+      (!state.ctx?.include3pBlocks && state.postBlocks?.get(postUri)?.embed)
     ) {
       return this.embedBlocked(uri, state)
+    }
+
+    const post = state.posts?.get(postUri)
+    if (post?.violatesEmbeddingRules) {
+      return this.embedDetached(uri)
     }
 
     if (parsedUri.collection === ids.AppBskyFeedPost) {
       const view = this.embedPostView(uri, state, depth)
       if (!view) return this.embedNotFound(uri)
+      const postgateRecordUri = postUriToPostgateUri(parsedUri.toString())
+      const postgate = state.postgates?.get(postgateRecordUri)
+      if (postgate?.record?.detachedEmbeddingUris?.includes(postUri)) {
+        return this.embedDetached(uri)
+      }
       return this.recordEmbedWrapper(view, withTypeTag)
     } else if (parsedUri.collection === ids.AppBskyFeedGenerator) {
       const view = this.feedGenerator(uri, state)
@@ -851,6 +1036,11 @@ export class Views {
       const view = this.labeler(parsedUri.hostname, state)
       if (!view) return this.embedNotFound(uri)
       view.$type = 'app.bsky.labeler.defs#labelerView'
+      return this.recordEmbedWrapper(view, withTypeTag)
+    } else if (parsedUri.collection === ids.AppBskyGraphStarterpack) {
+      const view = this.starterPackBasic(uri, state)
+      if (!view) return this.embedNotFound(uri)
+      view.$type = 'app.bsky.graph.defs#starterPackViewBasic'
       return this.recordEmbedWrapper(view, withTypeTag)
     }
     return this.embedNotFound(uri)
@@ -873,9 +1063,11 @@ export class Views {
     depth: number,
   ): RecordWithMediaView | undefined {
     const creator = creatorFromUri(postUri)
-    let mediaEmbed: ImagesEmbedView | ExternalEmbedView
+    let mediaEmbed: ImagesEmbedView | VideoEmbedView | ExternalEmbedView
     if (isImagesEmbed(embed.media)) {
       mediaEmbed = this.imagesEmbed(creator, embed.media)
+    } else if (isVideoEmbed(embed.media)) {
+      mediaEmbed = this.videoEmbed(creator, embed.media)
     } else if (isExternalEmbed(embed.media)) {
       mediaEmbed = this.externalEmbed(creator, embed.media)
     } else {
@@ -894,13 +1086,15 @@ export class Views {
       return true
     }
     const rootUriStr: string = post?.record.reply?.root.uri ?? uri
-    const gate = state.threadgates?.get(postToGateUri(rootUriStr))?.record
+    const gate = state.threadgates?.get(
+      postUriToThreadgateUri(rootUriStr),
+    )?.record
     const viewer = state.ctx?.viewer
     if (!gate || !viewer) {
       return undefined
     }
     const rootPost = state.posts?.get(rootUriStr)?.record
-    const ownerDid = new AtUri(rootUriStr).hostname
+    const ownerDid = creatorFromUri(rootUriStr)
     const {
       canReply,
       allowFollowing,
@@ -919,6 +1113,39 @@ export class Views {
       }
     }
     return true
+  }
+
+  userPostEmbeddingDisabled(
+    uri: string,
+    state: HydrationState,
+  ): boolean | undefined {
+    const post = state.posts?.get(uri)
+    if (!post) {
+      return true
+    }
+    const postgateRecordUri = postUriToPostgateUri(uri)
+    const gate = state.postgates?.get(postgateRecordUri)?.record
+    const viewerDid = state.ctx?.viewer ?? undefined
+    const {
+      embeddingRules: { canEmbed },
+    } = parsePostgate({
+      gate,
+      viewerDid,
+      authorDid: creatorFromUri(uri),
+    })
+    if (canEmbed) {
+      return false
+    }
+    return true
+  }
+
+  viewerPinned(uri: string, state: HydrationState, authorDid: string) {
+    if (!state.ctx?.viewer || state.ctx.viewer !== authorDid) return
+    const actor = state.actors?.get(authorDid)
+    if (!actor) return
+    const pinnedPost = safePinnedPost(actor.profile?.pinnedPost)
+    if (!pinnedPost) return undefined
+    return pinnedPost.uri === uri
   }
 
   notification(
@@ -940,6 +1167,17 @@ export class Views {
       recordInfo = state.reposts?.get(notif.uri)
     } else if (uri.collection === ids.AppBskyGraphFollow) {
       recordInfo = state.follows?.get(notif.uri)
+    } else if (uri.collection === ids.AppBskyActorProfile) {
+      const actor = state.actors?.get(authorDid)
+      recordInfo =
+        actor && actor.profile && actor.profileCid && actor.sortedAt
+          ? {
+              record: actor.profile,
+              cid: actor.profileCid,
+              sortedAt: actor.sortedAt,
+              takedownRef: actor.profileTakedownRef,
+            }
+          : null
     }
     if (!recordInfo) return
     const labels = state.labels?.getBySubject(notif.uri) ?? []
@@ -964,14 +1202,6 @@ export class Views {
       labels: [...labels, ...selfLabels],
     }
   }
-}
-
-const postToGateUri = (uri: string) => {
-  const aturi = new AtUri(uri)
-  if (aturi.collection === ids.AppBskyFeedPost) {
-    aturi.collection = ids.AppBskyFeedThreadgate
-  }
-  return aturi.toString()
 }
 
 const getRootUri = (uri: string, post: Post): string => {

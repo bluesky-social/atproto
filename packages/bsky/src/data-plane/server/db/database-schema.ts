@@ -6,7 +6,8 @@ import * as post from './tables/post'
 import * as postEmbed from './tables/post-embed'
 import * as postAgg from './tables/post-agg'
 import * as repost from './tables/repost'
-import * as threadGate from './tables/thread-gate'
+import * as threadgate from './tables/thread-gate'
+import * as postgate from './tables/post-gate'
 import * as feedItem from './tables/feed-item'
 import * as follow from './tables/follow'
 import * as like from './tables/like'
@@ -16,6 +17,7 @@ import * as listMute from './tables/list-mute'
 import * as listBlock from './tables/list-block'
 import * as mute from './tables/mute'
 import * as actorBlock from './tables/actor-block'
+import * as threadMute from './tables/thread-mute'
 import * as feedGenerator from './tables/feed-generator'
 import * as subscription from './tables/subscription'
 import * as actor from './tables/actor'
@@ -33,6 +35,8 @@ import * as suggestedFeed from './tables/suggested-feed'
 import * as taggedSuggestion from './tables/tagged-suggestion'
 import * as blobTakedown from './tables/blob-takedown'
 import * as labeler from './tables/labeler'
+import * as starterPack from './tables/starter-pack'
+import * as quote from './tables/quote'
 
 export type DatabaseSchemaType = duplicateRecord.PartialDB &
   profile.PartialDB &
@@ -41,7 +45,8 @@ export type DatabaseSchemaType = duplicateRecord.PartialDB &
   postEmbed.PartialDB &
   postAgg.PartialDB &
   repost.PartialDB &
-  threadGate.PartialDB &
+  threadgate.PartialDB &
+  postgate.PartialDB &
   feedItem.PartialDB &
   follow.PartialDB &
   like.PartialDB &
@@ -51,6 +56,7 @@ export type DatabaseSchemaType = duplicateRecord.PartialDB &
   listBlock.PartialDB &
   mute.PartialDB &
   actorBlock.PartialDB &
+  threadMute.PartialDB &
   feedGenerator.PartialDB &
   subscription.PartialDB &
   actor.PartialDB &
@@ -67,7 +73,9 @@ export type DatabaseSchemaType = duplicateRecord.PartialDB &
   suggestedFeed.PartialDB &
   blobTakedown.PartialDB &
   labeler.PartialDB &
-  taggedSuggestion.PartialDB
+  starterPack.PartialDB &
+  taggedSuggestion.PartialDB &
+  quote.PartialDB
 
 export type DatabaseSchema = Kysely<DatabaseSchemaType>
 

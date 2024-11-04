@@ -3,6 +3,7 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { resultPassthru } from '../../../proxy'
+import { ids } from '../../../../lexicon/lexicons'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.sendEmail({
@@ -25,13 +26,14 @@ export default function (server: Server, ctx: AppContext) {
       if (ctx.entrywayAgent) {
         assert(ctx.cfg.entryway)
         return resultPassthru(
-          await ctx.entrywayAgent.com.atproto.admin.sendEmail(input.body, {
-            encoding: 'application/json',
-            ...(await ctx.serviceAuthHeaders(
+          await ctx.entrywayAgent.com.atproto.admin.sendEmail(
+            input.body,
+            await ctx.serviceAuthHeaders(
               recipientDid,
-              ctx.cfg.entryway?.did,
-            )),
-          }),
+              ctx.cfg.entryway.did,
+              ids.ComAtprotoAdminSendEmail,
+            ),
+          ),
         )
       }
 

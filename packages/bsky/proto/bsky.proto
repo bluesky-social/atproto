@@ -79,6 +79,9 @@ message PostRecordMeta {
   bool violates_thread_gate = 1;
   bool has_media = 2;
   bool is_reply = 3;
+  bool violates_embedding_rules = 4;
+  bool has_post_gate = 5;
+  bool has_thread_gate = 6;
 }
 
 message GetPostRecordsRequest {
@@ -122,6 +125,14 @@ message GetThreadGateRecordsResponse {
   repeated Record records = 1;
 }
 
+message GetPostgateRecordsRequest {
+  repeated string uris = 1;
+}
+
+message GetPostgateRecordsResponse {
+  repeated Record records = 1;
+}
+
 message GetLabelerRecordsRequest {
   repeated string uris = 1;
 }
@@ -137,6 +148,13 @@ message GetAllLabelersResponse {
   repeated Record records = 2;
 }
 
+message GetStarterPackRecordsRequest {
+  repeated string uris = 1;
+}
+
+message GetStarterPackRecordsResponse {
+  repeated Record records = 1;
+}
 
 //
 // Follows
@@ -213,6 +231,17 @@ message GetLikesBySubjectSortedResponse {
   string cursor = 2;
 }
 
+message GetQuotesBySubjectSortedRequest {
+  RecordRef subject = 1;
+  int32 limit = 2;
+  string cursor = 3;
+}
+
+message GetQuotesBySubjectSortedResponse {
+  repeated string uris = 1;
+  string cursor = 2;
+}
+
 // - return like uris for user A on subject B, C, D...
 //     - viewer state on posts
 message GetLikesByActorAndSubjectsRequest {
@@ -253,6 +282,7 @@ message GetInteractionCountsResponse {
   repeated int32 likes = 1;
   repeated int32 reposts = 2;
   repeated int32 replies = 3;
+  repeated int32 quotes = 4;
 }
 
 message GetCountsForUsersRequest {
@@ -266,6 +296,33 @@ message GetCountsForUsersResponse {
   repeated int32 followers = 4;
   repeated int32 lists = 5;
   repeated int32 feeds = 6;
+  repeated int32 starter_packs = 7;
+}
+
+message GetStarterPackCountsRequest {
+  repeated RecordRef refs = 1;
+}
+
+message GetStarterPackCountsResponse {
+  repeated int32 joined_week = 1;
+  repeated int32 joined_all_time = 2;
+}
+
+message GetListCountsRequest {
+  repeated RecordRef refs = 1;
+}
+
+message GetListCountsResponse {
+  repeated int32 list_items = 1;
+}
+
+message GetNewUserCountForRangeRequest {
+  google.protobuf.Timestamp start = 1;
+  google.protobuf.Timestamp end = 2;
+}
+
+message GetNewUserCountForRangeResponse {
+  int32 count = 1;
 }
 
 //
@@ -335,6 +392,8 @@ message ActorInfo {
   bool labeler = 7;
   string allow_incoming_chats_from = 8;
   string upstream_status = 9;
+  google.protobuf.Timestamp created_at = 10;
+  bool priority_notifications = 11;
 }
 
 message GetActorsResponse {
@@ -529,6 +588,19 @@ message GetMutelistSubscriptionsResponse {
 }
 
 //
+// Thread Mutes
+//
+
+message GetThreadMutesOnSubjectsRequest {
+  string actor_did = 1;
+  repeated string thread_roots = 2;
+}
+
+message GetThreadMutesOnSubjectsResponse {
+  repeated bool muted = 1;
+}
+
+//
 // Blocks
 //
 
@@ -608,6 +680,7 @@ message GetNotificationsRequest {
   string actor_did = 1;
   int32 limit = 2;
   string cursor = 3;
+  bool priority = 4;
 }
 
 message Notification {
@@ -616,6 +689,7 @@ message Notification {
   string reason = 3;
   string reason_subject = 4;
   google.protobuf.Timestamp timestamp = 5;
+  bool priority = 6;
 }
 
 message GetNotificationsResponse {
@@ -628,6 +702,7 @@ message GetNotificationsResponse {
 message UpdateNotificationSeenRequest {
   string actor_did = 1;
   google.protobuf.Timestamp timestamp = 2;
+  bool priority = 3;
 }
 
 message UpdateNotificationSeenResponse {}
@@ -636,6 +711,7 @@ message UpdateNotificationSeenResponse {}
 //     - hydrating read state onto notifications
 message GetNotificationSeenRequest {
   string actor_did = 1;
+  bool priority = 2;
 }
 
 message GetNotificationSeenResponse {
@@ -646,6 +722,7 @@ message GetNotificationSeenResponse {
 //     - `getUnreadCount`
 message GetUnreadNotificationCountRequest {
   string actor_did = 1;
+  bool priority = 2;
 }
 
 message GetUnreadNotificationCountResponse {
@@ -894,6 +971,21 @@ message GetLabelsResponse {
 }
 
 //
+// Starter packs
+//
+
+message GetActorStarterPacksRequest {
+  string actor_did = 1;
+  int32 limit = 2;
+  string cursor = 3;
+}
+
+message GetActorStarterPacksResponse {
+  repeated string uris = 1;
+  string cursor = 2;
+}
+
+//
 // Sync
 //
 
@@ -969,13 +1061,21 @@ message GetRecordTakedownResponse {
 
 // Polo-backed Graph Endpoints
 
-// GetFollowsFollowing gets the list of DIDs that the actor follows that also follow the target
+
+
+// GetFollowsFollowing gets the list of DIDs that the actor follows that also follow the targets
 message GetFollowsFollowingRequest {
   string actor_did = 1;
-  string target_did = 2;
+  repeated string target_dids = 2;
 }
+
+message FollowsFollowing {
+  string target_did = 1;
+  repeated string dids = 2;
+}
+
 message GetFollowsFollowingResponse {
-  repeated string dids = 1;
+  repeated FollowsFollowing results = 1;
 }
 
 // Ping
@@ -1003,7 +1103,9 @@ service Service {
   rpc GetActorChatDeclarationRecords(GetActorChatDeclarationRecordsRequest) returns (GetActorChatDeclarationRecordsResponse);
   rpc GetRepostRecords(GetRepostRecordsRequest) returns (GetRepostRecordsResponse);
   rpc GetThreadGateRecords(GetThreadGateRecordsRequest) returns (GetThreadGateRecordsResponse);
+  rpc GetPostgateRecords(GetPostgateRecordsRequest) returns (GetPostgateRecordsResponse);
   rpc GetLabelerRecords(GetLabelerRecordsRequest) returns (GetLabelerRecordsResponse);
+  rpc GetStarterPackRecords(GetStarterPackRecordsRequest) returns (GetStarterPackRecordsResponse);
 
   // Follows
   rpc GetActorFollowsActors(GetActorFollowsActorsRequest) returns (GetActorFollowsActorsResponse);
@@ -1021,9 +1123,15 @@ service Service {
   rpc GetRepostsByActorAndSubjects(GetRepostsByActorAndSubjectsRequest) returns (GetRepostsByActorAndSubjectsResponse);
   rpc GetActorReposts(GetActorRepostsRequest) returns (GetActorRepostsResponse);
 
+  // Quotes
+  rpc GetQuotesBySubjectSorted(GetQuotesBySubjectSortedRequest) returns (GetQuotesBySubjectSortedResponse);
+
   // Interaction Counts
   rpc GetInteractionCounts(GetInteractionCountsRequest) returns (GetInteractionCountsResponse);
   rpc GetCountsForUsers(GetCountsForUsersRequest) returns (GetCountsForUsersResponse);
+  rpc GetStarterPackCounts(GetStarterPackCountsRequest) returns (GetStarterPackCountsResponse);
+  rpc GetListCounts(GetListCountsRequest) returns (GetListCountsResponse);
+  rpc GetNewUserCountForRange(GetNewUserCountForRangeRequest) returns (GetNewUserCountForRangeResponse);
 
   // Profile
   rpc GetActors(GetActorsRequest) returns (GetActorsResponse);
@@ -1047,6 +1155,9 @@ service Service {
   rpc GetActorMutesActorViaList(GetActorMutesActorViaListRequest) returns (GetActorMutesActorViaListResponse);
   rpc GetMutelistSubscription(GetMutelistSubscriptionRequest) returns (GetMutelistSubscriptionResponse);
   rpc GetMutelistSubscriptions(GetMutelistSubscriptionsRequest) returns (GetMutelistSubscriptionsResponse);
+
+  // Thread Mutes
+  rpc GetThreadMutesOnSubjects(GetThreadMutesOnSubjectsRequest) returns (GetThreadMutesOnSubjectsResponse);
 
   // Blocks
   rpc GetBidirectionalBlock(GetBidirectionalBlockRequest) returns (GetBidirectionalBlockResponse);
@@ -1092,6 +1203,9 @@ service Service {
   rpc GetLabels(GetLabelsRequest) returns (GetLabelsResponse);
   rpc GetAllLabelers(GetAllLabelersRequest) returns (GetAllLabelersResponse);
 
+  // Starter packs
+  rpc GetActorStarterPacks(GetActorStarterPacksRequest) returns (GetActorStarterPacksResponse);
+
   // Sync
   rpc GetLatestRev(GetLatestRevRequest) returns (GetLatestRevResponse);
 
@@ -1135,6 +1249,10 @@ service Service {
   rpc CreateActorMutelistSubscription(CreateActorMutelistSubscriptionRequest) returns (CreateActorMutelistSubscriptionResponse);
   rpc DeleteActorMutelistSubscription(DeleteActorMutelistSubscriptionRequest) returns (DeleteActorMutelistSubscriptionResponse);
   rpc ClearActorMutelistSubscriptions(ClearActorMutelistSubscriptionsRequest) returns (ClearActorMutelistSubscriptionsResponse);
+
+  rpc CreateThreadMute(CreateThreadMuteRequest) returns (CreateThreadMuteResponse);
+  rpc DeleteThreadMute(DeleteThreadMuteRequest) returns (DeleteThreadMuteResponse);
+  rpc ClearThreadMutes(ClearThreadMutesRequest) returns (ClearThreadMutesResponse);
 }
 
 
@@ -1241,3 +1359,23 @@ message ClearActorMutelistSubscriptionsRequest {
 }
 
 message ClearActorMutelistSubscriptionsResponse {}
+
+message CreateThreadMuteRequest {
+  string actor_did = 1;
+  string thread_root = 2;
+}
+
+message CreateThreadMuteResponse {}
+
+message DeleteThreadMuteRequest {
+  string actor_did = 1;
+  string thread_root = 2;
+}
+
+message DeleteThreadMuteResponse {}
+
+message ClearThreadMutesRequest {
+  string actor_did = 1;
+}
+
+message ClearThreadMutesResponse {}

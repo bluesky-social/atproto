@@ -197,50 +197,90 @@ export function string(
     }
   }
 
-  // maxLength
-  if (typeof def.maxLength === 'number') {
-    if (utf8Len(value) > def.maxLength) {
-      return {
-        success: false,
-        error: new ValidationError(
-          `${path} must not be longer than ${def.maxLength} characters`,
-        ),
+  // maxLength and minLength
+  if (typeof def.maxLength === 'number' || typeof def.minLength === 'number') {
+    const len = utf8Len(value)
+
+    if (typeof def.maxLength === 'number') {
+      if (len > def.maxLength) {
+        return {
+          success: false,
+          error: new ValidationError(
+            `${path} must not be longer than ${def.maxLength} characters`,
+          ),
+        }
+      }
+    }
+
+    if (typeof def.minLength === 'number') {
+      if (len < def.minLength) {
+        return {
+          success: false,
+          error: new ValidationError(
+            `${path} must not be shorter than ${def.minLength} characters`,
+          ),
+        }
       }
     }
   }
 
-  // minLength
-  if (typeof def.minLength === 'number') {
-    if (utf8Len(value) < def.minLength) {
-      return {
-        success: false,
-        error: new ValidationError(
-          `${path} must not be shorter than ${def.minLength} characters`,
-        ),
+  // maxGraphemes and minGraphemes
+  if (
+    typeof def.maxGraphemes === 'number' ||
+    typeof def.minGraphemes === 'number'
+  ) {
+    let needsMaxGraphemesCheck = false
+    let needsMinGraphemesCheck = false
+
+    if (typeof def.maxGraphemes === 'number') {
+      if (value.length <= def.maxGraphemes) {
+        // If the JavaScript string length (UTF-16) is within the maximum limit,
+        // its grapheme length (which <= .length) will also be within.
+        needsMaxGraphemesCheck = false
+      } else {
+        needsMaxGraphemesCheck = true
       }
     }
-  }
 
-  // maxGraphemes
-  if (typeof def.maxGraphemes === 'number') {
-    if (graphemeLen(value) > def.maxGraphemes) {
-      return {
-        success: false,
-        error: new ValidationError(
-          `${path} must not be longer than ${def.maxGraphemes} graphemes`,
-        ),
+    if (typeof def.minGraphemes === 'number') {
+      if (value.length < def.minGraphemes) {
+        // If the JavaScript string length (UTF-16) is below the minimal limit,
+        // its grapheme length (which <= .length) will also be below.
+        // Fail early.
+        return {
+          success: false,
+          error: new ValidationError(
+            `${path} must not be shorter than ${def.minGraphemes} graphemes`,
+          ),
+        }
+      } else {
+        needsMinGraphemesCheck = true
       }
     }
-  }
 
-  // minGraphemes
-  if (typeof def.minGraphemes === 'number') {
-    if (graphemeLen(value) < def.minGraphemes) {
-      return {
-        success: false,
-        error: new ValidationError(
-          `${path} must not be shorter than ${def.minGraphemes} graphemes`,
-        ),
+    if (needsMaxGraphemesCheck || needsMinGraphemesCheck) {
+      const len = graphemeLen(value)
+
+      if (typeof def.maxGraphemes === 'number') {
+        if (len > def.maxGraphemes) {
+          return {
+            success: false,
+            error: new ValidationError(
+              `${path} must not be longer than ${def.maxGraphemes} graphemes`,
+            ),
+          }
+        }
+      }
+
+      if (typeof def.minGraphemes === 'number') {
+        if (len < def.minGraphemes) {
+          return {
+            success: false,
+            error: new ValidationError(
+              `${path} must not be shorter than ${def.minGraphemes} graphemes`,
+            ),
+          }
+        }
       }
     }
   }

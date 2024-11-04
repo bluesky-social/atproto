@@ -1,4 +1,4 @@
-import AtpAgent from '@atproto/api'
+import { AtpAgent } from '@atproto/api'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import { SeedClient, TestNetworkNoAppView, basicSeed } from '@atproto/dev-env'
 import * as plc from '@did-plc/lib'
@@ -172,7 +172,7 @@ describe('plc operations', () => {
     )
 
     expect(mail.to).toEqual(sc.accounts[alice].email)
-    expect(mail.html).toContain('PLC Update Requested')
+    expect(mail.html).toContain('PLC update requested')
 
     const gotToken = getTokenFromMail(mail)
     assert(gotToken)

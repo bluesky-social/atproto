@@ -1,26 +1,39 @@
 import assert from 'node:assert'
+import * as undici from 'undici'
 import * as nodemailer from 'nodemailer'
 import { Redis } from 'ioredis'
 import * as plc from '@did-plc/lib'
+import {
+  Fetch,
+  isUnicastIp,
+  loggedFetch,
+  safeFetchWrap,
+  unicastLookup,
+} from '@atproto-labs/fetch-node'
 import * as crypto from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
 import { AtpAgent } from '@atproto/api'
 import { KmsKeypair, S3BlobStore } from '@atproto/aws'
+import { JoseKey, OAuthVerifier } from '@atproto/oauth-provider'
+import { BlobStore } from '@atproto/repo'
 import {
   RateLimiter,
   RateLimiterCreator,
   RateLimiterOpts,
   createServiceAuthHeaders,
+  createServiceJwt,
 } from '@atproto/xrpc-server'
+
 import { ServerConfig, ServerSecrets } from './config'
+import { PdsOAuthProvider } from './oauth/provider'
 import {
   AuthVerifier,
   createPublicKeyObject,
   createSecretKeyObject,
 } from './auth-verifier'
+import { fetchLogger } from './logger'
 import { ServerMailer } from './mailer'
 import { ModerationMailer } from './mailer/moderation'
-import { BlobStore } from '@atproto/repo'
 import { AccountManager } from './account-manager'
 import { Sequencer } from './sequencer'
 import { BackgroundQueue } from './background'
@@ -50,6 +63,9 @@ export type AppContextOptions = {
   moderationAgent?: AtpAgent
   reportingAgent?: AtpAgent
   entrywayAgent?: AtpAgent
+  proxyAgent: undici.Dispatcher
+  safeFetch: Fetch
+  authProvider?: PdsOAuthProvider
   authVerifier: AuthVerifier
   plcRotationKey: crypto.Keypair
   cfg: ServerConfig
@@ -74,7 +90,10 @@ export class AppContext {
   public moderationAgent: AtpAgent | undefined
   public reportingAgent: AtpAgent | undefined
   public entrywayAgent: AtpAgent | undefined
+  public proxyAgent: undici.Dispatcher
+  public safeFetch: Fetch
   public authVerifier: AuthVerifier
+  public authProvider?: PdsOAuthProvider
   public plcRotationKey: crypto.Keypair
   public cfg: ServerConfig
 
@@ -97,7 +116,10 @@ export class AppContext {
     this.moderationAgent = opts.moderationAgent
     this.reportingAgent = opts.reportingAgent
     this.entrywayAgent = opts.entrywayAgent
+    this.proxyAgent = opts.proxyAgent
+    this.safeFetch = opts.safeFetch
     this.authVerifier = opts.authVerifier
+    this.authProvider = opts.authProvider
     this.plcRotationKey = opts.plcRotationKey
     this.cfg = opts.cfg
   }
@@ -206,27 +228,18 @@ export class AppContext {
       : undefined
 
     const jwtSecretKey = createSecretKeyObject(secrets.jwtSecret)
+    const jwtPublicKey = cfg.entryway
+      ? createPublicKeyObject(cfg.entryway.jwtPublicKeyHex)
+      : null
+
     const accountManager = new AccountManager(
+      backgroundQueue,
       cfg.db.accountDbLoc,
       jwtSecretKey,
       cfg.service.did,
       cfg.db.disableWalAutoCheckpoint,
     )
     await accountManager.migrateOrThrow()
-
-    const jwtKey = cfg.entryway
-      ? createPublicKeyObject(cfg.entryway.jwtPublicKeyHex)
-      : jwtSecretKey
-
-    const authVerifier = new AuthVerifier(accountManager, idResolver, {
-      jwtKey, // @TODO support multiple keys?
-      adminPass: secrets.adminPassword,
-      dids: {
-        pds: cfg.service.did,
-        entryway: cfg.entryway?.did,
-        modService: cfg.modService?.did,
-      },
-    })
 
     const plcRotationKey =
       secrets.plcRotationKey.provider === 'kms'
@@ -250,6 +263,99 @@ export class AppContext {
       appviewCdnUrlPattern: cfg.bskyAppView?.cdnUrlPattern,
     })
 
+    // An agent for performing HTTP requests based on user provided URLs.
+    const proxyAgentBase = new undici.Agent({
+      allowH2: cfg.proxy.allowHTTP2, // This is experimental
+      headersTimeout: cfg.proxy.headersTimeout,
+      maxResponseSize: cfg.proxy.maxResponseSize,
+      bodyTimeout: cfg.proxy.bodyTimeout,
+      factory: cfg.proxy.disableSsrfProtection
+        ? undefined
+        : (origin, opts) => {
+            const { protocol, hostname } =
+              origin instanceof URL ? origin : new URL(origin)
+            if (protocol !== 'https:') {
+              throw new Error(`Forbidden protocol "${protocol}"`)
+            }
+            if (isUnicastIp(hostname) === false) {
+              throw new Error('Hostname resolved to non-unicast address')
+            }
+            return new undici.Pool(origin, opts)
+          },
+      connect: {
+        lookup: cfg.proxy.disableSsrfProtection ? undefined : unicastLookup,
+      },
+    })
+    const proxyAgent =
+      cfg.proxy.maxRetries > 0
+        ? new undici.RetryAgent(proxyAgentBase, {
+            statusCodes: [], // Only retry on socket errors
+            methods: ['GET', 'HEAD'],
+            maxRetries: cfg.proxy.maxRetries,
+          })
+        : proxyAgentBase
+
+    // A fetch() function that protects against SSRF attacks, large responses &
+    // known bad domains. This function can safely be used to fetch user
+    // provided URLs (unless "disableSsrfProtection" is true, of course).
+    const safeFetch = loggedFetch({
+      fetch: safeFetchWrap({
+        // Using globalThis.fetch allows safeFetchWrap to use keep-alive. See
+        // unicastFetchWrap().
+        fetch: globalThis.fetch,
+        allowIpHost: false,
+        responseMaxSize: cfg.fetch.maxResponseSize,
+        ssrfProtection: !cfg.fetch.disableSsrfProtection,
+      }),
+      logRequest: ({ method, url }) => {
+        fetchLogger.debug({ method, uri: url }, 'fetch')
+      },
+      logResponse: false,
+      logError: false,
+    })
+
+    const authProvider = cfg.oauth.provider
+      ? new PdsOAuthProvider({
+          issuer: cfg.oauth.issuer,
+          keyset: [
+            // Note: OpenID compatibility would require an RS256 private key in this list
+            await JoseKey.fromKeyLike(jwtSecretKey, undefined, 'HS256'),
+          ],
+          accountManager,
+          actorStore,
+          localViewer,
+          redis: redisScratch,
+          dpopSecret: secrets.dpopSecret,
+          customization: cfg.oauth.provider.customization,
+          safeFetch,
+        })
+      : undefined
+
+    const oauthVerifier: OAuthVerifier =
+      authProvider ?? // OAuthProvider extends OAuthVerifier
+      new OAuthVerifier({
+        issuer: cfg.oauth.issuer,
+        keyset: [await JoseKey.fromKeyLike(jwtPublicKey!, undefined, 'ES256K')],
+        dpopSecret: secrets.dpopSecret,
+        redis: redisScratch,
+      })
+
+    const authVerifier = new AuthVerifier(
+      accountManager,
+      idResolver,
+      oauthVerifier,
+      {
+        publicUrl: cfg.service.publicUrl,
+        jwtKey: jwtPublicKey ?? jwtSecretKey,
+        adminPass: secrets.adminPassword,
+        dids: {
+          pds: cfg.service.did,
+          entryway: cfg.entryway?.did,
+          modService: cfg.modService?.did,
+        },
+      },
+    )
+
     return new AppContext({
       actorStore,
       blobstore,
@@ -269,23 +375,37 @@ export class AppContext {
       moderationAgent,
       reportingAgent,
       entrywayAgent,
+      proxyAgent,
+      safeFetch,
       authVerifier,
+      authProvider,
       plcRotationKey,
       cfg,
       ...(overrides ?? {}),
     })
   }
 
-  async appviewAuthHeaders(did: string) {
+  async appviewAuthHeaders(did: string, lxm: string) {
     assert(this.cfg.bskyAppView)
-    return this.serviceAuthHeaders(did, this.cfg.bskyAppView.did)
+    return this.serviceAuthHeaders(did, this.cfg.bskyAppView.did, lxm)
   }
 
-  async serviceAuthHeaders(did: string, aud: string) {
+  async serviceAuthHeaders(did: string, aud: string, lxm: string) {
     const keypair = await this.actorStore.keypair(did)
     return createServiceAuthHeaders({
       iss: did,
       aud,
+      lxm,
+      keypair,
+    })
+  }
+
+  async serviceAuthJwt(did: string, aud: string, lxm: string) {
+    const keypair = await this.actorStore.keypair(did)
+    return createServiceJwt({
+      iss: did,
+      aud,
+      lxm,
       keypair,
     })
   }

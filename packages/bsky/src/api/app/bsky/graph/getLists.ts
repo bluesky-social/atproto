@@ -1,12 +1,14 @@
 import { mapDefined } from '@atproto/common'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getLists'
+import { REFERENCELIST } from '../../../../lexicon/types/app/bsky/graph/defs'
 import AppContext from '../../../../context'
 import {
   createPipeline,
   HydrationFnInput,
-  noRules,
   PresentationFnInput,
+  RulesFnInput,
   SkeletonFnInput,
 } from '../../../../pipeline'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
@@ -14,7 +16,12 @@ import { Views } from '../../../../views'
 import { clearlyBadCursor, resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
-  const getLists = createPipeline(skeleton, hydration, noRules, presentation)
+  const getLists = createPipeline(
+    skeleton,
+    hydration,
+    noReferenceLists,
+    presentation,
+  )
   server.app.bsky.graph.getLists({
     auth: ctx.authVerifier.optionalStandardOrRole,
     handler: async ({ params, auth, req }) => {
@@ -43,8 +50,12 @@ const skeleton = async (
   if (clearlyBadCursor(params.cursor)) {
     return { listUris: [] }
   }
+
+  const [did] = await ctx.hydrator.actor.getDids([params.actor])
+  if (!did) throw new InvalidRequestError('Profile not found')
+
   const { listUris, cursor } = await ctx.hydrator.dataplane.getActorLists({
-    actorDid: params.actor,
+    actorDid: did,
     cursor: params.cursor,
     limit: params.limit,
   })
@@ -57,6 +68,17 @@ const hydration = async (
   const { ctx, params, skeleton } = input
   const { listUris } = skeleton
   return ctx.hydrator.hydrateLists(listUris, params.hydrateCtx)
+}
+
+const noReferenceLists = (
+  input: RulesFnInput<Context, Params, SkeletonState>,
+) => {
+  const { skeleton, hydration } = input
+  skeleton.listUris = skeleton.listUris.filter((uri) => {
+    const list = hydration.lists?.get(uri)
+    return list?.record.purpose !== REFERENCELIST
+  })
+  return skeleton
 }
 
 const presentation = (

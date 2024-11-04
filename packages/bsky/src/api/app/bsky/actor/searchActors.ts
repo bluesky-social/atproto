@@ -1,7 +1,7 @@
 import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { mapDefined } from '@atproto/common'
-import AtpAgent from '@atproto/api'
+import { AtpAgent } from '@atproto/api'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/actor/searchActors'
 import {
   HydrationFnInput,
@@ -51,9 +51,9 @@ const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
   // add hits total
 
   if (ctx.searchAgent) {
-    // @NOTE cursors wont change on appview swap
+    // @NOTE cursors won't change on appview swap
     const { data: res } =
-      await ctx.searchAgent.api.app.bsky.unspecced.searchActorsSkeleton({
+      await ctx.searchAgent.app.bsky.unspecced.searchActorsSkeleton({
         q: term,
         cursor: params.cursor,
         limit: params.limit,

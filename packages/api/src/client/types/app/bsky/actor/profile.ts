@@ -6,6 +6,7 @@ import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
 import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
+import * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef'
 
 export interface Record {
   displayName?: string
@@ -18,6 +19,9 @@ export interface Record {
   labels?:
     | ComAtprotoLabelDefs.SelfLabels
     | { $type: string; [k: string]: unknown }
+  joinedViaStarterPack?: ComAtprotoRepoStrongRef.Main
+  pinnedPost?: ComAtprotoRepoStrongRef.Main
+  createdAt?: string
   [k: string]: unknown
 }
 

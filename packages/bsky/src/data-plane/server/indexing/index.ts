@@ -1,11 +1,10 @@
 import { sql } from 'kysely'
 import { CID } from 'multiformats/cid'
-import AtpAgent, { ComAtprotoSyncGetLatestCommit } from '@atproto/api'
+import { AtpAgent, ComAtprotoSyncGetLatestCommit } from '@atproto/api'
 import {
   readCarWithRoot,
   WriteOpAction,
   verifyRepo,
-  Commit,
   VerifiedRepo,
   getAndParseRecord,
 } from '@atproto/repo'
@@ -17,6 +16,7 @@ import { Database } from '../db'
 import { Actor } from '../db/tables/actor'
 import * as Post from './plugins/post'
 import * as Threadgate from './plugins/thread-gate'
+import * as Postgate from './plugins/post-gate'
 import * as Like from './plugins/like'
 import * as Repost from './plugins/repost'
 import * as Follow from './plugins/follow'
@@ -26,6 +26,7 @@ import * as ListItem from './plugins/list-item'
 import * as ListBlock from './plugins/list-block'
 import * as Block from './plugins/block'
 import * as FeedGenerator from './plugins/feed-generator'
+import * as StarterPack from './plugins/starter-pack'
 import * as Labeler from './plugins/labeler'
 import * as ChatDeclaration from './plugins/chat-declaration'
 import RecordProcessor from './processor'
@@ -37,6 +38,7 @@ export class IndexingService {
   records: {
     post: Post.PluginType
     threadGate: Threadgate.PluginType
+    postGate: Postgate.PluginType
     like: Like.PluginType
     repost: Repost.PluginType
     follow: Follow.PluginType
@@ -46,6 +48,7 @@ export class IndexingService {
     listBlock: ListBlock.PluginType
     block: Block.PluginType
     feedGenerator: FeedGenerator.PluginType
+    starterPack: StarterPack.PluginType
     labeler: Labeler.PluginType
     chatDeclaration: ChatDeclaration.PluginType
   }
@@ -58,6 +61,7 @@ export class IndexingService {
     this.records = {
       post: Post.makePlugin(this.db, this.background),
       threadGate: Threadgate.makePlugin(this.db, this.background),
+      postGate: Postgate.makePlugin(this.db, this.background),
       like: Like.makePlugin(this.db, this.background),
       repost: Repost.makePlugin(this.db, this.background),
       follow: Follow.makePlugin(this.db, this.background),
@@ -67,6 +71,7 @@ export class IndexingService {
       listBlock: ListBlock.makePlugin(this.db, this.background),
       block: Block.makePlugin(this.db, this.background),
       feedGenerator: FeedGenerator.makePlugin(this.db, this.background),
+      starterPack: StarterPack.makePlugin(this.db, this.background),
       labeler: Labeler.makePlugin(this.db, this.background),
       chatDeclaration: ChatDeclaration.makePlugin(this.db, this.background),
     }
@@ -221,43 +226,23 @@ export class IndexingService {
     )
   }
 
-  async setCommitLastSeen(
-    commit: Commit,
-    details: { commit: CID; rebase: boolean; tooBig: boolean },
-  ) {
+  async setCommitLastSeen(did: string, commit: CID, rev: string) {
     const { ref } = this.db.db.dynamic
     await this.db.db
       .insertInto('actor_sync')
       .values({
-        did: commit.did,
-        commitCid: details.commit.toString(),
-        commitDataCid: commit.data.toString(),
-        repoRev: commit.rev ?? null,
-        rebaseCount: details.rebase ? 1 : 0,
-        tooBigCount: details.tooBig ? 1 : 0,
+        did,
+        commitCid: commit.toString(),
+        repoRev: rev ?? null,
       })
       .onConflict((oc) => {
-        const sync = (col: string) => ref(`actor_sync.${col}`)
         const excluded = (col: string) => ref(`excluded.${col}`)
         return oc.column('did').doUpdateSet({
           commitCid: sql`${excluded('commitCid')}`,
-          commitDataCid: sql`${excluded('commitDataCid')}`,
           repoRev: sql`${excluded('repoRev')}`,
-          rebaseCount: sql`${sync('rebaseCount')} + ${excluded('rebaseCount')}`,
-          tooBigCount: sql`${sync('tooBigCount')} + ${excluded('tooBigCount')}`,
         })
       })
       .execute()
-  }
-
-  async checkCommitNeedsIndexing(commit: Commit) {
-    const sync = await this.db.db
-      .selectFrom('actor_sync')
-      .select('commitDataCid')
-      .where('did', '=', commit.did)
-      .executeTakeFirst()
-    if (!sync) return true
-    return sync.commitDataCid !== commit.data.toString()
   }
 
   findIndexerForCollection(collection: string) {
@@ -360,6 +345,10 @@ export class IndexingService {
     await this.db.db.deleteFrom('post').where('creator', '=', did).execute()
     await this.db.db
       .deleteFrom('thread_gate')
+      .where('creator', '=', did)
+      .execute()
+    await this.db.db
+      .deleteFrom('post_gate')
       .where('creator', '=', did)
       .execute()
     // notifications

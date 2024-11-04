@@ -66,6 +66,7 @@ Object {
           },
           "size": 3976,
         },
+        "createdAt": "1970-01-01T00:00:00.000Z",
         "description": "its me!",
         "displayName": "ali",
         "labels": Object {
@@ -165,6 +166,7 @@ Object {
           },
           "size": 3976,
         },
+        "createdAt": "1970-01-01T00:00:00.000Z",
         "description": "its me!",
         "displayName": "ali",
         "labels": Object {

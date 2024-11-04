@@ -34,7 +34,10 @@ export const createDataPlaneClient = (
         try {
           return await client.lib[method.localName](...args)
         } catch (err) {
-          if (err instanceof ConnectError && err.code === Code.Unavailable) {
+          if (
+            err instanceof ConnectError &&
+            (err.code === Code.Unavailable || err.code === Code.Aborted)
+          ) {
             tries++
             error = err
             remainingClients = getRemainingClients(remainingClients, client)

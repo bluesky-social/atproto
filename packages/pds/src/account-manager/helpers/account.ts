@@ -9,8 +9,6 @@ export type ActorAccount = ActorEntry & {
   email: string | null
   emailConfirmedAt: string | null
   invitesDisabled: 0 | 1 | null
-  active: boolean
-  status?: AccountStatus
 }
 
 export type AvailabilityFlags = {
@@ -26,7 +24,7 @@ export enum AccountStatus {
   Deactivated = 'deactivated',
 }
 
-const selectAccountQB = (db: AccountDb, flags?: AvailabilityFlags) => {
+export const selectAccountQB = (db: AccountDb, flags?: AvailabilityFlags) => {
   const { includeTakenDown = false, includeDeactivated = false } = flags ?? {}
   const { ref } = db.db.dynamic
   return db.db
@@ -63,7 +61,29 @@ export const getAccount = async (
       }
     })
     .executeTakeFirst()
-  return found ? { ...found, ...formatAccountStatus(found) } : null
+  return found || null
+}
+
+export const getAccounts = async (
+  db: AccountDb,
+  dids: string[],
+  flags?: AvailabilityFlags,
+): Promise<Map<string, ActorAccount>> => {
+  const results = new Map<string, ActorAccount>()
+
+  if (!dids.length) {
+    return results
+  }
+
+  const accounts = await selectAccountQB(db, flags)
+    .where('actor.did', 'in', dids)
+    .execute()
+
+  accounts.forEach((account) => {
+    results.set(account.did, account)
+  })
+
+  return results
 }
 
 export const getAccountByEmail = async (
@@ -74,7 +94,7 @@ export const getAccountByEmail = async (
   const found = await selectAccountQB(db, flags)
     .where('email', '=', email.toLowerCase())
     .executeTakeFirst()
-  return found ? { ...found, ...formatAccountStatus(found) } : null
+  return found || null
 }
 
 export const registerActor = async (
@@ -182,7 +202,10 @@ export const updateEmail = async (
     await db.executeWithRetry(
       db.db
         .updateTable('account')
-        .set({ email: email.toLowerCase(), emailConfirmedAt: null })
+        .set({
+          email: email.toLowerCase(),
+          emailConfirmedAt: null,
+        })
         .where('did', '=', did),
     )
   } catch (err) {
@@ -264,22 +287,19 @@ export const activateAccount = async (db: AccountDb, did: string) => {
   )
 }
 
-export const formatAccountStatus = (account: {
-  takedownRef: string | null
-  deactivatedAt: string | null
-}): {
-  active: boolean
-  status?: AccountStatus
-} => {
-  let status: AccountStatus | undefined = undefined
-  if (account.takedownRef) {
-    status = AccountStatus.Takendown
+export const formatAccountStatus = (
+  account: null | {
+    takedownRef: string | null
+    deactivatedAt: string | null
+  },
+) => {
+  if (!account) {
+    return { active: false, status: AccountStatus.Deleted } as const
+  } else if (account.takedownRef) {
+    return { active: false, status: AccountStatus.Takendown } as const
   } else if (account.deactivatedAt) {
-    status = AccountStatus.Deactivated
-  }
-  const active = !status
-  return {
-    active,
-    status,
+    return { active: false, status: AccountStatus.Deactivated } as const
+  } else {
+    return { active: true, status: undefined } as const
   }
 }

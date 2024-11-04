@@ -6,7 +6,7 @@ export const ensureValidRecordKey = (rkey: string): void => {
   if (!/^[a-zA-Z0-9_~.:-]{1,512}$/.test(rkey)) {
     throw new InvalidRecordKeyError('record key syntax not valid (regex)')
   }
-  if (rkey == '.' || rkey == '..')
+  if (rkey === '.' || rkey === '..')
     throw new InvalidRecordKeyError('record key can not be "." or ".."')
 }
 

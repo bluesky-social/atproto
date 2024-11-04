@@ -6,13 +6,22 @@ export const readEnv = (): ServerEnvironment => {
     port: envInt('PDS_PORT'),
     hostname: envStr('PDS_HOSTNAME'),
     serviceDid: envStr('PDS_SERVICE_DID'),
+    serviceName: envStr('PDS_SERVICE_NAME'),
     version: envStr('PDS_VERSION'),
+    homeUrl: envStr('PDS_HOME_URL'),
+    logoUrl: envStr('PDS_LOGO_URL'),
     privacyPolicyUrl: envStr('PDS_PRIVACY_POLICY_URL'),
+    supportUrl: envStr('PDS_SUPPORT_URL'),
     termsOfServiceUrl: envStr('PDS_TERMS_OF_SERVICE_URL'),
     contactEmailAddress: envStr('PDS_CONTACT_EMAIL_ADDRESS'),
     acceptingImports: envBool('PDS_ACCEPTING_REPO_IMPORTS'),
     blobUploadLimit: envInt('PDS_BLOB_UPLOAD_LIMIT'),
     devMode: envBool('PDS_DEV_MODE'),
+
+    // branding
+    brandColor: envStr('PDS_PRIMARY_COLOR'),
+    errorColor: envStr('PDS_ERROR_COLOR'),
+    warningColor: envStr('PDS_WARNING_COLOR'),
 
     // database
     dataDirectory: envStr('PDS_DATA_DIRECTORY'),
@@ -97,6 +106,7 @@ export const readEnv = (): ServerEnvironment => {
     crawlers: envList('PDS_CRAWLERS'),
 
     // secrets
+    dpopSecret: envStr('PDS_DPOP_SECRET'),
     jwtSecret: envStr('PDS_JWT_SECRET'),
     adminPassword: envStr('PDS_ADMIN_PASSWORD'),
 
@@ -106,6 +116,20 @@ export const readEnv = (): ServerEnvironment => {
     plcRotationKeyK256PrivateKeyHex: envStr(
       'PDS_PLC_ROTATION_KEY_K256_PRIVATE_KEY_HEX',
     ),
+
+    // user provided url http requests
+    disableSsrfProtection: envBool('PDS_DISABLE_SSRF_PROTECTION'),
+
+    // fetch
+    fetchMaxResponseSize: envInt('PDS_FETCH_MAX_RESPONSE_SIZE'),
+
+    // proxy
+    proxyAllowHTTP2: envBool('PDS_PROXY_ALLOW_HTTP2'),
+    proxyHeadersTimeout: envInt('PDS_PROXY_HEADERS_TIMEOUT'),
+    proxyBodyTimeout: envInt('PDS_PROXY_BODY_TIMEOUT'),
+    proxyMaxResponseSize: envInt('PDS_PROXY_MAX_RESPONSE_SIZE'),
+    proxyMaxRetries: envInt('PDS_PROXY_MAX_RETRIES'),
+    proxyPreferCompressed: envBool('PDS_PROXY_PREFER_COMPRESSED'),
   }
 }
 
@@ -114,13 +138,22 @@ export type ServerEnvironment = {
   port?: number
   hostname?: string
   serviceDid?: string
+  serviceName?: string
   version?: string
+  homeUrl?: string
+  logoUrl?: string
   privacyPolicyUrl?: string
+  supportUrl?: string
   termsOfServiceUrl?: string
   contactEmailAddress?: string
   acceptingImports?: boolean
   blobUploadLimit?: number
   devMode?: boolean
+
+  // branding
+  brandColor?: string
+  errorColor?: string
+  warningColor?: string
 
   // database
   dataDirectory?: string
@@ -203,10 +236,25 @@ export type ServerEnvironment = {
   crawlers?: string[]
 
   // secrets
+  dpopSecret?: string
   jwtSecret?: string
   adminPassword?: string
 
   // keys
   plcRotationKeyKmsKeyId?: string
   plcRotationKeyK256PrivateKeyHex?: string
+
+  // user provided url http requests
+  disableSsrfProtection?: boolean
+
+  // fetch
+  fetchMaxResponseSize?: number
+
+  // proxy
+  proxyAllowHTTP2?: boolean
+  proxyHeadersTimeout?: number
+  proxyBodyTimeout?: number
+  proxyMaxResponseSize?: number
+  proxyMaxRetries?: number
+  proxyPreferCompressed?: boolean
 }

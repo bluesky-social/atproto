@@ -1,10 +1,11 @@
+import { AtpAgent } from '@atproto/api'
 import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
-import AtpAgent from '@atproto/api'
 import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import * as plc from '@did-plc/lib'
 import usersSeed from './seeds/users'
 import { RepoRef } from '../src/lexicon/types/com/atproto/admin/defs'
+import { ids } from '../src/lexicon/lexicons'
 
 describe('moderator auth', () => {
   let network: TestNetworkNoAppView
@@ -73,9 +74,10 @@ describe('moderator auth', () => {
   })
 
   it('allows service auth requests from the configured appview did', async () => {
-    const headers = await createServiceAuthHeaders({
+    const updateHeaders = await createServiceAuthHeaders({
       iss: modServiceDid,
       aud: pdsDid,
+      lxm: ids.ComAtprotoAdminUpdateSubjectStatus,
       keypair: modServiceKey,
     })
     await agent.api.com.atproto.admin.updateSubjectStatus(
@@ -84,16 +86,22 @@ describe('moderator auth', () => {
         takedown: { applied: true, ref: 'test-repo' },
       },
       {
-        ...headers,
+        ...updateHeaders,
         encoding: 'application/json',
       },
     )
 
+    const getHeaders = await createServiceAuthHeaders({
+      iss: modServiceDid,
+      aud: pdsDid,
+      lxm: ids.ComAtprotoAdminGetSubjectStatus,
+      keypair: modServiceKey,
+    })
     const res = await agent.api.com.atproto.admin.getSubjectStatus(
       {
         did: repoSubject.did,
       },
-      headers,
+      getHeaders,
     )
     expect(res.data.subject.did).toBe(repoSubject.did)
     expect(res.data.takedown?.applied).toBe(true)
@@ -103,6 +111,7 @@ describe('moderator auth', () => {
     const headers = await createServiceAuthHeaders({
       iss: altModDid,
       aud: pdsDid,
+      lxm: ids.ComAtprotoAdminUpdateSubjectStatus,
       keypair: modServiceKey,
     })
     const attempt = agent.api.com.atproto.admin.updateSubjectStatus(
@@ -123,6 +132,7 @@ describe('moderator auth', () => {
     const headers = await createServiceAuthHeaders({
       iss: modServiceDid,
       aud: pdsDid,
+      lxm: ids.ComAtprotoAdminUpdateSubjectStatus,
       keypair: badKey,
     })
     const attempt = agent.api.com.atproto.admin.updateSubjectStatus(
@@ -145,6 +155,7 @@ describe('moderator auth', () => {
     const headers = await createServiceAuthHeaders({
       iss: modServiceDid,
       aud: sc.dids.alice,
+      lxm: ids.ComAtprotoAdminUpdateSubjectStatus,
       keypair: modServiceKey,
     })
     const attempt = agent.api.com.atproto.admin.updateSubjectStatus(

@@ -28,6 +28,8 @@ const insertFn = async (
       description: obj.description,
       avatarCid: obj.avatar?.ref.toString(),
       bannerCid: obj.banner?.ref.toString(),
+      joinedViaStarterPackUri: obj.joinedViaStarterPack?.uri,
+      createdAt: obj.createdAt ?? new Date().toISOString(),
       indexedAt: timestamp,
     })
     .onConflict((oc) => oc.doNothing())
@@ -40,8 +42,20 @@ const findDuplicate = async (): Promise<AtUri | null> => {
   return null
 }
 
-const notifsForInsert = () => {
-  return []
+const notifsForInsert = (obj: IndexedProfile) => {
+  if (!obj.joinedViaStarterPackUri) return []
+  const starterPackUri = new AtUri(obj.joinedViaStarterPackUri)
+  return [
+    {
+      did: starterPackUri.host,
+      author: obj.creator,
+      recordUri: obj.uri,
+      recordCid: obj.cid,
+      reason: 'starterpack-joined' as const,
+      reasonSubject: obj.joinedViaStarterPackUri,
+      sortAt: obj.indexedAt,
+    },
+  ]
 }
 
 const deleteFn = async (

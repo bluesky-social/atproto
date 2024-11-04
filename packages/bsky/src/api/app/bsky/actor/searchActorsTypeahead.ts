@@ -1,6 +1,6 @@
 import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
-import AtpAgent from '@atproto/api'
+import { AtpAgent } from '@atproto/api'
 import { mapDefined } from '@atproto/common'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/actor/searchActorsTypeahead'
 import {
@@ -52,7 +52,7 @@ const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
 
   if (ctx.searchAgent) {
     const { data: res } =
-      await ctx.searchAgent.api.app.bsky.unspecced.searchActorsSkeleton({
+      await ctx.searchAgent.app.bsky.unspecced.searchActorsSkeleton({
         typeahead: true,
         q: term,
         limit: params.limit,
@@ -82,10 +82,15 @@ const hydration = async (
 }
 
 const noBlocks = (inputs: RulesFnInput<Context, Params, Skeleton>) => {
-  const { ctx, skeleton, hydration } = inputs
-  skeleton.dids = skeleton.dids.filter(
-    (did) => !ctx.views.viewerBlockExists(did, hydration),
-  )
+  const { ctx, skeleton, hydration, params } = inputs
+  skeleton.dids = skeleton.dids.filter((did) => {
+    const actor = hydration.actors?.get(did)
+    if (!actor) return false
+    // Always display exact matches so that users can find profiles that they have blocked
+    const term = (params.q ?? params.term ?? '').toLowerCase()
+    const isExactMatch = actor.handle?.toLowerCase() === term
+    return isExactMatch || !ctx.views.viewerBlockExists(did, hydration)
+  })
   return skeleton
 }
 

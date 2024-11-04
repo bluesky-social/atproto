@@ -30,7 +30,7 @@ export const ensureValidAtUri = (uri: string) => {
   }
 
   const parts = uri.split('/')
-  if (parts.length >= 3 && (parts[0] != 'at:' || parts[1].length != 0)) {
+  if (parts.length >= 3 && (parts[0] !== 'at:' || parts[1].length !== 0)) {
     throw new Error('ATURI must start with "at://"')
   }
   if (parts.length < 3) {
@@ -48,7 +48,7 @@ export const ensureValidAtUri = (uri: string) => {
   }
 
   if (parts.length >= 4) {
-    if (parts[3].length == 0) {
+    if (parts[3].length === 0) {
       throw new Error(
         'ATURI can not have a slash after authority without a path segment',
       )
@@ -63,7 +63,7 @@ export const ensureValidAtUri = (uri: string) => {
   }
 
   if (parts.length >= 5) {
-    if (parts[4].length == 0) {
+    if (parts[4].length === 0) {
       throw new Error(
         'ATURI can not have a slash after collection, unless record key is provided',
       )
@@ -82,7 +82,7 @@ export const ensureValidAtUri = (uri: string) => {
   }
 
   if (fragmentPart != null) {
-    if (fragmentPart.length == 0 || fragmentPart[0] != '/') {
+    if (fragmentPart.length === 0 || fragmentPart[0] !== '/') {
       throw new Error('ATURI fragment must be non-empty and start with slash')
     }
     // NOTE: enforcing *some* checks here for sanity. Eg, at least no whitespace

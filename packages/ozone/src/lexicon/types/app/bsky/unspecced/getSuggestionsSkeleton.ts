@@ -14,6 +14,8 @@ export interface QueryParams {
   viewer?: string
   limit: number
   cursor?: string
+  /** DID of the account to get suggestions relative to. If not provided, suggestions will be based on the viewer. */
+  relativeToDid?: string
 }
 
 export type InputSchema = undefined
@@ -21,6 +23,8 @@ export type InputSchema = undefined
 export interface OutputSchema {
   cursor?: string
   actors: AppBskyUnspeccedDefs.SkeletonSearchActor[]
+  /** DID of the account these suggestions are relative to. If this is returned undefined, suggestions are based on the viewer. */
+  relativeToDid?: string
   [k: string]: unknown
 }
 

@@ -12,6 +12,7 @@ import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
 
 export interface QueryParams {
   limit: number
+  priority?: boolean
   cursor?: string
   seenAt?: string
 }
@@ -21,6 +22,7 @@ export type InputSchema = undefined
 export interface OutputSchema {
   cursor?: string
   notifications: Notification[]
+  priority?: boolean
   seenAt?: string
   [k: string]: unknown
 }
@@ -54,7 +56,7 @@ export interface Notification {
   uri: string
   cid: string
   author: AppBskyActorDefs.ProfileView
-  /** Expected values are 'like', 'repost', 'follow', 'mention', 'reply', and 'quote'. */
+  /** Expected values are 'like', 'repost', 'follow', 'mention', 'reply', 'quote', and 'starterpack-joined'. */
   reason:
     | 'like'
     | 'repost'
@@ -62,6 +64,7 @@ export interface Notification {
     | 'mention'
     | 'reply'
     | 'quote'
+    | 'starterpack-joined'
     | (string & {})
   reasonSubject?: string
   record: {}

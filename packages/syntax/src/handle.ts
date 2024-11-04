@@ -65,7 +65,7 @@ export const ensureValidHandle = (handle: string): void => {
         'Handle parts can not start or end with hyphens',
       )
     }
-    if (i + 1 == labels.length && !/^[a-zA-Z]/.test(l)) {
+    if (i + 1 === labels.length && !/^[a-zA-Z]/.test(l)) {
       throw new InvalidHandleError(
         'Handle final component (TLD) must start with ASCII letter',
       )

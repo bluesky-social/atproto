@@ -1,5 +1,29 @@
 # @atproto/lex-cli
 
+## 0.5.1
+
+### Patch Changes
+
+- Updated dependencies [[`87a1f2426`](https://github.com/bluesky-social/atproto/commit/87a1f24262e0e644b6cf31cc7a0446d9127ffa94)]:
+  - @atproto/lexicon@0.4.2
+
+## 0.5.0
+
+### Minor Changes
+
+- [#2707](https://github.com/bluesky-social/atproto/pull/2707) [`2bdf75d7a`](https://github.com/bluesky-social/atproto/commit/2bdf75d7a63924c10e7a311f16cb447d595b933e) Thanks [@matthieusieben](https://github.com/matthieusieben)! - The generated client implementation uses the new `XrpcClient` class from `@atproto/xrpc`, instead of the deprecated `Client` and `ServiceClient` class.
+
+### Patch Changes
+
+- Updated dependencies [[`b934b396b`](https://github.com/bluesky-social/atproto/commit/b934b396b13ba32bf2bf7e75ecdf6871e5f310dd), [`2bdf75d7a`](https://github.com/bluesky-social/atproto/commit/2bdf75d7a63924c10e7a311f16cb447d595b933e)]:
+  - @atproto/lexicon@0.4.1
+
+## 0.4.1
+
+### Patch Changes
+
+- [#2691](https://github.com/bluesky-social/atproto/pull/2691) [`08ef309c9`](https://github.com/bluesky-social/atproto/commit/08ef309c9c1f35f0e7093cb845321e876133d23e) Thanks [@dholms](https://github.com/dholms)! - Fix use of prettier.format for codegen
+
 ## 0.4.0
 
 ### Minor Changes

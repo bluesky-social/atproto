@@ -1,4 +1,4 @@
-import AtpAgent from '@atproto/api'
+import { AtpAgent } from '@atproto/api'
 import { TestNetwork, SeedClient } from '@atproto/dev-env'
 import basicSeed from '../seeds/basic'
 import { forSnapshot } from '../_util'
@@ -38,7 +38,7 @@ describe('proxies admin requests', () => {
       inviteCode: invite.code,
     })
     moderator = modAccount.did
-    network.ozone.addModeratorDid(moderator)
+    await network.ozone.addModeratorDid(moderator)
 
     await network.processAll()
   })

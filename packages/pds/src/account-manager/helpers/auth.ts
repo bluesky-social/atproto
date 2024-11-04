@@ -46,7 +46,10 @@ export const createAccessToken = (opts: {
     expiresIn = '120mins',
   } = opts
   const signer = new jose.SignJWT({ scope })
-    .setProtectedHeader({ alg: 'HS256' }) // only symmetric keys supported
+    .setProtectedHeader({
+      typ: 'at+jwt', // https://www.rfc-editor.org/rfc/rfc9068.html
+      alg: 'HS256', // only symmetric keys supported
+    })
     .setAudience(serviceDid)
     .setSubject(did)
     .setIssuedAt()
@@ -69,7 +72,10 @@ export const createRefreshToken = (opts: {
     expiresIn = '90days',
   } = opts
   const signer = new jose.SignJWT({ scope: AuthScope.Refresh })
-    .setProtectedHeader({ alg: 'HS256' }) // only symmetric keys supported
+    .setProtectedHeader({
+      typ: 'refresh+jwt',
+      alg: 'HS256', // only symmetric keys supported
+    })
     .setAudience(serviceDid)
     .setSubject(did)
     .setJti(jti)

@@ -1,6 +1,6 @@
 {
   "name": "@atproto/dev-env",
-  "version": "0.3.21",
+  "version": "0.3.60",
   "license": "MIT",
   "description": "Local development environment helper for atproto development",
   "keywords": [
@@ -17,7 +17,8 @@
   "bin": "dist/bin.js",
   "scripts": {
     "build": "tsc --build tsconfig.build.json",
-    "start": "../dev-infra/with-test-redis-and-db.sh node dist/bin.js"
+    "start": "../dev-infra/with-test-redis-and-db.sh node dist/bin.js",
+    "dev": "../dev-infra/with-test-redis-and-db.sh node --watch dist/bin.js"
   },
   "dependencies": {
     "@atproto/api": "workspace:^",
@@ -29,6 +30,7 @@
     "@atproto/lexicon": "workspace:^",
     "@atproto/ozone": "workspace:^",
     "@atproto/pds": "workspace:^",
+    "@atproto/sync": "workspace:^",
     "@atproto/syntax": "workspace:^",
     "@atproto/xrpc-server": "workspace:^",
     "@did-plc/lib": "^0.0.1",
@@ -41,6 +43,7 @@
     "uint8arrays": "3.0.0"
   },
   "devDependencies": {
-    "@types/express": "^4.17.13"
+    "@types/express": "^4.17.13",
+    "typescript": "^5.6.3"
   }
 }

@@ -1,13 +1,18 @@
 import { AtUri } from '@atproto/syntax'
 import { TID } from '@atproto/common-web'
+import zod from 'zod'
 
+import { Nux } from './client/types/app/bsky/actor/defs'
 import { AppBskyActorDefs } from './client'
 
 export function sanitizeMutedWordValue(value: string) {
-  return value
-    .trim()
-    .replace(/^#(?!\ufe0f)/, '')
-    .replace(/[\r\n\u00AD\u2060\u200D\u200C\u200B]+/, '')
+  return (
+    value
+      .trim()
+      .replace(/^#(?!\ufe0f)/, '')
+      // eslint-disable-next-line no-misleading-character-class
+      .replace(/[\r\n\u00AD\u2060\u200D\u200C\u200B]+/, '')
+  )
 }
 
 export function savedFeedsToUriArrays(
@@ -75,4 +80,32 @@ export function validateSavedFeed(savedFeed: AppBskyActorDefs.SavedFeed) {
       )
     }
   }
+}
+
+export type Did = `did:${string}`
+
+// @TODO use tools from @atproto/did
+export const isDid = (str: unknown): str is Did =>
+  typeof str === 'string' &&
+  str.startsWith('did:') &&
+  str.includes(':', 4) &&
+  str.length > 8 &&
+  str.length <= 2048
+
+export const asDid = (value: string): Did => {
+  if (isDid(value)) return value
+  throw new TypeError(`Invalid DID: ${value}`)
+}
+
+export const nuxSchema = zod
+  .object({
+    id: zod.string().max(64),
+    completed: zod.boolean(),
+    data: zod.string().max(300).optional(),
+    expiresAt: zod.string().datetime().optional(),
+  })
+  .strict()
+
+export function validateNux(nux: Nux) {
+  nuxSchema.parse(nux)
 }

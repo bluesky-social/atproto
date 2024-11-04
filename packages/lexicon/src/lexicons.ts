@@ -22,16 +22,31 @@ import * as ComplexValidators from './validators/complex'
 /**
  * A collection of compiled lexicons.
  */
-export class Lexicons {
+export class Lexicons implements Iterable<LexiconDoc> {
   docs: Map<string, LexiconDoc> = new Map()
   defs: Map<string, LexUserType> = new Map()
 
-  constructor(docs?: LexiconDoc[]) {
-    if (docs?.length) {
+  constructor(docs?: Iterable<LexiconDoc>) {
+    if (docs) {
       for (const doc of docs) {
         this.add(doc)
       }
     }
+  }
+
+  /**
+   * @example clone a lexicon:
+   * ```ts
+   * const clone = new Lexicons(originalLexicon)
+   * ```
+   *
+   * @example get docs array:
+   * ```ts
+   * const docs = Array.from(lexicons)
+   * ```
+   */
+  [Symbol.iterator](): Iterator<LexiconDoc> {
+    return this.docs.values()
   }
 
   /**

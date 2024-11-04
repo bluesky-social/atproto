@@ -113,11 +113,11 @@ export class TestNetwork extends TestNetworkNoAppView {
       inviteCode,
     })
 
-    ozone.addAdminDid(ozoneDid)
+    await ozone.addAdminDid(ozoneDid)
 
     mockNetworkUtilities(pds, bsky)
     await pds.processAll()
-    await bsky.sub.background.processAll()
+    await bsky.sub.processAll()
     await thirdPartyPds.close()
 
     let introspect: IntrospectServer | undefined = undefined
@@ -140,9 +140,11 @@ export class TestNetwork extends TestNetworkNoAppView {
     const lastSeq = await this.pds.ctx.sequencer.curr()
     if (!lastSeq) return
     while (Date.now() - start < timeout) {
-      if (sub.seenSeq !== null && sub.seenSeq >= lastSeq) {
-        // has seen last seq, just need to wait for it to finish processing
-        await sub.repoQueue.main.onIdle()
+      await sub.processAll()
+      const runnerCursor = await sub.runner.getCursor()
+      // if subscription claims to be done, ensure we are at the most recent cursor from PDS, else wait to process again
+      // (the subscription may claim to be finished before the PDS has even emitted it's event)
+      if (runnerCursor && runnerCursor >= lastSeq) {
         return
       }
       await wait(5)
@@ -152,16 +154,16 @@ export class TestNetwork extends TestNetworkNoAppView {
 
   async processAll(timeout?: number) {
     await this.pds.processAll()
-    await this.processFullSubscription(timeout)
-    await this.bsky.sub.background.processAll()
     await this.ozone.processAll()
+    await this.processFullSubscription(timeout)
   }
 
-  async serviceHeaders(did: string, aud?: string) {
+  async serviceHeaders(did: string, lxm: string, aud?: string) {
     const keypair = await this.pds.ctx.actorStore.keypair(did)
     const jwt = await createServiceJwt({
       iss: did,
       aud: aud ?? this.bsky.ctx.cfg.serverDid,
+      lxm,
       keypair,
     })
     return { authorization: `Bearer ${jwt}` }

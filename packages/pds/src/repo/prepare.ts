@@ -29,16 +29,21 @@ import {
   InvalidRecordError,
   PreparedWrite,
   PreparedBlobRef,
+  ValidationStatus,
 } from './types'
 import * as lex from '../lexicon/lexicons'
 import { isRecord as isFeedGenerator } from '../lexicon/types/app/bsky/feed/generator'
+import { isRecord as isStarterPack } from '../lexicon/types/app/bsky/graph/starterpack'
 import { isRecord as isPost } from '../lexicon/types/app/bsky/feed/post'
 import { isTag } from '../lexicon/types/app/bsky/richtext/facet'
 import { isRecord as isList } from '../lexicon/types/app/bsky/graph/list'
 import { isRecord as isProfile } from '../lexicon/types/app/bsky/actor/profile'
 import { hasExplicitSlur } from '../handle/explicit-slurs'
 
-export const assertValidRecord = (record: Record<string, unknown>) => {
+export const assertValidRecordWithStatus = (
+  record: Record<string, unknown>,
+  opts: { requireLexicon: boolean },
+): ValidationStatus => {
   if (typeof record.$type !== 'string') {
     throw new InvalidRecordError('No $type provided')
   }
@@ -47,7 +52,11 @@ export const assertValidRecord = (record: Record<string, unknown>) => {
     assertValidCreatedAt(record)
   } catch (e) {
     if (e instanceof LexiconDefNotFoundError) {
-      throw new InvalidRecordError(e.message)
+      if (opts.requireLexicon) {
+        throw new InvalidRecordError(e.message)
+      } else {
+        return 'unknown'
+      }
     }
     throw new InvalidRecordError(
       `Invalid ${record.$type} record: ${
@@ -55,6 +64,7 @@ export const assertValidRecord = (record: Record<string, unknown>) => {
       }`,
     )
   }
+  return 'valid'
 }
 
 // additional more rigorous check on datetimes
@@ -97,12 +107,15 @@ export const prepareCreate = async (opts: {
   record: RepoRecord
   validate?: boolean
 }): Promise<PreparedCreate> => {
-  const { did, collection, swapCid, validate = true } = opts
-  const record = setCollectionName(collection, opts.record, validate)
-  if (validate) {
-    assertValidRecord(record)
+  const { did, collection, swapCid, validate } = opts
+  const maybeValidate = validate !== false
+  const record = setCollectionName(collection, opts.record, maybeValidate)
+  let validationStatus: ValidationStatus
+  if (maybeValidate) {
+    validationStatus = assertValidRecordWithStatus(record, {
+      requireLexicon: validate === true,
+    })
   }
-
   const nextRkey = TID.next()
   const rkey = opts.rkey || nextRkey.toString()
   // @TODO: validate against Lexicon record 'key' type, not just overall recordkey syntax
@@ -114,7 +127,8 @@ export const prepareCreate = async (opts: {
     cid: await cidForSafeRecord(record),
     swapCid,
     record,
-    blobs: blobsForWrite(record, validate),
+    blobs: blobsForWrite(record, maybeValidate),
+    validationStatus,
   }
 }
 
@@ -126,10 +140,14 @@ export const prepareUpdate = async (opts: {
   record: RepoRecord
   validate?: boolean
 }): Promise<PreparedUpdate> => {
-  const { did, collection, rkey, swapCid, validate = true } = opts
-  const record = setCollectionName(collection, opts.record, validate)
-  if (validate) {
-    assertValidRecord(record)
+  const { did, collection, rkey, swapCid, validate } = opts
+  const maybeValidate = validate !== false
+  const record = setCollectionName(collection, opts.record, maybeValidate)
+  let validationStatus: ValidationStatus
+  if (maybeValidate) {
+    validationStatus = assertValidRecordWithStatus(record, {
+      requireLexicon: validate === true,
+    })
   }
   assertNoExplicitSlurs(rkey, record)
   return {
@@ -138,7 +156,8 @@ export const prepareUpdate = async (opts: {
     cid: await cidForSafeRecord(record),
     swapCid,
     record,
-    blobs: blobsForWrite(record, validate),
+    blobs: blobsForWrite(record, maybeValidate),
+    validationStatus,
   }
 }
 
@@ -207,6 +226,8 @@ function assertNoExplicitSlurs(rkey: string, record: RepoRecord) {
   if (isProfile(record)) {
     toCheck += ' ' + record.displayName
   } else if (isList(record)) {
+    toCheck += ' ' + record.name
+  } else if (isStarterPack(record)) {
     toCheck += ' ' + record.name
   } else if (isFeedGenerator(record)) {
     toCheck += ' ' + rkey

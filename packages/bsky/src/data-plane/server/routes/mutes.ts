@@ -5,6 +5,7 @@ import { ids } from '../../../lexicon/lexicons'
 import { Service } from '../../../proto/bsky_connect'
 import { Database } from '../db'
 import { CreatedAtDidKeyset, TimeCidKeyset, paginate } from '../db/pagination'
+import { keyBy } from '@atproto/common'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getActorMutesActor(req) {
@@ -165,6 +166,22 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .deleteFrom('list_mute')
       .where('mutedByDid', '=', actorDid)
       .execute()
+  },
+
+  async getThreadMutesOnSubjects(req) {
+    const { actorDid, threadRoots } = req
+    if (threadRoots.length === 0) {
+      return { muted: [] }
+    }
+    const res = await db.db
+      .selectFrom('thread_mute')
+      .selectAll()
+      .where('mutedByDid', '=', actorDid)
+      .where('rootUri', 'in', threadRoots)
+      .execute()
+    const byRootUri = keyBy(res, 'rootUri')
+    const muted = threadRoots.map((uri) => !!byRootUri[uri])
+    return { muted }
   },
 })
 

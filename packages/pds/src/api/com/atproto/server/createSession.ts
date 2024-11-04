@@ -1,12 +1,11 @@
 import { DAY, MINUTE } from '@atproto/common'
 import { INVALID_HANDLE } from '@atproto/syntax'
-import { AuthRequiredError } from '@atproto/xrpc-server'
+
+import { formatAccountStatus } from '../../../../account-manager'
 import AppContext from '../../../../context'
-import { softDeleted } from '../../../../db/util'
 import { Server } from '../../../../lexicon'
-import { didDocForSession } from './util'
 import { authPassthru, resultPassthru } from '../../../proxy'
-import { AppPassDescript } from '../../../../account-manager/helpers/password'
+import { didDocForSession } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.createSession({
@@ -32,49 +31,14 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
-      const { password } = input.body
-      const identifier = input.body.identifier.toLowerCase()
-
-      const user = identifier.includes('@')
-        ? await ctx.accountManager.getAccountByEmail(identifier, {
-            includeDeactivated: true,
-            includeTakenDown: true,
-          })
-        : await ctx.accountManager.getAccount(identifier, {
-            includeDeactivated: true,
-            includeTakenDown: true,
-          })
-
-      if (!user) {
-        throw new AuthRequiredError('Invalid identifier or password')
-      }
-
-      let appPassword: AppPassDescript | null = null
-      const validAccountPass = await ctx.accountManager.verifyAccountPassword(
-        user.did,
-        password,
-      )
-      if (!validAccountPass) {
-        appPassword = await ctx.accountManager.verifyAppPassword(
-          user.did,
-          password,
-        )
-        if (appPassword === null) {
-          throw new AuthRequiredError('Invalid identifier or password')
-        }
-      }
-
-      if (softDeleted(user)) {
-        throw new AuthRequiredError(
-          'Account has been taken down',
-          'AccountTakedown',
-        )
-      }
+      const { user, appPassword } = await ctx.accountManager.login(input.body)
 
       const [{ accessJwt, refreshJwt }, didDoc] = await Promise.all([
         ctx.accountManager.createSession(user.did, appPassword),
         didDocForSession(ctx, user.did),
       ])
+
+      const { status, active } = formatAccountStatus(user)
 
       return {
         encoding: 'application/json',
@@ -86,8 +50,8 @@ export default function (server: Server, ctx: AppContext) {
           emailConfirmed: !!user.emailConfirmedAt,
           accessJwt,
           refreshJwt,
-          active: user.active,
-          status: user.status,
+          active,
+          status,
         },
       }
     },

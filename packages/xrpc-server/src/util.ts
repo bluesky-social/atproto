@@ -1,6 +1,6 @@
-import assert from 'assert'
-import { Readable, Transform } from 'stream'
-import { createDeflate, createGunzip } from 'zlib'
+import assert from 'node:assert'
+import { Duplex, pipeline, Readable } from 'node:stream'
+import { IncomingMessage } from 'node:http'
 import express from 'express'
 import mime from 'mime-types'
 import {
@@ -10,7 +10,9 @@ import {
   LexXrpcQuery,
   LexXrpcSubscription,
 } from '@atproto/lexicon'
-import { forwardStreamErrors, MaxSizeChecker } from '@atproto/common'
+import { createDecoders, MaxSizeChecker } from '@atproto/common'
+import { ResponseType } from '@atproto/xrpc'
+
 import {
   UndecodedParams,
   Params,
@@ -86,8 +88,9 @@ export function validateInput(
   lexicons: Lexicons,
 ): HandlerInput | undefined {
   // request expectation
-  const reqHasBody = hasBody(req)
-  if (reqHasBody && (def.type !== 'procedure' || !def.input)) {
+
+  const bodyPresence = getBodyPresence(req)
+  if (bodyPresence === 'present' && (def.type !== 'procedure' || !def.input)) {
     throw new InvalidRequestError(
       `A request body was provided when none was expected`,
     )
@@ -95,7 +98,7 @@ export function validateInput(
   if (def.type === 'query') {
     return
   }
-  if (!reqHasBody && def.input) {
+  if (bodyPresence === 'missing' && def.input) {
     throw new InvalidRequestError(
       `A request body is expected but none was provided`,
     )
@@ -153,7 +156,7 @@ export function validateOutput(
   def: LexXrpcProcedure | LexXrpcQuery,
   output: HandlerSuccess | undefined,
   lexicons: Lexicons,
-): HandlerSuccess | undefined {
+): void {
   // initial validation
   if (output) {
     handlerSuccess.parse(output)
@@ -193,8 +196,6 @@ export function validateOutput(
       throw new InternalServerError(e instanceof Error ? e.message : String(e))
     }
   }
-
-  return output
 }
 
 export function normalizeMime(v: string) {
@@ -214,10 +215,13 @@ function isValidEncoding(possibleStr: string, value: string) {
   return possible.includes(normalized)
 }
 
-export function hasBody(req: express.Request) {
-  const contentLength = req.headers['content-length']
-  const transferEncoding = req.headers['transfer-encoding']
-  return (contentLength && parseInt(contentLength, 10) > 0) || transferEncoding
+type BodyPresence = 'missing' | 'empty' | 'present'
+
+function getBodyPresence(req: express.Request): BodyPresence {
+  if (req.headers['transfer-encoding'] != null) return 'present'
+  if (req.headers['content-length'] === '0') return 'empty'
+  if (req.headers['content-length'] != null) return 'present'
+  return 'missing'
 }
 
 export function processBodyAsBytes(req: express.Request): Promise<Uint8Array> {
@@ -232,40 +236,52 @@ function decodeBodyStream(
   req: express.Request,
   maxSize: number | undefined,
 ): Readable {
-  let stream: Readable = req
   const contentEncoding = req.headers['content-encoding']
   const contentLength = req.headers['content-length']
 
+  const contentLengthParsed = contentLength
+    ? parseInt(contentLength, 10)
+    : undefined
+
+  if (Number.isNaN(contentLengthParsed)) {
+    throw new XRPCError(ResponseType.InvalidRequest, 'invalid content-length')
+  }
+
   if (
     maxSize !== undefined &&
-    contentLength &&
-    parseInt(contentLength, 10) > maxSize
+    contentLengthParsed !== undefined &&
+    contentLengthParsed > maxSize
   ) {
-    throw new XRPCError(413, 'request entity too large')
+    throw new XRPCError(
+      ResponseType.PayloadTooLarge,
+      'request entity too large',
+    )
   }
 
-  let decoder: Transform | undefined
-  if (contentEncoding === 'gzip') {
-    decoder = createGunzip()
-  } else if (contentEncoding === 'deflate') {
-    decoder = createDeflate()
-  }
-
-  if (decoder) {
-    forwardStreamErrors(stream, decoder)
-    stream = stream.pipe(decoder)
+  let transforms: Duplex[]
+  try {
+    transforms = createDecoders(contentEncoding)
+  } catch (cause) {
+    throw new XRPCError(
+      ResponseType.UnsupportedMediaType,
+      'unsupported content-encoding',
+      undefined,
+      { cause },
+    )
   }
 
   if (maxSize !== undefined) {
     const maxSizeChecker = new MaxSizeChecker(
       maxSize,
-      () => new XRPCError(413, 'request entity too large'),
+      () =>
+        new XRPCError(ResponseType.PayloadTooLarge, 'request entity too large'),
     )
-    forwardStreamErrors(stream, maxSizeChecker)
-    stream = stream.pipe(maxSizeChecker)
+    transforms.push(maxSizeChecker)
   }
 
-  return stream
+  return transforms.length > 0
+    ? (pipeline([req, ...transforms], () => {}) as Duplex)
+    : req
 }
 
 export function serverTimingHeader(timings: ServerTiming[]) {
@@ -301,4 +317,72 @@ export interface ServerTiming {
   name: string
   duration?: number
   description?: string
+}
+
+export const parseReqNsid = (req: express.Request | IncomingMessage) =>
+  parseUrlNsid('originalUrl' in req ? req.originalUrl : req.url || '/')
+
+/**
+ * Validates and extracts the nsid from an xrpc path
+ */
+export const parseUrlNsid = (url: string): string => {
+  // /!\ Hot path
+
+  if (
+    // Ordered by likelihood of failure
+    url.length <= 6 ||
+    url[5] !== '/' ||
+    url[4] !== 'c' ||
+    url[3] !== 'p' ||
+    url[2] !== 'r' ||
+    url[1] !== 'x' ||
+    url[0] !== '/'
+  ) {
+    throw new InvalidRequestError('invalid xrpc path')
+  }
+
+  const startOfNsid = 6
+
+  let curr = startOfNsid
+  let char: number
+  let alphaNumRequired = true
+  for (; curr < url.length; curr++) {
+    char = url.charCodeAt(curr)
+    if (
+      (char >= 48 && char <= 57) || // 0-9
+      (char >= 65 && char <= 90) || // A-Z
+      (char >= 97 && char <= 122) // a-z
+    ) {
+      alphaNumRequired = false
+    } else if (char === 45 /* "-" */ || char === 46 /* "." */) {
+      if (alphaNumRequired) {
+        throw new InvalidRequestError('invalid xrpc path')
+      }
+      alphaNumRequired = true
+    } else if (char === 47 /* "/" */) {
+      // Allow trailing slash (next char is either EOS or "?")
+      if (curr === url.length - 1 || url.charCodeAt(curr + 1) === 63) {
+        break
+      }
+      throw new InvalidRequestError('invalid xrpc path')
+    } else if (char === 63 /* "?"" */) {
+      break
+    } else {
+      throw new InvalidRequestError('invalid xrpc path')
+    }
+  }
+
+  // last char was one of: '-', '.', '/'
+  if (alphaNumRequired) {
+    throw new InvalidRequestError('invalid xrpc path')
+  }
+
+  // A domain name consists of minimum two characters
+  if (curr - startOfNsid < 2) {
+    throw new InvalidRequestError('invalid xrpc path')
+  }
+
+  // @TODO is there a max ?
+
+  return url.slice(startOfNsid, curr)
 }

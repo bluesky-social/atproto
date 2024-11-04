@@ -8,6 +8,7 @@
   "engines": {
     "node": ">=18"
   },
+  "packageManager": "pnpm@8.15.9",
   "scripts": {
     "lint:fix": "pnpm lint --fix",
     "lint": "eslint . --ext .ts,.js",
@@ -19,7 +20,7 @@
     "verify:types": "tsc --build tsconfig.json",
     "format": "pnpm lint:fix && pnpm style:fix",
     "build": "pnpm --recursive --stream build",
-    "dev": "pnpm --stream '/^dev:.+$/'",
+    "dev": "NODE_ENV=development pnpm --stream '/^dev:.+$/'",
     "dev:tsc": "tsc --build tsconfig.json --watch",
     "dev:pkg": "pnpm --recursive --parallel --stream dev",
     "test": "LOG_ENABLED=false ./packages/dev-infra/with-test-redis-and-db.sh pnpm --stream -r test",
@@ -35,7 +36,7 @@
     "@swc/core": "^1.3.42",
     "@swc/jest": "^0.2.24",
     "@types/jest": "^28.1.4",
-    "@types/node": "^18.19.24",
+    "@types/node": "^18.19.56",
     "@typescript-eslint/eslint-plugin": "^7.4.0",
     "@typescript-eslint/parser": "^7.4.0",
     "dotenv": "^16.0.3",
@@ -47,11 +48,13 @@
     "pino-pretty": "^9.1.0",
     "prettier": "^3.2.5",
     "prettier-config-standard": "^7.0.0",
-    "typescript": "^5.4.4"
+    "typescript": "^5.6.3"
   },
   "workspaces": {
     "packages": [
-      "packages/*"
+      "packages/*",
+      "packages/oauth/*",
+      "packages/internal/*"
     ]
   }
 }

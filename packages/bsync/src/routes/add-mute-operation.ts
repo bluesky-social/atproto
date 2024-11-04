@@ -1,10 +1,5 @@
 import { sql } from 'kysely'
-import {
-  AtUri,
-  InvalidDidError,
-  ensureValidAtUri,
-  ensureValidDid,
-} from '@atproto/syntax'
+import { AtUri } from '@atproto/syntax'
 import { Code, ConnectError, ServiceImpl } from '@connectrpc/connect'
 import { Service } from '../proto/bsync_connect'
 import { AddMuteOperationResponse, MuteOperation_Type } from '../proto/bsync_pb'
@@ -12,6 +7,7 @@ import AppContext from '../context'
 import { createMuteOpChannel } from '../db/schema/mute_op'
 import { authWithApiKey } from './auth'
 import Database from '../db'
+import { isValidAtUri, isValidDid } from './util'
 
 export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
   async addMuteOperation(req, handlerCtx) {
@@ -120,9 +116,12 @@ const validMuteOp = (op: MuteOpInfo): MuteOpInfoValid => {
       // all good
     } else if (isValidAtUri(op.subject)) {
       const uri = new AtUri(op.subject)
-      if (uri.collection !== 'app.bsky.graph.list') {
+      if (
+        uri.collection !== 'app.bsky.graph.list' &&
+        uri.collection !== 'app.bsky.feed.post'
+      ) {
         throw new ConnectError(
-          'subject aturis must reference a list record',
+          'subject aturis must reference a list or post record',
           Code.InvalidArgument,
         )
       }
@@ -134,27 +133,6 @@ const validMuteOp = (op: MuteOpInfo): MuteOpInfoValid => {
     }
   }
   return op as MuteOpInfoValid // op.type has been checked
-}
-
-const isValidDid = (did: string) => {
-  try {
-    ensureValidDid(did)
-    return true
-  } catch (err) {
-    if (err instanceof InvalidDidError) {
-      return false
-    }
-    throw err
-  }
-}
-
-const isValidAtUri = (uri: string) => {
-  try {
-    ensureValidAtUri(uri)
-    return true
-  } catch {
-    return false
-  }
 }
 
 type MuteOpInfo = {

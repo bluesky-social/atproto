@@ -6,7 +6,7 @@ import { AtpAgent } from '@atproto/api'
 import { createServiceJwt } from '@atproto/xrpc-server'
 import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { DidAndKey, OzoneConfig } from './types'
-import { ADMIN_PASSWORD } from './const'
+import { ADMIN_PASSWORD, EXAMPLE_LABELER } from './const'
 import { createDidAndKey } from './util'
 import { ModeratorClient } from './moderator-client'
 
@@ -103,27 +103,50 @@ export class TestOzone {
     return this.server.ctx
   }
 
-  getClient() {
-    return new AtpAgent({ service: this.url })
+  getClient(): AtpAgent {
+    const agent = new AtpAgent({ service: this.url })
+    agent.configureLabelers([EXAMPLE_LABELER])
+    return agent
   }
 
   getModClient() {
     return new ModeratorClient(this)
   }
 
-  addAdminDid(did: string) {
+  async addAdminDid(did: string) {
+    await this.ctx.teamService(this.ctx.db).create({
+      did,
+      disabled: false,
+      lastUpdatedBy: this.ctx.cfg.service.did,
+      role: 'tools.ozone.team.defs#roleAdmin',
+    })
     this.ctx.cfg.access.admins.push(did)
   }
 
-  addModeratorDid(did: string) {
+  async addModeratorDid(did: string) {
+    await this.ctx.teamService(this.ctx.db).create({
+      did,
+      disabled: false,
+      lastUpdatedBy: this.ctx.cfg.service.did,
+      role: 'tools.ozone.team.defs#roleModerator',
+    })
     this.ctx.cfg.access.moderators.push(did)
   }
 
-  addTriageDid(did: string) {
+  async addTriageDid(did: string) {
+    await this.ctx.teamService(this.ctx.db).create({
+      did,
+      disabled: false,
+      lastUpdatedBy: this.ctx.cfg.service.did,
+      role: 'tools.ozone.team.defs#roleTriage',
+    })
     this.ctx.cfg.access.triage.push(did)
   }
 
-  async modHeaders(role: 'admin' | 'moderator' | 'triage' = 'moderator') {
+  async modHeaders(
+    lxm: string,
+    role: 'admin' | 'moderator' | 'triage' = 'moderator',
+  ) {
     const account =
       role === 'admin'
         ? this.adminAccnt
@@ -133,6 +156,7 @@ export class TestOzone {
     const jwt = await createServiceJwt({
       iss: account.did,
       aud: this.ctx.cfg.service.did,
+      lxm,
       keypair: account.key,
     })
     return { authorization: `Bearer ${jwt}` }

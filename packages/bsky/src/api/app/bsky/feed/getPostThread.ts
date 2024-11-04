@@ -1,7 +1,10 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { AtUri } from '@atproto/syntax'
 import { Server } from '../../../../lexicon'
-import { isNotFoundPost } from '../../../../lexicon/types/app/bsky/feed/defs'
+import {
+  isNotFoundPost,
+  isThreadViewPost,
+} from '../../../../lexicon/types/app/bsky/feed/defs'
+import { isRecord as isPostRecord } from '../../../../lexicon/types/app/bsky/feed/post'
 import {
   QueryParams,
   OutputSchema,
@@ -18,6 +21,7 @@ import {
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 import { DataPlaneClient, isDataplaneError, Code } from '../../../../data-plane'
+import { postUriToThreadgateUri } from '../../../../util/uris'
 
 export default function (server: Server, ctx: AppContext) {
   const getPostThread = createPipeline(
@@ -29,9 +33,15 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getPostThread({
     auth: ctx.authVerifier.optionalStandardOrRole,
     handler: async ({ params, auth, req, res }) => {
-      const { viewer } = ctx.authVerifier.parseCreds(auth)
+      const { viewer, includeTakedowns, include3pBlocks } =
+        ctx.authVerifier.parseCreds(auth)
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
+      const hydrateCtx = await ctx.hydrator.createContext({
+        labelers,
+        viewer,
+        includeTakedowns,
+        include3pBlocks,
+      })
 
       let result: OutputSchema
       try {
@@ -60,7 +70,7 @@ export default function (server: Server, ctx: AppContext) {
 
 const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
   const { ctx, params } = inputs
-  const anchor = await resolveUri(ctx, params.uri)
+  const anchor = await ctx.hydrator.resolveUri(params.uri)
   try {
     const res = await ctx.dataplane.getThread({
       postUri: anchor,
@@ -103,9 +113,19 @@ const presentation = (
   })
   if (isNotFoundPost(thread)) {
     // @TODO technically this could be returned as a NotFoundPost based on lexicon
-    throw new InvalidRequestError(`Post not found: ${params.uri}`, 'NotFound')
+    throw new InvalidRequestError(
+      `Post not found: ${skeleton.anchor}`,
+      'NotFound',
+    )
   }
-  return { thread }
+  const rootUri =
+    hydration.posts?.get(skeleton.anchor)?.record.reply?.root.uri ??
+    skeleton.anchor
+  const threadgate = ctx.views.threadgate(
+    postUriToThreadgateUri(rootUri),
+    hydration,
+  )
+  return { thread, threadgate }
 }
 
 type Context = {
@@ -119,12 +139,4 @@ type Params = QueryParams & { hydrateCtx: HydrateCtx }
 type Skeleton = {
   anchor: string
   uris: string[]
-}
-
-const resolveUri = async (ctx: Context, uriStr: string) => {
-  const uri = new AtUri(uriStr)
-  const [did] = await ctx.hydrator.actor.getDids([uri.host])
-  if (!did) return uriStr
-  uri.host = did
-  return uri.toString()
 }

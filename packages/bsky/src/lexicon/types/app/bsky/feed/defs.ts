@@ -7,6 +7,7 @@ import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 import * as AppBskyActorDefs from '../actor/defs'
 import * as AppBskyEmbedImages from '../embed/images'
+import * as AppBskyEmbedVideo from '../embed/video'
 import * as AppBskyEmbedExternal from '../embed/external'
 import * as AppBskyEmbedRecord from '../embed/record'
 import * as AppBskyEmbedRecordWithMedia from '../embed/recordWithMedia'
@@ -21,6 +22,7 @@ export interface PostView {
   record: {}
   embed?:
     | AppBskyEmbedImages.View
+    | AppBskyEmbedVideo.View
     | AppBskyEmbedExternal.View
     | AppBskyEmbedRecord.View
     | AppBskyEmbedRecordWithMedia.View
@@ -28,6 +30,7 @@ export interface PostView {
   replyCount?: number
   repostCount?: number
   likeCount?: number
+  quoteCount?: number
   indexedAt: string
   viewer?: ViewerState
   labels?: ComAtprotoLabelDefs.Label[]
@@ -49,7 +52,10 @@ export function validatePostView(v: unknown): ValidationResult {
 export interface ViewerState {
   repost?: string
   like?: string
+  threadMuted?: boolean
   replyDisabled?: boolean
+  embeddingDisabled?: boolean
+  pinned?: boolean
   [k: string]: unknown
 }
 
@@ -68,7 +74,7 @@ export function validateViewerState(v: unknown): ValidationResult {
 export interface FeedViewPost {
   post: PostView
   reply?: ReplyRef
-  reason?: ReasonRepost | { $type: string; [k: string]: unknown }
+  reason?: ReasonRepost | ReasonPin | { $type: string; [k: string]: unknown }
   /** Context provided by feed generator that may be passed back alongside interactions. */
   feedContext?: string
   [k: string]: unknown
@@ -127,6 +133,22 @@ export function isReasonRepost(v: unknown): v is ReasonRepost {
 
 export function validateReasonRepost(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.feed.defs#reasonRepost', v)
+}
+
+export interface ReasonPin {
+  [k: string]: unknown
+}
+
+export function isReasonPin(v: unknown): v is ReasonPin {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.feed.defs#reasonPin'
+  )
+}
+
+export function validateReasonPin(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.feed.defs#reasonPin', v)
 }
 
 export interface ThreadViewPost {
@@ -260,7 +282,10 @@ export function validateGeneratorViewerState(v: unknown): ValidationResult {
 
 export interface SkeletonFeedPost {
   post: string
-  reason?: SkeletonReasonRepost | { $type: string; [k: string]: unknown }
+  reason?:
+    | SkeletonReasonRepost
+    | SkeletonReasonPin
+    | { $type: string; [k: string]: unknown }
   /** Context that will be passed through to client and may be passed to feed generator back alongside interactions. */
   feedContext?: string
   [k: string]: unknown
@@ -293,6 +318,22 @@ export function isSkeletonReasonRepost(v: unknown): v is SkeletonReasonRepost {
 
 export function validateSkeletonReasonRepost(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.feed.defs#skeletonReasonRepost', v)
+}
+
+export interface SkeletonReasonPin {
+  [k: string]: unknown
+}
+
+export function isSkeletonReasonPin(v: unknown): v is SkeletonReasonPin {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.feed.defs#skeletonReasonPin'
+  )
+}
+
+export function validateSkeletonReasonPin(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.feed.defs#skeletonReasonPin', v)
 }
 
 export interface ThreadgateView {
@@ -331,7 +372,7 @@ export interface Interaction {
     | 'app.bsky.feed.defs#interactionQuote'
     | 'app.bsky.feed.defs#interactionShare'
     | (string & {})
-  /** Context on a feed item that was orginally supplied by the feed generator on getFeedSkeleton. */
+  /** Context on a feed item that was originally supplied by the feed generator on getFeedSkeleton. */
   feedContext?: string
   [k: string]: unknown
 }

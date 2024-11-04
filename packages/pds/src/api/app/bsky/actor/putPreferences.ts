@@ -19,7 +19,11 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
       await ctx.actorStore.transact(requester, async (actorTxn) => {
-        await actorTxn.pref.putPreferences(checkedPreferences, 'app.bsky')
+        await actorTxn.pref.putPreferences(
+          checkedPreferences,
+          'app.bsky',
+          auth.credentials.scope,
+        )
       })
     },
   })

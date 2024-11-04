@@ -1,13 +1,14 @@
 import assert from 'node:assert'
 import { OzoneEnvironment } from './env'
+import { DAY, HOUR } from '@atproto/common'
 
 // off-config but still from env:
 // logging: LOG_LEVEL, LOG_SYSTEMS, LOG_ENABLED, LOG_DESTINATION
 
 export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
   const port = env.port ?? 3000
-  assert(env.publicUrl)
-  assert(env.serverDid)
+  assert(env.publicUrl, 'publicUrl is required')
+  assert(env.serverDid, 'serverDid is required')
   const serviceCfg: OzoneConfig['service'] = {
     port,
     publicUrl: env.publicUrl,
@@ -16,7 +17,7 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     devMode: env.devMode,
   }
 
-  assert(env.dbPostgresUrl)
+  assert(env.dbPostgresUrl, 'dbPostgresUrl is required')
   const dbCfg: OzoneConfig['db'] = {
     postgresUrl: env.dbPostgresUrl,
     postgresSchema: env.dbPostgresSchema,
@@ -25,7 +26,8 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     poolIdleTimeoutMs: env.dbPoolIdleTimeoutMs,
   }
 
-  assert(env.appviewUrl && env.appviewDid)
+  assert(env.appviewUrl, 'appviewUrl is required')
+  assert(env.appviewDid, 'appviewDid is required')
   const appviewCfg: OzoneConfig['appview'] = {
     url: env.appviewUrl,
     did: env.appviewDid,
@@ -34,7 +36,8 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
 
   let pdsCfg: OzoneConfig['pds'] = null
   if (env.pdsUrl || env.pdsDid) {
-    assert(env.pdsUrl && env.pdsDid)
+    assert(env.pdsUrl, 'pdsUrl is required')
+    assert(env.pdsDid, 'pdsDid is required')
     pdsCfg = {
       url: env.pdsUrl,
       did: env.pdsDid,
@@ -43,7 +46,8 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
 
   let chatCfg: OzoneConfig['chat'] = null
   if (env.chatUrl || env.chatDid) {
-    assert(env.chatUrl && env.chatDid)
+    assert(env.chatUrl, 'chatUrl is required when chatDid is provided')
+    assert(env.chatDid, 'chatDid is required when chatUrl is provided')
     chatCfg = {
       url: env.chatUrl,
       did: env.chatDid,
@@ -54,9 +58,11 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     paths: env.cdnPaths,
   }
 
-  assert(env.didPlcUrl)
+  assert(env.didPlcUrl, 'didPlcUrl is required')
   const identityCfg: OzoneConfig['identity'] = {
     plcUrl: env.didPlcUrl,
+    cacheMaxTTL: env.didCacheMaxTTL ?? DAY,
+    cacheStaleTTL: env.didCacheStaleTTL ?? HOUR,
   }
 
   const blobDivertServiceCfg =
@@ -140,6 +146,8 @@ export type CdnConfig = {
 
 export type IdentityConfig = {
   plcUrl: string
+  cacheStaleTTL: number
+  cacheMaxTTL: number
 }
 
 export type AccessConfig = {

@@ -4,22 +4,30 @@ import { Record as LikeRecord } from '../lexicon/types/app/bsky/feed/like'
 import { Record as RepostRecord } from '../lexicon/types/app/bsky/feed/repost'
 import { Record as FeedGenRecord } from '../lexicon/types/app/bsky/feed/generator'
 import { Record as ThreadgateRecord } from '../lexicon/types/app/bsky/feed/threadgate'
+import { Record as PostgateRecord } from '../lexicon/types/app/bsky/feed/postgate'
 import {
   HydrationMap,
+  ItemRef,
   RecordInfo,
   parseRecord,
   parseString,
   split,
 } from './util'
-import { AtUri } from '@atproto/syntax'
-import { ids } from '../lexicon/lexicons'
+import { dedupeStrs } from '@atproto/common'
+import { postUriToThreadgateUri, postUriToPostgateUri } from '../util/uris'
 
-export type Post = RecordInfo<PostRecord> & { violatesThreadGate: boolean }
+export type Post = RecordInfo<PostRecord> & {
+  violatesThreadGate: boolean
+  violatesEmbeddingRules: boolean
+  hasThreadGate: boolean
+  hasPostGate: boolean
+}
 export type Posts = HydrationMap<Post>
 
 export type PostViewerState = {
   like?: string
   repost?: string
+  threadMuted?: boolean
 }
 
 export type PostViewerStates = HydrationMap<PostViewerState>
@@ -28,6 +36,7 @@ export type PostAgg = {
   likes: number
   replies: number
   reposts: number
+  quotes: number
 }
 
 export type PostAggs = HydrationMap<PostAgg>
@@ -55,12 +64,22 @@ export type FeedGenViewerStates = HydrationMap<FeedGenViewerState>
 
 export type Threadgate = RecordInfo<ThreadgateRecord>
 export type Threadgates = HydrationMap<Threadgate>
+export type Postgate = RecordInfo<PostgateRecord>
+export type Postgates = HydrationMap<Postgate>
 
-export type ItemRef = { uri: string; cid?: string }
+export type ThreadRef = ItemRef & { threadRoot: string }
 
 // @NOTE the feed item types in the protos for author feeds and timelines
 // technically have additional fields, not supported by the mock dataplane.
-export type FeedItem = { post: ItemRef; repost?: ItemRef }
+export type FeedItem = {
+  post: ItemRef
+  repost?: ItemRef
+  /**
+   * If true, overrides the `reason` with `app.bsky.feed.defs#reasonPin`. Used
+   * only in author feeds.
+   */
+  authorPinned?: boolean
+}
 
 export class FeedHydrator {
   constructor(public dataplane: DataPlaneClient) {}
@@ -80,16 +99,31 @@ export class FeedHydrator {
     return need.reduce((acc, uri, i) => {
       const record = parseRecord<PostRecord>(res.records[i], includeTakedowns)
       const violatesThreadGate = res.meta[i].violatesThreadGate
-      return acc.set(uri, record ? { ...record, violatesThreadGate } : null)
+      const violatesEmbeddingRules = res.meta[i].violatesEmbeddingRules
+      const hasThreadGate = res.meta[i].hasThreadGate
+      const hasPostGate = res.meta[i].hasPostGate
+      return acc.set(
+        uri,
+        record
+          ? {
+              ...record,
+              violatesThreadGate,
+              violatesEmbeddingRules,
+              hasThreadGate,
+              hasPostGate,
+            }
+          : null,
+      )
     }, base)
   }
 
   async getPostViewerStates(
-    refs: ItemRef[],
+    refs: ThreadRef[],
     viewer: string,
   ): Promise<PostViewerStates> {
     if (!refs.length) return new HydrationMap<PostViewerState>()
-    const [likes, reposts] = await Promise.all([
+    const threadRoots = refs.map((r) => r.threadRoot)
+    const [likes, reposts, threadMutesMap] = await Promise.all([
       this.dataplane.getLikesByActorAndSubjects({
         actorDid: viewer,
         refs,
@@ -98,13 +132,29 @@ export class FeedHydrator {
         actorDid: viewer,
         refs,
       }),
+      this.getThreadMutes(threadRoots, viewer),
     ])
-    return refs.reduce((acc, { uri }, i) => {
+    return refs.reduce((acc, { uri, threadRoot }, i) => {
       return acc.set(uri, {
         like: parseString(likes.uris[i]),
         repost: parseString(reposts.uris[i]),
+        threadMuted: threadMutesMap.get(threadRoot) ?? false,
       })
     }, new HydrationMap<PostViewerState>())
+  }
+
+  private async getThreadMutes(
+    threadRoots: string[],
+    viewer: string,
+  ): Promise<Map<string, boolean>> {
+    const deduped = dedupeStrs(threadRoots)
+    const threadMutes = await this.dataplane.getThreadMutesOnSubjects({
+      actorDid: viewer,
+      threadRoots: deduped,
+    })
+    return deduped.reduce((acc, cur, i) => {
+      return acc.set(cur, threadMutes.muted[i] ?? false)
+    }, new Map<string, boolean>())
   }
 
   async getPostAggregates(refs: ItemRef[]): Promise<PostAggs> {
@@ -115,6 +165,7 @@ export class FeedHydrator {
         likes: counts.likes[i] ?? 0,
         reposts: counts.reposts[i] ?? 0,
         replies: counts.replies[i] ?? 0,
+        quotes: counts.quotes[i] ?? 0,
       })
     }, new HydrationMap<PostAgg>())
   }
@@ -165,14 +216,14 @@ export class FeedHydrator {
     includeTakedowns = false,
   ): Promise<Threadgates> {
     if (!postUris.length) return new HydrationMap<Threadgate>()
-    const uris = postUris.map((uri) => {
-      const parsed = new AtUri(uri)
-      return AtUri.make(
-        parsed.hostname,
-        ids.AppBskyFeedThreadgate,
-        parsed.rkey,
-      ).toString()
-    })
+    const uris = postUris.map(postUriToThreadgateUri)
+    return this.getThreadgateRecords(uris, includeTakedowns)
+  }
+
+  async getThreadgateRecords(
+    uris: string[],
+    includeTakedowns = false,
+  ): Promise<Threadgates> {
     const res = await this.dataplane.getThreadGateRecords({ uris })
     return uris.reduce((acc, uri, i) => {
       const record = parseRecord<ThreadgateRecord>(
@@ -183,7 +234,29 @@ export class FeedHydrator {
     }, new HydrationMap<Threadgate>())
   }
 
-  // @TODO may not be supported yet by data plane
+  async getPostgatesForPosts(
+    postUris: string[],
+    includeTakedowns = false,
+  ): Promise<Postgates> {
+    if (!postUris.length) return new HydrationMap<Postgate>()
+    const uris = postUris.map(postUriToPostgateUri)
+    return this.getPostgateRecords(uris, includeTakedowns)
+  }
+
+  async getPostgateRecords(
+    uris: string[],
+    includeTakedowns = false,
+  ): Promise<Postgates> {
+    const res = await this.dataplane.getPostgateRecords({ uris })
+    return uris.reduce((acc, uri, i) => {
+      const record = parseRecord<PostgateRecord>(
+        res.records[i],
+        includeTakedowns,
+      )
+      return acc.set(uri, record ?? null)
+    }, new HydrationMap<Postgate>())
+  }
+
   async getLikes(uris: string[], includeTakedowns = false): Promise<Likes> {
     if (!uris.length) return new HydrationMap<Like>()
     const res = await this.dataplane.getLikeRecords({ uris })

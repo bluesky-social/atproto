@@ -1,6 +1,7 @@
 import path from 'node:path'
 import assert from 'node:assert'
 import { DAY, HOUR, SECOND } from '@atproto/common'
+import { Customization } from '@atproto/oauth-provider'
 import { ServerEnvironment } from './env'
 
 // off-config but still from env:
@@ -234,6 +235,69 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
 
   const crawlersCfg: ServerConfig['crawlers'] = env.crawlers ?? []
 
+  const fetchCfg: ServerConfig['fetch'] = {
+    disableSsrfProtection: env.disableSsrfProtection ?? env.devMode ?? false,
+    maxResponseSize: env.fetchMaxResponseSize ?? 512 * 1024, // 512kb
+  }
+
+  const proxyCfg: ServerConfig['proxy'] = {
+    disableSsrfProtection: env.disableSsrfProtection ?? env.devMode ?? false,
+    allowHTTP2: env.proxyAllowHTTP2 ?? false,
+    headersTimeout: env.proxyHeadersTimeout ?? 10e3,
+    bodyTimeout: env.proxyBodyTimeout ?? 30e3,
+    maxResponseSize: env.proxyMaxResponseSize ?? 10 * 1024 * 1024, // 10mb
+    maxRetries:
+      env.proxyMaxRetries != null && env.proxyMaxRetries > 0
+        ? env.proxyMaxRetries
+        : 0,
+    preferCompressed: env.proxyPreferCompressed ?? false,
+  }
+
+  const oauthCfg: ServerConfig['oauth'] = entrywayCfg
+    ? {
+        issuer: entrywayCfg.url,
+        provider: false,
+      }
+    : {
+        issuer: serviceCfg.publicUrl,
+        provider: {
+          customization: {
+            name: env.serviceName ?? 'Personal PDS',
+            logo: env.logoUrl,
+            colors: {
+              brand: env.brandColor,
+              error: env.errorColor,
+              warning: env.warningColor,
+            },
+            links: [
+              {
+                title: 'Home',
+                href: env.homeUrl,
+                rel: 'bookmark',
+              },
+              {
+                title: 'Terms of Service',
+                href: env.termsOfServiceUrl,
+                rel: 'terms-of-service',
+              },
+              {
+                title: 'Privacy Policy',
+                href: env.privacyPolicyUrl,
+                rel: 'privacy-policy',
+              },
+              {
+                title: 'Support',
+                href: env.supportUrl,
+                rel: 'help',
+              },
+            ].filter(
+              (f): f is typeof f & { href: NonNullable<(typeof f)['href']> } =>
+                f.href != null,
+            ),
+          },
+        },
+      }
+
   return {
     service: serviceCfg,
     db: dbCfg,
@@ -251,6 +315,9 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     redis: redisCfg,
     rateLimits: rateLimitsCfg,
     crawlers: crawlersCfg,
+    fetch: fetchCfg,
+    proxy: proxyCfg,
+    oauth: oauthCfg,
   }
 }
 
@@ -271,6 +338,9 @@ export type ServerConfig = {
   redis: RedisScratchConfig | null
   rateLimits: RateLimitsConfig
   crawlers: string[]
+  fetch: FetchConfig
+  proxy: ProxyConfig
+  oauth: OAuthConfig
 }
 
 export type ServiceConfig = {
@@ -335,6 +405,38 @@ export type EntrywayConfig = {
   did: string
   jwtPublicKeyHex: string
   plcRotationKey: string
+}
+
+export type FetchConfig = {
+  disableSsrfProtection: boolean
+  maxResponseSize: number
+}
+
+export type ProxyConfig = {
+  disableSsrfProtection: boolean
+  allowHTTP2: boolean
+  headersTimeout: number
+  bodyTimeout: number
+  maxResponseSize: number
+  maxRetries: number
+
+  /**
+   * When proxying requests that might get intercepted (for read-after-write) we
+   * negotiate the encoding based on the client's preferences. We will however
+   * use or own weights in order to be able to better control if the PDS will
+   * need to perform content decoding. This settings allows to prefer compressed
+   * content over uncompressed one.
+   */
+  preferCompressed: boolean
+}
+
+export type OAuthConfig = {
+  issuer: string
+  provider:
+    | false
+    | {
+        customization: Customization
+      }
 }
 
 export type InvitesConfig =
