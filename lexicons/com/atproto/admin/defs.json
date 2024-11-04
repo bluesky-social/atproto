@@ -33,7 +33,14 @@
         "invitesDisabled": { "type": "boolean" },
         "emailConfirmedAt": { "type": "string", "format": "datetime" },
         "inviteNote": { "type": "string" },
-        "deactivatedAt": { "type": "string", "format": "datetime" }
+        "deactivatedAt": { "type": "string", "format": "datetime" },
+        "threatSignatures": {
+          "type": "array",
+          "items": {
+            "type": "ref",
+            "ref": "#threatSignature"
+          }
+        }
       }
     },
     "repoRef": {
@@ -50,6 +57,14 @@
         "did": { "type": "string", "format": "did" },
         "cid": { "type": "string", "format": "cid" },
         "recordUri": { "type": "string", "format": "at-uri" }
+      }
+    },
+    "threatSignature": {
+      "type": "object",
+      "required": ["property", "value"],
+      "properties": {
+        "property": { "type": "string" },
+        "value": { "type": "string" }
       }
     }
   }
