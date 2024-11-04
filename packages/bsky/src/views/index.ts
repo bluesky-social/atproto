@@ -75,10 +75,15 @@ import { Notification } from '../proto/bsky_pb'
 import { postUriToThreadgateUri, postUriToPostgateUri } from '../util/uris'
 
 export class Views {
+  public imgUriBuilder: ImageUriBuilder = this.opts.imgUriBuilder
+  public videoUriBuilder: VideoUriBuilder = this.opts.videoUriBuilder
+  public indexedAtEpoch: Date | undefined = this.opts.indexedAtEpoch
   constructor(
-    public imgUriBuilder: ImageUriBuilder,
-    public videoUriBuilder: VideoUriBuilder,
-    public indexedAtEpoch: Date | undefined,
+    private opts: {
+      imgUriBuilder: ImageUriBuilder
+      videoUriBuilder: VideoUriBuilder
+      indexedAtEpoch: Date | undefined
+    },
   ) {}
 
   // Actor
@@ -149,7 +154,7 @@ export class Views {
           }
         : undefined,
       banner: actor.profile?.banner
-        ? this.imgUriBuilder.getPresetUri(
+        ? this.opts.imgUriBuilder.getPresetUri(
             'banner',
             did,
             cidFromBlobJson(actor.profile.banner),

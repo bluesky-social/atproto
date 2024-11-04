@@ -101,11 +101,11 @@ export class BskyAppView {
       rejectUnauthorized: !config.dataplaneIgnoreBadTls,
     })
     const hydrator = new Hydrator(dataplane, config.labelsFromIssuerDids)
-    const views = new Views(
-      imgUriBuilder,
-      videoUriBuilder,
-      config.indexedAtEpoch,
-    )
+    const views = new Views({
+      imgUriBuilder: imgUriBuilder,
+      videoUriBuilder: videoUriBuilder,
+      indexedAtEpoch: config.indexedAtEpoch,
+    })
 
     const bsyncClient = createBsyncClient({
       baseUrl: config.bsyncUrl,
