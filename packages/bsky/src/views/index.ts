@@ -154,7 +154,7 @@ export class Views {
           }
         : undefined,
       banner: actor.profile?.banner
-        ? this.opts.imgUriBuilder.getPresetUri(
+        ? this.imgUriBuilder.getPresetUri(
             'banner',
             did,
             cidFromBlobJson(actor.profile.banner),
