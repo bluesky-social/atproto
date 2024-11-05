@@ -12,6 +12,7 @@ import {
   parseRecord,
   parseString,
   split,
+  unique,
 } from './util'
 import { dedupeStrs } from '@atproto/common'
 import { postUriToThreadgateUri, postUriToPostgateUri } from '../util/uris'
@@ -89,12 +90,14 @@ export class FeedHydrator {
     includeTakedowns = false,
     given = new HydrationMap<Post>(),
   ): Promise<Posts> {
-    const [have, need] = split(uris, (uri) => given.has(uri))
+    // eslint-disable-next-line prefer-const
+    let [have, need] = split(uris, (uri) => given.has(uri))
     const base = have.reduce(
       (acc, uri) => acc.set(uri, given.get(uri) ?? null),
       new HydrationMap<Post>(),
     )
     if (!need.length) return base
+    need = unique(need)
     const res = await this.dataplane.getPostRecords({ uris: need })
     return need.reduce((acc, uri, i) => {
       const record = parseRecord<PostRecord>(res.records[i], includeTakedowns)
