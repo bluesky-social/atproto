@@ -491,13 +491,7 @@ export const verifySignatureWithKey: VerifySignatureWithKeyFn = async (
       throw new Error(`Expected key alg ${alg}, got ${parsed.jwtAlg}`)
     }
 
-    const prefixedBytes = extractPrefixedBytes(extractMultikey(didKey))
-    if (!hasPrefix(prefixedBytes, SECP256K1_DID_PREFIX)) {
-      throw new Error(`Not a secp256k1 did:key: ${didKey}`)
-    }
-    const keyBytes = prefixedBytes.slice(SECP256K1_DID_PREFIX.length)
-
-    return verifySig(keyBytes, msgBytes, sigBytes)
+    return verifySig(parsed.keyBytes, msgBytes, sigBytes)
   }
 
   return cryptoVerifySignatureWithKey(didKey, msgBytes, sigBytes, alg)
