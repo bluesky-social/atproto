@@ -8,6 +8,7 @@ import {
   parseRecordBytes,
   parseString,
   safeTakedownRef,
+  unique,
 } from './util'
 
 export type Actor = {
@@ -103,6 +104,7 @@ export class ActorHydrator {
 
   async getActors(dids: string[], includeTakedowns = false): Promise<Actors> {
     if (!dids.length) return new HydrationMap<Actor>()
+    dids = unique(dids)
     const res = await this.dataplane.getActors({ dids })
     return dids.reduce((acc, did, i) => {
       const actor = res.actors[i]
@@ -161,6 +163,7 @@ export class ActorHydrator {
     viewer: string,
   ): Promise<ProfileViewerStates> {
     if (!dids.length) return new HydrationMap<ProfileViewerState>()
+    dids = unique(dids)
     const res = await this.dataplane.getRelationships({
       actorDid: viewer,
       targetDids: dids,

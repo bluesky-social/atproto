@@ -154,3 +154,7 @@ export const safeTakedownRef = (obj?: {
   if (obj.takedownRef) return obj.takedownRef
   if (obj.takenDown) return 'BSKY-TAKEDOWN-UNKNOWN'
 }
+
+export const unique = (strs: string[]) => {
+  return [...new Set(strs)]
+}
