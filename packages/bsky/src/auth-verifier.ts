@@ -454,6 +454,31 @@ export const createPublicKeyObject = (publicKeyHex: string): KeyObject => {
   return crypto.createPublicKey({ format: 'pem', key })
 }
 
+const verifySig = (
+  publicKey: Uint8Array,
+  data: Uint8Array,
+  sig: Uint8Array,
+) => {
+  const keyEncoder = new KeyEncoder('secp256k1')
+
+  const pemKey = keyEncoder.encodePublic(
+    ui8.toString(publicKey, 'hex'),
+    'raw',
+    'pem',
+  )
+  const key = crypto.createPublicKey({ format: 'pem', key: pemKey })
+
+  return crypto.verify(
+    'sha256',
+    data,
+    {
+      key,
+      dsaEncoding: 'ieee-p1363',
+    },
+    sig,
+  )
+}
+
 export const verifySignatureWithKey: VerifySignatureWithKeyFn = async (
   didKey: string,
   msgBytes: Uint8Array,
@@ -471,31 +496,6 @@ export const verifySignatureWithKey: VerifySignatureWithKeyFn = async (
       throw new Error(`Not a secp256k1 did:key: ${didKey}`)
     }
     const keyBytes = prefixedBytes.slice(SECP256K1_DID_PREFIX.length)
-
-    const verifySig = (
-      publicKey: Uint8Array,
-      data: Uint8Array,
-      sig: Uint8Array,
-    ) => {
-      const keyEncoder = new KeyEncoder('secp256k1')
-
-      const pemKey = keyEncoder.encodePublic(
-        ui8.toString(publicKey, 'hex'),
-        'raw',
-        'pem',
-      )
-      const key = crypto.createPublicKey({ format: 'pem', key: pemKey })
-
-      return crypto.verify(
-        'sha256',
-        data,
-        {
-          key,
-          dsaEncoding: 'ieee-p1363',
-        },
-        sig,
-      )
-    }
 
     return verifySig(keyBytes, msgBytes, sigBytes)
   }
