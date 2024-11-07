@@ -565,6 +565,7 @@ export interface RepoView {
   invitesDisabled?: boolean
   inviteNote?: string
   deactivatedAt?: string
+  threatSignatures?: ComAtprotoAdminDefs.ThreatSignature[]
   [k: string]: unknown
 }
 
@@ -594,6 +595,7 @@ export interface RepoViewDetail {
   inviteNote?: string
   emailConfirmedAt?: string
   deactivatedAt?: string
+  threatSignatures?: ComAtprotoAdminDefs.ThreatSignature[]
   [k: string]: unknown
 }
 

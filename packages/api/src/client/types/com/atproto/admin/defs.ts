@@ -37,6 +37,7 @@ export interface AccountView {
   emailConfirmedAt?: string
   inviteNote?: string
   deactivatedAt?: string
+  threatSignatures?: ThreatSignature[]
   [k: string]: unknown
 }
 
@@ -86,4 +87,22 @@ export function isRepoBlobRef(v: unknown): v is RepoBlobRef {
 
 export function validateRepoBlobRef(v: unknown): ValidationResult {
   return lexicons.validate('com.atproto.admin.defs#repoBlobRef', v)
+}
+
+export interface ThreatSignature {
+  property: string
+  value: string
+  [k: string]: unknown
+}
+
+export function isThreatSignature(v: unknown): v is ThreatSignature {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.admin.defs#threatSignature'
+  )
+}
+
+export function validateThreatSignature(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.admin.defs#threatSignature', v)
 }

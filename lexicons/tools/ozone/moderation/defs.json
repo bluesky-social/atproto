@@ -478,7 +478,14 @@
         },
         "invitesDisabled": { "type": "boolean" },
         "inviteNote": { "type": "string" },
-        "deactivatedAt": { "type": "string", "format": "datetime" }
+        "deactivatedAt": { "type": "string", "format": "datetime" },
+        "threatSignatures": {
+          "type": "array",
+          "items": {
+            "type": "ref",
+            "ref": "com.atproto.admin.defs#threatSignature"
+          }
+        }
       }
     },
     "repoViewDetail": {
@@ -515,7 +522,14 @@
         "invitesDisabled": { "type": "boolean" },
         "inviteNote": { "type": "string" },
         "emailConfirmedAt": { "type": "string", "format": "datetime" },
-        "deactivatedAt": { "type": "string", "format": "datetime" }
+        "deactivatedAt": { "type": "string", "format": "datetime" },
+        "threatSignatures": {
+          "type": "array",
+          "items": {
+            "type": "ref",
+            "ref": "com.atproto.admin.defs#threatSignature"
+          }
+        }
       }
     },
     "repoViewNotFound": {
