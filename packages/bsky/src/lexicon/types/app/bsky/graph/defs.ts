@@ -2,13 +2,13 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
-import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
-import * as AppBskyActorDefs from '../actor/defs'
-import * as AppBskyRichtextFacet from '../richtext/facet'
-import * as AppBskyFeedDefs from '../feed/defs'
+import { lexicons } from '../../../../lexicons.js'
+import { isObj, hasProp } from '../../../../util.js'
+import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs.js'
+import * as AppBskyActorDefs from '../actor/defs.js'
+import * as AppBskyRichtextFacet from '../richtext/facet.js'
+import * as AppBskyFeedDefs from '../feed/defs.js'
 
 export interface ListViewBasic {
   uri: string

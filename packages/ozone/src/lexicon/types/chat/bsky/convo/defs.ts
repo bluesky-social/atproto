@@ -2,12 +2,12 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
-import * as AppBskyRichtextFacet from '../../../app/bsky/richtext/facet'
-import * as AppBskyEmbedRecord from '../../../app/bsky/embed/record'
-import * as ChatBskyActorDefs from '../actor/defs'
+import { lexicons } from '../../../../lexicons.js'
+import { isObj, hasProp } from '../../../../util.js'
+import * as AppBskyRichtextFacet from '../../../app/bsky/richtext/facet.js'
+import * as AppBskyEmbedRecord from '../../../app/bsky/embed/record.js'
+import * as ChatBskyActorDefs from '../actor/defs.js'
 
 export interface MessageRef {
   did: string

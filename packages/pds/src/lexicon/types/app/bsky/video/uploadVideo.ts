@@ -2,13 +2,13 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import express from 'express'
-import stream from 'stream'
+import stream from 'node:stream'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
+import { lexicons } from '../../../../lexicons.js'
+import { isObj, hasProp } from '../../../../util.js'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
-import * as AppBskyVideoDefs from './defs'
+import * as AppBskyVideoDefs from './defs.js'
 
 export interface QueryParams {}
 

@@ -73,10 +73,10 @@ const indexTs = (
         { name: 'StreamAuthVerifier' },
       ],
     })
-    //= import {schemas} from './lexicons'
+    //= import {schemas} from './lexicons.js'
     file
       .addImportDeclaration({
-        moduleSpecifier: './lexicons',
+        moduleSpecifier: './lexicons.js',
       })
       .addNamedImport({
         name: 'schemas',
@@ -93,7 +93,7 @@ const indexTs = (
       }
       file
         .addImportDeclaration({
-          moduleSpecifier: `./types/${lexiconDoc.id.split('.').join('/')}`,
+          moduleSpecifier: `./types/${lexiconDoc.id.split('.').join('/')}.js`,
         })
         .setNamespaceImport(toTitleCase(lexiconDoc.id))
     }
@@ -337,7 +337,7 @@ const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
         if (streamingInput || streamingOutput) {
           //= import stream from 'stream'
           file.addImportDeclaration({
-            moduleSpecifier: 'stream',
+            moduleSpecifier: 'node:stream',
             defaultImport: 'stream',
           })
         }
@@ -348,30 +348,31 @@ const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
           moduleSpecifier: '@atproto/lexicon',
         })
         .addNamedImports([{ name: 'ValidationResult' }, { name: 'BlobRef' }])
-      //= import {lexicons} from '../../lexicons.ts'
-      file
-        .addImportDeclaration({
-          moduleSpecifier: `${lexiconDoc.id
-            .split('.')
-            .map((_str) => '..')
-            .join('/')}/lexicons`,
-        })
-        .addNamedImports([{ name: 'lexicons' }])
-      //= import {isObj, hasProp} from '../../util.ts'
-      file
-        .addImportDeclaration({
-          moduleSpecifier: `${lexiconDoc.id
-            .split('.')
-            .map((_str) => '..')
-            .join('/')}/util`,
-        })
-        .addNamedImports([{ name: 'isObj' }, { name: 'hasProp' }])
       //= import {CID} from 'multiformats/cid'
       file
         .addImportDeclaration({
           moduleSpecifier: 'multiformats/cid',
         })
         .addNamedImports([{ name: 'CID' }])
+
+      //= import {lexicons} from '../../lexicons.js'
+      file
+        .addImportDeclaration({
+          moduleSpecifier: `${lexiconDoc.id
+            .split('.')
+            .map((_str) => '..')
+            .join('/')}/lexicons.js`,
+        })
+        .addNamedImports([{ name: 'lexicons' }])
+      //= import {isObj, hasProp} from '../../util.js'
+      file
+        .addImportDeclaration({
+          moduleSpecifier: `${lexiconDoc.id
+            .split('.')
+            .map((_str) => '..')
+            .join('/')}/util.js`,
+        })
+        .addNamedImports([{ name: 'isObj' }, { name: 'hasProp' }])
 
       for (const defId in lexiconDoc.defs) {
         const def = lexiconDoc.defs[defId]
@@ -546,7 +547,7 @@ function genServerXrpcStreaming(
   })
 
   file.addImportDeclaration({
-    moduleSpecifier: 'http',
+    moduleSpecifier: 'node:http',
     namedImports: [{ name: 'IncomingMessage' }],
   })
 

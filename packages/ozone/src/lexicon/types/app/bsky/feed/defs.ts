@@ -2,18 +2,18 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
-import * as AppBskyActorDefs from '../actor/defs'
-import * as AppBskyEmbedImages from '../embed/images'
-import * as AppBskyEmbedVideo from '../embed/video'
-import * as AppBskyEmbedExternal from '../embed/external'
-import * as AppBskyEmbedRecord from '../embed/record'
-import * as AppBskyEmbedRecordWithMedia from '../embed/recordWithMedia'
-import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
-import * as AppBskyRichtextFacet from '../richtext/facet'
-import * as AppBskyGraphDefs from '../graph/defs'
+import { lexicons } from '../../../../lexicons.js'
+import { isObj, hasProp } from '../../../../util.js'
+import * as AppBskyActorDefs from '../actor/defs.js'
+import * as AppBskyEmbedImages from '../embed/images.js'
+import * as AppBskyEmbedVideo from '../embed/video.js'
+import * as AppBskyEmbedExternal from '../embed/external.js'
+import * as AppBskyEmbedRecord from '../embed/record.js'
+import * as AppBskyEmbedRecordWithMedia from '../embed/recordWithMedia.js'
+import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs.js'
+import * as AppBskyRichtextFacet from '../richtext/facet.js'
+import * as AppBskyGraphDefs from '../graph/defs.js'
 
 export interface PostView {
   uri: string

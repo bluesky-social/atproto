@@ -70,10 +70,6 @@ const indexTs = (
       { name: 'FetchHandler' },
       { name: 'FetchHandlerOptions' },
     ])
-    //= import {schemas} from './lexicons'
-    file
-      .addImportDeclaration({ moduleSpecifier: './lexicons' })
-      .addNamedImports([{ name: 'schemas' }])
     //= import {CID} from 'multiformats/cid'
     file
       .addImportDeclaration({
@@ -81,9 +77,14 @@ const indexTs = (
       })
       .addNamedImports([{ name: 'CID' }])
 
+    //= import {schemas} from './lexicons.js'
+    file
+      .addImportDeclaration({ moduleSpecifier: './lexicons.js' })
+      .addNamedImports([{ name: 'schemas' }])
+
     // generate type imports and re-exports
     for (const lexicon of lexiconDocs) {
-      const moduleSpecifier = `./types/${lexicon.id.split('.').join('/')}`
+      const moduleSpecifier = `./types/${lexicon.id.split('.').join('/')}.js`
       file
         .addImportDeclaration({ moduleSpecifier })
         .setNamespaceImport(toTitleCase(lexicon.id))
@@ -452,30 +453,31 @@ const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
           moduleSpecifier: '@atproto/lexicon',
         })
         .addNamedImports([{ name: 'ValidationResult' }, { name: 'BlobRef' }])
-      //= import {isObj, hasProp} from '../../util.ts'
-      file
-        .addImportDeclaration({
-          moduleSpecifier: `${lexiconDoc.id
-            .split('.')
-            .map((_str) => '..')
-            .join('/')}/util`,
-        })
-        .addNamedImports([{ name: 'isObj' }, { name: 'hasProp' }])
-      //= import {lexicons} from '../../lexicons.ts'
-      file
-        .addImportDeclaration({
-          moduleSpecifier: `${lexiconDoc.id
-            .split('.')
-            .map((_str) => '..')
-            .join('/')}/lexicons`,
-        })
-        .addNamedImports([{ name: 'lexicons' }])
       //= import {CID} from 'multiformats/cid'
       file
         .addImportDeclaration({
           moduleSpecifier: 'multiformats/cid',
         })
         .addNamedImports([{ name: 'CID' }])
+
+      //= import {isObj, hasProp} from '../../util.js'
+      file
+        .addImportDeclaration({
+          moduleSpecifier: `${lexiconDoc.id
+            .split('.')
+            .map((_str) => '..')
+            .join('/')}/util.js`,
+        })
+        .addNamedImports([{ name: 'isObj' }, { name: 'hasProp' }])
+      //= import {lexicons} from '../../lexicons.js'
+      file
+        .addImportDeclaration({
+          moduleSpecifier: `${lexiconDoc.id
+            .split('.')
+            .map((_str) => '..')
+            .join('/')}/lexicons.js`,
+        })
+        .addNamedImports([{ name: 'lexicons' }])
 
       for (const defId in lexiconDoc.defs) {
         const def = lexiconDoc.defs[defId]

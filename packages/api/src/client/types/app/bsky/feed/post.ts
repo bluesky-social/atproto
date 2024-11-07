@@ -2,17 +2,17 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
-import * as AppBskyRichtextFacet from '../richtext/facet'
-import * as AppBskyEmbedImages from '../embed/images'
-import * as AppBskyEmbedVideo from '../embed/video'
-import * as AppBskyEmbedExternal from '../embed/external'
-import * as AppBskyEmbedRecord from '../embed/record'
-import * as AppBskyEmbedRecordWithMedia from '../embed/recordWithMedia'
-import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
-import * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef'
+import { isObj, hasProp } from '../../../../util.js'
+import { lexicons } from '../../../../lexicons.js'
+import * as AppBskyRichtextFacet from '../richtext/facet.js'
+import * as AppBskyEmbedImages from '../embed/images.js'
+import * as AppBskyEmbedVideo from '../embed/video.js'
+import * as AppBskyEmbedExternal from '../embed/external.js'
+import * as AppBskyEmbedRecord from '../embed/record.js'
+import * as AppBskyEmbedRecordWithMedia from '../embed/recordWithMedia.js'
+import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs.js'
+import * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef.js'
 
 export interface Record {
   /** The primary post content. May be an empty string, if there are embeds. */

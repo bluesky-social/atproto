@@ -2,13 +2,13 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
-import * as AppBskyEmbedRecord from './record'
-import * as AppBskyEmbedImages from './images'
-import * as AppBskyEmbedVideo from './video'
-import * as AppBskyEmbedExternal from './external'
+import { isObj, hasProp } from '../../../../util.js'
+import { lexicons } from '../../../../lexicons.js'
+import * as AppBskyEmbedRecord from './record.js'
+import * as AppBskyEmbedImages from './images.js'
+import * as AppBskyEmbedVideo from './video.js'
+import * as AppBskyEmbedExternal from './external.js'
 
 export interface Main {
   record: AppBskyEmbedRecord.Main
