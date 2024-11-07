@@ -191,7 +191,8 @@ describe('ozone-settings', () => {
     it('returns all personal settings', async () => {
       const result = await listOptions({ prefix: 'tools.ozone.setting.client' })
       expect(result.options.length).toBe(3)
-      expect(forSnapshot(result.settings)).toMatchSnapshot()
+
+      expect(forSnapshot(result.options)).toMatchSnapshot()
     })
 
     it('allows paginating options', async () => {
