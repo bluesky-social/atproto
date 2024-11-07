@@ -10821,6 +10821,9 @@ export const schemaDict = {
               'lex:tools.ozone.moderation.defs#modEventResolveAppeal',
               'lex:tools.ozone.moderation.defs#modEventDivert',
               'lex:tools.ozone.moderation.defs#modEventTag',
+              'lex:tools.ozone.moderation.defs#accountEvent',
+              'lex:tools.ozone.moderation.defs#identityEvent',
+              'lex:tools.ozone.moderation.defs#recordEvent',
             ],
           },
           subject: {
@@ -10885,6 +10888,9 @@ export const schemaDict = {
               'lex:tools.ozone.moderation.defs#modEventResolveAppeal',
               'lex:tools.ozone.moderation.defs#modEventDivert',
               'lex:tools.ozone.moderation.defs#modEventTag',
+              'lex:tools.ozone.moderation.defs#accountEvent',
+              'lex:tools.ozone.moderation.defs#identityEvent',
+              'lex:tools.ozone.moderation.defs#recordEvent',
             ],
           },
           subject: {
@@ -10925,6 +10931,13 @@ export const schemaDict = {
             refs: [
               'lex:com.atproto.admin.defs#repoRef',
               'lex:com.atproto.repo.strongRef',
+            ],
+          },
+          hosting: {
+            type: 'union',
+            refs: [
+              'lex:tools.ozone.moderation.defs#accountHosting',
+              'lex:tools.ozone.moderation.defs#recordHosting',
             ],
           },
           subjectBlobCids: {
@@ -11243,6 +11256,86 @@ export const schemaDict = {
           comment: {
             type: 'string',
             description: 'Additional comment about added/removed tags.',
+          },
+        },
+      },
+      accountEvent: {
+        type: 'object',
+        description:
+          'Logs account status related events on a repo subject. Normally captured by automod from the firehose and emitted to ozone for historical tracking.',
+        required: ['timestamp', 'active'],
+        properties: {
+          comment: {
+            type: 'string',
+          },
+          active: {
+            type: 'boolean',
+            description:
+              'Indicates that the account has a repository which can be fetched from the host that emitted this event.',
+          },
+          status: {
+            type: 'string',
+            knownValues: [
+              'unknown',
+              'deactivated',
+              'deleted',
+              'takendown',
+              'suspended',
+              'tombstoned',
+            ],
+          },
+          timestamp: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
+      identityEvent: {
+        type: 'object',
+        description:
+          'Logs identity related events on a repo subject. Normally captured by automod from the firehose and emitted to ozone for historical tracking.',
+        required: ['timestamp'],
+        properties: {
+          comment: {
+            type: 'string',
+          },
+          handle: {
+            type: 'string',
+            format: 'handle',
+          },
+          pdsHost: {
+            type: 'string',
+            format: 'uri',
+          },
+          tombstone: {
+            type: 'boolean',
+          },
+          timestamp: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
+      recordEvent: {
+        type: 'object',
+        description:
+          'Logs lifecycle event on a record subject. Normally captured by automod from the firehose and emitted to ozone for historical tracking.',
+        required: ['timestamp', 'op'],
+        properties: {
+          comment: {
+            type: 'string',
+          },
+          op: {
+            type: 'string',
+            knownValues: ['create', 'update', 'delete'],
+          },
+          cid: {
+            type: 'string',
+            format: 'cid',
+          },
+          timestamp: {
+            type: 'string',
+            format: 'datetime',
           },
         },
       },
@@ -11571,6 +11664,64 @@ export const schemaDict = {
           },
         },
       },
+      accountHosting: {
+        type: 'object',
+        required: ['status'],
+        properties: {
+          status: {
+            type: 'string',
+            knownValues: [
+              'takendown',
+              'suspended',
+              'deleted',
+              'deactivated',
+              'unknown',
+            ],
+          },
+          updatedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          deletedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          deactivatedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          reactivatedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
+      recordHosting: {
+        type: 'object',
+        required: ['status'],
+        properties: {
+          status: {
+            type: 'string',
+            knownValues: ['deleted', 'unknown'],
+          },
+          updatedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          deletedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
     },
   },
   ToolsOzoneModerationEmitEvent: {
@@ -11603,6 +11754,9 @@ export const schemaDict = {
                   'lex:tools.ozone.moderation.defs#modEventResolveAppeal',
                   'lex:tools.ozone.moderation.defs#modEventEmail',
                   'lex:tools.ozone.moderation.defs#modEventTag',
+                  'lex:tools.ozone.moderation.defs#accountEvent',
+                  'lex:tools.ozone.moderation.defs#identityEvent',
+                  'lex:tools.ozone.moderation.defs#recordEvent',
                 ],
               },
               subject: {
@@ -12004,6 +12158,38 @@ export const schemaDict = {
               type: 'string',
               format: 'datetime',
               description: 'Search subjects reviewed after a given timestamp',
+            },
+            hostingDeletedAfter: {
+              type: 'string',
+              format: 'datetime',
+              description:
+                'Search subjects where the associated record/account was deleted after a given timestamp',
+            },
+            hostingDeletedBefore: {
+              type: 'string',
+              format: 'datetime',
+              description:
+                'Search subjects where the associated record/account was deleted before a given timestamp',
+            },
+            hostingUpdatedAfter: {
+              type: 'string',
+              format: 'datetime',
+              description:
+                'Search subjects where the associated record/account was updated after a given timestamp',
+            },
+            hostingUpdatedBefore: {
+              type: 'string',
+              format: 'datetime',
+              description:
+                'Search subjects where the associated record/account was updated before a given timestamp',
+            },
+            hostingStatuses: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+              description:
+                'Search subjects by the status of the associated record/account',
             },
             reviewedBefore: {
               type: 'string',

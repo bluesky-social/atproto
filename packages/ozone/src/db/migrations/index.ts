@@ -16,3 +16,4 @@ export * as _20240904T205730722Z from './20240904T205730722Z-add-subject-did-ind
 export * as _20241001T205730722Z from './20241001T205730722Z-subject-status-review-state-index'
 export * as _20241008T205730722Z from './20241008T205730722Z-sets'
 export * as _20241018T205730722Z from './20241018T205730722Z-setting'
+export * as _20241026T205730722Z from './20241026T205730722Z-add-hosting-status-to-subject-status'
