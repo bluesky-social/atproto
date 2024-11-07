@@ -16,6 +16,7 @@
           },
           "since": {
             "type": "string",
+            "format": "tid",
             "description": "The revision ('rev') of the repo to create a diff from."
           }
         }

@@ -15,7 +15,11 @@
             "description": "The DID of the repo."
           },
           "collection": { "type": "string", "format": "nsid" },
-          "rkey": { "type": "string", "description": "Record Key" },
+          "rkey": {
+            "type": "string",
+            "description": "Record Key",
+            "format": "record-key"
+          },
           "commit": {
             "type": "string",
             "format": "cid",
