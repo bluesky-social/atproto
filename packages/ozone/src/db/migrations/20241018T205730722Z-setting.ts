@@ -18,7 +18,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('scope', 'text', (col) => col.notNull())
     .addColumn('createdBy', 'text', (col) => col.notNull())
     .addColumn('lastUpdatedBy', 'text', (col) => col.notNull())
-    .addUniqueConstraint('setting_scope_key_did_idx', ['key', 'scope', 'did'])
+    .addUniqueConstraint('setting_did_scope_key_idx', ['did', 'scope', 'key'])
     .execute()
 }
 

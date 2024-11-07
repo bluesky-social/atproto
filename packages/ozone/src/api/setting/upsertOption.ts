@@ -52,6 +52,7 @@ export default function (server: Server, ctx: AppContext) {
         const manageableRoles = getRolesForInstanceOption(access)
         const existingSetting = await getExistingSetting(
           settingService,
+          ownerDid,
           key,
           'instance',
         )
@@ -69,7 +70,12 @@ export default function (server: Server, ctx: AppContext) {
         })
       }
 
-      const newOption = await getExistingSetting(settingService, key, scope)
+      const newOption = await getExistingSetting(
+        settingService,
+        ownerDid,
+        key,
+        scope,
+      )
       assert(newOption, 'Failed to get the updated setting')
 
       return {
@@ -84,6 +90,7 @@ export default function (server: Server, ctx: AppContext) {
 
 const getExistingSetting = async (
   settingService: SettingService,
+  did: string,
   key: string,
   scope: string,
 ) => {
@@ -91,6 +98,7 @@ const getExistingSetting = async (
     scope: scope === 'personal' ? 'personal' : 'instance',
     keys: [key],
     limit: 1,
+    did,
   })
 
   return result.options[0]
