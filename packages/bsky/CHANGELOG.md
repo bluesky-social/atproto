@@ -1,5 +1,19 @@
 # @atproto/bsky
 
+## 0.0.93
+
+### Patch Changes
+
+- [#2936](https://github.com/bluesky-social/atproto/pull/2936) [`1982693e3`](https://github.com/bluesky-social/atproto/commit/1982693e3ea1fef4db76ac9aca3db8dc5ebf3fe0) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Use custom verifySignatureWithKey with native node:crypto instead of @noble/curves to evaluate performance
+
+- Updated dependencies [[`d6f33b474`](https://github.com/bluesky-social/atproto/commit/d6f33b4742e0b94722a993efc7d18833d9416bb6), [`b6eeb81c6`](https://github.com/bluesky-social/atproto/commit/b6eeb81c6d454b5ae91b05a21fc1820274c1b429), [`1982693e3`](https://github.com/bluesky-social/atproto/commit/1982693e3ea1fef4db76ac9aca3db8dc5ebf3fe0), [`1982693e3`](https://github.com/bluesky-social/atproto/commit/1982693e3ea1fef4db76ac9aca3db8dc5ebf3fe0), [`839202a3d`](https://github.com/bluesky-social/atproto/commit/839202a3d2b01de25de900cec7540019545798c6), [`e680d55ca`](https://github.com/bluesky-social/atproto/commit/e680d55ca2d7f6b213e2a8693eba6be39163ba41), [`c4b5e5395`](https://github.com/bluesky-social/atproto/commit/c4b5e53957463c37dd16fdd1b897d4ab02ab8e84)]:
+  - @atproto/api@0.13.15
+  - @atproto/crypto@0.4.2
+  - @atproto/xrpc-server@0.7.2
+  - @atproto/identity@0.4.3
+  - @atproto/repo@0.5.4
+  - @atproto/sync@0.1.5
+
 ## 0.0.92
 
 ### Patch Changes
