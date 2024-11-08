@@ -12,13 +12,7 @@
 //   - hard length limit of 8KBytes
 //   - not going to validate "percent encoding" here
 export const ensureValidDid = (did: string): void => {
-  if (
-    did.length < 7 || // did:x:y
-    did[3] !== ':' ||
-    did[2] !== 'd' ||
-    did[1] !== 'i' ||
-    did[0] !== 'd'
-  ) {
+  if (!did.startsWith('did:')) {
     throw new InvalidDidError('DID requires "did:" prefix')
   }
 
