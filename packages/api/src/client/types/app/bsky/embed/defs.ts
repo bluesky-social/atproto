@@ -24,3 +24,37 @@ export function isAspectRatio(v: unknown): v is AspectRatio {
 export function validateAspectRatio(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.embed.defs#aspectRatio', v)
 }
+
+/** Indicates that this video should be presented as a normal video - i.e. with sound, a progress bar, etc. */
+export interface VideoPresentation {
+  [k: string]: unknown
+}
+
+export function isVideoPresentation(v: unknown): v is VideoPresentation {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.embed.defs#videoPresentation'
+  )
+}
+
+export function validateVideoPresentation(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.embed.defs#videoPresentation', v)
+}
+
+/** Indicates that this video should be presented as a GIF - i.e. with no sound, looping, etc. */
+export interface GifPresentation {
+  [k: string]: unknown
+}
+
+export function isGifPresentation(v: unknown): v is GifPresentation {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.embed.defs#gifPresentation'
+  )
+}
+
+export function validateGifPresentation(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.embed.defs#gifPresentation', v)
+}

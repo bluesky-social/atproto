@@ -833,12 +833,11 @@ export class ComAtprotoModerationNS {
     data?: ComAtprotoModerationCreateReport.InputSchema,
     opts?: ComAtprotoModerationCreateReport.CallOptions,
   ): Promise<ComAtprotoModerationCreateReport.Response> {
-    return this._client.call(
-      'com.atproto.moderation.createReport',
-      opts?.qp,
-      data,
-      opts,
-    )
+    return this._client
+      .call('com.atproto.moderation.createReport', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoModerationCreateReport.toKnownErr(e)
+      })
   }
 }
 

@@ -49,6 +49,31 @@ export interface Response {
   data: OutputSchema
 }
 
+export class ReasonNotAcceptedError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message, src.headers, { cause: src })
+  }
+}
+
+export class CollectionNotAcceptedError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message, src.headers, { cause: src })
+  }
+}
+
+export class AccountNotAcceptedError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message, src.headers, { cause: src })
+  }
+}
+
 export function toKnownErr(e: any) {
+  if (e instanceof XRPCError) {
+    if (e.error === 'ReasonNotAccepted') return new ReasonNotAcceptedError(e)
+    if (e.error === 'CollectionNotAccepted')
+      return new CollectionNotAcceptedError(e)
+    if (e.error === 'AccountNotAccepted') return new AccountNotAcceptedError(e)
+  }
+
   return e
 }

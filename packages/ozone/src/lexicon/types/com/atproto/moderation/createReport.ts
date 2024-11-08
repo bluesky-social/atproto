@@ -51,6 +51,7 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
+  error?: 'ReasonNotAccepted' | 'CollectionNotAccepted' | 'AccountNotAccepted'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess | HandlerPipeThrough

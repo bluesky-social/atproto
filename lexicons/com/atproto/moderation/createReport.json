@@ -65,7 +65,12 @@
             "createdAt": { "type": "string", "format": "datetime" }
           }
         }
-      }
+      },
+      "errors": [
+        { "name": "ReasonNotAccepted" },
+        { "name": "CollectionNotAccepted" },
+        { "name": "AccountNotAccepted" }
+      ]
     }
   }
 }

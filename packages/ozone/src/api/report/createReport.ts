@@ -5,6 +5,7 @@ import { subjectFromInput } from '../../mod-service/subject'
 import { REASONAPPEAL } from '../../lexicon/types/com/atproto/moderation/defs'
 import { ForbiddenError } from '@atproto/xrpc-server'
 import { TagService } from '../../tag-service'
+import { assertReportAllowed } from '../../setting/block-report'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.moderation.createReport({
@@ -20,7 +21,19 @@ export default function (server: Server, ctx: AppContext) {
         throw new ForbiddenError('You cannot appeal this report')
       }
 
-      const db = ctx.db
+      const { db, cfg } = ctx
+      const settingService = ctx.settingService(db)
+      const { options: blockReportOptions } = await settingService.query({
+        limit: 1,
+        scope: 'instance',
+        did: cfg.service.did,
+        keys: ['tools.ozone.setting.blockReport'],
+      })
+
+      if (blockReportOptions.length) {
+        assertReportAllowed(blockReportOptions[0].value, subject, reasonType)
+      }
+
       const report = await db.transaction(async (dbTxn) => {
         const moderationTxn = ctx.modService(dbTxn)
         const { event: reportEvent, subjectStatus } =
