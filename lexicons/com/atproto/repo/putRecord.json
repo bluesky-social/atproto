@@ -25,7 +25,7 @@
             "rkey": {
               "type": "string",
               "description": "The Record Key.",
-              "maxLength": 15
+              "maxLength": 512
             },
             "validate": {
               "type": "boolean",

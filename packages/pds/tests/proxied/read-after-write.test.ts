@@ -101,12 +101,22 @@ describe('proxy read after write', () => {
       { uri: sc.posts[alice][0].ref.uriStr },
       { headers: { ...sc.getHeaders(alice) } },
     )
-    const layerOne = res.data.thread.replies as ThreadViewPost[]
+    const thread = res.data.thread as ThreadViewPost
+    const layerOne = thread.replies as ThreadViewPost[]
     expect(layerOne.length).toBe(1)
     expect(layerOne[0].post.uri).toEqual(reply1.ref.uriStr)
     const layerTwo = layerOne[0].replies as ThreadViewPost[]
     expect(layerTwo.length).toBe(1)
     expect(layerTwo[0].post.uri).toEqual(reply2.ref.uriStr)
+
+    const aliceHandle = sc.accounts[alice].handle
+    const handleUriStr = thread.post.uri.replace(alice, aliceHandle)
+    expect(handleUriStr).not.toEqual(thread.post.uri)
+    const handleRes = await agent.api.app.bsky.feed.getPostThread(
+      { uri: handleUriStr },
+      { headers: { ...sc.getHeaders(alice) } },
+    )
+    expect(handleRes.data.thread).toEqual(res.data.thread)
   })
 
   it('handles read after write on a thread that is not found on appview', async () => {
@@ -123,6 +133,15 @@ describe('proxy read after write', () => {
     expect((thread.replies?.at(0) as ThreadViewPost).post.uri).toEqual(
       replyRef2.uriStr,
     )
+
+    const aliceHandle = sc.accounts[alice].handle
+    const handleUriStr = thread.post.uri.replace(alice, aliceHandle)
+    expect(handleUriStr).not.toEqual(thread.post.uri)
+    const handleRes = await agent.api.app.bsky.feed.getPostThread(
+      { uri: handleUriStr },
+      { headers: { ...sc.getHeaders(alice) } },
+    )
+    expect(handleRes.data.thread).toEqual(res.data.thread)
   })
 
   it('handles read after write on threads with record embeds', async () => {

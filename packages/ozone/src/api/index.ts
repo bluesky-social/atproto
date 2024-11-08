@@ -30,6 +30,9 @@ import upsertSet from './set/upsertSet'
 import setDeleteValues from './set/deleteValues'
 import deleteSet from './set/deleteSet'
 import getRepos from './moderation/getRepos'
+import listOptions from './setting/listOptions'
+import removeOptions from './setting/removeOptions'
+import upsertOption from './setting/upsertOption'
 
 export * as health from './health'
 
@@ -66,5 +69,8 @@ export default function (server: Server, ctx: AppContext) {
   upsertSet(server, ctx)
   setDeleteValues(server, ctx)
   deleteSet(server, ctx)
+  upsertOption(server, ctx)
+  listOptions(server, ctx)
+  removeOptions(server, ctx)
   return server
 }

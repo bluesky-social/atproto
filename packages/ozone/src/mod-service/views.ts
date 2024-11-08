@@ -1,6 +1,10 @@
 import { sql } from 'kysely'
 import { AtUri, INVALID_HANDLE, normalizeDatetimeAlways } from '@atproto/syntax'
-import { AtpAgent, AppBskyFeedDefs } from '@atproto/api'
+import {
+  AtpAgent,
+  AppBskyFeedDefs,
+  ToolsOzoneModerationDefs,
+} from '@atproto/api'
 import { dedupeStrs } from '@atproto/common'
 import { BlobRef } from '@atproto/lexicon'
 import { Keypair } from '@atproto/crypto'
@@ -193,6 +197,25 @@ export class ModerationViews {
     if (event.action === 'tools.ozone.moderation.defs#modEventTag') {
       eventView.event.add = event.addedTags || []
       eventView.event.remove = event.removedTags || []
+    }
+
+    if (event.action === 'tools.ozone.moderation.defs#accountEvent') {
+      eventView.event.active = !!event.meta?.active
+      eventView.event.timestamp = event.meta?.timestamp
+      eventView.event.status = event.meta?.status
+    }
+
+    if (event.action === 'tools.ozone.moderation.defs#identityEvent') {
+      eventView.event.timestamp = event.meta?.timestamp
+      eventView.event.handle = event.meta?.handle
+      eventView.event.pdsHost = event.meta?.pdsHost
+      eventView.event.tombstone = !!event.meta?.tombstone
+    }
+
+    if (event.action === 'tools.ozone.moderation.defs#recordEvent') {
+      eventView.event.op = event.meta?.op
+      eventView.event.cid = event.meta?.cid
+      eventView.event.timestamp = event.meta?.timestamp
     }
 
     return eventView
@@ -574,7 +597,7 @@ export class ModerationViews {
   formatSubjectStatus(
     status: ModerationSubjectStatusRowWithHandle,
   ): SubjectStatusView {
-    return {
+    const statusView: SubjectStatusView = {
       id: status.id,
       reviewState: status.reviewState,
       createdAt: status.createdAt,
@@ -594,6 +617,26 @@ export class ModerationViews {
       tags: status.tags || [],
       subject: subjectFromStatusRow(status).lex(),
     }
+
+    if (status.recordPath !== '') {
+      statusView.hosting = {
+        $type: 'tools.ozone.moderation.defs#recordHosting',
+        updatedAt: status.hostingUpdatedAt ?? undefined,
+        deletedAt: status.hostingDeletedAt ?? undefined,
+        status: status.hostingStatus ?? 'unknown',
+      }
+    } else {
+      statusView.hosting = {
+        $type: 'tools.ozone.moderation.defs#accountHosting',
+        updatedAt: status.hostingUpdatedAt ?? undefined,
+        deletedAt: status.hostingDeletedAt ?? undefined,
+        status: status.hostingStatus ?? 'unknown',
+        deactivatedAt: status.hostingDeactivatedAt ?? undefined,
+        reactivatedAt: status.hostingReactivatedAt ?? undefined,
+      }
+    }
+
+    return statusView
   }
 
   async fetchAuthorFeed(

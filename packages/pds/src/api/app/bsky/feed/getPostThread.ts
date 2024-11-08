@@ -41,6 +41,12 @@ export default function (server: Server, ctx: AppContext) {
           if (!rev) throw err
 
           const uri = new AtUri(params.uri)
+          if (!uri.hostname.startsWith('did:')) {
+            const account = await ctx.accountManager.getAccount(uri.hostname)
+            if (account) {
+              uri.hostname = account.did
+            }
+          }
           if (uri.hostname !== requester) throw err
 
           const local = await ctx.actorStore.read(requester, (store) => {
@@ -51,6 +57,7 @@ export default function (server: Server, ctx: AppContext) {
               params,
               requester,
               rev,
+              uri,
             )
           })
           if (local === null) {
@@ -165,17 +172,21 @@ const readAfterWriteNotFound = async (
   params: QueryParams,
   requester: string,
   rev: string,
+  resolvedUri: AtUri,
 ): Promise<{ data: OutputSchema; lag?: number } | null> => {
-  const uri = new AtUri(params.uri)
-  if (uri.hostname !== requester) {
+  if (resolvedUri.hostname !== requester) {
     return null
   }
   const local = await localViewer.getRecordsSinceRev(rev)
-  const found = local.posts.find((p) => p.uri.toString() === uri.toString())
+  const found = local.posts.find(
+    (p) => p.uri.toString() === resolvedUri.toString(),
+  )
   if (!found) return null
   let thread = await threadPostView(localViewer, found)
   if (!thread) return null
-  const rest = local.posts.filter((p) => p.uri.toString() !== uri.toString())
+  const rest = local.posts.filter(
+    (p) => p.uri.toString() !== resolvedUri.toString(),
+  )
   thread = await addPostsToThread(localViewer, thread, rest)
   const highestParent = getHighestParent(thread)
   if (highestParent) {
