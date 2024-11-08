@@ -1341,7 +1341,7 @@ export const schemaDict = {
           },
           rkey: {
             type: 'string',
-            maxLength: 15,
+            maxLength: 512,
           },
           value: {
             type: 'unknown',
@@ -1450,7 +1450,7 @@ export const schemaDict = {
               rkey: {
                 type: 'string',
                 description: 'The Record Key.',
-                maxLength: 15,
+                maxLength: 512,
               },
               validate: {
                 type: 'boolean',
@@ -1901,7 +1901,7 @@ export const schemaDict = {
               rkey: {
                 type: 'string',
                 description: 'The Record Key.',
-                maxLength: 15,
+                maxLength: 512,
               },
               validate: {
                 type: 'boolean',
