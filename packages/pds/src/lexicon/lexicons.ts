@@ -5006,18 +5006,6 @@ export const schemaDict = {
           },
         },
       },
-      videoPresentation: {
-        type: 'object',
-        description:
-          'Indicates that this video should be presented as a normal video - i.e. with sound, a progress bar, etc.',
-        properties: {},
-      },
-      gifPresentation: {
-        type: 'object',
-        description:
-          'Indicates that this video should be presented as a GIF - i.e. with no sound, looping, etc.',
-        properties: {},
-      },
     },
   },
   AppBskyEmbedExternal: {
@@ -5389,15 +5377,6 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.embed.defs#aspectRatio',
           },
-          presentation: {
-            type: 'union',
-            description:
-              "The video's presentation type. If not provided, it will assumed to be #videoPresentation.",
-            refs: [
-              'lex:app.bsky.embed.video#videoPresentation',
-              'lex:app.bsky.embed.video#gifPresentation',
-            ],
-          },
         },
       },
       caption: {
@@ -5439,13 +5418,6 @@ export const schemaDict = {
           aspectRatio: {
             type: 'ref',
             ref: 'lex:app.bsky.embed.defs#aspectRatio',
-          },
-          presentation: {
-            type: 'union',
-            refs: [
-              'lex:app.bsky.embed.video#videoPresentation',
-              'lex:app.bsky.embed.video#gifPresentation',
-            ],
           },
         },
       },

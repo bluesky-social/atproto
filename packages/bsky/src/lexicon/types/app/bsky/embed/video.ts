@@ -13,10 +13,6 @@ export interface Main {
   /** Alt text description of the video, for accessibility. */
   alt?: string
   aspectRatio?: AppBskyEmbedDefs.AspectRatio
-  presentation?:
-    | VideoPresentation
-    | GifPresentation
-    | { $type: string; [k: string]: unknown }
   [k: string]: unknown
 }
 
@@ -57,10 +53,6 @@ export interface View {
   thumbnail?: string
   alt?: string
   aspectRatio?: AppBskyEmbedDefs.AspectRatio
-  presentation?:
-    | VideoPresentation
-    | GifPresentation
-    | { $type: string; [k: string]: unknown }
   [k: string]: unknown
 }
 
