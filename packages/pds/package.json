@@ -64,7 +64,7 @@
     "p-queue": "^6.6.2",
     "pino": "^8.21.0",
     "pino-http": "^8.2.1",
-    "sharp": "^0.32.6",
+    "sharp": "^0.33.5",
     "typed-emitter": "^2.1.0",
     "uint8arrays": "3.0.0",
     "undici": "^6.19.8",
