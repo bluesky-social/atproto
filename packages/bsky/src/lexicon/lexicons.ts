@@ -9893,6 +9893,9 @@ export const schemaDict = {
           muted: {
             type: 'boolean',
           },
+          opened: {
+            type: 'boolean',
+          },
           unreadCount: {
             type: 'integer',
           },
