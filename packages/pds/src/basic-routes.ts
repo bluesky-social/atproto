@@ -26,8 +26,7 @@ Most API routes are under /xrpc/
       Code: https://github.com/bluesky-social/atproto
  Self-Host: https://github.com/bluesky-social/pds
   Protocol: https://atproto.com
-`,
-    )
+`)
   })
 
   router.get('/robots.txt', function (req, res) {
