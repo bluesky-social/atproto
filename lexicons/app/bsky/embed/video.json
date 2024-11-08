@@ -26,6 +26,11 @@
         "aspectRatio": {
           "type": "ref",
           "ref": "app.bsky.embed.defs#aspectRatio"
+        },
+        "presentation": {
+          "type": "union",
+          "description": "The video's presentation type. If not provided, it will assumed to be #videoPresentation.",
+          "refs": ["#videoPresentation", "#gifPresentation"]
         }
       }
     },
@@ -59,6 +64,10 @@
         "aspectRatio": {
           "type": "ref",
           "ref": "app.bsky.embed.defs#aspectRatio"
+        },
+        "presentation": {
+          "type": "union",
+          "refs": ["#videoPresentation", "#gifPresentation"]
         }
       }
     }

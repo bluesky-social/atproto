@@ -10,6 +10,16 @@
         "width": { "type": "integer", "minimum": 1 },
         "height": { "type": "integer", "minimum": 1 }
       }
+    },
+    "videoPresentation": {
+      "type": "object",
+      "description": "Indicates that this video should be presented as a normal video - i.e. with sound, a progress bar, etc.",
+      "properties": {}
+    },
+    "gifPresentation": {
+      "type": "object",
+      "description": "Indicates that this video should be presented as a GIF - i.e. with no sound, looping, etc.",
+      "properties": {}
     }
   }
 }
