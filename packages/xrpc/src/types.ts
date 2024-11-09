@@ -188,3 +188,17 @@ export class XRPCInvalidResponseError extends XRPCError {
     )
   }
 }
+
+type IsLiteralKey<K extends PropertyKey> = {
+  string: string extends K ? 0 : 1
+  number: number extends K ? 0 : 1
+  symbol: symbol extends K ? 0 : 1
+}[K extends string ? 'string' : K extends number ? 'number' : 'symbol']
+
+type LiteralKey<T> = keyof {
+  [K in keyof T as IsLiteralKey<K> extends 1 ? K : never]: K
+}
+
+export type StrictKeyOmit<T, K extends LiteralKey<T>> = {
+  [K2 in keyof T as K2 extends K ? never : K2]: T[K2]
+}

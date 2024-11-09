@@ -312,7 +312,7 @@ function genRecordCls(file: SourceFile, nsid: string, lexRecord: LexRecord) {
     })
     method.addParameter({
       name: 'params',
-      type: `Omit<${toTitleCase(ATP_METHODS.list)}.QueryParams, "collection">`,
+      type: `StrictKeyOmit<${toTitleCase(ATP_METHODS.list)}.QueryParams, "collection">`,
     })
     method.setBodyText(
       [
@@ -330,7 +330,7 @@ function genRecordCls(file: SourceFile, nsid: string, lexRecord: LexRecord) {
     })
     method.addParameter({
       name: 'params',
-      type: `Omit<${toTitleCase(ATP_METHODS.get)}.QueryParams, "collection">`,
+      type: `StrictKeyOmit<${toTitleCase(ATP_METHODS.get)}.QueryParams, "collection">`,
     })
     method.setBodyText(
       [
@@ -348,7 +348,7 @@ function genRecordCls(file: SourceFile, nsid: string, lexRecord: LexRecord) {
     })
     method.addParameter({
       name: 'params',
-      type: `Omit<${toTitleCase(
+      type: `StrictKeyOmit<${toTitleCase(
         ATP_METHODS.create,
       )}.InputSchema, "collection" | "record">`,
     })
@@ -380,7 +380,7 @@ function genRecordCls(file: SourceFile, nsid: string, lexRecord: LexRecord) {
   //   })
   //   method.addParameter({
   //     name: 'params',
-  //     type: `Omit<${toTitleCase(ATP_METHODS.put)}.InputSchema, "collection" | "record">`,
+  //     type: `StrictKeyOmit<${toTitleCase(ATP_METHODS.put)}.InputSchema, "collection" | "record">`,
   //   })
   //   method.addParameter({
   //     name: 'record',
@@ -407,7 +407,7 @@ function genRecordCls(file: SourceFile, nsid: string, lexRecord: LexRecord) {
     })
     method.addParameter({
       name: 'params',
-      type: `Omit<${toTitleCase(
+      type: `StrictKeyOmit<${toTitleCase(
         ATP_METHODS.delete,
       )}.InputSchema, "collection">`,
     })
@@ -444,6 +444,7 @@ const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
         xrpcImport.addNamedImports([
           { name: 'HeadersMap' },
           { name: 'XRPCError' },
+          { name: 'StrictKeyOmit' },
         ])
       }
       //= import {ValidationResult, BlobRef} from '@atproto/lexicon'
