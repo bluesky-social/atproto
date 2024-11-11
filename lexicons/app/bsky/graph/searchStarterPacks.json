@@ -7,9 +7,7 @@
       "description": "Find starter packs matching search criteria. Does not require auth.",
       "parameters": {
         "type": "params",
-        "required": [
-          "q"
-        ],
+        "required": ["q"],
         "properties": {
           "q": {
             "type": "string",
