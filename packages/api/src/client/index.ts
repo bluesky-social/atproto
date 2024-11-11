@@ -147,6 +147,7 @@ import * as AppBskyGraphListitem from './types/app/bsky/graph/listitem'
 import * as AppBskyGraphMuteActor from './types/app/bsky/graph/muteActor'
 import * as AppBskyGraphMuteActorList from './types/app/bsky/graph/muteActorList'
 import * as AppBskyGraphMuteThread from './types/app/bsky/graph/muteThread'
+import * as AppBskyGraphSearchStarterPacks from './types/app/bsky/graph/searchStarterPacks'
 import * as AppBskyGraphStarterpack from './types/app/bsky/graph/starterpack'
 import * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor'
 import * as AppBskyGraphUnmuteActorList from './types/app/bsky/graph/unmuteActorList'
@@ -371,6 +372,7 @@ export * as AppBskyGraphListitem from './types/app/bsky/graph/listitem'
 export * as AppBskyGraphMuteActor from './types/app/bsky/graph/muteActor'
 export * as AppBskyGraphMuteActorList from './types/app/bsky/graph/muteActorList'
 export * as AppBskyGraphMuteThread from './types/app/bsky/graph/muteThread'
+export * as AppBskyGraphSearchStarterPacks from './types/app/bsky/graph/searchStarterPacks'
 export * as AppBskyGraphStarterpack from './types/app/bsky/graph/starterpack'
 export * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor'
 export * as AppBskyGraphUnmuteActorList from './types/app/bsky/graph/unmuteActorList'
@@ -2428,6 +2430,18 @@ export class AppBskyGraphNS {
     opts?: AppBskyGraphMuteThread.CallOptions,
   ): Promise<AppBskyGraphMuteThread.Response> {
     return this._client.call('app.bsky.graph.muteThread', opts?.qp, data, opts)
+  }
+
+  searchStarterPacks(
+    params?: AppBskyGraphSearchStarterPacks.QueryParams,
+    opts?: AppBskyGraphSearchStarterPacks.CallOptions,
+  ): Promise<AppBskyGraphSearchStarterPacks.Response> {
+    return this._client.call(
+      'app.bsky.graph.searchStarterPacks',
+      params,
+      undefined,
+      opts,
+    )
   }
 
   unmuteActor(

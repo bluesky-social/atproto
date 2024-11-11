@@ -8488,6 +8488,56 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyGraphSearchStarterPacks: {
+    lexicon: 1,
+    id: 'app.bsky.graph.searchStarterPacks',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Find starter packs matching search criteria. Does not require auth.',
+        parameters: {
+          type: 'params',
+          required: ['q'],
+          properties: {
+            q: {
+              type: 'string',
+              description:
+                'Search query string. Syntax, phrase, boolean, and faceting is unspecified, but Lucene query syntax is recommended.',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 25,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['actors'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              actors: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.graph.defs#starterPackViewBasic',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyGraphStarterpack: {
     lexicon: 1,
     id: 'app.bsky.graph.starterpack',
@@ -13486,6 +13536,7 @@ export const ids = {
   AppBskyGraphMuteActor: 'app.bsky.graph.muteActor',
   AppBskyGraphMuteActorList: 'app.bsky.graph.muteActorList',
   AppBskyGraphMuteThread: 'app.bsky.graph.muteThread',
+  AppBskyGraphSearchStarterPacks: 'app.bsky.graph.searchStarterPacks',
   AppBskyGraphStarterpack: 'app.bsky.graph.starterpack',
   AppBskyGraphUnmuteActor: 'app.bsky.graph.unmuteActor',
   AppBskyGraphUnmuteActorList: 'app.bsky.graph.unmuteActorList',
