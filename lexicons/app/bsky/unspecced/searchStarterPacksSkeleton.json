@@ -7,9 +7,7 @@
       "description": "Backend Starter Pack search, returns only skeleton.",
       "parameters": {
         "type": "params",
-        "required": [
-          "q"
-        ],
+        "required": ["q"],
         "properties": {
           "q": {
             "type": "string",
@@ -36,9 +34,7 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": [
-            "starterPacks"
-          ],
+          "required": ["starterPacks"],
           "properties": {
             "cursor": {
               "type": "string"
