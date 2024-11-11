@@ -985,6 +985,26 @@ message GetActorStarterPacksResponse {
   string cursor = 2;
 }
 
+message GetSuggestedStarterPacksRequest {
+  string actor_did = 1;
+  int32 limit = 2;
+  string cursor = 3;
+}
+
+message GetSuggestedStarterPacksResponse {
+  repeated string uris = 1;
+  string cursor = 2;
+}
+
+message SearchStarterPacksRequest {
+  string query = 1;
+  int32 limit = 2;
+}
+
+message SearchStarterPacksResponse {
+  repeated string uris = 1;
+}
+
 //
 // Sync
 //
@@ -1205,6 +1225,8 @@ service Service {
 
   // Starter packs
   rpc GetActorStarterPacks(GetActorStarterPacksRequest) returns (GetActorStarterPacksResponse);
+  rpc GetSuggestedStarterPacks(GetSuggestedStarterPacksRequest) returns (GetSuggestedStarterPacksResponse);
+  rpc SearchStarterPacks(SearchStarterPacksRequest) returns (SearchStarterPacksResponse);
 
   // Sync
   rpc GetLatestRev(GetLatestRevRequest) returns (GetLatestRevResponse);
