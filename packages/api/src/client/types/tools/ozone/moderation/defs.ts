@@ -374,8 +374,8 @@ export function validateModEventUnmute(v: unknown): ValidationResult {
 /** Mute incoming reports from an account */
 export interface ModEventMuteReporter {
   comment?: string
-  /** Indicates how long the account should remain muted. */
-  durationInHours: number
+  /** Indicates how long the account should remain muted. Falsy value here means a permanent mute. */
+  durationInHours?: number
   [k: string]: unknown
 }
 
