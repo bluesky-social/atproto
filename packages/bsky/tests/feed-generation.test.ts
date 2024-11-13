@@ -504,7 +504,12 @@ describe('feed generation', () => {
           ),
         },
       )
-      expect(res.data.feeds.map((f) => f.uri)).toEqual([feedUriAll])
+      expect(res.data.feeds.map((f) => f.uri)).toEqual([
+        // first two contain 'all' in description
+        feedUriNeedsAuth,
+        feedUriBadPagination,
+        feedUriAll,
+      ])
     })
 
     it('paginates', async () => {
