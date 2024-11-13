@@ -11185,14 +11185,14 @@ export const schemaDict = {
       modEventMuteReporter: {
         type: 'object',
         description: 'Mute incoming reports from an account',
-        required: ['durationInHours'],
         properties: {
           comment: {
             type: 'string',
           },
           durationInHours: {
             type: 'integer',
-            description: 'Indicates how long the account should remain muted.',
+            description:
+              'Indicates how long the account should remain muted. Falsy value here means a permanent mute.',
           },
         },
       },
@@ -13327,9 +13327,8 @@ export const schemaDict = {
       },
     },
   },
-} as const satisfies Record<string, LexiconDoc>
-
-export const schemas = Object.values(schemaDict)
+}
+export const schemas: LexiconDoc[] = Object.values(schemaDict) as LexiconDoc[]
 export const lexicons: Lexicons = new Lexicons(schemas)
 export const ids = {
   ComAtprotoAdminDefs: 'com.atproto.admin.defs',
