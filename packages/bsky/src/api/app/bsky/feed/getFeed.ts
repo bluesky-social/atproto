@@ -177,7 +177,7 @@ const skeletonFromFeedGen = async (
 ): Promise<AlgoResponse> => {
   const { feed, headers } = params
   const found = await ctx.hydrator.feed.getFeedGens([feed], true)
-  const feedDid = await found.get(feed)?.record.did
+  const feedDid = found.get(feed)?.record.did
   if (!feedDid) {
     throw new InvalidRequestError('could not find feed')
   }
@@ -220,6 +220,16 @@ const skeletonFromFeedGen = async (
         headers,
       },
     )
+
+    const { cursor: resultCursor } = result.data
+    if (params.cursor && resultCursor === params.cursor) {
+      // Prevents loops in custom feeds.
+      throw new UpstreamFailureError(
+        'feed provided an invalid response',
+        'UpstreamFailureError',
+      )
+    }
+
     skeleton = result.data
     if (result.headers['content-language']) {
       resHeaders = {
