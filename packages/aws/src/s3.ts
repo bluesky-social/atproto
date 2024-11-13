@@ -5,10 +5,10 @@ import { randomStr } from '@atproto/crypto'
 import { CID } from 'multiformats/cid'
 import stream from 'stream'
 
-export type S3Config = { bucket: string; uploadTimeoutMs?: number } & Omit<
-  aws.S3ClientConfig,
-  'apiVersion'
->
+export type S3Config = {
+  bucket: string
+  uploadTimeoutMs?: number
+} & aws.S3ClientConfig
 
 // @NOTE we use Upload rather than client.putObject because stream
 // length is not known in advance. See also aws/aws-sdk-js-v3#2348.
@@ -25,10 +25,7 @@ export class S3BlobStore implements BlobStore {
     const { bucket, uploadTimeoutMs, ...rest } = cfg
     this.bucket = bucket
     this.uploadTimeoutMs = uploadTimeoutMs ?? 10000
-    this.client = new aws.S3({
-      ...rest,
-      apiVersion: '2006-03-01',
-    })
+    this.client = new aws.S3(rest)
   }
 
   static creator(cfg: S3Config) {

@@ -6,10 +6,7 @@ import KeyEncoder from 'key-encoder'
 
 const keyEncoder = new KeyEncoder('secp256k1')
 
-export type KmsConfig = { keyId: string } & Omit<
-  aws.KMSClientConfig,
-  'apiVersion'
->
+export type KmsConfig = { keyId: string } & aws.KMSClientConfig
 
 export class KmsKeypair implements crypto.Keypair {
   jwtAlg = crypto.SECP256K1_JWT_ALG
@@ -22,10 +19,7 @@ export class KmsKeypair implements crypto.Keypair {
 
   static async load(cfg: KmsConfig) {
     const { keyId, ...rest } = cfg
-    const client = new aws.KMS({
-      ...rest,
-      apiVersion: '2014-11-01',
-    })
+    const client = new aws.KMS(rest)
     const res = await client.getPublicKey({ KeyId: keyId })
     if (!res.PublicKey) {
       throw new Error('Could not find public key')
