@@ -55,6 +55,34 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       cursor: keyset.packFromResult(res),
     }
   },
+
+  async searchStarterPacks(req) {
+    // @NOTE we don't store the term in the db, so we can't search by it.
+    const { term: _term, limit, cursor } = req
+    const { ref } = db.db.dynamic
+    let builder = db.db.selectFrom('starter_pack').selectAll()
+
+    const keyset = new TimeCidKeyset(
+      ref('starter_pack.sortAt'),
+      ref('starter_pack.cid'),
+    )
+
+    builder = paginate(builder, {
+      limit,
+      cursor,
+      keyset,
+      tryIndex: true,
+    })
+
+    const res = await builder.execute()
+
+    const cur = keyset.packFromResult(res)
+
+    return {
+      uris: res.map((row) => row.uri),
+      cursor: cur,
+    }
+  },
 })
 
 // Remove leading @ in case a handle is input that way
