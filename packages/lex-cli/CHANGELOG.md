@@ -1,5 +1,15 @@
 # @atproto/lex-cli
 
+## 0.5.2
+
+### Patch Changes
+
+- [#2911](https://github.com/bluesky-social/atproto/pull/2911) [`bac9be2d3`](https://github.com/bluesky-social/atproto/commit/bac9be2d3ec904d1f984a871f43cf89aca17289d) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Retain type of `schemas` using definition type instead of obscuring into a `LexiconDoc[]`
+
+- Updated dependencies [[`bac9be2d3`](https://github.com/bluesky-social/atproto/commit/bac9be2d3ec904d1f984a871f43cf89aca17289d), [`bac9be2d3`](https://github.com/bluesky-social/atproto/commit/bac9be2d3ec904d1f984a871f43cf89aca17289d)]:
+  - @atproto/syntax@0.3.1
+  - @atproto/lexicon@0.4.3
+
 ## 0.5.1
 
 ### Patch Changes

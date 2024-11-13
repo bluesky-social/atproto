@@ -1,5 +1,20 @@
 # @atproto/pds
 
+## 0.4.71
+
+### Patch Changes
+
+- [#2990](https://github.com/bluesky-social/atproto/pull/2990) [`24423fc2d`](https://github.com/bluesky-social/atproto/commit/24423fc2dd394c99a29dbe4419b356090ef19546) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Ensure read-after-write handles `quoteCount` for `getPostThread` responses.
+
+- Updated dependencies [[`bac9be2d3`](https://github.com/bluesky-social/atproto/commit/bac9be2d3ec904d1f984a871f43cf89aca17289d), [`48d08a469`](https://github.com/bluesky-social/atproto/commit/48d08a469f75837e3b7e879d286d12780440b8b8), [`bac9be2d3`](https://github.com/bluesky-social/atproto/commit/bac9be2d3ec904d1f984a871f43cf89aca17289d), [`bac9be2d3`](https://github.com/bluesky-social/atproto/commit/bac9be2d3ec904d1f984a871f43cf89aca17289d), [`561431fe4`](https://github.com/bluesky-social/atproto/commit/561431fe4897e81767dc768e9a31020d09bf86ff)]:
+  - @atproto/syntax@0.3.1
+  - @atproto/api@0.13.16
+  - @atproto/lexicon@0.4.3
+  - @atproto/repo@0.5.5
+  - @atproto/xrpc@0.6.4
+  - @atproto/xrpc-server@0.7.3
+  - @atproto/aws@0.2.9
+
 ## 0.4.70
 
 ### Patch Changes

@@ -1,5 +1,20 @@
 # @atproto/api
 
+## 0.13.16
+
+### Patch Changes
+
+- [#2988](https://github.com/bluesky-social/atproto/pull/2988) [`48d08a469`](https://github.com/bluesky-social/atproto/commit/48d08a469f75837e3b7e879d286d12780440b8b8) Thanks [@foysalit](https://github.com/foysalit)! - Make durationInHours optional for mute reporter event
+
+- [#2911](https://github.com/bluesky-social/atproto/pull/2911) [`bac9be2d3`](https://github.com/bluesky-social/atproto/commit/bac9be2d3ec904d1f984a871f43cf89aca17289d) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Export the generated lexicons `schemas` definitions
+
+- [#2953](https://github.com/bluesky-social/atproto/pull/2953) [`561431fe4`](https://github.com/bluesky-social/atproto/commit/561431fe4897e81767dc768e9a31020d09bf86ff) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Add convoView.opened to lexicon definition
+
+- Updated dependencies [[`bac9be2d3`](https://github.com/bluesky-social/atproto/commit/bac9be2d3ec904d1f984a871f43cf89aca17289d), [`bac9be2d3`](https://github.com/bluesky-social/atproto/commit/bac9be2d3ec904d1f984a871f43cf89aca17289d)]:
+  - @atproto/syntax@0.3.1
+  - @atproto/lexicon@0.4.3
+  - @atproto/xrpc@0.6.4
+
 ## 0.13.15
 
 ### Patch Changes
