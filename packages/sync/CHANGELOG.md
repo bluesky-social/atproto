@@ -1,5 +1,15 @@
 # @atproto/sync
 
+## 0.1.6
+
+### Patch Changes
+
+- Updated dependencies [[`bac9be2d3`](https://github.com/bluesky-social/atproto/commit/bac9be2d3ec904d1f984a871f43cf89aca17289d), [`bac9be2d3`](https://github.com/bluesky-social/atproto/commit/bac9be2d3ec904d1f984a871f43cf89aca17289d)]:
+  - @atproto/syntax@0.3.1
+  - @atproto/lexicon@0.4.3
+  - @atproto/repo@0.5.5
+  - @atproto/xrpc-server@0.7.3
+
 ## 0.1.5
 
 ### Patch Changes

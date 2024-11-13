@@ -1,5 +1,13 @@
 # @atproto/oauth-client
 
+## 0.3.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto-labs/identity-resolver@0.1.6
+  - @atproto/xrpc@0.6.4
+
 ## 0.3.0
 
 ### Minor Changes
