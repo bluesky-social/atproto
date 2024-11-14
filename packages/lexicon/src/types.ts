@@ -471,10 +471,10 @@ export function parseLexiconDoc(v: unknown): LexiconDoc {
   return v as LexiconDoc
 }
 
-export type ValidationResult =
+export type ValidationResult<V = unknown> =
   | {
       success: true
-      value: unknown
+      value: V
     }
   | {
       success: false
