@@ -221,16 +221,13 @@ const skeletonFromFeedGen = async (
       },
     )
 
-    const { cursor: resultCursor } = result.data
-    if (params.cursor && resultCursor === params.cursor) {
-      // Prevents loops in custom feeds.
-      throw new UpstreamFailureError(
-        'feed provided an invalid response',
-        'UpstreamFailureError',
-      )
+    skeleton = result.data
+
+    if (result.data.cursor === params.cursor) {
+      // Prevents loops if the custom feed echoes the the input cursor back.
+      skeleton.cursor = undefined
     }
 
-    skeleton = result.data
     if (result.headers['content-language']) {
       resHeaders = {
         'content-language': result.headers['content-language'],

@@ -667,9 +667,9 @@ describe('feed generation', () => {
       })
     })
 
-    it('fails on feeds that echo back the same cursor from the param.', async () => {
-      const tryGetFeed = agent.api.app.bsky.feed.getFeed(
-        { feed: feedUriBadPaginationCursor, cursor: '1' },
+    it('returns empty cursor with feeds that echo back the same cursor from the param.', async () => {
+      const res = await agent.api.app.bsky.feed.getFeed(
+        { feed: feedUriBadPaginationCursor, cursor: '1', limit: 2 },
         {
           headers: await network.serviceHeaders(
             alice,
@@ -678,9 +678,9 @@ describe('feed generation', () => {
           ),
         },
       )
-      await expect(tryGetFeed).rejects.toMatchObject({
-        error: 'UpstreamFailureError',
-      })
+
+      expect(res.data.cursor).toBeUndefined()
+      expect(res.data.feed).toHaveLength(2)
     })
 
     it('resolves contents of taken-down feed.', async () => {
