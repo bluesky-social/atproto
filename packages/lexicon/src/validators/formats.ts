@@ -6,8 +6,8 @@ import {
   ensureValidHandle,
   ensureValidNsid,
   ensureValidAtUri,
-  ensureValidTid,
   ensureValidRecordKey,
+  isValidTid,
 } from '@atproto/syntax'
 import { validateLanguage } from '@atproto/common-web'
 
@@ -131,17 +131,14 @@ export function language(path: string, value: string): ValidationResult {
 }
 
 export function tid(path: string, value: string): ValidationResult {
-  try {
-    ensureValidTid(value)
-  } catch {
-    return {
-      success: false,
-      error: new ValidationError(
-        `${path} must be a valid TID (timestamp identifier)`,
-      ),
-    }
+  if (isValidTid(value)) {
+    return { success: true, value }
   }
-  return { success: true, value }
+
+  return {
+    success: false,
+    error: new ValidationError(`${path} must be a valid TID`),
+  }
 }
 
 export function recordKey(path: string, value: string): ValidationResult {
