@@ -10566,8 +10566,9 @@ export const schemaDict = {
       },
     },
   },
-}
-export const schemas: LexiconDoc[] = Object.values(schemaDict) as LexiconDoc[]
+} as const satisfies Record<string, LexiconDoc>
+
+export const schemas = Object.values(schemaDict)
 export const lexicons: Lexicons = new Lexicons(schemas)
 export const ids = {
   ComAtprotoAdminDefs: 'com.atproto.admin.defs',
