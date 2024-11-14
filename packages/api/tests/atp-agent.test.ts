@@ -18,7 +18,7 @@ describe('agent', () => {
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
-      dbPostgresSchema: 'bsky_agent',
+      dbPostgresSchema: 'api_atp_agent',
     })
   })
 
