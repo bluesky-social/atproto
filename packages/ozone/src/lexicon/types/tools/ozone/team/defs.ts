@@ -2,10 +2,12 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
+import { lexicons } from '../../../../lexicons'
+import { $Type, is$typed } from '../../../../util'
 import * as AppBskyActorDefs from '../../../app/bsky/actor/defs'
+
+export const id = 'tools.ozone.team.defs'
 
 export interface Member {
   did: string
@@ -22,16 +24,14 @@ export interface Member {
   [k: string]: unknown
 }
 
-export function isMember(v: unknown): v is Member {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'tools.ozone.team.defs#member'
-  )
+export function isMember(
+  v: unknown,
+): v is Member & { $type: $Type<'tools.ozone.team.defs', 'member'> } {
+  return is$typed(v, id, 'member')
 }
 
-export function validateMember(v: unknown): ValidationResult {
-  return lexicons.validate('tools.ozone.team.defs#member', v)
+export function validateMember(v: unknown) {
+  return lexicons.validate(`${id}#member`, v) as ValidationResult<Member>
 }
 
 /** Admin role. Highest level of access, can perform all actions. */
