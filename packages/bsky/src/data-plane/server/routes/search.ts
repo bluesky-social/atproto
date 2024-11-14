@@ -57,10 +57,12 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   },
 
   async searchStarterPacks(req) {
-    // @NOTE we don't store the term in the db, so we can't search by it.
-    const { term: _term, limit, cursor } = req
+    const { term, limit, cursor } = req
     const { ref } = db.db.dynamic
-    let builder = db.db.selectFrom('starter_pack').selectAll()
+    let builder = db.db
+      .selectFrom('starter_pack')
+      .where('starter_pack.name', 'ilike', `%${term}%`)
+      .selectAll()
 
     const keyset = new TimeCidKeyset(
       ref('starter_pack.sortAt'),

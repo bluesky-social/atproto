@@ -214,7 +214,11 @@ describe('starter packs', () => {
         limit: 3,
       })
 
-      expect(page0.starterPacks).toHaveLength(3)
+      expect(page0.starterPacks).toMatchObject([
+        expect.objectContaining({ uri: sp4.uriStr }),
+        expect.objectContaining({ uri: sp3.uriStr }),
+        expect.objectContaining({ uri: sp2.uriStr }),
+      ])
 
       const { data: page1 } = await agent.api.app.bsky.graph.searchStarterPacks(
         {
@@ -224,13 +228,25 @@ describe('starter packs', () => {
         },
       )
 
-      // There are 4 starter packs, so 3 for page0, 1 for page1
-      expect(page1.starterPacks).toHaveLength(1)
+      expect(page1.starterPacks).toMatchObject([
+        expect.objectContaining({ uri: sp1.uriStr }),
+      ])
+    })
+
+    it('filters by the search term', async () => {
+      const { data } = await agent.app.bsky.graph.searchStarterPacks({
+        q: 'In CaSe',
+        limit: 3,
+      })
+
+      expect(data.starterPacks).toMatchObject([
+        expect.objectContaining({ uri: sp4.uriStr }),
+      ])
     })
 
     it('does not include starter packs with creator block relationship for non-creator viewers', async () => {
       const { data } = await agent.app.bsky.graph.searchStarterPacks(
-        { q: 'starter' },
+        { q: 'starter', limit: 3 },
         {
           headers: await network.serviceHeaders(
             sc.dids.frankie,
@@ -239,10 +255,9 @@ describe('starter packs', () => {
         },
       )
 
-      expect(data.starterPacks.length).toBe(1)
-      expect(
-        data.starterPacks.filter((sp) => sp.creator.did === sc.dids.alice),
-      ).toHaveLength(0)
+      expect(data.starterPacks).toMatchObject([
+        expect.objectContaining({ uri: sp4.uriStr }),
+      ])
     })
   })
 })
