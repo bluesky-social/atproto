@@ -3,7 +3,7 @@ on:
   push:
     branches:
       - main
-      - bsky-tweaks
+      - divy/timeout-polo
 env:
   REGISTRY: ghcr.io
   USERNAME: ${{ github.actor }}
