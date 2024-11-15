@@ -75,7 +75,7 @@ const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
     const res = await ctx.dataplane.getThread({
       postUri: anchor,
       above: params.parentHeight,
-      below: params.depth,
+      below: getDepth(params),
     })
     return {
       anchor,
@@ -109,7 +109,7 @@ const presentation = (
   const { ctx, params, skeleton, hydration } = inputs
   const thread = ctx.views.thread(skeleton, hydration, {
     height: params.parentHeight,
-    depth: params.depth,
+    depth: getDepth(params),
   })
   if (isNotFoundPost(thread)) {
     // @TODO technically this could be returned as a NotFoundPost based on lexicon
@@ -139,4 +139,9 @@ type Params = QueryParams & { hydrateCtx: HydrateCtx }
 type Skeleton = {
   anchor: string
   uris: string[]
+}
+
+const getDepth = (params: Params) => {
+  // map lexicon and bsky app default depth
+  return params.depth === 6 || params.depth === 10 ? 3 : params.depth
 }
