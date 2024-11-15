@@ -11,6 +11,7 @@ describe('pds like views', () => {
   // account dids, for convenience
   let alice: string
   let bob: string
+  let frankie: string
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -19,9 +20,16 @@ describe('pds like views', () => {
     agent = network.bsky.getClient()
     sc = network.getSeedClient()
     await likesSeed(sc)
+    await sc.createAccount('frankie', {
+      handle: 'frankie.test',
+      email: 'frankie@frankie.com',
+      password: 'password',
+    })
     await network.processAll()
+
     alice = sc.dids.alice
     bob = sc.dids.bob
+    frankie = sc.dids.frankie
   })
 
   afterAll(async () => {
@@ -107,5 +115,71 @@ describe('pds like views', () => {
         }
       }),
     )
+  })
+
+  it(`author doesn't see likes by user the author blocked`, async () => {
+    await sc.like(frankie, sc.posts[alice][1].ref)
+    await network.processAll()
+
+    const beforeBlock = await agent.app.bsky.feed.getLikes(
+      { uri: sc.posts[alice][1].ref.uriStr },
+      { headers: await network.serviceHeaders(alice, ids.AppBskyFeedGetLikes) },
+    )
+
+    expect(beforeBlock.data.likes.map((like) => like.actor.did)).toStrictEqual([
+      sc.dids.frankie,
+      sc.dids.eve,
+      sc.dids.dan,
+      sc.dids.carol,
+      sc.dids.bob,
+    ])
+
+    await sc.block(alice, frankie)
+    await network.processAll()
+
+    const afterBlock = await agent.app.bsky.feed.getLikes(
+      { uri: sc.posts[alice][1].ref.uriStr },
+      { headers: await network.serviceHeaders(alice, ids.AppBskyFeedGetLikes) },
+    )
+
+    expect(afterBlock.data.likes.map((like) => like.actor.did)).toStrictEqual([
+      sc.dids.eve,
+      sc.dids.dan,
+      sc.dids.carol,
+      sc.dids.bob,
+    ])
+  })
+
+  it(`non-author doesn't see likes by user the author blocked`, async () => {
+    await sc.unblock(alice, frankie)
+    await network.processAll()
+
+    const beforeBlock = await agent.app.bsky.feed.getLikes(
+      { uri: sc.posts[alice][1].ref.uriStr },
+      { headers: await network.serviceHeaders(alice, ids.AppBskyFeedGetLikes) },
+    )
+
+    expect(beforeBlock.data.likes.map((like) => like.actor.did)).toStrictEqual([
+      sc.dids.frankie,
+      sc.dids.eve,
+      sc.dids.dan,
+      sc.dids.carol,
+      sc.dids.bob,
+    ])
+
+    await sc.block(alice, frankie)
+    await network.processAll()
+
+    const afterBlock = await agent.app.bsky.feed.getLikes(
+      { uri: sc.posts[alice][1].ref.uriStr },
+      { headers: await network.serviceHeaders(bob, ids.AppBskyFeedGetLikes) },
+    )
+
+    expect(afterBlock.data.likes.map((like) => like.actor.did)).toStrictEqual([
+      sc.dids.eve,
+      sc.dids.dan,
+      sc.dids.carol,
+      sc.dids.bob,
+    ])
   })
 })
