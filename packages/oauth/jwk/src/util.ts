@@ -1,7 +1,6 @@
 import { base64url } from 'multiformats/bases/base64'
 import { RefinementCtx, ZodIssueCode } from 'zod'
 
-// eslint-disable-next-line @typescript-eslint/ban-types
 export type Simplify<T> = { [K in keyof T]: T[K] } & {}
 export type Override<T, V> = Simplify<V & Omit<T, keyof V>>
 
@@ -13,7 +12,7 @@ export type RequiredKey<T, K extends string> = Simplify<
       } & Omit<T, K>
 >
 
-// eslint-disable-next-line @typescript-eslint/ban-types
+// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
 export type DeepReadonly<T> = T extends Function
   ? T
   : T extends object
@@ -22,7 +21,7 @@ export type DeepReadonly<T> = T extends Function
       ? readonly DeepReadonly<U>[]
       : T
 
-// eslint-disable-next-line @typescript-eslint/ban-types
+// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
 export type UnReadonly<T> = T extends Function
   ? T
   : T extends object
