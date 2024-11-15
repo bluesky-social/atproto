@@ -149,32 +149,30 @@ describe('ozone-settings', () => {
 
   describe('listOptions', () => {
     beforeAll(async () => {
-      await Promise.all([
-        upsertOption({
-          scope: 'instance',
-          key: 'tools.ozone.setting.client.queues',
-          value: { stratosphere: { name: 'Stratosphere' } },
-          description:
-            'This determines how many queues the client interface will show',
-          managerRole: 'tools.ozone.team.defs#roleAdmin',
-        }),
-        upsertOption({
-          scope: 'instance',
-          key: 'tools.ozone.setting.client.queueHash',
-          value: { val: 10.5 },
-          description:
-            'This determines how each queue is balanced when sorted by oldest first',
-          managerRole: 'tools.ozone.team.defs#roleAdmin',
-        }),
-        upsertOption({
-          scope: 'instance',
-          key: 'tools.ozone.setting.client.externalLabelers',
-          value: { dids: ['did:plc:xyz'] },
-          description:
-            'List of external labelers that will be plugged into the client views',
-          managerRole: 'tools.ozone.team.defs#roleAdmin',
-        }),
-      ])
+      await upsertOption({
+        scope: 'instance',
+        key: 'tools.ozone.setting.client.queues',
+        value: { stratosphere: { name: 'Stratosphere' } },
+        description:
+          'This determines how many queues the client interface will show',
+        managerRole: 'tools.ozone.team.defs#roleAdmin',
+      })
+      await upsertOption({
+        scope: 'instance',
+        key: 'tools.ozone.setting.client.queueHash',
+        value: { val: 10.5 },
+        description:
+          'This determines how each queue is balanced when sorted by oldest first',
+        managerRole: 'tools.ozone.team.defs#roleAdmin',
+      })
+      await upsertOption({
+        scope: 'instance',
+        key: 'tools.ozone.setting.client.externalLabelers',
+        value: { dids: ['did:plc:xyz'] },
+        description:
+          'List of external labelers that will be plugged into the client views',
+        managerRole: 'tools.ozone.team.defs#roleAdmin',
+      })
     })
 
     afterAll(async () => {
