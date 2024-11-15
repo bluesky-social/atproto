@@ -1341,9 +1341,6 @@ importers:
         specifier: ^3.23.8
         version: 3.23.8
     devDependencies:
-      '@atproto/bsky':
-        specifier: workspace:^
-        version: link:../bsky
       '@atproto/lex-cli':
         specifier: workspace:^
         version: link:../lex-cli
