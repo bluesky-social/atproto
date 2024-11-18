@@ -32,56 +32,54 @@ describe('get-account-actions', () => {
   let modClient: ModeratorClient
 
   const seedReports = async () => {
-    await Promise.all([
-      sc.createReport({
-        subject: {
-          $type: 'com.atproto.admin.defs#repoRef',
-          did: sc.dids.carol,
-        },
-        reasonType: REASONMISLEADING,
-        reason: 'alice says carol is bad',
-        reportedBy: sc.dids.alice,
-      }),
-      sc.createReport({
-        subject: {
-          $type: 'com.atproto.repo.strongRef',
-          uri: sc.posts[sc.dids.carol][0].ref.uriStr,
-          cid: sc.posts[sc.dids.carol][0].ref.cidStr,
-        },
-        reasonType: REASONMISLEADING,
-        reason: 'alice says carol cannot post',
-        reportedBy: sc.dids.alice,
-      }),
-      sc.createReport({
-        subject: {
-          $type: 'com.atproto.admin.defs#repoRef',
-          did: sc.dids.bob,
-        },
-        reasonType: REASONSPAM,
-        reason: 'alice says bob is bad',
-        reportedBy: sc.dids.alice,
-      }),
-      sc.createReport({
-        subject: {
-          $type: 'com.atproto.repo.strongRef',
-          uri: sc.posts[sc.dids.bob][0].ref.uriStr,
-          cid: sc.posts[sc.dids.bob][0].ref.cidStr,
-        },
-        reasonType: REASONSPAM,
-        reason: 'alice says bob cannot post',
-        reportedBy: sc.dids.alice,
-      }),
-      sc.createReport({
-        subject: {
-          $type: 'com.atproto.repo.strongRef',
-          uri: sc.posts[sc.dids.bob][0].ref.uriStr,
-          cid: sc.posts[sc.dids.bob][0].ref.cidStr,
-        },
-        reasonType: REASONSPAM,
-        reason: 'carol also says bob cannot post',
-        reportedBy: sc.dids.carol,
-      }),
-    ])
+    await sc.createReport({
+      subject: {
+        $type: 'com.atproto.admin.defs#repoRef',
+        did: sc.dids.carol,
+      },
+      reasonType: REASONMISLEADING,
+      reason: 'alice says carol is bad',
+      reportedBy: sc.dids.alice,
+    })
+    await sc.createReport({
+      subject: {
+        $type: 'com.atproto.repo.strongRef',
+        uri: sc.posts[sc.dids.carol][0].ref.uriStr,
+        cid: sc.posts[sc.dids.carol][0].ref.cidStr,
+      },
+      reasonType: REASONMISLEADING,
+      reason: 'alice says carol cannot post',
+      reportedBy: sc.dids.alice,
+    })
+    await sc.createReport({
+      subject: {
+        $type: 'com.atproto.admin.defs#repoRef',
+        did: sc.dids.bob,
+      },
+      reasonType: REASONSPAM,
+      reason: 'alice says bob is bad',
+      reportedBy: sc.dids.alice,
+    })
+    await sc.createReport({
+      subject: {
+        $type: 'com.atproto.repo.strongRef',
+        uri: sc.posts[sc.dids.bob][0].ref.uriStr,
+        cid: sc.posts[sc.dids.bob][0].ref.cidStr,
+      },
+      reasonType: REASONSPAM,
+      reason: 'alice says bob cannot post',
+      reportedBy: sc.dids.alice,
+    })
+    await sc.createReport({
+      subject: {
+        $type: 'com.atproto.repo.strongRef',
+        uri: sc.posts[sc.dids.bob][0].ref.uriStr,
+        cid: sc.posts[sc.dids.bob][0].ref.cidStr,
+      },
+      reasonType: REASONSPAM,
+      reason: 'carol also says bob cannot post',
+      reportedBy: sc.dids.carol,
+    })
   }
 
   const getActions = async (
