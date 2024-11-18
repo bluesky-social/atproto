@@ -350,17 +350,23 @@ export class RichText {
   async detectFacets(agent: AtpBaseClient) {
     this.facets = detectFacets(this.unicodeText)
     if (this.facets) {
+      const promises: Promise<void>[] = []
       for (const facet of this.facets) {
         for (const feature of facet.features) {
           if (AppBskyRichtextFacet.isMention(feature)) {
-            const did = await agent.com.atproto.identity
-              .resolveHandle({ handle: feature.did })
-              .catch((_) => undefined)
-              .then((res) => res?.data.did)
-            feature.did = did || ''
+            promises.push(
+              agent.com.atproto.identity
+                .resolveHandle({ handle: feature.did })
+                .then((res) => res?.data.did)
+                .catch((_) => undefined)
+                .then((did) => {
+                  feature.did = did || ''
+                }),
+            )
           }
         }
       }
+      await Promise.allSettled(promises)
       this.facets.sort(facetSort)
     }
   }

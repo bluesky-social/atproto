@@ -17,6 +17,7 @@ export type Actor = {
   profileCid?: string
   profileTakedownRef?: string
   sortedAt?: Date
+  indexedAt?: Date
   takedownRef?: string
   isLabeler: boolean
   allowIncomingChatsFrom?: string
@@ -126,6 +127,7 @@ export class ActorHydrator {
         profileCid: profile?.cid,
         profileTakedownRef: safeTakedownRef(profile),
         sortedAt: profile?.sortedAt?.toDate(),
+        indexedAt: profile?.indexedAt?.toDate(),
         takedownRef: safeTakedownRef(actor),
         isLabeler: actor.labeler ?? false,
         allowIncomingChatsFrom: actor.allowIncomingChatsFrom || undefined,

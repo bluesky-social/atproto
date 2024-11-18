@@ -47,6 +47,7 @@ export function atUri(path: string, value: string): ValidationResult {
       error: new ValidationError(`${path} must be a valid at-uri`),
     }
   }
+
   return { success: true, value }
 }
 
@@ -82,15 +83,19 @@ export function handle(path: string, value: string): ValidationResult {
       error: new ValidationError(`${path} must be a valid handle`),
     }
   }
+
   return { success: true, value }
 }
 
 export function atIdentifier(path: string, value: string): ValidationResult {
-  const didResult = did(path, value)
-  if (didResult.success) return didResult
-
-  const handleResult = handle(path, value)
-  if (handleResult.success) return handleResult
+  // We can discriminate based on the "did:" prefix
+  if (value.startsWith('did:')) {
+    const didResult = did(path, value)
+    if (didResult.success) return didResult
+  } else {
+    const handleResult = handle(path, value)
+    if (handleResult.success) return handleResult
+  }
 
   return {
     success: false,
