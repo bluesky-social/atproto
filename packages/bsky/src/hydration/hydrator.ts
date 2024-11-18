@@ -98,6 +98,7 @@ export type HydrationState = {
   listViewers?: ListViewerStates
   listItems?: ListItems
   likes?: Likes
+  likeBlocks?: LikeBlocks
   labels?: Labels
   feedgens?: FeedGens
   feedgenViewers?: FeedGenViewerStates
@@ -118,6 +119,9 @@ type PostBlockPairs = {
   parent?: RelationshipPair
   root?: RelationshipPair
 }
+
+export type LikeBlock = boolean
+export type LikeBlocks = HydrationMap<LikeBlock>
 
 export type FollowBlock = boolean
 export type FollowBlocks = HydrationMap<FollowBlock>
@@ -743,12 +747,33 @@ export class Hydrator {
   // - like
   //   - profile
   //     - list basic
-  async hydrateLikes(uris: string[], ctx: HydrateCtx): Promise<HydrationState> {
+  async hydrateLikes(
+    authorDid: string,
+    uris: string[],
+    ctx: HydrateCtx,
+  ): Promise<HydrationState> {
     const [likes, profileState] = await Promise.all([
       this.feed.getLikes(uris, ctx.includeTakedowns),
       this.hydrateProfiles(uris.map(didFromUri), ctx),
     ])
-    return mergeStates(profileState, { likes, ctx })
+
+    const pairs: RelationshipPair[] = []
+    for (const [uri, like] of likes) {
+      if (like) {
+        pairs.push([authorDid, didFromUri(uri)])
+      }
+    }
+    const blocks = await this.graph.getBidirectionalBlocks(pairs)
+    const likeBlocks = new HydrationMap<LikeBlock>()
+    for (const [uri, like] of likes) {
+      if (like) {
+        likeBlocks.set(uri, blocks.isBlocked(authorDid, didFromUri(uri)))
+      } else {
+        likeBlocks.set(uri, null)
+      }
+    }
+
+    return mergeStates(profileState, { likes, likeBlocks, ctx })
   }
 
   // app.bsky.feed.getRepostedBy#repostedBy
@@ -1151,6 +1176,7 @@ export const mergeStates = (
     listViewers: mergeMaps(stateA.listViewers, stateB.listViewers),
     listItems: mergeMaps(stateA.listItems, stateB.listItems),
     likes: mergeMaps(stateA.likes, stateB.likes),
+    likeBlocks: mergeMaps(stateA.likeBlocks, stateB.likeBlocks),
     labels: mergeMaps(stateA.labels, stateB.labels),
     feedgens: mergeMaps(stateA.feedgens, stateB.feedgens),
     feedgenAggs: mergeMaps(stateA.feedgenAggs, stateB.feedgenAggs),
