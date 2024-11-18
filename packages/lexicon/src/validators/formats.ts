@@ -52,26 +52,16 @@ export function atUri(path: string, value: string): ValidationResult {
 }
 
 export function did(path: string, value: string): ValidationResult {
-  // Optimization
-  if (
-    value[3] === ':' &&
-    value[2] === 'd' &&
-    value[1] === 'i' &&
-    value[0] === 'd' &&
-    value.length >= 7 // did:x:y
-  ) {
-    try {
-      ensureValidDid(value)
-      return { success: true, value }
-    } catch {
-      // fall through
+  try {
+    ensureValidDid(value)
+  } catch {
+    return {
+      success: false,
+      error: new ValidationError(`${path} must be a valid did`),
     }
   }
 
-  return {
-    success: false,
-    error: new ValidationError(`${path} must be a valid did`),
-  }
+  return { success: true, value }
 }
 
 export function handle(path: string, value: string): ValidationResult {
