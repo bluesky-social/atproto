@@ -30,7 +30,8 @@ describe('feed generation', () => {
   let feedUriAllRef: RecordRef
   let feedUriEven: string
   let feedUriOdd: string // Unsupported by feed gen
-  let feedUriBadPagination: string
+  let feedUriBadPaginationLimit: string
+  let feedUriBadPaginationCursor: string
   let feedUriPrime: string // Taken-down
   let feedUriPrimeRef: RecordRef
   let feedUriNeedsAuth: string
@@ -47,10 +48,15 @@ describe('feed generation', () => {
     await network.processAll()
     alice = sc.dids.alice
     const allUri = AtUri.make(alice, 'app.bsky.feed.generator', 'all')
-    const feedUriBadPagination = AtUri.make(
+    const feedUriBadPaginationLimit = AtUri.make(
       alice,
       'app.bsky.feed.generator',
-      'bad-pagination',
+      'bad-pagination-limit',
+    )
+    const feedUriBadPaginationCursor = AtUri.make(
+      alice,
+      'app.bsky.feed.generator',
+      'bad-pagination-cursor',
     )
     const evenUri = AtUri.make(alice, 'app.bsky.feed.generator', 'even')
     const primeUri = AtUri.make(alice, 'app.bsky.feed.generator', 'prime')
@@ -62,7 +68,12 @@ describe('feed generation', () => {
     gen = await network.createFeedGen({
       [allUri.toString()]: feedGenHandler('all'),
       [evenUri.toString()]: feedGenHandler('even'),
-      [feedUriBadPagination.toString()]: feedGenHandler('bad-pagination'),
+      [feedUriBadPaginationLimit.toString()]: feedGenHandler(
+        'bad-pagination-limit',
+      ),
+      [feedUriBadPaginationCursor.toString()]: feedGenHandler(
+        'bad-pagination-cursor',
+      ),
       [primeUri.toString()]: feedGenHandler('prime'),
       [needsAuthUri.toString()]: feedGenHandler('needs-auth'),
     })
@@ -70,7 +81,7 @@ describe('feed generation', () => {
     const feedSuggestions = [
       { uri: allUri.toString(), order: 1 },
       { uri: evenUri.toString(), order: 2 },
-      { uri: feedUriBadPagination.toString(), order: 3 },
+      { uri: feedUriBadPaginationLimit.toString(), order: 3 },
       { uri: primeUri.toString(), order: 4 },
     ]
     await network.bsky.db.db
@@ -116,17 +127,31 @@ describe('feed generation', () => {
       },
       sc.getHeaders(alice),
     )
-    const badPagination = await pdsAgent.api.app.bsky.feed.generator.create(
-      { repo: alice, rkey: 'bad-pagination' },
-      {
-        did: gen.did,
-        displayName: 'Bad Pagination',
-        description:
-          'Provides all feed candidates, blindly ignoring pagination limit',
-        createdAt: new Date().toISOString(),
-      },
-      sc.getHeaders(alice),
-    )
+
+    const badPaginationLimit =
+      await pdsAgent.api.app.bsky.feed.generator.create(
+        { repo: alice, rkey: 'bad-pagination-limit' },
+        {
+          did: gen.did,
+          displayName: 'Bad Pagination Limit',
+          description:
+            'Provides all feed candidates, blindly ignoring pagination limit',
+          createdAt: new Date().toISOString(),
+        },
+        sc.getHeaders(alice),
+      )
+    const badPaginationCursor =
+      await pdsAgent.api.app.bsky.feed.generator.create(
+        { repo: alice, rkey: 'bad-pagination-cursor' },
+        {
+          did: gen.did,
+          displayName: 'Bad Pagination Cursor',
+          description: 'Echoes back the same cursor it received',
+          createdAt: new Date().toISOString(),
+        },
+        sc.getHeaders(alice),
+      )
+
     // Taken-down
     const prime = await pdsAgent.api.app.bsky.feed.generator.create(
       { repo: alice, rkey: 'prime' },
@@ -157,7 +182,8 @@ describe('feed generation', () => {
     feedUriAllRef = new RecordRef(all.uri, all.cid)
     feedUriEven = even.uri
     feedUriOdd = odd.uri
-    feedUriBadPagination = badPagination.uri
+    feedUriBadPaginationLimit = badPaginationLimit.uri
+    feedUriBadPaginationCursor = badPaginationCursor.uri
     feedUriPrime = prime.uri
     feedUriPrimeRef = new RecordRef(prime.uri, prime.cid)
     feedUriNeedsAuth = needsAuth.uri
@@ -203,12 +229,13 @@ describe('feed generation', () => {
 
     const paginatedAll = results(await paginateAll(paginator))
 
-    expect(paginatedAll.length).toEqual(5)
+    expect(paginatedAll.length).toEqual(6)
     expect(paginatedAll[0].uri).toEqual(feedUriOdd)
     expect(paginatedAll[1].uri).toEqual(feedUriNeedsAuth)
-    expect(paginatedAll[2].uri).toEqual(feedUriBadPagination)
-    expect(paginatedAll[3].uri).toEqual(feedUriEven)
-    expect(paginatedAll[4].uri).toEqual(feedUriAll)
+    expect(paginatedAll[2].uri).toEqual(feedUriBadPaginationCursor)
+    expect(paginatedAll[3].uri).toEqual(feedUriBadPaginationLimit)
+    expect(paginatedAll[4].uri).toEqual(feedUriEven)
+    expect(paginatedAll[5].uri).toEqual(feedUriAll)
     expect(paginatedAll.map((fg) => fg.uri)).not.toContain(feedUriPrime) // taken-down
     expect(forSnapshot(paginatedAll)).toMatchSnapshot()
   })
@@ -490,7 +517,7 @@ describe('feed generation', () => {
       expect(res.data.feeds.map((f) => f.uri)).toEqual([
         feedUriAll,
         feedUriEven,
-        feedUriBadPagination,
+        feedUriBadPaginationLimit,
       ])
     })
 
@@ -605,7 +632,7 @@ describe('feed generation', () => {
 
     it('paginates, handling feed not respecting limit.', async () => {
       const res = await agent.api.app.bsky.feed.getFeed(
-        { feed: feedUriBadPagination, limit: 3 },
+        { feed: feedUriBadPaginationLimit, limit: 3 },
         {
           headers: await network.serviceHeaders(
             alice,
@@ -638,6 +665,22 @@ describe('feed generation', () => {
       await expect(tryGetFeed).rejects.toMatchObject({
         error: 'UnknownFeed',
       })
+    })
+
+    it('returns empty cursor with feeds that echo back the same cursor from the param.', async () => {
+      const res = await agent.api.app.bsky.feed.getFeed(
+        { feed: feedUriBadPaginationCursor, cursor: '1', limit: 2 },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyFeedGetFeed,
+            gen.did,
+          ),
+        },
+      )
+
+      expect(res.data.cursor).toBeUndefined()
+      expect(res.data.feed).toHaveLength(2)
     })
 
     it('resolves contents of taken-down feed.', async () => {
@@ -712,7 +755,13 @@ describe('feed generation', () => {
 
   const feedGenHandler =
     (
-      feedName: 'even' | 'all' | 'prime' | 'bad-pagination' | 'needs-auth',
+      feedName:
+        | 'even'
+        | 'all'
+        | 'prime'
+        | 'bad-pagination-limit'
+        | 'bad-pagination-cursor'
+        | 'needs-auth',
     ): SkeletonHandler =>
     async ({ req, params }) => {
       if (feedName === 'needs-auth' && !req.headers.authorization) {
@@ -753,17 +802,22 @@ describe('feed generation', () => {
         return true
       })
       const feedResults =
-        feedName === 'bad-pagination'
+        feedName === 'bad-pagination-limit'
           ? fullFeed.slice(offset) // does not respect limit
           : fullFeed.slice(offset, offset + limit)
       const lastResult = feedResults.at(-1)
+      const cursorResult =
+        feedName === 'bad-pagination-cursor'
+          ? cursor
+          : lastResult
+            ? (fullFeed.indexOf(lastResult) + 1).toString()
+            : undefined
+
       return {
         encoding: 'application/json',
         body: {
           feed: feedResults,
-          cursor: lastResult
-            ? (fullFeed.indexOf(lastResult) + 1).toString()
-            : undefined,
+          cursor: cursorResult,
           $auth: jwtBody(req.headers.authorization), // for testing purposes
         },
       }
