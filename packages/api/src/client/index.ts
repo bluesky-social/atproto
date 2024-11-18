@@ -161,6 +161,7 @@ import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 import * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet'
 import * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs'
+import * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig'
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
 import * as AppBskyUnspeccedGetSuggestionsSkeleton from './types/app/bsky/unspecced/getSuggestionsSkeleton'
 import * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions'
@@ -217,6 +218,10 @@ import * as ToolsOzoneSetDeleteValues from './types/tools/ozone/set/deleteValues
 import * as ToolsOzoneSetGetValues from './types/tools/ozone/set/getValues'
 import * as ToolsOzoneSetQuerySets from './types/tools/ozone/set/querySets'
 import * as ToolsOzoneSetUpsertSet from './types/tools/ozone/set/upsertSet'
+import * as ToolsOzoneSettingDefs from './types/tools/ozone/setting/defs'
+import * as ToolsOzoneSettingListOptions from './types/tools/ozone/setting/listOptions'
+import * as ToolsOzoneSettingRemoveOptions from './types/tools/ozone/setting/removeOptions'
+import * as ToolsOzoneSettingUpsertOption from './types/tools/ozone/setting/upsertOption'
 import * as ToolsOzoneSignatureDefs from './types/tools/ozone/signature/defs'
 import * as ToolsOzoneSignatureFindCorrelation from './types/tools/ozone/signature/findCorrelation'
 import * as ToolsOzoneSignatureFindRelatedAccounts from './types/tools/ozone/signature/findRelatedAccounts'
@@ -384,6 +389,7 @@ export * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/
 export * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 export * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet'
 export * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs'
+export * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig'
 export * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
 export * as AppBskyUnspeccedGetSuggestionsSkeleton from './types/app/bsky/unspecced/getSuggestionsSkeleton'
 export * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions'
@@ -440,6 +446,10 @@ export * as ToolsOzoneSetDeleteValues from './types/tools/ozone/set/deleteValues
 export * as ToolsOzoneSetGetValues from './types/tools/ozone/set/getValues'
 export * as ToolsOzoneSetQuerySets from './types/tools/ozone/set/querySets'
 export * as ToolsOzoneSetUpsertSet from './types/tools/ozone/set/upsertSet'
+export * as ToolsOzoneSettingDefs from './types/tools/ozone/setting/defs'
+export * as ToolsOzoneSettingListOptions from './types/tools/ozone/setting/listOptions'
+export * as ToolsOzoneSettingRemoveOptions from './types/tools/ozone/setting/removeOptions'
+export * as ToolsOzoneSettingUpsertOption from './types/tools/ozone/setting/upsertOption'
 export * as ToolsOzoneSignatureDefs from './types/tools/ozone/signature/defs'
 export * as ToolsOzoneSignatureFindCorrelation from './types/tools/ozone/signature/findCorrelation'
 export * as ToolsOzoneSignatureFindRelatedAccounts from './types/tools/ozone/signature/findRelatedAccounts'
@@ -3016,6 +3026,18 @@ export class AppBskyUnspeccedNS {
     this._client = client
   }
 
+  getConfig(
+    params?: AppBskyUnspeccedGetConfig.QueryParams,
+    opts?: AppBskyUnspeccedGetConfig.CallOptions,
+  ): Promise<AppBskyUnspeccedGetConfig.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getConfig',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
   getPopularFeedGenerators(
     params?: AppBskyUnspeccedGetPopularFeedGenerators.QueryParams,
     opts?: AppBskyUnspeccedGetPopularFeedGenerators.CallOptions,
@@ -3435,6 +3457,7 @@ export class ToolsOzoneNS {
   moderation: ToolsOzoneModerationNS
   server: ToolsOzoneServerNS
   set: ToolsOzoneSetNS
+  setting: ToolsOzoneSettingNS
   signature: ToolsOzoneSignatureNS
   team: ToolsOzoneTeamNS
 
@@ -3445,6 +3468,7 @@ export class ToolsOzoneNS {
     this.moderation = new ToolsOzoneModerationNS(client)
     this.server = new ToolsOzoneServerNS(client)
     this.set = new ToolsOzoneSetNS(client)
+    this.setting = new ToolsOzoneSettingNS(client)
     this.signature = new ToolsOzoneSignatureNS(client)
     this.team = new ToolsOzoneTeamNS(client)
   }
@@ -3745,6 +3769,50 @@ export class ToolsOzoneSetNS {
     opts?: ToolsOzoneSetUpsertSet.CallOptions,
   ): Promise<ToolsOzoneSetUpsertSet.Response> {
     return this._client.call('tools.ozone.set.upsertSet', opts?.qp, data, opts)
+  }
+}
+
+export class ToolsOzoneSettingNS {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  listOptions(
+    params?: ToolsOzoneSettingListOptions.QueryParams,
+    opts?: ToolsOzoneSettingListOptions.CallOptions,
+  ): Promise<ToolsOzoneSettingListOptions.Response> {
+    return this._client.call(
+      'tools.ozone.setting.listOptions',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  removeOptions(
+    data?: ToolsOzoneSettingRemoveOptions.InputSchema,
+    opts?: ToolsOzoneSettingRemoveOptions.CallOptions,
+  ): Promise<ToolsOzoneSettingRemoveOptions.Response> {
+    return this._client.call(
+      'tools.ozone.setting.removeOptions',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
+  upsertOption(
+    data?: ToolsOzoneSettingUpsertOption.InputSchema,
+    opts?: ToolsOzoneSettingUpsertOption.CallOptions,
+  ): Promise<ToolsOzoneSettingUpsertOption.Response> {
+    return this._client.call(
+      'tools.ozone.setting.upsertOption',
+      opts?.qp,
+      data,
+      opts,
+    )
   }
 }
 

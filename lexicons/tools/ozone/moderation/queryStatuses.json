@@ -10,7 +10,7 @@
         "properties": {
           "includeAllUserRecords": {
             "type": "boolean",
-            "description": "All subjects belonging to the account specified in the 'subject' param will be returned."
+            "description": "All subjects, or subjects from given 'collections' param, belonging to the account specified in the 'subject' param will be returned."
           },
           "subject": {
             "type": "string",
@@ -35,6 +35,33 @@
             "type": "string",
             "format": "datetime",
             "description": "Search subjects reviewed after a given timestamp"
+          },
+          "hostingDeletedAfter": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Search subjects where the associated record/account was deleted after a given timestamp"
+          },
+          "hostingDeletedBefore": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Search subjects where the associated record/account was deleted before a given timestamp"
+          },
+          "hostingUpdatedAfter": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Search subjects where the associated record/account was updated after a given timestamp"
+          },
+          "hostingUpdatedBefore": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Search subjects where the associated record/account was updated before a given timestamp"
+          },
+          "hostingStatuses": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Search subjects by the status of the associated record/account"
           },
           "reviewedBefore": {
             "type": "string",
@@ -103,6 +130,20 @@
           },
           "cursor": {
             "type": "string"
+          },
+          "collections": {
+            "type": "array",
+            "maxLength": 20,
+            "description": "If specified, subjects belonging to the given collections will be returned. When subjectType is set to 'account', this will be ignored.",
+            "items": {
+              "type": "string",
+              "format": "nsid"
+            }
+          },
+          "subjectType": {
+            "type": "string",
+            "description": "If specified, subjects of the given type (account or record) will be returned. When this is set to 'account' the 'collections' parameter will be ignored. When includeAllUserRecords or subject is set, this will be ignored.",
+            "knownValues": ["account", "record"]
           }
         }
       },

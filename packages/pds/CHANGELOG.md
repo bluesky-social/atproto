@@ -1,5 +1,75 @@
 # @atproto/pds
 
+## 0.4.71
+
+### Patch Changes
+
+- [#2990](https://github.com/bluesky-social/atproto/pull/2990) [`24423fc2d`](https://github.com/bluesky-social/atproto/commit/24423fc2dd394c99a29dbe4419b356090ef19546) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Ensure read-after-write handles `quoteCount` for `getPostThread` responses.
+
+- Updated dependencies [[`bac9be2d3`](https://github.com/bluesky-social/atproto/commit/bac9be2d3ec904d1f984a871f43cf89aca17289d), [`48d08a469`](https://github.com/bluesky-social/atproto/commit/48d08a469f75837e3b7e879d286d12780440b8b8), [`bac9be2d3`](https://github.com/bluesky-social/atproto/commit/bac9be2d3ec904d1f984a871f43cf89aca17289d), [`bac9be2d3`](https://github.com/bluesky-social/atproto/commit/bac9be2d3ec904d1f984a871f43cf89aca17289d), [`561431fe4`](https://github.com/bluesky-social/atproto/commit/561431fe4897e81767dc768e9a31020d09bf86ff)]:
+  - @atproto/syntax@0.3.1
+  - @atproto/api@0.13.16
+  - @atproto/lexicon@0.4.3
+  - @atproto/repo@0.5.5
+  - @atproto/xrpc@0.6.4
+  - @atproto/xrpc-server@0.7.3
+  - @atproto/aws@0.2.9
+
+## 0.4.70
+
+### Patch Changes
+
+- [#2946](https://github.com/bluesky-social/atproto/pull/2946) [`9e18ab6a3`](https://github.com/bluesky-social/atproto/commit/9e18ab6a35f47e0a9cee76221bfa0817c8a624a1) Thanks [@gaearon](https://github.com/gaearon)! - Fix getPostThread optimistic handling for URIs with handle
+
+- [#2850](https://github.com/bluesky-social/atproto/pull/2850) [`9ffeb5216`](https://github.com/bluesky-social/atproto/commit/9ffeb5216ab29919a2c1f3cc18af26c21a077d4a) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use a less cryptic error message when proxying fails
+
+- [#2850](https://github.com/bluesky-social/atproto/pull/2850) [`9ffeb5216`](https://github.com/bluesky-social/atproto/commit/9ffeb5216ab29919a2c1f3cc18af26c21a077d4a) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow retrying proxied requests
+
+- Updated dependencies [[`d6f33b474`](https://github.com/bluesky-social/atproto/commit/d6f33b4742e0b94722a993efc7d18833d9416bb6), [`b6eeb81c6`](https://github.com/bluesky-social/atproto/commit/b6eeb81c6d454b5ae91b05a21fc1820274c1b429), [`709ba3015`](https://github.com/bluesky-social/atproto/commit/709ba301578c1956b8eb0d89bad717615a4fd7ba), [`1982693e3`](https://github.com/bluesky-social/atproto/commit/1982693e3ea1fef4db76ac9aca3db8dc5ebf3fe0), [`1982693e3`](https://github.com/bluesky-social/atproto/commit/1982693e3ea1fef4db76ac9aca3db8dc5ebf3fe0), [`839202a3d`](https://github.com/bluesky-social/atproto/commit/839202a3d2b01de25de900cec7540019545798c6), [`e680d55ca`](https://github.com/bluesky-social/atproto/commit/e680d55ca2d7f6b213e2a8693eba6be39163ba41), [`c4b5e5395`](https://github.com/bluesky-social/atproto/commit/c4b5e53957463c37dd16fdd1b897d4ab02ab8e84)]:
+  - @atproto/api@0.13.15
+  - @atproto/oauth-provider@0.2.7
+  - @atproto/crypto@0.4.2
+  - @atproto/xrpc-server@0.7.2
+  - @atproto/aws@0.2.8
+  - @atproto/identity@0.4.3
+  - @atproto/repo@0.5.4
+
+## 0.4.69
+
+### Patch Changes
+
+- Updated dependencies [[`209238769`](https://github.com/bluesky-social/atproto/commit/209238769c0bf38bf04f7fa9621eeb176b5c0ed8), [`73f40e63a`](https://github.com/bluesky-social/atproto/commit/73f40e63abe3283efc0a27eef781c00b497caad1)]:
+  - @atproto/api@0.13.14
+
+## 0.4.68
+
+### Patch Changes
+
+- Updated dependencies [[`19e36afb2`](https://github.com/bluesky-social/atproto/commit/19e36afb2c13dbc7b1033eb3cab5e7fc6f496fdc)]:
+  - @atproto/api@0.13.13
+
+## 0.4.67
+
+### Patch Changes
+
+- [#2924](https://github.com/bluesky-social/atproto/pull/2924) [`c1b0e176a`](https://github.com/bluesky-social/atproto/commit/c1b0e176adbc5108bff49d74fbae18de60e86732) Thanks [@dholms](https://github.com/dholms)! - Support alternate did mehtods in update handle
+
+## 0.4.66
+
+### Patch Changes
+
+- [#2871](https://github.com/bluesky-social/atproto/pull/2871) [`9d40ccbb6`](https://github.com/bluesky-social/atproto/commit/9d40ccbb69103fae9aae7e3cec31e9b3116f3ba2) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add Access-Control-Allow-Headers to .well-known/oauth-protected-resource response
+
+- Updated dependencies [[`8f2b80a0d`](https://github.com/bluesky-social/atproto/commit/8f2b80a0dcf118652452ea09764a947b09991e0f), [`9d40ccbb6`](https://github.com/bluesky-social/atproto/commit/9d40ccbb69103fae9aae7e3cec31e9b3116f3ba2), [`9d40ccbb6`](https://github.com/bluesky-social/atproto/commit/9d40ccbb69103fae9aae7e3cec31e9b3116f3ba2), [`7f26b1765`](https://github.com/bluesky-social/atproto/commit/7f26b176526b9856a8f61faca6f065f0afd43abf)]:
+  - @atproto/oauth-provider@0.2.6
+
+## 0.4.65
+
+### Patch Changes
+
+- Updated dependencies [[`22d039a22`](https://github.com/bluesky-social/atproto/commit/22d039a229e3ef08a793e1c98b473b1b8e18ac5e)]:
+  - @atproto/api@0.13.12
+
 ## 0.4.64
 
 ### Patch Changes

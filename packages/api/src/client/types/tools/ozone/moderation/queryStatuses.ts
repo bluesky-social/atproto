@@ -9,7 +9,7 @@ import { CID } from 'multiformats/cid'
 import * as ToolsOzoneModerationDefs from './defs'
 
 export interface QueryParams {
-  /** All subjects belonging to the account specified in the 'subject' param will be returned. */
+  /** All subjects, or subjects from given 'collections' param, belonging to the account specified in the 'subject' param will be returned. */
   includeAllUserRecords?: boolean
   /** The subject to get the status for. */
   subject?: string
@@ -21,6 +21,16 @@ export interface QueryParams {
   reportedBefore?: string
   /** Search subjects reviewed after a given timestamp */
   reviewedAfter?: string
+  /** Search subjects where the associated record/account was deleted after a given timestamp */
+  hostingDeletedAfter?: string
+  /** Search subjects where the associated record/account was deleted before a given timestamp */
+  hostingDeletedBefore?: string
+  /** Search subjects where the associated record/account was updated after a given timestamp */
+  hostingUpdatedAfter?: string
+  /** Search subjects where the associated record/account was updated before a given timestamp */
+  hostingUpdatedBefore?: string
+  /** Search subjects by the status of the associated record/account */
+  hostingStatuses?: string[]
   /** Search subjects reviewed before a given timestamp */
   reviewedBefore?: string
   /** By default, we don't include muted subjects in the results. Set this to true to include them. */
@@ -42,6 +52,10 @@ export interface QueryParams {
   tags?: string[]
   excludeTags?: string[]
   cursor?: string
+  /** If specified, subjects belonging to the given collections will be returned. When subjectType is set to 'account', this will be ignored. */
+  collections?: string[]
+  /** If specified, subjects of the given type (account or record) will be returned. When this is set to 'account' the 'collections' parameter will be ignored. When includeAllUserRecords or subject is set, this will be ignored. */
+  subjectType?: 'account' | 'record' | (string & {})
 }
 
 export type InputSchema = undefined

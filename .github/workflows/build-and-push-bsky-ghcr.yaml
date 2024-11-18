@@ -3,7 +3,7 @@ on:
   push:
     branches:
       - main
-      - bsky-tweaks
+      - bsky-use-native-crypto
 env:
   REGISTRY: ghcr.io
   USERNAME: ${{ github.actor }}

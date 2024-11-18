@@ -65,6 +65,7 @@ export const addAccountInfoToRepoViewDetail = (
     invitedBy,
     invites,
     invitesDisabled,
+    threatSignatures,
     // pick some duplicate/unwanted details out
     did: _did,
     handle: _handle,
@@ -82,6 +83,7 @@ export const addAccountInfoToRepoViewDetail = (
     invites,
     emailConfirmedAt,
     deactivatedAt,
+    threatSignatures,
   }
 }
 
@@ -98,6 +100,7 @@ export const addAccountInfoToRepoView = (
     invitesDisabled: accountInfo.invitesDisabled,
     inviteNote: accountInfo.inviteNote,
     deactivatedAt: accountInfo.deactivatedAt,
+    threatSignatures: accountInfo.threatSignatures,
   }
 }
 

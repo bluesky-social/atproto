@@ -31,7 +31,10 @@
             "#modEventEmail",
             "#modEventResolveAppeal",
             "#modEventDivert",
-            "#modEventTag"
+            "#modEventTag",
+            "#accountEvent",
+            "#identityEvent",
+            "#recordEvent"
           ]
         },
         "subject": {
@@ -78,7 +81,10 @@
             "#modEventEmail",
             "#modEventResolveAppeal",
             "#modEventDivert",
-            "#modEventTag"
+            "#modEventTag",
+            "#accountEvent",
+            "#identityEvent",
+            "#recordEvent"
           ]
         },
         "subject": {
@@ -109,6 +115,10 @@
             "com.atproto.admin.defs#repoRef",
             "com.atproto.repo.strongRef"
           ]
+        },
+        "hosting": {
+          "type": "union",
+          "refs": ["#accountHosting", "#recordHosting"]
         },
         "subjectBlobCids": {
           "type": "array",
@@ -324,12 +334,11 @@
     "modEventMuteReporter": {
       "type": "object",
       "description": "Mute incoming reports from an account",
-      "required": ["durationInHours"],
       "properties": {
         "comment": { "type": "string" },
         "durationInHours": {
           "type": "integer",
-          "description": "Indicates how long the account should remain muted."
+          "description": "Indicates how long the account should remain muted. Falsy value here means a permanent mute."
         }
       }
     },
@@ -390,6 +399,62 @@
         }
       }
     },
+    "accountEvent": {
+      "type": "object",
+      "description": "Logs account status related events on a repo subject. Normally captured by automod from the firehose and emitted to ozone for historical tracking.",
+      "required": ["timestamp", "active"],
+      "properties": {
+        "comment": { "type": "string" },
+        "active": {
+          "type": "boolean",
+          "description": "Indicates that the account has a repository which can be fetched from the host that emitted this event."
+        },
+        "status": {
+          "type": "string",
+          "knownValues": [
+            "unknown",
+            "deactivated",
+            "deleted",
+            "takendown",
+            "suspended",
+            "tombstoned"
+          ]
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "datetime"
+        }
+      }
+    },
+    "identityEvent": {
+      "type": "object",
+      "description": "Logs identity related events on a repo subject. Normally captured by automod from the firehose and emitted to ozone for historical tracking.",
+      "required": ["timestamp"],
+      "properties": {
+        "comment": { "type": "string" },
+        "handle": { "type": "string", "format": "handle" },
+        "pdsHost": { "type": "string", "format": "uri" },
+        "tombstone": { "type": "boolean" },
+        "timestamp": {
+          "type": "string",
+          "format": "datetime"
+        }
+      }
+    },
+    "recordEvent": {
+      "type": "object",
+      "description": "Logs lifecycle event on a record subject. Normally captured by automod from the firehose and emitted to ozone for historical tracking.",
+      "required": ["timestamp", "op"],
+      "properties": {
+        "comment": { "type": "string" },
+        "op": {
+          "type": "string",
+          "knownValues": ["create", "update", "delete"]
+        },
+        "cid": { "type": "string", "format": "cid" },
+        "timestamp": { "type": "string", "format": "datetime" }
+      }
+    },
     "repoView": {
       "type": "object",
       "required": [
@@ -412,7 +477,14 @@
         },
         "invitesDisabled": { "type": "boolean" },
         "inviteNote": { "type": "string" },
-        "deactivatedAt": { "type": "string", "format": "datetime" }
+        "deactivatedAt": { "type": "string", "format": "datetime" },
+        "threatSignatures": {
+          "type": "array",
+          "items": {
+            "type": "ref",
+            "ref": "com.atproto.admin.defs#threatSignature"
+          }
+        }
       }
     },
     "repoViewDetail": {
@@ -449,7 +521,14 @@
         "invitesDisabled": { "type": "boolean" },
         "inviteNote": { "type": "string" },
         "emailConfirmedAt": { "type": "string", "format": "datetime" },
-        "deactivatedAt": { "type": "string", "format": "datetime" }
+        "deactivatedAt": { "type": "string", "format": "datetime" },
+        "threatSignatures": {
+          "type": "array",
+          "items": {
+            "type": "ref",
+            "ref": "com.atproto.admin.defs#threatSignature"
+          }
+        }
       }
     },
     "repoViewNotFound": {
@@ -563,6 +642,64 @@
         "width": { "type": "integer" },
         "height": { "type": "integer" },
         "length": { "type": "integer" }
+      }
+    },
+    "accountHosting": {
+      "type": "object",
+      "required": ["status"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "knownValues": [
+            "takendown",
+            "suspended",
+            "deleted",
+            "deactivated",
+            "unknown"
+          ]
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "datetime"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "datetime"
+        },
+        "deletedAt": {
+          "type": "string",
+          "format": "datetime"
+        },
+        "deactivatedAt": {
+          "type": "string",
+          "format": "datetime"
+        },
+        "reactivatedAt": {
+          "type": "string",
+          "format": "datetime"
+        }
+      }
+    },
+    "recordHosting": {
+      "type": "object",
+      "required": ["status"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "knownValues": ["deleted", "unknown"]
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "datetime"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "datetime"
+        },
+        "deletedAt": {
+          "type": "string",
+          "format": "datetime"
+        }
       }
     }
   }

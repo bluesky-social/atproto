@@ -70,6 +70,13 @@ export const schemaDict = {
             type: 'string',
             format: 'datetime',
           },
+          threatSignatures: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.admin.defs#threatSignature',
+            },
+          },
         },
       },
       repoRef: {
@@ -97,6 +104,18 @@ export const schemaDict = {
           recordUri: {
             type: 'string',
             format: 'at-uri',
+          },
+        },
+      },
+      threatSignature: {
+        type: 'object',
+        required: ['property', 'value'],
+        properties: {
+          property: {
+            type: 'string',
+          },
+          value: {
+            type: 'string',
           },
         },
       },
@@ -1322,7 +1341,7 @@ export const schemaDict = {
           },
           rkey: {
             type: 'string',
-            maxLength: 15,
+            maxLength: 512,
           },
           value: {
             type: 'unknown',
@@ -1431,7 +1450,7 @@ export const schemaDict = {
               rkey: {
                 type: 'string',
                 description: 'The Record Key.',
-                maxLength: 15,
+                maxLength: 512,
               },
               validate: {
                 type: 'boolean',
@@ -1882,7 +1901,7 @@ export const schemaDict = {
               rkey: {
                 type: 'string',
                 description: 'The Record Key.',
-                maxLength: 15,
+                maxLength: 512,
               },
               validate: {
                 type: 'boolean',
@@ -9136,6 +9155,28 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyUnspeccedGetConfig: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.getConfig',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get miscellaneous runtime configuration.',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: [],
+            properties: {
+              checkEmailConfirmed: {
+                type: 'boolean',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyUnspeccedGetPopularFeedGenerators: {
     lexicon: 1,
     id: 'app.bsky.unspecced.getPopularFeedGenerators',
@@ -9852,6 +9893,9 @@ export const schemaDict = {
           muted: {
             type: 'boolean',
           },
+          opened: {
+            type: 'boolean',
+          },
           unreadCount: {
             type: 'integer',
           },
@@ -10522,8 +10566,9 @@ export const schemaDict = {
       },
     },
   },
-}
-export const schemas: LexiconDoc[] = Object.values(schemaDict) as LexiconDoc[]
+} as const satisfies Record<string, LexiconDoc>
+
+export const schemas = Object.values(schemaDict)
 export const lexicons: Lexicons = new Lexicons(schemas)
 export const ids = {
   ComAtprotoAdminDefs: 'com.atproto.admin.defs',
@@ -10695,6 +10740,7 @@ export const ids = {
   AppBskyNotificationUpdateSeen: 'app.bsky.notification.updateSeen',
   AppBskyRichtextFacet: 'app.bsky.richtext.facet',
   AppBskyUnspeccedDefs: 'app.bsky.unspecced.defs',
+  AppBskyUnspeccedGetConfig: 'app.bsky.unspecced.getConfig',
   AppBskyUnspeccedGetPopularFeedGenerators:
     'app.bsky.unspecced.getPopularFeedGenerators',
   AppBskyUnspeccedGetSuggestionsSkeleton:

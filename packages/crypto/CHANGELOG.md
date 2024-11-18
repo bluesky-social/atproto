@@ -1,5 +1,11 @@
 # @atproto/crypto
 
+## 0.4.2
+
+### Patch Changes
+
+- [#2936](https://github.com/bluesky-social/atproto/pull/2936) [`1982693e3`](https://github.com/bluesky-social/atproto/commit/1982693e3ea1fef4db76ac9aca3db8dc5ebf3fe0) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Export utils
+
 ## 0.4.1
 
 ### Patch Changes

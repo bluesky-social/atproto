@@ -1,5 +1,30 @@
 # @atproto/sync
 
+## 0.1.6
+
+### Patch Changes
+
+- Updated dependencies [[`bac9be2d3`](https://github.com/bluesky-social/atproto/commit/bac9be2d3ec904d1f984a871f43cf89aca17289d), [`bac9be2d3`](https://github.com/bluesky-social/atproto/commit/bac9be2d3ec904d1f984a871f43cf89aca17289d)]:
+  - @atproto/syntax@0.3.1
+  - @atproto/lexicon@0.4.3
+  - @atproto/repo@0.5.5
+  - @atproto/xrpc-server@0.7.3
+
+## 0.1.5
+
+### Patch Changes
+
+- Updated dependencies [[`1982693e3`](https://github.com/bluesky-social/atproto/commit/1982693e3ea1fef4db76ac9aca3db8dc5ebf3fe0)]:
+  - @atproto/xrpc-server@0.7.2
+  - @atproto/identity@0.4.3
+  - @atproto/repo@0.5.4
+
+## 0.1.4
+
+### Patch Changes
+
+- [#2906](https://github.com/bluesky-social/atproto/pull/2906) [`d605577c2`](https://github.com/bluesky-social/atproto/commit/d605577c25d3e69c7cc0a1e858a4f009d1ea3096) Thanks [@dholms](https://github.com/dholms)! - avoid parsing commits with no relevant ops
+
 ## 0.1.3
 
 ### Patch Changes

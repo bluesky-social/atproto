@@ -134,6 +134,7 @@ import * as AppBskyNotificationListNotifications from './types/app/bsky/notifica
 import * as AppBskyNotificationPutPreferences from './types/app/bsky/notification/putPreferences'
 import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
+import * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig'
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
 import * as AppBskyUnspeccedGetSuggestionsSkeleton from './types/app/bsky/unspecced/getSuggestionsSkeleton'
 import * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions'
@@ -182,6 +183,9 @@ import * as ToolsOzoneSetDeleteValues from './types/tools/ozone/set/deleteValues
 import * as ToolsOzoneSetGetValues from './types/tools/ozone/set/getValues'
 import * as ToolsOzoneSetQuerySets from './types/tools/ozone/set/querySets'
 import * as ToolsOzoneSetUpsertSet from './types/tools/ozone/set/upsertSet'
+import * as ToolsOzoneSettingListOptions from './types/tools/ozone/setting/listOptions'
+import * as ToolsOzoneSettingRemoveOptions from './types/tools/ozone/setting/removeOptions'
+import * as ToolsOzoneSettingUpsertOption from './types/tools/ozone/setting/upsertOption'
 import * as ToolsOzoneSignatureFindCorrelation from './types/tools/ozone/signature/findCorrelation'
 import * as ToolsOzoneSignatureFindRelatedAccounts from './types/tools/ozone/signature/findRelatedAccounts'
 import * as ToolsOzoneSignatureSearchAccounts from './types/tools/ozone/signature/searchAccounts'
@@ -1833,6 +1837,17 @@ export class AppBskyUnspeccedNS {
     this._server = server
   }
 
+  getConfig<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyUnspeccedGetConfig.Handler<ExtractAuth<AV>>,
+      AppBskyUnspeccedGetConfig.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.unspecced.getConfig' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   getPopularFeedGenerators<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -2182,6 +2197,7 @@ export class ToolsOzoneNS {
   moderation: ToolsOzoneModerationNS
   server: ToolsOzoneServerNS
   set: ToolsOzoneSetNS
+  setting: ToolsOzoneSettingNS
   signature: ToolsOzoneSignatureNS
   team: ToolsOzoneTeamNS
 
@@ -2192,6 +2208,7 @@ export class ToolsOzoneNS {
     this.moderation = new ToolsOzoneModerationNS(server)
     this.server = new ToolsOzoneServerNS(server)
     this.set = new ToolsOzoneSetNS(server)
+    this.setting = new ToolsOzoneSettingNS(server)
     this.signature = new ToolsOzoneSignatureNS(server)
     this.team = new ToolsOzoneTeamNS(server)
   }
@@ -2486,6 +2503,47 @@ export class ToolsOzoneSetNS {
     >,
   ) {
     const nsid = 'tools.ozone.set.upsertSet' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class ToolsOzoneSettingNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  listOptions<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneSettingListOptions.Handler<ExtractAuth<AV>>,
+      ToolsOzoneSettingListOptions.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.setting.listOptions' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  removeOptions<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneSettingRemoveOptions.Handler<ExtractAuth<AV>>,
+      ToolsOzoneSettingRemoveOptions.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.setting.removeOptions' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  upsertOption<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneSettingUpsertOption.Handler<ExtractAuth<AV>>,
+      ToolsOzoneSettingUpsertOption.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.setting.upsertOption' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }

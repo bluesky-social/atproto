@@ -1,5 +1,57 @@
 # @atproto/ozone
 
+## 0.1.55
+
+### Patch Changes
+
+- [#2988](https://github.com/bluesky-social/atproto/pull/2988) [`48d08a469`](https://github.com/bluesky-social/atproto/commit/48d08a469f75837e3b7e879d286d12780440b8b8) Thanks [@foysalit](https://github.com/foysalit)! - Make durationInHours optional for mute reporter event
+
+- Updated dependencies [[`bac9be2d3`](https://github.com/bluesky-social/atproto/commit/bac9be2d3ec904d1f984a871f43cf89aca17289d), [`48d08a469`](https://github.com/bluesky-social/atproto/commit/48d08a469f75837e3b7e879d286d12780440b8b8), [`bac9be2d3`](https://github.com/bluesky-social/atproto/commit/bac9be2d3ec904d1f984a871f43cf89aca17289d), [`bac9be2d3`](https://github.com/bluesky-social/atproto/commit/bac9be2d3ec904d1f984a871f43cf89aca17289d), [`561431fe4`](https://github.com/bluesky-social/atproto/commit/561431fe4897e81767dc768e9a31020d09bf86ff)]:
+  - @atproto/syntax@0.3.1
+  - @atproto/api@0.13.16
+  - @atproto/lexicon@0.4.3
+  - @atproto/xrpc@0.6.4
+  - @atproto/xrpc-server@0.7.3
+
+## 0.1.54
+
+### Patch Changes
+
+- [#2661](https://github.com/bluesky-social/atproto/pull/2661) [`d6f33b474`](https://github.com/bluesky-social/atproto/commit/d6f33b4742e0b94722a993efc7d18833d9416bb6) Thanks [@foysalit](https://github.com/foysalit)! - Add mod events and status filter for account and record hosting status
+
+- [#2905](https://github.com/bluesky-social/atproto/pull/2905) [`c4b5e5395`](https://github.com/bluesky-social/atproto/commit/c4b5e53957463c37dd16fdd1b897d4ab02ab8e84) Thanks [@foysalit](https://github.com/foysalit)! - Add user specific and instance-wide settings api for ozone
+
+- Updated dependencies [[`d6f33b474`](https://github.com/bluesky-social/atproto/commit/d6f33b4742e0b94722a993efc7d18833d9416bb6), [`b6eeb81c6`](https://github.com/bluesky-social/atproto/commit/b6eeb81c6d454b5ae91b05a21fc1820274c1b429), [`1982693e3`](https://github.com/bluesky-social/atproto/commit/1982693e3ea1fef4db76ac9aca3db8dc5ebf3fe0), [`1982693e3`](https://github.com/bluesky-social/atproto/commit/1982693e3ea1fef4db76ac9aca3db8dc5ebf3fe0), [`839202a3d`](https://github.com/bluesky-social/atproto/commit/839202a3d2b01de25de900cec7540019545798c6), [`e680d55ca`](https://github.com/bluesky-social/atproto/commit/e680d55ca2d7f6b213e2a8693eba6be39163ba41), [`c4b5e5395`](https://github.com/bluesky-social/atproto/commit/c4b5e53957463c37dd16fdd1b897d4ab02ab8e84)]:
+  - @atproto/api@0.13.15
+  - @atproto/crypto@0.4.2
+  - @atproto/xrpc-server@0.7.2
+  - @atproto/identity@0.4.3
+
+## 0.1.53
+
+### Patch Changes
+
+- Updated dependencies [[`209238769`](https://github.com/bluesky-social/atproto/commit/209238769c0bf38bf04f7fa9621eeb176b5c0ed8), [`73f40e63a`](https://github.com/bluesky-social/atproto/commit/73f40e63abe3283efc0a27eef781c00b497caad1)]:
+  - @atproto/api@0.13.14
+
+## 0.1.52
+
+### Patch Changes
+
+- [#2914](https://github.com/bluesky-social/atproto/pull/2914) [`19e36afb2`](https://github.com/bluesky-social/atproto/commit/19e36afb2c13dbc7b1033eb3cab5e7fc6f496fdc) Thanks [@foysalit](https://github.com/foysalit)! - Add collections and subjectType filters to ozone's queryEvents and queryStatuses endpoints
+
+- Updated dependencies [[`19e36afb2`](https://github.com/bluesky-social/atproto/commit/19e36afb2c13dbc7b1033eb3cab5e7fc6f496fdc)]:
+  - @atproto/api@0.13.13
+
+## 0.1.51
+
+### Patch Changes
+
+- [#2636](https://github.com/bluesky-social/atproto/pull/2636) [`22d039a22`](https://github.com/bluesky-social/atproto/commit/22d039a229e3ef08a793e1c98b473b1b8e18ac5e) Thanks [@foysalit](https://github.com/foysalit)! - Sets api to manage lists of strings on ozone, mostly aimed for automod configuration
+
+- Updated dependencies [[`22d039a22`](https://github.com/bluesky-social/atproto/commit/22d039a229e3ef08a793e1c98b473b1b8e18ac5e)]:
+  - @atproto/api@0.13.12
+
 ## 0.1.50
 
 ### Patch Changes

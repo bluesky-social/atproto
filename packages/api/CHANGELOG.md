@@ -1,5 +1,54 @@
 # @atproto/api
 
+## 0.13.16
+
+### Patch Changes
+
+- [#2988](https://github.com/bluesky-social/atproto/pull/2988) [`48d08a469`](https://github.com/bluesky-social/atproto/commit/48d08a469f75837e3b7e879d286d12780440b8b8) Thanks [@foysalit](https://github.com/foysalit)! - Make durationInHours optional for mute reporter event
+
+- [#2911](https://github.com/bluesky-social/atproto/pull/2911) [`bac9be2d3`](https://github.com/bluesky-social/atproto/commit/bac9be2d3ec904d1f984a871f43cf89aca17289d) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Export the generated lexicons `schemas` definitions
+
+- [#2953](https://github.com/bluesky-social/atproto/pull/2953) [`561431fe4`](https://github.com/bluesky-social/atproto/commit/561431fe4897e81767dc768e9a31020d09bf86ff) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Add convoView.opened to lexicon definition
+
+- Updated dependencies [[`bac9be2d3`](https://github.com/bluesky-social/atproto/commit/bac9be2d3ec904d1f984a871f43cf89aca17289d), [`bac9be2d3`](https://github.com/bluesky-social/atproto/commit/bac9be2d3ec904d1f984a871f43cf89aca17289d)]:
+  - @atproto/syntax@0.3.1
+  - @atproto/lexicon@0.4.3
+  - @atproto/xrpc@0.6.4
+
+## 0.13.15
+
+### Patch Changes
+
+- [#2661](https://github.com/bluesky-social/atproto/pull/2661) [`d6f33b474`](https://github.com/bluesky-social/atproto/commit/d6f33b4742e0b94722a993efc7d18833d9416bb6) Thanks [@foysalit](https://github.com/foysalit)! - Add mod events and status filter for account and record hosting status
+
+- [#2957](https://github.com/bluesky-social/atproto/pull/2957) [`b6eeb81c6`](https://github.com/bluesky-social/atproto/commit/b6eeb81c6d454b5ae91b05a21fc1820274c1b429) Thanks [@gaearon](https://github.com/gaearon)! - Detect facets in parallel
+
+- [#2917](https://github.com/bluesky-social/atproto/pull/2917) [`839202a3d`](https://github.com/bluesky-social/atproto/commit/839202a3d2b01de25de900cec7540019545798c6) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow instantiating an API Agent with a string or URL
+
+- [#2933](https://github.com/bluesky-social/atproto/pull/2933) [`e680d55ca`](https://github.com/bluesky-social/atproto/commit/e680d55ca2d7f6b213e2a8693eba6be39163ba41) Thanks [@mozzius](https://github.com/mozzius)! - Fix handling of invalid facets in RichText
+
+- [#2905](https://github.com/bluesky-social/atproto/pull/2905) [`c4b5e5395`](https://github.com/bluesky-social/atproto/commit/c4b5e53957463c37dd16fdd1b897d4ab02ab8e84) Thanks [@foysalit](https://github.com/foysalit)! - Add user specific and instance-wide settings api for ozone
+
+## 0.13.14
+
+### Patch Changes
+
+- [#2918](https://github.com/bluesky-social/atproto/pull/2918) [`209238769`](https://github.com/bluesky-social/atproto/commit/209238769c0bf38bf04f7fa9621eeb176b5c0ed8) Thanks [@devinivy](https://github.com/devinivy)! - add app.bsky.unspecced.getConfig endpoint
+
+- [#2931](https://github.com/bluesky-social/atproto/pull/2931) [`73f40e63a`](https://github.com/bluesky-social/atproto/commit/73f40e63abe3283efc0a27eef781c00b497caad1) Thanks [@dholms](https://github.com/dholms)! - Add threatSignatures to ozone repo views
+
+## 0.13.13
+
+### Patch Changes
+
+- [#2914](https://github.com/bluesky-social/atproto/pull/2914) [`19e36afb2`](https://github.com/bluesky-social/atproto/commit/19e36afb2c13dbc7b1033eb3cab5e7fc6f496fdc) Thanks [@foysalit](https://github.com/foysalit)! - Add collections and subjectType filters to ozone's queryEvents and queryStatuses endpoints
+
+## 0.13.12
+
+### Patch Changes
+
+- [#2636](https://github.com/bluesky-social/atproto/pull/2636) [`22d039a22`](https://github.com/bluesky-social/atproto/commit/22d039a229e3ef08a793e1c98b473b1b8e18ac5e) Thanks [@foysalit](https://github.com/foysalit)! - Sets api to manage lists of strings on ozone, mostly aimed for automod configuration
+
 ## 0.13.11
 
 ### Patch Changes

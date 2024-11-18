@@ -1,6 +1,6 @@
 {
   "name": "@atproto-labs/identity-resolver",
-  "version": "0.1.4",
+  "version": "0.1.6",
   "license": "MIT",
   "description": "A library resolving ATPROTO identities",
   "keywords": [
@@ -30,7 +30,7 @@
     "@atproto/syntax": "workspace:*"
   },
   "devDependencies": {
-    "typescript": "^5.3.3"
+    "typescript": "^5.6.3"
   },
   "scripts": {
     "build": "tsc --build tsconfig.json"

@@ -172,6 +172,7 @@ export class LocalViewer {
       likeCount: 0, // counts presumed to be 0 directly after post creation
       replyCount: 0,
       repostCount: 0,
+      quoteCount: 0,
       author,
       record,
       embed: embed ?? undefined,

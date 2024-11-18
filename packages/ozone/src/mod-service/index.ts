@@ -18,6 +18,9 @@ import {
   isModEventTakedown,
   isModEventEmail,
   isModEventTag,
+  isAccountEvent,
+  isIdentityEvent,
+  isRecordEvent,
   REVIEWESCALATED,
   REVIEWOPEN,
 } from '../lexicon/types/tools/ozone/moderation/defs'
@@ -149,6 +152,8 @@ export class ModerationService {
     addedTags: string[]
     removedTags: string[]
     reportTypes?: string[]
+    collections: string[]
+    subjectType?: string
   }): Promise<{ cursor?: string; events: ModerationEventRow[] }> {
     const {
       subject,
@@ -167,6 +172,8 @@ export class ModerationService {
       addedTags,
       removedTags,
       reportTypes,
+      collections,
+      subjectType,
     } = opts
     const { ref } = this.db.db.dynamic
     let builder = this.db.db.selectFrom('moderation_event').selectAll()
@@ -184,6 +191,20 @@ export class ModerationService {
           .if(!subjectUri, (q) => q.where('subjectUri', 'is', null))
           .if(!!subjectUri, (q) => q.where('subjectUri', '=', subjectUri))
       }
+    } else if (subjectType === 'account') {
+      builder = builder.where('subjectUri', 'is', null)
+    } else if (subjectType === 'record') {
+      builder = builder.where('subjectUri', 'is not', null)
+    }
+
+    // If subjectType is set to 'account' let that take priority and ignore collections filter
+    if (collections.length && subjectType !== 'account') {
+      builder = builder.where('subjectUri', 'is not', null).where((qb) => {
+        collections.forEach((collection) => {
+          qb = qb.orWhere('subjectUri', 'like', `%/${collection}/%`)
+        })
+        return qb
+      })
     }
 
     if (types.length) {
@@ -369,6 +390,25 @@ export class ModerationService {
       if (event.content) {
         meta.content = event.content
       }
+    }
+
+    if (isAccountEvent(event)) {
+      meta.active = event.active
+      meta.timestamp = event.timestamp
+      if (event.status) meta.status = event.status
+    }
+
+    if (isIdentityEvent(event)) {
+      meta.timestamp = event.timestamp
+      if (event.handle) meta.handle = event.handle
+      if (event.pdsHost) meta.pdsHost = event.pdsHost
+      if (event.tombstone) meta.tombstone = event.tombstone
+    }
+
+    if (isRecordEvent(event)) {
+      meta.timestamp = event.timestamp
+      meta.op = event.op
+      if (event.cid) meta.cid = event.cid
     }
 
     if (isModEventTakedown(event) && event.acknowledgeAccountSubjects) {
@@ -742,6 +782,11 @@ export class ModerationService {
     reportedAfter,
     reportedBefore,
     includeMuted,
+    hostingDeletedBefore,
+    hostingDeletedAfter,
+    hostingUpdatedBefore,
+    hostingUpdatedAfter,
+    hostingStatuses,
     onlyMuted,
     ignoreSubjects,
     sortDirection,
@@ -750,6 +795,8 @@ export class ModerationService {
     subject,
     tags,
     excludeTags,
+    collections,
+    subjectType,
   }: {
     includeAllUserRecords?: boolean
     cursor?: string
@@ -762,6 +809,11 @@ export class ModerationService {
     reportedAfter?: string
     reportedBefore?: string
     includeMuted?: boolean
+    hostingDeletedBefore?: string
+    hostingDeletedAfter?: string
+    hostingUpdatedBefore?: string
+    hostingUpdatedAfter?: string
+    hostingStatuses?: string[]
     onlyMuted?: boolean
     subject?: string
     ignoreSubjects?: string[]
@@ -770,6 +822,8 @@ export class ModerationService {
     sortField: 'lastReviewedAt' | 'lastReportedAt'
     tags: string[]
     excludeTags: string[]
+    collections: string[]
+    subjectType?: string
   }) {
     let builder = this.db.db.selectFrom('moderation_subject_status').selectAll()
     const { ref } = this.db.db.dynamic
@@ -789,11 +843,25 @@ export class ModerationService {
             : qb.where('recordPath', '=', ''),
         )
       }
+    } else if (subjectType === 'account') {
+      builder = builder.where('recordPath', '=', '')
+    } else if (subjectType === 'record') {
+      builder = builder.where('recordPath', '!=', '')
+    }
+
+    // If subjectType is set to 'account' let that take priority and ignore collections filter
+    if (collections.length && subjectType !== 'account') {
+      builder = builder.where('recordPath', '!=', '').where((qb) => {
+        collections.forEach((collection) => {
+          qb = qb.orWhere('recordPath', 'like', `${collection}/%`)
+        })
+        return qb
+      })
     }
 
     if (ignoreSubjects?.length) {
       builder = builder
-        .where('moderation_subject_status.did', 'not in', ignoreSubjects)
+        .where('did', 'not in', ignoreSubjects)
         .where('recordPath', 'not in', ignoreSubjects)
     }
 
@@ -811,6 +879,26 @@ export class ModerationService {
 
     if (reviewedBefore) {
       builder = builder.where('lastReviewedAt', '<', reviewedBefore)
+    }
+
+    if (hostingUpdatedAfter) {
+      builder = builder.where('hostingUpdatedAt', '>', hostingUpdatedAfter)
+    }
+
+    if (hostingUpdatedBefore) {
+      builder = builder.where('hostingUpdatedAt', '<', hostingUpdatedBefore)
+    }
+
+    if (hostingDeletedAfter) {
+      builder = builder.where('hostingDeletedAt', '>', hostingDeletedAfter)
+    }
+
+    if (hostingDeletedBefore) {
+      builder = builder.where('hostingDeletedAt', '<', hostingDeletedBefore)
+    }
+
+    if (hostingStatuses?.length) {
+      builder = builder.where('hostingStatus', 'in', hostingStatuses)
     }
 
     if (reportedAfter) {

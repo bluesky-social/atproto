@@ -36,10 +36,13 @@ export interface ServerConfigValues {
   modServiceDid: string
   adminPasswords: string[]
   labelsFromIssuerDids?: string[]
+  indexedAtEpoch?: Date
   // misc/dev
   blobCacheLocation?: string
   statsigKey?: string
   statsigEnv?: string
+  // client config
+  clientCheckEmailConfirmed?: boolean
 }
 
 export class ServerConfig {
@@ -121,6 +124,15 @@ export class ServerConfig {
       process.env.NODE_ENV === 'test'
         ? 'test'
         : process.env.BSKY_STATSIG_ENV || 'development'
+    const clientCheckEmailConfirmed =
+      process.env.BSKY_CLIENT_CHECK_EMAIL_CONFIRMED === 'true'
+    const indexedAtEpoch = process.env.BSKY_INDEXED_AT_EPOCH
+      ? new Date(process.env.BSKY_INDEXED_AT_EPOCH)
+      : undefined
+    assert(
+      !indexedAtEpoch || !isNaN(indexedAtEpoch.getTime()),
+      'invalid BSKY_INDEXED_AT_EPOCH',
+    )
     return new ServerConfig({
       version,
       debugMode,
@@ -156,6 +168,8 @@ export class ServerConfig {
       modServiceDid,
       statsigKey,
       statsigEnv,
+      clientCheckEmailConfirmed,
+      indexedAtEpoch,
       ...stripUndefineds(overrides ?? {}),
     })
   }
@@ -307,6 +321,14 @@ export class ServerConfig {
 
   get statsigEnv() {
     return this.cfg.statsigEnv
+  }
+
+  get clientCheckEmailConfirmed() {
+    return this.cfg.clientCheckEmailConfirmed
+  }
+
+  get indexedAtEpoch() {
+    return this.cfg.indexedAtEpoch
   }
 }
 

@@ -1,5 +1,14 @@
 # @atproto/lexicon
 
+## 0.4.3
+
+### Patch Changes
+
+- [#2911](https://github.com/bluesky-social/atproto/pull/2911) [`bac9be2d3`](https://github.com/bluesky-social/atproto/commit/bac9be2d3ec904d1f984a871f43cf89aca17289d) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve validation performances by using discriminated unions where possible
+
+- Updated dependencies [[`bac9be2d3`](https://github.com/bluesky-social/atproto/commit/bac9be2d3ec904d1f984a871f43cf89aca17289d)]:
+  - @atproto/syntax@0.3.1
+
 ## 0.4.2
 
 ### Patch Changes

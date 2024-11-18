@@ -19,6 +19,9 @@ export interface ModerationEvent {
     | 'tools.ozone.moderation.defs#modEventEmail'
     | 'tools.ozone.moderation.defs#modEventResolveAppeal'
     | 'tools.ozone.moderation.defs#modEventTag'
+    | 'tools.ozone.moderation.defs#accountEvent'
+    | 'tools.ozone.moderation.defs#identityEvent'
+    | 'tools.ozone.moderation.defs#recordEvent'
   subjectType:
     | 'com.atproto.admin.defs#repoRef'
     | 'com.atproto.repo.strongRef'

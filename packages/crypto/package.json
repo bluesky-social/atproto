@@ -1,6 +1,6 @@
 {
   "name": "@atproto/crypto",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "license": "MIT",
   "description": "Library for cryptographic keys and signing in atproto",
   "keywords": [
@@ -26,6 +26,7 @@
   },
   "devDependencies": {
     "@atproto/common": "workspace:^",
-    "jest": "^28.1.2"
+    "jest": "^28.1.2",
+    "typescript": "^5.6.3"
   }
 }

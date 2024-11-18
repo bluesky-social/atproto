@@ -5,6 +5,7 @@ export * from './random'
 export * from './sha'
 export * from './types'
 export * from './verify'
+export * from './utils'
 
 export * from './p256/keypair'
 export * from './p256/plugin'

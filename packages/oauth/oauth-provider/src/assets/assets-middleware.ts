@@ -41,6 +41,6 @@ export function authorizeAssetsMiddleware(): Middleware {
       res.setHeader('Cache-Control', 'public, max-age=31536000, immutable')
     }
 
-    await writeStream(res, asset.createStream(), asset.type)
+    writeStream(res, asset.createStream(), { contentType: asset.type })
   }
 }
