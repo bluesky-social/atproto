@@ -128,12 +128,12 @@ export class RepoTransactor extends RepoReader {
 
     // find blocks that are relevant to ops but not included in diff
     // (for instance a record that was moved but cid stayed the same)
-    const newRecordBlocks = commit.newBlocks.getMany(newRecordCids)
+    const newRecordBlocks = commit.relevantBlocks.getMany(newRecordCids)
     if (newRecordBlocks.missing.length > 0) {
       const missingBlocks = await this.storage.getBlocks(
         newRecordBlocks.missing,
       )
-      commit.newBlocks.addMap(missingBlocks.blocks)
+      commit.relevantBlocks.addMap(missingBlocks.blocks)
     }
     return commit
   }
