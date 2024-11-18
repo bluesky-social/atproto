@@ -1,4 +1,4 @@
-import { Selectable, sql } from 'kysely'
+import { Selectable } from 'kysely'
 import Database from '../db'
 import { paginate, TimeIdKeyset } from '../db/pagination'
 import { PublicSubjectStatus } from '../db/schema/public_subject_status'
@@ -13,12 +13,6 @@ import {
 import { getStatusIdentifierFromSubject } from '../mod-service/status'
 import { ModerationEventRow } from '../mod-service/types'
 import { AtUri } from '@atproto/syntax'
-import { ModerationSubjectStatus } from '../db/schema/moderation_subject_status'
-import {
-  REVIEWCLOSED,
-  REVIEWESCALATED,
-  REVIEWOPEN,
-} from '../lexicon/types/tools/ozone/moderation/defs'
 
 const modEventsAssociatedWithPublicStatus = [
   'tools.ozone.moderation.defs#modEventAcknowledge',
@@ -38,26 +32,36 @@ export class ModerationStatusHistory {
     return (db: Database) => new ModerationStatusHistory(db)
   }
 
-  async createStatusForReporter(event: ModerationEventRow) {
-    // only a few mod events can impact the public status
-    if (event.action !== 'tools.ozone.moderation.defs#modEventReport') {
-      return
-    }
-
+  async createStatus(event: ModerationEventRow) {
     const identifier = getStatusIdentifierFromSubject(
       event.subjectUri || event.subjectDid,
     )
 
+    const defaultValues = {
+      did: identifier.did,
+      recordPath: identifier.recordPath,
+      createdAt: event.createdAt,
+      updatedAt: event.createdAt,
+    }
+
+    const rows = [
+      {
+        ...defaultValues,
+        modAction: MODACTIONPENDING as PublicSubjectStatus['modAction'],
+        viewerDid: event.createdBy,
+        isAuthor: false,
+      },
+      {
+        ...defaultValues,
+        modAction: MODACTIONPENDING as PublicSubjectStatus['modAction'],
+        viewerDid: event.subjectDid,
+        isAuthor: true,
+      },
+    ]
+
     return this.db.db
       .insertInto('public_subject_status')
-      .values({
-        reporterDid: event.createdBy,
-        did: identifier.did,
-        recordPath: identifier.recordPath,
-        createdAt: event.createdAt,
-        modAction: MODACTIONPENDING,
-        updatedAt: event.createdAt,
-      })
+      .values(rows)
       .onConflict((oc) => oc.doNothing())
       .execute()
   }
@@ -66,7 +70,7 @@ export class ModerationStatusHistory {
     // Make sure we create a status row for the reporter first
     // If the event is not a report event, it won't create a row
     // if a status row already exists, it won't update/duplicate it
-    await this.createStatusForReporter(event)
+    await this.createStatus(event)
 
     // only a few mod events can update the public status
     if (!modEventsAssociatedWithPublicStatus.includes(event.action)) {
@@ -113,7 +117,7 @@ export class ModerationStatusHistory {
         // when mods acknowledge reports, there's a chance that they already labeled the content
         // or took a separate action on prior reports. in any case, we want to make sure that those statuses
         // are not overwritten because of acknowledging a report that happened after the previous action
-        .if(updates.modAction === MODACTIONTAKEDOWN, (query) => {
+        .if(updates.modAction === MODACTIONRESOLVE, (query) => {
           return query.where('modAction', '=', MODACTIONPENDING)
         })
         .set(updates)
@@ -121,14 +125,16 @@ export class ModerationStatusHistory {
     )
   }
 
-  async getStatusesForReporter({
-    reporterDid,
+  async getStatuses({
+    viewerDid,
     limit = 50,
     cursor,
+    forAuthor = false,
     sortDirection = 'desc',
   }: {
-    reporterDid: string
+    viewerDid: string
     limit: number
+    forAuthor?: boolean
     cursor?: string
     sortDirection: 'asc' | 'desc'
   }) {
@@ -136,7 +142,8 @@ export class ModerationStatusHistory {
 
     const builder = this.db.db
       .selectFrom('public_subject_status')
-      .where('reporterDid', '=', reporterDid)
+      .where('viewerDid', '=', viewerDid)
+      .where('isAuthor', '=', forAuthor)
       .selectAll()
 
     const keyset = new TimeIdKeyset(
@@ -195,44 +202,11 @@ export class ModerationStatusHistory {
       : status.did
   }
 
-  basicViewFromPublicStatus(
-    status: Selectable<PublicSubjectStatus>,
-  ): SubjectBasicView {
+  basicView(status: Selectable<PublicSubjectStatus>) {
     return {
       subject: this.atUriFromStatus(status),
       modAction: status.modAction,
       createdAt: status.createdAt,
-      // @TODO: Do we need status?
-      status: '',
-    }
-  }
-
-  basicViewFromModerationStatus(
-    status: Selectable<ModerationSubjectStatus>,
-  ): SubjectBasicView | null {
-    // Defaulting to resolve is not
-    let modAction: SubjectBasicView['modAction'] | undefined
-
-    if (status.takendown) {
-      modAction =
-        status.suspendUntil &&
-        new Date(status.suspendUntil).getTime() > Date.now()
-          ? MODACTIONSUSPEND
-          : MODACTIONTAKEDOWN
-    } else if (status.reviewState === REVIEWOPEN) {
-      modAction = MODACTIONPENDING
-    }
-
-    if (!modAction) {
-      return null
-    }
-
-    return {
-      subject: this.atUriFromStatus(status),
-      createdAt: status.createdAt,
-      modAction,
-      // @TODO: Do we need status?
-      status: '',
     }
   }
 }

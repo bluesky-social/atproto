@@ -11,7 +11,8 @@ export const publicSubjectStatusTableName = 'public_subject_status'
 
 export interface PublicSubjectStatus {
   id: Generated<number>
-  reporterDid: string
+  viewerDid: string
+  isAuthor: boolean
   did: string
   recordPath: string
   modAction:

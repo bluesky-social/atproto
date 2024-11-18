@@ -4,7 +4,8 @@ export async function up(db: Kysely<unknown>): Promise<void> {
   await db.schema
     .createTable('public_subject_status')
     .addColumn('id', 'serial', (col) => col.primaryKey())
-    .addColumn('reporterDid', 'varchar', (col) => col.notNull())
+    .addColumn('viewerDid', 'varchar', (col) => col.notNull())
+    .addColumn('isAuthor', 'varchar', (col) => col.notNull().defaultTo(false))
     .addColumn('did', 'varchar', (col) => col.notNull())
     // Default to '' so that we can apply unique constraints on did and recordPath columns
     .addColumn('recordPath', 'varchar', (col) => col.notNull().defaultTo(''))
@@ -14,8 +15,9 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
     .addColumn('updatedAt', 'varchar', (col) => col.notNull())
     .addUniqueConstraint('public_subject_status_unique_idx', [
+      'viewerDid',
+      'isAuthor',
       'did',
-      'reporterDid',
       'recordPath',
     ])
     .execute()

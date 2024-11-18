@@ -4,26 +4,20 @@ import {
   basicSeed,
   ModeratorClient,
 } from '@atproto/dev-env'
-import AtpAgent, {
-  AtUri,
-  ToolsOzoneHistoryGetAccountActions,
-} from '@atproto/api'
+import AtpAgent, { ToolsOzoneHistoryGetAccountActions } from '@atproto/api'
 import { forSnapshot } from './_util'
 import {
   REASONSPAM,
   REASONMISLEADING,
 } from '../src/lexicon/types/com/atproto/moderation/defs'
-import {
-  MODACTIONLABEL,
-  MODACTIONPENDING,
-} from '../src/lexicon/types/tools/ozone/history/defs'
+import { MODACTIONLABEL } from '../src/lexicon/types/tools/ozone/history/defs'
 
 type UserWithAgent = {
   agent?: AtpAgent
   token: string
 }
 
-describe('get-reported-subjects', () => {
+describe('get-account-actions', () => {
   let network: TestNetwork
   let sc: SeedClient
   const alice: UserWithAgent = {
@@ -107,7 +101,7 @@ describe('get-reported-subjects', () => {
       },
     )
 
-    return data
+    return data.subjects
   }
 
   beforeAll(async () => {
@@ -184,40 +178,11 @@ describe('get-reported-subjects', () => {
     ])
 
     const actionsOnBob = await getActions(bob, {})
-    console.log(actionsOnBob)
 
-    const actionOnBobsPost = actionsOnBob.subjects.find(
+    const actionOnBobsPost = actionsOnBob.find(
       (item) => item.subject === sc.posts[sc.dids.bob][0].ref.uriStr,
     )?.modAction
 
     expect(actionOnBobsPost).toEqual(MODACTIONLABEL)
   })
-
-  //   it('prior mod actions are not served to new reporters', async () => {
-  //     // technically, users wouldn't report their own content, but this is a test and we don't have a fourth user
-  //     await sc.createReport({
-  //       subject: {
-  //         $type: 'com.atproto.repo.strongRef',
-  //         uri: sc.posts[sc.dids.bob][0].ref.uriStr,
-  //         cid: sc.posts[sc.dids.bob][0].ref.cidStr,
-  //       },
-  //       reasonType: REASONMISLEADING,
-  //       reason: 'bob is telling on himself',
-  //       reportedBy: sc.dids.bob,
-  //     })
-  //     const [alicesReportedSubjects, bobsReportedSubjects] = await Promise.all([
-  //       getSubjects(alice, {}),
-  //       getSubjects(bob, {}),
-  //     ])
-
-  //     const modActionForAlice = alicesReportedSubjects.subjects.find(
-  //       (item) => item.subject === sc.posts[sc.dids.bob][0].ref.uriStr,
-  //     )?.modAction
-  //     const modActionForBob = bobsReportedSubjects.subjects.find(
-  //       (item) => item.subject === sc.posts[sc.dids.bob][0].ref.uriStr,
-  //     )?.modAction
-
-  //     expect(modActionForAlice).toEqual(MODACTIONLABEL)
-  //     expect(modActionForBob).toEqual(MODACTIONPENDING)
-  //   })
 })

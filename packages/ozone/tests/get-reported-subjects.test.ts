@@ -4,10 +4,7 @@ import {
   basicSeed,
   ModeratorClient,
 } from '@atproto/dev-env'
-import AtpAgent, {
-  AtUri,
-  ToolsOzoneHistoryGetReportedSubjects,
-} from '@atproto/api'
+import AtpAgent, { ToolsOzoneHistoryGetReportedSubjects } from '@atproto/api'
 import { forSnapshot } from './_util'
 import {
   REASONSPAM,
@@ -150,8 +147,8 @@ describe('get-reported-subjects', () => {
       getSubjects(carol, {}),
     ])
 
-    expect(alicesReportedSubjects.subjects.length).toBe(4)
-    expect(carolsReportedSubjects.subjects.length).toBe(1)
+    expect(forSnapshot(alicesReportedSubjects.subjects)).toMatchSnapshot()
+    expect(forSnapshot(carolsReportedSubjects.subjects)).toMatchSnapshot()
   })
 
   it('returns updated subject status after mod action', async () => {
