@@ -7,6 +7,8 @@ import { AppContext } from '../src'
 // outside of suite so they can be used in mock
 let alice: string
 let bob: string
+let carol: string
+let dan: string
 
 jest.mock('dns/promises', () => {
   return {
@@ -16,6 +18,12 @@ jest.mock('dns/promises', () => {
       }
       if (domain === '_atproto.bob.external') {
         return [[`did=${bob}`]]
+      }
+      if (domain === '_atproto.example.com') {
+        return [[`did=${carol}`]]
+      }
+      if (domain === '_atproto.dan.example.com') {
+        return [[`did=${dan}`]]
       }
       return []
     },
@@ -34,6 +42,9 @@ describe('handles', () => {
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'handles',
+      pds: {
+        serviceHandleDomains: ['.test', '.example.com'],
+      }
     })
     // @ts-expect-error Error due to circular dependency with the dev-env package
     ctx = network.pds.ctx
@@ -43,6 +54,8 @@ describe('handles', () => {
     await basicSeed(sc)
     alice = sc.dids.alice
     bob = sc.dids.bob
+    carol = sc.dids.carol
+    dan = sc.dids.dan
   })
 
   afterAll(async () => {
@@ -66,6 +79,20 @@ describe('handles', () => {
       handle: 'aLicE.tEst',
     })
     expect(res.data.did).toBe(alice)
+  })
+
+  it('allows resolving our own root domain as a handle', async () => {
+    const res = await agent.api.com.atproto.identity.resolveHandle({
+      handle: 'example.com',
+    })
+    expect(res.data.did).toBe(carol)
+  })
+
+  it('disallows external resolution of handles we are managing', async () => {
+    const attempt = agent.api.com.atproto.identity.resolveHandle({
+      handle: 'dan.example.com',
+    })
+    await expect(attempt).rejects.toThrow('Unable to resolve handle')
   })
 
   it('allows a user to change their handle', async () => {
@@ -174,6 +201,20 @@ describe('handles', () => {
 
     const data = await idResolver.did.resolveAtprotoData(alice)
     expect(data.handle).toBe('alice.external')
+  })
+
+  it('allows updating to a dns handle that is our root domain', async () => {
+    await agent.api.com.atproto.identity.updateHandle(
+      {
+        handle: 'example.com',
+      },
+      { headers: sc.getHeaders(carol), encoding: 'application/json' },
+    )
+    const dbHandle = await getHandleFromDb(carol)
+    expect(dbHandle).toBe('example.com')
+
+    const data = await idResolver.did.resolveAtprotoData(carol)
+    expect(data.handle).toBe('example.com')
   })
 
   it('does not allow updating to an invalid dns handle', async () => {
