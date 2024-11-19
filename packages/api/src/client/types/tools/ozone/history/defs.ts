@@ -38,7 +38,6 @@ export function validateSubjectBasicView(v: unknown): ValidationResult {
 
 export interface EventView {
   subject: string
-  uri: string
   createdAt: string
   event:
     | EventTakedown
@@ -62,7 +61,7 @@ export function validateEventView(v: unknown): ValidationResult {
   return lexicons.validate('tools.ozone.history.defs#eventView', v)
 }
 
-/** Take down a subject permanently or temporarily */
+/** Permanently or temporarily taken down */
 export interface EventTakedown {
   comment?: string
   /** Indicates how long the takedown should be in effect before automatically expiring. */
@@ -82,7 +81,7 @@ export function validateEventTakedown(v: unknown): ValidationResult {
   return lexicons.validate('tools.ozone.history.defs#eventTakedown', v)
 }
 
-/** Apply/Negate labels on a subject */
+/** Label(s) applied/negated */
 export interface EventLabel {
   comment?: string
   createLabelVals: string[]
@@ -102,7 +101,7 @@ export function validateEventLabel(v: unknown): ValidationResult {
   return lexicons.validate('tools.ozone.history.defs#eventLabel', v)
 }
 
-/** Report a subject */
+/** Subject reported */
 export interface EventReport {
   comment?: string
   reportType: ComAtprotoModerationDefs.ReasonType
@@ -121,7 +120,7 @@ export function validateEventReport(v: unknown): ValidationResult {
   return lexicons.validate('tools.ozone.history.defs#eventReport', v)
 }
 
-/** Keep a log of outgoing email to a user */
+/** Moderation email sent to the author of the subject */
 export interface EventEmail {
   /** The subject line of the email sent to the user. */
   subjectLine: string
@@ -144,7 +143,7 @@ export function validateEventEmail(v: unknown): ValidationResult {
   return lexicons.validate('tools.ozone.history.defs#eventEmail', v)
 }
 
-/** Resolve or acknowledge an event on a subject */
+/** Reports on the subject acknowledged by a moderator */
 export interface EventResolve {
   /** Describe the resolution or acknowledgment. */
   comment?: string

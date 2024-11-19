@@ -3,16 +3,18 @@ import Database from '../db'
 import { paginate, TimeIdKeyset } from '../db/pagination'
 import { PublicSubjectStatus } from '../db/schema/public_subject_status'
 import {
+  EventView,
   MODACTIONLABEL,
   MODACTIONPENDING,
   MODACTIONRESOLVE,
   MODACTIONSUSPEND,
   MODACTIONTAKEDOWN,
-  SubjectBasicView,
 } from '../lexicon/types/tools/ozone/history/defs'
+import * as ToolsOzoneModerationDefs from '../lexicon/types/tools/ozone/moderation/defs'
 import { getStatusIdentifierFromSubject } from '../mod-service/status'
 import { ModerationEventRow } from '../mod-service/types'
 import { AtUri } from '@atproto/syntax'
+import { ModerationEvent } from '../db/schema/moderation_event'
 
 const modEventsAssociatedWithPublicStatus = [
   'tools.ozone.moderation.defs#modEventAcknowledge',
@@ -20,6 +22,14 @@ const modEventsAssociatedWithPublicStatus = [
   'tools.ozone.moderation.defs#modEventTakedown',
   'tools.ozone.moderation.defs#modEventReverseTakedown',
 ]
+
+export const publishableModEvents = [
+  'tools.ozone.moderation.defs#modEventReport',
+  'tools.ozone.moderation.defs#modEventLabel',
+  'tools.ozone.moderation.defs#modEventAcknowledge',
+  'tools.ozone.moderation.defs#modEventEmail',
+  'tools.ozone.moderation.defs#modEventTakedown',
+] as ModerationEvent['action'][]
 
 export type ModerationStatusHistoryCreator = (
   db: Database,
@@ -207,6 +217,65 @@ export class ModerationStatusHistory {
       subject: this.atUriFromStatus(status),
       modAction: status.modAction,
       createdAt: status.createdAt,
+    }
+  }
+
+  transformModEventToPublicEvent(
+    event: ModerationEventRow,
+  ): EventView['event'] | null {
+    // @TODO: we're ignoring comments here because as of now, ozone doesn't allow
+    // mods to opt in to make a comment public vs. private and we don't want to publish
+    // all action comments so the safer option is to ignore those for now
+    if ('tools.ozone.moderation.defs#modEventAcknowledge' === event.action) {
+      return {
+        $type: 'tools.ozone.history.defs#eventResolve',
+      }
+    }
+
+    if ('tools.ozone.moderation.defs#modEventReport' === event.action) {
+      return {
+        $type: 'tools.ozone.history.defs#eventReport',
+        reportType: event.meta?.['reportType'],
+      }
+    }
+    if ('tools.ozone.moderation.defs#modEventEmail' === event.action) {
+      return {
+        $type: 'tools.ozone.history.defs#eventEmail',
+        subjectLine: event.meta?.['subjectLine'],
+      }
+    }
+
+    if ('tools.ozone.moderation.defs#modEventLabel' === event.action) {
+      return {
+        $type: 'tools.ozone.history.defs#eventLabel',
+        createLabelVals: event.createLabelVals
+          ? event.createLabelVals.split(',')
+          : [],
+        negateLabelVals: event.negateLabelVals
+          ? event.negateLabelVals.split(',')
+          : [],
+      }
+    }
+
+    if ('tools.ozone.moderation.defs#modEventTakedown' === event.action) {
+      return {
+        $type: 'tools.ozone.history.defs#eventTakedown',
+        durationInHours: event.durationInHours,
+      }
+    }
+
+    return null
+  }
+
+  eventView(modEvent: ModerationEventRow): EventView | null {
+    if (!publishableModEvents.includes(modEvent.action)) return null
+    const event = this.transformModEventToPublicEvent(modEvent)
+    if (!event) return null
+
+    return {
+      event,
+      createdAt: modEvent.createdAt,
+      subject: modEvent.subjectUri || modEvent.subjectDid,
     }
   }
 }

@@ -35,6 +35,7 @@ import listOptions from './setting/listOptions'
 import removeOptions from './setting/removeOptions'
 import upsertOption from './setting/upsertOption'
 import getAccountActions from './history/getAccountActions'
+import getSubjectHistory from './history/getSubjectHistory'
 
 export * as health from './health'
 
@@ -76,5 +77,6 @@ export default function (server: Server, ctx: AppContext) {
   removeOptions(server, ctx)
   getReportedSubjects(server, ctx)
   getAccountActions(server, ctx)
+  getSubjectHistory(server, ctx)
   return server
 }

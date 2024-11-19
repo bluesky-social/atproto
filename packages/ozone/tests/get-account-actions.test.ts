@@ -4,7 +4,10 @@ import {
   basicSeed,
   ModeratorClient,
 } from '@atproto/dev-env'
-import AtpAgent, { ToolsOzoneHistoryGetAccountActions } from '@atproto/api'
+import AtpAgent, {
+  ToolsOzoneHistoryGetAccountActions,
+  ToolsOzoneHistoryGetSubjectHistory,
+} from '@atproto/api'
 import { forSnapshot } from './_util'
 import {
   REASONSPAM,
@@ -102,6 +105,26 @@ describe('get-account-actions', () => {
     return data.subjects
   }
 
+  const getSubjectHistory = async (
+    user: UserWithAgent,
+    params: ToolsOzoneHistoryGetSubjectHistory.QueryParams,
+  ) => {
+    if (!user.agent) {
+      throw new Error('User agent not set')
+    }
+    const { data } = await user.agent.tools.ozone.history.getSubjectHistory(
+      params,
+      {
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+          'atproto-proxy': `${network.ozone.ctx.cfg.service.did}#atproto_labeler`,
+        },
+      },
+    )
+
+    return data.events
+  }
+
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'ozone_get_account_actions',
@@ -152,28 +175,26 @@ describe('get-account-actions', () => {
       uri: sc.posts[sc.dids.bob][0].ref.uriStr,
       cid: sc.posts[sc.dids.bob][0].ref.cidStr,
     }
-    await Promise.all([
-      modClient.emitEvent(
-        {
-          event: {
-            $type: 'tools.ozone.moderation.defs#modEventLabel',
-            createLabelVals: ['spam'],
-            negateLabelVals: [],
-          },
-          subject: bobsPostSubject,
+    await modClient.emitEvent(
+      {
+        event: {
+          $type: 'tools.ozone.moderation.defs#modEventLabel',
+          createLabelVals: ['spam'],
+          negateLabelVals: [],
         },
-        'admin',
-      ),
-      modClient.emitEvent(
-        {
-          event: {
-            $type: 'tools.ozone.moderation.defs#modEventAcknowledge',
-          },
-          subject: bobsPostSubject,
+        subject: bobsPostSubject,
+      },
+      'admin',
+    )
+    await modClient.emitEvent(
+      {
+        event: {
+          $type: 'tools.ozone.moderation.defs#modEventAcknowledge',
         },
-        'admin',
-      ),
-    ])
+        subject: bobsPostSubject,
+      },
+      'admin',
+    )
 
     const actionsOnBob = await getActions(bob, {})
 
@@ -182,5 +203,19 @@ describe('get-account-actions', () => {
     )?.modAction
 
     expect(actionOnBobsPost).toEqual(MODACTIONLABEL)
+  })
+
+  it('shows subject history for a specific subject', async () => {
+    const history = await getSubjectHistory(bob, {
+      subject: sc.posts[sc.dids.bob][0].ref.uriStr,
+    })
+    expect(forSnapshot(history)).toMatchSnapshot()
+  })
+  it('does not show subject history of a different user', async () => {
+    await expect(
+      getSubjectHistory(carol, {
+        subject: sc.posts[sc.dids.bob][0].ref.uriStr,
+      }),
+    ).rejects.toThrow('Unauthorized')
   })
 })

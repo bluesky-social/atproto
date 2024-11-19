@@ -10828,13 +10828,9 @@ export const schemaDict = {
       },
       eventView: {
         type: 'object',
-        required: ['subject', 'uri', 'createdAt', 'event'],
+        required: ['subject', 'createdAt', 'event'],
         properties: {
           subject: {
-            type: 'string',
-            format: 'uri',
-          },
-          uri: {
             type: 'string',
             format: 'uri',
           },
@@ -10856,7 +10852,7 @@ export const schemaDict = {
       },
       eventTakedown: {
         type: 'object',
-        description: 'Take down a subject permanently or temporarily',
+        description: 'Permanently or temporarily taken down',
         properties: {
           comment: {
             type: 'string',
@@ -10870,7 +10866,7 @@ export const schemaDict = {
       },
       eventLabel: {
         type: 'object',
-        description: 'Apply/Negate labels on a subject',
+        description: 'Label(s) applied/negated',
         required: ['createLabelVals', 'negateLabelVals'],
         properties: {
           comment: {
@@ -10892,7 +10888,7 @@ export const schemaDict = {
       },
       eventReport: {
         type: 'object',
-        description: 'Report a subject',
+        description: 'Subject reported',
         required: ['reportType'],
         properties: {
           comment: {
@@ -10906,7 +10902,7 @@ export const schemaDict = {
       },
       eventEmail: {
         type: 'object',
-        description: 'Keep a log of outgoing email to a user',
+        description: 'Moderation email sent to the author of the subject',
         required: ['subjectLine'],
         properties: {
           subjectLine: {
@@ -10925,7 +10921,7 @@ export const schemaDict = {
       },
       eventResolve: {
         type: 'object',
-        description: 'Resolve or acknowledge an event on a subject',
+        description: 'Reports on the subject acknowledged by a moderator',
         properties: {
           comment: {
             type: 'string',

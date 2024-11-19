@@ -33,3 +33,42 @@ Array [
   },
 ]
 `;
+
+exports[`get-account-actions shows subject history for a specific subject 1`] = `
+Array [
+  Object {
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "event": Object {
+      "$type": "tools.ozone.history.defs#eventResolve",
+    },
+    "subject": "record(0)",
+  },
+  Object {
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "event": Object {
+      "$type": "tools.ozone.history.defs#eventLabel",
+      "createLabelVals": Array [
+        "spam",
+      ],
+      "negateLabelVals": Array [],
+    },
+    "subject": "record(0)",
+  },
+  Object {
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "event": Object {
+      "$type": "tools.ozone.history.defs#eventReport",
+      "reportType": "com.atproto.moderation.defs#reasonSpam",
+    },
+    "subject": "record(0)",
+  },
+  Object {
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "event": Object {
+      "$type": "tools.ozone.history.defs#eventReport",
+      "reportType": "com.atproto.moderation.defs#reasonSpam",
+    },
+    "subject": "record(0)",
+  },
+]
+`;
