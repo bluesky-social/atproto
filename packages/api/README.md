@@ -339,12 +339,12 @@ const res4 = await agent.app.bsky.feed.post.list({ repo: alice.did })
 
 ### Non-browser configuration
 
-If you environment doesn't have a built-in `fetch` implementation, you'll need
+If your environment doesn't have a built-in `fetch` implementation, you'll need
 to provide one. This will typically be done through a polyfill.
 
 ### Bring your own fetch
 
-If you want to provide you own `fetch` implementation, you can do so by
+If you want to provide your own `fetch` implementation, you can do so by
 instantiating the sessionManager with a custom fetch implementation:
 
 ```typescript
