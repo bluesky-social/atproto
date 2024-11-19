@@ -1,4 +1,5 @@
-import { IncomingMessage } from 'http'
+import { IncomingMessage } from 'node:http'
+import { Duplex } from 'node:stream'
 import { WebSocketServer, ServerOptions, WebSocket } from 'ws'
 import { ErrorFrame, Frame } from './frames'
 import logger from './logger'
@@ -9,38 +10,53 @@ export class XrpcStreamServer {
   constructor(opts: ServerOptions & { handler: Handler }) {
     const { handler, ...serverOpts } = opts
     this.wss = new WebSocketServer(serverOpts)
-    this.wss.on('connection', async (socket, req) => {
-      socket.on('error', (err) => logger.error(err, 'websocket error'))
+    this.wss.on('connection', async (ws, req) => {
+      ws.on('error', (err) => logger.error(err, 'websocket error'))
       try {
         const ac = new AbortController()
-        const iterator = unwrapIterator(handler(req, ac.signal, socket, this))
-        socket.once('close', () => {
+        const iterable = handler(req, ac.signal, ws, this)
+        const duplex =
+          '_socket' in ws && ws._socket instanceof Duplex ? ws._socket : null
+
+        const iterator = unwrapIterator(iterable)
+        ws.once('close', () => {
           iterator.return?.()
           ac.abort()
         })
+        ws.on('message', (_data, _isBinary) => {
+          // ignore messages
+          // @TODO: Should we close the socket here, to avoid abuse ?
+        })
+
         const safeFrames = wrapIterator(iterator)
         for await (const frame of safeFrames) {
-          await new Promise((res, rej) => {
-            socket.send(frame.toBytes(), { binary: true }, (err) => {
-              // @TODO this callback may give more aggressive on backpressure than
-              // we ultimately want, but trying it out for the time being.
+          await new Promise<void>((res, rej) => {
+            ws.send(frame.toBytes(), { binary: true }, (err) => {
               if (err) return rej(err)
-              res(undefined)
+
+              // If the sender buffer is full, we need to wait for the drain event
+              if (duplex?.writableNeedDrain) {
+                // @TODO: Should we setup a termination timeout here ?
+                duplex.once('drain', res)
+              } else {
+                res()
+              }
             })
           })
+
           if (frame instanceof ErrorFrame) {
             throw new DisconnectError(CloseCode.Policy, frame.body.error)
           }
         }
       } catch (err) {
         if (err instanceof DisconnectError) {
-          return socket.close(err.wsCode, err.xrpcCode)
+          return ws.close(err.wsCode, err.xrpcCode)
         } else {
           logger.error(err, 'websocket server error')
-          return socket.terminate()
+          return ws.terminate()
         }
       }
-      socket.close(CloseCode.Normal)
+      ws.close(CloseCode.Normal)
     })
   }
 }
