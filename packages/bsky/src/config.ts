@@ -41,6 +41,10 @@ export interface ServerConfigValues {
   blobCacheLocation?: string
   statsigKey?: string
   statsigEnv?: string
+  // threads
+  bigThreadUris: Set<string>
+  bigThreadDepth?: number
+  maxThreadDepth?: number
   // client config
   clientCheckEmailConfirmed?: boolean
 }
@@ -133,6 +137,13 @@ export class ServerConfig {
       !indexedAtEpoch || !isNaN(indexedAtEpoch.getTime()),
       'invalid BSKY_INDEXED_AT_EPOCH',
     )
+    const bigThreadUris = new Set(envList(process.env.BSKY_BIG_THREAD_URIS))
+    const bigThreadDepth = process.env.BSKY_BIG_THREAD_DEPTH
+      ? parseInt(process.env.BSKY_BIG_THREAD_DEPTH || '', 10)
+      : undefined
+    const maxThreadDepth = process.env.BSKY_MAX_THREAD_DEPTH
+      ? parseInt(process.env.BSKY_MAX_THREAD_DEPTH || '', 10)
+      : undefined
     return new ServerConfig({
       version,
       debugMode,
@@ -170,6 +181,9 @@ export class ServerConfig {
       statsigEnv,
       clientCheckEmailConfirmed,
       indexedAtEpoch,
+      bigThreadUris,
+      bigThreadDepth,
+      maxThreadDepth,
       ...stripUndefineds(overrides ?? {}),
     })
   }
@@ -329,6 +343,18 @@ export class ServerConfig {
 
   get indexedAtEpoch() {
     return this.cfg.indexedAtEpoch
+  }
+
+  get bigThreadUris() {
+    return this.cfg.bigThreadUris
+  }
+
+  get bigThreadDepth() {
+    return this.cfg.bigThreadDepth
+  }
+
+  get maxThreadDepth() {
+    return this.cfg.maxThreadDepth
   }
 }
 

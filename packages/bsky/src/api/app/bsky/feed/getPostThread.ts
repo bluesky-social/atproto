@@ -22,6 +22,7 @@ import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 import { DataPlaneClient, isDataplaneError, Code } from '../../../../data-plane'
 import { postUriToThreadgateUri } from '../../../../util/uris'
+import { ServerConfig } from '../../../../config'
 
 export default function (server: Server, ctx: AppContext) {
   const getPostThread = createPipeline(
@@ -75,7 +76,7 @@ const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
     const res = await ctx.dataplane.getThread({
       postUri: anchor,
       above: params.parentHeight,
-      below: params.depth,
+      below: getDepth(ctx, anchor, params),
     })
     return {
       anchor,
@@ -109,7 +110,7 @@ const presentation = (
   const { ctx, params, skeleton, hydration } = inputs
   const thread = ctx.views.thread(skeleton, hydration, {
     height: params.parentHeight,
-    depth: params.depth,
+    depth: getDepth(ctx, skeleton.anchor, params),
   })
   if (isNotFoundPost(thread)) {
     // @TODO technically this could be returned as a NotFoundPost based on lexicon
@@ -132,6 +133,7 @@ type Context = {
   dataplane: DataPlaneClient
   hydrator: Hydrator
   views: Views
+  cfg: ServerConfig
 }
 
 type Params = QueryParams & { hydrateCtx: HydrateCtx }
@@ -139,4 +141,12 @@ type Params = QueryParams & { hydrateCtx: HydrateCtx }
 type Skeleton = {
   anchor: string
   uris: string[]
+}
+
+const getDepth = (ctx: Context, anchor: string, params: Params) => {
+  let maxDepth = ctx.cfg.maxThreadDepth
+  if (ctx.cfg.bigThreadUris.has(anchor) && ctx.cfg.bigThreadDepth) {
+    maxDepth = ctx.cfg.bigThreadDepth
+  }
+  return maxDepth ? Math.min(maxDepth, params.depth) : params.depth
 }
