@@ -44,7 +44,7 @@ describe('handles', () => {
       dbPostgresSchema: 'handles',
       pds: {
         serviceHandleDomains: ['.test', '.example.com'],
-      }
+      },
     })
     // @ts-expect-error Error due to circular dependency with the dev-env package
     ctx = network.pds.ctx
