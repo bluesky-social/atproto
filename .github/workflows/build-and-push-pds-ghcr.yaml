@@ -3,7 +3,7 @@ on:
   push:
     branches:
       - main
-      - msieben/micro-optimizations
+      - missing-delete-blocks
 env:
   REGISTRY: ghcr.io
   USERNAME: ${{ github.actor }}
