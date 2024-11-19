@@ -1,5 +1,12 @@
 # @atproto-labs/identity-resolver
 
+## 0.1.6
+
+### Patch Changes
+
+- Updated dependencies [[`bac9be2d3`](https://github.com/bluesky-social/atproto/commit/bac9be2d3ec904d1f984a871f43cf89aca17289d)]:
+  - @atproto/syntax@0.3.1
+
 ## 0.1.5
 
 ### Patch Changes

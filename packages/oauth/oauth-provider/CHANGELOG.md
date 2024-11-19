@@ -1,5 +1,11 @@
 # @atproto/oauth-provider
 
+## 0.2.7
+
+### Patch Changes
+
+- [#2852](https://github.com/bluesky-social/atproto/pull/2852) [`709ba3015`](https://github.com/bluesky-social/atproto/commit/709ba301578c1956b8eb0d89bad717615a4fd7ba) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove response content-encoding logic
+
 ## 0.2.6
 
 ### Patch Changes

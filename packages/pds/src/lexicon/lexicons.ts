@@ -1341,7 +1341,7 @@ export const schemaDict = {
           },
           rkey: {
             type: 'string',
-            maxLength: 15,
+            maxLength: 512,
           },
           value: {
             type: 'unknown',
@@ -1450,7 +1450,7 @@ export const schemaDict = {
               rkey: {
                 type: 'string',
                 description: 'The Record Key.',
-                maxLength: 15,
+                maxLength: 512,
               },
               validate: {
                 type: 'boolean',
@@ -1901,7 +1901,7 @@ export const schemaDict = {
               rkey: {
                 type: 'string',
                 description: 'The Record Key.',
-                maxLength: 15,
+                maxLength: 512,
               },
               validate: {
                 type: 'boolean',
@@ -8488,6 +8488,56 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyGraphSearchStarterPacks: {
+    lexicon: 1,
+    id: 'app.bsky.graph.searchStarterPacks',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Find starter packs matching search criteria. Does not require auth.',
+        parameters: {
+          type: 'params',
+          required: ['q'],
+          properties: {
+            q: {
+              type: 'string',
+              description:
+                'Search query string. Syntax, phrase, boolean, and faceting is unspecified, but Lucene query syntax is recommended.',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 25,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['starterPacks'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              starterPacks: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.graph.defs#starterPackViewBasic',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyGraphStarterpack: {
     lexicon: 1,
     id: 'app.bsky.graph.starterpack',
@@ -9153,6 +9203,16 @@ export const schemaDict = {
           },
         },
       },
+      skeletonSearchStarterPack: {
+        type: 'object',
+        required: ['uri'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+        },
+      },
     },
   },
   AppBskyUnspeccedGetConfig: {
@@ -9513,6 +9573,73 @@ export const schemaDict = {
                 items: {
                   type: 'ref',
                   ref: 'lex:app.bsky.unspecced.defs#skeletonSearchPost',
+                },
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'BadQueryString',
+          },
+        ],
+      },
+    },
+  },
+  AppBskyUnspeccedSearchStarterPacksSkeleton: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.searchStarterPacksSkeleton',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Backend Starter Pack search, returns only skeleton.',
+        parameters: {
+          type: 'params',
+          required: ['q'],
+          properties: {
+            q: {
+              type: 'string',
+              description:
+                'Search query string; syntax, phrase, boolean, and faceting is unspecified, but Lucene query syntax is recommended.',
+            },
+            viewer: {
+              type: 'string',
+              format: 'did',
+              description:
+                'DID of the account making the request (not included for public/unauthenticated queries).',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 25,
+            },
+            cursor: {
+              type: 'string',
+              description:
+                'Optional pagination mechanism; may not necessarily allow scrolling through entire result set.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['starterPacks'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              hitsTotal: {
+                type: 'integer',
+                description:
+                  'Count of search hits. Optional, may be rounded/truncated, and may not be possible to paginate through all hits.',
+              },
+              starterPacks: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.unspecced.defs#skeletonSearchStarterPack',
                 },
               },
             },
@@ -9891,6 +10018,9 @@ export const schemaDict = {
             ],
           },
           muted: {
+            type: 'boolean',
+          },
+          opened: {
             type: 'boolean',
           },
           unreadCount: {
@@ -10821,6 +10951,9 @@ export const schemaDict = {
               'lex:tools.ozone.moderation.defs#modEventResolveAppeal',
               'lex:tools.ozone.moderation.defs#modEventDivert',
               'lex:tools.ozone.moderation.defs#modEventTag',
+              'lex:tools.ozone.moderation.defs#accountEvent',
+              'lex:tools.ozone.moderation.defs#identityEvent',
+              'lex:tools.ozone.moderation.defs#recordEvent',
             ],
           },
           subject: {
@@ -10885,6 +11018,9 @@ export const schemaDict = {
               'lex:tools.ozone.moderation.defs#modEventResolveAppeal',
               'lex:tools.ozone.moderation.defs#modEventDivert',
               'lex:tools.ozone.moderation.defs#modEventTag',
+              'lex:tools.ozone.moderation.defs#accountEvent',
+              'lex:tools.ozone.moderation.defs#identityEvent',
+              'lex:tools.ozone.moderation.defs#recordEvent',
             ],
           },
           subject: {
@@ -10925,6 +11061,13 @@ export const schemaDict = {
             refs: [
               'lex:com.atproto.admin.defs#repoRef',
               'lex:com.atproto.repo.strongRef',
+            ],
+          },
+          hosting: {
+            type: 'union',
+            refs: [
+              'lex:tools.ozone.moderation.defs#accountHosting',
+              'lex:tools.ozone.moderation.defs#recordHosting',
             ],
           },
           subjectBlobCids: {
@@ -11169,14 +11312,14 @@ export const schemaDict = {
       modEventMuteReporter: {
         type: 'object',
         description: 'Mute incoming reports from an account',
-        required: ['durationInHours'],
         properties: {
           comment: {
             type: 'string',
           },
           durationInHours: {
             type: 'integer',
-            description: 'Indicates how long the account should remain muted.',
+            description:
+              'Indicates how long the account should remain muted. Falsy value here means a permanent mute.',
           },
         },
       },
@@ -11243,6 +11386,86 @@ export const schemaDict = {
           comment: {
             type: 'string',
             description: 'Additional comment about added/removed tags.',
+          },
+        },
+      },
+      accountEvent: {
+        type: 'object',
+        description:
+          'Logs account status related events on a repo subject. Normally captured by automod from the firehose and emitted to ozone for historical tracking.',
+        required: ['timestamp', 'active'],
+        properties: {
+          comment: {
+            type: 'string',
+          },
+          active: {
+            type: 'boolean',
+            description:
+              'Indicates that the account has a repository which can be fetched from the host that emitted this event.',
+          },
+          status: {
+            type: 'string',
+            knownValues: [
+              'unknown',
+              'deactivated',
+              'deleted',
+              'takendown',
+              'suspended',
+              'tombstoned',
+            ],
+          },
+          timestamp: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
+      identityEvent: {
+        type: 'object',
+        description:
+          'Logs identity related events on a repo subject. Normally captured by automod from the firehose and emitted to ozone for historical tracking.',
+        required: ['timestamp'],
+        properties: {
+          comment: {
+            type: 'string',
+          },
+          handle: {
+            type: 'string',
+            format: 'handle',
+          },
+          pdsHost: {
+            type: 'string',
+            format: 'uri',
+          },
+          tombstone: {
+            type: 'boolean',
+          },
+          timestamp: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
+      recordEvent: {
+        type: 'object',
+        description:
+          'Logs lifecycle event on a record subject. Normally captured by automod from the firehose and emitted to ozone for historical tracking.',
+        required: ['timestamp', 'op'],
+        properties: {
+          comment: {
+            type: 'string',
+          },
+          op: {
+            type: 'string',
+            knownValues: ['create', 'update', 'delete'],
+          },
+          cid: {
+            type: 'string',
+            format: 'cid',
+          },
+          timestamp: {
+            type: 'string',
+            format: 'datetime',
           },
         },
       },
@@ -11571,6 +11794,64 @@ export const schemaDict = {
           },
         },
       },
+      accountHosting: {
+        type: 'object',
+        required: ['status'],
+        properties: {
+          status: {
+            type: 'string',
+            knownValues: [
+              'takendown',
+              'suspended',
+              'deleted',
+              'deactivated',
+              'unknown',
+            ],
+          },
+          updatedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          deletedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          deactivatedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          reactivatedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
+      recordHosting: {
+        type: 'object',
+        required: ['status'],
+        properties: {
+          status: {
+            type: 'string',
+            knownValues: ['deleted', 'unknown'],
+          },
+          updatedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          deletedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
     },
   },
   ToolsOzoneModerationEmitEvent: {
@@ -11603,6 +11884,9 @@ export const schemaDict = {
                   'lex:tools.ozone.moderation.defs#modEventResolveAppeal',
                   'lex:tools.ozone.moderation.defs#modEventEmail',
                   'lex:tools.ozone.moderation.defs#modEventTag',
+                  'lex:tools.ozone.moderation.defs#accountEvent',
+                  'lex:tools.ozone.moderation.defs#identityEvent',
+                  'lex:tools.ozone.moderation.defs#recordEvent',
                 ],
               },
               subject: {
@@ -12004,6 +12288,38 @@ export const schemaDict = {
               type: 'string',
               format: 'datetime',
               description: 'Search subjects reviewed after a given timestamp',
+            },
+            hostingDeletedAfter: {
+              type: 'string',
+              format: 'datetime',
+              description:
+                'Search subjects where the associated record/account was deleted after a given timestamp',
+            },
+            hostingDeletedBefore: {
+              type: 'string',
+              format: 'datetime',
+              description:
+                'Search subjects where the associated record/account was deleted before a given timestamp',
+            },
+            hostingUpdatedAfter: {
+              type: 'string',
+              format: 'datetime',
+              description:
+                'Search subjects where the associated record/account was updated after a given timestamp',
+            },
+            hostingUpdatedBefore: {
+              type: 'string',
+              format: 'datetime',
+              description:
+                'Search subjects where the associated record/account was updated before a given timestamp',
+            },
+            hostingStatuses: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+              description:
+                'Search subjects by the status of the associated record/account',
             },
             reviewedBefore: {
               type: 'string',
@@ -12520,6 +12836,225 @@ export const schemaDict = {
       },
     },
   },
+  ToolsOzoneSettingDefs: {
+    lexicon: 1,
+    id: 'tools.ozone.setting.defs',
+    defs: {
+      option: {
+        type: 'object',
+        required: [
+          'key',
+          'value',
+          'did',
+          'scope',
+          'createdBy',
+          'lastUpdatedBy',
+        ],
+        properties: {
+          key: {
+            type: 'string',
+            format: 'nsid',
+          },
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          value: {
+            type: 'unknown',
+          },
+          description: {
+            type: 'string',
+            maxGraphemes: 1024,
+            maxLength: 10240,
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          updatedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          managerRole: {
+            type: 'string',
+            knownValues: [
+              'tools.ozone.team.defs#roleModerator',
+              'tools.ozone.team.defs#roleTriage',
+              'tools.ozone.team.defs#roleAdmin',
+            ],
+          },
+          scope: {
+            type: 'string',
+            knownValues: ['instance', 'personal'],
+          },
+          createdBy: {
+            type: 'string',
+            format: 'did',
+          },
+          lastUpdatedBy: {
+            type: 'string',
+            format: 'did',
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneSettingListOptions: {
+    lexicon: 1,
+    id: 'tools.ozone.setting.listOptions',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'List settings with optional filtering',
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+            scope: {
+              type: 'string',
+              knownValues: ['instance', 'personal'],
+              default: 'instance',
+            },
+            prefix: {
+              type: 'string',
+              description: 'Filter keys by prefix',
+            },
+            keys: {
+              type: 'array',
+              maxLength: 100,
+              items: {
+                type: 'string',
+                format: 'nsid',
+              },
+              description:
+                'Filter for only the specified keys. Ignored if prefix is provided',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['options'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              options: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.setting.defs#option',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneSettingRemoveOptions: {
+    lexicon: 1,
+    id: 'tools.ozone.setting.removeOptions',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Delete settings by key',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['keys', 'scope'],
+            properties: {
+              keys: {
+                type: 'array',
+                minLength: 1,
+                maxLength: 200,
+                items: {
+                  type: 'string',
+                  format: 'nsid',
+                },
+              },
+              scope: {
+                type: 'string',
+                knownValues: ['instance', 'personal'],
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneSettingUpsertOption: {
+    lexicon: 1,
+    id: 'tools.ozone.setting.upsertOption',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Create or update setting option',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['key', 'scope', 'value'],
+            properties: {
+              key: {
+                type: 'string',
+                format: 'nsid',
+              },
+              scope: {
+                type: 'string',
+                knownValues: ['instance', 'personal'],
+              },
+              value: {
+                type: 'unknown',
+              },
+              description: {
+                type: 'string',
+                maxLength: 2000,
+              },
+              managerRole: {
+                type: 'string',
+                knownValues: [
+                  'tools.ozone.team.defs#roleModerator',
+                  'tools.ozone.team.defs#roleTriage',
+                  'tools.ozone.team.defs#roleAdmin',
+                ],
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['option'],
+            properties: {
+              option: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.setting.defs#option',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ToolsOzoneSignatureDefs: {
     lexicon: 1,
     id: 'tools.ozone.signature.defs',
@@ -12919,8 +13454,9 @@ export const schemaDict = {
       },
     },
   },
-}
-export const schemas: LexiconDoc[] = Object.values(schemaDict) as LexiconDoc[]
+} as const satisfies Record<string, LexiconDoc>
+
+export const schemas = Object.values(schemaDict)
 export const lexicons: Lexicons = new Lexicons(schemas)
 export const ids = {
   ComAtprotoAdminDefs: 'com.atproto.admin.defs',
@@ -13077,6 +13613,7 @@ export const ids = {
   AppBskyGraphMuteActor: 'app.bsky.graph.muteActor',
   AppBskyGraphMuteActorList: 'app.bsky.graph.muteActorList',
   AppBskyGraphMuteThread: 'app.bsky.graph.muteThread',
+  AppBskyGraphSearchStarterPacks: 'app.bsky.graph.searchStarterPacks',
   AppBskyGraphStarterpack: 'app.bsky.graph.starterpack',
   AppBskyGraphUnmuteActor: 'app.bsky.graph.unmuteActor',
   AppBskyGraphUnmuteActorList: 'app.bsky.graph.unmuteActorList',
@@ -13102,6 +13639,8 @@ export const ids = {
   AppBskyUnspeccedSearchActorsSkeleton:
     'app.bsky.unspecced.searchActorsSkeleton',
   AppBskyUnspeccedSearchPostsSkeleton: 'app.bsky.unspecced.searchPostsSkeleton',
+  AppBskyUnspeccedSearchStarterPacksSkeleton:
+    'app.bsky.unspecced.searchStarterPacksSkeleton',
   AppBskyVideoDefs: 'app.bsky.video.defs',
   AppBskyVideoGetJobStatus: 'app.bsky.video.getJobStatus',
   AppBskyVideoGetUploadLimits: 'app.bsky.video.getUploadLimits',
@@ -13153,6 +13692,10 @@ export const ids = {
   ToolsOzoneSetGetValues: 'tools.ozone.set.getValues',
   ToolsOzoneSetQuerySets: 'tools.ozone.set.querySets',
   ToolsOzoneSetUpsertSet: 'tools.ozone.set.upsertSet',
+  ToolsOzoneSettingDefs: 'tools.ozone.setting.defs',
+  ToolsOzoneSettingListOptions: 'tools.ozone.setting.listOptions',
+  ToolsOzoneSettingRemoveOptions: 'tools.ozone.setting.removeOptions',
+  ToolsOzoneSettingUpsertOption: 'tools.ozone.setting.upsertOption',
   ToolsOzoneSignatureDefs: 'tools.ozone.signature.defs',
   ToolsOzoneSignatureFindCorrelation: 'tools.ozone.signature.findCorrelation',
   ToolsOzoneSignatureFindRelatedAccounts:

@@ -1,0 +1,52 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ozone-settings listOptions returns all personal settings 1`] = `
+Array [
+  Object {
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "createdBy": "user(1)",
+    "description": "List of external labelers that will be plugged into the client views",
+    "did": "user(1)",
+    "key": "tools.ozone.setting.client.externalLabelers",
+    "lastUpdatedBy": "user(1)",
+    "managerRole": "tools.ozone.team.defs#roleAdmin",
+    "scope": "instance",
+    "updatedAt": "1970-01-01T00:00:00.000Z",
+    "value": Object {
+      "dids": Array [
+        "user(0)",
+      ],
+    },
+  },
+  Object {
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "createdBy": "user(1)",
+    "description": "This determines how each queue is balanced when sorted by oldest first",
+    "did": "user(1)",
+    "key": "tools.ozone.setting.client.queueHash",
+    "lastUpdatedBy": "user(1)",
+    "managerRole": "tools.ozone.team.defs#roleAdmin",
+    "scope": "instance",
+    "updatedAt": "1970-01-01T00:00:00.000Z",
+    "value": Object {
+      "val": 10.5,
+    },
+  },
+  Object {
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "createdBy": "user(1)",
+    "description": "This determines how many queues the client interface will show",
+    "did": "user(1)",
+    "key": "tools.ozone.setting.client.queues",
+    "lastUpdatedBy": "user(1)",
+    "managerRole": "tools.ozone.team.defs#roleAdmin",
+    "scope": "instance",
+    "updatedAt": "1970-01-01T00:00:00.000Z",
+    "value": Object {
+      "stratosphere": Object {
+        "name": "Stratosphere",
+      },
+    },
+  },
+]
+`;
