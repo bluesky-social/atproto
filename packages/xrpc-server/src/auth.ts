@@ -62,11 +62,19 @@ const jsonToB64Url = (json: Record<string, unknown>): string => {
   return common.utf8ToB64Url(JSON.stringify(json))
 }
 
+export type VerifySignatureWithKeyFn = (
+  key: string,
+  msgBytes: Uint8Array,
+  sigBytes: Uint8Array,
+  alg: string,
+) => Promise<boolean>
+
 export const verifyJwt = async (
   jwtStr: string,
   ownDid: string | null, // null indicates to skip the audience check
   lxm: string | null, // null indicates to skip the lxm check
   getSigningKey: (iss: string, forceRefresh: boolean) => Promise<string>,
+  verifySignatureWithKey: VerifySignatureWithKeyFn = cryptoVerifySignatureWithKey,
 ): Promise<ServiceJwtPayload> => {
   const parts = jwtStr.split('.')
   if (parts.length !== 3) {
@@ -116,18 +124,13 @@ export const verifyJwt = async (
 
   const msgBytes = ui8.fromString(parts.slice(0, 2).join('.'), 'utf8')
   const sigBytes = ui8.fromString(sig, 'base64url')
-  const verifySignatureWithKey = async (key: string) => {
-    return crypto.verifySignature(key, msgBytes, sigBytes, {
-      jwtAlg: header.alg,
-      allowMalleableSig: true,
-    })
-  }
 
   const signingKey = await getSigningKey(payload.iss, false)
+  const { alg } = header
 
   let validSig: boolean
   try {
-    validSig = await verifySignatureWithKey(signingKey)
+    validSig = await verifySignatureWithKey(signingKey, msgBytes, sigBytes, alg)
   } catch (err) {
     throw new AuthRequiredError(
       'could not verify jwt signature',
@@ -141,7 +144,12 @@ export const verifyJwt = async (
     try {
       validSig =
         freshSigningKey !== signingKey
-          ? await verifySignatureWithKey(freshSigningKey)
+          ? await verifySignatureWithKey(
+              freshSigningKey,
+              msgBytes,
+              sigBytes,
+              alg,
+            )
           : false
     } catch (err) {
       throw new AuthRequiredError(
@@ -159,6 +167,18 @@ export const verifyJwt = async (
   }
 
   return payload
+}
+
+export const cryptoVerifySignatureWithKey: VerifySignatureWithKeyFn = async (
+  key: string,
+  msgBytes: Uint8Array,
+  sigBytes: Uint8Array,
+  alg: string,
+) => {
+  return crypto.verifySignature(key, msgBytes, sigBytes, {
+    jwtAlg: alg,
+    allowMalleableSig: true,
+  })
 }
 
 const parseB64UrlToJson = (b64: string) => {
