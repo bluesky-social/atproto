@@ -32,16 +32,30 @@ export const settingValidators: Record<
         )
       }
 
-      if (val['roles'] && !Array.isArray(val['roles'])) {
-        throw new InvalidRequestError(
-          `Roles must be an array of moderator roles for tag ${key}`,
-        )
+      if (val['roles']) {
+        if (!Array.isArray(val['roles'])) {
+          throw new InvalidRequestError(
+            `Roles must be an array of moderator roles for tag ${key}`,
+          )
+        }
+        if (!val['roles']?.length) {
+          throw new InvalidRequestError(
+            `Must define at least one role for tag ${key}`,
+          )
+        }
       }
 
-      if (val['moderators'] && !Array.isArray(val['moderators'])) {
-        throw new InvalidRequestError(
-          `Moderators must be an array of moderator DIDs for tag ${key}`,
-        )
+      if (val['moderators']) {
+        if (!Array.isArray(val['moderators'])) {
+          throw new InvalidRequestError(
+            `Moderators must be an array of moderator DIDs for tag ${key}`,
+          )
+        }
+        if (!val['moderators']?.length) {
+          throw new InvalidRequestError(
+            `Must define at least one moderator DID for tag ${key}`,
+          )
+        }
       }
     }
   },
