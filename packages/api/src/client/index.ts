@@ -81,6 +81,7 @@ import * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos'
 import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
 import * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
+import * as ComAtprotoTempAddReservedHandle from './types/com/atproto/temp/addReservedHandle'
 import * as ComAtprotoTempCheckSignupQueue from './types/com/atproto/temp/checkSignupQueue'
 import * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels'
 import * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/temp/requestPhoneVerification'
@@ -307,6 +308,7 @@ export * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos'
 export * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
 export * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 export * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
+export * as ComAtprotoTempAddReservedHandle from './types/com/atproto/temp/addReservedHandle'
 export * as ComAtprotoTempCheckSignupQueue from './types/com/atproto/temp/checkSignupQueue'
 export * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels'
 export * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/temp/requestPhoneVerification'
@@ -1415,6 +1417,18 @@ export class ComAtprotoTempNS {
 
   constructor(client: XrpcClient) {
     this._client = client
+  }
+
+  addReservedHandle(
+    data?: ComAtprotoTempAddReservedHandle.InputSchema,
+    opts?: ComAtprotoTempAddReservedHandle.CallOptions,
+  ): Promise<ComAtprotoTempAddReservedHandle.Response> {
+    return this._client.call(
+      'com.atproto.temp.addReservedHandle',
+      opts?.qp,
+      data,
+      opts,
+    )
   }
 
   checkSignupQueue(
