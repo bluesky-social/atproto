@@ -18,6 +18,7 @@ import { TagService } from '../../tag-service'
 import { retryHttp } from '../../util'
 import { ModeratorOutput, AdminTokenOutput } from '../../auth-verifier'
 import { SettingService } from '../../setting/service'
+import { ProtectedTagSettingKey } from '../../setting/constants'
 
 const handleModerationEvent = async ({
   ctx,
@@ -304,7 +305,7 @@ const assertTagAuth = async (
         configuredModerators &&
         !configuredModerators.includes(auth.credentials.iss)
       ) {
-        throw new Error(`Not allowed to manage tag: ${tag}`)
+        throw new InvalidRequestError(`Not allowed to manage tag: ${tag}`)
       }
 
       const configuredRoles = protectedTags[tag]?.['roles']
@@ -314,12 +315,16 @@ const assertTagAuth = async (
           auth.credentials.isModerator &&
           !configuredRoles.includes('tools.ozone.team.defs#roleModerator')
         ) {
-          throw new Error(`Can not manage tag ${tag} with moderator role`)
+          throw new InvalidRequestError(
+            `Can not manage tag ${tag} with moderator role`,
+          )
         } else if (
           auth.credentials.isTriage &&
           !configuredRoles.includes('tools.ozone.team.defs#roleTriage')
         ) {
-          throw new Error(`Can not manage tag ${tag} with triage role`)
+          throw new InvalidRequestError(
+            `Can not manage tag ${tag} with triage role`,
+          )
         }
       }
     }
@@ -331,7 +336,7 @@ const getProtectedTags = async (
   serviceDid: string,
 ) => {
   const protectedTagSetting = await settingService.query({
-    keys: ['tools.ozone.setting.protectedTags'],
+    keys: [ProtectedTagSettingKey],
     scope: 'instance',
     did: serviceDid,
     limit: 1,
