@@ -2,4 +2,4 @@
 "@atproto/xrpc-server": patch
 ---
 
-Add back-pressure on subscriptions
+Add back-pressure and buffering on subscriptions
