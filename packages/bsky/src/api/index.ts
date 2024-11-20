@@ -30,6 +30,7 @@ import getMutes from './app/bsky/graph/getMutes'
 import getRelationships from './app/bsky/graph/getRelationships'
 import getStarterPack from './app/bsky/graph/getStarterPack'
 import getStarterPacks from './app/bsky/graph/getStarterPacks'
+import searchStarterPacks from './app/bsky/graph/searchStarterPacks'
 import muteActor from './app/bsky/graph/muteActor'
 import unmuteActor from './app/bsky/graph/unmuteActor'
 import muteActorList from './app/bsky/graph/muteActorList'
@@ -95,6 +96,7 @@ export default function (server: Server, ctx: AppContext) {
   getRelationships(server, ctx)
   getStarterPack(server, ctx)
   getStarterPacks(server, ctx)
+  searchStarterPacks(server, ctx)
   muteActor(server, ctx)
   unmuteActor(server, ctx)
   muteActorList(server, ctx)

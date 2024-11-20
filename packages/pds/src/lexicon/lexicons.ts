@@ -8488,6 +8488,56 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyGraphSearchStarterPacks: {
+    lexicon: 1,
+    id: 'app.bsky.graph.searchStarterPacks',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Find starter packs matching search criteria. Does not require auth.',
+        parameters: {
+          type: 'params',
+          required: ['q'],
+          properties: {
+            q: {
+              type: 'string',
+              description:
+                'Search query string. Syntax, phrase, boolean, and faceting is unspecified, but Lucene query syntax is recommended.',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 25,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['starterPacks'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              starterPacks: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.graph.defs#starterPackViewBasic',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyGraphStarterpack: {
     lexicon: 1,
     id: 'app.bsky.graph.starterpack',
@@ -9153,6 +9203,16 @@ export const schemaDict = {
           },
         },
       },
+      skeletonSearchStarterPack: {
+        type: 'object',
+        required: ['uri'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+        },
+      },
     },
   },
   AppBskyUnspeccedGetConfig: {
@@ -9513,6 +9573,73 @@ export const schemaDict = {
                 items: {
                   type: 'ref',
                   ref: 'lex:app.bsky.unspecced.defs#skeletonSearchPost',
+                },
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'BadQueryString',
+          },
+        ],
+      },
+    },
+  },
+  AppBskyUnspeccedSearchStarterPacksSkeleton: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.searchStarterPacksSkeleton',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Backend Starter Pack search, returns only skeleton.',
+        parameters: {
+          type: 'params',
+          required: ['q'],
+          properties: {
+            q: {
+              type: 'string',
+              description:
+                'Search query string; syntax, phrase, boolean, and faceting is unspecified, but Lucene query syntax is recommended.',
+            },
+            viewer: {
+              type: 'string',
+              format: 'did',
+              description:
+                'DID of the account making the request (not included for public/unauthenticated queries).',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 25,
+            },
+            cursor: {
+              type: 'string',
+              description:
+                'Optional pagination mechanism; may not necessarily allow scrolling through entire result set.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['starterPacks'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              hitsTotal: {
+                type: 'integer',
+                description:
+                  'Count of search hits. Optional, may be rounded/truncated, and may not be possible to paginate through all hits.',
+              },
+              starterPacks: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.unspecced.defs#skeletonSearchStarterPack',
                 },
               },
             },
@@ -13486,6 +13613,7 @@ export const ids = {
   AppBskyGraphMuteActor: 'app.bsky.graph.muteActor',
   AppBskyGraphMuteActorList: 'app.bsky.graph.muteActorList',
   AppBskyGraphMuteThread: 'app.bsky.graph.muteThread',
+  AppBskyGraphSearchStarterPacks: 'app.bsky.graph.searchStarterPacks',
   AppBskyGraphStarterpack: 'app.bsky.graph.starterpack',
   AppBskyGraphUnmuteActor: 'app.bsky.graph.unmuteActor',
   AppBskyGraphUnmuteActorList: 'app.bsky.graph.unmuteActorList',
@@ -13511,6 +13639,8 @@ export const ids = {
   AppBskyUnspeccedSearchActorsSkeleton:
     'app.bsky.unspecced.searchActorsSkeleton',
   AppBskyUnspeccedSearchPostsSkeleton: 'app.bsky.unspecced.searchPostsSkeleton',
+  AppBskyUnspeccedSearchStarterPacksSkeleton:
+    'app.bsky.unspecced.searchStarterPacksSkeleton',
   AppBskyVideoDefs: 'app.bsky.video.defs',
   AppBskyVideoGetJobStatus: 'app.bsky.video.getJobStatus',
   AppBskyVideoGetUploadLimits: 'app.bsky.video.getUploadLimits',
