@@ -1,33 +1,43 @@
+import assert from 'node:assert'
 import { IncomingMessage } from 'node:http'
-import { Readable } from 'node:stream'
-import { ServerOptions, WebSocketServer } from 'ws'
+import { ServerOptions, WebSocket, WebSocketServer } from 'ws'
 import { ErrorFrame, Frame } from './frames'
 import logger from './logger'
 import { CloseCode } from './types'
 
-const HIGH_WATER_MARK = 16384
-const LOW_WATER_MARK = 4096
+export type XrpcStreamServerOptions = {
+  handler: Handler
+  highWaterMark?: number
+  lowWaterMark?: number
+} & ServerOptions
 
 export class XrpcStreamServer {
   wss: WebSocketServer
-  constructor({ handler, ...opts }: ServerOptions & { handler: Handler }) {
+  constructor({
+    handler,
+    highWaterMark = 16384,
+    lowWaterMark = 4096,
+    ...opts
+  }: XrpcStreamServerOptions) {
     this.wss = new WebSocketServer(opts)
-    this.wss.on('connection', async (ws, req) => {
+    this.wss.on('connection', (ws, req) => {
       const ac = new AbortController()
-      const readable = Readable.from(handler(req, ac.signal), {
-        // The data will be buffered in the websocket's underlying socket (the
-        // actual HTTP connection). When that buffer is full, and the readable
-        // is paused, we don't want the readable to start buffering data, so we
-        // set a low water mark here.
-        highWaterMark: 1,
-      })
+
+      const iterable = handler(req, ac.signal, ws, this)
+      const iterator = iterable[Symbol.asyncIterator]()
 
       const abortHandler = () => {
-        // abort the handler's signal
-        ac.abort()
-        // "return" the iterator
-        readable.destroy()
+        if (!ac.signal.aborted) {
+          ac.abort()
+          iterator.return?.()
+        }
       }
+
+      // Inbound messages are not expected
+      ws.on('message', (_data, _isBinary) => {
+        // @TODO should we cause an error here (to avoid clients from consuming
+        // un-necessary bandwidth) ?
+      })
 
       ws.once('close', () => {
         abortHandler()
@@ -38,37 +48,93 @@ export class XrpcStreamServer {
         abortHandler()
       })
 
-      readable.on('data', function (frame: Frame) {
-        if (frame instanceof ErrorFrame) {
-          ws.close(CloseCode.Policy, frame.code)
-          return
-        }
+      let paused = false
+      let pending = 0
 
-        ws.send(frame.toBytes(), function (err) {
-          if (err) {
-            logger.error(err, 'websocket error')
+      let done = false
+
+      const close = (...args: Parameters<typeof ws.close>): void => {
+        if (
+          ws.readyState !== WebSocket.CLOSING &&
+          ws.readyState !== WebSocket.CLOSED
+        ) {
+          ws.close(...args)
+        }
+      }
+
+      const readNext = () => {
+        iterator.next().then(
+          (result) => {
+            assert(!done, 'should not read after done')
+            assert(!paused, 'should not read while paused')
+
+            if (result.done) {
+              done = true
+
+              // This should not be needed since the iterator ended. Let's make
+              // sure we don't leak.
+              ac.abort()
+
+              // Only close now if no items are pending. Otherwise, we'll close
+              // after the last item is sent (see send() callback).
+              if (pending === 0) close(CloseCode.Normal)
+
+              return
+            }
+
+            const frame = result.value
+
+            pending++
+
+            ws.send(frame.toBytes(), { binary: true }, (err) => {
+              pending--
+
+              if (err) {
+                abortHandler()
+                ws.terminate() // Just to be sure
+                logger.error(err, 'websocket error')
+                return
+              }
+
+              if (done) {
+                // If this is the last callback, we can close now
+                if (pending === 0) {
+                  if (frame instanceof ErrorFrame) {
+                    close(CloseCode.Policy, frame.code)
+                  } else {
+                    close(CloseCode.Normal)
+                  }
+                }
+                return
+              }
+
+              if (paused && ws.bufferedAmount <= lowWaterMark) {
+                // resume
+                paused = false
+                readNext()
+              }
+            })
+
+            if (frame instanceof ErrorFrame) {
+              // Make sure we stop consuming
+              done = true
+              abortHandler()
+            } else if (ws.bufferedAmount >= highWaterMark) {
+              // pause
+              paused = true
+            } else {
+              readNext()
+            }
+          },
+          (err) => {
+            logger.error(err, 'websocket server error')
             abortHandler()
-            return
-          }
+            ws.terminate()
+          },
+        )
+      }
 
-          if (ws.bufferedAmount <= LOW_WATER_MARK && readable.isPaused()) {
-            readable.resume()
-          }
-        })
-
-        if (ws.bufferedAmount >= HIGH_WATER_MARK && !readable.isPaused()) {
-          readable.pause()
-        }
-      })
-
-      readable.once('end', () => {
-        ws.close(CloseCode.Normal)
-      })
-
-      readable.once('error', (err) => {
-        logger.error(err, 'websocket server error')
-        ws.terminate()
-      })
+      readNext()
     })
   }
 }
@@ -76,4 +142,6 @@ export class XrpcStreamServer {
 export type Handler = (
   req: IncomingMessage,
   signal: AbortSignal,
+  socket: WebSocket,
+  server: XrpcStreamServer,
 ) => AsyncIterable<Frame>

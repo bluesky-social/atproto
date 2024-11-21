@@ -1,11 +1,12 @@
-import * as http from 'http'
-import { once } from 'events'
-import { AddressInfo } from 'net'
-import { WebSocket } from 'ws'
 import { XRPCError } from '@atproto/xrpc'
+import { once } from 'node:events'
+import * as http from 'node:http'
+import { AddressInfo } from 'node:net'
+import { WebSocket } from 'ws'
 import {
   ErrorFrame,
   Frame,
+  Handler,
   MessageFrame,
   XrpcStreamServer,
   byFrame,
@@ -165,5 +166,41 @@ describe('Stream', () => {
 
       httpServer.close()
     })
+  })
+
+  it('applies back pressure.', async () => {
+    const httpServer = http.createServer()
+
+    const bytes = new Uint8Array(16 * 1024 * 1024)
+    const waitTimes: number[] = []
+
+    const server = new XrpcStreamServer({
+      server: httpServer,
+      highWaterMark: 2 * 16 * 1024 * 1024,
+      handler: async function* () {
+        let time = Date.now()
+        for (let i = 0; i < 10; i++) {
+          const now = Date.now()
+          yield new MessageFrame({ bytes, time: now - time })
+          waitTimes.push(now - time)
+          time = now
+        }
+      },
+    })
+
+    await once(httpServer.listen(), 'listening')
+    const { port } = server.wss.address() as AddressInfo
+
+    const ws = new WebSocket(`ws://localhost:${port}`)
+
+    for await (const _ of byFrame(ws)) {
+      await wait(50) // Simulate slow consumption
+    }
+
+    expect(waitTimes.some((t) => t > 50)).toBe(true)
+
+    ws.terminate()
+
+    httpServer.close()
   })
 })
