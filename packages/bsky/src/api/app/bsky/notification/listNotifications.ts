@@ -123,7 +123,11 @@ const noBlockOrMutesOrNeedsReview = (
       }
     }
     // Filter out notifications from users that need review unless moots
-    if (item.reason === 'reply' || item.reason === 'quote') {
+    if (
+      item.reason === 'reply' ||
+      item.reason === 'quote' ||
+      item.reason === 'mention'
+    ) {
       if (!ctx.views.viewerSeesNeedsReview(did, hydration)) {
         return false
       }

@@ -89,7 +89,7 @@ describe('bsky needs-review labels', () => {
     ).toBe(false)
   })
 
-  it('applies to reply and quote notifications.', async () => {
+  it('applies to reply, quote, and mention notifications.', async () => {
     const {
       data: { notifications },
     } = await agent.app.bsky.notification.listNotifications(
@@ -109,6 +109,11 @@ describe('bsky needs-review labels', () => {
     expect(
       notifications.some((notif) => {
         return notif.reason === 'quote' && notif.author.did === sc.dids.geoff
+      }),
+    ).toBe(false)
+    expect(
+      notifications.some((notif) => {
+        return notif.reason === 'mention' && notif.author.did === sc.dids.geoff
       }),
     ).toBe(false)
   })
