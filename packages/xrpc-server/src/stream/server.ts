@@ -1,66 +1,74 @@
 import { IncomingMessage } from 'node:http'
-import {
-  WebSocketServer,
-  ServerOptions,
-  WebSocket,
-  createWebSocketStream,
-} from 'ws'
+import { Readable } from 'node:stream'
+import { ServerOptions, WebSocketServer } from 'ws'
 import { ErrorFrame, Frame } from './frames'
 import logger from './logger'
-import { CloseCode, DisconnectError } from './types'
-import { pipeline } from 'node:stream/promises'
+import { CloseCode } from './types'
+
+const HIGH_WATER_MARK = 16384
+const LOW_WATER_MARK = 4096
 
 export class XrpcStreamServer {
   wss: WebSocketServer
-  constructor(opts: ServerOptions & { handler: Handler }) {
-    const { handler, ...serverOpts } = opts
-
-    this.wss = new WebSocketServer(serverOpts)
+  constructor({ handler, ...opts }: ServerOptions & { handler: Handler }) {
+    this.wss = new WebSocketServer(opts)
     this.wss.on('connection', async (ws, req) => {
-      // Needed because async generators get their own context
-      // eslint-disable-next-line @typescript-eslint/no-this-alias
-      const server = this
+      const ac = new AbortController()
+      const readable = Readable.from(handler(req, ac.signal), {
+        // The data will be buffered in the websocket's underlying socket (the
+        // actual HTTP connection). When that buffer is full, and the readable
+        // is paused, we don't want the readable to start buffering data, so we
+        // set a low water mark here.
+        highWaterMark: 1,
+      })
 
-      try {
-        await pipeline(
-          async function* () {
-            const ac = new AbortController()
-            try {
-              for await (const frame of handler(req, ac.signal, ws, server)) {
-                yield frame.toBytes()
-
-                if (frame instanceof ErrorFrame) {
-                  throw new DisconnectError(CloseCode.Policy, frame.body.error)
-                }
-              }
-            } catch (err) {
-              if (err instanceof DisconnectError) {
-                ws.close(err.wsCode, err.xrpcCode)
-                return
-              } else {
-                logger.error(err, 'websocket server error')
-                return
-              }
-            } finally {
-              // Make sure the signal is aborted when the async iterable is
-              // returned() or throw()s because the client is closed. This
-              // behavior is redundant with "return()" and "throw()" from the
-              // iterable, but allows simpler DX for the handler.
-              ac.abort()
-              ws.close(CloseCode.Normal)
-            }
-          },
-          createWebSocketStream(ws),
-          async function (readable) {
-            for await (const _ of readable) {
-              // ignore incoming data
-              // @TODO: Should we throw here (resulting in an error), to avoid abuse ?
-            }
-          },
-        )
-      } catch (err) {
-        logger.error(err, 'websocket error')
+      const abortHandler = () => {
+        // abort the handler's signal
+        ac.abort()
+        // "return" the iterator
+        readable.destroy()
       }
+
+      ws.once('close', () => {
+        abortHandler()
+      })
+
+      ws.once('error', (err) => {
+        logger.error(err, 'websocket error')
+        abortHandler()
+      })
+
+      readable.on('data', function (frame: Frame) {
+        if (frame instanceof ErrorFrame) {
+          ws.close(CloseCode.Policy, frame.code)
+          return
+        }
+
+        ws.send(frame.toBytes(), function (err) {
+          if (err) {
+            logger.error(err, 'websocket error')
+            abortHandler()
+            return
+          }
+
+          if (ws.bufferedAmount <= LOW_WATER_MARK && readable.isPaused()) {
+            readable.resume()
+          }
+        })
+
+        if (ws.bufferedAmount >= HIGH_WATER_MARK && !readable.isPaused()) {
+          readable.pause()
+        }
+      })
+
+      readable.once('end', () => {
+        ws.close(CloseCode.Normal)
+      })
+
+      readable.once('error', (err) => {
+        logger.error(err, 'websocket server error')
+        ws.terminate()
+      })
     })
   }
 }
@@ -68,6 +76,4 @@ export class XrpcStreamServer {
 export type Handler = (
   req: IncomingMessage,
   signal: AbortSignal,
-  socket: WebSocket,
-  server: XrpcStreamServer,
 ) => AsyncIterable<Frame>
