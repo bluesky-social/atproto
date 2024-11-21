@@ -80,6 +80,7 @@ import * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos'
 import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
 import * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
+import * as ComAtprotoTempAddReservedHandle from './types/com/atproto/temp/addReservedHandle'
 import * as ComAtprotoTempCheckSignupQueue from './types/com/atproto/temp/checkSignupQueue'
 import * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels'
 import * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/temp/requestPhoneVerification'
@@ -1133,6 +1134,17 @@ export class ComAtprotoTempNS {
 
   constructor(server: Server) {
     this._server = server
+  }
+
+  addReservedHandle<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoTempAddReservedHandle.Handler<ExtractAuth<AV>>,
+      ComAtprotoTempAddReservedHandle.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.temp.addReservedHandle' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
   checkSignupQueue<AV extends AuthVerifier>(

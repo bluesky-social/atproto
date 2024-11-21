@@ -3959,6 +3959,35 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoTempAddReservedHandle: {
+    lexicon: 1,
+    id: 'com.atproto.temp.addReservedHandle',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Add a handle to the set of reserved handles.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['handle'],
+            properties: {
+              handle: {
+                type: 'string',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
+      },
+    },
+  },
   ComAtprotoTempCheckSignupQueue: {
     lexicon: 1,
     id: 'com.atproto.temp.checkSignupQueue',
@@ -10784,6 +10813,7 @@ export const ids = {
   ComAtprotoSyncNotifyOfUpdate: 'com.atproto.sync.notifyOfUpdate',
   ComAtprotoSyncRequestCrawl: 'com.atproto.sync.requestCrawl',
   ComAtprotoSyncSubscribeRepos: 'com.atproto.sync.subscribeRepos',
+  ComAtprotoTempAddReservedHandle: 'com.atproto.temp.addReservedHandle',
   ComAtprotoTempCheckSignupQueue: 'com.atproto.temp.checkSignupQueue',
   ComAtprotoTempFetchLabels: 'com.atproto.temp.fetchLabels',
   ComAtprotoTempRequestPhoneVerification:
