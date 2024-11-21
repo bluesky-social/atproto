@@ -3,7 +3,7 @@ import {
   oauthClientIdSchema,
   oauthClientMetadataSchema,
 } from '@atproto/oauth-types'
-import z from 'zod'
+import type { TypeOf } from 'zod'
 
 import { Simplify } from './util.js'
 
@@ -29,4 +29,4 @@ export const clientMetadataSchema = oauthClientMetadataSchema.extend({
   client_id: oauthClientIdSchema.url(),
 })
 
-export type ClientMetadata = z.infer<typeof clientMetadataSchema>
+export type ClientMetadata = TypeOf<typeof clientMetadataSchema>
