@@ -11,6 +11,7 @@ describe('pds like views', () => {
   // account dids, for convenience
   let alice: string
   let bob: string
+  let carol: string
   let frankie: string
 
   beforeAll(async () => {
@@ -29,6 +30,7 @@ describe('pds like views', () => {
 
     alice = sc.dids.alice
     bob = sc.dids.bob
+    carol = sc.dids.carol
     frankie = sc.dids.frankie
   })
 
@@ -117,7 +119,7 @@ describe('pds like views', () => {
     )
   })
 
-  it(`author doesn't see likes by user the author blocked`, async () => {
+  it(`author viewer doesn't see likes by user the author blocked`, async () => {
     await sc.like(frankie, sc.posts[alice][1].ref)
     await network.processAll()
 
@@ -150,13 +152,13 @@ describe('pds like views', () => {
     ])
   })
 
-  it(`non-author doesn't see likes by user the author blocked`, async () => {
+  it(`non-author viewer doesn't see likes by user the author blocked and by user the viewer blocked `, async () => {
     await sc.unblock(alice, frankie)
     await network.processAll()
 
     const beforeBlock = await agent.app.bsky.feed.getLikes(
       { uri: sc.posts[alice][1].ref.uriStr },
-      { headers: await network.serviceHeaders(alice, ids.AppBskyFeedGetLikes) },
+      { headers: await network.serviceHeaders(bob, ids.AppBskyFeedGetLikes) },
     )
 
     expect(beforeBlock.data.likes.map((like) => like.actor.did)).toStrictEqual([
@@ -168,6 +170,7 @@ describe('pds like views', () => {
     ])
 
     await sc.block(alice, frankie)
+    await sc.block(bob, carol)
     await network.processAll()
 
     const afterBlock = await agent.app.bsky.feed.getLikes(
@@ -178,7 +181,6 @@ describe('pds like views', () => {
     expect(afterBlock.data.likes.map((like) => like.actor.did)).toStrictEqual([
       sc.dids.eve,
       sc.dids.dan,
-      sc.dids.carol,
       sc.dids.bob,
     ])
   })
