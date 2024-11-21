@@ -77,21 +77,7 @@ const hydration = async (inputs: {
     skeleton.likes,
     params.hydrateCtx,
   )
-  const dids = [skeleton.authorDid]
-
-  if (likesState.likes) {
-    for (const like of likesState.likes.values()) {
-      if (like) {
-        dids.push(like.cid)
-      }
-    }
-  }
-  const profileState = await ctx.hydrator.hydrateProfiles(
-    dids,
-    params.hydrateCtx,
-  )
-
-  return mergeStates(likesState, profileState)
+  return likesState
 }
 
 const noBlocks = (input: RulesFnInput<Context, Params, Skeleton>) => {
