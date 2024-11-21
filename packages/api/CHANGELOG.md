@@ -1,5 +1,13 @@
 # @atproto/api
 
+## 0.13.17
+
+### Patch Changes
+
+- [#2978](https://github.com/bluesky-social/atproto/pull/2978) [`a4b528e5f`](https://github.com/bluesky-social/atproto/commit/a4b528e5f51c8bfca56b293b0059b88d138ec421) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Add searchStarterPacks and searchStarterPacksSkeleton
+
+- [#3056](https://github.com/bluesky-social/atproto/pull/3056) [`2e7aa211d`](https://github.com/bluesky-social/atproto/commit/2e7aa211d2cbc629899c7f87f1713b13b932750b) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Add com.atproto.temp.addReservedHandle lexicon
+
 ## 0.13.16
 
 ### Patch Changes
