@@ -81,8 +81,7 @@ const hydration = async (inputs: {
 }
 
 const noBlocks = (input: RulesFnInput<Context, Params, Skeleton>) => {
-  const { ctx, params, skeleton, hydration } = input
-  const viewer = params.hydrateCtx.viewer
+  const { ctx, skeleton, hydration } = input
 
   skeleton.likes = skeleton.likes.filter((likeUri) => {
     const like = hydration.likes?.get(likeUri)
@@ -90,7 +89,7 @@ const noBlocks = (input: RulesFnInput<Context, Params, Skeleton>) => {
     const likerDid = creatorFromUri(likeUri)
     return (
       !hydration.likeBlocks?.get(likeUri) &&
-      (!viewer || !ctx.views.viewerBlockExists(likerDid, hydration))
+      !ctx.views.viewerBlockExists(likerDid, hydration)
     )
   })
   return skeleton
