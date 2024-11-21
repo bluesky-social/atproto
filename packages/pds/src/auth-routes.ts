@@ -8,7 +8,10 @@ export const createRouter = ({ authProvider, cfg }: AppContext): Router => {
 
   const oauthProtectedResourceMetadata =
     oauthProtectedResourceMetadataSchema.parse({
-      resource: cfg.service.publicUrl,
+      resource:
+        cfg.service.devMode && cfg.service.publicUrl.startsWith('http://')
+          ? cfg.service.publicUrl.replace('http://', 'https://') // must be https, can make exception in dev mode
+          : cfg.service.publicUrl,
       authorization_servers: [cfg.entryway?.url ?? cfg.service.publicUrl],
       bearer_methods_supported: ['header'],
       scopes_supported: [],
