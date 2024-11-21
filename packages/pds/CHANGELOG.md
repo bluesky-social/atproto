@@ -1,5 +1,14 @@
 # @atproto/pds
 
+## 0.4.72
+
+### Patch Changes
+
+- [#3034](https://github.com/bluesky-social/atproto/pull/3034) [`90399c859`](https://github.com/bluesky-social/atproto/commit/90399c85955301babc689c293bd3e7e1a94505a3) Thanks [@dholms](https://github.com/dholms)! - use getRecord in getFeed rather than resolving full view
+
+- Updated dependencies [[`a4b528e5f`](https://github.com/bluesky-social/atproto/commit/a4b528e5f51c8bfca56b293b0059b88d138ec421), [`2e7aa211d`](https://github.com/bluesky-social/atproto/commit/2e7aa211d2cbc629899c7f87f1713b13b932750b)]:
+  - @atproto/api@0.13.17
+
 ## 0.4.71
 
 ### Patch Changes
