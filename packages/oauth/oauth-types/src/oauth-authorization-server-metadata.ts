@@ -1,8 +1,8 @@
 import { z } from 'zod'
 
+import { webUrlSchema } from './common.js'
 import { oauthCodeChallengeMethodSchema } from './oauth-code-challenge-method.js'
 import { oauthIssuerIdentifierSchema } from './oauth-issuer-identifier.js'
-import { webUrlSchema } from './util.js'
 
 /**
  * @see {@link https://datatracker.ietf.org/doc/html/rfc8414}

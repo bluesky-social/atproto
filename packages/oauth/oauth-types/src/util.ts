@@ -1,20 +1,3 @@
-import { TypeOf, z } from 'zod'
-
-export const webUrlSchema = z
-  .string()
-  .refine((data) => URL.canParse(data), {
-    message: 'Invalid URL',
-  })
-  .refine(
-    (data): data is `http://${string}` | `https://${string}` =>
-      data.startsWith('http://') || data.startsWith('https://'),
-    {
-      message: 'URL must use the "https:" or "http:" protocol',
-    },
-  )
-
-export type WebUrl = TypeOf<typeof webUrlSchema>
-
 export function isHostnameIP(hostname: string) {
   // IPv4
   if (hostname.match(/^\d+\.\d+\.\d+\.\d+$/)) return true

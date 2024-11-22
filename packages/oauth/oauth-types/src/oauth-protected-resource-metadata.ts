@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 import { oauthIssuerIdentifierSchema } from './oauth-issuer-identifier.js'
-import { webUrlSchema } from './util.js'
+import { webUrlSchema } from './common.js'
 
 /**
  * @see {@link https://datatracker.ietf.org/doc/html/draft-ietf-oauth-resource-metadata-05#name-protected-resource-metadata-r}

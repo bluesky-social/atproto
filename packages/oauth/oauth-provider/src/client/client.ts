@@ -4,6 +4,7 @@ import {
   OAuthAuthorizationRequestParameters,
   OAuthClientCredentials,
   OAuthClientMetadata,
+  OAuthRedirectUri,
 } from '@atproto/oauth-types'
 import {
   UnsecuredJWT,
@@ -323,7 +324,7 @@ export class Client {
     return parameters
   }
 
-  get defaultRedirectUri(): string | undefined {
+  get defaultRedirectUri(): OAuthRedirectUri | undefined {
     const { redirect_uris } = this.metadata
     return redirect_uris.length === 1 ? redirect_uris[0] : undefined
   }

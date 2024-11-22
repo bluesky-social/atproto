@@ -1,6 +1,10 @@
 import { OAuthClientId } from './oauth-client-id.js'
+import {
+  OAuthLoopbackRedirectURI,
+  oauthLoopbackRedirectURISchema,
+  OAuthRedirectUri,
+} from './oauth-redirect-uri.js'
 import { OAuthScope, oauthScopeSchema } from './oauth-scope.js'
-import { isLoopbackHost, safeUrl } from './util.js'
 
 const OAUTH_CLIENT_ID_LOOPBACK_URL = 'http://localhost'
 
@@ -28,7 +32,7 @@ export function assertOAuthLoopbackClientId(
 // validation functions)
 export function parseOAuthLoopbackClientId(clientId: string): {
   scope?: OAuthScope
-  redirect_uris?: [string, ...string[]]
+  redirect_uris?: [OAuthRedirectUri, ...OAuthRedirectUri[]]
 } {
   if (!clientId.startsWith(OAUTH_CLIENT_ID_LOOPBACK_URL)) {
     throw new TypeError(
@@ -72,32 +76,13 @@ export function parseOAuthLoopbackClientId(clientId: string): {
   }
 
   const redirect_uris = searchParams.has('redirect_uri')
-    ? (searchParams.getAll('redirect_uri') as [string, ...string[]])
+    ? (searchParams
+        .getAll('redirect_uri')
+        .map((value) => oauthLoopbackRedirectURISchema.parse(value)) as [
+        OAuthLoopbackRedirectURI,
+        ...OAuthLoopbackRedirectURI[],
+      ])
     : undefined
-
-  if (redirect_uris) {
-    for (const uri of redirect_uris) {
-      const url = safeUrl(uri)
-      if (!url) {
-        throw new TypeError(`Invalid redirect_uri in client ID: ${uri}`)
-      }
-      if (url.protocol !== 'http:') {
-        throw new TypeError(
-          `Loopback ClientID must use "http:" redirect_uri's (got ${uri})`,
-        )
-      }
-      if (url.hostname === 'localhost') {
-        throw new TypeError(
-          `Loopback ClientID must not use "localhost" as redirect_uri hostname (got ${uri})`,
-        )
-      }
-      if (!isLoopbackHost(url.hostname)) {
-        throw new TypeError(
-          `Loopback ClientID must use loopback addresses as redirect_uri's (got ${uri})`,
-        )
-      }
-    }
-  }
 
   return {
     scope,

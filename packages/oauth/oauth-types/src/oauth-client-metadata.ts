@@ -1,12 +1,13 @@
 import { jwksPubSchema } from '@atproto/jwk'
 import { z } from 'zod'
 
+import { webUrlSchema } from './common.js'
 import { oauthClientIdSchema } from './oauth-client-id.js'
 import { oauthEndpointAuthMethod } from './oauth-endpoint-auth-method.js'
 import { oauthGrantTypeSchema } from './oauth-grant-type.js'
+import { oauthRedirectUriSchema } from './oauth-redirect-uri.js'
 import { oauthResponseTypeSchema } from './oauth-response-type.js'
 import { oauthScopeSchema } from './oauth-scope.js'
-import { webUrlSchema } from './util.js'
 
 // https://openid.net/specs/openid-connect-registration-1_0.html
 // https://datatracker.ietf.org/doc/html/rfc7591
@@ -14,7 +15,7 @@ export const oauthClientMetadataSchema = z.object({
   /**
    * @note redirect_uris require additional validation
    */
-  redirect_uris: z.array(z.string().url()).nonempty(),
+  redirect_uris: z.array(oauthRedirectUriSchema).nonempty(),
   response_types: z
     .array(oauthResponseTypeSchema)
     .nonempty()
