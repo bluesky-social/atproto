@@ -224,7 +224,8 @@ export class ModerationService {
     }
 
     if (comment) {
-      const keywords = comment.split('|')
+      // the input may end in || in which case, there may be item in the array which is just '' and we want to ignore those
+      const keywords = comment.split('||').filter((keyword) => !!keyword.trim())
       if (keywords.length > 1) {
         builder = builder.where((qb) => {
           keywords.forEach((keyword) => {
