@@ -1,16 +1,21 @@
 import { jwksPubSchema } from '@atproto/jwk'
 import { z } from 'zod'
 
-import { webUrlSchema } from './common.js'
 import { oauthClientIdSchema } from './oauth-client-id.js'
 import { oauthEndpointAuthMethod } from './oauth-endpoint-auth-method.js'
 import { oauthGrantTypeSchema } from './oauth-grant-type.js'
 import { oauthRedirectUriSchema } from './oauth-redirect-uri.js'
 import { oauthResponseTypeSchema } from './oauth-response-type.js'
 import { oauthScopeSchema } from './oauth-scope.js'
+import { webUriSchema } from './uri.js'
 
-// https://openid.net/specs/openid-connect-registration-1_0.html
-// https://datatracker.ietf.org/doc/html/rfc7591
+/**
+ * @see {@link https://openid.net/specs/openid-connect-registration-1_0.html}
+ * @see {@link https://datatracker.ietf.org/doc/html/rfc7591}
+ * @note we do not enforce https: scheme in URIs to support development
+ * environments. Make sure to validate the URIs before using it in a production
+ * environment.
+ */
 export const oauthClientMetadataSchema = z.object({
   /**
    * @note redirect_uris require additional validation
@@ -35,7 +40,7 @@ export const oauthClientMetadataSchema = z.object({
   token_endpoint_auth_signing_alg: z.string().optional(),
   userinfo_signed_response_alg: z.string().optional(),
   userinfo_encrypted_response_alg: z.string().optional(),
-  jwks_uri: webUrlSchema.optional(),
+  jwks_uri: webUriSchema.optional(),
   jwks: jwksPubSchema.optional(),
   application_type: z.enum(['web', 'native']).default('web').optional(), // default, per spec, is "web"
   subject_type: z.enum(['public', 'pairwise']).default('public').optional(),
@@ -46,10 +51,10 @@ export const oauthClientMetadataSchema = z.object({
   authorization_encrypted_response_alg: z.string().optional(),
   client_id: oauthClientIdSchema.optional(),
   client_name: z.string().optional(),
-  client_uri: webUrlSchema.optional(),
-  policy_uri: webUrlSchema.optional(),
-  tos_uri: webUrlSchema.optional(),
-  logo_uri: webUrlSchema.optional(), // TODO: allow data uri ?
+  client_uri: webUriSchema.optional(),
+  policy_uri: webUriSchema.optional(),
+  tos_uri: webUriSchema.optional(),
+  logo_uri: webUriSchema.optional(), // TODO: allow data: uri ?
 
   /**
    * Default Maximum Authentication Age. Specifies that the End-User MUST be

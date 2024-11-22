@@ -1,4 +1,5 @@
-import { OAuthClientId } from './oauth-client-id.js'
+import { TypeOf, ZodIssueCode } from 'zod'
+import { oauthClientIdSchema } from './oauth-client-id.js'
 import {
   OAuthLoopbackRedirectURI,
   oauthLoopbackRedirectURISchema,
@@ -6,10 +7,27 @@ import {
 } from './oauth-redirect-uri.js'
 import { OAuthScope, oauthScopeSchema } from './oauth-scope.js'
 
-const OAUTH_CLIENT_ID_LOOPBACK_URL = 'http://localhost'
+const PREFIX = 'http://localhost'
 
-export type OAuthClientIdLoopback = OAuthClientId &
-  `${typeof OAUTH_CLIENT_ID_LOOPBACK_URL}${'' | '/'}${'' | `?${string}`}`
+export const oauthClientIdLoopbackSchema = oauthClientIdSchema.superRefine(
+  (value, ctx): value is `${typeof PREFIX}${'' | '/'}${'' | `?${string}`}` => {
+    try {
+      assertOAuthLoopbackClientId(value)
+      return true
+    } catch (error) {
+      ctx.addIssue({
+        code: ZodIssueCode.custom,
+        message:
+          error instanceof TypeError
+            ? error.message
+            : 'Invalid loopback client ID',
+      })
+      return false
+    }
+  },
+)
+
+export type OAuthClientIdLoopback = TypeOf<typeof oauthClientIdLoopbackSchema>
 
 export function isOAuthClientIdLoopback(
   clientId: string,
@@ -34,19 +52,16 @@ export function parseOAuthLoopbackClientId(clientId: string): {
   scope?: OAuthScope
   redirect_uris?: [OAuthRedirectUri, ...OAuthRedirectUri[]]
 } {
-  if (!clientId.startsWith(OAUTH_CLIENT_ID_LOOPBACK_URL)) {
-    throw new TypeError(
-      `Loopback ClientID must start with "${OAUTH_CLIENT_ID_LOOPBACK_URL}"`,
-    )
-  } else if (clientId.includes('#', OAUTH_CLIENT_ID_LOOPBACK_URL.length)) {
+  if (!clientId.startsWith(PREFIX)) {
+    throw new TypeError(`Loopback ClientID must start with "${PREFIX}"`)
+  } else if (clientId.includes('#', PREFIX.length)) {
     throw new TypeError('Loopback ClientID must not contain a hash component')
   }
 
   const queryStringIdx =
-    clientId.length > OAUTH_CLIENT_ID_LOOPBACK_URL.length &&
-    clientId[OAUTH_CLIENT_ID_LOOPBACK_URL.length] === '/'
-      ? OAUTH_CLIENT_ID_LOOPBACK_URL.length + 1
-      : OAUTH_CLIENT_ID_LOOPBACK_URL.length
+    clientId.length > PREFIX.length && clientId[PREFIX.length] === '/'
+      ? PREFIX.length + 1
+      : PREFIX.length
 
   if (clientId.length === queryStringIdx) {
     return {} // no query string to parse
