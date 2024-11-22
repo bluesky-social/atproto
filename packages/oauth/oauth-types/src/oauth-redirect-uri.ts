@@ -1,11 +1,42 @@
-import { TypeOf, z } from 'zod'
+import { TypeOf, z, ZodIssueCode } from 'zod'
 import {
   httpsUriSchema,
+  LoopbackUri,
   loopbackUriSchema,
   privateUseUriSchema,
 } from './uri.js'
 
-export const oauthLoopbackRedirectURISchema = loopbackUriSchema
+export const oauthLoopbackRedirectURISchema = loopbackUriSchema.superRefine(
+  (
+    value,
+    ctx,
+  ): value is Exclude<
+    LoopbackUri,
+    `http://localhost${'' | `${':' | '/' | '?' | '#'}${string}`}`
+  > => {
+    const url = new URL(value)
+
+    if (url.hostname === 'localhost') {
+      // https://datatracker.ietf.org/doc/html/rfc8252#section-8.3
+      //
+      // > While redirect URIs using localhost (i.e.,
+      // > "http://localhost:{port}/{path}") function similarly to loopback IP
+      // > redirects described in Section 7.3, the use of localhost is NOT
+      // > RECOMMENDED.  Specifying a redirect URI with the loopback IP literal
+      // > rather than localhost avoids inadvertently listening on network
+      // > interfaces other than the loopback interface.  It is also less
+      // > susceptible to client-side firewalls and misconfigured host name
+      // > resolution on the user's device.
+      ctx.addIssue({
+        code: ZodIssueCode.custom,
+        message: 'Use of "localhost" hostname is not allowed (RFC 8252)',
+      })
+      return false
+    }
+
+    return true
+  },
+)
 export type OAuthLoopbackRedirectURI = TypeOf<
   typeof oauthLoopbackRedirectURISchema
 >

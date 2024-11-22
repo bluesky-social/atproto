@@ -27,7 +27,9 @@ export const loopbackUriSchema = dangerousUriSchema.superRefine(
     ctx,
   ): value is
     | `http://[::1]${string}`
+    | `http://localhost${'' | `${':' | '/' | '?' | '#'}${string}`}`
     | `http://127.0.0.1${'' | `${':' | '/' | '?' | '#'}${string}`}` => {
+    // Loopback url must use the "http:" protocol
     if (!value.startsWith('http://')) {
       ctx.addIssue({
         code: ZodIssueCode.custom,
@@ -38,19 +40,10 @@ export const loopbackUriSchema = dangerousUriSchema.superRefine(
 
     const url = new URL(value)
 
-    if (url.hostname === 'localhost') {
-      // https://datatracker.ietf.org/doc/html/rfc8252#section-8.3
-      ctx.addIssue({
-        code: ZodIssueCode.custom,
-        message: 'Use of "localhost" hostname is not allowed (RFC 8252)',
-      })
-      return false
-    }
-
     if (!isLoopbackHost(url.hostname)) {
       ctx.addIssue({
         code: ZodIssueCode.custom,
-        message: 'URL must use "127.0.0.1" or "[::1]" as hostname',
+        message: 'URL must use "localhost", "127.0.0.1" or "[::1]" as hostname',
       })
       return false
     }
