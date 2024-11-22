@@ -12212,7 +12212,7 @@ export const schemaDict = {
             comment: {
               type: 'string',
               description:
-                'If specified, only events with comments containing the keyword are returned. Use | to use multiple keywords in to match using OR condition.',
+                'If specified, only events with comments containing the keyword are returned. Apply | separator to use multiple keywords and match using OR condition.',
             },
             addedLabels: {
               type: 'array',
