@@ -70,8 +70,8 @@ export default function (server: Server, ctx: AppContext) {
           managerRole: getManagerRole(managerRole),
         }
 
-        if (settingValidators[key]) {
-          await settingValidators[key](option)
+        if (settingValidators.has(key)) {
+          await settingValidators.get(key)?.(option)
         }
 
         await settingService.upsert(option)
