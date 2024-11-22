@@ -233,8 +233,8 @@ export class ModerationService {
           })
           return qb
         })
-      } else {
-        builder = builder.where('comment', 'ilike', `%${comment}%`)
+      } else if (keywords.length === 1) {
+        builder = builder.where('comment', 'ilike', `%${keywords[0]}%`)
       }
     }
     if (hasComment) {

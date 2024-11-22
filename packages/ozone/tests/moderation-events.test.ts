@@ -243,12 +243,25 @@ describe('moderation-events', () => {
         },
         reportedBy: sc.dids.bob,
       })
-      const eventsMatchingBothKeywords = await modClient.queryEvents({
-        hasComment: true,
-        comment: 'november||lazy',
-      })
+      const [eventsMatchingBothKeywords, unusedTrailingSeparator, extraSpaces] =
+        await Promise.all([
+          modClient.queryEvents({
+            hasComment: true,
+            comment: 'november||lazy',
+          }),
+          modClient.queryEvents({
+            hasComment: true,
+            comment: 'november||lazy||',
+          }),
+          modClient.queryEvents({
+            hasComment: true,
+            comment: '||november||lazy||  ',
+          }),
+        ])
 
       expect(forSnapshot(eventsMatchingBothKeywords.events)).toMatchSnapshot()
+      expect(forSnapshot(unusedTrailingSeparator.events)).toMatchSnapshot()
+      expect(forSnapshot(extraSpaces.events)).toMatchSnapshot()
     })
 
     it('returns events matching filter params for labels', async () => {
