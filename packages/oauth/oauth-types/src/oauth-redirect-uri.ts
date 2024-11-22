@@ -7,16 +7,8 @@ import {
 } from './uri.js'
 
 export const oauthLoopbackRedirectURISchema = loopbackUriSchema.superRefine(
-  (
-    value,
-    ctx,
-  ): value is Exclude<
-    LoopbackUri,
-    `http://localhost${'' | `${':' | '/' | '?' | '#'}${string}`}`
-  > => {
-    const url = new URL(value)
-
-    if (url.hostname === 'localhost') {
+  (value, ctx): value is Exclude<LoopbackUri, `http://localhost${string}`> => {
+    if (value.startsWith('http://localhost')) {
       // https://datatracker.ietf.org/doc/html/rfc8252#section-8.3
       //
       // > While redirect URIs using localhost (i.e.,
