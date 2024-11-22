@@ -1,10 +1,10 @@
 import { TypeOf, z, ZodIssueCode } from 'zod'
-import { urlSchema } from './common.js'
+import { dangerousUrlSchema } from './common.js'
 import { isLoopbackHost } from './util.js'
 
 export type OAuthLoopbackRedirectURI =
   `http://${'127.0.0.1' | '[::1]'}${'' | `${':' | '/' | '?' | '#'}${string}`}`
-export const oauthLoopbackRedirectURISchema = urlSchema.superRefine(
+export const oauthLoopbackRedirectURISchema = dangerousUrlSchema.superRefine(
   (value, ctx): value is OAuthLoopbackRedirectURI => {
     if (!value.startsWith('http://')) {
       ctx.addIssue({
@@ -40,7 +40,7 @@ export const oauthLoopbackRedirectURISchema = urlSchema.superRefine(
 )
 
 export type OAuthHttpsRedirectURI = `https://${string}`
-export const oauthHttpsRedirectURISchema = urlSchema.superRefine(
+export const oauthHttpsRedirectURISchema = dangerousUrlSchema.superRefine(
   (value, ctx): value is OAuthHttpsRedirectURI => {
     if (!value.startsWith('https://')) {
       ctx.addIssue({
@@ -55,7 +55,7 @@ export const oauthHttpsRedirectURISchema = urlSchema.superRefine(
 )
 
 export type OAuthPrivateUseRedirectURI = `${string}.${string}:/${string}`
-export const oauthPrivateUseRedirectURISchema = urlSchema.superRefine(
+export const oauthPrivateUseRedirectURISchema = dangerousUrlSchema.superRefine(
   (value, ctx): value is OAuthPrivateUseRedirectURI => {
     const url = new URL(value)
 

@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { dangerousUrlSchema } from './common.js'
 
 /**
  * @see {@link https://datatracker.ietf.org/doc/html/rfc9396#section-2 | RFC 9396, Section 2}
@@ -9,7 +10,7 @@ export const oauthAuthorizationDetailSchema = z.object({
    * An array of strings representing the location of the resource or RS. These
    * strings are typically URIs identifying the location of the RS.
    */
-  locations: z.array(z.string().url()).optional(),
+  locations: z.array(dangerousUrlSchema).optional(),
   /**
    * An array of strings representing the kinds of actions to be taken at the
    * resource.
