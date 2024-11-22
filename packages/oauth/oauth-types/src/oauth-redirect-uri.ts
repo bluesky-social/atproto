@@ -51,6 +51,23 @@ export const oauthHttpsRedirectURISchema = dangerousUrlSchema.superRefine(
       return false
     }
 
+    const url = new URL(value)
+
+    if (isLoopbackHost(url.hostname)) {
+      // https://datatracker.ietf.org/doc/html/rfc8252#section-7.3
+      //
+      // > Loopback redirect URIs use the "http" scheme and are constructed
+      // > with the loopback IP literal and whatever port the client is
+      // > listening on. That is, "http://127.0.0.1:{port}/{path}" for IPv4,
+      // > and "http://[::1]:{port}/{path}" for IPv6.
+      ctx.addIssue({
+        code: ZodIssueCode.custom,
+        message:
+          'loopback redirect uris must use the "http:" protocol, not "https:"',
+      })
+      return false
+    }
+
     return true
   },
 )
