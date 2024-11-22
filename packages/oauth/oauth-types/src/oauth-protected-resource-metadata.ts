@@ -11,10 +11,20 @@ export const oauthProtectedResourceMetadataSchema = z.object({
    * REQUIRED. The protected resource's resource identifier, which is a URL that
    * uses the https scheme and has no query or fragment components. Using these
    * well-known resources is described in Section 3.
+   *
+   * @note This schema allows non https URLs for testing & development purposes.
+   * Make sure to validate the URL before using it in a production environment.
    */
-  resource: webUrlSchema.refine((url) => url.startsWith('https://'), {
-    message: 'Resource URL must use the https scheme',
-  }),
+  resource: webUrlSchema
+    // .refine((url): url is `https://${string}` => url.startsWith('https://'), {
+    //   message: 'Resource URL must use the https scheme',
+    // })
+    .refine((url) => !url.includes('?'), {
+      message: 'Resource URL must not contain query parameters',
+    })
+    .refine((url) => !url.includes('#'), {
+      message: 'Resource URL must not contain a fragment',
+    }),
 
   /**
    * OPTIONAL. JSON array containing a list of OAuth authorization server issuer
