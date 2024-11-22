@@ -3,7 +3,8 @@ import { dangerousUrlSchema } from './common.js'
 import { isLoopbackHost } from './util.js'
 
 export type OAuthLoopbackRedirectURI =
-  `http://${'127.0.0.1' | '[::1]'}${'' | `${':' | '/' | '?' | '#'}${string}`}`
+  | `http://[::1]${string}`
+  | `http://127.0.0.1${'' | `${':' | '/' | '?' | '#'}${string}`}`
 export const oauthLoopbackRedirectURISchema = dangerousUrlSchema.superRefine(
   (value, ctx): value is OAuthLoopbackRedirectURI => {
     if (!value.startsWith('http://')) {
