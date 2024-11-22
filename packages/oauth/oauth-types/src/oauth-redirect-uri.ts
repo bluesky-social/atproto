@@ -57,27 +57,41 @@ export const oauthHttpsRedirectURISchema = dangerousUrlSchema.superRefine(
 export type OAuthPrivateUseRedirectURI = `${string}.${string}:/${string}`
 export const oauthPrivateUseRedirectURISchema = dangerousUrlSchema.superRefine(
   (value, ctx): value is OAuthPrivateUseRedirectURI => {
-    const url = new URL(value)
+    const dotIdx = value.indexOf('.')
+    const colonIdx = value.indexOf(':')
 
-    if (url.protocol.includes('.')) {
-      if (url.hostname) {
-        // https://datatracker.ietf.org/doc/html/rfc8252#section-7.1
-        ctx.addIssue({
-          code: ZodIssueCode.custom,
-          message:
-            'Private-use URI schemes must not include a hostname (only one "/" is allowed after the protocol, as per RFC 8252)',
-        })
-        return false
-      }
-
-      return true
+    // Optimization: avoid parsing the URL if the protocol does not contain a "."
+    if (dotIdx === -1 || colonIdx === -1 || dotIdx > colonIdx) {
+      ctx.addIssue({
+        code: ZodIssueCode.custom,
+        message:
+          'Private-use URI scheme requires a "." as part of the protocol',
+      })
+      return false
     }
 
-    ctx.addIssue({
-      code: ZodIssueCode.custom,
-      message: 'URL must use a private-use URI scheme',
-    })
-    return false
+    const url = new URL(value)
+
+    // Should be covered by the check before, but let's be extra sure
+    if (!url.protocol.includes('.')) {
+      ctx.addIssue({
+        code: ZodIssueCode.custom,
+        message: 'Invalid private-use URI scheme',
+      })
+      return false
+    }
+
+    if (url.hostname) {
+      // https://datatracker.ietf.org/doc/html/rfc8252#section-7.1
+      ctx.addIssue({
+        code: ZodIssueCode.custom,
+        message:
+          'Private-use URI schemes must not include a hostname (only one "/" is allowed after the protocol, as per RFC 8252)',
+      })
+      return false
+    }
+
+    return true
   },
 )
 
