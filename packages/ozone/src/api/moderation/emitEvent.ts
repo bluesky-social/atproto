@@ -19,6 +19,7 @@ import { retryHttp } from '../../util'
 import { ModeratorOutput, AdminTokenOutput } from '../../auth-verifier'
 import { SettingService } from '../../setting/service'
 import { ProtectedTagSettingKey } from '../../setting/constants'
+import { ProtectedTagSetting } from '../../setting/types'
 
 const handleModerationEvent = async ({
   ctx,
@@ -97,7 +98,7 @@ const handleModerationEvent = async ({
 
       if (protectedTags) {
         status.tags.forEach((tag) => {
-          if (!protectedTags[tag]) return
+          if (!Object.hasOwn(protectedTags, tag)) return
           if (
             protectedTags[tag]['moderators'] &&
             !protectedTags[tag]['moderators'].includes(createdBy)
@@ -347,9 +348,7 @@ const getProtectedTags = async (
     return
   }
 
-  const protectedTags = protectedTagSetting.options[0].value
-
-  return protectedTags
+  return protectedTagSetting.options[0].value as ProtectedTagSetting
 }
 
 const validateLabels = (labels: string[]) => {
