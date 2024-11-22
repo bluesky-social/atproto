@@ -245,7 +245,7 @@ describe('moderation-events', () => {
       })
       const eventsMatchingBothKeywords = await modClient.queryEvents({
         hasComment: true,
-        comment: 'november|lazy',
+        comment: 'november||lazy',
       })
 
       expect(forSnapshot(eventsMatchingBothKeywords.events)).toMatchSnapshot()
