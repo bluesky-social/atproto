@@ -90,7 +90,16 @@ export class LabelHydrator {
         }
         acc.set(label.uri, entry)
       }
-      entry.labels.set(Labels.key(label), label)
+      const isActionableNeedsReview =
+        label.val === NEEDS_REVIEW_LABEL &&
+        !label.neg &&
+        labelers.redact.has(label.src)
+
+      // we action needs review labels on backend for now so don't send to client until client has proper logic for them
+      if (!isActionableNeedsReview) {
+        entry.labels.set(Labels.key(label), label)
+      }
+
       if (
         TAKEDOWN_LABELS.includes(label.val) &&
         !label.neg &&
@@ -98,11 +107,7 @@ export class LabelHydrator {
       ) {
         entry.isTakendown = true
       }
-      if (
-        label.val === NEEDS_REVIEW_LABEL &&
-        !label.neg &&
-        labelers.redact.has(label.src)
-      ) {
+      if (isActionableNeedsReview) {
         entry.needsReview = true
       }
       return acc
