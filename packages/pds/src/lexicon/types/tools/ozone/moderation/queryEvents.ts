@@ -29,7 +29,7 @@ export interface QueryParams {
   limit: number
   /** If true, only events with comments are returned */
   hasComment?: boolean
-  /** If specified, only events with comments containing the keyword are returned */
+  /** If specified, only events with comments containing the keyword are returned. Use | to use multiple keywords in to match using OR condition. */
   comment?: string
   /** If specified, only events where all of these labels were added are returned */
   addedLabels?: string[]

@@ -222,8 +222,19 @@ export class ModerationService {
     if (createdBefore) {
       builder = builder.where('createdAt', '<=', createdBefore)
     }
+
     if (comment) {
-      builder = builder.where('comment', 'ilike', `%${comment}%`)
+      const keywords = comment.split('|')
+      if (keywords.length > 1) {
+        builder = builder.where((qb) => {
+          keywords.forEach((keyword) => {
+            qb = qb.orWhere('comment', 'ilike', `%${keyword}%`)
+          })
+          return qb
+        })
+      } else {
+        builder = builder.where('comment', 'ilike', `%${comment}%`)
+      }
     }
     if (hasComment) {
       builder = builder.where('comment', 'is not', null)
