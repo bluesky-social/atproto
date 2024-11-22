@@ -2,8 +2,9 @@ import {
   OAuthAuthorizationRequestParameters,
   oauthClientIdSchema,
   oauthClientMetadataSchema,
+  webUrlSchema,
 } from '@atproto/oauth-types'
-import type { TypeOf } from 'zod'
+import { z, TypeOf } from 'zod'
 
 import { Simplify } from './util.js'
 
@@ -26,7 +27,7 @@ export type AuthorizeOptions = Simplify<
 >
 
 export const clientMetadataSchema = oauthClientMetadataSchema.extend({
-  client_id: oauthClientIdSchema.url(),
+  client_id: z.intersection(oauthClientIdSchema, webUrlSchema),
 })
 
 export type ClientMetadata = TypeOf<typeof clientMetadataSchema>
