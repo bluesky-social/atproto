@@ -9446,6 +9446,143 @@ export class SearchPostsResponse extends Message<SearchPostsResponse> {
 }
 
 /**
+ * - Return uris of starter packs matching term, paginated
+ *     - `searchStarterPacks` skeleton
+ *
+ * @generated from message bsky.SearchStarterPacksRequest
+ */
+export class SearchStarterPacksRequest extends Message<SearchStarterPacksRequest> {
+  /**
+   * @generated from field: string term = 1;
+   */
+  term = ''
+
+  /**
+   * @generated from field: int32 limit = 2;
+   */
+  limit = 0
+
+  /**
+   * @generated from field: string cursor = 3;
+   */
+  cursor = ''
+
+  constructor(data?: PartialMessage<SearchStarterPacksRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.SearchStarterPacksRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'term', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'limit', kind: 'scalar', T: 5 /* ScalarType.INT32 */ },
+    { no: 3, name: 'cursor', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): SearchStarterPacksRequest {
+    return new SearchStarterPacksRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): SearchStarterPacksRequest {
+    return new SearchStarterPacksRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): SearchStarterPacksRequest {
+    return new SearchStarterPacksRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | SearchStarterPacksRequest
+      | PlainMessage<SearchStarterPacksRequest>
+      | undefined,
+    b:
+      | SearchStarterPacksRequest
+      | PlainMessage<SearchStarterPacksRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(SearchStarterPacksRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.SearchStarterPacksResponse
+ */
+export class SearchStarterPacksResponse extends Message<SearchStarterPacksResponse> {
+  /**
+   * @generated from field: repeated string uris = 1;
+   */
+  uris: string[] = []
+
+  /**
+   * @generated from field: string cursor = 2;
+   */
+  cursor = ''
+
+  constructor(data?: PartialMessage<SearchStarterPacksResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.SearchStarterPacksResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    {
+      no: 1,
+      name: 'uris',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+      repeated: true,
+    },
+    { no: 2, name: 'cursor', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): SearchStarterPacksResponse {
+    return new SearchStarterPacksResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): SearchStarterPacksResponse {
+    return new SearchStarterPacksResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): SearchStarterPacksResponse {
+    return new SearchStarterPacksResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | SearchStarterPacksResponse
+      | PlainMessage<SearchStarterPacksResponse>
+      | undefined,
+    b:
+      | SearchStarterPacksResponse
+      | PlainMessage<SearchStarterPacksResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(SearchStarterPacksResponse, a, b)
+  }
+}
+
+/**
  * - Return DIDs of suggested follows for a user, excluding anyone they already follow
  *     - `getSuggestions`, `getSuggestedFollowsByActor`
  *

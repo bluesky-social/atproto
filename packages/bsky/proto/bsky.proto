@@ -906,6 +906,19 @@ message SearchPostsResponse {
   string cursor = 2;
 }
 
+// - Return uris of starter packs matching term, paginated
+//     - `searchStarterPacks` skeleton
+message SearchStarterPacksRequest {
+  string term = 1;
+  int32 limit = 2;
+  string cursor = 3;
+}
+
+message SearchStarterPacksResponse {
+  repeated string uris = 1;
+  string cursor = 2;
+}
+
 //
 // Suggestions
 //
@@ -1191,6 +1204,7 @@ service Service {
   // Search
   rpc SearchActors(SearchActorsRequest) returns (SearchActorsResponse);
   rpc SearchPosts(SearchPostsRequest) returns (SearchPostsResponse);
+  rpc SearchStarterPacks(SearchStarterPacksRequest) returns (SearchStarterPacksResponse);
 
   // Suggestions
   rpc GetFollowSuggestions(GetFollowSuggestionsRequest) returns (GetFollowSuggestionsResponse);

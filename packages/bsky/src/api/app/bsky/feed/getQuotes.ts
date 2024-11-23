@@ -1,4 +1,3 @@
-import { AtUri } from '@atproto/syntax'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { createPipeline } from '../../../../pipeline'
@@ -15,7 +14,12 @@ import { parseString } from '../../../../hydration/util'
 import { uriToDid } from '../../../../util/uris'
 
 export default function (server: Server, ctx: AppContext) {
-  const getQuotes = createPipeline(skeleton, hydration, noBlocks, presentation)
+  const getQuotes = createPipeline(
+    skeleton,
+    hydration,
+    noBlocksOrNeedsReview,
+    presentation,
+  )
   server.app.bsky.feed.getQuotes({
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ params, auth, req }) => {
@@ -67,16 +71,19 @@ const hydration = async (inputs: {
   )
 }
 
-const noBlocks = (inputs: {
+const noBlocksOrNeedsReview = (inputs: {
   ctx: Context
   skeleton: Skeleton
   hydration: HydrationState
 }) => {
   const { ctx, skeleton, hydration } = inputs
   skeleton.uris = skeleton.uris.filter((uri) => {
-    const embedBlock = hydration.postBlocks?.get(uri)?.embed
     const authorDid = uriToDid(uri)
-    return !ctx.views.viewerBlockExists(authorDid, hydration) && !embedBlock
+    return (
+      !ctx.views.viewerBlockExists(authorDid, hydration) &&
+      !hydration.postBlocks?.get(uri)?.embed &&
+      ctx.views.viewerSeesNeedsReview(authorDid, hydration)
+    )
   })
   return skeleton
 }
