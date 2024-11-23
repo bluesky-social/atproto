@@ -6,6 +6,7 @@ import { SettingService } from '../../setting/service'
 import { Member } from '../../db/schema/member'
 import { ToolsOzoneTeamDefs } from '@atproto/api'
 import assert from 'node:assert'
+import { settingValidators } from '../../setting/validators'
 
 export default function (server: Server, ctx: AppContext) {
   server.tools.ozone.setting.upsertOption({
@@ -63,11 +64,17 @@ export default function (server: Server, ctx: AppContext) {
         ) {
           throw new AuthRequiredError(`Not permitted to update setting ${key}`)
         }
-        await settingService.upsert({
+        const option = {
           ...baseOption,
-          scope: 'instance',
+          scope: 'instance' as const,
           managerRole: getManagerRole(managerRole),
-        })
+        }
+
+        if (settingValidators.has(key)) {
+          await settingValidators.get(key)?.(option)
+        }
+
+        await settingService.upsert(option)
       }
 
       const newOption = await getExistingSetting(

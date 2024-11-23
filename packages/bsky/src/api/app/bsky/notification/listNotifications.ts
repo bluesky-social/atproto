@@ -21,7 +21,7 @@ export default function (server: Server, ctx: AppContext) {
   const listNotifications = createPipeline(
     skeleton,
     hydration,
-    noBlockOrMutes,
+    noBlockOrMutesOrNeedsReview,
     presentation,
   )
   server.app.bsky.notification.listNotifications({
@@ -88,7 +88,7 @@ const hydration = async (
   return ctx.hydrator.hydrateNotifications(skeleton.notifs, params.hydrateCtx)
 }
 
-const noBlockOrMutes = (
+const noBlockOrMutesOrNeedsReview = (
   input: RulesFnInput<Context, Params, SkeletonState>,
 ) => {
   const { skeleton, hydration, ctx, params } = input
@@ -110,16 +110,26 @@ const noBlockOrMutes = (
           : undefined
         const isRootPostByViewer =
           rootPostUri && didFromUri(rootPostUri) === params.hydrateCtx?.viewer
-        const isHiddenReply = isRootPostByViewer
+        const isHiddenByThreadgate = isRootPostByViewer
           ? ctx.views.replyIsHiddenByThreadgate(
               item.uri,
               rootPostUri,
               hydration,
             )
           : false
-        if (isHiddenReply) {
+        if (isHiddenByThreadgate) {
           return false
         }
+      }
+    }
+    // Filter out notifications from users that need review unless moots
+    if (
+      item.reason === 'reply' ||
+      item.reason === 'quote' ||
+      item.reason === 'mention'
+    ) {
+      if (!ctx.views.viewerSeesNeedsReview(did, hydration)) {
+        return false
       }
     }
     return true
