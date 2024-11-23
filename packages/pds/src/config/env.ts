@@ -17,6 +17,7 @@ export const readEnv = (): ServerEnvironment => {
     acceptingImports: envBool('PDS_ACCEPTING_REPO_IMPORTS'),
     blobUploadLimit: envInt('PDS_BLOB_UPLOAD_LIMIT'),
     devMode: envBool('PDS_DEV_MODE'),
+    manualCertSet: new Set(envStr('PDS_MANUAL_CERTS')?.split(',')),
 
     // branding
     brandColor: envStr('PDS_PRIMARY_COLOR'),
