@@ -4490,7 +4490,13 @@ export const schemaDict = {
           sort: {
             type: 'string',
             description: 'Sorting mode for threads.',
-            knownValues: ['oldest', 'newest', 'most-likes', 'random'],
+            knownValues: [
+              'oldest',
+              'newest',
+              'most-likes',
+              'random',
+              'hotness',
+            ],
           },
           prioritizeFollowedUsers: {
             type: 'boolean',
@@ -13483,9 +13489,8 @@ export const schemaDict = {
       },
     },
   },
-} as const satisfies Record<string, LexiconDoc>
-
-export const schemas = Object.values(schemaDict)
+}
+export const schemas: LexiconDoc[] = Object.values(schemaDict) as LexiconDoc[]
 export const lexicons: Lexicons = new Lexicons(schemas)
 export const ids = {
   ComAtprotoAdminDefs: 'com.atproto.admin.defs',
