@@ -267,7 +267,7 @@ describe('agent', () => {
           },
         },
         threadViewPrefs: {
-          sort: 'oldest',
+          sort: 'hotness',
           prioritizeFollowedUsers: true,
         },
         interests: {
@@ -309,7 +309,7 @@ describe('agent', () => {
           },
         },
         threadViewPrefs: {
-          sort: 'oldest',
+          sort: 'hotness',
           prioritizeFollowedUsers: true,
         },
         interests: {
@@ -351,7 +351,7 @@ describe('agent', () => {
           },
         },
         threadViewPrefs: {
-          sort: 'oldest',
+          sort: 'hotness',
           prioritizeFollowedUsers: true,
         },
         interests: {
@@ -393,7 +393,7 @@ describe('agent', () => {
           },
         },
         threadViewPrefs: {
-          sort: 'oldest',
+          sort: 'hotness',
           prioritizeFollowedUsers: true,
         },
         interests: {
@@ -439,7 +439,7 @@ describe('agent', () => {
           },
         },
         threadViewPrefs: {
-          sort: 'oldest',
+          sort: 'hotness',
           prioritizeFollowedUsers: true,
         },
         interests: {
@@ -488,7 +488,7 @@ describe('agent', () => {
           },
         },
         threadViewPrefs: {
-          sort: 'oldest',
+          sort: 'hotness',
           prioritizeFollowedUsers: true,
         },
         interests: {
@@ -537,7 +537,7 @@ describe('agent', () => {
           },
         },
         threadViewPrefs: {
-          sort: 'oldest',
+          sort: 'hotness',
           prioritizeFollowedUsers: true,
         },
         interests: {
@@ -586,7 +586,7 @@ describe('agent', () => {
           },
         },
         threadViewPrefs: {
-          sort: 'oldest',
+          sort: 'hotness',
           prioritizeFollowedUsers: true,
         },
         interests: {
@@ -635,7 +635,7 @@ describe('agent', () => {
           },
         },
         threadViewPrefs: {
-          sort: 'oldest',
+          sort: 'hotness',
           prioritizeFollowedUsers: true,
         },
         interests: {
@@ -684,7 +684,7 @@ describe('agent', () => {
           },
         },
         threadViewPrefs: {
-          sort: 'oldest',
+          sort: 'hotness',
           prioritizeFollowedUsers: true,
         },
         interests: {
@@ -739,7 +739,7 @@ describe('agent', () => {
           },
         },
         threadViewPrefs: {
-          sort: 'oldest',
+          sort: 'hotness',
           prioritizeFollowedUsers: true,
         },
         interests: {
@@ -788,7 +788,7 @@ describe('agent', () => {
           },
         },
         threadViewPrefs: {
-          sort: 'oldest',
+          sort: 'hotness',
           prioritizeFollowedUsers: true,
         },
         interests: {
@@ -837,7 +837,7 @@ describe('agent', () => {
           },
         },
         threadViewPrefs: {
-          sort: 'oldest',
+          sort: 'hotness',
           prioritizeFollowedUsers: true,
         },
         interests: {
@@ -886,7 +886,7 @@ describe('agent', () => {
           },
         },
         threadViewPrefs: {
-          sort: 'oldest',
+          sort: 'hotness',
           prioritizeFollowedUsers: true,
         },
         interests: {
@@ -935,7 +935,7 @@ describe('agent', () => {
           },
         },
         threadViewPrefs: {
-          sort: 'oldest',
+          sort: 'hotness',
           prioritizeFollowedUsers: true,
         },
         interests: {
@@ -991,7 +991,7 @@ describe('agent', () => {
           },
         },
         threadViewPrefs: {
-          sort: 'oldest',
+          sort: 'hotness',
           prioritizeFollowedUsers: true,
         },
         interests: {

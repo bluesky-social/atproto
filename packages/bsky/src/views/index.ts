@@ -125,6 +125,15 @@ export class Views {
     return actor.muted || !!actor.mutedByList
   }
 
+  viewerSeesNeedsReview(did: string, state: HydrationState): boolean {
+    const { labels, profileViewers, ctx } = state
+    return (
+      !labels?.get(did)?.needsReview ||
+      ctx?.viewer === did ||
+      !!profileViewers?.get(did)?.following
+    )
+  }
+
   replyIsHiddenByThreadgate(
     replyUri: string,
     rootPostUri: string,
@@ -849,6 +858,9 @@ export class Views {
       if (rootUri !== getRootUri(uri, postInfo)) return // outside thread boundary
       if (this.viewerBlockExists(post.author.did, state)) {
         return this.blockedPost(uri, post.author.did, state)
+      }
+      if (!this.viewerSeesNeedsReview(post.author.did, state)) {
+        return undefined
       }
       return {
         $type: 'app.bsky.feed.defs#threadViewPost',
