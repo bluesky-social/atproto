@@ -16,9 +16,6 @@ export const oauthProtectedResourceMetadataSchema = z.object({
    * Make sure to validate the URL before using it in a production environment.
    */
   resource: webUriSchema
-    // .refine((url): url is `https://${string}` => url.startsWith('https://'), {
-    //   message: 'Resource URL must use the https scheme',
-    // })
     .refine((url) => !url.includes('?'), {
       message: 'Resource URL must not contain query parameters',
     })
