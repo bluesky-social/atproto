@@ -15,6 +15,20 @@ const atpSpecific = [
   'handle',
 ]
 
+const wgSpecific = [
+  'ca',
+  'caddy-sidecar',
+  'test-wss',
+  'test-ws',
+  'bgs',
+  'social-app',
+  'ozone',
+  'ozone-standalone',
+  'palomar',
+  'feed-generator',
+  'jetstream',
+]
+
 // naively pulled from: https://radwebhosting.com/client_area/knowledgebase/196/List-of-Banned-Subdomain-Prefixes.html
 const commonlyReserved = [
   'about',
@@ -1049,6 +1063,7 @@ const famousAccounts = [
 
 export const reservedSubdomains: Record<string, boolean> = [
   ...atpSpecific,
+  ...wgSpecific,
   ...commonlyReserved,
   ...famousAccounts,
 ].reduce((acc, cur) => {
