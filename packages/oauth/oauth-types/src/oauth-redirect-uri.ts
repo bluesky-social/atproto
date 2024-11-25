@@ -21,7 +21,8 @@ export const oauthLoopbackRedirectURISchema = loopbackUriSchema.superRefine(
       // > resolution on the user's device.
       ctx.addIssue({
         code: ZodIssueCode.custom,
-        message: 'Use of "localhost" hostname is not allowed (RFC 8252), use a loopback IP such as "127.0.0.1" instead',
+        message:
+          'Use of "localhost" hostname is not allowed (RFC 8252), use a loopback IP such as "127.0.0.1" instead',
       })
       return false
     }
