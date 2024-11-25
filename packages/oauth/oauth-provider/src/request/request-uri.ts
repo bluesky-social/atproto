@@ -6,7 +6,6 @@ export const REQUEST_URI_PREFIX = 'urn:ietf:params:oauth:request_uri:'
 
 export const requestUriSchema = z
   .string()
-  .url()
   .refinement(
     (data): data is `${typeof REQUEST_URI_PREFIX}${RequestId}` =>
       data.startsWith(REQUEST_URI_PREFIX) &&
