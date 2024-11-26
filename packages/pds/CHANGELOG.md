@@ -1,5 +1,18 @@
 # @atproto/pds
 
+## 0.4.74
+
+### Patch Changes
+
+- [#3092](https://github.com/bluesky-social/atproto/pull/3092) [`1e367cba2`](https://github.com/bluesky-social/atproto/commit/1e367cba2bd1ff5560c2ec5c2a5d348cd9342b65) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve email validation logic
+
+- [#3066](https://github.com/bluesky-social/atproto/pull/3066) [`5ddd51235`](https://github.com/bluesky-social/atproto/commit/5ddd51235c7e064bddcad2dd218df05d144d18d3) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Prevent use of non https: resource uri in production environments
+
+- [#3092](https://github.com/bluesky-social/atproto/pull/3092) [`1e367cba2`](https://github.com/bluesky-social/atproto/commit/1e367cba2bd1ff5560c2ec5c2a5d348cd9342b65) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update list of forbidden domain names in email addresses
+
+- Updated dependencies []:
+  - @atproto/oauth-provider@0.2.8
+
 ## 0.4.73
 
 ### Patch Changes
