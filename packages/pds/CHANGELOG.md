@@ -1,5 +1,36 @@
 # @atproto/pds
 
+## 0.4.74
+
+### Patch Changes
+
+- [#3092](https://github.com/bluesky-social/atproto/pull/3092) [`1e367cba2`](https://github.com/bluesky-social/atproto/commit/1e367cba2bd1ff5560c2ec5c2a5d348cd9342b65) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve email validation logic
+
+- [#3066](https://github.com/bluesky-social/atproto/pull/3066) [`5ddd51235`](https://github.com/bluesky-social/atproto/commit/5ddd51235c7e064bddcad2dd218df05d144d18d3) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Prevent use of non https: resource uri in production environments
+
+- [#3092](https://github.com/bluesky-social/atproto/pull/3092) [`1e367cba2`](https://github.com/bluesky-social/atproto/commit/1e367cba2bd1ff5560c2ec5c2a5d348cd9342b65) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update list of forbidden domain names in email addresses
+
+- Updated dependencies []:
+  - @atproto/oauth-provider@0.2.8
+
+## 0.4.73
+
+### Patch Changes
+
+- [#3082](https://github.com/bluesky-social/atproto/pull/3082) [`a3ce23c4c`](https://github.com/bluesky-social/atproto/commit/a3ce23c4ccf4f40998b9d1f5731e5c905390aedc) Thanks [@gaearon](https://github.com/gaearon)! - Add hotness as a thread sorting option
+
+- Updated dependencies [[`a3ce23c4c`](https://github.com/bluesky-social/atproto/commit/a3ce23c4ccf4f40998b9d1f5731e5c905390aedc)]:
+  - @atproto/api@0.13.18
+
+## 0.4.72
+
+### Patch Changes
+
+- [#3034](https://github.com/bluesky-social/atproto/pull/3034) [`90399c859`](https://github.com/bluesky-social/atproto/commit/90399c85955301babc689c293bd3e7e1a94505a3) Thanks [@dholms](https://github.com/dholms)! - use getRecord in getFeed rather than resolving full view
+
+- Updated dependencies [[`a4b528e5f`](https://github.com/bluesky-social/atproto/commit/a4b528e5f51c8bfca56b293b0059b88d138ec421), [`2e7aa211d`](https://github.com/bluesky-social/atproto/commit/2e7aa211d2cbc629899c7f87f1713b13b932750b)]:
+  - @atproto/api@0.13.17
+
 ## 0.4.71
 
 ### Patch Changes

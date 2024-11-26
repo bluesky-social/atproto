@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { oauthAuthorizationDetailsSchema } from './oauth-authorization-details.js'
 import { oauthClientIdSchema } from './oauth-client-id.js'
 import { oauthCodeChallengeMethodSchema } from './oauth-code-challenge-method.js'
+import { oauthRedirectUriSchema } from './oauth-redirect-uri.js'
 import { oauthResponseTypeSchema } from './oauth-response-type.js'
 import { oauthScopeSchema } from './oauth-scope.js'
 import { oidcClaimsParameterSchema } from './oidc-claims-parameter.js'
@@ -16,7 +17,7 @@ import { oidcEntityTypeSchema } from './oidc-entity-type.js'
 export const oauthAuthorizationRequestParametersSchema = z.object({
   client_id: oauthClientIdSchema,
   state: z.string().optional(),
-  redirect_uri: z.string().url().optional(),
+  redirect_uri: oauthRedirectUriSchema.optional(),
   scope: oauthScopeSchema.optional(),
   response_type: oauthResponseTypeSchema,
 
