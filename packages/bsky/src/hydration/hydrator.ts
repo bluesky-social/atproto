@@ -65,6 +65,7 @@ export class HydrateCtx {
   labelers = this.vals.labelers
   viewer = this.vals.viewer !== null ? serviceRefToDid(this.vals.viewer) : null
   includeTakedowns = this.vals.includeTakedowns
+  includeActorTakedowns = this.vals.includeActorTakedowns
   include3pBlocks = this.vals.include3pBlocks
   constructor(private vals: HydrateCtxVals) {}
   copy<V extends Partial<HydrateCtxVals>>(vals?: V): HydrateCtx & V {
@@ -76,6 +77,7 @@ export type HydrateCtxVals = {
   labelers: ParsedLabelers
   viewer: string | null
   includeTakedowns?: boolean
+  includeActorTakedowns?: boolean
   include3pBlocks?: boolean
 }
 
@@ -179,12 +181,13 @@ export class Hydrator {
     dids: string[],
     ctx: HydrateCtx,
   ): Promise<HydrationState> {
+    const includeTakedowns = ctx.includeTakedowns || ctx.includeActorTakedowns
     const [actors, labels, profileViewersState] = await Promise.all([
-      this.actor.getActors(dids, ctx.includeTakedowns),
+      this.actor.getActors(dids, includeTakedowns),
       this.label.getLabelsForSubjects(labelSubjectsForDid(dids), ctx.labelers),
       this.hydrateProfileViewers(dids, ctx),
     ])
-    if (!ctx.includeTakedowns) {
+    if (!includeTakedowns) {
       actionTakedownLabels(dids, actors, labels)
     }
     return mergeStates(profileViewersState ?? {}, {
