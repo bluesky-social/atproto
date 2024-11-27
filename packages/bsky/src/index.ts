@@ -8,7 +8,12 @@ import compression from 'compression'
 import { AtpAgent } from '@atproto/api'
 import { IdResolver } from '@atproto/identity'
 import { DAY, SECOND } from '@atproto/common'
-import API, { health, wellKnown, blobResolver } from './api'
+import API, {
+  health,
+  wellKnown,
+  blobResolver,
+  subscriptionListener,
+} from './api'
 import * as error from './error'
 import { loggerMiddleware } from './logger'
 import { ServerConfig } from './config'
@@ -25,6 +30,7 @@ import { authWithApiKey as bsyncAuth, createBsyncClient } from './bsync'
 import { authWithApiKey as courierAuth, createCourierClient } from './courier'
 import { FeatureGates } from './feature-gates'
 import { VideoUriBuilder } from './views/util'
+import axios from 'axios'
 
 export * from './data-plane'
 export type { ServerConfigValues } from './config'
@@ -96,6 +102,15 @@ export class BskyAppView {
       )
     }
 
+    const revenueCatClient = config.revenueCatV1ApiKey
+      ? axios.create({
+          baseURL: config.revenueCatV1Url,
+          headers: {
+            Authorization: `Bearer ${config.revenueCatV1ApiKey}`,
+          },
+        })
+      : undefined
+
     const dataplane = createDataPlaneClient(config.dataplaneUrls, {
       httpVersion: config.dataplaneHttpVersion,
       rejectUnauthorized: !config.dataplaneIgnoreBadTls,
@@ -146,6 +161,7 @@ export class BskyAppView {
       dataplane,
       searchAgent,
       suggestionsAgent,
+      revenueCatClient,
       hydrator,
       views,
       signingKey,
@@ -170,6 +186,9 @@ export class BskyAppView {
     app.use(health.createRouter(ctx))
     app.use(wellKnown.createRouter(ctx))
     app.use(blobResolver.createRouter(ctx))
+    if (revenueCatClient) {
+      app.use('/webhooks/revenuecat', subscriptionListener.createRouter(ctx))
+    }
     if (imgProcessingServer) {
       app.use('/img', imgProcessingServer.app)
     }

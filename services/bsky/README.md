@@ -21,3 +21,6 @@ This is the service entrypoint for the bsky appview. The entrypoint command shou
 - `BSKY_SEARCH_URL` - (alt. `BSKY_SEARCH_ENDPOINT`) -
 - `BSKY_LABELS_FROM_ISSUER_DIDS` - comma-separated list of labelers to always use for record labels.
 - `MOD_SERVICE_DID` - the DID of the mod service, used to receive service authed requests.
+- `BSKY_REVENUE_CAT_V1_URL` - URL of RevenueCat v1 service, to manage subscriptions.
+- `BSKY_REVENUE_CAT_V1_API_KEY` - API key for RevenueCat v1 service, to manage subscriptions. If not passed, subscriptions are disabled.
+- `BSKY_REVENUE_CAT_WEBHOOK_AUTHORIZATION` - (recommended) the authorization header RevenueCat will pass on webhook requests.
