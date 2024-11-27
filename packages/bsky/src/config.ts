@@ -24,6 +24,9 @@ export interface ServerConfigValues {
   searchUrl?: string
   suggestionsUrl?: string
   suggestionsApiKey?: string
+  revenueCatV1Url?: string
+  revenueCatV1ApiKey?: string
+  revenueCatWebhookAuthorization?: string
   cdnUrl?: string
   videoPlaylistUrlPattern?: string
   videoThumbnailUrlPattern?: string
@@ -82,6 +85,12 @@ export class ServerConfig {
       undefined
     const suggestionsUrl = process.env.BSKY_SUGGESTIONS_URL || undefined
     const suggestionsApiKey = process.env.BSKY_SUGGESTIONS_API_KEY || undefined
+    const revenueCatV1Url =
+      process.env.BSKY_REVENUE_CAT_V1_URL || 'https://api.revenuecat.com/v1'
+    const revenueCatV1ApiKey =
+      process.env.BSKY_REVENUE_CAT_V1_API_KEY || undefined
+    const revenueCatWebhookAuthorization =
+      process.env.BSKY_REVENUE_CAT_WEBHOOK_AUTHORIZATION || undefined
     let dataplaneUrls = overrides?.dataplaneUrls
     dataplaneUrls ??= process.env.BSKY_DATAPLANE_URLS
       ? process.env.BSKY_DATAPLANE_URLS.split(',')
@@ -158,6 +167,9 @@ export class ServerConfig {
       searchUrl,
       suggestionsUrl,
       suggestionsApiKey,
+      revenueCatV1Url,
+      revenueCatV1ApiKey,
+      revenueCatWebhookAuthorization,
       didPlcUrl,
       labelsFromIssuerDids,
       handleResolveNameservers,
@@ -283,6 +295,18 @@ export class ServerConfig {
 
   get suggestionsApiKey() {
     return this.cfg.suggestionsApiKey
+  }
+
+  get revenueCatV1Url() {
+    return this.cfg.revenueCatV1Url
+  }
+
+  get revenueCatV1ApiKey() {
+    return this.cfg.revenueCatV1ApiKey
+  }
+
+  get revenueCatWebhookAuthorization() {
+    return this.cfg.revenueCatWebhookAuthorization
   }
 
   get cdnUrl() {

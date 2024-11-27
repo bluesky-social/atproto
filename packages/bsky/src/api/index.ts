@@ -64,6 +64,8 @@ export * as wellKnown from './well-known'
 
 export * as blobResolver from './blob-resolver'
 
+export * as subscriptionListener from './subscription-listener'
+
 export default function (server: Server, ctx: AppContext) {
   // app.bsky
   getTimeline(server, ctx)

@@ -17,6 +17,7 @@ import {
   parseLabelerHeader,
 } from './util'
 import { httpLogger as log } from './logger'
+import { AxiosInstance } from 'axios'
 
 export class AppContext {
   constructor(
@@ -25,6 +26,7 @@ export class AppContext {
       dataplane: DataPlaneClient
       searchAgent: AtpAgent | undefined
       suggestionsAgent: AtpAgent | undefined
+      revenueCatClient: AxiosInstance | undefined
       hydrator: Hydrator
       views: Views
       signingKey: Keypair
@@ -50,6 +52,10 @@ export class AppContext {
 
   get suggestionsAgent(): AtpAgent | undefined {
     return this.opts.suggestionsAgent
+  }
+
+  get revenueCatClient(): AxiosInstance | undefined {
+    return this.opts.revenueCatClient
   }
 
   get hydrator(): Hydrator {

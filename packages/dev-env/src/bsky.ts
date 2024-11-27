@@ -67,6 +67,10 @@ export class TestBsky {
       bigThreadUris: new Set(),
       ...cfg,
       adminPasswords: [ADMIN_PASSWORD],
+      revenueCatV1Url: process.env.BSKY_REVENUE_CAT_V1_URL,
+      revenueCatV1ApiKey: process.env.BSKY_REVENUE_CAT_V1_API_KEY,
+      revenueCatWebhookAuthorization:
+        process.env.BSKY_REVENUE_CAT_WEBHOOK_AUTHORIZATION,
     })
 
     // Separate migration db in case migration changes some connection state that we need in the tests, e.g. "alter database ... set ..."
