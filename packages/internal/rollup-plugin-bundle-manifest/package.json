@@ -24,7 +24,7 @@
     }
   },
   "dependencies": {
-    "mime": "^3.0.0"
+    "mime": "^4.0.4"
   },
   "peerDependencies": {
     "rollup": "^4.0.0"
