@@ -39,6 +39,8 @@
     "@atproto/oauth-client": "workspace:*",
     "@atproto/oauth-client-browser": "workspace:*",
     "@atproto/oauth-types": "workspace:*",
+    "abortcontroller-polyfill": "^1.7.6",
+    "event-target-shim": "^6.0.2",
     "expo-sqlite": "^15.0.3",
     "jose": "^5.2.0",
     "react-native-quick-crypto": "^0.7.7"

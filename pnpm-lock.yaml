@@ -1013,6 +1013,12 @@ importers:
       '@atproto/oauth-types':
         specifier: workspace:*
         version: link:../oauth-types
+      abortcontroller-polyfill:
+        specifier: ^1.7.6
+        version: 1.7.6
+      event-target-shim:
+        specifier: ^6.0.2
+        version: 6.0.2
       expo-sqlite:
         specifier: ^15.0.3
         version: 15.0.3(expo@52.0.11)(react-native@0.76.3)(react@18.3.1)
@@ -6205,7 +6211,7 @@ packages:
 
   /@expo/bunyan@4.0.1:
     resolution: {integrity: sha512-+Lla7nYSiHZirgK+U/uYzsLv/X+HaJienbD5AKX1UQZHYfWaP+9uuQluRB4GrEVWF0GZ7vEVp/jzaOT9k/SQlg==}
-    engines: {'0': node >=0.10.0}
+    engines: {node: '>=0.10.0'}
     dependencies:
       uuid: 8.3.2
     dev: false
@@ -8548,6 +8554,10 @@ packages:
     engines: {node: '>=6.5'}
     dependencies:
       event-target-shim: 5.0.1
+
+  /abortcontroller-polyfill@1.7.6:
+    resolution: {integrity: sha512-Zypm+LjYdWAzvuypZvDN0smUJrhOurcuBWhhMRBExqVLRvdjp3Z9mASxKyq19K+meZMshwjjy5S0lkm388zE4Q==}
+    dev: false
 
   /accepts@1.3.8:
     resolution: {integrity: sha512-PYAthTa2m2VKxuvSD3DPC/Gy+U+sOA1LAuT8mkmRuvw+NACSaeXEQ+NHcVF7rONl6qcaxV3Uuemwawk+7+SJLw==}
@@ -11025,6 +11035,11 @@ packages:
     resolution: {integrity: sha512-i/2XbnSz/uxRCU6+NdVJgKWDTM427+MqYbkQzD321DuCQJUqOuJKIA0IM2+W2xtYHdKOmZ4dR6fExsd4SXL+WQ==}
     engines: {node: '>=6'}
 
+  /event-target-shim@6.0.2:
+    resolution: {integrity: sha512-8q3LsZjRezbFZ2PN+uP+Q7pnHUMmAOziU2vA2OwoFaKIXxlxl38IylhSSgUorWu/rf4er67w0ikBqjBFk/pomA==}
+    engines: {node: '>=10.13.0'}
+    dev: false
+
   /eventemitter3@4.0.7:
     resolution: {integrity: sha512-8guHBZCwKnFhYdHr2ysuRWErTwhoN2X8XELRlrRwpmfeY2jjuUN4taQMsULKUVo1K4DvZl+0pgfyoysHxvmvEw==}
 
@@ -11096,7 +11111,7 @@ packages:
       invariant: 2.2.4
       md5-file: 3.2.3
       react: 18.3.1
-      react-native: 0.76.3(@babel/core@7.26.0)(@babel/preset-env@7.26.0)(@types/react@18.3.12)(react@18.3.1)
+      react-native: 0.76.3(@babel/core@7.26.0)(@babel/preset-env@7.26.0)(react@18.3.1)
     transitivePeerDependencies:
       - supports-color
     dev: false
@@ -11110,7 +11125,7 @@ packages:
       '@expo/config': 10.0.5
       '@expo/env': 0.4.0
       expo: 52.0.11(@babel/core@7.26.0)(@babel/preset-env@7.26.0)(react-native@0.76.3)(react@18.3.1)
-      react-native: 0.76.3(@babel/core@7.26.0)(@babel/preset-env@7.26.0)(@types/react@18.3.12)(react@18.3.1)
+      react-native: 0.76.3(@babel/core@7.26.0)(@babel/preset-env@7.26.0)(react@18.3.1)
     transitivePeerDependencies:
       - supports-color
     dev: false
@@ -11168,7 +11183,7 @@ packages:
       react-native: '*'
     dependencies:
       expo: 52.0.11(@babel/core@7.26.0)(@babel/preset-env@7.26.0)(react-native@0.76.3)(react@18.3.1)
-      react-native: 0.76.3(@babel/core@7.26.0)(@babel/preset-env@7.26.0)(@types/react@18.3.12)(react@18.3.1)
+      react-native: 0.76.3(@babel/core@7.26.0)(@babel/preset-env@7.26.0)(react@18.3.1)
       web-streams-polyfill: 3.3.3
     dev: false
 
@@ -11308,7 +11323,7 @@ packages:
       expo-modules-core: 2.0.6
       fbemitter: 3.0.0
       react: 18.3.1
-      react-native: 0.76.3(@babel/core@7.26.0)(@babel/preset-env@7.26.0)(@types/react@18.3.12)(react@18.3.1)
+      react-native: 0.76.3(@babel/core@7.26.0)(@babel/preset-env@7.26.0)(react@18.3.1)
       web-streams-polyfill: 3.3.3
       whatwg-url-without-unicode: 8.0.0-3
     transitivePeerDependencies:
