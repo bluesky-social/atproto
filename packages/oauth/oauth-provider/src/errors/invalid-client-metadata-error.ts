@@ -1,4 +1,4 @@
-import { FetchError, FetchResponseError } from '@atproto-labs/fetch'
+import { FetchError } from '@atproto-labs/fetch'
 import { ZodError } from 'zod'
 import { OAuthError } from './oauth-error.js'
 
@@ -20,14 +20,8 @@ export class InvalidClientMetadataError extends OAuthError {
     }
 
     if (cause instanceof FetchError) {
-      const causeMessage =
-        cause instanceof FetchResponseError || cause.statusCode !== 500
-          ? // Only expose 500 message if it was generated on another server
-            cause.message
-          : undefined
-
       throw new InvalidClientMetadataError(
-        causeMessage ? `${message}: ${causeMessage}` : message,
+        cause.expose ? `${message}: ${cause.message}` : message,
         cause,
       )
     }
