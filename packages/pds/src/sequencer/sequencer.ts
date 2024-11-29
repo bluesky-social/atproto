@@ -30,29 +30,36 @@ import { AccountStatus } from '../account-manager/helpers/account'
 export * from './events'
 
 export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
-  db: SequencerDb
+  db: SequencerDb | null
   destroyed = false
   pollPromise: Promise<void> | null = null
   triesWithNoResults = 0
 
   constructor(
-    dbLocation: string,
+    private dbLocation: string,
     public crawlers: Crawlers,
     public lastSeen = 0,
-    disableWalAutoCheckpoint = false,
+    private disableWalAutoCheckpoint = false,
   ) {
     super()
     // note: this does not err when surpassed, just prints a warning to stderr
     this.setMaxListeners(100)
-    this.db = getDb(dbLocation, disableWalAutoCheckpoint)
+    this.db = null
+  }
+
+  private async getDb(): Promise<SequencerDb> {
+    // If the db is set, return it, otherwise set it and return it.
+    return this.db ? this.db : this.db = await getDb(this.dbLocation, this.disableWalAutoCheckpoint)
   }
 
   async start() {
-    await this.db.ensureWal()
-    const migrator = getMigrator(this.db)
+    const connection = await this.getDb();
+    await connection.ensureWal()
+    const migrator = getMigrator(connection)
     await migrator.migrateToLatestOrThrow()
     const curr = await this.curr()
     this.lastSeen = curr ?? 0
+
     if (this.pollPromise === null) {
       this.pollPromise = this.pollDb()
     }
@@ -67,7 +74,8 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
   }
 
   async curr(): Promise<number | null> {
-    const got = await this.db.db
+    const connection = await this.getDb();
+    const got = await connection.db
       .selectFrom('repo_seq')
       .selectAll()
       .orderBy('seq', 'desc')
@@ -77,7 +85,8 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
   }
 
   async next(cursor: number): Promise<SeqRow | null> {
-    const got = await this.db.db
+    const connection = await this.getDb();
+    const got = await connection.db
       .selectFrom('repo_seq')
       .selectAll()
       .where('seq', '>', cursor)
@@ -88,7 +97,8 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
   }
 
   async earliestAfterTime(time: string): Promise<SeqRow | null> {
-    const got = await this.db.db
+    const connection = await this.getDb();
+    const got = await connection.db
       .selectFrom('repo_seq')
       .selectAll()
       .where('sequencedAt', '>=', time)
@@ -106,7 +116,8 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
   }): Promise<SeqEvt[]> {
     const { earliestSeq, latestSeq, earliestTime, limit } = opts
 
-    let seqQb = this.db.db
+    const connection = await this.getDb();
+    let seqQb = connection.db
       .selectFrom('repo_seq')
       .selectAll()
       .orderBy('seq', 'asc')
@@ -208,8 +219,9 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
   }
 
   async sequenceEvt(evt: RepoSeqInsert): Promise<number> {
-    const res = await this.db.executeWithRetry(
-      this.db.db.insertInto('repo_seq').values(evt).returningAll(),
+    const connection = await this.getDb();
+    const res = await connection.executeWithRetry(
+      connection.db.insertInto('repo_seq').values(evt).returningAll(),
     )
     this.crawlers.notifyOfUpdate()
     return res[0].seq
@@ -248,8 +260,9 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
   }
 
   async deleteAllForUser(did: string, excludingSeqs: number[] = []) {
-    await this.db.executeWithRetry(
-      this.db.db
+    const connection = await this.getDb();
+    await connection.executeWithRetry(
+      connection.db
         .deleteFrom('repo_seq')
         .where('did', '=', did)
         .if(excludingSeqs.length > 0, (qb) =>

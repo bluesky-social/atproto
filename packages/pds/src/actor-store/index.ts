@@ -67,7 +67,7 @@ export class ActorStore {
       throw new InvalidRequestError('Repo not found', 'NotFound')
     }
 
-    const db = getDb(dbLocation, this.cfg.disableWalAutoCheckpoint)
+    const db = await getDb(dbLocation, this.cfg.disableWalAutoCheckpoint)
 
     // run a simple select with retry logic to ensure the db is ready (not in wal recovery mode)
     try {
@@ -142,7 +142,7 @@ export class ActorStore {
     const privKey = await keypair.export()
     await fs.writeFile(keyLocation, privKey)
 
-    const db: ActorDb = getDb(dbLocation, this.cfg.disableWalAutoCheckpoint)
+    const db: ActorDb = await getDb(dbLocation, this.cfg.disableWalAutoCheckpoint)
     try {
       await db.ensureWal()
       const migrator = getMigrator(db)

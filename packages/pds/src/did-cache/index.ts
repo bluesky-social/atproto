@@ -5,17 +5,22 @@ import { didCacheLogger } from '../logger'
 import { DidCacheDb, getMigrator, getDb } from './db'
 
 export class DidSqliteCache implements DidCache {
-  db: DidCacheDb
+  db: DidCacheDb | null
   public pQueue: PQueue | null //null during teardown
 
   constructor(
-    dbLocation: string,
+    private dbLocation: string,
     public staleTTL: number,
     public maxTTL: number,
-    disableWalAutoCheckpoint = false,
+    private disableWalAutoCheckpoint = false,
   ) {
-    this.db = getDb(dbLocation, disableWalAutoCheckpoint)
+    this.db = null
     this.pQueue = new PQueue()
+  }
+
+  private async getDb(): Promise<DidCacheDb> {
+    // If the db is set, return it, otherwise set it and return it.
+    return this.db ? this.db : this.db = await getDb(this.dbLocation, this.disableWalAutoCheckpoint)
   }
 
   async cacheDid(
@@ -24,23 +29,25 @@ export class DidSqliteCache implements DidCache {
     prevResult?: CacheResult,
   ): Promise<void> {
     try {
+      const connection = await this.getDb();
+
       if (prevResult) {
-        await this.db.executeWithRetry(
-          this.db.db
+        await connection.executeWithRetry(
+          connection.db
             .updateTable('did_doc')
             .set({ doc: JSON.stringify(doc), updatedAt: Date.now() })
             .where('did', '=', did)
             .where('updatedAt', '=', prevResult.updatedAt),
         )
       } else {
-        await this.db.executeWithRetry(
-          this.db.db
+        await connection.executeWithRetry(
+          connection.db
             .insertInto('did_doc')
             .values({ did, doc: JSON.stringify(doc), updatedAt: Date.now() })
             .onConflict((oc) =>
               oc.column('did').doUpdateSet({
-                doc: excluded(this.db.db, 'doc'),
-                updatedAt: excluded(this.db.db, 'updatedAt'),
+                doc: excluded(connection.db, 'doc'),
+                updatedAt: excluded(connection.db, 'updatedAt'),
               }),
             ),
         )
@@ -79,7 +86,8 @@ export class DidSqliteCache implements DidCache {
   }
 
   async checkCacheInternal(did: string): Promise<CacheResult | null> {
-    const res = await this.db.db
+    const connection = await this.getDb();
+    const res = await connection.db
       .selectFrom('did_doc')
       .where('did', '=', did)
       .selectAll()
@@ -100,8 +108,9 @@ export class DidSqliteCache implements DidCache {
 
   async clearEntry(did: string): Promise<void> {
     try {
-      await this.db.executeWithRetry(
-        this.db.db.deleteFrom('did_doc').where('did', '=', did),
+      const connection = await this.getDb();
+      await connection.executeWithRetry(
+        connection.db.deleteFrom('did_doc').where('did', '=', did),
       )
     } catch (err) {
       didCacheLogger.error({ did, err }, 'clearing did cache entry failed')
@@ -109,7 +118,8 @@ export class DidSqliteCache implements DidCache {
   }
 
   async clear(): Promise<void> {
-    await this.db.db.deleteFrom('did_doc').execute()
+    const connection = await this.getDb();
+    await connection.db.deleteFrom('did_doc').execute()
   }
 
   async processAll() {
@@ -117,8 +127,9 @@ export class DidSqliteCache implements DidCache {
   }
 
   async migrateOrThrow() {
-    await this.db.ensureWal()
-    await getMigrator(this.db).migrateToLatestOrThrow()
+    const connection = await this.getDb()
+    await connection.ensureWal()
+    await getMigrator(connection).migrateToLatestOrThrow()
   }
 
   async destroy() {
