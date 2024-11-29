@@ -222,8 +222,20 @@ export class ModerationService {
     if (createdBefore) {
       builder = builder.where('createdAt', '<=', createdBefore)
     }
+
     if (comment) {
-      builder = builder.where('comment', 'ilike', `%${comment}%`)
+      // the input may end in || in which case, there may be item in the array which is just '' and we want to ignore those
+      const keywords = comment.split('||').filter((keyword) => !!keyword.trim())
+      if (keywords.length > 1) {
+        builder = builder.where((qb) => {
+          keywords.forEach((keyword) => {
+            qb = qb.orWhere('comment', 'ilike', `%${keyword}%`)
+          })
+          return qb
+        })
+      } else if (keywords.length === 1) {
+        builder = builder.where('comment', 'ilike', `%${keywords[0]}%`)
+      }
     }
     if (hasComment) {
       builder = builder.where('comment', 'is not', null)
