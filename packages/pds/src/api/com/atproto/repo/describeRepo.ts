@@ -2,15 +2,14 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as id from '@atproto/identity'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
+import { INVALID_HANDLE } from '@atproto/syntax'
+import { assertRepoAvailability } from '../sync/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.describeRepo(async ({ params }) => {
     const { repo } = params
 
-    const account = await ctx.services.account(ctx.db).getAccount(repo)
-    if (account === null) {
-      throw new InvalidRequestError(`Could not find user: ${repo}`)
-    }
+    const account = await assertRepoAvailability(ctx, repo, false)
 
     let didDoc
     try {
@@ -22,14 +21,14 @@ export default function (server: Server, ctx: AppContext) {
     const handle = id.getHandle(didDoc)
     const handleIsCorrect = handle === account.handle
 
-    const collections = await ctx.services
-      .record(ctx.db)
-      .listCollectionsForDid(account.did)
+    const collections = await ctx.actorStore.read(account.did, (store) =>
+      store.record.listCollections(),
+    )
 
     return {
       encoding: 'application/json',
       body: {
-        handle: account.handle,
+        handle: account.handle ?? INVALID_HANDLE,
         did: account.did,
         didDoc,
         collections,

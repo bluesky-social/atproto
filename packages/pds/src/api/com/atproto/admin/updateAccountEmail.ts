@@ -1,23 +1,33 @@
-import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
+import { authPassthru } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.updateAccountEmail({
-    auth: ctx.roleVerifier,
-    handler: async ({ input, auth }) => {
-      if (!auth.credentials.admin) {
-        throw new AuthRequiredError('Insufficient privileges')
+    auth: ctx.authVerifier.adminToken,
+    handler: async ({ input, req }) => {
+      const account = await ctx.accountManager.getAccount(input.body.account, {
+        includeDeactivated: true,
+        includeTakenDown: true,
+      })
+      if (!account) {
+        throw new InvalidRequestError(
+          `Account does not exist: ${input.body.account}`,
+        )
       }
-      await ctx.db.transaction(async (dbTxn) => {
-        const accntService = ctx.services.account(dbTxn)
-        const account = await accntService.getAccount(input.body.account)
-        if (!account) {
-          throw new InvalidRequestError(
-            `Account does not exist: ${input.body.account}`,
-          )
-        }
-        await accntService.updateEmail(account.did, input.body.email)
+
+      if (ctx.entrywayAgent) {
+        await ctx.entrywayAgent.com.atproto.admin.updateAccountEmail(
+          input.body,
+          authPassthru(req, true),
+        )
+        return
+      }
+
+      await ctx.accountManager.updateEmail({
+        did: account.did,
+        email: input.body.email,
       })
     },
   })

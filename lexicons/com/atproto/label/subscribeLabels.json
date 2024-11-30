@@ -4,13 +4,13 @@
   "defs": {
     "main": {
       "type": "subscription",
-      "description": "Subscribe to label updates",
+      "description": "Subscribe to stream of labels (and negations). Public endpoint implemented by mod services. Uses same sequencing scheme as repo event stream.",
       "parameters": {
         "type": "params",
         "properties": {
           "cursor": {
             "type": "integer",
-            "description": "The last known event to backfill from."
+            "description": "The last known event seq number to backfill from."
           }
         }
       },

@@ -1,15 +1,11 @@
-import * as http from 'http'
-import getPort from 'get-port'
+import * as http from 'node:http'
+import { AddressInfo } from 'node:net'
+import { LexiconDoc } from '@atproto/lexicon'
+import { XRPCError, XRPCInvalidResponseError, XrpcClient } from '@atproto/xrpc'
 import { createServer, closeServer } from './_util'
 import * as xrpcServer from '../src'
-import xrpc, {
-  Client,
-  ServiceClient,
-  XRPCError,
-  XRPCInvalidResponseError,
-} from '@atproto/xrpc'
 
-const LEXICONS = [
+const LEXICONS: LexiconDoc[] = [
   {
     lexicon: 1,
     id: 'io.example.error',
@@ -74,7 +70,7 @@ const LEXICONS = [
   },
 ]
 
-const MISMATCHED_LEXICONS = [
+const MISMATCHED_LEXICONS: LexiconDoc[] = [
   {
     lexicon: 1,
     id: 'io.example.query',
@@ -129,17 +125,14 @@ describe('Errors', () => {
   server.method('io.example.procedure', () => {
     return undefined
   })
-  xrpc.addLexicons(LEXICONS)
-  const badXrpc = new Client()
-  badXrpc.addLexicons(MISMATCHED_LEXICONS)
 
-  let client: ServiceClient
-  let badClient: ServiceClient
+  let client: XrpcClient
+  let badClient: XrpcClient
   beforeAll(async () => {
-    const port = await getPort()
-    s = await createServer(port, server)
-    client = xrpc.service(`http://localhost:${port}`)
-    badClient = badXrpc.service(`http://localhost:${port}`)
+    s = await createServer(server)
+    const { port } = s.address() as AddressInfo
+    client = new XrpcClient(`http://localhost:${port}`, LEXICONS)
+    badClient = new XrpcClient(`http://localhost:${port}`, MISMATCHED_LEXICONS)
   })
   afterAll(async () => {
     await closeServer(s)

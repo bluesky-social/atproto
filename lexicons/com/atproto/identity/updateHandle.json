@@ -4,14 +4,18 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Updates the handle of the account",
+      "description": "Updates the current account's handle. Verifies handle validity, and updates did:plc document if necessary. Implemented by PDS, and requires auth.",
       "input": {
         "encoding": "application/json",
         "schema": {
           "type": "object",
           "required": ["handle"],
           "properties": {
-            "handle": { "type": "string", "format": "handle" }
+            "handle": {
+              "type": "string",
+              "format": "handle",
+              "description": "The new handle."
+            }
           }
         }
       }

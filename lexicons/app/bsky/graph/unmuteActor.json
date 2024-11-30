@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Unmute an actor by did or handle.",
+      "description": "Unmutes the specified account. Requires auth.",
       "input": {
         "encoding": "application/json",
         "schema": {

@@ -4,9 +4,11 @@
   "defs": {
     "main": {
       "type": "query",
+      "description": "Count the number of unread notifications for the requesting account. Requires auth.",
       "parameters": {
         "type": "params",
         "properties": {
+          "priority": { "type": "boolean" },
           "seenAt": { "type": "string", "format": "datetime" }
         }
       },

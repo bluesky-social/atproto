@@ -4,12 +4,21 @@
   "defs": {
     "main": {
       "type": "query",
+      "description": "Get a list of reposts for a given post.",
       "parameters": {
         "type": "params",
         "required": ["uri"],
         "properties": {
-          "uri": { "type": "string", "format": "at-uri" },
-          "cid": { "type": "string", "format": "cid" },
+          "uri": {
+            "type": "string",
+            "format": "at-uri",
+            "description": "Reference (AT-URI) of post record"
+          },
+          "cid": {
+            "type": "string",
+            "format": "cid",
+            "description": "If supplied, filters to reposts of specific version (by CID) of the post record."
+          },
           "limit": {
             "type": "integer",
             "minimum": 1,

@@ -4,12 +4,16 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Fetch a list of lists that belong to an actor",
+      "description": "Enumerates the lists created by a specified account (actor).",
       "parameters": {
         "type": "params",
         "required": ["actor"],
         "properties": {
-          "actor": { "type": "string", "format": "at-identifier" },
+          "actor": {
+            "type": "string",
+            "format": "at-identifier",
+            "description": "The account (actor) to enumerate lists from."
+          },
           "limit": {
             "type": "integer",
             "minimum": 1,

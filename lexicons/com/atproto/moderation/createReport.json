@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Report a repo or a record.",
+      "description": "Submit a moderation report regarding an atproto account or record. Implemented by moderation services (with PDS proxying), and requires auth.",
       "input": {
         "encoding": "application/json",
         "schema": {
@@ -13,9 +13,15 @@
           "properties": {
             "reasonType": {
               "type": "ref",
+              "description": "Indicates the broad category of violation the report is for.",
               "ref": "com.atproto.moderation.defs#reasonType"
             },
-            "reason": { "type": "string" },
+            "reason": {
+              "type": "string",
+              "maxGraphemes": 2000,
+              "maxLength": 20000,
+              "description": "Additional context about the content and violation."
+            },
             "subject": {
               "type": "union",
               "refs": [
@@ -43,7 +49,11 @@
               "type": "ref",
               "ref": "com.atproto.moderation.defs#reasonType"
             },
-            "reason": { "type": "string" },
+            "reason": {
+              "type": "string",
+              "maxGraphemes": 2000,
+              "maxLength": 20000
+            },
             "subject": {
               "type": "union",
               "refs": [

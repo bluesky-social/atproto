@@ -1,9 +1,21 @@
-import { LabelPreference } from './moderation/types'
+import { AppBskyActorDefs } from './client'
+import { ModerationPrefs } from './moderation/types'
+
+/**
+ * Supported proxy targets
+ */
+type UnknownServiceType = string & NonNullable<unknown>
+export type AtprotoServiceType = 'atproto_labeler' | UnknownServiceType
 
 /**
  * Used by the PersistSessionHandler to indicate what change occurred
  */
-export type AtpSessionEvent = 'create' | 'create-failed' | 'update' | 'expired'
+export type AtpSessionEvent =
+  | 'create'
+  | 'create-failed'
+  | 'update'
+  | 'expired'
+  | 'network-error'
 
 /**
  * Used by AtpAgent to store active sessions
@@ -14,6 +26,10 @@ export interface AtpSessionData {
   handle: string
   did: string
   email?: string
+  emailConfirmed?: boolean
+  emailAuthFactor?: boolean
+  active: boolean
+  status?: string
 }
 
 /**
@@ -25,69 +41,71 @@ export type AtpPersistSessionHandler = (
 ) => void | Promise<void>
 
 /**
- * AtpAgent constructor() opts
- */
-export interface AtpAgentOpts {
-  service: string | URL
-  persistSession?: AtpPersistSessionHandler
-}
-
-/**
- * AtpAgent createAccount() opts
- */
-export interface AtpAgentCreateAccountOpts {
-  email: string
-  password: string
-  handle: string
-  inviteCode?: string
-}
-
-/**
  * AtpAgent login() opts
  */
 export interface AtpAgentLoginOpts {
   identifier: string
   password: string
+  authFactorToken?: string | undefined
 }
-
-/**
- * AtpAgent global fetch handler
- */
-type AtpAgentFetchHeaders = Record<string, string>
-export interface AtpAgentFetchHandlerResponse {
-  status: number
-  headers: Record<string, string>
-  body: any
-}
-export type AtpAgentFetchHandler = (
-  httpUri: string,
-  httpMethod: string,
-  httpHeaders: AtpAgentFetchHeaders,
-  httpReqBody: any,
-) => Promise<AtpAgentFetchHandlerResponse>
 
 /**
  * AtpAgent global config opts
  */
 export interface AtpAgentGlobalOpts {
-  fetch: AtpAgentFetchHandler
+  appLabelers?: string[]
 }
 
 /**
- * Content-label preference
+ * Bluesky feed view preferences
  */
-export type BskyLabelPreference = LabelPreference | 'show'
-// TEMP we need to permanently convert 'show' to 'ignore', for now we manually convert -prf
+
+export interface BskyFeedViewPreference {
+  hideReplies: boolean
+  hideRepliesByUnfollowed: boolean
+  hideRepliesByLikeCount: number
+  hideReposts: boolean
+  hideQuotePosts: boolean
+  [key: string]: any
+}
 
 /**
- * Bluesky preferences object
+ * Bluesky thread view preferences
+ */
+export interface BskyThreadViewPreference {
+  sort: string
+  prioritizeFollowedUsers: boolean
+  [key: string]: any
+}
+
+/**
+ * Bluesky interests preferences
+ */
+export interface BskyInterestsPreference {
+  tags: string[]
+  [key: string]: any
+}
+
+/**
+ * Bluesky preferences
  */
 export interface BskyPreferences {
+  /**
+   * @deprecated use `savedFeeds`
+   */
   feeds: {
     saved?: string[]
     pinned?: string[]
   }
-  adultContentEnabled: boolean
-  contentLabels: Record<string, BskyLabelPreference>
+  savedFeeds: AppBskyActorDefs.SavedFeed[]
+  feedViewPrefs: Record<string, BskyFeedViewPreference>
+  threadViewPrefs: BskyThreadViewPreference
+  moderationPrefs: ModerationPrefs
   birthDate: Date | undefined
+  interests: BskyInterestsPreference
+  bskyAppState: {
+    queuedNudges: string[]
+    activeProgressGuide: AppBskyActorDefs.BskyAppProgressGuide | undefined
+    nuxs: AppBskyActorDefs.Nux[]
+  }
 }

@@ -1,23 +1,25 @@
 {
   "name": "@atproto/aws",
-  "version": "0.1.1",
-  "main": "src/index.ts",
-  "publishConfig": {
-    "main": "dist/index.js",
-    "types": "dist/src/index.d.ts"
-  },
+  "version": "0.2.9",
   "license": "MIT",
+  "description": "Shared AWS cloud API helpers for atproto services",
+  "keywords": [
+    "atproto",
+    "aws"
+  ],
+  "homepage": "https://atproto.com",
   "repository": {
     "type": "git",
-    "url": "https://github.com/bluesky-social/atproto.git",
+    "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/aws"
   },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
-    "build": "node ./build.js",
-    "postbuild": "tsc --build tsconfig.build.json",
-    "update-main-to-dist": "node ../../update-main-to-dist.js packages/aws"
+    "build": "tsc --build tsconfig.build.json"
   },
   "dependencies": {
+    "@atproto/common": "workspace:^",
     "@atproto/crypto": "workspace:^",
     "@atproto/repo": "workspace:^",
     "@aws-sdk/client-cloudfront": "^3.261.0",
@@ -28,5 +30,8 @@
     "key-encoder": "^2.0.3",
     "multiformats": "^9.9.0",
     "uint8arrays": "3.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3"
   }
 }

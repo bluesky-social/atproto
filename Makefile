@@ -20,23 +20,20 @@ test: ## Run all tests
 
 .PHONY: run-dev-env
 run-dev-env: ## Run a "development environment" shell
-	cd packages/dev-env; pnpm run start
+	cd packages/dev-env; NODE_ENV=development pnpm run start
 
-.PHONY: run-dev-pds
-run-dev-pds: ## Run PDS locally
-	if [ ! -f "packages/pds/.dev.env" ]; then cp packages/pds/example.dev.env packages/pds/.dev.env; fi
-	cd packages/pds; ENV=dev pnpm run start | pnpm exec pino-pretty
-
-.PHONY: run-dev-bsky
-run-dev-bsky: ## Run appview ('bsky') locally
-	if [ ! -f "packages/bsky/.dev.env" ]; then cp packages/bsky/example.dev.env packages/bsky/.dev.env; fi
-	cd packages/bsky; ENV=dev pnpm run start | pnpm exec pino-pretty
+.PHONY: run-dev-env-logged
+run-dev-env-logged: ## Run a "development environment" shell (with logging)
+	cd packages/dev-env; LOG_ENABLED=true NODE_ENV=development pnpm run start | pnpm exec pino-pretty
 
 .PHONY: codegen
 codegen: ## Re-generate packages from lexicon/ files
 	cd packages/api; pnpm run codegen
 	cd packages/pds; pnpm run codegen
 	cd packages/bsky; pnpm run codegen
+	cd packages/ozone; pnpm run codegen
+	# clean up codegen output
+	pnpm format
 
 .PHONY: lint
 lint: ## Run style checks and verify syntax
@@ -54,4 +51,4 @@ deps: ## Installs dependent libs using 'pnpm install'
 nvm-setup: ## Use NVM to install and activate node+pnpm
 	nvm install 18
 	nvm use 18
-	npm install --global pnpm
+	corepack enable

@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Mute an actor by did or handle.",
+      "description": "Creates a mute relationship for the specified account. Mutes are private in Bluesky. Requires auth.",
       "input": {
         "encoding": "application/json",
         "schema": {

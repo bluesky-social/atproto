@@ -1,4 +1,6 @@
-export default [
+import { LexiconDoc } from '../../src/index'
+
+const lexicons: LexiconDoc[] = [
   {
     lexicon: 1,
     id: 'com.example.kitchenSink',
@@ -521,3 +523,5 @@ export default [
     },
   },
 ]
+
+export default lexicons

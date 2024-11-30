@@ -7,10 +7,10 @@ import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
-import { HandlerAuth } from '@atproto/xrpc-server'
+import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 
 export interface QueryParams {
-  /** The DID of the repo. */
+  /** The DID of the account. */
   did: string
   /** The CID of the blob to fetch */
   cid: string
@@ -28,9 +28,15 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
+  error?:
+    | 'BlobNotFound'
+    | 'RepoNotFound'
+    | 'RepoTakendown'
+    | 'RepoSuspended'
+    | 'RepoDeactivated'
 }
 
-export type HandlerOutput = HandlerError | HandlerSuccess
+export type HandlerOutput = HandlerError | HandlerSuccess | HandlerPipeThrough
 export type HandlerReqCtx<HA extends HandlerAuth = never> = {
   auth: HA
   params: QueryParams

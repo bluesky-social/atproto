@@ -1,0 +1,1 @@
+../../../../interop-test-files/syntax/tid_syntax_valid.txt

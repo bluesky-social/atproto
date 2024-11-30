@@ -1,11 +1,6 @@
-import AtpAgent, { AtUri } from '@atproto/api'
-import { TestNetwork } from '@atproto/dev-env'
-import { SeedClient } from '../seeds/client'
-import basicSeed from '../seeds/basic'
-import {
-  BlockedByActorError,
-  BlockedActorError,
-} from '@atproto/api/src/client/types/app/bsky/feed/getActorLikes'
+import { AtUri, AtpAgent } from '@atproto/api'
+import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
+import { ids } from '../../src/lexicon/lexicons'
 
 describe('bsky actor likes feed views', () => {
   let network: TestNetwork
@@ -17,7 +12,6 @@ describe('bsky actor likes feed views', () => {
   let alice: string
   let bob: string
   let carol: string
-  let dan: string
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -25,13 +19,12 @@ describe('bsky actor likes feed views', () => {
     })
     agent = network.bsky.getClient()
     pdsAgent = network.pds.getClient()
-    sc = new SeedClient(pdsAgent)
+    sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()
     alice = sc.dids.alice
     bob = sc.dids.bob
     carol = sc.dids.carol
-    dan = sc.dids.dan
   })
 
   afterAll(async () => {
@@ -43,7 +36,12 @@ describe('bsky actor likes feed views', () => {
       data: { feed: bobLikes },
     } = await agent.api.app.bsky.feed.getActorLikes(
       { actor: sc.accounts[bob].handle },
-      { headers: await network.serviceHeaders(bob) },
+      {
+        headers: await network.serviceHeaders(
+          bob,
+          ids.AppBskyFeedGetActorLikes,
+        ),
+      },
     )
 
     expect(bobLikes).toHaveLength(3)
@@ -51,7 +49,12 @@ describe('bsky actor likes feed views', () => {
     await expect(
       agent.api.app.bsky.feed.getActorLikes(
         { actor: sc.accounts[bob].handle },
-        { headers: await network.serviceHeaders(carol) },
+        {
+          headers: await network.serviceHeaders(
+            carol,
+            ids.AppBskyFeedGetActorLikes,
+          ),
+        },
       ),
     ).rejects.toThrow('Profile not found')
   })
@@ -74,7 +77,12 @@ describe('bsky actor likes feed views', () => {
       data: { feed },
     } = await agent.api.app.bsky.feed.getActorLikes(
       { actor: sc.accounts[bob].handle },
-      { headers: await network.serviceHeaders(bob) },
+      {
+        headers: await network.serviceHeaders(
+          bob,
+          ids.AppBskyFeedGetActorLikes,
+        ),
+      },
     )
 
     expect(
@@ -108,7 +116,12 @@ describe('bsky actor likes feed views', () => {
       data: { feed },
     } = await agent.api.app.bsky.feed.getActorLikes(
       { actor: sc.accounts[bob].handle },
-      { headers: await network.serviceHeaders(bob) },
+      {
+        headers: await network.serviceHeaders(
+          bob,
+          ids.AppBskyFeedGetActorLikes,
+        ),
+      },
     )
 
     expect(

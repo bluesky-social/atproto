@@ -1,9 +1,12 @@
-import AtpAgent from '@atproto/api'
-import { TestNetwork } from '@atproto/dev-env'
-import { forSnapshot, paginateAll, stripViewerFromPost } from '../_util'
-import { RecordRef, SeedClient } from '../seeds/client'
-import basicSeed from '../seeds/basic'
-import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
+import { AtpAgent } from '@atproto/api'
+import { TestNetwork, SeedClient, RecordRef, basicSeed } from '@atproto/dev-env'
+import {
+  forSnapshot,
+  paginateAll,
+  stripViewer,
+  stripViewerFromPost,
+} from '../_util'
+import { ids } from '../../src/lexicon/lexicons'
 
 describe('list feed views', () => {
   let network: TestNetwork
@@ -22,8 +25,7 @@ describe('list feed views', () => {
       dbPostgresSchema: 'bsky_views_list_feed',
     })
     agent = network.bsky.getClient()
-    const pdsAgent = network.pds.getClient()
-    sc = new SeedClient(pdsAgent)
+    sc = network.getSeedClient()
     await basicSeed(sc)
     alice = sc.dids.alice
     bob = sc.dids.bob
@@ -41,7 +43,12 @@ describe('list feed views', () => {
   it('fetches list feed', async () => {
     const res = await agent.api.app.bsky.feed.getListFeed(
       { list: listRef.uriStr },
-      { headers: await network.serviceHeaders(carol) },
+      {
+        headers: await network.serviceHeaders(
+          carol,
+          ids.AppBskyFeedGetListFeed,
+        ),
+      },
     )
     expect(forSnapshot(res.data.feed)).toMatchSnapshot()
 
@@ -60,7 +67,12 @@ describe('list feed views', () => {
           cursor,
           limit: 2,
         },
-        { headers: await network.serviceHeaders(carol) },
+        {
+          headers: await network.serviceHeaders(
+            carol,
+            ids.AppBskyFeedGetListFeed,
+          ),
+        },
       )
       return res.data
     }
@@ -72,7 +84,12 @@ describe('list feed views', () => {
 
     const full = await agent.api.app.bsky.feed.getListFeed(
       { list: listRef.uriStr },
-      { headers: await network.serviceHeaders(carol) },
+      {
+        headers: await network.serviceHeaders(
+          carol,
+          ids.AppBskyFeedGetListFeed,
+        ),
+      },
     )
 
     expect(full.data.feed.length).toEqual(7)
@@ -82,7 +99,12 @@ describe('list feed views', () => {
   it('fetches results unauthed', async () => {
     const { data: authed } = await agent.api.app.bsky.feed.getListFeed(
       { list: listRef.uriStr },
-      { headers: await network.serviceHeaders(alice) },
+      {
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyFeedGetListFeed,
+        ),
+      },
     )
     const { data: unauthed } = await agent.api.app.bsky.feed.getListFeed({
       list: listRef.uriStr,
@@ -98,6 +120,9 @@ describe('list feed views', () => {
           result.reply = {
             parent: stripViewerFromPost(item.reply.parent),
             root: stripViewerFromPost(item.reply.root),
+            grandparentAuthor:
+              item.reply.grandparentAuthor &&
+              stripViewer(item.reply.grandparentAuthor),
           }
         }
         return result
@@ -115,21 +140,9 @@ describe('list feed views', () => {
   })
 
   it('blocks posts by actor takedown', async () => {
-    const actionRes = await agent.api.com.atproto.admin.takeModerationAction(
-      {
-        action: TAKEDOWN,
-        subject: {
-          $type: 'com.atproto.admin.defs#repoRef',
-          did: bob,
-        },
-        createdBy: 'did:example:admin',
-        reason: 'Y',
-      },
-      {
-        encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders(),
-      },
-    )
+    await network.bsky.ctx.dataplane.takedownActor({
+      did: bob,
+    })
 
     const res = await agent.api.app.bsky.feed.getListFeed({
       list: listRef.uriStr,
@@ -138,37 +151,16 @@ describe('list feed views', () => {
     expect(hasBob).toBe(false)
 
     // Cleanup
-    await agent.api.com.atproto.admin.reverseModerationAction(
-      {
-        id: actionRes.data.id,
-        createdBy: 'did:example:admin',
-        reason: 'Y',
-      },
-      {
-        encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders(),
-      },
-    )
+    await network.bsky.ctx.dataplane.untakedownActor({
+      did: bob,
+    })
   })
 
   it('blocks posts by record takedown.', async () => {
     const postRef = sc.replies[bob][0].ref // Post and reply parent
-    const actionRes = await agent.api.com.atproto.admin.takeModerationAction(
-      {
-        action: TAKEDOWN,
-        subject: {
-          $type: 'com.atproto.repo.strongRef',
-          uri: postRef.uriStr,
-          cid: postRef.cidStr,
-        },
-        createdBy: 'did:example:admin',
-        reason: 'Y',
-      },
-      {
-        encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders(),
-      },
-    )
+    await network.bsky.ctx.dataplane.takedownRecord({
+      recordUri: postRef.uriStr,
+    })
 
     const res = await agent.api.app.bsky.feed.getListFeed({
       list: listRef.uriStr,
@@ -179,16 +171,20 @@ describe('list feed views', () => {
     expect(hasPost).toBe(false)
 
     // Cleanup
-    await agent.api.com.atproto.admin.reverseModerationAction(
-      {
-        id: actionRes.data.id,
-        createdBy: 'did:example:admin',
-        reason: 'Y',
-      },
-      {
-        encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders(),
-      },
-    )
+    await network.bsky.ctx.dataplane.untakedownRecord({
+      recordUri: postRef.uriStr,
+    })
+  })
+
+  it('does not return posts with creator blocks', async () => {
+    await sc.block(bob, alice)
+    await network.processAll()
+
+    const res = await agent.api.app.bsky.feed.getListFeed({
+      list: listRef.uriStr,
+    })
+
+    const hasBob = res.data.feed.some((item) => item.post.author.did === bob)
+    expect(hasBob).toBe(false)
   })
 })

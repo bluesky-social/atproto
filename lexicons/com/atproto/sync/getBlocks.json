@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Gets blocks from a given repo.",
+      "description": "Get data blocks from a given repo, by CID. For example, intermediate MST nodes, or records. Does not require auth; implemented by PDS.",
       "parameters": {
         "type": "params",
         "required": ["did", "cids"],
@@ -22,7 +22,14 @@
       },
       "output": {
         "encoding": "application/vnd.ipld.car"
-      }
+      },
+      "errors": [
+        { "name": "BlockNotFound" },
+        { "name": "RepoNotFound" },
+        { "name": "RepoTakendown" },
+        { "name": "RepoSuspended" },
+        { "name": "RepoDeactivated" }
+      ]
     }
   }
 }

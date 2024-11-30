@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "List blob cids since some revision",
+      "description": "List blob CIDs for an account, since some repo revision. Does not require auth; implemented by PDS.",
       "parameters": {
         "type": "params",
         "required": ["did"],
@@ -16,7 +16,7 @@
           },
           "since": {
             "type": "string",
-            "description": "Optional revision of the repo to list blobs since"
+            "description": "Optional revision of the repo to list blobs since."
           },
           "limit": {
             "type": "integer",
@@ -40,7 +40,13 @@
             }
           }
         }
-      }
+      },
+      "errors": [
+        { "name": "RepoNotFound" },
+        { "name": "RepoTakendown" },
+        { "name": "RepoSuspended" },
+        { "name": "RepoDeactivated" }
+      ]
     }
   }
 }

@@ -1,25 +1,19 @@
-import {
-  CloseFn,
-  runTestServer,
-  TestServerInfo,
-} from '@atproto/pds/tests/_util'
 import { AtpAgent, ComAtprotoServerCreateAccount } from '..'
+import { TestNetworkNoAppView } from '@atproto/dev-env'
 
 describe('errors', () => {
-  let server: TestServerInfo
+  let network: TestNetworkNoAppView
   let client: AtpAgent
-  let close: CloseFn
 
   beforeAll(async () => {
-    server = await runTestServer({
+    network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'known_errors',
     })
-    client = new AtpAgent({ service: server.url })
-    close = server.close
+    client = network.pds.getClient()
   })
 
   afterAll(async () => {
-    await close()
+    await network.close()
   })
 
   it('constructs the correct error instance', async () => {

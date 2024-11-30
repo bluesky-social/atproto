@@ -1,4 +1,3 @@
-import Database from '../db'
 import { z } from 'zod'
 import { cborEncode, schema } from '@atproto/common'
 import {
@@ -10,33 +9,8 @@ import {
 } from '@atproto/repo'
 import { PreparedWrite } from '../repo'
 import { CID } from 'multiformats/cid'
-import { EventType, RepoSeqInsert } from '../db/tables/repo-seq'
-
-export const sequenceEvt = async (dbTxn: Database, evt: RepoSeqInsert) => {
-  dbTxn.assertTransaction()
-  await dbTxn.notify('new_repo_event')
-  if (evt.eventType === 'rebase') {
-    await invalidatePrevRepoOps(dbTxn, evt.did)
-  } else if (evt.eventType === 'handle') {
-    await invalidatePrevHandleOps(dbTxn, evt.did)
-  }
-
-  const res = await dbTxn.db
-    .insertInto('repo_seq')
-    .values(evt)
-    .returning('id')
-    .executeTakeFirst()
-
-  // since sqlite is serializable, sequence right after insert instead of relying on sequencer-leader
-  if (res && dbTxn.dialect === 'sqlite') {
-    await dbTxn.db
-      .updateTable('repo_seq')
-      .set({ seq: res.id })
-      .where('id', '=', res.id)
-      .execute()
-    await dbTxn.notify('outgoing_repo_seq')
-  }
-}
+import { RepoSeqInsert } from './db'
+import { AccountStatus } from '../account-manager'
 
 export const formatSeqCommit = async (
   did: string,
@@ -52,7 +26,10 @@ export const formatSeqCommit = async (
   if (writes.length > 200 || commitData.newBlocks.byteSize > 1000000) {
     tooBig = true
     const justRoot = new BlockMap()
-    justRoot.add(commitData.newBlocks.get(commitData.cid))
+    const rootBlock = commitData.newBlocks.get(commitData.cid)
+    if (rootBlock) {
+      justRoot.set(commitData.cid, rootBlock)
+    }
     carSlice = await blocksToCarFile(commitData.cid, justRoot)
   } else {
     tooBig = false
@@ -108,6 +85,44 @@ export const formatSeqHandleUpdate = async (
   }
 }
 
+export const formatSeqIdentityEvt = async (
+  did: string,
+  handle?: string,
+): Promise<RepoSeqInsert> => {
+  const evt: IdentityEvt = {
+    did,
+  }
+  if (handle) {
+    evt.handle = handle
+  }
+  return {
+    did,
+    eventType: 'identity',
+    event: cborEncode(evt),
+    sequencedAt: new Date().toISOString(),
+  }
+}
+
+export const formatSeqAccountEvt = async (
+  did: string,
+  status: AccountStatus,
+): Promise<RepoSeqInsert> => {
+  const evt: AccountEvt = {
+    did,
+    active: status === 'active',
+  }
+  if (status !== AccountStatus.Active) {
+    evt.status = status
+  }
+
+  return {
+    did,
+    eventType: 'account',
+    event: cborEncode(evt),
+    sequencedAt: new Date().toISOString(),
+  }
+}
+
 export const formatSeqTombstone = async (
   did: string,
 ): Promise<RepoSeqInsert> => {
@@ -120,29 +135,6 @@ export const formatSeqTombstone = async (
     event: cborEncode(evt),
     sequencedAt: new Date().toISOString(),
   }
-}
-
-export const invalidatePrevSeqEvts = async (
-  db: Database,
-  did: string,
-  eventTypes: EventType[],
-) => {
-  if (eventTypes.length < 1) return
-  await db.db
-    .updateTable('repo_seq')
-    .where('did', '=', did)
-    .where('eventType', 'in', eventTypes)
-    .where('invalidated', '=', 0)
-    .set({ invalidated: 1 })
-    .execute()
-}
-
-export const invalidatePrevRepoOps = async (db: Database, did: string) => {
-  return invalidatePrevSeqEvts(db, did, ['append', 'rebase'])
-}
-
-export const invalidatePrevHandleOps = async (db: Database, did: string) => {
-  return invalidatePrevSeqEvts(db, did, ['handle'])
 }
 
 export const commitEvtOp = z.object({
@@ -176,6 +168,26 @@ export const handleEvt = z.object({
 })
 export type HandleEvt = z.infer<typeof handleEvt>
 
+export const identityEvt = z.object({
+  did: z.string(),
+  handle: z.string().optional(),
+})
+export type IdentityEvt = z.infer<typeof identityEvt>
+
+export const accountEvt = z.object({
+  did: z.string(),
+  active: z.boolean(),
+  status: z
+    .enum([
+      AccountStatus.Takendown,
+      AccountStatus.Suspended,
+      AccountStatus.Deleted,
+      AccountStatus.Deactivated,
+    ])
+    .optional(),
+})
+export type AccountEvt = z.infer<typeof accountEvt>
+
 export const tombstoneEvt = z.object({
   did: z.string(),
 })
@@ -193,10 +205,27 @@ type TypedHandleEvt = {
   time: string
   evt: HandleEvt
 }
+type TypedIdentityEvt = {
+  type: 'identity'
+  seq: number
+  time: string
+  evt: IdentityEvt
+}
+type TypedAccountEvt = {
+  type: 'account'
+  seq: number
+  time: string
+  evt: AccountEvt
+}
 type TypedTombstoneEvt = {
   type: 'tombstone'
   seq: number
   time: string
   evt: TombstoneEvt
 }
-export type SeqEvt = TypedCommitEvt | TypedHandleEvt | TypedTombstoneEvt
+export type SeqEvt =
+  | TypedCommitEvt
+  | TypedHandleEvt
+  | TypedIdentityEvt
+  | TypedAccountEvt
+  | TypedTombstoneEvt

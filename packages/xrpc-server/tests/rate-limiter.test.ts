@@ -1,12 +1,13 @@
-import * as http from 'http'
-import getPort from 'get-port'
-import xrpc, { ServiceClient } from '@atproto/xrpc'
-import { createServer, closeServer } from './_util'
+import * as http from 'node:http'
+import { AddressInfo } from 'node:net'
+import { MINUTE } from '@atproto/common'
+import { LexiconDoc } from '@atproto/lexicon'
+import { XrpcClient } from '@atproto/xrpc'
 import * as xrpcServer from '../src'
 import { RateLimiter } from '../src'
-import { MINUTE } from '@atproto/common'
+import { closeServer, createServer } from './_util'
 
-const LEXICONS = [
+const LEXICONS: LexiconDoc[] = [
   {
     lexicon: 1,
     id: 'io.example.routeLimit',
@@ -85,6 +86,18 @@ const LEXICONS = [
   {
     lexicon: 1,
     id: 'io.example.noLimit',
+    defs: {
+      main: {
+        type: 'query',
+        output: {
+          encoding: 'application/json',
+        },
+      },
+    },
+  },
+  {
+    lexicon: 1,
+    id: 'io.example.nonExistent',
     defs: {
       main: {
         type: 'query',
@@ -177,13 +190,11 @@ describe('Parameters', () => {
     }),
   })
 
-  xrpc.addLexicons(LEXICONS)
-
-  let client: ServiceClient
+  let client: XrpcClient
   beforeAll(async () => {
-    const port = await getPort()
-    s = await createServer(port, server)
-    client = xrpc.service(`http://localhost:${port}`)
+    s = await createServer(server)
+    const { port } = s.address() as AddressInfo
+    client = new XrpcClient(`http://localhost:${port}`, LEXICONS)
   })
   afterAll(async () => {
     await closeServer(s)
@@ -230,6 +241,11 @@ describe('Parameters', () => {
       calls.push(makeCall())
     }
     await expect(Promise.all(calls)).rejects.toThrow('Rate Limit Exceeded')
+  })
+
+  it('applies global limits to xrpc catchall', async () => {
+    const makeCall = () => client.call('io.example.nonExistent')
+    await expect(makeCall()).rejects.toThrow('Rate Limit Exceeded')
   })
 
   it('can bypass rate limits', async () => {

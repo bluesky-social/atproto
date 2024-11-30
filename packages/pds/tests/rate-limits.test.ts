@@ -1,32 +1,33 @@
-import { runTestServer, TestServerInfo } from './_util'
-import { SeedClient } from './seeds/client'
-import userSeed from './seeds/basic'
 import { AtpAgent } from '@atproto/api'
 import { randomStr } from '@atproto/crypto'
+import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
+import userSeed from './seeds/basic'
 
 describe('rate limits', () => {
-  let server: TestServerInfo
+  let network: TestNetworkNoAppView
   let agent: AtpAgent
   let sc: SeedClient
   let alice: string
   let bob: string
 
   beforeAll(async () => {
-    server = await runTestServer({
+    network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'rate_limits',
-      redisScratchAddress: process.env.REDIS_HOST,
-      redisScratchPassword: process.env.REDIS_PASSWORD,
-      rateLimitsEnabled: true,
+      pds: {
+        redisScratchAddress: process.env.REDIS_HOST,
+        redisScratchPassword: process.env.REDIS_PASSWORD,
+        rateLimitsEnabled: true,
+      },
     })
-    agent = new AtpAgent({ service: server.url })
-    sc = new SeedClient(agent)
+    agent = network.pds.getClient()
+    sc = network.getSeedClient()
     await userSeed(sc)
     alice = sc.dids.alice
     bob = sc.dids.bob
   })
 
   afterAll(async () => {
-    await server.close()
+    await network.close()
   })
 
   it('rate limits by ip', async () => {

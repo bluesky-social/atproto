@@ -10,6 +10,8 @@ export const DISALLOWED_TLDS = [
   '.invalid',
   '.localhost',
   '.internal',
+  '.example',
+  '.alt',
   // policy could concievably change on ".onion" some day
   '.onion',
   // NOTE: .test is allowed in testing and devopment. In practical terms
@@ -63,7 +65,7 @@ export const ensureValidHandle = (handle: string): void => {
         'Handle parts can not start or end with hyphens',
       )
     }
-    if (i + 1 == labels.length && !/^[a-zA-Z]/.test(l)) {
+    if (i + 1 === labels.length && !/^[a-zA-Z]/.test(l)) {
       throw new InvalidHandleError(
         'Handle final component (TLD) must start with ASCII letter',
       )

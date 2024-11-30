@@ -2,232 +2,23 @@
   "lexicon": 1,
   "id": "com.atproto.admin.defs",
   "defs": {
-    "actionView": {
+    "statusAttr": {
       "type": "object",
-      "required": [
-        "id",
-        "action",
-        "subject",
-        "subjectBlobCids",
-        "reason",
-        "createdBy",
-        "createdAt",
-        "resolvedReportIds"
-      ],
+      "required": ["applied"],
       "properties": {
-        "id": { "type": "integer" },
-        "action": { "type": "ref", "ref": "#actionType" },
-        "durationInHours": {
-          "type": "integer",
-          "description": "Indicates how long this action was meant to be in effect before automatically expiring."
-        },
-        "subject": {
-          "type": "union",
-          "refs": ["#repoRef", "com.atproto.repo.strongRef"]
-        },
-        "subjectBlobCids": { "type": "array", "items": { "type": "string" } },
-        "createLabelVals": { "type": "array", "items": { "type": "string" } },
-        "negateLabelVals": { "type": "array", "items": { "type": "string" } },
-        "reason": { "type": "string" },
-        "createdBy": { "type": "string", "format": "did" },
-        "createdAt": { "type": "string", "format": "datetime" },
-        "reversal": { "type": "ref", "ref": "#actionReversal" },
-        "resolvedReportIds": { "type": "array", "items": { "type": "integer" } }
+        "applied": { "type": "boolean" },
+        "ref": { "type": "string" }
       }
     },
-    "actionViewDetail": {
+    "accountView": {
       "type": "object",
-      "required": [
-        "id",
-        "action",
-        "subject",
-        "subjectBlobs",
-        "reason",
-        "createdBy",
-        "createdAt",
-        "resolvedReports"
-      ],
-      "properties": {
-        "id": { "type": "integer" },
-        "action": { "type": "ref", "ref": "#actionType" },
-        "durationInHours": {
-          "type": "integer",
-          "description": "Indicates how long this action was meant to be in effect before automatically expiring."
-        },
-        "subject": {
-          "type": "union",
-          "refs": [
-            "#repoView",
-            "#repoViewNotFound",
-            "#recordView",
-            "#recordViewNotFound"
-          ]
-        },
-        "subjectBlobs": {
-          "type": "array",
-          "items": { "type": "ref", "ref": "#blobView" }
-        },
-        "createLabelVals": { "type": "array", "items": { "type": "string" } },
-        "negateLabelVals": { "type": "array", "items": { "type": "string" } },
-        "reason": { "type": "string" },
-        "createdBy": { "type": "string", "format": "did" },
-        "createdAt": { "type": "string", "format": "datetime" },
-        "reversal": { "type": "ref", "ref": "#actionReversal" },
-        "resolvedReports": {
-          "type": "array",
-          "items": { "type": "ref", "ref": "#reportView" }
-        }
-      }
-    },
-    "actionViewCurrent": {
-      "type": "object",
-      "required": ["id", "action"],
-      "properties": {
-        "id": { "type": "integer" },
-        "action": { "type": "ref", "ref": "#actionType" },
-        "durationInHours": {
-          "type": "integer",
-          "description": "Indicates how long this action was meant to be in effect before automatically expiring."
-        }
-      }
-    },
-    "actionReversal": {
-      "type": "object",
-      "required": ["reason", "createdBy", "createdAt"],
-      "properties": {
-        "reason": { "type": "string" },
-        "createdBy": { "type": "string", "format": "did" },
-        "createdAt": { "type": "string", "format": "datetime" }
-      }
-    },
-    "actionType": {
-      "type": "string",
-      "knownValues": ["#takedown", "#flag", "#acknowledge", "#escalate"]
-    },
-    "takedown": {
-      "type": "token",
-      "description": "Moderation action type: Takedown. Indicates that content should not be served by the PDS."
-    },
-    "flag": {
-      "type": "token",
-      "description": "Moderation action type: Flag. Indicates that the content was reviewed and considered to violate PDS rules, but may still be served."
-    },
-    "acknowledge": {
-      "type": "token",
-      "description": "Moderation action type: Acknowledge. Indicates that the content was reviewed and not considered to violate PDS rules."
-    },
-    "escalate": {
-      "type": "token",
-      "description": "Moderation action type: Escalate. Indicates that the content has been flagged for additional review."
-    },
-    "reportView": {
-      "type": "object",
-      "required": [
-        "id",
-        "reasonType",
-        "subject",
-        "reportedBy",
-        "createdAt",
-        "resolvedByActionIds"
-      ],
-      "properties": {
-        "id": { "type": "integer" },
-        "reasonType": {
-          "type": "ref",
-          "ref": "com.atproto.moderation.defs#reasonType"
-        },
-        "reason": { "type": "string" },
-        "subjectRepoHandle": { "type": "string" },
-        "subject": {
-          "type": "union",
-          "refs": ["#repoRef", "com.atproto.repo.strongRef"]
-        },
-        "reportedBy": { "type": "string", "format": "did" },
-        "createdAt": { "type": "string", "format": "datetime" },
-        "resolvedByActionIds": {
-          "type": "array",
-          "items": { "type": "integer" }
-        }
-      }
-    },
-    "reportViewDetail": {
-      "type": "object",
-      "required": [
-        "id",
-        "reasonType",
-        "subject",
-        "reportedBy",
-        "createdAt",
-        "resolvedByActions"
-      ],
-      "properties": {
-        "id": { "type": "integer" },
-        "reasonType": {
-          "type": "ref",
-          "ref": "com.atproto.moderation.defs#reasonType"
-        },
-        "reason": { "type": "string" },
-        "subject": {
-          "type": "union",
-          "refs": [
-            "#repoView",
-            "#repoViewNotFound",
-            "#recordView",
-            "#recordViewNotFound"
-          ]
-        },
-        "reportedBy": { "type": "string", "format": "did" },
-        "createdAt": { "type": "string", "format": "datetime" },
-        "resolvedByActions": {
-          "type": "array",
-          "items": { "type": "ref", "ref": "com.atproto.admin.defs#actionView" }
-        }
-      }
-    },
-    "repoView": {
-      "type": "object",
-      "required": [
-        "did",
-        "handle",
-        "relatedRecords",
-        "indexedAt",
-        "moderation"
-      ],
+      "required": ["did", "handle", "indexedAt"],
       "properties": {
         "did": { "type": "string", "format": "did" },
         "handle": { "type": "string", "format": "handle" },
         "email": { "type": "string" },
         "relatedRecords": { "type": "array", "items": { "type": "unknown" } },
         "indexedAt": { "type": "string", "format": "datetime" },
-        "moderation": { "type": "ref", "ref": "#moderation" },
-        "invitedBy": {
-          "type": "ref",
-          "ref": "com.atproto.server.defs#inviteCode"
-        },
-        "invitesDisabled": { "type": "boolean" },
-        "inviteNote": { "type": "string" }
-      }
-    },
-    "repoViewDetail": {
-      "type": "object",
-      "required": [
-        "did",
-        "handle",
-        "relatedRecords",
-        "indexedAt",
-        "moderation"
-      ],
-      "properties": {
-        "did": { "type": "string", "format": "did" },
-        "handle": { "type": "string", "format": "handle" },
-        "email": { "type": "string" },
-        "relatedRecords": { "type": "array", "items": { "type": "unknown" } },
-        "indexedAt": { "type": "string", "format": "datetime" },
-        "moderation": { "type": "ref", "ref": "#moderationDetail" },
-        "labels": {
-          "type": "array",
-          "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
-        },
         "invitedBy": {
           "type": "ref",
           "ref": "com.atproto.server.defs#inviteCode"
@@ -240,14 +31,16 @@
           }
         },
         "invitesDisabled": { "type": "boolean" },
-        "inviteNote": { "type": "string" }
-      }
-    },
-    "repoViewNotFound": {
-      "type": "object",
-      "required": ["did"],
-      "properties": {
-        "did": { "type": "string", "format": "did" }
+        "emailConfirmedAt": { "type": "string", "format": "datetime" },
+        "inviteNote": { "type": "string" },
+        "deactivatedAt": { "type": "string", "format": "datetime" },
+        "threatSignatures": {
+          "type": "array",
+          "items": {
+            "type": "ref",
+            "ref": "#threatSignature"
+          }
+        }
       }
     },
     "repoRef": {
@@ -257,116 +50,21 @@
         "did": { "type": "string", "format": "did" }
       }
     },
-    "recordView": {
+    "repoBlobRef": {
       "type": "object",
-      "required": [
-        "uri",
-        "cid",
-        "value",
-        "blobCids",
-        "indexedAt",
-        "moderation",
-        "repo"
-      ],
+      "required": ["did", "cid"],
       "properties": {
-        "uri": { "type": "string", "format": "at-uri" },
+        "did": { "type": "string", "format": "did" },
         "cid": { "type": "string", "format": "cid" },
-        "value": { "type": "unknown" },
-        "blobCids": {
-          "type": "array",
-          "items": { "type": "string", "format": "cid" }
-        },
-        "indexedAt": { "type": "string", "format": "datetime" },
-        "moderation": { "type": "ref", "ref": "#moderation" },
-        "repo": { "type": "ref", "ref": "#repoView" }
+        "recordUri": { "type": "string", "format": "at-uri" }
       }
     },
-    "recordViewDetail": {
+    "threatSignature": {
       "type": "object",
-      "required": [
-        "uri",
-        "cid",
-        "value",
-        "blobs",
-        "indexedAt",
-        "moderation",
-        "repo"
-      ],
+      "required": ["property", "value"],
       "properties": {
-        "uri": { "type": "string", "format": "at-uri" },
-        "cid": { "type": "string", "format": "cid" },
-        "value": { "type": "unknown" },
-        "blobs": {
-          "type": "array",
-          "items": { "type": "ref", "ref": "#blobView" }
-        },
-        "labels": {
-          "type": "array",
-          "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
-        },
-        "indexedAt": { "type": "string", "format": "datetime" },
-        "moderation": { "type": "ref", "ref": "#moderationDetail" },
-        "repo": { "type": "ref", "ref": "#repoView" }
-      }
-    },
-    "recordViewNotFound": {
-      "type": "object",
-      "required": ["uri"],
-      "properties": {
-        "uri": { "type": "string", "format": "at-uri" }
-      }
-    },
-    "moderation": {
-      "type": "object",
-      "properties": {
-        "currentAction": { "type": "ref", "ref": "#actionViewCurrent" }
-      }
-    },
-    "moderationDetail": {
-      "type": "object",
-      "required": ["actions", "reports"],
-      "properties": {
-        "currentAction": { "type": "ref", "ref": "#actionViewCurrent" },
-        "actions": {
-          "type": "array",
-          "items": { "type": "ref", "ref": "#actionView" }
-        },
-        "reports": {
-          "type": "array",
-          "items": { "type": "ref", "ref": "#reportView" }
-        }
-      }
-    },
-    "blobView": {
-      "type": "object",
-      "required": ["cid", "mimeType", "size", "createdAt"],
-      "properties": {
-        "cid": { "type": "string", "format": "cid" },
-        "mimeType": { "type": "string" },
-        "size": { "type": "integer" },
-        "createdAt": { "type": "string", "format": "datetime" },
-        "details": {
-          "type": "union",
-          "refs": ["#imageDetails", "#videoDetails"]
-        },
-        "moderation": { "type": "ref", "ref": "#moderation" }
-      }
-    },
-    "imageDetails": {
-      "type": "object",
-      "required": ["width", "height"],
-      "properties": {
-        "width": { "type": "integer" },
-        "height": { "type": "integer" }
-      }
-    },
-    "videoDetails": {
-      "type": "object",
-      "required": ["width", "height", "length"],
-      "properties": {
-        "width": { "type": "integer" },
-        "height": { "type": "integer" },
-        "length": { "type": "integer" }
+        "property": { "type": "string" },
+        "value": { "type": "string" }
       }
     }
   }

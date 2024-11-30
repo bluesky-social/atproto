@@ -4,12 +4,16 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Get information about a specific feed offered by a feed generator, such as its online status",
+      "description": "Get information about a feed generator. Implemented by AppView.",
       "parameters": {
         "type": "params",
         "required": ["feed"],
         "properties": {
-          "feed": { "type": "string", "format": "at-uri" }
+          "feed": {
+            "type": "string",
+            "format": "at-uri",
+            "description": "AT-URI of the feed generator record."
+          }
         }
       },
       "output": {
@@ -22,8 +26,14 @@
               "type": "ref",
               "ref": "app.bsky.feed.defs#generatorView"
             },
-            "isOnline": { "type": "boolean" },
-            "isValid": { "type": "boolean" }
+            "isOnline": {
+              "type": "boolean",
+              "description": "Indicates whether the feed generator service has been online recently, or else seems to be inactive."
+            },
+            "isValid": {
+              "type": "boolean",
+              "description": "Indicates whether the feed generator service is compatible with the record declaration."
+            }
           }
         }
       }

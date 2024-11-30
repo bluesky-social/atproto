@@ -17,6 +17,7 @@
           "type": "union",
           "refs": [
             "app.bsky.embed.images#view",
+            "app.bsky.embed.video#view",
             "app.bsky.embed.external#view",
             "app.bsky.embed.record#view",
             "app.bsky.embed.recordWithMedia#view"
@@ -25,6 +26,7 @@
         "replyCount": { "type": "integer" },
         "repostCount": { "type": "integer" },
         "likeCount": { "type": "integer" },
+        "quoteCount": { "type": "integer" },
         "indexedAt": { "type": "string", "format": "datetime" },
         "viewer": { "type": "ref", "ref": "#viewerState" },
         "labels": {
@@ -36,9 +38,14 @@
     },
     "viewerState": {
       "type": "object",
+      "description": "Metadata about the requesting account's relationship with the subject content. Only has meaningful content for authed requests.",
       "properties": {
         "repost": { "type": "string", "format": "at-uri" },
-        "like": { "type": "string", "format": "at-uri" }
+        "like": { "type": "string", "format": "at-uri" },
+        "threadMuted": { "type": "boolean" },
+        "replyDisabled": { "type": "boolean" },
+        "embeddingDisabled": { "type": "boolean" },
+        "pinned": { "type": "boolean" }
       }
     },
     "feedViewPost": {
@@ -47,7 +54,12 @@
       "properties": {
         "post": { "type": "ref", "ref": "#postView" },
         "reply": { "type": "ref", "ref": "#replyRef" },
-        "reason": { "type": "union", "refs": ["#reasonRepost"] }
+        "reason": { "type": "union", "refs": ["#reasonRepost", "#reasonPin"] },
+        "feedContext": {
+          "type": "string",
+          "description": "Context provided by feed generator that may be passed back alongside interactions.",
+          "maxLength": 2000
+        }
       }
     },
     "replyRef": {
@@ -61,6 +73,11 @@
         "parent": {
           "type": "union",
           "refs": ["#postView", "#notFoundPost", "#blockedPost"]
+        },
+        "grandparentAuthor": {
+          "type": "ref",
+          "ref": "app.bsky.actor.defs#profileViewBasic",
+          "description": "When parent is a reply to another post, this is the author of that post."
         }
       }
     },
@@ -71,6 +88,10 @@
         "by": { "type": "ref", "ref": "app.bsky.actor.defs#profileViewBasic" },
         "indexedAt": { "type": "string", "format": "datetime" }
       }
+    },
+    "reasonPin": {
+      "type": "object",
+      "properties": {}
     },
     "threadViewPost": {
       "type": "object",
@@ -87,8 +108,7 @@
             "type": "union",
             "refs": ["#threadViewPost", "#notFoundPost", "#blockedPost"]
           }
-        },
-        "viewer": { "type": "ref", "ref": "#viewerThreadState" }
+        }
       }
     },
     "notFoundPost": {
@@ -116,12 +136,6 @@
         "viewer": { "type": "ref", "ref": "app.bsky.actor.defs#viewerState" }
       }
     },
-    "viewerThreadState": {
-      "type": "object",
-      "properties": {
-        "canReply": { "type": "boolean" }
-      }
-    },
     "generatorView": {
       "type": "object",
       "required": ["uri", "cid", "did", "creator", "displayName", "indexedAt"],
@@ -140,8 +154,13 @@
           "type": "array",
           "items": { "type": "ref", "ref": "app.bsky.richtext.facet" }
         },
-        "avatar": { "type": "string" },
+        "avatar": { "type": "string", "format": "uri" },
         "likeCount": { "type": "integer", "minimum": 0 },
+        "acceptsInteractions": { "type": "boolean" },
+        "labels": {
+          "type": "array",
+          "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
+        },
         "viewer": { "type": "ref", "ref": "#generatorViewerState" },
         "indexedAt": { "type": "string", "format": "datetime" }
       }
@@ -157,7 +176,15 @@
       "required": ["post"],
       "properties": {
         "post": { "type": "string", "format": "at-uri" },
-        "reason": { "type": "union", "refs": ["#skeletonReasonRepost"] }
+        "reason": {
+          "type": "union",
+          "refs": ["#skeletonReasonRepost", "#skeletonReasonPin"]
+        },
+        "feedContext": {
+          "type": "string",
+          "description": "Context that will be passed through to client and may be passed to feed generator back alongside interactions.",
+          "maxLength": 2000
+        }
       }
     },
     "skeletonReasonRepost": {
@@ -166,6 +193,10 @@
       "properties": {
         "repost": { "type": "string", "format": "at-uri" }
       }
+    },
+    "skeletonReasonPin": {
+      "type": "object",
+      "properties": {}
     },
     "threadgateView": {
       "type": "object",
@@ -178,6 +209,82 @@
           "items": { "type": "ref", "ref": "app.bsky.graph.defs#listViewBasic" }
         }
       }
+    },
+    "interaction": {
+      "type": "object",
+      "properties": {
+        "item": { "type": "string", "format": "at-uri" },
+        "event": {
+          "type": "string",
+          "knownValues": [
+            "app.bsky.feed.defs#requestLess",
+            "app.bsky.feed.defs#requestMore",
+            "app.bsky.feed.defs#clickthroughItem",
+            "app.bsky.feed.defs#clickthroughAuthor",
+            "app.bsky.feed.defs#clickthroughReposter",
+            "app.bsky.feed.defs#clickthroughEmbed",
+            "app.bsky.feed.defs#interactionSeen",
+            "app.bsky.feed.defs#interactionLike",
+            "app.bsky.feed.defs#interactionRepost",
+            "app.bsky.feed.defs#interactionReply",
+            "app.bsky.feed.defs#interactionQuote",
+            "app.bsky.feed.defs#interactionShare"
+          ]
+        },
+        "feedContext": {
+          "type": "string",
+          "description": "Context on a feed item that was originally supplied by the feed generator on getFeedSkeleton.",
+          "maxLength": 2000
+        }
+      }
+    },
+    "requestLess": {
+      "type": "token",
+      "description": "Request that less content like the given feed item be shown in the feed"
+    },
+    "requestMore": {
+      "type": "token",
+      "description": "Request that more content like the given feed item be shown in the feed"
+    },
+    "clickthroughItem": {
+      "type": "token",
+      "description": "User clicked through to the feed item"
+    },
+    "clickthroughAuthor": {
+      "type": "token",
+      "description": "User clicked through to the author of the feed item"
+    },
+    "clickthroughReposter": {
+      "type": "token",
+      "description": "User clicked through to the reposter of the feed item"
+    },
+    "clickthroughEmbed": {
+      "type": "token",
+      "description": "User clicked through to the embedded content of the feed item"
+    },
+    "interactionSeen": {
+      "type": "token",
+      "description": "Feed item was seen by user"
+    },
+    "interactionLike": {
+      "type": "token",
+      "description": "User liked the feed item"
+    },
+    "interactionRepost": {
+      "type": "token",
+      "description": "User reposted the feed item"
+    },
+    "interactionReply": {
+      "type": "token",
+      "description": "User replied to the feed item"
+    },
+    "interactionQuote": {
+      "type": "token",
+      "description": "User quoted the feed item"
+    },
+    "interactionShare": {
+      "type": "token",
+      "description": "User shared the feed item"
     }
   }
 }

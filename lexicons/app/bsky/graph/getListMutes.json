@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Which lists is the requester's account muting?",
+      "description": "Enumerates mod lists that the requesting account (actor) currently has muted. Requires auth.",
       "parameters": {
         "type": "params",
         "properties": {

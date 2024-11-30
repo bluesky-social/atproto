@@ -1,47 +1,42 @@
-import AtpAgent from '@atproto/api'
-import { TID } from '@atproto/common'
-import { randomStr } from '@atproto/crypto'
+import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
+import { AtpAgent } from '@atproto/api'
+import { cidForCbor, TID } from '@atproto/common'
+import { Keypair, randomStr } from '@atproto/crypto'
 import * as repo from '@atproto/repo'
 import { MemoryBlockstore } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
-import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 import { CID } from 'multiformats/cid'
-import { AppContext } from '../../src'
-import { adminAuth, CloseFn, runTestServer } from '../_util'
-import { SeedClient } from '../seeds/client'
 
 describe('repo sync', () => {
+  let network: TestNetworkNoAppView
   let agent: AtpAgent
   let sc: SeedClient
   let did: string
+  let signingKey: Keypair
 
   const repoData: repo.RepoContents = {}
   const uris: AtUri[] = []
   const storage = new MemoryBlockstore()
   let currRoot: CID | undefined
-  let ctx: AppContext
-
-  let close: CloseFn
+  let currRev: string | undefined
 
   beforeAll(async () => {
-    const server = await runTestServer({
+    network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'repo_sync',
     })
-    ctx = server.ctx
-    close = server.close
-    agent = new AtpAgent({ service: server.url })
-    sc = new SeedClient(agent)
+    agent = network.pds.getClient()
+    sc = network.getSeedClient()
     await sc.createAccount('alice', {
       email: 'alice@test.com',
       handle: 'alice.test',
       password: 'alice-pass',
     })
     did = sc.dids.alice
-    agent.api.setHeader('authorization', `Bearer ${sc.accounts[did].accessJwt}`)
+    signingKey = await network.pds.ctx.actorStore.keypair(did)
   })
 
   afterAll(async () => {
-    await close()
+    await network.close()
   })
 
   it('creates and syncs some records', async () => {
@@ -61,7 +56,7 @@ describe('repo sync', () => {
       car.blocks,
       car.root,
       did,
-      ctx.repoSigningKey.did(),
+      signingKey.did(),
     )
     await storage.applyCommit(synced.commit)
     expect(synced.creates.length).toBe(ADD_COUNT)
@@ -70,6 +65,7 @@ describe('repo sync', () => {
     expect(contents).toEqual(repoData)
 
     currRoot = car.root
+    currRev = loaded.commit.rev
   })
 
   it('syncs creates and deletes', async () => {
@@ -86,11 +82,7 @@ describe('repo sync', () => {
     // delete two that are already sync & two that have not been
     for (let i = 0; i < DEL_COUNT; i++) {
       const uri = uris[i * 5]
-      await agent.api.app.bsky.feed.post.delete({
-        repo: did,
-        collection: uri.collection,
-        rkey: uri.rkey,
-      })
+      await sc.deletePost(did, uri)
       delete repoData[uri.collection][uri.rkey]
     }
 
@@ -102,7 +94,7 @@ describe('repo sync', () => {
       car.blocks,
       car.root,
       did,
-      ctx.repoSigningKey.did(),
+      signingKey.did(),
     )
     expect(synced.writes.length).toBe(ADD_COUNT) // -2 because of dels of new records, +2 because of dels of old records
     await storage.applyCommit(synced.commit)
@@ -111,6 +103,16 @@ describe('repo sync', () => {
     expect(contents).toEqual(repoData)
 
     currRoot = car.root
+    currRev = loaded.commit.rev
+  })
+
+  it('syncs repo status', async () => {
+    const status = await agent.api.com.atproto.sync.getRepoStatus({ did })
+    expect(status.data).toEqual({
+      did,
+      active: true,
+      rev: currRev,
+    })
   })
 
   it('syncs latest repo commit', async () => {
@@ -140,7 +142,7 @@ describe('repo sync', () => {
       car.blocks,
       car.root,
       did,
-      ctx.repoSigningKey.did(),
+      signingKey.did(),
     )
     expect(synced.writes.length).toBe(1)
     await storage.applyCommit(synced.commit)
@@ -162,20 +164,20 @@ describe('repo sync', () => {
     const records = await repo.verifyRecords(
       new Uint8Array(car.data),
       did,
-      ctx.repoSigningKey.did(),
+      signingKey.did(),
     )
     const claim = {
       collection,
       rkey,
-      record: repoData[collection][rkey],
+      cid: await cidForCbor(repoData[collection][rkey]),
     }
     expect(records.length).toBe(1)
-    expect(records[0].record).toEqual(claim.record)
+    expect(await cidForCbor(records[0].record)).toEqual(claim.cid)
     const result = await repo.verifyProofs(
       new Uint8Array(car.data),
       [claim],
       did,
-      ctx.repoSigningKey.did(),
+      signingKey.did(),
     )
     expect(result.verified.length).toBe(1)
     expect(result.unverified.length).toBe(0)
@@ -192,13 +194,13 @@ describe('repo sync', () => {
     const claim = {
       collection,
       rkey,
-      record: null,
+      cid: null,
     }
     const result = await repo.verifyProofs(
       new Uint8Array(car.data),
       [claim],
       did,
-      ctx.repoSigningKey.did(),
+      signingKey.did(),
     )
     expect(result.verified.length).toBe(1)
     expect(result.unverified.length).toBe(0)
@@ -206,37 +208,74 @@ describe('repo sync', () => {
 
   describe('repo takedown', () => {
     beforeAll(async () => {
-      await sc.takeModerationAction({
-        action: TAKEDOWN,
-        subject: {
-          $type: 'com.atproto.admin.defs#repoRef',
-          did,
+      await agent.api.com.atproto.admin.updateSubjectStatus(
+        {
+          subject: {
+            $type: 'com.atproto.admin.defs#repoRef',
+            did,
+          },
+          takedown: { applied: true },
         },
+        {
+          encoding: 'application/json',
+          headers: network.pds.adminAuthHeaders(),
+        },
+      )
+    })
+
+    afterAll(async () => {
+      await agent.api.com.atproto.admin.updateSubjectStatus(
+        {
+          subject: {
+            $type: 'com.atproto.admin.defs#repoRef',
+            did,
+          },
+          takedown: { applied: false },
+        },
+        {
+          encoding: 'application/json',
+          headers: network.pds.adminAuthHeaders(),
+        },
+      )
+    })
+
+    it('returns takendown status', async () => {
+      const res = await agent.api.com.atproto.sync.getRepoStatus({ did })
+      expect(res.data).toEqual({
+        did,
+        active: false,
+        status: 'takendown',
       })
-      agent.api.xrpc.unsetHeader('authorization')
+    })
+
+    it('lists as takendown in listRepos', async () => {
+      const res = await agent.api.com.atproto.sync.listRepos()
+      const found = res.data.repos.find((r) => r.did === did)
+      expect(found?.active).toBe(false)
+      expect(found?.status).toBe('takendown')
     })
 
     it('does not sync repo unauthed', async () => {
       const tryGetRepo = agent.api.com.atproto.sync.getRepo({ did })
-      await expect(tryGetRepo).rejects.toThrow(/Could not find repo for DID/)
+      await expect(tryGetRepo).rejects.toThrow(/Repo has been takendown/)
     })
 
     it('syncs repo to owner or admin', async () => {
       const tryGetRepoOwner = agent.api.com.atproto.sync.getRepo(
         { did },
-        { headers: { authorization: `Bearer ${sc.accounts[did].accessJwt}` } },
+        { headers: sc.getHeaders(did) },
       )
       await expect(tryGetRepoOwner).resolves.toBeDefined()
       const tryGetRepoAdmin = agent.api.com.atproto.sync.getRepo(
         { did },
-        { headers: { authorization: adminAuth() } },
+        { headers: network.pds.adminAuthHeaders() },
       )
       await expect(tryGetRepoAdmin).resolves.toBeDefined()
     })
 
     it('does not sync latest commit unauthed', async () => {
       const tryGetLatest = agent.api.com.atproto.sync.getLatestCommit({ did })
-      await expect(tryGetLatest).rejects.toThrow(/Could not find root for DID/)
+      await expect(tryGetLatest).rejects.toThrow(/Repo has been takendown/)
     })
 
     it('does not sync a record proof unauthed', async () => {
@@ -247,7 +286,7 @@ describe('repo sync', () => {
         collection,
         rkey,
       })
-      await expect(tryGetRecord).rejects.toThrow(/Could not find repo for DID/)
+      await expect(tryGetRecord).rejects.toThrow(/Repo has been takendown/)
     })
   })
 })

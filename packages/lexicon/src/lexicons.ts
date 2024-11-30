@@ -1,19 +1,13 @@
-import { ZodError } from 'zod'
 import {
   LexiconDoc,
-  lexiconDoc,
   LexRecord,
-  LexXrpcProcedure,
-  LexXrpcQuery,
   LexUserType,
-  LexiconDocMalformedError,
   LexiconDefNotFoundError,
   InvalidLexiconError,
   ValidationResult,
   ValidationError,
   isObj,
   hasProp,
-  LexXrpcSubscription,
 } from './types'
 import {
   assertValidRecord,
@@ -28,12 +22,12 @@ import * as ComplexValidators from './validators/complex'
 /**
  * A collection of compiled lexicons.
  */
-export class Lexicons {
+export class Lexicons implements Iterable<LexiconDoc> {
   docs: Map<string, LexiconDoc> = new Map()
   defs: Map<string, LexUserType> = new Map()
 
-  constructor(docs?: unknown[]) {
-    if (docs?.length) {
+  constructor(docs?: Iterable<LexiconDoc>) {
+    if (docs) {
       for (const doc of docs) {
         this.add(doc)
       }
@@ -41,26 +35,25 @@ export class Lexicons {
   }
 
   /**
+   * @example clone a lexicon:
+   * ```ts
+   * const clone = new Lexicons(originalLexicon)
+   * ```
+   *
+   * @example get docs array:
+   * ```ts
+   * const docs = Array.from(lexicons)
+   * ```
+   */
+  [Symbol.iterator](): Iterator<LexiconDoc> {
+    return this.docs.values()
+  }
+
+  /**
    * Add a lexicon doc.
    */
-  add(doc: unknown): void {
-    try {
-      lexiconDoc.parse(doc)
-    } catch (e) {
-      if (e instanceof ZodError) {
-        throw new LexiconDocMalformedError(
-          `Failed to parse schema definition ${
-            (doc as Record<string, string>).id
-          }`,
-          doc,
-          e.issues,
-        )
-      } else {
-        throw e
-      }
-    }
-    const validatedDoc = doc as LexiconDoc
-    const uri = toLexUri(validatedDoc.id)
+  add(doc: LexiconDoc): void {
+    const uri = toLexUri(doc.id)
     if (this.docs.has(uri)) {
       throw new Error(`${uri} has already been registered`)
     }
@@ -68,10 +61,10 @@ export class Lexicons {
     // WARNING
     // mutates the object
     // -prf
-    resolveRefUris(validatedDoc, uri)
+    resolveRefUris(doc, uri)
 
-    this.docs.set(uri, validatedDoc)
-    for (const [defUri, def] of iterDefs(validatedDoc)) {
+    this.docs.set(uri, doc)
+    for (const [defUri, def] of iterDefs(doc)) {
       this.defs.set(defUri, def)
     }
   }
@@ -110,7 +103,14 @@ export class Lexicons {
   /**
    * Get a def, throw if not found. Throws on not found.
    */
-  getDefOrThrow(uri: string, types?: string[]): LexUserType {
+  getDefOrThrow<T extends LexUserType['type'] = LexUserType['type']>(
+    uri: string,
+    types?: readonly T[],
+  ): Extract<LexUserType, { type: T }>
+  getDefOrThrow(
+    uri: string,
+    types?: readonly LexUserType['type'][],
+  ): LexUserType {
     const def = this.getDef(uri)
     if (!def) {
       throw new LexiconDefNotFoundError(`Lexicon not found: ${uri}`)
@@ -137,7 +137,7 @@ export class Lexicons {
     } else if (def.type === 'object') {
       return ComplexValidators.object(this, 'Object', def, value)
     } else {
-      // shouldnt happen
+      // shouldn't happen
       throw new InvalidLexiconError('Definition must be a record or object')
     }
   }
@@ -173,11 +173,7 @@ export class Lexicons {
       'procedure',
       'subscription',
     ])
-    return assertValidXrpcParams(
-      this,
-      def as LexXrpcProcedure | LexXrpcQuery | LexXrpcSubscription,
-      value,
-    )
+    return assertValidXrpcParams(this, def, value)
   }
 
   /**
@@ -186,7 +182,7 @@ export class Lexicons {
   assertValidXrpcInput(lexUri: string, value: unknown) {
     lexUri = toLexUri(lexUri)
     const def = this.getDefOrThrow(lexUri, ['procedure'])
-    return assertValidXrpcInput(this, def as LexXrpcProcedure, value)
+    return assertValidXrpcInput(this, def, value)
   }
 
   /**
@@ -195,11 +191,7 @@ export class Lexicons {
   assertValidXrpcOutput(lexUri: string, value: unknown) {
     lexUri = toLexUri(lexUri)
     const def = this.getDefOrThrow(lexUri, ['query', 'procedure'])
-    return assertValidXrpcOutput(
-      this,
-      def as LexXrpcProcedure | LexXrpcQuery,
-      value,
-    )
+    return assertValidXrpcOutput(this, def, value)
   }
 
   /**
@@ -208,7 +200,7 @@ export class Lexicons {
   assertValidXrpcMessage<T = unknown>(lexUri: string, value: unknown): T {
     lexUri = toLexUri(lexUri)
     const def = this.getDefOrThrow(lexUri, ['subscription'])
-    return assertValidXrpcMessage(this, def as LexXrpcSubscription, value) as T
+    return assertValidXrpcMessage(this, def, value) as T
   }
 
   /**

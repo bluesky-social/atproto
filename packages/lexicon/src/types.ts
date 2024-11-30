@@ -38,6 +38,8 @@ export const lexStringFormat = z.enum([
   'nsid',
   'cid',
   'language',
+  'tid',
+  'record-key',
 ])
 export type LexStringFormat = z.infer<typeof lexStringFormat>
 
@@ -143,7 +145,21 @@ export const lexArray = z
   .object({
     type: z.literal('array'),
     description: z.string().optional(),
-    items: z.union([lexPrimitive, lexIpldType, lexBlob, lexRefVariant]),
+    items: z.discriminatedUnion('type', [
+      // lexPrimitive
+      lexBoolean,
+      lexInteger,
+      lexString,
+      lexUnknown,
+      // lexIpldType
+      lexBytes,
+      lexCidLink,
+      // lexRefVariant
+      lexRef,
+      lexRefUnion,
+      // other
+      lexBlob,
+    ]),
     minLength: z.number().int().optional(),
     maxLength: z.number().int().optional(),
   })
@@ -173,11 +189,25 @@ export const lexObject = z
     description: z.string().optional(),
     required: z.string().array().optional(),
     nullable: z.string().array().optional(),
-    properties: z
-      .record(
-        z.union([lexRefVariant, lexIpldType, lexArray, lexBlob, lexPrimitive]),
-      )
-      .optional(),
+    properties: z.record(
+      z.discriminatedUnion('type', [
+        lexArray,
+
+        // lexPrimitive
+        lexBoolean,
+        lexInteger,
+        lexString,
+        lexUnknown,
+        // lexIpldType
+        lexBytes,
+        lexCidLink,
+        // lexRefVariant
+        lexRef,
+        lexRefUnion,
+        // other
+        lexBlob,
+      ]),
+    ),
   })
   .strict()
   .superRefine(requiredPropertiesRefinement)
@@ -191,7 +221,17 @@ export const lexXrpcParameters = z
     type: z.literal('params'),
     description: z.string().optional(),
     required: z.string().array().optional(),
-    properties: z.record(z.union([lexPrimitive, lexPrimitiveArray])),
+    properties: z.record(
+      z.discriminatedUnion('type', [
+        lexPrimitiveArray,
+
+        // lexPrimitive
+        lexBoolean,
+        lexInteger,
+        lexString,
+        lexUnknown,
+      ]),
+    ),
   })
   .strict()
   .superRefine(requiredPropertiesRefinement)
@@ -201,6 +241,7 @@ export const lexXrpcBody = z
   .object({
     description: z.string().optional(),
     encoding: z.string(),
+    // @NOTE using discriminatedUnion with a refined schema requires zod >= 4
     schema: z.union([lexRefVariant, lexObject]).optional(),
   })
   .strict()
@@ -209,6 +250,7 @@ export type LexXrpcBody = z.infer<typeof lexXrpcBody>
 export const lexXrpcSubscriptionMessage = z
   .object({
     description: z.string().optional(),
+    // @NOTE using discriminatedUnion with a refined schema requires zod >= 4
     schema: z.union([lexRefVariant, lexObject]).optional(),
   })
   .strict()
@@ -353,6 +395,13 @@ export const lexUserType = z.custom<
       }
     }
 
+    if (typeof val['type'] !== 'string') {
+      return {
+        message: 'Type property must be a string',
+        fatal: true,
+      }
+    }
+
     return {
       message: `Invalid type: ${val['type']} must be one of: record, query, procedure, subscription, blob, array, token, object, boolean, integer, string, bytes, cid-link, unknown`,
       fatal: true,
@@ -417,16 +466,9 @@ export function isDiscriminatedObject(
   return discriminatedObject.safeParse(value).success
 }
 
-export class LexiconDocMalformedError extends Error {
-  constructor(
-    message: string,
-    public schemaDef: unknown,
-    public issues?: z.ZodIssue[],
-  ) {
-    super(message)
-    this.schemaDef = schemaDef
-    this.issues = issues
-  }
+export function parseLexiconDoc(v: unknown): LexiconDoc {
+  lexiconDoc.parse(v)
+  return v as LexiconDoc
 }
 
 export type ValidationResult =

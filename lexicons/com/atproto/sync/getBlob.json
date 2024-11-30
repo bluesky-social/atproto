@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Get a blob associated with a given repo.",
+      "description": "Get a blob associated with a given account. Returns the full blob as originally uploaded. Does not require auth; implemented by PDS.",
       "parameters": {
         "type": "params",
         "required": ["did", "cid"],
@@ -12,7 +12,7 @@
           "did": {
             "type": "string",
             "format": "did",
-            "description": "The DID of the repo."
+            "description": "The DID of the account."
           },
           "cid": {
             "type": "string",
@@ -23,7 +23,14 @@
       },
       "output": {
         "encoding": "*/*"
-      }
+      },
+      "errors": [
+        { "name": "BlobNotFound" },
+        { "name": "RepoNotFound" },
+        { "name": "RepoTakendown" },
+        { "name": "RepoSuspended" },
+        { "name": "RepoDeactivated" }
+      ]
     }
   }
 }

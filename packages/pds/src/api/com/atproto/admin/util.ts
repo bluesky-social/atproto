@@ -1,8 +1,7 @@
 import express from 'express'
-import {
-  RepoView,
-  RepoViewDetail,
-} from '../../../../lexicon/types/com/atproto/admin/defs'
+import { ActorAccount } from '../../../../account-manager/helpers/account'
+import { INVALID_HANDLE } from '@atproto/syntax'
+import { CodeDetail } from '../../../../account-manager/helpers/invite'
 
 // Output designed to passed as second arg to AtpAgent methods.
 // The encoding field here is a quirk of the AtpAgent.
@@ -27,15 +26,37 @@ export function authPassthru(req: express.Request, withEncoding?: boolean) {
   }
 }
 
-// @NOTE mutates.
-// merges-in details that the pds knows about the repo.
-export function mergeRepoViewPdsDetails<T extends RepoView | RepoViewDetail>(
-  other: T,
-  pds: T,
+export function formatAccountInfo(
+  account: ActorAccount,
+  {
+    managesOwnInvites,
+    invitedBy,
+    invites,
+  }: {
+    managesOwnInvites: boolean
+    invites: Map<string, CodeDetail[]> | CodeDetail[]
+    invitedBy: Record<string, CodeDetail>
+  },
 ) {
-  other.email ??= pds.email
-  other.invites ??= pds.invites
-  other.invitedBy ??= pds.invitedBy
-  other.invitesDisabled ??= pds.invitesDisabled
-  return other
+  let invitesResults: CodeDetail[] | undefined
+  if (managesOwnInvites) {
+    if (Array.isArray(invites)) {
+      invitesResults = invites
+    } else {
+      invitesResults = invites.get(account.did) || []
+    }
+  }
+  return {
+    did: account.did,
+    handle: account.handle ?? INVALID_HANDLE,
+    email: account.email ?? undefined,
+    indexedAt: account.createdAt,
+    emailConfirmedAt: account.emailConfirmedAt ?? undefined,
+    invitedBy: managesOwnInvites ? invitedBy[account.did] : undefined,
+    invites: invitesResults,
+    invitesDisabled: managesOwnInvites
+      ? account.invitesDisabled === 1
+      : undefined,
+    deactivatedAt: account.deactivatedAt ?? undefined,
+  }
 }

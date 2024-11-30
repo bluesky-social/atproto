@@ -1,32 +1,31 @@
-import AtpAgent, { ComAtprotoServerCreateAccount } from '@atproto/api'
-import * as crypto from '@atproto/crypto'
-import { AppContext } from '../src'
-import * as util from './_util'
+import { AtpAgent, ComAtprotoServerCreateAccount } from '@atproto/api'
 import { DAY } from '@atproto/common'
+import * as crypto from '@atproto/crypto'
+import { TestNetworkNoAppView } from '@atproto/dev-env'
+import { AppContext } from '../src'
 import { genInvCodes } from '../src/api/com/atproto/server/util'
-import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 
 describe('account', () => {
-  let serverUrl: string
+  let network: TestNetworkNoAppView
   let ctx: AppContext
   let agent: AtpAgent
-  let close: util.CloseFn
 
   beforeAll(async () => {
-    const server = await util.runTestServer({
-      inviteRequired: true,
-      userInviteInterval: DAY,
-      userInviteEpoch: Date.now() - 3 * DAY,
+    network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'invite_codes',
+      pds: {
+        inviteRequired: true,
+        inviteInterval: DAY,
+        inviteEpoch: Date.now() - 3 * DAY,
+      },
     })
-    close = server.close
-    ctx = server.ctx
-    serverUrl = server.url
-    agent = new AtpAgent({ service: serverUrl })
+    // @ts-expect-error Error due to circular dependency with the dev-env package
+    ctx = network.pds.ctx
+    agent = network.pds.getClient()
   })
 
   afterAll(async () => {
-    await close()
+    await network.close()
   })
 
   it('describes the fact that invites are required', async () => {
@@ -35,7 +34,7 @@ describe('account', () => {
   })
 
   it('succeeds with a valid code', async () => {
-    const code = await createInviteCode(agent, 1)
+    const code = await createInviteCode(network, agent, 1)
     await createAccountWithInvite(agent, code)
   })
 
@@ -47,26 +46,24 @@ describe('account', () => {
   })
 
   it('fails on invite code from takendown account', async () => {
-    const account = await makeLoggedInAccount(agent)
+    const account = await makeLoggedInAccount(network, agent)
     // assign an invite code to the user
-    const code = await createInviteCode(agent, 1, account.did)
+    const code = await createInviteCode(network, agent, 1, account.did)
     // takedown the user's account
-    const { data: takedownAction } =
-      await agent.api.com.atproto.admin.takeModerationAction(
-        {
-          action: TAKEDOWN,
-          subject: {
-            $type: 'com.atproto.admin.defs#repoRef',
-            did: account.did,
-          },
-          createdBy: 'did:example:admin',
-          reason: 'Y',
-        },
-        {
-          encoding: 'application/json',
-          headers: { authorization: util.adminAuth() },
-        },
-      )
+    const subject = {
+      $type: 'com.atproto.admin.defs#repoRef',
+      did: account.did,
+    }
+    await agent.api.com.atproto.admin.updateSubjectStatus(
+      {
+        subject,
+        takedown: { applied: true },
+      },
+      {
+        encoding: 'application/json',
+        headers: network.pds.adminAuthHeaders(),
+      },
+    )
     // attempt to create account with the previously generated invite code
     const promise = createAccountWithInvite(agent, code)
     await expect(promise).rejects.toThrow(
@@ -74,15 +71,14 @@ describe('account', () => {
     )
 
     // double check that reversing the takedown action makes the invite code valid again
-    await agent.api.com.atproto.admin.reverseModerationAction(
+    await agent.api.com.atproto.admin.updateSubjectStatus(
       {
-        id: takedownAction.id,
-        createdBy: 'did:example:admin',
-        reason: 'Y',
+        subject,
+        takedown: { applied: false },
       },
       {
         encoding: 'application/json',
-        headers: { authorization: util.adminAuth() },
+        headers: network.pds.adminAuthHeaders(),
       },
     )
     // attempt to create account with the previously generated invite code
@@ -90,7 +86,7 @@ describe('account', () => {
   })
 
   it('fails on used up invite code', async () => {
-    const code = await createInviteCode(agent, 2)
+    const code = await createInviteCode(network, agent, 2)
     await createAccountsWithInvite(agent, code, 2)
     const promise = createAccountWithInvite(agent, code)
     await expect(promise).rejects.toThrow(
@@ -99,7 +95,7 @@ describe('account', () => {
   })
 
   it('handles racing invite code uses', async () => {
-    const inviteCode = await createInviteCode(agent, 1)
+    const inviteCode = await createInviteCode(network, agent, 1)
     const COUNT = 10
 
     let successes = 0
@@ -122,22 +118,20 @@ describe('account', () => {
   })
 
   it('allow users to get available user invites', async () => {
-    const account = await makeLoggedInAccount(agent)
+    const account = await makeLoggedInAccount(network, agent)
 
     // no codes available yet
-    const res1 =
-      await account.agent.api.com.atproto.server.getAccountInviteCodes()
+    const res1 = await account.com.atproto.server.getAccountInviteCodes()
     expect(res1.data.codes.length).toBe(0)
 
     // next, pretend account was made 2 days in the past
     const twoDaysAgo = new Date(Date.now() - 2 * DAY).toISOString()
-    await ctx.db.db
-      .updateTable('user_account')
+    await ctx.accountManager.db.db
+      .updateTable('actor')
       .set({ createdAt: twoDaysAgo })
-      .where('did', '=', account.did)
+      .where('did', '=', account.accountDid)
       .execute()
-    const res2 =
-      await account.agent.api.com.atproto.server.getAccountInviteCodes()
+    const res2 = await account.com.atproto.server.getAccountInviteCodes()
     expect(res2.data.codes.length).toBe(2)
 
     // use both invites and confirm we can't get any more
@@ -145,28 +139,26 @@ describe('account', () => {
       await createAccountWithInvite(agent, code.code)
     }
 
-    const res3 =
-      await account.agent.api.com.atproto.server.getAccountInviteCodes()
+    const res3 = await account.com.atproto.server.getAccountInviteCodes()
     expect(res3.data.codes.length).toBe(2)
   })
 
   it('admin gifted codes to not impact a users available codes', async () => {
-    const account = await makeLoggedInAccount(agent)
+    const account = await makeLoggedInAccount(network, agent)
 
     // again, pretend account was made 2 days ago
     const twoDaysAgo = new Date(Date.now() - 2 * DAY).toISOString()
-    await ctx.db.db
-      .updateTable('user_account')
+    await ctx.accountManager.db.db
+      .updateTable('actor')
       .set({ createdAt: twoDaysAgo })
-      .where('did', '=', account.did)
+      .where('did', '=', account.accountDid)
       .execute()
 
-    await createInviteCode(agent, 1, account.did)
-    await createInviteCode(agent, 1, account.did)
-    await createInviteCode(agent, 1, account.did)
+    await createInviteCode(network, agent, 1, account.accountDid)
+    await createInviteCode(network, agent, 1, account.accountDid)
+    await createInviteCode(network, agent, 1, account.accountDid)
 
-    const res =
-      await account.agent.api.com.atproto.server.getAccountInviteCodes()
+    const res = await account.com.atproto.server.getAccountInviteCodes()
     expect(res.data.codes.length).toBe(5)
 
     const fromAdmin = res.data.codes.filter(
@@ -175,37 +167,35 @@ describe('account', () => {
     expect(fromAdmin.length).toBe(3)
 
     const fromSelf = res.data.codes.filter(
-      (code) => code.createdBy === account.did,
+      (code) => code.createdBy === account.accountDid,
     )
     expect(fromSelf.length).toBe(2)
   })
 
   it('creates invites based on epoch', async () => {
-    const account = await makeLoggedInAccount(agent)
+    const account = await makeLoggedInAccount(network, agent)
 
     // first, pretend account was made 2 days ago & get those two codes
     const twoDaysAgo = new Date(Date.now() - 2 * DAY).toISOString()
-    await ctx.db.db
-      .updateTable('user_account')
+    await ctx.accountManager.db.db
+      .updateTable('actor')
       .set({ createdAt: twoDaysAgo })
-      .where('did', '=', account.did)
+      .where('did', '=', account.accountDid)
       .execute()
 
-    const res1 =
-      await account.agent.api.com.atproto.server.getAccountInviteCodes()
+    const res1 = await account.com.atproto.server.getAccountInviteCodes()
     expect(res1.data.codes.length).toBe(2)
 
     // then pretend account was made ever so slightly over 10 days ago
     const tenDaysAgo = new Date(Date.now() - 10.01 * DAY).toISOString()
-    await ctx.db.db
-      .updateTable('user_account')
+    await ctx.accountManager.db.db
+      .updateTable('actor')
       .set({ createdAt: tenDaysAgo })
-      .where('did', '=', account.did)
+      .where('did', '=', account.accountDid)
       .execute()
 
     // we have a 3 day epoch so should still get 3 code
-    const res2 =
-      await account.agent.api.com.atproto.server.getAccountInviteCodes()
+    const res2 = await account.com.atproto.server.getAccountInviteCodes()
     expect(res2.data.codes.length).toBe(3)
 
     // use up these codes
@@ -218,19 +208,21 @@ describe('account', () => {
       code: code,
       availableUses: 1,
       disabled: 0 as const,
-      forUser: account.did,
-      createdBy: account.did,
+      forAccount: account.accountDid,
+      createdBy: account.accountDid,
       createdAt: new Date(Date.now() - 5 * DAY).toISOString(),
     }))
-    await ctx.db.db.insertInto('invite_code').values(inviteRows).execute()
-    const res3 =
-      await account.agent.api.com.atproto.server.getAccountInviteCodes({
-        includeUsed: false,
-      })
+    await ctx.accountManager.db.db
+      .insertInto('invite_code')
+      .values(inviteRows)
+      .execute()
+    const res3 = await account.com.atproto.server.getAccountInviteCodes({
+      includeUsed: false,
+    })
     expect(res3.data.codes.length).toBe(10)
 
     // no we use the codes which should still not allow them to generate anymore
-    await ctx.db.db
+    await ctx.accountManager.db.db
       .insertInto('invite_code_use')
       .values(
         inviteRows.map((row) => ({
@@ -241,26 +233,25 @@ describe('account', () => {
       )
       .execute()
 
-    const res4 =
-      await account.agent.api.com.atproto.server.getAccountInviteCodes({
-        includeUsed: false,
-      })
+    const res4 = await account.com.atproto.server.getAccountInviteCodes({
+      includeUsed: false,
+    })
     expect(res4.data.codes.length).toBe(0)
   })
 
   it('prevents use of disabled codes', async () => {
-    const first = await createInviteCode(agent, 1)
-    const account = await makeLoggedInAccount(agent)
-    const second = await createInviteCode(agent, 1, account.did)
+    const first = await createInviteCode(network, agent, 1)
+    const account = await makeLoggedInAccount(network, agent)
+    const second = await createInviteCode(network, agent, 1, account.accountDid)
 
     // disabled first by code & second by did
     await agent.api.com.atproto.admin.disableInviteCodes(
       {
         codes: [first],
-        accounts: [account.did],
+        accounts: [account.accountDid],
       },
       {
-        headers: { authorization: util.adminAuth() },
+        headers: network.pds.adminAuthHeaders(),
         encoding: 'application/json',
       },
     )
@@ -279,7 +270,7 @@ describe('account', () => {
         accounts: ['admin'],
       },
       {
-        headers: { authorization: util.adminAuth() },
+        headers: network.pds.adminAuthHeaders(),
         encoding: 'application/json',
       },
     )
@@ -295,23 +286,23 @@ describe('account', () => {
         forAccounts: accounts,
       },
       {
-        headers: { authorization: util.adminAuth() },
+        headers: network.pds.adminAuthHeaders(),
         encoding: 'application/json',
       },
     )
     expect(res.data.codes.length).toBe(3)
-    const fromDb = await ctx.db.db
+    const fromDb = await ctx.accountManager.db.db
       .selectFrom('invite_code')
       .selectAll()
-      .where('forUser', 'in', accounts)
+      .where('forAccount', 'in', accounts)
       .execute()
     expect(fromDb.length).toBe(6)
     const dbCodesByUser = {}
     for (const row of fromDb) {
       expect(row.disabled).toBe(0)
       expect(row.availableUses).toBe(2)
-      dbCodesByUser[row.forUser] ??= []
-      dbCodesByUser[row.forUser].push(row.code)
+      dbCodesByUser[row.forAccount] ??= []
+      dbCodesByUser[row.forAccount].push(row.code)
     }
     for (const { account, codes } of res.data.codes) {
       expect(codes.length).toBe(2)
@@ -321,6 +312,7 @@ describe('account', () => {
 })
 
 const createInviteCode = async (
+  network: TestNetworkNoAppView,
   agent: AtpAgent,
   uses: number,
   forAccount?: string,
@@ -328,7 +320,7 @@ const createInviteCode = async (
   const res = await agent.api.com.atproto.server.createInviteCode(
     { useCount: uses, forAccount },
     {
-      headers: { authorization: util.adminAuth() },
+      headers: network.pds.adminAuthHeaders(),
       encoding: 'application/json',
     },
   )
@@ -360,18 +352,15 @@ const createAccountsWithInvite = async (
 }
 
 const makeLoggedInAccount = async (
-  agent: AtpAgent,
-): Promise<{ did: string; agent: AtpAgent }> => {
-  const code = await createInviteCode(agent, 1)
-  const account = await createAccountWithInvite(agent, code)
-  const did = account.did
-  const loggedInAgent = new AtpAgent({ service: agent.service.toString() })
-  await loggedInAgent.login({
+  network: TestNetworkNoAppView,
+  inviterAgent: AtpAgent,
+) => {
+  const code = await createInviteCode(network, inviterAgent, 1)
+  const account = await createAccountWithInvite(inviterAgent, code)
+  const agent = network.pds.getClient()
+  await agent.login({
     identifier: account.handle,
     password: account.password,
   })
-  return {
-    did,
-    agent: loggedInAgent,
-  }
+  return agent
 }

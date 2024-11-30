@@ -1,43 +1,120 @@
 import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
+import { AtpAgent } from '@atproto/api'
+import { mapDefined } from '@atproto/common'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/actor/searchActorsTypeahead'
 import {
-  cleanTerm,
-  getUserSearchQuerySimple,
-} from '../../../../services/util/search'
+  HydrationFnInput,
+  PresentationFnInput,
+  RulesFnInput,
+  SkeletonFnInput,
+  createPipeline,
+} from '../../../../pipeline'
+import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
+import { Views } from '../../../../views'
+import { DataPlaneClient } from '../../../../data-plane'
+import { parseString } from '../../../../hydration/util'
+import { resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
+  const searchActorsTypeahead = createPipeline(
+    skeleton,
+    hydration,
+    noBlocks,
+    presentation,
+  )
   server.app.bsky.actor.searchActorsTypeahead({
-    auth: ctx.authOptionalVerifier,
-    handler: async ({ params, auth }) => {
-      const { limit, term: rawTerm } = params
-      const requester = auth.credentials.did
-      const term = cleanTerm(rawTerm || '')
-
-      const db = ctx.db.getReplica('search')
-
-      const results = term
-        ? await getUserSearchQuerySimple(db, { term, limit })
-            .selectAll('actor')
-            .execute()
-        : []
-
-      const actors = await ctx.services
-        .actor(db)
-        .views.profilesBasic(results, requester, { omitLabels: true })
-
-      const SKIP = []
-      const filtered = results.flatMap((res) => {
-        const actor = actors[res.did]
-        if (actor.viewer?.blocking || actor.viewer?.blockedBy) return SKIP
-        return actor
-      })
-
+    auth: ctx.authVerifier.standardOptional,
+    handler: async ({ params, auth, req }) => {
+      const viewer = auth.credentials.iss
+      const labelers = ctx.reqLabelers(req)
+      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
+      const results = await searchActorsTypeahead(
+        { ...params, hydrateCtx },
+        ctx,
+      )
       return {
         encoding: 'application/json',
-        body: {
-          actors: filtered,
-        },
+        body: results,
+        headers: resHeaders({ labelers: hydrateCtx.labelers }),
       }
     },
   })
+}
+
+const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
+  const { ctx, params } = inputs
+  const term = params.q ?? params.term ?? ''
+
+  // @TODO
+  // add typeahead option
+  // add hits total
+
+  if (ctx.searchAgent) {
+    const { data: res } =
+      await ctx.searchAgent.app.bsky.unspecced.searchActorsSkeleton({
+        typeahead: true,
+        q: term,
+        limit: params.limit,
+        viewer: params.hydrateCtx.viewer ?? undefined,
+      })
+    return {
+      dids: res.actors.map(({ did }) => did),
+      cursor: parseString(res.cursor),
+    }
+  }
+
+  const res = await ctx.dataplane.searchActors({
+    term,
+    limit: params.limit,
+  })
+  return {
+    dids: res.dids,
+    cursor: parseString(res.cursor),
+  }
+}
+
+const hydration = async (
+  inputs: HydrationFnInput<Context, Params, Skeleton>,
+) => {
+  const { ctx, params, skeleton } = inputs
+  return ctx.hydrator.hydrateProfilesBasic(skeleton.dids, params.hydrateCtx)
+}
+
+const noBlocks = (inputs: RulesFnInput<Context, Params, Skeleton>) => {
+  const { ctx, skeleton, hydration, params } = inputs
+  skeleton.dids = skeleton.dids.filter((did) => {
+    const actor = hydration.actors?.get(did)
+    if (!actor) return false
+    // Always display exact matches so that users can find profiles that they have blocked
+    const term = (params.q ?? params.term ?? '').toLowerCase()
+    const isExactMatch = actor.handle?.toLowerCase() === term
+    return isExactMatch || !ctx.views.viewerBlockExists(did, hydration)
+  })
+  return skeleton
+}
+
+const presentation = (
+  inputs: PresentationFnInput<Context, Params, Skeleton>,
+) => {
+  const { ctx, skeleton, hydration } = inputs
+  const actors = mapDefined(skeleton.dids, (did) =>
+    ctx.views.profileBasic(did, hydration),
+  )
+  return {
+    actors,
+  }
+}
+
+type Context = {
+  dataplane: DataPlaneClient
+  hydrator: Hydrator
+  views: Views
+  searchAgent?: AtpAgent
+}
+
+type Params = QueryParams & { hydrateCtx: HydrateCtx }
+
+type Skeleton = {
+  dids: string[]
 }

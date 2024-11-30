@@ -1,46 +1,67 @@
+import express from 'express'
 import * as plc from '@did-plc/lib'
 import { IdResolver } from '@atproto/identity'
-import { DatabaseCoordinator } from './db'
+import { AtpAgent } from '@atproto/api'
+import { Keypair } from '@atproto/crypto'
 import { ServerConfig } from './config'
-import { ImageUriBuilder } from './image/uri'
-import { Services } from './services'
-import * as auth from './auth'
-import DidSqlCache from './did-cache'
-import { BackgroundQueue } from './background'
-import { MountedAlgos } from './feed-gen/types'
-import { LabelCache } from './label-cache'
-import { NotificationServer } from './notifications'
+import { DataPlaneClient } from './data-plane/client'
+import { Hydrator } from './hydration/hydrator'
+import { Views } from './views'
+import { AuthVerifier } from './auth-verifier'
+import { BsyncClient } from './bsync'
+import { CourierClient } from './courier'
+import { FeatureGates } from './feature-gates'
+import {
+  ParsedLabelers,
+  defaultLabelerHeader,
+  parseLabelerHeader,
+} from './util'
+import { httpLogger as log } from './logger'
 
 export class AppContext {
   constructor(
     private opts: {
-      db: DatabaseCoordinator
-      imgUriBuilder: ImageUriBuilder
       cfg: ServerConfig
-      services: Services
+      dataplane: DataPlaneClient
+      searchAgent: AtpAgent | undefined
+      suggestionsAgent: AtpAgent | undefined
+      hydrator: Hydrator
+      views: Views
+      signingKey: Keypair
       idResolver: IdResolver
-      didCache: DidSqlCache
-      labelCache: LabelCache
-      backgroundQueue: BackgroundQueue
-      algos: MountedAlgos
-      notifServer: NotificationServer
+      bsyncClient: BsyncClient
+      courierClient: CourierClient | undefined
+      authVerifier: AuthVerifier
+      featureGates: FeatureGates
     },
   ) {}
-
-  get db(): DatabaseCoordinator {
-    return this.opts.db
-  }
-
-  get imgUriBuilder(): ImageUriBuilder {
-    return this.opts.imgUriBuilder
-  }
 
   get cfg(): ServerConfig {
     return this.opts.cfg
   }
 
-  get services(): Services {
-    return this.opts.services
+  get dataplane(): DataPlaneClient {
+    return this.opts.dataplane
+  }
+
+  get searchAgent(): AtpAgent | undefined {
+    return this.opts.searchAgent
+  }
+
+  get suggestionsAgent(): AtpAgent | undefined {
+    return this.opts.suggestionsAgent
+  }
+
+  get hydrator(): Hydrator {
+    return this.opts.hydrator
+  }
+
+  get views(): Views {
+    return this.opts.views
+  }
+
+  get signingKey(): Keypair {
+    return this.opts.signingKey
   }
 
   get plcClient(): plc.Client {
@@ -51,46 +72,33 @@ export class AppContext {
     return this.opts.idResolver
   }
 
-  get didCache(): DidSqlCache {
-    return this.opts.didCache
+  get bsyncClient(): BsyncClient {
+    return this.opts.bsyncClient
   }
 
-  get labelCache(): LabelCache {
-    return this.opts.labelCache
+  get courierClient(): CourierClient | undefined {
+    return this.opts.courierClient
   }
 
-  get notifServer(): NotificationServer {
-    return this.opts.notifServer
+  get authVerifier(): AuthVerifier {
+    return this.opts.authVerifier
   }
 
-  get authVerifier() {
-    return auth.authVerifier(this.idResolver, { aud: this.cfg.serverDid })
+  get featureGates(): FeatureGates {
+    return this.opts.featureGates
   }
 
-  get authVerifierAnyAudience() {
-    return auth.authVerifier(this.idResolver, { aud: null })
-  }
-
-  get authOptionalVerifier() {
-    return auth.authOptionalVerifier(this.idResolver, {
-      aud: this.cfg.serverDid,
-    })
-  }
-
-  get authOptionalAccessOrRoleVerifier() {
-    return auth.authOptionalAccessOrRoleVerifier(this.idResolver, this.cfg)
-  }
-
-  get roleVerifier() {
-    return auth.roleVerifier(this.cfg)
-  }
-
-  get backgroundQueue(): BackgroundQueue {
-    return this.opts.backgroundQueue
-  }
-
-  get algos(): MountedAlgos {
-    return this.opts.algos
+  reqLabelers(req: express.Request): ParsedLabelers {
+    const val = req.header('atproto-accept-labelers')
+    let parsed: ParsedLabelers | null
+    try {
+      parsed = parseLabelerHeader(val)
+    } catch (err) {
+      parsed = null
+      log.info({ err, val }, 'failed to parse labeler header')
+    }
+    if (!parsed) return defaultLabelerHeader(this.cfg.labelsFromIssuerDids)
+    return parsed
   }
 }
 

@@ -1,11 +1,12 @@
-import * as http from 'http'
-import { Readable } from 'stream'
-import xrpc, { ServiceClient } from '@atproto/xrpc'
-import getPort from 'get-port'
+import * as http from 'node:http'
+import { Readable } from 'node:stream'
+import { LexiconDoc } from '@atproto/lexicon'
+import { XrpcClient } from '@atproto/xrpc'
 import { createServer, closeServer } from './_util'
 import * as xrpcServer from '../src'
+import { AddressInfo } from 'node:net'
 
-const LEXICONS = [
+const LEXICONS: LexiconDoc[] = [
   {
     lexicon: 1,
     id: 'io.example.pingOne',
@@ -120,13 +121,12 @@ describe('Procedures', () => {
       }
     },
   )
-  xrpc.addLexicons(LEXICONS)
 
-  let client: ServiceClient
+  let client: XrpcClient
   beforeAll(async () => {
-    const port = await getPort()
-    s = await createServer(port, server)
-    client = xrpc.service(`http://localhost:${port}`)
+    s = await createServer(server)
+    const { port } = s.address() as AddressInfo
+    client = new XrpcClient(`http://localhost:${port}`, LEXICONS)
   })
   afterAll(async () => {
     await closeServer(s)

@@ -1,26 +1,24 @@
-import { Handler as SkeletonHandler } from '@atproto/pds/src/lexicon/types/app/bsky/feed/getFeedSkeleton'
+import { SkeletonHandler } from '@atproto/pds'
 import { TestServerParams } from './types'
 import { TestPlc } from './plc'
 import { TestPds } from './pds'
 import { mockNetworkUtilities } from './util'
 import { TestFeedGen } from './feed-gen'
+import { SeedClient } from './seed/client'
 
 export class TestNetworkNoAppView {
   feedGens: TestFeedGen[] = []
-  constructor(public plc: TestPlc, public pds: TestPds) {}
+  constructor(
+    public plc: TestPlc,
+    public pds: TestPds,
+  ) {}
 
   static async create(
     params: Partial<TestServerParams> = {},
   ): Promise<TestNetworkNoAppView> {
-    const dbPostgresUrl = params.dbPostgresUrl || process.env.DB_POSTGRES_URL
-    const dbPostgresSchema =
-      params.dbPostgresSchema || process.env.DB_POSTGRES_SCHEMA
-
     const plc = await TestPlc.create(params.plc ?? {})
     const pds = await TestPds.create({
-      dbPostgresUrl,
-      dbPostgresSchema,
-      plcUrl: plc.url,
+      didPlcUrl: plc.url,
       ...params.pds,
     })
 
@@ -35,6 +33,11 @@ export class TestNetworkNoAppView {
     const fg = await TestFeedGen.create(this.plc.url, feeds)
     this.feedGens.push(fg)
     return fg
+  }
+
+  getSeedClient(): SeedClient<typeof this> {
+    const agent = this.pds.getClient()
+    return new SeedClient(this, agent)
   }
 
   async processAll() {

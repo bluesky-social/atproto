@@ -1,7 +1,6 @@
-import AtpAgent, { AtUri } from '@atproto/api'
-import { TestNetwork } from '@atproto/dev-env'
-import { SeedClient } from '../seeds/client'
-import likesSeed from '../seeds/likes'
+import { AtpAgent, AtUri } from '@atproto/api'
+import { TestNetwork, SeedClient, likesSeed } from '@atproto/dev-env'
+import { ids } from '../../src/lexicon/lexicons'
 
 describe('suggested follows', () => {
   let network: TestNetwork
@@ -11,14 +10,13 @@ describe('suggested follows', () => {
 
   beforeAll(async () => {
     network = await TestNetwork.create({
-      dbPostgresSchema: 'bsky_views_suggestions',
+      dbPostgresSchema: 'bsky_views_suggested_follows',
     })
     agent = network.bsky.getClient()
     pdsAgent = network.pds.getClient()
-    sc = new SeedClient(pdsAgent)
+    sc = network.getSeedClient()
     await likesSeed(sc)
     await network.processAll()
-    await network.bsky.processAll()
 
     const suggestions = [
       { did: sc.dids.alice, order: 1 },
@@ -28,9 +26,8 @@ describe('suggested follows', () => {
       { did: sc.dids.fred, order: 5 },
       { did: sc.dids.gina, order: 6 },
     ]
-    await network.bsky.ctx.db
-      .getPrimary()
-      .db.insertInto('suggested_follow')
+    await network.bsky.db.db
+      .insertInto('suggested_follow')
       .values(suggestions)
       .execute()
   })
@@ -44,7 +41,12 @@ describe('suggested follows', () => {
       {
         actor: sc.dids.alice,
       },
-      { headers: await network.serviceHeaders(sc.dids.carol) },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.carol,
+          ids.AppBskyGraphGetSuggestedFollowsByActor,
+        ),
+      },
     )
 
     expect(result.data.suggestions.length).toBe(4) // backfilled with 2 NPCs
@@ -60,7 +62,12 @@ describe('suggested follows', () => {
       {
         actor: sc.dids.alice,
       },
-      { headers: await network.serviceHeaders(sc.dids.fred) },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.fred,
+          ids.AppBskyGraphGetSuggestedFollowsByActor,
+        ),
+      },
     )
 
     expect(result.data.suggestions.length).toBe(4) // backfilled with 2 NPCs
@@ -80,7 +87,12 @@ describe('suggested follows', () => {
       {
         actor: sc.dids.alice,
       },
-      { headers: await network.serviceHeaders(sc.dids.carol) },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.carol,
+          ids.AppBskyGraphGetSuggestedFollowsByActor,
+        ),
+      },
     )
 
     expect(
@@ -105,7 +117,12 @@ describe('suggested follows', () => {
       {
         actor: sc.dids.alice,
       },
-      { headers: await network.serviceHeaders(sc.dids.carol) },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.carol,
+          ids.AppBskyGraphGetSuggestedFollowsByActor,
+        ),
+      },
     )
 
     expect(
@@ -130,7 +147,12 @@ describe('suggested follows', () => {
       {
         actor: sc.dids.alice,
       },
-      { headers: await network.serviceHeaders(sc.dids.carol) },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.carol,
+          ids.AppBskyGraphGetSuggestedFollowsByActor,
+        ),
+      },
     )
 
     expect(

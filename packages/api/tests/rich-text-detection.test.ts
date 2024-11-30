@@ -1,14 +1,15 @@
 import { AtpAgent, RichText, RichTextSegment } from '../src'
+import { isTag } from '../src/client/types/app/bsky/richtext/facet'
 
 describe('detectFacets', () => {
   const agent = new AtpAgent({ service: 'http://localhost' })
-  agent.resolveHandle = ({ handle }: { handle: string }) => {
-    return Promise.resolve({
-      success: true,
-      headers: {},
-      data: { did: 'did:fake:' + handle },
-    })
-  }
+
+  // Mock handle resolution
+  agent.com.atproto.identity.resolveHandle = async (params) => ({
+    success: true,
+    headers: {},
+    data: { did: `did:fake:${params?.handle}` },
+  })
 
   const inputs = [
     'no mention',
@@ -39,6 +40,8 @@ describe('detectFacets', () => {
     'start.com/foo/bar?baz=bux#hash middle end',
     'start middle end.com/foo/bar?baz=bux#hash',
     'newline1.com\nnewline2.com',
+    'a example.com/index.php php link',
+    'a trailing bsky.app: colon',
 
     'not.. a..url ..here',
     'e.g.',
@@ -155,6 +158,12 @@ describe('detectFacets', () => {
       ['\n'],
       ['newline2.com', 'https://newline2.com'],
     ],
+    [
+      ['a '],
+      ['example.com/index.php', 'https://example.com/index.php'],
+      [' php link'],
+    ],
+    [['a trailing '], ['bsky.app', 'https://bsky.app'], [': colon']],
 
     [['not.. a..url ..here']],
     [['e.g.']],
@@ -207,6 +216,156 @@ describe('detectFacets', () => {
       await rt.detectFacets(agent)
       expect(Array.from(rt.segments(), segmentToOutput)).toEqual(outputs[i])
     }
+  })
+
+  describe('correctly detects tags inline', () => {
+    const inputs: [
+      string,
+      string[],
+      { byteStart: number; byteEnd: number }[],
+    ][] = [
+      ['#a', ['a'], [{ byteStart: 0, byteEnd: 2 }]],
+      [
+        '#a #b',
+        ['a', 'b'],
+        [
+          { byteStart: 0, byteEnd: 2 },
+          { byteStart: 3, byteEnd: 5 },
+        ],
+      ],
+      ['#1', [], []],
+      ['#1a', ['1a'], [{ byteStart: 0, byteEnd: 3 }]],
+      ['#tag', ['tag'], [{ byteStart: 0, byteEnd: 4 }]],
+      ['body #tag', ['tag'], [{ byteStart: 5, byteEnd: 9 }]],
+      ['#tag body', ['tag'], [{ byteStart: 0, byteEnd: 4 }]],
+      ['body #tag body', ['tag'], [{ byteStart: 5, byteEnd: 9 }]],
+      ['body #1', [], []],
+      ['body #1a', ['1a'], [{ byteStart: 5, byteEnd: 8 }]],
+      ['body #a1', ['a1'], [{ byteStart: 5, byteEnd: 8 }]],
+      ['#', [], []],
+      ['#?', [], []],
+      ['text #', [], []],
+      ['text # text', [], []],
+      [
+        'body #thisisa64characterstring_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+        ['thisisa64characterstring_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'],
+        [{ byteStart: 5, byteEnd: 70 }],
+      ],
+      [
+        'body #thisisa65characterstring_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab',
+        [],
+        [],
+      ],
+      [
+        'body #thisisa64characterstring_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa!',
+        ['thisisa64characterstring_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'],
+        [{ byteStart: 5, byteEnd: 70 }],
+      ],
+      [
+        'its a #double#rainbow',
+        ['double#rainbow'],
+        [{ byteStart: 6, byteEnd: 21 }],
+      ],
+      ['##hashash', ['#hashash'], [{ byteStart: 0, byteEnd: 9 }]],
+      ['##', [], []],
+      ['some #n0n3s@n5e!', ['n0n3s@n5e'], [{ byteStart: 5, byteEnd: 15 }]],
+      [
+        'works #with,punctuation',
+        ['with,punctuation'],
+        [{ byteStart: 6, byteEnd: 23 }],
+      ],
+      [
+        'strips trailing #punctuation, #like. #this!',
+        ['punctuation', 'like', 'this'],
+        [
+          { byteStart: 16, byteEnd: 28 },
+          { byteStart: 30, byteEnd: 35 },
+          { byteStart: 37, byteEnd: 42 },
+        ],
+      ],
+      [
+        'strips #multi_trailing___...',
+        ['multi_trailing'],
+        [{ byteStart: 7, byteEnd: 22 }],
+      ],
+      [
+        'works with #🦋 emoji, and #butter🦋fly',
+        ['🦋', 'butter🦋fly'],
+        [
+          { byteStart: 11, byteEnd: 16 },
+          { byteStart: 28, byteEnd: 42 },
+        ],
+      ],
+      [
+        '#same #same #but #diff',
+        ['same', 'same', 'but', 'diff'],
+        [
+          { byteStart: 0, byteEnd: 5 },
+          { byteStart: 6, byteEnd: 11 },
+          { byteStart: 12, byteEnd: 16 },
+          { byteStart: 17, byteEnd: 22 },
+        ],
+      ],
+      ['this #️⃣tag should not be a tag', [], []],
+      [
+        'this ##️⃣tag should be a tag',
+        ['#️⃣tag'],
+        [
+          {
+            byteStart: 5,
+            byteEnd: 16,
+          },
+        ],
+      ],
+      [
+        'this #t\nag should be a tag',
+        ['t'],
+        [
+          {
+            byteStart: 5,
+            byteEnd: 7,
+          },
+        ],
+      ],
+      ['no match (\\u200B): #​', [], []],
+      ['no match (\\u200Ba): #​a', [], []],
+      ['match (a\\u200Bb): #a​b', ['a'], [{ byteStart: 18, byteEnd: 20 }]],
+      ['match (ab\\u200B): #ab​', ['ab'], [{ byteStart: 18, byteEnd: 21 }]],
+      ['no match (\\u20e2tag): #⃢tag', [], []],
+      ['no match (a\\u20e2b): #a⃢b', ['a'], [{ byteStart: 21, byteEnd: 23 }]],
+      [
+        'match full width number sign (tag): ＃tag',
+        ['tag'],
+        [{ byteStart: 36, byteEnd: 42 }],
+      ],
+      [
+        'match full width number sign (tag): ＃#️⃣tag',
+        ['#️⃣tag'],
+        [{ byteStart: 36, byteEnd: 49 }],
+      ],
+      ['no match 1?: #1?', [], []],
+    ]
+
+    it.each(inputs)('%s', async (input, tags, indices) => {
+      const rt = new RichText({ text: input })
+      await rt.detectFacets(agent)
+
+      const detectedTags: string[] = []
+      const detectedIndices: { byteStart: number; byteEnd: number }[] = []
+
+      for (const { facet } of rt.segments()) {
+        if (!facet) continue
+        for (const feature of facet.features) {
+          if (isTag(feature)) {
+            detectedTags.push(feature.tag)
+          }
+        }
+        detectedIndices.push(facet.index)
+      }
+
+      expect(detectedTags).toEqual(tags)
+      expect(detectedIndices).toEqual(indices)
+    })
   })
 })
 

@@ -4,12 +4,16 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "A view of a recent posts from actors in a list",
+      "description": "Get a feed of recent posts from a list (posts and reposts from any actors on the list). Does not require auth.",
       "parameters": {
         "type": "params",
         "required": ["list"],
         "properties": {
-          "list": { "type": "string", "format": "at-uri" },
+          "list": {
+            "type": "string",
+            "format": "at-uri",
+            "description": "Reference (AT-URI) to the list record."
+          },
           "limit": {
             "type": "integer",
             "minimum": 1,

@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Delete the current session."
+      "description": "Delete the current session. Requires auth."
     }
   }
 }

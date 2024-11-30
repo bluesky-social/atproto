@@ -8,6 +8,25 @@ import {
   isThreadViewPost,
 } from '../src/lexicon/types/app/bsky/feed/defs'
 import { isViewRecord } from '../src/lexicon/types/app/bsky/embed/record'
+import { AppBskyFeedGetPostThread } from '@atproto/api'
+import {
+  LabelerView,
+  isLabelerView,
+  isLabelerViewDetailed,
+} from '../src/lexicon/types/app/bsky/labeler/defs'
+
+type ThreadViewPost = Extract<
+  AppBskyFeedGetPostThread.OutputSchema['thread'],
+  { post: { uri: string } }
+>
+
+export function assertIsThreadViewPost(
+  value: unknown,
+): asserts value is ThreadViewPost {
+  expect(value).toMatchObject({
+    $type: 'app.bsky.feed.defs#threadViewPost',
+  })
+}
 
 // Swap out identifiers and dates with stable
 // values for the purpose of snapshot testing
@@ -49,7 +68,7 @@ export const forSnapshot = (obj: unknown) => {
         return constantDate
       }
     }
-    if (str.match(/^\d+::bafy/)) {
+    if (str.match(/^\d+__bafy/)) {
       return constantKeysetCursor
     }
     if (str.match(/\/img\/[^/]+\/.+\/did:plc:[^/]+\/[^/]+@[\w]+$/)) {
@@ -60,6 +79,15 @@ export const forSnapshot = (obj: unknown) => {
       if (!match) return str
       const [, did, cid] = match
       return str.replace(did, take(users, did)).replace(cid, take(cids, cid))
+    }
+    if (str.match(/\/vid\/did%3Aplc%3A[^/]+\/[^/]+\/[^/]+$/)) {
+      // Match video urls
+      const match = str.match(/\/vid\/(did%3Aplc%3A[^/]+)\/([^/]+)\/[^/]+$/)
+      if (!match) return str
+      const [, did, cid] = match
+      return str
+        .replace(did, take(users, decodeURIComponent(did)))
+        .replace(cid, take(cids, cid))
     }
     let isCid: boolean
     try {
@@ -110,7 +138,7 @@ export function take(
 }
 
 export const constantDate = new Date(0).toISOString()
-export const constantKeysetCursor = '0000000000000::bafycid'
+export const constantKeysetCursor = '0000000000000__bafycid'
 
 const mapLeafValues = (obj: unknown, fn: (val: unknown) => unknown) => {
   if (Array.isArray(obj)) {
@@ -159,16 +187,16 @@ export const stripViewerFromPost = (postUnknown: unknown): PostView => {
     post.embed && isViewRecord(post.embed.record)
       ? post.embed.record // Record from record embed
       : post.embed?.['record'] && isViewRecord(post.embed['record']['record'])
-      ? post.embed['record']['record'] // Record from record-with-media embed
-      : undefined
+        ? post.embed['record']['record'] // Record from record-with-media embed
+        : undefined
   if (recordEmbed) {
     recordEmbed.author = stripViewer(recordEmbed.author)
     recordEmbed.embeds?.forEach((deepEmbed) => {
       const deepRecordEmbed = isViewRecord(deepEmbed.record)
         ? deepEmbed.record // Record from record embed
         : deepEmbed['record'] && isViewRecord(deepEmbed['record']['record'])
-        ? deepEmbed['record']['record'] // Record from record-with-media embed
-        : undefined
+          ? deepEmbed['record']['record'] // Record from record-with-media embed
+          : undefined
       if (deepRecordEmbed) {
         deepRecordEmbed.author = stripViewer(deepRecordEmbed.author)
       }
@@ -189,4 +217,20 @@ export const stripViewerFromThread = <T>(thread: T): T => {
     thread.replies = thread.replies.map(stripViewerFromThread)
   }
   return thread
+}
+
+// @NOTE mutates
+export const stripViewerFromLabeler = (
+  serviceUnknown: unknown,
+): LabelerView => {
+  if (
+    serviceUnknown?.['$type'] &&
+    !isLabelerView(serviceUnknown) &&
+    !isLabelerViewDetailed(serviceUnknown)
+  ) {
+    throw new Error('Expected mod service view')
+  }
+  const labeler = serviceUnknown as LabelerView
+  labeler.creator = stripViewer(labeler.creator)
+  return stripViewer(labeler)
 }

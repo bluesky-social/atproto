@@ -27,11 +27,11 @@ export const normalizeAndValidateHandle = async (opts: {
       'InvalidHandle',
     )
   }
-  if (isServiceDomain(handle, ctx.cfg.availableUserDomains)) {
+  if (isServiceDomain(handle, ctx.cfg.identity.serviceHandleDomains)) {
     // verify constraints on a service domain
     ensureHandleServiceConstraints(
       handle,
-      ctx.cfg.availableUserDomains,
+      ctx.cfg.identity.serviceHandleDomains,
       allowReserved,
     )
   } else {
@@ -86,7 +86,7 @@ export const ensureHandleServiceConstraints = (
   if (front.length < 3) {
     throw new InvalidRequestError('Handle too short', 'InvalidHandle')
   }
-  if (handle.length > 30) {
+  if (front.length > 18) {
     throw new InvalidRequestError('Handle too long', 'InvalidHandle')
   }
   if (!allowReserved && reservedSubdomains[front]) {

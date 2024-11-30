@@ -1,6 +1,8 @@
-const base = require('../../jest.config.base.js')
-
+/** @type {import('jest').Config} */
 module.exports = {
-  ...base,
   displayName: 'API',
+  transform: { '^.+\\.ts$': '@swc/jest' },
+  testTimeout: 60000,
+  setupFiles: ['<rootDir>/../../jest.setup.ts'],
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
 }

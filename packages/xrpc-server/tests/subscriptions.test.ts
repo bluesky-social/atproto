@@ -1,7 +1,9 @@
-import * as http from 'http'
+import * as http from 'node:http'
+import { AddressInfo } from 'node:net'
 import { WebSocket, WebSocketServer, createWebSocketStream } from 'ws'
 import getPort from 'get-port'
 import { wait } from '@atproto/common'
+import { LexiconDoc } from '@atproto/lexicon'
 import { byFrame, MessageFrame, ErrorFrame, Frame, Subscription } from '../src'
 import {
   createServer,
@@ -11,7 +13,7 @@ import {
 } from './_util'
 import * as xrpcServer from '../src'
 
-const LEXICONS = [
+const LEXICONS: LexiconDoc[] = [
   {
     lexicon: 1,
     id: 'io.example.streamOne',
@@ -116,11 +118,11 @@ describe('Subscriptions', () => {
   let port: number
 
   beforeAll(async () => {
-    port = await getPort()
-    s = await createServer(port, server)
+    s = await createServer(server)
+    port = (s.address() as AddressInfo).port
   })
   afterAll(async () => {
-    await closeServer(s)
+    if (s) await closeServer(s)
   })
 
   it('streams messages', async () => {

@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Register for push notifications with a service",
+      "description": "Register to receive push notifications, via a specified service, for the requesting account. Requires auth.",
       "input": {
         "encoding": "application/json",
         "schema": {

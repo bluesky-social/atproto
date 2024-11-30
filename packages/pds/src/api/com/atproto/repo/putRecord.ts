@@ -1,6 +1,8 @@
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/syntax'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import { CommitData } from '@atproto/repo'
+import { BlobRef } from '@atproto/lexicon'
 import { Server } from '../../../../lexicon'
 import { prepareUpdate, prepareCreate } from '../../../../repo'
 import AppContext from '../../../../context'
@@ -11,11 +13,16 @@ import {
   PreparedCreate,
   PreparedUpdate,
 } from '../../../../repo'
-import { ConcurrentWriteError } from '../../../../services/repo'
+import { ids } from '../../../../lexicon/lexicons'
+import { Record as ProfileRecord } from '../../../../lexicon/types/app/bsky/actor/profile'
+import { ActorStoreTransactor } from '../../../../actor-store'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.putRecord({
-    auth: ctx.accessVerifierCheckTakedown,
+    auth: ctx.authVerifier.accessStandard({
+      checkTakedown: true,
+      checkDeactivated: true,
+    }),
     rateLimit: [
       {
         name: 'repo-write-hour',
@@ -38,18 +45,18 @@ export default function (server: Server, ctx: AppContext) {
         swapCommit,
         swapRecord,
       } = input.body
-      const did = await ctx.services.account(ctx.db).getDidForActor(repo)
+      const account = await ctx.accountManager.getAccount(repo, {
+        includeDeactivated: true,
+      })
 
-      if (!did) {
+      if (!account) {
         throw new InvalidRequestError(`Could not find repo: ${repo}`)
+      } else if (account.deactivatedAt) {
+        throw new InvalidRequestError('Account is deactivated')
       }
+      const did = account.did
       if (did !== auth.credentials.did) {
         throw new AuthRequiredError()
-      }
-      if (validate === false) {
-        throw new InvalidRequestError(
-          'Unvalidated writes are not yet supported.',
-        )
       }
 
       const uri = AtUri.make(did, collection, rkey)
@@ -57,47 +64,65 @@ export default function (server: Server, ctx: AppContext) {
       const swapRecordCid =
         typeof swapRecord === 'string' ? CID.parse(swapRecord) : swapRecord
 
-      const current = await ctx.services
-        .record(ctx.db)
-        .getRecord(uri, null, true)
-      const writeInfo = {
+      const { commit, write } = await ctx.actorStore.transact(
         did,
-        collection,
-        rkey,
-        record,
-        swapCid: swapRecordCid,
-        validate,
-      }
+        async (actorTxn) => {
+          const current = await actorTxn.record.getRecord(uri, null, true)
+          const isUpdate = current !== null
 
-      let write: PreparedCreate | PreparedUpdate
-      try {
-        write = current
-          ? await prepareUpdate(writeInfo)
-          : await prepareCreate(writeInfo)
-      } catch (err) {
-        if (err instanceof InvalidRecordError) {
-          throw new InvalidRequestError(err.message)
-        }
-        throw err
-      }
+          // @TODO temporaray hack for legacy blob refs in profiles - remove after migrating legacy blobs
+          if (isUpdate && collection === ids.AppBskyActorProfile) {
+            await updateProfileLegacyBlobRef(actorTxn, record)
+          }
+          const writeInfo = {
+            did,
+            collection,
+            rkey,
+            record,
+            swapCid: swapRecordCid,
+            validate,
+          }
 
-      const writes = [write]
+          let write: PreparedCreate | PreparedUpdate
+          try {
+            write = isUpdate
+              ? await prepareUpdate(writeInfo)
+              : await prepareCreate(writeInfo)
+          } catch (err) {
+            if (err instanceof InvalidRecordError) {
+              throw new InvalidRequestError(err.message)
+            }
+            throw err
+          }
 
-      try {
-        await ctx.services
-          .repo(ctx.db)
-          .processWrites({ did, writes, swapCommitCid }, 10)
-      } catch (err) {
-        if (
-          err instanceof BadCommitSwapError ||
-          err instanceof BadRecordSwapError
-        ) {
-          throw new InvalidRequestError(err.message, 'InvalidSwap')
-        } else if (err instanceof ConcurrentWriteError) {
-          throw new InvalidRequestError(err.message, 'ConcurrentWrites')
-        } else {
-          throw err
-        }
+          // no-op
+          if (current && current.cid === write.cid.toString()) {
+            return {
+              commit: null,
+              write,
+            }
+          }
+
+          let commit: CommitData
+          try {
+            commit = await actorTxn.repo.processWrites([write], swapCommitCid)
+          } catch (err) {
+            if (
+              err instanceof BadCommitSwapError ||
+              err instanceof BadRecordSwapError
+            ) {
+              throw new InvalidRequestError(err.message, 'InvalidSwap')
+            } else {
+              throw err
+            }
+          }
+          return { commit, write }
+        },
+      )
+
+      if (commit !== null) {
+        await ctx.sequencer.sequenceCommit(did, commit, [write])
+        await ctx.accountManager.updateRepoRoot(did, commit.cid, commit.rev)
       }
 
       return {
@@ -105,8 +130,38 @@ export default function (server: Server, ctx: AppContext) {
         body: {
           uri: write.uri.toString(),
           cid: write.cid.toString(),
+          commit: commit
+            ? {
+                cid: commit.cid.toString(),
+                rev: commit.rev,
+              }
+            : undefined,
+          validationStatus: write.validationStatus,
         },
       }
     },
   })
+}
+
+// WARNING: mutates object
+const updateProfileLegacyBlobRef = async (
+  actorStore: ActorStoreTransactor,
+  record: ProfileRecord,
+) => {
+  if (record.avatar && !record.avatar.original['$type']) {
+    const blob = await actorStore.repo.blob.getBlobMetadata(record.avatar.ref)
+    record.avatar = new BlobRef(
+      record.avatar.ref,
+      record.avatar.mimeType,
+      blob.size,
+    )
+  }
+  if (record.banner && !record.banner.original['$type']) {
+    const blob = await actorStore.repo.blob.getBlobMetadata(record.banner.ref)
+    record.banner = new BlobRef(
+      record.banner.ref,
+      record.banner.mimeType,
+      blob.size,
+    )
+  }
 }

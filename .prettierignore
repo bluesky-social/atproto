@@ -8,3 +8,5 @@ pnpm-lock.yaml
 .pnpm*
 .changeset
 *.d.ts
+packages/bsky/src/data-plane/gen
+CHANGELOG.md

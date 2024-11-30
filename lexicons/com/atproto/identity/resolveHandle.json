@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Provides the DID of a repo.",
+      "description": "Resolves a handle (domain name) to a DID.",
       "parameters": {
         "type": "params",
         "required": ["handle"],

@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Find labels relevant to the provided URI patterns.",
+      "description": "Find labels relevant to the provided AT-URI patterns. Public endpoint for moderation services, though may return different or additional results with auth.",
       "parameters": {
         "type": "params",
         "required": ["uriPatterns"],
@@ -12,12 +12,12 @@
           "uriPatterns": {
             "type": "array",
             "items": { "type": "string" },
-            "description": "List of AT URI patterns to match (boolean 'OR'). Each may be a prefix (ending with '*'; will match inclusive of the string leading to '*'), or a full URI"
+            "description": "List of AT URI patterns to match (boolean 'OR'). Each may be a prefix (ending with '*'; will match inclusive of the string leading to '*'), or a full URI."
           },
           "sources": {
             "type": "array",
             "items": { "type": "string", "format": "did" },
-            "description": "Optional list of label sources (DIDs) to filter on"
+            "description": "Optional list of label sources (DIDs) to filter on."
           },
           "limit": {
             "type": "integer",

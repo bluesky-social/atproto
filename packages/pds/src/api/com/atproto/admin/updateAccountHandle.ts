@@ -1,20 +1,13 @@
-import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import { normalizeAndValidateHandle } from '../../../../handle'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import {
-  HandleSequenceToken,
-  UserAlreadyExistsError,
-} from '../../../../services/account'
 import { httpLogger } from '../../../../logger'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.updateAccountHandle({
-    auth: ctx.roleVerifier,
-    handler: async ({ input, auth }) => {
-      if (!auth.credentials.admin) {
-        throw new AuthRequiredError('Insufficient privileges')
-      }
+    auth: ctx.authVerifier.adminToken,
+    handler: async ({ input }) => {
       const { did } = input.body
       const handle = await normalizeAndValidateHandle({
         ctx,
@@ -23,34 +16,36 @@ export default function (server: Server, ctx: AppContext) {
         allowReserved: true,
       })
 
-      const existingAccnt = await ctx.services.account(ctx.db).getAccount(did)
-      if (!existingAccnt) {
-        throw new InvalidRequestError(`Account not found: ${did}`)
-      }
+      // Pessimistic check to handle spam: also enforced by updateHandle() and the db.
+      const account = await ctx.accountManager.getAccount(handle, {
+        includeDeactivated: true,
+        includeTakenDown: true,
+      })
 
-      let seqHandleTok: HandleSequenceToken
-      if (existingAccnt.handle === handle) {
-        seqHandleTok = { handle, did }
+      if (account) {
+        if (account.did !== did) {
+          throw new InvalidRequestError(`Handle already taken: ${handle}`)
+        }
       } else {
-        seqHandleTok = await ctx.db.transaction(async (dbTxn) => {
-          let tok: HandleSequenceToken
-          try {
-            tok = await ctx.services.account(dbTxn).updateHandle(did, handle)
-          } catch (err) {
-            if (err instanceof UserAlreadyExistsError) {
-              throw new InvalidRequestError(`Handle already taken: ${handle}`)
-            }
-            throw err
+        if (ctx.cfg.entryway) {
+          // the pds defers to the entryway for updating the handle in the user's did doc.
+          // here was just check that the handle is already bidirectionally confirmed.
+          // @TODO if handle is taken according to this PDS, should we force-update?
+          const doc = await ctx.idResolver.did
+            .resolveAtprotoData(did, true)
+            .catch(() => undefined)
+          if (doc?.handle !== handle) {
+            throw new InvalidRequestError('Handle does not match DID doc')
           }
+        } else {
           await ctx.plcClient.updateHandle(did, ctx.plcRotationKey, handle)
-          return tok
-        })
+        }
+        await ctx.accountManager.updateHandle(did, handle)
       }
 
       try {
-        await ctx.db.transaction(async (dbTxn) => {
-          await ctx.services.account(dbTxn).sequenceHandle(seqHandleTok)
-        })
+        await ctx.sequencer.sequenceHandleUpdate(did, handle)
+        await ctx.sequencer.sequenceIdentityEvt(did, handle)
       } catch (err) {
         httpLogger.error(
           { err, did, handle },

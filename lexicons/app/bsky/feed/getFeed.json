@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Compose and hydrate a feed from a user's selected feed generator",
+      "description": "Get a hydrated feed from an actor's selected feed generator. Implemented by App View.",
       "parameters": {
         "type": "params",
         "required": ["feed"],

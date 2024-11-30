@@ -1,22 +1,15 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { AuthScope } from '../../../../auth'
 
 export default function (server: Server, ctx: AppContext) {
+  if (!ctx.cfg.bskyAppView) return
   server.app.bsky.actor.getPreferences({
-    auth: ctx.accessVerifier,
+    auth: ctx.authVerifier.accessStandard(),
     handler: async ({ auth }) => {
       const requester = auth.credentials.did
-      const { services, db } = ctx
-      let preferences = await services
-        .account(db)
-        .getPreferences(requester, 'app.bsky')
-      if (auth.credentials.scope !== AuthScope.Access) {
-        // filter out personal details for app passwords
-        preferences = preferences.filter(
-          (pref) => pref.$type !== 'app.bsky.actor.defs#personalDetailsPref',
-        )
-      }
+      const preferences = await ctx.actorStore.read(requester, (store) =>
+        store.pref.getPreferences('app.bsky', auth.credentials.scope),
+      )
       return {
         encoding: 'application/json',
         body: { preferences },

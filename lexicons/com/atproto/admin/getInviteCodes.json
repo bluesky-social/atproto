@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Admin view of invite codes",
+      "description": "Get an admin view of invite codes.",
       "parameters": {
         "type": "params",
         "properties": {

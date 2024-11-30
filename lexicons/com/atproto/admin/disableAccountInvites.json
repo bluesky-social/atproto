@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Disable an account from receiving new invite codes, but does not invalidate existing codes",
+      "description": "Disable an account from receiving new invite codes, but does not invalidate existing codes.",
       "input": {
         "encoding": "application/json",
         "schema": {
@@ -14,7 +14,7 @@
             "account": { "type": "string", "format": "did" },
             "note": {
               "type": "string",
-              "description": "Additionally add a note describing why the invites were disabled"
+              "description": "Optional reason for disabled invites."
             }
           }
         }

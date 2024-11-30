@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Write a record, creating or updating it as needed.",
+      "description": "Write a repository record, creating or updating it as needed. Requires auth, implemented by PDS.",
       "input": {
         "encoding": "application/json",
         "schema": {
@@ -15,7 +15,7 @@
             "repo": {
               "type": "string",
               "format": "at-identifier",
-              "description": "The handle or DID of the repo."
+              "description": "The handle or DID of the repo (aka, current account)."
             },
             "collection": {
               "type": "string",
@@ -24,13 +24,12 @@
             },
             "rkey": {
               "type": "string",
-              "description": "The key of the record.",
-              "maxLength": 15
+              "description": "The Record Key.",
+              "maxLength": 512
             },
             "validate": {
               "type": "boolean",
-              "default": true,
-              "description": "Validate the record?"
+              "description": "Can be set to 'false' to skip Lexicon schema validation of record data, 'true' to require it, or leave unset to validate only for known Lexicons."
             },
             "record": {
               "type": "unknown",
@@ -39,12 +38,12 @@
             "swapRecord": {
               "type": "string",
               "format": "cid",
-              "description": "Compare and swap with the previous record by cid."
+              "description": "Compare and swap with the previous record by CID. WARNING: nullable and optional field; may cause problems with golang implementation"
             },
             "swapCommit": {
               "type": "string",
               "format": "cid",
-              "description": "Compare and swap with the previous commit by cid."
+              "description": "Compare and swap with the previous commit by CID."
             }
           }
         }
@@ -56,7 +55,15 @@
           "required": ["uri", "cid"],
           "properties": {
             "uri": { "type": "string", "format": "at-uri" },
-            "cid": { "type": "string", "format": "cid" }
+            "cid": { "type": "string", "format": "cid" },
+            "commit": {
+              "type": "ref",
+              "ref": "com.atproto.repo.defs#commitMeta"
+            },
+            "validationStatus": {
+              "type": "string",
+              "knownValues": ["valid", "unknown"]
+            }
           }
         }
       },

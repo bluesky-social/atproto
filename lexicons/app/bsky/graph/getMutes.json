@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Who does the viewer mute?",
+      "description": "Enumerates accounts that the requesting account (actor) currently has muted. Requires auth.",
       "parameters": {
         "type": "params",
         "properties": {

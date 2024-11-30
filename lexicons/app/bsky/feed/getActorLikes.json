@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "A view of the posts liked by an actor.",
+      "description": "Get a list of posts liked by an actor. Requires auth, actor must be the requesting account.",
       "parameters": {
         "type": "params",
         "required": ["actor"],

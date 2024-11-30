@@ -1,28 +1,48 @@
+import { DAY, HOUR } from '@atproto/common'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
-import { getRandomToken } from './util'
+import { authPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.server.requestPasswordReset(async ({ input }) => {
-    const email = input.body.email.toLowerCase()
+  server.com.atproto.server.requestPasswordReset({
+    rateLimit: [
+      {
+        durationMs: DAY,
+        points: 50,
+      },
+      {
+        durationMs: HOUR,
+        points: 15,
+      },
+    ],
+    handler: async ({ input, req }) => {
+      const email = input.body.email.toLowerCase()
 
-    const user = await ctx.services.account(ctx.db).getAccountByEmail(email)
+      const account = await ctx.accountManager.getAccountByEmail(email, {
+        includeDeactivated: true,
+        includeTakenDown: true,
+      })
 
-    if (user) {
-      const token = getRandomToken().toUpperCase()
-      const grantedAt = new Date().toISOString()
-      await ctx.db.db
-        .updateTable('user_account')
-        .where('did', '=', user.did)
-        .set({
-          passwordResetToken: token,
-          passwordResetGrantedAt: grantedAt,
-        })
-        .execute()
-      await ctx.mailer.sendResetPassword(
-        { handle: user.handle, token },
-        { to: user.email },
+      if (!account?.email) {
+        if (ctx.entrywayAgent) {
+          await ctx.entrywayAgent.com.atproto.server.requestPasswordReset(
+            input.body,
+            authPassthru(req, true),
+          )
+          return
+        }
+        throw new InvalidRequestError('account does not have an email address')
+      }
+
+      const token = await ctx.accountManager.createEmailToken(
+        account.did,
+        'reset_password',
       )
-    }
+      await ctx.mailer.sendResetPassword(
+        { handle: account.handle ?? account.email, token },
+        { to: account.email },
+      )
+    },
   })
 }

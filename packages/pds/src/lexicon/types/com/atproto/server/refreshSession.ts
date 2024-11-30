@@ -6,7 +6,7 @@ import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
-import { HandlerAuth } from '@atproto/xrpc-server'
+import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 
 export interface QueryParams {}
 
@@ -17,6 +17,10 @@ export interface OutputSchema {
   refreshJwt: string
   handle: string
   did: string
+  didDoc?: {}
+  active?: boolean
+  /** Hosting status of the account. If not specified, then assume 'active'. */
+  status?: 'takendown' | 'suspended' | 'deactivated' | (string & {})
   [k: string]: unknown
 }
 
@@ -34,7 +38,7 @@ export interface HandlerError {
   error?: 'AccountTakedown'
 }
 
-export type HandlerOutput = HandlerError | HandlerSuccess
+export type HandlerOutput = HandlerError | HandlerSuccess | HandlerPipeThrough
 export type HandlerReqCtx<HA extends HandlerAuth = never> = {
   auth: HA
   params: QueryParams

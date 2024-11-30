@@ -4,6 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
+      "description": "Enumerate notifications for the requesting account. Requires auth.",
       "parameters": {
         "type": "params",
         "properties": {
@@ -13,6 +14,7 @@
             "maximum": 100,
             "default": 50
           },
+          "priority": { "type": "boolean" },
           "cursor": { "type": "string" },
           "seenAt": { "type": "string", "format": "datetime" }
         }
@@ -27,7 +29,9 @@
             "notifications": {
               "type": "array",
               "items": { "type": "ref", "ref": "#notification" }
-            }
+            },
+            "priority": { "type": "boolean" },
+            "seenAt": { "type": "string", "format": "datetime" }
           }
         }
       }
@@ -49,14 +53,15 @@
         "author": { "type": "ref", "ref": "app.bsky.actor.defs#profileView" },
         "reason": {
           "type": "string",
-          "description": "Expected values are 'like', 'repost', 'follow', 'mention', 'reply', and 'quote'.",
+          "description": "Expected values are 'like', 'repost', 'follow', 'mention', 'reply', 'quote', and 'starterpack-joined'.",
           "knownValues": [
             "like",
             "repost",
             "follow",
             "mention",
             "reply",
-            "quote"
+            "quote",
+            "starterpack-joined"
           ]
         },
         "reasonSubject": { "type": "string", "format": "at-uri" },

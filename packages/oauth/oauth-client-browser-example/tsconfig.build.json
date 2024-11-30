@@ -1,0 +1,11 @@
+{
+  "extends": [
+    "../../../tsconfig/browser.json",
+    "../../../tsconfig/bundler.json"
+  ],
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist"
+  },
+  "include": ["./src/**/*.ts", "./src/**/*.tsx"]
+}

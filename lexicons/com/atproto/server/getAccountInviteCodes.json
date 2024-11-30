@@ -4,12 +4,16 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Get all invite codes for a given account",
+      "description": "Get all invite codes for the current account. Requires auth.",
       "parameters": {
         "type": "params",
         "properties": {
           "includeUsed": { "type": "boolean", "default": true },
-          "createAvailable": { "type": "boolean", "default": true }
+          "createAvailable": {
+            "type": "boolean",
+            "default": true,
+            "description": "Controls whether any new 'earned' but not 'created' invites should be created."
+          }
         }
       },
       "output": {

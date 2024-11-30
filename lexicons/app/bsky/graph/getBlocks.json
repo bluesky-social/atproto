@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Who is the requester's account blocking?",
+      "description": "Enumerates which accounts the requesting account is currently blocking. Requires auth.",
       "parameters": {
         "type": "params",
         "properties": {

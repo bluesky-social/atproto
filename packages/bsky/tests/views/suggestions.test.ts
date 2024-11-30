@@ -1,8 +1,7 @@
-import AtpAgent from '@atproto/api'
-import { TestNetwork } from '@atproto/dev-env'
+import { AtpAgent } from '@atproto/api'
+import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
 import { stripViewer } from '../_util'
-import { SeedClient } from '../seeds/client'
-import basicSeed from '../seeds/basic'
+import { ids } from '../../src/lexicon/lexicons'
 
 describe('pds user search views', () => {
   let network: TestNetwork
@@ -14,20 +13,19 @@ describe('pds user search views', () => {
       dbPostgresSchema: 'bsky_views_suggestions',
     })
     agent = network.bsky.getClient()
-    const pdsAgent = network.pds.getClient()
-    sc = new SeedClient(pdsAgent)
+    sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()
-    await network.bsky.processAll()
 
     const suggestions = [
-      { did: sc.dids.bob, order: 1 },
-      { did: sc.dids.carol, order: 2 },
-      { did: sc.dids.dan, order: 3 },
+      { did: sc.dids.alice, order: 1 },
+      { did: sc.dids.bob, order: 2 },
+      { did: sc.dids.carol, order: 3 },
+      { did: sc.dids.dan, order: 4 },
     ]
-    await network.bsky.ctx.db
-      .getPrimary()
-      .db.insertInto('suggested_follow')
+
+    await network.bsky.db.db
+      .insertInto('suggested_follow')
       .values(suggestions)
       .execute()
   })
@@ -39,7 +37,12 @@ describe('pds user search views', () => {
   it('actor suggestion gives users', async () => {
     const result = await agent.api.app.bsky.actor.getSuggestions(
       {},
-      { headers: await network.serviceHeaders(sc.dids.carol) },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.carol,
+          ids.AppBskyActorGetSuggestions,
+        ),
+      },
     )
 
     // does not include carol, because she is requesting
@@ -53,7 +56,12 @@ describe('pds user search views', () => {
   it('does not suggest followed users', async () => {
     const result = await agent.api.app.bsky.actor.getSuggestions(
       {},
-      { headers: await network.serviceHeaders(sc.dids.alice) },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.alice,
+          ids.AppBskyActorGetSuggestions,
+        ),
+      },
     )
 
     // alice follows everyone
@@ -62,25 +70,51 @@ describe('pds user search views', () => {
 
   it('paginates', async () => {
     const result1 = await agent.api.app.bsky.actor.getSuggestions(
-      { limit: 1 },
-      { headers: await network.serviceHeaders(sc.dids.carol) },
+      { limit: 2 },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.carol,
+          ids.AppBskyActorGetSuggestions,
+        ),
+      },
     )
-    const result2 = await agent.api.app.bsky.actor.getSuggestions(
-      { limit: 1, cursor: result1.data.cursor },
-      { headers: await network.serviceHeaders(sc.dids.carol) },
-    )
-
     expect(result1.data.actors.length).toBe(1)
     expect(result1.data.actors[0].handle).toEqual('bob.test')
 
+    const result2 = await agent.api.app.bsky.actor.getSuggestions(
+      { limit: 2, cursor: result1.data.cursor },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.carol,
+          ids.AppBskyActorGetSuggestions,
+        ),
+      },
+    )
     expect(result2.data.actors.length).toBe(1)
     expect(result2.data.actors[0].handle).toEqual('dan.test')
+
+    const result3 = await agent.api.app.bsky.actor.getSuggestions(
+      { limit: 2, cursor: result2.data.cursor },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.carol,
+          ids.AppBskyActorGetSuggestions,
+        ),
+      },
+    )
+    expect(result3.data.actors.length).toBe(0)
+    expect(result3.data.cursor).toBeUndefined()
   })
 
   it('fetches suggestions unauthed', async () => {
     const { data: authed } = await agent.api.app.bsky.actor.getSuggestions(
       {},
-      { headers: await network.serviceHeaders(sc.dids.carol) },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.carol,
+          ids.AppBskyActorGetSuggestions,
+        ),
+      },
     )
     const { data: unauthed } = await agent.api.app.bsky.actor.getSuggestions({})
     const omitViewerFollows = ({ did }) => {
@@ -90,5 +124,26 @@ describe('pds user search views', () => {
     expect(unauthed.actors.filter(omitViewerFollows)).toEqual(
       authed.actors.map(stripViewer),
     )
+  })
+
+  it('returns tagged suggestions', async () => {
+    const suggestions = [
+      {
+        tag: 'test',
+        subject: 'did:example:test',
+        subjectType: 'actor',
+      },
+      {
+        tag: 'another',
+        subject: 'at://did:example:another/app.bsky.feed.generator/my-feed',
+        subjectType: 'feed',
+      },
+    ]
+    await network.bsky.db.db
+      .insertInto('tagged_suggestion')
+      .values(suggestions)
+      .execute()
+    const res = await agent.api.app.bsky.unspecced.getTaggedSuggestions()
+    expect(res.data.suggestions).toEqual(suggestions)
   })
 })

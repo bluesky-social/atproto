@@ -4,11 +4,14 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "A view of the user's home timeline.",
+      "description": "Get a view of the requesting account's home timeline. This is expected to be some form of reverse-chronological feed.",
       "parameters": {
         "type": "params",
         "properties": {
-          "algorithm": { "type": "string" },
+          "algorithm": {
+            "type": "string",
+            "description": "Variant 'algorithm' for timeline. Implementation-specific. NOTE: most feed flexibility has been moved to feed generator mechanism."
+          },
           "limit": {
             "type": "integer",
             "minimum": 1,

@@ -12,7 +12,6 @@ import {
   RepoContents,
   RecordPath,
   WriteOpAction,
-  RecordClaim,
   Commit,
   DataDiff,
   CommitData,
@@ -24,6 +23,7 @@ type IdMapping = Record<string, CID>
 export const randomCid = async (storage?: RepoStorage): Promise<CID> => {
   const block = await dataToCborBlock({ test: randomStr(50) })
   if (storage) {
+    // @ts-expect-error FIXME remove this comment (and fix the TS error)
     await storage.putBlock(block.cid, block.bytes)
   }
   return block.cid
@@ -170,25 +170,12 @@ export const formatEdit = async (
   }
 }
 
-export const contentsToClaims = (contents: RepoContents): RecordClaim[] => {
-  const claims: RecordClaim[] = []
-  for (const coll of Object.keys(contents)) {
-    for (const rkey of Object.keys(contents[coll])) {
-      claims.push({
-        collection: coll,
-        rkey: rkey,
-        record: contents[coll][rkey],
-      })
-    }
-  }
-  return claims
-}
-
 export const pathsForOps = (ops: RecordWriteOp[]): RecordPath[] =>
   ops.map((op) => ({ collection: op.collection, rkey: op.rkey }))
 
 export const saveMst = async (storage: RepoStorage, mst: MST): Promise<CID> => {
   const diff = await mst.getUnstoredBlocks()
+  // @ts-expect-error FIXME remove this comment (and fix the TS error)
   await storage.putMany(diff.blocks)
   return diff.root
 }
@@ -215,6 +202,8 @@ export const addBadCommit = async (
     sig: await keypair.sign(randomBytes(256)),
   }
   const commitCid = await newBlocks.add(commit)
+
+  // @ts-expect-error FIXME remove this comment (and fix the TS error)
   await repo.storage.applyCommit({
     cid: commitCid,
     rev,

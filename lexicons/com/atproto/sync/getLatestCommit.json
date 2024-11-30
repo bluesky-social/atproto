@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Gets the current commit CID & revision of the repo.",
+      "description": "Get the current commit CID & revision of the specified repo. Does not require auth.",
       "parameters": {
         "type": "params",
         "required": ["did"],
@@ -27,7 +27,12 @@
           }
         }
       },
-      "errors": [{ "name": "RepoNotFound" }]
+      "errors": [
+        { "name": "RepoNotFound" },
+        { "name": "RepoTakendown" },
+        { "name": "RepoSuspended" },
+        { "name": "RepoDeactivated" }
+      ]
     }
   }
 }

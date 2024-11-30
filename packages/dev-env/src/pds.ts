@@ -1,13 +1,14 @@
+import path from 'node:path'
+import os from 'node:os'
+import fs from 'node:fs/promises'
 import getPort from 'get-port'
 import * as ui8 from 'uint8arrays'
 import * as pds from '@atproto/pds'
+import { createSecretKeyObject } from '@atproto/pds'
 import { Secp256k1Keypair, randomStr } from '@atproto/crypto'
-import { MessageDispatcher } from '@atproto/pds/src/event-stream/message-queue'
 import { AtpAgent } from '@atproto/api'
-import { Client as PlcClient } from '@did-plc/lib'
-import { DAY, HOUR } from '@atproto/common-web'
 import { PdsConfig } from './types'
-import { uniqueLockId } from './util'
+import { ADMIN_PASSWORD, EXAMPLE_LABELER, JWT_SECRET } from './const'
 
 export class TestPds {
   constructor(
@@ -16,94 +17,53 @@ export class TestPds {
     public server: pds.PDS,
   ) {}
 
-  static async create(cfg: PdsConfig): Promise<TestPds> {
-    const repoSigningKey = await Secp256k1Keypair.create()
-    const plcRotationKey = await Secp256k1Keypair.create()
-    const recoveryKey = await Secp256k1Keypair.create()
+  static async create(config: PdsConfig): Promise<TestPds> {
+    const plcRotationKey = await Secp256k1Keypair.create({ exportable: true })
+    const plcRotationPriv = ui8.toString(await plcRotationKey.export(), 'hex')
+    const recoveryKey = (await Secp256k1Keypair.create()).did()
 
-    const port = cfg.port || (await getPort())
+    const port = config.port || (await getPort())
     const url = `http://localhost:${port}`
-    const plcClient = new PlcClient(cfg.plcUrl)
 
-    const serverDid = await plcClient.createDid({
-      signingKey: repoSigningKey.did(),
-      rotationKeys: [recoveryKey.did(), plcRotationKey.did()],
-      handle: 'pds.test',
-      pds: `http://localhost:${port}`,
-      signer: plcRotationKey,
-    })
+    const blobstoreLoc = path.join(os.tmpdir(), randomStr(8, 'base32'))
+    const dataDirectory = path.join(os.tmpdir(), randomStr(8, 'base32'))
+    await fs.mkdir(dataDirectory, { recursive: true })
 
-    const config = new pds.ServerConfig({
-      debugMode: true,
-      version: '0.0.0',
-      scheme: 'http',
+    const env: pds.ServerEnvironment = {
+      devMode: true,
       port,
-      hostname: 'localhost',
-      serverDid,
-      recoveryKey: recoveryKey.did(),
-      adminPassword: 'admin-pass',
-      moderatorPassword: 'moderator-pass',
-      triagePassword: 'triage-pass',
-      inviteRequired: false,
-      userInviteInterval: null,
-      userInviteEpoch: 0,
-      didPlcUrl: cfg.plcUrl,
-      didCacheMaxTTL: DAY,
-      didCacheStaleTTL: HOUR,
-      jwtSecret: 'jwt-secret',
-      availableUserDomains: ['.test'],
-      rateLimitsEnabled: false,
-      appUrlPasswordReset: 'app://forgot-password',
-      emailNoReplyAddress: 'noreply@blueskyweb.xyz',
-      publicUrl: 'https://pds.public.url',
-      imgUriSalt: '9dd04221f5755bce5f55f47464c27e1e',
-      imgUriKey:
-        'f23ecd142835025f42c3db2cf25dd813956c178392760256211f9d315f8ab4d8',
-      dbPostgresUrl: cfg.dbPostgresUrl,
-      maxSubscriptionBuffer: 200,
-      repoBackfillLimitMs: 1000 * 60 * 60, // 1hr
-      sequencerLeaderLockId: uniqueLockId(),
-      labelerDid: 'did:example:labeler',
-      labelerKeywords: { label_me: 'test-label', label_me_2: 'test-label-2' },
-      feedGenDid: 'did:example:feedGen',
-      dbTxLockNonce: await randomStr(32, 'base32'),
-      bskyAppViewProxy: !!cfg.bskyAppViewEndpoint,
+      dataDirectory: dataDirectory,
+      blobstoreDiskLocation: blobstoreLoc,
+      recoveryDidKey: recoveryKey,
+      adminPassword: ADMIN_PASSWORD,
+      jwtSecret: JWT_SECRET,
+      serviceHandleDomains: ['.test'],
+      bskyAppViewUrl: 'https://appview.invalid',
+      bskyAppViewDid: 'did:example:invalid',
       bskyAppViewCdnUrlPattern: 'http://cdn.appview.com/%s/%s/%s',
-      ...cfg,
-    })
-
-    const blobstore = new pds.MemoryBlobStore()
-    const db = config.dbPostgresUrl
-      ? pds.Database.postgres({
-          url: config.dbPostgresUrl,
-          schema: config.dbPostgresSchema,
-          txLockNonce: config.dbTxLockNonce,
-        })
-      : pds.Database.memory()
-    await db.migrateToLatestOrThrow()
-
-    if (
-      config.bskyAppViewEndpoint &&
-      config.bskyAppViewProxy &&
-      !cfg.enableInProcessAppView
-    ) {
-      // Disable communication to app view within pds
-      MessageDispatcher.prototype.send = async () => {}
+      modServiceUrl: 'https://moderator.invalid',
+      modServiceDid: 'did:example:invalid',
+      plcRotationKeyK256PrivateKeyHex: plcRotationPriv,
+      inviteRequired: false,
+      disableSsrfProtection: true,
+      serviceName: 'Development PDS',
+      brandColor: '#ffcb1e',
+      errorColor: undefined,
+      logoUrl:
+        'https://uxwing.com/wp-content/themes/uxwing/download/animals-and-birds/bee-icon.png',
+      homeUrl: 'https://bsky.social/',
+      termsOfServiceUrl: 'https://bsky.social/about/support/tos',
+      privacyPolicyUrl: 'https://bsky.social/about/support/privacy-policy',
+      supportUrl: 'https://blueskyweb.zendesk.com/hc/en-us',
+      ...config,
     }
+    const cfg = pds.envToCfg(env)
+    const secrets = pds.envToSecrets(env)
 
-    const server = pds.PDS.create({
-      db,
-      blobstore,
-      repoSigningKey,
-      plcRotationKey,
-      config,
-      algos: cfg.algos,
-    })
+    const server = await pds.PDS.create(cfg, secrets)
 
     await server.start()
 
-    // we refresh label cache by hand in `processAll` instead of on a timer
-    if (!cfg.enableLabelsCache) server.ctx.labelCache.stop()
     return new TestPds(url, port, server)
   }
 
@@ -112,31 +72,33 @@ export class TestPds {
   }
 
   getClient(): AtpAgent {
-    return new AtpAgent({ service: `http://localhost:${this.port}` })
+    const agent = new AtpAgent({ service: this.url })
+    agent.configureLabelers([EXAMPLE_LABELER])
+    return agent
   }
 
-  adminAuth(role: 'admin' | 'moderator' | 'triage' = 'admin'): string {
-    const password =
-      role === 'triage'
-        ? this.ctx.cfg.triagePassword
-        : role === 'moderator'
-        ? this.ctx.cfg.moderatorPassword
-        : this.ctx.cfg.adminPassword
+  adminAuth(): string {
     return (
       'Basic ' +
-      ui8.toString(ui8.fromString(`admin:${password}`, 'utf8'), 'base64pad')
+      ui8.toString(
+        ui8.fromString(`admin:${ADMIN_PASSWORD}`, 'utf8'),
+        'base64pad',
+      )
     )
   }
 
-  adminAuthHeaders(role?: 'admin' | 'moderator' | 'triage') {
+  adminAuthHeaders() {
     return {
-      authorization: this.adminAuth(role),
+      authorization: this.adminAuth(),
     }
+  }
+
+  jwtSecretKey() {
+    return createSecretKeyObject(JWT_SECRET)
   }
 
   async processAll() {
     await this.ctx.backgroundQueue.processAll()
-    await this.ctx.labelCache.fullRefresh()
   }
 
   async close() {

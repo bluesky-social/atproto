@@ -1,98 +1,94 @@
-import { dedupeStrs } from '@atproto/common'
-import { AtUri } from '@atproto/syntax'
+import { dedupeStrs, mapDefined } from '@atproto/common'
 import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getPosts'
 import AppContext from '../../../../context'
-import { Database } from '../../../../db'
-import { FeedHydrationState, FeedService } from '../../../../services/feed'
 import { createPipeline } from '../../../../pipeline'
-import { ActorService } from '../../../../services/actor'
+import {
+  HydrateCtx,
+  HydrationState,
+  Hydrator,
+} from '../../../../hydration/hydrator'
+import { Views } from '../../../../views'
+import { uriToDid as creatorFromUri } from '../../../../util/uris'
+import { resHeaders } from '../../../util'
+import { ids } from '../../../../lexicon/lexicons'
 
 export default function (server: Server, ctx: AppContext) {
   const getPosts = createPipeline(skeleton, hydration, noBlocks, presentation)
   server.app.bsky.feed.getPosts({
-    auth: ctx.authOptionalVerifier,
-    handler: async ({ params, auth }) => {
-      const db = ctx.db.getReplica()
-      const feedService = ctx.services.feed(db)
-      const actorService = ctx.services.actor(db)
-      const viewer = auth.credentials.did
+    auth: ctx.authVerifier.standardOptionalParameterized({
+      lxmCheck: (method) => {
+        if (!method) return false
+        return (
+          method === ids.AppBskyFeedGetPosts || method.startsWith('chat.bsky.')
+        )
+      },
+    }),
+    handler: async ({ params, auth, req }) => {
+      const viewer = auth.credentials.iss
+      const labelers = ctx.reqLabelers(req)
+      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
 
-      const results = await getPosts(
-        { ...params, viewer },
-        { db, feedService, actorService },
-      )
+      const results = await getPosts({ ...params, hydrateCtx }, ctx)
 
       return {
         encoding: 'application/json',
         body: results,
+        headers: resHeaders({ labelers: hydrateCtx.labelers }),
       }
     },
   })
 }
 
-const skeleton = async (params: Params) => {
-  return { params, postUris: dedupeStrs(params.uris) }
+const skeleton = async (inputs: { params: Params }) => {
+  return { posts: dedupeStrs(inputs.params.uris) }
 }
 
-const hydration = async (state: SkeletonState, ctx: Context) => {
-  const { feedService } = ctx
-  const { params, postUris } = state
-  const uris = new Set<string>(postUris)
-  const dids = new Set<string>(postUris.map((uri) => new AtUri(uri).hostname))
-  const hydrated = await feedService.feedHydration({
-    uris,
-    dids,
-    viewer: params.viewer,
-  })
-  return { ...state, ...hydrated }
-}
-
-const noBlocks = (state: HydrationState) => {
-  const { viewer } = state.params
-  state.postUris = state.postUris.filter((uri) => {
-    const post = state.posts[uri]
-    if (!viewer || !post) return true
-    return !state.bam.block([viewer, post.creator])
-  })
-  return state
-}
-
-const presentation = (state: HydrationState, ctx: Context) => {
-  const { feedService, actorService } = ctx
-  const { postUris, profiles, params } = state
-  const SKIP = []
-  const actors = actorService.views.profileBasicPresentation(
-    Object.keys(profiles),
-    state,
-    { viewer: params.viewer },
+const hydration = async (inputs: {
+  ctx: Context
+  params: Params
+  skeleton: Skeleton
+}) => {
+  const { ctx, params, skeleton } = inputs
+  return ctx.hydrator.hydratePosts(
+    skeleton.posts.map((uri) => ({ uri })),
+    params.hydrateCtx,
   )
-  const postViews = postUris.flatMap((uri) => {
-    const postView = feedService.views.formatPostView(
-      uri,
-      actors,
-      state.posts,
-      state.threadgates,
-      state.embeds,
-      state.labels,
-      state.lists,
-    )
-    return postView ?? SKIP
+}
+
+const noBlocks = (inputs: {
+  ctx: Context
+  skeleton: Skeleton
+  hydration: HydrationState
+}) => {
+  const { ctx, skeleton, hydration } = inputs
+  skeleton.posts = skeleton.posts.filter((uri) => {
+    const creator = creatorFromUri(uri)
+    return !ctx.views.viewerBlockExists(creator, hydration)
   })
-  return { posts: postViews }
+  return skeleton
+}
+
+const presentation = (inputs: {
+  ctx: Context
+  params: Params
+  skeleton: Skeleton
+  hydration: HydrationState
+}) => {
+  const { ctx, skeleton, hydration } = inputs
+  const posts = mapDefined(skeleton.posts, (uri) =>
+    ctx.views.post(uri, hydration),
+  )
+  return { posts }
 }
 
 type Context = {
-  db: Database
-  feedService: FeedService
-  actorService: ActorService
+  hydrator: Hydrator
+  views: Views
 }
 
-type Params = QueryParams & { viewer: string | null }
+type Params = QueryParams & { hydrateCtx: HydrateCtx }
 
-type SkeletonState = {
-  params: Params
-  postUris: string[]
+type Skeleton = {
+  posts: string[]
 }
-
-type HydrationState = SkeletonState & FeedHydrationState

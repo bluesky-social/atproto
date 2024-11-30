@@ -75,6 +75,9 @@ export class RateLimiter implements RateLimiterI {
       return null
     }
     const key = opts?.calcKey ? opts.calcKey(ctx) : this.calcKey(ctx)
+    if (key === null) {
+      return null
+    }
     const points = opts?.calcPoints
       ? opts.calcPoints(ctx)
       : this.calcPoints(ctx)

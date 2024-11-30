@@ -6,12 +6,15 @@ import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
-import { HandlerAuth } from '@atproto/xrpc-server'
+import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 
 export interface QueryParams {}
 
 export interface InputSchema {
+  /** A short name for the App Password, to help distinguish them. */
   name: string
+  /** If an app password has 'privileged' access to possibly sensitive account state. Meant for use with trusted clients. */
+  privileged?: boolean
   [k: string]: unknown
 }
 
@@ -34,7 +37,7 @@ export interface HandlerError {
   error?: 'AccountTakedown'
 }
 
-export type HandlerOutput = HandlerError | HandlerSuccess
+export type HandlerOutput = HandlerError | HandlerSuccess | HandlerPipeThrough
 export type HandlerReqCtx<HA extends HandlerAuth = never> = {
   auth: HA
   params: QueryParams
@@ -50,6 +53,7 @@ export interface AppPassword {
   name: string
   password: string
   createdAt: string
+  privileged?: boolean
   [k: string]: unknown
 }
 

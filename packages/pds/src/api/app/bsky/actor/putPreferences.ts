@@ -1,27 +1,29 @@
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { UserPreference } from '../../../../services/account'
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { AccountPreference } from '../../../../actor-store/preference/reader'
 
 export default function (server: Server, ctx: AppContext) {
+  if (!ctx.cfg.bskyAppView) return
   server.app.bsky.actor.putPreferences({
-    auth: ctx.accessVerifierCheckTakedown,
+    auth: ctx.authVerifier.accessStandard({ checkTakedown: true }),
     handler: async ({ auth, input }) => {
       const { preferences } = input.body
       const requester = auth.credentials.did
-      const { services, db } = ctx
-      const checkedPreferences: UserPreference[] = []
+      const checkedPreferences: AccountPreference[] = []
       for (const pref of preferences) {
         if (typeof pref.$type === 'string') {
-          checkedPreferences.push(pref as UserPreference)
+          checkedPreferences.push(pref as AccountPreference)
         } else {
           throw new InvalidRequestError('Preference is missing a $type')
         }
       }
-      await db.transaction(async (tx) => {
-        await services
-          .account(tx)
-          .putPreferences(requester, checkedPreferences, 'app.bsky')
+      await ctx.actorStore.transact(requester, async (actorTxn) => {
+        await actorTxn.pref.putPreferences(
+          checkedPreferences,
+          'app.bsky',
+          auth.credentials.scope,
+        )
       })
     },
   })

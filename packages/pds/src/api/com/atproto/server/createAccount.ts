@@ -1,15 +1,20 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
-import { normalizeAndValidateHandle } from '../../../../handle'
+import { DidDocument, MINUTE, check } from '@atproto/common'
+import { AtprotoData, ensureAtpDocument } from '@atproto/identity'
+import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import { ExportableKeypair, Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import * as plc from '@did-plc/lib'
-import * as scrypt from '../../../../db/scrypt'
+import { isEmailValid } from '@hapi/address'
+import { isDisposableEmail } from 'disposable-email-domains-js'
+
+import {
+  baseNormalizeAndValidate,
+  normalizeAndValidateHandle,
+} from '../../../../handle'
 import { Server } from '../../../../lexicon'
 import { InputSchema as CreateAccountInput } from '../../../../lexicon/types/com/atproto/server/createAccount'
-import { countAll } from '../../../../db/util'
-import { UserAlreadyExistsError } from '../../../../services/account'
 import AppContext from '../../../../context'
-import Database from '../../../../db'
-import { AtprotoData } from '@atproto/identity'
-import { MINUTE } from '@atproto/common'
+import { safeResolveDidDoc } from './util'
+import { AccountStatus } from '../../../../account-manager'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.createAccount({
@@ -17,60 +22,29 @@ export default function (server: Server, ctx: AppContext) {
       durationMs: 5 * MINUTE,
       points: 100,
     },
-    handler: async ({ input, req }) => {
-      const { email, password, inviteCode } = input.body
+    auth: ctx.authVerifier.userServiceAuthOptional,
+    handler: async ({ input, auth, req }) => {
+      const requester = auth.credentials?.did ?? null
+      const {
+        did,
+        handle,
+        email,
+        password,
+        inviteCode,
+        signingKey,
+        plcOp,
+        deactivated,
+      } = ctx.entrywayAgent
+        ? await validateInputsForEntrywayPds(ctx, input.body)
+        : await validateInputsForLocalPds(ctx, input.body, requester)
 
-      if (ctx.cfg.inviteRequired && !inviteCode) {
-        throw new InvalidRequestError(
-          'No invite code provided',
-          'InvalidInviteCode',
+      let didDoc: DidDocument | undefined
+      let creds: { accessJwt: string; refreshJwt: string }
+      await ctx.actorStore.create(did, signingKey)
+      try {
+        const commit = await ctx.actorStore.transact(did, (actorTxn) =>
+          actorTxn.repo.createRepo([]),
         )
-      }
-
-      // normalize & ensure valid handle
-      const handle = await normalizeAndValidateHandle({
-        ctx,
-        handle: input.body.handle,
-        did: input.body.did,
-      })
-
-      // check that the invite code still has uses
-      if (ctx.cfg.inviteRequired && inviteCode) {
-        await ensureCodeIsAvailable(ctx.db, inviteCode)
-      }
-
-      // determine the did & any plc ops we need to send
-      // if the provided did document is poorly setup, we throw
-      const { did, plcOp } = await getDidAndPlcOp(ctx, handle, input.body)
-
-      const now = new Date().toISOString()
-      const passwordScrypt = await scrypt.genSaltAndHash(password)
-
-      const result = await ctx.db.transaction(async (dbTxn) => {
-        const actorTxn = ctx.services.account(dbTxn)
-        const repoTxn = ctx.services.repo(dbTxn)
-
-        // it's a bit goofy that we run this logic twice,
-        // but we run it once for a sanity check before doing scrypt & plc ops
-        // & a second time for locking + integrity check
-        if (ctx.cfg.inviteRequired && inviteCode) {
-          await ensureCodeIsAvailable(dbTxn, inviteCode, true)
-        }
-
-        // Register user before going out to PLC to get a real did
-        try {
-          await actorTxn.registerUser({ email, handle, did, passwordScrypt })
-        } catch (err) {
-          if (err instanceof UserAlreadyExistsError) {
-            const got = await actorTxn.getAccount(handle, true)
-            if (got) {
-              throw new InvalidRequestError(`Handle already taken: ${handle}`)
-            } else {
-              throw new InvalidRequestError(`Email already taken: ${email}`)
-            }
-          }
-          throw err
-        }
 
         // Generate a real did with PLC
         if (plcOp) {
@@ -85,152 +59,241 @@ export default function (server: Server, ctx: AppContext) {
           }
         }
 
-        // insert invite code use
-        if (ctx.cfg.inviteRequired && inviteCode) {
-          await dbTxn.db
-            .insertInto('invite_code_use')
-            .values({
-              code: inviteCode,
-              usedBy: did,
-              usedAt: now,
-            })
-            .execute()
-        }
+        didDoc = await safeResolveDidDoc(ctx, did, true)
 
-        const access = ctx.auth.createAccessToken({ did })
-        const refresh = ctx.auth.createRefreshToken({ did })
-        await ctx.services.auth(dbTxn).grantRefreshToken(refresh.payload, null)
-
-        // Setup repo root
-        await repoTxn.createRepo(did, [], now)
-
-        return {
+        creds = await ctx.accountManager.createAccount({
           did,
-          accessJwt: access.jwt,
-          refreshJwt: refresh.jwt,
+          handle,
+          email,
+          password,
+          repoCid: commit.cid,
+          repoRev: commit.rev,
+          inviteCode,
+          deactivated,
+        })
+
+        if (!deactivated) {
+          await ctx.sequencer.sequenceIdentityEvt(did, handle)
+          await ctx.sequencer.sequenceAccountEvt(did, AccountStatus.Active)
+          await ctx.sequencer.sequenceCommit(did, commit, [])
         }
-      })
+        await ctx.accountManager.updateRepoRoot(did, commit.cid, commit.rev)
+        await ctx.actorStore.clearReservedKeypair(signingKey.did(), did)
+      } catch (err) {
+        // this will only be reached if the actor store _did not_ exist before
+        await ctx.actorStore.destroy(did)
+        throw err
+      }
 
       return {
         encoding: 'application/json',
         body: {
           handle,
-          did: result.did,
-          accessJwt: result.accessJwt,
-          refreshJwt: result.refreshJwt,
+          did: did,
+          didDoc,
+          accessJwt: creds.accessJwt,
+          refreshJwt: creds.refreshJwt,
         },
       }
     },
   })
 }
 
-export const ensureCodeIsAvailable = async (
-  db: Database,
-  inviteCode: string,
-  withLock = false,
-): Promise<void> => {
-  const { ref } = db.db.dynamic
-  const invite = await db.db
-    .selectFrom('invite_code')
-    .selectAll()
-    .whereNotExists((qb) =>
-      qb
-        .selectFrom('repo_root')
-        .selectAll()
-        .where('takedownId', 'is not', null)
-        .whereRef('did', '=', ref('invite_code.forUser')),
-    )
-    .where('code', '=', inviteCode)
-    .if(withLock && db.dialect === 'pg', (qb) => qb.forUpdate().skipLocked())
-    .executeTakeFirst()
-
-  if (!invite || invite.disabled) {
+const validateInputsForEntrywayPds = async (
+  ctx: AppContext,
+  input: CreateAccountInput,
+) => {
+  const { did, plcOp } = input
+  const handle = baseNormalizeAndValidate(input.handle)
+  if (!did || !input.plcOp) {
     throw new InvalidRequestError(
-      'Provided invite code not available',
-      'InvalidInviteCode',
+      'non-entryway pds requires bringing a DID and plcOp',
     )
   }
-
-  const uses = await db.db
-    .selectFrom('invite_code_use')
-    .select(countAll.as('count'))
-    .where('code', '=', inviteCode)
-    .executeTakeFirstOrThrow()
-
-  if (invite.availableUses <= uses.count) {
+  if (!check.is(plcOp, plc.def.operation)) {
+    throw new InvalidRequestError('invalid plc operation', 'IncompatibleDidDoc')
+  }
+  const plcRotationKey = ctx.cfg.entryway?.plcRotationKey
+  if (!plcRotationKey || !plcOp.rotationKeys.includes(plcRotationKey)) {
     throw new InvalidRequestError(
-      'Provided invite code not available',
-      'InvalidInviteCode',
+      'PLC DID does not include service rotation key',
+      'IncompatibleDidDoc',
     )
+  }
+  try {
+    await plc.assureValidOp(plcOp)
+    await plc.assureValidSig([plcRotationKey], plcOp)
+  } catch (err) {
+    throw new InvalidRequestError('invalid plc operation', 'IncompatibleDidDoc')
+  }
+  const doc = plc.formatDidDoc({ did, ...plcOp })
+  const data = ensureAtpDocument(doc)
+
+  let signingKey: ExportableKeypair | undefined
+  if (input.did) {
+    signingKey = await ctx.actorStore.getReservedKeypair(input.did)
+  }
+  if (!signingKey) {
+    signingKey = await ctx.actorStore.getReservedKeypair(data.signingKey)
+  }
+  if (!signingKey) {
+    throw new InvalidRequestError('reserved signing key does not exist')
+  }
+
+  validateAtprotoData(data, {
+    handle,
+    pds: ctx.cfg.service.publicUrl,
+    signingKey: signingKey.did(),
+  })
+
+  return {
+    did,
+    handle,
+    email: undefined,
+    password: undefined,
+    inviteCode: undefined,
+    signingKey,
+    plcOp,
+    deactivated: false,
   }
 }
 
-const getDidAndPlcOp = async (
+const validateInputsForLocalPds = async (
+  ctx: AppContext,
+  input: CreateAccountInput,
+  requester: string | null,
+) => {
+  const { email, password, inviteCode } = input
+  if (input.plcOp) {
+    throw new InvalidRequestError('Unsupported input: "plcOp"')
+  }
+
+  if (ctx.cfg.invites.required && !inviteCode) {
+    throw new InvalidRequestError(
+      'No invite code provided',
+      'InvalidInviteCode',
+    )
+  }
+
+  if (!email) {
+    throw new InvalidRequestError('Email is required')
+  } else if (!isEmailValid(email) || isDisposableEmail(email)) {
+    throw new InvalidRequestError(
+      'This email address is not supported, please use a different email.',
+    )
+  }
+
+  // normalize & ensure valid handle
+  const handle = await normalizeAndValidateHandle({
+    ctx,
+    handle: input.handle,
+    did: input.did,
+  })
+
+  // check that the invite code still has uses
+  if (ctx.cfg.invites.required && inviteCode) {
+    await ctx.accountManager.ensureInviteIsAvailable(inviteCode)
+  }
+
+  // check that the handle and email are available
+  const [handleAccnt, emailAcct] = await Promise.all([
+    ctx.accountManager.getAccount(handle),
+    ctx.accountManager.getAccountByEmail(email),
+  ])
+  if (handleAccnt) {
+    throw new InvalidRequestError(`Handle already taken: ${handle}`)
+  } else if (emailAcct) {
+    throw new InvalidRequestError(`Email already taken: ${email}`)
+  }
+
+  // determine the did & any plc ops we need to send
+  // if the provided did document is poorly setup, we throw
+  const signingKey = await Secp256k1Keypair.create({ exportable: true })
+
+  let did: string
+  let plcOp: plc.Operation | null
+  let deactivated = false
+  if (input.did) {
+    if (input.did !== requester) {
+      throw new AuthRequiredError(
+        `Missing auth to create account with did: ${input.did}`,
+      )
+    }
+    did = input.did
+    plcOp = null
+    deactivated = true
+  } else {
+    const formatted = await formatDidAndPlcOp(ctx, handle, input, signingKey)
+    did = formatted.did
+    plcOp = formatted.plcOp
+  }
+
+  return {
+    did,
+    handle,
+    email,
+    password,
+    inviteCode,
+    signingKey,
+    plcOp,
+    deactivated,
+  }
+}
+
+const formatDidAndPlcOp = async (
   ctx: AppContext,
   handle: string,
   input: CreateAccountInput,
+  signingKey: Keypair,
 ): Promise<{
   did: string
   plcOp: plc.Operation | null
 }> => {
   // if the user is not bringing a DID, then we format a create op for PLC
-  // but we don't send until we ensure the username & email are available
-  if (!input.did) {
-    const rotationKeys = [ctx.cfg.recoveryKey, ctx.plcRotationKey.did()]
-    if (input.recoveryKey) {
-      rotationKeys.unshift(input.recoveryKey)
-    }
-    const plcCreate = await plc.createOp({
-      signingKey: ctx.repoSigningKey.did(),
-      rotationKeys,
-      handle,
-      pds: ctx.cfg.publicUrl,
-      signer: ctx.plcRotationKey,
-    })
-    return {
-      did: plcCreate.did,
-      plcOp: plcCreate.op,
-    }
+  const rotationKeys = [ctx.plcRotationKey.did()]
+  if (ctx.cfg.identity.recoveryDidKey) {
+    rotationKeys.unshift(ctx.cfg.identity.recoveryDidKey)
   }
-
+  if (input.recoveryKey) {
+    rotationKeys.unshift(input.recoveryKey)
+  }
+  const plcCreate = await plc.createOp({
+    signingKey: signingKey.did(),
+    rotationKeys,
+    handle,
+    pds: ctx.cfg.service.publicUrl,
+    signer: ctx.plcRotationKey,
+  })
+  return {
+    did: plcCreate.did,
+    plcOp: plcCreate.op,
+  }
+}
+const validateAtprotoData = (
+  data: AtprotoData,
+  expected: {
+    handle: string
+    pds: string
+    signingKey: string
+  },
+) => {
   // if the user is bringing their own did:
   // resolve the user's did doc data, including rotationKeys if did:plc
   // determine if we have the capability to make changes to their DID
-  let atpData: AtprotoData
-  try {
-    atpData = await ctx.idResolver.did.resolveAtprotoData(input.did)
-  } catch (err) {
-    throw new InvalidRequestError(
-      `could not resolve valid DID document :${input.did}`,
-      'UnresolvableDid',
-    )
-  }
-  if (atpData.handle !== handle) {
+  if (data.handle !== expected.handle) {
     throw new InvalidRequestError(
       'provided handle does not match DID document handle',
       'IncompatibleDidDoc',
     )
-  } else if (atpData.pds !== ctx.cfg.publicUrl) {
+  } else if (data.pds !== expected.pds) {
     throw new InvalidRequestError(
       'DID document pds endpoint does not match service endpoint',
       'IncompatibleDidDoc',
     )
-  } else if (atpData.signingKey !== ctx.repoSigningKey.did()) {
+  } else if (data.signingKey !== expected.signingKey) {
     throw new InvalidRequestError(
       'DID document signing key does not match service signing key',
       'IncompatibleDidDoc',
     )
   }
-
-  if (input.did.startsWith('did:plc')) {
-    const data = await ctx.plcClient.getDocumentData(input.did)
-    if (!data.rotationKeys.includes(ctx.plcRotationKey.did())) {
-      throw new InvalidRequestError(
-        'PLC DID does not include service rotation key',
-        'IncompatibleDidDoc',
-      )
-    }
-  }
-
-  return { did: input.did, plcOp: null }
 }

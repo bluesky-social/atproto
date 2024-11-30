@@ -10,7 +10,7 @@ export interface RepoStorage {
   getRoot(): Promise<CID | null>
   putBlock(cid: CID, block: Uint8Array, rev: string): Promise<void>
   putMany(blocks: BlockMap, rev: string): Promise<void>
-  updateRoot(cid: CID): Promise<void>
+  updateRoot(cid: CID, rev: string): Promise<void>
   applyCommit(commit: CommitData)
 
   // Readable
@@ -38,8 +38,10 @@ export interface BlobStore {
   unquarantine(cid: CID): Promise<void>
   getBytes(cid: CID): Promise<Uint8Array>
   getStream(cid: CID): Promise<stream.Readable>
+  hasTemp(key: string): Promise<boolean>
   hasStored(cid: CID): Promise<boolean>
   delete(cid: CID): Promise<void>
+  deleteMany(cid: CID[]): Promise<void>
 }
 
 export class BlobNotFoundError extends Error {}

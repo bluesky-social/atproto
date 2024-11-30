@@ -1,201 +1,175 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { jsonStringToLex } from '@atproto/lexicon'
 import { mapDefined } from '@atproto/common'
 import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/notification/listNotifications'
+import { isRecord as isPostRecord } from '../../../../lexicon/types/app/bsky/feed/post'
 import AppContext from '../../../../context'
-import { Database } from '../../../../db'
-import { notSoftDeletedClause } from '../../../../db/util'
-import { paginate, TimeCidKeyset } from '../../../../db/pagination'
-import { BlockAndMuteState, GraphService } from '../../../../services/graph'
-import { ActorInfoMap, ActorService } from '../../../../services/actor'
-import { getSelfLabels, Labels, LabelService } from '../../../../services/label'
-import { createPipeline } from '../../../../pipeline'
+import {
+  createPipeline,
+  HydrationFnInput,
+  PresentationFnInput,
+  RulesFnInput,
+  SkeletonFnInput,
+} from '../../../../pipeline'
+import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
+import { Views } from '../../../../views'
+import { Notification } from '../../../../proto/bsky_pb'
+import { uriToDid as didFromUri } from '../../../../util/uris'
+import { clearlyBadCursor, resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   const listNotifications = createPipeline(
     skeleton,
     hydration,
-    noBlockOrMutes,
+    noBlockOrMutesOrNeedsReview,
     presentation,
   )
   server.app.bsky.notification.listNotifications({
-    auth: ctx.authVerifier,
-    handler: async ({ params, auth }) => {
-      const db = ctx.db.getReplica()
-      const actorService = ctx.services.actor(db)
-      const graphService = ctx.services.graph(db)
-      const labelService = ctx.services.label(db)
-      const viewer = auth.credentials.did
-
+    auth: ctx.authVerifier.standard,
+    handler: async ({ params, auth, req }) => {
+      const viewer = auth.credentials.iss
+      const labelers = ctx.reqLabelers(req)
+      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
       const result = await listNotifications(
-        { ...params, viewer },
-        { db, actorService, graphService, labelService },
+        { ...params, hydrateCtx: hydrateCtx.copy({ viewer }) },
+        ctx,
       )
-
       return {
         encoding: 'application/json',
         body: result,
+        headers: resHeaders({ labelers: hydrateCtx.labelers }),
       }
     },
   })
 }
 
 const skeleton = async (
-  params: Params,
-  ctx: Context,
+  input: SkeletonFnInput<Context, Params>,
 ): Promise<SkeletonState> => {
-  const { db } = ctx
-  const { limit, cursor, viewer } = params
-  const { ref } = db.db.dynamic
+  const { params, ctx } = input
   if (params.seenAt) {
     throw new InvalidRequestError('The seenAt parameter is unsupported')
   }
-  let notifBuilder = db.db
-    .selectFrom('notification as notif')
-    .innerJoin('record', 'record.uri', 'notif.recordUri')
-    .innerJoin('actor as author', 'author.did', 'notif.author')
-    .where(notSoftDeletedClause(ref('record')))
-    .where(notSoftDeletedClause(ref('author')))
-    .where('notif.did', '=', viewer)
-    .where((clause) =>
-      clause
-        .where('reasonSubject', 'is', null)
-        .orWhereExists(
-          db.db
-            .selectFrom('record as subject')
-            .selectAll()
-            .whereRef('subject.uri', '=', ref('notif.reasonSubject')),
-        ),
-    )
-    .select([
-      'notif.recordUri as uri',
-      'notif.recordCid as cid',
-      'author.did as authorDid',
-      'author.handle as authorHandle',
-      'author.indexedAt as authorIndexedAt',
-      'author.takedownId as authorTakedownId',
-      'notif.reason as reason',
-      'notif.reasonSubject as reasonSubject',
-      'notif.sortAt as indexedAt',
-      'record.json as recordJson',
-    ])
-
-  const keyset = new NotifsKeyset(ref('notif.sortAt'), ref('notif.recordCid'))
-  notifBuilder = paginate(notifBuilder, {
-    cursor,
-    limit,
-    keyset,
-  })
-
-  const actorStateQuery = db.db
-    .selectFrom('actor_state')
-    .selectAll()
-    .where('did', '=', viewer)
-
-  const [notifs, actorState] = await Promise.all([
-    notifBuilder.execute(),
-    actorStateQuery.executeTakeFirst(),
+  const viewer = params.hydrateCtx.viewer
+  const priority = params.priority ?? (await getPriority(ctx, viewer))
+  if (clearlyBadCursor(params.cursor)) {
+    return { notifs: [], priority }
+  }
+  const [res, lastSeenRes] = await Promise.all([
+    ctx.hydrator.dataplane.getNotifications({
+      actorDid: viewer,
+      priority,
+      cursor: params.cursor,
+      limit: params.limit,
+    }),
+    ctx.hydrator.dataplane.getNotificationSeen({
+      actorDid: viewer,
+      priority,
+    }),
   ])
-
+  // @NOTE for the first page of results if there's no last-seen time, consider top notification unread
+  // rather than all notifications. bit of a hack to be more graceful when seen times are out of sync.
+  let lastSeenDate = lastSeenRes.timestamp?.toDate()
+  if (!lastSeenDate && !params.cursor) {
+    lastSeenDate = res.notifications.at(0)?.timestamp?.toDate()
+  }
   return {
-    params,
-    notifs,
-    cursor: keyset.packFromResult(notifs),
-    lastSeenNotifs: actorState?.lastSeenNotifs,
+    notifs: res.notifications,
+    cursor: res.cursor || undefined,
+    priority,
+    lastSeenNotifs: lastSeenDate?.toISOString(),
   }
 }
 
-const hydration = async (state: SkeletonState, ctx: Context) => {
-  const { graphService, actorService, labelService } = ctx
-  const { params, notifs } = state
-  const { viewer } = params
-  const dids = notifs.map((notif) => notif.authorDid)
-  const uris = notifs.map((notif) => notif.uri)
-  const [actors, labels, bam] = await Promise.all([
-    actorService.views.profiles(dids, viewer),
-    labelService.getLabelsForUris(uris),
-    graphService.getBlockAndMuteState(dids.map((did) => [viewer, did])),
-  ])
-  return { ...state, actors, labels, bam }
+const hydration = async (
+  input: HydrationFnInput<Context, Params, SkeletonState>,
+) => {
+  const { skeleton, params, ctx } = input
+  return ctx.hydrator.hydrateNotifications(skeleton.notifs, params.hydrateCtx)
 }
 
-const noBlockOrMutes = (state: HydrationState) => {
-  const { viewer } = state.params
-  state.notifs = state.notifs.filter(
-    (item) =>
-      !state.bam.block([viewer, item.authorDid]) &&
-      !state.bam.mute([viewer, item.authorDid]),
-  )
-  return state
-}
-
-const presentation = (state: HydrationState) => {
-  const { notifs, cursor, actors, labels, lastSeenNotifs } = state
-  const notifications = mapDefined(notifs, (notif) => {
-    const author = actors[notif.authorDid]
-    if (!author) return undefined
-    const record = jsonStringToLex(notif.recordJson) as Record<string, unknown>
-    const recordLabels = labels[notif.uri] ?? []
-    const recordSelfLabels = getSelfLabels({
-      uri: notif.uri,
-      cid: notif.cid,
-      record,
-    })
-    return {
-      uri: notif.uri,
-      cid: notif.cid,
-      author,
-      reason: notif.reason,
-      reasonSubject: notif.reasonSubject || undefined,
-      record,
-      isRead: lastSeenNotifs ? notif.indexedAt <= lastSeenNotifs : false,
-      indexedAt: notif.indexedAt,
-      labels: [...recordLabels, ...recordSelfLabels],
+const noBlockOrMutesOrNeedsReview = (
+  input: RulesFnInput<Context, Params, SkeletonState>,
+) => {
+  const { skeleton, hydration, ctx, params } = input
+  skeleton.notifs = skeleton.notifs.filter((item) => {
+    const did = didFromUri(item.uri)
+    if (
+      ctx.views.viewerBlockExists(did, hydration) ||
+      ctx.views.viewerMuteExists(did, hydration)
+    ) {
+      return false
     }
+    // Filter out hidden replies only if the viewer owns
+    // the threadgate and they hid the reply.
+    if (item.reason === 'reply') {
+      const post = hydration.posts?.get(item.uri)
+      if (post) {
+        const rootPostUri = isPostRecord(post.record)
+          ? post.record.reply?.root.uri
+          : undefined
+        const isRootPostByViewer =
+          rootPostUri && didFromUri(rootPostUri) === params.hydrateCtx?.viewer
+        const isHiddenByThreadgate = isRootPostByViewer
+          ? ctx.views.replyIsHiddenByThreadgate(
+              item.uri,
+              rootPostUri,
+              hydration,
+            )
+          : false
+        if (isHiddenByThreadgate) {
+          return false
+        }
+      }
+    }
+    // Filter out notifications from users that need review unless moots
+    if (
+      item.reason === 'reply' ||
+      item.reason === 'quote' ||
+      item.reason === 'mention'
+    ) {
+      if (!ctx.views.viewerSeesNeedsReview(did, hydration)) {
+        return false
+      }
+    }
+    return true
   })
-  return { notifications, cursor }
+  return skeleton
+}
+
+const presentation = (
+  input: PresentationFnInput<Context, Params, SkeletonState>,
+) => {
+  const { skeleton, hydration, ctx } = input
+  const { notifs, lastSeenNotifs, cursor } = skeleton
+  const notifications = mapDefined(notifs, (notif) =>
+    ctx.views.notification(notif, lastSeenNotifs, hydration),
+  )
+  return {
+    notifications,
+    cursor,
+    priority: skeleton.priority,
+    seenAt: skeleton.lastSeenNotifs,
+  }
 }
 
 type Context = {
-  db: Database
-  actorService: ActorService
-  graphService: GraphService
-  labelService: LabelService
+  hydrator: Hydrator
+  views: Views
 }
 
 type Params = QueryParams & {
-  viewer: string
+  hydrateCtx: HydrateCtx & { viewer: string }
 }
 
 type SkeletonState = {
-  params: Params
-  notifs: NotifRow[]
+  notifs: Notification[]
+  priority: boolean
   lastSeenNotifs?: string
   cursor?: string
 }
 
-type HydrationState = SkeletonState & {
-  bam: BlockAndMuteState
-  actors: ActorInfoMap
-  labels: Labels
-}
-
-type NotifRow = {
-  indexedAt: string
-  cid: string
-  uri: string
-  authorDid: string
-  authorHandle: string | null
-  authorIndexedAt: string
-  authorTakedownId: number | null
-  reason: string
-  reasonSubject: string | null
-  recordJson: string
-}
-
-class NotifsKeyset extends TimeCidKeyset<NotifRow> {
-  labelResult(result: NotifRow) {
-    return { primary: result.indexedAt, secondary: result.cid }
-  }
+const getPriority = async (ctx: Context, did: string) => {
+  const actors = await ctx.hydrator.actor.getActors([did])
+  return !!actors.get(did)?.priorityNotifications
 }

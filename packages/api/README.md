@@ -11,40 +11,98 @@ This API is a client for ATProtocol servers. It communicates using HTTP. It incl
 
 First install the package:
 
-```
+```sh
 yarn add @atproto/api
 ```
 
 Then in your application:
 
 ```typescript
-import { BskyAgent } from '@atproto/api'
+import { AtpAgent } from '@atproto/api'
 
-const agent = new BskyAgent({ service: 'https://example.com' })
+const agent = new AtpAgent({ service: 'https://example.com' })
 ```
 
 ## Usage
 
 ### Session management
 
-Log into a server or create accounts using these APIs. You'll need an active session for most methods.
+You'll need an authenticated session for most API calls. There are two ways to
+manage sessions:
+
+1. [App password based session management](#app-password-based-session-management)
+2. [OAuth based session management](#oauth-based-session-management)
+
+#### App password based session management
+
+Username / password based authentication can be performed using the `AtpAgent`
+class.
+
+> [!CAUTION]
+>
+> This method is deprecated in favor of OAuth based session management. It is
+> recommended to use OAuth based session management (through the
+> `@atproto/oauth-client-*` packages).
 
 ```typescript
-import { BskyAgent, AtpSessionEvent, AtpSessionData } from '@atproto/api'
-const agent = new BskyAgent({
+import { AtpAgent, AtpSessionEvent, AtpSessionData } from '@atproto/api'
+
+// configure connection to the server, without account authentication
+const agent = new AtpAgent({
   service: 'https://example.com',
   persistSession: (evt: AtpSessionEvent, sess?: AtpSessionData) => {
     // store the session-data for reuse
   },
 })
 
-await agent.login({ identifier: 'alice@mail.com', password: 'hunter2' })
-await agent.resumeSession(savedSessionData)
+// Change the agent state to an authenticated state either by:
+
+// 1) creating a new account on the server.
 await agent.createAccount({
   email: 'alice@mail.com',
   password: 'hunter2',
   handle: 'alice.example.com',
+  inviteCode: 'some-code-12345-abcde',
 })
+
+// 2) if an existing session was securely stored previously, then reuse that to resume the session.
+await agent.resumeSession(savedSessionData)
+
+// 3) if no old session was available, create a new one by logging in with password (App Password)
+await agent.login({
+  identifier: 'alice@mail.com',
+  password: 'hunter2',
+})
+```
+
+#### OAuth based session management
+
+Depending on the environment used by your application, different OAuth clients
+are available:
+
+- [@atproto/oauth-client-browser](https://www.npmjs.com/package/@atproto/oauth-client-browser):
+  for the browser.
+- [@atproto/oauth-client-node](https://www.npmjs.com/package/@atproto/oauth-client-node): for
+  Node.js.
+- [@atproto/oauth-client](https://www.npmjs.com/package/@atproto/oauth-client):
+  Lower lever; compatible with most JS engines.
+
+Every `@atproto/oauth-client-*` implementation has a different way to obtain an
+`OAuthSession` instance that can be used to instantiate an `Agent` (from
+`@atproto/api`). Here is an example restoring a previously saved session:
+
+```typescript
+import { Agent } from '@atproto/api'
+import { OAuthClient } from '@atproto/oauth-client'
+
+const oauthClient = new OAuthClient({
+  // ...
+})
+
+const oauthSession = await oauthClient.restore('did:plc:123')
+
+// Instantiate the api Agent using an OAuthSession
+const agent = new Agent(oauthSession)
 ```
 
 ### API calls
@@ -52,6 +110,10 @@ await agent.createAccount({
 The agent includes methods for many common operations, including:
 
 ```typescript
+// The DID of the user currently authenticated (or undefined)
+agent.did
+agent.accountDid // Throws if the user is not authenticated
+
 // Feeds and content
 await agent.getTimeline(params, opts)
 await agent.getAuthorFeed(params, opts)
@@ -83,6 +145,10 @@ await agent.searchActors(params, opts)
 await agent.searchActorsTypeahead(params, opts)
 await agent.mute(did)
 await agent.unmute(did)
+await agent.muteModList(listUri)
+await agent.unmuteModList(listUri)
+await agent.blockModList(listUri)
+await agent.unblockModList(listUri)
 
 // Notifications
 await agent.listNotifications(params, opts)
@@ -93,10 +159,14 @@ await agent.updateSeenNotifications()
 await agent.resolveHandle(params, opts)
 await agent.updateHandle(params, opts)
 
-// Session management
-await agent.createAccount(params)
-await agent.login(params)
-await agent.resumeSession(session)
+// Legacy: Session management should be performed through the SessionManager
+// rather than the Agent instance.
+if (agent instanceof AtpAgent) {
+  // AtpAgent instances support using different sessions during their lifetime
+  await agent.createAccount({ ... }) // session a
+  await agent.login({ ... }) // session b
+  await agent.resumeSession(savedSession) // session c
+}
 ```
 
 ### Validation and types
@@ -166,87 +236,70 @@ console.log(rt3.graphemeLength) // => 1
 
 Applying the moderation system is a challenging task, but we've done our best to simplify it for you. The Moderation API helps handle a wide range of tasks, including:
 
+- Moderator labeling
 - User muting (including mutelists)
 - User blocking
-- Moderator labeling
+- Mutewords
+- Hidden posts
 
-For more information, see the [Moderation Documentation](./docs/moderation.md) or the associated [Labels Reference](./docs/labels.md).
+For more information, see the [Moderation Documentation](./docs/moderation.md).
 
 ```typescript
-import { moderatePost, moderateProfile } from '@atproto/api'
+import { moderatePost } from '@atproto/api'
+
+// First get the user's moderation prefs and their label definitions
+// =
+
+const prefs = await agent.getPreferences()
+const labelDefs = await agent.getLabelDefinitions(prefs)
 
 // We call the appropriate moderation function for the content
 // =
 
-const postMod = moderatePost(postView, getOpts())
-const profileMod = moderateProfile(profileView, getOpts())
+const postMod = moderatePost(postView, {
+  userDid: agent.session.did,
+  moderationPrefs: prefs.moderationPrefs,
+  labelDefs,
+})
 
 // We then use the output to decide how to affect rendering
 // =
 
-if (postMod.content.filter) {
-  // dont render in feeds or similar
-  // in contexts where this is disruptive (eg threads) you should ignore this and instead check blur
+// in feeds
+if (postMod.ui('contentList').filter) {
+  // don't include in feeds
 }
-if (postMod.content.blur) {
-  // render the whole object behind a cover (use postMod.content.cause to explain)
-  if (postMod.content.noOverride) {
+if (postMod.ui('contentList').blur) {
+  // render the whole object behind a cover (use postMod.ui('contentList').blurs to explain)
+  if (postMod.ui('contentList').noOverride) {
     // do not allow the cover the be removed
   }
 }
-if (postMod.content.alert) {
-  // render a warning on the content (use postMod.content.cause to explain)
+if (postMod.ui('contentList').alert || postMod.ui('contentList').inform) {
+  // render warnings on the post
+  // find the warnings in postMod.ui('contentList').alerts and postMod.ui('contentList').informs
 }
-if (postMod.embed.blur) {
-  // render the embedded media behind a cover (use postMod.embed.cause to explain)
-  if (postMod.embed.noOverride) {
+
+// viewed directly
+if (postMod.ui('contentView').filter) {
+  // don't include in feeds
+}
+if (postMod.ui('contentView').blur) {
+  // render the whole object behind a cover (use postMod.ui('contentView').blurs to explain)
+  if (postMod.ui('contentView').noOverride) {
     // do not allow the cover the be removed
   }
 }
-if (postMod.embed.alert) {
-  // render a warning on the embedded media (use postMod.embed.cause to explain)
-}
-if (postMod.avatar.blur) {
-  // render the avatar behind a cover
-}
-if (postMod.avatar.alert) {
-  // render an alert on the avatar
+if (postMod.ui('contentView').alert || postMod.ui('contentView').inform) {
+  // render warnings on the post
+  // find the warnings in postMod.ui('contentView').alerts and postMod.ui('contentView').informs
 }
 
-// The options passed into `apply()` supply the user's preferences
-// =
-
-function getOpts() {
-  return {
-    // the logged-in user's DID
-    userDid: 'did:plc:1234...',
-
-    // is adult content allowed?
-    adultContentEnabled: true,
-
-    // the global label settings (used on self-labels)
-    labels: {
-      porn: 'hide',
-      sexual: 'warn',
-      nudity: 'ignore',
-      // ...
-    },
-
-    // the per-labeler settings
-    labelers: [
-      {
-        labeler: {
-          did: '...',
-          displayName: 'My mod service',
-        },
-        labels: {
-          porn: 'hide',
-          sexual: 'warn',
-          nudity: 'ignore',
-          // ...
-        },
-      },
-    ],
+// post embeds in all contexts
+if (postMod.ui('contentMedia').blur) {
+  // render the whole object behind a cover (use postMod.ui('contentMedia').blurs to explain)
+  if (postMod.ui('contentMedia').noOverride) {
+    // do not allow the cover the be removed
   }
 }
 ```
@@ -284,43 +337,37 @@ const res3 = await agent.app.bsky.feed.post.create(
 const res4 = await agent.app.bsky.feed.post.list({ repo: alice.did })
 ```
 
-### Generic agent
+### Non-browser configuration
 
-If you want a generic AT Protocol agent without methods related to the Bluesky social lexicon, use the `AtpAgent` instead of the `BskyAgent`.
+If your environment doesn't have a built-in `fetch` implementation, you'll need
+to provide one. This will typically be done through a polyfill.
+
+### Bring your own fetch
+
+If you want to provide your own `fetch` implementation, you can do so by
+instantiating the sessionManager with a custom fetch implementation:
 
 ```typescript
 import { AtpAgent } from '@atproto/api'
 
-const agent = new AtpAgent({ service: 'https://example.com' })
-```
+const myFetch = (input: RequestInfo | URL, init?: RequestInit) => {
+  console.log('requesting', input)
+  const response = await globalThis.fetch(input, init)
+  console.log('got response', response)
+  return response
+}
 
-### Non-browser configuration
-
-In non-browser environments you'll need to specify a fetch polyfill. [See the example react-native polyfill here.](./docs/rn-fetch-handler.ts)
-
-```typescript
-import { BskyAgent } from '@atproto/api'
-
-const agent = new BskyAgent({ service: 'https://example.com' })
-
-// provide a custom fetch implementation (shouldnt be needed in node or the browser)
-import {
-  AtpAgentFetchHeaders,
-  AtpAgentFetchHandlerResponse,
-} from '@atproto/api'
-BskyAgent.configure({
-  async fetch(
-    httpUri: string,
-    httpMethod: string,
-    httpHeaders: AtpAgentFetchHeaders,
-    httpReqBody: any,
-  ): Promise<AtpAgentFetchHandlerResponse> {
-    // insert definition here...
-    return { status: 200 /*...*/ }
-  },
+const agent = new AtpAgent({
+  service: 'https://example.com',
+  fetch: myFetch,
 })
 ```
 
 ## License
 
-MIT
+This project is dual-licensed under MIT and Apache 2.0 terms:
+
+- MIT license ([LICENSE-MIT.txt](https://github.com/bluesky-social/atproto/blob/main/LICENSE-MIT.txt) or http://opensource.org/licenses/MIT)
+- Apache License, Version 2.0, ([LICENSE-APACHE.txt](https://github.com/bluesky-social/atproto/blob/main/LICENSE-APACHE.txt) or http://www.apache.org/licenses/LICENSE-2.0)
+
+Downstream projects and end users may chose either license individually, or both together, at their discretion. The motivation for this dual-licensing is the additional software patent assurance provided by Apache 2.0.

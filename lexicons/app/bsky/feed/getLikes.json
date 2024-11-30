@@ -4,12 +4,21 @@
   "defs": {
     "main": {
       "type": "query",
+      "description": "Get like records which reference a subject (by AT-URI and CID).",
       "parameters": {
         "type": "params",
         "required": ["uri"],
         "properties": {
-          "uri": { "type": "string", "format": "at-uri" },
-          "cid": { "type": "string", "format": "cid" },
+          "uri": {
+            "type": "string",
+            "format": "at-uri",
+            "description": "AT-URI of the subject (eg, a post record)."
+          },
+          "cid": {
+            "type": "string",
+            "format": "cid",
+            "description": "CID of the subject record (aka, specific version of record), to filter likes."
+          },
           "limit": {
             "type": "integer",
             "minimum": 1,

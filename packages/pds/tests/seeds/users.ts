@@ -1,10 +1,16 @@
-import { SeedClient } from './client'
+import { SeedClient } from '@atproto/dev-env'
 
-export default async (sc: SeedClient, invite?: { code: string }) => {
-  await sc.createAccount('alice', { ...users.alice, inviteCode: invite?.code })
-  await sc.createAccount('bob', { ...users.bob, inviteCode: invite?.code })
-  await sc.createAccount('carol', { ...users.carol, inviteCode: invite?.code })
-  await sc.createAccount('dan', { ...users.dan, inviteCode: invite?.code })
+export default async (sc: SeedClient, opts?: { inviteCode?: string }) => {
+  await sc.createAccount('alice', {
+    ...users.alice,
+    inviteCode: opts?.inviteCode,
+  })
+  await sc.createAccount('bob', { ...users.bob, inviteCode: opts?.inviteCode })
+  await sc.createAccount('carol', {
+    ...users.carol,
+    inviteCode: opts?.inviteCode,
+  })
+  await sc.createAccount('dan', { ...users.dan, inviteCode: opts?.inviteCode })
 
   await sc.createProfile(
     sc.dids.alice,
@@ -16,13 +22,13 @@ export default async (sc: SeedClient, invite?: { code: string }) => {
     sc.dids.bob,
     users.bob.displayName,
     users.bob.description,
-    users.alice.selfLabels,
+    users.bob.selfLabels,
   )
 
   return sc
 }
 
-const users = {
+export const users = {
   alice: {
     email: 'alice@test.com',
     handle: 'alice.test',

@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Get a record.",
+      "description": "Get a single record from a repository. Does not require auth.",
       "parameters": {
         "type": "params",
         "required": ["repo", "collection", "rkey"],
@@ -19,7 +19,7 @@
             "format": "nsid",
             "description": "The NSID of the record collection."
           },
-          "rkey": { "type": "string", "description": "The key of the record." },
+          "rkey": { "type": "string", "description": "The Record Key." },
           "cid": {
             "type": "string",
             "format": "cid",
@@ -38,7 +38,8 @@
             "value": { "type": "unknown" }
           }
         }
-      }
+      },
+      "errors": [{ "name": "RecordNotFound" }]
     }
   }
 }

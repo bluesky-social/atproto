@@ -4,12 +4,16 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Fetch a list of actors",
+      "description": "Gets a 'view' (with additional context) of a specified list.",
       "parameters": {
         "type": "params",
         "required": ["list"],
         "properties": {
-          "list": { "type": "string", "format": "at-uri" },
+          "list": {
+            "type": "string",
+            "format": "at-uri",
+            "description": "Reference (AT-URI) of the list record to hydrate."
+          },
           "limit": {
             "type": "integer",
             "minimum": 1,

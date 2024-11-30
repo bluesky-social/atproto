@@ -1,4 +1,5 @@
 import * as aws from '@aws-sdk/client-cloudfront'
+import { ImageInvalidator } from './types'
 
 export type CloudfrontConfig = {
   distributionId: string
@@ -33,9 +34,3 @@ export class CloudfrontInvalidator implements ImageInvalidator {
 }
 
 export default CloudfrontInvalidator
-
-// @NOTE keep in sync with same interface in pds/src/image/invalidator.ts
-// this is separate to avoid the dependency on @atproto/pds.
-interface ImageInvalidator {
-  invalidate(subject: string, paths: string[]): Promise<void>
-}

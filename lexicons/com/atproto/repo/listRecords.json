@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "List a range of records in a collection.",
+      "description": "List a range of records in a repository, matching a specific collection. Does not require auth.",
       "parameters": {
         "type": "params",
         "required": ["repo", "collection"],
@@ -37,7 +37,7 @@
           },
           "reverse": {
             "type": "boolean",
-            "description": "Reverse the order of the returned records?"
+            "description": "Flag to reverse the order of the returned records."
           }
         }
       },

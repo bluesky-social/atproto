@@ -2,14 +2,14 @@ node_modules
 lerna-debug.log
 npm-debug.log
 yarn-error.log
-packages/*/dist
+packages/**/dist
 .idea
 packages/*/coverage
 .vscode/
 test.sqlite
 .DS_Store
 *.log
-tsconfig.build.tsbuildinfo
+*.tsbuildinfo
 .*.env
 .env
 \#*\#

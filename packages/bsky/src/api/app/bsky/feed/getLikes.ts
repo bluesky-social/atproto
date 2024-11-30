@@ -1,127 +1,146 @@
 import { mapDefined } from '@atproto/common'
+import { normalizeDatetimeAlways } from '@atproto/syntax'
 import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getLikes'
-import { paginate, TimeCidKeyset } from '../../../../db/pagination'
 import AppContext from '../../../../context'
-import { notSoftDeletedClause } from '../../../../db/util'
-import { BlockAndMuteState, GraphService } from '../../../../services/graph'
-import { ActorInfoMap, ActorService } from '../../../../services/actor'
-import { Actor } from '../../../../db/tables/actor'
-import { Database } from '../../../../db'
-import { createPipeline } from '../../../../pipeline'
+import { createPipeline, RulesFnInput } from '../../../../pipeline'
+import {
+  HydrateCtx,
+  HydrationState,
+  Hydrator,
+  mergeStates,
+} from '../../../../hydration/hydrator'
+import { Views } from '../../../../views'
+import { parseString } from '../../../../hydration/util'
+import { uriToDid as creatorFromUri } from '../../../../util/uris'
+import { clearlyBadCursor, resHeaders } from '../../../util'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export default function (server: Server, ctx: AppContext) {
   const getLikes = createPipeline(skeleton, hydration, noBlocks, presentation)
   server.app.bsky.feed.getLikes({
-    auth: ctx.authOptionalVerifier,
-    handler: async ({ params, auth }) => {
-      const db = ctx.db.getReplica()
-      const actorService = ctx.services.actor(db)
-      const graphService = ctx.services.graph(db)
-      const viewer = auth.credentials.did
-
-      const result = await getLikes(
-        { ...params, viewer },
-        { db, actorService, graphService },
-      )
+    auth: ctx.authVerifier.standardOptional,
+    handler: async ({ params, auth, req }) => {
+      const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
+      const labelers = ctx.reqLabelers(req)
+      const hydrateCtx = await ctx.hydrator.createContext({
+        labelers,
+        viewer,
+        includeTakedowns,
+      })
+      const result = await getLikes({ ...params, hydrateCtx }, ctx)
 
       return {
         encoding: 'application/json',
         body: result,
+        headers: resHeaders({ labelers: hydrateCtx.labelers }),
       }
     },
   })
 }
 
-const skeleton = async (
-  params: Params,
-  ctx: Context,
-): Promise<SkeletonState> => {
-  const { db } = ctx
-  const { uri, cid, limit, cursor } = params
-  const { ref } = db.db.dynamic
+const skeleton = async (inputs: {
+  ctx: Context
+  params: Params
+}): Promise<Skeleton> => {
+  const { ctx, params } = inputs
+  const authorDid = creatorFromUri(params.uri)
 
-  let builder = db.db
-    .selectFrom('like')
-    .where('like.subject', '=', uri)
-    .innerJoin('actor as creator', 'creator.did', 'like.creator')
-    .where(notSoftDeletedClause(ref('creator')))
-    .selectAll('creator')
-    .select([
-      'like.cid as cid',
-      'like.createdAt as createdAt',
-      'like.indexedAt as indexedAt',
-      'like.sortAt as sortAt',
-    ])
-
-  if (cid) {
-    builder = builder.where('like.subjectCid', '=', cid)
+  if (clearlyBadCursor(params.cursor)) {
+    return { authorDid, likes: [] }
   }
-
-  const keyset = new TimeCidKeyset(ref('like.sortAt'), ref('like.cid'))
-  builder = paginate(builder, {
-    limit,
-    cursor,
-    keyset,
+  if (looksLikeNonSortedCursor(params.cursor)) {
+    throw new InvalidRequestError(
+      'Cursor appear to be out of date, please try reloading.',
+    )
+  }
+  const likesRes = await ctx.hydrator.dataplane.getLikesBySubjectSorted({
+    subject: { uri: params.uri, cid: params.cid },
+    cursor: params.cursor,
+    limit: params.limit,
   })
-
-  const likes = await builder.execute()
-
-  return { params, likes, cursor: keyset.packFromResult(likes) }
+  return {
+    authorDid,
+    likes: likesRes.uris,
+    cursor: parseString(likesRes.cursor),
+  }
 }
 
-const hydration = async (state: SkeletonState, ctx: Context) => {
-  const { graphService, actorService } = ctx
-  const { params, likes } = state
-  const { viewer } = params
-  const [actors, bam] = await Promise.all([
-    actorService.views.profiles(likes, viewer),
-    graphService.getBlockAndMuteState(
-      viewer ? likes.map((like) => [viewer, like.did]) : [],
-    ),
-  ])
-  return { ...state, bam, actors }
-}
-
-const noBlocks = (state: HydrationState) => {
-  const { viewer } = state.params
-  if (!viewer) return state
-  state.likes = state.likes.filter(
-    (item) => !state.bam.block([viewer, item.did]),
+const hydration = async (inputs: {
+  ctx: Context
+  params: Params
+  skeleton: Skeleton
+}) => {
+  const { ctx, params, skeleton } = inputs
+  const likesState = await ctx.hydrator.hydrateLikes(
+    skeleton.authorDid,
+    skeleton.likes,
+    params.hydrateCtx,
   )
-  return state
+  return likesState
 }
 
-const presentation = (state: HydrationState) => {
-  const { params, likes, actors, cursor } = state
-  const { uri, cid } = params
-  const likesView = mapDefined(likes, (like) =>
-    actors[like.did]
-      ? {
-          createdAt: like.createdAt,
-          indexedAt: like.indexedAt,
-          actor: actors[like.did],
-        }
-      : undefined,
-  )
-  return { likes: likesView, cursor, uri, cid }
+const noBlocks = (input: RulesFnInput<Context, Params, Skeleton>) => {
+  const { ctx, skeleton, hydration } = input
+
+  skeleton.likes = skeleton.likes.filter((likeUri) => {
+    const like = hydration.likes?.get(likeUri)
+    if (!like) return false
+    const likerDid = creatorFromUri(likeUri)
+    return (
+      !hydration.likeBlocks?.get(likeUri) &&
+      !ctx.views.viewerBlockExists(likerDid, hydration)
+    )
+  })
+  return skeleton
+}
+
+const presentation = (inputs: {
+  ctx: Context
+  params: Params
+  skeleton: Skeleton
+  hydration: HydrationState
+}) => {
+  const { ctx, params, skeleton, hydration } = inputs
+  const likeViews = mapDefined(skeleton.likes, (uri) => {
+    const like = hydration.likes?.get(uri)
+    if (!like || !like.record) {
+      return
+    }
+    const creatorDid = creatorFromUri(uri)
+    const actor = ctx.views.profile(creatorDid, hydration)
+    if (!actor) {
+      return
+    }
+    return {
+      actor,
+      createdAt: normalizeDatetimeAlways(like.record.createdAt),
+      indexedAt: like.sortedAt.toISOString(),
+    }
+  })
+  return {
+    likes: likeViews,
+    cursor: skeleton.cursor,
+    uri: params.uri,
+    cid: params.cid,
+  }
 }
 
 type Context = {
-  db: Database
-  actorService: ActorService
-  graphService: GraphService
+  hydrator: Hydrator
+  views: Views
 }
 
-type Params = QueryParams & { viewer: string | null }
+type Params = QueryParams & { hydrateCtx: HydrateCtx }
 
-type SkeletonState = {
-  params: Params
-  likes: (Actor & { createdAt: string })[]
+type Skeleton = {
+  authorDid: string
+  likes: string[]
   cursor?: string
 }
 
-type HydrationState = SkeletonState & {
-  bam: BlockAndMuteState
-  actors: ActorInfoMap
+const looksLikeNonSortedCursor = (cursor: string | undefined) => {
+  // the old cursor values used with getLikesBySubject() were dids.
+  // we now use getLikesBySubjectSorted(), whose cursors look like timestamps.
+  return cursor?.startsWith('did:')
 }

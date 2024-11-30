@@ -1,11 +1,5 @@
 import { Generated } from 'kysely'
 import {
-  ACKNOWLEDGE,
-  FLAG,
-  TAKEDOWN,
-  ESCALATE,
-} from '../../lexicon/types/com/atproto/admin/defs'
-import {
   REASONOTHER,
   REASONSPAM,
   REASONMISLEADING,
@@ -21,21 +15,33 @@ export const reportResolutionTableName = 'moderation_report_resolution'
 
 export interface ModerationAction {
   id: Generated<number>
-  action: typeof TAKEDOWN | typeof FLAG | typeof ACKNOWLEDGE | typeof ESCALATE
+  action:
+    | 'tools.ozone.moderation.defs#modEventTakedown'
+    | 'tools.ozone.moderation.defs#modEventAcknowledge'
+    | 'tools.ozone.moderation.defs#modEventEscalate'
+    | 'tools.ozone.moderation.defs#modEventComment'
+    | 'tools.ozone.moderation.defs#modEventLabel'
+    | 'tools.ozone.moderation.defs#modEventReport'
+    | 'tools.ozone.moderation.defs#modEventMute'
+    | 'tools.ozone.moderation.defs#modEventUnmute'
+    | 'tools.ozone.moderation.defs#modEventMuteReporter'
+    | 'tools.ozone.moderation.defs#modEventUnmuteReporter'
+    | 'tools.ozone.moderation.defs#modEventReverseTakedown'
+    | 'tools.ozone.moderation.defs#modEventEmail'
+    | 'tools.ozone.moderation.defs#modEventResolveAppeal'
+    | 'tools.ozone.moderation.defs#modEventDivert'
   subjectType: 'com.atproto.admin.defs#repoRef' | 'com.atproto.repo.strongRef'
   subjectDid: string
   subjectUri: string | null
   subjectCid: string | null
   createLabelVals: string | null
   negateLabelVals: string | null
-  reason: string
+  comment: string | null
   createdAt: string
   createdBy: string
-  reversedAt: string | null
-  reversedBy: string | null
-  reversedReason: string | null
   durationInHours: number | null
   expiresAt: string | null
+  meta: Record<string, string | boolean> | null
 }
 
 export interface ModerationActionSubjectBlob {

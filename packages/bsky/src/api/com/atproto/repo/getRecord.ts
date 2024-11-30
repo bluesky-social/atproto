@@ -2,38 +2,38 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AtUri } from '@atproto/syntax'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { jsonStringToLex } from '@atproto/lexicon'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.repo.getRecord(async ({ params }) => {
-    const { repo, collection, rkey, cid } = params
-    const db = ctx.db.getReplica()
-    const did = await ctx.services.actor(db).getActorDid(repo)
-    if (!did) {
-      throw new InvalidRequestError(`Could not find repo: ${repo}`)
-    }
+  server.com.atproto.repo.getRecord({
+    auth: ctx.authVerifier.optionalStandardOrRole,
+    handler: async ({ auth, params }) => {
+      const { repo, collection, rkey, cid } = params
+      const { includeTakedowns } = ctx.authVerifier.parseCreds(auth)
+      const [did] = await ctx.hydrator.actor.getDids([repo])
+      if (!did) {
+        throw new InvalidRequestError(`Could not find repo: ${repo}`)
+      }
 
-    const uri = AtUri.make(did, collection, rkey)
+      const actors = await ctx.hydrator.actor.getActors([did], includeTakedowns)
+      if (!actors.get(did)) {
+        throw new InvalidRequestError(`Could not find repo: ${repo}`)
+      }
 
-    let builder = db.db
-      .selectFrom('record')
-      .selectAll()
-      .where('uri', '=', uri.toString())
-    if (cid) {
-      builder = builder.where('cid', '=', cid)
-    }
+      const uri = AtUri.make(did, collection, rkey).toString()
+      const result = await ctx.hydrator.getRecord(uri, includeTakedowns)
 
-    const record = await builder.executeTakeFirst()
-    if (!record) {
-      throw new InvalidRequestError(`Could not locate record: ${uri}`)
-    }
-    return {
-      encoding: 'application/json',
-      body: {
-        uri: record.uri,
-        cid: record.cid,
-        value: jsonStringToLex(record.json) as Record<string, unknown>,
-      },
-    }
+      if (!result || (cid && result.cid !== cid)) {
+        throw new InvalidRequestError(`Could not locate record: ${uri}`)
+      }
+
+      return {
+        encoding: 'application/json' as const,
+        body: {
+          uri: uri,
+          cid: result.cid,
+          value: result.record,
+        },
+      }
+    },
   })
 }

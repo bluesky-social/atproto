@@ -12,20 +12,20 @@ env:
 jobs:
   build:
     name: Build & Publish
+    if: github.repository == 'bluesky-social/atproto'
     runs-on: ubuntu-latest
     permissions:
       contents: write
       pull-requests: write
     steps:
       - uses: actions/checkout@v3
-      - uses: pnpm/action-setup@v2
-        with:
-          version: 8
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v3
         with:
           node-version: 18
           cache: 'pnpm'
       - run: pnpm i --frozen-lockfile
+      - run: pnpm build
       - run: pnpm verify
       - name: Publish
         id: changesets

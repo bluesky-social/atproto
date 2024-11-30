@@ -1,44 +1,27 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { isUserOrAdmin } from '../../../../auth'
+import { assertRepoAvailability } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.listBlobs({
-    auth: ctx.optionalAccessOrRoleVerifier,
+    auth: ctx.authVerifier.optionalAccessOrAdminToken,
     handler: async ({ params, auth }) => {
       const { did, since, limit, cursor } = params
-      // takedown check for anyone other than an admin or the user
-      if (!isUserOrAdmin(auth, did)) {
-        const available = await ctx.services
-          .account(ctx.db)
-          .isRepoAvailable(did)
-        if (!available) {
-          throw new InvalidRequestError(`Could not find root for DID: ${did}`)
-        }
-      }
+      await assertRepoAvailability(
+        ctx,
+        did,
+        ctx.authVerifier.isUserOrAdmin(auth, did),
+      )
 
-      let builder = ctx.db.db
-        .selectFrom('repo_blob')
-        .where('did', '=', did)
-        .select('cid')
-        .orderBy('cid', 'asc')
-        .limit(limit)
-      if (since) {
-        builder = builder.where('repoRev', '>', since)
-      }
-
-      if (cursor) {
-        builder = builder.where('cid', '>', cursor)
-      }
-
-      const res = await builder.execute()
+      const blobCids = await ctx.actorStore.read(did, (store) =>
+        store.repo.blob.listBlobs({ since, limit, cursor }),
+      )
 
       return {
         encoding: 'application/json',
         body: {
-          cursor: res.at(-1)?.cid,
-          cids: res.map((row) => row.cid),
+          cursor: blobCids.at(-1),
+          cids: blobCids,
         },
       }
     },

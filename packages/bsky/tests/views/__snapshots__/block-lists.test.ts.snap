@@ -7,6 +7,7 @@ Object {
     "post": Object {
       "author": Object {
         "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+        "createdAt": "1970-01-01T00:00:00.000Z",
         "did": "user(0)",
         "displayName": "ali",
         "handle": "alice.test",
@@ -14,7 +15,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(2)",
             "val": "self-label-a",
@@ -22,7 +22,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(2)",
             "val": "self-label-b",
@@ -40,6 +39,11 @@ Object {
         "record": Object {
           "$type": "app.bsky.embed.record#viewRecord",
           "author": Object {
+            "associated": Object {
+              "chat": Object {
+                "allowIncoming": "none",
+              },
+            },
             "did": "user(2)",
             "handle": "dan.test",
             "labels": Array [],
@@ -68,6 +72,10 @@ Object {
           ],
           "indexedAt": "1970-01-01T00:00:00.000Z",
           "labels": Array [],
+          "likeCount": 0,
+          "quoteCount": 1,
+          "replyCount": 0,
+          "repostCount": 1,
           "uri": "record(3)",
           "value": Object {
             "$type": "app.bsky.feed.post",
@@ -102,13 +110,13 @@ Object {
         Object {
           "cid": "cids(0)",
           "cts": "1970-01-01T00:00:00.000Z",
-          "neg": false,
           "src": "did:example:labeler",
           "uri": "record(0)",
           "val": "test-label",
         },
       ],
       "likeCount": 2,
+      "quoteCount": 0,
       "record": Object {
         "$type": "app.bsky.feed.post",
         "createdAt": "1970-01-01T00:00:00.000Z",
@@ -124,10 +132,10 @@ Object {
       "replyCount": 0,
       "repostCount": 0,
       "uri": "record(0)",
-      "viewer": Object {},
-    },
-    "viewer": Object {
-      "canReply": true,
+      "viewer": Object {
+        "embeddingDisabled": false,
+        "threadMuted": false,
+      },
     },
   },
 }
@@ -151,6 +159,7 @@ Object {
     "post": Object {
       "author": Object {
         "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+        "createdAt": "1970-01-01T00:00:00.000Z",
         "did": "user(0)",
         "displayName": "ali",
         "handle": "alice.test",
@@ -158,7 +167,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(3)",
             "val": "self-label-a",
@@ -166,7 +174,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(3)",
             "val": "self-label-b",
@@ -183,6 +190,7 @@ Object {
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [],
       "likeCount": 0,
+      "quoteCount": 0,
       "record": Object {
         "$type": "app.bsky.feed.post",
         "createdAt": "1970-01-01T00:00:00.000Z",
@@ -201,12 +209,12 @@ Object {
       "replyCount": 0,
       "repostCount": 0,
       "uri": "record(0)",
-      "viewer": Object {},
+      "viewer": Object {
+        "embeddingDisabled": false,
+        "threadMuted": false,
+      },
     },
     "replies": Array [],
-    "viewer": Object {
-      "canReply": true,
-    },
   },
 }
 `;
@@ -218,6 +226,7 @@ Object {
     "post": Object {
       "author": Object {
         "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+        "createdAt": "1970-01-01T00:00:00.000Z",
         "did": "user(0)",
         "displayName": "ali",
         "handle": "alice.test",
@@ -225,7 +234,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(2)",
             "val": "self-label-a",
@@ -233,7 +241,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(2)",
             "val": "self-label-b",
@@ -249,6 +256,7 @@ Object {
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [],
       "likeCount": 3,
+      "quoteCount": 0,
       "record": Object {
         "$type": "app.bsky.feed.post",
         "createdAt": "1970-01-01T00:00:00.000000Z",
@@ -258,8 +266,10 @@ Object {
       "repostCount": 1,
       "uri": "record(0)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "like": "record(4)",
         "repost": "record(3)",
+        "threadMuted": false,
       },
     },
     "replies": Array [
@@ -288,21 +298,19 @@ Object {
         "uri": "record(7)",
       },
     ],
-    "viewer": Object {
-      "canReply": true,
-    },
   },
 }
 `;
 
 exports[`pds views with blocking from block lists returns a users own list blocks 1`] = `
 Object {
-  "cursor": "0000000000000::bafycid",
+  "cursor": "0000000000000__bafycid",
   "lists": Array [
     Object {
       "cid": "cids(0)",
       "creator": Object {
         "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+        "createdAt": "1970-01-01T00:00:00.000Z",
         "description": "its me!",
         "did": "user(0)",
         "displayName": "ali",
@@ -312,7 +320,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(3)",
             "val": "self-label-a",
@@ -320,7 +327,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(3)",
             "val": "self-label-b",
@@ -334,8 +340,10 @@ Object {
       },
       "description": "blah blah",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
+      "listItemCount": 0,
       "name": "new list",
-      "purpose": "app.bsky.graph.defs#blocklist",
+      "purpose": "app.bsky.graph.defs#modlist",
       "uri": "record(0)",
       "viewer": Object {
         "blocked": "record(1)",
@@ -347,6 +355,7 @@ Object {
       "cid": "cids(3)",
       "creator": Object {
         "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+        "createdAt": "1970-01-01T00:00:00.000Z",
         "description": "its me!",
         "did": "user(0)",
         "displayName": "ali",
@@ -356,7 +365,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(3)",
             "val": "self-label-a",
@@ -364,7 +372,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(3)",
             "val": "self-label-b",
@@ -378,8 +385,10 @@ Object {
       },
       "description": "big list of blocks",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
+      "listItemCount": 3,
       "name": "alice blocks",
-      "purpose": "app.bsky.graph.defs#blocklist",
+      "purpose": "app.bsky.graph.defs#modlist",
       "uri": "record(4)",
       "viewer": Object {
         "blocked": "record(5)",
@@ -392,12 +401,13 @@ Object {
 
 exports[`pds views with blocking from block lists returns lists associated with a user 1`] = `
 Object {
-  "cursor": "0000000000000::bafycid",
+  "cursor": "0000000000000__bafycid",
   "lists": Array [
     Object {
       "cid": "cids(0)",
       "creator": Object {
         "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+        "createdAt": "1970-01-01T00:00:00.000Z",
         "description": "its me!",
         "did": "user(0)",
         "displayName": "ali",
@@ -407,7 +417,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(2)",
             "val": "self-label-a",
@@ -415,7 +424,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(2)",
             "val": "self-label-b",
@@ -429,8 +437,10 @@ Object {
       },
       "description": "blah blah",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
+      "listItemCount": 0,
       "name": "new list",
-      "purpose": "app.bsky.graph.defs#blocklist",
+      "purpose": "app.bsky.graph.defs#modlist",
       "uri": "record(0)",
       "viewer": Object {
         "muted": false,
@@ -441,6 +451,7 @@ Object {
       "cid": "cids(3)",
       "creator": Object {
         "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+        "createdAt": "1970-01-01T00:00:00.000Z",
         "description": "its me!",
         "did": "user(0)",
         "displayName": "ali",
@@ -450,7 +461,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(2)",
             "val": "self-label-a",
@@ -458,7 +468,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(2)",
             "val": "self-label-b",
@@ -472,8 +481,10 @@ Object {
       },
       "description": "big list of blocks",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
+      "listItemCount": 3,
       "name": "alice blocks",
-      "purpose": "app.bsky.graph.defs#blocklist",
+      "purpose": "app.bsky.graph.defs#modlist",
       "uri": "record(3)",
       "viewer": Object {
         "blocked": "record(4)",
@@ -486,25 +497,58 @@ Object {
 
 exports[`pds views with blocking from block lists returns the contents of a list 1`] = `
 Object {
-  "cursor": "0000000000000::bafycid",
+  "cursor": "0000000000000__bafycid",
   "items": Array [
     Object {
       "subject": Object {
+        "associated": Object {
+          "chat": Object {
+            "allowIncoming": "none",
+          },
+        },
         "did": "user(2)",
+        "handle": "dan.test",
+        "labels": Array [],
+        "viewer": Object {
+          "blockedBy": false,
+          "muted": false,
+        },
+      },
+      "uri": "record(4)",
+    },
+    Object {
+      "subject": Object {
+        "did": "user(3)",
         "handle": "carol.test",
         "labels": Array [],
         "viewer": Object {
           "blockedBy": false,
           "blocking": "record(0)",
+          "blockingByList": Object {
+            "avatar": "https://bsky.public.url/img/avatar/plain/user(0)/cids(1)@jpeg",
+            "cid": "cids(0)",
+            "indexedAt": "1970-01-01T00:00:00.000Z",
+            "labels": Array [],
+            "listItemCount": 3,
+            "name": "alice blocks",
+            "purpose": "app.bsky.graph.defs#modlist",
+            "uri": "record(0)",
+            "viewer": Object {
+              "blocked": "record(1)",
+              "muted": false,
+            },
+          },
           "muted": false,
         },
       },
+      "uri": "record(5)",
     },
     Object {
       "subject": Object {
-        "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(1)@jpeg",
+        "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)@jpeg",
+        "createdAt": "1970-01-01T00:00:00.000Z",
         "description": "hi im bob label_me",
-        "did": "user(3)",
+        "did": "user(4)",
         "displayName": "bobby",
         "handle": "bob.test",
         "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -512,10 +556,24 @@ Object {
         "viewer": Object {
           "blockedBy": false,
           "blocking": "record(0)",
-          "following": "record(4)",
+          "blockingByList": Object {
+            "avatar": "https://bsky.public.url/img/avatar/plain/user(0)/cids(1)@jpeg",
+            "cid": "cids(0)",
+            "indexedAt": "1970-01-01T00:00:00.000Z",
+            "labels": Array [],
+            "listItemCount": 3,
+            "name": "alice blocks",
+            "purpose": "app.bsky.graph.defs#modlist",
+            "uri": "record(0)",
+            "viewer": Object {
+              "blocked": "record(1)",
+              "muted": false,
+            },
+          },
           "muted": false,
         },
       },
+      "uri": "record(6)",
     },
   ],
   "list": Object {
@@ -523,6 +581,7 @@ Object {
     "cid": "cids(0)",
     "creator": Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(0)/cids(1)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "its me!",
       "did": "user(1)",
       "displayName": "ali",
@@ -532,7 +591,6 @@ Object {
         Object {
           "cid": "cids(2)",
           "cts": "1970-01-01T00:00:00.000Z",
-          "neg": false,
           "src": "user(1)",
           "uri": "record(3)",
           "val": "self-label-a",
@@ -540,7 +598,6 @@ Object {
         Object {
           "cid": "cids(2)",
           "cts": "1970-01-01T00:00:00.000Z",
-          "neg": false,
           "src": "user(1)",
           "uri": "record(3)",
           "val": "self-label-b",
@@ -554,8 +611,10 @@ Object {
     },
     "description": "big list of blocks",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
+    "listItemCount": 3,
     "name": "alice blocks",
-    "purpose": "app.bsky.graph.defs#blocklist",
+    "purpose": "app.bsky.graph.defs#modlist",
     "uri": "record(0)",
     "viewer": Object {
       "blocked": "record(1)",

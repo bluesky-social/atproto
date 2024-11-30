@@ -1,16 +1,22 @@
-import AtpAgent from '@atproto/api'
-import { TestNetwork } from '@atproto/dev-env'
-import { forSnapshot, paginateAll, stripViewerFromPost } from '../_util'
-import { SeedClient } from '../seeds/client'
-import basicSeed from '../seeds/basic'
-import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
-import { isRecord } from '../../src/lexicon/types/app/bsky/feed/post'
+import { AtpAgent, AppBskyActorProfile, AppBskyFeedDefs } from '@atproto/api'
+import { TestNetwork, SeedClient, authorFeedSeed } from '@atproto/dev-env'
+import {
+  forSnapshot,
+  paginateAll,
+  stripViewer,
+  stripViewerFromPost,
+} from '../_util'
+import { ReplyRef, isRecord } from '../../src/lexicon/types/app/bsky/feed/post'
 import { isView as isEmbedRecordWithMedia } from '../../src/lexicon/types/app/bsky/embed/recordWithMedia'
 import { isView as isImageEmbed } from '../../src/lexicon/types/app/bsky/embed/images'
+import { isPostView } from '../../src/lexicon/types/app/bsky/feed/defs'
+import { uriToDid } from '../../src/util/uris'
+import { ids } from '../../src/lexicon/lexicons'
 
 describe('pds author feed views', () => {
   let network: TestNetwork
   let agent: AtpAgent
+  let pdsAgent: AtpAgent
   let sc: SeedClient
 
   // account dids, for convenience
@@ -18,20 +24,22 @@ describe('pds author feed views', () => {
   let bob: string
   let carol: string
   let dan: string
+  let eve: string
 
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_author_feed',
     })
     agent = network.bsky.getClient()
-    const pdsAgent = network.pds.getClient()
-    sc = new SeedClient(pdsAgent)
-    await basicSeed(sc)
+    pdsAgent = network.pds.getClient()
+    sc = network.getSeedClient()
+    await authorFeedSeed(sc)
     await network.processAll()
     alice = sc.dids.alice
     bob = sc.dids.bob
     carol = sc.dids.carol
     dan = sc.dids.dan
+    eve = sc.dids.eve
   })
 
   afterAll(async () => {
@@ -44,28 +52,48 @@ describe('pds author feed views', () => {
   it('fetches full author feeds for self (sorted, minimal viewer state).', async () => {
     const aliceForAlice = await agent.api.app.bsky.feed.getAuthorFeed(
       { actor: sc.accounts[alice].handle },
-      { headers: await network.serviceHeaders(alice) },
+      {
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyFeedGetAuthorFeed,
+        ),
+      },
     )
 
     expect(forSnapshot(aliceForAlice.data.feed)).toMatchSnapshot()
 
     const bobForBob = await agent.api.app.bsky.feed.getAuthorFeed(
       { actor: sc.accounts[bob].handle },
-      { headers: await network.serviceHeaders(bob) },
+      {
+        headers: await network.serviceHeaders(
+          bob,
+          ids.AppBskyFeedGetAuthorFeed,
+        ),
+      },
     )
 
     expect(forSnapshot(bobForBob.data.feed)).toMatchSnapshot()
 
     const carolForCarol = await agent.api.app.bsky.feed.getAuthorFeed(
       { actor: sc.accounts[carol].handle },
-      { headers: await network.serviceHeaders(carol) },
+      {
+        headers: await network.serviceHeaders(
+          carol,
+          ids.AppBskyFeedGetAuthorFeed,
+        ),
+      },
     )
 
     expect(forSnapshot(carolForCarol.data.feed)).toMatchSnapshot()
 
     const danForDan = await agent.api.app.bsky.feed.getAuthorFeed(
       { actor: sc.accounts[dan].handle },
-      { headers: await network.serviceHeaders(dan) },
+      {
+        headers: await network.serviceHeaders(
+          dan,
+          ids.AppBskyFeedGetAuthorFeed,
+        ),
+      },
     )
 
     expect(forSnapshot(danForDan.data.feed)).toMatchSnapshot()
@@ -74,7 +102,12 @@ describe('pds author feed views', () => {
   it("reflects fetching user's state in the feed.", async () => {
     const aliceForCarol = await agent.api.app.bsky.feed.getAuthorFeed(
       { actor: sc.accounts[alice].handle },
-      { headers: await network.serviceHeaders(carol) },
+      {
+        headers: await network.serviceHeaders(
+          carol,
+          ids.AppBskyFeedGetAuthorFeed,
+        ),
+      },
     )
 
     aliceForCarol.data.feed.forEach((postView) => {
@@ -95,7 +128,12 @@ describe('pds author feed views', () => {
           cursor,
           limit: 2,
         },
-        { headers: await network.serviceHeaders(dan) },
+        {
+          headers: await network.serviceHeaders(
+            dan,
+            ids.AppBskyFeedGetAuthorFeed,
+          ),
+        },
       )
       return res.data
     }
@@ -107,7 +145,12 @@ describe('pds author feed views', () => {
 
     const full = await agent.api.app.bsky.feed.getAuthorFeed(
       { actor: sc.accounts[alice].handle },
-      { headers: await network.serviceHeaders(dan) },
+      {
+        headers: await network.serviceHeaders(
+          dan,
+          ids.AppBskyFeedGetAuthorFeed,
+        ),
+      },
     )
 
     expect(full.data.feed.length).toEqual(4)
@@ -117,7 +160,12 @@ describe('pds author feed views', () => {
   it('fetches results unauthed.', async () => {
     const { data: authed } = await agent.api.app.bsky.feed.getAuthorFeed(
       { actor: sc.accounts[alice].handle },
-      { headers: await network.serviceHeaders(alice) },
+      {
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyFeedGetAuthorFeed,
+        ),
+      },
     )
     const { data: unauthed } = await agent.api.app.bsky.feed.getAuthorFeed({
       actor: sc.accounts[alice].handle,
@@ -133,6 +181,9 @@ describe('pds author feed views', () => {
           result.reply = {
             parent: stripViewerFromPost(item.reply.parent),
             root: stripViewerFromPost(item.reply.root),
+            grandparentAuthor:
+              item.reply.grandparentAuthor &&
+              stripViewer(item.reply.grandparentAuthor),
           }
         }
         return result
@@ -140,99 +191,95 @@ describe('pds author feed views', () => {
     )
   })
 
-  it('blocked by actor takedown.', async () => {
+  it('non-admins blocked by actor takedown.', async () => {
     const { data: preBlock } = await agent.api.app.bsky.feed.getAuthorFeed(
       { actor: alice },
-      { headers: await network.serviceHeaders(carol) },
+      {
+        headers: await network.serviceHeaders(
+          carol,
+          ids.AppBskyFeedGetAuthorFeed,
+        ),
+      },
     )
 
     expect(preBlock.feed.length).toBeGreaterThan(0)
 
-    const { data: action } =
-      await agent.api.com.atproto.admin.takeModerationAction(
-        {
-          action: TAKEDOWN,
-          subject: {
-            $type: 'com.atproto.admin.defs#repoRef',
-            did: alice,
-          },
-          createdBy: 'did:example:admin',
-          reason: 'Y',
-        },
-        {
-          encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
-        },
-      )
+    await network.bsky.ctx.dataplane.takedownActor({
+      did: alice,
+    })
 
-    const attempt = agent.api.app.bsky.feed.getAuthorFeed(
+    const attemptAsUser = agent.api.app.bsky.feed.getAuthorFeed(
       { actor: alice },
-      { headers: await network.serviceHeaders(carol) },
+      {
+        headers: await network.serviceHeaders(
+          carol,
+          ids.AppBskyFeedGetAuthorFeed,
+        ),
+      },
     )
-    await expect(attempt).rejects.toThrow('Profile not found')
+    await expect(attemptAsUser).rejects.toThrow('Profile not found')
+
+    const attemptAsAdmin = await agent.api.app.bsky.feed.getAuthorFeed(
+      { actor: alice },
+      { headers: network.bsky.adminAuthHeaders() },
+    )
+    expect(attemptAsAdmin.data.feed.length).toEqual(preBlock.feed.length)
 
     // Cleanup
-    await agent.api.com.atproto.admin.reverseModerationAction(
-      {
-        id: action.id,
-        createdBy: 'did:example:admin',
-        reason: 'Y',
-      },
-      {
-        encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders(),
-      },
-    )
+    await network.bsky.ctx.dataplane.untakedownActor({
+      did: alice,
+    })
   })
 
   it('blocked by record takedown.', async () => {
     const { data: preBlock } = await agent.api.app.bsky.feed.getAuthorFeed(
       { actor: alice },
-      { headers: await network.serviceHeaders(carol) },
+      {
+        headers: await network.serviceHeaders(
+          carol,
+          ids.AppBskyFeedGetAuthorFeed,
+        ),
+      },
     )
 
     expect(preBlock.feed.length).toBeGreaterThan(0)
 
     const post = preBlock.feed[0].post
 
-    const { data: action } =
-      await agent.api.com.atproto.admin.takeModerationAction(
-        {
-          action: TAKEDOWN,
-          subject: {
-            $type: 'com.atproto.repo.strongRef',
-            uri: post.uri,
-            cid: post.cid,
+    await network.bsky.ctx.dataplane.takedownRecord({
+      recordUri: post.uri,
+    })
+
+    const [{ data: postBlockAsUser }, { data: postBlockAsAdmin }] =
+      await Promise.all([
+        agent.api.app.bsky.feed.getAuthorFeed(
+          { actor: alice },
+          {
+            headers: await network.serviceHeaders(
+              carol,
+              ids.AppBskyFeedGetAuthorFeed,
+            ),
           },
-          createdBy: 'did:example:admin',
-          reason: 'Y',
-        },
-        {
-          encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
-        },
-      )
+        ),
+        agent.api.app.bsky.feed.getAuthorFeed(
+          { actor: alice },
+          { headers: network.bsky.adminAuthHeaders() },
+        ),
+      ])
 
-    const { data: postBlock } = await agent.api.app.bsky.feed.getAuthorFeed(
-      { actor: alice },
-      { headers: await network.serviceHeaders(carol) },
+    expect(postBlockAsUser.feed.length).toEqual(preBlock.feed.length - 1)
+    expect(postBlockAsUser.feed.map((item) => item.post.uri)).not.toContain(
+      post.uri,
     )
-
-    expect(postBlock.feed.length).toEqual(preBlock.feed.length - 1)
-    expect(postBlock.feed.map((item) => item.post.uri)).not.toContain(post.uri)
+    expect(postBlockAsAdmin.feed.length).toEqual(preBlock.feed.length)
+    expect(postBlockAsAdmin.feed.map((item) => item.post.uri)).toContain(
+      post.uri,
+    )
 
     // Cleanup
-    await agent.api.com.atproto.admin.reverseModerationAction(
-      {
-        id: action.id,
-        createdBy: 'did:example:admin',
-        reason: 'Y',
-      },
-      {
-        encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders(),
-      },
-    )
+    await network.bsky.ctx.dataplane.untakedownRecord({
+      recordUri: post.uri,
+    })
   })
 
   it('can filter by posts_with_media', async () => {
@@ -301,4 +348,221 @@ describe('pds author feed views', () => {
       }),
     ).toBeTruthy()
   })
+
+  it('posts_and_author_threads includes self-replies', async () => {
+    const { data: eveFeed } = await agent.api.app.bsky.feed.getAuthorFeed({
+      actor: eve,
+      filter: 'posts_and_author_threads',
+    })
+
+    expect(eveFeed.feed.length).toEqual(6)
+    expect(
+      eveFeed.feed.some(({ post }) => {
+        const replyByEve =
+          isRecord(post.record) && post.record.reply && post.author.did === eve
+        return replyByEve
+      }),
+    ).toBeTruthy()
+    // does not include eve's replies to fred, even within her own thread.
+    expect(
+      eveFeed.feed.every(({ post, reply }) => {
+        if (!post || !isRecord(post.record) || !post.record.reply) {
+          return true // not a reply
+        }
+        const replyToEve = isReplyTo(post.record.reply, eve)
+        const replyToReplyByEve =
+          reply &&
+          isPostView(reply.parent) &&
+          isRecord(reply.parent.record) &&
+          (!reply.parent.record.reply ||
+            isReplyTo(reply.parent.record.reply, eve))
+        return replyToEve && replyToReplyByEve
+      }),
+    ).toBeTruthy()
+    // reposts are preserved
+    expect(
+      eveFeed.feed.some(({ post, reason }) => {
+        const repostOfOther =
+          reason && isRecord(post.record) && post.author.did !== eve
+        return repostOfOther
+      }),
+    ).toBeTruthy()
+  })
+
+  describe('pins', () => {
+    async function createAndPinPost() {
+      const post = await sc.post(alice, 'pinned post')
+      await network.processAll()
+
+      const profile = await pdsAgent.com.atproto.repo.getRecord({
+        repo: alice,
+        collection: 'app.bsky.actor.profile',
+        rkey: 'self',
+      })
+
+      if (!AppBskyActorProfile.isRecord(profile.data.value)) {
+        throw new Error('')
+      }
+
+      const newProfile: AppBskyActorProfile.Record = {
+        ...profile,
+        pinnedPost: {
+          uri: post.ref.uriStr,
+          cid: post.ref.cid.toString(),
+        },
+      }
+
+      await sc.updateProfile(alice, newProfile)
+
+      await network.processAll()
+
+      return post
+    }
+
+    it('params.includePins = true, pin is in first page of results', async () => {
+      await sc.post(alice, 'not pinned post')
+      const post = await createAndPinPost()
+      await sc.post(alice, 'not pinned post')
+
+      const { data } = await agent.api.app.bsky.feed.getAuthorFeed(
+        { actor: sc.accounts[alice].handle, includePins: true },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyFeedGetAuthorFeed,
+          ),
+        },
+      )
+
+      const pinnedPosts = data.feed.filter(
+        (item) => item.post.uri === post.ref.uriStr,
+      )
+      expect(pinnedPosts.length).toEqual(1)
+
+      const pinnedPost = data.feed.at(0)
+      expect(pinnedPost?.post?.uri).toEqual(post.ref.uriStr)
+      expect(pinnedPost?.post?.viewer?.pinned).toBeTruthy()
+      expect(AppBskyFeedDefs.isReasonPin(pinnedPost?.reason)).toBeTruthy()
+
+      const notPinnedPost = data.feed.at(1)
+      expect(notPinnedPost?.post?.viewer?.pinned).toBeFalsy()
+      expect(forSnapshot(data.feed)).toMatchSnapshot()
+    })
+
+    it('params.includePins = true, pin is NOT in first page of results', async () => {
+      const post = await createAndPinPost()
+      await sc.post(alice, 'not pinned post')
+      await sc.post(alice, 'not pinned post')
+      await network.processAll()
+      const { data: page1 } = await agent.api.app.bsky.feed.getAuthorFeed(
+        { actor: sc.accounts[alice].handle, includePins: true, limit: 2 },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyFeedGetAuthorFeed,
+          ),
+        },
+      )
+
+      // exists with `reason`
+      const pinnedPost = page1.feed.find(
+        (item) => item.post.uri === post.ref.uriStr,
+      )
+      expect(pinnedPost?.post?.uri).toEqual(post.ref.uriStr)
+      expect(pinnedPost?.post?.viewer?.pinned).toBeTruthy()
+      expect(AppBskyFeedDefs.isReasonPin(pinnedPost?.reason)).toBeTruthy()
+      expect(forSnapshot(page1.feed)).toMatchSnapshot()
+
+      const { data: page2 } = await agent.api.app.bsky.feed.getAuthorFeed(
+        {
+          actor: sc.accounts[alice].handle,
+          includePins: true,
+          cursor: page1.cursor,
+        },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyFeedGetAuthorFeed,
+          ),
+        },
+      )
+
+      // exists without `reason`
+      const laterPinnedPost = page2.feed.find(
+        (item) => item.post.uri === post.ref.uriStr,
+      )
+      expect(laterPinnedPost?.post?.uri).toEqual(post.ref.uriStr)
+      expect(laterPinnedPost?.post?.viewer?.pinned).toBeTruthy()
+      expect(AppBskyFeedDefs.isReasonPin(laterPinnedPost?.reason)).toBeFalsy()
+      expect(forSnapshot(page2.feed)).toMatchSnapshot()
+    })
+
+    it('params.includePins = false', async () => {
+      const post = await createAndPinPost()
+      const { data } = await agent.api.app.bsky.feed.getAuthorFeed(
+        { actor: sc.accounts[alice].handle },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyFeedGetAuthorFeed,
+          ),
+        },
+      )
+
+      // exists without `reason`
+      const pinnedPost = data.feed.find(
+        (item) => item.post.uri === post.ref.uriStr,
+      )
+      expect(AppBskyFeedDefs.isReasonPin(pinnedPost?.reason)).toBeFalsy()
+      expect(forSnapshot(data.feed)).toMatchSnapshot()
+    })
+
+    it("cannot pin someone else's post", async () => {
+      const bobPost = await sc.post(bob, 'pinned post')
+      await sc.post(alice, 'not pinned post')
+      await network.processAll()
+
+      const profile = await pdsAgent.com.atproto.repo.getRecord({
+        repo: alice,
+        collection: 'app.bsky.actor.profile',
+        rkey: 'self',
+      })
+
+      if (!AppBskyActorProfile.isRecord(profile.data.value)) {
+        throw new Error('')
+      }
+
+      const newProfile: AppBskyActorProfile.Record = {
+        ...profile,
+        pinnedPost: {
+          uri: bobPost.ref.uriStr,
+          cid: bobPost.ref.cid.toString(),
+        },
+      }
+
+      await sc.updateProfile(alice, newProfile)
+
+      await network.processAll()
+
+      const { data } = await agent.api.app.bsky.feed.getAuthorFeed(
+        { actor: sc.accounts[alice].handle },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyFeedGetAuthorFeed,
+          ),
+        },
+      )
+
+      const pinnedPost = data.feed.find(
+        (item) => item.post.uri === bobPost.ref.uriStr,
+      )
+      expect(pinnedPost).toBeUndefined()
+      expect(forSnapshot(data.feed)).toMatchSnapshot()
+    })
+  })
 })
+
+function isReplyTo(reply: ReplyRef, did: string) {
+  return uriToDid(reply.root.uri) === did && uriToDid(reply.parent.uri) === did
+}

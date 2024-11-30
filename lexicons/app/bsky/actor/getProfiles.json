@@ -4,6 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
+      "description": "Get detailed profile views of multiple actors.",
       "parameters": {
         "type": "params",
         "required": ["actors"],

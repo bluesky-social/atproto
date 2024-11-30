@@ -14,7 +14,7 @@ Array [
   },
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
-    "id": 2,
+    "id": 3,
     "reason": "impersonation",
     "reasonType": "com.atproto.moderation.defs#reasonOther",
     "reportedBy": "user(2)",
@@ -26,133 +26,125 @@ Array [
 ]
 `;
 
-exports[`proxies admin requests fetches a list of actions. 1`] = `
-Object {
-  "actions": Array [
-    Object {
-      "action": "com.atproto.admin.defs#acknowledge",
-      "createdAt": "1970-01-01T00:00:00.000Z",
-      "createdBy": "did:example:admin",
-      "id": 3,
-      "reason": "Y",
-      "resolvedReportIds": Array [],
-      "reversal": Object {
-        "createdAt": "1970-01-01T00:00:00.000Z",
-        "createdBy": "did:example:admin",
-        "reason": "X",
-      },
-      "subject": Object {
-        "$type": "com.atproto.admin.defs#repoRef",
-        "did": "user(0)",
-      },
-      "subjectBlobCids": Array [],
-    },
-    Object {
-      "action": "com.atproto.admin.defs#flag",
-      "createdAt": "1970-01-01T00:00:00.000Z",
-      "createdBy": "did:example:admin",
-      "id": 2,
-      "reason": "Y",
-      "resolvedReportIds": Array [
-        2,
-        1,
-      ],
-      "subject": Object {
-        "$type": "com.atproto.repo.strongRef",
-        "cid": "cids(0)",
-        "uri": "record(0)",
-      },
-      "subjectBlobCids": Array [],
-    },
-  ],
-  "cursor": "2",
-}
-`;
-
-exports[`proxies admin requests fetches a list of reports. 1`] = `
-Object {
-  "cursor": "2",
-  "reports": Array [
-    Object {
-      "createdAt": "1970-01-01T00:00:00.000Z",
-      "id": 1,
-      "reasonType": "com.atproto.moderation.defs#reasonSpam",
-      "reportedBy": "user(0)",
-      "resolvedByActionIds": Array [
-        2,
-      ],
-      "subject": Object {
-        "$type": "com.atproto.admin.defs#repoRef",
-        "did": "user(1)",
-      },
-      "subjectRepoHandle": "bob.test",
-    },
-    Object {
-      "createdAt": "1970-01-01T00:00:00.000Z",
-      "id": 2,
-      "reason": "impersonation",
-      "reasonType": "com.atproto.moderation.defs#reasonOther",
-      "reportedBy": "user(2)",
-      "resolvedByActionIds": Array [
-        2,
-      ],
-      "subject": Object {
-        "$type": "com.atproto.admin.defs#repoRef",
-        "did": "user(1)",
-      },
-      "subjectRepoHandle": "bob.test",
-    },
-  ],
-}
-`;
-
-exports[`proxies admin requests fetches action details. 1`] = `
-Object {
-  "action": "com.atproto.admin.defs#acknowledge",
-  "createdAt": "1970-01-01T00:00:00.000Z",
-  "createdBy": "did:example:admin",
-  "id": 3,
-  "reason": "Y",
-  "resolvedReports": Array [],
-  "reversal": Object {
+exports[`proxies admin requests fetches a list of events. 1`] = `
+Array [
+  Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
-    "createdBy": "did:example:admin",
-    "reason": "X",
+    "createdBy": "user(1)",
+    "creatorHandle": "testmod.test",
+    "event": Object {
+      "$type": "tools.ozone.moderation.defs#modEventAcknowledge",
+    },
+    "id": 6,
+    "subject": Object {
+      "$type": "com.atproto.admin.defs#repoRef",
+      "did": "user(0)",
+    },
+    "subjectBlobCids": Array [],
+    "subjectHandle": "bob.test",
   },
+  Object {
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "createdBy": "user(2)",
+    "creatorHandle": "carol.test",
+    "event": Object {
+      "$type": "tools.ozone.moderation.defs#modEventReport",
+      "comment": "impersonation",
+      "isReporterMuted": false,
+      "reportType": "com.atproto.moderation.defs#reasonOther",
+    },
+    "id": 3,
+    "subject": Object {
+      "$type": "com.atproto.admin.defs#repoRef",
+      "did": "user(0)",
+    },
+    "subjectBlobCids": Array [],
+    "subjectHandle": "bob.test",
+  },
+  Object {
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "createdBy": "user(3)",
+    "creatorHandle": "mod-authority.test",
+    "event": Object {
+      "$type": "tools.ozone.moderation.defs#modEventTag",
+      "add": Array [
+        "lang:en",
+        "lang:i",
+      ],
+      "remove": Array [],
+    },
+    "id": 2,
+    "subject": Object {
+      "$type": "com.atproto.admin.defs#repoRef",
+      "did": "user(0)",
+    },
+    "subjectBlobCids": Array [],
+    "subjectHandle": "bob.test",
+  },
+  Object {
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "createdBy": "user(4)",
+    "creatorHandle": "alice.test",
+    "event": Object {
+      "$type": "tools.ozone.moderation.defs#modEventReport",
+      "isReporterMuted": false,
+      "reportType": "com.atproto.moderation.defs#reasonSpam",
+    },
+    "id": 1,
+    "subject": Object {
+      "$type": "com.atproto.admin.defs#repoRef",
+      "did": "user(0)",
+    },
+    "subjectBlobCids": Array [],
+    "subjectHandle": "bob.test",
+  },
+]
+`;
+
+exports[`proxies admin requests fetches event details. 1`] = `
+Object {
+  "createdAt": "1970-01-01T00:00:00.000Z",
+  "createdBy": "user(2)",
+  "event": Object {
+    "$type": "tools.ozone.moderation.defs#modEventTag",
+    "add": Array [
+      "lang:en",
+      "lang:i",
+    ],
+    "remove": Array [],
+  },
+  "id": 2,
   "subject": Object {
     "$type": "com.atproto.admin.defs#repoView",
     "did": "user(0)",
-    "email": "bob@test.com",
     "handle": "bob.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
-    "invitedBy": Object {
-      "available": 10,
-      "code": "invite-code",
-      "createdAt": "1970-01-01T00:00:00.000Z",
-      "createdBy": "admin",
-      "disabled": false,
-      "forAccount": "admin",
-      "uses": Array [
-        Object {
-          "usedAt": "1970-01-01T00:00:00.000Z",
-          "usedBy": "user(1)",
+    "moderation": Object {
+      "subjectStatus": Object {
+        "createdAt": "1970-01-01T00:00:00.000Z",
+        "hosting": Object {
+          "$type": "tools.ozone.moderation.defs#accountHosting",
+          "status": "unknown",
         },
-        Object {
-          "usedAt": "1970-01-01T00:00:00.000Z",
-          "usedBy": "user(0)",
+        "id": 1,
+        "lastReportedAt": "1970-01-01T00:00:00.000Z",
+        "lastReviewedAt": "1970-01-01T00:00:00.000Z",
+        "lastReviewedBy": "user(1)",
+        "reviewState": "tools.ozone.moderation.defs#reviewClosed",
+        "subject": Object {
+          "$type": "com.atproto.admin.defs#repoRef",
+          "did": "user(0)",
         },
-        Object {
-          "usedAt": "1970-01-01T00:00:00.000Z",
-          "usedBy": "user(2)",
-        },
-        Object {
-          "usedAt": "1970-01-01T00:00:00.000Z",
-          "usedBy": "user(3)",
-        },
-      ],
+        "subjectBlobCids": Array [],
+        "subjectRepoHandle": "bob.test",
+        "tags": Array [
+          "lang:en",
+          "lang:i",
+        ],
+        "takendown": false,
+        "updatedAt": "1970-01-01T00:00:00.000Z",
+      },
     },
-    "invitesDisabled": true,
-    "moderation": Object {},
     "relatedRecords": Array [
       Object {
         "$type": "app.bsky.actor.profile",
@@ -164,24 +156,56 @@ Object {
           },
           "size": 3976,
         },
+        "createdAt": "1970-01-01T00:00:00.000Z",
         "description": "hi im bob label_me",
         "displayName": "bobby",
-        "labels": Object {
-          "$type": "com.atproto.label.defs#selfLabels",
-          "values": Array [
-            Object {
-              "val": "self-label-a",
-            },
-            Object {
-              "val": "self-label-b",
-            },
-          ],
-        },
       },
     ],
   },
+  "subjectBlobCids": Array [],
   "subjectBlobs": Array [],
 }
+`;
+
+exports[`proxies admin requests fetches moderation events. 1`] = `
+Array [
+  Object {
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "createdBy": "user(0)",
+    "creatorHandle": "mod-authority.test",
+    "event": Object {
+      "$type": "tools.ozone.moderation.defs#modEventTag",
+      "add": Array [
+        "lang:en",
+      ],
+      "remove": Array [],
+    },
+    "id": 5,
+    "subject": Object {
+      "$type": "com.atproto.repo.strongRef",
+      "cid": "cids(0)",
+      "uri": "record(0)",
+    },
+    "subjectBlobCids": Array [],
+    "subjectHandle": "bob.test",
+  },
+  Object {
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "createdBy": "user(1)",
+    "creatorHandle": "testmod.test",
+    "event": Object {
+      "$type": "tools.ozone.moderation.defs#modEventAcknowledge",
+    },
+    "id": 4,
+    "subject": Object {
+      "$type": "com.atproto.repo.strongRef",
+      "cid": "cids(0)",
+      "uri": "record(0)",
+    },
+    "subjectBlobCids": Array [],
+    "subjectHandle": "bob.test",
+  },
+]
 `;
 
 exports[`proxies admin requests fetches record details. 1`] = `
@@ -192,30 +216,29 @@ Object {
   "indexedAt": "1970-01-01T00:00:00.000Z",
   "labels": Array [],
   "moderation": Object {
-    "actions": Array [
-      Object {
-        "action": "com.atproto.admin.defs#flag",
-        "createdAt": "1970-01-01T00:00:00.000Z",
-        "createdBy": "did:example:admin",
-        "id": 2,
-        "reason": "Y",
-        "resolvedReportIds": Array [
-          2,
-          1,
-        ],
-        "subject": Object {
-          "$type": "com.atproto.repo.strongRef",
-          "cid": "cids(0)",
-          "uri": "record(0)",
-        },
-        "subjectBlobCids": Array [],
+    "subjectStatus": Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "hosting": Object {
+        "$type": "tools.ozone.moderation.defs#recordHosting",
+        "status": "unknown",
       },
-    ],
-    "currentAction": Object {
-      "action": "com.atproto.admin.defs#flag",
-      "id": 2,
+      "id": 4,
+      "lastReviewedAt": "1970-01-01T00:00:00.000Z",
+      "lastReviewedBy": "user(1)",
+      "reviewState": "tools.ozone.moderation.defs#reviewClosed",
+      "subject": Object {
+        "$type": "com.atproto.repo.strongRef",
+        "cid": "cids(0)",
+        "uri": "record(0)",
+      },
+      "subjectBlobCids": Array [],
+      "subjectRepoHandle": "bob.test",
+      "tags": Array [
+        "lang:en",
+      ],
+      "takendown": false,
+      "updatedAt": "1970-01-01T00:00:00.000Z",
     },
-    "reports": Array [],
   },
   "repo": Object {
     "did": "user(0)",
@@ -236,23 +259,47 @@ Object {
         },
         Object {
           "usedAt": "1970-01-01T00:00:00.000Z",
-          "usedBy": "user(0)",
-        },
-        Object {
-          "usedAt": "1970-01-01T00:00:00.000Z",
           "usedBy": "user(2)",
         },
         Object {
           "usedAt": "1970-01-01T00:00:00.000Z",
           "usedBy": "user(3)",
         },
+        Object {
+          "usedAt": "1970-01-01T00:00:00.000Z",
+          "usedBy": "user(0)",
+        },
+        Object {
+          "usedAt": "1970-01-01T00:00:00.000Z",
+          "usedBy": "user(4)",
+        },
       ],
     },
     "invitesDisabled": true,
     "moderation": Object {
-      "currentAction": Object {
-        "action": "com.atproto.admin.defs#acknowledge",
-        "id": 3,
+      "subjectStatus": Object {
+        "createdAt": "1970-01-01T00:00:00.000Z",
+        "hosting": Object {
+          "$type": "tools.ozone.moderation.defs#accountHosting",
+          "status": "unknown",
+        },
+        "id": 1,
+        "lastReportedAt": "1970-01-01T00:00:00.000Z",
+        "lastReviewedAt": "1970-01-01T00:00:00.000Z",
+        "lastReviewedBy": "user(1)",
+        "reviewState": "tools.ozone.moderation.defs#reviewClosed",
+        "subject": Object {
+          "$type": "com.atproto.admin.defs#repoRef",
+          "did": "user(0)",
+        },
+        "subjectBlobCids": Array [],
+        "subjectRepoHandle": "bob.test",
+        "tags": Array [
+          "lang:en",
+          "lang:i",
+        ],
+        "takendown": false,
+        "updatedAt": "1970-01-01T00:00:00.000Z",
       },
     },
     "relatedRecords": Array [
@@ -266,19 +313,9 @@ Object {
           },
           "size": 3976,
         },
+        "createdAt": "1970-01-01T00:00:00.000Z",
         "description": "hi im bob label_me",
         "displayName": "bobby",
-        "labels": Object {
-          "$type": "com.atproto.label.defs#selfLabels",
-          "values": Array [
-            Object {
-              "val": "self-label-a",
-            },
-            Object {
-              "val": "self-label-b",
-            },
-          ],
-        },
       },
     ],
   },
@@ -314,126 +351,8 @@ Object {
   "invites": Array [],
   "invitesDisabled": false,
   "labels": Array [],
-  "moderation": Object {
-    "actions": Array [],
-    "reports": Array [],
-  },
+  "moderation": Object {},
   "relatedRecords": Array [],
-}
-`;
-
-exports[`proxies admin requests fetches report details. 1`] = `
-Object {
-  "createdAt": "1970-01-01T00:00:00.000Z",
-  "id": 1,
-  "reasonType": "com.atproto.moderation.defs#reasonSpam",
-  "reportedBy": "user(0)",
-  "resolvedByActions": Array [
-    Object {
-      "action": "com.atproto.admin.defs#flag",
-      "createdAt": "1970-01-01T00:00:00.000Z",
-      "createdBy": "did:example:admin",
-      "id": 2,
-      "reason": "Y",
-      "resolvedReportIds": Array [
-        2,
-        1,
-      ],
-      "subject": Object {
-        "$type": "com.atproto.repo.strongRef",
-        "cid": "cids(1)",
-        "uri": "record(0)",
-      },
-      "subjectBlobCids": Array [],
-    },
-  ],
-  "subject": Object {
-    "$type": "com.atproto.admin.defs#repoView",
-    "did": "user(1)",
-    "email": "bob@test.com",
-    "handle": "bob.test",
-    "indexedAt": "1970-01-01T00:00:00.000Z",
-    "invitedBy": Object {
-      "available": 10,
-      "code": "invite-code",
-      "createdAt": "1970-01-01T00:00:00.000Z",
-      "createdBy": "admin",
-      "disabled": false,
-      "forAccount": "admin",
-      "uses": Array [
-        Object {
-          "usedAt": "1970-01-01T00:00:00.000Z",
-          "usedBy": "user(0)",
-        },
-        Object {
-          "usedAt": "1970-01-01T00:00:00.000Z",
-          "usedBy": "user(1)",
-        },
-        Object {
-          "usedAt": "1970-01-01T00:00:00.000Z",
-          "usedBy": "user(2)",
-        },
-        Object {
-          "usedAt": "1970-01-01T00:00:00.000Z",
-          "usedBy": "user(3)",
-        },
-      ],
-    },
-    "invitesDisabled": true,
-    "moderation": Object {
-      "currentAction": Object {
-        "action": "com.atproto.admin.defs#acknowledge",
-        "id": 3,
-      },
-    },
-    "relatedRecords": Array [
-      Object {
-        "$type": "app.bsky.actor.profile",
-        "avatar": Object {
-          "$type": "blob",
-          "mimeType": "image/jpeg",
-          "ref": Object {
-            "$link": "cids(0)",
-          },
-          "size": 3976,
-        },
-        "description": "hi im bob label_me",
-        "displayName": "bobby",
-        "labels": Object {
-          "$type": "com.atproto.label.defs#selfLabels",
-          "values": Array [
-            Object {
-              "val": "self-label-a",
-            },
-            Object {
-              "val": "self-label-b",
-            },
-          ],
-        },
-      },
-    ],
-  },
-}
-`;
-
-exports[`proxies admin requests reverses action. 1`] = `
-Object {
-  "action": "com.atproto.admin.defs#acknowledge",
-  "createdAt": "1970-01-01T00:00:00.000Z",
-  "createdBy": "did:example:admin",
-  "id": 3,
-  "reason": "Y",
-  "resolvedReportIds": Array [],
-  "reversal": Object {
-    "createdAt": "1970-01-01T00:00:00.000Z",
-    "createdBy": "did:example:admin",
-    "reason": "X",
-  },
-  "subject": Object {
-    "$type": "com.atproto.admin.defs#repoRef",
-    "did": "user(0)",
-  },
-  "subjectBlobCids": Array [],
 }
 `;
 
@@ -455,6 +374,7 @@ Array [
           },
           "size": 3976,
         },
+        "createdAt": "1970-01-01T00:00:00.000Z",
         "description": "its me!",
         "displayName": "ali",
         "labels": Object {
@@ -476,12 +396,12 @@ Array [
 
 exports[`proxies admin requests takes actions and resolves reports 1`] = `
 Object {
-  "action": "com.atproto.admin.defs#flag",
   "createdAt": "1970-01-01T00:00:00.000Z",
-  "createdBy": "did:example:admin",
-  "id": 2,
-  "reason": "Y",
-  "resolvedReportIds": Array [],
+  "createdBy": "user(0)",
+  "event": Object {
+    "$type": "tools.ozone.moderation.defs#modEventAcknowledge",
+  },
+  "id": 4,
   "subject": Object {
     "$type": "com.atproto.repo.strongRef",
     "cid": "cids(0)",
@@ -493,35 +413,15 @@ Object {
 
 exports[`proxies admin requests takes actions and resolves reports 2`] = `
 Object {
-  "action": "com.atproto.admin.defs#acknowledge",
   "createdAt": "1970-01-01T00:00:00.000Z",
-  "createdBy": "did:example:admin",
-  "id": 3,
-  "reason": "Y",
-  "resolvedReportIds": Array [],
+  "createdBy": "user(1)",
+  "event": Object {
+    "$type": "tools.ozone.moderation.defs#modEventAcknowledge",
+  },
+  "id": 6,
   "subject": Object {
     "$type": "com.atproto.admin.defs#repoRef",
     "did": "user(0)",
-  },
-  "subjectBlobCids": Array [],
-}
-`;
-
-exports[`proxies admin requests takes actions and resolves reports 3`] = `
-Object {
-  "action": "com.atproto.admin.defs#flag",
-  "createdAt": "1970-01-01T00:00:00.000Z",
-  "createdBy": "did:example:admin",
-  "id": 2,
-  "reason": "Y",
-  "resolvedReportIds": Array [
-    2,
-    1,
-  ],
-  "subject": Object {
-    "$type": "com.atproto.repo.strongRef",
-    "cid": "cids(0)",
-    "uri": "record(0)",
   },
   "subjectBlobCids": Array [],
 }

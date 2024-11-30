@@ -6,13 +6,13 @@ import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
-import { HandlerAuth } from '@atproto/xrpc-server'
+import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 
 export interface QueryParams {}
 
 export interface InputSchema {
   account: string
-  /** Additionally add a note describing why the invites were disabled */
+  /** Optional reason for disabled invites. */
   note?: string
   [k: string]: unknown
 }

@@ -4,6 +4,7 @@ import {
   Repo,
   RepoContents,
   RepoVerificationError,
+  getAndParseRecord,
   readCarWithRoot,
 } from '../src'
 import { MemoryBlockstore } from '../src/storage'
@@ -47,7 +48,8 @@ describe('Repo Sync', () => {
     const contentsFromOps: RepoContents = {}
     for (const write of verified.creates) {
       contentsFromOps[write.collection] ??= {}
-      contentsFromOps[write.collection][write.rkey] = write.record
+      const parsed = await getAndParseRecord(car.blocks, write.cid)
+      contentsFromOps[write.collection][write.rkey] = parsed.record
     }
     expect(contentsFromOps).toEqual(repoData)
   })

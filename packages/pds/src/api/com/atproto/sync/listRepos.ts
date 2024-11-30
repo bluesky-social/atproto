@@ -2,25 +2,25 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { Cursor, GenericKeyset, paginate } from '../../../../db/pagination'
-import { notSoftDeletedClause } from '../../../../db/util'
+import { formatAccountStatus } from '../../../../account-manager'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.listRepos(async ({ params }) => {
     const { limit, cursor } = params
-    const { ref } = ctx.db.db.dynamic
-    let builder = ctx.db.db
-      .selectFrom('user_account')
-      .innerJoin('repo_root', 'repo_root.did', 'user_account.did')
-      .where(notSoftDeletedClause(ref('repo_root')))
+    const db = ctx.accountManager.db
+    const { ref } = db.db.dynamic
+    let builder = db.db
+      .selectFrom('actor')
+      .innerJoin('repo_root', 'repo_root.did', 'actor.did')
       .select([
-        'user_account.did as did',
-        'repo_root.root as head',
-        'user_account.createdAt as createdAt',
+        'actor.did as did',
+        'repo_root.cid as head',
+        'repo_root.rev as rev',
+        'actor.createdAt as createdAt',
+        'actor.deactivatedAt as deactivatedAt',
+        'actor.takedownRef as takedownRef',
       ])
-    const keyset = new TimeDidKeyset(
-      ref('user_account.createdAt'),
-      ref('user_account.did'),
-    )
+    const keyset = new TimeDidKeyset(ref('actor.createdAt'), ref('actor.did'))
     builder = paginate(builder, {
       limit,
       cursor,
@@ -29,7 +29,16 @@ export default function (server: Server, ctx: AppContext) {
       tryIndex: true,
     })
     const res = await builder.execute()
-    const repos = res.map((row) => ({ did: row.did, head: row.head }))
+    const repos = res.map((row) => {
+      const { active, status } = formatAccountStatus(row)
+      return {
+        did: row.did,
+        head: row.head,
+        rev: row.rev ?? '',
+        active,
+        status,
+      }
+    })
     return {
       encoding: 'application/json',
       body: {

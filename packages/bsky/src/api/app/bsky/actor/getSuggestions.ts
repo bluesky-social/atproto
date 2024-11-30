@@ -1,13 +1,18 @@
-import { mapDefined } from '@atproto/common'
+import { mapDefined, noUndefinedVals } from '@atproto/common'
 import AppContext from '../../../../context'
-import { Database } from '../../../../db'
-import { Actor } from '../../../../db/tables/actor'
-import { notSoftDeletedClause } from '../../../../db/util'
 import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/actor/getSuggestions'
 import { createPipeline } from '../../../../pipeline'
-import { ActorInfoMap, ActorService } from '../../../../services/actor'
-import { BlockAndMuteState, GraphService } from '../../../../services/graph'
+import {
+  HydrateCtx,
+  HydrationState,
+  Hydrator,
+} from '../../../../hydration/hydrator'
+import { Views } from '../../../../views'
+import { DataPlaneClient } from '../../../../data-plane'
+import { parseString } from '../../../../hydration/util'
+import { resHeaders } from '../../../util'
+import { AtpAgent } from '@atproto/api'
 
 export default function (server: Server, ctx: AppContext) {
   const getSuggestions = createPipeline(
@@ -17,110 +22,131 @@ export default function (server: Server, ctx: AppContext) {
     presentation,
   )
   server.app.bsky.actor.getSuggestions({
-    auth: ctx.authOptionalVerifier,
-    handler: async ({ params, auth }) => {
-      const db = ctx.db.getReplica()
-      const actorService = ctx.services.actor(db)
-      const graphService = ctx.services.graph(db)
-      const viewer = auth.credentials.did
-
-      const result = await getSuggestions(
-        { ...params, viewer },
-        { db, actorService, graphService },
+    auth: ctx.authVerifier.standardOptional,
+    handler: async ({ params, auth, req }) => {
+      const viewer = auth.credentials.iss
+      const labelers = ctx.reqLabelers(req)
+      const hydrateCtx = await ctx.hydrator.createContext({ viewer, labelers })
+      const headers = noUndefinedVals({
+        'accept-language': req.headers['accept-language'],
+        'x-bsky-topics': Array.isArray(req.headers['x-bsky-topics'])
+          ? req.headers['x-bsky-topics'].join(',')
+          : req.headers['x-bsky-topics'],
+      })
+      const { resHeaders: resultHeaders, ...result } = await getSuggestions(
+        { ...params, hydrateCtx, headers },
+        ctx,
       )
-
+      const suggestionsResHeaders = noUndefinedVals({
+        'content-language': resultHeaders?.['content-language'],
+      })
       return {
         encoding: 'application/json',
         body: result,
+        headers: {
+          ...suggestionsResHeaders,
+          ...resHeaders({ labelers: hydrateCtx.labelers }),
+        },
       }
     },
   })
 }
 
-const skeleton = async (
-  params: Params,
-  ctx: Context,
-): Promise<SkeletonState> => {
-  const { db } = ctx
-  const { limit, cursor, viewer } = params
-  const { ref } = db.db.dynamic
-  let suggestionsQb = db.db
-    .selectFrom('suggested_follow')
-    .innerJoin('actor', 'actor.did', 'suggested_follow.did')
-    .innerJoin('profile_agg', 'profile_agg.did', 'actor.did')
-    .where(notSoftDeletedClause(ref('actor')))
-    .where('suggested_follow.did', '!=', viewer ?? '')
-    .whereNotExists((qb) =>
-      qb
-        .selectFrom('follow')
-        .selectAll()
-        .where('creator', '=', viewer ?? '')
-        .whereRef('subjectDid', '=', ref('actor.did')),
-    )
-    .selectAll()
-    .select('profile_agg.postsCount as postsCount')
-    .limit(limit)
-    .orderBy('suggested_follow.order', 'asc')
-
-  if (cursor) {
-    const cursorRow = await db.db
-      .selectFrom('suggested_follow')
-      .where('did', '=', cursor)
-      .selectAll()
-      .executeTakeFirst()
-    if (cursorRow) {
-      suggestionsQb = suggestionsQb.where(
-        'suggested_follow.order',
-        '>',
-        cursorRow.order,
+const skeleton = async (input: {
+  ctx: Context
+  params: Params
+}): Promise<Skeleton> => {
+  const { ctx, params } = input
+  const viewer = params.hydrateCtx.viewer
+  if (ctx.suggestionsAgent) {
+    const res =
+      await ctx.suggestionsAgent.api.app.bsky.unspecced.getSuggestionsSkeleton(
+        {
+          viewer: viewer ?? undefined,
+          limit: params.limit,
+          cursor: params.cursor,
+        },
+        { headers: params.headers },
       )
+    return {
+      dids: res.data.actors.map((a) => a.did),
+      cursor: res.data.cursor,
+      resHeaders: res.headers,
     }
+  } else {
+    // @NOTE for appview swap moving to rkey-based cursors which are somewhat permissive, should not hard-break pagination
+    const suggestions = await ctx.dataplane.getFollowSuggestions({
+      actorDid: viewer ?? undefined,
+      cursor: params.cursor,
+      limit: params.limit,
+    })
+    let dids = suggestions.dids
+    if (viewer !== null) {
+      const follows = await ctx.dataplane.getActorFollowsActors({
+        actorDid: viewer,
+        targetDids: dids,
+      })
+      dids = dids.filter((did, i) => !follows.uris[i] && did !== viewer)
+    }
+    return { dids, cursor: parseString(suggestions.cursor) }
   }
-  const suggestions = await suggestionsQb.execute()
-  return { params, suggestions, cursor: suggestions.at(-1)?.did }
 }
 
-const hydration = async (state: SkeletonState, ctx: Context) => {
-  const { graphService, actorService } = ctx
-  const { params, suggestions } = state
-  const { viewer } = params
-  const [actors, bam] = await Promise.all([
-    actorService.views.profiles(suggestions, viewer),
-    graphService.getBlockAndMuteState(
-      viewer ? suggestions.map((sug) => [viewer, sug.did]) : [],
-    ),
-  ])
-  return { ...state, bam, actors }
+const hydration = async (input: {
+  ctx: Context
+  params: Params
+  skeleton: Skeleton
+}) => {
+  const { ctx, params, skeleton } = input
+  return ctx.hydrator.hydrateProfilesDetailed(skeleton.dids, params.hydrateCtx)
 }
 
-const noBlocksOrMutes = (state: HydrationState) => {
-  const { viewer } = state.params
-  if (!viewer) return state
-  state.suggestions = state.suggestions.filter(
-    (item) =>
-      !state.bam.block([viewer, item.did]) &&
-      !state.bam.mute([viewer, item.did]),
+const noBlocksOrMutes = (input: {
+  ctx: Context
+  params: Params
+  skeleton: Skeleton
+  hydration: HydrationState
+}) => {
+  const { ctx, skeleton, hydration } = input
+  skeleton.dids = skeleton.dids.filter(
+    (did) =>
+      !ctx.views.viewerBlockExists(did, hydration) &&
+      !ctx.views.viewerMuteExists(did, hydration),
   )
-  return state
+  return skeleton
 }
 
-const presentation = (state: HydrationState) => {
-  const { suggestions, actors, cursor } = state
-  const suggestedActors = mapDefined(suggestions, (sug) => actors[sug.did])
-  return { actors: suggestedActors, cursor }
+const presentation = (input: {
+  ctx: Context
+  params: Params
+  skeleton: Skeleton
+  hydration: HydrationState
+}) => {
+  const { ctx, skeleton, hydration } = input
+  const actors = mapDefined(skeleton.dids, (did) =>
+    ctx.views.profileKnownFollowers(did, hydration),
+  )
+  return {
+    actors,
+    cursor: skeleton.cursor,
+    resHeaders: skeleton.resHeaders,
+  }
 }
 
 type Context = {
-  db: Database
-  actorService: ActorService
-  graphService: GraphService
+  suggestionsAgent: AtpAgent | undefined
+  dataplane: DataPlaneClient
+  hydrator: Hydrator
+  views: Views
 }
 
-type Params = QueryParams & { viewer: string | null }
+type Params = QueryParams & {
+  hydrateCtx: HydrateCtx
+  headers: Record<string, string>
+}
 
-type SkeletonState = { params: Params; suggestions: Actor[]; cursor?: string }
-
-type HydrationState = SkeletonState & {
-  bam: BlockAndMuteState
-  actors: ActorInfoMap
+type Skeleton = {
+  dids: string[]
+  cursor?: string
+  resHeaders?: Record<string, string>
 }

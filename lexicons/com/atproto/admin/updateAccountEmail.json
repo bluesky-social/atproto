@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Administrative action to update an account's email",
+      "description": "Administrative action to update an account's email.",
       "input": {
         "encoding": "application/json",
         "schema": {

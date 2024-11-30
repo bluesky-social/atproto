@@ -15,7 +15,7 @@ const unsignedCommit = z.object({
   data: common.cid,
   rev: z.string(),
   // `prev` added for backwards compatibility with v2, no requirement of keeping around history
-  prev: common.cid.nullable().optional(),
+  prev: common.cid.nullable(),
 })
 export type UnsignedCommit = z.infer<typeof unsignedCommit> & { sig?: never }
 
@@ -24,7 +24,7 @@ const commit = z.object({
   version: z.literal(3),
   data: common.cid,
   rev: z.string(),
-  prev: common.cid.nullable().optional(),
+  prev: common.cid.nullable(),
   sig: common.bytes,
 })
 export type Commit = z.infer<typeof commit>
@@ -95,16 +95,25 @@ export type RecordDeleteOp = {
 
 export type RecordWriteOp = RecordCreateOp | RecordUpdateOp | RecordDeleteOp
 
-export type RecordCreateDescript = RecordCreateOp & {
+export type RecordCreateDescript = {
+  action: WriteOpAction.Create
+  collection: string
+  rkey: string
   cid: CID
 }
 
-export type RecordUpdateDescript = RecordUpdateOp & {
+export type RecordUpdateDescript = {
+  action: WriteOpAction.Update
+  collection: string
+  rkey: string
   prev: CID
   cid: CID
 }
 
-export type RecordDeleteDescript = RecordDeleteOp & {
+export type RecordDeleteDescript = {
+  action: WriteOpAction.Delete
+  collection: string
+  rkey: string
   cid: CID
 }
 
@@ -145,6 +154,12 @@ export type RecordPath = {
   rkey: string
 }
 
+export type RecordCidClaim = {
+  collection: string
+  rkey: string
+  cid: CID | null
+}
+
 export type RecordClaim = {
   collection: string
   rkey: string
@@ -162,4 +177,9 @@ export type VerifiedDiff = {
 export type VerifiedRepo = {
   creates: RecordCreateDescript[]
   commit: CommitData
+}
+
+export type CarBlock = {
+  cid: CID
+  bytes: Uint8Array
 }

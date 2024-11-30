@@ -15,3 +15,7 @@ ATProto receives so many contributions that we could never list everyone who des
 #### [TowhidKashem](https://github.com/TowhidKashem), Security disclosure, May 2023
 
 #### [DavidBuchanan314](https://github.com/DavidBuchanan314), Security disclosure, May 2023
+
+#### [goeo\_](https://bsky.app/profile/did:web:genco.me), Security disclosure, May 2024
+
+#### [DavidBuchanan314](https://github.com/DavidBuchanan314), Security disclosure, November 2024

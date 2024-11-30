@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "List dids and root cids of hosted repos",
+      "description": "Enumerates all the DID, rev, and commit CID for all repos hosted by this service. Does not require auth; implemented by PDS and Relay.",
       "parameters": {
         "type": "params",
         "properties": {
@@ -34,10 +34,21 @@
     },
     "repo": {
       "type": "object",
-      "required": ["did", "head"],
+      "required": ["did", "head", "rev"],
       "properties": {
         "did": { "type": "string", "format": "did" },
-        "head": { "type": "string", "format": "cid" }
+        "head": {
+          "type": "string",
+          "format": "cid",
+          "description": "Current repo commit CID"
+        },
+        "rev": { "type": "string" },
+        "active": { "type": "boolean" },
+        "status": {
+          "type": "string",
+          "description": "If active=false, this optional field indicates a possible reason for why the account is not active. If active=false and no status is supplied, then the host makes no claim for why the repository is no longer being hosted.",
+          "knownValues": ["takendown", "suspended", "deactivated"]
+        }
       }
     }
   }

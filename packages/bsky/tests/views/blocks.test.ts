@@ -1,16 +1,8 @@
 import assert from 'assert'
-import AtpAgent, { AtUri } from '@atproto/api'
-import { BlockedActorError } from '@atproto/api/src/client/types/app/bsky/feed/getAuthorFeed'
-import { BlockedByActorError } from '@atproto/api/src/client/types/app/bsky/feed/getAuthorFeed'
-import { isThreadViewPost } from '@atproto/api/src/client/types/app/bsky/feed/defs'
-import {
-  isViewRecord as isEmbedViewRecord,
-  isViewBlocked as isEmbedViewBlocked,
-} from '@atproto/api/src/client/types/app/bsky/embed/record'
-import { TestNetwork } from '@atproto/dev-env'
-import { forSnapshot } from '../_util'
-import { RecordRef, SeedClient } from '../seeds/client'
-import basicSeed from '../seeds/basic'
+import { TestNetwork, RecordRef, SeedClient, basicSeed } from '@atproto/dev-env'
+import { AtpAgent, AtUri } from '@atproto/api'
+import { assertIsThreadViewPost, forSnapshot } from '../_util'
+import { ids } from '../../src/lexicon/lexicons'
 
 describe('pds views with blocking', () => {
   let network: TestNetwork
@@ -22,6 +14,7 @@ describe('pds views with blocking', () => {
   let carolReplyToDan: { ref: RecordRef }
 
   let alice: string
+  let bob: string
   let carol: string
   let dan: string
   let danBlockUri: string
@@ -32,9 +25,10 @@ describe('pds views with blocking', () => {
     })
     agent = network.bsky.getClient()
     pdsAgent = network.pds.getClient()
-    sc = new SeedClient(pdsAgent)
+    sc = network.getSeedClient()
     await basicSeed(sc)
     alice = sc.dids.alice
+    bob = sc.dids.bob
     carol = sc.dids.carol
     dan = sc.dids.dan
     // add follows to ensure blocks work even w follows
@@ -45,6 +39,12 @@ describe('pds views with blocking', () => {
       sc.posts[dan][0].ref,
       sc.posts[dan][0].ref,
       'alice replies to dan',
+    )
+    const _carolReplyToAliceReplyToDan = await sc.reply(
+      carol,
+      sc.posts[dan][0].ref,
+      aliceReplyToDan.ref,
+      "carol replies to alice's reply to dan",
     )
     carolReplyToDan = await sc.reply(
       carol,
@@ -69,7 +69,12 @@ describe('pds views with blocking', () => {
   it('blocks thread post', async () => {
     const { data: threadAlice } = await agent.api.app.bsky.feed.getPostThread(
       { depth: 1, uri: sc.posts[carol][0].ref.uriStr },
-      { headers: await network.serviceHeaders(dan) },
+      {
+        headers: await network.serviceHeaders(
+          dan,
+          ids.AppBskyFeedGetPostThread,
+        ),
+      },
     )
     expect(threadAlice).toEqual({
       thread: {
@@ -87,7 +92,12 @@ describe('pds views with blocking', () => {
     })
     const { data: threadCarol } = await agent.api.app.bsky.feed.getPostThread(
       { depth: 1, uri: sc.posts[dan][0].ref.uriStr },
-      { headers: await network.serviceHeaders(carol) },
+      {
+        headers: await network.serviceHeaders(
+          carol,
+          ids.AppBskyFeedGetPostThread,
+        ),
+      },
     )
     expect(threadCarol).toEqual({
       thread: {
@@ -108,16 +118,46 @@ describe('pds views with blocking', () => {
     // Contains reply by carol
     const { data: thread } = await agent.api.app.bsky.feed.getPostThread(
       { depth: 1, uri: sc.posts[alice][1].ref.uriStr },
-      { headers: await network.serviceHeaders(dan) },
+      {
+        headers: await network.serviceHeaders(
+          dan,
+          ids.AppBskyFeedGetPostThread,
+        ),
+      },
     )
     expect(forSnapshot(thread)).toMatchSnapshot()
+  })
+
+  it('loads blocked reply as anchor with blocked parent', async () => {
+    const { data: thread } = await agent.api.app.bsky.feed.getPostThread(
+      { depth: 1, uri: carolReplyToDan.ref.uriStr },
+      {
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyFeedGetPostThread,
+        ),
+      },
+    )
+
+    assertIsThreadViewPost(thread.thread)
+
+    expect(thread.thread.post.uri).toEqual(carolReplyToDan.ref.uriStr)
+    expect(thread.thread.parent).toMatchObject({
+      $type: 'app.bsky.feed.defs#blockedPost',
+      uri: sc.posts[dan][0].ref.uriStr,
+    })
   })
 
   it('blocks thread parent', async () => {
     // Parent is a post by dan
     const { data: thread } = await agent.api.app.bsky.feed.getPostThread(
       { depth: 1, uri: aliceReplyToDan.ref.uriStr },
-      { headers: await network.serviceHeaders(carol) },
+      {
+        headers: await network.serviceHeaders(
+          carol,
+          ids.AppBskyFeedGetPostThread,
+        ),
+      },
     )
     expect(forSnapshot(thread)).toMatchSnapshot()
   })
@@ -126,7 +166,12 @@ describe('pds views with blocking', () => {
     // Contains a deep embed of carol's post, blocked by dan
     const { data: thread } = await agent.api.app.bsky.feed.getPostThread(
       { depth: 0, uri: sc.posts[alice][2].ref.uriStr },
-      { headers: await network.serviceHeaders(dan) },
+      {
+        headers: await network.serviceHeaders(
+          dan,
+          ids.AppBskyFeedGetPostThread,
+        ),
+      },
     )
     expect(forSnapshot(thread)).toMatchSnapshot()
   })
@@ -134,32 +179,65 @@ describe('pds views with blocking', () => {
   it('errors on getting author feed', async () => {
     const attempt1 = agent.api.app.bsky.feed.getAuthorFeed(
       { actor: carol },
-      { headers: await network.serviceHeaders(dan) },
+      {
+        headers: await network.serviceHeaders(
+          dan,
+          ids.AppBskyFeedGetAuthorFeed,
+        ),
+      },
     )
-    await expect(attempt1).rejects.toThrow(BlockedActorError)
+    await expect(attempt1).rejects.toMatchObject({
+      error: 'BlockedActor',
+    })
 
     const attempt2 = agent.api.app.bsky.feed.getAuthorFeed(
       { actor: dan },
-      { headers: await network.serviceHeaders(carol) },
+      {
+        headers: await network.serviceHeaders(
+          carol,
+          ids.AppBskyFeedGetAuthorFeed,
+        ),
+      },
     )
-    await expect(attempt2).rejects.toThrow(BlockedByActorError)
+    await expect(attempt2).rejects.toMatchObject({
+      error: 'BlockedByActor',
+    })
   })
 
   it('strips blocked users out of getTimeline', async () => {
     const resCarol = await agent.api.app.bsky.feed.getTimeline(
       { limit: 100 },
-      { headers: await network.serviceHeaders(carol) },
+      {
+        headers: await network.serviceHeaders(
+          carol,
+          ids.AppBskyFeedGetTimeline,
+        ),
+      },
     )
+
+    // dan's posts don't appear, nor alice's reply to dan, nor carol's reply to alice (which was a reply to dan)
     expect(
-      resCarol.data.feed.some((post) => post.post.author.did === dan),
+      resCarol.data.feed.some(
+        (post) =>
+          post.post.author.did === dan ||
+          post.reply?.parent.author?.['did'] === dan ||
+          post.reply?.grandparentAuthor?.did === dan,
+      ),
     ).toBeFalsy()
 
     const resDan = await agent.api.app.bsky.feed.getTimeline(
       { limit: 100 },
-      { headers: await network.serviceHeaders(dan) },
+      {
+        headers: await network.serviceHeaders(dan, ids.AppBskyFeedGetTimeline),
+      },
     )
     expect(
-      resDan.data.feed.some((post) => post.post.author.did === carol),
+      resDan.data.feed.some(
+        (post) =>
+          post.post.author.did === carol ||
+          post.reply?.parent.author?.['did'] === carol ||
+          post.reply?.grandparentAuthor?.did === carol,
+      ),
     ).toBeFalsy()
   })
 
@@ -171,7 +249,12 @@ describe('pds views with blocking', () => {
 
     const resCarol = await agent.api.app.bsky.feed.getListFeed(
       { list: listRef.uriStr, limit: 100 },
-      { headers: await network.serviceHeaders(carol) },
+      {
+        headers: await network.serviceHeaders(
+          carol,
+          ids.AppBskyFeedGetListFeed,
+        ),
+      },
     )
     expect(
       resCarol.data.feed.some((post) => post.post.author.did === dan),
@@ -179,7 +262,9 @@ describe('pds views with blocking', () => {
 
     const resDan = await agent.api.app.bsky.feed.getListFeed(
       { list: listRef.uriStr, limit: 100 },
-      { headers: await network.serviceHeaders(dan) },
+      {
+        headers: await network.serviceHeaders(dan, ids.AppBskyFeedGetListFeed),
+      },
     )
     expect(
       resDan.data.feed.some((post) => post.post.author.did === carol),
@@ -189,49 +274,97 @@ describe('pds views with blocking', () => {
   it('returns block status on getProfile', async () => {
     const resCarol = await agent.api.app.bsky.actor.getProfile(
       { actor: dan },
-      { headers: await network.serviceHeaders(carol) },
+      {
+        headers: await network.serviceHeaders(
+          carol,
+          ids.AppBskyActorGetProfile,
+        ),
+      },
     )
-    expect(resCarol.data.viewer?.blocking).toBeUndefined
+    expect(resCarol.data.viewer?.blocking).toBeUndefined()
     expect(resCarol.data.viewer?.blockedBy).toBe(true)
 
     const resDan = await agent.api.app.bsky.actor.getProfile(
       { actor: carol },
-      { headers: await network.serviceHeaders(dan) },
+      {
+        headers: await network.serviceHeaders(dan, ids.AppBskyActorGetProfile),
+      },
     )
-    expect(resDan.data.viewer?.blocking).toBeDefined
+    expect(resDan.data.viewer?.blocking).toBeDefined()
     expect(resDan.data.viewer?.blockedBy).toBe(false)
+  })
+
+  it('unsets viewer follow state when blocked', async () => {
+    // there are follows between carol and dan
+    const { data: profile } = await agent.api.app.bsky.actor.getProfile(
+      { actor: carol },
+      {
+        headers: await network.serviceHeaders(dan, ids.AppBskyActorGetProfile),
+      },
+    )
+    expect(profile.viewer?.following).toBeUndefined()
+    expect(profile.viewer?.followedBy).toBeUndefined()
+    const { data: result } = await agent.api.app.bsky.graph.getBlocks(
+      {},
+      { headers: await network.serviceHeaders(dan, ids.AppBskyGraphGetBlocks) },
+    )
+    const blocked = result.blocks.find((block) => block.did === carol)
+    expect(blocked).toBeDefined()
+    expect(blocked?.viewer?.following).toBeUndefined()
+    expect(blocked?.viewer?.followedBy).toBeUndefined()
   })
 
   it('returns block status on getProfiles', async () => {
     const resCarol = await agent.api.app.bsky.actor.getProfiles(
       { actors: [alice, dan] },
-      { headers: await network.serviceHeaders(carol) },
+      {
+        headers: await network.serviceHeaders(
+          carol,
+          ids.AppBskyActorGetProfiles,
+        ),
+      },
     )
     expect(resCarol.data.profiles[0].viewer?.blocking).toBeUndefined()
+    expect(resCarol.data.profiles[0].viewer?.blockingByList).toBeUndefined()
     expect(resCarol.data.profiles[0].viewer?.blockedBy).toBe(false)
     expect(resCarol.data.profiles[1].viewer?.blocking).toBeUndefined()
+    expect(resCarol.data.profiles[1].viewer?.blockingByList).toBeUndefined()
     expect(resCarol.data.profiles[1].viewer?.blockedBy).toBe(true)
 
     const resDan = await agent.api.app.bsky.actor.getProfiles(
       { actors: [alice, carol] },
-      { headers: await network.serviceHeaders(dan) },
+      {
+        headers: await network.serviceHeaders(dan, ids.AppBskyActorGetProfiles),
+      },
     )
     expect(resDan.data.profiles[0].viewer?.blocking).toBeUndefined()
+    expect(resDan.data.profiles[0].viewer?.blockingByList).toBeUndefined()
     expect(resDan.data.profiles[0].viewer?.blockedBy).toBe(false)
     expect(resDan.data.profiles[1].viewer?.blocking).toBeDefined()
+    expect(resDan.data.profiles[1].viewer?.blockingByList).toBeUndefined()
     expect(resDan.data.profiles[1].viewer?.blockedBy).toBe(false)
   })
 
   it('does not return block violating follows', async () => {
     const resCarol = await agent.api.app.bsky.graph.getFollows(
       { actor: carol },
-      { headers: await network.serviceHeaders(alice) },
+      {
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyGraphGetFollows,
+        ),
+      },
     )
     expect(resCarol.data.follows.some((f) => f.did === dan)).toBe(false)
 
     const resDan = await agent.api.app.bsky.graph.getFollows(
       { actor: dan },
-      { headers: await network.serviceHeaders(alice) },
+      {
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyGraphGetFollows,
+        ),
+      },
     )
     expect(resDan.data.follows.some((f) => f.did === carol)).toBe(false)
   })
@@ -239,13 +372,23 @@ describe('pds views with blocking', () => {
   it('does not return block violating followers', async () => {
     const resCarol = await agent.api.app.bsky.graph.getFollowers(
       { actor: carol },
-      { headers: await network.serviceHeaders(alice) },
+      {
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyGraphGetFollowers,
+        ),
+      },
     )
     expect(resCarol.data.followers.some((f) => f.did === dan)).toBe(false)
 
     const resDan = await agent.api.app.bsky.graph.getFollowers(
       { actor: dan },
-      { headers: await network.serviceHeaders(alice) },
+      {
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyGraphGetFollowers,
+        ),
+      },
     )
     expect(resDan.data.followers.some((f) => f.did === carol)).toBe(false)
   })
@@ -257,7 +400,7 @@ describe('pds views with blocking', () => {
 
     const resCarol = await agent.api.app.bsky.feed.getPosts(
       { uris: [alicePost, carolPost, danPost] },
-      { headers: await network.serviceHeaders(carol) },
+      { headers: await network.serviceHeaders(carol, ids.AppBskyFeedGetPosts) },
     )
     expect(resCarol.data.posts.some((p) => p.uri === alicePost)).toBe(true)
     expect(resCarol.data.posts.some((p) => p.uri === carolPost)).toBe(true)
@@ -265,7 +408,7 @@ describe('pds views with blocking', () => {
 
     const resDan = await agent.api.app.bsky.feed.getPosts(
       { uris: [alicePost, carolPost, danPost] },
-      { headers: await network.serviceHeaders(dan) },
+      { headers: await network.serviceHeaders(dan, ids.AppBskyFeedGetPosts) },
     )
     expect(resDan.data.posts.some((p) => p.uri === alicePost)).toBe(true)
     expect(resDan.data.posts.some((p) => p.uri === carolPost)).toBe(false)
@@ -277,7 +420,12 @@ describe('pds views with blocking', () => {
       {
         limit: 100,
       },
-      { headers: await network.serviceHeaders(carol) },
+      {
+        headers: await network.serviceHeaders(
+          carol,
+          ids.AppBskyNotificationListNotifications,
+        ),
+      },
     )
     expect(
       resCarol.data.notifications.some((notif) => notif.author.did === dan),
@@ -287,7 +435,12 @@ describe('pds views with blocking', () => {
       {
         limit: 100,
       },
-      { headers: await network.serviceHeaders(dan) },
+      {
+        headers: await network.serviceHeaders(
+          dan,
+          ids.AppBskyNotificationListNotifications,
+        ),
+      },
     )
     expect(
       resDan.data.notifications.some((notif) => notif.author.did === carol),
@@ -299,7 +452,12 @@ describe('pds views with blocking', () => {
       {
         term: 'dan.test',
       },
-      { headers: await network.serviceHeaders(carol) },
+      {
+        headers: await network.serviceHeaders(
+          carol,
+          ids.AppBskyActorSearchActors,
+        ),
+      },
     )
     expect(resCarol.data.actors.some((actor) => actor.did === dan)).toBeFalsy()
 
@@ -307,7 +465,12 @@ describe('pds views with blocking', () => {
       {
         term: 'carol.test',
       },
-      { headers: await network.serviceHeaders(dan) },
+      {
+        headers: await network.serviceHeaders(
+          dan,
+          ids.AppBskyActorSearchActors,
+        ),
+      },
     )
     expect(resDan.data.actors.some((actor) => actor.did === carol)).toBeFalsy()
   })
@@ -315,19 +478,57 @@ describe('pds views with blocking', () => {
   it('does not return blocked accounts in actor search typeahead', async () => {
     const resCarol = await agent.api.app.bsky.actor.searchActorsTypeahead(
       {
-        term: 'dan.test',
+        term: 'dan.tes',
       },
-      { headers: await network.serviceHeaders(carol) },
+      {
+        headers: await network.serviceHeaders(
+          carol,
+          ids.AppBskyActorSearchActorsTypeahead,
+        ),
+      },
     )
     expect(resCarol.data.actors.some((actor) => actor.did === dan)).toBeFalsy()
 
     const resDan = await agent.api.app.bsky.actor.searchActorsTypeahead(
       {
-        term: 'carol.test',
+        term: 'carol.tes',
       },
-      { headers: await network.serviceHeaders(dan) },
+      {
+        headers: await network.serviceHeaders(
+          dan,
+          ids.AppBskyActorSearchActorsTypeahead,
+        ),
+      },
     )
     expect(resDan.data.actors.some((actor) => actor.did === carol)).toBeFalsy()
+  })
+
+  it('does return blocked accounts in actor search typeahead when term is exact handle', async () => {
+    const resCarol = await agent.api.app.bsky.actor.searchActorsTypeahead(
+      {
+        term: 'dan.test',
+      },
+      {
+        headers: await network.serviceHeaders(
+          carol,
+          ids.AppBskyActorSearchActorsTypeahead,
+        ),
+      },
+    )
+    expect(resCarol.data.actors.some((actor) => actor.did === dan)).toBeTruthy()
+
+    const resDan = await agent.api.app.bsky.actor.searchActorsTypeahead(
+      {
+        term: 'carol.test',
+      },
+      {
+        headers: await network.serviceHeaders(
+          dan,
+          ids.AppBskyActorSearchActorsTypeahead,
+        ),
+      },
+    )
+    expect(resDan.data.actors.some((actor) => actor.did === carol)).toBeTruthy()
   })
 
   it('does not return blocked accounts in get suggestions', async () => {
@@ -340,7 +541,12 @@ describe('pds views with blocking', () => {
       {
         limit: 100,
       },
-      { headers: await network.serviceHeaders(carol) },
+      {
+        headers: await network.serviceHeaders(
+          carol,
+          ids.AppBskyActorGetSuggestions,
+        ),
+      },
     )
     expect(resCarol.data.actors.some((actor) => actor.did === dan)).toBeFalsy()
 
@@ -348,7 +554,12 @@ describe('pds views with blocking', () => {
       {
         limit: 100,
       },
-      { headers: await network.serviceHeaders(dan) },
+      {
+        headers: await network.serviceHeaders(
+          dan,
+          ids.AppBskyActorGetSuggestions,
+        ),
+      },
     )
     expect(resDan.data.actors.some((actor) => actor.did === carol)).toBeFalsy()
   })
@@ -359,9 +570,15 @@ describe('pds views with blocking', () => {
     const { data: replyThenBlock } =
       await agent.api.app.bsky.feed.getPostThread(
         { depth: 1, uri: sc.posts[dan][0].ref.uriStr },
-        { headers: await network.serviceHeaders(alice) },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyFeedGetPostThread,
+          ),
+        },
       )
-    assert(isThreadViewPost(replyThenBlock.thread))
+    assertIsThreadViewPost(replyThenBlock.thread)
+
     expect(replyThenBlock.thread.replies?.map(getThreadPostUri)).toEqual([
       aliceReplyToDan.ref.uriStr,
     ])
@@ -374,9 +591,15 @@ describe('pds views with blocking', () => {
     await network.processAll()
     const { data: unblock } = await agent.api.app.bsky.feed.getPostThread(
       { depth: 1, uri: sc.posts[dan][0].ref.uriStr },
-      { headers: await network.serviceHeaders(alice) },
+      {
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyFeedGetPostThread,
+        ),
+      },
     )
-    assert(isThreadViewPost(unblock.thread))
+
+    assertIsThreadViewPost(unblock.thread)
     expect(unblock.thread.replies?.map(getThreadPostUri)).toEqual([
       carolReplyToDan.ref.uriStr,
       aliceReplyToDan.ref.uriStr,
@@ -398,9 +621,16 @@ describe('pds views with blocking', () => {
     const { data: blockThenReply } =
       await agent.api.app.bsky.feed.getPostThread(
         { depth: 1, uri: sc.posts[dan][0].ref.uriStr },
-        { headers: await network.serviceHeaders(alice) },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyFeedGetPostThread,
+          ),
+        },
       )
-    assert(isThreadViewPost(blockThenReply.thread))
+
+    assertIsThreadViewPost(blockThenReply.thread)
+
     expect(replyThenBlock.thread.replies?.map(getThreadPostUri)).toEqual([
       aliceReplyToDan.ref.uriStr,
     ])
@@ -418,10 +648,19 @@ describe('pds views with blocking', () => {
     const { data: embedThenBlock } =
       await agent.api.app.bsky.feed.getPostThread(
         { depth: 0, uri: sc.posts[dan][1].ref.uriStr },
-        { headers: await network.serviceHeaders(alice) },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyFeedGetPostThread,
+          ),
+        },
       )
-    assert(isThreadViewPost(embedThenBlock.thread))
-    assert(isEmbedViewBlocked(embedThenBlock.thread.post.embed?.record))
+
+    assertIsThreadViewPost(embedThenBlock.thread)
+
+    expect(embedThenBlock.thread.post.embed?.record).toMatchObject({
+      $type: 'app.bsky.embed.record#viewBlocked',
+    })
 
     // unblock
     await pdsAgent.api.app.bsky.graph.block.delete(
@@ -431,10 +670,19 @@ describe('pds views with blocking', () => {
     await network.processAll()
     const { data: unblock } = await agent.api.app.bsky.feed.getPostThread(
       { depth: 0, uri: sc.posts[dan][1].ref.uriStr },
-      { headers: await network.serviceHeaders(alice) },
+      {
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyFeedGetPostThread,
+        ),
+      },
     )
-    assert(isThreadViewPost(unblock.thread))
-    assert(isEmbedViewRecord(unblock.thread.post.embed?.record))
+
+    assertIsThreadViewPost(unblock.thread)
+
+    expect(unblock.thread.post?.embed?.record).toMatchObject({
+      $type: 'app.bsky.embed.record#viewRecord',
+    })
 
     // block then embed
     danBlockCarol = await pdsAgent.api.app.bsky.graph.block.create(
@@ -453,10 +701,18 @@ describe('pds views with blocking', () => {
     const { data: blockThenEmbed } =
       await agent.api.app.bsky.feed.getPostThread(
         { depth: 0, uri: carolEmbedsDan.ref.uriStr },
-        { headers: await network.serviceHeaders(alice) },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyFeedGetPostThread,
+          ),
+        },
       )
-    assert(isThreadViewPost(blockThenEmbed.thread))
-    assert(isEmbedViewBlocked(blockThenEmbed.thread.post.embed?.record))
+    assertIsThreadViewPost(blockThenEmbed.thread)
+
+    expect(blockThenEmbed.thread.post.embed?.record).toMatchObject({
+      $type: 'app.bsky.embed.record#viewBlocked',
+    })
 
     // cleanup
     await pdsAgent.api.app.bsky.feed.post.delete(
@@ -469,20 +725,37 @@ describe('pds views with blocking', () => {
   it('applies third-party blocking rules in feeds.', async () => {
     // alice follows carol and dan, block exists between carol and dan.
     const replyBlockedUri = carolReplyToDan.ref.uriStr
+    const replyBlockedParentUri = sc.posts[dan][0].ref.uriStr
     const embedBlockedUri = sc.posts[dan][1].ref.uriStr
     const { data: timeline } = await agent.api.app.bsky.feed.getTimeline(
       { limit: 100 },
-      { headers: await network.serviceHeaders(alice) },
+      {
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyFeedGetTimeline,
+        ),
+      },
     )
     const replyBlockedPost = timeline.feed.find(
       (item) => item.post.uri === replyBlockedUri,
     )
-    expect(replyBlockedPost).toBeUndefined()
+    expect(replyBlockedPost?.reply).toMatchObject({
+      root: {
+        $type: 'app.bsky.feed.defs#blockedPost',
+        uri: replyBlockedParentUri,
+      },
+      parent: {
+        $type: 'app.bsky.feed.defs#blockedPost',
+        uri: replyBlockedParentUri,
+      },
+    })
     const embedBlockedPost = timeline.feed.find(
       (item) => item.post.uri === embedBlockedUri,
     )
     assert(embedBlockedPost)
-    assert(isEmbedViewBlocked(embedBlockedPost.post.embed?.record))
+    expect(embedBlockedPost.post.embed?.record).toMatchObject({
+      $type: 'app.bsky.embed.record#viewBlocked',
+    })
   })
 
   it('returns a list of blocks', async () => {
@@ -496,7 +769,7 @@ describe('pds views with blocking', () => {
 
     const res = await agent.api.app.bsky.graph.getBlocks(
       {},
-      { headers: await network.serviceHeaders(dan) },
+      { headers: await network.serviceHeaders(dan, ids.AppBskyGraphGetBlocks) },
     )
     const dids = res.data.blocks.map((block) => block.did).sort()
     expect(dids).toEqual([alice, carol].sort())
@@ -505,17 +778,33 @@ describe('pds views with blocking', () => {
   it('paginates getBlocks', async () => {
     const full = await agent.api.app.bsky.graph.getBlocks(
       {},
-      { headers: await network.serviceHeaders(dan) },
+      { headers: await network.serviceHeaders(dan, ids.AppBskyGraphGetBlocks) },
     )
     const first = await agent.api.app.bsky.graph.getBlocks(
       { limit: 1 },
-      { headers: await network.serviceHeaders(dan) },
+      { headers: await network.serviceHeaders(dan, ids.AppBskyGraphGetBlocks) },
     )
     const second = await agent.api.app.bsky.graph.getBlocks(
       { cursor: first.data.cursor },
-      { headers: await network.serviceHeaders(dan) },
+      { headers: await network.serviceHeaders(dan, ids.AppBskyGraphGetBlocks) },
     )
     const combined = [...first.data.blocks, ...second.data.blocks]
     expect(combined).toEqual(full.data.blocks)
+  })
+
+  it('returns knownFollowers with blocks filtered', async () => {
+    const carolForAlice = await agent.api.app.bsky.actor.getProfile(
+      { actor: bob },
+      {
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyActorGetProfile,
+        ),
+      },
+    )
+
+    const knownFollowers = carolForAlice.data.viewer?.knownFollowers
+    expect(knownFollowers?.count).toBe(1)
+    expect(knownFollowers?.followers).toHaveLength(0)
   })
 })

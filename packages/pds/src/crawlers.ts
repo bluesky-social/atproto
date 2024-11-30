@@ -1,6 +1,7 @@
 import { AtpAgent } from '@atproto/api'
 import { crawlerLogger as log } from './logger'
 import { MINUTE } from '@atproto/common'
+import { BackgroundQueue } from './background'
 
 const NOTIFY_THRESHOLD = 20 * MINUTE
 
@@ -8,7 +9,11 @@ export class Crawlers {
   public agents: AtpAgent[]
   public lastNotified = 0
 
-  constructor(public hostname: string, public crawlers: string[]) {
+  constructor(
+    public hostname: string,
+    public crawlers: string[],
+    public backgroundQueue: BackgroundQueue,
+  ) {
     this.agents = crawlers.map((service) => new AtpAgent({ service }))
   }
 
@@ -18,20 +23,22 @@ export class Crawlers {
       return
     }
 
-    await Promise.all(
-      this.agents.map(async (agent) => {
-        try {
-          await agent.api.com.atproto.sync.requestCrawl({
-            hostname: this.hostname,
-          })
-        } catch (err) {
-          log.warn(
-            { err, cralwer: agent.service.toString() },
-            'failed to request crawl',
-          )
-        }
-      }),
-    )
-    this.lastNotified = now
+    this.backgroundQueue.add(async () => {
+      await Promise.all(
+        this.agents.map(async (agent) => {
+          try {
+            await agent.api.com.atproto.sync.requestCrawl({
+              hostname: this.hostname,
+            })
+          } catch (err) {
+            log.warn(
+              { err, cralwer: agent.service.toString() },
+              'failed to request crawl',
+            )
+          }
+        }),
+      )
+      this.lastNotified = now
+    })
   }
 }

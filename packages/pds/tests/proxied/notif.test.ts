@@ -2,10 +2,9 @@ import { once } from 'events'
 import http from 'http'
 import { AddressInfo } from 'net'
 import express from 'express'
-import AtpAgent from '@atproto/api'
-import { TestNetworkNoAppView } from '@atproto/dev-env'
+import { AtpAgent } from '@atproto/api'
+import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
 import { verifyJwt } from '@atproto/xrpc-server'
-import { SeedClient } from '../seeds/client'
 import usersSeed from '../seeds/users'
 import { createServer } from '../../src/lexicon'
 
@@ -24,7 +23,7 @@ describe('notif service proxy', () => {
     network.pds.server.app.get
     const plc = network.plc.getClient()
     agent = network.pds.getClient()
-    sc = new SeedClient(agent)
+    sc = network.getSeedClient()
     await usersSeed(sc)
     await network.processAll()
     // piggybacking existing plc did, turn it into a notif service
@@ -38,6 +37,7 @@ describe('notif service proxy', () => {
       }
       return x
     })
+    await network.pds.ctx.idResolver.did.resolve(notifDid, true)
   })
 
   afterAll(async () => {
@@ -69,9 +69,13 @@ describe('notif service proxy', () => {
     const auth = await verifyJwt(
       spy.current?.['jwt'] as string,
       notifDid,
-      async () => network.pds.ctx.repoSigningKey.did(),
+      'app.bsky.notification.registerPush',
+      async (did) => {
+        const keypair = await network.pds.ctx.actorStore.keypair(did)
+        return keypair.did()
+      },
     )
-    expect(auth).toEqual(sc.dids.bob)
+    expect(auth.iss).toEqual(sc.dids.bob)
   })
 })
 

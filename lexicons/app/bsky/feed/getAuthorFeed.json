@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "A view of an actor's feed.",
+      "description": "Get a view of an actor's 'author feed' (post and reposts by the author). Does not require auth.",
       "parameters": {
         "type": "params",
         "required": ["actor"],
@@ -19,12 +19,18 @@
           "cursor": { "type": "string" },
           "filter": {
             "type": "string",
+            "description": "Combinations of post/repost types to include in response.",
             "knownValues": [
               "posts_with_replies",
               "posts_no_replies",
-              "posts_with_media"
+              "posts_with_media",
+              "posts_and_author_threads"
             ],
             "default": "posts_with_replies"
+          },
+          "includePins": {
+            "type": "boolean",
+            "default": false
           }
         }
       },

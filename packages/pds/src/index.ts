@@ -8,353 +8,112 @@ import express from 'express'
 import cors from 'cors'
 import http from 'http'
 import events from 'events'
-import { createTransport } from 'nodemailer'
-import { Redis } from 'ioredis'
-import { AtpAgent } from '@atproto/api'
-import * as crypto from '@atproto/crypto'
-import { BlobStore } from '@atproto/repo'
-import { IdResolver } from '@atproto/identity'
-import {
-  RateLimiter,
-  RateLimiterCreator,
-  RateLimiterOpts,
-  Options as XrpcServerOptions,
-} from '@atproto/xrpc-server'
-import { DAY, HOUR, MINUTE } from '@atproto/common'
-import * as appviewConsumers from './app-view/event-stream/consumers'
-import inProcessAppView from './app-view/api'
+import { Options as XrpcServerOptions } from '@atproto/xrpc-server'
+import { DAY, HOUR, MINUTE, SECOND } from '@atproto/common'
 import API from './api'
+import * as authRoutes from './auth-routes'
 import * as basicRoutes from './basic-routes'
 import * as wellKnown from './well-known'
-import Database from './db'
-import { ServerAuth } from './auth'
 import * as error from './error'
-import compression from './util/compression'
-import { dbLogger, loggerMiddleware, seqLogger } from './logger'
-import { ServerConfig } from './config'
-import { ServerMailer } from './mailer'
-import { ModerationMailer } from './mailer/moderation'
+import { loggerMiddleware } from './logger'
+import { ServerConfig, ServerSecrets } from './config'
 import { createServer } from './lexicon'
-import { MessageDispatcher } from './event-stream/message-queue'
-import { ImageUriBuilder } from './image/uri'
-import { BlobDiskCache, ImageProcessingServer } from './image/server'
-import { createServices } from './services'
 import { createHttpTerminator, HttpTerminator } from 'http-terminator'
-import AppContext from './context'
-import { Sequencer, SequencerLeader } from './sequencer'
-import {
-  ImageInvalidator,
-  ImageProcessingServerInvalidator,
-} from './image/invalidator'
-import { Labeler, HiveLabeler, KeywordLabeler } from './labeler'
-import { BackgroundQueue } from './event-stream/background-queue'
-import DidSqlCache from './did-cache'
-import { MountedAlgos } from './feed-gen/types'
-import { Crawlers } from './crawlers'
-import { LabelCache } from './label-cache'
-import { getRedisClient } from './redis'
-import { RuntimeFlags } from './runtime-flags'
+import AppContext, { AppContextOptions } from './context'
+import compression from './util/compression'
+import { proxyHandler } from './pipethrough'
 
-export type { MountedAlgos } from './feed-gen/types'
-export type { ServerConfigValues } from './config'
-export { ServerConfig } from './config'
+export * from './config'
 export { Database } from './db'
-export { ViewMaintainer } from './db/views'
-export { PeriodicModerationActionReversal } from './db/periodic-moderation-action-reversal'
-export { DiskBlobStore, MemoryBlobStore } from './storage'
+export { DiskBlobStore } from './disk-blobstore'
 export { AppContext } from './context'
-export { makeAlgos } from './feed-gen'
+export { httpLogger } from './logger'
+export { createSecretKeyObject } from './auth-verifier'
+export { type Handler as SkeletonHandler } from './lexicon/types/app/bsky/feed/getFeedSkeleton'
+export { createServer as createLexiconServer } from './lexicon'
+export * as sequencer from './sequencer'
+export { type PreparedWrite } from './repo'
+export * as repoPrepare from './repo/prepare'
+export { scripts } from './scripts'
 
 export class PDS {
   public ctx: AppContext
   public app: express.Application
   public server?: http.Server
   private terminator?: HttpTerminator
-  private dbStatsInterval?: NodeJS.Timer
-  private sequencerStatsInterval?: NodeJS.Timer
+  private dbStatsInterval?: NodeJS.Timeout
+  private sequencerStatsInterval?: NodeJS.Timeout
 
   constructor(opts: { ctx: AppContext; app: express.Application }) {
     this.ctx = opts.ctx
     this.app = opts.app
   }
 
-  static create(opts: {
-    db: Database
-    blobstore: BlobStore
-    imgInvalidator?: ImageInvalidator
-    repoSigningKey: crypto.Keypair
-    plcRotationKey: crypto.Keypair
-    algos?: MountedAlgos
-    config: ServerConfig
-  }): PDS {
-    const {
-      db,
-      blobstore,
-      repoSigningKey,
-      plcRotationKey,
-      algos = {},
-      config,
-    } = opts
-    let maybeImgInvalidator = opts.imgInvalidator
-    const auth = new ServerAuth({
-      jwtSecret: config.jwtSecret,
-      adminPass: config.adminPassword,
-      moderatorPass: config.moderatorPassword,
-      triagePass: config.triagePassword,
-    })
-
-    const didCache = new DidSqlCache(
-      db,
-      config.didCacheStaleTTL,
-      config.didCacheMaxTTL,
-    )
-    const idResolver = new IdResolver({
-      plcUrl: config.didPlcUrl,
-      didCache,
-      backupNameservers: config.handleResolveNameservers,
-    })
-
-    const messageDispatcher = new MessageDispatcher()
-    const sequencer = new Sequencer(db)
-    const sequencerLeader = config.sequencerLeaderEnabled
-      ? new SequencerLeader(db, config.sequencerLeaderLockId)
-      : null
-
-    const serverMailTransport =
-      config.emailSmtpUrl !== undefined
-        ? createTransport(config.emailSmtpUrl)
-        : createTransport({ jsonTransport: true })
-
-    const moderationMailTransport =
-      config.moderationEmailSmtpUrl !== undefined
-        ? createTransport(config.moderationEmailSmtpUrl)
-        : createTransport({ jsonTransport: true })
-
-    const mailer = new ServerMailer(serverMailTransport, config)
-    const moderationMailer = new ModerationMailer(
-      moderationMailTransport,
-      config,
-    )
-
-    const app = express()
-    app.set('trust proxy', true)
-    app.use(cors())
-    app.use(loggerMiddleware)
-    app.use(compression())
-
-    let imgUriEndpoint = config.imgUriEndpoint
-    if (!imgUriEndpoint) {
-      const imgProcessingCache = new BlobDiskCache(config.blobCacheLocation)
-      const imgProcessingServer = new ImageProcessingServer(
-        config.imgUriSalt,
-        config.imgUriKey,
-        blobstore,
-        imgProcessingCache,
-      )
-      maybeImgInvalidator ??= new ImageProcessingServerInvalidator(
-        imgProcessingCache,
-      )
-      app.use('/image', imgProcessingServer.app)
-      imgUriEndpoint = `${config.publicUrl}/image`
-    }
-
-    let imgInvalidator: ImageInvalidator
-    if (maybeImgInvalidator) {
-      imgInvalidator = maybeImgInvalidator
-    } else {
-      throw new Error('Missing PDS image invalidator')
-    }
-
-    const imgUriBuilder = new ImageUriBuilder(
-      imgUriEndpoint,
-      config.imgUriSalt,
-      config.imgUriKey,
-    )
-
-    const backgroundQueue = new BackgroundQueue(db)
-    const crawlers = new Crawlers(
-      config.hostname,
-      config.crawlersToNotify ?? [],
-    )
-
-    let labeler: Labeler
-    if (config.hiveApiKey) {
-      labeler = new HiveLabeler({
-        db,
-        blobstore,
-        backgroundQueue,
-        labelerDid: config.labelerDid,
-        hiveApiKey: config.hiveApiKey,
-        keywords: config.labelerKeywords,
-      })
-    } else {
-      labeler = new KeywordLabeler({
-        db,
-        blobstore,
-        backgroundQueue,
-        labelerDid: config.labelerDid,
-        keywords: config.labelerKeywords,
-      })
-    }
-
-    const labelCache = new LabelCache(db)
-
-    const appviewAgent = config.bskyAppViewEndpoint
-      ? new AtpAgent({ service: config.bskyAppViewEndpoint })
-      : undefined
-
-    const services = createServices({
-      repoSigningKey,
-      messageDispatcher,
-      blobstore,
-      imgUriBuilder,
-      imgInvalidator,
-      labeler,
-      labelCache,
-      appviewAgent,
-      appviewDid: config.bskyAppViewDid,
-      appviewCdnUrlPattern: config.bskyAppViewCdnUrlPattern,
-      backgroundQueue,
-      crawlers,
-    })
-
-    const runtimeFlags = new RuntimeFlags(db)
-
-    let redisScratch: Redis | undefined = undefined
-    if (config.redisScratchAddress) {
-      redisScratch = getRedisClient(
-        config.redisScratchAddress,
-        config.redisScratchPassword,
-      )
-    }
-
-    const ctx = new AppContext({
-      db,
-      blobstore,
-      redisScratch,
-      repoSigningKey,
-      plcRotationKey,
-      idResolver,
-      didCache,
-      cfg: config,
-      auth,
-      messageDispatcher,
-      sequencer,
-      sequencerLeader,
-      labeler,
-      labelCache,
-      runtimeFlags,
-      services,
-      mailer,
-      moderationMailer,
-      imgUriBuilder,
-      backgroundQueue,
-      appviewAgent,
-      crawlers,
-      algos,
-    })
+  static async create(
+    cfg: ServerConfig,
+    secrets: ServerSecrets,
+    overrides?: Partial<AppContextOptions>,
+  ): Promise<PDS> {
+    const ctx = await AppContext.fromConfig(cfg, secrets, overrides)
 
     const xrpcOpts: XrpcServerOptions = {
-      validateResponse: config.debugMode,
+      validateResponse: false,
       payload: {
-        jsonLimit: 100 * 1024, // 100kb
+        jsonLimit: 150 * 1024, // 150kb
         textLimit: 100 * 1024, // 100kb
-        blobLimit: 5 * 1024 * 1024, // 5mb
+        blobLimit: cfg.service.blobUploadLimit,
       },
-    }
-    if (config.rateLimitsEnabled) {
-      let rlCreator: RateLimiterCreator
-      if (redisScratch) {
-        rlCreator = (opts: RateLimiterOpts) =>
-          RateLimiter.redis(redisScratch, {
-            bypassSecret: config.rateLimitBypassKey,
-            bypassIps: config.rateLimitBypassIps,
-            ...opts,
-          })
-      } else {
-        rlCreator = (opts: RateLimiterOpts) =>
-          RateLimiter.memory({
-            bypassSecret: config.rateLimitBypassKey,
-            bypassIps: config.rateLimitBypassIps,
-            ...opts,
-          })
-      }
-      xrpcOpts['rateLimits'] = {
-        creator: rlCreator,
-        global: [
-          {
-            name: 'global-ip',
-            durationMs: 5 * MINUTE,
-            points: 3000,
-          },
-        ],
-        shared: [
-          {
-            name: 'repo-write-hour',
-            durationMs: HOUR,
-            points: 5000, // creates=3, puts=2, deletes=1
-          },
-          {
-            name: 'repo-write-day',
-            durationMs: DAY,
-            points: 35000, // creates=3, puts=2, deletes=1
-          },
-        ],
-      }
+      catchall: proxyHandler(ctx),
+      rateLimits: ctx.ratelimitCreator
+        ? {
+            creator: ctx.ratelimitCreator,
+            global: [
+              {
+                name: 'global-ip',
+                durationMs: 5 * MINUTE,
+                points: 3000,
+              },
+            ],
+            shared: [
+              {
+                name: 'repo-write-hour',
+                durationMs: HOUR,
+                points: 5000, // creates=3, puts=2, deletes=1
+              },
+              {
+                name: 'repo-write-day',
+                durationMs: DAY,
+                points: 35000, // creates=3, puts=2, deletes=1
+              },
+            ],
+          }
+        : undefined,
     }
 
     let server = createServer(xrpcOpts)
 
     server = API(server, ctx)
-    server = inProcessAppView(server, ctx)
 
+    const app = express()
+    app.set('trust proxy', true)
+    app.use(loggerMiddleware)
+    app.use(compression())
+    app.use(authRoutes.createRouter(ctx)) // Before CORS
+    app.use(cors({ maxAge: DAY / SECOND }))
     app.use(basicRoutes.createRouter(ctx))
     app.use(wellKnown.createRouter(ctx))
     app.use(server.xrpc.router)
     app.use(error.handler)
 
-    return new PDS({ ctx, app })
+    return new PDS({
+      ctx,
+      app,
+    })
   }
 
   async start(): Promise<http.Server> {
-    const { db, backgroundQueue } = this.ctx
-    if (db.cfg.dialect === 'pg') {
-      const { pool } = db.cfg
-      this.dbStatsInterval = setInterval(() => {
-        dbLogger.info(
-          {
-            idleCount: pool.idleCount,
-            totalCount: pool.totalCount,
-            waitingCount: pool.waitingCount,
-          },
-          'db pool stats',
-        )
-        dbLogger.info(
-          {
-            runningCount: backgroundQueue.queue.pending,
-            waitingCount: backgroundQueue.queue.size,
-          },
-          'background queue stats',
-        )
-      }, 10000)
-    }
-    this.sequencerStatsInterval = setInterval(async () => {
-      if (this.ctx.sequencerLeader?.isLeader) {
-        try {
-          const seq = await this.ctx.sequencerLeader.lastSeq()
-          seqLogger.info({ seq }, 'sequencer leader stats')
-        } catch (err) {
-          seqLogger.error({ err }, 'error getting last seq')
-        }
-      }
-    }, 500)
-    appviewConsumers.listen(this.ctx)
-    this.ctx.sequencerLeader?.run()
     await this.ctx.sequencer.start()
-    await this.ctx.db.startListeningToChannels()
-    this.ctx.labelCache.start()
-    await this.ctx.runtimeFlags.start()
-    const server = this.app.listen(this.ctx.cfg.port)
+    const server = this.app.listen(this.ctx.cfg.service.port)
     this.server = server
     this.server.keepAliveTimeout = 90000
     this.terminator = createHttpTerminator({ server })
@@ -363,13 +122,12 @@ export class PDS {
   }
 
   async destroy(): Promise<void> {
-    await this.ctx.runtimeFlags.destroy()
-    this.ctx.labelCache.stop()
-    await this.ctx.sequencerLeader?.destroy()
+    await this.ctx.sequencer.destroy()
     await this.terminator?.terminate()
     await this.ctx.backgroundQueue.destroy()
-    await this.ctx.db.close()
+    await this.ctx.accountManager.close()
     await this.ctx.redisScratch?.quit()
+    await this.ctx.proxyAgent.destroy()
     clearInterval(this.dbStatsInterval)
     clearInterval(this.sequencerStatsInterval)
   }

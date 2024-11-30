@@ -1,69 +1,42 @@
 import fs from 'fs/promises'
 import { gzipSync } from 'zlib'
-import AtpAgent from '@atproto/api'
-import { CloseFn, runTestServer, TestServerInfo } from './_util'
-import { Database, ServerConfig } from '../src'
-import DiskBlobStore from '../src/storage/disk-blobstore'
+import { AtpAgent } from '@atproto/api'
+import { AppContext } from '../src'
+import DiskBlobStore from '../src/disk-blobstore'
 import * as uint8arrays from 'uint8arrays'
-import * as image from '../src/image'
-import axios from 'axios'
 import { randomBytes } from '@atproto/crypto'
 import { BlobRef } from '@atproto/lexicon'
-import { ids } from '../src/lexicon/lexicons'
-
-const alice = {
-  email: 'alice@test.com',
-  handle: 'alice.test',
-  did: '',
-  password: 'alice-pass',
-}
-const bob = {
-  email: 'bob@test.com',
-  handle: 'bob.test',
-  did: '',
-  password: 'bob-pass',
-}
+import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
+import { users } from './seeds/users'
+import { ActorDb } from '../src/actor-store/db'
 
 describe('file uploads', () => {
-  let server: TestServerInfo
-  let aliceAgent: AtpAgent
-  let bobAgent: AtpAgent
-  let blobstore: DiskBlobStore
-  let db: Database
-  let cfg: ServerConfig
-  let serverUrl: string
-  let close: CloseFn
+  let network: TestNetworkNoAppView
+  let ctx: AppContext
+  let aliceDb: ActorDb
+  let alice: string
+  let bob: string
+  let agent: AtpAgent
+  let sc: SeedClient
 
   beforeAll(async () => {
-    server = await runTestServer({
+    network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'file_uploads',
     })
-    blobstore = server.ctx.blobstore as DiskBlobStore
-    db = server.ctx.db
-    close = server.close
-    aliceAgent = new AtpAgent({ service: server.url })
-    bobAgent = new AtpAgent({ service: server.url })
-    cfg = server.ctx.cfg
-    serverUrl = server.url
+    // @ts-expect-error Error due to circular dependency with the dev-env package
+    ctx = network.pds.ctx
+    agent = network.pds.getClient()
+    sc = network.getSeedClient()
+    await sc.createAccount('alice', users.alice)
+    await sc.createAccount('bob', users.bob)
+    alice = sc.dids.alice
+    bob = sc.dids.bob
+    aliceDb = await network.pds.ctx.actorStore.openDb(alice)
   })
 
   afterAll(async () => {
-    await close()
-  })
-
-  it('registers users', async () => {
-    const res = await aliceAgent.createAccount({
-      email: alice.email,
-      handle: alice.handle,
-      password: alice.password,
-    })
-    alice.did = res.data.did
-    const res2 = await bobAgent.createAccount({
-      email: bob.email,
-      handle: bob.handle,
-      password: bob.password,
-    })
-    bob.did = res2.data.did
+    aliceDb.close()
+    await network.close()
   })
 
   let smallBlob: BlobRef
@@ -71,36 +44,44 @@ describe('file uploads', () => {
 
   it('handles client abort', async () => {
     const abortController = new AbortController()
-    const _putTemp = server.ctx.blobstore.putTemp
-    server.ctx.blobstore.putTemp = function (...args) {
+    const BlobStore = ctx.blobstore('did:invalid')
+      .constructor as typeof DiskBlobStore
+    const _putTemp = BlobStore.prototype.putTemp
+    BlobStore.prototype.putTemp = function (...args) {
       // Abort just as processing blob in packages/pds/src/services/repo/blobs.ts
       process.nextTick(() => abortController.abort())
       return _putTemp.call(this, ...args)
     }
-    const response = fetch(`${server.url}/xrpc/com.atproto.repo.uploadBlob`, {
-      method: 'post',
-      body: Buffer.alloc(5000000), // Enough bytes to get some chunking going on
-      signal: abortController.signal,
-      headers: {
-        'content-type': 'image/jpeg',
-        authorization: `Bearer ${aliceAgent.session?.accessJwt}`,
+    const response = fetch(
+      `${network.pds.url}/xrpc/com.atproto.repo.uploadBlob`,
+      {
+        method: 'post',
+        body: Buffer.alloc(5000000), // Enough bytes to get some chunking going on
+        signal: abortController.signal,
+        headers: {
+          ...sc.getHeaders(alice),
+          'content-type': 'image/jpeg',
+        },
       },
-    })
+    )
     await expect(response).rejects.toThrow('operation was aborted')
     // Cleanup
-    server.ctx.blobstore.putTemp = _putTemp
+    BlobStore.prototype.putTemp = _putTemp
     // This test would fail from an uncaught exception: this grace period gives time for that to surface
     await new Promise((res) => setTimeout(res, 10))
   })
 
   it('uploads files', async () => {
-    smallFile = await fs.readFile('tests/image/fixtures/key-portrait-small.jpg')
-    const res = await aliceAgent.api.com.atproto.repo.uploadBlob(smallFile, {
+    smallFile = await fs.readFile(
+      '../dev-env/src/seed/img/key-portrait-small.jpg',
+    )
+    const res = await agent.api.com.atproto.repo.uploadBlob(smallFile, {
+      headers: sc.getHeaders(alice),
       encoding: 'image/jpeg',
     })
     smallBlob = res.data.blob
 
-    const found = await db.db
+    const found = await aliceDb.db
       .selectFrom('blob')
       .selectAll()
       .where('cid', '=', smallBlob.ref.toString())
@@ -111,32 +92,30 @@ describe('file uploads', () => {
     expect(found?.tempKey).toBeDefined()
     expect(found?.width).toBe(87)
     expect(found?.height).toBe(150)
-    expect(await blobstore.hasTemp(found?.tempKey as string)).toBeTruthy()
+    const hasKey = await ctx.blobstore(alice).hasTemp(found?.tempKey as string)
+    expect(hasKey).toBeTruthy()
   })
 
   it('can reference the file', async () => {
-    await updateProfile(aliceAgent, {
-      displayName: 'Alice',
-      avatar: smallBlob,
-    })
+    await sc.updateProfile(alice, { displayName: 'Alice', avatar: smallBlob })
   })
 
   it('after being referenced, the file is moved to permanent storage', async () => {
-    const found = await db.db
+    const found = await aliceDb.db
       .selectFrom('blob')
       .selectAll()
       .where('cid', '=', smallBlob.ref.toString())
       .executeTakeFirst()
-
     expect(found?.tempKey).toBeNull()
-    expect(await blobstore.hasStored(smallBlob.ref)).toBeTruthy()
-    const storedBytes = await blobstore.getBytes(smallBlob.ref)
+    const hasStored = ctx.blobstore(alice).hasStored(smallBlob.ref)
+    expect(hasStored).toBeTruthy()
+    const storedBytes = await ctx.blobstore(alice).getBytes(smallBlob.ref)
     expect(uint8arrays.equals(smallFile, storedBytes)).toBeTruthy()
   })
 
   it('can fetch the file after being referenced', async () => {
-    const { headers, data } = await aliceAgent.api.com.atproto.sync.getBlob({
-      did: alice.did,
+    const { headers, data } = await agent.api.com.atproto.sync.getBlob({
+      did: alice,
       cid: smallBlob.ref.toString(),
     })
     expect(headers['content-type']).toEqual('image/jpeg')
@@ -147,35 +126,18 @@ describe('file uploads', () => {
     expect(uint8arrays.equals(smallFile, new Uint8Array(data))).toBeTruthy()
   })
 
-  it('serves the referenced blob', async () => {
-    const profile = await aliceAgent.api.app.bsky.actor.getProfile({
-      actor: 'alice.test',
-    })
-    const avatar = profile.data.avatar as string
-    expect(typeof avatar).toBe('string')
-    const url = avatar.replace(cfg.publicUrl, serverUrl)
-    const res = await axios.get(url, { responseType: 'stream' })
-    expect(res.headers['content-type']).toBe('image/jpeg')
-    const info = await image.getInfo(res.data)
-    expect(info).toEqual(
-      expect.objectContaining({
-        height: 1000,
-        width: 1000,
-      }),
-    )
-  })
-
   let largeBlob: BlobRef
   let largeFile: Uint8Array
 
   it('does not allow referencing a file that is outside blob constraints', async () => {
-    largeFile = await fs.readFile('tests/image/fixtures/hd-key.jpg')
-    const res = await aliceAgent.api.com.atproto.repo.uploadBlob(largeFile, {
+    largeFile = await fs.readFile('../dev-env/src/seed/img/hd-key.jpg')
+    const res = await agent.api.com.atproto.repo.uploadBlob(largeFile, {
+      headers: sc.getHeaders(alice),
       encoding: 'image/jpeg',
     })
     largeBlob = res.data.blob
 
-    const profilePromise = updateProfile(aliceAgent, {
+    const profilePromise = sc.updateProfile(alice, {
       avatar: largeBlob,
     })
 
@@ -183,59 +145,64 @@ describe('file uploads', () => {
   })
 
   it('does not make a blob permanent if referencing failed', async () => {
-    const found = await db.db
+    const found = await aliceDb.db
       .selectFrom('blob')
       .selectAll()
       .where('cid', '=', largeBlob.ref.toString())
       .executeTakeFirst()
 
     expect(found?.tempKey).toBeDefined()
-    expect(await blobstore.hasTemp(found?.tempKey as string)).toBeTruthy()
-    expect(await blobstore.hasStored(largeBlob.ref)).toBeFalsy()
+    const hasTemp = await ctx.blobstore(alice).hasTemp(found?.tempKey as string)
+    expect(hasTemp).toBeTruthy()
+    const hasStored = await ctx.blobstore(alice).hasStored(largeBlob.ref)
+    expect(hasStored).toBeFalsy()
   })
 
   it('permits duplicate uploads of the same file', async () => {
     const file = await fs.readFile(
-      'tests/image/fixtures/key-landscape-small.jpg',
+      '../dev-env/src/seed/img/key-landscape-small.jpg',
     )
-    const { data: uploadA } = await aliceAgent.api.com.atproto.repo.uploadBlob(
+    const { data: uploadA } = await agent.api.com.atproto.repo.uploadBlob(
       file,
       {
+        headers: sc.getHeaders(alice),
         encoding: 'image/jpeg',
       } as any,
     )
-    const { data: uploadB } = await bobAgent.api.com.atproto.repo.uploadBlob(
+    const { data: uploadB } = await agent.api.com.atproto.repo.uploadBlob(
       file,
       {
+        headers: sc.getHeaders(bob),
         encoding: 'image/jpeg',
       } as any,
     )
     expect(uploadA).toEqual(uploadB)
 
-    await updateProfile(aliceAgent, {
+    await sc.updateProfile(alice, {
       displayName: 'Alice',
       avatar: uploadA.blob,
     })
-    const profileA = await aliceAgent.api.app.bsky.actor.profile.get({
-      repo: alice.did,
+    const profileA = await agent.api.app.bsky.actor.profile.get({
+      repo: alice,
       rkey: 'self',
     })
     expect((profileA.value as any).avatar.cid).toEqual(uploadA.cid)
-    await updateProfile(bobAgent, {
+    await sc.updateProfile(bob, {
       displayName: 'Bob',
       avatar: uploadB.blob,
     })
-    const profileB = await bobAgent.api.app.bsky.actor.profile.get({
-      repo: bob.did,
+    const profileB = await agent.api.app.bsky.actor.profile.get({
+      repo: bob,
       rkey: 'self',
     })
     expect((profileB.value as any).avatar.cid).toEqual(uploadA.cid)
     const { data: uploadAfterPermanent } =
-      await aliceAgent.api.com.atproto.repo.uploadBlob(file, {
+      await agent.api.com.atproto.repo.uploadBlob(file, {
+        headers: sc.getHeaders(alice),
         encoding: 'image/jpeg',
       } as any)
     expect(uploadAfterPermanent).toEqual(uploadA)
-    const blob = await db.db
+    const blob = await aliceDb.db
       .selectFrom('blob')
       .selectAll()
       .where('cid', '=', uploadAfterPermanent.blob.ref.toString())
@@ -244,11 +211,12 @@ describe('file uploads', () => {
   })
 
   it('supports compression during upload', async () => {
-    const { data: uploaded } = await aliceAgent.api.com.atproto.repo.uploadBlob(
+    const { data: uploaded } = await agent.api.com.atproto.repo.uploadBlob(
       gzipSync(smallFile),
       {
         encoding: 'image/jpeg',
         headers: {
+          ...sc.getHeaders(alice),
           'content-encoding': 'gzip',
         },
       } as any,
@@ -258,13 +226,14 @@ describe('file uploads', () => {
 
   it('corrects a bad mimetype', async () => {
     const file = await fs.readFile(
-      'tests/image/fixtures/key-landscape-large.jpg',
+      '../dev-env/src/seed/img/key-landscape-large.jpg',
     )
-    const res = await aliceAgent.api.com.atproto.repo.uploadBlob(file, {
+    const res = await agent.api.com.atproto.repo.uploadBlob(file, {
+      headers: sc.getHeaders(alice),
       encoding: 'video/mp4',
     } as any)
 
-    const found = await db.db
+    const found = await aliceDb.db
       .selectFrom('blob')
       .selectAll()
       .where('cid', '=', res.data.blob.ref.toString())
@@ -276,12 +245,13 @@ describe('file uploads', () => {
   })
 
   it('handles pngs', async () => {
-    const file = await fs.readFile('tests/image/fixtures/at.png')
-    const res = await aliceAgent.api.com.atproto.repo.uploadBlob(file, {
+    const file = await fs.readFile('../dev-env/src/seed/img/at.png')
+    const res = await agent.api.com.atproto.repo.uploadBlob(file, {
+      headers: sc.getHeaders(alice),
       encoding: 'image/png',
     })
 
-    const found = await db.db
+    const found = await aliceDb.db
       .selectFrom('blob')
       .selectAll()
       .where('cid', '=', res.data.blob.ref.toString())
@@ -294,11 +264,12 @@ describe('file uploads', () => {
 
   it('handles unknown mimetypes', async () => {
     const file = await randomBytes(20000)
-    const res = await aliceAgent.api.com.atproto.repo.uploadBlob(file, {
+    const res = await agent.api.com.atproto.repo.uploadBlob(file, {
+      headers: sc.getHeaders(alice),
       encoding: 'test/fake',
     } as any)
 
-    const found = await db.db
+    const found = await aliceDb.db
       .selectFrom('blob')
       .selectAll()
       .where('cid', '=', res.data.blob.ref.toString())
@@ -307,12 +278,3 @@ describe('file uploads', () => {
     expect(found?.mimeType).toBe('test/fake')
   })
 })
-
-async function updateProfile(agent: AtpAgent, record: Record<string, unknown>) {
-  return await agent.api.com.atproto.repo.putRecord({
-    repo: agent.session?.did ?? '',
-    collection: ids.AppBskyActorProfile,
-    rkey: 'self',
-    record,
-  })
-}

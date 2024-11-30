@@ -1,17 +1,15 @@
+import assert from 'node:assert'
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { DAY, MINUTE } from '@atproto/common'
 import { normalizeAndValidateHandle } from '../../../../handle'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import {
-  HandleSequenceToken,
-  UserAlreadyExistsError,
-} from '../../../../services/account'
 import { httpLogger } from '../../../../logger'
-import { DAY, MINUTE } from '@atproto/common'
+import { ids } from '../../../../lexicon/lexicons'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.identity.updateHandle({
-    auth: ctx.accessVerifierCheckTakedown,
+    auth: ctx.authVerifier.accessStandard({ checkTakedown: true }),
     rateLimit: [
       {
         durationMs: 5 * MINUTE,
@@ -26,6 +24,24 @@ export default function (server: Server, ctx: AppContext) {
     ],
     handler: async ({ auth, input }) => {
       const requester = auth.credentials.did
+
+      if (ctx.entrywayAgent) {
+        assert(ctx.cfg.entryway)
+
+        // the full flow is:
+        // -> entryway(identity.updateHandle) [update handle, submit plc op]
+        // -> pds(admin.updateAccountHandle)  [track handle, sequence handle update]
+        await ctx.entrywayAgent.com.atproto.identity.updateHandle(
+          { did: requester, handle: input.body.handle },
+          await ctx.serviceAuthHeaders(
+            auth.credentials.did,
+            ctx.cfg.entryway.did,
+            ids.ComAtprotoIdentityUpdateHandle,
+          ),
+        )
+        return
+      }
+
       const handle = await normalizeAndValidateHandle({
         ctx,
         handle: input.body.handle,
@@ -33,40 +49,40 @@ export default function (server: Server, ctx: AppContext) {
       })
 
       // Pessimistic check to handle spam: also enforced by updateHandle() and the db.
-      const handleDid = await ctx.services.account(ctx.db).getHandleDid(handle)
+      const account = await ctx.accountManager.getAccount(handle, {
+        includeDeactivated: true,
+      })
 
-      let seqHandleTok: HandleSequenceToken
-      if (handleDid) {
-        if (handleDid !== requester) {
-          throw new InvalidRequestError(`Handle already taken: ${handle}`)
-        }
-        seqHandleTok = { did: requester, handle: handle }
-      } else {
-        seqHandleTok = await ctx.db.transaction(async (dbTxn) => {
-          let tok: HandleSequenceToken
-          try {
-            tok = await ctx.services
-              .account(dbTxn)
-              .updateHandle(requester, handle)
-          } catch (err) {
-            if (err instanceof UserAlreadyExistsError) {
-              throw new InvalidRequestError(`Handle already taken: ${handle}`)
-            }
-            throw err
-          }
+      if (!account) {
+        if (requester.startsWith('did:plc:')) {
           await ctx.plcClient.updateHandle(
             requester,
             ctx.plcRotationKey,
             handle,
           )
-          return tok
-        })
+        } else {
+          const resolved = await ctx.idResolver.did.resolveAtprotoData(
+            requester,
+            true,
+          )
+          if (resolved.handle !== handle) {
+            throw new InvalidRequestError(
+              'DID is not properly configured for handle',
+            )
+          }
+        }
+        await ctx.accountManager.updateHandle(requester, handle)
+      } else {
+        // if we found an account with matching handle, check if it is the same as requester
+        // if so emit an identity event, otherwise error.
+        if (account.did !== requester) {
+          throw new InvalidRequestError(`Handle already taken: ${handle}`)
+        }
       }
 
       try {
-        await ctx.db.transaction(async (dbTxn) => {
-          await ctx.services.account(dbTxn).sequenceHandle(seqHandleTok)
-        })
+        await ctx.sequencer.sequenceHandleUpdate(requester, handle)
+        await ctx.sequencer.sequenceIdentityEvt(requester, handle)
       } catch (err) {
         httpLogger.error(
           { err, did: requester, handle },

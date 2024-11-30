@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Get suggested follows related to a given actor.",
+      "description": "Enumerates follows similar to a given account (actor). Expected use is to recommend additional accounts immediately after following one account.",
       "parameters": {
         "type": "params",
         "required": ["actor"],
@@ -24,6 +24,11 @@
                 "type": "ref",
                 "ref": "app.bsky.actor.defs#profileView"
               }
+            },
+            "isFallback": {
+              "type": "boolean",
+              "description": "If true, response has fallen-back to generic results, and is not scoped using relativeToDid",
+              "default": false
             }
           }
         }

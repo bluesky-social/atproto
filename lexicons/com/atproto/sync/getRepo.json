@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Gets the did's repo, optionally catching up from a specific revision.",
+      "description": "Download a repository export as CAR file. Optionally only a 'diff' since a previous revision. Does not require auth; implemented by PDS.",
       "parameters": {
         "type": "params",
         "required": ["did"],
@@ -16,13 +16,19 @@
           },
           "since": {
             "type": "string",
-            "description": "The revision of the repo to catch up from."
+            "description": "The revision ('rev') of the repo to create a diff from."
           }
         }
       },
       "output": {
         "encoding": "application/vnd.ipld.car"
-      }
+      },
+      "errors": [
+        { "name": "RepoNotFound" },
+        { "name": "RepoTakendown" },
+        { "name": "RepoSuspended" },
+        { "name": "RepoDeactivated" }
+      ]
     }
   }
 }

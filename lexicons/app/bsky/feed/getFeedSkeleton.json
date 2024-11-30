@@ -4,12 +4,16 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "A skeleton of a feed provided by a feed generator",
+      "description": "Get a skeleton of a feed provided by a feed generator. Auth is optional, depending on provider requirements, and provides the DID of the requester. Implemented by Feed Generator Service.",
       "parameters": {
         "type": "params",
         "required": ["feed"],
         "properties": {
-          "feed": { "type": "string", "format": "at-uri" },
+          "feed": {
+            "type": "string",
+            "format": "at-uri",
+            "description": "Reference to feed generator record describing the specific feed being requested."
+          },
           "limit": {
             "type": "integer",
             "minimum": 1,

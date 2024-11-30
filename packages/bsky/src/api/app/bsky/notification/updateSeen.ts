@@ -1,33 +1,49 @@
+import murmur from 'murmurhash'
+import { Struct, Timestamp } from '@bufbuild/protobuf'
 import { Server } from '../../../../lexicon'
-import { InvalidRequestError } from '@atproto/xrpc-server'
 import AppContext from '../../../../context'
-import { excluded } from '../../../../db/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.notification.updateSeen({
-    auth: ctx.authVerifier,
+    auth: ctx.authVerifier.standard,
     handler: async ({ input, auth }) => {
-      const { seenAt } = input.body
-      const viewer = auth.credentials.did
-
-      let parsed: string
-      try {
-        parsed = new Date(seenAt).toISOString()
-      } catch (_err) {
-        throw new InvalidRequestError('Invalid date')
-      }
-
-      const db = ctx.db.getPrimary()
-
-      await db.db
-        .insertInto('actor_state')
-        .values({ did: viewer, lastSeenNotifs: parsed })
-        .onConflict((oc) =>
-          oc.column('did').doUpdateSet({
-            lastSeenNotifs: excluded(db.db, 'lastSeenNotifs'),
-          }),
-        )
-        .executeTakeFirst()
+      const viewer = auth.credentials.iss
+      const seenAt = new Date(input.body.seenAt)
+      // For now we keep separate seen times behind the scenes for priority, but treat them as a single seen time.
+      await Promise.all([
+        ctx.dataplane.updateNotificationSeen({
+          actorDid: viewer,
+          timestamp: Timestamp.fromDate(seenAt),
+          priority: false,
+        }),
+        ctx.dataplane.updateNotificationSeen({
+          actorDid: viewer,
+          timestamp: Timestamp.fromDate(seenAt),
+          priority: true,
+        }),
+        ctx.courierClient?.pushNotifications({
+          notifications: [
+            {
+              id: getNotifId(viewer, seenAt),
+              clientControlled: true,
+              recipientDid: viewer,
+              alwaysDeliver: false,
+              collapseKey: 'mark-read-generic',
+              timestamp: Timestamp.fromDate(new Date()),
+              additional: Struct.fromJson({
+                reason: 'mark-read-generic',
+              }),
+            },
+          ],
+        }),
+      ])
     },
   })
+}
+
+function getNotifId(viewer: string, seenAt: Date) {
+  const key = ['mark-read-generic', viewer, seenAt.getTime().toString()].join(
+    '::',
+  )
+  return murmur.v3(key).toString(16)
 }

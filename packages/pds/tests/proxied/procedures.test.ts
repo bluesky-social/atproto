@@ -1,6 +1,5 @@
-import AtpAgent from '@atproto/api'
-import { TestNetwork } from '@atproto/dev-env'
-import { SeedClient } from '../seeds/client'
+import { AtpAgent } from '@atproto/api'
+import { TestNetwork, SeedClient } from '@atproto/dev-env'
 import basicSeed from '../seeds/basic'
 
 describe('proxies appview procedures', () => {
@@ -17,10 +16,9 @@ describe('proxies appview procedures', () => {
       dbPostgresSchema: 'proxy_procedures',
     })
     agent = network.pds.getClient()
-    sc = new SeedClient(agent)
-    await basicSeed(sc)
+    sc = network.getSeedClient()
+    await basicSeed(sc, { addModLabels: network.bsky })
     await network.processAll()
-    agent.api.setHeader('x-appview-proxy', 'true')
     alice = sc.dids.alice
     bob = sc.dids.bob
     carol = sc.dids.carol
@@ -93,6 +91,8 @@ describe('proxies appview procedures', () => {
       },
       sc.getHeaders(carol),
     )
+    await network.processAll()
+
     // mute lists
     await agent.api.app.bsky.graph.muteActorList(
       { list: bobList.uri },
@@ -142,7 +142,11 @@ describe('proxies appview procedures', () => {
         { headers: sc.getHeaders(alice) },
       )
     expect(result1.notifications.length).toBeGreaterThanOrEqual(5)
-    expect(result1.notifications.every((n) => !n.isRead)).toBe(true)
+    expect(
+      result1.notifications.every((n, i) => {
+        return (i === 0 && !n.isRead) || (i !== 0 && n.isRead)
+      }),
+    ).toBe(true)
     // update last seen
     const { indexedAt: lastSeenAt } = result1.notifications[2]
     await agent.api.app.bsky.notification.updateSeen(
@@ -163,7 +167,7 @@ describe('proxies appview procedures', () => {
     expect(result2.notifications).toEqual(
       result1.notifications.map((n) => ({
         ...n,
-        isRead: n.indexedAt <= lastSeenAt,
+        isRead: n.indexedAt < lastSeenAt,
       })),
     )
   })

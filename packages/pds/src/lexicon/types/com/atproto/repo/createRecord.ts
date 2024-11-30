@@ -6,22 +6,23 @@ import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
-import { HandlerAuth } from '@atproto/xrpc-server'
+import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
+import * as ComAtprotoRepoDefs from './defs'
 
 export interface QueryParams {}
 
 export interface InputSchema {
-  /** The handle or DID of the repo. */
+  /** The handle or DID of the repo (aka, current account). */
   repo: string
   /** The NSID of the record collection. */
   collection: string
-  /** The key of the record. */
+  /** The Record Key. */
   rkey?: string
-  /** Validate the record? */
-  validate: boolean
-  /** The record to create. */
+  /** Can be set to 'false' to skip Lexicon schema validation of record data, 'true' to require it, or leave unset to validate only for known Lexicons. */
+  validate?: boolean
+  /** The record itself. Must contain a $type field. */
   record: {}
-  /** Compare and swap with the previous commit by cid. */
+  /** Compare and swap with the previous commit by CID. */
   swapCommit?: string
   [k: string]: unknown
 }
@@ -29,6 +30,8 @@ export interface InputSchema {
 export interface OutputSchema {
   uri: string
   cid: string
+  commit?: ComAtprotoRepoDefs.CommitMeta
+  validationStatus?: 'valid' | 'unknown' | (string & {})
   [k: string]: unknown
 }
 
@@ -49,7 +52,7 @@ export interface HandlerError {
   error?: 'InvalidSwap'
 }
 
-export type HandlerOutput = HandlerError | HandlerSuccess
+export type HandlerOutput = HandlerError | HandlerSuccess | HandlerPipeThrough
 export type HandlerReqCtx<HA extends HandlerAuth = never> = {
   auth: HA
   params: QueryParams

@@ -1,27 +1,31 @@
 {
   "name": "@atproto/common-web",
-  "version": "0.2.0",
-  "main": "src/index.ts",
-  "publishConfig": {
-    "main": "dist/index.js",
-    "types": "dist/index.d.ts"
-  },
+  "version": "0.3.1",
   "license": "MIT",
+  "description": "Shared web-platform-friendly code for atproto libraries",
+  "keywords": [
+    "atproto"
+  ],
+  "homepage": "https://atproto.com",
   "repository": {
     "type": "git",
-    "url": "https://github.com/bluesky-social/atproto.git",
+    "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/common-web"
   },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "test": "jest",
-    "build": "node ./build.js",
-    "postbuild": "tsc --build tsconfig.build.json",
-    "update-main-to-dist": "node ../../update-main-to-dist.js packages/common-web"
+    "build": "tsc --build tsconfig.build.json"
   },
   "dependencies": {
     "graphemer": "^1.4.0",
     "multiformats": "^9.9.0",
     "uint8arrays": "3.0.0",
-    "zod": "^3.21.4"
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "jest": "^28.1.2",
+    "typescript": "^5.6.3"
   }
 }

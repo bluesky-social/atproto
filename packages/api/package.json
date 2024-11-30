@@ -1,39 +1,40 @@
 {
   "name": "@atproto/api",
-  "version": "0.6.14",
-  "main": "src/index.ts",
-  "publishConfig": {
-    "main": "dist/index.js",
-    "types": "dist/index.d.ts"
-  },
-  "scripts": {
-    "codegen": "pnpm docgen && node ./scripts/generate-code.mjs && lex gen-api ./src/client ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/*",
-    "docgen": "node ./scripts/generate-docs.mjs",
-    "build": "node ./build.js",
-    "postbuild": "tsc --build tsconfig.build.json",
-    "update-main-to-dist": "node ../../update-main-to-dist.js packages/api",
-    "test": "jest",
-    "bench": "jest --config jest.bench.config.js",
-    "bench:profile": "node --inspect-brk ../../node_modules/.bin/jest --config jest.bench.config.js"
-  },
+  "version": "0.13.18",
   "license": "MIT",
+  "description": "Client library for atproto and Bluesky",
+  "keywords": [
+    "atproto",
+    "bluesky",
+    "api"
+  ],
+  "homepage": "https://atproto.com",
   "repository": {
     "type": "git",
-    "url": "https://github.com/bluesky-social/atproto.git",
+    "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/api"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "codegen": "node ./scripts/generate-code.mjs && lex gen-api --yes ./src/client ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/* ../../lexicons/chat/bsky/*/* ../../lexicons/tools/ozone/*/*",
+    "build": "tsc --build tsconfig.build.json",
+    "test": "jest"
   },
   "dependencies": {
     "@atproto/common-web": "workspace:^",
     "@atproto/lexicon": "workspace:^",
     "@atproto/syntax": "workspace:^",
     "@atproto/xrpc": "workspace:^",
+    "await-lock": "^2.2.2",
     "multiformats": "^9.9.0",
     "tlds": "^1.234.0",
-    "typed-emitter": "^2.1.0"
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@atproto/lex-cli": "workspace:^",
-    "@atproto/pds": "workspace:^",
-    "common-tags": "^1.8.2"
+    "jest": "^28.1.2",
+    "prettier": "^3.2.5",
+    "typescript": "^5.6.3"
   }
 }

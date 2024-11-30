@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Gets blocks needed for existence or non-existence of record.",
+      "description": "Get data blocks needed to prove the existence or non-existence of record in the current version of repo. Does not require auth.",
       "parameters": {
         "type": "params",
         "required": ["did", "collection", "rkey"],
@@ -15,17 +15,24 @@
             "description": "The DID of the repo."
           },
           "collection": { "type": "string", "format": "nsid" },
-          "rkey": { "type": "string" },
+          "rkey": { "type": "string", "description": "Record Key" },
           "commit": {
             "type": "string",
             "format": "cid",
-            "description": "An optional past commit CID."
+            "description": "DEPRECATED: referenced a repo commit by CID, and retrieved record as of that commit"
           }
         }
       },
       "output": {
         "encoding": "application/vnd.ipld.car"
-      }
+      },
+      "errors": [
+        { "name": "RecordNotFound" },
+        { "name": "RepoNotFound" },
+        { "name": "RepoTakendown" },
+        { "name": "RepoSuspended" },
+        { "name": "RepoDeactivated" }
+      ]
     }
   }
 }

@@ -6,7 +6,7 @@ import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
-import { HandlerAuth } from '@atproto/xrpc-server'
+import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 
 export interface QueryParams {
   /** The handle or DID of the repo. */
@@ -20,7 +20,7 @@ export interface QueryParams {
   rkeyStart?: string
   /** DEPRECATED: The highest sort-ordered rkey to stop at (exclusive) */
   rkeyEnd?: string
-  /** Reverse the order of the returned records? */
+  /** Flag to reverse the order of the returned records. */
   reverse?: boolean
 }
 
@@ -45,7 +45,7 @@ export interface HandlerError {
   message?: string
 }
 
-export type HandlerOutput = HandlerError | HandlerSuccess
+export type HandlerOutput = HandlerError | HandlerSuccess | HandlerPipeThrough
 export type HandlerReqCtx<HA extends HandlerAuth = never> = {
   auth: HA
   params: QueryParams

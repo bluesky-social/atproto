@@ -1,7 +1,7 @@
 /**
  * GENERATED CODE - DO NOT MODIFY
  */
-import { Headers, XRPCError } from '@atproto/xrpc'
+import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
@@ -17,24 +17,26 @@ export type InputSchema = undefined
 export interface OutputSchema {
   handle: string
   did: string
+  /** The complete DID document for this account. */
   didDoc: {}
+  /** List of all the collections (NSIDs) for which this repo contains at least one record. */
   collections: string[]
+  /** Indicates if handle is currently valid (resolves bi-directionally) */
   handleIsCorrect: boolean
   [k: string]: unknown
 }
 
 export interface CallOptions {
-  headers?: Headers
+  signal?: AbortSignal
+  headers?: HeadersMap
 }
 
 export interface Response {
   success: boolean
-  headers: Headers
+  headers: HeadersMap
   data: OutputSchema
 }
 
 export function toKnownErr(e: any) {
-  if (e instanceof XRPCError) {
-  }
   return e
 }

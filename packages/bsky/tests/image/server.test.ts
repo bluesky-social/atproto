@@ -1,11 +1,8 @@
 import axios, { AxiosInstance } from 'axios'
 import { CID } from 'multiformats/cid'
-import { AtpAgent } from '@atproto/api'
 import { cidForCbor } from '@atproto/common'
-import { TestNetwork } from '@atproto/dev-env'
+import { TestNetwork, basicSeed } from '@atproto/dev-env'
 import { getInfo } from '../../src/image/sharp'
-import { SeedClient } from '../seeds/client'
-import basicSeed from '../seeds/basic'
 import { ImageUriBuilder } from '../../src/image/uri'
 
 describe('image processing server', () => {
@@ -18,11 +15,9 @@ describe('image processing server', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_image_processing_server',
     })
-    const pdsAgent = new AtpAgent({ service: network.pds.url })
-    const sc = new SeedClient(pdsAgent)
+    const sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()
-    await network.bsky.processAll()
     fileDid = sc.dids.carol
     fileCid = sc.posts[fileDid][0].images[0].image.ref
     client = axios.create({
@@ -40,7 +35,7 @@ describe('image processing server', () => {
       ImageUriBuilder.getPath({
         preset: 'feed_fullsize',
         did: fileDid,
-        cid: fileCid,
+        cid: fileCid.toString(),
       }),
       { responseType: 'stream' },
     )
@@ -66,7 +61,7 @@ describe('image processing server', () => {
     const path = ImageUriBuilder.getPath({
       preset: 'avatar',
       did: fileDid,
-      cid: fileCid,
+      cid: fileCid.toString(),
     })
     const res1 = await client.get(path, { responseType: 'arraybuffer' })
     expect(res1.headers['x-cache']).toEqual('miss')
@@ -84,7 +79,7 @@ describe('image processing server', () => {
       ImageUriBuilder.getPath({
         preset: 'feed_fullsize',
         did: fileDid,
-        cid: missingCid,
+        cid: missingCid.toString(),
       }),
     )
     expect(res.status).toEqual(404)

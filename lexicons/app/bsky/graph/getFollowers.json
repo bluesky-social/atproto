@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Who is following an actor?",
+      "description": "Enumerates accounts which follow a specified account (actor).",
       "parameters": {
         "type": "params",
         "required": ["actor"],

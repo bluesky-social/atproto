@@ -2,10 +2,11 @@
 
 exports[`pds follow views fetches followers 1`] = `
 Object {
-  "cursor": "0000000000000::bafycid",
+  "cursor": "0000000000000__bafycid",
   "followers": Array [
     Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-eve",
       "did": "user(0)",
       "displayName": "display-eve",
@@ -21,6 +22,7 @@ Object {
     },
     Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-dan",
       "did": "user(2)",
       "displayName": "display-dan",
@@ -36,6 +38,7 @@ Object {
     },
     Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(0)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-bob",
       "did": "user(4)",
       "displayName": "display-bob",
@@ -51,6 +54,7 @@ Object {
     },
     Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(7)/cids(0)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-carol",
       "did": "user(6)",
       "displayName": "display-carol",
@@ -67,6 +71,7 @@ Object {
   ],
   "subject": Object {
     "avatar": "https://bsky.public.url/img/avatar/plain/user(9)/cids(0)@jpeg",
+    "createdAt": "1970-01-01T00:00:00.000Z",
     "description": "descript-alice",
     "did": "user(8)",
     "displayName": "display-alice",
@@ -83,10 +88,11 @@ Object {
 
 exports[`pds follow views fetches followers 2`] = `
 Object {
-  "cursor": "0000000000000::bafycid",
+  "cursor": "0000000000000__bafycid",
   "followers": Array [
     Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-dan",
       "did": "user(0)",
       "displayName": "display-dan",
@@ -102,6 +108,7 @@ Object {
     },
     Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-alice",
       "did": "user(2)",
       "displayName": "display-alice",
@@ -116,6 +123,7 @@ Object {
   ],
   "subject": Object {
     "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(0)@jpeg",
+    "createdAt": "1970-01-01T00:00:00.000Z",
     "description": "descript-bob",
     "did": "user(4)",
     "displayName": "display-bob",
@@ -134,10 +142,11 @@ Object {
 
 exports[`pds follow views fetches followers 3`] = `
 Object {
-  "cursor": "0000000000000::bafycid",
+  "cursor": "0000000000000__bafycid",
   "followers": Array [
     Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-eve",
       "did": "user(0)",
       "displayName": "display-eve",
@@ -153,6 +162,7 @@ Object {
     },
     Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-bob",
       "did": "user(2)",
       "displayName": "display-bob",
@@ -168,6 +178,7 @@ Object {
     },
     Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(0)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-alice",
       "did": "user(4)",
       "displayName": "display-alice",
@@ -182,6 +193,7 @@ Object {
   ],
   "subject": Object {
     "avatar": "https://bsky.public.url/img/avatar/plain/user(7)/cids(0)@jpeg",
+    "createdAt": "1970-01-01T00:00:00.000Z",
     "description": "descript-carol",
     "did": "user(6)",
     "displayName": "display-carol",
@@ -200,10 +212,11 @@ Object {
 
 exports[`pds follow views fetches followers 4`] = `
 Object {
-  "cursor": "0000000000000::bafycid",
+  "cursor": "0000000000000__bafycid",
   "followers": Array [
     Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-alice",
       "did": "user(0)",
       "displayName": "display-alice",
@@ -218,6 +231,7 @@ Object {
   ],
   "subject": Object {
     "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
+    "createdAt": "1970-01-01T00:00:00.000Z",
     "description": "descript-dan",
     "did": "user(2)",
     "displayName": "display-dan",
@@ -236,10 +250,11 @@ Object {
 
 exports[`pds follow views fetches followers 5`] = `
 Object {
-  "cursor": "0000000000000::bafycid",
+  "cursor": "0000000000000__bafycid",
   "followers": Array [
     Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-dan",
       "did": "user(0)",
       "displayName": "display-dan",
@@ -255,6 +270,7 @@ Object {
     },
     Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-alice",
       "did": "user(2)",
       "displayName": "display-alice",
@@ -269,6 +285,7 @@ Object {
   ],
   "subject": Object {
     "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(0)@jpeg",
+    "createdAt": "1970-01-01T00:00:00.000Z",
     "description": "descript-eve",
     "did": "user(4)",
     "displayName": "display-eve",
@@ -287,10 +304,11 @@ Object {
 
 exports[`pds follow views fetches follows 1`] = `
 Object {
-  "cursor": "0000000000000::bafycid",
+  "cursor": "0000000000000__bafycid",
   "follows": Array [
     Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-eve",
       "did": "user(0)",
       "displayName": "display-eve",
@@ -306,6 +324,7 @@ Object {
     },
     Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-dan",
       "did": "user(2)",
       "displayName": "display-dan",
@@ -321,6 +340,7 @@ Object {
     },
     Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(0)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-carol",
       "did": "user(4)",
       "displayName": "display-carol",
@@ -336,6 +356,7 @@ Object {
     },
     Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(7)/cids(0)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-bob",
       "did": "user(6)",
       "displayName": "display-bob",
@@ -352,6 +373,7 @@ Object {
   ],
   "subject": Object {
     "avatar": "https://bsky.public.url/img/avatar/plain/user(9)/cids(0)@jpeg",
+    "createdAt": "1970-01-01T00:00:00.000Z",
     "description": "descript-alice",
     "did": "user(8)",
     "displayName": "display-alice",
@@ -368,10 +390,11 @@ Object {
 
 exports[`pds follow views fetches follows 2`] = `
 Object {
-  "cursor": "0000000000000::bafycid",
+  "cursor": "0000000000000__bafycid",
   "follows": Array [
     Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-carol",
       "did": "user(0)",
       "displayName": "display-carol",
@@ -387,6 +410,7 @@ Object {
     },
     Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-alice",
       "did": "user(2)",
       "displayName": "display-alice",
@@ -401,6 +425,7 @@ Object {
   ],
   "subject": Object {
     "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(0)@jpeg",
+    "createdAt": "1970-01-01T00:00:00.000Z",
     "description": "descript-bob",
     "did": "user(4)",
     "displayName": "display-bob",
@@ -419,10 +444,11 @@ Object {
 
 exports[`pds follow views fetches follows 3`] = `
 Object {
-  "cursor": "0000000000000::bafycid",
+  "cursor": "0000000000000__bafycid",
   "follows": Array [
     Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-alice",
       "did": "user(0)",
       "displayName": "display-alice",
@@ -437,6 +463,7 @@ Object {
   ],
   "subject": Object {
     "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
+    "createdAt": "1970-01-01T00:00:00.000Z",
     "description": "descript-carol",
     "did": "user(2)",
     "displayName": "display-carol",
@@ -455,10 +482,11 @@ Object {
 
 exports[`pds follow views fetches follows 4`] = `
 Object {
-  "cursor": "0000000000000::bafycid",
+  "cursor": "0000000000000__bafycid",
   "follows": Array [
     Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-eve",
       "did": "user(0)",
       "displayName": "display-eve",
@@ -474,6 +502,7 @@ Object {
     },
     Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-bob",
       "did": "user(2)",
       "displayName": "display-bob",
@@ -489,6 +518,7 @@ Object {
     },
     Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(0)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-alice",
       "did": "user(4)",
       "displayName": "display-alice",
@@ -503,6 +533,7 @@ Object {
   ],
   "subject": Object {
     "avatar": "https://bsky.public.url/img/avatar/plain/user(7)/cids(0)@jpeg",
+    "createdAt": "1970-01-01T00:00:00.000Z",
     "description": "descript-dan",
     "did": "user(6)",
     "displayName": "display-dan",
@@ -521,10 +552,11 @@ Object {
 
 exports[`pds follow views fetches follows 5`] = `
 Object {
-  "cursor": "0000000000000::bafycid",
+  "cursor": "0000000000000__bafycid",
   "follows": Array [
     Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-carol",
       "did": "user(0)",
       "displayName": "display-carol",
@@ -540,6 +572,7 @@ Object {
     },
     Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-alice",
       "did": "user(2)",
       "displayName": "display-alice",
@@ -554,6 +587,7 @@ Object {
   ],
   "subject": Object {
     "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(0)@jpeg",
+    "createdAt": "1970-01-01T00:00:00.000Z",
     "description": "descript-eve",
     "did": "user(4)",
     "displayName": "display-eve",
@@ -567,5 +601,28 @@ Object {
       "muted": false,
     },
   },
+}
+`;
+
+exports[`pds follow views fetches relationships between users 1`] = `
+Object {
+  "actor": "user(0)",
+  "relationships": Array [
+    Object {
+      "$type": "app.bsky.graph.defs#relationship",
+      "did": "user(1)",
+      "followedBy": "record(1)",
+      "following": "record(0)",
+    },
+    Object {
+      "$type": "app.bsky.graph.defs#relationship",
+      "did": "user(0)",
+    },
+    Object {
+      "$type": "app.bsky.graph.defs#relationship",
+      "did": "user(2)",
+      "following": "record(2)",
+    },
+  ],
 }
 `;

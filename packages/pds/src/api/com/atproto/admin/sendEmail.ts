@@ -1,34 +1,51 @@
-import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import assert from 'node:assert'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
+import { resultPassthru } from '../../../proxy'
+import { ids } from '../../../../lexicon/lexicons'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.sendEmail({
-    auth: ctx.roleVerifier,
-    handler: async ({ input, auth }) => {
-      if (!auth.credentials.admin && !auth.credentials.moderator) {
-        throw new AuthRequiredError('Insufficient privileges')
-      }
-
+    auth: ctx.authVerifier.moderator,
+    handler: async ({ input }) => {
       const {
         content,
         recipientDid,
-        subject = 'Message from Bluesky moderator',
+        subject = 'Message via your PDS',
       } = input.body
-      const userInfo = await ctx.db.db
-        .selectFrom('user_account')
-        .where('did', '=', recipientDid)
-        .select('email')
-        .executeTakeFirst()
 
-      if (!userInfo) {
+      const account = await ctx.accountManager.getAccount(recipientDid, {
+        includeDeactivated: true,
+        includeTakenDown: true,
+      })
+      if (!account) {
         throw new InvalidRequestError('Recipient not found')
+      }
+
+      if (ctx.entrywayAgent) {
+        assert(ctx.cfg.entryway)
+        return resultPassthru(
+          await ctx.entrywayAgent.com.atproto.admin.sendEmail(
+            input.body,
+            await ctx.serviceAuthHeaders(
+              recipientDid,
+              ctx.cfg.entryway.did,
+              ids.ComAtprotoAdminSendEmail,
+            ),
+          ),
+        )
+      }
+
+      if (!account.email) {
+        throw new InvalidRequestError('account does not have an email address')
       }
 
       await ctx.moderationMailer.send(
         { content },
-        { subject, to: userInfo.email },
+        { subject, to: account.email },
       )
+
       return {
         encoding: 'application/json',
         body: { sent: true },

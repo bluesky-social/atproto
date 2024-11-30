@@ -1,11 +1,11 @@
-import AtpAgent, { AppBskyFeedGetPostThread } from '@atproto/api'
-import { TestNetwork } from '@atproto/dev-env'
-import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
-import { forSnapshot, stripViewerFromThread } from '../_util'
-import { SeedClient } from '../seeds/client'
-import basicSeed from '../seeds/basic'
-import assert from 'assert'
-import { isThreadViewPost } from '@atproto/api/src/client/types/app/bsky/feed/defs'
+import { AppBskyFeedGetPostThread, AtpAgent } from '@atproto/api'
+import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
+import {
+  assertIsThreadViewPost,
+  forSnapshot,
+  stripViewerFromThread,
+} from '../_util'
+import { ids } from '../../src/lexicon/lexicons'
 
 describe('pds thread views', () => {
   let network: TestNetwork
@@ -22,8 +22,7 @@ describe('pds thread views', () => {
       dbPostgresSchema: 'bsky_views_thread',
     })
     agent = network.bsky.getClient()
-    const pdsAgent = network.pds.getClient()
-    sc = new SeedClient(pdsAgent)
+    sc = network.getSeedClient()
     await basicSeed(sc)
     alice = sc.dids.alice
     bob = sc.dids.bob
@@ -34,7 +33,6 @@ describe('pds thread views', () => {
     // Add a repost of a reply so that we can confirm myState in the thread
     await sc.repost(bob, sc.replies[alice][0].ref)
     await network.processAll()
-    await network.bsky.processAll()
   })
 
   afterAll(async () => {
@@ -44,7 +42,12 @@ describe('pds thread views', () => {
   it('fetches deep post thread', async () => {
     const thread = await agent.api.app.bsky.feed.getPostThread(
       { uri: sc.posts[alice][1].ref.uriStr },
-      { headers: await network.serviceHeaders(bob) },
+      {
+        headers: await network.serviceHeaders(
+          bob,
+          ids.AppBskyFeedGetPostThread,
+        ),
+      },
     )
 
     expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
@@ -53,7 +56,32 @@ describe('pds thread views', () => {
   it('fetches shallow post thread', async () => {
     const thread = await agent.api.app.bsky.feed.getPostThread(
       { depth: 1, uri: sc.posts[alice][1].ref.uriStr },
-      { headers: await network.serviceHeaders(bob) },
+      {
+        headers: await network.serviceHeaders(
+          bob,
+          ids.AppBskyFeedGetPostThread,
+        ),
+      },
+    )
+
+    expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
+  })
+
+  it('fetches thread with handle in uri', async () => {
+    const thread = await agent.api.app.bsky.feed.getPostThread(
+      {
+        depth: 1,
+        uri: sc.posts[alice][1].ref.uriStr.replace(
+          `at://${alice}`,
+          `at://${sc.accounts[alice].handle}`,
+        ),
+      },
+      {
+        headers: await network.serviceHeaders(
+          bob,
+          ids.AppBskyFeedGetPostThread,
+        ),
+      },
     )
 
     expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
@@ -62,7 +90,12 @@ describe('pds thread views', () => {
   it('fetches ancestors', async () => {
     const thread = await agent.api.app.bsky.feed.getPostThread(
       { depth: 1, uri: sc.replies[alice][0].ref.uriStr },
-      { headers: await network.serviceHeaders(bob) },
+      {
+        headers: await network.serviceHeaders(
+          bob,
+          ids.AppBskyFeedGetPostThread,
+        ),
+      },
     )
 
     expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
@@ -71,7 +104,12 @@ describe('pds thread views', () => {
   it('fails for an unknown post', async () => {
     const promise = agent.api.app.bsky.feed.getPostThread(
       { uri: 'at://did:example:fake/does.not.exist/self' },
-      { headers: await network.serviceHeaders(bob) },
+      {
+        headers: await network.serviceHeaders(
+          bob,
+          ids.AppBskyFeedGetPostThread,
+        ),
+      },
     )
 
     await expect(promise).rejects.toThrow(
@@ -82,7 +120,12 @@ describe('pds thread views', () => {
   it('fetches post thread unauthed', async () => {
     const { data: authed } = await agent.api.app.bsky.feed.getPostThread(
       { uri: sc.posts[alice][1].ref.uriStr },
-      { headers: await network.serviceHeaders(bob) },
+      {
+        headers: await network.serviceHeaders(
+          bob,
+          ids.AppBskyFeedGetPostThread,
+        ),
+      },
     )
     const { data: unauthed } = await agent.api.app.bsky.feed.getPostThread({
       uri: sc.posts[alice][1].ref.uriStr,
@@ -118,38 +161,117 @@ describe('pds thread views', () => {
     )
     indexes.aliceReplyReply = sc.replies[alice].length - 1
     await network.processAll()
-    await network.bsky.processAll()
 
     const thread1 = await agent.api.app.bsky.feed.getPostThread(
       { uri: sc.posts[alice][indexes.aliceRoot].ref.uriStr },
-      { headers: await network.serviceHeaders(bob) },
+      {
+        headers: await network.serviceHeaders(
+          bob,
+          ids.AppBskyFeedGetPostThread,
+        ),
+      },
     )
     expect(forSnapshot(thread1.data.thread)).toMatchSnapshot()
 
     await sc.deletePost(bob, sc.replies[bob][indexes.bobReply].ref.uri)
     await network.processAll()
-    await network.bsky.processAll()
 
     const thread2 = await agent.api.app.bsky.feed.getPostThread(
       { uri: sc.posts[alice][indexes.aliceRoot].ref.uriStr },
-      { headers: await network.serviceHeaders(bob) },
+      {
+        headers: await network.serviceHeaders(
+          bob,
+          ids.AppBskyFeedGetPostThread,
+        ),
+      },
     )
     expect(forSnapshot(thread2.data.thread)).toMatchSnapshot()
 
     const thread3 = await agent.api.app.bsky.feed.getPostThread(
       { uri: sc.replies[alice][indexes.aliceReplyReply].ref.uriStr },
-      { headers: await network.serviceHeaders(bob) },
+      {
+        headers: await network.serviceHeaders(
+          bob,
+          ids.AppBskyFeedGetPostThread,
+        ),
+      },
     )
     expect(forSnapshot(thread3.data.thread)).toMatchSnapshot()
+  })
+
+  it('omits parents and replies w/ different root than anchor post.', async () => {
+    const badRoot = sc.posts[alice][0]
+    const goodRoot = await sc.post(alice, 'good root')
+    const goodReply1 = await sc.reply(
+      alice,
+      goodRoot.ref,
+      goodRoot.ref,
+      'good reply 1',
+    )
+    const goodReply2 = await sc.reply(
+      alice,
+      goodRoot.ref,
+      goodReply1.ref,
+      'good reply 2',
+    )
+    const badReply = await sc.reply(
+      alice,
+      badRoot.ref,
+      goodReply1.ref,
+      'bad reply',
+    )
+    await network.processAll()
+    // good reply doesn't have replies w/ different root
+    const { data: goodReply1Thread } =
+      await agent.api.app.bsky.feed.getPostThread(
+        { uri: goodReply1.ref.uriStr },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyFeedGetPostThread,
+          ),
+        },
+      )
+    assertIsThreadViewPost(goodReply1Thread.thread)
+    assertIsThreadViewPost(goodReply1Thread.thread.parent)
+    expect(goodReply1Thread.thread.parent.post.uri).toEqual(goodRoot.ref.uriStr)
+    expect(
+      goodReply1Thread.thread.replies?.map((r) => {
+        assertIsThreadViewPost(r)
+        return r.post.uri
+      }),
+    ).toEqual([
+      goodReply2.ref.uriStr, // does not contain badReply
+    ])
+    expect(goodReply1Thread.thread.parent.replies).toBeUndefined()
+    // bad reply doesn't have a parent, which would have a different root
+    const { data: badReplyThread } =
+      await agent.api.app.bsky.feed.getPostThread(
+        { uri: badReply.ref.uriStr },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyFeedGetPostThread,
+          ),
+        },
+      )
+    assertIsThreadViewPost(badReplyThread.thread)
+    expect(badReplyThread.thread.parent).toBeUndefined() // is not goodReply1
   })
 
   it('reflects self-labels', async () => {
     const { data: thread } = await agent.api.app.bsky.feed.getPostThread(
       { uri: sc.posts[alice][0].ref.uriStr },
-      { headers: await network.serviceHeaders(bob) },
+      {
+        headers: await network.serviceHeaders(
+          bob,
+          ids.AppBskyFeedGetPostThread,
+        ),
+      },
     )
 
-    assert(isThreadViewPost(thread.thread), 'post does not exist')
+    assertIsThreadViewPost(thread.thread)
+
     const post = thread.thread.post
 
     const postSelfLabels = post.labels
@@ -168,27 +290,19 @@ describe('pds thread views', () => {
 
   describe('takedown', () => {
     it('blocks post by actor', async () => {
-      const { data: modAction } =
-        await agent.api.com.atproto.admin.takeModerationAction(
-          {
-            action: TAKEDOWN,
-            subject: {
-              $type: 'com.atproto.admin.defs#repoRef',
-              did: alice,
-            },
-            createdBy: 'did:example:admin',
-            reason: 'Y',
-          },
-          {
-            encoding: 'application/json',
-            headers: network.pds.adminAuthHeaders(),
-          },
-        )
+      await network.bsky.ctx.dataplane.takedownActor({
+        did: alice,
+      })
 
       // Same as shallow post thread test, minus alice
       const promise = agent.api.app.bsky.feed.getPostThread(
         { depth: 1, uri: sc.posts[alice][1].ref.uriStr },
-        { headers: await network.serviceHeaders(bob) },
+        {
+          headers: await network.serviceHeaders(
+            bob,
+            ids.AppBskyFeedGetPostThread,
+          ),
+        },
       )
 
       await expect(promise).rejects.toThrow(
@@ -196,122 +310,73 @@ describe('pds thread views', () => {
       )
 
       // Cleanup
-      await agent.api.com.atproto.admin.reverseModerationAction(
-        {
-          id: modAction.id,
-          createdBy: 'did:example:admin',
-          reason: 'Y',
-        },
-        {
-          encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
-        },
-      )
+      await network.bsky.ctx.dataplane.untakedownActor({
+        did: alice,
+      })
     })
 
     it('blocks replies by actor', async () => {
-      const { data: modAction } =
-        await agent.api.com.atproto.admin.takeModerationAction(
-          {
-            action: TAKEDOWN,
-            subject: {
-              $type: 'com.atproto.admin.defs#repoRef',
-              did: carol,
-            },
-            createdBy: 'did:example:admin',
-            reason: 'Y',
-          },
-          {
-            encoding: 'application/json',
-            headers: network.pds.adminAuthHeaders(),
-          },
-        )
+      await network.bsky.ctx.dataplane.takedownActor({
+        did: carol,
+      })
 
       // Same as deep post thread test, minus carol
       const thread = await agent.api.app.bsky.feed.getPostThread(
         { uri: sc.posts[alice][1].ref.uriStr },
-        { headers: await network.serviceHeaders(bob) },
+        {
+          headers: await network.serviceHeaders(
+            bob,
+            ids.AppBskyFeedGetPostThread,
+          ),
+        },
       )
 
       expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
 
       // Cleanup
-      await agent.api.com.atproto.admin.reverseModerationAction(
-        {
-          id: modAction.id,
-          createdBy: 'did:example:admin',
-          reason: 'Y',
-        },
-        {
-          encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
-        },
-      )
+      await network.bsky.ctx.dataplane.untakedownActor({
+        did: carol,
+      })
     })
 
     it('blocks ancestors by actor', async () => {
-      const { data: modAction } =
-        await agent.api.com.atproto.admin.takeModerationAction(
-          {
-            action: TAKEDOWN,
-            subject: {
-              $type: 'com.atproto.admin.defs#repoRef',
-              did: bob,
-            },
-            createdBy: 'did:example:admin',
-            reason: 'Y',
-          },
-          {
-            encoding: 'application/json',
-            headers: network.pds.adminAuthHeaders(),
-          },
-        )
+      await network.bsky.ctx.dataplane.takedownActor({
+        did: bob,
+      })
 
       // Same as ancestor post thread test, minus bob
       const thread = await agent.api.app.bsky.feed.getPostThread(
         { depth: 1, uri: sc.replies[alice][0].ref.uriStr },
-        { headers: await network.serviceHeaders(bob) },
+        {
+          headers: await network.serviceHeaders(
+            bob,
+            ids.AppBskyFeedGetPostThread,
+          ),
+        },
       )
 
       expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
 
       // Cleanup
-      await agent.api.com.atproto.admin.reverseModerationAction(
-        {
-          id: modAction.id,
-          createdBy: 'did:example:admin',
-          reason: 'Y',
-        },
-        {
-          encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
-        },
-      )
+      await network.bsky.ctx.dataplane.untakedownActor({
+        did: bob,
+      })
     })
 
     it('blocks post by record', async () => {
       const postRef = sc.posts[alice][1].ref
-      const { data: modAction } =
-        await agent.api.com.atproto.admin.takeModerationAction(
-          {
-            action: TAKEDOWN,
-            subject: {
-              $type: 'com.atproto.repo.strongRef',
-              uri: postRef.uriStr,
-              cid: postRef.cidStr,
-            },
-            createdBy: 'did:example:admin',
-            reason: 'Y',
-          },
-          {
-            encoding: 'application/json',
-            headers: network.pds.adminAuthHeaders(),
-          },
-        )
+      await network.bsky.ctx.dataplane.takedownRecord({
+        recordUri: postRef.uriStr,
+      })
 
       const promise = agent.api.app.bsky.feed.getPostThread(
         { depth: 1, uri: postRef.uriStr },
-        { headers: await network.serviceHeaders(bob) },
+        {
+          headers: await network.serviceHeaders(
+            bob,
+            ids.AppBskyFeedGetPostThread,
+          ),
+        },
       )
 
       await expect(promise).rejects.toThrow(
@@ -319,118 +384,87 @@ describe('pds thread views', () => {
       )
 
       // Cleanup
-      await agent.api.com.atproto.admin.reverseModerationAction(
-        {
-          id: modAction.id,
-          createdBy: 'did:example:admin',
-          reason: 'Y',
-        },
-        {
-          encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
-        },
-      )
+      await network.bsky.ctx.dataplane.untakedownRecord({
+        recordUri: postRef.uriStr,
+      })
     })
 
     it('blocks ancestors by record', async () => {
       const threadPreTakedown = await agent.api.app.bsky.feed.getPostThread(
         { depth: 1, uri: sc.replies[alice][0].ref.uriStr },
-        { headers: await network.serviceHeaders(bob) },
+        {
+          headers: await network.serviceHeaders(
+            bob,
+            ids.AppBskyFeedGetPostThread,
+          ),
+        },
       )
 
       const parent = threadPreTakedown.data.thread.parent?.['post']
 
-      const { data: modAction } =
-        await agent.api.com.atproto.admin.takeModerationAction(
-          {
-            action: TAKEDOWN,
-            subject: {
-              $type: 'com.atproto.repo.strongRef',
-              uri: parent.uri,
-              cid: parent.cid,
-            },
-            createdBy: 'did:example:admin',
-            reason: 'Y',
-          },
-          {
-            encoding: 'application/json',
-            headers: network.pds.adminAuthHeaders(),
-          },
-        )
+      await network.bsky.ctx.dataplane.takedownRecord({
+        recordUri: parent.uri,
+      })
 
       // Same as ancestor post thread test, minus parent post
       const thread = await agent.api.app.bsky.feed.getPostThread(
         { depth: 1, uri: sc.replies[alice][0].ref.uriStr },
-        { headers: await network.serviceHeaders(bob) },
+        {
+          headers: await network.serviceHeaders(
+            bob,
+            ids.AppBskyFeedGetPostThread,
+          ),
+        },
       )
 
       expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
 
       // Cleanup
-      await agent.api.com.atproto.admin.reverseModerationAction(
-        {
-          id: modAction.id,
-          createdBy: 'did:example:admin',
-          reason: 'Y',
-        },
-        {
-          encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
-        },
-      )
+      await network.bsky.ctx.dataplane.untakedownRecord({
+        recordUri: parent.uri,
+      })
     })
 
     it('blocks replies by record', async () => {
       const threadPreTakedown = await agent.api.app.bsky.feed.getPostThread(
         { uri: sc.posts[alice][1].ref.uriStr },
-        { headers: await network.serviceHeaders(bob) },
+        {
+          headers: await network.serviceHeaders(
+            bob,
+            ids.AppBskyFeedGetPostThread,
+          ),
+        },
       )
       const post1 = threadPreTakedown.data.thread.replies?.[0].post
       const post2 = threadPreTakedown.data.thread.replies?.[1].replies[0].post
 
-      const actionResults = await Promise.all(
+      await Promise.all(
         [post1, post2].map((post) =>
-          agent.api.com.atproto.admin.takeModerationAction(
-            {
-              action: TAKEDOWN,
-              subject: {
-                $type: 'com.atproto.repo.strongRef',
-                uri: post.uri,
-                cid: post.cid,
-              },
-              createdBy: 'did:example:admin',
-              reason: 'Y',
-            },
-            {
-              encoding: 'application/json',
-              headers: network.pds.adminAuthHeaders(),
-            },
-          ),
+          network.bsky.ctx.dataplane.takedownRecord({
+            recordUri: post.uri,
+          }),
         ),
       )
 
       // Same as deep post thread test, minus some replies
       const thread = await agent.api.app.bsky.feed.getPostThread(
         { uri: sc.posts[alice][1].ref.uriStr },
-        { headers: await network.serviceHeaders(bob) },
+        {
+          headers: await network.serviceHeaders(
+            bob,
+            ids.AppBskyFeedGetPostThread,
+          ),
+        },
       )
 
       expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
 
       // Cleanup
       await Promise.all(
-        actionResults.map((result) =>
-          agent.api.com.atproto.admin.reverseModerationAction(
-            {
-              id: result.data.id,
-              createdBy: 'did:example:admin',
-              reason: 'Y',
-            },
-            {
-              encoding: 'application/json',
-              headers: network.pds.adminAuthHeaders(),
-            },
-          ),
+        [post1, post2].map((post) =>
+          network.bsky.ctx.dataplane.untakedownRecord({
+            recordUri: post.uri,
+          }),
         ),
       )
     })

@@ -91,8 +91,7 @@ F: 0 1 2 3 4 5 6 7 8 910   // string indices
    ^-------^               // target slice {start: 0, end: 5}
  */
 
-import { AtpAgent } from '../agent'
-import { AppBskyFeedPost, AppBskyRichtextFacet } from '../client'
+import { AppBskyFeedPost, AppBskyRichtextFacet, AtpBaseClient } from '../client'
 import { UnicodeString } from './unicode'
 import { sanitizeRichText } from './sanitization'
 import { detectFacets } from './detection'
@@ -100,6 +99,7 @@ import { detectFacets } from './detection'
 export type Facet = AppBskyRichtextFacet.Main
 export type FacetLink = AppBskyRichtextFacet.Link
 export type FacetMention = AppBskyRichtextFacet.Mention
+export type FacetTag = AppBskyRichtextFacet.Tag
 export type Entity = AppBskyFeedPost.Entity
 
 export interface RichTextProps {
@@ -116,7 +116,10 @@ export interface RichTextOpts {
 }
 
 export class RichTextSegment {
-  constructor(public text: string, public facet?: Facet) {}
+  constructor(
+    public text: string,
+    public facet?: Facet,
+  ) {}
 
   get link(): FacetLink | undefined {
     const link = this.facet?.features.find(AppBskyRichtextFacet.isLink)
@@ -141,6 +144,18 @@ export class RichTextSegment {
   isMention() {
     return !!this.mention
   }
+
+  get tag(): FacetTag | undefined {
+    const tag = this.facet?.features.find(AppBskyRichtextFacet.isTag)
+    if (AppBskyRichtextFacet.isTag(tag)) {
+      return tag
+    }
+    return undefined
+  }
+
+  isTag() {
+    return !!this.tag
+  }
 }
 
 export class RichText {
@@ -154,7 +169,7 @@ export class RichText {
       this.facets = entitiesToFacets(this.unicodeText, props.entities)
     }
     if (this.facets) {
-      this.facets.sort(facetSort)
+      this.facets = this.facets.filter(facetFilter).sort(facetSort)
     }
     if (opts?.cleanNewlines) {
       sanitizeRichText(this, { cleanNewlines: true }).copyInto(this)
@@ -332,20 +347,26 @@ export class RichText {
    * Detects facets such as links and mentions
    * Note: Overwrites the existing facets with auto-detected facets
    */
-  async detectFacets(agent: AtpAgent) {
+  async detectFacets(agent: AtpBaseClient) {
     this.facets = detectFacets(this.unicodeText)
     if (this.facets) {
+      const promises: Promise<void>[] = []
       for (const facet of this.facets) {
         for (const feature of facet.features) {
           if (AppBskyRichtextFacet.isMention(feature)) {
-            const did = await agent
-              .resolveHandle({ handle: feature.did })
-              .catch((_) => undefined)
-              .then((res) => res?.data.did)
-            feature.did = did || ''
+            promises.push(
+              agent.com.atproto.identity
+                .resolveHandle({ handle: feature.did })
+                .then((res) => res?.data.did)
+                .catch((_) => undefined)
+                .then((did) => {
+                  feature.did = did || ''
+                }),
+            )
           }
         }
       }
+      await Promise.allSettled(promises)
       this.facets.sort(facetSort)
     }
   }
@@ -363,7 +384,11 @@ export class RichText {
   }
 }
 
-const facetSort = (a, b) => a.index.byteStart - b.index.byteStart
+const facetSort = (a: Facet, b: Facet) => a.index.byteStart - b.index.byteStart
+
+const facetFilter = (facet: Facet) =>
+  // discard negative-length facets. zero-length facets are valid
+  facet.index.byteStart <= facet.index.byteEnd
 
 function entitiesToFacets(text: UnicodeString, entities: Entity[]): Facet[] {
   const facets: Facet[] = []

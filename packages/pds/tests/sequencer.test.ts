@@ -1,16 +1,20 @@
-import AtpAgent from '@atproto/api'
+import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
 import { randomStr } from '@atproto/crypto'
-import { cborEncode, readFromGenerator, wait } from '@atproto/common'
-import { Sequencer, SeqEvt } from '../src/sequencer'
+import {
+  cborDecode,
+  cborEncode,
+  readFromGenerator,
+  wait,
+} from '@atproto/common'
+import { Sequencer, SeqEvt, formatSeqCommit } from '../src/sequencer'
+import { sequencer, repoPrepare } from '../../pds'
 import Outbox from '../src/sequencer/outbox'
-import { Database } from '../src'
-import { SeedClient } from './seeds/client'
 import userSeed from './seeds/users'
-import { TestServerInfo, runTestServer } from './_util'
+import { ids } from '../src/lexicon/lexicons'
+import { readCarWithRoot } from '@atproto/repo'
 
 describe('sequencer', () => {
-  let server: TestServerInfo
-  let db: Database
+  let network: TestNetworkNoAppView
   let sequencer: Sequencer
   let sc: SeedClient
   let alice: string
@@ -20,22 +24,21 @@ describe('sequencer', () => {
   let lastSeen: number
 
   beforeAll(async () => {
-    server = await runTestServer({
+    network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'sequencer',
     })
-    db = server.ctx.db
-    sequencer = server.ctx.sequencer
-    const agent = new AtpAgent({ service: server.url })
-    sc = new SeedClient(agent)
+    // @ts-expect-error Error due to circular dependency with the dev-env package
+    sequencer = network.pds.ctx.sequencer
+    sc = network.getSeedClient()
     await userSeed(sc)
     alice = sc.dids.alice
     bob = sc.dids.bob
-    // 6 events in userSeed
-    totalEvts = 6
+    // 14 events in userSeed
+    totalEvts = 14
   })
 
   afterAll(async () => {
-    await server.close()
+    await network.close()
   })
 
   const randomPost = async (by: string) => sc.post(by, randomStr(8, 'base32'))
@@ -52,7 +55,7 @@ describe('sequencer', () => {
   }
 
   const loadFromDb = (lastSeen: number) => {
-    return db.db
+    return sequencer.db.db
       .selectFrom('repo_seq')
       .select([
         'seq',
@@ -69,10 +72,11 @@ describe('sequencer', () => {
 
   const evtToDbRow = (e: SeqEvt) => {
     const did = e.type === 'commit' ? e.evt.repo : e.evt.did
+    const eventType = e.type === 'commit' ? 'append' : e.type
     return {
       seq: e.seq,
       did,
-      eventType: 'append',
+      eventType,
       event: Buffer.from(cborEncode(e.evt)),
       invalidated: 0,
       sequencedAt: e.time,
@@ -81,11 +85,9 @@ describe('sequencer', () => {
 
   const caughtUp = (outbox: Outbox): (() => Promise<boolean>) => {
     return async () => {
-      const leaderCaughtUp = await server.ctx.sequencerLeader?.isCaughtUp()
-      if (!leaderCaughtUp) return false
       const lastEvt = await outbox.sequencer.curr()
-      if (!lastEvt) return true
-      return outbox.lastSeen >= (lastEvt.seq ?? 0)
+      if (lastEvt === null) return true
+      return outbox.lastSeen >= (lastEvt ?? 0)
     }
   }
 
@@ -186,6 +188,8 @@ describe('sequencer', () => {
     }
     await expect(overloadBuffer).rejects.toThrow('Stream consumer too slow')
 
+    await createPromise
+
     const fromDb = await loadFromDb(lastSeen)
     lastSeen = fromDb.at(-1)?.seq ?? lastSeen
   })
@@ -210,5 +214,41 @@ describe('sequencer', () => {
       expect(evts.map(evtToDbRow)).toEqual(fromDb)
     }
     lastSeen = results[0].at(-1)?.seq ?? lastSeen
+  })
+
+  it('root block must be returned in tooBig seq commit', async () => {
+    // Create good records to exceed the event limit (the current limit is 200 events)
+    // it creates events completely locally, so it doesn't need to be in the network
+    const eventsToCreate = 250
+    const createPostRecord = () =>
+      repoPrepare.prepareCreate({
+        did: sc.dids.alice,
+        collection: ids.AppBskyFeedPost,
+        record: { text: 'valid', createdAt: new Date().toISOString() },
+      })
+    const writesPromises = Array.from(
+      { length: eventsToCreate },
+      createPostRecord,
+    )
+    const writes = await Promise.all(writesPromises)
+    // just format commit without processing writes
+    const writeCommit = await network.pds.ctx.actorStore.transact(
+      sc.dids.alice,
+      (store) => store.repo.formatCommit(writes),
+    )
+
+    const repoSeqInsert = await formatSeqCommit(
+      sc.dids.alice,
+      writeCommit,
+      writes,
+    )
+
+    const evt = cborDecode<sequencer.CommitEvt>(repoSeqInsert.event)
+    expect(evt.tooBig).toBe(true)
+
+    const car = await readCarWithRoot(evt.blocks)
+    expect(car.root.toString()).toBe(writeCommit.cid.toString())
+    // in the case of tooBig, the blocks must contain the root block only
+    expect(car.blocks.size).toBe(1)
   })
 })
