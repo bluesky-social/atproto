@@ -271,7 +271,7 @@ export class Server {
         const locals: RequestLocals = req[kRequestLocals]
 
         // handle req rate limits that don't use validated params
-        if (consumeBasicRateLimit) {
+        if (basicRlFns.length) {
           const result = await consumeBasicRateLimit(req, res)
           if (result instanceof RateLimitExceededError) {
             return next(result)
@@ -301,7 +301,7 @@ export class Server {
         }
 
         // handle rate limits
-        if (consumeParamRateLimit) {
+        if (paramRlFns.length) {
           const result = await consumeParamRateLimit(reqCtx)
           if (result instanceof RateLimitExceededError) {
             return next(result)
@@ -475,7 +475,7 @@ export class Server {
                 calcKey,
                 calcPoints,
               })
-            if (calcKey === undefined) {
+            if (calcKey === undefined && calcPoints === undefined) {
               this.basicRouteRateLimiterFns[nsid].push(consumeFn)
             } else {
               this.paramRouteRateLimiterFns[nsid].push(consumeFn)
@@ -497,7 +497,7 @@ export class Server {
                 calcKey,
                 calcPoints,
               })
-            if (calcKey === undefined) {
+            if (calcKey === undefined && calcPoints === undefined) {
               this.basicRouteRateLimiterFns[nsid].push(consumeFn)
             } else {
               this.paramRouteRateLimiterFns[nsid].push(consumeFn)
