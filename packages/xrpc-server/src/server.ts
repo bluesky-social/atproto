@@ -287,11 +287,6 @@ export class Server {
         }
         const input = validateReqInput(req)
 
-        if (input?.body instanceof Readable) {
-          // If the body stream errors at any time, abort the request
-          input.body.once('error', next)
-        }
-
         const reqCtx: XRPCReqContext = {
           params,
           input,
