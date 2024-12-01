@@ -1267,6 +1267,9 @@ service Service {
   rpc CreateThreadMute(CreateThreadMuteRequest) returns (CreateThreadMuteResponse);
   rpc DeleteThreadMute(DeleteThreadMuteRequest) returns (DeleteThreadMuteResponse);
   rpc ClearThreadMutes(ClearThreadMutesRequest) returns (ClearThreadMutesResponse);
+
+  // Subscription entitlement
+  rpc SetSubscriptionEntitlement(SetSubscriptionEntitlementRequest) returns (SetSubscriptionEntitlementResponse);
 }
 
 
@@ -1393,3 +1396,15 @@ message ClearThreadMutesRequest {
 }
 
 message ClearThreadMutesResponse {}
+
+// Subscription entitlement
+message SubscriptionEntitlement {
+  string did = 1;
+  repeated string entitlements = 2;
+}
+
+message SetSubscriptionEntitlementRequest {
+  SubscriptionEntitlement subscription_entitlement = 1;
+}
+
+message SetSubscriptionEntitlementResponse {}
