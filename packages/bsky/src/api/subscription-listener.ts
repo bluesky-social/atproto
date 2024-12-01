@@ -1,16 +1,18 @@
 import express, { RequestHandler } from 'express'
 import AppContext from '../context'
-import { AxiosInstance } from 'axios'
 import { httpLogger as log } from '../logger'
+import { RevenueCatClient } from '../revenueCat'
 
 type AppContextWithRevenueCatClient = AppContext & {
-  revenueCatClient: AxiosInstance
+  revenueCatClient: RevenueCatClient
 }
 
 const auth =
   (ctx: AppContextWithRevenueCatClient): RequestHandler =>
   (req: express.Request, res: express.Response, next: express.NextFunction) =>
-    req.header('Authorization') === ctx.cfg.revenueCatWebhookAuthorization
+    ctx.revenueCatClient.isWebhookAuthorizationValid(
+      req.header('Authorization'),
+    )
       ? next()
       : res
           .status(403)
@@ -25,14 +27,6 @@ type RevenueCatEventBody = {
   }
 }
 
-type RevenueCatSubscriberResponse = {
-  subscriber: {
-    entitlements: {
-      [entitlementIdentifier: string]: unknown
-    }
-  }
-}
-
 const revenueCatWebhookHandler =
   (ctx: AppContextWithRevenueCatClient): RequestHandler =>
   async (req, res) => {
@@ -42,11 +36,8 @@ const revenueCatWebhookHandler =
 
     try {
       const { app_user_id: did } = body.event
-      const { data } = await revenueCatClient.get(
-        `/subscribers/${encodeURIComponent(did)}`,
-      )
+      const subscriberRes = await revenueCatClient.getSubscriber(did)
 
-      const subscriberRes = data as RevenueCatSubscriberResponse
       const entitlementIdentifiers = Object.keys(
         subscriberRes.subscriber.entitlements ?? {},
       )

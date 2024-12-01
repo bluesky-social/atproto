@@ -67,7 +67,8 @@ export class TestBsky {
       bigThreadUris: new Set(),
       ...cfg,
       adminPasswords: [ADMIN_PASSWORD],
-      revenueCatV1Url: process.env.BSKY_REVENUE_CAT_V1_URL,
+      revenueCatV1Url:
+        process.env.BSKY_REVENUE_CAT_V1_URL || 'https://api.revenuecat.com/v1',
       revenueCatV1ApiKey: process.env.BSKY_REVENUE_CAT_V1_API_KEY,
       revenueCatWebhookAuthorization:
         process.env.BSKY_REVENUE_CAT_WEBHOOK_AUTHORIZATION,
