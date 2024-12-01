@@ -178,6 +178,8 @@ import {
   SearchPostsResponse,
   SearchStarterPacksRequest,
   SearchStarterPacksResponse,
+  SetSubscriptionEntitlementRequest,
+  SetSubscriptionEntitlementResponse,
   TakedownActorRequest,
   TakedownActorResponse,
   TakedownBlobRequest,
@@ -1120,6 +1122,17 @@ export const Service = {
       name: 'ClearThreadMutes',
       I: ClearThreadMutesRequest,
       O: ClearThreadMutesResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * Subscription entitlement
+     *
+     * @generated from rpc bsky.Service.SetSubscriptionEntitlement
+     */
+    setSubscriptionEntitlement: {
+      name: 'SetSubscriptionEntitlement',
+      I: SetSubscriptionEntitlementRequest,
+      O: SetSubscriptionEntitlementResponse,
       kind: MethodKind.Unary,
     },
   },
