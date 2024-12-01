@@ -9214,6 +9214,41 @@ export const schemaDict = {
       },
     },
   },
+  AppBskySubscriptionGetSubscriptionFeatures: {
+    lexicon: 1,
+    id: 'app.bsky.subscription.getSubscriptionFeatures',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Enumerate feature flags related to subscriptions for the requesting account. Requires auth.',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['features'],
+            properties: {
+              features: {
+                type: 'ref',
+                ref: 'lex:app.bsky.subscription.getSubscriptionFeatures#features',
+              },
+            },
+          },
+        },
+      },
+      features: {
+        type: 'object',
+        required: ['customProfileColor'],
+        properties: {
+          customProfileColor: {
+            type: 'boolean',
+            description:
+              'Indicates to client apps to allow the requesting account to customize the profile color.',
+          },
+        },
+      },
+    },
+  },
   AppBskySubscriptionRefreshSubscriptionCache: {
     lexicon: 1,
     id: 'app.bsky.subscription.refreshSubscriptionCache',
@@ -13700,6 +13735,8 @@ export const ids = {
   AppBskyNotificationRegisterPush: 'app.bsky.notification.registerPush',
   AppBskyNotificationUpdateSeen: 'app.bsky.notification.updateSeen',
   AppBskyRichtextFacet: 'app.bsky.richtext.facet',
+  AppBskySubscriptionGetSubscriptionFeatures:
+    'app.bsky.subscription.getSubscriptionFeatures',
   AppBskySubscriptionRefreshSubscriptionCache:
     'app.bsky.subscription.refreshSubscriptionCache',
   AppBskyUnspeccedDefs: 'app.bsky.unspecced.defs',

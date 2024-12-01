@@ -136,6 +136,7 @@ import * as AppBskyNotificationListNotifications from './types/app/bsky/notifica
 import * as AppBskyNotificationPutPreferences from './types/app/bsky/notification/putPreferences'
 import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
+import * as AppBskySubscriptionGetSubscriptionFeatures from './types/app/bsky/subscription/getSubscriptionFeatures'
 import * as AppBskySubscriptionRefreshSubscriptionCache from './types/app/bsky/subscription/refreshSubscriptionCache'
 import * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig'
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
@@ -1810,6 +1811,17 @@ export class AppBskySubscriptionNS {
 
   constructor(server: Server) {
     this._server = server
+  }
+
+  getSubscriptionFeatures<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskySubscriptionGetSubscriptionFeatures.Handler<ExtractAuth<AV>>,
+      AppBskySubscriptionGetSubscriptionFeatures.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.subscription.getSubscriptionFeatures' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
   refreshSubscriptionCache<AV extends AuthVerifier>(

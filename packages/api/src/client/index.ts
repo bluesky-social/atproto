@@ -162,6 +162,7 @@ import * as AppBskyNotificationPutPreferences from './types/app/bsky/notificatio
 import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 import * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet'
+import * as AppBskySubscriptionGetSubscriptionFeatures from './types/app/bsky/subscription/getSubscriptionFeatures'
 import * as AppBskySubscriptionRefreshSubscriptionCache from './types/app/bsky/subscription/refreshSubscriptionCache'
 import * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs'
 import * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig'
@@ -390,6 +391,7 @@ export * as AppBskyNotificationPutPreferences from './types/app/bsky/notificatio
 export * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush'
 export * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 export * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet'
+export * as AppBskySubscriptionGetSubscriptionFeatures from './types/app/bsky/subscription/getSubscriptionFeatures'
 export * as AppBskySubscriptionRefreshSubscriptionCache from './types/app/bsky/subscription/refreshSubscriptionCache'
 export * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs'
 export * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig'
@@ -3043,6 +3045,18 @@ export class AppBskySubscriptionNS {
 
   constructor(client: XrpcClient) {
     this._client = client
+  }
+
+  getSubscriptionFeatures(
+    params?: AppBskySubscriptionGetSubscriptionFeatures.QueryParams,
+    opts?: AppBskySubscriptionGetSubscriptionFeatures.CallOptions,
+  ): Promise<AppBskySubscriptionGetSubscriptionFeatures.Response> {
+    return this._client.call(
+      'app.bsky.subscription.getSubscriptionFeatures',
+      params,
+      undefined,
+      opts,
+    )
   }
 
   refreshSubscriptionCache(
