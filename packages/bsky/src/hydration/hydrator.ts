@@ -65,6 +65,7 @@ export class HydrateCtx {
   labelers = this.vals.labelers
   viewer = this.vals.viewer !== null ? serviceRefToDid(this.vals.viewer) : null
   includeTakedowns = this.vals.includeTakedowns
+  includeActorTakedowns = this.vals.includeActorTakedowns
   include3pBlocks = this.vals.include3pBlocks
   constructor(private vals: HydrateCtxVals) {}
   copy<V extends Partial<HydrateCtxVals>>(vals?: V): HydrateCtx & V {
@@ -76,6 +77,7 @@ export type HydrateCtxVals = {
   labelers: ParsedLabelers
   viewer: string | null
   includeTakedowns?: boolean
+  includeActorTakedowns?: boolean
   include3pBlocks?: boolean
 }
 
@@ -98,6 +100,7 @@ export type HydrationState = {
   listViewers?: ListViewerStates
   listItems?: ListItems
   likes?: Likes
+  likeBlocks?: LikeBlocks
   labels?: Labels
   feedgens?: FeedGens
   feedgenViewers?: FeedGenViewerStates
@@ -118,6 +121,9 @@ type PostBlockPairs = {
   parent?: RelationshipPair
   root?: RelationshipPair
 }
+
+export type LikeBlock = boolean
+export type LikeBlocks = HydrationMap<LikeBlock>
 
 export type FollowBlock = boolean
 export type FollowBlocks = HydrationMap<FollowBlock>
@@ -179,12 +185,13 @@ export class Hydrator {
     dids: string[],
     ctx: HydrateCtx,
   ): Promise<HydrationState> {
+    const includeTakedowns = ctx.includeTakedowns || ctx.includeActorTakedowns
     const [actors, labels, profileViewersState] = await Promise.all([
-      this.actor.getActors(dids, ctx.includeTakedowns),
+      this.actor.getActors(dids, includeTakedowns),
       this.label.getLabelsForSubjects(labelSubjectsForDid(dids), ctx.labelers),
       this.hydrateProfileViewers(dids, ctx),
     ])
-    if (!ctx.includeTakedowns) {
+    if (!includeTakedowns) {
       actionTakedownLabels(dids, actors, labels)
     }
     return mergeStates(profileViewersState ?? {}, {
@@ -743,12 +750,33 @@ export class Hydrator {
   // - like
   //   - profile
   //     - list basic
-  async hydrateLikes(uris: string[], ctx: HydrateCtx): Promise<HydrationState> {
+  async hydrateLikes(
+    authorDid: string,
+    uris: string[],
+    ctx: HydrateCtx,
+  ): Promise<HydrationState> {
     const [likes, profileState] = await Promise.all([
       this.feed.getLikes(uris, ctx.includeTakedowns),
       this.hydrateProfiles(uris.map(didFromUri), ctx),
     ])
-    return mergeStates(profileState, { likes, ctx })
+
+    const pairs: RelationshipPair[] = []
+    for (const [uri, like] of likes) {
+      if (like) {
+        pairs.push([authorDid, didFromUri(uri)])
+      }
+    }
+    const blocks = await this.graph.getBidirectionalBlocks(pairs)
+    const likeBlocks = new HydrationMap<LikeBlock>()
+    for (const [uri, like] of likes) {
+      if (like) {
+        likeBlocks.set(uri, blocks.isBlocked(authorDid, didFromUri(uri)))
+      } else {
+        likeBlocks.set(uri, null)
+      }
+    }
+
+    return mergeStates(profileState, { likes, likeBlocks, ctx })
   }
 
   // app.bsky.feed.getRepostedBy#repostedBy
@@ -1151,6 +1179,7 @@ export const mergeStates = (
     listViewers: mergeMaps(stateA.listViewers, stateB.listViewers),
     listItems: mergeMaps(stateA.listItems, stateB.listItems),
     likes: mergeMaps(stateA.likes, stateB.likes),
+    likeBlocks: mergeMaps(stateA.likeBlocks, stateB.likeBlocks),
     labels: mergeMaps(stateA.labels, stateB.labels),
     feedgens: mergeMaps(stateA.feedgens, stateB.feedgens),
     feedgenAggs: mergeMaps(stateA.feedgenAggs, stateB.feedgenAggs),
