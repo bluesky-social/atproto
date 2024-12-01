@@ -3,10 +3,14 @@ import AppContext from '../context'
 import { AxiosInstance } from 'axios'
 import { httpLogger as log } from '../logger'
 
+type AppContextWithRevenueCatClient = AppContext & {
+  revenueCatClient: AxiosInstance
+}
+
 const auth =
-  (expectedAuthorization: string | undefined): RequestHandler =>
+  (ctx: AppContextWithRevenueCatClient): RequestHandler =>
   (req: express.Request, res: express.Response, next: express.NextFunction) =>
-    req.header('Authorization') === expectedAuthorization
+    req.header('Authorization') === ctx.cfg.revenueCatWebhookAuthorization
       ? next()
       : res
           .status(403)
@@ -21,19 +25,36 @@ type RevenueCatEventBody = {
   }
 }
 
+type RevenueCatSubscriberResponse = {
+  subscriber: {
+    entitlements: {
+      [entitlementIdentifier: string]: unknown
+    }
+  }
+}
+
 const revenueCatWebhookHandler =
-  (revenueCatClient: AxiosInstance): RequestHandler =>
+  (ctx: AppContextWithRevenueCatClient): RequestHandler =>
   async (req, res) => {
+    const { dataplane, revenueCatClient } = ctx
+
     const body: RevenueCatEventBody = req.body
 
     try {
       const { app_user_id: did } = body.event
-      const rcRes = await revenueCatClient.get(
+      const { data } = await revenueCatClient.get(
         `/subscribers/${encodeURIComponent(did)}`,
       )
 
-      // @TODO: cache subscription data
-      console.log(rcRes.data)
+      const subscriberRes = data as RevenueCatSubscriberResponse
+      const entitlementIdentifiers = Object.keys(
+        subscriberRes.subscriber.entitlements ?? {},
+      )
+
+      await dataplane.setSubscriptionEntitlement({
+        subscriptionEntitlement: { did, entitlements: entitlementIdentifiers },
+      })
+
       res.end()
     } catch (error) {
       log.error(error)
@@ -42,20 +63,16 @@ const revenueCatWebhookHandler =
   }
 
 export const createRouter = (ctx: AppContext): express.Router => {
-  const {
-    cfg: { revenueCatWebhookAuthorization },
-    revenueCatClient,
-  } = ctx
-
   const router = express.Router()
 
-  if (!revenueCatClient) {
+  if (!ctx.revenueCatClient) {
     return router
   }
+  const ctxWithRevenueCatClient = ctx as AppContextWithRevenueCatClient
 
-  router.use(auth(revenueCatWebhookAuthorization))
+  router.use(auth(ctxWithRevenueCatClient))
   router.use(express.json())
-  router.post('/', revenueCatWebhookHandler(revenueCatClient))
+  router.post('/', revenueCatWebhookHandler(ctxWithRevenueCatClient))
 
   return router
 }
