@@ -47,6 +47,7 @@ import listNotifications from './app/bsky/notification/listNotifications'
 import updateSeen from './app/bsky/notification/updateSeen'
 import putPreferences from './app/bsky/notification/putPreferences'
 import registerPush from './app/bsky/notification/registerPush'
+import getSubscriptionFeatures from './app/bsky/subscription/getSubscriptionFeatures'
 import refreshSubscriptionCache from './app/bsky/subscription/refreshSubscriptionCache'
 import getConfig from './app/bsky/unspecced/getConfig'
 import getPopularFeedGenerators from './app/bsky/unspecced/getPopularFeedGenerators'
@@ -116,6 +117,7 @@ export default function (server: Server, ctx: AppContext) {
   updateSeen(server, ctx)
   putPreferences(server, ctx)
   registerPush(server, ctx)
+  getSubscriptionFeatures(server, ctx)
   refreshSubscriptionCache(server, ctx)
   getConfig(server, ctx)
   getPopularFeedGenerators(server, ctx)
