@@ -24,7 +24,7 @@ export interface ServerConfigValues {
   searchUrl?: string
   suggestionsUrl?: string
   suggestionsApiKey?: string
-  revenueCatV1Url?: string
+  revenueCatV1Url: string
   revenueCatV1ApiKey?: string
   revenueCatWebhookAuthorization?: string
   cdnUrl?: string

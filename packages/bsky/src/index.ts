@@ -31,6 +31,7 @@ import { authWithApiKey as courierAuth, createCourierClient } from './courier'
 import { FeatureGates } from './feature-gates'
 import { VideoUriBuilder } from './views/util'
 import axios from 'axios'
+import { RevenueCatClient } from './revenueCat'
 
 export * from './data-plane'
 export type { ServerConfigValues } from './config'
@@ -102,14 +103,14 @@ export class BskyAppView {
       )
     }
 
-    const revenueCatClient = config.revenueCatV1ApiKey
-      ? axios.create({
-          baseURL: config.revenueCatV1Url,
-          headers: {
-            Authorization: `Bearer ${config.revenueCatV1ApiKey}`,
-          },
-        })
-      : undefined
+    let revenueCatClient: RevenueCatClient | undefined
+    if (config.revenueCatV1ApiKey) {
+      revenueCatClient = new RevenueCatClient({
+        apiKey: config.revenueCatV1ApiKey,
+        url: config.revenueCatV1Url,
+        webhookAuthorization: config.revenueCatWebhookAuthorization,
+      })
+    }
 
     const dataplane = createDataPlaneClient(config.dataplaneUrls, {
       httpVersion: config.dataplaneHttpVersion,
