@@ -20,6 +20,7 @@ import records from './records'
 import relationships from './relationships'
 import reposts from './reposts'
 import search from './search'
+import subscriptionEntitlements from './subscription-entitlements'
 import suggestions from './suggestions'
 import sync from './sync'
 import threads from './threads'
@@ -48,6 +49,7 @@ export default (db: Database, idResolver: IdResolver) =>
       ...relationships(db),
       ...reposts(db),
       ...search(db),
+      ...subscriptionEntitlements(db),
       ...suggestions(db),
       ...sync(db),
       ...threads(db),
