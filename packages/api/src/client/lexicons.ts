@@ -9214,6 +9214,75 @@ export const schemaDict = {
       },
     },
   },
+  AppBskySubscriptionGetActiveSubscriptions: {
+    lexicon: 1,
+    id: 'app.bsky.subscription.getActiveSubscriptions',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Enumerate active subscriptions for the requesting account. Requires auth.',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['subscriptions'],
+            properties: {
+              subscriptions: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.subscription.getActiveSubscriptions#subscription',
+                },
+              },
+            },
+          },
+        },
+      },
+      subscription: {
+        type: 'object',
+        required: [
+          'status',
+          'renewalStatus',
+          'group',
+          'platform',
+          'offering',
+          'periodEndsAt',
+          'periodStartsAt',
+          'purchasedAt',
+        ],
+        properties: {
+          status: {
+            type: 'string',
+          },
+          renewalStatus: {
+            type: 'string',
+          },
+          group: {
+            type: 'string',
+          },
+          platform: {
+            type: 'string',
+          },
+          offering: {
+            type: 'string',
+          },
+          periodEndsAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          periodStartsAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          purchasedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
+    },
+  },
   AppBskySubscriptionGetSubscriptionFeatures: {
     lexicon: 1,
     id: 'app.bsky.subscription.getSubscriptionFeatures',
@@ -13735,6 +13804,8 @@ export const ids = {
   AppBskyNotificationRegisterPush: 'app.bsky.notification.registerPush',
   AppBskyNotificationUpdateSeen: 'app.bsky.notification.updateSeen',
   AppBskyRichtextFacet: 'app.bsky.richtext.facet',
+  AppBskySubscriptionGetActiveSubscriptions:
+    'app.bsky.subscription.getActiveSubscriptions',
   AppBskySubscriptionGetSubscriptionFeatures:
     'app.bsky.subscription.getSubscriptionFeatures',
   AppBskySubscriptionRefreshSubscriptionCache:

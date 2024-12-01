@@ -162,6 +162,7 @@ import * as AppBskyNotificationPutPreferences from './types/app/bsky/notificatio
 import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 import * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet'
+import * as AppBskySubscriptionGetActiveSubscriptions from './types/app/bsky/subscription/getActiveSubscriptions'
 import * as AppBskySubscriptionGetSubscriptionFeatures from './types/app/bsky/subscription/getSubscriptionFeatures'
 import * as AppBskySubscriptionRefreshSubscriptionCache from './types/app/bsky/subscription/refreshSubscriptionCache'
 import * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs'
@@ -391,6 +392,7 @@ export * as AppBskyNotificationPutPreferences from './types/app/bsky/notificatio
 export * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush'
 export * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 export * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet'
+export * as AppBskySubscriptionGetActiveSubscriptions from './types/app/bsky/subscription/getActiveSubscriptions'
 export * as AppBskySubscriptionGetSubscriptionFeatures from './types/app/bsky/subscription/getSubscriptionFeatures'
 export * as AppBskySubscriptionRefreshSubscriptionCache from './types/app/bsky/subscription/refreshSubscriptionCache'
 export * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs'
@@ -3045,6 +3047,18 @@ export class AppBskySubscriptionNS {
 
   constructor(client: XrpcClient) {
     this._client = client
+  }
+
+  getActiveSubscriptions(
+    params?: AppBskySubscriptionGetActiveSubscriptions.QueryParams,
+    opts?: AppBskySubscriptionGetActiveSubscriptions.CallOptions,
+  ): Promise<AppBskySubscriptionGetActiveSubscriptions.Response> {
+    return this._client.call(
+      'app.bsky.subscription.getActiveSubscriptions',
+      params,
+      undefined,
+      opts,
+    )
   }
 
   getSubscriptionFeatures(
