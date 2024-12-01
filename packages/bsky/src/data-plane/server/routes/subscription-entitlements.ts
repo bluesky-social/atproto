@@ -3,6 +3,18 @@ import { Service } from '../../../proto/bsky_connect'
 import { Database } from '../db'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
+  async getSubscriptionEntitlement(req) {
+    const { dids } = req
+
+    return {
+      subscriptionEntitlements: await db.db
+        .selectFrom('subscription_entitlement')
+        .selectAll()
+        .where('did', 'in', dids ?? [])
+        .execute(),
+    }
+  },
+
   async setSubscriptionEntitlement(req) {
     const { did, entitlements } = req
 

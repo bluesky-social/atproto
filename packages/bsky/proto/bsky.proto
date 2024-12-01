@@ -1095,7 +1095,19 @@ message GetFollowsFollowingResponse {
 message PingRequest {}
 message PingResponse {}
 
+// Subscription entitlement
+message SubscriptionEntitlement {
+  string did = 1;
+  repeated string entitlements = 2;
+}
 
+message GetSubscriptionEntitlementRequest {
+  repeated string dids = 1;
+}
+
+message GetSubscriptionEntitlementResponse {
+  repeated SubscriptionEntitlement subscriptionEntitlements = 1;
+}
 
 
 service Service {
@@ -1238,6 +1250,8 @@ service Service {
   // Ping
   rpc Ping(PingRequest) returns (PingResponse);
 
+  // Subscription entitlement
+  rpc GetSubscriptionEntitlement(GetSubscriptionEntitlementRequest) returns (GetSubscriptionEntitlementResponse);
 
 
 

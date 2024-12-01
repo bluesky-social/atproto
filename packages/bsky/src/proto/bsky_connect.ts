@@ -154,6 +154,8 @@ import {
   GetStarterPackCountsResponse,
   GetStarterPackRecordsRequest,
   GetStarterPackRecordsResponse,
+  GetSubscriptionEntitlementRequest,
+  GetSubscriptionEntitlementResponse,
   GetSuggestedEntitiesRequest,
   GetSuggestedEntitiesResponse,
   GetSuggestedFeedsRequest,
@@ -974,6 +976,17 @@ export const Service = {
       name: 'Ping',
       I: PingRequest,
       O: PingResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * Subscription entitlement
+     *
+     * @generated from rpc bsky.Service.GetSubscriptionEntitlement
+     */
+    getSubscriptionEntitlement: {
+      name: 'GetSubscriptionEntitlement',
+      I: GetSubscriptionEntitlementRequest,
+      O: GetSubscriptionEntitlementResponse,
       kind: MethodKind.Unary,
     },
     /**
