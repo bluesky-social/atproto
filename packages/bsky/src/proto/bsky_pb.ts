@@ -13152,3 +13152,186 @@ export class ClearThreadMutesResponse extends Message<ClearThreadMutesResponse> 
     return proto3.util.equals(ClearThreadMutesResponse, a, b)
   }
 }
+
+/**
+ * Subscription entitlement
+ *
+ * @generated from message bsky.SubscriptionEntitlement
+ */
+export class SubscriptionEntitlement extends Message<SubscriptionEntitlement> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: repeated string entitlements = 2;
+   */
+  entitlements: string[] = []
+
+  constructor(data?: PartialMessage<SubscriptionEntitlement>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.SubscriptionEntitlement'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    {
+      no: 2,
+      name: 'entitlements',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+      repeated: true,
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): SubscriptionEntitlement {
+    return new SubscriptionEntitlement().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): SubscriptionEntitlement {
+    return new SubscriptionEntitlement().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): SubscriptionEntitlement {
+    return new SubscriptionEntitlement().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | SubscriptionEntitlement
+      | PlainMessage<SubscriptionEntitlement>
+      | undefined,
+    b:
+      | SubscriptionEntitlement
+      | PlainMessage<SubscriptionEntitlement>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(SubscriptionEntitlement, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.SetSubscriptionEntitlementRequest
+ */
+export class SetSubscriptionEntitlementRequest extends Message<SetSubscriptionEntitlementRequest> {
+  /**
+   * @generated from field: bsky.SubscriptionEntitlement subscription_entitlement = 1;
+   */
+  subscriptionEntitlement?: SubscriptionEntitlement
+
+  constructor(data?: PartialMessage<SetSubscriptionEntitlementRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.SetSubscriptionEntitlementRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    {
+      no: 1,
+      name: 'subscription_entitlement',
+      kind: 'message',
+      T: SubscriptionEntitlement,
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): SetSubscriptionEntitlementRequest {
+    return new SetSubscriptionEntitlementRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): SetSubscriptionEntitlementRequest {
+    return new SetSubscriptionEntitlementRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): SetSubscriptionEntitlementRequest {
+    return new SetSubscriptionEntitlementRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | SetSubscriptionEntitlementRequest
+      | PlainMessage<SetSubscriptionEntitlementRequest>
+      | undefined,
+    b:
+      | SetSubscriptionEntitlementRequest
+      | PlainMessage<SetSubscriptionEntitlementRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(SetSubscriptionEntitlementRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.SetSubscriptionEntitlementResponse
+ */
+export class SetSubscriptionEntitlementResponse extends Message<SetSubscriptionEntitlementResponse> {
+  constructor(data?: PartialMessage<SetSubscriptionEntitlementResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.SetSubscriptionEntitlementResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): SetSubscriptionEntitlementResponse {
+    return new SetSubscriptionEntitlementResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): SetSubscriptionEntitlementResponse {
+    return new SetSubscriptionEntitlementResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): SetSubscriptionEntitlementResponse {
+    return new SetSubscriptionEntitlementResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | SetSubscriptionEntitlementResponse
+      | PlainMessage<SetSubscriptionEntitlementResponse>
+      | undefined,
+    b:
+      | SetSubscriptionEntitlementResponse
+      | PlainMessage<SetSubscriptionEntitlementResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(SetSubscriptionEntitlementResponse, a, b)
+  }
+}
