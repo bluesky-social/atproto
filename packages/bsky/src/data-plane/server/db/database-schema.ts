@@ -19,6 +19,7 @@ import * as mute from './tables/mute'
 import * as actorBlock from './tables/actor-block'
 import * as threadMute from './tables/thread-mute'
 import * as feedGenerator from './tables/feed-generator'
+import * as subscriptionEntitlement from './tables/subscription-entitlement'
 import * as subscription from './tables/subscription'
 import * as actor from './tables/actor'
 import * as actorState from './tables/actor-state'
@@ -58,6 +59,7 @@ export type DatabaseSchemaType = duplicateRecord.PartialDB &
   actorBlock.PartialDB &
   threadMute.PartialDB &
   feedGenerator.PartialDB &
+  subscriptionEntitlement.PartialDB &
   subscription.PartialDB &
   actor.PartialDB &
   actorState.PartialDB &
