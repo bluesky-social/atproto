@@ -146,11 +146,11 @@ export type ListPurpose =
   | (string & {})
 
 /** A list of actors to apply an aggregate moderation action (mute/block) on. */
-export const MODLIST = 'app.bsky.graph.defs#modlist'
+export const MODLIST = `${id}#modlist`
 /** A list of actors used for curation purposes such as list feeds or interaction gating. */
-export const CURATELIST = 'app.bsky.graph.defs#curatelist'
+export const CURATELIST = `${id}#curatelist`
 /** A list of actors used for only for reference purposes such as within a starter pack. */
-export const REFERENCELIST = 'app.bsky.graph.defs#referencelist'
+export const REFERENCELIST = `${id}#referencelist`
 
 export interface ListViewerState {
   muted?: boolean

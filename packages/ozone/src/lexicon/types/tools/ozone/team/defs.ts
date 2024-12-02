@@ -35,8 +35,8 @@ export function validateMember(v: unknown) {
 }
 
 /** Admin role. Highest level of access, can perform all actions. */
-export const ROLEADMIN = 'tools.ozone.team.defs#roleAdmin'
+export const ROLEADMIN = `${id}#roleAdmin`
 /** Moderator role. Can perform most actions. */
-export const ROLEMODERATOR = 'tools.ozone.team.defs#roleModerator'
+export const ROLEMODERATOR = `${id}#roleModerator`
 /** Triage role. Mostly intended for monitoring and escalating issues. */
-export const ROLETRIAGE = 'tools.ozone.team.defs#roleTriage'
+export const ROLETRIAGE = `${id}#roleTriage`

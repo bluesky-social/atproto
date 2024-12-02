@@ -164,13 +164,13 @@ export type SubjectReviewState =
   | (string & {})
 
 /** Moderator review status of a subject: Open. Indicates that the subject needs to be reviewed by a moderator */
-export const REVIEWOPEN = 'tools.ozone.moderation.defs#reviewOpen'
+export const REVIEWOPEN = `${id}#reviewOpen`
 /** Moderator review status of a subject: Escalated. Indicates that the subject was escalated for review by a moderator */
-export const REVIEWESCALATED = 'tools.ozone.moderation.defs#reviewEscalated'
+export const REVIEWESCALATED = `${id}#reviewEscalated`
 /** Moderator review status of a subject: Closed. Indicates that the subject was already reviewed and resolved by a moderator */
-export const REVIEWCLOSED = 'tools.ozone.moderation.defs#reviewClosed'
+export const REVIEWCLOSED = `${id}#reviewClosed`
 /** Moderator review status of a subject: Unnecessary. Indicates that the subject does not need a review at the moment but there is probably some moderation related metadata available for it */
-export const REVIEWNONE = 'tools.ozone.moderation.defs#reviewNone'
+export const REVIEWNONE = `${id}#reviewNone`
 
 /** Take down a subject permanently or temporarily */
 export interface ModEventTakedown {
