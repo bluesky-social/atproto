@@ -2,7 +2,7 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { mapDefined } from '@atproto/common'
 import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/notification/listNotifications'
-import { isRecord as isPostRecord } from '../../../../lexicon/types/app/bsky/feed/post'
+import { isValidRecord as isValidPostRecord } from '../../../../lexicon/types/app/bsky/feed/post'
 import AppContext from '../../../../context'
 import {
   createPipeline,
@@ -105,7 +105,7 @@ const noBlockOrMutesOrNeedsReview = (
     if (item.reason === 'reply') {
       const post = hydration.posts?.get(item.uri)
       if (post) {
-        const rootPostUri = isPostRecord(post.record)
+        const rootPostUri = isValidPostRecord(post.record)
           ? post.record.reply?.root.uri
           : undefined
         const isRootPostByViewer =

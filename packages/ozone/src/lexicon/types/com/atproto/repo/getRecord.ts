@@ -5,7 +5,7 @@ import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { lexicons } from '../../../../lexicons'
-import { $Type, is$typed } from '../../../../util'
+import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 
 export const id = 'com.atproto.repo.getRecord'
@@ -26,8 +26,7 @@ export type InputSchema = undefined
 export interface OutputSchema {
   uri: string
   cid?: string
-  value: {}
-  [k: string]: unknown
+  value: { [_ in string]: unknown }
 }
 
 export type HandlerInput = undefined

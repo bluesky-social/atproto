@@ -4,7 +4,7 @@
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import { $Type, is$typed } from '../../../../util'
+import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import * as AppBskyActorDefs from '../actor/defs'
 import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
@@ -25,7 +25,6 @@ export interface OutputSchema {
   notifications: Notification[]
   priority?: boolean
   seenAt?: string
-  [k: string]: unknown
 }
 
 export interface CallOptions {
@@ -44,6 +43,7 @@ export function toKnownErr(e: any) {
 }
 
 export interface Notification {
+  $type?: $Type<'app.bsky.notification.listNotifications', 'notification'>
   uri: string
   cid: string
   author: AppBskyActorDefs.ProfileView
@@ -58,16 +58,13 @@ export interface Notification {
     | 'starterpack-joined'
     | (string & {})
   reasonSubject?: string
-  record: {}
+  record: { [_ in string]: unknown }
   isRead: boolean
   indexedAt: string
   labels?: ComAtprotoLabelDefs.Label[]
-  [k: string]: unknown
 }
 
-export function isNotification(v: unknown): v is Notification & {
-  $type: $Type<'app.bsky.notification.listNotifications', 'notification'>
-} {
+export function isNotification<V>(v: V) {
   return is$typed(v, id, 'notification')
 }
 
@@ -76,4 +73,8 @@ export function validateNotification(v: unknown) {
     `${id}#notification`,
     v,
   ) as ValidationResult<Notification>
+}
+
+export function isValidNotification<V>(v: V): v is V & $Typed<Notification> {
+  return isNotification(v) && validateNotification(v).success
 }

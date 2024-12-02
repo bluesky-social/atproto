@@ -4,7 +4,7 @@
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import { $Type, is$typed } from '../../../../util'
+import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 
 export const id = 'app.bsky.notification.getUnreadCount'
@@ -18,7 +18,6 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   count: number
-  [k: string]: unknown
 }
 
 export interface CallOptions {

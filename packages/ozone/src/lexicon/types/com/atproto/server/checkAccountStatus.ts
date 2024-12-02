@@ -5,7 +5,7 @@ import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { lexicons } from '../../../../lexicons'
-import { $Type, is$typed } from '../../../../util'
+import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 
 export const id = 'com.atproto.server.checkAccountStatus'
@@ -24,7 +24,6 @@ export interface OutputSchema {
   privateStateValues: number
   expectedBlobs: number
   importedBlobs: number
-  [k: string]: unknown
 }
 
 export type HandlerInput = undefined

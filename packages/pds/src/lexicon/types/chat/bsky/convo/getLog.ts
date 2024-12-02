@@ -5,7 +5,7 @@ import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { lexicons } from '../../../../lexicons'
-import { $Type, is$typed } from '../../../../util'
+import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as ChatBskyConvoDefs from './defs'
 
@@ -20,13 +20,12 @@ export type InputSchema = undefined
 export interface OutputSchema {
   cursor?: string
   logs: (
-    | ChatBskyConvoDefs.LogBeginConvo
-    | ChatBskyConvoDefs.LogLeaveConvo
-    | ChatBskyConvoDefs.LogCreateMessage
-    | ChatBskyConvoDefs.LogDeleteMessage
-    | { $type: string; [k: string]: unknown }
+    | $Typed<ChatBskyConvoDefs.LogBeginConvo>
+    | $Typed<ChatBskyConvoDefs.LogLeaveConvo>
+    | $Typed<ChatBskyConvoDefs.LogCreateMessage>
+    | $Typed<ChatBskyConvoDefs.LogDeleteMessage>
+    | { $type: string }
   )[]
-  [k: string]: unknown
 }
 
 export type HandlerInput = undefined

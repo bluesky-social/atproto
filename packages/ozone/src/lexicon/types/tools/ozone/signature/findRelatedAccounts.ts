@@ -5,7 +5,7 @@ import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { lexicons } from '../../../../lexicons'
-import { $Type, is$typed } from '../../../../util'
+import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as ComAtprotoAdminDefs from '../../../com/atproto/admin/defs'
 import * as ToolsOzoneSignatureDefs from './defs'
@@ -23,7 +23,6 @@ export type InputSchema = undefined
 export interface OutputSchema {
   cursor?: string
   accounts: RelatedAccount[]
-  [k: string]: unknown
 }
 
 export type HandlerInput = undefined
@@ -52,14 +51,12 @@ export type Handler<HA extends HandlerAuth = never> = (
 ) => Promise<HandlerOutput> | HandlerOutput
 
 export interface RelatedAccount {
+  $type?: $Type<'tools.ozone.signature.findRelatedAccounts', 'relatedAccount'>
   account: ComAtprotoAdminDefs.AccountView
   similarities?: ToolsOzoneSignatureDefs.SigDetail[]
-  [k: string]: unknown
 }
 
-export function isRelatedAccount(v: unknown): v is RelatedAccount & {
-  $type: $Type<'tools.ozone.signature.findRelatedAccounts', 'relatedAccount'>
-} {
+export function isRelatedAccount<V>(v: V) {
   return is$typed(v, id, 'relatedAccount')
 }
 
@@ -68,4 +65,10 @@ export function validateRelatedAccount(v: unknown) {
     `${id}#relatedAccount`,
     v,
   ) as ValidationResult<RelatedAccount>
+}
+
+export function isValidRelatedAccount<V>(
+  v: V,
+): v is V & $Typed<RelatedAccount> {
+  return isRelatedAccount(v) && validateRelatedAccount(v).success
 }

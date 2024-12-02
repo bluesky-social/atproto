@@ -4,7 +4,7 @@
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import { $Type, is$typed } from '../../../../util'
+import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import * as AppBskyUnspeccedDefs from './defs'
 
@@ -26,7 +26,6 @@ export interface OutputSchema {
   actors: AppBskyUnspeccedDefs.SkeletonSearchActor[]
   /** DID of the account these suggestions are relative to. If this is returned undefined, suggestions are based on the viewer. */
   relativeToDid?: string
-  [k: string]: unknown
 }
 
 export interface CallOptions {

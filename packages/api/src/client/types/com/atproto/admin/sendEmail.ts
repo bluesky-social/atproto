@@ -4,7 +4,7 @@
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import { $Type, is$typed } from '../../../../util'
+import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 
 export const id = 'com.atproto.admin.sendEmail'
@@ -18,12 +18,10 @@ export interface InputSchema {
   senderDid: string
   /** Additional comment by the sender that won't be used in the email itself but helpful to provide more context for moderators/reviewers */
   comment?: string
-  [k: string]: unknown
 }
 
 export interface OutputSchema {
   sent: boolean
-  [k: string]: unknown
 }
 
 export interface CallOptions {

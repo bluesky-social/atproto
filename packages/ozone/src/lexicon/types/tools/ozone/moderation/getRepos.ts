@@ -5,7 +5,7 @@ import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { lexicons } from '../../../../lexicons'
-import { $Type, is$typed } from '../../../../util'
+import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as ToolsOzoneModerationDefs from './defs'
 
@@ -19,11 +19,10 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   repos: (
-    | ToolsOzoneModerationDefs.RepoViewDetail
-    | ToolsOzoneModerationDefs.RepoViewNotFound
-    | { $type: string; [k: string]: unknown }
+    | $Typed<ToolsOzoneModerationDefs.RepoViewDetail>
+    | $Typed<ToolsOzoneModerationDefs.RepoViewNotFound>
+    | { $type: string }
   )[]
-  [k: string]: unknown
 }
 
 export type HandlerInput = undefined

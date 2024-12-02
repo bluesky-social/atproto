@@ -5,7 +5,7 @@ import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { lexicons } from '../../../../lexicons'
-import { $Type, is$typed } from '../../../../util'
+import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 
 export const id = 'com.atproto.server.refreshSession'
@@ -19,11 +19,10 @@ export interface OutputSchema {
   refreshJwt: string
   handle: string
   did: string
-  didDoc?: {}
+  didDoc?: { [_ in string]: unknown }
   active?: boolean
   /** Hosting status of the account. If not specified, then assume 'active'. */
   status?: 'takendown' | 'suspended' | 'deactivated' | (string & {})
-  [k: string]: unknown
 }
 
 export type HandlerInput = undefined

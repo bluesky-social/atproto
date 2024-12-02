@@ -81,6 +81,11 @@ const indexTs = (
       })
       .addNamedImports([{ name: 'CID' }])
 
+    //= import {OmitKey} from './util'
+    file
+      .addImportDeclaration({ moduleSpecifier: `./util` })
+      .addNamedImports([{ name: 'OmitKey' }])
+
     // generate type imports and re-exports
     for (const lexicon of lexiconDocs) {
       const moduleSpecifier = `./types/${lexicon.id.split('.').join('/')}`
@@ -312,7 +317,7 @@ function genRecordCls(file: SourceFile, nsid: string, lexRecord: LexRecord) {
     })
     method.addParameter({
       name: 'params',
-      type: `Omit<${toTitleCase(ATP_METHODS.list)}.QueryParams, "collection">`,
+      type: `OmitKey<${toTitleCase(ATP_METHODS.list)}.QueryParams, "collection">`,
     })
     method.setBodyText(
       [
@@ -330,7 +335,7 @@ function genRecordCls(file: SourceFile, nsid: string, lexRecord: LexRecord) {
     })
     method.addParameter({
       name: 'params',
-      type: `Omit<${toTitleCase(ATP_METHODS.get)}.QueryParams, "collection">`,
+      type: `OmitKey<${toTitleCase(ATP_METHODS.get)}.QueryParams, "collection">`,
     })
     method.setBodyText(
       [
@@ -348,7 +353,7 @@ function genRecordCls(file: SourceFile, nsid: string, lexRecord: LexRecord) {
     })
     method.addParameter({
       name: 'params',
-      type: `Omit<${toTitleCase(
+      type: `OmitKey<${toTitleCase(
         ATP_METHODS.create,
       )}.InputSchema, "collection" | "record">`,
     })
@@ -365,8 +370,8 @@ function genRecordCls(file: SourceFile, nsid: string, lexRecord: LexRecord) {
       : ''
     method.setBodyText(
       [
-        `record.$type = '${nsid}'`,
-        `const res = await this._client.call('${ATP_METHODS.create}', undefined, { collection: '${nsid}', ${maybeRkeyPart}...params, record }, {encoding: 'application/json', headers })`,
+        `const collection = '${nsid}'`,
+        `const res = await this._client.call('${ATP_METHODS.create}', undefined, { collection, ${maybeRkeyPart}...params, record: { ...record, $type: collection} }, {encoding: 'application/json', headers })`,
         `return res.data`,
       ].join('\n'),
     )
@@ -380,7 +385,7 @@ function genRecordCls(file: SourceFile, nsid: string, lexRecord: LexRecord) {
   //   })
   //   method.addParameter({
   //     name: 'params',
-  //     type: `Omit<${toTitleCase(ATP_METHODS.put)}.InputSchema, "collection" | "record">`,
+  //     type: `OmitKey<${toTitleCase(ATP_METHODS.put)}.InputSchema, "collection" | "record">`,
   //   })
   //   method.addParameter({
   //     name: 'record',
@@ -407,7 +412,7 @@ function genRecordCls(file: SourceFile, nsid: string, lexRecord: LexRecord) {
     })
     method.addParameter({
       name: 'params',
-      type: `Omit<${toTitleCase(
+      type: `OmitKey<${toTitleCase(
         ATP_METHODS.delete,
       )}.InputSchema, "collection">`,
     })
@@ -460,7 +465,7 @@ const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
         })
         .addNamedImports([{ name: 'CID' }])
 
-      //= import { $Type, is$typed } from '../../util.ts'
+      //= import { $Type, $Typed, is$typed, OmitKey } from '../../util.ts'
       file
         .addImportDeclaration({
           moduleSpecifier: `${lexiconDoc.id
@@ -468,7 +473,12 @@ const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
             .map((_str) => '..')
             .join('/')}/util`,
         })
-        .addNamedImports([{ name: '$Type' }, { name: 'is$typed' }])
+        .addNamedImports([
+          { name: '$Type' },
+          { name: '$Typed' },
+          { name: 'is$typed' },
+          { name: 'OmitKey' },
+        ])
 
       //= import {lexicons} from '../../lexicons.ts'
       file
@@ -608,7 +618,12 @@ function genClientRecord(
   const def = lexicons.getDefOrThrow(lexUri, ['record'])
 
   //= export interface Record {...}
-  genObject(file, imports, lexUri, def.record, 'Record')
+  genObject(file, imports, lexUri, def.record, 'Record', {
+    defaultsArePresent: true,
+    allowUnknownProperties: true,
+    addTypeProperty: true,
+  })
+
   //= export function isRecord(v: unknown): v is Record {...}
   genObjHelpers(file, lexUri, 'Record')
 }

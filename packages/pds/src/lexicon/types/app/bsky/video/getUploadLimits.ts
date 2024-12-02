@@ -5,7 +5,7 @@ import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { lexicons } from '../../../../lexicons'
-import { $Type, is$typed } from '../../../../util'
+import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 
 export const id = 'app.bsky.video.getUploadLimits'
@@ -20,7 +20,6 @@ export interface OutputSchema {
   remainingDailyBytes?: number
   message?: string
   error?: string
-  [k: string]: unknown
 }
 
 export type HandlerInput = undefined

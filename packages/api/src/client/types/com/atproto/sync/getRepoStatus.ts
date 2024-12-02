@@ -4,7 +4,7 @@
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import { $Type, is$typed } from '../../../../util'
+import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 
 export const id = 'com.atproto.sync.getRepoStatus'
@@ -23,7 +23,6 @@ export interface OutputSchema {
   status?: 'takendown' | 'suspended' | 'deactivated' | (string & {})
   /** Optional field, the current rev of the repo, if active=true */
   rev?: string
-  [k: string]: unknown
 }
 
 export interface CallOptions {

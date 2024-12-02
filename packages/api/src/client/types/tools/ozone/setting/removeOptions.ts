@@ -4,7 +4,7 @@
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import { $Type, is$typed } from '../../../../util'
+import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 
 export const id = 'tools.ozone.setting.removeOptions'
@@ -14,12 +14,9 @@ export interface QueryParams {}
 export interface InputSchema {
   keys: string[]
   scope: 'instance' | 'personal' | (string & {})
-  [k: string]: unknown
 }
 
-export interface OutputSchema {
-  [k: string]: unknown
-}
+export interface OutputSchema {}
 
 export interface CallOptions {
   signal?: AbortSignal

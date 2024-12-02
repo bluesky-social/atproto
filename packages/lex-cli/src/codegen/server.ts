@@ -366,7 +366,7 @@ const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
         })
         .addNamedImports([{ name: 'lexicons' }])
 
-      //= import { $Type, is$typed } from '../../util.ts'
+      //= import { $Type, $Typed, is$typed, OmitKey } from '../../util.ts'
       file
         .addImportDeclaration({
           moduleSpecifier: `${lexiconDoc.id
@@ -374,7 +374,12 @@ const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
             .map((_str) => '..')
             .join('/')}/util`,
         })
-        .addNamedImports([{ name: '$Type' }, { name: 'is$typed' }])
+        .addNamedImports([
+          { name: '$Type' },
+          { name: '$Typed' },
+          { name: 'is$typed' },
+          { name: 'OmitKey' },
+        ])
 
       //= export const id = "{lexiconDoc.id}"
       file.addVariableStatement({
@@ -609,7 +614,12 @@ function genServerRecord(
   const def = lexicons.getDefOrThrow(lexUri, ['record'])
 
   //= export interface Record {...}
-  genObject(file, imports, lexUri, def.record, 'Record')
+  genObject(file, imports, lexUri, def.record, 'Record', {
+    defaultsArePresent: true,
+    allowUnknownProperties: true,
+    addTypeProperty: true,
+  })
+
   //= export function isRecord(v: unknown): v is Record {...}
   genObjHelpers(file, lexUri, 'Record')
 }

@@ -5,7 +5,7 @@ import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { lexicons } from '../../../../lexicons'
-import { $Type, is$typed } from '../../../../util'
+import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 
 export const id = 'com.atproto.identity.getRecommendedDidCredentials'
@@ -18,9 +18,8 @@ export interface OutputSchema {
   /** Recommended rotation keys for PLC dids. Should be undefined (or ignored) for did:webs. */
   rotationKeys?: string[]
   alsoKnownAs?: string[]
-  verificationMethods?: {}
-  services?: {}
-  [k: string]: unknown
+  verificationMethods?: { [_ in string]: unknown }
+  services?: { [_ in string]: unknown }
 }
 
 export type HandlerInput = undefined

@@ -4,7 +4,7 @@
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import { $Type, is$typed } from '../../../../util'
+import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 
 export const id = 'com.atproto.repo.uploadBlob'
@@ -15,7 +15,6 @@ export type InputSchema = string | Uint8Array | Blob
 
 export interface OutputSchema {
   blob: BlobRef
-  [k: string]: unknown
 }
 
 export interface CallOptions {

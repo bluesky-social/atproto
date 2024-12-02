@@ -5,7 +5,7 @@ import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { lexicons } from '../../../../lexicons'
-import { $Type, is$typed } from '../../../../util'
+import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as ComAtprotoServerDefs from './defs'
 
@@ -21,7 +21,6 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   codes: ComAtprotoServerDefs.InviteCode[]
-  [k: string]: unknown
 }
 
 export type HandlerInput = undefined

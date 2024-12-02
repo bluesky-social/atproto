@@ -62,7 +62,9 @@ export function genUserType(
       genToken(file, lexUri, def)
       break
     case 'object':
-      genObject(file, imports, lexUri, def)
+      genObject(file, imports, lexUri, def, undefined, {
+        addTypeProperty: true,
+      })
       genObjHelpers(file, lexUri)
       break
 
@@ -88,14 +90,31 @@ export function genObject(
   imports: Set<string>,
   lexUri: string,
   def: LexObject,
-  ifaceName?: string,
-  defaultsArePresent = true,
+  ifaceName: string = toTitleCase(getHash(lexUri)),
+  {
+    defaultsArePresent = true,
+    allowUnknownProperties = false,
+    addTypeProperty = false,
+  }: {
+    defaultsArePresent?: boolean
+    allowUnknownProperties?: boolean
+    addTypeProperty?: boolean
+  } = {},
 ) {
   const iface = file.addInterface({
-    name: ifaceName || toTitleCase(getHash(lexUri)),
+    name: ifaceName,
     isExported: true,
   })
   genComment(iface, def)
+
+  if (addTypeProperty) {
+    //= $type: uri
+    iface.addProperty({
+      name: `$type?`,
+      type: `$Type<${JSON.stringify(stripHash(stripScheme(lexUri)))}, ${JSON.stringify(getHash(lexUri))}>`,
+    })
+  }
+
   const nullableProps = new Set(def.nullable)
   if (def.properties) {
     for (const propKey in def.properties) {
@@ -108,12 +127,15 @@ export function genObject(
           propDef.default !== undefined)
       if (propDef.type === 'ref' || propDef.type === 'union') {
         //= propName: External|External
-        const refs = propDef.type === 'union' ? propDef.refs : [propDef.ref]
-        const types = refs.map((ref) =>
-          refToType(ref, stripScheme(stripHash(lexUri)), imports),
-        )
+        const types =
+          propDef.type === 'union'
+            ? propDef.refs.map(
+                (ref) =>
+                  `$Typed<${refToType(ref, stripScheme(stripHash(lexUri)), imports)}>`,
+              )
+            : [refToType(propDef.ref, stripScheme(stripHash(lexUri)), imports)]
         if (propDef.type === 'union' && !propDef.closed) {
-          types.push('{$type: string; [k: string]: unknown}')
+          types.push('{ $type: string }')
         }
         iface.addProperty({
           name: `${propKey}${req ? '' : '?'}`,
@@ -140,11 +162,12 @@ export function genObject(
               ),
             })
           } else if (propDef.items.type === 'union') {
-            const types = propDef.items.refs.map((ref) =>
-              refToType(ref, stripScheme(stripHash(lexUri)), imports),
+            const types = propDef.items.refs.map(
+              (ref) =>
+                `$Typed<${refToType(ref, stripScheme(stripHash(lexUri)), imports)}>`,
             )
             if (!propDef.items.closed) {
-              types.push('{$type: string; [k: string]: unknown}')
+              types.push('{ $type: string }')
             }
             propAst = iface.addProperty({
               name: `${propKey}${req ? '' : '?'}`,
@@ -177,12 +200,15 @@ export function genObject(
         }
       }
     }
-    //= [k: string]: unknown
-    iface.addIndexSignature({
-      keyName: 'k',
-      keyType: 'string',
-      returnType: 'unknown',
-    })
+
+    if (allowUnknownProperties) {
+      //= [k: string]: unknown
+      iface.addIndexSignature({
+        keyName: 'k',
+        keyType: 'string',
+        returnType: 'unknown',
+      })
+    }
   }
 }
 
@@ -221,11 +247,12 @@ export function genArray(
       isExported: true,
     })
   } else if (def.items.type === 'union') {
-    const types = def.items.refs.map((ref) =>
-      refToType(ref, stripScheme(stripHash(lexUri)), imports),
+    const types = def.items.refs.map(
+      (ref) =>
+        `$Typed<${refToType(ref, stripScheme(stripHash(lexUri)), imports)}>`,
     )
     if (!def.items.closed) {
-      types.push('{$type: string; [k: string]: unknown}')
+      types.push('{ $type: string }')
     }
     file.addTypeAlias({
       name: toTitleCase(getHash(lexUri)),
@@ -310,15 +337,23 @@ export function genXrpcInput(
   if (def.type === 'procedure' && def.input?.schema) {
     if (def.input.schema.type === 'ref' || def.input.schema.type === 'union') {
       //= export type InputSchema = ...
-      const refs =
+
+      const types =
         def.input.schema.type === 'union'
-          ? def.input.schema.refs
-          : [def.input.schema.ref]
-      const types = refs.map((ref) =>
-        refToType(ref, stripScheme(stripHash(lexUri)), imports),
-      )
+          ? def.input.schema.refs.map(
+              (ref) =>
+                `$Typed<${refToType(ref, stripScheme(stripHash(lexUri)), imports)}>`,
+            )
+          : [
+              refToType(
+                def.input.schema.ref,
+                stripScheme(stripHash(lexUri)),
+                imports,
+              ),
+            ]
+
       if (def.input.schema.type === 'union' && !def.input.schema.closed) {
-        types.push('{$type: string; [k: string]: unknown}')
+        types.push('{ $type: string }')
       }
       file.addTypeAlias({
         name: 'InputSchema',
@@ -327,14 +362,9 @@ export function genXrpcInput(
       })
     } else {
       //= export interface InputSchema {...}
-      genObject(
-        file,
-        imports,
-        lexUri,
-        def.input.schema,
-        `InputSchema`,
+      genObject(file, imports, lexUri, def.input.schema, `InputSchema`, {
         defaultsArePresent,
-      )
+      })
     }
   } else if (def.type === 'procedure' && def.input?.encoding) {
     //= export type InputSchema = string | Uint8Array | Blob
@@ -371,12 +401,15 @@ export function genXrpcOutput(
   if (schema) {
     if (schema.type === 'ref' || schema.type === 'union') {
       //= export type OutputSchema = ...
-      const refs = schema.type === 'union' ? schema.refs : [schema.ref]
-      const types = refs.map((ref) =>
-        refToType(ref, stripScheme(stripHash(lexUri)), imports),
-      )
+      const types =
+        schema.type === 'union'
+          ? schema.refs.map(
+              (ref) =>
+                `$Typed<${refToType(ref, stripScheme(stripHash(lexUri)), imports)}>`,
+            )
+          : [refToType(schema.ref, stripScheme(stripHash(lexUri)), imports)]
       if (schema.type === 'union' && !schema.closed) {
-        types.push('{$type: string; [k: string]: unknown}')
+        types.push('{ $type: string }')
       }
       file.addTypeAlias({
         name: 'OutputSchema',
@@ -385,14 +418,9 @@ export function genXrpcOutput(
       })
     } else {
       //= export interface OutputSchema {...}
-      genObject(
-        file,
-        imports,
-        lexUri,
-        schema,
-        `OutputSchema`,
+      genObject(file, imports, lexUri, schema, `OutputSchema`, {
         defaultsArePresent,
-      )
+      })
     }
   }
 }
@@ -404,26 +432,39 @@ export function genObjHelpers(
 ) {
   const hash = getHash(lexUri)
 
-  //= export function is{X}(v: unknown): v is X & { $type: NS } {...}
+  //= export function is{X}<V>(v: V) {...}
+
+  const isX = toCamelCase(`is-${ifaceName}`)
   file
     .addFunction({
-      name: toCamelCase(`is-${ifaceName}`),
-      parameters: [{ name: `v`, type: `unknown` }],
-      returnType: `v is ${ifaceName} & { $type: $Type<'${stripHash(lexUri)}', '${hash}'> }`,
+      name: isX,
+      typeParameters: [{ name: `V` }],
+      parameters: [{ name: `v`, type: `V` }],
       isExported: true,
     })
     .setBodyText(`return is$typed(v, id, ${JSON.stringify(hash)})`)
 
+  const validateX = toCamelCase(`validate-${ifaceName}`)
   //= export function validate{X}(v: unknown): ValidationResult<X> {...}
   file
     .addFunction({
-      name: toCamelCase(`validate-${ifaceName}`),
+      name: validateX,
       parameters: [{ name: `v`, type: `unknown` }],
       isExported: true,
     })
     .setBodyText(
       `return lexicons.validate(\`\${id}#${hash}\`, v) as ValidationResult<${ifaceName}>`,
     )
+
+  const isValidX = toCamelCase(`is-valid-${ifaceName}`)
+  file
+    .addFunction({
+      name: `${isValidX}<V>`,
+      parameters: [{ name: `v`, type: `V` }],
+      returnType: `v is V & $Typed<${ifaceName}>`,
+      isExported: true,
+    })
+    .setBodyText(`return ${isX}(v) && ${validateX}(v).success`)
 }
 
 export function stripScheme(uri: string): string {
@@ -507,7 +548,9 @@ export function primitiveToType(def: LexPrimitive): string {
       }
       return 'boolean'
     case 'unknown':
-      return '{}'
+      // the "Record" identifier from typescript get overwritten by the Record
+      // interface created by lex-cli.
+      return '{ [_ in string]: unknown }' // Record<string, unknown>
     default:
       throw new Error(`Unexpected primitive type: ${JSON.stringify(def)}`)
   }

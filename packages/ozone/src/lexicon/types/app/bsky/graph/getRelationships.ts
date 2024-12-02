@@ -5,7 +5,7 @@ import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { lexicons } from '../../../../lexicons'
-import { $Type, is$typed } from '../../../../util'
+import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as AppBskyGraphDefs from './defs'
 
@@ -23,11 +23,10 @@ export type InputSchema = undefined
 export interface OutputSchema {
   actor?: string
   relationships: (
-    | AppBskyGraphDefs.Relationship
-    | AppBskyGraphDefs.NotFoundActor
-    | { $type: string; [k: string]: unknown }
+    | $Typed<AppBskyGraphDefs.Relationship>
+    | $Typed<AppBskyGraphDefs.NotFoundActor>
+    | { $type: string }
   )[]
-  [k: string]: unknown
 }
 
 export type HandlerInput = undefined

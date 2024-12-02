@@ -711,7 +711,7 @@ describe('moderation', () => {
       },
     ) {
       const { createLabelVals, negateLabelVals } = opts
-      const result = await modClient.emitEvent({
+      const event = await modClient.emitEvent({
         event: {
           $type: 'tools.ozone.moderation.defs#modEventLabel',
           createLabelVals,
@@ -721,7 +721,7 @@ describe('moderation', () => {
         reason: 'Y',
         ...opts,
       })
-      return result.data
+      return event
     }
 
     async function reverse(

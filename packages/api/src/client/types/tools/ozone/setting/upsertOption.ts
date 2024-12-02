@@ -4,7 +4,7 @@
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import { $Type, is$typed } from '../../../../util'
+import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import * as ToolsOzoneSettingDefs from './defs'
 
@@ -15,19 +15,17 @@ export interface QueryParams {}
 export interface InputSchema {
   key: string
   scope: 'instance' | 'personal' | (string & {})
-  value: {}
+  value: { [_ in string]: unknown }
   description?: string
   managerRole?:
     | 'tools.ozone.team.defs#roleModerator'
     | 'tools.ozone.team.defs#roleTriage'
     | 'tools.ozone.team.defs#roleAdmin'
     | (string & {})
-  [k: string]: unknown
 }
 
 export interface OutputSchema {
   option: ToolsOzoneSettingDefs.Option
-  [k: string]: unknown
 }
 
 export interface CallOptions {

@@ -4,7 +4,7 @@
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import { $Type, is$typed } from '../../../../util'
+import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 
 export const id = 'com.atproto.repo.describeRepo'
@@ -20,12 +20,11 @@ export interface OutputSchema {
   handle: string
   did: string
   /** The complete DID document for this account. */
-  didDoc: {}
+  didDoc: { [_ in string]: unknown }
   /** List of all the collections (NSIDs) for which this repo contains at least one record. */
   collections: string[]
   /** Indicates if handle is currently valid (resolves bi-directionally) */
   handleIsCorrect: boolean
-  [k: string]: unknown
 }
 
 export interface CallOptions {

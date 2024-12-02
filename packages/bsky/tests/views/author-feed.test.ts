@@ -179,8 +179,8 @@ describe('pds author feed views', () => {
         }
         if (item.reply) {
           result.reply = {
-            parent: stripViewerFromPost(item.reply.parent),
-            root: stripViewerFromPost(item.reply.root),
+            parent: stripViewerFromPost(item.reply.parent, true),
+            root: stripViewerFromPost(item.reply.root, true),
             grandparentAuthor:
               item.reply.grandparentAuthor &&
               stripViewer(item.reply.grandparentAuthor),

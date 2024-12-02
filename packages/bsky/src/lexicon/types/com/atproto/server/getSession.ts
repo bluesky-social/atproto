@@ -5,7 +5,7 @@ import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { lexicons } from '../../../../lexicons'
-import { $Type, is$typed } from '../../../../util'
+import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 
 export const id = 'com.atproto.server.getSession'
@@ -20,11 +20,10 @@ export interface OutputSchema {
   email?: string
   emailConfirmed?: boolean
   emailAuthFactor?: boolean
-  didDoc?: {}
+  didDoc?: { [_ in string]: unknown }
   active?: boolean
   /** If active=false, this optional field indicates a possible reason for why the account is not active. If active=false and no status is supplied, then the host makes no claim for why the repository is no longer being hosted. */
   status?: 'takendown' | 'suspended' | 'deactivated' | (string & {})
-  [k: string]: unknown
 }
 
 export type HandlerInput = undefined

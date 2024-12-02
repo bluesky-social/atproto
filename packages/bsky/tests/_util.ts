@@ -5,15 +5,19 @@ import {
   FeedViewPost,
   PostView,
   isPostView,
+  isReasonRepost,
   isThreadViewPost,
 } from '../src/lexicon/types/app/bsky/feed/defs'
 import { isViewRecord } from '../src/lexicon/types/app/bsky/embed/record'
+import { isView as isRecordView } from '../src/lexicon/types/app/bsky/embed/record'
+import { isView as isRecordWithMediaView } from '../src/lexicon/types/app/bsky/embed/recordWithMedia'
 import { AppBskyFeedGetPostThread } from '@atproto/api'
 import {
   LabelerView,
   isLabelerView,
   isLabelerViewDetailed,
 } from '../src/lexicon/types/app/bsky/labeler/defs'
+import { $Typed } from '../src/lexicon/util'
 
 type ThreadViewPost = Extract<
   AppBskyFeedGetPostThread.OutputSchema['thread'],
@@ -108,8 +112,10 @@ export const forSnapshot = (obj: unknown) => {
 export const getOriginator = (item: FeedViewPost) => {
   if (!item.reason) {
     return item.post.author.did
+  } else if (isReasonRepost(item.reason)) {
+    return item.reason.by.did
   } else {
-    return (item.reason.by as { [did: string]: string }).did
+    throw new Error('Unexpected reason')
   }
 }
 
@@ -119,8 +125,11 @@ export const getOriginator = (item: FeedViewPost) => {
 // to this:
 //   [{ uri: '0'}, { uri: '1' }, { uri: '0'}]
 const kTake = Symbol('take')
-export function take(obj, value: string): string
-export function take(obj, value: string | undefined): string | undefined
+export function take(obj: Record<string, number>, value: string): string
+export function take(
+  obj: Record<string, number>,
+  value?: string,
+): string | undefined
 export function take(
   obj: { [s: string]: number; [kTake]?: string },
   value: string | undefined,
@@ -140,7 +149,10 @@ export function take(
 export const constantDate = new Date(0).toISOString()
 export const constantKeysetCursor = '0000000000000__bafycid'
 
-const mapLeafValues = (obj: unknown, fn: (val: unknown) => unknown) => {
+const mapLeafValues = (
+  obj: unknown,
+  fn: (val: unknown) => unknown,
+): unknown => {
   if (Array.isArray(obj)) {
     return obj.map((item) => mapLeafValues(item, fn))
   }
@@ -169,33 +181,57 @@ export const paginateAll = async <T extends { cursor?: string }>(
 }
 
 // @NOTE mutates
-export const stripViewer = <T extends { viewer?: Record<string, unknown> }>(
+export const stripViewer = <T extends { viewer?: unknown }>(
   val: T,
-): T => {
+): Omit<T, 'viewer'> => {
   delete val.viewer
   return val
 }
 
 // @NOTE mutates
-export const stripViewerFromPost = (postUnknown: unknown): PostView => {
-  if (postUnknown?.['$type'] && !isPostView(postUnknown)) {
+export function stripViewerFromPost(
+  postUnknown: object,
+  withType?: false,
+): PostView
+export function stripViewerFromPost(
+  postUnknown: object,
+  withType: true,
+): $Typed<PostView>
+export function stripViewerFromPost(
+  postUnknown: object,
+  withType = false,
+): PostView {
+  if ('$type' in postUnknown && !isPostView(postUnknown)) {
     throw new Error('Expected post view')
   }
   const post = postUnknown as PostView
+  if (withType) {
+    post.$type = 'app.bsky.feed.defs#postView'
+  } else {
+    delete post.$type
+  }
   post.author = stripViewer(post.author)
-  const recordEmbed =
-    post.embed && isViewRecord(post.embed.record)
-      ? post.embed.record // Record from record embed
-      : post.embed?.['record'] && isViewRecord(post.embed['record']['record'])
-        ? post.embed['record']['record'] // Record from record-with-media embed
+  const recordEmbed = isRecordView(post.embed)
+    ? isViewRecord(post.embed.record)
+      ? post.embed.record
+      : undefined
+    : isRecordWithMediaView(post.embed)
+      ? isViewRecord(post.embed.record.record)
+        ? post.embed.record.record
         : undefined
+      : undefined
+
   if (recordEmbed) {
     recordEmbed.author = stripViewer(recordEmbed.author)
     recordEmbed.embeds?.forEach((deepEmbed) => {
-      const deepRecordEmbed = isViewRecord(deepEmbed.record)
-        ? deepEmbed.record // Record from record embed
-        : deepEmbed['record'] && isViewRecord(deepEmbed['record']['record'])
-          ? deepEmbed['record']['record'] // Record from record-with-media embed
+      const deepRecordEmbed = isRecordView(deepEmbed)
+        ? isViewRecord(deepEmbed.record)
+          ? deepEmbed.record
+          : undefined
+        : isRecordWithMediaView(deepEmbed)
+          ? isViewRecord(deepEmbed.record.record)
+            ? deepEmbed.record.record
+            : undefined
           : undefined
       if (deepRecordEmbed) {
         deepRecordEmbed.author = stripViewer(deepRecordEmbed.author)
@@ -208,6 +244,7 @@ export const stripViewerFromPost = (postUnknown: unknown): PostView => {
 // @NOTE mutates
 export const stripViewerFromThread = <T>(thread: T): T => {
   if (!isThreadViewPost(thread)) return thread
+  // @ts-expect-error
   delete thread.viewer
   thread.post = stripViewerFromPost(thread.post)
   if (isThreadViewPost(thread.parent)) {
@@ -220,11 +257,9 @@ export const stripViewerFromThread = <T>(thread: T): T => {
 }
 
 // @NOTE mutates
-export const stripViewerFromLabeler = (
-  serviceUnknown: unknown,
-): LabelerView => {
+export const stripViewerFromLabeler = (serviceUnknown: object): LabelerView => {
   if (
-    serviceUnknown?.['$type'] &&
+    '$type' in serviceUnknown &&
     !isLabelerView(serviceUnknown) &&
     !isLabelerViewDetailed(serviceUnknown)
   ) {

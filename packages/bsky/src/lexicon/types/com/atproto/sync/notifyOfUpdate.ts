@@ -5,7 +5,7 @@ import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { lexicons } from '../../../../lexicons'
-import { $Type, is$typed } from '../../../../util'
+import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 
 export const id = 'com.atproto.sync.notifyOfUpdate'
@@ -15,7 +15,6 @@ export interface QueryParams {}
 export interface InputSchema {
   /** Hostname of the current service (usually a PDS) that is notifying of update. */
   hostname: string
-  [k: string]: unknown
 }
 
 export interface HandlerInput {

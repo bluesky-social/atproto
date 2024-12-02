@@ -2,7 +2,7 @@ import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../lexicon'
 import AppContext from '../../context'
 import {
-  isModEventDivert,
+  isValidModEventDivert,
   isModEventEmail,
   isModEventLabel,
   isModEventMuteReporter,
@@ -165,7 +165,7 @@ const handleModerationEvent = async ({
     )
   }
 
-  if (isModEventDivert(event) && subject.isRecord()) {
+  if (isValidModEventDivert(event) && subject.isRecord()) {
     if (!ctx.blobDiverter) {
       throw new InvalidRequestError(
         'BlobDiverter not configured for this service',
@@ -255,7 +255,7 @@ export default function (server: Server, ctx: AppContext) {
       })
 
       // On divert events, we need to automatically take down the blobs
-      if (isModEventDivert(input.body.event)) {
+      if (isValidModEventDivert(input.body.event)) {
         await handleModerationEvent({
           auth,
           ctx,
