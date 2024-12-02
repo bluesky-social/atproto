@@ -30,7 +30,6 @@ import { authWithApiKey as bsyncAuth, createBsyncClient } from './bsync'
 import { authWithApiKey as courierAuth, createCourierClient } from './courier'
 import { FeatureGates } from './feature-gates'
 import { VideoUriBuilder } from './views/util'
-import axios from 'axios'
 import { RevenueCatClient } from './revenueCat'
 
 export * from './data-plane'

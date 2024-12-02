@@ -4,7 +4,7 @@ type Config = {
   webhookAuthorization: string | undefined
 }
 
-type GetSubscriberResponse = {
+export type GetSubscriberResponse = {
   subscriber: {
     entitlements: {
       [entitlementIdentifier: string]: unknown
