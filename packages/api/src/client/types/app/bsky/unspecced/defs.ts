@@ -51,19 +51,15 @@ export interface SkeletonSearchStarterPack {
 
 export function isSkeletonSearchStarterPack(
   v: unknown,
-): v is SkeletonSearchStarterPack {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.unspecced.defs#skeletonSearchStarterPack'
-  )
+): v is SkeletonSearchStarterPack & {
+  $type: $Type<'app.bsky.unspecced.defs', 'skeletonSearchStarterPack'>
+} {
+  return is$typed(v, id, 'skeletonSearchStarterPack')
 }
 
-export function validateSkeletonSearchStarterPack(
-  v: unknown,
-): ValidationResult {
+export function validateSkeletonSearchStarterPack(v: unknown) {
   return lexicons.validate(
-    'app.bsky.unspecced.defs#skeletonSearchStarterPack',
+    `${id}#skeletonSearchStarterPack`,
     v,
-  )
+  ) as ValidationResult<SkeletonSearchStarterPack>
 }
