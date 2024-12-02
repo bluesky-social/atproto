@@ -212,7 +212,7 @@ export class Server {
       return this.options.catchall(req, res, next)
     }
 
-    const def = this.lex.getDef(req.params.methodId)
+    const def = this.lex.getDef(req.params['methodId'])
     if (!def) {
       return next(new MethodNotImplementedError())
     }
@@ -265,7 +265,7 @@ export class Server {
         }
         const input = validateReqInput(req)
 
-        const locals: RequestLocals = req[kRequestLocals]
+        const locals = extractLocals(req)
 
         const reqCtx: XRPCReqContext = {
           params,
@@ -371,7 +371,10 @@ export class Server {
                 yield item
                 continue
               }
-              const type = item?.['$type']
+              const type =
+                item != null && typeof item === 'object' && '$type' in item
+                  ? item['$type']
+                  : undefined
               if (!check.is(item, schema.map) || typeof type !== 'string') {
                 yield new MessageFrame(item)
                 continue
@@ -404,8 +407,10 @@ export class Server {
 
   private enableStreamingOnListen(app: Application) {
     const _listen = app.listen
+
+    // @ts-expect-error monkey-patch
     app.listen = (...args) => {
-      // @ts-ignore the args spread
+      // @ts-expect-error the args spread
       const httpServer = _listen.call(app, ...args)
       httpServer.on('upgrade', (req, socket, head) => {
         const url = new URL(req.url || '', 'http://x')
@@ -488,10 +493,33 @@ const kRequestLocals = Symbol('requestLocals')
 
 function createLocalsMiddleware(nsid: string): RequestHandler {
   return function (req, _res, next) {
-    const locals: RequestLocals = { auth: undefined, nsid }
-    req[kRequestLocals] = locals
+    setLocals(req, { auth: undefined, nsid })
     return next()
   }
+}
+
+type RequestWithLocals = Request & { [kRequestLocals]?: RequestLocals }
+
+function setLocals(req: RequestWithLocals, locals: RequestLocals) {
+  req[kRequestLocals] = locals
+}
+
+function extractLocals(
+  req: RequestWithLocals,
+  required: false,
+): RequestLocals | undefined
+function extractLocals(req: RequestWithLocals, required?: true): RequestLocals
+function extractLocals(
+  req: RequestWithLocals,
+  required?: boolean,
+): undefined | RequestLocals {
+  const locals = req[kRequestLocals]
+
+  if (locals == null && required !== false) {
+    throw new InternalServerError('missing locals')
+  }
+
+  return locals
 }
 
 type RequestLocals = {
@@ -506,7 +534,7 @@ function createAuthMiddleware(verifier: AuthVerifier): RequestHandler {
       if (isHandlerError(result)) {
         throw XRPCError.fromHandlerError(result)
       }
-      const locals: RequestLocals = req[kRequestLocals]
+      const locals = extractLocals(req)
       locals.auth = result
       next()
     } catch (err: unknown) {
@@ -516,7 +544,7 @@ function createAuthMiddleware(verifier: AuthVerifier): RequestHandler {
 }
 
 const errorMiddleware: ErrorRequestHandler = function (err, req, res, next) {
-  const locals: RequestLocals | undefined = req[kRequestLocals]
+  const locals = extractLocals(req, false)
   const methodSuffix = locals ? ` method ${locals.nsid}` : ''
   const xrpcError = XRPCError.fromError(err)
   if (xrpcError instanceof InternalServerError) {

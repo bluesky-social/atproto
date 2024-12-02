@@ -509,7 +509,7 @@ async function tryParsingError(
       headers['content-encoding'],
     )
 
-    const errInfo: unknown = JSON.parse(buffer.toString('utf8'))
+    const errInfo = JSON.parse(buffer.toString('utf8'))
     return {
       error: safeString(errInfo?.['error']),
       message: safeString(errInfo?.['message']),

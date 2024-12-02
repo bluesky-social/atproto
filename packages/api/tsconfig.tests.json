@@ -4,7 +4,8 @@
     "rootDir": ".",
     "types": ["jest", "./jest.d.ts"],
     "noEmit": true,
-    "noUnusedLocals": false
+    "noUnusedLocals": false,
+    "noPropertyAccessFromIndexSignature": false
   },
   "include": ["./tests"]
 }

@@ -177,7 +177,7 @@ export type HandlerRateLimitOpts = SharedRateLimitOpts | RouteRateLimitOpts
 export const isShared = (
   opts: HandlerRateLimitOpts,
 ): opts is SharedRateLimitOpts => {
-  return typeof opts['name'] === 'string'
+  return 'name' in opts && typeof opts['name'] === 'string'
 }
 
 export type RateLimiterStatus = {
@@ -270,9 +270,14 @@ export function isHandlerError(v: unknown): v is HandlerError {
   return (
     !!v &&
     typeof v === 'object' &&
+    'status' in v &&
     typeof v['status'] === 'number' &&
-    (v['error'] === undefined || typeof v['error'] === 'string') &&
-    (v['message'] === undefined || typeof v['message'] === 'string')
+    (!('error' in v) ||
+      v['error'] === undefined ||
+      typeof v['error'] === 'string') &&
+    (!('message' in v) ||
+      v['message'] === undefined ||
+      typeof v['message'] === 'string')
   )
 }
 
@@ -280,14 +285,14 @@ export function isHandlerPipeThroughBuffer(
   v: HandlerOutput,
 ): v is HandlerPipeThroughBuffer {
   // We only need to discriminate between possible HandlerOutput values
-  return v['buffer'] !== undefined
+  return 'buffer' in v && v['buffer'] !== undefined
 }
 
 export function isHandlerPipeThroughStream(
   v: HandlerOutput,
 ): v is HandlerPipeThroughStream {
   // We only need to discriminate between possible HandlerOutput values
-  return v['stream'] !== undefined
+  return 'stream' in v && v['stream'] !== undefined
 }
 
 export class InvalidRequestError extends XRPCError {

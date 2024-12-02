@@ -4,6 +4,7 @@ import { CID } from 'multiformats/cid'
 import * as ui8 from 'uint8arrays'
 import { lexicons } from '../lexicon/lexicons'
 import { Record } from '../proto/bsky_pb'
+import { isTypeofObject, JsonValue } from '@atproto/common'
 
 export class HydrationMap<T> extends Map<string, T | null> implements Merges {
   merge(map: HydrationMap<T>): this {
@@ -83,8 +84,12 @@ export const parseRecord = <T extends UnknownRecord>(
 }
 
 const isValidRecord = (json: unknown) => {
-  const lexRecord = jsonToLex(json)
-  if (typeof lexRecord?.['$type'] !== 'string') {
+  const lexRecord = jsonToLex(json as JsonValue)
+  if (
+    !isTypeofObject(lexRecord) ||
+    !('$type' in lexRecord) ||
+    typeof lexRecord['$type'] !== 'string'
+  ) {
     return false
   }
   try {

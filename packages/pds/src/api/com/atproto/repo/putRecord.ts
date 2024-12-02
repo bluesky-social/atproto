@@ -2,7 +2,7 @@ import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/syntax'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { CommitData } from '@atproto/repo'
-import { BlobRef } from '@atproto/lexicon'
+import { BlobRef, RepoRecord } from '@atproto/lexicon'
 import { Server } from '../../../../lexicon'
 import { prepareUpdate, prepareCreate } from '../../../../repo'
 import AppContext from '../../../../context'
@@ -78,7 +78,8 @@ export default function (server: Server, ctx: AppContext) {
             did,
             collection,
             rkey,
-            record,
+            // @TODO: actually validate / cast ?
+            record: record as RepoRecord,
             swapCid: swapRecordCid,
             validate,
           }
@@ -148,6 +149,7 @@ const updateProfileLegacyBlobRef = async (
   actorStore: ActorStoreTransactor,
   record: ProfileRecord,
 ) => {
+  // @ts-expect-error
   if (record.avatar && !record.avatar.original['$type']) {
     const blob = await actorStore.repo.blob.getBlobMetadata(record.avatar.ref)
     record.avatar = new BlobRef(
@@ -156,6 +158,7 @@ const updateProfileLegacyBlobRef = async (
       blob.size,
     )
   }
+  // @ts-expect-error
   if (record.banner && !record.banner.original['$type']) {
     const blob = await actorStore.repo.blob.getBlobMetadata(record.banner.ref)
     record.banner = new BlobRef(

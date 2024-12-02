@@ -25,7 +25,7 @@ export type SafeFetchWrapOptions = NonNullable<
  * @see {@link https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html}
  */
 export function safeFetchWrap({
-  fetch = globalThis.fetch as Fetch,
+  fetch = globalThis.fetch,
   responseMaxSize = 512 * 1024, // 512kB
   ssrfProtection = true,
   allowCustomPort = !ssrfProtection,
@@ -34,7 +34,18 @@ export function safeFetchWrap({
   allowIpHost = true,
   allowPrivateIps = !ssrfProtection,
   timeout = 10e3,
-  forbiddenDomainNames = DEFAULT_FORBIDDEN_DOMAIN_NAMES as Iterable<string>,
+  forbiddenDomainNames = DEFAULT_FORBIDDEN_DOMAIN_NAMES,
+}: {
+  fetch?: Fetch
+  responseMaxSize?: number
+  ssrfProtection?: boolean
+  allowCustomPort?: boolean
+  allowData?: boolean
+  allowHttp?: boolean
+  allowIpHost?: boolean
+  allowPrivateIps?: boolean
+  timeout?: number
+  forbiddenDomainNames?: Iterable<string>
 } = {}): Fetch<unknown> {
   return toRequestTransformer(
     pipe(

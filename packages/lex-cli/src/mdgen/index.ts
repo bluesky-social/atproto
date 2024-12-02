@@ -68,10 +68,10 @@ function merge(arr: StringTree): string {
     .join('\n')
 }
 
-function matchesStart(line) {
-  return /<!-- START lex /.test(line)
+function matchesStart(line?: string | StringTree) {
+  return line != null && /<!-- START lex /.test(String(line))
 }
 
-function matchesEnd(line) {
-  return /<!-- END lex /.test(line)
+function matchesEnd(line?: string | StringTree) {
+  return line != null && /<!-- END lex /.test(String(line))
 }

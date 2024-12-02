@@ -258,6 +258,6 @@ export class BrowserOAuthDatabase {
 
     // Spec recommends not to throw errors in dispose
     const db = await dbPromise.catch(() => null)
-    if (db) await (db[Symbol.asyncDispose] || db[Symbol.dispose]).call(db)
+    if (db) await db[Symbol.dispose].call(db)
   }
 }

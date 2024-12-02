@@ -1,4 +1,4 @@
-import { retry } from '@atproto/common'
+import { isErrnoException, retry } from '@atproto/common'
 import {
   DummyDriver,
   DynamicModule,
@@ -25,7 +25,7 @@ export const countAll = sql<number>`count(*)`
 export const countDistinct = (ref: DbRef) => sql<number>`count(distinct ${ref})`
 
 // For use with doUpdateSet()
-export const excluded = <T, S>(db: Kysely<S>, col) => {
+export const excluded = <T, S>(db: Kysely<S>, col: string) => {
   return sql<T>`${db.dynamic.ref(`excluded.${col}`)}`
 }
 
@@ -41,7 +41,7 @@ export const dummyDialect = {
   createDriver() {
     return new DummyDriver()
   },
-  createIntrospector(db) {
+  createIntrospector(db: Kysely<any>) {
     return new SqliteIntrospector(db)
   },
   createQueryCompiler() {
@@ -58,7 +58,7 @@ export const retrySqlite = <T>(fn: () => Promise<T>): Promise<T> => {
 }
 
 const retryableSqlite = (err: unknown) => {
-  return typeof err?.['code'] === 'string' && RETRY_ERRORS.has(err['code'])
+  return isErrnoException(err) && RETRY_ERRORS.has(err['code'])
 }
 
 // based on sqlite's backoff strategy https://github.com/sqlite/sqlite/blob/91c8e65dd4bf17d21fbf8f7073565fe1a71c8948/src/main.c#L1704-L1713
@@ -97,7 +97,7 @@ export type DbRef = RawBuilder | ReturnType<DynamicModule['ref']>
 export type AnyQb = SelectQueryBuilder<any, any, any>
 
 export const isErrUniqueViolation = (err: unknown) => {
-  const code = err?.['code']
+  const code = isErrnoException(err) ? err['code'] : undefined
   return (
     code === '23505' || // postgres, see https://www.postgresql.org/docs/current/errcodes-appendix.html
     code === 'SQLITE_CONSTRAINT_UNIQUE' // sqlite, see https://www.sqlite.org/rescode.html#constraint_unique

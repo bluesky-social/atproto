@@ -51,6 +51,8 @@ export default function (server: Server, ctx: AppContext) {
         write = await prepareCreate({
           did,
           collection,
+          // @TODO validate or cast into RepoRecord ?
+          // @ts-expect-error lexicon type defines "record" as "type unknown"
           record,
           rkey,
           validate,

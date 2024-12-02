@@ -1,3 +1,4 @@
+import { isCid, isTypeofObject } from '@atproto/common'
 import * as syntax from '@atproto/syntax'
 import { AtUri, ensureValidAtUri } from '@atproto/syntax'
 import { cborToLexRecord } from '@atproto/repo'
@@ -226,7 +227,12 @@ export const getBacklinks = (uri: AtUri, record: RepoRecord): Backlink[] => {
     record?.['$type'] === ids.AppBskyFeedRepost
   ) {
     const subject = record['subject']
-    if (typeof subject?.['uri'] !== 'string') {
+    if (
+      !isTypeofObject(subject) ||
+      isCid(subject) ||
+      !('uri' in subject) ||
+      typeof subject['uri'] !== 'string'
+    ) {
       return []
     }
     try {

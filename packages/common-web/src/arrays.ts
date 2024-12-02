@@ -1,4 +1,7 @@
-export const keyBy = <T>(arr: T[], key: string): Record<string, T> => {
+export function keyBy<
+  T extends { [_ in K]: string },
+  K extends string = string,
+>(arr: T[], key: K): Record<string, T> {
   return arr.reduce(
     (acc, cur) => {
       acc[cur[key]] = cur

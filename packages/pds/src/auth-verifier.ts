@@ -1,7 +1,7 @@
 import { KeyObject, createPublicKey, createSecretKey } from 'node:crypto'
 import { IncomingMessage, ServerResponse } from 'node:http'
 
-import { getVerificationMaterial } from '@atproto/common'
+import { getVerificationMaterial, isErrnoException } from '@atproto/common'
 import { IdResolver, getDidKeyFromMultibase } from '@atproto/identity'
 import {
   OAuthError,
@@ -654,7 +654,7 @@ export class AuthVerifier {
     try {
       return await jose.jwtVerify(token, this._jwtKey, verifyOptions)
     } catch (err) {
-      if (err?.['code'] === 'ERR_JWT_EXPIRED') {
+      if (isErrnoException(err) && err['code'] === 'ERR_JWT_EXPIRED') {
         throw new InvalidRequestError('Token has expired', 'ExpiredToken')
       }
       throw new InvalidRequestError(
@@ -682,6 +682,13 @@ enum AuthType {
   DPOP = 'DPoP',
 }
 
+function asAuthType(val: string): AuthType | null {
+  const upper = val.toUpperCase()
+  return Object.hasOwn(AuthType, upper)
+    ? AuthType[upper as keyof typeof AuthType]
+    : null
+}
+
 export const parseAuthorizationHeader = (
   authorization?: string,
 ): [type: null] | [type: AuthType, token: string] => {
@@ -696,9 +703,7 @@ export const parseAuthorizationHeader = (
   }
 
   // authorization type is case-insensitive
-  const authType = result[0].toUpperCase()
-
-  const type = Object.hasOwn(AuthType, authType) ? AuthType[authType] : null
+  const type = asAuthType(result[0])
   if (type) return [type, result[1]]
 
   throw new InvalidRequestError(

@@ -31,7 +31,7 @@ export class Database<Schema> {
     const sqliteDb = new SqliteDB(location, {
       timeout: 0, // handled by application
     })
-    const pragmas = {
+    const pragmas: Record<string, string> = {
       ...DEFAULT_PRAGMAS,
       ...(opts?.pragmas ?? {}),
     }

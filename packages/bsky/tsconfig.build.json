@@ -3,7 +3,8 @@
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "./dist",
-    "noUnusedLocals": false
+    "noUnusedLocals": false,
+    "noPropertyAccessFromIndexSignature": false
   },
   "include": ["./src"]
 }

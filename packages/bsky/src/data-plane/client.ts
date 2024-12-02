@@ -32,7 +32,7 @@ export const createDataPlaneClient = (
         const client = randomElement(remainingClients)
         assert(client, 'no clients available')
         try {
-          return await client.lib[method.localName](...args)
+          return await (client.lib as any)[method.localName](...args)
         } catch (err) {
           if (
             err instanceof ConnectError &&

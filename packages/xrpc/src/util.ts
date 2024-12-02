@@ -1,5 +1,6 @@
 import {
   jsonStringToLex,
+  LexValue,
   LexXrpcProcedure,
   LexXrpcQuery,
   stringifyLex,
@@ -222,7 +223,7 @@ function isBlobLike(value: unknown): value is Blob {
   // (e.g. fetch-blob from node-fetch).
   // https://github.com/node-fetch/fetch-blob/blob/a1a182e5978811407bef4ea1632b517567dda01f/index.js#L233-L244
 
-  const tag = value[Symbol.toStringTag]
+  const tag = Symbol.toStringTag in value && value[Symbol.toStringTag]
   if (tag === 'Blob' || tag === 'File') {
     return 'stream' in value && typeof value.stream === 'function'
   }
@@ -301,7 +302,7 @@ export function encodeMethodCallBody(
     return new TextEncoder().encode(String(data))
   }
   if (contentType.startsWith('application/json')) {
-    const json = stringifyLex(data)
+    const json = stringifyLex(data as LexValue)
     // Server would return a 400 error if the JSON is invalid (e.g. trying to
     // JSONify a function, or an object that implements toJSON() poorly).
     if (json === undefined) {

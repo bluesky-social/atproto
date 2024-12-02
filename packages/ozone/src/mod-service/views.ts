@@ -485,10 +485,11 @@ export class ModerationViews {
       )
       .selectAll()
       .executeTakeFirst()
-    const statusByCid = (modStatusResults?.blobCids || [])?.reduce(
-      (acc, cur) => Object.assign(acc, { [cur]: modStatusResults }),
-      {},
-    )
+    const statusByCid: Record<string, ModerationSubjectStatusRowWithHandle> =
+      modStatusResults?.blobCids?.reduce(
+        (acc, cur) => Object.assign(acc, { [cur]: modStatusResults }),
+        {},
+      ) ?? {}
     // Intentionally missing details field, since we don't have any on appview.
     // We also don't know when the blob was created, so we use a canned creation time.
     const unknownTime = new Date(0).toISOString()

@@ -28,7 +28,7 @@ export function omit(
 
   if (!src) return src
 
-  const dst = {}
+  const dst: Record<string, unknown> = {}
   const srcKeys = Object.keys(src)
   for (let i = 0; i < srcKeys.length; i++) {
     const key = srcKeys[i]
@@ -53,7 +53,7 @@ export type BailableWait = {
 }
 
 export const bailableWait = (ms: number): BailableWait => {
-  let bail
+  let bail: () => void
   const waitPromise = new Promise<void>((res) => {
     const timeout = setTimeout(res, ms)
     bail = () => {
@@ -61,7 +61,7 @@ export const bailableWait = (ms: number): BailableWait => {
       res()
     }
   })
-  return { bail, wait: () => waitPromise }
+  return { bail: bail!, wait: () => waitPromise }
 }
 
 export const flattenUint8Arrays = (arrs: Uint8Array[]): Uint8Array => {
@@ -117,12 +117,17 @@ export const asyncFilter = async <T>(
 
 export const isErrnoException = (
   err: unknown,
-): err is NodeJS.ErrnoException => {
-  return !!err && err['code']
+): err is Error & { code: string } => {
+  return err instanceof Error && 'code' in err && typeof err.code === 'string'
 }
 
-export const errHasMsg = (err: unknown, msg: string): boolean => {
-  return !!err && typeof err === 'object' && err['message'] === msg
+export const errHasMsg = <const M extends string>(
+  err: unknown,
+  msg: M,
+): err is { message: M } => {
+  return (
+    !!err && typeof err === 'object' && 'message' in err && err.message === msg
+  )
 }
 
 export const chunkArray = <T>(arr: T[], chunkSize: number): T[][] => {

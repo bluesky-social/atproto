@@ -186,11 +186,13 @@ export function combineSignals(signals: readonly (AbortSignal | undefined)[]) {
     sig.addEventListener('abort', onAbort, { signal: controller.signal })
   }
 
-  controller[Symbol.dispose] = () => {
-    const reason = new Error('AbortController was disposed')
-
-    controller.abort(reason)
-  }
+  Object.defineProperty(controller, Symbol.dispose, {
+    enumerable: false,
+    value: () => {
+      const reason = new Error('AbortController was disposed')
+      controller.abort(reason)
+    },
+  })
 
   return controller as AbortController & Disposable
 }

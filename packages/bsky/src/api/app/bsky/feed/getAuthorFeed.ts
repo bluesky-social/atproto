@@ -93,7 +93,9 @@ export const skeleton = async (inputs: {
     actorDid: did,
     limit: params.limit,
     cursor: params.cursor,
-    feedType: FILTER_TO_FEED_TYPE[params.filter],
+    feedType: Object.hasOwn(FILTER_TO_FEED_TYPE, params.filter)
+      ? FILTER_TO_FEED_TYPE[params.filter as keyof typeof FILTER_TO_FEED_TYPE]
+      : undefined,
   })
 
   let items: FeedItem[] = res.items.map((item) => ({

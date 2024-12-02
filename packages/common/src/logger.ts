@@ -1,23 +1,23 @@
 import pino from 'pino'
 
-const allSystemsEnabled = !process.env.LOG_SYSTEMS
-const enabledSystems = (process.env.LOG_SYSTEMS || '')
+const allSystemsEnabled = !process.env['LOG_SYSTEMS']
+const enabledSystems = (process.env['LOG_SYSTEMS'] || '')
   .replace(',', ' ')
   .split(' ')
 
-const enabledEnv = process.env.LOG_ENABLED
+const enabledEnv = process.env['LOG_ENABLED']
 const enabled =
   enabledEnv === 'true' || enabledEnv === 't' || enabledEnv === '1'
 
-const level = process.env.LOG_LEVEL || 'info'
+const level = process.env['LOG_LEVEL'] || 'info'
 
 const config = {
   enabled,
   level,
 }
 
-const rootLogger = process.env.LOG_DESTINATION
-  ? pino(config, pino.destination(process.env.LOG_DESTINATION))
+const rootLogger = process.env['LOG_DESTINATION']
+  ? pino(config, pino.destination(process.env['LOG_DESTINATION']))
   : pino(config)
 
 const subsystems: Record<string, pino.Logger> = {}

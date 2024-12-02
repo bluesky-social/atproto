@@ -20,6 +20,7 @@ export type SignInFormOutput = {
   username: string
   password: string
   remember?: boolean
+  emailOtp?: string
 }
 
 export type SignInFormProps = Override<

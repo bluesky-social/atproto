@@ -42,7 +42,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       const row = byDid[did]
       const chatDeclaration = parseRecordBytes(
         chatDeclarations.records[i].record,
-      )
+      ) as any
       return {
         exists: !!row,
         handle: row?.handle ?? undefined,
@@ -68,11 +68,11 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     if (handles.length === 0) {
       return { dids: [] }
     }
-    const res = await db.db
+    const res = (await db.db
       .selectFrom('actor')
       .where('handle', 'in', handles)
-      .selectAll()
-      .execute()
+      .select(['did', 'handle'])
+      .execute()) as { did: string; handle: string }[]
     const byHandle = keyBy(res, 'handle')
     const dids = handles.map((handle) => byHandle[handle]?.did ?? '')
     return { dids }
