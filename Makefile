@@ -28,9 +28,7 @@ run-dev-env-logged: ## Run a "development environment" shell (with logging)
 
 .PHONY: codegen
 codegen: ## Re-generate packages from lexicon/ files
-	pnpm run --parallel codegen
-	# clean up codegen output
-	pnpm format
+	pnpm codegen
 
 .PHONY: lint
 lint: ## Run style checks and verify syntax
