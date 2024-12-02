@@ -17,3 +17,4 @@ export * as _20241001T205730722Z from './20241001T205730722Z-subject-status-revi
 export * as _20241008T205730722Z from './20241008T205730722Z-sets'
 export * as _20241018T205730722Z from './20241018T205730722Z-setting'
 export * as _20241026T205730722Z from './20241026T205730722Z-add-hosting-status-to-subject-status'
+export * as _20241202T211332580Z from './20241202T211332580Z-last-reported-at-index'
