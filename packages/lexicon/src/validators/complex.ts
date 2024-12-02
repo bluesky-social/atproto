@@ -19,46 +19,25 @@ export function validate(
   def: LexUserType,
   value: unknown,
 ): ValidationResult {
-  // Order based on the number of occurrences in the Bluesky official lexicons:
-
-  // grep -oh -R -E '"type": "[^"]+"' lexicons | sort | uniq -c | sort -r
-  //  873 "type": "string"
-  //  386 "type": "object"
-  //  256 "type": "ref"
-  //  198 "type": "array"
-  //  136 "type": "integer"
-  //  103 "type": "query"
-  //   96 "type": "boolean"
-  //   93 "type": "params"
-  //   76 "type": "procedure"
-  //   52 "type": "union"
-  //   31 "type": "unknown"
-  //   29 "type": "token"
-  //   15 "type": "record"
-  //   10 "type": "blob"
-  //    4 "type": "cid-link"
-  //    2 "type": "subscription"
-  //    2 "type": "bytes"
-
   switch (def.type) {
-    case 'string':
-      return string(lexicons, path, def, value)
-    case 'object':
-      return object(lexicons, path, def, value)
-    case 'array':
-      return array(lexicons, path, def, value)
-    case 'integer':
-      return integer(lexicons, path, def, value)
     case 'boolean':
       return boolean(lexicons, path, def, value)
-    case 'unknown':
-      return unknown(lexicons, path, def, value)
-    case 'blob':
-      return blob(lexicons, path, def, value)
+    case 'integer':
+      return integer(lexicons, path, def, value)
+    case 'string':
+      return string(lexicons, path, def, value)
     case 'bytes':
       return bytes(lexicons, path, def, value)
     case 'cid-link':
       return cidLink(lexicons, path, def, value)
+    case 'unknown':
+      return unknown(lexicons, path, def, value)
+    case 'object':
+      return object(lexicons, path, def, value)
+    case 'array':
+      return array(lexicons, path, def, value)
+    case 'blob':
+      return blob(lexicons, path, def, value)
     default:
       return {
         success: false,
