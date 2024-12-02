@@ -2,9 +2,13 @@ import { z } from 'zod'
 
 import { oauthCodeChallengeMethodSchema } from './oauth-code-challenge-method.js'
 import { oauthIssuerIdentifierSchema } from './oauth-issuer-identifier.js'
+import { webUriSchema } from './uri.js'
 
 /**
  * @see {@link https://datatracker.ietf.org/doc/html/rfc8414}
+ * @note we do not enforce https: scheme in URIs to support development
+ * environments. Make sure to validate the URIs before using it in a production
+ * environment.
  */
 export const oauthAuthorizationServerMetadataSchema = z.object({
   issuer: oauthIssuerIdentifierSchema,
@@ -37,31 +41,31 @@ export const oauthAuthorizationServerMetadataSchema = z.object({
     .array(z.string())
     .optional(),
 
-  jwks_uri: z.string().url().optional(),
+  jwks_uri: webUriSchema.optional(),
 
-  authorization_endpoint: z.string().url(), // .optional(),
+  authorization_endpoint: webUriSchema, // .optional(),
 
-  token_endpoint: z.string().url(), // .optional(),
+  token_endpoint: webUriSchema, // .optional(),
   token_endpoint_auth_methods_supported: z.array(z.string()).optional(),
   token_endpoint_auth_signing_alg_values_supported: z
     .array(z.string())
     .optional(),
 
-  revocation_endpoint: z.string().url().optional(),
-  introspection_endpoint: z.string().url().optional(),
-  pushed_authorization_request_endpoint: z.string().url().optional(),
+  revocation_endpoint: webUriSchema.optional(),
+  introspection_endpoint: webUriSchema.optional(),
+  pushed_authorization_request_endpoint: webUriSchema.optional(),
 
   require_pushed_authorization_requests: z.boolean().optional(),
 
-  userinfo_endpoint: z.string().url().optional(),
-  end_session_endpoint: z.string().url().optional(),
-  registration_endpoint: z.string().url().optional(),
+  userinfo_endpoint: webUriSchema.optional(),
+  end_session_endpoint: webUriSchema.optional(),
+  registration_endpoint: webUriSchema.optional(),
 
   // https://datatracker.ietf.org/doc/html/rfc9449#section-5.1
   dpop_signing_alg_values_supported: z.array(z.string()).optional(),
 
   // https://datatracker.ietf.org/doc/html/draft-ietf-oauth-resource-metadata-05#section-4
-  protected_resources: z.array(z.string().url()).optional(),
+  protected_resources: z.array(webUriSchema).optional(),
 
   // https://drafts.aaronpk.com/draft-parecki-oauth-client-id-metadata-document/draft-parecki-oauth-client-id-metadata-document.html
   client_id_metadata_document_supported: z.boolean().optional(),

@@ -3,7 +3,9 @@ import { AtprotoData, ensureAtpDocument } from '@atproto/identity'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { ExportableKeypair, Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import * as plc from '@did-plc/lib'
-import disposable from 'disposable-email'
+import { isEmailValid } from '@hapi/address'
+import { isDisposableEmail } from 'disposable-email-domains-js'
+
 import {
   baseNormalizeAndValidate,
   normalizeAndValidateHandle,
@@ -175,7 +177,7 @@ const validateInputsForLocalPds = async (
 
   if (!email) {
     throw new InvalidRequestError('Email is required')
-  } else if (!disposable.validate(email)) {
+  } else if (!isEmailValid(email) || isDisposableEmail(email)) {
     throw new InvalidRequestError(
       'This email address is not supported, please use a different email.',
     )
