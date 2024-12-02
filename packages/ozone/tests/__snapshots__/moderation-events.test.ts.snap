@@ -197,3 +197,126 @@ Array [
   },
 ]
 `;
+
+exports[`moderation-events query events returns events matching multiple keywords in comment 1`] = `
+Array [
+  Object {
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "createdBy": "user(1)",
+    "creatorHandle": "bob.test",
+    "event": Object {
+      "$type": "tools.ozone.moderation.defs#modEventReport",
+      "comment": "rainy days feel lazy",
+      "isReporterMuted": false,
+      "reportType": "com.atproto.moderation.defs#reasonSpam",
+    },
+    "id": 16,
+    "subject": Object {
+      "$type": "com.atproto.admin.defs#repoRef",
+      "did": "user(0)",
+    },
+    "subjectBlobCids": Array [],
+    "subjectHandle": "alice.test",
+  },
+  Object {
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "createdBy": "user(1)",
+    "creatorHandle": "bob.test",
+    "event": Object {
+      "$type": "tools.ozone.moderation.defs#modEventReport",
+      "comment": "november rain",
+      "isReporterMuted": false,
+      "reportType": "com.atproto.moderation.defs#reasonSpam",
+    },
+    "id": 15,
+    "subject": Object {
+      "$type": "com.atproto.admin.defs#repoRef",
+      "did": "user(0)",
+    },
+    "subjectBlobCids": Array [],
+    "subjectHandle": "alice.test",
+  },
+]
+`;
+
+exports[`moderation-events query events returns events matching multiple keywords in comment 2`] = `
+Array [
+  Object {
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "createdBy": "user(1)",
+    "creatorHandle": "bob.test",
+    "event": Object {
+      "$type": "tools.ozone.moderation.defs#modEventReport",
+      "comment": "rainy days feel lazy",
+      "isReporterMuted": false,
+      "reportType": "com.atproto.moderation.defs#reasonSpam",
+    },
+    "id": 16,
+    "subject": Object {
+      "$type": "com.atproto.admin.defs#repoRef",
+      "did": "user(0)",
+    },
+    "subjectBlobCids": Array [],
+    "subjectHandle": "alice.test",
+  },
+  Object {
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "createdBy": "user(1)",
+    "creatorHandle": "bob.test",
+    "event": Object {
+      "$type": "tools.ozone.moderation.defs#modEventReport",
+      "comment": "november rain",
+      "isReporterMuted": false,
+      "reportType": "com.atproto.moderation.defs#reasonSpam",
+    },
+    "id": 15,
+    "subject": Object {
+      "$type": "com.atproto.admin.defs#repoRef",
+      "did": "user(0)",
+    },
+    "subjectBlobCids": Array [],
+    "subjectHandle": "alice.test",
+  },
+]
+`;
+
+exports[`moderation-events query events returns events matching multiple keywords in comment 3`] = `
+Array [
+  Object {
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "createdBy": "user(1)",
+    "creatorHandle": "bob.test",
+    "event": Object {
+      "$type": "tools.ozone.moderation.defs#modEventReport",
+      "comment": "rainy days feel lazy",
+      "isReporterMuted": false,
+      "reportType": "com.atproto.moderation.defs#reasonSpam",
+    },
+    "id": 16,
+    "subject": Object {
+      "$type": "com.atproto.admin.defs#repoRef",
+      "did": "user(0)",
+    },
+    "subjectBlobCids": Array [],
+    "subjectHandle": "alice.test",
+  },
+  Object {
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "createdBy": "user(1)",
+    "creatorHandle": "bob.test",
+    "event": Object {
+      "$type": "tools.ozone.moderation.defs#modEventReport",
+      "comment": "november rain",
+      "isReporterMuted": false,
+      "reportType": "com.atproto.moderation.defs#reasonSpam",
+    },
+    "id": 15,
+    "subject": Object {
+      "$type": "com.atproto.admin.defs#repoRef",
+      "did": "user(0)",
+    },
+    "subjectBlobCids": Array [],
+    "subjectHandle": "alice.test",
+  },
+]
+`;

@@ -18,14 +18,7 @@ import {
   unpackIdentityKeys,
 } from './data-plane'
 import { GetIdentityByDidResponse } from './proto/bsky_pb'
-import {
-  extractMultikey,
-  extractPrefixedBytes,
-  hasPrefix,
-  parseDidKey,
-  SECP256K1_DID_PREFIX,
-  SECP256K1_JWT_ALG,
-} from '@atproto/crypto'
+import { parseDidKey, SECP256K1_JWT_ALG } from '@atproto/crypto'
 
 type ReqCtx = {
   req: express.Request
