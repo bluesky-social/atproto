@@ -6,7 +6,6 @@ import { WebSocket } from 'ws'
 import {
   ErrorFrame,
   Frame,
-  Handler,
   MessageFrame,
   XrpcStreamServer,
   byFrame,
