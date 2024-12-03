@@ -9214,6 +9214,42 @@ export const schemaDict = {
       },
     },
   },
+  AppBskySubscriptionRefreshSubscriptionCache: {
+    lexicon: 1,
+    id: 'app.bsky.subscription.refreshSubscriptionCache',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Refresh the subscription cache for the requesting account or for another account if the role authorizes it, used to serve app.bsky.subscription.getActiveSubscriptions. Requires auth.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['did'],
+            properties: {
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
+        errors: [
+          {
+            name: 'UnavailableSubscriptionService',
+          },
+        ],
+      },
+    },
+  },
   AppBskyUnspeccedDefs: {
     lexicon: 1,
     id: 'app.bsky.unspecced.defs',
@@ -10728,8 +10764,9 @@ export const schemaDict = {
       },
     },
   },
-}
-export const schemas: LexiconDoc[] = Object.values(schemaDict) as LexiconDoc[]
+} as const satisfies Record<string, LexiconDoc>
+
+export const schemas = Object.values(schemaDict)
 export const lexicons: Lexicons = new Lexicons(schemas)
 export const ids = {
   ComAtprotoAdminDefs: 'com.atproto.admin.defs',
@@ -10902,6 +10939,8 @@ export const ids = {
   AppBskyNotificationRegisterPush: 'app.bsky.notification.registerPush',
   AppBskyNotificationUpdateSeen: 'app.bsky.notification.updateSeen',
   AppBskyRichtextFacet: 'app.bsky.richtext.facet',
+  AppBskySubscriptionRefreshSubscriptionCache:
+    'app.bsky.subscription.refreshSubscriptionCache',
   AppBskyUnspeccedDefs: 'app.bsky.unspecced.defs',
   AppBskyUnspeccedGetConfig: 'app.bsky.unspecced.getConfig',
   AppBskyUnspeccedGetPopularFeedGenerators:

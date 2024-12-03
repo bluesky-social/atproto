@@ -162,6 +162,7 @@ import * as AppBskyNotificationPutPreferences from './types/app/bsky/notificatio
 import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 import * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet'
+import * as AppBskySubscriptionRefreshSubscriptionCache from './types/app/bsky/subscription/refreshSubscriptionCache'
 import * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs'
 import * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig'
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
@@ -389,6 +390,7 @@ export * as AppBskyNotificationPutPreferences from './types/app/bsky/notificatio
 export * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush'
 export * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 export * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet'
+export * as AppBskySubscriptionRefreshSubscriptionCache from './types/app/bsky/subscription/refreshSubscriptionCache'
 export * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs'
 export * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig'
 export * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
@@ -1487,6 +1489,7 @@ export class AppBskyNS {
   labeler: AppBskyLabelerNS
   notification: AppBskyNotificationNS
   richtext: AppBskyRichtextNS
+  subscription: AppBskySubscriptionNS
   unspecced: AppBskyUnspeccedNS
   video: AppBskyVideoNS
 
@@ -1499,6 +1502,7 @@ export class AppBskyNS {
     this.labeler = new AppBskyLabelerNS(client)
     this.notification = new AppBskyNotificationNS(client)
     this.richtext = new AppBskyRichtextNS(client)
+    this.subscription = new AppBskySubscriptionNS(client)
     this.unspecced = new AppBskyUnspeccedNS(client)
     this.video = new AppBskyVideoNS(client)
   }
@@ -3031,6 +3035,30 @@ export class AppBskyRichtextNS {
 
   constructor(client: XrpcClient) {
     this._client = client
+  }
+}
+
+export class AppBskySubscriptionNS {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  refreshSubscriptionCache(
+    data?: AppBskySubscriptionRefreshSubscriptionCache.InputSchema,
+    opts?: AppBskySubscriptionRefreshSubscriptionCache.CallOptions,
+  ): Promise<AppBskySubscriptionRefreshSubscriptionCache.Response> {
+    return this._client
+      .call(
+        'app.bsky.subscription.refreshSubscriptionCache',
+        opts?.qp,
+        data,
+        opts,
+      )
+      .catch((e) => {
+        throw AppBskySubscriptionRefreshSubscriptionCache.toKnownErr(e)
+      })
   }
 }
 

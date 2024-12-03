@@ -1,0 +1,28 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.subscription.refreshSubscriptionCache",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Refresh the subscription cache for the requesting account or for another account if the role authorizes it, used to serve app.bsky.subscription.getActiveSubscriptions. Requires auth.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["did"],
+          "properties": {
+            "did": { "type": "string", "format": "did" }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "properties": {}
+        }
+      },
+      "errors": [{ "name": "UnavailableSubscriptionService" }]
+    }
+  }
+}
