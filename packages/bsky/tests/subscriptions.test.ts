@@ -1,12 +1,15 @@
+import AtpAgent from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import express from 'express'
-import http from 'node:http'
 import { once } from 'node:events'
+import http from 'node:http'
+import { ids } from '../src/lexicon/lexicons'
 import { Entitlement, GetSubscriberResponse } from '../src/subscriptions'
 
 const revenueCatWebhookAuthorization = 'Bearer any-token'
 
 describe('subscriptions views', () => {
+  let agent: AtpAgent
   let network: TestNetwork
   let sc: SeedClient
   let revenueCatServer: http.Server
@@ -15,8 +18,13 @@ describe('subscriptions views', () => {
 
   // account dids, for convenience
   let alice: string
+  let bob: string
+
+  const createdAt = new Date().toISOString()
+  const updatedAt = new Date().toISOString()
 
   const TEN_MINUTES = 600_000
+
   const entitlementValid: Entitlement = {
     expires_date: new Date(Date.now() + TEN_MINUTES).toISOString(),
   }
@@ -43,10 +51,12 @@ describe('subscriptions views', () => {
     })
     bskyUrl = `http://localhost:${network.bsky.port}`
     network.plc.getClient().updateData
+    agent = network.bsky.getClient()
     sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()
     alice = sc.dids.alice
+    bob = sc.dids.bob
   })
 
   afterAll(async () => {
@@ -56,9 +66,6 @@ describe('subscriptions views', () => {
   })
 
   describe('webhook handler', () => {
-    const createdAt = new Date().toISOString()
-    const updatedAt = new Date().toISOString()
-
     it('returns 403 if authorization is missing', async () => {
       const response = await fetch(`${bskyUrl}/webhooks/revenuecat`, {
         method: 'POST',
@@ -167,6 +174,127 @@ describe('subscriptions views', () => {
       await callWebhook(bskyUrl, {
         event: { app_user_id: alice },
       })
+
+      expect(
+        getUserSubscriptionEntitlement(network, alice),
+      ).resolves.toStrictEqual({
+        did: alice,
+        entitlements: [],
+        createdAt,
+        updatedAt: expect.any(String),
+      })
+    })
+  })
+
+  describe('refreshSubscriptionCache', () => {
+    it(`throws if standard user tries to refresh another user's cache`, async () => {
+      await expect(
+        agent.app.bsky.subscription.refreshSubscriptionCache(
+          { did: bob },
+          {
+            headers: await network.serviceHeaders(
+              alice,
+              ids.AppBskySubscriptionRefreshSubscriptionCache,
+            ),
+          },
+        ),
+      ).rejects.toThrow('bad issuer')
+    })
+
+    it(`allows admin to refresh another user's cache`, async () => {
+      await agent.app.bsky.subscription.refreshSubscriptionCache(
+        { did: bob },
+        {
+          headers: await network.adminHeaders({
+            username: 'admin',
+            password: 'admin-pass',
+          }),
+        },
+      )
+    })
+
+    it('sets valid entitlements cache from the API response, excluding expired', async () => {
+      revenueCatHandler.mockImplementation((req, res) => {
+        const response: GetSubscriberResponse = {
+          subscriber: {
+            entitlements: {
+              entitlementValid,
+              entitlementExpired,
+            },
+          },
+        }
+        res.json(response)
+      })
+
+      await agent.app.bsky.subscription.refreshSubscriptionCache(
+        { did: alice },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskySubscriptionRefreshSubscriptionCache,
+          ),
+        },
+      )
+
+      expect(
+        getUserSubscriptionEntitlement(network, alice),
+      ).resolves.toStrictEqual({
+        did: alice,
+        entitlements: ['entitlementValid'],
+        createdAt,
+        updatedAt: expect.any(String),
+      })
+    })
+
+    it('sets empty array in the cache if no valid entitlements are present', async () => {
+      revenueCatHandler.mockImplementation((req, res) => {
+        const response: GetSubscriberResponse = {
+          subscriber: {
+            entitlements: { entitlementExpired },
+          },
+        }
+        res.json(response)
+      })
+
+      await agent.app.bsky.subscription.refreshSubscriptionCache(
+        { did: alice },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskySubscriptionRefreshSubscriptionCache,
+          ),
+        },
+      )
+
+      expect(
+        getUserSubscriptionEntitlement(network, alice),
+      ).resolves.toStrictEqual({
+        did: alice,
+        entitlements: [],
+        createdAt,
+        updatedAt: expect.any(String),
+      })
+    })
+
+    it('sets empty array in the cache if no entitlements are present at all', async () => {
+      revenueCatHandler.mockImplementation((req, res) => {
+        const response: GetSubscriberResponse = {
+          subscriber: {
+            entitlements: {},
+          },
+        }
+        res.json(response)
+      })
+
+      await agent.app.bsky.subscription.refreshSubscriptionCache(
+        { did: alice },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskySubscriptionRefreshSubscriptionCache,
+          ),
+        },
+      )
 
       expect(
         getUserSubscriptionEntitlement(network, alice),
