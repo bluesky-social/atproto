@@ -30,7 +30,7 @@ import { authWithApiKey as bsyncAuth, createBsyncClient } from './bsync'
 import { authWithApiKey as courierAuth, createCourierClient } from './courier'
 import { FeatureGates } from './feature-gates'
 import { VideoUriBuilder } from './views/util'
-import { RevenueCatClient } from './revenueCat'
+import { RevenueCatClient } from './subscriptions'
 
 export * from './data-plane'
 export type { ServerConfigValues } from './config'

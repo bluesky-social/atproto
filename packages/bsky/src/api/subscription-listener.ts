@@ -1,7 +1,7 @@
 import express, { RequestHandler } from 'express'
 import AppContext from '../context'
 import { httpLogger as log } from '../logger'
-import { RevenueCatClient } from '../revenueCat'
+import { RevenueCatClient } from '../subscriptions'
 
 type AppContextWithRevenueCatClient = AppContext & {
   revenueCatClient: RevenueCatClient

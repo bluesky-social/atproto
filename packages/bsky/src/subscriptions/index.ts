@@ -1,0 +1,1 @@
+export { RevenueCatClient } from './revenueCat'

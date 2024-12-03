@@ -17,7 +17,7 @@ import {
   parseLabelerHeader,
 } from './util'
 import { httpLogger as log } from './logger'
-import { RevenueCatClient } from './revenueCat'
+import { RevenueCatClient } from './subscriptions'
 
 export class AppContext {
   constructor(
