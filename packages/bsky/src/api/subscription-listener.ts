@@ -2,7 +2,7 @@ import express, { RequestHandler } from 'express'
 import AppContext from '../context'
 import { httpLogger as log } from '../logger'
 import { RevenueCatClient } from '../subscriptions'
-import { entitlementIdentifiersFromSubscriber } from '../subscriptions/util'
+import { entitlementIdentifiersFromSubscriber } from '../subscriptions'
 
 type AppContextWithRevenueCatClient = AppContext & {
   revenueCatClient: RevenueCatClient

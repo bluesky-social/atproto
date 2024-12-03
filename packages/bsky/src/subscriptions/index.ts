@@ -1,1 +1,2 @@
-export { RevenueCatClient } from './revenueCat'
+export * from './revenueCat'
+export * from './util'

@@ -2,7 +2,7 @@ import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import express from 'express'
 import http from 'node:http'
 import { once } from 'node:events'
-import { GetSubscriberResponse } from '../../src/revenueCat'
+import { GetSubscriberResponse } from '../src/subscriptions'
 
 describe('subscriptions views', () => {
   let network: TestNetwork
