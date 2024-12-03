@@ -4,12 +4,14 @@ type Config = {
   webhookAuthorization: string | undefined
 }
 
-export type GetSubscriberResponse = {
-  subscriber: {
-    entitlements: {
-      [entitlementIdentifier: string]: unknown
-    }
+export type Subscriber = {
+  entitlements: {
+    [entitlementIdentifier: string]: unknown
   }
+}
+
+export type GetSubscriberResponse = {
+  subscriber: Subscriber
 }
 
 export class RevenueCatClient {

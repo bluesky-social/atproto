@@ -2,6 +2,7 @@ import express, { RequestHandler } from 'express'
 import AppContext from '../context'
 import { httpLogger as log } from '../logger'
 import { RevenueCatClient } from '../subscriptions'
+import { entitlementIdentifiersFromSubscriber } from '../subscriptions/util'
 
 type AppContextWithRevenueCatClient = AppContext & {
   revenueCatClient: RevenueCatClient
@@ -38,8 +39,8 @@ const revenueCatWebhookHandler =
       const { app_user_id: did } = body.event
       const subscriberRes = await revenueCatClient.getSubscriber(did)
 
-      const entitlementIdentifiers = Object.keys(
-        subscriberRes.subscriber.entitlements ?? {},
+      const entitlementIdentifiers = entitlementIdentifiersFromSubscriber(
+        subscriberRes.subscriber,
       )
 
       await dataplane.setSubscriptionEntitlement({
