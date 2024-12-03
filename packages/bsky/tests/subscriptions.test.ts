@@ -45,7 +45,7 @@ describe('subscriptions views', () => {
   })
 
   describe('webhook handler', () => {
-    it('sets the cache with the entitlements from the API response', async () => {
+    it('sets the cache with the entitlements from the API response, excluding expired', async () => {
       await network.bsky.db.db
         .insertInto('subscription_entitlement')
         .values({
@@ -67,8 +67,23 @@ describe('subscriptions views', () => {
         const response: GetSubscriberResponse = {
           subscriber: {
             entitlements: {
-              entitlement1: {},
-              entitlement2: {},
+              // Expires in 10 minutes from now, no grace period.
+              entitlement1: {
+                expires_date: new Date(Date.now() + 600_000).toISOString(),
+                grace_period_expires_date: null,
+              },
+              // Expired 1 minute ago, has a grace period until 15 minutes from now.
+              entitlement2: {
+                expires_date: new Date(Date.now() - 60_000).toISOString(),
+                grace_period_expires_date: new Date(
+                  Date.now() + 900_000,
+                ).toISOString(),
+              },
+              // Expired 1 minute ago, no grace period.
+              entitlement3: {
+                expires_date: new Date(Date.now() - 60_000).toISOString(),
+                grace_period_expires_date: null,
+              },
             },
           },
         }
