@@ -34,7 +34,8 @@ export class RevenueCatClient {
     path: string,
     method: string = 'GET',
   ): Promise<T> {
-    const res = await fetch(`${this.url}${path}`, {
+    const url = new URL(path, this.url)
+    const res = await fetch(url, {
       method,
       headers: {
         Authorization: `Bearer ${this.apiKey}`,
