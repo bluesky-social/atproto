@@ -64,6 +64,7 @@ export class TestBsky {
       bsyncHttpVersion: '1.1',
       modServiceDid: cfg.modServiceDid ?? 'did:example:invalidMod',
       labelsFromIssuerDids: [EXAMPLE_LABELER],
+      bigThreadUris: new Set(),
       ...cfg,
       adminPasswords: [ADMIN_PASSWORD],
     })

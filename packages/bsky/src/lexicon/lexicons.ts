@@ -3959,6 +3959,35 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoTempAddReservedHandle: {
+    lexicon: 1,
+    id: 'com.atproto.temp.addReservedHandle',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Add a handle to the set of reserved handles.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['handle'],
+            properties: {
+              handle: {
+                type: 'string',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
+      },
+    },
+  },
   ComAtprotoTempCheckSignupQueue: {
     lexicon: 1,
     id: 'com.atproto.temp.checkSignupQueue',
@@ -4461,7 +4490,13 @@ export const schemaDict = {
           sort: {
             type: 'string',
             description: 'Sorting mode for threads.',
-            knownValues: ['oldest', 'newest', 'most-likes', 'random'],
+            knownValues: [
+              'oldest',
+              'newest',
+              'most-likes',
+              'random',
+              'hotness',
+            ],
           },
           prioritizeFollowedUsers: {
             type: 'boolean',
@@ -10693,9 +10728,8 @@ export const schemaDict = {
       },
     },
   },
-} as const satisfies Record<string, LexiconDoc>
-
-export const schemas = Object.values(schemaDict)
+}
+export const schemas: LexiconDoc[] = Object.values(schemaDict) as LexiconDoc[]
 export const lexicons: Lexicons = new Lexicons(schemas)
 export const ids = {
   ComAtprotoAdminDefs: 'com.atproto.admin.defs',
@@ -10784,6 +10818,7 @@ export const ids = {
   ComAtprotoSyncNotifyOfUpdate: 'com.atproto.sync.notifyOfUpdate',
   ComAtprotoSyncRequestCrawl: 'com.atproto.sync.requestCrawl',
   ComAtprotoSyncSubscribeRepos: 'com.atproto.sync.subscribeRepos',
+  ComAtprotoTempAddReservedHandle: 'com.atproto.temp.addReservedHandle',
   ComAtprotoTempCheckSignupQueue: 'com.atproto.temp.checkSignupQueue',
   ComAtprotoTempFetchLabels: 'com.atproto.temp.fetchLabels',
   ComAtprotoTempRequestPhoneVerification:

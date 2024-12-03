@@ -1,7 +1,8 @@
 import assert from 'node:assert'
 
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import disposable from 'disposable-email'
+import { isEmailValid } from '@hapi/address'
+import { isDisposableEmail } from 'disposable-email-domains-js'
 
 import { UserAlreadyExistsError } from '../../../../account-manager/helpers/account'
 import AppContext from '../../../../context'
@@ -14,7 +15,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ auth, input }) => {
       const did = auth.credentials.did
       const { token, email } = input.body
-      if (!disposable.validate(email)) {
+      if (!isEmailValid(email) || isDisposableEmail(email)) {
         throw new InvalidRequestError(
           'This email address is not supported, please use a different email.',
         )

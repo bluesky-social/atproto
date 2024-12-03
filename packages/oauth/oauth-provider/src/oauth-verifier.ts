@@ -1,6 +1,7 @@
 import { Key, Keyset, isSignedJwt } from '@atproto/jwk'
 import {
   OAuthAccessToken,
+  OAuthIssuerIdentifier,
   OAuthTokenType,
   oauthIssuerIdentifierSchema,
 } from '@atproto/oauth-types'
@@ -77,7 +78,7 @@ export {
 }
 
 export class OAuthVerifier {
-  public readonly issuer: string
+  public readonly issuer: OAuthIssuerIdentifier
   public readonly keyset: Keyset
 
   protected readonly accessTokenType: AccessTokenType

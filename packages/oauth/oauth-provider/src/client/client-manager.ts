@@ -1,11 +1,9 @@
 import {
   bindFetch,
   Fetch,
-  FetchError,
   fetchJsonProcessor,
   fetchJsonZodProcessor,
   fetchOkProcessor,
-  FetchResponseError,
 } from '@atproto-labs/fetch'
 import { pipe } from '@atproto-labs/pipe'
 import {
@@ -25,11 +23,10 @@ import {
   OAuthClientMetadataInput,
   oauthClientMetadataSchema,
 } from '@atproto/oauth-types'
-import { ZodError } from 'zod'
 
 import { InvalidClientMetadataError } from '../errors/invalid-client-metadata-error.js'
 import { InvalidRedirectUriError } from '../errors/invalid-redirect-uri-error.js'
-import { OAuthError } from '../errors/oauth-error.js'
+import { callAsync } from '../lib/util/function.js'
 import {
   isInternetHost,
   isInternetUrl,
@@ -98,52 +95,38 @@ export class ClientManager {
    * @see {@link https://openid.net/specs/openid-connect-registration-1_0.html#rfc.section.2 OIDC Client Registration}
    */
   public async getClient(clientId: string) {
-    try {
-      const metadata = await this.getClientMetadata(clientId)
-
-      const jwks = metadata.jwks_uri
-        ? await this.jwks.get(metadata.jwks_uri)
-        : undefined
-
-      const partialInfo = await this.hooks.onClientInfo?.(clientId, {
-        metadata,
-        jwks,
-      })
-
-      const isFirstParty = partialInfo?.isFirstParty ?? false
-      const isTrusted = partialInfo?.isTrusted ?? isFirstParty
-
-      return new Client(clientId, metadata, jwks, { isFirstParty, isTrusted })
-    } catch (err) {
-      if (err instanceof OAuthError) {
-        throw err
-      }
-      if (err instanceof FetchError) {
-        const message =
-          err instanceof FetchResponseError || err.statusCode !== 500
-            ? // Only expose 500 message if it was generated on another server
-              `Failed to fetch client information: ${err.message}`
-            : `Failed to fetch client information due to an internal error`
-        throw new InvalidClientMetadataError(message, err)
-      }
-      if (err instanceof ZodError) {
-        const issues = err.issues
-          .map(
-            ({ path, message }) =>
-              `Validation${path.length ? ` of "${path.join('.')}"` : ''} failed with error: ${message}`,
-          )
-          .join(' ')
-        throw new InvalidClientMetadataError(issues || err.message, err)
-      }
-      if (err?.['code'] === 'DEPTH_ZERO_SELF_SIGNED_CERT') {
-        throw new InvalidClientMetadataError('Self-signed certificate', err)
-      }
-
+    const metadata = await this.getClientMetadata(clientId).catch((err) => {
       throw InvalidClientMetadataError.from(
         err,
-        `Unable to load client information for "${clientId}"`,
+        `Unable to obtain client metadata for "${clientId}"`,
       )
-    }
+    })
+
+    const jwks = metadata.jwks_uri
+      ? await this.jwks.get(metadata.jwks_uri).catch((err) => {
+          throw InvalidClientMetadataError.from(
+            err,
+            `Unable to obtain jwks from "${metadata.jwks_uri}" for "${clientId}"`,
+          )
+        })
+      : undefined
+
+    const partialInfo = this.hooks.onClientInfo
+      ? await callAsync(this.hooks.onClientInfo, clientId, {
+          metadata,
+          jwks,
+        }).catch((err) => {
+          throw InvalidClientMetadataError.from(
+            err,
+            `Rejected client information for "${clientId}"`,
+          )
+        })
+      : undefined
+
+    const isFirstParty = partialInfo?.isFirstParty ?? false
+    const isTrusted = partialInfo?.isTrusted ?? isFirstParty
+
+    return new Client(clientId, metadata, jwks, { isFirstParty, isTrusted })
   }
 
   protected async getClientMetadata(
