@@ -61,7 +61,9 @@ export const createRouter = (ctx: AppContext): express.Router => {
   const router = express.Router()
 
   if (!ctx.revenueCatClient) {
-    return router
+    throw new Error(
+      'RevenueCat webhook was tried to be set up without providing a RevenueCat client.',
+    )
   }
   const ctxWithRevenueCatClient = ctx as AppContextWithRevenueCatClient
 

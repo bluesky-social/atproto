@@ -103,7 +103,7 @@ export class BskyAppView {
     }
 
     let revenueCatClient: RevenueCatClient | undefined
-    if (config.revenueCatV1ApiKey) {
+    if (config.revenueCatV1ApiKey && config.revenueCatWebhookAuthorization) {
       revenueCatClient = new RevenueCatClient({
         apiKey: config.revenueCatV1ApiKey,
         url: config.revenueCatV1Url,

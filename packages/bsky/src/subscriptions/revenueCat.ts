@@ -1,7 +1,7 @@
 type Config = {
   apiKey: string
   url: string
-  webhookAuthorization: string | undefined
+  webhookAuthorization: string
 }
 
 // Reference: https://www.revenuecat.com/docs/api-v1#tag/customers
@@ -22,7 +22,7 @@ export type GetSubscriberResponse = {
 export class RevenueCatClient {
   private apiKey: string
   private url: string
-  private webhookAuthorization: string | undefined
+  private webhookAuthorization: string
 
   constructor({ apiKey, url, webhookAuthorization }: Config) {
     this.apiKey = apiKey
@@ -55,9 +55,6 @@ export class RevenueCatClient {
   }
 
   isWebhookAuthorizationValid(authorization: string | undefined): boolean {
-    // It is either valid if the authorization is:
-    //   1. not configured and undefined in the request.
-    //   2. configured and matches the request.
     return authorization === this.webhookAuthorization
   }
 }
