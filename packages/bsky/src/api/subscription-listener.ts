@@ -46,7 +46,8 @@ const revenueCatWebhookHandler =
       )
 
       await dataplane.setSubscriptionEntitlement({
-        subscriptionEntitlement: { did, entitlements: entitlementIdentifiers },
+        did,
+        entitlements: entitlementIdentifiers,
       })
 
       res.end()

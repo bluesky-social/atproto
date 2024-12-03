@@ -2,7 +2,7 @@ import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import express from 'express'
 import http from 'node:http'
 import { once } from 'node:events'
-import { GetSubscriberResponse } from '../src/subscriptions'
+import { Entitlement, GetSubscriberResponse } from '../src/subscriptions'
 
 describe('subscriptions views', () => {
   let network: TestNetwork
@@ -13,6 +13,14 @@ describe('subscriptions views', () => {
 
   // account dids, for convenience
   let alice: string
+
+  const TEN_MINUTES = 600_000
+  const entitlementValid: Entitlement = {
+    expires_date: new Date(Date.now() + TEN_MINUTES).toISOString(),
+  }
+  const entitlementExpired: Entitlement = {
+    expires_date: new Date(Date.now() - TEN_MINUTES).toISOString(),
+  }
 
   beforeAll(async () => {
     const revenueCatPort = 48567
@@ -45,45 +53,35 @@ describe('subscriptions views', () => {
   })
 
   describe('webhook handler', () => {
-    it('sets the cache with the entitlements from the API response, excluding expired', async () => {
+    const createdAt = new Date().toISOString()
+    const updatedAt = new Date().toISOString()
+
+    it('sets valid entitlements cache from the API response, excluding expired', async () => {
       await network.bsky.db.db
         .insertInto('subscription_entitlement')
         .values({
           did: alice,
           entitlements: JSON.stringify(['entitlement0']),
+          createdAt,
+          updatedAt,
         })
         .execute()
 
-      const before = await network.bsky.db.db
-        .selectFrom('subscription_entitlement')
-        .selectAll()
-        .execute()
-
-      expect(before).toStrictEqual([
-        { did: alice, entitlements: ['entitlement0'] },
-      ])
+      expect(
+        getUserSubscriptionEntitlement(network, alice),
+      ).resolves.toStrictEqual({
+        did: alice,
+        entitlements: ['entitlement0'],
+        createdAt,
+        updatedAt,
+      })
 
       revenueCatHandler.mockImplementation((req, res) => {
         const response: GetSubscriberResponse = {
           subscriber: {
             entitlements: {
-              // Expires in 10 minutes from now, no grace period.
-              entitlement1: {
-                expires_date: new Date(Date.now() + 600_000).toISOString(),
-                grace_period_expires_date: null,
-              },
-              // Expired 1 minute ago, has a grace period until 15 minutes from now.
-              entitlement2: {
-                expires_date: new Date(Date.now() - 60_000).toISOString(),
-                grace_period_expires_date: new Date(
-                  Date.now() + 900_000,
-                ).toISOString(),
-              },
-              // Expired 1 minute ago, no grace period.
-              entitlement3: {
-                expires_date: new Date(Date.now() - 60_000).toISOString(),
-                grace_period_expires_date: null,
-              },
+              entitlementValid,
+              entitlementExpired,
             },
           },
         }
@@ -98,17 +96,45 @@ describe('subscriptions views', () => {
         },
       })
 
-      const after = await network.bsky.db.db
-        .selectFrom('subscription_entitlement')
-        .selectAll()
-        .execute()
-
-      expect(after).toStrictEqual([
-        { did: alice, entitlements: ['entitlement1', 'entitlement2'] },
-      ])
+      expect(
+        getUserSubscriptionEntitlement(network, alice),
+      ).resolves.toStrictEqual({
+        did: alice,
+        entitlements: ['entitlementValid'],
+        createdAt,
+        updatedAt: expect.any(String),
+      })
     })
 
-    it('clears the cache if the API response returns no entitlements', async () => {
+    it('sets empty array in the cache if no valid entitlements are present', async () => {
+      revenueCatHandler.mockImplementation((req, res) => {
+        const response: GetSubscriberResponse = {
+          subscriber: {
+            entitlements: { entitlementExpired },
+          },
+        }
+        res.json(response)
+      })
+
+      await fetch(`${bskyUrl}/webhooks/revenuecat`, {
+        method: 'POST',
+        body: JSON.stringify({ event: { app_user_id: alice } }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      expect(
+        getUserSubscriptionEntitlement(network, alice),
+      ).resolves.toStrictEqual({
+        did: alice,
+        entitlements: [],
+        createdAt,
+        updatedAt: expect.any(String),
+      })
+    })
+
+    it('sets empty array in the cache if no entitlements are present at all', async () => {
       revenueCatHandler.mockImplementation((req, res) => {
         const response: GetSubscriberResponse = {
           subscriber: {
@@ -126,12 +152,14 @@ describe('subscriptions views', () => {
         },
       })
 
-      const after = await network.bsky.db.db
-        .selectFrom('subscription_entitlement')
-        .selectAll()
-        .execute()
-
-      expect(after).toHaveLength(0)
+      expect(
+        getUserSubscriptionEntitlement(network, alice),
+      ).resolves.toStrictEqual({
+        did: alice,
+        entitlements: [],
+        createdAt,
+        updatedAt: expect.any(String),
+      })
     })
   })
 })
@@ -149,3 +177,10 @@ async function createMockRevenueCatService(
   await once(server, 'listening')
   return server
 }
+
+const getUserSubscriptionEntitlement = (network: TestNetwork, did: string) =>
+  network.bsky.db.db
+    .selectFrom('subscription_entitlement')
+    .selectAll()
+    .where('did', '=', did)
+    .executeTakeFirst()

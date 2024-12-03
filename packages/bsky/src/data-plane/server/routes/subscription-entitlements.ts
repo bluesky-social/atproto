@@ -4,34 +4,25 @@ import { Database } from '../db'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async setSubscriptionEntitlement(req) {
-    const { subscriptionEntitlement } = req
+    const { did, entitlements } = req
 
-    if (!subscriptionEntitlement) {
-      return {}
-    }
-
-    const { did, entitlements } = subscriptionEntitlement
-
-    if (!did) {
-      return {}
-    }
-
-    if (!entitlements?.length) {
-      await db.db
-        .deleteFrom('subscription_entitlement')
-        .where('did', '=', did)
-        .execute()
-
+    if (!did || !entitlements) {
       return {}
     }
 
     await db.db
       .insertInto('subscription_entitlement')
-      .values({ did, entitlements: JSON.stringify(entitlements) })
+      .values({
+        did,
+        entitlements: JSON.stringify(entitlements),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      })
       .onConflict((oc) =>
-        oc
-          .column('did')
-          .doUpdateSet({ entitlements: JSON.stringify(entitlements) }),
+        oc.column('did').doUpdateSet({
+          entitlements: JSON.stringify(entitlements),
+          updatedAt: new Date().toISOString(),
+        }),
       )
       .execute()
 

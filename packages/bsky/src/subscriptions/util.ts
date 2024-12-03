@@ -5,15 +5,8 @@ export const entitlementIdentifiersFromSubscriber = (
 ): string[] => {
   const now = Date.now()
   return Object.entries(subscriber.entitlements)
-    .filter(([_, entitlement]) => {
-      const expiresDate = new Date(entitlement.expires_date).valueOf()
-      const gracePeriodExpiresDate = entitlement.grace_period_expires_date
-        ? new Date(entitlement.grace_period_expires_date).valueOf()
-        : expiresDate
-
-      const expirationMs = Math.max(expiresDate, gracePeriodExpiresDate)
-
-      return now < expirationMs
-    })
+    .filter(
+      ([_, entitlement]) => now < new Date(entitlement.expires_date).valueOf(),
+    )
     .map(([entitlementIdentifier]) => entitlementIdentifier)
 }

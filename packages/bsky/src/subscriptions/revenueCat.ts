@@ -7,7 +7,6 @@ type Config = {
 // Reference: https://www.revenuecat.com/docs/api-v1#tag/customers
 export type Entitlement = {
   expires_date: string
-  grace_period_expires_date: string | null
 }
 
 export type Subscriber = {

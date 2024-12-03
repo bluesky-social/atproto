@@ -1398,13 +1398,9 @@ message ClearThreadMutesRequest {
 message ClearThreadMutesResponse {}
 
 // Subscription entitlement
-message SubscriptionEntitlement {
+message SetSubscriptionEntitlementRequest {
   string did = 1;
   repeated string entitlements = 2;
-}
-
-message SetSubscriptionEntitlementRequest {
-  SubscriptionEntitlement subscription_entitlement = 1;
 }
 
 message SetSubscriptionEntitlementResponse {}
