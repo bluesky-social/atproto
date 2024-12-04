@@ -169,7 +169,7 @@ export class BskyAppView {
 
     app.use(health.createRouter(ctx))
     app.use(wellKnown.createRouter(ctx))
-    app.use(blobResolver.createRouter(ctx))
+    app.use(blobResolver.createMiddleware(ctx))
     if (imgProcessingServer) {
       app.use('/img', imgProcessingServer.app)
     }

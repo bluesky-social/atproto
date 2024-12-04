@@ -148,6 +148,12 @@ importers:
 
   packages/bsky:
     dependencies:
+      '@atproto-labs/fetch-node':
+        specifier: workspace:*
+        version: link:../internal/fetch-node
+      '@atproto-labs/xrpc-utils':
+        specifier: workspace:*
+        version: link:../internal/xrpc-utils
       '@atproto/api':
         specifier: workspace:^
         version: link:../api
@@ -157,6 +163,9 @@ importers:
       '@atproto/crypto':
         specifier: workspace:^
         version: link:../crypto
+      '@atproto/did':
+        specifier: workspace:^
+        version: link:../did
       '@atproto/identity':
         specifier: workspace:^
         version: link:../identity
@@ -190,6 +199,9 @@ importers:
       '@did-plc/lib':
         specifier: ^0.0.1
         version: 0.0.1
+      axios:
+        specifier: ^0.27.2
+        version: 0.27.2
       compression:
         specifier: ^1.7.4
         version: 1.7.4
@@ -250,6 +262,9 @@ importers:
       uint8arrays:
         specifier: 3.0.0
         version: 3.0.0
+      undici:
+        specifier: ^7.0.0
+        version: 7.0.0
     devDependencies:
       '@atproto/lex-cli':
         specifier: workspace:^
@@ -287,9 +302,6 @@ importers:
       '@types/qs':
         specifier: ^6.9.7
         version: 6.9.7
-      axios:
-        specifier: ^0.27.2
-        version: 0.27.2
       jest:
         specifier: ^28.1.2
         version: 28.1.2(@types/node@18.19.56)(ts-node@10.8.2)
@@ -4878,7 +4890,7 @@ packages:
       '@atproto/common': 0.1.0
       '@atproto/crypto': 0.1.0
       '@ipld/dag-cbor': 7.0.3
-      axios: 1.6.2
+      axios: 1.6.7
       multiformats: 9.9.0
       uint8arrays: 3.0.0
       zod: 3.23.8
@@ -4904,7 +4916,7 @@ packages:
       '@atproto/common': 0.1.0
       '@atproto/crypto': 0.1.0
       '@did-plc/lib': 0.0.4
-      axios: 1.4.0
+      axios: 1.6.7
       cors: 2.8.5
       express: 4.18.2
       express-async-errors: 3.1.1(express@4.18.2)
@@ -6915,26 +6927,8 @@ packages:
   /axios@0.27.2:
     resolution: {integrity: sha512-t+yRIyySRTp/wua5xEr+z1q60QmLq8ABsS5O9Me1AsE5dfKqgnCFzwiCZZ/cGNd1lq4/7akDWMxdhVlucjmnOQ==}
     dependencies:
-      follow-redirects: 1.15.2
+      follow-redirects: 1.15.5
       form-data: 4.0.0
-    transitivePeerDependencies:
-      - debug
-
-  /axios@1.4.0:
-    resolution: {integrity: sha512-S4XCWMEmzvo64T9GfvQDOXgYRDJ/wsSZc7Jvdgx5u1sd0JwsuPLqb3SYmusag+edF6ziyMensPVqLTSc1PiSEA==}
-    dependencies:
-      follow-redirects: 1.15.2
-      form-data: 4.0.0
-      proxy-from-env: 1.1.0
-    transitivePeerDependencies:
-      - debug
-
-  /axios@1.6.2:
-    resolution: {integrity: sha512-7i24Ri4pmDRfJTR7LDBhsOTtcm+9kjX5WiY1X3wIisx6G9So3pfMkEiU7emUBe46oceVImccTEM3k6C5dbVW8A==}
-    dependencies:
-      follow-redirects: 1.15.3
-      form-data: 4.0.0
-      proxy-from-env: 1.1.0
     transitivePeerDependencies:
       - debug
 
@@ -8929,24 +8923,6 @@ packages:
   /flatted@3.2.7:
     resolution: {integrity: sha512-5nqDSxl8nn5BSNxyR3n4I6eDmbolI6WT+QqR547RwxQapgjQBmtktdP+HTBb/a/zLsbzERTONyUB5pefh5TtjQ==}
     dev: true
-
-  /follow-redirects@1.15.2:
-    resolution: {integrity: sha512-VQLG33o04KaQ8uYi2tVNbdrWp1QWxNNea+nmIB4EVM28v0hmP17z7aG1+wAkNzVq4KeXTq3221ye5qTJP91JwA==}
-    engines: {node: '>=4.0'}
-    peerDependencies:
-      debug: '*'
-    peerDependenciesMeta:
-      debug:
-        optional: true
-
-  /follow-redirects@1.15.3:
-    resolution: {integrity: sha512-1VzOtuEM8pC9SFU1E+8KfTjZyMztRsgEfwQl44z8A25uy13jSzTj6dyK2Df52iV0vgHCfBwLhDWevLn95w5v6Q==}
-    engines: {node: '>=4.0'}
-    peerDependencies:
-      debug: '*'
-    peerDependenciesMeta:
-      debug:
-        optional: true
 
   /follow-redirects@1.15.5:
     resolution: {integrity: sha512-vSFWUON1B+yAw1VN4xMfxgn5fTUiaOzAJCKBwIIgT/+7CuGy9+r+5gITvP62j3RmaD5Ph65UaERdOSRGUzZtgw==}
@@ -13627,6 +13603,11 @@ packages:
   /undici@6.19.8:
     resolution: {integrity: sha512-U8uCCl2x9TK3WANvmBavymRzxbfFYG+tAu+fgx3zxQy3qdagQqBLwJVrdyO1TBfUXvfKveMKJZhpvUYoOjM+4g==}
     engines: {node: '>=18.17'}
+    dev: false
+
+  /undici@7.0.0:
+    resolution: {integrity: sha512-c4xi3kWnQJrb7h2q8aJYKvUzmz7boCgz1cUCC6OwdeM5Tr2P0hDuthr2iut4ggqsz+Cnh20U/LoTzbKIdDS/Nw==}
+    engines: {node: '>=20.18.1'}
     dev: false
 
   /unique-filename@2.0.1:

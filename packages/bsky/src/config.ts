@@ -47,6 +47,14 @@ export interface ServerConfigValues {
   maxThreadDepth?: number
   // client config
   clientCheckEmailConfirmed?: boolean
+  // http proxy agent
+  disableSsrfProtection: boolean
+  proxyAllowHTTP2: boolean
+  proxyHeadersTimeout: number
+  proxyBodyTimeout: number
+  proxyMaxResponseSize: number
+  proxyMaxRetries: number
+  proxyPreferCompressed: boolean
 }
 
 export class ServerConfig {
@@ -144,6 +152,23 @@ export class ServerConfig {
     const maxThreadDepth = process.env.BSKY_MAX_THREAD_DEPTH
       ? parseInt(process.env.BSKY_MAX_THREAD_DEPTH || '', 10)
       : undefined
+
+    const disableSsrfProtection =
+      process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test'
+
+    const proxyAllowHTTP2 = process.env.BSKY_PROXY_ALLOW_HTTP2 === 'true'
+    const proxyHeadersTimeout =
+      parseInt(process.env.BSKY_PROXY_HEADERS_TIMEOUT || '', 10) || 10e3
+    const proxyBodyTimeout =
+      parseInt(process.env.BSKY_PROXY_BODY_TIMEOUT || '', 10) || 30e3
+    const proxyMaxResponseSize =
+      parseInt(process.env.BSKY_PROXY_MAX_RESPONSE_SIZE || '', 10) ||
+      10 * 1024 * 1024 // 10mb
+    const proxyMaxRetries =
+      parseInt(process.env.BSKY_PROXY_MAX_RETRIES || '', 10) || 3
+    const proxyPreferCompressed =
+      process.env.BSKY_PROXY_PREFER_COMPRESSED === 'true'
+
     return new ServerConfig({
       version,
       debugMode,
@@ -184,6 +209,13 @@ export class ServerConfig {
       bigThreadUris,
       bigThreadDepth,
       maxThreadDepth,
+      disableSsrfProtection,
+      proxyAllowHTTP2,
+      proxyHeadersTimeout,
+      proxyBodyTimeout,
+      proxyMaxResponseSize,
+      proxyMaxRetries,
+      proxyPreferCompressed,
       ...stripUndefineds(overrides ?? {}),
     })
   }
@@ -355,6 +387,34 @@ export class ServerConfig {
 
   get maxThreadDepth() {
     return this.cfg.maxThreadDepth
+  }
+
+  get disableSsrfProtection() {
+    return this.cfg.disableSsrfProtection
+  }
+
+  get proxyAllowHTTP2() {
+    return this.cfg.proxyAllowHTTP2
+  }
+
+  get proxyHeadersTimeout() {
+    return this.cfg.proxyHeadersTimeout
+  }
+
+  get proxyBodyTimeout() {
+    return this.cfg.proxyBodyTimeout
+  }
+
+  get proxyMaxResponseSize() {
+    return this.cfg.proxyMaxResponseSize
+  }
+
+  get proxyMaxRetries() {
+    return this.cfg.proxyMaxRetries
+  }
+
+  get proxyPreferCompressed() {
+    return this.cfg.proxyPreferCompressed
   }
 }
 
