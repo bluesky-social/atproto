@@ -1,5 +1,6 @@
 import { errHasMsg } from '@atproto/common'
-import { PassThrough, pipeline, Readable } from 'node:stream'
+import { PassThrough, Readable } from 'node:stream'
+import { pipeline } from 'node:stream/promises'
 import sharp from 'sharp'
 import { formatsToMimes, ImageInfo, Options } from './util'
 
@@ -55,9 +56,12 @@ export async function maybeGetInfo(
 ): Promise<ImageInfo | null> {
   try {
     const processor = sharp()
-    const metadata = await pipeline(stream, processor).metadata()
 
-    const { size, height, width, format } = metadata
+    const [{ size, height, width, format }] = await Promise.all([
+      processor.metadata(),
+      pipeline(stream, processor), // Handles error propagation
+    ])
+
     if (size == null || height == null || width == null || format == null) {
       return null
     }
@@ -66,7 +70,7 @@ export async function maybeGetInfo(
       height,
       width,
       size,
-      mime: formatsToMimes[format] ?? 'unknown',
+      mime: formatsToMimes.get(format) ?? 'unknown',
     }
   } catch (err) {
     if (errHasMsg(err, 'Input buffer contains unsupported image format')) {

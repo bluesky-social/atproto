@@ -202,9 +202,6 @@ importers:
       '@types/http-errors':
         specifier: ^2.0.1
         version: 2.0.1
-      axios:
-        specifier: ^0.27.2
-        version: 0.27.2
       compression:
         specifier: ^1.7.4
         version: 1.7.4
@@ -266,8 +263,8 @@ importers:
         specifier: 3.0.0
         version: 3.0.0
       undici:
-        specifier: ^7.0.0
-        version: 7.0.0
+        specifier: ^6.19.8
+        version: 6.19.8
     devDependencies:
       '@atproto/lex-cli':
         specifier: workspace:^
@@ -13611,11 +13608,6 @@ packages:
   /undici@6.19.8:
     resolution: {integrity: sha512-U8uCCl2x9TK3WANvmBavymRzxbfFYG+tAu+fgx3zxQy3qdagQqBLwJVrdyO1TBfUXvfKveMKJZhpvUYoOjM+4g==}
     engines: {node: '>=18.17'}
-    dev: false
-
-  /undici@7.0.0:
-    resolution: {integrity: sha512-c4xi3kWnQJrb7h2q8aJYKvUzmz7boCgz1cUCC6OwdeM5Tr2P0hDuthr2iut4ggqsz+Cnh20U/LoTzbKIdDS/Nw==}
-    engines: {node: '>=20.18.1'}
     dev: false
 
   /unique-filename@2.0.1:

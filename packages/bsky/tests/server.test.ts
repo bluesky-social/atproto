@@ -4,6 +4,7 @@ import { once } from 'node:events'
 import { AddressInfo } from 'node:net'
 import { handler as errorHandler } from '../src/error'
 import { startServer } from './_util'
+import { request } from 'undici'
 
 describe('server', () => {
   let network: TestNetwork
@@ -70,7 +71,7 @@ describe('server', () => {
   })
 
   it('compresses large json responses', async () => {
-    const res = await fetch(
+    const res = await request(
       `${network.bsky.url}/xrpc/app.bsky.feed.getTimeline`,
       {
         headers: {
@@ -80,14 +81,17 @@ describe('server', () => {
       },
     )
 
+    for await (const _ of res.body);
+
     expect(res.headers['content-encoding']).toEqual('gzip')
-    await res.body?.cancel()
   })
 
   it('does not compress small payloads', async () => {
-    const res = await fetch(`${network.bsky.url}/xrpc/_health`, {
+    const res = await request(`${network.bsky.url}/xrpc/_health`, {
       headers: { 'accept-encoding': 'gzip' },
     })
+
+    for await (const _ of res.body);
 
     expect(res.headers['content-encoding']).toBeUndefined()
   })

@@ -68,11 +68,11 @@ export function createMiddleware(ctx: AppContext) {
       const options: Dispatcher.RequestOptions = {
         method: 'GET',
         origin: url.origin,
-        path: url.pathname,
-        headers: [
+        path: url.pathname + url.search,
+        headers: Object.fromEntries([
           ...getBlobHeaders(cfg, url),
           ['accept-encoding', acceptEncoding],
-        ],
+        ]),
       }
 
       await blobDispatcher

@@ -17,7 +17,8 @@ import fs from 'node:fs/promises'
 import { IncomingMessage, ServerResponse } from 'node:http'
 import os from 'node:os'
 import path from 'node:path'
-import { pipeline, Readable } from 'node:stream'
+import { Readable } from 'node:stream'
+import { pipeline } from 'node:stream/promises'
 import { Dispatcher } from 'undici'
 
 import {
@@ -29,9 +30,9 @@ import {
 import AppContext from '../context'
 import { isSuccessStatus } from '../util/http'
 import log from './logger'
-import { createImageUpscaler, createImageProcessor } from './sharp'
+import { createImageProcessor, createImageUpscaler } from './sharp'
 import { BadPathError, ImageUriBuilder } from './uri'
-import { formatsToMimes, Options } from './util'
+import { formatsToMimes, Options, SharpInfo } from './util'
 
 type Middleware = (
   req: IncomingMessage,
@@ -99,11 +100,11 @@ export function createMiddleware(
       const dispatcherOptions: Dispatcher.RequestOptions = {
         method: 'GET',
         origin: url.origin,
-        path: url.pathname,
-        headers: [
+        path: url.pathname + url.search,
+        headers: Object.fromEntries([
           ...getBlobHeaders(cfg, url),
           ['accept-encoding', acceptEncoding],
-        ],
+        ]),
       }
 
       await blobDispatcher.stream(dispatcherOptions, (upstream) => {
@@ -152,17 +153,21 @@ export function createMiddleware(
           .put(cacheKey, cloneStream(processor))
           .catch((err) => log.error(err, 'failed to cache image'))
 
-        processor.once('info', (info) => {
+        processor.once('info', ({ size, format }: SharpInfo) => {
+          const type = formatsToMimes.get(format) || 'application/octet-stream'
+
           // @NOTE sharp does emit this in time to be set as a header
-          res.setHeader('content-length', info.size)
+          res.setHeader('content-length', size)
+          res.setHeader('content-type', type)
         })
         res.statusCode = 200
         res.setHeader('x-cache', 'miss')
-        res.setHeader('content-type', getMime(options.format))
         res.setHeader('cache-control', `public, max-age=31536000`) // 1 year
 
         const streams = [...decoders, verifier, upscaler, processor, res]
-        pipeline(streams) // Errors will be propagated through the stream
+        void pipeline(streams).catch((err) => {
+          // Errors will be propagated through the streams
+        })
 
         // Return the stream in which the upstream response will be written to
         return streams[0]
@@ -216,7 +221,7 @@ function isImageMime(
 }
 
 function getMime(format: Options['format']) {
-  const mime = formatsToMimes[format]
+  const mime = formatsToMimes.get(format)
   if (!mime) throw new Error('Unknown format')
   return mime
 }
