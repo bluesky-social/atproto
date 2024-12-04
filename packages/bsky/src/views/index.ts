@@ -35,7 +35,11 @@ import {
   VideoUriBuilder,
   parsePostgate,
 } from './util'
-import { uriToDid as creatorFromUri, safePinnedPost } from '../util/uris'
+import {
+  uriToDid as creatorFromUri,
+  safePinnedPost,
+  uriToDid,
+} from '../util/uris'
 import { isListRule } from '../lexicon/types/app/bsky/feed/threadgate'
 import { isSelfLabels } from '../lexicon/types/com/atproto/label/defs'
 import {
@@ -111,18 +115,33 @@ export class Views {
   viewerBlockExists(did: string, state: HydrationState): boolean {
     const actor = state.profileViewers?.get(did)
     if (!actor) return false
-    return (
-      !!actor.blockedBy ||
-      !!actor.blocking ||
-      !!actor.blockedByList ||
-      !!actor.blockingByList
-    )
+    if (actor.blockedBy || actor.blocking) {
+      return true
+    }
+    if (actor.blockedByList) {
+      return this.recordActive(actor.blockedByList, state)
+    }
+    if (actor.blockingByList) {
+      return this.recordActive(actor.blockingByList, state)
+    }
+    return false
   }
 
   viewerMuteExists(did: string, state: HydrationState): boolean {
     const actor = state.profileViewers?.get(did)
     if (!actor) return false
-    return actor.muted || !!actor.mutedByList
+    if (actor.muted) {
+      return true
+    }
+    if (actor.mutedByList) {
+      return this.recordActive(actor.mutedByList, state)
+    }
+    return true
+  }
+
+  recordActive(uri: string, state: HydrationState) {
+    const did = uriToDid(uri)
+    return !this.actorIsTakendown(did, state)
   }
 
   viewerSeesNeedsReview(did: string, state: HydrationState): boolean {
@@ -282,8 +301,12 @@ export class Views {
   ): ProfileViewerState | undefined {
     const viewer = state.profileViewers?.get(did)
     if (!viewer) return
-    const blockedByUri = viewer.blockedBy || viewer.blockedByList
-    const blockingUri = viewer.blocking || viewer.blockingByList
+    const blockedByUri =
+      viewer.blockedBy ||
+      (viewer.blockedByList && this.recordActive(viewer.blockedByList, state))
+    const blockingUri =
+      viewer.blocking ||
+      (viewer.blockingByList && this.recordActive(viewer.blockingByList, state))
     const block = !!blockedByUri || !!blockingUri
     return {
       muted: viewer.muted || !!viewer.mutedByList,
