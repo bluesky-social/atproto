@@ -700,6 +700,19 @@ importers:
         specifier: ^5.6.3
         version: 5.6.3
 
+  packages/internal/xrpc-utils:
+    dependencies:
+      '@atproto/xrpc':
+        specifier: workspace:^
+        version: link:../../xrpc
+      '@atproto/xrpc-server':
+        specifier: workspace:^
+        version: link:../../xrpc-server
+    devDependencies:
+      typescript:
+        specifier: ^5.6.3
+        version: 5.6.3
+
   packages/lex-cli:
     dependencies:
       '@atproto/lexicon':
@@ -1226,6 +1239,9 @@ importers:
       '@atproto-labs/fetch-node':
         specifier: workspace:*
         version: link:../internal/fetch-node
+      '@atproto-labs/xrpc-utils':
+        specifier: workspace:*
+        version: link:../internal/xrpc-utils
       '@atproto/api':
         specifier: workspace:^
         version: link:../api

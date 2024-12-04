@@ -31,6 +31,7 @@
   },
   "dependencies": {
     "@atproto-labs/fetch-node": "workspace:*",
+    "@atproto-labs/xrpc-utils": "workspace:*",
     "@atproto/api": "workspace:^",
     "@atproto/aws": "workspace:^",
     "@atproto/common": "workspace:^",
