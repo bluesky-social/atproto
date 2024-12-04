@@ -38,7 +38,7 @@ describe('image processing server', () => {
     )
 
     const bytes = new Uint8Array(await res.arrayBuffer())
-    const info = await getInfo(Readable.from(bytes))
+    const info = await getInfo(Readable.from([bytes]))
 
     expect(info).toEqual({
       height: 580,
@@ -46,7 +46,7 @@ describe('image processing server', () => {
       size: 127578,
       mime: 'image/jpeg',
     })
-    expect(res.headers).toEqual(
+    expect(Object.fromEntries(res.headers)).toEqual(
       expect.objectContaining({
         'content-type': 'image/jpeg',
         'cache-control': 'public, max-age=31536000',
@@ -64,13 +64,13 @@ describe('image processing server', () => {
     const url = new URL(`/img${path}`, network.bsky.url)
 
     const res1 = await fetch(url)
-    expect(res1.headers['x-cache']).toEqual('miss')
+    expect(res1.headers.get('x-cache')).toEqual('miss')
     const bytes1 = new Uint8Array(await res1.arrayBuffer())
     const res2 = await fetch(url)
-    expect(res2.headers['x-cache']).toEqual('hit')
+    expect(res2.headers.get('x-cache')).toEqual('hit')
     const bytes2 = new Uint8Array(await res2.arrayBuffer())
     const res3 = await fetch(url)
-    expect(res3.headers['x-cache']).toEqual('hit')
+    expect(res3.headers.get('x-cache')).toEqual('hit')
     const bytes3 = new Uint8Array(await res3.arrayBuffer())
     expect(Buffer.compare(bytes1, bytes2)).toEqual(0)
     expect(Buffer.compare(bytes1, bytes3)).toEqual(0)
