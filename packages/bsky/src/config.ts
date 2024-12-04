@@ -48,13 +48,13 @@ export interface ServerConfigValues {
   // client config
   clientCheckEmailConfirmed?: boolean
   // http proxy agent
-  disableSsrfProtection: boolean
-  proxyAllowHTTP2: boolean
-  proxyHeadersTimeout: number
-  proxyBodyTimeout: number
-  proxyMaxResponseSize: number
-  proxyMaxRetries: number
-  proxyPreferCompressed: boolean
+  disableSsrfProtection?: boolean
+  proxyAllowHTTP2?: boolean
+  proxyHeadersTimeout?: number
+  proxyBodyTimeout?: number
+  proxyMaxResponseSize?: number
+  proxyMaxRetries?: number
+  proxyPreferCompressed?: boolean
 }
 
 export class ServerConfig {
@@ -158,14 +158,13 @@ export class ServerConfig {
 
     const proxyAllowHTTP2 = process.env.BSKY_PROXY_ALLOW_HTTP2 === 'true'
     const proxyHeadersTimeout =
-      parseInt(process.env.BSKY_PROXY_HEADERS_TIMEOUT || '', 10) || 10e3
+      parseInt(process.env.BSKY_PROXY_HEADERS_TIMEOUT || '', 10) || undefined
     const proxyBodyTimeout =
-      parseInt(process.env.BSKY_PROXY_BODY_TIMEOUT || '', 10) || 30e3
+      parseInt(process.env.BSKY_PROXY_BODY_TIMEOUT || '', 10) || undefined
     const proxyMaxResponseSize =
-      parseInt(process.env.BSKY_PROXY_MAX_RESPONSE_SIZE || '', 10) ||
-      10 * 1024 * 1024 // 10mb
+      parseInt(process.env.BSKY_PROXY_MAX_RESPONSE_SIZE || '', 10) || undefined
     const proxyMaxRetries =
-      parseInt(process.env.BSKY_PROXY_MAX_RETRIES || '', 10) || 3
+      parseInt(process.env.BSKY_PROXY_MAX_RETRIES || '', 10) || undefined
     const proxyPreferCompressed =
       process.env.BSKY_PROXY_PREFER_COMPRESSED === 'true'
 
@@ -389,32 +388,32 @@ export class ServerConfig {
     return this.cfg.maxThreadDepth
   }
 
-  get disableSsrfProtection() {
-    return this.cfg.disableSsrfProtection
+  get disableSsrfProtection(): boolean {
+    return this.cfg.disableSsrfProtection ?? false
   }
 
-  get proxyAllowHTTP2() {
-    return this.cfg.proxyAllowHTTP2
+  get proxyAllowHTTP2(): boolean {
+    return this.cfg.proxyAllowHTTP2 ?? false
   }
 
-  get proxyHeadersTimeout() {
-    return this.cfg.proxyHeadersTimeout
+  get proxyHeadersTimeout(): number {
+    return this.cfg.proxyHeadersTimeout ?? 10e3
   }
 
-  get proxyBodyTimeout() {
-    return this.cfg.proxyBodyTimeout
+  get proxyBodyTimeout(): number {
+    return this.cfg.proxyBodyTimeout ?? 30e3
   }
 
-  get proxyMaxResponseSize() {
-    return this.cfg.proxyMaxResponseSize
+  get proxyMaxResponseSize(): number {
+    return this.cfg.proxyMaxResponseSize ?? 10 * 1024 * 1024 // 10mb
   }
 
-  get proxyMaxRetries() {
-    return this.cfg.proxyMaxRetries
+  get proxyMaxRetries(): number {
+    return this.cfg.proxyMaxRetries ?? 3
   }
 
-  get proxyPreferCompressed() {
-    return this.cfg.proxyPreferCompressed
+  get proxyPreferCompressed(): boolean {
+    return this.cfg.proxyPreferCompressed ?? true
   }
 }
 
