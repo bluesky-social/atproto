@@ -1,4 +1,3 @@
-import { isUnicastIp, unicastLookup } from '@atproto-labs/fetch-node'
 import { buildProxiedContentEncoding } from '@atproto-labs/xrpc-utils'
 import { createDecoders, VerifyCidTransform } from '@atproto/common'
 import { isAtprotoDid } from '@atproto/did'
@@ -7,7 +6,7 @@ import { CID } from 'multiformats/cid'
 import { IncomingMessage, ServerResponse } from 'node:http'
 import { Duplex, Transform } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
-import { Agent, Dispatcher, Pool, RetryAgent } from 'undici'
+import { Dispatcher } from 'undici'
 
 import { ServerConfig } from '../config'
 import AppContext from '../context'
@@ -18,9 +17,11 @@ import {
   isDataplaneError,
   unpackIdentityServices,
 } from '../data-plane'
-import { httpLogger } from '../logger'
+import { parseCid } from '../hydration/util'
+import { httpLogger as log } from '../logger'
+import { isSuccessStatus } from '../util/http'
 
-const HEADERS_TO_PROXY = [
+export const RESPONSE_HEADERS_TO_PROXY = [
   'content-type',
   'content-length',
   'content-encoding',
@@ -29,13 +30,12 @@ const HEADERS_TO_PROXY = [
   'last-modified',
   'etag',
   'expires',
+  'retry-after',
   'vary', // Might vary based on "accept" headers
 ] as const
 
 export function createMiddleware(ctx: AppContext) {
-  const { cfg, dataplane } = ctx
-
-  const dispatcher = createDispatcher(cfg)
+  const { cfg, dataplane, blobDispatcher } = ctx
 
   return async (
     req: IncomingMessage,
@@ -44,18 +44,12 @@ export function createMiddleware(ctx: AppContext) {
   ): Promise<void> => {
     if (req.method !== 'GET' && req.method !== 'HEAD') return next()
     if (!req.url?.startsWith('/blob/')) return next()
-    const { length, 2: did, 3: cidParam } = req.url.split('/')
-    if (length !== 4 || !did || !cidParam) return next()
+    const { length, 2: didParam, 3: cidParam } = req.url.split('/')
+    if (length !== 4 || !cidParam || !cidParam) return next()
 
     try {
-      if (!isAtprotoDid(did)) throw createError(400, 'Invalid did')
-      const cid = parseCid(cidParam)
-
-      const pds = await getBlobPds(dataplane, did, cid)
-
-      const url = new URL(`/xrpc/com.atproto.sync.getBlob`, pds)
-      url.searchParams.set('did', did)
-      url.searchParams.set('cid', cid.toString())
+      const { did, cid } = parseBlobParams({ cid: cidParam, did: didParam })
+      const url = await getBlobUrl(dataplane, did, cid)
 
       // Security headers
       res.setHeader('Content-Security-Policy', `default-src 'none'; sandbox`)
@@ -63,40 +57,39 @@ export function createMiddleware(ctx: AppContext) {
       res.setHeader('X-Frame-Options', 'DENY')
       res.setHeader('X-XSS-Protection', '0')
 
+      // Because we will be verifying the CID, we need to ensure that the
+      // upstream response can be de-compressed. We do this by negotiating the
+      // "accept-encoding" header based on the downstream client's capabilities.
+      const acceptEncoding = buildProxiedContentEncoding(
+        req.headers['accept-encoding'],
+        cfg.proxyPreferCompressed,
+      )
+
       const options: Dispatcher.RequestOptions = {
         method: 'GET',
         origin: url.origin,
         path: url.pathname,
         headers: [
-          ...getRateLimitBypassHeaders(cfg, url),
-          // Because we will be verifying the CID, we need to ensure that
-          // the upstream response can be de-compressed.
-          [
-            'accept-encoding',
-            buildProxiedContentEncoding(
-              req.headers['accept-encoding'],
-              cfg.proxyPreferCompressed,
-            ),
-          ],
+          ...getBlobHeaders(cfg, url),
+          ['accept-encoding', acceptEncoding],
         ],
       }
 
-      await dispatcher
+      await blobDispatcher
         .stream(options, (upstream) => {
           // Proxy status code
           res.statusCode = upstream.statusCode
 
           // Proxy headers
-          for (const name of HEADERS_TO_PROXY) {
+          for (const name of RESPONSE_HEADERS_TO_PROXY) {
             const val = upstream.headers[name]
             if (val) res.setHeader(name, val)
           }
 
-          if (Math.floor(upstream.statusCode / 100) !== 2) {
-            // Non-2xx response
+          if (!isSuccessStatus(upstream.statusCode)) {
             if (upstream.statusCode >= 500) {
               res.statusCode = 502
-              httpLogger.warn(
+              log.warn(
                 { host: url.host, path: url.pathname },
                 'blob resolution failed upstream',
               )
@@ -111,16 +104,15 @@ export function createMiddleware(ctx: AppContext) {
           // 2xx status code, let's verify the CID
 
           const encoding = upstream.headers['content-encoding']
-          const duplex = createVerifierPassthrough(cid, encoding)
+          const duplex = createCidVerifier(cid, encoding)
 
           // Pipe the readable side of the duplex to the client response
           // stream. This will ensure proper flow control and backpressure.
           void pipeline([duplex, res]).catch((err) => {
-            httpLogger.warn(
-              { err, did, cid: cid.toString(), pds },
+            log.warn(
+              { err, did, cid: cid.toString(), pds: url.origin },
               'blob resolution failed during transmission',
             )
-            res.destroy(err instanceof Error ? err : new Error(String(err)))
           })
 
           // Return the duplex as the writable side of the stream that will be
@@ -129,8 +121,8 @@ export function createMiddleware(ctx: AppContext) {
         })
         .catch((err) => {
           if (!isHttpError(err)) {
-            httpLogger.warn(
-              { err, did, cid: cid.toString(), pds },
+            log.warn(
+              { err, did, cid: cid.toString(), pds: url.origin },
               'blob resolution failed during transmission',
             )
             throw createError(502)
@@ -148,14 +140,29 @@ export function createMiddleware(ctx: AppContext) {
   }
 }
 
-function parseCid(cidStr: string): CID {
-  try {
-    return CID.parse(cidStr)
-  } catch (cause) {
-    throw createError(400, 'Invalid cid', { cause })
-  }
+export function parseBlobParams(params: { cid: string; did: string }) {
+  const { cid, did } = params
+  if (!isAtprotoDid(did)) throw createError(400, 'Invalid did')
+  const cidObj = parseCid(cid)
+  if (!cidObj) throw createError(400, 'Invalid cid')
+  return { cid: cidObj, did }
 }
-async function getBlobPds(
+
+export async function getBlobUrl(
+  dataplane: DataPlaneClient,
+  did: string,
+  cid: CID,
+): Promise<URL> {
+  const pds = await getBlobPds(dataplane, did, cid)
+
+  const url = new URL(`/xrpc/com.atproto.sync.getBlob`, pds)
+  url.searchParams.set('did', did)
+  url.searchParams.set('cid', cid.toString())
+
+  return url
+}
+
+export async function getBlobPds(
   dataplane: DataPlaneClient,
   did: string,
   cid: CID,
@@ -204,7 +211,7 @@ async function getBlobPds(
   )
 }
 
-function* getRateLimitBypassHeaders(
+export function* getBlobHeaders(
   {
     blobRateLimitBypassKey: bypassKey,
     blobRateLimitBypassHostname: bypassHostname,
@@ -222,40 +229,12 @@ function* getRateLimitBypassHeaders(
   }
 }
 
-function createDispatcher(cfg: ServerConfig): Dispatcher {
-  const baseDispatcher = new Agent({
-    allowH2: cfg.proxyAllowHTTP2, // This is experimental
-    headersTimeout: cfg.proxyHeadersTimeout,
-    maxResponseSize: cfg.proxyMaxResponseSize,
-    bodyTimeout: cfg.proxyBodyTimeout,
-    factory: cfg.disableSsrfProtection
-      ? undefined
-      : (origin, opts) => {
-          const { protocol, hostname } =
-            origin instanceof URL ? origin : new URL(origin)
-          if (protocol !== 'https:') {
-            throw new Error(`Forbidden protocol "${protocol}"`)
-          }
-          if (isUnicastIp(hostname) === false) {
-            throw new Error('Hostname resolved to non-unicast address')
-          }
-          return new Pool(origin, opts)
-        },
-    connect: {
-      lookup: cfg.disableSsrfProtection ? undefined : unicastLookup,
-    },
-  })
-
-  return cfg.proxyMaxRetries > 0
-    ? new RetryAgent(baseDispatcher, {
-        statusCodes: [503], // Only retry on socket errors
-        methods: ['GET', 'HEAD'],
-        maxRetries: cfg.proxyMaxRetries,
-      })
-    : baseDispatcher
-}
-
-function createVerifierPassthrough(
+/**
+ * This function creates a passthrough stream that will decompress (if needed)
+ * and verify the CID of the input stream. The output data will be identical to
+ * the input data. For that reason, iy you need the
+ */
+export function createCidVerifier(
   cid: CID,
   encoding?: string | string[],
 ): Duplex {

@@ -17,6 +17,7 @@ import {
   parseLabelerHeader,
 } from './util'
 import { httpLogger as log } from './logger'
+import { Dispatcher } from 'undici'
 
 export class AppContext {
   constructor(
@@ -33,6 +34,7 @@ export class AppContext {
       courierClient: CourierClient | undefined
       authVerifier: AuthVerifier
       featureGates: FeatureGates
+      blobDispatcher: Dispatcher
     },
   ) {}
 
@@ -86,6 +88,10 @@ export class AppContext {
 
   get featureGates(): FeatureGates {
     return this.opts.featureGates
+  }
+
+  get blobDispatcher(): Dispatcher {
+    return this.opts.blobDispatcher
   }
 
   reqLabelers(req: express.Request): ParsedLabelers {

@@ -239,11 +239,6 @@ export class ServerConfig {
     return this.assignedPort || this.cfg.port
   }
 
-  get localUrl() {
-    assert(this.port, 'No port assigned')
-    return `http://localhost:${this.port}`
-  }
-
   get publicUrl() {
     return this.cfg.publicUrl
   }

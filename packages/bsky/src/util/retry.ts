@@ -1,38 +1,14 @@
-import { AxiosError } from 'axios'
-import { XRPCError, ResponseType } from '@atproto/xrpc'
-import { RetryOptions, retry } from '@atproto/common'
-import { Code, ConnectError } from '@connectrpc/connect'
+import { createRetryable } from '@atproto/common'
+import { ResponseType, XRPCError } from '@atproto/xrpc'
 
-export async function retryHttp<T>(
-  fn: () => Promise<T>,
-  opts: RetryOptions = {},
-): Promise<T> {
-  return retry(fn, { retryable: retryableHttp, ...opts })
-}
+export const RETRYABLE_HTTP_STATUS_CODES = [
+  408, 425, 429, 500, 502, 503, 504, 522, 524,
+]
 
-export function retryableHttp(err: unknown) {
+export const retryXrpc = createRetryable((err: unknown) => {
   if (err instanceof XRPCError) {
     if (err.status === ResponseType.Unknown) return true
-    return retryableHttpStatusCodes.has(err.status)
-  }
-  if (err instanceof AxiosError) {
-    if (!err.response) return true
-    return retryableHttpStatusCodes.has(err.response.status)
+    return RETRYABLE_HTTP_STATUS_CODES.includes(err.status)
   }
   return false
-}
-
-const retryableHttpStatusCodes = new Set([
-  408, 425, 429, 500, 502, 503, 504, 522, 524,
-])
-
-export async function retryConnect<T>(
-  fn: () => Promise<T>,
-  opts: RetryOptions = {},
-): Promise<T> {
-  return retry(fn, { retryable: retryableConnect, ...opts })
-}
-
-export function retryableConnect(err: unknown) {
-  return err instanceof ConnectError && err.code === Code.Unavailable
-}
+})

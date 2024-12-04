@@ -7,19 +7,19 @@ import {
 export type AcceptFlags = { q: number }
 export type Accept = [name: string, flags: AcceptFlags]
 
-const ACCEPT_ENCODING_COMPRESSED = [
+export const ACCEPT_ENCODING_COMPRESSED: readonly [Accept, ...Accept[]] = [
   ['gzip', { q: 1.0 }],
   ['deflate', { q: 0.9 }],
   ['br', { q: 0.8 }],
   ['identity', { q: 0.1 }],
-] as const satisfies Accept[]
+]
 
-const ACCEPT_ENCODING_UNCOMPRESSED = [
+export const ACCEPT_ENCODING_UNCOMPRESSED: readonly [Accept, ...Accept[]] = [
   ['identity', { q: 1.0 }],
   ['gzip', { q: 0.3 }],
   ['deflate', { q: 0.2 }],
   ['br', { q: 0.1 }],
-] as const satisfies Accept[]
+]
 
 // accept-encoding defaults to "identity with lowest priority"
 const ACCEPT_ENC_DEFAULT = ['identity', { q: 0.001 }] as const satisfies Accept
@@ -89,7 +89,9 @@ function isAllowedAccept([, flags]: Accept): boolean {
 /**
  * @see {@link https://developer.mozilla.org/en-US/docs/Glossary/Quality_values}
  */
-function formatAcceptHeader(accept: readonly [Accept, ...Accept[]]): string {
+export function formatAcceptHeader(
+  accept: readonly [Accept, ...Accept[]],
+): string {
   return accept.map(formatAcceptPart).join(',')
 }
 
