@@ -1,4 +1,3 @@
-import axios, { AxiosInstance } from 'axios'
 import { CID } from 'multiformats/cid'
 import { cidForCbor, verifyCidForBytes } from '@atproto/common'
 import { TestNetwork, basicSeed } from '@atproto/dev-env'
@@ -6,7 +5,6 @@ import { randomBytes } from '@atproto/crypto'
 
 describe('blob resolver', () => {
   let network: TestNetwork
-  let client: AxiosInstance
   let fileDid: string
   let fileCid: CID
 
@@ -19,10 +17,6 @@ describe('blob resolver', () => {
     await network.processAll()
     fileDid = sc.dids.carol
     fileCid = sc.posts[fileDid][0].images[0].image.ref
-    client = axios.create({
-      baseURL: network.bsky.url,
-      validateStatus: () => true,
-    })
   })
 
   afterAll(async () => {
@@ -30,57 +24,60 @@ describe('blob resolver', () => {
   })
 
   it('resolves blob with good signature check.', async () => {
-    const { data, status, headers } = await client.get(
-      `/blob/${fileDid}/${fileCid.toString()}`,
-      { responseType: 'arraybuffer' },
+    const response = await fetch(
+      new URL(`/blob/${fileDid}/${fileCid.toString()}`, network.bsky.url),
     )
-    expect(status).toEqual(200)
-    expect(headers['content-type']).toEqual('image/jpeg')
-    expect(headers['content-security-policy']).toEqual(
+    expect(response.status).toEqual(200)
+    expect(response.headers['content-type']).toEqual('image/jpeg')
+    expect(response.headers['content-security-policy']).toEqual(
       `default-src 'none'; sandbox`,
     )
-    expect(headers['x-content-type-options']).toEqual('nosniff')
-    await expect(verifyCidForBytes(fileCid, data)).resolves.toBeUndefined()
+    expect(response.headers['x-content-type-options']).toEqual('nosniff')
+
+    const bytes = new Uint8Array(await response.arrayBuffer())
+    await expect(verifyCidForBytes(fileCid, bytes)).resolves.toBeUndefined()
   })
 
   it('404s on missing blob.', async () => {
     const badCid = await cidForCbor({ unknown: true })
-    const { data, status } = await client.get(
-      `/blob/${fileDid}/${badCid.toString()}`,
+    const response = await fetch(
+      new URL(`/blob/${fileDid}/${badCid.toString()}`, network.bsky.url),
     )
-    expect(status).toEqual(404)
-    expect(data).toEqual({
+    expect(response.status).toEqual(404)
+    await expect(response.json()).resolves.toEqual({
       error: 'NotFoundError',
       message: 'Blob not found',
     })
   })
 
   it('404s on missing identity.', async () => {
-    const { data, status } = await client.get(
-      `/blob/did:plc:unknown/${fileCid.toString()}`,
+    const response = await fetch(
+      new URL(`/blob/did:plc:unknown/${fileCid.toString()}`, network.bsky.url),
     )
-    expect(status).toEqual(404)
-    expect(data).toEqual({
+    expect(response.status).toEqual(404)
+    await expect(response.json()).resolves.toEqual({
       error: 'NotFoundError',
       message: 'Origin not found',
     })
   })
 
   it('400s on invalid did.', async () => {
-    const { data, status } = await client.get(
-      `/blob/did::/${fileCid.toString()}`,
+    const response = await fetch(
+      new URL(`/blob/did::/${fileCid.toString()}`, network.bsky.url),
     )
-    expect(status).toEqual(400)
-    expect(data).toEqual({
+    expect(response.status).toEqual(400)
+    await expect(response.json()).resolves.toEqual({
       error: 'BadRequestError',
       message: 'Invalid did',
     })
   })
 
   it('400s on invalid cid.', async () => {
-    const { data, status } = await client.get(`/blob/${fileDid}/barfy`)
-    expect(status).toEqual(400)
-    expect(data).toEqual({
+    const response = await fetch(
+      new URL(`/blob/${fileDid}/barfy`, network.bsky.url),
+    )
+    expect(response.status).toEqual(400)
+    await expect(response.json()).resolves.toEqual({
       error: 'BadRequestError',
       message: 'Invalid cid',
     })
@@ -91,8 +88,11 @@ describe('blob resolver', () => {
     await network.pds.ctx
       .blobstore(fileDid)
       .putPermanent(fileCid, randomBytes(100))
-    const tryGetBlob = client.get(`/blob/${fileDid}/${fileCid.toString()}`)
-    await expect(tryGetBlob).rejects.toThrow(
+
+    const response = await fetch(
+      new URL(`/blob/${fileDid}/${fileCid.toString()}`, network.bsky.url),
+    )
+    await expect(response.arrayBuffer()).rejects.toThrow(
       'maxContentLength size of -1 exceeded',
     )
   })

@@ -45,7 +45,6 @@
     "@connectrpc/connect-node": "^1.1.4",
     "@did-plc/lib": "^0.0.1",
     "@types/http-errors": "^2.0.1",
-    "axios": "^0.27.2",
     "compression": "^1.7.4",
     "cors": "^2.8.5",
     "express": "^4.17.2",
