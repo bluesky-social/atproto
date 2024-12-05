@@ -1,5 +1,14 @@
 # @atproto/pds
 
+## 0.4.75
+
+### Patch Changes
+
+- Updated dependencies [[`622654672`](https://github.com/bluesky-social/atproto/commit/6226546725d1bb0375e3c9e0d71af173e8253c4f), [`ed2236220`](https://github.com/bluesky-social/atproto/commit/ed2236220900ab9a6132c525289cfdd959733a42)]:
+  - @atproto/oauth-provider@0.2.9
+  - @atproto/api@0.13.19
+  - @atproto-labs/fetch-node@0.1.4
+
 ## 0.4.74
 
 ### Patch Changes

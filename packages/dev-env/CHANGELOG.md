@@ -1,5 +1,15 @@
 # @atproto/dev-env
 
+## 0.3.66
+
+### Patch Changes
+
+- Updated dependencies [[`ed2236220`](https://github.com/bluesky-social/atproto/commit/ed2236220900ab9a6132c525289cfdd959733a42)]:
+  - @atproto/ozone@0.1.58
+  - @atproto/api@0.13.19
+  - @atproto/pds@0.4.75
+  - @atproto/bsky@0.0.97
+
 ## 0.3.65
 
 ### Patch Changes
