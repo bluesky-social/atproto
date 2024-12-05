@@ -1,5 +1,4 @@
 import express from 'express'
-import cors from 'cors'
 import compression from 'compression'
 import http from 'node:http'
 import events from 'node:events'
@@ -12,7 +11,6 @@ import { createMuteOpChannel } from './db/schema/mute_op'
 import { createNotifOpChannel } from './db/schema/notif_op'
 import * as health from './api/health'
 import * as revenueCat from './api/revenueCat'
-import { DAY, SECOND } from '@atproto/common'
 import { expressConnectMiddleware } from '@connectrpc/connect-express'
 import { createPurchaseOpChannel } from './db/schema/purchase_op'
 
@@ -48,7 +46,6 @@ export class BsyncService {
     const ctx = await AppContext.fromConfig(cfg, ac.signal, overrides)
 
     const app = express()
-    app.use(cors({ maxAge: DAY / SECOND }))
     app.use(loggerMiddleware)
     app.use(compression())
 
