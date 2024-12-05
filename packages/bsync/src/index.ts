@@ -8,6 +8,10 @@ import { ServerConfig } from './config'
 import routes from './routes'
 import { createMuteOpChannel } from './db/schema/mute_op'
 import { createNotifOpChannel } from './db/schema/notif_op'
+import {
+  isRevenueCatWebhookUrl,
+  revenueCatWebhookHandler,
+} from './subscriptions'
 
 export * from './config'
 export * from './client'
@@ -49,6 +53,9 @@ export class BsyncService {
         res.statusCode = 200
         res.setHeader('content-type', 'application/json')
         return res.end(JSON.stringify({ version: cfg.service.version }))
+      }
+      if (isRevenueCatWebhookUrl(req.url)) {
+        return revenueCatWebhookHandler(ctx, req, res)
       }
       handler(req, res)
     })

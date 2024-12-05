@@ -23,10 +23,25 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     apiKeys: new Set(env.apiKeys),
   }
 
+  let revenueCatCfg: RevenueCatConfig | undefined
+  if (env.revenueCatV1ApiKey) {
+    assert(env.revenueCatV1ApiUrl, 'missing revenue cat v1 api url')
+    assert(
+      env.revenueCatWebhookAuthorization,
+      'missing revenue cat webhook authorization',
+    )
+    revenueCatCfg = {
+      v1ApiKey: env.revenueCatV1ApiKey,
+      v1ApiUrl: env.revenueCatV1ApiUrl,
+      webhookAuthorization: env.revenueCatWebhookAuthorization,
+    }
+  }
+
   return {
     service: serviceCfg,
     db: dbCfg,
     auth: authCfg,
+    revenueCat: revenueCatCfg,
   }
 }
 
@@ -34,6 +49,7 @@ export type ServerConfig = {
   service: ServiceConfig
   db: DatabaseConfig
   auth: AuthConfig
+  revenueCat?: RevenueCatConfig
 }
 
 type ServiceConfig = {
@@ -55,6 +71,12 @@ type AuthConfig = {
   apiKeys: Set<string>
 }
 
+type RevenueCatConfig = {
+  v1ApiUrl: string
+  v1ApiKey: string
+  webhookAuthorization: string
+}
+
 export const readEnv = (): ServerEnvironment => {
   return {
     // service
@@ -70,6 +92,12 @@ export const readEnv = (): ServerEnvironment => {
     dbMigrate: envBool('BSYNC_DB_MIGRATE'),
     // secrets
     apiKeys: envList('BSYNC_API_KEYS'),
+    // revenue cat
+    revenueCatV1ApiKey: envStr('BSKY_REVENUE_CAT_V1_API_KEY'),
+    revenueCatV1ApiUrl: envStr('BSKY_REVENUE_CAT_V1_API_URL'),
+    revenueCatWebhookAuthorization: envStr(
+      'BSKY_REVENUE_CAT_WEBHOOK_AUTHORIZATION',
+    ),
   }
 }
 
@@ -87,4 +115,8 @@ export type ServerEnvironment = {
   dbMigrate?: boolean
   // secrets
   apiKeys: string[]
+  // revenue cat
+  revenueCatV1ApiUrl?: string
+  revenueCatV1ApiKey?: string
+  revenueCatWebhookAuthorization?: string
 }
