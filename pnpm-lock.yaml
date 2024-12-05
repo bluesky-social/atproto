@@ -489,9 +489,6 @@ importers:
       '@did-plc/server':
         specifier: ^0.0.1
         version: 0.0.1
-      axios:
-        specifier: ^0.27.2
-        version: 0.27.2
       dotenv:
         specifier: ^16.0.3
         version: 16.0.3
@@ -507,6 +504,9 @@ importers:
       uint8arrays:
         specifier: 3.0.0
         version: 3.0.0
+      undici:
+        specifier: ^7.1.0
+        version: 7.1.0
     devDependencies:
       '@types/express':
         specifier: ^4.17.13
@@ -13608,6 +13608,11 @@ packages:
   /undici@6.19.8:
     resolution: {integrity: sha512-U8uCCl2x9TK3WANvmBavymRzxbfFYG+tAu+fgx3zxQy3qdagQqBLwJVrdyO1TBfUXvfKveMKJZhpvUYoOjM+4g==}
     engines: {node: '>=18.17'}
+    dev: false
+
+  /undici@7.1.0:
+    resolution: {integrity: sha512-3+mdX2R31khuLCm2mKExSlMdJsfol7bJkIMH80tdXA74W34rT1jKemUTlYR7WY3TqsV4wfOgpatWmmB2Jl1+5g==}
+    engines: {node: '>=20.18.1'}
     dev: false
 
   /unique-filename@2.0.1:
