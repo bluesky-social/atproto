@@ -89,8 +89,8 @@ describe('image processing server', () => {
 
     const res = await fetch(url)
     expect(res.status).toEqual(404)
-    await expect(res.json()).resolves.toEqual({
-      message: 'Image not found',
+    await expect(res.json()).resolves.toMatchObject({
+      message: 'Blob not found',
     })
   })
 })

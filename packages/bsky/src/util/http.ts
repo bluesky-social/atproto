@@ -1,3 +1,4 @@
+import createHttpError from 'http-errors'
 import { IncomingMessage, ServerResponse } from 'node:http'
 import { IncomingHttpHeaders } from 'undici/types/header'
 
@@ -10,10 +11,6 @@ export type Middleware = (
 ) => void
 
 export type ResponseData = { statusCode: number; headers: IncomingHttpHeaders }
-
-export function isSuccess({ statusCode }: ResponseData) {
-  return statusCode >= 200 && statusCode < 300
-}
 
 const RESPONSE_HEADERS_TO_PROXY = new Set([
   'content-type',
@@ -34,4 +31,11 @@ export function proxyResponseHeaders(data: ResponseData, res: ServerResponse) {
     const val = data.headers[name]
     if (val) res.setHeader(name, val)
   }
+}
+
+export function responseSignal(res: ServerResponse): AbortSignal {
+  if (res.destroyed) throw createHttpError(499, 'Client Disconnected')
+  const controller = new AbortController()
+  res.once('close', () => controller.abort())
+  return controller.signal
 }

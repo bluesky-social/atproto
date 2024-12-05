@@ -1,5 +1,5 @@
 import { createReadStream } from 'node:fs'
-import { pipeline } from 'node:stream'
+import { pipeline } from 'node:stream/promises'
 import {
   Options,
   createImageProcessor,
@@ -187,6 +187,12 @@ describe('sharp image processor', () => {
     const image = createReadStream(`../dev-env/src/seed/img/${fixture}`)
     const upscaler = createImageUpscaler(options)
     const processor = createImageProcessor(options)
-    return await getInfo(pipeline(image, upscaler, processor))
+
+    const [info] = await Promise.all([
+      getInfo(processor),
+      pipeline([image, upscaler, processor]),
+    ])
+
+    return info
   }
 })

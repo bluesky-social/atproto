@@ -22,11 +22,10 @@ import {
 } from '../data-plane'
 import { parseCid } from '../hydration/util'
 import { httpLogger as log } from '../logger'
-import { isSuccess, Middleware, proxyResponseHeaders } from '../util/http'
+import { Middleware, proxyResponseHeaders, responseSignal } from '../util/http'
 
 export function createMiddleware(ctx: AppContext): Middleware {
   return async (req, res, next) => {
-    if (res.destroyed) return
     if (req.method !== 'GET' && req.method !== 'HEAD') return next()
     if (!req.url?.startsWith('/blob/')) return next()
     const { length, 2: didParam, 3: cidParam } = req.url.split('/')
@@ -41,6 +40,7 @@ export function createMiddleware(ctx: AppContext): Middleware {
       const streamOptions: StreamBlobOptions = {
         did: didParam,
         cid: cidParam,
+        signal: responseSignal(res),
         // Because we will be verifying the CID, we need to ensure that the
         // upstream response can be de-compressed. We do this by negotiating the
         // "accept-encoding" header based on the downstream client's capabilities.
@@ -51,27 +51,6 @@ export function createMiddleware(ctx: AppContext): Middleware {
       }
 
       await streamBlob(ctx, streamOptions, (upstream, { cid, did, url }) => {
-        if (!isSuccess(upstream)) {
-          if (upstream.statusCode >= 500) {
-            log.warn({ url }, 'blob resolution failed upstream')
-          }
-
-          // Throwing here will kill the underlying socket. This is fine if
-          // the payload is large, or if the underlying connection is an
-          // HTTP/2 (which we can't know here). Since error payloads are
-          // typically small, we'll just proxy the upstream error so that the
-          // connection can stay alive.
-
-          proxyResponseHeaders(upstream, res)
-          return res
-        }
-
-        if (res.destroyed) {
-          throw createError(499, 'Client disconnected')
-        }
-
-        // 2xx status code, let's verify the CID
-
         const encoding = upstream.headers['content-encoding']
         const verifier = createCidVerifier(cid, encoding)
 
@@ -113,6 +92,7 @@ export type StreamBlobOptions = {
   cid: string
   did: string
   acceptEncoding: string
+  signal?: AbortSignal
 }
 
 export type StreamBlobFactory = (
@@ -144,8 +124,18 @@ export async function streamBlob(
       origin: url.origin,
       path: url.pathname + url.search,
       headers,
+      signal: options.signal,
     },
-    (upstream) => factory(upstream, { url, did, cid }),
+    (upstream) => {
+      if (upstream.statusCode >= 500) {
+        log.warn({ url }, 'blob resolution failed upstream')
+        throw createError(502, 'Upstream Error')
+      } else if (upstream.statusCode >= 400) {
+        throw createError(404, 'Blob not found')
+      }
+
+      return factory(upstream, { url, did, cid })
+    },
   )
 }
 

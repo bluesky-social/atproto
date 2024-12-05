@@ -21,7 +21,7 @@ import { pipeline } from 'node:stream/promises'
 
 import { streamBlob, StreamBlobOptions } from '../api/blob-resolver'
 import AppContext from '../context'
-import { isSuccess, Middleware, proxyResponseHeaders } from '../util/http'
+import { Middleware, responseSignal } from '../util/http'
 import log from './logger'
 import { createImageProcessor, createImageUpscaler } from './sharp'
 import { BadPathError, ImageUriBuilder } from './uri'
@@ -84,12 +84,10 @@ export function createMiddleware(
 
       // Non-cached flow
 
-      // Client disconnected while loading cache
-      if (res.destroyed) return
-
       const streamOptions: StreamBlobOptions = {
         did: options.did,
         cid: options.cid,
+        signal: responseSignal(res),
         acceptEncoding: formatAcceptHeader(
           ctx.cfg.proxyPreferCompressed
             ? ACCEPT_ENCODING_COMPRESSED
@@ -98,32 +96,11 @@ export function createMiddleware(
       }
 
       await streamBlob(ctx, streamOptions, (upstream, { did, cid, url }) => {
-        if (!isSuccess(upstream)) {
-          if (upstream.statusCode >= 500) {
-            log.warn({ url }, 'blob resolution failed upstream')
-          }
-
-          // Throwing here will kill the underlying socket. This is fine if the
-          // payload is large, or if the underlying connection is an HTTP/2
-          // (which we can't know here). Since error payloads are typically
-          // small, we'll just proxy the upstream error so that the connection
-          // can stay alive.
-
-          proxyResponseHeaders(upstream, res)
-          return res
-        }
-
-        if (res.destroyed) {
-          throw createError(499, 'Client disconnected')
-        }
-
-        // If the upstream data is definitely not an image, there is no need
-        // to even try to process it.
         if (isImageMime(upstream.headers['content-type']) === false) {
           throw createError(400, 'Not an image')
         }
 
-        // Let's transform (decompress, verify, upscale), process and respond
+        // Let's transform (decompress, check CID, upscale), process and respond
 
         const transforms: Duplex[] = [
           ...createDecoders(upstream.headers['content-encoding']),
@@ -137,6 +114,9 @@ export function createMiddleware(
           .put(cacheKey, cloneStream(processor))
           .catch((err) => log.error(err, 'failed to cache image'))
 
+        res.statusCode = 200
+        res.setHeader('cache-control', `public, max-age=31536000`) // 1 year
+        res.setHeader('x-cache', 'miss')
         processor.once('info', ({ size, format }: SharpInfo) => {
           const type = formatsToMimes.get(format) || 'application/octet-stream'
 
@@ -144,9 +124,6 @@ export function createMiddleware(
           res.setHeader('content-length', size)
           res.setHeader('content-type', type)
         })
-        res.statusCode = 200
-        res.setHeader('cache-control', `public, max-age=31536000`) // 1 year
-        res.setHeader('x-cache', 'miss')
 
         const onError = (err: unknown) => {
           log.warn(

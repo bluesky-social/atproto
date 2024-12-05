@@ -28,11 +28,11 @@ describe('blob resolver', () => {
       new URL(`/blob/${fileDid}/${fileCid.toString()}`, network.bsky.url),
     )
     expect(response.status).toEqual(200)
-    expect(response.headers['content-type']).toEqual('image/jpeg')
-    expect(response.headers['content-security-policy']).toEqual(
+    expect(response.headers.get('content-type')).toEqual('image/jpeg')
+    expect(response.headers.get('content-security-policy')).toEqual(
       `default-src 'none'; sandbox`,
     )
-    expect(response.headers['x-content-type-options']).toEqual('nosniff')
+    expect(response.headers.get('x-content-type-options')).toEqual('nosniff')
 
     const bytes = new Uint8Array(await response.arrayBuffer())
     await expect(verifyCidForBytes(fileCid, bytes)).resolves.toBeUndefined()
@@ -51,8 +51,13 @@ describe('blob resolver', () => {
   })
 
   it('404s on missing identity.', async () => {
+    const nonExistingDid = `did:plc:${'a'.repeat(24)}`
+
     const response = await fetch(
-      new URL(`/blob/did:plc:unknown/${fileCid.toString()}`, network.bsky.url),
+      new URL(
+        `/blob/${nonExistingDid}/${fileCid.toString()}`,
+        network.bsky.url,
+      ),
     )
     expect(response.status).toEqual(404)
     await expect(response.json()).resolves.toEqual({
@@ -92,8 +97,6 @@ describe('blob resolver', () => {
     const response = await fetch(
       new URL(`/blob/${fileDid}/${fileCid.toString()}`, network.bsky.url),
     )
-    await expect(response.arrayBuffer()).rejects.toThrow(
-      'maxContentLength size of -1 exceeded',
-    )
+    await expect(response.arrayBuffer()).rejects.toThrow('terminated')
   })
 })
