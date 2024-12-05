@@ -2,9 +2,10 @@ import { TestNetwork, basicSeed } from '@atproto/dev-env'
 import express from 'express'
 import { once } from 'node:events'
 import { AddressInfo } from 'node:net'
+import { finished } from 'node:stream/promises'
+import { request } from 'undici'
 import { handler as errorHandler } from '../src/error'
 import { startServer } from './_util'
-import { request } from 'undici'
 
 describe('server', () => {
   let network: TestNetwork
@@ -81,7 +82,7 @@ describe('server', () => {
       },
     )
 
-    for await (const _ of res.body);
+    await finished(res.body.resume())
 
     expect(res.headers['content-encoding']).toEqual('gzip')
   })
@@ -91,7 +92,7 @@ describe('server', () => {
       headers: { 'accept-encoding': 'gzip' },
     })
 
-    for await (const _ of res.body);
+    await finished(res.body.resume())
 
     expect(res.headers['content-encoding']).toBeUndefined()
   })
