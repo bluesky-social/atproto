@@ -23,14 +23,14 @@ export const getSigningKeyId = async (
   return insertRes.id
 }
 
-export const RETRYABLE_HTTP_STATUS_CODES = [
+export const RETRYABLE_HTTP_STATUS_CODES = new Set([
   408, 425, 429, 500, 502, 503, 504, 522, 524,
-]
+])
 
 export const retryHttp = createRetryable((err: unknown) => {
   if (err instanceof XRPCError) {
     if (err.status === ResponseType.Unknown) return true
-    return RETRYABLE_HTTP_STATUS_CODES.includes(err.status)
+    return RETRYABLE_HTTP_STATUS_CODES.has(err.status)
   }
   return false
 })
@@ -82,4 +82,18 @@ export const formatLabelerHeader = (parsed: ParsedLabelers): string => {
     parsed.redact.has(did) ? `${did};redact` : did,
   )
   return parts.join(',')
+}
+
+export async function allFulfilled(
+  promises: Promise<unknown>[],
+): Promise<void> {
+  const results = await Promise.allSettled(promises)
+
+  const errors = results
+    .filter((result) => result.status === 'rejected')
+    .map((result) => result.reason)
+
+  if (errors.length === 1) throw errors[0]
+  if (errors.length > 1)
+    throw new AggregateError(errors, 'Multiple errors uploading blobs')
 }
