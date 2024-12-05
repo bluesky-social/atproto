@@ -26,6 +26,7 @@ import { isSuccess, Middleware, proxyResponseHeaders } from '../util/http'
 
 export function createMiddleware(ctx: AppContext): Middleware {
   return async (req, res, next) => {
+    if (res.destroyed) return
     if (req.method !== 'GET' && req.method !== 'HEAD') return next()
     if (!req.url?.startsWith('/blob/')) return next()
     const { length, 2: didParam, 3: cidParam } = req.url.split('/')
@@ -65,6 +66,10 @@ export function createMiddleware(ctx: AppContext): Middleware {
           return res
         }
 
+        if (res.destroyed) {
+          throw createError(499, 'Client disconnected')
+        }
+
         // 2xx status code, let's verify the CID
 
         const encoding = upstream.headers['content-encoding']
@@ -78,6 +83,7 @@ export function createMiddleware(ctx: AppContext): Middleware {
         }
 
         if (req.method === 'HEAD') {
+          res.once('close', () => verifier.destroy())
           void finished(verifier.resume()).then(() => {
             proxyResponseHeaders(upstream, res)
             res.end()
@@ -90,7 +96,7 @@ export function createMiddleware(ctx: AppContext): Middleware {
         return verifier
       })
     } catch (err) {
-      if (res.headersSent) {
+      if (res.headersSent || res.destroyed) {
         res.destroy()
       } else if (err instanceof VerifyCidError) {
         next(createError(404, 'Blob not found', err))

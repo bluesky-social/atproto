@@ -6,7 +6,6 @@ import {
 import {
   cloneStream,
   createDecoders,
-  forwardStreamErrors,
   isErrnoException,
   VerifyCidError,
   VerifyCidTransform,
@@ -44,6 +43,7 @@ export function createMiddleware(
   const cache = new BlobDiskCache(ctx.cfg.blobCacheLocation)
 
   return async (req, res, next) => {
+    if (res.destroyed) return
     if (req.method !== 'GET' && req.method !== 'HEAD') return next()
     if (!req.url?.startsWith(prefix)) return next()
     const { 0: path, 1: _search } = req.url.slice(prefix.length - 1).split('?')
@@ -63,14 +63,29 @@ export function createMiddleware(
         res.setHeader('content-type', getMime(options.format))
         res.setHeader('cache-control', `public, max-age=31536000`) // 1 year
         res.setHeader('content-length', cachedImage.size)
-        forwardStreamErrors(cachedImage, res)
-        return cachedImage.pipe(res)
+        await pipeline(cachedImage, res)
+        return
       } catch (err) {
-        // Ignore BlobNotFoundError and move on to non-cached flow
-        if (!(err instanceof BlobNotFoundError)) throw err
+        if (!(err instanceof BlobNotFoundError)) {
+          log.error({ cacheKey, err }, 'failed to serve cached image')
+        }
+
+        if (res.headersSent || res.destroyed) {
+          res.destroy()
+          return // nothing we can do...
+        } else {
+          // Ignore and move on to non-cached flow.
+          res.removeHeader('x-cache')
+          res.removeHeader('content-type')
+          res.removeHeader('cache-control')
+          res.removeHeader('content-length')
+        }
       }
 
       // Non-cached flow
+
+      // Client disconnected while loading cache
+      if (res.destroyed) return
 
       const streamOptions: StreamBlobOptions = {
         did: options.did,
@@ -96,6 +111,10 @@ export function createMiddleware(
 
           proxyResponseHeaders(upstream, res)
           return res
+        }
+
+        if (res.destroyed) {
+          throw createError(499, 'Client disconnected')
         }
 
         // If the upstream data is definitely not an image, there is no need
@@ -137,6 +156,7 @@ export function createMiddleware(
         }
 
         if (req.method === 'HEAD') {
+          res.once('close', () => processor.destroy())
           void pipeline([...transforms, processor.resume()]).then(() => {
             res.end()
           }, onError)
@@ -147,7 +167,7 @@ export function createMiddleware(
         return transforms[0]!
       })
     } catch (err) {
-      if (res.headersSent) {
+      if (res.headersSent || res.destroyed) {
         res.destroy()
       } else {
         res.removeHeader('content-type')
