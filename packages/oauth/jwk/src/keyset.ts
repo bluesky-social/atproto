@@ -162,7 +162,6 @@ export class Keyset<K extends Key = Key> implements Iterable<K> {
 
       // Skip negotiation if a specific "alg" was provided
       if (typeof alg === 'string') return [key, alg]
-      else if (alg?.length === 1) return [key, alg[0]!]
 
       matchingKeys.push(key)
     }
