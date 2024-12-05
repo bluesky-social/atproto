@@ -2,4 +2,5 @@
 "@atproto/bsky": patch
 ---
 
-Use undici to stream blob
+Improve performance when serving blobs
+
