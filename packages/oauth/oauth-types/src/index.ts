@@ -1,4 +1,5 @@
 export * from './constants.js'
+export * from './uri.js'
 export * from './util.js'
 
 export * from './atproto-loopback-client-metadata.js'
@@ -25,6 +26,7 @@ export * from './oauth-issuer-identifier.js'
 export * from './oauth-par-response.js'
 export * from './oauth-password-grant-token-request.js'
 export * from './oauth-protected-resource-metadata.js'
+export * from './oauth-redirect-uri.js'
 export * from './oauth-refresh-token-grant-token-request.js'
 export * from './oauth-refresh-token.js'
 export * from './oauth-request-uri.js'

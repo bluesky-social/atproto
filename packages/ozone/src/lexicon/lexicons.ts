@@ -3959,6 +3959,35 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoTempAddReservedHandle: {
+    lexicon: 1,
+    id: 'com.atproto.temp.addReservedHandle',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Add a handle to the set of reserved handles.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['handle'],
+            properties: {
+              handle: {
+                type: 'string',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
+      },
+    },
+  },
   ComAtprotoTempCheckSignupQueue: {
     lexicon: 1,
     id: 'com.atproto.temp.checkSignupQueue',
@@ -4461,7 +4490,13 @@ export const schemaDict = {
           sort: {
             type: 'string',
             description: 'Sorting mode for threads.',
-            knownValues: ['oldest', 'newest', 'most-likes', 'random'],
+            knownValues: [
+              'oldest',
+              'newest',
+              'most-likes',
+              'random',
+              'hotness',
+            ],
           },
           prioritizeFollowedUsers: {
             type: 'boolean',
@@ -11275,6 +11310,11 @@ export const schemaDict = {
           comment: {
             type: 'string',
           },
+          acknowledgeAccountSubjects: {
+            type: 'boolean',
+            description:
+              'If true, all other reports on content authored by this account will be resolved (acknowledged).',
+          },
         },
       },
       modEventEscalate: {
@@ -12183,7 +12223,7 @@ export const schemaDict = {
             comment: {
               type: 'string',
               description:
-                'If specified, only events with comments containing the keyword are returned',
+                'If specified, only events with comments containing the keyword are returned. Apply || separator to use multiple keywords and match using OR condition.',
             },
             addedLabels: {
               type: 'array',
@@ -13545,6 +13585,7 @@ export const ids = {
   ComAtprotoSyncNotifyOfUpdate: 'com.atproto.sync.notifyOfUpdate',
   ComAtprotoSyncRequestCrawl: 'com.atproto.sync.requestCrawl',
   ComAtprotoSyncSubscribeRepos: 'com.atproto.sync.subscribeRepos',
+  ComAtprotoTempAddReservedHandle: 'com.atproto.temp.addReservedHandle',
   ComAtprotoTempCheckSignupQueue: 'com.atproto.temp.checkSignupQueue',
   ComAtprotoTempFetchLabels: 'com.atproto.temp.fetchLabels',
   ComAtprotoTempRequestPhoneVerification:

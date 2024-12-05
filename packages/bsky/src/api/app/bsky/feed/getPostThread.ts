@@ -1,10 +1,6 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
-import {
-  isNotFoundPost,
-  isThreadViewPost,
-} from '../../../../lexicon/types/app/bsky/feed/defs'
-import { isRecord as isPostRecord } from '../../../../lexicon/types/app/bsky/feed/post'
+import { isNotFoundPost } from '../../../../lexicon/types/app/bsky/feed/defs'
 import {
   QueryParams,
   OutputSchema,

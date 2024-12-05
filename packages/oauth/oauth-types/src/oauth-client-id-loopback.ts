@@ -1,11 +1,33 @@
-import { OAuthClientId } from './oauth-client-id.js'
+import { TypeOf, ZodIssueCode } from 'zod'
+import { oauthClientIdSchema } from './oauth-client-id.js'
+import {
+  OAuthLoopbackRedirectURI,
+  oauthLoopbackRedirectURISchema,
+  OAuthRedirectUri,
+} from './oauth-redirect-uri.js'
 import { OAuthScope, oauthScopeSchema } from './oauth-scope.js'
-import { isLoopbackHost, safeUrl } from './util.js'
 
-const OAUTH_CLIENT_ID_LOOPBACK_URL = 'http://localhost'
+const PREFIX = 'http://localhost'
 
-export type OAuthClientIdLoopback = OAuthClientId &
-  `${typeof OAUTH_CLIENT_ID_LOOPBACK_URL}${'' | '/'}${'' | `?${string}`}`
+export const oauthClientIdLoopbackSchema = oauthClientIdSchema.superRefine(
+  (value, ctx): value is `${typeof PREFIX}${'' | '/'}${'' | `?${string}`}` => {
+    try {
+      assertOAuthLoopbackClientId(value)
+      return true
+    } catch (error) {
+      ctx.addIssue({
+        code: ZodIssueCode.custom,
+        message:
+          error instanceof TypeError
+            ? error.message
+            : 'Invalid loopback client ID',
+      })
+      return false
+    }
+  },
+)
+
+export type OAuthClientIdLoopback = TypeOf<typeof oauthClientIdLoopbackSchema>
 
 export function isOAuthClientIdLoopback(
   clientId: string,
@@ -28,21 +50,18 @@ export function assertOAuthLoopbackClientId(
 // validation functions)
 export function parseOAuthLoopbackClientId(clientId: string): {
   scope?: OAuthScope
-  redirect_uris?: [string, ...string[]]
+  redirect_uris?: [OAuthRedirectUri, ...OAuthRedirectUri[]]
 } {
-  if (!clientId.startsWith(OAUTH_CLIENT_ID_LOOPBACK_URL)) {
-    throw new TypeError(
-      `Loopback ClientID must start with "${OAUTH_CLIENT_ID_LOOPBACK_URL}"`,
-    )
-  } else if (clientId.includes('#', OAUTH_CLIENT_ID_LOOPBACK_URL.length)) {
+  if (!clientId.startsWith(PREFIX)) {
+    throw new TypeError(`Loopback ClientID must start with "${PREFIX}"`)
+  } else if (clientId.includes('#', PREFIX.length)) {
     throw new TypeError('Loopback ClientID must not contain a hash component')
   }
 
   const queryStringIdx =
-    clientId.length > OAUTH_CLIENT_ID_LOOPBACK_URL.length &&
-    clientId[OAUTH_CLIENT_ID_LOOPBACK_URL.length] === '/'
-      ? OAUTH_CLIENT_ID_LOOPBACK_URL.length + 1
-      : OAUTH_CLIENT_ID_LOOPBACK_URL.length
+    clientId.length > PREFIX.length && clientId[PREFIX.length] === '/'
+      ? PREFIX.length + 1
+      : PREFIX.length
 
   if (clientId.length === queryStringIdx) {
     return {} // no query string to parse
@@ -72,32 +91,13 @@ export function parseOAuthLoopbackClientId(clientId: string): {
   }
 
   const redirect_uris = searchParams.has('redirect_uri')
-    ? (searchParams.getAll('redirect_uri') as [string, ...string[]])
+    ? (searchParams
+        .getAll('redirect_uri')
+        .map((value) => oauthLoopbackRedirectURISchema.parse(value)) as [
+        OAuthLoopbackRedirectURI,
+        ...OAuthLoopbackRedirectURI[],
+      ])
     : undefined
-
-  if (redirect_uris) {
-    for (const uri of redirect_uris) {
-      const url = safeUrl(uri)
-      if (!url) {
-        throw new TypeError(`Invalid redirect_uri in client ID: ${uri}`)
-      }
-      if (url.protocol !== 'http:') {
-        throw new TypeError(
-          `Loopback ClientID must use "http:" redirect_uri's (got ${uri})`,
-        )
-      }
-      if (url.hostname === 'localhost') {
-        throw new TypeError(
-          `Loopback ClientID must not use "localhost" as redirect_uri hostname (got ${uri})`,
-        )
-      }
-      if (!isLoopbackHost(url.hostname)) {
-        throw new TypeError(
-          `Loopback ClientID must use loopback addresses as redirect_uri's (got ${uri})`,
-        )
-      }
-    }
-  }
 
   return {
     scope,

@@ -3,6 +3,8 @@ import {
   ToolsOzoneModerationEmitEvent as EmitModerationEvent,
   ToolsOzoneModerationQueryStatuses as QueryModerationStatuses,
   ToolsOzoneModerationQueryEvents as QueryModerationEvents,
+  ToolsOzoneSettingUpsertOption,
+  ToolsOzoneSettingRemoveOptions,
 } from '@atproto/api'
 import { TestOzone } from './ozone'
 
@@ -155,5 +157,41 @@ export class ModeratorClient {
       },
       role,
     )
+  }
+
+  async upsertSettingOption(
+    setting: ToolsOzoneSettingUpsertOption.InputSchema,
+    callerRole: 'admin' | 'moderator' | 'triage' = 'admin',
+  ) {
+    const { data } = await this.agent.tools.ozone.setting.upsertOption(
+      setting,
+      {
+        encoding: 'application/json',
+        headers: await this.ozone.modHeaders(
+          'tools.ozone.setting.upsertOption',
+          callerRole,
+        ),
+      },
+    )
+
+    return data
+  }
+
+  async removeSettingOptions(
+    params: ToolsOzoneSettingRemoveOptions.InputSchema,
+    callerRole: 'admin' | 'moderator' | 'triage' = 'admin',
+  ) {
+    const { data } = await this.agent.tools.ozone.setting.removeOptions(
+      params,
+      {
+        encoding: 'application/json',
+        headers: await this.ozone.modHeaders(
+          'tools.ozone.setting.removeOptions',
+          callerRole,
+        ),
+      },
+    )
+
+    return data
   }
 }

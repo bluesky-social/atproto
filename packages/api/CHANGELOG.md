@@ -1,5 +1,25 @@
 # @atproto/api
 
+## 0.13.19
+
+### Patch Changes
+
+- [#3171](https://github.com/bluesky-social/atproto/pull/3171) [`ed2236220`](https://github.com/bluesky-social/atproto/commit/ed2236220900ab9a6132c525289cfdd959733a42) Thanks [@foysalit](https://github.com/foysalit)! - Allow moderators to optionally acknowledge all open subjects of an account when acknowledging account level reports
+
+## 0.13.18
+
+### Patch Changes
+
+- [#3082](https://github.com/bluesky-social/atproto/pull/3082) [`a3ce23c4c`](https://github.com/bluesky-social/atproto/commit/a3ce23c4ccf4f40998b9d1f5731e5c905390aedc) Thanks [@gaearon](https://github.com/gaearon)! - Add hotness as a thread sorting option
+
+## 0.13.17
+
+### Patch Changes
+
+- [#2978](https://github.com/bluesky-social/atproto/pull/2978) [`a4b528e5f`](https://github.com/bluesky-social/atproto/commit/a4b528e5f51c8bfca56b293b0059b88d138ec421) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Add searchStarterPacks and searchStarterPacksSkeleton
+
+- [#3056](https://github.com/bluesky-social/atproto/pull/3056) [`2e7aa211d`](https://github.com/bluesky-social/atproto/commit/2e7aa211d2cbc629899c7f87f1713b13b932750b) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Add com.atproto.temp.addReservedHandle lexicon
+
 ## 0.13.16
 
 ### Patch Changes

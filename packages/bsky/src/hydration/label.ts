@@ -17,6 +17,7 @@ export type { Label } from '../lexicon/types/com/atproto/label/defs'
 
 export type SubjectLabels = {
   isTakendown: boolean
+  needsReview: boolean
   labels: HydrationMap<Label> // src + val -> label
 }
 
@@ -84,17 +85,30 @@ export class LabelHydrator {
       if (!entry) {
         entry = {
           isTakendown: false,
+          needsReview: false,
           labels: new HydrationMap(),
         }
         acc.set(label.uri, entry)
       }
-      entry.labels.set(Labels.key(label), label)
+      const isActionableNeedsReview =
+        label.val === NEEDS_REVIEW_LABEL &&
+        !label.neg &&
+        labelers.redact.has(label.src)
+
+      // we action needs review labels on backend for now so don't send to client until client has proper logic for them
+      if (!isActionableNeedsReview) {
+        entry.labels.set(Labels.key(label), label)
+      }
+
       if (
         TAKEDOWN_LABELS.includes(label.val) &&
         !label.neg &&
         labelers.redact.has(label.src)
       ) {
         entry.isTakendown = true
+      }
+      if (isActionableNeedsReview) {
+        entry.needsReview = true
       }
       return acc
     }, new Labels())
@@ -147,3 +161,4 @@ const labelerDidToUri = (did: string): string => {
 }
 
 const TAKEDOWN_LABELS = ['!takedown', '!suspend']
+const NEEDS_REVIEW_LABEL = 'needs-review'
