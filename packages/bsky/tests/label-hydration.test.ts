@@ -119,7 +119,7 @@ describe('label hydration', () => {
     )
     const { labels = [] } = res.data
     expect(labels).toEqual([])
-    expect(res.headers.get('atproto-content-labelers')).toEqual(
+    expect(res.headers['atproto-content-labelers']).toEqual(
       `${sc.dids.dan};redact`, // does not include alice
     )
     await network.bsky.ctx.dataplane.untakedownActor({ did: alice })
