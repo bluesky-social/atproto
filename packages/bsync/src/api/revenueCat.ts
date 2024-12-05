@@ -1,6 +1,6 @@
 import express, { RequestHandler } from 'express'
 import { AppContext } from '..'
-import { RevenueCatClient } from '../purchases'
+import { rcEventBodySchema, RevenueCatClient } from '../purchases'
 import { addPurchaseOperation, RcEventBody } from '../purchases'
 import { isValidDid } from '../routes/util'
 import { httpLogger as log } from '..'
@@ -26,18 +26,30 @@ const webhookHandler =
   async (req, res) => {
     const { revenueCatClient } = ctx
 
-    const body: RcEventBody = req.body
+    let body: RcEventBody
+    try {
+      body = rcEventBodySchema.parse(req.body)
+    } catch (error) {
+      log.error({ error }, 'RevenueCat webhook body schema validation failed')
+
+      return res.status(400).send({
+        success: false,
+        error: 'Bad request: body schema validation failed',
+      })
+    }
+
+    const { app_user_id: actorDid } = body.event
+
+    if (!isValidDid(actorDid)) {
+      log.error({ actorDid }, 'RevenueCat webhook got invalid DID')
+
+      return res.status(400).send({
+        success: false,
+        error: 'Bad request: invalid DID in app_user_id',
+      })
+    }
 
     try {
-      const { app_user_id: actorDid } = body.event
-
-      if (!isValidDid(actorDid)) {
-        return res.status(400).send({
-          success: false,
-          error: 'Bad request: invalid DID in app_user_id',
-        })
-      }
-
       const entitlements =
         await revenueCatClient.getEntitlementIdentifiers(actorDid)
 
@@ -45,7 +57,7 @@ const webhookHandler =
 
       res.send({ success: true, operationId: id })
     } catch (error) {
-      log.error(error)
+      log.error({ error }, 'Error while processing RevenueCat webhook')
 
       res.status(500).send({
         success: false,

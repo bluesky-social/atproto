@@ -2,7 +2,11 @@ import http from 'node:http'
 import { once } from 'node:events'
 import getPort from 'get-port'
 import { BsyncService, Database, envToCfg } from '../src'
-import { RcEntitlement, RcGetSubscriberResponse } from '../src/purchases'
+import {
+  RcEntitlement,
+  RcEventBody,
+  RcGetSubscriberResponse,
+} from '../src/purchases'
 
 const revenueCatWebhookAuthorization = 'Bearer any-token'
 
@@ -62,7 +66,7 @@ describe('purchases', () => {
   })
 
   describe('webhook handler', () => {
-    it('returns 403 if authorization is invalid', async () => {
+    it('replies 403 if authorization is invalid', async () => {
       const response = await fetch(`${bsyncUrl}/webhooks/revenuecat`, {
         method: 'POST',
         body: JSON.stringify({ event: { app_user_id: actorDid } }),
@@ -78,14 +82,23 @@ describe('purchases', () => {
       })
     })
 
-    it('returns 400 if DID is invalid', async () => {
-      const response = await callWebhook(bsyncUrl, {
-        event: { app_user_id: 'invalidDid' },
-      })
+    it('replies 400 if DID is invalid', async () => {
+      const response = await callWebhook(bsyncUrl, buildWebhookBody('invalid'))
 
       expect(response.status).toBe(400)
       expect(response.json()).resolves.toMatchObject({
         error: 'Bad request: invalid DID in app_user_id',
+      })
+    })
+
+    it('replies 400 if body is invalid', async () => {
+      const response = await callWebhook(bsyncUrl, {
+        any: 'thing ',
+      } as unknown as RcEventBody)
+
+      expect(response.status).toBe(400)
+      expect(response.json()).resolves.toMatchObject({
+        error: 'Bad request: body schema validation failed',
       })
     })
 
@@ -96,9 +109,7 @@ describe('purchases', () => {
         },
       })
 
-      await callWebhook(bsyncUrl, {
-        event: { app_user_id: actorDid },
-      })
+      await callWebhook(bsyncUrl, buildWebhookBody(actorDid))
 
       const op0 = await bsync.ctx.db.db
         .selectFrom('purchase_op')
@@ -132,9 +143,7 @@ describe('purchases', () => {
         },
       })
 
-      await callWebhook(bsyncUrl, {
-        event: { app_user_id: actorDid },
-      })
+      await callWebhook(bsyncUrl, buildWebhookBody(actorDid))
 
       const op1 = await bsync.ctx.db.db
         .selectFrom('purchase_op')
@@ -168,9 +177,7 @@ describe('purchases', () => {
         subscriber: { entitlements: {} },
       })
 
-      await callWebhook(bsyncUrl, {
-        event: { app_user_id: actorDid },
-      })
+      await callWebhook(bsyncUrl, buildWebhookBody(actorDid))
 
       const op = await bsync.ctx.db.db
         .selectFrom('purchase_op')
@@ -206,9 +213,17 @@ const clearPurchases = async (db: Database) => {
   await db.db.deleteFrom('purchase_op').execute()
 }
 
+const buildWebhookBody = (actorDid: string): RcEventBody => ({
+  api_version: '1.0',
+  event: {
+    app_user_id: actorDid,
+    type: 'INITIAL_PURCHASE',
+  },
+})
+
 const callWebhook = async (
   baseUrl: string,
-  body: Record<string, unknown>,
+  body: RcEventBody,
 ): Promise<Response> => {
   return fetch(`${baseUrl}/webhooks/revenuecat`, {
     method: 'POST',
