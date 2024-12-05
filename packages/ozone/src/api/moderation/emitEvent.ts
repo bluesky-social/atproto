@@ -2,6 +2,7 @@ import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../lexicon'
 import AppContext from '../../context'
 import {
+  isModEventAcknowledge,
   isModEventDivert,
   isModEventEmail,
   isModEventLabel,
@@ -39,6 +40,7 @@ const handleModerationEvent = async ({
   const moderationService = ctx.modService(db)
   const settingService = ctx.settingService(db)
   const { event } = input.body
+  const isAcknowledgeEvent = isModEventAcknowledge(event)
   const isTakedownEvent = isModEventTakedown(event)
   const isReverseTakedownEvent = isModEventReverseTakedown(event)
   const isLabelEvent = isModEventLabel(event)
@@ -219,8 +221,15 @@ const handleModerationEvent = async ({
       }
     }
 
-    if (isTakedownEvent && result.event.meta?.acknowledgeAccountSubjects) {
-      await moderationTxn.resolveSubjectsForAccount(subject.did, createdBy)
+    if (
+      (isTakedownEvent || isAcknowledgeEvent) &&
+      result.event.meta?.acknowledgeAccountSubjects
+    ) {
+      await moderationTxn.resolveSubjectsForAccount(
+        subject.did,
+        createdBy,
+        result.event,
+      )
     }
 
     if (isLabelEvent) {
