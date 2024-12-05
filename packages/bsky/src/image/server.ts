@@ -14,68 +14,46 @@ import { BlobNotFoundError } from '@atproto/repo'
 import createError, { isHttpError } from 'http-errors'
 import fsSync from 'node:fs'
 import fs from 'node:fs/promises'
-import { IncomingMessage, ServerResponse } from 'node:http'
 import os from 'node:os'
 import path from 'node:path'
 import { Readable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
-import { Dispatcher } from 'undici'
 
-import {
-  getBlobHeaders,
-  getBlobUrl,
-  parseBlobParams,
-  RESPONSE_HEADERS_TO_PROXY,
-} from '../api/blob-resolver'
+import { streamBlob, StreamBlobOptions } from '../api/blob-resolver'
 import AppContext from '../context'
-import { isSuccessStatus } from '../util/http'
+import { isSuccess, Middleware, proxyResponseHeaders } from '../util/http'
 import log from './logger'
 import { createImageProcessor, createImageUpscaler } from './sharp'
 import { BadPathError, ImageUriBuilder } from './uri'
 import { formatsToMimes, Options, SharpInfo } from './util'
 
-type Middleware = (
-  req: IncomingMessage,
-  res: ServerResponse,
-  next: (err?: unknown) => void,
-) => void
-
 export function createMiddleware(
-  { cfg, dataplane, blobDispatcher }: AppContext,
+  ctx: AppContext,
   { prefix = '/' }: { prefix?: string } = {},
 ): Middleware {
-  if (!prefix.startsWith('/') && !prefix.endsWith('/')) {
+  if (!prefix.startsWith('/') || !prefix.endsWith('/')) {
     throw new TypeError('Prefix must start and end with a slash')
   }
 
   // If there is a CDN, we don't need to serve images
-  if (cfg.cdnUrl) {
+  if (ctx.cfg.cdnUrl) {
     return (req, res, next) => next()
   }
 
-  // The "accept-encoding" header that will be used when fetching blobs from the
-  // upstream PDS.
-  const acceptEncoding = formatAcceptHeader(
-    cfg.proxyPreferCompressed
-      ? ACCEPT_ENCODING_COMPRESSED
-      : ACCEPT_ENCODING_UNCOMPRESSED,
-  )
-
-  const cache = new BlobDiskCache(cfg.blobCacheLocation)
+  const cache = new BlobDiskCache(ctx.cfg.blobCacheLocation)
 
   return async (req, res, next) => {
     if (!req.url?.startsWith(prefix)) return next()
 
-    const path = req.url
+    const { 0: path, 1: _search } = req.url
       .slice(prefix.length - 1) // keep the last slash
-      .split('?', 1)[0]
+      .split('?')
     if (!path) return next()
 
     try {
       const options = ImageUriBuilder.getOptions(path)
-      const { did, cid } = parseBlobParams(options)
 
-      const cacheKey = [did, cid.toString(), options.preset].join('::')
+      const cacheKey = [options.did, options.cid, options.preset].join('::')
 
       // Cached flow
 
@@ -95,43 +73,29 @@ export function createMiddleware(
 
       // Non-cached flow
 
-      const url = await getBlobUrl(dataplane, did, cid)
-
-      const dispatcherOptions: Dispatcher.RequestOptions = {
-        method: 'GET',
-        origin: url.origin,
-        path: url.pathname + url.search,
-        headers: Object.fromEntries([
-          ...getBlobHeaders(cfg, url),
-          ['accept-encoding', acceptEncoding],
-        ]),
+      const streamOptions: StreamBlobOptions = {
+        did: options.did,
+        cid: options.cid,
+        acceptEncoding: formatAcceptHeader(
+          ctx.cfg.proxyPreferCompressed
+            ? ACCEPT_ENCODING_COMPRESSED
+            : ACCEPT_ENCODING_UNCOMPRESSED,
+        ),
       }
 
-      await blobDispatcher.stream(dispatcherOptions, (upstream) => {
-        if (!isSuccessStatus(upstream.statusCode)) {
-          // Throwing here would cause the upstream connection to be destroyed.
-          // Killing the connection would actually fine if the payload is large,
-          // which is unlikely to be the case for error responses. Destroying
-          // the stream is also fine if the underlying connection is an HTTP/2
-          // stream (which we can't know here?). Since we can't know for sure
-          // that closing the connection is actually fine, we'll just proxy the
-          // upstream error.
-
-          res.statusCode =
-            upstream.statusCode >= 500 ? 502 : upstream.statusCode
-
-          for (const name of RESPONSE_HEADERS_TO_PROXY) {
-            const val = upstream.headers[name]
-            if (val) res.setHeader(name, val)
-          }
-
+      await streamBlob(ctx, streamOptions, (upstream, { did, cid, url }) => {
+        if (!isSuccess(upstream)) {
           if (upstream.statusCode >= 500) {
-            log.warn(
-              { host: url.host, path: url.pathname },
-              'blob resolution failed upstream',
-            )
+            log.warn({ url }, 'blob resolution failed upstream')
           }
 
+          // Throwing here will kill the underlying socket. This is fine if the
+          // payload is large, or if the underlying connection is an HTTP/2
+          // (which we can't know here). Since error payloads are typically
+          // small, we'll just proxy the upstream error so that the connection
+          // can stay alive.
+
+          proxyResponseHeaders(upstream, res)
           return res
         }
 
@@ -162,48 +126,32 @@ export function createMiddleware(
         })
         res.statusCode = 200
         res.setHeader('x-cache', 'miss')
+        res.setHeader('content-encoding', 'identity')
         res.setHeader('cache-control', `public, max-age=31536000`) // 1 year
 
         const streams = [...decoders, verifier, upscaler, processor, res]
         void pipeline(streams).catch((err) => {
-          // Errors will be propagated through the streams
+          log.warn(
+            { err, did, cid: cid.toString(), pds: url.origin },
+            'image processing failed',
+          )
         })
 
-        // Return the stream in which the upstream response will be written to
+        // Write the upstream response into the pipeline input
         return streams[0]
       })
     } catch (err) {
       if (res.headersSent) {
-        // Most likely a pipeline error. Can be due to any of the following:
-        // - The client disconnected
-        // - The upstream disconnected
-        // - The decoding of the stream failed
-        // - The CID verification failed
-        // - The processing stream failed (e.g. sharp)
-        log.error(err, 'failed to serve image')
         res.destroy()
-        return
+      } else if (err instanceof BadPathError) {
+        next(createError(400, err))
+      } else if (isHttpError(err)) {
+        next(err)
+      } else {
+        next(createError(502, 'Upstream Error', { cause: err }))
       }
-
-      if (!isHttpError(err) || err.status >= 500) {
-        log.error(err, 'failed to serve image')
-      }
-
-      const error = asHttpError(err)
-      const message = error.expose ? error.message : 'Internal Server Error'
-
-      res.statusCode = error.status
-      res.setHeader('content-type', 'application/json')
-      res.end(JSON.stringify({ message }))
     }
   }
-}
-
-function asHttpError(err: unknown): createError.HttpError {
-  if (isHttpError(err)) return err
-  if (err instanceof BadPathError) return createError(400, err)
-  if (err instanceof Error) return createError(500, err)
-  return createError(500)
 }
 
 function isImageMime(

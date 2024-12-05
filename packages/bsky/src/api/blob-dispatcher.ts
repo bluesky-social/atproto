@@ -30,7 +30,7 @@ export function createBlobDispatcher(cfg: ServerConfig): Dispatcher {
 
   return cfg.proxyMaxRetries > 0
     ? new RetryAgent(baseDispatcher, {
-        statusCodes: RETRYABLE_HTTP_STATUS_CODES,
+        statusCodes: [...RETRYABLE_HTTP_STATUS_CODES],
         methods: ['GET', 'HEAD'],
         maxRetries: cfg.proxyMaxRetries,
       })

@@ -63,7 +63,9 @@ export class ServerConfig {
 
   static readEnv(overrides?: Partial<ServerConfigValues>) {
     const version = process.env.BSKY_VERSION || undefined
-    const debugMode = process.env.NODE_ENV !== 'production'
+    const debugMode =
+      // Because security related features are disabled in development mode, this requires explicit opt-in.
+      process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test'
     const publicUrl = process.env.BSKY_PUBLIC_URL || undefined
     const serverDid = process.env.BSKY_SERVER_DID || 'did:example:test'
     const envPort = parseInt(process.env.BSKY_PORT || '', 10)
@@ -153,8 +155,9 @@ export class ServerConfig {
       ? parseInt(process.env.BSKY_MAX_THREAD_DEPTH || '', 10)
       : undefined
 
-    const disableSsrfProtection =
-      process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test'
+    const disableSsrfProtection = process.env.BSKY_DISABLE_SSRF_PROTECTION
+      ? process.env.BSKY_DISABLE_SSRF_PROTECTION === 'true'
+      : debugMode
 
     const proxyAllowHTTP2 = process.env.BSKY_PROXY_ALLOW_HTTP2 === 'true'
     const proxyHeadersTimeout =
@@ -392,7 +395,7 @@ export class ServerConfig {
   }
 
   get proxyHeadersTimeout(): number {
-    return this.cfg.proxyHeadersTimeout ?? 10e3
+    return this.cfg.proxyHeadersTimeout ?? 30e3
   }
 
   get proxyBodyTimeout(): number {
