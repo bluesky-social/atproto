@@ -1,22 +1,9 @@
+import { RcGetSubscriberResponse } from './revenueCatTypes'
+
 type Config = {
   v1ApiKey: string
   v1ApiUrl: string
   webhookAuthorization: string
-}
-
-// Reference: https://www.revenuecat.com/docs/api-v1#tag/customers
-export type GetSubscriberResponse = {
-  subscriber: Subscriber
-}
-
-export type Subscriber = {
-  entitlements: {
-    [entitlementIdentifier: string]: Entitlement
-  }
-}
-
-export type Entitlement = {
-  expires_date: string
 }
 
 export class RevenueCatClient {
@@ -49,8 +36,8 @@ export class RevenueCatClient {
     return res.json() as T
   }
 
-  private getSubscriber(did: string): Promise<GetSubscriberResponse> {
-    return this.fetch<GetSubscriberResponse>(
+  private getSubscriber(did: string): Promise<RcGetSubscriberResponse> {
+    return this.fetch<RcGetSubscriberResponse>(
       `/subscribers/${encodeURIComponent(did)}`,
     )
   }

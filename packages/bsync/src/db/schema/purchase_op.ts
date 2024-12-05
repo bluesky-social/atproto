@@ -1,6 +1,6 @@
 import { ColumnType, GeneratedAlways, Selectable } from 'kysely'
 
-export interface SubsOp {
+export interface PurchaseOp {
   id: GeneratedAlways<number>
   actorDid: string
   // https://github.com/kysely-org/kysely/issues/137
@@ -8,10 +8,10 @@ export interface SubsOp {
   createdAt: GeneratedAlways<Date>
 }
 
-export type SubsOpEntry = Selectable<SubsOp>
+export type PurchaseOpEntry = Selectable<PurchaseOp>
 
-export const tableName = 'subs_op'
+export const tableName = 'purchase_op'
 
-export type PartialDB = { [tableName]: SubsOp }
+export type PartialDB = { [tableName]: PurchaseOp }
 
-export const createSubsOpChannel = 'subs_op_create' // used with listen/notify
+export const createPurchaseOpChannel = 'purchase_op_create' // used with listen/notify

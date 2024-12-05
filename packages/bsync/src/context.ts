@@ -4,7 +4,8 @@ import Database from './db'
 import { createMuteOpChannel } from './db/schema/mute_op'
 import { createNotifOpChannel } from './db/schema/notif_op'
 import { EventEmitter } from 'stream'
-import { RevenueCatClient } from './subscriptions'
+import { RevenueCatClient } from './purchases'
+import { createPurchaseOpChannel } from './db/schema/purchase_op'
 
 export type AppContextOptions = {
   db: Database
@@ -59,4 +60,5 @@ export default AppContext
 export type AppEvents = {
   [createMuteOpChannel]: () => void
   [createNotifOpChannel]: () => void
+  [createPurchaseOpChannel]: () => void
 }

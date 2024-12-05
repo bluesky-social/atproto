@@ -2,24 +2,24 @@ import http from 'node:http'
 import { once } from 'node:events'
 import getPort from 'get-port'
 import { BsyncService, Database, envToCfg } from '../src'
-import { Entitlement, GetSubscriberResponse } from '../src/subscriptions'
+import { RcEntitlement, RcGetSubscriberResponse } from '../src/purchases'
 
 const revenueCatWebhookAuthorization = 'Bearer any-token'
 
-describe('subscriptions', () => {
+describe('purchases', () => {
   let bsync: BsyncService
   let bsyncUrl: string
 
   const actorDid = 'did:example:a'
 
   let revenueCatServer: http.Server
-  let revenueCatApiMock: jest.Mock<GetSubscriberResponse>
+  let revenueCatApiMock: jest.Mock<RcGetSubscriberResponse>
 
   const TEN_MINUTES = 600_000
-  const entitlementValid: Entitlement = {
+  const entitlementValid: RcEntitlement = {
     expires_date: new Date(Date.now() + TEN_MINUTES).toISOString(),
   }
-  const entitlementExpired: Entitlement = {
+  const entitlementExpired: RcEntitlement = {
     expires_date: new Date(Date.now() - TEN_MINUTES).toISOString(),
   }
 
@@ -36,7 +36,7 @@ describe('subscriptions', () => {
       envToCfg({
         port: await getPort(),
         dbUrl: process.env.DB_POSTGRES_URL,
-        dbSchema: 'bsync_subscriptions',
+        dbSchema: 'bsync_purchases',
         apiKeys: ['key-1'],
         longPollTimeoutMs: 500,
         revenueCatV1ApiKey: 'any-key',
@@ -58,7 +58,7 @@ describe('subscriptions', () => {
   })
 
   beforeEach(async () => {
-    await clearSubs(bsync.ctx.db)
+    await clearPurchases(bsync.ctx.db)
   })
 
   describe('webhook handler', () => {
@@ -78,6 +78,17 @@ describe('subscriptions', () => {
       })
     })
 
+    it('returns 400 if DID is invalid', async () => {
+      const response = await callWebhook(bsyncUrl, {
+        event: { app_user_id: 'invalidDid' },
+      })
+
+      expect(response.status).toBe(400)
+      expect(response.json()).resolves.toMatchObject({
+        error: 'Bad request: invalid DID in app_user_id',
+      })
+    })
+
     it('stores valid entitlements from the API response, excluding expired', async () => {
       revenueCatApiMock.mockReturnValueOnce({
         subscriber: {
@@ -90,7 +101,7 @@ describe('subscriptions', () => {
       })
 
       const op0 = await bsync.ctx.db.db
-        .selectFrom('subs_op')
+        .selectFrom('purchase_op')
         .selectAll()
         .where('actorDid', '=', actorDid)
         .orderBy('id', 'desc')
@@ -105,7 +116,7 @@ describe('subscriptions', () => {
 
       await expect(
         bsync.ctx.db.db
-          .selectFrom('subs_item')
+          .selectFrom('purchase_item')
           .selectAll()
           .where('actorDid', '=', actorDid)
           .executeTakeFirstOrThrow(),
@@ -126,7 +137,7 @@ describe('subscriptions', () => {
       })
 
       const op1 = await bsync.ctx.db.db
-        .selectFrom('subs_op')
+        .selectFrom('purchase_op')
         .selectAll()
         .where('actorDid', '=', actorDid)
         .orderBy('id', 'desc')
@@ -141,7 +152,7 @@ describe('subscriptions', () => {
 
       await expect(
         bsync.ctx.db.db
-          .selectFrom('subs_item')
+          .selectFrom('purchase_item')
           .selectAll()
           .where('actorDid', '=', actorDid)
           .executeTakeFirstOrThrow(),
@@ -162,7 +173,7 @@ describe('subscriptions', () => {
       })
 
       const op = await bsync.ctx.db.db
-        .selectFrom('subs_op')
+        .selectFrom('purchase_op')
         .selectAll()
         .where('actorDid', '=', actorDid)
         .orderBy('id', 'desc')
@@ -177,7 +188,7 @@ describe('subscriptions', () => {
 
       await expect(
         bsync.ctx.db.db
-          .selectFrom('subs_item')
+          .selectFrom('purchase_item')
           .selectAll()
           .where('actorDid', '=', actorDid)
           .executeTakeFirstOrThrow(),
@@ -190,16 +201,16 @@ describe('subscriptions', () => {
   })
 })
 
-const clearSubs = async (db: Database) => {
-  await db.db.deleteFrom('subs_item').execute()
-  await db.db.deleteFrom('subs_op').execute()
+const clearPurchases = async (db: Database) => {
+  await db.db.deleteFrom('purchase_item').execute()
+  await db.db.deleteFrom('purchase_op').execute()
 }
 
 const callWebhook = async (
   baseUrl: string,
   body: Record<string, unknown>,
 ): Promise<Response> => {
-  const response = await fetch(`${baseUrl}/webhooks/revenuecat`, {
+  return fetch(`${baseUrl}/webhooks/revenuecat`, {
     method: 'POST',
     body: JSON.stringify(body),
     headers: {
@@ -207,19 +218,11 @@ const callWebhook = async (
       'Content-Type': 'application/json',
     },
   })
-
-  if (!response.ok) {
-    throw new Error(
-      `Unexpected status on calling the webhook: '${response.status}'`,
-    )
-  }
-
-  return response
 }
 
 const createMockRevenueCatService = async (
   port: number,
-  apiMock: jest.Mock<GetSubscriberResponse>,
+  apiMock: jest.Mock<RcGetSubscriberResponse>,
 ): Promise<http.Server> => {
   const server = http.createServer((req, res) => {
     if (!req.url) {

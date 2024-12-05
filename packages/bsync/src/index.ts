@@ -1,17 +1,20 @@
+import express from 'express'
+import cors from 'cors'
+import compression from 'compression'
 import http from 'node:http'
 import events from 'node:events'
 import { createHttpTerminator, HttpTerminator } from 'http-terminator'
-import { connectNodeAdapter } from '@connectrpc/connect-node'
 import { dbLogger, loggerMiddleware } from './logger'
 import AppContext, { AppContextOptions } from './context'
 import { ServerConfig } from './config'
 import routes from './routes'
 import { createMuteOpChannel } from './db/schema/mute_op'
 import { createNotifOpChannel } from './db/schema/notif_op'
-import {
-  isRevenueCatWebhookUrl,
-  revenueCatWebhookHandler,
-} from './subscriptions'
+import * as health from './api/health'
+import * as revenueCat from './api/revenueCat'
+import { DAY, SECOND } from '@atproto/common'
+import { expressConnectMiddleware } from '@connectrpc/connect-express'
+import { createPurchaseOpChannel } from './db/schema/purchase_op'
 
 export * from './config'
 export * from './client'
@@ -21,20 +24,20 @@ export { httpLogger } from './logger'
 
 export class BsyncService {
   public ctx: AppContext
-  public server: http.Server
+  public app: express.Application
+  public server?: http.Server
   private ac: AbortController
-  private terminator: HttpTerminator
+  private terminator?: HttpTerminator
   private dbStatsInterval?: NodeJS.Timeout
 
   constructor(opts: {
     ctx: AppContext
-    server: http.Server
+    app: express.Application
     ac: AbortController
   }) {
     this.ctx = opts.ctx
-    this.server = opts.server
+    this.app = opts.app
     this.ac = opts.ac
-    this.terminator = createHttpTerminator({ server: this.server })
   }
 
   static async create(
@@ -43,23 +46,25 @@ export class BsyncService {
   ): Promise<BsyncService> {
     const ac = new AbortController()
     const ctx = await AppContext.fromConfig(cfg, ac.signal, overrides)
-    const handler = connectNodeAdapter({
-      routes: routes(ctx),
-      shutdownSignal: ac.signal,
-    })
-    const server = http.createServer((req, res) => {
-      loggerMiddleware(req, res)
-      if (isHealth(req.url)) {
-        res.statusCode = 200
-        res.setHeader('content-type', 'application/json')
-        return res.end(JSON.stringify({ version: cfg.service.version }))
-      }
-      if (isRevenueCatWebhookUrl(req.url)) {
-        return revenueCatWebhookHandler(ctx, req, res)
-      }
-      handler(req, res)
-    })
-    return new BsyncService({ ctx, server, ac })
+
+    const app = express()
+    app.use(cors({ maxAge: DAY / SECOND }))
+    app.use(loggerMiddleware)
+    app.use(compression())
+
+    app.use(
+      expressConnectMiddleware({
+        routes: routes(ctx),
+        shutdownSignal: ac.signal,
+      }),
+    )
+
+    app.use(health.createRouter(ctx))
+    if (ctx.revenueCatClient) {
+      app.use('/webhooks/revenuecat', revenueCat.createRouter(ctx))
+    }
+
+    return new BsyncService({ ctx, app, ac })
   }
 
   async start(): Promise<http.Server> {
@@ -77,15 +82,18 @@ export class BsyncService {
       )
     }, 10000)
     await this.setupAppEvents()
-    this.server.listen(this.ctx.cfg.service.port)
-    this.server.keepAliveTimeout = 90000
+
+    const server = this.app.listen(this.ctx.cfg.service.port)
+    server.keepAliveTimeout = 90000
+    this.server = server
+    this.terminator = createHttpTerminator({ server: this.server })
     await events.once(this.server, 'listening')
     return this.server
   }
 
   async destroy(): Promise<void> {
     this.ac.abort()
-    await this.terminator.terminate()
+    await this.terminator?.terminate()
     await this.ctx.db.close()
     clearInterval(this.dbStatsInterval)
     this.dbStatsInterval = undefined
@@ -106,14 +114,11 @@ export class BsyncService {
       if (notif.channel === createNotifOpChannel) {
         this.ctx.events.emit(createNotifOpChannel)
       }
+      if (notif.channel === createPurchaseOpChannel) {
+        this.ctx.events.emit(createPurchaseOpChannel)
+      }
     })
   }
 }
 
 export default BsyncService
-
-const isHealth = (urlStr: string | undefined) => {
-  if (!urlStr) return false
-  const url = new URL(urlStr, 'http://host')
-  return url.pathname === '/_health'
-}
