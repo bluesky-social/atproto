@@ -1,10 +1,14 @@
 import { buildProxiedContentEncoding } from '@atproto-labs/xrpc-utils'
-import { createDecoders, VerifyCidTransform } from '@atproto/common'
+import {
+  createDecoders,
+  VerifyCidError,
+  VerifyCidTransform,
+} from '@atproto/common'
 import { AtprotoDid, isAtprotoDid } from '@atproto/did'
 import createError, { isHttpError } from 'http-errors'
 import { CID } from 'multiformats/cid'
 import { Duplex, Transform, Writable } from 'node:stream'
-import { pipeline } from 'node:stream/promises'
+import { finished, pipeline } from 'node:stream/promises'
 import { Dispatcher } from 'undici'
 
 import { ServerConfig } from '../config'
@@ -66,21 +70,30 @@ export function createMiddleware(ctx: AppContext): Middleware {
         const encoding = upstream.headers['content-encoding']
         const verifier = createCidVerifier(cid, encoding)
 
-        // Pipe the readable side of the verifier to the client response
-        // stream. This will ensure proper flow control and backpressure.
-        void pipeline([verifier, res]).catch((err) => {
+        const onError = (err: unknown) => {
           log.warn(
             { err, did, cid: cid.toString(), pds: url.origin },
             'blob resolution failed during transmission',
           )
-        })
+        }
 
-        proxyResponseHeaders(upstream, res)
+        if (req.method === 'HEAD') {
+          void finished(verifier.resume()).then(() => {
+            proxyResponseHeaders(upstream, res)
+            res.end()
+          }, onError)
+        } else {
+          void pipeline([verifier, res]).catch(onError)
+          proxyResponseHeaders(upstream, res)
+        }
+
         return verifier
       })
     } catch (err) {
       if (res.headersSent) {
         res.destroy()
+      } else if (err instanceof VerifyCidError) {
+        next(createError(404, 'Blob not found', err))
       } else if (isHttpError(err)) {
         next(err)
       } else {
