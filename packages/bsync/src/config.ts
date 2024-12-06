@@ -93,10 +93,10 @@ export const readEnv = (): ServerEnvironment => {
     // secrets
     apiKeys: envList('BSYNC_API_KEYS'),
     // revenue cat
-    revenueCatV1ApiKey: envStr('BSKY_REVENUE_CAT_V1_API_KEY'),
-    revenueCatV1ApiUrl: envStr('BSKY_REVENUE_CAT_V1_API_URL'),
+    revenueCatV1ApiKey: envStr('BSYNC_REVENUE_CAT_V1_API_KEY'),
+    revenueCatV1ApiUrl: envStr('BSYNC_REVENUE_CAT_V1_API_URL'),
     revenueCatWebhookAuthorization: envStr(
-      'BSKY_REVENUE_CAT_WEBHOOK_AUTHORIZATION',
+      'BSYNC_REVENUE_CAT_WEBHOOK_AUTHORIZATION',
     ),
   }
 }
