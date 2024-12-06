@@ -11,7 +11,7 @@ import type {
   PartialMessage,
   PlainMessage,
 } from '@bufbuild/protobuf'
-import { Message, proto3 } from '@bufbuild/protobuf'
+import { Message, proto3, Timestamp } from '@bufbuild/protobuf'
 
 /**
  * @generated from message bsync.MuteOperation
@@ -686,6 +686,455 @@ export class ScanNotifOperationsResponse extends Message<ScanNotifOperationsResp
       | undefined,
   ): boolean {
     return proto3.util.equals(ScanNotifOperationsResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsync.AddPurchaseOperationRequest
+ */
+export class AddPurchaseOperationRequest extends Message<AddPurchaseOperationRequest> {
+  /**
+   * @generated from field: string actor_did = 1;
+   */
+  actorDid = ''
+
+  constructor(data?: PartialMessage<AddPurchaseOperationRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsync.AddPurchaseOperationRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'actor_did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): AddPurchaseOperationRequest {
+    return new AddPurchaseOperationRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): AddPurchaseOperationRequest {
+    return new AddPurchaseOperationRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): AddPurchaseOperationRequest {
+    return new AddPurchaseOperationRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | AddPurchaseOperationRequest
+      | PlainMessage<AddPurchaseOperationRequest>
+      | undefined,
+    b:
+      | AddPurchaseOperationRequest
+      | PlainMessage<AddPurchaseOperationRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(AddPurchaseOperationRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsync.AddPurchaseOperationResponse
+ */
+export class AddPurchaseOperationResponse extends Message<AddPurchaseOperationResponse> {
+  constructor(data?: PartialMessage<AddPurchaseOperationResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsync.AddPurchaseOperationResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): AddPurchaseOperationResponse {
+    return new AddPurchaseOperationResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): AddPurchaseOperationResponse {
+    return new AddPurchaseOperationResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): AddPurchaseOperationResponse {
+    return new AddPurchaseOperationResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | AddPurchaseOperationResponse
+      | PlainMessage<AddPurchaseOperationResponse>
+      | undefined,
+    b:
+      | AddPurchaseOperationResponse
+      | PlainMessage<AddPurchaseOperationResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(AddPurchaseOperationResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsync.Subscription
+ */
+export class Subscription extends Message<Subscription> {
+  /**
+   * @generated from field: string status = 1;
+   */
+  status = ''
+
+  /**
+   * @generated from field: string renewalStatus = 2;
+   */
+  renewalStatus = ''
+
+  /**
+   * @generated from field: string group = 3;
+   */
+  group = ''
+
+  /**
+   * @generated from field: string platform = 4;
+   */
+  platform = ''
+
+  /**
+   * @generated from field: string offering = 5;
+   */
+  offering = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp periodEndsAt = 6;
+   */
+  periodEndsAt?: Timestamp
+
+  /**
+   * @generated from field: google.protobuf.Timestamp periodStartsAt = 7;
+   */
+  periodStartsAt?: Timestamp
+
+  /**
+   * @generated from field: google.protobuf.Timestamp purchasedAt = 8;
+   */
+  purchasedAt?: Timestamp
+
+  constructor(data?: PartialMessage<Subscription>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsync.Subscription'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'status', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    {
+      no: 2,
+      name: 'renewalStatus',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+    },
+    { no: 3, name: 'group', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 4, name: 'platform', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: 'offering', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 6, name: 'periodEndsAt', kind: 'message', T: Timestamp },
+    { no: 7, name: 'periodStartsAt', kind: 'message', T: Timestamp },
+    { no: 8, name: 'purchasedAt', kind: 'message', T: Timestamp },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): Subscription {
+    return new Subscription().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): Subscription {
+    return new Subscription().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): Subscription {
+    return new Subscription().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a: Subscription | PlainMessage<Subscription> | undefined,
+    b: Subscription | PlainMessage<Subscription> | undefined,
+  ): boolean {
+    return proto3.util.equals(Subscription, a, b)
+  }
+}
+
+/**
+ * @generated from message bsync.GetActiveSubscriptionsRequest
+ */
+export class GetActiveSubscriptionsRequest extends Message<GetActiveSubscriptionsRequest> {
+  /**
+   * @generated from field: string actor_did = 1;
+   */
+  actorDid = ''
+
+  constructor(data?: PartialMessage<GetActiveSubscriptionsRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsync.GetActiveSubscriptionsRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'actor_did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetActiveSubscriptionsRequest {
+    return new GetActiveSubscriptionsRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetActiveSubscriptionsRequest {
+    return new GetActiveSubscriptionsRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetActiveSubscriptionsRequest {
+    return new GetActiveSubscriptionsRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | GetActiveSubscriptionsRequest
+      | PlainMessage<GetActiveSubscriptionsRequest>
+      | undefined,
+    b:
+      | GetActiveSubscriptionsRequest
+      | PlainMessage<GetActiveSubscriptionsRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetActiveSubscriptionsRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsync.GetActiveSubscriptionsResponse
+ */
+export class GetActiveSubscriptionsResponse extends Message<GetActiveSubscriptionsResponse> {
+  /**
+   * @generated from field: repeated bsync.Subscription subscriptions = 1;
+   */
+  subscriptions: Subscription[] = []
+
+  constructor(data?: PartialMessage<GetActiveSubscriptionsResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsync.GetActiveSubscriptionsResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    {
+      no: 1,
+      name: 'subscriptions',
+      kind: 'message',
+      T: Subscription,
+      repeated: true,
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetActiveSubscriptionsResponse {
+    return new GetActiveSubscriptionsResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetActiveSubscriptionsResponse {
+    return new GetActiveSubscriptionsResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetActiveSubscriptionsResponse {
+    return new GetActiveSubscriptionsResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | GetActiveSubscriptionsResponse
+      | PlainMessage<GetActiveSubscriptionsResponse>
+      | undefined,
+    b:
+      | GetActiveSubscriptionsResponse
+      | PlainMessage<GetActiveSubscriptionsResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetActiveSubscriptionsResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsync.GetSubscriptionGroupRequest
+ */
+export class GetSubscriptionGroupRequest extends Message<GetSubscriptionGroupRequest> {
+  /**
+   * @generated from field: string group = 1;
+   */
+  group = ''
+
+  /**
+   * @generated from field: string platform = 2;
+   */
+  platform = ''
+
+  constructor(data?: PartialMessage<GetSubscriptionGroupRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsync.GetSubscriptionGroupRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'group', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'platform', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetSubscriptionGroupRequest {
+    return new GetSubscriptionGroupRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetSubscriptionGroupRequest {
+    return new GetSubscriptionGroupRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetSubscriptionGroupRequest {
+    return new GetSubscriptionGroupRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | GetSubscriptionGroupRequest
+      | PlainMessage<GetSubscriptionGroupRequest>
+      | undefined,
+    b:
+      | GetSubscriptionGroupRequest
+      | PlainMessage<GetSubscriptionGroupRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetSubscriptionGroupRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsync.GetSubscriptionGroupResponse
+ */
+export class GetSubscriptionGroupResponse extends Message<GetSubscriptionGroupResponse> {
+  /**
+   * @generated from field: repeated string products = 1;
+   */
+  products: string[] = []
+
+  constructor(data?: PartialMessage<GetSubscriptionGroupResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsync.GetSubscriptionGroupResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    {
+      no: 1,
+      name: 'products',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+      repeated: true,
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetSubscriptionGroupResponse {
+    return new GetSubscriptionGroupResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetSubscriptionGroupResponse {
+    return new GetSubscriptionGroupResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetSubscriptionGroupResponse {
+    return new GetSubscriptionGroupResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | GetSubscriptionGroupResponse
+      | PlainMessage<GetSubscriptionGroupResponse>
+      | undefined,
+    b:
+      | GetSubscriptionGroupResponse
+      | PlainMessage<GetSubscriptionGroupResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetSubscriptionGroupResponse, a, b)
   }
 }
 
