@@ -14,7 +14,7 @@ import {
 } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
 import { Subscription } from '@atproto/xrpc-server'
-import { ClientOptions } from 'ws'
+import type { ClientOptions } from 'ws'
 import {
   type Account,
   type Commit,
