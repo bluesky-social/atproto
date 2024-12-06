@@ -12,7 +12,7 @@ import {
 import { AtprotoDid, isAtprotoDid } from '@atproto/did'
 import createError, { isHttpError } from 'http-errors'
 import { CID } from 'multiformats/cid'
-import { Duplex, Transform, Writable } from 'node:stream'
+import { Duplex, PassThrough, Transform, Writable } from 'node:stream'
 import { finished, pipeline } from 'node:stream/promises'
 import { Dispatcher } from 'undici'
 
@@ -59,27 +59,42 @@ export function createMiddleware(ctx: AppContext): Middleware {
         const encoding = upstream.headers['content-encoding']
         const verifier = createCidVerifier(cid, encoding)
 
-        const onError = (err: unknown) => {
-          log.warn(
-            { err, did, cid: cid.toString(), pds: url.origin },
-            'blob resolution failed during transmission',
-          )
-        }
+        // The way I/O work, it is likely that, in case of small payloads, the
+        // full upstream response is already buffered at this point. In order to
+        // return a 404 instead of a broken response stream, we allow the event
+        // loop to to process any pending I/O events before we start piping the
+        // bytes to the response. For larger payloads, the response will look
+        // like a 200 with a broken chunked response stream. The only way around
+        // that would be to buffer the entire response before piping it to the
+        // response, which will hurt latency (need the full payload) and memory
+        // usage (either RAM or DISK). Since this is more of an edge case, we
+        // allow the broken response stream to be sent.
+        setTimeout(() => {
+          const onError = (err: unknown) => {
+            log.warn(
+              { err, did, cid: cid.toString(), pds: url.origin },
+              'blob resolution failed during transmission',
+            )
+          }
 
-        if (req.method === 'HEAD') {
-          // Abort the verification if the client closes the connection
-          res.once('close', () => verifier.destroy())
-          // Use the verifier result to end the response
-          void finished(verifier.resume()).then(() => {
-            // Verifier succeeded, write the head
-            proxyResponseHeaders(upstream, res)
-            res.end()
-          }, onError)
-        } else {
+          // The promise returned by streamBlob() will be rejected as soon as
+          // the verifier errors.
+          const { errored } = verifier
+          if (errored) return onError(errored)
+
+          proxyResponseHeaders(upstream, res)
+
+          // Force chunked encoding. This is required because the verifier will
+          // trigger an error *after* the last chunk has been passed through.
+          // Because the number of bytes sent will match the content-length, the
+          // HTTP response will be considered "complete" by the HTTP server. At
+          // this point, only trailers headers could indicate that an error
+          // occurred, but that is not the behavior we expect.
+          res.removeHeader('content-length')
+
           // Pipe the verifier output into the HTTP response
           void pipeline([verifier, res]).catch(onError)
-          proxyResponseHeaders(upstream, res)
-        }
+        }, 10) // 0 works too. Allow for additional data to come in for 10ms.
 
         // Write the upstream response into the verifier.
         return verifier
@@ -88,7 +103,7 @@ export function createMiddleware(ctx: AppContext): Middleware {
       if (res.headersSent || res.destroyed) {
         res.destroy()
       } else if (err instanceof VerifyCidError) {
-        next(createError(404, 'Blob not found', err))
+        next(createError(404, err.message))
       } else if (isHttpError(err)) {
         next(err)
       } else {
@@ -159,12 +174,13 @@ export async function streamBlob(
             ? createError(404, 'Blob not found') // 4xx => 404
             : createError(502, 'Upstream Error') // 1xx, 3xx, 5xx => 502
 
-        // Throwing here will kill the underlying stream. This is fine if the
+        // Throwing here will destroy the underlying stream. This is fine if the
         // payload is large (we'd rather pay the overhead of establishing a new
         // connection than consume all that bandwidth), or if the underlying
-        // stream is using HTTP/2 (which we can't know here, or can we?). In
-        // an attempt to keep the connection alive, we will drain the first
-        // MAX_SIZE bytes of the response before causing an error.
+        // stream is using HTTP/2 (which we can't know here, can we?). In an
+        // attempt to keep HTTP/1.1 connections alive, we will drain the first
+        // MAX_SIZE bytes of the response before causing an error that will
+        // destroy the stream.
 
         const MAX_SIZE = 256 * 1024 // 256 KB
 
@@ -308,46 +324,43 @@ function createCidVerifier(cid: CID, encoding?: string | string[]): Duplex {
   if (!decoders.length) return verifier
 
   const pipelineController = new AbortController()
+  const pipelineStreams: Duplex[] = [...decoders, verifier]
+  const pipelineInput = pipelineStreams[0]!
 
   // Create a promise that will resolve if, and only if, the decoding and
   // verification succeed.
-  const pipelinePromise = pipeline([...decoders, verifier], {
+  const pipelinePromise: Promise<null | Error> = pipeline(pipelineStreams, {
     signal: pipelineController.signal,
-  }).catch((err) => {
-    const error = asError(err)
+  }).then(
+    () => null,
+    (err) => {
+      const error = asError(err)
 
-    // the data being processed by the pipeline is invalid (e.g. invalid
-    // compressed content, non-matching the CID, ...). If that occurs, we can
-    // destroy the passthrough (this allows not to wait for the "flush" event
-    // to propagate the error).
-    passthrough.destroy(error)
+      // the data being processed by the pipeline is invalid (e.g. invalid
+      // compressed content, non-matching the CID, ...). If that occurs, we can
+      // destroy the passthrough (this allows not to wait for the "flush" event
+      // to propagate the error).
+      passthrough.destroy(error)
 
-    throw error
-  })
-
-  // Avoid unhandled promise rejection (we will handle them later)
-  pipelinePromise.catch((_err) => {})
+      return error
+    },
+  )
 
   // We don't care about the un-compressed data, we only use the verifier to
   // detect any error through the pipelinePromise. We still need to pass the
   // verifier into flowing mode to ensure that the pipelinePromise resolves.
   verifier.resume()
 
-  const pipelineInput = decoders[0]
-
   const passthrough = new Transform({
-    transform(chunk, _encoding, callback) {
-      pipelineInput.write(chunk)
+    transform(chunk, encoding, callback) {
+      pipelineInput.write(chunk, encoding)
       callback(null, chunk)
     },
     flush(callback) {
       // End the input stream, which will resolve the pipeline promise
       pipelineInput.end()
       // End the pass-through stream according to the result of the pipeline
-      pipelinePromise.then(
-        () => callback(),
-        (err: unknown) => callback(asError(err)),
-      )
+      pipelinePromise.then(callback)
     },
     destroy(err, callback) {
       pipelineController.abort() // Causes pipeline() to destroy all streams
@@ -359,5 +372,7 @@ function createCidVerifier(cid: CID, encoding?: string | string[]): Duplex {
 }
 
 function asError(err: unknown): Error {
-  return err instanceof Error ? err : new Error('Processing failed')
+  return err instanceof Error
+    ? err
+    : new Error('Processing failed', { cause: err })
 }

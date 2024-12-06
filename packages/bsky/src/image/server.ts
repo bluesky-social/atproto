@@ -116,24 +116,15 @@ export function createMiddleware(
           res.setHeader('content-type', type)
         })
 
-        const onError = (err: unknown) => {
+        const streams = [...transforms, processor, res]
+        void pipeline(streams).catch((err: unknown) => {
           log.warn(
             { err, did, cid: cid.toString(), pds: url.origin },
             'blob resolution failed during transmission',
           )
-        }
+        })
 
-        if (req.method === 'HEAD') {
-          // Abort the processing if the client closes the connection
-          res.once('close', () => processor.destroy())
-          void pipeline([...transforms, processor.resume()]).then(() => {
-            res.end()
-          }, onError)
-        } else {
-          void pipeline([...transforms, processor, res]).catch(onError)
-        }
-
-        return transforms[0]!
+        return streams[0]!
       })
     } catch (err) {
       if (res.headersSent || res.destroyed) {
