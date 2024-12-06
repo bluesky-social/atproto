@@ -138,6 +138,8 @@ import {
   GetPostReplyCountsResponse,
   GetProfileRecordsRequest,
   GetProfileRecordsResponse,
+  GetPurchaseEntitlementsRequest,
+  GetPurchaseEntitlementsResponse,
   GetQuotesBySubjectSortedRequest,
   GetQuotesBySubjectSortedResponse,
   GetRecordTakedownRequest,
@@ -961,6 +963,17 @@ export const Service = {
       name: 'GetFollowsFollowing',
       I: GetFollowsFollowingRequest,
       O: GetFollowsFollowingResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * Purchase
+     *
+     * @generated from rpc bsky.Service.GetPurchaseEntitlements
+     */
+    getPurchaseEntitlements: {
+      name: 'GetPurchaseEntitlements',
+      I: GetPurchaseEntitlementsRequest,
+      O: GetPurchaseEntitlementsResponse,
       kind: MethodKind.Unary,
     },
     /**
