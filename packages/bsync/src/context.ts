@@ -4,26 +4,26 @@ import Database from './db'
 import { createMuteOpChannel } from './db/schema/mute_op'
 import { createNotifOpChannel } from './db/schema/notif_op'
 import { EventEmitter } from 'stream'
-import { RevenueCatClient } from './purchases'
 import { createPurchaseOpChannel } from './db/schema/purchase_op'
+import { PurchasesClient } from './purchases'
 
 export type AppContextOptions = {
   db: Database
-  revenueCatClient: RevenueCatClient | undefined
+  purchasesClient: PurchasesClient | undefined
   cfg: ServerConfig
   shutdown: AbortSignal
 }
 
 export class AppContext {
   db: Database
-  revenueCatClient: RevenueCatClient | undefined
+  purchasesClient: PurchasesClient | undefined
   cfg: ServerConfig
   shutdown: AbortSignal
   events: TypedEventEmitter<AppEvents>
 
   constructor(opts: AppContextOptions) {
     this.db = opts.db
-    this.revenueCatClient = opts.revenueCatClient
+    this.purchasesClient = opts.purchasesClient
     this.cfg = opts.cfg
     this.shutdown = opts.shutdown
     this.events = new EventEmitter() as TypedEventEmitter<AppEvents>
@@ -42,16 +42,27 @@ export class AppContext {
       poolIdleTimeoutMs: cfg.db.poolIdleTimeoutMs,
     })
 
-    let revenueCatClient: RevenueCatClient | undefined
-    if (cfg.revenueCat) {
-      revenueCatClient = new RevenueCatClient({
-        v1ApiKey: cfg.revenueCat.v1ApiKey,
-        v1ApiUrl: cfg.revenueCat.v1ApiUrl,
-        webhookAuthorization: cfg.revenueCat.webhookAuthorization,
+    let purchasesClient: PurchasesClient | undefined
+    if (cfg.purchases) {
+      purchasesClient = new PurchasesClient({
+        revenueCatV1ApiKey: cfg.purchases.revenueCatV1ApiKey,
+        revenueCatV1ApiUrl: cfg.purchases.revenueCatV1ApiUrl,
+        revenueCatWebhookAuthorization:
+          cfg.purchases.revenueCatWebhookAuthorization,
+        stripePriceIdMonthly: cfg.purchases.stripePriceIdMonthly,
+        stripePriceIdAnnual: cfg.purchases.stripePriceIdAnnual,
+        stripeProductIdMonthly: cfg.purchases.stripeProductIdMonthly,
+        stripeProductIdAnnual: cfg.purchases.stripeProductIdAnnual,
       })
     }
 
-    return new AppContext({ db, revenueCatClient, cfg, shutdown, ...overrides })
+    return new AppContext({
+      db,
+      purchasesClient,
+      cfg,
+      shutdown,
+      ...overrides,
+    })
   }
 }
 

@@ -15,6 +15,7 @@ import mutes from './mutes'
 import notifs from './notifs'
 import posts from './posts'
 import profile from './profile'
+import purchases from './purchases'
 import quotes from './quotes'
 import records from './records'
 import relationships from './relationships'
@@ -43,6 +44,7 @@ export default (db: Database, idResolver: IdResolver) =>
       ...notifs(db),
       ...posts(db),
       ...profile(db),
+      ...purchases(db),
       ...quotes(db),
       ...records(db),
       ...relationships(db),

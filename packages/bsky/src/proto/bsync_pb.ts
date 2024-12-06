@@ -1014,6 +1014,61 @@ export class GetSubscriptionsResponse extends Message<GetSubscriptionsResponse> 
 }
 
 /**
+ * @generated from message bsync.SubscriptionOffering
+ */
+export class SubscriptionOffering extends Message<SubscriptionOffering> {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id = ''
+
+  /**
+   * @generated from field: string product = 2;
+   */
+  product = ''
+
+  constructor(data?: PartialMessage<SubscriptionOffering>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsync.SubscriptionOffering'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'id', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'product', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): SubscriptionOffering {
+    return new SubscriptionOffering().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): SubscriptionOffering {
+    return new SubscriptionOffering().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): SubscriptionOffering {
+    return new SubscriptionOffering().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a: SubscriptionOffering | PlainMessage<SubscriptionOffering> | undefined,
+    b: SubscriptionOffering | PlainMessage<SubscriptionOffering> | undefined,
+  ): boolean {
+    return proto3.util.equals(SubscriptionOffering, a, b)
+  }
+}
+
+/**
  * @generated from message bsync.GetSubscriptionGroupRequest
  */
 export class GetSubscriptionGroupRequest extends Message<GetSubscriptionGroupRequest> {
@@ -1079,9 +1134,9 @@ export class GetSubscriptionGroupRequest extends Message<GetSubscriptionGroupReq
  */
 export class GetSubscriptionGroupResponse extends Message<GetSubscriptionGroupResponse> {
   /**
-   * @generated from field: repeated string products = 1;
+   * @generated from field: repeated bsync.SubscriptionOffering offerings = 1;
    */
-  products: string[] = []
+  offerings: SubscriptionOffering[] = []
 
   constructor(data?: PartialMessage<GetSubscriptionGroupResponse>) {
     super()
@@ -1093,9 +1148,9 @@ export class GetSubscriptionGroupResponse extends Message<GetSubscriptionGroupRe
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     {
       no: 1,
-      name: 'products',
-      kind: 'scalar',
-      T: 9 /* ScalarType.STRING */,
+      name: 'offerings',
+      kind: 'message',
+      T: SubscriptionOffering,
       repeated: true,
     },
   ])
