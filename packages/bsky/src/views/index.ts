@@ -106,9 +106,10 @@ export class Views {
   }
 
   actorIsTakendown(did: string, state: HydrationState): boolean {
-    if (state.actors?.get(did)?.takedownRef) return true
-    if (state.actors?.get(did)?.upstreamStatus === 'takendown') return true
-    if (state.actors?.get(did)?.upstreamStatus === 'suspended') return true
+    const actor = state.actors?.get(did)
+    if (actor?.takedownRef) return true
+    if (actor?.upstreamStatus === 'takendown') return true
+    if (actor?.upstreamStatus === 'suspended') return true
     if (state.labels?.get(did)?.isTakendown) return true
     return false
   }
@@ -148,7 +149,13 @@ export class Views {
 
   recordActive(uri: string, state: HydrationState) {
     const did = uriToDid(uri)
-    return this.actorIsTakendown(did, state) ? undefined : uri
+    const actor = state.actors?.get(did)
+    if (!actor || this.actorIsTakendown(did, state)) {
+      // actor may not be present when takedowns are eagerly applied during hydration.
+      // so it's important to _try_ to hydrate the actor for records checked this way.
+      return
+    }
+    return uri
   }
 
   viewerSeesNeedsReview(did: string, state: HydrationState): boolean {

@@ -43,7 +43,7 @@ import {
   mergeNestedMaps,
   mergeManyMaps,
 } from './util'
-import { uriToDid as didFromUri } from '../util/uris'
+import { uriToDid as didFromUri, uriToDid } from '../util/uris'
 import {
   FeedGenAggs,
   FeedGens,
@@ -507,12 +507,14 @@ export class Hydrator {
       }
     }
     // replace embed/parent/root pairs with block state
-    const blocks = await this.graph.getBidirectionalBlocks(relationships)
+    const blocks = await this.hydrateBidirectionalBlocks(
+      pairsToMap(relationships),
+    )
     for (const [uri, { embed, parent, root }] of postBlocksPairs) {
       postBlocks.set(uri, {
-        embed: !!embed && blocks.isBlocked(...embed),
-        parent: !!parent && blocks.isBlocked(...parent),
-        root: !!root && blocks.isBlocked(...root),
+        embed: !!embed && !!isBlocked(blocks, embed),
+        parent: !!parent && !!isBlocked(blocks, parent),
+        root: !!root && !!isBlocked(blocks, root),
       })
     }
     return postBlocks
@@ -708,8 +710,8 @@ export class Hydrator {
         )
       },
     )
-    const blocks = await this.graph.getBidirectionalBlocks(
-      listCreatorMemberPairs,
+    const blocks = await this.hydrateBidirectionalBlocks(
+      pairsToMap(listCreatorMemberPairs),
     )
     // sample top list items per starter pack based on their follows
     const listMemberAggs = await this.actor.getProfileAggregates(listMemberDids)
@@ -724,7 +726,8 @@ export class Hydrator {
       // update aggregation with list items for top 12 most followed members
       agg.listItemSampleUris = [
         ...members.listitems.filter(
-          (li) => ctx.viewer === creator || !blocks?.isBlocked(creator, li.did),
+          (li) =>
+            ctx.viewer === creator || !isBlocked(blocks, [creator, li.did]),
         ),
       ]
         .sort((li1, li2) => {
@@ -766,11 +769,11 @@ export class Hydrator {
         pairs.push([authorDid, didFromUri(uri)])
       }
     }
-    const blocks = await this.graph.getBidirectionalBlocks(pairs)
+    const blocks = await this.hydrateBidirectionalBlocks(pairsToMap(pairs))
     const likeBlocks = new HydrationMap<LikeBlock>()
     for (const [uri, like] of likes) {
       if (like) {
-        likeBlocks.set(uri, blocks.isBlocked(authorDid, didFromUri(uri)))
+        likeBlocks.set(uri, isBlocked(blocks, [authorDid, didFromUri(uri)]))
       } else {
         likeBlocks.set(uri, null)
       }
@@ -850,13 +853,13 @@ export class Hydrator {
         pairs.push([didFromUri(uri), follow.record.subject])
       }
     }
-    const blocks = await this.graph.getBidirectionalBlocks(pairs)
+    const blocks = await this.hydrateBidirectionalBlocks(pairsToMap(pairs))
     const followBlocks = new HydrationMap<FollowBlock>()
     for (const [uri, follow] of follows) {
       if (follow) {
         followBlocks.set(
           uri,
-          blocks.isBlocked(didFromUri(uri), follow.record.subject),
+          isBlocked(blocks, [didFromUri(uri), follow.record.subject]),
         )
       } else {
         followBlocks.set(uri, null)
@@ -878,10 +881,32 @@ export class Hydrator {
     const result = new HydrationMap<HydrationMap<boolean>>()
     const blocks = await this.graph.getBidirectionalBlocks(pairs)
 
+    // lookup list authors to apply takedown status to blocklists
+    const listAuthorDids = new Set<string>()
+    for (const [source, targets] of didMap) {
+      for (const target of targets) {
+        const block = blocks.get(source, target)
+        if (block?.blockListUri) {
+          listAuthorDids.add(uriToDid(block.blockListUri))
+        }
+      }
+    }
+
+    const activeListAuthors = await this.actor.getActors(
+      [...listAuthorDids],
+      false,
+    )
+
     for (const [source, targets] of didMap) {
       const didBlocks = new HydrationMap<boolean>()
       for (const target of targets) {
-        didBlocks.set(target, blocks.isBlocked(source, target))
+        const block = blocks.get(source, target)
+        const isBlocked = !!(
+          block?.blockUri ||
+          (block?.blockListUri &&
+            activeListAuthors.get(uriToDid(block.blockListUri)))
+        )
+        didBlocks.set(target, isBlocked)
       }
       result.set(source, didBlocks)
     }
@@ -1148,6 +1173,20 @@ const getListUrisFromThreadgates = (gates: Threadgates) => {
     }
   }
   return uris
+}
+
+const isBlocked = (blocks: BidirectionalBlocks, [a, b]: RelationshipPair) => {
+  return blocks.get(a)?.get(b) ?? null
+}
+
+const pairsToMap = (pairs: RelationshipPair[]): Map<string, string[]> => {
+  const map = new Map<string, string[]>()
+  for (const [a, b] of pairs) {
+    const list = map.get(a) ?? []
+    list.push(b)
+    map.set(a, list)
+  }
+  return map
 }
 
 export const mergeStates = (
