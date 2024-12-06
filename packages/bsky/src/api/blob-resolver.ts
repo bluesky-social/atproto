@@ -144,12 +144,20 @@ export async function streamBlob(
     },
     (upstream) => {
       if (upstream.statusCode !== 200) {
-        log.warn({ url }, 'blob resolution failed upstream')
+        log.warn(
+          {
+            did,
+            cid: cid.toString(),
+            pds: url.origin,
+            status: upstream.statusCode,
+          },
+          `blob resolution failed upstream`,
+        )
 
         const error =
-          upstream.statusCode >= 500 || upstream.statusCode < 400
-            ? createError(502, 'Upstream Error')
-            : createError(404, 'Blob not found')
+          upstream.statusCode >= 400 && upstream.statusCode < 500
+            ? createError(404, 'Blob not found') // 4xx => 404
+            : createError(502, 'Upstream Error') // 1xx, 3xx, 5xx => 502
 
         // Throwing here will kill the underlying stream. This is fine if the
         // payload is large (we'd rather pay the overhead of establishing a new
