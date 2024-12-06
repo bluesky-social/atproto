@@ -1,4 +1,9 @@
-import { buildProxiedContentEncoding } from '@atproto-labs/xrpc-utils'
+import {
+  ACCEPT_ENCODING_COMPRESSED,
+  ACCEPT_ENCODING_UNCOMPRESSED,
+  buildProxiedContentEncoding,
+  formatAcceptHeader,
+} from '@atproto-labs/xrpc-utils'
 import {
   createDecoders,
   VerifyCidError,
@@ -62,16 +67,21 @@ export function createMiddleware(ctx: AppContext): Middleware {
         }
 
         if (req.method === 'HEAD') {
+          // Abort the verification if the client closes the connection
           res.once('close', () => verifier.destroy())
+          // Use the verifier result to end the response
           void finished(verifier.resume()).then(() => {
+            // Verifier succeeded, write the head
             proxyResponseHeaders(upstream, res)
             res.end()
           }, onError)
         } else {
+          // Pipe the verifier output into the HTTP response
           void pipeline([verifier, res]).catch(onError)
           proxyResponseHeaders(upstream, res)
         }
 
+        // Write the upstream response into the verifier.
         return verifier
       })
     } catch (err) {
@@ -91,7 +101,7 @@ export function createMiddleware(ctx: AppContext): Middleware {
 export type StreamBlobOptions = {
   cid: string
   did: string
-  acceptEncoding: string
+  acceptEncoding?: string
   signal?: AbortSignal
 }
 
@@ -114,9 +124,15 @@ export async function streamBlob(
 
   const headers = getBlobHeaders(ctx.cfg, url)
 
-  if (options.acceptEncoding) {
-    headers.set('accept-encoding', options.acceptEncoding)
-  }
+  headers.set(
+    'accept-encoding',
+    options.acceptEncoding ||
+      formatAcceptHeader(
+        ctx.cfg.proxyPreferCompressed
+          ? ACCEPT_ENCODING_COMPRESSED
+          : ACCEPT_ENCODING_UNCOMPRESSED,
+      ),
+  )
 
   return ctx.blobDispatcher.stream(
     {
@@ -127,11 +143,47 @@ export async function streamBlob(
       signal: options.signal,
     },
     (upstream) => {
-      if (upstream.statusCode >= 500) {
+      if (upstream.statusCode !== 200) {
         log.warn({ url }, 'blob resolution failed upstream')
-        throw createError(502, 'Upstream Error')
-      } else if (upstream.statusCode >= 400) {
-        throw createError(404, 'Blob not found')
+
+        const error =
+          upstream.statusCode >= 500 || upstream.statusCode < 400
+            ? createError(502, 'Upstream Error')
+            : createError(404, 'Blob not found')
+
+        // Throwing here will kill the underlying stream. This is fine if the
+        // payload is large (we'd rather pay the overhead of establishing a new
+        // connection than consume all that bandwidth), or if the underlying
+        // stream is using HTTP/2 (which we can't know here, or can we?). In
+        // an attempt to keep the connection alive, we will drain the first
+        // MAX_SIZE bytes of the response before causing an error.
+
+        const MAX_SIZE = 256 * 1024 // 256 KB
+
+        // Abort the response right away if the content-length is too large
+        const length = upstream.headers['content-length']
+        if (typeof length === 'string' && !(parseInt(length, 10) < MAX_SIZE)) {
+          throw error
+        }
+
+        // Create a writable that will drain the upstream response and cause
+        // an error when the response ends, causing the returned promise to
+        // reject.
+        return Duplex.from(async function (data: AsyncIterable<Uint8Array>) {
+          // Let's drain the first MAX_SIZE bytes of the response in an attempt
+          // to keep the connection alive.
+          let size = 0
+          for await (const chunk of data) {
+            size += Buffer.byteLength(chunk)
+            // Stop the processing (destroying the connection) if the response
+            // is too large.
+            if (size > MAX_SIZE) throw error
+          }
+          // At this point the upstream response has successfully "ended",
+          // meaning that throwing shouldn't destroy the underlying connection.
+          // Throwing should only cause the promise to reject.
+          throw error
+        })
       }
 
       return factory(upstream, { url, did, cid })
@@ -139,7 +191,7 @@ export async function streamBlob(
   )
 }
 
-export function parseBlobParams(params: { cid: string; did: string }) {
+function parseBlobParams(params: { cid: string; did: string }) {
   const { cid, did } = params
   if (!isAtprotoDid(did)) throw createError(400, 'Invalid did')
   const cidObj = parseCid(cid)
@@ -147,7 +199,7 @@ export function parseBlobParams(params: { cid: string; did: string }) {
   return { cid: cidObj, did }
 }
 
-export async function getBlobUrl(
+async function getBlobUrl(
   dataplane: DataPlaneClient,
   did: string,
   cid: CID,
@@ -161,7 +213,7 @@ export async function getBlobUrl(
   return url
 }
 
-export async function getBlobPds(
+async function getBlobPds(
   dataplane: DataPlaneClient,
   did: string,
   cid: CID,
@@ -195,7 +247,7 @@ export async function getBlobPds(
   return pds
 }
 
-export function getBlobHeaders(
+function getBlobHeaders(
   {
     blobRateLimitBypassKey: bypassKey,
     blobRateLimitBypassHostname: bypassHostname,
@@ -225,10 +277,7 @@ export function getBlobHeaders(
  * If you need the un-compressed data, you should use a decompress + verify
  * pipeline instead.
  */
-export function createCidVerifier(
-  cid: CID,
-  encoding?: string | string[],
-): Duplex {
+function createCidVerifier(cid: CID, encoding?: string | string[]): Duplex {
   // If the upstream content is compressed, we do not want to return a
   // de-compressed stream here. Indeed, the "compression" middleware will
   // compress the response before it is sent downstream, if it is not already

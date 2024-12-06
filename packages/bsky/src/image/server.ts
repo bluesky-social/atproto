@@ -1,9 +1,4 @@
 import {
-  ACCEPT_ENCODING_COMPRESSED,
-  ACCEPT_ENCODING_UNCOMPRESSED,
-  formatAcceptHeader,
-} from '@atproto-labs/xrpc-utils'
-import {
   cloneStream,
   createDecoders,
   isErrnoException,
@@ -88,19 +83,15 @@ export function createMiddleware(
         did: options.did,
         cid: options.cid,
         signal: responseSignal(res),
-        acceptEncoding: formatAcceptHeader(
-          ctx.cfg.proxyPreferCompressed
-            ? ACCEPT_ENCODING_COMPRESSED
-            : ACCEPT_ENCODING_UNCOMPRESSED,
-        ),
       }
 
       await streamBlob(ctx, streamOptions, (upstream, { did, cid, url }) => {
+        // Definitely not an image ? Let's fail right away.
         if (isImageMime(upstream.headers['content-type']) === false) {
           throw createError(400, 'Not an image')
         }
 
-        // Let's transform (decompress, check CID, upscale), process and respond
+        // Let's transform (decompress, verify CID, upscale), process and respond
 
         const transforms: Duplex[] = [
           ...createDecoders(upstream.headers['content-encoding']),
@@ -133,6 +124,7 @@ export function createMiddleware(
         }
 
         if (req.method === 'HEAD') {
+          // Abort the processing if the client closes the connection
           res.once('close', () => processor.destroy())
           void pipeline([...transforms, processor.resume()]).then(() => {
             res.end()
