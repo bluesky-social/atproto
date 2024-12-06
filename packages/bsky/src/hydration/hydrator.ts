@@ -276,10 +276,11 @@ export class Hydrator {
   //   - profile basic
   async hydrateLists(uris: string[], ctx: HydrateCtx): Promise<HydrationState> {
     const [listsState, profilesState] = await Promise.all([
-      await this.hydrateListsBasic(uris, ctx),
-      await this.hydrateProfilesBasic(uris.map(didFromUri), ctx),
+      this.hydrateListsBasic(uris, ctx, {
+        skipAuthors: true, // handled via author profile hydration
+      }),
+      this.hydrateProfilesBasic(uris.map(didFromUri), ctx),
     ])
-
     return mergeStates(listsState, profilesState)
   }
 
@@ -288,19 +289,26 @@ export class Hydrator {
   async hydrateListsBasic(
     uris: string[],
     ctx: HydrateCtx,
+    opts?: { skipAuthors: boolean },
   ): Promise<HydrationState> {
-    const [lists, listAggs, listViewers, labels] = await Promise.all([
+    const includeAuthorDids = opts?.skipAuthors ? [] : uris.map(uriToDid)
+    const [lists, listAggs, listViewers, labels, actors] = await Promise.all([
       this.graph.getLists(uris, ctx.includeTakedowns),
       this.graph.getListAggregates(uris.map((uri) => ({ uri }))),
       ctx.viewer ? this.graph.getListViewerStates(uris, ctx.viewer) : undefined,
-      this.label.getLabelsForSubjects(uris, ctx.labelers),
+      this.label.getLabelsForSubjects(
+        [...uris, ...includeAuthorDids],
+        ctx.labelers,
+      ),
+      this.actor.getActors(includeAuthorDids, ctx.includeTakedowns),
     ])
 
     if (!ctx.includeTakedowns) {
       actionTakedownLabels(uris, lists, labels)
+      actionTakedownLabels(includeAuthorDids, actors, labels)
     }
 
-    return { lists, listAggs, listViewers, labels, ctx }
+    return { lists, listAggs, listViewers, labels, actors, ctx }
   }
 
   // app.bsky.graph.defs#listItemView
