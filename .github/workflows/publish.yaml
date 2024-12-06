@@ -19,10 +19,10 @@ jobs:
       pull-requests: write
     steps:
       - uses: actions/checkout@v3
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v3
+      - run: corepack enable && corepack prepare --activate
+      - uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version-file: package.json
           cache: 'pnpm'
       - run: pnpm i --frozen-lockfile
       - run: pnpm build
