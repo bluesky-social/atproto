@@ -149,70 +149,53 @@ export async function streamBlob(
       ),
   )
 
-  return ctx.blobDispatcher.stream(
-    {
-      method: 'GET',
-      origin: url.origin,
-      path: url.pathname + url.search,
-      headers,
-      signal: options.signal,
-    },
-    (upstream) => {
-      if (upstream.statusCode !== 200) {
-        log.warn(
-          {
-            did,
-            cid: cid.toString(),
-            pds: url.origin,
-            status: upstream.statusCode,
-          },
-          `blob resolution failed upstream`,
-        )
+  let headersReceived = false
 
-        const error =
-          upstream.statusCode >= 400 && upstream.statusCode < 500
-            ? createError(404, 'Blob not found') // 4xx => 404
-            : createError(502, 'Upstream Error') // 1xx, 3xx, 5xx => 502
+  return ctx.blobDispatcher
+    .stream(
+      {
+        method: 'GET',
+        origin: url.origin,
+        path: url.pathname + url.search,
+        headers,
+        signal: options.signal,
+      },
+      (upstream) => {
+        headersReceived = true
 
-        // Throwing here will destroy the underlying stream. This is fine if the
-        // payload is large (we'd rather pay the overhead of establishing a new
-        // connection than consume all that bandwidth), or if the underlying
-        // stream is using HTTP/2 (which we can't know here, can we?). In an
-        // attempt to keep HTTP/1.1 connections alive, we will drain the first
-        // MAX_SIZE bytes of the response before causing an error that will
-        // destroy the stream.
+        if (upstream.statusCode !== 200) {
+          log.warn(
+            {
+              did,
+              cid: cid.toString(),
+              pds: url.origin,
+              status: upstream.statusCode,
+            },
+            `blob resolution failed upstream`,
+          )
 
-        const MAX_SIZE = 256 * 1024 // 256 KB
-
-        // Abort the response right away if the content-length is too large
-        const length = upstream.headers['content-length']
-        if (typeof length === 'string' && !(parseInt(length, 10) < MAX_SIZE)) {
-          throw error
+          throw upstream.statusCode >= 400 && upstream.statusCode < 500
+            ? createError(404, 'Blob not found', { cause: upstream }) // 4xx => 404
+            : createError(502, 'Upstream Error', { cause: upstream }) // !200 && !4xx => 502
         }
 
-        // Create a writable that will drain the upstream response and cause
-        // an error when the response ends, causing the returned promise to
-        // reject.
-        return Duplex.from(async function (data: AsyncIterable<Uint8Array>) {
-          // Let's drain the first MAX_SIZE bytes of the response in an attempt
-          // to keep the connection alive.
-          let size = 0
-          for await (const chunk of data) {
-            size += Buffer.byteLength(chunk)
-            // Stop the processing (destroying the connection) if the response
-            // is too large.
-            if (size > MAX_SIZE) throw error
-          }
-          // At this point the upstream response has successfully "ended",
-          // meaning that throwing shouldn't destroy the underlying connection.
-          // Throwing should only cause the promise to reject.
-          throw error
-        })
+        return factory(upstream, { url, did, cid })
+      },
+    )
+    .catch((err) => {
+      // Is this a connection error, or a stream error ?
+      if (!headersReceived) {
+        // connection error, dns error, headers timeout, ...
+        log.warn(
+          { err, did, cid: cid.toString(), pds: url.origin },
+          'blob resolution failed during connection',
+        )
+
+        throw createError(502, 'Upstream Error', { cause: err })
       }
 
-      return factory(upstream, { url, did, cid })
-    },
-  )
+      throw err
+    })
 }
 
 function parseBlobParams(params: { cid: string; did: string }) {
