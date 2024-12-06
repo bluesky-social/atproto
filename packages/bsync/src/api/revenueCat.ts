@@ -1,30 +1,36 @@
 import express, { RequestHandler } from 'express'
 import { AppContext } from '..'
-import { rcEventBodySchema, RevenueCatClient } from '../purchases'
+import { rcEventBodySchema, PurchasesClient } from '../purchases'
 import { addPurchaseOperation, RcEventBody } from '../purchases'
 import { isValidDid } from '../routes/util'
 import { httpLogger as log } from '..'
 
-type AppContextWithRevenueCatClient = AppContext & {
-  revenueCatClient: RevenueCatClient
+type AppContextWithPurchasesClient = AppContext & {
+  purchasesClient: PurchasesClient
 }
 
 const auth =
-  (ctx: AppContextWithRevenueCatClient): RequestHandler =>
-  (req: express.Request, res: express.Response, next: express.NextFunction) =>
-    ctx.revenueCatClient.isWebhookAuthorizationValid(
-      req.header('Authorization'),
-    )
-      ? next()
-      : res.status(403).send({
-          success: false,
-          error: 'Forbidden: invalid authentication for RevenueCat webhook',
-        })
+  (ctx: AppContextWithPurchasesClient): RequestHandler =>
+  (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    const validAuthorization =
+      ctx.purchasesClient.isRcWebhookAuthorizationValid(
+        req.header('Authorization'),
+      )
+
+    if (validAuthorization) {
+      return next()
+    }
+
+    return res.status(403).json({
+      success: false,
+      error: 'Forbidden: invalid authentication for RevenueCat webhook',
+    })
+  }
 
 const webhookHandler =
-  (ctx: AppContextWithRevenueCatClient): RequestHandler =>
+  (ctx: AppContextWithPurchasesClient): RequestHandler =>
   async (req, res) => {
-    const { revenueCatClient } = ctx
+    const { purchasesClient } = ctx
 
     let body: RcEventBody
     try {
@@ -32,7 +38,7 @@ const webhookHandler =
     } catch (error) {
       log.error({ error }, 'RevenueCat webhook body schema validation failed')
 
-      return res.status(400).send({
+      return res.status(400).json({
         success: false,
         error: 'Bad request: body schema validation failed',
       })
@@ -43,23 +49,22 @@ const webhookHandler =
     if (!isValidDid(actorDid)) {
       log.error({ actorDid }, 'RevenueCat webhook got invalid DID')
 
-      return res.status(400).send({
+      return res.status(400).json({
         success: false,
         error: 'Bad request: invalid DID in app_user_id',
       })
     }
 
     try {
-      const entitlements =
-        await revenueCatClient.getEntitlementIdentifiers(actorDid)
+      const entitlements = await purchasesClient.getEntitlements(actorDid)
 
       const id = await addPurchaseOperation(ctx.db, actorDid, entitlements)
 
-      res.send({ success: true, operationId: id })
+      return res.json({ success: true, operationId: id })
     } catch (error) {
       log.error({ error }, 'Error while processing RevenueCat webhook')
 
-      res.status(500).send({
+      return res.status(500).json({
         success: false,
         error:
           'Internal server error: an error happened while processing the request',
@@ -67,10 +72,10 @@ const webhookHandler =
     }
   }
 
-const assertAppContextWithRevenueCatClient: (
+const assertAppContextWithPurchasesClient: (
   ctx: AppContext,
-) => asserts ctx is AppContextWithRevenueCatClient = (ctx: AppContext) => {
-  if (!ctx.revenueCatClient) {
+) => asserts ctx is AppContextWithPurchasesClient = (ctx: AppContext) => {
+  if (!ctx.purchasesClient) {
     throw new Error(
       'RevenueCat webhook was tried to be set up without configuring a RevenueCat client.',
     )
@@ -78,7 +83,7 @@ const assertAppContextWithRevenueCatClient: (
 }
 
 export const createRouter = (ctx: AppContext): express.Router => {
-  assertAppContextWithRevenueCatClient(ctx)
+  assertAppContextWithPurchasesClient(ctx)
 
   const router = express.Router()
   router.use(auth(ctx))

@@ -94,13 +94,18 @@ message GetSubscriptionsResponse {
   repeated Subscription subscriptions = 2;
 }
 
+message SubscriptionOffering {
+  string id = 1;
+  string product = 2;
+}
+
 message GetSubscriptionGroupRequest {
   string group = 1;
   string platform = 2;
 }
 
 message GetSubscriptionGroupResponse {
-  repeated string products = 1;
+  repeated SubscriptionOffering offerings = 1;
 }
 
 // Ping

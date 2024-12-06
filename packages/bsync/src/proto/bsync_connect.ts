@@ -10,10 +10,10 @@ import {
   AddNotifOperationResponse,
   AddPurchaseOperationRequest,
   AddPurchaseOperationResponse,
-  GetActiveSubscriptionsRequest,
-  GetActiveSubscriptionsResponse,
   GetSubscriptionGroupRequest,
   GetSubscriptionGroupResponse,
+  GetSubscriptionsRequest,
+  GetSubscriptionsResponse,
   PingRequest,
   PingResponse,
   ScanMuteOperationsRequest,
@@ -79,12 +79,12 @@ export const Service = {
       kind: MethodKind.Unary,
     },
     /**
-     * @generated from rpc bsync.Service.GetActiveSubscriptions
+     * @generated from rpc bsync.Service.GetSubscriptions
      */
-    getActiveSubscriptions: {
-      name: 'GetActiveSubscriptions',
-      I: GetActiveSubscriptionsRequest,
-      O: GetActiveSubscriptionsResponse,
+    getSubscriptions: {
+      name: 'GetSubscriptions',
+      I: GetSubscriptionsRequest,
+      O: GetSubscriptionsResponse,
       kind: MethodKind.Unary,
     },
     /**
