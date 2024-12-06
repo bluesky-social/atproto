@@ -12,8 +12,8 @@ import {
 import { AtprotoDid, isAtprotoDid } from '@atproto/did'
 import createError, { isHttpError } from 'http-errors'
 import { CID } from 'multiformats/cid'
-import { Duplex, PassThrough, Transform, Writable } from 'node:stream'
-import { finished, pipeline } from 'node:stream/promises'
+import { Duplex, Transform, Writable } from 'node:stream'
+import { pipeline } from 'node:stream/promises'
 import { Dispatcher } from 'undici'
 
 import { ServerConfig } from '../config'
