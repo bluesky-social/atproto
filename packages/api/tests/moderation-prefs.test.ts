@@ -7,7 +7,7 @@ describe('agent', () => {
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
-      dbPostgresSchema: 'bsky_agent',
+      dbPostgresSchema: 'api_moderation_prefs',
     })
   })
 
@@ -79,7 +79,7 @@ describe('agent', () => {
       },
       threadViewPrefs: {
         prioritizeFollowedUsers: true,
-        sort: 'oldest',
+        sort: 'hotness',
       },
       bskyAppState: {
         activeProgressGuide: undefined,
@@ -128,7 +128,7 @@ describe('agent', () => {
         },
       },
       threadViewPrefs: {
-        sort: 'oldest',
+        sort: 'hotness',
         prioritizeFollowedUsers: true,
       },
       bskyAppState: {
@@ -163,7 +163,7 @@ describe('agent', () => {
         },
       },
       threadViewPrefs: {
-        sort: 'oldest',
+        sort: 'hotness',
         prioritizeFollowedUsers: true,
       },
       bskyAppState: {
@@ -220,7 +220,7 @@ describe('agent', () => {
         },
       },
       threadViewPrefs: {
-        sort: 'oldest',
+        sort: 'hotness',
         prioritizeFollowedUsers: true,
       },
       bskyAppState: {

@@ -6,6 +6,7 @@ export interface StarterPack {
   uri: string
   cid: string
   creator: string
+  name: string
   createdAt: string
   indexedAt: string
   sortAt: GeneratedAlways<string>
