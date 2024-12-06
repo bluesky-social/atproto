@@ -32,7 +32,7 @@ export const getEmailToken = () => {
 // (i.e from xxXxxxx-xxx or xxxxxxxxxx)
 export const normalizeEmailToken = (input: string): string => {
   let normalized = input.trim().toUpperCase() // trim & capitalize
-  normalized = normalized.replace('-', '') // remove the hyphen
+  normalized = normalized.replace(/[^A-Z0-9]/g, '') // remove everything that isn't a letter or number
   normalized = normalized.slice(0, 5) + '-' + normalized.slice(5, 10) // replace the hyphen
   return normalized
 }
