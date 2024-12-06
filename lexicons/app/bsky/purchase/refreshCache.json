@@ -1,0 +1,27 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.purchase.refreshCache",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Refresh the purchase cache for the requesting account or for another account if the role authorizes it. Requires auth.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["did"],
+          "properties": {
+            "did": { "type": "string", "format": "did" }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    }
+  }
+}

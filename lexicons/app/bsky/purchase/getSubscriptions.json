@@ -1,0 +1,41 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.purchase.getSubscriptions",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Enumerate subscriptions for the requesting account, and the email used in the purchase. Requires auth.",
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["subscriptions"],
+          "properties": {
+            "email": { "type": "string" },
+            "subscriptions": {
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "#subscription"
+              }
+            }
+          }
+        }
+      }
+    },
+    "subscription": {
+      "type": "object",
+      "required": [],
+      "properties": {
+        "status": { "type": "string" },
+        "renewalStatus": { "type": "string" },
+        "group": { "type": "string" },
+        "platform": { "type": "string" },
+        "offering": { "type": "string" },
+        "periodEndsAt": { "type": "string", "format": "datetime" },
+        "periodStartsAt": { "type": "string", "format": "datetime" },
+        "purchasedAt": { "type": "string", "format": "datetime" }
+      }
+    }
+  }
+}

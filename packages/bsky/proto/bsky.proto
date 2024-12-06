@@ -1091,6 +1091,19 @@ message GetFollowsFollowingResponse {
   repeated FollowsFollowing results = 1;
 }
 
+message PurchaseEntitlement {
+  repeated string entitlements = 1;
+  google.protobuf.Timestamp created_at = 2;
+}
+
+message GetPurchaseEntitlementsRequest {
+  repeated string dids = 1;
+}
+
+message GetPurchaseEntitlementsResponse {
+  repeated PurchaseEntitlement purchaseEntitlements = 1;
+}
+
 // Ping
 message PingRequest {}
 message PingResponse {}
@@ -1234,6 +1247,9 @@ service Service {
 
   // Graph
   rpc GetFollowsFollowing(GetFollowsFollowingRequest) returns (GetFollowsFollowingResponse);
+
+  // Purchase
+  rpc GetPurchaseEntitlements(GetPurchaseEntitlementsRequest) returns (GetPurchaseEntitlementsResponse);
 
   // Ping
   rpc Ping(PingRequest) returns (PingResponse);
