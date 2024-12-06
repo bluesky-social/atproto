@@ -25,7 +25,7 @@
     "@atproto/lexicon": "workspace:^",
     "@atproto/xrpc": "workspace:^",
     "cbor-x": "^1.5.1",
-    "express": "^4.17.2",
+    "express": "^4.21.2",
     "http-errors": "^2.0.0",
     "mime-types": "^2.1.35",
     "rate-limiter-flexible": "^2.4.1",
