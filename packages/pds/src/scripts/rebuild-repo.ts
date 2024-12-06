@@ -73,6 +73,7 @@ export const rebuildRepo = async (ctx: AppContext, args: string[]) => {
       since: null,
       prev: null,
       newBlocks,
+      relevantBlocks: newBlocks,
       removedCids: toDelete,
     }
   })

@@ -1,5 +1,13 @@
 # @atproto/oauth-client-browser
 
+## 0.3.3
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto-labs/did-resolver@0.1.6
+  - @atproto/oauth-client@0.3.3
+
 ## 0.3.2
 
 ### Patch Changes
