@@ -81,6 +81,11 @@ of doing this:
    })
    ```
 
+> [!TIP]
+>
+> HTTPS is required for the client_id URL. Only loopback addresses may use HTTP, as described in
+> [using in development](#using-in-development-localhost)
+
 If performances are important to you, it is recommended to burn the metadata
 into the script. Server side rendering techniques can also be used to inject the
 metadata into the script at runtime.
