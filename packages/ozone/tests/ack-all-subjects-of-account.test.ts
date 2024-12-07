@@ -19,7 +19,7 @@ import {
 import { isRepoRef } from '../src/lexicon/types/com/atproto/admin/defs'
 import { ComAtprotoRepoStrongRef } from '@atproto/api'
 
-describe('moderation', () => {
+describe('acknowledge all subjects of account', () => {
   let network: TestNetwork
   let sc: SeedClient
   let modClient: ModeratorClient
