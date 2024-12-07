@@ -1,4 +1,4 @@
-import axios from 'axios'
+import { request } from 'undici'
 import * as plc from '@did-plc/lib'
 import { IdResolver } from '@atproto/identity'
 import { Secp256k1Keypair } from '@atproto/crypto'
@@ -41,10 +41,15 @@ export const mockResolvers = (idResolver: IdResolver, pds: TestPds) => {
       return origResolveHandleDns.call(idResolver.handle, handle)
     }
 
-    const url = `${pds.url}/.well-known/atproto-did`
+    const url = new URL(`/.well-known/atproto-did`, pds.url)
     try {
-      const res = await axios.get(url, { headers: { host: handle } })
-      return res.data
+      const res = await request(url, { headers: { host: handle } })
+      if (res.statusCode !== 200) {
+        res.body.destroy()
+        return undefined
+      }
+
+      return res.body.text()
     } catch (err) {
       return undefined
     }

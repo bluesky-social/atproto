@@ -1,7 +1,7 @@
-import axios, { AxiosError } from 'axios'
-import BaseResolver from './base-resolver'
-import { DidCache } from '../types'
 import { PoorlyFormattedDidError, UnsupportedDidWebPathError } from '../errors'
+import { DidCache } from '../types'
+import BaseResolver from './base-resolver'
+import { timed } from './util'
 
 export const DOC_PATH = '/.well-known/did.json'
 
@@ -32,17 +32,17 @@ export class DidWebResolver extends BaseResolver {
       url.protocol = 'http'
     }
 
-    try {
-      const res = await axios.get(url.toString(), {
-        responseType: 'json',
-        timeout: this.timeout,
+    return timed(this.timeout, async (signal) => {
+      const res = await fetch(url, {
+        signal,
+        redirect: 'error',
+        headers: { accept: 'application/did+ld+json,application/json' },
       })
-      return res.data
-    } catch (err) {
-      if (err instanceof AxiosError && err.response) {
-        return null // Positively not found, versus due to e.g. network error
-      }
-      throw err
-    }
+
+      // Positively not found, versus due to e.g. network error
+      if (!res.ok) return null
+
+      return res.json()
+    })
   }
 }
