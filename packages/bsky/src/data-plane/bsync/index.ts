@@ -9,6 +9,7 @@ import { Database } from '../server/db'
 import { Service } from '../../proto/bsync_connect'
 import { MuteOperation_Type } from '../../proto/bsync_pb'
 import { ids } from '../../lexicon/lexicons'
+import { Timestamp } from '@bufbuild/protobuf'
 
 export class MockBsync {
   constructor(public server: http.Server) {}
@@ -136,6 +137,64 @@ const createRoutes = (db: Database) => (router: ConnectRouter) =>
 
     async scanNotifOperations() {
       throw new Error('not implemented')
+    },
+
+    async addPurchaseOperation(req) {
+      const { actorDid } = req
+
+      // Simulates that a call to the subscription service returns the 'core' entitlement.
+      const entitlements = ['core']
+
+      await db.db
+        .insertInto('purchase')
+        .values({
+          did: actorDid,
+          entitlements: JSON.stringify(entitlements),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        })
+        .onConflict((oc) =>
+          oc.column('did').doUpdateSet({
+            entitlements: JSON.stringify(entitlements),
+            updatedAt: new Date().toISOString(),
+          }),
+        )
+        .execute()
+    },
+
+    async getActiveSubscriptions() {
+      // Simulates that a call to the subscription service returns this subscription.
+      return {
+        subscriptions: [
+          {
+            status: 'active',
+            renewalStatus: 'will_renew',
+            group: 'core',
+            platform: 'web',
+            offering: 'coreMonthly',
+            periodEndsAt: Timestamp.fromDate(new Date('2025-01-03T18:31:27Z')),
+            periodStartsAt: Timestamp.fromDate(
+              new Date('2024-12-03T18:31:27Z'),
+            ),
+            purchasedAt: Timestamp.fromDate(new Date('2024-12-03T18:31:27Z')),
+          },
+        ],
+      }
+    },
+
+    async getSubscriptionGroup() {
+      return {
+        offerings: [
+          {
+            id: 'coreMonthly',
+            product: 'bluesky_plus_core_v1_monthly',
+          },
+          {
+            id: 'coreAnnual',
+            product: 'bluesky_plus_core_v1_annual',
+          },
+        ],
+      }
     },
 
     async ping() {

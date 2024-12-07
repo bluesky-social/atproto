@@ -1,18 +1,18 @@
 import express, { RequestHandler } from 'express'
 import { AppContext } from '..'
-import { rcEventBodySchema, RevenueCatClient } from '../purchases'
+import { rcEventBodySchema, PurchasesClient } from '../purchases'
 import { addPurchaseOperation, RcEventBody } from '../purchases'
 import { isValidDid } from '../routes/util'
 import { httpLogger as log } from '..'
 
-type AppContextWithRevenueCatClient = AppContext & {
-  revenueCatClient: RevenueCatClient
+type AppContextWithPurchasesClient = AppContext & {
+  purchasesClient: PurchasesClient
 }
 
 const auth =
-  (ctx: AppContextWithRevenueCatClient): RequestHandler =>
+  (ctx: AppContextWithPurchasesClient): RequestHandler =>
   (req: express.Request, res: express.Response, next: express.NextFunction) =>
-    ctx.revenueCatClient.isWebhookAuthorizationValid(
+    ctx.purchasesClient.isRcWebhookAuthorizationValid(
       req.header('Authorization'),
     )
       ? next()
@@ -22,9 +22,9 @@ const auth =
         })
 
 const webhookHandler =
-  (ctx: AppContextWithRevenueCatClient): RequestHandler =>
+  (ctx: AppContextWithPurchasesClient): RequestHandler =>
   async (req, res) => {
-    const { revenueCatClient } = ctx
+    const { purchasesClient: purchasesClient } = ctx
 
     let body: RcEventBody
     try {
@@ -50,8 +50,7 @@ const webhookHandler =
     }
 
     try {
-      const entitlements =
-        await revenueCatClient.getEntitlementIdentifiers(actorDid)
+      const entitlements = await purchasesClient.getEntitlements(actorDid)
 
       const id = await addPurchaseOperation(ctx.db, actorDid, entitlements)
 
@@ -67,10 +66,10 @@ const webhookHandler =
     }
   }
 
-const assertAppContextWithRevenueCatClient: (
+const assertAppContextWithPurchasesClient: (
   ctx: AppContext,
-) => asserts ctx is AppContextWithRevenueCatClient = (ctx: AppContext) => {
-  if (!ctx.revenueCatClient) {
+) => asserts ctx is AppContextWithPurchasesClient = (ctx: AppContext) => {
+  if (!ctx.purchasesClient) {
     throw new Error(
       'RevenueCat webhook was tried to be set up without configuring a RevenueCat client.',
     )
@@ -78,7 +77,7 @@ const assertAppContextWithRevenueCatClient: (
 }
 
 export const createRouter = (ctx: AppContext): express.Router => {
-  assertAppContextWithRevenueCatClient(ctx)
+  assertAppContextWithPurchasesClient(ctx)
 
   const router = express.Router()
   router.use(auth(ctx))

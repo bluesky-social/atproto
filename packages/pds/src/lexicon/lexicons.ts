@@ -9133,6 +9133,189 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyPurchaseGetActiveSubscriptions: {
+    lexicon: 1,
+    id: 'app.bsky.purchase.getActiveSubscriptions',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Enumerate active subscriptions for the requesting account. Requires auth.',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['subscriptions'],
+            properties: {
+              subscriptions: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.purchase.getActiveSubscriptions#subscription',
+                },
+              },
+            },
+          },
+        },
+      },
+      subscription: {
+        type: 'object',
+        required: [],
+        properties: {
+          status: {
+            type: 'string',
+          },
+          renewalStatus: {
+            type: 'string',
+          },
+          group: {
+            type: 'string',
+          },
+          platform: {
+            type: 'string',
+          },
+          offering: {
+            type: 'string',
+          },
+          periodEndsAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          periodStartsAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          purchasedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
+    },
+  },
+  AppBskyPurchaseGetFeatures: {
+    lexicon: 1,
+    id: 'app.bsky.purchase.getFeatures',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Enumerate unlocked paid feature flags for the requesting account. Requires auth.',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['features'],
+            properties: {
+              features: {
+                type: 'ref',
+                ref: 'lex:app.bsky.purchase.getFeatures#features',
+              },
+            },
+          },
+        },
+      },
+      features: {
+        type: 'object',
+        required: [],
+        properties: {
+          customProfileColor: {
+            type: 'boolean',
+            description:
+              'Indicates to client apps to allow the requesting account to customize the profile color.',
+          },
+        },
+      },
+    },
+  },
+  AppBskyPurchaseGetSubscriptionGroup: {
+    lexicon: 1,
+    id: 'app.bsky.purchase.getSubscriptionGroup',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Gets a subscription group and its offerings for the target platform. Requires auth.',
+        parameters: {
+          type: 'params',
+          required: ['group', 'platform'],
+          properties: {
+            group: {
+              type: 'string',
+            },
+            platform: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: [],
+            properties: {
+              group: {
+                type: 'string',
+              },
+              offerings: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.purchase.getSubscriptionGroup#offering',
+                },
+              },
+            },
+          },
+        },
+      },
+      offering: {
+        type: 'object',
+        required: [],
+        properties: {
+          id: {
+            type: 'string',
+          },
+          platform: {
+            type: 'string',
+          },
+          product: {
+            type: 'string',
+          },
+        },
+      },
+    },
+  },
+  AppBskyPurchaseRefreshCache: {
+    lexicon: 1,
+    id: 'app.bsky.purchase.refreshCache',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Refresh the purchase cache for the requesting account or for another account if the role authorizes it. Requires auth.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['did'],
+            properties: {
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
+      },
+    },
+  },
   AppBskyRichtextFacet: {
     lexicon: 1,
     id: 'app.bsky.richtext.facet',
@@ -13489,8 +13672,9 @@ export const schemaDict = {
       },
     },
   },
-}
-export const schemas: LexiconDoc[] = Object.values(schemaDict) as LexiconDoc[]
+} as const satisfies Record<string, LexiconDoc>
+
+export const schemas = Object.values(schemaDict)
 export const lexicons: Lexicons = new Lexicons(schemas)
 export const ids = {
   ComAtprotoAdminDefs: 'com.atproto.admin.defs',
@@ -13662,6 +13846,11 @@ export const ids = {
   AppBskyNotificationPutPreferences: 'app.bsky.notification.putPreferences',
   AppBskyNotificationRegisterPush: 'app.bsky.notification.registerPush',
   AppBskyNotificationUpdateSeen: 'app.bsky.notification.updateSeen',
+  AppBskyPurchaseGetActiveSubscriptions:
+    'app.bsky.purchase.getActiveSubscriptions',
+  AppBskyPurchaseGetFeatures: 'app.bsky.purchase.getFeatures',
+  AppBskyPurchaseGetSubscriptionGroup: 'app.bsky.purchase.getSubscriptionGroup',
+  AppBskyPurchaseRefreshCache: 'app.bsky.purchase.refreshCache',
   AppBskyRichtextFacet: 'app.bsky.richtext.facet',
   AppBskyUnspeccedDefs: 'app.bsky.unspecced.defs',
   AppBskyUnspeccedGetConfig: 'app.bsky.unspecced.getConfig',
