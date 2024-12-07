@@ -126,7 +126,9 @@ const noBlockOrMutesOrNeedsReview = (
     if (
       item.reason === 'reply' ||
       item.reason === 'quote' ||
-      item.reason === 'mention'
+      item.reason === 'mention' ||
+      item.reason === 'like' ||
+      item.reason === 'follow'
     ) {
       if (!ctx.views.viewerSeesNeedsReview(did, hydration)) {
         return false
