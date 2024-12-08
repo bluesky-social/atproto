@@ -70,6 +70,7 @@ export class ServerMailer {
     const res = await this.transporter.sendMail({
       ...mailOpts,
       from: mailOpts.from ?? this.config.email?.fromAddress,
+      replyTo: this.config.email?.replyToAddress,
       html,
     })
     if (!this.config.email?.smtpUrl) {

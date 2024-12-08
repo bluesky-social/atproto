@@ -73,8 +73,12 @@ export const readEnv = (): ServerEnvironment => {
     // email
     emailSmtpUrl: envStr('PDS_EMAIL_SMTP_URL'),
     emailFromAddress: envStr('PDS_EMAIL_FROM_ADDRESS'),
+    emailReplyToAddress: envStr('PDS_EMAIL_REPLY_TO_ADDRESS'),
     moderationEmailSmtpUrl: envStr('PDS_MODERATION_EMAIL_SMTP_URL'),
     moderationEmailAddress: envStr('PDS_MODERATION_EMAIL_ADDRESS'),
+    moderationEmailReplyToAddress: envStr(
+      'PDS_MODERATION_EMAIL_REPLY_TO_ADDRESS',
+    ),
 
     // subscription
     maxSubscriptionBuffer: envInt('PDS_MAX_SUBSCRIPTION_BUFFER'),
@@ -203,8 +207,10 @@ export type ServerEnvironment = {
   // email
   emailSmtpUrl?: string
   emailFromAddress?: string
+  emailReplyToAddress?: string
   moderationEmailSmtpUrl?: string
   moderationEmailAddress?: string
+  moderationEmailReplyToAddress?: string
 
   // subscription
   maxSubscriptionBuffer?: number
