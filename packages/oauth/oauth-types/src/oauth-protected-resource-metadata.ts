@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
 import { oauthIssuerIdentifierSchema } from './oauth-issuer-identifier.js'
+import { webUriSchema } from './uri.js'
 
 /**
  * @see {@link https://datatracker.ietf.org/doc/html/draft-ietf-oauth-resource-metadata-05#name-protected-resource-metadata-r}
@@ -10,8 +11,17 @@ export const oauthProtectedResourceMetadataSchema = z.object({
    * REQUIRED. The protected resource's resource identifier, which is a URL that
    * uses the https scheme and has no query or fragment components. Using these
    * well-known resources is described in Section 3.
+   *
+   * @note This schema allows non https URLs for testing & development purposes.
+   * Make sure to validate the URL before using it in a production environment.
    */
-  resource: z.string().url(),
+  resource: webUriSchema
+    .refine((url) => !url.includes('?'), {
+      message: 'Resource URL must not contain query parameters',
+    })
+    .refine((url) => !url.includes('#'), {
+      message: 'Resource URL must not contain a fragment',
+    }),
 
   /**
    * OPTIONAL. JSON array containing a list of OAuth authorization server issuer
@@ -31,7 +41,7 @@ export const oauthProtectedResourceMetadataSchema = z.object({
    * available, a use (public key use) parameter value is REQUIRED for all keys
    * in the referenced JWK Set to indicate each key's intended usage.
    */
-  jwks_uri: z.string().url().optional(),
+  jwks_uri: webUriSchema.optional(),
 
   /**
    * RECOMMENDED. JSON array containing a list of the OAuth 2.0 [RFC6749] scope
@@ -64,20 +74,20 @@ export const oauthProtectedResourceMetadataSchema = z.object({
    * OPTIONAL. URL of a page containing human-readable information that
    * developers might want or need to know when using the protected resource
    */
-  resource_documentation: z.string().url().optional(),
+  resource_documentation: webUriSchema.optional(),
 
   /**
    * OPTIONAL. URL that the protected resource provides to read about the
    * protected resource's requirements on how the client can use the data
    * provided by the protected resource
    */
-  resource_policy_uri: z.string().url().optional(),
+  resource_policy_uri: webUriSchema.optional(),
 
   /**
    * OPTIONAL. URL that the protected resource provides to read about the
    * protected resource's terms of service
    */
-  resource_tos_uri: z.string().url().optional(),
+  resource_tos_uri: webUriSchema.optional(),
 })
 
 export type OAuthProtectedResourceMetadata = z.infer<

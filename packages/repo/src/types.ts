@@ -133,6 +133,7 @@ export type CommitData = {
   since: string | null
   prev: CID | null
   newBlocks: BlockMap
+  relevantBlocks: BlockMap
   removedCids: CidSet
 }
 

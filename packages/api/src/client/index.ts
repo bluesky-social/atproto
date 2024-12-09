@@ -81,6 +81,7 @@ import * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos'
 import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
 import * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
+import * as ComAtprotoTempAddReservedHandle from './types/com/atproto/temp/addReservedHandle'
 import * as ComAtprotoTempCheckSignupQueue from './types/com/atproto/temp/checkSignupQueue'
 import * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels'
 import * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/temp/requestPhoneVerification'
@@ -147,6 +148,7 @@ import * as AppBskyGraphListitem from './types/app/bsky/graph/listitem'
 import * as AppBskyGraphMuteActor from './types/app/bsky/graph/muteActor'
 import * as AppBskyGraphMuteActorList from './types/app/bsky/graph/muteActorList'
 import * as AppBskyGraphMuteThread from './types/app/bsky/graph/muteThread'
+import * as AppBskyGraphSearchStarterPacks from './types/app/bsky/graph/searchStarterPacks'
 import * as AppBskyGraphStarterpack from './types/app/bsky/graph/starterpack'
 import * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor'
 import * as AppBskyGraphUnmuteActorList from './types/app/bsky/graph/unmuteActorList'
@@ -167,6 +169,7 @@ import * as AppBskyUnspeccedGetSuggestionsSkeleton from './types/app/bsky/unspec
 import * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions'
 import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton'
 import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
+import * as AppBskyUnspeccedSearchStarterPacksSkeleton from './types/app/bsky/unspecced/searchStarterPacksSkeleton'
 import * as AppBskyVideoDefs from './types/app/bsky/video/defs'
 import * as AppBskyVideoGetJobStatus from './types/app/bsky/video/getJobStatus'
 import * as AppBskyVideoGetUploadLimits from './types/app/bsky/video/getUploadLimits'
@@ -309,6 +312,7 @@ export * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos'
 export * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
 export * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 export * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
+export * as ComAtprotoTempAddReservedHandle from './types/com/atproto/temp/addReservedHandle'
 export * as ComAtprotoTempCheckSignupQueue from './types/com/atproto/temp/checkSignupQueue'
 export * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels'
 export * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/temp/requestPhoneVerification'
@@ -375,6 +379,7 @@ export * as AppBskyGraphListitem from './types/app/bsky/graph/listitem'
 export * as AppBskyGraphMuteActor from './types/app/bsky/graph/muteActor'
 export * as AppBskyGraphMuteActorList from './types/app/bsky/graph/muteActorList'
 export * as AppBskyGraphMuteThread from './types/app/bsky/graph/muteThread'
+export * as AppBskyGraphSearchStarterPacks from './types/app/bsky/graph/searchStarterPacks'
 export * as AppBskyGraphStarterpack from './types/app/bsky/graph/starterpack'
 export * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor'
 export * as AppBskyGraphUnmuteActorList from './types/app/bsky/graph/unmuteActorList'
@@ -395,6 +400,7 @@ export * as AppBskyUnspeccedGetSuggestionsSkeleton from './types/app/bsky/unspec
 export * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions'
 export * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton'
 export * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
+export * as AppBskyUnspeccedSearchStarterPacksSkeleton from './types/app/bsky/unspecced/searchStarterPacksSkeleton'
 export * as AppBskyVideoDefs from './types/app/bsky/video/defs'
 export * as AppBskyVideoGetJobStatus from './types/app/bsky/video/getJobStatus'
 export * as AppBskyVideoGetUploadLimits from './types/app/bsky/video/getUploadLimits'
@@ -1428,6 +1434,18 @@ export class ComAtprotoTempNS {
     this._client = client
   }
 
+  addReservedHandle(
+    data?: ComAtprotoTempAddReservedHandle.InputSchema,
+    opts?: ComAtprotoTempAddReservedHandle.CallOptions,
+  ): Promise<ComAtprotoTempAddReservedHandle.Response> {
+    return this._client.call(
+      'com.atproto.temp.addReservedHandle',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
   checkSignupQueue(
     params?: ComAtprotoTempCheckSignupQueue.QueryParams,
     opts?: ComAtprotoTempCheckSignupQueue.CallOptions,
@@ -2445,6 +2463,18 @@ export class AppBskyGraphNS {
     return this._client.call('app.bsky.graph.muteThread', opts?.qp, data, opts)
   }
 
+  searchStarterPacks(
+    params?: AppBskyGraphSearchStarterPacks.QueryParams,
+    opts?: AppBskyGraphSearchStarterPacks.CallOptions,
+  ): Promise<AppBskyGraphSearchStarterPacks.Response> {
+    return this._client.call(
+      'app.bsky.graph.searchStarterPacks',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
   unmuteActor(
     data?: AppBskyGraphUnmuteActor.InputSchema,
     opts?: AppBskyGraphUnmuteActor.CallOptions,
@@ -3093,6 +3123,22 @@ export class AppBskyUnspeccedNS {
       .call('app.bsky.unspecced.searchPostsSkeleton', params, undefined, opts)
       .catch((e) => {
         throw AppBskyUnspeccedSearchPostsSkeleton.toKnownErr(e)
+      })
+  }
+
+  searchStarterPacksSkeleton(
+    params?: AppBskyUnspeccedSearchStarterPacksSkeleton.QueryParams,
+    opts?: AppBskyUnspeccedSearchStarterPacksSkeleton.CallOptions,
+  ): Promise<AppBskyUnspeccedSearchStarterPacksSkeleton.Response> {
+    return this._client
+      .call(
+        'app.bsky.unspecced.searchStarterPacksSkeleton',
+        params,
+        undefined,
+        opts,
+      )
+      .catch((e) => {
+        throw AppBskyUnspeccedSearchStarterPacksSkeleton.toKnownErr(e)
       })
   }
 }

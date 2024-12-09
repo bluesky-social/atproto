@@ -316,6 +316,19 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
       scope: options?.scope ?? this.clientMetadata.scope,
     }
 
+    const authorizationUrl = new URL(metadata.authorization_endpoint)
+
+    // Since the user will be redirected to the authorization_endpoint url using
+    // a browser, we need to make sure that the url is valid.
+    if (
+      authorizationUrl.protocol !== 'https:' &&
+      authorizationUrl.protocol !== 'http:'
+    ) {
+      throw new TypeError(
+        `Invalid authorization endpoint protocol: ${authorizationUrl.protocol}`,
+      )
+    }
+
     if (metadata.pushed_authorization_request_endpoint) {
       const server = await this.serverFactory.fromMetadata(metadata, dpopKey)
       const parResponse = await server.request(
@@ -323,7 +336,6 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
         parameters,
       )
 
-      const authorizationUrl = new URL(metadata.authorization_endpoint)
       authorizationUrl.searchParams.set(
         'client_id',
         this.clientMetadata.client_id,
@@ -335,7 +347,6 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
         'Server requires pushed authorization requests (PAR) but no PAR endpoint is available',
       )
     } else {
-      const authorizationUrl = new URL(metadata.authorization_endpoint)
       for (const [key, value] of Object.entries(parameters)) {
         if (value) authorizationUrl.searchParams.set(key, String(value))
       }

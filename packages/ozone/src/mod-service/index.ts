@@ -23,6 +23,7 @@ import {
   isRecordEvent,
   REVIEWESCALATED,
   REVIEWOPEN,
+  isModEventAcknowledge,
 } from '../lexicon/types/tools/ozone/moderation/defs'
 import { RepoRef, RepoBlobRef } from '../lexicon/types/com/atproto/admin/defs'
 import {
@@ -225,8 +226,20 @@ export class ModerationService {
     if (createdBefore) {
       builder = builder.where('createdAt', '<=', createdBefore)
     }
+
     if (comment) {
-      builder = builder.where('comment', 'ilike', `%${comment}%`)
+      // the input may end in || in which case, there may be item in the array which is just '' and we want to ignore those
+      const keywords = comment.split('||').filter((keyword) => !!keyword.trim())
+      if (keywords.length > 1) {
+        builder = builder.where((qb) => {
+          keywords.forEach((keyword) => {
+            qb = qb.orWhere('comment', 'ilike', `%${keyword}%`)
+          })
+          return qb
+        })
+      } else if (keywords.length === 1) {
+        builder = builder.where('comment', 'ilike', `%${keywords[0]}%`)
+      }
     }
     if (hasComment) {
       builder = builder.where('comment', 'is not', null)
@@ -305,7 +318,11 @@ export class ModerationService {
     return await builder.execute()
   }
 
-  async resolveSubjectsForAccount(did: string, createdBy: string) {
+  async resolveSubjectsForAccount(
+    did: string,
+    createdBy: string,
+    accountEvent: ModerationEventRow,
+  ) {
     const subjectsToBeResolved = await this.db.db
       .selectFrom('moderation_subject_status')
       .where('did', '=', did)
@@ -318,6 +335,10 @@ export class ModerationService {
       return
     }
 
+    let accountEventInfo = `Account Event ID: ${accountEvent.id}`
+    if (accountEvent.comment) {
+      accountEventInfo += ` | Account Event Comment: ${accountEvent.comment}`
+    }
     // Process subjects in chunks of 100 since each of these will trigger multiple db queries
     for (const subjects of chunkArray(subjectsToBeResolved, 100)) {
       await Promise.all(
@@ -326,13 +347,13 @@ export class ModerationService {
             createdBy,
             subject: subjectFromStatusRow(subject),
           }
+
           // For consistency's sake, when acknowledging appealed subjects, we should first resolve the appeal
           if (subject.appealed) {
             await this.logEvent({
               event: {
                 $type: 'tools.ozone.moderation.defs#modEventResolveAppeal',
-                comment:
-                  '[AUTO_RESOLVE_FOR_TAKENDOWN_ACCOUNT]: Automatically resolving all appealed content for a takendown account',
+                comment: `[AUTO_RESOLVE_ON_ACCOUNT_ACTION]: Automatically resolving all appealed content due to account level action | ${accountEventInfo}`,
               },
               ...eventData,
             })
@@ -341,8 +362,7 @@ export class ModerationService {
           await this.logEvent({
             event: {
               $type: 'tools.ozone.moderation.defs#modEventAcknowledge',
-              comment:
-                '[AUTO_RESOLVE_FOR_TAKENDOWN_ACCOUNT]: Automatically resolving all reported content for a takendown account',
+              comment: `[AUTO_RESOLVE_ON_ACCOUNT_ACTION]: Automatically resolving all reported content due to account level action | ${accountEventInfo}`,
             },
             ...eventData,
           })
@@ -411,7 +431,10 @@ export class ModerationService {
       if (event.cid) meta.cid = event.cid
     }
 
-    if (isModEventTakedown(event) && event.acknowledgeAccountSubjects) {
+    if (
+      (isModEventTakedown(event) || isModEventAcknowledge(event)) &&
+      event.acknowledgeAccountSubjects
+    ) {
       meta.acknowledgeAccountSubjects = true
     }
 

@@ -50,6 +50,7 @@ export default function (server: Server, ctx: AppContext) {
           since: null,
           prev: null,
           newBlocks: blocks.blocks,
+          relevantBlocks: blocks.blocks,
           removedCids: new CidSet(),
         }
       })
