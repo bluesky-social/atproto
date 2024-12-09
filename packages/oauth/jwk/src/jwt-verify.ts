@@ -1,7 +1,7 @@
 import { JwtHeader, JwtPayload } from './jwt.js'
 import { RequiredKey } from './util.js'
 
-export type VerifyOptions<C extends string = string> = {
+export type VerifyOptions<C extends string = never> = {
   audience?: string | readonly string[]
   /** in seconds */
   clockTolerance?: number
@@ -14,9 +14,7 @@ export type VerifyOptions<C extends string = string> = {
   requiredClaims?: readonly C[]
 }
 
-export type VerifyPayload = Record<string, unknown>
-
-export type VerifyResult<P extends VerifyPayload, C extends string> = {
-  payload: RequiredKey<P & JwtPayload, C>
+export type VerifyResult<C extends string = never> = {
+  payload: RequiredKey<JwtPayload, C>
   protectedHeader: JwtHeader
 }
