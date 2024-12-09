@@ -57,7 +57,7 @@ export class BsyncService {
     )
 
     app.use(health.createRouter(ctx))
-    if (ctx.revenueCatClient) {
+    if (ctx.purchasesClient) {
       app.use('/webhooks/revenuecat', revenueCat.createRouter(ctx))
     }
 
