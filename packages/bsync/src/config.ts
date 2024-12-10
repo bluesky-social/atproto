@@ -25,7 +25,6 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
 
   let purchasesCfg: PurchasesConfig | undefined
   if (env.revenueCatV1ApiKey) {
-    assert(env.revenueCatV1ApiUrl, 'missing RevenueCat V1 api url')
     assert(
       env.revenueCatWebhookAuthorization,
       'missing RevenueCat webhook authorization',
@@ -49,7 +48,8 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
 
     purchasesCfg = {
       revenueCatV1ApiKey: env.revenueCatV1ApiKey,
-      revenueCatV1ApiUrl: env.revenueCatV1ApiUrl,
+      revenueCatV1ApiUrl:
+        env.revenueCatV1ApiUrl || 'https://api.revenuecat.com/v1',
       revenueCatWebhookAuthorization: env.revenueCatWebhookAuthorization,
       stripePriceIdMonthly: env.stripePriceIdMonthly,
       stripePriceIdAnnual: env.stripePriceIdAnnual,
