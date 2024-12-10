@@ -53,6 +53,20 @@ const paginateNotifications = async (opts: {
 }) => {
   const { ctx, priority, filter, limit, viewer } = opts
 
+  // if not filtering, then just pass through the response from dataplane
+  if (!filter) {
+    const res = await ctx.hydrator.dataplane.getNotifications({
+      actorDid: viewer,
+      priority,
+      cursor: opts.cursor,
+      limit,
+    })
+    return {
+      notifications: res.notifications,
+      cursor: res.cursor,
+    }
+  }
+
   let nextCursor: string | undefined = opts.cursor
   let toReturn: Notification[] = []
   const maxAttempts = 10
@@ -64,9 +78,9 @@ const paginateNotifications = async (opts: {
       cursor: nextCursor,
       limit,
     })
-    const filtered = filter
-      ? res.notifications.filter((notif) => filter.includes(notif.reason))
-      : res.notifications
+    const filtered = res.notifications.filter((notif) =>
+      filter.includes(notif.reason),
+    )
     toReturn = [...toReturn, ...filtered]
     nextCursor = res.cursor ?? undefined
     if (toReturn.length >= attemptSize || !nextCursor) {
