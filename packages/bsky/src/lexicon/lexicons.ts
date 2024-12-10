@@ -9226,7 +9226,7 @@ export const schemaDict = {
         properties: {
           id: {
             type: 'string',
-            knownValues: ['coreAnnual', 'coreMonthly'],
+            knownValues: ['core:annual', 'core:monthly'],
           },
           platform: {
             type: 'string',
@@ -9294,7 +9294,7 @@ export const schemaDict = {
           },
           offering: {
             type: 'string',
-            knownValues: ['coreAnnual', 'coreMonthly'],
+            knownValues: ['core:annual', 'core:monthly'],
           },
           periodEndsAt: {
             type: 'string',

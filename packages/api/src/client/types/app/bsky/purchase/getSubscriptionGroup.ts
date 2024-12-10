@@ -36,7 +36,7 @@ export function toKnownErr(e: any) {
 }
 
 export interface Offering {
-  id?: 'coreAnnual' | 'coreMonthly' | (string & {})
+  id?: 'core:annual' | 'core:monthly' | (string & {})
   platform?: 'android' | 'ios' | 'web' | (string & {})
   product?: string
   [k: string]: unknown

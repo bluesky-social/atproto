@@ -47,7 +47,7 @@
         },
         "offering": {
           "type": "string",
-          "knownValues": ["coreAnnual", "coreMonthly"]
+          "knownValues": ["core:annual", "core:monthly"]
         },
         "periodEndsAt": { "type": "string", "format": "datetime" },
         "periodStartsAt": { "type": "string", "format": "datetime" },

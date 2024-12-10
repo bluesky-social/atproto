@@ -7,6 +7,7 @@ export const addPurchaseOperation = async (
   actorDid: string,
   entitlements: string[],
 ) => {
+  // Store sorted to make comparisons easier.
   const sortedEntitlements = [...entitlements].sort()
 
   return db.transaction(async (txn) => {

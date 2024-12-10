@@ -40,7 +40,7 @@
       "properties": {
         "id": {
           "type": "string",
-          "knownValues": ["coreAnnual", "coreMonthly"]
+          "knownValues": ["core:annual", "core:monthly"]
         },
         "platform": {
           "type": "string",

@@ -177,7 +177,7 @@ const createRoutes = (db: Database) => (router: ConnectRouter) =>
             renewalStatus: 'will_renew',
             group: 'core',
             platform: 'web',
-            offering: 'coreMonthly',
+            offering: 'core:monthly',
             periodEndsAt: Timestamp.fromDate(end),
             periodStartsAt: Timestamp.fromDate(start),
             purchasedAt: Timestamp.fromDate(start),
@@ -190,11 +190,11 @@ const createRoutes = (db: Database) => (router: ConnectRouter) =>
       return {
         offerings: [
           {
-            id: 'coreMonthly',
+            id: 'core:monthly',
             product: 'bluesky_plus_core_v1_monthly',
           },
           {
-            id: 'coreAnnual',
+            id: 'core:annual',
             product: 'bluesky_plus_core_v1_annual',
           },
         ],
