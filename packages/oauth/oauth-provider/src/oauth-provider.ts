@@ -1093,6 +1093,50 @@ export class OAuthProvider extends OAuthVerifier {
         }
       }
 
+    const apiHandler = <
+      T,
+      TReq extends Req,
+      TRes extends Res,
+      S extends z.ZodTypeAny,
+      Json,
+    >(
+      inputSchema: S,
+      buildJson: (
+        this: T,
+        req: TReq,
+        res: TRes,
+        input: z.infer<S>,
+      ) => Json | Promise<Json>,
+      status?: number,
+    ) => {
+      return jsonHandler<T, TReq, TRes, Json>(async function (req, res) {
+        validateFetchMode(req, res, ['same-origin'])
+        validateFetchSite(req, res, ['same-origin'])
+        validateSameOrigin(req, res, issuerOrigin)
+        const referer = validateReferer(req, res, {
+          origin: issuerOrigin,
+          pathname: '/oauth/authorize',
+        })
+
+        const requestUri = requestUriSchema.parse(
+          referer.searchParams.get('request_uri'),
+          { path: ['query', 'request_uri'] },
+        )
+
+        validateCsrfToken(
+          req,
+          res,
+          req.headers['x-csrf-token'],
+          csrfCookie(requestUri),
+        )
+
+        const payload = await parseHttpRequest(req, ['json'])
+        const input = inputSchema.parse(payload, { path: ['body'] })
+
+        return buildJson.call(this, req, res, input)
+      }, status)
+    }
+
     const navigationHandler = <T, TReq extends Req, TRes extends Res>(
       handler: (this: T, req: TReq, res: TRes) => void | Promise<void>,
     ): Handler<T, TReq, TRes> =>
@@ -1348,46 +1392,74 @@ export class OAuthProvider extends OAuthVerifier {
       }),
     )
 
-    const signInPayloadSchema = z.object({
-      csrf_token: z.string(),
-      request_uri: requestUriSchema,
-      client_id: clientIdSchema,
-      credentials: signInCredentialsSchema,
-    })
-
-    router.options('/oauth/authorize/sign-in', corsPreflight)
     router.post(
       '/oauth/authorize/sign-in',
-      jsonHandler(async function (req, res) {
-        validateFetchMode(req, res, ['same-origin'])
-        validateFetchSite(req, res, ['same-origin'])
-        validateSameOrigin(req, res, issuerOrigin)
+      apiHandler(
+        z
+          .object({
+            request_uri: requestUriSchema,
+            client_id: clientIdSchema,
+            credentials: signInCredentialsSchema,
+          })
+          .strict(),
+        async function (req, res, input) {
+          const { deviceId } = await deviceManager.load(req, res, true)
 
-        const payload = await parseHttpRequest(req, ['json'])
-        const input = await signInPayloadSchema.parseAsync(payload, {
-          path: ['body'],
-        })
+          return server.signIn(
+            deviceId,
+            input.request_uri,
+            input.client_id,
+            input.credentials,
+          )
+        },
+      ),
+    )
 
-        validateReferer(req, res, {
-          origin: issuerOrigin,
-          pathname: '/oauth/authorize',
-        })
-        validateCsrfToken(
-          req,
-          res,
-          input.csrf_token,
-          csrfCookie(input.request_uri),
-        )
+    router.options('/oauth/authorize/reset-password-init', corsPreflight)
+    router.post(
+      '/oauth/authorize/reset-password-init',
+      apiHandler(
+        z
+          .object({
+            email: z.string().email(),
+          })
+          .strict(),
+        async (req, res, input) => {
+          const { deviceId } = await deviceManager.load(req, res)
 
-        const { deviceId } = await deviceManager.load(req, res, true)
+          // TODO
 
-        return server.signIn(
-          deviceId,
-          input.request_uri,
-          input.client_id,
-          input.credentials,
-        )
-      }),
+          return {
+            deviceId,
+            email: input.email,
+            ok: true,
+          }
+        },
+      ),
+    )
+
+    router.options('/oauth/authorize/reset-password-confirm', corsPreflight)
+    router.post(
+      '/oauth/authorize/reset-password-confirm',
+      apiHandler(
+        z
+          .object({
+            code: z.string().regex(/^[A-Z2-7]{5}-[A-Z2-7]{5}$/),
+            newPassword: z.string().min(8),
+          })
+          .strict(),
+        async (req, res, input) => {
+          const { deviceId } = await deviceManager.load(req, res)
+
+          // TODO
+
+          return {
+            deviceId,
+            input: input,
+            ok: true,
+          }
+        },
+      ),
     )
 
     const acceptQuerySchema = z.object({

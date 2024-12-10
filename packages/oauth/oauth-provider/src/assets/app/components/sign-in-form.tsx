@@ -7,14 +7,14 @@ import {
 import { clsx } from '../lib/clsx'
 import { Override } from '../lib/util'
 import { Button } from './button'
+import { Fieldset } from './fieldset'
 import { FormCard, FormCardProps } from './form-card'
 import { AtSymbolIcon } from './icons/at-symbol-icon'
 import { LockIcon } from './icons/lock-icon'
 import { InfoCard } from './info-card'
 import { InputCheckbox } from './input-checkbox'
+import { InputOtp, OTP_CODE_EXAMPLE } from './input-otp'
 import { InputText } from './input-text'
-import { TokenIcon } from './icons/token-icon'
-import { Fieldset } from './fieldset'
 
 export type SignInFormOutput = {
   username: string
@@ -32,6 +32,10 @@ export type SignInFormProps = Override<
     onCancel?: () => void
     cancelLabel?: ReactNode
     cancelAria?: string
+
+    onForgotPassword?: (username?: string) => void
+    forgotPasswordLabel?: ReactNode
+    forgotPasswordAria?: string
 
     accountSection?: ReactNode
     sessionSection?: ReactNode
@@ -56,9 +60,9 @@ export type SignInFormProps = Override<
     secondFactorPlaceholder?: string
     secondFactorAria?: string
     secondFactorPattern?: string
-    secondFactorFormat?: string
+    secondFactorExample?: string
+    secondFactorFormatMessage?: string
     secondFactorHint?: string
-    secondFactorParseValue?: (value: string) => string | false
 
     rememberVisible?: boolean
     rememberDefault?: boolean
@@ -75,6 +79,10 @@ export function SignInForm({
   onCancel = undefined,
   cancelAria = 'Cancel',
   cancelLabel = cancelAria,
+
+  onForgotPassword = undefined,
+  forgotPasswordAria = 'Forgot?',
+  forgotPasswordLabel = forgotPasswordAria,
 
   accountSection = 'Account',
   sessionSection = 'Session',
@@ -106,10 +114,9 @@ export function SignInForm({
   secondFactorLabel = 'Confirmation code',
   secondFactorAria = secondFactorLabel,
   secondFactorPlaceholder = secondFactorLabel,
-  secondFactorPattern = '^[A-Z2-7]{5}-[A-Z2-7]{5}$',
-  secondFactorFormat = 'XXXXX-XXXXX',
+  secondFactorExample = OTP_CODE_EXAMPLE,
+  secondFactorFormatMessage = 'Make sure to match the format: $1',
   secondFactorHint = 'Check your $1 email for a login code and enter it here.',
-  secondFactorParseValue = checkAndFormatEmailOtpCode,
 
   rememberVisible = true,
   rememberDefault = false,
@@ -120,14 +127,18 @@ export function SignInForm({
 }: SignInFormProps) {
   const [focused, setFocused] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [otp, setOtp] = useState<string | null>(null)
   const [secondFactor, setSecondFactor] = useState<null | {
     type: 'emailOtp'
     hint: string
   }>(null)
 
+  const [otpMissingError, setOtpMissingError] = useState(false)
+
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const resetState = useCallback(() => {
+    setOtp(null)
     setSecondFactor(null)
     setErrorMessage(null)
   }, [])
@@ -141,7 +152,6 @@ export function SignInForm({
           username: HTMLInputElement
           password: HTMLInputElement
           remember?: HTMLInputElement
-          secondFactor?: HTMLInputElement
         },
         SubmitEvent
       >,
@@ -155,17 +165,11 @@ export function SignInForm({
       }
 
       if (secondFactor) {
-        const element = event.currentTarget.secondFactor
-        if (!element) throw new Error('Second factor input not found')
-        const value = secondFactorParseValue(element.value)
-        if (!value) {
-          setSecondFactor({
-            type: secondFactor.type,
-            hint: `Make sure to match the format: ${secondFactorFormat}`,
-          })
+        if (!otp) {
+          setOtpMissingError(true)
           return
         }
-        credentials[secondFactor.type] = value
+        credentials[secondFactor.type] = otp
       }
 
       setLoading(true)
@@ -185,7 +189,7 @@ export function SignInForm({
         setLoading(false)
       }
     },
-    [secondFactor, onSubmit],
+    [secondFactor, otp, onSubmit],
   )
 
   return (
@@ -240,13 +244,31 @@ export function SignInForm({
           onChange={resetState}
           onFocus={() => setFocused(true)}
           onBlur={() => setTimeout(setFocused, 100, false)}
+          append={
+            onForgotPassword && (
+              <Button
+                type="button"
+                onClick={(event) => {
+                  const { form } = event.target as Node & {
+                    form: HTMLFormElement
+                  }
+
+                  onForgotPassword(form?.username.value)
+                }}
+                aria-label={forgotPasswordAria}
+                className="text-sm"
+              >
+                {forgotPasswordLabel}
+              </Button>
+            )
+          }
           placeholder={passwordPlaceholder}
           aria-label={passwordAria}
           autoCapitalize="none"
           autoCorrect="off"
           autoComplete="current-password"
           dir="auto"
-          enterKeyHint="done"
+          enterKeyHint={secondFactor ? 'next' : 'done'}
           spellCheck="false"
           required
           readOnly={passwordReadonly}
@@ -273,6 +295,7 @@ export function SignInForm({
             name="remember"
             defaultChecked={rememberDefault}
             aria-label={rememberAria}
+            enterKeyHint={secondFactor ? 'next' : 'done'}
           >
             {rememberLabel}
           </InputCheckbox>
@@ -282,25 +305,26 @@ export function SignInForm({
       {secondFactor && (
         <Fieldset key="2fa" title={secondFactorSection} disabled={loading}>
           <div>
-            <InputText
-              icon={<TokenIcon className="w-5" />}
-              name="secondFactor"
-              type="text"
-              placeholder={secondFactorPlaceholder}
+            <InputOtp
               aria-label={secondFactorAria}
-              autoCapitalize="none"
-              autoCorrect="off"
-              autoComplete="off"
-              spellCheck="false"
-              dir="auto"
+              placeholder={secondFactorPlaceholder}
               enterKeyHint="done"
               required
-              pattern={secondFactorPattern}
-              title={secondFactorFormat}
               autoFocus={true}
+              defaultValue={otp ?? ''}
+              onOtp={(otp) => {
+                setOtp(otp)
+                if (otp) setOtpMissingError(false)
+              }}
             />
+
             <p className="text-slate-600 dark:text-slate-400 text-sm">
-              {secondFactorHint.replaceAll('$1', secondFactor.hint)}
+              {otpMissingError
+                ? secondFactorFormatMessage.replaceAll(
+                    '$1',
+                    secondFactorExample,
+                  )
+                : secondFactorHint.replaceAll('$1', secondFactor.hint)}
             </p>
           </div>
         </Fieldset>
@@ -315,23 +339,4 @@ function parseErrorMessage(err: unknown): string {
   }
 
   return 'An unknown error occurred'
-}
-
-export function checkAndFormatEmailOtpCode(code: string): string | false {
-  const EMAIL_CODE_REGEX = /^[A-Z2-7]{5}-[A-Z2-7]{5}$/
-
-  // Trim the reset code
-  let fixed = code.trim().toUpperCase()
-
-  // Add a dash if needed
-  if (fixed.length === 10) {
-    fixed = `${fixed.slice(0, 5)}-${fixed.slice(5, 10)}`
-  }
-
-  // Check that it is a valid format
-  if (!EMAIL_CODE_REGEX.test(fixed)) {
-    return false
-  }
-
-  return fixed
 }
