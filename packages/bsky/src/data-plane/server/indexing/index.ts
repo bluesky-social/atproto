@@ -31,7 +31,7 @@ import * as Labeler from './plugins/labeler'
 import * as ChatDeclaration from './plugins/chat-declaration'
 import RecordProcessor from './processor'
 import { subLogger } from '../../../logger'
-import { retryHttp } from '../../../util/retry'
+import { retryXrpc } from '../../../util/retry'
 import { BackgroundQueue } from '../background'
 
 export class IndexingService {
@@ -165,7 +165,7 @@ export class IndexingService {
     )
     const { api } = new AtpAgent({ service: pds })
 
-    const { data: car } = await retryHttp(() =>
+    const { data: car } = await retryXrpc(() =>
       api.com.atproto.sync.getRepo({ did }),
     )
     const { root, blocks } = await readCarWithRoot(car)
@@ -287,7 +287,7 @@ export class IndexingService {
     if (!pds) return false
     const { api } = new AtpAgent({ service: pds })
     try {
-      await retryHttp(() => api.com.atproto.sync.getLatestCommit({ did }))
+      await retryXrpc(() => api.com.atproto.sync.getLatestCommit({ did }))
       return true
     } catch (err) {
       if (err instanceof ComAtprotoSyncGetLatestCommit.RepoNotFoundError) {

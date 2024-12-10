@@ -1,14 +1,13 @@
-import http from 'node:http'
-import assert from 'node:assert'
-import express from 'express'
-import axios from 'axios'
-import * as plc from '@did-plc/lib'
-import { SeedClient, TestNetworkNoAppView, usersSeed } from '@atproto/dev-env'
 import { Keypair } from '@atproto/crypto'
+import { SeedClient, TestNetworkNoAppView, usersSeed } from '@atproto/dev-env'
 import { verifyJwt } from '@atproto/xrpc-server'
-import { parseProxyHeader } from '../../src/pipethrough'
+import * as plc from '@did-plc/lib'
+import express from 'express'
+import assert from 'node:assert'
 import { once } from 'node:events'
+import http from 'node:http'
 import { AddressInfo } from 'node:net'
+import { parseProxyHeader } from '../../src/pipethrough'
 
 describe('proxy header', () => {
   let network: TestNetworkNoAppView
@@ -39,19 +38,6 @@ describe('proxy header', () => {
     await proxyServer.close()
     await network.close()
   })
-
-  const assertAxiosErr = async (promise: Promise<unknown>, msg: string) => {
-    try {
-      await promise
-    } catch (err) {
-      if (!axios.isAxiosError(err)) {
-        throw err
-      }
-      expect(err.response?.data?.['message']).toEqual(msg)
-      return
-    }
-    throw new Error('no error thrown')
-  }
 
   it('parses proxy header', async () => {
     expect(parseProxyHeader(network.pds.ctx, `#atproto_test`)).rejects.toThrow(
@@ -84,7 +70,7 @@ describe('proxy header', () => {
 
   it('proxies requests based on header', async () => {
     const path = `/xrpc/app.bsky.actor.getProfile?actor=${alice}`
-    await axios.get(`${network.pds.url}${path}`, {
+    await fetch(`${network.pds.url}${path}`, {
       headers: {
         ...sc.getHeaders(alice),
         'atproto-proxy': `${proxyServer.did}#atproto_test`,
@@ -106,37 +92,49 @@ describe('proxy header', () => {
 
   it('fails on a non-existant did', async () => {
     const path = `/xrpc/app.bsky.actor.getProfile?actor=${alice}`
-    const attempt = axios.get(`${network.pds.url}${path}`, {
+    const response = await fetch(`${network.pds.url}${path}`, {
       headers: {
         ...sc.getHeaders(alice),
         'atproto-proxy': `did:plc:12345678123456781234578#atproto_test`,
       },
     })
-    await assertAxiosErr(attempt, 'could not resolve proxy did')
+
+    await expect(response.json()).resolves.toMatchObject({
+      message: 'could not resolve proxy did',
+    })
+
     expect(proxyServer.requests.length).toBe(1)
   })
 
   it('fails when a service is not specified', async () => {
     const path = `/xrpc/app.bsky.actor.getProfile?actor=${alice}`
-    const attempt = axios.get(`${network.pds.url}${path}`, {
+    const response = await fetch(`${network.pds.url}${path}`, {
       headers: {
         ...sc.getHeaders(alice),
         'atproto-proxy': proxyServer.did,
       },
     })
-    await assertAxiosErr(attempt, 'no service id specified in proxy header')
+
+    await expect(response.json()).resolves.toMatchObject({
+      message: 'no service id specified in proxy header',
+    })
+
     expect(proxyServer.requests.length).toBe(1)
   })
 
   it('fails on a non-existant service', async () => {
     const path = `/xrpc/app.bsky.actor.getProfile?actor=${alice}`
-    const attempt = axios.get(`${network.pds.url}${path}`, {
+    const response = await fetch(`${network.pds.url}${path}`, {
       headers: {
         ...sc.getHeaders(alice),
         'atproto-proxy': `${proxyServer.did}#atproto_bad`,
       },
     })
-    await assertAxiosErr(attempt, 'could not resolve proxy did service url')
+
+    await expect(response.json()).resolves.toMatchObject({
+      message: 'could not resolve proxy did service url',
+    })
+
     expect(proxyServer.requests.length).toBe(1)
   })
 })

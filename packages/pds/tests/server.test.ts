@@ -1,11 +1,12 @@
-import { AddressInfo } from 'net'
-import express from 'express'
-import axios, { AxiosError } from 'axios'
-import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import { AtpAgent, AtUri } from '@atproto/api'
-import { handler as errorHandler } from '../src/error'
-import basicSeed from './seeds/basic'
 import { randomStr } from '@atproto/crypto'
+import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
+import express from 'express'
+import { finished } from 'node:stream/promises'
+import { request } from 'undici'
+import { handler as errorHandler } from '../src/error'
+import { startServer } from './_util'
+import basicSeed from './seeds/basic'
 
 describe('server', () => {
   let network: TestNetworkNoAppView
@@ -31,53 +32,42 @@ describe('server', () => {
   })
 
   it('preserves 404s.', async () => {
-    const promise = axios.get(`${network.pds.url}/unknown`)
-    await expect(promise).rejects.toThrow('failed with status code 404')
+    const res = await fetch(`${network.pds.url}/unknown`)
+    expect(res.status).toEqual(404)
   })
 
   it('error handler turns unknown errors into 500s.', async () => {
     const app = express()
-    app.get('/oops', () => {
-      throw new Error('Oops!')
-    })
-    app.use(errorHandler)
-    const srv = app.listen()
-    const port = (srv.address() as AddressInfo).port
-    const promise = axios.get(`http://localhost:${port}/oops`)
-    await expect(promise).rejects.toThrow('failed with status code 500')
-    srv.close()
+      .get('/oops', () => {
+        throw new Error('Oops!')
+      })
+      .use(errorHandler)
+
+    const { origin, stop } = await startServer(app)
     try {
-      await promise
-    } catch (err: unknown) {
-      const axiosError = err as AxiosError
-      expect(axiosError.response?.status).toEqual(500)
-      expect(axiosError.response?.data).toEqual({
+      const res = await fetch(new URL(`/oops`, origin))
+      expect(res.status).toEqual(500)
+      await expect(res.json()).resolves.toEqual({
         error: 'InternalServerError',
         message: 'Internal Server Error',
       })
+    } finally {
+      await stop()
     }
   })
 
   it('limits size of json input.', async () => {
-    let error: AxiosError
-    try {
-      await axios.post(
-        `${network.pds.url}/xrpc/com.atproto.repo.createRecord`,
-        {
-          data: 'x'.repeat(150 * 1024), // 150kb
-        },
-        { headers: sc.getHeaders(alice) },
-      )
-      throw new Error('Request should have failed')
-    } catch (err) {
-      if (axios.isAxiosError(err)) {
-        error = err
-      } else {
-        throw err
-      }
-    }
-    expect(error.response?.status).toEqual(413)
-    expect(error.response?.data).toEqual({
+    const res = await fetch(
+      `${network.pds.url}/xrpc/com.atproto.repo.createRecord`,
+      {
+        method: 'POST',
+        body: 'x'.repeat(150 * 1024), // 150kb
+        headers: sc.getHeaders(alice),
+      },
+    )
+
+    expect(res.status).toEqual(413)
+    await expect(res.json()).resolves.toEqual({
       error: 'PayloadTooLargeError',
       message: 'request entity too large',
     })
@@ -102,56 +92,53 @@ describe('server', () => {
     )
     const uri = new AtUri(createRes.data.uri)
 
-    const res = await axios.get(
+    const res = await request(
       `${network.pds.url}/xrpc/com.atproto.repo.getRecord?repo=${uri.host}&collection=${uri.collection}&rkey=${uri.rkey}`,
       {
-        decompress: false,
         headers: { ...sc.getHeaders(alice), 'accept-encoding': 'gzip' },
       },
     )
+
+    await finished(res.body.resume())
 
     expect(res.headers['content-encoding']).toEqual('gzip')
   })
 
   it('compresses large car file responses', async () => {
-    const res = await axios.get(
+    const res = await request(
       `${network.pds.url}/xrpc/com.atproto.sync.getRepo?did=${alice}`,
-      { decompress: false, headers: { 'accept-encoding': 'gzip' } },
+      { headers: { 'accept-encoding': 'gzip' } },
     )
+
+    await finished(res.body.resume())
+
     expect(res.headers['content-encoding']).toEqual('gzip')
   })
 
   it('does not compress small payloads', async () => {
-    const res = await axios.get(`${network.pds.url}/xrpc/_health`, {
-      decompress: false,
+    const res = await request(`${network.pds.url}/xrpc/_health`, {
       headers: { 'accept-encoding': 'gzip' },
     })
+
+    await finished(res.body.resume())
+
     expect(res.headers['content-encoding']).toBeUndefined()
   })
 
   it('healthcheck succeeds when database is available.', async () => {
-    const { data, status } = await axios.get(`${network.pds.url}/xrpc/_health`)
-    expect(status).toEqual(200)
-    expect(data).toEqual({ version: '0.0.0' })
+    const res = await fetch(`${network.pds.url}/xrpc/_health`)
+    expect(res.status).toEqual(200)
+    await expect(res.json()).resolves.toEqual({ version: '0.0.0' })
   })
 
   // @TODO this is hanging for some unknown reason
   it.skip('healthcheck fails when database is unavailable.', async () => {
     await network.pds.ctx.accountManager.db.close()
-    let error: AxiosError
-    try {
-      await axios.get(`${network.pds.url}/xrpc/_health`)
-      throw new Error('Healthcheck should have failed')
-    } catch (err) {
-      if (axios.isAxiosError(err)) {
-        error = err
-      } else {
-        throw err
-      }
-    }
-    expect(error.response?.status).toEqual(503)
-    expect(error.response?.data).toEqual({
-      version: '0.0.0',
+
+    const response = await fetch(`${network.pds.url}/xrpc/_health`)
+    expect(response.status).toEqual(503)
+    await expect(response.json()).resolves.toEqual({
+      version: 'unknown',
       error: 'Service Unavailable',
     })
   })
