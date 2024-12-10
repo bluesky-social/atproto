@@ -2,11 +2,11 @@ import dns, { LookupAddress } from 'node:dns'
 import { LookupFunction } from 'node:net'
 
 import {
-  asRequest,
-  extractUrl,
   Fetch,
   FetchContext,
   FetchRequestError,
+  asRequest,
+  extractUrl,
 } from '@atproto-labs/fetch'
 import ipaddr from 'ipaddr.js'
 import { isValid as isValidDomain } from 'psl'

@@ -1,22 +1,24 @@
-import express from 'express'
 import * as plc from '@did-plc/lib'
-import { IdResolver } from '@atproto/identity'
+import express from 'express'
+
 import { AtpAgent } from '@atproto/api'
 import { Keypair } from '@atproto/crypto'
-import { ServerConfig } from './config'
-import { DataPlaneClient } from './data-plane/client'
-import { Hydrator } from './hydration/hydrator'
-import { Views } from './views'
+import { IdResolver } from '@atproto/identity'
+
 import { AuthVerifier } from './auth-verifier'
 import { BsyncClient } from './bsync'
+import { ServerConfig } from './config'
 import { CourierClient } from './courier'
+import { DataPlaneClient } from './data-plane/client'
 import { FeatureGates } from './feature-gates'
+import { Hydrator } from './hydration/hydrator'
+import { httpLogger as log } from './logger'
 import {
   ParsedLabelers,
   defaultLabelerHeader,
   parseLabelerHeader,
 } from './util'
-import { httpLogger as log } from './logger'
+import { Views } from './views'
 
 export class AppContext {
   constructor(
@@ -101,5 +103,3 @@ export class AppContext {
     return parsed
   }
 }
-
-export default AppContext

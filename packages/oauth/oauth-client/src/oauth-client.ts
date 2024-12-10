@@ -1,11 +1,11 @@
 import {
-  assertAtprotoDid,
   AtprotoDid,
   DidCache,
   DidResolverCached,
   DidResolverCommon,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   type DidResolverCommonOptions,
+  assertAtprotoDid,
 } from '@atproto-labs/did-resolver'
 import { Fetch } from '@atproto-labs/fetch'
 import {
@@ -16,14 +16,15 @@ import {
 } from '@atproto-labs/handle-resolver'
 import { IdentityResolver } from '@atproto-labs/identity-resolver'
 import { SimpleStoreMemory } from '@atproto-labs/simple-store-memory'
+
 import { Key, Keyset } from '@atproto/jwk'
 import {
   OAuthAuthorizationRequestParameters,
   OAuthClientIdDiscoverable,
   OAuthClientMetadata,
   OAuthClientMetadataInput,
-  oauthClientMetadataSchema,
   OAuthResponseMode,
+  oauthClientMetadataSchema,
 } from '@atproto/oauth-types'
 
 import { FALLBACK_ALG } from './constants.js'

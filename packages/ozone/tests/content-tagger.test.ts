@@ -4,6 +4,7 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
+
 import { REASONSPAM } from '../src/lexicon/types/com/atproto/moderation/defs'
 
 describe('moderation subject content tagging', () => {

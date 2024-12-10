@@ -1,5 +1,6 @@
-import { CLIENT_ASSERTION_TYPE_JWT_BEARER } from '@atproto/oauth-types'
 import { KeyLike, calculateJwkThumbprint, errors, exportJWK } from 'jose'
+
+import { CLIENT_ASSERTION_TYPE_JWT_BEARER } from '@atproto/oauth-types'
 
 import { InvalidClientError } from '../errors/invalid-client-error.js'
 

@@ -1,7 +1,10 @@
-import { AddressInfo } from 'net'
-import express from 'express'
+import { AddressInfo } from 'node:net'
+
 import axios, { AxiosError } from 'axios'
-import { TestOzone, TestNetwork } from '@atproto/dev-env'
+import express from 'express'
+
+import { TestNetwork, TestOzone } from '@atproto/dev-env'
+
 import { handler as errorHandler } from '../src/error'
 
 describe('server', () => {

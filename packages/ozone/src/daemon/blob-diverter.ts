@@ -1,16 +1,18 @@
+import { Readable } from 'node:stream'
+
+import axios from 'axios'
+import { CID } from 'multiformats/cid'
+
 import {
   VerifyCidTransform,
   forwardStreamErrors,
   getPdsEndpoint,
 } from '@atproto/common'
 import { IdResolver } from '@atproto/identity'
-import axios from 'axios'
-import { Readable } from 'stream'
-import { CID } from 'multiformats/cid'
 
-import Database from '../db'
-import { retryHttp } from '../util'
 import { BlobDivertConfig } from '../config'
+import { Database } from '../db'
+import { retryHttp } from '../util'
 
 export class BlobDiverter {
   serviceConfig: BlobDivertConfig

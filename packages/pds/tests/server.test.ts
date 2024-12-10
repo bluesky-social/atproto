@@ -1,11 +1,15 @@
-import { AddressInfo } from 'net'
-import express from 'express'
+import { AddressInfo } from 'node:net'
+
 import axios, { AxiosError } from 'axios'
-import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
-import { AtpAgent, AtUri } from '@atproto/api'
-import { handler as errorHandler } from '../src/error'
-import basicSeed from './seeds/basic'
+import express from 'express'
+
+import { AtUri, AtpAgent } from '@atproto/api'
 import { randomStr } from '@atproto/crypto'
+import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
+
+import { handler as errorHandler } from '../src/error'
+
+import basicSeed from './seeds/basic'
 
 describe('server', () => {
   let network: TestNetworkNoAppView

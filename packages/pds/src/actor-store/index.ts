@@ -1,29 +1,32 @@
-import path from 'path'
-import assert from 'assert'
-import fs from 'fs/promises'
-import * as crypto from '@atproto/crypto'
-import { Keypair, ExportableKeypair } from '@atproto/crypto'
-import { BlobStore } from '@atproto/repo'
+import assert from 'node:assert'
+import fs, { mkdir } from 'node:fs/promises'
+import path from 'node:path'
+
+import { CID } from 'multiformats/cid'
+
 import {
   chunkArray,
   fileExists,
   readIfExists,
   rmIfExists,
 } from '@atproto/common'
-import { ActorDb, getDb, getMigrator } from './db'
-import { BackgroundQueue } from '../background'
-import { RecordReader } from './record/reader'
-import { PreferenceReader } from './preference/reader'
-import { RepoReader } from './repo/reader'
-import { RepoTransactor } from './repo/transactor'
-import { PreferenceTransactor } from './preference/transactor'
+import * as crypto from '@atproto/crypto'
+import { ExportableKeypair, Keypair } from '@atproto/crypto'
+import { BlobStore } from '@atproto/repo'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { RecordTransactor } from './record/transactor'
-import { CID } from 'multiformats/cid'
-import DiskBlobStore from '../disk-blobstore'
-import { mkdir } from 'fs/promises'
+
+import { BackgroundQueue } from '../background'
 import { ActorStoreConfig } from '../config'
 import { retrySqlite } from '../db'
+import { DiskBlobStore } from '../disk-blobstore'
+
+import { ActorDb, getDb, getMigrator } from './db'
+import { PreferenceReader } from './preference/reader'
+import { PreferenceTransactor } from './preference/transactor'
+import { RecordReader } from './record/reader'
+import { RecordTransactor } from './record/transactor'
+import { RepoReader } from './repo/reader'
+import { RepoTransactor } from './repo/transactor'
 
 type ActorStoreResources = {
   blobstore: (did: string) => BlobStore

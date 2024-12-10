@@ -1,6 +1,8 @@
-import { Readable } from 'stream'
-import { pipeline } from 'stream/promises'
+import { Readable } from 'node:stream'
+import { pipeline } from 'node:stream/promises'
+
 import sharp from 'sharp'
+
 import { errHasMsg } from '@atproto/common'
 
 export async function maybeGetInfo(

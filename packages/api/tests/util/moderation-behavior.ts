@@ -1,8 +1,8 @@
 import {
-  ModerationUI,
-  ModerationOpts,
   ComAtprotoLabelDefs,
   LabelPreference,
+  ModerationOpts,
+  ModerationUI,
 } from '../../src'
 import { mock as m } from '../../src/mocker'
 

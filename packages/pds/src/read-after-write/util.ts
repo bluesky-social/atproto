@@ -1,3 +1,5 @@
+import express from 'express'
+
 import { jsonToLex } from '@atproto/lexicon'
 import { HeadersMap } from '@atproto/xrpc'
 import {
@@ -5,9 +7,8 @@ import {
   HandlerPipeThroughBuffer,
   parseReqNsid,
 } from '@atproto/xrpc-server'
-import express from 'express'
 
-import AppContext from '../context'
+import { AppContext } from '../context'
 import { lexicons } from '../lexicon/lexicons'
 import { readStickyLogger as log } from '../logger'
 import {
@@ -15,6 +16,7 @@ import {
   isJsonContentType,
   pipethrough,
 } from '../pipethrough'
+
 import { HandlerResponse, LocalRecords, MungeFn } from './types'
 import { getRecordsSinceRev } from './viewer'
 

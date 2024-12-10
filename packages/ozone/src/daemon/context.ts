@@ -1,14 +1,16 @@
-import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
-import { createServiceAuthHeaders } from '@atproto/xrpc-server'
-import { IdResolver } from '@atproto/identity'
 import { AtpAgent } from '@atproto/api'
+import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
+import { IdResolver } from '@atproto/identity'
+import { createServiceAuthHeaders } from '@atproto/xrpc-server'
+
+import { BackgroundQueue } from '../background'
 import { OzoneConfig, OzoneSecrets } from '../config'
 import { Database } from '../db'
+import { ModerationService, ModerationServiceCreator } from '../mod-service'
+import { getSigningKeyId } from '../util'
+
 import { EventPusher } from './event-pusher'
 import { EventReverser } from './event-reverser'
-import { ModerationService, ModerationServiceCreator } from '../mod-service'
-import { BackgroundQueue } from '../background'
-import { getSigningKeyId } from '../util'
 
 export type DaemonContextOptions = {
   db: Database
@@ -98,5 +100,3 @@ export class DaemonContext {
     return this.opts.eventReverser
   }
 }
-
-export default DaemonContext

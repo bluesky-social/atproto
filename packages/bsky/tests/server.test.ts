@@ -1,9 +1,12 @@
-import { AddressInfo } from 'net'
-import express from 'express'
+import { once } from 'node:events'
+import { AddressInfo } from 'node:net'
+
 import axios, { AxiosError } from 'axios'
+import express from 'express'
+
 import { TestNetwork, basicSeed } from '@atproto/dev-env'
+
 import { handler as errorHandler } from '../src/error'
-import { once } from 'events'
 
 describe('server', () => {
   let network: TestNetwork

@@ -1,6 +1,6 @@
 import { Code } from './code.js'
-import { RequestId } from './request-id.js'
 import { RequestData } from './request-data.js'
+import { RequestId } from './request-id.js'
 import { RequestStore } from './request-store.js'
 
 export class RequestStoreMemory implements RequestStore {

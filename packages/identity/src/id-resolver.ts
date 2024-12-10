@@ -1,5 +1,5 @@
+import { DidResolver } from './did/did-resolver'
 import { HandleResolver } from './handle'
-import DidResolver from './did/did-resolver'
 import { IdentityResolverOpts } from './types'
 
 export class IdResolver {

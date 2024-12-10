@@ -1,5 +1,6 @@
 import { ResolvedHandle } from '@atproto-labs/handle-resolver'
 import { SimpleStore, Value } from '@atproto-labs/simple-store'
+
 import { DidDocument } from '@atproto/did'
 import { Key } from '@atproto/jwk'
 import { WebcryptoKey } from '@atproto/jwk-webcrypto'

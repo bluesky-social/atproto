@@ -4,6 +4,7 @@ import {
   AtprotoHandleResolverNode,
   AtprotoHandleResolverNodeOptions,
 } from '@atproto-labs/handle-resolver-node'
+
 import { JoseKey } from '@atproto/jwk-jose'
 import {
   OAuthClient,

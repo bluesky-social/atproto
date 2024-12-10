@@ -8,6 +8,7 @@ import { AccountManager } from '../account-manager/index'
 import { ActorStore } from '../actor-store/index'
 import { oauthLogger } from '../logger'
 import { LocalViewerCreator } from '../read-after-write/index'
+
 import { DetailedAccountStore } from './detailed-account-store'
 
 export type AuthProviderOptions = {

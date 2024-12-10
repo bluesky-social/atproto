@@ -1,8 +1,9 @@
+import { z } from 'zod'
+
 import {
   oauthAccessTokenSchema,
   oauthTokenTypeSchema,
 } from '@atproto/oauth-types'
-import { z } from 'zod'
 
 import { InvalidRequestError } from '../../errors/invalid-request-error.js'
 import { WWWAuthenticateError } from '../../errors/www-authenticate-error.js'
