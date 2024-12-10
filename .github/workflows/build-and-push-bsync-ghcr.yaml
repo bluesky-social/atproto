@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+      - bsky-bsync-subscription-endpoints
 env:
   REGISTRY: ghcr.io
   USERNAME: ${{ github.actor }}
