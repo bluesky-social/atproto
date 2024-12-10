@@ -11,7 +11,15 @@ import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
 
 export interface QueryParams {
   /** Notification types to include in response. */
-  filter?: 'all' | 'mentions' | (string & {})
+  filter?:
+    | 'like'
+    | 'repost'
+    | 'follow'
+    | 'mention'
+    | 'reply'
+    | 'quote'
+    | 'starterpack-joined'
+    | (string & {})[]
   limit?: number
   priority?: boolean
   cursor?: string
