@@ -10,7 +10,6 @@ import {
   QueryResult,
   UnknownRow,
 } from 'kysely'
-import SqliteDB from 'better-sqlite3'
 import { dbLogger } from '../logger'
 import { retrySqlite } from './util'
 
@@ -24,10 +23,11 @@ export class Database<Schema> {
 
   constructor(public db: Kysely<Schema>) {}
 
-  static sqlite<T>(
+  static async sqlite<T>(
     location: string,
     opts?: { pragmas?: Record<string, string> },
-  ): Database<T> {
+  ): Promise<Database<T>> {
+    const { SqliteDB } = await import('better-sqlite3')
     const sqliteDb = new SqliteDB(location, {
       timeout: 0, // handled by application
     })
