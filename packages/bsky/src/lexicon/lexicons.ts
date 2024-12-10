@@ -8944,6 +8944,12 @@ export const schemaDict = {
         parameters: {
           type: 'params',
           properties: {
+            filter: {
+              type: 'string',
+              description: 'Notification types to include in response.',
+              knownValues: ['all', 'mentions'],
+              default: 'all',
+            },
             limit: {
               type: 'integer',
               minimum: 1,

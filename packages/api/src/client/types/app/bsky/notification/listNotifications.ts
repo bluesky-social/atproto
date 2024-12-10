@@ -10,6 +10,8 @@ import * as AppBskyActorDefs from '../actor/defs'
 import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
 
 export interface QueryParams {
+  /** Notification types to include in response. */
+  filter?: 'all' | 'mentions' | (string & {})
   limit?: number
   priority?: boolean
   cursor?: string
