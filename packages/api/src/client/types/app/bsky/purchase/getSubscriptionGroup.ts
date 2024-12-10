@@ -8,14 +8,14 @@ import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
 
 export interface QueryParams {
-  group: string
-  platform: string
+  group: 'core' | (string & {})
+  platform: 'android' | 'ios' | 'web' | (string & {})
 }
 
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  group?: string
+  group?: 'core' | (string & {})
   offerings?: Offering[]
   [k: string]: unknown
 }
@@ -36,8 +36,8 @@ export function toKnownErr(e: any) {
 }
 
 export interface Offering {
-  id?: string
-  platform?: string
+  id?: 'coreAnnual' | 'coreMonthly' | (string & {})
+  platform?: 'android' | 'ios' | 'web' | (string & {})
   product?: string
   [k: string]: unknown
 }

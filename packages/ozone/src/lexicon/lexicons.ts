@@ -9191,9 +9191,11 @@ export const schemaDict = {
           properties: {
             group: {
               type: 'string',
+              knownValues: ['core'],
             },
             platform: {
               type: 'string',
+              knownValues: ['android', 'ios', 'web'],
             },
           },
         },
@@ -9205,6 +9207,7 @@ export const schemaDict = {
             properties: {
               group: {
                 type: 'string',
+                knownValues: ['core'],
               },
               offerings: {
                 type: 'array',
@@ -9223,9 +9226,11 @@ export const schemaDict = {
         properties: {
           id: {
             type: 'string',
+            knownValues: ['coreAnnual', 'coreMonthly'],
           },
           platform: {
             type: 'string',
+            knownValues: ['android', 'ios', 'web'],
           },
           product: {
             type: 'string',
@@ -9268,18 +9273,28 @@ export const schemaDict = {
         properties: {
           status: {
             type: 'string',
+            knownValues: ['active', 'expired', 'paused', 'unknown'],
           },
           renewalStatus: {
             type: 'string',
+            knownValues: [
+              'unknown',
+              'will_not_renew',
+              'will_pause',
+              'will_renew',
+            ],
           },
           group: {
             type: 'string',
+            knownValues: ['core'],
           },
           platform: {
             type: 'string',
+            knownValues: ['android', 'ios', 'web'],
           },
           offering: {
             type: 'string',
+            knownValues: ['coreAnnual', 'coreMonthly'],
           },
           periodEndsAt: {
             type: 'string',

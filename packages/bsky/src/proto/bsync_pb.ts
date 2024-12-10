@@ -690,21 +690,21 @@ export class ScanNotifOperationsResponse extends Message<ScanNotifOperationsResp
 }
 
 /**
- * @generated from message bsync.AddPurchaseOperationRequest
+ * @generated from message bsync.RefreshPurchasesRequest
  */
-export class AddPurchaseOperationRequest extends Message<AddPurchaseOperationRequest> {
+export class RefreshPurchasesRequest extends Message<RefreshPurchasesRequest> {
   /**
    * @generated from field: string actor_did = 1;
    */
   actorDid = ''
 
-  constructor(data?: PartialMessage<AddPurchaseOperationRequest>) {
+  constructor(data?: PartialMessage<RefreshPurchasesRequest>) {
     super()
     proto3.util.initPartial(data, this)
   }
 
   static readonly runtime: typeof proto3 = proto3
-  static readonly typeName = 'bsync.AddPurchaseOperationRequest'
+  static readonly typeName = 'bsync.RefreshPurchasesRequest'
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: 'actor_did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
   ])
@@ -712,86 +712,83 @@ export class AddPurchaseOperationRequest extends Message<AddPurchaseOperationReq
   static fromBinary(
     bytes: Uint8Array,
     options?: Partial<BinaryReadOptions>,
-  ): AddPurchaseOperationRequest {
-    return new AddPurchaseOperationRequest().fromBinary(bytes, options)
+  ): RefreshPurchasesRequest {
+    return new RefreshPurchasesRequest().fromBinary(bytes, options)
   }
 
   static fromJson(
     jsonValue: JsonValue,
     options?: Partial<JsonReadOptions>,
-  ): AddPurchaseOperationRequest {
-    return new AddPurchaseOperationRequest().fromJson(jsonValue, options)
+  ): RefreshPurchasesRequest {
+    return new RefreshPurchasesRequest().fromJson(jsonValue, options)
   }
 
   static fromJsonString(
     jsonString: string,
     options?: Partial<JsonReadOptions>,
-  ): AddPurchaseOperationRequest {
-    return new AddPurchaseOperationRequest().fromJsonString(jsonString, options)
+  ): RefreshPurchasesRequest {
+    return new RefreshPurchasesRequest().fromJsonString(jsonString, options)
   }
 
   static equals(
     a:
-      | AddPurchaseOperationRequest
-      | PlainMessage<AddPurchaseOperationRequest>
+      | RefreshPurchasesRequest
+      | PlainMessage<RefreshPurchasesRequest>
       | undefined,
     b:
-      | AddPurchaseOperationRequest
-      | PlainMessage<AddPurchaseOperationRequest>
+      | RefreshPurchasesRequest
+      | PlainMessage<RefreshPurchasesRequest>
       | undefined,
   ): boolean {
-    return proto3.util.equals(AddPurchaseOperationRequest, a, b)
+    return proto3.util.equals(RefreshPurchasesRequest, a, b)
   }
 }
 
 /**
- * @generated from message bsync.AddPurchaseOperationResponse
+ * @generated from message bsync.RefreshPurchasesResponse
  */
-export class AddPurchaseOperationResponse extends Message<AddPurchaseOperationResponse> {
-  constructor(data?: PartialMessage<AddPurchaseOperationResponse>) {
+export class RefreshPurchasesResponse extends Message<RefreshPurchasesResponse> {
+  constructor(data?: PartialMessage<RefreshPurchasesResponse>) {
     super()
     proto3.util.initPartial(data, this)
   }
 
   static readonly runtime: typeof proto3 = proto3
-  static readonly typeName = 'bsync.AddPurchaseOperationResponse'
+  static readonly typeName = 'bsync.RefreshPurchasesResponse'
   static readonly fields: FieldList = proto3.util.newFieldList(() => [])
 
   static fromBinary(
     bytes: Uint8Array,
     options?: Partial<BinaryReadOptions>,
-  ): AddPurchaseOperationResponse {
-    return new AddPurchaseOperationResponse().fromBinary(bytes, options)
+  ): RefreshPurchasesResponse {
+    return new RefreshPurchasesResponse().fromBinary(bytes, options)
   }
 
   static fromJson(
     jsonValue: JsonValue,
     options?: Partial<JsonReadOptions>,
-  ): AddPurchaseOperationResponse {
-    return new AddPurchaseOperationResponse().fromJson(jsonValue, options)
+  ): RefreshPurchasesResponse {
+    return new RefreshPurchasesResponse().fromJson(jsonValue, options)
   }
 
   static fromJsonString(
     jsonString: string,
     options?: Partial<JsonReadOptions>,
-  ): AddPurchaseOperationResponse {
-    return new AddPurchaseOperationResponse().fromJsonString(
-      jsonString,
-      options,
-    )
+  ): RefreshPurchasesResponse {
+    return new RefreshPurchasesResponse().fromJsonString(jsonString, options)
   }
 
   static equals(
     a:
-      | AddPurchaseOperationResponse
-      | PlainMessage<AddPurchaseOperationResponse>
+      | RefreshPurchasesResponse
+      | PlainMessage<RefreshPurchasesResponse>
       | undefined,
     b:
-      | AddPurchaseOperationResponse
-      | PlainMessage<AddPurchaseOperationResponse>
+      | RefreshPurchasesResponse
+      | PlainMessage<RefreshPurchasesResponse>
       | undefined,
   ): boolean {
-    return proto3.util.equals(AddPurchaseOperationResponse, a, b)
+    return proto3.util.equals(RefreshPurchasesResponse, a, b)
   }
 }
 

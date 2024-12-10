@@ -9,8 +9,11 @@
         "type": "params",
         "required": ["group", "platform"],
         "properties": {
-          "group": { "type": "string" },
-          "platform": { "type": "string" }
+          "group": { "type": "string", "knownValues": ["core"] },
+          "platform": {
+            "type": "string",
+            "knownValues": ["android", "ios", "web"]
+          }
         }
       },
       "output": {
@@ -19,7 +22,7 @@
           "type": "object",
           "required": [],
           "properties": {
-            "group": { "type": "string" },
+            "group": { "type": "string", "knownValues": ["core"] },
             "offerings": {
               "type": "array",
               "items": {
@@ -35,8 +38,14 @@
       "type": "object",
       "required": [],
       "properties": {
-        "id": { "type": "string" },
-        "platform": { "type": "string" },
+        "id": {
+          "type": "string",
+          "knownValues": ["coreAnnual", "coreMonthly"]
+        },
+        "platform": {
+          "type": "string",
+          "knownValues": ["android", "ios", "web"]
+        },
         "product": { "type": "string" }
       }
     }

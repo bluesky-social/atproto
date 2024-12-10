@@ -139,7 +139,7 @@ const createRoutes = (db: Database) => (router: ConnectRouter) =>
       throw new Error('not implemented')
     },
 
-    async addPurchaseOperation(req) {
+    async refreshPurchases(req) {
       const { actorDid } = req
 
       // Simulates that a call to the subscription service returns the 'core' entitlement.

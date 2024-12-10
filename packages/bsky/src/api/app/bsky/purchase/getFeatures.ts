@@ -8,7 +8,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ auth }) => {
       const viewer = auth.credentials.iss
 
-      const features = await getFeaturesForViewerEntitlements(viewer, ctx)
+      const features = await getFeaturesForViewerEntitlements(ctx, viewer)
 
       return {
         encoding: 'application/json',
@@ -29,8 +29,8 @@ const coreEntitlementFeatures: Features = {
 }
 
 const getFeaturesForViewerEntitlements = async (
-  viewerDid: string,
   ctx: AppContext,
+  viewerDid: string,
 ): Promise<Features> => {
   const { purchaseEntitlements } = await ctx.dataplane.getPurchaseEntitlements({
     dids: [viewerDid],
