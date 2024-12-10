@@ -11,7 +11,10 @@
           "filter": {
             "description": "Notification types to include in response.",
             "type": "array",
-            "items": { "type": "string" }
+            "items": {
+              "type": "string",
+              "description": "A reason that matches the reason property of #notification."
+            }
           },
           "limit": {
             "type": "integer",

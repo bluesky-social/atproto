@@ -8949,6 +8949,8 @@ export const schemaDict = {
               type: 'array',
               items: {
                 type: 'string',
+                description:
+                  'A reason that matches the reason property of #notification.',
               },
             },
             limit: {
