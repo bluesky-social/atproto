@@ -419,6 +419,73 @@ describe('notification views', () => {
     expect(forSnapshot(notifs.data)).toMatchSnapshot()
   })
 
+  it('filters notifications by reason', async () => {
+    const res = await agent.app.bsky.notification.listNotifications(
+      {
+        filter: ['mention'],
+      },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.alice,
+          ids.AppBskyNotificationListNotifications,
+        ),
+      },
+    )
+    expect(res.data.notifications.length).toBe(1)
+    expect(forSnapshot(res.data)).toMatchSnapshot()
+  })
+
+  it('filters notifications by multiple reasons', async () => {
+    const res = await agent.app.bsky.notification.listNotifications(
+      {
+        filter: ['mention', 'reply'],
+      },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.alice,
+          ids.AppBskyNotificationListNotifications,
+        ),
+      },
+    )
+    expect(res.data.notifications.length).toBe(4)
+    expect(forSnapshot(res.data)).toMatchSnapshot()
+  })
+
+  it('paginates filtered notifications', async () => {
+    const results = (results) =>
+      sort(results.flatMap((res) => res.notifications))
+    const paginator = async (cursor?: string) => {
+      const res = await agent.app.bsky.notification.listNotifications(
+        { filter: ['mention', 'reply'], cursor, limit: 2 },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyNotificationListNotifications,
+          ),
+        },
+      )
+      return res.data
+    }
+
+    const paginatedAll = await paginateAll(paginator)
+    paginatedAll.forEach((res) =>
+      expect(res.notifications.length).toBeLessThanOrEqual(2),
+    )
+
+    const full = await agent.app.bsky.notification.listNotifications(
+      { filter: ['mention', 'reply'] },
+      {
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyNotificationListNotifications,
+        ),
+      },
+    )
+
+    expect(full.data.notifications.length).toBe(4)
+    expect(results(paginatedAll)).toEqual(results([full.data]))
+  })
+
   it('fails open on clearly bad cursor.', async () => {
     const { data: notifs } =
       await agent.api.app.bsky.notification.listNotifications(
