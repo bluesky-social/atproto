@@ -11,18 +11,7 @@
           "filter": {
             "description": "Notification types to include in response.",
             "type": "array",
-            "items": {
-              "type": "string",
-              "knownValues": [
-                "like",
-                "repost",
-                "follow",
-                "mention",
-                "reply",
-                "quote",
-                "starterpack-joined"
-              ]
-            }
+            "items": { "type": "string" }
           },
           "limit": {
             "type": "integer",
