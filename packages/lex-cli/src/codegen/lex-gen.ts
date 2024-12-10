@@ -187,6 +187,8 @@ export function genObject(
 }
 
 export function genToken(file: SourceFile, lexUri: string, def: LexToken) {
+  //= /** <comment> */
+  //= export const <TOKEN> = `${id}#<token>`
   genComment(
     file.addVariableStatement({
       isExported: true,
@@ -194,7 +196,7 @@ export function genToken(file: SourceFile, lexUri: string, def: LexToken) {
       declarations: [
         {
           name: toScreamingSnakeCase(getHash(lexUri)),
-          initializer: `"${stripScheme(lexUri)}"`,
+          initializer: `\`\${id}#${getHash(lexUri)}\``,
         },
       ],
     }),
@@ -398,35 +400,30 @@ export function genXrpcOutput(
 export function genObjHelpers(
   file: SourceFile,
   lexUri: string,
-  ifaceName?: string,
+  ifaceName: string = toTitleCase(getHash(lexUri)),
 ) {
   const hash = getHash(lexUri)
 
-  //= export function is{X}(v: unknown): v is X {...}
+  //= export function is{X}(v: unknown): v is X & { $type: NS } {...}
   file
     .addFunction({
-      name: toCamelCase(`is-${ifaceName || hash}`),
+      name: toCamelCase(`is-${ifaceName}`),
       parameters: [{ name: `v`, type: `unknown` }],
-      returnType: `v is ${ifaceName || toTitleCase(hash)}`,
+      returnType: `v is ${ifaceName} & { $type: $Type<'${stripHash(lexUri)}', '${hash}'> }`,
+      isExported: true,
+    })
+    .setBodyText(`return is$typed(v, id, ${JSON.stringify(hash)})`)
+
+  //= export function validate{X}(v: unknown): ValidationResult<X> {...}
+  file
+    .addFunction({
+      name: toCamelCase(`validate-${ifaceName}`),
+      parameters: [{ name: `v`, type: `unknown` }],
       isExported: true,
     })
     .setBodyText(
-      hash === 'main'
-        ? `return isObj(v) && hasProp(v, '$type') && (v.$type === "${lexUri}" || v.$type === "${stripHash(
-            lexUri,
-          )}")`
-        : `return isObj(v) && hasProp(v, '$type') && v.$type === "${lexUri}"`,
+      `return lexicons.validate(\`\${id}#${hash}\`, v) as ValidationResult<${ifaceName}>`,
     )
-
-  //= export function validate{X}(v: unknown): ValidationResult {...}
-  file
-    .addFunction({
-      name: toCamelCase(`validate-${ifaceName || hash}`),
-      parameters: [{ name: `v`, type: `unknown` }],
-      returnType: `ValidationResult`,
-      isExported: true,
-    })
-    .setBodyText(`return lexicons.validate("${lexUri}", v)`)
 }
 
 export function stripScheme(uri: string): string {
