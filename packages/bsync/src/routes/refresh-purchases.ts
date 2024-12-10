@@ -5,7 +5,6 @@ import AppContext from '../context'
 import { authWithApiKey } from './auth'
 import { isValidDid } from './util'
 import { addPurchaseOperation } from '../purchases/addPurchaseOperation'
-import { PurchaseItem } from '../db/schema/purchase_item'
 
 export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
   async refreshPurchases(req, handlerCtx) {
