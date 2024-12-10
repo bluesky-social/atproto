@@ -43,6 +43,56 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
+const paginateNotifications = async (opts: {
+  ctx: Context
+  priority: boolean
+  filter?: string[]
+  cursor?: string
+  limit: number
+  viewer: string
+}) => {
+  const { ctx, priority, filter, limit, viewer } = opts
+
+  // if not filtering, then just pass through the response from dataplane
+  if (!filter) {
+    const res = await ctx.hydrator.dataplane.getNotifications({
+      actorDid: viewer,
+      priority,
+      cursor: opts.cursor,
+      limit,
+    })
+    return {
+      notifications: res.notifications,
+      cursor: res.cursor,
+    }
+  }
+
+  let nextCursor: string | undefined = opts.cursor
+  let toReturn: Notification[] = []
+  const maxAttempts = 10
+  const attemptSize = Math.ceil(limit / 2)
+  for (let i = 0; i < maxAttempts; i++) {
+    const res = await ctx.hydrator.dataplane.getNotifications({
+      actorDid: viewer,
+      priority,
+      cursor: nextCursor,
+      limit,
+    })
+    const filtered = res.notifications.filter((notif) =>
+      filter.includes(notif.reason),
+    )
+    toReturn = [...toReturn, ...filtered]
+    nextCursor = res.cursor ?? undefined
+    if (toReturn.length >= attemptSize || !nextCursor) {
+      break
+    }
+  }
+  return {
+    notifications: toReturn,
+    cursor: nextCursor,
+  }
+}
+
 const skeleton = async (
   input: SkeletonFnInput<Context, Params>,
 ): Promise<SkeletonState> => {
@@ -56,11 +106,13 @@ const skeleton = async (
     return { notifs: [], priority }
   }
   const [res, lastSeenRes] = await Promise.all([
-    ctx.hydrator.dataplane.getNotifications({
-      actorDid: viewer,
+    paginateNotifications({
+      ctx,
       priority,
+      filter: params.filter,
       cursor: params.cursor,
       limit: params.limit,
+      viewer,
     }),
     ctx.hydrator.dataplane.getNotificationSeen({
       actorDid: viewer,
