@@ -5,7 +5,7 @@ type PlatformId = 'web' | 'ios' | 'android'
 
 type SubscriptionGroupId = 'core'
 
-type SubscriptionOfferingId = 'coreMonthly' | 'coreAnnual'
+type SubscriptionOfferingId = 'core:monthly' | 'core:annual'
 
 const assertSubscriptionGroup: (
   group: string,
@@ -84,38 +84,41 @@ export class PurchasesClient {
     })
 
     this.STRIPE_PRODUCTS = {
-      coreMonthly: opts.stripeProductIdMonthly,
-      coreAnnual: opts.stripeProductIdAnnual,
+      'core:monthly': opts.stripeProductIdMonthly,
+      'core:annual': opts.stripeProductIdAnnual,
     }
 
     this.PRODUCTS = {
       web: {
-        coreMonthly: opts.stripePriceIdMonthly,
-        coreAnnual: opts.stripePriceIdAnnual,
+        'core:monthly': opts.stripePriceIdMonthly,
+        'core:annual': opts.stripePriceIdAnnual,
       },
       ios: {
-        coreMonthly: 'bluesky_plus_core_v1_monthly',
-        coreAnnual: 'bluesky_plus_core_v1_annual',
+        'core:monthly': 'bluesky_plus_core_v1_monthly',
+        'core:annual': 'bluesky_plus_core_v1_annual',
       },
       android: {
-        coreMonthly: 'bluesky_plus_core_v1:monthly',
-        coreAnnual: 'bluesky_plus_core_v1:annual',
+        'core:monthly': 'bluesky_plus_core_v1:monthly',
+        'core:annual': 'bluesky_plus_core_v1:annual',
       },
     }
 
     this.GROUPS = {
       core: {
         web: [
-          { id: 'coreMonthly', product: this.PRODUCTS.web.coreMonthly },
-          { id: 'coreAnnual', product: this.PRODUCTS.web.coreAnnual },
+          { id: 'core:monthly', product: this.PRODUCTS.web['core:monthly'] },
+          { id: 'core:annual', product: this.PRODUCTS.web['core:annual'] },
         ],
         ios: [
-          { id: 'coreMonthly', product: this.PRODUCTS.ios.coreMonthly },
-          { id: 'coreAnnual', product: this.PRODUCTS.ios.coreAnnual },
+          { id: 'core:monthly', product: this.PRODUCTS.ios['core:monthly'] },
+          { id: 'core:annual', product: this.PRODUCTS.ios['core:annual'] },
         ],
         android: [
-          { id: 'coreMonthly', product: this.PRODUCTS.android.coreMonthly },
-          { id: 'coreAnnual', product: this.PRODUCTS.android.coreAnnual },
+          {
+            id: 'core:monthly',
+            product: this.PRODUCTS.android['core:monthly'],
+          },
+          { id: 'core:annual', product: this.PRODUCTS.android['core:annual'] },
         ],
       },
     }
@@ -238,14 +241,14 @@ export class PurchasesClient {
     identifier: string,
   ): SubscriptionOfferingId | undefined => {
     switch (identifier) {
-      case this.STRIPE_PRODUCTS.coreMonthly:
-      case this.PRODUCTS.ios.coreMonthly:
-      case this.PRODUCTS.android.coreMonthly:
-        return 'coreMonthly'
-      case this.STRIPE_PRODUCTS.coreAnnual:
-      case this.PRODUCTS.ios.coreAnnual:
-      case this.PRODUCTS.android.coreAnnual:
-        return 'coreAnnual'
+      case this.STRIPE_PRODUCTS['core:monthly']:
+      case this.PRODUCTS.ios['core:monthly']:
+      case this.PRODUCTS.android['core:monthly']:
+        return 'core:monthly'
+      case this.STRIPE_PRODUCTS['core:annual']:
+      case this.PRODUCTS.ios['core:annual']:
+      case this.PRODUCTS.android['core:annual']:
+        return 'core:annual'
       default:
         return undefined
     }
@@ -255,12 +258,12 @@ export class PurchasesClient {
     identifier: string,
   ): SubscriptionGroupId | undefined => {
     switch (identifier) {
-      case this.STRIPE_PRODUCTS.coreMonthly:
-      case this.STRIPE_PRODUCTS.coreAnnual:
-      case this.PRODUCTS.ios.coreMonthly:
-      case this.PRODUCTS.ios.coreAnnual:
-      case this.PRODUCTS.android.coreMonthly:
-      case this.PRODUCTS.android.coreAnnual:
+      case this.STRIPE_PRODUCTS['core:monthly']:
+      case this.STRIPE_PRODUCTS['core:annual']:
+      case this.PRODUCTS.ios['core:monthly']:
+      case this.PRODUCTS.ios['core:annual']:
+      case this.PRODUCTS.android['core:monthly']:
+      case this.PRODUCTS.android['core:annual']:
         return 'core'
       default:
         return undefined

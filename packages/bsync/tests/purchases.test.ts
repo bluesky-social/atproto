@@ -555,7 +555,7 @@ describe('purchases', () => {
               renewalStatus: 'will_not_renew',
               group: 'core',
               platform: 'web',
-              offering: 'coreMonthly',
+              offering: 'core:monthly',
               periodEndsAt: Timestamp.fromDate(lastWeek),
               periodStartsAt: Timestamp.fromDate(twoWeeksAgo),
               purchasedAt: Timestamp.fromDate(twoWeeksAgo),
@@ -565,7 +565,7 @@ describe('purchases', () => {
               renewalStatus: 'will_renew',
               group: 'core',
               platform: 'web',
-              offering: 'coreAnnual',
+              offering: 'core:annual',
               periodEndsAt: Timestamp.fromDate(nextWeek),
               periodStartsAt: Timestamp.fromDate(lastWeek),
               purchasedAt: Timestamp.fromDate(lastWeek),
@@ -590,8 +590,8 @@ describe('purchases', () => {
         { group: 'core', platform: 'android' },
         {
           offerings: [
-            { id: 'coreMonthly', product: 'bluesky_plus_core_v1:monthly' },
-            { id: 'coreAnnual', product: 'bluesky_plus_core_v1:annual' },
+            { id: 'core:monthly', product: 'bluesky_plus_core_v1:monthly' },
+            { id: 'core:annual', product: 'bluesky_plus_core_v1:annual' },
           ],
         },
       )
@@ -600,8 +600,8 @@ describe('purchases', () => {
         { group: 'core', platform: 'ios' },
         {
           offerings: [
-            { id: 'coreMonthly', product: 'bluesky_plus_core_v1_monthly' },
-            { id: 'coreAnnual', product: 'bluesky_plus_core_v1_annual' },
+            { id: 'core:monthly', product: 'bluesky_plus_core_v1_monthly' },
+            { id: 'core:annual', product: 'bluesky_plus_core_v1_annual' },
           ],
         },
       )
@@ -610,8 +610,8 @@ describe('purchases', () => {
         { group: 'core', platform: 'web' },
         {
           offerings: [
-            { id: 'coreMonthly', product: stripePriceIdMonthly },
-            { id: 'coreAnnual', product: stripePriceIdAnnual },
+            { id: 'core:monthly', product: stripePriceIdMonthly },
+            { id: 'core:annual', product: stripePriceIdAnnual },
           ],
         },
       )

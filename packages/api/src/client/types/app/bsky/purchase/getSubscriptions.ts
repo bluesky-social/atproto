@@ -42,7 +42,7 @@ export interface Subscription {
     | (string & {})
   group?: 'core' | (string & {})
   platform?: 'android' | 'ios' | 'web' | (string & {})
-  offering?: 'coreAnnual' | 'coreMonthly' | (string & {})
+  offering?: 'core:annual' | 'core:monthly' | (string & {})
   periodEndsAt?: string
   periodStartsAt?: string
   purchasedAt?: string

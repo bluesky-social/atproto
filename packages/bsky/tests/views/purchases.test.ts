@@ -92,7 +92,7 @@ describe('purchases', () => {
             renewalStatus: 'will_renew',
             group: 'core',
             platform: 'web',
-            offering: 'coreMonthly',
+            offering: 'core:monthly',
             periodEndsAt: expect.any(String),
             periodStartsAt: expect.any(String),
             purchasedAt: expect.any(String),
@@ -116,12 +116,12 @@ describe('purchases', () => {
         group: 'core',
         offerings: [
           {
-            id: 'coreMonthly',
+            id: 'core:monthly',
             platform: 'ios',
             product: 'bluesky_plus_core_v1_monthly',
           },
           {
-            id: 'coreAnnual',
+            id: 'core:annual',
             platform: 'ios',
             product: 'bluesky_plus_core_v1_annual',
           },

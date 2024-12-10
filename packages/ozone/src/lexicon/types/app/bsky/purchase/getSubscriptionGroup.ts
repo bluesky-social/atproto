@@ -47,7 +47,7 @@ export type Handler<HA extends HandlerAuth = never> = (
 ) => Promise<HandlerOutput> | HandlerOutput
 
 export interface Offering {
-  id?: 'coreAnnual' | 'coreMonthly' | (string & {})
+  id?: 'core:annual' | 'core:monthly' | (string & {})
   platform?: 'android' | 'ios' | 'web' | (string & {})
   product?: string
   [k: string]: unknown
