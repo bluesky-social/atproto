@@ -57,7 +57,11 @@ export class SettingService {
       builder = builder.where('id', '<', cursorId)
     }
 
-    const options = await builder.orderBy('id', 'desc').limit(limit).execute()
+    const options = await builder
+      .orderBy('id', 'desc')
+      .orderBy('key', 'asc')
+      .limit(limit)
+      .execute()
 
     return {
       options,
