@@ -43,6 +43,9 @@ describe('purchases', () => {
   const entitlementValid: RcEntitlement = {
     expires_date: nextWeek.toISOString(),
   }
+  const entitlementValid2: RcEntitlement = {
+    expires_date: nextWeek.toISOString(),
+  }
 
   const stripePriceIdMonthly = 'price_id_monthly'
   const stripePriceIdAnnual = 'price_id_annual'
@@ -145,8 +148,8 @@ describe('purchases', () => {
       )
     })
 
-    it('stores valid entitlements from the API response, excluding expired', async () => {
-      revenueCatApiMock.mockReturnValueOnce({
+    it('stores sorted valid entitlements from the API response, excluding expired', async () => {
+      revenueCatApiMock.mockReturnValue({
         subscriber: {
           entitlements: { entitlementExpired },
           subscriptions: {},
@@ -182,9 +185,13 @@ describe('purchases', () => {
         fromId: op0.id,
       })
 
-      revenueCatApiMock.mockReturnValueOnce({
+      revenueCatApiMock.mockReturnValue({
         subscriber: {
-          entitlements: { entitlementValid, entitlementExpired },
+          entitlements: {
+            entitlementValid2,
+            entitlementValid,
+            entitlementExpired,
+          },
           subscriptions: {},
           subscriber_attributes: {},
         },
@@ -202,7 +209,7 @@ describe('purchases', () => {
       expect(op1).toStrictEqual({
         id: expect.any(Number),
         actorDid,
-        entitlements: ['entitlementValid'],
+        entitlements: ['entitlementValid', 'entitlementValid2'],
         createdAt: expect.any(Date),
       })
 
@@ -214,7 +221,7 @@ describe('purchases', () => {
           .executeTakeFirstOrThrow(),
       ).resolves.toStrictEqual({
         actorDid,
-        entitlements: ['entitlementValid'],
+        entitlements: ['entitlementValid', 'entitlementValid2'],
         fromId: op1.id,
       })
     })
@@ -258,10 +265,10 @@ describe('purchases', () => {
     })
   })
 
-  describe('addPurchaseOperation', () => {
+  describe('refreshPurchases', () => {
     it('fails on bad inputs', async () => {
       await expect(
-        client.addPurchaseOperation({
+        client.refreshPurchases({
           actorDid: 'invalid',
         }),
       ).rejects.toStrictEqual(
@@ -270,7 +277,7 @@ describe('purchases', () => {
     })
 
     it('stores valid entitlements from the API response, excluding expired', async () => {
-      revenueCatApiMock.mockReturnValueOnce({
+      revenueCatApiMock.mockReturnValue({
         subscriber: {
           entitlements: { entitlementExpired },
           subscriptions: {},
@@ -278,7 +285,7 @@ describe('purchases', () => {
         },
       })
 
-      await client.addPurchaseOperation({ actorDid })
+      await client.refreshPurchases({ actorDid })
 
       const op0 = await bsync.ctx.db.db
         .selectFrom('purchase_op')
@@ -306,7 +313,7 @@ describe('purchases', () => {
         fromId: op0.id,
       })
 
-      revenueCatApiMock.mockReturnValueOnce({
+      revenueCatApiMock.mockReturnValue({
         subscriber: {
           entitlements: { entitlementValid, entitlementExpired },
           subscriptions: {},
@@ -314,7 +321,7 @@ describe('purchases', () => {
         },
       })
 
-      await client.addPurchaseOperation({ actorDid })
+      await client.refreshPurchases({ actorDid })
 
       const op1 = await bsync.ctx.db.db
         .selectFrom('purchase_op')
@@ -352,7 +359,7 @@ describe('purchases', () => {
         },
       })
 
-      await client.addPurchaseOperation({ actorDid })
+      await client.refreshPurchases({ actorDid })
 
       const op = await bsync.ctx.db.db
         .selectFrom('purchase_op')
@@ -379,6 +386,92 @@ describe('purchases', () => {
         entitlements: [],
         fromId: op.id,
       })
+    })
+
+    it('only creates new operations if the entitlements differ from the current state', async () => {
+      // 1. pre-check, no operations existing.
+      await expect(
+        bsync.ctx.db.db
+          .selectFrom('purchase_op')
+          .selectAll()
+          .where('actorDid', '=', actorDid)
+          .execute(),
+      ).resolves.toHaveLength(0)
+      await expect(
+        bsync.ctx.db.db
+          .selectFrom('purchase_item')
+          .selectAll()
+          .where('actorDid', '=', actorDid)
+          .execute(),
+      ).resolves.toHaveLength(0)
+
+      // 2. 1 new entitlement, will generate 1 operation
+      revenueCatApiMock.mockReturnValue({
+        subscriber: {
+          entitlements: { entitlementValid },
+          subscriptions: {},
+          subscriber_attributes: {},
+        },
+      })
+      await client.refreshPurchases({ actorDid })
+
+      await expect(
+        bsync.ctx.db.db
+          .selectFrom('purchase_op')
+          .selectAll()
+          .where('actorDid', '=', actorDid)
+          .execute(),
+      ).resolves.toHaveLength(1)
+      await expect(
+        bsync.ctx.db.db
+          .selectFrom('purchase_item')
+          .selectAll()
+          .where('actorDid', '=', actorDid)
+          .execute(),
+      ).resolves.toHaveLength(1)
+
+      // 3. 1 new entitlement, will generate 1 operation
+      revenueCatApiMock.mockReturnValue({
+        subscriber: {
+          entitlements: { entitlementValid, entitlementValid2 },
+          subscriptions: {},
+          subscriber_attributes: {},
+        },
+      })
+      await client.refreshPurchases({ actorDid })
+
+      await expect(
+        bsync.ctx.db.db
+          .selectFrom('purchase_op')
+          .selectAll()
+          .where('actorDid', '=', actorDid)
+          .execute(),
+      ).resolves.toHaveLength(2)
+      await expect(
+        bsync.ctx.db.db
+          .selectFrom('purchase_item')
+          .selectAll()
+          .where('actorDid', '=', actorDid)
+          .execute(),
+      ).resolves.toHaveLength(1)
+
+      // 4. no new entitlements, will not generate new operations
+      await client.refreshPurchases({ actorDid })
+
+      await expect(
+        bsync.ctx.db.db
+          .selectFrom('purchase_op')
+          .selectAll()
+          .where('actorDid', '=', actorDid)
+          .execute(),
+      ).resolves.toHaveLength(2)
+      await expect(
+        bsync.ctx.db.db
+          .selectFrom('purchase_item')
+          .selectAll()
+          .where('actorDid', '=', actorDid)
+          .execute(),
+      ).resolves.toHaveLength(1)
     })
   })
 

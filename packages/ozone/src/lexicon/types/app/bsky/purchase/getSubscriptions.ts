@@ -44,11 +44,16 @@ export type Handler<HA extends HandlerAuth = never> = (
 ) => Promise<HandlerOutput> | HandlerOutput
 
 export interface Subscription {
-  status?: string
-  renewalStatus?: string
-  group?: string
-  platform?: string
-  offering?: string
+  status?: 'active' | 'expired' | 'paused' | 'unknown' | (string & {})
+  renewalStatus?:
+    | 'unknown'
+    | 'will_not_renew'
+    | 'will_pause'
+    | 'will_renew'
+    | (string & {})
+  group?: 'core' | (string & {})
+  platform?: 'android' | 'ios' | 'web' | (string & {})
+  offering?: 'coreAnnual' | 'coreMonthly' | (string & {})
   periodEndsAt?: string
   periodStartsAt?: string
   purchasedAt?: string

@@ -7,11 +7,13 @@ export const addPurchaseOperation = async (
   actorDid: string,
   entitlements: string[],
 ) => {
+  const sortedEntitlements = [...entitlements].sort()
+
   return db.transaction(async (txn) => {
     // create purchase op
-    const id = await createPurchaseOp(txn, actorDid, entitlements)
+    const id = await createPurchaseOp(txn, actorDid, sortedEntitlements)
     // update purchase state
-    await updatePurchaseItem(txn, id, actorDid, entitlements)
+    await updatePurchaseItem(txn, id, actorDid, sortedEntitlements)
     return id
   })
 }

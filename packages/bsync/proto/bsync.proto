@@ -68,11 +68,11 @@ message ScanNotifOperationsResponse {
   string cursor = 2;
 }
 
-message AddPurchaseOperationRequest {
+message RefreshPurchasesRequest {
   string actor_did = 1;
 }
 
-message AddPurchaseOperationResponse {}
+message RefreshPurchasesResponse {}
 
 message Subscription {
   string status = 1;
@@ -120,7 +120,7 @@ service Service {
   rpc AddNotifOperation(AddNotifOperationRequest) returns (AddNotifOperationResponse);
   rpc ScanNotifOperations(ScanNotifOperationsRequest) returns (ScanNotifOperationsResponse);
   // Purchase
-  rpc AddPurchaseOperation(AddPurchaseOperationRequest) returns (AddPurchaseOperationResponse);
+  rpc RefreshPurchases(RefreshPurchasesRequest) returns (RefreshPurchasesResponse);
   rpc GetSubscriptions(GetSubscriptionsRequest) returns (GetSubscriptionsResponse);
   rpc GetSubscriptionGroup(GetSubscriptionGroupRequest) returns (GetSubscriptionGroupResponse);
   // Ping

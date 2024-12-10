@@ -27,11 +27,28 @@
       "type": "object",
       "required": [],
       "properties": {
-        "status": { "type": "string" },
-        "renewalStatus": { "type": "string" },
-        "group": { "type": "string" },
-        "platform": { "type": "string" },
-        "offering": { "type": "string" },
+        "status": {
+          "type": "string",
+          "knownValues": ["active", "expired", "paused", "unknown"]
+        },
+        "renewalStatus": {
+          "type": "string",
+          "knownValues": [
+            "unknown",
+            "will_not_renew",
+            "will_pause",
+            "will_renew"
+          ]
+        },
+        "group": { "type": "string", "knownValues": ["core"] },
+        "platform": {
+          "type": "string",
+          "knownValues": ["android", "ios", "web"]
+        },
+        "offering": {
+          "type": "string",
+          "knownValues": ["coreAnnual", "coreMonthly"]
+        },
         "periodEndsAt": { "type": "string", "format": "datetime" },
         "periodStartsAt": { "type": "string", "format": "datetime" },
         "purchasedAt": { "type": "string", "format": "datetime" }

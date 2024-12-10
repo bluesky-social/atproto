@@ -8,14 +8,14 @@ import {
   AddMuteOperationResponse,
   AddNotifOperationRequest,
   AddNotifOperationResponse,
-  AddPurchaseOperationRequest,
-  AddPurchaseOperationResponse,
   GetSubscriptionGroupRequest,
   GetSubscriptionGroupResponse,
   GetSubscriptionsRequest,
   GetSubscriptionsResponse,
   PingRequest,
   PingResponse,
+  RefreshPurchasesRequest,
+  RefreshPurchasesResponse,
   ScanMuteOperationsRequest,
   ScanMuteOperationsResponse,
   ScanNotifOperationsRequest,
@@ -70,12 +70,12 @@ export const Service = {
     /**
      * Purchase
      *
-     * @generated from rpc bsync.Service.AddPurchaseOperation
+     * @generated from rpc bsync.Service.RefreshPurchases
      */
-    addPurchaseOperation: {
-      name: 'AddPurchaseOperation',
-      I: AddPurchaseOperationRequest,
-      O: AddPurchaseOperationResponse,
+    refreshPurchases: {
+      name: 'RefreshPurchases',
+      I: RefreshPurchasesRequest,
+      O: RefreshPurchasesResponse,
       kind: MethodKind.Unary,
     },
     /**

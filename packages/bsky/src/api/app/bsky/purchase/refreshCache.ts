@@ -10,7 +10,7 @@ export default function (server: Server, ctx: AppContext) {
       const { did } = input.body
       validateCredentials(did, auth)
 
-      await ctx.bsyncClient.addPurchaseOperation({
+      await ctx.bsyncClient.refreshPurchases({
         actorDid: did,
       })
 
