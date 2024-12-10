@@ -1,6 +1,6 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { Features } from '@atproto/api/dist/client/types/app/bsky/purchase/getFeatures'
+import { Features } from '../../../../lexicon/types/app/bsky/purchase/getFeatures'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.purchase.getFeatures({
@@ -36,7 +36,7 @@ const getFeaturesForViewerEntitlements = async (
     dids: [viewerDid],
   })
 
-  if (purchaseEntitlements?.length === 0) {
+  if (purchaseEntitlements.length === 0) {
     return defaultFeatures
   }
 
