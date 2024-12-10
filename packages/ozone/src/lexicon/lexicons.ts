@@ -8949,15 +8949,8 @@ export const schemaDict = {
               type: 'array',
               items: {
                 type: 'string',
-                knownValues: [
-                  'like',
-                  'repost',
-                  'follow',
-                  'mention',
-                  'reply',
-                  'quote',
-                  'starterpack-joined',
-                ],
+                description:
+                  'A reason that matches the reason property of #notification.',
               },
             },
             limit: {
