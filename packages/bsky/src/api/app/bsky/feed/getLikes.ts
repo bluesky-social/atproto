@@ -3,11 +3,12 @@ import { normalizeDatetimeAlways } from '@atproto/syntax'
 import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getLikes'
 import AppContext from '../../../../context'
-import { createPipeline } from '../../../../pipeline'
+import { createPipeline, RulesFnInput } from '../../../../pipeline'
 import {
   HydrateCtx,
   HydrationState,
   Hydrator,
+  mergeStates,
 } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 import { parseString } from '../../../../hydration/util'
@@ -43,8 +44,10 @@ const skeleton = async (inputs: {
   params: Params
 }): Promise<Skeleton> => {
   const { ctx, params } = inputs
+  const authorDid = creatorFromUri(params.uri)
+
   if (clearlyBadCursor(params.cursor)) {
-    return { likes: [] }
+    return { authorDid, likes: [] }
   }
   if (looksLikeNonSortedCursor(params.cursor)) {
     throw new InvalidRequestError(
@@ -57,6 +60,7 @@ const skeleton = async (inputs: {
     limit: params.limit,
   })
   return {
+    authorDid,
     likes: likesRes.uris,
     cursor: parseString(likesRes.cursor),
   }
@@ -68,18 +72,25 @@ const hydration = async (inputs: {
   skeleton: Skeleton
 }) => {
   const { ctx, params, skeleton } = inputs
-  return await ctx.hydrator.hydrateLikes(skeleton.likes, params.hydrateCtx)
+  const likesState = await ctx.hydrator.hydrateLikes(
+    skeleton.authorDid,
+    skeleton.likes,
+    params.hydrateCtx,
+  )
+  return likesState
 }
 
-const noBlocks = (inputs: {
-  ctx: Context
-  skeleton: Skeleton
-  hydration: HydrationState
-}) => {
-  const { ctx, skeleton, hydration } = inputs
-  skeleton.likes = skeleton.likes.filter((uri) => {
-    const creator = creatorFromUri(uri)
-    return !ctx.views.viewerBlockExists(creator, hydration)
+const noBlocks = (input: RulesFnInput<Context, Params, Skeleton>) => {
+  const { ctx, skeleton, hydration } = input
+
+  skeleton.likes = skeleton.likes.filter((likeUri) => {
+    const like = hydration.likes?.get(likeUri)
+    if (!like) return false
+    const likerDid = creatorFromUri(likeUri)
+    return (
+      !hydration.likeBlocks?.get(likeUri) &&
+      !ctx.views.viewerBlockExists(likerDid, hydration)
+    )
   })
   return skeleton
 }
@@ -123,6 +134,7 @@ type Context = {
 type Params = QueryParams & { hydrateCtx: HydrateCtx }
 
 type Skeleton = {
+  authorDid: string
   likes: string[]
   cursor?: string
 }
