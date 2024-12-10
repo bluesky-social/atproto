@@ -8945,10 +8945,20 @@ export const schemaDict = {
           type: 'params',
           properties: {
             filter: {
-              type: 'string',
               description: 'Notification types to include in response.',
-              knownValues: ['all', 'mentions'],
-              default: 'all',
+              type: 'array',
+              items: {
+                type: 'string',
+                knownValues: [
+                  'like',
+                  'repost',
+                  'follow',
+                  'mention',
+                  'reply',
+                  'quote',
+                  'starterpack-joined',
+                ],
+              },
             },
             limit: {
               type: 'integer',
