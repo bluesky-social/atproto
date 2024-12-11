@@ -1,5 +1,15 @@
 # @atproto/api
 
+## 0.13.20
+
+### Patch Changes
+
+- [#3222](https://github.com/bluesky-social/atproto/pull/3222) [`207728d2b`](https://github.com/bluesky-social/atproto/commit/207728d2b3b819af297ecb90e6373eb7721cbe34) Thanks [@gaearon](https://github.com/gaearon)! - Add optional reasons param to listNotifications
+
+- Updated dependencies [[`9fd65ba0f`](https://github.com/bluesky-social/atproto/commit/9fd65ba0fa4caca59fd0e6156145e4c2618e3a95)]:
+  - @atproto/lexicon@0.4.4
+  - @atproto/xrpc@0.6.5
+
 ## 0.13.19
 
 ### Patch Changes
