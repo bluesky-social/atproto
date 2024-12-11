@@ -1,0 +1,37 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.graph.vouch",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "Record declaring a 'vouch' for another account. Must be bi-directionally accepted by the subject through their profile reocrd.",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": ["subject", "relationship", "createdAt"],
+        "properties": {
+          "subject": { "type": "string", "format": "did" },
+          "relationship": {
+            "type": "string",
+            "knownValues": [
+              "verifiedBy",
+              "employeeOf",
+              "memberOf",
+              "affiliatedWith",
+              "countributorTo",
+              "alumnusOf",
+              "colleagueOf",
+              "creatorOf",
+              "founderOf",
+              "relatedTo",
+              "marriedTo",
+              "friendOf",
+              "nemesisOf"
+            ]
+          },
+          "createdAt": { "type": "string", "format": "datetime" }
+        }
+      }
+    }
+  }
+}

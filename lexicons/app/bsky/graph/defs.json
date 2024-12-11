@@ -161,6 +161,28 @@
           "description": "if the actor is followed by this DID, contains the AT-URI of the follow record"
         }
       }
+    },
+    "vouchView": {
+      "type": "object",
+      "required": ["uri", "cid", "record", "accepted", "creator", "indexedAt"],
+      "properties": {
+        "uri": { "type": "string", "format": "at-uri" },
+        "cid": { "type": "string", "format": "cid" },
+        "record": { "type": "unknown" },
+        "accepted": { 
+          "type": "boolean",
+          "description": "Whether the subject of the vouch has accepted the vouch yet. Often vouch views will be filtered such that they only return accpeted vouches."
+        },
+        "creator": {
+          "type": "ref",
+          "ref": "app.bsky.actor.defs#profileViewBasic"
+        },
+        "labels": {
+          "type": "array",
+          "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
+        },
+        "indexedAt": { "type": "string", "format": "datetime" }
+      }
     }
   }
 }

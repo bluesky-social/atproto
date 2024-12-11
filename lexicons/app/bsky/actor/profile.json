@@ -45,6 +45,22 @@
             "type": "ref",
             "ref": "com.atproto.repo.strongRef"
           },
+          "acceptingVouches": {
+            "type": "string",
+            "knownValues": ["all", "none", "following"]
+          },
+          "highlightedVouch": {
+            "type": "string",
+            "format": "at-uri"
+          },
+          "acceptedVouches": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "at-uri"
+            },
+            "maxLength": 20
+          },
           "createdAt": { "type": "string", "format": "datetime" }
         }
       }

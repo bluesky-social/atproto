@@ -1,0 +1,41 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.graph.listGivenVouches",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Enumerates all vouches given by a user. Only returns unaccepted vouches when the viewer matches the requested actor.",
+      "parameters": {
+        "type": "params",
+        "required": ["actor"],
+        "properties": {
+          "actor": { "type": "string", "format": "at-identifier" },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 50
+          },
+          "cursor": { "type": "string" }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["vouches"],
+          "properties": {
+            "cursor": { "type": "string" },
+            "vouches": {
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "app.bsky.graph.defs#vouchView"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
