@@ -5,8 +5,8 @@ import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
-import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
 import * as AppBskyGraphDefs from '../graph/defs'
+import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
 import * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef'
 
 export interface ProfileViewBasic {
@@ -15,6 +15,7 @@ export interface ProfileViewBasic {
   displayName?: string
   avatar?: string
   associated?: ProfileAssociated
+  highlightedVouch?: AppBskyGraphDefs.VouchView
   viewer?: ViewerState
   labels?: ComAtprotoLabelDefs.Label[]
   createdAt?: string
@@ -40,6 +41,7 @@ export interface ProfileView {
   description?: string
   avatar?: string
   associated?: ProfileAssociated
+  highlightedVouch?: AppBskyGraphDefs.VouchView
   indexedAt?: string
   createdAt?: string
   viewer?: ViewerState
@@ -70,6 +72,8 @@ export interface ProfileViewDetailed {
   followsCount?: number
   postsCount?: number
   associated?: ProfileAssociated
+  highlightedVouch?: AppBskyGraphDefs.VouchView
+  acceptedVouches?: AppBskyGraphDefs.VouchView[]
   joinedViaStarterPack?: AppBskyGraphDefs.StarterPackViewBasic
   indexedAt?: string
   createdAt?: string

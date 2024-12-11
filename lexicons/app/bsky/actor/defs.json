@@ -18,7 +18,10 @@
           "type": "ref",
           "ref": "#profileAssociated"
         },
-        "highlightedVouch": { "type": "ref", "ref": "app.bsky.graph.defs#vouchView" },
+        "highlightedVouch": {
+          "type": "ref",
+          "ref": "app.bsky.graph.defs#vouchView"
+        },
         "viewer": { "type": "ref", "ref": "#viewerState" },
         "labels": {
           "type": "array",
@@ -48,7 +51,10 @@
           "type": "ref",
           "ref": "#profileAssociated"
         },
-        "highlightedVouch": { "type": "ref", "ref": "app.bsky.graph.defs#vouchView" },
+        "highlightedVouch": {
+          "type": "ref",
+          "ref": "app.bsky.graph.defs#vouchView"
+        },
         "indexedAt": { "type": "string", "format": "datetime" },
         "createdAt": { "type": "string", "format": "datetime" },
         "viewer": { "type": "ref", "ref": "#viewerState" },
@@ -83,8 +89,11 @@
           "type": "ref",
           "ref": "#profileAssociated"
         },
-        "highlightedVouch": { "type": "ref", "ref": "app.bsky.graph.defs#vouchView" },
-        "acceptedVouches": { 
+        "highlightedVouch": {
+          "type": "ref",
+          "ref": "app.bsky.graph.defs#vouchView"
+        },
+        "acceptedVouches": {
           "type": "array",
           "items": { "type": "ref", "ref": "app.bsky.graph.defs#vouchView" }
         },

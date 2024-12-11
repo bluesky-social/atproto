@@ -204,3 +204,27 @@ export function isRelationship(v: unknown): v is Relationship {
 export function validateRelationship(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.graph.defs#relationship', v)
 }
+
+export interface VouchView {
+  uri: string
+  cid: string
+  record: {}
+  /** Whether the subject of the vouch has accepted the vouch yet. Often vouch views will be filtered such that they only return accpeted vouches. */
+  accepted: boolean
+  creator: AppBskyActorDefs.ProfileViewBasic
+  labels?: ComAtprotoLabelDefs.Label[]
+  indexedAt: string
+  [k: string]: unknown
+}
+
+export function isVouchView(v: unknown): v is VouchView {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.graph.defs#vouchView'
+  )
+}
+
+export function validateVouchView(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.graph.defs#vouchView', v)
+}

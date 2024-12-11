@@ -25,6 +25,7 @@ import * as List from './plugins/list'
 import * as ListItem from './plugins/list-item'
 import * as ListBlock from './plugins/list-block'
 import * as Block from './plugins/block'
+import * as Vouch from './plugins/vouch'
 import * as FeedGenerator from './plugins/feed-generator'
 import * as StarterPack from './plugins/starter-pack'
 import * as Labeler from './plugins/labeler'
@@ -47,6 +48,7 @@ export class IndexingService {
     listItem: ListItem.PluginType
     listBlock: ListBlock.PluginType
     block: Block.PluginType
+    vouch: Vouch.PluginType
     feedGenerator: FeedGenerator.PluginType
     starterPack: StarterPack.PluginType
     labeler: Labeler.PluginType
@@ -70,6 +72,7 @@ export class IndexingService {
       listItem: ListItem.makePlugin(this.db, this.background),
       listBlock: ListBlock.makePlugin(this.db, this.background),
       block: Block.makePlugin(this.db, this.background),
+      vouch: Vouch.makePlugin(this.db, this.background),
       feedGenerator: FeedGenerator.makePlugin(this.db, this.background),
       starterPack: StarterPack.makePlugin(this.db, this.background),
       labeler: Labeler.makePlugin(this.db, this.background),
@@ -304,6 +307,7 @@ export class IndexingService {
     await this.db.db.deleteFrom('follow').where('creator', '=', did).execute()
     await this.db.db.deleteFrom('repost').where('creator', '=', did).execute()
     await this.db.db.deleteFrom('like').where('creator', '=', did).execute()
+    await this.db.db.deleteFrom('vouch').where('creator', '=', did).execute()
     await this.db.db
       .deleteFrom('feed_generator')
       .where('creator', '=', did)
