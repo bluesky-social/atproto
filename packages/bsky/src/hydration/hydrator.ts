@@ -26,6 +26,7 @@ import {
   RelationshipPair,
   StarterPackAggs,
   StarterPacks,
+  Vouches,
 } from './graph'
 import {
   LabelHydrator,
@@ -67,6 +68,7 @@ export class HydrateCtx {
   includeTakedowns = this.vals.includeTakedowns
   includeActorTakedowns = this.vals.includeActorTakedowns
   include3pBlocks = this.vals.include3pBlocks
+  excludeVouches = this.vals.excludeVouches
   constructor(private vals: HydrateCtxVals) {}
   copy<V extends Partial<HydrateCtxVals>>(vals?: V): HydrateCtx & V {
     return new HydrateCtx({ ...this.vals, ...vals }) as HydrateCtx & V
@@ -79,6 +81,7 @@ export type HydrateCtxVals = {
   includeTakedowns?: boolean
   includeActorTakedowns?: boolean
   include3pBlocks?: boolean
+  excludeVouches?: boolean
 }
 
 export type HydrationState = {
@@ -107,6 +110,7 @@ export type HydrationState = {
   feedgenAggs?: FeedGenAggs
   starterPacks?: StarterPacks
   starterPackAggs?: StarterPackAggs
+  vouches?: Vouches
   labelers?: Labelers
   labelerViewers?: LabelerViewerStates
   labelerAggs?: LabelerAggs
@@ -181,6 +185,7 @@ export class Hydrator {
   // app.bsky.actor.defs#profileView
   // - profile
   //   - list basic
+  //   - vouch
   async hydrateProfiles(
     dids: string[],
     ctx: HydrateCtx,
@@ -191,10 +196,26 @@ export class Hydrator {
       this.label.getLabelsForSubjects(labelSubjectsForDid(dids), ctx.labelers),
       this.hydrateProfileViewers(dids, ctx),
     ])
+    let vouchState: HydrationState = {}
+    if (!ctx.excludeVouches) {
+      const vouchUris = Array.from(actors.values()).flatMap((a) => {
+        const uris = a?.profile?.acceptedVouches ?? []
+        const highlighted = a?.profile?.highlightedVouch
+        if (highlighted && !uris.includes(highlighted)) {
+          uris.push(highlighted)
+        }
+        return uris
+      })
+      vouchState = await this.hydrateVouches(vouchUris, ctx)
+    }
     if (!includeTakedowns) {
       actionTakedownLabels(dids, actors, labels)
     }
-    return mergeStates(profileViewersState ?? {}, {
+    const intermediateState = mergeManyStates(
+      profileViewersState ?? {},
+      vouchState,
+    )
+    return mergeStates(intermediateState, {
       actors,
       labels,
       ctx,
@@ -269,6 +290,29 @@ export class Hydrator {
       ctx,
       bidirectionalBlocks,
     })
+  }
+
+  // app.bsky.graph.defs#vouchView
+  // - profile basic
+  //   - profile basic
+  async hydrateVouches(
+    uris: string[],
+    ctx: HydrateCtx,
+  ): Promise<HydrationState> {
+    const [vouches, profilesState, labels] = await Promise.all([
+      this.graph.getVouches(uris, ctx.includeTakedowns),
+      this.hydrateProfilesBasic(
+        uris.map(didFromUri),
+        ctx.copy({ excludeVouches: true }), // ensure we don't keep recursively hydrating vouches
+      ),
+      this.label.getLabelsForSubjects(uris, ctx.labelers),
+    ])
+
+    if (!ctx.includeTakedowns) {
+      actionTakedownLabels(uris, vouches, labels)
+    }
+
+    return mergeStates(profilesState, { vouches, labels, ctx })
   }
 
   // app.bsky.graph.defs#listView
@@ -1186,6 +1230,7 @@ export const mergeStates = (
     feedgenViewers: mergeMaps(stateA.feedgenViewers, stateB.feedgenViewers),
     starterPacks: mergeMaps(stateA.starterPacks, stateB.starterPacks),
     starterPackAggs: mergeMaps(stateA.starterPackAggs, stateB.starterPackAggs),
+    vouches: mergeMaps(stateA.vouches, stateB.vouches),
     labelers: mergeMaps(stateA.labelers, stateB.labelers),
     labelerAggs: mergeMaps(stateA.labelerAggs, stateB.labelerAggs),
     labelerViewers: mergeMaps(stateA.labelerViewers, stateB.labelerViewers),

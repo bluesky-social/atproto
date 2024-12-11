@@ -156,6 +156,14 @@ message GetStarterPackRecordsResponse {
   repeated Record records = 1;
 }
 
+message GetVouchRecordsRequest {
+  repeated string uris = 1;
+}
+
+message GetVouchRecordsResponse {
+  repeated Record records = 1;
+}
+
 //
 // Follows
 //
@@ -1119,6 +1127,7 @@ service Service {
   rpc GetPostgateRecords(GetPostgateRecordsRequest) returns (GetPostgateRecordsResponse);
   rpc GetLabelerRecords(GetLabelerRecordsRequest) returns (GetLabelerRecordsResponse);
   rpc GetStarterPackRecords(GetStarterPackRecordsRequest) returns (GetStarterPackRecordsResponse);
+  rpc GetVouchRecords(GetVouchRecordsRequest) returns (GetVouchRecordsResponse);
 
   // Follows
   rpc GetActorFollowsActors(GetActorFollowsActorsRequest) returns (GetActorFollowsActorsResponse);

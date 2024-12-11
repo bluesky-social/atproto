@@ -1,11 +1,15 @@
 import { Record as FollowRecord } from '../lexicon/types/app/bsky/graph/follow'
 import { Record as BlockRecord } from '../lexicon/types/app/bsky/graph/block'
 import { Record as StarterPackRecord } from '../lexicon/types/app/bsky/graph/starterpack'
+import { Record as VouchRecord } from '../lexicon/types/app/bsky/graph/vouch'
 import { Record as ListRecord } from '../lexicon/types/app/bsky/graph/list'
 import { Record as ListItemRecord } from '../lexicon/types/app/bsky/graph/listitem'
 import { DataPlaneClient } from '../data-plane/client'
 import { HydrationMap, ItemRef, RecordInfo, parseRecord } from './util'
 import { FollowInfo } from '../proto/bsky_pb'
+
+export type Vouch = RecordInfo<VouchRecord>
+export type Vouches = HydrationMap<Vouch>
 
 export type List = RecordInfo<ListRecord>
 export type Lists = HydrationMap<List>
@@ -92,6 +96,15 @@ export class Blocks {
 
 export class GraphHydrator {
   constructor(public dataplane: DataPlaneClient) {}
+
+  async getVouches(uris: string[], includeTakedowns = false): Promise<Vouches> {
+    if (!uris.length) return new HydrationMap<Vouch>()
+    const res = await this.dataplane.getVouchRecords({ uris })
+    return uris.reduce((acc, uri, i) => {
+      const record = parseRecord<VouchRecord>(res.records[i], includeTakedowns)
+      return acc.set(uri, record ?? null)
+    }, new HydrationMap<Vouch>())
+  }
 
   async getLists(uris: string[], includeTakedowns = false): Promise<Lists> {
     if (!uris.length) return new HydrationMap<List>()
