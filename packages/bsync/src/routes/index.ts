@@ -9,6 +9,7 @@ import scanNotifOperations from './scan-notif-operations'
 import getSubscriptions from './get-subscriptions'
 import getSubscriptionGroup from './get-subscription-group'
 import refreshPurchases from './refresh-purchases'
+import scanPurchaseOperations from './scan-purchase-operations'
 
 export default (ctx: AppContext) => (router: ConnectRouter) => {
   return router.service(Service, {
@@ -19,6 +20,7 @@ export default (ctx: AppContext) => (router: ConnectRouter) => {
     ...getSubscriptions(ctx),
     ...getSubscriptionGroup(ctx),
     ...refreshPurchases(ctx),
+    ...scanPurchaseOperations(ctx),
     async ping() {
       const { db } = ctx
       await sql`select 1`.execute(db.db)

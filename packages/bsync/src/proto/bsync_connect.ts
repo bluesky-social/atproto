@@ -20,6 +20,8 @@ import {
   ScanMuteOperationsResponse,
   ScanNotifOperationsRequest,
   ScanNotifOperationsResponse,
+  ScanPurchaseOperationsRequest,
+  ScanPurchaseOperationsResponse,
 } from './bsync_pb'
 import { MethodKind } from '@bufbuild/protobuf'
 
@@ -70,15 +72,6 @@ export const Service = {
     /**
      * Purchase
      *
-     * @generated from rpc bsync.Service.RefreshPurchases
-     */
-    refreshPurchases: {
-      name: 'RefreshPurchases',
-      I: RefreshPurchasesRequest,
-      O: RefreshPurchasesResponse,
-      kind: MethodKind.Unary,
-    },
-    /**
      * @generated from rpc bsync.Service.GetSubscriptions
      */
     getSubscriptions: {
@@ -94,6 +87,24 @@ export const Service = {
       name: 'GetSubscriptionGroup',
       I: GetSubscriptionGroupRequest,
       O: GetSubscriptionGroupResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsync.Service.RefreshPurchases
+     */
+    refreshPurchases: {
+      name: 'RefreshPurchases',
+      I: RefreshPurchasesRequest,
+      O: RefreshPurchasesResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsync.Service.ScanPurchaseOperations
+     */
+    scanPurchaseOperations: {
+      name: 'ScanPurchaseOperations',
+      I: ScanPurchaseOperationsRequest,
+      O: ScanPurchaseOperationsResponse,
       kind: MethodKind.Unary,
     },
     /**
