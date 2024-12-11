@@ -9,6 +9,8 @@ export default function (server: Server, ctx: AppContext) {
         encoding: 'application/json',
         body: {
           checkEmailConfirmed: ctx.cfg.clientCheckEmailConfirmed,
+          trendingTopicsEnabled: ctx.cfg.trendingTopicsEnabled,
+          trendingTopicsLangs: ctx.cfg.trendingTopicsLangs,
         },
       }
     },
