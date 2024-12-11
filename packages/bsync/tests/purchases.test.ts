@@ -15,9 +15,12 @@ import {
   RcGetSubscriberResponse,
 } from '../src/purchases'
 import { Code, ConnectError } from '@connectrpc/connect'
-import { GetSubscriptionsResponse } from '../src/proto/bsync_pb'
+import {
+  GetSubscriptionsResponse,
+  PurchaseOperation,
+} from '../src/proto/bsync_pb'
 import { Timestamp } from '@bufbuild/protobuf'
-import { DAY } from '@atproto/common'
+import { DAY, wait } from '@atproto/common'
 
 const revenueCatWebhookAuthorization = 'Bearer any-token'
 
@@ -67,7 +70,7 @@ describe('purchases', () => {
         dbUrl: process.env.DB_POSTGRES_URL,
         dbSchema: 'bsync_purchases',
         apiKeys: ['key-1'],
-        longPollTimeoutMs: 500,
+        longPollTimeoutMs: 3000,
         revenueCatV1ApiKey: 'any-key',
         revenueCatV1ApiUrl: `http://localhost:${revenueCatPort}`,
         revenueCatWebhookAuthorization,
@@ -632,6 +635,103 @@ describe('purchases', () => {
         { group: 'core', platform: 'wrong-platform' },
         `invalid platform: 'wrong-platform'`,
       )
+    })
+  })
+
+  describe('scanPurchaseOperations', () => {
+    it('requires auth', async () => {
+      // unauthed
+      const unauthedClient = createClient({
+        httpVersion: '1.1',
+        baseUrl: `http://localhost:${bsync.ctx.cfg.service.port}`,
+      })
+      const tryScanPurchaseOperations1 = unauthedClient.scanPurchaseOperations(
+        {},
+      )
+      await expect(tryScanPurchaseOperations1).rejects.toEqual(
+        new ConnectError('missing auth', Code.Unauthenticated),
+      )
+      // bad auth
+      const badauthedClient = createClient({
+        httpVersion: '1.1',
+        baseUrl: `http://localhost:${bsync.ctx.cfg.service.port}`,
+        interceptors: [authWithApiKey('key-bad')],
+      })
+      const tryScanPurchaseOperations2 = badauthedClient.scanPurchaseOperations(
+        {},
+      )
+      await expect(tryScanPurchaseOperations2).rejects.toEqual(
+        new ConnectError('invalid api key', Code.Unauthenticated),
+      )
+    })
+
+    it('pages over created purchase ops.', async () => {
+      // add 100 purchase ops
+      for (let i = 0; i < 100; ++i) {
+        revenueCatApiMock.mockReturnValue({
+          subscriber: {
+            entitlements: { [`entitlement-${i}`]: entitlementValid },
+            subscriptions: {},
+            subscriber_attributes: {},
+          },
+        })
+
+        await client.refreshPurchases({ actorDid: `did:example:a` })
+      }
+
+      let cursor: string | undefined
+      const operations: PurchaseOperation[] = []
+      do {
+        const res = await client.scanPurchaseOperations({
+          cursor,
+          limit: 30,
+        })
+        operations.push(...res.operations)
+        cursor = res.operations.length ? res.cursor : undefined
+      } while (cursor)
+
+      expect(operations.length).toEqual(100)
+      const operationIds = operations.map((op) => parseInt(op.id, 10))
+      const ascending = (a: number, b: number) => a - b
+      expect(operationIds).toEqual([...operationIds].sort(ascending))
+    })
+
+    it('supports long-poll, finding an operation.', async () => {
+      const scanPromise = client.scanPurchaseOperations({})
+      await wait(100) // would be complete by now if it wasn't long-polling for an item
+
+      revenueCatApiMock.mockReturnValue({
+        subscriber: {
+          entitlements: { [`entitlement-b`]: entitlementValid },
+          subscriptions: {},
+          subscriber_attributes: {},
+        },
+      })
+      await client.refreshPurchases({
+        actorDid: 'did:example:a',
+      })
+
+      const res = await scanPromise
+
+      const operation = await bsync.ctx.db.db
+        .selectFrom('purchase_op')
+        .selectAll()
+        .where('actorDid', '=', 'did:example:a')
+        .executeTakeFirstOrThrow()
+
+      expect(res.operations.length).toEqual(1)
+      expect(res.operations[0]).toEqual({
+        id: operation.id.toString(),
+        actorDid: 'did:example:a',
+        entitlements: ['entitlement-b'],
+      })
+      expect(res.cursor).toEqual(operation.id.toString())
+    })
+
+    it('supports long-poll, not finding an operation.', async () => {
+      const res = await client.scanPurchaseOperations({})
+      expect(res.cursor).toEqual('')
+      expect(res.operations).toEqual([])
     })
   })
 })

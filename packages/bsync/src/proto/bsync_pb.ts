@@ -690,109 +690,6 @@ export class ScanNotifOperationsResponse extends Message<ScanNotifOperationsResp
 }
 
 /**
- * @generated from message bsync.RefreshPurchasesRequest
- */
-export class RefreshPurchasesRequest extends Message<RefreshPurchasesRequest> {
-  /**
-   * @generated from field: string actor_did = 1;
-   */
-  actorDid = ''
-
-  constructor(data?: PartialMessage<RefreshPurchasesRequest>) {
-    super()
-    proto3.util.initPartial(data, this)
-  }
-
-  static readonly runtime: typeof proto3 = proto3
-  static readonly typeName = 'bsync.RefreshPurchasesRequest'
-  static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: 'actor_did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
-  ])
-
-  static fromBinary(
-    bytes: Uint8Array,
-    options?: Partial<BinaryReadOptions>,
-  ): RefreshPurchasesRequest {
-    return new RefreshPurchasesRequest().fromBinary(bytes, options)
-  }
-
-  static fromJson(
-    jsonValue: JsonValue,
-    options?: Partial<JsonReadOptions>,
-  ): RefreshPurchasesRequest {
-    return new RefreshPurchasesRequest().fromJson(jsonValue, options)
-  }
-
-  static fromJsonString(
-    jsonString: string,
-    options?: Partial<JsonReadOptions>,
-  ): RefreshPurchasesRequest {
-    return new RefreshPurchasesRequest().fromJsonString(jsonString, options)
-  }
-
-  static equals(
-    a:
-      | RefreshPurchasesRequest
-      | PlainMessage<RefreshPurchasesRequest>
-      | undefined,
-    b:
-      | RefreshPurchasesRequest
-      | PlainMessage<RefreshPurchasesRequest>
-      | undefined,
-  ): boolean {
-    return proto3.util.equals(RefreshPurchasesRequest, a, b)
-  }
-}
-
-/**
- * @generated from message bsync.RefreshPurchasesResponse
- */
-export class RefreshPurchasesResponse extends Message<RefreshPurchasesResponse> {
-  constructor(data?: PartialMessage<RefreshPurchasesResponse>) {
-    super()
-    proto3.util.initPartial(data, this)
-  }
-
-  static readonly runtime: typeof proto3 = proto3
-  static readonly typeName = 'bsync.RefreshPurchasesResponse'
-  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
-
-  static fromBinary(
-    bytes: Uint8Array,
-    options?: Partial<BinaryReadOptions>,
-  ): RefreshPurchasesResponse {
-    return new RefreshPurchasesResponse().fromBinary(bytes, options)
-  }
-
-  static fromJson(
-    jsonValue: JsonValue,
-    options?: Partial<JsonReadOptions>,
-  ): RefreshPurchasesResponse {
-    return new RefreshPurchasesResponse().fromJson(jsonValue, options)
-  }
-
-  static fromJsonString(
-    jsonString: string,
-    options?: Partial<JsonReadOptions>,
-  ): RefreshPurchasesResponse {
-    return new RefreshPurchasesResponse().fromJsonString(jsonString, options)
-  }
-
-  static equals(
-    a:
-      | RefreshPurchasesResponse
-      | PlainMessage<RefreshPurchasesResponse>
-      | undefined,
-    b:
-      | RefreshPurchasesResponse
-      | PlainMessage<RefreshPurchasesResponse>
-      | undefined,
-  ): boolean {
-    return proto3.util.equals(RefreshPurchasesResponse, a, b)
-  }
-}
-
-/**
  * @generated from message bsync.Subscription
  */
 export class Subscription extends Message<Subscription> {
@@ -1187,6 +1084,310 @@ export class GetSubscriptionGroupResponse extends Message<GetSubscriptionGroupRe
       | undefined,
   ): boolean {
     return proto3.util.equals(GetSubscriptionGroupResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsync.RefreshPurchasesRequest
+ */
+export class RefreshPurchasesRequest extends Message<RefreshPurchasesRequest> {
+  /**
+   * @generated from field: string actor_did = 1;
+   */
+  actorDid = ''
+
+  constructor(data?: PartialMessage<RefreshPurchasesRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsync.RefreshPurchasesRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'actor_did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): RefreshPurchasesRequest {
+    return new RefreshPurchasesRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): RefreshPurchasesRequest {
+    return new RefreshPurchasesRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): RefreshPurchasesRequest {
+    return new RefreshPurchasesRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | RefreshPurchasesRequest
+      | PlainMessage<RefreshPurchasesRequest>
+      | undefined,
+    b:
+      | RefreshPurchasesRequest
+      | PlainMessage<RefreshPurchasesRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(RefreshPurchasesRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsync.RefreshPurchasesResponse
+ */
+export class RefreshPurchasesResponse extends Message<RefreshPurchasesResponse> {
+  constructor(data?: PartialMessage<RefreshPurchasesResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsync.RefreshPurchasesResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): RefreshPurchasesResponse {
+    return new RefreshPurchasesResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): RefreshPurchasesResponse {
+    return new RefreshPurchasesResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): RefreshPurchasesResponse {
+    return new RefreshPurchasesResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | RefreshPurchasesResponse
+      | PlainMessage<RefreshPurchasesResponse>
+      | undefined,
+    b:
+      | RefreshPurchasesResponse
+      | PlainMessage<RefreshPurchasesResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(RefreshPurchasesResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsync.PurchaseOperation
+ */
+export class PurchaseOperation extends Message<PurchaseOperation> {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id = ''
+
+  /**
+   * @generated from field: string actor_did = 2;
+   */
+  actorDid = ''
+
+  /**
+   * @generated from field: repeated string entitlements = 3;
+   */
+  entitlements: string[] = []
+
+  constructor(data?: PartialMessage<PurchaseOperation>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsync.PurchaseOperation'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'id', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'actor_did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    {
+      no: 3,
+      name: 'entitlements',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+      repeated: true,
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): PurchaseOperation {
+    return new PurchaseOperation().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): PurchaseOperation {
+    return new PurchaseOperation().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): PurchaseOperation {
+    return new PurchaseOperation().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a: PurchaseOperation | PlainMessage<PurchaseOperation> | undefined,
+    b: PurchaseOperation | PlainMessage<PurchaseOperation> | undefined,
+  ): boolean {
+    return proto3.util.equals(PurchaseOperation, a, b)
+  }
+}
+
+/**
+ * @generated from message bsync.ScanPurchaseOperationsRequest
+ */
+export class ScanPurchaseOperationsRequest extends Message<ScanPurchaseOperationsRequest> {
+  /**
+   * @generated from field: string cursor = 1;
+   */
+  cursor = ''
+
+  /**
+   * @generated from field: int32 limit = 2;
+   */
+  limit = 0
+
+  constructor(data?: PartialMessage<ScanPurchaseOperationsRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsync.ScanPurchaseOperationsRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'cursor', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'limit', kind: 'scalar', T: 5 /* ScalarType.INT32 */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): ScanPurchaseOperationsRequest {
+    return new ScanPurchaseOperationsRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): ScanPurchaseOperationsRequest {
+    return new ScanPurchaseOperationsRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): ScanPurchaseOperationsRequest {
+    return new ScanPurchaseOperationsRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | ScanPurchaseOperationsRequest
+      | PlainMessage<ScanPurchaseOperationsRequest>
+      | undefined,
+    b:
+      | ScanPurchaseOperationsRequest
+      | PlainMessage<ScanPurchaseOperationsRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(ScanPurchaseOperationsRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsync.ScanPurchaseOperationsResponse
+ */
+export class ScanPurchaseOperationsResponse extends Message<ScanPurchaseOperationsResponse> {
+  /**
+   * @generated from field: repeated bsync.PurchaseOperation operations = 1;
+   */
+  operations: PurchaseOperation[] = []
+
+  /**
+   * @generated from field: string cursor = 2;
+   */
+  cursor = ''
+
+  constructor(data?: PartialMessage<ScanPurchaseOperationsResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsync.ScanPurchaseOperationsResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    {
+      no: 1,
+      name: 'operations',
+      kind: 'message',
+      T: PurchaseOperation,
+      repeated: true,
+    },
+    { no: 2, name: 'cursor', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): ScanPurchaseOperationsResponse {
+    return new ScanPurchaseOperationsResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): ScanPurchaseOperationsResponse {
+    return new ScanPurchaseOperationsResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): ScanPurchaseOperationsResponse {
+    return new ScanPurchaseOperationsResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | ScanPurchaseOperationsResponse
+      | PlainMessage<ScanPurchaseOperationsResponse>
+      | undefined,
+    b:
+      | ScanPurchaseOperationsResponse
+      | PlainMessage<ScanPurchaseOperationsResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(ScanPurchaseOperationsResponse, a, b)
   }
 }
 
