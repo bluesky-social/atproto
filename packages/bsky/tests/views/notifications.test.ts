@@ -417,6 +417,17 @@ describe('notification views', () => {
       ),
     ).toBe(true)
     expect(forSnapshot(notifs.data)).toMatchSnapshot()
+    await agent.api.app.bsky.notification.putPreferences(
+      { priority: false },
+      {
+        encoding: 'application/json',
+        headers: await network.serviceHeaders(
+          sc.dids.carol,
+          ids.AppBskyNotificationPutPreferences,
+        ),
+      },
+    )
+    await network.processAll()
   })
 
   it('filters notifications by reason', async () => {

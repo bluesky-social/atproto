@@ -1457,7 +1457,7 @@ Object {
       "uri": "record(9)",
     },
   ],
-  "priority": true,
+  "priority": false,
   "seenAt": "1970-01-01T00:00:00.000Z",
 }
 `;
@@ -1515,7 +1515,7 @@ Object {
       "uri": "record(0)",
     },
   ],
-  "priority": true,
+  "priority": false,
   "seenAt": "1970-01-01T00:00:00.000Z",
 }
 `;
