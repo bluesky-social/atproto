@@ -46,15 +46,15 @@ export default function (server: Server, ctx: AppContext) {
 const paginateNotifications = async (opts: {
   ctx: Context
   priority: boolean
-  filter?: string[]
+  reasons?: string[]
   cursor?: string
   limit: number
   viewer: string
 }) => {
-  const { ctx, priority, filter, limit, viewer } = opts
+  const { ctx, priority, reasons, limit, viewer } = opts
 
   // if not filtering, then just pass through the response from dataplane
-  if (!filter) {
+  if (!reasons) {
     const res = await ctx.hydrator.dataplane.getNotifications({
       actorDid: viewer,
       priority,
@@ -79,7 +79,7 @@ const paginateNotifications = async (opts: {
       limit,
     })
     const filtered = res.notifications.filter((notif) =>
-      filter.includes(notif.reason),
+      reasons.includes(notif.reason),
     )
     toReturn = [...toReturn, ...filtered]
     nextCursor = res.cursor ?? undefined
@@ -109,7 +109,7 @@ const skeleton = async (
     paginateNotifications({
       ctx,
       priority,
-      filter: params.filter,
+      reasons: params.reasons,
       cursor: params.cursor,
       limit: params.limit,
       viewer,

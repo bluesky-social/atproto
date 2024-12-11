@@ -433,7 +433,7 @@ describe('notification views', () => {
   it('filters notifications by reason', async () => {
     const res = await agent.app.bsky.notification.listNotifications(
       {
-        filter: ['mention'],
+        reasons: ['mention'],
       },
       {
         headers: await network.serviceHeaders(
@@ -449,7 +449,7 @@ describe('notification views', () => {
   it('filters notifications by multiple reasons', async () => {
     const res = await agent.app.bsky.notification.listNotifications(
       {
-        filter: ['mention', 'reply'],
+        reasons: ['mention', 'reply'],
       },
       {
         headers: await network.serviceHeaders(
@@ -467,7 +467,7 @@ describe('notification views', () => {
       sort(results.flatMap((res) => res.notifications))
     const paginator = async (cursor?: string) => {
       const res = await agent.app.bsky.notification.listNotifications(
-        { filter: ['mention', 'reply'], cursor, limit: 2 },
+        { reasons: ['mention', 'reply'], cursor, limit: 2 },
         {
           headers: await network.serviceHeaders(
             alice,
@@ -484,7 +484,7 @@ describe('notification views', () => {
     )
 
     const full = await agent.app.bsky.notification.listNotifications(
-      { filter: ['mention', 'reply'] },
+      { reasons: ['mention', 'reply'] },
       {
         headers: await network.serviceHeaders(
           alice,
