@@ -5,4 +5,4 @@
 "@atproto/pds": patch
 ---
 
-Add optional filter param to listNotifications
+Add optional reasons param to listNotifications
