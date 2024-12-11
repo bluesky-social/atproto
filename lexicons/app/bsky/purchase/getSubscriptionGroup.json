@@ -1,0 +1,53 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.purchase.getSubscriptionGroup",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Gets a subscription group and its offerings for the target platform. Requires auth.",
+      "parameters": {
+        "type": "params",
+        "required": ["group", "platform"],
+        "properties": {
+          "group": { "type": "string", "knownValues": ["core"] },
+          "platform": {
+            "type": "string",
+            "knownValues": ["android", "ios", "web"]
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": [],
+          "properties": {
+            "group": { "type": "string", "knownValues": ["core"] },
+            "offerings": {
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "#offering"
+              }
+            }
+          }
+        }
+      }
+    },
+    "offering": {
+      "type": "object",
+      "required": [],
+      "properties": {
+        "id": {
+          "type": "string",
+          "knownValues": ["core:annual", "core:monthly"]
+        },
+        "platform": {
+          "type": "string",
+          "knownValues": ["android", "ios", "web"]
+        },
+        "product": { "type": "string" }
+      }
+    }
+  }
+}

@@ -11247,6 +11247,195 @@ export class GetFollowsFollowingResponse extends Message<GetFollowsFollowingResp
 }
 
 /**
+ * @generated from message bsky.PurchaseEntitlement
+ */
+export class PurchaseEntitlement extends Message<PurchaseEntitlement> {
+  /**
+   * @generated from field: repeated string entitlements = 1;
+   */
+  entitlements: string[] = []
+
+  /**
+   * @generated from field: google.protobuf.Timestamp created_at = 2;
+   */
+  createdAt?: Timestamp
+
+  constructor(data?: PartialMessage<PurchaseEntitlement>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.PurchaseEntitlement'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    {
+      no: 1,
+      name: 'entitlements',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+      repeated: true,
+    },
+    { no: 2, name: 'created_at', kind: 'message', T: Timestamp },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): PurchaseEntitlement {
+    return new PurchaseEntitlement().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): PurchaseEntitlement {
+    return new PurchaseEntitlement().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): PurchaseEntitlement {
+    return new PurchaseEntitlement().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a: PurchaseEntitlement | PlainMessage<PurchaseEntitlement> | undefined,
+    b: PurchaseEntitlement | PlainMessage<PurchaseEntitlement> | undefined,
+  ): boolean {
+    return proto3.util.equals(PurchaseEntitlement, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.GetPurchaseEntitlementsRequest
+ */
+export class GetPurchaseEntitlementsRequest extends Message<GetPurchaseEntitlementsRequest> {
+  /**
+   * @generated from field: repeated string dids = 1;
+   */
+  dids: string[] = []
+
+  constructor(data?: PartialMessage<GetPurchaseEntitlementsRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetPurchaseEntitlementsRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    {
+      no: 1,
+      name: 'dids',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+      repeated: true,
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetPurchaseEntitlementsRequest {
+    return new GetPurchaseEntitlementsRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetPurchaseEntitlementsRequest {
+    return new GetPurchaseEntitlementsRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetPurchaseEntitlementsRequest {
+    return new GetPurchaseEntitlementsRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | GetPurchaseEntitlementsRequest
+      | PlainMessage<GetPurchaseEntitlementsRequest>
+      | undefined,
+    b:
+      | GetPurchaseEntitlementsRequest
+      | PlainMessage<GetPurchaseEntitlementsRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetPurchaseEntitlementsRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.GetPurchaseEntitlementsResponse
+ */
+export class GetPurchaseEntitlementsResponse extends Message<GetPurchaseEntitlementsResponse> {
+  /**
+   * @generated from field: repeated bsky.PurchaseEntitlement purchaseEntitlements = 1;
+   */
+  purchaseEntitlements: PurchaseEntitlement[] = []
+
+  constructor(data?: PartialMessage<GetPurchaseEntitlementsResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetPurchaseEntitlementsResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    {
+      no: 1,
+      name: 'purchaseEntitlements',
+      kind: 'message',
+      T: PurchaseEntitlement,
+      repeated: true,
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetPurchaseEntitlementsResponse {
+    return new GetPurchaseEntitlementsResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetPurchaseEntitlementsResponse {
+    return new GetPurchaseEntitlementsResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetPurchaseEntitlementsResponse {
+    return new GetPurchaseEntitlementsResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | GetPurchaseEntitlementsResponse
+      | PlainMessage<GetPurchaseEntitlementsResponse>
+      | undefined,
+    b:
+      | GetPurchaseEntitlementsResponse
+      | PlainMessage<GetPurchaseEntitlementsResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetPurchaseEntitlementsResponse, a, b)
+  }
+}
+
+/**
  * Ping
  *
  * @generated from message bsky.PingRequest
