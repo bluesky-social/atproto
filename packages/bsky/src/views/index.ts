@@ -28,6 +28,7 @@ import {
   ListViewBasic,
   StarterPackView,
   StarterPackViewBasic,
+  VouchView,
 } from '../lexicon/types/app/bsky/graph/defs'
 import {
   parseThreadGate,
@@ -35,7 +36,11 @@ import {
   VideoUriBuilder,
   parsePostgate,
 } from './util'
-import { uriToDid as creatorFromUri, safePinnedPost } from '../util/uris'
+import {
+  uriToDid as creatorFromUri,
+  safePinnedPost,
+  uriToDid,
+} from '../util/uris'
 import { isListRule } from '../lexicon/types/app/bsky/feed/threadgate'
 import { isSelfLabels } from '../lexicon/types/com/atproto/label/defs'
 import {
@@ -432,6 +437,23 @@ export class Views {
       feeds,
       list,
       listItemsSample,
+    }
+  }
+
+  vouch(uri: string, state: HydrationState): VouchView | undefined {
+    const vouchInfo = state.vouches?.get(uri)
+    if (!vouchInfo) return
+    const creator = this.profileBasic(uriToDid(uri), state)
+    if (!creator) return
+    const labels = state.labels?.getBySubject(uri) ?? []
+    return {
+      uri,
+      cid: vouchInfo.vouch.cid,
+      record: vouchInfo.vouch.record,
+      accept: vouchInfo.accept,
+      creator,
+      labels,
+      indexedAt: this.indexedAt(vouchInfo.vouch).toISOString(),
     }
   }
 

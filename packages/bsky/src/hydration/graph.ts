@@ -8,7 +8,10 @@ import { DataPlaneClient } from '../data-plane/client'
 import { HydrationMap, ItemRef, RecordInfo, parseRecord } from './util'
 import { FollowInfo } from '../proto/bsky_pb'
 
-export type Vouch = RecordInfo<VouchRecord>
+export type Vouch = {
+  vouch: RecordInfo<VouchRecord>
+  accept?: { uri: string; cid: string }
+}
 export type Vouches = HydrationMap<Vouch>
 
 export type List = RecordInfo<ListRecord>
@@ -99,10 +102,22 @@ export class GraphHydrator {
 
   async getVouches(uris: string[], includeTakedowns = false): Promise<Vouches> {
     if (!uris.length) return new HydrationMap<Vouch>()
-    const res = await this.dataplane.getVouchRecords({ uris })
+    const res = await this.dataplane.getVouches({ uris })
     return uris.reduce((acc, uri, i) => {
-      const record = parseRecord<VouchRecord>(res.records[i], includeTakedowns)
-      return acc.set(uri, record ?? null)
+      const vouchInfo = res.vouches[i]
+      if (!vouchInfo?.record) return acc.set(uri, null)
+      const vouch = parseRecord<VouchRecord>(vouchInfo.record, includeTakedowns)
+      if (!vouch) return acc.set(uri, null)
+      return acc.set(uri, {
+        vouch,
+        accept:
+          vouchInfo.acceptUri && vouchInfo.acceptCid
+            ? {
+                uri: vouchInfo.acceptUri,
+                cid: vouchInfo.acceptCid,
+              }
+            : undefined,
+      })
     }, new HydrationMap<Vouch>())
   }
 

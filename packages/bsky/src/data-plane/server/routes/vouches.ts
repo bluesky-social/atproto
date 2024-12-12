@@ -27,7 +27,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       const validAccept =
         accept.vouchUri === uri && accept.vouchCid === vouch.cid
       return {
-        vouch,
+        record: vouch,
         acceptUri: validAccept ? accept.uri : undefined,
         acceptCid: validAccept ? accept.cid : undefined,
       }

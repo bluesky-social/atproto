@@ -10560,9 +10560,9 @@ export class GetActorStarterPacksResponse extends Message<GetActorStarterPacksRe
  */
 export class VouchInfo extends Message<VouchInfo> {
   /**
-   * @generated from field: bsky.Record vouch = 1;
+   * @generated from field: bsky.Record record = 1;
    */
-  vouch?: Record
+  record?: Record
 
   /**
    * @generated from field: string accept_uri = 2;
@@ -10582,7 +10582,7 @@ export class VouchInfo extends Message<VouchInfo> {
   static readonly runtime: typeof proto3 = proto3
   static readonly typeName = 'bsky.VouchInfo'
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: 'vouch', kind: 'message', T: Record },
+    { no: 1, name: 'record', kind: 'message', T: Record },
     { no: 2, name: 'accept_uri', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
     { no: 3, name: 'accept_cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
   ])

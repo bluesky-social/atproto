@@ -1019,7 +1019,7 @@ message GetActorStarterPacksResponse {
 //
 
 message VouchInfo {
-  Record vouch = 1;
+  Record record = 1;
   string accept_uri = 2;
   string accept_cid = 3;
 }

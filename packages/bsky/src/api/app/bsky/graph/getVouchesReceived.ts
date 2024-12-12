@@ -10,13 +10,11 @@ import {
   SkeletonFnInput,
   createPipeline,
 } from '../../../../pipeline'
-import {
-  HydrateCtx,
-  Hydrator,
-  mergeStates,
-} from '../../../../hydration/hydrator'
+import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
-import { clearlyBadCursor, resHeaders } from '../../../util'
+import { resHeaders } from '../../../util'
+import { uriToDid as didFromUri } from '../../../../util/uris'
+import { DataPlaneClient } from '../../../../data-plane'
 
 export default function (server: Server, ctx: AppContext) {
   const getVouchesReceived = createPipeline(
@@ -50,21 +48,17 @@ export default function (server: Server, ctx: AppContext) {
 
 const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
   const { params, ctx } = input
-  const [subjectDid] = await ctx.hydrator.actor.getDidsDefined([params.actor])
-  if (!subjectDid) {
+  const [actorDid] = await ctx.hydrator.actor.getDidsDefined([params.actor])
+  if (!actorDid) {
     throw new InvalidRequestError(`Actor not found: ${params.actor}`)
   }
-  if (clearlyBadCursor(params.cursor)) {
-    return { subjectDid, followUris: [] }
-  }
-  const { follows, cursor } = await ctx.hydrator.graph.getActorFollows({
-    did: subjectDid,
+  const { uris, cursor } = await ctx.dataplane.getVouchesReceived({
+    actorDid,
     cursor: params.cursor,
     limit: params.limit,
   })
   return {
-    subjectDid,
-    followUris: follows.map((f) => f.uri),
+    vouchUris: uris,
     cursor: cursor || undefined,
   }
 }
@@ -73,35 +67,27 @@ const hydration = async (
   input: HydrationFnInput<Context, Params, SkeletonState>,
 ) => {
   const { ctx, params, skeleton } = input
-  const { followUris, subjectDid } = skeleton
-  const followState = await ctx.hydrator.hydrateFollows(followUris)
-  const dids = [subjectDid]
-  if (followState.follows) {
-    for (const follow of followState.follows.values()) {
-      if (follow) {
-        dids.push(follow.record.subject)
-      }
-    }
-  }
-  const profileState = await ctx.hydrator.hydrateProfiles(
-    dids,
+  const { vouchUris } = skeleton
+  const vouchState = await ctx.hydrator.hydrateVouches(
+    vouchUris,
     params.hydrateCtx,
   )
-  return mergeStates(followState, profileState)
+  return vouchState
 }
 
 const noBlocks = (input: RulesFnInput<Context, Params, SkeletonState>) => {
   const { skeleton, params, hydration, ctx } = input
   const viewer = params.hydrateCtx.viewer
-  skeleton.followUris = skeleton.followUris.filter((followUri) => {
-    const follow = hydration.follows?.get(followUri)
-    if (!follow) return false
-    return (
-      !hydration.followBlocks?.get(followUri) &&
-      (!viewer ||
-        !ctx.views.viewerBlockExists(follow.record.subject, hydration))
-    )
-  })
+  // @TODO
+  // skeleton.vouchUris = skeleton.vouchUris.filter((vouchUri) => {
+  //   const vouch = hydration.vouches?.get(vouchUri)
+  //   if (!vouch) return false
+  //   return (
+  //     !hydration.followBlocks?.get(vouchUri) &&
+  //     (!viewer ||
+  //       !ctx.views.viewerBlockExists(follow.record.subject, hydration))
+  //   )
+  // })
   return skeleton
 }
 
@@ -109,30 +95,22 @@ const presentation = (
   input: PresentationFnInput<Context, Params, SkeletonState>,
 ) => {
   const { ctx, hydration, skeleton, params } = input
-  const { subjectDid, followUris, cursor } = skeleton
+  const { vouchUris, cursor } = skeleton
   const isNoHosted = (did: string) => ctx.views.actorIsNoHosted(did, hydration)
 
-  const subject = ctx.views.profile(subjectDid, hydration)
-  if (
-    !subject ||
-    (!params.hydrateCtx.includeTakedowns && isNoHosted(subjectDid))
-  ) {
-    throw new InvalidRequestError(`Actor not found: ${params.actor}`)
-  }
-
-  const follows = mapDefined(followUris, (followUri) => {
-    const followDid = hydration.follows?.get(followUri)?.record.subject
-    if (!followDid) return
-    if (!params.hydrateCtx.includeTakedowns && isNoHosted(followDid)) {
+  const vouches = mapDefined(vouchUris, (vouchUri) => {
+    const voucherDid = didFromUri(vouchUri)
+    if (!params.hydrateCtx.includeTakedowns && isNoHosted(voucherDid)) {
       return
     }
-    return ctx.views.profile(followDid, hydration)
+    return ctx.views.vouch(vouchUri, hydration)
   })
 
-  return { follows, subject, cursor }
+  return { vouches, cursor }
 }
 
 type Context = {
+  dataplane: DataPlaneClient
   hydrator: Hydrator
   views: Views
 }
@@ -142,7 +120,6 @@ type Params = QueryParams & {
 }
 
 type SkeletonState = {
-  subjectDid: string
-  followUris: string[]
+  vouchUris: string[]
   cursor?: string
 }
