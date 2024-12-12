@@ -198,24 +198,15 @@ export class Hydrator {
     ])
     let vouchState: HydrationState = {}
     if (!ctx.excludeVouches) {
-      const vouchUris = Array.from(actors.values()).flatMap((a) => {
-        const uris = a?.profile?.acceptedVouches ?? []
-        const highlighted = a?.profile?.highlightedVouch
-        if (highlighted && !uris.includes(highlighted)) {
-          uris.push(highlighted)
-        }
-        return uris
+      const vouchUris = mapDefined(Array.from(actors.values()), (actor) => {
+        return actor?.profile?.highlightedVouch
       })
       vouchState = await this.hydrateVouches(vouchUris, ctx)
     }
     if (!includeTakedowns) {
       actionTakedownLabels(dids, actors, labels)
     }
-    const intermediateState = mergeManyStates(
-      profileViewersState ?? {},
-      vouchState,
-    )
-    return mergeStates(intermediateState, {
+    return mergeManyStates(profileViewersState ?? {}, vouchState, {
       actors,
       labels,
       ctx,
