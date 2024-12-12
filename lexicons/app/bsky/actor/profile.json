@@ -53,14 +53,6 @@
             "type": "string",
             "format": "at-uri"
           },
-          "acceptedVouches": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "format": "at-uri"
-            },
-            "maxLength": 20
-          },
           "createdAt": { "type": "string", "format": "datetime" }
         }
       }

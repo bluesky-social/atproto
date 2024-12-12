@@ -1,0 +1,22 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.graph.vouchaccept",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "Record to bi-directionally accept a vouch record from another account.",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": ["vounch", "createdAt"],
+        "properties": {
+          "vouch": { 
+            "type": "ref", 
+            "ref": "com.atproto.repo.strongRef"
+          },
+          "createdAt": { "type": "string", "format": "datetime" }
+        }
+      }
+    }
+  }
+}
