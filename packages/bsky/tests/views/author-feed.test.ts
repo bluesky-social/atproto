@@ -6,7 +6,11 @@ import {
   stripViewer,
   stripViewerFromPost,
 } from '../_util'
-import { ReplyRef, isRecord } from '../../src/lexicon/types/app/bsky/feed/post'
+import {
+  ReplyRef,
+  isValidReplyRef,
+  isRecord,
+} from '../../src/lexicon/types/app/bsky/feed/post'
 import { isView as isEmbedRecordWithMedia } from '../../src/lexicon/types/app/bsky/embed/recordWithMedia'
 import { isView as isImageEmbed } from '../../src/lexicon/types/app/bsky/embed/images'
 import { isPostView } from '../../src/lexicon/types/app/bsky/feed/defs'
@@ -179,8 +183,8 @@ describe('pds author feed views', () => {
         }
         if (item.reply) {
           result.reply = {
-            parent: stripViewerFromPost(item.reply.parent),
-            root: stripViewerFromPost(item.reply.root),
+            parent: stripViewerFromPost(item.reply.parent, true),
+            root: stripViewerFromPost(item.reply.root, true),
             grandparentAuthor:
               item.reply.grandparentAuthor &&
               stripViewer(item.reply.grandparentAuthor),
@@ -366,7 +370,11 @@ describe('pds author feed views', () => {
     // does not include eve's replies to fred, even within her own thread.
     expect(
       eveFeed.feed.every(({ post, reply }) => {
-        if (!post || !isRecord(post.record) || !post.record.reply) {
+        if (
+          !post ||
+          !isRecord(post.record) ||
+          !isValidReplyRef(post.record.reply)
+        ) {
           return true // not a reply
         }
         const replyToEve = isReplyTo(post.record.reply, eve)
@@ -374,7 +382,7 @@ describe('pds author feed views', () => {
           reply &&
           isPostView(reply.parent) &&
           isRecord(reply.parent.record) &&
-          (!reply.parent.record.reply ||
+          (!isValidReplyRef(reply.parent.record.reply) ||
             isReplyTo(reply.parent.record.reply, eve))
         return replyToEve && replyToReplyByEve
       }),

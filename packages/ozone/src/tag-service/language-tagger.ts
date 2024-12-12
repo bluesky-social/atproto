@@ -31,14 +31,14 @@ export class LanguageTagger extends ContentTagger {
   getTextFromRecord(recordValue?: Record<string, unknown>): string | undefined {
     let text: string | undefined
 
-    if (AppBskyGraphList.isRecord(recordValue)) {
+    if (AppBskyGraphList.isValidRecord(recordValue)) {
       text = recordValue.description || recordValue.name
     } else if (
-      AppBskyFeedGenerator.isRecord(recordValue) ||
-      AppBskyActorProfile.isRecord(recordValue)
+      AppBskyFeedGenerator.isValidRecord(recordValue) ||
+      AppBskyActorProfile.isValidRecord(recordValue)
     ) {
       text = recordValue.description || recordValue.displayName
-    } else if (AppBskyFeedPost.isRecord(recordValue)) {
+    } else if (AppBskyFeedPost.isValidRecord(recordValue)) {
       text = recordValue.text
     }
 

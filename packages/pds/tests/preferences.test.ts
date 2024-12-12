@@ -163,6 +163,7 @@ describe('user preferences', () => {
           { $type: 'app.bsky.actor.defs#adultContentPref', enabled: false },
           {
             $type: 'com.atproto.server.defs#unknown',
+            // @ts-expect-error un-spec'ed prop
             hello: 'world',
           },
         ],
@@ -179,6 +180,7 @@ describe('user preferences', () => {
       {
         preferences: [
           { $type: 'app.bsky.actor.defs#adultContentPref', enabled: false },
+          // @ts-expect-error this is what we are testing !
           {
             label: 'dogs',
             visibility: 'warn',

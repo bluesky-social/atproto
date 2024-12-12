@@ -23,12 +23,12 @@ export default function (server: Server, ctx: AppContext) {
           }
         }
         return {
-          $type: 'tools.ozone.moderation.defs#repoViewDetail',
           ...addAccountInfoToRepoViewDetail(
             partialRepo,
             accountInfo.get(did) || null,
             auth.credentials.isModerator,
           ),
+          $type: 'tools.ozone.moderation.defs#repoViewDetail',
         }
       })
 

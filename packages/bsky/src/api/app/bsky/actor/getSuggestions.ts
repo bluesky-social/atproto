@@ -148,5 +148,5 @@ type Params = QueryParams & {
 type Skeleton = {
   dids: string[]
   cursor?: string
-  resHeaders?: Record<string, string>
+  resHeaders?: Record<string, undefined | string>
 }

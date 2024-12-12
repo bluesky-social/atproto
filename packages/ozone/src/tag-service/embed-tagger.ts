@@ -28,7 +28,7 @@ export class EmbedTagger extends ContentTagger {
         return []
       }
       const tags: string[] = []
-      if (AppBskyFeedPost.isRecord(recordValue)) {
+      if (AppBskyFeedPost.isValidRecord(recordValue)) {
         const embedContent = AppBskyEmbedRecordWithMedia.isMain(
           recordValue.embed,
         )

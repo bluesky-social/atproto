@@ -832,6 +832,7 @@ describe(`hasMutedWord`, () => {
             features: [
               {
                 $type: 'com.example.richtext.facet#other',
+                // @ts-expect-error
                 foo: 'bar',
               },
               {

@@ -265,7 +265,7 @@ export class SeedClient<
   async block(
     from: string,
     to: string,
-    overrides?: Partial<AppBskyGraphFollow.Record>,
+    overrides?: Partial<Omit<AppBskyGraphFollow.Record, '$type'>>,
   ) {
     const res = await this.agent.app.bsky.graph.block.create(
       { repo: from },

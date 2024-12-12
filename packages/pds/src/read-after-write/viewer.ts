@@ -20,10 +20,12 @@ import {
 import { ListView } from '../lexicon/types/app/bsky/graph/defs'
 import {
   Main as EmbedImages,
+  View as EmbedImagesView,
   isMain as isEmbedImages,
 } from '../lexicon/types/app/bsky/embed/images'
 import {
   Main as EmbedExternal,
+  View as EmbedExternalView,
   isMain as isEmbedExternal,
 } from '../lexicon/types/app/bsky/embed/external'
 import {
@@ -39,6 +41,7 @@ import {
 import { ActorStoreReader } from '../actor-store'
 import { LocalRecords, RecordDescript } from './types'
 import { AccountManager } from '../account-manager'
+import { $Typed } from '../lexicon/util'
 
 type CommonSignedUris = 'avatar' | 'banner' | 'feed_thumbnail' | 'feed_fullsize'
 
@@ -194,7 +197,9 @@ export class LocalViewer {
     }
   }
 
-  async formatSimpleEmbed(embed: EmbedImages | EmbedExternal) {
+  async formatSimpleEmbed(
+    embed: $Typed<EmbedImages> | $Typed<EmbedExternal>,
+  ): Promise<$Typed<EmbedImagesView> | $Typed<EmbedExternalView>> {
     if (isEmbedImages(embed)) {
       const images = embed.images.map((img) => ({
         thumb: this.getImageUrl('feed_thumbnail', img.image.ref.toString()),
@@ -220,11 +225,14 @@ export class LocalViewer {
         },
       }
     } else {
+      // @ts-expect-error
       throw new TypeError(`Unexpected embed type: ${embed.$type}`)
     }
   }
 
-  async formatRecordEmbed(embed: EmbedRecord): Promise<EmbedRecordView> {
+  async formatRecordEmbed(
+    embed: EmbedRecord,
+  ): Promise<$Typed<EmbedRecordView>> {
     const view = await this.formatRecordEmbedInternal(embed)
     return {
       $type: 'app.bsky.embed.record#view',
@@ -240,7 +248,9 @@ export class LocalViewer {
 
   private async formatRecordEmbedInternal(
     embed: EmbedRecord,
-  ): Promise<null | ViewRecord | GeneratorView | ListView> {
+  ): Promise<
+    null | $Typed<ViewRecord> | $Typed<GeneratorView> | $Typed<ListView>
+  > {
     if (!this.appViewAgent || !this.appviewDid) {
       return null
     }
@@ -300,10 +310,9 @@ export class LocalViewer {
     }
   }
 
-  updateProfileViewBasic(
-    view: ProfileViewBasic,
-    record: ProfileRecord,
-  ): ProfileViewBasic {
+  updateProfileViewBasic<
+    T extends ProfileViewDetailed | ProfileViewBasic | ProfileView,
+  >(view: T, record: ProfileRecord): T {
     return {
       ...view,
       displayName: record.displayName,
@@ -313,17 +322,19 @@ export class LocalViewer {
     }
   }
 
-  updateProfileView(view: ProfileView, record: ProfileRecord): ProfileView {
+  updateProfileView<
+    T extends ProfileViewDetailed | ProfileViewBasic | ProfileView,
+  >(view: T, record: ProfileRecord): T {
     return {
       ...this.updateProfileViewBasic(view, record),
       description: record.description,
     }
   }
 
-  updateProfileDetailed(
-    view: ProfileViewDetailed,
+  updateProfileDetailed<T extends ProfileViewDetailed>(
+    view: T,
     record: ProfileRecord,
-  ): ProfileViewDetailed {
+  ): T {
     return {
       ...this.updateProfileView(view, record),
       banner: record.banner
@@ -357,25 +368,40 @@ export const getRecordsSinceRev = async (
       return { count: 0, profile: null, posts: [] }
     }
   }
-  return res.reduce(
-    (acc, cur) => {
-      const descript = {
-        uri: new AtUri(cur.uri),
-        cid: CID.parse(cur.cid),
-        indexedAt: cur.indexedAt,
-        record: cborToLexRecord(cur.content),
+
+  let profile: RecordDescript<ProfileRecord> | null = null
+  let count = 0
+  const posts: RecordDescript<PostRecord>[] = []
+
+  for (const row of res) {
+    const uri = new AtUri(row.uri)
+
+    if (uri.collection === ids.AppBskyActorProfile) {
+      if (uri.rkey === 'self') {
+        // @TODO Should we validate instead of type casting?
+        const record = cborToLexRecord(row.content) as ProfileRecord
+
+        profile = {
+          uri,
+          cid: CID.parse(row.cid),
+          indexedAt: row.indexedAt,
+          record,
+        }
       }
-      if (
-        descript.uri.collection === ids.AppBskyActorProfile &&
-        descript.uri.rkey === 'self'
-      ) {
-        acc.profile = descript as RecordDescript<ProfileRecord>
-      } else if (descript.uri.collection === ids.AppBskyFeedPost) {
-        acc.posts.push(descript as RecordDescript<PostRecord>)
-      }
-      acc.count++
-      return acc
-    },
-    { count: 0, profile: null, posts: [] } as LocalRecords,
-  )
+    } else if (uri.collection === ids.AppBskyFeedPost) {
+      // @TODO: should we use validatePostRecord here (to avoid the unsafe type cast)?
+      const record = cborToLexRecord(row.content) as PostRecord
+
+      posts.push({
+        uri,
+        cid: CID.parse(row.cid),
+        indexedAt: row.indexedAt,
+        record,
+      })
+    }
+
+    count++
+  }
+
+  return { count, profile, posts }
 }

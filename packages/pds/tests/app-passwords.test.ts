@@ -73,7 +73,7 @@ describe('app_passwords', () => {
   it('allows actions to be performed from app', async () => {
     await appAgent.api.app.bsky.feed.post.create(
       {
-        repo: appAgent.session?.did,
+        repo: appAgent.assertDid,
       },
       {
         text: 'Testing testing',
@@ -82,7 +82,7 @@ describe('app_passwords', () => {
     )
     await priviAgent.api.app.bsky.feed.post.create(
       {
-        repo: priviAgent.session?.did,
+        repo: priviAgent.assertDid,
       },
       {
         text: 'testing again',
@@ -142,7 +142,7 @@ describe('app_passwords', () => {
     // allows any access auth
     await appAgent.api.app.bsky.feed.post.create(
       {
-        repo: appAgent.session?.did,
+        repo: appAgent.assertDid,
       },
       {
         text: 'Testing testing',
@@ -188,7 +188,7 @@ describe('app_passwords', () => {
     // allows any access auth
     await priviAgent.api.app.bsky.feed.post.create(
       {
-        repo: priviAgent.session?.did,
+        repo: priviAgent.assertDid,
       },
       {
         text: 'Testing testing',

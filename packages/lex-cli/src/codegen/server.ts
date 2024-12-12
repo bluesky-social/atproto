@@ -1,29 +1,29 @@
+import { LexiconDoc, Lexicons } from '@atproto/lexicon'
+import { NSID } from '@atproto/syntax'
 import {
   IndentationText,
   Project,
   SourceFile,
   VariableDeclarationKind,
 } from 'ts-morph'
-import { Lexicons, LexiconDoc } from '@atproto/lexicon'
-import { NSID } from '@atproto/syntax'
-import { gen, lexiconsTs, utilTs } from './common'
 import { GeneratedAPI } from '../types'
+import { gen, lexiconsTs, utilTs } from './common'
 import {
+  genCommonImports,
   genImports,
+  genRecord,
   genUserType,
-  genObject,
-  genXrpcParams,
   genXrpcInput,
   genXrpcOutput,
-  genObjHelpers,
+  genXrpcParams,
 } from './lex-gen'
 import {
-  lexiconsToDefTree,
   DefTreeNode,
+  lexiconsToDefTree,
   schemasToNsidTokens,
   toCamelCase,
-  toTitleCase,
   toScreamingSnakeCase,
+  toTitleCase,
 } from './util'
 
 export async function genServerApi(
@@ -319,8 +319,6 @@ const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
     project,
     `/types/${lexiconDoc.id.split('.').join('/')}.ts`,
     async (file) => {
-      const imports: Set<string> = new Set()
-
       const main = lexiconDoc.defs.main
       if (main?.type === 'query' || main?.type === 'procedure') {
         //= import express from 'express'
@@ -342,49 +340,10 @@ const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
           })
         }
       }
-      //= import {ValidationResult, BlobRef} from '@atproto/lexicon'
-      file
-        .addImportDeclaration({
-          moduleSpecifier: '@atproto/lexicon',
-        })
-        .addNamedImports([{ name: 'ValidationResult' }, { name: 'BlobRef' }])
 
-      //= import {CID} from 'multiformats/cid'
-      file
-        .addImportDeclaration({
-          moduleSpecifier: 'multiformats/cid',
-        })
-        .addNamedImports([{ name: 'CID' }])
+      genCommonImports(file, lexiconDoc.id)
 
-      //= import {lexicons} from '../../lexicons.ts'
-      file
-        .addImportDeclaration({
-          moduleSpecifier: `${lexiconDoc.id
-            .split('.')
-            .map((_str) => '..')
-            .join('/')}/lexicons`,
-        })
-        .addNamedImports([{ name: 'lexicons' }])
-
-      //= import { $Type, is$typed } from '../../util.ts'
-      file
-        .addImportDeclaration({
-          moduleSpecifier: `${lexiconDoc.id
-            .split('.')
-            .map((_str) => '..')
-            .join('/')}/util`,
-        })
-        .addNamedImports([{ name: '$Type' }, { name: 'is$typed' }])
-
-      //= const id = "{lexiconDoc.id}"
-      file.addVariableStatement({
-        isExported: false, // Do not export to allow tree-shaking
-        declarationKind: VariableDeclarationKind.Const,
-        declarations: [
-          { name: 'id', initializer: JSON.stringify(lexiconDoc.id) },
-        ],
-      })
-
+      const imports: Set<string> = new Set()
       for (const defId in lexiconDoc.defs) {
         const def = lexiconDoc.defs[defId]
         const lexUri = `${lexiconDoc.id}#${defId}`
@@ -399,7 +358,7 @@ const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
             genXrpcOutput(file, imports, lexicons, lexUri, false)
             genServerXrpcStreaming(file, lexicons, lexUri)
           } else if (def.type === 'record') {
-            genServerRecord(file, imports, lexicons, lexUri)
+            genRecord(file, imports, lexicons, lexUri)
           } else {
             genUserType(file, imports, lexicons, lexUri)
           }
@@ -598,20 +557,6 @@ function genServerXrpcStreaming(
     ],
     type: `(ctx: HandlerReqCtx<HA>) => AsyncIterable<HandlerOutput>`,
   })
-}
-
-function genServerRecord(
-  file: SourceFile,
-  imports: Set<string>,
-  lexicons: Lexicons,
-  lexUri: string,
-) {
-  const def = lexicons.getDefOrThrow(lexUri, ['record'])
-
-  //= export interface Record {...}
-  genObject(file, imports, lexUri, def.record, 'Record')
-  //= export function isRecord(v: unknown): v is Record {...}
-  genObjHelpers(file, lexUri, 'Record')
 }
 
 function arrayToUnion(arr?: string[]) {

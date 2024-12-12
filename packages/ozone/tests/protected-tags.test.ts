@@ -50,6 +50,7 @@ describe('protected-tags', () => {
         modClient.upsertSettingOption({
           ...basicSetting,
           managerRole: ROLEADMIN,
+          // @ts-expect-error testing invalid value here
           value: ['test'],
         }),
       ).rejects.toThrow('Invalid configuration')

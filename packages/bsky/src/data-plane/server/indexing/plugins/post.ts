@@ -2,6 +2,7 @@ import { Insertable, Selectable, sql } from 'kysely'
 import { CID } from 'multiformats/cid'
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import { jsonStringToLex } from '@atproto/lexicon'
+import { $Typed } from '../../../../lexicon/util'
 import {
   Record as PostRecord,
   ReplyRef,
@@ -29,6 +30,7 @@ import {
   violatesThreadGate as checkViolatesThreadGate,
 } from '../../util'
 import { BackgroundQueue } from '../../background'
+import { RecordWithMedia } from '../../../../views/types'
 import { parsePostgate } from '../../../../views/util'
 import {
   postUriToThreadgateUri,
@@ -498,7 +500,13 @@ export const makePlugin = (
 
 export default makePlugin
 
-function separateEmbeds(embed: PostRecord['embed']) {
+function separateEmbeds(
+  embed: PostRecord['embed'],
+): Array<
+  | RecordWithMedia['media']
+  | $Typed<RecordWithMedia['record']>
+  | NonNullable<PostRecord['embed']>
+> {
   if (!embed) {
     return []
   }

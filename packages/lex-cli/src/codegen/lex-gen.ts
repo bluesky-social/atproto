@@ -27,6 +27,72 @@ export function genComment<T>(
   return commentable as T
 }
 
+export function genCommonImports(file: SourceFile, baseNsid: string) {
+  //= import {ValidationResult, BlobRef} from '@atproto/lexicon'
+  file
+    .addImportDeclaration({
+      moduleSpecifier: '@atproto/lexicon',
+    })
+    .addNamedImports([{ name: 'ValidationResult' }, { name: 'BlobRef' }])
+
+  //= import {CID} from 'multiformats/cid'
+  file
+    .addImportDeclaration({
+      moduleSpecifier: 'multiformats/cid',
+    })
+    .addNamedImports([{ name: 'CID' }])
+
+  //= import { validate as _validate } from '../../lexicons.ts'
+  file
+    .addImportDeclaration({
+      moduleSpecifier: `${baseNsid
+        .split('.')
+        .map((_str) => '..')
+        .join('/')}/lexicons`,
+    })
+    .addNamedImports([
+      { name: 'isValid', alias: '_isValid' },
+      { name: 'validate', alias: '_validate' },
+    ])
+
+  //= import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../util.ts'
+  file
+    .addImportDeclaration({
+      moduleSpecifier: `${baseNsid
+        .split('.')
+        .map((_str) => '..')
+        .join('/')}/util`,
+    })
+    .addNamedImports([
+      { name: '$Type' },
+      { name: '$Typed' },
+      { name: 'is$typed', alias: '_is$typed' },
+      { name: 'OmitKey' },
+    ])
+
+  // tsc adds protection against circular imports, which hurts bundle size.
+  // Since we know that lexicon.ts and util.ts do not depend on the file being
+  // generated, we can safely bypass this protection.
+  // Note that we are not using `import * as util from '../../util'` because
+  // typescript will emit is own helpers for the import, which we want to avoid.
+  file.addVariableStatement({
+    isExported: false,
+    declarationKind: VariableDeclarationKind.Const,
+    declarations: [
+      { name: 'is$typed', initializer: '_is$typed' },
+      { name: 'isValid', initializer: '_isValid' },
+      { name: 'validate', initializer: '_validate' },
+    ],
+  })
+
+  //= const id = "{baseNsid}"
+  file.addVariableStatement({
+    isExported: false, // Do not export to allow tree-shaking
+    declarationKind: VariableDeclarationKind.Const,
+    declarations: [{ name: 'id', initializer: JSON.stringify(baseNsid) }],
+  })
+}
+
 export function genImports(
   file: SourceFile,
   imports: Set<string>,
@@ -41,6 +107,7 @@ export function genImports(
       resolvedPath = `./${resolvedPath}`
     }
     file.addImportDeclaration({
+      isTypeOnly: true,
       moduleSpecifier: resolvedPath,
       namespaceImport: toTitleCase(nsid),
     })
@@ -61,10 +128,16 @@ export function genUserType(
     case 'token':
       genToken(file, lexUri, def)
       break
-    case 'object':
-      genObject(file, imports, lexUri, def)
-      genObjHelpers(file, lexUri)
+    case 'object': {
+      const ifaceName: string = toTitleCase(getHash(lexUri))
+      genObject(file, imports, lexUri, def, ifaceName, {
+        addTypeProperty: true,
+      })
+      genObjHelpers(file, lexUri, ifaceName, {
+        requireTypeProperty: false,
+      })
       break
+    }
 
     case 'blob':
     case 'bytes':
@@ -83,19 +156,36 @@ export function genUserType(
   }
 }
 
-export function genObject(
+function genObject(
   file: SourceFile,
   imports: Set<string>,
   lexUri: string,
   def: LexObject,
-  ifaceName?: string,
-  defaultsArePresent = true,
+  ifaceName: string,
+  {
+    defaultsArePresent = true,
+    allowUnknownProperties = false,
+    addTypeProperty = false,
+  }: {
+    defaultsArePresent?: boolean
+    allowUnknownProperties?: boolean
+    addTypeProperty?: boolean
+  } = {},
 ) {
   const iface = file.addInterface({
-    name: ifaceName || toTitleCase(getHash(lexUri)),
+    name: ifaceName,
     isExported: true,
   })
   genComment(iface, def)
+
+  if (addTypeProperty) {
+    //= $type: uri
+    iface.addProperty({
+      name: `$type?`,
+      type: `$Type<${JSON.stringify(stripHash(stripScheme(lexUri)))}, ${JSON.stringify(getHash(lexUri))}>`,
+    })
+  }
+
   const nullableProps = new Set(def.nullable)
   if (def.properties) {
     for (const propKey in def.properties) {
@@ -108,12 +198,15 @@ export function genObject(
           propDef.default !== undefined)
       if (propDef.type === 'ref' || propDef.type === 'union') {
         //= propName: External|External
-        const refs = propDef.type === 'union' ? propDef.refs : [propDef.ref]
-        const types = refs.map((ref) =>
-          refToType(ref, stripScheme(stripHash(lexUri)), imports),
-        )
+        const types =
+          propDef.type === 'union'
+            ? propDef.refs.map(
+                (ref) =>
+                  `$Typed<${refToType(ref, stripScheme(stripHash(lexUri)), imports)}>`,
+              )
+            : [refToType(propDef.ref, stripScheme(stripHash(lexUri)), imports)]
         if (propDef.type === 'union' && !propDef.closed) {
-          types.push('{$type: string; [k: string]: unknown}')
+          types.push('{ $type: string }')
         }
         iface.addProperty({
           name: `${propKey}${req ? '' : '?'}`,
@@ -140,11 +233,12 @@ export function genObject(
               ),
             })
           } else if (propDef.items.type === 'union') {
-            const types = propDef.items.refs.map((ref) =>
-              refToType(ref, stripScheme(stripHash(lexUri)), imports),
+            const types = propDef.items.refs.map(
+              (ref) =>
+                `$Typed<${refToType(ref, stripScheme(stripHash(lexUri)), imports)}>`,
             )
             if (!propDef.items.closed) {
-              types.push('{$type: string; [k: string]: unknown}')
+              types.push('{ $type: string }')
             }
             propAst = iface.addProperty({
               name: `${propKey}${req ? '' : '?'}`,
@@ -177,12 +271,15 @@ export function genObject(
         }
       }
     }
-    //= [k: string]: unknown
-    iface.addIndexSignature({
-      keyName: 'k',
-      keyType: 'string',
-      returnType: 'unknown',
-    })
+
+    if (allowUnknownProperties) {
+      //= [k: string]: unknown
+      iface.addIndexSignature({
+        keyName: 'k',
+        keyType: 'string',
+        returnType: 'unknown',
+      })
+    }
   }
 }
 
@@ -221,11 +318,12 @@ export function genArray(
       isExported: true,
     })
   } else if (def.items.type === 'union') {
-    const types = def.items.refs.map((ref) =>
-      refToType(ref, stripScheme(stripHash(lexUri)), imports),
+    const types = def.items.refs.map(
+      (ref) =>
+        `$Typed<${refToType(ref, stripScheme(stripHash(lexUri)), imports)}>`,
     )
     if (!def.items.closed) {
-      types.push('{$type: string; [k: string]: unknown}')
+      types.push('{ $type: string }')
     }
     file.addTypeAlias({
       name: toTitleCase(getHash(lexUri)),
@@ -310,15 +408,23 @@ export function genXrpcInput(
   if (def.type === 'procedure' && def.input?.schema) {
     if (def.input.schema.type === 'ref' || def.input.schema.type === 'union') {
       //= export type InputSchema = ...
-      const refs =
+
+      const types =
         def.input.schema.type === 'union'
-          ? def.input.schema.refs
-          : [def.input.schema.ref]
-      const types = refs.map((ref) =>
-        refToType(ref, stripScheme(stripHash(lexUri)), imports),
-      )
+          ? def.input.schema.refs.map(
+              (ref) =>
+                `$Typed<${refToType(ref, stripScheme(stripHash(lexUri)), imports)}>`,
+            )
+          : [
+              refToType(
+                def.input.schema.ref,
+                stripScheme(stripHash(lexUri)),
+                imports,
+              ),
+            ]
+
       if (def.input.schema.type === 'union' && !def.input.schema.closed) {
-        types.push('{$type: string; [k: string]: unknown}')
+        types.push('{ $type: string }')
       }
       file.addTypeAlias({
         name: 'InputSchema',
@@ -327,14 +433,9 @@ export function genXrpcInput(
       })
     } else {
       //= export interface InputSchema {...}
-      genObject(
-        file,
-        imports,
-        lexUri,
-        def.input.schema,
-        `InputSchema`,
+      genObject(file, imports, lexUri, def.input.schema, `InputSchema`, {
         defaultsArePresent,
-      )
+      })
     }
   } else if (def.type === 'procedure' && def.input?.encoding) {
     //= export type InputSchema = string | Uint8Array | Blob
@@ -371,12 +472,15 @@ export function genXrpcOutput(
   if (schema) {
     if (schema.type === 'ref' || schema.type === 'union') {
       //= export type OutputSchema = ...
-      const refs = schema.type === 'union' ? schema.refs : [schema.ref]
-      const types = refs.map((ref) =>
-        refToType(ref, stripScheme(stripHash(lexUri)), imports),
-      )
+      const types =
+        schema.type === 'union'
+          ? schema.refs.map(
+              (ref) =>
+                `$Typed<${refToType(ref, stripScheme(stripHash(lexUri)), imports)}>`,
+            )
+          : [refToType(schema.ref, stripScheme(stripHash(lexUri)), imports)]
       if (schema.type === 'union' && !schema.closed) {
-        types.push('{$type: string; [k: string]: unknown}')
+        types.push('{ $type: string }')
       }
       file.addTypeAlias({
         name: 'OutputSchema',
@@ -385,44 +489,89 @@ export function genXrpcOutput(
       })
     } else {
       //= export interface OutputSchema {...}
-      genObject(
-        file,
-        imports,
-        lexUri,
-        schema,
-        `OutputSchema`,
+      genObject(file, imports, lexUri, schema, `OutputSchema`, {
         defaultsArePresent,
-      )
+      })
     }
   }
 }
 
-export function genObjHelpers(
+export function genRecord(
+  file: SourceFile,
+  imports: Set<string>,
+  lexicons: Lexicons,
+  lexUri: string,
+) {
+  const def = lexicons.getDefOrThrow(lexUri, ['record'])
+
+  //= export interface Record {...}
+  genObject(file, imports, lexUri, def.record, 'Record', {
+    defaultsArePresent: true,
+    allowUnknownProperties: true,
+    addTypeProperty: true,
+  })
+
+  //= export function isRecord(v: unknown): v is Record {...}
+  genObjHelpers(file, lexUri, 'Record', {
+    requireTypeProperty: true,
+  })
+}
+
+function genObjHelpers(
   file: SourceFile,
   lexUri: string,
-  ifaceName: string = toTitleCase(getHash(lexUri)),
+  ifaceName: string,
+  {
+    requireTypeProperty,
+  }: {
+    requireTypeProperty: boolean
+  },
 ) {
   const hash = getHash(lexUri)
 
-  //= export function is{X}(v: unknown): v is X & { $type: NS } {...}
+  const hashVar = `hash${ifaceName}`
+
+  file.addVariableStatement({
+    isExported: false,
+    declarationKind: VariableDeclarationKind.Const,
+    declarations: [{ name: hashVar, initializer: JSON.stringify(hash) }],
+  })
+
+  const isX = toCamelCase(`is-${ifaceName}`)
+
+  //= export function is{X}<V>(v: V) {...}
   file
     .addFunction({
-      name: toCamelCase(`is-${ifaceName}`),
-      parameters: [{ name: `v`, type: `unknown` }],
-      returnType: `v is ${ifaceName} & { $type: $Type<'${stripHash(lexUri)}', '${hash}'> }`,
+      name: isX,
+      typeParameters: [{ name: `V` }],
+      parameters: [{ name: `v`, type: `V` }],
       isExported: true,
     })
-    .setBodyText(`return is$typed(v, id, ${JSON.stringify(hash)})`)
+    .setBodyText(`return is$typed(v, id, ${hashVar})`)
 
-  //= export function validate{X}(v: unknown): ValidationResult<X> {...}
+  const validateX = toCamelCase(`validate-${ifaceName}`)
+
+  //= export function validate{X}(v: unknown) {...}
   file
     .addFunction({
-      name: toCamelCase(`validate-${ifaceName}`),
-      parameters: [{ name: `v`, type: `unknown` }],
+      name: validateX,
+      typeParameters: [{ name: `V` }],
+      parameters: [{ name: `v`, type: `V` }],
+      isExported: true,
+    })
+    .setBodyText(`return validate<${ifaceName} & V>(v, id, ${hashVar})`)
+
+  const isValidX = toCamelCase(`isValid-${ifaceName}`)
+
+  //= export function isValid{X}<V>(v: V): v is V & $Typed<{X}> {...}
+  file
+    .addFunction({
+      name: `${isValidX}<V>`,
+      parameters: [{ name: `v`, type: `V` }],
       isExported: true,
     })
     .setBodyText(
-      `return lexicons.validate(\`\${id}#${hash}\`, v) as ValidationResult<${ifaceName}>`,
+      `return isValid<${ifaceName} & V>(v, id, ${hashVar}${requireTypeProperty ? ',true' : ''})`,
     )
 }
 
@@ -507,7 +656,10 @@ export function primitiveToType(def: LexPrimitive): string {
       }
       return 'boolean'
     case 'unknown':
-      return '{}'
+      // @TODO Should we use "object" here ?
+      // the "Record" identifier from typescript get overwritten by the Record
+      // interface created by lex-cli.
+      return '{ [_ in string]: unknown }' // Record<string, unknown>
     default:
       throw new Error(`Unexpected primitive type: ${JSON.stringify(def)}`)
   }

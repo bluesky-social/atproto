@@ -118,11 +118,14 @@ describe('list feed views', () => {
         }
         if (item.reply) {
           result.reply = {
-            parent: stripViewerFromPost(item.reply.parent),
-            root: stripViewerFromPost(item.reply.root),
-            grandparentAuthor:
-              item.reply.grandparentAuthor &&
-              stripViewer(item.reply.grandparentAuthor),
+            parent: stripViewerFromPost(item.reply.parent, true),
+            root: stripViewerFromPost(item.reply.root, true),
+          }
+
+          if (item.reply.grandparentAuthor) {
+            result.reply.grandparentAuthor = stripViewer(
+              item.reply.grandparentAuthor,
+            )
           }
         }
         return result
