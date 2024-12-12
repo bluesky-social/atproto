@@ -4,23 +4,22 @@
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { lexicons } from '../../../../lexicons'
-import { $Type, is$typed } from '../../../../util'
+import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 
 const id = 'app.bsky.feed.postgate'
 
 export interface Record {
+  $type?: $Type<'app.bsky.feed.postgate', 'main'>
   createdAt: string
   /** Reference (AT-URI) to the post record. */
   post: string
   /** List of AT-URIs embedding this post that the author has detached from. */
   detachedEmbeddingUris?: string[]
-  embeddingRules?: (DisableRule | { $type: string; [k: string]: unknown })[]
+  embeddingRules?: ($Typed<DisableRule> | { $type: string })[]
   [k: string]: unknown
 }
 
-export function isRecord(
-  v: unknown,
-): v is Record & { $type: $Type<'app.bsky.feed.postgate', 'main'> } {
+export function isRecord<V>(v: V) {
   return is$typed(v, id, 'main')
 }
 
@@ -28,14 +27,16 @@ export function validateRecord(v: unknown) {
   return lexicons.validate(`${id}#main`, v) as ValidationResult<Record>
 }
 
-/** Disables embedding of this post. */
-export interface DisableRule {
-  [k: string]: unknown
+export function isValidRecord<V>(v: V): v is V & $Typed<Record> {
+  return isRecord(v) && validateRecord(v).success
 }
 
-export function isDisableRule(v: unknown): v is DisableRule & {
-  $type: $Type<'app.bsky.feed.postgate', 'disableRule'>
-} {
+/** Disables embedding of this post. */
+export interface DisableRule {
+  $type?: $Type<'app.bsky.feed.postgate', 'disableRule'>
+}
+
+export function isDisableRule<V>(v: V) {
   return is$typed(v, id, 'disableRule')
 }
 
@@ -44,4 +45,8 @@ export function validateDisableRule(v: unknown) {
     `${id}#disableRule`,
     v,
   ) as ValidationResult<DisableRule>
+}
+
+export function isValidDisableRule<V>(v: V): v is V & $Typed<DisableRule> {
+  return isDisableRule(v) && validateDisableRule(v).success
 }

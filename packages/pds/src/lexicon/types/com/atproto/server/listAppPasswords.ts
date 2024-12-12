@@ -5,7 +5,7 @@ import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { lexicons } from '../../../../lexicons'
-import { $Type, is$typed } from '../../../../util'
+import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 
 const id = 'com.atproto.server.listAppPasswords'
@@ -16,7 +16,6 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   passwords: AppPassword[]
-  [k: string]: unknown
 }
 
 export type HandlerInput = undefined
@@ -46,15 +45,13 @@ export type Handler<HA extends HandlerAuth = never> = (
 ) => Promise<HandlerOutput> | HandlerOutput
 
 export interface AppPassword {
+  $type?: $Type<'com.atproto.server.listAppPasswords', 'appPassword'>
   name: string
   createdAt: string
   privileged?: boolean
-  [k: string]: unknown
 }
 
-export function isAppPassword(v: unknown): v is AppPassword & {
-  $type: $Type<'com.atproto.server.listAppPasswords', 'appPassword'>
-} {
+export function isAppPassword<V>(v: V) {
   return is$typed(v, id, 'appPassword')
 }
 
@@ -63,4 +60,8 @@ export function validateAppPassword(v: unknown) {
     `${id}#appPassword`,
     v,
   ) as ValidationResult<AppPassword>
+}
+
+export function isValidAppPassword<V>(v: V): v is V & $Typed<AppPassword> {
+  return isAppPassword(v) && validateAppPassword(v).success
 }

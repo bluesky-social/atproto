@@ -3,21 +3,19 @@
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import { $Type, is$typed } from '../../../../util'
+import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import * as ComAtprotoServerDefs from '../server/defs'
 
 const id = 'com.atproto.admin.defs'
 
 export interface StatusAttr {
+  $type?: $Type<'com.atproto.admin.defs', 'statusAttr'>
   applied: boolean
   ref?: string
-  [k: string]: unknown
 }
 
-export function isStatusAttr(
-  v: unknown,
-): v is StatusAttr & { $type: $Type<'com.atproto.admin.defs', 'statusAttr'> } {
+export function isStatusAttr<V>(v: V) {
   return is$typed(v, id, 'statusAttr')
 }
 
@@ -28,11 +26,16 @@ export function validateStatusAttr(v: unknown) {
   ) as ValidationResult<StatusAttr>
 }
 
+export function isValidStatusAttr<V>(v: V): v is V & $Typed<StatusAttr> {
+  return isStatusAttr(v) && validateStatusAttr(v).success
+}
+
 export interface AccountView {
+  $type?: $Type<'com.atproto.admin.defs', 'accountView'>
   did: string
   handle: string
   email?: string
-  relatedRecords?: {}[]
+  relatedRecords?: { [_ in string]: unknown }[]
   indexedAt: string
   invitedBy?: ComAtprotoServerDefs.InviteCode
   invites?: ComAtprotoServerDefs.InviteCode[]
@@ -41,12 +44,9 @@ export interface AccountView {
   inviteNote?: string
   deactivatedAt?: string
   threatSignatures?: ThreatSignature[]
-  [k: string]: unknown
 }
 
-export function isAccountView(v: unknown): v is AccountView & {
-  $type: $Type<'com.atproto.admin.defs', 'accountView'>
-} {
+export function isAccountView<V>(v: V) {
   return is$typed(v, id, 'accountView')
 }
 
@@ -57,14 +57,16 @@ export function validateAccountView(v: unknown) {
   ) as ValidationResult<AccountView>
 }
 
-export interface RepoRef {
-  did: string
-  [k: string]: unknown
+export function isValidAccountView<V>(v: V): v is V & $Typed<AccountView> {
+  return isAccountView(v) && validateAccountView(v).success
 }
 
-export function isRepoRef(
-  v: unknown,
-): v is RepoRef & { $type: $Type<'com.atproto.admin.defs', 'repoRef'> } {
+export interface RepoRef {
+  $type?: $Type<'com.atproto.admin.defs', 'repoRef'>
+  did: string
+}
+
+export function isRepoRef<V>(v: V) {
   return is$typed(v, id, 'repoRef')
 }
 
@@ -72,16 +74,18 @@ export function validateRepoRef(v: unknown) {
   return lexicons.validate(`${id}#repoRef`, v) as ValidationResult<RepoRef>
 }
 
+export function isValidRepoRef<V>(v: V): v is V & $Typed<RepoRef> {
+  return isRepoRef(v) && validateRepoRef(v).success
+}
+
 export interface RepoBlobRef {
+  $type?: $Type<'com.atproto.admin.defs', 'repoBlobRef'>
   did: string
   cid: string
   recordUri?: string
-  [k: string]: unknown
 }
 
-export function isRepoBlobRef(v: unknown): v is RepoBlobRef & {
-  $type: $Type<'com.atproto.admin.defs', 'repoBlobRef'>
-} {
+export function isRepoBlobRef<V>(v: V) {
   return is$typed(v, id, 'repoBlobRef')
 }
 
@@ -92,15 +96,17 @@ export function validateRepoBlobRef(v: unknown) {
   ) as ValidationResult<RepoBlobRef>
 }
 
-export interface ThreatSignature {
-  property: string
-  value: string
-  [k: string]: unknown
+export function isValidRepoBlobRef<V>(v: V): v is V & $Typed<RepoBlobRef> {
+  return isRepoBlobRef(v) && validateRepoBlobRef(v).success
 }
 
-export function isThreatSignature(v: unknown): v is ThreatSignature & {
-  $type: $Type<'com.atproto.admin.defs', 'threatSignature'>
-} {
+export interface ThreatSignature {
+  $type?: $Type<'com.atproto.admin.defs', 'threatSignature'>
+  property: string
+  value: string
+}
+
+export function isThreatSignature<V>(v: V) {
   return is$typed(v, id, 'threatSignature')
 }
 
@@ -109,4 +115,10 @@ export function validateThreatSignature(v: unknown) {
     `${id}#threatSignature`,
     v,
   ) as ValidationResult<ThreatSignature>
+}
+
+export function isValidThreatSignature<V>(
+  v: V,
+): v is V & $Typed<ThreatSignature> {
+  return isThreatSignature(v) && validateThreatSignature(v).success
 }

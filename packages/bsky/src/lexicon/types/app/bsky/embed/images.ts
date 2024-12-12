@@ -4,19 +4,17 @@
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { lexicons } from '../../../../lexicons'
-import { $Type, is$typed } from '../../../../util'
+import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import * as AppBskyEmbedDefs from './defs'
 
 const id = 'app.bsky.embed.images'
 
 export interface Main {
+  $type?: $Type<'app.bsky.embed.images', 'main'>
   images: Image[]
-  [k: string]: unknown
 }
 
-export function isMain(
-  v: unknown,
-): v is Main & { $type: $Type<'app.bsky.embed.images', 'main'> } {
+export function isMain<V>(v: V) {
   return is$typed(v, id, 'main')
 }
 
@@ -24,17 +22,19 @@ export function validateMain(v: unknown) {
   return lexicons.validate(`${id}#main`, v) as ValidationResult<Main>
 }
 
+export function isValidMain<V>(v: V): v is V & $Typed<Main> {
+  return isMain(v) && validateMain(v).success
+}
+
 export interface Image {
+  $type?: $Type<'app.bsky.embed.images', 'image'>
   image: BlobRef
   /** Alt text description of the image, for accessibility. */
   alt: string
   aspectRatio?: AppBskyEmbedDefs.AspectRatio
-  [k: string]: unknown
 }
 
-export function isImage(
-  v: unknown,
-): v is Image & { $type: $Type<'app.bsky.embed.images', 'image'> } {
+export function isImage<V>(v: V) {
   return is$typed(v, id, 'image')
 }
 
@@ -42,14 +42,16 @@ export function validateImage(v: unknown) {
   return lexicons.validate(`${id}#image`, v) as ValidationResult<Image>
 }
 
-export interface View {
-  images: ViewImage[]
-  [k: string]: unknown
+export function isValidImage<V>(v: V): v is V & $Typed<Image> {
+  return isImage(v) && validateImage(v).success
 }
 
-export function isView(
-  v: unknown,
-): v is View & { $type: $Type<'app.bsky.embed.images', 'view'> } {
+export interface View {
+  $type?: $Type<'app.bsky.embed.images', 'view'>
+  images: ViewImage[]
+}
+
+export function isView<V>(v: V) {
   return is$typed(v, id, 'view')
 }
 
@@ -57,7 +59,12 @@ export function validateView(v: unknown) {
   return lexicons.validate(`${id}#view`, v) as ValidationResult<View>
 }
 
+export function isValidView<V>(v: V): v is V & $Typed<View> {
+  return isView(v) && validateView(v).success
+}
+
 export interface ViewImage {
+  $type?: $Type<'app.bsky.embed.images', 'viewImage'>
   /** Fully-qualified URL where a thumbnail of the image can be fetched. For example, CDN location provided by the App View. */
   thumb: string
   /** Fully-qualified URL where a large version of the image can be fetched. May or may not be the exact original blob. For example, CDN location provided by the App View. */
@@ -65,15 +72,16 @@ export interface ViewImage {
   /** Alt text description of the image, for accessibility. */
   alt: string
   aspectRatio?: AppBskyEmbedDefs.AspectRatio
-  [k: string]: unknown
 }
 
-export function isViewImage(
-  v: unknown,
-): v is ViewImage & { $type: $Type<'app.bsky.embed.images', 'viewImage'> } {
+export function isViewImage<V>(v: V) {
   return is$typed(v, id, 'viewImage')
 }
 
 export function validateViewImage(v: unknown) {
   return lexicons.validate(`${id}#viewImage`, v) as ValidationResult<ViewImage>
+}
+
+export function isValidViewImage<V>(v: V): v is V & $Typed<ViewImage> {
+  return isViewImage(v) && validateViewImage(v).success
 }

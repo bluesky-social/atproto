@@ -4,20 +4,18 @@
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { lexicons } from '../../../../lexicons'
-import { $Type, is$typed } from '../../../../util'
+import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 
 const id = 'app.bsky.richtext.facet'
 
 /** Annotation of a sub-string within rich text. */
 export interface Main {
+  $type?: $Type<'app.bsky.richtext.facet', 'main'>
   index: ByteSlice
-  features: (Mention | Link | Tag | { $type: string; [k: string]: unknown })[]
-  [k: string]: unknown
+  features: ($Typed<Mention> | $Typed<Link> | $Typed<Tag> | { $type: string })[]
 }
 
-export function isMain(
-  v: unknown,
-): v is Main & { $type: $Type<'app.bsky.richtext.facet', 'main'> } {
+export function isMain<V>(v: V) {
   return is$typed(v, id, 'main')
 }
 
@@ -25,15 +23,17 @@ export function validateMain(v: unknown) {
   return lexicons.validate(`${id}#main`, v) as ValidationResult<Main>
 }
 
-/** Facet feature for mention of another account. The text is usually a handle, including a '@' prefix, but the facet reference is a DID. */
-export interface Mention {
-  did: string
-  [k: string]: unknown
+export function isValidMain<V>(v: V): v is V & $Typed<Main> {
+  return isMain(v) && validateMain(v).success
 }
 
-export function isMention(
-  v: unknown,
-): v is Mention & { $type: $Type<'app.bsky.richtext.facet', 'mention'> } {
+/** Facet feature for mention of another account. The text is usually a handle, including a '@' prefix, but the facet reference is a DID. */
+export interface Mention {
+  $type?: $Type<'app.bsky.richtext.facet', 'mention'>
+  did: string
+}
+
+export function isMention<V>(v: V) {
   return is$typed(v, id, 'mention')
 }
 
@@ -41,15 +41,17 @@ export function validateMention(v: unknown) {
   return lexicons.validate(`${id}#mention`, v) as ValidationResult<Mention>
 }
 
-/** Facet feature for a URL. The text URL may have been simplified or truncated, but the facet reference should be a complete URL. */
-export interface Link {
-  uri: string
-  [k: string]: unknown
+export function isValidMention<V>(v: V): v is V & $Typed<Mention> {
+  return isMention(v) && validateMention(v).success
 }
 
-export function isLink(
-  v: unknown,
-): v is Link & { $type: $Type<'app.bsky.richtext.facet', 'link'> } {
+/** Facet feature for a URL. The text URL may have been simplified or truncated, but the facet reference should be a complete URL. */
+export interface Link {
+  $type?: $Type<'app.bsky.richtext.facet', 'link'>
+  uri: string
+}
+
+export function isLink<V>(v: V) {
   return is$typed(v, id, 'link')
 }
 
@@ -57,15 +59,17 @@ export function validateLink(v: unknown) {
   return lexicons.validate(`${id}#link`, v) as ValidationResult<Link>
 }
 
-/** Facet feature for a hashtag. The text usually includes a '#' prefix, but the facet reference should not (except in the case of 'double hash tags'). */
-export interface Tag {
-  tag: string
-  [k: string]: unknown
+export function isValidLink<V>(v: V): v is V & $Typed<Link> {
+  return isLink(v) && validateLink(v).success
 }
 
-export function isTag(
-  v: unknown,
-): v is Tag & { $type: $Type<'app.bsky.richtext.facet', 'tag'> } {
+/** Facet feature for a hashtag. The text usually includes a '#' prefix, but the facet reference should not (except in the case of 'double hash tags'). */
+export interface Tag {
+  $type?: $Type<'app.bsky.richtext.facet', 'tag'>
+  tag: string
+}
+
+export function isTag<V>(v: V) {
   return is$typed(v, id, 'tag')
 }
 
@@ -73,19 +77,25 @@ export function validateTag(v: unknown) {
   return lexicons.validate(`${id}#tag`, v) as ValidationResult<Tag>
 }
 
-/** Specifies the sub-string range a facet feature applies to. Start index is inclusive, end index is exclusive. Indices are zero-indexed, counting bytes of the UTF-8 encoded text. NOTE: some languages, like Javascript, use UTF-16 or Unicode codepoints for string slice indexing; in these languages, convert to byte arrays before working with facets. */
-export interface ByteSlice {
-  byteStart: number
-  byteEnd: number
-  [k: string]: unknown
+export function isValidTag<V>(v: V): v is V & $Typed<Tag> {
+  return isTag(v) && validateTag(v).success
 }
 
-export function isByteSlice(
-  v: unknown,
-): v is ByteSlice & { $type: $Type<'app.bsky.richtext.facet', 'byteSlice'> } {
+/** Specifies the sub-string range a facet feature applies to. Start index is inclusive, end index is exclusive. Indices are zero-indexed, counting bytes of the UTF-8 encoded text. NOTE: some languages, like Javascript, use UTF-16 or Unicode codepoints for string slice indexing; in these languages, convert to byte arrays before working with facets. */
+export interface ByteSlice {
+  $type?: $Type<'app.bsky.richtext.facet', 'byteSlice'>
+  byteStart: number
+  byteEnd: number
+}
+
+export function isByteSlice<V>(v: V) {
   return is$typed(v, id, 'byteSlice')
 }
 
 export function validateByteSlice(v: unknown) {
   return lexicons.validate(`${id}#byteSlice`, v) as ValidationResult<ByteSlice>
+}
+
+export function isValidByteSlice<V>(v: V): v is V & $Typed<ByteSlice> {
+  return isByteSlice(v) && validateByteSlice(v).success
 }

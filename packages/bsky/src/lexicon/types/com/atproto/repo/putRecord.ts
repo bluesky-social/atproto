@@ -5,7 +5,7 @@ import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { lexicons } from '../../../../lexicons'
-import { $Type, is$typed } from '../../../../util'
+import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as ComAtprotoRepoDefs from './defs'
 
@@ -23,12 +23,11 @@ export interface InputSchema {
   /** Can be set to 'false' to skip Lexicon schema validation of record data, 'true' to require it, or leave unset to validate only for known Lexicons. */
   validate?: boolean
   /** The record to write. */
-  record: {}
+  record: { [_ in string]: unknown }
   /** Compare and swap with the previous record by CID. WARNING: nullable and optional field; may cause problems with golang implementation */
   swapRecord?: string | null
   /** Compare and swap with the previous commit by CID. */
   swapCommit?: string
-  [k: string]: unknown
 }
 
 export interface OutputSchema {
@@ -36,7 +35,6 @@ export interface OutputSchema {
   cid: string
   commit?: ComAtprotoRepoDefs.CommitMeta
   validationStatus?: 'valid' | 'unknown' | (string & {})
-  [k: string]: unknown
 }
 
 export interface HandlerInput {

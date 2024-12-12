@@ -4,7 +4,7 @@
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import { $Type, is$typed } from '../../../../util'
+import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 
 const id = 'com.atproto.server.listAppPasswords'
@@ -15,7 +15,6 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   passwords: AppPassword[]
-  [k: string]: unknown
 }
 
 export interface CallOptions {
@@ -44,15 +43,13 @@ export function toKnownErr(e: any) {
 }
 
 export interface AppPassword {
+  $type?: $Type<'com.atproto.server.listAppPasswords', 'appPassword'>
   name: string
   createdAt: string
   privileged?: boolean
-  [k: string]: unknown
 }
 
-export function isAppPassword(v: unknown): v is AppPassword & {
-  $type: $Type<'com.atproto.server.listAppPasswords', 'appPassword'>
-} {
+export function isAppPassword<V>(v: V) {
   return is$typed(v, id, 'appPassword')
 }
 
@@ -61,4 +58,8 @@ export function validateAppPassword(v: unknown) {
     `${id}#appPassword`,
     v,
   ) as ValidationResult<AppPassword>
+}
+
+export function isValidAppPassword<V>(v: V): v is V & $Typed<AppPassword> {
+  return isAppPassword(v) && validateAppPassword(v).success
 }

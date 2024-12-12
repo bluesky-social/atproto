@@ -3,13 +3,14 @@
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import { $Type, is$typed } from '../../../../util'
+import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import * as AppBskyActorDefs from '../../../app/bsky/actor/defs'
 
 const id = 'tools.ozone.team.defs'
 
 export interface Member {
+  $type?: $Type<'tools.ozone.team.defs', 'member'>
   did: string
   disabled?: boolean
   profile?: AppBskyActorDefs.ProfileViewDetailed
@@ -21,17 +22,18 @@ export interface Member {
     | 'lex:tools.ozone.team.defs#roleModerator'
     | 'lex:tools.ozone.team.defs#roleTriage'
     | (string & {})
-  [k: string]: unknown
 }
 
-export function isMember(
-  v: unknown,
-): v is Member & { $type: $Type<'tools.ozone.team.defs', 'member'> } {
+export function isMember<V>(v: V) {
   return is$typed(v, id, 'member')
 }
 
 export function validateMember(v: unknown) {
   return lexicons.validate(`${id}#member`, v) as ValidationResult<Member>
+}
+
+export function isValidMember<V>(v: V): v is V & $Typed<Member> {
+  return isMember(v) && validateMember(v).success
 }
 
 /** Admin role. Highest level of access, can perform all actions. */

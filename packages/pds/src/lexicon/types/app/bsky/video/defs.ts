@@ -4,11 +4,12 @@
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { lexicons } from '../../../../lexicons'
-import { $Type, is$typed } from '../../../../util'
+import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 
 const id = 'app.bsky.video.defs'
 
 export interface JobStatus {
+  $type?: $Type<'app.bsky.video.defs', 'jobStatus'>
   jobId: string
   did: string
   /** The state of the video processing job. All values not listed as a known value indicate that the job is in process. */
@@ -18,15 +19,16 @@ export interface JobStatus {
   blob?: BlobRef
   error?: string
   message?: string
-  [k: string]: unknown
 }
 
-export function isJobStatus(
-  v: unknown,
-): v is JobStatus & { $type: $Type<'app.bsky.video.defs', 'jobStatus'> } {
+export function isJobStatus<V>(v: V) {
   return is$typed(v, id, 'jobStatus')
 }
 
 export function validateJobStatus(v: unknown) {
   return lexicons.validate(`${id}#jobStatus`, v) as ValidationResult<JobStatus>
+}
+
+export function isValidJobStatus<V>(v: V): v is V & $Typed<JobStatus> {
+  return isJobStatus(v) && validateJobStatus(v).success
 }

@@ -5,7 +5,7 @@ import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { lexicons } from '../../../../lexicons'
-import { $Type, is$typed } from '../../../../util'
+import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as AppBskyLabelerDefs from './defs'
 
@@ -20,11 +20,10 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   views: (
-    | AppBskyLabelerDefs.LabelerView
-    | AppBskyLabelerDefs.LabelerViewDetailed
-    | { $type: string; [k: string]: unknown }
+    | $Typed<AppBskyLabelerDefs.LabelerView>
+    | $Typed<AppBskyLabelerDefs.LabelerViewDetailed>
+    | { $type: string }
   )[]
-  [k: string]: unknown
 }
 
 export type HandlerInput = undefined

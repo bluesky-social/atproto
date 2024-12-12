@@ -5,7 +5,7 @@ import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { lexicons } from '../../../../lexicons'
-import { $Type, is$typed } from '../../../../util'
+import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 
 const id = 'app.bsky.feed.describeFeedGenerator'
@@ -18,7 +18,6 @@ export interface OutputSchema {
   did: string
   feeds: Feed[]
   links?: Links
-  [k: string]: unknown
 }
 
 export type HandlerInput = undefined
@@ -47,13 +46,11 @@ export type Handler<HA extends HandlerAuth = never> = (
 ) => Promise<HandlerOutput> | HandlerOutput
 
 export interface Feed {
+  $type?: $Type<'app.bsky.feed.describeFeedGenerator', 'feed'>
   uri: string
-  [k: string]: unknown
 }
 
-export function isFeed(
-  v: unknown,
-): v is Feed & { $type: $Type<'app.bsky.feed.describeFeedGenerator', 'feed'> } {
+export function isFeed<V>(v: V) {
   return is$typed(v, id, 'feed')
 }
 
@@ -61,18 +58,24 @@ export function validateFeed(v: unknown) {
   return lexicons.validate(`${id}#feed`, v) as ValidationResult<Feed>
 }
 
-export interface Links {
-  privacyPolicy?: string
-  termsOfService?: string
-  [k: string]: unknown
+export function isValidFeed<V>(v: V): v is V & $Typed<Feed> {
+  return isFeed(v) && validateFeed(v).success
 }
 
-export function isLinks(v: unknown): v is Links & {
-  $type: $Type<'app.bsky.feed.describeFeedGenerator', 'links'>
-} {
+export interface Links {
+  $type?: $Type<'app.bsky.feed.describeFeedGenerator', 'links'>
+  privacyPolicy?: string
+  termsOfService?: string
+}
+
+export function isLinks<V>(v: V) {
   return is$typed(v, id, 'links')
 }
 
 export function validateLinks(v: unknown) {
   return lexicons.validate(`${id}#links`, v) as ValidationResult<Links>
+}
+
+export function isValidLinks<V>(v: V): v is V & $Typed<Links> {
+  return isLinks(v) && validateLinks(v).success
 }

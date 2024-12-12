@@ -13756,4 +13756,4 @@ export const ids = {
   ToolsOzoneTeamDeleteMember: 'tools.ozone.team.deleteMember',
   ToolsOzoneTeamListMembers: 'tools.ozone.team.listMembers',
   ToolsOzoneTeamUpdateMember: 'tools.ozone.team.updateMember',
-}
+} as const

@@ -4,13 +4,14 @@
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { lexicons } from '../../../../lexicons'
-import { $Type, is$typed } from '../../../../util'
+import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import * as AppBskyActorDefs from '../../../app/bsky/actor/defs'
 import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
 
 const id = 'chat.bsky.actor.defs'
 
 export interface ProfileViewBasic {
+  $type?: $Type<'chat.bsky.actor.defs', 'profileViewBasic'>
   did: string
   handle: string
   displayName?: string
@@ -20,12 +21,9 @@ export interface ProfileViewBasic {
   labels?: ComAtprotoLabelDefs.Label[]
   /** Set to true when the actor cannot actively participate in converations */
   chatDisabled?: boolean
-  [k: string]: unknown
 }
 
-export function isProfileViewBasic(v: unknown): v is ProfileViewBasic & {
-  $type: $Type<'chat.bsky.actor.defs', 'profileViewBasic'>
-} {
+export function isProfileViewBasic<V>(v: V) {
   return is$typed(v, id, 'profileViewBasic')
 }
 
@@ -34,4 +32,10 @@ export function validateProfileViewBasic(v: unknown) {
     `${id}#profileViewBasic`,
     v,
   ) as ValidationResult<ProfileViewBasic>
+}
+
+export function isValidProfileViewBasic<V>(
+  v: V,
+): v is V & $Typed<ProfileViewBasic> {
+  return isProfileViewBasic(v) && validateProfileViewBasic(v).success
 }

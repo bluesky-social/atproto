@@ -4,7 +4,7 @@
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import { $Type, is$typed } from '../../../../util'
+import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import * as ToolsOzoneCommunicationDefs from './defs'
 
@@ -23,7 +23,6 @@ export interface InputSchema {
   lang?: string
   /** DID of the user who is creating the template. */
   createdBy?: string
-  [k: string]: unknown
 }
 
 export type OutputSchema = ToolsOzoneCommunicationDefs.TemplateView

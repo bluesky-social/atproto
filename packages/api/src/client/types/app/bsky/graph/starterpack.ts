@@ -3,13 +3,14 @@
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import { $Type, is$typed } from '../../../../util'
+import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import * as AppBskyRichtextFacet from '../richtext/facet'
 
 const id = 'app.bsky.graph.starterpack'
 
 export interface Record {
+  $type?: $Type<'app.bsky.graph.starterpack', 'main'>
   /** Display name for starter pack; can not be empty. */
   name: string
   description?: string
@@ -21,9 +22,7 @@ export interface Record {
   [k: string]: unknown
 }
 
-export function isRecord(
-  v: unknown,
-): v is Record & { $type: $Type<'app.bsky.graph.starterpack', 'main'> } {
+export function isRecord<V>(v: V) {
   return is$typed(v, id, 'main')
 }
 
@@ -31,17 +30,23 @@ export function validateRecord(v: unknown) {
   return lexicons.validate(`${id}#main`, v) as ValidationResult<Record>
 }
 
-export interface FeedItem {
-  uri: string
-  [k: string]: unknown
+export function isValidRecord<V>(v: V): v is V & $Typed<Record> {
+  return isRecord(v) && validateRecord(v).success
 }
 
-export function isFeedItem(
-  v: unknown,
-): v is FeedItem & { $type: $Type<'app.bsky.graph.starterpack', 'feedItem'> } {
+export interface FeedItem {
+  $type?: $Type<'app.bsky.graph.starterpack', 'feedItem'>
+  uri: string
+}
+
+export function isFeedItem<V>(v: V) {
   return is$typed(v, id, 'feedItem')
 }
 
 export function validateFeedItem(v: unknown) {
   return lexicons.validate(`${id}#feedItem`, v) as ValidationResult<FeedItem>
+}
+
+export function isValidFeedItem<V>(v: V): v is V & $Typed<FeedItem> {
+  return isFeedItem(v) && validateFeedItem(v).success
 }

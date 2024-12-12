@@ -5,7 +5,7 @@ import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { lexicons } from '../../../../lexicons'
-import { $Type, is$typed } from '../../../../util'
+import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as ComAtprotoRepoDefs from './defs'
 
@@ -18,16 +18,18 @@ export interface InputSchema {
   repo: string
   /** Can be set to 'false' to skip Lexicon schema validation of record data across all operations, 'true' to require it, or leave unset to validate only for known Lexicons. */
   validate?: boolean
-  writes: (Create | Update | Delete)[]
+  writes: ($Typed<Create> | $Typed<Update> | $Typed<Delete>)[]
   /** If provided, the entire operation will fail if the current repo commit CID does not match this value. Used to prevent conflicting repo mutations. */
   swapCommit?: string
-  [k: string]: unknown
 }
 
 export interface OutputSchema {
   commit?: ComAtprotoRepoDefs.CommitMeta
-  results?: (CreateResult | UpdateResult | DeleteResult)[]
-  [k: string]: unknown
+  results?: (
+    | $Typed<CreateResult>
+    | $Typed<UpdateResult>
+    | $Typed<DeleteResult>
+  )[]
 }
 
 export interface HandlerInput {
@@ -61,15 +63,13 @@ export type Handler<HA extends HandlerAuth = never> = (
 
 /** Operation which creates a new record. */
 export interface Create {
+  $type?: $Type<'com.atproto.repo.applyWrites', 'create'>
   collection: string
   rkey?: string
-  value: {}
-  [k: string]: unknown
+  value: { [_ in string]: unknown }
 }
 
-export function isCreate(
-  v: unknown,
-): v is Create & { $type: $Type<'com.atproto.repo.applyWrites', 'create'> } {
+export function isCreate<V>(v: V) {
   return is$typed(v, id, 'create')
 }
 
@@ -77,17 +77,19 @@ export function validateCreate(v: unknown) {
   return lexicons.validate(`${id}#create`, v) as ValidationResult<Create>
 }
 
-/** Operation which updates an existing record. */
-export interface Update {
-  collection: string
-  rkey: string
-  value: {}
-  [k: string]: unknown
+export function isValidCreate<V>(v: V): v is V & $Typed<Create> {
+  return isCreate(v) && validateCreate(v).success
 }
 
-export function isUpdate(
-  v: unknown,
-): v is Update & { $type: $Type<'com.atproto.repo.applyWrites', 'update'> } {
+/** Operation which updates an existing record. */
+export interface Update {
+  $type?: $Type<'com.atproto.repo.applyWrites', 'update'>
+  collection: string
+  rkey: string
+  value: { [_ in string]: unknown }
+}
+
+export function isUpdate<V>(v: V) {
   return is$typed(v, id, 'update')
 }
 
@@ -95,16 +97,18 @@ export function validateUpdate(v: unknown) {
   return lexicons.validate(`${id}#update`, v) as ValidationResult<Update>
 }
 
-/** Operation which deletes an existing record. */
-export interface Delete {
-  collection: string
-  rkey: string
-  [k: string]: unknown
+export function isValidUpdate<V>(v: V): v is V & $Typed<Update> {
+  return isUpdate(v) && validateUpdate(v).success
 }
 
-export function isDelete(
-  v: unknown,
-): v is Delete & { $type: $Type<'com.atproto.repo.applyWrites', 'delete'> } {
+/** Operation which deletes an existing record. */
+export interface Delete {
+  $type?: $Type<'com.atproto.repo.applyWrites', 'delete'>
+  collection: string
+  rkey: string
+}
+
+export function isDelete<V>(v: V) {
   return is$typed(v, id, 'delete')
 }
 
@@ -112,16 +116,18 @@ export function validateDelete(v: unknown) {
   return lexicons.validate(`${id}#delete`, v) as ValidationResult<Delete>
 }
 
+export function isValidDelete<V>(v: V): v is V & $Typed<Delete> {
+  return isDelete(v) && validateDelete(v).success
+}
+
 export interface CreateResult {
+  $type?: $Type<'com.atproto.repo.applyWrites', 'createResult'>
   uri: string
   cid: string
   validationStatus?: 'valid' | 'unknown' | (string & {})
-  [k: string]: unknown
 }
 
-export function isCreateResult(v: unknown): v is CreateResult & {
-  $type: $Type<'com.atproto.repo.applyWrites', 'createResult'>
-} {
+export function isCreateResult<V>(v: V) {
   return is$typed(v, id, 'createResult')
 }
 
@@ -132,16 +138,18 @@ export function validateCreateResult(v: unknown) {
   ) as ValidationResult<CreateResult>
 }
 
+export function isValidCreateResult<V>(v: V): v is V & $Typed<CreateResult> {
+  return isCreateResult(v) && validateCreateResult(v).success
+}
+
 export interface UpdateResult {
+  $type?: $Type<'com.atproto.repo.applyWrites', 'updateResult'>
   uri: string
   cid: string
   validationStatus?: 'valid' | 'unknown' | (string & {})
-  [k: string]: unknown
 }
 
-export function isUpdateResult(v: unknown): v is UpdateResult & {
-  $type: $Type<'com.atproto.repo.applyWrites', 'updateResult'>
-} {
+export function isUpdateResult<V>(v: V) {
   return is$typed(v, id, 'updateResult')
 }
 
@@ -152,13 +160,15 @@ export function validateUpdateResult(v: unknown) {
   ) as ValidationResult<UpdateResult>
 }
 
-export interface DeleteResult {
-  [k: string]: unknown
+export function isValidUpdateResult<V>(v: V): v is V & $Typed<UpdateResult> {
+  return isUpdateResult(v) && validateUpdateResult(v).success
 }
 
-export function isDeleteResult(v: unknown): v is DeleteResult & {
-  $type: $Type<'com.atproto.repo.applyWrites', 'deleteResult'>
-} {
+export interface DeleteResult {
+  $type?: $Type<'com.atproto.repo.applyWrites', 'deleteResult'>
+}
+
+export function isDeleteResult<V>(v: V) {
   return is$typed(v, id, 'deleteResult')
 }
 
@@ -167,4 +177,8 @@ export function validateDeleteResult(v: unknown) {
     `${id}#deleteResult`,
     v,
   ) as ValidationResult<DeleteResult>
+}
+
+export function isValidDeleteResult<V>(v: V): v is V & $Typed<DeleteResult> {
+  return isDeleteResult(v) && validateDeleteResult(v).success
 }

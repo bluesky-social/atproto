@@ -4,11 +4,12 @@
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { lexicons } from '../../../../lexicons'
-import { $Type, is$typed } from '../../../../util'
+import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 
 const id = 'com.atproto.server.defs'
 
 export interface InviteCode {
+  $type?: $Type<'com.atproto.server.defs', 'inviteCode'>
   code: string
   available: number
   disabled: boolean
@@ -16,12 +17,9 @@ export interface InviteCode {
   createdBy: string
   createdAt: string
   uses: InviteCodeUse[]
-  [k: string]: unknown
 }
 
-export function isInviteCode(
-  v: unknown,
-): v is InviteCode & { $type: $Type<'com.atproto.server.defs', 'inviteCode'> } {
+export function isInviteCode<V>(v: V) {
   return is$typed(v, id, 'inviteCode')
 }
 
@@ -32,15 +30,17 @@ export function validateInviteCode(v: unknown) {
   ) as ValidationResult<InviteCode>
 }
 
-export interface InviteCodeUse {
-  usedBy: string
-  usedAt: string
-  [k: string]: unknown
+export function isValidInviteCode<V>(v: V): v is V & $Typed<InviteCode> {
+  return isInviteCode(v) && validateInviteCode(v).success
 }
 
-export function isInviteCodeUse(v: unknown): v is InviteCodeUse & {
-  $type: $Type<'com.atproto.server.defs', 'inviteCodeUse'>
-} {
+export interface InviteCodeUse {
+  $type?: $Type<'com.atproto.server.defs', 'inviteCodeUse'>
+  usedBy: string
+  usedAt: string
+}
+
+export function isInviteCodeUse<V>(v: V) {
   return is$typed(v, id, 'inviteCodeUse')
 }
 
@@ -49,4 +49,8 @@ export function validateInviteCodeUse(v: unknown) {
     `${id}#inviteCodeUse`,
     v,
   ) as ValidationResult<InviteCodeUse>
+}
+
+export function isValidInviteCodeUse<V>(v: V): v is V & $Typed<InviteCodeUse> {
+  return isInviteCodeUse(v) && validateInviteCodeUse(v).success
 }

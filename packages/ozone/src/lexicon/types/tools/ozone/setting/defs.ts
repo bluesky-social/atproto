@@ -4,14 +4,15 @@
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { lexicons } from '../../../../lexicons'
-import { $Type, is$typed } from '../../../../util'
+import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 
 const id = 'tools.ozone.setting.defs'
 
 export interface Option {
+  $type?: $Type<'tools.ozone.setting.defs', 'option'>
   key: string
   did: string
-  value: {}
+  value: { [_ in string]: unknown }
   description?: string
   createdAt?: string
   updatedAt?: string
@@ -23,15 +24,16 @@ export interface Option {
   scope: 'instance' | 'personal' | (string & {})
   createdBy: string
   lastUpdatedBy: string
-  [k: string]: unknown
 }
 
-export function isOption(
-  v: unknown,
-): v is Option & { $type: $Type<'tools.ozone.setting.defs', 'option'> } {
+export function isOption<V>(v: V) {
   return is$typed(v, id, 'option')
 }
 
 export function validateOption(v: unknown) {
   return lexicons.validate(`${id}#option`, v) as ValidationResult<Option>
+}
+
+export function isValidOption<V>(v: V): v is V & $Typed<Option> {
+  return isOption(v) && validateOption(v).success
 }

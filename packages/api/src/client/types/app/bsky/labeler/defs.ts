@@ -3,7 +3,7 @@
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import { $Type, is$typed } from '../../../../util'
+import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import * as AppBskyActorDefs from '../actor/defs'
 import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
@@ -11,6 +11,7 @@ import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
 const id = 'app.bsky.labeler.defs'
 
 export interface LabelerView {
+  $type?: $Type<'app.bsky.labeler.defs', 'labelerView'>
   uri: string
   cid: string
   creator: AppBskyActorDefs.ProfileView
@@ -18,12 +19,9 @@ export interface LabelerView {
   viewer?: LabelerViewerState
   indexedAt: string
   labels?: ComAtprotoLabelDefs.Label[]
-  [k: string]: unknown
 }
 
-export function isLabelerView(
-  v: unknown,
-): v is LabelerView & { $type: $Type<'app.bsky.labeler.defs', 'labelerView'> } {
+export function isLabelerView<V>(v: V) {
   return is$typed(v, id, 'labelerView')
 }
 
@@ -34,7 +32,12 @@ export function validateLabelerView(v: unknown) {
   ) as ValidationResult<LabelerView>
 }
 
+export function isValidLabelerView<V>(v: V): v is V & $Typed<LabelerView> {
+  return isLabelerView(v) && validateLabelerView(v).success
+}
+
 export interface LabelerViewDetailed {
+  $type?: $Type<'app.bsky.labeler.defs', 'labelerViewDetailed'>
   uri: string
   cid: string
   creator: AppBskyActorDefs.ProfileView
@@ -43,12 +46,9 @@ export interface LabelerViewDetailed {
   viewer?: LabelerViewerState
   indexedAt: string
   labels?: ComAtprotoLabelDefs.Label[]
-  [k: string]: unknown
 }
 
-export function isLabelerViewDetailed(v: unknown): v is LabelerViewDetailed & {
-  $type: $Type<'app.bsky.labeler.defs', 'labelerViewDetailed'>
-} {
+export function isLabelerViewDetailed<V>(v: V) {
   return is$typed(v, id, 'labelerViewDetailed')
 }
 
@@ -59,14 +59,18 @@ export function validateLabelerViewDetailed(v: unknown) {
   ) as ValidationResult<LabelerViewDetailed>
 }
 
-export interface LabelerViewerState {
-  like?: string
-  [k: string]: unknown
+export function isValidLabelerViewDetailed<V>(
+  v: V,
+): v is V & $Typed<LabelerViewDetailed> {
+  return isLabelerViewDetailed(v) && validateLabelerViewDetailed(v).success
 }
 
-export function isLabelerViewerState(v: unknown): v is LabelerViewerState & {
-  $type: $Type<'app.bsky.labeler.defs', 'labelerViewerState'>
-} {
+export interface LabelerViewerState {
+  $type?: $Type<'app.bsky.labeler.defs', 'labelerViewerState'>
+  like?: string
+}
+
+export function isLabelerViewerState<V>(v: V) {
   return is$typed(v, id, 'labelerViewerState')
 }
 
@@ -77,17 +81,21 @@ export function validateLabelerViewerState(v: unknown) {
   ) as ValidationResult<LabelerViewerState>
 }
 
+export function isValidLabelerViewerState<V>(
+  v: V,
+): v is V & $Typed<LabelerViewerState> {
+  return isLabelerViewerState(v) && validateLabelerViewerState(v).success
+}
+
 export interface LabelerPolicies {
+  $type?: $Type<'app.bsky.labeler.defs', 'labelerPolicies'>
   /** The label values which this labeler publishes. May include global or custom labels. */
   labelValues: ComAtprotoLabelDefs.LabelValue[]
   /** Label values created by this labeler and scoped exclusively to it. Labels defined here will override global label definitions for this labeler. */
   labelValueDefinitions?: ComAtprotoLabelDefs.LabelValueDefinition[]
-  [k: string]: unknown
 }
 
-export function isLabelerPolicies(v: unknown): v is LabelerPolicies & {
-  $type: $Type<'app.bsky.labeler.defs', 'labelerPolicies'>
-} {
+export function isLabelerPolicies<V>(v: V) {
   return is$typed(v, id, 'labelerPolicies')
 }
 
@@ -96,4 +104,10 @@ export function validateLabelerPolicies(v: unknown) {
     `${id}#labelerPolicies`,
     v,
   ) as ValidationResult<LabelerPolicies>
+}
+
+export function isValidLabelerPolicies<V>(
+  v: V,
+): v is V & $Typed<LabelerPolicies> {
+  return isLabelerPolicies(v) && validateLabelerPolicies(v).success
 }

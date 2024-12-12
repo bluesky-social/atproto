@@ -4,18 +4,16 @@
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { lexicons } from '../../../../lexicons'
-import { $Type, is$typed } from '../../../../util'
+import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 
 const id = 'app.bsky.unspecced.defs'
 
 export interface SkeletonSearchPost {
+  $type?: $Type<'app.bsky.unspecced.defs', 'skeletonSearchPost'>
   uri: string
-  [k: string]: unknown
 }
 
-export function isSkeletonSearchPost(v: unknown): v is SkeletonSearchPost & {
-  $type: $Type<'app.bsky.unspecced.defs', 'skeletonSearchPost'>
-} {
+export function isSkeletonSearchPost<V>(v: V) {
   return is$typed(v, id, 'skeletonSearchPost')
 }
 
@@ -26,14 +24,18 @@ export function validateSkeletonSearchPost(v: unknown) {
   ) as ValidationResult<SkeletonSearchPost>
 }
 
-export interface SkeletonSearchActor {
-  did: string
-  [k: string]: unknown
+export function isValidSkeletonSearchPost<V>(
+  v: V,
+): v is V & $Typed<SkeletonSearchPost> {
+  return isSkeletonSearchPost(v) && validateSkeletonSearchPost(v).success
 }
 
-export function isSkeletonSearchActor(v: unknown): v is SkeletonSearchActor & {
-  $type: $Type<'app.bsky.unspecced.defs', 'skeletonSearchActor'>
-} {
+export interface SkeletonSearchActor {
+  $type?: $Type<'app.bsky.unspecced.defs', 'skeletonSearchActor'>
+  did: string
+}
+
+export function isSkeletonSearchActor<V>(v: V) {
   return is$typed(v, id, 'skeletonSearchActor')
 }
 
@@ -44,16 +46,18 @@ export function validateSkeletonSearchActor(v: unknown) {
   ) as ValidationResult<SkeletonSearchActor>
 }
 
-export interface SkeletonSearchStarterPack {
-  uri: string
-  [k: string]: unknown
+export function isValidSkeletonSearchActor<V>(
+  v: V,
+): v is V & $Typed<SkeletonSearchActor> {
+  return isSkeletonSearchActor(v) && validateSkeletonSearchActor(v).success
 }
 
-export function isSkeletonSearchStarterPack(
-  v: unknown,
-): v is SkeletonSearchStarterPack & {
-  $type: $Type<'app.bsky.unspecced.defs', 'skeletonSearchStarterPack'>
-} {
+export interface SkeletonSearchStarterPack {
+  $type?: $Type<'app.bsky.unspecced.defs', 'skeletonSearchStarterPack'>
+  uri: string
+}
+
+export function isSkeletonSearchStarterPack<V>(v: V) {
   return is$typed(v, id, 'skeletonSearchStarterPack')
 }
 
@@ -62,4 +66,13 @@ export function validateSkeletonSearchStarterPack(v: unknown) {
     `${id}#skeletonSearchStarterPack`,
     v,
   ) as ValidationResult<SkeletonSearchStarterPack>
+}
+
+export function isValidSkeletonSearchStarterPack<V>(
+  v: V,
+): v is V & $Typed<SkeletonSearchStarterPack> {
+  return (
+    isSkeletonSearchStarterPack(v) &&
+    validateSkeletonSearchStarterPack(v).success
+  )
 }

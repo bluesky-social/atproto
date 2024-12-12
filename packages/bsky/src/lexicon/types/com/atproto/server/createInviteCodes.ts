@@ -5,7 +5,7 @@ import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { lexicons } from '../../../../lexicons'
-import { $Type, is$typed } from '../../../../util'
+import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 
 const id = 'com.atproto.server.createInviteCodes'
@@ -16,12 +16,10 @@ export interface InputSchema {
   codeCount: number
   useCount: number
   forAccounts?: string[]
-  [k: string]: unknown
 }
 
 export interface OutputSchema {
   codes: AccountCodes[]
-  [k: string]: unknown
 }
 
 export interface HandlerInput {
@@ -53,14 +51,12 @@ export type Handler<HA extends HandlerAuth = never> = (
 ) => Promise<HandlerOutput> | HandlerOutput
 
 export interface AccountCodes {
+  $type?: $Type<'com.atproto.server.createInviteCodes', 'accountCodes'>
   account: string
   codes: string[]
-  [k: string]: unknown
 }
 
-export function isAccountCodes(v: unknown): v is AccountCodes & {
-  $type: $Type<'com.atproto.server.createInviteCodes', 'accountCodes'>
-} {
+export function isAccountCodes<V>(v: V) {
   return is$typed(v, id, 'accountCodes')
 }
 
@@ -69,4 +65,8 @@ export function validateAccountCodes(v: unknown) {
     `${id}#accountCodes`,
     v,
   ) as ValidationResult<AccountCodes>
+}
+
+export function isValidAccountCodes<V>(v: V): v is V & $Typed<AccountCodes> {
+  return isAccountCodes(v) && validateAccountCodes(v).success
 }

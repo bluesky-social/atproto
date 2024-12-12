@@ -5,7 +5,7 @@ import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { lexicons } from '../../../../lexicons'
-import { $Type, is$typed } from '../../../../util'
+import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 
 const id = 'app.bsky.unspecced.getTaggedSuggestions'
@@ -16,7 +16,6 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   suggestions: Suggestion[]
-  [k: string]: unknown
 }
 
 export type HandlerInput = undefined
@@ -45,15 +44,13 @@ export type Handler<HA extends HandlerAuth = never> = (
 ) => Promise<HandlerOutput> | HandlerOutput
 
 export interface Suggestion {
+  $type?: $Type<'app.bsky.unspecced.getTaggedSuggestions', 'suggestion'>
   tag: string
   subjectType: 'actor' | 'feed' | (string & {})
   subject: string
-  [k: string]: unknown
 }
 
-export function isSuggestion(v: unknown): v is Suggestion & {
-  $type: $Type<'app.bsky.unspecced.getTaggedSuggestions', 'suggestion'>
-} {
+export function isSuggestion<V>(v: V) {
   return is$typed(v, id, 'suggestion')
 }
 
@@ -62,4 +59,8 @@ export function validateSuggestion(v: unknown) {
     `${id}#suggestion`,
     v,
   ) as ValidationResult<Suggestion>
+}
+
+export function isValidSuggestion<V>(v: V): v is V & $Typed<Suggestion> {
+  return isSuggestion(v) && validateSuggestion(v).success
 }

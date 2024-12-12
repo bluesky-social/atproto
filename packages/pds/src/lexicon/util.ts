@@ -1,6 +1,10 @@
 /**
  * GENERATED CODE - DO NOT MODIFY
  */
+export type OmitKey<T, K extends keyof T> = {
+  [K2 in keyof T as K2 extends K ? never : K2]: T[K2]
+}
+
 export type $Typed<V> = V & { $type: string }
 
 export type $Type<Id extends string, Hash extends string> = Hash extends 'main'
@@ -30,10 +34,16 @@ function check$type<Id extends string, Hash extends string>(
         $type.endsWith(hash)
 }
 
+export type Is$Typed<V, Id extends string, Hash extends string> = V extends {
+  $type?: string
+}
+  ? Extract<V, { $type: $Type<Id, Hash> }>
+  : V & { $type: $Type<Id, Hash> }
+
 export function is$typed<V, Id extends string, Hash extends string>(
   v: V,
   id: Id,
   hash: Hash,
-): v is V & object & { $type: $Type<Id, Hash> } {
+): v is Is$Typed<V, Id, Hash> {
   return has$type(v) && check$type(v.$type, id, hash)
 }

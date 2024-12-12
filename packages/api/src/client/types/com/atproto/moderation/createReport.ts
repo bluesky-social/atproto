@@ -4,7 +4,7 @@
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import { $Type, is$typed } from '../../../../util'
+import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import * as ComAtprotoModerationDefs from './defs'
 import * as ComAtprotoAdminDefs from '../admin/defs'
@@ -19,10 +19,9 @@ export interface InputSchema {
   /** Additional context about the content and violation. */
   reason?: string
   subject:
-    | ComAtprotoAdminDefs.RepoRef
-    | ComAtprotoRepoStrongRef.Main
-    | { $type: string; [k: string]: unknown }
-  [k: string]: unknown
+    | $Typed<ComAtprotoAdminDefs.RepoRef>
+    | $Typed<ComAtprotoRepoStrongRef.Main>
+    | { $type: string }
 }
 
 export interface OutputSchema {
@@ -30,12 +29,11 @@ export interface OutputSchema {
   reasonType: ComAtprotoModerationDefs.ReasonType
   reason?: string
   subject:
-    | ComAtprotoAdminDefs.RepoRef
-    | ComAtprotoRepoStrongRef.Main
-    | { $type: string; [k: string]: unknown }
+    | $Typed<ComAtprotoAdminDefs.RepoRef>
+    | $Typed<ComAtprotoRepoStrongRef.Main>
+    | { $type: string }
   reportedBy: string
   createdAt: string
-  [k: string]: unknown
 }
 
 export interface CallOptions {
