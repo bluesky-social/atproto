@@ -5640,6 +5640,9 @@ export const schemaDict = {
               ],
             },
           },
+          isLikedByRootAuthor: {
+            type: 'boolean',
+          },
         },
       },
       notFoundPost: {
