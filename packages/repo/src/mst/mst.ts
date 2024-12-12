@@ -756,6 +756,20 @@ export class MST {
     return cids
   }
 
+  async addBlocksForPath(key: string, blocks: BlockMap) {
+    const serialized = await this.serialize()
+    blocks.set(serialized.cid, serialized.bytes)
+    const index = await this.findGtOrEqualLeafIndex(key)
+    const found = await this.atIndex(index)
+    if (found && found.isLeaf() && found.key === key) {
+      return
+    }
+    const prev = await this.atIndex(index - 1)
+    if (prev && prev.isTree()) {
+      await prev.addBlocksForPath(key, blocks)
+    }
+  }
+
   // Matching Leaf interface
   // -------------------
 

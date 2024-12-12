@@ -305,6 +305,8 @@ export function validateModEventLabel(v: unknown) {
 
 export interface ModEventAcknowledge {
   comment?: string
+  /** If true, all other reports on content authored by this account will be resolved (acknowledged). */
+  acknowledgeAccountSubjects?: boolean
   [k: string]: unknown
 }
 

@@ -1,5 +1,11 @@
 # @atproto/lexicon
 
+## 0.4.4
+
+### Patch Changes
+
+- [#3223](https://github.com/bluesky-social/atproto/pull/3223) [`9fd65ba0f`](https://github.com/bluesky-social/atproto/commit/9fd65ba0fa4caca59fd0e6156145e4c2618e3a95) Thanks [@gaearon](https://github.com/gaearon)! - Add fast paths that skip UTF8 encoding
+
 ## 0.4.3
 
 ### Patch Changes

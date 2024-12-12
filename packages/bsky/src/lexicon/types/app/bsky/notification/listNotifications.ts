@@ -13,6 +13,8 @@ import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
 const id = 'app.bsky.notification.listNotifications'
 
 export interface QueryParams {
+  /** Notification reasons to include in response. */
+  reasons?: string[]
   limit: number
   priority?: boolean
   cursor?: string
