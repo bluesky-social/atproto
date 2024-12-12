@@ -57,8 +57,8 @@ export type AuthorizeData = {
 
 // see "declareBackendData()" in the backend
 const readBackendData = <T>(key: string): T | undefined => {
-  const value = window[key] as T | undefined
-  delete window[key] // Prevent accidental usage / potential leaks to dependencies
+  const value = window[key as keyof typeof window] as T | undefined
+  delete window[key as keyof typeof window] // Prevent accidental usage / potential leaks to dependencies
   return value
 }
 

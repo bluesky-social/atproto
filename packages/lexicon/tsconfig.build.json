@@ -1,6 +1,7 @@
 {
   "extends": "../../tsconfig/isomorphic.json",
   "compilerOptions": {
+    "noImplicitAny": false,
     "rootDir": "./src",
     "outDir": "./dist"
   },

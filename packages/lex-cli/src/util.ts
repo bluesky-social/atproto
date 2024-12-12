@@ -125,7 +125,7 @@ function printZodError(node: ZodFormattedError<any>, path = ''): boolean {
       if (k === '_errors') {
         continue
       }
-      printZodError(node[k], `${path}/${k}`)
+      printZodError((node as any)[k], `${path}/${k}`)
     }
   }
   return false

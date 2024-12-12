@@ -83,20 +83,23 @@ export const assertValidCreatedAt = (record: Record<string, unknown>) => {
   }
 }
 
-export const setCollectionName = (
+export const setCollectionName = <R extends object>(
   collection: string,
-  record: RepoRecord,
+  record: R,
   validate: boolean,
-) => {
-  if (!record.$type) {
-    record.$type = collection
+): R & { $type: string } => {
+  if (!('$type' in record) || record.$type === undefined) {
+    return { ...record, $type: collection }
+  }
+  if (typeof record.$type !== 'string') {
+    throw new InvalidRecordError('Invalid $type: not a string')
   }
   if (validate && record.$type !== collection) {
     throw new InvalidRecordError(
       `Invalid $type: expected ${collection}, got ${record.$type}`,
     )
   }
-  return record
+  return record as R & { $type: string }
 }
 
 export const prepareCreate = async (opts: {
@@ -274,8 +277,9 @@ export const blobsForWrite = (
     cid: ref.ref,
     mimeType: ref.mimeType,
     constraints:
-      validate && recordType
-        ? CONSTRAINTS[recordType]?.[path.join('/')] ?? {}
+      validate && recordType && Object.hasOwn(CONSTRAINTS, recordType)
+        ? CONSTRAINTS[recordType as keyof typeof CONSTRAINTS][path.join('/')] ??
+          {}
         : {},
   }))
 }
@@ -315,7 +319,7 @@ export const findBlobRefs = (
   return []
 }
 
-const CONSTRAINTS = {
+const CONSTRAINTS: Record<string, Record<string, unknown>> = {
   [lex.ids.AppBskyActorProfile]: {
     avatar:
       lex.schemaDict.AppBskyActorProfile.defs.main.record.properties.avatar,

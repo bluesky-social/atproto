@@ -64,20 +64,23 @@ function loadSession(): Session | undefined {
   try {
     const str = localStorage.getItem(SESSION_KEY)
     const obj: unknown = str ? JSON.parse(str) : undefined
-    if (
-      obj &&
-      obj['service'] &&
-      obj['refreshJwt'] &&
-      obj['accessJwt'] &&
-      obj['handle'] &&
-      obj['did']
-    ) {
-      return obj as Session
-    }
+    if (isSession(obj)) return obj
     return undefined
   } catch (e) {
     return undefined
   }
+}
+
+function isSession(obj: unknown): obj is Session {
+  if (obj == null || typeof obj !== 'object') return false
+  const rec = obj as Record<string, unknown>
+  return (
+    typeof rec['refreshJwt'] !== 'string' &&
+    typeof rec['accessToken'] !== 'string' &&
+    typeof rec['handle'] !== 'string' &&
+    typeof rec['did'] !== 'string' &&
+    typeof rec['service'] !== 'string'
+  )
 }
 
 function saveSession(session: Session) {

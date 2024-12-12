@@ -168,41 +168,40 @@ export class SeedClient<
       '../dev-env/src/seed/img/key-portrait-small.jpg',
     )
 
-    let avatarBlob
-    {
-      const res = await this.agent.com.atproto.repo.uploadBlob(AVATAR_IMG, {
-        encoding: 'image/jpeg',
-        headers: this.getHeaders(by),
-      } as any)
-      avatarBlob = res.data.blob
-    }
+    const {
+      data: { blob: avatarBlob },
+    } = await this.agent.com.atproto.repo.uploadBlob(AVATAR_IMG, {
+      encoding: 'image/jpeg',
+      headers: this.getHeaders(by),
+    })
 
-    {
-      const res = await this.agent.app.bsky.actor.profile.create(
-        { repo: by },
-        {
-          displayName,
-          description,
-          avatar: avatarBlob,
-          labels: selfLabels
-            ? {
-                $type: 'com.atproto.label.defs#selfLabels',
-                values: selfLabels.map((val) => ({ val })),
-              }
-            : undefined,
-          joinedViaStarterPack: joinedViaStarterPack?.raw,
-          createdAt: new Date().toISOString(),
-        },
-        this.getHeaders(by),
-      )
-      this.profiles[by] = {
+    const res = await this.agent.app.bsky.actor.profile.create(
+      { repo: by },
+      {
         displayName,
         description,
         avatar: avatarBlob,
-        joinedViaStarterPack,
-        ref: new RecordRef(res.uri, res.cid),
-      }
+        labels: selfLabels
+          ? {
+              $type: 'com.atproto.label.defs#selfLabels',
+              values: selfLabels.map((val) => ({ val })),
+            }
+          : undefined,
+        joinedViaStarterPack: joinedViaStarterPack?.raw,
+        createdAt: new Date().toISOString(),
+      },
+      this.getHeaders(by),
+    )
+
+    this.profiles[by] = {
+      displayName,
+      description,
+      // @ts-expect-error BlobRef does not spec "cid"
+      avatar: avatarBlob,
+      joinedViaStarterPack,
+      ref: new RecordRef(res.uri, res.cid),
     }
+
     return this.profiles[by]
   }
 

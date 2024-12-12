@@ -361,7 +361,7 @@ export class ServerConfig {
 function stripUndefineds(
   obj: Record<string, unknown>,
 ): Record<string, unknown> {
-  const result = {}
+  const result: Record<string, unknown> = {}
   Object.entries(obj).forEach(([key, val]) => {
     if (val !== undefined) {
       result[key] = val

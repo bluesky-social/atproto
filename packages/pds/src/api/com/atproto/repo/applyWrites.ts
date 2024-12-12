@@ -82,6 +82,8 @@ export default function (server: Server, ctx: AppContext) {
               return prepareCreate({
                 did,
                 collection: write.collection,
+                // @TODO Should we validate/cast to RepoRecord?
+                // @ts-expect-error input is "type unknown".
                 record: write.value,
                 rkey: write.rkey,
                 validate,
@@ -90,6 +92,8 @@ export default function (server: Server, ctx: AppContext) {
               return prepareUpdate({
                 did,
                 collection: write.collection,
+                // @TODO Should we validate/cast to RepoRecord?
+                // @ts-expect-error input is "type unknown".
                 record: write.value,
                 rkey: write.rkey,
                 validate,

@@ -56,6 +56,8 @@
     "@rollup/plugin-terser": "^0.4.4",
     "@rollup/plugin-typescript": "^11.1.6",
     "@types/cookie": "^0.6.0",
+    "@types/hapi__content": "^6.0.3",
+    "@types/http-errors": "^2.0.1",
     "@types/keygrip": "^1.0.6",
     "@types/psl": "1.1.3",
     "@types/react": "^18.2.50",

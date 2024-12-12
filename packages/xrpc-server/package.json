@@ -36,6 +36,7 @@
   "devDependencies": {
     "@atproto/crypto": "workspace:^",
     "@types/express": "^4.17.13",
+    "@types/mime-types": "^2.1.4",
     "@types/express-serve-static-core": "^4.17.36",
     "@types/http-errors": "^2.0.1",
     "@types/ws": "^8.5.4",

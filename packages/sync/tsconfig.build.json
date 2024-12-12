@@ -2,7 +2,8 @@
   "extends": "../../tsconfig/node.json",
   "compilerOptions": {
     "rootDir": "./src",
-    "outDir": "./dist"
+    "outDir": "./dist",
+    "noPropertyAccessFromIndexSignature": false
   },
   "include": ["./src"]
 }

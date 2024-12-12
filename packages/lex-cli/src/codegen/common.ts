@@ -11,7 +11,7 @@ const PRETTIER_OPTS = {
   trailingComma: 'all' as const,
 }
 
-export const utilTs = (project) =>
+export const utilTs = (project: Project) =>
   gen(project, '/util.ts', async (file) => {
     file.replaceWithText(`
 export type OmitKey<T, K extends keyof T> = {
@@ -102,7 +102,7 @@ export function is$typed<V, Id extends string, Hash extends string>(
 `)
   })
 
-export const lexiconsTs = (project, lexicons: LexiconDoc[]) =>
+export const lexiconsTs = (project: Project, lexicons: LexiconDoc[]) =>
   gen(project, '/lexicons.ts', async (file) => {
     const nsidToEnum = (nsid: string): string => {
       return nsid

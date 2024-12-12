@@ -251,11 +251,15 @@ export class ModerationDecision {
 
   addLabel(target: LabelTarget, label: Label, opts: ModerationOpts) {
     // look up the label definition
-    const labelDef = CUSTOM_LABEL_VALUE_RE.test(label.val)
-      ? opts.labelDefs?.[label.src]?.find(
-          (def) => def.identifier === label.val,
-        ) || LABELS[label.val]
-      : LABELS[label.val]
+    const labelDef =
+      (CUSTOM_LABEL_VALUE_RE.test(label.val)
+        ? opts.labelDefs?.[label.src]?.find(
+            (def) => def.identifier === label.val,
+          )
+        : undefined) ||
+      (Object.hasOwn(LABELS, label.val)
+        ? LABELS[label.val as keyof typeof LABELS]
+        : undefined)
     if (!labelDef) {
       // ignore labels we don't understand
       return

@@ -4,8 +4,8 @@ import {
   ipldToJson,
   jsonToIpld,
   JsonValue,
+  isCid,
 } from '@atproto/common-web'
-import { CID } from 'multiformats/cid'
 import { BlobRef, jsonBlobRef } from './blob-refs'
 
 export type LexValue =
@@ -22,8 +22,9 @@ export type RepoRecord = Record<string, LexValue>
 export const lexToIpld = (val: LexValue): IpldValue => {
   // walk arrays
   if (Array.isArray(val)) {
-    return val.map((item) => lexToIpld(item))
+    return val.map(lexToIpld)
   }
+
   // objects
   if (val && typeof val === 'object') {
     // convert blobs, leaving the original encoding so that we don't change CIDs on re-encode
@@ -31,7 +32,7 @@ export const lexToIpld = (val: LexValue): IpldValue => {
       return val.original
     }
     // retain cids & bytes
-    if (CID.asCID(val) || val instanceof Uint8Array) {
+    if (isCid(val) || val instanceof Uint8Array) {
       return val
     }
     // walk plain objects
@@ -48,23 +49,27 @@ export const lexToIpld = (val: LexValue): IpldValue => {
 export const ipldToLex = (val: IpldValue): LexValue => {
   // map arrays
   if (Array.isArray(val)) {
-    return val.map((item) => ipldToLex(item))
+    return val.map(ipldToLex)
   }
+
   // objects
   if (val && typeof val === 'object') {
+    // retain cids, bytes
+    if (isCid(val) || val instanceof Uint8Array) {
+      return val
+    }
+
     // convert blobs, using hints to avoid expensive is() check
     if (
-      (val['$type'] === 'blob' ||
-        (typeof val['cid'] === 'string' &&
-          typeof val['mimeType'] === 'string')) &&
+      typeof val['mimeType'] === 'string' &&
+      (val['$type'] === 'blob' || typeof val['cid'] === 'string') &&
+      // Optimization: Only check against the "jsonBlobRef" schema if the object
+      // has the right shape.
       check.is(val, jsonBlobRef)
     ) {
       return BlobRef.fromJsonRef(val)
     }
-    // retain cids, bytes
-    if (CID.asCID(val) || val instanceof Uint8Array) {
-      return val
-    }
+
     // map plain objects
     const toReturn = {}
     for (const key of Object.keys(val)) {

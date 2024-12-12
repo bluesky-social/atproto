@@ -2,8 +2,12 @@ import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/syntax'
 import { WriteOpAction } from '@atproto/repo'
 import { RepoRecord } from '@atproto/lexicon'
+import { $Typed } from '../lexicon/util'
 
 export type ValidationStatus = 'valid' | 'unknown' | undefined
+
+export type UnknownRecord = { [_ in string]: unknown }
+export type $TypedRecord = $Typed<UnknownRecord>
 
 export type BlobConstraint = {
   accept?: string[]

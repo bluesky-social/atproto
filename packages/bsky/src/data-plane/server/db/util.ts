@@ -2,6 +2,7 @@ import {
   DummyDriver,
   DynamicModule,
   ExpressionBuilder,
+  Kysely,
   RawBuilder,
   SelectQueryBuilder,
   sql,
@@ -31,7 +32,7 @@ export const softDeleted = (actorOrRecord: { takedownRef: string | null }) => {
 export const countAll = sql<number>`count(*)`
 
 // For use with doUpdateSet()
-export const excluded = <T>(db: DatabaseSchema, col) => {
+export const excluded = <T>(db: DatabaseSchema, col: string) => {
   return sql<T>`${db.dynamic.ref(`excluded.${col}`)}`
 }
 
@@ -49,7 +50,7 @@ export const dummyDialect = {
   createDriver() {
     return new DummyDriver()
   },
-  createIntrospector(db) {
+  createIntrospector(db: Kysely<any>) {
     return new SqliteIntrospector(db)
   },
   createQueryCompiler() {

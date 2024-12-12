@@ -68,13 +68,14 @@ export const ResponseTypeNames = {
   [ResponseType.XRPCNotSupported]: 'XRPCNotSupported',
   [ResponseType.PayloadTooLarge]: 'PayloadTooLarge',
   [ResponseType.UnsupportedMediaType]: 'UnsupportedMediaType',
+  [ResponseType.NotAcceptable]: 'NotAcceptable',
   [ResponseType.RateLimitExceeded]: 'RateLimitExceeded',
   [ResponseType.InternalServerError]: 'InternalServerError',
   [ResponseType.MethodNotImplemented]: 'MethodNotImplemented',
   [ResponseType.UpstreamFailure]: 'UpstreamFailure',
   [ResponseType.NotEnoughResources]: 'NotEnoughResources',
   [ResponseType.UpstreamTimeout]: 'UpstreamTimeout',
-}
+} as const satisfies Record<ResponseType, string>
 
 export function httpResponseCodeToName(status: number): string {
   return ResponseTypeNames[httpResponseCodeToEnum(status)]
@@ -91,12 +92,13 @@ export const ResponseTypeStrings = {
   [ResponseType.PayloadTooLarge]: 'Payload Too Large',
   [ResponseType.UnsupportedMediaType]: 'Unsupported Media Type',
   [ResponseType.RateLimitExceeded]: 'Rate Limit Exceeded',
+  [ResponseType.NotAcceptable]: 'Not Acceptable',
   [ResponseType.InternalServerError]: 'Internal Server Error',
   [ResponseType.MethodNotImplemented]: 'Method Not Implemented',
   [ResponseType.UpstreamFailure]: 'Upstream Failure',
   [ResponseType.NotEnoughResources]: 'Not Enough Resources',
   [ResponseType.UpstreamTimeout]: 'Upstream Timeout',
-}
+} as const satisfies Record<ResponseType, string>
 
 export function httpResponseCodeToString(status: number): string {
   return ResponseTypeStrings[httpResponseCodeToEnum(status)]
@@ -144,16 +146,20 @@ export class XRPCError extends Error {
 
     // Try and find a Response object in the cause
     const causeResponse: Response | undefined =
-      cause instanceof Response
-        ? cause
-        : cause?.['response'] instanceof Response
+      cause instanceof Response || cause == null
+        ? cause || undefined
+        : typeof cause === 'object' &&
+            'response' in cause &&
+            cause['response'] instanceof Response
           ? cause['response']
           : undefined
 
     const statusCode: unknown =
       // Extract status code from "http-errors" like errors
-      causeErr?.['statusCode'] ??
-      causeErr?.['status'] ??
+      (causeErr && 'statusCode' in causeErr
+        ? causeErr.statusCode
+        : undefined) ??
+      (causeErr && 'status' in causeErr ? causeErr.status : undefined) ??
       // Use the status code from the response object as fallback
       causeResponse?.status
 

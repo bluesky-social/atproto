@@ -223,7 +223,9 @@ export class AccountManager
     return { accessJwt, refreshJwt }
   }
 
-  async rotateRefreshToken(id: string) {
+  async rotateRefreshToken(
+    id: string,
+  ): Promise<{ accessJwt: string; refreshJwt: string } | null> {
     const token = await auth.getRefreshToken(this.db, id)
     if (!token) return null
 

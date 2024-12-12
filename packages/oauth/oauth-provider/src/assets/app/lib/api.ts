@@ -44,13 +44,19 @@ export class Api {
       }
     } else if (
       response.status === 400 &&
-      json?.['error'] === 'invalid_request' &&
-      json?.['error_description'] === 'Invalid credentials'
+      json != null &&
+      typeof json === 'object' &&
+      'error' in json &&
+      json['error'] === 'invalid_request' &&
+      json['error_description'] === 'Invalid credentials'
     ) {
       throw new InvalidCredentialsError()
     } else if (
       response.status === 401 &&
-      json?.['error'] === 'second_authentication_factor_required'
+      json != null &&
+      typeof json === 'object' &&
+      'error' in json &&
+      json['error'] === 'second_authentication_factor_required'
     ) {
       const data = json as {
         type: 'emailOtp'

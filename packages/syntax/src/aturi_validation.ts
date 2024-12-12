@@ -108,18 +108,18 @@ export const ensureValidAtUriRegex = (uri: string): void => {
   const groups = rm.groups
 
   try {
-    ensureValidHandleRegex(groups.authority)
+    ensureValidHandleRegex(groups['authority'])
   } catch {
     try {
-      ensureValidDidRegex(groups.authority)
+      ensureValidDidRegex(groups['authority'])
     } catch {
       throw new Error('ATURI authority must be a valid handle or DID')
     }
   }
 
-  if (groups.collection) {
+  if (groups['collection']) {
     try {
-      ensureValidNsidRegex(groups.collection)
+      ensureValidNsidRegex(groups['collection'])
     } catch {
       throw new Error('ATURI collection path segment must be a valid NSID')
     }

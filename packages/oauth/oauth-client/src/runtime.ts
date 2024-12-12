@@ -1,4 +1,4 @@
-import { Key } from '@atproto/jwk'
+import { Jwk, Key } from '@atproto/jwk'
 import { base64url } from 'multiformats/bases/base64'
 
 import { requestLocalLock } from './lock.js'
@@ -43,7 +43,7 @@ export class Runtime {
     }
   }
 
-  public async calculateJwkThumbprint(jwk) {
+  public async calculateJwkThumbprint(jwk: Jwk) {
     const components = extractJktComponents(jwk)
     const data = JSON.stringify(components)
     return this.sha256(data)
@@ -65,9 +65,9 @@ export class Runtime {
   }
 }
 
-function extractJktComponents(jwk) {
-  const get = (field) => {
-    const value = jwk[field]
+function extractJktComponents(jwk: Jwk) {
+  const get = (field: string) => {
+    const value = jwk[field as keyof typeof jwk]
     if (typeof value !== 'string' || !value) {
       throw new TypeError(`"${field}" Parameter missing or invalid`)
     }

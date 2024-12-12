@@ -3341,4 +3341,5 @@ describe('agent', () => {
   })
 })
 
-const byType = (a, b) => a.$type.localeCompare(b.$type)
+const byType = (a: { $type: string }, b: { $type: string }) =>
+  a.$type.localeCompare(b.$type)

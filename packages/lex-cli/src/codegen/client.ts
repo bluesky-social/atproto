@@ -429,14 +429,18 @@ function genRecordCls(file: SourceFile, nsid: string, lexRecord: LexRecord) {
   }
 }
 
-const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
+const lexiconTs = (
+  project: Project,
+  lexicons: Lexicons,
+  lexiconDoc: LexiconDoc,
+) =>
   gen(
     project,
     `/types/${lexiconDoc.id.split('.').join('/')}.ts`,
     async (file) => {
       const imports: Set<string> = new Set()
 
-      const main = lexiconDoc.defs.main
+      const main = lexiconDoc.defs['main']
       if (
         main?.type === 'query' ||
         main?.type === 'subscription' ||

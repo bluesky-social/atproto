@@ -82,7 +82,7 @@ export class ReadThroughCache<T> {
     if (opts?.revalidate) {
       return this.fetchAndCacheMany(keys)
     }
-    let cached: Record<string, string>
+    let cached: Record<string, string | undefined>
     try {
       cached = await this.redis.getMulti(keys)
     } catch (err) {
