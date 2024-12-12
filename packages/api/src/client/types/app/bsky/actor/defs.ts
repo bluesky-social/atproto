@@ -41,6 +41,7 @@ export interface ProfileView {
   description?: string
   avatar?: string
   associated?: ProfileAssociated
+  acceptingVouches?: 'all' | 'none' | 'following' | (string & {})
   highlightedVouch?: AppBskyGraphDefs.VouchView
   indexedAt?: string
   createdAt?: string
@@ -72,8 +73,8 @@ export interface ProfileViewDetailed {
   followsCount?: number
   postsCount?: number
   associated?: ProfileAssociated
+  acceptingVouches?: 'all' | 'none' | 'following' | (string & {})
   highlightedVouch?: AppBskyGraphDefs.VouchView
-  acceptedVouches?: AppBskyGraphDefs.VouchView[]
   joinedViaStarterPack?: AppBskyGraphDefs.StarterPackViewBasic
   indexedAt?: string
   createdAt?: string

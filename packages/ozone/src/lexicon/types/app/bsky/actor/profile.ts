@@ -23,7 +23,6 @@ export interface Record {
   pinnedPost?: ComAtprotoRepoStrongRef.Main
   acceptingVouches?: 'all' | 'none' | 'following' | (string & {})
   highlightedVouch?: string
-  acceptedVouches?: string[]
   createdAt?: string
   [k: string]: unknown
 }

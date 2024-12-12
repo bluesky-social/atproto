@@ -9,6 +9,8 @@ import { CID } from 'multiformats/cid'
 import * as AppBskyGraphDefs from './defs'
 
 export interface QueryParams {
+  actor: string
+  includeUnaccepted?: boolean
   limit?: number
   cursor?: string
 }

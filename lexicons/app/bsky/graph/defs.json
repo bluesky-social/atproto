@@ -169,7 +169,7 @@
         "uri": { "type": "string", "format": "at-uri" },
         "cid": { "type": "string", "format": "cid" },
         "record": { "type": "unknown" },
-        "accept": { 
+        "accept": {
           "type": "ref",
           "ref": "com.atproto.repo.strongRef",
           "description": "A pointer to the vouchaccept record. Undefined if the user has not accepted it."

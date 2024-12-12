@@ -9,6 +9,7 @@ import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
 import * as AppBskyActorDefs from '../actor/defs'
 import * as AppBskyRichtextFacet from '../richtext/facet'
 import * as AppBskyFeedDefs from '../feed/defs'
+import * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef'
 
 export interface ListViewBasic {
   uri: string
@@ -209,8 +210,7 @@ export interface VouchView {
   uri: string
   cid: string
   record: {}
-  /** Whether the subject of the vouch has accepted the vouch yet. Often vouch views will be filtered such that they only return accpeted vouches. */
-  accepted: boolean
+  accept?: ComAtprotoRepoStrongRef.Main
   creator: AppBskyActorDefs.ProfileViewBasic
   labels?: ComAtprotoLabelDefs.Label[]
   indexedAt: string

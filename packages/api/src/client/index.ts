@@ -132,18 +132,18 @@ import * as AppBskyGraphGetActorStarterPacks from './types/app/bsky/graph/getAct
 import * as AppBskyGraphGetBlocks from './types/app/bsky/graph/getBlocks'
 import * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
 import * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
-import * as AppBskyGraphGetGivenVouches from './types/app/bsky/graph/getGivenVouches'
 import * as AppBskyGraphGetKnownFollowers from './types/app/bsky/graph/getKnownFollowers'
 import * as AppBskyGraphGetList from './types/app/bsky/graph/getList'
 import * as AppBskyGraphGetListBlocks from './types/app/bsky/graph/getListBlocks'
 import * as AppBskyGraphGetListMutes from './types/app/bsky/graph/getListMutes'
 import * as AppBskyGraphGetLists from './types/app/bsky/graph/getLists'
 import * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes'
-import * as AppBskyGraphGetOfferedVouches from './types/app/bsky/graph/getOfferedVouches'
 import * as AppBskyGraphGetRelationships from './types/app/bsky/graph/getRelationships'
 import * as AppBskyGraphGetStarterPack from './types/app/bsky/graph/getStarterPack'
 import * as AppBskyGraphGetStarterPacks from './types/app/bsky/graph/getStarterPacks'
 import * as AppBskyGraphGetSuggestedFollowsByActor from './types/app/bsky/graph/getSuggestedFollowsByActor'
+import * as AppBskyGraphGetVouchesGiven from './types/app/bsky/graph/getVouchesGiven'
+import * as AppBskyGraphGetVouchesReceived from './types/app/bsky/graph/getVouchesReceived'
 import * as AppBskyGraphList from './types/app/bsky/graph/list'
 import * as AppBskyGraphListblock from './types/app/bsky/graph/listblock'
 import * as AppBskyGraphListitem from './types/app/bsky/graph/listitem'
@@ -156,6 +156,7 @@ import * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor'
 import * as AppBskyGraphUnmuteActorList from './types/app/bsky/graph/unmuteActorList'
 import * as AppBskyGraphUnmuteThread from './types/app/bsky/graph/unmuteThread'
 import * as AppBskyGraphVouch from './types/app/bsky/graph/vouch'
+import * as AppBskyGraphVouchaccept from './types/app/bsky/graph/vouchaccept'
 import * as AppBskyLabelerDefs from './types/app/bsky/labeler/defs'
 import * as AppBskyLabelerGetServices from './types/app/bsky/labeler/getServices'
 import * as AppBskyLabelerService from './types/app/bsky/labeler/service'
@@ -362,18 +363,18 @@ export * as AppBskyGraphGetActorStarterPacks from './types/app/bsky/graph/getAct
 export * as AppBskyGraphGetBlocks from './types/app/bsky/graph/getBlocks'
 export * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
 export * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
-export * as AppBskyGraphGetGivenVouches from './types/app/bsky/graph/getGivenVouches'
 export * as AppBskyGraphGetKnownFollowers from './types/app/bsky/graph/getKnownFollowers'
 export * as AppBskyGraphGetList from './types/app/bsky/graph/getList'
 export * as AppBskyGraphGetListBlocks from './types/app/bsky/graph/getListBlocks'
 export * as AppBskyGraphGetListMutes from './types/app/bsky/graph/getListMutes'
 export * as AppBskyGraphGetLists from './types/app/bsky/graph/getLists'
 export * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes'
-export * as AppBskyGraphGetOfferedVouches from './types/app/bsky/graph/getOfferedVouches'
 export * as AppBskyGraphGetRelationships from './types/app/bsky/graph/getRelationships'
 export * as AppBskyGraphGetStarterPack from './types/app/bsky/graph/getStarterPack'
 export * as AppBskyGraphGetStarterPacks from './types/app/bsky/graph/getStarterPacks'
 export * as AppBskyGraphGetSuggestedFollowsByActor from './types/app/bsky/graph/getSuggestedFollowsByActor'
+export * as AppBskyGraphGetVouchesGiven from './types/app/bsky/graph/getVouchesGiven'
+export * as AppBskyGraphGetVouchesReceived from './types/app/bsky/graph/getVouchesReceived'
 export * as AppBskyGraphList from './types/app/bsky/graph/list'
 export * as AppBskyGraphListblock from './types/app/bsky/graph/listblock'
 export * as AppBskyGraphListitem from './types/app/bsky/graph/listitem'
@@ -386,6 +387,7 @@ export * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor'
 export * as AppBskyGraphUnmuteActorList from './types/app/bsky/graph/unmuteActorList'
 export * as AppBskyGraphUnmuteThread from './types/app/bsky/graph/unmuteThread'
 export * as AppBskyGraphVouch from './types/app/bsky/graph/vouch'
+export * as AppBskyGraphVouchaccept from './types/app/bsky/graph/vouchaccept'
 export * as AppBskyLabelerDefs from './types/app/bsky/labeler/defs'
 export * as AppBskyLabelerGetServices from './types/app/bsky/labeler/getServices'
 export * as AppBskyLabelerService from './types/app/bsky/labeler/service'
@@ -2266,6 +2268,7 @@ export class AppBskyGraphNS {
   listitem: ListitemRecord
   starterpack: StarterpackRecord
   vouch: VouchRecord
+  vouchaccept: VouchacceptRecord
 
   constructor(client: XrpcClient) {
     this._client = client
@@ -2276,6 +2279,7 @@ export class AppBskyGraphNS {
     this.listitem = new ListitemRecord(client)
     this.starterpack = new StarterpackRecord(client)
     this.vouch = new VouchRecord(client)
+    this.vouchaccept = new VouchacceptRecord(client)
   }
 
   getActorStarterPacks(
@@ -2320,18 +2324,6 @@ export class AppBskyGraphNS {
   ): Promise<AppBskyGraphGetFollows.Response> {
     return this._client.call(
       'app.bsky.graph.getFollows',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  getGivenVouches(
-    params?: AppBskyGraphGetGivenVouches.QueryParams,
-    opts?: AppBskyGraphGetGivenVouches.CallOptions,
-  ): Promise<AppBskyGraphGetGivenVouches.Response> {
-    return this._client.call(
-      'app.bsky.graph.getGivenVouches',
       params,
       undefined,
       opts,
@@ -2395,18 +2387,6 @@ export class AppBskyGraphNS {
     return this._client.call('app.bsky.graph.getMutes', params, undefined, opts)
   }
 
-  getOfferedVouches(
-    params?: AppBskyGraphGetOfferedVouches.QueryParams,
-    opts?: AppBskyGraphGetOfferedVouches.CallOptions,
-  ): Promise<AppBskyGraphGetOfferedVouches.Response> {
-    return this._client.call(
-      'app.bsky.graph.getOfferedVouches',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
   getRelationships(
     params?: AppBskyGraphGetRelationships.QueryParams,
     opts?: AppBskyGraphGetRelationships.CallOptions,
@@ -2448,6 +2428,30 @@ export class AppBskyGraphNS {
   ): Promise<AppBskyGraphGetSuggestedFollowsByActor.Response> {
     return this._client.call(
       'app.bsky.graph.getSuggestedFollowsByActor',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getVouchesGiven(
+    params?: AppBskyGraphGetVouchesGiven.QueryParams,
+    opts?: AppBskyGraphGetVouchesGiven.CallOptions,
+  ): Promise<AppBskyGraphGetVouchesGiven.Response> {
+    return this._client.call(
+      'app.bsky.graph.getVouchesGiven',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getVouchesReceived(
+    params?: AppBskyGraphGetVouchesReceived.QueryParams,
+    opts?: AppBskyGraphGetVouchesReceived.CallOptions,
+  ): Promise<AppBskyGraphGetVouchesReceived.Response> {
+    return this._client.call(
+      'app.bsky.graph.getVouchesReceived',
       params,
       undefined,
       opts,
@@ -2954,6 +2958,71 @@ export class VouchRecord {
       'com.atproto.repo.deleteRecord',
       undefined,
       { collection: 'app.bsky.graph.vouch', ...params },
+      { headers },
+    )
+  }
+}
+
+export class VouchacceptRecord {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  async list(
+    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
+  ): Promise<{
+    cursor?: string
+    records: { uri: string; value: AppBskyGraphVouchaccept.Record }[]
+  }> {
+    const res = await this._client.call('com.atproto.repo.listRecords', {
+      collection: 'app.bsky.graph.vouchaccept',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{
+    uri: string
+    cid: string
+    value: AppBskyGraphVouchaccept.Record
+  }> {
+    const res = await this._client.call('com.atproto.repo.getRecord', {
+      collection: 'app.bsky.graph.vouchaccept',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: Omit<
+      ComAtprotoRepoCreateRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: AppBskyGraphVouchaccept.Record,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    record.$type = 'app.bsky.graph.vouchaccept'
+    const res = await this._client.call(
+      'com.atproto.repo.createRecord',
+      undefined,
+      { collection: 'app.bsky.graph.vouchaccept', ...params, record },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async delete(
+    params: Omit<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
+    headers?: Record<string, string>,
+  ): Promise<void> {
+    await this._client.call(
+      'com.atproto.repo.deleteRecord',
+      undefined,
+      { collection: 'app.bsky.graph.vouchaccept', ...params },
       { headers },
     )
   }
