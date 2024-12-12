@@ -57,7 +57,7 @@ export class BsyncService {
     )
 
     app.use(health.createRouter(ctx))
-    if (ctx.revenueCatClient) {
+    if (ctx.purchasesClient) {
       app.use('/webhooks/revenuecat', revenueCat.createRouter(ctx))
     }
 
@@ -104,6 +104,7 @@ export class BsyncService {
     // if these error, unhandled rejection should cause process to exit
     conn.query(`listen ${createMuteOpChannel}`)
     conn.query(`listen ${createNotifOpChannel}`)
+    conn.query(`listen ${createPurchaseOpChannel}`)
     conn.on('notification', (notif) => {
       if (notif.channel === createMuteOpChannel) {
         this.ctx.events.emit(createMuteOpChannel)

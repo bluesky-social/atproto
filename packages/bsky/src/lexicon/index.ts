@@ -136,6 +136,10 @@ import * as AppBskyNotificationListNotifications from './types/app/bsky/notifica
 import * as AppBskyNotificationPutPreferences from './types/app/bsky/notification/putPreferences'
 import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
+import * as AppBskyPurchaseGetFeatures from './types/app/bsky/purchase/getFeatures'
+import * as AppBskyPurchaseGetSubscriptionGroup from './types/app/bsky/purchase/getSubscriptionGroup'
+import * as AppBskyPurchaseGetSubscriptions from './types/app/bsky/purchase/getSubscriptions'
+import * as AppBskyPurchaseRefreshCache from './types/app/bsky/purchase/refreshCache'
 import * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig'
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
 import * as AppBskyUnspeccedGetSuggestionsSkeleton from './types/app/bsky/unspecced/getSuggestionsSkeleton'
@@ -1156,6 +1160,7 @@ export class AppBskyNS {
   graph: AppBskyGraphNS
   labeler: AppBskyLabelerNS
   notification: AppBskyNotificationNS
+  purchase: AppBskyPurchaseNS
   richtext: AppBskyRichtextNS
   unspecced: AppBskyUnspeccedNS
   video: AppBskyVideoNS
@@ -1168,6 +1173,7 @@ export class AppBskyNS {
     this.graph = new AppBskyGraphNS(server)
     this.labeler = new AppBskyLabelerNS(server)
     this.notification = new AppBskyNotificationNS(server)
+    this.purchase = new AppBskyPurchaseNS(server)
     this.richtext = new AppBskyRichtextNS(server)
     this.unspecced = new AppBskyUnspeccedNS(server)
     this.video = new AppBskyVideoNS(server)
@@ -1790,6 +1796,58 @@ export class AppBskyNotificationNS {
     >,
   ) {
     const nsid = 'app.bsky.notification.updateSeen' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class AppBskyPurchaseNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  getFeatures<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyPurchaseGetFeatures.Handler<ExtractAuth<AV>>,
+      AppBskyPurchaseGetFeatures.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.purchase.getFeatures' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getSubscriptionGroup<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyPurchaseGetSubscriptionGroup.Handler<ExtractAuth<AV>>,
+      AppBskyPurchaseGetSubscriptionGroup.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.purchase.getSubscriptionGroup' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getSubscriptions<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyPurchaseGetSubscriptions.Handler<ExtractAuth<AV>>,
+      AppBskyPurchaseGetSubscriptions.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.purchase.getSubscriptions' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  refreshCache<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyPurchaseRefreshCache.Handler<ExtractAuth<AV>>,
+      AppBskyPurchaseRefreshCache.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.purchase.refreshCache' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }

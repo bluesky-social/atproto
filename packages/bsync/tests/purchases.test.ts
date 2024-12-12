@@ -1,17 +1,35 @@
-import http from 'node:http'
 import { once } from 'node:events'
+import http from 'node:http'
+
+import { Timestamp } from '@bufbuild/protobuf'
+import { Code, ConnectError } from '@connectrpc/connect'
 import getPort from 'get-port'
-import { BsyncService, Database, envToCfg } from '../src'
+
+import { DAY, wait } from '@atproto/common'
+
+import {
+  authWithApiKey,
+  BsyncClient,
+  BsyncService,
+  createClient,
+  Database,
+  envToCfg,
+} from '../src'
+import {
+  GetSubscriptionsResponse,
+  PurchaseOperation,
+} from '../src/proto/bsync_pb'
 import {
   RcEntitlement,
   RcEventBody,
   RcGetSubscriberResponse,
 } from '../src/purchases'
 
-const revenueCatWebhookAuthorization = 'Bearer any-token'
+const revenueCatWebhookAuthorization = 'any-token'
 
 describe('purchases', () => {
   let bsync: BsyncService
+  let client: BsyncClient
   let bsyncUrl: string
 
   const actorDid = 'did:example:a'
@@ -19,13 +37,26 @@ describe('purchases', () => {
   let revenueCatServer: http.Server
   let revenueCatApiMock: jest.Mock<RcGetSubscriberResponse>
 
-  const TEN_MINUTES = 600_000
-  const entitlementValid: RcEntitlement = {
-    expires_date: new Date(Date.now() + TEN_MINUTES).toISOString(),
-  }
+  const ONE_WEEK = DAY * 7
+  const now = new Date()
+  const twoWeeksAgo = new Date(now.valueOf() - ONE_WEEK * 2)
+  const lastWeek = new Date(now.valueOf() - ONE_WEEK)
+  const nextWeek = new Date(now.valueOf() + ONE_WEEK)
+
   const entitlementExpired: RcEntitlement = {
-    expires_date: new Date(Date.now() - TEN_MINUTES).toISOString(),
+    expires_date: lastWeek.toISOString(),
   }
+  const entitlementValid: RcEntitlement = {
+    expires_date: nextWeek.toISOString(),
+  }
+  const entitlementValid2: RcEntitlement = {
+    expires_date: nextWeek.toISOString(),
+  }
+
+  const stripePriceIdMonthly = 'price_id_monthly'
+  const stripePriceIdAnnual = 'price_id_annual'
+  const stripeProductIdMonthly = 'product_id_monthly'
+  const stripeProductIdAnnual = 'product_id_annual'
 
   beforeAll(async () => {
     const revenueCatPort = await getPort()
@@ -42,10 +73,14 @@ describe('purchases', () => {
         dbUrl: process.env.DB_POSTGRES_URL,
         dbSchema: 'bsync_purchases',
         apiKeys: ['key-1'],
-        longPollTimeoutMs: 500,
+        longPollTimeoutMs: 3000,
         revenueCatV1ApiKey: 'any-key',
         revenueCatV1ApiUrl: `http://localhost:${revenueCatPort}`,
         revenueCatWebhookAuthorization,
+        stripePriceIdMonthly,
+        stripePriceIdAnnual,
+        stripeProductIdMonthly,
+        stripeProductIdAnnual,
       }),
     )
 
@@ -53,6 +88,11 @@ describe('purchases', () => {
 
     await bsync.ctx.db.migrateToLatestOrThrow()
     await bsync.start()
+    client = createClient({
+      httpVersion: '1.1',
+      baseUrl: `http://localhost:${bsync.ctx.cfg.service.port}`,
+      interceptors: [authWithApiKey('key-1')],
+    })
   })
 
   afterAll(async () => {
@@ -77,18 +117,26 @@ describe('purchases', () => {
       })
 
       expect(response.status).toBe(403)
-      expect(response.json()).resolves.toMatchObject({
-        error: 'Forbidden: invalid authentication for RevenueCat webhook',
-      })
+      const body = await response.json()
+      expect(body).toStrictEqual(
+        structuredClone({
+          error: 'Forbidden: invalid authentication for RevenueCat webhook',
+          success: false,
+        }),
+      )
     })
 
     it('replies 400 if DID is invalid', async () => {
       const response = await callWebhook(bsyncUrl, buildWebhookBody('invalid'))
 
       expect(response.status).toBe(400)
-      expect(response.json()).resolves.toMatchObject({
-        error: 'Bad request: invalid DID in app_user_id',
-      })
+      const body = await response.json()
+      expect(body).toStrictEqual(
+        structuredClone({
+          error: 'Bad request: invalid DID in app_user_id',
+          success: false,
+        }),
+      )
     })
 
     it('replies 400 if body is invalid', async () => {
@@ -97,15 +145,21 @@ describe('purchases', () => {
       } as unknown as RcEventBody)
 
       expect(response.status).toBe(400)
-      expect(response.json()).resolves.toMatchObject({
-        error: 'Bad request: body schema validation failed',
-      })
+      const body = await response.json()
+      expect(body).toStrictEqual(
+        structuredClone({
+          error: 'Bad request: body schema validation failed',
+          success: false,
+        }),
+      )
     })
 
-    it('stores valid entitlements from the API response, excluding expired', async () => {
-      revenueCatApiMock.mockReturnValueOnce({
+    it('stores sorted valid entitlements from the API response, excluding expired', async () => {
+      revenueCatApiMock.mockReturnValue({
         subscriber: {
           entitlements: { entitlementExpired },
+          subscriptions: {},
+          subscriber_attributes: {},
         },
       })
 
@@ -118,7 +172,7 @@ describe('purchases', () => {
         .orderBy('id', 'desc')
         .executeTakeFirstOrThrow()
 
-      expect(op0).toMatchObject({
+      expect(op0).toStrictEqual({
         id: expect.any(Number),
         actorDid,
         entitlements: [],
@@ -131,15 +185,21 @@ describe('purchases', () => {
           .selectAll()
           .where('actorDid', '=', actorDid)
           .executeTakeFirstOrThrow(),
-      ).resolves.toMatchObject({
+      ).resolves.toStrictEqual({
         actorDid,
         entitlements: [],
         fromId: op0.id,
       })
 
-      revenueCatApiMock.mockReturnValueOnce({
+      revenueCatApiMock.mockReturnValue({
         subscriber: {
-          entitlements: { entitlementValid, entitlementExpired },
+          entitlements: {
+            entitlementValid2,
+            entitlementValid,
+            entitlementExpired,
+          },
+          subscriptions: {},
+          subscriber_attributes: {},
         },
       })
 
@@ -152,10 +212,10 @@ describe('purchases', () => {
         .orderBy('id', 'desc')
         .executeTakeFirstOrThrow()
 
-      expect(op1).toMatchObject({
+      expect(op1).toStrictEqual({
         id: expect.any(Number),
         actorDid,
-        entitlements: ['entitlementValid'],
+        entitlements: ['entitlementValid', 'entitlementValid2'],
         createdAt: expect.any(Date),
       })
 
@@ -165,16 +225,20 @@ describe('purchases', () => {
           .selectAll()
           .where('actorDid', '=', actorDid)
           .executeTakeFirstOrThrow(),
-      ).resolves.toMatchObject({
+      ).resolves.toStrictEqual({
         actorDid,
-        entitlements: ['entitlementValid'],
+        entitlements: ['entitlementValid', 'entitlementValid2'],
         fromId: op1.id,
       })
     })
 
     it('sets empty array in the cache if no entitlements are present at all', async () => {
       revenueCatApiMock.mockReturnValue({
-        subscriber: { entitlements: {} },
+        subscriber: {
+          entitlements: {},
+          subscriptions: {},
+          subscriber_attributes: {},
+        },
       })
 
       await callWebhook(bsyncUrl, buildWebhookBody(actorDid))
@@ -186,7 +250,7 @@ describe('purchases', () => {
         .orderBy('id', 'desc')
         .executeTakeFirstOrThrow()
 
-      expect(op).toMatchObject({
+      expect(op).toStrictEqual({
         id: expect.any(Number),
         actorDid,
         entitlements: [],
@@ -199,11 +263,478 @@ describe('purchases', () => {
           .selectAll()
           .where('actorDid', '=', actorDid)
           .executeTakeFirstOrThrow(),
-      ).resolves.toMatchObject({
+      ).resolves.toStrictEqual({
         actorDid,
         entitlements: [],
         fromId: op.id,
       })
+    })
+  })
+
+  describe('refreshPurchases', () => {
+    it('fails on bad inputs', async () => {
+      await expect(
+        client.refreshPurchases({
+          actorDid: 'invalid',
+        }),
+      ).rejects.toStrictEqual(
+        new ConnectError('actor_did must be a valid did', Code.InvalidArgument),
+      )
+    })
+
+    it('stores valid entitlements from the API response, excluding expired', async () => {
+      revenueCatApiMock.mockReturnValue({
+        subscriber: {
+          entitlements: { entitlementExpired },
+          subscriptions: {},
+          subscriber_attributes: {},
+        },
+      })
+
+      await client.refreshPurchases({ actorDid })
+
+      const op0 = await bsync.ctx.db.db
+        .selectFrom('purchase_op')
+        .selectAll()
+        .where('actorDid', '=', actorDid)
+        .orderBy('id', 'desc')
+        .executeTakeFirstOrThrow()
+
+      expect(op0).toStrictEqual({
+        id: expect.any(Number),
+        actorDid,
+        entitlements: [],
+        createdAt: expect.any(Date),
+      })
+
+      await expect(
+        bsync.ctx.db.db
+          .selectFrom('purchase_item')
+          .selectAll()
+          .where('actorDid', '=', actorDid)
+          .executeTakeFirstOrThrow(),
+      ).resolves.toStrictEqual({
+        actorDid,
+        entitlements: [],
+        fromId: op0.id,
+      })
+
+      revenueCatApiMock.mockReturnValue({
+        subscriber: {
+          entitlements: { entitlementValid, entitlementExpired },
+          subscriptions: {},
+          subscriber_attributes: {},
+        },
+      })
+
+      await client.refreshPurchases({ actorDid })
+
+      const op1 = await bsync.ctx.db.db
+        .selectFrom('purchase_op')
+        .selectAll()
+        .where('actorDid', '=', actorDid)
+        .orderBy('id', 'desc')
+        .executeTakeFirstOrThrow()
+
+      expect(op1).toStrictEqual({
+        id: expect.any(Number),
+        actorDid,
+        entitlements: ['entitlementValid'],
+        createdAt: expect.any(Date),
+      })
+
+      await expect(
+        bsync.ctx.db.db
+          .selectFrom('purchase_item')
+          .selectAll()
+          .where('actorDid', '=', actorDid)
+          .executeTakeFirstOrThrow(),
+      ).resolves.toStrictEqual({
+        actorDid,
+        entitlements: ['entitlementValid'],
+        fromId: op1.id,
+      })
+    })
+
+    it('sets empty array in the cache if no entitlements are present at all', async () => {
+      revenueCatApiMock.mockReturnValue({
+        subscriber: {
+          entitlements: {},
+          subscriptions: {},
+          subscriber_attributes: {},
+        },
+      })
+
+      await client.refreshPurchases({ actorDid })
+
+      const op = await bsync.ctx.db.db
+        .selectFrom('purchase_op')
+        .selectAll()
+        .where('actorDid', '=', actorDid)
+        .orderBy('id', 'desc')
+        .executeTakeFirstOrThrow()
+
+      expect(op).toStrictEqual({
+        id: expect.any(Number),
+        actorDid,
+        entitlements: [],
+        createdAt: expect.any(Date),
+      })
+
+      await expect(
+        bsync.ctx.db.db
+          .selectFrom('purchase_item')
+          .selectAll()
+          .where('actorDid', '=', actorDid)
+          .executeTakeFirstOrThrow(),
+      ).resolves.toStrictEqual({
+        actorDid,
+        entitlements: [],
+        fromId: op.id,
+      })
+    })
+
+    it('only creates new operations if the entitlements differ from the current state', async () => {
+      // 1. pre-check, no operations existing.
+      await expect(
+        bsync.ctx.db.db
+          .selectFrom('purchase_op')
+          .selectAll()
+          .where('actorDid', '=', actorDid)
+          .execute(),
+      ).resolves.toHaveLength(0)
+      await expect(
+        bsync.ctx.db.db
+          .selectFrom('purchase_item')
+          .selectAll()
+          .where('actorDid', '=', actorDid)
+          .execute(),
+      ).resolves.toHaveLength(0)
+
+      // 2. 1 new entitlement, will generate 1 operation
+      revenueCatApiMock.mockReturnValue({
+        subscriber: {
+          entitlements: { entitlementValid },
+          subscriptions: {},
+          subscriber_attributes: {},
+        },
+      })
+      await client.refreshPurchases({ actorDid })
+
+      await expect(
+        bsync.ctx.db.db
+          .selectFrom('purchase_op')
+          .selectAll()
+          .where('actorDid', '=', actorDid)
+          .execute(),
+      ).resolves.toHaveLength(1)
+      await expect(
+        bsync.ctx.db.db
+          .selectFrom('purchase_item')
+          .selectAll()
+          .where('actorDid', '=', actorDid)
+          .execute(),
+      ).resolves.toHaveLength(1)
+
+      // 3. 1 new entitlement, will generate 1 operation
+      revenueCatApiMock.mockReturnValue({
+        subscriber: {
+          entitlements: { entitlementValid, entitlementValid2 },
+          subscriptions: {},
+          subscriber_attributes: {},
+        },
+      })
+      await client.refreshPurchases({ actorDid })
+
+      await expect(
+        bsync.ctx.db.db
+          .selectFrom('purchase_op')
+          .selectAll()
+          .where('actorDid', '=', actorDid)
+          .execute(),
+      ).resolves.toHaveLength(2)
+      await expect(
+        bsync.ctx.db.db
+          .selectFrom('purchase_item')
+          .selectAll()
+          .where('actorDid', '=', actorDid)
+          .execute(),
+      ).resolves.toHaveLength(1)
+
+      // 4. no new entitlements, will not generate new operations
+      await client.refreshPurchases({ actorDid })
+
+      await expect(
+        bsync.ctx.db.db
+          .selectFrom('purchase_op')
+          .selectAll()
+          .where('actorDid', '=', actorDid)
+          .execute(),
+      ).resolves.toHaveLength(2)
+      await expect(
+        bsync.ctx.db.db
+          .selectFrom('purchase_item')
+          .selectAll()
+          .where('actorDid', '=', actorDid)
+          .execute(),
+      ).resolves.toHaveLength(1)
+    })
+  })
+
+  describe('getSubscriptions', () => {
+    it('returns the email if returned from RC', async () => {
+      revenueCatApiMock.mockReturnValue({
+        subscriber: {
+          entitlements: {},
+          subscriptions: {},
+          subscriber_attributes: {
+            email: {
+              value: 'test@test',
+            },
+          },
+        },
+      })
+
+      const res = await client.getSubscriptions({ actorDid })
+
+      expect(res).toStrictEqual(
+        new GetSubscriptionsResponse({
+          email: 'test@test',
+          subscriptions: [],
+        }),
+      )
+    })
+
+    it('returns empty subscriptions if none returned from RC', async () => {
+      revenueCatApiMock.mockReturnValue({
+        subscriber: {
+          entitlements: {},
+          subscriptions: {},
+          subscriber_attributes: {},
+        },
+      })
+
+      const res = await client.getSubscriptions({ actorDid })
+
+      expect(res).toStrictEqual(
+        new GetSubscriptionsResponse({
+          email: '',
+          subscriptions: [],
+        }),
+      )
+    })
+
+    it('returns the mapped subscriptions data returned from RC', async () => {
+      revenueCatApiMock.mockReturnValue({
+        subscriber: {
+          entitlements: {},
+          subscriptions: {
+            [stripeProductIdMonthly]: {
+              auto_resume_date: null,
+              expires_date: lastWeek.toISOString(),
+              original_purchase_date: twoWeeksAgo.toISOString(),
+              purchase_date: twoWeeksAgo.toISOString(),
+              store: 'stripe',
+              unsubscribe_detected_at: null,
+            },
+            [stripeProductIdAnnual]: {
+              auto_resume_date: null,
+              expires_date: nextWeek.toISOString(),
+              original_purchase_date: lastWeek.toISOString(),
+              purchase_date: lastWeek.toISOString(),
+              store: 'stripe',
+              unsubscribe_detected_at: null,
+            },
+          },
+          subscriber_attributes: {},
+        },
+      })
+
+      const res = await client.getSubscriptions({ actorDid })
+
+      expect(res).toStrictEqual(
+        new GetSubscriptionsResponse({
+          email: '',
+          subscriptions: [
+            {
+              status: 'expired',
+              renewalStatus: 'will_not_renew',
+              group: 'core',
+              platform: 'web',
+              offering: 'core:monthly',
+              periodEndsAt: Timestamp.fromDate(lastWeek),
+              periodStartsAt: Timestamp.fromDate(twoWeeksAgo),
+              purchasedAt: Timestamp.fromDate(twoWeeksAgo),
+            },
+            {
+              status: 'active',
+              renewalStatus: 'will_renew',
+              group: 'core',
+              platform: 'web',
+              offering: 'core:annual',
+              periodEndsAt: Timestamp.fromDate(nextWeek),
+              periodStartsAt: Timestamp.fromDate(lastWeek),
+              purchasedAt: Timestamp.fromDate(lastWeek),
+            },
+          ],
+        }),
+      )
+    })
+  })
+
+  describe('getSubscriptionGroup', () => {
+    type Input = { group: string; platform: string }
+    type Expected = { offerings: { id: string; product: string }[] }
+
+    it('returns the expected data when input is correct', async () => {
+      const t = async (input: Input, expected: Expected) => {
+        const res = await client.getSubscriptionGroup(input)
+        expect(structuredClone(res)).toStrictEqual(structuredClone(expected))
+      }
+
+      await t(
+        { group: 'core', platform: 'android' },
+        {
+          offerings: [
+            { id: 'core:monthly', product: 'bluesky_plus_core_v1:monthly' },
+            { id: 'core:annual', product: 'bluesky_plus_core_v1:annual' },
+          ],
+        },
+      )
+
+      await t(
+        { group: 'core', platform: 'ios' },
+        {
+          offerings: [
+            { id: 'core:monthly', product: 'bluesky_plus_core_v1_monthly' },
+            { id: 'core:annual', product: 'bluesky_plus_core_v1_annual' },
+          ],
+        },
+      )
+
+      await t(
+        { group: 'core', platform: 'web' },
+        {
+          offerings: [
+            { id: 'core:monthly', product: stripePriceIdMonthly },
+            { id: 'core:annual', product: stripePriceIdAnnual },
+          ],
+        },
+      )
+    })
+
+    it('throws the expected error when input is incorrect', async () => {
+      const t = async (input: Input, expected: string) => {
+        await expect(client.getSubscriptionGroup(input)).rejects.toThrow(
+          expected,
+        )
+      }
+
+      await t(
+        { group: 'wrong-group', platform: 'android' },
+        `invalid subscription group: 'wrong-group'`,
+      )
+      await t(
+        { group: 'core', platform: 'wrong-platform' },
+        `invalid platform: 'wrong-platform'`,
+      )
+    })
+  })
+
+  describe('scanPurchaseOperations', () => {
+    it('requires auth', async () => {
+      // unauthed
+      const unauthedClient = createClient({
+        httpVersion: '1.1',
+        baseUrl: `http://localhost:${bsync.ctx.cfg.service.port}`,
+      })
+      const tryScanPurchaseOperations1 = unauthedClient.scanPurchaseOperations(
+        {},
+      )
+      await expect(tryScanPurchaseOperations1).rejects.toEqual(
+        new ConnectError('missing auth', Code.Unauthenticated),
+      )
+      // bad auth
+      const badauthedClient = createClient({
+        httpVersion: '1.1',
+        baseUrl: `http://localhost:${bsync.ctx.cfg.service.port}`,
+        interceptors: [authWithApiKey('key-bad')],
+      })
+      const tryScanPurchaseOperations2 = badauthedClient.scanPurchaseOperations(
+        {},
+      )
+      await expect(tryScanPurchaseOperations2).rejects.toEqual(
+        new ConnectError('invalid api key', Code.Unauthenticated),
+      )
+    })
+
+    it('pages over created purchase ops.', async () => {
+      // add 100 purchase ops
+      for (let i = 0; i < 100; ++i) {
+        revenueCatApiMock.mockReturnValue({
+          subscriber: {
+            entitlements: { [`entitlement-${i}`]: entitlementValid },
+            subscriptions: {},
+            subscriber_attributes: {},
+          },
+        })
+
+        await client.refreshPurchases({ actorDid: `did:example:a` })
+      }
+
+      let cursor: string | undefined
+      const operations: PurchaseOperation[] = []
+      do {
+        const res = await client.scanPurchaseOperations({
+          cursor,
+          limit: 30,
+        })
+        operations.push(...res.operations)
+        cursor = res.operations.length ? res.cursor : undefined
+      } while (cursor)
+
+      expect(operations.length).toEqual(100)
+      const operationIds = operations.map((op) => parseInt(op.id, 10))
+      const ascending = (a: number, b: number) => a - b
+      expect(operationIds).toEqual([...operationIds].sort(ascending))
+    })
+
+    it('supports long-poll, finding an operation.', async () => {
+      const scanPromise = client.scanPurchaseOperations({})
+      await wait(100) // would be complete by now if it wasn't long-polling for an item
+
+      revenueCatApiMock.mockReturnValue({
+        subscriber: {
+          entitlements: { [`entitlement-b`]: entitlementValid },
+          subscriptions: {},
+          subscriber_attributes: {},
+        },
+      })
+      await client.refreshPurchases({
+        actorDid: 'did:example:a',
+      })
+
+      const res = await scanPromise
+
+      const operation = await bsync.ctx.db.db
+        .selectFrom('purchase_op')
+        .selectAll()
+        .where('actorDid', '=', 'did:example:a')
+        .executeTakeFirstOrThrow()
+
+      expect(res.operations.length).toEqual(1)
+      expect(res.operations[0]).toEqual({
+        id: operation.id.toString(),
+        actorDid: 'did:example:a',
+        entitlements: ['entitlement-b'],
+      })
+      expect(res.cursor).toEqual(operation.id.toString())
+    })
+
+    it('supports long-poll, not finding an operation.', async () => {
+      const res = await client.scanPurchaseOperations({})
+      expect(res.cursor).toEqual('')
+      expect(res.operations).toEqual([])
     })
   })
 })
@@ -229,7 +760,7 @@ const callWebhook = async (
     method: 'POST',
     body: JSON.stringify(body),
     headers: {
-      Authorization: revenueCatWebhookAuthorization,
+      Authorization: `Bearer ${revenueCatWebhookAuthorization}`,
       'Content-Type': 'application/json',
     },
   })
