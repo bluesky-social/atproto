@@ -38,6 +38,7 @@ import * as labeler from './tables/labeler'
 import * as starterPack from './tables/starter-pack'
 import * as quote from './tables/quote'
 import * as vouch from './tables/vouch'
+import * as vouchAccept from './tables/vouch-accept'
 
 export type DatabaseSchemaType = duplicateRecord.PartialDB &
   profile.PartialDB &
@@ -77,7 +78,8 @@ export type DatabaseSchemaType = duplicateRecord.PartialDB &
   starterPack.PartialDB &
   taggedSuggestion.PartialDB &
   quote.PartialDB &
-  vouch.PartialDB
+  vouch.PartialDB &
+  vouchAccept.PartialDB
 
 export type DatabaseSchema = Kysely<DatabaseSchemaType>
 
