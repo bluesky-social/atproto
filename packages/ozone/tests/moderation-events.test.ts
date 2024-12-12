@@ -13,6 +13,7 @@ import {
   REASONMISLEADING,
   REASONSPAM,
 } from '../src/lexicon/types/com/atproto/moderation/defs'
+import { isMain as isStrongRef } from '../src/lexicon/types/com/atproto/repo/strongRef'
 
 describe('moderation-events', () => {
   let network: TestNetwork
@@ -357,8 +358,12 @@ describe('moderation-events', () => {
 
       expect(addAndRemoveEvent.id).toEqual(addAndRemoveFinder.events[0].id)
       expect(addAndRemoveEvent.id).toEqual(addAndRemoveFinder.events[0].id)
-      expect(addAndRemoveEvent.event.add).toEqual(['L3'])
-      expect(addAndRemoveEvent.event.remove).toEqual(['L2'])
+      expect(
+        'add' in addAndRemoveEvent.event && addAndRemoveEvent.event.add,
+      ).toEqual(['L3'])
+      expect(
+        'remove' in addAndRemoveEvent.event && addAndRemoveEvent.event.remove,
+      ).toEqual(['L2'])
     })
 
     it('returns events for specified collections', async () => {
@@ -407,11 +412,13 @@ describe('moderation-events', () => {
       ])
 
       expect(onlyStarterPackReports.events.length).toEqual(1)
+      assert(isStrongRef(onlyStarterPackReports.events[0].subject))
       expect(onlyStarterPackReports.events[0].subject.uri).toContain(
         'app.bsky.graph.starterpack',
       )
 
       expect(onlyAlicesStarterPackReports.events.length).toEqual(1)
+      assert(isStrongRef(onlyAlicesStarterPackReports.events[0].subject))
       expect(onlyAlicesStarterPackReports.events[0].subject.uri).toContain(
         sp.uriStr,
       )
@@ -439,16 +446,24 @@ describe('moderation-events', () => {
 
       // only account reports are returned, no event has a uri
       expect(
-        onlyAccountReports.events.every((e) => !e.subject.uri),
+        onlyAccountReports.events.every(
+          (e) => !('uri' in e.subject && e.subject.uri),
+        ),
       ).toBeTruthy()
 
       // only record reports are returned, all events have a uri
-      expect(onlyRecordReports.events.every((e) => e.subject.uri)).toBeTruthy()
+      expect(
+        onlyRecordReports.events.every(
+          (e) => 'uri' in e.subject && e.subject.uri,
+        ),
+      ).toBeTruthy()
 
       // only bob's account reports are returned, no events have a URI even though the subjectType is record
       expect(
         onlyReportsOnBobsAccount.events.every(
-          (e) => !e.subject.uri && e.subject.did === sc.dids.bob,
+          (e) =>
+            !('uri' in e.subject && e.subject.uri) &&
+            ('did' in e.subject && e.subject.did) === sc.dids.bob,
         ),
       ).toBeTruthy()
     })

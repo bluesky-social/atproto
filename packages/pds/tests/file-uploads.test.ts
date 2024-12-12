@@ -186,6 +186,7 @@ describe('file uploads', () => {
       repo: alice,
       rkey: 'self',
     })
+    // @ts-expect-error "cid" is not documented as "com.atproto.repo.uploadBlob" output
     expect((profileA.value as any).avatar.cid).toEqual(uploadA.cid)
     await sc.updateProfile(bob, {
       displayName: 'Bob',
@@ -195,6 +196,7 @@ describe('file uploads', () => {
       repo: bob,
       rkey: 'self',
     })
+    // @ts-expect-error "cid" is not documented as "com.atproto.repo.uploadBlob" output
     expect((profileB.value as any).avatar.cid).toEqual(uploadA.cid)
     const { data: uploadAfterPermanent } =
       await agent.api.com.atproto.repo.uploadBlob(file, {

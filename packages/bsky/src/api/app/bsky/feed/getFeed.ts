@@ -8,6 +8,7 @@ import {
 import { ResponseType, XRPCError } from '@atproto/xrpc'
 import { AtpAgent, AppBskyFeedGetFeedSkeleton } from '@atproto/api'
 import { noUndefinedVals } from '@atproto/common'
+import { isSkeletonReasonRepost } from '../../../../lexicon/types/app/bsky/feed/defs'
 import { QueryParams as GetFeedParams } from '../../../../lexicon/types/app/bsky/feed/getFeed'
 import { OutputSchema as SkeletonOutput } from '../../../../lexicon/types/app/bsky/feed/getFeedSkeleton'
 import { Server } from '../../../../lexicon'
@@ -42,10 +43,8 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.standardOptionalParameterized({
       lxmCheck: (method) => {
         return (
-          method !== undefined &&
-          [ids.AppBskyFeedGetFeedSkeleton, ids.AppBskyFeedGetFeed].includes(
-            method,
-          )
+          method === ids.AppBskyFeedGetFeedSkeleton ||
+          method === ids.AppBskyFeedGetFeed
         )
       },
       skipAudCheck: true,
@@ -254,10 +253,9 @@ const skeletonFromFeedGen = async (
   const { feed: feedSkele, ...skele } = skeleton
   const feedItems = feedSkele.slice(0, params.limit).map((item) => ({
     post: { uri: item.post },
-    repost:
-      typeof item.reason?.repost === 'string'
-        ? { uri: item.reason.repost }
-        : undefined,
+    repost: isSkeletonReasonRepost(item.reason)
+      ? { uri: item.reason.repost }
+      : undefined,
     feedContext: item.feedContext,
   }))
 

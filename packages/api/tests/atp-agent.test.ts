@@ -12,6 +12,7 @@ import {
   savedFeedsToUriArrays,
   validateSavedFeed,
 } from '../src/util'
+import { $Typed } from '../src/client/util'
 
 describe('agent', () => {
   let network: TestNetworkNoAppView
@@ -2217,7 +2218,7 @@ describe('agent', () => {
       async function addLegacyMutedWord(mutedWord: AppBskyActorDefs.MutedWord) {
         await updatePreferences(agent, (prefs) => {
           let mutedWordsPref = prefs.findLast(
-            (pref) =>
+            (pref): pref is $Typed<AppBskyActorDefs.MutedWordsPref> =>
               AppBskyActorDefs.isMutedWordsPref(pref) &&
               AppBskyActorDefs.validateMutedWordsPref(pref).success,
           )
@@ -2236,18 +2237,14 @@ describe('agent', () => {
           } else {
             // if the pref doesn't exist, create it
             mutedWordsPref = {
+              $type: 'app.bsky.actor.defs#mutedWordsPref',
               items: [newMutedWord],
             }
           }
 
           return prefs
             .filter((p) => !AppBskyActorDefs.isMutedWordsPref(p))
-            .concat([
-              {
-                ...mutedWordsPref,
-                $type: 'app.bsky.actor.defs#mutedWordsPref',
-              },
-            ])
+            .concat([mutedWordsPref])
         })
       }
 
@@ -3246,6 +3243,7 @@ describe('agent', () => {
 
         await agent.bskyAppSetActiveProgressGuide({
           guide: 'test-guide',
+          // @ts-expect-error unspecced field
           numThings: 0,
         })
         await expect(agent.getPreferences()).resolves.toHaveProperty(
@@ -3254,6 +3252,7 @@ describe('agent', () => {
         )
         await agent.bskyAppSetActiveProgressGuide({
           guide: 'test-guide',
+          // @ts-expect-error unspecced field
           numThings: 1,
         })
         await expect(agent.getPreferences()).resolves.toHaveProperty(
@@ -3332,6 +3331,7 @@ describe('agent', () => {
         // @ts-expect-error
         expect(() => agent.bskyAppUpsertNux({ name: 'a' })).rejects.toThrow()
         expect(() =>
+          // @ts-expect-error
           agent.bskyAppUpsertNux({ id: 'a', completed: false, foo: 'bar' }),
         ).rejects.toThrow()
       })

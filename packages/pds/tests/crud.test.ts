@@ -1,4 +1,5 @@
-import fs from 'fs/promises'
+import assert from 'node:assert'
+import fs from 'node:fs/promises'
 import { AtUri } from '@atproto/syntax'
 import { AtpAgent } from '@atproto/api'
 import { BlobRef } from '@atproto/lexicon'
@@ -7,6 +8,7 @@ import { cidForCbor, TID, ui8ToArrayBuffer } from '@atproto/common'
 import { BlobNotFoundError } from '@atproto/repo'
 import * as Post from '../src/lexicon/types/app/bsky/feed/post'
 import { forSnapshot, paginateAll } from './_util'
+import { isMain as isImagesEmbed } from '../src/lexicon/types/app/bsky/embed/images'
 import AppContext from '../src/context'
 import { ids, lexicons } from '../src/lexicon/lexicons'
 
@@ -186,7 +188,8 @@ describe('crud operations', () => {
       rkey: postUri.rkey,
       repo: aliceAgent.accountDid,
     })
-    const images = post.value.embed?.images as { image: BlobRef }[]
+    assert(isImagesEmbed(post.value.embed))
+    const images = post.value.embed.images
     expect(images.length).toEqual(1)
     expect(uploaded.ref.equals(images[0].image.ref)).toBeTruthy()
     // Ensure that the uploaded image is now in the blobstore, i.e. doesn't throw BlobNotFoundError
@@ -771,7 +774,6 @@ describe('crud operations', () => {
         writes: [
           {
             $type: `${ids.ComAtprotoRepoApplyWrites}#create`,
-            action: 'create',
             collection: ids.AppBskyFeedPost,
             value: {
               $type: ids.AppBskyFeedPost,
@@ -781,14 +783,12 @@ describe('crud operations', () => {
           },
           {
             $type: `${ids.ComAtprotoRepoApplyWrites}#update`,
-            action: 'update',
             collection: 'com.example.record',
             rkey: new AtUri(existing1.data.uri).rkey,
             value: {},
           },
           {
             $type: `${ids.ComAtprotoRepoApplyWrites}#delete`,
-            action: 'delete',
             collection: 'com.example.record',
             rkey: new AtUri(existing2.data.uri).rkey,
           },
@@ -1157,7 +1157,6 @@ describe('crud operations', () => {
         writes: [
           {
             $type: `${ids.ComAtprotoRepoApplyWrites}#create`,
-            action: 'create',
             collection: ids.AppBskyFeedPost,
             value: { $type: ids.AppBskyFeedPost, ...postRecord() },
           },
@@ -1182,7 +1181,6 @@ describe('crud operations', () => {
         writes: [
           {
             $type: `${ids.ComAtprotoRepoApplyWrites}#create`,
-            action: 'create',
             collection: ids.AppBskyFeedPost,
             value: { $type: ids.AppBskyFeedPost, ...postRecord() },
           },

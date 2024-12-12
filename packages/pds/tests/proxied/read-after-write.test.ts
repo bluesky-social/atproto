@@ -4,10 +4,13 @@ import { AtpAgent } from '@atproto/api'
 import { request } from 'undici'
 import { TestNetwork, SeedClient, RecordRef } from '@atproto/dev-env'
 import basicSeed from '../seeds/basic'
-import { ThreadViewPost } from '../../src/lexicon/types/app/bsky/feed/defs'
-import { View as RecordEmbedView } from '../../src/lexicon/types/app/bsky/embed/record'
-import { View as ExternalEmbedView } from '../../src/lexicon/types/app/bsky/embed/external'
-import { View as ImagesEmbedView } from '../../src/lexicon/types/app/bsky/embed/images'
+import {
+  isThreadViewPost,
+  ThreadViewPost,
+} from '../../src/lexicon/types/app/bsky/feed/defs'
+import { isView as isRecordEmbedView } from '../../src/lexicon/types/app/bsky/embed/record'
+import { isView as isExternalEmbedView } from '../../src/lexicon/types/app/bsky/embed/external'
+import { isView as isImagesEmbedView } from '../../src/lexicon/types/app/bsky/embed/images'
 
 describe('proxy read after write', () => {
   let network: TestNetwork
@@ -202,11 +205,17 @@ describe('proxy read after write', () => {
       { uri: sc.posts[alice][2].ref.uriStr },
       { headers: { ...sc.getHeaders(alice) } },
     )
-    const replies = res.data.thread.replies as ThreadViewPost[]
+    assert(isThreadViewPost(res.data.thread))
+    // @ts-ignore "pnpm verify:types" fails though VSCode doesn't complain
+    assert(res.data.thread.replies, 'replies is undefined')
+    // @ts-ignore "pnpm verify:types" fails though VSCode doesn't complain
+    const { replies } = res.data.thread
     expect(replies.length).toBe(1)
+    assert(isThreadViewPost(replies[0]))
     expect(replies[0].post.uri).toEqual(replyRes1.uri)
-    const imgs = replies[0].post.embed as ImagesEmbedView
-    expect(imgs.images[0].fullsize).toEqual(
+    const { embed } = replies[0].post
+    assert(isImagesEmbedView(embed))
+    expect(embed.images[0].fullsize).toEqual(
       util.format(
         network.pds.ctx.cfg.bskyAppView.cdnUrlPattern,
         'feed_fullsize',
@@ -214,13 +223,14 @@ describe('proxy read after write', () => {
         img.image.ref.toString(),
       ),
     )
-    expect(imgs.images[0].aspectRatio).toEqual({ height: 2, width: 1 })
-    expect(imgs.images[0].alt).toBe('alt text')
-    expect(replies[0].replies?.length).toBe(1)
-    // @ts-ignore
+    expect(embed.images[0].aspectRatio).toEqual({ height: 2, width: 1 })
+    expect(embed.images[0].alt).toBe('alt text')
+    assert(replies[0].replies, 'replies[0].replies is undefined')
+    expect(replies[0].replies.length).toBe(1)
+    assert(isThreadViewPost(replies[0].replies[0]))
     expect(replies[0].replies[0].post.uri).toEqual(replyRes2.uri)
-    // @ts-ignore
-    const external = replies[0].replies[0].post.embed as ExternalEmbedView
+    const external = replies[0].replies[0].post.embed
+    assert(isExternalEmbedView(external))
     expect(external.external.title).toEqual('TestImage')
     expect(external.external.thumb).toEqual(
       util.format(
@@ -253,10 +263,16 @@ describe('proxy read after write', () => {
       { uri: sc.posts[carol][0].ref.uriStr },
       { headers: { ...sc.getHeaders(alice) } },
     )
-    const replies = res.data.thread.replies as ThreadViewPost[]
+    assert(isThreadViewPost(res.data.thread))
+    // @ts-ignore "pnpm verify:types" fails though VSCode doesn't complain
+    assert(res.data.thread.replies, 'replies is undefined')
+    // @ts-ignore "pnpm verify:types" fails though VSCode doesn't complain
+    const { replies } = res.data.thread
     expect(replies.length).toBe(1)
+    assert(isThreadViewPost(replies[0]))
     expect(replies[0].post.uri).toEqual(replyRes.uri)
-    const embed = replies[0].post.embed as RecordEmbedView
+    const embed = replies[0].post.embed
+    assert(isRecordEmbedView(embed))
     expect(embed.record.uri).toEqual(sc.posts[alice][0].ref.uriStr)
   })
 

@@ -11,7 +11,10 @@ export function decideUserList(
 ): ModerationDecision {
   const acc = new ModerationDecision()
 
-  const creator = isProfile(subject.creator) ? subject.creator : undefined
+  const creator =
+    'creator' in subject && isProfile(subject.creator)
+      ? subject.creator
+      : undefined
 
   if (creator) {
     acc.setDid(creator.did)

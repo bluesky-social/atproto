@@ -37,7 +37,7 @@ export class RecordReader {
     rkeyStart?: string
     rkeyEnd?: string
     includeSoftDeleted?: boolean
-  }): Promise<{ uri: string; cid: string; value: object }[]> {
+  }): Promise<{ uri: string; cid: string; value: Record<string, unknown> }[]> {
     const {
       collection,
       limit,
@@ -92,7 +92,7 @@ export class RecordReader {
   ): Promise<{
     uri: string
     cid: string
-    value: object
+    value: Record<string, unknown>
     indexedAt: string
     takedownRef: string | null
   } | null> {

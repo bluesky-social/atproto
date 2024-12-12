@@ -8,9 +8,9 @@ import {
 } from '../../../../lexicon/types/app/bsky/feed/post'
 import { Record as GateRecord } from '../../../../lexicon/types/app/bsky/feed/threadgate'
 import { Record as PostgateRecord } from '../../../../lexicon/types/app/bsky/feed/postgate'
-import { isMain as isEmbedImage } from '../../../../lexicon/types/app/bsky/embed/images'
-import { isMain as isEmbedExternal } from '../../../../lexicon/types/app/bsky/embed/external'
-import { isMain as isEmbedRecord } from '../../../../lexicon/types/app/bsky/embed/record'
+import { isValidMain as isValidEmbedImage } from '../../../../lexicon/types/app/bsky/embed/images'
+import { isValidMain as isValidEmbedExternal } from '../../../../lexicon/types/app/bsky/embed/external'
+import { isValidMain as isValidEmbedRecord } from '../../../../lexicon/types/app/bsky/embed/record'
 import { isMain as isEmbedRecordWithMedia } from '../../../../lexicon/types/app/bsky/embed/recordWithMedia'
 import {
   isMention,
@@ -152,7 +152,7 @@ const insertFn = async (
   const embeds: (PostEmbedImage[] | PostEmbedExternal | PostEmbedRecord)[] = []
   const postEmbeds = separateEmbeds(obj.embed)
   for (const postEmbed of postEmbeds) {
-    if (isEmbedImage(postEmbed)) {
+    if (isValidEmbedImage(postEmbed)) {
       const { images } = postEmbed
       const imagesEmbed = images.map((img, i) => ({
         postUri: uri.toString(),
@@ -162,7 +162,7 @@ const insertFn = async (
       }))
       embeds.push(imagesEmbed)
       await db.insertInto('post_embed_image').values(imagesEmbed).execute()
-    } else if (isEmbedExternal(postEmbed)) {
+    } else if (isValidEmbedExternal(postEmbed)) {
       const { external } = postEmbed
       const externalEmbed = {
         postUri: uri.toString(),
@@ -173,7 +173,7 @@ const insertFn = async (
       }
       embeds.push(externalEmbed)
       await db.insertInto('post_embed_external').values(externalEmbed).execute()
-    } else if (isEmbedRecord(postEmbed)) {
+    } else if (isValidEmbedRecord(postEmbed)) {
       const { record } = postEmbed
       const embedUri = new AtUri(record.uri)
       const recordEmbed = {

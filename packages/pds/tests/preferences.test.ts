@@ -179,6 +179,7 @@ describe('user preferences', () => {
       {
         preferences: [
           { $type: 'app.bsky.actor.defs#adultContentPref', enabled: false },
+          // @ts-expect-error this is what we are testing !
           {
             label: 'dogs',
             visibility: 'warn',

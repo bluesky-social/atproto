@@ -1,6 +1,9 @@
 import { AtUri } from '@atproto/syntax'
 import { CID } from 'multiformats/cid'
-import { FeedViewPost } from '../src/lexicon/types/app/bsky/feed/defs'
+import {
+  FeedViewPost,
+  isReasonRepost,
+} from '../src/lexicon/types/app/bsky/feed/defs'
 import { lexToJson } from '@atproto/lexicon'
 
 // Swap out identifiers and dates with stable
@@ -96,8 +99,10 @@ export const forSnapshot = (obj: unknown) => {
 export const getOriginator = (item: FeedViewPost) => {
   if (!item.reason) {
     return item.post.author.did
+  } else if (isReasonRepost(item.reason)) {
+    return item.reason.by.did
   } else {
-    return (item.reason.by as { [did: string]: string }).did
+    throw new Error('Unexpected reason')
   }
 }
 

@@ -98,6 +98,7 @@ describe('moderation-appeals', () => {
 
       // Verify that appeal status changed when appeal report was emitted by moderator
       const status = await assertBobsPostStatus(REVIEWESCALATED, true)
+      // @ts-expect-error unspecced ?
       expect(status?.appealedAt).not.toBeNull()
 
       // Create a report as normal user for carol's post

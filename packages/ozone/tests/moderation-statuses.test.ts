@@ -18,6 +18,7 @@ import {
   REVIEWOPEN,
   REVIEWNONE,
 } from '../src/lexicon/types/tools/ozone/moderation/defs'
+import { isMain as isStrongRef } from '../src/lexicon/types/com/atproto/repo/strongRef'
 
 describe('moderation-statuses', () => {
   let network: TestNetwork
@@ -216,10 +217,14 @@ describe('moderation-statuses', () => {
       ])
 
       expect(onlyStarterPackStatuses.subjectStatuses.length).toEqual(1)
+      assert(isStrongRef(onlyStarterPackStatuses.subjectStatuses[0].subject))
       expect(onlyStarterPackStatuses.subjectStatuses[0].subject.uri).toContain(
         'app.bsky.graph.starterpack',
       )
       expect(onlyAlicesStarterPackStatuses.subjectStatuses.length).toEqual(1)
+      assert(
+        isStrongRef(onlyAlicesStarterPackStatuses.subjectStatuses[0].subject),
+      )
       expect(
         onlyAlicesStarterPackStatuses.subjectStatuses[0].subject.uri,
       ).toEqual(sp.uriStr)
@@ -247,18 +252,24 @@ describe('moderation-statuses', () => {
 
       // only account statuses are returned, no event has a uri
       expect(
-        onlyAccountStatuses.subjectStatuses.every((e) => !e.subject.uri),
+        onlyAccountStatuses.subjectStatuses.every(
+          (e) => !('uri' in e.subject && e.subject.uri),
+        ),
       ).toBeTruthy()
 
       // only record statuses are returned, all events have a uri
       expect(
-        onlyRecordStatuses.subjectStatuses.every((e) => e.subject.uri),
+        onlyRecordStatuses.subjectStatuses.every(
+          (e) => 'uri' in e.subject && e.subject.uri,
+        ),
       ).toBeTruthy()
 
       // only bob's account statuses are returned, no events have a URI even though the subjectType is record
       expect(
         onlyStatusesOnBobsAccount.subjectStatuses.every(
-          (e) => !e.subject.uri && e.subject.did === sc.dids.bob,
+          (e) =>
+            !('uri' in e.subject && e.subject.uri) &&
+            ('did' in e.subject && e.subject.did) === sc.dids.bob,
         ),
       ).toBeTruthy()
     })

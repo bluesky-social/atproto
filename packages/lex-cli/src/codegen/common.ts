@@ -14,6 +14,10 @@ const PRETTIER_OPTS = {
 export const utilTs = (project) =>
   gen(project, '/util.ts', async (file) => {
     file.replaceWithText(`
+export type OmitKey<T, K extends keyof T> = {
+  [K2 in keyof T as K2 extends K ? never : K2]: T[K2]
+}
+
 export type $Typed<V> = V & { $type: string }
 
 export type $Type<Id extends string, Hash extends string> = Hash extends 'main'
@@ -42,12 +46,57 @@ function check$type<Id extends string, Hash extends string>(
         $type.startsWith(id) &&
         $type.endsWith(hash)
 }
+${
+  /**
+   * The construct below allows to properly distinguish open unions. Consider
+   * the following example:
+   *
+   * ```ts
+   * type Foo = { $type?: $Type<'foo', 'main'>; foo: string }
+   * type Bar = { $type?: $Type<'bar', 'main'>; bar: string }
+   * type OpenFooBarUnion = $Typed<Foo> | $Typed<Bar> | { $type: string }
+   * ```
+   *
+   * In the context of lexicons, when there is a open union as shown above, the
+   * if `$type` if either `foo` or `bar`, then the object IS of type `Foo` or
+   * `Bar`.
+   *
+   * ```ts
+   * declare const obj1: OpenFooBarUnion
+   * if (is$typed(obj1, 'foo', 'main')) {
+   *   obj1.$type // "foo" | "foo#main"
+   *   obj1.foo // string
+   * }
+   * ```
+   *
+   * Similarly, if an object is of type `unknown`, then the `is$typed` function
+   * should only return assurance about the `$type` property, which is what it
+   * actually checks:
+   *
+   * ```ts
+   * declare const obj2: unknown
+   * if (is$typed(obj2, 'foo', 'main')) {
+   *  obj2.$type // "foo" | "foo#main"
+   *  // @ts-expect-error
+   *  obj2.foo
+   * }
+   * ```
+   *
+   * The construct bellow is what makes these two scenarios possible.
+   */
+  ''
+}
+export type Is$Typed<V, Id extends string, Hash extends string> = V extends {
+  $type?: string
+}
+  ? Extract<V, { $type: $Type<Id, Hash> }>
+  : V & { $type: $Type<Id, Hash> }
 
 export function is$typed<V, Id extends string, Hash extends string>(
   v: V,
   id: Id,
   hash: Hash,
-): v is V & object & { $type: $Type<Id, Hash> } {
+): v is Is$Typed<V, Id, Hash> {
   return has$type(v) && check$type(v.$type, id, hash)
 }
 `)
@@ -124,14 +173,11 @@ export const lexiconsTs = (project, lexicons: LexiconDoc[]) =>
       declarations: [
         {
           name: 'ids',
-          initializer: JSON.stringify(
-            lexicons.reduce((acc, cur) => {
-              return {
-                ...acc,
-                [nsidToEnum(cur.id)]: cur.id,
-              }
-            }, {}),
-          ),
+          initializer: `{${lexicons
+            .map(
+              (lex) => `\n  ${nsidToEnum(lex.id)}: ${JSON.stringify(lex.id)},`,
+            )
+            .join('')}\n} as const`,
         },
       ],
     })

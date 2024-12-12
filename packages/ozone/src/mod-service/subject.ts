@@ -3,9 +3,19 @@ import { InputSchema as ReportInput } from '../lexicon/types/com/atproto/moderat
 import { InputSchema as ActionInput } from '../lexicon/types/tools/ozone/moderation/emitEvent'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { ModerationEventRow, ModerationSubjectStatusRow } from './types'
-import { RepoRef } from '../lexicon/types/com/atproto/admin/defs'
-import { Main as StrongRef } from '../lexicon/types/com/atproto/repo/strongRef'
-import { MessageRef } from '../lexicon/types/chat/bsky/convo/defs'
+import {
+  isValidRepoRef,
+  RepoRef,
+} from '../lexicon/types/com/atproto/admin/defs'
+import {
+  isValidMain as isValidStrongRef,
+  Main as StrongRef,
+} from '../lexicon/types/com/atproto/repo/strongRef'
+import {
+  isValidMessageRef,
+  MessageRef,
+} from '../lexicon/types/chat/bsky/convo/defs'
+import { $Typed } from '../lexicon/util'
 
 type SubjectInput = ReportInput['subject'] | ActionInput['subject']
 
@@ -13,37 +23,21 @@ export const subjectFromInput = (
   subject: SubjectInput,
   blobs?: string[],
 ): ModSubject => {
-  if (
-    subject.$type === 'com.atproto.admin.defs#repoRef' &&
-    typeof subject.did === 'string'
-  ) {
+  if (isValidRepoRef(subject)) {
     if (blobs && blobs.length > 0) {
       throw new InvalidRequestError('Blobs do not apply to repo subjects')
     }
     return new RepoSubject(subject.did)
   }
-  if (
-    subject.$type === 'com.atproto.repo.strongRef' &&
-    typeof subject.uri === 'string' &&
-    typeof subject.cid === 'string'
-  ) {
+  if (isValidStrongRef(subject)) {
     return new RecordSubject(subject.uri, subject.cid, blobs)
   }
   // @NOTE #messageRef is not a report input for com.atproto.moderation.createReport.
   // we are taking advantage of the open union in order for bsky.chat to interoperate here.
-  if (
-    subject.$type === 'chat.bsky.convo.defs#messageRef' &&
-    typeof subject.did === 'string' &&
-    (typeof subject.convoId === 'string' || subject.convoId === undefined) &&
-    typeof subject.messageId === 'string'
-  ) {
+  if (isValidMessageRef(subject)) {
     // @TODO we should start to require subject.convoId is a string in order to properly validate
     // the #messageRef. temporarily allowing it to be optional as a stopgap for rollout.
-    return new MessageSubject(
-      subject.did,
-      subject.convoId ?? '',
-      subject.messageId,
-    )
+    return new MessageSubject(subject.did, subject.convoId, subject.messageId)
   }
 
   throw new InvalidRequestError('Invalid subject')
@@ -106,7 +100,7 @@ export interface ModSubject {
   isRecord(): this is RecordSubject
   isMessage(): this is MessageSubject
   info(): SubjectInfo
-  lex(): RepoRef | StrongRef | MessageRef
+  lex(): $Typed<RepoRef> | $Typed<StrongRef> | $Typed<MessageRef>
 }
 
 export class RepoSubject implements ModSubject {
@@ -133,7 +127,7 @@ export class RepoSubject implements ModSubject {
       meta: null,
     }
   }
-  lex(): RepoRef {
+  lex(): $Typed<RepoRef> {
     return {
       $type: 'com.atproto.admin.defs#repoRef',
       did: this.did,
@@ -174,7 +168,7 @@ export class RecordSubject implements ModSubject {
       meta: null,
     }
   }
-  lex(): StrongRef {
+  lex(): $Typed<StrongRef> {
     return {
       $type: 'com.atproto.repo.strongRef',
       uri: this.uri,
@@ -211,7 +205,7 @@ export class MessageSubject implements ModSubject {
       meta: { convoId: this.convoId || undefined },
     }
   }
-  lex(): MessageRef {
+  lex(): $Typed<MessageRef> {
     return {
       $type: 'chat.bsky.convo.defs#messageRef',
       did: this.did,
