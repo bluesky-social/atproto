@@ -8,7 +8,7 @@ import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import * as AppBskyLabelerDefs from './defs'
 
-export const id = 'app.bsky.labeler.getServices'
+const id = 'app.bsky.labeler.getServices'
 
 export interface QueryParams {
   dids: string[]

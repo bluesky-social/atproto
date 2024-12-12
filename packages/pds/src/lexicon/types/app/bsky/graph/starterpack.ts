@@ -7,7 +7,7 @@ import { lexicons } from '../../../../lexicons'
 import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import * as AppBskyRichtextFacet from '../richtext/facet'
 
-export const id = 'app.bsky.graph.starterpack'
+const id = 'app.bsky.graph.starterpack'
 
 export interface Record {
   $type?: $Type<'app.bsky.graph.starterpack', 'main'>

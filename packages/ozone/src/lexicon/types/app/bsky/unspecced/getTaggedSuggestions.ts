@@ -8,7 +8,7 @@ import { lexicons } from '../../../../lexicons'
 import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 
-export const id = 'app.bsky.unspecced.getTaggedSuggestions'
+const id = 'app.bsky.unspecced.getTaggedSuggestions'
 
 export interface QueryParams {}
 

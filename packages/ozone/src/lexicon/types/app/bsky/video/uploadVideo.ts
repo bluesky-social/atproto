@@ -10,7 +10,7 @@ import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as AppBskyVideoDefs from './defs'
 
-export const id = 'app.bsky.video.uploadVideo'
+const id = 'app.bsky.video.uploadVideo'
 
 export interface QueryParams {}
 

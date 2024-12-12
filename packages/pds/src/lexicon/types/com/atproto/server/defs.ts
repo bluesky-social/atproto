@@ -6,7 +6,7 @@ import { CID } from 'multiformats/cid'
 import { lexicons } from '../../../../lexicons'
 import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 
-export const id = 'com.atproto.server.defs'
+const id = 'com.atproto.server.defs'
 
 export interface InviteCode {
   $type?: $Type<'com.atproto.server.defs', 'inviteCode'>

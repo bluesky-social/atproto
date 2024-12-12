@@ -6,7 +6,7 @@ import { CID } from 'multiformats/cid'
 import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 
-export const id = 'app.bsky.video.defs'
+const id = 'app.bsky.video.defs'
 
 export interface JobStatus {
   $type?: $Type<'app.bsky.video.defs', 'jobStatus'>

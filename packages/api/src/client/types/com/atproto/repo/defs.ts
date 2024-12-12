@@ -6,7 +6,7 @@ import { CID } from 'multiformats/cid'
 import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 
-export const id = 'com.atproto.repo.defs'
+const id = 'com.atproto.repo.defs'
 
 export interface CommitMeta {
   $type?: $Type<'com.atproto.repo.defs', 'commitMeta'>

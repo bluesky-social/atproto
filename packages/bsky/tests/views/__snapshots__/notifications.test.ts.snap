@@ -1263,6 +1263,263 @@ Array [
 ]
 `;
 
+exports[`notification views filters notifications by multiple reasons 1`] = `
+Object {
+  "notifications": Array [
+    Object {
+      "author": Object {
+        "did": "user(0)",
+        "handle": "carol.test",
+        "labels": Array [],
+        "viewer": Object {
+          "blockedBy": false,
+          "followedBy": "record(2)",
+          "following": "record(1)",
+          "muted": false,
+        },
+      },
+      "cid": "cids(0)",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "isRead": false,
+      "labels": Array [],
+      "reason": "reply",
+      "reasonSubject": "record(3)",
+      "record": Object {
+        "$type": "app.bsky.feed.post",
+        "createdAt": "1970-01-01T00:00:00.000Z",
+        "reply": Object {
+          "parent": Object {
+            "cid": "cids(2)",
+            "uri": "record(3)",
+          },
+          "root": Object {
+            "cid": "cids(1)",
+            "uri": "record(4)",
+          },
+        },
+        "text": "indeed",
+      },
+      "uri": "record(0)",
+    },
+    Object {
+      "author": Object {
+        "did": "user(0)",
+        "handle": "carol.test",
+        "labels": Array [],
+        "viewer": Object {
+          "blockedBy": false,
+          "followedBy": "record(2)",
+          "following": "record(1)",
+          "muted": false,
+        },
+      },
+      "cid": "cids(3)",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "isRead": false,
+      "labels": Array [],
+      "reason": "reply",
+      "reasonSubject": "record(4)",
+      "record": Object {
+        "$type": "app.bsky.feed.post",
+        "createdAt": "1970-01-01T00:00:00.000Z",
+        "reply": Object {
+          "parent": Object {
+            "cid": "cids(1)",
+            "uri": "record(4)",
+          },
+          "root": Object {
+            "cid": "cids(1)",
+            "uri": "record(4)",
+          },
+        },
+        "text": "of course",
+      },
+      "uri": "record(5)",
+    },
+    Object {
+      "author": Object {
+        "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(5)@jpeg",
+        "createdAt": "1970-01-01T00:00:00.000Z",
+        "description": "hi im bob label_me",
+        "did": "user(1)",
+        "displayName": "bobby",
+        "handle": "bob.test",
+        "indexedAt": "1970-01-01T00:00:00.000Z",
+        "labels": Array [],
+        "viewer": Object {
+          "blockedBy": false,
+          "followedBy": "record(8)",
+          "following": "record(7)",
+          "muted": false,
+        },
+      },
+      "cid": "cids(4)",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "isRead": false,
+      "labels": Array [
+        Object {
+          "cid": "cids(4)",
+          "cts": "1970-01-01T00:00:00.000Z",
+          "src": "did:example:labeler",
+          "uri": "record(6)",
+          "val": "test-label",
+        },
+        Object {
+          "cid": "cids(4)",
+          "cts": "1970-01-01T00:00:00.000Z",
+          "src": "did:example:labeler",
+          "uri": "record(6)",
+          "val": "test-label-2",
+        },
+      ],
+      "reason": "reply",
+      "reasonSubject": "record(4)",
+      "record": Object {
+        "$type": "app.bsky.feed.post",
+        "createdAt": "1970-01-01T00:00:00.000Z",
+        "embed": Object {
+          "$type": "app.bsky.embed.images",
+          "images": Array [
+            Object {
+              "alt": "../dev-env/src/seed/img/key-landscape-small.jpg",
+              "image": Object {
+                "$type": "blob",
+                "mimeType": "image/jpeg",
+                "ref": Object {
+                  "$link": "cids(6)",
+                },
+                "size": 4114,
+              },
+            },
+          ],
+        },
+        "reply": Object {
+          "parent": Object {
+            "cid": "cids(1)",
+            "uri": "record(4)",
+          },
+          "root": Object {
+            "cid": "cids(1)",
+            "uri": "record(4)",
+          },
+        },
+        "text": "hear that label_me label_me_2",
+      },
+      "uri": "record(6)",
+    },
+    Object {
+      "author": Object {
+        "associated": Object {
+          "chat": Object {
+            "allowIncoming": "none",
+          },
+        },
+        "did": "user(3)",
+        "handle": "dan.test",
+        "labels": Array [],
+        "viewer": Object {
+          "blockedBy": false,
+          "following": "record(10)",
+          "muted": false,
+        },
+      },
+      "cid": "cids(7)",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "isRead": false,
+      "labels": Array [],
+      "reason": "mention",
+      "record": Object {
+        "$type": "app.bsky.feed.post",
+        "createdAt": "1970-01-01T00:00:00.000Z",
+        "embed": Object {
+          "$type": "app.bsky.embed.record",
+          "record": Object {
+            "cid": "cids(8)",
+            "uri": "record(11)",
+          },
+        },
+        "facets": Array [
+          Object {
+            "features": Array [
+              Object {
+                "$type": "app.bsky.richtext.facet#mention",
+                "did": "user(4)",
+              },
+            ],
+            "index": Object {
+              "byteEnd": 18,
+              "byteStart": 0,
+            },
+          },
+        ],
+        "text": "@alice.bluesky.xyz is the best",
+      },
+      "uri": "record(9)",
+    },
+  ],
+  "priority": false,
+  "seenAt": "1970-01-01T00:00:00.000Z",
+}
+`;
+
+exports[`notification views filters notifications by reason 1`] = `
+Object {
+  "notifications": Array [
+    Object {
+      "author": Object {
+        "associated": Object {
+          "chat": Object {
+            "allowIncoming": "none",
+          },
+        },
+        "did": "user(0)",
+        "handle": "dan.test",
+        "labels": Array [],
+        "viewer": Object {
+          "blockedBy": false,
+          "following": "record(1)",
+          "muted": false,
+        },
+      },
+      "cid": "cids(0)",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "isRead": false,
+      "labels": Array [],
+      "reason": "mention",
+      "record": Object {
+        "$type": "app.bsky.feed.post",
+        "createdAt": "1970-01-01T00:00:00.000Z",
+        "embed": Object {
+          "$type": "app.bsky.embed.record",
+          "record": Object {
+            "cid": "cids(1)",
+            "uri": "record(2)",
+          },
+        },
+        "facets": Array [
+          Object {
+            "features": Array [
+              Object {
+                "$type": "app.bsky.richtext.facet#mention",
+                "did": "user(1)",
+              },
+            ],
+            "index": Object {
+              "byteEnd": 18,
+              "byteStart": 0,
+            },
+          },
+        ],
+        "text": "@alice.bluesky.xyz is the best",
+      },
+      "uri": "record(0)",
+    },
+  ],
+  "priority": false,
+  "seenAt": "1970-01-01T00:00:00.000Z",
+}
+`;
+
 exports[`notification views generates notifications for quotes 1`] = `
 Array [
   Object {

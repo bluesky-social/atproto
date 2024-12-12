@@ -11,7 +11,7 @@ import * as ToolsOzoneModerationDefs from './defs'
 import * as ComAtprotoAdminDefs from '../../../com/atproto/admin/defs'
 import * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef'
 
-export const id = 'tools.ozone.moderation.emitEvent'
+const id = 'tools.ozone.moderation.emitEvent'
 
 export interface QueryParams {}
 

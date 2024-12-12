@@ -8,7 +8,7 @@ import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import * as ToolsOzoneSettingDefs from './defs'
 
-export const id = 'tools.ozone.setting.listOptions'
+const id = 'tools.ozone.setting.listOptions'
 
 export interface QueryParams {
   limit?: number

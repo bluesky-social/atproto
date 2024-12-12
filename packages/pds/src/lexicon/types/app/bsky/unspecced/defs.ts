@@ -6,7 +6,7 @@ import { CID } from 'multiformats/cid'
 import { lexicons } from '../../../../lexicons'
 import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 
-export const id = 'app.bsky.unspecced.defs'
+const id = 'app.bsky.unspecced.defs'
 
 export interface SkeletonSearchPost {
   $type?: $Type<'app.bsky.unspecced.defs', 'skeletonSearchPost'>

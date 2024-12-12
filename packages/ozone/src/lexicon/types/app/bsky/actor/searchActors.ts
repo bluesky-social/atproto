@@ -9,7 +9,7 @@ import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as AppBskyActorDefs from './defs'
 
-export const id = 'app.bsky.actor.searchActors'
+const id = 'app.bsky.actor.searchActors'
 
 export interface QueryParams {
   /** DEPRECATED: use 'q' instead. */

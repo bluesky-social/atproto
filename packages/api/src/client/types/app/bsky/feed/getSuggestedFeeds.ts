@@ -8,7 +8,7 @@ import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import * as AppBskyFeedDefs from './defs'
 
-export const id = 'app.bsky.feed.getSuggestedFeeds'
+const id = 'app.bsky.feed.getSuggestedFeeds'
 
 export interface QueryParams {
   limit?: number

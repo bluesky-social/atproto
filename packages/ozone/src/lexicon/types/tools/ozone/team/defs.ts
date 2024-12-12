@@ -7,7 +7,7 @@ import { lexicons } from '../../../../lexicons'
 import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import * as AppBskyActorDefs from '../../../app/bsky/actor/defs'
 
-export const id = 'tools.ozone.team.defs'
+const id = 'tools.ozone.team.defs'
 
 export interface Member {
   $type?: $Type<'tools.ozone.team.defs', 'member'>

@@ -8,7 +8,7 @@ import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import * as ComAtprotoLabelDefs from './defs'
 
-export const id = 'com.atproto.label.subscribeLabels'
+const id = 'com.atproto.label.subscribeLabels'
 
 export interface Labels {
   $type?: $Type<'com.atproto.label.subscribeLabels', 'labels'>

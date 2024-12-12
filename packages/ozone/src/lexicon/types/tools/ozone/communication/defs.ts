@@ -6,7 +6,7 @@ import { CID } from 'multiformats/cid'
 import { lexicons } from '../../../../lexicons'
 import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 
-export const id = 'tools.ozone.communication.defs'
+const id = 'tools.ozone.communication.defs'
 
 export interface TemplateView {
   $type?: $Type<'tools.ozone.communication.defs', 'templateView'>

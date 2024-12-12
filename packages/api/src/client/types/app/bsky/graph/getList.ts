@@ -8,7 +8,7 @@ import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import * as AppBskyGraphDefs from './defs'
 
-export const id = 'app.bsky.graph.getList'
+const id = 'app.bsky.graph.getList'
 
 export interface QueryParams {
   /** Reference (AT-URI) of the list record to hydrate. */

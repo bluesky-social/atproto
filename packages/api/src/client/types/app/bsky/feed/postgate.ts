@@ -6,7 +6,7 @@ import { CID } from 'multiformats/cid'
 import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 
-export const id = 'app.bsky.feed.postgate'
+const id = 'app.bsky.feed.postgate'
 
 export interface Record {
   $type?: $Type<'app.bsky.feed.postgate', 'main'>

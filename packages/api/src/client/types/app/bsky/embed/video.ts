@@ -7,7 +7,7 @@ import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import * as AppBskyEmbedDefs from './defs'
 
-export const id = 'app.bsky.embed.video'
+const id = 'app.bsky.embed.video'
 
 export interface Main {
   $type?: $Type<'app.bsky.embed.video', 'main'>

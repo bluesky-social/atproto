@@ -8,7 +8,7 @@ import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import * as ComAtprotoServerDefs from '../server/defs'
 
-export const id = 'com.atproto.admin.getInviteCodes'
+const id = 'com.atproto.admin.getInviteCodes'
 
 export interface QueryParams {
   sort?: 'recent' | 'usage' | (string & {})

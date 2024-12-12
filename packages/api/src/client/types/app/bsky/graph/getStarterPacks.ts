@@ -8,7 +8,7 @@ import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import * as AppBskyGraphDefs from './defs'
 
-export const id = 'app.bsky.graph.getStarterPacks'
+const id = 'app.bsky.graph.getStarterPacks'
 
 export interface QueryParams {
   uris: string[]

@@ -7,7 +7,7 @@ import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef'
 
-export const id = 'app.bsky.feed.repost'
+const id = 'app.bsky.feed.repost'
 
 export interface Record {
   $type?: $Type<'app.bsky.feed.repost', 'main'>

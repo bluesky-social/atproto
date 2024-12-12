@@ -7,7 +7,7 @@ import { lexicons } from '../../../../lexicons'
 import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef'
 
-export const id = 'app.bsky.feed.like'
+const id = 'app.bsky.feed.like'
 
 export interface Record {
   $type?: $Type<'app.bsky.feed.like', 'main'>

@@ -1,5 +1,17 @@
 # @atproto/sync
 
+## 0.1.7
+
+### Patch Changes
+
+- [#2992](https://github.com/bluesky-social/atproto/pull/2992) [`0bec389a1`](https://github.com/bluesky-social/atproto/commit/0bec389a1c53adbcfab7b877df9b291d44d8ea33) Thanks [@dholms](https://github.com/dholms)! - Pass through options to websocket
+
+- Updated dependencies [[`588baae12`](https://github.com/bluesky-social/atproto/commit/588baae1212a3cba3bf0d95d2f268e80513fd9c4), [`9fd65ba0f`](https://github.com/bluesky-social/atproto/commit/9fd65ba0fa4caca59fd0e6156145e4c2618e3a95), [`c9848edaf`](https://github.com/bluesky-social/atproto/commit/c9848edaf0947727aa5a60e3c67eecda3f48d46a)]:
+  - @atproto/common@0.4.5
+  - @atproto/lexicon@0.4.4
+  - @atproto/repo@0.6.0
+  - @atproto/xrpc-server@0.7.4
+
 ## 0.1.6
 
 ### Patch Changes

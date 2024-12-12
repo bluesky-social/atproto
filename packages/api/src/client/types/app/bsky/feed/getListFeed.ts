@@ -8,7 +8,7 @@ import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import * as AppBskyFeedDefs from './defs'
 
-export const id = 'app.bsky.feed.getListFeed'
+const id = 'app.bsky.feed.getListFeed'
 
 export interface QueryParams {
   /** Reference (AT-URI) to the list record. */

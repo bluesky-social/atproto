@@ -140,7 +140,10 @@ export class ModerationViews {
       event.durationInHours = row.durationInHours ?? undefined
     }
 
-    if (isModEventTakedown(event) && meta.acknowledgeAccountSubjects) {
+    if (
+      (isModEventTakedown(event) || isModEventAcknowledge(event)) &&
+      meta.acknowledgeAccountSubjects
+    ) {
       event.acknowledgeAccountSubjects = ifBoolean(
         meta.acknowledgeAccountSubjects,
       )!

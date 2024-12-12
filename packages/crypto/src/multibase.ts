@@ -48,6 +48,6 @@ export const bytesToMultibase = (
     case 'base64urlpad':
       return 'U' + uint8arrays.toString(mb, encoding)
     default:
-      throw new Error(`Unsupported multibase: :${mb}`)
+      throw new Error(`Unsupported multibase: :${encoding}`)
   }
 }

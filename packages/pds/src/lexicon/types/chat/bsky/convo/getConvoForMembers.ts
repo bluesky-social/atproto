@@ -9,7 +9,7 @@ import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as ChatBskyConvoDefs from './defs'
 
-export const id = 'chat.bsky.convo.getConvoForMembers'
+const id = 'chat.bsky.convo.getConvoForMembers'
 
 export interface QueryParams {
   members: string[]

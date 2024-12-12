@@ -6,7 +6,7 @@ import { CID } from 'multiformats/cid'
 import { lexicons } from '../../../../lexicons'
 import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 
-export const id = 'app.bsky.feed.threadgate'
+const id = 'app.bsky.feed.threadgate'
 
 export interface Record {
   $type?: $Type<'app.bsky.feed.threadgate', 'main'>

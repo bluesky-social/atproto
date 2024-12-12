@@ -9,7 +9,7 @@ import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as AppBskyActorDefs from './defs'
 
-export const id = 'app.bsky.actor.getProfile'
+const id = 'app.bsky.actor.getProfile'
 
 export interface QueryParams {
   /** Handle or DID of account to fetch profile of. */

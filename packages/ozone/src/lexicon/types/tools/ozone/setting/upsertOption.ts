@@ -9,7 +9,7 @@ import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as ToolsOzoneSettingDefs from './defs'
 
-export const id = 'tools.ozone.setting.upsertOption'
+const id = 'tools.ozone.setting.upsertOption'
 
 export interface QueryParams {}
 

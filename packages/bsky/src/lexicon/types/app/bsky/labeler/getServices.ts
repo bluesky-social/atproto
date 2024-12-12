@@ -9,7 +9,7 @@ import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as AppBskyLabelerDefs from './defs'
 
-export const id = 'app.bsky.labeler.getServices'
+const id = 'app.bsky.labeler.getServices'
 
 export interface QueryParams {
   dids: string[]

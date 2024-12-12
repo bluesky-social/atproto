@@ -1,5 +1,11 @@
 # @atproto-labs/fetch
 
+## 0.1.2
+
+### Patch Changes
+
+- [#3135](https://github.com/bluesky-social/atproto/pull/3135) [`622654672`](https://github.com/bluesky-social/atproto/commit/6226546725d1bb0375e3c9e0d71af173e8253c4f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Support parsing of more fetch() errors
+
 ## 0.1.1
 
 ### Patch Changes

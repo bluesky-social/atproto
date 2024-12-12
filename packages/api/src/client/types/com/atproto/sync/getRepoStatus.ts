@@ -7,7 +7,7 @@ import { CID } from 'multiformats/cid'
 import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 
-export const id = 'com.atproto.sync.getRepoStatus'
+const id = 'com.atproto.sync.getRepoStatus'
 
 export interface QueryParams {
   /** The DID of the repo. */

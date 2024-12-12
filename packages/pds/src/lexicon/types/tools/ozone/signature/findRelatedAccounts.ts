@@ -10,7 +10,7 @@ import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as ComAtprotoAdminDefs from '../../../com/atproto/admin/defs'
 import * as ToolsOzoneSignatureDefs from './defs'
 
-export const id = 'tools.ozone.signature.findRelatedAccounts'
+const id = 'tools.ozone.signature.findRelatedAccounts'
 
 export interface QueryParams {
   did: string

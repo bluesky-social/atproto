@@ -9,7 +9,7 @@ import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as ComAtprotoLabelDefs from '../label/defs'
 
-export const id = 'com.atproto.temp.fetchLabels'
+const id = 'com.atproto.temp.fetchLabels'
 
 export interface QueryParams {
   since?: number

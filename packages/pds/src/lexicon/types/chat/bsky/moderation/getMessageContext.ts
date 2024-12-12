@@ -9,7 +9,7 @@ import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as ChatBskyConvoDefs from '../convo/defs'
 
-export const id = 'chat.bsky.moderation.getMessageContext'
+const id = 'chat.bsky.moderation.getMessageContext'
 
 export interface QueryParams {
   /** Conversation that the message is from. NOTE: this field will eventually be required. */

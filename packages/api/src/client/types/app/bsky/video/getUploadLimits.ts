@@ -7,7 +7,7 @@ import { CID } from 'multiformats/cid'
 import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 
-export const id = 'app.bsky.video.getUploadLimits'
+const id = 'app.bsky.video.getUploadLimits'
 
 export interface QueryParams {}
 

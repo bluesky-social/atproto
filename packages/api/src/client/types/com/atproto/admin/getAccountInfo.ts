@@ -8,7 +8,7 @@ import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import * as ComAtprotoAdminDefs from './defs'
 
-export const id = 'com.atproto.admin.getAccountInfo'
+const id = 'com.atproto.admin.getAccountInfo'
 
 export interface QueryParams {
   did: string

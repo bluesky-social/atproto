@@ -8,7 +8,7 @@ import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import * as AppBskyActorDefs from './defs'
 
-export const id = 'app.bsky.actor.getSuggestions'
+const id = 'app.bsky.actor.getSuggestions'
 
 export interface QueryParams {
   limit?: number

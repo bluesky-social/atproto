@@ -6,7 +6,7 @@ import { CID } from 'multiformats/cid'
 import { lexicons } from '../../../../lexicons'
 import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 
-export const id = 'app.bsky.graph.listitem'
+const id = 'app.bsky.graph.listitem'
 
 export interface Record {
   $type?: $Type<'app.bsky.graph.listitem', 'main'>

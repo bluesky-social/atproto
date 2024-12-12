@@ -12,7 +12,7 @@ import * as ComAtprotoModerationDefs from '../../../com/atproto/moderation/defs'
 import * as ComAtprotoServerDefs from '../../../com/atproto/server/defs'
 import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
 
-export const id = 'tools.ozone.moderation.defs'
+const id = 'tools.ozone.moderation.defs'
 
 export interface ModEventView {
   $type?: $Type<'tools.ozone.moderation.defs', 'modEventView'>
@@ -333,6 +333,8 @@ export function isValidModEventLabel<V>(v: V): v is V & $Typed<ModEventLabel> {
 export interface ModEventAcknowledge {
   $type?: $Type<'tools.ozone.moderation.defs', 'modEventAcknowledge'>
   comment?: string
+  /** If true, all other reports on content authored by this account will be resolved (acknowledged). */
+  acknowledgeAccountSubjects?: boolean
 }
 
 export function isModEventAcknowledge<V>(v: V) {

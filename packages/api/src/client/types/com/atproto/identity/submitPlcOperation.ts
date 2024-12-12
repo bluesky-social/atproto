@@ -7,7 +7,7 @@ import { CID } from 'multiformats/cid'
 import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 
-export const id = 'com.atproto.identity.submitPlcOperation'
+const id = 'com.atproto.identity.submitPlcOperation'
 
 export interface QueryParams {}
 

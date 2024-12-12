@@ -198,27 +198,52 @@ export function string(
   }
 
   // maxLength and minLength
-  if (typeof def.maxLength === 'number' || typeof def.minLength === 'number') {
-    const len = utf8Len(value)
-
-    if (typeof def.maxLength === 'number') {
-      if (len > def.maxLength) {
-        return {
-          success: false,
-          error: new ValidationError(
-            `${path} must not be longer than ${def.maxLength} characters`,
-          ),
-        }
+  if (typeof def.minLength === 'number' || typeof def.maxLength === 'number') {
+    // If the JavaScript string length * 3 is below the maximum limit,
+    // its UTF8 length (which <= .length * 3) will also be below.
+    if (typeof def.minLength === 'number' && value.length * 3 < def.minLength) {
+      return {
+        success: false,
+        error: new ValidationError(
+          `${path} must not be shorter than ${def.minLength} characters`,
+        ),
       }
     }
 
-    if (typeof def.minLength === 'number') {
-      if (len < def.minLength) {
-        return {
-          success: false,
-          error: new ValidationError(
-            `${path} must not be shorter than ${def.minLength} characters`,
-          ),
+    // If the JavaScript string length * 3 is within the maximum limit,
+    // its UTF8 length (which <= .length * 3) will also be within.
+    // When there's no minimal length, this lets us skip the UTF8 length check.
+    let canSkipUtf8LenChecks = false
+    if (
+      typeof def.minLength === 'undefined' &&
+      typeof def.maxLength === 'number' &&
+      value.length * 3 <= def.maxLength
+    ) {
+      canSkipUtf8LenChecks = true
+    }
+
+    if (!canSkipUtf8LenChecks) {
+      const len = utf8Len(value)
+
+      if (typeof def.maxLength === 'number') {
+        if (len > def.maxLength) {
+          return {
+            success: false,
+            error: new ValidationError(
+              `${path} must not be longer than ${def.maxLength} characters`,
+            ),
+          }
+        }
+      }
+
+      if (typeof def.minLength === 'number') {
+        if (len < def.minLength) {
+          return {
+            success: false,
+            error: new ValidationError(
+              `${path} must not be shorter than ${def.minLength} characters`,
+            ),
+          }
         }
       }
     }

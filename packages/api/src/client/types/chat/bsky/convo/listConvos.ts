@@ -8,7 +8,7 @@ import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import * as ChatBskyConvoDefs from './defs'
 
-export const id = 'chat.bsky.convo.listConvos'
+const id = 'chat.bsky.convo.listConvos'
 
 export interface QueryParams {
   limit?: number

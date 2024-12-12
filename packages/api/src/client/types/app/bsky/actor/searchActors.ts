@@ -8,7 +8,7 @@ import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import * as AppBskyActorDefs from './defs'
 
-export const id = 'app.bsky.actor.searchActors'
+const id = 'app.bsky.actor.searchActors'
 
 export interface QueryParams {
   /** DEPRECATED: use 'q' instead. */

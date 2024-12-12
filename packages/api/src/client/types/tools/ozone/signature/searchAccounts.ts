@@ -8,7 +8,7 @@ import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import * as ComAtprotoAdminDefs from '../../../com/atproto/admin/defs'
 
-export const id = 'tools.ozone.signature.searchAccounts'
+const id = 'tools.ozone.signature.searchAccounts'
 
 export interface QueryParams {
   values: string[]

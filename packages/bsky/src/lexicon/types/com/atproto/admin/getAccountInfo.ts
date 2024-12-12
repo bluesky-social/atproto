@@ -9,7 +9,7 @@ import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as ComAtprotoAdminDefs from './defs'
 
-export const id = 'com.atproto.admin.getAccountInfo'
+const id = 'com.atproto.admin.getAccountInfo'
 
 export interface QueryParams {
   did: string

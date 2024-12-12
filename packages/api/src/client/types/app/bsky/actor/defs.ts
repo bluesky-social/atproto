@@ -9,7 +9,7 @@ import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
 import * as AppBskyGraphDefs from '../graph/defs'
 import * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef'
 
-export const id = 'app.bsky.actor.defs'
+const id = 'app.bsky.actor.defs'
 
 export interface ProfileViewBasic {
   $type?: $Type<'app.bsky.actor.defs', 'profileViewBasic'>

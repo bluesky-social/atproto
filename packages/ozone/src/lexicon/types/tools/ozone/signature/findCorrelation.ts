@@ -9,7 +9,7 @@ import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as ToolsOzoneSignatureDefs from './defs'
 
-export const id = 'tools.ozone.signature.findCorrelation'
+const id = 'tools.ozone.signature.findCorrelation'
 
 export interface QueryParams {
   dids: string[]

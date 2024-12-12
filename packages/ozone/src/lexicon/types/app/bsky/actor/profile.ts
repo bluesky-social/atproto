@@ -8,7 +8,7 @@ import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
 import * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef'
 
-export const id = 'app.bsky.actor.profile'
+const id = 'app.bsky.actor.profile'
 
 export interface Record {
   $type?: $Type<'app.bsky.actor.profile', 'main'>

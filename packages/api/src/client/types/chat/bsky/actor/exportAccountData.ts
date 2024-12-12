@@ -7,7 +7,7 @@ import { CID } from 'multiformats/cid'
 import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 
-export const id = 'chat.bsky.actor.exportAccountData'
+const id = 'chat.bsky.actor.exportAccountData'
 
 export interface QueryParams {}
 

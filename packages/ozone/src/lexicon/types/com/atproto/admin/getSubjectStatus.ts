@@ -10,7 +10,7 @@ import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as ComAtprotoAdminDefs from './defs'
 import * as ComAtprotoRepoStrongRef from '../repo/strongRef'
 
-export const id = 'com.atproto.admin.getSubjectStatus'
+const id = 'com.atproto.admin.getSubjectStatus'
 
 export interface QueryParams {
   did?: string

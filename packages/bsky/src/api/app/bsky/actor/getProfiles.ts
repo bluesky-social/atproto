@@ -25,9 +25,13 @@ export default function (server: Server, ctx: AppContext) {
       },
     }),
     handler: async ({ auth, params, req }) => {
-      const viewer = auth.credentials.iss
+      const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({ viewer, labelers })
+      const hydrateCtx = await ctx.hydrator.createContext({
+        viewer,
+        labelers,
+        includeTakedowns,
+      })
 
       const result = await getProfile({ ...params, hydrateCtx }, ctx)
 

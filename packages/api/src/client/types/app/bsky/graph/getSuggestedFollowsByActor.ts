@@ -8,7 +8,7 @@ import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import * as AppBskyActorDefs from '../actor/defs'
 
-export const id = 'app.bsky.graph.getSuggestedFollowsByActor'
+const id = 'app.bsky.graph.getSuggestedFollowsByActor'
 
 export interface QueryParams {
   actor: string

@@ -8,7 +8,7 @@ import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import * as AppBskyActorDefs from '../actor/defs'
 
-export const id = 'app.bsky.feed.getRepostedBy'
+const id = 'app.bsky.feed.getRepostedBy'
 
 export interface QueryParams {
   /** Reference (AT-URI) of post record */

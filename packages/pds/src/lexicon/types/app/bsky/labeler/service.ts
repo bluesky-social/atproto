@@ -8,7 +8,7 @@ import { $Type, $Typed, is$typed, OmitKey } from '../../../../util'
 import * as AppBskyLabelerDefs from './defs'
 import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
 
-export const id = 'app.bsky.labeler.service'
+const id = 'app.bsky.labeler.service'
 
 export interface Record {
   $type?: $Type<'app.bsky.labeler.service', 'main'>
