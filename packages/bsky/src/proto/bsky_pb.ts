@@ -2221,6 +2221,128 @@ export class GetVouchRecordsResponse extends Message<GetVouchRecordsResponse> {
 }
 
 /**
+ * @generated from message bsky.GetVouchAcceptRecordsRequest
+ */
+export class GetVouchAcceptRecordsRequest extends Message<GetVouchAcceptRecordsRequest> {
+  /**
+   * @generated from field: repeated string uris = 1;
+   */
+  uris: string[] = []
+
+  constructor(data?: PartialMessage<GetVouchAcceptRecordsRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetVouchAcceptRecordsRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    {
+      no: 1,
+      name: 'uris',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+      repeated: true,
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetVouchAcceptRecordsRequest {
+    return new GetVouchAcceptRecordsRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetVouchAcceptRecordsRequest {
+    return new GetVouchAcceptRecordsRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetVouchAcceptRecordsRequest {
+    return new GetVouchAcceptRecordsRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | GetVouchAcceptRecordsRequest
+      | PlainMessage<GetVouchAcceptRecordsRequest>
+      | undefined,
+    b:
+      | GetVouchAcceptRecordsRequest
+      | PlainMessage<GetVouchAcceptRecordsRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetVouchAcceptRecordsRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.GetVouchAcceptRecordsResponse
+ */
+export class GetVouchAcceptRecordsResponse extends Message<GetVouchAcceptRecordsResponse> {
+  /**
+   * @generated from field: repeated bsky.Record records = 1;
+   */
+  records: Record[] = []
+
+  constructor(data?: PartialMessage<GetVouchAcceptRecordsResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetVouchAcceptRecordsResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'records', kind: 'message', T: Record, repeated: true },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetVouchAcceptRecordsResponse {
+    return new GetVouchAcceptRecordsResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetVouchAcceptRecordsResponse {
+    return new GetVouchAcceptRecordsResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetVouchAcceptRecordsResponse {
+    return new GetVouchAcceptRecordsResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | GetVouchAcceptRecordsResponse
+      | PlainMessage<GetVouchAcceptRecordsResponse>
+      | undefined,
+    b:
+      | GetVouchAcceptRecordsResponse
+      | PlainMessage<GetVouchAcceptRecordsResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetVouchAcceptRecordsResponse, a, b)
+  }
+}
+
+/**
  * - Return follow uris where user A follows users B, C, D, …
  *     - E.g. for viewer state on `getProfiles`
  *
@@ -10430,6 +10552,461 @@ export class GetActorStarterPacksResponse extends Message<GetActorStarterPacksRe
       | undefined,
   ): boolean {
     return proto3.util.equals(GetActorStarterPacksResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.VouchInfo
+ */
+export class VouchInfo extends Message<VouchInfo> {
+  /**
+   * @generated from field: bsky.Record vouch = 1;
+   */
+  vouch?: Record
+
+  /**
+   * @generated from field: string accept_uri = 2;
+   */
+  acceptUri = ''
+
+  /**
+   * @generated from field: string accept_cid = 3;
+   */
+  acceptCid = ''
+
+  constructor(data?: PartialMessage<VouchInfo>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.VouchInfo'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'vouch', kind: 'message', T: Record },
+    { no: 2, name: 'accept_uri', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'accept_cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): VouchInfo {
+    return new VouchInfo().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): VouchInfo {
+    return new VouchInfo().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): VouchInfo {
+    return new VouchInfo().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a: VouchInfo | PlainMessage<VouchInfo> | undefined,
+    b: VouchInfo | PlainMessage<VouchInfo> | undefined,
+  ): boolean {
+    return proto3.util.equals(VouchInfo, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.GetVouchesRequest
+ */
+export class GetVouchesRequest extends Message<GetVouchesRequest> {
+  /**
+   * @generated from field: repeated string uris = 1;
+   */
+  uris: string[] = []
+
+  constructor(data?: PartialMessage<GetVouchesRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetVouchesRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    {
+      no: 1,
+      name: 'uris',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+      repeated: true,
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetVouchesRequest {
+    return new GetVouchesRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetVouchesRequest {
+    return new GetVouchesRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetVouchesRequest {
+    return new GetVouchesRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a: GetVouchesRequest | PlainMessage<GetVouchesRequest> | undefined,
+    b: GetVouchesRequest | PlainMessage<GetVouchesRequest> | undefined,
+  ): boolean {
+    return proto3.util.equals(GetVouchesRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.GetVouchesResponse
+ */
+export class GetVouchesResponse extends Message<GetVouchesResponse> {
+  /**
+   * @generated from field: repeated bsky.VouchInfo vouches = 1;
+   */
+  vouches: VouchInfo[] = []
+
+  constructor(data?: PartialMessage<GetVouchesResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetVouchesResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'vouches', kind: 'message', T: VouchInfo, repeated: true },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetVouchesResponse {
+    return new GetVouchesResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetVouchesResponse {
+    return new GetVouchesResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetVouchesResponse {
+    return new GetVouchesResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a: GetVouchesResponse | PlainMessage<GetVouchesResponse> | undefined,
+    b: GetVouchesResponse | PlainMessage<GetVouchesResponse> | undefined,
+  ): boolean {
+    return proto3.util.equals(GetVouchesResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.GetVouchesGivenRequest
+ */
+export class GetVouchesGivenRequest extends Message<GetVouchesGivenRequest> {
+  /**
+   * @generated from field: string actor_did = 1;
+   */
+  actorDid = ''
+
+  /**
+   * @generated from field: bool include_unaccepted = 2;
+   */
+  includeUnaccepted = false
+
+  /**
+   * @generated from field: int32 limit = 3;
+   */
+  limit = 0
+
+  /**
+   * @generated from field: string cursor = 4;
+   */
+  cursor = ''
+
+  constructor(data?: PartialMessage<GetVouchesGivenRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetVouchesGivenRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'actor_did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    {
+      no: 2,
+      name: 'include_unaccepted',
+      kind: 'scalar',
+      T: 8 /* ScalarType.BOOL */,
+    },
+    { no: 3, name: 'limit', kind: 'scalar', T: 5 /* ScalarType.INT32 */ },
+    { no: 4, name: 'cursor', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetVouchesGivenRequest {
+    return new GetVouchesGivenRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetVouchesGivenRequest {
+    return new GetVouchesGivenRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetVouchesGivenRequest {
+    return new GetVouchesGivenRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | GetVouchesGivenRequest
+      | PlainMessage<GetVouchesGivenRequest>
+      | undefined,
+    b:
+      | GetVouchesGivenRequest
+      | PlainMessage<GetVouchesGivenRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetVouchesGivenRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.GetVouchesGivenResponse
+ */
+export class GetVouchesGivenResponse extends Message<GetVouchesGivenResponse> {
+  /**
+   * @generated from field: repeated string uris = 1;
+   */
+  uris: string[] = []
+
+  /**
+   * @generated from field: string cursor = 2;
+   */
+  cursor = ''
+
+  constructor(data?: PartialMessage<GetVouchesGivenResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetVouchesGivenResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    {
+      no: 1,
+      name: 'uris',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+      repeated: true,
+    },
+    { no: 2, name: 'cursor', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetVouchesGivenResponse {
+    return new GetVouchesGivenResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetVouchesGivenResponse {
+    return new GetVouchesGivenResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetVouchesGivenResponse {
+    return new GetVouchesGivenResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | GetVouchesGivenResponse
+      | PlainMessage<GetVouchesGivenResponse>
+      | undefined,
+    b:
+      | GetVouchesGivenResponse
+      | PlainMessage<GetVouchesGivenResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetVouchesGivenResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.GetVouchesReceivedRequest
+ */
+export class GetVouchesReceivedRequest extends Message<GetVouchesReceivedRequest> {
+  /**
+   * @generated from field: string actor_did = 1;
+   */
+  actorDid = ''
+
+  /**
+   * @generated from field: bool include_unaccepted = 2;
+   */
+  includeUnaccepted = false
+
+  /**
+   * @generated from field: int32 limit = 3;
+   */
+  limit = 0
+
+  /**
+   * @generated from field: string cursor = 4;
+   */
+  cursor = ''
+
+  constructor(data?: PartialMessage<GetVouchesReceivedRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetVouchesReceivedRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'actor_did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    {
+      no: 2,
+      name: 'include_unaccepted',
+      kind: 'scalar',
+      T: 8 /* ScalarType.BOOL */,
+    },
+    { no: 3, name: 'limit', kind: 'scalar', T: 5 /* ScalarType.INT32 */ },
+    { no: 4, name: 'cursor', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetVouchesReceivedRequest {
+    return new GetVouchesReceivedRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetVouchesReceivedRequest {
+    return new GetVouchesReceivedRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetVouchesReceivedRequest {
+    return new GetVouchesReceivedRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | GetVouchesReceivedRequest
+      | PlainMessage<GetVouchesReceivedRequest>
+      | undefined,
+    b:
+      | GetVouchesReceivedRequest
+      | PlainMessage<GetVouchesReceivedRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetVouchesReceivedRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.GetVouchesReceivedResponse
+ */
+export class GetVouchesReceivedResponse extends Message<GetVouchesReceivedResponse> {
+  /**
+   * @generated from field: repeated string uris = 1;
+   */
+  uris: string[] = []
+
+  /**
+   * @generated from field: string cursor = 2;
+   */
+  cursor = ''
+
+  constructor(data?: PartialMessage<GetVouchesReceivedResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetVouchesReceivedResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    {
+      no: 1,
+      name: 'uris',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+      repeated: true,
+    },
+    { no: 2, name: 'cursor', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetVouchesReceivedResponse {
+    return new GetVouchesReceivedResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetVouchesReceivedResponse {
+    return new GetVouchesReceivedResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetVouchesReceivedResponse {
+    return new GetVouchesReceivedResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | GetVouchesReceivedResponse
+      | PlainMessage<GetVouchesReceivedResponse>
+      | undefined,
+    b:
+      | GetVouchesReceivedResponse
+      | PlainMessage<GetVouchesReceivedResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetVouchesReceivedResponse, a, b)
   }
 }
 

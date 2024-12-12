@@ -168,6 +168,14 @@ import {
   GetTimelineResponse,
   GetUnreadNotificationCountRequest,
   GetUnreadNotificationCountResponse,
+  GetVouchAcceptRecordsRequest,
+  GetVouchAcceptRecordsResponse,
+  GetVouchesGivenRequest,
+  GetVouchesGivenResponse,
+  GetVouchesReceivedRequest,
+  GetVouchesReceivedResponse,
+  GetVouchesRequest,
+  GetVouchesResponse,
   GetVouchRecordsRequest,
   GetVouchRecordsResponse,
   PingRequest,
@@ -353,6 +361,15 @@ export const Service = {
       name: 'GetVouchRecords',
       I: GetVouchRecordsRequest,
       O: GetVouchRecordsResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsky.Service.GetVouchAcceptRecords
+     */
+    getVouchAcceptRecords: {
+      name: 'GetVouchAcceptRecords',
+      I: GetVouchAcceptRecordsRequest,
+      O: GetVouchAcceptRecordsResponse,
       kind: MethodKind.Unary,
     },
     /**
@@ -901,6 +918,35 @@ export const Service = {
       name: 'GetActorStarterPacks',
       I: GetActorStarterPacksRequest,
       O: GetActorStarterPacksResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * Vouches
+     *
+     * @generated from rpc bsky.Service.GetVouches
+     */
+    getVouches: {
+      name: 'GetVouches',
+      I: GetVouchesRequest,
+      O: GetVouchesResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsky.Service.GetVouchesGiven
+     */
+    getVouchesGiven: {
+      name: 'GetVouchesGiven',
+      I: GetVouchesGivenRequest,
+      O: GetVouchesGivenResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsky.Service.GetVouchesReceived
+     */
+    getVouchesReceived: {
+      name: 'GetVouchesReceived',
+      I: GetVouchesReceivedRequest,
+      O: GetVouchesReceivedResponse,
       kind: MethodKind.Unary,
     },
     /**

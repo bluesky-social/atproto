@@ -164,6 +164,14 @@ message GetVouchRecordsResponse {
   repeated Record records = 1;
 }
 
+message GetVouchAcceptRecordsRequest {
+  repeated string uris = 1;
+}
+
+message GetVouchAcceptRecordsResponse {
+  repeated Record records = 1;
+}
+
 //
 // Follows
 //
@@ -1007,6 +1015,48 @@ message GetActorStarterPacksResponse {
 }
 
 //
+// Vouches
+//
+
+message VouchInfo {
+  Record vouch = 1;
+  string accept_uri = 2;
+  string accept_cid = 3;
+}
+
+message GetVouchesRequest {
+  repeated string uris = 1;
+}
+
+message GetVouchesResponse {
+  repeated VouchInfo vouches = 1;
+}
+
+message GetVouchesGivenRequest {
+  string actor_did = 1;
+  bool include_unaccepted = 2;
+  int32 limit = 3;
+  string cursor = 4;
+}
+
+message GetVouchesGivenResponse {
+  repeated string uris = 1;
+  string cursor = 2;
+}
+
+message GetVouchesReceivedRequest {
+  string actor_did = 1;
+  bool include_unaccepted = 2;
+  int32 limit = 3;
+  string cursor = 4;
+}
+
+message GetVouchesReceivedResponse {
+  repeated string uris = 1;
+  string cursor = 2;
+}
+
+//
 // Sync
 //
 
@@ -1128,6 +1178,7 @@ service Service {
   rpc GetLabelerRecords(GetLabelerRecordsRequest) returns (GetLabelerRecordsResponse);
   rpc GetStarterPackRecords(GetStarterPackRecordsRequest) returns (GetStarterPackRecordsResponse);
   rpc GetVouchRecords(GetVouchRecordsRequest) returns (GetVouchRecordsResponse);
+  rpc GetVouchAcceptRecords(GetVouchAcceptRecordsRequest) returns (GetVouchAcceptRecordsResponse);
 
   // Follows
   rpc GetActorFollowsActors(GetActorFollowsActorsRequest) returns (GetActorFollowsActorsResponse);
@@ -1228,6 +1279,11 @@ service Service {
 
   // Starter packs
   rpc GetActorStarterPacks(GetActorStarterPacksRequest) returns (GetActorStarterPacksResponse);
+
+  // Vouches
+  rpc GetVouches(GetVouchesRequest) returns (GetVouchesResponse);
+  rpc GetVouchesGiven(GetVouchesGivenRequest) returns (GetVouchesGivenResponse);
+  rpc GetVouchesReceived(GetVouchesReceivedRequest) returns (GetVouchesReceivedResponse);
 
   // Sync
   rpc GetLatestRev(GetLatestRevRequest) returns (GetLatestRevResponse);
