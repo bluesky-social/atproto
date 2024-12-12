@@ -480,9 +480,9 @@ const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
         })
         .addNamedImports([{ name: 'lexicons' }])
 
-      //= export const id = "{lexiconDoc.id}"
+      //= const id = "{lexiconDoc.id}"
       file.addVariableStatement({
-        isExported: true,
+        isExported: false, // Do not export to allow tree-shaking
         declarationKind: VariableDeclarationKind.Const,
         declarations: [
           { name: 'id', initializer: JSON.stringify(lexiconDoc.id) },
