@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "record",
-      "description": "Record declaring a 'vouch' for another account. Must be bi-directionally accepted by the subject through their profile reocrd.",
+      "description": "Record declaring a 'vouch' for another account. Must be bi-directionally accepted by the subject a vouchaccept record.",
       "key": "tid",
       "record": {
         "type": "object",
