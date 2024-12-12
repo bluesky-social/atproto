@@ -8,7 +8,7 @@ import { $Type, is$typed } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import * as AppBskyGraphDefs from './defs'
 
-export const id = 'app.bsky.graph.getListMutes'
+const id = 'app.bsky.graph.getListMutes'
 
 export interface QueryParams {
   limit?: number

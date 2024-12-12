@@ -8,7 +8,7 @@ import { lexicons } from '../../../../lexicons'
 import { $Type, is$typed } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 
-export const id = 'tools.ozone.setting.removeOptions'
+const id = 'tools.ozone.setting.removeOptions'
 
 export interface QueryParams {}
 

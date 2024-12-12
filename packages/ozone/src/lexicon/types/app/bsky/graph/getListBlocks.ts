@@ -9,7 +9,7 @@ import { $Type, is$typed } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as AppBskyGraphDefs from './defs'
 
-export const id = 'app.bsky.graph.getListBlocks'
+const id = 'app.bsky.graph.getListBlocks'
 
 export interface QueryParams {
   limit: number

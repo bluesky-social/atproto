@@ -6,7 +6,7 @@ import { CID } from 'multiformats/cid'
 import { lexicons } from '../../../../lexicons'
 import { $Type, is$typed } from '../../../../util'
 
-export const id = 'app.bsky.feed.threadgate'
+const id = 'app.bsky.feed.threadgate'
 
 export interface Record {
   /** Reference (AT-URI) to the post record. */

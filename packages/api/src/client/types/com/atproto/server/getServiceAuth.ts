@@ -7,7 +7,7 @@ import { CID } from 'multiformats/cid'
 import { $Type, is$typed } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 
-export const id = 'com.atproto.server.getServiceAuth'
+const id = 'com.atproto.server.getServiceAuth'
 
 export interface QueryParams {
   /** The DID of the service that the token will be used to authenticate with */

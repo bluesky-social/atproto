@@ -6,7 +6,7 @@ import { CID } from 'multiformats/cid'
 import { $Type, is$typed } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 
-export const id = 'app.bsky.graph.listblock'
+const id = 'app.bsky.graph.listblock'
 
 export interface Record {
   /** Reference (AT-URI) to the mod list record. */

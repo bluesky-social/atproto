@@ -16,7 +16,7 @@ import * as AppBskyEmbedVideo from './video'
 import * as AppBskyEmbedExternal from './external'
 import * as AppBskyEmbedRecordWithMedia from './recordWithMedia'
 
-export const id = 'app.bsky.embed.record'
+const id = 'app.bsky.embed.record'
 
 export interface Main {
   record: ComAtprotoRepoStrongRef.Main

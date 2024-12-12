@@ -7,7 +7,7 @@ import { CID } from 'multiformats/cid'
 import { $Type, is$typed } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 
-export const id = 'tools.ozone.communication.deleteTemplate'
+const id = 'tools.ozone.communication.deleteTemplate'
 
 export interface QueryParams {}
 

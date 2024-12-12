@@ -7,7 +7,7 @@ import { CID } from 'multiformats/cid'
 import { $Type, is$typed } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 
-export const id = 'app.bsky.notification.getUnreadCount'
+const id = 'app.bsky.notification.getUnreadCount'
 
 export interface QueryParams {
   priority?: boolean

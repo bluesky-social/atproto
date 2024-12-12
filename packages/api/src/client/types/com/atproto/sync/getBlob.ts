@@ -7,7 +7,7 @@ import { CID } from 'multiformats/cid'
 import { $Type, is$typed } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 
-export const id = 'com.atproto.sync.getBlob'
+const id = 'com.atproto.sync.getBlob'
 
 export interface QueryParams {
   /** The DID of the account. */

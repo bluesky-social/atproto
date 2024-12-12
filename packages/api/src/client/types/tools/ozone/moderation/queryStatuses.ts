@@ -8,7 +8,7 @@ import { $Type, is$typed } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import * as ToolsOzoneModerationDefs from './defs'
 
-export const id = 'tools.ozone.moderation.queryStatuses'
+const id = 'tools.ozone.moderation.queryStatuses'
 
 export interface QueryParams {
   /** All subjects, or subjects from given 'collections' param, belonging to the account specified in the 'subject' param will be returned. */

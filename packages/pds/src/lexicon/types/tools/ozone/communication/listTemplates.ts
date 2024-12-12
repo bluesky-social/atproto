@@ -9,7 +9,7 @@ import { $Type, is$typed } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as ToolsOzoneCommunicationDefs from './defs'
 
-export const id = 'tools.ozone.communication.listTemplates'
+const id = 'tools.ozone.communication.listTemplates'
 
 export interface QueryParams {}
 

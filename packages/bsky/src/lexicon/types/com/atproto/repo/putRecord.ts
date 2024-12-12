@@ -9,7 +9,7 @@ import { $Type, is$typed } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as ComAtprotoRepoDefs from './defs'
 
-export const id = 'com.atproto.repo.putRecord'
+const id = 'com.atproto.repo.putRecord'
 
 export interface QueryParams {}
 

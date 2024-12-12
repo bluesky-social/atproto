@@ -6,7 +6,7 @@ import { CID } from 'multiformats/cid'
 import { lexicons } from '../../../../lexicons'
 import { $Type, is$typed } from '../../../../util'
 
-export const id = 'app.bsky.graph.block'
+const id = 'app.bsky.graph.block'
 
 export interface Record {
   /** DID of the account to be blocked. */

@@ -7,7 +7,7 @@ import { $Type, is$typed } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import * as ComAtprotoServerDefs from '../server/defs'
 
-export const id = 'com.atproto.admin.defs'
+const id = 'com.atproto.admin.defs'
 
 export interface StatusAttr {
   applied: boolean

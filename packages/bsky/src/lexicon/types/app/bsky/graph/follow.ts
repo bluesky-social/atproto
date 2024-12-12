@@ -6,7 +6,7 @@ import { CID } from 'multiformats/cid'
 import { lexicons } from '../../../../lexicons'
 import { $Type, is$typed } from '../../../../util'
 
-export const id = 'app.bsky.graph.follow'
+const id = 'app.bsky.graph.follow'
 
 export interface Record {
   subject: string

@@ -8,7 +8,7 @@ import { $Type, is$typed } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import * as AppBskyVideoDefs from './defs'
 
-export const id = 'app.bsky.video.uploadVideo'
+const id = 'app.bsky.video.uploadVideo'
 
 export interface QueryParams {}
 

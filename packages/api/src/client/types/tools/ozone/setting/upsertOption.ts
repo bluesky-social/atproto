@@ -8,7 +8,7 @@ import { $Type, is$typed } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import * as ToolsOzoneSettingDefs from './defs'
 
-export const id = 'tools.ozone.setting.upsertOption'
+const id = 'tools.ozone.setting.upsertOption'
 
 export interface QueryParams {}
 

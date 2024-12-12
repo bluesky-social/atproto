@@ -8,7 +8,7 @@ import { $Type, is$typed } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import * as AppBskyUnspeccedDefs from './defs'
 
-export const id = 'app.bsky.unspecced.getSuggestionsSkeleton'
+const id = 'app.bsky.unspecced.getSuggestionsSkeleton'
 
 export interface QueryParams {
   /** DID of the account making the request (not included for public/unauthenticated queries). Used to boost followed accounts in ranking. */

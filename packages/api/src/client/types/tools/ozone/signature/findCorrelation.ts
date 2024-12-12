@@ -8,7 +8,7 @@ import { $Type, is$typed } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import * as ToolsOzoneSignatureDefs from './defs'
 
-export const id = 'tools.ozone.signature.findCorrelation'
+const id = 'tools.ozone.signature.findCorrelation'
 
 export interface QueryParams {
   dids: string[]

@@ -9,7 +9,7 @@ import { $Type, is$typed } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as AppBskyFeedDefs from './defs'
 
-export const id = 'app.bsky.feed.getFeedSkeleton'
+const id = 'app.bsky.feed.getFeedSkeleton'
 
 export interface QueryParams {
   /** Reference to feed generator record describing the specific feed being requested. */

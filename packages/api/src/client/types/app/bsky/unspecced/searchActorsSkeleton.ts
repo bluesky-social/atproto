@@ -8,7 +8,7 @@ import { $Type, is$typed } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import * as AppBskyUnspeccedDefs from './defs'
 
-export const id = 'app.bsky.unspecced.searchActorsSkeleton'
+const id = 'app.bsky.unspecced.searchActorsSkeleton'
 
 export interface QueryParams {
   /** Search query string; syntax, phrase, boolean, and faceting is unspecified, but Lucene query syntax is recommended. For typeahead search, only simple term match is supported, not full syntax. */

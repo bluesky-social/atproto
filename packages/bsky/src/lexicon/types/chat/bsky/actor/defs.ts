@@ -8,7 +8,7 @@ import { $Type, is$typed } from '../../../../util'
 import * as AppBskyActorDefs from '../../../app/bsky/actor/defs'
 import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
 
-export const id = 'chat.bsky.actor.defs'
+const id = 'chat.bsky.actor.defs'
 
 export interface ProfileViewBasic {
   did: string

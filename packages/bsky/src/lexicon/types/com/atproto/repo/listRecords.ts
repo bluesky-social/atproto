@@ -8,7 +8,7 @@ import { lexicons } from '../../../../lexicons'
 import { $Type, is$typed } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 
-export const id = 'com.atproto.repo.listRecords'
+const id = 'com.atproto.repo.listRecords'
 
 export interface QueryParams {
   /** The handle or DID of the repo. */

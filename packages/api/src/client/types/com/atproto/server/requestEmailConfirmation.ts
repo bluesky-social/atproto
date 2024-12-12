@@ -7,7 +7,7 @@ import { CID } from 'multiformats/cid'
 import { $Type, is$typed } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 
-export const id = 'com.atproto.server.requestEmailConfirmation'
+const id = 'com.atproto.server.requestEmailConfirmation'
 
 export interface QueryParams {}
 

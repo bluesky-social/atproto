@@ -9,7 +9,7 @@ import { lexicons } from '../../../../lexicons'
 import { $Type, is$typed } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 
-export const id = 'com.atproto.sync.getBlocks'
+const id = 'com.atproto.sync.getBlocks'
 
 export interface QueryParams {
   /** The DID of the repo. */

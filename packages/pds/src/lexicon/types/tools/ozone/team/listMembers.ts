@@ -9,7 +9,7 @@ import { $Type, is$typed } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as ToolsOzoneTeamDefs from './defs'
 
-export const id = 'tools.ozone.team.listMembers'
+const id = 'tools.ozone.team.listMembers'
 
 export interface QueryParams {
   limit: number

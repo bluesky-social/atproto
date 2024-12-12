@@ -9,7 +9,7 @@ import { $Type, is$typed } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as AppBskyFeedDefs from './defs'
 
-export const id = 'app.bsky.feed.searchPosts'
+const id = 'app.bsky.feed.searchPosts'
 
 export interface QueryParams {
   /** Search query string; syntax, phrase, boolean, and faceting is unspecified, but Lucene query syntax is recommended. */

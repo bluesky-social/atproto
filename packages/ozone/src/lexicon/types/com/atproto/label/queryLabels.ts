@@ -9,7 +9,7 @@ import { $Type, is$typed } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as ComAtprotoLabelDefs from './defs'
 
-export const id = 'com.atproto.label.queryLabels'
+const id = 'com.atproto.label.queryLabels'
 
 export interface QueryParams {
   /** List of AT URI patterns to match (boolean 'OR'). Each may be a prefix (ending with '*'; will match inclusive of the string leading to '*'), or a full URI. */

@@ -8,7 +8,7 @@ import { $Type, is$typed } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import * as ToolsOzoneCommunicationDefs from './defs'
 
-export const id = 'tools.ozone.communication.createTemplate'
+const id = 'tools.ozone.communication.createTemplate'
 
 export interface QueryParams {}
 

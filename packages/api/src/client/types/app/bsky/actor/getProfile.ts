@@ -8,7 +8,7 @@ import { $Type, is$typed } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import * as AppBskyActorDefs from './defs'
 
-export const id = 'app.bsky.actor.getProfile'
+const id = 'app.bsky.actor.getProfile'
 
 export interface QueryParams {
   /** Handle or DID of account to fetch profile of. */

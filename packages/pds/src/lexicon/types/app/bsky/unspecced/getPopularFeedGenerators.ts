@@ -9,7 +9,7 @@ import { $Type, is$typed } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as AppBskyFeedDefs from '../feed/defs'
 
-export const id = 'app.bsky.unspecced.getPopularFeedGenerators'
+const id = 'app.bsky.unspecced.getPopularFeedGenerators'
 
 export interface QueryParams {
   limit: number

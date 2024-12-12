@@ -8,7 +8,7 @@ import { $Type, is$typed } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import * as ComAtprotoLabelDefs from '../label/defs'
 
-export const id = 'com.atproto.temp.fetchLabels'
+const id = 'com.atproto.temp.fetchLabels'
 
 export interface QueryParams {
   since?: number

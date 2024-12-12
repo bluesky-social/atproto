@@ -8,7 +8,7 @@ import { lexicons } from '../../../../lexicons'
 import * as AppBskyLabelerDefs from './defs'
 import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
 
-export const id = 'app.bsky.labeler.service'
+const id = 'app.bsky.labeler.service'
 
 export interface Record {
   policies: AppBskyLabelerDefs.LabelerPolicies

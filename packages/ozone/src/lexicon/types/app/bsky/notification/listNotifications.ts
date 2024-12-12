@@ -10,7 +10,7 @@ import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as AppBskyActorDefs from '../actor/defs'
 import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
 
-export const id = 'app.bsky.notification.listNotifications'
+const id = 'app.bsky.notification.listNotifications'
 
 export interface QueryParams {
   limit: number

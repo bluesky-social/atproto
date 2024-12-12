@@ -6,7 +6,7 @@ import { CID } from 'multiformats/cid'
 import { lexicons } from '../../../../lexicons'
 import { $Type, is$typed } from '../../../../util'
 
-export const id = 'tools.ozone.setting.defs'
+const id = 'tools.ozone.setting.defs'
 
 export interface Option {
   key: string

@@ -8,7 +8,7 @@ import { $Type, is$typed } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import * as AppBskyFeedDefs from './defs'
 
-export const id = 'app.bsky.feed.getFeedGenerator'
+const id = 'app.bsky.feed.getFeedGenerator'
 
 export interface QueryParams {
   /** AT-URI of the feed generator record. */

@@ -9,7 +9,7 @@ import { $Type, is$typed } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as ComAtprotoServerDefs from './defs'
 
-export const id = 'com.atproto.server.getAccountInviteCodes'
+const id = 'com.atproto.server.getAccountInviteCodes'
 
 export interface QueryParams {
   includeUsed: boolean

@@ -14,7 +14,7 @@ import * as AppBskyEmbedRecordWithMedia from '../embed/recordWithMedia'
 import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
 import * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef'
 
-export const id = 'app.bsky.feed.post'
+const id = 'app.bsky.feed.post'
 
 export interface Record {
   /** The primary post content. May be an empty string, if there are embeds. */

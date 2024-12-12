@@ -8,7 +8,7 @@ import { lexicons } from '../../../../lexicons'
 import { $Type, is$typed } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 
-export const id = 'com.atproto.server.requestEmailUpdate'
+const id = 'com.atproto.server.requestEmailUpdate'
 
 export interface QueryParams {}
 

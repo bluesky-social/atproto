@@ -8,7 +8,7 @@ import { lexicons } from '../../../../lexicons'
 import { $Type, is$typed } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 
-export const id = 'com.atproto.server.getServiceAuth'
+const id = 'com.atproto.server.getServiceAuth'
 
 export interface QueryParams {
   /** The DID of the service that the token will be used to authenticate with */

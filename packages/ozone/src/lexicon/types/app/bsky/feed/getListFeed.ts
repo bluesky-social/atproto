@@ -9,7 +9,7 @@ import { $Type, is$typed } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as AppBskyFeedDefs from './defs'
 
-export const id = 'app.bsky.feed.getListFeed'
+const id = 'app.bsky.feed.getListFeed'
 
 export interface QueryParams {
   /** Reference (AT-URI) to the list record. */

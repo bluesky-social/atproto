@@ -7,7 +7,7 @@ import { $Type, is$typed } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import * as AppBskyRichtextFacet from '../richtext/facet'
 
-export const id = 'app.bsky.graph.starterpack'
+const id = 'app.bsky.graph.starterpack'
 
 export interface Record {
   /** Display name for starter pack; can not be empty. */

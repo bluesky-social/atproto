@@ -10,7 +10,7 @@ import * as AppBskyActorDefs from '../actor/defs'
 import * as AppBskyRichtextFacet from '../richtext/facet'
 import * as AppBskyFeedDefs from '../feed/defs'
 
-export const id = 'app.bsky.graph.defs'
+const id = 'app.bsky.graph.defs'
 
 export interface ListViewBasic {
   uri: string

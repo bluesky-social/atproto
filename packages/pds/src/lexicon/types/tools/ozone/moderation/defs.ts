@@ -12,7 +12,7 @@ import * as ComAtprotoModerationDefs from '../../../com/atproto/moderation/defs'
 import * as ComAtprotoServerDefs from '../../../com/atproto/server/defs'
 import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
 
-export const id = 'tools.ozone.moderation.defs'
+const id = 'tools.ozone.moderation.defs'
 
 export interface ModEventView {
   id: number

@@ -9,7 +9,7 @@ import { $Type, is$typed } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as ComAtprotoAdminDefs from '../../../com/atproto/admin/defs'
 
-export const id = 'tools.ozone.signature.searchAccounts'
+const id = 'tools.ozone.signature.searchAccounts'
 
 export interface QueryParams {
   values: string[]

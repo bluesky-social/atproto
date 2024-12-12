@@ -6,7 +6,7 @@ import { CID } from 'multiformats/cid'
 import { lexicons } from '../../../../lexicons'
 import { $Type, is$typed } from '../../../../util'
 
-export const id = 'app.bsky.richtext.facet'
+const id = 'app.bsky.richtext.facet'
 
 /** Annotation of a sub-string within rich text. */
 export interface Main {

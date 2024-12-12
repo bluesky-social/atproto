@@ -9,7 +9,7 @@ import { $Type, is$typed } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as AppBskyActorDefs from './defs'
 
-export const id = 'app.bsky.actor.searchActorsTypeahead'
+const id = 'app.bsky.actor.searchActorsTypeahead'
 
 export interface QueryParams {
   /** DEPRECATED: use 'q' instead. */

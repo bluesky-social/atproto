@@ -10,7 +10,7 @@ import * as ComAtprotoModerationDefs from './defs'
 import * as ComAtprotoAdminDefs from '../admin/defs'
 import * as ComAtprotoRepoStrongRef from '../repo/strongRef'
 
-export const id = 'com.atproto.moderation.createReport'
+const id = 'com.atproto.moderation.createReport'
 
 export interface QueryParams {}
 

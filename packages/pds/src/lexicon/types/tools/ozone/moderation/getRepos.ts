@@ -9,7 +9,7 @@ import { $Type, is$typed } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as ToolsOzoneModerationDefs from './defs'
 
-export const id = 'tools.ozone.moderation.getRepos'
+const id = 'tools.ozone.moderation.getRepos'
 
 export interface QueryParams {
   dids: string[]

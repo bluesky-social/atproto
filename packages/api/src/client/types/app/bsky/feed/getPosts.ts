@@ -8,7 +8,7 @@ import { $Type, is$typed } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import * as AppBskyFeedDefs from './defs'
 
-export const id = 'app.bsky.feed.getPosts'
+const id = 'app.bsky.feed.getPosts'
 
 export interface QueryParams {
   /** List of post AT-URIs to return hydrated views for. */

@@ -8,7 +8,7 @@ import { lexicons } from '../../../../lexicons'
 import * as AppBskyActorDefs from '../actor/defs'
 import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
 
-export const id = 'app.bsky.labeler.defs'
+const id = 'app.bsky.labeler.defs'
 
 export interface LabelerView {
   uri: string

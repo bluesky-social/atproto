@@ -8,7 +8,7 @@ import { lexicons } from '../../../../lexicons'
 import * as AppBskyRichtextFacet from '../richtext/facet'
 import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
 
-export const id = 'app.bsky.feed.generator'
+const id = 'app.bsky.feed.generator'
 
 export interface Record {
   did: string

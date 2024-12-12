@@ -6,7 +6,7 @@ import { CID } from 'multiformats/cid'
 import { lexicons } from '../../../../lexicons'
 import { $Type, is$typed } from '../../../../util'
 
-export const id = 'app.bsky.embed.external'
+const id = 'app.bsky.embed.external'
 
 /** A representation of some externally linked content (eg, a URL and 'card'), embedded in a Bluesky record (eg, a post). */
 export interface Main {

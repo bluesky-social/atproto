@@ -8,7 +8,7 @@ import { $Type, is$typed } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import * as AppBskyGraphDefs from './defs'
 
-export const id = 'app.bsky.graph.getLists'
+const id = 'app.bsky.graph.getLists'
 
 export interface QueryParams {
   /** The account (actor) to enumerate lists from. */

@@ -9,7 +9,7 @@ import { $Type, is$typed } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as AppBskyFeedDefs from './defs'
 
-export const id = 'app.bsky.feed.getActorFeeds'
+const id = 'app.bsky.feed.getActorFeeds'
 
 export interface QueryParams {
   actor: string

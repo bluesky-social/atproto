@@ -9,7 +9,7 @@ import { HandlerAuth, ErrorFrame } from '@atproto/xrpc-server'
 import { IncomingMessage } from 'http'
 import * as ComAtprotoLabelDefs from './defs'
 
-export const id = 'com.atproto.label.subscribeLabels'
+const id = 'com.atproto.label.subscribeLabels'
 
 export interface QueryParams {
   /** The last known event seq number to backfill from. */

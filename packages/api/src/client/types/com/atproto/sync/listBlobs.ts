@@ -7,7 +7,7 @@ import { CID } from 'multiformats/cid'
 import { $Type, is$typed } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 
-export const id = 'com.atproto.sync.listBlobs'
+const id = 'com.atproto.sync.listBlobs'
 
 export interface QueryParams {
   /** The DID of the repo. */

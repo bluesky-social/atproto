@@ -6,7 +6,7 @@ import { CID } from 'multiformats/cid'
 import { lexicons } from '../../../../lexicons'
 import { $Type, is$typed } from '../../../../util'
 
-export const id = 'app.bsky.embed.defs'
+const id = 'app.bsky.embed.defs'
 
 /** width:height represents an aspect ratio. It may be approximate, and may not correspond to absolute dimensions in any given unit. */
 export interface AspectRatio {

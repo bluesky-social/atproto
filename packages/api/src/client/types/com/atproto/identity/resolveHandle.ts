@@ -7,7 +7,7 @@ import { CID } from 'multiformats/cid'
 import { $Type, is$typed } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 
-export const id = 'com.atproto.identity.resolveHandle'
+const id = 'com.atproto.identity.resolveHandle'
 
 export interface QueryParams {
   /** The handle to resolve. */

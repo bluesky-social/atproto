@@ -15,7 +15,7 @@ import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
 import * as AppBskyRichtextFacet from '../richtext/facet'
 import * as AppBskyGraphDefs from '../graph/defs'
 
-export const id = 'app.bsky.feed.defs'
+const id = 'app.bsky.feed.defs'
 
 export interface PostView {
   uri: string

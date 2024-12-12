@@ -6,7 +6,7 @@ import { CID } from 'multiformats/cid'
 import { lexicons } from '../../../../lexicons'
 import { $Type, is$typed } from '../../../../util'
 
-export const id = 'com.atproto.label.defs'
+const id = 'com.atproto.label.defs'
 
 /** Metadata tag on an atproto resource (eg, repo or record). */
 export interface Label {

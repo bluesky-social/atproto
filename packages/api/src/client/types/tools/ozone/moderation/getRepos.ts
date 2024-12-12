@@ -8,7 +8,7 @@ import { $Type, is$typed } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import * as ToolsOzoneModerationDefs from './defs'
 
-export const id = 'tools.ozone.moderation.getRepos'
+const id = 'tools.ozone.moderation.getRepos'
 
 export interface QueryParams {
   dids: string[]

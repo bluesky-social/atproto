@@ -7,7 +7,7 @@ import { CID } from 'multiformats/cid'
 import { $Type, is$typed } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 
-export const id = 'app.bsky.notification.updateSeen'
+const id = 'app.bsky.notification.updateSeen'
 
 export interface QueryParams {}
 

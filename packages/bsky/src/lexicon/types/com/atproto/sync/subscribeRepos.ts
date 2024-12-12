@@ -8,7 +8,7 @@ import { $Type, is$typed } from '../../../../util'
 import { HandlerAuth, ErrorFrame } from '@atproto/xrpc-server'
 import { IncomingMessage } from 'http'
 
-export const id = 'com.atproto.sync.subscribeRepos'
+const id = 'com.atproto.sync.subscribeRepos'
 
 export interface QueryParams {
   /** The last known event seq number to backfill from. */

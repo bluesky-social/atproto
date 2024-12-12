@@ -7,7 +7,7 @@ import { CID } from 'multiformats/cid'
 import { $Type, is$typed } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 
-export const id = 'com.atproto.sync.listRepos'
+const id = 'com.atproto.sync.listRepos'
 
 export interface QueryParams {
   limit?: number

@@ -9,7 +9,7 @@ import { lexicons } from '../../../../lexicons'
 import { $Type, is$typed } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 
-export const id = 'chat.bsky.actor.exportAccountData'
+const id = 'chat.bsky.actor.exportAccountData'
 
 export interface QueryParams {}
 

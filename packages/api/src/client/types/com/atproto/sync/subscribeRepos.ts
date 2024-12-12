@@ -7,7 +7,7 @@ import { CID } from 'multiformats/cid'
 import { $Type, is$typed } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 
-export const id = 'com.atproto.sync.subscribeRepos'
+const id = 'com.atproto.sync.subscribeRepos'
 
 /** Represents an update of repository state. Note that empty commits are allowed, which include no repo data changes, but an update to rev and signature. */
 export interface Commit {

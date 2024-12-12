@@ -8,7 +8,7 @@ import { $Type, is$typed } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import * as AppBskyFeedDefs from './defs'
 
-export const id = 'app.bsky.feed.getAuthorFeed'
+const id = 'app.bsky.feed.getAuthorFeed'
 
 export interface QueryParams {
   actor: string

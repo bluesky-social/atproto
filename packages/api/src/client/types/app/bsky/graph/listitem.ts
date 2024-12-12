@@ -6,7 +6,7 @@ import { CID } from 'multiformats/cid'
 import { $Type, is$typed } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 
-export const id = 'app.bsky.graph.listitem'
+const id = 'app.bsky.graph.listitem'
 
 export interface Record {
   /** The account which is included on the list. */

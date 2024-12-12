@@ -9,7 +9,7 @@ import { $Type, is$typed } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as AppBskyActorDefs from '../actor/defs'
 
-export const id = 'app.bsky.feed.getRepostedBy'
+const id = 'app.bsky.feed.getRepostedBy'
 
 export interface QueryParams {
   /** Reference (AT-URI) of post record */

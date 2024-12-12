@@ -8,7 +8,7 @@ import { lexicons } from '../../../../lexicons'
 import { $Type, is$typed } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 
-export const id = 'com.atproto.temp.checkSignupQueue'
+const id = 'com.atproto.temp.checkSignupQueue'
 
 export interface QueryParams {}
 

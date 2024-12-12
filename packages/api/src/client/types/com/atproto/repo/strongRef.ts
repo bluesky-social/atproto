@@ -6,7 +6,7 @@ import { CID } from 'multiformats/cid'
 import { $Type, is$typed } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 
-export const id = 'com.atproto.repo.strongRef'
+const id = 'com.atproto.repo.strongRef'
 
 export interface Main {
   uri: string

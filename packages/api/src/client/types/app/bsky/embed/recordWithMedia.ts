@@ -10,7 +10,7 @@ import * as AppBskyEmbedImages from './images'
 import * as AppBskyEmbedVideo from './video'
 import * as AppBskyEmbedExternal from './external'
 
-export const id = 'app.bsky.embed.recordWithMedia'
+const id = 'app.bsky.embed.recordWithMedia'
 
 export interface Main {
   record: AppBskyEmbedRecord.Main

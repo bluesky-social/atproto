@@ -8,7 +8,7 @@ import { $Type, is$typed } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import * as ComAtprotoServerDefs from './defs'
 
-export const id = 'com.atproto.server.getAccountInviteCodes'
+const id = 'com.atproto.server.getAccountInviteCodes'
 
 export interface QueryParams {
   includeUsed?: boolean

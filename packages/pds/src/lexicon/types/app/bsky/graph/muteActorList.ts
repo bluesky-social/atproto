@@ -8,7 +8,7 @@ import { lexicons } from '../../../../lexicons'
 import { $Type, is$typed } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 
-export const id = 'app.bsky.graph.muteActorList'
+const id = 'app.bsky.graph.muteActorList'
 
 export interface QueryParams {}
 

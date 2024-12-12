@@ -9,7 +9,7 @@ import * as AppBskyGraphDefs from './defs'
 import * as AppBskyRichtextFacet from '../richtext/facet'
 import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
 
-export const id = 'app.bsky.graph.list'
+const id = 'app.bsky.graph.list'
 
 export interface Record {
   purpose: AppBskyGraphDefs.ListPurpose

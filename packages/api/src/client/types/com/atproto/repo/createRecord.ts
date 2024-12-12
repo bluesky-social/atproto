@@ -8,7 +8,7 @@ import { $Type, is$typed } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import * as ComAtprotoRepoDefs from './defs'
 
-export const id = 'com.atproto.repo.createRecord'
+const id = 'com.atproto.repo.createRecord'
 
 export interface QueryParams {}
 

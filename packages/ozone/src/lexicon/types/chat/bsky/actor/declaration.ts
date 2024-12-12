@@ -6,7 +6,7 @@ import { CID } from 'multiformats/cid'
 import { lexicons } from '../../../../lexicons'
 import { $Type, is$typed } from '../../../../util'
 
-export const id = 'chat.bsky.actor.declaration'
+const id = 'chat.bsky.actor.declaration'
 
 export interface Record {
   allowIncoming: 'all' | 'none' | 'following' | (string & {})

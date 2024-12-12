@@ -9,7 +9,7 @@ import * as AppBskyRichtextFacet from '../../../app/bsky/richtext/facet'
 import * as AppBskyEmbedRecord from '../../../app/bsky/embed/record'
 import * as ChatBskyActorDefs from '../actor/defs'
 
-export const id = 'chat.bsky.convo.defs'
+const id = 'chat.bsky.convo.defs'
 
 export interface MessageRef {
   did: string

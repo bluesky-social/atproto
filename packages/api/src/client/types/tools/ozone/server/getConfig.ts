@@ -7,7 +7,7 @@ import { CID } from 'multiformats/cid'
 import { $Type, is$typed } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 
-export const id = 'tools.ozone.server.getConfig'
+const id = 'tools.ozone.server.getConfig'
 
 export interface QueryParams {}
 

@@ -8,7 +8,7 @@ import { $Type, is$typed } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import * as AppBskyUnspeccedDefs from './defs'
 
-export const id = 'app.bsky.unspecced.searchPostsSkeleton'
+const id = 'app.bsky.unspecced.searchPostsSkeleton'
 
 export interface QueryParams {
   /** Search query string; syntax, phrase, boolean, and faceting is unspecified, but Lucene query syntax is recommended. */

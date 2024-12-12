@@ -7,7 +7,7 @@ import { CID } from 'multiformats/cid'
 import { $Type, is$typed } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 
-export const id = 'chat.bsky.moderation.updateActorAccess'
+const id = 'chat.bsky.moderation.updateActorAccess'
 
 export interface QueryParams {}
 

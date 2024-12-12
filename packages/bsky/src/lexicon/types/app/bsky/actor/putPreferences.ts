@@ -9,7 +9,7 @@ import { $Type, is$typed } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as AppBskyActorDefs from './defs'
 
-export const id = 'app.bsky.actor.putPreferences'
+const id = 'app.bsky.actor.putPreferences'
 
 export interface QueryParams {}
 

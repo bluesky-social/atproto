@@ -7,7 +7,7 @@ import { CID } from 'multiformats/cid'
 import { $Type, is$typed } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 
-export const id = 'com.atproto.temp.checkSignupQueue'
+const id = 'com.atproto.temp.checkSignupQueue'
 
 export interface QueryParams {}
 

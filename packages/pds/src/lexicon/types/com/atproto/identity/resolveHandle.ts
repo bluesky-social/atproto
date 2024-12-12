@@ -8,7 +8,7 @@ import { lexicons } from '../../../../lexicons'
 import { $Type, is$typed } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 
-export const id = 'com.atproto.identity.resolveHandle'
+const id = 'com.atproto.identity.resolveHandle'
 
 export interface QueryParams {
   /** The handle to resolve. */

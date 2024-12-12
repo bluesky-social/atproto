@@ -9,7 +9,7 @@ import { lexicons } from '../../../../lexicons'
 import * as ComAtprotoAdminDefs from './defs'
 import * as ComAtprotoRepoStrongRef from '../repo/strongRef'
 
-export const id = 'com.atproto.admin.updateSubjectStatus'
+const id = 'com.atproto.admin.updateSubjectStatus'
 
 export interface QueryParams {}
 

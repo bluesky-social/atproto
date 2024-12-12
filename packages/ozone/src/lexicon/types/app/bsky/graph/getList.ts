@@ -9,7 +9,7 @@ import { $Type, is$typed } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as AppBskyGraphDefs from './defs'
 
-export const id = 'app.bsky.graph.getList'
+const id = 'app.bsky.graph.getList'
 
 export interface QueryParams {
   /** Reference (AT-URI) of the list record to hydrate. */

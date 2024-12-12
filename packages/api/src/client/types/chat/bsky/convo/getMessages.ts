@@ -8,7 +8,7 @@ import { $Type, is$typed } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import * as ChatBskyConvoDefs from './defs'
 
-export const id = 'chat.bsky.convo.getMessages'
+const id = 'chat.bsky.convo.getMessages'
 
 export interface QueryParams {
   convoId: string

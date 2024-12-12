@@ -8,7 +8,7 @@ import { $Type, is$typed } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import * as AppBskyActorDefs from '../actor/defs'
 
-export const id = 'app.bsky.feed.getLikes'
+const id = 'app.bsky.feed.getLikes'
 
 export interface QueryParams {
   /** AT-URI of the subject (eg, a post record). */
