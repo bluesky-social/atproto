@@ -25,7 +25,7 @@ import {
   RcGetSubscriberResponse,
 } from '../src/purchases'
 
-const revenueCatWebhookAuthorization = 'Bearer any-token'
+const revenueCatWebhookAuthorization = 'any-token'
 
 describe('purchases', () => {
   let bsync: BsyncService
@@ -760,7 +760,7 @@ const callWebhook = async (
     method: 'POST',
     body: JSON.stringify(body),
     headers: {
-      Authorization: revenueCatWebhookAuthorization,
+      Authorization: `Bearer ${revenueCatWebhookAuthorization}`,
       'Content-Type': 'application/json',
     },
   })

@@ -98,6 +98,6 @@ export class RevenueCatClient {
   }
 
   isWebhookAuthorizationValid(authorization: string | undefined): boolean {
-    return authorization === this.webhookAuthorization
+    return authorization === `Bearer ${this.webhookAuthorization}`
   }
 }
