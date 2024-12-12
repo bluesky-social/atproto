@@ -3,6 +3,7 @@ import { Service } from '../proto/bsync_connect'
 import { GetSubscriptionGroupResponse } from '../proto/bsync_pb'
 import AppContext from '../context'
 import { authWithApiKey } from './auth'
+import { assertPlatform, assertSubscriptionGroup } from '../purchases'
 
 export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
   async getSubscriptionGroup(req, handlerCtx) {
@@ -18,13 +19,16 @@ export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
 
     const { group, platform } = req
     try {
-      const offerings = purchasesClient.getSubscriptionGroup(group, platform)
-
-      return new GetSubscriptionGroupResponse({
-        offerings,
-      })
+      assertSubscriptionGroup(group)
+      assertPlatform(platform)
     } catch (error) {
       throw new ConnectError((error as Error).message, Code.InvalidArgument)
     }
+
+    const offerings = purchasesClient.getSubscriptionGroup(group, platform)
+
+    return new GetSubscriptionGroupResponse({
+      offerings,
+    })
   },
 })

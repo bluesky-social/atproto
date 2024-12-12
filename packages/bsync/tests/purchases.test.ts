@@ -1,6 +1,12 @@
-import http from 'node:http'
 import { once } from 'node:events'
+import http from 'node:http'
+
+import { Timestamp } from '@bufbuild/protobuf'
+import { Code, ConnectError } from '@connectrpc/connect'
 import getPort from 'get-port'
+
+import { DAY, wait } from '@atproto/common'
+
 import {
   authWithApiKey,
   BsyncClient,
@@ -10,17 +16,14 @@ import {
   envToCfg,
 } from '../src'
 import {
+  GetSubscriptionsResponse,
+  PurchaseOperation,
+} from '../src/proto/bsync_pb'
+import {
   RcEntitlement,
   RcEventBody,
   RcGetSubscriberResponse,
 } from '../src/purchases'
-import { Code, ConnectError } from '@connectrpc/connect'
-import {
-  GetSubscriptionsResponse,
-  PurchaseOperation,
-} from '../src/proto/bsync_pb'
-import { Timestamp } from '@bufbuild/protobuf'
-import { DAY, wait } from '@atproto/common'
 
 const revenueCatWebhookAuthorization = 'Bearer any-token'
 

@@ -7,7 +7,7 @@ type SubscriptionGroupId = 'core'
 
 type SubscriptionOfferingId = 'core:monthly' | 'core:annual'
 
-const assertSubscriptionGroup: (
+export const assertSubscriptionGroup: (
   group: string,
 ) => asserts group is SubscriptionGroupId = (group: string) => {
   if (['core'].includes(group)) {
@@ -16,9 +16,9 @@ const assertSubscriptionGroup: (
   throw new Error(`invalid subscription group: '${group}'`)
 }
 
-const assertPlatform: (platform: string) => asserts platform is PlatformId = (
+export const assertPlatform: (
   platform: string,
-) => {
+) => asserts platform is PlatformId = (platform: string) => {
   if (['web', 'ios', 'android'].includes(platform)) {
     return
   }
@@ -128,10 +128,11 @@ export class PurchasesClient {
     return this.revenueCatClient.isWebhookAuthorizationValid(authorization)
   }
 
-  getSubscriptionGroup(group: string, platform: string) {
-    assertSubscriptionGroup(group)
-    assertPlatform(platform)
-    return this.GROUPS[group][platform]
+  getSubscriptionGroup(
+    subscriptionGroupId: SubscriptionGroupId,
+    platformId: PlatformId,
+  ) {
+    return this.GROUPS[subscriptionGroupId][platformId]
   }
 
   async getEntitlements(did: string): Promise<string[]> {
@@ -187,10 +188,10 @@ export class PurchasesClient {
 
     let status = 'unknown'
     if (s.auto_resume_date) {
-      if (now > expiresAt) {
+      if (now >= expiresAt) {
         status = 'paused'
       }
-    } else if (now > expiresAt) {
+    } else if (now >= expiresAt) {
       status = 'expired'
     } else if (now < expiresAt) {
       status = 'active'
@@ -200,7 +201,7 @@ export class PurchasesClient {
     if (s.auto_resume_date) {
       if (now < expiresAt) {
         renewalStatus = 'will_pause'
-      } else if (now > expiresAt) {
+      } else if (now >= expiresAt) {
         renewalStatus = 'will_renew'
       }
     } else if (now < expiresAt) {
@@ -208,13 +209,13 @@ export class PurchasesClient {
       if (s.unsubscribe_detected_at) {
         renewalStatus = 'will_not_renew'
       }
-    } else if (now > expiresAt) {
+    } else if (now >= expiresAt) {
       renewalStatus = 'will_not_renew'
     }
 
     let periodEndsAt = s.expires_date
     if (s.auto_resume_date) {
-      if (now > expiresAt) {
+      if (now >= expiresAt) {
         periodEndsAt = s.auto_resume_date
       }
     }
