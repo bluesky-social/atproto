@@ -1,23 +1,16 @@
-import assert from 'node:assert'
-
 import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
-import { ids } from '../../../../lexicon/lexicons'
+import { authPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.deactivateAccount({
     auth: ctx.authVerifier.accessFull(),
-    handler: async ({ auth, input }) => {
+    handler: async ({ req, auth, input }) => {
       // in the case of entryway, the full flow is deactivateAccount (PDS) -> deactivateAccount (Entryway) -> updateSubjectStatus(PDS)
       if (ctx.entrywayAgent) {
-        assert(ctx.cfg.entryway)
         await ctx.entrywayAgent.com.atproto.server.deactivateAccount(
           input.body,
-          await ctx.serviceAuthHeaders(
-            auth.credentials.did,
-            ctx.cfg.entryway.did,
-            ids.ComAtprotoServerDeactivateAccount,
-          ),
+          authPassthru(req),
         )
         return
       }

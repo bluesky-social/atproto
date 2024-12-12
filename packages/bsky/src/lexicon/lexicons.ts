@@ -8944,6 +8944,15 @@ export const schemaDict = {
         parameters: {
           type: 'params',
           properties: {
+            reasons: {
+              description: 'Notification reasons to include in response.',
+              type: 'array',
+              items: {
+                type: 'string',
+                description:
+                  'A reason that matches the reason property of #notification.',
+              },
+            },
             limit: {
               type: 'integer',
               minimum: 1,
@@ -10728,8 +10737,9 @@ export const schemaDict = {
       },
     },
   },
-}
-export const schemas: LexiconDoc[] = Object.values(schemaDict) as LexiconDoc[]
+} as const satisfies Record<string, LexiconDoc>
+
+export const schemas = Object.values(schemaDict)
 export const lexicons: Lexicons = new Lexicons(schemas)
 export const ids = {
   ComAtprotoAdminDefs: 'com.atproto.admin.defs',
