@@ -10,6 +10,7 @@ import { Service } from '../../proto/bsync_connect'
 import { MuteOperation_Type } from '../../proto/bsync_pb'
 import { ids } from '../../lexicon/lexicons'
 import { Timestamp } from '@bufbuild/protobuf'
+import { DAY } from '@atproto/common'
 
 export class MockBsync {
   constructor(public server: http.Server) {}
@@ -145,25 +146,27 @@ const createRoutes = (db: Database) => (router: ConnectRouter) =>
       // Simulates that a call to the subscription service returns the 'core' entitlement.
       const entitlements = ['core']
 
+      const now = new Date().toISOString()
+
       await db.db
         .insertInto('purchase')
         .values({
           did: actorDid,
           entitlements: JSON.stringify(entitlements),
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
+          createdAt: now,
+          updatedAt: now,
         })
         .onConflict((oc) =>
           oc.column('did').doUpdateSet({
             entitlements: JSON.stringify(entitlements),
-            updatedAt: new Date().toISOString(),
+            updatedAt: now,
           }),
         )
         .execute()
     },
 
     async getSubscriptions() {
-      const TEN_DAYS = 864_000_000
+      const TEN_DAYS = 10 * DAY
       const now = Date.now()
       const start = new Date(now - TEN_DAYS)
       const end = new Date(now + TEN_DAYS)

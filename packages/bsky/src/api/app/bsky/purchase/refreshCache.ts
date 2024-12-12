@@ -8,7 +8,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.standardOrRole,
     handler: async ({ auth, input }) => {
       const { did } = input.body
-      validateCredentials(did, auth)
+      assertValidCredentials(did, auth)
 
       await ctx.bsyncClient.refreshPurchases({
         actorDid: did,
@@ -22,7 +22,7 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const validateCredentials = (
+const assertValidCredentials = (
   did: string,
   auth: StandardOutput | RoleOutput,
 ) => {
