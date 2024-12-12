@@ -164,14 +164,15 @@
     },
     "vouchView": {
       "type": "object",
-      "required": ["uri", "cid", "record", "accepted", "creator", "indexedAt"],
+      "required": ["uri", "cid", "record", "creator", "indexedAt"],
       "properties": {
         "uri": { "type": "string", "format": "at-uri" },
         "cid": { "type": "string", "format": "cid" },
         "record": { "type": "unknown" },
-        "accepted": { 
-          "type": "boolean",
-          "description": "Whether the subject of the vouch has accepted the vouch yet. Often vouch views will be filtered such that they only return accpeted vouches."
+        "accept": { 
+          "type": "ref",
+          "ref": "com.atproto.repo.strongRef",
+          "description": "A pointer to the vouchaccept record. Undefined if the user has not accepted it."
         },
         "creator": {
           "type": "ref",
