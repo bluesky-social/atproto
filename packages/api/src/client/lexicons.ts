@@ -8455,14 +8455,57 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyGraphGetVouchesOffered: {
+    lexicon: 1,
+    id: 'app.bsky.graph.getVouchesOffered',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Enumerates all vouches offered to and not yet accepted by the requesting user. Requires auth.',
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['vouches'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              vouches: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.graph.defs#vouchView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyGraphGetVouchesReceived: {
     lexicon: 1,
     id: 'app.bsky.graph.getVouchesReceived',
     defs: {
       main: {
         type: 'query',
-        description:
-          'Enumerates all vouches received by the requesting user. Only returns unaccepted vouches when the viewer matches the requested actor.',
+        description: 'Enumerates all vouches received and accepted by a user.',
         parameters: {
           type: 'params',
           required: ['actor'],
@@ -8470,10 +8513,6 @@ export const schemaDict = {
             actor: {
               type: 'string',
               format: 'at-identifier',
-            },
-            includeUnaccepted: {
-              type: 'boolean',
-              default: false,
             },
             limit: {
               type: 'integer',
@@ -13892,6 +13931,7 @@ export const ids = {
   AppBskyGraphGetSuggestedFollowsByActor:
     'app.bsky.graph.getSuggestedFollowsByActor',
   AppBskyGraphGetVouchesGiven: 'app.bsky.graph.getVouchesGiven',
+  AppBskyGraphGetVouchesOffered: 'app.bsky.graph.getVouchesOffered',
   AppBskyGraphGetVouchesReceived: 'app.bsky.graph.getVouchesReceived',
   AppBskyGraphList: 'app.bsky.graph.list',
   AppBskyGraphListblock: 'app.bsky.graph.listblock',

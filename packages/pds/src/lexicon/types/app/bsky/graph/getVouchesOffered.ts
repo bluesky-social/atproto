@@ -10,7 +10,6 @@ import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as AppBskyGraphDefs from './defs'
 
 export interface QueryParams {
-  actor: string
   limit: number
   cursor?: string
 }
