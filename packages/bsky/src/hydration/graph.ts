@@ -102,10 +102,7 @@ export class GraphHydrator {
 
   async getVouches(uris: string[], includeTakedowns = false): Promise<Vouches> {
     if (!uris.length) return new HydrationMap<Vouch>()
-    const res = await this.dataplane.getVouches({ uris }).catch((err) => {
-      console.log('HERE')
-      throw err
-    })
+    const res = await this.dataplane.getVouches({ uris })
     return uris.reduce((acc, uri, i) => {
       const vouchInfo = res.vouches[i]
       if (!vouchInfo?.record) return acc.set(uri, null)
