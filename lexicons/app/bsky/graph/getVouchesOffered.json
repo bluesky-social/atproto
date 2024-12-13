@@ -1,15 +1,13 @@
 {
   "lexicon": 1,
-  "id": "app.bsky.graph.getVouchesReceived",
+  "id": "app.bsky.graph.getVouchesOffered",
   "defs": {
     "main": {
       "type": "query",
-      "description": "Enumerates all vouches received and accepted by a user.",
+      "description": "Enumerates all vouches offered to and not yet accepted by the requesting user. Requires auth.",
       "parameters": {
         "type": "params",
-        "required": ["actor"],
         "properties": {
-          "actor": { "type": "string", "format": "at-identifier" },
           "limit": {
             "type": "integer",
             "minimum": 1,
