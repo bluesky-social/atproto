@@ -1,7 +1,7 @@
 import { mapDefined } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getFollowers'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getVouchesReceived'
 import AppContext from '../../../../context'
 import {
   HydrationFnInput,
@@ -34,7 +34,6 @@ export default function (server: Server, ctx: AppContext) {
         includeTakedowns,
       })
 
-      // @TODO ensure canViewTakedowns gets threaded through and applied properly
       const result = await getVouchesReceived({ ...params, hydrateCtx }, ctx)
 
       return {

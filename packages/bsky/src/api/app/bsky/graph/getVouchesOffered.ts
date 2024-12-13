@@ -1,7 +1,7 @@
 import { mapDefined } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getVouchesGiven'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getVouchesOffered'
 import AppContext from '../../../../context'
 import {
   HydrationFnInput,
@@ -17,24 +17,26 @@ import { uriToDid as didFromUri } from '../../../../util/uris'
 import { DataPlaneClient } from '../../../../data-plane'
 
 export default function (server: Server, ctx: AppContext) {
-  const getVouchesGiven = createPipeline(
+  const getVouchesOffered = createPipeline(
     skeleton,
     hydration,
     noBlocks,
     presentation,
   )
-  server.app.bsky.graph.getVouchesGiven({
-    auth: ctx.authVerifier.optionalStandardOrRole,
+  server.app.bsky.graph.getVouchesOffered({
+    auth: ctx.authVerifier.standard,
     handler: async ({ params, auth, req }) => {
-      const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
+      const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
         labelers,
         viewer,
-        includeTakedowns,
       })
 
-      const result = await getVouchesGiven({ ...params, hydrateCtx }, ctx)
+      const result = await getVouchesOffered(
+        { ...params, viewer, hydrateCtx },
+        ctx,
+      )
 
       return {
         encoding: 'application/json',
@@ -47,12 +49,8 @@ export default function (server: Server, ctx: AppContext) {
 
 const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
   const { params, ctx } = input
-  const [actorDid] = await ctx.hydrator.actor.getDidsDefined([params.actor])
-  if (!actorDid) {
-    throw new InvalidRequestError(`Actor not found: ${params.actor}`)
-  }
-  const { uris, cursor } = await ctx.dataplane.getVouchesGiven({
-    actorDid,
+  const { uris, cursor } = await ctx.dataplane.getVouchesOffered({
+    actorDid: params.viewer,
     cursor: params.cursor,
     limit: params.limit,
   })
@@ -115,6 +113,7 @@ type Context = {
 }
 
 type Params = QueryParams & {
+  viewer: string
   hydrateCtx: HydrateCtx
 }
 

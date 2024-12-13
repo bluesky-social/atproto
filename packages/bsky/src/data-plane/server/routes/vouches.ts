@@ -66,22 +66,47 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     }
   },
   async getVouchesReceived(req) {
-    const { actorDid, includeUnaccepted, limit, cursor } = req
+    const { actorDid, limit, cursor } = req
     const { ref } = db.db.dynamic
     let builder = db.db
       .selectFrom('vouch')
       .select(['uri', 'cid', 'sortAt'])
       .where('subjectDid', '=', actorDid)
-
-    if (!includeUnaccepted) {
-      builder = builder.whereExists((qb) =>
+      .whereExists((qb) =>
         qb
           .selectFrom('vouch_accept')
           .whereRef('vouch_accept.vouchUri', '=', 'vouch.uri')
           .whereRef('vouch_accept.vouchCid', '=', 'vouch.cid')
           .whereRef('vouch_accept.creator', '=', 'vouch.subjectDid'),
       )
+
+    const keyset = new TimeCidKeyset(ref('vouch.sortAt'), ref('vouch.cid'))
+    builder = paginate(builder, {
+      limit,
+      cursor,
+      keyset,
+    })
+
+    const vouches = await builder.execute()
+    return {
+      uris: vouches.map((v) => v.uri),
+      cursor: keyset.packFromResult(vouches),
     }
+  },
+  async getVouchesOffered(req) {
+    const { actorDid, limit, cursor } = req
+    const { ref } = db.db.dynamic
+    let builder = db.db
+      .selectFrom('vouch')
+      .select(['uri', 'cid', 'sortAt'])
+      .where('subjectDid', '=', actorDid)
+      .whereNotExists((qb) =>
+        qb
+          .selectFrom('vouch_accept')
+          .whereRef('vouch_accept.vouchUri', '=', 'vouch.uri')
+          .whereRef('vouch_accept.vouchCid', '=', 'vouch.cid')
+          .whereRef('vouch_accept.creator', '=', 'vouch.subjectDid'),
+      )
 
     const keyset = new TimeCidKeyset(ref('vouch.sortAt'), ref('vouch.cid'))
     builder = paginate(builder, {

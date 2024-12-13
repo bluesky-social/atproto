@@ -1046,12 +1046,22 @@ message GetVouchesGivenResponse {
 
 message GetVouchesReceivedRequest {
   string actor_did = 1;
-  bool include_unaccepted = 2;
   int32 limit = 3;
   string cursor = 4;
 }
 
 message GetVouchesReceivedResponse {
+  repeated string uris = 1;
+  string cursor = 2;
+}
+
+message GetVouchesOfferedRequest {
+  string actor_did = 1;
+  int32 limit = 3;
+  string cursor = 4;
+}
+
+message GetVouchesOfferedResponse {
   repeated string uris = 1;
   string cursor = 2;
 }
@@ -1284,6 +1294,7 @@ service Service {
   rpc GetVouches(GetVouchesRequest) returns (GetVouchesResponse);
   rpc GetVouchesGiven(GetVouchesGivenRequest) returns (GetVouchesGivenResponse);
   rpc GetVouchesReceived(GetVouchesReceivedRequest) returns (GetVouchesReceivedResponse);
+  rpc GetVouchesOffered(GetVouchesOfferedRequest) returns (GetVouchesOfferedResponse);
 
   // Sync
   rpc GetLatestRev(GetLatestRevRequest) returns (GetLatestRevResponse);

@@ -97,6 +97,60 @@ Array [
 ]
 `;
 
+exports[`vouches fetches vouches offered to a requesting user 1`] = `
+Array [
+  Object {
+    "cid": "cids(0)",
+    "creator": Object {
+      "associated": Object {
+        "chat": Object {
+          "allowIncoming": "none",
+        },
+      },
+      "did": "user(1)",
+      "handle": "dan.test",
+      "labels": Array [],
+      "viewer": Object {
+        "blockedBy": false,
+        "followedBy": "record(1)",
+        "muted": false,
+      },
+    },
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
+    "record": Object {
+      "$type": "app.bsky.graph.vouch",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "relationship": "friendOf",
+      "subject": "user(0)",
+    },
+    "uri": "record(0)",
+  },
+  Object {
+    "cid": "cids(1)",
+    "creator": Object {
+      "did": "user(2)",
+      "handle": "carol.test",
+      "labels": Array [],
+      "viewer": Object {
+        "blockedBy": false,
+        "following": "record(3)",
+        "muted": false,
+      },
+    },
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
+    "record": Object {
+      "$type": "app.bsky.graph.vouch",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "relationship": "verifiedBy",
+      "subject": "user(0)",
+    },
+    "uri": "record(2)",
+  },
+]
+`;
+
 exports[`vouches highlights a vouch on basic profile views 1`] = `
 Object {
   "accept": Object {

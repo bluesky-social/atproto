@@ -1,5 +1,6 @@
 import { AtpAgent } from '@atproto/api'
 import { TestNetwork, SeedClient, basicSeed, RecordRef } from '@atproto/dev-env'
+import { ids } from '../../src/lexicon/lexicons'
 import { forSnapshot } from '../_util'
 
 describe('vouches', () => {
@@ -39,6 +40,8 @@ describe('vouches', () => {
     const vouch3 = await sc.vouch(carol, dan, 'friendOf')
     await sc.acceptVouch(dan, vouch3)
 
+    await sc.vouch(dan, bob, 'friendOf')
+
     await sc.updateProfile(alice, {
       highlightedVouch: vouch1.uriStr,
     })
@@ -66,6 +69,20 @@ describe('vouches', () => {
 
     // does not return unaccepted vouches
     expect(res.data.vouches.some((v) => v.creator.did === bob)).toBe(false)
+  })
+
+  it('fetches vouches offered to a requesting user', async () => {
+    const res = await agent.app.bsky.graph.getVouchesOffered(
+      {},
+      {
+        headers: await network.serviceHeaders(
+          bob,
+          ids.AppBskyGraphGetVouchesOffered,
+        ),
+      },
+    )
+    expect(res.data.vouches.length).toBe(2)
+    expect(forSnapshot(res.data.vouches)).toMatchSnapshot()
   })
 
   it('highlights a vouch on profile', async () => {
