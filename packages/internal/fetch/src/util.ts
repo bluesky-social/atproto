@@ -29,7 +29,7 @@ export const ifObject = <V>(v: V) => {
   if (typeof v === 'object' && v != null && !Array.isArray(v)) {
     const proto = Object.getPrototypeOf(v)
     if (proto === null || proto === plainObjectProto) {
-      // eslint-disable-next-line @typescript-eslint/ban-types
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
       return v as V extends JsonScalar | JsonArray | Function | symbol
         ? never
         : V extends Json
