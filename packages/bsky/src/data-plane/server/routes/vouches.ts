@@ -25,7 +25,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       if (!vouch) return {}
       const accept = byVouchUri[uri]
       const validAccept =
-        accept.vouchUri === uri && accept.vouchCid === vouch.cid
+        accept?.vouchUri === uri && accept?.vouchCid === vouch.cid
       return {
         record: vouch,
         acceptUri: validAccept ? accept.uri : undefined,
@@ -68,7 +68,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getVouchesReceived(req) {
     const { actorDid, includeUnaccepted, limit, cursor } = req
     const { ref } = db.db.dynamic
-    let builder = await db.db
+    let builder = db.db
       .selectFrom('vouch')
       .select(['uri', 'cid', 'sortAt'])
       .where('subjectDid', '=', actorDid)

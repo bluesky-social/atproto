@@ -104,6 +104,17 @@ export class SeedClient<
       }
     >
   >
+  vouches: Record<
+    string,
+    Record<
+      string,
+      {
+        ref?: RecordRef
+        accept?: RecordRef
+      }
+    >
+  >
+
   dids: Record<string, string>
 
   constructor(
@@ -121,6 +132,7 @@ export class SeedClient<
     this.lists = {}
     this.feedgens = {}
     this.starterpacks = {}
+    this.vouches = {}
     this.dids = {}
   }
 
@@ -529,6 +541,39 @@ export class SeedClient<
       this.getHeaders(by),
     )
     delete foundList.items[subject]
+  }
+
+  async vouch(by: string, subject: string, relationship: string) {
+    const res = await this.agent.app.bsky.graph.vouch.create(
+      { repo: by },
+      {
+        subject,
+        relationship,
+        createdAt: new Date().toISOString(),
+      },
+      this.getHeaders(by),
+    )
+    const ref = new RecordRef(res.uri, res.cid)
+    this.vouches[by] ??= {}
+    this.vouches[by][subject] = { ref }
+    return ref
+  }
+
+  async acceptVouch(by: string, vouch: RecordRef) {
+    const res = await this.agent.app.bsky.graph.vouchaccept.create(
+      { repo: by },
+      {
+        vouch: {
+          uri: vouch.uriStr,
+          cid: vouch.cidStr,
+        },
+        createdAt: new Date().toISOString(),
+      },
+      this.getHeaders(by),
+    )
+    const ref = new RecordRef(res.uri, res.cid)
+    this.vouches[vouch.uri.hostname][by].accept = ref
+    return ref
   }
 
   async createReport(opts: {
