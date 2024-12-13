@@ -1,0 +1,152 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`vouches fetches vouches for a user 1`] = `
+Array [
+  Object {
+    "accept": Object {
+      "cid": "cids(1)",
+      "uri": "record(1)",
+    },
+    "cid": "cids(0)",
+    "creator": Object {
+      "did": "user(1)",
+      "handle": "carol.test",
+      "labels": Array [],
+    },
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
+    "record": Object {
+      "$type": "app.bsky.graph.vouch",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "relationship": "friendOf",
+      "subject": "user(0)",
+    },
+    "uri": "record(0)",
+  },
+  Object {
+    "accept": Object {
+      "cid": "cids(3)",
+      "uri": "record(3)",
+    },
+    "cid": "cids(2)",
+    "creator": Object {
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(4)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "did": "user(2)",
+      "displayName": "bobby",
+      "handle": "bob.test",
+      "labels": Array [],
+    },
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
+    "record": Object {
+      "$type": "app.bsky.graph.vouch",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "relationship": "verifiedBy",
+      "subject": "user(0)",
+    },
+    "uri": "record(2)",
+  },
+]
+`;
+
+exports[`vouches fetches vouches given by a user 1`] = `
+Array [
+  Object {
+    "accept": Object {
+      "cid": "cids(1)",
+      "uri": "record(1)",
+    },
+    "cid": "cids(0)",
+    "creator": Object {
+      "did": "user(1)",
+      "handle": "carol.test",
+      "labels": Array [],
+    },
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
+    "record": Object {
+      "$type": "app.bsky.graph.vouch",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "relationship": "friendOf",
+      "subject": "user(0)",
+    },
+    "uri": "record(0)",
+  },
+  Object {
+    "accept": Object {
+      "cid": "cids(3)",
+      "uri": "record(3)",
+    },
+    "cid": "cids(2)",
+    "creator": Object {
+      "did": "user(1)",
+      "handle": "carol.test",
+      "labels": Array [],
+    },
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
+    "record": Object {
+      "$type": "app.bsky.graph.vouch",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "relationship": "friendOf",
+      "subject": "user(2)",
+    },
+    "uri": "record(2)",
+  },
+]
+`;
+
+exports[`vouches highlights a vouch on basic profile views 1`] = `
+Object {
+  "accept": Object {
+    "cid": "cids(1)",
+    "uri": "record(1)",
+  },
+  "cid": "cids(0)",
+  "creator": Object {
+    "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(2)@jpeg",
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "did": "user(1)",
+    "displayName": "bobby",
+    "handle": "bob.test",
+    "labels": Array [],
+  },
+  "indexedAt": "1970-01-01T00:00:00.000Z",
+  "labels": Array [],
+  "record": Object {
+    "$type": "app.bsky.graph.vouch",
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "relationship": "verifiedBy",
+    "subject": "user(0)",
+  },
+  "uri": "record(0)",
+}
+`;
+
+exports[`vouches highlights a vouch on profile 1`] = `
+Object {
+  "accept": Object {
+    "cid": "cids(1)",
+    "uri": "record(1)",
+  },
+  "cid": "cids(0)",
+  "creator": Object {
+    "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(2)@jpeg",
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "did": "user(1)",
+    "displayName": "bobby",
+    "handle": "bob.test",
+    "labels": Array [],
+  },
+  "indexedAt": "1970-01-01T00:00:00.000Z",
+  "labels": Array [],
+  "record": Object {
+    "$type": "app.bsky.graph.vouch",
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "relationship": "verifiedBy",
+    "subject": "user(0)",
+  },
+  "uri": "record(0)",
+}
+`;

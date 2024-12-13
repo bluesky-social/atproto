@@ -255,6 +255,9 @@ export class Views {
                 : undefined,
             }
           : undefined,
+      highlightedVouch: actor.profile?.highlightedVouch
+        ? this.vouch(actor.profile.highlightedVouch, state)
+        : undefined,
       viewer: this.profileViewer(did, state),
       labels,
       createdAt: actor.createdAt?.toISOString(),

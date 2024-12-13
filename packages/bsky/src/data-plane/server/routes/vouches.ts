@@ -15,7 +15,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       db.db
         .selectFrom('vouch_accept')
         .selectAll()
-        .where('uri', 'in', uris)
+        .where('vouchUri', 'in', uris)
         .execute(),
       getRecords(db)({ uris }),
     ])
@@ -37,7 +37,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getVouchesGiven(req) {
     const { actorDid, includeUnaccepted, limit, cursor } = req
     const { ref } = db.db.dynamic
-    let builder = await db.db
+    let builder = db.db
       .selectFrom('vouch')
       .select(['uri', 'cid', 'sortAt'])
       .where('creator', '=', actorDid)
