@@ -38,15 +38,16 @@ export default function (server: Server, ctx: AppContext) {
       const subjects: SubjectBasicView[] = []
       const uris = new Set<string>()
 
-      results.statuses.forEach((item) =>
-        uris.add(modHistoryService.atUriFromStatus(item)),
-      )
+      for (const item of results.statuses) {
+        uris.add(modHistoryService.atUriFromStatus(item))
+      }
+
       const [accountInfos, labels] = await Promise.all([
         modService.views.getAccoutInfosByDid([viewerDid]),
         modService.views.labels(Array.from(uris)),
       ])
 
-      results.statuses.forEach((item) => {
+      for (const item of results.statuses) {
         const view = modHistoryService.basicView(item)
         const accountInfo = accountInfos.get(item.did)
         const subjectProfile = accountInfo?.relatedRecords?.find(
@@ -63,7 +64,7 @@ export default function (server: Server, ctx: AppContext) {
               : 'active'
             : 'deleted',
         })
-      })
+      }
 
       return {
         encoding: 'application/json',

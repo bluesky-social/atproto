@@ -120,6 +120,7 @@ export class ModerationStatusHistory {
       this.db.db
         .updateTable('public_subject_status')
         .where('did', '=', identifier.did)
+        // Only update the status for reporters who updated the incoming event
         .where('createdAt', '<', event.createdAt)
         .if(!!identifier.recordPath, (query) =>
           query.where('recordPath', '=', identifier.recordPath),

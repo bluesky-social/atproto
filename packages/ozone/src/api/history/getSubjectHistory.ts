@@ -20,8 +20,16 @@ export default function (server: Server, ctx: AppContext) {
         if (!viewerDid) {
           throw new InvalidRequestError('Unauthorized')
         }
-        // Users should only be able to view history for their own subjects
-        if (!subject.includes(viewerDid)) {
+        // Users should only be able to view history for their own account
+        if (subject.startsWith('did:') && subject !== viewerDid) {
+          throw new InvalidRequestError('Unauthorized')
+        }
+
+        // Users should only be able to view history for their own records
+        if (
+          subject.startsWith('at://') &&
+          !subject.startsWith(`at://${viewerDid}`)
+        ) {
           throw new InvalidRequestError('Unauthorized')
         }
       }
@@ -43,10 +51,10 @@ export default function (server: Server, ctx: AppContext) {
 
       const events: EventView[] = []
 
-      results.events.forEach((item) => {
+      for (const item of results.events) {
         const view = modHistoryService.eventView(item)
         if (view) events.push(view)
-      })
+      }
 
       return {
         encoding: 'application/json',
