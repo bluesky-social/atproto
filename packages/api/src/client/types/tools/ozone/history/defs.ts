@@ -39,6 +39,7 @@ export function validateSubjectBasicView(v: unknown): ValidationResult {
 export interface EventView {
   subject: string
   createdAt: string
+  isAutomated: boolean
   event:
     | EventTakedown
     | EventLabel

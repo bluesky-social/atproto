@@ -112,6 +112,13 @@ export class AppContext {
       appview: cfg.appview.pushEvents ? cfg.appview : undefined,
       pds: cfg.pds ?? undefined,
     })
+
+    // As we introduce more automated services, we will need to carefully add their dids here only
+    // when we want end users to see their actions as automated mod actions
+    const modStatusHistoryService = ModerationStatusHistory.creator([
+      cfg.service.did,
+    ])
+
     const modService = ModerationService.creator(
       signingKey,
       signingKeyId,
@@ -122,10 +129,10 @@ export class AppContext {
       appviewAgent,
       createAuthHeaders,
       overrides?.imgInvalidator,
+      modStatusHistoryService,
     )
 
     const communicationTemplateService = CommunicationTemplateService.creator()
-    const modStatusHistoryService = ModerationStatusHistory.creator()
     const teamService = TeamService.creator()
     const setService = SetService.creator()
     const settingService = SettingService.creator()

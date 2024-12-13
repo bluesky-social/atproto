@@ -38,7 +38,7 @@
     },
     "eventView": {
       "type": "object",
-      "required": ["subject", "createdAt", "event"],
+      "required": ["subject", "createdAt", "event", "isAutomated"],
       "properties": {
         "subject": {
           "type": "string",
@@ -47,6 +47,10 @@
         "createdAt": {
           "type": "string",
           "format": "datetime"
+        },
+        "isAutomated": {
+          "type": "boolean",
+          "default": false
         },
         "event": {
           "type": "union",

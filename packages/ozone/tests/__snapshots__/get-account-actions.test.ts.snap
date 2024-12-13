@@ -41,6 +41,7 @@ Array [
     "event": Object {
       "$type": "tools.ozone.history.defs#eventResolve",
     },
+    "isAutomated": false,
     "subject": "record(0)",
   },
   Object {
@@ -52,6 +53,7 @@ Array [
       ],
       "negateLabelVals": Array [],
     },
+    "isAutomated": false,
     "subject": "record(0)",
   },
   Object {
@@ -60,6 +62,7 @@ Array [
       "$type": "tools.ozone.history.defs#eventReport",
       "reportType": "com.atproto.moderation.defs#reasonSpam",
     },
+    "isAutomated": false,
     "subject": "record(0)",
   },
   Object {
@@ -68,6 +71,7 @@ Array [
       "$type": "tools.ozone.history.defs#eventReport",
       "reportType": "com.atproto.moderation.defs#reasonSpam",
     },
+    "isAutomated": false,
     "subject": "record(0)",
   },
 ]

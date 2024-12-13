@@ -10999,7 +10999,7 @@ export const schemaDict = {
       },
       eventView: {
         type: 'object',
-        required: ['subject', 'createdAt', 'event'],
+        required: ['subject', 'createdAt', 'event', 'isAutomated'],
         properties: {
           subject: {
             type: 'string',
@@ -11008,6 +11008,10 @@ export const schemaDict = {
           createdAt: {
             type: 'string',
             format: 'datetime',
+          },
+          isAutomated: {
+            type: 'boolean',
+            default: false,
           },
           event: {
             type: 'union',

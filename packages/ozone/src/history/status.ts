@@ -10,7 +10,6 @@ import {
   MODACTIONSUSPEND,
   MODACTIONTAKEDOWN,
 } from '../lexicon/types/tools/ozone/history/defs'
-import * as ToolsOzoneModerationDefs from '../lexicon/types/tools/ozone/moderation/defs'
 import { getStatusIdentifierFromSubject } from '../mod-service/status'
 import { ModerationEventRow } from '../mod-service/types'
 import { AtUri } from '@atproto/syntax'
@@ -36,10 +35,13 @@ export type ModerationStatusHistoryCreator = (
 ) => ModerationStatusHistory
 
 export class ModerationStatusHistory {
-  constructor(private db: Database) {}
+  constructor(
+    private db: Database,
+    private automods: string[],
+  ) {}
 
-  static creator() {
-    return (db: Database) => new ModerationStatusHistory(db)
+  static creator(automods: string[]) {
+    return (db: Database) => new ModerationStatusHistory(db, automods)
   }
 
   async createStatus(event: ModerationEventRow) {
@@ -58,16 +60,21 @@ export class ModerationStatusHistory {
       {
         ...defaultValues,
         modAction: MODACTIONPENDING as PublicSubjectStatus['modAction'],
-        viewerDid: event.createdBy,
-        isAuthor: false,
-      },
-      {
-        ...defaultValues,
-        modAction: MODACTIONPENDING as PublicSubjectStatus['modAction'],
         viewerDid: event.subjectDid,
         isAuthor: true,
       },
     ]
+
+    // Only create a status row for the creator of the event for reports
+    // This avoids creating individual status rows for moderators actioning subjects
+    if (event.action === 'tools.ozone.moderation.defs#modEventReport') {
+      rows.push({
+        ...defaultValues,
+        modAction: MODACTIONPENDING as PublicSubjectStatus['modAction'],
+        viewerDid: event.createdBy,
+        isAuthor: false,
+      })
+    }
 
     return this.db.db
       .insertInto('public_subject_status')
@@ -98,6 +105,8 @@ export class ModerationStatusHistory {
     }
 
     switch (event.action) {
+      // When takedown is reversed, we mark status as "resolved" instead of introducing a new status
+      case 'tools.ozone.moderation.defs#modEventReverseTakedown':
       case 'tools.ozone.moderation.defs#modEventAcknowledge':
         updates.modAction = MODACTIONRESOLVE
         break
@@ -125,11 +134,12 @@ export class ModerationStatusHistory {
         .if(!!identifier.recordPath, (query) =>
           query.where('recordPath', '=', identifier.recordPath),
         )
-        // when mods acknowledge reports, there's a chance that they already labeled the content
-        // or took a separate action on prior reports. in any case, we want to make sure that those statuses
-        // are not overwritten because of acknowledging a report that happened after the previous action
+        // label action, by itself doesn't change the mod status so usually there's a separate ack event that follows
         .if(updates.modAction === MODACTIONRESOLVE, (query) => {
-          return query.where('modAction', '=', MODACTIONPENDING)
+          return query.where('modAction', 'not in', [
+            MODACTIONRESOLVE,
+            MODACTIONLABEL,
+          ])
         })
         .set(updates)
         .executeTakeFirst()
@@ -277,6 +287,7 @@ export class ModerationStatusHistory {
       event,
       createdAt: modEvent.createdAt,
       subject: modEvent.subjectUri || modEvent.subjectDid,
+      isAutomated: this.automods.includes(modEvent.createdBy),
     }
   }
 }
