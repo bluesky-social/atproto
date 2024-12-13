@@ -1201,6 +1201,17 @@ export const schemaDict = {
             },
           },
         },
+        errors: [
+          {
+            name: 'ReasonNotAccepted',
+          },
+          {
+            name: 'CollectionNotAccepted',
+          },
+          {
+            name: 'AccountNotAccepted',
+          },
+        ],
       },
     },
   },
