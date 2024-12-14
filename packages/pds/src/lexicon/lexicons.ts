@@ -7672,7 +7672,7 @@ export const schemaDict = {
       },
       vouchView: {
         type: 'object',
-        required: ['uri', 'cid', 'record', 'creator', 'indexedAt'],
+        required: ['uri', 'cid', 'record', 'creator', 'subject', 'indexedAt'],
         properties: {
           uri: {
             type: 'string',

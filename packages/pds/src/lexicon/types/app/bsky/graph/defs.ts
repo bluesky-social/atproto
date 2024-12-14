@@ -212,7 +212,7 @@ export interface VouchView {
   record: {}
   accept?: ComAtprotoRepoStrongRef.Main
   creator: AppBskyActorDefs.ProfileViewBasic
-  subject?: AppBskyActorDefs.ProfileViewBasic
+  subject: AppBskyActorDefs.ProfileViewBasic
   labels?: ComAtprotoLabelDefs.Label[]
   indexedAt: string
   [k: string]: unknown
