@@ -215,6 +215,7 @@ export class Views {
   profileBasic(
     did: string,
     state: HydrationState,
+    opts: { ignoreVouches: boolean } = { ignoreVouches: false },
   ): ProfileViewBasic | undefined {
     const actor = state.actors?.get(did)
     if (!actor) return
@@ -255,9 +256,10 @@ export class Views {
                 : undefined,
             }
           : undefined,
-      highlightedVouch: actor.profile?.highlightedVouch
-        ? this.vouch(actor.profile.highlightedVouch, state)
-        : undefined,
+      highlightedVouch:
+        actor.profile?.highlightedVouch && !opts.ignoreVouches
+          ? this.vouch(actor.profile.highlightedVouch, state)
+          : undefined,
       viewer: this.profileViewer(did, state),
       labels,
       createdAt: actor.createdAt?.toISOString(),
@@ -446,8 +448,13 @@ export class Views {
   vouch(uri: string, state: HydrationState): VouchView | undefined {
     const vouchInfo = state.vouches?.get(uri)
     if (!vouchInfo) return
-    const creator = this.profileBasic(uriToDid(uri), state)
-    if (!creator) return
+    const creator = this.profileBasic(uriToDid(uri), state, {
+      ignoreVouches: true,
+    })
+    const subject = this.profileBasic(vouchInfo.vouch.record.subject, state, {
+      ignoreVouches: true,
+    })
+    if (!creator || !subject) return
     const labels = state.labels?.getBySubject(uri) ?? []
     return {
       uri,
@@ -455,6 +462,7 @@ export class Views {
       record: vouchInfo.vouch.record,
       accept: vouchInfo.accept,
       creator,
+      subject,
       labels,
       indexedAt: this.indexedAt(vouchInfo.vouch).toISOString(),
     }

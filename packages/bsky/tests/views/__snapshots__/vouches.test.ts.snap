@@ -1,5 +1,41 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`vouches fetched vouches contain subject profile view 1`] = `
+Array [
+  Object {
+    "accept": Object {
+      "cid": "cids(1)",
+      "uri": "record(1)",
+    },
+    "cid": "cids(0)",
+    "creator": Object {
+      "did": "user(1)",
+      "handle": "carol.test",
+      "labels": Array [],
+    },
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
+    "record": Object {
+      "$type": "app.bsky.graph.vouch",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "relationship": "friendOf",
+      "subject": "user(0)",
+    },
+    "subject": Object {
+      "associated": Object {
+        "chat": Object {
+          "allowIncoming": "none",
+        },
+      },
+      "did": "user(0)",
+      "handle": "dan.test",
+      "labels": Array [],
+    },
+    "uri": "record(0)",
+  },
+]
+`;
+
 exports[`vouches fetches unaccepted vouches given by a user 1`] = `
 Array [
   Object {
@@ -22,10 +58,18 @@ Array [
       "relationship": "friendOf",
       "subject": "user(0)",
     },
+    "subject": Object {
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(1)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "did": "user(0)",
+      "displayName": "bobby",
+      "handle": "bob.test",
+      "labels": Array [],
+    },
     "uri": "record(0)",
   },
   Object {
-    "cid": "cids(1)",
+    "cid": "cids(2)",
     "creator": Object {
       "associated": Object {
         "chat": Object {
@@ -42,7 +86,12 @@ Array [
       "$type": "app.bsky.graph.vouch",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "relationship": "colleagueOf",
-      "subject": "user(2)",
+      "subject": "user(3)",
+    },
+    "subject": Object {
+      "did": "user(3)",
+      "handle": "alice.test",
+      "labels": Array [],
     },
     "uri": "record(1)",
   },
@@ -70,6 +119,11 @@ Array [
       "relationship": "friendOf",
       "subject": "user(0)",
     },
+    "subject": Object {
+      "did": "user(0)",
+      "handle": "alice.test",
+      "labels": Array [],
+    },
     "uri": "record(0)",
   },
   Object {
@@ -93,6 +147,11 @@ Array [
       "createdAt": "1970-01-01T00:00:00.000Z",
       "relationship": "verifiedBy",
       "subject": "user(0)",
+    },
+    "subject": Object {
+      "did": "user(0)",
+      "handle": "alice.test",
+      "labels": Array [],
     },
     "uri": "record(2)",
   },
@@ -120,6 +179,16 @@ Array [
       "relationship": "friendOf",
       "subject": "user(0)",
     },
+    "subject": Object {
+      "associated": Object {
+        "chat": Object {
+          "allowIncoming": "none",
+        },
+      },
+      "did": "user(0)",
+      "handle": "dan.test",
+      "labels": Array [],
+    },
     "uri": "record(0)",
   },
   Object {
@@ -140,6 +209,11 @@ Array [
       "createdAt": "1970-01-01T00:00:00.000Z",
       "relationship": "friendOf",
       "subject": "user(2)",
+    },
+    "subject": Object {
+      "did": "user(2)",
+      "handle": "alice.test",
+      "labels": Array [],
     },
     "uri": "record(2)",
   },
@@ -173,12 +247,24 @@ Array [
       "relationship": "friendOf",
       "subject": "user(0)",
     },
+    "subject": Object {
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(1)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "did": "user(0)",
+      "displayName": "bobby",
+      "handle": "bob.test",
+      "labels": Array [],
+      "viewer": Object {
+        "blockedBy": false,
+        "muted": false,
+      },
+    },
     "uri": "record(0)",
   },
   Object {
-    "cid": "cids(1)",
+    "cid": "cids(2)",
     "creator": Object {
-      "did": "user(2)",
+      "did": "user(3)",
       "handle": "carol.test",
       "labels": Array [],
       "viewer": Object {
@@ -194,6 +280,18 @@ Array [
       "createdAt": "1970-01-01T00:00:00.000Z",
       "relationship": "verifiedBy",
       "subject": "user(0)",
+    },
+    "subject": Object {
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(1)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "did": "user(0)",
+      "displayName": "bobby",
+      "handle": "bob.test",
+      "labels": Array [],
+      "viewer": Object {
+        "blockedBy": false,
+        "muted": false,
+      },
     },
     "uri": "record(2)",
   },
@@ -223,6 +321,11 @@ Object {
     "relationship": "verifiedBy",
     "subject": "user(0)",
   },
+  "subject": Object {
+    "did": "user(0)",
+    "handle": "alice.test",
+    "labels": Array [],
+  },
   "uri": "record(0)",
 }
 `;
@@ -249,6 +352,11 @@ Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
     "relationship": "verifiedBy",
     "subject": "user(0)",
+  },
+  "subject": Object {
+    "did": "user(0)",
+    "handle": "alice.test",
+    "labels": Array [],
   },
   "uri": "record(0)",
 }

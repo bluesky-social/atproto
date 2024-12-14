@@ -290,10 +290,16 @@ export class Hydrator {
     uris: string[],
     ctx: HydrateCtx,
   ): Promise<HydrationState> {
-    const [vouches, profilesState, labels] = await Promise.all([
-      this.graph.getVouches(uris, ctx.includeTakedowns),
+    const vouches = await this.graph.getVouches(uris, ctx.includeTakedowns)
+    const dids = new Set(uris.map(didFromUri))
+    vouches.forEach((vouch) => {
+      if (vouch) {
+        dids.add(vouch.vouch.record.subject)
+      }
+    })
+    const [profilesState, labels] = await Promise.all([
       this.hydrateProfilesBasic(
-        uris.map(didFromUri),
+        Array.from(dids),
         ctx.copy({ excludeVouches: true }), // ensure we don't keep recursively hydrating vouches
       ),
       this.label.getLabelsForSubjects(uris, ctx.labelers),

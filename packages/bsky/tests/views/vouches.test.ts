@@ -83,6 +83,15 @@ describe('vouches', () => {
     expect(res.data.vouches.every((v) => v.accepted === undefined)).toBe(true)
   })
 
+  it('fetched vouches contain subject profile view', async () => {
+    const res = await agent.app.bsky.graph.getVouchesGiven({
+      actor: carol,
+      limit: 1,
+    })
+    expect(forSnapshot(res.data.vouches)).toMatchSnapshot()
+    expect(res.data.vouches[0].subject).toBeTruthy()
+  })
+
   it('fetches vouches offered to a requesting user', async () => {
     const res = await agent.app.bsky.graph.getVouchesOffered(
       {},
