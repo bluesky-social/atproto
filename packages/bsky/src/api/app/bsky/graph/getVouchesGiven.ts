@@ -53,6 +53,7 @@ const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
   }
   const { uris, cursor } = await ctx.dataplane.getVouchesGiven({
     actorDid,
+    includeUnaccepted: params.includeUnaccepted,
     cursor: params.cursor,
     limit: params.limit,
   })

@@ -71,6 +71,18 @@ describe('vouches', () => {
     expect(res.data.vouches.some((v) => v.creator.did === bob)).toBe(false)
   })
 
+  it('fetches unaccepted vouches given by a user', async () => {
+    const res = await agent.app.bsky.graph.getVouchesGiven({
+      actor: dan,
+      includeUnaccepted: true,
+    })
+    expect(res.data.vouches.length).toBe(2)
+    expect(forSnapshot(res.data.vouches)).toMatchSnapshot()
+
+    // does return unaccepted vouches
+    expect(res.data.vouches.every((v) => v.accepted === undefined)).toBe(true)
+  })
+
   it('fetches vouches offered to a requesting user', async () => {
     const res = await agent.app.bsky.graph.getVouchesOffered(
       {},

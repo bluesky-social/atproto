@@ -1,5 +1,54 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`vouches fetches unaccepted vouches given by a user 1`] = `
+Array [
+  Object {
+    "cid": "cids(0)",
+    "creator": Object {
+      "associated": Object {
+        "chat": Object {
+          "allowIncoming": "none",
+        },
+      },
+      "did": "user(1)",
+      "handle": "dan.test",
+      "labels": Array [],
+    },
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
+    "record": Object {
+      "$type": "app.bsky.graph.vouch",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "relationship": "friendOf",
+      "subject": "user(0)",
+    },
+    "uri": "record(0)",
+  },
+  Object {
+    "cid": "cids(1)",
+    "creator": Object {
+      "associated": Object {
+        "chat": Object {
+          "allowIncoming": "none",
+        },
+      },
+      "did": "user(1)",
+      "handle": "dan.test",
+      "labels": Array [],
+    },
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
+    "record": Object {
+      "$type": "app.bsky.graph.vouch",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "relationship": "colleagueOf",
+      "subject": "user(2)",
+    },
+    "uri": "record(1)",
+  },
+]
+`;
+
 exports[`vouches fetches vouches for a user 1`] = `
 Array [
   Object {
