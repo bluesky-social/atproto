@@ -97,6 +97,7 @@ import * as AppBskyActorSearchActorsTypeahead from './types/app/bsky/actor/searc
 import * as AppBskyEmbedDefs from './types/app/bsky/embed/defs'
 import * as AppBskyEmbedExternal from './types/app/bsky/embed/external'
 import * as AppBskyEmbedImages from './types/app/bsky/embed/images'
+import * as AppBskyEmbedPoll from './types/app/bsky/embed/poll'
 import * as AppBskyEmbedRecord from './types/app/bsky/embed/record'
 import * as AppBskyEmbedRecordWithMedia from './types/app/bsky/embed/recordWithMedia'
 import * as AppBskyEmbedVideo from './types/app/bsky/embed/video'
@@ -119,6 +120,7 @@ import * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy'
 import * as AppBskyFeedGetSuggestedFeeds from './types/app/bsky/feed/getSuggestedFeeds'
 import * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
 import * as AppBskyFeedLike from './types/app/bsky/feed/like'
+import * as AppBskyFeedPollAnswer from './types/app/bsky/feed/pollAnswer'
 import * as AppBskyFeedPost from './types/app/bsky/feed/post'
 import * as AppBskyFeedPostgate from './types/app/bsky/feed/postgate'
 import * as AppBskyFeedRepost from './types/app/bsky/feed/repost'
@@ -324,6 +326,7 @@ export * as AppBskyActorSearchActorsTypeahead from './types/app/bsky/actor/searc
 export * as AppBskyEmbedDefs from './types/app/bsky/embed/defs'
 export * as AppBskyEmbedExternal from './types/app/bsky/embed/external'
 export * as AppBskyEmbedImages from './types/app/bsky/embed/images'
+export * as AppBskyEmbedPoll from './types/app/bsky/embed/poll'
 export * as AppBskyEmbedRecord from './types/app/bsky/embed/record'
 export * as AppBskyEmbedRecordWithMedia from './types/app/bsky/embed/recordWithMedia'
 export * as AppBskyEmbedVideo from './types/app/bsky/embed/video'
@@ -346,6 +349,7 @@ export * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy'
 export * as AppBskyFeedGetSuggestedFeeds from './types/app/bsky/feed/getSuggestedFeeds'
 export * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
 export * as AppBskyFeedLike from './types/app/bsky/feed/like'
+export * as AppBskyFeedPollAnswer from './types/app/bsky/feed/pollAnswer'
 export * as AppBskyFeedPost from './types/app/bsky/feed/post'
 export * as AppBskyFeedPostgate from './types/app/bsky/feed/postgate'
 export * as AppBskyFeedRepost from './types/app/bsky/feed/repost'
@@ -1671,6 +1675,7 @@ export class AppBskyFeedNS {
   _client: XrpcClient
   generator: GeneratorRecord
   like: LikeRecord
+  pollAnswer: PollAnswerRecord
   post: PostRecord
   postgate: PostgateRecord
   repost: RepostRecord
@@ -1680,6 +1685,7 @@ export class AppBskyFeedNS {
     this._client = client
     this.generator = new GeneratorRecord(client)
     this.like = new LikeRecord(client)
+    this.pollAnswer = new PollAnswerRecord(client)
     this.post = new PostRecord(client)
     this.postgate = new PostgateRecord(client)
     this.repost = new RepostRecord(client)
@@ -1998,6 +2004,71 @@ export class LikeRecord {
       'com.atproto.repo.deleteRecord',
       undefined,
       { collection: 'app.bsky.feed.like', ...params },
+      { headers },
+    )
+  }
+}
+
+export class PollAnswerRecord {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  async list(
+    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
+  ): Promise<{
+    cursor?: string
+    records: { uri: string; value: AppBskyFeedPollAnswer.Record }[]
+  }> {
+    const res = await this._client.call('com.atproto.repo.listRecords', {
+      collection: 'app.bsky.feed.pollAnswer',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{
+    uri: string
+    cid: string
+    value: AppBskyFeedPollAnswer.Record
+  }> {
+    const res = await this._client.call('com.atproto.repo.getRecord', {
+      collection: 'app.bsky.feed.pollAnswer',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: Omit<
+      ComAtprotoRepoCreateRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: AppBskyFeedPollAnswer.Record,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    record.$type = 'app.bsky.feed.pollAnswer'
+    const res = await this._client.call(
+      'com.atproto.repo.createRecord',
+      undefined,
+      { collection: 'app.bsky.feed.pollAnswer', ...params, record },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async delete(
+    params: Omit<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
+    headers?: Record<string, string>,
+  ): Promise<void> {
+    await this._client.call(
+      'com.atproto.repo.deleteRecord',
+      undefined,
+      { collection: 'app.bsky.feed.pollAnswer', ...params },
       { headers },
     )
   }

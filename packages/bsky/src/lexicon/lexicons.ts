@@ -5183,6 +5183,35 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyEmbedPoll: {
+    lexicon: 1,
+    id: 'app.bsky.embed.poll',
+    defs: {
+      main: {
+        type: 'object',
+        required: ['question', 'options'],
+        properties: {
+          question: {
+            type: 'string',
+            maxLength: 3000,
+            maxGraphemes: 300,
+            description: 'The question being asked.',
+          },
+          options: {
+            type: 'array',
+            items: {
+              type: 'string',
+              maxLength: 3000,
+              maxGraphemes: 300,
+              description: 'The options available for the poll.',
+            },
+            minLength: 2,
+            maxLength: 4,
+          },
+        },
+      },
+    },
+  },
   AppBskyEmbedRecord: {
     lexicon: 1,
     id: 'app.bsky.embed.record',
@@ -6873,6 +6902,37 @@ export const schemaDict = {
             createdAt: {
               type: 'string',
               format: 'datetime',
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyFeedPollAnswer: {
+    lexicon: 1,
+    id: 'app.bsky.feed.pollAnswer',
+    defs: {
+      main: {
+        type: 'record',
+        description: "Record declaring a user's answer to a poll.",
+        key: 'tid',
+        record: {
+          type: 'object',
+          required: ['subject', 'answer', 'createdAt'],
+          properties: {
+            subject: {
+              type: 'ref',
+              ref: 'lex:com.atproto.repo.strongRef',
+            },
+            createdAt: {
+              type: 'string',
+              format: 'datetime',
+            },
+            answer: {
+              type: 'integer',
+              minimum: 0,
+              maximum: 3,
+              description: 'The index of the option selected by the user.',
             },
           },
         },
@@ -10845,6 +10905,7 @@ export const ids = {
   AppBskyEmbedDefs: 'app.bsky.embed.defs',
   AppBskyEmbedExternal: 'app.bsky.embed.external',
   AppBskyEmbedImages: 'app.bsky.embed.images',
+  AppBskyEmbedPoll: 'app.bsky.embed.poll',
   AppBskyEmbedRecord: 'app.bsky.embed.record',
   AppBskyEmbedRecordWithMedia: 'app.bsky.embed.recordWithMedia',
   AppBskyEmbedVideo: 'app.bsky.embed.video',
@@ -10867,6 +10928,7 @@ export const ids = {
   AppBskyFeedGetSuggestedFeeds: 'app.bsky.feed.getSuggestedFeeds',
   AppBskyFeedGetTimeline: 'app.bsky.feed.getTimeline',
   AppBskyFeedLike: 'app.bsky.feed.like',
+  AppBskyFeedPollAnswer: 'app.bsky.feed.pollAnswer',
   AppBskyFeedPost: 'app.bsky.feed.post',
   AppBskyFeedPostgate: 'app.bsky.feed.postgate',
   AppBskyFeedRepost: 'app.bsky.feed.repost',
