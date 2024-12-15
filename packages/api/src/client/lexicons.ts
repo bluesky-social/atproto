@@ -5210,6 +5210,29 @@ export const schemaDict = {
           },
         },
       },
+      view: {
+        type: 'object',
+        required: ['question', 'options'],
+        properties: {
+          question: {
+            type: 'string',
+            maxLength: 3000,
+            maxGraphemes: 300,
+            description: 'The question being asked.',
+          },
+          options: {
+            type: 'array',
+            items: {
+              type: 'string',
+              maxLength: 3000,
+              maxGraphemes: 300,
+              description: 'The options available for the poll.',
+            },
+            minLength: 2,
+            maxLength: 4,
+          },
+        },
+      },
     },
   },
   AppBskyEmbedRecord: {
@@ -5507,6 +5530,7 @@ export const schemaDict = {
               'lex:app.bsky.embed.external#view',
               'lex:app.bsky.embed.record#view',
               'lex:app.bsky.embed.recordWithMedia#view',
+              'lex:app.bsky.embed.poll#view',
             ],
           },
           replyCount: {
@@ -5520,6 +5544,15 @@ export const schemaDict = {
           },
           quoteCount: {
             type: 'integer',
+          },
+          pollAnswerCount: {
+            type: 'integer',
+          },
+          pollAnswers: {
+            type: 'array',
+            items: {
+              type: 'integer',
+            },
           },
           indexedAt: {
             type: 'string',
