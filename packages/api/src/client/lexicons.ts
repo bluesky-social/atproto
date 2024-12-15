@@ -6558,6 +6558,91 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyFeedGetPollAnswers: {
+    lexicon: 1,
+    id: 'app.bsky.feed.getPollAnswers',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get poll answers for a given poll which reference a post.',
+        parameters: {
+          type: 'params',
+          required: ['uri'],
+          properties: {
+            uri: {
+              type: 'string',
+              format: 'at-uri',
+              description: 'AT-URI of the subject (eg, a post record).',
+            },
+            cid: {
+              type: 'string',
+              format: 'cid',
+              description:
+                'CID of the subject record (aka, specific version of record), to filter likes.',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['uri'],
+            properties: {
+              uri: {
+                type: 'string',
+                format: 'at-uri',
+              },
+              cid: {
+                type: 'string',
+                format: 'cid',
+              },
+              cursor: {
+                type: 'string',
+              },
+              pollAnswers: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.feed.getPollAnswers#pollAnswer',
+                },
+              },
+            },
+          },
+        },
+      },
+      pollAnswer: {
+        type: 'object',
+        required: ['indexedAt', 'createdAt', 'actor', 'answer'],
+        properties: {
+          indexedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          actor: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileView',
+          },
+          answer: {
+            type: 'integer',
+          },
+        },
+      },
+    },
+  },
   AppBskyFeedGetPostThread: {
     lexicon: 1,
     id: 'app.bsky.feed.getPostThread',
@@ -13687,6 +13772,7 @@ export const ids = {
   AppBskyFeedGetFeedSkeleton: 'app.bsky.feed.getFeedSkeleton',
   AppBskyFeedGetLikes: 'app.bsky.feed.getLikes',
   AppBskyFeedGetListFeed: 'app.bsky.feed.getListFeed',
+  AppBskyFeedGetPollAnswers: 'app.bsky.feed.getPollAnswers',
   AppBskyFeedGetPostThread: 'app.bsky.feed.getPostThread',
   AppBskyFeedGetPosts: 'app.bsky.feed.getPosts',
   AppBskyFeedGetQuotes: 'app.bsky.feed.getQuotes',
