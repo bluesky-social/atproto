@@ -47,6 +47,29 @@
           "maxLength": 4
         }
       }
+    },
+    "view": {
+      "type": "object",
+      "required": ["question", "options"],
+      "properties": {
+        "question": {
+          "type": "string",
+          "maxLength": 3000,
+          "maxGraphemes": 300,
+          "description": "The question being asked."
+        },
+        "options": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 3000,
+            "maxGraphemes": 300,
+            "description": "The options available for the poll."
+          },
+          "minLength": 2,
+          "maxLength": 4
+        }
+      }
     }
   }
 }
