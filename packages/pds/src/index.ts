@@ -85,7 +85,15 @@ export class PDS {
                 durationMs: DAY,
                 points: 35000, // creates=3, puts=2, deletes=1
               },
-            ],
+            ].concat(
+              cfg.rateLimits.enabled && cfg.rateLimits.commitsPerSec
+                ? {
+                    name: 'repo-commit-second',
+                    durationMs: SECOND,
+                    points: cfg.rateLimits.commitsPerSec,
+                  }
+                : [],
+            ),
           }
         : undefined,
     }

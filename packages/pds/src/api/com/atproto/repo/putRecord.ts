@@ -34,6 +34,11 @@ export default function (server: Server, ctx: AppContext) {
         calcKey: ({ auth }) => auth.credentials.did,
         calcPoints: () => 2,
       },
+      {
+        name: 'repo-commit-second',
+        calcKey: ({ auth }) => auth.credentials.did,
+        calcPoints: () => 1,
+      },
     ],
     handler: async ({ auth, input }) => {
       const {

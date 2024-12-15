@@ -230,6 +230,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
         bypassIps: env.rateLimitBypassIps?.map((ipOrCidr) =>
           ipOrCidr.split('/')[0]?.trim(),
         ),
+        commitsPerSec: env.rateLimitCommitsPerSec,
       }
     : { enabled: false }
 
@@ -470,6 +471,7 @@ export type RateLimitsConfig =
       mode: 'memory' | 'redis'
       bypassKey?: string
       bypassIps?: string[]
+      commitsPerSec?: number
     }
   | { enabled: false }
 

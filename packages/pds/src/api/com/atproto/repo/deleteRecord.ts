@@ -22,6 +22,11 @@ export default function (server: Server, ctx: AppContext) {
         calcKey: ({ auth }) => auth.credentials.did,
         calcPoints: () => 1,
       },
+      {
+        name: 'repo-commit-second',
+        calcKey: ({ auth }) => auth.credentials.did,
+        calcPoints: () => 1,
+      },
     ],
     handler: async ({ input, auth }) => {
       const { repo, collection, rkey, swapCommit, swapRecord } = input.body

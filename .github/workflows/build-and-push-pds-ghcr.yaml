@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+      - divy/pds-limit-commits-per-sec
 env:
   REGISTRY: ghcr.io
   USERNAME: ${{ github.actor }}
