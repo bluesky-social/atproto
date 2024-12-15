@@ -20,8 +20,29 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     // Aids in index uniqueness plus answer counting
     .addUniqueConstraint('poll_answer_unique_subject_answer', ['subject', 'answer', 'creator'])
     .execute()
+
+  await db.schema
+    .alterTable('post_agg')
+    .addColumn('pollAnswerCount', 'bigint', (col) => col.notNull().defaultTo(0))
+    .execute()
+
+  await db.schema
+    .alterTable('post_agg')
+    .addColumn('pollAnswers', 'json', (col) => col.notNull().defaultTo(sql`${JSON.stringify([])}`))
+    .execute()
+
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {
   await db.schema.dropTable('poll_answer').execute()
+
+  await db.schema
+    .alterTable('post_agg')
+    .dropColumn('pollAnswerCount')
+    .execute()
+
+  await db.schema
+    .alterTable('post_agg')
+    .dropColumn('pollAnswers')
+    .execute()
 }
