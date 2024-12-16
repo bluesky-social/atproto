@@ -9,6 +9,8 @@ import { CID } from 'multiformats/cid'
 import * as AppBskyUnspeccedDefs from './defs'
 
 export interface QueryParams {
+  /** DID of the account making the request (not included for public/unauthenticated queries). Used to boost followed accounts in ranking. */
+  viewer?: string
   limit?: number
 }
 
@@ -17,8 +19,6 @@ export type InputSchema = undefined
 export interface OutputSchema {
   topics: AppBskyUnspeccedDefs.TrendingTopic[]
   suggested: AppBskyUnspeccedDefs.TrendingTopic[]
-  /** DID of the account these suggestions are relative to. If this is returned undefined, suggestions are based on the viewer. */
-  relativeToDid?: string
   [k: string]: unknown
 }
 

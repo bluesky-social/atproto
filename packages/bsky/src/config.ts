@@ -24,6 +24,8 @@ export interface ServerConfigValues {
   searchUrl?: string
   suggestionsUrl?: string
   suggestionsApiKey?: string
+  topicsUrl?: string
+  topicsApiKey?: string
   cdnUrl?: string
   videoPlaylistUrlPattern?: string
   videoThumbnailUrlPattern?: string
@@ -158,6 +160,8 @@ export class ServerConfig {
       searchUrl,
       suggestionsUrl,
       suggestionsApiKey,
+      topicsUrl,
+      topicsApiKey,
       didPlcUrl,
       labelsFromIssuerDids,
       handleResolveNameservers,
@@ -283,6 +287,14 @@ export class ServerConfig {
 
   get suggestionsApiKey() {
     return this.cfg.suggestionsApiKey
+  }
+
+  get topicsUrl() {
+    return this.cfg.topicsUrl
+  }
+
+  get topicsApiKey() {
+    return this.cfg.topicsApiKey
   }
 
   get cdnUrl() {

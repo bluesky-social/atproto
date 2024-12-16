@@ -1,7 +1,6 @@
 import { noUndefinedVals } from '@atproto/common'
 import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
-import getSuggestedFollowsByActor from './getSuggestedFollowsByActor'
 import {
   createPipeline,
   HydrationFnInput,
@@ -9,12 +8,12 @@ import {
   RulesFnInput,
   SkeletonFnInput,
 } from '../../../../pipeline'
-import { InvalidRequestError } from '@atproto/xrpc-server'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/unspecced/getTrendingTopics'
 import AtpAgent from '@atproto/api'
-
+import { TrendingTopic } from '../../../../lexicon/types/app/bsky/unspecced/defs'
+import { InternalServerError } from '@atproto/xrpc-server'
 
 export default function (server: Server, ctx: AppContext) {
   const getTrendingTopics = createPipeline(
@@ -32,19 +31,13 @@ export default function (server: Server, ctx: AppContext) {
       const headers = noUndefinedVals({
         'accept-language': req.headers['accept-language'],
       })
-      const { headers: resultHeaders, ...result } = await getTrendingTopics(
+      const { ...result } = await getTrendingTopics(
         { ...params, hydrateCtx: hydrateCtx.copy({ viewer }), headers },
         ctx,
       )
-      const responseHeaders = noUndefinedVals({
-        'content-language': resultHeaders?.['content-language'],
-      })
       return {
         encoding: 'application/json',
         body: result,
-        headers: {
-          ...responseHeaders,
-        },
       }
     },
   })
@@ -52,26 +45,38 @@ export default function (server: Server, ctx: AppContext) {
 
 const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
   const { params, ctx } = input
-
   if (ctx.topicsAgent) {
-    const res = await ctx.topicsAgent.app.bsky.unspecced.getTrendingTopics({
-      viewer: params.hydrateCtx.viewer ?? undefined,
-    }),
-    { headers: params.headers },
+    const res = await ctx.topicsAgent.app.bsky.unspecced.getTrendingTopics(
+      {
+        viewer: params.viewer,
+      },
+      {
+        headers: params.headers,
+      },
+    )
+    return res.data
+  } else {
+    throw new InternalServerError('Topics agent not available')
   }
 }
 
 const hydration = async (
   _: HydrationFnInput<Context, Params, SkeletonState>,
-) => {}
+) => {
+  return {}
+}
 
-const noBlocksOrMutes = (_: RulesFnInput<Context, Params, SkeletonState>) => {
+const noBlocksOrMutes = (
+  input: RulesFnInput<Context, Params, SkeletonState>,
+) => {
+  const { skeleton } = input
   return skeleton
 }
 
 const presentation = (
-  _: PresentationFnInput<Context, Params, SkeletonState>,
+  input: PresentationFnInput<Context, Params, SkeletonState>,
 ) => {
+  const { skeleton } = input
   return skeleton
 }
 
@@ -87,5 +92,6 @@ type Params = QueryParams & {
 }
 
 type SkeletonState = {
-  response: any
+  topics: TrendingTopic[]
+  suggested: TrendingTopic[]
 }

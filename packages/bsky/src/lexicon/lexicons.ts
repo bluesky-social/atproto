@@ -9465,6 +9465,12 @@ export const schemaDict = {
         parameters: {
           type: 'params',
           properties: {
+            viewer: {
+              type: 'string',
+              format: 'did',
+              description:
+                'DID of the account making the request (not included for public/unauthenticated queries). Used to boost followed accounts in ranking.',
+            },
             limit: {
               type: 'integer',
               minimum: 1,
@@ -9492,12 +9498,6 @@ export const schemaDict = {
                   type: 'ref',
                   ref: 'lex:app.bsky.unspecced.defs#trendingTopic',
                 },
-              },
-              relativeToDid: {
-                type: 'string',
-                format: 'did',
-                description:
-                  'DID of the account these suggestions are relative to. If this is returned undefined, suggestions are based on the viewer.',
               },
             },
           },
