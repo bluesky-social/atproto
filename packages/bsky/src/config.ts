@@ -49,8 +49,8 @@ export interface ServerConfigValues {
   maxThreadDepth?: number
   // client config
   clientCheckEmailConfirmed?: boolean
-  trendingTopicsEnabled?: boolean
-  trendingTopicsLangs?: string[]
+  topicsEnabled?: boolean
+  topicsLangs?: string[]
 }
 
 export class ServerConfig {
@@ -136,10 +136,9 @@ export class ServerConfig {
         : process.env.BSKY_STATSIG_ENV || 'development'
     const clientCheckEmailConfirmed =
       process.env.BSKY_CLIENT_CHECK_EMAIL_CONFIRMED === 'true'
-    const trendingTopicsEnabled =
-      process.env.BSKY_TRENDING_TOPICS_ENABLED === 'true'
-    const trendingTopicsLangs = process.env.BSKY_TRENDING_TOPICS_LANGS
-      ? process.env.BSKY_TRENDING_TOPICS_LANGS.split(',')
+    const topicsEnabled = process.env.BSKY_TOPICS_ENABLED === 'true'
+    const topicsLangs = process.env.BSKY_TOPICS_LANGS
+      ? process.env.BSKY_TOPICS_LANGS.split(',')
       : undefined
     const indexedAtEpoch = process.env.BSKY_INDEXED_AT_EPOCH
       ? new Date(process.env.BSKY_INDEXED_AT_EPOCH)
@@ -193,8 +192,8 @@ export class ServerConfig {
       statsigKey,
       statsigEnv,
       clientCheckEmailConfirmed,
-      trendingTopicsEnabled,
-      trendingTopicsLangs,
+      topicsEnabled,
+      topicsLangs,
       indexedAtEpoch,
       bigThreadUris,
       bigThreadDepth,
@@ -364,12 +363,12 @@ export class ServerConfig {
     return this.cfg.clientCheckEmailConfirmed
   }
 
-  get trendingTopicsEnabled() {
-    return this.cfg.trendingTopicsEnabled
+  get topicsEnabled() {
+    return this.cfg.topicsEnabled
   }
 
-  get trendingTopicsLangs() {
-    return this.cfg.trendingTopicsLangs
+  get topicsLangs() {
+    return this.cfg.topicsLangs ?? []
   }
 
   get indexedAtEpoch() {
