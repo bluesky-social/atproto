@@ -20,9 +20,16 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["topics"],
+          "required": ["topics", "suggested"],
           "properties": {
             "topics": {
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "app.bsky.unspecced.defs#trendingTopic"
+              }
+            },
+            "suggested": {
               "type": "array",
               "items": {
                 "type": "ref",
