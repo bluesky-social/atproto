@@ -50,7 +50,6 @@ export interface ServerConfigValues {
   // client config
   clientCheckEmailConfirmed?: boolean
   topicsEnabled?: boolean
-  topicsLangs?: string[]
 }
 
 export class ServerConfig {
@@ -137,9 +136,6 @@ export class ServerConfig {
     const clientCheckEmailConfirmed =
       process.env.BSKY_CLIENT_CHECK_EMAIL_CONFIRMED === 'true'
     const topicsEnabled = process.env.BSKY_TOPICS_ENABLED === 'true'
-    const topicsLangs = process.env.BSKY_TOPICS_LANGS
-      ? process.env.BSKY_TOPICS_LANGS.split(',')
-      : undefined
     const indexedAtEpoch = process.env.BSKY_INDEXED_AT_EPOCH
       ? new Date(process.env.BSKY_INDEXED_AT_EPOCH)
       : undefined
@@ -193,7 +189,6 @@ export class ServerConfig {
       statsigEnv,
       clientCheckEmailConfirmed,
       topicsEnabled,
-      topicsLangs,
       indexedAtEpoch,
       bigThreadUris,
       bigThreadDepth,
@@ -365,10 +360,6 @@ export class ServerConfig {
 
   get topicsEnabled() {
     return this.cfg.topicsEnabled
-  }
-
-  get topicsLangs() {
-    return this.cfg.topicsLangs ?? []
   }
 
   get indexedAtEpoch() {

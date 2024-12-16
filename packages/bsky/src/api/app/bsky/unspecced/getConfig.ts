@@ -10,7 +10,6 @@ export default function (server: Server, ctx: AppContext) {
         body: {
           checkEmailConfirmed: ctx.cfg.clientCheckEmailConfirmed,
           topicsEnabled: ctx.cfg.topicsEnabled,
-          topicsLangs: ctx.cfg.topicsLangs,
         },
       }
     },
