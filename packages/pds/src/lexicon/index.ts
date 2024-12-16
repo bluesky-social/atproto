@@ -95,14 +95,14 @@ import * as AppBskyFeedDescribeFeedGenerator from './types/app/bsky/feed/describ
 import * as AppBskyFeedGetActorFeeds from './types/app/bsky/feed/getActorFeeds'
 import * as AppBskyFeedGetActorLikes from './types/app/bsky/feed/getActorLikes'
 import * as AppBskyFeedGetAuthorFeed from './types/app/bsky/feed/getAuthorFeed'
+import * as AppBskyFeedGetFeed from './types/app/bsky/feed/getFeed'
 import * as AppBskyFeedGetFeedGenerator from './types/app/bsky/feed/getFeedGenerator'
 import * as AppBskyFeedGetFeedGenerators from './types/app/bsky/feed/getFeedGenerators'
-import * as AppBskyFeedGetFeed from './types/app/bsky/feed/getFeed'
 import * as AppBskyFeedGetFeedSkeleton from './types/app/bsky/feed/getFeedSkeleton'
 import * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes'
 import * as AppBskyFeedGetListFeed from './types/app/bsky/feed/getListFeed'
-import * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts'
 import * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
+import * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts'
 import * as AppBskyFeedGetQuotes from './types/app/bsky/feed/getQuotes'
 import * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy'
 import * as AppBskyFeedGetSuggestedFeeds from './types/app/bsky/feed/getSuggestedFeeds'
@@ -114,8 +114,8 @@ import * as AppBskyGraphGetBlocks from './types/app/bsky/graph/getBlocks'
 import * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
 import * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
 import * as AppBskyGraphGetKnownFollowers from './types/app/bsky/graph/getKnownFollowers'
-import * as AppBskyGraphGetListBlocks from './types/app/bsky/graph/getListBlocks'
 import * as AppBskyGraphGetList from './types/app/bsky/graph/getList'
+import * as AppBskyGraphGetListBlocks from './types/app/bsky/graph/getListBlocks'
 import * as AppBskyGraphGetListMutes from './types/app/bsky/graph/getListMutes'
 import * as AppBskyGraphGetLists from './types/app/bsky/graph/getLists'
 import * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes'
@@ -150,15 +150,15 @@ import * as AppBskyVideoUploadVideo from './types/app/bsky/video/uploadVideo'
 import * as ChatBskyActorDeleteAccount from './types/chat/bsky/actor/deleteAccount'
 import * as ChatBskyActorExportAccountData from './types/chat/bsky/actor/exportAccountData'
 import * as ChatBskyConvoDeleteMessageForSelf from './types/chat/bsky/convo/deleteMessageForSelf'
-import * as ChatBskyConvoGetConvoForMembers from './types/chat/bsky/convo/getConvoForMembers'
 import * as ChatBskyConvoGetConvo from './types/chat/bsky/convo/getConvo'
+import * as ChatBskyConvoGetConvoForMembers from './types/chat/bsky/convo/getConvoForMembers'
 import * as ChatBskyConvoGetLog from './types/chat/bsky/convo/getLog'
 import * as ChatBskyConvoGetMessages from './types/chat/bsky/convo/getMessages'
 import * as ChatBskyConvoLeaveConvo from './types/chat/bsky/convo/leaveConvo'
 import * as ChatBskyConvoListConvos from './types/chat/bsky/convo/listConvos'
 import * as ChatBskyConvoMuteConvo from './types/chat/bsky/convo/muteConvo'
-import * as ChatBskyConvoSendMessageBatch from './types/chat/bsky/convo/sendMessageBatch'
 import * as ChatBskyConvoSendMessage from './types/chat/bsky/convo/sendMessage'
+import * as ChatBskyConvoSendMessageBatch from './types/chat/bsky/convo/sendMessageBatch'
 import * as ChatBskyConvoUnmuteConvo from './types/chat/bsky/convo/unmuteConvo'
 import * as ChatBskyConvoUpdateRead from './types/chat/bsky/convo/updateRead'
 import * as ChatBskyModerationGetActorMetadata from './types/chat/bsky/moderation/getActorMetadata'
@@ -183,10 +183,10 @@ import * as ToolsOzoneSetDeleteSet from './types/tools/ozone/set/deleteSet'
 import * as ToolsOzoneSetDeleteValues from './types/tools/ozone/set/deleteValues'
 import * as ToolsOzoneSetGetValues from './types/tools/ozone/set/getValues'
 import * as ToolsOzoneSetQuerySets from './types/tools/ozone/set/querySets'
+import * as ToolsOzoneSetUpsertSet from './types/tools/ozone/set/upsertSet'
 import * as ToolsOzoneSettingListOptions from './types/tools/ozone/setting/listOptions'
 import * as ToolsOzoneSettingRemoveOptions from './types/tools/ozone/setting/removeOptions'
 import * as ToolsOzoneSettingUpsertOption from './types/tools/ozone/setting/upsertOption'
-import * as ToolsOzoneSetUpsertSet from './types/tools/ozone/set/upsertSet'
 import * as ToolsOzoneSignatureFindCorrelation from './types/tools/ozone/signature/findCorrelation'
 import * as ToolsOzoneSignatureFindRelatedAccounts from './types/tools/ozone/signature/findRelatedAccounts'
 import * as ToolsOzoneSignatureSearchAccounts from './types/tools/ozone/signature/searchAccounts'
@@ -1362,6 +1362,17 @@ export class AppBskyFeedNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  getFeed<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyFeedGetFeed.Handler<ExtractAuth<AV>>,
+      AppBskyFeedGetFeed.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.feed.getFeed' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   getFeedGenerator<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -1381,17 +1392,6 @@ export class AppBskyFeedNS {
     >,
   ) {
     const nsid = 'app.bsky.feed.getFeedGenerators' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getFeed<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      AppBskyFeedGetFeed.Handler<ExtractAuth<AV>>,
-      AppBskyFeedGetFeed.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'app.bsky.feed.getFeed' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -1428,17 +1428,6 @@ export class AppBskyFeedNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
-  getPosts<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      AppBskyFeedGetPosts.Handler<ExtractAuth<AV>>,
-      AppBskyFeedGetPosts.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'app.bsky.feed.getPosts' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
   getPostThread<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -1447,6 +1436,17 @@ export class AppBskyFeedNS {
     >,
   ) {
     const nsid = 'app.bsky.feed.getPostThread' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getPosts<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyFeedGetPosts.Handler<ExtractAuth<AV>>,
+      AppBskyFeedGetPosts.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.feed.getPosts' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -1579,17 +1579,6 @@ export class AppBskyGraphNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
-  getListBlocks<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      AppBskyGraphGetListBlocks.Handler<ExtractAuth<AV>>,
-      AppBskyGraphGetListBlocks.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'app.bsky.graph.getListBlocks' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
   getList<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -1598,6 +1587,17 @@ export class AppBskyGraphNS {
     >,
   ) {
     const nsid = 'app.bsky.graph.getList' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getListBlocks<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyGraphGetListBlocks.Handler<ExtractAuth<AV>>,
+      AppBskyGraphGetListBlocks.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.graph.getListBlocks' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -2055,17 +2055,6 @@ export class ChatBskyConvoNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
-  getConvoForMembers<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      ChatBskyConvoGetConvoForMembers.Handler<ExtractAuth<AV>>,
-      ChatBskyConvoGetConvoForMembers.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'chat.bsky.convo.getConvoForMembers' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
   getConvo<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -2074,6 +2063,17 @@ export class ChatBskyConvoNS {
     >,
   ) {
     const nsid = 'chat.bsky.convo.getConvo' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getConvoForMembers<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyConvoGetConvoForMembers.Handler<ExtractAuth<AV>>,
+      ChatBskyConvoGetConvoForMembers.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.getConvoForMembers' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -2132,17 +2132,6 @@ export class ChatBskyConvoNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
-  sendMessageBatch<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      ChatBskyConvoSendMessageBatch.Handler<ExtractAuth<AV>>,
-      ChatBskyConvoSendMessageBatch.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'chat.bsky.convo.sendMessageBatch' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
   sendMessage<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -2151,6 +2140,17 @@ export class ChatBskyConvoNS {
     >,
   ) {
     const nsid = 'chat.bsky.convo.sendMessage' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  sendMessageBatch<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyConvoSendMessageBatch.Handler<ExtractAuth<AV>>,
+      ChatBskyConvoSendMessageBatch.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.sendMessageBatch' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
