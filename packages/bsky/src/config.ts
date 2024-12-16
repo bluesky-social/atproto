@@ -84,6 +84,8 @@ export class ServerConfig {
       undefined
     const suggestionsUrl = process.env.BSKY_SUGGESTIONS_URL || undefined
     const suggestionsApiKey = process.env.BSKY_SUGGESTIONS_API_KEY || undefined
+    const topicsUrl = process.env.BSKY_TOPICS_URL || undefined
+    const topicsApiKey = process.env.BSKY_TOPICS_API_KEY
     let dataplaneUrls = overrides?.dataplaneUrls
     dataplaneUrls ??= process.env.BSKY_DATAPLANE_URLS
       ? process.env.BSKY_DATAPLANE_URLS.split(',')
