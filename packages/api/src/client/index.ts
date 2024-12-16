@@ -43,6 +43,7 @@ import * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
 import * as ComAtprotoRepoStrongRef from './types/com/atproto/repo/strongRef'
 import * as ComAtprotoRepoUploadBlob from './types/com/atproto/repo/uploadBlob'
 import * as ComAtprotoServerActivateAccount from './types/com/atproto/server/activateAccount'
+import * as ComAtprotoServerAppealAccountAction from './types/com/atproto/server/appealAccountAction'
 import * as ComAtprotoServerCheckAccountStatus from './types/com/atproto/server/checkAccountStatus'
 import * as ComAtprotoServerConfirmEmail from './types/com/atproto/server/confirmEmail'
 import * as ComAtprotoServerCreateAccount from './types/com/atproto/server/createAccount'
@@ -270,6 +271,7 @@ export * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
 export * as ComAtprotoRepoStrongRef from './types/com/atproto/repo/strongRef'
 export * as ComAtprotoRepoUploadBlob from './types/com/atproto/repo/uploadBlob'
 export * as ComAtprotoServerActivateAccount from './types/com/atproto/server/activateAccount'
+export * as ComAtprotoServerAppealAccountAction from './types/com/atproto/server/appealAccountAction'
 export * as ComAtprotoServerCheckAccountStatus from './types/com/atproto/server/checkAccountStatus'
 export * as ComAtprotoServerConfirmEmail from './types/com/atproto/server/confirmEmail'
 export * as ComAtprotoServerCreateAccount from './types/com/atproto/server/createAccount'
@@ -984,6 +986,18 @@ export class ComAtprotoServerNS {
   ): Promise<ComAtprotoServerActivateAccount.Response> {
     return this._client.call(
       'com.atproto.server.activateAccount',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
+  appealAccountAction(
+    data?: ComAtprotoServerAppealAccountAction.InputSchema,
+    opts?: ComAtprotoServerAppealAccountAction.CallOptions,
+  ): Promise<ComAtprotoServerAppealAccountAction.Response> {
+    return this._client.call(
+      'com.atproto.server.appealAccountAction',
       opts?.qp,
       data,
       opts,

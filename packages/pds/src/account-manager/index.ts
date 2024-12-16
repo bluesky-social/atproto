@@ -295,6 +295,7 @@ export class AccountManager
   }): Promise<{
     user: ActorAccount
     appPassword: password.AppPassDescript | null
+    isSoftDeleted: boolean
   }> {
     const start = Date.now()
     try {
@@ -326,14 +327,7 @@ export class AccountManager
         }
       }
 
-      if (softDeleted(user)) {
-        throw new AuthRequiredError(
-          'Account has been taken down',
-          'AccountTakedown',
-        )
-      }
-
-      return { user, appPassword }
+      return { user, appPassword, isSoftDeleted: softDeleted(user) }
     } finally {
       // Mitigate timing attacks
       await wait(350 - (Date.now() - start))

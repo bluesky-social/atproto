@@ -207,7 +207,7 @@ export async function pipethrough(
 // Request setup/formatting
 // -------------------
 
-async function parseProxyInfo(
+export async function parseProxyInfo(
   ctx: AppContext,
   req: express.Request,
   lxm: string,

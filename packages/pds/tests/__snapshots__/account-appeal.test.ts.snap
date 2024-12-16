@@ -1,0 +1,53 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`account action appeal actor takedown allows appeal request. 1`] = `
+Object {
+  "appealed": true,
+  "createdAt": "1970-01-01T00:00:00.000Z",
+  "hosting": Object {
+    "$type": "tools.ozone.moderation.defs#accountHosting",
+    "status": "unknown",
+  },
+  "id": 9,
+  "lastAppealedAt": "1970-01-01T00:00:00.000Z",
+  "lastReportedAt": "1970-01-01T00:00:00.000Z",
+  "reviewState": "tools.ozone.moderation.defs#reviewEscalated",
+  "subject": Object {
+    "$type": "com.atproto.admin.defs#repoRef",
+    "did": "user(0)",
+  },
+  "subjectBlobCids": Array [],
+  "subjectRepoHandle": "handle.invalid",
+  "tags": Array [
+    "lang:und",
+  ],
+  "takendown": false,
+  "updatedAt": "1970-01-01T00:00:00.000Z",
+}
+`;
+
+exports[`auth actor takedown allows appeal request. 1`] = `
+Object {
+  "appealed": true,
+  "createdAt": "1970-01-01T00:00:00.000Z",
+  "hosting": Object {
+    "$type": "tools.ozone.moderation.defs#accountHosting",
+    "status": "unknown",
+  },
+  "id": 7,
+  "lastAppealedAt": "1970-01-01T00:00:00.000Z",
+  "lastReportedAt": "1970-01-01T00:00:00.000Z",
+  "reviewState": "tools.ozone.moderation.defs#reviewEscalated",
+  "subject": Object {
+    "$type": "com.atproto.admin.defs#repoRef",
+    "did": "user(0)",
+  },
+  "subjectBlobCids": Array [],
+  "subjectRepoHandle": "handle.invalid",
+  "tags": Array [
+    "lang:und",
+  ],
+  "takendown": false,
+  "updatedAt": "1970-01-01T00:00:00.000Z",
+}
+`;

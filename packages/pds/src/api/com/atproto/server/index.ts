@@ -35,6 +35,8 @@ import checkAccountStatus from './checkAccountStatus'
 import activateAccount from './activateAccount'
 import deactivateAccount from './deactivateAccount'
 
+import appealAccountAction from './appealAccountAction'
+
 export default function (server: Server, ctx: AppContext) {
   describeServer(server, ctx)
   createAccount(server, ctx)
@@ -61,4 +63,5 @@ export default function (server: Server, ctx: AppContext) {
   checkAccountStatus(server, ctx)
   activateAccount(server, ctx)
   deactivateAccount(server, ctx)
+  appealAccountAction(server, ctx)
 }

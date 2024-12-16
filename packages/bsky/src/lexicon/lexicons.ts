@@ -2018,6 +2018,44 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoServerAppealAccountAction: {
+    lexicon: 1,
+    id: 'com.atproto.server.appealAccountAction',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Appeal an account level moderation action',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['identifier', 'password'],
+            properties: {
+              identifier: {
+                type: 'string',
+                description:
+                  'Handle or other identifier supported by the server for the authenticating user.',
+              },
+              password: {
+                type: 'string',
+              },
+              comment: {
+                type: 'string',
+                description: "User's comment to be included with the appeal.",
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
+      },
+    },
+  },
   ComAtprotoServerCheckAccountStatus: {
     lexicon: 1,
     id: 'com.atproto.server.checkAccountStatus',
@@ -10786,6 +10824,7 @@ export const ids = {
   ComAtprotoRepoStrongRef: 'com.atproto.repo.strongRef',
   ComAtprotoRepoUploadBlob: 'com.atproto.repo.uploadBlob',
   ComAtprotoServerActivateAccount: 'com.atproto.server.activateAccount',
+  ComAtprotoServerAppealAccountAction: 'com.atproto.server.appealAccountAction',
   ComAtprotoServerCheckAccountStatus: 'com.atproto.server.checkAccountStatus',
   ComAtprotoServerConfirmEmail: 'com.atproto.server.confirmEmail',
   ComAtprotoServerCreateAccount: 'com.atproto.server.createAccount',
