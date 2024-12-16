@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.13.21
+
+### Patch Changes
+
+- [#3250](https://github.com/bluesky-social/atproto/pull/3250) [`dced566de`](https://github.com/bluesky-social/atproto/commit/dced566de5079ef4208801db476a7e7416f5e5aa) Thanks [@haileyok](https://github.com/haileyok)! - add trending topics
+
 ## 0.13.20
 
 ### Patch Changes
