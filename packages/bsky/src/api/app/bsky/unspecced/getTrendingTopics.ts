@@ -87,7 +87,7 @@ type Context = {
 }
 
 type Params = QueryParams & {
-  hydrateCtx: HydrateCtx & { viewer: string }
+  hydrateCtx: HydrateCtx & { viewer: string | null }
   headers: Record<string, string>
 }
 
