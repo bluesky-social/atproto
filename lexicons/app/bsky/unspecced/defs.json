@@ -30,7 +30,7 @@
         "topic": { "type": "string" },
         "displayName": { "type": "string" },
         "description": { "type": "string" },
-        "link": { "type": "string", "format": "uri" }
+        "link": { "type": "string" }
       }
     }
   }
