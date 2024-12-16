@@ -1,6 +1,6 @@
 {
   "name": "@atproto/common",
-  "version": "0.4.4",
+  "version": "0.4.5",
   "license": "MIT",
   "description": "Shared web-platform-friendly code for atproto libraries",
   "keywords": [

@@ -22,6 +22,16 @@
       "properties": {
         "uri": { "type": "string", "format": "at-uri" }
       }
+    },
+    "trendingTopic": {
+      "type": "object",
+      "required": ["topic", "link"],
+      "properties": {
+        "topic": { "type": "string" },
+        "displayName": { "type": "string" },
+        "description": { "type": "string" },
+        "link": { "type": "string" }
+      }
     }
   }
 }

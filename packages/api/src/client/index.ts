@@ -106,21 +106,21 @@ import * as AppBskyFeedGenerator from './types/app/bsky/feed/generator'
 import * as AppBskyFeedGetActorFeeds from './types/app/bsky/feed/getActorFeeds'
 import * as AppBskyFeedGetActorLikes from './types/app/bsky/feed/getActorLikes'
 import * as AppBskyFeedGetAuthorFeed from './types/app/bsky/feed/getAuthorFeed'
-import * as AppBskyFeedGetFeed from './types/app/bsky/feed/getFeed'
 import * as AppBskyFeedGetFeedGenerator from './types/app/bsky/feed/getFeedGenerator'
 import * as AppBskyFeedGetFeedGenerators from './types/app/bsky/feed/getFeedGenerators'
+import * as AppBskyFeedGetFeed from './types/app/bsky/feed/getFeed'
 import * as AppBskyFeedGetFeedSkeleton from './types/app/bsky/feed/getFeedSkeleton'
 import * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes'
 import * as AppBskyFeedGetListFeed from './types/app/bsky/feed/getListFeed'
-import * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
 import * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts'
+import * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
 import * as AppBskyFeedGetQuotes from './types/app/bsky/feed/getQuotes'
 import * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy'
 import * as AppBskyFeedGetSuggestedFeeds from './types/app/bsky/feed/getSuggestedFeeds'
 import * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
 import * as AppBskyFeedLike from './types/app/bsky/feed/like'
-import * as AppBskyFeedPost from './types/app/bsky/feed/post'
 import * as AppBskyFeedPostgate from './types/app/bsky/feed/postgate'
+import * as AppBskyFeedPost from './types/app/bsky/feed/post'
 import * as AppBskyFeedRepost from './types/app/bsky/feed/repost'
 import * as AppBskyFeedSearchPosts from './types/app/bsky/feed/searchPosts'
 import * as AppBskyFeedSendInteractions from './types/app/bsky/feed/sendInteractions'
@@ -133,8 +133,8 @@ import * as AppBskyGraphGetBlocks from './types/app/bsky/graph/getBlocks'
 import * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
 import * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
 import * as AppBskyGraphGetKnownFollowers from './types/app/bsky/graph/getKnownFollowers'
-import * as AppBskyGraphGetList from './types/app/bsky/graph/getList'
 import * as AppBskyGraphGetListBlocks from './types/app/bsky/graph/getListBlocks'
+import * as AppBskyGraphGetList from './types/app/bsky/graph/getList'
 import * as AppBskyGraphGetListMutes from './types/app/bsky/graph/getListMutes'
 import * as AppBskyGraphGetLists from './types/app/bsky/graph/getLists'
 import * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes'
@@ -142,9 +142,9 @@ import * as AppBskyGraphGetRelationships from './types/app/bsky/graph/getRelatio
 import * as AppBskyGraphGetStarterPack from './types/app/bsky/graph/getStarterPack'
 import * as AppBskyGraphGetStarterPacks from './types/app/bsky/graph/getStarterPacks'
 import * as AppBskyGraphGetSuggestedFollowsByActor from './types/app/bsky/graph/getSuggestedFollowsByActor'
-import * as AppBskyGraphList from './types/app/bsky/graph/list'
 import * as AppBskyGraphListblock from './types/app/bsky/graph/listblock'
 import * as AppBskyGraphListitem from './types/app/bsky/graph/listitem'
+import * as AppBskyGraphList from './types/app/bsky/graph/list'
 import * as AppBskyGraphMuteActor from './types/app/bsky/graph/muteActor'
 import * as AppBskyGraphMuteActorList from './types/app/bsky/graph/muteActorList'
 import * as AppBskyGraphMuteThread from './types/app/bsky/graph/muteThread'
@@ -167,6 +167,7 @@ import * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
 import * as AppBskyUnspeccedGetSuggestionsSkeleton from './types/app/bsky/unspecced/getSuggestionsSkeleton'
 import * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions'
+import * as AppBskyUnspeccedGetTrendingTopics from './types/app/bsky/unspecced/getTrendingTopics'
 import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton'
 import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
 import * as AppBskyUnspeccedSearchStarterPacksSkeleton from './types/app/bsky/unspecced/searchStarterPacksSkeleton'
@@ -180,15 +181,15 @@ import * as ChatBskyActorDeleteAccount from './types/chat/bsky/actor/deleteAccou
 import * as ChatBskyActorExportAccountData from './types/chat/bsky/actor/exportAccountData'
 import * as ChatBskyConvoDefs from './types/chat/bsky/convo/defs'
 import * as ChatBskyConvoDeleteMessageForSelf from './types/chat/bsky/convo/deleteMessageForSelf'
-import * as ChatBskyConvoGetConvo from './types/chat/bsky/convo/getConvo'
 import * as ChatBskyConvoGetConvoForMembers from './types/chat/bsky/convo/getConvoForMembers'
+import * as ChatBskyConvoGetConvo from './types/chat/bsky/convo/getConvo'
 import * as ChatBskyConvoGetLog from './types/chat/bsky/convo/getLog'
 import * as ChatBskyConvoGetMessages from './types/chat/bsky/convo/getMessages'
 import * as ChatBskyConvoLeaveConvo from './types/chat/bsky/convo/leaveConvo'
 import * as ChatBskyConvoListConvos from './types/chat/bsky/convo/listConvos'
 import * as ChatBskyConvoMuteConvo from './types/chat/bsky/convo/muteConvo'
-import * as ChatBskyConvoSendMessage from './types/chat/bsky/convo/sendMessage'
 import * as ChatBskyConvoSendMessageBatch from './types/chat/bsky/convo/sendMessageBatch'
+import * as ChatBskyConvoSendMessage from './types/chat/bsky/convo/sendMessage'
 import * as ChatBskyConvoUnmuteConvo from './types/chat/bsky/convo/unmuteConvo'
 import * as ChatBskyConvoUpdateRead from './types/chat/bsky/convo/updateRead'
 import * as ChatBskyModerationGetActorMetadata from './types/chat/bsky/moderation/getActorMetadata'
@@ -216,11 +217,11 @@ import * as ToolsOzoneSetDeleteSet from './types/tools/ozone/set/deleteSet'
 import * as ToolsOzoneSetDeleteValues from './types/tools/ozone/set/deleteValues'
 import * as ToolsOzoneSetGetValues from './types/tools/ozone/set/getValues'
 import * as ToolsOzoneSetQuerySets from './types/tools/ozone/set/querySets'
-import * as ToolsOzoneSetUpsertSet from './types/tools/ozone/set/upsertSet'
 import * as ToolsOzoneSettingDefs from './types/tools/ozone/setting/defs'
 import * as ToolsOzoneSettingListOptions from './types/tools/ozone/setting/listOptions'
 import * as ToolsOzoneSettingRemoveOptions from './types/tools/ozone/setting/removeOptions'
 import * as ToolsOzoneSettingUpsertOption from './types/tools/ozone/setting/upsertOption'
+import * as ToolsOzoneSetUpsertSet from './types/tools/ozone/set/upsertSet'
 import * as ToolsOzoneSignatureDefs from './types/tools/ozone/signature/defs'
 import * as ToolsOzoneSignatureFindCorrelation from './types/tools/ozone/signature/findCorrelation'
 import * as ToolsOzoneSignatureFindRelatedAccounts from './types/tools/ozone/signature/findRelatedAccounts'
@@ -333,21 +334,21 @@ export * as AppBskyFeedGenerator from './types/app/bsky/feed/generator'
 export * as AppBskyFeedGetActorFeeds from './types/app/bsky/feed/getActorFeeds'
 export * as AppBskyFeedGetActorLikes from './types/app/bsky/feed/getActorLikes'
 export * as AppBskyFeedGetAuthorFeed from './types/app/bsky/feed/getAuthorFeed'
-export * as AppBskyFeedGetFeed from './types/app/bsky/feed/getFeed'
 export * as AppBskyFeedGetFeedGenerator from './types/app/bsky/feed/getFeedGenerator'
 export * as AppBskyFeedGetFeedGenerators from './types/app/bsky/feed/getFeedGenerators'
+export * as AppBskyFeedGetFeed from './types/app/bsky/feed/getFeed'
 export * as AppBskyFeedGetFeedSkeleton from './types/app/bsky/feed/getFeedSkeleton'
 export * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes'
 export * as AppBskyFeedGetListFeed from './types/app/bsky/feed/getListFeed'
-export * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
 export * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts'
+export * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
 export * as AppBskyFeedGetQuotes from './types/app/bsky/feed/getQuotes'
 export * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy'
 export * as AppBskyFeedGetSuggestedFeeds from './types/app/bsky/feed/getSuggestedFeeds'
 export * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
 export * as AppBskyFeedLike from './types/app/bsky/feed/like'
-export * as AppBskyFeedPost from './types/app/bsky/feed/post'
 export * as AppBskyFeedPostgate from './types/app/bsky/feed/postgate'
+export * as AppBskyFeedPost from './types/app/bsky/feed/post'
 export * as AppBskyFeedRepost from './types/app/bsky/feed/repost'
 export * as AppBskyFeedSearchPosts from './types/app/bsky/feed/searchPosts'
 export * as AppBskyFeedSendInteractions from './types/app/bsky/feed/sendInteractions'
@@ -360,8 +361,8 @@ export * as AppBskyGraphGetBlocks from './types/app/bsky/graph/getBlocks'
 export * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
 export * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
 export * as AppBskyGraphGetKnownFollowers from './types/app/bsky/graph/getKnownFollowers'
-export * as AppBskyGraphGetList from './types/app/bsky/graph/getList'
 export * as AppBskyGraphGetListBlocks from './types/app/bsky/graph/getListBlocks'
+export * as AppBskyGraphGetList from './types/app/bsky/graph/getList'
 export * as AppBskyGraphGetListMutes from './types/app/bsky/graph/getListMutes'
 export * as AppBskyGraphGetLists from './types/app/bsky/graph/getLists'
 export * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes'
@@ -369,9 +370,9 @@ export * as AppBskyGraphGetRelationships from './types/app/bsky/graph/getRelatio
 export * as AppBskyGraphGetStarterPack from './types/app/bsky/graph/getStarterPack'
 export * as AppBskyGraphGetStarterPacks from './types/app/bsky/graph/getStarterPacks'
 export * as AppBskyGraphGetSuggestedFollowsByActor from './types/app/bsky/graph/getSuggestedFollowsByActor'
-export * as AppBskyGraphList from './types/app/bsky/graph/list'
 export * as AppBskyGraphListblock from './types/app/bsky/graph/listblock'
 export * as AppBskyGraphListitem from './types/app/bsky/graph/listitem'
+export * as AppBskyGraphList from './types/app/bsky/graph/list'
 export * as AppBskyGraphMuteActor from './types/app/bsky/graph/muteActor'
 export * as AppBskyGraphMuteActorList from './types/app/bsky/graph/muteActorList'
 export * as AppBskyGraphMuteThread from './types/app/bsky/graph/muteThread'
@@ -394,6 +395,7 @@ export * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig
 export * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
 export * as AppBskyUnspeccedGetSuggestionsSkeleton from './types/app/bsky/unspecced/getSuggestionsSkeleton'
 export * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions'
+export * as AppBskyUnspeccedGetTrendingTopics from './types/app/bsky/unspecced/getTrendingTopics'
 export * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton'
 export * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
 export * as AppBskyUnspeccedSearchStarterPacksSkeleton from './types/app/bsky/unspecced/searchStarterPacksSkeleton'
@@ -407,15 +409,15 @@ export * as ChatBskyActorDeleteAccount from './types/chat/bsky/actor/deleteAccou
 export * as ChatBskyActorExportAccountData from './types/chat/bsky/actor/exportAccountData'
 export * as ChatBskyConvoDefs from './types/chat/bsky/convo/defs'
 export * as ChatBskyConvoDeleteMessageForSelf from './types/chat/bsky/convo/deleteMessageForSelf'
-export * as ChatBskyConvoGetConvo from './types/chat/bsky/convo/getConvo'
 export * as ChatBskyConvoGetConvoForMembers from './types/chat/bsky/convo/getConvoForMembers'
+export * as ChatBskyConvoGetConvo from './types/chat/bsky/convo/getConvo'
 export * as ChatBskyConvoGetLog from './types/chat/bsky/convo/getLog'
 export * as ChatBskyConvoGetMessages from './types/chat/bsky/convo/getMessages'
 export * as ChatBskyConvoLeaveConvo from './types/chat/bsky/convo/leaveConvo'
 export * as ChatBskyConvoListConvos from './types/chat/bsky/convo/listConvos'
 export * as ChatBskyConvoMuteConvo from './types/chat/bsky/convo/muteConvo'
-export * as ChatBskyConvoSendMessage from './types/chat/bsky/convo/sendMessage'
 export * as ChatBskyConvoSendMessageBatch from './types/chat/bsky/convo/sendMessageBatch'
+export * as ChatBskyConvoSendMessage from './types/chat/bsky/convo/sendMessage'
 export * as ChatBskyConvoUnmuteConvo from './types/chat/bsky/convo/unmuteConvo'
 export * as ChatBskyConvoUpdateRead from './types/chat/bsky/convo/updateRead'
 export * as ChatBskyModerationGetActorMetadata from './types/chat/bsky/moderation/getActorMetadata'
@@ -443,11 +445,11 @@ export * as ToolsOzoneSetDeleteSet from './types/tools/ozone/set/deleteSet'
 export * as ToolsOzoneSetDeleteValues from './types/tools/ozone/set/deleteValues'
 export * as ToolsOzoneSetGetValues from './types/tools/ozone/set/getValues'
 export * as ToolsOzoneSetQuerySets from './types/tools/ozone/set/querySets'
-export * as ToolsOzoneSetUpsertSet from './types/tools/ozone/set/upsertSet'
 export * as ToolsOzoneSettingDefs from './types/tools/ozone/setting/defs'
 export * as ToolsOzoneSettingListOptions from './types/tools/ozone/setting/listOptions'
 export * as ToolsOzoneSettingRemoveOptions from './types/tools/ozone/setting/removeOptions'
 export * as ToolsOzoneSettingUpsertOption from './types/tools/ozone/setting/upsertOption'
+export * as ToolsOzoneSetUpsertSet from './types/tools/ozone/set/upsertSet'
 export * as ToolsOzoneSignatureDefs from './types/tools/ozone/signature/defs'
 export * as ToolsOzoneSignatureFindCorrelation from './types/tools/ozone/signature/findCorrelation'
 export * as ToolsOzoneSignatureFindRelatedAccounts from './types/tools/ozone/signature/findRelatedAccounts'
@@ -1671,8 +1673,8 @@ export class AppBskyFeedNS {
   _client: XrpcClient
   generator: GeneratorRecord
   like: LikeRecord
-  post: PostRecord
   postgate: PostgateRecord
+  post: PostRecord
   repost: RepostRecord
   threadgate: ThreadgateRecord
 
@@ -1680,8 +1682,8 @@ export class AppBskyFeedNS {
     this._client = client
     this.generator = new GeneratorRecord(client)
     this.like = new LikeRecord(client)
-    this.post = new PostRecord(client)
     this.postgate = new PostgateRecord(client)
+    this.post = new PostRecord(client)
     this.repost = new RepostRecord(client)
     this.threadgate = new ThreadgateRecord(client)
   }
@@ -1732,17 +1734,6 @@ export class AppBskyFeedNS {
       })
   }
 
-  getFeed(
-    params?: AppBskyFeedGetFeed.QueryParams,
-    opts?: AppBskyFeedGetFeed.CallOptions,
-  ): Promise<AppBskyFeedGetFeed.Response> {
-    return this._client
-      .call('app.bsky.feed.getFeed', params, undefined, opts)
-      .catch((e) => {
-        throw AppBskyFeedGetFeed.toKnownErr(e)
-      })
-  }
-
   getFeedGenerator(
     params?: AppBskyFeedGetFeedGenerator.QueryParams,
     opts?: AppBskyFeedGetFeedGenerator.CallOptions,
@@ -1765,6 +1756,17 @@ export class AppBskyFeedNS {
       undefined,
       opts,
     )
+  }
+
+  getFeed(
+    params?: AppBskyFeedGetFeed.QueryParams,
+    opts?: AppBskyFeedGetFeed.CallOptions,
+  ): Promise<AppBskyFeedGetFeed.Response> {
+    return this._client
+      .call('app.bsky.feed.getFeed', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyFeedGetFeed.toKnownErr(e)
+      })
   }
 
   getFeedSkeleton(
@@ -1796,6 +1798,13 @@ export class AppBskyFeedNS {
       })
   }
 
+  getPosts(
+    params?: AppBskyFeedGetPosts.QueryParams,
+    opts?: AppBskyFeedGetPosts.CallOptions,
+  ): Promise<AppBskyFeedGetPosts.Response> {
+    return this._client.call('app.bsky.feed.getPosts', params, undefined, opts)
+  }
+
   getPostThread(
     params?: AppBskyFeedGetPostThread.QueryParams,
     opts?: AppBskyFeedGetPostThread.CallOptions,
@@ -1805,13 +1814,6 @@ export class AppBskyFeedNS {
       .catch((e) => {
         throw AppBskyFeedGetPostThread.toKnownErr(e)
       })
-  }
-
-  getPosts(
-    params?: AppBskyFeedGetPosts.QueryParams,
-    opts?: AppBskyFeedGetPosts.CallOptions,
-  ): Promise<AppBskyFeedGetPosts.Response> {
-    return this._client.call('app.bsky.feed.getPosts', params, undefined, opts)
   }
 
   getQuotes(
@@ -2003,67 +2005,6 @@ export class LikeRecord {
   }
 }
 
-export class PostRecord {
-  _client: XrpcClient
-
-  constructor(client: XrpcClient) {
-    this._client = client
-  }
-
-  async list(
-    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
-  ): Promise<{
-    cursor?: string
-    records: { uri: string; value: AppBskyFeedPost.Record }[]
-  }> {
-    const res = await this._client.call('com.atproto.repo.listRecords', {
-      collection: 'app.bsky.feed.post',
-      ...params,
-    })
-    return res.data
-  }
-
-  async get(
-    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
-  ): Promise<{ uri: string; cid: string; value: AppBskyFeedPost.Record }> {
-    const res = await this._client.call('com.atproto.repo.getRecord', {
-      collection: 'app.bsky.feed.post',
-      ...params,
-    })
-    return res.data
-  }
-
-  async create(
-    params: Omit<
-      ComAtprotoRepoCreateRecord.InputSchema,
-      'collection' | 'record'
-    >,
-    record: AppBskyFeedPost.Record,
-    headers?: Record<string, string>,
-  ): Promise<{ uri: string; cid: string }> {
-    record.$type = 'app.bsky.feed.post'
-    const res = await this._client.call(
-      'com.atproto.repo.createRecord',
-      undefined,
-      { collection: 'app.bsky.feed.post', ...params, record },
-      { encoding: 'application/json', headers },
-    )
-    return res.data
-  }
-
-  async delete(
-    params: Omit<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
-    headers?: Record<string, string>,
-  ): Promise<void> {
-    await this._client.call(
-      'com.atproto.repo.deleteRecord',
-      undefined,
-      { collection: 'app.bsky.feed.post', ...params },
-      { headers },
-    )
-  }
-}
-
 export class PostgateRecord {
   _client: XrpcClient
 
@@ -2120,6 +2061,67 @@ export class PostgateRecord {
       'com.atproto.repo.deleteRecord',
       undefined,
       { collection: 'app.bsky.feed.postgate', ...params },
+      { headers },
+    )
+  }
+}
+
+export class PostRecord {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  async list(
+    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
+  ): Promise<{
+    cursor?: string
+    records: { uri: string; value: AppBskyFeedPost.Record }[]
+  }> {
+    const res = await this._client.call('com.atproto.repo.listRecords', {
+      collection: 'app.bsky.feed.post',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{ uri: string; cid: string; value: AppBskyFeedPost.Record }> {
+    const res = await this._client.call('com.atproto.repo.getRecord', {
+      collection: 'app.bsky.feed.post',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: Omit<
+      ComAtprotoRepoCreateRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: AppBskyFeedPost.Record,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    record.$type = 'app.bsky.feed.post'
+    const res = await this._client.call(
+      'com.atproto.repo.createRecord',
+      undefined,
+      { collection: 'app.bsky.feed.post', ...params, record },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async delete(
+    params: Omit<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
+    headers?: Record<string, string>,
+  ): Promise<void> {
+    await this._client.call(
+      'com.atproto.repo.deleteRecord',
+      undefined,
+      { collection: 'app.bsky.feed.post', ...params },
       { headers },
     )
   }
@@ -2255,18 +2257,18 @@ export class AppBskyGraphNS {
   _client: XrpcClient
   block: BlockRecord
   follow: FollowRecord
-  list: ListRecord
   listblock: ListblockRecord
   listitem: ListitemRecord
+  list: ListRecord
   starterpack: StarterpackRecord
 
   constructor(client: XrpcClient) {
     this._client = client
     this.block = new BlockRecord(client)
     this.follow = new FollowRecord(client)
-    this.list = new ListRecord(client)
     this.listblock = new ListblockRecord(client)
     this.listitem = new ListitemRecord(client)
+    this.list = new ListRecord(client)
     this.starterpack = new StarterpackRecord(client)
   }
 
@@ -2330,13 +2332,6 @@ export class AppBskyGraphNS {
     )
   }
 
-  getList(
-    params?: AppBskyGraphGetList.QueryParams,
-    opts?: AppBskyGraphGetList.CallOptions,
-  ): Promise<AppBskyGraphGetList.Response> {
-    return this._client.call('app.bsky.graph.getList', params, undefined, opts)
-  }
-
   getListBlocks(
     params?: AppBskyGraphGetListBlocks.QueryParams,
     opts?: AppBskyGraphGetListBlocks.CallOptions,
@@ -2347,6 +2342,13 @@ export class AppBskyGraphNS {
       undefined,
       opts,
     )
+  }
+
+  getList(
+    params?: AppBskyGraphGetList.QueryParams,
+    opts?: AppBskyGraphGetList.CallOptions,
+  ): Promise<AppBskyGraphGetList.Response> {
+    return this._client.call('app.bsky.graph.getList', params, undefined, opts)
   }
 
   getListMutes(
@@ -2614,67 +2616,6 @@ export class FollowRecord {
   }
 }
 
-export class ListRecord {
-  _client: XrpcClient
-
-  constructor(client: XrpcClient) {
-    this._client = client
-  }
-
-  async list(
-    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
-  ): Promise<{
-    cursor?: string
-    records: { uri: string; value: AppBskyGraphList.Record }[]
-  }> {
-    const res = await this._client.call('com.atproto.repo.listRecords', {
-      collection: 'app.bsky.graph.list',
-      ...params,
-    })
-    return res.data
-  }
-
-  async get(
-    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
-  ): Promise<{ uri: string; cid: string; value: AppBskyGraphList.Record }> {
-    const res = await this._client.call('com.atproto.repo.getRecord', {
-      collection: 'app.bsky.graph.list',
-      ...params,
-    })
-    return res.data
-  }
-
-  async create(
-    params: Omit<
-      ComAtprotoRepoCreateRecord.InputSchema,
-      'collection' | 'record'
-    >,
-    record: AppBskyGraphList.Record,
-    headers?: Record<string, string>,
-  ): Promise<{ uri: string; cid: string }> {
-    record.$type = 'app.bsky.graph.list'
-    const res = await this._client.call(
-      'com.atproto.repo.createRecord',
-      undefined,
-      { collection: 'app.bsky.graph.list', ...params, record },
-      { encoding: 'application/json', headers },
-    )
-    return res.data
-  }
-
-  async delete(
-    params: Omit<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
-    headers?: Record<string, string>,
-  ): Promise<void> {
-    await this._client.call(
-      'com.atproto.repo.deleteRecord',
-      undefined,
-      { collection: 'app.bsky.graph.list', ...params },
-      { headers },
-    )
-  }
-}
-
 export class ListblockRecord {
   _client: XrpcClient
 
@@ -2796,6 +2737,67 @@ export class ListitemRecord {
       'com.atproto.repo.deleteRecord',
       undefined,
       { collection: 'app.bsky.graph.listitem', ...params },
+      { headers },
+    )
+  }
+}
+
+export class ListRecord {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  async list(
+    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
+  ): Promise<{
+    cursor?: string
+    records: { uri: string; value: AppBskyGraphList.Record }[]
+  }> {
+    const res = await this._client.call('com.atproto.repo.listRecords', {
+      collection: 'app.bsky.graph.list',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{ uri: string; cid: string; value: AppBskyGraphList.Record }> {
+    const res = await this._client.call('com.atproto.repo.getRecord', {
+      collection: 'app.bsky.graph.list',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: Omit<
+      ComAtprotoRepoCreateRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: AppBskyGraphList.Record,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    record.$type = 'app.bsky.graph.list'
+    const res = await this._client.call(
+      'com.atproto.repo.createRecord',
+      undefined,
+      { collection: 'app.bsky.graph.list', ...params, record },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async delete(
+    params: Omit<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
+    headers?: Record<string, string>,
+  ): Promise<void> {
+    await this._client.call(
+      'com.atproto.repo.deleteRecord',
+      undefined,
+      { collection: 'app.bsky.graph.list', ...params },
       { headers },
     )
   }
@@ -3089,6 +3091,18 @@ export class AppBskyUnspeccedNS {
     )
   }
 
+  getTrendingTopics(
+    params?: AppBskyUnspeccedGetTrendingTopics.QueryParams,
+    opts?: AppBskyUnspeccedGetTrendingTopics.CallOptions,
+  ): Promise<AppBskyUnspeccedGetTrendingTopics.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getTrendingTopics',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
   searchActorsSkeleton(
     params?: AppBskyUnspeccedSearchActorsSkeleton.QueryParams,
     opts?: AppBskyUnspeccedSearchActorsSkeleton.CallOptions,
@@ -3314,24 +3328,24 @@ export class ChatBskyConvoNS {
     )
   }
 
-  getConvo(
-    params?: ChatBskyConvoGetConvo.QueryParams,
-    opts?: ChatBskyConvoGetConvo.CallOptions,
-  ): Promise<ChatBskyConvoGetConvo.Response> {
-    return this._client.call(
-      'chat.bsky.convo.getConvo',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
   getConvoForMembers(
     params?: ChatBskyConvoGetConvoForMembers.QueryParams,
     opts?: ChatBskyConvoGetConvoForMembers.CallOptions,
   ): Promise<ChatBskyConvoGetConvoForMembers.Response> {
     return this._client.call(
       'chat.bsky.convo.getConvoForMembers',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getConvo(
+    params?: ChatBskyConvoGetConvo.QueryParams,
+    opts?: ChatBskyConvoGetConvo.CallOptions,
+  ): Promise<ChatBskyConvoGetConvo.Response> {
+    return this._client.call(
+      'chat.bsky.convo.getConvo',
       params,
       undefined,
       opts,
@@ -3383,24 +3397,24 @@ export class ChatBskyConvoNS {
     return this._client.call('chat.bsky.convo.muteConvo', opts?.qp, data, opts)
   }
 
-  sendMessage(
-    data?: ChatBskyConvoSendMessage.InputSchema,
-    opts?: ChatBskyConvoSendMessage.CallOptions,
-  ): Promise<ChatBskyConvoSendMessage.Response> {
-    return this._client.call(
-      'chat.bsky.convo.sendMessage',
-      opts?.qp,
-      data,
-      opts,
-    )
-  }
-
   sendMessageBatch(
     data?: ChatBskyConvoSendMessageBatch.InputSchema,
     opts?: ChatBskyConvoSendMessageBatch.CallOptions,
   ): Promise<ChatBskyConvoSendMessageBatch.Response> {
     return this._client.call(
       'chat.bsky.convo.sendMessageBatch',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
+  sendMessage(
+    data?: ChatBskyConvoSendMessage.InputSchema,
+    opts?: ChatBskyConvoSendMessage.CallOptions,
+  ): Promise<ChatBskyConvoSendMessage.Response> {
+    return this._client.call(
+      'chat.bsky.convo.sendMessage',
       opts?.qp,
       data,
       opts,
