@@ -167,6 +167,7 @@ import * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
 import * as AppBskyUnspeccedGetSuggestionsSkeleton from './types/app/bsky/unspecced/getSuggestionsSkeleton'
 import * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions'
+import * as AppBskyUnspeccedGetTrendingTopics from './types/app/bsky/unspecced/getTrendingTopics'
 import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton'
 import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
 import * as AppBskyUnspeccedSearchStarterPacksSkeleton from './types/app/bsky/unspecced/searchStarterPacksSkeleton'
@@ -394,6 +395,7 @@ export * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig
 export * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
 export * as AppBskyUnspeccedGetSuggestionsSkeleton from './types/app/bsky/unspecced/getSuggestionsSkeleton'
 export * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions'
+export * as AppBskyUnspeccedGetTrendingTopics from './types/app/bsky/unspecced/getTrendingTopics'
 export * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton'
 export * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
 export * as AppBskyUnspeccedSearchStarterPacksSkeleton from './types/app/bsky/unspecced/searchStarterPacksSkeleton'
@@ -3083,6 +3085,18 @@ export class AppBskyUnspeccedNS {
   ): Promise<AppBskyUnspeccedGetTaggedSuggestions.Response> {
     return this._client.call(
       'app.bsky.unspecced.getTaggedSuggestions',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getTrendingTopics(
+    params?: AppBskyUnspeccedGetTrendingTopics.QueryParams,
+    opts?: AppBskyUnspeccedGetTrendingTopics.CallOptions,
+  ): Promise<AppBskyUnspeccedGetTrendingTopics.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getTrendingTopics',
       params,
       undefined,
       opts,

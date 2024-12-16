@@ -24,6 +24,8 @@ export interface ServerConfigValues {
   searchUrl?: string
   suggestionsUrl?: string
   suggestionsApiKey?: string
+  topicsUrl?: string
+  topicsApiKey?: string
   cdnUrl?: string
   videoPlaylistUrlPattern?: string
   videoThumbnailUrlPattern?: string
@@ -47,6 +49,7 @@ export interface ServerConfigValues {
   maxThreadDepth?: number
   // client config
   clientCheckEmailConfirmed?: boolean
+  topicsEnabled?: boolean
 }
 
 export class ServerConfig {
@@ -82,6 +85,8 @@ export class ServerConfig {
       undefined
     const suggestionsUrl = process.env.BSKY_SUGGESTIONS_URL || undefined
     const suggestionsApiKey = process.env.BSKY_SUGGESTIONS_API_KEY || undefined
+    const topicsUrl = process.env.BSKY_TOPICS_URL || undefined
+    const topicsApiKey = process.env.BSKY_TOPICS_API_KEY
     let dataplaneUrls = overrides?.dataplaneUrls
     dataplaneUrls ??= process.env.BSKY_DATAPLANE_URLS
       ? process.env.BSKY_DATAPLANE_URLS.split(',')
@@ -130,6 +135,7 @@ export class ServerConfig {
         : process.env.BSKY_STATSIG_ENV || 'development'
     const clientCheckEmailConfirmed =
       process.env.BSKY_CLIENT_CHECK_EMAIL_CONFIRMED === 'true'
+    const topicsEnabled = process.env.BSKY_TOPICS_ENABLED === 'true'
     const indexedAtEpoch = process.env.BSKY_INDEXED_AT_EPOCH
       ? new Date(process.env.BSKY_INDEXED_AT_EPOCH)
       : undefined
@@ -158,6 +164,8 @@ export class ServerConfig {
       searchUrl,
       suggestionsUrl,
       suggestionsApiKey,
+      topicsUrl,
+      topicsApiKey,
       didPlcUrl,
       labelsFromIssuerDids,
       handleResolveNameservers,
@@ -180,6 +188,7 @@ export class ServerConfig {
       statsigKey,
       statsigEnv,
       clientCheckEmailConfirmed,
+      topicsEnabled,
       indexedAtEpoch,
       bigThreadUris,
       bigThreadDepth,
@@ -285,6 +294,14 @@ export class ServerConfig {
     return this.cfg.suggestionsApiKey
   }
 
+  get topicsUrl() {
+    return this.cfg.topicsUrl
+  }
+
+  get topicsApiKey() {
+    return this.cfg.topicsApiKey
+  }
+
   get cdnUrl() {
     return this.cfg.cdnUrl
   }
@@ -339,6 +356,10 @@ export class ServerConfig {
 
   get clientCheckEmailConfirmed() {
     return this.cfg.clientCheckEmailConfirmed
+  }
+
+  get topicsEnabled() {
+    return this.cfg.topicsEnabled
   }
 
   get indexedAtEpoch() {
