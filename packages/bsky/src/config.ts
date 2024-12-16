@@ -49,6 +49,7 @@ export interface ServerConfigValues {
   maxThreadDepth?: number
   // client config
   clientCheckEmailConfirmed?: boolean
+  topicsEnabled?: boolean
 }
 
 export class ServerConfig {
@@ -134,6 +135,7 @@ export class ServerConfig {
         : process.env.BSKY_STATSIG_ENV || 'development'
     const clientCheckEmailConfirmed =
       process.env.BSKY_CLIENT_CHECK_EMAIL_CONFIRMED === 'true'
+    const topicsEnabled = process.env.BSKY_TOPICS_ENABLED === 'true'
     const indexedAtEpoch = process.env.BSKY_INDEXED_AT_EPOCH
       ? new Date(process.env.BSKY_INDEXED_AT_EPOCH)
       : undefined
@@ -186,6 +188,7 @@ export class ServerConfig {
       statsigKey,
       statsigEnv,
       clientCheckEmailConfirmed,
+      topicsEnabled,
       indexedAtEpoch,
       bigThreadUris,
       bigThreadDepth,
@@ -353,6 +356,10 @@ export class ServerConfig {
 
   get clientCheckEmailConfirmed() {
     return this.cfg.clientCheckEmailConfirmed
+  }
+
+  get topicsEnabled() {
+    return this.cfg.topicsEnabled
   }
 
   get indexedAtEpoch() {
