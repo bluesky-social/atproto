@@ -22,11 +22,17 @@ export const genInvCodes = (cfg: ServerConfig, count: number): string[] => {
   return codes
 }
 
-// Formatted xxxxx-xxxxx where digits are in base32
-export const getRandomToken = () => {
-  const token = crypto.randomStr(8, 'base32').slice(0, 10)
-  return token.slice(0, 5) + '-' + token.slice(5, 10)
+// Random token formatted XXXXX-XXXXX where digits are in base32
+export const getEmailToken = () => {
+  return normalizeEmailToken(crypto.randomStr(8, 'base32'))
 }
+
+// Transforms a badly-formed email token to XXXXX-XXXXX
+// (i.e from xxXxxxx-xxx or xxxxxxxxxx)
+export const normalizeEmailToken = (input: string): string => {
+  const normalized = input.trim().toUpperCase().replace('-', ''); // normalize to XXXXXXXXXX
+  return normalized.slice(0, 5) + '-' + normalized.slice(5, 10); // insert hyphen
+};
 
 export const safeResolveDidDoc = async (
   ctx: AppContext,
