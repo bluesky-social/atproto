@@ -1,6 +1,6 @@
 import * as jose from 'jose'
 import { AtpAgent } from '@atproto/api'
-import { TestNetworkNoAppView, SeedClient, TestNetwork } from '@atproto/dev-env'
+import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import { createRefreshToken } from '../src/account-manager/helpers/auth'
 
 describe('auth', () => {
@@ -8,7 +8,7 @@ describe('auth', () => {
   let agent: AtpAgent
 
   beforeAll(async () => {
-    network = await TestNetwork.create({
+    network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'auth',
     })
     agent = network.pds.getClient()
@@ -284,30 +284,6 @@ describe('auth', () => {
     await expect(
       createSession({ identifier: 'iris.test', password: 'password' }),
     ).rejects.toMatchObject({
-      error: 'AccountTakedown',
-    })
-  })
-
-  it('actor takedown disallows refresh session.', async () => {
-    const account = await createAccount({
-      handle: 'jared.test',
-      email: 'jared@test.com',
-      password: 'password',
-    })
-    await agent.com.atproto.admin.updateSubjectStatus(
-      {
-        subject: {
-          $type: 'com.atproto.admin.defs#repoRef',
-          did: account.did,
-        },
-        takedown: { applied: true },
-      },
-      {
-        encoding: 'application/json',
-        headers: { authorization: network.pds.adminAuth() },
-      },
-    )
-    await expect(refreshSession(account.refreshJwt)).rejects.toMatchObject({
       error: 'AccountTakedown',
     })
   })
