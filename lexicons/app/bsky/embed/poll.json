@@ -43,7 +43,7 @@
             "maxGraphemes": 300,
             "description": "The options available for the poll."
           },
-          "minLength": 2,
+          "minLength": 1,
           "maxLength": 4
         }
       }
