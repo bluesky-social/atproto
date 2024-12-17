@@ -17,7 +17,7 @@
           "cid": {
             "type": "string",
             "format": "cid",
-            "description": "CID of the subject record (aka, specific version of record), to filter likes."
+            "description": "CID of the subject record (aka, specific version of record), to filter poll answers."
           },
           "limit": {
             "type": "integer",
