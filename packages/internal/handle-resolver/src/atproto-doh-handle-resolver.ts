@@ -54,7 +54,7 @@ function dohResolveTxtFactory({
           ? await response.text()
           : `Failed to resolve ${hostname}`
         throw new TypeError(message)
-      } else if (contentType !== 'application/dns-json') {
+      } else if (contentType?.match(/application\/(dns-)?json/i) == null) {
         throw new TypeError('Unexpected response from DoH server')
       }
 
