@@ -2450,6 +2450,9 @@ export const schemaDict = {
               authFactorToken: {
                 type: 'string',
               },
+              allowTakendown: {
+                type: 'boolean',
+              },
             },
           },
         },

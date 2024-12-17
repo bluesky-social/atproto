@@ -16,7 +16,8 @@
               "description": "Handle or other identifier supported by the server for the authenticating user."
             },
             "password": { "type": "string" },
-            "authFactorToken": { "type": "string" }
+            "authFactorToken": { "type": "string" },
+            "allowTakendown": { "type": "boolean" }
           }
         }
       },

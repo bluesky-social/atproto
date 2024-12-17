@@ -14,6 +14,7 @@ export interface InputSchema {
   identifier: string
   password: string
   authFactorToken?: string
+  allowTakendown?: boolean
   [k: string]: unknown
 }
 

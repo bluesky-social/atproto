@@ -32,6 +32,7 @@ export enum AuthScope {
   AppPass = 'com.atproto.appPass',
   AppPassPrivileged = 'com.atproto.appPassPrivileged',
   SignupQueued = 'com.atproto.signupQueued',
+  Takendown = 'com.atproto.takendown',
 }
 
 export type AccessOpts = {

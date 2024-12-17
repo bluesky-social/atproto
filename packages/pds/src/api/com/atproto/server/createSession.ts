@@ -35,7 +35,7 @@ export default function (server: Server, ctx: AppContext) {
       const { user, isSoftDeleted, appPassword } =
         await ctx.accountManager.login(input.body)
 
-      if (isSoftDeleted) {
+      if (!input.body.allowTakendown && isSoftDeleted) {
         throw new AuthRequiredError(
           'Account has been taken down',
           'AccountTakedown',
@@ -43,7 +43,7 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const [{ accessJwt, refreshJwt }, didDoc] = await Promise.all([
-        ctx.accountManager.createSession(user.did, appPassword),
+        ctx.accountManager.createSession(user.did, appPassword, isSoftDeleted),
         didDocForSession(ctx, user.did),
       ])
 
