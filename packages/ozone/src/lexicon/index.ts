@@ -43,7 +43,6 @@ import * as ComAtprotoRepoListRecords from './types/com/atproto/repo/listRecords
 import * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
 import * as ComAtprotoRepoUploadBlob from './types/com/atproto/repo/uploadBlob'
 import * as ComAtprotoServerActivateAccount from './types/com/atproto/server/activateAccount'
-import * as ComAtprotoServerAppealAccountAction from './types/com/atproto/server/appealAccountAction'
 import * as ComAtprotoServerCheckAccountStatus from './types/com/atproto/server/checkAccountStatus'
 import * as ComAtprotoServerConfirmEmail from './types/com/atproto/server/confirmEmail'
 import * as ComAtprotoServerCreateAccount from './types/com/atproto/server/createAccount'
@@ -711,17 +710,6 @@ export class ComAtprotoServerNS {
     >,
   ) {
     const nsid = 'com.atproto.server.activateAccount' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  appealAccountAction<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      ComAtprotoServerAppealAccountAction.Handler<ExtractAuth<AV>>,
-      ComAtprotoServerAppealAccountAction.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'com.atproto.server.appealAccountAction' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
