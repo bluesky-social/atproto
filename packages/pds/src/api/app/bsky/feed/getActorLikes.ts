@@ -1,6 +1,6 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { OutputSchema } from '../../../../lexicon/types/app/bsky/feed/getAuthorFeed'
+import { OutputSchema } from '../../../../lexicon/types/app/bsky/feed/getActorLikes'
 import {
   LocalViewer,
   pipethroughReadAfterWrite,

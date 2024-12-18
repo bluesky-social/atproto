@@ -4,6 +4,7 @@ import {
   AppBskyNotificationListNotifications,
   AppBskyGraphDefs,
   ComAtprotoLabelDefs,
+  ChatBskyActorDefs,
 } from '../client/index'
 import { KnownLabelValue } from './const/labels'
 
@@ -87,6 +88,7 @@ export type ModerationSubjectProfile =
   | AppBskyActorDefs.ProfileViewBasic
   | AppBskyActorDefs.ProfileView
   | AppBskyActorDefs.ProfileViewDetailed
+  | ChatBskyActorDefs.ProfileViewBasic
 
 export type ModerationSubjectPost = AppBskyFeedDefs.PostView
 
