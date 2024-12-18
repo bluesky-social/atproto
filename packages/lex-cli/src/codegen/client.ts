@@ -452,7 +452,15 @@ const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
           moduleSpecifier: '@atproto/lexicon',
         })
         .addNamedImports([{ name: 'ValidationResult' }, { name: 'BlobRef' }])
-      //= import {isObj, hasProp} from '../../util.ts'
+
+      //= import {CID} from 'multiformats/cid'
+      file
+        .addImportDeclaration({
+          moduleSpecifier: 'multiformats/cid',
+        })
+        .addNamedImports([{ name: 'CID' }])
+
+      //= import { $Type, is$typed } from '../../util.ts'
       file
         .addImportDeclaration({
           moduleSpecifier: `${lexiconDoc.id
@@ -460,7 +468,8 @@ const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
             .map((_str) => '..')
             .join('/')}/util`,
         })
-        .addNamedImports([{ name: 'isObj' }, { name: 'hasProp' }])
+        .addNamedImports([{ name: '$Type' }, { name: 'is$typed' }])
+
       //= import {lexicons} from '../../lexicons.ts'
       file
         .addImportDeclaration({
@@ -470,12 +479,15 @@ const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
             .join('/')}/lexicons`,
         })
         .addNamedImports([{ name: 'lexicons' }])
-      //= import {CID} from 'multiformats/cid'
-      file
-        .addImportDeclaration({
-          moduleSpecifier: 'multiformats/cid',
-        })
-        .addNamedImports([{ name: 'CID' }])
+
+      //= const id = "{lexiconDoc.id}"
+      file.addVariableStatement({
+        isExported: false, // Do not export to allow tree-shaking
+        declarationKind: VariableDeclarationKind.Const,
+        declarations: [
+          { name: 'id', initializer: JSON.stringify(lexiconDoc.id) },
+        ],
+      })
 
       for (const defId in lexiconDoc.defs) {
         const def = lexiconDoc.defs[defId]
