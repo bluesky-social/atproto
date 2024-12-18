@@ -27,7 +27,7 @@ export function assertValidXrpcParams(
   value: unknown,
 ) {
   if (def.parameters) {
-    const res = params(lexicons, 'Params', def.parameters, value)
+    const res = params(lexicons, 'Params', def.parameters, value ?? {})
     if (!res.success) throw res.error
     return res.value
   }
@@ -40,7 +40,13 @@ export function assertValidXrpcInput(
 ) {
   if (def.input?.schema) {
     // loop: all input schema definitions
-    return assertValidOneOf(lexicons, 'Input', def.input.schema, value, true)
+    return assertValidOneOf(
+      lexicons,
+      'Input',
+      def.input.schema,
+      value ?? {},
+      true,
+    )
   }
 }
 
@@ -51,7 +57,13 @@ export function assertValidXrpcOutput(
 ) {
   if (def.output?.schema) {
     // loop: all output schema definitions
-    return assertValidOneOf(lexicons, 'Output', def.output.schema, value, true)
+    return assertValidOneOf(
+      lexicons,
+      'Output',
+      def.output.schema,
+      value ?? {},
+      true,
+    )
   }
 }
 
