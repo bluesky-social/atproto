@@ -65,6 +65,7 @@ export class TestBsky {
       modServiceDid: cfg.modServiceDid ?? 'did:example:invalidMod',
       labelsFromIssuerDids: [EXAMPLE_LABELER],
       bigThreadUris: new Set(),
+      disableSsrfProtection: true,
       ...cfg,
       adminPasswords: [ADMIN_PASSWORD],
     })
