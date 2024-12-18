@@ -74,7 +74,7 @@
   "scripts": {
     "build:frontend": "rollup --config rollup.config.js",
     "build:backend": "tsc --build --force tsconfig.backend.json",
-    "build": "pnpm --parallel --stream '/^build:.+$/'",
+    "build": "pnpm --parallel --stream \"/^build:.+$/\"",
     "dev": "rollup --config rollup.config.js --watch"
   }
 }
