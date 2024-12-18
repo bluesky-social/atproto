@@ -164,7 +164,7 @@ const handleModerationEvent = async ({
     )
     const initialTags = isModEventReport(event)
       ? [getTagForReport(event.reportType)]
-      : []
+      : undefined
     await tagService.evaluateForSubject(initialTags)
 
     if (subject.isRepo()) {

@@ -23,9 +23,9 @@ export class TagService {
   }
 
   // Allow the caller to seed the initial tags
-  async evaluateForSubject(initialTags: string[] = []) {
+  async evaluateForSubject(initialTags?: Iterable<string>) {
     try {
-      const tags = new Set([...initialTags])
+      const tags = new Set(initialTags)
 
       await Promise.all(
         this.taggers.map(async (tagger) => {
