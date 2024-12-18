@@ -1,4 +1,6 @@
 import fs from 'fs/promises'
+import path from 'node:path'
+
 import { CID } from 'multiformats/cid'
 import {
   ComAtprotoModerationCreateReport,
@@ -17,6 +19,14 @@ import { TestNetworkNoAppView } from '../network-no-appview'
 // and keeps track of all created data in memory for convenience.
 
 let AVATAR_IMG: Uint8Array | undefined
+
+// AVATAR_PATH defines the path to the avatar in:
+// 1. a non-CWD-based way.
+// 2. a way that works with the built package, as the same path is correct for src/ and dist/.
+const AVATAR_PATH = path.resolve(
+  __dirname,
+  '../../src/seed/img/key-portrait-small.jpg',
+)
 
 export type ImageRef = {
   image: BlobRef
@@ -164,9 +174,7 @@ export class SeedClient<
     ref: RecordRef
     joinedViaStarterPack?: RecordRef
   }> {
-    AVATAR_IMG ??= await fs.readFile(
-      '../dev-env/src/seed/img/key-portrait-small.jpg',
-    )
+    AVATAR_IMG ??= await fs.readFile(AVATAR_PATH)
 
     let avatarBlob
     {
