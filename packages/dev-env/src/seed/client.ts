@@ -20,6 +20,8 @@ import { TestNetworkNoAppView } from '../network-no-appview'
 
 let AVATAR_IMG: Uint8Array | undefined
 
+// AVATAR_PATH is defined in a non-CWD-dependant way, so this works
+// for any consumer of this package, even outside the atproto repo.
 const AVATAR_PATH = path.resolve(
   __dirname,
   '../../assets/key-portrait-small.jpg',
