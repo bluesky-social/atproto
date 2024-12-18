@@ -9142,6 +9142,84 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyPurchaseCreateStripeBillingUrl: {
+    lexicon: 1,
+    id: 'app.bsky.purchase.createStripeBillingUrl',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Creates a Stripe Billing Portal session and returns the URL to access it. Requires auth.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['redirectUrl'],
+            properties: {
+              redirectUrl: {
+                type: 'string',
+                format: 'uri',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              billingUrl: {
+                type: 'string',
+                format: 'uri',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyPurchaseCreateStripeCheckoutUrl: {
+    lexicon: 1,
+    id: 'app.bsky.purchase.createStripeCheckoutUrl',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Creates a Stripe Checkout session and returns the URL to access it. Requires auth.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['email', 'priceId', 'redirectUrl'],
+            properties: {
+              email: {
+                type: 'string',
+              },
+              priceId: {
+                type: 'string',
+              },
+              redirectUrl: {
+                type: 'string',
+                format: 'uri',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              checkoutUrl: {
+                type: 'string',
+                format: 'uri',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyPurchaseGetFeatures: {
     lexicon: 1,
     id: 'app.bsky.purchase.getFeatures',
@@ -11112,6 +11190,10 @@ export const ids = {
   AppBskyNotificationPutPreferences: 'app.bsky.notification.putPreferences',
   AppBskyNotificationRegisterPush: 'app.bsky.notification.registerPush',
   AppBskyNotificationUpdateSeen: 'app.bsky.notification.updateSeen',
+  AppBskyPurchaseCreateStripeBillingUrl:
+    'app.bsky.purchase.createStripeBillingUrl',
+  AppBskyPurchaseCreateStripeCheckoutUrl:
+    'app.bsky.purchase.createStripeCheckoutUrl',
   AppBskyPurchaseGetFeatures: 'app.bsky.purchase.getFeatures',
   AppBskyPurchaseGetSubscriptionGroup: 'app.bsky.purchase.getSubscriptionGroup',
   AppBskyPurchaseGetSubscriptions: 'app.bsky.purchase.getSubscriptions',
