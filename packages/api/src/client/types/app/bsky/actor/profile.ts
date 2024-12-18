@@ -2,11 +2,13 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
+import { $Type, is$typed } from '../../../../util'
+import { lexicons } from '../../../../lexicons'
 import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
 import * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef'
+
+const id = 'app.bsky.actor.profile'
 
 export interface Record {
   displayName?: string
@@ -25,15 +27,12 @@ export interface Record {
   [k: string]: unknown
 }
 
-export function isRecord(v: unknown): v is Record {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    (v.$type === 'app.bsky.actor.profile#main' ||
-      v.$type === 'app.bsky.actor.profile')
-  )
+export function isRecord(
+  v: unknown,
+): v is Record & { $type: $Type<'app.bsky.actor.profile', 'main'> } {
+  return is$typed(v, id, 'main')
 }
 
-export function validateRecord(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.actor.profile#main', v)
+export function validateRecord(v: unknown) {
+  return lexicons.validate(`${id}#main`, v) as ValidationResult<Record>
 }

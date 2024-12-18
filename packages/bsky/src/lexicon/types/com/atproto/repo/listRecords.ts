@@ -3,10 +3,12 @@
  */
 import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
+import { lexicons } from '../../../../lexicons'
+import { $Type, is$typed } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
+
+const id = 'com.atproto.repo.listRecords'
 
 export interface QueryParams {
   /** The handle or DID of the repo. */
@@ -64,14 +66,12 @@ export interface Record {
   [k: string]: unknown
 }
 
-export function isRecord(v: unknown): v is Record {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'com.atproto.repo.listRecords#record'
-  )
+export function isRecord(
+  v: unknown,
+): v is Record & { $type: $Type<'com.atproto.repo.listRecords', 'record'> } {
+  return is$typed(v, id, 'record')
 }
 
-export function validateRecord(v: unknown): ValidationResult {
-  return lexicons.validate('com.atproto.repo.listRecords#record', v)
+export function validateRecord(v: unknown) {
+  return lexicons.validate(`${id}#record`, v) as ValidationResult<Record>
 }

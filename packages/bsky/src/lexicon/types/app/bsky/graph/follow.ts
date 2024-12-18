@@ -2,9 +2,11 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
+import { lexicons } from '../../../../lexicons'
+import { $Type, is$typed } from '../../../../util'
+
+const id = 'app.bsky.graph.follow'
 
 export interface Record {
   subject: string
@@ -12,15 +14,12 @@ export interface Record {
   [k: string]: unknown
 }
 
-export function isRecord(v: unknown): v is Record {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    (v.$type === 'app.bsky.graph.follow#main' ||
-      v.$type === 'app.bsky.graph.follow')
-  )
+export function isRecord(
+  v: unknown,
+): v is Record & { $type: $Type<'app.bsky.graph.follow', 'main'> } {
+  return is$typed(v, id, 'main')
 }
 
-export function validateRecord(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.graph.follow#main', v)
+export function validateRecord(v: unknown) {
+  return lexicons.validate(`${id}#main`, v) as ValidationResult<Record>
 }

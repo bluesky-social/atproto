@@ -2,9 +2,11 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
+import { $Type, is$typed } from '../../../../util'
+import { lexicons } from '../../../../lexicons'
+
+const id = 'com.atproto.label.defs'
 
 /** Metadata tag on an atproto resource (eg, repo or record). */
 export interface Label {
@@ -29,16 +31,14 @@ export interface Label {
   [k: string]: unknown
 }
 
-export function isLabel(v: unknown): v is Label {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'com.atproto.label.defs#label'
-  )
+export function isLabel(
+  v: unknown,
+): v is Label & { $type: $Type<'com.atproto.label.defs', 'label'> } {
+  return is$typed(v, id, 'label')
 }
 
-export function validateLabel(v: unknown): ValidationResult {
-  return lexicons.validate('com.atproto.label.defs#label', v)
+export function validateLabel(v: unknown) {
+  return lexicons.validate(`${id}#label`, v) as ValidationResult<Label>
 }
 
 /** Metadata tags on an atproto record, published by the author within the record. */
@@ -47,16 +47,17 @@ export interface SelfLabels {
   [k: string]: unknown
 }
 
-export function isSelfLabels(v: unknown): v is SelfLabels {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'com.atproto.label.defs#selfLabels'
-  )
+export function isSelfLabels(
+  v: unknown,
+): v is SelfLabels & { $type: $Type<'com.atproto.label.defs', 'selfLabels'> } {
+  return is$typed(v, id, 'selfLabels')
 }
 
-export function validateSelfLabels(v: unknown): ValidationResult {
-  return lexicons.validate('com.atproto.label.defs#selfLabels', v)
+export function validateSelfLabels(v: unknown) {
+  return lexicons.validate(
+    `${id}#selfLabels`,
+    v,
+  ) as ValidationResult<SelfLabels>
 }
 
 /** Metadata tag on an atproto record, published by the author within the record. Note that schemas should use #selfLabels, not #selfLabel. */
@@ -66,16 +67,14 @@ export interface SelfLabel {
   [k: string]: unknown
 }
 
-export function isSelfLabel(v: unknown): v is SelfLabel {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'com.atproto.label.defs#selfLabel'
-  )
+export function isSelfLabel(
+  v: unknown,
+): v is SelfLabel & { $type: $Type<'com.atproto.label.defs', 'selfLabel'> } {
+  return is$typed(v, id, 'selfLabel')
 }
 
-export function validateSelfLabel(v: unknown): ValidationResult {
-  return lexicons.validate('com.atproto.label.defs#selfLabel', v)
+export function validateSelfLabel(v: unknown) {
+  return lexicons.validate(`${id}#selfLabel`, v) as ValidationResult<SelfLabel>
 }
 
 /** Declares a label value and its expected interpretations and behaviors. */
@@ -94,16 +93,19 @@ export interface LabelValueDefinition {
   [k: string]: unknown
 }
 
-export function isLabelValueDefinition(v: unknown): v is LabelValueDefinition {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'com.atproto.label.defs#labelValueDefinition'
-  )
+export function isLabelValueDefinition(
+  v: unknown,
+): v is LabelValueDefinition & {
+  $type: $Type<'com.atproto.label.defs', 'labelValueDefinition'>
+} {
+  return is$typed(v, id, 'labelValueDefinition')
 }
 
-export function validateLabelValueDefinition(v: unknown): ValidationResult {
-  return lexicons.validate('com.atproto.label.defs#labelValueDefinition', v)
+export function validateLabelValueDefinition(v: unknown) {
+  return lexicons.validate(
+    `${id}#labelValueDefinition`,
+    v,
+  ) as ValidationResult<LabelValueDefinition>
 }
 
 /** Strings which describe the label in the UI, localized into a specific language. */
@@ -119,21 +121,17 @@ export interface LabelValueDefinitionStrings {
 
 export function isLabelValueDefinitionStrings(
   v: unknown,
-): v is LabelValueDefinitionStrings {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'com.atproto.label.defs#labelValueDefinitionStrings'
-  )
+): v is LabelValueDefinitionStrings & {
+  $type: $Type<'com.atproto.label.defs', 'labelValueDefinitionStrings'>
+} {
+  return is$typed(v, id, 'labelValueDefinitionStrings')
 }
 
-export function validateLabelValueDefinitionStrings(
-  v: unknown,
-): ValidationResult {
+export function validateLabelValueDefinitionStrings(v: unknown) {
   return lexicons.validate(
-    'com.atproto.label.defs#labelValueDefinitionStrings',
+    `${id}#labelValueDefinitionStrings`,
     v,
-  )
+  ) as ValidationResult<LabelValueDefinitionStrings>
 }
 
 export type LabelValue =

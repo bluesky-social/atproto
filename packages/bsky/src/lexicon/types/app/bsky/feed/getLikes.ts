@@ -3,11 +3,13 @@
  */
 import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
+import { lexicons } from '../../../../lexicons'
+import { $Type, is$typed } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as AppBskyActorDefs from '../actor/defs'
+
+const id = 'app.bsky.feed.getLikes'
 
 export interface QueryParams {
   /** AT-URI of the subject (eg, a post record). */
@@ -60,12 +62,12 @@ export interface Like {
   [k: string]: unknown
 }
 
-export function isLike(v: unknown): v is Like {
-  return (
-    isObj(v) && hasProp(v, '$type') && v.$type === 'app.bsky.feed.getLikes#like'
-  )
+export function isLike(
+  v: unknown,
+): v is Like & { $type: $Type<'app.bsky.feed.getLikes', 'like'> } {
+  return is$typed(v, id, 'like')
 }
 
-export function validateLike(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.feed.getLikes#like', v)
+export function validateLike(v: unknown) {
+  return lexicons.validate(`${id}#like`, v) as ValidationResult<Like>
 }

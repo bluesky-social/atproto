@@ -2,15 +2,17 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
+import { lexicons } from '../../../../lexicons'
+import { $Type, is$typed } from '../../../../util'
 import * as ComAtprotoAdminDefs from '../../../com/atproto/admin/defs'
 import * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef'
 import * as ChatBskyConvoDefs from '../../../chat/bsky/convo/defs'
 import * as ComAtprotoModerationDefs from '../../../com/atproto/moderation/defs'
 import * as ComAtprotoServerDefs from '../../../com/atproto/server/defs'
 import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
+
+const id = 'tools.ozone.moderation.defs'
 
 export interface ModEventView {
   id: number
@@ -47,16 +49,19 @@ export interface ModEventView {
   [k: string]: unknown
 }
 
-export function isModEventView(v: unknown): v is ModEventView {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'tools.ozone.moderation.defs#modEventView'
-  )
+export function isModEventView(
+  v: unknown,
+): v is ModEventView & {
+  $type: $Type<'tools.ozone.moderation.defs', 'modEventView'>
+} {
+  return is$typed(v, id, 'modEventView')
 }
 
-export function validateModEventView(v: unknown): ValidationResult {
-  return lexicons.validate('tools.ozone.moderation.defs#modEventView', v)
+export function validateModEventView(v: unknown) {
+  return lexicons.validate(
+    `${id}#modEventView`,
+    v,
+  ) as ValidationResult<ModEventView>
 }
 
 export interface ModEventViewDetail {
@@ -93,16 +98,19 @@ export interface ModEventViewDetail {
   [k: string]: unknown
 }
 
-export function isModEventViewDetail(v: unknown): v is ModEventViewDetail {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'tools.ozone.moderation.defs#modEventViewDetail'
-  )
+export function isModEventViewDetail(
+  v: unknown,
+): v is ModEventViewDetail & {
+  $type: $Type<'tools.ozone.moderation.defs', 'modEventViewDetail'>
+} {
+  return is$typed(v, id, 'modEventViewDetail')
 }
 
-export function validateModEventViewDetail(v: unknown): ValidationResult {
-  return lexicons.validate('tools.ozone.moderation.defs#modEventViewDetail', v)
+export function validateModEventViewDetail(v: unknown) {
+  return lexicons.validate(
+    `${id}#modEventViewDetail`,
+    v,
+  ) as ValidationResult<ModEventViewDetail>
 }
 
 export interface SubjectStatusView {
@@ -139,16 +147,19 @@ export interface SubjectStatusView {
   [k: string]: unknown
 }
 
-export function isSubjectStatusView(v: unknown): v is SubjectStatusView {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'tools.ozone.moderation.defs#subjectStatusView'
-  )
+export function isSubjectStatusView(
+  v: unknown,
+): v is SubjectStatusView & {
+  $type: $Type<'tools.ozone.moderation.defs', 'subjectStatusView'>
+} {
+  return is$typed(v, id, 'subjectStatusView')
 }
 
-export function validateSubjectStatusView(v: unknown): ValidationResult {
-  return lexicons.validate('tools.ozone.moderation.defs#subjectStatusView', v)
+export function validateSubjectStatusView(v: unknown) {
+  return lexicons.validate(
+    `${id}#subjectStatusView`,
+    v,
+  ) as ValidationResult<SubjectStatusView>
 }
 
 export type SubjectReviewState =
@@ -159,13 +170,13 @@ export type SubjectReviewState =
   | (string & {})
 
 /** Moderator review status of a subject: Open. Indicates that the subject needs to be reviewed by a moderator */
-export const REVIEWOPEN = 'tools.ozone.moderation.defs#reviewOpen'
+export const REVIEWOPEN = `${id}#reviewOpen`
 /** Moderator review status of a subject: Escalated. Indicates that the subject was escalated for review by a moderator */
-export const REVIEWESCALATED = 'tools.ozone.moderation.defs#reviewEscalated'
+export const REVIEWESCALATED = `${id}#reviewEscalated`
 /** Moderator review status of a subject: Closed. Indicates that the subject was already reviewed and resolved by a moderator */
-export const REVIEWCLOSED = 'tools.ozone.moderation.defs#reviewClosed'
+export const REVIEWCLOSED = `${id}#reviewClosed`
 /** Moderator review status of a subject: Unnecessary. Indicates that the subject does not need a review at the moment but there is probably some moderation related metadata available for it */
-export const REVIEWNONE = 'tools.ozone.moderation.defs#reviewNone'
+export const REVIEWNONE = `${id}#reviewNone`
 
 /** Take down a subject permanently or temporarily */
 export interface ModEventTakedown {
@@ -179,16 +190,19 @@ export interface ModEventTakedown {
   [k: string]: unknown
 }
 
-export function isModEventTakedown(v: unknown): v is ModEventTakedown {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'tools.ozone.moderation.defs#modEventTakedown'
-  )
+export function isModEventTakedown(
+  v: unknown,
+): v is ModEventTakedown & {
+  $type: $Type<'tools.ozone.moderation.defs', 'modEventTakedown'>
+} {
+  return is$typed(v, id, 'modEventTakedown')
 }
 
-export function validateModEventTakedown(v: unknown): ValidationResult {
-  return lexicons.validate('tools.ozone.moderation.defs#modEventTakedown', v)
+export function validateModEventTakedown(v: unknown) {
+  return lexicons.validate(
+    `${id}#modEventTakedown`,
+    v,
+  ) as ValidationResult<ModEventTakedown>
 }
 
 /** Revert take down action on a subject */
@@ -200,19 +214,17 @@ export interface ModEventReverseTakedown {
 
 export function isModEventReverseTakedown(
   v: unknown,
-): v is ModEventReverseTakedown {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'tools.ozone.moderation.defs#modEventReverseTakedown'
-  )
+): v is ModEventReverseTakedown & {
+  $type: $Type<'tools.ozone.moderation.defs', 'modEventReverseTakedown'>
+} {
+  return is$typed(v, id, 'modEventReverseTakedown')
 }
 
-export function validateModEventReverseTakedown(v: unknown): ValidationResult {
+export function validateModEventReverseTakedown(v: unknown) {
   return lexicons.validate(
-    'tools.ozone.moderation.defs#modEventReverseTakedown',
+    `${id}#modEventReverseTakedown`,
     v,
-  )
+  ) as ValidationResult<ModEventReverseTakedown>
 }
 
 /** Resolve appeal on a subject */
@@ -224,19 +236,17 @@ export interface ModEventResolveAppeal {
 
 export function isModEventResolveAppeal(
   v: unknown,
-): v is ModEventResolveAppeal {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'tools.ozone.moderation.defs#modEventResolveAppeal'
-  )
+): v is ModEventResolveAppeal & {
+  $type: $Type<'tools.ozone.moderation.defs', 'modEventResolveAppeal'>
+} {
+  return is$typed(v, id, 'modEventResolveAppeal')
 }
 
-export function validateModEventResolveAppeal(v: unknown): ValidationResult {
+export function validateModEventResolveAppeal(v: unknown) {
   return lexicons.validate(
-    'tools.ozone.moderation.defs#modEventResolveAppeal',
+    `${id}#modEventResolveAppeal`,
     v,
-  )
+  ) as ValidationResult<ModEventResolveAppeal>
 }
 
 /** Add a comment to a subject */
@@ -247,16 +257,19 @@ export interface ModEventComment {
   [k: string]: unknown
 }
 
-export function isModEventComment(v: unknown): v is ModEventComment {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'tools.ozone.moderation.defs#modEventComment'
-  )
+export function isModEventComment(
+  v: unknown,
+): v is ModEventComment & {
+  $type: $Type<'tools.ozone.moderation.defs', 'modEventComment'>
+} {
+  return is$typed(v, id, 'modEventComment')
 }
 
-export function validateModEventComment(v: unknown): ValidationResult {
-  return lexicons.validate('tools.ozone.moderation.defs#modEventComment', v)
+export function validateModEventComment(v: unknown) {
+  return lexicons.validate(
+    `${id}#modEventComment`,
+    v,
+  ) as ValidationResult<ModEventComment>
 }
 
 /** Report a subject */
@@ -268,16 +281,19 @@ export interface ModEventReport {
   [k: string]: unknown
 }
 
-export function isModEventReport(v: unknown): v is ModEventReport {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'tools.ozone.moderation.defs#modEventReport'
-  )
+export function isModEventReport(
+  v: unknown,
+): v is ModEventReport & {
+  $type: $Type<'tools.ozone.moderation.defs', 'modEventReport'>
+} {
+  return is$typed(v, id, 'modEventReport')
 }
 
-export function validateModEventReport(v: unknown): ValidationResult {
-  return lexicons.validate('tools.ozone.moderation.defs#modEventReport', v)
+export function validateModEventReport(v: unknown) {
+  return lexicons.validate(
+    `${id}#modEventReport`,
+    v,
+  ) as ValidationResult<ModEventReport>
 }
 
 /** Apply/Negate labels on a subject */
@@ -288,16 +304,19 @@ export interface ModEventLabel {
   [k: string]: unknown
 }
 
-export function isModEventLabel(v: unknown): v is ModEventLabel {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'tools.ozone.moderation.defs#modEventLabel'
-  )
+export function isModEventLabel(
+  v: unknown,
+): v is ModEventLabel & {
+  $type: $Type<'tools.ozone.moderation.defs', 'modEventLabel'>
+} {
+  return is$typed(v, id, 'modEventLabel')
 }
 
-export function validateModEventLabel(v: unknown): ValidationResult {
-  return lexicons.validate('tools.ozone.moderation.defs#modEventLabel', v)
+export function validateModEventLabel(v: unknown) {
+  return lexicons.validate(
+    `${id}#modEventLabel`,
+    v,
+  ) as ValidationResult<ModEventLabel>
 }
 
 export interface ModEventAcknowledge {
@@ -307,16 +326,19 @@ export interface ModEventAcknowledge {
   [k: string]: unknown
 }
 
-export function isModEventAcknowledge(v: unknown): v is ModEventAcknowledge {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'tools.ozone.moderation.defs#modEventAcknowledge'
-  )
+export function isModEventAcknowledge(
+  v: unknown,
+): v is ModEventAcknowledge & {
+  $type: $Type<'tools.ozone.moderation.defs', 'modEventAcknowledge'>
+} {
+  return is$typed(v, id, 'modEventAcknowledge')
 }
 
-export function validateModEventAcknowledge(v: unknown): ValidationResult {
-  return lexicons.validate('tools.ozone.moderation.defs#modEventAcknowledge', v)
+export function validateModEventAcknowledge(v: unknown) {
+  return lexicons.validate(
+    `${id}#modEventAcknowledge`,
+    v,
+  ) as ValidationResult<ModEventAcknowledge>
 }
 
 export interface ModEventEscalate {
@@ -324,16 +346,19 @@ export interface ModEventEscalate {
   [k: string]: unknown
 }
 
-export function isModEventEscalate(v: unknown): v is ModEventEscalate {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'tools.ozone.moderation.defs#modEventEscalate'
-  )
+export function isModEventEscalate(
+  v: unknown,
+): v is ModEventEscalate & {
+  $type: $Type<'tools.ozone.moderation.defs', 'modEventEscalate'>
+} {
+  return is$typed(v, id, 'modEventEscalate')
 }
 
-export function validateModEventEscalate(v: unknown): ValidationResult {
-  return lexicons.validate('tools.ozone.moderation.defs#modEventEscalate', v)
+export function validateModEventEscalate(v: unknown) {
+  return lexicons.validate(
+    `${id}#modEventEscalate`,
+    v,
+  ) as ValidationResult<ModEventEscalate>
 }
 
 /** Mute incoming reports on a subject */
@@ -344,16 +369,19 @@ export interface ModEventMute {
   [k: string]: unknown
 }
 
-export function isModEventMute(v: unknown): v is ModEventMute {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'tools.ozone.moderation.defs#modEventMute'
-  )
+export function isModEventMute(
+  v: unknown,
+): v is ModEventMute & {
+  $type: $Type<'tools.ozone.moderation.defs', 'modEventMute'>
+} {
+  return is$typed(v, id, 'modEventMute')
 }
 
-export function validateModEventMute(v: unknown): ValidationResult {
-  return lexicons.validate('tools.ozone.moderation.defs#modEventMute', v)
+export function validateModEventMute(v: unknown) {
+  return lexicons.validate(
+    `${id}#modEventMute`,
+    v,
+  ) as ValidationResult<ModEventMute>
 }
 
 /** Unmute action on a subject */
@@ -363,16 +391,19 @@ export interface ModEventUnmute {
   [k: string]: unknown
 }
 
-export function isModEventUnmute(v: unknown): v is ModEventUnmute {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'tools.ozone.moderation.defs#modEventUnmute'
-  )
+export function isModEventUnmute(
+  v: unknown,
+): v is ModEventUnmute & {
+  $type: $Type<'tools.ozone.moderation.defs', 'modEventUnmute'>
+} {
+  return is$typed(v, id, 'modEventUnmute')
 }
 
-export function validateModEventUnmute(v: unknown): ValidationResult {
-  return lexicons.validate('tools.ozone.moderation.defs#modEventUnmute', v)
+export function validateModEventUnmute(v: unknown) {
+  return lexicons.validate(
+    `${id}#modEventUnmute`,
+    v,
+  ) as ValidationResult<ModEventUnmute>
 }
 
 /** Mute incoming reports from an account */
@@ -383,19 +414,19 @@ export interface ModEventMuteReporter {
   [k: string]: unknown
 }
 
-export function isModEventMuteReporter(v: unknown): v is ModEventMuteReporter {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'tools.ozone.moderation.defs#modEventMuteReporter'
-  )
+export function isModEventMuteReporter(
+  v: unknown,
+): v is ModEventMuteReporter & {
+  $type: $Type<'tools.ozone.moderation.defs', 'modEventMuteReporter'>
+} {
+  return is$typed(v, id, 'modEventMuteReporter')
 }
 
-export function validateModEventMuteReporter(v: unknown): ValidationResult {
+export function validateModEventMuteReporter(v: unknown) {
   return lexicons.validate(
-    'tools.ozone.moderation.defs#modEventMuteReporter',
+    `${id}#modEventMuteReporter`,
     v,
-  )
+  ) as ValidationResult<ModEventMuteReporter>
 }
 
 /** Unmute incoming reports from an account */
@@ -407,19 +438,17 @@ export interface ModEventUnmuteReporter {
 
 export function isModEventUnmuteReporter(
   v: unknown,
-): v is ModEventUnmuteReporter {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'tools.ozone.moderation.defs#modEventUnmuteReporter'
-  )
+): v is ModEventUnmuteReporter & {
+  $type: $Type<'tools.ozone.moderation.defs', 'modEventUnmuteReporter'>
+} {
+  return is$typed(v, id, 'modEventUnmuteReporter')
 }
 
-export function validateModEventUnmuteReporter(v: unknown): ValidationResult {
+export function validateModEventUnmuteReporter(v: unknown) {
   return lexicons.validate(
-    'tools.ozone.moderation.defs#modEventUnmuteReporter',
+    `${id}#modEventUnmuteReporter`,
     v,
-  )
+  ) as ValidationResult<ModEventUnmuteReporter>
 }
 
 /** Keep a log of outgoing email to a user */
@@ -433,16 +462,19 @@ export interface ModEventEmail {
   [k: string]: unknown
 }
 
-export function isModEventEmail(v: unknown): v is ModEventEmail {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'tools.ozone.moderation.defs#modEventEmail'
-  )
+export function isModEventEmail(
+  v: unknown,
+): v is ModEventEmail & {
+  $type: $Type<'tools.ozone.moderation.defs', 'modEventEmail'>
+} {
+  return is$typed(v, id, 'modEventEmail')
 }
 
-export function validateModEventEmail(v: unknown): ValidationResult {
-  return lexicons.validate('tools.ozone.moderation.defs#modEventEmail', v)
+export function validateModEventEmail(v: unknown) {
+  return lexicons.validate(
+    `${id}#modEventEmail`,
+    v,
+  ) as ValidationResult<ModEventEmail>
 }
 
 /** Divert a record's blobs to a 3rd party service for further scanning/tagging */
@@ -451,16 +483,19 @@ export interface ModEventDivert {
   [k: string]: unknown
 }
 
-export function isModEventDivert(v: unknown): v is ModEventDivert {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'tools.ozone.moderation.defs#modEventDivert'
-  )
+export function isModEventDivert(
+  v: unknown,
+): v is ModEventDivert & {
+  $type: $Type<'tools.ozone.moderation.defs', 'modEventDivert'>
+} {
+  return is$typed(v, id, 'modEventDivert')
 }
 
-export function validateModEventDivert(v: unknown): ValidationResult {
-  return lexicons.validate('tools.ozone.moderation.defs#modEventDivert', v)
+export function validateModEventDivert(v: unknown) {
+  return lexicons.validate(
+    `${id}#modEventDivert`,
+    v,
+  ) as ValidationResult<ModEventDivert>
 }
 
 /** Add/Remove a tag on a subject */
@@ -474,16 +509,19 @@ export interface ModEventTag {
   [k: string]: unknown
 }
 
-export function isModEventTag(v: unknown): v is ModEventTag {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'tools.ozone.moderation.defs#modEventTag'
-  )
+export function isModEventTag(
+  v: unknown,
+): v is ModEventTag & {
+  $type: $Type<'tools.ozone.moderation.defs', 'modEventTag'>
+} {
+  return is$typed(v, id, 'modEventTag')
 }
 
-export function validateModEventTag(v: unknown): ValidationResult {
-  return lexicons.validate('tools.ozone.moderation.defs#modEventTag', v)
+export function validateModEventTag(v: unknown) {
+  return lexicons.validate(
+    `${id}#modEventTag`,
+    v,
+  ) as ValidationResult<ModEventTag>
 }
 
 /** Logs account status related events on a repo subject. Normally captured by automod from the firehose and emitted to ozone for historical tracking. */
@@ -503,16 +541,19 @@ export interface AccountEvent {
   [k: string]: unknown
 }
 
-export function isAccountEvent(v: unknown): v is AccountEvent {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'tools.ozone.moderation.defs#accountEvent'
-  )
+export function isAccountEvent(
+  v: unknown,
+): v is AccountEvent & {
+  $type: $Type<'tools.ozone.moderation.defs', 'accountEvent'>
+} {
+  return is$typed(v, id, 'accountEvent')
 }
 
-export function validateAccountEvent(v: unknown): ValidationResult {
-  return lexicons.validate('tools.ozone.moderation.defs#accountEvent', v)
+export function validateAccountEvent(v: unknown) {
+  return lexicons.validate(
+    `${id}#accountEvent`,
+    v,
+  ) as ValidationResult<AccountEvent>
 }
 
 /** Logs identity related events on a repo subject. Normally captured by automod from the firehose and emitted to ozone for historical tracking. */
@@ -525,16 +566,19 @@ export interface IdentityEvent {
   [k: string]: unknown
 }
 
-export function isIdentityEvent(v: unknown): v is IdentityEvent {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'tools.ozone.moderation.defs#identityEvent'
-  )
+export function isIdentityEvent(
+  v: unknown,
+): v is IdentityEvent & {
+  $type: $Type<'tools.ozone.moderation.defs', 'identityEvent'>
+} {
+  return is$typed(v, id, 'identityEvent')
 }
 
-export function validateIdentityEvent(v: unknown): ValidationResult {
-  return lexicons.validate('tools.ozone.moderation.defs#identityEvent', v)
+export function validateIdentityEvent(v: unknown) {
+  return lexicons.validate(
+    `${id}#identityEvent`,
+    v,
+  ) as ValidationResult<IdentityEvent>
 }
 
 /** Logs lifecycle event on a record subject. Normally captured by automod from the firehose and emitted to ozone for historical tracking. */
@@ -546,16 +590,19 @@ export interface RecordEvent {
   [k: string]: unknown
 }
 
-export function isRecordEvent(v: unknown): v is RecordEvent {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'tools.ozone.moderation.defs#recordEvent'
-  )
+export function isRecordEvent(
+  v: unknown,
+): v is RecordEvent & {
+  $type: $Type<'tools.ozone.moderation.defs', 'recordEvent'>
+} {
+  return is$typed(v, id, 'recordEvent')
 }
 
-export function validateRecordEvent(v: unknown): ValidationResult {
-  return lexicons.validate('tools.ozone.moderation.defs#recordEvent', v)
+export function validateRecordEvent(v: unknown) {
+  return lexicons.validate(
+    `${id}#recordEvent`,
+    v,
+  ) as ValidationResult<RecordEvent>
 }
 
 export interface RepoView {
@@ -573,16 +620,14 @@ export interface RepoView {
   [k: string]: unknown
 }
 
-export function isRepoView(v: unknown): v is RepoView {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'tools.ozone.moderation.defs#repoView'
-  )
+export function isRepoView(
+  v: unknown,
+): v is RepoView & { $type: $Type<'tools.ozone.moderation.defs', 'repoView'> } {
+  return is$typed(v, id, 'repoView')
 }
 
-export function validateRepoView(v: unknown): ValidationResult {
-  return lexicons.validate('tools.ozone.moderation.defs#repoView', v)
+export function validateRepoView(v: unknown) {
+  return lexicons.validate(`${id}#repoView`, v) as ValidationResult<RepoView>
 }
 
 export interface RepoViewDetail {
@@ -603,16 +648,19 @@ export interface RepoViewDetail {
   [k: string]: unknown
 }
 
-export function isRepoViewDetail(v: unknown): v is RepoViewDetail {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'tools.ozone.moderation.defs#repoViewDetail'
-  )
+export function isRepoViewDetail(
+  v: unknown,
+): v is RepoViewDetail & {
+  $type: $Type<'tools.ozone.moderation.defs', 'repoViewDetail'>
+} {
+  return is$typed(v, id, 'repoViewDetail')
 }
 
-export function validateRepoViewDetail(v: unknown): ValidationResult {
-  return lexicons.validate('tools.ozone.moderation.defs#repoViewDetail', v)
+export function validateRepoViewDetail(v: unknown) {
+  return lexicons.validate(
+    `${id}#repoViewDetail`,
+    v,
+  ) as ValidationResult<RepoViewDetail>
 }
 
 export interface RepoViewNotFound {
@@ -620,16 +668,19 @@ export interface RepoViewNotFound {
   [k: string]: unknown
 }
 
-export function isRepoViewNotFound(v: unknown): v is RepoViewNotFound {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'tools.ozone.moderation.defs#repoViewNotFound'
-  )
+export function isRepoViewNotFound(
+  v: unknown,
+): v is RepoViewNotFound & {
+  $type: $Type<'tools.ozone.moderation.defs', 'repoViewNotFound'>
+} {
+  return is$typed(v, id, 'repoViewNotFound')
 }
 
-export function validateRepoViewNotFound(v: unknown): ValidationResult {
-  return lexicons.validate('tools.ozone.moderation.defs#repoViewNotFound', v)
+export function validateRepoViewNotFound(v: unknown) {
+  return lexicons.validate(
+    `${id}#repoViewNotFound`,
+    v,
+  ) as ValidationResult<RepoViewNotFound>
 }
 
 export interface RecordView {
@@ -643,16 +694,19 @@ export interface RecordView {
   [k: string]: unknown
 }
 
-export function isRecordView(v: unknown): v is RecordView {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'tools.ozone.moderation.defs#recordView'
-  )
+export function isRecordView(
+  v: unknown,
+): v is RecordView & {
+  $type: $Type<'tools.ozone.moderation.defs', 'recordView'>
+} {
+  return is$typed(v, id, 'recordView')
 }
 
-export function validateRecordView(v: unknown): ValidationResult {
-  return lexicons.validate('tools.ozone.moderation.defs#recordView', v)
+export function validateRecordView(v: unknown) {
+  return lexicons.validate(
+    `${id}#recordView`,
+    v,
+  ) as ValidationResult<RecordView>
 }
 
 export interface RecordViewDetail {
@@ -667,16 +721,19 @@ export interface RecordViewDetail {
   [k: string]: unknown
 }
 
-export function isRecordViewDetail(v: unknown): v is RecordViewDetail {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'tools.ozone.moderation.defs#recordViewDetail'
-  )
+export function isRecordViewDetail(
+  v: unknown,
+): v is RecordViewDetail & {
+  $type: $Type<'tools.ozone.moderation.defs', 'recordViewDetail'>
+} {
+  return is$typed(v, id, 'recordViewDetail')
 }
 
-export function validateRecordViewDetail(v: unknown): ValidationResult {
-  return lexicons.validate('tools.ozone.moderation.defs#recordViewDetail', v)
+export function validateRecordViewDetail(v: unknown) {
+  return lexicons.validate(
+    `${id}#recordViewDetail`,
+    v,
+  ) as ValidationResult<RecordViewDetail>
 }
 
 export interface RecordViewNotFound {
@@ -684,16 +741,19 @@ export interface RecordViewNotFound {
   [k: string]: unknown
 }
 
-export function isRecordViewNotFound(v: unknown): v is RecordViewNotFound {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'tools.ozone.moderation.defs#recordViewNotFound'
-  )
+export function isRecordViewNotFound(
+  v: unknown,
+): v is RecordViewNotFound & {
+  $type: $Type<'tools.ozone.moderation.defs', 'recordViewNotFound'>
+} {
+  return is$typed(v, id, 'recordViewNotFound')
 }
 
-export function validateRecordViewNotFound(v: unknown): ValidationResult {
-  return lexicons.validate('tools.ozone.moderation.defs#recordViewNotFound', v)
+export function validateRecordViewNotFound(v: unknown) {
+  return lexicons.validate(
+    `${id}#recordViewNotFound`,
+    v,
+  ) as ValidationResult<RecordViewNotFound>
 }
 
 export interface Moderation {
@@ -701,16 +761,19 @@ export interface Moderation {
   [k: string]: unknown
 }
 
-export function isModeration(v: unknown): v is Moderation {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'tools.ozone.moderation.defs#moderation'
-  )
+export function isModeration(
+  v: unknown,
+): v is Moderation & {
+  $type: $Type<'tools.ozone.moderation.defs', 'moderation'>
+} {
+  return is$typed(v, id, 'moderation')
 }
 
-export function validateModeration(v: unknown): ValidationResult {
-  return lexicons.validate('tools.ozone.moderation.defs#moderation', v)
+export function validateModeration(v: unknown) {
+  return lexicons.validate(
+    `${id}#moderation`,
+    v,
+  ) as ValidationResult<Moderation>
 }
 
 export interface ModerationDetail {
@@ -718,16 +781,19 @@ export interface ModerationDetail {
   [k: string]: unknown
 }
 
-export function isModerationDetail(v: unknown): v is ModerationDetail {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'tools.ozone.moderation.defs#moderationDetail'
-  )
+export function isModerationDetail(
+  v: unknown,
+): v is ModerationDetail & {
+  $type: $Type<'tools.ozone.moderation.defs', 'moderationDetail'>
+} {
+  return is$typed(v, id, 'moderationDetail')
 }
 
-export function validateModerationDetail(v: unknown): ValidationResult {
-  return lexicons.validate('tools.ozone.moderation.defs#moderationDetail', v)
+export function validateModerationDetail(v: unknown) {
+  return lexicons.validate(
+    `${id}#moderationDetail`,
+    v,
+  ) as ValidationResult<ModerationDetail>
 }
 
 export interface BlobView {
@@ -743,16 +809,14 @@ export interface BlobView {
   [k: string]: unknown
 }
 
-export function isBlobView(v: unknown): v is BlobView {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'tools.ozone.moderation.defs#blobView'
-  )
+export function isBlobView(
+  v: unknown,
+): v is BlobView & { $type: $Type<'tools.ozone.moderation.defs', 'blobView'> } {
+  return is$typed(v, id, 'blobView')
 }
 
-export function validateBlobView(v: unknown): ValidationResult {
-  return lexicons.validate('tools.ozone.moderation.defs#blobView', v)
+export function validateBlobView(v: unknown) {
+  return lexicons.validate(`${id}#blobView`, v) as ValidationResult<BlobView>
 }
 
 export interface ImageDetails {
@@ -761,16 +825,19 @@ export interface ImageDetails {
   [k: string]: unknown
 }
 
-export function isImageDetails(v: unknown): v is ImageDetails {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'tools.ozone.moderation.defs#imageDetails'
-  )
+export function isImageDetails(
+  v: unknown,
+): v is ImageDetails & {
+  $type: $Type<'tools.ozone.moderation.defs', 'imageDetails'>
+} {
+  return is$typed(v, id, 'imageDetails')
 }
 
-export function validateImageDetails(v: unknown): ValidationResult {
-  return lexicons.validate('tools.ozone.moderation.defs#imageDetails', v)
+export function validateImageDetails(v: unknown) {
+  return lexicons.validate(
+    `${id}#imageDetails`,
+    v,
+  ) as ValidationResult<ImageDetails>
 }
 
 export interface VideoDetails {
@@ -780,16 +847,19 @@ export interface VideoDetails {
   [k: string]: unknown
 }
 
-export function isVideoDetails(v: unknown): v is VideoDetails {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'tools.ozone.moderation.defs#videoDetails'
-  )
+export function isVideoDetails(
+  v: unknown,
+): v is VideoDetails & {
+  $type: $Type<'tools.ozone.moderation.defs', 'videoDetails'>
+} {
+  return is$typed(v, id, 'videoDetails')
 }
 
-export function validateVideoDetails(v: unknown): ValidationResult {
-  return lexicons.validate('tools.ozone.moderation.defs#videoDetails', v)
+export function validateVideoDetails(v: unknown) {
+  return lexicons.validate(
+    `${id}#videoDetails`,
+    v,
+  ) as ValidationResult<VideoDetails>
 }
 
 export interface AccountHosting {
@@ -808,16 +878,19 @@ export interface AccountHosting {
   [k: string]: unknown
 }
 
-export function isAccountHosting(v: unknown): v is AccountHosting {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'tools.ozone.moderation.defs#accountHosting'
-  )
+export function isAccountHosting(
+  v: unknown,
+): v is AccountHosting & {
+  $type: $Type<'tools.ozone.moderation.defs', 'accountHosting'>
+} {
+  return is$typed(v, id, 'accountHosting')
 }
 
-export function validateAccountHosting(v: unknown): ValidationResult {
-  return lexicons.validate('tools.ozone.moderation.defs#accountHosting', v)
+export function validateAccountHosting(v: unknown) {
+  return lexicons.validate(
+    `${id}#accountHosting`,
+    v,
+  ) as ValidationResult<AccountHosting>
 }
 
 export interface RecordHosting {
@@ -828,14 +901,17 @@ export interface RecordHosting {
   [k: string]: unknown
 }
 
-export function isRecordHosting(v: unknown): v is RecordHosting {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'tools.ozone.moderation.defs#recordHosting'
-  )
+export function isRecordHosting(
+  v: unknown,
+): v is RecordHosting & {
+  $type: $Type<'tools.ozone.moderation.defs', 'recordHosting'>
+} {
+  return is$typed(v, id, 'recordHosting')
 }
 
-export function validateRecordHosting(v: unknown): ValidationResult {
-  return lexicons.validate('tools.ozone.moderation.defs#recordHosting', v)
+export function validateRecordHosting(v: unknown) {
+  return lexicons.validate(
+    `${id}#recordHosting`,
+    v,
+  ) as ValidationResult<RecordHosting>
 }

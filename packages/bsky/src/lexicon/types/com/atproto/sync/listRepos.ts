@@ -3,10 +3,12 @@
  */
 import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
+import { lexicons } from '../../../../lexicons'
+import { $Type, is$typed } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
+
+const id = 'com.atproto.sync.listRepos'
 
 export interface QueryParams {
   limit: number
@@ -57,14 +59,12 @@ export interface Repo {
   [k: string]: unknown
 }
 
-export function isRepo(v: unknown): v is Repo {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'com.atproto.sync.listRepos#repo'
-  )
+export function isRepo(
+  v: unknown,
+): v is Repo & { $type: $Type<'com.atproto.sync.listRepos', 'repo'> } {
+  return is$typed(v, id, 'repo')
 }
 
-export function validateRepo(v: unknown): ValidationResult {
-  return lexicons.validate('com.atproto.sync.listRepos#repo', v)
+export function validateRepo(v: unknown) {
+  return lexicons.validate(`${id}#repo`, v) as ValidationResult<Repo>
 }

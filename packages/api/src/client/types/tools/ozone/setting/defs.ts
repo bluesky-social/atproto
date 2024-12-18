@@ -2,9 +2,11 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
+import { $Type, is$typed } from '../../../../util'
+import { lexicons } from '../../../../lexicons'
+
+const id = 'tools.ozone.setting.defs'
 
 export interface Option {
   key: string
@@ -24,14 +26,12 @@ export interface Option {
   [k: string]: unknown
 }
 
-export function isOption(v: unknown): v is Option {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'tools.ozone.setting.defs#option'
-  )
+export function isOption(
+  v: unknown,
+): v is Option & { $type: $Type<'tools.ozone.setting.defs', 'option'> } {
+  return is$typed(v, id, 'option')
 }
 
-export function validateOption(v: unknown): ValidationResult {
-  return lexicons.validate('tools.ozone.setting.defs#option', v)
+export function validateOption(v: unknown) {
+  return lexicons.validate(`${id}#option`, v) as ValidationResult<Option>
 }
