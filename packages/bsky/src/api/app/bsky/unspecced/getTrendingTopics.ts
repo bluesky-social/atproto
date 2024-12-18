@@ -48,6 +48,7 @@ const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
   if (ctx.topicsAgent) {
     const res = await ctx.topicsAgent.app.bsky.unspecced.getTrendingTopics(
       {
+        ...params,
         viewer: params.viewer,
       },
       {
