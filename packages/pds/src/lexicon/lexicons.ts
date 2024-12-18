@@ -2414,6 +2414,8 @@ export const schemaDict = {
               },
               allowTakendown: {
                 type: 'boolean',
+                description:
+                  'When true, instead of throwing error for takendown accounts, a valid response with a narrow scoped token will be returned',
               },
             },
           },
