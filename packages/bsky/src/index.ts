@@ -88,6 +88,16 @@ export class BskyAppView {
       )
     }
 
+    const topicsAgent = config.topicsUrl
+      ? new AtpAgent({ service: config.topicsUrl })
+      : undefined
+    if (topicsAgent && config.topicsApiKey) {
+      topicsAgent.api.setHeader(
+        'authorization',
+        `Bearer ${config.topicsApiKey}`,
+      )
+    }
+
     const dataplane = createDataPlaneClient(config.dataplaneUrls, {
       httpVersion: config.dataplaneHttpVersion,
       rejectUnauthorized: !config.dataplaneIgnoreBadTls,
@@ -140,6 +150,7 @@ export class BskyAppView {
       dataplane,
       searchAgent,
       suggestionsAgent,
+      topicsAgent,
       hydrator,
       views,
       signingKey,
