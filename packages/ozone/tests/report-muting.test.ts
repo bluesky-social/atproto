@@ -69,7 +69,7 @@ describe('report-muting', () => {
     })
 
     // Verify that a subject status was not created for bob's post since the reporter was muted
-    await assertSubjectStatus(bobsPostSubject.uri, undefined)
+    await assertSubjectStatus(bobsPostSubject.uri, REVIEWNONE)
     // Verify, however, that the event was logged
     await modClient.queryEvents({
       subject: bobsPostSubject.uri,
