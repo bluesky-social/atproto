@@ -3,11 +3,19 @@
  */
 import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
+import {
+  isValid as _isValid,
+  validate as _validate,
+} from '../../../../lexicons'
+import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
-import * as ChatBskyConvoDefs from './defs'
+import type * as ChatBskyConvoDefs from './defs'
+
+const is$typed = _is$typed,
+  isValid = _isValid,
+  validate = _validate
+const id = 'chat.bsky.convo.getMessages'
 
 export interface QueryParams {
   convoId: string
@@ -20,11 +28,10 @@ export type InputSchema = undefined
 export interface OutputSchema {
   cursor?: string
   messages: (
-    | ChatBskyConvoDefs.MessageView
-    | ChatBskyConvoDefs.DeletedMessageView
-    | { $type: string; [k: string]: unknown }
+    | $Typed<ChatBskyConvoDefs.MessageView>
+    | $Typed<ChatBskyConvoDefs.DeletedMessageView>
+    | { $type: string }
   )[]
-  [k: string]: unknown
 }
 
 export type HandlerInput = undefined
