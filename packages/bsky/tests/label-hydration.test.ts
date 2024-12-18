@@ -1,6 +1,7 @@
-import { AtpAgent } from '@atproto/api'
-import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
 import axios from 'axios'
+
+import { AtpAgent } from '@atproto/api'
+import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 
 describe('label hydration', () => {
   let network: TestNetwork

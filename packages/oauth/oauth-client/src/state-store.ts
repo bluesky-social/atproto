@@ -1,4 +1,5 @@
 import { SimpleStore } from '@atproto-labs/simple-store'
+
 import { Key } from '@atproto/jwk'
 
 export type InternalStateData = {

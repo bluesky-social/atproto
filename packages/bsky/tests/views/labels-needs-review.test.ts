@@ -1,7 +1,9 @@
+import assert from 'node:assert'
+
 import { AtpAgent } from '@atproto/api'
-import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
+import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+
 import { ids } from '../../src/lexicon/lexicons'
-import assert from 'assert'
 import { isThreadViewPost } from '../../src/lexicon/types/app/bsky/feed/defs'
 
 describe('bsky needs-review labels', () => {

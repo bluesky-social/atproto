@@ -1,4 +1,5 @@
 import { RefreshToken } from '@atproto/oauth-provider'
+
 import { AccountDb } from '../db'
 
 /**

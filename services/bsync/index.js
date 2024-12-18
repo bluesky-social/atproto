@@ -7,10 +7,10 @@ require('dd-trace') // Only works with commonjs
 
 // Tracer code above must come before anything else
 const {
-  envToCfg,
-  readEnv,
-  httpLogger,
   default: BsyncService,
+  envToCfg,
+  httpLogger,
+  readEnv,
 } = require('@atproto/bsync')
 
 const main = async () => {

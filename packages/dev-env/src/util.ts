@@ -1,9 +1,11 @@
-import axios from 'axios'
 import * as plc from '@did-plc/lib'
-import { IdResolver } from '@atproto/identity'
+import axios from 'axios'
+
 import { Secp256k1Keypair } from '@atproto/crypto'
-import { TestPds } from './pds'
+import { IdResolver } from '@atproto/identity'
+
 import { TestBsky } from './bsky'
+import { TestPds } from './pds'
 import { DidAndKey } from './types'
 
 export const mockNetworkUtilities = (pds: TestPds, bsky?: TestBsky) => {

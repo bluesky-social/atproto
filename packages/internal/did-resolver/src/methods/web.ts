@@ -1,11 +1,12 @@
 import {
-  bindFetch,
   Fetch,
+  bindFetch,
   fetchJsonProcessor,
   fetchJsonZodProcessor,
   fetchOkProcessor,
 } from '@atproto-labs/fetch'
 import { pipe } from '@atproto-labs/pipe'
+
 import { Did, didDocumentValidator, didWebToUrl } from '@atproto/did'
 
 import { DidMethod, ResolveDidOptions } from '../did-method.js'

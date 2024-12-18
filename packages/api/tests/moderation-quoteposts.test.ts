@@ -1,9 +1,9 @@
 import {
-  moderatePost,
-  mock,
-  ModerationOpts,
   InterpretedLabelValueDefinition,
+  ModerationOpts,
   interpretLabelValueDefinition,
+  mock,
+  moderatePost,
 } from '../src'
 import './util/moderation-behavior'
 

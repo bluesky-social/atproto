@@ -1,10 +1,12 @@
 import assert from 'node:assert'
+
 import {
   ModeratorClient,
   SeedClient,
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
+
 import { forSnapshot } from './_util'
 
 describe('blob divert', () => {

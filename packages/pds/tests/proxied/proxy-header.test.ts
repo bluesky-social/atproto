@@ -1,14 +1,17 @@
-import http from 'node:http'
 import assert from 'node:assert'
-import express from 'express'
-import axios from 'axios'
-import * as plc from '@did-plc/lib'
-import { SeedClient, TestNetworkNoAppView, usersSeed } from '@atproto/dev-env'
-import { Keypair } from '@atproto/crypto'
-import { verifyJwt } from '@atproto/xrpc-server'
-import { parseProxyHeader } from '../../src/pipethrough'
 import { once } from 'node:events'
+import http from 'node:http'
 import { AddressInfo } from 'node:net'
+
+import * as plc from '@did-plc/lib'
+import axios from 'axios'
+import express from 'express'
+
+import { Keypair } from '@atproto/crypto'
+import { SeedClient, TestNetworkNoAppView, usersSeed } from '@atproto/dev-env'
+import { verifyJwt } from '@atproto/xrpc-server'
+
+import { parseProxyHeader } from '../../src/pipethrough'
 
 describe('proxy header', () => {
   let network: TestNetworkNoAppView

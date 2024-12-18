@@ -1,12 +1,14 @@
+import { CID } from 'multiformats/cid'
+
+import { RepoRecord } from '@atproto/lexicon'
+import { cborToLexRecord } from '@atproto/repo'
 import * as syntax from '@atproto/syntax'
 import { AtUri, ensureValidAtUri } from '@atproto/syntax'
-import { cborToLexRecord } from '@atproto/repo'
-import { CID } from 'multiformats/cid'
+
 import { countAll, notSoftDeletedClause } from '../../db/util'
 import { ids } from '../../lexicon/lexicons'
-import { ActorDb, Backlink } from '../db'
 import { StatusAttr } from '../../lexicon/types/com/atproto/admin/defs'
-import { RepoRecord } from '@atproto/lexicon'
+import { ActorDb, Backlink } from '../db'
 
 export class RecordReader {
   constructor(public db: ActorDb) {}

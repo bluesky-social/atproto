@@ -24,6 +24,9 @@
     "migration:create": "ts-node ./bin/migration-create.ts",
     "buf:gen": "buf generate proto"
   },
+  "engines": {
+    "node": ">=18.7.0"
+  },
   "dependencies": {
     "@atproto/common": "workspace:^",
     "@atproto/syntax": "workspace:^",

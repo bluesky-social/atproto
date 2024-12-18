@@ -1,11 +1,12 @@
 import { CachedGetter, SimpleStore } from '@atproto-labs/simple-store'
+
 import { Did, DidDocument } from '@atproto/did'
 
 import { DidCacheMemory } from './did-cache-memory.js'
 import { DidMethod, ResolveDidOptions } from './did-method.js'
 import { DidResolver, ResolvedDocument } from './did-resolver.js'
 
-export type { DidMethod, ResolvedDocument, ResolveDidOptions }
+export type { DidMethod, ResolveDidOptions, ResolvedDocument }
 
 export type DidCache = SimpleStore<Did, DidDocument>
 

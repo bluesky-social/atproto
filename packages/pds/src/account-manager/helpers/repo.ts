@@ -1,4 +1,5 @@
 import { CID } from 'multiformats/cid'
+
 import { AccountDb } from '../db'
 
 export const updateRoot = async (

@@ -1,18 +1,20 @@
 // This may require better organization but for now, just dumping functions here containing DB queries for moderation status
 
+import { HOUR } from '@atproto/common'
 import { AtUri } from '@atproto/syntax'
+
 import { Database } from '../db'
 import { ModerationSubjectStatus } from '../db/schema/moderation_subject_status'
+import { jsonb } from '../db/types'
+import { REASONAPPEAL } from '../lexicon/types/com/atproto/moderation/defs'
 import {
-  REVIEWOPEN,
   REVIEWCLOSED,
   REVIEWESCALATED,
   REVIEWNONE,
+  REVIEWOPEN,
 } from '../lexicon/types/tools/ozone/moderation/defs'
+
 import { ModerationEventRow, ModerationSubjectStatusRow } from './types'
-import { HOUR } from '@atproto/common'
-import { REASONAPPEAL } from '../lexicon/types/com/atproto/moderation/defs'
-import { jsonb } from '../db/types'
 
 const getSubjectStatusForModerationEvent = ({
   currentStatus,

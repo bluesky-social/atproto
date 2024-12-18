@@ -1,5 +1,6 @@
 import { Fetch, Json, bindFetch, fetchJsonProcessor } from '@atproto-labs/fetch'
 import { SimpleStore } from '@atproto-labs/simple-store'
+
 import { AtprotoDid } from '@atproto/did'
 import { Key, Keyset } from '@atproto/jwk'
 import {

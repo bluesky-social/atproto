@@ -1,8 +1,9 @@
 import {
   IdentityResolver,
-  ResolvedIdentity,
   ResolveIdentityOptions,
+  ResolvedIdentity,
 } from '@atproto-labs/identity-resolver'
+
 import {
   OAuthAuthorizationServerMetadata,
   oauthIssuerIdentifierSchema,

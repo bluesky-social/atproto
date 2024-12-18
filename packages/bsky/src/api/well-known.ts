@@ -1,8 +1,9 @@
-import express from 'express'
-import AppContext from '../context'
+import { Router } from 'express'
 
-export const createRouter = (ctx: AppContext): express.Router => {
-  const router = express.Router()
+import { AppContext } from '../context'
+
+export const createRouter = (ctx: AppContext): Router => {
+  const router = Router()
 
   router.get('/.well-known/did.json', (_req, res) => {
     const hostname = ctx.cfg.publicUrl && new URL(ctx.cfg.publicUrl).hostname

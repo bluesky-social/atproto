@@ -1,8 +1,10 @@
 import { AxiosError } from 'axios'
 import { parseList } from 'structured-headers'
-import { XRPCError, ResponseType } from '@atproto/xrpc'
+
 import { RetryOptions, retry } from '@atproto/common'
-import Database from './db'
+import { ResponseType, XRPCError } from '@atproto/xrpc'
+
+import { Database } from './db'
 
 export const getSigningKeyId = async (
   db: Database,

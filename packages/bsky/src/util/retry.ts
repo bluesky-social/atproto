@@ -1,7 +1,8 @@
-import { AxiosError } from 'axios'
-import { XRPCError, ResponseType } from '@atproto/xrpc'
-import { RetryOptions, retry } from '@atproto/common'
 import { Code, ConnectError } from '@connectrpc/connect'
+import { AxiosError } from 'axios'
+
+import { RetryOptions, retry } from '@atproto/common'
+import { ResponseType, XRPCError } from '@atproto/xrpc'
 
 export async function retryHttp<T>(
   fn: () => Promise<T>,

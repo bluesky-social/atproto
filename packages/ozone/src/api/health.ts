@@ -1,9 +1,10 @@
-import express from 'express'
+import { Router } from 'express'
 import { sql } from 'kysely'
-import AppContext from '../context'
 
-export const createRouter = (ctx: AppContext): express.Router => {
-  const router = express.Router()
+import { AppContext } from '../context'
+
+export const createRouter = (ctx: AppContext): Router => {
+  const router = Router()
 
   router.get('/xrpc/_health', async function (req, res) {
     const { version } = ctx.cfg.service

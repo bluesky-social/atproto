@@ -1,5 +1,6 @@
+import { z } from 'zod'
+
 import { jwtPayloadSchema } from '@atproto/jwk'
-import z from 'zod'
 
 import { clientIdSchema } from '../client/client-id.js'
 import { Simplify } from '../lib/util/type.js'

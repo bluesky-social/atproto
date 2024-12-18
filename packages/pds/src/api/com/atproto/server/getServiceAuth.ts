@@ -1,6 +1,7 @@
-import { InvalidRequestError, createServiceJwt } from '@atproto/xrpc-server'
 import { HOUR, MINUTE } from '@atproto/common'
-import AppContext from '../../../../context'
+import { InvalidRequestError, createServiceJwt } from '@atproto/xrpc-server'
+
+import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { PRIVILEGED_METHODS, PROTECTED_METHODS } from '../../../../pipethrough'
 

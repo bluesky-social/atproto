@@ -1,14 +1,16 @@
-import { AtUri } from '@atproto/syntax'
-import { lexToJson } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
+
+import { AppBskyFeedGetPostThread } from '@atproto/api'
+import { lexToJson } from '@atproto/lexicon'
+import { AtUri } from '@atproto/syntax'
+
+import { isViewRecord } from '../src/lexicon/types/app/bsky/embed/record'
 import {
   FeedViewPost,
   PostView,
   isPostView,
   isThreadViewPost,
 } from '../src/lexicon/types/app/bsky/feed/defs'
-import { isViewRecord } from '../src/lexicon/types/app/bsky/embed/record'
-import { AppBskyFeedGetPostThread } from '@atproto/api'
 import {
   LabelerView,
   isLabelerView,

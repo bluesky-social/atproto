@@ -1,8 +1,11 @@
 import { CID } from 'multiformats/cid'
-import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
-import { InvalidRequestError } from '@atproto/xrpc-server'
+
 import { BlobNotFoundError } from '@atproto/repo'
+import { InvalidRequestError } from '@atproto/xrpc-server'
+
+import { AppContext } from '../../../../context'
+import { Server } from '../../../../lexicon'
+
 import { assertRepoAvailability } from './util'
 
 export default function (server: Server, ctx: AppContext) {

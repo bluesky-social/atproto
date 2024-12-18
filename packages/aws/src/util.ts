@@ -1,4 +1,5 @@
 import { handleAllSettledErrors } from '@atproto/common'
+
 import { ImageInvalidator } from './types'
 
 export class MultiImageInvalidator implements ImageInvalidator {

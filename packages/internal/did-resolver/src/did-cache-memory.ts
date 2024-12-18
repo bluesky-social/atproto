@@ -1,8 +1,9 @@
-import { Did, DidDocument } from '@atproto/did'
 import {
   SimpleStoreMemory,
   SimpleStoreMemoryOptions,
 } from '@atproto-labs/simple-store-memory'
+
+import { Did, DidDocument } from '@atproto/did'
 
 import { DidCache } from './did-cache.js'
 

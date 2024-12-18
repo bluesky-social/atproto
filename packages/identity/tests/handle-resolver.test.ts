@@ -1,6 +1,6 @@
 import { HandleResolver } from '../src'
 
-jest.mock('dns/promises', () => {
+jest.mock('node:dns/promises', () => {
   return {
     resolveTxt: (handle: string) => {
       if (handle === '_atproto.simple.test') {

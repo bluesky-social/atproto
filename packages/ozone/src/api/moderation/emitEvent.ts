@@ -1,7 +1,10 @@
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+
+import { AdminTokenOutput, ModeratorOutput } from '../../auth-verifier'
+import { AppContext } from '../../context'
 import { Server } from '../../lexicon'
-import AppContext from '../../context'
 import {
+  ModEventTag,
   isModEventAcknowledge,
   isModEventDivert,
   isModEventEmail,
@@ -11,16 +14,14 @@ import {
   isModEventTag,
   isModEventTakedown,
   isModEventUnmuteReporter,
-  ModEventTag,
 } from '../../lexicon/types/tools/ozone/moderation/defs'
 import { HandlerInput } from '../../lexicon/types/tools/ozone/moderation/emitEvent'
 import { subjectFromInput } from '../../mod-service/subject'
+import { ProtectedTagSettingKey } from '../../setting/constants'
+import { SettingService } from '../../setting/service'
+import { ProtectedTagSetting } from '../../setting/types'
 import { TagService } from '../../tag-service'
 import { retryHttp } from '../../util'
-import { ModeratorOutput, AdminTokenOutput } from '../../auth-verifier'
-import { SettingService } from '../../setting/service'
-import { ProtectedTagSettingKey } from '../../setting/constants'
-import { ProtectedTagSetting } from '../../setting/types'
 
 const handleModerationEvent = async ({
   ctx,

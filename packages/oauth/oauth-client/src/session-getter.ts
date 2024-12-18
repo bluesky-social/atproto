@@ -3,6 +3,7 @@ import {
   GetCachedOptions,
   SimpleStore,
 } from '@atproto-labs/simple-store'
+
 import { AtprotoDid } from '@atproto/did'
 import { Key } from '@atproto/jwk'
 
@@ -13,7 +14,7 @@ import { OAuthResponseError } from './oauth-response-error.js'
 import { TokenSet } from './oauth-server-agent.js'
 import { OAuthServerFactory } from './oauth-server-factory.js'
 import { Runtime } from './runtime.js'
-import { combineSignals, CustomEventTarget, timeoutSignal } from './util.js'
+import { CustomEventTarget, combineSignals, timeoutSignal } from './util.js'
 
 export type Session = {
   dpopKey: Key

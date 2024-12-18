@@ -1,25 +1,28 @@
-import { pipeline, Readable } from 'stream'
-import express from 'express'
-import createError from 'http-errors'
+import { Readable, pipeline } from 'node:stream'
+
 import axios, { AxiosError } from 'axios'
+import { Router } from 'express'
+import createError from 'http-errors'
 import { CID } from 'multiformats/cid'
-import { ensureValidDid } from '@atproto/syntax'
-import { forwardStreamErrors, VerifyCidTransform } from '@atproto/common'
+
+import { VerifyCidTransform, forwardStreamErrors } from '@atproto/common'
 import { DidNotFoundError } from '@atproto/identity'
-import AppContext from '../context'
-import { httpLogger as log } from '../logger'
-import { retryHttp } from '../util/retry'
+import { ensureValidDid } from '@atproto/syntax'
+
+import { AppContext } from '../context'
 import {
   Code,
   getServiceEndpoint,
   isDataplaneError,
   unpackIdentityServices,
 } from '../data-plane'
+import { httpLogger as log } from '../logger'
+import { retryHttp } from '../util/retry'
 
 // Resolve and verify blob from its origin host
 
-export const createRouter = (ctx: AppContext): express.Router => {
-  const router = express.Router()
+export const createRouter = (ctx: AppContext): Router => {
+  const router = Router()
 
   router.get('/blob/:did/:cid', async function (req, res, next) {
     try {

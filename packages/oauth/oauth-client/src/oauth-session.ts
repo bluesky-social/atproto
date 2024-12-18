@@ -1,4 +1,5 @@
-import { bindFetch, Fetch } from '@atproto-labs/fetch'
+import { Fetch, bindFetch } from '@atproto-labs/fetch'
+
 import { AtprotoDid } from '@atproto/did'
 import { OAuthAuthorizationServerMetadata } from '@atproto/oauth-types'
 

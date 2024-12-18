@@ -1,7 +1,9 @@
-import { AtUri } from '@atproto/syntax'
 import { CID } from 'multiformats/cid'
-import { FeedViewPost } from '../src/lexicon/types/app/bsky/feed/defs'
+
 import { lexToJson } from '@atproto/lexicon'
+import { AtUri } from '@atproto/syntax'
+
+import { FeedViewPost } from '../src/lexicon/types/app/bsky/feed/defs'
 
 // Swap out identifiers and dates with stable
 // values for the purpose of snapshot testing

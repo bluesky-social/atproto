@@ -1,3 +1,7 @@
+import { KeyObject } from 'node:crypto'
+
+import { CID } from 'multiformats/cid'
+
 import { HOUR, wait } from '@atproto/common'
 import {
   AccountInfo,
@@ -20,13 +24,12 @@ import {
   UpdateRequestData,
 } from '@atproto/oauth-provider'
 import { AuthRequiredError } from '@atproto/xrpc-server'
-import { CID } from 'multiformats/cid'
-import { KeyObject } from 'node:crypto'
 
 import { AuthScope } from '../auth-verifier'
 import { BackgroundQueue } from '../background'
 import { softDeleted } from '../db'
 import { StatusAttr } from '../lexicon/types/com/atproto/admin/defs'
+
 import { AccountDb, EmailTokenPurpose, getDb, getMigrator } from './db'
 import * as account from './helpers/account'
 import { AccountStatus, ActorAccount } from './helpers/account'

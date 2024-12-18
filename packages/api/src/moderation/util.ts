@@ -4,11 +4,12 @@ import {
   AppBskyLabelerDefs,
   ComAtprotoLabelDefs,
 } from '../client'
+
 import {
   InterpretedLabelValueDefinition,
-  ModerationBehavior,
   LabelPreference,
   LabelValueDefinitionFlag,
+  ModerationBehavior,
 } from './types'
 
 export function isQuotedPost(embed: unknown): embed is AppBskyEmbedRecord.View {

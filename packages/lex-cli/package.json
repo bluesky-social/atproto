@@ -21,6 +21,9 @@
   "scripts": {
     "build": "tsc --build tsconfig.build.json"
   },
+  "engines": {
+    "node": ">=18.7.0"
+  },
   "dependencies": {
     "@atproto/lexicon": "workspace:^",
     "@atproto/syntax": "workspace:^",

@@ -1,4 +1,5 @@
-import { createReadStream } from 'fs'
+import { createReadStream } from 'node:fs'
+
 import { Options, getInfo, resize } from '../../src/image/sharp'
 
 describe('sharp image processor', () => {

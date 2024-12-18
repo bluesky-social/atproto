@@ -1,8 +1,11 @@
-import { Readable } from 'stream'
-import { pipeline } from 'stream/promises'
+import { Readable } from 'node:stream'
+import { pipeline } from 'node:stream/promises'
+
 import sharp from 'sharp'
+
 import { errHasMsg, forwardStreamErrors } from '@atproto/common'
-import { formatsToMimes, ImageInfo, Options } from './util'
+
+import { ImageInfo, Options, formatsToMimes } from './util'
 
 export type { Options }
 

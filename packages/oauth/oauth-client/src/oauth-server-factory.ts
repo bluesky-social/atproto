@@ -1,4 +1,5 @@
 import { Fetch } from '@atproto-labs/fetch'
+
 import { Key, Keyset } from '@atproto/jwk'
 import { OAuthAuthorizationServerMetadata } from '@atproto/oauth-types'
 

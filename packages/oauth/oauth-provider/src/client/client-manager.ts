@@ -1,6 +1,6 @@
 import {
-  bindFetch,
   Fetch,
+  bindFetch,
   fetchJsonProcessor,
   fetchJsonZodProcessor,
   fetchOkProcessor,
@@ -11,16 +11,17 @@ import {
   GetCachedOptions,
   SimpleStore,
 } from '@atproto-labs/simple-store'
-import { Jwks, jwksSchema, Keyset } from '@atproto/jwk'
+
+import { Jwks, Keyset, jwksSchema } from '@atproto/jwk'
 import {
-  isLoopbackHost,
-  isOAuthClientIdDiscoverable,
-  isOAuthClientIdLoopback,
   OAuthAuthorizationServerMetadata,
   OAuthClientIdDiscoverable,
   OAuthClientIdLoopback,
   OAuthClientMetadata,
   OAuthClientMetadataInput,
+  isLoopbackHost,
+  isOAuthClientIdDiscoverable,
+  isOAuthClientIdLoopback,
   oauthClientMetadataSchema,
 } from '@atproto/oauth-types'
 
@@ -34,6 +35,7 @@ import {
 } from '../lib/util/hostname.js'
 import { Awaitable } from '../lib/util/type.js'
 import { OAuthHooks } from '../oauth-hooks.js'
+
 import { ClientId } from './client-id.js'
 import { ClientStore } from './client-store.js'
 import { parseDiscoverableClientId, parseRedirectUri } from './client-utils.js'

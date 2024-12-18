@@ -1,15 +1,15 @@
-import * as actor from './actor'
 import * as account from './account'
+import * as actor from './actor'
+import * as appPassword from './app-password'
+import * as oauthRequest from './authorization-request'
 import * as device from './device'
 import * as deviceAccount from './device-account'
-import * as oauthRequest from './authorization-request'
+import * as emailToken from './email-token'
+import * as inviteCode from './invite-code'
+import * as refreshToken from './refresh-token'
+import * as repoRoot from './repo-root'
 import * as token from './token'
 import * as usedRefreshToken from './used-refresh-token'
-import * as repoRoot from './repo-root'
-import * as refreshToken from './refresh-token'
-import * as appPassword from './app-password'
-import * as inviteCode from './invite-code'
-import * as emailToken from './email-token'
 
 export type DatabaseSchema = actor.PartialDB &
   account.PartialDB &
