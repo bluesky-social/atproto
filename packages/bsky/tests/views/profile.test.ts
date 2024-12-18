@@ -118,10 +118,10 @@ describe('pds profile views', () => {
 
   it('presents avatars & banners', async () => {
     const avatarImg = await fs.readFile(
-      '../dev-env/src/seed/img/key-portrait-small.jpg',
+      '../dev-env/assets/key-portrait-small.jpg',
     )
     const bannerImg = await fs.readFile(
-      '../dev-env/src/seed/img/key-landscape-small.jpg',
+      '../dev-env/assets/key-landscape-small.jpg',
     )
     const avatarRes = await pdsAgent.api.com.atproto.repo.uploadBlob(
       avatarImg,

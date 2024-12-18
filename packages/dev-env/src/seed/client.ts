@@ -20,12 +20,9 @@ import { TestNetworkNoAppView } from '../network-no-appview'
 
 let AVATAR_IMG: Uint8Array | undefined
 
-// AVATAR_PATH defines the path to the avatar in:
-// 1. a non-CWD-based way.
-// 2. a way that works with the built package, as the same path is correct for src/ and dist/.
 const AVATAR_PATH = path.resolve(
   __dirname,
-  '../../src/seed/img/key-portrait-small.jpg',
+  '../../assets/key-portrait-small.jpg',
 )
 
 export type ImageRef = {

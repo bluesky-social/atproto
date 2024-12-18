@@ -73,7 +73,7 @@ describe('file uploads', () => {
 
   it('uploads files', async () => {
     smallFile = await fs.readFile(
-      '../dev-env/src/seed/img/key-portrait-small.jpg',
+      '../dev-env/assets/key-portrait-small.jpg',
     )
     const res = await agent.api.com.atproto.repo.uploadBlob(smallFile, {
       headers: sc.getHeaders(alice),
@@ -130,7 +130,7 @@ describe('file uploads', () => {
   let largeFile: Uint8Array
 
   it('does not allow referencing a file that is outside blob constraints', async () => {
-    largeFile = await fs.readFile('../dev-env/src/seed/img/hd-key.jpg')
+    largeFile = await fs.readFile('../dev-env/assets/hd-key.jpg')
     const res = await agent.api.com.atproto.repo.uploadBlob(largeFile, {
       headers: sc.getHeaders(alice),
       encoding: 'image/jpeg',
@@ -160,7 +160,7 @@ describe('file uploads', () => {
 
   it('permits duplicate uploads of the same file', async () => {
     const file = await fs.readFile(
-      '../dev-env/src/seed/img/key-landscape-small.jpg',
+      '../dev-env/assets/key-landscape-small.jpg',
     )
     const { data: uploadA } = await agent.api.com.atproto.repo.uploadBlob(
       file,
@@ -226,7 +226,7 @@ describe('file uploads', () => {
 
   it('corrects a bad mimetype', async () => {
     const file = await fs.readFile(
-      '../dev-env/src/seed/img/key-landscape-large.jpg',
+      '../dev-env/assets/key-landscape-large.jpg',
     )
     const res = await agent.api.com.atproto.repo.uploadBlob(file, {
       headers: sc.getHeaders(alice),
@@ -245,7 +245,7 @@ describe('file uploads', () => {
   })
 
   it('handles pngs', async () => {
-    const file = await fs.readFile('../dev-env/src/seed/img/at.png')
+    const file = await fs.readFile('../dev-env/assets/at.png')
     const res = await agent.api.com.atproto.repo.uploadBlob(file, {
       headers: sc.getHeaders(alice),
       encoding: 'image/png',

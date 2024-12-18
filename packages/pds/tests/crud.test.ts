@@ -157,7 +157,7 @@ describe('crud operations', () => {
 
   it('attaches images to a post', async () => {
     const file = await fs.readFile(
-      '../dev-env/src/seed/img/key-landscape-small.jpg',
+      '../dev-env/assets/key-landscape-small.jpg',
     )
     const uploadedRes = await aliceAgent.api.com.atproto.repo.uploadBlob(file, {
       encoding: 'image/jpeg',
@@ -517,7 +517,7 @@ describe('crud operations', () => {
     it('updates a legacy blob ref when updating profile', async () => {
       const { repo } = bobAgent.api.com.atproto
       const file = await fs.readFile(
-        '../dev-env/src/seed/img/key-portrait-small.jpg',
+        '../dev-env/assets/key-portrait-small.jpg',
       )
       const uploadedRes = await repo.uploadBlob(file, {
         encoding: 'image/jpeg',
@@ -813,7 +813,7 @@ describe('crud operations', () => {
 
     it('correctly associates images with unknown record types', async () => {
       const file = await fs.readFile(
-        '../dev-env/src/seed/img/key-portrait-small.jpg',
+        '../dev-env/assets/key-portrait-small.jpg',
       )
       const uploadedRes = await aliceAgent.api.com.atproto.repo.uploadBlob(
         file,
@@ -868,7 +868,7 @@ describe('crud operations', () => {
 
     it('enforces blob ref format even when unvalidated', async () => {
       const file = await fs.readFile(
-        '../dev-env/src/seed/img/key-portrait-small.jpg',
+        '../dev-env/assets/key-portrait-small.jpg',
       )
       const uploadedRes = await aliceAgent.api.com.atproto.repo.uploadBlob(
         file,
