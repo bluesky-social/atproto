@@ -824,6 +824,8 @@ export class ModerationService {
       })
       .filter(Boolean)
 
+    if (!conditions.length) return builder
+
     // Combine all conditions with OR
     return builder.where(sql`(${sql.join(conditions, sql` OR `)})`)
   }
