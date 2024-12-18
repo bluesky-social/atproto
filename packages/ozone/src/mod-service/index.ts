@@ -797,27 +797,32 @@ export class ModerationService {
   ) => {
     const { ref } = this.db.db.dynamic
     // Build an array of conditions
-    const conditions = tags.map((tag) => {
-      if (tag.includes('&&')) {
-        // Split by '&&' for AND logic
-        const subTags = tag
-          .split('&&')
-          // Make sure spaces on either sides of '&&' are trimmed
-          .map((subTag) => subTag.trim())
-          // Remove empty strings after trimming is applied
-          .filter(Boolean)
-        return sql`(${sql.join(
-          subTags.map(
-            (subTag) =>
-              sql`${ref('moderation_subject_status.tags')} ? ${subTag}`,
-          ),
-          sql` AND `,
-        )})`
-      } else {
-        // Single tag condition
-        return sql`${ref('moderation_subject_status.tags')} ? ${tag}`
-      }
-    })
+    const conditions = tags
+      .map((tag) => {
+        if (tag.includes('&&')) {
+          // Split by '&&' for AND logic
+          const subTags = tag
+            .split('&&')
+            // Make sure spaces on either sides of '&&' are trimmed
+            .map((subTag) => subTag.trim())
+            // Remove empty strings after trimming is applied
+            .filter(Boolean)
+
+          if (!subTags.length) return null
+
+          return sql`(${sql.join(
+            subTags.map(
+              (subTag) =>
+                sql`${ref('moderation_subject_status.tags')} ? ${subTag}`,
+            ),
+            sql` AND `,
+          )})`
+        } else {
+          // Single tag condition
+          return sql`${ref('moderation_subject_status.tags')} ? ${tag}`
+        }
+      })
+      .filter(Boolean)
 
     // Combine all conditions with OR
     return builder.where(sql`(${sql.join(conditions, sql` OR `)})`)
