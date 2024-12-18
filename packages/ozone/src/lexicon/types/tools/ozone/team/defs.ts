@@ -2,12 +2,21 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
-import * as AppBskyActorDefs from '../../../app/bsky/actor/defs'
+import {
+  isValid as _isValid,
+  validate as _validate,
+} from '../../../../lexicons'
+import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import type * as AppBskyActorDefs from '../../../app/bsky/actor/defs'
+
+const is$typed = _is$typed,
+  isValid = _isValid,
+  validate = _validate
+const id = 'tools.ozone.team.defs'
 
 export interface Member {
+  $type?: $Type<'tools.ozone.team.defs', 'member'>
   did: string
   disabled?: boolean
   profile?: AppBskyActorDefs.ProfileViewDetailed
@@ -19,24 +28,25 @@ export interface Member {
     | 'lex:tools.ozone.team.defs#roleModerator'
     | 'lex:tools.ozone.team.defs#roleTriage'
     | (string & {})
-  [k: string]: unknown
 }
 
-export function isMember(v: unknown): v is Member {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'tools.ozone.team.defs#member'
-  )
+const hashMember = 'member'
+
+export function isMember<V>(v: V) {
+  return is$typed(v, id, hashMember)
 }
 
-export function validateMember(v: unknown): ValidationResult {
-  return lexicons.validate('tools.ozone.team.defs#member', v)
+export function validateMember<V>(v: V) {
+  return validate<Member & V>(v, id, hashMember)
+}
+
+export function isValidMember<V>(v: V) {
+  return isValid<Member & V>(v, id, hashMember)
 }
 
 /** Admin role. Highest level of access, can perform all actions. */
-export const ROLEADMIN = 'tools.ozone.team.defs#roleAdmin'
+export const ROLEADMIN = `${id}#roleAdmin`
 /** Moderator role. Can perform most actions. */
-export const ROLEMODERATOR = 'tools.ozone.team.defs#roleModerator'
+export const ROLEMODERATOR = `${id}#roleModerator`
 /** Triage role. Mostly intended for monitoring and escalating issues. */
-export const ROLETRIAGE = 'tools.ozone.team.defs#roleTriage'
+export const ROLETRIAGE = `${id}#roleTriage`

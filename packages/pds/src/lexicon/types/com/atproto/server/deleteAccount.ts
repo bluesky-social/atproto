@@ -3,10 +3,18 @@
  */
 import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
+import {
+  isValid as _isValid,
+  validate as _validate,
+} from '../../../../lexicons'
+import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
+
+const is$typed = _is$typed,
+  isValid = _isValid,
+  validate = _validate
+const id = 'com.atproto.server.deleteAccount'
 
 export interface QueryParams {}
 
@@ -14,7 +22,6 @@ export interface InputSchema {
   did: string
   password: string
   token: string
-  [k: string]: unknown
 }
 
 export interface HandlerInput {
