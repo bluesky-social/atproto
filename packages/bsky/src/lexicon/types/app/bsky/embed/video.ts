@@ -3,62 +3,80 @@
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import { lexicons } from '../../../../lexicons'
-import { $Type, is$typed } from '../../../../util'
-import * as AppBskyEmbedDefs from './defs'
+import {
+  isValid as _isValid,
+  validate as _validate,
+} from '../../../../lexicons'
+import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import type * as AppBskyEmbedDefs from './defs'
 
+const is$typed = _is$typed,
+  isValid = _isValid,
+  validate = _validate
 const id = 'app.bsky.embed.video'
 
 export interface Main {
+  $type?: $Type<'app.bsky.embed.video', 'main'>
   video: BlobRef
   captions?: Caption[]
   /** Alt text description of the video, for accessibility. */
   alt?: string
   aspectRatio?: AppBskyEmbedDefs.AspectRatio
-  [k: string]: unknown
 }
 
-export function isMain(
-  v: unknown,
-): v is Main & { $type: $Type<'app.bsky.embed.video', 'main'> } {
-  return is$typed(v, id, 'main')
+const hashMain = 'main'
+
+export function isMain<V>(v: V) {
+  return is$typed(v, id, hashMain)
 }
 
-export function validateMain(v: unknown) {
-  return lexicons.validate(`${id}#main`, v) as ValidationResult<Main>
+export function validateMain<V>(v: V) {
+  return validate<Main & V>(v, id, hashMain)
+}
+
+export function isValidMain<V>(v: V) {
+  return isValid<Main & V>(v, id, hashMain)
 }
 
 export interface Caption {
+  $type?: $Type<'app.bsky.embed.video', 'caption'>
   lang: string
   file: BlobRef
-  [k: string]: unknown
 }
 
-export function isCaption(
-  v: unknown,
-): v is Caption & { $type: $Type<'app.bsky.embed.video', 'caption'> } {
-  return is$typed(v, id, 'caption')
+const hashCaption = 'caption'
+
+export function isCaption<V>(v: V) {
+  return is$typed(v, id, hashCaption)
 }
 
-export function validateCaption(v: unknown) {
-  return lexicons.validate(`${id}#caption`, v) as ValidationResult<Caption>
+export function validateCaption<V>(v: V) {
+  return validate<Caption & V>(v, id, hashCaption)
+}
+
+export function isValidCaption<V>(v: V) {
+  return isValid<Caption & V>(v, id, hashCaption)
 }
 
 export interface View {
+  $type?: $Type<'app.bsky.embed.video', 'view'>
   cid: string
   playlist: string
   thumbnail?: string
   alt?: string
   aspectRatio?: AppBskyEmbedDefs.AspectRatio
-  [k: string]: unknown
 }
 
-export function isView(
-  v: unknown,
-): v is View & { $type: $Type<'app.bsky.embed.video', 'view'> } {
-  return is$typed(v, id, 'view')
+const hashView = 'view'
+
+export function isView<V>(v: V) {
+  return is$typed(v, id, hashView)
 }
 
-export function validateView(v: unknown) {
-  return lexicons.validate(`${id}#view`, v) as ValidationResult<View>
+export function validateView<V>(v: V) {
+  return validate<View & V>(v, id, hashView)
+}
+
+export function isValidView<V>(v: V) {
+  return isValid<View & V>(v, id, hashView)
 }

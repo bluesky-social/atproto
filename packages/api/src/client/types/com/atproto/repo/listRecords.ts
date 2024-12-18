@@ -4,9 +4,15 @@
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import { $Type, is$typed } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
+import {
+  isValid as _isValid,
+  validate as _validate,
+} from '../../../../lexicons'
+import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 
+const is$typed = _is$typed,
+  isValid = _isValid,
+  validate = _validate
 const id = 'com.atproto.repo.listRecords'
 
 export interface QueryParams {
@@ -30,7 +36,6 @@ export type InputSchema = undefined
 export interface OutputSchema {
   cursor?: string
   records: Record[]
-  [k: string]: unknown
 }
 
 export interface CallOptions {
@@ -49,18 +54,22 @@ export function toKnownErr(e: any) {
 }
 
 export interface Record {
+  $type?: $Type<'com.atproto.repo.listRecords', 'record'>
   uri: string
   cid: string
-  value: {}
-  [k: string]: unknown
+  value: { [_ in string]: unknown }
 }
 
-export function isRecord(
-  v: unknown,
-): v is Record & { $type: $Type<'com.atproto.repo.listRecords', 'record'> } {
-  return is$typed(v, id, 'record')
+const hashRecord = 'record'
+
+export function isRecord<V>(v: V) {
+  return is$typed(v, id, hashRecord)
 }
 
-export function validateRecord(v: unknown) {
-  return lexicons.validate(`${id}#record`, v) as ValidationResult<Record>
+export function validateRecord<V>(v: V) {
+  return validate<Record & V>(v, id, hashRecord)
+}
+
+export function isValidRecord<V>(v: V) {
+  return isValid<Record & V>(v, id, hashRecord)
 }

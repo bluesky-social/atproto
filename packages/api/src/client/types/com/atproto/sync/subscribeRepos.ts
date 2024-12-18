@@ -4,13 +4,20 @@
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import { $Type, is$typed } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
+import {
+  isValid as _isValid,
+  validate as _validate,
+} from '../../../../lexicons'
+import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 
+const is$typed = _is$typed,
+  isValid = _isValid,
+  validate = _validate
 const id = 'com.atproto.sync.subscribeRepos'
 
 /** Represents an update of repository state. Note that empty commits are allowed, which include no repo data changes, but an update to rev and signature. */
 export interface Commit {
+  $type?: $Type<'com.atproto.sync.subscribeRepos', 'commit'>
   /** The stream sequence number of this message. */
   seq: number
   /** DEPRECATED -- unused */
@@ -33,43 +40,49 @@ export interface Commit {
   blobs: CID[]
   /** Timestamp of when this message was originally broadcast. */
   time: string
-  [k: string]: unknown
 }
 
-export function isCommit(
-  v: unknown,
-): v is Commit & { $type: $Type<'com.atproto.sync.subscribeRepos', 'commit'> } {
-  return is$typed(v, id, 'commit')
+const hashCommit = 'commit'
+
+export function isCommit<V>(v: V) {
+  return is$typed(v, id, hashCommit)
 }
 
-export function validateCommit(v: unknown) {
-  return lexicons.validate(`${id}#commit`, v) as ValidationResult<Commit>
+export function validateCommit<V>(v: V) {
+  return validate<Commit & V>(v, id, hashCommit)
+}
+
+export function isValidCommit<V>(v: V) {
+  return isValid<Commit & V>(v, id, hashCommit)
 }
 
 /** Represents a change to an account's identity. Could be an updated handle, signing key, or pds hosting endpoint. Serves as a prod to all downstream services to refresh their identity cache. */
 export interface Identity {
+  $type?: $Type<'com.atproto.sync.subscribeRepos', 'identity'>
   seq: number
   did: string
   time: string
   /** The current handle for the account, or 'handle.invalid' if validation fails. This field is optional, might have been validated or passed-through from an upstream source. Semantics and behaviors for PDS vs Relay may evolve in the future; see atproto specs for more details. */
   handle?: string
-  [k: string]: unknown
 }
 
-export function isIdentity(
-  v: unknown,
-): v is Identity & {
-  $type: $Type<'com.atproto.sync.subscribeRepos', 'identity'>
-} {
-  return is$typed(v, id, 'identity')
+const hashIdentity = 'identity'
+
+export function isIdentity<V>(v: V) {
+  return is$typed(v, id, hashIdentity)
 }
 
-export function validateIdentity(v: unknown) {
-  return lexicons.validate(`${id}#identity`, v) as ValidationResult<Identity>
+export function validateIdentity<V>(v: V) {
+  return validate<Identity & V>(v, id, hashIdentity)
+}
+
+export function isValidIdentity<V>(v: V) {
+  return isValid<Identity & V>(v, id, hashIdentity)
 }
 
 /** Represents a change to an account's status on a host (eg, PDS or Relay). The semantics of this event are that the status is at the host which emitted the event, not necessarily that at the currently active PDS. Eg, a Relay takedown would emit a takedown with active=false, even if the PDS is still active. */
 export interface Account {
+  $type?: $Type<'com.atproto.sync.subscribeRepos', 'account'>
   seq: number
   did: string
   time: string
@@ -77,112 +90,129 @@ export interface Account {
   active: boolean
   /** If active=false, this optional field indicates a reason for why the account is not active. */
   status?: 'takendown' | 'suspended' | 'deleted' | 'deactivated' | (string & {})
-  [k: string]: unknown
 }
 
-export function isAccount(
-  v: unknown,
-): v is Account & {
-  $type: $Type<'com.atproto.sync.subscribeRepos', 'account'>
-} {
-  return is$typed(v, id, 'account')
+const hashAccount = 'account'
+
+export function isAccount<V>(v: V) {
+  return is$typed(v, id, hashAccount)
 }
 
-export function validateAccount(v: unknown) {
-  return lexicons.validate(`${id}#account`, v) as ValidationResult<Account>
+export function validateAccount<V>(v: V) {
+  return validate<Account & V>(v, id, hashAccount)
+}
+
+export function isValidAccount<V>(v: V) {
+  return isValid<Account & V>(v, id, hashAccount)
 }
 
 /** DEPRECATED -- Use #identity event instead */
 export interface Handle {
+  $type?: $Type<'com.atproto.sync.subscribeRepos', 'handle'>
   seq: number
   did: string
   handle: string
   time: string
-  [k: string]: unknown
 }
 
-export function isHandle(
-  v: unknown,
-): v is Handle & { $type: $Type<'com.atproto.sync.subscribeRepos', 'handle'> } {
-  return is$typed(v, id, 'handle')
+const hashHandle = 'handle'
+
+export function isHandle<V>(v: V) {
+  return is$typed(v, id, hashHandle)
 }
 
-export function validateHandle(v: unknown) {
-  return lexicons.validate(`${id}#handle`, v) as ValidationResult<Handle>
+export function validateHandle<V>(v: V) {
+  return validate<Handle & V>(v, id, hashHandle)
+}
+
+export function isValidHandle<V>(v: V) {
+  return isValid<Handle & V>(v, id, hashHandle)
 }
 
 /** DEPRECATED -- Use #account event instead */
 export interface Migrate {
+  $type?: $Type<'com.atproto.sync.subscribeRepos', 'migrate'>
   seq: number
   did: string
   migrateTo: string | null
   time: string
-  [k: string]: unknown
 }
 
-export function isMigrate(
-  v: unknown,
-): v is Migrate & {
-  $type: $Type<'com.atproto.sync.subscribeRepos', 'migrate'>
-} {
-  return is$typed(v, id, 'migrate')
+const hashMigrate = 'migrate'
+
+export function isMigrate<V>(v: V) {
+  return is$typed(v, id, hashMigrate)
 }
 
-export function validateMigrate(v: unknown) {
-  return lexicons.validate(`${id}#migrate`, v) as ValidationResult<Migrate>
+export function validateMigrate<V>(v: V) {
+  return validate<Migrate & V>(v, id, hashMigrate)
+}
+
+export function isValidMigrate<V>(v: V) {
+  return isValid<Migrate & V>(v, id, hashMigrate)
 }
 
 /** DEPRECATED -- Use #account event instead */
 export interface Tombstone {
+  $type?: $Type<'com.atproto.sync.subscribeRepos', 'tombstone'>
   seq: number
   did: string
   time: string
-  [k: string]: unknown
 }
 
-export function isTombstone(
-  v: unknown,
-): v is Tombstone & {
-  $type: $Type<'com.atproto.sync.subscribeRepos', 'tombstone'>
-} {
-  return is$typed(v, id, 'tombstone')
+const hashTombstone = 'tombstone'
+
+export function isTombstone<V>(v: V) {
+  return is$typed(v, id, hashTombstone)
 }
 
-export function validateTombstone(v: unknown) {
-  return lexicons.validate(`${id}#tombstone`, v) as ValidationResult<Tombstone>
+export function validateTombstone<V>(v: V) {
+  return validate<Tombstone & V>(v, id, hashTombstone)
+}
+
+export function isValidTombstone<V>(v: V) {
+  return isValid<Tombstone & V>(v, id, hashTombstone)
 }
 
 export interface Info {
+  $type?: $Type<'com.atproto.sync.subscribeRepos', 'info'>
   name: 'OutdatedCursor' | (string & {})
   message?: string
-  [k: string]: unknown
 }
 
-export function isInfo(
-  v: unknown,
-): v is Info & { $type: $Type<'com.atproto.sync.subscribeRepos', 'info'> } {
-  return is$typed(v, id, 'info')
+const hashInfo = 'info'
+
+export function isInfo<V>(v: V) {
+  return is$typed(v, id, hashInfo)
 }
 
-export function validateInfo(v: unknown) {
-  return lexicons.validate(`${id}#info`, v) as ValidationResult<Info>
+export function validateInfo<V>(v: V) {
+  return validate<Info & V>(v, id, hashInfo)
+}
+
+export function isValidInfo<V>(v: V) {
+  return isValid<Info & V>(v, id, hashInfo)
 }
 
 /** A repo operation, ie a mutation of a single record. */
 export interface RepoOp {
+  $type?: $Type<'com.atproto.sync.subscribeRepos', 'repoOp'>
   action: 'create' | 'update' | 'delete' | (string & {})
   path: string
   /** For creates and updates, the new record CID. For deletions, null. */
   cid: CID | null
-  [k: string]: unknown
 }
 
-export function isRepoOp(
-  v: unknown,
-): v is RepoOp & { $type: $Type<'com.atproto.sync.subscribeRepos', 'repoOp'> } {
-  return is$typed(v, id, 'repoOp')
+const hashRepoOp = 'repoOp'
+
+export function isRepoOp<V>(v: V) {
+  return is$typed(v, id, hashRepoOp)
 }
 
-export function validateRepoOp(v: unknown) {
-  return lexicons.validate(`${id}#repoOp`, v) as ValidationResult<RepoOp>
+export function validateRepoOp<V>(v: V) {
+  return validate<RepoOp & V>(v, id, hashRepoOp)
+}
+
+export function isValidRepoOp<V>(v: V) {
+  return isValid<RepoOp & V>(v, id, hashRepoOp)
 }

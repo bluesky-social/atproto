@@ -3,47 +3,57 @@
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import { $Type, is$typed } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
+import {
+  isValid as _isValid,
+  validate as _validate,
+} from '../../../../lexicons'
+import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 
+const is$typed = _is$typed,
+  isValid = _isValid,
+  validate = _validate
 const id = 'app.bsky.feed.postgate'
 
 export interface Record {
+  $type?: $Type<'app.bsky.feed.postgate', 'main'>
   createdAt: string
   /** Reference (AT-URI) to the post record. */
   post: string
   /** List of AT-URIs embedding this post that the author has detached from. */
   detachedEmbeddingUris?: string[]
-  embeddingRules?: (DisableRule | { $type: string; [k: string]: unknown })[]
+  embeddingRules?: ($Typed<DisableRule> | { $type: string })[]
   [k: string]: unknown
 }
 
-export function isRecord(
-  v: unknown,
-): v is Record & { $type: $Type<'app.bsky.feed.postgate', 'main'> } {
-  return is$typed(v, id, 'main')
+const hashRecord = 'main'
+
+export function isRecord<V>(v: V) {
+  return is$typed(v, id, hashRecord)
 }
 
-export function validateRecord(v: unknown) {
-  return lexicons.validate(`${id}#main`, v) as ValidationResult<Record>
+export function validateRecord<V>(v: V) {
+  return validate<Record & V>(v, id, hashRecord)
+}
+
+export function isValidRecord<V>(v: V) {
+  return isValid<Record & V>(v, id, hashRecord, true)
 }
 
 /** Disables embedding of this post. */
 export interface DisableRule {
-  [k: string]: unknown
+  $type?: $Type<'app.bsky.feed.postgate', 'disableRule'>
 }
 
-export function isDisableRule(
-  v: unknown,
-): v is DisableRule & {
-  $type: $Type<'app.bsky.feed.postgate', 'disableRule'>
-} {
-  return is$typed(v, id, 'disableRule')
+const hashDisableRule = 'disableRule'
+
+export function isDisableRule<V>(v: V) {
+  return is$typed(v, id, hashDisableRule)
 }
 
-export function validateDisableRule(v: unknown) {
-  return lexicons.validate(
-    `${id}#disableRule`,
-    v,
-  ) as ValidationResult<DisableRule>
+export function validateDisableRule<V>(v: V) {
+  return validate<DisableRule & V>(v, id, hashDisableRule)
+}
+
+export function isValidDisableRule<V>(v: V) {
+  return isValid<DisableRule & V>(v, id, hashDisableRule)
 }

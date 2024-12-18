@@ -4,9 +4,15 @@
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import { $Type, is$typed } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
+import {
+  isValid as _isValid,
+  validate as _validate,
+} from '../../../../lexicons'
+import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 
+const is$typed = _is$typed,
+  isValid = _isValid,
+  validate = _validate
 const id = 'com.atproto.server.createInviteCodes'
 
 export interface QueryParams {}
@@ -15,12 +21,10 @@ export interface InputSchema {
   codeCount: number
   useCount: number
   forAccounts?: string[]
-  [k: string]: unknown
 }
 
 export interface OutputSchema {
   codes: AccountCodes[]
-  [k: string]: unknown
 }
 
 export interface CallOptions {
@@ -41,22 +45,21 @@ export function toKnownErr(e: any) {
 }
 
 export interface AccountCodes {
+  $type?: $Type<'com.atproto.server.createInviteCodes', 'accountCodes'>
   account: string
   codes: string[]
-  [k: string]: unknown
 }
 
-export function isAccountCodes(
-  v: unknown,
-): v is AccountCodes & {
-  $type: $Type<'com.atproto.server.createInviteCodes', 'accountCodes'>
-} {
-  return is$typed(v, id, 'accountCodes')
+const hashAccountCodes = 'accountCodes'
+
+export function isAccountCodes<V>(v: V) {
+  return is$typed(v, id, hashAccountCodes)
 }
 
-export function validateAccountCodes(v: unknown) {
-  return lexicons.validate(
-    `${id}#accountCodes`,
-    v,
-  ) as ValidationResult<AccountCodes>
+export function validateAccountCodes<V>(v: V) {
+  return validate<AccountCodes & V>(v, id, hashAccountCodes)
+}
+
+export function isValidAccountCodes<V>(v: V) {
+  return isValid<AccountCodes & V>(v, id, hashAccountCodes)
 }

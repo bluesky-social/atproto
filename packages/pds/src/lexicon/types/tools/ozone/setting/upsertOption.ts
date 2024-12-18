@@ -4,11 +4,17 @@
 import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import { lexicons } from '../../../../lexicons'
-import { $Type, is$typed } from '../../../../util'
+import {
+  isValid as _isValid,
+  validate as _validate,
+} from '../../../../lexicons'
+import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
-import * as ToolsOzoneSettingDefs from './defs'
+import type * as ToolsOzoneSettingDefs from './defs'
 
+const is$typed = _is$typed,
+  isValid = _isValid,
+  validate = _validate
 const id = 'tools.ozone.setting.upsertOption'
 
 export interface QueryParams {}
@@ -16,19 +22,17 @@ export interface QueryParams {}
 export interface InputSchema {
   key: string
   scope: 'instance' | 'personal' | (string & {})
-  value: {}
+  value: { [_ in string]: unknown }
   description?: string
   managerRole?:
     | 'tools.ozone.team.defs#roleModerator'
     | 'tools.ozone.team.defs#roleTriage'
     | 'tools.ozone.team.defs#roleAdmin'
     | (string & {})
-  [k: string]: unknown
 }
 
 export interface OutputSchema {
   option: ToolsOzoneSettingDefs.Option
-  [k: string]: unknown
 }
 
 export interface HandlerInput {

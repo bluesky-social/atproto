@@ -3,90 +3,100 @@
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import { $Type, is$typed } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
+import {
+  isValid as _isValid,
+  validate as _validate,
+} from '../../../../lexicons'
+import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 
+const is$typed = _is$typed,
+  isValid = _isValid,
+  validate = _validate
 const id = 'app.bsky.unspecced.defs'
 
 export interface SkeletonSearchPost {
+  $type?: $Type<'app.bsky.unspecced.defs', 'skeletonSearchPost'>
   uri: string
-  [k: string]: unknown
 }
 
-export function isSkeletonSearchPost(
-  v: unknown,
-): v is SkeletonSearchPost & {
-  $type: $Type<'app.bsky.unspecced.defs', 'skeletonSearchPost'>
-} {
-  return is$typed(v, id, 'skeletonSearchPost')
+const hashSkeletonSearchPost = 'skeletonSearchPost'
+
+export function isSkeletonSearchPost<V>(v: V) {
+  return is$typed(v, id, hashSkeletonSearchPost)
 }
 
-export function validateSkeletonSearchPost(v: unknown) {
-  return lexicons.validate(
-    `${id}#skeletonSearchPost`,
-    v,
-  ) as ValidationResult<SkeletonSearchPost>
+export function validateSkeletonSearchPost<V>(v: V) {
+  return validate<SkeletonSearchPost & V>(v, id, hashSkeletonSearchPost)
+}
+
+export function isValidSkeletonSearchPost<V>(v: V) {
+  return isValid<SkeletonSearchPost & V>(v, id, hashSkeletonSearchPost)
 }
 
 export interface SkeletonSearchActor {
+  $type?: $Type<'app.bsky.unspecced.defs', 'skeletonSearchActor'>
   did: string
-  [k: string]: unknown
 }
 
-export function isSkeletonSearchActor(
-  v: unknown,
-): v is SkeletonSearchActor & {
-  $type: $Type<'app.bsky.unspecced.defs', 'skeletonSearchActor'>
-} {
-  return is$typed(v, id, 'skeletonSearchActor')
+const hashSkeletonSearchActor = 'skeletonSearchActor'
+
+export function isSkeletonSearchActor<V>(v: V) {
+  return is$typed(v, id, hashSkeletonSearchActor)
 }
 
-export function validateSkeletonSearchActor(v: unknown) {
-  return lexicons.validate(
-    `${id}#skeletonSearchActor`,
-    v,
-  ) as ValidationResult<SkeletonSearchActor>
+export function validateSkeletonSearchActor<V>(v: V) {
+  return validate<SkeletonSearchActor & V>(v, id, hashSkeletonSearchActor)
+}
+
+export function isValidSkeletonSearchActor<V>(v: V) {
+  return isValid<SkeletonSearchActor & V>(v, id, hashSkeletonSearchActor)
 }
 
 export interface SkeletonSearchStarterPack {
+  $type?: $Type<'app.bsky.unspecced.defs', 'skeletonSearchStarterPack'>
   uri: string
-  [k: string]: unknown
 }
 
-export function isSkeletonSearchStarterPack(
-  v: unknown,
-): v is SkeletonSearchStarterPack & {
-  $type: $Type<'app.bsky.unspecced.defs', 'skeletonSearchStarterPack'>
-} {
-  return is$typed(v, id, 'skeletonSearchStarterPack')
+const hashSkeletonSearchStarterPack = 'skeletonSearchStarterPack'
+
+export function isSkeletonSearchStarterPack<V>(v: V) {
+  return is$typed(v, id, hashSkeletonSearchStarterPack)
 }
 
-export function validateSkeletonSearchStarterPack(v: unknown) {
-  return lexicons.validate(
-    `${id}#skeletonSearchStarterPack`,
+export function validateSkeletonSearchStarterPack<V>(v: V) {
+  return validate<SkeletonSearchStarterPack & V>(
     v,
-  ) as ValidationResult<SkeletonSearchStarterPack>
+    id,
+    hashSkeletonSearchStarterPack,
+  )
+}
+
+export function isValidSkeletonSearchStarterPack<V>(v: V) {
+  return isValid<SkeletonSearchStarterPack & V>(
+    v,
+    id,
+    hashSkeletonSearchStarterPack,
+  )
 }
 
 export interface TrendingTopic {
+  $type?: $Type<'app.bsky.unspecced.defs', 'trendingTopic'>
   topic: string
   displayName?: string
   description?: string
   link: string
-  [k: string]: unknown
 }
 
-export function isTrendingTopic(
-  v: unknown,
-): v is TrendingTopic & {
-  $type: $Type<'app.bsky.unspecced.defs', 'trendingTopic'>
-} {
-  return is$typed(v, id, 'trendingTopic')
+const hashTrendingTopic = 'trendingTopic'
+
+export function isTrendingTopic<V>(v: V) {
+  return is$typed(v, id, hashTrendingTopic)
 }
 
-export function validateTrendingTopic(v: unknown) {
-  return lexicons.validate(
-    `${id}#trendingTopic`,
-    v,
-  ) as ValidationResult<TrendingTopic>
+export function validateTrendingTopic<V>(v: V) {
+  return validate<TrendingTopic & V>(v, id, hashTrendingTopic)
+}
+
+export function isValidTrendingTopic<V>(v: V) {
+  return isValid<TrendingTopic & V>(v, id, hashTrendingTopic)
 }

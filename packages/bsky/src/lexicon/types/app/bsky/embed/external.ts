@@ -3,79 +3,96 @@
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import { lexicons } from '../../../../lexicons'
-import { $Type, is$typed } from '../../../../util'
+import {
+  isValid as _isValid,
+  validate as _validate,
+} from '../../../../lexicons'
+import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 
+const is$typed = _is$typed,
+  isValid = _isValid,
+  validate = _validate
 const id = 'app.bsky.embed.external'
 
 /** A representation of some externally linked content (eg, a URL and 'card'), embedded in a Bluesky record (eg, a post). */
 export interface Main {
+  $type?: $Type<'app.bsky.embed.external', 'main'>
   external: External
-  [k: string]: unknown
 }
 
-export function isMain(
-  v: unknown,
-): v is Main & { $type: $Type<'app.bsky.embed.external', 'main'> } {
-  return is$typed(v, id, 'main')
+const hashMain = 'main'
+
+export function isMain<V>(v: V) {
+  return is$typed(v, id, hashMain)
 }
 
-export function validateMain(v: unknown) {
-  return lexicons.validate(`${id}#main`, v) as ValidationResult<Main>
+export function validateMain<V>(v: V) {
+  return validate<Main & V>(v, id, hashMain)
+}
+
+export function isValidMain<V>(v: V) {
+  return isValid<Main & V>(v, id, hashMain)
 }
 
 export interface External {
+  $type?: $Type<'app.bsky.embed.external', 'external'>
   uri: string
   title: string
   description: string
   thumb?: BlobRef
-  [k: string]: unknown
 }
 
-export function isExternal(
-  v: unknown,
-): v is External & { $type: $Type<'app.bsky.embed.external', 'external'> } {
-  return is$typed(v, id, 'external')
+const hashExternal = 'external'
+
+export function isExternal<V>(v: V) {
+  return is$typed(v, id, hashExternal)
 }
 
-export function validateExternal(v: unknown) {
-  return lexicons.validate(`${id}#external`, v) as ValidationResult<External>
+export function validateExternal<V>(v: V) {
+  return validate<External & V>(v, id, hashExternal)
+}
+
+export function isValidExternal<V>(v: V) {
+  return isValid<External & V>(v, id, hashExternal)
 }
 
 export interface View {
+  $type?: $Type<'app.bsky.embed.external', 'view'>
   external: ViewExternal
-  [k: string]: unknown
 }
 
-export function isView(
-  v: unknown,
-): v is View & { $type: $Type<'app.bsky.embed.external', 'view'> } {
-  return is$typed(v, id, 'view')
+const hashView = 'view'
+
+export function isView<V>(v: V) {
+  return is$typed(v, id, hashView)
 }
 
-export function validateView(v: unknown) {
-  return lexicons.validate(`${id}#view`, v) as ValidationResult<View>
+export function validateView<V>(v: V) {
+  return validate<View & V>(v, id, hashView)
+}
+
+export function isValidView<V>(v: V) {
+  return isValid<View & V>(v, id, hashView)
 }
 
 export interface ViewExternal {
+  $type?: $Type<'app.bsky.embed.external', 'viewExternal'>
   uri: string
   title: string
   description: string
   thumb?: string
-  [k: string]: unknown
 }
 
-export function isViewExternal(
-  v: unknown,
-): v is ViewExternal & {
-  $type: $Type<'app.bsky.embed.external', 'viewExternal'>
-} {
-  return is$typed(v, id, 'viewExternal')
+const hashViewExternal = 'viewExternal'
+
+export function isViewExternal<V>(v: V) {
+  return is$typed(v, id, hashViewExternal)
 }
 
-export function validateViewExternal(v: unknown) {
-  return lexicons.validate(
-    `${id}#viewExternal`,
-    v,
-  ) as ValidationResult<ViewExternal>
+export function validateViewExternal<V>(v: V) {
+  return validate<ViewExternal & V>(v, id, hashViewExternal)
+}
+
+export function isValidViewExternal<V>(v: V) {
+  return isValid<ViewExternal & V>(v, id, hashViewExternal)
 }

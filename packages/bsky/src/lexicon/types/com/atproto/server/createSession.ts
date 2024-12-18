@@ -4,10 +4,16 @@
 import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import { lexicons } from '../../../../lexicons'
-import { $Type, is$typed } from '../../../../util'
+import {
+  isValid as _isValid,
+  validate as _validate,
+} from '../../../../lexicons'
+import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 
+const is$typed = _is$typed,
+  isValid = _isValid,
+  validate = _validate
 const id = 'com.atproto.server.createSession'
 
 export interface QueryParams {}
@@ -19,7 +25,6 @@ export interface InputSchema {
   authFactorToken?: string
   /** When true, instead of throwing error for takendown accounts, a valid response with a narrow scoped token will be returned */
   allowTakendown?: boolean
-  [k: string]: unknown
 }
 
 export interface OutputSchema {
@@ -27,14 +32,13 @@ export interface OutputSchema {
   refreshJwt: string
   handle: string
   did: string
-  didDoc?: {}
+  didDoc?: { [_ in string]: unknown }
   email?: string
   emailConfirmed?: boolean
   emailAuthFactor?: boolean
   active?: boolean
   /** If active=false, this optional field indicates a possible reason for why the account is not active. If active=false and no status is supplied, then the host makes no claim for why the repository is no longer being hosted. */
   status?: 'takendown' | 'suspended' | 'deactivated' | (string & {})
-  [k: string]: unknown
 }
 
 export interface HandlerInput {

@@ -4,11 +4,17 @@
 import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import { lexicons } from '../../../../lexicons'
-import { $Type, is$typed } from '../../../../util'
+import {
+  isValid as _isValid,
+  validate as _validate,
+} from '../../../../lexicons'
+import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
-import * as AppBskyUnspeccedDefs from './defs'
+import type * as AppBskyUnspeccedDefs from './defs'
 
+const is$typed = _is$typed,
+  isValid = _isValid,
+  validate = _validate
 const id = 'app.bsky.unspecced.searchStarterPacksSkeleton'
 
 export interface QueryParams {
@@ -28,7 +34,6 @@ export interface OutputSchema {
   /** Count of search hits. Optional, may be rounded/truncated, and may not be possible to paginate through all hits. */
   hitsTotal?: number
   starterPacks: AppBskyUnspeccedDefs.SkeletonSearchStarterPack[]
-  [k: string]: unknown
 }
 
 export type HandlerInput = undefined

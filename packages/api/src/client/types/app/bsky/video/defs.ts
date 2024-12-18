@@ -3,12 +3,19 @@
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import { $Type, is$typed } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
+import {
+  isValid as _isValid,
+  validate as _validate,
+} from '../../../../lexicons'
+import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 
+const is$typed = _is$typed,
+  isValid = _isValid,
+  validate = _validate
 const id = 'app.bsky.video.defs'
 
 export interface JobStatus {
+  $type?: $Type<'app.bsky.video.defs', 'jobStatus'>
   jobId: string
   did: string
   /** The state of the video processing job. All values not listed as a known value indicate that the job is in process. */
@@ -18,15 +25,18 @@ export interface JobStatus {
   blob?: BlobRef
   error?: string
   message?: string
-  [k: string]: unknown
 }
 
-export function isJobStatus(
-  v: unknown,
-): v is JobStatus & { $type: $Type<'app.bsky.video.defs', 'jobStatus'> } {
-  return is$typed(v, id, 'jobStatus')
+const hashJobStatus = 'jobStatus'
+
+export function isJobStatus<V>(v: V) {
+  return is$typed(v, id, hashJobStatus)
 }
 
-export function validateJobStatus(v: unknown) {
-  return lexicons.validate(`${id}#jobStatus`, v) as ValidationResult<JobStatus>
+export function validateJobStatus<V>(v: V) {
+  return validate<JobStatus & V>(v, id, hashJobStatus)
+}
+
+export function isValidJobStatus<V>(v: V) {
+  return isValid<JobStatus & V>(v, id, hashJobStatus)
 }

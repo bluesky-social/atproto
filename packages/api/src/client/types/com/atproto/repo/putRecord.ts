@@ -4,10 +4,16 @@
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import { $Type, is$typed } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
-import * as ComAtprotoRepoDefs from './defs'
+import {
+  isValid as _isValid,
+  validate as _validate,
+} from '../../../../lexicons'
+import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import type * as ComAtprotoRepoDefs from './defs'
 
+const is$typed = _is$typed,
+  isValid = _isValid,
+  validate = _validate
 const id = 'com.atproto.repo.putRecord'
 
 export interface QueryParams {}
@@ -22,12 +28,11 @@ export interface InputSchema {
   /** Can be set to 'false' to skip Lexicon schema validation of record data, 'true' to require it, or leave unset to validate only for known Lexicons. */
   validate?: boolean
   /** The record to write. */
-  record: {}
+  record: { [_ in string]: unknown }
   /** Compare and swap with the previous record by CID. WARNING: nullable and optional field; may cause problems with golang implementation */
   swapRecord?: string | null
   /** Compare and swap with the previous commit by CID. */
   swapCommit?: string
-  [k: string]: unknown
 }
 
 export interface OutputSchema {
@@ -35,7 +40,6 @@ export interface OutputSchema {
   cid: string
   commit?: ComAtprotoRepoDefs.CommitMeta
   validationStatus?: 'valid' | 'unknown' | (string & {})
-  [k: string]: unknown
 }
 
 export interface CallOptions {

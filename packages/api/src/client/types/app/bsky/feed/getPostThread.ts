@@ -4,10 +4,16 @@
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import { $Type, is$typed } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
-import * as AppBskyFeedDefs from './defs'
+import {
+  isValid as _isValid,
+  validate as _validate,
+} from '../../../../lexicons'
+import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import type * as AppBskyFeedDefs from './defs'
 
+const is$typed = _is$typed,
+  isValid = _isValid,
+  validate = _validate
 const id = 'app.bsky.feed.getPostThread'
 
 export interface QueryParams {
@@ -23,12 +29,11 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   thread:
-    | AppBskyFeedDefs.ThreadViewPost
-    | AppBskyFeedDefs.NotFoundPost
-    | AppBskyFeedDefs.BlockedPost
-    | { $type: string; [k: string]: unknown }
+    | $Typed<AppBskyFeedDefs.ThreadViewPost>
+    | $Typed<AppBskyFeedDefs.NotFoundPost>
+    | $Typed<AppBskyFeedDefs.BlockedPost>
+    | { $type: string }
   threadgate?: AppBskyFeedDefs.ThreadgateView
-  [k: string]: unknown
 }
 
 export interface CallOptions {

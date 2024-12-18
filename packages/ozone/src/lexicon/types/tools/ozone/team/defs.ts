@@ -3,13 +3,20 @@
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import { lexicons } from '../../../../lexicons'
-import { $Type, is$typed } from '../../../../util'
-import * as AppBskyActorDefs from '../../../app/bsky/actor/defs'
+import {
+  isValid as _isValid,
+  validate as _validate,
+} from '../../../../lexicons'
+import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import type * as AppBskyActorDefs from '../../../app/bsky/actor/defs'
 
+const is$typed = _is$typed,
+  isValid = _isValid,
+  validate = _validate
 const id = 'tools.ozone.team.defs'
 
 export interface Member {
+  $type?: $Type<'tools.ozone.team.defs', 'member'>
   did: string
   disabled?: boolean
   profile?: AppBskyActorDefs.ProfileViewDetailed
@@ -21,17 +28,20 @@ export interface Member {
     | 'lex:tools.ozone.team.defs#roleModerator'
     | 'lex:tools.ozone.team.defs#roleTriage'
     | (string & {})
-  [k: string]: unknown
 }
 
-export function isMember(
-  v: unknown,
-): v is Member & { $type: $Type<'tools.ozone.team.defs', 'member'> } {
-  return is$typed(v, id, 'member')
+const hashMember = 'member'
+
+export function isMember<V>(v: V) {
+  return is$typed(v, id, hashMember)
 }
 
-export function validateMember(v: unknown) {
-  return lexicons.validate(`${id}#member`, v) as ValidationResult<Member>
+export function validateMember<V>(v: V) {
+  return validate<Member & V>(v, id, hashMember)
+}
+
+export function isValidMember<V>(v: V) {
+  return isValid<Member & V>(v, id, hashMember)
 }
 
 /** Admin role. Highest level of access, can perform all actions. */

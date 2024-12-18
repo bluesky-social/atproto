@@ -3,19 +3,26 @@
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import { lexicons } from '../../../../lexicons'
-import { $Type, is$typed } from '../../../../util'
+import {
+  isValid as _isValid,
+  validate as _validate,
+} from '../../../../lexicons'
+import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 
+const is$typed = _is$typed,
+  isValid = _isValid,
+  validate = _validate
 const id = 'app.bsky.feed.threadgate'
 
 export interface Record {
+  $type?: $Type<'app.bsky.feed.threadgate', 'main'>
   /** Reference (AT-URI) to the post record. */
   post: string
   allow?: (
-    | MentionRule
-    | FollowingRule
-    | ListRule
-    | { $type: string; [k: string]: unknown }
+    | $Typed<MentionRule>
+    | $Typed<FollowingRule>
+    | $Typed<ListRule>
+    | { $type: string }
   )[]
   createdAt: string
   /** List of hidden reply URIs. */
@@ -23,68 +30,74 @@ export interface Record {
   [k: string]: unknown
 }
 
-export function isRecord(
-  v: unknown,
-): v is Record & { $type: $Type<'app.bsky.feed.threadgate', 'main'> } {
-  return is$typed(v, id, 'main')
+const hashRecord = 'main'
+
+export function isRecord<V>(v: V) {
+  return is$typed(v, id, hashRecord)
 }
 
-export function validateRecord(v: unknown) {
-  return lexicons.validate(`${id}#main`, v) as ValidationResult<Record>
+export function validateRecord<V>(v: V) {
+  return validate<Record & V>(v, id, hashRecord)
+}
+
+export function isValidRecord<V>(v: V) {
+  return isValid<Record & V>(v, id, hashRecord, true)
 }
 
 /** Allow replies from actors mentioned in your post. */
 export interface MentionRule {
-  [k: string]: unknown
+  $type?: $Type<'app.bsky.feed.threadgate', 'mentionRule'>
 }
 
-export function isMentionRule(
-  v: unknown,
-): v is MentionRule & {
-  $type: $Type<'app.bsky.feed.threadgate', 'mentionRule'>
-} {
-  return is$typed(v, id, 'mentionRule')
+const hashMentionRule = 'mentionRule'
+
+export function isMentionRule<V>(v: V) {
+  return is$typed(v, id, hashMentionRule)
 }
 
-export function validateMentionRule(v: unknown) {
-  return lexicons.validate(
-    `${id}#mentionRule`,
-    v,
-  ) as ValidationResult<MentionRule>
+export function validateMentionRule<V>(v: V) {
+  return validate<MentionRule & V>(v, id, hashMentionRule)
+}
+
+export function isValidMentionRule<V>(v: V) {
+  return isValid<MentionRule & V>(v, id, hashMentionRule)
 }
 
 /** Allow replies from actors you follow. */
 export interface FollowingRule {
-  [k: string]: unknown
+  $type?: $Type<'app.bsky.feed.threadgate', 'followingRule'>
 }
 
-export function isFollowingRule(
-  v: unknown,
-): v is FollowingRule & {
-  $type: $Type<'app.bsky.feed.threadgate', 'followingRule'>
-} {
-  return is$typed(v, id, 'followingRule')
+const hashFollowingRule = 'followingRule'
+
+export function isFollowingRule<V>(v: V) {
+  return is$typed(v, id, hashFollowingRule)
 }
 
-export function validateFollowingRule(v: unknown) {
-  return lexicons.validate(
-    `${id}#followingRule`,
-    v,
-  ) as ValidationResult<FollowingRule>
+export function validateFollowingRule<V>(v: V) {
+  return validate<FollowingRule & V>(v, id, hashFollowingRule)
+}
+
+export function isValidFollowingRule<V>(v: V) {
+  return isValid<FollowingRule & V>(v, id, hashFollowingRule)
 }
 
 /** Allow replies from actors on a list. */
 export interface ListRule {
+  $type?: $Type<'app.bsky.feed.threadgate', 'listRule'>
   list: string
-  [k: string]: unknown
 }
 
-export function isListRule(
-  v: unknown,
-): v is ListRule & { $type: $Type<'app.bsky.feed.threadgate', 'listRule'> } {
-  return is$typed(v, id, 'listRule')
+const hashListRule = 'listRule'
+
+export function isListRule<V>(v: V) {
+  return is$typed(v, id, hashListRule)
 }
 
-export function validateListRule(v: unknown) {
-  return lexicons.validate(`${id}#listRule`, v) as ValidationResult<ListRule>
+export function validateListRule<V>(v: V) {
+  return validate<ListRule & V>(v, id, hashListRule)
+}
+
+export function isValidListRule<V>(v: V) {
+  return isValid<ListRule & V>(v, id, hashListRule)
 }

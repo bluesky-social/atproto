@@ -4,21 +4,24 @@
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import { $Type, is$typed } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
+import {
+  isValid as _isValid,
+  validate as _validate,
+} from '../../../../lexicons'
+import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 
+const is$typed = _is$typed,
+  isValid = _isValid,
+  validate = _validate
 const id = 'com.atproto.temp.addReservedHandle'
 
 export interface QueryParams {}
 
 export interface InputSchema {
   handle: string
-  [k: string]: unknown
 }
 
-export interface OutputSchema {
-  [k: string]: unknown
-}
+export interface OutputSchema {}
 
 export interface CallOptions {
   signal?: AbortSignal

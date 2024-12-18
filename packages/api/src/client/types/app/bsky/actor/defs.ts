@@ -3,15 +3,22 @@
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import { $Type, is$typed } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
-import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
-import * as AppBskyGraphDefs from '../graph/defs'
-import * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef'
+import {
+  isValid as _isValid,
+  validate as _validate,
+} from '../../../../lexicons'
+import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import type * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
+import type * as AppBskyGraphDefs from '../graph/defs'
+import type * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef'
 
+const is$typed = _is$typed,
+  isValid = _isValid,
+  validate = _validate
 const id = 'app.bsky.actor.defs'
 
 export interface ProfileViewBasic {
+  $type?: $Type<'app.bsky.actor.defs', 'profileViewBasic'>
   did: string
   handle: string
   displayName?: string
@@ -20,25 +27,24 @@ export interface ProfileViewBasic {
   viewer?: ViewerState
   labels?: ComAtprotoLabelDefs.Label[]
   createdAt?: string
-  [k: string]: unknown
 }
 
-export function isProfileViewBasic(
-  v: unknown,
-): v is ProfileViewBasic & {
-  $type: $Type<'app.bsky.actor.defs', 'profileViewBasic'>
-} {
-  return is$typed(v, id, 'profileViewBasic')
+const hashProfileViewBasic = 'profileViewBasic'
+
+export function isProfileViewBasic<V>(v: V) {
+  return is$typed(v, id, hashProfileViewBasic)
 }
 
-export function validateProfileViewBasic(v: unknown) {
-  return lexicons.validate(
-    `${id}#profileViewBasic`,
-    v,
-  ) as ValidationResult<ProfileViewBasic>
+export function validateProfileViewBasic<V>(v: V) {
+  return validate<ProfileViewBasic & V>(v, id, hashProfileViewBasic)
+}
+
+export function isValidProfileViewBasic<V>(v: V) {
+  return isValid<ProfileViewBasic & V>(v, id, hashProfileViewBasic)
 }
 
 export interface ProfileView {
+  $type?: $Type<'app.bsky.actor.defs', 'profileView'>
   did: string
   handle: string
   displayName?: string
@@ -49,23 +55,24 @@ export interface ProfileView {
   createdAt?: string
   viewer?: ViewerState
   labels?: ComAtprotoLabelDefs.Label[]
-  [k: string]: unknown
 }
 
-export function isProfileView(
-  v: unknown,
-): v is ProfileView & { $type: $Type<'app.bsky.actor.defs', 'profileView'> } {
-  return is$typed(v, id, 'profileView')
+const hashProfileView = 'profileView'
+
+export function isProfileView<V>(v: V) {
+  return is$typed(v, id, hashProfileView)
 }
 
-export function validateProfileView(v: unknown) {
-  return lexicons.validate(
-    `${id}#profileView`,
-    v,
-  ) as ValidationResult<ProfileView>
+export function validateProfileView<V>(v: V) {
+  return validate<ProfileView & V>(v, id, hashProfileView)
+}
+
+export function isValidProfileView<V>(v: V) {
+  return isValid<ProfileView & V>(v, id, hashProfileView)
 }
 
 export interface ProfileViewDetailed {
+  $type?: $Type<'app.bsky.actor.defs', 'profileViewDetailed'>
   did: string
   handle: string
   displayName?: string
@@ -82,70 +89,67 @@ export interface ProfileViewDetailed {
   viewer?: ViewerState
   labels?: ComAtprotoLabelDefs.Label[]
   pinnedPost?: ComAtprotoRepoStrongRef.Main
-  [k: string]: unknown
 }
 
-export function isProfileViewDetailed(
-  v: unknown,
-): v is ProfileViewDetailed & {
-  $type: $Type<'app.bsky.actor.defs', 'profileViewDetailed'>
-} {
-  return is$typed(v, id, 'profileViewDetailed')
+const hashProfileViewDetailed = 'profileViewDetailed'
+
+export function isProfileViewDetailed<V>(v: V) {
+  return is$typed(v, id, hashProfileViewDetailed)
 }
 
-export function validateProfileViewDetailed(v: unknown) {
-  return lexicons.validate(
-    `${id}#profileViewDetailed`,
-    v,
-  ) as ValidationResult<ProfileViewDetailed>
+export function validateProfileViewDetailed<V>(v: V) {
+  return validate<ProfileViewDetailed & V>(v, id, hashProfileViewDetailed)
+}
+
+export function isValidProfileViewDetailed<V>(v: V) {
+  return isValid<ProfileViewDetailed & V>(v, id, hashProfileViewDetailed)
 }
 
 export interface ProfileAssociated {
+  $type?: $Type<'app.bsky.actor.defs', 'profileAssociated'>
   lists?: number
   feedgens?: number
   starterPacks?: number
   labeler?: boolean
   chat?: ProfileAssociatedChat
-  [k: string]: unknown
 }
 
-export function isProfileAssociated(
-  v: unknown,
-): v is ProfileAssociated & {
-  $type: $Type<'app.bsky.actor.defs', 'profileAssociated'>
-} {
-  return is$typed(v, id, 'profileAssociated')
+const hashProfileAssociated = 'profileAssociated'
+
+export function isProfileAssociated<V>(v: V) {
+  return is$typed(v, id, hashProfileAssociated)
 }
 
-export function validateProfileAssociated(v: unknown) {
-  return lexicons.validate(
-    `${id}#profileAssociated`,
-    v,
-  ) as ValidationResult<ProfileAssociated>
+export function validateProfileAssociated<V>(v: V) {
+  return validate<ProfileAssociated & V>(v, id, hashProfileAssociated)
+}
+
+export function isValidProfileAssociated<V>(v: V) {
+  return isValid<ProfileAssociated & V>(v, id, hashProfileAssociated)
 }
 
 export interface ProfileAssociatedChat {
+  $type?: $Type<'app.bsky.actor.defs', 'profileAssociatedChat'>
   allowIncoming: 'all' | 'none' | 'following' | (string & {})
-  [k: string]: unknown
 }
 
-export function isProfileAssociatedChat(
-  v: unknown,
-): v is ProfileAssociatedChat & {
-  $type: $Type<'app.bsky.actor.defs', 'profileAssociatedChat'>
-} {
-  return is$typed(v, id, 'profileAssociatedChat')
+const hashProfileAssociatedChat = 'profileAssociatedChat'
+
+export function isProfileAssociatedChat<V>(v: V) {
+  return is$typed(v, id, hashProfileAssociatedChat)
 }
 
-export function validateProfileAssociatedChat(v: unknown) {
-  return lexicons.validate(
-    `${id}#profileAssociatedChat`,
-    v,
-  ) as ValidationResult<ProfileAssociatedChat>
+export function validateProfileAssociatedChat<V>(v: V) {
+  return validate<ProfileAssociatedChat & V>(v, id, hashProfileAssociatedChat)
+}
+
+export function isValidProfileAssociatedChat<V>(v: V) {
+  return isValid<ProfileAssociatedChat & V>(v, id, hashProfileAssociatedChat)
 }
 
 /** Metadata about the requesting account's relationship with the subject account. Only has meaningful content for authed requests. */
 export interface ViewerState {
+  $type?: $Type<'app.bsky.actor.defs', 'viewerState'>
   muted?: boolean
   mutedByList?: AppBskyGraphDefs.ListViewBasic
   blockedBy?: boolean
@@ -154,185 +158,184 @@ export interface ViewerState {
   following?: string
   followedBy?: string
   knownFollowers?: KnownFollowers
-  [k: string]: unknown
 }
 
-export function isViewerState(
-  v: unknown,
-): v is ViewerState & { $type: $Type<'app.bsky.actor.defs', 'viewerState'> } {
-  return is$typed(v, id, 'viewerState')
+const hashViewerState = 'viewerState'
+
+export function isViewerState<V>(v: V) {
+  return is$typed(v, id, hashViewerState)
 }
 
-export function validateViewerState(v: unknown) {
-  return lexicons.validate(
-    `${id}#viewerState`,
-    v,
-  ) as ValidationResult<ViewerState>
+export function validateViewerState<V>(v: V) {
+  return validate<ViewerState & V>(v, id, hashViewerState)
+}
+
+export function isValidViewerState<V>(v: V) {
+  return isValid<ViewerState & V>(v, id, hashViewerState)
 }
 
 /** The subject's followers whom you also follow */
 export interface KnownFollowers {
+  $type?: $Type<'app.bsky.actor.defs', 'knownFollowers'>
   count: number
   followers: ProfileViewBasic[]
-  [k: string]: unknown
 }
 
-export function isKnownFollowers(
-  v: unknown,
-): v is KnownFollowers & {
-  $type: $Type<'app.bsky.actor.defs', 'knownFollowers'>
-} {
-  return is$typed(v, id, 'knownFollowers')
+const hashKnownFollowers = 'knownFollowers'
+
+export function isKnownFollowers<V>(v: V) {
+  return is$typed(v, id, hashKnownFollowers)
 }
 
-export function validateKnownFollowers(v: unknown) {
-  return lexicons.validate(
-    `${id}#knownFollowers`,
-    v,
-  ) as ValidationResult<KnownFollowers>
+export function validateKnownFollowers<V>(v: V) {
+  return validate<KnownFollowers & V>(v, id, hashKnownFollowers)
+}
+
+export function isValidKnownFollowers<V>(v: V) {
+  return isValid<KnownFollowers & V>(v, id, hashKnownFollowers)
 }
 
 export type Preferences = (
-  | AdultContentPref
-  | ContentLabelPref
-  | SavedFeedsPref
-  | SavedFeedsPrefV2
-  | PersonalDetailsPref
-  | FeedViewPref
-  | ThreadViewPref
-  | InterestsPref
-  | MutedWordsPref
-  | HiddenPostsPref
-  | BskyAppStatePref
-  | LabelersPref
-  | { $type: string; [k: string]: unknown }
+  | $Typed<AdultContentPref>
+  | $Typed<ContentLabelPref>
+  | $Typed<SavedFeedsPref>
+  | $Typed<SavedFeedsPrefV2>
+  | $Typed<PersonalDetailsPref>
+  | $Typed<FeedViewPref>
+  | $Typed<ThreadViewPref>
+  | $Typed<InterestsPref>
+  | $Typed<MutedWordsPref>
+  | $Typed<HiddenPostsPref>
+  | $Typed<BskyAppStatePref>
+  | $Typed<LabelersPref>
+  | { $type: string }
 )[]
 
 export interface AdultContentPref {
+  $type?: $Type<'app.bsky.actor.defs', 'adultContentPref'>
   enabled: boolean
-  [k: string]: unknown
 }
 
-export function isAdultContentPref(
-  v: unknown,
-): v is AdultContentPref & {
-  $type: $Type<'app.bsky.actor.defs', 'adultContentPref'>
-} {
-  return is$typed(v, id, 'adultContentPref')
+const hashAdultContentPref = 'adultContentPref'
+
+export function isAdultContentPref<V>(v: V) {
+  return is$typed(v, id, hashAdultContentPref)
 }
 
-export function validateAdultContentPref(v: unknown) {
-  return lexicons.validate(
-    `${id}#adultContentPref`,
-    v,
-  ) as ValidationResult<AdultContentPref>
+export function validateAdultContentPref<V>(v: V) {
+  return validate<AdultContentPref & V>(v, id, hashAdultContentPref)
+}
+
+export function isValidAdultContentPref<V>(v: V) {
+  return isValid<AdultContentPref & V>(v, id, hashAdultContentPref)
 }
 
 export interface ContentLabelPref {
+  $type?: $Type<'app.bsky.actor.defs', 'contentLabelPref'>
   /** Which labeler does this preference apply to? If undefined, applies globally. */
   labelerDid?: string
   label: string
   visibility: 'ignore' | 'show' | 'warn' | 'hide' | (string & {})
-  [k: string]: unknown
 }
 
-export function isContentLabelPref(
-  v: unknown,
-): v is ContentLabelPref & {
-  $type: $Type<'app.bsky.actor.defs', 'contentLabelPref'>
-} {
-  return is$typed(v, id, 'contentLabelPref')
+const hashContentLabelPref = 'contentLabelPref'
+
+export function isContentLabelPref<V>(v: V) {
+  return is$typed(v, id, hashContentLabelPref)
 }
 
-export function validateContentLabelPref(v: unknown) {
-  return lexicons.validate(
-    `${id}#contentLabelPref`,
-    v,
-  ) as ValidationResult<ContentLabelPref>
+export function validateContentLabelPref<V>(v: V) {
+  return validate<ContentLabelPref & V>(v, id, hashContentLabelPref)
+}
+
+export function isValidContentLabelPref<V>(v: V) {
+  return isValid<ContentLabelPref & V>(v, id, hashContentLabelPref)
 }
 
 export interface SavedFeed {
+  $type?: $Type<'app.bsky.actor.defs', 'savedFeed'>
   id: string
   type: 'feed' | 'list' | 'timeline' | (string & {})
   value: string
   pinned: boolean
-  [k: string]: unknown
 }
 
-export function isSavedFeed(
-  v: unknown,
-): v is SavedFeed & { $type: $Type<'app.bsky.actor.defs', 'savedFeed'> } {
-  return is$typed(v, id, 'savedFeed')
+const hashSavedFeed = 'savedFeed'
+
+export function isSavedFeed<V>(v: V) {
+  return is$typed(v, id, hashSavedFeed)
 }
 
-export function validateSavedFeed(v: unknown) {
-  return lexicons.validate(`${id}#savedFeed`, v) as ValidationResult<SavedFeed>
+export function validateSavedFeed<V>(v: V) {
+  return validate<SavedFeed & V>(v, id, hashSavedFeed)
+}
+
+export function isValidSavedFeed<V>(v: V) {
+  return isValid<SavedFeed & V>(v, id, hashSavedFeed)
 }
 
 export interface SavedFeedsPrefV2 {
+  $type?: $Type<'app.bsky.actor.defs', 'savedFeedsPrefV2'>
   items: SavedFeed[]
-  [k: string]: unknown
 }
 
-export function isSavedFeedsPrefV2(
-  v: unknown,
-): v is SavedFeedsPrefV2 & {
-  $type: $Type<'app.bsky.actor.defs', 'savedFeedsPrefV2'>
-} {
-  return is$typed(v, id, 'savedFeedsPrefV2')
+const hashSavedFeedsPrefV2 = 'savedFeedsPrefV2'
+
+export function isSavedFeedsPrefV2<V>(v: V) {
+  return is$typed(v, id, hashSavedFeedsPrefV2)
 }
 
-export function validateSavedFeedsPrefV2(v: unknown) {
-  return lexicons.validate(
-    `${id}#savedFeedsPrefV2`,
-    v,
-  ) as ValidationResult<SavedFeedsPrefV2>
+export function validateSavedFeedsPrefV2<V>(v: V) {
+  return validate<SavedFeedsPrefV2 & V>(v, id, hashSavedFeedsPrefV2)
+}
+
+export function isValidSavedFeedsPrefV2<V>(v: V) {
+  return isValid<SavedFeedsPrefV2 & V>(v, id, hashSavedFeedsPrefV2)
 }
 
 export interface SavedFeedsPref {
+  $type?: $Type<'app.bsky.actor.defs', 'savedFeedsPref'>
   pinned: string[]
   saved: string[]
   timelineIndex?: number
-  [k: string]: unknown
 }
 
-export function isSavedFeedsPref(
-  v: unknown,
-): v is SavedFeedsPref & {
-  $type: $Type<'app.bsky.actor.defs', 'savedFeedsPref'>
-} {
-  return is$typed(v, id, 'savedFeedsPref')
+const hashSavedFeedsPref = 'savedFeedsPref'
+
+export function isSavedFeedsPref<V>(v: V) {
+  return is$typed(v, id, hashSavedFeedsPref)
 }
 
-export function validateSavedFeedsPref(v: unknown) {
-  return lexicons.validate(
-    `${id}#savedFeedsPref`,
-    v,
-  ) as ValidationResult<SavedFeedsPref>
+export function validateSavedFeedsPref<V>(v: V) {
+  return validate<SavedFeedsPref & V>(v, id, hashSavedFeedsPref)
+}
+
+export function isValidSavedFeedsPref<V>(v: V) {
+  return isValid<SavedFeedsPref & V>(v, id, hashSavedFeedsPref)
 }
 
 export interface PersonalDetailsPref {
+  $type?: $Type<'app.bsky.actor.defs', 'personalDetailsPref'>
   /** The birth date of account owner. */
   birthDate?: string
-  [k: string]: unknown
 }
 
-export function isPersonalDetailsPref(
-  v: unknown,
-): v is PersonalDetailsPref & {
-  $type: $Type<'app.bsky.actor.defs', 'personalDetailsPref'>
-} {
-  return is$typed(v, id, 'personalDetailsPref')
+const hashPersonalDetailsPref = 'personalDetailsPref'
+
+export function isPersonalDetailsPref<V>(v: V) {
+  return is$typed(v, id, hashPersonalDetailsPref)
 }
 
-export function validatePersonalDetailsPref(v: unknown) {
-  return lexicons.validate(
-    `${id}#personalDetailsPref`,
-    v,
-  ) as ValidationResult<PersonalDetailsPref>
+export function validatePersonalDetailsPref<V>(v: V) {
+  return validate<PersonalDetailsPref & V>(v, id, hashPersonalDetailsPref)
+}
+
+export function isValidPersonalDetailsPref<V>(v: V) {
+  return isValid<PersonalDetailsPref & V>(v, id, hashPersonalDetailsPref)
 }
 
 export interface FeedViewPref {
+  $type?: $Type<'app.bsky.actor.defs', 'feedViewPref'>
   /** The URI of the feed, or an identifier which describes the feed. */
   feed: string
   /** Hide replies in the feed. */
@@ -345,23 +348,24 @@ export interface FeedViewPref {
   hideReposts?: boolean
   /** Hide quote posts in the feed. */
   hideQuotePosts?: boolean
-  [k: string]: unknown
 }
 
-export function isFeedViewPref(
-  v: unknown,
-): v is FeedViewPref & { $type: $Type<'app.bsky.actor.defs', 'feedViewPref'> } {
-  return is$typed(v, id, 'feedViewPref')
+const hashFeedViewPref = 'feedViewPref'
+
+export function isFeedViewPref<V>(v: V) {
+  return is$typed(v, id, hashFeedViewPref)
 }
 
-export function validateFeedViewPref(v: unknown) {
-  return lexicons.validate(
-    `${id}#feedViewPref`,
-    v,
-  ) as ValidationResult<FeedViewPref>
+export function validateFeedViewPref<V>(v: V) {
+  return validate<FeedViewPref & V>(v, id, hashFeedViewPref)
+}
+
+export function isValidFeedViewPref<V>(v: V) {
+  return isValid<FeedViewPref & V>(v, id, hashFeedViewPref)
 }
 
 export interface ThreadViewPref {
+  $type?: $Type<'app.bsky.actor.defs', 'threadViewPref'>
   /** Sorting mode for threads. */
   sort?:
     | 'oldest'
@@ -372,49 +376,47 @@ export interface ThreadViewPref {
     | (string & {})
   /** Show followed users at the top of all replies. */
   prioritizeFollowedUsers?: boolean
-  [k: string]: unknown
 }
 
-export function isThreadViewPref(
-  v: unknown,
-): v is ThreadViewPref & {
-  $type: $Type<'app.bsky.actor.defs', 'threadViewPref'>
-} {
-  return is$typed(v, id, 'threadViewPref')
+const hashThreadViewPref = 'threadViewPref'
+
+export function isThreadViewPref<V>(v: V) {
+  return is$typed(v, id, hashThreadViewPref)
 }
 
-export function validateThreadViewPref(v: unknown) {
-  return lexicons.validate(
-    `${id}#threadViewPref`,
-    v,
-  ) as ValidationResult<ThreadViewPref>
+export function validateThreadViewPref<V>(v: V) {
+  return validate<ThreadViewPref & V>(v, id, hashThreadViewPref)
+}
+
+export function isValidThreadViewPref<V>(v: V) {
+  return isValid<ThreadViewPref & V>(v, id, hashThreadViewPref)
 }
 
 export interface InterestsPref {
+  $type?: $Type<'app.bsky.actor.defs', 'interestsPref'>
   /** A list of tags which describe the account owner's interests gathered during onboarding. */
   tags: string[]
-  [k: string]: unknown
 }
 
-export function isInterestsPref(
-  v: unknown,
-): v is InterestsPref & {
-  $type: $Type<'app.bsky.actor.defs', 'interestsPref'>
-} {
-  return is$typed(v, id, 'interestsPref')
+const hashInterestsPref = 'interestsPref'
+
+export function isInterestsPref<V>(v: V) {
+  return is$typed(v, id, hashInterestsPref)
 }
 
-export function validateInterestsPref(v: unknown) {
-  return lexicons.validate(
-    `${id}#interestsPref`,
-    v,
-  ) as ValidationResult<InterestsPref>
+export function validateInterestsPref<V>(v: V) {
+  return validate<InterestsPref & V>(v, id, hashInterestsPref)
+}
+
+export function isValidInterestsPref<V>(v: V) {
+  return isValid<InterestsPref & V>(v, id, hashInterestsPref)
 }
 
 export type MutedWordTarget = 'content' | 'tag' | (string & {})
 
 /** A word that the account owner has muted. */
 export interface MutedWord {
+  $type?: $Type<'app.bsky.actor.defs', 'mutedWord'>
   id?: string
   /** The muted word itself. */
   value: string
@@ -424,162 +426,165 @@ export interface MutedWord {
   actorTarget: 'all' | 'exclude-following' | (string & {})
   /** The date and time at which the muted word will expire and no longer be applied. */
   expiresAt?: string
-  [k: string]: unknown
 }
 
-export function isMutedWord(
-  v: unknown,
-): v is MutedWord & { $type: $Type<'app.bsky.actor.defs', 'mutedWord'> } {
-  return is$typed(v, id, 'mutedWord')
+const hashMutedWord = 'mutedWord'
+
+export function isMutedWord<V>(v: V) {
+  return is$typed(v, id, hashMutedWord)
 }
 
-export function validateMutedWord(v: unknown) {
-  return lexicons.validate(`${id}#mutedWord`, v) as ValidationResult<MutedWord>
+export function validateMutedWord<V>(v: V) {
+  return validate<MutedWord & V>(v, id, hashMutedWord)
+}
+
+export function isValidMutedWord<V>(v: V) {
+  return isValid<MutedWord & V>(v, id, hashMutedWord)
 }
 
 export interface MutedWordsPref {
+  $type?: $Type<'app.bsky.actor.defs', 'mutedWordsPref'>
   /** A list of words the account owner has muted. */
   items: MutedWord[]
-  [k: string]: unknown
 }
 
-export function isMutedWordsPref(
-  v: unknown,
-): v is MutedWordsPref & {
-  $type: $Type<'app.bsky.actor.defs', 'mutedWordsPref'>
-} {
-  return is$typed(v, id, 'mutedWordsPref')
+const hashMutedWordsPref = 'mutedWordsPref'
+
+export function isMutedWordsPref<V>(v: V) {
+  return is$typed(v, id, hashMutedWordsPref)
 }
 
-export function validateMutedWordsPref(v: unknown) {
-  return lexicons.validate(
-    `${id}#mutedWordsPref`,
-    v,
-  ) as ValidationResult<MutedWordsPref>
+export function validateMutedWordsPref<V>(v: V) {
+  return validate<MutedWordsPref & V>(v, id, hashMutedWordsPref)
+}
+
+export function isValidMutedWordsPref<V>(v: V) {
+  return isValid<MutedWordsPref & V>(v, id, hashMutedWordsPref)
 }
 
 export interface HiddenPostsPref {
+  $type?: $Type<'app.bsky.actor.defs', 'hiddenPostsPref'>
   /** A list of URIs of posts the account owner has hidden. */
   items: string[]
-  [k: string]: unknown
 }
 
-export function isHiddenPostsPref(
-  v: unknown,
-): v is HiddenPostsPref & {
-  $type: $Type<'app.bsky.actor.defs', 'hiddenPostsPref'>
-} {
-  return is$typed(v, id, 'hiddenPostsPref')
+const hashHiddenPostsPref = 'hiddenPostsPref'
+
+export function isHiddenPostsPref<V>(v: V) {
+  return is$typed(v, id, hashHiddenPostsPref)
 }
 
-export function validateHiddenPostsPref(v: unknown) {
-  return lexicons.validate(
-    `${id}#hiddenPostsPref`,
-    v,
-  ) as ValidationResult<HiddenPostsPref>
+export function validateHiddenPostsPref<V>(v: V) {
+  return validate<HiddenPostsPref & V>(v, id, hashHiddenPostsPref)
+}
+
+export function isValidHiddenPostsPref<V>(v: V) {
+  return isValid<HiddenPostsPref & V>(v, id, hashHiddenPostsPref)
 }
 
 export interface LabelersPref {
+  $type?: $Type<'app.bsky.actor.defs', 'labelersPref'>
   labelers: LabelerPrefItem[]
-  [k: string]: unknown
 }
 
-export function isLabelersPref(
-  v: unknown,
-): v is LabelersPref & { $type: $Type<'app.bsky.actor.defs', 'labelersPref'> } {
-  return is$typed(v, id, 'labelersPref')
+const hashLabelersPref = 'labelersPref'
+
+export function isLabelersPref<V>(v: V) {
+  return is$typed(v, id, hashLabelersPref)
 }
 
-export function validateLabelersPref(v: unknown) {
-  return lexicons.validate(
-    `${id}#labelersPref`,
-    v,
-  ) as ValidationResult<LabelersPref>
+export function validateLabelersPref<V>(v: V) {
+  return validate<LabelersPref & V>(v, id, hashLabelersPref)
+}
+
+export function isValidLabelersPref<V>(v: V) {
+  return isValid<LabelersPref & V>(v, id, hashLabelersPref)
 }
 
 export interface LabelerPrefItem {
+  $type?: $Type<'app.bsky.actor.defs', 'labelerPrefItem'>
   did: string
-  [k: string]: unknown
 }
 
-export function isLabelerPrefItem(
-  v: unknown,
-): v is LabelerPrefItem & {
-  $type: $Type<'app.bsky.actor.defs', 'labelerPrefItem'>
-} {
-  return is$typed(v, id, 'labelerPrefItem')
+const hashLabelerPrefItem = 'labelerPrefItem'
+
+export function isLabelerPrefItem<V>(v: V) {
+  return is$typed(v, id, hashLabelerPrefItem)
 }
 
-export function validateLabelerPrefItem(v: unknown) {
-  return lexicons.validate(
-    `${id}#labelerPrefItem`,
-    v,
-  ) as ValidationResult<LabelerPrefItem>
+export function validateLabelerPrefItem<V>(v: V) {
+  return validate<LabelerPrefItem & V>(v, id, hashLabelerPrefItem)
+}
+
+export function isValidLabelerPrefItem<V>(v: V) {
+  return isValid<LabelerPrefItem & V>(v, id, hashLabelerPrefItem)
 }
 
 /** A grab bag of state that's specific to the bsky.app program. Third-party apps shouldn't use this. */
 export interface BskyAppStatePref {
+  $type?: $Type<'app.bsky.actor.defs', 'bskyAppStatePref'>
   activeProgressGuide?: BskyAppProgressGuide
   /** An array of tokens which identify nudges (modals, popups, tours, highlight dots) that should be shown to the user. */
   queuedNudges?: string[]
   /** Storage for NUXs the user has encountered. */
   nuxs?: Nux[]
-  [k: string]: unknown
 }
 
-export function isBskyAppStatePref(
-  v: unknown,
-): v is BskyAppStatePref & {
-  $type: $Type<'app.bsky.actor.defs', 'bskyAppStatePref'>
-} {
-  return is$typed(v, id, 'bskyAppStatePref')
+const hashBskyAppStatePref = 'bskyAppStatePref'
+
+export function isBskyAppStatePref<V>(v: V) {
+  return is$typed(v, id, hashBskyAppStatePref)
 }
 
-export function validateBskyAppStatePref(v: unknown) {
-  return lexicons.validate(
-    `${id}#bskyAppStatePref`,
-    v,
-  ) as ValidationResult<BskyAppStatePref>
+export function validateBskyAppStatePref<V>(v: V) {
+  return validate<BskyAppStatePref & V>(v, id, hashBskyAppStatePref)
+}
+
+export function isValidBskyAppStatePref<V>(v: V) {
+  return isValid<BskyAppStatePref & V>(v, id, hashBskyAppStatePref)
 }
 
 /** If set, an active progress guide. Once completed, can be set to undefined. Should have unspecced fields tracking progress. */
 export interface BskyAppProgressGuide {
+  $type?: $Type<'app.bsky.actor.defs', 'bskyAppProgressGuide'>
   guide: string
-  [k: string]: unknown
 }
 
-export function isBskyAppProgressGuide(
-  v: unknown,
-): v is BskyAppProgressGuide & {
-  $type: $Type<'app.bsky.actor.defs', 'bskyAppProgressGuide'>
-} {
-  return is$typed(v, id, 'bskyAppProgressGuide')
+const hashBskyAppProgressGuide = 'bskyAppProgressGuide'
+
+export function isBskyAppProgressGuide<V>(v: V) {
+  return is$typed(v, id, hashBskyAppProgressGuide)
 }
 
-export function validateBskyAppProgressGuide(v: unknown) {
-  return lexicons.validate(
-    `${id}#bskyAppProgressGuide`,
-    v,
-  ) as ValidationResult<BskyAppProgressGuide>
+export function validateBskyAppProgressGuide<V>(v: V) {
+  return validate<BskyAppProgressGuide & V>(v, id, hashBskyAppProgressGuide)
+}
+
+export function isValidBskyAppProgressGuide<V>(v: V) {
+  return isValid<BskyAppProgressGuide & V>(v, id, hashBskyAppProgressGuide)
 }
 
 /** A new user experiences (NUX) storage object */
 export interface Nux {
+  $type?: $Type<'app.bsky.actor.defs', 'nux'>
   id: string
   completed: boolean
   /** Arbitrary data for the NUX. The structure is defined by the NUX itself. Limited to 300 characters. */
   data?: string
   /** The date and time at which the NUX will expire and should be considered completed. */
   expiresAt?: string
-  [k: string]: unknown
 }
 
-export function isNux(
-  v: unknown,
-): v is Nux & { $type: $Type<'app.bsky.actor.defs', 'nux'> } {
-  return is$typed(v, id, 'nux')
+const hashNux = 'nux'
+
+export function isNux<V>(v: V) {
+  return is$typed(v, id, hashNux)
 }
 
-export function validateNux(v: unknown) {
-  return lexicons.validate(`${id}#nux`, v) as ValidationResult<Nux>
+export function validateNux<V>(v: V) {
+  return validate<Nux & V>(v, id, hashNux)
+}
+
+export function isValidNux<V>(v: V) {
+  return isValid<Nux & V>(v, id, hashNux)
 }

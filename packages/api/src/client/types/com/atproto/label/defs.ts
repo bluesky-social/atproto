@@ -3,13 +3,20 @@
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import { $Type, is$typed } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
+import {
+  isValid as _isValid,
+  validate as _validate,
+} from '../../../../lexicons'
+import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 
+const is$typed = _is$typed,
+  isValid = _isValid,
+  validate = _validate
 const id = 'com.atproto.label.defs'
 
 /** Metadata tag on an atproto resource (eg, repo or record). */
 export interface Label {
+  $type?: $Type<'com.atproto.label.defs', 'label'>
   /** The AT Protocol version of the label object. */
   ver?: number
   /** DID of the actor who created this label. */
@@ -28,57 +35,66 @@ export interface Label {
   exp?: string
   /** Signature of dag-cbor encoded label. */
   sig?: Uint8Array
-  [k: string]: unknown
 }
 
-export function isLabel(
-  v: unknown,
-): v is Label & { $type: $Type<'com.atproto.label.defs', 'label'> } {
-  return is$typed(v, id, 'label')
+const hashLabel = 'label'
+
+export function isLabel<V>(v: V) {
+  return is$typed(v, id, hashLabel)
 }
 
-export function validateLabel(v: unknown) {
-  return lexicons.validate(`${id}#label`, v) as ValidationResult<Label>
+export function validateLabel<V>(v: V) {
+  return validate<Label & V>(v, id, hashLabel)
+}
+
+export function isValidLabel<V>(v: V) {
+  return isValid<Label & V>(v, id, hashLabel)
 }
 
 /** Metadata tags on an atproto record, published by the author within the record. */
 export interface SelfLabels {
+  $type?: $Type<'com.atproto.label.defs', 'selfLabels'>
   values: SelfLabel[]
-  [k: string]: unknown
 }
 
-export function isSelfLabels(
-  v: unknown,
-): v is SelfLabels & { $type: $Type<'com.atproto.label.defs', 'selfLabels'> } {
-  return is$typed(v, id, 'selfLabels')
+const hashSelfLabels = 'selfLabels'
+
+export function isSelfLabels<V>(v: V) {
+  return is$typed(v, id, hashSelfLabels)
 }
 
-export function validateSelfLabels(v: unknown) {
-  return lexicons.validate(
-    `${id}#selfLabels`,
-    v,
-  ) as ValidationResult<SelfLabels>
+export function validateSelfLabels<V>(v: V) {
+  return validate<SelfLabels & V>(v, id, hashSelfLabels)
+}
+
+export function isValidSelfLabels<V>(v: V) {
+  return isValid<SelfLabels & V>(v, id, hashSelfLabels)
 }
 
 /** Metadata tag on an atproto record, published by the author within the record. Note that schemas should use #selfLabels, not #selfLabel. */
 export interface SelfLabel {
+  $type?: $Type<'com.atproto.label.defs', 'selfLabel'>
   /** The short string name of the value or type of this label. */
   val: string
-  [k: string]: unknown
 }
 
-export function isSelfLabel(
-  v: unknown,
-): v is SelfLabel & { $type: $Type<'com.atproto.label.defs', 'selfLabel'> } {
-  return is$typed(v, id, 'selfLabel')
+const hashSelfLabel = 'selfLabel'
+
+export function isSelfLabel<V>(v: V) {
+  return is$typed(v, id, hashSelfLabel)
 }
 
-export function validateSelfLabel(v: unknown) {
-  return lexicons.validate(`${id}#selfLabel`, v) as ValidationResult<SelfLabel>
+export function validateSelfLabel<V>(v: V) {
+  return validate<SelfLabel & V>(v, id, hashSelfLabel)
+}
+
+export function isValidSelfLabel<V>(v: V) {
+  return isValid<SelfLabel & V>(v, id, hashSelfLabel)
 }
 
 /** Declares a label value and its expected interpretations and behaviors. */
 export interface LabelValueDefinition {
+  $type?: $Type<'com.atproto.label.defs', 'labelValueDefinition'>
   /** The value of the label being defined. Must only include lowercase ascii and the '-' character ([a-z-]+). */
   identifier: string
   /** How should a client visually convey this label? 'inform' means neutral and informational; 'alert' means negative and warning; 'none' means show nothing. */
@@ -90,48 +106,53 @@ export interface LabelValueDefinition {
   /** Does the user need to have adult content enabled in order to configure this label? */
   adultOnly?: boolean
   locales: LabelValueDefinitionStrings[]
-  [k: string]: unknown
 }
 
-export function isLabelValueDefinition(
-  v: unknown,
-): v is LabelValueDefinition & {
-  $type: $Type<'com.atproto.label.defs', 'labelValueDefinition'>
-} {
-  return is$typed(v, id, 'labelValueDefinition')
+const hashLabelValueDefinition = 'labelValueDefinition'
+
+export function isLabelValueDefinition<V>(v: V) {
+  return is$typed(v, id, hashLabelValueDefinition)
 }
 
-export function validateLabelValueDefinition(v: unknown) {
-  return lexicons.validate(
-    `${id}#labelValueDefinition`,
-    v,
-  ) as ValidationResult<LabelValueDefinition>
+export function validateLabelValueDefinition<V>(v: V) {
+  return validate<LabelValueDefinition & V>(v, id, hashLabelValueDefinition)
+}
+
+export function isValidLabelValueDefinition<V>(v: V) {
+  return isValid<LabelValueDefinition & V>(v, id, hashLabelValueDefinition)
 }
 
 /** Strings which describe the label in the UI, localized into a specific language. */
 export interface LabelValueDefinitionStrings {
+  $type?: $Type<'com.atproto.label.defs', 'labelValueDefinitionStrings'>
   /** The code of the language these strings are written in. */
   lang: string
   /** A short human-readable name for the label. */
   name: string
   /** A longer description of what the label means and why it might be applied. */
   description: string
-  [k: string]: unknown
 }
 
-export function isLabelValueDefinitionStrings(
-  v: unknown,
-): v is LabelValueDefinitionStrings & {
-  $type: $Type<'com.atproto.label.defs', 'labelValueDefinitionStrings'>
-} {
-  return is$typed(v, id, 'labelValueDefinitionStrings')
+const hashLabelValueDefinitionStrings = 'labelValueDefinitionStrings'
+
+export function isLabelValueDefinitionStrings<V>(v: V) {
+  return is$typed(v, id, hashLabelValueDefinitionStrings)
 }
 
-export function validateLabelValueDefinitionStrings(v: unknown) {
-  return lexicons.validate(
-    `${id}#labelValueDefinitionStrings`,
+export function validateLabelValueDefinitionStrings<V>(v: V) {
+  return validate<LabelValueDefinitionStrings & V>(
     v,
-  ) as ValidationResult<LabelValueDefinitionStrings>
+    id,
+    hashLabelValueDefinitionStrings,
+  )
+}
+
+export function isValidLabelValueDefinitionStrings<V>(v: V) {
+  return isValid<LabelValueDefinitionStrings & V>(
+    v,
+    id,
+    hashLabelValueDefinitionStrings,
+  )
 }
 
 export type LabelValue =

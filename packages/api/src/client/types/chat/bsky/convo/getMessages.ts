@@ -4,10 +4,16 @@
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import { $Type, is$typed } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
-import * as ChatBskyConvoDefs from './defs'
+import {
+  isValid as _isValid,
+  validate as _validate,
+} from '../../../../lexicons'
+import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import type * as ChatBskyConvoDefs from './defs'
 
+const is$typed = _is$typed,
+  isValid = _isValid,
+  validate = _validate
 const id = 'chat.bsky.convo.getMessages'
 
 export interface QueryParams {
@@ -21,11 +27,10 @@ export type InputSchema = undefined
 export interface OutputSchema {
   cursor?: string
   messages: (
-    | ChatBskyConvoDefs.MessageView
-    | ChatBskyConvoDefs.DeletedMessageView
-    | { $type: string; [k: string]: unknown }
+    | $Typed<ChatBskyConvoDefs.MessageView>
+    | $Typed<ChatBskyConvoDefs.DeletedMessageView>
+    | { $type: string }
   )[]
-  [k: string]: unknown
 }
 
 export interface CallOptions {

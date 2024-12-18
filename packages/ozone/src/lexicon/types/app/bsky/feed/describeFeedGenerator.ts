@@ -4,10 +4,16 @@
 import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import { lexicons } from '../../../../lexicons'
-import { $Type, is$typed } from '../../../../util'
+import {
+  isValid as _isValid,
+  validate as _validate,
+} from '../../../../lexicons'
+import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 
+const is$typed = _is$typed,
+  isValid = _isValid,
+  validate = _validate
 const id = 'app.bsky.feed.describeFeedGenerator'
 
 export interface QueryParams {}
@@ -18,7 +24,6 @@ export interface OutputSchema {
   did: string
   feeds: Feed[]
   links?: Links
-  [k: string]: unknown
 }
 
 export type HandlerInput = undefined
@@ -47,34 +52,40 @@ export type Handler<HA extends HandlerAuth = never> = (
 ) => Promise<HandlerOutput> | HandlerOutput
 
 export interface Feed {
+  $type?: $Type<'app.bsky.feed.describeFeedGenerator', 'feed'>
   uri: string
-  [k: string]: unknown
 }
 
-export function isFeed(
-  v: unknown,
-): v is Feed & { $type: $Type<'app.bsky.feed.describeFeedGenerator', 'feed'> } {
-  return is$typed(v, id, 'feed')
+const hashFeed = 'feed'
+
+export function isFeed<V>(v: V) {
+  return is$typed(v, id, hashFeed)
 }
 
-export function validateFeed(v: unknown) {
-  return lexicons.validate(`${id}#feed`, v) as ValidationResult<Feed>
+export function validateFeed<V>(v: V) {
+  return validate<Feed & V>(v, id, hashFeed)
+}
+
+export function isValidFeed<V>(v: V) {
+  return isValid<Feed & V>(v, id, hashFeed)
 }
 
 export interface Links {
+  $type?: $Type<'app.bsky.feed.describeFeedGenerator', 'links'>
   privacyPolicy?: string
   termsOfService?: string
-  [k: string]: unknown
 }
 
-export function isLinks(
-  v: unknown,
-): v is Links & {
-  $type: $Type<'app.bsky.feed.describeFeedGenerator', 'links'>
-} {
-  return is$typed(v, id, 'links')
+const hashLinks = 'links'
+
+export function isLinks<V>(v: V) {
+  return is$typed(v, id, hashLinks)
 }
 
-export function validateLinks(v: unknown) {
-  return lexicons.validate(`${id}#links`, v) as ValidationResult<Links>
+export function validateLinks<V>(v: V) {
+  return validate<Links & V>(v, id, hashLinks)
+}
+
+export function isValidLinks<V>(v: V) {
+  return isValid<Links & V>(v, id, hashLinks)
 }
