@@ -136,6 +136,8 @@ import * as AppBskyNotificationListNotifications from './types/app/bsky/notifica
 import * as AppBskyNotificationPutPreferences from './types/app/bsky/notification/putPreferences'
 import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
+import * as AppBskyPurchaseCreateStripeBillingUrl from './types/app/bsky/purchase/createStripeBillingUrl'
+import * as AppBskyPurchaseCreateStripeCheckoutUrl from './types/app/bsky/purchase/createStripeCheckoutUrl'
 import * as AppBskyPurchaseGetFeatures from './types/app/bsky/purchase/getFeatures'
 import * as AppBskyPurchaseGetSubscriptionGroup from './types/app/bsky/purchase/getSubscriptionGroup'
 import * as AppBskyPurchaseGetSubscriptions from './types/app/bsky/purchase/getSubscriptions'
@@ -1848,6 +1850,28 @@ export class AppBskyPurchaseNS {
 
   constructor(server: Server) {
     this._server = server
+  }
+
+  createStripeBillingUrl<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyPurchaseCreateStripeBillingUrl.Handler<ExtractAuth<AV>>,
+      AppBskyPurchaseCreateStripeBillingUrl.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.purchase.createStripeBillingUrl' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  createStripeCheckoutUrl<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyPurchaseCreateStripeCheckoutUrl.Handler<ExtractAuth<AV>>,
+      AppBskyPurchaseCreateStripeCheckoutUrl.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.purchase.createStripeCheckoutUrl' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
   getFeatures<AV extends AuthVerifier>(

@@ -161,6 +161,8 @@ import * as AppBskyNotificationListNotifications from './types/app/bsky/notifica
 import * as AppBskyNotificationPutPreferences from './types/app/bsky/notification/putPreferences'
 import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
+import * as AppBskyPurchaseCreateStripeBillingUrl from './types/app/bsky/purchase/createStripeBillingUrl'
+import * as AppBskyPurchaseCreateStripeCheckoutUrl from './types/app/bsky/purchase/createStripeCheckoutUrl'
 import * as AppBskyPurchaseGetFeatures from './types/app/bsky/purchase/getFeatures'
 import * as AppBskyPurchaseGetSubscriptionGroup from './types/app/bsky/purchase/getSubscriptionGroup'
 import * as AppBskyPurchaseGetSubscriptions from './types/app/bsky/purchase/getSubscriptions'
@@ -392,6 +394,8 @@ export * as AppBskyNotificationListNotifications from './types/app/bsky/notifica
 export * as AppBskyNotificationPutPreferences from './types/app/bsky/notification/putPreferences'
 export * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush'
 export * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
+export * as AppBskyPurchaseCreateStripeBillingUrl from './types/app/bsky/purchase/createStripeBillingUrl'
+export * as AppBskyPurchaseCreateStripeCheckoutUrl from './types/app/bsky/purchase/createStripeCheckoutUrl'
 export * as AppBskyPurchaseGetFeatures from './types/app/bsky/purchase/getFeatures'
 export * as AppBskyPurchaseGetSubscriptionGroup from './types/app/bsky/purchase/getSubscriptionGroup'
 export * as AppBskyPurchaseGetSubscriptions from './types/app/bsky/purchase/getSubscriptions'
@@ -3041,6 +3045,30 @@ export class AppBskyPurchaseNS {
 
   constructor(client: XrpcClient) {
     this._client = client
+  }
+
+  createStripeBillingUrl(
+    data?: AppBskyPurchaseCreateStripeBillingUrl.InputSchema,
+    opts?: AppBskyPurchaseCreateStripeBillingUrl.CallOptions,
+  ): Promise<AppBskyPurchaseCreateStripeBillingUrl.Response> {
+    return this._client.call(
+      'app.bsky.purchase.createStripeBillingUrl',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
+  createStripeCheckoutUrl(
+    data?: AppBskyPurchaseCreateStripeCheckoutUrl.InputSchema,
+    opts?: AppBskyPurchaseCreateStripeCheckoutUrl.CallOptions,
+  ): Promise<AppBskyPurchaseCreateStripeCheckoutUrl.Response> {
+    return this._client.call(
+      'app.bsky.purchase.createStripeCheckoutUrl',
+      opts?.qp,
+      data,
+      opts,
+    )
   }
 
   getFeatures(
