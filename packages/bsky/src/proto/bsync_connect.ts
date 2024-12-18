@@ -3,25 +3,14 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import {
-  AddMuteOperationRequest,
-  AddMuteOperationResponse,
-  AddNotifOperationRequest,
-  AddNotifOperationResponse,
-  PingRequest,
-  PingResponse,
-  ScanMuteOperationsRequest,
-  ScanMuteOperationsResponse,
-  ScanNotifOperationsRequest,
-  ScanNotifOperationsResponse,
-} from './bsync_pb'
-import { MethodKind } from '@bufbuild/protobuf'
+import { AddMuteOperationRequest, AddMuteOperationResponse, AddNotifOperationRequest, AddNotifOperationResponse, PingRequest, PingResponse, ScanMuteOperationsRequest, ScanMuteOperationsResponse, ScanNotifOperationsRequest, ScanNotifOperationsResponse } from "./bsync_pb";
+import { MethodKind } from "@bufbuild/protobuf";
 
 /**
  * @generated from service bsync.Service
  */
 export const Service = {
-  typeName: 'bsync.Service',
+  typeName: "bsync.Service",
   methods: {
     /**
      * Sync
@@ -29,7 +18,7 @@ export const Service = {
      * @generated from rpc bsync.Service.AddMuteOperation
      */
     addMuteOperation: {
-      name: 'AddMuteOperation',
+      name: "AddMuteOperation",
       I: AddMuteOperationRequest,
       O: AddMuteOperationResponse,
       kind: MethodKind.Unary,
@@ -38,7 +27,7 @@ export const Service = {
      * @generated from rpc bsync.Service.ScanMuteOperations
      */
     scanMuteOperations: {
-      name: 'ScanMuteOperations',
+      name: "ScanMuteOperations",
       I: ScanMuteOperationsRequest,
       O: ScanMuteOperationsResponse,
       kind: MethodKind.Unary,
@@ -47,7 +36,7 @@ export const Service = {
      * @generated from rpc bsync.Service.AddNotifOperation
      */
     addNotifOperation: {
-      name: 'AddNotifOperation',
+      name: "AddNotifOperation",
       I: AddNotifOperationRequest,
       O: AddNotifOperationResponse,
       kind: MethodKind.Unary,
@@ -56,7 +45,7 @@ export const Service = {
      * @generated from rpc bsync.Service.ScanNotifOperations
      */
     scanNotifOperations: {
-      name: 'ScanNotifOperations',
+      name: "ScanNotifOperations",
       I: ScanNotifOperationsRequest,
       O: ScanNotifOperationsResponse,
       kind: MethodKind.Unary,
@@ -67,10 +56,11 @@ export const Service = {
      * @generated from rpc bsync.Service.Ping
      */
     ping: {
-      name: 'Ping',
+      name: "Ping",
       I: PingRequest,
       O: PingResponse,
       kind: MethodKind.Unary,
     },
-  },
-} as const
+  }
+} as const;
+
