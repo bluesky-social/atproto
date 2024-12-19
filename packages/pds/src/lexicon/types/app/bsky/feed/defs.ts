@@ -11,6 +11,7 @@ import * as AppBskyEmbedVideo from '../embed/video'
 import * as AppBskyEmbedExternal from '../embed/external'
 import * as AppBskyEmbedRecord from '../embed/record'
 import * as AppBskyEmbedRecordWithMedia from '../embed/recordWithMedia'
+import * as AppBskyEmbedPoll from '../embed/poll'
 import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
 import * as AppBskyRichtextFacet from '../richtext/facet'
 import * as AppBskyGraphDefs from '../graph/defs'
@@ -26,11 +27,14 @@ export interface PostView {
     | AppBskyEmbedExternal.View
     | AppBskyEmbedRecord.View
     | AppBskyEmbedRecordWithMedia.View
+    | AppBskyEmbedPoll.View
     | { $type: string; [k: string]: unknown }
   replyCount?: number
   repostCount?: number
   likeCount?: number
   quoteCount?: number
+  pollAnswerCount?: number
+  pollAnswers?: number[]
   indexedAt: string
   viewer?: ViewerState
   labels?: ComAtprotoLabelDefs.Label[]

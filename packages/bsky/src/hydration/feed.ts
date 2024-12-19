@@ -1,6 +1,7 @@
 import { DataPlaneClient } from '../data-plane/client'
 import { Record as PostRecord } from '../lexicon/types/app/bsky/feed/post'
 import { Record as LikeRecord } from '../lexicon/types/app/bsky/feed/like'
+import { Record as PollAnswerRecord } from '../lexicon/types/app/bsky/feed/pollAnswer'
 import { Record as RepostRecord } from '../lexicon/types/app/bsky/feed/repost'
 import { Record as FeedGenRecord } from '../lexicon/types/app/bsky/feed/generator'
 import { Record as ThreadgateRecord } from '../lexicon/types/app/bsky/feed/threadgate'
@@ -37,6 +38,8 @@ export type PostAgg = {
   replies: number
   reposts: number
   quotes: number
+  pollAnswerCount: number
+  pollAnswers: number[]
 }
 
 export type PostAggs = HydrationMap<PostAgg>
@@ -46,6 +49,9 @@ export type Likes = HydrationMap<Like>
 
 export type Repost = RecordInfo<RepostRecord>
 export type Reposts = HydrationMap<Repost>
+
+export type PollAnswer = RecordInfo<PollAnswerRecord>
+export type PollAnswers = HydrationMap<PollAnswer>
 
 export type FeedGenAgg = {
   likes: number
@@ -166,6 +172,8 @@ export class FeedHydrator {
         reposts: counts.reposts[i] ?? 0,
         replies: counts.replies[i] ?? 0,
         quotes: counts.quotes[i] ?? 0,
+        pollAnswerCount: counts.pollAnswerCount[i] ?? 0,
+        pollAnswers: counts.pollAnswers[i]?.count ?? [],
       })
     }, new HydrationMap<PostAgg>())
   }
