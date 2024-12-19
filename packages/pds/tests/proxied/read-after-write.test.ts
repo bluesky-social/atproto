@@ -48,7 +48,7 @@ describe('proxy read after write', () => {
     assert(network.pds.ctx.cfg.bskyAppView)
     const blob = await sc.uploadFile(
       alice,
-      '../dev-env/src/seed/img/key-landscape-small.jpg',
+      '../dev-env/assets/key-landscape-small.jpg',
       'image/jpeg',
     )
     await sc.updateProfile(alice, { displayName: 'blah', avatar: blob.image })
@@ -148,7 +148,7 @@ describe('proxy read after write', () => {
     assert(network.pds.ctx.cfg.bskyAppView)
     const img = await sc.uploadFile(
       alice,
-      '../dev-env/src/seed/img/key-landscape-small.jpg',
+      '../dev-env/assets/key-landscape-small.jpg',
       'image/jpeg',
     )
     const replyRes1 = await agent.api.app.bsky.feed.post.create(
