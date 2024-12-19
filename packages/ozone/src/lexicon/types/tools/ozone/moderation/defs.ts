@@ -136,6 +136,8 @@ export interface SubjectStatusView {
   appealed?: boolean
   suspendUntil?: string
   tags?: string[]
+  accountStats?: AccountStats
+  recordsStats?: RecordsStats
   [k: string]: unknown
 }
 
@@ -149,6 +151,56 @@ export function isSubjectStatusView(v: unknown): v is SubjectStatusView {
 
 export function validateSubjectStatusView(v: unknown): ValidationResult {
   return lexicons.validate('tools.ozone.moderation.defs#subjectStatusView', v)
+}
+
+/** Statistics about a particular account subject on the labeller */
+export interface AccountStats {
+  /** Number of times the account was suspended */
+  suspendedCount?: number
+  /** Number of times the account was taken down */
+  takedownCount?: number
+  /** List of labels currently applied on the account */
+  labels?: string[]
+  [k: string]: unknown
+}
+
+export function isAccountStats(v: unknown): v is AccountStats {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'tools.ozone.moderation.defs#accountStats'
+  )
+}
+
+export function validateAccountStats(v: unknown): ValidationResult {
+  return lexicons.validate('tools.ozone.moderation.defs#accountStats', v)
+}
+
+/** Statistics about a set of record subjects on the labeller */
+export interface RecordsStats {
+  /** Total number of record subjects in the set */
+  subjectCount?: number
+  /** Number of record subjects currently in "reviewOpen" or "reviewEscalated" state */
+  pendingCount?: number
+  /** Number of record subjects currently in "reviewNone" or "reviewClosed" state */
+  processedCount?: number
+  /** Number of record subjects currently taken down */
+  takendownCount?: number
+  /** Number of record subjects currently having at least one label applied */
+  labeledCount?: number
+  [k: string]: unknown
+}
+
+export function isRecordsStats(v: unknown): v is RecordsStats {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'tools.ozone.moderation.defs#recordsStats'
+  )
+}
+
+export function validateRecordsStats(v: unknown): ValidationResult {
+  return lexicons.validate('tools.ozone.moderation.defs#recordsStats', v)
 }
 
 export type SubjectReviewState =

@@ -182,6 +182,61 @@
         "tags": {
           "type": "array",
           "items": { "type": "string" }
+        },
+        "accountStats": {
+          "description": "Statistics related to the account subject",
+          "type": "ref",
+          "ref": "#accountStats"
+        },
+        "recordsStats": {
+          "description": "Statistics related to the record subjects authored by the subject's account",
+          "type": "ref",
+          "ref": "#recordsStats"
+        }
+      }
+    },
+    "accountStats": {
+      "description": "Statistics about a particular account subject on the labeller",
+      "type": "object",
+      "properties": {
+        "suspendedCount": {
+          "description": "Number of times the account was suspended",
+          "type": "integer"
+        },
+        "takedownCount": {
+          "description": "Number of times the account was taken down",
+          "type": "integer"
+        },
+        "labels": {
+          "description": "List of labels currently applied on the account",
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "recordsStats": {
+      "description": "Statistics about a set of record subjects on the labeller",
+      "type": "object",
+      "properties": {
+        "subjectCount": {
+          "description": "Total number of record subjects in the set",
+          "type": "integer"
+        },
+        "pendingCount": {
+          "description": "Number of record subjects currently in \"reviewOpen\" or \"reviewEscalated\" state",
+          "type": "integer"
+        },
+        "processedCount": {
+          "description": "Number of record subjects currently in \"reviewNone\" or \"reviewClosed\" state",
+          "type": "integer"
+        },
+        "takendownCount": {
+          "description": "Number of record subjects currently taken down",
+          "type": "integer"
+        },
+        "labeledCount": {
+          "description": "Number of record subjects currently having at least one label applied",
+          "type": "integer"
         }
       }
     },
