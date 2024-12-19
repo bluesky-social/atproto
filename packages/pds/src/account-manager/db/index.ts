@@ -6,14 +6,14 @@ export * from './schema'
 
 export type AccountDb = Database<DatabaseSchema>
 
-export const getDb = (
+export const getDb = async (
   location: string,
   disableWalAutoCheckpoint = false,
-): AccountDb => {
+): Promise<AccountDb> => {
   const pragmas: Record<string, string> = disableWalAutoCheckpoint
     ? { wal_autocheckpoint: '0' }
     : {}
-  return Database.sqlite(location, { pragmas })
+  return await Database.sqlite(location, { pragmas })
 }
 
 export const getMigrator = (db: AccountDb) => {

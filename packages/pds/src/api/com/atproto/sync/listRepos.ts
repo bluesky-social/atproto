@@ -7,9 +7,9 @@ import { formatAccountStatus } from '../../../../account-manager'
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.listRepos(async ({ params }) => {
     const { limit, cursor } = params
-    const db = ctx.accountManager.db
-    const { ref } = db.db.dynamic
-    let builder = db.db
+    const connection = await ctx.accountManager.getDb()
+    const { ref } = connection.db.dynamic
+    let builder = connection.db
       .selectFrom('actor')
       .innerJoin('repo_root', 'repo_root.did', 'actor.did')
       .select([

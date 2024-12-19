@@ -6,14 +6,14 @@ export * from './schema'
 
 export type SequencerDb = Database<SequencerDbSchema>
 
-export const getDb = (
+export const getDb = async (
   location: string,
   disableWalAutoCheckpoint = false,
-): SequencerDb => {
+): Promise<SequencerDb> => {
   const pragmas: Record<string, string> = disableWalAutoCheckpoint
     ? { wal_autocheckpoint: '0' }
     : {}
-  return Database.sqlite(location, pragmas)
+  return await Database.sqlite(location, pragmas)
 }
 
 export const getMigrator = (db: Database<SequencerDbSchema>) => {

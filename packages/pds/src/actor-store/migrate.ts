@@ -10,7 +10,8 @@ export const forEachActorStore = async (
   const { concurrency = 1 } = opts
 
   const queue = new PQueue({ concurrency })
-  const actorQb = ctx.accountManager.db.db
+  const connection = await ctx.accountManager.getDb()
+  const actorQb = connection.db
     .selectFrom('actor')
     .selectAll()
     .limit(2 * concurrency)
