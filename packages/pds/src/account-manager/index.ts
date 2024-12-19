@@ -217,9 +217,7 @@ export class AccountManager
       did,
       jwtKey: this.jwtKey,
       serviceDid: this.serviceDid,
-      scope: isSoftDeleted
-        ? AuthScope.Takendown
-        : auth.formatScope(appPassword),
+      scope: auth.formatScope(appPassword, isSoftDeleted),
     })
     // For soft deleted accounts don't store refresh token so that it can't be rotated.
     if (!isSoftDeleted) {

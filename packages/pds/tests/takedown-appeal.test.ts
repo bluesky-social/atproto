@@ -1,6 +1,7 @@
 import { AtpAgent, ComAtprotoModerationDefs } from '@atproto/api'
 import { SeedClient, TestNetwork } from '@atproto/dev-env'
 import { forSnapshot } from './_util'
+import { ids } from '../src/lexicon/lexicons'
 
 describe('appeal account takedown', () => {
   let network: TestNetwork
@@ -10,7 +11,7 @@ describe('appeal account takedown', () => {
 
   beforeAll(async () => {
     network = await TestNetwork.create({
-      dbPostgresSchema: 'auth',
+      dbPostgresSchema: 'takedown_appeal',
     })
     sc = network.getSeedClient()
     const modAccount = await sc.createAccount('moderator', {
@@ -124,5 +125,33 @@ describe('appeal account takedown', () => {
         },
       ),
     ).rejects.toThrow('Report not accepted from takendown account')
+  })
+  it('takendown actor is not allowed to create records.', async () => {
+    const { data: auth } = await agent.com.atproto.server.createSession({
+      identifier: 'jeff.test',
+      password: 'password',
+      allowTakendown: true,
+    })
+
+    // send appeal event as the takendown account
+    await expect(
+      agent.com.atproto.repo.createRecord(
+        {
+          repo: auth.did,
+          collection: ids.AppBskyFeedPost,
+          // rkey: 'self',
+          record: {
+            text: 'test',
+            createdAt: new Date().toISOString(),
+          },
+        },
+        {
+          headers: {
+            authorization: `Bearer ${auth.accessJwt}`,
+          },
+          encoding: 'application/json',
+        },
+      ),
+    ).rejects.toThrow('Bad token scope')
   })
 })
