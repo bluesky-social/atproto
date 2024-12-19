@@ -2,15 +2,24 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
-import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
-import * as AppBskyActorDefs from '../actor/defs'
-import * as AppBskyRichtextFacet from '../richtext/facet'
-import * as AppBskyFeedDefs from '../feed/defs'
+import {
+  isValid as _isValid,
+  validate as _validate,
+} from '../../../../lexicons'
+import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import type * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
+import type * as AppBskyActorDefs from '../actor/defs'
+import type * as AppBskyRichtextFacet from '../richtext/facet'
+import type * as AppBskyFeedDefs from '../feed/defs'
+
+const is$typed = _is$typed,
+  isValid = _isValid,
+  validate = _validate
+const id = 'app.bsky.graph.defs'
 
 export interface ListViewBasic {
+  $type?: $Type<'app.bsky.graph.defs', 'listViewBasic'>
   uri: string
   cid: string
   name: string
@@ -20,22 +29,24 @@ export interface ListViewBasic {
   labels?: ComAtprotoLabelDefs.Label[]
   viewer?: ListViewerState
   indexedAt?: string
-  [k: string]: unknown
 }
 
-export function isListViewBasic(v: unknown): v is ListViewBasic {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.graph.defs#listViewBasic'
-  )
+const hashListViewBasic = 'listViewBasic'
+
+export function isListViewBasic<V>(v: V) {
+  return is$typed(v, id, hashListViewBasic)
 }
 
-export function validateListViewBasic(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.graph.defs#listViewBasic', v)
+export function validateListViewBasic<V>(v: V) {
+  return validate<ListViewBasic & V>(v, id, hashListViewBasic)
+}
+
+export function isValidListViewBasic<V>(v: V) {
+  return isValid<ListViewBasic>(v, id, hashListViewBasic)
 }
 
 export interface ListView {
+  $type?: $Type<'app.bsky.graph.defs', 'listView'>
   uri: string
   cid: string
   creator: AppBskyActorDefs.ProfileView
@@ -48,43 +59,47 @@ export interface ListView {
   labels?: ComAtprotoLabelDefs.Label[]
   viewer?: ListViewerState
   indexedAt: string
-  [k: string]: unknown
 }
 
-export function isListView(v: unknown): v is ListView {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.graph.defs#listView'
-  )
+const hashListView = 'listView'
+
+export function isListView<V>(v: V) {
+  return is$typed(v, id, hashListView)
 }
 
-export function validateListView(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.graph.defs#listView', v)
+export function validateListView<V>(v: V) {
+  return validate<ListView & V>(v, id, hashListView)
+}
+
+export function isValidListView<V>(v: V) {
+  return isValid<ListView>(v, id, hashListView)
 }
 
 export interface ListItemView {
+  $type?: $Type<'app.bsky.graph.defs', 'listItemView'>
   uri: string
   subject: AppBskyActorDefs.ProfileView
-  [k: string]: unknown
 }
 
-export function isListItemView(v: unknown): v is ListItemView {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.graph.defs#listItemView'
-  )
+const hashListItemView = 'listItemView'
+
+export function isListItemView<V>(v: V) {
+  return is$typed(v, id, hashListItemView)
 }
 
-export function validateListItemView(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.graph.defs#listItemView', v)
+export function validateListItemView<V>(v: V) {
+  return validate<ListItemView & V>(v, id, hashListItemView)
+}
+
+export function isValidListItemView<V>(v: V) {
+  return isValid<ListItemView>(v, id, hashListItemView)
 }
 
 export interface StarterPackView {
+  $type?: $Type<'app.bsky.graph.defs', 'starterPackView'>
   uri: string
   cid: string
-  record: {}
+  record: { [_ in string]: unknown }
   creator: AppBskyActorDefs.ProfileViewBasic
   list?: ListViewBasic
   listItemsSample?: ListItemView[]
@@ -93,44 +108,47 @@ export interface StarterPackView {
   joinedAllTimeCount?: number
   labels?: ComAtprotoLabelDefs.Label[]
   indexedAt: string
-  [k: string]: unknown
 }
 
-export function isStarterPackView(v: unknown): v is StarterPackView {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.graph.defs#starterPackView'
-  )
+const hashStarterPackView = 'starterPackView'
+
+export function isStarterPackView<V>(v: V) {
+  return is$typed(v, id, hashStarterPackView)
 }
 
-export function validateStarterPackView(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.graph.defs#starterPackView', v)
+export function validateStarterPackView<V>(v: V) {
+  return validate<StarterPackView & V>(v, id, hashStarterPackView)
+}
+
+export function isValidStarterPackView<V>(v: V) {
+  return isValid<StarterPackView>(v, id, hashStarterPackView)
 }
 
 export interface StarterPackViewBasic {
+  $type?: $Type<'app.bsky.graph.defs', 'starterPackViewBasic'>
   uri: string
   cid: string
-  record: {}
+  record: { [_ in string]: unknown }
   creator: AppBskyActorDefs.ProfileViewBasic
   listItemCount?: number
   joinedWeekCount?: number
   joinedAllTimeCount?: number
   labels?: ComAtprotoLabelDefs.Label[]
   indexedAt: string
-  [k: string]: unknown
 }
 
-export function isStarterPackViewBasic(v: unknown): v is StarterPackViewBasic {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.graph.defs#starterPackViewBasic'
-  )
+const hashStarterPackViewBasic = 'starterPackViewBasic'
+
+export function isStarterPackViewBasic<V>(v: V) {
+  return is$typed(v, id, hashStarterPackViewBasic)
 }
 
-export function validateStarterPackViewBasic(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.graph.defs#starterPackViewBasic', v)
+export function validateStarterPackViewBasic<V>(v: V) {
+  return validate<StarterPackViewBasic & V>(v, id, hashStarterPackViewBasic)
+}
+
+export function isValidStarterPackViewBasic<V>(v: V) {
+  return isValid<StarterPackViewBasic>(v, id, hashStarterPackViewBasic)
 }
 
 export type ListPurpose =
@@ -140,67 +158,73 @@ export type ListPurpose =
   | (string & {})
 
 /** A list of actors to apply an aggregate moderation action (mute/block) on. */
-export const MODLIST = 'app.bsky.graph.defs#modlist'
+export const MODLIST = `${id}#modlist`
 /** A list of actors used for curation purposes such as list feeds or interaction gating. */
-export const CURATELIST = 'app.bsky.graph.defs#curatelist'
+export const CURATELIST = `${id}#curatelist`
 /** A list of actors used for only for reference purposes such as within a starter pack. */
-export const REFERENCELIST = 'app.bsky.graph.defs#referencelist'
+export const REFERENCELIST = `${id}#referencelist`
 
 export interface ListViewerState {
+  $type?: $Type<'app.bsky.graph.defs', 'listViewerState'>
   muted?: boolean
   blocked?: string
-  [k: string]: unknown
 }
 
-export function isListViewerState(v: unknown): v is ListViewerState {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.graph.defs#listViewerState'
-  )
+const hashListViewerState = 'listViewerState'
+
+export function isListViewerState<V>(v: V) {
+  return is$typed(v, id, hashListViewerState)
 }
 
-export function validateListViewerState(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.graph.defs#listViewerState', v)
+export function validateListViewerState<V>(v: V) {
+  return validate<ListViewerState & V>(v, id, hashListViewerState)
+}
+
+export function isValidListViewerState<V>(v: V) {
+  return isValid<ListViewerState>(v, id, hashListViewerState)
 }
 
 /** indicates that a handle or DID could not be resolved */
 export interface NotFoundActor {
+  $type?: $Type<'app.bsky.graph.defs', 'notFoundActor'>
   actor: string
   notFound: true
-  [k: string]: unknown
 }
 
-export function isNotFoundActor(v: unknown): v is NotFoundActor {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.graph.defs#notFoundActor'
-  )
+const hashNotFoundActor = 'notFoundActor'
+
+export function isNotFoundActor<V>(v: V) {
+  return is$typed(v, id, hashNotFoundActor)
 }
 
-export function validateNotFoundActor(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.graph.defs#notFoundActor', v)
+export function validateNotFoundActor<V>(v: V) {
+  return validate<NotFoundActor & V>(v, id, hashNotFoundActor)
+}
+
+export function isValidNotFoundActor<V>(v: V) {
+  return isValid<NotFoundActor>(v, id, hashNotFoundActor)
 }
 
 /** lists the bi-directional graph relationships between one actor (not indicated in the object), and the target actors (the DID included in the object) */
 export interface Relationship {
+  $type?: $Type<'app.bsky.graph.defs', 'relationship'>
   did: string
   /** if the actor follows this DID, this is the AT-URI of the follow record */
   following?: string
   /** if the actor is followed by this DID, contains the AT-URI of the follow record */
   followedBy?: string
-  [k: string]: unknown
 }
 
-export function isRelationship(v: unknown): v is Relationship {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.graph.defs#relationship'
-  )
+const hashRelationship = 'relationship'
+
+export function isRelationship<V>(v: V) {
+  return is$typed(v, id, hashRelationship)
 }
 
-export function validateRelationship(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.graph.defs#relationship', v)
+export function validateRelationship<V>(v: V) {
+  return validate<Relationship & V>(v, id, hashRelationship)
+}
+
+export function isValidRelationship<V>(v: V) {
+  return isValid<Relationship>(v, id, hashRelationship)
 }

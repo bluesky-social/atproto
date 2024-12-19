@@ -3,21 +3,27 @@
  */
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
-import * as ChatBskyConvoDefs from './defs'
+import {
+  isValid as _isValid,
+  validate as _validate,
+} from '../../../../lexicons'
+import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import type * as ChatBskyConvoDefs from './defs'
+
+const is$typed = _is$typed,
+  isValid = _isValid,
+  validate = _validate
+const id = 'chat.bsky.convo.sendMessageBatch'
 
 export interface QueryParams {}
 
 export interface InputSchema {
   items: BatchItem[]
-  [k: string]: unknown
 }
 
 export interface OutputSchema {
   items: ChatBskyConvoDefs.MessageView[]
-  [k: string]: unknown
 }
 
 export interface CallOptions {
@@ -38,19 +44,21 @@ export function toKnownErr(e: any) {
 }
 
 export interface BatchItem {
+  $type?: $Type<'chat.bsky.convo.sendMessageBatch', 'batchItem'>
   convoId: string
   message: ChatBskyConvoDefs.MessageInput
-  [k: string]: unknown
 }
 
-export function isBatchItem(v: unknown): v is BatchItem {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'chat.bsky.convo.sendMessageBatch#batchItem'
-  )
+const hashBatchItem = 'batchItem'
+
+export function isBatchItem<V>(v: V) {
+  return is$typed(v, id, hashBatchItem)
 }
 
-export function validateBatchItem(v: unknown): ValidationResult {
-  return lexicons.validate('chat.bsky.convo.sendMessageBatch#batchItem', v)
+export function validateBatchItem<V>(v: V) {
+  return validate<BatchItem & V>(v, id, hashBatchItem)
+}
+
+export function isValidBatchItem<V>(v: V) {
+  return isValid<BatchItem>(v, id, hashBatchItem)
 }

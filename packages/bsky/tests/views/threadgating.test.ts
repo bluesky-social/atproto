@@ -1,4 +1,4 @@
-import assert from 'assert'
+import assert from 'node:assert'
 import { AtpAgent } from '@atproto/api'
 import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
 import {
