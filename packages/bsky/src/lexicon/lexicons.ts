@@ -8406,60 +8406,6 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyGraphGetVouchesAccepted: {
-    lexicon: 1,
-    id: 'app.bsky.graph.getVouchesAccepted',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          'Enumerates all vouches received by a user. Only returns unaccepted vouches when the viewer matches the requested actor.',
-        parameters: {
-          type: 'params',
-          required: ['actor'],
-          properties: {
-            actor: {
-              type: 'string',
-              format: 'at-identifier',
-            },
-            state: {
-              type: 'string',
-              default: 'accepted',
-              knownValues: ['accepted', 'pending', 'all'],
-            },
-            limit: {
-              type: 'integer',
-              minimum: 1,
-              maximum: 100,
-              default: 50,
-            },
-            cursor: {
-              type: 'string',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['vouches'],
-            properties: {
-              cursor: {
-                type: 'string',
-              },
-              vouches: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:app.bsky.graph.defs#vouchView',
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  },
   AppBskyGraphGetVouchesGiven: {
     lexicon: 1,
     id: 'app.bsky.graph.getVouchesGiven',
@@ -8523,6 +8469,60 @@ export const schemaDict = {
           vouch: {
             type: 'ref',
             ref: 'lex:app.bsky.graph.defs#vouchView',
+          },
+        },
+      },
+    },
+  },
+  AppBskyGraphGetVouchesReceived: {
+    lexicon: 1,
+    id: 'app.bsky.graph.getVouchesReceived',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Enumerates all vouches received by a user. Only returns unaccepted vouches when the viewer matches the requested actor.',
+        parameters: {
+          type: 'params',
+          required: ['actor'],
+          properties: {
+            actor: {
+              type: 'string',
+              format: 'at-identifier',
+            },
+            state: {
+              type: 'string',
+              default: 'accepted',
+              knownValues: ['accepted', 'pending', 'all'],
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['vouches'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              vouches: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.graph.defs#vouchView',
+                },
+              },
+            },
           },
         },
       },
@@ -11145,8 +11145,8 @@ export const ids = {
   AppBskyGraphGetStarterPacks: 'app.bsky.graph.getStarterPacks',
   AppBskyGraphGetSuggestedFollowsByActor:
     'app.bsky.graph.getSuggestedFollowsByActor',
-  AppBskyGraphGetVouchesAccepted: 'app.bsky.graph.getVouchesAccepted',
   AppBskyGraphGetVouchesGiven: 'app.bsky.graph.getVouchesGiven',
+  AppBskyGraphGetVouchesReceived: 'app.bsky.graph.getVouchesReceived',
   AppBskyGraphList: 'app.bsky.graph.list',
   AppBskyGraphListblock: 'app.bsky.graph.listblock',
   AppBskyGraphListitem: 'app.bsky.graph.listitem',
