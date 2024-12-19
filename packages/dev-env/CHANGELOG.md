@@ -1,5 +1,11 @@
 # @atproto/dev-env
 
+## 0.3.69
+
+### Patch Changes
+
+- [#3266](https://github.com/bluesky-social/atproto/pull/3266) [`638f5a831`](https://github.com/bluesky-social/atproto/commit/638f5a8312136e8666d9390a73cb273459ffe082) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Fix avatar path resolution
+
 ## 0.3.68
 
 ### Patch Changes
