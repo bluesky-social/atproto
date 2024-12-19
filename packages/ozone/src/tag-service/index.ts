@@ -22,15 +22,18 @@ export class TagService {
     ]
   }
 
-  async evaluateForSubject() {
+  // Allow the caller to seed the initial tags
+  async evaluateForSubject(initialTags?: Iterable<string>) {
     try {
-      const tags: string[] = []
+      const tags = new Set(initialTags)
 
       await Promise.all(
         this.taggers.map(async (tagger) => {
           try {
             const newTags = await tagger.getTags()
-            if (newTags.length) tags.push(...newTags)
+            for (const newTag of newTags) {
+              tags.add(newTag)
+            }
           } catch (e) {
             // Don't let one tagger error stop the rest from running
             log.error(
@@ -41,11 +44,19 @@ export class TagService {
         }),
       )
 
-      if (tags.length > 0) {
+      // Ensure that before inserting new tags, we discard any tag that may
+      // have been evaluated to be added but is already present in the subject
+      if (this.subjectStatus?.tags?.length) {
+        for (const tag of this.subjectStatus.tags) {
+          tags.delete(tag)
+        }
+      }
+
+      if (tags.size) {
         await this.moderationService.logEvent({
           event: {
             $type: 'tools.ozone.moderation.defs#modEventTag',
-            add: tags,
+            add: [...tags],
             remove: [],
           },
           subject: this.subject,
