@@ -27,7 +27,8 @@ export const signedTokenPayloadSchema = z.intersection(
       jti: tokenIdSchema,
       sub: subSchema,
       client_id: clientIdSchema,
-    }),
+    })
+    .passthrough(),
 )
 
 export type SignedTokenPayload = Simplify<
