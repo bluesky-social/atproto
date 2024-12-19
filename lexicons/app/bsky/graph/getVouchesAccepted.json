@@ -4,12 +4,21 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Enumerates all vouches received and accepted by a user.",
+      "description": "Enumerates all vouches received by a user. Only returns unaccepted vouches when the viewer matches the requested actor.",
       "parameters": {
         "type": "params",
         "required": ["actor"],
         "properties": {
           "actor": { "type": "string", "format": "at-identifier" },
+          "state": { 
+            "type": "string",
+            "default": "accepted",
+            "knownValues": [
+              "accepted",
+              "pending",
+              "all"
+            ]
+           },
           "limit": {
             "type": "integer",
             "minimum": 1,

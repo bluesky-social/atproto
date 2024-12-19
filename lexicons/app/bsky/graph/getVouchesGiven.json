@@ -10,10 +10,15 @@
         "required": ["actor"],
         "properties": {
           "actor": { "type": "string", "format": "at-identifier" },
-          "includeUnaccepted": {
-            "type": "boolean",
-            "default": false
-          },
+          "state": { 
+            "type": "string",
+            "default": "accepted",
+            "knownValues": [
+              "accepted",
+              "pending",
+              "all"
+            ]
+           },
           "limit": {
             "type": "integer",
             "minimum": 1,
@@ -43,9 +48,9 @@
     },
     "actorVouch": {
       "type": "object",
-      "required": ["actor", "vouch"],
+      "required": ["subject", "vouch"],
       "properties": {
-        "actor": {
+        "subject": {
           "type": "ref",
           "ref": "app.bsky.actor.defs#profileViewBasic"
         },
