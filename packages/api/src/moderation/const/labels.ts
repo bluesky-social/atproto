@@ -16,7 +16,6 @@ export const DEFAULT_LABEL_SETTINGS: Record<string, LabelPreference> = {
   sexual: 'warn',
   nudity: 'ignore',
   'graphic-media': 'warn',
-  gore: 'warn',
 }
 
 export const LABELS: Record<KnownLabelValue, InterpretedLabelValueDefinition> =
@@ -195,6 +194,7 @@ export const LABELS: Record<KnownLabelValue, InterpretedLabelValueDefinition> =
       },
       locales: [],
     },
+    /** @deprecated alias for `graphic-media` */
     gore: {
       identifier: 'gore',
       flags: ['adult'],
