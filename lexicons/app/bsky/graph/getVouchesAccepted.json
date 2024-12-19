@@ -10,15 +10,11 @@
         "required": ["actor"],
         "properties": {
           "actor": { "type": "string", "format": "at-identifier" },
-          "state": { 
+          "state": {
             "type": "string",
             "default": "accepted",
-            "knownValues": [
-              "accepted",
-              "pending",
-              "all"
-            ]
-           },
+            "knownValues": ["accepted", "pending", "all"]
+          },
           "limit": {
             "type": "integer",
             "minimum": 1,

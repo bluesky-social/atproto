@@ -12,7 +12,7 @@ import * as AppBskyGraphDefs from './defs'
 
 export interface QueryParams {
   actor: string
-  includeUnaccepted: boolean
+  state: 'accepted' | 'pending' | 'all' | (string & {})
   limit: number
   cursor?: string
 }
@@ -51,7 +51,7 @@ export type Handler<HA extends HandlerAuth = never> = (
 ) => Promise<HandlerOutput> | HandlerOutput
 
 export interface ActorVouch {
-  actor: AppBskyActorDefs.ProfileViewBasic
+  subject: AppBskyActorDefs.ProfileViewBasic
   vouch: AppBskyGraphDefs.VouchView
   [k: string]: unknown
 }

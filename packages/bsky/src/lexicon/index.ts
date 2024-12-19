@@ -125,7 +125,6 @@ import * as AppBskyGraphGetStarterPacks from './types/app/bsky/graph/getStarterP
 import * as AppBskyGraphGetSuggestedFollowsByActor from './types/app/bsky/graph/getSuggestedFollowsByActor'
 import * as AppBskyGraphGetVouchesAccepted from './types/app/bsky/graph/getVouchesAccepted'
 import * as AppBskyGraphGetVouchesGiven from './types/app/bsky/graph/getVouchesGiven'
-import * as AppBskyGraphGetVouchesPending from './types/app/bsky/graph/getVouchesPending'
 import * as AppBskyGraphMuteActor from './types/app/bsky/graph/muteActor'
 import * as AppBskyGraphMuteActorList from './types/app/bsky/graph/muteActorList'
 import * as AppBskyGraphMuteThread from './types/app/bsky/graph/muteThread'
@@ -1656,17 +1655,6 @@ export class AppBskyGraphNS {
     >,
   ) {
     const nsid = 'app.bsky.graph.getVouchesGiven' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getVouchesPending<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      AppBskyGraphGetVouchesPending.Handler<ExtractAuth<AV>>,
-      AppBskyGraphGetVouchesPending.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'app.bsky.graph.getVouchesPending' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

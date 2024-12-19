@@ -11,6 +11,7 @@ import * as AppBskyGraphDefs from './defs'
 
 export interface QueryParams {
   actor: string
+  state: 'accepted' | 'pending' | 'all' | (string & {})
   limit: number
   cursor?: string
 }

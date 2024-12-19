@@ -144,7 +144,6 @@ import * as AppBskyGraphGetStarterPacks from './types/app/bsky/graph/getStarterP
 import * as AppBskyGraphGetSuggestedFollowsByActor from './types/app/bsky/graph/getSuggestedFollowsByActor'
 import * as AppBskyGraphGetVouchesAccepted from './types/app/bsky/graph/getVouchesAccepted'
 import * as AppBskyGraphGetVouchesGiven from './types/app/bsky/graph/getVouchesGiven'
-import * as AppBskyGraphGetVouchesPending from './types/app/bsky/graph/getVouchesPending'
 import * as AppBskyGraphList from './types/app/bsky/graph/list'
 import * as AppBskyGraphListblock from './types/app/bsky/graph/listblock'
 import * as AppBskyGraphListitem from './types/app/bsky/graph/listitem'
@@ -376,7 +375,6 @@ export * as AppBskyGraphGetStarterPacks from './types/app/bsky/graph/getStarterP
 export * as AppBskyGraphGetSuggestedFollowsByActor from './types/app/bsky/graph/getSuggestedFollowsByActor'
 export * as AppBskyGraphGetVouchesAccepted from './types/app/bsky/graph/getVouchesAccepted'
 export * as AppBskyGraphGetVouchesGiven from './types/app/bsky/graph/getVouchesGiven'
-export * as AppBskyGraphGetVouchesPending from './types/app/bsky/graph/getVouchesPending'
 export * as AppBskyGraphList from './types/app/bsky/graph/list'
 export * as AppBskyGraphListblock from './types/app/bsky/graph/listblock'
 export * as AppBskyGraphListitem from './types/app/bsky/graph/listitem'
@@ -2454,18 +2452,6 @@ export class AppBskyGraphNS {
   ): Promise<AppBskyGraphGetVouchesGiven.Response> {
     return this._client.call(
       'app.bsky.graph.getVouchesGiven',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  getVouchesPending(
-    params?: AppBskyGraphGetVouchesPending.QueryParams,
-    opts?: AppBskyGraphGetVouchesPending.CallOptions,
-  ): Promise<AppBskyGraphGetVouchesPending.Response> {
-    return this._client.call(
-      'app.bsky.graph.getVouchesPending',
       params,
       undefined,
       opts,
