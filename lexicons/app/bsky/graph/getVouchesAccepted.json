@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "app.bsky.graph.getVouchesReceived",
+  "id": "app.bsky.graph.getVouchesAccepted",
   "defs": {
     "main": {
       "type": "query",
