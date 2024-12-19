@@ -10,7 +10,11 @@ import {
   SkeletonFnInput,
   createPipeline,
 } from '../../../../pipeline'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
+import {
+  HydrateCtx,
+  Hydrator,
+  mergeStates,
+} from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 import { resHeaders } from '../../../util'
 import { uriToDid as didFromUri } from '../../../../util/uris'
@@ -51,9 +55,14 @@ const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
   if (!actorDid) {
     throw new InvalidRequestError(`Actor not found: ${params.actor}`)
   }
+  if (params.state !== 'accepted' && actorDid !== params.hydrateCtx.viewer) {
+    throw new InvalidRequestError(
+      'Cannot request unaccepeted vouches for an actor other than oneself',
+    )
+  }
   const { uris, cursor } = await ctx.dataplane.getVouchesGiven({
     actorDid,
-    includeUnaccepted: params.includeUnaccepted,
+    state: params.state,
     cursor: params.cursor,
     limit: params.limit,
   })
@@ -72,7 +81,15 @@ const hydration = async (
     vouchUris,
     params.hydrateCtx,
   )
-  return vouchState
+  const profileDids = mapDefined(
+    vouchUris,
+    (uri) => vouchState.vouches?.get(uri)?.vouch.record.subject,
+  )
+  const profilesState = await ctx.hydrator.hydrateProfilesBasic(
+    profileDids,
+    params.hydrateCtx.copy({ excludeVouches: true }),
+  )
+  return mergeStates(vouchState, profilesState)
 }
 
 const noBlocks = (input: RulesFnInput<Context, Params, SkeletonState>) => {
@@ -99,11 +116,19 @@ const presentation = (
   const isNoHosted = (did: string) => ctx.views.actorIsNoHosted(did, hydration)
 
   const vouches = mapDefined(vouchUris, (vouchUri) => {
+    const subjectDid = hydration.vouches?.get(vouchUri)?.vouch.record.subject
+    if (!subjectDid) return
     const voucherDid = didFromUri(vouchUri)
-    if (!params.hydrateCtx.includeTakedowns && isNoHosted(voucherDid)) {
+    if (
+      !params.hydrateCtx.includeTakedowns &&
+      (isNoHosted(voucherDid) || isNoHosted(subjectDid))
+    ) {
       return
     }
-    return ctx.views.vouch(vouchUri, hydration)
+    const vouch = ctx.views.vouch(vouchUri, hydration)
+    const subject = ctx.views.profileBasic(subjectDid, hydration)
+    if (!vouch || !subject) return
+    return { subject, vouch }
   })
 
   return { vouches, cursor }

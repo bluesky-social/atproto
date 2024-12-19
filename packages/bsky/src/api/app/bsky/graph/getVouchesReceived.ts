@@ -51,8 +51,14 @@ const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
   if (!actorDid) {
     throw new InvalidRequestError(`Actor not found: ${params.actor}`)
   }
+  if (params.state !== 'accepted' && actorDid !== params.hydrateCtx.viewer) {
+    throw new InvalidRequestError(
+      'Cannot request unaccepeted vouches for an actor other than oneself',
+    )
+  }
   const { uris, cursor } = await ctx.dataplane.getVouchesReceived({
     actorDid,
+    state: params.state,
     cursor: params.cursor,
     limit: params.limit,
   })
