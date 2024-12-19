@@ -22,7 +22,7 @@ async function gen() {
   const knownValues = new Set()
   const flattenedLabelDefs = []
 
-  for (const {alias: aliases, ...label} of labelsDef) {
+  for (const { alias: aliases, ...label } of labelsDef) {
     knownValues.add(label.identifier)
     flattenedLabelDefs.push([label.identifier, { ...label, locales: [] }])
 
