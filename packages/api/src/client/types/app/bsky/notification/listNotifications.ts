@@ -3,11 +3,13 @@
  */
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
+import { $Type, is$typed } from '../../../../util'
+import { lexicons } from '../../../../lexicons'
 import * as AppBskyActorDefs from '../actor/defs'
 import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
+
+const id = 'app.bsky.notification.listNotifications'
 
 export interface QueryParams {
   /** Notification reasons to include in response. */
@@ -65,17 +67,15 @@ export interface Notification {
   [k: string]: unknown
 }
 
-export function isNotification(v: unknown): v is Notification {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.notification.listNotifications#notification'
-  )
+export function isNotification(v: unknown): v is Notification & {
+  $type: $Type<'app.bsky.notification.listNotifications', 'notification'>
+} {
+  return is$typed(v, id, 'notification')
 }
 
-export function validateNotification(v: unknown): ValidationResult {
+export function validateNotification(v: unknown) {
   return lexicons.validate(
-    'app.bsky.notification.listNotifications#notification',
+    `${id}#notification`,
     v,
-  )
+  ) as ValidationResult<Notification>
 }

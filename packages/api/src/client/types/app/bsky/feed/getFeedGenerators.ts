@@ -3,10 +3,12 @@
  */
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
+import { $Type, is$typed } from '../../../../util'
+import { lexicons } from '../../../../lexicons'
 import * as AppBskyFeedDefs from './defs'
+
+const id = 'app.bsky.feed.getFeedGenerators'
 
 export interface QueryParams {
   feeds: string[]

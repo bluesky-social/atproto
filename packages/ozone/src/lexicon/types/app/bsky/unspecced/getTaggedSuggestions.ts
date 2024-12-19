@@ -3,10 +3,12 @@
  */
 import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
+import { lexicons } from '../../../../lexicons'
+import { $Type, is$typed } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
+
+const id = 'app.bsky.unspecced.getTaggedSuggestions'
 
 export interface QueryParams {}
 
@@ -49,17 +51,15 @@ export interface Suggestion {
   [k: string]: unknown
 }
 
-export function isSuggestion(v: unknown): v is Suggestion {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.unspecced.getTaggedSuggestions#suggestion'
-  )
+export function isSuggestion(v: unknown): v is Suggestion & {
+  $type: $Type<'app.bsky.unspecced.getTaggedSuggestions', 'suggestion'>
+} {
+  return is$typed(v, id, 'suggestion')
 }
 
-export function validateSuggestion(v: unknown): ValidationResult {
+export function validateSuggestion(v: unknown) {
   return lexicons.validate(
-    'app.bsky.unspecced.getTaggedSuggestions#suggestion',
+    `${id}#suggestion`,
     v,
-  )
+  ) as ValidationResult<Suggestion>
 }

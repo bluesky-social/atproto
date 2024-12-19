@@ -2,9 +2,11 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
+import { lexicons } from '../../../../lexicons'
+import { $Type, is$typed } from '../../../../util'
+
+const id = 'com.atproto.server.defs'
 
 export interface InviteCode {
   code: string
@@ -17,16 +19,17 @@ export interface InviteCode {
   [k: string]: unknown
 }
 
-export function isInviteCode(v: unknown): v is InviteCode {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'com.atproto.server.defs#inviteCode'
-  )
+export function isInviteCode(
+  v: unknown,
+): v is InviteCode & { $type: $Type<'com.atproto.server.defs', 'inviteCode'> } {
+  return is$typed(v, id, 'inviteCode')
 }
 
-export function validateInviteCode(v: unknown): ValidationResult {
-  return lexicons.validate('com.atproto.server.defs#inviteCode', v)
+export function validateInviteCode(v: unknown) {
+  return lexicons.validate(
+    `${id}#inviteCode`,
+    v,
+  ) as ValidationResult<InviteCode>
 }
 
 export interface InviteCodeUse {
@@ -35,14 +38,15 @@ export interface InviteCodeUse {
   [k: string]: unknown
 }
 
-export function isInviteCodeUse(v: unknown): v is InviteCodeUse {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'com.atproto.server.defs#inviteCodeUse'
-  )
+export function isInviteCodeUse(v: unknown): v is InviteCodeUse & {
+  $type: $Type<'com.atproto.server.defs', 'inviteCodeUse'>
+} {
+  return is$typed(v, id, 'inviteCodeUse')
 }
 
-export function validateInviteCodeUse(v: unknown): ValidationResult {
-  return lexicons.validate('com.atproto.server.defs#inviteCodeUse', v)
+export function validateInviteCodeUse(v: unknown) {
+  return lexicons.validate(
+    `${id}#inviteCodeUse`,
+    v,
+  ) as ValidationResult<InviteCodeUse>
 }

@@ -2,11 +2,13 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
+import { $Type, is$typed } from '../../../../util'
+import { lexicons } from '../../../../lexicons'
 import * as AppBskyActorDefs from '../../../app/bsky/actor/defs'
 import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
+
+const id = 'chat.bsky.actor.defs'
 
 export interface ProfileViewBasic {
   did: string
@@ -21,14 +23,15 @@ export interface ProfileViewBasic {
   [k: string]: unknown
 }
 
-export function isProfileViewBasic(v: unknown): v is ProfileViewBasic {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'chat.bsky.actor.defs#profileViewBasic'
-  )
+export function isProfileViewBasic(v: unknown): v is ProfileViewBasic & {
+  $type: $Type<'chat.bsky.actor.defs', 'profileViewBasic'>
+} {
+  return is$typed(v, id, 'profileViewBasic')
 }
 
-export function validateProfileViewBasic(v: unknown): ValidationResult {
-  return lexicons.validate('chat.bsky.actor.defs#profileViewBasic', v)
+export function validateProfileViewBasic(v: unknown) {
+  return lexicons.validate(
+    `${id}#profileViewBasic`,
+    v,
+  ) as ValidationResult<ProfileViewBasic>
 }

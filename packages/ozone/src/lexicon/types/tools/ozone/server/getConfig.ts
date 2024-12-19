@@ -3,10 +3,12 @@
  */
 import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
+import { lexicons } from '../../../../lexicons'
+import { $Type, is$typed } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
+
+const id = 'tools.ozone.server.getConfig'
 
 export interface QueryParams {}
 
@@ -51,16 +53,17 @@ export interface ServiceConfig {
   [k: string]: unknown
 }
 
-export function isServiceConfig(v: unknown): v is ServiceConfig {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'tools.ozone.server.getConfig#serviceConfig'
-  )
+export function isServiceConfig(v: unknown): v is ServiceConfig & {
+  $type: $Type<'tools.ozone.server.getConfig', 'serviceConfig'>
+} {
+  return is$typed(v, id, 'serviceConfig')
 }
 
-export function validateServiceConfig(v: unknown): ValidationResult {
-  return lexicons.validate('tools.ozone.server.getConfig#serviceConfig', v)
+export function validateServiceConfig(v: unknown) {
+  return lexicons.validate(
+    `${id}#serviceConfig`,
+    v,
+  ) as ValidationResult<ServiceConfig>
 }
 
 export interface ViewerConfig {
@@ -72,14 +75,15 @@ export interface ViewerConfig {
   [k: string]: unknown
 }
 
-export function isViewerConfig(v: unknown): v is ViewerConfig {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'tools.ozone.server.getConfig#viewerConfig'
-  )
+export function isViewerConfig(v: unknown): v is ViewerConfig & {
+  $type: $Type<'tools.ozone.server.getConfig', 'viewerConfig'>
+} {
+  return is$typed(v, id, 'viewerConfig')
 }
 
-export function validateViewerConfig(v: unknown): ValidationResult {
-  return lexicons.validate('tools.ozone.server.getConfig#viewerConfig', v)
+export function validateViewerConfig(v: unknown) {
+  return lexicons.validate(
+    `${id}#viewerConfig`,
+    v,
+  ) as ValidationResult<ViewerConfig>
 }

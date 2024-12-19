@@ -206,7 +206,7 @@ export class LocalViewer {
         $type: 'app.bsky.embed.images#view',
         images,
       }
-    } else {
+    } else if (isEmbedExternal(embed)) {
       const { uri, title, description, thumb } = embed.external
       return {
         $type: 'app.bsky.embed.external#view',
@@ -219,6 +219,8 @@ export class LocalViewer {
             : undefined,
         },
       }
+    } else {
+      throw new TypeError(`Unexpected embed type: ${embed.$type}`)
     }
   }
 

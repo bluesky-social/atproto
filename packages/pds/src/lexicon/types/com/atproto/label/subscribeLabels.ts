@@ -2,12 +2,14 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
+import { lexicons } from '../../../../lexicons'
+import { $Type, is$typed } from '../../../../util'
 import { HandlerAuth, ErrorFrame } from '@atproto/xrpc-server'
 import { IncomingMessage } from 'http'
 import * as ComAtprotoLabelDefs from './defs'
+
+const id = 'com.atproto.label.subscribeLabels'
 
 export interface QueryParams {
   /** The last known event seq number to backfill from. */
@@ -36,16 +38,14 @@ export interface Labels {
   [k: string]: unknown
 }
 
-export function isLabels(v: unknown): v is Labels {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'com.atproto.label.subscribeLabels#labels'
-  )
+export function isLabels(v: unknown): v is Labels & {
+  $type: $Type<'com.atproto.label.subscribeLabels', 'labels'>
+} {
+  return is$typed(v, id, 'labels')
 }
 
-export function validateLabels(v: unknown): ValidationResult {
-  return lexicons.validate('com.atproto.label.subscribeLabels#labels', v)
+export function validateLabels(v: unknown) {
+  return lexicons.validate(`${id}#labels`, v) as ValidationResult<Labels>
 }
 
 export interface Info {
@@ -54,14 +54,12 @@ export interface Info {
   [k: string]: unknown
 }
 
-export function isInfo(v: unknown): v is Info {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'com.atproto.label.subscribeLabels#info'
-  )
+export function isInfo(
+  v: unknown,
+): v is Info & { $type: $Type<'com.atproto.label.subscribeLabels', 'info'> } {
+  return is$typed(v, id, 'info')
 }
 
-export function validateInfo(v: unknown): ValidationResult {
-  return lexicons.validate('com.atproto.label.subscribeLabels#info', v)
+export function validateInfo(v: unknown) {
+  return lexicons.validate(`${id}#info`, v) as ValidationResult<Info>
 }
