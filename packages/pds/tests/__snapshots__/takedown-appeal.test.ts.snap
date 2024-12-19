@@ -1,0 +1,30 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`appeal account takedown actor takedown allows appeal request. 1`] = `
+Object {
+  "appealed": true,
+  "createdAt": "1970-01-01T00:00:00.000Z",
+  "hosting": Object {
+    "$type": "tools.ozone.moderation.defs#accountHosting",
+    "status": "unknown",
+  },
+  "id": 1,
+  "lastAppealedAt": "1970-01-01T00:00:00.000Z",
+  "lastReportedAt": "1970-01-01T00:00:00.000Z",
+  "lastReviewedAt": "1970-01-01T00:00:00.000Z",
+  "lastReviewedBy": "user(0)",
+  "reviewState": "tools.ozone.moderation.defs#reviewEscalated",
+  "subject": Object {
+    "$type": "com.atproto.admin.defs#repoRef",
+    "did": "user(1)",
+  },
+  "subjectBlobCids": Array [],
+  "subjectRepoHandle": "jeff.test",
+  "tags": Array [
+    "lang:und",
+    "report:appeal",
+  ],
+  "takendown": true,
+  "updatedAt": "1970-01-01T00:00:00.000Z",
+}
+`;
