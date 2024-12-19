@@ -152,6 +152,7 @@ export class ModerationService {
     reportTypes?: string[]
     collections: string[]
     subjectType?: string
+    policy?: string
   }): Promise<{ cursor?: string; events: ModerationEventRow[] }> {
     const {
       subject,
@@ -172,6 +173,7 @@ export class ModerationService {
       reportTypes,
       collections,
       subjectType,
+      policy,
     } = opts
     const { ref } = this.db.db.dynamic
     let builder = this.db.db.selectFrom('moderation_event').selectAll()
@@ -263,6 +265,9 @@ export class ModerationService {
     }
     if (reportTypes?.length) {
       builder = builder.where(sql`meta->>'reportType'`, 'in', reportTypes)
+    }
+    if (policy) {
+      builder = builder.where(sql`meta->>'policy'`, '=', policy)
     }
 
     const keyset = new TimeIdKeyset(
@@ -433,6 +438,10 @@ export class ModerationService {
       event.acknowledgeAccountSubjects
     ) {
       meta.acknowledgeAccountSubjects = true
+    }
+
+    if (isModEventTakedown(event) && event.policy) {
+      meta.policy = event.policy
     }
 
     // Keep trace of reports that came in while the reporter was in muted stated
