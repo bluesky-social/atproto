@@ -224,6 +224,10 @@
         "acknowledgeAccountSubjects": {
           "type": "boolean",
           "description": "If true, all other reports on content authored by this account will be resolved (acknowledged)."
+        },
+        "policy": {
+          "type": "string",
+          "description": "Name/Keyword of the policy that drove the decision."
         }
       }
     },

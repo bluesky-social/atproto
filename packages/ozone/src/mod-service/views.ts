@@ -137,6 +137,16 @@ export class ModerationViews {
       }
     }
 
+    if (
+      event.action === 'tools.ozone.moderation.defs#modEventTakedown' &&
+      event.meta?.policy
+    ) {
+      eventView.event = {
+        ...eventView.event,
+        policy: event.meta.policy,
+      }
+    }
+
     if (event.action === 'tools.ozone.moderation.defs#modEventLabel') {
       eventView.event = {
         ...eventView.event,

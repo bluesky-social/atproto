@@ -11304,6 +11304,10 @@ export const schemaDict = {
             description:
               'If true, all other reports on content authored by this account will be resolved (acknowledged).',
           },
+          policy: {
+            type: 'string',
+            description: 'Name/Keyword of the policy that drove the decision.',
+          },
         },
       },
       modEventReverseTakedown: {
@@ -12339,6 +12343,11 @@ export const schemaDict = {
               items: {
                 type: 'string',
               },
+            },
+            policy: {
+              type: 'string',
+              description:
+                'If specified, only events where the policy matches the given policy are returned',
             },
             cursor: {
               type: 'string',
