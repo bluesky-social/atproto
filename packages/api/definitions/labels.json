@@ -147,6 +147,7 @@
   },
   {
     "identifier": "graphic-media",
+    "alias": ["gore"],
     "flags": ["adult"],
     "configurable": true,
     "defaultSetting": "warn",
