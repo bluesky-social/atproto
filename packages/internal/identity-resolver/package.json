@@ -1,6 +1,6 @@
 {
   "name": "@atproto-labs/identity-resolver",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "license": "MIT",
   "description": "A library resolving ATPROTO identities",
   "keywords": [

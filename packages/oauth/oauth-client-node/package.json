@@ -1,6 +1,6 @@
 {
   "name": "@atproto/oauth-client-node",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "license": "MIT",
   "description": "ATPROTO OAuth client for the NodeJS",
   "keywords": [
