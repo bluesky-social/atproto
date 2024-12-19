@@ -172,8 +172,6 @@ import {
   GetVouchAcceptRecordsResponse,
   GetVouchesGivenRequest,
   GetVouchesGivenResponse,
-  GetVouchesOfferedRequest,
-  GetVouchesOfferedResponse,
   GetVouchesReceivedRequest,
   GetVouchesReceivedResponse,
   GetVouchesRequest,
@@ -949,15 +947,6 @@ export const Service = {
       name: 'GetVouchesReceived',
       I: GetVouchesReceivedRequest,
       O: GetVouchesReceivedResponse,
-      kind: MethodKind.Unary,
-    },
-    /**
-     * @generated from rpc bsky.Service.GetVouchesOffered
-     */
-    getVouchesOffered: {
-      name: 'GetVouchesOffered',
-      I: GetVouchesOfferedRequest,
-      O: GetVouchesOfferedResponse,
       kind: MethodKind.Unary,
     },
     /**
