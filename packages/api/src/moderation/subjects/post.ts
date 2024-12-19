@@ -11,6 +11,7 @@ import { ModerationSubjectPost, ModerationOpts } from '../types'
 import { hasMutedWord } from '../mutewords'
 import { decideAccount } from './account'
 import { decideProfile } from './profile'
+import { BSKY_LABELER_DID } from '../../const'
 
 export function decidePost(
   subject: ModerationSubjectPost,
@@ -22,6 +23,16 @@ export function decidePost(
   acc.setIsMe(subject.author.did === opts.userDid)
   if (subject.labels?.length) {
     for (const label of subject.labels) {
+      /**
+       * The `gore` label has been deprecated in favor of `graphic-media`. This
+       * translates old `gore` labels to `graphic-media`.
+       */
+      if (
+        label.val === 'gore' &&
+        (!label.src || label.src === BSKY_LABELER_DID)
+      ) {
+        label.val = 'graphic-media'
+      }
       acc.addLabel('content', label, opts)
     }
   }
