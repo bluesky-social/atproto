@@ -23,23 +23,11 @@ import {
 import AppContext from './context'
 import { ids } from './lexicon/lexicons'
 import { httpLogger } from './logger'
-import { AuthScope } from './auth-verifier'
-
-const getStandardAccess = (ctx: AppContext, path: string) => {
-  const additionalAccess: AuthScope[] = []
-  if (path.startsWith(`/xrpc/${ids.ComAtprotoModerationCreateReport}`)) {
-    additionalAccess.push(AuthScope.Takendown)
-  }
-
-  return ctx.authVerifier.accessStandard({
-    additional: additionalAccess,
-  })
-}
 
 export const proxyHandler = (ctx: AppContext): CatchallHandler => {
+  const accessStandard = ctx.authVerifier.accessStandard()
   return async (req, res, next) => {
     // /!\ Hot path
-    const accessStandard = getStandardAccess(ctx, req.originalUrl)
     try {
       if (
         req.method !== 'GET' &&
