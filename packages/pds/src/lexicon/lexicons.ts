@@ -8406,6 +8406,54 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyGraphGetVouchesAccepted: {
+    lexicon: 1,
+    id: 'app.bsky.graph.getVouchesAccepted',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Enumerates all vouches received and accepted by a user.',
+        parameters: {
+          type: 'params',
+          required: ['actor'],
+          properties: {
+            actor: {
+              type: 'string',
+              format: 'at-identifier',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['vouches'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              vouches: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.graph.defs#vouchView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyGraphGetVouchesGiven: {
     lexicon: 1,
     id: 'app.bsky.graph.getVouchesGiven',
@@ -8450,18 +8498,32 @@ export const schemaDict = {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:app.bsky.graph.defs#vouchView',
+                  ref: 'lex:app.bsky.graph.getVouchesGiven#actorVouch',
                 },
               },
             },
           },
         },
       },
+      actorVouch: {
+        type: 'object',
+        required: ['actor', 'vouch'],
+        properties: {
+          actor: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileViewBasic',
+          },
+          vouch: {
+            type: 'ref',
+            ref: 'lex:app.bsky.graph.defs#vouchView',
+          },
+        },
+      },
     },
   },
-  AppBskyGraphGetVouchesOffered: {
+  AppBskyGraphGetVouchesPending: {
     lexicon: 1,
-    id: 'app.bsky.graph.getVouchesOffered',
+    id: 'app.bsky.graph.getVouchesPending',
     defs: {
       main: {
         type: 'query',
@@ -8470,54 +8532,6 @@ export const schemaDict = {
         parameters: {
           type: 'params',
           properties: {
-            limit: {
-              type: 'integer',
-              minimum: 1,
-              maximum: 100,
-              default: 50,
-            },
-            cursor: {
-              type: 'string',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['vouches'],
-            properties: {
-              cursor: {
-                type: 'string',
-              },
-              vouches: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:app.bsky.graph.defs#vouchView',
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  AppBskyGraphGetVouchesReceived: {
-    lexicon: 1,
-    id: 'app.bsky.graph.getVouchesReceived',
-    defs: {
-      main: {
-        type: 'query',
-        description: 'Enumerates all vouches received and accepted by a user.',
-        parameters: {
-          type: 'params',
-          required: ['actor'],
-          properties: {
-            actor: {
-              type: 'string',
-              format: 'at-identifier',
-            },
             limit: {
               type: 'integer',
               minimum: 1,
@@ -13934,9 +13948,9 @@ export const ids = {
   AppBskyGraphGetStarterPacks: 'app.bsky.graph.getStarterPacks',
   AppBskyGraphGetSuggestedFollowsByActor:
     'app.bsky.graph.getSuggestedFollowsByActor',
+  AppBskyGraphGetVouchesAccepted: 'app.bsky.graph.getVouchesAccepted',
   AppBskyGraphGetVouchesGiven: 'app.bsky.graph.getVouchesGiven',
-  AppBskyGraphGetVouchesOffered: 'app.bsky.graph.getVouchesOffered',
-  AppBskyGraphGetVouchesReceived: 'app.bsky.graph.getVouchesReceived',
+  AppBskyGraphGetVouchesPending: 'app.bsky.graph.getVouchesPending',
   AppBskyGraphList: 'app.bsky.graph.list',
   AppBskyGraphListblock: 'app.bsky.graph.listblock',
   AppBskyGraphListitem: 'app.bsky.graph.listitem',

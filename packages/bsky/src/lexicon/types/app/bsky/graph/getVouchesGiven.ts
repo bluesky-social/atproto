@@ -7,6 +7,7 @@ import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
+import * as AppBskyActorDefs from '../actor/defs'
 import * as AppBskyGraphDefs from './defs'
 
 export interface QueryParams {
@@ -20,7 +21,7 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   cursor?: string
-  vouches: AppBskyGraphDefs.VouchView[]
+  vouches: ActorVouch[]
   [k: string]: unknown
 }
 
@@ -48,3 +49,21 @@ export type HandlerReqCtx<HA extends HandlerAuth = never> = {
 export type Handler<HA extends HandlerAuth = never> = (
   ctx: HandlerReqCtx<HA>,
 ) => Promise<HandlerOutput> | HandlerOutput
+
+export interface ActorVouch {
+  actor: AppBskyActorDefs.ProfileViewBasic
+  vouch: AppBskyGraphDefs.VouchView
+  [k: string]: unknown
+}
+
+export function isActorVouch(v: unknown): v is ActorVouch {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.graph.getVouchesGiven#actorVouch'
+  )
+}
+
+export function validateActorVouch(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.graph.getVouchesGiven#actorVouch', v)
+}

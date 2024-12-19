@@ -142,9 +142,9 @@ import * as AppBskyGraphGetRelationships from './types/app/bsky/graph/getRelatio
 import * as AppBskyGraphGetStarterPack from './types/app/bsky/graph/getStarterPack'
 import * as AppBskyGraphGetStarterPacks from './types/app/bsky/graph/getStarterPacks'
 import * as AppBskyGraphGetSuggestedFollowsByActor from './types/app/bsky/graph/getSuggestedFollowsByActor'
+import * as AppBskyGraphGetVouchesAccepted from './types/app/bsky/graph/getVouchesAccepted'
 import * as AppBskyGraphGetVouchesGiven from './types/app/bsky/graph/getVouchesGiven'
-import * as AppBskyGraphGetVouchesOffered from './types/app/bsky/graph/getVouchesOffered'
-import * as AppBskyGraphGetVouchesReceived from './types/app/bsky/graph/getVouchesReceived'
+import * as AppBskyGraphGetVouchesPending from './types/app/bsky/graph/getVouchesPending'
 import * as AppBskyGraphList from './types/app/bsky/graph/list'
 import * as AppBskyGraphListblock from './types/app/bsky/graph/listblock'
 import * as AppBskyGraphListitem from './types/app/bsky/graph/listitem'
@@ -374,9 +374,9 @@ export * as AppBskyGraphGetRelationships from './types/app/bsky/graph/getRelatio
 export * as AppBskyGraphGetStarterPack from './types/app/bsky/graph/getStarterPack'
 export * as AppBskyGraphGetStarterPacks from './types/app/bsky/graph/getStarterPacks'
 export * as AppBskyGraphGetSuggestedFollowsByActor from './types/app/bsky/graph/getSuggestedFollowsByActor'
+export * as AppBskyGraphGetVouchesAccepted from './types/app/bsky/graph/getVouchesAccepted'
 export * as AppBskyGraphGetVouchesGiven from './types/app/bsky/graph/getVouchesGiven'
-export * as AppBskyGraphGetVouchesOffered from './types/app/bsky/graph/getVouchesOffered'
-export * as AppBskyGraphGetVouchesReceived from './types/app/bsky/graph/getVouchesReceived'
+export * as AppBskyGraphGetVouchesPending from './types/app/bsky/graph/getVouchesPending'
 export * as AppBskyGraphList from './types/app/bsky/graph/list'
 export * as AppBskyGraphListblock from './types/app/bsky/graph/listblock'
 export * as AppBskyGraphListitem from './types/app/bsky/graph/listitem'
@@ -2436,6 +2436,18 @@ export class AppBskyGraphNS {
     )
   }
 
+  getVouchesAccepted(
+    params?: AppBskyGraphGetVouchesAccepted.QueryParams,
+    opts?: AppBskyGraphGetVouchesAccepted.CallOptions,
+  ): Promise<AppBskyGraphGetVouchesAccepted.Response> {
+    return this._client.call(
+      'app.bsky.graph.getVouchesAccepted',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
   getVouchesGiven(
     params?: AppBskyGraphGetVouchesGiven.QueryParams,
     opts?: AppBskyGraphGetVouchesGiven.CallOptions,
@@ -2448,24 +2460,12 @@ export class AppBskyGraphNS {
     )
   }
 
-  getVouchesOffered(
-    params?: AppBskyGraphGetVouchesOffered.QueryParams,
-    opts?: AppBskyGraphGetVouchesOffered.CallOptions,
-  ): Promise<AppBskyGraphGetVouchesOffered.Response> {
+  getVouchesPending(
+    params?: AppBskyGraphGetVouchesPending.QueryParams,
+    opts?: AppBskyGraphGetVouchesPending.CallOptions,
+  ): Promise<AppBskyGraphGetVouchesPending.Response> {
     return this._client.call(
-      'app.bsky.graph.getVouchesOffered',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  getVouchesReceived(
-    params?: AppBskyGraphGetVouchesReceived.QueryParams,
-    opts?: AppBskyGraphGetVouchesReceived.CallOptions,
-  ): Promise<AppBskyGraphGetVouchesReceived.Response> {
-    return this._client.call(
-      'app.bsky.graph.getVouchesReceived',
+      'app.bsky.graph.getVouchesPending',
       params,
       undefined,
       opts,
