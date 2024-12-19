@@ -34,10 +34,24 @@
               "type": "array",
               "items": {
                 "type": "ref",
-                "ref": "app.bsky.graph.defs#vouchView"
+                "ref": "#actorVouch"
               }
             }
           }
+        }
+      }
+    },
+    "actorVouch": {
+      "type": "object",
+      "required": ["actor", "vouch"],
+      "properties": {
+        "actor": {
+          "type": "ref",
+          "ref": "app.bsky.actor.defs#profileViewBasic"
+        },
+        "vouch": {
+          "type": "ref",
+          "ref": "app.bsky.graph.defs#vouchView"
         }
       }
     }
