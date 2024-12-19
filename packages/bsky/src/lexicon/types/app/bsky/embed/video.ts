@@ -2,10 +2,12 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
+import { lexicons } from '../../../../lexicons'
+import { $Type, is$typed } from '../../../../util'
 import * as AppBskyEmbedDefs from './defs'
+
+const id = 'app.bsky.embed.video'
 
 export interface Main {
   video: BlobRef
@@ -16,17 +18,14 @@ export interface Main {
   [k: string]: unknown
 }
 
-export function isMain(v: unknown): v is Main {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    (v.$type === 'app.bsky.embed.video#main' ||
-      v.$type === 'app.bsky.embed.video')
-  )
+export function isMain(
+  v: unknown,
+): v is Main & { $type: $Type<'app.bsky.embed.video', 'main'> } {
+  return is$typed(v, id, 'main')
 }
 
-export function validateMain(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.embed.video#main', v)
+export function validateMain(v: unknown) {
+  return lexicons.validate(`${id}#main`, v) as ValidationResult<Main>
 }
 
 export interface Caption {
@@ -35,16 +34,14 @@ export interface Caption {
   [k: string]: unknown
 }
 
-export function isCaption(v: unknown): v is Caption {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.embed.video#caption'
-  )
+export function isCaption(
+  v: unknown,
+): v is Caption & { $type: $Type<'app.bsky.embed.video', 'caption'> } {
+  return is$typed(v, id, 'caption')
 }
 
-export function validateCaption(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.embed.video#caption', v)
+export function validateCaption(v: unknown) {
+  return lexicons.validate(`${id}#caption`, v) as ValidationResult<Caption>
 }
 
 export interface View {
@@ -56,12 +53,12 @@ export interface View {
   [k: string]: unknown
 }
 
-export function isView(v: unknown): v is View {
-  return (
-    isObj(v) && hasProp(v, '$type') && v.$type === 'app.bsky.embed.video#view'
-  )
+export function isView(
+  v: unknown,
+): v is View & { $type: $Type<'app.bsky.embed.video', 'view'> } {
+  return is$typed(v, id, 'view')
 }
 
-export function validateView(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.embed.video#view', v)
+export function validateView(v: unknown) {
+  return lexicons.validate(`${id}#view`, v) as ValidationResult<View>
 }

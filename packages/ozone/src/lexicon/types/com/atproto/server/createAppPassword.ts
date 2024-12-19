@@ -3,10 +3,12 @@
  */
 import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
+import { lexicons } from '../../../../lexicons'
+import { $Type, is$typed } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
+
+const id = 'com.atproto.server.createAppPassword'
 
 export interface QueryParams {}
 
@@ -57,17 +59,15 @@ export interface AppPassword {
   [k: string]: unknown
 }
 
-export function isAppPassword(v: unknown): v is AppPassword {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'com.atproto.server.createAppPassword#appPassword'
-  )
+export function isAppPassword(v: unknown): v is AppPassword & {
+  $type: $Type<'com.atproto.server.createAppPassword', 'appPassword'>
+} {
+  return is$typed(v, id, 'appPassword')
 }
 
-export function validateAppPassword(v: unknown): ValidationResult {
+export function validateAppPassword(v: unknown) {
   return lexicons.validate(
-    'com.atproto.server.createAppPassword#appPassword',
+    `${id}#appPassword`,
     v,
-  )
+  ) as ValidationResult<AppPassword>
 }

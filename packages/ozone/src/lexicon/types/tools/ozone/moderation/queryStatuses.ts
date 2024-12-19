@@ -3,11 +3,13 @@
  */
 import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
+import { lexicons } from '../../../../lexicons'
+import { $Type, is$typed } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as ToolsOzoneModerationDefs from './defs'
+
+const id = 'tools.ozone.moderation.queryStatuses'
 
 export interface QueryParams {
   /** All subjects, or subjects from given 'collections' param, belonging to the account specified in the 'subject' param will be returned. */

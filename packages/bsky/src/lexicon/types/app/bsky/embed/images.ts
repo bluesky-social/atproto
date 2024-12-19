@@ -2,27 +2,26 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
+import { lexicons } from '../../../../lexicons'
+import { $Type, is$typed } from '../../../../util'
 import * as AppBskyEmbedDefs from './defs'
+
+const id = 'app.bsky.embed.images'
 
 export interface Main {
   images: Image[]
   [k: string]: unknown
 }
 
-export function isMain(v: unknown): v is Main {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    (v.$type === 'app.bsky.embed.images#main' ||
-      v.$type === 'app.bsky.embed.images')
-  )
+export function isMain(
+  v: unknown,
+): v is Main & { $type: $Type<'app.bsky.embed.images', 'main'> } {
+  return is$typed(v, id, 'main')
 }
 
-export function validateMain(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.embed.images#main', v)
+export function validateMain(v: unknown) {
+  return lexicons.validate(`${id}#main`, v) as ValidationResult<Main>
 }
 
 export interface Image {
@@ -33,14 +32,14 @@ export interface Image {
   [k: string]: unknown
 }
 
-export function isImage(v: unknown): v is Image {
-  return (
-    isObj(v) && hasProp(v, '$type') && v.$type === 'app.bsky.embed.images#image'
-  )
+export function isImage(
+  v: unknown,
+): v is Image & { $type: $Type<'app.bsky.embed.images', 'image'> } {
+  return is$typed(v, id, 'image')
 }
 
-export function validateImage(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.embed.images#image', v)
+export function validateImage(v: unknown) {
+  return lexicons.validate(`${id}#image`, v) as ValidationResult<Image>
 }
 
 export interface View {
@@ -48,14 +47,14 @@ export interface View {
   [k: string]: unknown
 }
 
-export function isView(v: unknown): v is View {
-  return (
-    isObj(v) && hasProp(v, '$type') && v.$type === 'app.bsky.embed.images#view'
-  )
+export function isView(
+  v: unknown,
+): v is View & { $type: $Type<'app.bsky.embed.images', 'view'> } {
+  return is$typed(v, id, 'view')
 }
 
-export function validateView(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.embed.images#view', v)
+export function validateView(v: unknown) {
+  return lexicons.validate(`${id}#view`, v) as ValidationResult<View>
 }
 
 export interface ViewImage {
@@ -69,14 +68,12 @@ export interface ViewImage {
   [k: string]: unknown
 }
 
-export function isViewImage(v: unknown): v is ViewImage {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.embed.images#viewImage'
-  )
+export function isViewImage(
+  v: unknown,
+): v is ViewImage & { $type: $Type<'app.bsky.embed.images', 'viewImage'> } {
+  return is$typed(v, id, 'viewImage')
 }
 
-export function validateViewImage(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.embed.images#viewImage', v)
+export function validateViewImage(v: unknown) {
+  return lexicons.validate(`${id}#viewImage`, v) as ValidationResult<ViewImage>
 }

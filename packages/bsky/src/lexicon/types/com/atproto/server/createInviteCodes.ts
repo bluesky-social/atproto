@@ -3,10 +3,12 @@
  */
 import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
+import { lexicons } from '../../../../lexicons'
+import { $Type, is$typed } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
+
+const id = 'com.atproto.server.createInviteCodes'
 
 export interface QueryParams {}
 
@@ -56,17 +58,15 @@ export interface AccountCodes {
   [k: string]: unknown
 }
 
-export function isAccountCodes(v: unknown): v is AccountCodes {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'com.atproto.server.createInviteCodes#accountCodes'
-  )
+export function isAccountCodes(v: unknown): v is AccountCodes & {
+  $type: $Type<'com.atproto.server.createInviteCodes', 'accountCodes'>
+} {
+  return is$typed(v, id, 'accountCodes')
 }
 
-export function validateAccountCodes(v: unknown): ValidationResult {
+export function validateAccountCodes(v: unknown) {
   return lexicons.validate(
-    'com.atproto.server.createInviteCodes#accountCodes',
+    `${id}#accountCodes`,
     v,
-  )
+  ) as ValidationResult<AccountCodes>
 }

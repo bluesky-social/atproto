@@ -2,11 +2,13 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
+import { lexicons } from '../../../../lexicons'
+import { $Type, is$typed } from '../../../../util'
 import * as AppBskyActorDefs from '../actor/defs'
 import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
+
+const id = 'app.bsky.labeler.defs'
 
 export interface LabelerView {
   uri: string
@@ -19,16 +21,17 @@ export interface LabelerView {
   [k: string]: unknown
 }
 
-export function isLabelerView(v: unknown): v is LabelerView {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.labeler.defs#labelerView'
-  )
+export function isLabelerView(
+  v: unknown,
+): v is LabelerView & { $type: $Type<'app.bsky.labeler.defs', 'labelerView'> } {
+  return is$typed(v, id, 'labelerView')
 }
 
-export function validateLabelerView(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.labeler.defs#labelerView', v)
+export function validateLabelerView(v: unknown) {
+  return lexicons.validate(
+    `${id}#labelerView`,
+    v,
+  ) as ValidationResult<LabelerView>
 }
 
 export interface LabelerViewDetailed {
@@ -43,16 +46,17 @@ export interface LabelerViewDetailed {
   [k: string]: unknown
 }
 
-export function isLabelerViewDetailed(v: unknown): v is LabelerViewDetailed {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.labeler.defs#labelerViewDetailed'
-  )
+export function isLabelerViewDetailed(v: unknown): v is LabelerViewDetailed & {
+  $type: $Type<'app.bsky.labeler.defs', 'labelerViewDetailed'>
+} {
+  return is$typed(v, id, 'labelerViewDetailed')
 }
 
-export function validateLabelerViewDetailed(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.labeler.defs#labelerViewDetailed', v)
+export function validateLabelerViewDetailed(v: unknown) {
+  return lexicons.validate(
+    `${id}#labelerViewDetailed`,
+    v,
+  ) as ValidationResult<LabelerViewDetailed>
 }
 
 export interface LabelerViewerState {
@@ -60,16 +64,17 @@ export interface LabelerViewerState {
   [k: string]: unknown
 }
 
-export function isLabelerViewerState(v: unknown): v is LabelerViewerState {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.labeler.defs#labelerViewerState'
-  )
+export function isLabelerViewerState(v: unknown): v is LabelerViewerState & {
+  $type: $Type<'app.bsky.labeler.defs', 'labelerViewerState'>
+} {
+  return is$typed(v, id, 'labelerViewerState')
 }
 
-export function validateLabelerViewerState(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.labeler.defs#labelerViewerState', v)
+export function validateLabelerViewerState(v: unknown) {
+  return lexicons.validate(
+    `${id}#labelerViewerState`,
+    v,
+  ) as ValidationResult<LabelerViewerState>
 }
 
 export interface LabelerPolicies {
@@ -80,14 +85,15 @@ export interface LabelerPolicies {
   [k: string]: unknown
 }
 
-export function isLabelerPolicies(v: unknown): v is LabelerPolicies {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.labeler.defs#labelerPolicies'
-  )
+export function isLabelerPolicies(v: unknown): v is LabelerPolicies & {
+  $type: $Type<'app.bsky.labeler.defs', 'labelerPolicies'>
+} {
+  return is$typed(v, id, 'labelerPolicies')
 }
 
-export function validateLabelerPolicies(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.labeler.defs#labelerPolicies', v)
+export function validateLabelerPolicies(v: unknown) {
+  return lexicons.validate(
+    `${id}#labelerPolicies`,
+    v,
+  ) as ValidationResult<LabelerPolicies>
 }

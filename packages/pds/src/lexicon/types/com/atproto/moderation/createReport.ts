@@ -3,13 +3,15 @@
  */
 import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
+import { lexicons } from '../../../../lexicons'
+import { $Type, is$typed } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as ComAtprotoModerationDefs from './defs'
 import * as ComAtprotoAdminDefs from '../admin/defs'
 import * as ComAtprotoRepoStrongRef from '../repo/strongRef'
+
+const id = 'com.atproto.moderation.createReport'
 
 export interface QueryParams {}
 
