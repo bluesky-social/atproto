@@ -164,6 +164,7 @@ export interface ThreadViewPost {
     | BlockedPost
     | { $type: string; [k: string]: unknown }
   )[]
+  isLikedByRootAuthor?: boolean
   [k: string]: unknown
 }
 
