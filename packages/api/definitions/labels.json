@@ -165,5 +165,26 @@
         "contentMedia": "blur"
       }
     }
+  },
+  {
+    "identifier": "gore",
+    "flags": ["adult"],
+    "configurable": true,
+    "defaultSetting": "warn",
+    "severity": "none",
+    "blurs": "media",
+    "behaviors": {
+      "account": {
+        "avatar": "blur",
+        "banner": "blur"
+      },
+      "profile": {
+        "avatar": "blur",
+        "banner": "blur"
+      },
+      "content": {
+        "contentMedia": "blur"
+      }
+    }
   }
 ]
