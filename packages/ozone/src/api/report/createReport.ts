@@ -9,6 +9,7 @@ import {
 import { ForbiddenError } from '@atproto/xrpc-server'
 import { TagService } from '../../tag-service'
 import { ModerationService } from '../../mod-service'
+import { getTagForReport } from '../../tag-service/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.moderation.createReport({
@@ -44,7 +45,7 @@ export default function (server: Server, ctx: AppContext) {
           ctx.cfg.service.did,
           moderationTxn,
         )
-        await tagService.evaluateForSubject()
+        await tagService.evaluateForSubject([getTagForReport(reasonType)])
 
         return reportEvent
       })

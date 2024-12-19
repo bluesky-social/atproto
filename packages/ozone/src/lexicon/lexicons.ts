@@ -9262,6 +9262,24 @@ export const schemaDict = {
           },
         },
       },
+      trendingTopic: {
+        type: 'object',
+        required: ['topic', 'link'],
+        properties: {
+          topic: {
+            type: 'string',
+          },
+          displayName: {
+            type: 'string',
+          },
+          description: {
+            type: 'string',
+          },
+          link: {
+            type: 'string',
+          },
+        },
+      },
     },
   },
   AppBskyUnspeccedGetConfig: {
@@ -9437,6 +9455,56 @@ export const schemaDict = {
           subject: {
             type: 'string',
             format: 'uri',
+          },
+        },
+      },
+    },
+  },
+  AppBskyUnspeccedGetTrendingTopics: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.getTrendingTopics',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get a list of trending topics',
+        parameters: {
+          type: 'params',
+          properties: {
+            viewer: {
+              type: 'string',
+              format: 'did',
+              description:
+                'DID of the account making the request (not included for public/unauthenticated queries). Used to boost followed accounts in ranking.',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 25,
+              default: 10,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['topics', 'suggested'],
+            properties: {
+              topics: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.unspecced.defs#trendingTopic',
+                },
+              },
+              suggested: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.unspecced.defs#trendingTopic',
+                },
+              },
+            },
           },
         },
       },
@@ -12435,6 +12503,9 @@ export const schemaDict = {
               type: 'array',
               items: {
                 type: 'string',
+                maxLength: 25,
+                description:
+                  'Items in this array are applied with OR filters. To apply AND filter, put all tags in the same string and separate using && characters',
               },
             },
             excludeTags: {
@@ -13691,6 +13762,7 @@ export const ids = {
     'app.bsky.unspecced.getSuggestionsSkeleton',
   AppBskyUnspeccedGetTaggedSuggestions:
     'app.bsky.unspecced.getTaggedSuggestions',
+  AppBskyUnspeccedGetTrendingTopics: 'app.bsky.unspecced.getTrendingTopics',
   AppBskyUnspeccedSearchActorsSkeleton:
     'app.bsky.unspecced.searchActorsSkeleton',
   AppBskyUnspeccedSearchPostsSkeleton: 'app.bsky.unspecced.searchPostsSkeleton',

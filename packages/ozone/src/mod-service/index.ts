@@ -1,5 +1,5 @@
 import net from 'node:net'
-import { Insertable, sql } from 'kysely'
+import { Insertable, SelectQueryBuilder, sql } from 'kysely'
 import { CID } from 'multiformats/cid'
 import { AtUri, INVALID_HANDLE } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
@@ -791,6 +791,45 @@ export class ModerationService {
     return result
   }
 
+  applyTagFilter = (
+    builder: SelectQueryBuilder<any, any, any>,
+    tags: string[],
+  ) => {
+    const { ref } = this.db.db.dynamic
+    // Build an array of conditions
+    const conditions = tags
+      .map((tag) => {
+        if (tag.includes('&&')) {
+          // Split by '&&' for AND logic
+          const subTags = tag
+            .split('&&')
+            // Make sure spaces on either sides of '&&' are trimmed
+            .map((subTag) => subTag.trim())
+            // Remove empty strings after trimming is applied
+            .filter(Boolean)
+
+          if (!subTags.length) return null
+
+          return sql`(${sql.join(
+            subTags.map(
+              (subTag) =>
+                sql`${ref('moderation_subject_status.tags')} ? ${subTag}`,
+            ),
+            sql` AND `,
+          )})`
+        } else {
+          // Single tag condition
+          return sql`${ref('moderation_subject_status.tags')} ? ${tag}`
+        }
+      })
+      .filter(Boolean)
+
+    if (!conditions.length) return builder
+
+    // Combine all conditions with OR
+    return builder.where(sql`(${sql.join(conditions, sql` OR `)})`)
+  }
+
   async getSubjectStatuses({
     includeAllUserRecords,
     cursor,
@@ -958,11 +997,7 @@ export class ModerationService {
     }
 
     if (tags.length) {
-      builder = builder.where(
-        sql`${ref('moderation_subject_status.tags')} ?| array[${sql.join(
-          tags,
-        )}]::TEXT[]`,
-      )
+      builder = this.applyTagFilter(builder, tags)
     }
 
     if (excludeTags.length) {

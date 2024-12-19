@@ -7,6 +7,7 @@ import {
   isModEventEmail,
   isModEventLabel,
   isModEventMuteReporter,
+  isModEventReport,
   isModEventReverseTakedown,
   isModEventTag,
   isModEventTakedown,
@@ -21,6 +22,7 @@ import { ModeratorOutput, AdminTokenOutput } from '../../auth-verifier'
 import { SettingService } from '../../setting/service'
 import { ProtectedTagSettingKey } from '../../setting/constants'
 import { ProtectedTagSetting } from '../../setting/types'
+import { getTagForReport } from '../../tag-service/util'
 
 const handleModerationEvent = async ({
   ctx,
@@ -160,7 +162,10 @@ const handleModerationEvent = async ({
       ctx.cfg.service.did,
       moderationTxn,
     )
-    await tagService.evaluateForSubject()
+    const initialTags = isModEventReport(event)
+      ? [getTagForReport(event.reportType)]
+      : undefined
+    await tagService.evaluateForSubject(initialTags)
 
     if (subject.isRepo()) {
       if (isTakedownEvent) {
