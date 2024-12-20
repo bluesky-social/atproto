@@ -699,7 +699,7 @@ export class Subscription extends Message<Subscription> {
   status = ''
 
   /**
-   * @generated from field: string renewalStatus = 2;
+   * @generated from field: string renewal_status = 2;
    */
   renewalStatus = ''
 
@@ -719,17 +719,17 @@ export class Subscription extends Message<Subscription> {
   offering = ''
 
   /**
-   * @generated from field: google.protobuf.Timestamp periodEndsAt = 6;
+   * @generated from field: google.protobuf.Timestamp period_ends_at = 6;
    */
   periodEndsAt?: Timestamp
 
   /**
-   * @generated from field: google.protobuf.Timestamp periodStartsAt = 7;
+   * @generated from field: google.protobuf.Timestamp period_starts_at = 7;
    */
   periodStartsAt?: Timestamp
 
   /**
-   * @generated from field: google.protobuf.Timestamp purchasedAt = 8;
+   * @generated from field: google.protobuf.Timestamp purchased_at = 8;
    */
   purchasedAt?: Timestamp
 
@@ -744,16 +744,16 @@ export class Subscription extends Message<Subscription> {
     { no: 1, name: 'status', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
     {
       no: 2,
-      name: 'renewalStatus',
+      name: 'renewal_status',
       kind: 'scalar',
       T: 9 /* ScalarType.STRING */,
     },
     { no: 3, name: 'group', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
     { no: 4, name: 'platform', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
     { no: 5, name: 'offering', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
-    { no: 6, name: 'periodEndsAt', kind: 'message', T: Timestamp },
-    { no: 7, name: 'periodStartsAt', kind: 'message', T: Timestamp },
-    { no: 8, name: 'purchasedAt', kind: 'message', T: Timestamp },
+    { no: 6, name: 'period_ends_at', kind: 'message', T: Timestamp },
+    { no: 7, name: 'period_starts_at', kind: 'message', T: Timestamp },
+    { no: 8, name: 'purchased_at', kind: 'message', T: Timestamp },
   ])
 
   static fromBinary(
