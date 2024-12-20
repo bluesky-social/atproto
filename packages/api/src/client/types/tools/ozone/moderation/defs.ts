@@ -174,6 +174,8 @@ export interface ModEventTakedown {
   durationInHours?: number
   /** If true, all other reports on content authored by this account will be resolved (acknowledged). */
   acknowledgeAccountSubjects?: boolean
+  /** Name/Keyword of the policy that drove the decision. */
+  policy?: string
   [k: string]: unknown
 }
 
