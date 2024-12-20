@@ -12377,6 +12377,16 @@ export const schemaDict = {
         parameters: {
           type: 'params',
           properties: {
+            queueCount: {
+              type: 'integer',
+              description:
+                'The number of subjects to return from the queue. If not specified, all subjects are returned.',
+            },
+            queueIndex: {
+              type: 'integer',
+              description:
+                'The index of the first subject to return from the queue. If not specified, the first subject is returned.',
+            },
             includeAllUserRecords: {
               type: 'boolean',
               description:

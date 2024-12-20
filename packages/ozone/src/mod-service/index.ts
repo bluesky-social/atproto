@@ -831,6 +831,8 @@ export class ModerationService {
   }
 
   async getSubjectStatuses({
+    queueCount,
+    queueIndex,
     includeAllUserRecords,
     cursor,
     limit = 50,
@@ -858,6 +860,8 @@ export class ModerationService {
     collections,
     subjectType,
   }: {
+    queueCount?: number
+    queueIndex?: number
     includeAllUserRecords?: boolean
     cursor?: string
     limit?: number
@@ -907,6 +911,21 @@ export class ModerationService {
       builder = builder.where('recordPath', '=', '')
     } else if (subjectType === 'record') {
       builder = builder.where('recordPath', '!=', '')
+    }
+
+    // Only fetch items that belongs to the specified queue when specified
+    if (
+      !subject &&
+      queueCount &&
+      queueIndex &&
+      queueCount >= 0 &&
+      queueIndex < queueCount
+    ) {
+      builder = builder.where(
+        sql`ABS(HASHTEXT(did)) % ${queueCount}`,
+        '=',
+        queueIndex,
+      )
     }
 
     // If subjectType is set to 'account' let that take priority and ignore collections filter

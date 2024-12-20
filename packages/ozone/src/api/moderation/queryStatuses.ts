@@ -33,6 +33,8 @@ export default function (server: Server, ctx: AppContext) {
         excludeTags = [],
         collections = [],
         subjectType,
+        queueCount,
+        queueIndex,
       } = params
       const db = ctx.db
       const modService = ctx.modService(db)
@@ -63,6 +65,8 @@ export default function (server: Server, ctx: AppContext) {
         excludeTags,
         collections,
         subjectType,
+        queueCount,
+        queueIndex,
       })
       const subjectStatuses = results.statuses.map((status) =>
         modService.views.formatSubjectStatus(status),
