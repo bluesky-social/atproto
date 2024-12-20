@@ -2,15 +2,20 @@ import { SeedClient, usersSeed, TestNetwork } from '@atproto/dev-env'
 import { AtpAgent } from '@atproto/api'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
-import { RepoRef } from '../../src/lexicon/types/com/atproto/admin/defs'
+import {
+  isRepoRef,
+  RepoRef,
+} from '../../src/lexicon/types/com/atproto/admin/defs'
 import { ids } from '../../src/lexicon/lexicons'
+import { $Typed } from '../../src/lexicon/util'
+import assert from 'node:assert'
 
 describe('admin auth', () => {
   let network: TestNetwork
   let agent: AtpAgent
   let sc: SeedClient
 
-  let repoSubject: RepoRef
+  let repoSubject: $Typed<RepoRef>
 
   const modServiceDid = 'did:example:mod'
   const altModDid = 'did:example:alt'
@@ -96,6 +101,7 @@ describe('admin auth', () => {
       { did: repoSubject.did },
       getHeaders,
     )
+    assert(isRepoRef(res.data.subject))
     expect(res.data.subject.did).toBe(repoSubject.did)
     expect(res.data.takedown?.applied).toBe(true)
   })

@@ -32,12 +32,12 @@ import {
   ValidationStatus,
 } from './types'
 import * as lex from '../lexicon/lexicons'
-import { isRecord as isFeedGenerator } from '../lexicon/types/app/bsky/feed/generator'
-import { isRecord as isStarterPack } from '../lexicon/types/app/bsky/graph/starterpack'
-import { isRecord as isPost } from '../lexicon/types/app/bsky/feed/post'
+import { isValidRecord as isValidFeedGenerator } from '../lexicon/types/app/bsky/feed/generator'
+import { isValidRecord as isValidStarterPack } from '../lexicon/types/app/bsky/graph/starterpack'
+import { isValidRecord as isValidPost } from '../lexicon/types/app/bsky/feed/post'
 import { isTag } from '../lexicon/types/app/bsky/richtext/facet'
-import { isRecord as isList } from '../lexicon/types/app/bsky/graph/list'
-import { isRecord as isProfile } from '../lexicon/types/app/bsky/actor/profile'
+import { isValidRecord as isValidList } from '../lexicon/types/app/bsky/graph/list'
+import { isValidRecord as isValidProfile } from '../lexicon/types/app/bsky/actor/profile'
 import { hasExplicitSlur } from '../handle/explicit-slurs'
 
 export const assertValidRecordWithStatus = (
@@ -222,30 +222,31 @@ async function cidForSafeRecord(record: RepoRecord) {
 }
 
 function assertNoExplicitSlurs(rkey: string, record: RepoRecord) {
-  let toCheck = ''
-  if (isProfile(record)) {
-    toCheck += ' ' + record.displayName
-  } else if (isList(record)) {
-    toCheck += ' ' + record.name
-  } else if (isStarterPack(record)) {
-    toCheck += ' ' + record.name
-  } else if (isFeedGenerator(record)) {
-    toCheck += ' ' + rkey
-    toCheck += ' ' + record.displayName
-  } else if (isPost(record)) {
+  const toCheck: string[] = []
+
+  if (isValidProfile(record)) {
+    if (record.displayName) toCheck.push(record.displayName)
+  } else if (isValidList(record)) {
+    toCheck.push(record.name)
+  } else if (isValidStarterPack(record)) {
+    toCheck.push(record.name)
+  } else if (isValidFeedGenerator(record)) {
+    toCheck.push(rkey)
+    toCheck.push(record.displayName)
+  } else if (isValidPost(record)) {
     if (record.tags) {
-      toCheck += record.tags.join(' ')
+      toCheck.push(...record.tags)
     }
 
     for (const facet of record.facets || []) {
       for (const feat of facet.features) {
         if (isTag(feat)) {
-          toCheck += ' ' + feat.tag
+          toCheck.push(feat.tag)
         }
       }
     }
   }
-  if (hasExplicitSlur(toCheck)) {
+  if (hasExplicitSlur(toCheck.join(' '))) {
     throw new InvalidRecordError('Unacceptable slur in record')
   }
 }

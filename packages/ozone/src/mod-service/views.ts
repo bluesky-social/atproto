@@ -1,39 +1,55 @@
-import { sql } from 'kysely'
-import { AtUri, INVALID_HANDLE, normalizeDatetimeAlways } from '@atproto/syntax'
-import {
-  AtpAgent,
-  AppBskyFeedDefs,
-  ToolsOzoneModerationDefs,
-} from '@atproto/api'
+import { AtpAgent } from '@atproto/api'
 import { dedupeStrs } from '@atproto/common'
-import { BlobRef } from '@atproto/lexicon'
 import { Keypair } from '@atproto/crypto'
+import { BlobRef } from '@atproto/lexicon'
+import { AtUri, INVALID_HANDLE, normalizeDatetimeAlways } from '@atproto/syntax'
+import { sql } from 'kysely'
 import { Database } from '../db'
+import { LabelRow } from '../db/schema/label'
+import { ids } from '../lexicon/lexicons'
+import { FeedViewPost } from '../lexicon/types/app/bsky/feed/defs'
+import { AccountView } from '../lexicon/types/com/atproto/admin/defs'
 import {
+  Label,
+  isValidSelfLabels,
+} from '../lexicon/types/com/atproto/label/defs'
+import { OutputSchema as ReportOutput } from '../lexicon/types/com/atproto/moderation/createReport'
+import { REASONOTHER } from '../lexicon/types/com/atproto/moderation/defs'
+import {
+  BlobView,
   ModEventView,
-  RepoView,
-  RepoViewDetail,
+  ModEventViewDetail,
   RecordView,
   RecordViewDetail,
-  BlobView,
+  RepoView,
   SubjectStatusView,
-  ModEventViewDetail,
+  isAccountEvent,
+  isIdentityEvent,
+  isModEventAcknowledge,
+  isModEventComment,
+  isModEventEmail,
+  isModEventEscalate,
+  isModEventLabel,
+  isModEventMute,
+  isModEventMuteReporter,
+  isModEventReport,
+  isModEventTag,
+  isModEventTakedown,
+  isRecordEvent,
 } from '../lexicon/types/tools/ozone/moderation/defs'
-import { AccountView } from '../lexicon/types/com/atproto/admin/defs'
-import { OutputSchema as ReportOutput } from '../lexicon/types/com/atproto/moderation/createReport'
-import { Label, isSelfLabels } from '../lexicon/types/com/atproto/label/defs'
+import { dbLogger, httpLogger } from '../logger'
+import { ParsedLabelers } from '../util'
+import { subjectFromEventRow, subjectFromStatusRow } from './subject'
 import {
   ModerationEventRowWithHandle,
   ModerationSubjectStatusRowWithHandle,
 } from './types'
-import { REASONOTHER } from '../lexicon/types/com/atproto/moderation/defs'
-import { subjectFromEventRow, subjectFromStatusRow } from './subject'
 import { formatLabel, signLabel } from './util'
-import { LabelRow } from '../db/schema/label'
-import { dbLogger } from '../logger'
-import { httpLogger } from '../logger'
-import { ParsedLabelers } from '../util'
-import { ids } from '../lexicon/lexicons'
+
+const ifString = (val: unknown): string | undefined =>
+  typeof val === 'string' ? val : undefined
+const ifBoolean = (val: unknown): boolean | undefined =>
+  typeof val === 'boolean' ? val : undefined
 
 export type AuthHeaders = {
   headers: {
@@ -98,125 +114,103 @@ export class ModerationViews {
     }, new Map<string, RepoView>())
   }
 
-  formatEvent(event: ModerationEventRowWithHandle): ModEventView {
+  formatEvent(row: ModerationEventRowWithHandle): Omit<ModEventView, '$type'> {
     const eventView: ModEventView = {
-      id: event.id,
+      id: row.id,
       event: {
-        $type: event.action,
-        comment: event.comment ?? undefined,
+        $type: row.action,
+        comment: row.comment ?? undefined,
       },
-      subject: subjectFromEventRow(event).lex(),
-      subjectBlobCids: event.subjectBlobCids ?? [],
-      createdBy: event.createdBy,
-      createdAt: event.createdAt,
-      subjectHandle: event.subjectHandle ?? undefined,
-      creatorHandle: event.creatorHandle ?? undefined,
+      subject: subjectFromEventRow(row).lex(),
+      subjectBlobCids: row.subjectBlobCids ?? [],
+      createdBy: row.createdBy,
+      createdAt: row.createdAt,
+      subjectHandle: row.subjectHandle ?? undefined,
+      creatorHandle: row.creatorHandle ?? undefined,
+    }
+
+    const { event } = eventView
+    const meta = row.meta || {}
+
+    if (
+      isModEventMuteReporter(event) ||
+      isModEventTakedown(event) ||
+      isModEventMute(event)
+    ) {
+      event.durationInHours = row.durationInHours ?? undefined
     }
 
     if (
-      [
-        'tools.ozone.moderation.defs#modEventMuteReporter',
-        'tools.ozone.moderation.defs#modEventTakedown',
-        'tools.ozone.moderation.defs#modEventMute',
-      ].includes(event.action)
+      (isModEventTakedown(event) || isModEventAcknowledge(event)) &&
+      meta.acknowledgeAccountSubjects
     ) {
-      eventView.event = {
-        ...eventView.event,
-        durationInHours: event.durationInHours ?? undefined,
-      }
+      event.acknowledgeAccountSubjects = ifBoolean(
+        meta.acknowledgeAccountSubjects,
+      )!
     }
 
-    if (
-      (event.action === 'tools.ozone.moderation.defs#modEventTakedown' ||
-        event.action === 'tools.ozone.moderation.defs#modEventAcknowledge') &&
-      event.meta?.acknowledgeAccountSubjects
-    ) {
-      eventView.event = {
-        ...eventView.event,
-        acknowledgeAccountSubjects: event.meta.acknowledgeAccountSubjects,
-      }
-    }
-
-    if (event.action === 'tools.ozone.moderation.defs#modEventLabel') {
-      eventView.event = {
-        ...eventView.event,
-        createLabelVals: event.createLabelVals?.length
-          ? event.createLabelVals.split(' ')
-          : [],
-        negateLabelVals: event.negateLabelVals?.length
-          ? event.negateLabelVals.split(' ')
-          : [],
-      }
+    if (isModEventLabel(event)) {
+      event.createLabelVals = row.createLabelVals?.length
+        ? row.createLabelVals.split(' ')
+        : []
+      event.negateLabelVals = row.negateLabelVals?.length
+        ? row.negateLabelVals.split(' ')
+        : []
     }
 
     // This is for legacy data only, for new events, these types of events won't have labels attached
     if (
-      [
-        'tools.ozone.moderation.defs#modEventAcknowledge',
-        'tools.ozone.moderation.defs#modEventTakedown',
-        'tools.ozone.moderation.defs#modEventEscalate',
-      ].includes(event.action)
+      isModEventAcknowledge(event) ||
+      isModEventTakedown(event) ||
+      isModEventEscalate(event)
     ) {
-      if (event.createLabelVals?.length) {
-        eventView.event = {
-          ...eventView.event,
-          createLabelVals: event.createLabelVals.split(' '),
-        }
+      if (row.createLabelVals?.length) {
+        // @ts-expect-error legacy
+        event.createLabelVals = row.createLabelVals.split(' ')
       }
 
-      if (event.negateLabelVals?.length) {
-        eventView.event = {
-          ...eventView.event,
-          negateLabelVals: event.negateLabelVals.split(' '),
-        }
+      if (row.negateLabelVals?.length) {
+        // @ts-expect-error legacy
+        event.negateLabelVals = row.negateLabelVals.split(' ')
       }
     }
 
-    if (event.action === 'tools.ozone.moderation.defs#modEventReport') {
-      eventView.event = {
-        ...eventView.event,
-        reportType: event.meta?.reportType ?? undefined,
-        isReporterMuted: !!event.meta?.isReporterMuted,
-      }
+    if (isModEventReport(event)) {
+      event.isReporterMuted = !!meta.isReporterMuted
+      event.reportType = ifString(meta.reportType)!
     }
 
-    if (event.action === 'tools.ozone.moderation.defs#modEventEmail') {
-      eventView.event = {
-        ...eventView.event,
-        subjectLine: event.meta?.subjectLine ?? '',
-        content: event.meta?.content,
-      }
+    if (isModEventEmail(event)) {
+      event.content = ifString(meta.content)!
+      event.subjectLine = ifString(meta.subjectLine)!
     }
 
-    if (
-      event.action === 'tools.ozone.moderation.defs#modEventComment' &&
-      event.meta?.sticky
-    ) {
-      eventView.event.sticky = true
+    if (isModEventComment(event) && meta.sticky) {
+      event.sticky = true
     }
 
-    if (event.action === 'tools.ozone.moderation.defs#modEventTag') {
-      eventView.event.add = event.addedTags || []
-      eventView.event.remove = event.removedTags || []
+    if (isModEventTag(event)) {
+      event.add = row.addedTags || []
+      event.remove = row.removedTags || []
     }
 
-    if (event.action === 'tools.ozone.moderation.defs#accountEvent') {
-      eventView.event.active = !!event.meta?.active
-      eventView.event.timestamp = event.meta?.timestamp
-      eventView.event.status = event.meta?.status
+    if (isAccountEvent(event)) {
+      event.active = !!meta.active
+      event.timestamp = ifString(meta.timestamp)!
+      event.status = ifString(meta.status)!
     }
 
-    if (event.action === 'tools.ozone.moderation.defs#identityEvent') {
-      eventView.event.timestamp = event.meta?.timestamp
-      eventView.event.handle = event.meta?.handle
-      eventView.event.pdsHost = event.meta?.pdsHost
-      eventView.event.tombstone = !!event.meta?.tombstone
+    if (isIdentityEvent(event)) {
+      event.timestamp = ifString(meta.timestamp)!
+      event.handle = ifString(meta.handle)!
+      event.pdsHost = ifString(meta.pdsHost)!
+      event.tombstone = !!meta.tombstone
     }
 
-    if (event.action === 'tools.ozone.moderation.defs#recordEvent') {
-      eventView.event.op = event.meta?.op
-      eventView.event.cid = event.meta?.cid
-      eventView.event.timestamp = event.meta?.timestamp
+    if (isRecordEvent(event)) {
+      event.op = ifString(meta.op)!
+      event.cid = ifString(meta.cid)!
+      event.timestamp = ifString(meta.timestamp)!
     }
 
     return eventView
@@ -234,7 +228,7 @@ export class ModerationViews {
     }
     const subject = await this.subject(subjectId)
     const eventView = this.formatEvent(result)
-    const allBlobs = findBlobRefs(subject.value)
+    const allBlobs = 'value' in subject ? findBlobRefs(subject.value) : []
     const subjectBlobs = await this.blob(
       allBlobs.filter((blob) =>
         eventView.subjectBlobCids.includes(blob.ref.toString()),
@@ -308,7 +302,7 @@ export class ModerationViews {
     }, new Map<string, RecordInfo>())
   }
 
-  async records(subjects: RecordSubject[]): Promise<Map<string, RecordView>> {
+  async records(subjects: RecordSubject[]) {
     const uris = subjects.map((record) => new AtUri(record.uri))
     const dids = uris.map((u) => u.hostname)
 
@@ -318,13 +312,26 @@ export class ModerationViews {
       this.fetchRecords(subjects),
     ])
 
-    return uris.reduce((acc, uri) => {
+    const map = new Map<
+      string,
+      // Because the result of this function is used to build RecordViewDetail,
+      // we explicitly type the result without the $type field, so can be used
+      // as both RecordView and RecordViewDetail, without having to cast or
+      // override the $type field.
+      RecordView & {
+        $type?: undefined
+        moderation: { $type?: undefined; subjectStatus?: SubjectStatusView }
+      }
+    >()
+
+    for (const uri of uris) {
       const repo = repos.get(uri.hostname)
-      if (!repo) return acc
+      if (!repo) continue
       const record = records.get(uri.toString())
-      if (!record) return acc
+      if (!record) continue
       const subjectStatus = subjectStatuses.get(uri.toString())
-      return acc.set(uri.toString(), {
+
+      map.set(uri.toString(), {
         uri: uri.toString(),
         cid: record.cid,
         value: record.value,
@@ -337,7 +344,9 @@ export class ModerationViews {
             : undefined,
         },
       })
-    }, new Map<string, RecordView>())
+    }
+
+    return map
   }
 
   async recordDetails(
@@ -428,7 +437,7 @@ export class ModerationViews {
         : REASONOTHER,
       reason: report.comment ?? undefined,
       reportedBy: report.createdBy,
-      subject: subjectFromEventRow(report).lex(),
+      subject: subjectFromEventRow(report).lex() as ReportOutput['subject'],
     }
   }
   // Partial view for subjects
@@ -439,12 +448,12 @@ export class ModerationViews {
       const repo = repos.get(subject)
       if (repo) {
         return {
-          $type: 'com.atproto.admin.defs#repoView',
           ...repo,
+          $type: 'tools.ozone.moderation.defs#repoView',
         }
       } else {
         return {
-          $type: 'com.atproto.admin.defs#repoViewNotFound',
+          $type: 'tools.ozone.moderation.defs#repoViewNotFound',
           did: subject,
         }
       }
@@ -453,12 +462,12 @@ export class ModerationViews {
       const record = records.get(subject)
       if (record) {
         return {
-          $type: 'com.atproto.admin.defs#recordView',
           ...record,
+          $type: 'tools.ozone.moderation.defs#recordView',
         }
       } else {
         return {
-          $type: 'com.atproto.admin.defs#recordViewNotFound',
+          $type: 'tools.ozone.moderation.defs#recordViewNotFound',
           uri: subject,
         }
       }
@@ -616,7 +625,9 @@ export class ModerationViews {
       subjectRepoHandle: status.handle ?? undefined,
       subjectBlobCids: status.blobCids || [],
       tags: status.tags || [],
-      subject: subjectFromStatusRow(status).lex(),
+      subject: subjectFromStatusRow(
+        status,
+      ).lex() as SubjectStatusView['subject'],
     }
 
     if (status.recordPath !== '') {
@@ -640,9 +651,7 @@ export class ModerationViews {
     return statusView
   }
 
-  async fetchAuthorFeed(
-    actor: string,
-  ): Promise<AppBskyFeedDefs.FeedViewPost[]> {
+  async fetchAuthorFeed(actor: string): Promise<FeedViewPost[]> {
     const auth = await this.appviewAuth(ids.AppBskyFeedGetAuthorFeed)
     if (!auth) return []
     const {
@@ -696,7 +705,7 @@ export function getSelfLabels(details: {
 }): Label[] {
   const { uri, cid, record } = details
   if (!uri || !cid || !record) return []
-  if (!isSelfLabels(record.labels)) return []
+  if (!isValidSelfLabels(record.labels)) return []
   const src = new AtUri(uri).host // record creator
   const cts =
     typeof record.createdAt === 'string'

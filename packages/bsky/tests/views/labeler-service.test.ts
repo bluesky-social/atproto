@@ -2,6 +2,8 @@ import { AtpAgent } from '@atproto/api'
 import { TestNetwork, SeedClient, basicSeed, RecordRef } from '@atproto/dev-env'
 import { forSnapshot, stripViewerFromLabeler } from '../_util'
 import { ids } from '../../src/lexicon/lexicons'
+import { isView as isRecordEmbedView } from '../../src/lexicon/types/app/bsky/embed/record'
+import assert from 'node:assert'
 
 describe('labeler service views', () => {
   let network: TestNetwork
@@ -150,7 +152,8 @@ describe('labeler service views', () => {
     const serviceViews = await agent.api.app.bsky.labeler.getServices({
       dids: [alice],
     })
-    expect(postViews.data.posts[0].embed?.record).toMatchObject(
+    assert(isRecordEmbedView(postViews.data.posts[0].embed))
+    expect(postViews.data.posts[0].embed.record).toMatchObject(
       serviceViews.data.views[0],
     )
   })

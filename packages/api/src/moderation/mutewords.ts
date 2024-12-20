@@ -34,7 +34,7 @@ export function hasMutedWord({
   facets?: AppBskyRichtextFacet.Main[]
   outlineTags?: string[]
   languages?: string[]
-  actor?: AppBskyActorDefs.ProfileView
+  actor?: AppBskyActorDefs.ProfileView | AppBskyActorDefs.ProfileViewBasic
 }) {
   const exception = LANGUAGE_EXCEPTIONS.includes(languages?.[0] || '')
   const tags = ([] as string[])

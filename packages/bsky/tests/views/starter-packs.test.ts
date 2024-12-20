@@ -1,8 +1,8 @@
+import assert from 'node:assert'
 import { AtpAgent } from '@atproto/api'
 import { TestNetwork, SeedClient, RecordRef, basicSeed } from '@atproto/dev-env'
-import { isRecord as isProfile } from '../../src/lexicon/types/app/bsky/actor/profile'
+import { isValidRecord as isValidProfile } from '../../src/lexicon/types/app/bsky/actor/profile'
 import { forSnapshot } from '../_util'
-import assert from 'assert'
 import { ids } from '../../src/lexicon/lexicons'
 
 describe('starter packs', () => {
@@ -147,7 +147,7 @@ describe('starter packs', () => {
       expect(notif.reason).toBe('starterpack-joined')
       expect(notif.reasonSubject).toBe(sp1.uriStr)
       expect(notif.uri).toMatch(/\/app\.bsky\.actor\.profile\/self$/)
-      assert(isProfile(notif.record), 'record is not profile')
+      assert(isValidProfile(notif.record), 'record is not profile')
       expect(notif.record.joinedViaStarterPack?.uri).toBe(sp1.uriStr)
     })
     expect(forSnapshot(notifications)).toMatchSnapshot()

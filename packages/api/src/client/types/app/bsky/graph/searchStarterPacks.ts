@@ -3,10 +3,18 @@
  */
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
-import * as AppBskyGraphDefs from './defs'
+import {
+  isValid as _isValid,
+  validate as _validate,
+} from '../../../../lexicons'
+import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import type * as AppBskyGraphDefs from './defs'
+
+const is$typed = _is$typed,
+  isValid = _isValid,
+  validate = _validate
+const id = 'app.bsky.graph.searchStarterPacks'
 
 export interface QueryParams {
   /** Search query string. Syntax, phrase, boolean, and faceting is unspecified, but Lucene query syntax is recommended. */
@@ -20,7 +28,6 @@ export type InputSchema = undefined
 export interface OutputSchema {
   cursor?: string
   starterPacks: AppBskyGraphDefs.StarterPackViewBasic[]
-  [k: string]: unknown
 }
 
 export interface CallOptions {

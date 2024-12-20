@@ -1,8 +1,8 @@
 import { Selectable } from 'kysely'
 import { ModerationEvent } from '../db/schema/moderation_event'
 import { ModerationSubjectStatus } from '../db/schema/moderation_subject_status'
-import { ToolsOzoneModerationDefs } from '@atproto/api'
 import { ModSubject } from './subject'
+import { ModEventView } from '../lexicon/types/tools/ozone/moderation/defs'
 
 export type ModerationEventRow = Selectable<ModerationEvent>
 export type ReversibleModerationEvent = Pick<
@@ -21,19 +21,7 @@ export type ModerationSubjectStatusRow = Selectable<ModerationSubjectStatus>
 export type ModerationSubjectStatusRowWithHandle =
   ModerationSubjectStatusRow & { handle: string | null }
 
-export type ModEventType =
-  | ToolsOzoneModerationDefs.ModEventTakedown
-  | ToolsOzoneModerationDefs.ModEventAcknowledge
-  | ToolsOzoneModerationDefs.ModEventEscalate
-  | ToolsOzoneModerationDefs.ModEventComment
-  | ToolsOzoneModerationDefs.ModEventLabel
-  | ToolsOzoneModerationDefs.ModEventReport
-  | ToolsOzoneModerationDefs.ModEventMute
-  | ToolsOzoneModerationDefs.ModEventReverseTakedown
-  | ToolsOzoneModerationDefs.ModEventTag
-  | ToolsOzoneModerationDefs.AccountEvent
-  | ToolsOzoneModerationDefs.IdentityEvent
-  | ToolsOzoneModerationDefs.RecordEvent
+export type ModEventType = ModEventView['event']
 
 type AccountHostingView = {
   $type: 'tools.ozone.moderation.defs#accountHosting'

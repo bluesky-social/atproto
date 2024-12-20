@@ -3,11 +3,19 @@
  */
 import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
+import {
+  isValid as _isValid,
+  validate as _validate,
+} from '../../../../lexicons'
+import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
-import * as ComAtprotoServerDefs from './defs'
+import type * as ComAtprotoServerDefs from './defs'
+
+const is$typed = _is$typed,
+  isValid = _isValid,
+  validate = _validate
+const id = 'com.atproto.server.getAccountInviteCodes'
 
 export interface QueryParams {
   includeUsed: boolean
@@ -19,7 +27,6 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   codes: ComAtprotoServerDefs.InviteCode[]
-  [k: string]: unknown
 }
 
 export type HandlerInput = undefined
