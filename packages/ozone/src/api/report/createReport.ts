@@ -2,9 +2,13 @@ import { Server } from '../../lexicon'
 import AppContext from '../../context'
 import { getReasonType } from '../util'
 import { subjectFromInput } from '../../mod-service/subject'
-import { REASONAPPEAL } from '../../lexicon/types/com/atproto/moderation/defs'
+import {
+  REASONAPPEAL,
+  ReasonType,
+} from '../../lexicon/types/com/atproto/moderation/defs'
 import { ForbiddenError } from '@atproto/xrpc-server'
 import { TagService } from '../../tag-service'
+import { ModerationService } from '../../mod-service'
 import { getTagForReport } from '../../tag-service/util'
 
 export default function (server: Server, ctx: AppContext) {
@@ -22,6 +26,9 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const db = ctx.db
+
+      await assertValidReporter(ctx.modService(db), reasonType, requester)
+
       const report = await db.transaction(async (dbTxn) => {
         const moderationTxn = ctx.modService(dbTxn)
         const { event: reportEvent, subjectStatus } =
@@ -50,4 +57,38 @@ export default function (server: Server, ctx: AppContext) {
       }
     },
   })
+}
+
+const assertValidReporter = async (
+  modService: ModerationService,
+  reasonType: ReasonType,
+  did: string,
+) => {
+  const reporterStatus = await modService.getCurrentStatus({ did })
+
+  // If we don't have a mod status for the reporter, no need to do further checks
+  if (!reporterStatus.length) {
+    return
+  }
+
+  // For appeals, we just need to make sure that the account does not have pending appeal
+  if (reasonType === REASONAPPEAL) {
+    if (reporterStatus[0]?.appealed) {
+      throw new ForbiddenError(
+        'Awaiting decision on previous appeal',
+        'AlreadyAppealed',
+      )
+    }
+    return
+  }
+
+  // For non appeals, we need to make sure the reporter account is not already in takendown status
+  // This is necessary because we allow takendown accounts call createReport but that's only meant for appeals
+  // and we need to make sure takendown accounts don't abuse this endpoint
+  if (reporterStatus[0]?.takendown) {
+    throw new ForbiddenError(
+      'Report not accepted from takendown account',
+      'AccountTakedown',
+    )
+  }
 }

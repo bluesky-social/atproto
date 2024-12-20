@@ -15,6 +15,8 @@ export interface InputSchema {
   identifier: string
   password: string
   authFactorToken?: string
+  /** When true, instead of throwing error for takendown accounts, a valid response with a narrow scoped token will be returned */
+  allowTakendown?: boolean
   [k: string]: unknown
 }
 
