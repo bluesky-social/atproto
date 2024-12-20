@@ -47,25 +47,32 @@ export { AccountStatus, formatAccountStatus } from './helpers/account'
 export class AccountManager
   implements AccountStore, RequestStore, DeviceStore, TokenStore
 {
-  db: AccountDb
+  db: AccountDb | null
 
   constructor(
     private backgroundQueue: BackgroundQueue,
-    dbLocation: string,
+    private dbLocation: string,
     private jwtKey: KeyObject,
     private serviceDid: string,
-    disableWalAutoCheckpoint = false,
+    private disableWalAutoCheckpoint = false,
   ) {
-    this.db = getDb(dbLocation, disableWalAutoCheckpoint)
+    this.db = null
+  }
+
+  async getDb(): Promise<AccountDb> {
+    // If the db is set, return it, otherwise set it and return it.
+    return this.db ? this.db : this.db = await getDb(this.dbLocation, this.disableWalAutoCheckpoint)
   }
 
   async migrateOrThrow() {
-    await this.db.ensureWal()
-    await getMigrator(this.db).migrateToLatestOrThrow()
+    const connection = await this.getDb();
+    await connection.ensureWal()
+    await getMigrator(connection).migrateToLatestOrThrow()
   }
 
   close() {
-    this.db.close()
+    // we do not need to get the db if it does not exist, we are trying to close it :)
+    this.db?.close()
   }
 
   // Account
@@ -75,21 +82,24 @@ export class AccountManager
     handleOrDid: string,
     flags?: account.AvailabilityFlags,
   ): Promise<ActorAccount | null> {
-    return account.getAccount(this.db, handleOrDid, flags)
+    const connection = await this.getDb();
+    return account.getAccount(connection, handleOrDid, flags)
   }
 
   async getAccounts(
     dids: string[],
     flags?: account.AvailabilityFlags,
   ): Promise<Map<string, ActorAccount>> {
-    return account.getAccounts(this.db, dids, flags)
+    const connection = await this.getDb();
+    return account.getAccounts(connection, dids, flags)
   }
 
   async getAccountByEmail(
     email: string,
     flags?: account.AvailabilityFlags,
   ): Promise<ActorAccount | null> {
-    return account.getAccountByEmail(this.db, email, flags)
+    const connection = await this.getDb();
+    return account.getAccountByEmail(connection, email, flags)
   }
 
   async isAccountActivated(did: string): Promise<boolean> {
@@ -148,7 +158,8 @@ export class AccountManager
     })
     const refreshPayload = auth.decodeRefreshToken(refreshJwt)
     const now = new Date().toISOString()
-    await this.db.transaction(async (dbTxn) => {
+    const connection = await this.getDb();
+    await connection.transaction(async (dbTxn) => {
       if (inviteCode) {
         await invite.ensureInviteIsAvailable(dbTxn, inviteCode)
       }
@@ -172,15 +183,18 @@ export class AccountManager
   // @NOTE should always be paired with a sequenceHandle().
   // the token output from this method should be passed to sequenceHandle().
   async updateHandle(did: string, handle: string) {
-    return account.updateHandle(this.db, did, handle)
+    const connection = await this.getDb();
+    return account.updateHandle(connection, did, handle)
   }
 
   async deleteAccount(did: string) {
-    return account.deleteAccount(this.db, did)
+    const connection = await this.getDb();
+    return account.deleteAccount(connection, did)
   }
 
   async takedownAccount(did: string, takedown: StatusAttr) {
-    await this.db.transaction(async (dbTxn) =>
+    const connection = await this.getDb();
+    await connection.transaction(async (dbTxn) =>
       Promise.all([
         account.updateAccountTakedownStatus(dbTxn, did, takedown),
         auth.revokeRefreshTokensByDid(dbTxn, did),
@@ -190,19 +204,23 @@ export class AccountManager
   }
 
   async getAccountAdminStatus(did: string) {
-    return account.getAccountAdminStatus(this.db, did)
+    const connection = await this.getDb();
+    return account.getAccountAdminStatus(connection, did)
   }
 
   async updateRepoRoot(did: string, cid: CID, rev: string) {
-    return repo.updateRoot(this.db, did, cid, rev)
+    const connection = await this.getDb();
+    return repo.updateRoot(connection, did, cid, rev)
   }
 
   async deactivateAccount(did: string, deleteAfter: string | null) {
-    return account.deactivateAccount(this.db, did, deleteAfter)
+    const connection = await this.getDb();
+    return account.deactivateAccount(connection, did, deleteAfter)
   }
 
   async activateAccount(did: string) {
-    return account.activateAccount(this.db, did)
+    const connection = await this.getDb();
+    return account.activateAccount(connection, did)
   }
 
   // Auth
@@ -219,19 +237,21 @@ export class AccountManager
       scope: auth.formatScope(appPassword),
     })
     const refreshPayload = auth.decodeRefreshToken(refreshJwt)
-    await auth.storeRefreshToken(this.db, refreshPayload, appPassword)
+    const connection = await this.getDb();
+    await auth.storeRefreshToken(connection, refreshPayload, appPassword)
     return { accessJwt, refreshJwt }
   }
 
   async rotateRefreshToken(id: string) {
-    const token = await auth.getRefreshToken(this.db, id)
+    const connection = await this.getDb();
+    const token = await auth.getRefreshToken(connection, id)
     if (!token) return null
 
     const now = new Date()
 
     // take the chance to tidy all of a user's expired tokens
     // does not need to be transactional since this is just best-effort
-    await auth.deleteExpiredRefreshTokens(this.db, token.did, now.toISOString())
+    await auth.deleteExpiredRefreshTokens(connection, token.did, now.toISOString())
 
     // Shorten the refresh token lifespan down from its
     // original expiration time to its revocation grace period.
@@ -260,7 +280,7 @@ export class AccountManager
 
     const refreshPayload = auth.decodeRefreshToken(refreshJwt)
     try {
-      await this.db.transaction((dbTxn) =>
+      await connection.transaction((dbTxn) =>
         Promise.all([
           auth.addRefreshGracePeriod(dbTxn, {
             id,
@@ -280,7 +300,8 @@ export class AccountManager
   }
 
   async revokeRefreshToken(id: string) {
-    return auth.revokeRefreshToken(this.db, id)
+    const connection = await this.getDb();
+    return auth.revokeRefreshToken(connection, id)
   }
 
   // Login
@@ -344,29 +365,34 @@ export class AccountManager
   // ----------
 
   async createAppPassword(did: string, name: string, privileged: boolean) {
-    return password.createAppPassword(this.db, did, name, privileged)
+    const connection = await this.getDb();
+    return password.createAppPassword(connection, did, name, privileged)
   }
 
   async listAppPasswords(did: string) {
-    return password.listAppPasswords(this.db, did)
+    const connection = await this.getDb();
+    return password.listAppPasswords(connection, did)
   }
 
   async verifyAccountPassword(
     did: string,
     passwordStr: string,
   ): Promise<boolean> {
-    return password.verifyAccountPassword(this.db, did, passwordStr)
+    const connection = await this.getDb();
+    return password.verifyAccountPassword(connection, did, passwordStr)
   }
 
   async verifyAppPassword(
     did: string,
     passwordStr: string,
   ): Promise<password.AppPassDescript | null> {
-    return password.verifyAppPassword(this.db, did, passwordStr)
+    const connection = await this.getDb();
+    return password.verifyAppPassword(connection, did, passwordStr)
   }
 
   async revokeAppPassword(did: string, name: string) {
-    await this.db.transaction(async (dbTxn) =>
+    const connection = await this.getDb();
+    await connection.transaction(async (dbTxn) =>
       Promise.all([
         password.deleteAppPassword(dbTxn, did, name),
         auth.revokeAppPasswordRefreshToken(dbTxn, did, name),
@@ -378,14 +404,16 @@ export class AccountManager
   // ----------
 
   async ensureInviteIsAvailable(code: string) {
-    return invite.ensureInviteIsAvailable(this.db, code)
+    const connection = await this.getDb();
+    return invite.ensureInviteIsAvailable(connection, code)
   }
 
   async createInviteCodes(
     toCreate: { account: string; codes: string[] }[],
     useCount: number,
   ) {
-    return invite.createInviteCodes(this.db, toCreate, useCount)
+    const connection = await this.getDb();
+    return invite.createInviteCodes(connection, toCreate, useCount)
   }
 
   async createAccountInviteCodes(
@@ -394,8 +422,9 @@ export class AccountManager
     expectedTotal: number,
     disabled: 0 | 1,
   ) {
+    const connection = await this.getDb();
     return invite.createAccountInviteCodes(
-      this.db,
+      connection,
       forAccount,
       codes,
       expectedTotal,
@@ -404,35 +433,42 @@ export class AccountManager
   }
 
   async getAccountInvitesCodes(did: string) {
-    const inviteCodes = await invite.getAccountsInviteCodes(this.db, [did])
+    const connection = await this.getDb();
+    const inviteCodes = await invite.getAccountsInviteCodes(connection, [did])
     return inviteCodes.get(did) ?? []
   }
 
   async getAccountsInvitesCodes(dids: string[]) {
-    return invite.getAccountsInviteCodes(this.db, dids)
+    const connection = await this.getDb();
+    return invite.getAccountsInviteCodes(connection, dids)
   }
 
   async getInvitedByForAccounts(dids: string[]) {
-    return invite.getInvitedByForAccounts(this.db, dids)
+    const connection = await this.getDb();
+    return invite.getInvitedByForAccounts(connection, dids)
   }
 
   async getInviteCodesUses(codes: string[]) {
-    return invite.getInviteCodesUses(this.db, codes)
+    const connection = await this.getDb();
+    return invite.getInviteCodesUses(connection, codes)
   }
 
   async setAccountInvitesDisabled(did: string, disabled: boolean) {
-    return invite.setAccountInvitesDisabled(this.db, did, disabled)
+    const connection = await this.getDb();
+    return invite.setAccountInvitesDisabled(connection, did, disabled)
   }
 
   async disableInviteCodes(opts: { codes: string[]; accounts: string[] }) {
-    return invite.disableInviteCodes(this.db, opts)
+    const connection = await this.getDb();
+    return invite.disableInviteCodes(connection, opts)
   }
 
   // Email Tokens
   // ----------
 
   async createEmailToken(did: string, purpose: EmailTokenPurpose) {
-    return emailToken.createEmailToken(this.db, did, purpose)
+    const connection = await this.getDb();
+    return emailToken.createEmailToken(connection, did, purpose)
   }
 
   async assertValidEmailToken(
@@ -440,7 +476,8 @@ export class AccountManager
     purpose: EmailTokenPurpose,
     token: string,
   ) {
-    return emailToken.assertValidToken(this.db, did, purpose, token)
+    const connection = await this.getDb();
+    return emailToken.assertValidToken(connection, did, purpose, token)
   }
 
   async assertValidEmailTokenAndCleanup(
@@ -448,15 +485,17 @@ export class AccountManager
     purpose: EmailTokenPurpose,
     token: string,
   ) {
-    await emailToken.assertValidToken(this.db, did, purpose, token)
-    await emailToken.deleteEmailToken(this.db, did, purpose)
+    const connection = await this.getDb();
+    await emailToken.assertValidToken(connection, did, purpose, token)
+    await emailToken.deleteEmailToken(connection, did, purpose)
   }
 
   async confirmEmail(opts: { did: string; token: string }) {
     const { did, token } = opts
-    await emailToken.assertValidToken(this.db, did, 'confirm_email', token)
+    const connection = await this.getDb();
+    await emailToken.assertValidToken(connection, did, 'confirm_email', token)
     const now = new Date().toISOString()
-    await this.db.transaction((dbTxn) =>
+    await connection.transaction((dbTxn) =>
       Promise.all([
         emailToken.deleteEmailToken(dbTxn, did, 'confirm_email'),
         account.setEmailConfirmedAt(dbTxn, did, now),
@@ -466,7 +505,8 @@ export class AccountManager
 
   async updateEmail(opts: { did: string; email: string }) {
     const { did, email } = opts
-    await this.db.transaction((dbTxn) =>
+    const connection = await this.getDb();
+    await connection.transaction((dbTxn) =>
       Promise.all([
         account.updateEmail(dbTxn, did, email),
         emailToken.deleteAllEmailTokens(dbTxn, did),
@@ -475,8 +515,9 @@ export class AccountManager
   }
 
   async resetPassword(opts: { password: string; token: string }) {
+    const connection = await this.getDb();
     const did = await emailToken.assertValidTokenAndFindDid(
-      this.db,
+      connection,
       'reset_password',
       opts.token,
     )
@@ -486,7 +527,8 @@ export class AccountManager
   async updateAccountPassword(opts: { did: string; password: string }) {
     const { did } = opts
     const passwordScrypt = await scrypt.genSaltAndHash(opts.password)
-    await this.db.transaction(async (dbTxn) =>
+    const connection = await this.getDb();
+    await connection.transaction(async (dbTxn) =>
       Promise.all([
         password.updateUserPassword(dbTxn, { did, passwordScrypt }),
         emailToken.deleteEmailToken(dbTxn, did, 'reset_password'),
@@ -508,8 +550,9 @@ export class AccountManager
         throw new AuthRequiredError('App passwords are not allowed')
       }
 
-      await this.db.executeWithRetry(
-        deviceAccount.createOrUpdateQB(this.db, deviceId, user.did, remember),
+      const connection = await this.getDb();
+      await connection.executeWithRetry(
+        deviceAccount.createOrUpdateQB(connection, deviceId, user.did, remember),
       )
 
       return await this.getDeviceAccount(deviceId, user.did)
@@ -524,7 +567,8 @@ export class AccountManager
     sub: string,
     clientId: string,
   ): Promise<void> {
-    await this.db.transaction(async (dbTxn) => {
+    const connection = await this.getDb();
+    await connection.transaction(async (dbTxn) => {
       const row = await deviceAccount
         .readQB(dbTxn, deviceId, sub)
         .executeTakeFirstOrThrow()
@@ -544,8 +588,9 @@ export class AccountManager
     deviceId: DeviceId,
     sub: string,
   ): Promise<AccountInfo | null> {
+    const connection = await this.getDb();
     const row = await deviceAccount
-      .getAccountInfoQB(this.db, deviceId, sub)
+      .getAccountInfoQB(connection, deviceId, sub)
       .executeTakeFirst()
 
     if (!row) return null
@@ -557,8 +602,9 @@ export class AccountManager
   }
 
   async listDeviceAccounts(deviceId: DeviceId): Promise<AccountInfo[]> {
+    const connection = await this.getDb();
     const rows = await deviceAccount
-      .listRememberedQB(this.db, deviceId)
+      .listRememberedQB(connection, deviceId)
       .execute()
 
     return rows.map((row) => ({
@@ -568,20 +614,23 @@ export class AccountManager
   }
 
   async removeDeviceAccount(deviceId: DeviceId, sub: string): Promise<void> {
-    await this.db.executeWithRetry(
-      deviceAccount.removeQB(this.db, deviceId, sub),
+    const connection = await this.getDb();
+    await connection.executeWithRetry(
+      deviceAccount.removeQB(connection, deviceId, sub),
     )
   }
 
   // RequestStore
 
   async createRequest(id: RequestId, data: RequestData): Promise<void> {
-    await this.db.executeWithRetry(authRequest.createQB(this.db, id, data))
+    const connection = await this.getDb();
+    await connection.executeWithRetry(authRequest.createQB(connection, id, data))
   }
 
   async readRequest(id: RequestId): Promise<RequestData | null> {
     try {
-      const row = await authRequest.readQB(this.db, id).executeTakeFirst()
+      const connection = await this.getDb();
+      const row = await authRequest.readQB(connection, id).executeTakeFirst()
       if (!row) return null
       return authRequest.rowToRequestData(row)
     } finally {
@@ -589,32 +638,38 @@ export class AccountManager
       // the current (potentially expired) request data to allow the provider to
       // handle expired requests.
       this.backgroundQueue.add(async () => {
-        await this.db.executeWithRetry(authRequest.removeOldExpiredQB(this.db))
+        const connection = await this.getDb();
+        await connection.executeWithRetry(authRequest.removeOldExpiredQB(connection))
       })
     }
   }
 
   async updateRequest(id: RequestId, data: UpdateRequestData): Promise<void> {
-    await this.db.executeWithRetry(authRequest.updateQB(this.db, id, data))
+    const connection = await this.getDb();
+    await connection.executeWithRetry(authRequest.updateQB(connection, id, data))
   }
 
   async deleteRequest(id: RequestId): Promise<void> {
-    await this.db.executeWithRetry(authRequest.removeByIdQB(this.db, id))
+    const connection = await this.getDb();
+    await connection.executeWithRetry(authRequest.removeByIdQB(connection, id))
   }
 
   async findRequestByCode(code: Code): Promise<FoundRequestResult | null> {
-    const row = await authRequest.findByCodeQB(this.db, code).executeTakeFirst()
+    const connection = await this.getDb();
+    const row = await authRequest.findByCodeQB(connection, code).executeTakeFirst()
     return row ? authRequest.rowToFoundRequestResult(row) : null
   }
 
   // DeviceStore
 
   async createDevice(deviceId: DeviceId, data: DeviceData): Promise<void> {
-    await this.db.executeWithRetry(device.createQB(this.db, deviceId, data))
+    const connection = await this.getDb();
+    await connection.executeWithRetry(device.createQB(connection, deviceId, data))
   }
 
   async readDevice(deviceId: DeviceId): Promise<null | DeviceData> {
-    const row = await device.readQB(this.db, deviceId).executeTakeFirst()
+    const connection = await this.getDb();
+    const row = await device.readQB(connection, deviceId).executeTakeFirst()
     return row ? device.rowToDeviceData(row) : null
   }
 
@@ -622,12 +677,14 @@ export class AccountManager
     deviceId: DeviceId,
     data: Partial<DeviceData>,
   ): Promise<void> {
-    await this.db.executeWithRetry(device.updateQB(this.db, deviceId, data))
+    const connection = await this.getDb();
+    await connection.executeWithRetry(device.updateQB(connection, deviceId, data))
   }
 
   async deleteDevice(deviceId: DeviceId): Promise<void> {
+    const connection = await this.getDb();
     // Will cascade to device_account (device_account_device_id_fk)
-    await this.db.executeWithRetry(device.removeQB(this.db, deviceId))
+    await connection.executeWithRetry(device.removeQB(connection, deviceId))
   }
 
   // TokenStore
@@ -637,7 +694,8 @@ export class AccountManager
     data: TokenData,
     refreshToken?: RefreshToken,
   ): Promise<void> {
-    await this.db.transaction(async (dbTxn) => {
+    const connection = await this.getDb();
+    await connection.transaction(async (dbTxn) => {
       if (refreshToken) {
         const { count } = await usedRefreshToken
           .countQB(dbTxn, refreshToken)
@@ -653,13 +711,15 @@ export class AccountManager
   }
 
   async readToken(tokenId: TokenId): Promise<TokenInfo | null> {
-    const row = await token.findByQB(this.db, { tokenId }).executeTakeFirst()
+    const connection = await this.getDb();
+    const row = await token.findByQB(connection, { tokenId }).executeTakeFirst()
     return row ? token.toTokenInfo(row, this.serviceDid) : null
   }
 
   async deleteToken(tokenId: TokenId): Promise<void> {
+    const connection = await this.getDb();
     // Will cascade to used_refresh_token (used_refresh_token_fk)
-    await this.db.executeWithRetry(token.removeQB(this.db, tokenId))
+    await connection.executeWithRetry(token.removeQB(connection, tokenId))
   }
 
   async rotateToken(
@@ -668,7 +728,8 @@ export class AccountManager
     newRefreshToken: RefreshToken,
     newData: NewTokenData,
   ): Promise<void> {
-    const err = await this.db.transaction(async (dbTxn) => {
+    const connection = await this.getDb();
+    const err = await connection.transaction(async (dbTxn) => {
       const { id, currentRefreshToken } = await token
         .forRotateQB(dbTxn, tokenId)
         .executeTakeFirstOrThrow()
@@ -699,20 +760,22 @@ export class AccountManager
   async findTokenByRefreshToken(
     refreshToken: RefreshToken,
   ): Promise<TokenInfo | null> {
+    const connection = await this.getDb();
     const used = await usedRefreshToken
-      .findByTokenQB(this.db, refreshToken)
+      .findByTokenQB(connection, refreshToken)
       .executeTakeFirst()
 
     const search = used
       ? { id: used.tokenId }
       : { currentRefreshToken: refreshToken }
 
-    const row = await token.findByQB(this.db, search).executeTakeFirst()
+    const row = await token.findByQB(connection, search).executeTakeFirst()
     return row ? token.toTokenInfo(row, this.serviceDid) : null
   }
 
   async findTokenByCode(code: Code): Promise<TokenInfo | null> {
-    const row = await token.findByQB(this.db, { code }).executeTakeFirst()
+    const connection = await this.getDb();
+    const row = await token.findByQB(connection, { code }).executeTakeFirst()
     return row ? token.toTokenInfo(row, this.serviceDid) : null
   }
 }

@@ -19,8 +19,8 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
       const { sort, limit, cursor } = params
-      const db = ctx.accountManager.db
-      const ref = db.db.dynamic.ref
+      const connection = await ctx.accountManager.getDb()
+      const ref = connection.db.dynamic.ref
       let keyset
       if (sort === 'recent') {
         keyset = new TimeCodeKeyset(ref('createdAt'), ref('code'))
@@ -30,7 +30,7 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError(`unknown sort method: ${sort}`)
       }
 
-      let builder = selectInviteCodesQb(db)
+      let builder = selectInviteCodesQb(connection)
       builder = paginate(builder, {
         limit,
         cursor,
