@@ -37,6 +37,16 @@ describe('bsky takedown labels', () => {
       sc.getHeaders(sc.dids.carol),
     )
     carolListRef = await sc.createList(sc.dids.carol, 'carol list', 'mod')
+    // alice blocks dan via carol's list, and carol is takendown
+    await sc.addToList(sc.dids.carol, sc.dids.dan, carolListRef)
+    await pdsAgent.app.bsky.graph.listblock.create(
+      { repo: sc.dids.alice },
+      {
+        subject: carolListRef.uriStr,
+        createdAt: new Date().toISOString(),
+      },
+      sc.getHeaders(sc.dids.alice),
+    )
     aliceGenRef = await sc.createFeedGen(
       sc.dids.alice,
       'did:web:example.com',
@@ -179,6 +189,25 @@ describe('bsky takedown labels', () => {
       {
         headers: await network.serviceHeaders(
           sc.dids.carol,
+          ids.AppBskyActorGetProfile,
+        ),
+      },
+    )
+    expect(profile.did).toBe(sc.dids.dan)
+    expect(profile.viewer).not.toBeUndefined()
+    expect(profile.viewer?.blockedBy).toBe(false)
+    expect(profile.viewer?.blocking).toBeUndefined()
+    expect(profile.viewer?.blockingByList).toBeUndefined()
+  })
+
+  it('author takedown halts application of mod lists', async () => {
+    const { data: profile } = await agent.app.bsky.actor.getProfile(
+      {
+        actor: sc.dids.dan, // blocked via carol's list, and carol is takendown
+      },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.alice,
           ids.AppBskyActorGetProfile,
         ),
       },
