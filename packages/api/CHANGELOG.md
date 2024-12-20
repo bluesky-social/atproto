@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.13.22
+
+### Patch Changes
+
+- [#3270](https://github.com/bluesky-social/atproto/pull/3270) [`f22383cee`](https://github.com/bluesky-social/atproto/commit/f22383cee8feb8b9f761c801ab6e07ad8dc019ed) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add support for label def aliases, deprecation notices. This provides support for the deprecated `gore` label until a full cleanup effort can be completed.
+
 ## 0.13.21
 
 ### Patch Changes
