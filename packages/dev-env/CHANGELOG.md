@@ -1,5 +1,21 @@
 # @atproto/dev-env
 
+## 0.3.70
+
+### Patch Changes
+
+- Updated dependencies [[`f22383cee`](https://github.com/bluesky-social/atproto/commit/f22383cee8feb8b9f761c801ab6e07ad8dc019ed)]:
+  - @atproto/api@0.13.22
+  - @atproto/bsky@0.0.100
+  - @atproto/ozone@0.1.61
+  - @atproto/pds@0.4.78
+
+## 0.3.69
+
+### Patch Changes
+
+- [#3266](https://github.com/bluesky-social/atproto/pull/3266) [`638f5a831`](https://github.com/bluesky-social/atproto/commit/638f5a8312136e8666d9390a73cb273459ffe082) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Fix avatar path resolution
+
 ## 0.3.68
 
 ### Patch Changes

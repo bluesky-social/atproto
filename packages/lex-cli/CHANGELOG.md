@@ -1,5 +1,11 @@
 # @atproto/lex-cli
 
+## 0.5.4
+
+### Patch Changes
+
+- [#3274](https://github.com/bluesky-social/atproto/pull/3274) [`672243a9e`](https://github.com/bluesky-social/atproto/commit/672243a9ea0a2cbd0cfaa4e255c58de658ed22e2) Thanks [@dholms](https://github.com/dholms)! - Allow ratelimit calcKey to return null
+
 ## 0.5.3
 
 ### Patch Changes

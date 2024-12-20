@@ -1,5 +1,13 @@
 # @atproto/oauth-client-node
 
+## 0.2.5
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto-labs/handle-resolver-node@0.1.9
+  - @atproto/oauth-client@0.3.5
+
 ## 0.2.4
 
 ### Patch Changes

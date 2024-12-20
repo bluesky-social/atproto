@@ -178,7 +178,7 @@ describe('sharp image processor', () => {
   })
 
   async function processFixture(fixture: string, options: Options) {
-    const image = createReadStream(`../dev-env/src/seed/img/${fixture}`)
+    const image = createReadStream(`../dev-env/assets/${fixture}`)
     const resized = await resize(image, options)
     return await getInfo(resized)
   }
