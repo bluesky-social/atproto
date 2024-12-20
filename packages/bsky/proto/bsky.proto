@@ -1091,6 +1091,7 @@ message GetFollowsFollowingResponse {
   repeated FollowsFollowing results = 1;
 }
 
+// Purchase
 message PurchaseEntitlement {
   repeated string entitlements = 1;
   google.protobuf.Timestamp created_at = 2;
@@ -1101,7 +1102,7 @@ message GetPurchaseEntitlementsRequest {
 }
 
 message GetPurchaseEntitlementsResponse {
-  repeated PurchaseEntitlement purchaseEntitlements = 1;
+  repeated PurchaseEntitlement purchase_entitlements = 1;
 }
 
 // Ping

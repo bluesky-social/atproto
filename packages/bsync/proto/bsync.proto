@@ -70,13 +70,13 @@ message ScanNotifOperationsResponse {
 
 message Subscription {
   string status = 1;
-  string renewalStatus = 2;
+  string renewal_status = 2;
   string group = 3;
   string platform = 4;
   string offering = 5;
-  google.protobuf.Timestamp periodEndsAt = 6;
-  google.protobuf.Timestamp periodStartsAt = 7;
-  google.protobuf.Timestamp purchasedAt = 8;
+  google.protobuf.Timestamp period_ends_at = 6;
+  google.protobuf.Timestamp period_starts_at = 7;
+  google.protobuf.Timestamp purchased_at = 8;
 }
 
 message GetSubscriptionsRequest {

@@ -11247,6 +11247,8 @@ export class GetFollowsFollowingResponse extends Message<GetFollowsFollowingResp
 }
 
 /**
+ * Purchase
+ *
  * @generated from message bsky.PurchaseEntitlement
  */
 export class PurchaseEntitlement extends Message<PurchaseEntitlement> {
@@ -11376,7 +11378,7 @@ export class GetPurchaseEntitlementsRequest extends Message<GetPurchaseEntitleme
  */
 export class GetPurchaseEntitlementsResponse extends Message<GetPurchaseEntitlementsResponse> {
   /**
-   * @generated from field: repeated bsky.PurchaseEntitlement purchaseEntitlements = 1;
+   * @generated from field: repeated bsky.PurchaseEntitlement purchase_entitlements = 1;
    */
   purchaseEntitlements: PurchaseEntitlement[] = []
 
@@ -11390,7 +11392,7 @@ export class GetPurchaseEntitlementsResponse extends Message<GetPurchaseEntitlem
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     {
       no: 1,
-      name: 'purchaseEntitlements',
+      name: 'purchase_entitlements',
       kind: 'message',
       T: PurchaseEntitlement,
       repeated: true,
