@@ -12,7 +12,6 @@ import { Database } from '../db'
 import {
   ModEventView,
   RepoView,
-  RepoViewDetail,
   RecordView,
   RecordViewDetail,
   BlobView,
