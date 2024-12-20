@@ -56,6 +56,10 @@ import { httpLogger as log } from '../logger'
 import { OzoneConfig } from '../config'
 import { LABELER_HEADER_NAME, ParsedLabelers } from '../util'
 import { ids } from '../lexicon/lexicons'
+import {
+  ModerationStatusHistory,
+  ModerationStatusHistoryCreator,
+} from '../history/status'
 
 export type ModerationServiceCreator = (db: Database) => ModerationService
 
@@ -74,6 +78,7 @@ export class ModerationService {
       method: string,
     ) => Promise<AuthHeaders>,
     public imgInvalidator?: ImageInvalidator,
+    public statusHistory?: ModerationStatusHistory,
   ) {}
 
   static creator(
@@ -86,6 +91,7 @@ export class ModerationService {
     appviewAgent: AtpAgent,
     createAuthHeaders: (aud: string, method: string) => Promise<AuthHeaders>,
     imgInvalidator?: ImageInvalidator,
+    statusHistoryService?: ModerationStatusHistoryCreator,
   ) {
     return (db: Database) =>
       new ModerationService(
@@ -99,6 +105,7 @@ export class ModerationService {
         appviewAgent,
         createAuthHeaders,
         imgInvalidator,
+        statusHistoryService?.(db),
       )
   }
 
@@ -475,11 +482,12 @@ export class ModerationService {
       .returningAll()
       .executeTakeFirstOrThrow()
 
-    const subjectStatus = await adjustModerationSubjectStatus(
-      this.db,
-      modEvent,
-      subject.blobCids,
-    )
+    const [subjectStatus] = await Promise.all([
+      adjustModerationSubjectStatus(this.db, modEvent, subject.blobCids),
+      this.statusHistory
+        ? this.statusHistory.adjustForModEvent(modEvent)
+        : Promise.resolve(),
+    ])
 
     return { event: modEvent, subjectStatus }
   }
