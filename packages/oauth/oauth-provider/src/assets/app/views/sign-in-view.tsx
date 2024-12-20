@@ -11,6 +11,7 @@ export type SignInViewProps = {
   loginHint?: string
 
   onSignIn: (credentials: SignInFormOutput) => void | PromiseLike<void>
+  onForgotPassword?: () => void
   onBack?: () => void
 }
 
@@ -20,6 +21,7 @@ export function SignInView({
   setSession,
 
   onSignIn,
+  onForgotPassword,
   onBack,
 }: SignInViewProps) {
   const session = useMemo(() => sessions.find((s) => s.selected), [sessions])
@@ -45,6 +47,7 @@ export function SignInView({
       >
         <SignInForm
           onSubmit={onSignIn}
+          onForgotPassword={onForgotPassword}
           onCancel={clearSession}
           cancelAria="Back" // to account picker
           usernameDefault={
@@ -62,6 +65,7 @@ export function SignInView({
       <LayoutTitlePage title="Sign in" subtitle="Enter your password">
         <SignInForm
           onSubmit={onSignIn}
+          onForgotPassword={onForgotPassword}
           onCancel={onBack}
           cancelAria="Back"
           usernameDefault={loginHint}
@@ -77,7 +81,12 @@ export function SignInView({
         title="Sign in"
         subtitle="Enter your username and password"
       >
-        <SignInForm onSubmit={onSignIn} onCancel={onBack} cancelAria="Back" />
+        <SignInForm
+          onSubmit={onSignIn}
+          onForgotPassword={onForgotPassword}
+          onCancel={onBack}
+          cancelAria="Back"
+        />
       </LayoutTitlePage>
     )
   }
@@ -90,6 +99,7 @@ export function SignInView({
       >
         <SignInForm
           onSubmit={onSignIn}
+          onForgotPassword={onForgotPassword}
           onCancel={() => setShowSignInForm(false)}
           cancelAria="Back" // to account picker
         />
@@ -104,7 +114,7 @@ export function SignInView({
         onAccount={(a) => setSession(a.sub)}
         onOther={() => setShowSignInForm(true)}
         onBack={onBack}
-        backAria="Back" // to previous view
+        backAria="Back"
       />
     </LayoutTitlePage>
   )
