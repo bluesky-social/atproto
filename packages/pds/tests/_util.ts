@@ -1,7 +1,10 @@
-import { AtUri } from '@atproto/syntax'
-import { CID } from 'multiformats/cid'
-import { FeedViewPost } from '../src/lexicon/types/app/bsky/feed/defs'
 import { lexToJson } from '@atproto/lexicon'
+import { AtUri } from '@atproto/syntax'
+import { type Express } from 'express'
+import { CID } from 'multiformats/cid'
+import { Server } from 'node:http'
+import { AddressInfo } from 'node:net'
+import { FeedViewPost } from '../src/lexicon/types/app/bsky/feed/defs'
 
 // Swap out identifiers and dates with stable
 // values for the purpose of snapshot testing
@@ -155,4 +158,47 @@ export const paginateAll = async <T extends { cursor?: string }>(
     cursor = res.cursor
   } while (cursor && results.length < limit)
   return results
+}
+
+export async function startServer(app: Express) {
+  return new Promise<{
+    origin: string
+    server: Server
+    stop: () => Promise<void>
+  }>((resolve, reject) => {
+    const onListen = () => {
+      const port = (server.address() as AddressInfo).port
+      resolve({
+        server,
+        origin: `http://localhost:${port}`,
+        stop: () => stopServer(server),
+      })
+      cleanup()
+    }
+    const onError = (err: Error) => {
+      reject(err)
+      cleanup()
+    }
+    const cleanup = () => {
+      server.removeListener('listening', onListen)
+      server.removeListener('error', onError)
+    }
+
+    const server = app
+      .listen(0)
+      .once('listening', onListen)
+      .once('error', onError)
+  })
+}
+
+export async function stopServer(server: Server) {
+  return new Promise<void>((resolve, reject) => {
+    server.close((err) => {
+      if (err) {
+        reject(err)
+      } else {
+        resolve()
+      }
+    })
+  })
 }
