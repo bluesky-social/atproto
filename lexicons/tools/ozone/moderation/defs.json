@@ -199,43 +199,58 @@
       "description": "Statistics about a particular account subject on the labeller",
       "type": "object",
       "properties": {
-        "suspendedCount": {
+        "reportCount": {
+          "description": "Total number of reports on the account",
+          "type": "integer"
+        },
+        "appealCount": {
+          "description": "Total number of appeals against a moderation action on the account",
+          "type": "integer"
+        },
+        "suspendCount": {
           "description": "Number of times the account was suspended",
           "type": "integer"
         },
         "takedownCount": {
           "description": "Number of times the account was taken down",
           "type": "integer"
-        },
-        "labels": {
-          "description": "List of labels currently applied on the account",
-          "type": "array",
-          "items": { "type": "string" }
         }
       }
     },
     "recordsStats": {
-      "description": "Statistics about a set of record subjects on the labeller",
+      "description": "Statistics about a set of record subject items on the labeller",
       "type": "object",
       "properties": {
+        "totalReports": {
+          "description": "Cumulative sum of the number of reports on the items in the set",
+          "type": "integer"
+        },
+        "reportedCount": {
+          "description": "Number of items that were reported at least once",
+          "type": "integer"
+        },
+        "escalatedCount": {
+          "description": "Number of items that were escalated at least once",
+          "type": "integer"
+        },
+        "appealedCount": {
+          "description": "Number of items that were appealed at least once",
+          "type": "integer"
+        },
         "subjectCount": {
-          "description": "Total number of record subjects in the set",
+          "description": "Total number of item in the set",
           "type": "integer"
         },
         "pendingCount": {
-          "description": "Number of record subjects currently in \"reviewOpen\" or \"reviewEscalated\" state",
+          "description": "Number of item currently in \"reviewOpen\" or \"reviewEscalated\" state",
           "type": "integer"
         },
         "processedCount": {
-          "description": "Number of record subjects currently in \"reviewNone\" or \"reviewClosed\" state",
+          "description": "Number of item currently in \"reviewNone\" or \"reviewClosed\" state",
           "type": "integer"
         },
         "takendownCount": {
-          "description": "Number of record subjects currently taken down",
-          "type": "integer"
-        },
-        "labeledCount": {
-          "description": "Number of record subjects currently having at least one label applied",
+          "description": "Number of item currently taken down",
           "type": "integer"
         }
       }

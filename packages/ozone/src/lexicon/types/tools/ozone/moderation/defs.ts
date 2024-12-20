@@ -155,12 +155,14 @@ export function validateSubjectStatusView(v: unknown): ValidationResult {
 
 /** Statistics about a particular account subject on the labeller */
 export interface AccountStats {
+  /** Total number of reports on the account */
+  reportCount?: number
+  /** Total number of appeals against a moderation action on the account */
+  appealCount?: number
   /** Number of times the account was suspended */
-  suspendedCount?: number
+  suspendCount?: number
   /** Number of times the account was taken down */
   takedownCount?: number
-  /** List of labels currently applied on the account */
-  labels?: string[]
   [k: string]: unknown
 }
 
@@ -176,18 +178,24 @@ export function validateAccountStats(v: unknown): ValidationResult {
   return lexicons.validate('tools.ozone.moderation.defs#accountStats', v)
 }
 
-/** Statistics about a set of record subjects on the labeller */
+/** Statistics about a set of record subject items on the labeller */
 export interface RecordsStats {
-  /** Total number of record subjects in the set */
+  /** Cumulative sum of the number of reports on the items in the set */
+  totalReports?: number
+  /** Number of items that were reported at least once */
+  reportedCount?: number
+  /** Number of items that were escalated at least once */
+  escalatedCount?: number
+  /** Number of items that were appealed at least once */
+  appealedCount?: number
+  /** Total number of item in the set */
   subjectCount?: number
-  /** Number of record subjects currently in "reviewOpen" or "reviewEscalated" state */
+  /** Number of item currently in "reviewOpen" or "reviewEscalated" state */
   pendingCount?: number
-  /** Number of record subjects currently in "reviewNone" or "reviewClosed" state */
+  /** Number of item currently in "reviewNone" or "reviewClosed" state */
   processedCount?: number
-  /** Number of record subjects currently taken down */
+  /** Number of item currently taken down */
   takendownCount?: number
-  /** Number of record subjects currently having at least one label applied */
-  labeledCount?: number
   [k: string]: unknown
 }
 
