@@ -318,6 +318,7 @@ export class AccountManager
       if (!user) {
         throw new AuthRequiredError('Invalid identifier or password')
       }
+      const isSoftDeleted = softDeleted(user)
 
       let appPassword: password.AppPassDescript | null = null
       const validAccountPass = await this.verifyAccountPassword(
@@ -325,13 +326,17 @@ export class AccountManager
         password,
       )
       if (!validAccountPass) {
+        // takendown/suspended accounts cannot login with app password
+        if (isSoftDeleted) {
+          throw new AuthRequiredError('Invalid identifier or password')
+        }
         appPassword = await this.verifyAppPassword(user.did, password)
         if (appPassword === null) {
           throw new AuthRequiredError('Invalid identifier or password')
         }
       }
 
-      return { user, appPassword, isSoftDeleted: softDeleted(user) }
+      return { user, appPassword, isSoftDeleted }
     } finally {
       // Mitigate timing attacks
       await wait(350 - (Date.now() - start))
