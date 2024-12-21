@@ -2,9 +2,11 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
+import { lexicons } from '../../../../lexicons'
+import { $Type, is$typed } from '../../../../util'
+
+const id = 'app.bsky.feed.postgate'
 
 export interface Record {
   createdAt: string
@@ -16,17 +18,14 @@ export interface Record {
   [k: string]: unknown
 }
 
-export function isRecord(v: unknown): v is Record {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    (v.$type === 'app.bsky.feed.postgate#main' ||
-      v.$type === 'app.bsky.feed.postgate')
-  )
+export function isRecord(
+  v: unknown,
+): v is Record & { $type: $Type<'app.bsky.feed.postgate', 'main'> } {
+  return is$typed(v, id, 'main')
 }
 
-export function validateRecord(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.feed.postgate#main', v)
+export function validateRecord(v: unknown) {
+  return lexicons.validate(`${id}#main`, v) as ValidationResult<Record>
 }
 
 /** Disables embedding of this post. */
@@ -34,14 +33,15 @@ export interface DisableRule {
   [k: string]: unknown
 }
 
-export function isDisableRule(v: unknown): v is DisableRule {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.feed.postgate#disableRule'
-  )
+export function isDisableRule(v: unknown): v is DisableRule & {
+  $type: $Type<'app.bsky.feed.postgate', 'disableRule'>
+} {
+  return is$typed(v, id, 'disableRule')
 }
 
-export function validateDisableRule(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.feed.postgate#disableRule', v)
+export function validateDisableRule(v: unknown) {
+  return lexicons.validate(
+    `${id}#disableRule`,
+    v,
+  ) as ValidationResult<DisableRule>
 }

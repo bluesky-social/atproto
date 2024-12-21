@@ -2,9 +2,11 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
+import { lexicons } from '../../../../lexicons'
+import { $Type, is$typed } from '../../../../util'
+
+const id = 'tools.ozone.signature.defs'
 
 export interface SigDetail {
   property: string
@@ -12,14 +14,12 @@ export interface SigDetail {
   [k: string]: unknown
 }
 
-export function isSigDetail(v: unknown): v is SigDetail {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'tools.ozone.signature.defs#sigDetail'
-  )
+export function isSigDetail(v: unknown): v is SigDetail & {
+  $type: $Type<'tools.ozone.signature.defs', 'sigDetail'>
+} {
+  return is$typed(v, id, 'sigDetail')
 }
 
-export function validateSigDetail(v: unknown): ValidationResult {
-  return lexicons.validate('tools.ozone.signature.defs#sigDetail', v)
+export function validateSigDetail(v: unknown) {
+  return lexicons.validate(`${id}#sigDetail`, v) as ValidationResult<SigDetail>
 }

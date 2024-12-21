@@ -3,10 +3,12 @@
  */
 import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
+import { lexicons } from '../../../../lexicons'
+import { $Type, is$typed } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
+
+const id = 'com.atproto.server.describeServer'
 
 export interface QueryParams {}
 
@@ -56,16 +58,14 @@ export interface Links {
   [k: string]: unknown
 }
 
-export function isLinks(v: unknown): v is Links {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'com.atproto.server.describeServer#links'
-  )
+export function isLinks(
+  v: unknown,
+): v is Links & { $type: $Type<'com.atproto.server.describeServer', 'links'> } {
+  return is$typed(v, id, 'links')
 }
 
-export function validateLinks(v: unknown): ValidationResult {
-  return lexicons.validate('com.atproto.server.describeServer#links', v)
+export function validateLinks(v: unknown) {
+  return lexicons.validate(`${id}#links`, v) as ValidationResult<Links>
 }
 
 export interface Contact {
@@ -73,14 +73,12 @@ export interface Contact {
   [k: string]: unknown
 }
 
-export function isContact(v: unknown): v is Contact {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'com.atproto.server.describeServer#contact'
-  )
+export function isContact(v: unknown): v is Contact & {
+  $type: $Type<'com.atproto.server.describeServer', 'contact'>
+} {
+  return is$typed(v, id, 'contact')
 }
 
-export function validateContact(v: unknown): ValidationResult {
-  return lexicons.validate('com.atproto.server.describeServer#contact', v)
+export function validateContact(v: unknown) {
+  return lexicons.validate(`${id}#contact`, v) as ValidationResult<Contact>
 }

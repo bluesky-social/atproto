@@ -3,10 +3,12 @@
  */
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
+import { $Type, is$typed } from '../../../../util'
+import { lexicons } from '../../../../lexicons'
 import * as ComAtprotoRepoDefs from './defs'
+
+const id = 'com.atproto.repo.applyWrites'
 
 export interface QueryParams {}
 
@@ -62,16 +64,14 @@ export interface Create {
   [k: string]: unknown
 }
 
-export function isCreate(v: unknown): v is Create {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'com.atproto.repo.applyWrites#create'
-  )
+export function isCreate(
+  v: unknown,
+): v is Create & { $type: $Type<'com.atproto.repo.applyWrites', 'create'> } {
+  return is$typed(v, id, 'create')
 }
 
-export function validateCreate(v: unknown): ValidationResult {
-  return lexicons.validate('com.atproto.repo.applyWrites#create', v)
+export function validateCreate(v: unknown) {
+  return lexicons.validate(`${id}#create`, v) as ValidationResult<Create>
 }
 
 /** Operation which updates an existing record. */
@@ -82,16 +82,14 @@ export interface Update {
   [k: string]: unknown
 }
 
-export function isUpdate(v: unknown): v is Update {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'com.atproto.repo.applyWrites#update'
-  )
+export function isUpdate(
+  v: unknown,
+): v is Update & { $type: $Type<'com.atproto.repo.applyWrites', 'update'> } {
+  return is$typed(v, id, 'update')
 }
 
-export function validateUpdate(v: unknown): ValidationResult {
-  return lexicons.validate('com.atproto.repo.applyWrites#update', v)
+export function validateUpdate(v: unknown) {
+  return lexicons.validate(`${id}#update`, v) as ValidationResult<Update>
 }
 
 /** Operation which deletes an existing record. */
@@ -101,16 +99,14 @@ export interface Delete {
   [k: string]: unknown
 }
 
-export function isDelete(v: unknown): v is Delete {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'com.atproto.repo.applyWrites#delete'
-  )
+export function isDelete(
+  v: unknown,
+): v is Delete & { $type: $Type<'com.atproto.repo.applyWrites', 'delete'> } {
+  return is$typed(v, id, 'delete')
 }
 
-export function validateDelete(v: unknown): ValidationResult {
-  return lexicons.validate('com.atproto.repo.applyWrites#delete', v)
+export function validateDelete(v: unknown) {
+  return lexicons.validate(`${id}#delete`, v) as ValidationResult<Delete>
 }
 
 export interface CreateResult {
@@ -120,16 +116,17 @@ export interface CreateResult {
   [k: string]: unknown
 }
 
-export function isCreateResult(v: unknown): v is CreateResult {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'com.atproto.repo.applyWrites#createResult'
-  )
+export function isCreateResult(v: unknown): v is CreateResult & {
+  $type: $Type<'com.atproto.repo.applyWrites', 'createResult'>
+} {
+  return is$typed(v, id, 'createResult')
 }
 
-export function validateCreateResult(v: unknown): ValidationResult {
-  return lexicons.validate('com.atproto.repo.applyWrites#createResult', v)
+export function validateCreateResult(v: unknown) {
+  return lexicons.validate(
+    `${id}#createResult`,
+    v,
+  ) as ValidationResult<CreateResult>
 }
 
 export interface UpdateResult {
@@ -139,30 +136,32 @@ export interface UpdateResult {
   [k: string]: unknown
 }
 
-export function isUpdateResult(v: unknown): v is UpdateResult {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'com.atproto.repo.applyWrites#updateResult'
-  )
+export function isUpdateResult(v: unknown): v is UpdateResult & {
+  $type: $Type<'com.atproto.repo.applyWrites', 'updateResult'>
+} {
+  return is$typed(v, id, 'updateResult')
 }
 
-export function validateUpdateResult(v: unknown): ValidationResult {
-  return lexicons.validate('com.atproto.repo.applyWrites#updateResult', v)
+export function validateUpdateResult(v: unknown) {
+  return lexicons.validate(
+    `${id}#updateResult`,
+    v,
+  ) as ValidationResult<UpdateResult>
 }
 
 export interface DeleteResult {
   [k: string]: unknown
 }
 
-export function isDeleteResult(v: unknown): v is DeleteResult {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'com.atproto.repo.applyWrites#deleteResult'
-  )
+export function isDeleteResult(v: unknown): v is DeleteResult & {
+  $type: $Type<'com.atproto.repo.applyWrites', 'deleteResult'>
+} {
+  return is$typed(v, id, 'deleteResult')
 }
 
-export function validateDeleteResult(v: unknown): ValidationResult {
-  return lexicons.validate('com.atproto.repo.applyWrites#deleteResult', v)
+export function validateDeleteResult(v: unknown) {
+  return lexicons.validate(
+    `${id}#deleteResult`,
+    v,
+  ) as ValidationResult<DeleteResult>
 }

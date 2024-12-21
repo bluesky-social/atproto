@@ -2,9 +2,11 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
+import { lexicons } from '../../../../lexicons'
+import { $Type, is$typed } from '../../../../util'
+
+const id = 'app.bsky.graph.listitem'
 
 export interface Record {
   /** The account which is included on the list. */
@@ -15,15 +17,12 @@ export interface Record {
   [k: string]: unknown
 }
 
-export function isRecord(v: unknown): v is Record {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    (v.$type === 'app.bsky.graph.listitem#main' ||
-      v.$type === 'app.bsky.graph.listitem')
-  )
+export function isRecord(
+  v: unknown,
+): v is Record & { $type: $Type<'app.bsky.graph.listitem', 'main'> } {
+  return is$typed(v, id, 'main')
 }
 
-export function validateRecord(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.graph.listitem#main', v)
+export function validateRecord(v: unknown) {
+  return lexicons.validate(`${id}#main`, v) as ValidationResult<Record>
 }
