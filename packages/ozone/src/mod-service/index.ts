@@ -833,6 +833,7 @@ export class ModerationService {
   async getSubjectStatuses({
     queueCount,
     queueIndex,
+    queueSeed = '',
     includeAllUserRecords,
     cursor,
     limit = 50,
@@ -862,6 +863,7 @@ export class ModerationService {
   }: {
     queueCount?: number
     queueIndex?: number
+    queueSeed?: string
     includeAllUserRecords?: boolean
     cursor?: string
     limit?: number
@@ -922,7 +924,9 @@ export class ModerationService {
       queueIndex < queueCount
     ) {
       builder = builder.where(
-        sql`ABS(HASHTEXT(did)) % ${queueCount}`,
+        queueSeed
+          ? sql`ABS(HASHTEXT(${queueSeed} || did)) % ${queueCount}`
+          : sql`ABS(HASHTEXT(did)) % ${queueCount}`,
         '=',
         queueIndex,
       )

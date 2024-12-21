@@ -9,10 +9,12 @@ import { CID } from 'multiformats/cid'
 import * as ToolsOzoneModerationDefs from './defs'
 
 export interface QueryParams {
-  /** The number of subjects to return from the queue. If not specified, all subjects are returned. */
+  /** Number of queues being used by moderators. Subjects will be split among all queues. */
   queueCount?: number
-  /** The index of the first subject to return from the queue. If not specified, the first subject is returned. */
+  /** Index of the queue to fetch subjects from. Works only when queueCount value is specified. */
   queueIndex?: number
+  /** A seeder to shuffle/balance the queue items. */
+  queueSeed?: string
   /** All subjects, or subjects from given 'collections' param, belonging to the account specified in the 'subject' param will be returned. */
   includeAllUserRecords?: boolean
   /** The subject to get the status for. */

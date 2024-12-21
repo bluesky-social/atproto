@@ -12380,12 +12380,16 @@ export const schemaDict = {
             queueCount: {
               type: 'integer',
               description:
-                'The number of subjects to return from the queue. If not specified, all subjects are returned.',
+                'Number of queues being used by moderators. Subjects will be split among all queues.',
             },
             queueIndex: {
               type: 'integer',
               description:
-                'The index of the first subject to return from the queue. If not specified, the first subject is returned.',
+                'Index of the queue to fetch subjects from. Works only when queueCount value is specified.',
+            },
+            queueSeed: {
+              type: 'string',
+              description: 'A seeder to shuffle/balance the queue items.',
             },
             includeAllUserRecords: {
               type: 'boolean',
