@@ -71,7 +71,7 @@ describe('detectFacets', () => {
     ],
     [['@full123-chars.test', 'did:fake:full123-chars.test']],
     [['not@right']],
-    [['@handle.com', 'did:fake:handle.com'], ['!@#$chars']],
+    [['@handle.com', 'did:fake:handle.com'], ['!@'], ['#$chars', '$chars']],
     [
       ['@handle.com', 'did:fake:handle.com'],
       ['\n'],
@@ -344,6 +344,45 @@ describe('detectFacets', () => {
         [{ byteStart: 36, byteEnd: 49 }],
       ],
       ['no match 1?: #1?', [], []],
+      [
+        'match #tag1 #tag2 /#tag3 "#tag4 (#tag5 -#tag6 _#tag7 !#tag8 ?#tag9 @#tag10 ;#tag11 ,#tag12 .#tag13 [#tag14 &#tag15 &#tag16',
+        [
+          'tag1',
+          'tag2',
+          'tag3',
+          'tag4',
+          'tag5',
+          'tag6',
+          'tag7',
+          'tag8',
+          'tag9',
+          'tag10',
+          'tag11',
+          'tag12',
+          'tag13',
+          'tag14',
+          'tag15',
+          'tag16',
+        ],
+        [
+          { byteStart: 6, byteEnd: 11 },
+          { byteStart: 12, byteEnd: 17 },
+          { byteStart: 19, byteEnd: 24 },
+          { byteStart: 26, byteEnd: 31 },
+          { byteStart: 33, byteEnd: 38 },
+          { byteStart: 40, byteEnd: 45 },
+          { byteStart: 47, byteEnd: 52 },
+          { byteStart: 54, byteEnd: 59 },
+          { byteStart: 61, byteEnd: 66 },
+          { byteStart: 68, byteEnd: 74 },
+          { byteStart: 76, byteEnd: 82 },
+          { byteStart: 84, byteEnd: 90 },
+          { byteStart: 92, byteEnd: 98 },
+          { byteStart: 100, byteEnd: 106 },
+          { byteStart: 108, byteEnd: 114 },
+          { byteStart: 116, byteEnd: 122 },
+        ],
+      ],
     ]
 
     it.each(inputs)('%s', async (input, tags, indices) => {
@@ -379,6 +418,9 @@ function segmentToOutput(segment: RichTextSegment): string[] {
         }
         if (f.uri) {
           return String(f.uri)
+        }
+        if (f.tag) {
+          return String(f.tag)
         }
         return undefined
       })?.[0] || '',
