@@ -12382,6 +12382,20 @@ export const schemaDict = {
         parameters: {
           type: 'params',
           properties: {
+            queueCount: {
+              type: 'integer',
+              description:
+                'Number of queues being used by moderators. Subjects will be split among all queues.',
+            },
+            queueIndex: {
+              type: 'integer',
+              description:
+                'Index of the queue to fetch subjects from. Works only when queueCount value is specified.',
+            },
+            queueSeed: {
+              type: 'string',
+              description: 'A seeder to shuffle/balance the queue items.',
+            },
             includeAllUserRecords: {
               type: 'boolean',
               description:
