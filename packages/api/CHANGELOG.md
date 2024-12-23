@@ -1,5 +1,13 @@
 # @atproto/api
 
+## 0.13.23
+
+### Patch Changes
+
+- [#3251](https://github.com/bluesky-social/atproto/pull/3251) [`6d308b857`](https://github.com/bluesky-social/atproto/commit/6d308b857ba2a514ee3c75ebdef7225e298ed7d7) Thanks [@foysalit](https://github.com/foysalit)! - Allow createSession to request takendown account scope
+
+- [#3280](https://github.com/bluesky-social/atproto/pull/3280) [`9ea2cce9a`](https://github.com/bluesky-social/atproto/commit/9ea2cce9a4c0a08994a8cb5abc81dc4bc2221d0c) Thanks [@foysalit](https://github.com/foysalit)! - Apply ozone queue splitting at the database query level
+
 ## 0.13.22
 
 ### Patch Changes
