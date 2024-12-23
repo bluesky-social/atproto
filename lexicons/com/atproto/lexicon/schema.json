@@ -1,0 +1,35 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.lexicon.schema",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "Lexicon schema for when schemas themselves are represented as atproto records. Note that the full schema language is not defined in Lexicon. This schema is protocol-layer, and designed to be flexible and forwards-compatible, and does not follow normal schema best practices.",
+      "key": "nsid",
+      "record": {
+        "type": "object",
+        "required": ["lexicon"],
+        "properties": {
+          "lexicon": {
+            "type": "integer",
+            "description": "Indicates the 'version' of the Lexicon language. Must be '1' for the current atproto/Lexicon schema system."
+          },
+          "id": {
+            "type": "string",
+            "format": "nsid",
+            "description": "The NSID of this overall set of Lexicon definitions. Must match the record key of this record. Must not include a fragment (separated by a #), even '#main'."
+          },
+          "description": {
+            "type": "string",
+            "description": "Short top-level description of the Lexicon (distinct from descriptions of any sub-fields)"
+          },
+          "defs": {
+            "type": "array",
+            "items": { "type": "unknown" },
+            "description": "The Lexicon schema definitions themselves, with structure defined in the atproto Lexicon specifications."
+          }
+        }
+      }
+    }
+  }
+}
