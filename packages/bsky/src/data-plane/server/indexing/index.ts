@@ -18,6 +18,7 @@ import * as Post from './plugins/post'
 import * as Threadgate from './plugins/thread-gate'
 import * as Postgate from './plugins/post-gate'
 import * as Like from './plugins/like'
+import * as PollAnswer from './plugins/poll-answer'
 import * as Repost from './plugins/repost'
 import * as Follow from './plugins/follow'
 import * as Profile from './plugins/profile'
@@ -40,6 +41,7 @@ export class IndexingService {
     threadGate: Threadgate.PluginType
     postGate: Postgate.PluginType
     like: Like.PluginType
+    pollAnswer: PollAnswer.PluginType
     repost: Repost.PluginType
     follow: Follow.PluginType
     profile: Profile.PluginType
@@ -63,6 +65,7 @@ export class IndexingService {
       threadGate: Threadgate.makePlugin(this.db, this.background),
       postGate: Postgate.makePlugin(this.db, this.background),
       like: Like.makePlugin(this.db, this.background),
+      pollAnswer: PollAnswer.makePlugin(this.db, this.background),
       repost: Repost.makePlugin(this.db, this.background),
       follow: Follow.makePlugin(this.db, this.background),
       profile: Profile.makePlugin(this.db, this.background),
@@ -304,6 +307,7 @@ export class IndexingService {
     await this.db.db.deleteFrom('follow').where('creator', '=', did).execute()
     await this.db.db.deleteFrom('repost').where('creator', '=', did).execute()
     await this.db.db.deleteFrom('like').where('creator', '=', did).execute()
+    await this.db.db.deleteFrom('poll_answer').where('creator', '=', did).execute()
     await this.db.db
       .deleteFrom('feed_generator')
       .where('creator', '=', did)

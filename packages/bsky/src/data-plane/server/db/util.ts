@@ -30,6 +30,10 @@ export const softDeleted = (actorOrRecord: { takedownRef: string | null }) => {
 
 export const countAll = sql<number>`count(*)`
 
+export const bitMask = (db: DatabaseSchema, col: string, mask: number) => {
+  return sql<number>`(${db.dynamic.ref(col)} & ${mask}) = ${mask}`
+}
+
 // For use with doUpdateSet()
 export const excluded = <T>(db: DatabaseSchema, col) => {
   return sql<T>`${db.dynamic.ref(`excluded.${col}`)}`

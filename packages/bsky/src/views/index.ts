@@ -621,6 +621,8 @@ export class Views {
       repostCount: aggs?.reposts ?? 0,
       likeCount: aggs?.likes ?? 0,
       quoteCount: aggs?.quotes ?? 0,
+      pollAnswerCount: aggs?.pollAnswerCount ?? 0,
+      pollAnswers: aggs?.pollAnswers ?? [],
       indexedAt: this.indexedAt(post).toISOString(),
       viewer: viewer
         ? {
@@ -1011,6 +1013,8 @@ export class Views {
       replyCount: postView.replyCount,
       repostCount: postView.repostCount,
       quoteCount: postView.quoteCount,
+      pollAnswerCount: postView.pollAnswerCount,
+      pollAnswers: postView.pollAnswers,
       indexedAt: postView.indexedAt,
       embeds: depth > 1 ? undefined : postView.embed ? [postView.embed] : [],
     }
