@@ -14,8 +14,8 @@
           "createdAt": { "type": "string", "format": "datetime" },
           "answer": {
             "type": "integer",
-            "minimum": 0,
-            "maximum": 3,
+            "minimum": 1,
+            "maximum": 15,
             "description": "The index of the option selected by the user."
           }
         }
