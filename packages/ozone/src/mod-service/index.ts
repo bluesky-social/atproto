@@ -919,8 +919,9 @@ export class ModerationService {
     if (
       !subject &&
       queueCount &&
-      queueIndex &&
-      queueCount >= 0 &&
+      queueCount > 0 &&
+      queueIndex !== undefined &&
+      queueIndex >= 0 &&
       queueIndex < queueCount
     ) {
       builder = builder.where(
