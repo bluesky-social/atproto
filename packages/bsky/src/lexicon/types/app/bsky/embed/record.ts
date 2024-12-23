@@ -15,6 +15,7 @@ import * as AppBskyEmbedImages from './images'
 import * as AppBskyEmbedVideo from './video'
 import * as AppBskyEmbedExternal from './external'
 import * as AppBskyEmbedRecordWithMedia from './recordWithMedia'
+import * as AppBskyEmbedPoll from './poll'
 
 export interface Main {
   record: ComAtprotoRepoStrongRef.Main
@@ -75,6 +76,7 @@ export interface ViewRecord {
     | AppBskyEmbedExternal.View
     | View
     | AppBskyEmbedRecordWithMedia.View
+    | AppBskyEmbedPoll.View
     | { $type: string; [k: string]: unknown }
   )[]
   indexedAt: string
