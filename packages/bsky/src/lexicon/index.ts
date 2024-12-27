@@ -2177,13 +2177,13 @@ export class ChatBskyModerationNS {
 
 type SharedRateLimitOpts<T> = {
   name: string
-  calcKey?: (ctx: T) => string | null
+  calcKey?: (ctx: T) => string
   calcPoints?: (ctx: T) => number
 }
 type RouteRateLimitOpts<T> = {
   durationMs: number
   points: number
-  calcKey?: (ctx: T) => string | null
+  calcKey?: (ctx: T) => string
   calcPoints?: (ctx: T) => number
 }
 type HandlerOpts = { blobLimit?: number }

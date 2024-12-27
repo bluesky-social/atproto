@@ -12515,9 +12515,9 @@ export const schemaDict = {
             },
             tags: {
               type: 'array',
+              maxLength: 25,
               items: {
                 type: 'string',
-                maxLength: 25,
                 description:
                   'Items in this array are applied with OR filters. To apply AND filter, put all tags in the same string and separate using && characters',
               },
