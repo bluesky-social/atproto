@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.13.24
+
+### Patch Changes
+
+- [#3294](https://github.com/bluesky-social/atproto/pull/3294) [`d90d999de`](https://github.com/bluesky-social/atproto/commit/d90d999defda01a9b04dbce129e254990062c283) Thanks [@foysalit](https://github.com/foysalit)! - Limit tags filter to 25 max and remove 25 char limit for tag item
+
 ## 0.13.23
 
 ### Patch Changes
