@@ -105,6 +105,7 @@ Object {
 exports[`bsky views with mutes from mute lists flags mutes in threads 1`] = `
 Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
+  "isLikedByRootAuthor": false,
   "post": Object {
     "author": Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
@@ -157,6 +158,7 @@ Object {
   "replies": Array [
     Object {
       "$type": "app.bsky.feed.defs#threadViewPost",
+      "isLikedByRootAuthor": false,
       "post": Object {
         "author": Object {
           "did": "user(2)",
@@ -213,6 +215,7 @@ Object {
     },
     Object {
       "$type": "app.bsky.feed.defs#threadViewPost",
+      "isLikedByRootAuthor": false,
       "post": Object {
         "author": Object {
           "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(1)@jpeg",
