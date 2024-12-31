@@ -341,29 +341,14 @@ export class Hydrator {
     state: HydrationState = {},
   ): Promise<HydrationState> {
     const uris = refs.map((ref) => ref.uri)
+
+    // layer 0: the posts in the thread
     const postsLayer0 = await this.feed.getPosts(
       uris,
       ctx.includeTakedowns,
       state.posts,
     )
-    // first level embeds plus thread roots we haven't fetched yet
-    const urisLayer1 = nestedRecordUrisFromPosts(postsLayer0)
     const additionalRootUris = rootUrisFromPosts(postsLayer0) // supports computing threadgates
-    const urisLayer1ByCollection = urisByCollection(urisLayer1)
-    const embedPostUrisLayer1 =
-      urisLayer1ByCollection.get(ids.AppBskyFeedPost) ?? []
-    const postsLayer1 = await this.feed.getPosts(
-      [...embedPostUrisLayer1, ...additionalRootUris],
-      ctx.includeTakedowns,
-    )
-    // second level embeds, ignoring any additional root uris we mixed-in to the previous layer
-    const urisLayer2 = nestedRecordUrisFromPosts(
-      postsLayer1,
-      embedPostUrisLayer1,
-    )
-    const urisLayer2ByCollection = urisByCollection(urisLayer2)
-    const embedPostUrisLayer2 =
-      urisLayer2ByCollection.get(ids.AppBskyFeedPost) ?? []
     const threadRootUris = new Set<string>()
     for (const [uri, post] of postsLayer0) {
       if (post) {
@@ -385,6 +370,26 @@ export class Hydrator {
         postUrisWithThreadgates.add(uri)
       }
     }
+
+    // layer 1: first level embeds plus thread roots we haven't fetched yet
+    const urisLayer1 = nestedRecordUrisFromPosts(postsLayer0)
+    const urisLayer1ByCollection = urisByCollection(urisLayer1)
+    const embedPostUrisLayer1 =
+      urisLayer1ByCollection.get(ids.AppBskyFeedPost) ?? []
+    const postsLayer1 = await this.feed.getPosts(
+      [...embedPostUrisLayer1, ...additionalRootUris],
+      ctx.includeTakedowns,
+    )
+
+    // layer 2: second level embeds, ignoring any additional root uris we mixed-in to the previous layer
+    const urisLayer2 = nestedRecordUrisFromPosts(
+      postsLayer1,
+      embedPostUrisLayer1,
+    )
+    const urisLayer2ByCollection = urisByCollection(urisLayer2)
+    const embedPostUrisLayer2 =
+      urisLayer2ByCollection.get(ids.AppBskyFeedPost) ?? []
+
     const [postsLayer2, threadgates] = await Promise.all([
       this.feed.getPosts(embedPostUrisLayer2, ctx.includeTakedowns),
       this.feed.getThreadgatesForPosts([...postUrisWithThreadgates.values()]),
