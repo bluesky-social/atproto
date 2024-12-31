@@ -2638,13 +2638,13 @@ export class ToolsOzoneTeamNS {
 
 type SharedRateLimitOpts<T> = {
   name: string
-  calcKey?: (ctx: T) => string
+  calcKey?: (ctx: T) => string | null
   calcPoints?: (ctx: T) => number
 }
 type RouteRateLimitOpts<T> = {
   durationMs: number
   points: number
-  calcKey?: (ctx: T) => string
+  calcKey?: (ctx: T) => string | null
   calcPoints?: (ctx: T) => number
 }
 type HandlerOpts = { blobLimit?: number }
