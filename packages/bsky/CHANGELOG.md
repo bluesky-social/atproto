@@ -1,5 +1,12 @@
 # @atproto/bsky
 
+## 0.0.102
+
+### Patch Changes
+
+- Updated dependencies [[`d90d999de`](https://github.com/bluesky-social/atproto/commit/d90d999defda01a9b04dbce129e254990062c283)]:
+  - @atproto/api@0.13.24
+
 ## 0.0.101
 
 ### Patch Changes
