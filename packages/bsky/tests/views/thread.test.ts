@@ -27,6 +27,10 @@ describe('pds thread views', () => {
     alice = sc.dids.alice
     bob = sc.dids.bob
     carol = sc.dids.carol
+
+    await sc.like(alice, sc.replies[alice][0].ref)
+    await sc.like(alice, sc.replies[bob][0].ref)
+    await sc.like(alice, sc.replies[carol][0].ref)
   })
 
   beforeAll(async () => {

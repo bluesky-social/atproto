@@ -58,12 +58,14 @@ import {
   Threadgates,
   Postgates,
   FeedItem,
+  ThreadRootAuthorStates,
 } from './feed'
 import { ParsedLabelers } from '../util'
 
 export class HydrateCtx {
   labelers = this.vals.labelers
   viewer = this.vals.viewer !== null ? serviceRefToDid(this.vals.viewer) : null
+  includeThreadRootAuthorState = this.vals.includeThreadRootAuthorState
   includeTakedowns = this.vals.includeTakedowns
   includeActorTakedowns = this.vals.includeActorTakedowns
   include3pBlocks = this.vals.include3pBlocks
@@ -76,6 +78,7 @@ export class HydrateCtx {
 export type HydrateCtxVals = {
   labelers: ParsedLabelers
   viewer: string | null
+  includeThreadRootAuthorState?: boolean
   includeTakedowns?: boolean
   includeActorTakedowns?: boolean
   include3pBlocks?: boolean
@@ -89,6 +92,7 @@ export type HydrationState = {
   posts?: Posts
   postAggs?: PostAggs
   postViewers?: PostViewerStates
+  threadRootAuthors?: ThreadRootAuthorStates
   postBlocks?: PostBlocks
   reposts?: Reposts
   follows?: Follows
@@ -434,6 +438,7 @@ export class Hydrator {
     const [
       postAggs,
       postViewers,
+      threadRootAuthors,
       labels,
       postBlocks,
       profileState,
@@ -446,6 +451,9 @@ export class Hydrator {
       this.feed.getPostAggregates(allRefs),
       ctx.viewer
         ? this.feed.getPostViewerStates(threadRefs, ctx.viewer)
+        : undefined,
+      ctx.includeThreadRootAuthorState
+        ? this.feed.getThreadRootAuthorStates(threadRefs)
         : undefined,
       this.label.getLabelsForSubjects(allPostUris, ctx.labelers),
       this.hydratePostBlocks(posts),
@@ -470,6 +478,7 @@ export class Hydrator {
         posts,
         postAggs,
         postViewers,
+        threadRootAuthors,
         postBlocks,
         labels,
         threadgates,
@@ -1035,6 +1044,7 @@ export class Hydrator {
     return new HydrateCtx({
       labelers: availableLabelers,
       viewer: vals.viewer,
+      includeThreadRootAuthorState: vals.includeThreadRootAuthorState,
       includeTakedowns: vals.includeTakedowns,
       include3pBlocks: vals.include3pBlocks,
     })
@@ -1173,6 +1183,10 @@ export const mergeStates = (
     posts: mergeMaps(stateA.posts, stateB.posts),
     postAggs: mergeMaps(stateA.postAggs, stateB.postAggs),
     postViewers: mergeMaps(stateA.postViewers, stateB.postViewers),
+    threadRootAuthors: mergeMaps(
+      stateA.threadRootAuthors,
+      stateB.threadRootAuthors,
+    ),
     postBlocks: mergeMaps(stateA.postBlocks, stateB.postBlocks),
     reposts: mergeMaps(stateA.reposts, stateB.reposts),
     follows: mergeMaps(stateA.follows, stateB.follows),

@@ -36,6 +36,7 @@ export default function (server: Server, ctx: AppContext) {
       const hydrateCtx = await ctx.hydrator.createContext({
         labelers,
         viewer,
+        includeThreadRootAuthorState: true,
         includeTakedowns,
         include3pBlocks,
       })
