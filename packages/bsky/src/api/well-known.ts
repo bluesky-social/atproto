@@ -28,8 +28,8 @@ export const createRouter = (ctx: AppContext): express.Router => {
             serviceEndpoint,
           },
           {
-            id: '#bsky_app_view',
-            type: 'BskyAppViewService',
+            id: '#bsky_appview',
+            type: 'BskyAppView',
             serviceEndpoint,
           },
         ],
