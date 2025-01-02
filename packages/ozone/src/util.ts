@@ -83,17 +83,3 @@ export const formatLabelerHeader = (parsed: ParsedLabelers): string => {
   )
   return parts.join(',')
 }
-
-export async function allFulfilled(
-  promises: Promise<unknown>[],
-): Promise<void> {
-  const results = await Promise.allSettled(promises)
-
-  const errors = results
-    .filter((result) => result.status === 'rejected')
-    .map((result) => result.reason)
-
-  if (errors.length === 1) throw errors[0]
-  if (errors.length > 1)
-    throw new AggregateError(errors, 'Multiple errors uploading blobs')
-}

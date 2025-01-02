@@ -2,6 +2,7 @@ import {
   createDecoders,
   getPdsEndpoint,
   VerifyCidTransform,
+  allFulfilled,
 } from '@atproto/common'
 import { IdResolver } from '@atproto/identity'
 import { ResponseType, XRPCError } from '@atproto/xrpc'
@@ -12,7 +13,7 @@ import * as undici from 'undici'
 
 import { BlobDivertConfig } from '../config'
 import Database from '../db'
-import { allFulfilled, retryHttp } from '../util'
+import { retryHttp } from '../util'
 
 export class BlobDiverter {
   serviceConfig: BlobDivertConfig
@@ -124,17 +125,16 @@ export class BlobDiverter {
     const pds = getPdsEndpoint(didDoc)
     if (!pds) throw new Error('Error resolving PDS')
 
-    // attempt to download and upload within the same retry block since the blob stream is not reusable
-    try {
-      await allFulfilled(
-        subjectBlobCids.map((cid) =>
-          retryHttp(async () => {
-            const blob = await this.getBlob({ pds, cid, did })
-            return this.uploadBlob(blob, { did, uri })
-          }),
-        ),
-      )
-    } catch (err) {
+    await allFulfilled(
+      subjectBlobCids.map((cid) =>
+        retryHttp(async () => {
+          // attempt to download and upload within the same retry block since
+          // the blob stream is not reusable
+          const blob = await this.getBlob({ pds, cid, did })
+          return this.uploadBlob(blob, { did, uri })
+        }),
+      ),
+    ).catch((err) => {
       throw new XRPCError(
         ResponseType.UpstreamFailure,
         undefined,
@@ -142,7 +142,7 @@ export class BlobDiverter {
         undefined,
         { cause: err },
       )
-    }
+    })
   }
 }
 
