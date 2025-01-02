@@ -538,7 +538,6 @@ exports[`indexing indexes posts. 1`] = `
 Object {
   "thread": Object {
     "$type": "app.bsky.feed.defs#threadViewPost",
-    "isLikedByRootAuthor": false,
     "post": Object {
       "author": Object {
         "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
@@ -600,6 +599,7 @@ Object {
       },
     },
     "replies": Array [],
+    "rootAuthor": Object {},
   },
 }
 `;
@@ -608,7 +608,6 @@ exports[`indexing indexes posts. 2`] = `
 Object {
   "thread": Object {
     "$type": "app.bsky.feed.defs#threadViewPost",
-    "isLikedByRootAuthor": false,
     "post": Object {
       "author": Object {
         "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
@@ -670,6 +669,7 @@ Object {
       },
     },
     "replies": Array [],
+    "rootAuthor": Object {},
   },
 }
 `;

@@ -4,7 +4,6 @@ exports[`pds views with blocking blocks record embeds 1`] = `
 Object {
   "thread": Object {
     "$type": "app.bsky.feed.defs#threadViewPost",
-    "isLikedByRootAuthor": false,
     "post": Object {
       "author": Object {
         "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
@@ -138,6 +137,7 @@ Object {
         "threadMuted": false,
       },
     },
+    "rootAuthor": Object {},
   },
 }
 `;
@@ -146,7 +146,6 @@ exports[`pds views with blocking blocks thread parent 1`] = `
 Object {
   "thread": Object {
     "$type": "app.bsky.feed.defs#threadViewPost",
-    "isLikedByRootAuthor": false,
     "parent": Object {
       "$type": "app.bsky.feed.defs#blockedPost",
       "author": Object {
@@ -219,7 +218,6 @@ Object {
     "replies": Array [
       Object {
         "$type": "app.bsky.feed.defs#threadViewPost",
-        "isLikedByRootAuthor": false,
         "post": Object {
           "author": Object {
             "did": "user(3)",
@@ -258,8 +256,10 @@ Object {
             "threadMuted": false,
           },
         },
+        "rootAuthor": Object {},
       },
     ],
+    "rootAuthor": Object {},
   },
 }
 `;
@@ -268,7 +268,6 @@ exports[`pds views with blocking blocks thread reply 1`] = `
 Object {
   "thread": Object {
     "$type": "app.bsky.feed.defs#threadViewPost",
-    "isLikedByRootAuthor": false,
     "post": Object {
       "author": Object {
         "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
@@ -333,7 +332,6 @@ Object {
       },
       Object {
         "$type": "app.bsky.feed.defs#threadViewPost",
-        "isLikedByRootAuthor": false,
         "post": Object {
           "author": Object {
             "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(1)@jpeg",
@@ -417,8 +415,10 @@ Object {
             "threadMuted": false,
           },
         },
+        "rootAuthor": Object {},
       },
     ],
+    "rootAuthor": Object {},
   },
 }
 `;

@@ -3,13 +3,10 @@
 exports[`pds thread views fetches ancestors 1`] = `
 Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
-  "isLikedByRootAuthor": true,
   "parent": Object {
     "$type": "app.bsky.feed.defs#threadViewPost",
-    "isLikedByRootAuthor": true,
     "parent": Object {
       "$type": "app.bsky.feed.defs#threadViewPost",
-      "isLikedByRootAuthor": false,
       "post": Object {
         "author": Object {
           "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
@@ -59,6 +56,7 @@ Object {
           "threadMuted": false,
         },
       },
+      "rootAuthor": Object {},
     },
     "post": Object {
       "author": Object {
@@ -142,6 +140,9 @@ Object {
         "threadMuted": false,
       },
     },
+    "rootAuthor": Object {
+      "like": "record(8)",
+    },
   },
   "post": Object {
     "author": Object {
@@ -203,13 +204,15 @@ Object {
     },
   },
   "replies": Array [],
+  "rootAuthor": Object {
+    "like": "record(9)",
+  },
 }
 `;
 
 exports[`pds thread views fetches deep post thread 1`] = `
 Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
-  "isLikedByRootAuthor": false,
   "post": Object {
     "author": Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
@@ -262,7 +265,6 @@ Object {
   "replies": Array [
     Object {
       "$type": "app.bsky.feed.defs#threadViewPost",
-      "isLikedByRootAuthor": true,
       "post": Object {
         "author": Object {
           "did": "user(2)",
@@ -303,10 +305,12 @@ Object {
         },
       },
       "replies": Array [],
+      "rootAuthor": Object {
+        "like": "record(7)",
+      },
     },
     Object {
       "$type": "app.bsky.feed.defs#threadViewPost",
-      "isLikedByRootAuthor": true,
       "post": Object {
         "author": Object {
           "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(1)@jpeg",
@@ -337,14 +341,14 @@ Object {
             "cid": "cids(4)",
             "cts": "1970-01-01T00:00:00.000Z",
             "src": "did:example:labeler",
-            "uri": "record(7)",
+            "uri": "record(8)",
             "val": "test-label",
           },
           Object {
             "cid": "cids(4)",
             "cts": "1970-01-01T00:00:00.000Z",
             "src": "did:example:labeler",
-            "uri": "record(7)",
+            "uri": "record(8)",
             "val": "test-label-2",
           },
         ],
@@ -383,7 +387,7 @@ Object {
         },
         "replyCount": 1,
         "repostCount": 0,
-        "uri": "record(7)",
+        "uri": "record(8)",
         "viewer": Object {
           "embeddingDisabled": false,
           "threadMuted": false,
@@ -392,7 +396,6 @@ Object {
       "replies": Array [
         Object {
           "$type": "app.bsky.feed.defs#threadViewPost",
-          "isLikedByRootAuthor": true,
           "post": Object {
             "author": Object {
               "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
@@ -434,7 +437,7 @@ Object {
               "reply": Object {
                 "parent": Object {
                   "cid": "cids(4)",
-                  "uri": "record(7)",
+                  "uri": "record(8)",
                 },
                 "root": Object {
                   "cid": "cids(0)",
@@ -445,25 +448,31 @@ Object {
             },
             "replyCount": 0,
             "repostCount": 2,
-            "uri": "record(8)",
+            "uri": "record(9)",
             "viewer": Object {
               "embeddingDisabled": false,
-              "repost": "record(9)",
+              "repost": "record(10)",
               "threadMuted": false,
             },
           },
           "replies": Array [],
+          "rootAuthor": Object {
+            "like": "record(11)",
+          },
         },
       ],
+      "rootAuthor": Object {
+        "like": "record(12)",
+      },
     },
   ],
+  "rootAuthor": Object {},
 }
 `;
 
 exports[`pds thread views fetches shallow post thread 1`] = `
 Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
-  "isLikedByRootAuthor": false,
   "post": Object {
     "author": Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
@@ -516,7 +525,6 @@ Object {
   "replies": Array [
     Object {
       "$type": "app.bsky.feed.defs#threadViewPost",
-      "isLikedByRootAuthor": true,
       "post": Object {
         "author": Object {
           "did": "user(2)",
@@ -556,10 +564,12 @@ Object {
           "threadMuted": false,
         },
       },
+      "rootAuthor": Object {
+        "like": "record(7)",
+      },
     },
     Object {
       "$type": "app.bsky.feed.defs#threadViewPost",
-      "isLikedByRootAuthor": true,
       "post": Object {
         "author": Object {
           "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(1)@jpeg",
@@ -590,14 +600,14 @@ Object {
             "cid": "cids(4)",
             "cts": "1970-01-01T00:00:00.000Z",
             "src": "did:example:labeler",
-            "uri": "record(7)",
+            "uri": "record(8)",
             "val": "test-label",
           },
           Object {
             "cid": "cids(4)",
             "cts": "1970-01-01T00:00:00.000Z",
             "src": "did:example:labeler",
-            "uri": "record(7)",
+            "uri": "record(8)",
             "val": "test-label-2",
           },
         ],
@@ -636,21 +646,24 @@ Object {
         },
         "replyCount": 1,
         "repostCount": 0,
-        "uri": "record(7)",
+        "uri": "record(8)",
         "viewer": Object {
           "embeddingDisabled": false,
           "threadMuted": false,
         },
       },
+      "rootAuthor": Object {
+        "like": "record(9)",
+      },
     },
   ],
+  "rootAuthor": Object {},
 }
 `;
 
 exports[`pds thread views fetches thread with handle in uri 1`] = `
 Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
-  "isLikedByRootAuthor": false,
   "post": Object {
     "author": Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
@@ -703,7 +716,6 @@ Object {
   "replies": Array [
     Object {
       "$type": "app.bsky.feed.defs#threadViewPost",
-      "isLikedByRootAuthor": true,
       "post": Object {
         "author": Object {
           "did": "user(2)",
@@ -743,10 +755,12 @@ Object {
           "threadMuted": false,
         },
       },
+      "rootAuthor": Object {
+        "like": "record(7)",
+      },
     },
     Object {
       "$type": "app.bsky.feed.defs#threadViewPost",
-      "isLikedByRootAuthor": true,
       "post": Object {
         "author": Object {
           "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(1)@jpeg",
@@ -777,14 +791,14 @@ Object {
             "cid": "cids(4)",
             "cts": "1970-01-01T00:00:00.000Z",
             "src": "did:example:labeler",
-            "uri": "record(7)",
+            "uri": "record(8)",
             "val": "test-label",
           },
           Object {
             "cid": "cids(4)",
             "cts": "1970-01-01T00:00:00.000Z",
             "src": "did:example:labeler",
-            "uri": "record(7)",
+            "uri": "record(8)",
             "val": "test-label-2",
           },
         ],
@@ -823,21 +837,24 @@ Object {
         },
         "replyCount": 1,
         "repostCount": 0,
-        "uri": "record(7)",
+        "uri": "record(8)",
         "viewer": Object {
           "embeddingDisabled": false,
           "threadMuted": false,
         },
       },
+      "rootAuthor": Object {
+        "like": "record(9)",
+      },
     },
   ],
+  "rootAuthor": Object {},
 }
 `;
 
 exports[`pds thread views handles deleted posts correctly 1`] = `
 Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
-  "isLikedByRootAuthor": false,
   "post": Object {
     "author": Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
@@ -889,7 +906,6 @@ Object {
   "replies": Array [
     Object {
       "$type": "app.bsky.feed.defs#threadViewPost",
-      "isLikedByRootAuthor": false,
       "post": Object {
         "author": Object {
           "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(1)@jpeg",
@@ -934,7 +950,6 @@ Object {
       "replies": Array [
         Object {
           "$type": "app.bsky.feed.defs#threadViewPost",
-          "isLikedByRootAuthor": false,
           "post": Object {
             "author": Object {
               "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
@@ -994,17 +1009,19 @@ Object {
             },
           },
           "replies": Array [],
+          "rootAuthor": Object {},
         },
       ],
+      "rootAuthor": Object {},
     },
   ],
+  "rootAuthor": Object {},
 }
 `;
 
 exports[`pds thread views handles deleted posts correctly 2`] = `
 Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
-  "isLikedByRootAuthor": false,
   "post": Object {
     "author": Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
@@ -1054,13 +1071,13 @@ Object {
     },
   },
   "replies": Array [],
+  "rootAuthor": Object {},
 }
 `;
 
 exports[`pds thread views handles deleted posts correctly 3`] = `
 Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
-  "isLikedByRootAuthor": false,
   "parent": Object {
     "$type": "app.bsky.feed.defs#notFoundPost",
     "notFound": true,
@@ -1125,13 +1142,13 @@ Object {
     },
   },
   "replies": Array [],
+  "rootAuthor": Object {},
 }
 `;
 
 exports[`pds thread views takedown blocks ancestors by actor 1`] = `
 Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
-  "isLikedByRootAuthor": true,
   "parent": Object {
     "$type": "app.bsky.feed.defs#notFoundPost",
     "notFound": true,
@@ -1197,13 +1214,15 @@ Object {
     },
   },
   "replies": Array [],
+  "rootAuthor": Object {
+    "like": "record(7)",
+  },
 }
 `;
 
 exports[`pds thread views takedown blocks ancestors by record 1`] = `
 Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
-  "isLikedByRootAuthor": true,
   "parent": Object {
     "$type": "app.bsky.feed.defs#notFoundPost",
     "notFound": true,
@@ -1269,13 +1288,15 @@ Object {
     },
   },
   "replies": Array [],
+  "rootAuthor": Object {
+    "like": "record(7)",
+  },
 }
 `;
 
 exports[`pds thread views takedown blocks replies by actor 1`] = `
 Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
-  "isLikedByRootAuthor": false,
   "post": Object {
     "author": Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
@@ -1328,7 +1349,6 @@ Object {
   "replies": Array [
     Object {
       "$type": "app.bsky.feed.defs#threadViewPost",
-      "isLikedByRootAuthor": true,
       "post": Object {
         "author": Object {
           "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(1)@jpeg",
@@ -1414,7 +1434,6 @@ Object {
       "replies": Array [
         Object {
           "$type": "app.bsky.feed.defs#threadViewPost",
-          "isLikedByRootAuthor": true,
           "post": Object {
             "author": Object {
               "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
@@ -1475,17 +1494,23 @@ Object {
             },
           },
           "replies": Array [],
+          "rootAuthor": Object {
+            "like": "record(8)",
+          },
         },
       ],
+      "rootAuthor": Object {
+        "like": "record(9)",
+      },
     },
   ],
+  "rootAuthor": Object {},
 }
 `;
 
 exports[`pds thread views takedown blocks replies by record 1`] = `
 Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
-  "isLikedByRootAuthor": false,
   "post": Object {
     "author": Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
@@ -1538,7 +1563,6 @@ Object {
   "replies": Array [
     Object {
       "$type": "app.bsky.feed.defs#threadViewPost",
-      "isLikedByRootAuthor": true,
       "post": Object {
         "author": Object {
           "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(1)@jpeg",
@@ -1622,7 +1646,11 @@ Object {
         },
       },
       "replies": Array [],
+      "rootAuthor": Object {
+        "like": "record(6)",
+      },
     },
   ],
+  "rootAuthor": Object {},
 }
 `;
