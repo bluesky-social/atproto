@@ -1,14 +1,5 @@
-import {
-  mockResolvers,
-  SeedClient,
-  TestNetworkNoAppView,
-  usersSeed,
-} from '@atproto/dev-env'
+import { SeedClient, TestNetworkNoAppView, usersSeed } from '@atproto/dev-env'
 import { CID } from 'multiformats/cid'
-import { Firehose, FirehoseOptions, MemoryRunner } from '../src'
-import { IdResolver } from '@atproto/identity'
-import { Create, Event } from '../src/events'
-import { createDeferrable, wait } from '@atproto/common'
 import { Subscription } from '@atproto/xrpc-server'
 import * as repo from '@atproto/repo'
 import { isValidRepoEvent, RepoOp } from '../src/firehose/lexicons'
@@ -70,8 +61,7 @@ describe('induction', () => {
         const ops = evt.ops as RepoOp[]
         for (const op of ops) {
           if (op.action === 'create') {
-            // @ts-ignore
-            data = await data.delete(op.path, op.prev)
+            data = await data.delete(op.path)
           } else if (op.action === 'update') {
             data = await data.update(op.path, op.prev)
           } else if (op.action === 'delete') {

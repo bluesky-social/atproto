@@ -443,7 +443,16 @@ export class MST {
 
   // if the topmost node in the tree only points to another tree, trim the top and return the subtree
   async trimTop(): Promise<MST> {
-    const entries = await this.getEntries()
+    let entries: NodeEntry[]
+    try {
+      entries = await this.getEntries()
+    } catch (err) {
+      if (err instanceof MissingBlockError) {
+        return this
+      } else {
+        throw err
+      }
+    }
     if (entries.length === 1 && entries[0].isTree()) {
       return entries[0].trimTop()
     } else {
