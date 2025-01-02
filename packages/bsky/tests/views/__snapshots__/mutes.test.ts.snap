@@ -196,7 +196,7 @@ Object {
           "threadMuted": false,
         },
       },
-      "rootAuthor": Object {},
+      "threadContext": Object {},
     },
     Object {
       "$type": "app.bsky.feed.defs#threadViewPost",
@@ -284,9 +284,9 @@ Object {
           "threadMuted": false,
         },
       },
-      "rootAuthor": Object {},
+      "threadContext": Object {},
     },
   ],
-  "rootAuthor": Object {},
+  "threadContext": Object {},
 }
 `;

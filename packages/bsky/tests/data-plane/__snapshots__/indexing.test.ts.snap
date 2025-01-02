@@ -599,7 +599,7 @@ Object {
       },
     },
     "replies": Array [],
-    "rootAuthor": Object {},
+    "threadContext": Object {},
   },
 }
 `;
@@ -669,7 +669,7 @@ Object {
       },
     },
     "replies": Array [],
-    "rootAuthor": Object {},
+    "threadContext": Object {},
   },
 }
 `;
