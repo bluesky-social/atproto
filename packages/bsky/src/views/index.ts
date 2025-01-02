@@ -799,7 +799,9 @@ export class Views {
             opts.depth,
           )
         : undefined,
-      isLikedByRootAuthor: !!state.threadRootAuthors?.get(post.uri)?.like,
+      rootAuthor: {
+        like: state.threadRootAuthors?.get(post.uri)?.like,
+      },
     }
   }
 
@@ -829,7 +831,9 @@ export class Views {
       $type: 'app.bsky.feed.defs#threadViewPost',
       post,
       parent: this.threadParent(parentUri, rootUri, state, height - 1),
-      isLikedByRootAuthor: !!state.threadRootAuthors?.get(post.uri)?.like,
+      rootAuthor: {
+        like: state.threadRootAuthors?.get(post.uri)?.like,
+      },
     }
   }
 
@@ -874,7 +878,9 @@ export class Views {
           state,
           depth - 1,
         ),
-        isLikedByRootAuthor: !!state.threadRootAuthors?.get(post.uri)?.like,
+        rootAuthor: {
+          like: state.threadRootAuthors?.get(post.uri)?.like,
+        },
       }
     })
   }
