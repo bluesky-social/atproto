@@ -123,11 +123,11 @@ export class ModeratorClient {
       durationInHours?: number
       acknowledgeAccountSubjects?: boolean
       reason?: string
-      policy?: string
+      policies?: string[]
     },
     role?: ModLevel,
   ) {
-    const { durationInHours, acknowledgeAccountSubjects, policy, ...rest } =
+    const { durationInHours, acknowledgeAccountSubjects, policies, ...rest } =
       opts
     return this.emitEvent(
       {
@@ -135,7 +135,7 @@ export class ModeratorClient {
           $type: 'tools.ozone.moderation.defs#modEventTakedown',
           acknowledgeAccountSubjects,
           durationInHours,
-          policy,
+          policies,
         },
         ...rest,
       },
