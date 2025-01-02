@@ -71,6 +71,24 @@ export function validateViewerState(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.feed.defs#viewerState', v)
 }
 
+/** Metadata about this post within the context of the thread it is in. */
+export interface ThreadContext {
+  rootAuthorLike?: string
+  [k: string]: unknown
+}
+
+export function isThreadContext(v: unknown): v is ThreadContext {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.feed.defs#threadContext'
+  )
+}
+
+export function validateThreadContext(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.feed.defs#threadContext', v)
+}
+
 export interface FeedViewPost {
   post: PostView
   reply?: ReplyRef
@@ -164,6 +182,7 @@ export interface ThreadViewPost {
     | BlockedPost
     | { $type: string; [k: string]: unknown }
   )[]
+  threadContext?: ThreadContext
   [k: string]: unknown
 }
 
