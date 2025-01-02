@@ -36,12 +36,10 @@ export function createMiddleware(ctx: AppContext): Middleware {
     const { length, 2: didParam, 3: cidParam } = req.url.split('/')
     if (length !== 4 || !didParam || !cidParam) return next()
 
-    try {
-      res.setHeader('Content-Security-Policy', `default-src 'none'; sandbox`)
-      res.setHeader('X-Content-Type-Options', 'nosniff')
-      res.setHeader('X-Frame-Options', 'DENY')
-      res.setHeader('X-XSS-Protection', '0')
+    // @TODO Check sec-fetch-* headers (e.g. to prevent files from being
+    // displayed as a web page) ?
 
+    try {
       const streamOptions: StreamBlobOptions = {
         did: didParam,
         cid: cidParam,
@@ -59,6 +57,27 @@ export function createMiddleware(ctx: AppContext): Middleware {
         const encoding = upstream.headers['content-encoding']
         const verifier = createCidVerifier(cid, encoding)
 
+        const logError = (err: unknown) => {
+          log.warn(
+            { err, did, cid: cid.toString(), pds: url.origin },
+            'blob resolution failed during transmission',
+          )
+        }
+
+        const onError = (err: unknown) => {
+          // No need to pipe the data (verifier) into the response, as it is
+          // "errored". The response processing will continue in the "catch"
+          // block below (because streamBlob() will reject the promise in case
+          // of "error" event on the writable stream returned by the factory).
+          clearTimeout(graceTimer)
+          logError(err)
+        }
+
+        // Catch any error that occurs before the timer bellow is triggered.
+        // The promise returned by streamBlob() will be rejected as soon as
+        // the verifier errors.
+        verifier.on('error', onError)
+
         // The way I/O work, it is likely that, in case of small payloads, the
         // full upstream response is already buffered at this point. In order to
         // return a 404 instead of a broken response stream, we allow the event
@@ -69,18 +88,21 @@ export function createMiddleware(ctx: AppContext): Middleware {
         // response, which will hurt latency (need the full payload) and memory
         // usage (either RAM or DISK). Since this is more of an edge case, we
         // allow the broken response stream to be sent.
-        setTimeout(() => {
-          const onError = (err: unknown) => {
-            log.warn(
-              { err, did, cid: cid.toString(), pds: url.origin },
-              'blob resolution failed during transmission',
-            )
-          }
+        const graceTimer = setTimeout(() => {
+          verifier.off('error', onError)
 
-          // The promise returned by streamBlob() will be rejected as soon as
-          // the verifier errors.
-          const { errored } = verifier
-          if (errored) return onError(errored)
+          // Make sure that the content served from the bsky api domain cannot
+          // be used to perform XSS attacks (by serving HTML pages)
+          res.setHeader(
+            'Content-Security-Policy',
+            `default-src 'none'; sandbox`,
+          )
+          res.setHeader('X-Content-Type-Options', 'nosniff')
+          res.setHeader('X-Frame-Options', 'DENY')
+          res.setHeader('X-XSS-Protection', '0')
+
+          // @TODO Add a cache-control header ?
+          // @TODO Add content-disposition header (to force download) ?
 
           proxyResponseHeaders(upstream, res)
 
@@ -92,8 +114,18 @@ export function createMiddleware(ctx: AppContext): Middleware {
           // occurred, but that is not the behavior we expect.
           res.removeHeader('content-length')
 
+          // From this point on, triggering the next middleware (including any
+          // error handler) can be problematic because content-type,
+          // content-enconding, etc. headers have already been set. Because of
+          // this, we make sure that res.headersSent is set to true, preventing
+          // another error handler middleware from being called (from the catch
+          // block bellow). Not flushing the headers here would require to
+          // revert the headers set from this middleware (which we don't do for
+          // now).
+          res.flushHeaders()
+
           // Pipe the verifier output into the HTTP response
-          void pipeline([verifier, res]).catch(onError)
+          void pipeline([verifier, res]).catch(logError)
         }, 10) // 0 works too. Allow for additional data to come in for 10ms.
 
         // Write the upstream response into the verifier.
@@ -103,6 +135,8 @@ export function createMiddleware(ctx: AppContext): Middleware {
       if (res.headersSent || res.destroyed) {
         res.destroy()
       } else if (err instanceof VerifyCidError) {
+        // @NOTE This only works because of the graceTimer above. It will also
+        // only be triggered for small payloads.
         next(createError(404, err.message))
       } else if (isHttpError(err)) {
         next(err)
