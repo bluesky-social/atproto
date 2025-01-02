@@ -29,7 +29,6 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
   const accessStandard = ctx.authVerifier.accessStandard()
   return async (req, res, next) => {
     // /!\ Hot path
-
     try {
       if (
         req.method !== 'GET' &&
@@ -192,7 +191,7 @@ export async function pipethrough(
 // Request setup/formatting
 // -------------------
 
-async function parseProxyInfo(
+export async function parseProxyInfo(
   ctx: AppContext,
   req: express.Request,
   lxm: string,

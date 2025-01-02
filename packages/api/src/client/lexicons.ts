@@ -2412,6 +2412,11 @@ export const schemaDict = {
               authFactorToken: {
                 type: 'string',
               },
+              allowTakendown: {
+                type: 'boolean',
+                description:
+                  'When true, instead of throwing error for takendown accounts, a valid response with a narrow scoped token will be returned',
+              },
             },
           },
         },
@@ -12377,6 +12382,20 @@ export const schemaDict = {
         parameters: {
           type: 'params',
           properties: {
+            queueCount: {
+              type: 'integer',
+              description:
+                'Number of queues being used by moderators. Subjects will be split among all queues.',
+            },
+            queueIndex: {
+              type: 'integer',
+              description:
+                'Index of the queue to fetch subjects from. Works only when queueCount value is specified.',
+            },
+            queueSeed: {
+              type: 'string',
+              description: 'A seeder to shuffle/balance the queue items.',
+            },
             includeAllUserRecords: {
               type: 'boolean',
               description:
@@ -12496,9 +12515,9 @@ export const schemaDict = {
             },
             tags: {
               type: 'array',
+              maxLength: 25,
               items: {
                 type: 'string',
-                maxLength: 25,
                 description:
                   'Items in this array are applied with OR filters. To apply AND filter, put all tags in the same string and separate using && characters',
               },

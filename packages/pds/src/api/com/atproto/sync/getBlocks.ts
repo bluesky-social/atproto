@@ -8,7 +8,7 @@ import { assertRepoAvailability } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.getBlocks({
-    auth: ctx.authVerifier.optionalAccessOrAdminToken,
+    auth: ctx.authVerifier.optionalAccessOrAdminToken(),
     handler: async ({ params, auth }) => {
       const { did } = params
       await assertRepoAvailability(
