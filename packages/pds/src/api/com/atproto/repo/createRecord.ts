@@ -75,11 +75,12 @@ export default function (server: Server, ctx: AppContext) {
                   write.record,
                 )
               : []
-          const backlinkDeletions = backlinkConflicts.map((uri) =>
+          const backlinkDeletions = backlinkConflicts.map(({ uri, cid }) =>
             prepareDelete({
               did: uri.hostname,
               collection: uri.collection,
               rkey: uri.rkey,
+              swapCid: cid,
             }),
           )
           const writes = [...backlinkDeletions, write]

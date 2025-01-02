@@ -31,6 +31,7 @@ export type PreparedUpdate = {
   uri: AtUri
   cid: CID
   swapCid?: CID | null
+  prev: CID
   record: RepoRecord
   blobs: PreparedBlobRef[]
   validationStatus: ValidationStatus
@@ -40,6 +41,7 @@ export type PreparedDelete = {
   action: WriteOpAction.Delete
   uri: AtUri
   swapCid?: CID | null
+  prev: CID
 }
 
 export type PreparedWrite = PreparedCreate | PreparedUpdate | PreparedDelete

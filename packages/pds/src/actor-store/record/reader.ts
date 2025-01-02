@@ -179,7 +179,10 @@ export class RecordReader {
   // @NOTE this logic is a placeholder until we allow users to specify these constraints themselves.
   // Ensures that we don't end-up with duplicate likes, reposts, and follows from race conditions.
 
-  async getBacklinkConflicts(uri: AtUri, record: RepoRecord): Promise<AtUri[]> {
+  async getBacklinkConflicts(
+    uri: AtUri,
+    record: RepoRecord,
+  ): Promise<{ uri: AtUri; cid: CID }[]> {
     const recordBacklinks = getBacklinks(uri, record)
     const conflicts = await Promise.all(
       recordBacklinks.map((backlink) =>
@@ -190,9 +193,10 @@ export class RecordReader {
         }),
       ),
     )
-    return conflicts
-      .flat()
-      .map(({ rkey }) => AtUri.make(uri.hostname, uri.collection, rkey))
+    return conflicts.flat().map(({ rkey, cid }) => ({
+      uri: AtUri.make(uri.hostname, uri.collection, rkey),
+      cid: CID.parse(cid),
+    }))
   }
 }
 

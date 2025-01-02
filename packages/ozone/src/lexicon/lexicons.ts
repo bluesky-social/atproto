@@ -3946,7 +3946,7 @@ export const schemaDict = {
         type: 'object',
         description: 'A repo operation, ie a mutation of a single record.',
         required: ['action', 'path', 'cid'],
-        nullable: ['cid'],
+        nullable: ['cid', 'prev'],
         properties: {
           action: {
             type: 'string',
@@ -3956,6 +3956,11 @@ export const schemaDict = {
             type: 'string',
           },
           cid: {
+            type: 'cid-link',
+            description:
+              'For creates and updates, the new record CID. For deletions, null.',
+          },
+          prev: {
             type: 'cid-link',
             description:
               'For creates and updates, the new record CID. For deletions, null.',

@@ -186,6 +186,7 @@ export interface RepoOp {
   path: string
   /** For creates and updates, the new record CID. For deletions, null. */
   cid: CID | null
+  prev: CID | null
   [k: string]: unknown
 }
 

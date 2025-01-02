@@ -18,6 +18,7 @@ import {
   PreparedWrite,
 } from '../../../../repo'
 import AppContext from '../../../../context'
+import { AtUri } from '@atproto/syntax'
 
 const ratelimitPoints = ({ input }: { input: HandlerInput }) => {
   let points = 0
@@ -77,7 +78,7 @@ export default function (server: Server, ctx: AppContext) {
       let writes: PreparedWrite[]
       try {
         writes = await Promise.all(
-          tx.writes.map((write) => {
+          tx.writes.map(async (write) => {
             if (isCreate(write)) {
               return prepareCreate({
                 did,
@@ -87,18 +88,40 @@ export default function (server: Server, ctx: AppContext) {
                 validate,
               })
             } else if (isUpdate(write)) {
+              const curr = await ctx.actorStore.read(did, (store) =>
+                store.record.getRecord(
+                  AtUri.make(did, write.collection, write.rkey),
+                  null,
+                  true,
+                ),
+              )
+              if (!curr) {
+                throw new Error()
+              }
               return prepareUpdate({
                 did,
                 collection: write.collection,
                 record: write.value,
                 rkey: write.rkey,
+                swapCid: CID.parse(curr.cid),
                 validate,
               })
             } else if (isDelete(write)) {
+              const curr = await ctx.actorStore.read(did, (store) =>
+                store.record.getRecord(
+                  AtUri.make(did, write.collection, write.rkey),
+                  null,
+                  true,
+                ),
+              )
+              if (!curr) {
+                throw new Error()
+              }
               return prepareDelete({
                 did,
                 collection: write.collection,
                 rkey: write.rkey,
+                swapCid: CID.parse(curr.cid),
               })
             } else {
               throw new InvalidRequestError(

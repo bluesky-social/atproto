@@ -136,7 +136,7 @@ export const prepareUpdate = async (opts: {
   did: string
   collection: string
   rkey: string
-  swapCid?: CID | null
+  swapCid: CID
   record: RepoRecord
   validate?: boolean
 }): Promise<PreparedUpdate> => {
@@ -155,6 +155,7 @@ export const prepareUpdate = async (opts: {
     uri: AtUri.make(did, collection, rkey),
     cid: await cidForSafeRecord(record),
     swapCid,
+    prev: swapCid,
     record,
     blobs: blobsForWrite(record, maybeValidate),
     validationStatus,
@@ -165,13 +166,14 @@ export const prepareDelete = (opts: {
   did: string
   collection: string
   rkey: string
-  swapCid?: CID | null
+  swapCid: CID
 }): PreparedDelete => {
   const { did, collection, rkey, swapCid } = opts
   return {
     action: WriteOpAction.Delete,
     uri: AtUri.make(did, collection, rkey),
     swapCid,
+    prev: swapCid,
   }
 }
 

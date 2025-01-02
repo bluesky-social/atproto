@@ -74,19 +74,21 @@ export default function (server: Server, ctx: AppContext) {
           if (isUpdate && collection === ids.AppBskyActorProfile) {
             await updateProfileLegacyBlobRef(actorTxn, record)
           }
+          const prev = current ? CID.parse(current.cid) : undefined
           const writeInfo = {
             did,
             collection,
             rkey,
             record,
-            swapCid: swapRecordCid,
+            swapCid: swapRecordCid ?? prev,
             validate,
           }
 
           let write: PreparedCreate | PreparedUpdate
           try {
             write = isUpdate
-              ? await prepareUpdate(writeInfo)
+              ? // @ts-ignore
+                await prepareUpdate(writeInfo)
               : await prepareCreate(writeInfo)
           } catch (err) {
             if (err instanceof InvalidRecordError) {

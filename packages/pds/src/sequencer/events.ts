@@ -40,15 +40,18 @@ export const formatSeqCommit = async (
     for (const w of writes) {
       const path = w.uri.collection + '/' + w.uri.rkey
       let cid: CID | null
+      let prev: CID | null
       if (w.action === WriteOpAction.Delete) {
         cid = null
+        prev = w.prev
       } else {
         cid = w.cid
+        prev = w.action === WriteOpAction.Create ? null : w.prev
         w.blobs.forEach((blob) => {
           blobs.add(blob.cid)
         })
       }
-      ops.push({ action: w.action, path, cid })
+      ops.push({ action: w.action, path, cid, prev })
     }
     carSlice = await blocksToCarFile(commitData.cid, blocksToSend)
   }
@@ -149,6 +152,7 @@ export const commitEvtOp = z.object({
   ]),
   path: z.string(),
   cid: schema.cid.nullable(),
+  prev: schema.cid.nullable(),
 })
 export type CommitEvtOp = z.infer<typeof commitEvtOp>
 
