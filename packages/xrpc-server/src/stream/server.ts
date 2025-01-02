@@ -1,46 +1,140 @@
-import { IncomingMessage } from 'http'
-import { WebSocketServer, ServerOptions, WebSocket } from 'ws'
+import assert from 'node:assert'
+import { IncomingMessage } from 'node:http'
+import { ServerOptions, WebSocket, WebSocketServer } from 'ws'
 import { ErrorFrame, Frame } from './frames'
 import logger from './logger'
-import { CloseCode, DisconnectError } from './types'
+import { CloseCode } from './types'
+
+export type XrpcStreamServerOptions = {
+  handler: Handler
+  highWaterMark?: number
+  lowWaterMark?: number
+} & ServerOptions
 
 export class XrpcStreamServer {
   wss: WebSocketServer
-  constructor(opts: ServerOptions & { handler: Handler }) {
-    const { handler, ...serverOpts } = opts
-    this.wss = new WebSocketServer(serverOpts)
-    this.wss.on('connection', async (socket, req) => {
-      socket.on('error', (err) => logger.error(err, 'websocket error'))
-      try {
-        const ac = new AbortController()
-        const iterator = unwrapIterator(handler(req, ac.signal, socket, this))
-        socket.once('close', () => {
-          iterator.return?.()
+  constructor({
+    handler,
+    highWaterMark = 16384,
+    lowWaterMark = 4096,
+    ...opts
+  }: XrpcStreamServerOptions) {
+    this.wss = new WebSocketServer(opts)
+    this.wss.on('connection', (ws, req) => {
+      const ac = new AbortController()
+
+      const iterable = handler(req, ac.signal, ws, this)
+      const iterator = iterable[Symbol.asyncIterator]()
+
+      const abortHandler = () => {
+        if (!ac.signal.aborted) {
           ac.abort()
-        })
-        const safeFrames = wrapIterator(iterator)
-        for await (const frame of safeFrames) {
-          await new Promise((res, rej) => {
-            socket.send(frame.toBytes(), { binary: true }, (err) => {
-              // @TODO this callback may give more aggressive on backpressure than
-              // we ultimately want, but trying it out for the time being.
-              if (err) return rej(err)
-              res(undefined)
-            })
-          })
-          if (frame instanceof ErrorFrame) {
-            throw new DisconnectError(CloseCode.Policy, frame.body.error)
-          }
-        }
-      } catch (err) {
-        if (err instanceof DisconnectError) {
-          return socket.close(err.wsCode, err.xrpcCode)
-        } else {
-          logger.error(err, 'websocket server error')
-          return socket.terminate()
+          iterator.return?.()
         }
       }
-      socket.close(CloseCode.Normal)
+
+      // Inbound messages are not expected
+      ws.on('message', (_data, _isBinary) => {
+        // @TODO should we cause an error here (to avoid clients from consuming
+        // un-necessary bandwidth) ?
+      })
+
+      ws.once('close', () => {
+        abortHandler()
+      })
+
+      ws.once('error', (err) => {
+        logger.error(err, 'websocket error')
+        abortHandler()
+      })
+
+      let paused = false
+      let pending = 0
+
+      let done = false
+
+      const close = (...args: Parameters<typeof ws.close>): void => {
+        if (
+          ws.readyState !== WebSocket.CLOSING &&
+          ws.readyState !== WebSocket.CLOSED
+        ) {
+          ws.close(...args)
+        }
+      }
+
+      const readNext = () => {
+        iterator.next().then(
+          (result) => {
+            assert(!done, 'should not read after done')
+            assert(!paused, 'should not read while paused')
+
+            if (result.done) {
+              done = true
+
+              // This should not be needed since the iterator ended. Let's make
+              // sure we don't leak.
+              ac.abort()
+
+              // Only close now if no items are pending. Otherwise, we'll close
+              // after the last item is sent (see send() callback).
+              if (pending === 0) close(CloseCode.Normal)
+
+              return
+            }
+
+            const frame = result.value
+
+            pending++
+
+            ws.send(frame.toBytes(), { binary: true }, (err) => {
+              pending--
+
+              if (err) {
+                abortHandler()
+                ws.terminate() // Just to be sure
+                logger.error(err, 'websocket error')
+                return
+              }
+
+              if (done) {
+                // If this is the last callback, we can close now
+                if (pending === 0) {
+                  if (frame instanceof ErrorFrame) {
+                    close(CloseCode.Policy, frame.code)
+                  } else {
+                    close(CloseCode.Normal)
+                  }
+                }
+                return
+              }
+
+              if (paused && ws.bufferedAmount <= lowWaterMark) {
+                // resume
+                paused = false
+                readNext()
+              }
+            })
+
+            if (frame instanceof ErrorFrame) {
+              // Make sure we stop consuming
+              done = true
+              abortHandler()
+            } else if (ws.bufferedAmount >= highWaterMark) {
+              // pause
+              paused = true
+            } else {
+              readNext()
+            }
+          },
+          (err) => {
+            logger.error(err, 'websocket server error')
+            abortHandler()
+            ws.terminate()
+          },
+        )
+      }
+
+      readNext()
     })
   }
 }
@@ -51,15 +145,3 @@ export type Handler = (
   socket: WebSocket,
   server: XrpcStreamServer,
 ) => AsyncIterable<Frame>
-
-function unwrapIterator<T>(iterable: AsyncIterable<T>): AsyncIterator<T> {
-  return iterable[Symbol.asyncIterator]()
-}
-
-function wrapIterator<T>(iterator: AsyncIterator<T>): AsyncIterable<T> {
-  return {
-    [Symbol.asyncIterator]() {
-      return iterator
-    },
-  }
-}
