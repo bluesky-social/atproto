@@ -59,13 +59,13 @@ import {
   Postgates,
   FeedItem,
   ThreadRootAuthorStates,
+  ThreadRef,
 } from './feed'
 import { ParsedLabelers } from '../util'
 
 export class HydrateCtx {
   labelers = this.vals.labelers
   viewer = this.vals.viewer !== null ? serviceRefToDid(this.vals.viewer) : null
-  includeThreadRootAuthorState = this.vals.includeThreadRootAuthorState
   includeTakedowns = this.vals.includeTakedowns
   includeActorTakedowns = this.vals.includeActorTakedowns
   include3pBlocks = this.vals.include3pBlocks
@@ -78,7 +78,6 @@ export class HydrateCtx {
 export type HydrateCtxVals = {
   labelers: ParsedLabelers
   viewer: string | null
-  includeThreadRootAuthorState?: boolean
   includeTakedowns?: boolean
   includeActorTakedowns?: boolean
   include3pBlocks?: boolean
@@ -456,7 +455,6 @@ export class Hydrator {
     const [
       postAggs,
       postViewers,
-      threadRootAuthors,
       labels,
       postBlocks,
       profileState,
@@ -469,9 +467,6 @@ export class Hydrator {
       this.feed.getPostAggregates(allRefs),
       ctx.viewer
         ? this.feed.getPostViewerStates(threadRefs, ctx.viewer)
-        : undefined,
-      ctx.includeThreadRootAuthorState
-        ? this.feed.getThreadRootAuthorStates(threadRefs)
         : undefined,
       this.label.getLabelsForSubjects(allPostUris, ctx.labelers),
       this.hydratePostBlocks(posts),
@@ -496,7 +491,6 @@ export class Hydrator {
         posts,
         postAggs,
         postViewers,
-        threadRootAuthors,
         postBlocks,
         labels,
         threadgates,
@@ -629,7 +623,30 @@ export class Hydrator {
     refs: ItemRef[],
     ctx: HydrateCtx,
   ): Promise<HydrationState> {
-    return this.hydratePosts(refs, ctx)
+    const postsState = await this.hydratePosts(refs, ctx)
+
+    const { posts } = postsState
+    const postsList = posts ? Array.from(posts.entries()) : []
+
+    const isDefined = (
+      entry: [string, Post | null],
+    ): entry is [string, Post] => {
+      const [, post] = entry
+      return !!post
+    }
+
+    const threadRefs: ThreadRef[] = postsList
+      .filter(isDefined)
+      .map(([uri, post]) => ({
+        uri,
+        cid: post.cid,
+        threadRoot: post.record.reply?.root.uri ?? uri,
+      }))
+
+    const threadRootAuthors =
+      await this.feed.getThreadRootAuthorStates(threadRefs)
+
+    return mergeStates(postsState, { threadRootAuthors })
   }
 
   // app.bsky.feed.defs#generatorView
@@ -1062,7 +1079,6 @@ export class Hydrator {
     return new HydrateCtx({
       labelers: availableLabelers,
       viewer: vals.viewer,
-      includeThreadRootAuthorState: vals.includeThreadRootAuthorState,
       includeTakedowns: vals.includeTakedowns,
       include3pBlocks: vals.include3pBlocks,
     })
