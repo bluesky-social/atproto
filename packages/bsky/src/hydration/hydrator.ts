@@ -58,7 +58,7 @@ import {
   Threadgates,
   Postgates,
   FeedItem,
-  ThreadRootAuthorStates,
+  ThreadContextStates,
   ThreadRef,
 } from './feed'
 import { ParsedLabelers } from '../util'
@@ -91,7 +91,7 @@ export type HydrationState = {
   posts?: Posts
   postAggs?: PostAggs
   postViewers?: PostViewerStates
-  threadRootAuthors?: ThreadRootAuthorStates
+  threadContextStates?: ThreadContextStates
   postBlocks?: PostBlocks
   reposts?: Reposts
   follows?: Follows
@@ -643,10 +643,10 @@ export class Hydrator {
         threadRoot: post.record.reply?.root.uri ?? uri,
       }))
 
-    const threadRootAuthors =
-      await this.feed.getThreadRootAuthorStates(threadRefs)
+    const threadContextStates =
+      await this.feed.getThreadContextStates(threadRefs)
 
-    return mergeStates(postsState, { threadRootAuthors })
+    return mergeStates(postsState, { threadContextStates })
   }
 
   // app.bsky.feed.defs#generatorView
@@ -1217,9 +1217,9 @@ export const mergeStates = (
     posts: mergeMaps(stateA.posts, stateB.posts),
     postAggs: mergeMaps(stateA.postAggs, stateB.postAggs),
     postViewers: mergeMaps(stateA.postViewers, stateB.postViewers),
-    threadRootAuthors: mergeMaps(
-      stateA.threadRootAuthors,
-      stateB.threadRootAuthors,
+    threadContextStates: mergeMaps(
+      stateA.threadContextStates,
+      stateB.threadContextStates,
     ),
     postBlocks: mergeMaps(stateA.postBlocks, stateB.postBlocks),
     reposts: mergeMaps(stateA.reposts, stateB.reposts),

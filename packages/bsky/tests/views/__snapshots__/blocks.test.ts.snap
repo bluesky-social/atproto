@@ -137,7 +137,7 @@ Object {
         "threadMuted": false,
       },
     },
-    "rootAuthor": Object {},
+    "threadContext": Object {},
   },
 }
 `;
@@ -256,10 +256,10 @@ Object {
             "threadMuted": false,
           },
         },
-        "rootAuthor": Object {},
+        "threadContext": Object {},
       },
     ],
-    "rootAuthor": Object {},
+    "threadContext": Object {},
   },
 }
 `;
@@ -415,10 +415,10 @@ Object {
             "threadMuted": false,
           },
         },
-        "rootAuthor": Object {},
+        "threadContext": Object {},
       },
     ],
-    "rootAuthor": Object {},
+    "threadContext": Object {},
   },
 }
 `;

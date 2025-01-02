@@ -137,7 +137,7 @@ Object {
         "threadMuted": false,
       },
     },
-    "rootAuthor": Object {},
+    "threadContext": Object {},
   },
 }
 `;
@@ -216,7 +216,7 @@ Object {
       },
     },
     "replies": Array [],
-    "rootAuthor": Object {},
+    "threadContext": Object {},
   },
 }
 `;
@@ -300,7 +300,7 @@ Object {
         "uri": "record(7)",
       },
     ],
-    "rootAuthor": Object {},
+    "threadContext": Object {},
   },
 }
 `;

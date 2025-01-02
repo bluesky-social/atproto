@@ -56,7 +56,7 @@ Object {
           "threadMuted": false,
         },
       },
-      "rootAuthor": Object {},
+      "threadContext": Object {},
     },
     "post": Object {
       "author": Object {
@@ -140,8 +140,8 @@ Object {
         "threadMuted": false,
       },
     },
-    "rootAuthor": Object {
-      "like": "record(8)",
+    "threadContext": Object {
+      "rootAuthorLike": "record(8)",
     },
   },
   "post": Object {
@@ -204,8 +204,8 @@ Object {
     },
   },
   "replies": Array [],
-  "rootAuthor": Object {
-    "like": "record(9)",
+  "threadContext": Object {
+    "rootAuthorLike": "record(9)",
   },
 }
 `;
@@ -305,8 +305,8 @@ Object {
         },
       },
       "replies": Array [],
-      "rootAuthor": Object {
-        "like": "record(7)",
+      "threadContext": Object {
+        "rootAuthorLike": "record(7)",
       },
     },
     Object {
@@ -456,17 +456,17 @@ Object {
             },
           },
           "replies": Array [],
-          "rootAuthor": Object {
-            "like": "record(11)",
+          "threadContext": Object {
+            "rootAuthorLike": "record(11)",
           },
         },
       ],
-      "rootAuthor": Object {
-        "like": "record(12)",
+      "threadContext": Object {
+        "rootAuthorLike": "record(12)",
       },
     },
   ],
-  "rootAuthor": Object {},
+  "threadContext": Object {},
 }
 `;
 
@@ -564,8 +564,8 @@ Object {
           "threadMuted": false,
         },
       },
-      "rootAuthor": Object {
-        "like": "record(7)",
+      "threadContext": Object {
+        "rootAuthorLike": "record(7)",
       },
     },
     Object {
@@ -652,12 +652,12 @@ Object {
           "threadMuted": false,
         },
       },
-      "rootAuthor": Object {
-        "like": "record(9)",
+      "threadContext": Object {
+        "rootAuthorLike": "record(9)",
       },
     },
   ],
-  "rootAuthor": Object {},
+  "threadContext": Object {},
 }
 `;
 
@@ -755,8 +755,8 @@ Object {
           "threadMuted": false,
         },
       },
-      "rootAuthor": Object {
-        "like": "record(7)",
+      "threadContext": Object {
+        "rootAuthorLike": "record(7)",
       },
     },
     Object {
@@ -843,12 +843,12 @@ Object {
           "threadMuted": false,
         },
       },
-      "rootAuthor": Object {
-        "like": "record(9)",
+      "threadContext": Object {
+        "rootAuthorLike": "record(9)",
       },
     },
   ],
-  "rootAuthor": Object {},
+  "threadContext": Object {},
 }
 `;
 
@@ -1009,13 +1009,13 @@ Object {
             },
           },
           "replies": Array [],
-          "rootAuthor": Object {},
+          "threadContext": Object {},
         },
       ],
-      "rootAuthor": Object {},
+      "threadContext": Object {},
     },
   ],
-  "rootAuthor": Object {},
+  "threadContext": Object {},
 }
 `;
 
@@ -1071,7 +1071,7 @@ Object {
     },
   },
   "replies": Array [],
-  "rootAuthor": Object {},
+  "threadContext": Object {},
 }
 `;
 
@@ -1142,7 +1142,7 @@ Object {
     },
   },
   "replies": Array [],
-  "rootAuthor": Object {},
+  "threadContext": Object {},
 }
 `;
 
@@ -1214,8 +1214,8 @@ Object {
     },
   },
   "replies": Array [],
-  "rootAuthor": Object {
-    "like": "record(7)",
+  "threadContext": Object {
+    "rootAuthorLike": "record(7)",
   },
 }
 `;
@@ -1288,8 +1288,8 @@ Object {
     },
   },
   "replies": Array [],
-  "rootAuthor": Object {
-    "like": "record(7)",
+  "threadContext": Object {
+    "rootAuthorLike": "record(7)",
   },
 }
 `;
@@ -1494,17 +1494,17 @@ Object {
             },
           },
           "replies": Array [],
-          "rootAuthor": Object {
-            "like": "record(8)",
+          "threadContext": Object {
+            "rootAuthorLike": "record(8)",
           },
         },
       ],
-      "rootAuthor": Object {
-        "like": "record(9)",
+      "threadContext": Object {
+        "rootAuthorLike": "record(9)",
       },
     },
   ],
-  "rootAuthor": Object {},
+  "threadContext": Object {},
 }
 `;
 
@@ -1646,11 +1646,11 @@ Object {
         },
       },
       "replies": Array [],
-      "rootAuthor": Object {
-        "like": "record(6)",
+      "threadContext": Object {
+        "rootAuthorLike": "record(6)",
       },
     },
   ],
-  "rootAuthor": Object {},
+  "threadContext": Object {},
 }
 `;
