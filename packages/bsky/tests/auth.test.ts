@@ -70,6 +70,86 @@ describe('auth', () => {
     )
   })
 
+  describe('service id', () => {
+    let aliceKeypair: Keypair
+
+    beforeAll(async () => {
+      aliceKeypair = await network.pds.ctx.actorStore.keypair(alice)
+    })
+
+    it('accepts audience without service id', async () => {
+      const jwt = await createServiceJwt({
+        aud: network.bsky.ctx.cfg.serverDid,
+        iss: alice,
+        lxm: ids.AppBskyActorGetProfile,
+        keypair: aliceKeypair,
+      })
+
+      const result = await agent.app.bsky.actor.getProfile(
+        { actor: sc.dids.carol },
+        {
+          headers: { authorization: `Bearer ${jwt}` },
+        },
+      )
+
+      expect(result).toBeDefined()
+    })
+
+    it('accepts audience with service id', async () => {
+      const jwt = await createServiceJwt({
+        aud: `${network.bsky.ctx.cfg.serverDid}#bsky_appview`,
+        iss: alice,
+        lxm: ids.AppBskyActorGetProfile,
+        keypair: aliceKeypair,
+      })
+
+      const result = await agent.app.bsky.actor.getProfile(
+        { actor: sc.dids.carol },
+        {
+          headers: { authorization: `Bearer ${jwt}` },
+        },
+      )
+
+      expect(result).toBeDefined()
+    })
+
+    it('throws with audience with unsupported service id', async () => {
+      const jwt = await createServiceJwt({
+        aud: `${network.bsky.ctx.cfg.serverDid}#unsupported`,
+        iss: alice,
+        lxm: ids.AppBskyActorGetProfile,
+        keypair: aliceKeypair,
+      })
+
+      await expect(
+        agent.app.bsky.actor.getProfile(
+          { actor: sc.dids.carol },
+          {
+            headers: { authorization: `Bearer ${jwt}` },
+          },
+        ),
+      ).rejects.toThrow('jwt audience does not match service id')
+    })
+
+    it('throws with audience with empty service id fragment', async () => {
+      const jwt = await createServiceJwt({
+        aud: `${network.bsky.ctx.cfg.serverDid}#`,
+        iss: alice,
+        lxm: ids.AppBskyActorGetProfile,
+        keypair: aliceKeypair,
+      })
+
+      await expect(
+        agent.app.bsky.actor.getProfile(
+          { actor: sc.dids.carol },
+          {
+            headers: { authorization: `Bearer ${jwt}` },
+          },
+        ),
+      ).rejects.toThrow('jwt audience does not match service id')
+    })
+  })
+
   it('throws if the user key is incorrect', async () => {
     const bobKeypair = await network.pds.ctx.actorStore.keypair(bob)
 

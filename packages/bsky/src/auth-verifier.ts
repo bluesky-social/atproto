@@ -134,12 +134,29 @@ export class AuthVerifier {
           iss: null,
           aud: null,
         })
-        if (!opts.skipAudCheck && !this.standardAudienceDids.has(aud)) {
+
+        const [audDid, audServiceId] = aud.split('#')
+
+        if (!opts.skipAudCheck && !this.standardAudienceDids.has(audDid)) {
           throw new AuthRequiredError(
             'jwt audience does not match service did',
             'BadJwtAudience',
           )
         }
+
+        const hasServiceId = aud.includes('#')
+        if (
+          audDid === this.ownDid &&
+          // @NOTE: Temporarily make the service id optional, only validate if present.
+          hasServiceId &&
+          audServiceId !== 'bsky_appview'
+        ) {
+          throw new AuthRequiredError(
+            'jwt audience does not match service id',
+            'BadJwtAudience',
+          )
+        }
+
         return {
           credentials: {
             type: 'standard',
