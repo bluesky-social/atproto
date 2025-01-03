@@ -3,10 +3,12 @@
  */
 import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
+import { lexicons } from '../../../../lexicons'
+import { $Type, is$typed } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
+
+const id = 'com.atproto.repo.listMissingBlobs'
 
 export interface QueryParams {
   limit: number
@@ -52,14 +54,15 @@ export interface RecordBlob {
   [k: string]: unknown
 }
 
-export function isRecordBlob(v: unknown): v is RecordBlob {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'com.atproto.repo.listMissingBlobs#recordBlob'
-  )
+export function isRecordBlob(v: unknown): v is RecordBlob & {
+  $type: $Type<'com.atproto.repo.listMissingBlobs', 'recordBlob'>
+} {
+  return is$typed(v, id, 'recordBlob')
 }
 
-export function validateRecordBlob(v: unknown): ValidationResult {
-  return lexicons.validate('com.atproto.repo.listMissingBlobs#recordBlob', v)
+export function validateRecordBlob(v: unknown) {
+  return lexicons.validate(
+    `${id}#recordBlob`,
+    v,
+  ) as ValidationResult<RecordBlob>
 }

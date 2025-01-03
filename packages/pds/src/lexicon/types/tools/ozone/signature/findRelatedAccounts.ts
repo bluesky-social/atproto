@@ -3,12 +3,14 @@
  */
 import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
+import { lexicons } from '../../../../lexicons'
+import { $Type, is$typed } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as ComAtprotoAdminDefs from '../../../com/atproto/admin/defs'
 import * as ToolsOzoneSignatureDefs from './defs'
+
+const id = 'tools.ozone.signature.findRelatedAccounts'
 
 export interface QueryParams {
   did: string
@@ -55,17 +57,15 @@ export interface RelatedAccount {
   [k: string]: unknown
 }
 
-export function isRelatedAccount(v: unknown): v is RelatedAccount {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'tools.ozone.signature.findRelatedAccounts#relatedAccount'
-  )
+export function isRelatedAccount(v: unknown): v is RelatedAccount & {
+  $type: $Type<'tools.ozone.signature.findRelatedAccounts', 'relatedAccount'>
+} {
+  return is$typed(v, id, 'relatedAccount')
 }
 
-export function validateRelatedAccount(v: unknown): ValidationResult {
+export function validateRelatedAccount(v: unknown) {
   return lexicons.validate(
-    'tools.ozone.signature.findRelatedAccounts#relatedAccount',
+    `${id}#relatedAccount`,
     v,
-  )
+  ) as ValidationResult<RelatedAccount>
 }

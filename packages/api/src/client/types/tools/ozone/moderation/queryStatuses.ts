@@ -3,10 +3,12 @@
  */
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
+import { $Type, is$typed } from '../../../../util'
+import { lexicons } from '../../../../lexicons'
 import * as ToolsOzoneModerationDefs from './defs'
+
+const id = 'tools.ozone.moderation.queryStatuses'
 
 export interface QueryParams {
   /** Number of queues being used by moderators. Subjects will be split among all queues. */

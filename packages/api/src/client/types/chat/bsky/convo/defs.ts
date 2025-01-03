@@ -2,12 +2,14 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
+import { $Type, is$typed } from '../../../../util'
+import { lexicons } from '../../../../lexicons'
 import * as AppBskyRichtextFacet from '../../../app/bsky/richtext/facet'
 import * as AppBskyEmbedRecord from '../../../app/bsky/embed/record'
 import * as ChatBskyActorDefs from '../actor/defs'
+
+const id = 'chat.bsky.convo.defs'
 
 export interface MessageRef {
   did: string
@@ -16,16 +18,17 @@ export interface MessageRef {
   [k: string]: unknown
 }
 
-export function isMessageRef(v: unknown): v is MessageRef {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'chat.bsky.convo.defs#messageRef'
-  )
+export function isMessageRef(
+  v: unknown,
+): v is MessageRef & { $type: $Type<'chat.bsky.convo.defs', 'messageRef'> } {
+  return is$typed(v, id, 'messageRef')
 }
 
-export function validateMessageRef(v: unknown): ValidationResult {
-  return lexicons.validate('chat.bsky.convo.defs#messageRef', v)
+export function validateMessageRef(v: unknown) {
+  return lexicons.validate(
+    `${id}#messageRef`,
+    v,
+  ) as ValidationResult<MessageRef>
 }
 
 export interface MessageInput {
@@ -36,16 +39,17 @@ export interface MessageInput {
   [k: string]: unknown
 }
 
-export function isMessageInput(v: unknown): v is MessageInput {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'chat.bsky.convo.defs#messageInput'
-  )
+export function isMessageInput(v: unknown): v is MessageInput & {
+  $type: $Type<'chat.bsky.convo.defs', 'messageInput'>
+} {
+  return is$typed(v, id, 'messageInput')
 }
 
-export function validateMessageInput(v: unknown): ValidationResult {
-  return lexicons.validate('chat.bsky.convo.defs#messageInput', v)
+export function validateMessageInput(v: unknown) {
+  return lexicons.validate(
+    `${id}#messageInput`,
+    v,
+  ) as ValidationResult<MessageInput>
 }
 
 export interface MessageView {
@@ -60,16 +64,17 @@ export interface MessageView {
   [k: string]: unknown
 }
 
-export function isMessageView(v: unknown): v is MessageView {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'chat.bsky.convo.defs#messageView'
-  )
+export function isMessageView(
+  v: unknown,
+): v is MessageView & { $type: $Type<'chat.bsky.convo.defs', 'messageView'> } {
+  return is$typed(v, id, 'messageView')
 }
 
-export function validateMessageView(v: unknown): ValidationResult {
-  return lexicons.validate('chat.bsky.convo.defs#messageView', v)
+export function validateMessageView(v: unknown) {
+  return lexicons.validate(
+    `${id}#messageView`,
+    v,
+  ) as ValidationResult<MessageView>
 }
 
 export interface DeletedMessageView {
@@ -80,16 +85,17 @@ export interface DeletedMessageView {
   [k: string]: unknown
 }
 
-export function isDeletedMessageView(v: unknown): v is DeletedMessageView {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'chat.bsky.convo.defs#deletedMessageView'
-  )
+export function isDeletedMessageView(v: unknown): v is DeletedMessageView & {
+  $type: $Type<'chat.bsky.convo.defs', 'deletedMessageView'>
+} {
+  return is$typed(v, id, 'deletedMessageView')
 }
 
-export function validateDeletedMessageView(v: unknown): ValidationResult {
-  return lexicons.validate('chat.bsky.convo.defs#deletedMessageView', v)
+export function validateDeletedMessageView(v: unknown) {
+  return lexicons.validate(
+    `${id}#deletedMessageView`,
+    v,
+  ) as ValidationResult<DeletedMessageView>
 }
 
 export interface MessageViewSender {
@@ -97,16 +103,17 @@ export interface MessageViewSender {
   [k: string]: unknown
 }
 
-export function isMessageViewSender(v: unknown): v is MessageViewSender {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'chat.bsky.convo.defs#messageViewSender'
-  )
+export function isMessageViewSender(v: unknown): v is MessageViewSender & {
+  $type: $Type<'chat.bsky.convo.defs', 'messageViewSender'>
+} {
+  return is$typed(v, id, 'messageViewSender')
 }
 
-export function validateMessageViewSender(v: unknown): ValidationResult {
-  return lexicons.validate('chat.bsky.convo.defs#messageViewSender', v)
+export function validateMessageViewSender(v: unknown) {
+  return lexicons.validate(
+    `${id}#messageViewSender`,
+    v,
+  ) as ValidationResult<MessageViewSender>
 }
 
 export interface ConvoView {
@@ -123,16 +130,14 @@ export interface ConvoView {
   [k: string]: unknown
 }
 
-export function isConvoView(v: unknown): v is ConvoView {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'chat.bsky.convo.defs#convoView'
-  )
+export function isConvoView(
+  v: unknown,
+): v is ConvoView & { $type: $Type<'chat.bsky.convo.defs', 'convoView'> } {
+  return is$typed(v, id, 'convoView')
 }
 
-export function validateConvoView(v: unknown): ValidationResult {
-  return lexicons.validate('chat.bsky.convo.defs#convoView', v)
+export function validateConvoView(v: unknown) {
+  return lexicons.validate(`${id}#convoView`, v) as ValidationResult<ConvoView>
 }
 
 export interface LogBeginConvo {
@@ -141,16 +146,17 @@ export interface LogBeginConvo {
   [k: string]: unknown
 }
 
-export function isLogBeginConvo(v: unknown): v is LogBeginConvo {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'chat.bsky.convo.defs#logBeginConvo'
-  )
+export function isLogBeginConvo(v: unknown): v is LogBeginConvo & {
+  $type: $Type<'chat.bsky.convo.defs', 'logBeginConvo'>
+} {
+  return is$typed(v, id, 'logBeginConvo')
 }
 
-export function validateLogBeginConvo(v: unknown): ValidationResult {
-  return lexicons.validate('chat.bsky.convo.defs#logBeginConvo', v)
+export function validateLogBeginConvo(v: unknown) {
+  return lexicons.validate(
+    `${id}#logBeginConvo`,
+    v,
+  ) as ValidationResult<LogBeginConvo>
 }
 
 export interface LogLeaveConvo {
@@ -159,16 +165,17 @@ export interface LogLeaveConvo {
   [k: string]: unknown
 }
 
-export function isLogLeaveConvo(v: unknown): v is LogLeaveConvo {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'chat.bsky.convo.defs#logLeaveConvo'
-  )
+export function isLogLeaveConvo(v: unknown): v is LogLeaveConvo & {
+  $type: $Type<'chat.bsky.convo.defs', 'logLeaveConvo'>
+} {
+  return is$typed(v, id, 'logLeaveConvo')
 }
 
-export function validateLogLeaveConvo(v: unknown): ValidationResult {
-  return lexicons.validate('chat.bsky.convo.defs#logLeaveConvo', v)
+export function validateLogLeaveConvo(v: unknown) {
+  return lexicons.validate(
+    `${id}#logLeaveConvo`,
+    v,
+  ) as ValidationResult<LogLeaveConvo>
 }
 
 export interface LogCreateMessage {
@@ -181,16 +188,17 @@ export interface LogCreateMessage {
   [k: string]: unknown
 }
 
-export function isLogCreateMessage(v: unknown): v is LogCreateMessage {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'chat.bsky.convo.defs#logCreateMessage'
-  )
+export function isLogCreateMessage(v: unknown): v is LogCreateMessage & {
+  $type: $Type<'chat.bsky.convo.defs', 'logCreateMessage'>
+} {
+  return is$typed(v, id, 'logCreateMessage')
 }
 
-export function validateLogCreateMessage(v: unknown): ValidationResult {
-  return lexicons.validate('chat.bsky.convo.defs#logCreateMessage', v)
+export function validateLogCreateMessage(v: unknown) {
+  return lexicons.validate(
+    `${id}#logCreateMessage`,
+    v,
+  ) as ValidationResult<LogCreateMessage>
 }
 
 export interface LogDeleteMessage {
@@ -203,14 +211,15 @@ export interface LogDeleteMessage {
   [k: string]: unknown
 }
 
-export function isLogDeleteMessage(v: unknown): v is LogDeleteMessage {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'chat.bsky.convo.defs#logDeleteMessage'
-  )
+export function isLogDeleteMessage(v: unknown): v is LogDeleteMessage & {
+  $type: $Type<'chat.bsky.convo.defs', 'logDeleteMessage'>
+} {
+  return is$typed(v, id, 'logDeleteMessage')
 }
 
-export function validateLogDeleteMessage(v: unknown): ValidationResult {
-  return lexicons.validate('chat.bsky.convo.defs#logDeleteMessage', v)
+export function validateLogDeleteMessage(v: unknown) {
+  return lexicons.validate(
+    `${id}#logDeleteMessage`,
+    v,
+  ) as ValidationResult<LogDeleteMessage>
 }

@@ -2,9 +2,11 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
+import { lexicons } from '../../../../lexicons'
+import { $Type, is$typed } from '../../../../util'
+
+const id = 'app.bsky.video.defs'
 
 export interface JobStatus {
   jobId: string
@@ -19,14 +21,12 @@ export interface JobStatus {
   [k: string]: unknown
 }
 
-export function isJobStatus(v: unknown): v is JobStatus {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.video.defs#jobStatus'
-  )
+export function isJobStatus(
+  v: unknown,
+): v is JobStatus & { $type: $Type<'app.bsky.video.defs', 'jobStatus'> } {
+  return is$typed(v, id, 'jobStatus')
 }
 
-export function validateJobStatus(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.video.defs#jobStatus', v)
+export function validateJobStatus(v: unknown) {
+  return lexicons.validate(`${id}#jobStatus`, v) as ValidationResult<JobStatus>
 }

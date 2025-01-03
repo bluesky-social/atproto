@@ -2,9 +2,9 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
+import { lexicons } from '../../../../lexicons'
+import { $Type, is$typed } from '../../../../util'
 import * as AppBskyRichtextFacet from '../richtext/facet'
 import * as AppBskyEmbedImages from '../embed/images'
 import * as AppBskyEmbedVideo from '../embed/video'
@@ -13,6 +13,8 @@ import * as AppBskyEmbedRecord from '../embed/record'
 import * as AppBskyEmbedRecordWithMedia from '../embed/recordWithMedia'
 import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
 import * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef'
+
+const id = 'app.bsky.feed.post'
 
 export interface Record {
   /** The primary post content. May be an empty string, if there are embeds. */
@@ -41,16 +43,14 @@ export interface Record {
   [k: string]: unknown
 }
 
-export function isRecord(v: unknown): v is Record {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    (v.$type === 'app.bsky.feed.post#main' || v.$type === 'app.bsky.feed.post')
-  )
+export function isRecord(
+  v: unknown,
+): v is Record & { $type: $Type<'app.bsky.feed.post', 'main'> } {
+  return is$typed(v, id, 'main')
 }
 
-export function validateRecord(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.feed.post#main', v)
+export function validateRecord(v: unknown) {
+  return lexicons.validate(`${id}#main`, v) as ValidationResult<Record>
 }
 
 export interface ReplyRef {
@@ -59,14 +59,14 @@ export interface ReplyRef {
   [k: string]: unknown
 }
 
-export function isReplyRef(v: unknown): v is ReplyRef {
-  return (
-    isObj(v) && hasProp(v, '$type') && v.$type === 'app.bsky.feed.post#replyRef'
-  )
+export function isReplyRef(
+  v: unknown,
+): v is ReplyRef & { $type: $Type<'app.bsky.feed.post', 'replyRef'> } {
+  return is$typed(v, id, 'replyRef')
 }
 
-export function validateReplyRef(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.feed.post#replyRef', v)
+export function validateReplyRef(v: unknown) {
+  return lexicons.validate(`${id}#replyRef`, v) as ValidationResult<ReplyRef>
 }
 
 /** Deprecated: use facets instead. */
@@ -78,14 +78,14 @@ export interface Entity {
   [k: string]: unknown
 }
 
-export function isEntity(v: unknown): v is Entity {
-  return (
-    isObj(v) && hasProp(v, '$type') && v.$type === 'app.bsky.feed.post#entity'
-  )
+export function isEntity(
+  v: unknown,
+): v is Entity & { $type: $Type<'app.bsky.feed.post', 'entity'> } {
+  return is$typed(v, id, 'entity')
 }
 
-export function validateEntity(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.feed.post#entity', v)
+export function validateEntity(v: unknown) {
+  return lexicons.validate(`${id}#entity`, v) as ValidationResult<Entity>
 }
 
 /** Deprecated. Use app.bsky.richtext instead -- A text segment. Start is inclusive, end is exclusive. Indices are for utf16-encoded strings. */
@@ -95,14 +95,12 @@ export interface TextSlice {
   [k: string]: unknown
 }
 
-export function isTextSlice(v: unknown): v is TextSlice {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.feed.post#textSlice'
-  )
+export function isTextSlice(
+  v: unknown,
+): v is TextSlice & { $type: $Type<'app.bsky.feed.post', 'textSlice'> } {
+  return is$typed(v, id, 'textSlice')
 }
 
-export function validateTextSlice(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.feed.post#textSlice', v)
+export function validateTextSlice(v: unknown) {
+  return lexicons.validate(`${id}#textSlice`, v) as ValidationResult<TextSlice>
 }

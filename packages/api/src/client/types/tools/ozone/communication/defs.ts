@@ -2,9 +2,11 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
+import { $Type, is$typed } from '../../../../util'
+import { lexicons } from '../../../../lexicons'
+
+const id = 'tools.ozone.communication.defs'
 
 export interface TemplateView {
   id: string
@@ -24,14 +26,15 @@ export interface TemplateView {
   [k: string]: unknown
 }
 
-export function isTemplateView(v: unknown): v is TemplateView {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'tools.ozone.communication.defs#templateView'
-  )
+export function isTemplateView(v: unknown): v is TemplateView & {
+  $type: $Type<'tools.ozone.communication.defs', 'templateView'>
+} {
+  return is$typed(v, id, 'templateView')
 }
 
-export function validateTemplateView(v: unknown): ValidationResult {
-  return lexicons.validate('tools.ozone.communication.defs#templateView', v)
+export function validateTemplateView(v: unknown) {
+  return lexicons.validate(
+    `${id}#templateView`,
+    v,
+  ) as ValidationResult<TemplateView>
 }

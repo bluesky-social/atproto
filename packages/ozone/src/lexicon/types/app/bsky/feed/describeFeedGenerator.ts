@@ -3,10 +3,12 @@
  */
 import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
+import { lexicons } from '../../../../lexicons'
+import { $Type, is$typed } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
+
+const id = 'app.bsky.feed.describeFeedGenerator'
 
 export interface QueryParams {}
 
@@ -49,16 +51,14 @@ export interface Feed {
   [k: string]: unknown
 }
 
-export function isFeed(v: unknown): v is Feed {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.feed.describeFeedGenerator#feed'
-  )
+export function isFeed(
+  v: unknown,
+): v is Feed & { $type: $Type<'app.bsky.feed.describeFeedGenerator', 'feed'> } {
+  return is$typed(v, id, 'feed')
 }
 
-export function validateFeed(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.feed.describeFeedGenerator#feed', v)
+export function validateFeed(v: unknown) {
+  return lexicons.validate(`${id}#feed`, v) as ValidationResult<Feed>
 }
 
 export interface Links {
@@ -67,14 +67,12 @@ export interface Links {
   [k: string]: unknown
 }
 
-export function isLinks(v: unknown): v is Links {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.feed.describeFeedGenerator#links'
-  )
+export function isLinks(v: unknown): v is Links & {
+  $type: $Type<'app.bsky.feed.describeFeedGenerator', 'links'>
+} {
+  return is$typed(v, id, 'links')
 }
 
-export function validateLinks(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.feed.describeFeedGenerator#links', v)
+export function validateLinks(v: unknown) {
+  return lexicons.validate(`${id}#links`, v) as ValidationResult<Links>
 }

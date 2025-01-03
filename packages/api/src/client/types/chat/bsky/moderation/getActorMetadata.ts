@@ -3,9 +3,11 @@
  */
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
+import { $Type, is$typed } from '../../../../util'
+import { lexicons } from '../../../../lexicons'
+
+const id = 'chat.bsky.moderation.getActorMetadata'
 
 export interface QueryParams {
   actor: string
@@ -43,14 +45,12 @@ export interface Metadata {
   [k: string]: unknown
 }
 
-export function isMetadata(v: unknown): v is Metadata {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'chat.bsky.moderation.getActorMetadata#metadata'
-  )
+export function isMetadata(v: unknown): v is Metadata & {
+  $type: $Type<'chat.bsky.moderation.getActorMetadata', 'metadata'>
+} {
+  return is$typed(v, id, 'metadata')
 }
 
-export function validateMetadata(v: unknown): ValidationResult {
-  return lexicons.validate('chat.bsky.moderation.getActorMetadata#metadata', v)
+export function validateMetadata(v: unknown) {
+  return lexicons.validate(`${id}#metadata`, v) as ValidationResult<Metadata>
 }

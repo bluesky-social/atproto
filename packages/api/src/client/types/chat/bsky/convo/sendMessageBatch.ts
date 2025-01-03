@@ -3,10 +3,12 @@
  */
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
+import { $Type, is$typed } from '../../../../util'
+import { lexicons } from '../../../../lexicons'
 import * as ChatBskyConvoDefs from './defs'
+
+const id = 'chat.bsky.convo.sendMessageBatch'
 
 export interface QueryParams {}
 
@@ -43,14 +45,12 @@ export interface BatchItem {
   [k: string]: unknown
 }
 
-export function isBatchItem(v: unknown): v is BatchItem {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'chat.bsky.convo.sendMessageBatch#batchItem'
-  )
+export function isBatchItem(v: unknown): v is BatchItem & {
+  $type: $Type<'chat.bsky.convo.sendMessageBatch', 'batchItem'>
+} {
+  return is$typed(v, id, 'batchItem')
 }
 
-export function validateBatchItem(v: unknown): ValidationResult {
-  return lexicons.validate('chat.bsky.convo.sendMessageBatch#batchItem', v)
+export function validateBatchItem(v: unknown) {
+  return lexicons.validate(`${id}#batchItem`, v) as ValidationResult<BatchItem>
 }
