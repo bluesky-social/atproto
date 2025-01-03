@@ -1,7 +1,7 @@
 import { Project, SourceFile, VariableDeclarationKind } from 'ts-morph'
-import { LexiconDoc } from '@atproto/lexicon'
+import { type LexiconDoc } from '@atproto/lexicon'
 import prettier from 'prettier'
-import { GeneratedFile } from '../types'
+import { type GeneratedFile } from '../types'
 
 const PRETTIER_OPTS = {
   parser: 'typescript',
@@ -18,10 +18,10 @@ export function isObj(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null
 }
 
-export function hasProp<K extends PropertyKey>(
-  data: object,
+export function hasProp<T extends object, K extends PropertyKey>(
+  data: T,
   prop: K,
-): data is Record<K, unknown> {
+): data is T & Record<K, unknown> {
   return prop in data
 }
 `)
@@ -36,12 +36,12 @@ export const lexiconsTs = (project, lexicons: LexiconDoc[]) =>
         .join('')
     }
 
-    //= import {LexiconDoc} from '@atproto/lexicon'
+    //= import { type LexiconDoc, Lexicons } from '@atproto/lexicon'
     file
       .addImportDeclaration({
         moduleSpecifier: '@atproto/lexicon',
       })
-      .addNamedImports([{ name: 'LexiconDoc' }, { name: 'Lexicons' }])
+      .addNamedImports([{ name: 'LexiconDoc', isTypeOnly: true }, { name: 'Lexicons' }])
 
     //= export const schemaDict = {...} as const satisfies Record<string, LexiconDoc>
     file.addVariableStatement({
@@ -66,14 +66,14 @@ export const lexiconsTs = (project, lexicons: LexiconDoc[]) =>
       ],
     })
 
-    //= export const schemas = Object.values(schemaDict)
+    //= export const schemas = Object.values(schemaDict) satisfies LexiconDoc[]
     file.addVariableStatement({
       isExported: true,
       declarationKind: VariableDeclarationKind.Const,
       declarations: [
         {
           name: 'schemas',
-          initializer: 'Object.values(schemaDict)',
+          initializer: 'Object.values(schemaDict) satisfies LexiconDoc[]',
         },
       ],
     })

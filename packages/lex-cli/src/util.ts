@@ -1,9 +1,9 @@
 import fs from 'fs'
 import { join } from 'path'
-import { parseLexiconDoc, LexiconDoc } from '@atproto/lexicon'
-import { ZodError, ZodFormattedError } from 'zod'
+import { parseLexiconDoc, type LexiconDoc } from '@atproto/lexicon'
+import { ZodError, type ZodFormattedError } from 'zod'
 import chalk from 'chalk'
-import { GeneratedAPI, FileDiff } from './types'
+import { type GeneratedAPI, type FileDiff } from './types'
 
 export function readAllLexicons(paths: string[]): LexiconDoc[] {
   const docs: LexiconDoc[] = []

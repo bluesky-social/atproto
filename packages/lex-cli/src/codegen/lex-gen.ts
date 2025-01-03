@@ -2,15 +2,15 @@ import { SourceFile, VariableDeclarationKind } from 'ts-morph'
 import { relative as getRelativePath } from 'path'
 import {
   Lexicons,
-  LexUserType,
-  LexObject,
-  LexArray,
-  LexPrimitive,
-  LexBlob,
-  LexToken,
-  LexCidLink,
-  LexBytes,
-  LexIpldType,
+  type LexUserType,
+  type LexObject,
+  type LexArray,
+  type LexPrimitive,
+  type LexBlob,
+  type LexToken,
+  type LexCidLink,
+  type LexBytes,
+  type LexIpldType,
 } from '@atproto/lexicon'
 import { toCamelCase, toTitleCase, toScreamingSnakeCase } from './util'
 

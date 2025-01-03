@@ -4,10 +4,10 @@ import {
   SourceFile,
   VariableDeclarationKind,
 } from 'ts-morph'
-import { Lexicons, LexiconDoc } from '@atproto/lexicon'
+import { Lexicons, type LexiconDoc } from '@atproto/lexicon'
 import { NSID } from '@atproto/syntax'
 import { gen, lexiconsTs, utilTs } from './common'
-import { GeneratedAPI } from '../types'
+import { type GeneratedAPI } from '../types'
 import {
   genImports,
   genUserType,
@@ -19,7 +19,7 @@ import {
 } from './lex-gen'
 import {
   lexiconsToDefTree,
-  DefTreeNode,
+  type DefTreeNode,
   schemasToNsidTokens,
   toCamelCase,
   toTitleCase,
@@ -68,9 +68,10 @@ const indexTs = (
         {
           name: 'Options',
           alias: 'XrpcOptions',
+          isTypeOnly: true
         },
-        { name: 'AuthVerifier' },
-        { name: 'StreamAuthVerifier' },
+        { name: 'AuthVerifier', isTypeOnly: true },
+        { name: 'StreamAuthVerifier', isTypeOnly: true },
       ],
     })
     //= import {schemas} from './lexicons'
@@ -342,12 +343,12 @@ const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
           })
         }
       }
-      //= import {ValidationResult, BlobRef} from '@atproto/lexicon'
+      //= import { type ValidationResult, BlobRef } from '@atproto/lexicon'
       file
         .addImportDeclaration({
           moduleSpecifier: '@atproto/lexicon',
         })
-        .addNamedImports([{ name: 'ValidationResult' }, { name: 'BlobRef' }])
+        .addNamedImports([{ name: 'ValidationResult', isTypeOnly: true }, { name: 'BlobRef' }])
       //= import {lexicons} from '../../lexicons.ts'
       file
         .addImportDeclaration({
