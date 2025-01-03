@@ -800,7 +800,7 @@ export class Views {
           )
         : undefined,
       threadContext: {
-        rootAuthorLike: state.threadContextStates?.get(post.uri)?.like,
+        rootAuthorLike: state.threadContexts?.get(post.uri)?.like,
       },
     }
   }
@@ -832,7 +832,7 @@ export class Views {
       post,
       parent: this.threadParent(parentUri, rootUri, state, height - 1),
       threadContext: {
-        rootAuthorLike: state.threadContextStates?.get(post.uri)?.like,
+        rootAuthorLike: state.threadContexts?.get(post.uri)?.like,
       },
     }
   }
@@ -879,7 +879,7 @@ export class Views {
           depth - 1,
         ),
         threadContext: {
-          rootAuthorLike: state.threadContextStates?.get(post.uri)?.like,
+          rootAuthorLike: state.threadContexts?.get(post.uri)?.like,
         },
       }
     })
