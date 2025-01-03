@@ -161,6 +161,12 @@ import * as AppBskyNotificationListNotifications from './types/app/bsky/notifica
 import * as AppBskyNotificationPutPreferences from './types/app/bsky/notification/putPreferences'
 import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
+import * as AppBskyPurchaseCreateStripeBillingUrl from './types/app/bsky/purchase/createStripeBillingUrl'
+import * as AppBskyPurchaseCreateStripeCheckoutUrl from './types/app/bsky/purchase/createStripeCheckoutUrl'
+import * as AppBskyPurchaseGetFeatures from './types/app/bsky/purchase/getFeatures'
+import * as AppBskyPurchaseGetSubscriptionGroup from './types/app/bsky/purchase/getSubscriptionGroup'
+import * as AppBskyPurchaseGetSubscriptions from './types/app/bsky/purchase/getSubscriptions'
+import * as AppBskyPurchaseRefreshCache from './types/app/bsky/purchase/refreshCache'
 import * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet'
 import * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs'
 import * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig'
@@ -389,6 +395,12 @@ export * as AppBskyNotificationListNotifications from './types/app/bsky/notifica
 export * as AppBskyNotificationPutPreferences from './types/app/bsky/notification/putPreferences'
 export * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush'
 export * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
+export * as AppBskyPurchaseCreateStripeBillingUrl from './types/app/bsky/purchase/createStripeBillingUrl'
+export * as AppBskyPurchaseCreateStripeCheckoutUrl from './types/app/bsky/purchase/createStripeCheckoutUrl'
+export * as AppBskyPurchaseGetFeatures from './types/app/bsky/purchase/getFeatures'
+export * as AppBskyPurchaseGetSubscriptionGroup from './types/app/bsky/purchase/getSubscriptionGroup'
+export * as AppBskyPurchaseGetSubscriptions from './types/app/bsky/purchase/getSubscriptions'
+export * as AppBskyPurchaseRefreshCache from './types/app/bsky/purchase/refreshCache'
 export * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet'
 export * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs'
 export * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig'
@@ -1488,6 +1500,7 @@ export class AppBskyNS {
   graph: AppBskyGraphNS
   labeler: AppBskyLabelerNS
   notification: AppBskyNotificationNS
+  purchase: AppBskyPurchaseNS
   richtext: AppBskyRichtextNS
   unspecced: AppBskyUnspeccedNS
   video: AppBskyVideoNS
@@ -1500,6 +1513,7 @@ export class AppBskyNS {
     this.graph = new AppBskyGraphNS(client)
     this.labeler = new AppBskyLabelerNS(client)
     this.notification = new AppBskyNotificationNS(client)
+    this.purchase = new AppBskyPurchaseNS(client)
     this.richtext = new AppBskyRichtextNS(client)
     this.unspecced = new AppBskyUnspeccedNS(client)
     this.video = new AppBskyVideoNS(client)
@@ -3021,6 +3035,86 @@ export class AppBskyNotificationNS {
   ): Promise<AppBskyNotificationUpdateSeen.Response> {
     return this._client.call(
       'app.bsky.notification.updateSeen',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+}
+
+export class AppBskyPurchaseNS {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  createStripeBillingUrl(
+    data?: AppBskyPurchaseCreateStripeBillingUrl.InputSchema,
+    opts?: AppBskyPurchaseCreateStripeBillingUrl.CallOptions,
+  ): Promise<AppBskyPurchaseCreateStripeBillingUrl.Response> {
+    return this._client.call(
+      'app.bsky.purchase.createStripeBillingUrl',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
+  createStripeCheckoutUrl(
+    data?: AppBskyPurchaseCreateStripeCheckoutUrl.InputSchema,
+    opts?: AppBskyPurchaseCreateStripeCheckoutUrl.CallOptions,
+  ): Promise<AppBskyPurchaseCreateStripeCheckoutUrl.Response> {
+    return this._client.call(
+      'app.bsky.purchase.createStripeCheckoutUrl',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
+  getFeatures(
+    params?: AppBskyPurchaseGetFeatures.QueryParams,
+    opts?: AppBskyPurchaseGetFeatures.CallOptions,
+  ): Promise<AppBskyPurchaseGetFeatures.Response> {
+    return this._client.call(
+      'app.bsky.purchase.getFeatures',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getSubscriptionGroup(
+    params?: AppBskyPurchaseGetSubscriptionGroup.QueryParams,
+    opts?: AppBskyPurchaseGetSubscriptionGroup.CallOptions,
+  ): Promise<AppBskyPurchaseGetSubscriptionGroup.Response> {
+    return this._client.call(
+      'app.bsky.purchase.getSubscriptionGroup',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getSubscriptions(
+    params?: AppBskyPurchaseGetSubscriptions.QueryParams,
+    opts?: AppBskyPurchaseGetSubscriptions.CallOptions,
+  ): Promise<AppBskyPurchaseGetSubscriptions.Response> {
+    return this._client.call(
+      'app.bsky.purchase.getSubscriptions',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  refreshCache(
+    data?: AppBskyPurchaseRefreshCache.InputSchema,
+    opts?: AppBskyPurchaseRefreshCache.CallOptions,
+  ): Promise<AppBskyPurchaseRefreshCache.Response> {
+    return this._client.call(
+      'app.bsky.purchase.refreshCache',
       opts?.qp,
       data,
       opts,

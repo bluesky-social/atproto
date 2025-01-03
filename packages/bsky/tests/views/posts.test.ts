@@ -1,8 +1,7 @@
 import { AppBskyFeedPost, AtpAgent } from '@atproto/api'
 import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
 import { forSnapshot, stripViewerFromPost } from '../_util'
-import { RecordEmbed, VideoEmbed } from '../../src/views/types'
-import { RecordWithMedia } from '../../dist/views/types'
+import { RecordEmbed, RecordWithMedia, VideoEmbed } from '../../src/views/types'
 import { ids } from '../../src/lexicon/lexicons'
 
 describe('pds posts views', () => {
