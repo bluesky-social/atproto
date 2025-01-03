@@ -36,11 +36,11 @@ export type PostViewerState = {
 
 export type PostViewerStates = HydrationMap<PostViewerState>
 
-export type ThreadContextState = {
+export type ThreadContext = {
   like?: string
 }
 
-export type ThreadContextStates = HydrationMap<ThreadContextState>
+export type ThreadContexts = HydrationMap<ThreadContext>
 
 export type PostAgg = {
   likes: number
@@ -167,10 +167,8 @@ export class FeedHydrator {
     }, new Map<string, boolean>())
   }
 
-  async getThreadContextStates(
-    refs: ThreadRef[],
-  ): Promise<ThreadContextStates> {
-    if (!refs.length) return new HydrationMap<ThreadContextState>()
+  async getThreadContexts(refs: ThreadRef[]): Promise<ThreadContexts> {
+    if (!refs.length) return new HydrationMap<ThreadContext>()
 
     const refsByRootAuthor = refs.reduce((acc, ref) => {
       const { threadRoot } = ref
@@ -205,7 +203,7 @@ export class FeedHydrator {
       return acc.set(uri, {
         like: parseString(likesByUri.get(uri)),
       })
-    }, new HydrationMap<ThreadContextState>())
+    }, new HydrationMap<ThreadContext>())
   }
 
   async getPostAggregates(refs: ItemRef[]): Promise<PostAggs> {
