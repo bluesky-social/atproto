@@ -1,9 +1,13 @@
 FROM node:20.11-alpine as build
 
-RUN npm install -g pnpm
+RUN corepack enable
+
+WORKDIR /app
+
+COPY ./package.json ./
+RUN corepack prepare --activate
 
 # Move files into the image and install
-WORKDIR /app
 COPY ./*.* ./
 # NOTE bsky's transitive dependencies go here: if that changes, this needs to be updated.
 COPY ./tsconfig ./tsconfig

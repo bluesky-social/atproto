@@ -1,6 +1,7 @@
 {
   "name": "ozone-service",
   "private": true,
+  "packageManager": "pnpm@8.15.9",
   "dependencies": {
     "@atproto/aws": "workspace:^",
     "@atproto/ozone": "workspace:^",
