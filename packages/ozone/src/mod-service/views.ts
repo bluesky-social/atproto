@@ -139,11 +139,12 @@ export class ModerationViews {
 
     if (
       event.action === 'tools.ozone.moderation.defs#modEventTakedown' &&
-      typeof event.meta?.policies === 'string'
+      typeof event.meta?.policies === 'string' &&
+      event.meta.policies.length > 0
     ) {
       eventView.event = {
         ...eventView.event,
-        policies: event.meta.policies.split(' '),
+        policies: event.meta.policies.split(','),
       }
     }
 
