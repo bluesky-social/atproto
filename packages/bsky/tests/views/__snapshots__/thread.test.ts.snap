@@ -56,6 +56,7 @@ Object {
           "threadMuted": false,
         },
       },
+      "threadContext": Object {},
     },
     "post": Object {
       "author": Object {
@@ -98,7 +99,7 @@ Object {
           "val": "test-label-2",
         },
       ],
-      "likeCount": 0,
+      "likeCount": 1,
       "quoteCount": 0,
       "record": Object {
         "$type": "app.bsky.feed.post",
@@ -139,6 +140,9 @@ Object {
         "threadMuted": false,
       },
     },
+    "threadContext": Object {
+      "rootAuthorLike": "record(8)",
+    },
   },
   "post": Object {
     "author": Object {
@@ -173,7 +177,7 @@ Object {
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
-    "likeCount": 0,
+    "likeCount": 1,
     "quoteCount": 0,
     "record": Object {
       "$type": "app.bsky.feed.post",
@@ -200,6 +204,9 @@ Object {
     },
   },
   "replies": Array [],
+  "threadContext": Object {
+    "rootAuthorLike": "record(9)",
+  },
 }
 `;
 
@@ -272,7 +279,7 @@ Object {
         "cid": "cids(3)",
         "indexedAt": "1970-01-01T00:00:00.000Z",
         "labels": Array [],
-        "likeCount": 0,
+        "likeCount": 1,
         "quoteCount": 0,
         "record": Object {
           "$type": "app.bsky.feed.post",
@@ -298,6 +305,9 @@ Object {
         },
       },
       "replies": Array [],
+      "threadContext": Object {
+        "rootAuthorLike": "record(7)",
+      },
     },
     Object {
       "$type": "app.bsky.feed.defs#threadViewPost",
@@ -331,18 +341,18 @@ Object {
             "cid": "cids(4)",
             "cts": "1970-01-01T00:00:00.000Z",
             "src": "did:example:labeler",
-            "uri": "record(7)",
+            "uri": "record(8)",
             "val": "test-label",
           },
           Object {
             "cid": "cids(4)",
             "cts": "1970-01-01T00:00:00.000Z",
             "src": "did:example:labeler",
-            "uri": "record(7)",
+            "uri": "record(8)",
             "val": "test-label-2",
           },
         ],
-        "likeCount": 0,
+        "likeCount": 1,
         "quoteCount": 0,
         "record": Object {
           "$type": "app.bsky.feed.post",
@@ -377,7 +387,7 @@ Object {
         },
         "replyCount": 1,
         "repostCount": 0,
-        "uri": "record(7)",
+        "uri": "record(8)",
         "viewer": Object {
           "embeddingDisabled": false,
           "threadMuted": false,
@@ -419,7 +429,7 @@ Object {
             "cid": "cids(6)",
             "indexedAt": "1970-01-01T00:00:00.000Z",
             "labels": Array [],
-            "likeCount": 0,
+            "likeCount": 1,
             "quoteCount": 0,
             "record": Object {
               "$type": "app.bsky.feed.post",
@@ -427,7 +437,7 @@ Object {
               "reply": Object {
                 "parent": Object {
                   "cid": "cids(4)",
-                  "uri": "record(7)",
+                  "uri": "record(8)",
                 },
                 "root": Object {
                   "cid": "cids(0)",
@@ -438,18 +448,25 @@ Object {
             },
             "replyCount": 0,
             "repostCount": 2,
-            "uri": "record(8)",
+            "uri": "record(9)",
             "viewer": Object {
               "embeddingDisabled": false,
-              "repost": "record(9)",
+              "repost": "record(10)",
               "threadMuted": false,
             },
           },
           "replies": Array [],
+          "threadContext": Object {
+            "rootAuthorLike": "record(11)",
+          },
         },
       ],
+      "threadContext": Object {
+        "rootAuthorLike": "record(12)",
+      },
     },
   ],
+  "threadContext": Object {},
 }
 `;
 
@@ -522,7 +539,7 @@ Object {
         "cid": "cids(3)",
         "indexedAt": "1970-01-01T00:00:00.000Z",
         "labels": Array [],
-        "likeCount": 0,
+        "likeCount": 1,
         "quoteCount": 0,
         "record": Object {
           "$type": "app.bsky.feed.post",
@@ -546,6 +563,9 @@ Object {
           "embeddingDisabled": false,
           "threadMuted": false,
         },
+      },
+      "threadContext": Object {
+        "rootAuthorLike": "record(7)",
       },
     },
     Object {
@@ -580,18 +600,18 @@ Object {
             "cid": "cids(4)",
             "cts": "1970-01-01T00:00:00.000Z",
             "src": "did:example:labeler",
-            "uri": "record(7)",
+            "uri": "record(8)",
             "val": "test-label",
           },
           Object {
             "cid": "cids(4)",
             "cts": "1970-01-01T00:00:00.000Z",
             "src": "did:example:labeler",
-            "uri": "record(7)",
+            "uri": "record(8)",
             "val": "test-label-2",
           },
         ],
-        "likeCount": 0,
+        "likeCount": 1,
         "quoteCount": 0,
         "record": Object {
           "$type": "app.bsky.feed.post",
@@ -626,14 +646,18 @@ Object {
         },
         "replyCount": 1,
         "repostCount": 0,
-        "uri": "record(7)",
+        "uri": "record(8)",
         "viewer": Object {
           "embeddingDisabled": false,
           "threadMuted": false,
         },
       },
+      "threadContext": Object {
+        "rootAuthorLike": "record(9)",
+      },
     },
   ],
+  "threadContext": Object {},
 }
 `;
 
@@ -706,7 +730,7 @@ Object {
         "cid": "cids(3)",
         "indexedAt": "1970-01-01T00:00:00.000Z",
         "labels": Array [],
-        "likeCount": 0,
+        "likeCount": 1,
         "quoteCount": 0,
         "record": Object {
           "$type": "app.bsky.feed.post",
@@ -730,6 +754,9 @@ Object {
           "embeddingDisabled": false,
           "threadMuted": false,
         },
+      },
+      "threadContext": Object {
+        "rootAuthorLike": "record(7)",
       },
     },
     Object {
@@ -764,18 +791,18 @@ Object {
             "cid": "cids(4)",
             "cts": "1970-01-01T00:00:00.000Z",
             "src": "did:example:labeler",
-            "uri": "record(7)",
+            "uri": "record(8)",
             "val": "test-label",
           },
           Object {
             "cid": "cids(4)",
             "cts": "1970-01-01T00:00:00.000Z",
             "src": "did:example:labeler",
-            "uri": "record(7)",
+            "uri": "record(8)",
             "val": "test-label-2",
           },
         ],
-        "likeCount": 0,
+        "likeCount": 1,
         "quoteCount": 0,
         "record": Object {
           "$type": "app.bsky.feed.post",
@@ -810,14 +837,18 @@ Object {
         },
         "replyCount": 1,
         "repostCount": 0,
-        "uri": "record(7)",
+        "uri": "record(8)",
         "viewer": Object {
           "embeddingDisabled": false,
           "threadMuted": false,
         },
       },
+      "threadContext": Object {
+        "rootAuthorLike": "record(9)",
+      },
     },
   ],
+  "threadContext": Object {},
 }
 `;
 
@@ -978,10 +1009,13 @@ Object {
             },
           },
           "replies": Array [],
+          "threadContext": Object {},
         },
       ],
+      "threadContext": Object {},
     },
   ],
+  "threadContext": Object {},
 }
 `;
 
@@ -1037,6 +1071,7 @@ Object {
     },
   },
   "replies": Array [],
+  "threadContext": Object {},
 }
 `;
 
@@ -1107,6 +1142,7 @@ Object {
     },
   },
   "replies": Array [],
+  "threadContext": Object {},
 }
 `;
 
@@ -1151,7 +1187,7 @@ Object {
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
-    "likeCount": 0,
+    "likeCount": 1,
     "quoteCount": 0,
     "record": Object {
       "$type": "app.bsky.feed.post",
@@ -1178,6 +1214,9 @@ Object {
     },
   },
   "replies": Array [],
+  "threadContext": Object {
+    "rootAuthorLike": "record(7)",
+  },
 }
 `;
 
@@ -1222,7 +1261,7 @@ Object {
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
-    "likeCount": 0,
+    "likeCount": 1,
     "quoteCount": 0,
     "record": Object {
       "$type": "app.bsky.feed.post",
@@ -1249,6 +1288,9 @@ Object {
     },
   },
   "replies": Array [],
+  "threadContext": Object {
+    "rootAuthorLike": "record(7)",
+  },
 }
 `;
 
@@ -1348,7 +1390,7 @@ Object {
             "val": "test-label-2",
           },
         ],
-        "likeCount": 0,
+        "likeCount": 1,
         "quoteCount": 0,
         "record": Object {
           "$type": "app.bsky.feed.post",
@@ -1425,7 +1467,7 @@ Object {
             "cid": "cids(5)",
             "indexedAt": "1970-01-01T00:00:00.000Z",
             "labels": Array [],
-            "likeCount": 0,
+            "likeCount": 1,
             "quoteCount": 0,
             "record": Object {
               "$type": "app.bsky.feed.post",
@@ -1452,10 +1494,17 @@ Object {
             },
           },
           "replies": Array [],
+          "threadContext": Object {
+            "rootAuthorLike": "record(8)",
+          },
         },
       ],
+      "threadContext": Object {
+        "rootAuthorLike": "record(9)",
+      },
     },
   ],
+  "threadContext": Object {},
 }
 `;
 
@@ -1555,7 +1604,7 @@ Object {
             "val": "test-label-2",
           },
         ],
-        "likeCount": 0,
+        "likeCount": 1,
         "quoteCount": 0,
         "record": Object {
           "$type": "app.bsky.feed.post",
@@ -1597,7 +1646,11 @@ Object {
         },
       },
       "replies": Array [],
+      "threadContext": Object {
+        "rootAuthorLike": "record(6)",
+      },
     },
   ],
+  "threadContext": Object {},
 }
 `;

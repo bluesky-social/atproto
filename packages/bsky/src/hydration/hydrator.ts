@@ -58,6 +58,8 @@ import {
   Threadgates,
   Postgates,
   FeedItem,
+  ThreadContexts,
+  ThreadRef,
 } from './feed'
 import { ParsedLabelers } from '../util'
 
@@ -89,6 +91,7 @@ export type HydrationState = {
   posts?: Posts
   postAggs?: PostAggs
   postViewers?: PostViewerStates
+  threadContexts?: ThreadContexts
   postBlocks?: PostBlocks
   reposts?: Reposts
   follows?: Follows
@@ -341,29 +344,24 @@ export class Hydrator {
     state: HydrationState = {},
   ): Promise<HydrationState> {
     const uris = refs.map((ref) => ref.uri)
+
+    state.posts ??= new HydrationMap<Post>()
+    const addPostsToHydrationState = (posts: Posts) => {
+      posts.forEach((post, uri) => {
+        state.posts ??= new HydrationMap<Post>()
+        state.posts.set(uri, post)
+      })
+    }
+
+    // layer 0: the posts in the thread
     const postsLayer0 = await this.feed.getPosts(
       uris,
       ctx.includeTakedowns,
       state.posts,
     )
-    // first level embeds plus thread roots we haven't fetched yet
-    const urisLayer1 = nestedRecordUrisFromPosts(postsLayer0)
+    addPostsToHydrationState(postsLayer0)
+
     const additionalRootUris = rootUrisFromPosts(postsLayer0) // supports computing threadgates
-    const urisLayer1ByCollection = urisByCollection(urisLayer1)
-    const embedPostUrisLayer1 =
-      urisLayer1ByCollection.get(ids.AppBskyFeedPost) ?? []
-    const postsLayer1 = await this.feed.getPosts(
-      [...embedPostUrisLayer1, ...additionalRootUris],
-      ctx.includeTakedowns,
-    )
-    // second level embeds, ignoring any additional root uris we mixed-in to the previous layer
-    const urisLayer2 = nestedRecordUrisFromPosts(
-      postsLayer1,
-      embedPostUrisLayer1,
-    )
-    const urisLayer2ByCollection = urisByCollection(urisLayer2)
-    const embedPostUrisLayer2 =
-      urisLayer2ByCollection.get(ids.AppBskyFeedPost) ?? []
     const threadRootUris = new Set<string>()
     for (const [uri, post] of postsLayer0) {
       if (post) {
@@ -385,10 +383,38 @@ export class Hydrator {
         postUrisWithThreadgates.add(uri)
       }
     }
+
+    // layer 1: first level embeds plus thread roots we haven't fetched yet
+    const urisLayer1 = nestedRecordUrisFromPosts(postsLayer0)
+    const urisLayer1ByCollection = urisByCollection(urisLayer1)
+    const embedPostUrisLayer1 =
+      urisLayer1ByCollection.get(ids.AppBskyFeedPost) ?? []
+    const postsLayer1 = await this.feed.getPosts(
+      [...embedPostUrisLayer1, ...additionalRootUris],
+      ctx.includeTakedowns,
+      state.posts,
+    )
+    addPostsToHydrationState(postsLayer1)
+
+    // layer 2: second level embeds, ignoring any additional root uris we mixed-in to the previous layer
+    const urisLayer2 = nestedRecordUrisFromPosts(
+      postsLayer1,
+      embedPostUrisLayer1,
+    )
+    const urisLayer2ByCollection = urisByCollection(urisLayer2)
+    const embedPostUrisLayer2 =
+      urisLayer2ByCollection.get(ids.AppBskyFeedPost) ?? []
+
     const [postsLayer2, threadgates] = await Promise.all([
-      this.feed.getPosts(embedPostUrisLayer2, ctx.includeTakedowns),
+      this.feed.getPosts(
+        embedPostUrisLayer2,
+        ctx.includeTakedowns,
+        state.posts,
+      ),
       this.feed.getThreadgatesForPosts([...postUrisWithThreadgates.values()]),
     ])
+    addPostsToHydrationState(postsLayer2)
+
     // collect list/feedgen embeds, lists in threadgates, post record hydration
     const threadgateListUris = getListUrisFromThreadgates(threadgates)
     const nestedListUris = [
@@ -597,7 +623,29 @@ export class Hydrator {
     refs: ItemRef[],
     ctx: HydrateCtx,
   ): Promise<HydrationState> {
-    return this.hydratePosts(refs, ctx)
+    const postsState = await this.hydratePosts(refs, ctx)
+
+    const { posts } = postsState
+    const postsList = posts ? Array.from(posts.entries()) : []
+
+    const isDefined = (
+      entry: [string, Post | null],
+    ): entry is [string, Post] => {
+      const [, post] = entry
+      return !!post
+    }
+
+    const threadRefs: ThreadRef[] = postsList
+      .filter(isDefined)
+      .map(([uri, post]) => ({
+        uri,
+        cid: post.cid,
+        threadRoot: post.record.reply?.root.uri ?? uri,
+      }))
+
+    const threadContexts = await this.feed.getThreadContexts(threadRefs)
+
+    return mergeStates(postsState, { threadContexts })
   }
 
   // app.bsky.feed.defs#generatorView
@@ -1168,6 +1216,7 @@ export const mergeStates = (
     posts: mergeMaps(stateA.posts, stateB.posts),
     postAggs: mergeMaps(stateA.postAggs, stateB.postAggs),
     postViewers: mergeMaps(stateA.postViewers, stateB.postViewers),
+    threadContexts: mergeMaps(stateA.threadContexts, stateB.threadContexts),
     postBlocks: mergeMaps(stateA.postBlocks, stateB.postBlocks),
     reposts: mergeMaps(stateA.reposts, stateB.reposts),
     follows: mergeMaps(stateA.follows, stateB.follows),
