@@ -10,6 +10,7 @@ import * as communicationTemplate from './communication_template'
 import * as set from './ozone_set'
 import * as member from './member'
 import * as setting from './setting'
+import * as publicSubjectStatus from './public_subject_status'
 
 export type DatabaseSchemaType = modEvent.PartialDB &
   modSubjectStatus.PartialDB &
@@ -21,7 +22,8 @@ export type DatabaseSchemaType = modEvent.PartialDB &
   communicationTemplate.PartialDB &
   set.PartialDB &
   member.PartialDB &
-  setting.PartialDB
+  setting.PartialDB &
+  publicSubjectStatus.PartialDB
 
 export type DatabaseSchema = Kysely<DatabaseSchemaType>
 
