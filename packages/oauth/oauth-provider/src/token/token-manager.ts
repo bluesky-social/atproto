@@ -462,6 +462,7 @@ export class TokenManager {
       case isSignedJwt(token): {
         const { payload } = await this.signer.verify(token, {
           clockTolerance: Infinity,
+          requiredClaims: ['jti'],
         })
         const tokenId = tokenIdSchema.parse(payload.jti)
         await this.store.deleteToken(tokenId)
