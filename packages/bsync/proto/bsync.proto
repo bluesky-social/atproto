@@ -3,6 +3,8 @@ syntax = "proto3";
 package bsync;
 option go_package = "./;bsync";
 
+import "google/protobuf/timestamp.proto";
+
 //
 // Sync
 //
@@ -66,7 +68,61 @@ message ScanNotifOperationsResponse {
   string cursor = 2;
 }
 
+message Subscription {
+  string status = 1;
+  string renewalStatus = 2;
+  string group = 3;
+  string platform = 4;
+  string offering = 5;
+  google.protobuf.Timestamp periodEndsAt = 6;
+  google.protobuf.Timestamp periodStartsAt = 7;
+  google.protobuf.Timestamp purchasedAt = 8;
+}
 
+message GetSubscriptionsRequest {
+  string actor_did = 1;
+}
+
+message GetSubscriptionsResponse {
+  string email = 1;
+  repeated Subscription subscriptions = 2;
+}
+
+message SubscriptionOffering {
+  string id = 1;
+  string product = 2;
+}
+
+message GetSubscriptionGroupRequest {
+  string group = 1;
+  string platform = 2;
+}
+
+message GetSubscriptionGroupResponse {
+  repeated SubscriptionOffering offerings = 1;
+}
+
+message RefreshPurchasesRequest {
+  string actor_did = 1;
+}
+
+message RefreshPurchasesResponse {}
+
+message PurchaseOperation {
+  string id = 1;
+  string actor_did = 2;
+  repeated string entitlements = 3;
+}
+
+message ScanPurchaseOperationsRequest {
+  string cursor = 1;
+  int32 limit = 2;
+}
+
+message ScanPurchaseOperationsResponse {
+  repeated PurchaseOperation operations = 1;
+  string cursor = 2;
+}
 
 // Ping
 message PingRequest {}
@@ -79,6 +135,11 @@ service Service {
   rpc ScanMuteOperations(ScanMuteOperationsRequest) returns (ScanMuteOperationsResponse);
   rpc AddNotifOperation(AddNotifOperationRequest) returns (AddNotifOperationResponse);
   rpc ScanNotifOperations(ScanNotifOperationsRequest) returns (ScanNotifOperationsResponse);
+  // Purchase
+  rpc GetSubscriptions(GetSubscriptionsRequest) returns (GetSubscriptionsResponse);
+  rpc GetSubscriptionGroup(GetSubscriptionGroupRequest) returns (GetSubscriptionGroupResponse);
+  rpc RefreshPurchases(RefreshPurchasesRequest) returns (RefreshPurchasesResponse);
+  rpc ScanPurchaseOperations(ScanPurchaseOperationsRequest) returns (ScanPurchaseOperationsResponse);
   // Ping
   rpc Ping(PingRequest) returns (PingResponse);
 }

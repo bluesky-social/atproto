@@ -1,0 +1,33 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.purchase.getFeatures",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Enumerate unlocked paid feature flags for the requesting account. Requires auth.",
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["features"],
+          "properties": {
+            "features": {
+              "type": "ref",
+              "ref": "#features"
+            }
+          }
+        }
+      }
+    },
+    "features": {
+      "type": "object",
+      "required": [],
+      "properties": {
+        "customProfileColor": {
+          "type": "boolean",
+          "description": "Indicates to client apps to allow the requesting account to customize the profile color."
+        }
+      }
+    }
+  }
+}

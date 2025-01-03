@@ -35,14 +35,14 @@ export enum RoleStatus {
   Missing,
 }
 
-type NullOutput = {
+export type NullOutput = {
   credentials: {
     type: 'none'
     iss: null
   }
 }
 
-type StandardOutput = {
+export type StandardOutput = {
   credentials: {
     type: 'standard'
     aud: string
@@ -50,14 +50,14 @@ type StandardOutput = {
   }
 }
 
-type RoleOutput = {
+export type RoleOutput = {
   credentials: {
     type: 'role'
     admin: boolean
   }
 }
 
-type ModServiceOutput = {
+export type ModServiceOutput = {
   credentials: {
     type: 'mod_service'
     aud: string

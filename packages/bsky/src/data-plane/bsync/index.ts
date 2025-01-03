@@ -9,6 +9,8 @@ import { Database } from '../server/db'
 import { Service } from '../../proto/bsync_connect'
 import { MuteOperation_Type } from '../../proto/bsync_pb'
 import { ids } from '../../lexicon/lexicons'
+import { Timestamp } from '@bufbuild/protobuf'
+import { DAY } from '@atproto/common'
 
 export class MockBsync {
   constructor(public server: http.Server) {}
@@ -136,6 +138,70 @@ const createRoutes = (db: Database) => (router: ConnectRouter) =>
 
     async scanNotifOperations() {
       throw new Error('not implemented')
+    },
+
+    async refreshPurchases(req) {
+      const { actorDid } = req
+
+      // Simulates that a call to the subscription service returns the 'core' entitlement.
+      const entitlements = ['core']
+
+      const now = new Date().toISOString()
+
+      await db.db
+        .insertInto('purchase')
+        .values({
+          did: actorDid,
+          entitlements: JSON.stringify(entitlements),
+          createdAt: now,
+          updatedAt: now,
+        })
+        .onConflict((oc) =>
+          oc.column('did').doUpdateSet({
+            entitlements: JSON.stringify(entitlements),
+            updatedAt: now,
+          }),
+        )
+        .execute()
+    },
+
+    async getSubscriptions() {
+      const TEN_DAYS = 10 * DAY
+      const now = Date.now()
+      const start = new Date(now - TEN_DAYS)
+      const end = new Date(now + TEN_DAYS)
+
+      // Simulates that a call to the subscription service returns this subscription.
+      return {
+        email: 'test@test',
+        subscriptions: [
+          {
+            status: 'active',
+            renewalStatus: 'will_renew',
+            group: 'core',
+            platform: 'web',
+            offering: 'core:monthly',
+            periodEndsAt: Timestamp.fromDate(end),
+            periodStartsAt: Timestamp.fromDate(start),
+            purchasedAt: Timestamp.fromDate(start),
+          },
+        ],
+      }
+    },
+
+    async getSubscriptionGroup() {
+      return {
+        offerings: [
+          {
+            id: 'core:monthly',
+            product: 'bluesky_plus_core_v1_monthly',
+          },
+          {
+            id: 'core:annual',
+            product: 'bluesky_plus_core_v1_annual',
+          },
+        ],
+      }
     },
 
     async ping() {
