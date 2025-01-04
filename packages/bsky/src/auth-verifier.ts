@@ -92,7 +92,10 @@ export class AuthVerifier {
   ) {
     this.ownDid = opts.ownDid
     this.standardAudienceDids = new Set([
+      // @TODO: Temporarily we still accept the own DID by itself.
+      // Later, we will only accept with the service id fragment.
       opts.ownDid,
+      `${opts.ownDid}#bsky_appview`,
       ...opts.alternateAudienceDids,
     ])
     this.modServiceDid = opts.modServiceDid
