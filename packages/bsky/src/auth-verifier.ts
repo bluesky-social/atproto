@@ -92,7 +92,10 @@ export class AuthVerifier {
   ) {
     this.ownDid = opts.ownDid
     this.standardAudienceDids = new Set([
+      // @TODO: Temporarily we still accept the own DID by itself.
+      // Later, we will only accept with the service id fragment.
       opts.ownDid,
+      `${opts.ownDid}#bsky_appview`,
       ...opts.alternateAudienceDids,
     ])
     this.modServiceDid = opts.modServiceDid
@@ -134,29 +137,12 @@ export class AuthVerifier {
           iss: null,
           aud: null,
         })
-
-        const [audDid, audServiceId] = aud.split('#')
-
-        if (!opts.skipAudCheck && !this.standardAudienceDids.has(audDid)) {
+        if (!opts.skipAudCheck && !this.standardAudienceDids.has(aud)) {
           throw new AuthRequiredError(
             'jwt audience does not match service did',
             'BadJwtAudience',
           )
         }
-
-        const hasServiceId = aud.includes('#')
-        if (
-          audDid === this.ownDid &&
-          // @NOTE: Temporarily make the service id optional, only validate if present.
-          hasServiceId &&
-          audServiceId !== 'bsky_appview'
-        ) {
-          throw new AuthRequiredError(
-            'jwt audience does not match service id',
-            'BadJwtAudience',
-          )
-        }
-
         return {
           credentials: {
             type: 'standard',

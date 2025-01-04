@@ -128,7 +128,7 @@ describe('auth', () => {
             headers: { authorization: `Bearer ${jwt}` },
           },
         ),
-      ).rejects.toThrow('jwt audience does not match service id')
+      ).rejects.toThrow('jwt audience does not match service did')
     })
 
     it('throws with audience with empty service id fragment', async () => {
@@ -146,7 +146,7 @@ describe('auth', () => {
             headers: { authorization: `Bearer ${jwt}` },
           },
         ),
-      ).rejects.toThrow('jwt audience does not match service id')
+      ).rejects.toThrow('jwt audience does not match service did')
     })
   })
 
