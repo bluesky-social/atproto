@@ -23,8 +23,7 @@
   },
   "dependencies": {
     "@atproto/common-web": "workspace:^",
-    "@atproto/crypto": "workspace:^",
-    "axios": "^0.27.2"
+    "@atproto/crypto": "workspace:^"
   },
   "devDependencies": {
     "@did-plc/lib": "^0.0.1",

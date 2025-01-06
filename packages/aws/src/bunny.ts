@@ -1,4 +1,4 @@
-import { handleAllSettledErrors } from '@atproto/common'
+import { allFulfilled } from '@atproto/common'
 import { ImageInvalidator } from './types'
 
 export type BunnyConfig = {
@@ -11,7 +11,7 @@ const API_PURGE_URL = 'https://api.bunny.net/purge'
 export class BunnyInvalidator implements ImageInvalidator {
   constructor(public cfg: BunnyConfig) {}
   async invalidate(_subject: string, paths: string[]) {
-    const results = await Promise.allSettled(
+    await allFulfilled(
       paths.map(async (path) =>
         purgeUrl({
           url: this.cfg.urlPrefix + path,
@@ -19,7 +19,6 @@ export class BunnyInvalidator implements ImageInvalidator {
         }),
       ),
     )
-    handleAllSettledErrors(results)
   }
 }
 

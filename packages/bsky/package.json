@@ -27,9 +27,12 @@
     "buf:gen": "buf generate ../bsync/proto && buf generate ./proto"
   },
   "dependencies": {
+    "@atproto-labs/fetch-node": "workspace:*",
+    "@atproto-labs/xrpc-utils": "workspace:*",
     "@atproto/api": "workspace:^",
     "@atproto/common": "workspace:^",
     "@atproto/crypto": "workspace:^",
+    "@atproto/did": "workspace:^",
     "@atproto/identity": "workspace:^",
     "@atproto/lexicon": "workspace:^",
     "@atproto/repo": "workspace:^",
@@ -41,6 +44,7 @@
     "@connectrpc/connect-express": "^1.1.4",
     "@connectrpc/connect-node": "^1.1.4",
     "@did-plc/lib": "^0.0.1",
+    "@types/http-errors": "^2.0.1",
     "compression": "^1.7.4",
     "cors": "^2.8.5",
     "express": "^4.17.2",
@@ -60,7 +64,8 @@
     "statsig-node": "^5.23.1",
     "structured-headers": "^1.0.1",
     "typed-emitter": "^2.1.0",
-    "uint8arrays": "3.0.0"
+    "uint8arrays": "3.0.0",
+    "undici": "^6.19.8"
   },
   "devDependencies": {
     "@atproto/api": "workspace:^",
@@ -76,7 +81,6 @@
     "@types/express-serve-static-core": "^4.17.36",
     "@types/pg": "^8.6.6",
     "@types/qs": "^6.9.7",
-    "axios": "^0.27.2",
     "jest": "^28.1.2",
     "ts-node": "^10.8.2",
     "typescript": "^5.6.3"
