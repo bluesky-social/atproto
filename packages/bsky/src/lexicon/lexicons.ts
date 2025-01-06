@@ -5814,7 +5814,8 @@ export const schemaDict = {
             format: 'cid',
           },
           record: {
-            type: 'unknown',
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.threadgate#record',
           },
           lists: {
             type: 'array',
