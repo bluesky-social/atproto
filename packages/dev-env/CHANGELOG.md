@@ -1,5 +1,17 @@
 # @atproto/dev-env
 
+## 0.3.73
+
+### Patch Changes
+
+- [#3271](https://github.com/bluesky-social/atproto/pull/3271) [`53621f8e1`](https://github.com/bluesky-social/atproto/commit/53621f8e100a3aa3c1caff10a08d3f4ea919875a) Thanks [@foysalit](https://github.com/foysalit)! - Allow setting policy names with takedown actions and when querying events
+
+- Updated dependencies [[`53621f8e1`](https://github.com/bluesky-social/atproto/commit/53621f8e100a3aa3c1caff10a08d3f4ea919875a)]:
+  - @atproto/ozone@0.1.64
+  - @atproto/api@0.13.25
+  - @atproto/bsky@0.0.103
+  - @atproto/pds@0.4.81
+
 ## 0.3.72
 
 ### Patch Changes
