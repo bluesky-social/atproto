@@ -90,6 +90,7 @@ export class LocalViewer {
   }
 
   async serviceAuthHeaders(did: string, lxm: string) {
+    // @TODO: appview DID
     if (!this.appviewDid) {
       throw new Error('Could not find bsky appview did')
     }

@@ -56,7 +56,12 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
         throw new InvalidRequestError('Bad token method', 'InvalidToken')
       }
 
-      const { url: origin, did: aud } = await parseProxyInfo(ctx, req, lxm)
+      const {
+        url: origin,
+        did,
+        serviceId,
+      } = await parseProxyInfo(ctx, req, lxm)
+      const aud = serviceId ? `${did}${serviceId}` : did
 
       const headers: IncomingHttpHeaders = {
         'accept-encoding': req.headers['accept-encoding'] || 'identity',
@@ -160,7 +165,8 @@ export async function pipethrough(
 
   const lxm = parseReqNsid(req)
 
-  const { url: origin, did: aud } = await parseProxyInfo(ctx, req, lxm)
+  const { url: origin, did, serviceId } = await parseProxyInfo(ctx, req, lxm)
+  const aud = serviceId ? `${did}${serviceId}` : did
 
   const dispatchOptions: Dispatcher.RequestOptions = {
     origin,
@@ -210,7 +216,7 @@ export async function parseProxyInfo(
   ctx: AppContext,
   req: express.Request,
   lxm: string,
-): Promise<{ url: string; did: string }> {
+): Promise<{ url: string; did: string; serviceId?: string }> {
   // /!\ Hot path
 
   const proxyToHeader = req.header('atproto-proxy')
@@ -226,7 +232,7 @@ export const parseProxyHeader = async (
   // Using subset of AppContext for testing purposes
   ctx: Pick<AppContext, 'idResolver'>,
   proxyTo: string,
-): Promise<{ did: string; url: string }> => {
+): Promise<{ url: string; did: string; serviceId: string }> => {
   // /!\ Hot path
 
   const hashIndex = proxyTo.indexOf('#')
@@ -261,7 +267,7 @@ export const parseProxyHeader = async (
     throw new InvalidRequestError('could not resolve proxy did service url')
   }
 
-  return { did, url }
+  return { did, url, serviceId }
 }
 
 /**
@@ -654,7 +660,7 @@ const defaultService = (
     case ids.ComAtprotoModerationCreateReport:
       return ctx.cfg.reportService
     default:
-      return ctx.cfg.bskyAppView
+      return ctx.cfg.reportService
   }
 }
 

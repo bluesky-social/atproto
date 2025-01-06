@@ -387,6 +387,7 @@ export class AppContext {
 
   async appviewAuthHeaders(did: string, lxm: string) {
     assert(this.cfg.bskyAppView)
+    // @TODO: appview DID
     return this.serviceAuthHeaders(did, this.cfg.bskyAppView.did, lxm)
   }
 
