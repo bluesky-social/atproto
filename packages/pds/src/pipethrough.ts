@@ -209,7 +209,7 @@ export async function parseProxyInfo(
 
 export const parseProxyHeader = async (
   // Using subset of AppContext for testing purposes
-  ctx: Pick<AppContext, 'idResolver'>,
+  ctx: Pick<AppContext, 'cfg' | 'idResolver'>,
   proxyTo: string,
 ): Promise<{ did: string; url: string }> => {
   // /!\ Hot path
@@ -244,6 +244,14 @@ export const parseProxyHeader = async (
   const url = getServiceEndpoint(didDoc, { id: serviceId })
   if (!url) {
     throw new InvalidRequestError('could not resolve proxy did service url')
+  }
+
+  // Special case a configured appview, while still proxying correctly any other appview
+  if (
+    ctx.cfg.bskyAppView &&
+    proxyTo === `${ctx.cfg.bskyAppView.did}#bsky_appview`
+  ) {
+    return { did, url: ctx.cfg.bskyAppView.url }
   }
 
   return { did, url }

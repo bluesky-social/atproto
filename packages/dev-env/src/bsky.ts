@@ -34,6 +34,20 @@ export class TestBsky {
       signer: serviceKeypair,
     })
 
+    const endpoint = `http://localhost:${port}`
+
+    await plcClient.updateData(serverDid, serviceKeypair, (x) => {
+      x.services['bsky_notif'] = {
+        type: 'BskyNotificationService',
+        endpoint,
+      }
+      x.services['bsky_appview'] = {
+        type: 'BskyAppView',
+        endpoint,
+      }
+      return x
+    })
+
     // shared across server, ingester, and indexer in order to share pool, avoid too many pg connections.
     const db = new bsky.Database({
       url: cfg.dbPostgresUrl,
