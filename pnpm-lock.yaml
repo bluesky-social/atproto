@@ -130,8 +130,8 @@ importers:
         specifier: ^3.226.0
         version: 3.226.0(@aws-sdk/abort-controller@3.374.0)(@aws-sdk/client-s3@3.224.0)
       '@noble/curves':
-        specifier: ^1.1.0
-        version: 1.1.0
+        specifier: ^1.7.0
+        version: 1.8.0
       key-encoder:
         specifier: ^2.0.3
         version: 2.0.3
@@ -426,11 +426,11 @@ importers:
   packages/crypto:
     dependencies:
       '@noble/curves':
-        specifier: ^1.1.0
-        version: 1.1.0
+        specifier: ^1.7.0
+        version: 1.8.0
       '@noble/hashes':
-        specifier: ^1.3.1
-        version: 1.3.1
+        specifier: ^1.6.1
+        version: 1.7.0
       uint8arrays:
         specifier: 3.0.0
         version: 3.0.0
@@ -5579,15 +5579,16 @@ packages:
       read-yaml-file: 1.1.0
     dev: true
 
-  /@noble/curves@1.1.0:
-    resolution: {integrity: sha512-091oBExgENk/kGj3AZmtBDMpxQPDtxQABR2B9lb1JbVTs6ytdzZNwvhxQ4MWasRNEzlbEH8jCWFCwhF/Obj5AA==}
+  /@noble/curves@1.8.0:
+    resolution: {integrity: sha512-j84kjAbzEnQHaSIhRPUmB3/eVXu2k3dKPl2LOrR8fSOIL+89U+7lV117EWHtq/GHM3ReGHM46iRBdZfpc4HRUQ==}
+    engines: {node: ^14.21.3 || >=16}
     dependencies:
-      '@noble/hashes': 1.3.1
+      '@noble/hashes': 1.7.0
     dev: false
 
-  /@noble/hashes@1.3.1:
-    resolution: {integrity: sha512-EbqwksQwz9xDRGfDST86whPBgM65E0OH/pCgqW0GBVzO22bNE+NuIbeTb714+IfSjU3aRk47EUvXIb5bTsenKA==}
-    engines: {node: '>= 16'}
+  /@noble/hashes@1.7.0:
+    resolution: {integrity: sha512-HXydb0DgzTpDPwbVeDGCG1gIu7X6+AuU6Zl6av/E/KG8LMsvPntvq+w17CHRpKBmN6Ybdrt1eP3k4cj8DJa78w==}
+    engines: {node: ^14.21.3 || >=16}
     dev: false
 
   /@noble/secp256k1@1.7.1:
