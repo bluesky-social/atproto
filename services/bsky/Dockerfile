@@ -16,6 +16,7 @@ COPY ./packages/api ./packages/api
 COPY ./packages/common ./packages/common
 COPY ./packages/common-web ./packages/common-web
 COPY ./packages/crypto ./packages/crypto
+COPY ./packages/did ./packages/did
 COPY ./packages/identity ./packages/identity
 COPY ./packages/sync ./packages/sync
 COPY ./packages/syntax ./packages/syntax
@@ -23,6 +24,10 @@ COPY ./packages/lexicon ./packages/lexicon
 COPY ./packages/repo ./packages/repo
 COPY ./packages/xrpc ./packages/xrpc
 COPY ./packages/xrpc-server ./packages/xrpc-server
+COPY ./packages/internal/fetch-node ./packages/internal/fetch-node
+COPY ./packages/internal/fetch ./packages/internal/fetch
+COPY ./packages/internal/pipe ./packages/internal/pipe
+COPY ./packages/internal/xrpc-utils ./packages/internal/xrpc-utils
 COPY ./services/bsky ./services/bsky
 
 # install all deps
