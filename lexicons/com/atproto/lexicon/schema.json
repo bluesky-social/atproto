@@ -24,8 +24,7 @@
             "description": "Short top-level description of the Lexicon (distinct from descriptions of any sub-fields)"
           },
           "defs": {
-            "type": "array",
-            "items": { "type": "unknown" },
+            "type": "unknown",
             "description": "The Lexicon schema definitions themselves, with structure defined in the atproto Lexicon specifications."
           }
         }
