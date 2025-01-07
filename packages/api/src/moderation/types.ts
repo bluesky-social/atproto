@@ -10,7 +10,7 @@ import { KnownLabelValue } from './const/labels'
 // syntax
 // =
 
-export const CUSTOM_LABEL_VALUE_RE = /^[a-z-]+$/
+export const CUSTOM_LABEL_VALUE_RE = /^[a-z0-9-]+$/
 
 // behaviors
 // =
