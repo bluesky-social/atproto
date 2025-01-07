@@ -1,5 +1,17 @@
 # @atproto/bsky
 
+## 0.0.105
+
+### Patch Changes
+
+- Updated dependencies [[`1abfd74ec`](https://github.com/bluesky-social/atproto/commit/1abfd74ec7114e5d8e2411f7a4fa10bdce97e277)]:
+  - @atproto/crypto@0.4.3
+  - @atproto/identity@0.4.5
+  - @atproto/repo@0.6.2
+  - @atproto/xrpc-server@0.7.6
+  - @atproto/sync@0.1.9
+  - @atproto-labs/xrpc-utils@0.0.2
+
 ## 0.0.104
 
 ### Patch Changes
