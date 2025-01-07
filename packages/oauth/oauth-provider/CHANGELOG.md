@@ -1,5 +1,12 @@
 # @atproto/oauth-provider
 
+## 0.2.11
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/common@0.4.6
+
 ## 0.2.10
 
 ### Patch Changes

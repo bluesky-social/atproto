@@ -1,5 +1,15 @@
 # @atproto/identity
 
+## 0.4.4
+
+### Patch Changes
+
+- [#3177](https://github.com/bluesky-social/atproto/pull/3177) [`72eba67af`](https://github.com/bluesky-social/atproto/commit/72eba67af1af8320b5400bcb9319d5c3c8407d99) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove dependency on Axios
+
+- Updated dependencies [[`72eba67af`](https://github.com/bluesky-social/atproto/commit/72eba67af1af8320b5400bcb9319d5c3c8407d99), [`72eba67af`](https://github.com/bluesky-social/atproto/commit/72eba67af1af8320b5400bcb9319d5c3c8407d99)]:
+  - @atproto/common-web@0.3.2
+  - @atproto/crypto@0.4.2
+
 ## 0.4.3
 
 ### Patch Changes

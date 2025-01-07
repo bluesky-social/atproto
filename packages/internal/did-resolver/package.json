@@ -1,6 +1,6 @@
 {
   "name": "@atproto-labs/did-resolver",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "license": "MIT",
   "description": "DID resolution and verification library",
   "keywords": [
