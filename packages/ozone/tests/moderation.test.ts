@@ -816,7 +816,9 @@ describe('moderation', () => {
     it.skip('prevents image blob from being served, even when cached.', async () => {
       const fetchImage = await fetch(imageUri)
       expect(fetchImage.status).toEqual(404)
-      expect(await fetchImage.json()).toEqual({ message: 'Image not found' })
+      expect(await fetchImage.json()).toMatchObject({
+        message: 'Blob not found',
+      })
     })
 
     it('invalidates the image in the cdn', async () => {

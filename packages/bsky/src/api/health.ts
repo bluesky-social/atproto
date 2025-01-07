@@ -6,9 +6,23 @@ export const createRouter = (ctx: AppContext): express.Router => {
 
   router.get('/', function (req, res) {
     res.type('text/plain')
-    res.send(
-      'This is an AT Protocol Application View (AppView) for the "bsky.app" application: https://github.com/bluesky-social/atproto\n\nMost API routes are under /xrpc/',
-    )
+    res.send(`
+  _         _
+ | |       | |
+ | |__  ___| | ___   _
+ | '_ \\/ __| |/ / | | |
+ | |_) \\__ \\   <| |_| |
+ |_.__/|___/_|\\_\\\\__, |
+                  __/ |
+                 |___/
+
+This is an AT Protocol Application View (AppView) for the "bsky.app" application.
+
+Most API routes are under /xrpc/
+
+      Code: https://github.com/bluesky-social/atproto
+  Protocol: https://atproto.com
+`)
   })
 
   router.get('/robots.txt', function (req, res) {

@@ -5,10 +5,11 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
+import { AuthScope } from '../../../../auth-verifier'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.identity.requestPlcOperationSignature({
-    auth: ctx.authVerifier.accessFull(),
+    auth: ctx.authVerifier.accessFull({ additional: [AuthScope.Takendown] }),
     handler: async ({ auth }) => {
       if (ctx.entrywayAgent) {
         assert(ctx.cfg.entryway)

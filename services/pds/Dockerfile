@@ -2,10 +2,14 @@
 # see additional reference to this image further down.
 FROM node:20.11-alpine3.18 as build
 
-RUN npm install -g pnpm
+RUN corepack enable
+
+WORKDIR /app
+
+COPY ./package.json ./
+RUN corepack prepare --activate
 
 # Move files into the image and install
-WORKDIR /app
 COPY ./*.* ./
 # NOTE pds's transitive dependencies go here: if that changes, this needs to be updated.
 COPY ./tsconfig ./tsconfig
@@ -32,6 +36,7 @@ COPY ./packages/internal/fetch-node ./packages/internal/fetch-node
 COPY ./packages/internal/simple-store ./packages/internal/simple-store
 COPY ./packages/internal/simple-store-memory ./packages/internal/simple-store-memory
 COPY ./packages/internal/rollup-plugin-bundle-manifest ./packages/internal/rollup-plugin-bundle-manifest
+COPY ./packages/internal/xrpc-utils ./packages/internal/xrpc-utils
 COPY ./services/pds ./services/pds
 
 # install all deps

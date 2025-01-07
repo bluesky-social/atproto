@@ -27,7 +27,7 @@ importers:
         specifier: ^28.1.4
         version: 28.1.4
       '@types/node':
-        specifier: ^18.19.56
+        specifier: ^18.19.67
         version: 18.19.67
       '@typescript-eslint/eslint-plugin':
         specifier: ^7.4.0
@@ -148,6 +148,12 @@ importers:
 
   packages/bsky:
     dependencies:
+      '@atproto-labs/fetch-node':
+        specifier: workspace:*
+        version: link:../internal/fetch-node
+      '@atproto-labs/xrpc-utils':
+        specifier: workspace:*
+        version: link:../internal/xrpc-utils
       '@atproto/api':
         specifier: workspace:^
         version: link:../api
@@ -157,6 +163,9 @@ importers:
       '@atproto/crypto':
         specifier: workspace:^
         version: link:../crypto
+      '@atproto/did':
+        specifier: workspace:^
+        version: link:../did
       '@atproto/identity':
         specifier: workspace:^
         version: link:../identity
@@ -190,6 +199,9 @@ importers:
       '@did-plc/lib':
         specifier: ^0.0.1
         version: 0.0.1
+      '@types/http-errors':
+        specifier: ^2.0.1
+        version: 2.0.1
       compression:
         specifier: ^1.7.4
         version: 1.7.4
@@ -250,6 +262,9 @@ importers:
       uint8arrays:
         specifier: 3.0.0
         version: 3.0.0
+      undici:
+        specifier: ^6.19.8
+        version: 6.19.8
     devDependencies:
       '@atproto/lex-cli':
         specifier: workspace:^
@@ -287,9 +302,6 @@ importers:
       '@types/qs':
         specifier: ^6.9.7
         version: 6.9.7
-      axios:
-        specifier: ^0.27.2
-        version: 0.27.2
       jest:
         specifier: ^28.1.2
         version: 28.1.2(@types/node@18.19.67)(ts-node@10.8.2)
@@ -477,9 +489,6 @@ importers:
       '@did-plc/server':
         specifier: ^0.0.1
         version: 0.0.1
-      axios:
-        specifier: ^0.27.2
-        version: 0.27.2
       dotenv:
         specifier: ^16.0.3
         version: 16.0.3
@@ -495,6 +504,9 @@ importers:
       uint8arrays:
         specifier: 3.0.0
         version: 3.0.0
+      undici:
+        specifier: ^6.14.1
+        version: 6.19.8
     devDependencies:
       '@types/express':
         specifier: ^4.17.13
@@ -521,9 +533,6 @@ importers:
       '@atproto/crypto':
         specifier: workspace:^
         version: link:../crypto
-      axios:
-        specifier: ^0.27.2
-        version: 0.27.2
     devDependencies:
       '@did-plc/lib':
         specifier: ^0.0.1
@@ -695,6 +704,19 @@ importers:
       lru-cache:
         specifier: ^10.2.0
         version: 10.2.0
+    devDependencies:
+      typescript:
+        specifier: ^5.6.3
+        version: 5.6.3
+
+  packages/internal/xrpc-utils:
+    dependencies:
+      '@atproto/xrpc':
+        specifier: workspace:^
+        version: link:../../xrpc
+      '@atproto/xrpc-server':
+        specifier: workspace:^
+        version: link:../../xrpc-server
     devDependencies:
       typescript:
         specifier: ^5.6.3
@@ -1144,9 +1166,6 @@ importers:
       '@did-plc/lib':
         specifier: ^0.0.1
         version: 0.0.1
-      axios:
-        specifier: ^1.6.7
-        version: 1.6.7
       compression:
         specifier: ^1.7.4
         version: 1.7.4
@@ -1186,6 +1205,9 @@ importers:
       uint8arrays:
         specifier: 3.0.0
         version: 3.0.0
+      undici:
+        specifier: ^6.14.1
+        version: 6.19.8
     devDependencies:
       '@atproto/lex-cli':
         specifier: workspace:^
@@ -1226,6 +1248,9 @@ importers:
       '@atproto-labs/fetch-node':
         specifier: workspace:*
         version: link:../internal/fetch-node
+      '@atproto-labs/xrpc-utils':
+        specifier: workspace:*
+        version: link:../internal/xrpc-utils
       '@atproto/api':
         specifier: workspace:^
         version: link:../api
@@ -1374,9 +1399,6 @@ importers:
       '@types/qs':
         specifier: ^6.9.7
         version: 6.9.7
-      axios:
-        specifier: ^0.27.2
-        version: 0.27.2
       esbuild:
         specifier: ^0.14.48
         version: 0.14.48
@@ -6904,14 +6926,6 @@ packages:
   /await-lock@2.2.2:
     resolution: {integrity: sha512-aDczADvlvTGajTDjcjpJMqRkOF6Qdz3YbPZm/PyW6tKPkx2hlYBzxMhEywM/tU72HrVZjgl5VCdRuMlA7pZ8Gw==}
     dev: false
-
-  /axios@0.27.2:
-    resolution: {integrity: sha512-t+yRIyySRTp/wua5xEr+z1q60QmLq8ABsS5O9Me1AsE5dfKqgnCFzwiCZZ/cGNd1lq4/7akDWMxdhVlucjmnOQ==}
-    dependencies:
-      follow-redirects: 1.15.5
-      form-data: 4.0.0
-    transitivePeerDependencies:
-      - debug
 
   /axios@1.6.7:
     resolution: {integrity: sha512-/hDJGff6/c7u0hDkvkGxR/oy6CbCs8ziCsC7SqmhjfozqiJGc8Z11wrv9z9lYfY4K8l+H9TpjcMDX0xOZmx+RA==}
