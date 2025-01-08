@@ -11,7 +11,8 @@
           "format": "uri"
         },
         "status": {
-          "type": "string"
+          "type": "string",
+          "knownValues": ["deactivated", "active", "deleted"]
         },
         "modAction": {
           "type": "string",
@@ -49,17 +50,16 @@
           "format": "datetime"
         },
         "isAutomated": {
-          "type": "boolean",
-          "default": false
+          "type": "boolean"
         },
         "event": {
           "type": "union",
           "refs": [
-            "#eventTakedown",
-            "#eventLabel",
-            "#eventReport",
-            "#eventEmail",
-            "#eventResolve"
+            "tools.ozone.history.defs#eventTakedown",
+            "tools.ozone.history.defs#eventLabel",
+            "tools.ozone.history.defs#eventReport",
+            "tools.ozone.history.defs#eventEmail",
+            "tools.ozone.history.defs#eventResolve"
           ]
         }
       }

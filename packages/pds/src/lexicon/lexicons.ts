@@ -11046,6 +11046,7 @@ export const schemaDict = {
           },
           status: {
             type: 'string',
+            knownValues: ['deactivated', 'active', 'deleted'],
           },
           modAction: {
             type: 'string',
@@ -11084,7 +11085,6 @@ export const schemaDict = {
           },
           isAutomated: {
             type: 'boolean',
-            default: false,
           },
           event: {
             type: 'union',
@@ -11336,6 +11336,7 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
+            required: ['events'],
             properties: {
               events: {
                 type: 'array',
@@ -12680,7 +12681,7 @@ export const schemaDict = {
               items: {
                 type: 'string',
                 description:
-                  'If specified, only events where the policy matches the given policy are returned',
+                  'If specified, only events where the action policies match any of the given policies are returned',
               },
             },
             cursor: {

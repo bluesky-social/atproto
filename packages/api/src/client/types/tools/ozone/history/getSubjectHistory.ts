@@ -17,7 +17,7 @@ export interface QueryParams {
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  events?: ToolsOzoneHistoryDefs.EventView[]
+  events: ToolsOzoneHistoryDefs.EventView[]
   cursor?: string
   [k: string]: unknown
 }

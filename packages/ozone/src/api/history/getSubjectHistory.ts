@@ -1,7 +1,6 @@
 import { Server } from '../../lexicon'
 import AppContext from '../../context'
 import { EventView } from '../../lexicon/types/tools/ozone/history/defs'
-import assert from 'node:assert'
 import { publishableModEvents } from '../../history/status'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 

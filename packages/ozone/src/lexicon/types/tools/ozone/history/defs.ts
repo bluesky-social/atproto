@@ -11,7 +11,7 @@ import * as ComAtprotoModerationDefs from '../../../com/atproto/moderation/defs'
 
 export interface SubjectBasicView {
   subject: string
-  status: string
+  status: 'deactivated' | 'active' | 'deleted' | (string & {})
   modAction:
     | 'lex:tools.ozone.history.defs#modActionPending'
     | 'lex:tools.ozone.history.defs#modActionLabel'

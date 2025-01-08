@@ -23,6 +23,7 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
+          "required": ["events"],
           "properties": {
             "events": {
               "type": "array",
