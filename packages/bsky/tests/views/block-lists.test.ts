@@ -48,7 +48,7 @@ describe('pds views with blocking from block lists', () => {
   it('creates a list with some items', async () => {
     const avatar = await sc.uploadFile(
       alice,
-      '../dev-env/src/seed/img/key-portrait-small.jpg',
+      '../dev-env/assets/key-portrait-small.jpg',
       'image/jpeg',
     )
     // alice creates block list with bob & carol that dan uses

@@ -5,6 +5,7 @@ import {
   basicSeed,
 } from '@atproto/dev-env'
 import { REASONSPAM } from '../src/lexicon/types/com/atproto/moderation/defs'
+import { REASONMISLEADING } from '../dist/lexicon/types/com/atproto/moderation/defs'
 
 describe('moderation subject content tagging', () => {
   let network: TestNetwork
@@ -136,6 +137,34 @@ describe('moderation subject content tagging', () => {
       ])
       expect(mediaImagePostStatus.tags).toContain('embed:image')
       expect(imagePostStatus.tags).toContain('embed:image')
+    })
+  })
+
+  describe('report tagger', () => {
+    it('Adds report reason tag', async () => {
+      await Promise.all([
+        sc.createReport({
+          reasonType: REASONSPAM,
+          subject: {
+            $type: 'com.atproto.admin.defs#repoRef',
+            did: sc.dids.carol,
+          },
+          reportedBy: sc.dids.alice,
+        }),
+        sc.createReport({
+          reasonType: REASONMISLEADING,
+          subject: {
+            $type: 'com.atproto.admin.defs#repoRef',
+            did: sc.dids.carol,
+          },
+          reportedBy: sc.dids.alice,
+        }),
+      ])
+
+      const accountStatus = await getStatus(sc.dids.carol)
+
+      expect(accountStatus.tags).toContain('report:spam')
+      expect(accountStatus.tags).toContain('report:misleading')
     })
   })
 })

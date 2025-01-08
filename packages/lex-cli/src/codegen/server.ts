@@ -180,7 +180,7 @@ const indexTs = (
       typeParameters: [{ name: 'T' }],
       type: `{
         name: string
-        calcKey?: (ctx: T) => string
+        calcKey?: (ctx: T) => string | null
         calcPoints?: (ctx: T) => number
       }`,
     })
@@ -191,7 +191,7 @@ const indexTs = (
       type: `{
         durationMs: number
         points: number
-        calcKey?: (ctx: T) => string
+        calcKey?: (ctx: T) => string | null
         calcPoints?: (ctx: T) => number
       }`,
     })

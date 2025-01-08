@@ -8,6 +8,18 @@
       "parameters": {
         "type": "params",
         "properties": {
+          "queueCount": {
+            "type": "integer",
+            "description": "Number of queues being used by moderators. Subjects will be split among all queues."
+          },
+          "queueIndex": {
+            "type": "integer",
+            "description": "Index of the queue to fetch subjects from. Works only when queueCount value is specified."
+          },
+          "queueSeed": {
+            "type": "string",
+            "description": "A seeder to shuffle/balance the queue items."
+          },
           "includeAllUserRecords": {
             "type": "boolean",
             "description": "All subjects, or subjects from given 'collections' param, belonging to the account specified in the 'subject' param will be returned."
@@ -118,8 +130,10 @@
           },
           "tags": {
             "type": "array",
+            "maxLength": 25,
             "items": {
-              "type": "string"
+              "type": "string",
+              "description": "Items in this array are applied with OR filters. To apply AND filter, put all tags in the same string and separate using && characters"
             }
           },
           "excludeTags": {

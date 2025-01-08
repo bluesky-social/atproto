@@ -287,7 +287,7 @@ Array [
         "$type": "app.bsky.embed.images",
         "images": Array [
           Object {
-            "alt": "../dev-env/src/seed/img/key-landscape-small.jpg",
+            "alt": "../dev-env/assets/key-landscape-small.jpg",
             "image": Object {
               "$type": "blob",
               "mimeType": "image/jpeg",
@@ -1168,7 +1168,7 @@ Array [
         "$type": "app.bsky.embed.images",
         "images": Array [
           Object {
-            "alt": "../dev-env/src/seed/img/key-landscape-small.jpg",
+            "alt": "../dev-env/assets/key-landscape-small.jpg",
             "image": Object {
               "$type": "blob",
               "mimeType": "image/jpeg",
@@ -1381,7 +1381,7 @@ Object {
           "$type": "app.bsky.embed.images",
           "images": Array [
             Object {
-              "alt": "../dev-env/src/seed/img/key-landscape-small.jpg",
+              "alt": "../dev-env/assets/key-landscape-small.jpg",
               "image": Object {
                 "$type": "blob",
                 "mimeType": "image/jpeg",

@@ -2412,6 +2412,11 @@ export const schemaDict = {
               authFactorToken: {
                 type: 'string',
               },
+              allowTakendown: {
+                type: 'boolean',
+                description:
+                  'When true, instead of throwing error for takendown accounts, a valid response with a narrow scoped token will be returned',
+              },
             },
           },
         },
@@ -9257,6 +9262,24 @@ export const schemaDict = {
           },
         },
       },
+      trendingTopic: {
+        type: 'object',
+        required: ['topic', 'link'],
+        properties: {
+          topic: {
+            type: 'string',
+          },
+          displayName: {
+            type: 'string',
+          },
+          description: {
+            type: 'string',
+          },
+          link: {
+            type: 'string',
+          },
+        },
+      },
     },
   },
   AppBskyUnspeccedGetConfig: {
@@ -9432,6 +9455,56 @@ export const schemaDict = {
           subject: {
             type: 'string',
             format: 'uri',
+          },
+        },
+      },
+    },
+  },
+  AppBskyUnspeccedGetTrendingTopics: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.getTrendingTopics',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get a list of trending topics',
+        parameters: {
+          type: 'params',
+          properties: {
+            viewer: {
+              type: 'string',
+              format: 'did',
+              description:
+                'DID of the account making the request (not included for public/unauthenticated queries). Used to boost followed accounts in ranking.',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 25,
+              default: 10,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['topics', 'suggested'],
+            properties: {
+              topics: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.unspecced.defs#trendingTopic',
+                },
+              },
+              suggested: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.unspecced.defs#trendingTopic',
+                },
+              },
+            },
           },
         },
       },
@@ -11557,6 +11630,15 @@ export const schemaDict = {
             description:
               'If true, all other reports on content authored by this account will be resolved (acknowledged).',
           },
+          policies: {
+            type: 'array',
+            maxLength: 5,
+            items: {
+              type: 'string',
+            },
+            description:
+              'Names/Keywords of the policies that drove the decision.',
+          },
         },
       },
       modEventReverseTakedown: {
@@ -12593,6 +12675,14 @@ export const schemaDict = {
                 type: 'string',
               },
             },
+            policies: {
+              type: 'array',
+              items: {
+                type: 'string',
+                description:
+                  'If specified, only events where the policy matches the given policy are returned',
+              },
+            },
             cursor: {
               type: 'string',
             },
@@ -12630,6 +12720,20 @@ export const schemaDict = {
         parameters: {
           type: 'params',
           properties: {
+            queueCount: {
+              type: 'integer',
+              description:
+                'Number of queues being used by moderators. Subjects will be split among all queues.',
+            },
+            queueIndex: {
+              type: 'integer',
+              description:
+                'Index of the queue to fetch subjects from. Works only when queueCount value is specified.',
+            },
+            queueSeed: {
+              type: 'string',
+              description: 'A seeder to shuffle/balance the queue items.',
+            },
             includeAllUserRecords: {
               type: 'boolean',
               description:
@@ -12749,8 +12853,11 @@ export const schemaDict = {
             },
             tags: {
               type: 'array',
+              maxLength: 25,
               items: {
                 type: 'string',
+                description:
+                  'Items in this array are applied with OR filters. To apply AND filter, put all tags in the same string and separate using && characters',
               },
             },
             excludeTags: {
@@ -14007,6 +14114,7 @@ export const ids = {
     'app.bsky.unspecced.getSuggestionsSkeleton',
   AppBskyUnspeccedGetTaggedSuggestions:
     'app.bsky.unspecced.getTaggedSuggestions',
+  AppBskyUnspeccedGetTrendingTopics: 'app.bsky.unspecced.getTrendingTopics',
   AppBskyUnspeccedSearchActorsSkeleton:
     'app.bsky.unspecced.searchActorsSkeleton',
   AppBskyUnspeccedSearchPostsSkeleton: 'app.bsky.unspecced.searchPostsSkeleton',

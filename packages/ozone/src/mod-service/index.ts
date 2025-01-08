@@ -1,5 +1,5 @@
 import net from 'node:net'
-import { Insertable, sql } from 'kysely'
+import { Insertable, SelectQueryBuilder, sql } from 'kysely'
 import { CID } from 'multiformats/cid'
 import { AtUri, INVALID_HANDLE } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
@@ -159,6 +159,7 @@ export class ModerationService {
     reportTypes?: string[]
     collections: string[]
     subjectType?: string
+    policies?: string[]
   }): Promise<{ cursor?: string; events: ModerationEventRow[] }> {
     const {
       subject,
@@ -179,6 +180,7 @@ export class ModerationService {
       reportTypes,
       collections,
       subjectType,
+      policies,
     } = opts
     const { ref } = this.db.db.dynamic
     let builder = this.db.db.selectFrom('moderation_event').selectAll()
@@ -270,6 +272,14 @@ export class ModerationService {
     }
     if (reportTypes?.length) {
       builder = builder.where(sql`meta->>'reportType'`, 'in', reportTypes)
+    }
+    if (policies?.length) {
+      builder = builder.where((qb) => {
+        policies.forEach((policy) => {
+          qb = qb.orWhere(sql`meta->>'policies'`, 'ilike', `%${policy}%`)
+        })
+        return qb
+      })
     }
 
     const keyset = new TimeIdKeyset(
@@ -440,6 +450,10 @@ export class ModerationService {
       event.acknowledgeAccountSubjects
     ) {
       meta.acknowledgeAccountSubjects = true
+    }
+
+    if (isModEventTakedown(event) && event.policies?.length) {
+      meta.policies = event.policies.join(',')
     }
 
     // Keep trace of reports that came in while the reporter was in muted stated
@@ -799,7 +813,49 @@ export class ModerationService {
     return result
   }
 
+  applyTagFilter = (
+    builder: SelectQueryBuilder<any, any, any>,
+    tags: string[],
+  ) => {
+    const { ref } = this.db.db.dynamic
+    // Build an array of conditions
+    const conditions = tags
+      .map((tag) => {
+        if (tag.includes('&&')) {
+          // Split by '&&' for AND logic
+          const subTags = tag
+            .split('&&')
+            // Make sure spaces on either sides of '&&' are trimmed
+            .map((subTag) => subTag.trim())
+            // Remove empty strings after trimming is applied
+            .filter(Boolean)
+
+          if (!subTags.length) return null
+
+          return sql`(${sql.join(
+            subTags.map(
+              (subTag) =>
+                sql`${ref('moderation_subject_status.tags')} ? ${subTag}`,
+            ),
+            sql` AND `,
+          )})`
+        } else {
+          // Single tag condition
+          return sql`${ref('moderation_subject_status.tags')} ? ${tag}`
+        }
+      })
+      .filter(Boolean)
+
+    if (!conditions.length) return builder
+
+    // Combine all conditions with OR
+    return builder.where(sql`(${sql.join(conditions, sql` OR `)})`)
+  }
+
   async getSubjectStatuses({
+    queueCount,
+    queueIndex,
+    queueSeed = '',
     includeAllUserRecords,
     cursor,
     limit = 50,
@@ -827,6 +883,9 @@ export class ModerationService {
     collections,
     subjectType,
   }: {
+    queueCount?: number
+    queueIndex?: number
+    queueSeed?: string
     includeAllUserRecords?: boolean
     cursor?: string
     limit?: number
@@ -876,6 +935,24 @@ export class ModerationService {
       builder = builder.where('recordPath', '=', '')
     } else if (subjectType === 'record') {
       builder = builder.where('recordPath', '!=', '')
+    }
+
+    // Only fetch items that belongs to the specified queue when specified
+    if (
+      !subject &&
+      queueCount &&
+      queueCount > 0 &&
+      queueIndex !== undefined &&
+      queueIndex >= 0 &&
+      queueIndex < queueCount
+    ) {
+      builder = builder.where(
+        queueSeed
+          ? sql`ABS(HASHTEXT(${queueSeed} || did)) % ${queueCount}`
+          : sql`ABS(HASHTEXT(did)) % ${queueCount}`,
+        '=',
+        queueIndex,
+      )
     }
 
     // If subjectType is set to 'account' let that take priority and ignore collections filter
@@ -966,11 +1043,7 @@ export class ModerationService {
     }
 
     if (tags.length) {
-      builder = builder.where(
-        sql`${ref('moderation_subject_status.tags')} ?| array[${sql.join(
-          tags,
-        )}]::TEXT[]`,
-      )
+      builder = this.applyTagFilter(builder, tags)
     }
 
     if (excludeTags.length) {

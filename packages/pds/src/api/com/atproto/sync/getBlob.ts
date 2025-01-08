@@ -4,10 +4,13 @@ import AppContext from '../../../../context'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { BlobNotFoundError } from '@atproto/repo'
 import { assertRepoAvailability } from './util'
+import { AuthScope } from '../../../../auth-verifier'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.getBlob({
-    auth: ctx.authVerifier.optionalAccessOrAdminToken,
+    auth: ctx.authVerifier.optionalAccessOrAdminToken({
+      additional: [AuthScope.Takendown],
+    }),
     handler: async ({ params, res, auth }) => {
       const { did } = params
       await assertRepoAvailability(

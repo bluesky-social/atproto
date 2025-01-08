@@ -1,136 +1,170 @@
-import fs from 'fs/promises'
-import fsSync from 'fs'
-import os from 'os'
-import path from 'path'
-import { Readable } from 'stream'
-import axios, { AxiosError } from 'axios'
-import express, {
-  Request,
-  Response,
-  Express,
-  ErrorRequestHandler,
-  NextFunction,
-} from 'express'
-import createError, { isHttpError } from 'http-errors'
-import { BlobNotFoundError } from '@atproto/repo'
 import {
   cloneStream,
-  forwardStreamErrors,
+  createDecoders,
   isErrnoException,
+  VerifyCidError,
+  VerifyCidTransform,
 } from '@atproto/common'
-import { BadPathError, ImageUriBuilder } from './uri'
+import { BlobNotFoundError } from '@atproto/repo'
+import createError, { isHttpError } from 'http-errors'
+import fsSync from 'node:fs'
+import fs from 'node:fs/promises'
+import os from 'node:os'
+import path from 'node:path'
+import { Duplex, Readable } from 'node:stream'
+import { pipeline } from 'node:stream/promises'
+
+import { streamBlob, StreamBlobOptions } from '../api/blob-resolver'
+import AppContext from '../context'
+import { Middleware, responseSignal } from '../util/http'
 import log from './logger'
-import { resize } from './sharp'
-import { formatsToMimes, Options } from './util'
-import { retryHttp } from '../util/retry'
-import { ServerConfig } from '../config'
+import { createImageProcessor, createImageUpscaler } from './sharp'
+import { BadPathError, ImageUriBuilder } from './uri'
+import { formatsToMimes, Options, SharpInfo } from './util'
 
-export class ImageProcessingServer {
-  app: Express = express()
-  uriBuilder: ImageUriBuilder
-
-  constructor(
-    public cfg: ServerConfig,
-    public cache: BlobCache,
-  ) {
-    this.uriBuilder = new ImageUriBuilder('')
-    this.app.get('*', this.handler.bind(this))
-    this.app.use(errorMiddleware)
+export function createMiddleware(
+  ctx: AppContext,
+  { prefix = '/' }: { prefix?: string } = {},
+): Middleware {
+  if (!prefix.startsWith('/') || !prefix.endsWith('/')) {
+    throw new TypeError('Prefix must start and end with a slash')
   }
 
-  async handler(req: Request, res: Response, next: NextFunction) {
+  // If there is a CDN, we don't need to serve images
+  if (ctx.cfg.cdnUrl) {
+    return (req, res, next) => next()
+  }
+
+  const cache = new BlobDiskCache(ctx.cfg.blobCacheLocation)
+
+  return async (req, res, next) => {
+    if (res.destroyed) return
+    if (req.method !== 'GET' && req.method !== 'HEAD') return next()
+    if (!req.url?.startsWith(prefix)) return next()
+    const { 0: path, 1: _search } = req.url.slice(prefix.length - 1).split('?')
+    if (!path.startsWith('/') || path === '/') return next()
+
     try {
-      const path = req.path
       const options = ImageUriBuilder.getOptions(path)
-      const cacheKey = [
-        options.did,
-        options.cid.toString(),
-        options.preset,
-      ].join('::')
+
+      const cacheKey = [options.did, options.cid, options.preset].join('::')
 
       // Cached flow
 
       try {
-        const cachedImage = await this.cache.get(cacheKey)
+        const cachedImage = await cache.get(cacheKey)
         res.statusCode = 200
         res.setHeader('x-cache', 'hit')
         res.setHeader('content-type', getMime(options.format))
         res.setHeader('cache-control', `public, max-age=31536000`) // 1 year
         res.setHeader('content-length', cachedImage.size)
-        forwardStreamErrors(cachedImage, res)
-        return cachedImage.pipe(res)
+        await pipeline(cachedImage, res)
+        return
       } catch (err) {
-        // Ignore BlobNotFoundError and move on to non-cached flow
-        if (!(err instanceof BlobNotFoundError)) throw err
+        if (!(err instanceof BlobNotFoundError)) {
+          log.error({ cacheKey, err }, 'failed to serve cached image')
+        }
+
+        if (res.headersSent || res.destroyed) {
+          res.destroy()
+          return // nothing we can do...
+        } else {
+          // Ignore and move on to non-cached flow.
+          res.removeHeader('x-cache')
+          res.removeHeader('content-type')
+          res.removeHeader('cache-control')
+          res.removeHeader('content-length')
+        }
       }
 
       // Non-cached flow
 
-      const { localUrl } = this.cfg
-      const did = options.did
-      const cidStr = options.cid.toString()
+      const streamOptions: StreamBlobOptions = {
+        did: options.did,
+        cid: options.cid,
+        signal: responseSignal(res),
+      }
 
-      const blobResult = await retryHttp(() =>
-        getBlob({ baseUrl: localUrl, did, cid: cidStr }),
-      )
+      await streamBlob(ctx, streamOptions, (upstream, { did, cid, url }) => {
+        // Definitely not an image ? Let's fail right away.
+        if (isImageMime(upstream.headers['content-type']) === false) {
+          throw createError(400, 'Not an image')
+        }
 
-      const imageStream: Readable = blobResult.data
-      const processedImage = await resize(imageStream, options)
+        // Let's transform (decompress, verify CID, upscale), process and respond
 
-      // Cache in the background
-      this.cache
-        .put(cacheKey, cloneStream(processedImage))
-        .catch((err) => log.error(err, 'failed to cache image'))
-      // Respond
-      res.statusCode = 200
-      res.setHeader('x-cache', 'miss')
-      res.setHeader('content-type', getMime(options.format))
-      res.setHeader('cache-control', `public, max-age=31536000`) // 1 year
-      forwardStreamErrors(processedImage, res)
-      return (
-        processedImage
+        const transforms: Duplex[] = [
+          ...createDecoders(upstream.headers['content-encoding']),
+          new VerifyCidTransform(cid),
+          createImageUpscaler(options),
+        ]
+        const processor = createImageProcessor(options)
+
+        // Cache in the background
+        cache
+          .put(cacheKey, cloneStream(processor))
+          .catch((err) => log.error(err, 'failed to cache image'))
+
+        res.statusCode = 200
+        res.setHeader('cache-control', `public, max-age=31536000`) // 1 year
+        res.setHeader('x-cache', 'miss')
+        processor.once('info', ({ size, format }: SharpInfo) => {
+          const type = formatsToMimes.get(format) || 'application/octet-stream'
+
           // @NOTE sharp does emit this in time to be set as a header
-          .once('info', (info) => res.setHeader('content-length', info.size))
-          .pipe(res)
-      )
-    } catch (err: unknown) {
-      if (err instanceof BadPathError) {
-        return next(createError(400, err))
+          res.setHeader('content-length', size)
+          res.setHeader('content-type', type)
+        })
+
+        const streams = [...transforms, processor, res]
+        void pipeline(streams).catch((err: unknown) => {
+          log.warn(
+            { err, did, cid: cid.toString(), pds: url.origin },
+            'blob resolution failed during transmission',
+          )
+        })
+
+        return streams[0]!
+      })
+    } catch (err) {
+      if (res.headersSent || res.destroyed) {
+        res.destroy()
+      } else {
+        res.removeHeader('content-type')
+        res.removeHeader('content-length')
+        res.removeHeader('cache-control')
+        res.removeHeader('x-cache')
+
+        if (err instanceof BadPathError) {
+          next(createError(400, err))
+        } else if (err instanceof VerifyCidError) {
+          next(createError(404, 'Blob not found', err))
+        } else if (isHttpError(err)) {
+          next(err)
+        } else {
+          next(createError(502, 'Upstream Error', { cause: err }))
+        }
       }
-      if (err instanceof AxiosError) {
-        if (err.code === AxiosError.ETIMEDOUT) {
-          return next(createError(504)) // Gateway timeout
-        }
-        if (!err.response || err.response.status >= 500) {
-          return next(createError(502))
-        }
-        if (err.response.status === 400) {
-          return next(createError(400))
-        }
-        return next(createError(404, 'Image not found'))
-      }
-      return next(err)
     }
   }
 }
 
-const errorMiddleware: ErrorRequestHandler = function (err, _req, res, next) {
-  if (isHttpError(err)) {
-    log.error(err, `error: ${err.message}`)
-  } else {
-    log.error(err, 'unhandled exception')
+function isImageMime(
+  contentType: string | string[] | undefined,
+): undefined | boolean {
+  if (contentType == null || contentType === 'application/octet-stream') {
+    return undefined // maybe
   }
-  if (res.headersSent) {
-    return next(err)
+  if (Array.isArray(contentType)) {
+    if (contentType.length === 0) return undefined // should never happen
+    if (contentType.length === 1) return isImageMime(contentType[0])
+    return contentType.every(isImageMime) // Should we throw a 502 here?
   }
-  const httpError = createError(err)
-  return res.status(httpError.status).json({
-    message: httpError.expose ? httpError.message : 'Internal Server Error',
-  })
+  return contentType.startsWith('image/')
 }
 
 function getMime(format: Options['format']) {
-  const mime = formatsToMimes[format]
+  const mime = formatsToMimes.get(format)
   if (!mime) throw new Error('Unknown format')
   return mime
 }
@@ -192,14 +226,4 @@ export class BlobDiskCache implements BlobCache {
   async clearAll() {
     await fs.rm(this.tempDir, { recursive: true, force: true })
   }
-}
-
-function getBlob(opts: { baseUrl: string; did: string; cid: string }) {
-  const { baseUrl, did, cid } = opts
-  const enc = encodeURIComponent
-  return axios.get(`${baseUrl}/blob/${enc(did)}/${enc(cid)}`, {
-    decompress: true,
-    responseType: 'stream',
-    timeout: 2000, // 2sec of inactivity on the connection
-  })
 }
