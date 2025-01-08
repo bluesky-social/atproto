@@ -5,6 +5,7 @@ import { CID } from 'multiformats/cid'
 import { Server } from 'node:http'
 import { AddressInfo } from 'node:net'
 import { FeedViewPost } from '../src/lexicon/types/app/bsky/feed/defs'
+import { ToolsOzoneModerationDefs } from '@atproto/api'
 
 // Swap out identifiers and dates with stable
 // values for the purpose of snapshot testing
@@ -201,4 +202,22 @@ export async function stopServer(server: Server) {
       }
     })
   })
+}
+
+const normalizeSubjectStatus = (
+  subject: ToolsOzoneModerationDefs.SubjectStatusView,
+) => {
+  return { ...subject, tags: subject.tags?.sort() }
+}
+
+export const forSubjectStatusSnapshot = (
+  status:
+    | ToolsOzoneModerationDefs.SubjectStatusView
+    | ToolsOzoneModerationDefs.SubjectStatusView[],
+) => {
+  if (Array.isArray(status)) {
+    return forSnapshot(status.map(normalizeSubjectStatus))
+  }
+
+  return forSnapshot(normalizeSubjectStatus(status))
 }
