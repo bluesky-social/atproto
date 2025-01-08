@@ -1,6 +1,6 @@
 import { AtpAgent, ComAtprotoModerationDefs } from '@atproto/api'
 import { SeedClient, TestNetwork } from '@atproto/dev-env'
-import { forSnapshot } from './_util'
+import { forSubjectStatusSnapshot } from './_util'
 import { ids } from '../src/lexicon/lexicons'
 
 describe('appeal account takedown', () => {
@@ -97,7 +97,9 @@ describe('appeal account takedown', () => {
     )
 
     expect(result.subjectStatuses[0].appealed).toBe(true)
-    expect(forSnapshot(result.subjectStatuses[0])).toMatchSnapshot()
+    expect(
+      forSubjectStatusSnapshot(result.subjectStatuses[0]),
+    ).toMatchSnapshot()
   })
 
   it('takendown actor is not allowed to create reports.', async () => {
