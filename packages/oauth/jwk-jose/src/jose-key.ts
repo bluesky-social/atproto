@@ -38,6 +38,12 @@ export type Importable = string | KeyLike | Jwk
 export type { GenerateKeyPairOptions, GenerateKeyPairResult }
 
 export class JoseKey<J extends Jwk = Jwk> extends Key<J> {
+  /**
+   * Some runtimes (e.g. Bun) require an `alg` second argument to be set when
+   * invoking `importJWK`. In order to be compatible with these runtimes, we
+   * provide the following method to ensure the `alg` is always set. We also
+   * take the opportunity to ensure that the `alg` is compatible with this key.
+   */
   protected async getKeyObj(alg: string) {
     if (!this.algorithms.includes(alg)) {
       throw new JwkError(`Key cannot be used with algorithm "${alg}"`)
