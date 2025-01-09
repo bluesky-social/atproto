@@ -211,15 +211,19 @@ export class AccountManager
   async createSession(
     did: string,
     appPassword: password.AppPassDescript | null,
+    isSoftDeleted = false,
   ) {
     const { accessJwt, refreshJwt } = await auth.createTokens({
       did,
       jwtKey: this.jwtKey,
       serviceDid: this.serviceDid,
-      scope: auth.formatScope(appPassword),
+      scope: auth.formatScope(appPassword, isSoftDeleted),
     })
-    const refreshPayload = auth.decodeRefreshToken(refreshJwt)
-    await auth.storeRefreshToken(this.db, refreshPayload, appPassword)
+    // For soft deleted accounts don't store refresh token so that it can't be rotated.
+    if (!isSoftDeleted) {
+      const refreshPayload = auth.decodeRefreshToken(refreshJwt)
+      await auth.storeRefreshToken(this.db, refreshPayload, appPassword)
+    }
     return { accessJwt, refreshJwt }
   }
 
@@ -295,6 +299,7 @@ export class AccountManager
   }): Promise<{
     user: ActorAccount
     appPassword: password.AppPassDescript | null
+    isSoftDeleted: boolean
   }> {
     const start = Date.now()
     try {
@@ -313,6 +318,7 @@ export class AccountManager
       if (!user) {
         throw new AuthRequiredError('Invalid identifier or password')
       }
+      const isSoftDeleted = softDeleted(user)
 
       let appPassword: password.AppPassDescript | null = null
       const validAccountPass = await this.verifyAccountPassword(
@@ -320,20 +326,17 @@ export class AccountManager
         password,
       )
       if (!validAccountPass) {
+        // takendown/suspended accounts cannot login with app password
+        if (isSoftDeleted) {
+          throw new AuthRequiredError('Invalid identifier or password')
+        }
         appPassword = await this.verifyAppPassword(user.did, password)
         if (appPassword === null) {
           throw new AuthRequiredError('Invalid identifier or password')
         }
       }
 
-      if (softDeleted(user)) {
-        throw new AuthRequiredError(
-          'Account has been taken down',
-          'AccountTakedown',
-        )
-      }
-
-      return { user, appPassword }
+      return { user, appPassword, isSoftDeleted }
     } finally {
       // Mitigate timing attacks
       await wait(350 - (Date.now() - start))

@@ -1,6 +1,7 @@
 import { CID } from 'multiformats/cid'
-import { TID } from '@atproto/common'
+import { dataToCborBlock, TID } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
+import { lexToIpld } from '@atproto/lexicon'
 import {
   Commit,
   CommitData,
@@ -69,6 +70,7 @@ export class Repo extends ReadableRepo {
       since: null,
       prev: null,
       newBlocks,
+      relevantBlocks: newBlocks,
       removedCids: diff.removedCids,
     }
   }
@@ -140,11 +142,22 @@ export class Repo extends ReadableRepo {
     const newBlocks = diff.newMstBlocks
     const removedCids = diff.removedCids
 
+    const relevantBlocks = new BlockMap()
+    await Promise.all(
+      writes.map((op) =>
+        data.addBlocksForPath(
+          util.formatDataKey(op.collection, op.rkey),
+          relevantBlocks,
+        ),
+      ),
+    )
+
     const addedLeaves = leaves.getMany(diff.newLeafCids.toList())
     if (addedLeaves.missing.length > 0) {
       throw new Error(`Missing leaf blocks: ${addedLeaves.missing}`)
     }
     newBlocks.addMap(addedLeaves.blocks)
+    relevantBlocks.addMap(addedLeaves.blocks)
 
     const rev = TID.nextStr(this.commit.rev)
     const commit = await util.signCommit(
@@ -157,21 +170,20 @@ export class Repo extends ReadableRepo {
       },
       keypair,
     )
-    const commitCid = await newBlocks.add(commit)
-
-    // ensure the commit cid actually changed
-    if (commitCid.equals(this.cid)) {
-      newBlocks.delete(commitCid)
-    } else {
+    const commitBlock = await dataToCborBlock(lexToIpld(commit))
+    if (!commitBlock.cid.equals(this.cid)) {
+      newBlocks.set(commitBlock.cid, commitBlock.bytes)
+      relevantBlocks.set(commitBlock.cid, commitBlock.bytes)
       removedCids.add(this.cid)
     }
 
     return {
-      cid: commitCid,
+      cid: commitBlock.cid,
       rev,
       since: this.commit.rev,
       prev: this.cid,
       newBlocks,
+      relevantBlocks,
       removedCids,
     }
   }
@@ -208,6 +220,7 @@ export class Repo extends ReadableRepo {
       since: null,
       prev: null,
       newBlocks,
+      relevantBlocks: newBlocks,
       removedCids: new CidSet([this.cid]),
     }
   }

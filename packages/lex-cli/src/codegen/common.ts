@@ -43,37 +43,37 @@ export const lexiconsTs = (project, lexicons: LexiconDoc[]) =>
       })
       .addNamedImports([{ name: 'LexiconDoc' }, { name: 'Lexicons' }])
 
-    //= export const schemaDict: Record<string, LexiconDoc> = {...}
+    //= export const schemaDict = {...} as const satisfies Record<string, LexiconDoc>
     file.addVariableStatement({
       isExported: true,
       declarationKind: VariableDeclarationKind.Const,
       declarations: [
         {
           name: 'schemaDict',
-          initializer: JSON.stringify(
-            lexicons.reduce(
-              (acc, cur) => ({
-                ...acc,
-                [nsidToEnum(cur.id)]: cur,
-              }),
-              {},
-            ),
-            null,
-            2,
-          ),
+          initializer:
+            JSON.stringify(
+              lexicons.reduce(
+                (acc, cur) => ({
+                  ...acc,
+                  [nsidToEnum(cur.id)]: cur,
+                }),
+                {},
+              ),
+              null,
+              2,
+            ) + ' as const satisfies Record<string, LexiconDoc>',
         },
       ],
     })
 
-    //= export const schemas: LexiconDoc[] = Object.values(schemaDict) as LexiconDoc[]
+    //= export const schemas = Object.values(schemaDict)
     file.addVariableStatement({
       isExported: true,
       declarationKind: VariableDeclarationKind.Const,
       declarations: [
         {
           name: 'schemas',
-          type: 'LexiconDoc[]',
-          initializer: 'Object.values(schemaDict) as LexiconDoc[]',
+          initializer: 'Object.values(schemaDict)',
         },
       ],
     })

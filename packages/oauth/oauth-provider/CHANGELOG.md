@@ -1,5 +1,42 @@
 # @atproto/oauth-provider
 
+## 0.2.11
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/common@0.4.6
+
+## 0.2.10
+
+### Patch Changes
+
+- Updated dependencies [[`588baae12`](https://github.com/bluesky-social/atproto/commit/588baae1212a3cba3bf0d95d2f268e80513fd9c4)]:
+  - @atproto/common@0.4.5
+
+## 0.2.9
+
+### Patch Changes
+
+- [#3135](https://github.com/bluesky-social/atproto/pull/3135) [`622654672`](https://github.com/bluesky-social/atproto/commit/6226546725d1bb0375e3c9e0d71af173e8253c4f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve "invalid_client_metadata" error description
+
+- Updated dependencies [[`622654672`](https://github.com/bluesky-social/atproto/commit/6226546725d1bb0375e3c9e0d71af173e8253c4f)]:
+  - @atproto-labs/fetch@0.1.2
+  - @atproto-labs/fetch-node@0.1.4
+
+## 0.2.8
+
+### Patch Changes
+
+- Updated dependencies [[`5ddd51235`](https://github.com/bluesky-social/atproto/commit/5ddd51235c7e064bddcad2dd218df05d144d18d3), [`5ddd51235`](https://github.com/bluesky-social/atproto/commit/5ddd51235c7e064bddcad2dd218df05d144d18d3), [`5ddd51235`](https://github.com/bluesky-social/atproto/commit/5ddd51235c7e064bddcad2dd218df05d144d18d3)]:
+  - @atproto/oauth-types@0.2.1
+
+## 0.2.7
+
+### Patch Changes
+
+- [#2852](https://github.com/bluesky-social/atproto/pull/2852) [`709ba3015`](https://github.com/bluesky-social/atproto/commit/709ba301578c1956b8eb0d89bad717615a4fd7ba) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove response content-encoding logic
+
 ## 0.2.6
 
 ### Patch Changes

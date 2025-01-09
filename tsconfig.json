@@ -20,6 +20,7 @@
     { "path": "./packages/internal/rollup-plugin-bundle-manifest" },
     { "path": "./packages/internal/simple-store" },
     { "path": "./packages/internal/simple-store-memory" },
+    { "path": "./packages/internal/xrpc-utils" },
     { "path": "./packages/lex-cli" },
     { "path": "./packages/lexicon" },
     { "path": "./packages/oauth/jwk" },

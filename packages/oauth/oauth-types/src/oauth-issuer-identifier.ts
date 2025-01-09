@@ -1,9 +1,8 @@
 import { z } from 'zod'
-import { safeUrl } from './util.js'
+import { webUriSchema } from './uri.js'
 
-export const oauthIssuerIdentifierSchema = z
-  .string()
-  .superRefine((value, ctx): value is `${'http' | 'https'}://${string}` => {
+export const oauthIssuerIdentifierSchema = webUriSchema.superRefine(
+  (value, ctx) => {
     // Validate the issuer (MIX-UP attacks)
 
     if (value.endsWith('/')) {
@@ -14,22 +13,7 @@ export const oauthIssuerIdentifierSchema = z
       return false
     }
 
-    const url = safeUrl(value)
-    if (!url) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'Invalid url',
-      })
-      return false
-    }
-
-    if (url.protocol !== 'https:' && url.protocol !== 'http:') {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: `Invalid issuer URL protocol "${url.protocol}"`,
-      })
-      return false
-    }
+    const url = new URL(value)
 
     if (url.username || url.password) {
       ctx.addIssue({
@@ -57,6 +41,7 @@ export const oauthIssuerIdentifierSchema = z
     }
 
     return true
-  })
+  },
+)
 
 export type OAuthIssuerIdentifier = z.infer<typeof oauthIssuerIdentifierSchema>

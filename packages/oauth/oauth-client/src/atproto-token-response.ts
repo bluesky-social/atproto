@@ -1,6 +1,6 @@
 import { atprotoDidSchema } from '@atproto/did'
 import { oauthTokenResponseSchema } from '@atproto/oauth-types'
-import { z } from 'zod'
+import { z, TypeOf } from 'zod'
 
 import { includesSpaceSeparatedValue, SpaceSeparatedValue } from './util'
 
@@ -19,4 +19,4 @@ export const atprotoTokenResponseSchema = oauthTokenResponseSchema.extend({
   id_token: z.never().optional(),
 })
 
-export type AtprotoTokenResponse = z.infer<typeof atprotoTokenResponseSchema>
+export type AtprotoTokenResponse = TypeOf<typeof atprotoTokenResponseSchema>

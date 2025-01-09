@@ -2,8 +2,8 @@ import { isSignedJwt } from '@atproto/jwk'
 import {
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
   OAuthAccessToken,
-  OAuthAuthorizationRequestParameters,
   OAuthAuthorizationCodeGrantTokenRequest,
+  OAuthAuthorizationRequestParameters,
   OAuthClientCredentialsGrantTokenRequest,
   OAuthPasswordGrantTokenRequest,
   OAuthRefreshTokenGrantTokenRequest,
@@ -31,6 +31,7 @@ import { InvalidGrantError } from '../errors/invalid-grant-error.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { InvalidTokenError } from '../errors/invalid-token-error.js'
 import { dateToEpoch, dateToRelativeSeconds } from '../lib/util/date.js'
+import { callAsync } from '../lib/util/function.js'
 import { OAuthHooks } from '../oauth-hooks.js'
 import { Code, isCode } from '../request/code.js'
 import { Signer } from '../signer/signer.js'
@@ -207,10 +208,13 @@ export class TokenManager {
     const now = new Date()
     const expiresAt = this.createTokenExpiry(now)
 
-    const authorizationDetails = await this.hooks.onAuthorizationDetails?.call(
-      null,
-      { client, parameters, account },
-    )
+    const authorizationDetails = this.hooks.onAuthorizationDetails
+      ? await callAsync(this.hooks.onAuthorizationDetails, {
+          client,
+          parameters,
+          account,
+        })
+      : undefined
 
     const tokenData: TokenData = {
       createdAt: now,
@@ -374,12 +378,13 @@ export class TokenManager {
         throw new InvalidGrantError(`Refresh token expired`)
       }
 
-      const authorization_details =
-        await this.hooks.onAuthorizationDetails?.call(null, {
-          client,
-          parameters,
-          account,
-        })
+      const authorization_details = this.hooks.onAuthorizationDetails
+        ? await callAsync(this.hooks.onAuthorizationDetails, {
+            client,
+            parameters,
+            account,
+          })
+        : undefined
 
       const nextTokenId = await generateTokenId()
       const nextRefreshToken = await generateRefreshToken()

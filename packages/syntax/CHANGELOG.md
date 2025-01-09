@@ -1,5 +1,11 @@
 # @atproto/syntax
 
+## 0.3.1
+
+### Patch Changes
+
+- [#2911](https://github.com/bluesky-social/atproto/pull/2911) [`bac9be2d3`](https://github.com/bluesky-social/atproto/commit/bac9be2d3ec904d1f984a871f43cf89aca17289d) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve performances of did validation
+
 ## 0.3.0
 
 ### Minor Changes
