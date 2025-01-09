@@ -1,6 +1,6 @@
-import axios, { AxiosError } from 'axios'
-import BaseResolver from './base-resolver'
 import { DidCache } from '../types'
+import BaseResolver from './base-resolver'
+import { timed } from './util'
 
 export class DidPlcResolver extends BaseResolver {
   constructor(
@@ -12,16 +12,22 @@ export class DidPlcResolver extends BaseResolver {
   }
 
   async resolveNoCheck(did: string): Promise<unknown> {
-    try {
-      const res = await axios.get(`${this.plcUrl}/${encodeURIComponent(did)}`, {
-        timeout: this.timeout,
+    return timed(this.timeout, async (signal) => {
+      const url = new URL(`/${encodeURIComponent(did)}`, this.plcUrl)
+      const res = await fetch(url, {
+        redirect: 'error',
+        headers: { accept: 'application/did+ld+json,application/json' },
+        signal,
       })
-      return res.data
-    } catch (err) {
-      if (err instanceof AxiosError && err.response?.status === 404) {
-        return null // Positively not found, versus due to e.g. network error
+
+      // Positively not found, versus due to e.g. network error
+      if (res.status === 404) return null
+
+      if (!res.ok) {
+        throw Object.assign(new Error(res.statusText), { status: res.status })
       }
-      throw err
-    }
+
+      return res.json()
+    })
   }
 }

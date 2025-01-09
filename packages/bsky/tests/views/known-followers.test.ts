@@ -14,7 +14,7 @@ describe('known followers (social proof)', () => {
 
   beforeAll(async () => {
     network = await TestNetwork.create({
-      dbPostgresSchema: 'bsky_views_block',
+      dbPostgresSchema: 'bsky_known_followers',
     })
     agent = network.bsky.getClient()
     pdsAgent = network.pds.getClient()

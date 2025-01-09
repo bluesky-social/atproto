@@ -70,7 +70,7 @@
       "required": ["collection", "value"],
       "properties": {
         "collection": { "type": "string", "format": "nsid" },
-        "rkey": { "type": "string", "maxLength": 15 },
+        "rkey": { "type": "string", "maxLength": 512 },
         "value": { "type": "unknown" }
       }
     },

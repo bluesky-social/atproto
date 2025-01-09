@@ -1,7 +1,6 @@
-import { AxiosError } from 'axios'
+import { createRetryable } from '@atproto/common'
+import { ResponseType, XRPCError } from '@atproto/xrpc'
 import { parseList } from 'structured-headers'
-import { XRPCError, ResponseType } from '@atproto/xrpc'
-import { RetryOptions, retry } from '@atproto/common'
 import Database from './db'
 
 export const getSigningKeyId = async (
@@ -24,28 +23,17 @@ export const getSigningKeyId = async (
   return insertRes.id
 }
 
-export async function retryHttp<T>(
-  fn: () => Promise<T>,
-  opts: RetryOptions = {},
-): Promise<T> {
-  return retry(fn, { retryable: retryableHttp, ...opts })
-}
-
-export function retryableHttp(err: unknown) {
-  if (err instanceof XRPCError) {
-    if (err.status === ResponseType.Unknown) return true
-    return retryableHttpStatusCodes.has(err.status)
-  }
-  if (err instanceof AxiosError) {
-    if (!err.response) return true
-    return retryableHttpStatusCodes.has(err.response.status)
-  }
-  return false
-}
-
-const retryableHttpStatusCodes = new Set([
+export const RETRYABLE_HTTP_STATUS_CODES = new Set([
   408, 425, 429, 500, 502, 503, 504, 522, 524,
 ])
+
+export const retryHttp = createRetryable((err: unknown) => {
+  if (err instanceof XRPCError) {
+    if (err.status === ResponseType.Unknown) return true
+    return RETRYABLE_HTTP_STATUS_CODES.has(err.status)
+  }
+  return false
+})
 
 export type ParsedLabelers = {
   dids: string[]

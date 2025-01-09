@@ -17,6 +17,7 @@ import {
   parseLabelerHeader,
 } from './util'
 import { httpLogger as log } from './logger'
+import { Dispatcher } from 'undici'
 
 export class AppContext {
   constructor(
@@ -25,6 +26,7 @@ export class AppContext {
       dataplane: DataPlaneClient
       searchAgent: AtpAgent | undefined
       suggestionsAgent: AtpAgent | undefined
+      topicsAgent: AtpAgent | undefined
       hydrator: Hydrator
       views: Views
       signingKey: Keypair
@@ -33,6 +35,7 @@ export class AppContext {
       courierClient: CourierClient | undefined
       authVerifier: AuthVerifier
       featureGates: FeatureGates
+      blobDispatcher: Dispatcher
     },
   ) {}
 
@@ -50,6 +53,10 @@ export class AppContext {
 
   get suggestionsAgent(): AtpAgent | undefined {
     return this.opts.suggestionsAgent
+  }
+
+  get topicsAgent(): AtpAgent | undefined {
+    return this.opts.topicsAgent
   }
 
   get hydrator(): Hydrator {
@@ -86,6 +93,10 @@ export class AppContext {
 
   get featureGates(): FeatureGates {
     return this.opts.featureGates
+  }
+
+  get blobDispatcher(): Dispatcher {
+    return this.opts.blobDispatcher
   }
 
   reqLabelers(req: express.Request): ParsedLabelers {

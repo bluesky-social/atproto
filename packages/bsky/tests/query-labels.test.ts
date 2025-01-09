@@ -13,7 +13,7 @@ describe('label hydration', () => {
 
   beforeAll(async () => {
     network = await TestNetwork.create({
-      dbPostgresSchema: 'bsky_label_hydration',
+      dbPostgresSchema: 'bsky_query_labels',
     })
     pdsAgent = network.pds.getClient()
     sc = network.getSeedClient()

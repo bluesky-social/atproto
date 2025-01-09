@@ -224,6 +224,46 @@ describe('moderation-events', () => {
       expect(eventsWithComment.events.length).toEqual(10)
     })
 
+    it('returns events matching multiple keywords in comment', async () => {
+      await sc.createReport({
+        reasonType: REASONSPAM,
+        reason: 'november rain',
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: sc.dids.alice,
+        },
+        reportedBy: sc.dids.bob,
+      })
+      await sc.createReport({
+        reasonType: REASONSPAM,
+        reason: 'rainy days feel lazy',
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: sc.dids.alice,
+        },
+        reportedBy: sc.dids.bob,
+      })
+      const [eventsMatchingBothKeywords, unusedTrailingSeparator, extraSpaces] =
+        await Promise.all([
+          modClient.queryEvents({
+            hasComment: true,
+            comment: 'november||lazy',
+          }),
+          modClient.queryEvents({
+            hasComment: true,
+            comment: 'november||lazy||',
+          }),
+          modClient.queryEvents({
+            hasComment: true,
+            comment: '||november||lazy||  ',
+          }),
+        ])
+
+      expect(forSnapshot(eventsMatchingBothKeywords.events)).toMatchSnapshot()
+      expect(forSnapshot(unusedTrailingSeparator.events)).toMatchSnapshot()
+      expect(forSnapshot(extraSpaces.events)).toMatchSnapshot()
+    })
+
     it('returns events matching filter params for labels', async () => {
       const [negatedLabelEvent, createdLabelEvent] = await Promise.all([
         modClient.emitEvent({
