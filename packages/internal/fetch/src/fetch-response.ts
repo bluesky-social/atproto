@@ -14,6 +14,23 @@ import {
   logCancellationError,
 } from './util.js'
 
+/**
+ * media-type     = type "/" subtype *( ";" parameter )
+ * type           = token
+ * subtype        = token
+ * token          = 1*<any CHAR except CTLs or separators>
+ * separators     = "(" | ")" | "<" | ">" | "@"
+ *                | "," | ";" | ":" | "\" | <">
+ *                | "/" | "[" | "]" | "?" | "="
+ *                | "{" | "}" | SP | HT
+ * CTL            = <any US-ASCII control character (octets 0 - 31) and DEL (127)>
+ * SP             = <US-ASCII SP, space (32)>
+ * HT             = <US-ASCII HT, horizontal-tab (9)>
+ * @note The type, subtype, and parameter attribute names are case-insensitive.
+ * @see {@link https://datatracker.ietf.org/doc/html/rfc2616#autoid-23}
+ */
+const JSON_MIME = /^application\/(?:[^()<>@,;:/[\]\\?={} \t]+\+)?json$/i
+
 export type ResponseTransformer = Transformer<Response>
 export type ResponseMessageGetter = Transformer<Response, string | undefined>
 
@@ -51,7 +68,7 @@ const extractResponseMessage: ResponseMessageGetter = async (response) => {
   try {
     if (mimeType === 'text/plain') {
       return await response.text()
-    } else if (/^application\/(?:[^+]+\+)?json$/i.test(mimeType)) {
+    } else if (JSON_MIME.test(mimeType)) {
       const json: unknown = await response.json()
 
       if (typeof json === 'string') return json
@@ -220,7 +237,7 @@ export async function fetchResponseTypeChecker(
 ): Promise<Response> {
   const mimeType = extractMime(response)
   if (mimeType) {
-    if (!isExpectedMime(mimeType)) {
+    if (!isExpectedMime(mimeType.toLowerCase())) {
       throw await FetchResponseError.from(
         response,
         `Unexpected response Content-Type (${mimeType})`,
@@ -260,7 +277,7 @@ export async function fetchResponseJsonTransformer<T = Json>(
 }
 
 export function fetchJsonProcessor<T = Json>(
-  expectedMime: MimeTypeCheck = /^application\/(?:[^+]+\+)?json$/,
+  expectedMime: MimeTypeCheck = JSON_MIME,
   contentTypeRequired = true,
 ): Transformer<Response, ParsedJsonResponse<T>> {
   return pipe(
