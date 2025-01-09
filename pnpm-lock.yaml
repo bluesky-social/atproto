@@ -201,7 +201,7 @@ importers:
         version: 0.0.1
       '@types/http-errors':
         specifier: ^2.0.1
-        version: 2.0.1
+        version: 2.0.4
       compression:
         specifier: ^1.7.4
         version: 1.7.4
@@ -812,6 +812,9 @@ importers:
       '@atproto/jwk-jose':
         specifier: workspace:*
         version: link:../jwk-jose
+      zod:
+        specifier: ^3.23.8
+        version: 3.23.8
     devDependencies:
       typescript:
         specifier: ^5.6.3
@@ -1566,8 +1569,8 @@ importers:
         specifier: ^4.17.36
         version: 4.17.36
       '@types/http-errors':
-        specifier: ^2.0.1
-        version: 2.0.1
+        specifier: ^2.0.4
+        version: 2.0.4
       '@types/ws':
         specifier: ^8.5.4
         version: 8.5.4
@@ -6310,8 +6313,8 @@ packages:
       '@types/node': 18.19.67
     dev: true
 
-  /@types/http-errors@2.0.1:
-    resolution: {integrity: sha512-/K3ds8TRAfBvi5vfjuz8y6+GiAYBZ0x4tXv1Av6CWBWn0IlADc+ZX9pMq7oU0fNQPnBwIZl3rmeLp6SBApbxSQ==}
+  /@types/http-errors@2.0.4:
+    resolution: {integrity: sha512-D0CFMMtydbJAegzOyHjtiKPLlvnm3iTZyZRSZoLq2mRhDdmLfIWOCYPfQJ4cu2erKghU++QvjcUjp/5h7hESpA==}
 
   /@types/is-ci@3.0.0:
     resolution: {integrity: sha512-Q0Op0hdWbYd1iahB+IFNQcWXFq4O0Q5MwQP7uN0souuQ4rPg1vEYcnIOfr1gY+M+6rc8FGoRaBO1mOOvL29sEQ==}
@@ -6447,7 +6450,7 @@ packages:
   /@types/serve-static@1.15.2:
     resolution: {integrity: sha512-J2LqtvFYCzaj8pVYKw8klQXrLLk7TBZmQ4ShlcdkELFKGwGMfevMLneMMRkMgZxotOD9wg497LpC7O8PcvAmfw==}
     dependencies:
-      '@types/http-errors': 2.0.1
+      '@types/http-errors': 2.0.4
       '@types/mime': 3.0.1
       '@types/node': 18.19.67
 
