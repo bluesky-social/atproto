@@ -2,4 +2,4 @@
 "@atproto/jwk": patch
 ---
 
-Expose ZodError to allow for proper schema validation error catching
+Expose ValidationError to allow for proper error handling
