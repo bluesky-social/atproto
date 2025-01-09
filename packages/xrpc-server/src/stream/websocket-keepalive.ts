@@ -19,6 +19,8 @@ export class WebSocketKeepAlive implements AsyncIterable<Uint8Array> {
   ) {}
 
   async *[Symbol.asyncIterator](): AsyncGenerator<Uint8Array> {
+    this.opts.signal?.throwIfAborted()
+
     const maxReconnectMs = 1000 * (this.opts.maxReconnectSeconds ?? 64)
 
     let initialSetup = true
