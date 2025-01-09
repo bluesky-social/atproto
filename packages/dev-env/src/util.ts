@@ -45,7 +45,7 @@ export const mockResolvers = (idResolver: IdResolver, pds: TestPds) => {
     try {
       const res = await request(url, { headers: { host: handle } })
       if (res.statusCode !== 200) {
-        res.body.destroy()
+        await res.body.dump()
         return undefined
       }
 

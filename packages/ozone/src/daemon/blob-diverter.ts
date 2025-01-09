@@ -46,7 +46,7 @@ export class BlobDiverter {
       })
 
     if (blobResponse.statusCode !== 200) {
-      blobResponse.body.destroy()
+      await blobResponse.body.dump()
       throw new XRPCError(
         blobResponse.statusCode,
         undefined,
@@ -72,7 +72,7 @@ export class BlobDiverter {
       }
     } catch (err) {
       // Typically un-supported content encoding
-      blobResponse.body.destroy()
+      await blobResponse.body.dump()
       throw err
     }
   }
@@ -99,7 +99,7 @@ export class BlobDiverter {
       })
 
     if (result.statusCode !== 200) {
-      result.body.destroy()
+      await result.body.dump()
       throw new XRPCError(
         result.statusCode,
         undefined,
