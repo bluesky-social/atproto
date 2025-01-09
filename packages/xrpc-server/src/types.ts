@@ -99,6 +99,7 @@ export type XRPCReqContext = {
   input: HandlerInput | undefined
   req: express.Request
   res: express.Response
+  resetRouteRateLimits: () => Promise<void>
 }
 
 export type XRPCHandler = (
@@ -136,12 +137,18 @@ export type CalcPointsFn = (ctx: XRPCReqContext) => number
 
 export interface RateLimiterI {
   consume: RateLimiterConsume
+  delete: RateLimiterDelete
 }
 
 export type RateLimiterConsume = (
   ctx: XRPCReqContext,
   opts?: { calcKey?: CalcKeyFn; calcPoints?: CalcPointsFn },
 ) => Promise<RateLimiterStatus | RateLimitExceededError | null>
+
+export type RateLimiterDelete = (
+  ctx: XRPCReqContext,
+  opts?: { calcKey?: CalcKeyFn },
+) => Promise<void>
 
 export type RateLimiterCreator = (opts: {
   keyPrefix: string
