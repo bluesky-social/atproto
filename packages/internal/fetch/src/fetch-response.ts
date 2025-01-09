@@ -14,7 +14,7 @@ import {
   logCancellationError,
 } from './util.js'
 
-export type ResponseTranformer = Transformer<Response>
+export type ResponseTransformer = Transformer<Response>
 export type ResponseMessageGetter = Transformer<Response, string | undefined>
 
 export class FetchResponseError extends FetchError {
@@ -155,7 +155,7 @@ export function cancelBodyOnError<T>(
 
 export function fetchOkProcessor(
   customMessage?: string | ResponseMessageGetter,
-): ResponseTranformer {
+): ResponseTransformer {
   return cancelBodyOnError((response) => {
     return fetchOkTransformer(response, customMessage)
   })
@@ -169,7 +169,7 @@ export async function fetchOkTransformer(
   throw await FetchResponseError.from(response, customMessage)
 }
 
-export function fetchMaxSizeProcessor(maxBytes: number): ResponseTranformer {
+export function fetchMaxSizeProcessor(maxBytes: number): ResponseTransformer {
   if (maxBytes === Infinity) return (response) => response
   if (!Number.isFinite(maxBytes) || maxBytes < 0) {
     throw new TypeError('maxBytes must be a 0, Infinity or a positive number')
@@ -200,7 +200,7 @@ export type MimeTypeCheck = string | RegExp | MimeTypeCheckFn
 export function fetchTypeProcessor(
   expectedMime: MimeTypeCheck,
   contentTypeRequired = true,
-): ResponseTranformer {
+): ResponseTransformer {
   const isExpected: MimeTypeCheckFn =
     typeof expectedMime === 'string'
       ? (mimeType) => mimeType === expectedMime
@@ -243,7 +243,7 @@ export type ParsedJsonResponse<T = Json> = {
   json: T
 }
 
-export async function fetchResponseJsonTranformer<T = Json>(
+export async function fetchResponseJsonTransformer<T = Json>(
   response: Response,
 ): Promise<ParsedJsonResponse<T>> {
   try {
@@ -265,7 +265,7 @@ export function fetchJsonProcessor<T = Json>(
 ): Transformer<Response, ParsedJsonResponse<T>> {
   return pipe(
     fetchTypeProcessor(expectedMime, contentTypeRequired),
-    cancelBodyOnError(fetchResponseJsonTranformer<T>),
+    cancelBodyOnError(fetchResponseJsonTransformer<T>),
   )
 }
 
