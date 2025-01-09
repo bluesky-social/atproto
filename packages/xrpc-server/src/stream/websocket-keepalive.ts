@@ -19,25 +19,25 @@ export class WebSocketKeepAlive implements AsyncIterable<Uint8Array> {
   ) {}
 
   async *[Symbol.asyncIterator](): AsyncGenerator<Uint8Array> {
-    this.opts.signal?.throwIfAborted()
-
     const maxReconnectMs = 1000 * (this.opts.maxReconnectSeconds ?? 64)
 
     let initialSetup = true
     let reconnects: number | null = null
 
-    while (this.opts.signal?.aborted !== true) {
+    while (true) {
+      this.opts.signal?.throwIfAborted()
+
       if (reconnects !== null) {
         const duration = initialSetup
           ? Math.min(1000, maxReconnectMs)
           : backoffMs(reconnects++, maxReconnectMs)
         await wait(duration)
 
-        if (this.opts.signal?.aborted) break
+        this.opts.signal?.throwIfAborted()
       }
       const url = await this.opts.getUrl()
 
-      if (this.opts.signal?.aborted) break
+      this.opts.signal?.throwIfAborted()
 
       const ac = new AbortController()
       const ws = new WebSocket(url, this.opts)

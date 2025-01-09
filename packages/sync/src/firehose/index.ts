@@ -116,6 +116,11 @@ export class Firehose {
           await this.processEvt(evt)
         }
       }
+
+      // If the servers throws a "DisconnectError" (to indicate clean shutdown)
+      // the the async iterator will cleanly "return". This is not an expected
+      // behavior (the firehose is an infinitely running event stream).
+      throw new Error('unexpected exit from firehose subscription')
     } catch (err) {
       if (err && err['name'] === 'AbortError') {
         this.destoryDefer.resolve()
