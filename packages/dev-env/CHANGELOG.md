@@ -1,5 +1,16 @@
 # @atproto/dev-env
 
+## 0.3.76
+
+### Patch Changes
+
+- [#3344](https://github.com/bluesky-social/atproto/pull/3344) [`48a0e9d60`](https://github.com/bluesky-social/atproto/commit/48a0e9d6060c2dc93899f13f2fc7cc76c04fbcd9) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Properly dispose of unused http responses
+
+- Updated dependencies [[`48a0e9d60`](https://github.com/bluesky-social/atproto/commit/48a0e9d6060c2dc93899f13f2fc7cc76c04fbcd9)]:
+  - @atproto/ozone@0.1.67
+  - @atproto/pds@0.4.84
+  - @atproto/bsky@0.0.106
+
 ## 0.3.75
 
 ### Patch Changes
