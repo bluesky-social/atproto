@@ -108,7 +108,8 @@
             "type": "union",
             "refs": ["#threadViewPost", "#notFoundPost", "#blockedPost"]
           }
-        }
+        },
+        "isLikedByRootAuthor": { "type": "boolean" }
       }
     },
     "notFoundPost": {
