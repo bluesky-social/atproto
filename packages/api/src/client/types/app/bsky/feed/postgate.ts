@@ -15,7 +15,7 @@ const is$typed = _is$typed,
 const id = 'app.bsky.feed.postgate'
 
 export interface Record {
-  $type?: $Type<'app.bsky.feed.postgate', 'main'>
+  $type: $Type<'app.bsky.feed.postgate', 'main'>
   createdAt: string
   /** Reference (AT-URI) to the post record. */
   post: string

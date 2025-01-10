@@ -16,7 +16,7 @@ const is$typed = _is$typed,
 const id = 'app.bsky.feed.like'
 
 export interface Record {
-  $type?: $Type<'app.bsky.feed.like', 'main'>
+  $type: $Type<'app.bsky.feed.like', 'main'>
   subject: ComAtprotoRepoStrongRef.Main
   createdAt: string
   [k: string]: unknown

@@ -10839,7 +10839,7 @@ export function isValid<V extends { $type?: string }>(
   id: string,
   hash: string,
   requiredType: true,
-): v is $Typed<V>
+): v is V & { $type: string }
 export function isValid<V extends { $type?: string }>(
   v: unknown,
   id: string,

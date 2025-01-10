@@ -15,7 +15,7 @@ const is$typed = _is$typed,
 const id = 'app.bsky.feed.threadgate'
 
 export interface Record {
-  $type?: $Type<'app.bsky.feed.threadgate', 'main'>
+  $type: $Type<'app.bsky.feed.threadgate', 'main'>
   /** Reference (AT-URI) to the post record. */
   post: string
   allow?: (

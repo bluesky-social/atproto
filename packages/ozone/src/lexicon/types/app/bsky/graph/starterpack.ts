@@ -16,7 +16,7 @@ const is$typed = _is$typed,
 const id = 'app.bsky.graph.starterpack'
 
 export interface Record {
-  $type?: $Type<'app.bsky.graph.starterpack', 'main'>
+  $type: $Type<'app.bsky.graph.starterpack', 'main'>
   /** Display name for starter pack; can not be empty. */
   name: string
   description?: string

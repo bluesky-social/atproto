@@ -15,7 +15,7 @@ const is$typed = _is$typed,
 const id = 'app.bsky.graph.listitem'
 
 export interface Record {
-  $type?: $Type<'app.bsky.graph.listitem', 'main'>
+  $type: $Type<'app.bsky.graph.listitem', 'main'>
   /** The account which is included on the list. */
   subject: string
   /** Reference (AT-URI) to the list record (app.bsky.graph.list). */

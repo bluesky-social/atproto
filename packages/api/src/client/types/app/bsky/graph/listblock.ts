@@ -15,7 +15,7 @@ const is$typed = _is$typed,
 const id = 'app.bsky.graph.listblock'
 
 export interface Record {
-  $type?: $Type<'app.bsky.graph.listblock', 'main'>
+  $type: $Type<'app.bsky.graph.listblock', 'main'>
   /** Reference (AT-URI) to the mod list record. */
   subject: string
   createdAt: string

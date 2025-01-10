@@ -15,7 +15,7 @@ const is$typed = _is$typed,
 const id = 'app.bsky.graph.follow'
 
 export interface Record {
-  $type?: $Type<'app.bsky.graph.follow', 'main'>
+  $type: $Type<'app.bsky.graph.follow', 'main'>
   subject: string
   createdAt: string
   [k: string]: unknown

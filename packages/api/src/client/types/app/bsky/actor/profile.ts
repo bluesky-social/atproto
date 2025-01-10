@@ -17,7 +17,7 @@ const is$typed = _is$typed,
 const id = 'app.bsky.actor.profile'
 
 export interface Record {
-  $type?: $Type<'app.bsky.actor.profile', 'main'>
+  $type: $Type<'app.bsky.actor.profile', 'main'>
   displayName?: string
   /** Free-form profile description text. */
   description?: string
