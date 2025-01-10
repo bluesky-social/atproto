@@ -1,0 +1,41 @@
+{
+  "lexicon": 1,
+  "id": "tools.ozone.history.getSubjectHistory",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Fetch the history of events for a specific subject.",
+      "parameters": {
+        "type": "params",
+        "required": ["subject"],
+        "properties": {
+          "subject": { "type": "string", "format": "uri" },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "default": 50,
+            "maximum": 100
+          },
+          "cursor": { "type": "string" }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["events"],
+          "properties": {
+            "events": {
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "tools.ozone.history.defs#eventView"
+              }
+            },
+            "cursor": { "type": "string" }
+          }
+        }
+      }
+    }
+  }
+}
