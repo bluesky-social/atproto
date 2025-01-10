@@ -4,7 +4,7 @@
 import { XrpcClient, FetchHandler, FetchHandlerOptions } from '@atproto/xrpc'
 import { schemas } from './lexicons'
 import { CID } from 'multiformats/cid'
-import { OmitKey } from './util'
+import { OmitKey, Un$Typed } from './util'
 import * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs'
 import * as ComAtprotoAdminDeleteAccount from './types/com/atproto/admin/deleteAccount'
 import * as ComAtprotoAdminDisableAccountInvites from './types/com/atproto/admin/disableAccountInvites'
@@ -1636,7 +1636,7 @@ export class ProfileRecord {
       ComAtprotoRepoCreateRecord.InputSchema,
       'collection' | 'record'
     >,
-    record: AppBskyActorProfile.Record,
+    record: Un$Typed<AppBskyActorProfile.Record>,
     headers?: Record<string, string>,
   ): Promise<{ uri: string; cid: string }> {
     const collection = 'app.bsky.actor.profile'
@@ -1924,7 +1924,7 @@ export class GeneratorRecord {
       ComAtprotoRepoCreateRecord.InputSchema,
       'collection' | 'record'
     >,
-    record: AppBskyFeedGenerator.Record,
+    record: Un$Typed<AppBskyFeedGenerator.Record>,
     headers?: Record<string, string>,
   ): Promise<{ uri: string; cid: string }> {
     const collection = 'app.bsky.feed.generator'
@@ -1985,7 +1985,7 @@ export class LikeRecord {
       ComAtprotoRepoCreateRecord.InputSchema,
       'collection' | 'record'
     >,
-    record: AppBskyFeedLike.Record,
+    record: Un$Typed<AppBskyFeedLike.Record>,
     headers?: Record<string, string>,
   ): Promise<{ uri: string; cid: string }> {
     const collection = 'app.bsky.feed.like'
@@ -2046,7 +2046,7 @@ export class PostRecord {
       ComAtprotoRepoCreateRecord.InputSchema,
       'collection' | 'record'
     >,
-    record: AppBskyFeedPost.Record,
+    record: Un$Typed<AppBskyFeedPost.Record>,
     headers?: Record<string, string>,
   ): Promise<{ uri: string; cid: string }> {
     const collection = 'app.bsky.feed.post'
@@ -2107,7 +2107,7 @@ export class PostgateRecord {
       ComAtprotoRepoCreateRecord.InputSchema,
       'collection' | 'record'
     >,
-    record: AppBskyFeedPostgate.Record,
+    record: Un$Typed<AppBskyFeedPostgate.Record>,
     headers?: Record<string, string>,
   ): Promise<{ uri: string; cid: string }> {
     const collection = 'app.bsky.feed.postgate'
@@ -2168,7 +2168,7 @@ export class RepostRecord {
       ComAtprotoRepoCreateRecord.InputSchema,
       'collection' | 'record'
     >,
-    record: AppBskyFeedRepost.Record,
+    record: Un$Typed<AppBskyFeedRepost.Record>,
     headers?: Record<string, string>,
   ): Promise<{ uri: string; cid: string }> {
     const collection = 'app.bsky.feed.repost'
@@ -2233,7 +2233,7 @@ export class ThreadgateRecord {
       ComAtprotoRepoCreateRecord.InputSchema,
       'collection' | 'record'
     >,
-    record: AppBskyFeedThreadgate.Record,
+    record: Un$Typed<AppBskyFeedThreadgate.Record>,
     headers?: Record<string, string>,
   ): Promise<{ uri: string; cid: string }> {
     const collection = 'app.bsky.feed.threadgate'
@@ -2535,7 +2535,7 @@ export class BlockRecord {
       ComAtprotoRepoCreateRecord.InputSchema,
       'collection' | 'record'
     >,
-    record: AppBskyGraphBlock.Record,
+    record: Un$Typed<AppBskyGraphBlock.Record>,
     headers?: Record<string, string>,
   ): Promise<{ uri: string; cid: string }> {
     const collection = 'app.bsky.graph.block'
@@ -2596,7 +2596,7 @@ export class FollowRecord {
       ComAtprotoRepoCreateRecord.InputSchema,
       'collection' | 'record'
     >,
-    record: AppBskyGraphFollow.Record,
+    record: Un$Typed<AppBskyGraphFollow.Record>,
     headers?: Record<string, string>,
   ): Promise<{ uri: string; cid: string }> {
     const collection = 'app.bsky.graph.follow'
@@ -2657,7 +2657,7 @@ export class ListRecord {
       ComAtprotoRepoCreateRecord.InputSchema,
       'collection' | 'record'
     >,
-    record: AppBskyGraphList.Record,
+    record: Un$Typed<AppBskyGraphList.Record>,
     headers?: Record<string, string>,
   ): Promise<{ uri: string; cid: string }> {
     const collection = 'app.bsky.graph.list'
@@ -2722,7 +2722,7 @@ export class ListblockRecord {
       ComAtprotoRepoCreateRecord.InputSchema,
       'collection' | 'record'
     >,
-    record: AppBskyGraphListblock.Record,
+    record: Un$Typed<AppBskyGraphListblock.Record>,
     headers?: Record<string, string>,
   ): Promise<{ uri: string; cid: string }> {
     const collection = 'app.bsky.graph.listblock'
@@ -2783,7 +2783,7 @@ export class ListitemRecord {
       ComAtprotoRepoCreateRecord.InputSchema,
       'collection' | 'record'
     >,
-    record: AppBskyGraphListitem.Record,
+    record: Un$Typed<AppBskyGraphListitem.Record>,
     headers?: Record<string, string>,
   ): Promise<{ uri: string; cid: string }> {
     const collection = 'app.bsky.graph.listitem'
@@ -2848,7 +2848,7 @@ export class StarterpackRecord {
       ComAtprotoRepoCreateRecord.InputSchema,
       'collection' | 'record'
     >,
-    record: AppBskyGraphStarterpack.Record,
+    record: Un$Typed<AppBskyGraphStarterpack.Record>,
     headers?: Record<string, string>,
   ): Promise<{ uri: string; cid: string }> {
     const collection = 'app.bsky.graph.starterpack'
@@ -2935,7 +2935,7 @@ export class ServiceRecord {
       ComAtprotoRepoCreateRecord.InputSchema,
       'collection' | 'record'
     >,
-    record: AppBskyLabelerService.Record,
+    record: Un$Typed<AppBskyLabelerService.Record>,
     headers?: Record<string, string>,
   ): Promise<{ uri: string; cid: string }> {
     const collection = 'app.bsky.labeler.service'
@@ -3284,7 +3284,7 @@ export class DeclarationRecord {
       ComAtprotoRepoCreateRecord.InputSchema,
       'collection' | 'record'
     >,
-    record: ChatBskyActorDeclaration.Record,
+    record: Un$Typed<ChatBskyActorDeclaration.Record>,
     headers?: Record<string, string>,
   ): Promise<{ uri: string; cid: string }> {
     const collection = 'chat.bsky.actor.declaration'

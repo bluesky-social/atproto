@@ -17,7 +17,7 @@ const is$typed = _is$typed,
 const id = 'app.bsky.labeler.service'
 
 export interface Record {
-  $type?: $Type<'app.bsky.labeler.service', 'main'>
+  $type: $Type<'app.bsky.labeler.service', 'main'>
   policies: AppBskyLabelerDefs.LabelerPolicies
   labels?: $Typed<ComAtprotoLabelDefs.SelfLabels> | { $type: string }
   createdAt: string

@@ -15,7 +15,7 @@ const is$typed = _is$typed,
 const id = 'chat.bsky.actor.declaration'
 
 export interface Record {
-  $type?: $Type<'chat.bsky.actor.declaration', 'main'>
+  $type: $Type<'chat.bsky.actor.declaration', 'main'>
   allowIncoming: 'all' | 'none' | 'following' | (string & {})
   [k: string]: unknown
 }

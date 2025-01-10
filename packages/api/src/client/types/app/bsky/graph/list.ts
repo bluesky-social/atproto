@@ -18,7 +18,7 @@ const is$typed = _is$typed,
 const id = 'app.bsky.graph.list'
 
 export interface Record {
-  $type?: $Type<'app.bsky.graph.list', 'main'>
+  $type: $Type<'app.bsky.graph.list', 'main'>
   purpose: AppBskyGraphDefs.ListPurpose
   /** Display name for list; can not be empty. */
   name: string

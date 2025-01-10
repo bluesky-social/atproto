@@ -13644,7 +13644,7 @@ export function isValid<V extends { $type?: string }>(
   v: unknown,
   id: string,
   hash: string,
-  requiredType?: boolean,
+  requiredType?: false,
 ): v is V
 export function isValid(
   v: unknown,

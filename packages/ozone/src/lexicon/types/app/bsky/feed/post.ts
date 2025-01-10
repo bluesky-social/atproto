@@ -23,7 +23,7 @@ const is$typed = _is$typed,
 const id = 'app.bsky.feed.post'
 
 export interface Record {
-  $type?: $Type<'app.bsky.feed.post', 'main'>
+  $type: $Type<'app.bsky.feed.post', 'main'>
   /** The primary post content. May be an empty string, if there are embeds. */
   text: string
   /** DEPRECATED: replaced by app.bsky.richtext.facet. */

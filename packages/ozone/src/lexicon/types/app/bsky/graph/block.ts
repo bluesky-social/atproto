@@ -15,7 +15,7 @@ const is$typed = _is$typed,
 const id = 'app.bsky.graph.block'
 
 export interface Record {
-  $type?: $Type<'app.bsky.graph.block', 'main'>
+  $type: $Type<'app.bsky.graph.block', 'main'>
   /** DID of the account to be blocked. */
   subject: string
   createdAt: string

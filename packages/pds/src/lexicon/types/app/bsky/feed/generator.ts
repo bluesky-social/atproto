@@ -17,7 +17,7 @@ const is$typed = _is$typed,
 const id = 'app.bsky.feed.generator'
 
 export interface Record {
-  $type?: $Type<'app.bsky.feed.generator', 'main'>
+  $type: $Type<'app.bsky.feed.generator', 'main'>
   did: string
   displayName: string
   description?: string
