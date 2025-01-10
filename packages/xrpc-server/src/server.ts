@@ -1,4 +1,3 @@
-import { check, schema } from '@atproto/common'
 import {
   LexiconDoc,
   Lexicons,
@@ -369,26 +368,26 @@ export class Server {
             for await (const item of items) {
               if (item instanceof Frame) {
                 yield item
-                continue
-              }
-              const type = item?.['$type']
-              if (!check.is(item, schema.map) || typeof type !== 'string') {
-                yield new MessageFrame(item)
-                continue
-              }
-              const split = type.split('#')
-              let t: string
-              if (
-                split.length === 2 &&
-                (split[0] === '' || split[0] === nsid)
+              } else if (
+                item != null &&
+                typeof item === 'object' &&
+                '$type' in item &&
+                typeof item.$type === 'string'
               ) {
-                t = `#${split[1]}`
+                const { $type, ...body } = item
+
+                const type =
+                  // "<nsid>#<type>" -> "#<type>"
+                  $type.charCodeAt(nsid.length) === 35 /* "#" */ &&
+                  $type.startsWith(nsid) &&
+                  !$type.includes('#', nsid.length + 1) // no more "#" afterwards
+                    ? $type.slice(nsid.length) // strip nsid (keep "#")
+                    : $type
+
+                yield new MessageFrame(body, { type })
               } else {
-                t = type
+                yield new MessageFrame(item)
               }
-              const clone = { ...item }
-              delete clone['$type']
-              yield new MessageFrame(clone, { type: t })
             }
           } catch (err) {
             const xrpcErrPayload = XRPCError.fromError(err).payload
