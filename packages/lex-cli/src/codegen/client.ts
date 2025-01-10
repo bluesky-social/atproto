@@ -84,7 +84,7 @@ const indexTs = (
     //= import {OmitKey} from './util'
     file
       .addImportDeclaration({ moduleSpecifier: `./util` })
-      .addNamedImports([{ name: 'OmitKey' }])
+      .addNamedImports([{ name: 'OmitKey' }, { name: 'Un$Typed' }])
 
     // generate type imports and re-exports
     for (const lexicon of lexiconDocs) {
@@ -359,7 +359,7 @@ function genRecordCls(file: SourceFile, nsid: string, lexRecord: LexRecord) {
     })
     method.addParameter({
       name: 'record',
-      type: `${typeModule}.Record`,
+      type: `Un$Typed<${typeModule}.Record>`,
     })
     method.addParameter({
       name: 'headers?',

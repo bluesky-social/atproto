@@ -7,7 +7,7 @@ import {
   AppBskyGraphDefs,
   AppBskyNotificationListNotifications,
 } from './client'
-import { $Typed } from './client/util'
+import { $Typed, Un$Typed } from './client/util'
 
 const FAKE_CID = 'bafyreiclp443lavogvhj3d2ob2cxbfuscni2k5jk7bebjzg7khl3esabwq'
 
@@ -160,7 +160,7 @@ export const mock = {
     labels,
   }: {
     record: AppBskyFeedPost.Record
-    author: Omit<AppBskyActorDefs.ProfileViewBasic, '$type'>
+    author: Un$Typed<AppBskyActorDefs.ProfileViewBasic>
     labels?: ComAtprotoLabelDefs.Label[]
   }): AppBskyNotificationListNotifications.Notification {
     return {
@@ -181,7 +181,7 @@ export const mock = {
     subjectDid,
     labels,
   }: {
-    author: Omit<AppBskyActorDefs.ProfileViewBasic, '$type'>
+    author: Un$Typed<AppBskyActorDefs.ProfileViewBasic>
     subjectDid: string
     labels?: ComAtprotoLabelDefs.Label[]
   }): AppBskyNotificationListNotifications.Notification {

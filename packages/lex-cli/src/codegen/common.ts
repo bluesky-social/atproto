@@ -18,23 +18,24 @@ export type OmitKey<T, K extends keyof T> = {
   [K2 in keyof T as K2 extends K ? never : K2]: T[K2]
 }
 
-export type $Typed<V> = V & { $type: string }
+export type $Typed<V, T extends string = string> = V & { $type: T }
+export type Un$Typed<V extends { $type?: string }> = OmitKey<V, '$type'>
 
 export type $Type<Id extends string, Hash extends string> = Hash extends 'main'
-  ? Id | \`\${Id}#\${Hash}\`
+  ? Id
   : \`\${Id}#\${Hash}\`
 
 function isObject<V>(v: V): v is V & object {
   return v != null && typeof v === 'object'
 }
 
-function check$type<Id extends string, Hash extends string>(
+function compare$type<Id extends string, Hash extends string>(
   $type: unknown,
   id: Id,
   hash: Hash,
 ): $type is $Type<Id, Hash> {
-  return $type === id
-    ? hash === 'main'
+  return hash === 'main'
+    ? $type === id
     : // $type === \`\${id}#\${hash}\`
       typeof $type === 'string' &&
         $type.length === id.length + 1 + hash.length &&
@@ -60,7 +61,7 @@ ${
    * ```ts
    * declare const obj1: OpenFooBarUnion
    * if (is$typed(obj1, 'foo', 'main')) {
-   *   obj1.$type // "foo" | "foo#main"
+   *   obj1.$type // $Type<'foo', 'main'>
    *   obj1.foo // string
    * }
    * ```
@@ -72,7 +73,7 @@ ${
    * ```ts
    * declare const obj2: unknown
    * if (is$typed(obj2, 'foo', 'main')) {
-   *  obj2.$type // "foo" | "foo#main"
+   *  obj2.$type // $Type<'foo', 'main'>
    *  // @ts-expect-error
    *  obj2.foo
    * }
@@ -82,13 +83,13 @@ ${
    */
   ''
 }
-export type Is$Typed<V, Id extends string, Hash extends string> = V extends {
+export type $TypedObject<V, Id extends string, Hash extends string> = V extends {
   $type: $Type<Id, Hash>
 }
   ? V
   : V extends { $type?: string }
-    ? V extends { $type?: $Type<Id, Hash> }
-      ? $Typed<V>
+    ? V extends { $type?: infer T extends $Type<Id, Hash> }
+      ? V & { $type: T }
       : never
     : V & { $type: $Type<Id, Hash> }
 
@@ -96,8 +97,8 @@ export function is$typed<V, Id extends string, Hash extends string>(
   v: V,
   id: Id,
   hash: Hash,
-): v is Is$Typed<V, Id, Hash> {
-  return isObject(v) && '$type' in v && check$type(v.$type, id, hash)
+): v is $TypedObject<V, Id, Hash> {
+  return isObject(v) && '$type' in v && compare$type(v.$type, id, hash)
 }
 
 export function maybe$typed<V, Id extends string, Hash extends string>(
@@ -108,7 +109,7 @@ export function maybe$typed<V, Id extends string, Hash extends string>(
   return (
     isObject(v) &&
     ('$type' in v
-      ? v.$type === undefined || check$type(v.$type, id, hash)
+      ? v.$type === undefined || compare$type(v.$type, id, hash)
       : true)
   )
 }
@@ -222,7 +223,7 @@ export const lexiconsTs = (project, lexicons: LexiconDoc[]) =>
             { name: 'hash', type: 'string' },
             { name: 'requiredType', type: 'true' },
           ],
-          returnType: 'v is $Typed<V>',
+          returnType: 'v is V & { $type: string }',
         },
         {
           typeParameters: ['V extends { $type?: string }'],

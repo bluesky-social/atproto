@@ -2217,30 +2217,18 @@ describe('agent', () => {
 
       async function addLegacyMutedWord(mutedWord: AppBskyActorDefs.MutedWord) {
         await updatePreferences(agent, (prefs) => {
-          let mutedWordsPref = prefs.findLast(
-            (pref): pref is $Typed<AppBskyActorDefs.MutedWordsPref> =>
-              AppBskyActorDefs.isMutedWordsPref(pref) &&
-              AppBskyActorDefs.validateMutedWordsPref(pref).success,
-          )
+          const mutedWordsPref = prefs.findLast(
+            AppBskyActorDefs.isValidMutedWordsPref,
+          ) || {
+            $type: 'app.bsky.actor.defs#mutedWordsPref',
+            items: [],
+          }
 
-          const newMutedWord: AppBskyActorDefs.MutedWord = {
+          mutedWordsPref.items.push({
             value: mutedWord.value,
             targets: mutedWord.targets,
             actorTarget: 'all',
-          }
-
-          if (
-            mutedWordsPref &&
-            AppBskyActorDefs.isMutedWordsPref(mutedWordsPref)
-          ) {
-            mutedWordsPref.items.push(newMutedWord)
-          } else {
-            // if the pref doesn't exist, create it
-            mutedWordsPref = {
-              $type: 'app.bsky.actor.defs#mutedWordsPref',
-              items: [newMutedWord],
-            }
-          }
+          })
 
           return prefs
             .filter((p) => !AppBskyActorDefs.isMutedWordsPref(p))

@@ -131,7 +131,7 @@ export function genUserType(
     case 'object': {
       const ifaceName: string = toTitleCase(getHash(lexUri))
       genObject(file, imports, lexUri, def, ifaceName, {
-        addTypeProperty: true,
+        typeProperty: true,
       })
       genObjHelpers(file, lexUri, ifaceName, {
         requireTypeProperty: false,
@@ -165,11 +165,11 @@ function genObject(
   {
     defaultsArePresent = true,
     allowUnknownProperties = false,
-    addTypeProperty = false,
+    typeProperty = false,
   }: {
     defaultsArePresent?: boolean
     allowUnknownProperties?: boolean
-    addTypeProperty?: boolean
+    typeProperty?: boolean | 'required'
   } = {},
 ) {
   const iface = file.addInterface({
@@ -178,11 +178,14 @@ function genObject(
   })
   genComment(iface, def)
 
-  if (addTypeProperty) {
-    //= $type: uri
+  if (typeProperty) {
+    const hash = getHash(lexUri)
+    const baseNsid = stripScheme(stripHash(lexUri))
+
+    //= $type?: <uri>
     iface.addProperty({
-      name: `$type?`,
-      type: `$Type<${JSON.stringify(stripHash(stripScheme(lexUri)))}, ${JSON.stringify(getHash(lexUri))}>`,
+      name: typeProperty === 'required' ? `$type` : `$type?`,
+      type: `$Type<${JSON.stringify(baseNsid)}, ${JSON.stringify(hash)}>`,
     })
   }
 
@@ -200,10 +203,7 @@ function genObject(
         //= propName: External|External
         const types =
           propDef.type === 'union'
-            ? propDef.refs.map(
-                (ref) =>
-                  `$Typed<${refToType(ref, stripScheme(stripHash(lexUri)), imports)}>`,
-              )
+            ? propDef.refs.map((ref) => refToUnionType(ref, lexUri, imports))
             : [refToType(propDef.ref, stripScheme(stripHash(lexUri)), imports)]
         if (propDef.type === 'union' && !propDef.closed) {
           types.push('{ $type: string }')
@@ -233,9 +233,8 @@ function genObject(
               ),
             })
           } else if (propDef.items.type === 'union') {
-            const types = propDef.items.refs.map(
-              (ref) =>
-                `$Typed<${refToType(ref, stripScheme(stripHash(lexUri)), imports)}>`,
+            const types = propDef.items.refs.map((ref) =>
+              refToUnionType(ref, lexUri, imports),
             )
             if (!propDef.items.closed) {
               types.push('{ $type: string }')
@@ -318,9 +317,8 @@ export function genArray(
       isExported: true,
     })
   } else if (def.items.type === 'union') {
-    const types = def.items.refs.map(
-      (ref) =>
-        `$Typed<${refToType(ref, stripScheme(stripHash(lexUri)), imports)}>`,
+    const types = def.items.refs.map((ref) =>
+      refToUnionType(ref, lexUri, imports),
     )
     if (!def.items.closed) {
       types.push('{ $type: string }')
@@ -411,9 +409,8 @@ export function genXrpcInput(
 
       const types =
         def.input.schema.type === 'union'
-          ? def.input.schema.refs.map(
-              (ref) =>
-                `$Typed<${refToType(ref, stripScheme(stripHash(lexUri)), imports)}>`,
+          ? def.input.schema.refs.map((ref) =>
+              refToUnionType(ref, lexUri, imports),
             )
           : [
               refToType(
@@ -474,10 +471,7 @@ export function genXrpcOutput(
       //= export type OutputSchema = ...
       const types =
         schema.type === 'union'
-          ? schema.refs.map(
-              (ref) =>
-                `$Typed<${refToType(ref, stripScheme(stripHash(lexUri)), imports)}>`,
-            )
+          ? schema.refs.map((ref) => refToUnionType(ref, lexUri, imports))
           : [refToType(schema.ref, stripScheme(stripHash(lexUri)), imports)]
       if (schema.type === 'union' && !schema.closed) {
         types.push('{ $type: string }')
@@ -508,7 +502,7 @@ export function genRecord(
   genObject(file, imports, lexUri, def.record, 'Record', {
     defaultsArePresent: true,
     allowUnknownProperties: true,
-    addTypeProperty: true,
+    typeProperty: 'required',
   })
 
   //= export function isRecord(v: unknown): v is Record {...}
@@ -563,7 +557,7 @@ function genObjHelpers(
 
   const isValidX = toCamelCase(`isValid-${ifaceName}`)
 
-  //= export function isValid{X}<V>(v: V): v is V & $Typed<{X}> {...}
+  //= export function isValid{X}<V>(v: V) {...}
   file
     .addFunction({
       name: `${isValidX}<V>`,
@@ -571,7 +565,7 @@ function genObjHelpers(
       isExported: true,
     })
     .setBodyText(
-      `return isValid<${ifaceName} & V>(v, id, ${hashVar}${requireTypeProperty ? ',true' : ''})`,
+      `return isValid<${ifaceName} & V>(v, id, ${hashVar}${requireTypeProperty ? ', true' : ''})`,
     )
 }
 
@@ -595,7 +589,16 @@ export function ipldToType(def: LexCidLink | LexBytes) {
   return 'CID'
 }
 
-export function refToType(
+function refToUnionType(
+  ref: string,
+  lexUri: string,
+  imports: Set<string>,
+): string {
+  const baseNsid = stripScheme(stripHash(lexUri))
+  return `$Typed<${refToType(ref, baseNsid, imports)}>`
+}
+
+function refToType(
   ref: string,
   baseNsid: string,
   imports: Set<string>,

@@ -45,8 +45,7 @@ import {
   ModerationSubjectStatusRowWithHandle,
 } from './types'
 import { formatLabel, signLabel } from './util'
-
-type Un$Typed<T> = Omit<T, '$type'> & { $type?: never }
+import { Un$Typed } from '../lexicon/util'
 
 const ifString = (val: unknown): string | undefined =>
   typeof val === 'string' ? val : undefined

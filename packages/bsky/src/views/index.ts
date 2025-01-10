@@ -74,9 +74,7 @@ import {
 } from '../lexicon/types/app/bsky/labeler/defs'
 import { Notification } from '../proto/bsky_pb'
 import { postUriToThreadgateUri, postUriToPostgateUri } from '../util/uris'
-import { $Typed } from '../lexicon/util'
-
-type Un$Typed<V> = Omit<V, '$type'> & { $type?: never }
+import { $Typed, Un$Typed } from '../lexicon/util'
 
 export class Views {
   public imgUriBuilder: ImageUriBuilder = this.opts.imgUriBuilder
@@ -310,7 +308,7 @@ export class Views {
   knownFollowers(
     did: string,
     state: HydrationState,
-  ): Un$Typed<KnownFollowers> | undefined {
+  ): KnownFollowers | undefined {
     const knownFollowers = state.knownFollowers?.get(did)
     if (!knownFollowers) return
     const blocks = state.bidirectionalBlocks?.get(did)
