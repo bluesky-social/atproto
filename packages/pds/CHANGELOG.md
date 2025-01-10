@@ -1,5 +1,13 @@
 # @atproto/pds
 
+## 0.4.84
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/oauth-provider@0.2.12
+  - @atproto-labs/fetch-node@0.1.5
+
 ## 0.4.83
 
 ### Patch Changes

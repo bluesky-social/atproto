@@ -1,5 +1,12 @@
 # @atproto/bsky
 
+## 0.0.106
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto-labs/fetch-node@0.1.5
+
 ## 0.0.105
 
 ### Patch Changes
