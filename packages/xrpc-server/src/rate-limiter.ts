@@ -10,6 +10,7 @@ import {
   CalcPointsFn,
   RateLimitExceededError,
   RateLimiterConsume,
+  RateLimiterDelete,
   RateLimiterI,
   RateLimiterStatus,
   XRPCReqContext,
@@ -61,10 +62,10 @@ export class RateLimiter implements RateLimiterI {
     return new RateLimiter(limiter, opts)
   }
 
-  async consume(
+  consume = async (
     ctx: XRPCReqContext,
     opts?: { calcKey?: CalcKeyFn; calcPoints?: CalcPointsFn },
-  ): Promise<RateLimiterStatus | RateLimitExceededError | null> {
+  ): Promise<RateLimiterStatus | RateLimitExceededError | null> => {
     if (
       this.bypassSecret &&
       ctx.req.header('x-ratelimit-bypass') === this.bypassSecret
@@ -109,6 +110,30 @@ export class RateLimiter implements RateLimiterI {
       }
     }
   }
+
+  delete = async (
+    ctx: XRPCReqContext,
+    opts?: { calcKey?: CalcKeyFn },
+  ): Promise<void> => {
+    const key = opts?.calcKey ? opts.calcKey(ctx) : this.calcKey(ctx)
+    if (key === null) {
+      return
+    }
+
+    try {
+      await this.limiter.delete(key)
+    } catch (err) {
+      logger.error(
+        {
+          err,
+          keyPrefix: this.limiter.keyPrefix,
+          points: this.limiter.points,
+          duration: this.limiter.duration,
+        },
+        'rate limiter failed to delete key',
+      )
+    }
+  }
 }
 
 export const formatLimiterStatus = (
@@ -141,6 +166,14 @@ export const consumeMany = async (
     setResHeaders(ctx, tightestLimit)
     return tightestLimit
   }
+}
+
+export const deleteMany = async (
+  ctx: XRPCReqContext,
+  fns: RateLimiterDelete[],
+): Promise<void> => {
+  if (fns.length === 0) return
+  await Promise.all(fns.map((fn) => fn(ctx)))
 }
 
 export const setResHeaders = (
