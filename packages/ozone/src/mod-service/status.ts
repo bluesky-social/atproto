@@ -1,18 +1,18 @@
 // This may require better organization but for now, just dumping functions here containing DB queries for moderation status
 
+import { HOUR } from '@atproto/common'
 import { AtUri } from '@atproto/syntax'
 import { Database } from '../db'
-import { ModerationSubjectStatus } from '../db/schema/moderation_subject_status'
+import DatabaseSchema from '../db/schema'
+import { jsonb } from '../db/types'
+import { REASONAPPEAL } from '../lexicon/types/com/atproto/moderation/defs'
 import {
-  REVIEWOPEN,
   REVIEWCLOSED,
   REVIEWESCALATED,
   REVIEWNONE,
+  REVIEWOPEN,
 } from '../lexicon/types/tools/ozone/moderation/defs'
 import { ModerationEventRow, ModerationSubjectStatusRow } from './types'
-import { HOUR } from '@atproto/common'
-import { REASONAPPEAL } from '../lexicon/types/com/atproto/moderation/defs'
-import { jsonb } from '../db/types'
 
 const getSubjectStatusForModerationEvent = ({
   currentStatus,
@@ -203,6 +203,24 @@ const getSubjectStatusForRecordEvent = ({
   return {}
 }
 
+export const moderationSubjectStatusQueryBuilder = (db: DatabaseSchema) => {
+  return db
+    .selectFrom('moderation_subject_status as mss')
+    .selectAll('mss')
+    .leftJoin('account_events_stats as aes', (join) =>
+      join.onRef('mss.did', '=', 'aes.subjectDid'),
+    )
+    .selectAll('aes')
+    .leftJoin('account_record_events_stats as ares', (join) =>
+      join.onRef('mss.did', '=', 'ares.subjectDid'),
+    )
+    .selectAll('ares')
+    .leftJoin('account_record_status_stats as arss', (join) =>
+      join.onRef('mss.did', '=', 'arss.did'),
+    )
+    .selectAll('arss')
+}
+
 // Based on a given moderation action event, this function will update the moderation status of the subject
 // If there's no existing status, it will create one
 // If the action event does not affect the status, it will do nothing
@@ -391,29 +409,6 @@ export const adjustModerationSubjectStatus = async (
 
   const status = await insertQuery.returningAll().executeTakeFirst()
   return status || null
-}
-
-type ModerationSubjectStatusFilter =
-  | Pick<ModerationSubjectStatus, 'did'>
-  | Pick<ModerationSubjectStatus, 'did' | 'recordPath'>
-  | Pick<ModerationSubjectStatus, 'did' | 'recordPath' | 'recordCid'>
-export const getModerationSubjectStatus = async (
-  db: Database,
-  filters: ModerationSubjectStatusFilter,
-) => {
-  let builder = db.db
-    .selectFrom('moderation_subject_status')
-    // DID will always be passed at the very least
-    .where('did', '=', filters.did)
-    .where('recordPath', '=', 'recordPath' in filters ? filters.recordPath : '')
-
-  if ('recordCid' in filters) {
-    builder = builder.where('recordCid', '=', filters.recordCid)
-  } else {
-    builder = builder.where('recordCid', 'is', null)
-  }
-
-  return builder.executeTakeFirst()
 }
 
 export const getStatusIdentifierFromSubject = (

@@ -1,6 +1,5 @@
 import net from 'node:net'
-import { Insertable, SelectQueryBuilder, sql } from 'kysely'
-import { CID } from 'multiformats/cid'
+import { Insertable, sql } from 'kysely'
 import { AtUri, INVALID_HANDLE } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { addHoursToDate, chunkArray } from '@atproto/common'
@@ -29,11 +28,13 @@ import { RepoRef, RepoBlobRef } from '../lexicon/types/com/atproto/admin/defs'
 import {
   adjustModerationSubjectStatus,
   getStatusIdentifierFromSubject,
+  moderationSubjectStatusQueryBuilder,
 } from './status'
 import {
   ModEventType,
   ModerationEventRow,
   ModerationSubjectStatusRow,
+  ModerationSubjectStatusRowWithHandle,
   ReversibleModerationEvent,
 } from './types'
 import { ModerationEvent } from '../db/schema/moderation_event'
@@ -310,19 +311,6 @@ export class ModerationService {
       .selectAll()
       .where('id', '=', id)
       .executeTakeFirst()
-  }
-
-  async getCurrentStatus(
-    subject: { did: string } | { uri: AtUri } | { cids: CID[] },
-  ) {
-    let builder = this.db.db.selectFrom('moderation_subject_status').selectAll()
-    if ('did' in subject) {
-      builder = builder.where('did', '=', subject.did)
-    } else if ('uri' in subject) {
-      builder = builder.where('recordPath', '=', subject.uri.toString())
-    }
-    // TODO: Handle the cid status
-    return await builder.execute()
   }
 
   async resolveSubjectsForAccount(
@@ -805,45 +793,6 @@ export class ModerationService {
     return result
   }
 
-  applyTagFilter = (
-    builder: SelectQueryBuilder<any, any, any>,
-    tags: string[],
-  ) => {
-    const { ref } = this.db.db.dynamic
-    // Build an array of conditions
-    const conditions = tags
-      .map((tag) => {
-        if (tag.includes('&&')) {
-          // Split by '&&' for AND logic
-          const subTags = tag
-            .split('&&')
-            // Make sure spaces on either sides of '&&' are trimmed
-            .map((subTag) => subTag.trim())
-            // Remove empty strings after trimming is applied
-            .filter(Boolean)
-
-          if (!subTags.length) return null
-
-          return sql`(${sql.join(
-            subTags.map(
-              (subTag) =>
-                sql`${ref('moderation_subject_status.tags')} ? ${subTag}`,
-            ),
-            sql` AND `,
-          )})`
-        } else {
-          // Single tag condition
-          return sql`${ref('moderation_subject_status.tags')} ? ${tag}`
-        }
-      })
-      .filter(Boolean)
-
-    if (!conditions.length) return builder
-
-    // Combine all conditions with OR
-    return builder.where(sql`(${sql.join(conditions, sql` OR `)})`)
-  }
-
   async getSubjectStatuses({
     queueCount,
     queueIndex,
@@ -900,33 +849,33 @@ export class ModerationService {
     sortDirection: 'asc' | 'desc'
     lastReviewedBy?: string
     sortField: 'lastReviewedAt' | 'lastReportedAt'
-    tags: string[]
-    excludeTags: string[]
-    collections: string[]
+    tags?: string[]
+    excludeTags?: string[]
+    collections?: string[]
     subjectType?: string
-  }) {
-    let builder = this.db.db.selectFrom('moderation_subject_status').selectAll()
+  }): Promise<{
+    statuses: ModerationSubjectStatusRowWithHandle[]
+    cursor?: string
+  }> {
+    let builder = moderationSubjectStatusQueryBuilder(this.db.db)
+
     const { ref } = this.db.db.dynamic
 
     if (subject) {
       const subjectInfo = getStatusIdentifierFromSubject(subject)
-      builder = builder.where(
-        'moderation_subject_status.did',
-        '=',
-        subjectInfo.did,
-      )
+      builder = builder.where('mss.did', '=', subjectInfo.did)
 
       if (!includeAllUserRecords) {
         builder = builder.where((qb) =>
           subjectInfo.recordPath
-            ? qb.where('recordPath', '=', subjectInfo.recordPath)
-            : qb.where('recordPath', '=', ''),
+            ? qb.where('mss.recordPath', '=', subjectInfo.recordPath)
+            : qb.where('mss.recordPath', '=', ''),
         )
       }
     } else if (subjectType === 'account') {
-      builder = builder.where('recordPath', '=', '')
+      builder = builder.where('mss.recordPath', '=', '')
     } else if (subjectType === 'record') {
-      builder = builder.where('recordPath', '!=', '')
+      builder = builder.where('mss.recordPath', '!=', '')
     }
 
     // Only fetch items that belongs to the specified queue when specified
@@ -948,112 +897,126 @@ export class ModerationService {
     }
 
     // If subjectType is set to 'account' let that take priority and ignore collections filter
-    if (collections.length && subjectType !== 'account') {
-      builder = builder.where('recordPath', '!=', '').where((qb) => {
-        collections.forEach((collection) => {
-          qb = qb.orWhere('recordPath', 'like', `${collection}/%`)
-        })
-        return qb
-      })
+    if (subjectType !== 'account' && collections?.length) {
+      builder = builder
+        .where('mss.recordPath', '!=', '')
+        .where((qb) =>
+          collections.reduce(
+            (qb, collection) =>
+              qb.orWhere('mss.recordPath', 'like', `${collection}/%`),
+            qb.where(sql`false`),
+          ),
+        )
     }
 
     if (ignoreSubjects?.length) {
       builder = builder
-        .where('did', 'not in', ignoreSubjects)
-        .where('recordPath', 'not in', ignoreSubjects)
+        .where('mss.did', 'not in', ignoreSubjects)
+        .where('mss.recordPath', 'not in', ignoreSubjects)
     }
 
     if (reviewState) {
-      builder = builder.where('reviewState', '=', reviewState)
+      builder = builder.where('mss.reviewState', '=', reviewState)
     }
 
     if (lastReviewedBy) {
-      builder = builder.where('lastReviewedBy', '=', lastReviewedBy)
+      builder = builder.where('mss.lastReviewedBy', '=', lastReviewedBy)
     }
 
     if (reviewedAfter) {
-      builder = builder.where('lastReviewedAt', '>', reviewedAfter)
+      builder = builder.where('mss.lastReviewedAt', '>', reviewedAfter)
     }
 
     if (reviewedBefore) {
-      builder = builder.where('lastReviewedAt', '<', reviewedBefore)
+      builder = builder.where('mss.lastReviewedAt', '<', reviewedBefore)
     }
 
     if (hostingUpdatedAfter) {
-      builder = builder.where('hostingUpdatedAt', '>', hostingUpdatedAfter)
+      builder = builder.where('mss.hostingUpdatedAt', '>', hostingUpdatedAfter)
     }
 
     if (hostingUpdatedBefore) {
-      builder = builder.where('hostingUpdatedAt', '<', hostingUpdatedBefore)
+      builder = builder.where('mss.hostingUpdatedAt', '<', hostingUpdatedBefore)
     }
 
     if (hostingDeletedAfter) {
-      builder = builder.where('hostingDeletedAt', '>', hostingDeletedAfter)
+      builder = builder.where('mss.hostingDeletedAt', '>', hostingDeletedAfter)
     }
 
     if (hostingDeletedBefore) {
-      builder = builder.where('hostingDeletedAt', '<', hostingDeletedBefore)
+      builder = builder.where('mss.hostingDeletedAt', '<', hostingDeletedBefore)
     }
 
     if (hostingStatuses?.length) {
-      builder = builder.where('hostingStatus', 'in', hostingStatuses)
+      builder = builder.where('mss.hostingStatus', 'in', hostingStatuses)
     }
 
     if (reportedAfter) {
-      builder = builder.where('lastReviewedAt', '>', reportedAfter)
+      builder = builder.where('mss.lastReviewedAt', '>', reportedAfter)
     }
 
     if (reportedBefore) {
-      builder = builder.where('lastReportedAt', '<', reportedBefore)
+      builder = builder.where('mss.lastReportedAt', '<', reportedBefore)
     }
 
     if (takendown) {
-      builder = builder.where('takendown', '=', true)
+      builder = builder.where('mss.takendown', '=', true)
     }
 
     if (appealed !== undefined) {
       builder =
         appealed === false
-          ? builder.where('appealed', 'is', null)
-          : builder.where('appealed', '=', appealed)
+          ? builder.where('mss.appealed', 'is', null)
+          : builder.where('mss.appealed', '=', appealed)
     }
 
     if (!includeMuted) {
       builder = builder.where((qb) =>
         qb
-          .where('muteUntil', '<', new Date().toISOString())
-          .orWhere('muteUntil', 'is', null),
+          .where('mss.muteUntil', '<', new Date().toISOString())
+          .orWhere('mss.muteUntil', 'is', null),
       )
     }
 
     if (onlyMuted) {
       builder = builder.where((qb) =>
         qb
-          .where('muteUntil', '>', new Date().toISOString())
-          .orWhere('muteReportingUntil', '>', new Date().toISOString()),
+          .where('mss.muteUntil', '>', new Date().toISOString())
+          .orWhere('mss.muteReportingUntil', '>', new Date().toISOString()),
       )
     }
 
-    if (tags.length) {
-      builder = this.applyTagFilter(builder, tags)
+    // ["tag1", "tag2 && tag3", "tag4"] => [["tag1"], ["tag2", "tag3"], ["tag4"]]
+    const conditions = parseTags(tags)
+    if (conditions?.length) {
+      // [["tag1"], ["tag2", "tag3"], ["tag4"]] => (tags ? 'tag1') OR (tags ? 'tag2' AND tags ? 'tag3') OR (tags ? 'tag4')
+      builder = builder.where((qb) =>
+        conditions.reduce(
+          (qb, subTags, i) =>
+            // OR every conditions
+            qb[i === 0 ? 'where' : 'orWhere']((qb) =>
+              subTags.reduce(
+                // AND every sub subTags
+                (qb, subTag) => qb.where(sql`${ref('mss.tags')} ? ${subTag}`),
+                qb,
+              ),
+            ),
+          qb,
+        ),
+      )
     }
 
-    if (excludeTags.length) {
+    if (excludeTags?.length) {
       builder = builder.where((qb) =>
         qb
           .where(
-            sql`NOT(${ref(
-              'moderation_subject_status.tags',
-            )} ?| array[${sql.join(excludeTags)}]::TEXT[])`,
+            sql`NOT(${ref('mss.tags')} ?| array[${sql.join(excludeTags)}]::TEXT[])`,
           )
           .orWhere('tags', 'is', null),
       )
     }
 
-    const keyset = new StatusKeyset(
-      ref(`moderation_subject_status.${sortField}`),
-      ref('moderation_subject_status.id'),
-    )
+    const keyset = new StatusKeyset(ref(`mss.${sortField}`), ref('mss.id'))
     const paginatedBuilder = paginate(builder, {
       limit,
       cursor,
@@ -1067,13 +1030,12 @@ export class ModerationService {
     const infos = await this.views.getAccoutInfosByDid(
       results.map((r) => r.did),
     )
-    const resultsWithHandles = results.map((r) => ({
-      ...r,
-      handle: infos.get(r.did)?.handle ?? INVALID_HANDLE,
-    }))
 
     return {
-      statuses: resultsWithHandles,
+      statuses: results.map((r) => ({
+        ...r,
+        handle: infos.get(r.did)?.handle ?? INVALID_HANDLE,
+      })),
       cursor: keyset.packFromResult(results),
     }
   }
@@ -1194,6 +1156,18 @@ export class ModerationService {
     }
   }
 }
+
+const parseTags = (tags?: string[]) =>
+  tags
+    ?.map((tag) =>
+      tag
+        .split(/\s*&&\s*/g)
+        .map((subTag) => subTag.trim())
+        // Ignore invalid syntax ("", "tag1 &&", "&& tag2", "tag1 && && tag2", etc.)
+        .filter(Boolean),
+    )
+    // Ignore invalid items
+    .filter((subTags): subTags is [string, ...string[]] => subTags.length > 0)
 
 const isSafeUrl = (url: URL) => {
   if (url.protocol !== 'https:') return false

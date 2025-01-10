@@ -11,6 +11,11 @@ import * as set from './ozone_set'
 import * as member from './member'
 import * as setting from './setting'
 
+import * as recordEventsStats from './record_events_stats'
+import * as accountEventsStats from './account_events_stats'
+import * as accountRecordEventsStats from './account_record_events_stats'
+import * as accountRecordStatusStats from './account_record_status_stats'
+
 export type DatabaseSchemaType = modEvent.PartialDB &
   modSubjectStatus.PartialDB &
   label.PartialDB &
@@ -21,7 +26,11 @@ export type DatabaseSchemaType = modEvent.PartialDB &
   communicationTemplate.PartialDB &
   set.PartialDB &
   member.PartialDB &
-  setting.PartialDB
+  setting.PartialDB &
+  accountEventsStats.PartialDB &
+  recordEventsStats.PartialDB &
+  accountRecordEventsStats.PartialDB &
+  accountRecordStatusStats.PartialDB
 
 export type DatabaseSchema = Kysely<DatabaseSchemaType>
 
