@@ -19,12 +19,12 @@
     "directory": "packages/oauth/oauth-client-browser"
   },
   "type": "commonjs",
-  "main": "dist/index.cjs",
+  "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "default": "./dist/index.cjs"
+      "default": "./dist/index.js"
     }
   },
   "files": [
