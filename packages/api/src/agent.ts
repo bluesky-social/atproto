@@ -1,4 +1,4 @@
-import { TID } from '@atproto/common-web'
+import { retry, TID } from '@atproto/common-web'
 import { AtUri, ensureValidDid } from '@atproto/syntax'
 import { buildFetchHandler, FetchHandler, XrpcClient } from '@atproto/xrpc'
 import AwaitLock from 'await-lock'
@@ -15,7 +15,7 @@ import {
 } from './client/index'
 import { schemas } from './client/lexicons'
 import { MutedWord, Nux } from './client/types/app/bsky/actor/defs'
-import { $Typed } from './client/util'
+import { $Typed, Un$Typed } from './client/util'
 import { BSKY_LABELER_DID } from './const'
 import { interpretLabelValueDefinitions } from './moderation'
 import { DEFAULT_LABEL_SETTINGS } from './moderation/const/labels'
@@ -442,56 +442,52 @@ export class Agent extends XrpcClient {
   async upsertProfile(
     updateFn: (
       existing: AppBskyActorProfile.Record | undefined,
-    ) => AppBskyActorProfile.Record | Promise<AppBskyActorProfile.Record>,
+    ) =>
+      | Un$Typed<AppBskyActorProfile.Record>
+      | Promise<Un$Typed<AppBskyActorProfile.Record>>,
   ) {
-    const repo = this.accountDid
+    const upsert = async () => {
+      const repo = this.assertDid
+      const collection = 'app.bsky.actor.profile'
 
-    let retriesRemaining = 5
-    while (retriesRemaining >= 0) {
-      // fetch existing
       const existing = await this.com.atproto.repo
         .getRecord({
           repo,
-          collection: 'app.bsky.actor.profile',
+          collection,
           rkey: 'self',
         })
         .catch((_) => undefined)
 
       // run the update
-      const updated = await updateFn(existing?.data.value)
-      if (updated) {
-        updated.$type = 'app.bsky.actor.profile'
-      }
+      const updated = await updateFn(
+        AppBskyActorProfile.isValidRecord(existing?.data.value)
+          ? existing.data.value
+          : undefined,
+      )
 
-      // validate the record
-      const validation = AppBskyActorProfile.validateRecord(updated)
+      // validate the value returned by the update function
+      const validation = AppBskyActorProfile.validateRecord({
+        $type: collection,
+        ...updated,
+      })
+
       if (!validation.success) {
         throw validation.error
       }
 
-      try {
-        // attempt the put
-        await this.com.atproto.repo.putRecord({
-          repo,
-          collection: 'app.bsky.actor.profile',
-          rkey: 'self',
-          record: updated,
-          swapRecord: existing?.data.cid || null,
-        })
-      } catch (e: unknown) {
-        if (
-          retriesRemaining > 0 &&
-          e instanceof ComAtprotoRepoPutRecord.InvalidSwapError
-        ) {
-          // try again
-          retriesRemaining--
-          continue
-        } else {
-          throw e
-        }
-      }
-      break
+      await this.com.atproto.repo.putRecord({
+        repo,
+        collection,
+        rkey: 'self',
+        record: validation.value,
+        swapRecord: existing?.data.cid || null,
+      })
     }
+
+    return retry(upsert, {
+      maxRetries: 5,
+      retryable: (e) => e instanceof ComAtprotoRepoPutRecord.InvalidSwapError,
+    })
   }
 
   async mute(actor: string) {
@@ -1250,11 +1246,9 @@ export class Agent extends XrpcClient {
   async bskyAppSetActiveProgressGuide(
     guide: AppBskyActorDefs.BskyAppProgressGuide | undefined,
   ) {
-    if (
-      guide &&
-      !AppBskyActorDefs.validateBskyAppProgressGuide(guide).success
-    ) {
-      throw new Error('Invalid progress guide')
+    if (guide) {
+      const result = AppBskyActorDefs.validateBskyAppProgressGuide(guide)
+      if (!result.success) throw result.error
     }
 
     await this.updatePreferences((prefs: AppBskyActorDefs.Preferences) => {

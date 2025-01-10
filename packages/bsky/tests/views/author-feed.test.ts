@@ -1,3 +1,4 @@
+import assert from 'node:assert'
 import { AtpAgent, AppBskyActorProfile, AppBskyFeedDefs } from '@atproto/api'
 import { TestNetwork, SeedClient, authorFeedSeed } from '@atproto/dev-env'
 import {
@@ -408,12 +409,10 @@ describe('pds author feed views', () => {
         rkey: 'self',
       })
 
-      if (!AppBskyActorProfile.isRecord(profile.data.value)) {
-        throw new Error('')
-      }
+      assert(AppBskyActorProfile.isValidRecord(profile.data.value))
 
       const newProfile: AppBskyActorProfile.Record = {
-        ...profile,
+        ...profile.data.value,
         pinnedPost: {
           uri: post.ref.uriStr,
           cid: post.ref.cid.toString(),
@@ -536,12 +535,10 @@ describe('pds author feed views', () => {
         rkey: 'self',
       })
 
-      if (!AppBskyActorProfile.isRecord(profile.data.value)) {
-        throw new Error('')
-      }
+      assert(AppBskyActorProfile.isValidRecord(profile.data.value))
 
       const newProfile: AppBskyActorProfile.Record = {
-        ...profile,
+        ...profile.data.value,
         pinnedPost: {
           uri: bobPost.ref.uriStr,
           cid: bobPost.ref.cid.toString(),

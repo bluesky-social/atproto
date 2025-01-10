@@ -52,9 +52,7 @@ export const getPdsAccountInfos = async (
   }
 }
 
-type Un$Typed<T> = Omit<T, '$type'> & { $type?: never }
-
-function un$type<T extends object>(obj: T): Un$Typed<T> {
+function un$type<T extends object>(obj: T): Omit<T, '$type'> {
   if ('$type' in obj) {
     const { $type: _, ...rest } = obj
     return rest

@@ -103,10 +103,7 @@ export function interpretLabelValueDefinitions(
   labelerView: AppBskyLabelerDefs.LabelerViewDetailed,
 ): InterpretedLabelValueDefinition[] {
   return (labelerView.policies?.labelValueDefinitions || [])
-    .filter(
-      (labelValDef) =>
-        ComAtprotoLabelDefs.validateLabelValueDefinition(labelValDef).success,
-    )
+    .filter(ComAtprotoLabelDefs.isValidLabelValueDefinition)
     .map((labelValDef) =>
       interpretLabelValueDefinition(labelValDef, labelerView.creator.did),
     )
