@@ -1,5 +1,5 @@
 import net from 'node:net'
-import { Insertable, SelectQueryBuilder, sql } from 'kysely'
+import { Insertable, sql } from 'kysely'
 import { AtUri, INVALID_HANDLE } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { addHoursToDate, chunkArray } from '@atproto/common'
@@ -793,45 +793,6 @@ export class ModerationService {
     return result
   }
 
-  applyTagFilter = (
-    builder: SelectQueryBuilder<any, any, any>,
-    tags: string[],
-  ) => {
-    const { ref } = this.db.db.dynamic
-    // Build an array of conditions
-    const conditions = tags
-      .map((tag) => {
-        if (tag.includes('&&')) {
-          // Split by '&&' for AND logic
-          const subTags = tag
-            .split('&&')
-            // Make sure spaces on either sides of '&&' are trimmed
-            .map((subTag) => subTag.trim())
-            // Remove empty strings after trimming is applied
-            .filter(Boolean)
-
-          if (!subTags.length) return null
-
-          return sql`(${sql.join(
-            subTags.map(
-              (subTag) =>
-                sql`${ref('moderation_subject_status.tags')} ? ${subTag}`,
-            ),
-            sql` AND `,
-          )})`
-        } else {
-          // Single tag condition
-          return sql`${ref('moderation_subject_status.tags')} ? ${tag}`
-        }
-      })
-      .filter(Boolean)
-
-    if (!conditions.length) return builder
-
-    // Combine all conditions with OR
-    return builder.where(sql`(${sql.join(conditions, sql` OR `)})`)
-  }
-
   async getSubjectStatuses({
     queueCount,
     queueIndex,
@@ -1025,8 +986,24 @@ export class ModerationService {
       )
     }
 
-    if (tags?.length) {
-      builder = this.applyTagFilter(builder, tags)
+    // ["tag1", "tag2 && tag3", "tag4"] => [["tag1"], ["tag2", "tag3"], ["tag4"]]
+    const conditions = parseTags(tags)
+    if (conditions?.length) {
+      // [["tag1"], ["tag2", "tag3"], ["tag4"]] => (tags ? 'tag1') OR (tags ? 'tag2' AND tags ? 'tag3') OR (tags ? 'tag4')
+      builder = builder.where((qb) =>
+        conditions.reduce(
+          (qb, subTags, i) =>
+            // OR every conditions
+            qb[i === 0 ? 'where' : 'orWhere']((qb) =>
+              subTags.reduce(
+                // AND every sub subTags
+                (qb, subTag) => qb.where(sql`${ref('mss.tags')} ? ${subTag}`),
+                qb,
+              ),
+            ),
+          qb,
+        ),
+      )
     }
 
     if (excludeTags?.length) {
@@ -1179,6 +1156,18 @@ export class ModerationService {
     }
   }
 }
+
+const parseTags = (tags?: string[]) =>
+  tags
+    ?.map((tag) =>
+      tag
+        .split(/\s*&&\s*/g)
+        .map((subTag) => subTag.trim())
+        // Ignore invalid syntax ("", "tag1 &&", "&& tag2", "tag1 && && tag2", etc.)
+        .filter(Boolean),
+    )
+    // Ignore invalid items
+    .filter((subTags): subTags is [string, ...string[]] => subTags.length > 0)
 
 const isSafeUrl = (url: URL) => {
   if (url.protocol !== 'https:') return false
