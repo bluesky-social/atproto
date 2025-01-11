@@ -21,7 +21,13 @@ const LANGUAGE_EXCEPTIONS = [
   'vi', // Vietnamese
 ]
 
-export function hasMutedWord({
+export type MuteWordMatch =
+  | {
+      word: AppBskyActorDefs.MutedWord
+    }[]
+  | null
+
+export function matchMuteWord({
   mutedWords,
   text,
   facets,
@@ -35,7 +41,7 @@ export function hasMutedWord({
   outlineTags?: string[]
   languages?: string[]
   actor?: AppBskyActorDefs.ProfileView
-}) {
+}): MuteWordMatch {
   const exception = LANGUAGE_EXCEPTIONS.includes(languages?.[0] || '')
   const tags = ([] as string[])
     .concat(outlineTags || [])
@@ -46,7 +52,9 @@ export function hasMutedWord({
     )
     .map((t) => t.toLowerCase())
 
-  for (const mute of mutedWords) {
+  const matches: Exclude<MuteWordMatch, null> = []
+
+  outer: for (const mute of mutedWords) {
     const mutedWord = mute.value.toLowerCase()
     const postText = text.toLowerCase()
 
@@ -60,24 +68,37 @@ export function hasMutedWord({
       continue
 
     // `content` applies to tags as well
-    if (tags.includes(mutedWord)) return true
+    if (tags.includes(mutedWord)) {
+      matches.push({ word: mute })
+      continue
+    }
     // rest of the checks are for `content` only
     if (!mute.targets.includes('content')) continue
     // single character or other exception, has to use includes
-    if ((mutedWord.length === 1 || exception) && postText.includes(mutedWord))
-      return true
+    if ((mutedWord.length === 1 || exception) && postText.includes(mutedWord)) {
+      matches.push({ word: mute })
+      continue
+    }
     // too long
     if (mutedWord.length > postText.length) continue
     // exact match
-    if (mutedWord === postText) return true
+    if (mutedWord === postText) {
+      matches.push({ word: mute })
+      continue
+    }
     // any muted phrase with space or punctuation
-    if (/(?:\s|\p{P})+?/u.test(mutedWord) && postText.includes(mutedWord))
-      return true
+    if (/(?:\s|\p{P})+?/u.test(mutedWord) && postText.includes(mutedWord)) {
+      matches.push({ word: mute })
+      continue
+    }
 
     // check individual character groups
     const words = postText.split(REGEX.WORD_BOUNDARY)
     for (const word of words) {
-      if (word === mutedWord) return true
+      if (word === mutedWord) {
+        matches.push({ word: mute })
+        continue outer
+      }
 
       // compare word without leading/trailing punctuation, but allow internal
       // punctuation (such as `s@ssy`)
@@ -86,23 +107,35 @@ export function hasMutedWord({
         '',
       )
 
-      if (mutedWord === wordTrimmedPunctuation) return true
+      if (mutedWord === wordTrimmedPunctuation) {
+        matches.push({ word: mute })
+        continue outer
+      }
       if (mutedWord.length > wordTrimmedPunctuation.length) continue
 
       if (/\p{P}+/u.test(wordTrimmedPunctuation)) {
         const spacedWord = wordTrimmedPunctuation.replace(/\p{P}+/gu, ' ')
-        if (spacedWord === mutedWord) return true
+        if (spacedWord === mutedWord) {
+          matches.push({ word: mute })
+          continue outer
+        }
 
         const contiguousWord = spacedWord.replace(/\s/gu, '')
-        if (contiguousWord === mutedWord) return true
+        if (contiguousWord === mutedWord) {
+          matches.push({ word: mute })
+          continue outer
+        }
 
         const wordParts = wordTrimmedPunctuation.split(/\p{P}+/u)
         for (const wordPart of wordParts) {
-          if (wordPart === mutedWord) return true
+          if (wordPart === mutedWord) {
+            matches.push({ word: mute })
+            continue outer
+          }
         }
       }
     }
   }
 
-  return false
+  return matches.length ? matches : null
 }
