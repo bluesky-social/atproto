@@ -2,13 +2,22 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
-import * as AppBskyActorDefs from '../../../app/bsky/actor/defs'
-import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
+import {
+  isValid as _isValid,
+  validate as _validate,
+} from '../../../../lexicons'
+import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import type * as AppBskyActorDefs from '../../../app/bsky/actor/defs'
+import type * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
+
+const is$typed = _is$typed,
+  isValid = _isValid,
+  validate = _validate
+const id = 'chat.bsky.actor.defs'
 
 export interface ProfileViewBasic {
+  $type?: $Type<'chat.bsky.actor.defs', 'profileViewBasic'>
   did: string
   handle: string
   displayName?: string
@@ -18,17 +27,18 @@ export interface ProfileViewBasic {
   labels?: ComAtprotoLabelDefs.Label[]
   /** Set to true when the actor cannot actively participate in converations */
   chatDisabled?: boolean
-  [k: string]: unknown
 }
 
-export function isProfileViewBasic(v: unknown): v is ProfileViewBasic {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'chat.bsky.actor.defs#profileViewBasic'
-  )
+const hashProfileViewBasic = 'profileViewBasic'
+
+export function isProfileViewBasic<V>(v: V) {
+  return is$typed(v, id, hashProfileViewBasic)
 }
 
-export function validateProfileViewBasic(v: unknown): ValidationResult {
-  return lexicons.validate('chat.bsky.actor.defs#profileViewBasic', v)
+export function validateProfileViewBasic<V>(v: V) {
+  return validate<ProfileViewBasic & V>(v, id, hashProfileViewBasic)
+}
+
+export function isValidProfileViewBasic<V>(v: V) {
+  return isValid<ProfileViewBasic & V>(v, id, hashProfileViewBasic)
 }

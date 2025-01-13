@@ -1,6 +1,4 @@
 import { z } from 'zod'
-import { Lexicons } from './lexicons'
-import { LexRefVariant, LexUserType } from './types'
 
 export function toLexUri(str: string, baseUri?: string): string {
   if (str.split('#').length > 2) {
@@ -17,19 +15,6 @@ export function toLexUri(str: string, baseUri?: string): string {
     return `${baseUri}${str}`
   }
   return `lex:${str}`
-}
-
-export function toConcreteTypes(
-  lexicons: Lexicons,
-  def: LexRefVariant | LexUserType,
-): LexUserType[] {
-  if (def.type === 'ref') {
-    return [lexicons.getDefOrThrow(def.ref)]
-  } else if (def.type === 'union') {
-    return def.refs.map((ref) => lexicons.getDefOrThrow(ref)).flat()
-  } else {
-    return [def]
-  }
 }
 
 export function requiredPropertiesRefinement<
