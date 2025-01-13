@@ -11,7 +11,7 @@ import {
 import { toConcreteTypes, toLexUri } from '../util'
 
 import { blob } from './blob'
-import { boolean, integer, string, bytes, cidLink, unknown } from './primitives'
+import { validate as validatePrimitive } from './primitives'
 
 export function validate(
   lexicons: Lexicons,
@@ -20,18 +20,6 @@ export function validate(
   value: unknown,
 ): ValidationResult {
   switch (def.type) {
-    case 'boolean':
-      return boolean(lexicons, path, def, value)
-    case 'integer':
-      return integer(lexicons, path, def, value)
-    case 'string':
-      return string(lexicons, path, def, value)
-    case 'bytes':
-      return bytes(lexicons, path, def, value)
-    case 'cid-link':
-      return cidLink(lexicons, path, def, value)
-    case 'unknown':
-      return unknown(lexicons, path, def, value)
     case 'object':
       return object(lexicons, path, def, value)
     case 'array':
@@ -39,10 +27,7 @@ export function validate(
     case 'blob':
       return blob(lexicons, path, def, value)
     default:
-      return {
-        success: false,
-        error: new ValidationError(`Unexpected lexicon type: ${def.type}`),
-      }
+      return validatePrimitive(lexicons, path, def, value)
   }
 }
 
