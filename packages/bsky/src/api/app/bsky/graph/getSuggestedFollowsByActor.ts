@@ -73,6 +73,7 @@ const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
     return {
       isFallback: !res.data.relativeToDid,
       suggestedDids: res.data.actors.map((a) => a.did),
+      recId: res.data.recId,
       headers: res.headers,
     }
   } else {
@@ -133,5 +134,6 @@ type Params = QueryParams & {
 type SkeletonState = {
   isFallback: boolean
   suggestedDids: string[]
+  recId?: number
   headers?: Record<string, string>
 }
