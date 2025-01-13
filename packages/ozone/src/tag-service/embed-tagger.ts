@@ -28,12 +28,14 @@ export class EmbedTagger extends ContentTagger {
         return []
       }
       const tags: string[] = []
-      if (AppBskyFeedPost.isRecord(recordValue)) {
+      const result = AppBskyFeedPost.validateRecord(recordValue)
+
+      if (result.success) {
         const embedContent = AppBskyEmbedRecordWithMedia.isMain(
-          recordValue.embed,
+          result.value.embed,
         )
-          ? recordValue.embed.media
-          : recordValue.embed
+          ? result.value.embed.media
+          : result.value.embed
 
         if (AppBskyEmbedImages.isMain(embedContent)) {
           tags.push(`${this.tagPrefix}image`)

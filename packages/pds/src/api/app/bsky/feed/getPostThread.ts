@@ -23,6 +23,7 @@ import {
   formatMungedResponse,
 } from '../../../../read-after-write'
 import { ids } from '../../../../lexicon/lexicons'
+import { $Typed } from '../../../../lexicon/util'
 
 export default function (server: Server, ctx: AppContext) {
   const { bskyAppView } = ctx.cfg
@@ -99,12 +100,12 @@ const getPostThreadMunge = async (
 
 const addPostsToThread = async (
   localViewer: LocalViewer,
-  original: ThreadViewPost,
+  original: $Typed<ThreadViewPost>,
   posts: RecordDescript<PostRecord>[],
 ) => {
   const inThread = findPostsInThread(original, posts)
   if (inThread.length === 0) return original
-  let thread: ThreadViewPost = original
+  let thread: $Typed<ThreadViewPost> = original
   for (const record of inThread) {
     thread = await insertIntoThreadReplies(localViewer, thread, record)
   }
@@ -125,9 +126,9 @@ const findPostsInThread = (
 
 const insertIntoThreadReplies = async (
   localViewer: LocalViewer,
-  view: ThreadViewPost,
+  view: $Typed<ThreadViewPost>,
   descript: RecordDescript<PostRecord>,
-): Promise<ThreadViewPost> => {
+): Promise<$Typed<ThreadViewPost>> => {
   if (descript.record.reply?.parent.uri === view.post.uri) {
     const postView = await threadPostView(localViewer, descript)
     if (!postView) return view
@@ -154,7 +155,7 @@ const insertIntoThreadReplies = async (
 const threadPostView = async (
   localViewer: LocalViewer,
   descript: RecordDescript<PostRecord>,
-): Promise<ThreadViewPost | null> => {
+): Promise<$Typed<ThreadViewPost> | null> => {
   const postView = await localViewer.getPost(descript)
   if (!postView) return null
   return {

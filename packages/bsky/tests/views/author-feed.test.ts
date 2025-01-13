@@ -1,4 +1,5 @@
-import { AtpAgent, AppBskyActorProfile, AppBskyFeedDefs } from '@atproto/api'
+import assert from 'node:assert'
+import { AtpAgent } from '@atproto/api'
 import { TestNetwork, SeedClient, authorFeedSeed } from '@atproto/dev-env'
 import {
   forSnapshot,
@@ -6,12 +7,25 @@ import {
   stripViewer,
   stripViewerFromPost,
 } from '../_util'
-import { ReplyRef, isRecord } from '../../src/lexicon/types/app/bsky/feed/post'
+import {
+  ReplyRef,
+  validateReplyRef,
+  isRecord,
+} from '../../src/lexicon/types/app/bsky/feed/post'
 import { isView as isEmbedRecordWithMedia } from '../../src/lexicon/types/app/bsky/embed/recordWithMedia'
 import { isView as isImageEmbed } from '../../src/lexicon/types/app/bsky/embed/images'
+import {
+  Record as Profile,
+  validateRecord as validatePostRecord,
+} from '../../src/lexicon/types/app/bsky/actor/profile'
+import { isReasonPin } from '../../src/lexicon/types/app/bsky/feed/defs'
 import { isPostView } from '../../src/lexicon/types/app/bsky/feed/defs'
 import { uriToDid } from '../../src/util/uris'
 import { ids } from '../../src/lexicon/lexicons'
+import { asPredicate } from '../../src/lexicon/util'
+
+const isValidReplyRef = asPredicate(validateReplyRef)
+const isValidProfile = asPredicate(validatePostRecord)
 
 describe('pds author feed views', () => {
   let network: TestNetwork
@@ -179,8 +193,8 @@ describe('pds author feed views', () => {
         }
         if (item.reply) {
           result.reply = {
-            parent: stripViewerFromPost(item.reply.parent),
-            root: stripViewerFromPost(item.reply.root),
+            parent: stripViewerFromPost(item.reply.parent, true),
+            root: stripViewerFromPost(item.reply.root, true),
             grandparentAuthor:
               item.reply.grandparentAuthor &&
               stripViewer(item.reply.grandparentAuthor),
@@ -289,7 +303,7 @@ describe('pds author feed views', () => {
     })
 
     expect(carolFeed.feed.length).toBeGreaterThan(0)
-    expect(
+    assert(
       carolFeed.feed.every(({ post }) => {
         const isRecordWithActorMedia =
           isEmbedRecordWithMedia(post.embed) && isImageEmbed(post.embed?.media)
@@ -298,18 +312,18 @@ describe('pds author feed views', () => {
 
         return (isRecordWithActorMedia || isActorMedia) && isFromActor
       }),
-    ).toBeTruthy()
+    )
 
     const { data: bobFeed } = await agent.api.app.bsky.feed.getAuthorFeed({
       actor: bob,
       filter: 'posts_with_media',
     })
 
-    expect(
+    assert(
       bobFeed.feed.every(({ post }) => {
         return isImageEmbed(post.embed) && post.author.did === bob
       }),
-    ).toBeTruthy()
+    )
 
     const { data: danFeed } = await agent.api.app.bsky.feed.getAuthorFeed({
       actor: dan,
@@ -325,14 +339,14 @@ describe('pds author feed views', () => {
       filter: 'posts_no_replies',
     })
 
-    expect(
+    assert(
       carolFeed.feed.every(({ post }) => {
         return (
           (isRecord(post.record) && !post.record.reply) ||
           (isRecord(post.record) && post.record.reply)
         )
       }),
-    ).toBeTruthy()
+    )
 
     const { data: danFeed } = await agent.api.app.bsky.feed.getAuthorFeed({
       actor: dan,
@@ -366,7 +380,11 @@ describe('pds author feed views', () => {
     // does not include eve's replies to fred, even within her own thread.
     expect(
       eveFeed.feed.every(({ post, reply }) => {
-        if (!post || !isRecord(post.record) || !post.record.reply) {
+        if (
+          !post ||
+          !isRecord(post.record) ||
+          !isValidReplyRef(post.record.reply)
+        ) {
           return true // not a reply
         }
         const replyToEve = isReplyTo(post.record.reply, eve)
@@ -374,7 +392,7 @@ describe('pds author feed views', () => {
           reply &&
           isPostView(reply.parent) &&
           isRecord(reply.parent.record) &&
-          (!reply.parent.record.reply ||
+          (!isValidReplyRef(reply.parent.record.reply) ||
             isReplyTo(reply.parent.record.reply, eve))
         return replyToEve && replyToReplyByEve
       }),
@@ -400,12 +418,10 @@ describe('pds author feed views', () => {
         rkey: 'self',
       })
 
-      if (!AppBskyActorProfile.isRecord(profile.data.value)) {
-        throw new Error('')
-      }
+      assert(isValidProfile(profile.data.value))
 
-      const newProfile: AppBskyActorProfile.Record = {
-        ...profile,
+      const newProfile: Profile = {
+        ...profile.data.value,
         pinnedPost: {
           uri: post.ref.uriStr,
           cid: post.ref.cid.toString(),
@@ -441,8 +457,8 @@ describe('pds author feed views', () => {
 
       const pinnedPost = data.feed.at(0)
       expect(pinnedPost?.post?.uri).toEqual(post.ref.uriStr)
-      expect(pinnedPost?.post?.viewer?.pinned).toBeTruthy()
-      expect(AppBskyFeedDefs.isReasonPin(pinnedPost?.reason)).toBeTruthy()
+      assert(pinnedPost?.post?.viewer?.pinned)
+      assert(isReasonPin(pinnedPost?.reason))
 
       const notPinnedPost = data.feed.at(1)
       expect(notPinnedPost?.post?.viewer?.pinned).toBeFalsy()
@@ -469,8 +485,8 @@ describe('pds author feed views', () => {
         (item) => item.post.uri === post.ref.uriStr,
       )
       expect(pinnedPost?.post?.uri).toEqual(post.ref.uriStr)
-      expect(pinnedPost?.post?.viewer?.pinned).toBeTruthy()
-      expect(AppBskyFeedDefs.isReasonPin(pinnedPost?.reason)).toBeTruthy()
+      assert(pinnedPost?.post?.viewer?.pinned)
+      assert(isReasonPin(pinnedPost?.reason))
       expect(forSnapshot(page1.feed)).toMatchSnapshot()
 
       const { data: page2 } = await agent.api.app.bsky.feed.getAuthorFeed(
@@ -492,8 +508,8 @@ describe('pds author feed views', () => {
         (item) => item.post.uri === post.ref.uriStr,
       )
       expect(laterPinnedPost?.post?.uri).toEqual(post.ref.uriStr)
-      expect(laterPinnedPost?.post?.viewer?.pinned).toBeTruthy()
-      expect(AppBskyFeedDefs.isReasonPin(laterPinnedPost?.reason)).toBeFalsy()
+      assert(laterPinnedPost?.post?.viewer?.pinned)
+      expect(isReasonPin(laterPinnedPost?.reason)).toBeFalsy()
       expect(forSnapshot(page2.feed)).toMatchSnapshot()
     })
 
@@ -513,7 +529,7 @@ describe('pds author feed views', () => {
       const pinnedPost = data.feed.find(
         (item) => item.post.uri === post.ref.uriStr,
       )
-      expect(AppBskyFeedDefs.isReasonPin(pinnedPost?.reason)).toBeFalsy()
+      expect(isReasonPin(pinnedPost?.reason)).toBeFalsy()
       expect(forSnapshot(data.feed)).toMatchSnapshot()
     })
 
@@ -528,12 +544,10 @@ describe('pds author feed views', () => {
         rkey: 'self',
       })
 
-      if (!AppBskyActorProfile.isRecord(profile.data.value)) {
-        throw new Error('')
-      }
+      assert(isValidProfile(profile.data.value))
 
-      const newProfile: AppBskyActorProfile.Record = {
-        ...profile,
+      const newProfile: Profile = {
+        ...profile.data.value,
         pinnedPost: {
           uri: bobPost.ref.uriStr,
           cid: bobPost.ref.cid.toString(),
