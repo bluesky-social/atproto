@@ -32,9 +32,7 @@ export class ModerationDecision {
   static merge(
     ...decisions: (ModerationDecision | undefined)[]
   ): ModerationDecision {
-    const decisionsFiltered: ModerationDecision[] = decisions.filter(
-      (v) => !!v,
-    ) as ModerationDecision[]
+    const decisionsFiltered = decisions.filter((v) => v != null)
     const decision = new ModerationDecision()
     if (decisionsFiltered[0]) {
       decision.did = decisionsFiltered[0].did

@@ -1,15 +1,20 @@
-import {
-  ComAtprotoModerationDefs,
-  ToolsOzoneModerationDefs,
-  ToolsOzoneModerationEmitEvent as EmitModerationEvent,
-} from '@atproto/api'
+import assert from 'node:assert'
 import {
   ModeratorClient,
   SeedClient,
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import { REVIEWOPEN } from '../src/lexicon/types/tools/ozone/moderation/defs'
+import { isRepoRef } from '../src/lexicon/types/com/atproto/admin/defs'
+import { REASONMISLEADING } from '../src/lexicon/types/com/atproto/moderation/defs'
+import { isMain as isStrongRef } from '../src/lexicon/types/com/atproto/repo/strongRef'
+import {
+  REVIEWOPEN,
+  SubjectStatusView,
+  isAccountHosting,
+  isRecordHosting,
+} from '../src/lexicon/types/tools/ozone/moderation/defs'
+import { InputSchema } from '../src/lexicon/types/tools/ozone/moderation/emitEvent'
 
 describe('record and account events on moderation subjects', () => {
   let network: TestNetwork
@@ -32,7 +37,7 @@ describe('record and account events on moderation subjects', () => {
 
   const getSubjectStatus = async (
     subject: string,
-  ): Promise<ToolsOzoneModerationDefs.SubjectStatusView | undefined> => {
+  ): Promise<SubjectStatusView | undefined> => {
     const res = await modClient.queryStatuses({
       subject,
     })
@@ -41,7 +46,7 @@ describe('record and account events on moderation subjects', () => {
 
   describe('record events', () => {
     const emitRecordEvent = async (
-      subject: EmitModerationEvent.InputSchema['subject'],
+      subject: InputSchema['subject'],
       op: 'create' | 'update' | 'delete',
     ) => {
       return await modClient.emitEvent(
@@ -67,26 +72,28 @@ describe('record and account events on moderation subjects', () => {
 
       await sc.createReport({
         reportedBy: sc.dids.carol,
-        reasonType: ComAtprotoModerationDefs.REASONMISLEADING,
+        reasonType: REASONMISLEADING,
         reason: 'misleading',
         subject: bobsPostSubject,
       })
 
       await emitRecordEvent(bobsPostSubject, 'update')
       const statusAfterUpdate = await getSubjectStatus(bobsPostSubject.uri)
-      expect(statusAfterUpdate?.hosting?.updatedAt).toBeTruthy()
+      assert(isRecordHosting(statusAfterUpdate?.hosting))
+      expect(statusAfterUpdate.hosting?.updatedAt).toBeTruthy()
 
       await emitRecordEvent(bobsPostSubject, 'delete')
       const statusAfterDelete = await getSubjectStatus(bobsPostSubject.uri)
-      expect(statusAfterDelete?.hosting?.deletedAt).toBeTruthy()
-      expect(statusAfterDelete?.hosting?.status).toEqual('deleted')
+      assert(isRecordHosting(statusAfterDelete?.hosting))
+      expect(statusAfterDelete.hosting?.deletedAt).toBeTruthy()
+      expect(statusAfterDelete.hosting?.status).toEqual('deleted')
       // Ensure that due to delete or update event, review state does not change
-      expect(statusAfterDelete?.reviewState).toEqual(REVIEWOPEN)
+      expect(statusAfterDelete.reviewState).toEqual(REVIEWOPEN)
     })
   })
   describe('account/identity events', () => {
     const emitAccountEvent = async (
-      subject: EmitModerationEvent.InputSchema['subject'],
+      subject: InputSchema['subject'],
       active: boolean,
       status?: 'takendown' | 'deleted' | 'deactivated' | 'suspended',
     ) => {
@@ -113,7 +120,7 @@ describe('record and account events on moderation subjects', () => {
 
       await sc.createReport({
         reportedBy: sc.dids.carol,
-        reasonType: ComAtprotoModerationDefs.REASONMISLEADING,
+        reasonType: REASONMISLEADING,
         reason: 'misleading',
         subject: carolsAccountSubject,
       })
@@ -122,17 +129,19 @@ describe('record and account events on moderation subjects', () => {
       const statusAfterDeactivation = await getSubjectStatus(
         carolsAccountSubject.did,
       )
-      expect(statusAfterDeactivation?.hosting?.deactivatedAt).toBeTruthy()
-      expect(statusAfterDeactivation?.hosting?.status).toEqual('deactivated')
-      expect(statusAfterDeactivation?.reviewState).toEqual(REVIEWOPEN)
+      assert(isAccountHosting(statusAfterDeactivation?.hosting))
+      expect(statusAfterDeactivation.hosting.deactivatedAt).toBeTruthy()
+      expect(statusAfterDeactivation.hosting.status).toEqual('deactivated')
+      expect(statusAfterDeactivation.reviewState).toEqual(REVIEWOPEN)
 
       await emitAccountEvent(carolsAccountSubject, true)
       const statusAfterReactivation = await getSubjectStatus(
         carolsAccountSubject.did,
       )
-      expect(statusAfterReactivation?.hosting?.updatedAt).toBeTruthy()
-      expect(statusAfterReactivation?.hosting?.status).toEqual('active')
-      expect(statusAfterReactivation?.hosting?.deletedAt).toBeFalsy()
+      assert(isAccountHosting(statusAfterReactivation?.hosting))
+      expect(statusAfterReactivation.hosting.updatedAt).toBeTruthy()
+      expect(statusAfterReactivation.hosting.status).toEqual('active')
+      expect(statusAfterReactivation.hosting.deletedAt).toBeFalsy()
     })
 
     it('gets statuses by hosting properties', async () => {
@@ -176,9 +185,11 @@ describe('record and account events on moderation subjects', () => {
 
       expect(deactivatedOrDeletedStatuses.length).toEqual(3)
       expect(deletedStatusesInPastDay.length).toEqual(2)
+      assert(isStrongRef(deletedStatusesInPastDay[0]?.subject))
       expect(deletedStatusesInPastDay[0]?.subject.uri).toEqual(
         sc.posts[sc.dids.bob][1].ref.uriStr,
       )
+      assert(isRepoRef(deletedStatusesInPastDay[1]?.subject))
       expect(deletedStatusesInPastDay[1]?.subject.did).toEqual(sc.dids.bob)
       expect(deletedStatusesBeforeYesterday.length).toEqual(0)
     })

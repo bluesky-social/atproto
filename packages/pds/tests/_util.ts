@@ -5,7 +5,10 @@ import { CID } from 'multiformats/cid'
 import { ToolsOzoneModerationDefs } from '@atproto/api'
 import { lexToJson } from '@atproto/lexicon'
 import { AtUri } from '@atproto/syntax'
-import { FeedViewPost } from '../src/lexicon/types/app/bsky/feed/defs'
+import {
+  FeedViewPost,
+  isReasonRepost,
+} from '../src/lexicon/types/app/bsky/feed/defs'
 
 // Swap out identifiers and dates with stable
 // values for the purpose of snapshot testing
@@ -98,10 +101,10 @@ export const forSnapshot = (obj: unknown) => {
 // Feed testing utils
 
 export const getOriginator = (item: FeedViewPost) => {
-  if (!item.reason) {
-    return item.post.author.did
+  if (isReasonRepost(item.reason)) {
+    return item.reason.by.did
   } else {
-    return (item.reason.by as { [did: string]: string }).did
+    return item.post.author.did
   }
 }
 

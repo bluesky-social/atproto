@@ -21,6 +21,7 @@ import { ImageInvalidator } from '../image-invalidator'
 import { ids } from '../lexicon/lexicons'
 import { RepoBlobRef, RepoRef } from '../lexicon/types/com/atproto/admin/defs'
 import { Label } from '../lexicon/types/com/atproto/label/defs'
+import { ReasonType } from '../lexicon/types/com/atproto/moderation/defs'
 import { Main as StrongRef } from '../lexicon/types/com/atproto/repo/strongRef'
 import {
   REVIEWESCALATED,
@@ -471,7 +472,11 @@ export class ModerationService {
     const modEvent = await this.db.db
       .insertInto('moderation_event')
       .values({
-        comment: event.comment ? `${event.comment}` : null,
+        comment:
+          ('comment' in event &&
+            typeof event.comment === 'string' &&
+            event.comment) ||
+          null,
         action: event.$type as ModerationEvent['action'],
         createdAt: createdAt.toISOString(),
         createdBy,
@@ -479,9 +484,10 @@ export class ModerationService {
         negateLabelVals,
         addedTags,
         removedTags,
-        durationInHours: event.durationInHours
-          ? Number(event.durationInHours)
-          : null,
+        durationInHours:
+          'durationInHours' in event && event.durationInHours
+            ? Number(event.durationInHours)
+            : null,
         meta: Object.assign(meta, subjectInfo.meta),
         expiresAt:
           (isModEventTakedown(event) || isModEventMute(event)) &&
@@ -783,7 +789,7 @@ export class ModerationService {
   }
 
   async report(info: {
-    reasonType: NonNullable<ModerationEventRow['meta']>['reportType']
+    reasonType: ReasonType
     reason?: string
     subject: ModSubject
     reportedBy: string

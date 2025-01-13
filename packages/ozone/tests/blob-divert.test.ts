@@ -1,4 +1,5 @@
 import assert from 'node:assert'
+import { ToolsOzoneModerationDefs } from '@atproto/api'
 import {
   ModeratorClient,
   SeedClient,
@@ -6,7 +7,7 @@ import {
   basicSeed,
 } from '@atproto/dev-env'
 import { ResponseType, XRPCError } from '@atproto/xrpc'
-import { forSnapshot } from './_util'
+import { forSnapshot, identity } from './_util'
 
 describe('blob divert', () => {
   let network: TestNetwork
@@ -56,10 +57,11 @@ describe('blob divert', () => {
     modClient.emitEvent(
       {
         subject: getSubject(),
-        event: {
+        // @ts-expect-error "tools.ozone.moderation.defs#modEventDivert" is not part of the event open union
+        event: identity<ToolsOzoneModerationDefs.ModEventDivert>({
           $type: 'tools.ozone.moderation.defs#modEventDivert',
           comment: 'Diverting for test',
-        },
+        }),
         createdBy: sc.dids.alice,
         subjectBlobCids: getImages().map((img) => img.image.ref.toString()),
       },

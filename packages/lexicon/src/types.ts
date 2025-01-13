@@ -447,23 +447,13 @@ export function isValidLexiconDoc(v: unknown): v is LexiconDoc {
   return lexiconDoc.safeParse(v).success
 }
 
-export function isObj(obj: unknown): obj is Record<string, unknown> {
-  return obj !== null && typeof obj === 'object'
+export function isObj<V>(v: V): v is V & object {
+  return v != null && typeof v === 'object'
 }
 
-export function hasProp<K extends PropertyKey>(
-  data: object,
-  prop: K,
-): data is Record<K, unknown> {
-  return prop in data
-}
-
-export const discriminatedObject = z.object({ $type: z.string() })
-export type DiscriminatedObject = z.infer<typeof discriminatedObject>
-export function isDiscriminatedObject(
-  value: unknown,
-): value is DiscriminatedObject {
-  return discriminatedObject.safeParse(value).success
+export type DiscriminatedObject = { $type: string }
+export function isDiscriminatedObject(v: unknown): v is DiscriminatedObject {
+  return isObj(v) && '$type' in v && typeof v.$type === 'string'
 }
 
 export function parseLexiconDoc(v: unknown): LexiconDoc {
@@ -471,10 +461,10 @@ export function parseLexiconDoc(v: unknown): LexiconDoc {
   return v as LexiconDoc
 }
 
-export type ValidationResult =
+export type ValidationResult<V = unknown> =
   | {
       success: true
-      value: unknown
+      value: V
     }
   | {
       success: false
