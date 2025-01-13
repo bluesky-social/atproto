@@ -4,15 +4,11 @@
 import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import {
-  isValid as _isValid,
-  validate as _validate,
-} from '../../../../lexicons'
+import { validate as _validate } from '../../../../lexicons'
 import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 
 const is$typed = _is$typed,
-  isValid = _isValid,
   validate = _validate
 const id = 'com.atproto.server.createInviteCodes'
 
@@ -70,8 +66,4 @@ export function isAccountCodes<V>(v: V) {
 
 export function validateAccountCodes<V>(v: V) {
   return validate<AccountCodes & V>(v, id, hashAccountCodes)
-}
-
-export function isValidAccountCodes<V>(v: V) {
-  return isValid<AccountCodes & V>(v, id, hashAccountCodes)
 }

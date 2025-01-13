@@ -3,17 +3,13 @@
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import {
-  isValid as _isValid,
-  validate as _validate,
-} from '../../../../lexicons'
+import { validate as _validate } from '../../../../lexicons'
 import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 import type * as AppBskyRichtextFacet from '../../../app/bsky/richtext/facet'
 import type * as AppBskyEmbedRecord from '../../../app/bsky/embed/record'
 import type * as ChatBskyActorDefs from '../actor/defs'
 
 const is$typed = _is$typed,
-  isValid = _isValid,
   validate = _validate
 const id = 'chat.bsky.convo.defs'
 
@@ -34,10 +30,6 @@ export function validateMessageRef<V>(v: V) {
   return validate<MessageRef & V>(v, id, hashMessageRef)
 }
 
-export function isValidMessageRef<V>(v: V) {
-  return isValid<MessageRef & V>(v, id, hashMessageRef)
-}
-
 export interface MessageInput {
   $type?: $Type<'chat.bsky.convo.defs', 'messageInput'>
   text: string
@@ -54,10 +46,6 @@ export function isMessageInput<V>(v: V) {
 
 export function validateMessageInput<V>(v: V) {
   return validate<MessageInput & V>(v, id, hashMessageInput)
-}
-
-export function isValidMessageInput<V>(v: V) {
-  return isValid<MessageInput & V>(v, id, hashMessageInput)
 }
 
 export interface MessageView {
@@ -82,10 +70,6 @@ export function validateMessageView<V>(v: V) {
   return validate<MessageView & V>(v, id, hashMessageView)
 }
 
-export function isValidMessageView<V>(v: V) {
-  return isValid<MessageView & V>(v, id, hashMessageView)
-}
-
 export interface DeletedMessageView {
   $type?: $Type<'chat.bsky.convo.defs', 'deletedMessageView'>
   id: string
@@ -104,10 +88,6 @@ export function validateDeletedMessageView<V>(v: V) {
   return validate<DeletedMessageView & V>(v, id, hashDeletedMessageView)
 }
 
-export function isValidDeletedMessageView<V>(v: V) {
-  return isValid<DeletedMessageView & V>(v, id, hashDeletedMessageView)
-}
-
 export interface MessageViewSender {
   $type?: $Type<'chat.bsky.convo.defs', 'messageViewSender'>
   did: string
@@ -121,10 +101,6 @@ export function isMessageViewSender<V>(v: V) {
 
 export function validateMessageViewSender<V>(v: V) {
   return validate<MessageViewSender & V>(v, id, hashMessageViewSender)
-}
-
-export function isValidMessageViewSender<V>(v: V) {
-  return isValid<MessageViewSender & V>(v, id, hashMessageViewSender)
 }
 
 export interface ConvoView {
@@ -151,10 +127,6 @@ export function validateConvoView<V>(v: V) {
   return validate<ConvoView & V>(v, id, hashConvoView)
 }
 
-export function isValidConvoView<V>(v: V) {
-  return isValid<ConvoView & V>(v, id, hashConvoView)
-}
-
 export interface LogBeginConvo {
   $type?: $Type<'chat.bsky.convo.defs', 'logBeginConvo'>
   rev: string
@@ -171,10 +143,6 @@ export function validateLogBeginConvo<V>(v: V) {
   return validate<LogBeginConvo & V>(v, id, hashLogBeginConvo)
 }
 
-export function isValidLogBeginConvo<V>(v: V) {
-  return isValid<LogBeginConvo & V>(v, id, hashLogBeginConvo)
-}
-
 export interface LogLeaveConvo {
   $type?: $Type<'chat.bsky.convo.defs', 'logLeaveConvo'>
   rev: string
@@ -189,10 +157,6 @@ export function isLogLeaveConvo<V>(v: V) {
 
 export function validateLogLeaveConvo<V>(v: V) {
   return validate<LogLeaveConvo & V>(v, id, hashLogLeaveConvo)
-}
-
-export function isValidLogLeaveConvo<V>(v: V) {
-  return isValid<LogLeaveConvo & V>(v, id, hashLogLeaveConvo)
 }
 
 export interface LogCreateMessage {
@@ -212,10 +176,6 @@ export function validateLogCreateMessage<V>(v: V) {
   return validate<LogCreateMessage & V>(v, id, hashLogCreateMessage)
 }
 
-export function isValidLogCreateMessage<V>(v: V) {
-  return isValid<LogCreateMessage & V>(v, id, hashLogCreateMessage)
-}
-
 export interface LogDeleteMessage {
   $type?: $Type<'chat.bsky.convo.defs', 'logDeleteMessage'>
   rev: string
@@ -231,8 +191,4 @@ export function isLogDeleteMessage<V>(v: V) {
 
 export function validateLogDeleteMessage<V>(v: V) {
   return validate<LogDeleteMessage & V>(v, id, hashLogDeleteMessage)
-}
-
-export function isValidLogDeleteMessage<V>(v: V) {
-  return isValid<LogDeleteMessage & V>(v, id, hashLogDeleteMessage)
 }

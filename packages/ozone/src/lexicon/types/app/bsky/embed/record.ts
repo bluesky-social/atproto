@@ -3,10 +3,7 @@
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import {
-  isValid as _isValid,
-  validate as _validate,
-} from '../../../../lexicons'
+import { validate as _validate } from '../../../../lexicons'
 import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 import type * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef'
 import type * as AppBskyFeedDefs from '../feed/defs'
@@ -20,7 +17,6 @@ import type * as AppBskyEmbedExternal from './external'
 import type * as AppBskyEmbedRecordWithMedia from './recordWithMedia'
 
 const is$typed = _is$typed,
-  isValid = _isValid,
   validate = _validate
 const id = 'app.bsky.embed.record'
 
@@ -37,10 +33,6 @@ export function isMain<V>(v: V) {
 
 export function validateMain<V>(v: V) {
   return validate<Main & V>(v, id, hashMain)
-}
-
-export function isValidMain<V>(v: V) {
-  return isValid<Main & V>(v, id, hashMain)
 }
 
 export interface View {
@@ -65,10 +57,6 @@ export function isView<V>(v: V) {
 
 export function validateView<V>(v: V) {
   return validate<View & V>(v, id, hashView)
-}
-
-export function isValidView<V>(v: V) {
-  return isValid<View & V>(v, id, hashView)
 }
 
 export interface ViewRecord {
@@ -104,10 +92,6 @@ export function validateViewRecord<V>(v: V) {
   return validate<ViewRecord & V>(v, id, hashViewRecord)
 }
 
-export function isValidViewRecord<V>(v: V) {
-  return isValid<ViewRecord & V>(v, id, hashViewRecord)
-}
-
 export interface ViewNotFound {
   $type?: $Type<'app.bsky.embed.record', 'viewNotFound'>
   uri: string
@@ -122,10 +106,6 @@ export function isViewNotFound<V>(v: V) {
 
 export function validateViewNotFound<V>(v: V) {
   return validate<ViewNotFound & V>(v, id, hashViewNotFound)
-}
-
-export function isValidViewNotFound<V>(v: V) {
-  return isValid<ViewNotFound & V>(v, id, hashViewNotFound)
 }
 
 export interface ViewBlocked {
@@ -145,10 +125,6 @@ export function validateViewBlocked<V>(v: V) {
   return validate<ViewBlocked & V>(v, id, hashViewBlocked)
 }
 
-export function isValidViewBlocked<V>(v: V) {
-  return isValid<ViewBlocked & V>(v, id, hashViewBlocked)
-}
-
 export interface ViewDetached {
   $type?: $Type<'app.bsky.embed.record', 'viewDetached'>
   uri: string
@@ -163,8 +139,4 @@ export function isViewDetached<V>(v: V) {
 
 export function validateViewDetached<V>(v: V) {
   return validate<ViewDetached & V>(v, id, hashViewDetached)
-}
-
-export function isValidViewDetached<V>(v: V) {
-  return isValid<ViewDetached & V>(v, id, hashViewDetached)
 }

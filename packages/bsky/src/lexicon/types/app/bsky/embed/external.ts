@@ -3,14 +3,10 @@
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import {
-  isValid as _isValid,
-  validate as _validate,
-} from '../../../../lexicons'
+import { validate as _validate } from '../../../../lexicons'
 import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 
 const is$typed = _is$typed,
-  isValid = _isValid,
   validate = _validate
 const id = 'app.bsky.embed.external'
 
@@ -28,10 +24,6 @@ export function isMain<V>(v: V) {
 
 export function validateMain<V>(v: V) {
   return validate<Main & V>(v, id, hashMain)
-}
-
-export function isValidMain<V>(v: V) {
-  return isValid<Main & V>(v, id, hashMain)
 }
 
 export interface External {
@@ -52,10 +44,6 @@ export function validateExternal<V>(v: V) {
   return validate<External & V>(v, id, hashExternal)
 }
 
-export function isValidExternal<V>(v: V) {
-  return isValid<External & V>(v, id, hashExternal)
-}
-
 export interface View {
   $type?: $Type<'app.bsky.embed.external', 'view'>
   external: ViewExternal
@@ -69,10 +57,6 @@ export function isView<V>(v: V) {
 
 export function validateView<V>(v: V) {
   return validate<View & V>(v, id, hashView)
-}
-
-export function isValidView<V>(v: V) {
-  return isValid<View & V>(v, id, hashView)
 }
 
 export interface ViewExternal {
@@ -91,8 +75,4 @@ export function isViewExternal<V>(v: V) {
 
 export function validateViewExternal<V>(v: V) {
   return validate<ViewExternal & V>(v, id, hashViewExternal)
-}
-
-export function isValidViewExternal<V>(v: V) {
-  return isValid<ViewExternal & V>(v, id, hashViewExternal)
 }

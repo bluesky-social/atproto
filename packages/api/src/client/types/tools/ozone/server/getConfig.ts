@@ -4,14 +4,10 @@
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import {
-  isValid as _isValid,
-  validate as _validate,
-} from '../../../../lexicons'
+import { validate as _validate } from '../../../../lexicons'
 import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 
 const is$typed = _is$typed,
-  isValid = _isValid,
   validate = _validate
 const id = 'tools.ozone.server.getConfig'
 
@@ -57,10 +53,6 @@ export function validateServiceConfig<V>(v: V) {
   return validate<ServiceConfig & V>(v, id, hashServiceConfig)
 }
 
-export function isValidServiceConfig<V>(v: V) {
-  return isValid<ServiceConfig & V>(v, id, hashServiceConfig)
-}
-
 export interface ViewerConfig {
   $type?: $Type<'tools.ozone.server.getConfig', 'viewerConfig'>
   role?:
@@ -78,8 +70,4 @@ export function isViewerConfig<V>(v: V) {
 
 export function validateViewerConfig<V>(v: V) {
   return validate<ViewerConfig & V>(v, id, hashViewerConfig)
-}
-
-export function isValidViewerConfig<V>(v: V) {
-  return isValid<ViewerConfig & V>(v, id, hashViewerConfig)
 }

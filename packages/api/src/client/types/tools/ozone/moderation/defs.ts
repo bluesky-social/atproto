@@ -3,10 +3,7 @@
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import {
-  isValid as _isValid,
-  validate as _validate,
-} from '../../../../lexicons'
+import { validate as _validate } from '../../../../lexicons'
 import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 import type * as ComAtprotoAdminDefs from '../../../com/atproto/admin/defs'
 import type * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef'
@@ -16,7 +13,6 @@ import type * as ComAtprotoServerDefs from '../../../com/atproto/server/defs'
 import type * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
 
 const is$typed = _is$typed,
-  isValid = _isValid,
   validate = _validate
 const id = 'tools.ozone.moderation.defs'
 
@@ -65,10 +61,6 @@ export function validateModEventView<V>(v: V) {
   return validate<ModEventView & V>(v, id, hashModEventView)
 }
 
-export function isValidModEventView<V>(v: V) {
-  return isValid<ModEventView & V>(v, id, hashModEventView)
-}
-
 export interface ModEventViewDetail {
   $type?: $Type<'tools.ozone.moderation.defs', 'modEventViewDetail'>
   id: number
@@ -113,10 +105,6 @@ export function validateModEventViewDetail<V>(v: V) {
   return validate<ModEventViewDetail & V>(v, id, hashModEventViewDetail)
 }
 
-export function isValidModEventViewDetail<V>(v: V) {
-  return isValid<ModEventViewDetail & V>(v, id, hashModEventViewDetail)
-}
-
 export interface SubjectStatusView {
   $type?: $Type<'tools.ozone.moderation.defs', 'subjectStatusView'>
   id: number
@@ -158,10 +146,6 @@ export function validateSubjectStatusView<V>(v: V) {
   return validate<SubjectStatusView & V>(v, id, hashSubjectStatusView)
 }
 
-export function isValidSubjectStatusView<V>(v: V) {
-  return isValid<SubjectStatusView & V>(v, id, hashSubjectStatusView)
-}
-
 export type SubjectReviewState =
   | 'lex:tools.ozone.moderation.defs#reviewOpen'
   | 'lex:tools.ozone.moderation.defs#reviewEscalated'
@@ -200,10 +184,6 @@ export function validateModEventTakedown<V>(v: V) {
   return validate<ModEventTakedown & V>(v, id, hashModEventTakedown)
 }
 
-export function isValidModEventTakedown<V>(v: V) {
-  return isValid<ModEventTakedown & V>(v, id, hashModEventTakedown)
-}
-
 /** Revert take down action on a subject */
 export interface ModEventReverseTakedown {
   $type?: $Type<'tools.ozone.moderation.defs', 'modEventReverseTakedown'>
@@ -219,14 +199,6 @@ export function isModEventReverseTakedown<V>(v: V) {
 
 export function validateModEventReverseTakedown<V>(v: V) {
   return validate<ModEventReverseTakedown & V>(
-    v,
-    id,
-    hashModEventReverseTakedown,
-  )
-}
-
-export function isValidModEventReverseTakedown<V>(v: V) {
-  return isValid<ModEventReverseTakedown & V>(
     v,
     id,
     hashModEventReverseTakedown,
@@ -250,10 +222,6 @@ export function validateModEventResolveAppeal<V>(v: V) {
   return validate<ModEventResolveAppeal & V>(v, id, hashModEventResolveAppeal)
 }
 
-export function isValidModEventResolveAppeal<V>(v: V) {
-  return isValid<ModEventResolveAppeal & V>(v, id, hashModEventResolveAppeal)
-}
-
 /** Add a comment to a subject */
 export interface ModEventComment {
   $type?: $Type<'tools.ozone.moderation.defs', 'modEventComment'>
@@ -270,10 +238,6 @@ export function isModEventComment<V>(v: V) {
 
 export function validateModEventComment<V>(v: V) {
   return validate<ModEventComment & V>(v, id, hashModEventComment)
-}
-
-export function isValidModEventComment<V>(v: V) {
-  return isValid<ModEventComment & V>(v, id, hashModEventComment)
 }
 
 /** Report a subject */
@@ -295,10 +259,6 @@ export function validateModEventReport<V>(v: V) {
   return validate<ModEventReport & V>(v, id, hashModEventReport)
 }
 
-export function isValidModEventReport<V>(v: V) {
-  return isValid<ModEventReport & V>(v, id, hashModEventReport)
-}
-
 /** Apply/Negate labels on a subject */
 export interface ModEventLabel {
   $type?: $Type<'tools.ozone.moderation.defs', 'modEventLabel'>
@@ -315,10 +275,6 @@ export function isModEventLabel<V>(v: V) {
 
 export function validateModEventLabel<V>(v: V) {
   return validate<ModEventLabel & V>(v, id, hashModEventLabel)
-}
-
-export function isValidModEventLabel<V>(v: V) {
-  return isValid<ModEventLabel & V>(v, id, hashModEventLabel)
 }
 
 export interface ModEventAcknowledge {
@@ -338,10 +294,6 @@ export function validateModEventAcknowledge<V>(v: V) {
   return validate<ModEventAcknowledge & V>(v, id, hashModEventAcknowledge)
 }
 
-export function isValidModEventAcknowledge<V>(v: V) {
-  return isValid<ModEventAcknowledge & V>(v, id, hashModEventAcknowledge)
-}
-
 export interface ModEventEscalate {
   $type?: $Type<'tools.ozone.moderation.defs', 'modEventEscalate'>
   comment?: string
@@ -355,10 +307,6 @@ export function isModEventEscalate<V>(v: V) {
 
 export function validateModEventEscalate<V>(v: V) {
   return validate<ModEventEscalate & V>(v, id, hashModEventEscalate)
-}
-
-export function isValidModEventEscalate<V>(v: V) {
-  return isValid<ModEventEscalate & V>(v, id, hashModEventEscalate)
 }
 
 /** Mute incoming reports on a subject */
@@ -379,10 +327,6 @@ export function validateModEventMute<V>(v: V) {
   return validate<ModEventMute & V>(v, id, hashModEventMute)
 }
 
-export function isValidModEventMute<V>(v: V) {
-  return isValid<ModEventMute & V>(v, id, hashModEventMute)
-}
-
 /** Unmute action on a subject */
 export interface ModEventUnmute {
   $type?: $Type<'tools.ozone.moderation.defs', 'modEventUnmute'>
@@ -398,10 +342,6 @@ export function isModEventUnmute<V>(v: V) {
 
 export function validateModEventUnmute<V>(v: V) {
   return validate<ModEventUnmute & V>(v, id, hashModEventUnmute)
-}
-
-export function isValidModEventUnmute<V>(v: V) {
-  return isValid<ModEventUnmute & V>(v, id, hashModEventUnmute)
 }
 
 /** Mute incoming reports from an account */
@@ -422,10 +362,6 @@ export function validateModEventMuteReporter<V>(v: V) {
   return validate<ModEventMuteReporter & V>(v, id, hashModEventMuteReporter)
 }
 
-export function isValidModEventMuteReporter<V>(v: V) {
-  return isValid<ModEventMuteReporter & V>(v, id, hashModEventMuteReporter)
-}
-
 /** Unmute incoming reports from an account */
 export interface ModEventUnmuteReporter {
   $type?: $Type<'tools.ozone.moderation.defs', 'modEventUnmuteReporter'>
@@ -441,10 +377,6 @@ export function isModEventUnmuteReporter<V>(v: V) {
 
 export function validateModEventUnmuteReporter<V>(v: V) {
   return validate<ModEventUnmuteReporter & V>(v, id, hashModEventUnmuteReporter)
-}
-
-export function isValidModEventUnmuteReporter<V>(v: V) {
-  return isValid<ModEventUnmuteReporter & V>(v, id, hashModEventUnmuteReporter)
 }
 
 /** Keep a log of outgoing email to a user */
@@ -468,10 +400,6 @@ export function validateModEventEmail<V>(v: V) {
   return validate<ModEventEmail & V>(v, id, hashModEventEmail)
 }
 
-export function isValidModEventEmail<V>(v: V) {
-  return isValid<ModEventEmail & V>(v, id, hashModEventEmail)
-}
-
 /** Divert a record's blobs to a 3rd party service for further scanning/tagging */
 export interface ModEventDivert {
   $type?: $Type<'tools.ozone.moderation.defs', 'modEventDivert'>
@@ -486,10 +414,6 @@ export function isModEventDivert<V>(v: V) {
 
 export function validateModEventDivert<V>(v: V) {
   return validate<ModEventDivert & V>(v, id, hashModEventDivert)
-}
-
-export function isValidModEventDivert<V>(v: V) {
-  return isValid<ModEventDivert & V>(v, id, hashModEventDivert)
 }
 
 /** Add/Remove a tag on a subject */
@@ -511,10 +435,6 @@ export function isModEventTag<V>(v: V) {
 
 export function validateModEventTag<V>(v: V) {
   return validate<ModEventTag & V>(v, id, hashModEventTag)
-}
-
-export function isValidModEventTag<V>(v: V) {
-  return isValid<ModEventTag & V>(v, id, hashModEventTag)
 }
 
 /** Logs account status related events on a repo subject. Normally captured by automod from the firehose and emitted to ozone for historical tracking. */
@@ -544,10 +464,6 @@ export function validateAccountEvent<V>(v: V) {
   return validate<AccountEvent & V>(v, id, hashAccountEvent)
 }
 
-export function isValidAccountEvent<V>(v: V) {
-  return isValid<AccountEvent & V>(v, id, hashAccountEvent)
-}
-
 /** Logs identity related events on a repo subject. Normally captured by automod from the firehose and emitted to ozone for historical tracking. */
 export interface IdentityEvent {
   $type?: $Type<'tools.ozone.moderation.defs', 'identityEvent'>
@@ -568,10 +484,6 @@ export function validateIdentityEvent<V>(v: V) {
   return validate<IdentityEvent & V>(v, id, hashIdentityEvent)
 }
 
-export function isValidIdentityEvent<V>(v: V) {
-  return isValid<IdentityEvent & V>(v, id, hashIdentityEvent)
-}
-
 /** Logs lifecycle event on a record subject. Normally captured by automod from the firehose and emitted to ozone for historical tracking. */
 export interface RecordEvent {
   $type?: $Type<'tools.ozone.moderation.defs', 'recordEvent'>
@@ -589,10 +501,6 @@ export function isRecordEvent<V>(v: V) {
 
 export function validateRecordEvent<V>(v: V) {
   return validate<RecordEvent & V>(v, id, hashRecordEvent)
-}
-
-export function isValidRecordEvent<V>(v: V) {
-  return isValid<RecordEvent & V>(v, id, hashRecordEvent)
 }
 
 export interface RepoView {
@@ -618,10 +526,6 @@ export function isRepoView<V>(v: V) {
 
 export function validateRepoView<V>(v: V) {
   return validate<RepoView & V>(v, id, hashRepoView)
-}
-
-export function isValidRepoView<V>(v: V) {
-  return isValid<RepoView & V>(v, id, hashRepoView)
 }
 
 export interface RepoViewDetail {
@@ -652,10 +556,6 @@ export function validateRepoViewDetail<V>(v: V) {
   return validate<RepoViewDetail & V>(v, id, hashRepoViewDetail)
 }
 
-export function isValidRepoViewDetail<V>(v: V) {
-  return isValid<RepoViewDetail & V>(v, id, hashRepoViewDetail)
-}
-
 export interface RepoViewNotFound {
   $type?: $Type<'tools.ozone.moderation.defs', 'repoViewNotFound'>
   did: string
@@ -669,10 +569,6 @@ export function isRepoViewNotFound<V>(v: V) {
 
 export function validateRepoViewNotFound<V>(v: V) {
   return validate<RepoViewNotFound & V>(v, id, hashRepoViewNotFound)
-}
-
-export function isValidRepoViewNotFound<V>(v: V) {
-  return isValid<RepoViewNotFound & V>(v, id, hashRepoViewNotFound)
 }
 
 export interface RecordView {
@@ -694,10 +590,6 @@ export function isRecordView<V>(v: V) {
 
 export function validateRecordView<V>(v: V) {
   return validate<RecordView & V>(v, id, hashRecordView)
-}
-
-export function isValidRecordView<V>(v: V) {
-  return isValid<RecordView & V>(v, id, hashRecordView)
 }
 
 export interface RecordViewDetail {
@@ -722,10 +614,6 @@ export function validateRecordViewDetail<V>(v: V) {
   return validate<RecordViewDetail & V>(v, id, hashRecordViewDetail)
 }
 
-export function isValidRecordViewDetail<V>(v: V) {
-  return isValid<RecordViewDetail & V>(v, id, hashRecordViewDetail)
-}
-
 export interface RecordViewNotFound {
   $type?: $Type<'tools.ozone.moderation.defs', 'recordViewNotFound'>
   uri: string
@@ -739,10 +627,6 @@ export function isRecordViewNotFound<V>(v: V) {
 
 export function validateRecordViewNotFound<V>(v: V) {
   return validate<RecordViewNotFound & V>(v, id, hashRecordViewNotFound)
-}
-
-export function isValidRecordViewNotFound<V>(v: V) {
-  return isValid<RecordViewNotFound & V>(v, id, hashRecordViewNotFound)
 }
 
 export interface Moderation {
@@ -760,10 +644,6 @@ export function validateModeration<V>(v: V) {
   return validate<Moderation & V>(v, id, hashModeration)
 }
 
-export function isValidModeration<V>(v: V) {
-  return isValid<Moderation & V>(v, id, hashModeration)
-}
-
 export interface ModerationDetail {
   $type?: $Type<'tools.ozone.moderation.defs', 'moderationDetail'>
   subjectStatus?: SubjectStatusView
@@ -777,10 +657,6 @@ export function isModerationDetail<V>(v: V) {
 
 export function validateModerationDetail<V>(v: V) {
   return validate<ModerationDetail & V>(v, id, hashModerationDetail)
-}
-
-export function isValidModerationDetail<V>(v: V) {
-  return isValid<ModerationDetail & V>(v, id, hashModerationDetail)
 }
 
 export interface BlobView {
@@ -803,10 +679,6 @@ export function validateBlobView<V>(v: V) {
   return validate<BlobView & V>(v, id, hashBlobView)
 }
 
-export function isValidBlobView<V>(v: V) {
-  return isValid<BlobView & V>(v, id, hashBlobView)
-}
-
 export interface ImageDetails {
   $type?: $Type<'tools.ozone.moderation.defs', 'imageDetails'>
   width: number
@@ -821,10 +693,6 @@ export function isImageDetails<V>(v: V) {
 
 export function validateImageDetails<V>(v: V) {
   return validate<ImageDetails & V>(v, id, hashImageDetails)
-}
-
-export function isValidImageDetails<V>(v: V) {
-  return isValid<ImageDetails & V>(v, id, hashImageDetails)
 }
 
 export interface VideoDetails {
@@ -842,10 +710,6 @@ export function isVideoDetails<V>(v: V) {
 
 export function validateVideoDetails<V>(v: V) {
   return validate<VideoDetails & V>(v, id, hashVideoDetails)
-}
-
-export function isValidVideoDetails<V>(v: V) {
-  return isValid<VideoDetails & V>(v, id, hashVideoDetails)
 }
 
 export interface AccountHosting {
@@ -874,10 +738,6 @@ export function validateAccountHosting<V>(v: V) {
   return validate<AccountHosting & V>(v, id, hashAccountHosting)
 }
 
-export function isValidAccountHosting<V>(v: V) {
-  return isValid<AccountHosting & V>(v, id, hashAccountHosting)
-}
-
 export interface RecordHosting {
   $type?: $Type<'tools.ozone.moderation.defs', 'recordHosting'>
   status: 'deleted' | 'unknown' | (string & {})
@@ -894,8 +754,4 @@ export function isRecordHosting<V>(v: V) {
 
 export function validateRecordHosting<V>(v: V) {
   return validate<RecordHosting & V>(v, id, hashRecordHosting)
-}
-
-export function isValidRecordHosting<V>(v: V) {
-  return isValid<RecordHosting & V>(v, id, hashRecordHosting)
 }

@@ -3,16 +3,12 @@
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import {
-  isValid as _isValid,
-  validate as _validate,
-} from '../../../../lexicons'
+import { validate as _validate } from '../../../../lexicons'
 import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 import type * as AppBskyActorDefs from '../actor/defs'
 import type * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
 
 const is$typed = _is$typed,
-  isValid = _isValid,
   validate = _validate
 const id = 'app.bsky.labeler.defs'
 
@@ -37,10 +33,6 @@ export function validateLabelerView<V>(v: V) {
   return validate<LabelerView & V>(v, id, hashLabelerView)
 }
 
-export function isValidLabelerView<V>(v: V) {
-  return isValid<LabelerView & V>(v, id, hashLabelerView)
-}
-
 export interface LabelerViewDetailed {
   $type?: $Type<'app.bsky.labeler.defs', 'labelerViewDetailed'>
   uri: string
@@ -63,10 +55,6 @@ export function validateLabelerViewDetailed<V>(v: V) {
   return validate<LabelerViewDetailed & V>(v, id, hashLabelerViewDetailed)
 }
 
-export function isValidLabelerViewDetailed<V>(v: V) {
-  return isValid<LabelerViewDetailed & V>(v, id, hashLabelerViewDetailed)
-}
-
 export interface LabelerViewerState {
   $type?: $Type<'app.bsky.labeler.defs', 'labelerViewerState'>
   like?: string
@@ -80,10 +68,6 @@ export function isLabelerViewerState<V>(v: V) {
 
 export function validateLabelerViewerState<V>(v: V) {
   return validate<LabelerViewerState & V>(v, id, hashLabelerViewerState)
-}
-
-export function isValidLabelerViewerState<V>(v: V) {
-  return isValid<LabelerViewerState & V>(v, id, hashLabelerViewerState)
 }
 
 export interface LabelerPolicies {
@@ -102,8 +86,4 @@ export function isLabelerPolicies<V>(v: V) {
 
 export function validateLabelerPolicies<V>(v: V) {
   return validate<LabelerPolicies & V>(v, id, hashLabelerPolicies)
-}
-
-export function isValidLabelerPolicies<V>(v: V) {
-  return isValid<LabelerPolicies & V>(v, id, hashLabelerPolicies)
 }

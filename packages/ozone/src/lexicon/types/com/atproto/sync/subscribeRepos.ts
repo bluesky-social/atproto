@@ -3,16 +3,12 @@
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import {
-  isValid as _isValid,
-  validate as _validate,
-} from '../../../../lexicons'
+import { validate as _validate } from '../../../../lexicons'
 import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, ErrorFrame } from '@atproto/xrpc-server'
 import { IncomingMessage } from 'http'
 
 const is$typed = _is$typed,
-  isValid = _isValid,
   validate = _validate
 const id = 'com.atproto.sync.subscribeRepos'
 
@@ -79,10 +75,6 @@ export function validateCommit<V>(v: V) {
   return validate<Commit & V>(v, id, hashCommit)
 }
 
-export function isValidCommit<V>(v: V) {
-  return isValid<Commit & V>(v, id, hashCommit)
-}
-
 /** Represents a change to an account's identity. Could be an updated handle, signing key, or pds hosting endpoint. Serves as a prod to all downstream services to refresh their identity cache. */
 export interface Identity {
   $type?: $Type<'com.atproto.sync.subscribeRepos', 'identity'>
@@ -101,10 +93,6 @@ export function isIdentity<V>(v: V) {
 
 export function validateIdentity<V>(v: V) {
   return validate<Identity & V>(v, id, hashIdentity)
-}
-
-export function isValidIdentity<V>(v: V) {
-  return isValid<Identity & V>(v, id, hashIdentity)
 }
 
 /** Represents a change to an account's status on a host (eg, PDS or Relay). The semantics of this event are that the status is at the host which emitted the event, not necessarily that at the currently active PDS. Eg, a Relay takedown would emit a takedown with active=false, even if the PDS is still active. */
@@ -129,10 +117,6 @@ export function validateAccount<V>(v: V) {
   return validate<Account & V>(v, id, hashAccount)
 }
 
-export function isValidAccount<V>(v: V) {
-  return isValid<Account & V>(v, id, hashAccount)
-}
-
 /** DEPRECATED -- Use #identity event instead */
 export interface Handle {
   $type?: $Type<'com.atproto.sync.subscribeRepos', 'handle'>
@@ -150,10 +134,6 @@ export function isHandle<V>(v: V) {
 
 export function validateHandle<V>(v: V) {
   return validate<Handle & V>(v, id, hashHandle)
-}
-
-export function isValidHandle<V>(v: V) {
-  return isValid<Handle & V>(v, id, hashHandle)
 }
 
 /** DEPRECATED -- Use #account event instead */
@@ -175,10 +155,6 @@ export function validateMigrate<V>(v: V) {
   return validate<Migrate & V>(v, id, hashMigrate)
 }
 
-export function isValidMigrate<V>(v: V) {
-  return isValid<Migrate & V>(v, id, hashMigrate)
-}
-
 /** DEPRECATED -- Use #account event instead */
 export interface Tombstone {
   $type?: $Type<'com.atproto.sync.subscribeRepos', 'tombstone'>
@@ -197,10 +173,6 @@ export function validateTombstone<V>(v: V) {
   return validate<Tombstone & V>(v, id, hashTombstone)
 }
 
-export function isValidTombstone<V>(v: V) {
-  return isValid<Tombstone & V>(v, id, hashTombstone)
-}
-
 export interface Info {
   $type?: $Type<'com.atproto.sync.subscribeRepos', 'info'>
   name: 'OutdatedCursor' | (string & {})
@@ -215,10 +187,6 @@ export function isInfo<V>(v: V) {
 
 export function validateInfo<V>(v: V) {
   return validate<Info & V>(v, id, hashInfo)
-}
-
-export function isValidInfo<V>(v: V) {
-  return isValid<Info & V>(v, id, hashInfo)
 }
 
 /** A repo operation, ie a mutation of a single record. */
@@ -238,8 +206,4 @@ export function isRepoOp<V>(v: V) {
 
 export function validateRepoOp<V>(v: V) {
   return validate<RepoOp & V>(v, id, hashRepoOp)
-}
-
-export function isValidRepoOp<V>(v: V) {
-  return isValid<RepoOp & V>(v, id, hashRepoOp)
 }

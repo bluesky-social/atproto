@@ -4,15 +4,11 @@
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import {
-  isValid as _isValid,
-  validate as _validate,
-} from '../../../../lexicons'
+import { validate as _validate } from '../../../../lexicons'
 import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 import type * as ComAtprotoRepoDefs from './defs'
 
 const is$typed = _is$typed,
-  isValid = _isValid,
   validate = _validate
 const id = 'com.atproto.repo.applyWrites'
 
@@ -82,10 +78,6 @@ export function validateCreate<V>(v: V) {
   return validate<Create & V>(v, id, hashCreate)
 }
 
-export function isValidCreate<V>(v: V) {
-  return isValid<Create & V>(v, id, hashCreate)
-}
-
 /** Operation which updates an existing record. */
 export interface Update {
   $type?: $Type<'com.atproto.repo.applyWrites', 'update'>
@@ -102,10 +94,6 @@ export function isUpdate<V>(v: V) {
 
 export function validateUpdate<V>(v: V) {
   return validate<Update & V>(v, id, hashUpdate)
-}
-
-export function isValidUpdate<V>(v: V) {
-  return isValid<Update & V>(v, id, hashUpdate)
 }
 
 /** Operation which deletes an existing record. */
@@ -125,10 +113,6 @@ export function validateDelete<V>(v: V) {
   return validate<Delete & V>(v, id, hashDelete)
 }
 
-export function isValidDelete<V>(v: V) {
-  return isValid<Delete & V>(v, id, hashDelete)
-}
-
 export interface CreateResult {
   $type?: $Type<'com.atproto.repo.applyWrites', 'createResult'>
   uri: string
@@ -144,10 +128,6 @@ export function isCreateResult<V>(v: V) {
 
 export function validateCreateResult<V>(v: V) {
   return validate<CreateResult & V>(v, id, hashCreateResult)
-}
-
-export function isValidCreateResult<V>(v: V) {
-  return isValid<CreateResult & V>(v, id, hashCreateResult)
 }
 
 export interface UpdateResult {
@@ -167,10 +147,6 @@ export function validateUpdateResult<V>(v: V) {
   return validate<UpdateResult & V>(v, id, hashUpdateResult)
 }
 
-export function isValidUpdateResult<V>(v: V) {
-  return isValid<UpdateResult & V>(v, id, hashUpdateResult)
-}
-
 export interface DeleteResult {
   $type?: $Type<'com.atproto.repo.applyWrites', 'deleteResult'>
 }
@@ -183,8 +159,4 @@ export function isDeleteResult<V>(v: V) {
 
 export function validateDeleteResult<V>(v: V) {
   return validate<DeleteResult & V>(v, id, hashDeleteResult)
-}
-
-export function isValidDeleteResult<V>(v: V) {
-  return isValid<DeleteResult & V>(v, id, hashDeleteResult)
 }

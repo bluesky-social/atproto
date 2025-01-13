@@ -3,10 +3,7 @@
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import {
-  isValid as _isValid,
-  validate as _validate,
-} from '../../../../lexicons'
+import { validate as _validate } from '../../../../lexicons'
 import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 import type * as AppBskyActorDefs from '../actor/defs'
 import type * as AppBskyEmbedImages from '../embed/images'
@@ -19,7 +16,6 @@ import type * as AppBskyRichtextFacet from '../richtext/facet'
 import type * as AppBskyGraphDefs from '../graph/defs'
 
 const is$typed = _is$typed,
-  isValid = _isValid,
   validate = _validate
 const id = 'app.bsky.feed.defs'
 
@@ -56,10 +52,6 @@ export function validatePostView<V>(v: V) {
   return validate<PostView & V>(v, id, hashPostView)
 }
 
-export function isValidPostView<V>(v: V) {
-  return isValid<PostView & V>(v, id, hashPostView)
-}
-
 /** Metadata about the requesting account's relationship with the subject content. Only has meaningful content for authed requests. */
 export interface ViewerState {
   $type?: $Type<'app.bsky.feed.defs', 'viewerState'>
@@ -81,10 +73,6 @@ export function validateViewerState<V>(v: V) {
   return validate<ViewerState & V>(v, id, hashViewerState)
 }
 
-export function isValidViewerState<V>(v: V) {
-  return isValid<ViewerState & V>(v, id, hashViewerState)
-}
-
 export interface FeedViewPost {
   $type?: $Type<'app.bsky.feed.defs', 'feedViewPost'>
   post: PostView
@@ -102,10 +90,6 @@ export function isFeedViewPost<V>(v: V) {
 
 export function validateFeedViewPost<V>(v: V) {
   return validate<FeedViewPost & V>(v, id, hashFeedViewPost)
-}
-
-export function isValidFeedViewPost<V>(v: V) {
-  return isValid<FeedViewPost & V>(v, id, hashFeedViewPost)
 }
 
 export interface ReplyRef {
@@ -133,10 +117,6 @@ export function validateReplyRef<V>(v: V) {
   return validate<ReplyRef & V>(v, id, hashReplyRef)
 }
 
-export function isValidReplyRef<V>(v: V) {
-  return isValid<ReplyRef & V>(v, id, hashReplyRef)
-}
-
 export interface ReasonRepost {
   $type?: $Type<'app.bsky.feed.defs', 'reasonRepost'>
   by: AppBskyActorDefs.ProfileViewBasic
@@ -153,10 +133,6 @@ export function validateReasonRepost<V>(v: V) {
   return validate<ReasonRepost & V>(v, id, hashReasonRepost)
 }
 
-export function isValidReasonRepost<V>(v: V) {
-  return isValid<ReasonRepost & V>(v, id, hashReasonRepost)
-}
-
 export interface ReasonPin {
   $type?: $Type<'app.bsky.feed.defs', 'reasonPin'>
 }
@@ -169,10 +145,6 @@ export function isReasonPin<V>(v: V) {
 
 export function validateReasonPin<V>(v: V) {
   return validate<ReasonPin & V>(v, id, hashReasonPin)
-}
-
-export function isValidReasonPin<V>(v: V) {
-  return isValid<ReasonPin & V>(v, id, hashReasonPin)
 }
 
 export interface ThreadViewPost {
@@ -201,10 +173,6 @@ export function validateThreadViewPost<V>(v: V) {
   return validate<ThreadViewPost & V>(v, id, hashThreadViewPost)
 }
 
-export function isValidThreadViewPost<V>(v: V) {
-  return isValid<ThreadViewPost & V>(v, id, hashThreadViewPost)
-}
-
 export interface NotFoundPost {
   $type?: $Type<'app.bsky.feed.defs', 'notFoundPost'>
   uri: string
@@ -219,10 +187,6 @@ export function isNotFoundPost<V>(v: V) {
 
 export function validateNotFoundPost<V>(v: V) {
   return validate<NotFoundPost & V>(v, id, hashNotFoundPost)
-}
-
-export function isValidNotFoundPost<V>(v: V) {
-  return isValid<NotFoundPost & V>(v, id, hashNotFoundPost)
 }
 
 export interface BlockedPost {
@@ -242,10 +206,6 @@ export function validateBlockedPost<V>(v: V) {
   return validate<BlockedPost & V>(v, id, hashBlockedPost)
 }
 
-export function isValidBlockedPost<V>(v: V) {
-  return isValid<BlockedPost & V>(v, id, hashBlockedPost)
-}
-
 export interface BlockedAuthor {
   $type?: $Type<'app.bsky.feed.defs', 'blockedAuthor'>
   did: string
@@ -260,10 +220,6 @@ export function isBlockedAuthor<V>(v: V) {
 
 export function validateBlockedAuthor<V>(v: V) {
   return validate<BlockedAuthor & V>(v, id, hashBlockedAuthor)
-}
-
-export function isValidBlockedAuthor<V>(v: V) {
-  return isValid<BlockedAuthor & V>(v, id, hashBlockedAuthor)
 }
 
 export interface GeneratorView {
@@ -293,10 +249,6 @@ export function validateGeneratorView<V>(v: V) {
   return validate<GeneratorView & V>(v, id, hashGeneratorView)
 }
 
-export function isValidGeneratorView<V>(v: V) {
-  return isValid<GeneratorView & V>(v, id, hashGeneratorView)
-}
-
 export interface GeneratorViewerState {
   $type?: $Type<'app.bsky.feed.defs', 'generatorViewerState'>
   like?: string
@@ -310,10 +262,6 @@ export function isGeneratorViewerState<V>(v: V) {
 
 export function validateGeneratorViewerState<V>(v: V) {
   return validate<GeneratorViewerState & V>(v, id, hashGeneratorViewerState)
-}
-
-export function isValidGeneratorViewerState<V>(v: V) {
-  return isValid<GeneratorViewerState & V>(v, id, hashGeneratorViewerState)
 }
 
 export interface SkeletonFeedPost {
@@ -337,10 +285,6 @@ export function validateSkeletonFeedPost<V>(v: V) {
   return validate<SkeletonFeedPost & V>(v, id, hashSkeletonFeedPost)
 }
 
-export function isValidSkeletonFeedPost<V>(v: V) {
-  return isValid<SkeletonFeedPost & V>(v, id, hashSkeletonFeedPost)
-}
-
 export interface SkeletonReasonRepost {
   $type?: $Type<'app.bsky.feed.defs', 'skeletonReasonRepost'>
   repost: string
@@ -356,10 +300,6 @@ export function validateSkeletonReasonRepost<V>(v: V) {
   return validate<SkeletonReasonRepost & V>(v, id, hashSkeletonReasonRepost)
 }
 
-export function isValidSkeletonReasonRepost<V>(v: V) {
-  return isValid<SkeletonReasonRepost & V>(v, id, hashSkeletonReasonRepost)
-}
-
 export interface SkeletonReasonPin {
   $type?: $Type<'app.bsky.feed.defs', 'skeletonReasonPin'>
 }
@@ -372,10 +312,6 @@ export function isSkeletonReasonPin<V>(v: V) {
 
 export function validateSkeletonReasonPin<V>(v: V) {
   return validate<SkeletonReasonPin & V>(v, id, hashSkeletonReasonPin)
-}
-
-export function isValidSkeletonReasonPin<V>(v: V) {
-  return isValid<SkeletonReasonPin & V>(v, id, hashSkeletonReasonPin)
 }
 
 export interface ThreadgateView {
@@ -394,10 +330,6 @@ export function isThreadgateView<V>(v: V) {
 
 export function validateThreadgateView<V>(v: V) {
   return validate<ThreadgateView & V>(v, id, hashThreadgateView)
-}
-
-export function isValidThreadgateView<V>(v: V) {
-  return isValid<ThreadgateView & V>(v, id, hashThreadgateView)
 }
 
 export interface Interaction {
@@ -429,10 +361,6 @@ export function isInteraction<V>(v: V) {
 
 export function validateInteraction<V>(v: V) {
   return validate<Interaction & V>(v, id, hashInteraction)
-}
-
-export function isValidInteraction<V>(v: V) {
-  return isValid<Interaction & V>(v, id, hashInteraction)
 }
 
 /** Request that less content like the given feed item be shown in the feed */

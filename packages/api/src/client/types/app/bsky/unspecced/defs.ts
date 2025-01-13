@@ -3,14 +3,10 @@
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import {
-  isValid as _isValid,
-  validate as _validate,
-} from '../../../../lexicons'
+import { validate as _validate } from '../../../../lexicons'
 import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 
 const is$typed = _is$typed,
-  isValid = _isValid,
   validate = _validate
 const id = 'app.bsky.unspecced.defs'
 
@@ -29,10 +25,6 @@ export function validateSkeletonSearchPost<V>(v: V) {
   return validate<SkeletonSearchPost & V>(v, id, hashSkeletonSearchPost)
 }
 
-export function isValidSkeletonSearchPost<V>(v: V) {
-  return isValid<SkeletonSearchPost & V>(v, id, hashSkeletonSearchPost)
-}
-
 export interface SkeletonSearchActor {
   $type?: $Type<'app.bsky.unspecced.defs', 'skeletonSearchActor'>
   did: string
@@ -48,10 +40,6 @@ export function validateSkeletonSearchActor<V>(v: V) {
   return validate<SkeletonSearchActor & V>(v, id, hashSkeletonSearchActor)
 }
 
-export function isValidSkeletonSearchActor<V>(v: V) {
-  return isValid<SkeletonSearchActor & V>(v, id, hashSkeletonSearchActor)
-}
-
 export interface SkeletonSearchStarterPack {
   $type?: $Type<'app.bsky.unspecced.defs', 'skeletonSearchStarterPack'>
   uri: string
@@ -65,14 +53,6 @@ export function isSkeletonSearchStarterPack<V>(v: V) {
 
 export function validateSkeletonSearchStarterPack<V>(v: V) {
   return validate<SkeletonSearchStarterPack & V>(
-    v,
-    id,
-    hashSkeletonSearchStarterPack,
-  )
-}
-
-export function isValidSkeletonSearchStarterPack<V>(v: V) {
-  return isValid<SkeletonSearchStarterPack & V>(
     v,
     id,
     hashSkeletonSearchStarterPack,
@@ -95,8 +75,4 @@ export function isTrendingTopic<V>(v: V) {
 
 export function validateTrendingTopic<V>(v: V) {
   return validate<TrendingTopic & V>(v, id, hashTrendingTopic)
-}
-
-export function isValidTrendingTopic<V>(v: V) {
-  return isValid<TrendingTopic & V>(v, id, hashTrendingTopic)
 }

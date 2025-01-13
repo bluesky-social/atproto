@@ -3,17 +3,13 @@
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import {
-  isValid as _isValid,
-  validate as _validate,
-} from '../../../../lexicons'
+import { validate as _validate } from '../../../../lexicons'
 import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, ErrorFrame } from '@atproto/xrpc-server'
 import { IncomingMessage } from 'http'
 import type * as ComAtprotoLabelDefs from './defs'
 
 const is$typed = _is$typed,
-  isValid = _isValid,
   validate = _validate
 const id = 'com.atproto.label.subscribeLabels'
 
@@ -51,10 +47,6 @@ export function validateLabels<V>(v: V) {
   return validate<Labels & V>(v, id, hashLabels)
 }
 
-export function isValidLabels<V>(v: V) {
-  return isValid<Labels & V>(v, id, hashLabels)
-}
-
 export interface Info {
   $type?: $Type<'com.atproto.label.subscribeLabels', 'info'>
   name: 'OutdatedCursor' | (string & {})
@@ -69,8 +61,4 @@ export function isInfo<V>(v: V) {
 
 export function validateInfo<V>(v: V) {
   return validate<Info & V>(v, id, hashInfo)
-}
-
-export function isValidInfo<V>(v: V) {
-  return isValid<Info & V>(v, id, hashInfo)
 }

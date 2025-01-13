@@ -3,10 +3,7 @@
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import {
-  isValid as _isValid,
-  validate as _validate,
-} from '../../../../lexicons'
+import { validate as _validate } from '../../../../lexicons'
 import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 import type * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
 import type * as AppBskyActorDefs from '../actor/defs'
@@ -14,7 +11,6 @@ import type * as AppBskyRichtextFacet from '../richtext/facet'
 import type * as AppBskyFeedDefs from '../feed/defs'
 
 const is$typed = _is$typed,
-  isValid = _isValid,
   validate = _validate
 const id = 'app.bsky.graph.defs'
 
@@ -39,10 +35,6 @@ export function isListViewBasic<V>(v: V) {
 
 export function validateListViewBasic<V>(v: V) {
   return validate<ListViewBasic & V>(v, id, hashListViewBasic)
-}
-
-export function isValidListViewBasic<V>(v: V) {
-  return isValid<ListViewBasic & V>(v, id, hashListViewBasic)
 }
 
 export interface ListView {
@@ -71,10 +63,6 @@ export function validateListView<V>(v: V) {
   return validate<ListView & V>(v, id, hashListView)
 }
 
-export function isValidListView<V>(v: V) {
-  return isValid<ListView & V>(v, id, hashListView)
-}
-
 export interface ListItemView {
   $type?: $Type<'app.bsky.graph.defs', 'listItemView'>
   uri: string
@@ -89,10 +77,6 @@ export function isListItemView<V>(v: V) {
 
 export function validateListItemView<V>(v: V) {
   return validate<ListItemView & V>(v, id, hashListItemView)
-}
-
-export function isValidListItemView<V>(v: V) {
-  return isValid<ListItemView & V>(v, id, hashListItemView)
 }
 
 export interface StarterPackView {
@@ -120,10 +104,6 @@ export function validateStarterPackView<V>(v: V) {
   return validate<StarterPackView & V>(v, id, hashStarterPackView)
 }
 
-export function isValidStarterPackView<V>(v: V) {
-  return isValid<StarterPackView & V>(v, id, hashStarterPackView)
-}
-
 export interface StarterPackViewBasic {
   $type?: $Type<'app.bsky.graph.defs', 'starterPackViewBasic'>
   uri: string
@@ -145,10 +125,6 @@ export function isStarterPackViewBasic<V>(v: V) {
 
 export function validateStarterPackViewBasic<V>(v: V) {
   return validate<StarterPackViewBasic & V>(v, id, hashStarterPackViewBasic)
-}
-
-export function isValidStarterPackViewBasic<V>(v: V) {
-  return isValid<StarterPackViewBasic & V>(v, id, hashStarterPackViewBasic)
 }
 
 export type ListPurpose =
@@ -180,10 +156,6 @@ export function validateListViewerState<V>(v: V) {
   return validate<ListViewerState & V>(v, id, hashListViewerState)
 }
 
-export function isValidListViewerState<V>(v: V) {
-  return isValid<ListViewerState & V>(v, id, hashListViewerState)
-}
-
 /** indicates that a handle or DID could not be resolved */
 export interface NotFoundActor {
   $type?: $Type<'app.bsky.graph.defs', 'notFoundActor'>
@@ -199,10 +171,6 @@ export function isNotFoundActor<V>(v: V) {
 
 export function validateNotFoundActor<V>(v: V) {
   return validate<NotFoundActor & V>(v, id, hashNotFoundActor)
-}
-
-export function isValidNotFoundActor<V>(v: V) {
-  return isValid<NotFoundActor & V>(v, id, hashNotFoundActor)
 }
 
 /** lists the bi-directional graph relationships between one actor (not indicated in the object), and the target actors (the DID included in the object) */
@@ -223,8 +191,4 @@ export function isRelationship<V>(v: V) {
 
 export function validateRelationship<V>(v: V) {
   return validate<Relationship & V>(v, id, hashRelationship)
-}
-
-export function isValidRelationship<V>(v: V) {
-  return isValid<Relationship & V>(v, id, hashRelationship)
 }

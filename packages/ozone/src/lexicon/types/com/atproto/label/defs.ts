@@ -3,14 +3,10 @@
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import {
-  isValid as _isValid,
-  validate as _validate,
-} from '../../../../lexicons'
+import { validate as _validate } from '../../../../lexicons'
 import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 
 const is$typed = _is$typed,
-  isValid = _isValid,
   validate = _validate
 const id = 'com.atproto.label.defs'
 
@@ -47,10 +43,6 @@ export function validateLabel<V>(v: V) {
   return validate<Label & V>(v, id, hashLabel)
 }
 
-export function isValidLabel<V>(v: V) {
-  return isValid<Label & V>(v, id, hashLabel)
-}
-
 /** Metadata tags on an atproto record, published by the author within the record. */
 export interface SelfLabels {
   $type?: $Type<'com.atproto.label.defs', 'selfLabels'>
@@ -65,10 +57,6 @@ export function isSelfLabels<V>(v: V) {
 
 export function validateSelfLabels<V>(v: V) {
   return validate<SelfLabels & V>(v, id, hashSelfLabels)
-}
-
-export function isValidSelfLabels<V>(v: V) {
-  return isValid<SelfLabels & V>(v, id, hashSelfLabels)
 }
 
 /** Metadata tag on an atproto record, published by the author within the record. Note that schemas should use #selfLabels, not #selfLabel. */
@@ -86,10 +74,6 @@ export function isSelfLabel<V>(v: V) {
 
 export function validateSelfLabel<V>(v: V) {
   return validate<SelfLabel & V>(v, id, hashSelfLabel)
-}
-
-export function isValidSelfLabel<V>(v: V) {
-  return isValid<SelfLabel & V>(v, id, hashSelfLabel)
 }
 
 /** Declares a label value and its expected interpretations and behaviors. */
@@ -118,10 +102,6 @@ export function validateLabelValueDefinition<V>(v: V) {
   return validate<LabelValueDefinition & V>(v, id, hashLabelValueDefinition)
 }
 
-export function isValidLabelValueDefinition<V>(v: V) {
-  return isValid<LabelValueDefinition & V>(v, id, hashLabelValueDefinition)
-}
-
 /** Strings which describe the label in the UI, localized into a specific language. */
 export interface LabelValueDefinitionStrings {
   $type?: $Type<'com.atproto.label.defs', 'labelValueDefinitionStrings'>
@@ -141,14 +121,6 @@ export function isLabelValueDefinitionStrings<V>(v: V) {
 
 export function validateLabelValueDefinitionStrings<V>(v: V) {
   return validate<LabelValueDefinitionStrings & V>(
-    v,
-    id,
-    hashLabelValueDefinitionStrings,
-  )
-}
-
-export function isValidLabelValueDefinitionStrings<V>(v: V) {
-  return isValid<LabelValueDefinitionStrings & V>(
     v,
     id,
     hashLabelValueDefinitionStrings,

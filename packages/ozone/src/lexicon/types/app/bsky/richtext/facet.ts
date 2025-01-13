@@ -3,14 +3,10 @@
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import {
-  isValid as _isValid,
-  validate as _validate,
-} from '../../../../lexicons'
+import { validate as _validate } from '../../../../lexicons'
 import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 
 const is$typed = _is$typed,
-  isValid = _isValid,
   validate = _validate
 const id = 'app.bsky.richtext.facet'
 
@@ -31,10 +27,6 @@ export function validateMain<V>(v: V) {
   return validate<Main & V>(v, id, hashMain)
 }
 
-export function isValidMain<V>(v: V) {
-  return isValid<Main & V>(v, id, hashMain)
-}
-
 /** Facet feature for mention of another account. The text is usually a handle, including a '@' prefix, but the facet reference is a DID. */
 export interface Mention {
   $type?: $Type<'app.bsky.richtext.facet', 'mention'>
@@ -49,10 +41,6 @@ export function isMention<V>(v: V) {
 
 export function validateMention<V>(v: V) {
   return validate<Mention & V>(v, id, hashMention)
-}
-
-export function isValidMention<V>(v: V) {
-  return isValid<Mention & V>(v, id, hashMention)
 }
 
 /** Facet feature for a URL. The text URL may have been simplified or truncated, but the facet reference should be a complete URL. */
@@ -71,10 +59,6 @@ export function validateLink<V>(v: V) {
   return validate<Link & V>(v, id, hashLink)
 }
 
-export function isValidLink<V>(v: V) {
-  return isValid<Link & V>(v, id, hashLink)
-}
-
 /** Facet feature for a hashtag. The text usually includes a '#' prefix, but the facet reference should not (except in the case of 'double hash tags'). */
 export interface Tag {
   $type?: $Type<'app.bsky.richtext.facet', 'tag'>
@@ -89,10 +73,6 @@ export function isTag<V>(v: V) {
 
 export function validateTag<V>(v: V) {
   return validate<Tag & V>(v, id, hashTag)
-}
-
-export function isValidTag<V>(v: V) {
-  return isValid<Tag & V>(v, id, hashTag)
 }
 
 /** Specifies the sub-string range a facet feature applies to. Start index is inclusive, end index is exclusive. Indices are zero-indexed, counting bytes of the UTF-8 encoded text. NOTE: some languages, like Javascript, use UTF-16 or Unicode codepoints for string slice indexing; in these languages, convert to byte arrays before working with facets. */
@@ -110,8 +90,4 @@ export function isByteSlice<V>(v: V) {
 
 export function validateByteSlice<V>(v: V) {
   return validate<ByteSlice & V>(v, id, hashByteSlice)
-}
-
-export function isValidByteSlice<V>(v: V) {
-  return isValid<ByteSlice & V>(v, id, hashByteSlice)
 }

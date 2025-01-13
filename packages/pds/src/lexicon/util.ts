@@ -1,6 +1,9 @@
 /**
  * GENERATED CODE - DO NOT MODIFY
  */
+
+import { ValidationResult } from '@atproto/lexicon'
+
 export type OmitKey<T, K extends keyof T> = {
   [K2 in keyof T as K2 extends K ? never : K2]: T[K2]
 }
@@ -64,4 +67,18 @@ export function maybe$typed<V, Id extends string, Hash extends string>(
       ? v.$type === undefined || compare$type(v.$type, id, hash)
       : true)
   )
+}
+
+export type Validator<R = unknown> = (v: unknown) => ValidationResult<R>
+export type ValidatorParam<V extends Validator> =
+  V extends Validator<infer R> ? R : never
+
+/**
+ * Utility function that allows to convert a "validate*" utility function into a
+ * type predicate.
+ */
+export function asPredicate<V extends Validator>(validate: V) {
+  return function <T>(v: T): v is T & ValidatorParam<V> {
+    return validate(v).success
+  }
 }

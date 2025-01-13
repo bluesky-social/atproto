@@ -3,15 +3,11 @@
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import {
-  isValid as _isValid,
-  validate as _validate,
-} from '../../../../lexicons'
+import { validate as _validate } from '../../../../lexicons'
 import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 import type * as ComAtprotoServerDefs from '../server/defs'
 
 const is$typed = _is$typed,
-  isValid = _isValid,
   validate = _validate
 const id = 'com.atproto.admin.defs'
 
@@ -29,10 +25,6 @@ export function isStatusAttr<V>(v: V) {
 
 export function validateStatusAttr<V>(v: V) {
   return validate<StatusAttr & V>(v, id, hashStatusAttr)
-}
-
-export function isValidStatusAttr<V>(v: V) {
-  return isValid<StatusAttr & V>(v, id, hashStatusAttr)
 }
 
 export interface AccountView {
@@ -61,10 +53,6 @@ export function validateAccountView<V>(v: V) {
   return validate<AccountView & V>(v, id, hashAccountView)
 }
 
-export function isValidAccountView<V>(v: V) {
-  return isValid<AccountView & V>(v, id, hashAccountView)
-}
-
 export interface RepoRef {
   $type?: $Type<'com.atproto.admin.defs', 'repoRef'>
   did: string
@@ -78,10 +66,6 @@ export function isRepoRef<V>(v: V) {
 
 export function validateRepoRef<V>(v: V) {
   return validate<RepoRef & V>(v, id, hashRepoRef)
-}
-
-export function isValidRepoRef<V>(v: V) {
-  return isValid<RepoRef & V>(v, id, hashRepoRef)
 }
 
 export interface RepoBlobRef {
@@ -101,10 +85,6 @@ export function validateRepoBlobRef<V>(v: V) {
   return validate<RepoBlobRef & V>(v, id, hashRepoBlobRef)
 }
 
-export function isValidRepoBlobRef<V>(v: V) {
-  return isValid<RepoBlobRef & V>(v, id, hashRepoBlobRef)
-}
-
 export interface ThreatSignature {
   $type?: $Type<'com.atproto.admin.defs', 'threatSignature'>
   property: string
@@ -119,8 +99,4 @@ export function isThreatSignature<V>(v: V) {
 
 export function validateThreatSignature<V>(v: V) {
   return validate<ThreatSignature & V>(v, id, hashThreatSignature)
-}
-
-export function isValidThreatSignature<V>(v: V) {
-  return isValid<ThreatSignature & V>(v, id, hashThreatSignature)
 }

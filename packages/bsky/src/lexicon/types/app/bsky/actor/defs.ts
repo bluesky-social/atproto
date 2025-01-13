@@ -3,17 +3,13 @@
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import {
-  isValid as _isValid,
-  validate as _validate,
-} from '../../../../lexicons'
+import { validate as _validate } from '../../../../lexicons'
 import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 import type * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
 import type * as AppBskyGraphDefs from '../graph/defs'
 import type * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef'
 
 const is$typed = _is$typed,
-  isValid = _isValid,
   validate = _validate
 const id = 'app.bsky.actor.defs'
 
@@ -39,10 +35,6 @@ export function validateProfileViewBasic<V>(v: V) {
   return validate<ProfileViewBasic & V>(v, id, hashProfileViewBasic)
 }
 
-export function isValidProfileViewBasic<V>(v: V) {
-  return isValid<ProfileViewBasic & V>(v, id, hashProfileViewBasic)
-}
-
 export interface ProfileView {
   $type?: $Type<'app.bsky.actor.defs', 'profileView'>
   did: string
@@ -65,10 +57,6 @@ export function isProfileView<V>(v: V) {
 
 export function validateProfileView<V>(v: V) {
   return validate<ProfileView & V>(v, id, hashProfileView)
-}
-
-export function isValidProfileView<V>(v: V) {
-  return isValid<ProfileView & V>(v, id, hashProfileView)
 }
 
 export interface ProfileViewDetailed {
@@ -101,10 +89,6 @@ export function validateProfileViewDetailed<V>(v: V) {
   return validate<ProfileViewDetailed & V>(v, id, hashProfileViewDetailed)
 }
 
-export function isValidProfileViewDetailed<V>(v: V) {
-  return isValid<ProfileViewDetailed & V>(v, id, hashProfileViewDetailed)
-}
-
 export interface ProfileAssociated {
   $type?: $Type<'app.bsky.actor.defs', 'profileAssociated'>
   lists?: number
@@ -124,10 +108,6 @@ export function validateProfileAssociated<V>(v: V) {
   return validate<ProfileAssociated & V>(v, id, hashProfileAssociated)
 }
 
-export function isValidProfileAssociated<V>(v: V) {
-  return isValid<ProfileAssociated & V>(v, id, hashProfileAssociated)
-}
-
 export interface ProfileAssociatedChat {
   $type?: $Type<'app.bsky.actor.defs', 'profileAssociatedChat'>
   allowIncoming: 'all' | 'none' | 'following' | (string & {})
@@ -141,10 +121,6 @@ export function isProfileAssociatedChat<V>(v: V) {
 
 export function validateProfileAssociatedChat<V>(v: V) {
   return validate<ProfileAssociatedChat & V>(v, id, hashProfileAssociatedChat)
-}
-
-export function isValidProfileAssociatedChat<V>(v: V) {
-  return isValid<ProfileAssociatedChat & V>(v, id, hashProfileAssociatedChat)
 }
 
 /** Metadata about the requesting account's relationship with the subject account. Only has meaningful content for authed requests. */
@@ -170,10 +146,6 @@ export function validateViewerState<V>(v: V) {
   return validate<ViewerState & V>(v, id, hashViewerState)
 }
 
-export function isValidViewerState<V>(v: V) {
-  return isValid<ViewerState & V>(v, id, hashViewerState)
-}
-
 /** The subject's followers whom you also follow */
 export interface KnownFollowers {
   $type?: $Type<'app.bsky.actor.defs', 'knownFollowers'>
@@ -189,10 +161,6 @@ export function isKnownFollowers<V>(v: V) {
 
 export function validateKnownFollowers<V>(v: V) {
   return validate<KnownFollowers & V>(v, id, hashKnownFollowers)
-}
-
-export function isValidKnownFollowers<V>(v: V) {
-  return isValid<KnownFollowers & V>(v, id, hashKnownFollowers)
 }
 
 export type Preferences = (
@@ -226,10 +194,6 @@ export function validateAdultContentPref<V>(v: V) {
   return validate<AdultContentPref & V>(v, id, hashAdultContentPref)
 }
 
-export function isValidAdultContentPref<V>(v: V) {
-  return isValid<AdultContentPref & V>(v, id, hashAdultContentPref)
-}
-
 export interface ContentLabelPref {
   $type?: $Type<'app.bsky.actor.defs', 'contentLabelPref'>
   /** Which labeler does this preference apply to? If undefined, applies globally. */
@@ -246,10 +210,6 @@ export function isContentLabelPref<V>(v: V) {
 
 export function validateContentLabelPref<V>(v: V) {
   return validate<ContentLabelPref & V>(v, id, hashContentLabelPref)
-}
-
-export function isValidContentLabelPref<V>(v: V) {
-  return isValid<ContentLabelPref & V>(v, id, hashContentLabelPref)
 }
 
 export interface SavedFeed {
@@ -270,10 +230,6 @@ export function validateSavedFeed<V>(v: V) {
   return validate<SavedFeed & V>(v, id, hashSavedFeed)
 }
 
-export function isValidSavedFeed<V>(v: V) {
-  return isValid<SavedFeed & V>(v, id, hashSavedFeed)
-}
-
 export interface SavedFeedsPrefV2 {
   $type?: $Type<'app.bsky.actor.defs', 'savedFeedsPrefV2'>
   items: SavedFeed[]
@@ -287,10 +243,6 @@ export function isSavedFeedsPrefV2<V>(v: V) {
 
 export function validateSavedFeedsPrefV2<V>(v: V) {
   return validate<SavedFeedsPrefV2 & V>(v, id, hashSavedFeedsPrefV2)
-}
-
-export function isValidSavedFeedsPrefV2<V>(v: V) {
-  return isValid<SavedFeedsPrefV2 & V>(v, id, hashSavedFeedsPrefV2)
 }
 
 export interface SavedFeedsPref {
@@ -310,10 +262,6 @@ export function validateSavedFeedsPref<V>(v: V) {
   return validate<SavedFeedsPref & V>(v, id, hashSavedFeedsPref)
 }
 
-export function isValidSavedFeedsPref<V>(v: V) {
-  return isValid<SavedFeedsPref & V>(v, id, hashSavedFeedsPref)
-}
-
 export interface PersonalDetailsPref {
   $type?: $Type<'app.bsky.actor.defs', 'personalDetailsPref'>
   /** The birth date of account owner. */
@@ -328,10 +276,6 @@ export function isPersonalDetailsPref<V>(v: V) {
 
 export function validatePersonalDetailsPref<V>(v: V) {
   return validate<PersonalDetailsPref & V>(v, id, hashPersonalDetailsPref)
-}
-
-export function isValidPersonalDetailsPref<V>(v: V) {
-  return isValid<PersonalDetailsPref & V>(v, id, hashPersonalDetailsPref)
 }
 
 export interface FeedViewPref {
@@ -360,10 +304,6 @@ export function validateFeedViewPref<V>(v: V) {
   return validate<FeedViewPref & V>(v, id, hashFeedViewPref)
 }
 
-export function isValidFeedViewPref<V>(v: V) {
-  return isValid<FeedViewPref & V>(v, id, hashFeedViewPref)
-}
-
 export interface ThreadViewPref {
   $type?: $Type<'app.bsky.actor.defs', 'threadViewPref'>
   /** Sorting mode for threads. */
@@ -388,10 +328,6 @@ export function validateThreadViewPref<V>(v: V) {
   return validate<ThreadViewPref & V>(v, id, hashThreadViewPref)
 }
 
-export function isValidThreadViewPref<V>(v: V) {
-  return isValid<ThreadViewPref & V>(v, id, hashThreadViewPref)
-}
-
 export interface InterestsPref {
   $type?: $Type<'app.bsky.actor.defs', 'interestsPref'>
   /** A list of tags which describe the account owner's interests gathered during onboarding. */
@@ -406,10 +342,6 @@ export function isInterestsPref<V>(v: V) {
 
 export function validateInterestsPref<V>(v: V) {
   return validate<InterestsPref & V>(v, id, hashInterestsPref)
-}
-
-export function isValidInterestsPref<V>(v: V) {
-  return isValid<InterestsPref & V>(v, id, hashInterestsPref)
 }
 
 export type MutedWordTarget = 'content' | 'tag' | (string & {})
@@ -438,10 +370,6 @@ export function validateMutedWord<V>(v: V) {
   return validate<MutedWord & V>(v, id, hashMutedWord)
 }
 
-export function isValidMutedWord<V>(v: V) {
-  return isValid<MutedWord & V>(v, id, hashMutedWord)
-}
-
 export interface MutedWordsPref {
   $type?: $Type<'app.bsky.actor.defs', 'mutedWordsPref'>
   /** A list of words the account owner has muted. */
@@ -456,10 +384,6 @@ export function isMutedWordsPref<V>(v: V) {
 
 export function validateMutedWordsPref<V>(v: V) {
   return validate<MutedWordsPref & V>(v, id, hashMutedWordsPref)
-}
-
-export function isValidMutedWordsPref<V>(v: V) {
-  return isValid<MutedWordsPref & V>(v, id, hashMutedWordsPref)
 }
 
 export interface HiddenPostsPref {
@@ -478,10 +402,6 @@ export function validateHiddenPostsPref<V>(v: V) {
   return validate<HiddenPostsPref & V>(v, id, hashHiddenPostsPref)
 }
 
-export function isValidHiddenPostsPref<V>(v: V) {
-  return isValid<HiddenPostsPref & V>(v, id, hashHiddenPostsPref)
-}
-
 export interface LabelersPref {
   $type?: $Type<'app.bsky.actor.defs', 'labelersPref'>
   labelers: LabelerPrefItem[]
@@ -497,10 +417,6 @@ export function validateLabelersPref<V>(v: V) {
   return validate<LabelersPref & V>(v, id, hashLabelersPref)
 }
 
-export function isValidLabelersPref<V>(v: V) {
-  return isValid<LabelersPref & V>(v, id, hashLabelersPref)
-}
-
 export interface LabelerPrefItem {
   $type?: $Type<'app.bsky.actor.defs', 'labelerPrefItem'>
   did: string
@@ -514,10 +430,6 @@ export function isLabelerPrefItem<V>(v: V) {
 
 export function validateLabelerPrefItem<V>(v: V) {
   return validate<LabelerPrefItem & V>(v, id, hashLabelerPrefItem)
-}
-
-export function isValidLabelerPrefItem<V>(v: V) {
-  return isValid<LabelerPrefItem & V>(v, id, hashLabelerPrefItem)
 }
 
 /** A grab bag of state that's specific to the bsky.app program. Third-party apps shouldn't use this. */
@@ -540,10 +452,6 @@ export function validateBskyAppStatePref<V>(v: V) {
   return validate<BskyAppStatePref & V>(v, id, hashBskyAppStatePref)
 }
 
-export function isValidBskyAppStatePref<V>(v: V) {
-  return isValid<BskyAppStatePref & V>(v, id, hashBskyAppStatePref)
-}
-
 /** If set, an active progress guide. Once completed, can be set to undefined. Should have unspecced fields tracking progress. */
 export interface BskyAppProgressGuide {
   $type?: $Type<'app.bsky.actor.defs', 'bskyAppProgressGuide'>
@@ -558,10 +466,6 @@ export function isBskyAppProgressGuide<V>(v: V) {
 
 export function validateBskyAppProgressGuide<V>(v: V) {
   return validate<BskyAppProgressGuide & V>(v, id, hashBskyAppProgressGuide)
-}
-
-export function isValidBskyAppProgressGuide<V>(v: V) {
-  return isValid<BskyAppProgressGuide & V>(v, id, hashBskyAppProgressGuide)
 }
 
 /** A new user experiences (NUX) storage object */
@@ -583,8 +487,4 @@ export function isNux<V>(v: V) {
 
 export function validateNux<V>(v: V) {
   return validate<Nux & V>(v, id, hashNux)
-}
-
-export function isValidNux<V>(v: V) {
-  return isValid<Nux & V>(v, id, hashNux)
 }
