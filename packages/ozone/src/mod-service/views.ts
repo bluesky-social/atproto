@@ -11,7 +11,7 @@ import { FeedViewPost } from '../lexicon/types/app/bsky/feed/defs'
 import { AccountView } from '../lexicon/types/com/atproto/admin/defs'
 import {
   Label,
-  isValidSelfLabels,
+  validateSelfLabels,
 } from '../lexicon/types/com/atproto/label/defs'
 import { OutputSchema as ReportOutput } from '../lexicon/types/com/atproto/moderation/createReport'
 import { REASONOTHER } from '../lexicon/types/com/atproto/moderation/defs'
@@ -45,7 +45,9 @@ import {
   ModerationSubjectStatusRowWithHandle,
 } from './types'
 import { formatLabel, signLabel } from './util'
-import { Un$Typed } from '../lexicon/util'
+import { asPredicate, Un$Typed } from '../lexicon/util'
+
+const isValidSelfLabels = asPredicate(validateSelfLabels)
 
 const ifString = (val: unknown): string | undefined =>
   typeof val === 'string' ? val : undefined

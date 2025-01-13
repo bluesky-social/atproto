@@ -12,7 +12,7 @@ import {
   savedFeedsToUriArrays,
   validateSavedFeed,
 } from '../src/util'
-import { $Typed } from '../src/client/util'
+import { asPredicate } from '../src/client/util'
 
 describe('agent', () => {
   let network: TestNetworkNoAppView
@@ -2218,7 +2218,7 @@ describe('agent', () => {
       async function addLegacyMutedWord(mutedWord: AppBskyActorDefs.MutedWord) {
         await updatePreferences(agent, (prefs) => {
           const mutedWordsPref = prefs.findLast(
-            AppBskyActorDefs.isValidMutedWordsPref,
+            asPredicate(AppBskyActorDefs.validateMutedWordsPref),
           ) || {
             $type: 'app.bsky.actor.defs#mutedWordsPref',
             items: [],

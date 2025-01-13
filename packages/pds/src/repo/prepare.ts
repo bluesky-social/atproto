@@ -32,13 +32,20 @@ import {
   ValidationStatus,
 } from './types'
 import * as lex from '../lexicon/lexicons'
-import { isValidRecord as isValidFeedGenerator } from '../lexicon/types/app/bsky/feed/generator'
-import { isValidRecord as isValidStarterPack } from '../lexicon/types/app/bsky/graph/starterpack'
-import { isValidRecord as isValidPost } from '../lexicon/types/app/bsky/feed/post'
+import * as AppBskyFeedGenerator from '../lexicon/types/app/bsky/feed/generator'
+import * as AppBskyGraphStarterpack from '../lexicon/types/app/bsky/graph/starterpack'
+import * as AppBskyFeedPost from '../lexicon/types/app/bsky/feed/post'
 import { isTag } from '../lexicon/types/app/bsky/richtext/facet'
-import { isValidRecord as isValidList } from '../lexicon/types/app/bsky/graph/list'
-import { isValidRecord as isValidProfile } from '../lexicon/types/app/bsky/actor/profile'
+import * as AppBskyGraphList from '../lexicon/types/app/bsky/graph/list'
+import * as AppBskyActorProfile from '../lexicon/types/app/bsky/actor/profile'
 import { hasExplicitSlur } from '../handle/explicit-slurs'
+import { asPredicate } from '../lexicon/util'
+
+const isValidFeedGenerator = asPredicate(AppBskyFeedGenerator.validateRecord)
+const isValidStarterPack = asPredicate(AppBskyGraphStarterpack.validateRecord)
+const isValidPost = asPredicate(AppBskyFeedPost.validateRecord)
+const isValidList = asPredicate(AppBskyGraphList.validateRecord)
+const isValidProfile = asPredicate(AppBskyActorProfile.validateRecord)
 
 export const assertValidRecordWithStatus = (
   record: Record<string, unknown>,

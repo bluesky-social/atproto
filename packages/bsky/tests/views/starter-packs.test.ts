@@ -1,9 +1,11 @@
 import assert from 'node:assert'
-import { AtpAgent } from '@atproto/api'
+import { asPredicate, AtpAgent } from '@atproto/api'
 import { TestNetwork, SeedClient, RecordRef, basicSeed } from '@atproto/dev-env'
-import { isValidRecord as isValidProfile } from '../../src/lexicon/types/app/bsky/actor/profile'
+import { validateRecord as validateProfileRecord } from '../../src/lexicon/types/app/bsky/actor/profile'
 import { forSnapshot } from '../_util'
 import { ids } from '../../src/lexicon/lexicons'
+
+const isValidProfile = asPredicate(validateProfileRecord)
 
 describe('starter packs', () => {
   let network: TestNetwork

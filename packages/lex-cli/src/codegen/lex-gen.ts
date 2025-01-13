@@ -50,10 +50,7 @@ export function genCommonImports(file: SourceFile, baseNsid: string) {
         .map((_str) => '..')
         .join('/')}/lexicons`,
     })
-    .addNamedImports([
-      { name: 'isValid', alias: '_isValid' },
-      { name: 'validate', alias: '_validate' },
-    ])
+    .addNamedImports([{ name: 'validate', alias: '_validate' }])
 
   //= import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../util.ts'
   file
@@ -80,7 +77,6 @@ export function genCommonImports(file: SourceFile, baseNsid: string) {
     declarationKind: VariableDeclarationKind.Const,
     declarations: [
       { name: 'is$typed', initializer: '_is$typed' },
-      { name: 'isValid', initializer: '_isValid' },
       { name: 'validate', initializer: '_validate' },
     ],
   })
@@ -553,19 +549,8 @@ function genObjHelpers(
       parameters: [{ name: `v`, type: `V` }],
       isExported: true,
     })
-    .setBodyText(`return validate<${ifaceName} & V>(v, id, ${hashVar})`)
-
-  const isValidX = toCamelCase(`isValid-${ifaceName}`)
-
-  //= export function isValid{X}<V>(v: V) {...}
-  file
-    .addFunction({
-      name: `${isValidX}<V>`,
-      parameters: [{ name: `v`, type: `V` }],
-      isExported: true,
-    })
     .setBodyText(
-      `return isValid<${ifaceName} & V>(v, id, ${hashVar}${requireTypeProperty ? ', true' : ''})`,
+      `return validate<${ifaceName} & V>(v, id, ${hashVar}${requireTypeProperty ? ', true' : ''})`,
     )
 }
 

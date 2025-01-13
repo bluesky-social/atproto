@@ -2,7 +2,7 @@ import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../lexicon'
 import AppContext from '../../context'
 import {
-  isValidModEventDivert,
+  validateModEventDivert,
   isModEventAcknowledge,
   isModEventEmail,
   isModEventLabel,
@@ -23,6 +23,9 @@ import { SettingService } from '../../setting/service'
 import { ProtectedTagSettingKey } from '../../setting/constants'
 import { ProtectedTagSetting } from '../../setting/types'
 import { getTagForReport } from '../../tag-service/util'
+import { asPredicate } from '../../lexicon/util'
+
+const isValidModEventDivert = asPredicate(validateModEventDivert)
 
 const handleModerationEvent = async ({
   ctx,

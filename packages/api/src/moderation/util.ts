@@ -4,6 +4,7 @@ import {
   AppBskyLabelerDefs,
   ComAtprotoLabelDefs,
 } from '../client'
+import { asPredicate } from '../client/util'
 import {
   InterpretedLabelValueDefinition,
   ModerationBehavior,
@@ -103,7 +104,7 @@ export function interpretLabelValueDefinitions(
   labelerView: AppBskyLabelerDefs.LabelerViewDetailed,
 ): InterpretedLabelValueDefinition[] {
   return (labelerView.policies?.labelValueDefinitions || [])
-    .filter(ComAtprotoLabelDefs.isValidLabelValueDefinition)
+    .filter(asPredicate(ComAtprotoLabelDefs.validateLabelValueDefinition))
     .map((labelValDef) =>
       interpretLabelValueDefinition(labelValDef, labelerView.creator.did),
     )

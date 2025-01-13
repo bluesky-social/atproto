@@ -38,7 +38,7 @@ import {
 } from './util'
 import { uriToDid as creatorFromUri, safePinnedPost } from '../util/uris'
 import { isListRule } from '../lexicon/types/app/bsky/feed/threadgate'
-import { isValidSelfLabels } from '../lexicon/types/com/atproto/label/defs'
+import { validateSelfLabels } from '../lexicon/types/com/atproto/label/defs'
 import {
   Embed,
   EmbedBlocked,
@@ -74,7 +74,9 @@ import {
 } from '../lexicon/types/app/bsky/labeler/defs'
 import { Notification } from '../proto/bsky_pb'
 import { postUriToThreadgateUri, postUriToPostgateUri } from '../util/uris'
-import { $Typed, Un$Typed } from '../lexicon/util'
+import { $Typed, asPredicate, Un$Typed } from '../lexicon/util'
+
+const isValidSelfLabels = asPredicate(validateSelfLabels)
 
 export class Views {
   public imgUriBuilder: ImageUriBuilder = this.opts.imgUriBuilder
@@ -459,6 +461,7 @@ export class Views {
   }): Label[] {
     const { uri, cid, record } = details
     if (!uri || !cid || !record) return []
+
     if (!isValidSelfLabels(record.labels)) return []
     const src = creatorFromUri(uri) // record creator
     const cts =

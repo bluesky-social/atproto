@@ -1,5 +1,5 @@
 import assert from 'node:assert'
-import { AtpAgent, AppBskyActorProfile, AppBskyFeedDefs } from '@atproto/api'
+import { AtpAgent } from '@atproto/api'
 import { TestNetwork, SeedClient, authorFeedSeed } from '@atproto/dev-env'
 import {
   forSnapshot,
@@ -9,14 +9,23 @@ import {
 } from '../_util'
 import {
   ReplyRef,
-  isValidReplyRef,
+  validateReplyRef,
   isRecord,
 } from '../../src/lexicon/types/app/bsky/feed/post'
 import { isView as isEmbedRecordWithMedia } from '../../src/lexicon/types/app/bsky/embed/recordWithMedia'
 import { isView as isImageEmbed } from '../../src/lexicon/types/app/bsky/embed/images'
+import {
+  Record as Profile,
+  validateRecord as validatePostRecord,
+} from '../../src/lexicon/types/app/bsky/actor/profile'
+import { isReasonPin } from '../../src/lexicon/types/app/bsky/feed/defs'
 import { isPostView } from '../../src/lexicon/types/app/bsky/feed/defs'
 import { uriToDid } from '../../src/util/uris'
 import { ids } from '../../src/lexicon/lexicons'
+import { asPredicate } from '../../src/lexicon/util'
+
+const isValidReplyRef = asPredicate(validateReplyRef)
+const isValidProfile = asPredicate(validatePostRecord)
 
 describe('pds author feed views', () => {
   let network: TestNetwork
@@ -294,7 +303,7 @@ describe('pds author feed views', () => {
     })
 
     expect(carolFeed.feed.length).toBeGreaterThan(0)
-    expect(
+    assert(
       carolFeed.feed.every(({ post }) => {
         const isRecordWithActorMedia =
           isEmbedRecordWithMedia(post.embed) && isImageEmbed(post.embed?.media)
@@ -303,18 +312,18 @@ describe('pds author feed views', () => {
 
         return (isRecordWithActorMedia || isActorMedia) && isFromActor
       }),
-    ).toBeTruthy()
+    )
 
     const { data: bobFeed } = await agent.api.app.bsky.feed.getAuthorFeed({
       actor: bob,
       filter: 'posts_with_media',
     })
 
-    expect(
+    assert(
       bobFeed.feed.every(({ post }) => {
         return isImageEmbed(post.embed) && post.author.did === bob
       }),
-    ).toBeTruthy()
+    )
 
     const { data: danFeed } = await agent.api.app.bsky.feed.getAuthorFeed({
       actor: dan,
@@ -330,14 +339,14 @@ describe('pds author feed views', () => {
       filter: 'posts_no_replies',
     })
 
-    expect(
+    assert(
       carolFeed.feed.every(({ post }) => {
         return (
           (isRecord(post.record) && !post.record.reply) ||
           (isRecord(post.record) && post.record.reply)
         )
       }),
-    ).toBeTruthy()
+    )
 
     const { data: danFeed } = await agent.api.app.bsky.feed.getAuthorFeed({
       actor: dan,
@@ -409,9 +418,9 @@ describe('pds author feed views', () => {
         rkey: 'self',
       })
 
-      assert(AppBskyActorProfile.isValidRecord(profile.data.value))
+      assert(isValidProfile(profile.data.value))
 
-      const newProfile: AppBskyActorProfile.Record = {
+      const newProfile: Profile = {
         ...profile.data.value,
         pinnedPost: {
           uri: post.ref.uriStr,
@@ -448,8 +457,8 @@ describe('pds author feed views', () => {
 
       const pinnedPost = data.feed.at(0)
       expect(pinnedPost?.post?.uri).toEqual(post.ref.uriStr)
-      expect(pinnedPost?.post?.viewer?.pinned).toBeTruthy()
-      expect(AppBskyFeedDefs.isReasonPin(pinnedPost?.reason)).toBeTruthy()
+      assert(pinnedPost?.post?.viewer?.pinned)
+      assert(isReasonPin(pinnedPost?.reason))
 
       const notPinnedPost = data.feed.at(1)
       expect(notPinnedPost?.post?.viewer?.pinned).toBeFalsy()
@@ -476,8 +485,8 @@ describe('pds author feed views', () => {
         (item) => item.post.uri === post.ref.uriStr,
       )
       expect(pinnedPost?.post?.uri).toEqual(post.ref.uriStr)
-      expect(pinnedPost?.post?.viewer?.pinned).toBeTruthy()
-      expect(AppBskyFeedDefs.isReasonPin(pinnedPost?.reason)).toBeTruthy()
+      assert(pinnedPost?.post?.viewer?.pinned)
+      assert(isReasonPin(pinnedPost?.reason))
       expect(forSnapshot(page1.feed)).toMatchSnapshot()
 
       const { data: page2 } = await agent.api.app.bsky.feed.getAuthorFeed(
@@ -499,8 +508,8 @@ describe('pds author feed views', () => {
         (item) => item.post.uri === post.ref.uriStr,
       )
       expect(laterPinnedPost?.post?.uri).toEqual(post.ref.uriStr)
-      expect(laterPinnedPost?.post?.viewer?.pinned).toBeTruthy()
-      expect(AppBskyFeedDefs.isReasonPin(laterPinnedPost?.reason)).toBeFalsy()
+      assert(laterPinnedPost?.post?.viewer?.pinned)
+      expect(isReasonPin(laterPinnedPost?.reason)).toBeFalsy()
       expect(forSnapshot(page2.feed)).toMatchSnapshot()
     })
 
@@ -520,7 +529,7 @@ describe('pds author feed views', () => {
       const pinnedPost = data.feed.find(
         (item) => item.post.uri === post.ref.uriStr,
       )
-      expect(AppBskyFeedDefs.isReasonPin(pinnedPost?.reason)).toBeFalsy()
+      expect(isReasonPin(pinnedPost?.reason)).toBeFalsy()
       expect(forSnapshot(data.feed)).toMatchSnapshot()
     })
 
@@ -535,9 +544,9 @@ describe('pds author feed views', () => {
         rkey: 'self',
       })
 
-      assert(AppBskyActorProfile.isValidRecord(profile.data.value))
+      assert(isValidProfile(profile.data.value))
 
-      const newProfile: AppBskyActorProfile.Record = {
+      const newProfile: Profile = {
         ...profile.data.value,
         pinnedPost: {
           uri: bobPost.ref.uriStr,

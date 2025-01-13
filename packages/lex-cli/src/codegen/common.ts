@@ -1,19 +1,21 @@
 import { Project, SourceFile, VariableDeclarationKind } from 'ts-morph'
 import { LexiconDoc } from '@atproto/lexicon'
-import prettier from 'prettier'
+import prettier, { Options as PrettierOptions } from 'prettier'
 import { GeneratedFile } from '../types'
 
-const PRETTIER_OPTS = {
+const PRETTIER_OPTS: PrettierOptions = {
   parser: 'typescript',
   tabWidth: 2,
   semi: false,
   singleQuote: true,
-  trailingComma: 'all' as const,
+  trailingComma: 'all',
 }
 
 export const utilTs = (project) =>
   gen(project, '/util.ts', async (file) => {
     file.replaceWithText(`
+import { ValidationResult } from '@atproto/lexicon'
+
 export type OmitKey<T, K extends keyof T> = {
   [K2 in keyof T as K2 extends K ? never : K2]: T[K2]
 }
@@ -113,6 +115,20 @@ export function maybe$typed<V, Id extends string, Hash extends string>(
       : true)
   )
 }
+
+export type Validator<R = unknown> = (v: unknown) => ValidationResult<R>
+export type ValidatorParam<V extends Validator> =
+  V extends Validator<infer R> ? R : never
+
+/**
+ * Utility function that allows to convert a "validate*" utility function into a
+ * type predicate.
+ */
+export function asPredicate<V extends Validator>(validate: V) {
+  return function <T>(v: T): v is T & ValidatorParam<V> {
+    return validate(v).success
+  }
+}
 `)
   })
 
@@ -199,16 +215,39 @@ export const lexiconsTs = (project, lexicons: LexiconDoc[]) =>
     file.addFunction({
       isExported: true,
       name: 'validate',
-      typeParameters: ['V'],
+      overloads: [
+        {
+          typeParameters: ['T extends { $type: string }'],
+          parameters: [
+            { name: 'v', type: 'unknown' },
+            { name: 'id', type: 'string' },
+            { name: 'hash', type: 'string' },
+            { name: 'requiredType', type: 'true' },
+          ],
+          returnType: 'ValidationResult<T>',
+        },
+        {
+          typeParameters: ['T extends { $type?: string }'],
+          parameters: [
+            { name: 'v', type: 'unknown' },
+            { name: 'id', type: 'string' },
+            { name: 'hash', type: 'string' },
+            { name: 'requiredType', type: 'false', hasQuestionToken: true },
+          ],
+          returnType: 'ValidationResult<T>',
+        },
+      ],
       parameters: [
         { name: 'v', type: 'unknown' },
         { name: 'id', type: 'string' },
         { name: 'hash', type: 'string' },
+        { name: 'requiredType', type: 'boolean', hasQuestionToken: true },
       ],
       statements: [
         // If $type is present, make sure it is valid before validating the rest of the object
-        'return (maybe$typed(v, id, hash) ? lexicons.validate(`${id}#${hash}`, v) : { success: false, error: new ValidationError(`Must be an object with "${id}#${hash}" $type property`) }) as ValidationResult<V>',
+        'return (requiredType ? is$typed : maybe$typed)(v, id, hash) ? lexicons.validate(`${id}#${hash}`, v) : { success: false, error: new ValidationError(`Must be an object with "${hash === \'main\' ? id : `${id}#${hash}`}" $type property`) }',
       ],
+      returnType: 'ValidationResult',
     })
 
     file.addFunction({
@@ -216,24 +255,24 @@ export const lexiconsTs = (project, lexicons: LexiconDoc[]) =>
       name: 'isValid',
       overloads: [
         {
-          typeParameters: ['V extends { $type?: string }'],
+          typeParameters: ['T extends { $type: string }'],
           parameters: [
             { name: 'v', type: 'unknown' },
             { name: 'id', type: 'string' },
             { name: 'hash', type: 'string' },
             { name: 'requiredType', type: 'true' },
           ],
-          returnType: 'v is $Typed<V>',
+          returnType: 'v is T',
         },
         {
-          typeParameters: ['V extends { $type?: string }'],
+          typeParameters: ['T extends { $type?: string }'],
           parameters: [
             { name: 'v', type: 'unknown' },
             { name: 'id', type: 'string' },
             { name: 'hash', type: 'string' },
             { name: 'requiredType', type: 'false', hasQuestionToken: true },
           ],
-          returnType: 'v is V',
+          returnType: 'v is T',
         },
       ],
       parameters: [
@@ -271,12 +310,11 @@ export async function gen(
 ): Promise<GeneratedFile> {
   const file = project.createSourceFile(path)
   await gen(file)
-  file.saveSync()
-  const src = project.getFileSystem().readFileSync(path)
-  return {
-    path: path,
-    content: `${banner()}${await prettier.format(src, PRETTIER_OPTS)}`,
-  }
+  await file.save() // Save in the "in memory" file system
+  const src = `${banner()}${file.getFullText()}`
+  const content = await prettier.format(src, PRETTIER_OPTS)
+
+  return { path, content }
 }
 
 function banner() {

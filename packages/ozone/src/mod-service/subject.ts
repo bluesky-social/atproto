@@ -4,17 +4,17 @@ import { InputSchema as ActionInput } from '../lexicon/types/tools/ozone/moderat
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { ModerationEventRow, ModerationSubjectStatusRow } from './types'
 import { isRepoRef, RepoRef } from '../lexicon/types/com/atproto/admin/defs'
-import {
-  isValidMain as isStrongRef,
-  Main as StrongRef,
-} from '../lexicon/types/com/atproto/repo/strongRef'
-import {
-  isValidMessageRef,
-  MessageRef,
-} from '../lexicon/types/chat/bsky/convo/defs'
-import { $Typed } from '../lexicon/util'
+import * as ComAtprotoRepoStrongRef from '../lexicon/types/com/atproto/repo/strongRef'
+import * as ChatBskyConvoDefs from '../lexicon/types/chat/bsky/convo/defs'
+import { $Typed, asPredicate } from '../lexicon/util'
 
 type SubjectInput = ReportInput['subject'] | ActionInput['subject']
+
+type StrongRef = ComAtprotoRepoStrongRef.Main
+const isStrongRef = asPredicate(ComAtprotoRepoStrongRef.validateMain)
+
+type MessageRef = ChatBskyConvoDefs.MessageRef
+const isValidMessageRef = asPredicate(ChatBskyConvoDefs.validateMessageRef)
 
 const isMessageRefWithoutConvoId = (
   subject: unknown,
