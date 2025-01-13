@@ -19,6 +19,8 @@ export interface OutputSchema {
   suggestions: AppBskyActorDefs.ProfileView[]
   /** If true, response has fallen-back to generic results, and is not scoped using relativeToDid */
   isFallback?: boolean
+  /** Snowflake for this recommendation, use when submitting recommendation events. */
+  recId?: number
   [k: string]: unknown
 }
 
