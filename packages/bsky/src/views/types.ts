@@ -25,7 +25,10 @@ import {
   NotFoundPost,
   PostView,
 } from '../lexicon/types/app/bsky/feed/defs'
-import { ListView } from '../lexicon/types/app/bsky/graph/defs'
+import {
+  ListView,
+  StarterPackViewBasic,
+} from '../lexicon/types/app/bsky/graph/defs'
 import { LabelerView } from '../lexicon/types/app/bsky/labeler/defs'
 
 export type {
@@ -89,3 +92,4 @@ export type RecordEmbedViewInternal =
   | GeneratorView
   | ListView
   | LabelerView
+  | StarterPackViewBasic

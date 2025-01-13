@@ -32,6 +32,7 @@ export default function (server: Server, ctx: AppContext) {
         // -> entryway(identity.updateHandle) [update handle, submit plc op]
         // -> pds(admin.updateAccountHandle)  [track handle, sequence handle update]
         await ctx.entrywayAgent.com.atproto.identity.updateHandle(
+          // @ts-expect-error "did" is not in the schema
           { did: requester, handle: input.body.handle },
           await ctx.serviceAuthHeaders(
             auth.credentials.did,

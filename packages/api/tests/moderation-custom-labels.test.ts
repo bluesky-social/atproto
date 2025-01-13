@@ -223,6 +223,7 @@ describe('Moderation: custom labels', () => {
         res = moderatePost(
           mock.postView({
             record: {
+              $type: 'app.bsky.feed.post',
               text: 'Hello',
               createdAt: new Date().toISOString(),
             },

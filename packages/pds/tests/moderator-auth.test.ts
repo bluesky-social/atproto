@@ -1,18 +1,20 @@
+import assert from 'node:assert'
 import { AtpAgent } from '@atproto/api'
 import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
 import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import * as plc from '@did-plc/lib'
 import usersSeed from './seeds/users'
-import { RepoRef } from '../src/lexicon/types/com/atproto/admin/defs'
+import { isRepoRef, RepoRef } from '../src/lexicon/types/com/atproto/admin/defs'
 import { ids } from '../src/lexicon/lexicons'
+import { $Typed } from '../src/lexicon/util'
 
 describe('moderator auth', () => {
   let network: TestNetworkNoAppView
   let agent: AtpAgent
   let sc: SeedClient
 
-  let repoSubject: RepoRef
+  let repoSubject: $Typed<RepoRef>
 
   let modServiceDid: string
   let altModDid: string
@@ -103,6 +105,7 @@ describe('moderator auth', () => {
       },
       getHeaders,
     )
+    assert(isRepoRef(res.data.subject))
     expect(res.data.subject.did).toBe(repoSubject.did)
     expect(res.data.takedown?.applied).toBe(true)
   })
