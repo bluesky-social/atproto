@@ -53,7 +53,6 @@ export async function up(db: Kysely<any>): Promise<void> {
     )
     .execute()
 
-  // TODO try/catch to ignore existing
   await db.schema
     .createIndex('account_events_stats_did_idx')
     // .ifNotExists() // REquires newer version of kysely
