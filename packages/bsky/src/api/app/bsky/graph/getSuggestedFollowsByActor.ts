@@ -116,7 +116,12 @@ const presentation = (
   const suggestions = mapDefined(suggestedDids, (did) =>
     ctx.views.profileDetailed(did, hydration),
   )
-  return { isFallback: skeleton.isFallback, suggestions, headers }
+  return {
+    isFallback: skeleton.isFallback,
+    suggestions,
+    recId: skeleton.recId,
+    headers,
+  }
 }
 
 type Context = {
