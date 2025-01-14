@@ -11,6 +11,7 @@ import * as AppBskyFeedDefs from './defs'
 
 export interface QueryParams {
   feed: string
+  presentation?: 'immersive' | (string & {})
   limit: number
   cursor?: string
 }

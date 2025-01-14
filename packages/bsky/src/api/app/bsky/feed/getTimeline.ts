@@ -1,7 +1,11 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getTimeline'
-import { clearlyBadCursor, resHeaders } from '../../../util'
+import {
+  clearlyBadCursor,
+  presentationToFeedPresentation,
+  resHeaders,
+} from '../../../util'
 import { createPipeline } from '../../../../pipeline'
 import {
   HydrateCtx,
@@ -54,6 +58,7 @@ export const skeleton = async (inputs: {
   }
   const res = await ctx.dataplane.getTimeline({
     actorDid: params.hydrateCtx.viewer,
+    feedPresentation: presentationToFeedPresentation(params.presentation),
     limit: params.limit,
     cursor: params.cursor,
   })

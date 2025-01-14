@@ -5434,6 +5434,10 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.embed.defs#aspectRatio',
           },
+          presentation: {
+            type: 'string',
+            knownValues: ['gif', 'immersive'],
+          },
         },
       },
       caption: {
@@ -6174,6 +6178,10 @@ export const schemaDict = {
               type: 'string',
               format: 'at-identifier',
             },
+            presentation: {
+              type: 'string',
+              knownValues: ['immersive'],
+            },
             limit: {
               type: 'integer',
               minimum: 1,
@@ -6246,6 +6254,10 @@ export const schemaDict = {
             feed: {
               type: 'string',
               format: 'at-uri',
+            },
+            presentation: {
+              type: 'string',
+              knownValues: ['immersive'],
             },
             limit: {
               type: 'integer',
@@ -6386,6 +6398,10 @@ export const schemaDict = {
               format: 'at-uri',
               description:
                 'Reference to feed generator record describing the specific feed being requested.',
+            },
+            presentation: {
+              type: 'string',
+              knownValues: ['immersive'],
             },
             limit: {
               type: 'integer',
@@ -6853,6 +6869,10 @@ export const schemaDict = {
               type: 'string',
               description:
                 "Variant 'algorithm' for timeline. Implementation-specific. NOTE: most feed flexibility has been moved to feed generator mechanism.",
+            },
+            presentation: {
+              type: 'string',
+              knownValues: ['immersive'],
             },
             limit: {
               type: 'integer',

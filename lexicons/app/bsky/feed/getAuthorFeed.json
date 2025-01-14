@@ -10,6 +10,7 @@
         "required": ["actor"],
         "properties": {
           "actor": { "type": "string", "format": "at-identifier" },
+          "presentation": { "type": "string", "knownValues": ["immersive"] },
           "limit": {
             "type": "integer",
             "minimum": 1,

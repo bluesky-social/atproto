@@ -790,6 +790,11 @@ enum FeedType {
   FEED_TYPE_POSTS_WITH_MEDIA = 3;
 }
 
+enum FeedPresentation {
+  FEED_PRESENTATION_DEFAULT = 0;
+  FEED_PRESENTATION_IMMERSIVE = 1;
+}
+
 // - Returns recent posts authored by a given DID, paginated
 //     - `getAuthorFeed`
 //     - Optionally: filter by if a post is/isn’t a reply and if a post has a media object in it
@@ -798,6 +803,7 @@ message GetAuthorFeedRequest {
   int32 limit = 2;
   string cursor = 3;
   FeedType feed_type = 4;
+  FeedPresentation feed_presentation = 5;
 }
 
 message AuthorFeedItem {
@@ -827,6 +833,7 @@ message GetTimelineRequest {
   bool exclude_replies = 4;
   bool exclude_reposts = 5;
   bool exclude_quotes = 6;
+  FeedPresentation feed_presentation = 7;
 }
 
 message GetTimelineResponse {

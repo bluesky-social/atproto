@@ -12,6 +12,7 @@ import { isView as isImageEmbed } from '../../src/lexicon/types/app/bsky/embed/i
 import { isPostView } from '../../src/lexicon/types/app/bsky/feed/defs'
 import { uriToDid } from '../../src/util/uris'
 import { ids } from '../../src/lexicon/lexicons'
+import { VideoEmbed } from '../../src/views/types'
 
 describe('pds author feed views', () => {
   let network: TestNetwork
@@ -559,6 +560,57 @@ describe('pds author feed views', () => {
       )
       expect(pinnedPost).toBeUndefined()
       expect(forSnapshot(data.feed)).toMatchSnapshot()
+    })
+  })
+
+  describe('presentations', () => {
+    it('fetches immersive presentation for posts_and_author_threads filter', async () => {
+      // @TODO
+    })
+
+    it('fetches immersive presentation for posts_with_replies filter', async () => {
+      const { data: video } = await pdsAgent.api.com.atproto.repo.uploadBlob(
+        Buffer.from('notarealvideo'),
+        {
+          headers: sc.getHeaders(sc.dids.alice),
+          encoding: 'image/mp4',
+        },
+      )
+      await pdsAgent.api.app.bsky.feed.post.create(
+        { repo: sc.dids.alice },
+        {
+          text: 'immersive embed',
+          createdAt: new Date().toISOString(),
+          embed: {
+            $type: 'app.bsky.embed.video',
+            video: video.blob,
+            alt: 'alt text',
+            aspectRatio: { height: 3, width: 4 },
+            presentation: 'immersive',
+          } satisfies VideoEmbed,
+        },
+        sc.getHeaders(sc.dids.alice),
+      )
+      await network.processAll()
+
+      const immersive = await agent.api.app.bsky.feed.getAuthorFeed(
+        {
+          actor: sc.accounts[alice].handle,
+          filter: 'posts_with_replies',
+          presentation: 'immersive',
+        },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyFeedGetAuthorFeed,
+          ),
+        },
+      )
+      expect(forSnapshot(immersive.data.feed)).toMatchSnapshot()
+    })
+
+    it('fetches immersive presentation for posts_with_media filter', async () => {
+      // @TODO
     })
   })
 })

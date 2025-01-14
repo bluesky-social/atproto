@@ -212,6 +212,7 @@ const skeletonFromFeedGen = async (
     const result = await agent.api.app.bsky.feed.getFeedSkeleton(
       {
         feed: params.feed,
+        presentation: params.presentation,
         // The feedgen is not guaranteed to honor the limit, but we try it.
         limit: params.limit,
         cursor: params.cursor,

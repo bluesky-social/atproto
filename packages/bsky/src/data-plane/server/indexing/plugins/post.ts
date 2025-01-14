@@ -1,7 +1,7 @@
 import { Insertable, Selectable, sql } from 'kysely'
 import { CID } from 'multiformats/cid'
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
-import { jsonStringToLex } from '@atproto/lexicon'
+import { hasProp, isObj, jsonStringToLex } from '@atproto/lexicon'
 import {
   Record as PostRecord,
   ReplyRef,
@@ -12,6 +12,7 @@ import { isMain as isEmbedImage } from '../../../../lexicon/types/app/bsky/embed
 import { isMain as isEmbedExternal } from '../../../../lexicon/types/app/bsky/embed/external'
 import { isMain as isEmbedRecord } from '../../../../lexicon/types/app/bsky/embed/record'
 import { isMain as isEmbedRecordWithMedia } from '../../../../lexicon/types/app/bsky/embed/recordWithMedia'
+import { isMain as isEmbedVideo } from '../../../../lexicon/types/app/bsky/embed/video'
 import {
   isMention,
   isLink,
@@ -41,6 +42,8 @@ type Post = Selectable<DatabaseSchemaType['post']>
 type PostEmbedImage = DatabaseSchemaType['post_embed_image']
 type PostEmbedExternal = DatabaseSchemaType['post_embed_external']
 type PostEmbedRecord = DatabaseSchemaType['post_embed_record']
+type PostEmbedVideo = DatabaseSchemaType['post_embed_video']
+type PostEmbedImmersive = DatabaseSchemaType['post_embed_immersive']
 type PostAncestor = {
   uri: string
   height: number
@@ -55,10 +58,25 @@ type PostDescendent = {
 type IndexedPost = {
   post: Post
   facets?: { type: 'mention' | 'link'; value: string }[]
-  embeds?: (PostEmbedImage[] | PostEmbedExternal | PostEmbedRecord)[]
+  embeds?: (
+    | PostEmbedImage[]
+    | PostEmbedExternal
+    | PostEmbedRecord
+    | PostEmbedVideo
+  )[]
   ancestors?: PostAncestor[]
   descendents?: PostDescendent[]
   threadgate?: GateRecord
+}
+
+function isEmbedImmersive(v: unknown) {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    (v.$type === 'app.bsky.embed.video#main' ||
+      v.$type === 'app.bsky.embed.video') &&
+    v.presentation === 'immersive'
+  )
 }
 
 const lexId = lex.ids.AppBskyFeedPost
@@ -149,7 +167,12 @@ const insertFn = async (
       return []
     })
   // Embed indices
-  const embeds: (PostEmbedImage[] | PostEmbedExternal | PostEmbedRecord)[] = []
+  const embeds: (
+    | PostEmbedImage[]
+    | PostEmbedExternal
+    | PostEmbedRecord
+    | PostEmbedVideo
+  )[] = []
   const postEmbeds = separateEmbeds(obj.embed)
   for (const postEmbed of postEmbeds) {
     if (isEmbedImage(postEmbed)) {
@@ -231,6 +254,22 @@ const insertFn = async (
             .set({ violatesEmbeddingRules: violatesEmbeddingRules })
             .executeTakeFirst()
         }
+      }
+    } else if (isEmbedVideo(postEmbed)) {
+      const { video } = postEmbed
+      const videoEmbed = {
+        postUri: uri.toString(),
+        videoCid: video.ref.toString(),
+        // @NOTE: alt is required for image but not for video on the lexicon.
+        alt: postEmbed.alt ?? null,
+      }
+      embeds.push(videoEmbed)
+
+      await db.insertInto('post_embed_video').values(videoEmbed).execute()
+      if (isEmbedImmersive(postEmbed)) {
+        // @NOTE: could do both inserts in a transaction, but requires
+        // having our `Database` instance here, which is not this `db`.
+        await db.insertInto('post_embed_immersive').values(videoEmbed).execute()
       }
     }
   }

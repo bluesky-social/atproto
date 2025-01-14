@@ -13,6 +13,7 @@ export interface Main {
   /** Alt text description of the video, for accessibility. */
   alt?: string
   aspectRatio?: AppBskyEmbedDefs.AspectRatio
+  presentation?: 'gif' | 'immersive' | (string & {})
   [k: string]: unknown
 }
 

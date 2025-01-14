@@ -11,6 +11,7 @@ import * as AppBskyFeedDefs from './defs'
 
 export interface QueryParams {
   actor: string
+  presentation?: 'immersive' | (string & {})
   limit: number
   cursor?: string
   /** Combinations of post/repost types to include in response. */

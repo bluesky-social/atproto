@@ -46,6 +46,26 @@ proto3.util.setEnumType(FeedType, 'bsky.FeedType', [
 ])
 
 /**
+ * @generated from enum bsky.FeedPresentation
+ */
+export enum FeedPresentation {
+  /**
+   * @generated from enum value: FEED_PRESENTATION_DEFAULT = 0;
+   */
+  DEFAULT = 0,
+
+  /**
+   * @generated from enum value: FEED_PRESENTATION_IMMERSIVE = 1;
+   */
+  IMMERSIVE = 1,
+}
+// Retrieve enum metadata with: proto3.getEnumType(FeedPresentation)
+proto3.util.setEnumType(FeedPresentation, 'bsky.FeedPresentation', [
+  { no: 0, name: 'FEED_PRESENTATION_DEFAULT' },
+  { no: 1, name: 'FEED_PRESENTATION_IMMERSIVE' },
+])
+
+/**
  * @generated from message bsky.Record
  */
 export class Record extends Message<Record> {
@@ -8443,6 +8463,11 @@ export class GetAuthorFeedRequest extends Message<GetAuthorFeedRequest> {
    */
   feedType = FeedType.UNSPECIFIED
 
+  /**
+   * @generated from field: bsky.FeedPresentation feed_presentation = 5;
+   */
+  feedPresentation = FeedPresentation.DEFAULT
+
   constructor(data?: PartialMessage<GetAuthorFeedRequest>) {
     super()
     proto3.util.initPartial(data, this)
@@ -8455,6 +8480,12 @@ export class GetAuthorFeedRequest extends Message<GetAuthorFeedRequest> {
     { no: 2, name: 'limit', kind: 'scalar', T: 5 /* ScalarType.INT32 */ },
     { no: 3, name: 'cursor', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
     { no: 4, name: 'feed_type', kind: 'enum', T: proto3.getEnumType(FeedType) },
+    {
+      no: 5,
+      name: 'feed_presentation',
+      kind: 'enum',
+      T: proto3.getEnumType(FeedPresentation),
+    },
   ])
 
   static fromBinary(
@@ -8707,6 +8738,11 @@ export class GetTimelineRequest extends Message<GetTimelineRequest> {
    */
   excludeQuotes = false
 
+  /**
+   * @generated from field: bsky.FeedPresentation feed_presentation = 7;
+   */
+  feedPresentation = FeedPresentation.DEFAULT
+
   constructor(data?: PartialMessage<GetTimelineRequest>) {
     super()
     proto3.util.initPartial(data, this)
@@ -8735,6 +8771,12 @@ export class GetTimelineRequest extends Message<GetTimelineRequest> {
       name: 'exclude_quotes',
       kind: 'scalar',
       T: 8 /* ScalarType.BOOL */,
+    },
+    {
+      no: 7,
+      name: 'feed_presentation',
+      kind: 'enum',
+      T: proto3.getEnumType(FeedPresentation),
     },
   ])
 

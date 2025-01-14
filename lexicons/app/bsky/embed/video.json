@@ -26,6 +26,10 @@
         "aspectRatio": {
           "type": "ref",
           "ref": "app.bsky.embed.defs#aspectRatio"
+        },
+        "presentation": {
+          "type": "string",
+          "knownValues": ["gif", "immersive"]
         }
       }
     },

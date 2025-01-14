@@ -2,11 +2,25 @@ import { ServiceImpl } from '@connectrpc/connect'
 import { Service } from '../../../proto/bsky_connect'
 import { Database } from '../db'
 import { TimeCidKeyset, paginate } from '../db/pagination'
-import { FeedType } from '../../../proto/bsky_pb'
+import { FeedPresentation, FeedType } from '../../../proto/bsky_pb'
+import { AnyQb } from '../db/util'
+
+const onlyImmersive = <QB extends AnyQb>(qb: QB): QB => {
+  return (
+    qb
+      // only immersive posts
+      .whereExists((qb) =>
+        qb
+          .selectFrom('post_embed_immersive')
+          .select('post_embed_immersive.postUri')
+          .whereRef('post_embed_immersive.postUri', '=', 'feed_item.postUri'),
+      ) as QB
+  )
+}
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getAuthorFeed(req) {
-    const { actorDid, limit, cursor, feedType } = req
+    const { actorDid, limit, cursor, feedType, feedPresentation } = req
     const { ref } = db.db.dynamic
 
     // defaults to posts, reposts, and replies
@@ -21,11 +35,20 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
         // only your own posts
         .where('type', '=', 'post')
         // only posts with media
-        .whereExists((qb) =>
+        .where((qb) =>
           qb
-            .selectFrom('post_embed_image')
-            .select('post_embed_image.postUri')
-            .whereRef('post_embed_image.postUri', '=', 'feed_item.postUri'),
+            .whereExists((qb) =>
+              qb
+                .selectFrom('post_embed_image')
+                .select('post_embed_image.postUri')
+                .whereRef('post_embed_image.postUri', '=', 'feed_item.postUri'),
+            )
+            .orWhereExists((qb) =>
+              qb
+                .selectFrom('post_embed_video')
+                .select('post_embed_video.postUri')
+                .whereRef('post_embed_video.postUri', '=', 'feed_item.postUri'),
+            ),
         )
     } else if (feedType === FeedType.POSTS_NO_REPLIES) {
       builder = builder.where((qb) =>
@@ -38,6 +61,10 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
           .orWhere('post.replyParent', 'is', null)
           .orWhere('post.replyRoot', 'like', `at://${actorDid}/%`),
       )
+    }
+
+    if (feedPresentation === FeedPresentation.IMMERSIVE) {
+      builder = onlyImmersive(builder)
     }
 
     const keyset = new TimeCidKeyset(
@@ -60,9 +87,9 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   },
 
   async getTimeline(req) {
-    const { actorDid, limit, cursor } = req
-    const { ref } = db.db.dynamic
+    const { actorDid, limit, cursor, feedPresentation } = req
 
+    const { ref } = db.db.dynamic
     const keyset = new TimeCidKeyset(
       ref('feed_item.sortAt'),
       ref('feed_item.cid'),
@@ -73,6 +100,10 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .innerJoin('follow', 'follow.subjectDid', 'feed_item.originatorDid')
       .where('follow.creator', '=', actorDid)
       .selectAll('feed_item')
+
+    if (feedPresentation === FeedPresentation.IMMERSIVE) {
+      followQb = onlyImmersive(followQb)
+    }
 
     followQb = paginate(followQb, {
       limit,
@@ -85,6 +116,10 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .selectFrom('feed_item')
       .where('feed_item.originatorDid', '=', actorDid)
       .selectAll('feed_item')
+
+    if (feedPresentation === FeedPresentation.IMMERSIVE) {
+      selfQb = onlyImmersive(selfQb)
+    }
 
     selfQb = paginate(selfQb, {
       limit: Math.min(limit, 10),

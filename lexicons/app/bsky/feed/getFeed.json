@@ -10,6 +10,7 @@
         "required": ["feed"],
         "properties": {
           "feed": { "type": "string", "format": "at-uri" },
+          "presentation": { "type": "string", "knownValues": ["immersive"] },
           "limit": {
             "type": "integer",
             "minimum": 1,

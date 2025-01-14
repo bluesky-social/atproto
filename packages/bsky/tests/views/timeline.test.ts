@@ -10,12 +10,14 @@ import { forSnapshot, getOriginator, paginateAll } from '../_util'
 import { FeedViewPost } from '../../src/lexicon/types/app/bsky/feed/defs'
 import { Database } from '../../src'
 import { ids } from '../../src/lexicon/lexicons'
+import { VideoEmbed } from '../../src/views/types'
 
 const REVERSE_CHRON = 'reverse-chronological'
 
 describe('timeline views', () => {
   let network: TestNetwork
   let agent: AtpAgent
+  let pdsAgent: AtpAgent
   let sc: SeedClient
 
   // account dids, for convenience
@@ -29,6 +31,7 @@ describe('timeline views', () => {
       dbPostgresSchema: 'bsky_views_home_feed',
     })
     agent = network.bsky.getClient()
+    pdsAgent = network.pds.getClient()
     sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()
@@ -301,6 +304,83 @@ describe('timeline views', () => {
       },
     )
     expect(timeline).toEqual({ feed: [] })
+  })
+
+  it('returns empty feed if no items match presentation', async () => {
+    const { data } = await agent.api.app.bsky.feed.getTimeline(
+      { presentation: 'immersive' },
+      {
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyFeedGetTimeline,
+        ),
+      },
+    )
+
+    expect(data).toEqual({ feed: [] })
+  })
+
+  it('conforms to presentation param for follows and self', async () => {
+    const { data: followVideo } =
+      await pdsAgent.api.com.atproto.repo.uploadBlob(
+        Buffer.from('notarealvideo'),
+        {
+          headers: sc.getHeaders(sc.dids.bob),
+          encoding: 'image/mp4',
+        },
+      )
+    await pdsAgent.api.app.bsky.feed.post.create(
+      { repo: sc.dids.bob },
+      {
+        text: 'immersive from bob',
+        createdAt: new Date().toISOString(),
+        embed: {
+          $type: 'app.bsky.embed.video',
+          video: followVideo.blob,
+          alt: 'alt text',
+          aspectRatio: { height: 3, width: 4 },
+          presentation: 'immersive',
+        } satisfies VideoEmbed,
+      },
+      sc.getHeaders(sc.dids.bob),
+    )
+
+    const { data: selfVideo } = await pdsAgent.api.com.atproto.repo.uploadBlob(
+      Buffer.from('notarealvideo'),
+      {
+        headers: sc.getHeaders(sc.dids.alice),
+        encoding: 'image/mp4',
+      },
+    )
+    await pdsAgent.api.app.bsky.feed.post.create(
+      { repo: sc.dids.alice },
+      {
+        text: 'immersive from alice',
+        createdAt: new Date().toISOString(),
+        embed: {
+          $type: 'app.bsky.embed.video',
+          video: selfVideo.blob,
+          alt: 'alt text',
+          aspectRatio: { height: 3, width: 4 },
+          presentation: 'immersive',
+        } satisfies VideoEmbed,
+      },
+      sc.getHeaders(sc.dids.alice),
+    )
+    await network.processAll()
+
+    const { data } = await agent.api.app.bsky.feed.getTimeline(
+      { presentation: 'immersive' },
+      {
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyFeedGetTimeline,
+        ),
+      },
+    )
+
+    expect(data.feed).toHaveLength(2)
+    expect(forSnapshot(data.feed)).toMatchSnapshot()
   })
 })
 

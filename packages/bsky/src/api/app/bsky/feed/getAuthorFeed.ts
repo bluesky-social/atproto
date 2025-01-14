@@ -3,7 +3,11 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getAuthorFeed'
 import AppContext from '../../../../context'
-import { clearlyBadCursor, resHeaders } from '../../../util'
+import {
+  clearlyBadCursor,
+  presentationToFeedPresentation,
+  resHeaders,
+} from '../../../util'
 import { createPipeline } from '../../../../pipeline'
 import {
   HydrateCtx,
@@ -91,9 +95,10 @@ export const skeleton = async (inputs: {
 
   const res = await ctx.dataplane.getAuthorFeed({
     actorDid: did,
+    feedType: FILTER_TO_FEED_TYPE[params.filter],
+    feedPresentation: presentationToFeedPresentation(params.presentation),
     limit: params.limit,
     cursor: params.cursor,
-    feedType: FILTER_TO_FEED_TYPE[params.filter],
   })
 
   let items: FeedItem[] = res.items.map((item) => ({
