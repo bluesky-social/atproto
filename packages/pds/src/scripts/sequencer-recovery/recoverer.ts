@@ -161,6 +161,7 @@ export class Recoverer {
       since: evt.since,
       prev: evt.prev,
       newBlocks: blocks,
+      relevantBlocks: new BlockMap(),
       removedCids: new CidSet(),
     }
     await this.ctx.actorStore.transact(did, (actorTxn) =>
