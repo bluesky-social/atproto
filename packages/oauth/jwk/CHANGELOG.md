@@ -1,5 +1,17 @@
 # @atproto/jwk
 
+## 0.1.2
+
+### Patch Changes
+
+- [#2879](https://github.com/bluesky-social/atproto/pull/2879) [`2889c7699`](https://github.com/bluesky-social/atproto/commit/2889c76995ce3c569f595ac3c678218e9ce659f0) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Mark jwk key fields as readonly
+
+- [#2879](https://github.com/bluesky-social/atproto/pull/2879) [`2889c7699`](https://github.com/bluesky-social/atproto/commit/2889c76995ce3c569f595ac3c678218e9ce659f0) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove unsafe type casting during JWT verification
+
+- [#2879](https://github.com/bluesky-social/atproto/pull/2879) [`2889c7699`](https://github.com/bluesky-social/atproto/commit/2889c76995ce3c569f595ac3c678218e9ce659f0) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow (passthrough) unknown properties in JWT payload & headers
+
+- [#2879](https://github.com/bluesky-social/atproto/pull/2879) [`2889c7699`](https://github.com/bluesky-social/atproto/commit/2889c76995ce3c569f595ac3c678218e9ce659f0) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Expose ValidationError to allow for proper error handling
+
 ## 0.1.1
 
 ### Patch Changes

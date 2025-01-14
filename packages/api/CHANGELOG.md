@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.13.27
+
+### Patch Changes
+
+- [#3364](https://github.com/bluesky-social/atproto/pull/3364) [`e277158f7`](https://github.com/bluesky-social/atproto/commit/e277158f70a831b04fde3ec84b3c1eaa6ce82e9d) Thanks [@iwsmith](https://github.com/iwsmith)! - add recId to getSuggestions
+
 ## 0.13.26
 
 ### Patch Changes
