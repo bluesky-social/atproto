@@ -52,7 +52,7 @@ export function buildUrl({
     }
   }
 
-  if (cursor) {
+  if (typeof cursor === 'number') {
     url.searchParams.set('cursor', cursor.toString())
   }
 
