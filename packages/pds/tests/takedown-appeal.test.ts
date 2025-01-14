@@ -35,6 +35,7 @@ describe('appeal account takedown', () => {
       email: 'jeff@test.com',
       password: 'password',
     })
+    await network.processAll()
 
     // Emit a takedown event
     await network.ozone.getModClient().performTakedown({
