@@ -1,5 +1,82 @@
 # @atproto/api
 
+## 0.13.27
+
+### Patch Changes
+
+- [#3364](https://github.com/bluesky-social/atproto/pull/3364) [`e277158f7`](https://github.com/bluesky-social/atproto/commit/e277158f70a831b04fde3ec84b3c1eaa6ce82e9d) Thanks [@iwsmith](https://github.com/iwsmith)! - add recId to getSuggestions
+
+## 0.13.26
+
+### Patch Changes
+
+- Updated dependencies [[`72eba67af`](https://github.com/bluesky-social/atproto/commit/72eba67af1af8320b5400bcb9319d5c3c8407d99), [`72eba67af`](https://github.com/bluesky-social/atproto/commit/72eba67af1af8320b5400bcb9319d5c3c8407d99)]:
+  - @atproto/common-web@0.3.2
+  - @atproto/lexicon@0.4.5
+  - @atproto/xrpc@0.6.6
+
+## 0.13.25
+
+### Patch Changes
+
+- [#3271](https://github.com/bluesky-social/atproto/pull/3271) [`53621f8e1`](https://github.com/bluesky-social/atproto/commit/53621f8e100a3aa3c1caff10a08d3f4ea919875a) Thanks [@foysalit](https://github.com/foysalit)! - Allow setting policy names with takedown actions and when querying events
+
+## 0.13.24
+
+### Patch Changes
+
+- [#3294](https://github.com/bluesky-social/atproto/pull/3294) [`d90d999de`](https://github.com/bluesky-social/atproto/commit/d90d999defda01a9b04dbce129e254990062c283) Thanks [@foysalit](https://github.com/foysalit)! - Limit tags filter to 25 max and remove 25 char limit for tag item
+
+## 0.13.23
+
+### Patch Changes
+
+- [#3251](https://github.com/bluesky-social/atproto/pull/3251) [`6d308b857`](https://github.com/bluesky-social/atproto/commit/6d308b857ba2a514ee3c75ebdef7225e298ed7d7) Thanks [@foysalit](https://github.com/foysalit)! - Allow createSession to request takendown account scope
+
+- [#3280](https://github.com/bluesky-social/atproto/pull/3280) [`9ea2cce9a`](https://github.com/bluesky-social/atproto/commit/9ea2cce9a4c0a08994a8cb5abc81dc4bc2221d0c) Thanks [@foysalit](https://github.com/foysalit)! - Apply ozone queue splitting at the database query level
+
+## 0.13.22
+
+### Patch Changes
+
+- [#3270](https://github.com/bluesky-social/atproto/pull/3270) [`f22383cee`](https://github.com/bluesky-social/atproto/commit/f22383cee8feb8b9f761c801ab6e07ad8dc019ed) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add support for label def aliases, deprecation notices. This provides support for the deprecated `gore` label until a full cleanup effort can be completed.
+
+## 0.13.21
+
+### Patch Changes
+
+- [#3250](https://github.com/bluesky-social/atproto/pull/3250) [`dced566de`](https://github.com/bluesky-social/atproto/commit/dced566de5079ef4208801db476a7e7416f5e5aa) Thanks [@haileyok](https://github.com/haileyok)! - add trending topics
+
+## 0.13.20
+
+### Patch Changes
+
+- [#3222](https://github.com/bluesky-social/atproto/pull/3222) [`207728d2b`](https://github.com/bluesky-social/atproto/commit/207728d2b3b819af297ecb90e6373eb7721cbe34) Thanks [@gaearon](https://github.com/gaearon)! - Add optional reasons param to listNotifications
+
+- Updated dependencies [[`9fd65ba0f`](https://github.com/bluesky-social/atproto/commit/9fd65ba0fa4caca59fd0e6156145e4c2618e3a95)]:
+  - @atproto/lexicon@0.4.4
+  - @atproto/xrpc@0.6.5
+
+## 0.13.19
+
+### Patch Changes
+
+- [#3171](https://github.com/bluesky-social/atproto/pull/3171) [`ed2236220`](https://github.com/bluesky-social/atproto/commit/ed2236220900ab9a6132c525289cfdd959733a42) Thanks [@foysalit](https://github.com/foysalit)! - Allow moderators to optionally acknowledge all open subjects of an account when acknowledging account level reports
+
+## 0.13.18
+
+### Patch Changes
+
+- [#3082](https://github.com/bluesky-social/atproto/pull/3082) [`a3ce23c4c`](https://github.com/bluesky-social/atproto/commit/a3ce23c4ccf4f40998b9d1f5731e5c905390aedc) Thanks [@gaearon](https://github.com/gaearon)! - Add hotness as a thread sorting option
+
+## 0.13.17
+
+### Patch Changes
+
+- [#2978](https://github.com/bluesky-social/atproto/pull/2978) [`a4b528e5f`](https://github.com/bluesky-social/atproto/commit/a4b528e5f51c8bfca56b293b0059b88d138ec421) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Add searchStarterPacks and searchStarterPacksSkeleton
+
+- [#3056](https://github.com/bluesky-social/atproto/pull/3056) [`2e7aa211d`](https://github.com/bluesky-social/atproto/commit/2e7aa211d2cbc629899c7f87f1713b13b932750b) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Add com.atproto.temp.addReservedHandle lexicon
+
 ## 0.13.16
 
 ### Patch Changes

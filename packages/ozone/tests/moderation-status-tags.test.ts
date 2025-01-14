@@ -71,5 +71,42 @@ describe('moderation-status-tags', () => {
         'follow-churn',
       )
     })
+
+    it('allows filtering by tags', async () => {
+      await modClient.emitEvent({
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: sc.dids.alice,
+        },
+        event: {
+          $type: 'tools.ozone.moderation.defs#modEventTag',
+          add: ['report:spam', 'lang:ja', 'lang:en'],
+          remove: [],
+        },
+      })
+      const [englishAndJapaneseQueue, englishOrJapaneseQueue] =
+        await Promise.all([
+          modClient.queryStatuses({
+            tags: ['lang:ja&&lang:en'],
+          }),
+          modClient.queryStatuses({
+            tags: ['report:ja', 'lang:en'],
+          }),
+        ])
+
+      // Verify that the queue only contains 1 item with both en and ja tags which is alice's account
+      expect(englishAndJapaneseQueue.subjectStatuses.length).toEqual(1)
+      expect(englishAndJapaneseQueue.subjectStatuses[0].subject.did).toEqual(
+        sc.dids.alice,
+      )
+
+      // Verify that when querying for either en or ja tags, both alice and bob are returned
+      expect(englishOrJapaneseQueue.subjectStatuses.length).toEqual(2)
+      const englishOrJapaneseDids = englishOrJapaneseQueue.subjectStatuses.map(
+        ({ subject }) => subject.did,
+      )
+      expect(englishOrJapaneseDids).toContain(sc.dids.alice)
+      expect(englishOrJapaneseDids).toContain(sc.dids.bob)
+    })
   })
 })

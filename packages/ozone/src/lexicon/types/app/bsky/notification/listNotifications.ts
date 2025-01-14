@@ -11,6 +11,8 @@ import * as AppBskyActorDefs from '../actor/defs'
 import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
 
 export interface QueryParams {
+  /** Notification reasons to include in response. */
+  reasons?: string[]
   limit: number
   priority?: boolean
   cursor?: string

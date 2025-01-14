@@ -127,12 +127,24 @@ export class ModerationViews {
     }
 
     if (
-      event.action === 'tools.ozone.moderation.defs#modEventTakedown' &&
+      (event.action === 'tools.ozone.moderation.defs#modEventTakedown' ||
+        event.action === 'tools.ozone.moderation.defs#modEventAcknowledge') &&
       event.meta?.acknowledgeAccountSubjects
     ) {
       eventView.event = {
         ...eventView.event,
-        acknowledgeAccountSubjects: event.meta?.acknowledgeAccountSubjects,
+        acknowledgeAccountSubjects: event.meta.acknowledgeAccountSubjects,
+      }
+    }
+
+    if (
+      event.action === 'tools.ozone.moderation.defs#modEventTakedown' &&
+      typeof event.meta?.policies === 'string' &&
+      event.meta.policies.length > 0
+    ) {
+      eventView.event = {
+        ...eventView.event,
+        policies: event.meta.policies.split(','),
       }
     }
 

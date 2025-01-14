@@ -28,12 +28,8 @@ export const verifySig = async (
 ): Promise<boolean> => {
   const allowMalleable = opts?.allowMalleableSig ?? false
   const msgHash = await sha256(data)
-  // parse as compact sig to prevent signature malleability
-  // library supports sigs in 2 different formats: https://github.com/paulmillr/noble-curves/issues/99
-  if (!allowMalleable && !isCompactFormat(sig)) {
-    return false
-  }
   return p256.verify(sig, msgHash, publicKey, {
+    format: allowMalleable ? undefined : 'compact', // prevent DER-encoded signatures
     lowS: !allowMalleable,
   })
 }

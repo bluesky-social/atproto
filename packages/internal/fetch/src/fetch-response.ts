@@ -14,7 +14,24 @@ import {
   logCancellationError,
 } from './util.js'
 
-export type ResponseTranformer = Transformer<Response>
+/**
+ * media-type     = type "/" subtype *( ";" parameter )
+ * type           = token
+ * subtype        = token
+ * token          = 1*<any CHAR except CTLs or separators>
+ * separators     = "(" | ")" | "<" | ">" | "@"
+ *                | "," | ";" | ":" | "\" | <">
+ *                | "/" | "[" | "]" | "?" | "="
+ *                | "{" | "}" | SP | HT
+ * CTL            = <any US-ASCII control character (octets 0 - 31) and DEL (127)>
+ * SP             = <US-ASCII SP, space (32)>
+ * HT             = <US-ASCII HT, horizontal-tab (9)>
+ * @note The type, subtype, and parameter attribute names are case-insensitive.
+ * @see {@link https://datatracker.ietf.org/doc/html/rfc2616#autoid-23}
+ */
+const JSON_MIME = /^application\/(?:[^()<>@,;:/[\]\\?={} \t]+\+)?json$/i
+
+export type ResponseTransformer = Transformer<Response>
 export type ResponseMessageGetter = Transformer<Response, string | undefined>
 
 export class FetchResponseError extends FetchError {
@@ -51,7 +68,7 @@ const extractResponseMessage: ResponseMessageGetter = async (response) => {
   try {
     if (mimeType === 'text/plain') {
       return await response.text()
-    } else if (/^application\/(?:[^+]+\+)?json$/i.test(mimeType)) {
+    } else if (JSON_MIME.test(mimeType)) {
       const json: unknown = await response.json()
 
       if (typeof json === 'string') return json
@@ -155,7 +172,7 @@ export function cancelBodyOnError<T>(
 
 export function fetchOkProcessor(
   customMessage?: string | ResponseMessageGetter,
-): ResponseTranformer {
+): ResponseTransformer {
   return cancelBodyOnError((response) => {
     return fetchOkTransformer(response, customMessage)
   })
@@ -169,7 +186,7 @@ export async function fetchOkTransformer(
   throw await FetchResponseError.from(response, customMessage)
 }
 
-export function fetchMaxSizeProcessor(maxBytes: number): ResponseTranformer {
+export function fetchMaxSizeProcessor(maxBytes: number): ResponseTransformer {
   if (maxBytes === Infinity) return (response) => response
   if (!Number.isFinite(maxBytes) || maxBytes < 0) {
     throw new TypeError('maxBytes must be a 0, Infinity or a positive number')
@@ -200,7 +217,7 @@ export type MimeTypeCheck = string | RegExp | MimeTypeCheckFn
 export function fetchTypeProcessor(
   expectedMime: MimeTypeCheck,
   contentTypeRequired = true,
-): ResponseTranformer {
+): ResponseTransformer {
   const isExpected: MimeTypeCheckFn =
     typeof expectedMime === 'string'
       ? (mimeType) => mimeType === expectedMime
@@ -220,7 +237,7 @@ export async function fetchResponseTypeChecker(
 ): Promise<Response> {
   const mimeType = extractMime(response)
   if (mimeType) {
-    if (!isExpectedMime(mimeType)) {
+    if (!isExpectedMime(mimeType.toLowerCase())) {
       throw await FetchResponseError.from(
         response,
         `Unexpected response Content-Type (${mimeType})`,
@@ -243,7 +260,7 @@ export type ParsedJsonResponse<T = Json> = {
   json: T
 }
 
-export async function fetchResponseJsonTranformer<T = Json>(
+export async function fetchResponseJsonTransformer<T = Json>(
   response: Response,
 ): Promise<ParsedJsonResponse<T>> {
   try {
@@ -260,12 +277,12 @@ export async function fetchResponseJsonTranformer<T = Json>(
 }
 
 export function fetchJsonProcessor<T = Json>(
-  expectedMime: MimeTypeCheck = /^application\/(?:[^+]+\+)?json$/,
+  expectedMime: MimeTypeCheck = JSON_MIME,
   contentTypeRequired = true,
 ): Transformer<Response, ParsedJsonResponse<T>> {
   return pipe(
     fetchTypeProcessor(expectedMime, contentTypeRequired),
-    cancelBodyOnError(fetchResponseJsonTranformer<T>),
+    cancelBodyOnError(fetchResponseJsonTransformer<T>),
   )
 }
 

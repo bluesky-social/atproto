@@ -1,5 +1,5 @@
 import net from 'node:net'
-import { Insertable, sql } from 'kysely'
+import { Insertable, SelectQueryBuilder, sql } from 'kysely'
 import { CID } from 'multiformats/cid'
 import { AtUri, INVALID_HANDLE } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
@@ -23,6 +23,7 @@ import {
   isRecordEvent,
   REVIEWESCALATED,
   REVIEWOPEN,
+  isModEventAcknowledge,
 } from '../lexicon/types/tools/ozone/moderation/defs'
 import { RepoRef, RepoBlobRef } from '../lexicon/types/com/atproto/admin/defs'
 import {
@@ -151,6 +152,7 @@ export class ModerationService {
     reportTypes?: string[]
     collections: string[]
     subjectType?: string
+    policies?: string[]
   }): Promise<{ cursor?: string; events: ModerationEventRow[] }> {
     const {
       subject,
@@ -171,6 +173,7 @@ export class ModerationService {
       reportTypes,
       collections,
       subjectType,
+      policies,
     } = opts
     const { ref } = this.db.db.dynamic
     let builder = this.db.db.selectFrom('moderation_event').selectAll()
@@ -222,8 +225,20 @@ export class ModerationService {
     if (createdBefore) {
       builder = builder.where('createdAt', '<=', createdBefore)
     }
+
     if (comment) {
-      builder = builder.where('comment', 'ilike', `%${comment}%`)
+      // the input may end in || in which case, there may be item in the array which is just '' and we want to ignore those
+      const keywords = comment.split('||').filter((keyword) => !!keyword.trim())
+      if (keywords.length > 1) {
+        builder = builder.where((qb) => {
+          keywords.forEach((keyword) => {
+            qb = qb.orWhere('comment', 'ilike', `%${keyword}%`)
+          })
+          return qb
+        })
+      } else if (keywords.length === 1) {
+        builder = builder.where('comment', 'ilike', `%${keywords[0]}%`)
+      }
     }
     if (hasComment) {
       builder = builder.where('comment', 'is not', null)
@@ -250,6 +265,14 @@ export class ModerationService {
     }
     if (reportTypes?.length) {
       builder = builder.where(sql`meta->>'reportType'`, 'in', reportTypes)
+    }
+    if (policies?.length) {
+      builder = builder.where((qb) => {
+        policies.forEach((policy) => {
+          qb = qb.orWhere(sql`meta->>'policies'`, 'ilike', `%${policy}%`)
+        })
+        return qb
+      })
     }
 
     const keyset = new TimeIdKeyset(
@@ -302,7 +325,11 @@ export class ModerationService {
     return await builder.execute()
   }
 
-  async resolveSubjectsForAccount(did: string, createdBy: string) {
+  async resolveSubjectsForAccount(
+    did: string,
+    createdBy: string,
+    accountEvent: ModerationEventRow,
+  ) {
     const subjectsToBeResolved = await this.db.db
       .selectFrom('moderation_subject_status')
       .where('did', '=', did)
@@ -315,6 +342,10 @@ export class ModerationService {
       return
     }
 
+    let accountEventInfo = `Account Event ID: ${accountEvent.id}`
+    if (accountEvent.comment) {
+      accountEventInfo += ` | Account Event Comment: ${accountEvent.comment}`
+    }
     // Process subjects in chunks of 100 since each of these will trigger multiple db queries
     for (const subjects of chunkArray(subjectsToBeResolved, 100)) {
       await Promise.all(
@@ -323,13 +354,13 @@ export class ModerationService {
             createdBy,
             subject: subjectFromStatusRow(subject),
           }
+
           // For consistency's sake, when acknowledging appealed subjects, we should first resolve the appeal
           if (subject.appealed) {
             await this.logEvent({
               event: {
                 $type: 'tools.ozone.moderation.defs#modEventResolveAppeal',
-                comment:
-                  '[AUTO_RESOLVE_FOR_TAKENDOWN_ACCOUNT]: Automatically resolving all appealed content for a takendown account',
+                comment: `[AUTO_RESOLVE_ON_ACCOUNT_ACTION]: Automatically resolving all appealed content due to account level action | ${accountEventInfo}`,
               },
               ...eventData,
             })
@@ -338,8 +369,7 @@ export class ModerationService {
           await this.logEvent({
             event: {
               $type: 'tools.ozone.moderation.defs#modEventAcknowledge',
-              comment:
-                '[AUTO_RESOLVE_FOR_TAKENDOWN_ACCOUNT]: Automatically resolving all reported content for a takendown account',
+              comment: `[AUTO_RESOLVE_ON_ACCOUNT_ACTION]: Automatically resolving all reported content due to account level action | ${accountEventInfo}`,
             },
             ...eventData,
           })
@@ -408,8 +438,15 @@ export class ModerationService {
       if (event.cid) meta.cid = event.cid
     }
 
-    if (isModEventTakedown(event) && event.acknowledgeAccountSubjects) {
+    if (
+      (isModEventTakedown(event) || isModEventAcknowledge(event)) &&
+      event.acknowledgeAccountSubjects
+    ) {
       meta.acknowledgeAccountSubjects = true
+    }
+
+    if (isModEventTakedown(event) && event.policies?.length) {
+      meta.policies = event.policies.join(',')
     }
 
     // Keep trace of reports that came in while the reporter was in muted stated
@@ -768,7 +805,49 @@ export class ModerationService {
     return result
   }
 
+  applyTagFilter = (
+    builder: SelectQueryBuilder<any, any, any>,
+    tags: string[],
+  ) => {
+    const { ref } = this.db.db.dynamic
+    // Build an array of conditions
+    const conditions = tags
+      .map((tag) => {
+        if (tag.includes('&&')) {
+          // Split by '&&' for AND logic
+          const subTags = tag
+            .split('&&')
+            // Make sure spaces on either sides of '&&' are trimmed
+            .map((subTag) => subTag.trim())
+            // Remove empty strings after trimming is applied
+            .filter(Boolean)
+
+          if (!subTags.length) return null
+
+          return sql`(${sql.join(
+            subTags.map(
+              (subTag) =>
+                sql`${ref('moderation_subject_status.tags')} ? ${subTag}`,
+            ),
+            sql` AND `,
+          )})`
+        } else {
+          // Single tag condition
+          return sql`${ref('moderation_subject_status.tags')} ? ${tag}`
+        }
+      })
+      .filter(Boolean)
+
+    if (!conditions.length) return builder
+
+    // Combine all conditions with OR
+    return builder.where(sql`(${sql.join(conditions, sql` OR `)})`)
+  }
+
   async getSubjectStatuses({
+    queueCount,
+    queueIndex,
+    queueSeed = '',
     includeAllUserRecords,
     cursor,
     limit = 50,
@@ -796,6 +875,9 @@ export class ModerationService {
     collections,
     subjectType,
   }: {
+    queueCount?: number
+    queueIndex?: number
+    queueSeed?: string
     includeAllUserRecords?: boolean
     cursor?: string
     limit?: number
@@ -845,6 +927,24 @@ export class ModerationService {
       builder = builder.where('recordPath', '=', '')
     } else if (subjectType === 'record') {
       builder = builder.where('recordPath', '!=', '')
+    }
+
+    // Only fetch items that belongs to the specified queue when specified
+    if (
+      !subject &&
+      queueCount &&
+      queueCount > 0 &&
+      queueIndex !== undefined &&
+      queueIndex >= 0 &&
+      queueIndex < queueCount
+    ) {
+      builder = builder.where(
+        queueSeed
+          ? sql`ABS(HASHTEXT(${queueSeed} || did)) % ${queueCount}`
+          : sql`ABS(HASHTEXT(did)) % ${queueCount}`,
+        '=',
+        queueIndex,
+      )
     }
 
     // If subjectType is set to 'account' let that take priority and ignore collections filter
@@ -935,11 +1035,7 @@ export class ModerationService {
     }
 
     if (tags.length) {
-      builder = builder.where(
-        sql`${ref('moderation_subject_status.tags')} ?| array[${sql.join(
-          tags,
-        )}]::TEXT[]`,
-      )
+      builder = this.applyTagFilter(builder, tags)
     }
 
     if (excludeTags.length) {

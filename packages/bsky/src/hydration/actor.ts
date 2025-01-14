@@ -5,7 +5,6 @@ import {
   HydrationMap,
   RecordInfo,
   parseRecord,
-  parseRecordBytes,
   parseString,
   safeTakedownRef,
 } from './util'
@@ -116,18 +115,19 @@ export class ActorHydrator {
       ) {
         return acc.set(did, null)
       }
-      const profile =
-        includeTakedowns || !actor.profile?.takenDown
-          ? actor.profile
-          : undefined
+
+      const profile = actor.profile
+        ? parseRecord<ProfileRecord>(actor.profile, includeTakedowns)
+        : undefined
+
       return acc.set(did, {
         did,
         handle: parseString(actor.handle),
-        profile: parseRecordBytes<ProfileRecord>(profile?.record),
+        profile: profile?.record,
         profileCid: profile?.cid,
-        profileTakedownRef: safeTakedownRef(profile),
-        sortedAt: profile?.sortedAt?.toDate(),
-        indexedAt: profile?.indexedAt?.toDate(),
+        profileTakedownRef: profile?.takedownRef,
+        sortedAt: profile?.sortedAt,
+        indexedAt: profile?.indexedAt,
         takedownRef: safeTakedownRef(actor),
         isLabeler: actor.labeler ?? false,
         allowIncomingChatsFrom: actor.allowIncomingChatsFrom || undefined,
@@ -189,11 +189,17 @@ export class ActorHydrator {
     viewer: string | null,
   ): Promise<KnownFollowers> {
     if (!viewer) return new HydrationMap<ProfileViewerState['knownFollowers']>()
-    const { results: knownFollowersResults } =
-      await this.dataplane.getFollowsFollowing({
-        actorDid: viewer,
-        targetDids: dids,
-      })
+    const { results: knownFollowersResults } = await this.dataplane
+      .getFollowsFollowing(
+        {
+          actorDid: viewer,
+          targetDids: dids,
+        },
+        {
+          signal: AbortSignal.timeout(100),
+        },
+      )
+      .catch(() => ({ results: [] }))
     return dids.reduce((acc, did, i) => {
       const result = knownFollowersResults[i]?.dids
       return acc.set(
