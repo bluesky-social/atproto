@@ -71,6 +71,7 @@ const skeleton = async (input: {
     return {
       dids: res.data.actors.map((a) => a.did),
       cursor: res.data.cursor,
+      recId: res.data.recId,
       resHeaders: res.headers,
     }
   } else {
@@ -129,6 +130,7 @@ const presentation = (input: {
   return {
     actors,
     cursor: skeleton.cursor,
+    recId: skeleton.recId,
     resHeaders: skeleton.resHeaders,
   }
 }
@@ -148,5 +150,6 @@ type Params = QueryParams & {
 type Skeleton = {
   dids: string[]
   cursor?: string
+  recId?: number
   resHeaders?: Record<string, string>
 }
