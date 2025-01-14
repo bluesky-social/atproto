@@ -19,6 +19,8 @@ export type InputSchema = undefined
 export interface OutputSchema {
   cursor?: string
   actors: AppBskyActorDefs.ProfileView[]
+  /** Snowflake for this recommendation, use when submitting recommendation events. */
+  recId?: number
   [k: string]: unknown
 }
 

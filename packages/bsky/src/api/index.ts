@@ -30,6 +30,7 @@ import getMutes from './app/bsky/graph/getMutes'
 import getRelationships from './app/bsky/graph/getRelationships'
 import getStarterPack from './app/bsky/graph/getStarterPack'
 import getStarterPacks from './app/bsky/graph/getStarterPacks'
+import searchStarterPacks from './app/bsky/graph/searchStarterPacks'
 import muteActor from './app/bsky/graph/muteActor'
 import unmuteActor from './app/bsky/graph/unmuteActor'
 import muteActorList from './app/bsky/graph/muteActorList'
@@ -37,6 +38,7 @@ import unmuteActorList from './app/bsky/graph/unmuteActorList'
 import muteThread from './app/bsky/graph/muteThread'
 import unmuteThread from './app/bsky/graph/unmuteThread'
 import getSuggestedFollowsByActor from './app/bsky/graph/getSuggestedFollowsByActor'
+import getTrendingTopics from './app/bsky/unspecced/getTrendingTopics'
 import getLabelerServices from './app/bsky/labeler/getServices'
 import searchActors from './app/bsky/actor/searchActors'
 import searchActorsTypeahead from './app/bsky/actor/searchActorsTypeahead'
@@ -46,6 +48,7 @@ import listNotifications from './app/bsky/notification/listNotifications'
 import updateSeen from './app/bsky/notification/updateSeen'
 import putPreferences from './app/bsky/notification/putPreferences'
 import registerPush from './app/bsky/notification/registerPush'
+import getConfig from './app/bsky/unspecced/getConfig'
 import getPopularFeedGenerators from './app/bsky/unspecced/getPopularFeedGenerators'
 import getTaggedSuggestions from './app/bsky/unspecced/getTaggedSuggestions'
 import getSubjectStatus from './com/atproto/admin/getSubjectStatus'
@@ -94,6 +97,7 @@ export default function (server: Server, ctx: AppContext) {
   getRelationships(server, ctx)
   getStarterPack(server, ctx)
   getStarterPacks(server, ctx)
+  searchStarterPacks(server, ctx)
   muteActor(server, ctx)
   unmuteActor(server, ctx)
   muteActorList(server, ctx)
@@ -101,6 +105,7 @@ export default function (server: Server, ctx: AppContext) {
   muteThread(server, ctx)
   unmuteThread(server, ctx)
   getSuggestedFollowsByActor(server, ctx)
+  getTrendingTopics(server, ctx)
   getLabelerServices(server, ctx)
   searchActors(server, ctx)
   searchActorsTypeahead(server, ctx)
@@ -110,6 +115,7 @@ export default function (server: Server, ctx: AppContext) {
   updateSeen(server, ctx)
   putPreferences(server, ctx)
   registerPush(server, ctx)
+  getConfig(server, ctx)
   getPopularFeedGenerators(server, ctx)
   getTaggedSuggestions(server, ctx)
   // com.atproto

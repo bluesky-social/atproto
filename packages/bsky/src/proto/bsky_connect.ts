@@ -176,6 +176,8 @@ import {
   SearchFeedGeneratorsResponse,
   SearchPostsRequest,
   SearchPostsResponse,
+  SearchStarterPacksRequest,
+  SearchStarterPacksResponse,
   TakedownActorRequest,
   TakedownActorResponse,
   TakedownBlobRequest,
@@ -817,6 +819,15 @@ export const Service = {
       name: 'SearchPosts',
       I: SearchPostsRequest,
       O: SearchPostsResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsky.Service.SearchStarterPacks
+     */
+    searchStarterPacks: {
+      name: 'SearchStarterPacks',
+      I: SearchStarterPacksRequest,
+      O: SearchStarterPacksResponse,
       kind: MethodKind.Unary,
     },
     /**

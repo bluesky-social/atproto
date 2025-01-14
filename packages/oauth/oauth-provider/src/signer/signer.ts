@@ -19,7 +19,7 @@ import {
   signedTokenPayloadSchema,
 } from './signed-token-payload.js'
 
-export type SignPayload = Omit<JwtPayload, 'iss'>
+export type SignPayload = JwtPayload & { iss?: never }
 
 export class Signer {
   constructor(
@@ -27,11 +27,11 @@ export class Signer {
     public readonly keyset: Keyset,
   ) {}
 
-  async verify<P extends Record<string, unknown> = JwtPayload>(
+  async verify<C extends string = never>(
     token: SignedJwt,
-    options?: Omit<VerifyOptions, 'issuer'>,
+    options?: Omit<VerifyOptions<C>, 'issuer'>,
   ) {
-    return this.keyset.verifyJwt<P>(token, {
+    return this.keyset.verifyJwt<C>(token, {
       ...options,
       issuer: [this.issuer],
     })
@@ -84,18 +84,16 @@ export class Signer {
     )
   }
 
-  async verifyAccessToken(token: SignedJwt) {
-    const result = await this.verify<SignedTokenPayload>(token, {
-      typ: 'at+jwt',
-    })
-
-    // The result is already type casted as an AccessTokenPayload, but we need
-    // to actually verify this. That should already be covered by the fact that
-    // we don't sign 'at+jwt' tokens without a valid token ID. Let's double
-    // check in case another version/implementation was used to generate the
-    // token.
-    signedTokenPayloadSchema.parse(result.payload)
-
-    return result
+  async verifyAccessToken<C extends string = never>(
+    token: SignedJwt,
+    options?: Omit<VerifyOptions<C>, 'issuer' | 'typ'>,
+  ) {
+    const result = await this.verify<C>(token, { ...options, typ: 'at+jwt' })
+    type Payload = typeof result.payload // RequiredKey<JwtPayload, C>
+    return {
+      protectedHeader: result.protectedHeader,
+      payload: signedTokenPayloadSchema.parse(result.payload) as Payload &
+        SignedTokenPayload,
+    }
   }
 }

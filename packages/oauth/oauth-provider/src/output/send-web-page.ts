@@ -8,7 +8,7 @@ import {
   Html,
   js,
 } from '../lib/html/index.js'
-import { writeHtml } from '../lib/http/response.js'
+import { writeHtml, WriteResponseOptions } from '../lib/http/response.js'
 
 export function declareBackendData(name: string, data: unknown) {
   // The script tag is removed after the data is assigned to the global variable
@@ -18,9 +18,11 @@ export function declareBackendData(name: string, data: unknown) {
   return js`window[${name}]=${data};document.currentScript.remove();`
 }
 
+export type SendWebPageOptions = BuildDocumentOptions & WriteResponseOptions
+
 export async function sendWebPage(
   res: ServerResponse,
-  { status = 200, ...options }: BuildDocumentOptions & { status?: number },
+  options: SendWebPageOptions,
 ): Promise<void> {
   // @TODO: make these headers configurable (?)
   res.setHeader('Permissions-Policy', 'otp-credentials=*, document-domain=()')
@@ -53,7 +55,7 @@ export async function sendWebPage(
 
   const html = buildDocument(options)
 
-  return writeHtml(res, html.toString(), status)
+  return writeHtml(res, html.toString(), options)
 }
 
 function assetToHash(asset: Html | AssetRef): string {

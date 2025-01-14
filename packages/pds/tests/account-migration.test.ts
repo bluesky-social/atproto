@@ -44,17 +44,17 @@ describe('account migration', () => {
     }
     const img1 = await sc.uploadFile(
       alice,
-      '../dev-env/src/seed/img/at.png',
+      '../dev-env/assets/at.png',
       'image/png',
     )
     const img2 = await sc.uploadFile(
       alice,
-      '../dev-env/src/seed/img/key-alt.jpg',
+      '../dev-env/assets/key-alt.jpg',
       'image/jpeg',
     )
     const img3 = await sc.uploadFile(
       alice,
-      '../dev-env/src/seed/img/key-landscape-small.jpg',
+      '../dev-env/assets/key-landscape-small.jpg',
       'image/jpeg',
     )
 

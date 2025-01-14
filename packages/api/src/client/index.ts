@@ -82,6 +82,7 @@ import * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos'
 import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
 import * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
+import * as ComAtprotoTempAddReservedHandle from './types/com/atproto/temp/addReservedHandle'
 import * as ComAtprotoTempCheckSignupQueue from './types/com/atproto/temp/checkSignupQueue'
 import * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels'
 import * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/temp/requestPhoneVerification'
@@ -148,6 +149,7 @@ import * as AppBskyGraphListitem from './types/app/bsky/graph/listitem'
 import * as AppBskyGraphMuteActor from './types/app/bsky/graph/muteActor'
 import * as AppBskyGraphMuteActorList from './types/app/bsky/graph/muteActorList'
 import * as AppBskyGraphMuteThread from './types/app/bsky/graph/muteThread'
+import * as AppBskyGraphSearchStarterPacks from './types/app/bsky/graph/searchStarterPacks'
 import * as AppBskyGraphStarterpack from './types/app/bsky/graph/starterpack'
 import * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor'
 import * as AppBskyGraphUnmuteActorList from './types/app/bsky/graph/unmuteActorList'
@@ -162,11 +164,14 @@ import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 import * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet'
 import * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs'
+import * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig'
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
 import * as AppBskyUnspeccedGetSuggestionsSkeleton from './types/app/bsky/unspecced/getSuggestionsSkeleton'
 import * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions'
+import * as AppBskyUnspeccedGetTrendingTopics from './types/app/bsky/unspecced/getTrendingTopics'
 import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton'
 import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
+import * as AppBskyUnspeccedSearchStarterPacksSkeleton from './types/app/bsky/unspecced/searchStarterPacksSkeleton'
 import * as AppBskyVideoDefs from './types/app/bsky/video/defs'
 import * as AppBskyVideoGetJobStatus from './types/app/bsky/video/getJobStatus'
 import * as AppBskyVideoGetUploadLimits from './types/app/bsky/video/getUploadLimits'
@@ -214,6 +219,10 @@ import * as ToolsOzoneSetDeleteValues from './types/tools/ozone/set/deleteValues
 import * as ToolsOzoneSetGetValues from './types/tools/ozone/set/getValues'
 import * as ToolsOzoneSetQuerySets from './types/tools/ozone/set/querySets'
 import * as ToolsOzoneSetUpsertSet from './types/tools/ozone/set/upsertSet'
+import * as ToolsOzoneSettingDefs from './types/tools/ozone/setting/defs'
+import * as ToolsOzoneSettingListOptions from './types/tools/ozone/setting/listOptions'
+import * as ToolsOzoneSettingRemoveOptions from './types/tools/ozone/setting/removeOptions'
+import * as ToolsOzoneSettingUpsertOption from './types/tools/ozone/setting/upsertOption'
 import * as ToolsOzoneSignatureDefs from './types/tools/ozone/signature/defs'
 import * as ToolsOzoneSignatureFindCorrelation from './types/tools/ozone/signature/findCorrelation'
 import * as ToolsOzoneSignatureFindRelatedAccounts from './types/tools/ozone/signature/findRelatedAccounts'
@@ -302,6 +311,7 @@ export * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos'
 export * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
 export * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 export * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
+export * as ComAtprotoTempAddReservedHandle from './types/com/atproto/temp/addReservedHandle'
 export * as ComAtprotoTempCheckSignupQueue from './types/com/atproto/temp/checkSignupQueue'
 export * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels'
 export * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/temp/requestPhoneVerification'
@@ -368,6 +378,7 @@ export * as AppBskyGraphListitem from './types/app/bsky/graph/listitem'
 export * as AppBskyGraphMuteActor from './types/app/bsky/graph/muteActor'
 export * as AppBskyGraphMuteActorList from './types/app/bsky/graph/muteActorList'
 export * as AppBskyGraphMuteThread from './types/app/bsky/graph/muteThread'
+export * as AppBskyGraphSearchStarterPacks from './types/app/bsky/graph/searchStarterPacks'
 export * as AppBskyGraphStarterpack from './types/app/bsky/graph/starterpack'
 export * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor'
 export * as AppBskyGraphUnmuteActorList from './types/app/bsky/graph/unmuteActorList'
@@ -382,11 +393,14 @@ export * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/
 export * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 export * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet'
 export * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs'
+export * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig'
 export * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
 export * as AppBskyUnspeccedGetSuggestionsSkeleton from './types/app/bsky/unspecced/getSuggestionsSkeleton'
 export * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions'
+export * as AppBskyUnspeccedGetTrendingTopics from './types/app/bsky/unspecced/getTrendingTopics'
 export * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton'
 export * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
+export * as AppBskyUnspeccedSearchStarterPacksSkeleton from './types/app/bsky/unspecced/searchStarterPacksSkeleton'
 export * as AppBskyVideoDefs from './types/app/bsky/video/defs'
 export * as AppBskyVideoGetJobStatus from './types/app/bsky/video/getJobStatus'
 export * as AppBskyVideoGetUploadLimits from './types/app/bsky/video/getUploadLimits'
@@ -434,6 +448,10 @@ export * as ToolsOzoneSetDeleteValues from './types/tools/ozone/set/deleteValues
 export * as ToolsOzoneSetGetValues from './types/tools/ozone/set/getValues'
 export * as ToolsOzoneSetQuerySets from './types/tools/ozone/set/querySets'
 export * as ToolsOzoneSetUpsertSet from './types/tools/ozone/set/upsertSet'
+export * as ToolsOzoneSettingDefs from './types/tools/ozone/setting/defs'
+export * as ToolsOzoneSettingListOptions from './types/tools/ozone/setting/listOptions'
+export * as ToolsOzoneSettingRemoveOptions from './types/tools/ozone/setting/removeOptions'
+export * as ToolsOzoneSettingUpsertOption from './types/tools/ozone/setting/upsertOption'
 export * as ToolsOzoneSignatureDefs from './types/tools/ozone/signature/defs'
 export * as ToolsOzoneSignatureFindCorrelation from './types/tools/ozone/signature/findCorrelation'
 export * as ToolsOzoneSignatureFindRelatedAccounts from './types/tools/ozone/signature/findRelatedAccounts'
@@ -1415,6 +1433,18 @@ export class ComAtprotoTempNS {
 
   constructor(client: XrpcClient) {
     this._client = client
+  }
+
+  addReservedHandle(
+    data?: ComAtprotoTempAddReservedHandle.InputSchema,
+    opts?: ComAtprotoTempAddReservedHandle.CallOptions,
+  ): Promise<ComAtprotoTempAddReservedHandle.Response> {
+    return this._client.call(
+      'com.atproto.temp.addReservedHandle',
+      opts?.qp,
+      data,
+      opts,
+    )
   }
 
   checkSignupQueue(
@@ -2434,6 +2464,18 @@ export class AppBskyGraphNS {
     return this._client.call('app.bsky.graph.muteThread', opts?.qp, data, opts)
   }
 
+  searchStarterPacks(
+    params?: AppBskyGraphSearchStarterPacks.QueryParams,
+    opts?: AppBskyGraphSearchStarterPacks.CallOptions,
+  ): Promise<AppBskyGraphSearchStarterPacks.Response> {
+    return this._client.call(
+      'app.bsky.graph.searchStarterPacks',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
   unmuteActor(
     data?: AppBskyGraphUnmuteActor.InputSchema,
     opts?: AppBskyGraphUnmuteActor.CallOptions,
@@ -3015,6 +3057,18 @@ export class AppBskyUnspeccedNS {
     this._client = client
   }
 
+  getConfig(
+    params?: AppBskyUnspeccedGetConfig.QueryParams,
+    opts?: AppBskyUnspeccedGetConfig.CallOptions,
+  ): Promise<AppBskyUnspeccedGetConfig.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getConfig',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
   getPopularFeedGenerators(
     params?: AppBskyUnspeccedGetPopularFeedGenerators.QueryParams,
     opts?: AppBskyUnspeccedGetPopularFeedGenerators.CallOptions,
@@ -3051,6 +3105,18 @@ export class AppBskyUnspeccedNS {
     )
   }
 
+  getTrendingTopics(
+    params?: AppBskyUnspeccedGetTrendingTopics.QueryParams,
+    opts?: AppBskyUnspeccedGetTrendingTopics.CallOptions,
+  ): Promise<AppBskyUnspeccedGetTrendingTopics.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getTrendingTopics',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
   searchActorsSkeleton(
     params?: AppBskyUnspeccedSearchActorsSkeleton.QueryParams,
     opts?: AppBskyUnspeccedSearchActorsSkeleton.CallOptions,
@@ -3070,6 +3136,22 @@ export class AppBskyUnspeccedNS {
       .call('app.bsky.unspecced.searchPostsSkeleton', params, undefined, opts)
       .catch((e) => {
         throw AppBskyUnspeccedSearchPostsSkeleton.toKnownErr(e)
+      })
+  }
+
+  searchStarterPacksSkeleton(
+    params?: AppBskyUnspeccedSearchStarterPacksSkeleton.QueryParams,
+    opts?: AppBskyUnspeccedSearchStarterPacksSkeleton.CallOptions,
+  ): Promise<AppBskyUnspeccedSearchStarterPacksSkeleton.Response> {
+    return this._client
+      .call(
+        'app.bsky.unspecced.searchStarterPacksSkeleton',
+        params,
+        undefined,
+        opts,
+      )
+      .catch((e) => {
+        throw AppBskyUnspeccedSearchStarterPacksSkeleton.toKnownErr(e)
       })
   }
 }
@@ -3433,6 +3515,7 @@ export class ToolsOzoneNS {
   moderation: ToolsOzoneModerationNS
   server: ToolsOzoneServerNS
   set: ToolsOzoneSetNS
+  setting: ToolsOzoneSettingNS
   signature: ToolsOzoneSignatureNS
   team: ToolsOzoneTeamNS
 
@@ -3442,6 +3525,7 @@ export class ToolsOzoneNS {
     this.moderation = new ToolsOzoneModerationNS(client)
     this.server = new ToolsOzoneServerNS(client)
     this.set = new ToolsOzoneSetNS(client)
+    this.setting = new ToolsOzoneSettingNS(client)
     this.signature = new ToolsOzoneSignatureNS(client)
     this.team = new ToolsOzoneTeamNS(client)
   }
@@ -3698,6 +3782,50 @@ export class ToolsOzoneSetNS {
     opts?: ToolsOzoneSetUpsertSet.CallOptions,
   ): Promise<ToolsOzoneSetUpsertSet.Response> {
     return this._client.call('tools.ozone.set.upsertSet', opts?.qp, data, opts)
+  }
+}
+
+export class ToolsOzoneSettingNS {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  listOptions(
+    params?: ToolsOzoneSettingListOptions.QueryParams,
+    opts?: ToolsOzoneSettingListOptions.CallOptions,
+  ): Promise<ToolsOzoneSettingListOptions.Response> {
+    return this._client.call(
+      'tools.ozone.setting.listOptions',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  removeOptions(
+    data?: ToolsOzoneSettingRemoveOptions.InputSchema,
+    opts?: ToolsOzoneSettingRemoveOptions.CallOptions,
+  ): Promise<ToolsOzoneSettingRemoveOptions.Response> {
+    return this._client.call(
+      'tools.ozone.setting.removeOptions',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
+  upsertOption(
+    data?: ToolsOzoneSettingUpsertOption.InputSchema,
+    opts?: ToolsOzoneSettingUpsertOption.CallOptions,
+  ): Promise<ToolsOzoneSettingUpsertOption.Response> {
+    return this._client.call(
+      'tools.ozone.setting.upsertOption',
+      opts?.qp,
+      data,
+      opts,
+    )
   }
 }
 

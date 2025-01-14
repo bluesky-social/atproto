@@ -1,5 +1,49 @@
 # @atproto/xrpc-server
 
+## 0.7.6
+
+### Patch Changes
+
+- Updated dependencies [[`1abfd74ec`](https://github.com/bluesky-social/atproto/commit/1abfd74ec7114e5d8e2411f7a4fa10bdce97e277)]:
+  - @atproto/crypto@0.4.3
+
+## 0.7.5
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/common@0.4.6
+  - @atproto/lexicon@0.4.5
+  - @atproto/crypto@0.4.2
+  - @atproto/xrpc@0.6.6
+
+## 0.7.4
+
+### Patch Changes
+
+- Updated dependencies [[`588baae12`](https://github.com/bluesky-social/atproto/commit/588baae1212a3cba3bf0d95d2f268e80513fd9c4), [`9fd65ba0f`](https://github.com/bluesky-social/atproto/commit/9fd65ba0fa4caca59fd0e6156145e4c2618e3a95)]:
+  - @atproto/common@0.4.5
+  - @atproto/lexicon@0.4.4
+  - @atproto/crypto@0.4.2
+  - @atproto/xrpc@0.6.5
+
+## 0.7.3
+
+### Patch Changes
+
+- Updated dependencies [[`bac9be2d3`](https://github.com/bluesky-social/atproto/commit/bac9be2d3ec904d1f984a871f43cf89aca17289d)]:
+  - @atproto/lexicon@0.4.3
+  - @atproto/xrpc@0.6.4
+
+## 0.7.2
+
+### Patch Changes
+
+- [#2936](https://github.com/bluesky-social/atproto/pull/2936) [`1982693e3`](https://github.com/bluesky-social/atproto/commit/1982693e3ea1fef4db76ac9aca3db8dc5ebf3fe0) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Accept a custom verifySignatureWithKey in verifyJwt
+
+- Updated dependencies [[`1982693e3`](https://github.com/bluesky-social/atproto/commit/1982693e3ea1fef4db76ac9aca3db8dc5ebf3fe0)]:
+  - @atproto/crypto@0.4.2
+
 ## 0.7.1
 
 ### Patch Changes

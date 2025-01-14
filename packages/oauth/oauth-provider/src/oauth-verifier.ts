@@ -1,10 +1,11 @@
 import { Key, Keyset, isSignedJwt } from '@atproto/jwk'
 import {
   OAuthAccessToken,
+  OAuthIssuerIdentifier,
   OAuthTokenType,
   oauthIssuerIdentifierSchema,
 } from '@atproto/oauth-types'
-import { Redis, type RedisOptions } from 'ioredis'
+import type { Redis, RedisOptions } from 'ioredis'
 
 import { AccessTokenType } from './access-token/access-token-type.js'
 import { DpopManager, DpopManagerOptions } from './dpop/dpop-manager.js'
@@ -77,7 +78,7 @@ export {
 }
 
 export class OAuthVerifier {
-  public readonly issuer: string
+  public readonly issuer: OAuthIssuerIdentifier
   public readonly keyset: Keyset
 
   protected readonly accessTokenType: AccessTokenType

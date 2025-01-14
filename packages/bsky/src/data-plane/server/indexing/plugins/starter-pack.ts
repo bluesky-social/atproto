@@ -24,6 +24,7 @@ const insertFn = async (
       uri: uri.toString(),
       cid: cid.toString(),
       creator: uri.host,
+      name: obj.name,
       createdAt: normalizeDatetimeAlways(obj.createdAt),
       indexedAt: timestamp,
     })

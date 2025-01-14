@@ -1,5 +1,40 @@
 # @atproto/oauth-types
 
+## 0.2.2
+
+### Patch Changes
+
+- Updated dependencies [[`2889c7699`](https://github.com/bluesky-social/atproto/commit/2889c76995ce3c569f595ac3c678218e9ce659f0), [`2889c7699`](https://github.com/bluesky-social/atproto/commit/2889c76995ce3c569f595ac3c678218e9ce659f0), [`2889c7699`](https://github.com/bluesky-social/atproto/commit/2889c76995ce3c569f595ac3c678218e9ce659f0), [`2889c7699`](https://github.com/bluesky-social/atproto/commit/2889c76995ce3c569f595ac3c678218e9ce659f0)]:
+  - @atproto/jwk@0.1.2
+
+## 0.2.1
+
+### Patch Changes
+
+- [#3066](https://github.com/bluesky-social/atproto/pull/3066) [`5ddd51235`](https://github.com/bluesky-social/atproto/commit/5ddd51235c7e064bddcad2dd218df05d144d18d3) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add oauthClientIdLoopbackSchema and oauthClientIdDiscoverableSchema schemas
+
+- [#3066](https://github.com/bluesky-social/atproto/pull/3066) [`5ddd51235`](https://github.com/bluesky-social/atproto/commit/5ddd51235c7e064bddcad2dd218df05d144d18d3) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Enforce use of http and https url where applicable
+
+- [#3066](https://github.com/bluesky-social/atproto/pull/3066) [`5ddd51235`](https://github.com/bluesky-social/atproto/commit/5ddd51235c7e064bddcad2dd218df05d144d18d3) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Strong validation or redirect_uri
+
+## 0.2.0
+
+### Minor Changes
+
+- [#2874](https://github.com/bluesky-social/atproto/pull/2874) [`7f26b1765`](https://github.com/bluesky-social/atproto/commit/7f26b176526b9856a8f61faca6f065f0afd43abf) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow oauthIssuerIdentifier to be an "http:" url. Make sure to manually check for "http:" issuers if you don't allow them.
+
+- [#2874](https://github.com/bluesky-social/atproto/pull/2874) [`7f26b1765`](https://github.com/bluesky-social/atproto/commit/7f26b176526b9856a8f61faca6f065f0afd43abf) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove ALLOW_UNSECURE_ORIGINS constant
+
+- [#2871](https://github.com/bluesky-social/atproto/pull/2871) [`9d40ccbb6`](https://github.com/bluesky-social/atproto/commit/9d40ccbb69103fae9aae7e3cec31e9b3116f3ba2) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove invalid `issuer` property from OAuthTokenResponse
+
+### Patch Changes
+
+- [#2871](https://github.com/bluesky-social/atproto/pull/2871) [`9d40ccbb6`](https://github.com/bluesky-social/atproto/commit/9d40ccbb69103fae9aae7e3cec31e9b3116f3ba2) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add missing "wap" display request parameter value
+
+- [#2871](https://github.com/bluesky-social/atproto/pull/2871) [`9d40ccbb6`](https://github.com/bluesky-social/atproto/commit/9d40ccbb69103fae9aae7e3cec31e9b3116f3ba2) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove invalid `client_id` property from oauthRefreshTokenGrantTokenRequestSchema
+
+- [#2874](https://github.com/bluesky-social/atproto/pull/2874) [`7f26b1765`](https://github.com/bluesky-social/atproto/commit/7f26b176526b9856a8f61faca6f065f0afd43abf) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve typing of oauthIssuerIdentifierSchema
+
 ## 0.1.5
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @atproto/did
 
+## 0.1.3
+
+### Patch Changes
+
+- [#2871](https://github.com/bluesky-social/atproto/pull/2871) [`9d40ccbb6`](https://github.com/bluesky-social/atproto/commit/9d40ccbb69103fae9aae7e3cec31e9b3116f3ba2) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add atprotoDidSchema to validate Atproto supported DID's using zod
+
 ## 0.1.2
 
 ### Patch Changes

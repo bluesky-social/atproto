@@ -15,14 +15,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        name: Install pnpm
-        with:
-          run_install: false
+      - run: corepack enable && corepack prepare --activate
       - uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version-file: package.json
           cache: 'pnpm'
+      - name: Get current month
+        run: echo "CURRENT_MONTH=$(date +'%Y-%m')" >> $GITHUB_ENV
+      - uses: actions/cache@v4
+        name: Cache Puppeteer browser binaries
+        with:
+          path: ~/.cache
+          key: ${{ env.CURRENT_MONTH }}-${{ runner.os }}
       - run: pnpm i --frozen-lockfile
       - run: pnpm build
       - uses: actions/upload-artifact@v4
@@ -41,14 +45,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        name: Install pnpm
-        with:
-          run_install: false
+      - run: corepack enable && corepack prepare --activate
       - uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version-file: package.json
           cache: 'pnpm'
+      - name: Get current month
+        run: echo "CURRENT_MONTH=$(date +'%Y-%m')" >> $GITHUB_ENV
+      - uses: actions/cache@v4
+        name: Cache Puppeteer browser binaries
+        with:
+          path: ~/.cache
+          key: ${{ env.CURRENT_MONTH }}-${{ runner.os }}
       - run: pnpm i --frozen-lockfile
       - uses: actions/download-artifact@v4
         with:
@@ -61,14 +69,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        name: Install pnpm
-        with:
-          run_install: false
+      - run: corepack enable && corepack prepare --activate
       - uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version-file: package.json
           cache: 'pnpm'
+      - name: Get current month
+        run: echo "CURRENT_MONTH=$(date +'%Y-%m')" >> $GITHUB_ENV
+      - uses: actions/cache@v4
+        name: Cache Puppeteer browser binaries
+        with:
+          path: ~/.cache
+          key: ${{ env.CURRENT_MONTH }}-${{ runner.os }}
       - run: pnpm i --frozen-lockfile
       - uses: actions/download-artifact@v4
         with:

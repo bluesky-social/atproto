@@ -39,3 +39,47 @@ export function isSkeletonSearchActor(v: unknown): v is SkeletonSearchActor {
 export function validateSkeletonSearchActor(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.unspecced.defs#skeletonSearchActor', v)
 }
+
+export interface SkeletonSearchStarterPack {
+  uri: string
+  [k: string]: unknown
+}
+
+export function isSkeletonSearchStarterPack(
+  v: unknown,
+): v is SkeletonSearchStarterPack {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.unspecced.defs#skeletonSearchStarterPack'
+  )
+}
+
+export function validateSkeletonSearchStarterPack(
+  v: unknown,
+): ValidationResult {
+  return lexicons.validate(
+    'app.bsky.unspecced.defs#skeletonSearchStarterPack',
+    v,
+  )
+}
+
+export interface TrendingTopic {
+  topic: string
+  displayName?: string
+  description?: string
+  link: string
+  [k: string]: unknown
+}
+
+export function isTrendingTopic(v: unknown): v is TrendingTopic {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.unspecced.defs#trendingTopic'
+  )
+}
+
+export function validateTrendingTopic(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.unspecced.defs#trendingTopic', v)
+}

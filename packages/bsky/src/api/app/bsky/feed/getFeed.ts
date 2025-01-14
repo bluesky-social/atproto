@@ -129,13 +129,14 @@ const noBlocksOrMutes = (inputs: RulesFnInput<Context, Params, Skeleton>) => {
       !bam.ancestorAuthorBlocked
     )
   })
+
   return skeleton
 }
 
 const presentation = (
   inputs: PresentationFnInput<Context, Params, Skeleton>,
 ) => {
-  const { ctx, params, skeleton, hydration } = inputs
+  const { ctx, skeleton, hydration } = inputs
   const feed = mapDefined(skeleton.items, (item) => {
     const post = ctx.views.feedViewPost(item, hydration)
     if (!post) return
@@ -143,7 +144,7 @@ const presentation = (
       ...post,
       feedContext: item.feedContext,
     }
-  }).slice(0, params.limit)
+  })
   return {
     feed,
     cursor: skeleton.cursor,
@@ -176,7 +177,7 @@ const skeletonFromFeedGen = async (
 ): Promise<AlgoResponse> => {
   const { feed, headers } = params
   const found = await ctx.hydrator.feed.getFeedGens([feed], true)
-  const feedDid = await found.get(feed)?.record.did
+  const feedDid = found.get(feed)?.record.did
   if (!feedDid) {
     throw new InvalidRequestError('could not find feed')
   }
@@ -211,6 +212,7 @@ const skeletonFromFeedGen = async (
     const result = await agent.api.app.bsky.feed.getFeedSkeleton(
       {
         feed: params.feed,
+        // The feedgen is not guaranteed to honor the limit, but we try it.
         limit: params.limit,
         cursor: params.cursor,
       },
@@ -218,7 +220,14 @@ const skeletonFromFeedGen = async (
         headers,
       },
     )
+
     skeleton = result.data
+
+    if (result.data.cursor === params.cursor) {
+      // Prevents loops if the custom feed echoes the the input cursor back.
+      skeleton.cursor = undefined
+    }
+
     if (result.headers['content-language']) {
       resHeaders = {
         'content-language': result.headers['content-language'],
@@ -243,7 +252,7 @@ const skeletonFromFeedGen = async (
   }
 
   const { feed: feedSkele, ...skele } = skeleton
-  const feedItems = feedSkele.map((item) => ({
+  const feedItems = feedSkele.slice(0, params.limit).map((item) => ({
     post: { uri: item.post },
     repost:
       typeof item.reason?.repost === 'string'

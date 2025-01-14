@@ -1,5 +1,5 @@
-import crypto from 'crypto'
-import { Transform, TransformCallback } from 'stream'
+import { createHash } from 'node:crypto'
+import { Transform } from 'node:stream'
 import { check, schema } from '@atproto/common-web'
 import { CID } from 'multiformats/cid'
 import * as Block from 'multiformats/block'
@@ -63,33 +63,31 @@ export const sha256RawToCid = (hash: Uint8Array): CID => {
 }
 
 export class VerifyCidTransform extends Transform {
-  hasher = crypto.createHash('sha256')
   constructor(public cid: CID) {
-    super()
-  }
-
-  _transform(chunk: Uint8Array, _enc: BufferEncoding, cb: TransformCallback) {
-    this.hasher.update(chunk)
-    cb(null, chunk)
-  }
-
-  _flush(cb: TransformCallback) {
-    try {
-      const cid = sha256RawToCid(this.hasher.digest())
-      if (this.cid.equals(cid)) {
-        return cb()
-      } else {
-        return cb(new VerifyCidError(this.cid, cid))
-      }
-    } catch (_err) {
-      const err =
-        _err instanceof Error
-          ? _err
-          : new Error('Unexpected error', { cause: _err })
-      return cb(err)
-    }
+    const hasher = createHash('sha256')
+    super({
+      transform(chunk, encoding, callback) {
+        hasher.update(chunk)
+        callback(null, chunk)
+      },
+      flush(callback) {
+        try {
+          const actual = sha256RawToCid(hasher.digest())
+          if (actual.equals(cid)) {
+            return callback()
+          } else {
+            return callback(new VerifyCidError(cid, actual))
+          }
+        } catch (err) {
+          return callback(asError(err))
+        }
+      },
+    })
   }
 }
+
+const asError = (err: unknown): Error =>
+  err instanceof Error ? err : new Error('Unexpected error', { cause: err })
 
 export class VerifyCidError extends Error {
   constructor(

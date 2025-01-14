@@ -15,9 +15,17 @@ export const createRouter = ({ authProvider, cfg }: AppContext): Router => {
       resource_documentation: 'https://atproto.com',
     })
 
+  if (
+    !cfg.service.devMode &&
+    !oauthProtectedResourceMetadata.resource.startsWith('https://')
+  ) {
+    throw new Error('Resource URL must use the https scheme')
+  }
+
   router.get('/.well-known/oauth-protected-resource', (req, res) => {
     res.setHeader('Access-Control-Allow-Origin', '*')
     res.setHeader('Access-Control-Allow-Method', '*')
+    res.setHeader('Access-Control-Allow-Headers', '*')
     res.status(200).json(oauthProtectedResourceMetadata)
   })
 

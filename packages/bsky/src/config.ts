@@ -24,6 +24,8 @@ export interface ServerConfigValues {
   searchUrl?: string
   suggestionsUrl?: string
   suggestionsApiKey?: string
+  topicsUrl?: string
+  topicsApiKey?: string
   cdnUrl?: string
   videoPlaylistUrlPattern?: string
   videoThumbnailUrlPattern?: string
@@ -36,10 +38,26 @@ export interface ServerConfigValues {
   modServiceDid: string
   adminPasswords: string[]
   labelsFromIssuerDids?: string[]
+  indexedAtEpoch?: Date
   // misc/dev
   blobCacheLocation?: string
   statsigKey?: string
   statsigEnv?: string
+  // threads
+  bigThreadUris: Set<string>
+  bigThreadDepth?: number
+  maxThreadDepth?: number
+  // client config
+  clientCheckEmailConfirmed?: boolean
+  topicsEnabled?: boolean
+  // http proxy agent
+  disableSsrfProtection?: boolean
+  proxyAllowHTTP2?: boolean
+  proxyHeadersTimeout?: number
+  proxyBodyTimeout?: number
+  proxyMaxResponseSize?: number
+  proxyMaxRetries?: number
+  proxyPreferCompressed?: boolean
 }
 
 export class ServerConfig {
@@ -48,7 +66,9 @@ export class ServerConfig {
 
   static readEnv(overrides?: Partial<ServerConfigValues>) {
     const version = process.env.BSKY_VERSION || undefined
-    const debugMode = process.env.NODE_ENV !== 'production'
+    const debugMode =
+      // Because security related features are disabled in development mode, this requires explicit opt-in.
+      process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test'
     const publicUrl = process.env.BSKY_PUBLIC_URL || undefined
     const serverDid = process.env.BSKY_SERVER_DID || 'did:example:test'
     const envPort = parseInt(process.env.BSKY_PORT || '', 10)
@@ -75,6 +95,8 @@ export class ServerConfig {
       undefined
     const suggestionsUrl = process.env.BSKY_SUGGESTIONS_URL || undefined
     const suggestionsApiKey = process.env.BSKY_SUGGESTIONS_API_KEY || undefined
+    const topicsUrl = process.env.BSKY_TOPICS_URL || undefined
+    const topicsApiKey = process.env.BSKY_TOPICS_API_KEY
     let dataplaneUrls = overrides?.dataplaneUrls
     dataplaneUrls ??= process.env.BSKY_DATAPLANE_URLS
       ? process.env.BSKY_DATAPLANE_URLS.split(',')
@@ -121,6 +143,40 @@ export class ServerConfig {
       process.env.NODE_ENV === 'test'
         ? 'test'
         : process.env.BSKY_STATSIG_ENV || 'development'
+    const clientCheckEmailConfirmed =
+      process.env.BSKY_CLIENT_CHECK_EMAIL_CONFIRMED === 'true'
+    const topicsEnabled = process.env.BSKY_TOPICS_ENABLED === 'true'
+    const indexedAtEpoch = process.env.BSKY_INDEXED_AT_EPOCH
+      ? new Date(process.env.BSKY_INDEXED_AT_EPOCH)
+      : undefined
+    assert(
+      !indexedAtEpoch || !isNaN(indexedAtEpoch.getTime()),
+      'invalid BSKY_INDEXED_AT_EPOCH',
+    )
+    const bigThreadUris = new Set(envList(process.env.BSKY_BIG_THREAD_URIS))
+    const bigThreadDepth = process.env.BSKY_BIG_THREAD_DEPTH
+      ? parseInt(process.env.BSKY_BIG_THREAD_DEPTH || '', 10)
+      : undefined
+    const maxThreadDepth = process.env.BSKY_MAX_THREAD_DEPTH
+      ? parseInt(process.env.BSKY_MAX_THREAD_DEPTH || '', 10)
+      : undefined
+
+    const disableSsrfProtection = process.env.BSKY_DISABLE_SSRF_PROTECTION
+      ? process.env.BSKY_DISABLE_SSRF_PROTECTION === 'true'
+      : debugMode
+
+    const proxyAllowHTTP2 = process.env.BSKY_PROXY_ALLOW_HTTP2 === 'true'
+    const proxyHeadersTimeout =
+      parseInt(process.env.BSKY_PROXY_HEADERS_TIMEOUT || '', 10) || undefined
+    const proxyBodyTimeout =
+      parseInt(process.env.BSKY_PROXY_BODY_TIMEOUT || '', 10) || undefined
+    const proxyMaxResponseSize =
+      parseInt(process.env.BSKY_PROXY_MAX_RESPONSE_SIZE || '', 10) || undefined
+    const proxyMaxRetries =
+      parseInt(process.env.BSKY_PROXY_MAX_RETRIES || '', 10) || undefined
+    const proxyPreferCompressed =
+      process.env.BSKY_PROXY_PREFER_COMPRESSED === 'true'
+
     return new ServerConfig({
       version,
       debugMode,
@@ -135,6 +191,8 @@ export class ServerConfig {
       searchUrl,
       suggestionsUrl,
       suggestionsApiKey,
+      topicsUrl,
+      topicsApiKey,
       didPlcUrl,
       labelsFromIssuerDids,
       handleResolveNameservers,
@@ -156,6 +214,19 @@ export class ServerConfig {
       modServiceDid,
       statsigKey,
       statsigEnv,
+      clientCheckEmailConfirmed,
+      topicsEnabled,
+      indexedAtEpoch,
+      bigThreadUris,
+      bigThreadDepth,
+      maxThreadDepth,
+      disableSsrfProtection,
+      proxyAllowHTTP2,
+      proxyHeadersTimeout,
+      proxyBodyTimeout,
+      proxyMaxResponseSize,
+      proxyMaxRetries,
+      proxyPreferCompressed,
       ...stripUndefineds(overrides ?? {}),
     })
   }
@@ -178,11 +249,6 @@ export class ServerConfig {
 
   get port() {
     return this.assignedPort || this.cfg.port
-  }
-
-  get localUrl() {
-    assert(this.port, 'No port assigned')
-    return `http://localhost:${this.port}`
   }
 
   get publicUrl() {
@@ -257,6 +323,14 @@ export class ServerConfig {
     return this.cfg.suggestionsApiKey
   }
 
+  get topicsUrl() {
+    return this.cfg.topicsUrl
+  }
+
+  get topicsApiKey() {
+    return this.cfg.topicsApiKey
+  }
+
   get cdnUrl() {
     return this.cfg.cdnUrl
   }
@@ -307,6 +381,58 @@ export class ServerConfig {
 
   get statsigEnv() {
     return this.cfg.statsigEnv
+  }
+
+  get clientCheckEmailConfirmed() {
+    return this.cfg.clientCheckEmailConfirmed
+  }
+
+  get topicsEnabled() {
+    return this.cfg.topicsEnabled
+  }
+
+  get indexedAtEpoch() {
+    return this.cfg.indexedAtEpoch
+  }
+
+  get bigThreadUris() {
+    return this.cfg.bigThreadUris
+  }
+
+  get bigThreadDepth() {
+    return this.cfg.bigThreadDepth
+  }
+
+  get maxThreadDepth() {
+    return this.cfg.maxThreadDepth
+  }
+
+  get disableSsrfProtection(): boolean {
+    return this.cfg.disableSsrfProtection ?? false
+  }
+
+  get proxyAllowHTTP2(): boolean {
+    return this.cfg.proxyAllowHTTP2 ?? false
+  }
+
+  get proxyHeadersTimeout(): number {
+    return this.cfg.proxyHeadersTimeout ?? 30e3
+  }
+
+  get proxyBodyTimeout(): number {
+    return this.cfg.proxyBodyTimeout ?? 30e3
+  }
+
+  get proxyMaxResponseSize(): number {
+    return this.cfg.proxyMaxResponseSize ?? 10 * 1024 * 1024 // 10mb
+  }
+
+  get proxyMaxRetries(): number {
+    return this.cfg.proxyMaxRetries ?? 3
+  }
+
+  get proxyPreferCompressed(): boolean {
+    return this.cfg.proxyPreferCompressed ?? true
   }
 }
 

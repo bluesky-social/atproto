@@ -55,11 +55,8 @@ export class AppViewHandleResolver implements HandleResolver {
     )
     url.searchParams.set('handle', handle)
 
-    const headers = new Headers()
-    if (options?.noCache) headers.set('cache-control', 'no-cache')
-
     const response = await this.fetch.call(null, url, {
-      headers,
+      cache: options?.noCache ? 'no-cache' : undefined,
       signal: options?.signal,
       redirect: 'error',
     })

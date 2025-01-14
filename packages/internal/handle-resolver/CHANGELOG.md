@@ -1,5 +1,23 @@
 # @atproto-labs/handle-resolver
 
+## 0.1.5
+
+### Patch Changes
+
+- [#3046](https://github.com/bluesky-social/atproto/pull/3046) [`a200e5095`](https://github.com/bluesky-social/atproto/commit/a200e50951d297c3f9670e96027262196bc29b0b) Thanks [@sgarciac](https://github.com/sgarciac)! - This change makes the DoH handle resolver accept a wider range of content types for DoH API calls.
+
+  While there is no agreed upon MIME type for DoH's JSON Schema, this change supports a reasonable
+  set that include those used by major DoH providers such as Google and Cloudflare.
+
+## 0.1.4
+
+### Patch Changes
+
+- [#2871](https://github.com/bluesky-social/atproto/pull/2871) [`9d40ccbb6`](https://github.com/bluesky-social/atproto/commit/9d40ccbb69103fae9aae7e3cec31e9b3116f3ba2) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use fetch()'s "cache" option instead of headers to force caching behavior
+
+- Updated dependencies [[`9d40ccbb6`](https://github.com/bluesky-social/atproto/commit/9d40ccbb69103fae9aae7e3cec31e9b3116f3ba2)]:
+  - @atproto/did@0.1.3
+
 ## 0.1.3
 
 ### Patch Changes

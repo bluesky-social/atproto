@@ -12,6 +12,7 @@ describe('starter packs', () => {
   let sp1: RecordRef
   let sp2: RecordRef
   let sp3: RecordRef
+  let sp4: RecordRef
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -67,6 +68,13 @@ describe('starter packs', () => {
       [],
     )
     await sc.block(sc.dids.frankie, sc.dids.alice)
+
+    sp4 = await sc.createStarterPack(
+      sc.dids.bob,
+      "bob's starter pack in case you block alice",
+      [sc.dids.alice, sc.dids.frankie],
+      [],
+    )
 
     await network.processAll()
   })
@@ -197,5 +205,59 @@ describe('starter packs', () => {
     )
     expect(view.data.starterPack.listItemsSample?.length).toBe(3)
     expect(forSnapshot(view.data.starterPack.listItemsSample)).toMatchSnapshot()
+  })
+
+  describe('searchStarterPacks', () => {
+    it('searches starter packs and returns paginated', async () => {
+      const { data: page0 } = await agent.app.bsky.graph.searchStarterPacks({
+        q: 'starter',
+        limit: 3,
+      })
+
+      expect(page0.starterPacks).toMatchObject([
+        expect.objectContaining({ uri: sp4.uriStr }),
+        expect.objectContaining({ uri: sp3.uriStr }),
+        expect.objectContaining({ uri: sp2.uriStr }),
+      ])
+
+      const { data: page1 } = await agent.api.app.bsky.graph.searchStarterPacks(
+        {
+          q: 'starter',
+          limit: 3,
+          cursor: page0.cursor,
+        },
+      )
+
+      expect(page1.starterPacks).toMatchObject([
+        expect.objectContaining({ uri: sp1.uriStr }),
+      ])
+    })
+
+    it('filters by the search term', async () => {
+      const { data } = await agent.app.bsky.graph.searchStarterPacks({
+        q: 'In CaSe',
+        limit: 3,
+      })
+
+      expect(data.starterPacks).toMatchObject([
+        expect.objectContaining({ uri: sp4.uriStr }),
+      ])
+    })
+
+    it('does not include starter packs with creator block relationship for non-creator viewers', async () => {
+      const { data } = await agent.app.bsky.graph.searchStarterPacks(
+        { q: 'starter', limit: 3 },
+        {
+          headers: await network.serviceHeaders(
+            sc.dids.frankie,
+            ids.AppBskyGraphSearchStarterPacks,
+          ),
+        },
+      )
+
+      expect(data.starterPacks).toMatchObject([
+        expect.objectContaining({ uri: sp4.uriStr }),
+      ])
+    })
   })
 })

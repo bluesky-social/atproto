@@ -7,10 +7,13 @@ import {
   SqlRepoReader,
 } from '../../../../actor-store/repo/sql-repo-reader'
 import { assertRepoAvailability } from './util'
+import { AuthScope } from '../../../../auth-verifier'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.getRepo({
-    auth: ctx.authVerifier.optionalAccessOrAdminToken,
+    auth: ctx.authVerifier.optionalAccessOrAdminToken({
+      additional: [AuthScope.Takendown],
+    }),
     handler: async ({ params, auth }) => {
       const { did, since } = params
       await assertRepoAvailability(

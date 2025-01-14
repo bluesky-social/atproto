@@ -169,7 +169,7 @@ export class RichText {
       this.facets = entitiesToFacets(this.unicodeText, props.entities)
     }
     if (this.facets) {
-      this.facets.sort(facetSort)
+      this.facets = this.facets.filter(facetFilter).sort(facetSort)
     }
     if (opts?.cleanNewlines) {
       sanitizeRichText(this, { cleanNewlines: true }).copyInto(this)
@@ -350,17 +350,23 @@ export class RichText {
   async detectFacets(agent: AtpBaseClient) {
     this.facets = detectFacets(this.unicodeText)
     if (this.facets) {
+      const promises: Promise<void>[] = []
       for (const facet of this.facets) {
         for (const feature of facet.features) {
           if (AppBskyRichtextFacet.isMention(feature)) {
-            const did = await agent.com.atproto.identity
-              .resolveHandle({ handle: feature.did })
-              .catch((_) => undefined)
-              .then((res) => res?.data.did)
-            feature.did = did || ''
+            promises.push(
+              agent.com.atproto.identity
+                .resolveHandle({ handle: feature.did })
+                .then((res) => res?.data.did)
+                .catch((_) => undefined)
+                .then((did) => {
+                  feature.did = did || ''
+                }),
+            )
           }
         }
       }
+      await Promise.allSettled(promises)
       this.facets.sort(facetSort)
     }
   }
@@ -378,7 +384,11 @@ export class RichText {
   }
 }
 
-const facetSort = (a, b) => a.index.byteStart - b.index.byteStart
+const facetSort = (a: Facet, b: Facet) => a.index.byteStart - b.index.byteStart
+
+const facetFilter = (facet: Facet) =>
+  // discard negative-length facets. zero-length facets are valid
+  facet.index.byteStart <= facet.index.byteEnd
 
 function entitiesToFacets(text: UnicodeString, entities: Entity[]): Facet[] {
   const facets: Facet[] = []

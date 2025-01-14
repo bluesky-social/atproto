@@ -1,5 +1,34 @@
 # @atproto-labs/did-resolver
 
+## 0.1.8
+
+### Patch Changes
+
+- Updated dependencies [[`5ece8c6ae`](https://github.com/bluesky-social/atproto/commit/5ece8c6aeab9c5c3f51295d93ed6e27c3c6095c2), [`5ece8c6ae`](https://github.com/bluesky-social/atproto/commit/5ece8c6aeab9c5c3f51295d93ed6e27c3c6095c2)]:
+  - @atproto-labs/fetch@0.2.0
+
+## 0.1.7
+
+### Patch Changes
+
+- [#3177](https://github.com/bluesky-social/atproto/pull/3177) [`72eba67af`](https://github.com/bluesky-social/atproto/commit/72eba67af1af8320b5400bcb9319d5c3c8407d99) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Ensure proper escaping when building PLC url
+
+## 0.1.6
+
+### Patch Changes
+
+- Updated dependencies [[`622654672`](https://github.com/bluesky-social/atproto/commit/6226546725d1bb0375e3c9e0d71af173e8253c4f)]:
+  - @atproto-labs/fetch@0.1.2
+
+## 0.1.5
+
+### Patch Changes
+
+- [#2874](https://github.com/bluesky-social/atproto/pull/2874) [`7f26b1765`](https://github.com/bluesky-social/atproto/commit/7f26b176526b9856a8f61faca6f065f0afd43abf) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add "allowHttp" did:web method option
+
+- Updated dependencies [[`9d40ccbb6`](https://github.com/bluesky-social/atproto/commit/9d40ccbb69103fae9aae7e3cec31e9b3116f3ba2)]:
+  - @atproto/did@0.1.3
+
 ## 0.1.4
 
 ### Patch Changes

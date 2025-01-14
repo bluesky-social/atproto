@@ -1,4 +1,4 @@
-import { Redis } from 'ioredis'
+import type { Redis } from 'ioredis'
 
 import { CreateRedisOptions, createRedis } from '../lib/redis.js'
 import type { ReplayStore } from './replay-store.js'

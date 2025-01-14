@@ -1,5 +1,21 @@
 # @atproto-labs/fetch
 
+## 0.2.0
+
+### Minor Changes
+
+- [#3343](https://github.com/bluesky-social/atproto/pull/3343) [`5ece8c6ae`](https://github.com/bluesky-social/atproto/commit/5ece8c6aeab9c5c3f51295d93ed6e27c3c6095c2) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix typo in `ResponseTranformer` and `fetchResponseJsonTranformer`
+
+### Patch Changes
+
+- [#3343](https://github.com/bluesky-social/atproto/pull/3343) [`5ece8c6ae`](https://github.com/bluesky-social/atproto/commit/5ece8c6aeab9c5c3f51295d93ed6e27c3c6095c2) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Response mime type check is now case-insensitive (as per rfc2616)
+
+## 0.1.2
+
+### Patch Changes
+
+- [#3135](https://github.com/bluesky-social/atproto/pull/3135) [`622654672`](https://github.com/bluesky-social/atproto/commit/6226546725d1bb0375e3c9e0d71af173e8253c4f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Support parsing of more fetch() errors
+
 ## 0.1.1
 
 ### Patch Changes

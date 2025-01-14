@@ -1,6 +1,6 @@
 {
   "name": "@atproto/aws",
-  "version": "0.2.7",
+  "version": "0.2.12",
   "license": "MIT",
   "description": "Shared AWS cloud API helpers for atproto services",
   "keywords": [
@@ -26,12 +26,12 @@
     "@aws-sdk/client-kms": "^3.196.0",
     "@aws-sdk/client-s3": "^3.224.0",
     "@aws-sdk/lib-storage": "^3.226.0",
-    "@noble/curves": "^1.1.0",
+    "@noble/curves": "^1.7.0",
     "key-encoder": "^2.0.3",
     "multiformats": "^9.9.0",
     "uint8arrays": "3.0.0"
   },
   "devDependencies": {
-    "typescript": "^5.6.2"
+    "typescript": "^5.6.3"
   }
 }

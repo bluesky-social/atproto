@@ -1,7 +1,11 @@
 import {
+  assertAtprotoDid,
+  AtprotoDid,
   DidCache,
   DidResolverCached,
   DidResolverCommon,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  type DidResolverCommonOptions,
 } from '@atproto-labs/did-resolver'
 import { Fetch } from '@atproto-labs/fetch'
 import {
@@ -14,6 +18,7 @@ import { IdentityResolver } from '@atproto-labs/identity-resolver'
 import { SimpleStoreMemory } from '@atproto-labs/simple-store-memory'
 import { Key, Keyset } from '@atproto/jwk'
 import {
+  OAuthAuthorizationRequestParameters,
   OAuthClientIdDiscoverable,
   OAuthClientMetadata,
   OAuthClientMetadataInput,
@@ -73,6 +78,21 @@ export type OAuthClientOptions = {
   responseMode: OAuthResponseMode
   clientMetadata: Readonly<OAuthClientMetadataInput>
   keyset?: Keyset | Iterable<Key | undefined | null | false>
+  /**
+   * Determines if the client will allow communicating with the OAuth Servers
+   * (Authorization & Resource), or to retrieve "did:web" documents, over
+   * unsafe HTTP connections. It is recommended to set this to `true` only for
+   * development purposes.
+   *
+   * @note This does not affect the identity resolution mechanism, which will
+   * allow HTTP connections to the PLC Directory (if the provided directory url
+   * is "http:" based).
+   * @default false
+   * @see {@link OAuthProtectedResourceMetadataResolver.allowHttpResource}
+   * @see {@link OAuthAuthorizationServerMetadataResolver.allowHttpIssuer}
+   * @see {@link DidResolverCommonOptions.allowHttp}
+   */
+  allowHttp?: boolean
 
   // Stores
   stateStore: StateStore
@@ -143,11 +163,12 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
   readonly serverFactory: OAuthServerFactory
 
   // Stores
-  readonly sessionGetter: SessionGetter
-  readonly stateStore: StateStore
+  protected readonly sessionGetter: SessionGetter
+  protected readonly stateStore: StateStore
 
   constructor({
     fetch = globalThis.fetch,
+    allowHttp = false,
 
     stateStore,
     sessionStore,
@@ -186,7 +207,7 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
     this.oauthResolver = new OAuthResolver(
       new IdentityResolver(
         new DidResolverCached(
-          new DidResolverCommon({ fetch, plcDirectoryUrl }),
+          new DidResolverCommon({ fetch, plcDirectoryUrl, allowHttp }),
           didCache,
         ),
         new CachedHandleResolver(
@@ -197,10 +218,12 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
       new OAuthProtectedResourceMetadataResolver(
         protectedResourceMetadataCache,
         fetch,
+        { allowHttpResource: allowHttp },
       ),
       new OAuthAuthorizationServerMetadataResolver(
         authorizationServerMetadataCache,
         fetch,
+        { allowHttpIssuer: allowHttp },
       ),
     )
     this.serverFactory = new OAuthServerFactory(
@@ -248,7 +271,10 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
     return this.keyset?.publicJwks ?? ({ keys: [] as const } as const)
   }
 
-  async authorize(input: string, options?: AuthorizeOptions): Promise<URL> {
+  async authorize(
+    input: string,
+    { signal, ...options }: AuthorizeOptions = {},
+  ): Promise<URL> {
     const redirectUri =
       options?.redirect_uri ?? this.clientMetadata.redirect_uris[0]
     if (!this.clientMetadata.redirect_uris.includes(redirectUri)) {
@@ -256,10 +282,9 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
       throw new TypeError('Invalid redirect_uri')
     }
 
-    const { identity, metadata } = await this.oauthResolver.resolve(
-      input,
-      options,
-    )
+    const { identity, metadata } = await this.oauthResolver.resolve(input, {
+      signal,
+    })
 
     const pkce = await this.runtime.generatePKCE()
     const dpopKey = await this.runtime.generateKey(
@@ -275,7 +300,9 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
       appState: options?.state,
     })
 
-    const parameters = {
+    const parameters: OAuthAuthorizationRequestParameters = {
+      ...options,
+
       client_id: this.clientMetadata.client_id,
       redirect_uri: redirectUri,
       code_challenge: pkce.challenge,
@@ -285,12 +312,21 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
         ? input // If input is a handle or a DID, use it as a login_hint
         : undefined,
       response_mode: this.responseMode,
-      response_type: 'code',
-
-      display: options?.display,
-      prompt: options?.prompt,
+      response_type: 'code' as const,
       scope: options?.scope ?? this.clientMetadata.scope,
-      ui_locales: options?.ui_locales,
+    }
+
+    const authorizationUrl = new URL(metadata.authorization_endpoint)
+
+    // Since the user will be redirected to the authorization_endpoint url using
+    // a browser, we need to make sure that the url is valid.
+    if (
+      authorizationUrl.protocol !== 'https:' &&
+      authorizationUrl.protocol !== 'http:'
+    ) {
+      throw new TypeError(
+        `Invalid authorization endpoint protocol: ${authorizationUrl.protocol}`,
+      )
     }
 
     if (metadata.pushed_authorization_request_endpoint) {
@@ -300,7 +336,6 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
         parameters,
       )
 
-      const authorizationUrl = new URL(metadata.authorization_endpoint)
       authorizationUrl.searchParams.set(
         'client_id',
         this.clientMetadata.client_id,
@@ -312,7 +347,6 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
         'Server requires pushed authorization requests (PAR) but no PAR endpoint is available',
       )
     } else {
-      const authorizationUrl = new URL(metadata.authorization_endpoint)
       for (const [key, value] of Object.entries(parameters)) {
         if (value) authorizationUrl.searchParams.set(key, String(value))
       }
@@ -396,14 +430,14 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
       )
 
       if (issuerParam != null) {
-        if (!server.serverMetadata.issuer) {
+        if (!server.issuer) {
           throw new OAuthCallbackError(
             params,
             'Issuer not found in metadata',
             stateData.appState,
           )
         }
-        if (server.serverMetadata.issuer !== issuerParam) {
+        if (server.issuer !== issuerParam) {
           throw new OAuthCallbackError(
             params,
             'Issuer mismatch',
@@ -431,7 +465,7 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
 
         return { session, state: stateData.appState ?? null }
       } catch (err) {
-        await server.revoke(tokenSet.access_token)
+        await server.revoke(tokenSet.refresh_token || tokenSet.access_token)
 
         throw err
       }
@@ -448,11 +482,17 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
    *
    * @param refresh See {@link SessionGetter.getSession}
    */
-  async restore(sub: string, refresh?: boolean): Promise<OAuthSession> {
-    const { dpopKey, tokenSet } = await this.sessionGetter.getSession(
-      sub,
-      refresh,
-    )
+  async restore(
+    sub: string,
+    refresh: boolean | 'auto' = 'auto',
+  ): Promise<OAuthSession> {
+    // sub arg is lightly typed for convenience of library user
+    assertAtprotoDid(sub)
+
+    const { dpopKey, tokenSet } = await this.sessionGetter.get(sub, {
+      noCache: refresh === true,
+      allowStale: refresh === false,
+    })
 
     const server = await this.serverFactory.fromIssuer(tokenSet.iss, dpopKey, {
       noCache: refresh === true,
@@ -463,10 +503,12 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
   }
 
   async revoke(sub: string) {
-    const { dpopKey, tokenSet } = await this.sessionGetter.getSession(
-      sub,
-      false,
-    )
+    // sub arg is lightly typed for convenience of library user
+    assertAtprotoDid(sub)
+
+    const { dpopKey, tokenSet } = await this.sessionGetter.get(sub, {
+      allowStale: true,
+    })
 
     // NOT using `;(await this.restore(sub, false)).signOut()` because we want
     // the tokens to be deleted even if it was not possible to fetch the issuer
@@ -479,7 +521,10 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
     }
   }
 
-  protected createSession(server: OAuthServerAgent, sub: string): OAuthSession {
+  protected createSession(
+    server: OAuthServerAgent,
+    sub: AtprotoDid,
+  ): OAuthSession {
     return new OAuthSession(server, sub, this.sessionGetter, this.fetch)
   }
 }

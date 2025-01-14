@@ -213,13 +213,10 @@ export class Keyset<K extends Key = Key> implements Iterable<K> {
     }
   }
 
-  async verifyJwt<
-    P extends Record<string, unknown> = JwtPayload,
-    C extends string = string,
-  >(
+  async verifyJwt<C extends string = never>(
     token: SignedJwt,
     options?: VerifyOptions<C>,
-  ): Promise<VerifyResult<P, C> & { key: K }> {
+  ): Promise<VerifyResult<C> & { key: K }> {
     const { header } = unsafeDecodeJwt(token)
     const { kid, alg } = header
 
@@ -227,7 +224,7 @@ export class Keyset<K extends Key = Key> implements Iterable<K> {
 
     for (const key of this.list({ kid, alg })) {
       try {
-        const result = await key.verifyJwt<P, C>(token, options)
+        const result = await key.verifyJwt<C>(token, options)
         return { ...result, key }
       } catch (err) {
         errors.push(err)

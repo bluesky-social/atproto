@@ -1,5 +1,26 @@
 # @atproto/bsync
 
+## 0.0.11
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/common@0.4.6
+
+## 0.0.10
+
+### Patch Changes
+
+- Updated dependencies [[`588baae12`](https://github.com/bluesky-social/atproto/commit/588baae1212a3cba3bf0d95d2f268e80513fd9c4)]:
+  - @atproto/common@0.4.5
+
+## 0.0.9
+
+### Patch Changes
+
+- Updated dependencies [[`bac9be2d3`](https://github.com/bluesky-social/atproto/commit/bac9be2d3ec904d1f984a871f43cf89aca17289d)]:
+  - @atproto/syntax@0.3.1
+
 ## 0.0.8
 
 ### Patch Changes

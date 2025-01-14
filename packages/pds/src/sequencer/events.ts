@@ -22,11 +22,18 @@ export const formatSeqCommit = async (
   const blobs = new CidSet()
   let carSlice: Uint8Array
 
+  const blocksToSend = new BlockMap()
+  blocksToSend.addMap(commitData.newBlocks)
+  blocksToSend.addMap(commitData.relevantBlocks)
+
   // max 200 ops or 1MB of data
-  if (writes.length > 200 || commitData.newBlocks.byteSize > 1000000) {
+  if (writes.length > 200 || blocksToSend.byteSize > 1000000) {
     tooBig = true
     const justRoot = new BlockMap()
-    justRoot.add(commitData.newBlocks.get(commitData.cid))
+    const rootBlock = blocksToSend.get(commitData.cid)
+    if (rootBlock) {
+      justRoot.set(commitData.cid, rootBlock)
+    }
     carSlice = await blocksToCarFile(commitData.cid, justRoot)
   } else {
     tooBig = false
@@ -43,7 +50,7 @@ export const formatSeqCommit = async (
       }
       ops.push({ action: w.action, path, cid })
     }
-    carSlice = await blocksToCarFile(commitData.cid, commitData.newBlocks)
+    carSlice = await blocksToCarFile(commitData.cid, blocksToSend)
   }
 
   const evt: CommitEvt = {

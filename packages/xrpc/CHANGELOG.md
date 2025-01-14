@@ -1,5 +1,26 @@
 # @atproto/xrpc
 
+## 0.6.6
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lexicon@0.4.5
+
+## 0.6.5
+
+### Patch Changes
+
+- Updated dependencies [[`9fd65ba0f`](https://github.com/bluesky-social/atproto/commit/9fd65ba0fa4caca59fd0e6156145e4c2618e3a95)]:
+  - @atproto/lexicon@0.4.4
+
+## 0.6.4
+
+### Patch Changes
+
+- Updated dependencies [[`bac9be2d3`](https://github.com/bluesky-social/atproto/commit/bac9be2d3ec904d1f984a871f43cf89aca17289d)]:
+  - @atproto/lexicon@0.4.3
+
 ## 0.6.3
 
 ### Patch Changes

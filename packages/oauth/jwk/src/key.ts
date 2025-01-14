@@ -1,12 +1,14 @@
 import { jwkAlgorithms } from './alg.js'
 import { JwkError } from './errors.js'
 import { Jwk, jwkSchema } from './jwk.js'
-import { VerifyOptions, VerifyPayload, VerifyResult } from './jwt-verify.js'
+import { VerifyOptions, VerifyResult } from './jwt-verify.js'
 import { JwtHeader, JwtPayload, SignedJwt } from './jwt.js'
 import { cachedGetter } from './util.js'
 
-export abstract class Key {
-  constructor(protected readonly jwk: Readonly<Jwk>) {
+const jwkSchemaReadonly = jwkSchema.readonly()
+
+export abstract class Key<J extends Jwk = Jwk> {
+  constructor(protected readonly jwk: Readonly<J>) {
     // A key should always be used either for signing or encryption.
     if (!jwk.use) throw new JwkError('Missing "use" Parameter value')
   }
@@ -24,25 +26,28 @@ export abstract class Key {
     return false
   }
 
-  get privateJwk(): Jwk | undefined {
+  get privateJwk(): Readonly<J> | undefined {
     return this.isPrivate ? this.jwk : undefined
   }
 
   @cachedGetter
-  get publicJwk(): Jwk | undefined {
+  get publicJwk():
+    | Readonly<Exclude<J, { kty: 'oct' }> & { d?: never }>
+    | undefined {
     if (this.isSymetric) return undefined
-    if (this.isPrivate) {
-      const { d: _, ...jwk } = this.jwk as any
-      return jwk
-    }
-    return this.jwk
+
+    return jwkSchemaReadonly.parse({
+      ...this.jwk,
+      d: undefined,
+      k: undefined,
+    }) as Exclude<J, { kty: 'oct' }> & { d?: never }
   }
 
   @cachedGetter
-  get bareJwk(): Jwk | undefined {
+  get bareJwk(): Readonly<Jwk> | undefined {
     if (this.isSymetric) return undefined
     const { kty, crv, e, n, x, y } = this.jwk as any
-    return jwkSchema.parse({ crv, e, kty, n, x, y })
+    return jwkSchemaReadonly.parse({ crv, e, kty, n, x, y })
   }
 
   get use() {
@@ -64,7 +69,7 @@ export abstract class Key {
   }
 
   get crv() {
-    return (this.jwk as { crv: undefined } | Extract<Jwk, { crv: unknown }>).crv
+    return (this.jwk as { crv: undefined } | Extract<J, { crv: unknown }>).crv
   }
 
   /**
@@ -73,7 +78,7 @@ export abstract class Key {
    */
   @cachedGetter
   get algorithms(): readonly string[] {
-    return Array.from(jwkAlgorithms(this.jwk))
+    return Object.freeze(Array.from(jwkAlgorithms(this.jwk)))
   }
 
   /**
@@ -86,8 +91,8 @@ export abstract class Key {
    *
    * @throws {JwtVerifyError} if the JWT is invalid
    */
-  abstract verifyJwt<
-    P extends VerifyPayload = JwtPayload,
-    C extends string = string,
-  >(token: SignedJwt, options?: VerifyOptions<C>): Promise<VerifyResult<P, C>>
+  abstract verifyJwt<C extends string = never>(
+    token: SignedJwt,
+    options?: VerifyOptions<C>,
+  ): Promise<VerifyResult<C>>
 }

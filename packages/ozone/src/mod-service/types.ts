@@ -31,3 +31,28 @@ export type ModEventType =
   | ToolsOzoneModerationDefs.ModEventMute
   | ToolsOzoneModerationDefs.ModEventReverseTakedown
   | ToolsOzoneModerationDefs.ModEventTag
+  | ToolsOzoneModerationDefs.AccountEvent
+  | ToolsOzoneModerationDefs.IdentityEvent
+  | ToolsOzoneModerationDefs.RecordEvent
+
+type AccountHostingView = {
+  $type: 'tools.ozone.moderation.defs#accountHosting'
+  status: 'active' | 'takendown' | 'suspended' | 'deleted' | 'deactivated'
+  createdAt?: Date
+  updatedAt?: Date
+  deletedAt?: Date
+  deactivatedAt?: Date
+  reactivatedAt?: Date
+}
+
+type RecordHostingView = {
+  $type: 'tools.ozone.moderation.defs#recordHosting'
+  status: 'active' | 'deleted'
+  createdAt?: Date
+  updatedAt?: Date
+  deletedAt?: Date
+}
+
+export type ModerationSubjectHostingView =
+  | AccountHostingView
+  | RecordHostingView

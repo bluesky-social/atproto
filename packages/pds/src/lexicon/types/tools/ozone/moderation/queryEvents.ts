@@ -20,12 +20,16 @@ export interface QueryParams {
   /** Retrieve events created before a given timestamp */
   createdBefore?: string
   subject?: string
-  /** If true, events on all record types (posts, lists, profile etc.) owned by the did are returned */
+  /** If specified, only events where the subject belongs to the given collections will be returned. When subjectType is set to 'account', this will be ignored. */
+  collections?: string[]
+  /** If specified, only events where the subject is of the given type (account or record) will be returned. When this is set to 'account' the 'collections' parameter will be ignored. When includeAllUserRecords or subject is set, this will be ignored. */
+  subjectType?: 'account' | 'record' | (string & {})
+  /** If true, events on all record types (posts, lists, profile etc.) or records from given 'collections' param, owned by the did are returned. */
   includeAllUserRecords: boolean
   limit: number
   /** If true, only events with comments are returned */
   hasComment?: boolean
-  /** If specified, only events with comments containing the keyword are returned */
+  /** If specified, only events with comments containing the keyword are returned. Apply || separator to use multiple keywords and match using OR condition. */
   comment?: string
   /** If specified, only events where all of these labels were added are returned */
   addedLabels?: string[]
@@ -36,6 +40,7 @@ export interface QueryParams {
   /** If specified, only events where all of these tags were removed are returned */
   removedTags?: string[]
   reportTypes?: string[]
+  policies?: string[]
   cursor?: string
 }
 
