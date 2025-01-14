@@ -922,17 +922,16 @@ export class ModerationService {
     if (subjectType !== 'account' && collections?.length) {
       builder = builder
         .where('moderation_subject_status.recordPath', '!=', '')
-        .where((qb) =>
-          collections.reduce(
-            (qb, collection) =>
-              qb.orWhere(
-                'moderation_subject_status.recordPath',
-                'like',
-                `${collection}/%`,
-              ),
-            qb.where(sql`false`),
-          ),
-        )
+        .where((qb) => {
+          for (const collection of collections) {
+            qb = qb.orWhere(
+              'moderation_subject_status.recordPath',
+              'like',
+              `${collection}/%`,
+            )
+          }
+          return qb
+        })
     }
 
     if (ignoreSubjects?.length) {
@@ -1072,23 +1071,21 @@ export class ModerationService {
     const conditions = parseTags(tags)
     if (conditions?.length) {
       // [["tag1"], ["tag2", "tag3"], ["tag4"]] => (tags ? 'tag1') OR (tags ? 'tag2' AND tags ? 'tag3') OR (tags ? 'tag4')
-      builder = builder.where((qb) =>
-        conditions.reduce(
-          (qb, subTags, i) =>
-            // OR every conditions
-            qb[i === 0 ? 'where' : 'orWhere']((qb) =>
-              subTags.reduce(
-                // AND every sub subTags
-                (qb, subTag) =>
-                  qb.where(
-                    sql`${ref('moderation_subject_status.tags')} ? ${subTag}`,
-                  ),
-                qb,
-              ),
-            ),
-          qb,
-        ),
-      )
+      builder = builder.where((qb) => {
+        for (const subTags of conditions) {
+          // OR between every conditions items (subTags)
+          qb = qb.orWhere((qb) => {
+            // AND between every subTags items (subTag)
+            for (const subTag of subTags) {
+              qb = qb.where(
+                sql`${ref('moderation_subject_status.tags')} ? ${subTag}`,
+              )
+            }
+            return qb
+          })
+        }
+        return qb
+      })
     }
 
     if (excludeTags?.length) {
