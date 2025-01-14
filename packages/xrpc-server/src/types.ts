@@ -137,7 +137,7 @@ export type CalcPointsFn = (ctx: XRPCReqContext) => number
 
 export interface RateLimiterI {
   consume: RateLimiterConsume
-  delete: RateLimiterDelete
+  reset: RateLimiterReset
 }
 
 export type RateLimiterConsume = (
@@ -145,7 +145,7 @@ export type RateLimiterConsume = (
   opts?: { calcKey?: CalcKeyFn; calcPoints?: CalcPointsFn },
 ) => Promise<RateLimiterStatus | RateLimitExceededError | null>
 
-export type RateLimiterDelete = (
+export type RateLimiterReset = (
   ctx: XRPCReqContext,
   opts?: { calcKey?: CalcKeyFn },
 ) => Promise<void>

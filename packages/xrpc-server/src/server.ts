@@ -21,7 +21,7 @@ import { Readable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 
 import log from './logger'
-import { consumeMany, deleteMany } from './rate-limiter'
+import { consumeMany, resetMany } from './rate-limiter'
 import { ErrorFrame, Frame, MessageFrame, XrpcStreamServer } from './stream'
 import {
   AuthVerifier,
@@ -254,13 +254,13 @@ export class Server {
     const consumeRateLimit = (reqCtx: XRPCReqContext) =>
       consumeMany(
         reqCtx,
-        rls.map(({ consume }) => consume),
+        rls.map((rl) => (ctx: XRPCReqContext) => rl.consume(ctx)),
       )
 
-    const deleteRateLimit = (reqCtx: XRPCReqContext) =>
-      deleteMany(
+    const resetRateLimit = (reqCtx: XRPCReqContext) =>
+      resetMany(
         reqCtx,
-        rls.map(({ delete: deleteRl }) => deleteRl),
+        rls.map((rl) => (ctx: XRPCReqContext) => rl.reset(ctx)),
       )
 
     return async function (req, res, next) {
@@ -283,7 +283,7 @@ export class Server {
           req,
           res,
           async resetRouteRateLimits() {
-            return deleteRateLimit(this)
+            return resetRateLimit(this)
           },
         }
 
@@ -436,15 +436,9 @@ export class Server {
   private setupRouteRateLimits(nsid: string, config: XRPCHandlerConfig) {
     this.routeRateLimiters[nsid] = []
     for (const limit of this.globalRateLimiters) {
-      const consumeFn = async (ctx: XRPCReqContext) => {
-        return limit.consume(ctx)
-      }
-      const deleteFn = async (ctx: XRPCReqContext) => {
-        return limit.delete(ctx)
-      }
       this.routeRateLimiters[nsid].push({
-        consume: consumeFn,
-        delete: deleteFn,
+        consume: (ctx: XRPCReqContext) => limit.consume(ctx),
+        reset: (ctx: XRPCReqContext) => limit.reset(ctx),
       })
     }
 
@@ -459,18 +453,16 @@ export class Server {
         if (isShared(limit)) {
           const rateLimiter = this.sharedRateLimiters[limit.name]
           if (rateLimiter) {
-            const consumeFn = (ctx: XRPCReqContext) =>
-              rateLimiter.consume(ctx, {
-                calcKey,
-                calcPoints,
-              })
-            const deleteFn = (ctx: XRPCReqContext) =>
-              rateLimiter.delete(ctx, {
-                calcKey,
-              })
             this.routeRateLimiters[nsid].push({
-              consume: consumeFn,
-              delete: deleteFn,
+              consume: (ctx: XRPCReqContext) =>
+                rateLimiter.consume(ctx, {
+                  calcKey,
+                  calcPoints,
+                }),
+              reset: (ctx: XRPCReqContext) =>
+                rateLimiter.reset(ctx, {
+                  calcKey,
+                }),
             })
           }
         } else {
@@ -484,18 +476,16 @@ export class Server {
           })
           if (rateLimiter) {
             this.sharedRateLimiters[nsid] = rateLimiter
-            const consumeFn = (ctx: XRPCReqContext) =>
-              rateLimiter.consume(ctx, {
-                calcKey,
-                calcPoints,
-              })
-            const deleteFn = (ctx: XRPCReqContext) =>
-              rateLimiter.delete(ctx, {
-                calcKey,
-              })
             this.routeRateLimiters[nsid].push({
-              consume: consumeFn,
-              delete: deleteFn,
+              consume: (ctx: XRPCReqContext) =>
+                rateLimiter.consume(ctx, {
+                  calcKey,
+                  calcPoints,
+                }),
+              reset: (ctx: XRPCReqContext) =>
+                rateLimiter.reset(ctx, {
+                  calcKey,
+                }),
             })
           }
         }

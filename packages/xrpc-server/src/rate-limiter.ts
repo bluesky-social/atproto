@@ -10,7 +10,7 @@ import {
   CalcPointsFn,
   RateLimitExceededError,
   RateLimiterConsume,
-  RateLimiterDelete,
+  RateLimiterReset,
   RateLimiterI,
   RateLimiterStatus,
   XRPCReqContext,
@@ -62,10 +62,10 @@ export class RateLimiter implements RateLimiterI {
     return new RateLimiter(limiter, opts)
   }
 
-  consume = async (
+  async consume(
     ctx: XRPCReqContext,
     opts?: { calcKey?: CalcKeyFn; calcPoints?: CalcPointsFn },
-  ): Promise<RateLimiterStatus | RateLimitExceededError | null> => {
+  ): Promise<RateLimiterStatus | RateLimitExceededError | null> {
     if (
       this.bypassSecret &&
       ctx.req.header('x-ratelimit-bypass') === this.bypassSecret
@@ -111,10 +111,10 @@ export class RateLimiter implements RateLimiterI {
     }
   }
 
-  delete = async (
+  async reset(
     ctx: XRPCReqContext,
     opts?: { calcKey?: CalcKeyFn },
-  ): Promise<void> => {
+  ): Promise<void> {
     const key = opts?.calcKey ? opts.calcKey(ctx) : this.calcKey(ctx)
     if (key === null) {
       return
@@ -123,15 +123,7 @@ export class RateLimiter implements RateLimiterI {
     try {
       await this.limiter.delete(key)
     } catch (err) {
-      logger.error(
-        {
-          err,
-          keyPrefix: this.limiter.keyPrefix,
-          points: this.limiter.points,
-          duration: this.limiter.duration,
-        },
-        'rate limiter failed to delete key',
-      )
+      throw new Error(`rate limiter failed to reset key: ${key}`)
     }
   }
 }
@@ -168,9 +160,9 @@ export const consumeMany = async (
   }
 }
 
-export const deleteMany = async (
+export const resetMany = async (
   ctx: XRPCReqContext,
-  fns: RateLimiterDelete[],
+  fns: RateLimiterReset[],
 ): Promise<void> => {
   if (fns.length === 0) return
   await Promise.all(fns.map((fn) => fn(ctx)))
