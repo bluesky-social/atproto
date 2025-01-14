@@ -205,18 +205,18 @@ const getSubjectStatusForRecordEvent = ({
 
 export const moderationSubjectStatusQueryBuilder = (db: DatabaseSchema) => {
   return db
-    .selectFrom('moderation_subject_status as mss')
-    .selectAll('mss')
+    .selectFrom('moderation_subject_status')
+    .selectAll('moderation_subject_status')
     .leftJoin('account_events_stats as aes', (join) =>
-      join.onRef('mss.did', '=', 'aes.subjectDid'),
+      join.onRef('moderation_subject_status.did', '=', 'aes.subjectDid'),
     )
     .selectAll('aes')
     .leftJoin('account_record_events_stats as ares', (join) =>
-      join.onRef('mss.did', '=', 'ares.subjectDid'),
+      join.onRef('moderation_subject_status.did', '=', 'ares.subjectDid'),
     )
     .selectAll('ares')
     .leftJoin('account_record_status_stats as arss', (join) =>
-      join.onRef('mss.did', '=', 'arss.did'),
+      join.onRef('moderation_subject_status.did', '=', 'arss.did'),
     )
     .selectAll('arss')
 }

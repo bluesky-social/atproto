@@ -482,7 +482,7 @@ export class ModerationViews {
     )
       .where(
         sql<string>`${ref(
-          'mss.blobCids',
+          'moderation_subject_status.blobCids',
         )} @> ${JSON.stringify(blobs.map((blob) => blob.ref.toString()))}`,
       )
       .selectAll()
@@ -553,31 +553,36 @@ export class ModerationViews {
     return signed
   }
 
-  async getSubjectStatus(subjects: string[]) {
+  async getSubjectStatus(
+    subjects: string[],
+  ): Promise<Map<string, ModerationSubjectStatusRowWithHandle>> {
+    if (!subjects.length) return new Map()
+
     const parsedSubjects = subjects.map(parseSubjectId)
 
-    const builder = moderationSubjectStatusQueryBuilder(this.db.db).where(
-      (clause) => {
-        return parsedSubjects.reduce(
-          (clause, sub) => {
-            return clause.orWhere((qb) =>
-              qb
-                .where('mss.did', '=', sub.did)
-                .where('mss.recordPath', '=', sub.recordPath ?? ''),
-            )
-          },
-          // If the array is empty, no result should ne returned
-          clause.where(sql`false`),
-        )
-      },
-    )
+    const builder = moderationSubjectStatusQueryBuilder(this.db.db)
+      //
+      .where((qb) => {
+        for (const sub of parsedSubjects) {
+          qb = qb.orWhere((qb) =>
+            qb
+              .where('moderation_subject_status.did', '=', sub.did)
+              .where(
+                'moderation_subject_status.recordPath',
+                '=',
+                sub.recordPath ?? '',
+              ),
+          )
+        }
+        return qb
+      })
 
     const [statusRes, accountsByDid] = await Promise.all([
       builder.execute(),
       this.getAccoutInfosByDid(parsedSubjects.map((s) => s.did)),
     ])
 
-    return new Map<string, ModerationSubjectStatusRowWithHandle>(
+    return new Map(
       statusRes.map((status) => {
         const subjectId = formatSubjectId(status.did, status.recordPath)
         const handle = accountsByDid.get(status.did)?.handle ?? INVALID_HANDLE

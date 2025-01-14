@@ -4828,6 +4828,11 @@ export const schemaDict = {
                   ref: 'lex:app.bsky.actor.defs#profileView',
                 },
               },
+              recId: {
+                type: 'integer',
+                description:
+                  'Snowflake for this recommendation, use when submitting recommendation events.',
+              },
             },
           },
         },
@@ -8335,6 +8340,11 @@ export const schemaDict = {
                   'If true, response has fallen-back to generic results, and is not scoped using relativeToDid',
                 default: false,
               },
+              recId: {
+                type: 'integer',
+                description:
+                  'Snowflake for this recommendation, use when submitting recommendation events.',
+              },
             },
           },
         },
@@ -9405,6 +9415,11 @@ export const schemaDict = {
                 format: 'did',
                 description:
                   'DID of the account these suggestions are relative to. If this is returned undefined, suggestions are based on the viewer.',
+              },
+              recId: {
+                type: 'integer',
+                description:
+                  'Snowflake for this recommendation, use when submitting recommendation events.',
               },
             },
           },
@@ -11275,8 +11290,7 @@ export const schemaDict = {
         },
       },
       accountStats: {
-        description:
-          'Statistics about a particular account subject on the labeller',
+        description: 'Statistics about a particular account subject',
         type: 'object',
         properties: {
           reportCount: {
@@ -11299,8 +11313,7 @@ export const schemaDict = {
         },
       },
       recordsStats: {
-        description:
-          'Statistics about a set of record subject items on the labeller',
+        description: 'Statistics about a set of record subject items',
         type: 'object',
         properties: {
           totalReports: {

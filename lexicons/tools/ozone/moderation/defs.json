@@ -196,7 +196,7 @@
       }
     },
     "accountStats": {
-      "description": "Statistics about a particular account subject on the labeller",
+      "description": "Statistics about a particular account subject",
       "type": "object",
       "properties": {
         "reportCount": {
@@ -218,7 +218,7 @@
       }
     },
     "recordsStats": {
-      "description": "Statistics about a set of record subject items on the labeller",
+      "description": "Statistics about a set of record subject items",
       "type": "object",
       "properties": {
         "totalReports": {

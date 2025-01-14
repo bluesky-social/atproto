@@ -1,5 +1,6 @@
 import net from 'node:net'
 import { Insertable, sql } from 'kysely'
+import { CID } from 'multiformats/cid'
 import { AtUri, INVALID_HANDLE } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { addHoursToDate, chunkArray } from '@atproto/common'
@@ -311,6 +312,19 @@ export class ModerationService {
       .selectAll()
       .where('id', '=', id)
       .executeTakeFirst()
+  }
+
+  async getCurrentStatus(
+    subject: { did: string } | { uri: AtUri } | { cids: CID[] },
+  ) {
+    let builder = this.db.db.selectFrom('moderation_subject_status').selectAll()
+    if ('did' in subject) {
+      builder = builder.where('did', '=', subject.did)
+    } else if ('uri' in subject) {
+      builder = builder.where('recordPath', '=', subject.uri.toString())
+    }
+    // TODO: Handle the cid status
+    return await builder.execute()
   }
 
   async resolveSubjectsForAccount(
@@ -863,19 +877,27 @@ export class ModerationService {
 
     if (subject) {
       const subjectInfo = getStatusIdentifierFromSubject(subject)
-      builder = builder.where('mss.did', '=', subjectInfo.did)
+      builder = builder.where(
+        'moderation_subject_status.did',
+        '=',
+        subjectInfo.did,
+      )
 
       if (!includeAllUserRecords) {
         builder = builder.where((qb) =>
           subjectInfo.recordPath
-            ? qb.where('mss.recordPath', '=', subjectInfo.recordPath)
-            : qb.where('mss.recordPath', '=', ''),
+            ? qb.where(
+                'moderation_subject_status.recordPath',
+                '=',
+                subjectInfo.recordPath,
+              )
+            : qb.where('moderation_subject_status.recordPath', '=', ''),
         )
       }
     } else if (subjectType === 'account') {
-      builder = builder.where('mss.recordPath', '=', '')
+      builder = builder.where('moderation_subject_status.recordPath', '=', '')
     } else if (subjectType === 'record') {
-      builder = builder.where('mss.recordPath', '!=', '')
+      builder = builder.where('moderation_subject_status.recordPath', '!=', '')
     }
 
     // Only fetch items that belongs to the specified queue when specified
@@ -899,11 +921,15 @@ export class ModerationService {
     // If subjectType is set to 'account' let that take priority and ignore collections filter
     if (subjectType !== 'account' && collections?.length) {
       builder = builder
-        .where('mss.recordPath', '!=', '')
+        .where('moderation_subject_status.recordPath', '!=', '')
         .where((qb) =>
           collections.reduce(
             (qb, collection) =>
-              qb.orWhere('mss.recordPath', 'like', `${collection}/%`),
+              qb.orWhere(
+                'moderation_subject_status.recordPath',
+                'like',
+                `${collection}/%`,
+              ),
             qb.where(sql`false`),
           ),
         )
@@ -911,78 +937,134 @@ export class ModerationService {
 
     if (ignoreSubjects?.length) {
       builder = builder
-        .where('mss.did', 'not in', ignoreSubjects)
-        .where('mss.recordPath', 'not in', ignoreSubjects)
+        .where('moderation_subject_status.did', 'not in', ignoreSubjects)
+        .where('moderation_subject_status.recordPath', 'not in', ignoreSubjects)
     }
 
     if (reviewState) {
-      builder = builder.where('mss.reviewState', '=', reviewState)
+      builder = builder.where(
+        'moderation_subject_status.reviewState',
+        '=',
+        reviewState,
+      )
     }
 
     if (lastReviewedBy) {
-      builder = builder.where('mss.lastReviewedBy', '=', lastReviewedBy)
+      builder = builder.where(
+        'moderation_subject_status.lastReviewedBy',
+        '=',
+        lastReviewedBy,
+      )
     }
 
     if (reviewedAfter) {
-      builder = builder.where('mss.lastReviewedAt', '>', reviewedAfter)
+      builder = builder.where(
+        'moderation_subject_status.lastReviewedAt',
+        '>',
+        reviewedAfter,
+      )
     }
 
     if (reviewedBefore) {
-      builder = builder.where('mss.lastReviewedAt', '<', reviewedBefore)
+      builder = builder.where(
+        'moderation_subject_status.lastReviewedAt',
+        '<',
+        reviewedBefore,
+      )
     }
 
     if (hostingUpdatedAfter) {
-      builder = builder.where('mss.hostingUpdatedAt', '>', hostingUpdatedAfter)
+      builder = builder.where(
+        'moderation_subject_status.hostingUpdatedAt',
+        '>',
+        hostingUpdatedAfter,
+      )
     }
 
     if (hostingUpdatedBefore) {
-      builder = builder.where('mss.hostingUpdatedAt', '<', hostingUpdatedBefore)
+      builder = builder.where(
+        'moderation_subject_status.hostingUpdatedAt',
+        '<',
+        hostingUpdatedBefore,
+      )
     }
 
     if (hostingDeletedAfter) {
-      builder = builder.where('mss.hostingDeletedAt', '>', hostingDeletedAfter)
+      builder = builder.where(
+        'moderation_subject_status.hostingDeletedAt',
+        '>',
+        hostingDeletedAfter,
+      )
     }
 
     if (hostingDeletedBefore) {
-      builder = builder.where('mss.hostingDeletedAt', '<', hostingDeletedBefore)
+      builder = builder.where(
+        'moderation_subject_status.hostingDeletedAt',
+        '<',
+        hostingDeletedBefore,
+      )
     }
 
     if (hostingStatuses?.length) {
-      builder = builder.where('mss.hostingStatus', 'in', hostingStatuses)
+      builder = builder.where(
+        'moderation_subject_status.hostingStatus',
+        'in',
+        hostingStatuses,
+      )
     }
 
     if (reportedAfter) {
-      builder = builder.where('mss.lastReviewedAt', '>', reportedAfter)
+      builder = builder.where(
+        'moderation_subject_status.lastReviewedAt',
+        '>',
+        reportedAfter,
+      )
     }
 
     if (reportedBefore) {
-      builder = builder.where('mss.lastReportedAt', '<', reportedBefore)
+      builder = builder.where(
+        'moderation_subject_status.lastReportedAt',
+        '<',
+        reportedBefore,
+      )
     }
 
     if (takendown) {
-      builder = builder.where('mss.takendown', '=', true)
+      builder = builder.where('moderation_subject_status.takendown', '=', true)
     }
 
     if (appealed !== undefined) {
       builder =
         appealed === false
-          ? builder.where('mss.appealed', 'is', null)
-          : builder.where('mss.appealed', '=', appealed)
+          ? builder.where('moderation_subject_status.appealed', 'is', null)
+          : builder.where('moderation_subject_status.appealed', '=', appealed)
     }
 
     if (!includeMuted) {
       builder = builder.where((qb) =>
         qb
-          .where('mss.muteUntil', '<', new Date().toISOString())
-          .orWhere('mss.muteUntil', 'is', null),
+          .where(
+            'moderation_subject_status.muteUntil',
+            '<',
+            new Date().toISOString(),
+          )
+          .orWhere('moderation_subject_status.muteUntil', 'is', null),
       )
     }
 
     if (onlyMuted) {
       builder = builder.where((qb) =>
         qb
-          .where('mss.muteUntil', '>', new Date().toISOString())
-          .orWhere('mss.muteReportingUntil', '>', new Date().toISOString()),
+          .where(
+            'moderation_subject_status.muteUntil',
+            '>',
+            new Date().toISOString(),
+          )
+          .orWhere(
+            'moderation_subject_status.muteReportingUntil',
+            '>',
+            new Date().toISOString(),
+          ),
       )
     }
 
@@ -997,7 +1079,10 @@ export class ModerationService {
             qb[i === 0 ? 'where' : 'orWhere']((qb) =>
               subTags.reduce(
                 // AND every sub subTags
-                (qb, subTag) => qb.where(sql`${ref('mss.tags')} ? ${subTag}`),
+                (qb, subTag) =>
+                  qb.where(
+                    sql`${ref('moderation_subject_status.tags')} ? ${subTag}`,
+                  ),
                 qb,
               ),
             ),
@@ -1010,13 +1095,16 @@ export class ModerationService {
       builder = builder.where((qb) =>
         qb
           .where(
-            sql`NOT(${ref('mss.tags')} ?| array[${sql.join(excludeTags)}]::TEXT[])`,
+            sql`NOT(${ref('moderation_subject_status.tags')} ?| array[${sql.join(excludeTags)}]::TEXT[])`,
           )
           .orWhere('tags', 'is', null),
       )
     }
 
-    const keyset = new StatusKeyset(ref(`mss.${sortField}`), ref('mss.id'))
+    const keyset = new StatusKeyset(
+      ref(`moderation_subject_status.${sortField}`),
+      ref('moderation_subject_status.id'),
+    )
     const paginatedBuilder = paginate(builder, {
       limit,
       cursor,

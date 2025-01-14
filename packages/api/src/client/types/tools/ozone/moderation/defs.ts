@@ -153,7 +153,7 @@ export function validateSubjectStatusView(v: unknown): ValidationResult {
   return lexicons.validate('tools.ozone.moderation.defs#subjectStatusView', v)
 }
 
-/** Statistics about a particular account subject on the labeller */
+/** Statistics about a particular account subject */
 export interface AccountStats {
   /** Total number of reports on the account */
   reportCount?: number
@@ -178,7 +178,7 @@ export function validateAccountStats(v: unknown): ValidationResult {
   return lexicons.validate('tools.ozone.moderation.defs#accountStats', v)
 }
 
-/** Statistics about a set of record subject items on the labeller */
+/** Statistics about a set of record subject items */
 export interface RecordsStats {
   /** Cumulative sum of the number of reports on the items in the set */
   totalReports?: number
