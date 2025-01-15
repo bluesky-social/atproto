@@ -1,0 +1,28 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.identity.resolveIdentity",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Resolves an identity (DID or Handle) to a full identity (DID document and verified handle).",
+      "parameters": {
+        "type": "params",
+        "required": ["identifier"],
+        "properties": {
+          "handle": {
+            "type": "string",
+            "format": "at-identifier",
+            "description": "Handle or DID to resolve."
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "ref",
+          "ref": "com.atproto.identity.defs#atprotoIdentity"
+        }
+      }
+    }
+  }
+}
