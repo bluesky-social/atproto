@@ -152,14 +152,22 @@ type InferLexIpldType<D extends LexIpldType> = D extends LexBytes
     ? Cid
     : never
 
-type InferLexBlob<D extends LexBlob> = Simplify<{
-  $type: 'blob'
-  ref: string
-  mimeType: D extends { accept: readonly (infer A extends string)[] }
-    ? A
-    : string
-  size: number
-}>
+type InferLexBlob<D extends LexBlob> = Simplify<
+  | {
+      $type: 'blob'
+      ref: string
+      mimeType: D extends { accept: readonly (infer A extends string)[] }
+        ? A
+        : string
+      size: number
+    }
+  | {
+      cid: string
+      mimeType: D extends { accept: readonly (infer A extends string)[] }
+        ? A
+        : string
+    }
+>
 
 type InferLexObject<
   L extends readonly LexiconDoc[],
