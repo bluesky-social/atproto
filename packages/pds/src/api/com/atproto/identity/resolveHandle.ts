@@ -3,6 +3,7 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as ident from '@atproto/syntax'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
+import { isSupportedHandle } from '../../../../handle'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.identity.resolveHandle(async ({ params }) => {
@@ -24,7 +25,7 @@ export default function (server: Server, ctx: AppContext) {
       did = user.did
     } else {
       const supportedHandle = ctx.cfg.identity.serviceHandleDomains.some(
-        (host) => handle.endsWith(host) || handle === host.slice(1),
+        (host) => isSupportedHandle(handle, host),
       )
       // this should be in our DB & we couldn't find it, so fail
       if (supportedHandle) {
