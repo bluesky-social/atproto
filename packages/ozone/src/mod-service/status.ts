@@ -78,7 +78,7 @@ const getSubjectStatusForModerationEvent = ({
     case 'tools.ozone.moderation.defs#modEventTakedown':
       return {
         // If we are doing a takedown, safe to move the item out of appealed state
-        appealed: false,
+        ...(currentStatus?.appealed ? { appealed: false } : {}),
         takendown: true,
         lastReviewedBy: createdBy,
         reviewState: REVIEWCLOSED,
