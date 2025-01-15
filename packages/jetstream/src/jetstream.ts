@@ -1,4 +1,4 @@
-import { LexiconDoc, Lexicons } from '@atproto/lexicon'
+import { jsonToLex, LexiconDoc, Lexicons } from '@atproto/lexicon'
 import { DuplexOptions } from 'node:stream'
 import { createWebSocketStream, WebSocket } from 'ws'
 
@@ -86,7 +86,8 @@ export async function* jetstream({
         case CommitOperation.Create:
         case CommitOperation.Update:
           try {
-            const result = lexicons.validate(commit.collection, commit.record)
+            const parsed = jsonToLex(commit.record)
+            const result = lexicons.validate(commit.collection, parsed)
             commit.recordError = result.success ? null : result.error
             yield event
           } catch (error) {
