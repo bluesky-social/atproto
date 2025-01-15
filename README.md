@@ -28,7 +28,7 @@ This repository contains Bluesky's reference implementation of AT Protocol, and 
 
 **Lexicons:** for both the `com.atproto.*` and `app.bsky.*` are canonically versioned in this repo, for now, under `./lexicons/`. These are JSON files in the [Lexicon schema definition language](https://atproto.com/specs/lexicon), similar to JSON Schema or OpenAPI.
 
-**Interoperability Test Data:** the language-neutral test files in `./interop-test-files/` may be useful for other protocol implementations to ensure that they follow the specification correctly
+Interoperability test data used to be in this repo, but are now in [bluesky-social/atproto-interop-tests](https://github.com/bluesky-social/atproto-interop-tests).
 
 The source code for the Bluesky Social client app (for web and mobile) can be found at [bluesky-social/social-app](https://github.com/bluesky-social/social-app).
 
