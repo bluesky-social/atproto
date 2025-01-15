@@ -2,6 +2,7 @@ import { Readable } from 'stream'
 import { pipeline } from 'stream/promises'
 import sharp from 'sharp'
 import { errHasMsg } from '@atproto/common'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export async function maybeGetInfo(
   stream: Readable,
@@ -15,10 +16,12 @@ export async function maybeGetInfo(
     ])
     metadata = result
   } catch (err) {
+    // If the buffer doesn't have any identifiable image in it, return null
     if (errHasMsg(err, 'Input buffer contains unsupported image format')) {
       return null
     }
-    throw err
+    // Otherwise, the buffer has a corrupt image in it
+    throw new InvalidRequestError("Image detected but content is unparsable")
   }
   const { size, height, width, format } = metadata
   if (
