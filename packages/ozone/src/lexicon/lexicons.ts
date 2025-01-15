@@ -1122,6 +1122,29 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoLexiconSchema: {
+    lexicon: 1,
+    id: 'com.atproto.lexicon.schema',
+    defs: {
+      main: {
+        type: 'record',
+        description:
+          "Representation of Lexicon schemas themselves, when published as atproto records. Note that the schema language is not defined in Lexicon; this meta schema currently only includes a single version field ('lexicon'). See the atproto specifications for description of the other expected top-level fields ('id', 'defs', etc).",
+        key: 'nsid',
+        record: {
+          type: 'object',
+          required: ['lexicon'],
+          properties: {
+            lexicon: {
+              type: 'integer',
+              description:
+                "Indicates the 'version' of the Lexicon language. Must be '1' for the current atproto/Lexicon schema system.",
+            },
+          },
+        },
+      },
+    },
+  },
   ComAtprotoModerationCreateReport: {
     lexicon: 1,
     id: 'com.atproto.moderation.createReport',
@@ -13644,6 +13667,7 @@ export const ids = {
   ComAtprotoLabelDefs: 'com.atproto.label.defs',
   ComAtprotoLabelQueryLabels: 'com.atproto.label.queryLabels',
   ComAtprotoLabelSubscribeLabels: 'com.atproto.label.subscribeLabels',
+  ComAtprotoLexiconSchema: 'com.atproto.lexicon.schema',
   ComAtprotoModerationCreateReport: 'com.atproto.moderation.createReport',
   ComAtprotoModerationDefs: 'com.atproto.moderation.defs',
   ComAtprotoRepoApplyWrites: 'com.atproto.repo.applyWrites',
