@@ -19,6 +19,8 @@ export interface Record {
   labels?:
     | ComAtprotoLabelDefs.SelfLabels
     | { $type: string; [k: string]: unknown }
+  /** Indicates the human language for the intended audiences of the feed generator. */
+  langs?: string[]
   createdAt: string
   [k: string]: unknown
 }

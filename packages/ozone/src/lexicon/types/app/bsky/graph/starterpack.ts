@@ -15,6 +15,8 @@ export interface Record {
   /** Reference (AT-URI) to the list record. */
   list: string
   feeds?: FeedItem[]
+  /** Indicates the human language for the intended audiences of the starter pack. */
+  langs?: string[]
   createdAt: string
   [k: string]: unknown
 }

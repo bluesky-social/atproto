@@ -18,6 +18,12 @@
             "type": "union",
             "refs": ["com.atproto.label.defs#selfLabels"]
           },
+          "langs": {
+            "type": "array",
+            "description": "Indicates the human language for the intended audiences of the labeler.",
+            "maxLength": 3,
+            "items": { "type": "string", "format": "language" }
+          },
           "createdAt": { "type": "string", "format": "datetime" }
         }
       }
