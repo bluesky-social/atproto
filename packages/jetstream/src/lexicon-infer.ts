@@ -62,6 +62,13 @@ type Simplify<T> = { [K in keyof T]: T[K] } & NonNullable<unknown>
 
 declare const failure: unique symbol
 type Failure<Message extends string> = { [failure]: Message }
+type RefToType<R extends Ref> = R extends `lex:${infer N}#main`
+  ? N
+  : R extends `lex:${infer N}`
+    ? N
+    : R extends `${infer H}#main`
+      ? H
+      : R
 
 // LexiconDoc definition extraction utilities
 
@@ -101,15 +108,13 @@ type InferProperties<
   L extends readonly LexiconDoc[],
   C extends L[number]['id'],
   P extends Record<string, LexDef>,
-  R,
-> = R extends readonly (infer T extends string)[]
-  ? Simplify<
-      {
-        -readonly [K in Exclude<keyof P, T>]?: InferDef<L, C, P[K]>
-      } & {
-        -readonly [K in Extract<keyof P, T>]-?: InferDef<L, C, P[K]>
-      }
-    >
+  Required,
+> = Required extends readonly (infer T extends string)[]
+  ? {
+      -readonly [K in Exclude<keyof P, T>]?: InferDef<L, C, P[K]>
+    } & {
+      -readonly [K in Extract<keyof P, T>]-?: InferDef<L, C, P[K]>
+    }
   : {
       -readonly [K in keyof P]?: InferDef<L, C, P[K]>
     }
@@ -163,7 +168,12 @@ type InferLexObject<
     properties: Record<string, LexDef>
     required?: readonly string[]
   },
-> = InferProperties<L, C, D['properties'], D['required']>
+  R extends Ref,
+> = Simplify<
+  InferProperties<L, C, D['properties'], D['required']> & {
+    $type?: RefToType<R>
+  }
+>
 
 type InferLexArray<
   L extends readonly LexiconDoc[],
@@ -175,7 +185,14 @@ type InferLexRecord<
   L extends readonly LexiconDoc[],
   C extends L[number]['id'],
   D extends { record: LexObject },
-> = InferLexObject<L, C, D['record']>
+  R extends Ref,
+> = Simplify<
+  {
+    $type: RefToType<R>
+    // Records can contain additional properties
+    [k: string]: unknown
+  } & InferProperties<L, C, D['record']['properties'], D['record']['required']>
+>
 
 type InferLexRefVariant<
   L extends readonly LexiconDoc[],
@@ -192,28 +209,29 @@ type InferRef<
   C extends L[number]['id'],
   R extends Ref,
 > = R extends `lex:${infer N}#${infer H}`
-  ? InferDef<L, N, ExtractDef<L, N, H>>
+  ? InferDef<L, N, ExtractDef<L, N, H>, `${N}#${H}`>
   : R extends `lex:${infer N}`
-    ? InferDef<L, N, ExtractDef<L, N, 'main'>>
+    ? InferDef<L, N, ExtractDef<L, N, 'main'>, `${N}#main`>
     : R extends `#${infer H}`
-      ? InferDef<L, C, ExtractDef<L, C, H>>
+      ? InferDef<L, C, ExtractDef<L, C, H>, `${C}#${H}`>
       : R extends `${infer N}#${infer H}`
-        ? InferDef<L, N, ExtractDef<L, N, H>>
+        ? InferDef<L, N, ExtractDef<L, N, H>, `${N}#${H}`>
         : R extends `${string}.${string}`
-          ? InferDef<L, R, ExtractDef<L, R, 'main'>>
+          ? InferDef<L, R, ExtractDef<L, R, 'main'>, `${R}#main`>
           : Failure<"ref must be in the form 'lex:<nsid>#<def>', 'lex:<nsid>', '<nsid>#<def>', '#<def>'. or '<nsid>'.">
 
 type InferDef<
   L extends readonly LexiconDoc[],
   C extends L[number]['id'],
   D extends LexDef,
+  R extends Ref = never,
 > =
   // Lexicon validator does not allow nested records.
   // D extends LexRecord ? InferLexRecord<L, C, D> :
   D extends LexRefVariant
     ? InferLexRefVariant<L, C, D>
     : D extends LexObject
-      ? InferLexObject<L, C, D>
+      ? InferLexObject<L, C, D, R>
       : D extends LexArray | LexPrimitiveArray
         ? InferLexArray<L, C, D>
         : D extends LexPrimitive
@@ -242,13 +260,9 @@ export type RecordId<L extends readonly LexiconDoc[]> = ExtractId<L, LexRecord>
 
 export type InferRecord<
   L extends readonly LexiconDoc[],
-  Id extends RecordId<L>,
+  Id extends RecordId<L> = RecordId<L>,
 > = {
-  [I in Id]: InferLexRecord<L, I, ExtractMain<L, I, LexRecord>> & {
-    $type: I
-    // Records can contain additional properties
-    [k: string]: unknown
-  }
+  [I in Id]: InferLexRecord<L, I, ExtractMain<L, I, LexRecord>, I>
 }[Id]
 
 //- Xrpc extraction
@@ -279,7 +293,7 @@ type InferXrpcParameters<
   properties: infer P extends Record<string, LexDef>
   required?: infer R
 }
-  ? InferProperties<L, C, P, R>
+  ? Simplify<InferProperties<L, C, P, R>>
   : undefined | Record<string, never>
 
 type InferXrpcProcedureInput<

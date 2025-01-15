@@ -1,6 +1,7 @@
 import { Cid, Did } from './lexicon-infer.js'
 
-export type UnknownRecord<T extends string = string> = { $type: T } & {
+export type UnknownRecord<T extends string = string> = {
+  $type: T
   [k: string]: unknown
 }
 export type UnknownEvent = { kind: string }
@@ -65,10 +66,29 @@ export interface Identity {
 
 //- CommitEvent
 
-export interface CommitEvent<R extends UnknownRecord = UnknownRecord>
-  extends EventBase {
+export interface CommitEvent<
+  KnownRecord extends UnknownRecord = UnknownRecord,
+  Collections extends KnownRecord['$type'] | undefined = undefined,
+> extends EventBase {
   kind: EventKind.Commit
-  commit: CommitCreate<R> | CommitUpdate<R> | CommitDelete<R>
+  commit: Collections extends undefined
+    ?
+        | CommitDelete
+        | CommitCreate<UnknownRecord, Error>
+        | CommitUpdate<UnknownRecord, Error>
+        | {
+            [T in KnownRecord['$type']]:
+              | CommitCreate<Extract<KnownRecord, { $type: T }>, null>
+              | CommitUpdate<Extract<KnownRecord, { $type: T }>, null>
+          }[KnownRecord['$type']]
+    : {
+        [T in KnownRecord['$type']]:
+          | CommitDelete<Extract<KnownRecord, { $type: T }>>
+          | CommitCreate<Extract<KnownRecord, { $type: T }>, null>
+          | CommitUpdate<Extract<KnownRecord, { $type: T }>, null>
+          | CommitCreate<UnknownRecord<T>, Error>
+          | CommitUpdate<UnknownRecord<T>, Error>
+      }[NonNullable<Collections>]
 }
 
 export function isCommitEvent(event: UnknownEvent): event is CommitEvent {
@@ -88,42 +108,29 @@ export interface CommitBase {
   operation: CommitOperation
 }
 
-export type CommitCreate<R extends UnknownRecord> = {
-  [T in R['$type']]: CommitBase & {
-    collection: T
-    operation: CommitOperation.Create
-  } & (
-      | {
-          recordValid: true
-          record: Extract<R, { $type: T }>
-        }
-      | {
-          recordValid: false
-          record: UnknownRecord<T>
-        }
-    )
-}[R['$type']]
+export type CommitCreate<
+  R extends UnknownRecord = UnknownRecord,
+  E extends Error | null = Error | null,
+> = CommitBase & {
+  collection: R['$type']
+  operation: CommitOperation.Create
+  record: R
+  recordError: E
+}
 
-export type CommitUpdate<R extends UnknownRecord> = {
-  [T in R['$type']]: CommitBase & {
-    collection: T
-    operation: CommitOperation.Update
-    cid: Cid
-  } & (
-      | {
-          recordValid: true
-          record: Extract<R, { $type: T }>
-        }
-      | {
-          recordValid: false
-          record: UnknownRecord<T>
-        }
-    )
-}[R['$type']]
+export type CommitUpdate<
+  R extends UnknownRecord = UnknownRecord,
+  E extends Error | null = Error | null,
+> = CommitBase & {
+  collection: R['$type']
+  operation: CommitOperation.Update
+  cid: Cid
+  record: R
+  recordError: E
+}
 
-export type CommitDelete<R extends UnknownRecord> = {
-  [T in R['$type']]: CommitBase & {
-    collection: T
+export type CommitDelete<R extends UnknownRecord = UnknownRecord> =
+  CommitBase & {
+    collection: R['$type']
     operation: CommitOperation.Delete
   }
-}[R['$type']]

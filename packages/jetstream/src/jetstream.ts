@@ -18,7 +18,7 @@ import { InferRecord, RecordId } from './lexicon-infer.js'
 
 export type JetstreamOptions<
   Schemas extends readonly LexiconDoc[],
-  Collections extends RecordId<Schemas>,
+  Collections extends RecordId<Schemas> | undefined,
 > = DuplexOptions &
   Omit<EndpointOptions, 'wantedCollections'> & {
     schemas: Schemas
@@ -30,19 +30,19 @@ export type JetstreamOptions<
 
 export function jetstream<
   const Schemas extends readonly LexiconDoc[],
-  Collections extends RecordId<Schemas> = RecordId<Schemas>,
+  const Collections extends
+    | InferRecord<Schemas>['$type']
+    | undefined = undefined,
 >(
   options: JetstreamOptions<Schemas, Collections>,
 ): AsyncGenerator<
-  AccountEvent | IdentityEvent | CommitEvent<InferRecord<Schemas, Collections>>
+  AccountEvent | IdentityEvent | CommitEvent<InferRecord<Schemas>, Collections>
 >
 
 export async function* jetstream({
   schemas,
   compress = true,
-  wantedCollections = schemas
-    .filter((l) => l['defs']?.['main']?.['type'] === 'record')
-    .map((l) => l.id),
+  wantedCollections,
   ...options
 }: DuplexOptions &
   EndpointOptions & {
@@ -50,8 +50,11 @@ export async function* jetstream({
   }): AsyncGenerator<AccountEvent | IdentityEvent | CommitEvent> {
   const lexicons = new Lexicons(schemas)
 
-  for (const collection of wantedCollections) {
-    lexicons.getDefOrThrow(collection, ['record'])
+  // Make sure we have a way to validate the wanted records
+  if (wantedCollections) {
+    for (const collection of wantedCollections) {
+      lexicons.getDefOrThrow(collection, ['record'])
+    }
   }
 
   const decoder = compress ? await getDecoder() : null
@@ -76,16 +79,25 @@ export async function* jetstream({
     } else if (isCommitEvent(event)) {
       const { commit } = event
 
-      if (commit.operation === CommitOperation.Delete) {
-        yield event
-      } else if (
-        commit.operation === CommitOperation.Create ||
-        commit.operation === CommitOperation.Update
-      ) {
-        const result = lexicons.validate(commit.collection, commit.record)
-        commit.recordValid = result.success
-        yield event
+      switch (commit.operation) {
+        case CommitOperation.Delete:
+          yield event
+          break
+        case CommitOperation.Create:
+        case CommitOperation.Update:
+          try {
+            const result = lexicons.validate(commit.collection, commit.record)
+            commit.recordError = result.success ? null : result.error
+            yield event
+          } catch (error) {
+            commit.recordError =
+              error instanceof Error ? error : new Error(String(error))
+            yield event
+          }
+          break
       }
+    } else {
+      throw new Error(`Unknown event type: ${event}`)
     }
   }
 }

@@ -7,10 +7,8 @@ async function main(signal) {
   for await (const event of jetstream({
     signal,
     schemas: [
-      // If you also need Bluesky's official schemas in addition to yours,
-      // import {schemas} from '@atproto/api' then uncomment the following
-      // line:
-
+      // If you don't need the schemas from the official Bluesky API, you can
+      // comment next line:
       ...schemas,
       {
         lexicon: 1,
@@ -58,11 +56,24 @@ async function main(signal) {
       event.commit.operation === 'update'
     ) {
       const { commit } = event
-      commit.record // { $type: "foo.bar"; [x: string]: unknown } | { $type: "app.bsky.feed.post"; [x: string]: unknown }
+      // { $type: "foo.bar"; [x: string]: unknown } | { $type: "app.bsky.feed.post"; [x: string]: unknown }
+      commit.record
 
-      if (commit.collection === 'foo.bar' && commit.recordValid) {
-        commit.record.$type // 'foo.bar'
-        commit.record.fooObject.text // string
+      if (!commit.recordError) {
+        // 'foo.bar' | 'app.bsky.feed.post' | ... (all knowns record types from the schemas)
+        commit.record.$type
+
+        if (commit.record.$type === 'foo.bar') {
+          commit.record.fooObject.$type // 'foo.bar.defs#fooObject' | undefined
+          commit.record.fooObject.text // string
+          commit.record.fooObject.bar // number | undefined
+        }
+        if (commit.record.$type === 'app.bsky.feed.post') {
+          commit.record.text // string
+        }
+      } else {
+        commit.recordError // ValidationError | InvalidLexiconError | LexiconDefNotFoundError | Error
+        commit.record // UnknownRecord
       }
     }
   }
