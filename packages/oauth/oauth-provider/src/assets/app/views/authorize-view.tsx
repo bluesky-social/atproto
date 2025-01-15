@@ -8,10 +8,20 @@ import { AcceptView } from './accept-view'
 import { SignInView } from './sign-in-view'
 import { SignUpView } from './sign-up-view'
 import { WelcomeView } from './welcome-view'
+import { ResetPasswordView } from './reset-password-view'
 
 export type AuthorizeViewProps = {
   authorizeData: AuthorizeData
   customizationData?: CustomizationData
+}
+
+enum View {
+  Welcome,
+  SignUp,
+  SignIn,
+  ResetPassword,
+  Accept,
+  Done,
 }
 
 export function AuthorizeView({
@@ -20,18 +30,26 @@ export function AuthorizeView({
 }: AuthorizeViewProps) {
   const forceSignIn = authorizeData?.loginHint != null
 
-  const [view, setView] = useState<
-    'welcome' | 'sign-in' | 'sign-up' | 'accept' | 'done'
-  >(forceSignIn ? 'sign-in' : 'welcome')
+  const initialView = forceSignIn ? View.SignIn : View.Welcome
+  const [view, setView] = useState<View>(initialView)
 
-  const showDone = useBoundDispatch(setView, 'done')
-  const showSignIn = useBoundDispatch(setView, 'sign-in')
-  // const showSignUp = useBoundDispatch(setView, 'sign-up')
-  const showAccept = useBoundDispatch(setView, 'accept')
-  const showWelcome = useBoundDispatch(setView, 'welcome')
+  const showDone = useBoundDispatch(setView, View.Done)
+  const showSignIn = useBoundDispatch(setView, View.SignIn)
+  const showResetPassword = useBoundDispatch(setView, View.ResetPassword)
+  // const showSignUp = useBoundDispatch(setView, View.SignUp)
+  const showAccept = useBoundDispatch(setView, View.Accept)
+  const showWelcome = useBoundDispatch(setView, View.Welcome)
 
-  const { sessions, setSession, doAccept, doReject, doSignIn, doSignUp } =
-    useApi(authorizeData, { onRedirected: showDone })
+  const {
+    sessions,
+    setSession,
+    doSignUp,
+    doSignIn,
+    doInitiatePasswordReset,
+    doConfirmResetPassword,
+    doAccept,
+    doReject,
+  } = useApi(authorizeData, { onRedirected: showDone })
 
   const session = sessions.find((s) => s.selected && !s.loginRequired)
   useEffect(() => {
@@ -41,7 +59,7 @@ export function AuthorizeView({
     }
   }, [session, doAccept, showAccept])
 
-  if (view === 'welcome') {
+  if (view === View.Welcome) {
     return (
       <WelcomeView
         name={customizationData?.name}
@@ -54,7 +72,7 @@ export function AuthorizeView({
     )
   }
 
-  if (view === 'sign-up') {
+  if (view === View.SignUp) {
     return (
       <SignUpView
         links={customizationData?.links}
@@ -64,7 +82,17 @@ export function AuthorizeView({
     )
   }
 
-  if (view === 'sign-in') {
+  if (view === View.ResetPassword) {
+    return (
+      <ResetPasswordView
+        onResetPasswordInit={doInitiatePasswordReset}
+        onResetPasswordConfirm={doConfirmResetPassword}
+        onBack={forceSignIn ? showSignIn : showWelcome}
+      />
+    )
+  }
+
+  if (view === View.SignIn) {
     return (
       <SignInView
         loginHint={authorizeData.loginHint}
@@ -72,11 +100,12 @@ export function AuthorizeView({
         setSession={setSession}
         onSignIn={doSignIn}
         onBack={forceSignIn ? doReject : showWelcome}
+        onForgotPassword={showResetPassword}
       />
     )
   }
 
-  if (view === 'accept' && session) {
+  if (view === View.Accept && session) {
     return (
       <AcceptView
         clientId={authorizeData.clientId}
@@ -91,7 +120,7 @@ export function AuthorizeView({
             ? undefined
             : () => {
                 setSession(null)
-                setView(sessions.length ? 'sign-in' : 'welcome')
+                setView(sessions.length ? View.SignIn : View.Welcome)
               }
         }
       />
