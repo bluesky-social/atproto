@@ -722,6 +722,28 @@ importers:
         specifier: ^5.6.3
         version: 5.6.3
 
+  packages/jetstream:
+    dependencies:
+      '@atproto/lexicon':
+        specifier: workspace:*
+        version: link:../lexicon
+      '@toondepauw/node-zstd':
+        specifier: ^1.2.0
+        version: 1.2.0
+      ws:
+        specifier: ^8.18.0
+        version: 8.18.0
+    devDependencies:
+      '@atproto/api':
+        specifier: workspace:*
+        version: link:../api
+      '@types/ws':
+        specifier: ^8.5.4
+        version: 8.5.4
+      typescript:
+        specifier: ^5.6.3
+        version: 5.6.3
+
   packages/lex-cli:
     dependencies:
       '@atproto/lexicon':
@@ -6181,6 +6203,92 @@ packages:
   /@tokenizer/token@0.3.0:
     resolution: {integrity: sha512-OvjF+z51L3ov0OyAU0duzsYuvO01PH7x4t6DJx+guahgTnBHkhJdG7soQeTSFLWN3efnHyibZ4Z8l2EuWwJN3A==}
 
+  /@toondepauw/node-zstd-darwin-arm64@1.2.0:
+    resolution: {integrity: sha512-fdBGlRSrf19M1+IJ98aJCLK6/HKQRnRlhE5i6EZ7kVfD2r6h5Bq9NqHAmQ5MgwtmfB9VMmiIrQAMIxKVeT54pg==}
+    engines: {node: '>= 14'}
+    cpu: [arm64]
+    os: [darwin]
+    requiresBuild: true
+    dev: false
+    optional: true
+
+  /@toondepauw/node-zstd-darwin-x64@1.2.0:
+    resolution: {integrity: sha512-ZVu4zkQUgCQ8z1lLd7/LZzIYDKL48tPguIN8L4SRfLuWWlTq2/4OT6AmchztDbe5soLCDuw64t5X5otDvgsGJA==}
+    engines: {node: '>= 14'}
+    cpu: [x64]
+    os: [darwin]
+    requiresBuild: true
+    dev: false
+    optional: true
+
+  /@toondepauw/node-zstd-freebsd-x64@1.2.0:
+    resolution: {integrity: sha512-kDK+l3uP7htiWvM/klY32siEGIBk3K5Da4/DcXV2q/Vp+Ph86FWpQRzC46wJIpJB60xEU67pxFGLBH/8/RB02g==}
+    engines: {node: '>= 14'}
+    cpu: [x64]
+    os: [freebsd]
+    requiresBuild: true
+    dev: false
+    optional: true
+
+  /@toondepauw/node-zstd-linux-arm64-gnu@1.2.0:
+    resolution: {integrity: sha512-KteUWam7McA0moNiRgu7KSgPu3FE+KXuh3ObqWoco5JK53Sp4Pgr/q1IYsdN6TYYbgJMkJpof62NIbyi6tnVfg==}
+    engines: {node: '>= 14'}
+    cpu: [arm64]
+    os: [linux]
+    requiresBuild: true
+    dev: false
+    optional: true
+
+  /@toondepauw/node-zstd-linux-arm64-musl@1.2.0:
+    resolution: {integrity: sha512-KjbGOXvPmorhWGD4kEVjdBz/gJgUOw1Eu0xziBwsq03URrI0XSDAY6YiJZpZtGnSjm7XonEpnBZcVwXH1HZz3Q==}
+    engines: {node: '>= 14'}
+    cpu: [arm64]
+    os: [linux]
+    requiresBuild: true
+    dev: false
+    optional: true
+
+  /@toondepauw/node-zstd-linux-x64-gnu@1.2.0:
+    resolution: {integrity: sha512-qNJDZGd/jplK/1J+8V87dYdrviAxNt1iwI/SQ0JR3HTz5Jdbu+BnVB9oMklCc/bGWa8zTkiZkl/EwA3gtbpo+Q==}
+    engines: {node: '>= 14'}
+    cpu: [x64]
+    os: [linux]
+    requiresBuild: true
+    dev: false
+    optional: true
+
+  /@toondepauw/node-zstd-linux-x64-musl@1.2.0:
+    resolution: {integrity: sha512-Cw1qnMXde8caitDMbk0vWrqnVHTSK+JB/Dp3XnZghQjBrD7JLj2qNzh0eTkxNFa+nijbo8HyyslWGswCugYZCw==}
+    engines: {node: '>= 14'}
+    cpu: [x64]
+    os: [linux]
+    requiresBuild: true
+    dev: false
+    optional: true
+
+  /@toondepauw/node-zstd-win32-x64-msvc@1.2.0:
+    resolution: {integrity: sha512-7cD2/R7DLZHMxHTsQNtOX3vJCT4qd74a3nWjYYthJ89gqXwwEoC8BwttQxvHd0qCZ3S/cZ/BYoTikXMwMNmCEg==}
+    engines: {node: '>= 14'}
+    cpu: [x64]
+    os: [win32]
+    requiresBuild: true
+    dev: false
+    optional: true
+
+  /@toondepauw/node-zstd@1.2.0:
+    resolution: {integrity: sha512-vVDvPUstF9gKEX+Kqp654bL+4UNus6pkmY8mlcJQpIw/Sn6sO9fl1PEwxB0d0unH5PmVfBUicf1lOXu74OLrCg==}
+    engines: {node: '>= 14'}
+    optionalDependencies:
+      '@toondepauw/node-zstd-darwin-arm64': 1.2.0
+      '@toondepauw/node-zstd-darwin-x64': 1.2.0
+      '@toondepauw/node-zstd-freebsd-x64': 1.2.0
+      '@toondepauw/node-zstd-linux-arm64-gnu': 1.2.0
+      '@toondepauw/node-zstd-linux-arm64-musl': 1.2.0
+      '@toondepauw/node-zstd-linux-x64-gnu': 1.2.0
+      '@toondepauw/node-zstd-linux-x64-musl': 1.2.0
+      '@toondepauw/node-zstd-win32-x64-msvc': 1.2.0
+    dev: false
+
   /@tootallnate/once@2.0.0:
     resolution: {integrity: sha512-XCuKFP5PS55gnMVu3dty8KPatLqUoy/ZYzDzAGCQ8JNFCkLXzmI7vNHCR+XpbZaMWQK/vQubr7PkYq8g470J/A==}
     engines: {node: '>= 10'}
@@ -6465,7 +6573,7 @@ packages:
   /@types/ws@8.5.4:
     resolution: {integrity: sha512-zdQDHKUgcX/zBc4GrwsE/7dVdAD8JR4EuiAXiiUhhfyIJXXb2+PrGshFyeXWQPMmmZ2XxgaqclgpIC7eTXc1mg==}
     dependencies:
-      '@types/node': 18.19.56
+      '@types/node': 18.19.67
     dev: true
 
   /@types/yargs-parser@21.0.0:
