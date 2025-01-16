@@ -9,7 +9,7 @@ import {
   FetchRequestError,
 } from '@atproto-labs/fetch'
 import ipaddr from 'ipaddr.js'
-import { isValid as isValidDomain } from 'psl'
+import { parse as pslParse } from 'psl'
 import { Agent, Client } from 'undici'
 
 import { isUnicastIp } from './util.js'
@@ -183,6 +183,14 @@ export function unicastLookup(
       }
     }
   })
+}
+
+// see lupomontero/psl#258 for context on psl usage.
+// in short, this ensures a structurally valid domain
+// plus a "listed" tld.
+function isValidDomain(domain: string) {
+  const parsed = pslParse(domain)
+  return !parsed.error && parsed.listed
 }
 
 function isNotUnicast(ip: ipaddr.IPv4 | ipaddr.IPv6): boolean {
