@@ -12,6 +12,17 @@ import * as modStatus from '../schema/moderation_subject_status'
 import * as recordEventsStats from '../schema/record_events_stats'
 
 export async function up(db: Kysely<any>): Promise<void> {
+  // Used by "tools.ozone.moderation.queryStatuses". Reduces query cost by two
+  // order of magnitudes when sorting using "reportedRecordsCount" or
+  // "takendownRecordsCount" and filtering by "reviewState".
+  await db.schema
+    .createIndex('moderation_subject_status_did_id_review_state_idx')
+    .on('moderation_subject_status')
+    .column('did')
+    .expression(sql`"id" ASC NULLS FIRST`)
+    .column('reviewState')
+    .execute()
+
   // ~6sec for 16M events
   await db.schema
     .createView('account_events_stats')
@@ -55,7 +66,6 @@ export async function up(db: Kysely<any>): Promise<void> {
 
   await db.schema
     .createIndex('account_events_stats_did_idx')
-    // .ifNotExists() // REquires newer version of kysely
     .unique()
     .on('account_events_stats')
     .column('subjectDid')
@@ -93,7 +103,6 @@ export async function up(db: Kysely<any>): Promise<void> {
 
   await db.schema
     .createIndex('record_events_stats_uri_idx')
-    // .ifNotExists()
     .unique()
     .on('record_events_stats')
     .column('subjectUri')
@@ -101,7 +110,6 @@ export async function up(db: Kysely<any>): Promise<void> {
 
   await db.schema
     .createIndex('record_events_stats_did_idx')
-    // .ifNotExists()
     .on('record_events_stats')
     .column('subjectDid')
     .execute()
@@ -135,9 +143,15 @@ export async function up(db: Kysely<any>): Promise<void> {
 
   await db.schema
     .createIndex('account_record_events_stats_did_idx')
-    // .ifNotExists()
     .unique()
     .on('account_record_events_stats')
+    .column('subjectDid')
+    .execute()
+
+  await db.schema
+    .createIndex('account_record_events_stats_reported_count_idx')
+    .on('account_record_events_stats')
+    .expression(sql`"reportedCount" ASC NULLS FIRST`)
     .column('subjectDid')
     .execute()
 
@@ -171,9 +185,15 @@ export async function up(db: Kysely<any>): Promise<void> {
 
   await db.schema
     .createIndex('account_record_status_stats_did_idx')
-    // .ifNotExists()
     .unique()
     .on('account_record_status_stats')
+    .column('did')
+    .execute()
+
+  await db.schema
+    .createIndex('account_record_status_stats_takendown_count_idx')
+    .on('account_record_status_stats')
+    .expression(sql`"takendownCount" ASC NULLS FIRST`)
     .column('did')
     .execute()
 }
