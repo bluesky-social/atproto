@@ -247,6 +247,10 @@ export interface GeneratorView {
   acceptsInteractions?: boolean
   labels?: ComAtprotoLabelDefs.Label[]
   viewer?: GeneratorViewerState
+  contentMode?:
+    | 'app.bsky.feed.defs#contentModeUnspecified'
+    | 'app.bsky.feed.defs#contentModeVideo'
+    | (string & {})
   indexedAt: string
   [k: string]: unknown
 }
@@ -401,6 +405,11 @@ export const CLICKTHROUGHAUTHOR = 'app.bsky.feed.defs#clickthroughAuthor'
 export const CLICKTHROUGHREPOSTER = 'app.bsky.feed.defs#clickthroughReposter'
 /** User clicked through to the embedded content of the feed item */
 export const CLICKTHROUGHEMBED = 'app.bsky.feed.defs#clickthroughEmbed'
+/** Declares the feed generator returns any types of posts. */
+export const CONTENTMODEUNSPECIFIED =
+  'app.bsky.feed.defs#contentModeUnspecified'
+/** Declares the feed generator returns posts containing app.bsky.embed.video embeds. */
+export const CONTENTMODEVIDEO = 'app.bsky.feed.defs#contentModeVideo'
 /** Feed item was seen by user */
 export const INTERACTIONSEEN = 'app.bsky.feed.defs#interactionSeen'
 /** User liked the feed item */

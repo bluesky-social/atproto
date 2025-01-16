@@ -5778,6 +5778,13 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.feed.defs#generatorViewerState',
           },
+          contentMode: {
+            type: 'string',
+            knownValues: [
+              'app.bsky.feed.defs#contentModeUnspecified',
+              'app.bsky.feed.defs#contentModeVideo',
+            ],
+          },
           indexedAt: {
             type: 'string',
             format: 'datetime',
@@ -5912,6 +5919,15 @@ export const schemaDict = {
         description:
           'User clicked through to the embedded content of the feed item',
       },
+      contentModeUnspecified: {
+        type: 'token',
+        description: 'Declares the feed generator returns any types of posts.',
+      },
+      contentModeVideo: {
+        type: 'token',
+        description:
+          'Declares the feed generator returns posts containing app.bsky.embed.video embeds.',
+      },
       interactionSeen: {
         type: 'token',
         description: 'Feed item was seen by user',
@@ -6042,6 +6058,13 @@ export const schemaDict = {
               type: 'union',
               description: 'Self-label values',
               refs: ['lex:com.atproto.label.defs#selfLabels'],
+            },
+            contentMode: {
+              type: 'string',
+              knownValues: [
+                'app.bsky.feed.defs#contentModeUnspecified',
+                'app.bsky.feed.defs#contentModeVideo',
+              ],
             },
             createdAt: {
               type: 'string',
