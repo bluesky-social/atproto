@@ -11329,6 +11329,10 @@ export const schemaDict = {
             description: 'Number of times the account was suspended',
             type: 'integer',
           },
+          escalateCount: {
+            description: 'Number of times the account was escalated',
+            type: 'integer',
+          },
           takedownCount: {
             description: 'Number of times the account was taken down',
             type: 'integer',
@@ -12622,7 +12626,12 @@ export const schemaDict = {
             sortField: {
               type: 'string',
               default: 'lastReportedAt',
-              enum: ['lastReviewedAt', 'lastReportedAt'],
+              enum: [
+                'lastReviewedAt',
+                'lastReportedAt',
+                'reportedRecordsCount',
+                'takendownRecordsCount',
+              ],
             },
             sortDirection: {
               type: 'string',
@@ -12676,6 +12685,16 @@ export const schemaDict = {
               description:
                 "If specified, subjects of the given type (account or record) will be returned. When this is set to 'account' the 'collections' parameter will be ignored. When includeAllUserRecords or subject is set, this will be ignored.",
               knownValues: ['account', 'record'],
+            },
+            minReportedRecordsCount: {
+              type: 'integer',
+              description:
+                'If specified, only subjects that belong to an account that has at least this many reported records will be returned.',
+            },
+            minTakendownRecordsCount: {
+              type: 'integer',
+              description:
+                'If specified, only subjects that belong to an account that has at least this many taken down records will be returned.',
             },
           },
         },

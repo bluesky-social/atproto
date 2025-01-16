@@ -207,18 +207,30 @@ export const moderationSubjectStatusQueryBuilder = (db: DatabaseSchema) => {
   return db
     .selectFrom('moderation_subject_status')
     .selectAll('moderation_subject_status')
-    .leftJoin('account_events_stats as aes', (join) =>
-      join.onRef('moderation_subject_status.did', '=', 'aes.subjectDid'),
+    .leftJoin('account_events_stats', (join) =>
+      join.onRef(
+        'moderation_subject_status.did',
+        '=',
+        'account_events_stats.subjectDid',
+      ),
     )
-    .selectAll('aes')
-    .leftJoin('account_record_events_stats as ares', (join) =>
-      join.onRef('moderation_subject_status.did', '=', 'ares.subjectDid'),
+    .selectAll('account_events_stats')
+    .leftJoin('account_record_events_stats', (join) =>
+      join.onRef(
+        'moderation_subject_status.did',
+        '=',
+        'account_record_events_stats.subjectDid',
+      ),
     )
-    .selectAll('ares')
-    .leftJoin('account_record_status_stats as arss', (join) =>
-      join.onRef('moderation_subject_status.did', '=', 'arss.did'),
+    .selectAll('account_record_events_stats')
+    .leftJoin('account_record_status_stats', (join) =>
+      join.onRef(
+        'moderation_subject_status.did',
+        '=',
+        'account_record_status_stats.did',
+      ),
     )
-    .selectAll('arss')
+    .selectAll('account_record_status_stats')
 }
 
 // Based on a given moderation action event, this function will update the moderation status of the subject

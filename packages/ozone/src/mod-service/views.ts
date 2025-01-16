@@ -615,16 +615,22 @@ export class ModerationViews {
       subject: subjectFromStatusRow(status).lex(),
 
       accountStats: {
+        // account_events_stats
         reportCount: status.reportCount ?? undefined,
         appealCount: status.appealCount ?? undefined,
         suspendCount: status.suspendCount ?? undefined,
         takedownCount: status.takedownCount ?? undefined,
+        escalateCount: status.escalateCount ?? undefined,
       },
+
       recordsStats: {
+        // account_record_events_stats
         totalReports: status.totalReports ?? undefined,
         reportedCount: status.reportedCount ?? undefined,
         escalatedCount: status.escalatedCount ?? undefined,
         appealedCount: status.appealedCount ?? undefined,
+
+        // account_record_status_stats
         subjectCount: status.subjectCount ?? undefined,
         pendingCount: status.pendingCount ?? undefined,
         processedCount: status.processedCount ?? undefined,

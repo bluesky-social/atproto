@@ -161,6 +161,8 @@ export interface AccountStats {
   appealCount?: number
   /** Number of times the account was suspended */
   suspendCount?: number
+  /** Number of times the account was escalated */
+  escalateCount?: number
   /** Number of times the account was taken down */
   takedownCount?: number
   [k: string]: unknown

@@ -41,6 +41,7 @@ import {
 import { ModerationEvent } from '../db/schema/moderation_event'
 import { StatusKeyset, TimeIdKeyset, paginate } from '../db/pagination'
 import { Label } from '../lexicon/types/com/atproto/label/defs'
+import { QueryParams as QueryStatusParams } from '../lexicon/types/tools/ozone/moderation/queryStatuses'
 import {
   ModSubject,
   RecordSubject,
@@ -58,6 +59,7 @@ import { httpLogger as log } from '../logger'
 import { OzoneConfig } from '../config'
 import { LABELER_HEADER_NAME, ParsedLabelers } from '../util'
 import { ids } from '../lexicon/lexicons'
+import { getReviewState } from '../api/util'
 
 export type ModerationServiceCreator = (db: Database) => ModerationService
 
@@ -821,53 +823,25 @@ export class ModerationService {
     reviewedBefore,
     reportedAfter,
     reportedBefore,
-    includeMuted,
+    includeMuted = false,
     hostingDeletedBefore,
     hostingDeletedAfter,
     hostingUpdatedBefore,
     hostingUpdatedAfter,
     hostingStatuses,
-    onlyMuted,
+    onlyMuted = false,
     ignoreSubjects,
-    sortDirection,
+    sortDirection = 'desc',
     lastReviewedBy,
-    sortField,
+    sortField = 'lastReportedAt',
     subject,
     tags,
     excludeTags,
     collections,
     subjectType,
-  }: {
-    queueCount?: number
-    queueIndex?: number
-    queueSeed?: string
-    includeAllUserRecords?: boolean
-    cursor?: string
-    limit?: number
-    takendown?: boolean
-    appealed?: boolean
-    reviewedBefore?: string
-    reviewState?: ModerationSubjectStatusRow['reviewState']
-    reviewedAfter?: string
-    reportedAfter?: string
-    reportedBefore?: string
-    includeMuted?: boolean
-    hostingDeletedBefore?: string
-    hostingDeletedAfter?: string
-    hostingUpdatedBefore?: string
-    hostingUpdatedAfter?: string
-    hostingStatuses?: string[]
-    onlyMuted?: boolean
-    subject?: string
-    ignoreSubjects?: string[]
-    sortDirection: 'asc' | 'desc'
-    lastReviewedBy?: string
-    sortField: 'lastReviewedAt' | 'lastReportedAt'
-    tags?: string[]
-    excludeTags?: string[]
-    collections?: string[]
-    subjectType?: string
-  }): Promise<{
+    minReportedRecordsCount = 0,
+    minTakendownRecordsCount = 0,
+  }: QueryStatusParams): Promise<{
     statuses: ModerationSubjectStatusRowWithHandle[]
     cursor?: string
   }> {
@@ -940,11 +914,12 @@ export class ModerationService {
         .where('moderation_subject_status.recordPath', 'not in', ignoreSubjects)
     }
 
-    if (reviewState) {
+    const reviewStateNormalized = getReviewState(reviewState)
+    if (reviewStateNormalized) {
       builder = builder.where(
         'moderation_subject_status.reviewState',
         '=',
-        reviewState,
+        reviewStateNormalized,
       )
     }
 
@@ -1098,8 +1073,28 @@ export class ModerationService {
       )
     }
 
+    if (minTakendownRecordsCount > 0) {
+      builder = builder.where(
+        'account_record_status_stats.takendownCount',
+        '>=',
+        minTakendownRecordsCount,
+      )
+    }
+
+    if (minReportedRecordsCount > 0) {
+      builder = builder.where(
+        'account_record_events_stats.reportedCount',
+        '>=',
+        minReportedRecordsCount,
+      )
+    }
+
     const keyset = new StatusKeyset(
-      ref(`moderation_subject_status.${sortField}`),
+      sortField === 'reportedRecordsCount'
+        ? ref(`account_record_events_stats.reportedCount`)
+        : sortField === 'takendownRecordsCount'
+          ? ref(`account_record_status_stats.takendownCount`)
+          : ref(`moderation_subject_status.${sortField}`),
       ref('moderation_subject_status.id'),
     )
     const paginatedBuilder = paginate(builder, {

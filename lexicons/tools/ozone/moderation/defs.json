@@ -211,6 +211,10 @@
           "description": "Number of times the account was suspended",
           "type": "integer"
         },
+        "escalateCount": {
+          "description": "Number of times the account was escalated",
+          "type": "integer"
+        },
         "takedownCount": {
           "description": "Number of times the account was taken down",
           "type": "integer"
