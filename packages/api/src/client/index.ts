@@ -28,6 +28,7 @@ import * as ComAtprotoIdentityUpdateHandle from './types/com/atproto/identity/up
 import * as ComAtprotoLabelDefs from './types/com/atproto/label/defs'
 import * as ComAtprotoLabelQueryLabels from './types/com/atproto/label/queryLabels'
 import * as ComAtprotoLabelSubscribeLabels from './types/com/atproto/label/subscribeLabels'
+import * as ComAtprotoLexiconSchema from './types/com/atproto/lexicon/schema'
 import * as ComAtprotoModerationCreateReport from './types/com/atproto/moderation/createReport'
 import * as ComAtprotoModerationDefs from './types/com/atproto/moderation/defs'
 import * as ComAtprotoRepoApplyWrites from './types/com/atproto/repo/applyWrites'
@@ -256,6 +257,7 @@ export * as ComAtprotoIdentityUpdateHandle from './types/com/atproto/identity/up
 export * as ComAtprotoLabelDefs from './types/com/atproto/label/defs'
 export * as ComAtprotoLabelQueryLabels from './types/com/atproto/label/queryLabels'
 export * as ComAtprotoLabelSubscribeLabels from './types/com/atproto/label/subscribeLabels'
+export * as ComAtprotoLexiconSchema from './types/com/atproto/lexicon/schema'
 export * as ComAtprotoModerationCreateReport from './types/com/atproto/moderation/createReport'
 export * as ComAtprotoModerationDefs from './types/com/atproto/moderation/defs'
 export * as ComAtprotoRepoApplyWrites from './types/com/atproto/repo/applyWrites'
@@ -535,6 +537,7 @@ export class ComAtprotoNS {
   admin: ComAtprotoAdminNS
   identity: ComAtprotoIdentityNS
   label: ComAtprotoLabelNS
+  lexicon: ComAtprotoLexiconNS
   moderation: ComAtprotoModerationNS
   repo: ComAtprotoRepoNS
   server: ComAtprotoServerNS
@@ -546,6 +549,7 @@ export class ComAtprotoNS {
     this.admin = new ComAtprotoAdminNS(client)
     this.identity = new ComAtprotoIdentityNS(client)
     this.label = new ComAtprotoLabelNS(client)
+    this.lexicon = new ComAtprotoLexiconNS(client)
     this.moderation = new ComAtprotoModerationNS(client)
     this.repo = new ComAtprotoRepoNS(client)
     this.server = new ComAtprotoServerNS(client)
@@ -826,6 +830,81 @@ export class ComAtprotoLabelNS {
       params,
       undefined,
       opts,
+    )
+  }
+}
+
+export class ComAtprotoLexiconNS {
+  _client: XrpcClient
+  schema: SchemaRecord
+
+  constructor(client: XrpcClient) {
+    this._client = client
+    this.schema = new SchemaRecord(client)
+  }
+}
+
+export class SchemaRecord {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  async list(
+    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
+  ): Promise<{
+    cursor?: string
+    records: { uri: string; value: ComAtprotoLexiconSchema.Record }[]
+  }> {
+    const res = await this._client.call('com.atproto.repo.listRecords', {
+      collection: 'com.atproto.lexicon.schema',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{
+    uri: string
+    cid: string
+    value: ComAtprotoLexiconSchema.Record
+  }> {
+    const res = await this._client.call('com.atproto.repo.getRecord', {
+      collection: 'com.atproto.lexicon.schema',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: Omit<
+      ComAtprotoRepoCreateRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: ComAtprotoLexiconSchema.Record,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    record.$type = 'com.atproto.lexicon.schema'
+    const res = await this._client.call(
+      'com.atproto.repo.createRecord',
+      undefined,
+      { collection: 'com.atproto.lexicon.schema', ...params, record },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async delete(
+    params: Omit<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
+    headers?: Record<string, string>,
+  ): Promise<void> {
+    await this._client.call(
+      'com.atproto.repo.deleteRecord',
+      undefined,
+      { collection: 'com.atproto.lexicon.schema', ...params },
+      { headers },
     )
   }
 }
