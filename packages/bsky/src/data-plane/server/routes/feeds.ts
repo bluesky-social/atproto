@@ -27,6 +27,17 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
             .select('post_embed_image.postUri')
             .whereRef('post_embed_image.postUri', '=', 'feed_item.postUri'),
         )
+    } else if (feedType === FeedType.POSTS_WITH_VIDEO) {
+      builder = builder
+        // only your own posts
+        .where('type', '=', 'post')
+        // only posts with video
+        .whereExists((qb) =>
+          qb
+            .selectFrom('post_embed_video')
+            .select('post_embed_video.postUri')
+            .whereRef('post_embed_video.postUri', '=', 'feed_item.postUri'),
+        )
     } else if (feedType === FeedType.POSTS_NO_REPLIES) {
       builder = builder.where((qb) =>
         qb.where('post.replyParent', 'is', null).orWhere('type', '=', 'repost'),

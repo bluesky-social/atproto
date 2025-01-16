@@ -19,6 +19,7 @@ export interface QueryParams {
     | 'posts_no_replies'
     | 'posts_with_media'
     | 'posts_and_author_threads'
+    | 'posts_with_video'
     | (string & {})
   includePins: boolean
 }

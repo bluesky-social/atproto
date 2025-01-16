@@ -6215,6 +6215,7 @@ export const schemaDict = {
                 'posts_no_replies',
                 'posts_with_media',
                 'posts_and_author_threads',
+                'posts_with_video',
               ],
               default: 'posts_with_replies',
             },
