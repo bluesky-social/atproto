@@ -122,8 +122,8 @@ export class RateLimiter implements RateLimiterI {
 
     try {
       await this.limiter.delete(key)
-    } catch (err) {
-      throw new Error(`rate limiter failed to reset key: ${key}`)
+    } catch (cause) {
+      throw new Error(`rate limiter failed to reset key: ${key}`, { cause })
     }
   }
 }
