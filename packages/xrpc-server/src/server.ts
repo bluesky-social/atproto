@@ -282,9 +282,7 @@ export class Server {
           auth: locals.auth,
           req,
           res,
-          async resetRouteRateLimits() {
-            return resetRateLimit(this)
-          },
+          resetRouteRateLimits: async () => resetRateLimit(reqCtx),
         }
 
         // handle rate limits
