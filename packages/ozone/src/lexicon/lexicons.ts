@@ -5573,6 +5573,17 @@ export const schemaDict = {
           },
         },
       },
+      threadContext: {
+        type: 'object',
+        description:
+          'Metadata about this post within the context of the thread it is in.',
+        properties: {
+          rootAuthorLike: {
+            type: 'string',
+            format: 'at-uri',
+          },
+        },
+      },
       feedViewPost: {
         type: 'object',
         required: ['post'],
@@ -5672,6 +5683,10 @@ export const schemaDict = {
                 'lex:app.bsky.feed.defs#blockedPost',
               ],
             },
+          },
+          threadContext: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.defs#threadContext',
           },
         },
       },
