@@ -114,13 +114,7 @@ export class OzoneService {
         },
         'db pool stats',
       )
-      dbLogger.info(
-        {
-          runningCount: backgroundQueue.queue.pending,
-          waitingCount: backgroundQueue.queue.size,
-        },
-        'background queue stats',
-      )
+      dbLogger.info(backgroundQueue.getStats(), 'background queue stats')
     }, 10000)
     await this.ctx.sequencer.start()
     const server = this.app.listen(this.ctx.cfg.service.port)
