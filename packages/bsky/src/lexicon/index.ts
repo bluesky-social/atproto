@@ -181,6 +181,8 @@ export const APP_BSKY_FEED = {
   DefsClickthroughAuthor: 'app.bsky.feed.defs#clickthroughAuthor',
   DefsClickthroughReposter: 'app.bsky.feed.defs#clickthroughReposter',
   DefsClickthroughEmbed: 'app.bsky.feed.defs#clickthroughEmbed',
+  DefsContentModeUnspecified: 'app.bsky.feed.defs#contentModeUnspecified',
+  DefsContentModeVideo: 'app.bsky.feed.defs#contentModeVideo',
   DefsInteractionSeen: 'app.bsky.feed.defs#interactionSeen',
   DefsInteractionLike: 'app.bsky.feed.defs#interactionLike',
   DefsInteractionRepost: 'app.bsky.feed.defs#interactionRepost',
