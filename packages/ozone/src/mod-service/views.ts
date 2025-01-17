@@ -615,6 +615,9 @@ export class ModerationViews {
       subject: subjectFromStatusRow(status).lex(),
 
       accountStats: {
+        // Explicitly typing to allow for easy manipulation (e.g. to strip from tests snapshots)
+        $type: 'tools.ozone.moderation.defs#accountStats',
+
         // account_events_stats
         reportCount: status.reportCount ?? undefined,
         appealCount: status.appealCount ?? undefined,
@@ -624,6 +627,9 @@ export class ModerationViews {
       },
 
       recordsStats: {
+        // Explicitly typing to allow for easy manipulation (e.g. to strip from tests snapshots)
+        $type: 'tools.ozone.moderation.defs#recordStats',
+
         // account_record_events_stats
         totalReports: status.totalReports ?? undefined,
         reportedCount: status.reportedCount ?? undefined,

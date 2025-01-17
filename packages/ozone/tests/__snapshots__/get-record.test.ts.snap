@@ -28,6 +28,9 @@ Object {
   ],
   "moderation": Object {
     "subjectStatus": Object {
+      "accountStats": Object {
+        "$type": "tools.ozone.moderation.defs#accountStats",
+      },
       "createdAt": "1970-01-01T00:00:00.000Z",
       "hosting": Object {
         "$type": "tools.ozone.moderation.defs#recordHosting",
@@ -37,6 +40,9 @@ Object {
       "lastReportedAt": "1970-01-01T00:00:00.000Z",
       "lastReviewedAt": "1970-01-01T00:00:00.000Z",
       "lastReviewedBy": "user(1)",
+      "recordsStats": Object {
+        "$type": "tools.ozone.moderation.defs#recordStats",
+      },
       "reviewState": "tools.ozone.moderation.defs#reviewClosed",
       "subject": Object {
         "$type": "com.atproto.repo.strongRef",
@@ -134,6 +140,9 @@ Object {
   ],
   "moderation": Object {
     "subjectStatus": Object {
+      "accountStats": Object {
+        "$type": "tools.ozone.moderation.defs#accountStats",
+      },
       "createdAt": "1970-01-01T00:00:00.000Z",
       "hosting": Object {
         "$type": "tools.ozone.moderation.defs#recordHosting",
@@ -143,6 +152,9 @@ Object {
       "lastReportedAt": "1970-01-01T00:00:00.000Z",
       "lastReviewedAt": "1970-01-01T00:00:00.000Z",
       "lastReviewedBy": "user(1)",
+      "recordsStats": Object {
+        "$type": "tools.ozone.moderation.defs#recordStats",
+      },
       "reviewState": "tools.ozone.moderation.defs#reviewClosed",
       "subject": Object {
         "$type": "com.atproto.repo.strongRef",

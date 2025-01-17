@@ -142,7 +142,9 @@ Object {
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "moderation": Object {
       "subjectStatus": Object {
-        "accountStats": Object {},
+        "accountStats": Object {
+          "$type": "tools.ozone.moderation.defs#accountStats",
+        },
         "createdAt": "1970-01-01T00:00:00.000Z",
         "hosting": Object {
           "$type": "tools.ozone.moderation.defs#accountHosting",
@@ -152,7 +154,9 @@ Object {
         "lastReportedAt": "1970-01-01T00:00:00.000Z",
         "lastReviewedAt": "1970-01-01T00:00:00.000Z",
         "lastReviewedBy": "user(1)",
-        "recordsStats": Object {},
+        "recordsStats": Object {
+          "$type": "tools.ozone.moderation.defs#recordStats",
+        },
         "reviewState": "tools.ozone.moderation.defs#reviewClosed",
         "subject": Object {
           "$type": "com.atproto.admin.defs#repoRef",
@@ -242,7 +246,9 @@ Object {
   "labels": Array [],
   "moderation": Object {
     "subjectStatus": Object {
-      "accountStats": Object {},
+      "accountStats": Object {
+        "$type": "tools.ozone.moderation.defs#accountStats",
+      },
       "createdAt": "1970-01-01T00:00:00.000Z",
       "hosting": Object {
         "$type": "tools.ozone.moderation.defs#recordHosting",
@@ -251,7 +257,9 @@ Object {
       "id": 5,
       "lastReviewedAt": "1970-01-01T00:00:00.000Z",
       "lastReviewedBy": "user(1)",
-      "recordsStats": Object {},
+      "recordsStats": Object {
+        "$type": "tools.ozone.moderation.defs#recordStats",
+      },
       "reviewState": "tools.ozone.moderation.defs#reviewClosed",
       "subject": Object {
         "$type": "com.atproto.repo.strongRef",
@@ -305,7 +313,9 @@ Object {
     "invitesDisabled": true,
     "moderation": Object {
       "subjectStatus": Object {
-        "accountStats": Object {},
+        "accountStats": Object {
+          "$type": "tools.ozone.moderation.defs#accountStats",
+        },
         "createdAt": "1970-01-01T00:00:00.000Z",
         "hosting": Object {
           "$type": "tools.ozone.moderation.defs#accountHosting",
@@ -315,7 +325,9 @@ Object {
         "lastReportedAt": "1970-01-01T00:00:00.000Z",
         "lastReviewedAt": "1970-01-01T00:00:00.000Z",
         "lastReviewedBy": "user(1)",
-        "recordsStats": Object {},
+        "recordsStats": Object {
+          "$type": "tools.ozone.moderation.defs#recordStats",
+        },
         "reviewState": "tools.ozone.moderation.defs#reviewClosed",
         "subject": Object {
           "$type": "com.atproto.admin.defs#repoRef",
