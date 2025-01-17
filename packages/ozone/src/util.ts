@@ -202,9 +202,10 @@ export function boundAbortController(
   }
 
   const abortController = new AbortController()
+  const abort = () => abortController.abort()
 
   for (const signal of signals) {
-    signal?.addEventListener('abort', () => abortController.abort(), {
+    signal?.addEventListener('abort', abort, {
       once: true,
       signal: abortController.signal,
     })
