@@ -83,3 +83,93 @@ export const formatLabelerHeader = (parsed: ParsedLabelers): string => {
   )
   return parts.join(',')
 }
+
+/**
+ * Utility function similar to `setInterval()`. The main difference is that the
+ * execution is controlled through a signal and that the function will wait for
+ * `interval` milliseconds *between* the end of the previous execution and the
+ * start of the next one (instead of starting the execution every `interval`
+ * milliseconds), ensuring that the function is not running concurrently.
+ *
+ * @returns A promise that resolves when the signal is aborted, and the last
+ * execution is done.
+ *
+ * @throws if the signal is already aborted.
+ */
+export function startInterval(
+  fn: (signal: AbortSignal) => void | Promise<void>,
+  interval: number,
+  signal: AbortSignal,
+) {
+  signal.throwIfAborted()
+
+  return new Promise<void>((resolve) => {
+    let timer: NodeJS.Timeout | undefined
+
+    const run = async () => {
+      timer = undefined // record that we are running
+
+      // Cloning the signal for this particular run to prevent memory leaks
+      const abortController = boundAbortController(signal)
+      try {
+        await fn(abortController.signal)
+      } finally {
+        abortController.abort()
+        if (signal.aborted) resolve()
+        else schedule()
+      }
+    }
+
+    const schedule = () => {
+      timer = setTimeout(run, interval)
+    }
+
+    const stop = () => {
+      if (timer) {
+        clearTimeout(timer)
+        resolve()
+      } else {
+        // fn is running, resolve() will be called
+      }
+    }
+
+    signal.addEventListener('abort', stop, { once: true })
+
+    schedule()
+  })
+}
+
+/**
+ * Determines whether the cause of an error is a signal's reason
+ */
+export function isCausedBySignal(err: unknown, { reason }: AbortSignal) {
+  return err === reason || (err instanceof Error && err.cause === reason)
+}
+
+/**
+ * Creates an AbortController that will be aborted when any of the given signals
+ * is aborted.
+ *
+ * @note Make sure to call `abortController.abort()` when you are done with
+ * the controller to avoid memory leaks.
+ *
+ * @throws if any of the input signals is already aborted.
+ */
+export function boundAbortController(
+  ...signals: readonly (AbortSignal | undefined | null)[]
+): AbortController {
+  for (const signal of signals) {
+    signal?.throwIfAborted()
+  }
+
+  const abortController = new AbortController()
+
+  for (const signal of signals) {
+    signal?.addEventListener('abort', () => abortController.abort(), {
+      once: true,
+      signal: abortController.signal,
+    })
+  }
+
+  return abortController
+}

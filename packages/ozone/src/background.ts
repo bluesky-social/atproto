@@ -1,6 +1,7 @@
 import PQueue from 'p-queue'
 import { Database } from './db'
 import { dbLogger } from './logger'
+import { boundAbortController, isCausedBySignal, startInterval } from './util'
 
 type Task = (db: Database, signal: AbortSignal) => Promise<void>
 
@@ -11,7 +12,7 @@ export class BackgroundQueue {
   private abortController = new AbortController()
   private queue = new PQueue({ concurrency: 20 })
 
-  protected get signal() {
+  public get signal() {
     return this.abortController.signal
   }
 
@@ -28,30 +29,50 @@ export class BackgroundQueue {
     }
   }
 
-  add(task: Task) {
+  /**
+   * Add a task that will be executed at some point in the future.
+   *
+   * The task will be executed even if the backgroundQueue is destroyed, unless
+   * the provided `signal` is aborted.
+   *
+   * The `signal` provided to the task will be aborted whenever either the
+   * backgroundQueue is destroyed or the provided `signal` is aborted.
+   */
+  async add(task: Task, signal?: AbortSignal): Promise<void> {
     if (this.destroyed) {
       return
     }
 
-    const { db, signal } = this
+    const abortController = boundAbortController(this.signal, signal)
 
-    this.queue
-      .add(() => task(db, signal))
-      .catch((err) => {
-        if (!isCausedBySignal(err, signal)) {
+    return this.queue.add<void>(async () => {
+      try {
+        // Do not run the task if the signal provided to the task has become
+        // aborted. Do not use `abortController.signal` here since we do not
+        // want to abort the task if the backgroundQueue is being destroyed.
+        if (signal?.aborted) return
+
+        await task(this.db, abortController.signal)
+      } catch (err) {
+        if (!isCausedBySignal(err, abortController.signal)) {
           dbLogger.error(err, 'background queue task failed')
         }
-      })
+      } finally {
+        abortController.abort()
+      }
+    })
   }
 
   async processAll() {
     await this.queue.onIdle()
   }
 
-  // On destroy we stop accepting new tasks, but complete all
-  // pending/in-progress tasks. Tasks can decide to abort their current
-  // operation based on the signal they received. The application calls this
-  // only once http connections have drained (tasks no longer being added).
+  /**
+   * On destroy we stop accepting new tasks, but complete all
+   * pending/in-progress tasks. Tasks can decide to abort their current
+   * operation based on the signal they received. The application calls this
+   * only once http connections have drained (tasks no longer being added).
+   */
   async destroy() {
     this.abortController.abort()
     await this.queue.onIdle()
@@ -62,10 +83,10 @@ export class BackgroundQueue {
  * A simple periodic background task runner
  */
 export class PeriodicBackgroundTask {
-  private abortController = new AbortController()
+  private abortController: AbortController
   private promise?: Promise<void>
 
-  protected get signal() {
+  public get signal() {
     return this.abortController.signal
   }
 
@@ -74,83 +95,32 @@ export class PeriodicBackgroundTask {
   }
 
   constructor(
-    protected db: Database,
+    protected backgroundQueue: BackgroundQueue,
     protected interval: number,
     protected task: Task,
-  ) {}
+  ) {
+    if (!Number.isFinite(interval) || interval <= 0) {
+      throw new TypeError('interval must be a positive number')
+    }
+
+    // Bind this class's signal to the backgroundQueue's signal (destroying this
+    // instance if the backgroundQueue is destroyed)
+    this.abortController = boundAbortController(backgroundQueue.signal)
+  }
 
   async start() {
-    this.signal.throwIfAborted()
-    if (this.promise !== undefined) throw new Error('Already started')
-
-    const { db, task } = this
-
-    this.promise = startInterval(
-      async (signal) => {
-        try {
-          await task(db, signal)
-        } catch (err) {
-          if (!isCausedBySignal(err, signal)) {
-            dbLogger.error(err, 'periodic background task failed')
-          }
-        }
-      },
+    // Noop if already started. Throws if the signal is aborted (destroyed).
+    this.promise ||= startInterval(
+      async (signal) => this.backgroundQueue.add(this.task, signal),
       this.interval,
       this.signal,
     )
   }
 
   async destroy() {
-    this.signal.throwIfAborted()
     this.abortController.abort()
 
     await this.promise
     this.promise = undefined
   }
-}
-
-/**
- * Determines whether the cause of an error is a signal's reason
- */
-function isCausedBySignal(err: unknown, { reason }: AbortSignal) {
-  return err === reason || (err instanceof Error && err.cause === reason)
-}
-
-function startInterval(
-  fn: (signal: AbortSignal) => void | Promise<void>,
-  interval: number,
-  signal: AbortSignal,
-) {
-  signal.throwIfAborted()
-
-  return new Promise<void>((resolve) => {
-    let timer: NodeJS.Timeout | undefined
-
-    const run = async () => {
-      timer = undefined // record that we are running
-      try {
-        await fn(signal)
-      } finally {
-        if (signal.aborted) resolve()
-        else schedule()
-      }
-    }
-
-    const schedule = () => {
-      timer = setTimeout(run, interval)
-    }
-
-    const stop = () => {
-      if (timer) {
-        clearTimeout(timer)
-        resolve()
-      } else {
-        // fn is running, resolve() will be called
-      }
-    }
-
-    signal.addEventListener('abort', stop, { once: true })
-
-    schedule()
-  })
 }

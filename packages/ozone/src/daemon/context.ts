@@ -70,7 +70,9 @@ export class DaemonContext {
 
     const eventReverser = new EventReverser(db, modService)
 
-    const materializedViewRefresher = new MaterializedViewRefresher(db)
+    const materializedViewRefresher = new MaterializedViewRefresher(
+      backgroundQueue,
+    )
 
     return new DaemonContext({
       db,
