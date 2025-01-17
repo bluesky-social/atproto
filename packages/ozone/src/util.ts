@@ -109,23 +109,35 @@ export function startInterval(
 ) {
   signal.throwIfAborted()
 
-  return new Promise<void>((resolve) => {
+  // Renaming for clarity
+  const inputSignal = signal
+
+  // Clone the input signal in order to be able to abort the interval in case
+  // `fn` throws an unexpected error.
+  const intervalController = boundAbortController(inputSignal)
+  const intervalSignal = intervalController.signal
+
+  return new Promise<void>((resolve, reject) => {
     let timer: NodeJS.Timeout | undefined
 
     const run = async () => {
       // Cloning the signal for this particular run to prevent memory leaks
-      const abortController = boundAbortController(signal)
+      const runController = boundAbortController(intervalSignal)
+      const runSignal = runController.signal
+
       try {
-        await fn(abortController.signal)
+        await fn(runSignal)
       } catch (err) {
-        if (!isCausedBySignal(err, abortController.signal)) {
-          // Will cause "unhandledRejection" event to be emitted. This is
-          // expected.
-          throw err
+        // Silently ignore the error if it is caused by the signal
+        if (!isCausedBySignal(err, runSignal)) {
+          // Invalid behavior: stop the interval and reject the promise.
+          intervalController.abort()
+          reject(new Error('Unexpected error', { cause: err }))
         }
       } finally {
-        abortController.abort()
-        if (signal.aborted) resolve()
+        runController.abort()
+
+        if (intervalSignal.aborted) resolve()
         else schedule()
       }
     }
@@ -133,21 +145,33 @@ export function startInterval(
     const schedule = () => {
       assert(timer === undefined, 'unexpected state')
       timer = setTimeout(() => {
-        timer = undefined // record that we are running
+        timer = undefined // "running" state
         void run()
       }, interval)
     }
 
     const stop = () => {
+      // This function will only be called if the `inputSignal` is aborted
+      // before the interval controller is aborted.
+
+      // Stop the interval
+      intervalController.abort()
+
       if (timer === undefined) {
-        // fn is running, `resolve` will be called from `run`'s finally block
+        // `fn` is currently running; `run`'s finally block will resolve the
+        // promise.
       } else {
+        // The execution was scheduled but not started yet. Clear the timer and
+        // resolve the promise.
         clearTimeout(timer)
         resolve()
       }
     }
 
-    signal.addEventListener('abort', stop, { once: true })
+    inputSignal.addEventListener('abort', stop, {
+      once: true,
+      signal: intervalSignal,
+    })
 
     if (runImmediately) void run()
     else schedule()
