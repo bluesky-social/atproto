@@ -72,6 +72,7 @@ export class DaemonContext {
 
     const materializedViewRefresher = new MaterializedViewRefresher(
       backgroundQueue,
+      cfg.db.materializedViewRefreshIntervalMs,
     )
 
     return new DaemonContext({

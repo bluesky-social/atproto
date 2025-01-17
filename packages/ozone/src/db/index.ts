@@ -71,7 +71,6 @@ export class Database {
       this.pool = pool
       this.db = new Kysely<DatabaseSchemaType>({
         dialect: new PostgresDialect({ pool }),
-        log: ['error', 'query'],
       })
     }
 
