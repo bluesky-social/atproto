@@ -12686,6 +12686,11 @@ export const schemaDict = {
                 "If specified, subjects of the given type (account or record) will be returned. When this is set to 'account' the 'collections' parameter will be ignored. When includeAllUserRecords or subject is set, this will be ignored.",
               knownValues: ['account', 'record'],
             },
+            minAccountSuspendCount: {
+              type: 'integer',
+              description:
+                'If specified, only subjects that belong to an account that has at least this many suspensions will be returned.',
+            },
             minReportedRecordsCount: {
               type: 'integer',
               description:

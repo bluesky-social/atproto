@@ -839,8 +839,9 @@ export class ModerationService {
     excludeTags,
     collections,
     subjectType,
-    minReportedRecordsCount = 0,
-    minTakendownRecordsCount = 0,
+    minAccountSuspendCount,
+    minReportedRecordsCount,
+    minTakendownRecordsCount,
   }: QueryStatusParams): Promise<{
     statuses: ModerationSubjectStatusRowWithHandle[]
     cursor?: string
@@ -1073,7 +1074,15 @@ export class ModerationService {
       )
     }
 
-    if (minTakendownRecordsCount > 0) {
+    if (minAccountSuspendCount != null && minAccountSuspendCount > 0) {
+      builder = builder.where(
+        'account_events_stats.suspendCount',
+        '>=',
+        minAccountSuspendCount,
+      )
+    }
+
+    if (minTakendownRecordsCount != null && minTakendownRecordsCount > 0) {
       builder = builder.where(
         'account_record_status_stats.takendownCount',
         '>=',
@@ -1081,7 +1090,7 @@ export class ModerationService {
       )
     }
 
-    if (minReportedRecordsCount > 0) {
+    if (minReportedRecordsCount != null && minReportedRecordsCount > 0) {
       builder = builder.where(
         'account_record_events_stats.reportedCount',
         '>=',

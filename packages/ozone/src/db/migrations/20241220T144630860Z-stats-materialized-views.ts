@@ -71,6 +71,13 @@ export async function up(db: Kysely<any>): Promise<void> {
     .column('subjectDid')
     .execute()
 
+  await db.schema
+    .createIndex('account_events_stats_suspend_count_idx')
+    .on('account_events_stats')
+    .expression(sql`"suspendCount" ASC NULLS FIRST`)
+    .column('subjectDid')
+    .execute()
+
   // ~50sec for 16M events
   await db.schema
     .createView('record_events_stats')
