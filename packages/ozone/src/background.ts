@@ -83,7 +83,10 @@ export class BackgroundQueue {
 }
 
 /**
- * A simple periodic background task runner
+ * A simple periodic background task runner. This class will schedule a task to
+ * run through a provided {@link BackgroundQueue} at a fixed interval. The task
+ * will never run more than once concurrently, and will wait at least `interval`
+ * milliseconds between the end of one run and the start of the next.
  */
 export class PeriodicBackgroundTask {
   private abortController: AbortController

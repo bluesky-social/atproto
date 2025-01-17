@@ -204,6 +204,10 @@ const getSubjectStatusForRecordEvent = ({
 }
 
 export const moderationSubjectStatusQueryBuilder = (db: DatabaseSchema) => {
+  // @NOTE: Using select() instead of selectAll() below because the materialized
+  // views might be incomplete, and we don't want the null `did` columns to
+  // interfere with the (never null) `did` column from the
+  // `moderation_subject_status` table in the results
   return db
     .selectFrom('moderation_subject_status')
     .selectAll('moderation_subject_status')
@@ -214,7 +218,13 @@ export const moderationSubjectStatusQueryBuilder = (db: DatabaseSchema) => {
         'account_events_stats.subjectDid',
       ),
     )
-    .selectAll('account_events_stats')
+    .select([
+      'account_events_stats.takedownCount',
+      'account_events_stats.suspendCount',
+      'account_events_stats.escalateCount',
+      'account_events_stats.reportCount',
+      'account_events_stats.appealCount',
+    ])
     .leftJoin('account_record_events_stats', (join) =>
       join.onRef(
         'moderation_subject_status.did',
@@ -222,7 +232,12 @@ export const moderationSubjectStatusQueryBuilder = (db: DatabaseSchema) => {
         'account_record_events_stats.subjectDid',
       ),
     )
-    .selectAll('account_record_events_stats')
+    .select([
+      'account_record_events_stats.totalReports',
+      'account_record_events_stats.reportedCount',
+      'account_record_events_stats.escalatedCount',
+      'account_record_events_stats.appealedCount',
+    ])
     .leftJoin('account_record_status_stats', (join) =>
       join.onRef(
         'moderation_subject_status.did',
@@ -230,7 +245,12 @@ export const moderationSubjectStatusQueryBuilder = (db: DatabaseSchema) => {
         'account_record_status_stats.did',
       ),
     )
-    .selectAll('account_record_status_stats')
+    .select([
+      'account_record_status_stats.subjectCount',
+      'account_record_status_stats.pendingCount',
+      'account_record_status_stats.processedCount',
+      'account_record_status_stats.takendownCount',
+    ])
 }
 
 // Based on a given moderation action event, this function will update the moderation status of the subject
