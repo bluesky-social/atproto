@@ -45,6 +45,14 @@ Object {
           "lastReviewedBy": "user(1)",
           "recordsStats": Object {
             "$type": "tools.ozone.moderation.defs#recordStats",
+            "appealedCount": 0,
+            "escalatedCount": 0,
+            "pendingCount": 0,
+            "processedCount": 1,
+            "reportedCount": 1,
+            "subjectCount": 1,
+            "takendownCount": 1,
+            "totalReports": 2,
           },
           "reviewState": "tools.ozone.moderation.defs#reviewClosed",
           "subject": Object {

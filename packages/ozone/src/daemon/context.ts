@@ -118,7 +118,10 @@ export class DaemonContext {
   }
 
   async processAll() {
-    await this.eventPusher.processAll()
+    await allFulfilled([
+      this.eventPusher.processAll(),
+      this.materializedViewRefresher.processAll(),
+    ])
   }
 
   async destroy() {

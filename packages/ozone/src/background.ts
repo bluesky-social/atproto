@@ -90,7 +90,9 @@ export class BackgroundQueue {
  */
 export class PeriodicBackgroundTask {
   private abortController: AbortController
-  private promise?: Promise<void>
+
+  private intervalPromise?: Promise<void>
+  private runningPromise?: Promise<void>
 
   public get signal() {
     return this.abortController.signal
@@ -114,17 +116,31 @@ export class PeriodicBackgroundTask {
     this.abortController = boundAbortController(backgroundQueue.signal)
   }
 
+  private run(signal: AbortSignal): Promise<void> {
+    // Already running
+    if (this.runningPromise) return this.runningPromise
+
+    const promise = this.backgroundQueue.add(this.task, signal)
+
+    // Store the promise on this instance
+    return (this.runningPromise = promise).finally(() => {
+      if (this.runningPromise === promise) this.runningPromise = undefined
+    })
+  }
+
   start() {
     // Noop if already started. Throws if the signal is aborted (destroyed).
-    this.promise ||= startInterval(
-      async (signal) => this.backgroundQueue.add(this.task, signal),
+    this.intervalPromise ||= startInterval(
+      async (signal) => this.run(signal),
       this.interval,
       this.signal,
-    ).catch((err) => {
-      if (!isCausedBySignal(err, this.signal)) {
-        dbLogger.error(err, 'periodic background task failed')
-      }
-    })
+    )
+  }
+
+  async processAll() {
+    if (!this.intervalPromise) return // not started
+
+    return this.run(this.signal)
   }
 
   async destroy() {
@@ -133,7 +149,7 @@ export class PeriodicBackgroundTask {
 
     this.abortController.abort()
 
-    await this.promise
-    this.promise = undefined
+    await this.intervalPromise
+    this.intervalPromise = undefined
   }
 }

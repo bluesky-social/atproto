@@ -5,6 +5,11 @@ Array [
   Object {
     "accountStats": Object {
       "$type": "tools.ozone.moderation.defs#accountStats",
+      "appealCount": 0,
+      "escalateCount": 0,
+      "reportCount": 2,
+      "suspendCount": 0,
+      "takedownCount": 0,
     },
     "createdAt": "1970-01-01T00:00:00.000Z",
     "hosting": Object {
@@ -15,6 +20,14 @@ Array [
     "lastReportedAt": "1970-01-01T00:00:00.000Z",
     "recordsStats": Object {
       "$type": "tools.ozone.moderation.defs#recordStats",
+      "appealedCount": 0,
+      "escalatedCount": 0,
+      "pendingCount": 1,
+      "processedCount": 0,
+      "reportedCount": 1,
+      "subjectCount": 1,
+      "takendownCount": 0,
+      "totalReports": 2,
     },
     "reviewState": "tools.ozone.moderation.defs#reviewOpen",
     "subject": Object {
@@ -35,6 +48,11 @@ Array [
   Object {
     "accountStats": Object {
       "$type": "tools.ozone.moderation.defs#accountStats",
+      "appealCount": 0,
+      "escalateCount": 0,
+      "reportCount": 2,
+      "suspendCount": 0,
+      "takedownCount": 0,
     },
     "createdAt": "1970-01-01T00:00:00.000Z",
     "hosting": Object {
@@ -45,6 +63,14 @@ Array [
     "lastReportedAt": "1970-01-01T00:00:00.000Z",
     "recordsStats": Object {
       "$type": "tools.ozone.moderation.defs#recordStats",
+      "appealedCount": 0,
+      "escalatedCount": 0,
+      "pendingCount": 1,
+      "processedCount": 0,
+      "reportedCount": 1,
+      "subjectCount": 1,
+      "takendownCount": 0,
+      "totalReports": 2,
     },
     "reviewState": "tools.ozone.moderation.defs#reviewOpen",
     "subject": Object {
@@ -69,6 +95,11 @@ Array [
   Object {
     "accountStats": Object {
       "$type": "tools.ozone.moderation.defs#accountStats",
+      "appealCount": 0,
+      "escalateCount": 0,
+      "reportCount": 2,
+      "suspendCount": 0,
+      "takedownCount": 0,
     },
     "createdAt": "1970-01-01T00:00:00.000Z",
     "hosting": Object {
@@ -79,6 +110,14 @@ Array [
     "lastReportedAt": "1970-01-01T00:00:00.000Z",
     "recordsStats": Object {
       "$type": "tools.ozone.moderation.defs#recordStats",
+      "appealedCount": 0,
+      "escalatedCount": 0,
+      "pendingCount": 1,
+      "processedCount": 0,
+      "reportedCount": 1,
+      "subjectCount": 1,
+      "takendownCount": 0,
+      "totalReports": 2,
     },
     "reviewState": "tools.ozone.moderation.defs#reviewOpen",
     "subject": Object {
@@ -99,6 +138,11 @@ Array [
   Object {
     "accountStats": Object {
       "$type": "tools.ozone.moderation.defs#accountStats",
+      "appealCount": 0,
+      "escalateCount": 0,
+      "reportCount": 2,
+      "suspendCount": 0,
+      "takedownCount": 0,
     },
     "createdAt": "1970-01-01T00:00:00.000Z",
     "hosting": Object {
@@ -109,6 +153,14 @@ Array [
     "lastReportedAt": "1970-01-01T00:00:00.000Z",
     "recordsStats": Object {
       "$type": "tools.ozone.moderation.defs#recordStats",
+      "appealedCount": 0,
+      "escalatedCount": 0,
+      "pendingCount": 1,
+      "processedCount": 0,
+      "reportedCount": 1,
+      "subjectCount": 1,
+      "takendownCount": 0,
+      "totalReports": 2,
     },
     "reviewState": "tools.ozone.moderation.defs#reviewOpen",
     "subject": Object {
@@ -128,6 +180,11 @@ Array [
   Object {
     "accountStats": Object {
       "$type": "tools.ozone.moderation.defs#accountStats",
+      "appealCount": 0,
+      "escalateCount": 0,
+      "reportCount": 2,
+      "suspendCount": 0,
+      "takedownCount": 0,
     },
     "createdAt": "1970-01-01T00:00:00.000Z",
     "hosting": Object {
@@ -138,6 +195,14 @@ Array [
     "lastReportedAt": "1970-01-01T00:00:00.000Z",
     "recordsStats": Object {
       "$type": "tools.ozone.moderation.defs#recordStats",
+      "appealedCount": 0,
+      "escalatedCount": 0,
+      "pendingCount": 1,
+      "processedCount": 0,
+      "reportedCount": 1,
+      "subjectCount": 1,
+      "takendownCount": 0,
+      "totalReports": 2,
     },
     "reviewState": "tools.ozone.moderation.defs#reviewOpen",
     "subject": Object {
@@ -157,6 +222,11 @@ Array [
   Object {
     "accountStats": Object {
       "$type": "tools.ozone.moderation.defs#accountStats",
+      "appealCount": 0,
+      "escalateCount": 0,
+      "reportCount": 2,
+      "suspendCount": 0,
+      "takedownCount": 0,
     },
     "createdAt": "1970-01-01T00:00:00.000Z",
     "hosting": Object {
@@ -167,6 +237,14 @@ Array [
     "lastReportedAt": "1970-01-01T00:00:00.000Z",
     "recordsStats": Object {
       "$type": "tools.ozone.moderation.defs#recordStats",
+      "appealedCount": 0,
+      "escalatedCount": 0,
+      "pendingCount": 1,
+      "processedCount": 0,
+      "reportedCount": 1,
+      "subjectCount": 1,
+      "takendownCount": 0,
+      "totalReports": 2,
     },
     "reviewState": "tools.ozone.moderation.defs#reviewOpen",
     "subject": Object {

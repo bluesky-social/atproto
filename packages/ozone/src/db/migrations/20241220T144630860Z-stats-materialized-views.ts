@@ -130,7 +130,12 @@ export async function up(db: Kysely<any>): Promise<void> {
         .selectFrom('record_events_stats')
         .select([
           'subjectDid',
-          (eb) => sql<number>`SUM(${eb.ref('reportCount')})`.as('totalReports'),
+          (eb) =>
+            // Casting to "bigint" because "numeric" gets casted to a string
+            // by default by postgres-node.
+            sql<number>`SUM(${eb.ref('reportCount')})::bigint`.as(
+              'totalReports',
+            ),
           (eb) =>
             sql<number>`COUNT(*) FILTER (WHERE ${eb.ref('reportCount')} > 0)`.as(
               'reportedCount',

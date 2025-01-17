@@ -27,6 +27,11 @@ Object {
         "subjectStatus": Object {
           "accountStats": Object {
             "$type": "tools.ozone.moderation.defs#accountStats",
+            "appealCount": 0,
+            "escalateCount": 0,
+            "reportCount": 2,
+            "suspendCount": 0,
+            "takedownCount": 1,
           },
           "createdAt": "1970-01-01T00:00:00.000Z",
           "hosting": Object {
