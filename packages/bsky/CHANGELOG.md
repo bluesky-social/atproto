@@ -1,5 +1,15 @@
 # @atproto/bsky
 
+## 0.0.108
+
+### Patch Changes
+
+- [#3389](https://github.com/bluesky-social/atproto/pull/3389) [`cbf17066f`](https://github.com/bluesky-social/atproto/commit/cbf17066f314fbc7f2e943127ee4a9f589f8bec2) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - add feedgen content mode lexicon spec
+
+- Updated dependencies [[`cbf17066f`](https://github.com/bluesky-social/atproto/commit/cbf17066f314fbc7f2e943127ee4a9f589f8bec2), [`9c0128193`](https://github.com/bluesky-social/atproto/commit/9c01281931a371304bcfa465005d7363c003bc5f)]:
+  - @atproto/api@0.13.28
+  - @atproto-labs/fetch-node@0.1.6
+
 ## 0.0.107
 
 ### Patch Changes
