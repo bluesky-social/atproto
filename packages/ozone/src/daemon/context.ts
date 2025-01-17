@@ -120,7 +120,7 @@ export class DaemonContext {
   async processAll() {
     await allFulfilled([
       this.eventPusher.processAll(),
-      this.materializedViewRefresher.processAll(),
+      this.materializedViewRefresher.run(),
     ])
   }
 

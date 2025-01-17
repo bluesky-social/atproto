@@ -116,20 +116,30 @@ export class PeriodicBackgroundTask {
     this.abortController = boundAbortController(backgroundQueue.signal)
   }
 
-  private run(signal: AbortSignal): Promise<void> {
-    // Already running
+  public run(signal?: AbortSignal): Promise<void> {
+    // `startInterval` already ensures that only one run is in progress at a
+    // time. However, we want to be able to expose a `run()` method that can be
+    // used to force a run, which could cause concurrent executions. We prevent
+    // this using the `runningPromise` property.
+
     if (this.runningPromise) return this.runningPromise
 
-    const promise = this.backgroundQueue.add(this.task, signal)
+    // Combine the `this.signal` with the provided `signal`, if any.
+    const abortController = boundAbortController(this.signal, signal)
 
-    // Store the promise on this instance
+    const promise = this.backgroundQueue.add(this.task, abortController.signal)
+
     return (this.runningPromise = promise).finally(() => {
       if (this.runningPromise === promise) this.runningPromise = undefined
+
+      // Cleanup the listeners added by `boundAbortController`
+      abortController.abort()
     })
   }
 
-  start() {
-    // Noop if already started. Throws if the signal is aborted (destroyed).
+  public start() {
+    // Noop if already started. Throws if this.signal is aborted (instance is
+    // destroyed).
     this.intervalPromise ||= startInterval(
       async (signal) => this.run(signal),
       this.interval,
@@ -137,13 +147,7 @@ export class PeriodicBackgroundTask {
     )
   }
 
-  async processAll() {
-    if (!this.intervalPromise) return // not started
-
-    return this.run(this.signal)
-  }
-
-  async destroy() {
+  public async destroy() {
     // @NOTE This instance does not "own" the backgroundQueue, so we do not
     // destroy it here.
 
