@@ -38,6 +38,7 @@ export type ModerationSubjectStatusRowWithStats = ModerationSubjectStatusRow & {
   processedCount: number | null
   takendownCount: number | null
 }
+
 export type ModerationSubjectStatusRowWithHandle =
   ModerationSubjectStatusRowWithStats & { handle: string | null }
 

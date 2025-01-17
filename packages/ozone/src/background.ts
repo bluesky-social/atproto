@@ -52,6 +52,9 @@ export class BackgroundQueue {
         // want to abort the task if the backgroundQueue is being destroyed.
         if (signal?.aborted) return
 
+        // The task will receive a "combined signal" allowing it to abort if
+        // either the backgroundQueue is destroyed or the provided signal is
+        // aborted.
         await task(this.db, abortController.signal)
       } catch (err) {
         if (!isCausedBySignal(err, abortController.signal)) {
@@ -108,16 +111,23 @@ export class PeriodicBackgroundTask {
     this.abortController = boundAbortController(backgroundQueue.signal)
   }
 
-  async start() {
+  start() {
     // Noop if already started. Throws if the signal is aborted (destroyed).
     this.promise ||= startInterval(
       async (signal) => this.backgroundQueue.add(this.task, signal),
       this.interval,
       this.signal,
-    )
+    ).catch((err) => {
+      if (!isCausedBySignal(err, this.signal)) {
+        dbLogger.error(err, 'periodic background task failed')
+      }
+    })
   }
 
   async destroy() {
+    // @NOTE This instance does not "own" the backgroundQueue, so we do not
+    // destroy it here.
+
     this.abortController.abort()
 
     await this.promise

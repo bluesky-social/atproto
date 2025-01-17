@@ -1,3 +1,4 @@
+import assert from 'node:assert'
 import { createRetryable } from '@atproto/common'
 import { ResponseType, XRPCError } from '@atproto/xrpc'
 import { parseList } from 'structured-headers'
@@ -91,6 +92,10 @@ export const formatLabelerHeader = (parsed: ParsedLabelers): string => {
  * start of the next one (instead of starting the execution every `interval`
  * milliseconds), ensuring that the function is not running concurrently.
  *
+ * @param fn The function to execute. That function must not throw any error
+ * other than `signal.reason` or an {@link Error} that has the `signal.reason`
+ * as its cause.
+ *
  * @returns A promise that resolves when the signal is aborted, and the last
  * execution is done.
  *
@@ -100,6 +105,7 @@ export function startInterval(
   fn: (signal: AbortSignal) => void | Promise<void>,
   interval: number,
   signal: AbortSignal,
+  runImmediately = false,
 ) {
   signal.throwIfAborted()
 
@@ -107,12 +113,16 @@ export function startInterval(
     let timer: NodeJS.Timeout | undefined
 
     const run = async () => {
-      timer = undefined // record that we are running
-
       // Cloning the signal for this particular run to prevent memory leaks
       const abortController = boundAbortController(signal)
       try {
         await fn(abortController.signal)
+      } catch (err) {
+        if (!isCausedBySignal(err, abortController.signal)) {
+          // Will cause "unhandledRejection" event to be emitted. This is
+          // expected.
+          throw err
+        }
       } finally {
         abortController.abort()
         if (signal.aborted) resolve()
@@ -121,21 +131,26 @@ export function startInterval(
     }
 
     const schedule = () => {
-      timer = setTimeout(run, interval)
+      assert(timer === undefined, 'unexpected state')
+      timer = setTimeout(() => {
+        timer = undefined // record that we are running
+        void run()
+      }, interval)
     }
 
     const stop = () => {
-      if (timer) {
+      if (timer === undefined) {
+        // fn is running, `resolve` will be called from `run`'s finally block
+      } else {
         clearTimeout(timer)
         resolve()
-      } else {
-        // fn is running, resolve() will be called
       }
     }
 
     signal.addEventListener('abort', stop, { once: true })
 
-    schedule()
+    if (runImmediately) void run()
+    else schedule()
   })
 }
 

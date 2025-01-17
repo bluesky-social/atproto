@@ -583,10 +583,10 @@ export class ModerationViews {
     ])
 
     return new Map(
-      statusRes.map((status) => {
-        const subjectId = formatSubjectId(status.did, status.recordPath)
-        const handle = accountsByDid.get(status.did)?.handle ?? INVALID_HANDLE
-        return [subjectId, { ...status, handle }]
+      statusRes.map((row): [string, ModerationSubjectStatusRowWithHandle] => {
+        const subjectId = formatSubjectId(row.did, row.recordPath)
+        const handle = accountsByDid.get(row.did)?.handle ?? INVALID_HANDLE
+        return [subjectId, { ...row, handle }]
       }),
     )
   }
