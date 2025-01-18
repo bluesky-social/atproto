@@ -82,6 +82,7 @@ message PostRecordMeta {
   bool violates_embedding_rules = 4;
   bool has_post_gate = 5;
   bool has_thread_gate = 6;
+  bool has_video = 7;
 }
 
 message GetPostRecordsRequest {

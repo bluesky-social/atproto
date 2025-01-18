@@ -981,6 +981,11 @@ export class PostRecordMeta extends Message<PostRecordMeta> {
    */
   hasThreadGate = false
 
+  /**
+   * @generated from field: bool has_video = 7;
+   */
+  hasVideo = false
+
   constructor(data?: PartialMessage<PostRecordMeta>) {
     super()
     proto3.util.initPartial(data, this)
@@ -1015,6 +1020,7 @@ export class PostRecordMeta extends Message<PostRecordMeta> {
       kind: 'scalar',
       T: 8 /* ScalarType.BOOL */,
     },
+    { no: 7, name: 'has_video', kind: 'scalar', T: 8 /* ScalarType.BOOL */ },
   ])
 
   static fromBinary(
