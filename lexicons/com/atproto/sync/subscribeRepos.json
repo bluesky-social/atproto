@@ -206,6 +206,10 @@
         "cid": {
           "type": "cid-link",
           "description": "For creates and updates, the new record CID. For deletions, null."
+        },
+        "prev": {
+          "type": "cid-link",
+          "description": "For updates and deletes, the previous record CID (required). For creations, null."
         }
       }
     }
