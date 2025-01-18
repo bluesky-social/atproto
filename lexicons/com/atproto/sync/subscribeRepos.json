@@ -102,7 +102,7 @@
           "type": "array",
           "items": {
             "type": "cid-link",
-            "description": "List of new blobs (by CID) referenced by records in this commit."
+            "description": "DEPRECATED -- will soon always be empty. List of new blobs (by CID) referenced by records in this commit."
           }
         },
         "time": {
