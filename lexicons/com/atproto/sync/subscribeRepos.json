@@ -19,6 +19,7 @@
           "type": "union",
           "refs": [
             "#commit",
+            "#resync",
             "#identity",
             "#account",
             "#handle",
@@ -61,7 +62,7 @@
         "rebase": { "type": "boolean", "description": "DEPRECATED -- unused" },
         "tooBig": {
           "type": "boolean",
-          "description": "Indicates that this commit contained too many ops, or data size was too large. Consumers will need to make a separate request to get missing data."
+          "description": "DEPRECATED -- replaced by #resync event and data limits. Indicates that this commit contained too many ops, or data size was too large. Consumers will need to make a separate request to get missing data."
         },
         "repo": {
           "type": "string",
@@ -104,6 +105,41 @@
             "type": "cid-link",
             "description": "DEPRECATED -- will soon always be empty. List of new blobs (by CID) referenced by records in this commit."
           }
+        },
+        "prevData": {
+          "type": "cid-link",
+          "description": "The root CID of the MST tree for the previous commit from this repo (indicated by the 'since' revision field in this message). Corresponds to the 'data' field in the repo commit object. NOTE: this field is effectively required for the 'inductive' version of firehose."
+        },
+        "time": {
+          "type": "string",
+          "format": "datetime",
+          "description": "Timestamp of when this message was originally broadcast."
+        }
+      }
+    },
+    "resync": {
+      "type": "object",
+      "description": "Updates the repo to a new state, without necessarily including that state on the firehose. Used to recover from broken commit streams, data loss incidents, or in situations where upstream host does not know recent state of the repository.",
+      "required": [
+        "seq",
+        "did",
+        "commit",
+        "time"
+      ],
+      "properties": {
+        "seq": {
+          "type": "integer",
+          "description": "The stream sequence number of this message."
+        },
+        "did": {
+          "type": "string",
+          "format": "did",
+          "description": "The account this repo event corresponds to."
+        },
+        "commit": {
+          "type": "bytes",
+          "description": "CBOR block encoding the commit object (including signature).",
+          "maxLength": 100000
         },
         "time": {
           "type": "string",
