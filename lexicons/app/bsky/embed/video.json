@@ -26,6 +26,13 @@
         "aspectRatio": {
           "type": "ref",
           "ref": "app.bsky.embed.defs#aspectRatio"
+        },
+        "composer": {
+          "type": "string",
+          "knownValues": [
+            "app.bsky.embed.defs#videoComposerUnspecified",
+            "app.bsky.embed.defs#videoComposerVibe"
+          ]
         }
       }
     },
@@ -59,6 +66,13 @@
         "aspectRatio": {
           "type": "ref",
           "ref": "app.bsky.embed.defs#aspectRatio"
+        },
+        "composer": {
+          "type": "string",
+          "knownValues": [
+            "app.bsky.embed.defs#videoComposerUnspecified",
+            "app.bsky.embed.defs#videoComposerVibe"
+          ]
         }
       }
     }

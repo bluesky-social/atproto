@@ -24,3 +24,9 @@ export function isAspectRatio(v: unknown): v is AspectRatio {
 export function validateAspectRatio(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.embed.defs#aspectRatio', v)
 }
+
+/** Declares a video embed as captured by an unspecified composer. */
+export const VIDEOCOMPOSERUNSPECIFIED =
+  'app.bsky.embed.defs#videoComposerUnspecified'
+/** Declares a video embed as captured by the Vibe composer. */
+export const VIDEOCOMPOSERVIBE = 'app.bsky.embed.defs#videoComposerVibe'

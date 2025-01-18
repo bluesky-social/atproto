@@ -204,6 +204,10 @@ export const COM_ATPROTO_MODERATION = {
   DefsReasonOther: 'com.atproto.moderation.defs#reasonOther',
   DefsReasonAppeal: 'com.atproto.moderation.defs#reasonAppeal',
 }
+export const APP_BSKY_EMBED = {
+  DefsVideoComposerUnspecified: 'app.bsky.embed.defs#videoComposerUnspecified',
+  DefsVideoComposerVibe: 'app.bsky.embed.defs#videoComposerVibe',
+}
 export const APP_BSKY_FEED = {
   DefsRequestLess: 'app.bsky.feed.defs#requestLess',
   DefsRequestMore: 'app.bsky.feed.defs#requestMore',

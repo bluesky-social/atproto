@@ -10,6 +10,14 @@
         "width": { "type": "integer", "minimum": 1 },
         "height": { "type": "integer", "minimum": 1 }
       }
+    },
+    "videoComposerUnspecified": {
+      "type": "token",
+      "description": "Declares a video embed as captured by an unspecified composer."
+    },
+    "videoComposerVibe": {
+      "type": "token",
+      "description": "Declares a video embed as captured by the Vibe composer."
     }
   }
 }

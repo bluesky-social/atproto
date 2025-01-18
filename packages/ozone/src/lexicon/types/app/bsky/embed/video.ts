@@ -13,6 +13,10 @@ export interface Main {
   /** Alt text description of the video, for accessibility. */
   alt?: string
   aspectRatio?: AppBskyEmbedDefs.AspectRatio
+  composer?:
+    | 'app.bsky.embed.defs#videoComposerUnspecified'
+    | 'app.bsky.embed.defs#videoComposerVibe'
+    | (string & {})
   [k: string]: unknown
 }
 
@@ -53,6 +57,10 @@ export interface View {
   thumbnail?: string
   alt?: string
   aspectRatio?: AppBskyEmbedDefs.AspectRatio
+  composer?:
+    | 'app.bsky.embed.defs#videoComposerUnspecified'
+    | 'app.bsky.embed.defs#videoComposerVibe'
+    | (string & {})
   [k: string]: unknown
 }
 

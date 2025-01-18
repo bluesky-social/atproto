@@ -5063,6 +5063,15 @@ export const schemaDict = {
           },
         },
       },
+      videoComposerUnspecified: {
+        type: 'token',
+        description:
+          'Declares a video embed as captured by an unspecified composer.',
+      },
+      videoComposerVibe: {
+        type: 'token',
+        description: 'Declares a video embed as captured by the Vibe composer.',
+      },
     },
   },
   AppBskyEmbedExternal: {
@@ -5434,6 +5443,13 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.embed.defs#aspectRatio',
           },
+          composer: {
+            type: 'string',
+            knownValues: [
+              'app.bsky.embed.defs#videoComposerUnspecified',
+              'app.bsky.embed.defs#videoComposerVibe',
+            ],
+          },
         },
       },
       caption: {
@@ -5475,6 +5491,13 @@ export const schemaDict = {
           aspectRatio: {
             type: 'ref',
             ref: 'lex:app.bsky.embed.defs#aspectRatio',
+          },
+          composer: {
+            type: 'string',
+            knownValues: [
+              'app.bsky.embed.defs#videoComposerUnspecified',
+              'app.bsky.embed.defs#videoComposerVibe',
+            ],
           },
         },
       },
