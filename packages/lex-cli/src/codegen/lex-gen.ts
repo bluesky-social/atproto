@@ -36,7 +36,7 @@ export function genImports(
 
   for (const nsid of imports) {
     const targetPath = '/' + nsid.split('.').join('/')
-    let resolvedPath = getRelativePath(startPath, targetPath)
+    let resolvedPath = getRelativePath(startPath, targetPath).replace(/\\\\/g,"/").replace(/\\/g,"/")
     if (!resolvedPath.startsWith('.')) {
       resolvedPath = `./${resolvedPath}`
     }
