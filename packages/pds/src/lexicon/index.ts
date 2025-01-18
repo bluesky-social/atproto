@@ -168,6 +168,9 @@ import * as ToolsOzoneCommunicationCreateTemplate from './types/tools/ozone/comm
 import * as ToolsOzoneCommunicationDeleteTemplate from './types/tools/ozone/communication/deleteTemplate'
 import * as ToolsOzoneCommunicationListTemplates from './types/tools/ozone/communication/listTemplates'
 import * as ToolsOzoneCommunicationUpdateTemplate from './types/tools/ozone/communication/updateTemplate'
+import * as ToolsOzoneHistoryGetAccountActions from './types/tools/ozone/history/getAccountActions'
+import * as ToolsOzoneHistoryGetReportedSubjects from './types/tools/ozone/history/getReportedSubjects'
+import * as ToolsOzoneHistoryGetSubjectHistory from './types/tools/ozone/history/getSubjectHistory'
 import * as ToolsOzoneModerationEmitEvent from './types/tools/ozone/moderation/emitEvent'
 import * as ToolsOzoneModerationGetEvent from './types/tools/ozone/moderation/getEvent'
 import * as ToolsOzoneModerationGetRecord from './types/tools/ozone/moderation/getRecord'
@@ -224,6 +227,13 @@ export const APP_BSKY_GRAPH = {
   DefsModlist: 'app.bsky.graph.defs#modlist',
   DefsCuratelist: 'app.bsky.graph.defs#curatelist',
   DefsReferencelist: 'app.bsky.graph.defs#referencelist',
+}
+export const TOOLS_OZONE_HISTORY = {
+  DefsModActionPending: 'tools.ozone.history.defs#modActionPending',
+  DefsModActionResolve: 'tools.ozone.history.defs#modActionResolve',
+  DefsModActionLabel: 'tools.ozone.history.defs#modActionLabel',
+  DefsModActionTakedown: 'tools.ozone.history.defs#modActionTakedown',
+  DefsModActionSuspend: 'tools.ozone.history.defs#modActionSuspend',
 }
 export const TOOLS_OZONE_MODERATION = {
   DefsReviewOpen: 'tools.ozone.moderation.defs#reviewOpen',
@@ -2243,6 +2253,7 @@ export class ToolsNS {
 export class ToolsOzoneNS {
   _server: Server
   communication: ToolsOzoneCommunicationNS
+  history: ToolsOzoneHistoryNS
   moderation: ToolsOzoneModerationNS
   server: ToolsOzoneServerNS
   set: ToolsOzoneSetNS
@@ -2253,6 +2264,7 @@ export class ToolsOzoneNS {
   constructor(server: Server) {
     this._server = server
     this.communication = new ToolsOzoneCommunicationNS(server)
+    this.history = new ToolsOzoneHistoryNS(server)
     this.moderation = new ToolsOzoneModerationNS(server)
     this.server = new ToolsOzoneServerNS(server)
     this.set = new ToolsOzoneSetNS(server)
@@ -2310,6 +2322,47 @@ export class ToolsOzoneCommunicationNS {
     >,
   ) {
     const nsid = 'tools.ozone.communication.updateTemplate' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class ToolsOzoneHistoryNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  getAccountActions<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneHistoryGetAccountActions.Handler<ExtractAuth<AV>>,
+      ToolsOzoneHistoryGetAccountActions.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.history.getAccountActions' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getReportedSubjects<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneHistoryGetReportedSubjects.Handler<ExtractAuth<AV>>,
+      ToolsOzoneHistoryGetReportedSubjects.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.history.getReportedSubjects' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getSubjectHistory<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneHistoryGetSubjectHistory.Handler<ExtractAuth<AV>>,
+      ToolsOzoneHistoryGetSubjectHistory.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.history.getSubjectHistory' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }
