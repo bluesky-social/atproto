@@ -1,5 +1,11 @@
 # @atproto-labs/fetch-node
 
+## 0.1.6
+
+### Patch Changes
+
+- [#3379](https://github.com/bluesky-social/atproto/pull/3379) [`9c0128193`](https://github.com/bluesky-social/atproto/commit/9c01281931a371304bcfa465005d7363c003bc5f) Thanks [@devinivy](https://github.com/devinivy)! - Unicast checks should permit PSL domains.
+
 ## 0.1.5
 
 ### Patch Changes

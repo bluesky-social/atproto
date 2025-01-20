@@ -39,6 +39,13 @@
             "description": "Self-label values",
             "refs": ["com.atproto.label.defs#selfLabels"]
           },
+          "contentMode": {
+            "type": "string",
+            "knownValues": [
+              "app.bsky.feed.defs#contentModeUnspecified",
+              "app.bsky.feed.defs#contentModeVideo"
+            ]
+          },
           "createdAt": { "type": "string", "format": "datetime" }
         }
       }

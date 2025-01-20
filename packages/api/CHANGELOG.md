@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.13.28
+
+### Patch Changes
+
+- [#3389](https://github.com/bluesky-social/atproto/pull/3389) [`cbf17066f`](https://github.com/bluesky-social/atproto/commit/cbf17066f314fbc7f2e943127ee4a9f589f8bec2) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - add feedgen content mode lexicon spec
+
 ## 0.13.27
 
 ### Patch Changes

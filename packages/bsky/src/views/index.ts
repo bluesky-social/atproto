@@ -572,6 +572,7 @@ export class Views {
             like: viewer.like,
           }
         : undefined,
+      contentMode: feedgen.record.contentMode,
       indexedAt: this.indexedAt(feedgen).toISOString(),
     }
   }
