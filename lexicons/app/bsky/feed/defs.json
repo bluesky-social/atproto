@@ -193,7 +193,11 @@
         "post": { "type": "string", "format": "at-uri" },
         "reason": {
           "type": "union",
-          "refs": ["#skeletonReasonRepost", "#skeletonReasonPin"]
+          "refs": [
+            "#skeletonReasonRepost",
+            "#skeletonReasonPin",
+            "#skeletonReasonSponsored"
+          ]
         },
         "feedContext": {
           "type": "string",
@@ -210,6 +214,10 @@
       }
     },
     "skeletonReasonPin": {
+      "type": "object",
+      "properties": {}
+    },
+    "skeletonReasonSponsored": {
       "type": "object",
       "properties": {}
     },
