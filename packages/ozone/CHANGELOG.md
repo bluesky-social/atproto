@@ -1,5 +1,14 @@
 # @atproto/ozone
 
+## 0.1.70
+
+### Patch Changes
+
+- [#3416](https://github.com/bluesky-social/atproto/pull/3416) [`50603b4f2`](https://github.com/bluesky-social/atproto/commit/50603b4f2ef08bd618730107ec164a57f27dcca6) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add account and record level statistics when querring `tools.ozone.moderation.queryStatuses`.
+
+- Updated dependencies [[`50603b4f2`](https://github.com/bluesky-social/atproto/commit/50603b4f2ef08bd618730107ec164a57f27dcca6)]:
+  - @atproto/api@0.13.29
+
 ## 0.1.69
 
 ### Patch Changes
