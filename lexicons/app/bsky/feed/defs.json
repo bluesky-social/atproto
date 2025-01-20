@@ -219,7 +219,12 @@
     },
     "skeletonReasonSponsored": {
       "type": "object",
-      "properties": {}
+      "properties": {
+        "info": {
+          "type": "string",
+          "description": "Extended information about sponsored content, provided by the feed generator for transparency purposes."
+        }
+      }
     },
     "threadgateView": {
       "type": "object",
