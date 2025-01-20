@@ -152,8 +152,10 @@ export class PeriodicBackgroundTask {
     // destroy it here.
 
     this.abortController.abort()
+    console.error('ABOOOORT')
 
     await this.intervalPromise
     this.intervalPromise = undefined
+    console.error('DONE -_-')
   }
 }

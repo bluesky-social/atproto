@@ -93,15 +93,18 @@ export const formatLabelerHeader = (parsed: ParsedLabelers): string => {
  * milliseconds), ensuring that the function is not running concurrently.
  *
  * @param fn The function to execute. That function must not throw any error
- * other than `signal.reason` or an {@link Error} that has the `signal.reason`
- * as its cause.
+ * other than {@link signal}'s {@link AbortSignal.reason} or an {@link Error}
+ * that has the {@link signal}'s {@link AbortSignal.reason} as its
+ * {@link Error.cause}.
  *
  * @returns A promise that resolves when the signal is aborted, and the last
  * execution is done.
  *
- * @throws if the signal is already aborted.
+ * @throws {AbortSignal['reason']} if the {@link signal} is already aborted.
+ * @throws {TypeError} if {@link fn} throws an unexpected error (with the
+ * unexpected error as the {@link Error.cause}).
  */
-export function startInterval(
+export async function startInterval(
   fn: (signal: AbortSignal) => void | Promise<void>,
   interval: number,
   signal: AbortSignal,
@@ -112,9 +115,7 @@ export function startInterval(
   // Renaming for clarity
   const inputSignal = signal
 
-  // Clone the input signal in order to be able to abort the interval in case
-  // `fn` throws an unexpected error.
-  const intervalController = boundAbortController(inputSignal)
+  const intervalController = new AbortController()
   const intervalSignal = intervalController.signal
 
   return new Promise<void>((resolve, reject) => {
@@ -128,13 +129,24 @@ export function startInterval(
       try {
         await fn(runSignal)
       } catch (err) {
-        // Silently ignore the error if it is caused by the signal
-        if (!isCausedBySignal(err, runSignal)) {
+        if (err != null && isCausedBySignal(err, runSignal)) {
+          // Silently ignore the error if it is caused by the signal. At this
+          // point, the interval controller was aborted, which will cause the
+          // promise to resolve in the "finally" block bellow.
+        } else {
           // Invalid behavior: stop the interval and reject the promise.
-          intervalController.abort()
-          reject(new Error('Unexpected error', { cause: err }))
+          const error = new TypeError('Unexpected error', { cause: err })
+
+          // Rejecting here will make `resolve()` in the "finally" block to be a
+          // no-op. Rejecting before aborting the controller to ensure the
+          // promise does not get resolved by the `abort` event listeners.
+          reject(error)
+
+          // Using `error` as abort reason to avoid creating an AbortError.
+          intervalController.abort(error)
         }
       } finally {
+        // Cleanup the listeners added by `boundAbortController`
         runController.abort()
 
         if (intervalSignal.aborted) resolve()
@@ -150,28 +162,27 @@ export function startInterval(
       }, interval)
     }
 
-    const stop = () => {
+    inputSignal.addEventListener(
+      'abort',
       // This function will only be called if the `inputSignal` is aborted
       // before the interval controller is aborted.
+      () => {
+        // Stop the interval, using the input signal's reason
+        intervalController.abort(inputSignal.reason)
 
-      // Stop the interval
-      intervalController.abort()
-
-      if (timer === undefined) {
-        // `fn` is currently running; `run`'s finally block will resolve the
-        // promise.
-      } else {
-        // The execution was scheduled but not started yet. Clear the timer and
-        // resolve the promise.
-        clearTimeout(timer)
-        resolve()
-      }
-    }
-
-    inputSignal.addEventListener('abort', stop, {
-      once: true,
-      signal: intervalSignal,
-    })
+        if (timer === undefined) {
+          // `fn` is currently running; `run`'s finally block will resolve the
+          // promise.
+        } else {
+          // The execution was scheduled but not started yet. Clear the timer
+          // and resolve the promise.
+          clearTimeout(timer)
+          resolve()
+        }
+      },
+      // Remove the listener whenever the interval is aborted.
+      { signal: intervalSignal },
+    )
 
     if (runImmediately) void run()
     else schedule()
@@ -181,8 +192,13 @@ export function startInterval(
 /**
  * Determines whether the cause of an error is a signal's reason
  */
-export function isCausedBySignal(err: unknown, { reason }: AbortSignal) {
-  return err === reason || (err instanceof Error && err.cause === reason)
+export function isCausedBySignal(err: unknown, signal: AbortSignal) {
+  if (!signal.aborted) return false
+  if (signal.reason == null) return false // Ignore nullish reasons
+  return (
+    err === signal.reason ||
+    (err instanceof Error && err.cause === signal.reason)
+  )
 }
 
 /**
@@ -202,13 +218,12 @@ export function boundAbortController(
   }
 
   const abortController = new AbortController()
-  const abort = () => abortController.abort()
+  const abort = function (event: Event) {
+    abortController.abort((event.target as AbortSignal)?.reason)
+  }
 
   for (const signal of signals) {
-    signal?.addEventListener('abort', abort, {
-      once: true,
-      signal: abortController.signal,
-    })
+    signal?.addEventListener('abort', abort, { signal: abortController.signal })
   }
 
   return abortController
