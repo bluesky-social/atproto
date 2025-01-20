@@ -3,6 +3,14 @@
 exports[`moderation-statuses query statuses returns statuses filtered by subject language 1`] = `
 Array [
   Object {
+    "accountStats": Object {
+      "$type": "tools.ozone.moderation.defs#accountStats",
+      "appealCount": 0,
+      "escalateCount": 0,
+      "reportCount": 2,
+      "suspendCount": 0,
+      "takedownCount": 0,
+    },
     "createdAt": "1970-01-01T00:00:00.000Z",
     "hosting": Object {
       "$type": "tools.ozone.moderation.defs#recordHosting",
@@ -10,6 +18,17 @@ Array [
     },
     "id": 7,
     "lastReportedAt": "1970-01-01T00:00:00.000Z",
+    "recordsStats": Object {
+      "$type": "tools.ozone.moderation.defs#recordStats",
+      "appealedCount": 0,
+      "escalatedCount": 0,
+      "pendingCount": 1,
+      "processedCount": 0,
+      "reportedCount": 1,
+      "subjectCount": 1,
+      "takendownCount": 0,
+      "totalReports": 2,
+    },
     "reviewState": "tools.ozone.moderation.defs#reviewOpen",
     "subject": Object {
       "$type": "com.atproto.repo.strongRef",
@@ -27,6 +46,14 @@ Array [
     "updatedAt": "1970-01-01T00:00:00.000Z",
   },
   Object {
+    "accountStats": Object {
+      "$type": "tools.ozone.moderation.defs#accountStats",
+      "appealCount": 0,
+      "escalateCount": 0,
+      "reportCount": 2,
+      "suspendCount": 0,
+      "takedownCount": 0,
+    },
     "createdAt": "1970-01-01T00:00:00.000Z",
     "hosting": Object {
       "$type": "tools.ozone.moderation.defs#accountHosting",
@@ -34,6 +61,17 @@ Array [
     },
     "id": 5,
     "lastReportedAt": "1970-01-01T00:00:00.000Z",
+    "recordsStats": Object {
+      "$type": "tools.ozone.moderation.defs#recordStats",
+      "appealedCount": 0,
+      "escalatedCount": 0,
+      "pendingCount": 1,
+      "processedCount": 0,
+      "reportedCount": 1,
+      "subjectCount": 1,
+      "takendownCount": 0,
+      "totalReports": 2,
+    },
     "reviewState": "tools.ozone.moderation.defs#reviewOpen",
     "subject": Object {
       "$type": "com.atproto.admin.defs#repoRef",
@@ -55,6 +93,14 @@ Array [
 exports[`moderation-statuses query statuses returns statuses for subjects that received moderation events 1`] = `
 Array [
   Object {
+    "accountStats": Object {
+      "$type": "tools.ozone.moderation.defs#accountStats",
+      "appealCount": 0,
+      "escalateCount": 0,
+      "reportCount": 2,
+      "suspendCount": 0,
+      "takedownCount": 0,
+    },
     "createdAt": "1970-01-01T00:00:00.000Z",
     "hosting": Object {
       "$type": "tools.ozone.moderation.defs#recordHosting",
@@ -62,6 +108,17 @@ Array [
     },
     "id": 7,
     "lastReportedAt": "1970-01-01T00:00:00.000Z",
+    "recordsStats": Object {
+      "$type": "tools.ozone.moderation.defs#recordStats",
+      "appealedCount": 0,
+      "escalatedCount": 0,
+      "pendingCount": 1,
+      "processedCount": 0,
+      "reportedCount": 1,
+      "subjectCount": 1,
+      "takendownCount": 0,
+      "totalReports": 2,
+    },
     "reviewState": "tools.ozone.moderation.defs#reviewOpen",
     "subject": Object {
       "$type": "com.atproto.repo.strongRef",
@@ -79,6 +136,14 @@ Array [
     "updatedAt": "1970-01-01T00:00:00.000Z",
   },
   Object {
+    "accountStats": Object {
+      "$type": "tools.ozone.moderation.defs#accountStats",
+      "appealCount": 0,
+      "escalateCount": 0,
+      "reportCount": 2,
+      "suspendCount": 0,
+      "takedownCount": 0,
+    },
     "createdAt": "1970-01-01T00:00:00.000Z",
     "hosting": Object {
       "$type": "tools.ozone.moderation.defs#accountHosting",
@@ -86,6 +151,17 @@ Array [
     },
     "id": 5,
     "lastReportedAt": "1970-01-01T00:00:00.000Z",
+    "recordsStats": Object {
+      "$type": "tools.ozone.moderation.defs#recordStats",
+      "appealedCount": 0,
+      "escalatedCount": 0,
+      "pendingCount": 1,
+      "processedCount": 0,
+      "reportedCount": 1,
+      "subjectCount": 1,
+      "takendownCount": 0,
+      "totalReports": 2,
+    },
     "reviewState": "tools.ozone.moderation.defs#reviewOpen",
     "subject": Object {
       "$type": "com.atproto.admin.defs#repoRef",
@@ -102,6 +178,14 @@ Array [
     "updatedAt": "1970-01-01T00:00:00.000Z",
   },
   Object {
+    "accountStats": Object {
+      "$type": "tools.ozone.moderation.defs#accountStats",
+      "appealCount": 0,
+      "escalateCount": 0,
+      "reportCount": 2,
+      "suspendCount": 0,
+      "takedownCount": 0,
+    },
     "createdAt": "1970-01-01T00:00:00.000Z",
     "hosting": Object {
       "$type": "tools.ozone.moderation.defs#recordHosting",
@@ -109,6 +193,17 @@ Array [
     },
     "id": 3,
     "lastReportedAt": "1970-01-01T00:00:00.000Z",
+    "recordsStats": Object {
+      "$type": "tools.ozone.moderation.defs#recordStats",
+      "appealedCount": 0,
+      "escalatedCount": 0,
+      "pendingCount": 1,
+      "processedCount": 0,
+      "reportedCount": 1,
+      "subjectCount": 1,
+      "takendownCount": 0,
+      "totalReports": 2,
+    },
     "reviewState": "tools.ozone.moderation.defs#reviewOpen",
     "subject": Object {
       "$type": "com.atproto.repo.strongRef",
@@ -125,6 +220,14 @@ Array [
     "updatedAt": "1970-01-01T00:00:00.000Z",
   },
   Object {
+    "accountStats": Object {
+      "$type": "tools.ozone.moderation.defs#accountStats",
+      "appealCount": 0,
+      "escalateCount": 0,
+      "reportCount": 2,
+      "suspendCount": 0,
+      "takedownCount": 0,
+    },
     "createdAt": "1970-01-01T00:00:00.000Z",
     "hosting": Object {
       "$type": "tools.ozone.moderation.defs#accountHosting",
@@ -132,6 +235,17 @@ Array [
     },
     "id": 1,
     "lastReportedAt": "1970-01-01T00:00:00.000Z",
+    "recordsStats": Object {
+      "$type": "tools.ozone.moderation.defs#recordStats",
+      "appealedCount": 0,
+      "escalatedCount": 0,
+      "pendingCount": 1,
+      "processedCount": 0,
+      "reportedCount": 1,
+      "subjectCount": 1,
+      "takendownCount": 0,
+      "totalReports": 2,
+    },
     "reviewState": "tools.ozone.moderation.defs#reviewOpen",
     "subject": Object {
       "$type": "com.atproto.admin.defs#repoRef",

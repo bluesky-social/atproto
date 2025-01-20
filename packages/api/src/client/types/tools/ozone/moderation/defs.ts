@@ -136,6 +136,8 @@ export interface SubjectStatusView {
   appealed?: boolean
   suspendUntil?: string
   tags?: string[]
+  accountStats?: AccountStats
+  recordsStats?: RecordsStats
   [k: string]: unknown
 }
 
@@ -149,6 +151,66 @@ export function isSubjectStatusView(v: unknown): v is SubjectStatusView {
 
 export function validateSubjectStatusView(v: unknown): ValidationResult {
   return lexicons.validate('tools.ozone.moderation.defs#subjectStatusView', v)
+}
+
+/** Statistics about a particular account subject */
+export interface AccountStats {
+  /** Total number of reports on the account */
+  reportCount?: number
+  /** Total number of appeals against a moderation action on the account */
+  appealCount?: number
+  /** Number of times the account was suspended */
+  suspendCount?: number
+  /** Number of times the account was escalated */
+  escalateCount?: number
+  /** Number of times the account was taken down */
+  takedownCount?: number
+  [k: string]: unknown
+}
+
+export function isAccountStats(v: unknown): v is AccountStats {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'tools.ozone.moderation.defs#accountStats'
+  )
+}
+
+export function validateAccountStats(v: unknown): ValidationResult {
+  return lexicons.validate('tools.ozone.moderation.defs#accountStats', v)
+}
+
+/** Statistics about a set of record subject items */
+export interface RecordsStats {
+  /** Cumulative sum of the number of reports on the items in the set */
+  totalReports?: number
+  /** Number of items that were reported at least once */
+  reportedCount?: number
+  /** Number of items that were escalated at least once */
+  escalatedCount?: number
+  /** Number of items that were appealed at least once */
+  appealedCount?: number
+  /** Total number of item in the set */
+  subjectCount?: number
+  /** Number of item currently in "reviewOpen" or "reviewEscalated" state */
+  pendingCount?: number
+  /** Number of item currently in "reviewNone" or "reviewClosed" state */
+  processedCount?: number
+  /** Number of item currently taken down */
+  takendownCount?: number
+  [k: string]: unknown
+}
+
+export function isRecordsStats(v: unknown): v is RecordsStats {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'tools.ozone.moderation.defs#recordsStats'
+  )
+}
+
+export function validateRecordsStats(v: unknown): ValidationResult {
+  return lexicons.validate('tools.ozone.moderation.defs#recordsStats', v)
 }
 
 export type SubjectReviewState =

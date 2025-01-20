@@ -18,6 +18,14 @@ Object {
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "moderation": Object {
       "subjectStatus": Object {
+        "accountStats": Object {
+          "$type": "tools.ozone.moderation.defs#accountStats",
+          "appealCount": 0,
+          "escalateCount": 1,
+          "reportCount": 4,
+          "suspendCount": 0,
+          "takedownCount": 0,
+        },
         "createdAt": "1970-01-01T00:00:00.000Z",
         "hosting": Object {
           "$type": "tools.ozone.moderation.defs#accountHosting",
@@ -27,6 +35,17 @@ Object {
         "lastReportedAt": "1970-01-01T00:00:00.000Z",
         "lastReviewedAt": "1970-01-01T00:00:00.000Z",
         "lastReviewedBy": "user(1)",
+        "recordsStats": Object {
+          "$type": "tools.ozone.moderation.defs#recordStats",
+          "appealedCount": 0,
+          "escalatedCount": 0,
+          "pendingCount": 2,
+          "processedCount": 0,
+          "reportedCount": 2,
+          "subjectCount": 2,
+          "takendownCount": 0,
+          "totalReports": 3,
+        },
         "reviewState": "tools.ozone.moderation.defs#reviewEscalated",
         "subject": Object {
           "$type": "com.atproto.admin.defs#repoRef",

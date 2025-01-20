@@ -1,10 +1,6 @@
 import { sql } from 'kysely'
 import { AtUri, INVALID_HANDLE, normalizeDatetimeAlways } from '@atproto/syntax'
-import {
-  AtpAgent,
-  AppBskyFeedDefs,
-  ToolsOzoneModerationDefs,
-} from '@atproto/api'
+import { AtpAgent, AppBskyFeedDefs } from '@atproto/api'
 import { dedupeStrs } from '@atproto/common'
 import { BlobRef } from '@atproto/lexicon'
 import { Keypair } from '@atproto/crypto'
@@ -12,7 +8,6 @@ import { Database } from '../db'
 import {
   ModEventView,
   RepoView,
-  RepoViewDetail,
   RecordView,
   RecordViewDetail,
   BlobView,
@@ -34,6 +29,7 @@ import { dbLogger } from '../logger'
 import { httpLogger } from '../logger'
 import { ParsedLabelers } from '../util'
 import { ids } from '../lexicon/lexicons'
+import { moderationSubjectStatusQueryBuilder } from './status'
 
 export type AuthHeaders = {
   headers: {
@@ -481,8 +477,9 @@ export class ModerationViews {
   async blob(blobs: BlobRef[]): Promise<BlobView[]> {
     if (!blobs.length) return []
     const { ref } = this.db.db.dynamic
-    const modStatusResults = await this.db.db
-      .selectFrom('moderation_subject_status')
+    const modStatusResults = await moderationSubjectStatusQueryBuilder(
+      this.db.db,
+    )
       .where(
         sql<string>`${ref(
           'moderation_subject_status.blobCids',
@@ -529,10 +526,10 @@ export class ModerationViews {
     await Promise.all(
       res.map(async (labelRow) => {
         const signedLabel = await this.formatLabelAndEnsureSig(labelRow)
-        if (!labels.has(labelRow.uri)) {
-          labels.set(labelRow.uri, [])
-        }
-        labels.get(labelRow.uri)?.push(signedLabel)
+
+        const current = labels.get(labelRow.uri)
+        if (current) current.push(signedLabel)
+        else labels.set(labelRow.uri, [signedLabel])
       }),
     )
     return labels
@@ -559,51 +556,39 @@ export class ModerationViews {
   async getSubjectStatus(
     subjects: string[],
   ): Promise<Map<string, ModerationSubjectStatusRowWithHandle>> {
-    const parsedSubjects = subjects.map((subject) => parseSubjectId(subject))
-    const filterForSubject = (did: string, recordPath?: string) => {
-      return (clause: any) => {
-        clause = clause
-          .where('moderation_subject_status.did', '=', did)
-          .where('moderation_subject_status.recordPath', '=', recordPath || '')
-        return clause
-      }
-      // TODO: Fix the typing here?
-    }
+    if (!subjects.length) return new Map()
 
-    const builder = this.db.db
-      .selectFrom('moderation_subject_status')
-      .where((clause) => {
-        parsedSubjects.forEach((subject, i) => {
-          const applySubjectFilter = filterForSubject(
-            subject.did,
-            subject.recordPath,
+    const parsedSubjects = subjects.map(parseSubjectId)
+
+    const builder = moderationSubjectStatusQueryBuilder(this.db.db)
+      //
+      .where((qb) => {
+        for (const sub of parsedSubjects) {
+          qb = qb.orWhere((qb) =>
+            qb
+              .where('moderation_subject_status.did', '=', sub.did)
+              .where(
+                'moderation_subject_status.recordPath',
+                '=',
+                sub.recordPath ?? '',
+              ),
           )
-          if (i === 0) {
-            clause = clause.where(applySubjectFilter)
-          } else {
-            clause = clause.orWhere(applySubjectFilter)
-          }
-        })
-
-        return clause
+        }
+        return qb
       })
-      .selectAll()
 
     const [statusRes, accountsByDid] = await Promise.all([
       builder.execute(),
       this.getAccoutInfosByDid(parsedSubjects.map((s) => s.did)),
     ])
 
-    return statusRes.reduce((acc, cur) => {
-      const subject = cur.recordPath
-        ? formatSubjectId(cur.did, cur.recordPath)
-        : cur.did
-      const handle = accountsByDid.get(cur.did)?.handle
-      return acc.set(subject, {
-        ...cur,
-        handle: handle ?? INVALID_HANDLE,
-      })
-    }, new Map<string, ModerationSubjectStatusRowWithHandle>())
+    return new Map(
+      statusRes.map((row): [string, ModerationSubjectStatusRowWithHandle] => {
+        const subjectId = formatSubjectId(row.did, row.recordPath)
+        const handle = accountsByDid.get(row.did)?.handle ?? INVALID_HANDLE
+        return [subjectId, { ...row, handle }]
+      }),
+    )
   }
 
   formatSubjectStatus(
@@ -628,6 +613,35 @@ export class ModerationViews {
       subjectBlobCids: status.blobCids || [],
       tags: status.tags || [],
       subject: subjectFromStatusRow(status).lex(),
+
+      accountStats: {
+        // Explicitly typing to allow for easy manipulation (e.g. to strip from tests snapshots)
+        $type: 'tools.ozone.moderation.defs#accountStats',
+
+        // account_events_stats
+        reportCount: status.reportCount ?? undefined,
+        appealCount: status.appealCount ?? undefined,
+        suspendCount: status.suspendCount ?? undefined,
+        takedownCount: status.takedownCount ?? undefined,
+        escalateCount: status.escalateCount ?? undefined,
+      },
+
+      recordsStats: {
+        // Explicitly typing to allow for easy manipulation (e.g. to strip from tests snapshots)
+        $type: 'tools.ozone.moderation.defs#recordStats',
+
+        // account_record_events_stats
+        totalReports: status.totalReports ?? undefined,
+        reportedCount: status.reportedCount ?? undefined,
+        escalatedCount: status.escalatedCount ?? undefined,
+        appealedCount: status.appealedCount ?? undefined,
+
+        // account_record_status_stats
+        subjectCount: status.subjectCount ?? undefined,
+        pendingCount: status.pendingCount ?? undefined,
+        processedCount: status.processedCount ?? undefined,
+        takendownCount: status.takendownCount ?? undefined,
+      },
     }
 
     if (status.recordPath !== '') {
@@ -677,7 +691,7 @@ type RecordInfo = {
   indexedAt: string
 }
 
-function parseSubjectId(subject: string) {
+function parseSubjectId(subject: string): { did: string; recordPath?: string } {
   if (subject.startsWith('did:')) {
     return { did: subject }
   }

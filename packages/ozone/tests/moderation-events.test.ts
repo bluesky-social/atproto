@@ -68,6 +68,10 @@ describe('moderation-events', () => {
     await seedEvents()
   })
 
+  beforeEach(async () => {
+    await network.processAll()
+  })
+
   afterAll(async () => {
     await network.close()
   })
