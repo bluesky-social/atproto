@@ -1,5 +1,11 @@
 # @atproto/lex-cli
 
+## 0.5.6
+
+### Patch Changes
+
+- [#3420](https://github.com/bluesky-social/atproto/pull/3420) [`6241f6b00`](https://github.com/bluesky-social/atproto/commit/6241f6b00b8728cd5f5e879591b0ca98308edab0) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Expose resetRouteRateLimits to the handler context
+
 ## 0.5.5
 
 ### Patch Changes
