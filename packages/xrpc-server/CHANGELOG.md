@@ -1,5 +1,11 @@
 # @atproto/xrpc-server
 
+## 0.7.8
+
+### Patch Changes
+
+- [#3422](https://github.com/bluesky-social/atproto/pull/3422) [`1015d9692`](https://github.com/bluesky-social/atproto/commit/1015d96925898149cc60b434561e19730a1bea12) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Fix rate limit reset binding
+
 ## 0.7.7
 
 ### Patch Changes
