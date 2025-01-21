@@ -48,6 +48,13 @@
         "pinned": { "type": "boolean" }
       }
     },
+    "threadContext": {
+      "type": "object",
+      "description": "Metadata about this post within the context of the thread it is in.",
+      "properties": {
+        "rootAuthorLike": { "type": "string", "format": "at-uri" }
+      }
+    },
     "feedViewPost": {
       "type": "object",
       "required": ["post"],
@@ -108,7 +115,8 @@
             "type": "union",
             "refs": ["#threadViewPost", "#notFoundPost", "#blockedPost"]
           }
-        }
+        },
+        "threadContext": { "type": "ref", "ref": "#threadContext" }
       }
     },
     "notFoundPost": {
