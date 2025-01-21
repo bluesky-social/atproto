@@ -1,5 +1,13 @@
 # @atproto/pds
 
+## 0.4.88
+
+### Patch Changes
+
+- Updated dependencies [[`1015d9692`](https://github.com/bluesky-social/atproto/commit/1015d96925898149cc60b434561e19730a1bea12)]:
+  - @atproto/xrpc-server@0.7.8
+  - @atproto-labs/xrpc-utils@0.0.4
+
 ## 0.4.87
 
 ### Patch Changes
