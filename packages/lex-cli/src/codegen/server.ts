@@ -520,6 +520,7 @@ function genServerXrpcMethod(
         input: HandlerInput
         req: express.Request
         res: express.Response
+        resetRouteRateLimits: () => Promise<void>
       }`,
   })
 
