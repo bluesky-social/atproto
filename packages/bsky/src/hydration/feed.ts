@@ -14,7 +14,11 @@ import {
   split,
 } from './util'
 import { dedupeStrs } from '@atproto/common'
-import { postUriToThreadgateUri, postUriToPostgateUri } from '../util/uris'
+import {
+  postUriToThreadgateUri,
+  postUriToPostgateUri,
+  uriToDid as didFromUri,
+} from '../util/uris'
 
 export type Post = RecordInfo<PostRecord> & {
   violatesThreadGate: boolean
@@ -31,6 +35,12 @@ export type PostViewerState = {
 }
 
 export type PostViewerStates = HydrationMap<PostViewerState>
+
+export type ThreadContext = {
+  like?: string
+}
+
+export type ThreadContexts = HydrationMap<ThreadContext>
 
 export type PostAgg = {
   likes: number
@@ -155,6 +165,45 @@ export class FeedHydrator {
     return deduped.reduce((acc, cur, i) => {
       return acc.set(cur, threadMutes.muted[i] ?? false)
     }, new Map<string, boolean>())
+  }
+
+  async getThreadContexts(refs: ThreadRef[]): Promise<ThreadContexts> {
+    if (!refs.length) return new HydrationMap<ThreadContext>()
+
+    const refsByRootAuthor = refs.reduce((acc, ref) => {
+      const { threadRoot } = ref
+      const rootAuthor = didFromUri(threadRoot)
+      const existingValue = acc.get(rootAuthor) ?? []
+      return acc.set(rootAuthor, [...existingValue, ref])
+    }, new Map<string, ThreadRef[]>())
+    const refsByRootAuthorEntries = Array.from(refsByRootAuthor.entries())
+
+    const likesPromises = refsByRootAuthorEntries.map(
+      ([rootAuthor, refsForAuthor]) =>
+        this.dataplane.getLikesByActorAndSubjects({
+          actorDid: rootAuthor,
+          refs: refsForAuthor.map(({ uri, cid }) => ({ uri, cid })),
+        }),
+    )
+
+    const rootAuthorsLikes = await Promise.all(likesPromises)
+
+    const likesByUri = refsByRootAuthorEntries.reduce(
+      (acc, [_rootAuthor, refsForAuthor], i) => {
+        const likesForRootAuthor = rootAuthorsLikes[i]
+        refsForAuthor.forEach(({ uri }, j) => {
+          acc.set(uri, likesForRootAuthor.uris[j])
+        })
+        return acc
+      },
+      new Map<string, string>(),
+    )
+
+    return refs.reduce((acc, { uri }) => {
+      return acc.set(uri, {
+        like: parseString(likesByUri.get(uri)),
+      })
+    }, new HydrationMap<ThreadContext>())
   }
 
   async getPostAggregates(refs: ItemRef[]): Promise<PostAggs> {
