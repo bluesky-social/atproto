@@ -886,8 +886,8 @@ export class ModerationService {
     ) {
       builder = builder.where(
         queueSeed
-          ? sql`ABS(HASHTEXT(${queueSeed} || did)) % ${queueCount}`
-          : sql`ABS(HASHTEXT(did)) % ${queueCount}`,
+          ? sql`ABS(HASHTEXT(${queueSeed} || moderation_subject_status.did)) % ${queueCount}`
+          : sql`ABS(HASHTEXT(moderation_subject_status.did)) % ${queueCount}`,
         '=',
         queueIndex,
       )
