@@ -205,6 +205,8 @@ export interface RepoOp {
   path: string
   /** For creates and updates, the new record CID. For deletions, null. */
   cid: CID | null
+  /** For deletes and updates, the CID  of the previous record. For creates, undefined. */
+  prev?: CID
   [k: string]: unknown
 }
 
