@@ -1,5 +1,11 @@
 # @atproto/oauth-provider
 
+## 0.2.14
+
+### Patch Changes
+
+- [#3415](https://github.com/bluesky-social/atproto/pull/3415) [`c5a4cdb0a`](https://github.com/bluesky-social/atproto/commit/c5a4cdb0a52f4583ffe783a0b259e80263f24a8c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve error description in case invalid DPoP nonce is used
+
 ## 0.2.13
 
 ### Patch Changes

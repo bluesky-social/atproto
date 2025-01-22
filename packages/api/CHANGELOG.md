@@ -1,5 +1,13 @@
 # @atproto/api
 
+## 0.13.30
+
+### Patch Changes
+
+- [#3429](https://github.com/bluesky-social/atproto/pull/3429) [`e6e6aea38`](https://github.com/bluesky-social/atproto/commit/e6e6aea3814e3d0bb42a537f80d77947e85fa73f) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - add feedViewPost.threadContext defs
+
+- [#3390](https://github.com/bluesky-social/atproto/pull/3390) [`c0a75d310`](https://github.com/bluesky-social/atproto/commit/c0a75d310aa92c067799a97d1acc5bd0543114c5) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - posts_with_video filter in getAuthorFeed
+
 ## 0.13.29
 
 ### Patch Changes

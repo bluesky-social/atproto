@@ -1,5 +1,14 @@
 # @atproto/ozone
 
+## 0.1.72
+
+### Patch Changes
+
+- [#3426](https://github.com/bluesky-social/atproto/pull/3426) [`1ada2d093`](https://github.com/bluesky-social/atproto/commit/1ada2d093427e45b6d59a16cf146bf5282560c7b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix getSubjectStatuses query
+
+- Updated dependencies [[`e6e6aea38`](https://github.com/bluesky-social/atproto/commit/e6e6aea3814e3d0bb42a537f80d77947e85fa73f), [`c0a75d310`](https://github.com/bluesky-social/atproto/commit/c0a75d310aa92c067799a97d1acc5bd0543114c5)]:
+  - @atproto/api@0.13.30
+
 ## 0.1.71
 
 ### Patch Changes
