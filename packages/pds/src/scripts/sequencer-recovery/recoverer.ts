@@ -20,7 +20,7 @@ import { AccountManager, AccountStatus } from '../../account-manager'
 import { ActorStore, ActorStoreTransactor } from '../../actor-store'
 import { rmIfExists } from '@atproto/common'
 
-type Context = {
+export type RecovererContext = {
   sequencer: Sequencer
   accountManager: AccountManager
   actorStore: ActorStore
@@ -31,7 +31,7 @@ export class Recoverer {
   queues: UserQueues
 
   constructor(
-    public ctx: Context,
+    public ctx: RecovererContext,
     opts: { cursor: number; concurrency: number },
   ) {
     this.cursor = opts.cursor
