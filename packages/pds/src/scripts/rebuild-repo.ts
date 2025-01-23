@@ -75,10 +75,12 @@ export const rebuildRepo = async (ctx: AppContext, args: string[]) => {
       newBlocks,
       relevantBlocks: newBlocks,
       removedCids: toDelete,
+      ops: [],
+      blobs: new CidSet(),
     }
   })
   await ctx.accountManager.updateRepoRoot(did, commit.cid, rev)
-  await ctx.sequencer.sequenceCommit(did, commit, [])
+  await ctx.sequencer.sequenceCommit(did, commit)
 }
 
 const listExistingBlocks = async (
