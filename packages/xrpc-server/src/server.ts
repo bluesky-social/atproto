@@ -68,17 +68,17 @@ export class Server {
   sharedRateLimiters: Record<string, RateLimiterI>
   routeRateLimiters: Record<string, RateLimiterI[]>
 
-  constructor(lexicons?: LexiconDoc[], opts?: Options) {
+  constructor(lexicons?: LexiconDoc[], opts: Options = {}) {
     if (lexicons) {
       this.addLexicons(lexicons)
     }
     this.router.use(this.routes)
     this.router.use('/xrpc/:methodId', this.catchall.bind(this))
-    this.router.use(errorMiddleware)
+    this.router.use(createErrorMiddleware(opts))
     this.router.once('mount', (app: Application) => {
       this.enableStreamingOnListen(app)
     })
-    this.options = opts ?? {}
+    this.options = opts
     this.middleware = {
       json: express.json({ limit: opts?.payload?.jsonLimit }),
       text: express.text({ limit: opts?.payload?.textLimit }),
@@ -535,26 +535,30 @@ function createAuthMiddleware(verifier: AuthVerifier): RequestHandler {
   }
 }
 
-const errorMiddleware: ErrorRequestHandler = function (err, req, res, next) {
-  const locals: RequestLocals | undefined = req[kRequestLocals]
-  const methodSuffix = locals ? ` method ${locals.nsid}` : ''
-  const xrpcError = XRPCError.fromError(err)
-  if (xrpcError instanceof InternalServerError) {
-    // log trace for unhandled exceptions
-    log.error(err, `unhandled exception in xrpc${methodSuffix}`)
-  } else {
-    // do not log trace for known xrpc errors
-    log.error(
-      {
-        status: xrpcError.type,
-        message: xrpcError.message,
-        name: xrpcError.customErrorName,
-      },
-      `error in xrpc${methodSuffix}`,
-    )
+function createErrorMiddleware({
+  errorParser = (err) => XRPCError.fromError(err),
+}: Options): ErrorRequestHandler {
+  return (err, req, res, next) => {
+    const locals: RequestLocals | undefined = req[kRequestLocals]
+    const methodSuffix = locals ? ` method ${locals.nsid}` : ''
+    const xrpcError = errorParser(err)
+    if (xrpcError instanceof InternalServerError) {
+      // log trace for unhandled exceptions
+      log.error(err, `unhandled exception in xrpc${methodSuffix}`)
+    } else {
+      // do not log trace for known xrpc errors
+      log.error(
+        {
+          status: xrpcError.type,
+          message: xrpcError.message,
+          name: xrpcError.customErrorName,
+        },
+        `error in xrpc${methodSuffix}`,
+      )
+    }
+    if (res.headersSent) {
+      return next(err)
+    }
+    return res.status(xrpcError.type).json(xrpcError.payload)
   }
-  if (res.headersSent) {
-    return next(err)
-  }
-  return res.status(xrpcError.type).json(xrpcError.payload)
 }
