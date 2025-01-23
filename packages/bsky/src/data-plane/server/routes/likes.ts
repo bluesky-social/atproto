@@ -58,7 +58,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .selectAll()
       .execute()
     const bySubject = keyBy(res, 'subject')
-    const uris = refs.map(({ uri }) => bySubject[uri]?.uri ?? '')
+    const uris = refs.map(({ uri }) => bySubject.get(uri)?.uri ?? '')
     return { uris }
   },
 

@@ -1,11 +1,8 @@
-export const keyBy = <T>(arr: T[], key: string): Record<string, T> => {
-  return arr.reduce(
-    (acc, cur) => {
-      acc[cur[key]] = cur
-      return acc
-    },
-    {} as Record<string, T>,
-  )
+export const keyBy = <T>(arr: T[], key: string): Map<string, T> => {
+  return arr.reduce((acc, cur) => {
+    acc.set(cur[key], cur)
+    return acc
+  }, new Map<string, T>())
 }
 
 export const mapDefined = <T, S>(
