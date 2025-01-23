@@ -17,10 +17,10 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .execute()
     const byUri = keyBy(res, 'uri')
     return {
-      likes: uris.map((uri) => byUri[uri]?.likeCount ?? 0),
-      replies: uris.map((uri) => byUri[uri]?.replyCount ?? 0),
-      reposts: uris.map((uri) => byUri[uri]?.repostCount ?? 0),
-      quotes: uris.map((uri) => byUri[uri]?.quoteCount ?? 0),
+      likes: uris.map((uri) => byUri.get(uri)?.likeCount ?? 0),
+      replies: uris.map((uri) => byUri.get(uri)?.replyCount ?? 0),
+      reposts: uris.map((uri) => byUri.get(uri)?.repostCount ?? 0),
+      quotes: uris.map((uri) => byUri.get(uri)?.quoteCount ?? 0),
     }
   },
   async getCountsForUsers(req) {
@@ -52,12 +52,14 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .execute()
     const byDid = keyBy(res, 'did')
     return {
-      followers: req.dids.map((uri) => byDid[uri]?.followersCount ?? 0),
-      following: req.dids.map((uri) => byDid[uri]?.followsCount ?? 0),
-      posts: req.dids.map((uri) => byDid[uri]?.postsCount ?? 0),
-      lists: req.dids.map((uri) => byDid[uri]?.listsCount ?? 0),
-      feeds: req.dids.map((uri) => byDid[uri]?.feedGensCount ?? 0),
-      starterPacks: req.dids.map((uri) => byDid[uri]?.starterPacksCount ?? 0),
+      followers: req.dids.map((uri) => byDid.get(uri)?.followersCount ?? 0),
+      following: req.dids.map((uri) => byDid.get(uri)?.followsCount ?? 0),
+      posts: req.dids.map((uri) => byDid.get(uri)?.postsCount ?? 0),
+      lists: req.dids.map((uri) => byDid.get(uri)?.listsCount ?? 0),
+      feeds: req.dids.map((uri) => byDid.get(uri)?.feedGensCount ?? 0),
+      starterPacks: req.dids.map(
+        (uri) => byDid.get(uri)?.starterPacksCount ?? 0,
+      ),
     }
   },
   async getStarterPackCounts(req) {
@@ -105,7 +107,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .execute()
     const countsByUri = keyBy(countsListItems, 'uri')
     return {
-      listItems: uris.map((uri) => countsByUri[uri]?.count ?? 0),
+      listItems: uris.map((uri) => countsByUri.get(uri)?.count ?? 0),
     }
   },
 })

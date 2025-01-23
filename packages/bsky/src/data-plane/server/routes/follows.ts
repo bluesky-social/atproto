@@ -18,7 +18,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .selectAll()
       .execute()
     const bySubject = keyBy(res, 'subjectDid')
-    const uris = targetDids.map((did) => bySubject[did]?.uri ?? '')
+    const uris = targetDids.map((did) => bySubject.get(did)?.uri ?? '')
     return {
       uris,
     }

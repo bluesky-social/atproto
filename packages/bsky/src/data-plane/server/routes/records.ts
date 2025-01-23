@@ -41,7 +41,7 @@ export const getRecords =
       : []
     const byUri = keyBy(res, 'uri')
     const records: Record[] = req.uris.map((uri) => {
-      const row = byUri[uri]
+      const row = byUri.get(uri)
       const json = row ? row.json : JSON.stringify(null)
       const createdAtRaw = new Date(JSON.parse(json)?.['createdAt'])
       const createdAt = !isNaN(createdAtRaw.getTime())
@@ -88,10 +88,10 @@ export const getPostRecords = (db: Database) => {
     const byKey = keyBy(details, 'uri')
     const meta = req.uris.map((uri) => {
       return new PostRecordMeta({
-        violatesThreadGate: !!byKey[uri]?.violatesThreadGate,
-        violatesEmbeddingRules: !!byKey[uri]?.violatesEmbeddingRules,
-        hasThreadGate: !!byKey[uri]?.hasThreadGate,
-        hasPostGate: !!byKey[uri]?.hasPostGate,
+        violatesThreadGate: !!byKey.get(uri)?.violatesThreadGate,
+        violatesEmbeddingRules: !!byKey.get(uri)?.violatesEmbeddingRules,
+        hasThreadGate: !!byKey.get(uri)?.hasThreadGate,
+        hasPostGate: !!byKey.get(uri)?.hasPostGate,
       })
     })
     return { records, meta }

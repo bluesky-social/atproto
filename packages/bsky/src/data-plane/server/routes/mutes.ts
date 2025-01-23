@@ -180,7 +180,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .where('rootUri', 'in', threadRoots)
       .execute()
     const byRootUri = keyBy(res, 'rootUri')
-    const muted = threadRoots.map((uri) => !!byRootUri[uri])
+    const muted = threadRoots.map((uri) => !!byRootUri.get(uri))
     return { muted }
   },
 })

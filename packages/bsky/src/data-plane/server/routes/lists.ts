@@ -69,7 +69,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .selectAll()
       .execute()
     const byListUri = keyBy(res, 'listUri')
-    const listitemUris = listUris.map((uri) => byListUri[uri]?.uri ?? '')
+    const listitemUris = listUris.map((uri) => byListUri.get(uri)?.uri ?? '')
     return {
       listitemUris,
     }
