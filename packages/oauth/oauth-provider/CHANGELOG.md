@@ -1,5 +1,11 @@
 # @atproto/oauth-provider
 
+## 0.2.15
+
+### Patch Changes
+
+- [#3432](https://github.com/bluesky-social/atproto/pull/3432) [`b04943191`](https://github.com/bluesky-social/atproto/commit/b04943191b9f89a5263a77358d47d1362a6454a6) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add user friendly description for transition:\* scopes
+
 ## 0.2.14
 
 ### Patch Changes
