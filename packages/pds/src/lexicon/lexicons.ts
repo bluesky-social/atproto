@@ -3986,7 +3986,7 @@ export const schemaDict = {
           prev: {
             type: 'cid-link',
             description:
-              'For deletes and updates, the CID  of the previous record. For creates, undefined.',
+              'EXPERIMENTAL. For deletes and updates, the CID  of the previous record. For creates, undefined.',
           },
         },
       },

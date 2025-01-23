@@ -209,7 +209,7 @@
         },
         "prev": {
           "type": "cid-link",
-          "description": "For deletes and updates, the CID  of the previous record. For creates, undefined."
+          "description": "EXPERIMENTAL. For deletes and updates, the CID  of the previous record. For creates, undefined."
         }
       }
     }
