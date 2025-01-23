@@ -127,6 +127,10 @@ function getScopeDescription(scope: string): string {
   switch (scope) {
     case 'atproto':
       return 'Uniquely identify you'
+    case 'transition:generic':
+      return 'Access your account data (except chat messages)'
+    case 'transition:chat.bsky':
+      return 'Access your chat messages'
     default:
       return scope
   }
