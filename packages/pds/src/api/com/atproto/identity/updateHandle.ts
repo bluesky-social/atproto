@@ -55,11 +55,19 @@ export default function (server: Server, ctx: AppContext) {
 
       if (!account) {
         if (requester.startsWith('did:plc:')) {
-          await ctx.plcClient.updateHandle(
-            requester,
-            ctx.plcRotationKey,
-            handle,
-          )
+          try {
+            await ctx.plcClient.updateHandle(
+              requester,
+              ctx.plcRotationKey,
+              handle,
+            )
+          } catch (cause) {
+            throw new InvalidRequestError(
+              'Failed to update handle in PLC directory',
+              undefined,
+              { cause },
+            )
+          }
         } else {
           const resolved = await ctx.idResolver.did.resolveAtprotoData(
             requester,
