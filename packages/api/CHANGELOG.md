@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.13.31
+
+### Patch Changes
+
+- [#3441](https://github.com/bluesky-social/atproto/pull/3441) [`8c6c7813a`](https://github.com/bluesky-social/atproto/commit/8c6c7813a9c2110c8fe21acdca8f09554a1983ce) Thanks [@mozzius](https://github.com/mozzius)! - Allow passing `allowTakendown` to createSession
+
 ## 0.13.30
 
 ### Patch Changes
