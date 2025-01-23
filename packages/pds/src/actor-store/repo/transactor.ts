@@ -104,29 +104,32 @@ export class RepoTransactor extends RepoReader {
       if (action !== WriteOpAction.Create) {
         delAndUpdateUris.push(uri)
       }
-      if (swapCid === undefined) {
-        continue
-      }
       const record = await this.record.getRecord(uri, null, true)
-      const currRecord = record && CID.parse(record.cid)
-      if (action === WriteOpAction.Create && swapCid !== null) {
-        throw new BadRecordSwapError(currRecord) // There should be no current record for a create
-      }
-      if (action === WriteOpAction.Update && swapCid === null) {
-        throw new BadRecordSwapError(currRecord) // There should be a current record for an update
-      }
-      if (action === WriteOpAction.Delete && swapCid === null) {
-        throw new BadRecordSwapError(currRecord) // There should be a current record for a delete
-      }
-      if ((currRecord || swapCid) && !currRecord?.equals(swapCid)) {
-        throw new BadRecordSwapError(currRecord)
-      }
-      commitOps.push({
+      const currRecord = record ? CID.parse(record.cid) : null
+
+      const op: CommitOp = {
         action,
         path: formatDataKey(uri.collection, uri.rkey),
         cid: write.action === WriteOpAction.Delete ? null : write.cid,
-        prev: currRecord ?? undefined,
-      })
+      }
+      if (currRecord) {
+        op.prev = currRecord
+      }
+      commitOps.push(op)
+      if (swapCid !== undefined) {
+        if (action === WriteOpAction.Create && swapCid !== null) {
+          throw new BadRecordSwapError(currRecord) // There should be no current record for a create
+        }
+        if (action === WriteOpAction.Update && swapCid === null) {
+          throw new BadRecordSwapError(currRecord) // There should be a current record for an update
+        }
+        if (action === WriteOpAction.Delete && swapCid === null) {
+          throw new BadRecordSwapError(currRecord) // There should be a current record for a delete
+        }
+        if ((currRecord || swapCid) && !currRecord?.equals(swapCid)) {
+          throw new BadRecordSwapError(currRecord)
+        }
+      }
     }
 
     const repo = await Repo.load(this.storage, currRoot.cid)

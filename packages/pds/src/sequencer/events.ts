@@ -8,7 +8,6 @@ import { AccountStatus } from '../account-manager'
 export const formatSeqCommit = async (
   did: string,
   commitData: CommitDataWithOps,
-  // writes: PreparedWrite[],
 ): Promise<RepoSeqInsert> => {
   const blocksToSend = new BlockMap()
   blocksToSend.addMap(commitData.newBlocks)
