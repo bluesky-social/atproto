@@ -1,4 +1,5 @@
 import assert from 'node:assert'
+import { PlcClientError } from '@did-plc/lib'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { DAY, MINUTE } from '@atproto/common'
 import { normalizeAndValidateHandle } from '../../../../handle'
@@ -61,12 +62,18 @@ export default function (server: Server, ctx: AppContext) {
               ctx.plcRotationKey,
               handle,
             )
-          } catch (cause) {
-            throw new InvalidRequestError(
-              'Failed to update handle in PLC directory',
-              undefined,
-              { cause },
-            )
+          } catch (err) {
+            const message =
+              (err instanceof PlcClientError &&
+                // extract the error message from the PLC response
+                typeof err.data === 'object' &&
+                err.data != null &&
+                'message' in err.data &&
+                typeof err.data.message === 'string' &&
+                err.data.message) ||
+              'Failed to update handle in PLC directory'
+
+            throw new InvalidRequestError(message, undefined, { cause: err })
           }
         } else {
           const resolved = await ctx.idResolver.did.resolveAtprotoData(
