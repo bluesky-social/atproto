@@ -54,11 +54,11 @@ export function didWebToUrl(did: string) {
   try {
     const url = new URL(
       `https://${host.replaceAll('%3A', ':')}${path.replaceAll(':', '/')}`,
-    )
+    ) as URL & { protocol: 'http:' | 'https:' }
     if (url.hostname === 'localhost') {
       url.protocol = 'http:'
     }
-    return url as URL & { protocol: 'http:' | 'https:' }
+    return url
   } catch (cause) {
     throw new InvalidDidError(did, 'Invalid Web DID', cause)
   }
