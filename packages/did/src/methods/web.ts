@@ -9,9 +9,11 @@ export const DID_WEB_PREFIX = `did:web:` satisfies Did<'web'>
 export function isDidWeb(input: unknown): input is Did<'web'> {
   // Optimization: make cheap checks first
   if (typeof input !== 'string') return false
+  if (!input.startsWith(DID_WEB_PREFIX)) return false
+  if (input.charAt(DID_WEB_PREFIX.length) === ':') return false
 
   try {
-    assertDidWeb(input)
+    didWebToUrl(input)
     return true
   } catch {
     return false
@@ -31,7 +33,7 @@ export function assertDidWeb(input: unknown): asserts input is Did<'web'> {
   void didWebToUrl(input)
 }
 
-export function didWebToUrl(did: string): URL {
+export function didWebToUrl(did: string) {
   if (!did.startsWith(DID_WEB_PREFIX)) {
     throw new InvalidDidError(did, `did:web must start with ${DID_WEB_PREFIX}`)
   }
@@ -43,24 +45,28 @@ export function didWebToUrl(did: string): URL {
   // Make sure every char is valid (per DID spec)
   assertDidMsid(did, DID_WEB_PREFIX.length)
 
+  const hostIdx = DID_WEB_PREFIX.length
+  const pathIdx = did.indexOf(':', hostIdx)
+
+  const host = pathIdx === -1 ? did.slice(hostIdx) : did.slice(hostIdx, pathIdx)
+  const path = pathIdx === -1 ? '' : did.slice(pathIdx)
+
   try {
-    const msid = did.slice(DID_WEB_PREFIX.length)
-    const parts = msid.split(':').map(decodeURIComponent)
-    const url = new URL(`https://${parts.join('/')}`)
+    const url = new URL(
+      `https://${host.replaceAll('%3A', ':')}${path.replaceAll(':', '/')}`,
+    )
     if (url.hostname === 'localhost') {
       url.protocol = 'http:'
     }
-    return url
+    return url as URL & { protocol: 'http:' | 'https:' }
   } catch (cause) {
     throw new InvalidDidError(did, 'Invalid Web DID', cause)
   }
 }
 
 export function urlToDidWeb(url: URL): Did<'web'> {
-  const path =
-    url.pathname === '/'
-      ? ''
-      : url.pathname.slice(1).split('/').map(encodeURIComponent).join(':')
+  const port = url.port ? `%3A${url.port}` : ''
+  const path = url.pathname === '/' ? '' : url.pathname.replaceAll('/', ':')
 
-  return `did:web:${encodeURIComponent(url.host)}${path ? `:${path}` : ''}`
+  return `did:web:${url.hostname}${port}${path}`
 }
