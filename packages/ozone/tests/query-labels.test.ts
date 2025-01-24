@@ -156,6 +156,7 @@ describe('ozone query labels', () => {
         newSigningKey,
         newSigningKeyId,
         ctx.cfg,
+        // @ts-ignore
         modSrvc.backgroundQueue,
         ctx.idResolver,
         // @ts-ignore

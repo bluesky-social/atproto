@@ -18,17 +18,14 @@ export class OzoneDaemon {
   }
 
   async start() {
-    this.ctx.eventPusher.start()
-    this.ctx.eventReverser.start()
+    await this.ctx.start()
   }
 
   async processAll() {
-    await this.ctx.eventPusher.processAll()
+    await this.ctx.processAll()
   }
 
   async destroy() {
-    await this.ctx.eventReverser.destroy()
-    await this.ctx.eventPusher.destroy()
-    await this.ctx.db.close()
+    await this.ctx.destroy()
   }
 }

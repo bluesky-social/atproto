@@ -3,12 +3,13 @@ import { wait } from './util'
 export type RetryOptions = {
   maxRetries?: number
   getWaitMs?: (n: number) => number | null
-  retryable?: (err: unknown) => boolean
 }
 
 export async function retry<T>(
   fn: () => Promise<T>,
-  opts: RetryOptions = {},
+  opts: RetryOptions & {
+    retryable?: (err: unknown) => boolean
+  } = {},
 ): Promise<T> {
   const { maxRetries = 3, retryable = () => true, getWaitMs = backoffMs } = opts
   let retries = 0
@@ -31,6 +32,11 @@ export async function retry<T>(
     }
   }
   throw doneError
+}
+
+export function createRetryable(retryable: (err: unknown) => boolean) {
+  return async <T>(fn: () => Promise<T>, opts?: RetryOptions) =>
+    retry(fn, { ...opts, retryable })
 }
 
 // Waits exponential backoff with max and jitter: ~100, ~200, ~400, ~800, ~1000, ~1000, ...

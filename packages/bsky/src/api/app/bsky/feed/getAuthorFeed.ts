@@ -58,6 +58,7 @@ const FILTER_TO_FEED_TYPE = {
   posts_no_replies: FeedType.POSTS_NO_REPLIES,
   posts_with_media: FeedType.POSTS_WITH_MEDIA,
   posts_and_author_threads: FeedType.POSTS_AND_AUTHOR_THREADS,
+  posts_with_video: FeedType.POSTS_WITH_VIDEO,
 }
 
 export const skeleton = async (inputs: {

@@ -1,6 +1,7 @@
 {
   "name": "bsync-service",
   "private": true,
+  "packageManager": "pnpm@8.15.9",
   "dependencies": {
     "@atproto/bsync": "workspace:^",
     "dd-trace": "3.13.2"

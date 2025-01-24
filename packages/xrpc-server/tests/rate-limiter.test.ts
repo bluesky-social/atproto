@@ -29,6 +29,25 @@ const LEXICONS: LexiconDoc[] = [
   },
   {
     lexicon: 1,
+    id: 'io.example.routeLimitReset',
+    defs: {
+      main: {
+        type: 'query',
+        parameters: {
+          type: 'params',
+          required: ['count'],
+          properties: {
+            count: { type: 'integer' },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+        },
+      },
+    },
+  },
+  {
+    lexicon: 1,
     id: 'io.example.sharedLimitOne',
     defs: {
       main: {
@@ -145,7 +164,22 @@ describe('Parameters', () => {
       body: ctx.params,
     }),
   })
+  server.method('io.example.routeLimitReset', {
+    rateLimit: {
+      durationMs: 5 * MINUTE,
+      points: 2,
+    },
+    handler: (ctx: xrpcServer.XRPCReqContext) => {
+      if (ctx.params.count === 1) {
+        ctx.resetRouteRateLimits()
+      }
 
+      return {
+        encoding: 'json',
+        body: {},
+      }
+    },
+  })
   server.method('io.example.sharedLimitOne', {
     rateLimit: {
       name: 'shared-limit',
@@ -206,6 +240,22 @@ describe('Parameters', () => {
       await makeCall()
     }
     await expect(makeCall).rejects.toThrow('Rate Limit Exceeded')
+  })
+
+  it('can reset route rate limits', async () => {
+    // Limit is 2.
+    // Call 0 is OK (1/2).
+    // Call 1 is OK (2/2), and resets the limit.
+    // Call 2 is OK (1/2).
+    // Call 3 is OK (2/2).
+    for (let i = 0; i < 4; i++) {
+      await client.call('io.example.routeLimitReset', { count: i })
+    }
+
+    // Call 4 exceeds the limit (3/2).
+    await expect(
+      client.call('io.example.routeLimitReset', { count: 4 }),
+    ).rejects.toThrow('Rate Limit Exceeded')
   })
 
   it('rate limits on a shared route', async () => {

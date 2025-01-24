@@ -9,9 +9,11 @@ import {
 import { ReplyRef, isRecord } from '../../src/lexicon/types/app/bsky/feed/post'
 import { isView as isEmbedRecordWithMedia } from '../../src/lexicon/types/app/bsky/embed/recordWithMedia'
 import { isView as isImageEmbed } from '../../src/lexicon/types/app/bsky/embed/images'
+import { isView as isVideoEmbed } from '../../src/lexicon/types/app/bsky/embed/video'
 import { isPostView } from '../../src/lexicon/types/app/bsky/feed/defs'
 import { uriToDid } from '../../src/util/uris'
 import { ids } from '../../src/lexicon/lexicons'
+import { VideoEmbed } from '../../src/views/types'
 
 describe('pds author feed views', () => {
   let network: TestNetwork
@@ -314,6 +316,68 @@ describe('pds author feed views', () => {
     const { data: danFeed } = await agent.api.app.bsky.feed.getAuthorFeed({
       actor: dan,
       filter: 'posts_with_media',
+    })
+
+    expect(danFeed.feed.length).toEqual(0)
+  })
+
+  it('can filter by posts_with_video', async () => {
+    const { data: carolFeedBefore } =
+      await agent.api.app.bsky.feed.getAuthorFeed({
+        actor: carol,
+        filter: 'posts_with_video',
+      })
+    expect(carolFeedBefore.feed).toHaveLength(0)
+
+    const { data: video } = await pdsAgent.api.com.atproto.repo.uploadBlob(
+      Buffer.from('notarealvideo'),
+      {
+        headers: sc.getHeaders(sc.dids.carol),
+        encoding: 'image/mp4',
+      },
+    )
+
+    await sc.post(carol, 'video post', undefined, undefined, undefined, {
+      embed: {
+        $type: 'app.bsky.embed.video',
+        video: video.blob,
+        alt: 'alt text',
+        aspectRatio: { height: 3, width: 4 },
+      } satisfies VideoEmbed,
+    })
+    await network.processAll()
+
+    const { data: carolFeed } = await agent.api.app.bsky.feed.getAuthorFeed({
+      actor: carol,
+      filter: 'posts_with_video',
+    })
+
+    expect(carolFeed.feed).toHaveLength(1)
+    expect(
+      carolFeed.feed.every(({ post }) => {
+        const isRecordWithActorMedia =
+          isEmbedRecordWithMedia(post.embed) && isVideoEmbed(post.embed?.media)
+        const isActorMedia = isVideoEmbed(post.embed)
+        const isFromActor = post.author.did === carol
+
+        return (isRecordWithActorMedia || isActorMedia) && isFromActor
+      }),
+    ).toBeTruthy()
+
+    const { data: bobFeed } = await agent.api.app.bsky.feed.getAuthorFeed({
+      actor: bob,
+      filter: 'posts_with_video',
+    })
+
+    expect(
+      bobFeed.feed.every(({ post }) => {
+        return isVideoEmbed(post.embed) && post.author.did === bob
+      }),
+    ).toBeTruthy()
+
+    const { data: danFeed } = await agent.api.app.bsky.feed.getAuthorFeed({
+      actor: dan,
+      filter: 'posts_with_video',
     })
 
     expect(danFeed.feed.length).toEqual(0)

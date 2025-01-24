@@ -15,6 +15,8 @@ export interface InputSchema {
   identifier: string
   password: string
   authFactorToken?: string
+  /** When true, instead of throwing error for takendown accounts, a valid response with a narrow scoped token will be returned */
+  allowTakendown?: boolean
   [k: string]: unknown
 }
 
@@ -57,6 +59,7 @@ export type HandlerReqCtx<HA extends HandlerAuth = never> = {
   input: HandlerInput
   req: express.Request
   res: express.Response
+  resetRouteRateLimits: () => Promise<void>
 }
 export type Handler<HA extends HandlerAuth = never> = (
   ctx: HandlerReqCtx<HA>,

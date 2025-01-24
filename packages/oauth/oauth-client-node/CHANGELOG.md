@@ -1,5 +1,57 @@
 # @atproto/oauth-client-node
 
+## 0.2.8
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto-labs/handle-resolver-node@0.1.11
+
+## 0.2.7
+
+### Patch Changes
+
+- Updated dependencies [[`2889c7699`](https://github.com/bluesky-social/atproto/commit/2889c76995ce3c569f595ac3c678218e9ce659f0), [`2889c7699`](https://github.com/bluesky-social/atproto/commit/2889c76995ce3c569f595ac3c678218e9ce659f0), [`2889c7699`](https://github.com/bluesky-social/atproto/commit/2889c76995ce3c569f595ac3c678218e9ce659f0), [`2889c7699`](https://github.com/bluesky-social/atproto/commit/2889c76995ce3c569f595ac3c678218e9ce659f0), [`2889c7699`](https://github.com/bluesky-social/atproto/commit/2889c76995ce3c569f595ac3c678218e9ce659f0)]:
+  - @atproto/jwk@0.1.2
+  - @atproto/jwk-jose@0.1.3
+  - @atproto/jwk-webcrypto@0.1.3
+  - @atproto/oauth-client@0.3.7
+  - @atproto/oauth-types@0.2.2
+  - @atproto-labs/did-resolver@0.1.8
+  - @atproto-labs/handle-resolver-node@0.1.10
+
+## 0.2.6
+
+### Patch Changes
+
+- Updated dependencies [[`72eba67af`](https://github.com/bluesky-social/atproto/commit/72eba67af1af8320b5400bcb9319d5c3c8407d99)]:
+  - @atproto-labs/did-resolver@0.1.7
+  - @atproto/oauth-client@0.3.6
+
+## 0.2.5
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto-labs/handle-resolver-node@0.1.9
+  - @atproto/oauth-client@0.3.5
+
+## 0.2.4
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/oauth-client@0.3.4
+
+## 0.2.3
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto-labs/did-resolver@0.1.6
+  - @atproto/oauth-client@0.3.3
+  - @atproto-labs/handle-resolver-node@0.1.8
+
 ## 0.2.2
 
 ### Patch Changes

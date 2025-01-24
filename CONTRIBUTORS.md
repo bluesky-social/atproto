@@ -19,3 +19,5 @@ ATProto receives so many contributions that we could never list everyone who des
 #### [goeo\_](https://bsky.app/profile/did:web:genco.me), Security disclosure, May 2024
 
 #### [DavidBuchanan314](https://github.com/DavidBuchanan314), Security disclosure, November 2024
+
+#### [imax](https://github.com/imax9000), Security disclosure, January 2025

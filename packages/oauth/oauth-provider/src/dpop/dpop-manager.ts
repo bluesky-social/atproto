@@ -87,11 +87,15 @@ export class DpopManager {
     }
 
     if (payload['nonce'] && !this.dpopNonce?.check(payload['nonce'])) {
-      throw new UseDpopNonceError()
+      throw new UseDpopNonceError('DPoP nonce mismatch')
     }
 
     const htuNorm = normalizeHtu(htu)
-    if (!htuNorm || htuNorm !== normalizeHtu(payload['htu'])) {
+    if (!htuNorm) {
+      throw new TypeError('Invalid "htu" argument')
+    }
+
+    if (htuNorm !== normalizeHtu(payload['htu'])) {
       throw new InvalidDpopProofError('DPoP htu mismatch')
     }
 

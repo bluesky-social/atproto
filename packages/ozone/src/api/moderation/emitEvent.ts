@@ -2,10 +2,12 @@ import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../lexicon'
 import AppContext from '../../context'
 import {
+  isModEventAcknowledge,
   isModEventDivert,
   isModEventEmail,
   isModEventLabel,
   isModEventMuteReporter,
+  isModEventReport,
   isModEventReverseTakedown,
   isModEventTag,
   isModEventTakedown,
@@ -20,6 +22,7 @@ import { ModeratorOutput, AdminTokenOutput } from '../../auth-verifier'
 import { SettingService } from '../../setting/service'
 import { ProtectedTagSettingKey } from '../../setting/constants'
 import { ProtectedTagSetting } from '../../setting/types'
+import { getTagForReport } from '../../tag-service/util'
 
 const handleModerationEvent = async ({
   ctx,
@@ -39,6 +42,7 @@ const handleModerationEvent = async ({
   const moderationService = ctx.modService(db)
   const settingService = ctx.settingService(db)
   const { event } = input.body
+  const isAcknowledgeEvent = isModEventAcknowledge(event)
   const isTakedownEvent = isModEventTakedown(event)
   const isReverseTakedownEvent = isModEventReverseTakedown(event)
   const isLabelEvent = isModEventLabel(event)
@@ -97,49 +101,7 @@ const handleModerationEvent = async ({
       )
 
       if (protectedTags) {
-        status.tags.forEach((tag) => {
-          if (!Object.hasOwn(protectedTags, tag)) return
-          if (
-            protectedTags[tag]['moderators'] &&
-            !protectedTags[tag]['moderators'].includes(createdBy)
-          ) {
-            throw new InvalidRequestError(
-              `Not allowed to action on protected tag: ${tag}`,
-            )
-          }
-          if (protectedTags[tag]['roles']) {
-            if (
-              auth.credentials.isAdmin &&
-              !protectedTags[tag]['roles'].includes(
-                'tools.ozone.team.defs#roleAdmin',
-              )
-            ) {
-              throw new InvalidRequestError(
-                `Not allowed to action on protected tag: ${tag}`,
-              )
-            }
-            if (
-              auth.credentials.isModerator &&
-              !protectedTags[tag]['roles'].includes(
-                'tools.ozone.team.defs#roleModerator',
-              )
-            ) {
-              throw new InvalidRequestError(
-                `Not allowed to action on protected tag: ${tag}`,
-              )
-            }
-            if (
-              auth.credentials.isTriage &&
-              !protectedTags[tag]['roles'].includes(
-                'tools.ozone.team.defs#roleTriage',
-              )
-            ) {
-              throw new InvalidRequestError(
-                `Not allowed to action on protected tag: ${tag}`,
-              )
-            }
-          }
-        })
+        assertProtectedTagAction(protectedTags, status.tags, createdBy, auth)
       }
     }
 
@@ -200,7 +162,10 @@ const handleModerationEvent = async ({
       ctx.cfg.service.did,
       moderationTxn,
     )
-    await tagService.evaluateForSubject()
+    const initialTags = isModEventReport(event)
+      ? [getTagForReport(event.reportType)]
+      : undefined
+    await tagService.evaluateForSubject(initialTags)
 
     if (subject.isRepo()) {
       if (isTakedownEvent) {
@@ -219,8 +184,15 @@ const handleModerationEvent = async ({
       }
     }
 
-    if (isTakedownEvent && result.event.meta?.acknowledgeAccountSubjects) {
-      await moderationTxn.resolveSubjectsForAccount(subject.did, createdBy)
+    if (
+      (isTakedownEvent || isAcknowledgeEvent) &&
+      result.event.meta?.acknowledgeAccountSubjects
+    ) {
+      await moderationTxn.resolveSubjectsForAccount(
+        subject.did,
+        createdBy,
+        result.event,
+      )
     }
 
     if (isLabelEvent) {
@@ -279,6 +251,68 @@ export default function (server: Server, ctx: AppContext) {
         body: moderationEvent,
       }
     },
+  })
+}
+
+const assertProtectedTagAction = (
+  protectedTags: ProtectedTagSetting,
+  subjectTags: string[],
+  actionAuthor: string,
+  auth: ModeratorOutput | AdminTokenOutput,
+) => {
+  subjectTags.forEach((tag) => {
+    if (!Object.hasOwn(protectedTags, tag)) return
+    if (
+      protectedTags[tag]['moderators'] &&
+      !protectedTags[tag]['moderators'].includes(actionAuthor)
+    ) {
+      throw new InvalidRequestError(
+        `Not allowed to action on protected tag: ${tag}`,
+      )
+    }
+
+    if (protectedTags[tag]['roles']) {
+      if (auth.credentials.isAdmin) {
+        if (
+          protectedTags[tag]['roles'].includes(
+            'tools.ozone.team.defs#roleAdmin',
+          )
+        ) {
+          return
+        }
+        throw new InvalidRequestError(
+          `Not allowed to action on protected tag: ${tag}`,
+        )
+      }
+
+      if (auth.credentials.isModerator) {
+        if (
+          protectedTags[tag]['roles'].includes(
+            'tools.ozone.team.defs#roleModerator',
+          )
+        ) {
+          return
+        }
+
+        throw new InvalidRequestError(
+          `Not allowed to action on protected tag: ${tag}`,
+        )
+      }
+
+      if (auth.credentials.isTriage) {
+        if (
+          protectedTags[tag]['roles'].includes(
+            'tools.ozone.team.defs#roleTriage',
+          )
+        ) {
+          return
+        }
+
+        throw new InvalidRequestError(
+          `Not allowed to action on protected tag: ${tag}`,
+        )
+      }
+    }
   })
 }
 

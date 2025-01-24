@@ -19,6 +19,10 @@ export interface Record {
   labels?:
     | ComAtprotoLabelDefs.SelfLabels
     | { $type: string; [k: string]: unknown }
+  contentMode?:
+    | 'app.bsky.feed.defs#contentModeUnspecified'
+    | 'app.bsky.feed.defs#contentModeVideo'
+    | (string & {})
   createdAt: string
   [k: string]: unknown
 }

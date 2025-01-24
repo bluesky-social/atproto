@@ -177,7 +177,7 @@ describe('moderation', () => {
     it('prevents blob from being reuploaded', async () => {
       const attempt = sc.uploadFile(
         sc.dids.carol,
-        '../dev-env/src/seed/img/key-alt.jpg',
+        '../dev-env/assets/key-alt.jpg',
         'image/jpeg',
       )
       await expect(attempt).rejects.toThrow(

@@ -603,6 +603,7 @@ export class Views {
             like: viewer.like,
           }
         : undefined,
+      contentMode: feedgen.record.contentMode,
       indexedAt: this.indexedAt(feedgen).toISOString(),
     }
   }
@@ -830,6 +831,9 @@ export class Views {
             opts.depth,
           )
         : undefined,
+      threadContext: {
+        rootAuthorLike: state.threadContexts?.get(post.uri)?.like,
+      },
     }
   }
 
@@ -859,6 +863,9 @@ export class Views {
       $type: 'app.bsky.feed.defs#threadViewPost',
       post,
       parent: this.threadParent(parentUri, rootUri, state, height - 1),
+      threadContext: {
+        rootAuthorLike: state.threadContexts?.get(post.uri)?.like,
+      },
     }
   }
 
@@ -903,6 +910,9 @@ export class Views {
           state,
           depth - 1,
         ),
+        threadContext: {
+          rootAuthorLike: state.threadContexts?.get(post.uri)?.like,
+        },
       }
     })
   }

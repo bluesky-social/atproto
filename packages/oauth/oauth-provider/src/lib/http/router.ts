@@ -104,10 +104,10 @@ export class Router<
           const host = req.headers.host || routerUrl?.host || 'localhost'
           const pathname = req.url || '/'
           url = new URL(pathname, `${protocol}//${host}`)
-        } catch (err) {
-          return next(
-            Object.assign(err as Error, { status: 400, statusCode: 400 }),
-          )
+        } catch (cause) {
+          const error =
+            cause instanceof Error ? cause : new Error('Invalid URL', { cause })
+          return next(Object.assign(error, { status: 400, statusCode: 400 }))
         }
       }
 

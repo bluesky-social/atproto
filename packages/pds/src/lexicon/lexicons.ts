@@ -1122,6 +1122,29 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoLexiconSchema: {
+    lexicon: 1,
+    id: 'com.atproto.lexicon.schema',
+    defs: {
+      main: {
+        type: 'record',
+        description:
+          "Representation of Lexicon schemas themselves, when published as atproto records. Note that the schema language is not defined in Lexicon; this meta schema currently only includes a single version field ('lexicon'). See the atproto specifications for description of the other expected top-level fields ('id', 'defs', etc).",
+        key: 'nsid',
+        record: {
+          type: 'object',
+          required: ['lexicon'],
+          properties: {
+            lexicon: {
+              type: 'integer',
+              description:
+                "Indicates the 'version' of the Lexicon language. Must be '1' for the current atproto/Lexicon schema system.",
+            },
+          },
+        },
+      },
+    },
+  },
   ComAtprotoModerationCreateReport: {
     lexicon: 1,
     id: 'com.atproto.moderation.createReport',
@@ -2411,6 +2434,11 @@ export const schemaDict = {
               },
               authFactorToken: {
                 type: 'string',
+              },
+              allowTakendown: {
+                type: 'boolean',
+                description:
+                  'When true, instead of throwing error for takendown accounts, a valid response with a narrow scoped token will be returned',
               },
             },
           },
@@ -4823,6 +4851,11 @@ export const schemaDict = {
                   ref: 'lex:app.bsky.actor.defs#profileView',
                 },
               },
+              recId: {
+                type: 'integer',
+                description:
+                  'Snowflake for this recommendation, use when submitting recommendation events.',
+              },
             },
           },
         },
@@ -5540,6 +5573,17 @@ export const schemaDict = {
           },
         },
       },
+      threadContext: {
+        type: 'object',
+        description:
+          'Metadata about this post within the context of the thread it is in.',
+        properties: {
+          rootAuthorLike: {
+            type: 'string',
+            format: 'at-uri',
+          },
+        },
+      },
       feedViewPost: {
         type: 'object',
         required: ['post'],
@@ -5639,6 +5683,10 @@ export const schemaDict = {
                 'lex:app.bsky.feed.defs#blockedPost',
               ],
             },
+          },
+          threadContext: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.defs#threadContext',
           },
         },
       },
@@ -5744,6 +5792,13 @@ export const schemaDict = {
           viewer: {
             type: 'ref',
             ref: 'lex:app.bsky.feed.defs#generatorViewerState',
+          },
+          contentMode: {
+            type: 'string',
+            knownValues: [
+              'app.bsky.feed.defs#contentModeUnspecified',
+              'app.bsky.feed.defs#contentModeVideo',
+            ],
           },
           indexedAt: {
             type: 'string',
@@ -5879,6 +5934,15 @@ export const schemaDict = {
         description:
           'User clicked through to the embedded content of the feed item',
       },
+      contentModeUnspecified: {
+        type: 'token',
+        description: 'Declares the feed generator returns any types of posts.',
+      },
+      contentModeVideo: {
+        type: 'token',
+        description:
+          'Declares the feed generator returns posts containing app.bsky.embed.video embeds.',
+      },
       interactionSeen: {
         type: 'token',
         description: 'Feed item was seen by user',
@@ -6009,6 +6073,13 @@ export const schemaDict = {
               type: 'union',
               description: 'Self-label values',
               refs: ['lex:com.atproto.label.defs#selfLabels'],
+            },
+            contentMode: {
+              type: 'string',
+              knownValues: [
+                'app.bsky.feed.defs#contentModeUnspecified',
+                'app.bsky.feed.defs#contentModeVideo',
+              ],
             },
             createdAt: {
               type: 'string',
@@ -6159,6 +6230,7 @@ export const schemaDict = {
                 'posts_no_replies',
                 'posts_with_media',
                 'posts_and_author_threads',
+                'posts_with_video',
               ],
               default: 'posts_with_replies',
             },
@@ -8330,6 +8402,11 @@ export const schemaDict = {
                   'If true, response has fallen-back to generic results, and is not scoped using relativeToDid',
                 default: false,
               },
+              recId: {
+                type: 'integer',
+                description:
+                  'Snowflake for this recommendation, use when submitting recommendation events.',
+              },
             },
           },
         },
@@ -8944,6 +9021,15 @@ export const schemaDict = {
         parameters: {
           type: 'params',
           properties: {
+            reasons: {
+              description: 'Notification reasons to include in response.',
+              type: 'array',
+              items: {
+                type: 'string',
+                description:
+                  'A reason that matches the reason property of #notification.',
+              },
+            },
             limit: {
               type: 'integer',
               minimum: 1,
@@ -9248,6 +9334,24 @@ export const schemaDict = {
           },
         },
       },
+      trendingTopic: {
+        type: 'object',
+        required: ['topic', 'link'],
+        properties: {
+          topic: {
+            type: 'string',
+          },
+          displayName: {
+            type: 'string',
+          },
+          description: {
+            type: 'string',
+          },
+          link: {
+            type: 'string',
+          },
+        },
+      },
     },
   },
   AppBskyUnspeccedGetConfig: {
@@ -9374,6 +9478,11 @@ export const schemaDict = {
                 description:
                   'DID of the account these suggestions are relative to. If this is returned undefined, suggestions are based on the viewer.',
               },
+              recId: {
+                type: 'integer',
+                description:
+                  'Snowflake for this recommendation, use when submitting recommendation events.',
+              },
             },
           },
         },
@@ -9423,6 +9532,56 @@ export const schemaDict = {
           subject: {
             type: 'string',
             format: 'uri',
+          },
+        },
+      },
+    },
+  },
+  AppBskyUnspeccedGetTrendingTopics: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.getTrendingTopics',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get a list of trending topics',
+        parameters: {
+          type: 'params',
+          properties: {
+            viewer: {
+              type: 'string',
+              format: 'did',
+              description:
+                'DID of the account making the request (not included for public/unauthenticated queries). Used to boost followed accounts in ranking.',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 25,
+              default: 10,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['topics', 'suggested'],
+            properties: {
+              topics: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.unspecced.defs#trendingTopic',
+                },
+              },
+              suggested: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.unspecced.defs#trendingTopic',
+                },
+              },
+            },
           },
         },
       },
@@ -11179,6 +11338,85 @@ export const schemaDict = {
               type: 'string',
             },
           },
+          accountStats: {
+            description: 'Statistics related to the account subject',
+            type: 'ref',
+            ref: 'lex:tools.ozone.moderation.defs#accountStats',
+          },
+          recordsStats: {
+            description:
+              "Statistics related to the record subjects authored by the subject's account",
+            type: 'ref',
+            ref: 'lex:tools.ozone.moderation.defs#recordsStats',
+          },
+        },
+      },
+      accountStats: {
+        description: 'Statistics about a particular account subject',
+        type: 'object',
+        properties: {
+          reportCount: {
+            description: 'Total number of reports on the account',
+            type: 'integer',
+          },
+          appealCount: {
+            description:
+              'Total number of appeals against a moderation action on the account',
+            type: 'integer',
+          },
+          suspendCount: {
+            description: 'Number of times the account was suspended',
+            type: 'integer',
+          },
+          escalateCount: {
+            description: 'Number of times the account was escalated',
+            type: 'integer',
+          },
+          takedownCount: {
+            description: 'Number of times the account was taken down',
+            type: 'integer',
+          },
+        },
+      },
+      recordsStats: {
+        description: 'Statistics about a set of record subject items',
+        type: 'object',
+        properties: {
+          totalReports: {
+            description:
+              'Cumulative sum of the number of reports on the items in the set',
+            type: 'integer',
+          },
+          reportedCount: {
+            description: 'Number of items that were reported at least once',
+            type: 'integer',
+          },
+          escalatedCount: {
+            description: 'Number of items that were escalated at least once',
+            type: 'integer',
+          },
+          appealedCount: {
+            description: 'Number of items that were appealed at least once',
+            type: 'integer',
+          },
+          subjectCount: {
+            description: 'Total number of item in the set',
+            type: 'integer',
+          },
+          pendingCount: {
+            description:
+              'Number of item currently in "reviewOpen" or "reviewEscalated" state',
+            type: 'integer',
+          },
+          processedCount: {
+            description:
+              'Number of item currently in "reviewNone" or "reviewClosed" state',
+            type: 'integer',
+          },
+          takendownCount: {
+            description: 'Number of item currently taken down',
+            type: 'integer',
+          },
         },
       },
       subjectReviewState: {
@@ -11226,6 +11464,15 @@ export const schemaDict = {
             type: 'boolean',
             description:
               'If true, all other reports on content authored by this account will be resolved (acknowledged).',
+          },
+          policies: {
+            type: 'array',
+            maxLength: 5,
+            items: {
+              type: 'string',
+            },
+            description:
+              'Names/Keywords of the policies that drove the decision.',
           },
         },
       },
@@ -11309,6 +11556,11 @@ export const schemaDict = {
         properties: {
           comment: {
             type: 'string',
+          },
+          acknowledgeAccountSubjects: {
+            type: 'boolean',
+            description:
+              'If true, all other reports on content authored by this account will be resolved (acknowledged).',
           },
         },
       },
@@ -12218,7 +12470,7 @@ export const schemaDict = {
             comment: {
               type: 'string',
               description:
-                'If specified, only events with comments containing the keyword are returned',
+                'If specified, only events with comments containing the keyword are returned. Apply || separator to use multiple keywords and match using OR condition.',
             },
             addedLabels: {
               type: 'array',
@@ -12258,6 +12510,14 @@ export const schemaDict = {
                 type: 'string',
               },
             },
+            policies: {
+              type: 'array',
+              items: {
+                type: 'string',
+                description:
+                  'If specified, only events where the action policies match any of the given policies are returned',
+              },
+            },
             cursor: {
               type: 'string',
             },
@@ -12295,6 +12555,20 @@ export const schemaDict = {
         parameters: {
           type: 'params',
           properties: {
+            queueCount: {
+              type: 'integer',
+              description:
+                'Number of queues being used by moderators. Subjects will be split among all queues.',
+            },
+            queueIndex: {
+              type: 'integer',
+              description:
+                'Index of the queue to fetch subjects from. Works only when queueCount value is specified.',
+            },
+            queueSeed: {
+              type: 'string',
+              description: 'A seeder to shuffle/balance the queue items.',
+            },
             includeAllUserRecords: {
               type: 'boolean',
               description:
@@ -12391,7 +12665,12 @@ export const schemaDict = {
             sortField: {
               type: 'string',
               default: 'lastReportedAt',
-              enum: ['lastReviewedAt', 'lastReportedAt'],
+              enum: [
+                'lastReviewedAt',
+                'lastReportedAt',
+                'reportedRecordsCount',
+                'takendownRecordsCount',
+              ],
             },
             sortDirection: {
               type: 'string',
@@ -12414,8 +12693,11 @@ export const schemaDict = {
             },
             tags: {
               type: 'array',
+              maxLength: 25,
               items: {
                 type: 'string',
+                description:
+                  'Items in this array are applied with OR filters. To apply AND filter, put all tags in the same string and separate using && characters',
               },
             },
             excludeTags: {
@@ -12442,6 +12724,21 @@ export const schemaDict = {
               description:
                 "If specified, subjects of the given type (account or record) will be returned. When this is set to 'account' the 'collections' parameter will be ignored. When includeAllUserRecords or subject is set, this will be ignored.",
               knownValues: ['account', 'record'],
+            },
+            minAccountSuspendCount: {
+              type: 'integer',
+              description:
+                'If specified, only subjects that belong to an account that has at least this many suspensions will be returned.',
+            },
+            minReportedRecordsCount: {
+              type: 'integer',
+              description:
+                'If specified, only subjects that belong to an account that has at least this many reported records will be returned.',
+            },
+            minTakendownRecordsCount: {
+              type: 'integer',
+              description:
+                'If specified, only subjects that belong to an account that has at least this many taken down records will be returned.',
             },
           },
         },
@@ -13489,8 +13786,9 @@ export const schemaDict = {
       },
     },
   },
-}
-export const schemas: LexiconDoc[] = Object.values(schemaDict) as LexiconDoc[]
+} as const satisfies Record<string, LexiconDoc>
+
+export const schemas = Object.values(schemaDict)
 export const lexicons: Lexicons = new Lexicons(schemas)
 export const ids = {
   ComAtprotoAdminDefs: 'com.atproto.admin.defs',
@@ -13522,6 +13820,7 @@ export const ids = {
   ComAtprotoLabelDefs: 'com.atproto.label.defs',
   ComAtprotoLabelQueryLabels: 'com.atproto.label.queryLabels',
   ComAtprotoLabelSubscribeLabels: 'com.atproto.label.subscribeLabels',
+  ComAtprotoLexiconSchema: 'com.atproto.lexicon.schema',
   ComAtprotoModerationCreateReport: 'com.atproto.moderation.createReport',
   ComAtprotoModerationDefs: 'com.atproto.moderation.defs',
   ComAtprotoRepoApplyWrites: 'com.atproto.repo.applyWrites',
@@ -13671,6 +13970,7 @@ export const ids = {
     'app.bsky.unspecced.getSuggestionsSkeleton',
   AppBskyUnspeccedGetTaggedSuggestions:
     'app.bsky.unspecced.getTaggedSuggestions',
+  AppBskyUnspeccedGetTrendingTopics: 'app.bsky.unspecced.getTrendingTopics',
   AppBskyUnspeccedSearchActorsSkeleton:
     'app.bsky.unspecced.searchActorsSkeleton',
   AppBskyUnspeccedSearchPostsSkeleton: 'app.bsky.unspecced.searchPostsSkeleton',

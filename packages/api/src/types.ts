@@ -47,6 +47,7 @@ export interface AtpAgentLoginOpts {
   identifier: string
   password: string
   authFactorToken?: string | undefined
+  allowTakendown?: boolean
 }
 
 /**
