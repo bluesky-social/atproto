@@ -18,10 +18,10 @@ export function isObj(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null
 }
 
-export function hasProp<T extends object, K extends PropertyKey>(
-  data: T,
+export function hasProp<K extends PropertyKey>(
+  data: object,
   prop: K,
-): data is T & Record<K, unknown> {
+): data is Record<K, unknown> {
   return prop in data
 }
 `)
@@ -66,14 +66,14 @@ export const lexiconsTs = (project, lexicons: LexiconDoc[]) =>
       ],
     })
 
-    //= export const schemas = Object.values(schemaDict) satisfies LexiconDoc[]
+    //= export const schemas = Object.values(schemaDict)
     file.addVariableStatement({
       isExported: true,
       declarationKind: VariableDeclarationKind.Const,
       declarations: [
         {
           name: 'schemas',
-          initializer: 'Object.values(schemaDict) satisfies LexiconDoc[]',
+          initializer: 'Object.values(schemaDict)',
         },
       ],
     })
