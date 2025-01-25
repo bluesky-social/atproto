@@ -218,7 +218,7 @@
       "properties": {
         "uri": { "type": "string", "format": "at-uri" },
         "cid": { "type": "string", "format": "cid" },
-        "record": { "type": "unknown" },
+        "record": { "type": "ref", "ref": "app.bsky.feed.threadgate#record" },
         "lists": {
           "type": "array",
           "items": { "type": "ref", "ref": "app.bsky.graph.defs#listViewBasic" }
