@@ -28,6 +28,7 @@ import { VideoUriBuilder } from './views/util'
 import { createBlobDispatcher } from './api/blob-dispatcher'
 
 export * from './data-plane'
+export * from './lexicon';
 export type { ServerConfigValues } from './config'
 export { ServerConfig } from './config'
 export { Database } from './data-plane/server/db'
