@@ -37,6 +37,10 @@ describe('sequencer', () => {
     totalEvts = 14
   })
 
+  beforeEach(async () => {
+    await network.processAll()
+  })
+
   afterAll(async () => {
     await network.close()
   })

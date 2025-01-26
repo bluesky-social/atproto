@@ -628,7 +628,7 @@ export class ModerationViews {
 
       recordsStats: {
         // Explicitly typing to allow for easy manipulation (e.g. to strip from tests snapshots)
-        $type: 'tools.ozone.moderation.defs#recordStats',
+        $type: 'tools.ozone.moderation.defs#recordsStats',
 
         // account_record_events_stats
         totalReports: status.totalReports ?? undefined,

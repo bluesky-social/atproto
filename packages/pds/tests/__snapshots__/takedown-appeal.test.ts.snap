@@ -4,6 +4,11 @@ exports[`appeal account takedown actor takedown allows appeal request. 1`] = `
 Object {
   "accountStats": Object {
     "$type": "tools.ozone.moderation.defs#accountStats",
+    "appealCount": 0,
+    "escalateCount": 0,
+    "reportCount": 0,
+    "suspendCount": 0,
+    "takedownCount": 1,
   },
   "appealed": true,
   "createdAt": "1970-01-01T00:00:00.000Z",
@@ -17,7 +22,7 @@ Object {
   "lastReviewedAt": "1970-01-01T00:00:00.000Z",
   "lastReviewedBy": "user(0)",
   "recordsStats": Object {
-    "$type": "tools.ozone.moderation.defs#recordStats",
+    "$type": "tools.ozone.moderation.defs#recordsStats",
   },
   "reviewState": "tools.ozone.moderation.defs#reviewEscalated",
   "subject": Object {

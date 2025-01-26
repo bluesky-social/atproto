@@ -61,6 +61,8 @@ describe('appeal account takedown', () => {
       },
     )
 
+    await network.processAll()
+
     // Verify user can not get session token without setting the optional param
     await expect(
       agent.com.atproto.server.createSession({
