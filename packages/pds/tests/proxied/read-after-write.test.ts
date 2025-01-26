@@ -282,7 +282,7 @@ describe('proxy read after write', () => {
       { headers: { ...sc.getHeaders(alice) } },
     )
     const lag = res.headers['atproto-upstream-lag']
-    expect(lag).toBeDefined()
+    assert(lag !== undefined)
     const parsed = parseInt(lag)
     expect(parsed > 0).toBe(true)
   })
