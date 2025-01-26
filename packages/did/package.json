@@ -28,9 +28,12 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@swc/jest": "^0.2.24",
+    "jest": "^28.1.2",
     "typescript": "^5.6.3"
   },
   "scripts": {
-    "build": "tsc --build tsconfig.build.json"
+    "build": "tsc --build tsconfig.build.json",
+    "test": "jest"
   }
 }

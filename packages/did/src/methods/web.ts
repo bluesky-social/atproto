@@ -13,7 +13,7 @@ export function isDidWeb(input: unknown): input is Did<'web'> {
   if (input.charAt(DID_WEB_PREFIX.length) === ':') return false
 
   try {
-    didWebToUrl(input)
+    didWebToUrl(input as Did<'web'>)
     return true
   } catch {
     return false
@@ -30,18 +30,18 @@ export function assertDidWeb(input: unknown): asserts input is Did<'web'> {
     throw new InvalidDidError(typeof input, `DID must be a string`)
   }
 
-  void didWebToUrl(input)
+  if (!input.startsWith(DID_WEB_PREFIX)) {
+    throw new InvalidDidError(input, `Invalid did:web prefix`)
+  }
+
+  if (input.charAt(DID_WEB_PREFIX.length) === ':') {
+    throw new InvalidDidError(input, 'did:web MSID must not start with a colon')
+  }
+
+  void didWebToUrl(input as Did<'web'>)
 }
 
-export function didWebToUrl(did: string) {
-  if (!did.startsWith(DID_WEB_PREFIX)) {
-    throw new InvalidDidError(did, `did:web must start with ${DID_WEB_PREFIX}`)
-  }
-
-  if (did.charAt(DID_WEB_PREFIX.length) === ':') {
-    throw new InvalidDidError(did, 'did:web MSID must not start with a colon')
-  }
-
+export function didWebToUrl(did: Did<'web'>) {
   // Make sure every char is valid (per DID spec)
   assertDidMsid(did, DID_WEB_PREFIX.length)
 
