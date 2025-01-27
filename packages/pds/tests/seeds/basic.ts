@@ -61,7 +61,7 @@ export default async (
         index: { byteStart: 0, byteEnd: 18 },
         features: [
           {
-            $type: `${ids.AppBskyRichtextFacet}#mention`,
+            $type: `${ids.AppBskyRichtextFacet}#mention` as const,
             did: alice,
           },
         ],

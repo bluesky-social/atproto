@@ -18,7 +18,9 @@ export interface Merges {
   merge<T extends this>(map: T): this
 }
 
-export type RecordInfo<T> = {
+type UnknownRecord = { $type: string; [x: string]: unknown }
+
+export type RecordInfo<T extends UnknownRecord> = {
   record: T
   cid: string
   sortedAt: Date
@@ -56,7 +58,7 @@ export const mergeManyMaps = <T>(...maps: HydrationMap<T>[]) => {
 
 export type ItemRef = { uri: string; cid?: string }
 
-export const parseRecord = <T>(
+export const parseRecord = <T extends UnknownRecord>(
   entry: Record,
   includeTakedowns: boolean,
 ): RecordInfo<T> | undefined => {
