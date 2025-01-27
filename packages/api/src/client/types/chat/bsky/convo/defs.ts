@@ -5,9 +5,9 @@ import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { validate as _validate } from '../../../../lexicons'
 import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
-import type * as AppBskyRichtextFacet from '../../../app/bsky/richtext/facet'
-import type * as AppBskyEmbedRecord from '../../../app/bsky/embed/record'
-import type * as ChatBskyActorDefs from '../actor/defs'
+import type * as AppBskyRichtextFacet from '../../../app/bsky/richtext/facet.js'
+import type * as AppBskyEmbedRecord from '../../../app/bsky/embed/record.js'
+import type * as ChatBskyActorDefs from '../actor/defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
