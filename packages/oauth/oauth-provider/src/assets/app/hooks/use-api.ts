@@ -75,6 +75,20 @@ export function useApi(
     [api, performRedirect, clientId, setSessions],
   )
 
+  const doInitiatePasswordReset = useCallback(
+    async (email: string) => {
+      return api.resetPasswordInit(email)
+    },
+    [api],
+  )
+
+  const doConfirmResetPassword = useCallback(
+    async (code: string, newPassword: string) => {
+      return api.resetPasswordConfirm(code, newPassword)
+    },
+    [api],
+  )
+
   const doSignUp = useCallback(
     (data: SignUpData) => {
       //
@@ -99,6 +113,8 @@ export function useApi(
     setSession,
 
     doSignIn,
+    doInitiatePasswordReset,
+    doConfirmResetPassword,
     doSignUp,
     doAccept,
     doReject,

@@ -8,11 +8,13 @@ export function Button({
   role = 'Button',
   color = 'grey',
   disabled = false,
+  transparent = false,
   loading = undefined,
   ...props
 }: {
   color?: 'brand' | 'grey'
   loading?: boolean
+  transparent?: boolean
 } & ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
     <button
@@ -23,8 +25,14 @@ export function Button({
       className={clsx(
         'py-2 px-6 rounded-lg truncate cursor-pointer touch-manipulation tracking-wide overflow-hidden',
         color === 'brand'
-          ? 'bg-brand text-white'
-          : 'bg-slate-100 hover:bg-slate-200 text-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300',
+          ? transparent
+            ? 'bg-transparent text-brand'
+            : 'bg-brand text-white'
+          : clsx(
+              'text-slate-600 dark:text-slate-300',
+              'hover:bg-slate-200 dark:hover:bg-slate-700',
+              transparent ? 'bg-transparent' : 'bg-slate-100 dark:bg-slate-800',
+            ),
         className,
       )}
     >
