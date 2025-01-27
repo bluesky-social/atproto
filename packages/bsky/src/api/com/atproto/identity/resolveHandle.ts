@@ -7,7 +7,9 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.identity.resolveHandle(async ({ req, params }) => {
     const handle = ident.normalizeHandle(params.handle || req.hostname)
 
-    let [did] = await ctx.hydrator.actor.getDids([handle])
+    let [did] = req.headers['cache-control']?.includes('no-cache')
+      ? [undefined]
+      : await ctx.hydrator.actor.getDids([handle])
 
     if (!did) {
       const publicHostname = ctx.cfg.publicUrl
