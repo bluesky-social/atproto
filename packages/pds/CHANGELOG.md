@@ -1,5 +1,19 @@
 # @atproto/pds
 
+## 0.4.91
+
+### Patch Changes
+
+- [#3463](https://github.com/bluesky-social/atproto/pull/3463) [`8810885b8`](https://github.com/bluesky-social/atproto/commit/8810885b8e7fa0377e6c000c091eec1dd85ed261) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix flaky tests
+
+- [#3439](https://github.com/bluesky-social/atproto/pull/3439) [`4f2841efe`](https://github.com/bluesky-social/atproto/commit/4f2841efeb410e710e0c8da7c9204468f6256a75) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve error reporting in case of failed PLC update operation
+
+- Updated dependencies [[`4f2841efe`](https://github.com/bluesky-social/atproto/commit/4f2841efeb410e710e0c8da7c9204468f6256a75), [`4f2841efe`](https://github.com/bluesky-social/atproto/commit/4f2841efeb410e710e0c8da7c9204468f6256a75), [`fb64d50ee`](https://github.com/bluesky-social/atproto/commit/fb64d50ee220316b9f1183e5c3259629489734c9)]:
+  - @atproto/xrpc-server@0.7.9
+  - @atproto/xrpc@0.6.7
+  - @atproto-labs/xrpc-utils@0.0.5
+  - @atproto/api@0.13.32
+
 ## 0.4.90
 
 ### Patch Changes

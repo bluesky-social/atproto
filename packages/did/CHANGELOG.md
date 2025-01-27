@@ -1,5 +1,11 @@
 # @atproto/did
 
+## 0.1.4
+
+### Patch Changes
+
+- [#3454](https://github.com/bluesky-social/atproto/pull/3454) [`cc2a1222b`](https://github.com/bluesky-social/atproto/commit/cc2a1222bd2b8ddd70d70dad174c1c63246a2d87) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix encoding and decoding of did:web
+
 ## 0.1.3
 
 ### Patch Changes

@@ -1,5 +1,18 @@
 # @atproto/ozone
 
+## 0.1.74
+
+### Patch Changes
+
+- [#3437](https://github.com/bluesky-social/atproto/pull/3437) [`da7a831a7`](https://github.com/bluesky-social/atproto/commit/da7a831a7318343ba1ee98de3811ba337c043dbd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Code cleanup
+
+- [#3463](https://github.com/bluesky-social/atproto/pull/3463) [`8810885b8`](https://github.com/bluesky-social/atproto/commit/8810885b8e7fa0377e6c000c091eec1dd85ed261) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix typo in recordsStats's $type property
+
+- Updated dependencies [[`4f2841efe`](https://github.com/bluesky-social/atproto/commit/4f2841efeb410e710e0c8da7c9204468f6256a75), [`4f2841efe`](https://github.com/bluesky-social/atproto/commit/4f2841efeb410e710e0c8da7c9204468f6256a75), [`fb64d50ee`](https://github.com/bluesky-social/atproto/commit/fb64d50ee220316b9f1183e5c3259629489734c9)]:
+  - @atproto/xrpc-server@0.7.9
+  - @atproto/xrpc@0.6.7
+  - @atproto/api@0.13.32
+
 ## 0.1.73
 
 ### Patch Changes
