@@ -1,7 +1,7 @@
 import { Project, SourceFile, VariableDeclarationKind } from 'ts-morph'
-import { LexiconDoc } from '@atproto/lexicon'
+import { type LexiconDoc } from '@atproto/lexicon'
 import prettier from 'prettier'
-import { GeneratedFile } from '../types'
+import { type GeneratedFile } from '../types'
 
 const PRETTIER_OPTS = {
   parser: 'typescript',
@@ -36,12 +36,12 @@ export const lexiconsTs = (project, lexicons: LexiconDoc[]) =>
         .join('')
     }
 
-    //= import {LexiconDoc} from '@atproto/lexicon'
+    //= import { type LexiconDoc, Lexicons } from '@atproto/lexicon'
     file
       .addImportDeclaration({
         moduleSpecifier: '@atproto/lexicon',
       })
-      .addNamedImports([{ name: 'LexiconDoc' }, { name: 'Lexicons' }])
+      .addNamedImports([{ name: 'LexiconDoc', isTypeOnly: true }, { name: 'Lexicons' }])
 
     //= export const schemaDict = {...} as const satisfies Record<string, LexiconDoc>
     file.addVariableStatement({
