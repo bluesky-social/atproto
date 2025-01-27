@@ -1,5 +1,11 @@
 # @atproto/xrpc
 
+## 0.6.7
+
+### Patch Changes
+
+- [#3456](https://github.com/bluesky-social/atproto/pull/3456) [`fb64d50ee`](https://github.com/bluesky-social/atproto/commit/fb64d50ee220316b9f1183e5c3259629489734c9) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Explicitly allow "undefined" values in `headers`
+
 ## 0.6.6
 
 ### Patch Changes
