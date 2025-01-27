@@ -1,10 +1,11 @@
 import assert from 'node:assert'
 
-import { check } from '@atproto/common'
-import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as plc from '@did-plc/lib'
 
-import AppContext from '../../../../context'
+import { check } from '@atproto/common'
+import { InvalidRequestError } from '@atproto/xrpc-server'
+
+import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
 import { resultPassthru } from '../../../proxy'

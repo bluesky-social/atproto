@@ -1,4 +1,5 @@
 import { z } from 'zod'
+
 import { DidError, InvalidDidError } from './did-error.js'
 
 const DID_PREFIX = 'did:'

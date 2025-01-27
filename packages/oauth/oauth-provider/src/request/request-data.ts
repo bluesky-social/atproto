@@ -4,6 +4,7 @@ import { ClientAuth } from '../client/client-auth.js'
 import { ClientId } from '../client/client-id.js'
 import { DeviceId } from '../device/device-id.js'
 import { Sub } from '../oidc/sub.js'
+
 import { Code } from './code.js'
 
 export type RequestData = {

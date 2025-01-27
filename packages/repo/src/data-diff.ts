@@ -1,7 +1,8 @@
 import { CID } from 'multiformats'
-import CidSet from './cid-set'
+
+import { BlockMap } from './block-map'
+import { CidSet } from './cid-set'
 import { MST, NodeEntry, mstDiff } from './mst'
-import BlockMap from './block-map'
 
 export class DataDiff {
   adds: Record<string, DataAdd> = {}
@@ -115,5 +116,3 @@ export type DataDelete = {
   key: string
   cid: CID
 }
-
-export default DataDiff

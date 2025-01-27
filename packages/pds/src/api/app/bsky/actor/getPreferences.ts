@@ -1,6 +1,6 @@
-import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
 import { AuthScope } from '../../../../auth-verifier'
+import { AppContext } from '../../../../context'
+import { Server } from '../../../../lexicon'
 
 export default function (server: Server, ctx: AppContext) {
   if (!ctx.bskyAppView) return

@@ -1,4 +1,5 @@
 import * as uint8arrays from 'uint8arrays'
+
 import { BASE58_MULTIBASE_PREFIX, DID_KEY_PREFIX } from './const'
 
 export const extractMultikey = (did: string): string => {

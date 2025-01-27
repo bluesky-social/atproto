@@ -1,7 +1,9 @@
-import { AtUri } from '@atproto/syntax'
-import { jsonToLex } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import * as ui8 from 'uint8arrays'
+
+import { jsonToLex } from '@atproto/lexicon'
+import { AtUri } from '@atproto/syntax'
+
 import { lexicons } from '../lexicon/lexicons'
 import { Record } from '../proto/bsky_pb'
 

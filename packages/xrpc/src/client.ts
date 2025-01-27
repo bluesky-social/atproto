@@ -1,7 +1,8 @@
 import { LexiconDoc, Lexicons } from '@atproto/lexicon'
+
 import { CallOptions, QueryParams } from './types'
-import { XrpcClient } from './xrpc-client'
 import { combineHeaders } from './util'
+import { XrpcClient } from './xrpc-client'
 
 /** @deprecated Use {@link XrpcClient} instead */
 export class Client {

@@ -1,10 +1,13 @@
 import * as http from 'node:http'
 import { AddressInfo } from 'node:net'
+
 import { MINUTE } from '@atproto/common'
 import { LexiconDoc } from '@atproto/lexicon'
 import { XrpcClient } from '@atproto/xrpc'
+
 import * as xrpcServer from '../src'
 import { RateLimiter } from '../src'
+
 import { closeServer, createServer } from './_util'
 
 const LEXICONS: LexiconDoc[] = [

@@ -1,9 +1,9 @@
+import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
 import { OutputSchema } from '../../../../lexicon/types/app/bsky/actor/getProfile'
 import {
-  LocalViewer,
   LocalRecords,
+  LocalViewer,
   pipethroughReadAfterWrite,
 } from '../../../../read-after-write'
 

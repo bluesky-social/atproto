@@ -1,4 +1,5 @@
 import { Awaitable } from '../lib/util/type.js'
+
 import { DeviceData } from './device-data.js'
 import { DeviceId } from './device-id.js'
 

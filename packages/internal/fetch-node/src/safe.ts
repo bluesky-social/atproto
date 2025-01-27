@@ -1,7 +1,7 @@
 import {
-  asRequest,
   DEFAULT_FORBIDDEN_DOMAIN_NAMES,
   Fetch,
+  asRequest,
   fetchMaxSizeProcessor,
   forbiddenDomainNameRequestTransform,
   protocolCheckRequestTransform,

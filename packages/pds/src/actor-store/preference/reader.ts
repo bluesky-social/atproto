@@ -1,5 +1,6 @@
 import { AuthScope } from '../../auth-verifier'
 import { ActorDb } from '../db'
+
 import { prefInScope } from './util'
 
 export class PreferenceReader {

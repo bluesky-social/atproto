@@ -1,7 +1,6 @@
-import { Transformer, pipe } from '@atproto-labs/pipe'
+import type { ParseParams, TypeOf, ZodTypeAny } from 'zod'
 
-// optional dependency for typing purposes
-import type { ZodTypeAny, ParseParams, TypeOf } from 'zod'
+import { Transformer, pipe } from '@atproto-labs/pipe'
 
 import { FetchError } from './fetch-error.js'
 import { TransformedResponse } from './transformed-response.js'

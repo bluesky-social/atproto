@@ -1,4 +1,4 @@
-import pino from 'pino'
+import { destination, pino } from 'pino'
 
 const allSystemsEnabled = !process.env.LOG_SYSTEMS
 const enabledSystems = (process.env.LOG_SYSTEMS || '')
@@ -17,7 +17,7 @@ const config = {
 }
 
 const rootLogger = process.env.LOG_DESTINATION
-  ? pino(config, pino.destination(process.env.LOG_DESTINATION))
+  ? pino(config, destination(process.env.LOG_DESTINATION))
   : pino(config)
 
 const subsystems: Record<string, pino.Logger> = {}

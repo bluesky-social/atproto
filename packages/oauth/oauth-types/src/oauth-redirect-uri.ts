@@ -1,7 +1,8 @@
-import { TypeOf, z, ZodIssueCode } from 'zod'
+import { TypeOf, ZodIssueCode, z } from 'zod'
+
 import {
-  httpsUriSchema,
   LoopbackUri,
+  httpsUriSchema,
   loopbackUriSchema,
   privateUseUriSchema,
 } from './uri.js'

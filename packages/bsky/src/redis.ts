@@ -1,4 +1,5 @@
-import assert from 'assert'
+import assert from 'node:assert'
+
 import { Redis as RedisDriver } from 'ioredis'
 
 export class Redis {

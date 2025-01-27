@@ -1,8 +1,11 @@
 import PQueue from 'p-queue'
+
 import { CacheResult, DidCache, DidDocument } from '@atproto/identity'
+
 import { excluded } from '../db/util'
 import { didCacheLogger } from '../logger'
-import { DidCacheDb, getMigrator, getDb } from './db'
+
+import { DidCacheDb, getDb, getMigrator } from './db'
 
 export class DidSqliteCache implements DidCache {
   db: DidCacheDb

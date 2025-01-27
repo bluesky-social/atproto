@@ -1,4 +1,5 @@
 import { chunkArray } from '@atproto/common-web'
+
 import { SeedClient } from './client'
 
 export default async (sc: SeedClient, max = Infinity) => {

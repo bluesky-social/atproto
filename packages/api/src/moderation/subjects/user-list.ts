@@ -1,7 +1,9 @@
 import { AtUri } from '@atproto/syntax'
+
 import { AppBskyActorDefs } from '../../client/index'
 import { ModerationDecision } from '../decision'
-import { ModerationSubjectUserList, ModerationOpts } from '../types'
+import { ModerationOpts, ModerationSubjectUserList } from '../types'
+
 import { decideAccount } from './account'
 import { decideProfile } from './profile'
 

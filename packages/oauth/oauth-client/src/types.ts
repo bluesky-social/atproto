@@ -1,10 +1,11 @@
+import { TypeOf, z } from 'zod'
+
 import {
-  oauthClientIdLoopbackSchema,
   OAuthAuthorizationRequestParameters,
   oauthClientIdDiscoverableSchema,
+  oauthClientIdLoopbackSchema,
   oauthClientMetadataSchema,
 } from '@atproto/oauth-types'
-import { TypeOf, z } from 'zod'
 
 import { Simplify } from './util.js'
 

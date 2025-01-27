@@ -1,6 +1,8 @@
 import { CID } from 'multiformats/cid'
-import BlockMap from '../block-map'
-import ReadableBlockstore from './readable-blockstore'
+
+import { BlockMap } from '../block-map'
+
+import { ReadableBlockstore } from './readable-blockstore'
 
 export class SyncStorage extends ReadableBlockstore {
   constructor(

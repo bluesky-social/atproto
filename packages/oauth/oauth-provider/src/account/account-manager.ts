@@ -1,10 +1,12 @@
 import { isOAuthClientIdLoopback } from '@atproto/oauth-types'
+
 import { Client } from '../client/client.js'
 import { DeviceId } from '../device/device-id.js'
 import { constantTime } from '../lib/util/time.js'
 import { InvalidRequestError } from '../oauth-errors.js'
 import { Sub } from '../oidc/sub.js'
 import { ClientAuth } from '../token/token-store.js'
+
 import {
   Account,
   AccountInfo,

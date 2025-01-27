@@ -1,10 +1,11 @@
 import { Generated } from 'kysely'
+
 import {
-  REASONOTHER,
-  REASONSPAM,
   REASONMISLEADING,
+  REASONOTHER,
   REASONRUDE,
   REASONSEXUAL,
+  REASONSPAM,
   REASONVIOLATION,
 } from '../../lexicon/types/com/atproto/moderation/defs'
 

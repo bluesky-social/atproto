@@ -1,4 +1,5 @@
 import { TypeOf, z } from 'zod'
+
 import { oauthClientIdSchema } from './oauth-client-id.js'
 import { httpsUriSchema } from './uri.js'
 import { extractUrlPath, isHostnameIP } from './util.js'

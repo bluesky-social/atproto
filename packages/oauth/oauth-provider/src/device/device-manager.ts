@@ -4,9 +4,9 @@ import { serialize as serializeCookie } from 'cookie'
 import type Keygrip from 'keygrip'
 import { z } from 'zod'
 
+import { SESSION_FIXATION_MAX_AGE } from '../constants.js'
 import { appendHeader, parseHttpCookies } from '../lib/http/index.js'
 
-import { SESSION_FIXATION_MAX_AGE } from '../constants.js'
 import { DeviceData } from './device-data.js'
 import { extractDeviceDetails } from './device-details.js'
 import { DeviceId, deviceIdSchema, generateDeviceId } from './device-id.js'

@@ -3,6 +3,7 @@ import { useCallback, useMemo, useState } from 'react'
 import { Account, AuthorizeData, Session } from '../backend-data'
 import { Api } from '../lib/api'
 import { upsert } from '../lib/util'
+
 import { useCsrfToken } from './use-csrf-token'
 
 export type SignInCredentials = {
@@ -76,7 +77,7 @@ export function useApi(
   )
 
   const doSignUp = useCallback(
-    (data: SignUpData) => {
+    (_data: SignUpData) => {
       //
       throw new Error('Not implemented')
     },

@@ -1,6 +1,7 @@
 import { PoorlyFormattedDidError, UnsupportedDidWebPathError } from '../errors'
 import { DidCache } from '../types'
-import BaseResolver from './base-resolver'
+
+import { BaseResolver } from './base-resolver'
 import { timed } from './util'
 
 export const DOC_PATH = '/.well-known/did.json'

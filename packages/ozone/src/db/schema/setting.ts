@@ -1,4 +1,5 @@
 import { Generated, GeneratedAlways } from 'kysely'
+
 import { Member } from './member'
 
 export const settingTableName = 'setting'

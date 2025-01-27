@@ -1,5 +1,7 @@
-import { keyBy } from '@atproto/common'
 import { ServiceImpl } from '@connectrpc/connect'
+
+import { keyBy } from '@atproto/common'
+
 import { Service } from '../../../proto/bsky_connect'
 import { FollowsFollowing } from '../../../proto/bsky_pb'
 import { Database } from '../db'

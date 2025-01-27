@@ -1,4 +1,5 @@
-import fs from 'fs'
+import fs from 'node:fs'
+
 import { LexiconDoc } from '@atproto/lexicon'
 
 const INSERT_START = [

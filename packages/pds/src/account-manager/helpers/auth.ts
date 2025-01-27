@@ -1,10 +1,14 @@
 import assert from 'node:assert'
 import { KeyObject } from 'node:crypto'
+
 import * as jose from 'jose'
 import * as ui8 from 'uint8arrays'
+
 import * as crypto from '@atproto/crypto'
+
 import { AuthScope } from '../../auth-verifier'
 import { AccountDb } from '../db'
+
 import { AppPassDescript } from './password'
 
 export type AuthToken = {

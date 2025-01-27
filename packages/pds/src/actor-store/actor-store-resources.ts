@@ -1,4 +1,5 @@
 import { BlobStore } from '@atproto/repo'
+
 import { BackgroundQueue } from '../background'
 
 export type ActorStoreResources = {

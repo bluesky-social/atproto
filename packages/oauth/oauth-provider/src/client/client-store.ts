@@ -1,6 +1,7 @@
 import { OAuthClientMetadata } from '@atproto/oauth-types'
 
 import { Awaitable } from '../lib/util/type.js'
+
 import { ClientId } from './client-id.js'
 
 // Export all types needed to implement the ClientStore interface

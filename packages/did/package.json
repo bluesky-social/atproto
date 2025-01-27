@@ -24,6 +24,9 @@
       "default": "./dist/index.js"
     }
   },
+  "engines": {
+    "node": ">=18.7.0"
+  },
   "dependencies": {
     "zod": "^3.23.8"
   },

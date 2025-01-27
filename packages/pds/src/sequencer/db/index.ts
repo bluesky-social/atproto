@@ -1,6 +1,7 @@
 import { Database, Migrator } from '../../db'
-import { SequencerDbSchema } from './schema'
+
 import migrations from './migrations'
+import { SequencerDbSchema } from './schema'
 
 export * from './schema'
 
