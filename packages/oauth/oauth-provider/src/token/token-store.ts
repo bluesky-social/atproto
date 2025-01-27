@@ -2,6 +2,7 @@ import { DeviceAccountInfo } from '../account/account-store.js'
 import { Account } from '../account/account.js'
 import { Awaitable } from '../lib/util/type.js'
 import { Code } from '../request/code.js'
+
 import { RefreshToken } from './refresh-token.js'
 import { TokenData } from './token-data.js'
 import { TokenId } from './token-id.js'

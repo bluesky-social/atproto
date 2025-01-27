@@ -1,10 +1,10 @@
 import {
-  moderateProfile,
-  moderatePost,
-  mock,
-  ModerationOpts,
   InterpretedLabelValueDefinition,
+  ModerationOpts,
   interpretLabelValueDefinition,
+  mock,
+  moderatePost,
+  moderateProfile,
 } from '../src'
 import './util/moderation-behavior'
 

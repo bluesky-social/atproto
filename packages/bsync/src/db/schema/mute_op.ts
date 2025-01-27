@@ -1,4 +1,5 @@
 import { GeneratedAlways, Selectable } from 'kysely'
+
 import { MuteOperation_Type } from '../../proto/bsync_pb'
 
 export interface MuteOp {

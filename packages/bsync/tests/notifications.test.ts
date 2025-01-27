@@ -1,6 +1,8 @@
-import { wait } from '@atproto/common'
-import getPort from 'get-port'
 import { Code, ConnectError } from '@connectrpc/connect'
+import getPort from 'get-port'
+
+import { wait } from '@atproto/common'
+
 import {
   BsyncClient,
   BsyncService,

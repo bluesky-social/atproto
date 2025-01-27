@@ -18,6 +18,9 @@
     "test": "jest",
     "build": "tsc --build tsconfig.build.json"
   },
+  "engines": {
+    "node": ">=18.7.0"
+  },
   "dependencies": {
     "@atproto/common-web": "workspace:^",
     "@ipld/dag-cbor": "^7.0.3",

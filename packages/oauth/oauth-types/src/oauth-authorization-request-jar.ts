@@ -1,5 +1,6 @@
-import { signedJwtSchema, unsignedJwtSchema } from '@atproto/jwk'
 import { z } from 'zod'
+
+import { signedJwtSchema, unsignedJwtSchema } from '@atproto/jwk'
 
 export const oauthAuthorizationRequestJarSchema = z.object({
   /**

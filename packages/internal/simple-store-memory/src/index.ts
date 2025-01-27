@@ -1,5 +1,6 @@
-import { SimpleStore, Key, Value } from '@atproto-labs/simple-store'
 import { LRUCache } from 'lru-cache'
+
+import { Key, SimpleStore, Value } from '@atproto-labs/simple-store'
 
 import { roughSizeOfObject } from './util.js'
 

@@ -1,8 +1,9 @@
 import { AtpAgent } from '@atproto/api'
-import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as ident from '@atproto/syntax'
+import { InvalidRequestError } from '@atproto/xrpc-server'
+
+import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.identity.resolveHandle(async ({ params }) => {

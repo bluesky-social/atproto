@@ -3,12 +3,12 @@ import { ServerResponse } from 'node:http'
 
 import {
   AssetRef,
-  buildDocument,
   BuildDocumentOptions,
   Html,
+  buildDocument,
   js,
 } from '../lib/html/index.js'
-import { writeHtml, WriteResponseOptions } from '../lib/http/response.js'
+import { WriteResponseOptions, writeHtml } from '../lib/http/response.js'
 
 export function declareBackendData(name: string, data: unknown) {
   // The script tag is removed after the data is assigned to the global variable

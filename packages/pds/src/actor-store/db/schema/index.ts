@@ -1,10 +1,10 @@
 import * as accountPref from './account-pref'
-import * as repoRoot from './repo-root'
-import * as record from './record'
 import * as backlink from './backlink'
-import * as repoBlock from './repo-block'
 import * as blob from './blob'
+import * as record from './record'
 import * as recordBlob from './record-blob'
+import * as repoBlock from './repo-block'
+import * as repoRoot from './repo-root'
 
 export type DatabaseSchema = accountPref.PartialDB &
   repoRoot.PartialDB &

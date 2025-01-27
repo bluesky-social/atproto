@@ -1,10 +1,9 @@
 import {
-  TestNetwork,
-  SeedClient,
-  basicSeed,
   ModeratorClient,
+  SeedClient,
+  TestNetwork,
+  basicSeed,
 } from '@atproto/dev-env'
-import { ids } from '../src/lexicon/lexicons'
 
 describe('get profiles through ozone', () => {
   let network: TestNetwork

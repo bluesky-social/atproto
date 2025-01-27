@@ -1,3 +1,5 @@
+import { Selectable } from 'kysely'
+
 import {
   Code,
   NewTokenData,
@@ -7,7 +9,7 @@ import {
   TokenId,
   TokenInfo,
 } from '@atproto/oauth-provider'
-import { Selectable } from 'kysely'
+
 import {
   fromDateISO,
   fromJsonArray,
@@ -17,6 +19,7 @@ import {
   toJsonObject,
 } from '../../db'
 import { AccountDb, Token } from '../db'
+
 import { ActorAccount, selectAccountQB } from './account'
 import {
   SelectableDeviceAccount,

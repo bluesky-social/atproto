@@ -1,4 +1,5 @@
 import { LexiconDoc, Lexicons, ValidationError } from '@atproto/lexicon'
+
 import {
   FetchHandler,
   FetchHandlerObject,

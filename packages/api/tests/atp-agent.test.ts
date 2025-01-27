@@ -1,5 +1,6 @@
-import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { TID } from '@atproto/common-web'
+import { TestNetworkNoAppView } from '@atproto/dev-env'
+
 import {
   AppBskyActorDefs,
   AppBskyActorProfile,

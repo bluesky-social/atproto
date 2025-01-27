@@ -1,4 +1,4 @@
-import { envInt, envStr, envBool, envList } from '@atproto/common'
+import { envBool, envInt, envList, envStr } from '@atproto/common'
 
 export const readEnv = (): ServerEnvironment => {
   return {

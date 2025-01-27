@@ -1,6 +1,7 @@
 import { Database, Migrator } from '../../db'
-import { DatabaseSchema } from './schema'
+
 import migrations from './migrations'
+import { DatabaseSchema } from './schema'
 
 export * from './schema'
 

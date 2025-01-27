@@ -1,9 +1,10 @@
 import {
-  TestNetwork,
-  SeedClient,
-  basicSeed,
   ModeratorClient,
+  SeedClient,
+  TestNetwork,
+  basicSeed,
 } from '@atproto/dev-env'
+
 import { REASONSPAM } from '../src/lexicon/types/com/atproto/moderation/defs'
 
 describe('moderation-status-tags', () => {

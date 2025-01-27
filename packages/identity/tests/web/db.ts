@@ -61,5 +61,3 @@ export class DidWebDb {
     await this.store.del(didPath)
   }
 }
-
-export default DidWebDb
