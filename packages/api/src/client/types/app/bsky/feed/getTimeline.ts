@@ -3,10 +3,10 @@
  */
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
+import { isObj, hasProp } from '../../../../util.js'
+import { lexicons } from '../../../../lexicons.js'
 import { CID } from 'multiformats/cid'
-import * as AppBskyFeedDefs from './defs'
+import * as AppBskyFeedDefs from './defs.js'
 
 export interface QueryParams {
   /** Variant 'algorithm' for timeline. Implementation-specific. NOTE: most feed flexibility has been moved to feed generator mechanism. */

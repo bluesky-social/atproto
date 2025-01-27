@@ -2,11 +2,11 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
+import { isObj, hasProp } from '../../../../util.js'
+import { lexicons } from '../../../../lexicons.js'
 import { CID } from 'multiformats/cid'
-import * as AppBskyLabelerDefs from './defs'
-import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
+import * as AppBskyLabelerDefs from './defs.js'
+import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs.js'
 
 export interface Record {
   policies: AppBskyLabelerDefs.LabelerPolicies

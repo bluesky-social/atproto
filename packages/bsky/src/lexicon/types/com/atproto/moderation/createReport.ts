@@ -3,13 +3,13 @@
  */
 import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
+import { lexicons } from '../../../../lexicons.js'
+import { isObj, hasProp } from '../../../../util.js'
 import { CID } from 'multiformats/cid'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
-import * as ComAtprotoModerationDefs from './defs'
-import * as ComAtprotoAdminDefs from '../admin/defs'
-import * as ComAtprotoRepoStrongRef from '../repo/strongRef'
+import * as ComAtprotoModerationDefs from './defs.js'
+import * as ComAtprotoAdminDefs from '../admin/defs.js'
+import * as ComAtprotoRepoStrongRef from '../repo/strongRef.js'
 
 export interface QueryParams {}
 

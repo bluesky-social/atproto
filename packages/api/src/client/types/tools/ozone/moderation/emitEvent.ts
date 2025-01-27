@@ -3,12 +3,12 @@
  */
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
+import { isObj, hasProp } from '../../../../util.js'
+import { lexicons } from '../../../../lexicons.js'
 import { CID } from 'multiformats/cid'
-import * as ToolsOzoneModerationDefs from './defs'
-import * as ComAtprotoAdminDefs from '../../../com/atproto/admin/defs'
-import * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef'
+import * as ToolsOzoneModerationDefs from './defs.js'
+import * as ComAtprotoAdminDefs from '../../../com/atproto/admin/defs.js'
+import * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef.js'
 
 export interface QueryParams {}
 

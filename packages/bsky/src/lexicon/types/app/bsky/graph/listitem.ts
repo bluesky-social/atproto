@@ -2,8 +2,8 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
+import { lexicons } from '../../../../lexicons.js'
+import { isObj, hasProp } from '../../../../util.js'
 import { CID } from 'multiformats/cid'
 
 export interface Record {

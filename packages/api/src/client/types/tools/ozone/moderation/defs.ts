@@ -2,15 +2,15 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
+import { isObj, hasProp } from '../../../../util.js'
+import { lexicons } from '../../../../lexicons.js'
 import { CID } from 'multiformats/cid'
-import * as ComAtprotoAdminDefs from '../../../com/atproto/admin/defs'
-import * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef'
-import * as ChatBskyConvoDefs from '../../../chat/bsky/convo/defs'
-import * as ComAtprotoModerationDefs from '../../../com/atproto/moderation/defs'
-import * as ComAtprotoServerDefs from '../../../com/atproto/server/defs'
-import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
+import * as ComAtprotoAdminDefs from '../../../com/atproto/admin/defs.js'
+import * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef.js'
+import * as ChatBskyConvoDefs from '../../../chat/bsky/convo/defs.js'
+import * as ComAtprotoModerationDefs from '../../../com/atproto/moderation/defs.js'
+import * as ComAtprotoServerDefs from '../../../com/atproto/server/defs.js'
+import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs.js'
 
 export interface ModEventView {
   id: number

@@ -2,11 +2,11 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
+import { lexicons } from '../../../../lexicons.js'
+import { isObj, hasProp } from '../../../../util.js'
 import { CID } from 'multiformats/cid'
-import * as AppBskyActorDefs from '../../../app/bsky/actor/defs'
-import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
+import * as AppBskyActorDefs from '../../../app/bsky/actor/defs.js'
+import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs.js'
 
 export interface ProfileViewBasic {
   did: string

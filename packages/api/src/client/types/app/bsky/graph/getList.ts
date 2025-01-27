@@ -3,10 +3,10 @@
  */
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
+import { isObj, hasProp } from '../../../../util.js'
+import { lexicons } from '../../../../lexicons.js'
 import { CID } from 'multiformats/cid'
-import * as AppBskyGraphDefs from './defs'
+import * as AppBskyGraphDefs from './defs.js'
 
 export interface QueryParams {
   /** Reference (AT-URI) of the list record to hydrate. */
