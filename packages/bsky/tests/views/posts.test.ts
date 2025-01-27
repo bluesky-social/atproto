@@ -4,6 +4,7 @@ import { forSnapshot, stripViewerFromPost } from '../_util'
 import { RecordEmbed, VideoEmbed } from '../../src/views/types'
 import { RecordWithMedia } from '../../dist/views/types'
 import { ids } from '../../src/lexicon/lexicons'
+import { XRPCError } from '@atproto/xrpc'
 
 describe('pds posts views', () => {
   let network: TestNetwork
@@ -188,5 +189,23 @@ describe('pds posts views', () => {
     const { data } = await agent.app.bsky.feed.getPosts({ uris: [uri] })
     expect(data.posts.length).toBe(1)
     expect(forSnapshot(data.posts[0])).toMatchSnapshot()
+  })
+
+  it('upload malformed svg', async () => {
+    try {
+      await pdsAgent.api.com.atproto.repo.uploadBlob(
+        Buffer.from('<svgQ'),
+        {
+          headers: sc.getHeaders(sc.dids.alice),
+          encoding: 'text/html',
+        },
+      )
+      throw new Error('Didnt throw')
+    } catch (e) {
+      expect(e).toBeInstanceOf(XRPCError)
+      expect((e as XRPCError).success).toBeFalsy()
+      expect((e as XRPCError).error).toBe("InvalidRequest")
+      expect((e as XRPCError).message).toBe('Image detected but content is unparsable')
+    }
   })
 })
