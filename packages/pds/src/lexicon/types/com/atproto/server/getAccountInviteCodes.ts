@@ -7,7 +7,7 @@ import { CID } from 'multiformats/cid'
 import { validate as _validate } from '../../../../lexicons'
 import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
-import type * as ComAtprotoServerDefs from './defs'
+import type * as ComAtprotoServerDefs from './defs.js'
 
 const is$typed = _is$typed,
   validate = _validate

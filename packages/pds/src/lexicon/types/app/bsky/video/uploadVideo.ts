@@ -2,13 +2,13 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import express from 'express'
-import stream from 'stream'
+import stream from 'node:stream'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { validate as _validate } from '../../../../lexicons'
 import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
-import type * as AppBskyVideoDefs from './defs'
+import type * as AppBskyVideoDefs from './defs.js'
 
 const is$typed = _is$typed,
   validate = _validate

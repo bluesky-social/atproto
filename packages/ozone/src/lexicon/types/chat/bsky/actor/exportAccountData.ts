@@ -2,7 +2,7 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import express from 'express'
-import stream from 'stream'
+import stream from 'node:stream'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { validate as _validate } from '../../../../lexicons'
