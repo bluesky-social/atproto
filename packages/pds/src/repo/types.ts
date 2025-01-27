@@ -1,6 +1,6 @@
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/syntax'
-import { WriteOpAction } from '@atproto/repo'
+import { CidSet, CommitData, WriteOpAction } from '@atproto/repo'
 import { RepoRecord } from '@atproto/lexicon'
 
 export type ValidationStatus = 'valid' | 'unknown' | undefined
@@ -40,6 +40,18 @@ export type PreparedDelete = {
   action: WriteOpAction.Delete
   uri: AtUri
   swapCid?: CID | null
+}
+
+export type CommitOp = {
+  action: 'create' | 'update' | 'delete'
+  path: string
+  cid: CID | null
+  prev?: CID
+}
+
+export type CommitDataWithOps = CommitData & {
+  ops: CommitOp[]
+  blobs: CidSet
 }
 
 export type PreparedWrite = PreparedCreate | PreparedUpdate | PreparedDelete

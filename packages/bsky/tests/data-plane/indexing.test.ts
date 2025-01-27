@@ -592,11 +592,7 @@ describe('indexing', () => {
         writeCommit.cid,
         writeCommit.rev,
       )
-      await network.pds.ctx.sequencer.sequenceCommit(
-        sc.dids.alice,
-        writeCommit,
-        writes,
-      )
+      await network.pds.ctx.sequencer.sequenceCommit(sc.dids.alice, writeCommit)
       // Index
       const { data: commit } =
         await pdsAgent.api.com.atproto.sync.getLatestCommit({
