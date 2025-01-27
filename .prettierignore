@@ -8,5 +8,10 @@ pnpm-lock.yaml
 .pnpm*
 .changeset
 *.d.ts
-packages/bsky/src/data-plane/gen
 CHANGELOG.md
+
+# Prettier is used to format the code during codegen
+packages/api/src/client
+packages/bsky/src/lexicon
+packages/pds/src/lexicon
+packages/ozone/src/lexicon
