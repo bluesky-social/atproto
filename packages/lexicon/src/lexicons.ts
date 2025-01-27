@@ -1,22 +1,22 @@
 import {
-  LexiconDoc,
+  InvalidLexiconError,
   LexRecord,
   LexUserType,
   LexiconDefNotFoundError,
-  InvalidLexiconError,
-  ValidationResult,
+  LexiconDoc,
   ValidationError,
-  isObj,
+  ValidationResult,
   hasProp,
+  isObj,
 } from './types'
+import { toLexUri } from './util'
 import {
   assertValidRecord,
-  assertValidXrpcParams,
   assertValidXrpcInput,
-  assertValidXrpcOutput,
   assertValidXrpcMessage,
+  assertValidXrpcOutput,
+  assertValidXrpcParams,
 } from './validation'
-import { toLexUri } from './util'
 import * as ComplexValidators from './validators/complex'
 
 /**

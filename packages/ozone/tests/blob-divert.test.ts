@@ -1,3 +1,5 @@
+import assert from 'node:assert'
+
 import {
   ModeratorClient,
   SeedClient,
@@ -5,7 +7,7 @@ import {
   basicSeed,
 } from '@atproto/dev-env'
 import { ResponseType, XRPCError } from '@atproto/xrpc'
-import assert from 'node:assert'
+
 import { forSnapshot } from './_util'
 
 describe('blob divert', () => {

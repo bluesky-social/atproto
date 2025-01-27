@@ -1,6 +1,8 @@
+import { format } from 'prettier'
 import { Project, SourceFile, VariableDeclarationKind } from 'ts-morph'
+
 import { LexiconDoc } from '@atproto/lexicon'
-import prettier from 'prettier'
+
 import { GeneratedFile } from '../types'
 
 const PRETTIER_OPTS = {
@@ -122,7 +124,7 @@ export async function gen(
   const src = project.getFileSystem().readFileSync(path)
   return {
     path: path,
-    content: `${banner()}${await prettier.format(src, PRETTIER_OPTS)}`,
+    content: `${banner()}${await format(src, PRETTIER_OPTS)}`,
   }
 }
 

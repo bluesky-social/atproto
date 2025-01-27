@@ -6,7 +6,7 @@
   "license": "MIT",
   "private": true,
   "engines": {
-    "node": "18"
+    "node": ">=18.7.0"
   },
   "packageManager": "pnpm@8.15.9",
   "scripts": {
@@ -43,6 +43,9 @@
     "dotenv": "^16.0.3",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
+    "eslint-import-resolver-typescript": "^3.7.0",
+    "eslint-plugin-import": "^2.31.0",
+    "eslint-plugin-n": "^17.15.0",
     "eslint-plugin-prettier": "^5.1.3",
     "jest": "^28.1.2",
     "node-gyp": "^9.3.1",

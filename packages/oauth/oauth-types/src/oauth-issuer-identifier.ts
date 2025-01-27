@@ -1,4 +1,5 @@
 import { z } from 'zod'
+
 import { webUriSchema } from './uri.js'
 
 export const oauthIssuerIdentifierSchema = webUriSchema.superRefine(

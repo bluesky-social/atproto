@@ -1,6 +1,6 @@
-import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
 import { AtpAgent } from '@atproto/api'
 import { randomStr } from '@atproto/crypto'
+import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 
 describe('pds admin invite views', () => {
   let network: TestNetworkNoAppView

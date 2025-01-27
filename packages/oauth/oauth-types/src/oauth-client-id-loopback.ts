@@ -1,9 +1,10 @@
 import { TypeOf, ZodIssueCode } from 'zod'
+
 import { oauthClientIdSchema } from './oauth-client-id.js'
 import {
   OAuthLoopbackRedirectURI,
-  oauthLoopbackRedirectURISchema,
   OAuthRedirectUri,
+  oauthLoopbackRedirectURISchema,
 } from './oauth-redirect-uri.js'
 import { OAuthScope, oauthScopeSchema } from './oauth-scope.js'
 

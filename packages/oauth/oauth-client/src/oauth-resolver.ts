@@ -1,12 +1,12 @@
 import {
-  IdentityResolver,
-  ResolvedIdentity,
-  ResolveIdentityOptions,
-} from '@atproto-labs/identity-resolver'
-import {
   OAuthAuthorizationServerMetadata,
   oauthIssuerIdentifierSchema,
 } from '@atproto/oauth-types'
+import {
+  IdentityResolver,
+  ResolveIdentityOptions,
+  ResolvedIdentity,
+} from '@atproto-labs/identity-resolver'
 
 import {
   GetCachedOptions,

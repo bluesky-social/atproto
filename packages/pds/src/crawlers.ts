@@ -1,7 +1,8 @@
 import { AtpAgent } from '@atproto/api'
-import { crawlerLogger as log } from './logger'
 import { MINUTE } from '@atproto/common'
+
 import { BackgroundQueue } from './background'
+import { crawlerLogger as log } from './logger'
 
 const NOTIFY_THRESHOLD = 20 * MINUTE
 

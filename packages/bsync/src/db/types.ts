@@ -1,5 +1,5 @@
-import { Pool as PgPool } from 'pg'
 import { DynamicModule, RawBuilder, SelectQueryBuilder } from 'kysely'
+import { Pool as PgPool } from 'pg'
 
 export type DbRef = RawBuilder | ReturnType<DynamicModule['ref']>
 

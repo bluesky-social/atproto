@@ -1,5 +1,8 @@
 import readline from 'node:readline/promises'
+
 import { CID } from 'multiformats/cid'
+
+import { TID } from '@atproto/common'
 import {
   BlockMap,
   CidSet,
@@ -9,9 +12,9 @@ import {
   signCommit,
 } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
-import { TID } from '@atproto/common'
+
 import { ActorStoreTransactor } from '../actor-store'
-import AppContext from '../context'
+import { AppContext } from '../context'
 
 export const rebuildRepo = async (ctx: AppContext, args: string[]) => {
   const did = args[0]

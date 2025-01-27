@@ -1,6 +1,10 @@
 import { ConnectRouter } from '@connectrpc/connect'
+
 import { IdResolver } from '@atproto/identity'
+
 import { Service } from '../../../proto/bsky_connect'
+import { Database } from '../db'
+
 import blocks from './blocks'
 import feedGens from './feed-gens'
 import feeds from './feeds'
@@ -20,11 +24,10 @@ import records from './records'
 import relationships from './relationships'
 import reposts from './reposts'
 import search from './search'
+import starterPacks from './starter-packs'
 import suggestions from './suggestions'
 import sync from './sync'
 import threads from './threads'
-import starterPacks from './starter-packs'
-import { Database } from '../db'
 
 export default (db: Database, idResolver: IdResolver) =>
   (router: ConnectRouter) =>

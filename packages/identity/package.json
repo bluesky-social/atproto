@@ -21,6 +21,9 @@
     "test:log": "cat test.log | pino-pretty",
     "build": "tsc --build tsconfig.build.json"
   },
+  "engines": {
+    "node": ">=18.7.0"
+  },
   "dependencies": {
     "@atproto/common-web": "workspace:^",
     "@atproto/crypto": "workspace:^"

@@ -1,5 +1,5 @@
 import * as ui8 from 'uint8arrays'
-import vectors from './ipld-vectors'
+
 import {
   cborDecode,
   cborEncode,
@@ -8,6 +8,8 @@ import {
   ipldToJson,
   jsonToIpld,
 } from '../src'
+
+import { vectors } from './ipld-vectors'
 
 describe('ipld', () => {
   for (const vector of vectors) {

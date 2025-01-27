@@ -1,6 +1,7 @@
+import { z } from 'zod'
+
 import { JwkError, jwkSchema } from '@atproto/jwk'
 import { GenerateKeyPairOptions, JoseKey } from '@atproto/jwk-jose'
-import z from 'zod'
 
 import { fromSubtleAlgorithm, isCryptoKeyPair } from './util.js'
 

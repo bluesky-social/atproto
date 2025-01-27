@@ -1,5 +1,5 @@
-import { ensureValidHandle, ensureValidHandleRegex } from './handle'
 import { ensureValidDid, ensureValidDidRegex } from './did'
+import { ensureValidHandle, ensureValidHandleRegex } from './handle'
 import { ensureValidNsid, ensureValidNsidRegex } from './nsid'
 
 // Human-readable constraints on ATURI:

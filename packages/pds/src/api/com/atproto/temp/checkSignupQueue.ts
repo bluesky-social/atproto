@@ -1,7 +1,7 @@
-import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
-import { authPassthru, resultPassthru } from '../../../proxy'
 import { AuthScope } from '../../../../auth-verifier'
+import { AppContext } from '../../../../context'
+import { Server } from '../../../../lexicon'
+import { authPassthru, resultPassthru } from '../../../proxy'
 
 // THIS IS A TEMPORARY UNSPECCED ROUTE
 export default function (server: Server, ctx: AppContext) {

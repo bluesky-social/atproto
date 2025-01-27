@@ -1,12 +1,14 @@
+import { ServerResponse } from 'node:http'
+
 import {
   OAuthAuthorizationRequestParameters,
   OAuthTokenType,
 } from '@atproto/oauth-types'
-import { ServerResponse } from 'node:http'
 
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { html, js } from '../lib/html/index.js'
 import { Code } from '../request/code.js'
+
 import { sendWebPage } from './send-web-page.js'
 
 // https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-11#section-7.5.4

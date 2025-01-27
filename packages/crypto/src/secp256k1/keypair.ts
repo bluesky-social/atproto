@@ -69,5 +69,3 @@ export class Secp256k1Keypair implements Keypair {
     return this.privateKey
   }
 }
-
-export default Secp256k1Keypair

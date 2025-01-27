@@ -1,6 +1,7 @@
 import { sql } from 'kysely'
-import AppContext from '../context'
 import PQueue from 'p-queue'
+
+import { AppContext } from '../context'
 
 export const forEachActorStore = async (
   ctx: AppContext,

@@ -1,9 +1,9 @@
-import express from 'express'
 import { IncomingHttpHeaders, ServerResponse } from 'node:http'
 import { PassThrough, Readable } from 'node:stream'
+
+import express from 'express'
 import { Dispatcher } from 'undici'
 
-import { buildProxiedContentEncoding } from '@atproto-labs/xrpc-utils'
 import {
   decodeStream,
   getServiceEndpoint,
@@ -17,11 +17,12 @@ import {
   HandlerPipeThroughStream,
   InternalServerError,
   InvalidRequestError,
-  parseReqNsid,
   XRPCError as XRPCServerError,
+  parseReqNsid,
 } from '@atproto/xrpc-server'
+import { buildProxiedContentEncoding } from '@atproto-labs/xrpc-utils'
 
-import AppContext from './context'
+import { AppContext } from './context'
 import { ids } from './lexicon/lexicons'
 import { httpLogger } from './logger'
 

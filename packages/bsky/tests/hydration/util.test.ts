@@ -1,7 +1,7 @@
 import {
   HydrationMap,
-  mergeMaps,
   mergeManyMaps,
+  mergeMaps,
   mergeNestedMaps,
 } from '../../src/hydration/util'
 

@@ -1,10 +1,13 @@
 import { CID } from 'multiformats/cid'
-import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
-import { InvalidRequestError } from '@atproto/xrpc-server'
+
 import { BlobNotFoundError } from '@atproto/repo'
-import { assertRepoAvailability } from './util'
+import { InvalidRequestError } from '@atproto/xrpc-server'
+
 import { AuthScope } from '../../../../auth-verifier'
+import { AppContext } from '../../../../context'
+import { Server } from '../../../../lexicon'
+
+import { assertRepoAvailability } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.getBlob({
