@@ -1,8 +1,11 @@
-export const keyBy = <T>(arr: T[], key: string): Map<string, T> => {
+export function keyBy<T, K extends keyof T>(
+  arr: readonly T[],
+  key: K,
+): Map<T[K], T> {
   return arr.reduce((acc, cur) => {
     acc.set(cur[key], cur)
     return acc
-  }, new Map<string, T>())
+  }, new Map<T[K], T>())
 }
 
 export const mapDefined = <T, S>(
