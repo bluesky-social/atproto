@@ -219,10 +219,12 @@
     },
     "skeletonReasonSponsored": {
       "type": "object",
+      "description": "The existence of this reason on a skeletonFeedPost indicates the post is being displayed to the user in a promotional capacity (i.e., as sponsored content)."
       "properties": {
         "info": {
           "type": "string",
-          "description": "Extended information about sponsored content, provided by the feed generator for transparency purposes."
+          "description": "Extended information about sponsored content, provided by the feed generator for transparency purposes.",
+          "maxLength": 2000
         }
       }
     },
