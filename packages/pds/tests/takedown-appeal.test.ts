@@ -35,6 +35,7 @@ describe('appeal account takedown', () => {
       email: 'jeff@test.com',
       password: 'password',
     })
+    await network.processAll()
 
     // Emit a takedown event
     await network.ozone.getModClient().performTakedown({
@@ -59,6 +60,8 @@ describe('appeal account takedown', () => {
         headers: { authorization: network.pds.adminAuth() },
       },
     )
+
+    await network.processAll()
 
     // Verify user can not get session token without setting the optional param
     await expect(

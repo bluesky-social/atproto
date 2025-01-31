@@ -1,5 +1,37 @@
 # @atproto/api
 
+## 0.13.31
+
+### Patch Changes
+
+- [#3441](https://github.com/bluesky-social/atproto/pull/3441) [`8c6c7813a`](https://github.com/bluesky-social/atproto/commit/8c6c7813a9c2110c8fe21acdca8f09554a1983ce) Thanks [@mozzius](https://github.com/mozzius)! - Allow passing `allowTakendown` to createSession
+
+## 0.13.30
+
+### Patch Changes
+
+- [#3429](https://github.com/bluesky-social/atproto/pull/3429) [`e6e6aea38`](https://github.com/bluesky-social/atproto/commit/e6e6aea3814e3d0bb42a537f80d77947e85fa73f) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - add feedViewPost.threadContext defs
+
+- [#3390](https://github.com/bluesky-social/atproto/pull/3390) [`c0a75d310`](https://github.com/bluesky-social/atproto/commit/c0a75d310aa92c067799a97d1acc5bd0543114c5) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - posts_with_video filter in getAuthorFeed
+
+## 0.13.29
+
+### Patch Changes
+
+- [#3416](https://github.com/bluesky-social/atproto/pull/3416) [`50603b4f2`](https://github.com/bluesky-social/atproto/commit/50603b4f2ef08bd618730107ec164a57f27dcca6) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update `tools.ozone.moderation.queryStatuses` lexicon
+
+## 0.13.28
+
+### Patch Changes
+
+- [#3389](https://github.com/bluesky-social/atproto/pull/3389) [`cbf17066f`](https://github.com/bluesky-social/atproto/commit/cbf17066f314fbc7f2e943127ee4a9f589f8bec2) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - add feedgen content mode lexicon spec
+
+## 0.13.27
+
+### Patch Changes
+
+- [#3364](https://github.com/bluesky-social/atproto/pull/3364) [`e277158f7`](https://github.com/bluesky-social/atproto/commit/e277158f70a831b04fde3ec84b3c1eaa6ce82e9d) Thanks [@iwsmith](https://github.com/iwsmith)! - add recId to getSuggestions
+
 ## 0.13.26
 
 ### Patch Changes

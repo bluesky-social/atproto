@@ -38,6 +38,10 @@ describe('admin get repo view', () => {
     await network.processAll()
   })
 
+  beforeEach(async () => {
+    await network.processAll()
+  })
+
   afterAll(async () => {
     await network.close()
   })

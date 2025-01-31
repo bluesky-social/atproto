@@ -28,7 +28,7 @@ import {
   isDataplaneError,
   unpackIdentityServices,
 } from '../../../../data-plane'
-import { resHeaders } from '../../../util'
+import { BSKY_USER_AGENT, resHeaders } from '../../../util'
 import { ids } from '../../../../lexicon/lexicons'
 
 export default function (server: Server, ctx: AppContext) {
@@ -55,6 +55,7 @@ export default function (server: Server, ctx: AppContext) {
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
       const headers = noUndefinedVals({
+        'user-agent': BSKY_USER_AGENT,
         authorization: req.headers['authorization'],
         'accept-language': req.headers['accept-language'],
         'x-bsky-topics': Array.isArray(req.headers['x-bsky-topics'])

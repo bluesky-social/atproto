@@ -18,8 +18,29 @@ export type ModerationEventRowWithHandle = ModerationEventRow & {
   creatorHandle?: string | null
 }
 export type ModerationSubjectStatusRow = Selectable<ModerationSubjectStatus>
+export type ModerationSubjectStatusRowWithStats = ModerationSubjectStatusRow & {
+  // account_events_stats
+  takedownCount: number | null
+  suspendCount: number | null
+  escalateCount: number | null
+  reportCount: number | null
+  appealCount: number | null
+
+  // account_record_events_stats
+  totalReports: number | null
+  reportedCount: number | null
+  escalatedCount: number | null
+  appealedCount: number | null
+
+  // account_record_status_stats
+  subjectCount: number | null
+  pendingCount: number | null
+  processedCount: number | null
+  takendownCount: number | null
+}
+
 export type ModerationSubjectStatusRowWithHandle =
-  ModerationSubjectStatusRow & { handle: string | null }
+  ModerationSubjectStatusRowWithStats & { handle: string | null }
 
 export type ModEventType =
   | ToolsOzoneModerationDefs.ModEventTakedown

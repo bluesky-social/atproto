@@ -6,17 +6,20 @@ import { OzoneConfig, OzoneSecrets } from '../config'
 import { Database } from '../db'
 import { EventPusher } from './event-pusher'
 import { EventReverser } from './event-reverser'
-import { ModerationService, ModerationServiceCreator } from '../mod-service'
+import { ModerationService } from '../mod-service'
 import { BackgroundQueue } from '../background'
 import { getSigningKeyId } from '../util'
+import { MaterializedViewRefresher } from './materialized-view-refresher'
+import { allFulfilled } from '@atproto/common'
 
 export type DaemonContextOptions = {
   db: Database
   cfg: OzoneConfig
-  modService: ModerationServiceCreator
+  backgroundQueue: BackgroundQueue
   signingKey: Keypair
   eventPusher: EventPusher
   eventReverser: EventReverser
+  materializedViewRefresher: MaterializedViewRefresher
 }
 
 export class DaemonContext {
@@ -67,13 +70,19 @@ export class DaemonContext {
 
     const eventReverser = new EventReverser(db, modService)
 
+    const materializedViewRefresher = new MaterializedViewRefresher(
+      backgroundQueue,
+      cfg.db.materializedViewRefreshIntervalMs,
+    )
+
     return new DaemonContext({
       db,
       cfg,
-      modService,
+      backgroundQueue,
       signingKey,
       eventPusher,
       eventReverser,
+      materializedViewRefresher,
       ...(overrides ?? {}),
     })
   }
@@ -86,8 +95,8 @@ export class DaemonContext {
     return this.opts.cfg
   }
 
-  get modService(): ModerationServiceCreator {
-    return this.opts.modService
+  get backgroundQueue(): BackgroundQueue {
+    return this.opts.backgroundQueue
   }
 
   get eventPusher(): EventPusher {
@@ -96,6 +105,35 @@ export class DaemonContext {
 
   get eventReverser(): EventReverser {
     return this.opts.eventReverser
+  }
+
+  get materializedViewRefresher(): MaterializedViewRefresher {
+    return this.opts.materializedViewRefresher
+  }
+
+  async start() {
+    this.eventPusher.start()
+    this.eventReverser.start()
+    this.materializedViewRefresher.start()
+  }
+
+  async processAll() {
+    // Sequential because the materialized view values depend on the events.
+    await this.eventPusher.processAll()
+    await this.materializedViewRefresher.run()
+  }
+
+  async destroy() {
+    try {
+      await allFulfilled([
+        this.eventReverser.destroy(),
+        this.eventPusher.destroy(),
+        this.materializedViewRefresher.destroy(),
+      ])
+    } finally {
+      await this.backgroundQueue.destroy()
+      await this.db.close()
+    }
   }
 }
 

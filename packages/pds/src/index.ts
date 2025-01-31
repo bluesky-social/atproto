@@ -10,6 +10,9 @@ import http from 'http'
 import events from 'events'
 import { Options as XrpcServerOptions } from '@atproto/xrpc-server'
 import { DAY, HOUR, MINUTE, SECOND } from '@atproto/common'
+import { XRPCError, ResponseType } from '@atproto/xrpc-server'
+import { PlcClientError } from '@did-plc/lib'
+
 import API from './api'
 import * as authRoutes from './auth-routes'
 import * as basicRoutes from './basic-routes'
@@ -64,6 +67,28 @@ export class PDS {
         blobLimit: cfg.service.blobUploadLimit,
       },
       catchall: proxyHandler(ctx),
+      errorParser: (err) => {
+        if (err instanceof PlcClientError) {
+          const payloadMessage =
+            typeof err.data === 'object' &&
+            err.data != null &&
+            'message' in err.data &&
+            typeof err.data.message === 'string' &&
+            err.data.message
+
+          const type =
+            err.status >= 500
+              ? ResponseType.UpstreamFailure
+              : ResponseType.InvalidRequest
+
+          return new XRPCError(
+            type,
+            payloadMessage || 'Unable to perform PLC operation',
+          )
+        }
+
+        return XRPCError.fromError(err)
+      },
       rateLimits: ctx.ratelimitCreator
         ? {
             creator: ctx.ratelimitCreator,

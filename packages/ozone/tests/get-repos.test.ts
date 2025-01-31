@@ -38,6 +38,10 @@ describe('admin get multiple repos', () => {
     await network.processAll()
   })
 
+  beforeEach(async () => {
+    await network.processAll()
+  })
+
   afterAll(async () => {
     await network.close()
   })

@@ -62,6 +62,9 @@ describe('proxies admin requests', () => {
       password: 'password',
       inviteCode: invite.code,
     })
+  })
+
+  beforeEach(async () => {
     await network.processAll()
   })
 

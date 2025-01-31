@@ -32,6 +32,10 @@ describe('admin get records view', () => {
     await network.processAll()
   })
 
+  beforeEach(async () => {
+    await network.processAll()
+  })
+
   afterAll(async () => {
     await network.close()
   })

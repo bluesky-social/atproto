@@ -58,6 +58,7 @@ const FILTER_TO_FEED_TYPE = {
   posts_no_replies: FeedType.POSTS_NO_REPLIES,
   posts_with_media: FeedType.POSTS_WITH_MEDIA,
   posts_and_author_threads: FeedType.POSTS_AND_AUTHOR_THREADS,
+  posts_with_video: FeedType.POSTS_WITH_VIDEO,
 }
 
 export const skeleton = async (inputs: {
@@ -144,13 +145,19 @@ const noBlocksOrMutedReposts = (inputs: {
 }): Skeleton => {
   const { ctx, skeleton, hydration } = inputs
   const relationship = hydration.profileViewers?.get(skeleton.actor.did)
-  if (relationship?.blocking || relationship?.blockingByList) {
+  if (
+    relationship &&
+    (relationship.blocking || ctx.views.blockingByList(relationship, hydration))
+  ) {
     throw new InvalidRequestError(
       `Requester has blocked actor: ${skeleton.actor.did}`,
       'BlockedActor',
     )
   }
-  if (relationship?.blockedBy || relationship?.blockedByList) {
+  if (
+    relationship &&
+    (relationship.blockedBy || ctx.views.blockedByList(relationship, hydration))
+  ) {
     throw new InvalidRequestError(
       `Requester is blocked by actor: ${skeleton.actor.did}`,
       'BlockedByActor',

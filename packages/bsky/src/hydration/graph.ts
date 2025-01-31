@@ -46,48 +46,44 @@ export type ListAggs = HydrationMap<ListAgg>
 export type RelationshipPair = [didA: string, didB: string]
 
 const dedupePairs = (pairs: RelationshipPair[]): RelationshipPair[] => {
-  const mapped = pairs.reduce(
-    (acc, cur) => {
-      const sorted = ([...cur] as RelationshipPair).sort()
-      acc[sorted.join('-')] = sorted
-      return acc
-    },
-    {} as Record<string, RelationshipPair>,
-  )
-  return Object.values(mapped)
+  const deduped = pairs.reduce((acc, pair) => {
+    return acc.set(Blocks.key(...pair), pair)
+  }, new Map<string, RelationshipPair>())
+  return [...deduped.values()]
 }
 
 export class Blocks {
-  _blocks: Map<string, boolean> = new Map()
+  _blocks: Map<string, BlockEntry> = new Map() // did:a,did:b -> block
   constructor() {}
 
   static key(didA: string, didB: string): string {
     return [didA, didB].sort().join(',')
   }
 
-  set(didA: string, didB: string, exists: boolean): Blocks {
+  set(didA: string, didB: string, block: BlockEntry): Blocks {
     const key = Blocks.key(didA, didB)
-    this._blocks.set(key, exists)
+    this._blocks.set(key, block)
     return this
   }
 
-  has(didA: string, didB: string): boolean {
+  get(didA: string, didB: string): BlockEntry | null {
+    if (didA === didB) return null // ignore self-blocks
     const key = Blocks.key(didA, didB)
-    return this._blocks.has(key)
-  }
-
-  isBlocked(didA: string, didB: string): boolean {
-    if (didA === didB) return false // ignore self-blocks
-    const key = Blocks.key(didA, didB)
-    return this._blocks.get(key) ?? false
+    return this._blocks.get(key) ?? null
   }
 
   merge(blocks: Blocks): Blocks {
-    blocks._blocks.forEach((exists, key) => {
-      this._blocks.set(key, exists)
+    blocks._blocks.forEach((block, key) => {
+      this._blocks.set(key, block)
     })
     return this
   }
+}
+
+// No "blocking" vs. "blocked" directionality: only suitable for bidirectional block checks
+export type BlockEntry = {
+  blockUri: string | undefined
+  blockListUri: string | undefined
 }
 
 export class GraphHydrator {
@@ -162,7 +158,11 @@ export class GraphHydrator {
     const blocks = new Blocks()
     for (let i = 0; i < deduped.length; i++) {
       const pair = deduped[i]
-      blocks.set(pair.a, pair.b, res.exists[i] ?? false)
+      const block = res.blocks[i]
+      blocks.set(pair.a, pair.b, {
+        blockUri: block.blockedBy || block.blocking || undefined,
+        blockListUri: block.blockedByList || block.blockingByList || undefined,
+      })
     }
     return blocks
   }

@@ -29,6 +29,17 @@ export type Options = {
     global?: ServerRateLimitDescription[]
     shared?: ServerRateLimitDescription[]
   }
+  /**
+   * By default, errors are converted to {@link XRPCError} using
+   * {@link XRPCError.fromError} before being rendered. If method handlers throw
+   * error objects that are not properly rendered in the HTTP response, this
+   * function can be used to properly convert them to {@link XRPCError}. The
+   * provided function will typically fallback to the default error conversion
+   * (`return XRPCError.fromError(err)`) if the error is not recognized.
+   *
+   * @note This function should not throw errors.
+   */
+  errorParser?: (err: unknown) => XRPCError
 }
 
 export type UndecodedParams = (typeof express.request)['query']
@@ -99,6 +110,7 @@ export type XRPCReqContext = {
   input: HandlerInput | undefined
   req: express.Request
   res: express.Response
+  resetRouteRateLimits: () => Promise<void>
 }
 
 export type XRPCHandler = (
@@ -136,12 +148,18 @@ export type CalcPointsFn = (ctx: XRPCReqContext) => number
 
 export interface RateLimiterI {
   consume: RateLimiterConsume
+  reset: RateLimiterReset
 }
 
 export type RateLimiterConsume = (
   ctx: XRPCReqContext,
   opts?: { calcKey?: CalcKeyFn; calcPoints?: CalcPointsFn },
 ) => Promise<RateLimiterStatus | RateLimitExceededError | null>
+
+export type RateLimiterReset = (
+  ctx: XRPCReqContext,
+  opts?: { calcKey?: CalcKeyFn },
+) => Promise<void>
 
 export type RateLimiterCreator = (opts: {
   keyPrefix: string
@@ -204,6 +222,8 @@ export type XRPCStreamHandlerConfig = {
   auth?: StreamAuthVerifier
   handler: XRPCStreamHandler
 }
+
+export { ResponseType }
 
 export class XRPCError extends Error {
   constructor(

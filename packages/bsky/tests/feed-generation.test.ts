@@ -35,6 +35,7 @@ describe('feed generation', () => {
   let feedUriPrime: string // Taken-down
   let feedUriPrimeRef: RecordRef
   let feedUriNeedsAuth: string
+  let feedUriContentModeVideo: string
   let starterPackRef: { uri: string; cid: string }
 
   beforeAll(async () => {
@@ -173,6 +174,17 @@ describe('feed generation', () => {
       },
       sc.getHeaders(alice),
     )
+    const contentModeVideo = await pdsAgent.api.app.bsky.feed.generator.create(
+      { repo: alice, rkey: 'content-mode-video' },
+      {
+        did: gen.did,
+        displayName: 'Content mode video',
+        description: 'Has a contentMode specified',
+        createdAt: new Date().toISOString(),
+        contentMode: 'app.bsky.feed.defs#contentModeVideo',
+      },
+      sc.getHeaders(alice),
+    )
     await network.processAll()
     await network.bsky.ctx.dataplane.takedownRecord({
       recordUri: prime.uri,
@@ -187,6 +199,7 @@ describe('feed generation', () => {
     feedUriPrime = prime.uri
     feedUriPrimeRef = new RecordRef(prime.uri, prime.cid)
     feedUriNeedsAuth = needsAuth.uri
+    feedUriContentModeVideo = contentModeVideo.uri
   })
 
   it('feed gen records can be updated', async () => {
@@ -229,13 +242,14 @@ describe('feed generation', () => {
 
     const paginatedAll = results(await paginateAll(paginator))
 
-    expect(paginatedAll.length).toEqual(6)
+    expect(paginatedAll.length).toEqual(7)
     expect(paginatedAll[0].uri).toEqual(feedUriOdd)
-    expect(paginatedAll[1].uri).toEqual(feedUriNeedsAuth)
-    expect(paginatedAll[2].uri).toEqual(feedUriBadPaginationCursor)
-    expect(paginatedAll[3].uri).toEqual(feedUriBadPaginationLimit)
-    expect(paginatedAll[4].uri).toEqual(feedUriEven)
-    expect(paginatedAll[5].uri).toEqual(feedUriAll)
+    expect(paginatedAll[1].uri).toEqual(feedUriContentModeVideo)
+    expect(paginatedAll[2].uri).toEqual(feedUriNeedsAuth)
+    expect(paginatedAll[3].uri).toEqual(feedUriBadPaginationCursor)
+    expect(paginatedAll[4].uri).toEqual(feedUriBadPaginationLimit)
+    expect(paginatedAll[5].uri).toEqual(feedUriEven)
+    expect(paginatedAll[6].uri).toEqual(feedUriAll)
     expect(paginatedAll.map((fg) => fg.uri)).not.toContain(feedUriPrime) // taken-down
     expect(forSnapshot(paginatedAll)).toMatchSnapshot()
   })
@@ -397,6 +411,22 @@ describe('feed generation', () => {
       expect(forSnapshot(resEven.data)).toMatchSnapshot()
       expect(resEven.data.isOnline).toBe(true)
       expect(resEven.data.isValid).toBe(true)
+    })
+
+    it('describes a feed gen & returns content mode', async () => {
+      const resEven = await agent.api.app.bsky.feed.getFeedGenerator(
+        { feed: feedUriContentModeVideo },
+        {
+          headers: await network.serviceHeaders(
+            sc.dids.bob,
+            ids.AppBskyFeedGetFeedGenerator,
+          ),
+        },
+      )
+      expect(forSnapshot(resEven.data)).toMatchSnapshot()
+      expect(resEven.data.view.contentMode).toBe(
+        'app.bsky.feed.defs#contentModeVideo',
+      )
     })
 
     it('does not describe taken-down feed', async () => {

@@ -49,7 +49,11 @@ export interface QueryParams {
   ignoreSubjects?: string[]
   /** Get all subject statuses that were reviewed by a specific moderator */
   lastReviewedBy?: string
-  sortField: 'lastReviewedAt' | 'lastReportedAt'
+  sortField:
+    | 'lastReviewedAt'
+    | 'lastReportedAt'
+    | 'reportedRecordsCount'
+    | 'takendownRecordsCount'
   sortDirection: 'asc' | 'desc'
   /** Get subjects that were taken down */
   takendown?: boolean
@@ -63,6 +67,12 @@ export interface QueryParams {
   collections?: string[]
   /** If specified, subjects of the given type (account or record) will be returned. When this is set to 'account' the 'collections' parameter will be ignored. When includeAllUserRecords or subject is set, this will be ignored. */
   subjectType?: 'account' | 'record' | (string & {})
+  /** If specified, only subjects that belong to an account that has at least this many suspensions will be returned. */
+  minAccountSuspendCount?: number
+  /** If specified, only subjects that belong to an account that has at least this many reported records will be returned. */
+  minReportedRecordsCount?: number
+  /** If specified, only subjects that belong to an account that has at least this many taken down records will be returned. */
+  minTakendownRecordsCount?: number
 }
 
 export type InputSchema = undefined
@@ -93,6 +103,7 @@ export type HandlerReqCtx<HA extends HandlerAuth = never> = {
   input: HandlerInput
   req: express.Request
   res: express.Response
+  resetRouteRateLimits: () => Promise<void>
 }
 export type Handler<HA extends HandlerAuth = never> = (
   ctx: HandlerReqCtx<HA>,

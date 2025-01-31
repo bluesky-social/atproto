@@ -181,6 +181,8 @@ export const APP_BSKY_FEED = {
   DefsClickthroughAuthor: 'app.bsky.feed.defs#clickthroughAuthor',
   DefsClickthroughReposter: 'app.bsky.feed.defs#clickthroughReposter',
   DefsClickthroughEmbed: 'app.bsky.feed.defs#clickthroughEmbed',
+  DefsContentModeUnspecified: 'app.bsky.feed.defs#contentModeUnspecified',
+  DefsContentModeVideo: 'app.bsky.feed.defs#contentModeVideo',
   DefsInteractionSeen: 'app.bsky.feed.defs#interactionSeen',
   DefsInteractionLike: 'app.bsky.feed.defs#interactionLike',
   DefsInteractionRepost: 'app.bsky.feed.defs#interactionRepost',
@@ -227,6 +229,7 @@ export class ComAtprotoNS {
   admin: ComAtprotoAdminNS
   identity: ComAtprotoIdentityNS
   label: ComAtprotoLabelNS
+  lexicon: ComAtprotoLexiconNS
   moderation: ComAtprotoModerationNS
   repo: ComAtprotoRepoNS
   server: ComAtprotoServerNS
@@ -238,6 +241,7 @@ export class ComAtprotoNS {
     this.admin = new ComAtprotoAdminNS(server)
     this.identity = new ComAtprotoIdentityNS(server)
     this.label = new ComAtprotoLabelNS(server)
+    this.lexicon = new ComAtprotoLexiconNS(server)
     this.moderation = new ComAtprotoModerationNS(server)
     this.repo = new ComAtprotoRepoNS(server)
     this.server = new ComAtprotoServerNS(server)
@@ -513,6 +517,14 @@ export class ComAtprotoLabelNS {
   ) {
     const nsid = 'com.atproto.label.subscribeLabels' // @ts-ignore
     return this._server.xrpc.streamMethod(nsid, cfg)
+  }
+}
+
+export class ComAtprotoLexiconNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
   }
 }
 
