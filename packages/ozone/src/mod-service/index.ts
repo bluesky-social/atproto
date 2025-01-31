@@ -1161,9 +1161,10 @@ export class ModerationService {
     labels: { create?: string[]; negate?: string[] },
     durationInHours?: number,
   ): Promise<Label[]> {
-    const exp = durationInHours
-      ? addHoursToDate(durationInHours).toISOString()
-      : undefined
+    const exp =
+      durationInHours !== undefined
+        ? addHoursToDate(durationInHours).toISOString()
+        : undefined
     const { create = [], negate = [] } = labels
     const toCreate = create.map((val) => ({
       src: this.cfg.service.did,

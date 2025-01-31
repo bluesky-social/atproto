@@ -515,8 +515,7 @@ describe('moderation', () => {
       await expect(getRepoLabels(sc.dids.bob)).resolves.toEqual(['kittens'])
     })
 
-    it.only('creates expiring label', async () => {
-      const { ctx } = ozone
+    it('creates expiring label', async () => {
       await emitLabelEvent({
         createLabelVals: ['temp'],
         negateLabelVals: [],
