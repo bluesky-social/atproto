@@ -24,6 +24,7 @@ import { EventReverser } from '../src'
 import { ImageInvalidator } from '../src/image-invalidator'
 import { TAKEDOWN_LABEL } from '../src/mod-service'
 import { ids } from '../src/lexicon/lexicons'
+import { HOUR } from '@atproto/common'
 
 describe('moderation', () => {
   let network: TestNetwork
@@ -514,6 +515,24 @@ describe('moderation', () => {
       await expect(getRepoLabels(sc.dids.bob)).resolves.toEqual(['kittens'])
     })
 
+    it('creates expiring label', async () => {
+      await emitLabelEvent({
+        createLabelVals: ['temp'],
+        negateLabelVals: [],
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: sc.dids.bob,
+        },
+        durationInHours: 24,
+      })
+      const repo = await getRepo(sc.dids.bob)
+      // Losely check that the expiry date is set to above 23 hours from now
+      expect(
+        `${repo?.labels?.[0].exp}` >
+          new Date(Date.now() + 23 * HOUR).toISOString(),
+      ).toBeTruthy()
+    })
+
     it('does not allow triage moderators to label.', async () => {
       const attemptLabel = modClient.emitEvent(
         {
@@ -708,14 +727,16 @@ describe('moderation', () => {
         subject: ToolsOzoneModerationEmitEvent.InputSchema['subject']
         createLabelVals: ModEventLabel['createLabelVals']
         negateLabelVals: ModEventLabel['negateLabelVals']
+        durationInHours?: ModEventLabel['durationInHours']
       },
     ) {
-      const { createLabelVals, negateLabelVals } = opts
+      const { createLabelVals, negateLabelVals, durationInHours } = opts
       const result = await modClient.emitEvent({
         event: {
           $type: 'tools.ozone.moderation.defs#modEventLabel',
           createLabelVals,
           negateLabelVals,
+          durationInHours,
         },
         createdBy: 'did:example:admin',
         reason: 'Y',
@@ -740,7 +761,7 @@ describe('moderation', () => {
     }
 
     async function getRecordLabels(uri: string) {
-      const result = await agent.api.tools.ozone.moderation.getRecord(
+      const result = await agent.tools.ozone.moderation.getRecord(
         { uri },
         {
           headers: await network.ozone.modHeaders(
@@ -752,8 +773,8 @@ describe('moderation', () => {
       return labels.map((l) => l.val)
     }
 
-    async function getRepoLabels(did: string) {
-      const result = await agent.api.tools.ozone.moderation.getRepo(
+    async function getRepo(did: string) {
+      const result = await agent.tools.ozone.moderation.getRepo(
         { did },
         {
           headers: await network.ozone.modHeaders(
@@ -761,7 +782,12 @@ describe('moderation', () => {
           ),
         },
       )
-      const labels = result.data.labels ?? []
+      return result.data
+    }
+
+    async function getRepoLabels(did: string) {
+      const result = await getRepo(did)
+      const labels = result.labels ?? []
       return labels.map((l) => l.val)
     }
   })
