@@ -207,6 +207,9 @@ const handleModerationEvent = async ({
             ? result.event.negateLabelVals.split(' ')
             : undefined,
         },
+        result.event.durationInHours
+          ? Number(result.event.durationInHours)
+          : undefined,
       )
     }
 

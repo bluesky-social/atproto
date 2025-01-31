@@ -374,6 +374,10 @@
         "negateLabelVals": {
           "type": "array",
           "items": { "type": "string" }
+        },
+        "durationInHours": {
+          "type": "integer",
+          "description": "Indicates how long the label will remain on the subject. Only applies on labels that are being added."
         }
       }
     },

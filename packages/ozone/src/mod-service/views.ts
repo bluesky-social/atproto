@@ -113,6 +113,7 @@ export class ModerationViews {
       [
         'tools.ozone.moderation.defs#modEventMuteReporter',
         'tools.ozone.moderation.defs#modEventTakedown',
+        'tools.ozone.moderation.defs#modEventLabel',
         'tools.ozone.moderation.defs#modEventMute',
       ].includes(event.action)
     ) {
