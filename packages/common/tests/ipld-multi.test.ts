@@ -23,7 +23,7 @@ describe('ipld decode multi', () => {
     expect(decoded[1]).toEqual(two)
   })
 
-  it('blah', async () => {
+  it('parses safe ints as number', async () => {
     const one = {
       test: Number.MAX_SAFE_INTEGER,
     }
