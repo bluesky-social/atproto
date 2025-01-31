@@ -18,9 +18,15 @@ cborx.addExtension({
   },
 })
 
+const decoder = new cborx.Decoder({
+  // @ts-ignore
+  int64AsNumber: true, // not in types for some reason
+  useRecords: false,
+})
+
 export const cborDecodeMulti = (encoded: Uint8Array): unknown[] => {
   const decoded: unknown[] = []
-  cborx.decodeMultiple(encoded, (value) => {
+  decoder.decodeMultiple(encoded, (value) => {
     decoded.push(value)
   })
   return decoded
