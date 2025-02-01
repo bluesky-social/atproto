@@ -1,5 +1,11 @@
 # @atproto/common
 
+## 0.4.7
+
+### Patch Changes
+
+- [#3481](https://github.com/bluesky-social/atproto/pull/3481) [`52c687a05`](https://github.com/bluesky-social/atproto/commit/52c687a05c70d5660fae1de9e1bbc6297f37f1f4) Thanks [@dholms](https://github.com/dholms)! - Parse safe uint64 as number
+
 ## 0.4.6
 
 ### Patch Changes

@@ -1,5 +1,12 @@
 # @atproto/oauth-provider
 
+## 0.2.16
+
+### Patch Changes
+
+- Updated dependencies [[`52c687a05`](https://github.com/bluesky-social/atproto/commit/52c687a05c70d5660fae1de9e1bbc6297f37f1f4)]:
+  - @atproto/common@0.4.7
+
 ## 0.2.15
 
 ### Patch Changes
