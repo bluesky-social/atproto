@@ -1,5 +1,18 @@
 # @atproto/xrpc-server
 
+## 0.7.9
+
+### Patch Changes
+
+- [#3439](https://github.com/bluesky-social/atproto/pull/3439) [`4f2841efe`](https://github.com/bluesky-social/atproto/commit/4f2841efeb410e710e0c8da7c9204468f6256a75) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Export the `ResponseType` type used in the `XRPCError` constructor
+
+- [#3439](https://github.com/bluesky-social/atproto/pull/3439) [`4f2841efe`](https://github.com/bluesky-social/atproto/commit/4f2841efeb410e710e0c8da7c9204468f6256a75) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow providing a custom `errorParser` option to XRPCServer
+
+- Updated dependencies [[`fb64d50ee`](https://github.com/bluesky-social/atproto/commit/fb64d50ee220316b9f1183e5c3259629489734c9), [`52c687a05`](https://github.com/bluesky-social/atproto/commit/52c687a05c70d5660fae1de9e1bbc6297f37f1f4)]:
+  - @atproto/xrpc@0.6.7
+  - @atproto/common@0.4.7
+  - @atproto/crypto@0.4.3
+
 ## 0.7.8
 
 ### Patch Changes
