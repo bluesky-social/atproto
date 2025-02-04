@@ -93,3 +93,12 @@ export const ensureHandleServiceConstraints = (
     throw new InvalidRequestError('Reserved handle', 'HandleNotAvailable')
   }
 }
+
+/**
+ * A handle is supported if it has the same number of subdomains as the host and ends with the host
+ * @param handle The handle to check
+ * @param host The host to check against
+ * @returns Whether the handle is supported
+ */
+export const isSupportedHandle = (handle: string, host: string): boolean =>
+  handle.split('.').length === host.split('.').length && handle.endsWith(host)
