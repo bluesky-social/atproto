@@ -43,7 +43,7 @@ Object {
           "lastReviewedAt": "1970-01-01T00:00:00.000Z",
           "lastReviewedBy": "user(1)",
           "recordsStats": Object {
-            "$type": "tools.ozone.moderation.defs#recordStats",
+            "$type": "tools.ozone.moderation.defs#recordsStats",
           },
           "reviewState": "tools.ozone.moderation.defs#reviewClosed",
           "subject": Object {

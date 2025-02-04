@@ -145,13 +145,19 @@ const noBlocksOrMutedReposts = (inputs: {
 }): Skeleton => {
   const { ctx, skeleton, hydration } = inputs
   const relationship = hydration.profileViewers?.get(skeleton.actor.did)
-  if (relationship?.blocking || relationship?.blockingByList) {
+  if (
+    relationship &&
+    (relationship.blocking || ctx.views.blockingByList(relationship, hydration))
+  ) {
     throw new InvalidRequestError(
       `Requester has blocked actor: ${skeleton.actor.did}`,
       'BlockedActor',
     )
   }
-  if (relationship?.blockedBy || relationship?.blockedByList) {
+  if (
+    relationship &&
+    (relationship.blockedBy || ctx.views.blockedByList(relationship, hydration))
+  ) {
     throw new InvalidRequestError(
       `Requester is blocked by actor: ${skeleton.actor.did}`,
       'BlockedByActor',

@@ -113,6 +113,7 @@ export class ModerationViews {
       [
         'tools.ozone.moderation.defs#modEventMuteReporter',
         'tools.ozone.moderation.defs#modEventTakedown',
+        'tools.ozone.moderation.defs#modEventLabel',
         'tools.ozone.moderation.defs#modEventMute',
       ].includes(event.action)
     ) {
@@ -628,7 +629,7 @@ export class ModerationViews {
 
       recordsStats: {
         // Explicitly typing to allow for easy manipulation (e.g. to strip from tests snapshots)
-        $type: 'tools.ozone.moderation.defs#recordStats',
+        $type: 'tools.ozone.moderation.defs#recordsStats',
 
         // account_record_events_stats
         totalReports: status.totalReports ?? undefined,

@@ -7,7 +7,7 @@ import {
   ProfileViewDetailed,
   ProfileView,
   ProfileViewBasic,
-  ViewerState as ProfileViewerState,
+  ViewerState as ProfileViewer,
 } from '../lexicon/types/app/bsky/actor/defs'
 import {
   BlockedPost,
@@ -35,7 +35,11 @@ import {
   VideoUriBuilder,
   parsePostgate,
 } from './util'
-import { uriToDid as creatorFromUri, safePinnedPost } from '../util/uris'
+import {
+  uriToDid as creatorFromUri,
+  safePinnedPost,
+  uriToDid,
+} from '../util/uris'
 import { isListRule } from '../lexicon/types/app/bsky/feed/threadgate'
 import { isSelfLabels } from '../lexicon/types/com/atproto/label/defs'
 import {
@@ -73,6 +77,7 @@ import {
 } from '../lexicon/types/app/bsky/labeler/defs'
 import { Notification } from '../proto/bsky_pb'
 import { postUriToThreadgateUri, postUriToPostgateUri } from '../util/uris'
+import { ProfileViewerState } from '../hydration/actor'
 
 export class Views {
   public imgUriBuilder: ImageUriBuilder = this.opts.imgUriBuilder
@@ -101,9 +106,10 @@ export class Views {
   }
 
   actorIsTakendown(did: string, state: HydrationState): boolean {
-    if (state.actors?.get(did)?.takedownRef) return true
-    if (state.actors?.get(did)?.upstreamStatus === 'takendown') return true
-    if (state.actors?.get(did)?.upstreamStatus === 'suspended') return true
+    const actor = state.actors?.get(did)
+    if (actor?.takedownRef) return true
+    if (actor?.upstreamStatus === 'takendown') return true
+    if (actor?.upstreamStatus === 'suspended') return true
     if (state.labels?.get(did)?.isTakendown) return true
     return false
   }
@@ -111,18 +117,45 @@ export class Views {
   viewerBlockExists(did: string, state: HydrationState): boolean {
     const actor = state.profileViewers?.get(did)
     if (!actor) return false
-    return (
-      !!actor.blockedBy ||
-      !!actor.blocking ||
-      !!actor.blockedByList ||
-      !!actor.blockingByList
+    return !!(
+      actor.blockedBy ||
+      actor.blocking ||
+      this.blockedByList(actor, state) ||
+      this.blockingByList(actor, state)
     )
   }
 
   viewerMuteExists(did: string, state: HydrationState): boolean {
     const actor = state.profileViewers?.get(did)
     if (!actor) return false
-    return actor.muted || !!actor.mutedByList
+    return !!(actor.muted || this.mutedByList(actor, state))
+  }
+
+  blockingByList(viewer: ProfileViewerState, state: HydrationState) {
+    return (
+      viewer.blockingByList && this.recordActive(viewer.blockingByList, state)
+    )
+  }
+
+  blockedByList(viewer: ProfileViewerState, state: HydrationState) {
+    return (
+      viewer.blockedByList && this.recordActive(viewer.blockedByList, state)
+    )
+  }
+
+  mutedByList(viewer: ProfileViewerState, state: HydrationState) {
+    return viewer.mutedByList && this.recordActive(viewer.mutedByList, state)
+  }
+
+  recordActive(uri: string, state: HydrationState) {
+    const did = uriToDid(uri)
+    const actor = state.actors?.get(did)
+    if (!actor || this.actorIsTakendown(did, state)) {
+      // actor may not be present when takedowns are eagerly applied during hydration.
+      // so it's important to _try_ to hydrate the actor for records checked this way.
+      return
+    }
+    return uri
   }
 
   viewerSeesNeedsReview(did: string, state: HydrationState): boolean {
@@ -276,24 +309,22 @@ export class Views {
     }
   }
 
-  profileViewer(
-    did: string,
-    state: HydrationState,
-  ): ProfileViewerState | undefined {
+  profileViewer(did: string, state: HydrationState): ProfileViewer | undefined {
     const viewer = state.profileViewers?.get(did)
     if (!viewer) return
-    const blockedByUri = viewer.blockedBy || viewer.blockedByList
-    const blockingUri = viewer.blocking || viewer.blockingByList
+    const blockedByList = this.blockedByList(viewer, state)
+    const blockedByUri = viewer.blockedBy || blockedByList
+    const blockingByList = this.blockingByList(viewer, state)
+    const blockingUri = viewer.blocking || blockingByList
     const block = !!blockedByUri || !!blockingUri
+    const mutedByList = this.mutedByList(viewer, state)
     return {
-      muted: viewer.muted || !!viewer.mutedByList,
-      mutedByList: viewer.mutedByList
-        ? this.listBasic(viewer.mutedByList, state)
-        : undefined,
+      muted: !!(viewer.muted || mutedByList),
+      mutedByList: mutedByList ? this.listBasic(mutedByList, state) : undefined,
       blockedBy: !!blockedByUri,
       blocking: blockingUri,
-      blockingByList: viewer.blockingByList
-        ? this.listBasic(viewer.blockingByList, state)
+      blockingByList: blockingByList
+        ? this.listBasic(blockingByList, state)
         : undefined,
       following: viewer.following && !block ? viewer.following : undefined,
       followedBy: viewer.followedBy && !block ? viewer.followedBy : undefined,
@@ -323,11 +354,11 @@ export class Views {
   blockedProfileViewer(
     did: string,
     state: HydrationState,
-  ): ProfileViewerState | undefined {
+  ): ProfileViewer | undefined {
     const viewer = state.profileViewers?.get(did)
     if (!viewer) return
-    const blockedByUri = viewer.blockedBy || viewer.blockedByList
-    const blockingUri = viewer.blocking || viewer.blockingByList
+    const blockedByUri = viewer.blockedBy || this.blockedByList(viewer, state)
+    const blockingUri = viewer.blocking || this.blockingByList(viewer, state)
     return {
       blockedBy: !!blockedByUri,
       blocking: blockingUri,

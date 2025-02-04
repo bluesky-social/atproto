@@ -19,6 +19,7 @@
     "verify:lint": "pnpm lint",
     "verify:types": "tsc --build tsconfig.json",
     "format": "pnpm lint:fix && pnpm style:fix",
+    "codegen": "pnpm run --recursive --stream --filter '@atproto/lex-cli...' build --force && pnpm run --recursive --stream --parallel codegen",
     "build": "pnpm --recursive --stream build",
     "dev": "NODE_ENV=development pnpm --stream '/^dev:.+$/'",
     "dev:tsc": "tsc --build tsconfig.json --watch",

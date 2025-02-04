@@ -90,7 +90,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getBlockExistence(req) {
     const { pairs } = req
     if (pairs.length === 0) {
-      return { exists: [] }
+      return { exists: [], blocks: [] }
     }
     const { ref } = db.db.dynamic
     const sourceRef = ref('pair.source')
@@ -101,48 +101,72 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .select([
         sql<string>`${sourceRef}`.as('source'),
         sql<string>`${targetRef}`.as('target'),
+        (eb) =>
+          eb
+            .selectFrom('actor_block')
+            .whereRef('actor_block.creator', '=', sourceRef)
+            .whereRef('actor_block.subjectDid', '=', targetRef)
+            .select('uri')
+            .as('blocking'),
+        (eb) =>
+          eb
+            .selectFrom('actor_block')
+            .whereRef('actor_block.creator', '=', targetRef)
+            .whereRef('actor_block.subjectDid', '=', sourceRef)
+            .select('uri')
+            .as('blockedBy'),
+        (eb) =>
+          eb
+            .selectFrom('list_item')
+            .innerJoin(
+              'list_block',
+              'list_block.subjectUri',
+              'list_item.listUri',
+            )
+            .whereRef('list_block.creator', '=', sourceRef)
+            .whereRef('list_item.subjectDid', '=', targetRef)
+            .select('list_item.listUri')
+            .as('blockingByList'),
+        (eb) =>
+          eb
+            .selectFrom('list_item')
+            .innerJoin(
+              'list_block',
+              'list_block.subjectUri',
+              'list_item.listUri',
+            )
+            .whereRef('list_block.creator', '=', targetRef)
+            .whereRef('list_item.subjectDid', '=', sourceRef)
+            .select('list_item.listUri')
+            .as('blockedByList'),
       ])
-      .whereExists((qb) =>
-        qb
-          .selectFrom('actor_block')
-          .whereRef('actor_block.creator', '=', sourceRef)
-          .whereRef('actor_block.subjectDid', '=', targetRef)
-          .select('uri'),
-      )
-      .orWhereExists((qb) =>
-        qb
-          .selectFrom('actor_block')
-          .whereRef('actor_block.creator', '=', targetRef)
-          .whereRef('actor_block.subjectDid', '=', sourceRef)
-          .select('uri'),
-      )
-      .orWhereExists((qb) =>
-        qb
-          .selectFrom('list_item')
-          .innerJoin('list_block', 'list_block.subjectUri', 'list_item.listUri')
-          .whereRef('list_block.creator', '=', sourceRef)
-          .whereRef('list_item.subjectDid', '=', targetRef)
-          .select('list_item.listUri'),
-      )
-      .orWhereExists((qb) =>
-        qb
-          .selectFrom('list_item')
-          .innerJoin('list_block', 'list_block.subjectUri', 'list_item.listUri')
-          .whereRef('list_block.creator', '=', targetRef)
-          .whereRef('list_item.subjectDid', '=', sourceRef)
-          .select('list_item.listUri'),
-      )
       .execute()
-    const existMap = res.reduce((acc, cur) => {
-      const key = [cur.source, cur.target].sort().join(',')
-      return acc.set(key, true)
-    }, new Map<string, boolean>())
-    const exists = pairs.map((pair) => {
-      const key = [pair.a, pair.b].sort().join(',')
-      return existMap.get(key) === true
-    })
+    const getKey = (a, b) => [a, b].sort().join(',')
+    const lookup = res.reduce((acc, cur) => {
+      const key = getKey(cur.source, cur.target)
+      return acc.set(key, cur)
+    }, new Map<string, (typeof res)[0]>())
     return {
-      exists,
+      exists: pairs.map((pair) => {
+        const item = lookup.get(getKey(pair.a, pair.b))
+        if (!item) return false
+        return !!(
+          item.blocking ||
+          item.blockedBy ||
+          item.blockingByList ||
+          item.blockedByList
+        )
+      }),
+      blocks: pairs.map((pair) => {
+        const item = lookup.get(getKey(pair.a, pair.b))
+        if (!item) return {}
+        return {
+          blockedBy: item.blockedBy || undefined,
+          blocking: item.blocking || undefined,
+          blockedByList: item.blockedByList || undefined,
+          blockingByList: item.blockingByList || undefined,
+        }
+      }),
     }
   },
 })

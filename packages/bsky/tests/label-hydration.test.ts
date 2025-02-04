@@ -73,8 +73,11 @@ describe('label hydration', () => {
     expect(res.data.labels?.find((l) => l.src === labelerDid)?.val).toEqual(
       'misleading',
     )
-    const labelerHeaderDids = res.headers['atproto-content-labelers'].split(',')
-    expect(labelerHeaderDids.sort()).toEqual(
+    const labelerHeaderDids = res.headers['atproto-content-labelers']
+      ?.split(',')
+      .sort()
+
+    expect(labelerHeaderDids).toEqual(
       [alice, `${bob};redact`, labelerDid].sort(),
     )
   })

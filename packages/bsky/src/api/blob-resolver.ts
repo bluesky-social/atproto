@@ -28,6 +28,7 @@ import {
 import { parseCid } from '../hydration/util'
 import { httpLogger as log } from '../logger'
 import { Middleware, proxyResponseHeaders, responseSignal } from '../util/http'
+import { BSKY_USER_AGENT } from './util'
 
 export function createMiddleware(ctx: AppContext): Middleware {
   return async (req, res, next) => {
@@ -297,6 +298,8 @@ function getBlobHeaders(
   url: URL,
 ): Map<string, string> {
   const headers = new Map<string, string>()
+
+  headers.set('user-agent', BSKY_USER_AGENT)
 
   if (bypassKey && bypassHostname) {
     const matchesUrl = bypassHostname.startsWith('.')

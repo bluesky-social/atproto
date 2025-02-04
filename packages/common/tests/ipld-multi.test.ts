@@ -22,4 +22,13 @@ describe('ipld decode multi', () => {
     expect(decoded[0]).toEqual(one)
     expect(decoded[1]).toEqual(two)
   })
+
+  it('parses safe ints as number', async () => {
+    const one = {
+      test: Number.MAX_SAFE_INTEGER,
+    }
+    const encoded = cborEncode(one)
+    const decoded = cborDecodeMulti(encoded)
+    expect(Number.isInteger(decoded[0]?.['test'])).toBe(true)
+  })
 })

@@ -1159,13 +1159,19 @@ export class ModerationService {
     uri: string,
     cid: string | null,
     labels: { create?: string[]; negate?: string[] },
+    durationInHours?: number,
   ): Promise<Label[]> {
+    const exp =
+      durationInHours !== undefined
+        ? addHoursToDate(durationInHours).toISOString()
+        : undefined
     const { create = [], negate = [] } = labels
     const toCreate = create.map((val) => ({
       src: this.cfg.service.did,
       uri,
       cid: cid ?? undefined,
       val,
+      exp,
       cts: new Date().toISOString(),
     }))
     const toNegate = negate.map((val) => ({

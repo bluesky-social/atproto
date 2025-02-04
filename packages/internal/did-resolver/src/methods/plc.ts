@@ -45,6 +45,7 @@ export class DidPlcMethod implements DidMethod<'plc'> {
     // should still check if the msid is valid.
     assertDidPlc(did)
 
+    // Should never throw
     const url = new URL(`/${encodeURIComponent(did)}`, this.plcDirectoryUrl)
 
     return this.fetch(url, {
