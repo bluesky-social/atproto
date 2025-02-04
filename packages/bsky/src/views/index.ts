@@ -1163,10 +1163,14 @@ export class Views {
     const ownerDid = creatorFromUri(rootUriStr)
     const {
       canReply,
+      allowFollower,
       allowFollowing,
       allowListUris = [],
     } = parseThreadGate(viewer, ownerDid, rootPost ?? null, gate)
     if (canReply) {
+      return false
+    }
+    if (allowFollower && state.profileViewers?.get(ownerDid)?.following) {
       return false
     }
     if (allowFollowing && state.profileViewers?.get(ownerDid)?.followedBy) {

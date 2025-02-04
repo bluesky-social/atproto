@@ -7339,6 +7339,7 @@ export const schemaDict = {
                 type: 'union',
                 refs: [
                   'lex:app.bsky.feed.threadgate#mentionRule',
+                  'lex:app.bsky.feed.threadgate#followerRule',
                   'lex:app.bsky.feed.threadgate#followingRule',
                   'lex:app.bsky.feed.threadgate#listRule',
                 ],
@@ -7363,6 +7364,11 @@ export const schemaDict = {
       mentionRule: {
         type: 'object',
         description: 'Allow replies from actors mentioned in your post.',
+        properties: {},
+      },
+      followerRule: {
+        type: 'object',
+        description: 'Allow replies from actors who follow you.',
         properties: {},
       },
       followingRule: {

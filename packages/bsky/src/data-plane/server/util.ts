@@ -100,13 +100,14 @@ export const violatesThreadGate = async (
 ) => {
   const {
     canReply,
+    allowFollower,
     allowFollowing,
     allowListUris = [],
   } = parseThreadGate(replierDid, ownerDid, rootPost, gate)
   if (canReply) {
     return false
   }
-  if (!allowFollowing && !allowListUris?.length) {
+  if (!allowFollower && !allowFollowing && !allowListUris?.length) {
     return true
   }
   const { ref } = db.dynamic
@@ -114,6 +115,14 @@ export const violatesThreadGate = async (
   const check = await db
     .selectFrom(valuesList([replierDid]).as(sql`subject (did)`))
     .select([
+      allowFollower
+        ? db
+            .selectFrom('follow')
+            .where('subjectDid', '=', ownerDid)
+            .whereRef('creator', '=', ref('subject.did'))
+            .select('subjectDid')
+            .as('isFollower')
+        : nullResult.as('isFollower'),
       allowFollowing
         ? db
             .selectFrom('follow')
@@ -135,6 +144,8 @@ export const violatesThreadGate = async (
     .executeTakeFirst()
 
   if (allowFollowing && check?.isFollowed) {
+    return false
+  } else if (allowFollower && check?.isFollower) {
     return false
   } else if (allowListUris.length && check?.isInList) {
     return false
