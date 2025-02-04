@@ -4381,6 +4381,7 @@ export const schemaDict = {
             'lex:app.bsky.actor.defs#hiddenPostsPref',
             'lex:app.bsky.actor.defs#bskyAppStatePref',
             'lex:app.bsky.actor.defs#labelersPref',
+            'lex:app.bsky.actor.defs#postInteractionSettingsPref',
           ],
         },
       },
@@ -4711,6 +4712,34 @@ export const schemaDict = {
             format: 'datetime',
             description:
               'The date and time at which the NUX will expire and should be considered completed.',
+          },
+        },
+      },
+      postInteractionSettingsPref: {
+        type: 'object',
+        description:
+          'Default post interaction settings for the account. Should mirror the ruleset defs of the threadgate and postgate records exactly.',
+        required: ['threadgateAllowRules', 'postgateEmbeddingRules'],
+        properties: {
+          threadgateAllowRules: {
+            type: 'array',
+            maxLength: 5,
+            items: {
+              type: 'union',
+              refs: [
+                'lex:app.bsky.feed.threadgate#mentionRule',
+                'lex:app.bsky.feed.threadgate#followingRule',
+                'lex:app.bsky.feed.threadgate#listRule',
+              ],
+            },
+          },
+          postgateEmbeddingRules: {
+            type: 'array',
+            maxLength: 5,
+            items: {
+              type: 'union',
+              refs: ['lex:app.bsky.feed.postgate#disableRule'],
+            },
           },
         },
       },

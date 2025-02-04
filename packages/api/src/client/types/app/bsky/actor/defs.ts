@@ -8,6 +8,8 @@ import { CID } from 'multiformats/cid'
 import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
 import * as AppBskyGraphDefs from '../graph/defs'
 import * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef'
+import * as AppBskyFeedThreadgate from '../feed/threadgate'
+import * as AppBskyFeedPostgate from '../feed/postgate'
 
 export interface ProfileViewBasic {
   did: string
@@ -188,6 +190,7 @@ export type Preferences = (
   | HiddenPostsPref
   | BskyAppStatePref
   | LabelersPref
+  | PostInteractionSettingsPref
   | { $type: string; [k: string]: unknown }
 )[]
 
@@ -531,4 +534,35 @@ export function isNux(v: unknown): v is Nux {
 
 export function validateNux(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.actor.defs#nux', v)
+}
+
+/** Default post interaction settings for the account. Should mirror the ruleset defs of the threadgate and postgate records exactly. */
+export interface PostInteractionSettingsPref {
+  threadgateAllowRules: (
+    | AppBskyFeedThreadgate.MentionRule
+    | AppBskyFeedThreadgate.FollowingRule
+    | AppBskyFeedThreadgate.ListRule
+    | { $type: string; [k: string]: unknown }
+  )[]
+  postgateEmbeddingRules: (
+    | AppBskyFeedPostgate.DisableRule
+    | { $type: string; [k: string]: unknown }
+  )[]
+  [k: string]: unknown
+}
+
+export function isPostInteractionSettingsPref(
+  v: unknown,
+): v is PostInteractionSettingsPref {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.actor.defs#postInteractionSettingsPref'
+  )
+}
+
+export function validatePostInteractionSettingsPref(
+  v: unknown,
+): ValidationResult {
+  return lexicons.validate('app.bsky.actor.defs#postInteractionSettingsPref', v)
 }

@@ -174,7 +174,8 @@
           "#mutedWordsPref",
           "#hiddenPostsPref",
           "#bskyAppStatePref",
-          "#labelersPref"
+          "#labelersPref",
+          "#postInteractionSettingsPref"
         ]
       }
     },
@@ -466,6 +467,33 @@
           "type": "string",
           "format": "datetime",
           "description": "The date and time at which the NUX will expire and should be considered completed."
+        }
+      }
+    },
+    "postInteractionSettingsPref": {
+      "type": "object",
+      "description": "Default post interaction settings for the account. Should mirror the ruleset defs of the threadgate and postgate records exactly.",
+      "required": ["threadgateAllowRules", "postgateEmbeddingRules"],
+      "properties": {
+        "threadgateAllowRules": {
+          "type": "array",
+          "maxLength": 5,
+          "items": {
+            "type": "union",
+            "refs": [
+              "app.bsky.feed.threadgate#mentionRule",
+              "app.bsky.feed.threadgate#followingRule",
+              "app.bsky.feed.threadgate#listRule"
+            ]
+          }
+        },
+        "postgateEmbeddingRules": {
+          "type": "array",
+          "maxLength": 5,
+          "items": {
+            "type": "union",
+            "refs": ["app.bsky.feed.postgate#disableRule"]
+          }
         }
       }
     }
