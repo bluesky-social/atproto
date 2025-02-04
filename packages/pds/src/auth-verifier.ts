@@ -479,7 +479,6 @@ export class AuthVerifier {
       const dpopNonce = this.oauthVerifier.nextDpopNonce()
       if (dpopNonce) {
         res.setHeader('DPoP-Nonce', dpopNonce)
-        res.appendHeader('Access-Control-Expose-Headers', 'DPoP-Nonce')
       }
     }
 
@@ -549,7 +548,6 @@ export class AuthVerifier {
       // (particularly useful for DPoP's "use_dpop_nonce" error)
       if (res && err instanceof WWWAuthenticateError) {
         res.setHeader('WWW-Authenticate', err.wwwAuthenticateHeader)
-        res.appendHeader('Access-Control-Expose-Headers', 'WWW-Authenticate')
       }
 
       if (err instanceof OAuthError) {
