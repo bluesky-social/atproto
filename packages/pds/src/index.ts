@@ -124,7 +124,21 @@ export class PDS {
     app.use(loggerMiddleware)
     app.use(compression())
     app.use(authRoutes.createRouter(ctx)) // Before CORS
-    app.use(cors({ maxAge: DAY / SECOND }))
+    app.use(
+      cors({
+        maxAge: DAY / SECOND,
+        exposedHeaders: [
+          // OAuth headers
+          'DPoP-Nonce',
+          'WWW-Authenticate',
+          // Ratelimit headers
+          'Ratelimit-Limit',
+          'Ratelimit-Policy',
+          'Ratelimit-Remaining',
+          'Ratelimit-Reset',
+        ],
+      }),
+    )
     app.use(basicRoutes.createRouter(ctx))
     app.use(wellKnown.createRouter(ctx))
     app.use(server.xrpc.router)
