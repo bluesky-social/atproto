@@ -11148,6 +11148,7 @@ export const schemaDict = {
               'lex:tools.ozone.moderation.defs#accountEvent',
               'lex:tools.ozone.moderation.defs#identityEvent',
               'lex:tools.ozone.moderation.defs#recordEvent',
+              'lex:tools.ozone.moderation.defs#modEventPriorityScore',
             ],
           },
           subject: {
@@ -11215,6 +11216,7 @@ export const schemaDict = {
               'lex:tools.ozone.moderation.defs#accountEvent',
               'lex:tools.ozone.moderation.defs#identityEvent',
               'lex:tools.ozone.moderation.defs#recordEvent',
+              'lex:tools.ozone.moderation.defs#modEventPriorityScore',
             ],
           },
           subject: {
@@ -11293,6 +11295,13 @@ export const schemaDict = {
           comment: {
             type: 'string',
             description: 'Sticky comment on the subject.',
+          },
+          priorityScore: {
+            type: 'integer',
+            description:
+              'Numeric value representing the level of priority. Higher score means higher priority.',
+            minimum: 0,
+            maximum: 100,
           },
           muteUntil: {
             type: 'string',
@@ -11553,6 +11562,27 @@ export const schemaDict = {
             type: 'integer',
             description:
               'Indicates how long the label will remain on the subject. Only applies on labels that are being added.',
+          },
+        },
+      },
+      modEventPriorityScore: {
+        type: 'object',
+        description:
+          'Set priority score of the subject. Higher score means higher priority.',
+        required: ['score'],
+        properties: {
+          comment: {
+            type: 'string',
+          },
+          score: {
+            type: 'integer',
+            minimum: 0,
+            maximum: 100,
+          },
+          durationInHours: {
+            type: 'integer',
+            description:
+              'Indicates how long the priority score will be in effect. It will be set to 0 after this duration.',
           },
         },
       },
@@ -12179,6 +12209,7 @@ export const schemaDict = {
                   'lex:tools.ozone.moderation.defs#accountEvent',
                   'lex:tools.ozone.moderation.defs#identityEvent',
                   'lex:tools.ozone.moderation.defs#recordEvent',
+                  'lex:tools.ozone.moderation.defs#modEventPriorityScore',
                 ],
               },
               subject: {
@@ -12675,6 +12706,7 @@ export const schemaDict = {
                 'lastReportedAt',
                 'reportedRecordsCount',
                 'takendownRecordsCount',
+                'priorityScore',
               ],
             },
             sortDirection: {

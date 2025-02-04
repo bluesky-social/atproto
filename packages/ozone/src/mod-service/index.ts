@@ -24,6 +24,7 @@ import {
   REVIEWESCALATED,
   REVIEWOPEN,
   isModEventAcknowledge,
+  isModEventPriorityScore,
 } from '../lexicon/types/tools/ozone/moderation/defs'
 import { RepoRef, RepoBlobRef } from '../lexicon/types/com/atproto/admin/defs'
 import {
@@ -403,7 +404,7 @@ export class ModerationService {
         ? event.negateLabelVals.join(' ')
         : undefined
 
-    const meta: Record<string, string | boolean> = {}
+    const meta: Record<string, string | number | boolean> = {}
 
     const addedTags = isModEventTag(event) ? jsonb(event.add) : null
     const removedTags = isModEventTag(event) ? jsonb(event.remove) : null
@@ -427,6 +428,10 @@ export class ModerationService {
       meta.active = event.active
       meta.timestamp = event.timestamp
       if (event.status) meta.status = event.status
+    }
+
+    if (isModEventPriorityScore(event)) {
+      meta.priorityScore = event.score
     }
 
     if (isIdentityEvent(event)) {
@@ -1103,7 +1108,9 @@ export class ModerationService {
         ? ref(`account_record_events_stats.reportedCount`)
         : sortField === 'takendownRecordsCount'
           ? ref(`account_record_status_stats.takendownCount`)
-          : ref(`moderation_subject_status.${sortField}`),
+          : sortField === 'priorityScore'
+            ? ref(`moderation_subject_status.priorityScore`)
+            : ref(`moderation_subject_status.${sortField}`),
       ref('moderation_subject_status.id'),
     )
     const paginatedBuilder = paginate(builder, {
@@ -1114,6 +1121,7 @@ export class ModerationService {
       tryIndex: true,
       nullsLast: true,
     })
+    console.log(paginatedBuilder.compile())
     const results = await paginatedBuilder.execute()
 
     const infos = await this.views.getAccoutInfosByDid(

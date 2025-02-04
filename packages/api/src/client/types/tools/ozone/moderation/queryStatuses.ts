@@ -53,6 +53,7 @@ export interface QueryParams {
     | 'lastReportedAt'
     | 'reportedRecordsCount'
     | 'takendownRecordsCount'
+    | 'priorityScore'
   sortDirection?: 'asc' | 'desc'
   /** Get subjects that were taken down */
   takendown?: boolean

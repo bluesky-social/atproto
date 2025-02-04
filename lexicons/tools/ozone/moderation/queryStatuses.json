@@ -111,7 +111,8 @@
               "lastReviewedAt",
               "lastReportedAt",
               "reportedRecordsCount",
-              "takendownRecordsCount"
+              "takendownRecordsCount",
+              "priorityScore"
             ]
           },
           "sortDirection": {
