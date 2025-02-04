@@ -40,9 +40,7 @@ describe('blob deletes', () => {
   })
 
   const getDbBlobsForDid = (did: string) => {
-    return ctx.actorStore.read(did, (store) =>
-      store.db.db.selectFrom('blob').selectAll().execute(),
-    )
+    return ctx.actorStore.read(did, (store) => store.repo.blob.getBlobCids())
   }
 
   it('deletes blob when record is deleted', async () => {
@@ -79,7 +77,7 @@ describe('blob deletes', () => {
 
     const dbBlobs = await getDbBlobsForDid(alice)
     expect(dbBlobs.length).toBe(1)
-    expect(dbBlobs[0].cid).toEqual(img2.image.ref.toString())
+    expect(dbBlobs[0].toString()).toEqual(img2.image.ref.toString())
 
     const hasImg = await ctx.blobstore(alice).hasStored(img.image.ref)
     expect(hasImg).toBeFalsy()

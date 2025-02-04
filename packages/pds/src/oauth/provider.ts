@@ -5,15 +5,10 @@ import {
 } from '@atproto/oauth-provider'
 
 import { AccountManager } from '../account-manager/index'
-import { ActorStore } from '../actor-store/index'
 import { oauthLogger } from '../logger'
-import { LocalViewerCreator } from '../read-after-write/index'
-import { DetailedAccountStore } from './detailed-account-store'
 
 export type AuthProviderOptions = {
   accountManager: AccountManager
-  actorStore: ActorStore
-  localViewer: LocalViewerCreator
 } & Pick<
   OAuthProviderOptions,
   'issuer' | 'redis' | 'keyset' | 'dpopSecret' | 'customization'
@@ -23,8 +18,6 @@ export type AuthProviderOptions = {
 export class PdsOAuthProvider extends OAuthProvider {
   constructor({
     accountManager,
-    actorStore,
-    localViewer,
     keyset,
     redis,
     dpopSecret,
@@ -39,6 +32,7 @@ export class PdsOAuthProvider extends OAuthProvider {
       redis,
       safeFetch,
       customization,
+      store: accountManager,
       metadata: {
         // PdsOAuthProvider is used when the PDS is both an authorization server
         // & resource server, in which case the issuer origin is also the
@@ -47,15 +41,6 @@ export class PdsOAuthProvider extends OAuthProvider {
 
         scopes_supported: ['transition:generic', 'transition:chat.bsky'],
       },
-
-      accountStore: new DetailedAccountStore(
-        accountManager,
-        actorStore,
-        localViewer,
-      ),
-      requestStore: accountManager,
-      deviceStore: accountManager,
-      tokenStore: accountManager,
 
       // If the PDS is both an authorization server & resource server (no
       // entryway), there is no need to use JWTs as access tokens. Instead,

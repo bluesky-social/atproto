@@ -8,8 +8,8 @@ import {
 } from '../../../../read-after-write'
 
 export default function (server: Server, ctx: AppContext) {
-  const { bskyAppView } = ctx.cfg
-  if (!bskyAppView) return
+  if (!ctx.bskyAppView) return
+
   server.app.bsky.actor.getProfiles({
     auth: ctx.authVerifier.accessStandard(),
     handler: async (reqCtx) => {

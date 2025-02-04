@@ -38,6 +38,21 @@ export class BlobTransactor extends BlobReader {
     super(db, blobstore)
   }
 
+  async insertBlobs(recordUri: string, blobs: Iterable<BlobRef>) {
+    const values = Array.from(blobs, (cid) => ({
+      recordUri,
+      blobCid: cid.ref.toString(),
+    }))
+
+    if (values.length) {
+      await this.db.db
+        .insertInto('record_blob')
+        .values(values)
+        .onConflict((oc) => oc.doNothing())
+        .execute()
+    }
+  }
+
   async uploadBlobAndGetMetadata(
     userSuggestedMime: string,
     blobStream: stream.Readable,

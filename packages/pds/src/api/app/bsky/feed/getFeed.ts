@@ -6,16 +6,16 @@ import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/oauth-provider'
 
 export default function (server: Server, ctx: AppContext) {
-  const { appViewAgent } = ctx
-  const { bskyAppView } = ctx.cfg
-  if (!appViewAgent || !bskyAppView) return
+  const { bskyAppView } = ctx
+  if (!bskyAppView) return
+
   server.app.bsky.feed.getFeed({
     auth: ctx.authVerifier.accessStandard(),
     handler: async ({ params, auth, req }) => {
       const requester = auth.credentials.did
 
       const feedUrl = new AtUri(params.feed)
-      const { data } = await appViewAgent.com.atproto.repo.getRecord({
+      const { data } = await bskyAppView.agent.com.atproto.repo.getRecord({
         repo: feedUrl.hostname,
         collection: feedUrl.collection,
         rkey: feedUrl.rkey,

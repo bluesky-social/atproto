@@ -4,7 +4,8 @@ import AppContext from '../../../../context'
 import { AccountPreference } from '../../../../actor-store/preference/reader'
 
 export default function (server: Server, ctx: AppContext) {
-  if (!ctx.cfg.bskyAppView) return
+  if (!ctx.bskyAppView) return
+
   server.app.bsky.actor.putPreferences({
     auth: ctx.authVerifier.accessStandard({ checkTakedown: true }),
     handler: async ({ auth, input }) => {

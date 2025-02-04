@@ -1,12 +1,21 @@
+import { RepoRecord } from '@atproto/lexicon'
+import { cborToLexRecord, CidSet, formatDataKey } from '@atproto/repo'
 import * as syntax from '@atproto/syntax'
 import { AtUri, ensureValidAtUri } from '@atproto/syntax'
-import { cborToLexRecord } from '@atproto/repo'
 import { CID } from 'multiformats/cid'
 import { countAll, notSoftDeletedClause } from '../../db/util'
 import { ids } from '../../lexicon/lexicons'
-import { ActorDb, Backlink } from '../db'
+import { Record as ProfileRecord } from '../../lexicon/types/app/bsky/actor/profile'
+import { Record as PostRecord } from '../../lexicon/types/app/bsky/feed/post'
 import { StatusAttr } from '../../lexicon/types/com/atproto/admin/defs'
-import { RepoRecord } from '@atproto/lexicon'
+import { LocalRecords } from '../../read-after-write/types'
+import { ActorDb, Backlink } from '../db'
+
+export type RecordDescript = {
+  uri: string
+  path: string
+  cid: CID
+}
 
 export class RecordReader {
   constructor(public db: ActorDb) {}
@@ -17,6 +26,30 @@ export class RecordReader {
       .select(countAll.as('count'))
       .executeTakeFirst()
     return res?.count ?? 0
+  }
+
+  async listAll(): Promise<RecordDescript[]> {
+    const records: RecordDescript[] = []
+    let cursor: string | undefined = ''
+    while (cursor !== undefined) {
+      const res = await this.db.db
+        .selectFrom('record')
+        .select(['uri', 'cid'])
+        .where('uri', '>', cursor)
+        .orderBy('uri', 'asc')
+        .limit(1000)
+        .execute()
+      for (const row of res) {
+        const parsed = new AtUri(row.uri)
+        records.push({
+          uri: row.uri,
+          path: formatDataKey(parsed.collection, parsed.rkey),
+          cid: CID.parse(row.cid),
+        })
+      }
+      cursor = res.at(-1)?.uri
+    }
+    return records
   }
 
   async listCollections(): Promise<string[]> {
@@ -193,6 +226,94 @@ export class RecordReader {
     return conflicts
       .flat()
       .map(({ rkey }) => AtUri.make(uri.hostname, uri.collection, rkey))
+  }
+
+  async listExistingBlocks(): Promise<CidSet> {
+    const cids = new CidSet()
+    let cursor: string | undefined = ''
+    while (cursor !== undefined) {
+      const res = await this.db.db
+        .selectFrom('repo_block')
+        .select('cid')
+        .where('cid', '>', cursor)
+        .orderBy('cid', 'asc')
+        .limit(1000)
+        .execute()
+      for (const row of res) {
+        cids.add(CID.parse(row.cid))
+      }
+      cursor = res.at(-1)?.cid
+    }
+    return cids
+  }
+
+  async getProfileRecord() {
+    const row = await this.db.db
+      .selectFrom('record')
+      .leftJoin('repo_block', 'repo_block.cid', 'record.cid')
+      .where('record.collection', '=', ids.AppBskyActorProfile)
+      .where('record.rkey', '=', 'self')
+      .selectAll()
+      .executeTakeFirst()
+
+    if (!row?.content) return null
+
+    return cborToLexRecord(row.content) as ProfileRecord
+  }
+
+  async getRecordsSinceRev(rev: string): Promise<LocalRecords> {
+    const result: LocalRecords = { count: 0, profile: null, posts: [] }
+
+    const res = await this.db.db
+      .selectFrom('record')
+      .innerJoin('repo_block', 'repo_block.cid', 'record.cid')
+      .select([
+        'repo_block.content',
+        'uri',
+        'repo_block.cid',
+        'record.indexedAt',
+      ])
+      .where('record.repoRev', '>', rev)
+      .limit(10)
+      .orderBy('record.repoRev', 'asc')
+      .execute()
+
+    // sanity check to ensure that the clock received is not before _all_ local records (for instance in case of account migration)
+    if (res.length > 0) {
+      const sanityCheckRes = await this.db.db
+        .selectFrom('record')
+        .selectAll()
+        .where('record.repoRev', '<=', rev)
+        .limit(1)
+        .executeTakeFirst()
+
+      if (!sanityCheckRes) {
+        return result
+      }
+    }
+
+    for (const cur of res) {
+      result.count++
+
+      const uri = new AtUri(cur.uri)
+      if (uri.collection === ids.AppBskyActorProfile && uri.rkey === 'self') {
+        result.profile = {
+          uri,
+          cid: CID.parse(cur.cid),
+          indexedAt: cur.indexedAt,
+          record: cborToLexRecord(cur.content) as ProfileRecord,
+        }
+      } else if (uri.collection === ids.AppBskyFeedPost) {
+        result.posts.push({
+          uri,
+          cid: CID.parse(cur.cid),
+          indexedAt: cur.indexedAt,
+          record: cborToLexRecord(cur.content) as PostRecord,
+        })
+      }
+    }
+
+    return result
   }
 }
 

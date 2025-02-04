@@ -19,13 +19,14 @@ export class SqlRepoReader extends ReadableBlockstore {
 
   async getRoot(): Promise<CID> {
     const root = await this.getRootDetailed()
-    return root?.cid ?? null
+    return root.cid
   }
 
   async getRootDetailed(): Promise<{ cid: CID; rev: string }> {
     const res = await this.db.db
       .selectFrom('repo_root')
-      .selectAll()
+      .select(['cid', 'rev'])
+      .limit(1)
       .executeTakeFirstOrThrow()
     return {
       cid: CID.parse(res.cid),

@@ -1,29 +1,27 @@
-import path from 'path'
-import assert from 'assert'
-import fs from 'fs/promises'
-import * as crypto from '@atproto/crypto'
-import { Keypair, ExportableKeypair } from '@atproto/crypto'
-import { BlobStore } from '@atproto/repo'
 import {
   chunkArray,
   fileExists,
   readIfExists,
   rmIfExists,
 } from '@atproto/common'
-import { ActorDb, getDb, getMigrator } from './db'
-import { BackgroundQueue } from '../background'
-import { RecordReader } from './record/reader'
-import { PreferenceReader } from './preference/reader'
-import { RepoReader } from './repo/reader'
-import { RepoTransactor } from './repo/transactor'
-import { PreferenceTransactor } from './preference/transactor'
+import * as crypto from '@atproto/crypto'
+import { ExportableKeypair, Keypair } from '@atproto/crypto'
+import { BlobStore } from '@atproto/repo'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { RecordTransactor } from './record/transactor'
-import { CID } from 'multiformats/cid'
-import DiskBlobStore from '../disk-blobstore'
-import { mkdir } from 'fs/promises'
+import assert from 'node:assert'
+import fs, { mkdir } from 'node:fs/promises'
+import path from 'node:path'
+import { BackgroundQueue } from '../background'
 import { ActorStoreConfig } from '../config'
 import { retrySqlite } from '../db'
+import DiskBlobStore from '../disk-blobstore'
+import { ActorDb, getDb, getMigrator } from './db'
+import { PreferenceReader } from './preference/reader'
+import { PreferenceTransactor } from './preference/transactor'
+import { RecordReader } from './record/reader'
+import { RecordTransactor } from './record/transactor'
+import { RepoReader } from './repo/reader'
+import { RepoTransactor } from './repo/transactor'
 
 type ActorStoreResources = {
   blobstore: (did: string) => BlobStore
@@ -85,10 +83,8 @@ export class ActorStore {
   async read<T>(did: string, fn: ActorStoreReadFn<T>) {
     const db = await this.openDb(did)
     try {
-      const reader = createActorReader(did, db, this.resources, () =>
-        this.keypair(did),
-      )
-      return await fn(reader)
+      const getKeypair = () => this.keypair(did)
+      return await fn(new ActorStoreReader(did, db, this.resources, getKeypair))
     } finally {
       db.close()
     }
@@ -99,8 +95,7 @@ export class ActorStore {
     const db = await this.openDb(did)
     try {
       return await db.transaction((dbTxn) => {
-        const store = createActorTransactor(did, dbTxn, keypair, this.resources)
-        return fn(store)
+        return fn(new ActorStoreTransactor(did, dbTxn, keypair, this.resources))
       })
     } finally {
       db.close()
@@ -111,21 +106,7 @@ export class ActorStore {
     const keypair = await this.keypair(did)
     const db = await this.openDb(did)
     try {
-      const writer = createActorTransactor(did, db, keypair, this.resources)
-      return await fn({
-        ...writer,
-        transact: async <T>(fn: ActorStoreTransactFn<T>): Promise<T> => {
-          return db.transaction((dbTxn) => {
-            const transactor = createActorTransactor(
-              did,
-              dbTxn,
-              keypair,
-              this.resources,
-            )
-            return fn(transactor)
-          })
-        },
-      })
+      return await fn(new ActorStoreWriter(did, db, keypair, this.resources))
     } finally {
       db.close()
     }
@@ -157,10 +138,9 @@ export class ActorStore {
     if (blobstore instanceof DiskBlobStore) {
       await blobstore.deleteAll()
     } else {
-      const blobRows = await this.read(did, (store) =>
-        store.db.db.selectFrom('blob').select('cid').execute(),
+      const cids = await this.read(did, async (store) =>
+        store.repo.blob.getBlobCids(),
       )
-      const cids = blobRows.map((row) => CID.parse(row.cid))
       await Promise.allSettled(
         chunkArray(cids, 500).map((chunk) => blobstore.deleteMany(chunk)),
       )
@@ -226,71 +206,85 @@ const loadKey = async (loc: string): Promise<ExportableKeypair | undefined> => {
   return crypto.Secp256k1Keypair.import(privKey, { exportable: true })
 }
 
-const createActorTransactor = (
-  did: string,
-  db: ActorDb,
-  keypair: Keypair,
-  resources: ActorStoreResources,
-): ActorStoreTransactor => {
-  const { blobstore, backgroundQueue } = resources
-  const userBlobstore = blobstore(did)
-  return {
-    did,
-    db,
-    repo: new RepoTransactor(db, did, keypair, userBlobstore, backgroundQueue),
-    record: new RecordTransactor(db, userBlobstore),
-    pref: new PreferenceTransactor(db),
+type Awaitable<T> = T | PromiseLike<T>
+
+export type ActorStoreReadFn<T> = (fn: ActorStoreReader) => Awaitable<T>
+export type ActorStoreTransactFn<T> = (fn: ActorStoreTransactor) => Awaitable<T>
+export type ActorStoreWriterFn<T> = (fn: ActorStoreWriter) => Awaitable<T>
+
+export class ActorStoreReader {
+  public readonly repo: RepoReader
+  public readonly record: RecordReader
+  public readonly pref: PreferenceReader
+
+  constructor(
+    public readonly did: string,
+    protected readonly db: ActorDb,
+    protected readonly resources: ActorStoreResources,
+    public readonly keypair: () => Promise<Keypair>,
+  ) {
+    const blobstore = resources.blobstore(did)
+
+    this.repo = new RepoReader(db, blobstore)
+    this.record = new RecordReader(db)
+    this.pref = new PreferenceReader(db)
+
+    // Invoke "keypair" once. Also avoids leaking "this" as keypair context.
+    let keypairPromise: Promise<Keypair>
+    this.keypair = () => (keypairPromise ??= Promise.resolve().then(keypair))
+  }
+
+  async transact<T>(fn: ActorStoreTransactFn<T>): Promise<T> {
+    const keypair = await this.keypair()
+    return this.db.transaction((dbTxn) => {
+      const store = new ActorStoreTransactor(
+        this.did,
+        dbTxn,
+        keypair,
+        this.resources,
+      )
+      return fn(store)
+    })
   }
 }
 
-const createActorReader = (
-  did: string,
-  db: ActorDb,
-  resources: ActorStoreResources,
-  getKeypair: () => Promise<Keypair>,
-): ActorStoreReader => {
-  const { blobstore } = resources
-  return {
-    did,
-    db,
-    repo: new RepoReader(db, blobstore(did)),
-    record: new RecordReader(db),
-    pref: new PreferenceReader(db),
-    keypair: getKeypair,
-    transact: async <T>(fn: ActorStoreTransactFn<T>): Promise<T> => {
-      const keypair = await getKeypair()
-      return db.transaction((dbTxn) => {
-        const store = createActorTransactor(did, dbTxn, keypair, resources)
-        return fn(store)
-      })
-    },
+export class ActorStoreTransactor {
+  public readonly record: RecordTransactor
+  public readonly repo: RepoTransactor
+  public readonly pref: PreferenceTransactor
+
+  constructor(
+    public readonly did: string,
+    protected readonly db: ActorDb,
+    protected readonly keypair: Keypair,
+    protected readonly resources: ActorStoreResources,
+  ) {
+    const blobstore = resources.blobstore(did)
+
+    this.record = new RecordTransactor(db, blobstore)
+    this.pref = new PreferenceTransactor(db)
+    this.repo = new RepoTransactor(
+      db,
+      blobstore,
+      did,
+      keypair,
+      resources.backgroundQueue,
+    )
   }
 }
 
-export type ActorStoreReadFn<T> = (fn: ActorStoreReader) => Promise<T>
-export type ActorStoreTransactFn<T> = (fn: ActorStoreTransactor) => Promise<T>
-export type ActorStoreWriterFn<T> = (fn: ActorStoreWriter) => Promise<T>
-
-export type ActorStoreReader = {
-  did: string
-  db: ActorDb
-  repo: RepoReader
-  record: RecordReader
-  pref: PreferenceReader
-  keypair: () => Promise<Keypair>
-  transact: <T>(fn: ActorStoreTransactFn<T>) => Promise<T>
-}
-
-export type ActorStoreTransactor = {
-  did: string
-  db: ActorDb
-  repo: RepoTransactor
-  record: RecordTransactor
-  pref: PreferenceTransactor
-}
-
-export type ActorStoreWriter = ActorStoreTransactor & {
-  transact: <T>(fn: ActorStoreTransactFn<T>) => Promise<T>
+export class ActorStoreWriter extends ActorStoreTransactor {
+  async transact<T>(fn: ActorStoreTransactFn<T>): Promise<T> {
+    return this.db.transaction((dbTxn) => {
+      const transactor = new ActorStoreTransactor(
+        this.did,
+        dbTxn,
+        this.keypair,
+        this.resources,
+      )
+      return fn(transactor)
+    })
+  }
 }
 
 function assertSafePathPart(part: string) {

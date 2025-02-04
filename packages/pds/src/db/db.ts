@@ -51,7 +51,7 @@ export class Database<Schema> {
   }
 
   async transactionNoRetry<T>(
-    fn: (db: Database<Schema>) => T | Promise<T>,
+    fn: (db: Database<Schema>) => T | PromiseLike<T>,
   ): Promise<T> {
     this.assertNotTransaction()
     const leakyTxPlugin = new LeakyTxPlugin()
@@ -77,7 +77,7 @@ export class Database<Schema> {
   }
 
   async transaction<T>(
-    fn: (db: Database<Schema>) => T | Promise<T>,
+    fn: (db: Database<Schema>) => T | PromiseLike<T>,
   ): Promise<T> {
     return retrySqlite(() => this.transactionNoRetry(fn))
   }
