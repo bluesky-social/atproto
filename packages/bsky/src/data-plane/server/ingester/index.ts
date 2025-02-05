@@ -41,6 +41,7 @@ export class FirehoseIngester {
     ;(async () => {
       while (!this.ac.signal.aborted) {
         await this.subscribe().catch((err) => {
+          if (err instanceof DOMException) return
           logger.error({ err }, 'firehose subscription failed')
         })
       }

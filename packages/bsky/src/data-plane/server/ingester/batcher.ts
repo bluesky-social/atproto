@@ -55,9 +55,15 @@ export class Batcher<T = unknown> {
     if (!backpressuring) {
       return null
     }
-    return backpressuring.catch((err) => {
-      logger.error({ err }, 'batcher backpressure failed')
-    })
+    return backpressuring
+      .then(() => {
+        this.backpressuring = null
+      })
+      .catch((err) => {
+        logger.error({ err }, 'batcher backpressure failed')
+        this.backpressuring = null
+        this.backpressuring = this.backpressure()
+      })
   }
   async stop() {
     this.ac.abort()

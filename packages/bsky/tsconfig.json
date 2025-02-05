@@ -3,5 +3,10 @@
   "references": [
     { "path": "./tsconfig.build.json" },
     { "path": "./tsconfig.tests.json" }
-  ]
+  ],
+  "ts-node": {
+    "compilerOptions": {
+      "esModuleInterop": true
+    }
+  }
 }
