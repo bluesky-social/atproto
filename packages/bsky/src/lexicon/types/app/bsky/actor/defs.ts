@@ -536,14 +536,16 @@ export function validateNux(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.actor.defs#nux', v)
 }
 
-/** Default post interaction settings for the account. Should mirror the ruleset defs of the threadgate and postgate records exactly. */
+/** Default post interaction settings for the account. These values should be applied as default values when creating new posts. These refs should mirror the threadgate and postgate records exactly. */
 export interface PostInteractionSettingsPref {
+  /** Matches threadgate record. List of rules defining who can reply to this users posts. If value is an empty array, no one can reply. If value is undefined, anyone can reply. */
   threadgateAllowRules?: (
     | AppBskyFeedThreadgate.MentionRule
     | AppBskyFeedThreadgate.FollowingRule
     | AppBskyFeedThreadgate.ListRule
     | { $type: string; [k: string]: unknown }
   )[]
+  /** Matches postgate record. List of rules defining who can embed this users posts. If value is an empty array or is undefined, no particular rules apply and anyone can embed. */
   postgateEmbeddingRules?: (
     | AppBskyFeedPostgate.DisableRule
     | { $type: string; [k: string]: unknown }

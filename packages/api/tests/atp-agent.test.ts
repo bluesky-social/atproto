@@ -279,8 +279,8 @@ describe('agent', () => {
           nuxs: [],
         },
         postInteractionSettings: {
-          threadgateAllowRules: [],
-          postgateEmbeddingRules: [],
+          threadgateAllowRules: undefined,
+          postgateEmbeddingRules: undefined,
         },
       })
 
@@ -325,8 +325,8 @@ describe('agent', () => {
           nuxs: [],
         },
         postInteractionSettings: {
-          threadgateAllowRules: [],
-          postgateEmbeddingRules: [],
+          threadgateAllowRules: undefined,
+          postgateEmbeddingRules: undefined,
         },
       })
 
@@ -371,8 +371,8 @@ describe('agent', () => {
           nuxs: [],
         },
         postInteractionSettings: {
-          threadgateAllowRules: [],
-          postgateEmbeddingRules: [],
+          threadgateAllowRules: undefined,
+          postgateEmbeddingRules: undefined,
         },
       })
 
@@ -417,8 +417,8 @@ describe('agent', () => {
           nuxs: [],
         },
         postInteractionSettings: {
-          threadgateAllowRules: [],
-          postgateEmbeddingRules: [],
+          threadgateAllowRules: undefined,
+          postgateEmbeddingRules: undefined,
         },
       })
 
@@ -467,8 +467,8 @@ describe('agent', () => {
           nuxs: [],
         },
         postInteractionSettings: {
-          threadgateAllowRules: [],
-          postgateEmbeddingRules: [],
+          threadgateAllowRules: undefined,
+          postgateEmbeddingRules: undefined,
         },
       })
 
@@ -520,8 +520,8 @@ describe('agent', () => {
           nuxs: [],
         },
         postInteractionSettings: {
-          threadgateAllowRules: [],
-          postgateEmbeddingRules: [],
+          threadgateAllowRules: undefined,
+          postgateEmbeddingRules: undefined,
         },
       })
 
@@ -573,8 +573,8 @@ describe('agent', () => {
           nuxs: [],
         },
         postInteractionSettings: {
-          threadgateAllowRules: [],
-          postgateEmbeddingRules: [],
+          threadgateAllowRules: undefined,
+          postgateEmbeddingRules: undefined,
         },
       })
 
@@ -626,8 +626,8 @@ describe('agent', () => {
           nuxs: [],
         },
         postInteractionSettings: {
-          threadgateAllowRules: [],
-          postgateEmbeddingRules: [],
+          threadgateAllowRules: undefined,
+          postgateEmbeddingRules: undefined,
         },
       })
 
@@ -679,8 +679,8 @@ describe('agent', () => {
           nuxs: [],
         },
         postInteractionSettings: {
-          threadgateAllowRules: [],
-          postgateEmbeddingRules: [],
+          threadgateAllowRules: undefined,
+          postgateEmbeddingRules: undefined,
         },
       })
 
@@ -732,8 +732,8 @@ describe('agent', () => {
           nuxs: [],
         },
         postInteractionSettings: {
-          threadgateAllowRules: [],
-          postgateEmbeddingRules: [],
+          threadgateAllowRules: undefined,
+          postgateEmbeddingRules: undefined,
         },
       })
 
@@ -791,8 +791,8 @@ describe('agent', () => {
           nuxs: [],
         },
         postInteractionSettings: {
-          threadgateAllowRules: [],
-          postgateEmbeddingRules: [],
+          threadgateAllowRules: undefined,
+          postgateEmbeddingRules: undefined,
         },
       })
 
@@ -844,8 +844,8 @@ describe('agent', () => {
           nuxs: [],
         },
         postInteractionSettings: {
-          threadgateAllowRules: [],
-          postgateEmbeddingRules: [],
+          threadgateAllowRules: undefined,
+          postgateEmbeddingRules: undefined,
         },
       })
 
@@ -897,8 +897,8 @@ describe('agent', () => {
           nuxs: [],
         },
         postInteractionSettings: {
-          threadgateAllowRules: [],
-          postgateEmbeddingRules: [],
+          threadgateAllowRules: undefined,
+          postgateEmbeddingRules: undefined,
         },
       })
 
@@ -950,8 +950,8 @@ describe('agent', () => {
           nuxs: [],
         },
         postInteractionSettings: {
-          threadgateAllowRules: [],
-          postgateEmbeddingRules: [],
+          threadgateAllowRules: undefined,
+          postgateEmbeddingRules: undefined,
         },
       })
 
@@ -1003,8 +1003,8 @@ describe('agent', () => {
           nuxs: [],
         },
         postInteractionSettings: {
-          threadgateAllowRules: [],
-          postgateEmbeddingRules: [],
+          threadgateAllowRules: undefined,
+          postgateEmbeddingRules: undefined,
         },
       })
 
@@ -1063,8 +1063,8 @@ describe('agent', () => {
           nuxs: [],
         },
         postInteractionSettings: {
-          threadgateAllowRules: [],
-          postgateEmbeddingRules: [],
+          threadgateAllowRules: undefined,
+          postgateEmbeddingRules: undefined,
         },
       })
 
@@ -1123,8 +1123,8 @@ describe('agent', () => {
           nuxs: [],
         },
         postInteractionSettings: {
-          threadgateAllowRules: [],
-          postgateEmbeddingRules: [],
+          threadgateAllowRules: undefined,
+          postgateEmbeddingRules: undefined,
         },
       })
 
@@ -1183,8 +1183,8 @@ describe('agent', () => {
           nuxs: [],
         },
         postInteractionSettings: {
-          threadgateAllowRules: [],
-          postgateEmbeddingRules: [],
+          threadgateAllowRules: undefined,
+          postgateEmbeddingRules: undefined,
         },
       })
 
@@ -1243,8 +1243,8 @@ describe('agent', () => {
           nuxs: [],
         },
         postInteractionSettings: {
-          threadgateAllowRules: [],
-          postgateEmbeddingRules: [],
+          threadgateAllowRules: undefined,
+          postgateEmbeddingRules: undefined,
         },
       })
     })
@@ -1430,8 +1430,8 @@ describe('agent', () => {
           nuxs: [],
         },
         postInteractionSettings: {
-          threadgateAllowRules: [],
-          postgateEmbeddingRules: [],
+          threadgateAllowRules: undefined,
+          postgateEmbeddingRules: undefined,
         },
       })
 
@@ -1492,8 +1492,8 @@ describe('agent', () => {
           nuxs: [],
         },
         postInteractionSettings: {
-          threadgateAllowRules: [],
-          postgateEmbeddingRules: [],
+          threadgateAllowRules: undefined,
+          postgateEmbeddingRules: undefined,
         },
       })
 
@@ -1555,8 +1555,8 @@ describe('agent', () => {
           nuxs: [],
         },
         postInteractionSettings: {
-          threadgateAllowRules: [],
-          postgateEmbeddingRules: [],
+          threadgateAllowRules: undefined,
+          postgateEmbeddingRules: undefined,
         },
       })
 
@@ -1614,8 +1614,8 @@ describe('agent', () => {
           nuxs: [],
         },
         postInteractionSettings: {
-          threadgateAllowRules: [],
-          postgateEmbeddingRules: [],
+          threadgateAllowRules: undefined,
+          postgateEmbeddingRules: undefined,
         },
       })
 
@@ -1673,8 +1673,8 @@ describe('agent', () => {
           nuxs: [],
         },
         postInteractionSettings: {
-          threadgateAllowRules: [],
-          postgateEmbeddingRules: [],
+          threadgateAllowRules: undefined,
+          postgateEmbeddingRules: undefined,
         },
       })
 
@@ -1732,8 +1732,8 @@ describe('agent', () => {
           nuxs: [],
         },
         postInteractionSettings: {
-          threadgateAllowRules: [],
-          postgateEmbeddingRules: [],
+          threadgateAllowRules: undefined,
+          postgateEmbeddingRules: undefined,
         },
       })
 
@@ -1803,8 +1803,8 @@ describe('agent', () => {
           nuxs: [],
         },
         postInteractionSettings: {
-          threadgateAllowRules: [],
-          postgateEmbeddingRules: [],
+          threadgateAllowRules: undefined,
+          postgateEmbeddingRules: undefined,
         },
       })
 
@@ -3482,9 +3482,30 @@ describe('agent', () => {
         expect(prefs.postInteractionSettings).toEqual(next)
       })
 
+      /**
+       * Logic matches threadgate `allow` logic, where `undefined` means "anyone
+       * can reply" and an empty array means "no one can reply".
+       *
+       * Postgate `embeddingRules` behaves differently, where `undefined` and
+       * an empty array both mean "no particular rules applied".
+       *
+       * Both props are optional though, so for easier sharing of types, we
+       * allow `undefined`.
+       */
+      it('clears using undefined', async () => {
+        const next: AppBskyActorDefs.PostInteractionSettingsPref = {
+          threadgateAllowRules: undefined,
+          postgateEmbeddingRules: undefined,
+        }
+
+        await agent.setPostInteractionSettings(next)
+
+        const prefs = await agent.getPreferences()
+
+        expect(prefs.postInteractionSettings).toEqual(next)
+      })
+
       it('validates inputs', async () => {
-        // @ts-expect-error
-        expect(() => agent.setPostInteractionSettings({})).rejects.toThrow()
         expect(() =>
           agent.setPostInteractionSettings({
             threadgateAllowRules: [{ key: 'string' }],

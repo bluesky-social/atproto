@@ -91,11 +91,6 @@ export interface BskyInterestsPreference {
   [key: string]: any
 }
 
-export interface PostInteractionSettingsPreference {
-  threadgateAllowRules: AppBskyFeedThreadgate.Record['allow']
-  postgateEmbeddingRules: AppBskyFeedPostgate.Record['embeddingRules']
-}
-
 /**
  * Bluesky preferences
  */
@@ -118,5 +113,5 @@ export interface BskyPreferences {
     activeProgressGuide: AppBskyActorDefs.BskyAppProgressGuide | undefined
     nuxs: AppBskyActorDefs.Nux[]
   }
-  postInteractionSettings: PostInteractionSettingsPreference
+  postInteractionSettings: AppBskyActorDefs.PostInteractionSettingsPref
 }

@@ -472,10 +472,11 @@
     },
     "postInteractionSettingsPref": {
       "type": "object",
-      "description": "Default post interaction settings for the account. Should mirror the ruleset defs of the threadgate and postgate records exactly.",
+      "description": "Default post interaction settings for the account. These values should be applied as default values when creating new posts. These refs should mirror the threadgate and postgate records exactly.",
       "required": [],
       "properties": {
         "threadgateAllowRules": {
+          "description": "Matches threadgate record. List of rules defining who can reply to this users posts. If value is an empty array, no one can reply. If value is undefined, anyone can reply.",
           "type": "array",
           "maxLength": 5,
           "items": {
@@ -488,6 +489,7 @@
           }
         },
         "postgateEmbeddingRules": {
+          "description": "Matches postgate record. List of rules defining who can embed this users posts. If value is an empty array or is undefined, no particular rules apply and anyone can embed.",
           "type": "array",
           "maxLength": 5,
           "items": {

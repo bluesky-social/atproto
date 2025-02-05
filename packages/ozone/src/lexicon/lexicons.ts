@@ -4718,10 +4718,12 @@ export const schemaDict = {
       postInteractionSettingsPref: {
         type: 'object',
         description:
-          'Default post interaction settings for the account. Should mirror the ruleset defs of the threadgate and postgate records exactly.',
+          'Default post interaction settings for the account. These values should be applied as default values when creating new posts. These refs should mirror the threadgate and postgate records exactly.',
         required: [],
         properties: {
           threadgateAllowRules: {
+            description:
+              'Matches threadgate record. List of rules defining who can reply to this users posts. If value is an empty array, no one can reply. If value is undefined, anyone can reply.',
             type: 'array',
             maxLength: 5,
             items: {
@@ -4734,6 +4736,8 @@ export const schemaDict = {
             },
           },
           postgateEmbeddingRules: {
+            description:
+              'Matches postgate record. List of rules defining who can embed this users posts. If value is an empty array or is undefined, no particular rules apply and anyone can embed.',
             type: 'array',
             maxLength: 5,
             items: {
@@ -7149,6 +7153,8 @@ export const schemaDict = {
                 'List of AT-URIs embedding this post that the author has detached from.',
             },
             embeddingRules: {
+              description:
+                'List of rules defining who can embed this post. If value is an empty array or is undefined, no particular rules apply and anyone can embed.',
               type: 'array',
               maxLength: 5,
               items: {
@@ -7362,6 +7368,8 @@ export const schemaDict = {
               description: 'Reference (AT-URI) to the post record.',
             },
             allow: {
+              description:
+                'List of rules defining who can reply to this post. If value is an empty array, no one can reply. If value is undefined, anyone can reply.',
               type: 'array',
               maxLength: 5,
               items: {
