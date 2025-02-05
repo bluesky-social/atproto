@@ -86,6 +86,10 @@ describe('agent', () => {
         queuedNudges: [],
         nuxs: [],
       },
+      postInteractionSettings: {
+        threadgateAllowRules: undefined,
+        postgateEmbeddingRules: undefined,
+      },
     })
   })
 
@@ -136,6 +140,10 @@ describe('agent', () => {
         queuedNudges: [],
         nuxs: [],
       },
+      postInteractionSettings: {
+        threadgateAllowRules: undefined,
+        postgateEmbeddingRules: undefined,
+      },
     })
     expect(agent.labelers).toStrictEqual(['did:plc:other'])
 
@@ -170,6 +178,10 @@ describe('agent', () => {
         activeProgressGuide: undefined,
         queuedNudges: [],
         nuxs: [],
+      },
+      postInteractionSettings: {
+        threadgateAllowRules: undefined,
+        postgateEmbeddingRules: undefined,
       },
     })
     expect(agent.labelers).toStrictEqual([])
@@ -227,6 +239,10 @@ describe('agent', () => {
         activeProgressGuide: undefined,
         queuedNudges: [],
         nuxs: [],
+      },
+      postInteractionSettings: {
+        threadgateAllowRules: undefined,
+        postgateEmbeddingRules: undefined,
       },
     })
   })

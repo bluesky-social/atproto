@@ -174,7 +174,8 @@
           "#mutedWordsPref",
           "#hiddenPostsPref",
           "#bskyAppStatePref",
-          "#labelersPref"
+          "#labelersPref",
+          "#postInteractionSettingsPref"
         ]
       }
     },
@@ -466,6 +467,35 @@
           "type": "string",
           "format": "datetime",
           "description": "The date and time at which the NUX will expire and should be considered completed."
+        }
+      }
+    },
+    "postInteractionSettingsPref": {
+      "type": "object",
+      "description": "Default post interaction settings for the account. These values should be applied as default values when creating new posts. These refs should mirror the threadgate and postgate records exactly.",
+      "required": [],
+      "properties": {
+        "threadgateAllowRules": {
+          "description": "Matches threadgate record. List of rules defining who can reply to this users posts. If value is an empty array, no one can reply. If value is undefined, anyone can reply.",
+          "type": "array",
+          "maxLength": 5,
+          "items": {
+            "type": "union",
+            "refs": [
+              "app.bsky.feed.threadgate#mentionRule",
+              "app.bsky.feed.threadgate#followingRule",
+              "app.bsky.feed.threadgate#listRule"
+            ]
+          }
+        },
+        "postgateEmbeddingRules": {
+          "description": "Matches postgate record. List of rules defining who can embed this users posts. If value is an empty array or is undefined, no particular rules apply and anyone can embed.",
+          "type": "array",
+          "maxLength": 5,
+          "items": {
+            "type": "union",
+            "refs": ["app.bsky.feed.postgate#disableRule"]
+          }
         }
       }
     }
