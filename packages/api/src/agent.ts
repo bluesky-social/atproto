@@ -589,8 +589,8 @@ export class Agent extends XrpcClient {
         nuxs: [],
       },
       postInteractionSettings: {
-        threadgateAllowRules: [],
-        postgateEmbeddingRules: [],
+        threadgateAllowRules: undefined,
+        postgateEmbeddingRules: undefined,
       },
     }
     const res = await this.app.bsky.actor.getPreferences({})
@@ -701,9 +701,9 @@ export class Agent extends XrpcClient {
         AppBskyActorDefs.validatePostInteractionSettingsPref(pref).success
       ) {
         prefs.postInteractionSettings.threadgateAllowRules =
-          pref.threadgateAllowRules || []
+          pref.threadgateAllowRules
         prefs.postInteractionSettings.postgateEmbeddingRules =
-          pref.postgateEmbeddingRules || []
+          pref.postgateEmbeddingRules
       }
     }
 
@@ -1498,13 +1498,19 @@ export class Agent extends XrpcClient {
 
       if (!prev) {
         prev = {
-          threadgateAllowRules: [],
-          postgateEmbeddingRules: [],
+          /**
+           * Matches handling of `threadgate.allow` where `undefined` means "everyone"
+           */
+          threadgateAllowRules: undefined,
+          postgateEmbeddingRules: undefined,
         }
       }
 
-      prev.threadgateAllowRules = settings.threadgateAllowRules || []
-      prev.postgateEmbeddingRules = settings.postgateEmbeddingRules || []
+      /**
+       * Matches handling of `threadgate.allow` where `undefined` means "everyone"
+       */
+      prev.threadgateAllowRules = settings.threadgateAllowRules
+      prev.postgateEmbeddingRules = settings.postgateEmbeddingRules
 
       return prefs
         .filter((p) => !AppBskyActorDefs.isPostInteractionSettingsPref(p))

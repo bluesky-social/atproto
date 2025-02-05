@@ -4719,7 +4719,7 @@ export const schemaDict = {
         type: 'object',
         description:
           'Default post interaction settings for the account. Should mirror the ruleset defs of the threadgate and postgate records exactly.',
-        required: ['threadgateAllowRules', 'postgateEmbeddingRules'],
+        required: [],
         properties: {
           threadgateAllowRules: {
             type: 'array',

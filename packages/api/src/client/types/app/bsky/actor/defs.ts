@@ -538,13 +538,13 @@ export function validateNux(v: unknown): ValidationResult {
 
 /** Default post interaction settings for the account. Should mirror the ruleset defs of the threadgate and postgate records exactly. */
 export interface PostInteractionSettingsPref {
-  threadgateAllowRules: (
+  threadgateAllowRules?: (
     | AppBskyFeedThreadgate.MentionRule
     | AppBskyFeedThreadgate.FollowingRule
     | AppBskyFeedThreadgate.ListRule
     | { $type: string; [k: string]: unknown }
   )[]
-  postgateEmbeddingRules: (
+  postgateEmbeddingRules?: (
     | AppBskyFeedPostgate.DisableRule
     | { $type: string; [k: string]: unknown }
   )[]
