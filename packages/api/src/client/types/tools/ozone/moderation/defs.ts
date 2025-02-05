@@ -372,8 +372,6 @@ export function validateModEventLabel(v: unknown): ValidationResult {
 export interface ModEventPriorityScore {
   comment?: string
   score: number
-  /** Indicates how long the priority score will be in effect. It will be set to 0 after this duration. */
-  durationInHours?: number
   [k: string]: unknown
 }
 

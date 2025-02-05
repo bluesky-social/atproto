@@ -11579,11 +11579,6 @@ export const schemaDict = {
             minimum: 0,
             maximum: 100,
           },
-          durationInHours: {
-            type: 'integer',
-            description:
-              'Indicates how long the priority score will be in effect. It will be set to 0 after this duration.',
-          },
         },
       },
       modEventAcknowledge: {
