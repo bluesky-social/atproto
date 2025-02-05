@@ -1,11 +1,11 @@
 import { AppBskyFeedGetPostThread, AtpAgent } from '@atproto/api'
-import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
+import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import { ids } from '../../src/lexicon/lexicons'
 import {
   assertIsThreadViewPost,
   forSnapshot,
   stripViewerFromThread,
 } from '../_util'
-import { ids } from '../../src/lexicon/lexicons'
 
 describe('pds thread views', () => {
   let network: TestNetwork

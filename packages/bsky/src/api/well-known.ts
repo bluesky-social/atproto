@@ -1,8 +1,8 @@
-import express from 'express'
-import AppContext from '../context'
+import { Router } from 'express'
+import { AppContext } from '../context'
 
-export const createRouter = (ctx: AppContext): express.Router => {
-  const router = express.Router()
+export const createRouter = (ctx: AppContext): Router => {
+  const router = Router()
 
   const did = ctx.cfg.serverDid
   if (did.startsWith('did:web:')) {

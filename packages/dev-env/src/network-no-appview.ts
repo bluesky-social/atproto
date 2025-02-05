@@ -1,10 +1,10 @@
 import { SkeletonHandler } from '@atproto/pds'
-import { TestServerParams } from './types'
-import { TestPlc } from './plc'
-import { TestPds } from './pds'
-import { mockNetworkUtilities } from './util'
 import { TestFeedGen } from './feed-gen'
+import { TestPds } from './pds'
+import { TestPlc } from './plc'
 import { SeedClient } from './seed/client'
+import { TestServerParams } from './types'
+import { mockNetworkUtilities } from './util'
 
 export class TestNetworkNoAppView {
   feedGens: TestFeedGen[] = []

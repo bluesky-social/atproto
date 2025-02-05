@@ -1,11 +1,11 @@
-import { AtpAgent } from '@atproto/api'
-import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
-import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
-import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import * as plc from '@did-plc/lib'
-import usersSeed from './seeds/users'
-import { RepoRef } from '../src/lexicon/types/com/atproto/admin/defs'
+import { AtpAgent } from '@atproto/api'
+import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
+import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
+import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import { ids } from '../src/lexicon/lexicons'
+import { RepoRef } from '../src/lexicon/types/com/atproto/admin/defs'
+import usersSeed from './seeds/users'
 
 describe('moderator auth', () => {
   let network: TestNetworkNoAppView

@@ -1,12 +1,7 @@
+import AwaitLock from 'await-lock'
 import { TID } from '@atproto/common-web'
 import { AtUri, ensureValidDid } from '@atproto/syntax'
-import {
-  buildFetchHandler,
-  BuildFetchHandlerOptions,
-  FetchHandler,
-  XrpcClient,
-} from '@atproto/xrpc'
-import AwaitLock from 'await-lock'
+import { FetchHandler, XrpcClient, buildFetchHandler } from '@atproto/xrpc'
 import {
   AppBskyActorDefs,
   AppBskyActorProfile,
@@ -38,14 +33,14 @@ import {
   BskyThreadViewPreference,
 } from './types'
 import {
-  asDid,
   Did,
+  asDid,
   getSavedFeedType,
   isDid,
   sanitizeMutedWordValue,
   savedFeedsToUriArrays,
-  validateSavedFeed,
   validateNux,
+  validateSavedFeed,
 } from './util'
 
 const FEED_VIEW_PREF_DEFAULTS = {

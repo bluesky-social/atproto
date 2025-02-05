@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import { isSignedJwt } from '@atproto/jwk'
 import {
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
@@ -10,8 +11,6 @@ import {
   OAuthTokenResponse,
   OAuthTokenType,
 } from '@atproto/oauth-types'
-import { createHash } from 'node:crypto'
-
 import { AccessTokenType } from '../access-token/access-token-type.js'
 import { DeviceAccountInfo } from '../account/account-store.js'
 import { Account } from '../account/account.js'

@@ -1,10 +1,16 @@
+import { dedupeStrs } from '@atproto/common'
 import { DataPlaneClient } from '../data-plane/client'
-import { Record as PostRecord } from '../lexicon/types/app/bsky/feed/post'
-import { Record as LikeRecord } from '../lexicon/types/app/bsky/feed/like'
-import { Record as RepostRecord } from '../lexicon/types/app/bsky/feed/repost'
 import { Record as FeedGenRecord } from '../lexicon/types/app/bsky/feed/generator'
-import { Record as ThreadgateRecord } from '../lexicon/types/app/bsky/feed/threadgate'
+import { Record as LikeRecord } from '../lexicon/types/app/bsky/feed/like'
+import { Record as PostRecord } from '../lexicon/types/app/bsky/feed/post'
 import { Record as PostgateRecord } from '../lexicon/types/app/bsky/feed/postgate'
+import { Record as RepostRecord } from '../lexicon/types/app/bsky/feed/repost'
+import { Record as ThreadgateRecord } from '../lexicon/types/app/bsky/feed/threadgate'
+import {
+  postUriToPostgateUri,
+  postUriToThreadgateUri,
+  uriToDid as didFromUri,
+} from '../util/uris'
 import {
   HydrationMap,
   ItemRef,
@@ -13,12 +19,6 @@ import {
   parseString,
   split,
 } from './util'
-import { dedupeStrs } from '@atproto/common'
-import {
-  postUriToThreadgateUri,
-  postUriToPostgateUri,
-  uriToDid as didFromUri,
-} from '../util/uris'
 
 export type Post = RecordInfo<PostRecord> & {
   violatesThreadGate: boolean

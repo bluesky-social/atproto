@@ -1,9 +1,9 @@
-import usersSeed from './users'
 import { TestBsky } from '../bsky'
+import { EXAMPLE_LABELER } from '../const'
 import { TestNetwork } from '../network'
 import { TestNetworkNoAppView } from '../network-no-appview'
 import { SeedClient } from './client'
-import { EXAMPLE_LABELER } from '../const'
+import usersSeed from './users'
 
 export default async (
   sc: SeedClient<TestNetwork | TestNetworkNoAppView>,

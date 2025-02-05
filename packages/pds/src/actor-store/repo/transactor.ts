@@ -1,9 +1,10 @@
 import { CID } from 'multiformats/cid'
 import * as crypto from '@atproto/crypto'
 import { BlobStore, formatDataKey, Repo, WriteOpAction } from '@atproto/repo'
-import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AtUri } from '@atproto/syntax'
-import { SqlRepoTransactor } from './sql-repo-transactor'
+import { InvalidRequestError } from '@atproto/xrpc-server'
+import { BackgroundQueue } from '../../background'
+import { createWriteToOp, writeToOp } from '../../repo'
 import {
   BadCommitSwapError,
   BadRecordSwapError,
@@ -13,32 +14,38 @@ import {
   PreparedWrite,
 } from '../../repo/types'
 import { BlobTransactor } from '../blob/transactor'
-import { createWriteToOp, writeToOp } from '../../repo'
-import { BackgroundQueue } from '../../background'
 import { ActorDb } from '../db'
 import { RecordTransactor } from '../record/transactor'
 import { RepoReader } from './reader'
+import { SqlRepoTransactor } from './sql-repo-transactor'
 import { blobCidsFromWrites, commitOpsFromCreates } from './util'
 
 export class RepoTransactor extends RepoReader {
   blob: BlobTransactor
   record: RecordTransactor
   storage: SqlRepoTransactor
-  now: string
 
   constructor(
     public db: ActorDb,
+    public blobstore: BlobStore,
     public did: string,
     public signingKey: crypto.Keypair,
-    public blobstore: BlobStore,
     public backgroundQueue: BackgroundQueue,
-    now?: string,
+    public now: string = new Date().toISOString(),
   ) {
     super(db, blobstore)
     this.blob = new BlobTransactor(db, blobstore, backgroundQueue)
     this.record = new RecordTransactor(db, blobstore)
-    this.now = now ?? new Date().toISOString()
-    this.storage = new SqlRepoTransactor(db, this.did, this.now)
+    this.storage = new SqlRepoTransactor(db, did, now)
+  }
+
+  async maybeLoadRepo(): Promise<Repo | null> {
+    const res = await this.db.db
+      .selectFrom('repo_root')
+      .select('cid')
+      .limit(1)
+      .executeTakeFirst()
+    return res ? Repo.load(this.storage, CID.parse(res.cid)) : null
   }
 
   async createRepo(writes: PreparedCreate[]): Promise<CommitDataWithOps> {

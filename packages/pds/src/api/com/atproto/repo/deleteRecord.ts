@@ -1,9 +1,12 @@
-import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
-import { prepareDelete } from '../../../../repo'
-import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
-import { BadCommitSwapError, BadRecordSwapError } from '../../../../repo'
 import { CID } from 'multiformats/cid'
+import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import { AppContext } from '../../../../context'
+import { Server } from '../../../../lexicon'
+import {
+  BadCommitSwapError,
+  BadRecordSwapError,
+  prepareDelete,
+} from '../../../../repo'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.deleteRecord({

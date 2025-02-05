@@ -4,27 +4,29 @@
 // leave at top of file before importing Routes
 import 'express-async-errors'
 
-import express from 'express'
-import cors from 'cors'
-import http from 'http'
-import events from 'events'
-import { Options as XrpcServerOptions } from '@atproto/xrpc-server'
-import { DAY, HOUR, MINUTE, SECOND } from '@atproto/common'
-import { XRPCError, ResponseType } from '@atproto/xrpc-server'
+import events from 'node:events'
+import http from 'node:http'
 import { PlcClientError } from '@did-plc/lib'
-
+import cors from 'cors'
+import express from 'express'
+import { HttpTerminator, createHttpTerminator } from 'http-terminator'
+import { DAY, HOUR, MINUTE, SECOND } from '@atproto/common'
+import {
+  Options as XrpcServerOptions,
+  ResponseType,
+  XRPCError,
+} from '@atproto/xrpc-server'
 import API from './api'
 import * as authRoutes from './auth-routes'
 import * as basicRoutes from './basic-routes'
-import * as wellKnown from './well-known'
-import * as error from './error'
-import { loggerMiddleware } from './logger'
 import { ServerConfig, ServerSecrets } from './config'
+import { AppContext, AppContextOptions } from './context'
+import * as error from './error'
 import { createServer } from './lexicon'
-import { createHttpTerminator, HttpTerminator } from 'http-terminator'
-import AppContext, { AppContextOptions } from './context'
-import compression from './util/compression'
+import { loggerMiddleware } from './logger'
 import { proxyHandler } from './pipethrough'
+import compression from './util/compression'
+import * as wellKnown from './well-known'
 
 export * from './config'
 export { Database } from './db'

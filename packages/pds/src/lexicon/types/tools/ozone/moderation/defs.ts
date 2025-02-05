@@ -347,6 +347,8 @@ export interface ModEventLabel {
   comment?: string
   createLabelVals: string[]
   negateLabelVals: string[]
+  /** Indicates how long the label will remain on the subject. Only applies on labels that are being added. */
+  durationInHours?: number
   [k: string]: unknown
 }
 

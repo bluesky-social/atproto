@@ -1,15 +1,15 @@
 import { AtpAgent } from '@atproto/api'
+import { cborEncode } from '@atproto/common'
+import { Secp256k1Keypair, verifySignature } from '@atproto/crypto'
 import { EXAMPLE_LABELER, TestNetwork } from '@atproto/dev-env'
 import { DisconnectError, Subscription } from '@atproto/xrpc-server'
 import { ids, lexicons } from '../src/lexicon/lexicons'
 import { Label } from '../src/lexicon/types/com/atproto/label/defs'
-import { Secp256k1Keypair, verifySignature } from '@atproto/crypto'
-import { cborEncode } from '@atproto/common'
-import { ModerationService } from '../src/mod-service'
 import {
   OutputSchema as LabelMessage,
   isLabels,
 } from '../src/lexicon/types/com/atproto/label/subscribeLabels'
+import { ModerationService } from '../src/mod-service'
 import { getSigningKeyId } from '../src/util'
 
 describe('ozone query labels', () => {

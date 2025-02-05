@@ -1,5 +1,5 @@
 import { Code, ConnectError, HandlerContext } from '@connectrpc/connect'
-import AppContext from '../context'
+import { AppContext } from '../context'
 
 const BEARER = 'Bearer '
 

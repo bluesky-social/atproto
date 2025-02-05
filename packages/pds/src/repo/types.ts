@@ -1,7 +1,7 @@
 import { CID } from 'multiformats/cid'
-import { AtUri } from '@atproto/syntax'
-import { CidSet, CommitData, WriteOpAction } from '@atproto/repo'
 import { RepoRecord } from '@atproto/lexicon'
+import { CidSet, CommitData, WriteOpAction } from '@atproto/repo'
+import { AtUri } from '@atproto/syntax'
 
 export type ValidationStatus = 'valid' | 'unknown' | undefined
 

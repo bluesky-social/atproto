@@ -1,7 +1,7 @@
 import { AtpAgent } from '@atproto/api'
-import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
-import usersSeed from './seeds/users'
+import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import { AuthScope } from '../dist/auth-verifier'
+import usersSeed from './seeds/users'
 
 describe('user preferences', () => {
   let network: TestNetworkNoAppView

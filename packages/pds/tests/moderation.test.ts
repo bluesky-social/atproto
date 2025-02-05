@@ -1,12 +1,12 @@
 import { AtpAgent } from '@atproto/api'
-import { TestNetworkNoAppView, ImageRef, SeedClient } from '@atproto/dev-env'
+import { ImageRef, SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import { BlobNotFoundError } from '@atproto/repo'
-import basicSeed from './seeds/basic'
 import {
   RepoBlobRef,
   RepoRef,
 } from '../src/lexicon/types/com/atproto/admin/defs'
 import { Main as StrongRef } from '../src/lexicon/types/com/atproto/repo/strongRef'
+import basicSeed from './seeds/basic'
 
 describe('moderation', () => {
   let network: TestNetworkNoAppView

@@ -1,11 +1,11 @@
-import { lexToJson } from '@atproto/lexicon'
-import { AtUri } from '@atproto/syntax'
-import { type Express } from 'express'
-import { CID } from 'multiformats/cid'
 import { Server } from 'node:http'
 import { AddressInfo } from 'node:net'
-import { FeedViewPost } from '../src/lexicon/types/app/bsky/feed/defs'
+import { type Express } from 'express'
+import { CID } from 'multiformats/cid'
 import { ToolsOzoneModerationDefs } from '@atproto/api'
+import { lexToJson } from '@atproto/lexicon'
+import { AtUri } from '@atproto/syntax'
+import { FeedViewPost } from '../src/lexicon/types/app/bsky/feed/defs'
 
 // Swap out identifiers and dates with stable
 // values for the purpose of snapshot testing

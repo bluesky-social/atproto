@@ -1,10 +1,10 @@
 import { Timestamp } from '@bufbuild/protobuf'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
 import {
-  isRepoRef,
   isRepoBlobRef,
+  isRepoRef,
 } from '../../../../lexicon/types/com/atproto/admin/defs'
 import { isMain as isStrongRef } from '../../../../lexicon/types/com/atproto/repo/strongRef'
 

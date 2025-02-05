@@ -3,7 +3,7 @@
 import { HOUR } from '@atproto/common'
 import { AtUri } from '@atproto/syntax'
 import { Database } from '../db'
-import DatabaseSchema from '../db/schema'
+import { DatabaseSchema } from '../db/schema'
 import { jsonb } from '../db/types'
 import { REASONAPPEAL } from '../lexicon/types/com/atproto/moderation/defs'
 import {
@@ -77,6 +77,8 @@ const getSubjectStatusForModerationEvent = ({
       }
     case 'tools.ozone.moderation.defs#modEventTakedown':
       return {
+        // If we are doing a takedown, safe to move the item out of appealed state
+        ...(currentStatus?.appealed ? { appealed: false } : {}),
         takendown: true,
         lastReviewedBy: createdBy,
         reviewState: REVIEWCLOSED,

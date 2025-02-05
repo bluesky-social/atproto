@@ -11554,6 +11554,11 @@ export const schemaDict = {
               type: 'string',
             },
           },
+          durationInHours: {
+            type: 'integer',
+            description:
+              'Indicates how long the label will remain on the subject. Only applies on labels that are being added.',
+          },
         },
       },
       modEventAcknowledge: {

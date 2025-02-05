@@ -1,10 +1,10 @@
-import { AtUri } from '@atproto/syntax'
-import { COM_ATPROTO_MODERATION, AtpAgent } from '@atproto/api'
+import { AtpAgent, COM_ATPROTO_MODERATION } from '@atproto/api'
 import { Database } from '@atproto/bsky'
+import { AtUri } from '@atproto/syntax'
 import { EXAMPLE_LABELER, RecordRef, TestNetwork } from '../index'
 import { postTexts, replyTexts } from './data'
-import labeledImgB64 from './img/labeled-img-b64'
 import blurHashB64 from './img/blur-hash-avatar-b64'
+import labeledImgB64 from './img/labeled-img-b64'
 
 // NOTE
 // deterministic date generator

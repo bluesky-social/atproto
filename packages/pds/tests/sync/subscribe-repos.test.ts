@@ -1,28 +1,28 @@
-import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
+import { CID } from 'multiformats/cid'
+import { WebSocket } from 'ws'
 import { AtpAgent } from '@atproto/api'
 import {
-  cborDecode,
   HOUR,
   MINUTE,
+  cborDecode,
   readFromGenerator,
   wait,
 } from '@atproto/common'
 import { randomStr } from '@atproto/crypto'
+import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import * as repo from '@atproto/repo'
 import { readCar } from '@atproto/repo'
-import { byFrame, ErrorFrame, Frame, MessageFrame } from '@atproto/xrpc-server'
-import { WebSocket } from 'ws'
+import { ErrorFrame, Frame, MessageFrame, byFrame } from '@atproto/xrpc-server'
+import { AppContext } from '../../src'
+import { AccountStatus } from '../../src/account-manager'
 import {
+  Account as AccountEvt,
   Commit as CommitEvt,
   Handle as HandleEvt,
-  Tombstone as TombstoneEvt,
-  Account as AccountEvt,
   Identity as IdentityEvt,
+  Tombstone as TombstoneEvt,
 } from '../../src/lexicon/types/com/atproto/sync/subscribeRepos'
-import { AppContext } from '../../src'
 import basicSeed from '../seeds/basic'
-import { CID } from 'multiformats/cid'
-import { AccountStatus } from '../../src/account-manager'
 
 describe('repo subscribe repos', () => {
   let serverHost: string

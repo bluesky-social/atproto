@@ -1,6 +1,6 @@
 import { ServiceImpl } from '@connectrpc/connect'
-import { Service } from '../../../proto/bsky_connect'
 import { keyBy } from '@atproto/common'
+import { Service } from '../../../proto/bsky_connect'
 import { Database } from '../db'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
@@ -15,7 +15,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .where('uri', 'in', uris)
       .execute()
     const byUri = keyBy(res, 'uri')
-    const counts = uris.map((uri) => byUri[uri]?.replyCount ?? 0)
+    const counts = uris.map((uri) => byUri.get(uri)?.replyCount ?? 0)
     return { counts }
   },
 })

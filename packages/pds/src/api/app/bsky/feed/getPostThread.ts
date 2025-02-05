@@ -1,32 +1,31 @@
 import assert from 'node:assert'
 import { AtUri } from '@atproto/syntax'
 import { XRPCError } from '@atproto/xrpc'
-
+import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
+import { ids } from '../../../../lexicon/lexicons'
 import {
   ThreadViewPost,
   isThreadViewPost,
 } from '../../../../lexicon/types/app/bsky/feed/defs'
-import { Record as PostRecord } from '../../../../lexicon/types/app/bsky/feed/post'
 import {
   OutputSchema,
   QueryParams,
 } from '../../../../lexicon/types/app/bsky/feed/getPostThread'
+import { Record as PostRecord } from '../../../../lexicon/types/app/bsky/feed/post'
 import {
+  LocalRecords,
   LocalViewer,
+  RecordDescript,
+  formatMungedResponse,
   getLocalLag,
   getRepoRev,
-  LocalRecords,
-  RecordDescript,
   pipethroughReadAfterWrite,
-  formatMungedResponse,
 } from '../../../../read-after-write'
-import { ids } from '../../../../lexicon/lexicons'
 
 export default function (server: Server, ctx: AppContext) {
-  const { bskyAppView } = ctx.cfg
-  if (!bskyAppView) return
+  if (!ctx.bskyAppView) return
+
   server.app.bsky.feed.getPostThread({
     auth: ctx.authVerifier.accessStandard(),
     handler: async (reqCtx) => {
@@ -191,11 +190,12 @@ const readAfterWriteNotFound = async (
   const highestParent = getHighestParent(thread)
   if (highestParent) {
     try {
-      assert(ctx.appViewAgent)
-      const parentsRes = await ctx.appViewAgent.api.app.bsky.feed.getPostThread(
-        { uri: highestParent, parentHeight: params.parentHeight, depth: 0 },
-        await ctx.appviewAuthHeaders(requester, ids.AppBskyFeedGetPostThread),
-      )
+      assert(ctx.bskyAppView)
+      const parentsRes =
+        await ctx.bskyAppView.agent.app.bsky.feed.getPostThread(
+          { uri: highestParent, parentHeight: params.parentHeight, depth: 0 },
+          await ctx.appviewAuthHeaders(requester, ids.AppBskyFeedGetPostThread),
+        )
       thread.parent = parentsRes.data.thread
     } catch (err) {
       // do nothing

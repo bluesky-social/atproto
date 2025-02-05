@@ -1,9 +1,9 @@
-import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
-import { parseProxyInfo } from '../../../../pipethrough'
-import { ids } from '../../../../lexicon/lexicons'
 import { AtpAgent } from '@atproto/api'
 import { AuthScope } from '../../../../auth-verifier'
+import { AppContext } from '../../../../context'
+import { Server } from '../../../../lexicon'
+import { ids } from '../../../../lexicon/lexicons'
+import { parseProxyInfo } from '../../../../pipethrough'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.moderation.createReport({

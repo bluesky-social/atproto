@@ -1,11 +1,9 @@
 import assert from 'node:assert'
-
-import { InvalidRequestError } from '@atproto/xrpc-server'
 import { isEmailValid } from '@hapi/address'
 import { isDisposableEmail } from 'disposable-email-domains-js'
-
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import { UserAlreadyExistsError } from '../../../../account-manager/helpers/account'
-import AppContext from '../../../../context'
+import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
 

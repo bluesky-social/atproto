@@ -275,5 +275,3 @@ export const vectors = [
     cid: 'bafyreico7wgbbfe6dpfsuednrtrlh6t2yjl6xq5rf32gl3pgwhwxk77cn4',
   },
 ]
-
-export default vectors

@@ -1,16 +1,16 @@
-import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
-import { createServiceAuthHeaders } from '@atproto/xrpc-server'
-import { IdResolver } from '@atproto/identity'
 import { AtpAgent } from '@atproto/api'
+import { allFulfilled } from '@atproto/common'
+import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
+import { IdResolver } from '@atproto/identity'
+import { createServiceAuthHeaders } from '@atproto/xrpc-server'
+import { BackgroundQueue } from '../background'
 import { OzoneConfig, OzoneSecrets } from '../config'
 import { Database } from '../db'
+import { ModerationService } from '../mod-service'
+import { getSigningKeyId } from '../util'
 import { EventPusher } from './event-pusher'
 import { EventReverser } from './event-reverser'
-import { ModerationService } from '../mod-service'
-import { BackgroundQueue } from '../background'
-import { getSigningKeyId } from '../util'
 import { MaterializedViewRefresher } from './materialized-view-refresher'
-import { allFulfilled } from '@atproto/common'
 
 export type DaemonContextOptions = {
   db: Database
@@ -136,5 +136,3 @@ export class DaemonContext {
     }
   }
 }
-
-export default DaemonContext

@@ -1,7 +1,17 @@
-import EventEmitter from 'events'
+import EventEmitter from 'node:events'
 import TypedEmitter from 'typed-emitter'
-import { seqLogger as log } from '../logger'
 import { SECOND, cborDecode, wait } from '@atproto/common'
+import { AccountStatus } from '../account-manager/helpers/account'
+import { Crawlers } from '../crawlers'
+import { seqLogger as log } from '../logger'
+import { CommitDataWithOps } from '../repo'
+import {
+  RepoSeqEntry,
+  RepoSeqInsert,
+  SequencerDb,
+  getDb,
+  getMigrator,
+} from './db'
 import {
   AccountEvt,
   CommitEvt,
@@ -15,16 +25,6 @@ import {
   formatSeqIdentityEvt,
   formatSeqTombstone,
 } from './events'
-import {
-  SequencerDb,
-  getMigrator,
-  RepoSeqEntry,
-  RepoSeqInsert,
-  getDb,
-} from './db'
-import { CommitDataWithOps } from '../repo'
-import { Crawlers } from '../crawlers'
-import { AccountStatus } from '../account-manager/helpers/account'
 
 export * from './events'
 

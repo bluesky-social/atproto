@@ -1,12 +1,11 @@
 import type { Redis } from 'ioredis'
-
 import { CreateRedisOptions, createRedis } from '../lib/redis.js'
 import { Code } from './code.js'
 import { RequestData } from './request-data.js'
 import { RequestId, requestIdSchema } from './request-id.js'
 import { RequestStore } from './request-store.js'
 
-export type { Redis, CreateRedisOptions }
+export type { CreateRedisOptions, Redis }
 
 export type ReplayStoreRedisOptions = {
   redis: CreateRedisOptions

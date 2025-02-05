@@ -1,10 +1,12 @@
+import { ComAtprotoRepoStrongRef } from '@atproto/api'
 import {
-  TestNetwork,
+  ModeratorClient,
   RecordRef,
   SeedClient,
+  TestNetwork,
   basicSeed,
-  ModeratorClient,
 } from '@atproto/dev-env'
+import { isRepoRef } from '../src/lexicon/types/com/atproto/admin/defs'
 import {
   REASONAPPEAL,
   REASONOTHER,
@@ -16,8 +18,6 @@ import {
   REVIEWOPEN,
   SubjectStatusView,
 } from '../src/lexicon/types/tools/ozone/moderation/defs'
-import { isRepoRef } from '../src/lexicon/types/com/atproto/admin/defs'
-import { ComAtprotoRepoStrongRef } from '@atproto/api'
 
 describe('acknowledge all subjects of account', () => {
   let network: TestNetwork

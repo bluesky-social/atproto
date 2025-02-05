@@ -4,8 +4,8 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import { REASONSPAM } from '../src/lexicon/types/com/atproto/moderation/defs'
 import { REASONMISLEADING } from '../dist/lexicon/types/com/atproto/moderation/defs'
+import { REASONSPAM } from '../src/lexicon/types/com/atproto/moderation/defs'
 
 describe('moderation subject content tagging', () => {
   let network: TestNetwork

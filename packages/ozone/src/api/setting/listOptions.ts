@@ -1,6 +1,6 @@
 import { AuthRequiredError } from '@atproto/xrpc-server'
+import { AppContext } from '../../context'
 import { Server } from '../../lexicon'
-import AppContext from '../../context'
 
 export default function (server: Server, ctx: AppContext) {
   server.tools.ozone.setting.listOptions({

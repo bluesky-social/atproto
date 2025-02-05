@@ -1,10 +1,10 @@
-import { InvalidRequestError, createServiceJwt } from '@atproto/xrpc-server'
 import { HOUR, MINUTE } from '@atproto/common'
-import AppContext from '../../../../context'
-import { Server } from '../../../../lexicon'
-import { PRIVILEGED_METHODS, PROTECTED_METHODS } from '../../../../pipethrough'
+import { InvalidRequestError, createServiceJwt } from '@atproto/xrpc-server'
 import { AuthScope } from '../../../../auth-verifier'
+import { AppContext } from '../../../../context'
+import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
+import { PRIVILEGED_METHODS, PROTECTED_METHODS } from '../../../../pipethrough'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.getServiceAuth({

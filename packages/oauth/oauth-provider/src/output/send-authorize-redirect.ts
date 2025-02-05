@@ -1,9 +1,8 @@
+import { ServerResponse } from 'node:http'
 import {
   OAuthAuthorizationRequestParameters,
   OAuthTokenType,
 } from '@atproto/oauth-types'
-import { ServerResponse } from 'node:http'
-
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { html, js } from '../lib/html/index.js'
 import { Code } from '../request/code.js'
