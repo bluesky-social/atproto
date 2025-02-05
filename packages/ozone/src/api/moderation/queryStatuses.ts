@@ -8,7 +8,6 @@ export default function (server: Server, ctx: AppContext) {
       const db = ctx.db
       const modService = ctx.modService(db)
       const results = await modService.getSubjectStatuses(params)
-      console.log(results.statuses)
       const subjectStatuses = results.statuses.map((status) =>
         modService.views.formatSubjectStatus(status),
       )

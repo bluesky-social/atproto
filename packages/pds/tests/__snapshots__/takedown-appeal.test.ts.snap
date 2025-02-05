@@ -16,11 +16,12 @@ Object {
     "$type": "tools.ozone.moderation.defs#accountHosting",
     "status": "unknown",
   },
-  "id": 1,
+  "id": 9,
   "lastAppealedAt": "1970-01-01T00:00:00.000Z",
   "lastReportedAt": "1970-01-01T00:00:00.000Z",
   "lastReviewedAt": "1970-01-01T00:00:00.000Z",
   "lastReviewedBy": "user(0)",
+  "priorityScore": 0,
   "recordsStats": Object {
     "$type": "tools.ozone.moderation.defs#recordsStats",
   },
