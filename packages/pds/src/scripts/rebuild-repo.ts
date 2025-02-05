@@ -1,3 +1,4 @@
+import readline from 'node:readline/promises'
 import { TID } from '@atproto/common'
 import {
   BlockMap,
@@ -6,8 +7,7 @@ import {
   MemoryBlockstore,
   signCommit,
 } from '@atproto/repo'
-import readline from 'node:readline/promises'
-import AppContext from '../context'
+import { AppContext } from '../context'
 
 export const rebuildRepo = async (ctx: AppContext, args: string[]) => {
   const did = args[0]

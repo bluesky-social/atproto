@@ -1,36 +1,56 @@
 import net from 'node:net'
 import { Insertable, sql } from 'kysely'
 import { CID } from 'multiformats/cid'
-import { AtUri, INVALID_HANDLE } from '@atproto/syntax'
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { AtpAgent } from '@atproto/api'
 import { addHoursToDate, chunkArray } from '@atproto/common'
 import { Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
-import { AtpAgent } from '@atproto/api'
+import { AtUri, INVALID_HANDLE } from '@atproto/syntax'
+import { InvalidRequestError } from '@atproto/xrpc-server'
+import { getReviewState } from '../api/util'
+import { BackgroundQueue } from '../background'
+import { OzoneConfig } from '../config'
+import { EventPusher } from '../daemon'
 import { Database } from '../db'
-import { AuthHeaders, ModerationViews } from './views'
+import { StatusKeyset, TimeIdKeyset, paginate } from '../db/pagination'
+import { BlobPushEvent } from '../db/schema/blob_push_event'
+import { LabelChannel } from '../db/schema/label'
+import { ModerationEvent } from '../db/schema/moderation_event'
+import { jsonb } from '../db/types'
+import { ImageInvalidator } from '../image-invalidator'
+import { ids } from '../lexicon/lexicons'
+import { RepoBlobRef, RepoRef } from '../lexicon/types/com/atproto/admin/defs'
+import { Label } from '../lexicon/types/com/atproto/label/defs'
 import { Main as StrongRef } from '../lexicon/types/com/atproto/repo/strongRef'
 import {
+  REVIEWESCALATED,
+  REVIEWOPEN,
+  isAccountEvent,
+  isIdentityEvent,
+  isModEventAcknowledge,
   isModEventComment,
+  isModEventEmail,
   isModEventLabel,
   isModEventMute,
   isModEventReport,
-  isModEventTakedown,
-  isModEventEmail,
   isModEventTag,
-  isAccountEvent,
-  isIdentityEvent,
+  isModEventTakedown,
   isRecordEvent,
-  REVIEWESCALATED,
-  REVIEWOPEN,
-  isModEventAcknowledge,
 } from '../lexicon/types/tools/ozone/moderation/defs'
-import { RepoRef, RepoBlobRef } from '../lexicon/types/com/atproto/admin/defs'
+import { QueryParams as QueryStatusParams } from '../lexicon/types/tools/ozone/moderation/queryStatuses'
+import { httpLogger as log } from '../logger'
+import { LABELER_HEADER_NAME, ParsedLabelers } from '../util'
 import {
   adjustModerationSubjectStatus,
   getStatusIdentifierFromSubject,
   moderationSubjectStatusQueryBuilder,
 } from './status'
+import {
+  ModSubject,
+  RecordSubject,
+  RepoSubject,
+  subjectFromStatusRow,
+} from './subject'
 import {
   ModEventType,
   ModerationEventRow,
@@ -38,28 +58,8 @@ import {
   ModerationSubjectStatusRowWithHandle,
   ReversibleModerationEvent,
 } from './types'
-import { ModerationEvent } from '../db/schema/moderation_event'
-import { StatusKeyset, TimeIdKeyset, paginate } from '../db/pagination'
-import { Label } from '../lexicon/types/com/atproto/label/defs'
-import { QueryParams as QueryStatusParams } from '../lexicon/types/tools/ozone/moderation/queryStatuses'
-import {
-  ModSubject,
-  RecordSubject,
-  RepoSubject,
-  subjectFromStatusRow,
-} from './subject'
-import { jsonb } from '../db/types'
-import { LabelChannel } from '../db/schema/label'
-import { BlobPushEvent } from '../db/schema/blob_push_event'
-import { BackgroundQueue } from '../background'
-import { EventPusher } from '../daemon'
 import { formatLabel, formatLabelRow, signLabel } from './util'
-import { ImageInvalidator } from '../image-invalidator'
-import { httpLogger as log } from '../logger'
-import { OzoneConfig } from '../config'
-import { LABELER_HEADER_NAME, ParsedLabelers } from '../util'
-import { ids } from '../lexicon/lexicons'
-import { getReviewState } from '../api/util'
+import { AuthHeaders, ModerationViews } from './views'
 
 export type ModerationServiceCreator = (db: Database) => ModerationService
 

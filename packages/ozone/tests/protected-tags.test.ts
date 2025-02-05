@@ -1,14 +1,14 @@
 import {
-  TestNetwork,
-  SeedClient,
-  basicSeed,
   ModeratorClient,
+  SeedClient,
+  TestNetwork,
+  basicSeed,
 } from '@atproto/dev-env'
-import { ProtectedTagSettingKey } from '../src/setting/constants'
 import {
   ROLEADMIN,
   ROLEMODERATOR,
 } from '../dist/lexicon/types/tools/ozone/team/defs'
+import { ProtectedTagSettingKey } from '../src/setting/constants'
 
 describe('protected-tags', () => {
   let network: TestNetwork

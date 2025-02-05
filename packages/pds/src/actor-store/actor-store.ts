@@ -1,3 +1,6 @@
+import assert from 'node:assert'
+import fs, { mkdir } from 'node:fs/promises'
+import path from 'node:path'
 import {
   chunkArray,
   fileExists,
@@ -7,12 +10,9 @@ import {
 import * as crypto from '@atproto/crypto'
 import { ExportableKeypair, Keypair } from '@atproto/crypto'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import assert from 'node:assert'
-import fs, { mkdir } from 'node:fs/promises'
-import path from 'node:path'
 import { ActorStoreConfig } from '../config'
 import { retrySqlite } from '../db'
-import DiskBlobStore from '../disk-blobstore'
+import { DiskBlobStore } from '../disk-blobstore'
 import { ActorStoreReader } from './actor-store-reader'
 import { ActorStoreResources } from './actor-store-resources'
 import { ActorStoreTransactor } from './actor-store-transactor'

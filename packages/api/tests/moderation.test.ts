@@ -1,11 +1,11 @@
+import { ModerationOpts } from '../dist'
 import {
-  moderateProfile,
-  moderatePost,
-  mock,
   interpretLabelValueDefinition,
+  mock,
+  moderatePost,
+  moderateProfile,
 } from '../src'
 import './util/moderation-behavior'
-import { ModerationOpts } from '../dist'
 
 describe('Moderation', () => {
   it('Applies self-labels on profiles according to the global preferences', () => {

@@ -1,21 +1,21 @@
-import assert from 'assert'
-import { XRPCError } from '@atproto/xrpc'
-import { AuthRequiredError } from '@atproto/xrpc-server'
-import { TID } from '@atproto/common'
+import assert from 'node:assert'
 import { AtUri, AtpAgent } from '@atproto/api'
+import { TID } from '@atproto/common'
 import {
-  TestNetwork,
-  TestFeedGen,
-  SeedClient,
   RecordRef,
+  SeedClient,
+  TestFeedGen,
+  TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import { Handler as SkeletonHandler } from '../src/lexicon/types/app/bsky/feed/getFeedSkeleton'
+import { XRPCError } from '@atproto/xrpc'
+import { AuthRequiredError } from '@atproto/xrpc-server'
 import { ids } from '../src/lexicon/lexicons'
 import {
   FeedViewPost,
   SkeletonFeedPost,
 } from '../src/lexicon/types/app/bsky/feed/defs'
+import { Handler as SkeletonHandler } from '../src/lexicon/types/app/bsky/feed/getFeedSkeleton'
 import { forSnapshot, paginateAll } from './_util'
 
 describe('feed generation', () => {

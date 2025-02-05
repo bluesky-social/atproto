@@ -1,5 +1,5 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
 import { CID } from 'multiformats/cid'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export const parseCidParam = (cid: string): CID => {
   try {

@@ -1,19 +1,19 @@
-import { AtpAgent, AppBskyActorProfile, AppBskyFeedDefs } from '@atproto/api'
-import { TestNetwork, SeedClient, authorFeedSeed } from '@atproto/dev-env'
+import { AppBskyActorProfile, AppBskyFeedDefs, AtpAgent } from '@atproto/api'
+import { SeedClient, TestNetwork, authorFeedSeed } from '@atproto/dev-env'
+import { ids } from '../../src/lexicon/lexicons'
+import { isView as isImageEmbed } from '../../src/lexicon/types/app/bsky/embed/images'
+import { isView as isEmbedRecordWithMedia } from '../../src/lexicon/types/app/bsky/embed/recordWithMedia'
+import { isView as isVideoEmbed } from '../../src/lexicon/types/app/bsky/embed/video'
+import { isPostView } from '../../src/lexicon/types/app/bsky/feed/defs'
+import { ReplyRef, isRecord } from '../../src/lexicon/types/app/bsky/feed/post'
+import { uriToDid } from '../../src/util/uris'
+import { VideoEmbed } from '../../src/views/types'
 import {
   forSnapshot,
   paginateAll,
   stripViewer,
   stripViewerFromPost,
 } from '../_util'
-import { ReplyRef, isRecord } from '../../src/lexicon/types/app/bsky/feed/post'
-import { isView as isEmbedRecordWithMedia } from '../../src/lexicon/types/app/bsky/embed/recordWithMedia'
-import { isView as isImageEmbed } from '../../src/lexicon/types/app/bsky/embed/images'
-import { isView as isVideoEmbed } from '../../src/lexicon/types/app/bsky/embed/video'
-import { isPostView } from '../../src/lexicon/types/app/bsky/feed/defs'
-import { uriToDid } from '../../src/util/uris'
-import { ids } from '../../src/lexicon/lexicons'
-import { VideoEmbed } from '../../src/views/types'
 
 describe('pds author feed views', () => {
   let network: TestNetwork

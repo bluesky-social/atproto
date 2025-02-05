@@ -15,6 +15,9 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/sync"
   },
+  "engines": {
+    "node": ">=18.7.0"
+  },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {

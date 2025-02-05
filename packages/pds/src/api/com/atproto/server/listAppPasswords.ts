@@ -1,6 +1,5 @@
 import assert from 'node:assert'
-
-import AppContext from '../../../../context'
+import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
 import { resultPassthru } from '../../../proxy'

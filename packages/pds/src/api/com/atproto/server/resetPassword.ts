@@ -1,6 +1,6 @@
-import AppContext from '../../../../context'
-import { Server } from '../../../../lexicon'
 import { MINUTE } from '@atproto/common'
+import { AppContext } from '../../../../context'
+import { Server } from '../../../../lexicon'
 import { authPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {

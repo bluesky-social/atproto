@@ -1,4 +1,18 @@
 import {
+  type GenerateKeyPairOptions,
+  type GenerateKeyPairResult,
+  type JWK,
+  type JWTVerifyOptions,
+  type KeyLike,
+  SignJWT,
+  errors,
+  exportJWK,
+  generateKeyPair,
+  importJWK,
+  importPKCS8,
+  jwtVerify,
+} from 'jose'
+import {
   Jwk,
   JwkError,
   JwtCreateError,
@@ -14,21 +28,6 @@ import {
   jwtHeaderSchema,
   jwtPayloadSchema,
 } from '@atproto/jwk'
-import {
-  SignJWT,
-  errors,
-  exportJWK,
-  generateKeyPair,
-  importJWK,
-  importPKCS8,
-  jwtVerify,
-  type GenerateKeyPairOptions,
-  type GenerateKeyPairResult,
-  type JWK,
-  type JWTVerifyOptions,
-  type KeyLike,
-} from 'jose'
-
 import { either } from './util'
 
 const { JOSEError } = errors

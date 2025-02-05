@@ -1,12 +1,12 @@
 import { AtpAgent } from '@atproto/api'
-import { TestNetwork, SeedClient, RecordRef, basicSeed } from '@atproto/dev-env'
+import { RecordRef, SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import { ids } from '../../src/lexicon/lexicons'
 import {
   forSnapshot,
   paginateAll,
   stripViewer,
   stripViewerFromPost,
 } from '../_util'
-import { ids } from '../../src/lexicon/lexicons'
 
 describe('list feed views', () => {
   let network: TestNetwork

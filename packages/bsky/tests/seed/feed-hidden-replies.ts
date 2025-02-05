@@ -1,4 +1,4 @@
-import { TestNetwork, SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
+import { SeedClient, TestNetwork, TestNetworkNoAppView } from '@atproto/dev-env'
 
 export type User = {
   id: string

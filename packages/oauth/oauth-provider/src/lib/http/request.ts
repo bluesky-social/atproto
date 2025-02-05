@@ -1,10 +1,9 @@
+import { randomBytes } from 'node:crypto'
 import { parse as parseCookie, serialize as serializeCookie } from 'cookie'
-import { randomBytes } from 'crypto'
 import createHttpError from 'http-errors'
-
 import { appendHeader } from './response.js'
 import { IncomingMessage, ServerResponse } from './types.js'
-import { urlMatch, UrlReference } from './url.js'
+import { UrlReference, urlMatch } from './url.js'
 
 export function validateHeaderValue(
   req: IncomingMessage,

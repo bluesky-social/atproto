@@ -1,7 +1,7 @@
-import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
 import { AtpAgent, BlobRef } from '@atproto/api'
-import { ids } from '../src/lexicon/lexicons'
+import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import { AppContext } from '../src'
+import { ids } from '../src/lexicon/lexicons'
 
 describe('blob deletes', () => {
   let network: TestNetworkNoAppView

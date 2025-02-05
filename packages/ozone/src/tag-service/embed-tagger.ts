@@ -1,13 +1,13 @@
 import {
+  AppBskyEmbedExternal,
   AppBskyEmbedImages,
   AppBskyEmbedRecordWithMedia,
-  AppBskyFeedPost,
   AppBskyEmbedVideo,
-  AppBskyEmbedExternal,
+  AppBskyFeedPost,
 } from '@atproto/api'
+import { ids } from '../lexicon/lexicons'
 import { langLogger as log } from '../logger'
 import { ContentTagger } from './content-tagger'
-import { ids } from '../lexicon/lexicons'
 
 export class EmbedTagger extends ContentTagger {
   tagPrefix = 'embed:'

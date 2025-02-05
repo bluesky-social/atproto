@@ -1,5 +1,4 @@
 import { RichText, mock, moderatePost } from '../src/'
-
 import { hasMutedWord } from '../src/moderation/mutewords'
 
 describe(`hasMutedWord`, () => {

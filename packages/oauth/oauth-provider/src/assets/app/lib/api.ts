@@ -1,5 +1,4 @@
 import { FetchResponseError, Json } from '@atproto-labs/fetch'
-
 import { Account, Session } from '../backend-data'
 
 export class Api {

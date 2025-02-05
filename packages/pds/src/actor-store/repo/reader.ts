@@ -1,6 +1,4 @@
 import { BlobStore } from '@atproto/repo'
-import { CID } from 'multiformats/cid'
-
 import { BlobReader } from '../blob/reader'
 import { ActorDb } from '../db'
 import { RecordReader } from '../record/reader'

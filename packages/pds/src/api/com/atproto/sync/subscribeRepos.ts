@@ -1,8 +1,8 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
-import Outbox from '../../../../sequencer/outbox'
 import { httpLogger } from '../../../../logger'
+import { Outbox } from '../../../../sequencer/outbox'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.subscribeRepos(async function* ({ params, signal }) {

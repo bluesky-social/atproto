@@ -1,12 +1,12 @@
-import assert from 'assert'
+import assert from 'node:assert'
 import { AtpAgent } from '@atproto/api'
-import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
+import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import { ids } from '../../src/lexicon/lexicons'
 import {
   isNotFoundPost,
   isThreadViewPost,
 } from '../../src/lexicon/types/app/bsky/feed/defs'
 import { forSnapshot } from '../_util'
-import { ids } from '../../src/lexicon/lexicons'
 
 describe('views with thread gating', () => {
   let network: TestNetwork

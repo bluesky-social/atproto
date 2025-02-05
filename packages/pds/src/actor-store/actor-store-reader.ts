@@ -1,10 +1,10 @@
 import { Keypair } from '@atproto/crypto'
 import { ActorStoreResources } from './actor-store-resources'
+import { ActorStoreTransactor } from './actor-store-transactor'
 import { ActorDb } from './db'
 import { PreferenceReader } from './preference/reader'
 import { RecordReader } from './record/reader'
 import { RepoReader } from './repo/reader'
-import { ActorStoreTransactor } from './actor-store-transactor'
 
 export class ActorStoreReader {
   public readonly repo: RepoReader

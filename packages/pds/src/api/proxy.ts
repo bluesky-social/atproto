@@ -1,6 +1,6 @@
+import { IncomingMessage } from 'node:http'
 import { Headers } from '@atproto/xrpc'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { IncomingMessage } from 'node:http'
 
 export const resultPassthru = <T>(result: { headers: Headers; data: T }) => {
   // @TODO pass through any headers that we always want to forward along

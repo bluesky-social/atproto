@@ -1,14 +1,14 @@
+import { sql } from 'kysely'
+import { CID } from 'multiformats/cid'
+import { chunkArray, wait } from '@atproto/common'
 import {
   BlockMap,
   CidSet,
   ReadableBlockstore,
   writeCarStream,
 } from '@atproto/repo'
-import { chunkArray, wait } from '@atproto/common'
-import { CID } from 'multiformats/cid'
-import { ActorDb } from '../db'
-import { sql } from 'kysely'
 import { countAll } from '../../db'
+import { ActorDb } from '../db'
 
 export class SqlRepoReader extends ReadableBlockstore {
   cache: BlockMap = new BlockMap()

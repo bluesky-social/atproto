@@ -1,11 +1,11 @@
 import {
-  ComAtprotoLabelDefs,
-  AppBskyFeedDefs,
   AppBskyActorDefs,
-  AppBskyFeedPost,
   AppBskyEmbedRecord,
+  AppBskyFeedDefs,
+  AppBskyFeedPost,
   AppBskyGraphDefs,
   AppBskyNotificationListNotifications,
+  ComAtprotoLabelDefs,
 } from './client'
 
 const FAKE_CID = 'bafyreiclp443lavogvhj3d2ob2cxbfuscni2k5jk7bebjzg7khl3esabwq'

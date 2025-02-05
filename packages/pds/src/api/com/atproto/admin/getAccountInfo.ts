@@ -1,7 +1,6 @@
-import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { INVALID_HANDLE } from '@atproto/syntax'
+import { AppContext } from '../../../../context'
+import { Server } from '../../../../lexicon'
 import { formatAccountInfo } from './util'
 
 export default function (server: Server, ctx: AppContext) {

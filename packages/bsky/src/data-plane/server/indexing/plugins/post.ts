@@ -1,27 +1,33 @@
 import { Insertable, Selectable, sql } from 'kysely'
 import { CID } from 'multiformats/cid'
-import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import { jsonStringToLex } from '@atproto/lexicon'
-import {
-  Record as PostRecord,
-  ReplyRef,
-} from '../../../../lexicon/types/app/bsky/feed/post'
-import { Record as GateRecord } from '../../../../lexicon/types/app/bsky/feed/threadgate'
-import { Record as PostgateRecord } from '../../../../lexicon/types/app/bsky/feed/postgate'
-import { isMain as isEmbedImage } from '../../../../lexicon/types/app/bsky/embed/images'
+import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
+import * as lex from '../../../../lexicon/lexicons'
 import { isMain as isEmbedExternal } from '../../../../lexicon/types/app/bsky/embed/external'
+import { isMain as isEmbedImage } from '../../../../lexicon/types/app/bsky/embed/images'
 import { isMain as isEmbedRecord } from '../../../../lexicon/types/app/bsky/embed/record'
 import { isMain as isEmbedRecordWithMedia } from '../../../../lexicon/types/app/bsky/embed/recordWithMedia'
 import { isMain as isEmbedVideo } from '../../../../lexicon/types/app/bsky/embed/video'
 import {
-  isMention,
+  Record as PostRecord,
+  ReplyRef,
+} from '../../../../lexicon/types/app/bsky/feed/post'
+import { Record as PostgateRecord } from '../../../../lexicon/types/app/bsky/feed/postgate'
+import { Record as GateRecord } from '../../../../lexicon/types/app/bsky/feed/threadgate'
+import {
   isLink,
+  isMention,
 } from '../../../../lexicon/types/app/bsky/richtext/facet'
-import * as lex from '../../../../lexicon/lexicons'
-import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
-import RecordProcessor from '../processor'
-import { Notification } from '../../db/tables/notification'
+import {
+  postUriToPostgateUri,
+  postUriToThreadgateUri,
+  uriToDid,
+} from '../../../../util/uris'
+import { parsePostgate } from '../../../../views/util'
+import { BackgroundQueue } from '../../background'
 import { Database } from '../../db'
+import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
+import { Notification } from '../../db/tables/notification'
 import { countAll, excluded } from '../../db/util'
 import {
   getAncestorsAndSelfQb,
@@ -29,13 +35,7 @@ import {
   invalidReplyRoot as checkInvalidReplyRoot,
   violatesThreadGate as checkViolatesThreadGate,
 } from '../../util'
-import { BackgroundQueue } from '../../background'
-import { parsePostgate } from '../../../../views/util'
-import {
-  postUriToThreadgateUri,
-  postUriToPostgateUri,
-  uriToDid,
-} from '../../../../util/uris'
+import { RecordProcessor } from '../processor'
 
 type Notif = Insertable<Notification>
 type Post = Selectable<DatabaseSchemaType['post']>

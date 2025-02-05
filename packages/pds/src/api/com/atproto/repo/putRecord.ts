@@ -1,10 +1,10 @@
+import { CID } from 'multiformats/cid'
 import { BlobRef } from '@atproto/lexicon'
 import { CommitData } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
-import { CID } from 'multiformats/cid'
 import { ActorStoreTransactor } from '../../../../actor-store/actor-store-transactor'
-import AppContext from '../../../../context'
+import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
 import { Record as ProfileRecord } from '../../../../lexicon/types/app/bsky/actor/profile'
@@ -12,9 +12,9 @@ import {
   BadCommitSwapError,
   BadRecordSwapError,
   InvalidRecordError,
-  prepareCreate,
   PreparedCreate,
   PreparedUpdate,
+  prepareCreate,
   prepareUpdate,
 } from '../../../../repo'
 

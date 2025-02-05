@@ -1,15 +1,15 @@
 import assert from 'node:assert'
 import fs from 'node:fs/promises'
-import { AtUri } from '@atproto/syntax'
 import { AtpAgent } from '@atproto/api'
-import { BlobRef } from '@atproto/lexicon'
+import { TID, cidForCbor, ui8ToArrayBuffer } from '@atproto/common'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
-import { cidForCbor, TID, ui8ToArrayBuffer } from '@atproto/common'
+import { BlobRef } from '@atproto/lexicon'
 import { BlobNotFoundError } from '@atproto/repo'
+import { AtUri } from '@atproto/syntax'
+import { AppContext } from '../src/context'
+import { ids, lexicons } from '../src/lexicon/lexicons'
 import * as Post from '../src/lexicon/types/app/bsky/feed/post'
 import { forSnapshot, paginateAll } from './_util'
-import AppContext from '../src/context'
-import { ids, lexicons } from '../src/lexicon/lexicons'
 
 describe('crud operations', () => {
   let network: TestNetworkNoAppView

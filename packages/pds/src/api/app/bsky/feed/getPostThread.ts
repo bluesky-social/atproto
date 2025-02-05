@@ -1,28 +1,27 @@
 import assert from 'node:assert'
 import { AtUri } from '@atproto/syntax'
 import { XRPCError } from '@atproto/xrpc'
-
+import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
+import { ids } from '../../../../lexicon/lexicons'
 import {
   ThreadViewPost,
   isThreadViewPost,
 } from '../../../../lexicon/types/app/bsky/feed/defs'
-import { Record as PostRecord } from '../../../../lexicon/types/app/bsky/feed/post'
 import {
   OutputSchema,
   QueryParams,
 } from '../../../../lexicon/types/app/bsky/feed/getPostThread'
+import { Record as PostRecord } from '../../../../lexicon/types/app/bsky/feed/post'
 import {
+  LocalRecords,
   LocalViewer,
+  RecordDescript,
+  formatMungedResponse,
   getLocalLag,
   getRepoRev,
-  LocalRecords,
-  RecordDescript,
   pipethroughReadAfterWrite,
-  formatMungedResponse,
 } from '../../../../read-after-write'
-import { ids } from '../../../../lexicon/lexicons'
 
 export default function (server: Server, ctx: AppContext) {
   if (!ctx.bskyAppView) return

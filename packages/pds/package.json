@@ -16,6 +16,9 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": "dist/bin.js",
+  "engines": {
+    "node": ">=18.7.0"
+  },
   "scripts": {
     "prepare": "[ \"$npm_config_production\" = true ] || puppeteer browsers install chrome",
     "codegen": "lex gen-server --yes ./src/lexicon ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/* ../../lexicons/chat/bsky/*/* ../../lexicons/tools/ozone/*/*",

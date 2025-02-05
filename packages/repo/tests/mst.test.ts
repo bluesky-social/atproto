@@ -1,11 +1,9 @@
+import { CID } from 'multiformats'
+import { DataAdd, DataDelete, DataDiff, DataUpdate } from '../src/data-diff'
 import { MST } from '../src/mst'
-import DataDiff, { DataAdd, DataUpdate, DataDelete } from '../src/data-diff'
-import { countPrefixLen, InvalidMstKeyError } from '../src/mst/util'
-
+import { InvalidMstKeyError, countPrefixLen } from '../src/mst/util'
 import { MemoryBlockstore } from '../src/storage'
 import * as util from './_util'
-
-import { CID } from 'multiformats'
 
 describe('Merkle Search Tree', () => {
   let blockstore: MemoryBlockstore

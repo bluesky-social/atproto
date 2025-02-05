@@ -1,9 +1,9 @@
-import { keyBy } from '@atproto/common'
 import { ServiceImpl } from '@connectrpc/connect'
+import { keyBy } from '@atproto/common'
 import { Service } from '../../../proto/bsky_connect'
 import { Database } from '../db'
-import { countAll } from '../db/util'
 import { TimeCidKeyset, paginate } from '../db/pagination'
+import { countAll } from '../db/util'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getActorLists(req) {

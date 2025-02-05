@@ -1,5 +1,5 @@
+import { AppContext } from '../../context'
 import { Server } from '../../lexicon'
-import AppContext from '../../context'
 import { addAccountInfoToRepoViewDetail, getPdsAccountInfos } from '../util'
 
 export default function (server: Server, ctx: AppContext) {

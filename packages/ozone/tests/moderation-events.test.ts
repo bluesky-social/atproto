@@ -1,18 +1,18 @@
 import assert from 'node:assert'
 import EventEmitter, { once } from 'node:events'
-import {
-  TestNetwork,
-  SeedClient,
-  basicSeed,
-  ModeratorClient,
-} from '@atproto/dev-env'
 import { ToolsOzoneModerationDefs } from '@atproto/api'
-import { forSnapshot } from './_util'
+import {
+  ModeratorClient,
+  SeedClient,
+  TestNetwork,
+  basicSeed,
+} from '@atproto/dev-env'
 import {
   REASONAPPEAL,
   REASONMISLEADING,
   REASONSPAM,
 } from '../src/lexicon/types/com/atproto/moderation/defs'
+import { forSnapshot } from './_util'
 
 describe('moderation-events', () => {
   let network: TestNetwork

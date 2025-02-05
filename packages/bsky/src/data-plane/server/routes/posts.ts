@@ -1,6 +1,6 @@
 import { ServiceImpl } from '@connectrpc/connect'
-import { Service } from '../../../proto/bsky_connect'
 import { keyBy } from '@atproto/common'
+import { Service } from '../../../proto/bsky_connect'
 import { Database } from '../db'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({

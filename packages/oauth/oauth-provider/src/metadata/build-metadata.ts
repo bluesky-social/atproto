@@ -3,7 +3,6 @@ import {
   OAuthAuthorizationServerMetadata,
   oauthAuthorizationServerMetadataSchema,
 } from '@atproto/oauth-types'
-
 import { Client } from '../client/client.js'
 import { VERIFY_ALGOS } from '../lib/util/crypto.js'
 

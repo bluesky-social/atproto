@@ -1,7 +1,7 @@
 import { AtpAgent } from '@atproto/api'
-import { TestNetwork, SeedClient, likesSeed } from '@atproto/dev-env'
-import { constantDate, forSnapshot, paginateAll, stripViewer } from '../_util'
+import { SeedClient, TestNetwork, likesSeed } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
+import { constantDate, forSnapshot, paginateAll, stripViewer } from '../_util'
 
 describe('pds like views', () => {
   let network: TestNetwork

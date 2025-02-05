@@ -1,12 +1,12 @@
+import { AtpAgent } from '@atproto/api'
 import {
   ModeratorClient,
   SeedClient,
   TestNetwork,
   usersBulkSeed,
 } from '@atproto/dev-env'
-import { AtpAgent } from '@atproto/api'
-import { paginateAll } from './_util'
 import { ids } from '../src/lexicon/lexicons'
+import { paginateAll } from './_util'
 
 describe('admin repo search view', () => {
   let network: TestNetwork

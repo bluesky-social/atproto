@@ -1,6 +1,6 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { ActorAccount } from '../../../../account-manager/helpers/account'
-import AppContext from '../../../../context'
+import { AppContext } from '../../../../context'
 
 export const assertRepoAvailability = async (
   ctx: AppContext,

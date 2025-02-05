@@ -1,19 +1,12 @@
 import assert from 'node:assert'
-import * as undici from 'undici'
-import * as nodemailer from 'nodemailer'
-import { Redis } from 'ioredis'
 import * as plc from '@did-plc/lib'
-import {
-  Fetch,
-  isUnicastIp,
-  loggedFetch,
-  safeFetchWrap,
-  unicastLookup,
-} from '@atproto-labs/fetch-node'
-import * as crypto from '@atproto/crypto'
-import { IdResolver } from '@atproto/identity'
+import { Redis } from 'ioredis'
+import * as nodemailer from 'nodemailer'
+import * as undici from 'undici'
 import { AtpAgent } from '@atproto/api'
 import { KmsKeypair, S3BlobStore } from '@atproto/aws'
+import * as crypto from '@atproto/crypto'
+import { IdResolver } from '@atproto/identity'
 import { JoseKey, OAuthVerifier } from '@atproto/oauth-provider'
 import { BlobStore } from '@atproto/repo'
 import {
@@ -23,28 +16,34 @@ import {
   createServiceAuthHeaders,
   createServiceJwt,
 } from '@atproto/xrpc-server'
-
-import { ServerConfig, ServerSecrets } from './config'
-import { PdsOAuthProvider } from './oauth/provider'
+import {
+  Fetch,
+  isUnicastIp,
+  loggedFetch,
+  safeFetchWrap,
+  unicastLookup,
+} from '@atproto-labs/fetch-node'
+import { AccountManager } from './account-manager'
+import { ActorStore } from './actor-store/actor-store'
 import {
   AuthVerifier,
   createPublicKeyObject,
   createSecretKeyObject,
 } from './auth-verifier'
+import { BackgroundQueue } from './background'
+import { BskyAppView } from './bsky-app-view'
+import { ServerConfig, ServerSecrets } from './config'
+import { Crawlers } from './crawlers'
+import { DidSqliteCache } from './did-cache'
+import { DiskBlobStore } from './disk-blobstore'
+import { ImageUrlBuilder } from './image/image-url-builder'
 import { fetchLogger } from './logger'
 import { ServerMailer } from './mailer'
 import { ModerationMailer } from './mailer/moderation'
-import { AccountManager } from './account-manager'
-import { Sequencer } from './sequencer'
-import { BackgroundQueue } from './background'
-import { DidSqliteCache } from './did-cache'
-import { Crawlers } from './crawlers'
-import { DiskBlobStore } from './disk-blobstore'
-import { getRedisClient } from './redis'
-import { ActorStore } from './actor-store/actor-store'
+import { PdsOAuthProvider } from './oauth/provider'
 import { LocalViewer, LocalViewerCreator } from './read-after-write/viewer'
-import { BskyAppView } from './bsky-app-view'
-import { ImageUrlBuilder } from './image/image-url-builder'
+import { getRedisClient } from './redis'
+import { Sequencer } from './sequencer'
 
 export type AppContextOptions = {
   actorStore: ActorStore
@@ -416,5 +415,3 @@ export class AppContext {
     })
   }
 }
-
-export default AppContext

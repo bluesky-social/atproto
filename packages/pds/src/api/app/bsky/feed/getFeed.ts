@@ -1,9 +1,9 @@
-import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
-import { pipethrough } from '../../../../pipethrough'
-import { ids } from '../../../../lexicon/lexicons'
-import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/oauth-provider'
+import { AtUri } from '@atproto/syntax'
+import { AppContext } from '../../../../context'
+import { Server } from '../../../../lexicon'
+import { ids } from '../../../../lexicon/lexicons'
+import { pipethrough } from '../../../../pipethrough'
 
 export default function (server: Server, ctx: AppContext) {
   const { bskyAppView } = ctx

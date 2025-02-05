@@ -1,15 +1,18 @@
+import { AtpAgent, ToolsOzoneModerationEmitEvent } from '@atproto/api'
+import { HOUR } from '@atproto/common'
 import {
-  TestNetwork,
-  TestOzone,
   ImageRef,
+  ModeratorClient,
   RecordRef,
   SeedClient,
+  TestNetwork,
+  TestOzone,
   basicSeed,
-  ModeratorClient,
 } from '@atproto/dev-env'
-import { AtpAgent, ToolsOzoneModerationEmitEvent } from '@atproto/api'
 import { AtUri } from '@atproto/syntax'
-import { forSnapshot } from './_util'
+import { EventReverser } from '../src'
+import { ImageInvalidator } from '../src/image-invalidator'
+import { ids } from '../src/lexicon/lexicons'
 import {
   REASONMISLEADING,
   REASONOTHER,
@@ -20,11 +23,8 @@ import {
   REVIEWCLOSED,
   REVIEWESCALATED,
 } from '../src/lexicon/types/tools/ozone/moderation/defs'
-import { EventReverser } from '../src'
-import { ImageInvalidator } from '../src/image-invalidator'
 import { TAKEDOWN_LABEL } from '../src/mod-service'
-import { ids } from '../src/lexicon/lexicons'
-import { HOUR } from '@atproto/common'
+import { forSnapshot } from './_util'
 
 describe('moderation', () => {
   let network: TestNetwork

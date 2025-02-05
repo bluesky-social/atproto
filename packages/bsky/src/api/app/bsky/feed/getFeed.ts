@@ -1,17 +1,25 @@
-import { mapDefined } from '@atproto/common'
+import { AppBskyFeedGetFeedSkeleton, AtpAgent } from '@atproto/api'
+import { mapDefined, noUndefinedVals } from '@atproto/common'
+import { ResponseType, XRPCError } from '@atproto/xrpc'
 import {
   InvalidRequestError,
-  UpstreamFailureError,
   ServerTimer,
+  UpstreamFailureError,
   serverTimingHeader,
 } from '@atproto/xrpc-server'
-import { ResponseType, XRPCError } from '@atproto/xrpc'
-import { AtpAgent, AppBskyFeedGetFeedSkeleton } from '@atproto/api'
-import { noUndefinedVals } from '@atproto/common'
+import { AppContext } from '../../../../context'
+import {
+  Code,
+  getServiceEndpoint,
+  isDataplaneError,
+  unpackIdentityServices,
+} from '../../../../data-plane'
+import { FeedItem } from '../../../../hydration/feed'
+import { HydrateCtx } from '../../../../hydration/hydrator'
+import { Server } from '../../../../lexicon'
+import { ids } from '../../../../lexicon/lexicons'
 import { QueryParams as GetFeedParams } from '../../../../lexicon/types/app/bsky/feed/getFeed'
 import { OutputSchema as SkeletonOutput } from '../../../../lexicon/types/app/bsky/feed/getFeedSkeleton'
-import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -19,17 +27,8 @@ import {
   SkeletonFnInput,
   createPipeline,
 } from '../../../../pipeline'
-import { HydrateCtx } from '../../../../hydration/hydrator'
-import { FeedItem } from '../../../../hydration/feed'
 import { GetIdentityByDidResponse } from '../../../../proto/bsky_pb'
-import {
-  Code,
-  getServiceEndpoint,
-  isDataplaneError,
-  unpackIdentityServices,
-} from '../../../../data-plane'
 import { BSKY_USER_AGENT, resHeaders } from '../../../util'
-import { ids } from '../../../../lexicon/lexicons'
 
 export default function (server: Server, ctx: AppContext) {
   const getFeed = createPipeline(

@@ -1,35 +1,34 @@
 import { sql } from 'kysely'
-import { AtUri, INVALID_HANDLE, normalizeDatetimeAlways } from '@atproto/syntax'
-import { AtpAgent, AppBskyFeedDefs } from '@atproto/api'
+import { AppBskyFeedDefs, AtpAgent } from '@atproto/api'
 import { dedupeStrs } from '@atproto/common'
-import { BlobRef } from '@atproto/lexicon'
 import { Keypair } from '@atproto/crypto'
+import { BlobRef } from '@atproto/lexicon'
+import { AtUri, INVALID_HANDLE, normalizeDatetimeAlways } from '@atproto/syntax'
 import { Database } from '../db'
+import { LabelRow } from '../db/schema/label'
+import { ids } from '../lexicon/lexicons'
+import { AccountView } from '../lexicon/types/com/atproto/admin/defs'
+import { Label, isSelfLabels } from '../lexicon/types/com/atproto/label/defs'
+import { OutputSchema as ReportOutput } from '../lexicon/types/com/atproto/moderation/createReport'
+import { REASONOTHER } from '../lexicon/types/com/atproto/moderation/defs'
 import {
+  BlobView,
   ModEventView,
-  RepoView,
+  ModEventViewDetail,
   RecordView,
   RecordViewDetail,
-  BlobView,
+  RepoView,
   SubjectStatusView,
-  ModEventViewDetail,
 } from '../lexicon/types/tools/ozone/moderation/defs'
-import { AccountView } from '../lexicon/types/com/atproto/admin/defs'
-import { OutputSchema as ReportOutput } from '../lexicon/types/com/atproto/moderation/createReport'
-import { Label, isSelfLabels } from '../lexicon/types/com/atproto/label/defs'
+import { dbLogger, httpLogger } from '../logger'
+import { ParsedLabelers } from '../util'
+import { moderationSubjectStatusQueryBuilder } from './status'
+import { subjectFromEventRow, subjectFromStatusRow } from './subject'
 import {
   ModerationEventRowWithHandle,
   ModerationSubjectStatusRowWithHandle,
 } from './types'
-import { REASONOTHER } from '../lexicon/types/com/atproto/moderation/defs'
-import { subjectFromEventRow, subjectFromStatusRow } from './subject'
 import { formatLabel, signLabel } from './util'
-import { LabelRow } from '../db/schema/label'
-import { dbLogger } from '../logger'
-import { httpLogger } from '../logger'
-import { ParsedLabelers } from '../util'
-import { ids } from '../lexicon/lexicons'
-import { moderationSubjectStatusQueryBuilder } from './status'
 
 export type AuthHeaders = {
   headers: {
