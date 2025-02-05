@@ -1,5 +1,21 @@
 # @atproto/oauth-client-browser
 
+## 0.3.9
+
+### Patch Changes
+
+- [#3220](https://github.com/bluesky-social/atproto/pull/3220) [`61dc0d60e`](https://github.com/bluesky-social/atproto/commit/61dc0d60e19b88c6427a54c6d95a391b5f4da7bd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Apply new linting rules regarding import order
+
+- Updated dependencies [[`61dc0d60e`](https://github.com/bluesky-social/atproto/commit/61dc0d60e19b88c6427a54c6d95a391b5f4da7bd), [`61dc0d60e`](https://github.com/bluesky-social/atproto/commit/61dc0d60e19b88c6427a54c6d95a391b5f4da7bd)]:
+  - @atproto-labs/handle-resolver@0.1.7
+  - @atproto-labs/did-resolver@0.1.10
+  - @atproto-labs/simple-store@0.1.2
+  - @atproto/jwk-webcrypto@0.1.4
+  - @atproto/oauth-client@0.3.9
+  - @atproto/oauth-types@0.2.3
+  - @atproto/jwk@0.1.3
+  - @atproto/did@0.1.5
+
 ## 0.3.8
 
 ### Patch Changes

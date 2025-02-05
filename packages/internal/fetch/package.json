@@ -1,6 +1,6 @@
 {
   "name": "@atproto-labs/fetch",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "license": "MIT",
   "description": "Isomorphic wrapper utilities for fetch API",
   "keywords": [

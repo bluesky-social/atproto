@@ -1,6 +1,6 @@
 {
   "name": "@atproto/crypto",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "license": "MIT",
   "description": "Library for cryptographic keys and signing in atproto",
   "keywords": [
