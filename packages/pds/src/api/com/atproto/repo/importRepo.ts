@@ -1,6 +1,6 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { ActorStoreTransactor } from '../../../../actor-store'
+import { ActorStoreTransactor } from '../../../../actor-store/actor-store-transactor'
 import { TID } from '@atproto/common'
 import {
   WriteOpAction,

@@ -32,7 +32,7 @@ import {
   Main as EmbedRecordWithMedia,
   isMain as isEmbedRecordWithMedia,
 } from '../lexicon/types/app/bsky/embed/recordWithMedia'
-import { ActorStoreReader } from '../actor-store'
+import { ActorStoreReader } from '../actor-store/actor-store-reader'
 import { LocalRecords, RecordDescript } from './types'
 import { AccountManager } from '../account-manager'
 import { BskyAppView } from '../bsky-app-view'
@@ -40,18 +40,20 @@ import { ImageUrlBuilder } from '../image/image-url-builder'
 
 type CommonSignedUris = 'avatar' | 'banner' | 'feed_thumbnail' | 'feed_fullsize'
 
-export type LocalViewerCreator = (actorStore: ActorStoreReader) => LocalViewer
+export type LocalViewerCreator = (
+  actorStoreReader: ActorStoreReader,
+) => LocalViewer
 
 export class LocalViewer {
   constructor(
-    public readonly actorStore: ActorStoreReader,
+    public readonly actorStoreReader: ActorStoreReader,
     public readonly accountManager: AccountManager,
     public readonly imageUrlBuilder: ImageUrlBuilder,
     public readonly bskyAppView?: BskyAppView,
   ) {}
 
   get did() {
-    return this.actorStore.did
+    return this.actorStoreReader.did
   }
 
   static creator(
@@ -71,7 +73,7 @@ export class LocalViewer {
     if (!this.bskyAppView) {
       throw new Error('Could not find bsky appview did')
     }
-    const keypair = await this.actorStore.keypair()
+    const keypair = await this.actorStoreReader.keypair()
 
     return createServiceAuthHeaders({
       iss: did,
@@ -82,12 +84,12 @@ export class LocalViewer {
   }
 
   async getRecordsSinceRev(rev: string): Promise<LocalRecords> {
-    return this.actorStore.record.getRecordsSinceRev(rev)
+    return this.actorStoreReader.record.getRecordsSinceRev(rev)
   }
 
   async getProfileBasic(): Promise<ProfileViewBasic | null> {
     const [profileRes, accountRes] = await Promise.all([
-      this.actorStore.record.getProfileRecord(),
+      this.actorStoreReader.record.getProfileRecord(),
       this.accountManager.getAccount(this.did),
     ])
 

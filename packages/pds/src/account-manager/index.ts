@@ -21,10 +21,11 @@ import {
   UpdateRequestData,
 } from '@atproto/oauth-provider'
 import { AuthRequiredError } from '@atproto/xrpc-server'
+import { Selectable } from 'kysely'
 import { CID } from 'multiformats/cid'
 import { KeyObject } from 'node:crypto'
 
-import { ActorStore } from '../actor-store'
+import { ActorStore } from '../actor-store/actor-store'
 import { AuthScope } from '../auth-verifier'
 import { BackgroundQueue } from '../background'
 import { softDeleted } from '../db'
@@ -44,7 +45,6 @@ import * as repo from './helpers/repo'
 import * as scrypt from './helpers/scrypt'
 import * as token from './helpers/token'
 import * as usedRefreshToken from './helpers/used-refresh-token'
-import { Selectable } from 'kysely'
 
 export { AccountStatus, formatAccountStatus } from './helpers/account'
 
@@ -512,10 +512,9 @@ export class AccountManager
     if (!account.name || !account.picture) {
       const did = account.sub
 
-      const profile = await this.actorStore.read(
-        did,
-        async (actorStoreReader) => actorStoreReader.record.getProfileRecord(),
-      )
+      const profile = await this.actorStore.read(did, async (store) => {
+        return store.record.getProfileRecord()
+      })
 
       if (profile) {
         const { avatar, displayName } = profile
