@@ -1,4 +1,5 @@
-import fs from 'fs/promises'
+import assert from 'node:assert'
+import fs from 'node:fs/promises'
 import { AtUri } from '@atproto/syntax'
 import { AtpAgent } from '@atproto/api'
 import { BlobRef } from '@atproto/lexicon'
@@ -828,22 +829,17 @@ describe('crud operations', () => {
       const record = await ctx.actorStore.read(aliceAgent.accountDid, (store) =>
         store.record.getRecord(new AtUri(res.data.uri), res.data.cid),
       )
-      expect(record?.value).toMatchObject({
+      assert(record)
+      expect(record.value).toMatchObject({
         $type: 'com.example.record',
         blah: 'thing',
       })
       const recordBlobs = await ctx.actorStore.read(
-        aliceAgent.accountDid,
-        (store) =>
-          store.db.db
-            .selectFrom('blob')
-            .innerJoin('record_blob', 'record_blob.blobCid', 'blob.cid')
-            .where('recordUri', '=', res.data.uri)
-            .selectAll()
-            .execute(),
+        aliceAgent.assertDid,
+        (store) => store.repo.blob.getBlobsForRecord(record.uri),
       )
       expect(recordBlobs.length).toBe(1)
-      expect(recordBlobs.at(0)?.cid).toBe(uploadedRes.data.blob.ref.toString())
+      expect(recordBlobs.at(0)).toBe(uploadedRes.data.blob.ref.toString())
     })
 
     it('enforces record type constraint even when unvalidated', async () => {

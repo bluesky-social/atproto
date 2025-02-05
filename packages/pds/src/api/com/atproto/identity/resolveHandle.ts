@@ -1,4 +1,3 @@
-import { AtpAgent } from '@atproto/api'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as ident from '@atproto/syntax'
 import { Server } from '../../../../lexicon'
@@ -33,8 +32,16 @@ export default function (server: Server, ctx: AppContext) {
     }
 
     // this is not someone on our server, but we help with resolving anyway
-    if (!did && ctx.appViewAgent) {
-      did = await tryResolveFromAppView(ctx.appViewAgent, handle)
+    if (!did && ctx.bskyAppView) {
+      try {
+        const result =
+          await ctx.bskyAppView.agent.com.atproto.identity.resolveHandle({
+            handle,
+          })
+        did = result.data.did
+      } catch {
+        // Ignore
+      }
     }
 
     if (!did) {
@@ -50,15 +57,4 @@ export default function (server: Server, ctx: AppContext) {
       body: { did },
     }
   })
-}
-
-async function tryResolveFromAppView(agent: AtpAgent, handle: string) {
-  try {
-    const result = await agent.api.com.atproto.identity.resolveHandle({
-      handle,
-    })
-    return result.data.did
-  } catch (_err) {
-    return
-  }
 }

@@ -41,8 +41,10 @@ import { DidSqliteCache } from './did-cache'
 import { Crawlers } from './crawlers'
 import { DiskBlobStore } from './disk-blobstore'
 import { getRedisClient } from './redis'
-import { ActorStore } from './actor-store'
+import { ActorStore } from './actor-store/actor-store'
 import { LocalViewer, LocalViewerCreator } from './read-after-write/viewer'
+import { BskyAppView } from './bsky-app-view'
+import { ImageUrlBuilder } from './image/image-url-builder'
 
 export type AppContextOptions = {
   actorStore: ActorStore
@@ -59,7 +61,7 @@ export type AppContextOptions = {
   redisScratch?: Redis
   ratelimitCreator?: RateLimiterCreator
   crawlers: Crawlers
-  appViewAgent?: AtpAgent
+  bskyAppView?: BskyAppView
   moderationAgent?: AtpAgent
   reportingAgent?: AtpAgent
   entrywayAgent?: AtpAgent
@@ -86,7 +88,7 @@ export class AppContext {
   public redisScratch?: Redis
   public ratelimitCreator?: RateLimiterCreator
   public crawlers: Crawlers
-  public appViewAgent: AtpAgent | undefined
+  public bskyAppView?: BskyAppView
   public moderationAgent: AtpAgent | undefined
   public reportingAgent: AtpAgent | undefined
   public entrywayAgent: AtpAgent | undefined
@@ -112,7 +114,7 @@ export class AppContext {
     this.redisScratch = opts.redisScratch
     this.ratelimitCreator = opts.ratelimitCreator
     this.crawlers = opts.crawlers
-    this.appViewAgent = opts.appViewAgent
+    this.bskyAppView = opts.bskyAppView
     this.moderationAgent = opts.moderationAgent
     this.reportingAgent = opts.reportingAgent
     this.entrywayAgent = opts.entrywayAgent
@@ -214,9 +216,10 @@ export class AppContext {
       }
     }
 
-    const appViewAgent = cfg.bskyAppView
-      ? new AtpAgent({ service: cfg.bskyAppView.url })
+    const bskyAppView = cfg.bskyAppView
+      ? new BskyAppView(cfg.bskyAppView)
       : undefined
+
     const moderationAgent = cfg.modService
       ? new AtpAgent({ service: cfg.modService.url })
       : undefined
@@ -232,7 +235,19 @@ export class AppContext {
       ? createPublicKeyObject(cfg.entryway.jwtPublicKeyHex)
       : null
 
+    const imageUrlBuilder = new ImageUrlBuilder(
+      cfg.service.hostname,
+      bskyAppView,
+    )
+
+    const actorStore = new ActorStore(cfg.actorStore, {
+      blobstore,
+      backgroundQueue,
+    })
+
     const accountManager = new AccountManager(
+      actorStore,
+      imageUrlBuilder,
       backgroundQueue,
       cfg.db.accountDbLoc,
       jwtSecretKey,
@@ -250,18 +265,11 @@ export class AppContext {
             secrets.plcRotationKey.privateKeyHex,
           )
 
-    const actorStore = new ActorStore(cfg.actorStore, {
-      blobstore,
-      backgroundQueue,
-    })
-
-    const localViewer = LocalViewer.creator({
+    const localViewer = LocalViewer.creator(
       accountManager,
-      appViewAgent,
-      pdsHostname: cfg.service.hostname,
-      appviewDid: cfg.bskyAppView?.did,
-      appviewCdnUrlPattern: cfg.bskyAppView?.cdnUrlPattern,
-    })
+      imageUrlBuilder,
+      bskyAppView,
+    )
 
     // An agent for performing HTTP requests based on user provided URLs.
     const proxyAgentBase = new undici.Agent({
@@ -322,8 +330,6 @@ export class AppContext {
             await JoseKey.fromKeyLike(jwtSecretKey, undefined, 'HS256'),
           ],
           accountManager,
-          actorStore,
-          localViewer,
           redis: redisScratch,
           dpopSecret: secrets.dpopSecret,
           customization: cfg.oauth.provider.customization,
@@ -371,7 +377,7 @@ export class AppContext {
       redisScratch,
       ratelimitCreator,
       crawlers,
-      appViewAgent,
+      bskyAppView,
       moderationAgent,
       reportingAgent,
       entrywayAgent,
@@ -386,8 +392,8 @@ export class AppContext {
   }
 
   async appviewAuthHeaders(did: string, lxm: string) {
-    assert(this.cfg.bskyAppView)
-    return this.serviceAuthHeaders(did, this.cfg.bskyAppView.did, lxm)
+    assert(this.bskyAppView)
+    return this.serviceAuthHeaders(did, this.bskyAppView.did, lxm)
   }
 
   async serviceAuthHeaders(did: string, aud: string, lxm: string) {

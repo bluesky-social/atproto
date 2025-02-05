@@ -1,9 +1,8 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { ActorStoreTransactor } from '../../../../actor-store'
+import { ActorStoreTransactor } from '../../../../actor-store/actor-store-transactor'
 import { TID } from '@atproto/common'
 import {
-  Repo,
   WriteOpAction,
   getAndParseRecord,
   readCarStream,
@@ -44,13 +43,7 @@ const importRepo = async (
   if (roots.length !== 1) {
     throw new InvalidRequestError('expected one root')
   }
-  const currRoot = await actorStore.db.db
-    .selectFrom('repo_root')
-    .selectAll()
-    .executeTakeFirst()
-  const currRepo = currRoot
-    ? await Repo.load(actorStore.repo.storage, CID.parse(currRoot.cid))
-    : null
+  const currRepo = await actorStore.repo.maybeLoadRepo()
   const diff = await verifyDiff(
     currRepo,
     blocks,
@@ -89,18 +82,10 @@ const importRepo = async (
               now,
             )
             const recordBlobs = findBlobRefs(parsedRecord)
-            const blobValues = recordBlobs.map((cid) => ({
-              recordUri: uri.toString(),
-              blobCid: cid.ref.toString(),
-            }))
-            const indexRecordBlobs =
-              blobValues.length > 0
-                ? actorStore.db.db
-                    .insertInto('record_blob')
-                    .values(blobValues)
-                    .onConflict((oc) => oc.doNothing())
-                    .execute()
-                : Promise.resolve()
+            const indexRecordBlobs = actorStore.repo.blob.insertBlobs(
+              uri.toString(),
+              recordBlobs,
+            )
             await Promise.all([indexRecord, indexRecordBlobs])
           }
         },

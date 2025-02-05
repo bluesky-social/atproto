@@ -8,8 +8,9 @@ import { AuthScope } from '../../../../auth-verifier'
 import { ids } from '../../../../lexicon/lexicons'
 
 export default function (server: Server, ctx: AppContext) {
-  const { appViewAgent } = ctx
-  if (!appViewAgent) return
+  const { bskyAppView } = ctx
+  if (!bskyAppView) return
+
   server.app.bsky.notification.registerPush({
     auth: ctx.authVerifier.accessStandard({
       additional: [AuthScope.SignupQueued],
@@ -26,8 +27,8 @@ export default function (server: Server, ctx: AppContext) {
         ids.AppBskyNotificationRegisterPush,
       )
 
-      if (ctx.cfg.bskyAppView?.did === serviceDid) {
-        await appViewAgent.api.app.bsky.notification.registerPush(input.body, {
+      if (bskyAppView.did === serviceDid) {
+        await bskyAppView.agent.app.bsky.notification.registerPush(input.body, {
           ...authHeaders,
           encoding: 'application/json',
         })

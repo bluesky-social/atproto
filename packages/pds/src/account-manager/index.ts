@@ -1,5 +1,6 @@
 import { HOUR, wait } from '@atproto/common'
 import {
+  Account,
   AccountInfo,
   AccountStore,
   Code,
@@ -20,12 +21,15 @@ import {
   UpdateRequestData,
 } from '@atproto/oauth-provider'
 import { AuthRequiredError } from '@atproto/xrpc-server'
+import { Selectable } from 'kysely'
 import { CID } from 'multiformats/cid'
 import { KeyObject } from 'node:crypto'
 
+import { ActorStore } from '../actor-store/actor-store'
 import { AuthScope } from '../auth-verifier'
 import { BackgroundQueue } from '../background'
 import { softDeleted } from '../db'
+import { ImageUrlBuilder } from '../image/image-url-builder'
 import { StatusAttr } from '../lexicon/types/com/atproto/admin/defs'
 import { AccountDb, EmailTokenPurpose, getDb, getMigrator } from './db'
 import * as account from './helpers/account'
@@ -50,6 +54,8 @@ export class AccountManager
   db: AccountDb
 
   constructor(
+    private actorStore: ActorStore,
+    private imageUrlBuilder: ImageUrlBuilder,
     private backgroundQueue: BackgroundQueue,
     dbLocation: string,
     private jwtKey: KeyObject,
@@ -500,6 +506,29 @@ export class AccountManager
 
   // AccountStore
 
+  private async buildAccount(row: Selectable<ActorAccount>): Promise<Account> {
+    const account = deviceAccount.toAccount(row, this.serviceDid)
+
+    if (!account.name || !account.picture) {
+      const did = account.sub
+
+      const profile = await this.actorStore.read(did, async (store) => {
+        return store.record.getProfileRecord()
+      })
+
+      if (profile) {
+        const { avatar, displayName } = profile
+
+        account.name ||= displayName
+        account.picture ||= avatar
+          ? this.imageUrlBuilder.build('avatar', did, avatar.ref.toString())
+          : undefined
+      }
+    }
+
+    return account
+  }
+
   async authenticateAccount(
     { username: identifier, password, remember = false }: SignInCredentials,
     deviceId: DeviceId,
@@ -554,7 +583,7 @@ export class AccountManager
     if (!row) return null
 
     return {
-      account: deviceAccount.toAccount(row, this.serviceDid),
+      account: await this.buildAccount(row),
       info: deviceAccount.toDeviceAccountInfo(row),
     }
   }
@@ -564,10 +593,12 @@ export class AccountManager
       .listRememberedQB(this.db, deviceId)
       .execute()
 
-    return rows.map((row) => ({
-      account: deviceAccount.toAccount(row, this.serviceDid),
-      info: deviceAccount.toDeviceAccountInfo(row),
-    }))
+    return Promise.all(
+      rows.map(async (row) => ({
+        account: await this.buildAccount(row),
+        info: deviceAccount.toDeviceAccountInfo(row),
+      })),
+    )
   }
 
   async removeDeviceAccount(deviceId: DeviceId, sub: string): Promise<void> {

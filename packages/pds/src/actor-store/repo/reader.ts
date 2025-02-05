@@ -1,8 +1,10 @@
 import { BlobStore } from '@atproto/repo'
-import { SqlRepoReader } from './sql-repo-reader'
+import { CID } from 'multiformats/cid'
+
 import { BlobReader } from '../blob/reader'
 import { ActorDb } from '../db'
 import { RecordReader } from '../record/reader'
+import { SqlRepoReader } from './sql-repo-reader'
 
 export class RepoReader {
   blob: BlobReader

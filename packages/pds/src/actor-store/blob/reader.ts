@@ -1,10 +1,10 @@
-import stream from 'stream'
-import { CID } from 'multiformats/cid'
 import { BlobNotFoundError, BlobStore } from '@atproto/repo'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { ActorDb } from '../db'
+import { CID } from 'multiformats/cid'
+import stream from 'stream'
 import { countAll, countDistinct, notSoftDeletedClause } from '../../db/util'
 import { StatusAttr } from '../../lexicon/types/com/atproto/admin/defs'
+import { ActorDb } from '../db'
 
 export class BlobReader {
   constructor(
@@ -95,6 +95,16 @@ export class BlobReader {
     return res.map((row) => row.recordUri)
   }
 
+  async getBlobsForRecord(recordUri: string): Promise<string[]> {
+    const res = await this.db.db
+      .selectFrom('blob')
+      .innerJoin('record_blob', 'record_blob.blobCid', 'blob.cid')
+      .where('recordUri', '=', recordUri)
+      .select('blob.cid')
+      .execute()
+    return res.map((row) => row.cid)
+  }
+
   async blobCount(): Promise<number> {
     const res = await this.db.db
       .selectFrom('blob')
@@ -137,5 +147,10 @@ export class BlobReader {
       cid: row.blobCid,
       recordUri: row.recordUri,
     }))
+  }
+
+  async getBlobCids() {
+    const blobRows = await this.db.db.selectFrom('blob').select('cid').execute()
+    return blobRows.map((row) => CID.parse(row.cid))
   }
 }
