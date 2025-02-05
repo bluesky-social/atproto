@@ -12772,6 +12772,13 @@ export const schemaDict = {
               description:
                 'If specified, only subjects that belong to an account that has at least this many taken down records will be returned.',
             },
+            minPriorityScore: {
+              minimum: 0,
+              maximum: 100,
+              type: 'integer',
+              description:
+                'If specified, only subjects that have priority score value above the given value will be returned.',
+            },
           },
         },
         output: {

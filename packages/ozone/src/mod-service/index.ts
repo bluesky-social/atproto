@@ -847,6 +847,7 @@ export class ModerationService {
     minAccountSuspendCount,
     minReportedRecordsCount,
     minTakendownRecordsCount,
+    minPriorityScore,
   }: QueryStatusParams): Promise<{
     statuses: ModerationSubjectStatusRowWithHandle[]
     cursor?: string
@@ -1100,6 +1101,14 @@ export class ModerationService {
         'account_record_events_stats.reportedCount',
         '>=',
         minReportedRecordsCount,
+      )
+    }
+
+    if (minPriorityScore != null && minPriorityScore > 0) {
+      builder = builder.where(
+        'moderation_subject_status.priorityScore',
+        '>=',
+        minPriorityScore,
       )
     }
 
