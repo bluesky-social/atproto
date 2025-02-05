@@ -1,19 +1,14 @@
 import {
-  TestNetwork,
-  SeedClient,
-  basicSeed,
   ModeratorClient,
+  SeedClient,
+  TestNetwork,
+  basicSeed,
 } from '@atproto/dev-env'
 
 describe('moderation', () => {
   let network: TestNetwork
   let sc: SeedClient
   let modClient: ModeratorClient
-
-  const repoSubject = (did: string) => ({
-    $type: 'com.atproto.admin.defs#repoRef',
-    did,
-  })
 
   beforeAll(async () => {
     network = await TestNetwork.create({
