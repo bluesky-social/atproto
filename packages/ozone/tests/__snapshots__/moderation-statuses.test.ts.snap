@@ -18,6 +18,7 @@ Array [
     },
     "id": 7,
     "lastReportedAt": "1970-01-01T00:00:00.000Z",
+    "priorityScore": 0,
     "recordsStats": Object {
       "$type": "tools.ozone.moderation.defs#recordsStats",
       "appealedCount": 0,
@@ -61,6 +62,7 @@ Array [
     },
     "id": 5,
     "lastReportedAt": "1970-01-01T00:00:00.000Z",
+    "priorityScore": 0,
     "recordsStats": Object {
       "$type": "tools.ozone.moderation.defs#recordsStats",
       "appealedCount": 0,
@@ -108,6 +110,7 @@ Array [
     },
     "id": 7,
     "lastReportedAt": "1970-01-01T00:00:00.000Z",
+    "priorityScore": 0,
     "recordsStats": Object {
       "$type": "tools.ozone.moderation.defs#recordsStats",
       "appealedCount": 0,
@@ -151,6 +154,7 @@ Array [
     },
     "id": 5,
     "lastReportedAt": "1970-01-01T00:00:00.000Z",
+    "priorityScore": 0,
     "recordsStats": Object {
       "$type": "tools.ozone.moderation.defs#recordsStats",
       "appealedCount": 0,
@@ -193,6 +197,7 @@ Array [
     },
     "id": 3,
     "lastReportedAt": "1970-01-01T00:00:00.000Z",
+    "priorityScore": 0,
     "recordsStats": Object {
       "$type": "tools.ozone.moderation.defs#recordsStats",
       "appealedCount": 0,
@@ -235,6 +240,7 @@ Array [
     },
     "id": 1,
     "lastReportedAt": "1970-01-01T00:00:00.000Z",
+    "priorityScore": 0,
     "recordsStats": Object {
       "$type": "tools.ozone.moderation.defs#recordsStats",
       "appealedCount": 0,
