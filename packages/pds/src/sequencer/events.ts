@@ -1,9 +1,9 @@
 import { z } from 'zod'
 import { cborEncode, schema } from '@atproto/common'
 import { BlockMap, blocksToCarFile } from '@atproto/repo'
+import { AccountStatus } from '../account-manager'
 import { CommitDataWithOps } from '../repo'
 import { RepoSeqInsert } from './db'
-import { AccountStatus } from '../account-manager'
 
 export const formatSeqCommit = async (
   did: string,

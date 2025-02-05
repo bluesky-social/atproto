@@ -1,6 +1,6 @@
 import { CID } from 'multiformats/cid'
 import * as crypto from '@atproto/crypto'
-import { BlobStore, formatDataKey, Repo, WriteOpAction } from '@atproto/repo'
+import { BlobStore, Repo, WriteOpAction, formatDataKey } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { BackgroundQueue } from '../../background'
