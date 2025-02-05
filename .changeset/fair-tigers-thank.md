@@ -38,4 +38,4 @@
 "@atproto/pds": patch
 ---
 
-Re-order file imports to match linting rules
+Apply new linting rules regarding import order
