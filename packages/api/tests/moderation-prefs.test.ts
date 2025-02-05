@@ -87,8 +87,8 @@ describe('agent', () => {
         nuxs: [],
       },
       postInteractionSettings: {
-        threadgateAllowRules: [],
-        postgateEmbeddingRules: [],
+        threadgateAllowRules: undefined,
+        postgateEmbeddingRules: undefined,
       },
     })
   })
@@ -141,8 +141,8 @@ describe('agent', () => {
         nuxs: [],
       },
       postInteractionSettings: {
-        threadgateAllowRules: [],
-        postgateEmbeddingRules: [],
+        threadgateAllowRules: undefined,
+        postgateEmbeddingRules: undefined,
       },
     })
     expect(agent.labelers).toStrictEqual(['did:plc:other'])
@@ -180,8 +180,8 @@ describe('agent', () => {
         nuxs: [],
       },
       postInteractionSettings: {
-        threadgateAllowRules: [],
-        postgateEmbeddingRules: [],
+        threadgateAllowRules: undefined,
+        postgateEmbeddingRules: undefined,
       },
     })
     expect(agent.labelers).toStrictEqual([])
@@ -241,8 +241,8 @@ describe('agent', () => {
         nuxs: [],
       },
       postInteractionSettings: {
-        threadgateAllowRules: [],
-        postgateEmbeddingRules: [],
+        threadgateAllowRules: undefined,
+        postgateEmbeddingRules: undefined,
       },
     })
   })
