@@ -1,5 +1,6 @@
 import { HOUR, wait } from '@atproto/common'
 import {
+  Account,
   AccountInfo,
   AccountStore,
   Code,
@@ -43,6 +44,7 @@ import * as repo from './helpers/repo'
 import * as scrypt from './helpers/scrypt'
 import * as token from './helpers/token'
 import * as usedRefreshToken from './helpers/used-refresh-token'
+import { Selectable } from 'kysely'
 
 export { AccountStatus, formatAccountStatus } from './helpers/account'
 
@@ -504,10 +506,8 @@ export class AccountManager
 
   // AccountStore
 
-  private async enrichAccountInfo(
-    accountInfo: AccountInfo,
-  ): Promise<AccountInfo> {
-    const { account } = accountInfo
+  private async buildAccount(row: Selectable<ActorAccount>): Promise<Account> {
+    const account = deviceAccount.toAccount(row, this.serviceDid)
 
     if (!account.name || !account.picture) {
       const did = account.sub
@@ -527,7 +527,7 @@ export class AccountManager
       }
     }
 
-    return accountInfo
+    return account
   }
 
   async authenticateAccount(
@@ -583,10 +583,10 @@ export class AccountManager
 
     if (!row) return null
 
-    return this.enrichAccountInfo({
-      account: deviceAccount.toAccount(row, this.serviceDid),
+    return {
+      account: await this.buildAccount(row),
       info: deviceAccount.toDeviceAccountInfo(row),
-    })
+    }
   }
 
   async listDeviceAccounts(deviceId: DeviceId): Promise<AccountInfo[]> {
@@ -595,12 +595,10 @@ export class AccountManager
       .execute()
 
     return Promise.all(
-      Array.from(rows, (row) =>
-        this.enrichAccountInfo({
-          account: deviceAccount.toAccount(row, this.serviceDid),
-          info: deviceAccount.toDeviceAccountInfo(row),
-        }),
-      ),
+      rows.map(async (row) => ({
+        account: await this.buildAccount(row),
+        info: deviceAccount.toDeviceAccountInfo(row),
+      })),
     )
   }
 
