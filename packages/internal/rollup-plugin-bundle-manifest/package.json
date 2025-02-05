@@ -23,6 +23,12 @@
       "default": "./dist/index.js"
     }
   },
+  "engines": {
+    "node": ">=18.7.0"
+  },
+  "files": [
+    "dist"
+  ],
   "dependencies": {
     "mime": "^3.0.0"
   },

@@ -1,5 +1,5 @@
-import { DAY, keyBy } from '@atproto/common'
 import { ServiceImpl } from '@connectrpc/connect'
+import { DAY, keyBy } from '@atproto/common'
 import { Service } from '../../../proto/bsky_connect'
 import { Database } from '../db'
 import { countAll } from '../db/util'

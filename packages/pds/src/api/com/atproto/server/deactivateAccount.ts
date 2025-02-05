@@ -1,5 +1,5 @@
 import { AuthScope } from '../../../../auth-verifier'
-import AppContext from '../../../../context'
+import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { authPassthru } from '../../../proxy'
 

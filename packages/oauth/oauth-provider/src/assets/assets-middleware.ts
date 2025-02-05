@@ -4,7 +4,6 @@ import {
   validateFetchSite,
   writeStream,
 } from '../lib/http/index.js'
-
 import { ASSETS_URL_PREFIX, getAsset } from './index.js'
 
 export function authorizeAssetsMiddleware(): Middleware {

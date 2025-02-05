@@ -1,14 +1,14 @@
-import fs from 'fs/promises'
-import { gzipSync } from 'zlib'
-import { AtpAgent } from '@atproto/api'
-import { AppContext } from '../src'
-import DiskBlobStore from '../src/disk-blobstore'
+import fs from 'node:fs/promises'
+import { gzipSync } from 'node:zlib'
 import * as uint8arrays from 'uint8arrays'
+import { AtpAgent } from '@atproto/api'
 import { randomBytes } from '@atproto/crypto'
-import { BlobRef } from '@atproto/lexicon'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
-import { users } from './seeds/users'
+import { BlobRef } from '@atproto/lexicon'
+import { AppContext } from '../src'
 import { ActorDb } from '../src/actor-store/db'
+import { DiskBlobStore } from '../src/disk-blobstore'
+import { users } from './seeds/users'
 
 describe('file uploads', () => {
   let network: TestNetworkNoAppView

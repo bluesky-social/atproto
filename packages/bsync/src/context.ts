@@ -1,9 +1,9 @@
+import { EventEmitter } from 'node:stream'
 import TypedEventEmitter from 'typed-emitter'
 import { ServerConfig } from './config'
-import Database from './db'
+import { Database } from './db'
 import { createMuteOpChannel } from './db/schema/mute_op'
 import { createNotifOpChannel } from './db/schema/notif_op'
-import { EventEmitter } from 'stream'
 
 export type AppContextOptions = {
   db: Database
@@ -39,8 +39,6 @@ export class AppContext {
     return new AppContext({ db, cfg, shutdown, ...overrides })
   }
 }
-
-export default AppContext
 
 export type AppEvents = {
   [createMuteOpChannel]: () => void

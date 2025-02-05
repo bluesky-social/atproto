@@ -7,6 +7,9 @@
     "atproto",
     "mst"
   ],
+  "engines": {
+    "node": ">=18.7.0"
+  },
   "homepage": "https://atproto.com",
   "repository": {
     "type": "git",

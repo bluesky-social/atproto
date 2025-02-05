@@ -1,9 +1,4 @@
 import { CID } from 'multiformats/cid'
-import {
-  AtUri,
-  ensureValidRecordKey,
-  ensureValidDatetime,
-} from '@atproto/syntax'
 import { TID, check, dataToCborBlock } from '@atproto/common'
 import {
   BlobRef,
@@ -15,30 +10,35 @@ import {
   untypedJsonBlobRef,
 } from '@atproto/lexicon'
 import {
-  cborToLex,
-  RecordDeleteOp,
   RecordCreateOp,
+  RecordDeleteOp,
   RecordUpdateOp,
   RecordWriteOp,
   WriteOpAction,
+  cborToLex,
 } from '@atproto/repo'
 import {
-  PreparedCreate,
-  PreparedUpdate,
-  PreparedDelete,
+  AtUri,
+  ensureValidDatetime,
+  ensureValidRecordKey,
+} from '@atproto/syntax'
+import { hasExplicitSlur } from '../handle/explicit-slurs'
+import * as lex from '../lexicon/lexicons'
+import { isRecord as isProfile } from '../lexicon/types/app/bsky/actor/profile'
+import { isRecord as isFeedGenerator } from '../lexicon/types/app/bsky/feed/generator'
+import { isRecord as isPost } from '../lexicon/types/app/bsky/feed/post'
+import { isRecord as isList } from '../lexicon/types/app/bsky/graph/list'
+import { isRecord as isStarterPack } from '../lexicon/types/app/bsky/graph/starterpack'
+import { isTag } from '../lexicon/types/app/bsky/richtext/facet'
+import {
   InvalidRecordError,
-  PreparedWrite,
   PreparedBlobRef,
+  PreparedCreate,
+  PreparedDelete,
+  PreparedUpdate,
+  PreparedWrite,
   ValidationStatus,
 } from './types'
-import * as lex from '../lexicon/lexicons'
-import { isRecord as isFeedGenerator } from '../lexicon/types/app/bsky/feed/generator'
-import { isRecord as isStarterPack } from '../lexicon/types/app/bsky/graph/starterpack'
-import { isRecord as isPost } from '../lexicon/types/app/bsky/feed/post'
-import { isTag } from '../lexicon/types/app/bsky/richtext/facet'
-import { isRecord as isList } from '../lexicon/types/app/bsky/graph/list'
-import { isRecord as isProfile } from '../lexicon/types/app/bsky/actor/profile'
-import { hasExplicitSlur } from '../handle/explicit-slurs'
 
 export const assertValidRecordWithStatus = (
   record: Record<string, unknown>,

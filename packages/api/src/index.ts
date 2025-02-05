@@ -4,10 +4,10 @@ import { lexicons as internalLexicons } from './client/lexicons'
 export { AtUri } from '@atproto/syntax'
 export {
   BlobRef,
+  jsonStringToLex,
+  jsonToLex,
   lexToJson,
   stringifyLex,
-  jsonToLex,
-  jsonStringToLex,
 } from '@atproto/lexicon'
 export { parseLanguage } from '@atproto/common-web'
 export * from './types'
@@ -22,7 +22,7 @@ export * from './rich-text/util'
 export * from './moderation'
 export * from './moderation/types'
 export * from './mocker'
-export { LABELS, DEFAULT_LABEL_SETTINGS } from './moderation/const/labels'
+export { DEFAULT_LABEL_SETTINGS, LABELS } from './moderation/const/labels'
 export { Agent } from './agent'
 
 export { AtpAgent, type AtpAgentOptions } from './atp-agent'

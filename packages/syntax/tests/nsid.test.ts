@@ -1,11 +1,11 @@
+import * as fs from 'node:fs'
+import * as readline from 'node:readline'
 import {
-  ensureValidNsid,
-  ensureValidNsidRegex,
   InvalidNsidError,
   NSID,
+  ensureValidNsid,
+  ensureValidNsidRegex,
 } from '../src'
-import * as readline from 'readline'
-import * as fs from 'fs'
 
 describe('NSID parsing & creation', () => {
   it('parses valid NSIDs', () => {

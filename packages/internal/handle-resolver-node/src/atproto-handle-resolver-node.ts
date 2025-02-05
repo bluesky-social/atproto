@@ -3,7 +3,6 @@ import {
   AtprotoHandleResolver,
   HandleResolver,
 } from '@atproto-labs/handle-resolver'
-
 import {
   nodeResolveTxtDefault,
   nodeResolveTxtFactory,

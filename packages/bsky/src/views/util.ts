@@ -2,15 +2,15 @@ import * as util from 'node:util'
 import { BlobRef } from '@atproto/lexicon'
 import { Record as PostRecord } from '../lexicon/types/app/bsky/feed/post'
 import {
+  Record as PostgateRecord,
+  isDisableRule as isPostgateDisableRule,
+} from '../lexicon/types/app/bsky/feed/postgate'
+import {
   Record as GateRecord,
   isFollowingRule,
   isListRule,
   isMentionRule,
 } from '../lexicon/types/app/bsky/feed/threadgate'
-import {
-  Record as PostgateRecord,
-  isDisableRule as isPostgateDisableRule,
-} from '../lexicon/types/app/bsky/feed/postgate'
 import { isMention } from '../lexicon/types/app/bsky/richtext/facet'
 
 export const parseThreadGate = (

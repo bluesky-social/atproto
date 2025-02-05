@@ -1,13 +1,13 @@
-import stream from 'stream'
+import stream from 'node:stream'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
 import {
   RepoRootNotFoundError,
   SqlRepoReader,
 } from '../../../../actor-store/repo/sql-repo-reader'
-import { assertRepoAvailability } from './util'
 import { AuthScope } from '../../../../auth-verifier'
+import { AppContext } from '../../../../context'
+import { Server } from '../../../../lexicon'
+import { assertRepoAvailability } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.getRepo({

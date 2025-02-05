@@ -7,6 +7,7 @@ import {
 
 describe('moderation', () => {
   let network: TestNetwork
+
   let sc: SeedClient
   let modClient: ModeratorClient
 

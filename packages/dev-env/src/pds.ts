@@ -1,14 +1,14 @@
-import path from 'node:path'
-import os from 'node:os'
 import fs from 'node:fs/promises'
+import os from 'node:os'
+import path from 'node:path'
 import getPort from 'get-port'
 import * as ui8 from 'uint8arrays'
+import { AtpAgent } from '@atproto/api'
+import { Secp256k1Keypair, randomStr } from '@atproto/crypto'
 import * as pds from '@atproto/pds'
 import { createSecretKeyObject } from '@atproto/pds'
-import { Secp256k1Keypair, randomStr } from '@atproto/crypto'
-import { AtpAgent } from '@atproto/api'
-import { PdsConfig } from './types'
 import { ADMIN_PASSWORD, EXAMPLE_LABELER, JWT_SECRET } from './const'
+import { PdsConfig } from './types'
 
 export class TestPds {
   constructor(

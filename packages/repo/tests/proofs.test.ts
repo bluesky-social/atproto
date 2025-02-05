@@ -3,7 +3,6 @@ import * as crypto from '@atproto/crypto'
 import { RecordCidClaim, RecordPath, Repo, RepoContents } from '../src'
 import { MemoryBlockstore } from '../src/storage'
 import * as sync from '../src/sync'
-
 import * as util from './_util'
 
 describe('Repo Proofs', () => {

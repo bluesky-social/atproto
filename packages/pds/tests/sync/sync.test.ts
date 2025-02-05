@@ -1,11 +1,11 @@
-import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
+import { CID } from 'multiformats/cid'
 import { AtpAgent } from '@atproto/api'
-import { cidForCbor, TID } from '@atproto/common'
+import { TID, cidForCbor } from '@atproto/common'
 import { Keypair, randomStr } from '@atproto/crypto'
+import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import * as repo from '@atproto/repo'
 import { MemoryBlockstore } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
-import { CID } from 'multiformats/cid'
 
 describe('repo sync', () => {
   let network: TestNetworkNoAppView

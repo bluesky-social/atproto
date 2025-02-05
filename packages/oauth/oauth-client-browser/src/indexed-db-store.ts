@@ -1,4 +1,4 @@
-import { SimpleStore, Key, Value } from '@atproto-labs/simple-store'
+import { Key, SimpleStore, Value } from '@atproto-labs/simple-store'
 import { DB, DBObjectStore } from './indexed-db/index.js'
 
 const storeName = 'store'

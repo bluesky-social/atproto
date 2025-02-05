@@ -1,9 +1,9 @@
 import { Generated } from 'kysely'
 import {
   REVIEWCLOSED,
-  REVIEWOPEN,
   REVIEWESCALATED,
   REVIEWNONE,
+  REVIEWOPEN,
 } from '../../lexicon/types/tools/ozone/moderation/defs'
 
 export const subjectStatusTableName = 'moderation_subject_status'

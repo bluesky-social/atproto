@@ -1,6 +1,6 @@
 import { OAuthAuthorizationRequestParameters } from '@atproto/oauth-types'
-import { ClientId } from '../client/client-id.js'
 import { ClientAuth } from '../client/client-auth.js'
+import { ClientId } from '../client/client-id.js'
 import { RequestId } from './request-id.js'
 import { RequestUri } from './request-uri.js'
 

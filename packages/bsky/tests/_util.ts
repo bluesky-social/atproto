@@ -1,11 +1,10 @@
+import { Server } from 'node:http'
+import { AddressInfo } from 'node:net'
+import { type Express } from 'express'
+import { CID } from 'multiformats/cid'
 import { AppBskyFeedGetPostThread } from '@atproto/api'
 import { lexToJson } from '@atproto/lexicon'
 import { AtUri } from '@atproto/syntax'
-import { type Express } from 'express'
-import { CID } from 'multiformats/cid'
-import { Server } from 'node:http'
-
-import { AddressInfo } from 'node:net'
 import { isViewRecord } from '../src/lexicon/types/app/bsky/embed/record'
 import {
   FeedViewPost,

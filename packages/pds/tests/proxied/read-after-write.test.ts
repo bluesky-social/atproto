@@ -1,13 +1,13 @@
-import util from 'node:util'
 import assert from 'node:assert'
-import { AtpAgent } from '@atproto/api'
+import util from 'node:util'
 import { request } from 'undici'
-import { TestNetwork, SeedClient, RecordRef } from '@atproto/dev-env'
-import basicSeed from '../seeds/basic'
-import { ThreadViewPost } from '../../src/lexicon/types/app/bsky/feed/defs'
-import { View as RecordEmbedView } from '../../src/lexicon/types/app/bsky/embed/record'
+import { AtpAgent } from '@atproto/api'
+import { RecordRef, SeedClient, TestNetwork } from '@atproto/dev-env'
 import { View as ExternalEmbedView } from '../../src/lexicon/types/app/bsky/embed/external'
 import { View as ImagesEmbedView } from '../../src/lexicon/types/app/bsky/embed/images'
+import { View as RecordEmbedView } from '../../src/lexicon/types/app/bsky/embed/record'
+import { ThreadViewPost } from '../../src/lexicon/types/app/bsky/feed/defs'
+import basicSeed from '../seeds/basic'
 
 describe('proxy read after write', () => {
   let network: TestNetwork

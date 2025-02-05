@@ -9,9 +9,8 @@ import {
   isDiscriminatedObject,
 } from '../types'
 import { toConcreteTypes, toLexUri } from '../util'
-
 import { blob } from './blob'
-import { boolean, integer, string, bytes, cidLink, unknown } from './primitives'
+import { boolean, bytes, cidLink, integer, string, unknown } from './primitives'
 
 export function validate(
   lexicons: Lexicons,

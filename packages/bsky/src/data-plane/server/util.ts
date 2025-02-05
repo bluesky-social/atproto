@@ -4,9 +4,9 @@ import {
   ReplyRef,
 } from '../../lexicon/types/app/bsky/feed/post'
 import { Record as GateRecord } from '../../lexicon/types/app/bsky/feed/threadgate'
-import DatabaseSchema from './db/database-schema'
-import { valuesList } from './db/util'
 import { parseThreadGate } from '../../views/util'
+import { DatabaseSchema } from './db/database-schema'
+import { valuesList } from './db/util'
 
 export const getDescendentsQb = (
   db: DatabaseSchema,

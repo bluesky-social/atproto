@@ -1,12 +1,11 @@
 import { z } from 'zod'
-
 import { InvalidDidError } from './did-error.js'
 import { Did } from './did.js'
 import {
-  assertDidPlc,
-  assertDidWeb,
   DID_PLC_PREFIX,
   DID_WEB_PREFIX,
+  assertDidPlc,
+  assertDidWeb,
   isDidPlc,
 } from './methods.js'
 

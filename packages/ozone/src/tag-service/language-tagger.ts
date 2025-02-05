@@ -4,10 +4,9 @@ import {
   AppBskyFeedPost,
   AppBskyGraphList,
 } from '@atproto/api'
-
 import { langLogger as log } from '../logger'
-import { code3ToCode2 } from './language-data'
 import { ContentTagger } from './content-tagger'
+import { code3ToCode2 } from './language-data'
 
 export class LanguageTagger extends ContentTagger {
   tagPrefix = 'lang:'

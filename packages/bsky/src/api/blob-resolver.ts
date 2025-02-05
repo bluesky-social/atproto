@@ -1,23 +1,22 @@
+import { Duplex, Transform, Writable } from 'node:stream'
+import { pipeline } from 'node:stream/promises'
+import createError, { isHttpError } from 'http-errors'
+import { CID } from 'multiformats/cid'
+import { Dispatcher } from 'undici'
+import {
+  VerifyCidError,
+  VerifyCidTransform,
+  createDecoders,
+} from '@atproto/common'
+import { AtprotoDid, isAtprotoDid } from '@atproto/did'
 import {
   ACCEPT_ENCODING_COMPRESSED,
   ACCEPT_ENCODING_UNCOMPRESSED,
   buildProxiedContentEncoding,
   formatAcceptHeader,
 } from '@atproto-labs/xrpc-utils'
-import {
-  createDecoders,
-  VerifyCidError,
-  VerifyCidTransform,
-} from '@atproto/common'
-import { AtprotoDid, isAtprotoDid } from '@atproto/did'
-import createError, { isHttpError } from 'http-errors'
-import { CID } from 'multiformats/cid'
-import { Duplex, Transform, Writable } from 'node:stream'
-import { pipeline } from 'node:stream/promises'
-import { Dispatcher } from 'undici'
-
 import { ServerConfig } from '../config'
-import AppContext from '../context'
+import { AppContext } from '../context'
 import {
   Code,
   DataPlaneClient,

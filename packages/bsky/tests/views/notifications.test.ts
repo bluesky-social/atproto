@@ -1,8 +1,8 @@
 import { AtpAgent } from '@atproto/api'
-import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
-import { forSnapshot, paginateAll } from '../_util'
-import { Notification } from '../../src/lexicon/types/app/bsky/notification/listNotifications'
+import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
+import { Notification } from '../../src/lexicon/types/app/bsky/notification/listNotifications'
+import { forSnapshot, paginateAll } from '../_util'
 
 describe('notification views', () => {
   let network: TestNetwork

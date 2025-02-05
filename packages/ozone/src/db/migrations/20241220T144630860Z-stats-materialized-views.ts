@@ -1,12 +1,10 @@
 import { Kysely, sql } from 'kysely'
-
 import { REASONAPPEAL } from '../../lexicon/types/com/atproto/moderation/defs'
-import { DatabaseSchemaType } from '../schema'
-
 import {
   REVIEWESCALATED,
   REVIEWOPEN,
 } from '../../lexicon/types/tools/ozone/moderation/defs'
+import { DatabaseSchemaType } from '../schema'
 import * as modEvent from '../schema/moderation_event'
 import * as modStatus from '../schema/moderation_subject_status'
 import * as recordEventsStats from '../schema/record_events_stats'

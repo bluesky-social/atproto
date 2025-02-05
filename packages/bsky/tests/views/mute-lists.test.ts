@@ -1,7 +1,7 @@
-import { AtpAgent, AtUri } from '@atproto/api'
-import { TestNetwork, SeedClient, RecordRef, basicSeed } from '@atproto/dev-env'
-import { forSnapshot } from '../_util'
+import { AtUri, AtpAgent } from '@atproto/api'
+import { RecordRef, SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
+import { forSnapshot } from '../_util'
 
 describe('bsky views with mutes from mute lists', () => {
   let network: TestNetwork

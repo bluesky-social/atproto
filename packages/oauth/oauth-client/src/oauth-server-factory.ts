@@ -1,7 +1,6 @@
-import { Fetch } from '@atproto-labs/fetch'
 import { Key, Keyset } from '@atproto/jwk'
 import { OAuthAuthorizationServerMetadata } from '@atproto/oauth-types'
-
+import { Fetch } from '@atproto-labs/fetch'
 import { GetCachedOptions } from './oauth-authorization-server-metadata-resolver.js'
 import { OAuthResolver } from './oauth-resolver.js'
 import { DpopNonceCache, OAuthServerAgent } from './oauth-server-agent.js'

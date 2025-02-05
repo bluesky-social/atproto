@@ -1,5 +1,4 @@
 import { Readable, pipeline } from 'node:stream'
-
 import { Handler, ServerResponse } from './types.js'
 
 export function appendHeader(

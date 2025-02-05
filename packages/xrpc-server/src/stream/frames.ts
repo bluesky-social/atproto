@@ -1,13 +1,13 @@
 import * as uint8arrays from 'uint8arrays'
-import { cborEncode, cborDecodeMulti } from '@atproto/common'
+import { cborDecodeMulti, cborEncode } from '@atproto/common'
 import {
-  frameHeader,
+  ErrorFrameBody,
+  ErrorFrameHeader,
   FrameHeader,
   FrameType,
   MessageFrameHeader,
-  ErrorFrameHeader,
-  ErrorFrameBody,
   errorFrameBody,
+  frameHeader,
 } from './types'
 
 export abstract class Frame {

@@ -1,12 +1,8 @@
 node_modules
 interop-test-files
+__snapshots__
 dist
-build
-.nyc_output
-coverage
 pnpm-lock.yaml
 .pnpm*
 .changeset
-*.d.ts
-packages/bsky/src/data-plane/gen
 CHANGELOG.md

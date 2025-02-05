@@ -1,11 +1,10 @@
-import { FetchError, FetchResponseError } from '@atproto-labs/fetch'
-import { Did, DidError, extractDidMethod } from '@atproto/did'
 import { ZodError } from 'zod'
-
+import { Did, DidError, extractDidMethod } from '@atproto/did'
+import { FetchError, FetchResponseError } from '@atproto-labs/fetch'
 import { DidMethod, DidMethods, ResolveDidOptions } from './did-method.js'
 import { DidResolver, ResolvedDocument } from './did-resolver.js'
 
-export type { DidMethod, ResolvedDocument, ResolveDidOptions }
+export type { DidMethod, ResolveDidOptions, ResolvedDocument }
 
 export class DidResolverBase<M extends string = string>
   implements DidResolver<M>

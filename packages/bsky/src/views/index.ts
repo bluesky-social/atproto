@@ -1,12 +1,16 @@
-import { AtUri, INVALID_HANDLE, normalizeDatetimeAlways } from '@atproto/syntax'
 import { mapDefined } from '@atproto/common'
-import { ImageUriBuilder } from '../image/uri'
+import { AtUri, INVALID_HANDLE, normalizeDatetimeAlways } from '@atproto/syntax'
+import { ProfileViewerState } from '../hydration/actor'
+import { FeedItem, Post, Repost } from '../hydration/feed'
 import { HydrationState } from '../hydration/hydrator'
+import { Label } from '../hydration/label'
+import { RecordInfo } from '../hydration/util'
+import { ImageUriBuilder } from '../image/uri'
 import { ids } from '../lexicon/lexicons'
 import {
-  ProfileViewDetailed,
   ProfileView,
   ProfileViewBasic,
+  ProfileViewDetailed,
   ViewerState as ProfileViewer,
 } from '../lexicon/types/app/bsky/actor/defs'
 import {
@@ -15,14 +19,15 @@ import {
   GeneratorView,
   NotFoundPost,
   PostView,
-  ReasonRepost,
   ReasonPin,
+  ReasonRepost,
   ReplyRef,
   ThreadViewPost,
   ThreadgateView,
   isPostView,
 } from '../lexicon/types/app/bsky/feed/defs'
 import { isRecord as isPostRecord } from '../lexicon/types/app/bsky/feed/post'
+import { isListRule } from '../lexicon/types/app/bsky/feed/threadgate'
 import {
   ListView,
   ListViewBasic,
@@ -30,23 +35,23 @@ import {
   StarterPackViewBasic,
 } from '../lexicon/types/app/bsky/graph/defs'
 import {
-  parseThreadGate,
-  cidFromBlobJson,
-  VideoUriBuilder,
-  parsePostgate,
-} from './util'
+  LabelerView,
+  LabelerViewDetailed,
+} from '../lexicon/types/app/bsky/labeler/defs'
+import { isSelfLabels } from '../lexicon/types/com/atproto/label/defs'
+import { Notification } from '../proto/bsky_pb'
 import {
-  uriToDid as creatorFromUri,
+  postUriToPostgateUri,
+  postUriToThreadgateUri,
   safePinnedPost,
   uriToDid,
+  uriToDid as creatorFromUri,
 } from '../util/uris'
-import { isListRule } from '../lexicon/types/app/bsky/feed/threadgate'
-import { isSelfLabels } from '../lexicon/types/com/atproto/label/defs'
 import {
   Embed,
   EmbedBlocked,
-  EmbedNotFound,
   EmbedDetached,
+  EmbedNotFound,
   EmbedView,
   ExternalEmbed,
   ExternalEmbedView,
@@ -68,16 +73,12 @@ import {
   isRecordWithMedia,
   isVideoEmbed,
 } from './types'
-import { Label } from '../hydration/label'
-import { FeedItem, Post, Repost } from '../hydration/feed'
-import { RecordInfo } from '../hydration/util'
 import {
-  LabelerView,
-  LabelerViewDetailed,
-} from '../lexicon/types/app/bsky/labeler/defs'
-import { Notification } from '../proto/bsky_pb'
-import { postUriToThreadgateUri, postUriToPostgateUri } from '../util/uris'
-import { ProfileViewerState } from '../hydration/actor'
+  VideoUriBuilder,
+  cidFromBlobJson,
+  parsePostgate,
+  parseThreadGate,
+} from './util'
 
 export class Views {
   public imgUriBuilder: ImageUriBuilder = this.opts.imgUriBuilder

@@ -1,21 +1,21 @@
 import { sql } from 'kysely'
 import { CID } from 'multiformats/cid'
-import { cidForCbor, TID } from '@atproto/common'
-import { repoPrepare } from '@atproto/pds'
-import { WriteOpAction } from '@atproto/repo'
-import { AtUri } from '@atproto/syntax'
 import {
   AppBskyActorProfile,
-  AppBskyFeedPost,
   AppBskyFeedLike,
+  AppBskyFeedPost,
   AppBskyFeedRepost,
   AppBskyGraphFollow,
   AtpAgent,
 } from '@atproto/api'
-import { TestNetwork, SeedClient, usersSeed, basicSeed } from '@atproto/dev-env'
-import { forSnapshot } from '../_util'
-import { ids } from '../../src/lexicon/lexicons'
+import { TID, cidForCbor } from '@atproto/common'
+import { SeedClient, TestNetwork, basicSeed, usersSeed } from '@atproto/dev-env'
+import { repoPrepare } from '@atproto/pds'
+import { WriteOpAction } from '@atproto/repo'
+import { AtUri } from '@atproto/syntax'
 import { Database } from '../../src/data-plane/server/db'
+import { ids } from '../../src/lexicon/lexicons'
+import { forSnapshot } from '../_util'
 
 describe('indexing', () => {
   let network: TestNetwork

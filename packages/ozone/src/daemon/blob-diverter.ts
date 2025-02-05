@@ -1,18 +1,17 @@
+import { Readable } from 'node:stream'
+import { finished, pipeline } from 'node:stream/promises'
+import { CID } from 'multiformats/cid'
+import * as undici from 'undici'
 import {
-  createDecoders,
-  getPdsEndpoint,
   VerifyCidTransform,
   allFulfilled,
+  createDecoders,
+  getPdsEndpoint,
 } from '@atproto/common'
 import { IdResolver } from '@atproto/identity'
 import { ResponseType, XRPCError } from '@atproto/xrpc'
-import { CID } from 'multiformats/cid'
-import { Readable } from 'node:stream'
-import { finished, pipeline } from 'node:stream/promises'
-import * as undici from 'undici'
-
 import { BlobDivertConfig } from '../config'
-import Database from '../db'
+import { Database } from '../db'
 import { retryHttp } from '../util'
 
 export class BlobDiverter {

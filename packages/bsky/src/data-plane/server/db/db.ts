@@ -1,5 +1,5 @@
-import assert from 'assert'
-import EventEmitter from 'events'
+import assert from 'node:assert'
+import EventEmitter from 'node:events'
 import {
   Kysely,
   KyselyPlugin,
@@ -11,13 +11,13 @@ import {
   RootOperationNode,
   UnknownRow,
 } from 'kysely'
-import TypedEmitter from 'typed-emitter'
 import { Pool as PgPool, types as pgTypes } from 'pg'
-import * as migrations from './migrations'
-import DatabaseSchema, { DatabaseSchemaType } from './database-schema'
-import { PgOptions } from './types'
+import TypedEmitter from 'typed-emitter'
 import { dbLogger } from '../../../logger'
+import { DatabaseSchema, DatabaseSchemaType } from './database-schema'
+import * as migrations from './migrations'
 import { CtxMigrationProvider } from './migrations/provider'
+import { PgOptions } from './types'
 
 export class Database {
   pool: PgPool

@@ -1,7 +1,7 @@
-import { Selectable } from 'kysely'
+import { type Selectable } from 'kysely'
+import { ToolsOzoneModerationDefs } from '@atproto/api'
 import { ModerationEvent } from '../db/schema/moderation_event'
 import { ModerationSubjectStatus } from '../db/schema/moderation_subject_status'
-import { ToolsOzoneModerationDefs } from '@atproto/api'
 import { ModSubject } from './subject'
 
 export type ModerationEventRow = Selectable<ModerationEvent>

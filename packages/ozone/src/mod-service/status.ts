@@ -3,7 +3,7 @@
 import { HOUR } from '@atproto/common'
 import { AtUri } from '@atproto/syntax'
 import { Database } from '../db'
-import DatabaseSchema from '../db/schema'
+import { DatabaseSchema } from '../db/schema'
 import { jsonb } from '../db/types'
 import { REASONAPPEAL } from '../lexicon/types/com/atproto/moderation/defs'
 import {

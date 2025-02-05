@@ -1,5 +1,4 @@
 import { z } from 'zod'
-
 import { deviceDetailsSchema } from './device-details.js'
 import { sessionIdSchema } from './session-id.js'
 

@@ -1,16 +1,16 @@
-import { type Express } from 'express'
 import { Server } from 'node:http'
 import { AddressInfo } from 'node:net'
-import { AtUri } from '@atproto/syntax'
-import { lexToJson } from '@atproto/lexicon'
+import { type Express } from 'express'
 import { CID } from 'multiformats/cid'
+import { lexToJson } from '@atproto/lexicon'
+import { AtUri } from '@atproto/syntax'
+import { isViewRecord } from '../src/lexicon/types/app/bsky/embed/record'
 import {
   FeedViewPost,
   PostView,
   isPostView,
   isThreadViewPost,
 } from '../src/lexicon/types/app/bsky/feed/defs'
-import { isViewRecord } from '../src/lexicon/types/app/bsky/embed/record'
 
 // Swap out identifiers and dates with stable
 // values for the purpose of snapshot testing

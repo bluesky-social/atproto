@@ -1,12 +1,5 @@
-import { check, schema } from '@atproto/common'
-import {
-  LexiconDoc,
-  Lexicons,
-  lexToJson,
-  LexXrpcProcedure,
-  LexXrpcQuery,
-  LexXrpcSubscription,
-} from '@atproto/lexicon'
+import { Readable } from 'node:stream'
+import { pipeline } from 'node:stream/promises'
 import express, {
   Application,
   ErrorRequestHandler,
@@ -16,10 +9,18 @@ import express, {
   RequestHandler,
   Response,
   Router,
+  json as jsonParser,
+  text as textParser,
 } from 'express'
-import { Readable } from 'node:stream'
-import { pipeline } from 'node:stream/promises'
-
+import { check, schema } from '@atproto/common'
+import {
+  LexXrpcProcedure,
+  LexXrpcQuery,
+  LexXrpcSubscription,
+  LexiconDoc,
+  Lexicons,
+  lexToJson,
+} from '@atproto/lexicon'
 import log from './logger'
 import { consumeMany, resetMany } from './rate-limiter'
 import { ErrorFrame, Frame, MessageFrame, XrpcStreamServer } from './stream'
@@ -30,21 +31,21 @@ import {
   HandlerSuccess,
   InternalServerError,
   InvalidRequestError,
-  isHandlerError,
-  isHandlerPipeThroughBuffer,
-  isHandlerPipeThroughStream,
-  isShared,
   MethodNotImplementedError,
   Options,
   Params,
-  RateLimiterI,
   RateLimitExceededError,
+  RateLimiterI,
   XRPCError,
   XRPCHandler,
   XRPCHandlerConfig,
   XRPCReqContext,
   XRPCStreamHandler,
   XRPCStreamHandlerConfig,
+  isHandlerError,
+  isHandlerPipeThroughBuffer,
+  isHandlerPipeThroughStream,
+  isShared,
 } from './types'
 import {
   decodeQueryParams,
@@ -59,7 +60,7 @@ export function createServer(lexicons?: LexiconDoc[], options?: Options) {
 
 export class Server {
   router: Express = express()
-  routes: Router = express.Router()
+  routes: Router = Router()
   subscriptions = new Map<string, XrpcStreamServer>()
   lex = new Lexicons()
   options: Options
@@ -80,8 +81,8 @@ export class Server {
     })
     this.options = opts
     this.middleware = {
-      json: express.json({ limit: opts?.payload?.jsonLimit }),
-      text: express.text({ limit: opts?.payload?.textLimit }),
+      json: jsonParser({ limit: opts?.payload?.jsonLimit }),
+      text: textParser({ limit: opts?.payload?.textLimit }),
     }
     this.globalRateLimiters = []
     this.sharedRateLimiters = {}

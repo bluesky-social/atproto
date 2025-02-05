@@ -1,18 +1,17 @@
-import fs from 'fs/promises'
+import fs from 'node:fs/promises'
 import path from 'node:path'
-
 import { CID } from 'multiformats/cid'
 import {
-  ComAtprotoModerationCreateReport,
-  AppBskyFeedPost,
-  AppBskyRichtextFacet,
   AppBskyFeedLike,
+  AppBskyFeedPost,
   AppBskyGraphFollow,
   AppBskyGraphList,
+  AppBskyRichtextFacet,
   AtpAgent,
+  ComAtprotoModerationCreateReport,
 } from '@atproto/api'
-import { AtUri } from '@atproto/syntax'
 import { BlobRef } from '@atproto/lexicon'
+import { AtUri } from '@atproto/syntax'
 import { TestNetworkNoAppView } from '../network-no-appview'
 
 // Makes it simple to create data via the XRPC client,

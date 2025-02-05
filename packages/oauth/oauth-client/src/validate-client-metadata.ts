@@ -4,7 +4,6 @@ import {
   assertOAuthDiscoverableClientId,
   assertOAuthLoopbackClientId,
 } from '@atproto/oauth-types'
-
 import { ClientMetadata, clientMetadataSchema } from './types.js'
 
 const TOKEN_ENDPOINT_AUTH_METHOD = `token_endpoint_auth_method`

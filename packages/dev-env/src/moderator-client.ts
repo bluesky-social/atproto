@@ -1,10 +1,10 @@
 import {
   AtpAgent,
   ToolsOzoneModerationEmitEvent as EmitModerationEvent,
-  ToolsOzoneModerationQueryStatuses as QueryModerationStatuses,
   ToolsOzoneModerationQueryEvents as QueryModerationEvents,
-  ToolsOzoneSettingUpsertOption,
+  ToolsOzoneModerationQueryStatuses as QueryModerationStatuses,
   ToolsOzoneSettingRemoveOptions,
+  ToolsOzoneSettingUpsertOption,
 } from '@atproto/api'
 import { TestOzone } from './ozone'
 

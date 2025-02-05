@@ -25,6 +25,9 @@
     "test:updateSnapshot": "jest --updateSnapshot",
     "migration:create": "ts-node ./bin/migration-create.ts"
   },
+  "engines": {
+    "node": ">=18.7.0"
+  },
   "dependencies": {
     "@atproto/api": "workspace:^",
     "@atproto/common": "workspace:^",

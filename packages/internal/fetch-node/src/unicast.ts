@@ -1,17 +1,15 @@
 import dns, { LookupAddress } from 'node:dns'
 import { LookupFunction } from 'node:net'
-
-import {
-  asRequest,
-  extractUrl,
-  Fetch,
-  FetchContext,
-  FetchRequestError,
-} from '@atproto-labs/fetch'
 import ipaddr from 'ipaddr.js'
 import { parse as pslParse } from 'psl'
 import { Agent, Client } from 'undici'
-
+import {
+  Fetch,
+  FetchContext,
+  FetchRequestError,
+  asRequest,
+  extractUrl,
+} from '@atproto-labs/fetch'
 import { isUnicastIp } from './util.js'
 
 const { IPv4, IPv6 } = ipaddr
