@@ -34,6 +34,7 @@ export const formatSeqCommit = async (
       blocks: await blocksToCarFile(commitData.cid, justRoot),
       ops: [],
       blobs: [],
+      prevData: commitData.prevData ?? undefined,
     }
   } else {
     evt = {
@@ -47,6 +48,7 @@ export const formatSeqCommit = async (
       blocks: await blocksToCarFile(commitData.cid, blocksToSend),
       ops: commitData.ops,
       blobs: commitData.blobs.toList(),
+      prevData: commitData.prevData ?? undefined,
     }
   }
 
@@ -149,6 +151,7 @@ export const commitEvt = z.object({
   blocks: schema.bytes,
   ops: z.array(commitEvtOp),
   blobs: z.array(schema.cid),
+  prevData: schema.cid.optional(),
 })
 export type CommitEvt = z.infer<typeof commitEvt>
 

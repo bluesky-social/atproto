@@ -45,6 +45,7 @@ export default function (server: Server, ctx: AppContext) {
           removedCids: new CidSet(),
           ops: [],
           blobs: new CidSet(),
+          prevData: null,
         }
       })
 

@@ -73,6 +73,7 @@ export const rebuildRepo = async (ctx: AppContext, args: string[]) => {
       removedCids: toDelete,
       ops: [],
       blobs: new CidSet(),
+      prevData: null,
     }
   })
   await ctx.accountManager.updateRepoRoot(did, commit.cid, rev)

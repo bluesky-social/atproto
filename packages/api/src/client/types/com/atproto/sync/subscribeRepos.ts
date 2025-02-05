@@ -29,6 +29,8 @@ export interface Commit {
   blocks: Uint8Array
   ops: RepoOp[]
   blobs: CID[]
+  /** EXPERIMENTAL. The root CID of the MST tree for the previous commit from this repo (indicated by the 'since' revision field in this message). Corresponds to the 'data' field in the repo commit object. NOTE: this field is effectively required for the 'inductive' version of firehose. */
+  prevData?: CID
   /** Timestamp of when this message was originally broadcast. */
   time: string
   [k: string]: unknown

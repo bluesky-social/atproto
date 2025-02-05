@@ -65,6 +65,7 @@ export class RepoTransactor extends RepoReader {
       ...commit,
       ops: commitOpsFromCreates(writes),
       blobs: blobCidsFromWrites(writes),
+      prevData: null,
     }
   }
 
@@ -140,6 +141,7 @@ export class RepoTransactor extends RepoReader {
     }
 
     const repo = await Repo.load(this.storage, currRoot.cid)
+    const prevData = repo.commit.data
     const writeOps = writes.map(writeToOp)
     const commit = await repo.formatCommit(writeOps, this.signingKey)
 
@@ -165,6 +167,7 @@ export class RepoTransactor extends RepoReader {
       ...commit,
       ops: commitOps,
       blobs: blobCidsFromWrites(writes),
+      prevData,
     }
   }
 

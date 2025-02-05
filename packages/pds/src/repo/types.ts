@@ -52,6 +52,7 @@ export type CommitOp = {
 export type CommitDataWithOps = CommitData & {
   ops: CommitOp[]
   blobs: CidSet
+  prevData: CID | null
 }
 
 export type PreparedWrite = PreparedCreate | PreparedUpdate | PreparedDelete

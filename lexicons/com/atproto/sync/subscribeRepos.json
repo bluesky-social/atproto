@@ -105,6 +105,10 @@
             "description": "List of new blobs (by CID) referenced by records in this commit."
           }
         },
+        "prevData": {
+          "type": "cid-link",
+          "description": "EXPERIMENTAL. The root CID of the MST tree for the previous commit from this repo (indicated by the 'since' revision field in this message). Corresponds to the 'data' field in the repo commit object. NOTE: this field is effectively required for the 'inductive' version of firehose."
+        },
         "time": {
           "type": "string",
           "format": "datetime",
