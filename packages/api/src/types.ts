@@ -1,8 +1,4 @@
-import {
-  AppBskyActorDefs,
-  AppBskyFeedThreadgate,
-  AppBskyFeedPostgate,
-} from './client'
+import { AppBskyActorDefs } from './client'
 import { ModerationPrefs } from './moderation/types'
 
 /**
