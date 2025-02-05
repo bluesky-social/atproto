@@ -1,12 +1,10 @@
 import * as plc from '@did-plc/lib'
 import { isEmailValid } from '@hapi/address'
 import { isDisposableEmail } from 'disposable-email-domains-js'
-
 import { DidDocument, MINUTE, check } from '@atproto/common'
 import { ExportableKeypair, Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { AtprotoData, ensureAtpDocument } from '@atproto/identity'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
-
 import { AccountStatus } from '../../../../account-manager'
 import { AppContext } from '../../../../context'
 import {
@@ -15,7 +13,6 @@ import {
 } from '../../../../handle'
 import { Server } from '../../../../lexicon'
 import { InputSchema as CreateAccountInput } from '../../../../lexicon/types/com/atproto/server/createAccount'
-
 import { safeResolveDidDoc } from './util'
 
 export default function (server: Server, ctx: AppContext) {

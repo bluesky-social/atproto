@@ -1,6 +1,5 @@
 import { sql } from 'kysely'
 import { CID } from 'multiformats/cid'
-
 import { chunkArray, wait } from '@atproto/common'
 import {
   BlockMap,
@@ -8,7 +7,6 @@ import {
   ReadableBlockstore,
   writeCarStream,
 } from '@atproto/repo'
-
 import { countAll } from '../../db'
 import { ActorDb } from '../db'
 

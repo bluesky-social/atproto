@@ -1,6 +1,5 @@
 import { Lexicons } from '../lexicons'
 import { LexXrpcParameters, ValidationError, ValidationResult } from '../types'
-
 import { array } from './complex'
 import * as PrimitiveValidators from './primitives'
 

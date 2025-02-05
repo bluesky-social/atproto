@@ -1,9 +1,7 @@
 import { ConnectRouter } from '@connectrpc/connect'
 import { sql } from 'kysely'
-
 import { AppContext } from '../context'
 import { Service } from '../proto/bsync_connect'
-
 import addMuteOperation from './add-mute-operation'
 import addNotifOperation from './add-notif-operation'
 import scanMuteOperations from './scan-mute-operations'

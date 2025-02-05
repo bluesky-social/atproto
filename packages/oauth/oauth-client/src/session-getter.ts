@@ -5,7 +5,6 @@ import {
   GetCachedOptions,
   SimpleStore,
 } from '@atproto-labs/simple-store'
-
 import { TokenInvalidError } from './errors/token-invalid-error.js'
 import { TokenRefreshError } from './errors/token-refresh-error.js'
 import { TokenRevokedError } from './errors/token-revoked-error.js'

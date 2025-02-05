@@ -7,7 +7,6 @@ import {
   UpstreamFailureError,
   serverTimingHeader,
 } from '@atproto/xrpc-server'
-
 import { AppContext } from '../../../../context'
 import {
   Code,

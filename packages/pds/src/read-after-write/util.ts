@@ -1,5 +1,4 @@
 import express from 'express'
-
 import { jsonToLex } from '@atproto/lexicon'
 import { HeadersMap } from '@atproto/xrpc'
 import {
@@ -7,7 +6,6 @@ import {
   HandlerPipeThroughBuffer,
   parseReqNsid,
 } from '@atproto/xrpc-server'
-
 import { AppContext } from '../context'
 import { lexicons } from '../lexicon/lexicons'
 import { readStickyLogger as log } from '../logger'
@@ -16,7 +14,6 @@ import {
   isJsonContentType,
   pipethrough,
 } from '../pipethrough'
-
 import { HandlerResponse, LocalRecords, MungeFn } from './types'
 
 const REPO_REV_HEADER = 'atproto-repo-rev'

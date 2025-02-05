@@ -1,6 +1,5 @@
 import { cborEncode, noUndefinedVals } from '@atproto/common'
 import { Keypair } from '@atproto/crypto'
-
 import { LabelRow } from '../db/schema/label'
 import { Label } from '../lexicon/types/com/atproto/label/defs'
 

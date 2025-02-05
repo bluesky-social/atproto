@@ -1,13 +1,10 @@
 import assert from 'node:assert'
-
 import * as plc from '@did-plc/lib'
 import express from 'express'
-
 import { AtpAgent } from '@atproto/api'
 import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { DidCache, IdResolver, MemoryCache } from '@atproto/identity'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
-
 import { AuthVerifier } from './auth-verifier'
 import { BackgroundQueue } from './background'
 import {

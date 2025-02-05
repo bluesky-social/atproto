@@ -1,6 +1,5 @@
 import { PoorlyFormattedDidError, UnsupportedDidMethodError } from '../errors'
 import { DidResolverOpts } from '../types'
-
 import { BaseResolver } from './base-resolver'
 import { DidPlcResolver } from './plc-resolver'
 import { DidWebResolver } from './web-resolver'

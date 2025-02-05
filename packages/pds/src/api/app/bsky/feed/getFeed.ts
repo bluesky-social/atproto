@@ -1,6 +1,5 @@
 import { InvalidRequestError } from '@atproto/oauth-provider'
 import { AtUri } from '@atproto/syntax'
-
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'

@@ -1,6 +1,5 @@
 import { Router } from 'express'
 import { sql } from 'kysely'
-
 import { AppContext } from '../context'
 
 export const createRouter = (ctx: AppContext): Router => {

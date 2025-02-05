@@ -1,6 +1,5 @@
 import { Readable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
-
 import express, {
   Application,
   ErrorRequestHandler,
@@ -13,7 +12,6 @@ import express, {
   json as jsonParser,
   text as textParser,
 } from 'express'
-
 import { check, schema } from '@atproto/common'
 import {
   LexXrpcProcedure,
@@ -23,7 +21,6 @@ import {
   Lexicons,
   lexToJson,
 } from '@atproto/lexicon'
-
 import log from './logger'
 import { consumeMany, resetMany } from './rate-limiter'
 import { ErrorFrame, Frame, MessageFrame, XrpcStreamServer } from './stream'

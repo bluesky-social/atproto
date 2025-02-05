@@ -1,11 +1,9 @@
 import { AtUri } from '@atproto/syntax'
-
 import { DataPlaneClient } from '../data-plane/client'
 import { ids } from '../lexicon/lexicons'
 import { Record as LabelerRecord } from '../lexicon/types/app/bsky/labeler/service'
 import { Label } from '../lexicon/types/com/atproto/label/defs'
 import { ParsedLabelers } from '../util'
-
 import {
   HydrationMap,
   Merges,

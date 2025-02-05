@@ -1,10 +1,7 @@
 import http from 'node:http'
-
 import cors from 'cors'
 import express from 'express'
-
 import { DidDocument } from '../../src'
-
 import { DidWebDb } from './db'
 
 const DOC_PATH = '/.well-known/did.json'

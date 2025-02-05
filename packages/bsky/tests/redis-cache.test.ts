@@ -1,5 +1,4 @@
 import { wait } from '@atproto/common'
-
 import { Redis } from '../src/'
 import { ReadThroughCache } from '../src/cache/read-through'
 

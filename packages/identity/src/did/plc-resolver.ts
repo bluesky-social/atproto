@@ -1,5 +1,4 @@
 import { DidCache } from '../types'
-
 import { BaseResolver } from './base-resolver'
 import { timed } from './util'
 

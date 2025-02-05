@@ -1,5 +1,4 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-
 import { AccountPreference } from '../../../../actor-store/preference/reader'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'

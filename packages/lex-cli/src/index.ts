@@ -1,10 +1,8 @@
 #!/usr/bin/env node
 
 import path from 'node:path'
-
 import { Command } from 'commander'
 import yesno from 'yesno'
-
 import { genClientApi } from './codegen/client'
 import { genServerApi } from './codegen/server'
 import * as mdGen from './mdgen'

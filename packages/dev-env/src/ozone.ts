@@ -1,12 +1,10 @@
 import * as plc from '@did-plc/lib'
 import getPort from 'get-port'
 import * as ui8 from 'uint8arrays'
-
 import { AtpAgent } from '@atproto/api'
 import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import * as ozone from '@atproto/ozone'
 import { createServiceJwt } from '@atproto/xrpc-server'
-
 import { ADMIN_PASSWORD, EXAMPLE_LABELER } from './const'
 import { ModeratorClient } from './moderator-client'
 import { DidAndKey, OzoneConfig } from './types'

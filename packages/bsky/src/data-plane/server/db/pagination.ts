@@ -1,7 +1,5 @@
 import { sql } from 'kysely'
-
 import { InvalidRequestError } from '@atproto/xrpc-server'
-
 import { AnyQb, DbRef } from './util'
 
 export type Cursor = { primary: string; secondary: string }

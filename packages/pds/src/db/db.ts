@@ -1,5 +1,4 @@
 import assert from 'node:assert'
-
 import SqliteDB from 'better-sqlite3'
 import {
   Kysely,
@@ -12,9 +11,7 @@ import {
   UnknownRow,
   sql,
 } from 'kysely'
-
 import { dbLogger } from '../logger'
-
 import { retrySqlite } from './util'
 
 const DEFAULT_PRAGMAS = {

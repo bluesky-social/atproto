@@ -1,13 +1,10 @@
 import { once } from 'node:events'
 import http from 'node:http'
 import { AddressInfo } from 'node:net'
-
 import express from 'express'
-
 import { AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import { verifyJwt } from '@atproto/xrpc-server'
-
 import { createServer } from '../../src/lexicon'
 import usersSeed from '../seeds/users'
 

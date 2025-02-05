@@ -5,9 +5,7 @@ import {
   TestNetwork,
   usersBulkSeed,
 } from '@atproto/dev-env'
-
 import { ids } from '../src/lexicon/lexicons'
-
 import { paginateAll } from './_util'
 
 describe('admin repo search view', () => {

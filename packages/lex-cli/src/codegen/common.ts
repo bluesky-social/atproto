@@ -1,8 +1,6 @@
 import { format } from 'prettier'
 import { Project, SourceFile, VariableDeclarationKind } from 'ts-morph'
-
 import { LexiconDoc } from '@atproto/lexicon'
-
 import { GeneratedFile } from '../types'
 
 const PRETTIER_OPTS = {

@@ -1,6 +1,5 @@
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-
 import activateAccount from './activateAccount'
 import checkAccountStatus from './checkAccountStatus'
 import confirmEmail from './confirmEmail'

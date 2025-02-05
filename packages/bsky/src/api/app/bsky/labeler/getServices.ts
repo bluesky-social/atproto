@@ -1,5 +1,4 @@
 import { mapDefined } from '@atproto/common'
-
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { resHeaders } from '../../../util'

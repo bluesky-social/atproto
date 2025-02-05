@@ -1,12 +1,9 @@
 import { once } from 'node:events'
-
 import { ServiceImpl } from '@connectrpc/connect'
-
 import { AppContext } from '../context'
 import { createNotifOpChannel } from '../db/schema/notif_op'
 import { Service } from '../proto/bsync_connect'
 import { ScanNotifOperationsResponse } from '../proto/bsync_pb'
-
 import { authWithApiKey } from './auth'
 import { combineSignals, validCursor } from './util'
 

@@ -1,10 +1,7 @@
 import assert from 'node:assert'
-
 import { Insertable, Selectable } from 'kysely'
-
 import { AtpAgent } from '@atproto/api'
 import { SECOND } from '@atproto/common'
-
 import { Database } from '../db'
 import { BlobPushEvent } from '../db/schema/blob_push_event'
 import { RepoPushEventType } from '../db/schema/repo_push_event'

@@ -1,5 +1,4 @@
 import { Kysely } from 'kysely'
-
 import * as actor from './tables/actor'
 import * as actorBlock from './tables/actor-block'
 import * as actorState from './tables/actor-state'

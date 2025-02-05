@@ -2,7 +2,6 @@
 
 import { HOUR } from '@atproto/common'
 import { AtUri } from '@atproto/syntax'
-
 import { Database } from '../db'
 import { DatabaseSchema } from '../db/schema'
 import { jsonb } from '../db/types'
@@ -13,7 +12,6 @@ import {
   REVIEWNONE,
   REVIEWOPEN,
 } from '../lexicon/types/tools/ozone/moderation/defs'
-
 import { ModerationEventRow, ModerationSubjectStatusRow } from './types'
 
 const getSubjectStatusForModerationEvent = ({

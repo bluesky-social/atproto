@@ -1,6 +1,5 @@
 import { OzoneConfig, OzoneSecrets } from '../config'
 import { AppContextOptions } from '../context'
-
 import { DaemonContext } from './context'
 
 export { EventPusher } from './event-pusher'

@@ -1,6 +1,5 @@
 import { DidDocument, PoorlyFormattedDidDocumentError } from '@atproto/identity'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-
 import { AppContext } from '../../../../context'
 
 // provides http-friendly errors during did resolution

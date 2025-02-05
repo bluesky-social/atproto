@@ -1,9 +1,7 @@
 import AwaitLock from 'await-lock'
-
 import { TID } from '@atproto/common-web'
 import { AtUri, ensureValidDid } from '@atproto/syntax'
 import { FetchHandler, XrpcClient, buildFetchHandler } from '@atproto/xrpc'
-
 import {
   AppBskyActorDefs,
   AppBskyActorProfile,

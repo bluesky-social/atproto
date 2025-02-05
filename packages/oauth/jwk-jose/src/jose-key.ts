@@ -12,7 +12,6 @@ import {
   importPKCS8,
   jwtVerify,
 } from 'jose'
-
 import {
   Jwk,
   JwkError,
@@ -29,7 +28,6 @@ import {
   jwtHeaderSchema,
   jwtPayloadSchema,
 } from '@atproto/jwk'
-
 import { either } from './util'
 
 const { JOSEError } = errors

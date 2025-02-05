@@ -1,7 +1,6 @@
 import AtpAgent from '@atproto/api'
 import { noUndefinedVals } from '@atproto/common'
 import { InternalServerError } from '@atproto/xrpc-server'
-
 import { AppContext } from '../../../../context'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { Server } from '../../../../lexicon'

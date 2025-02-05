@@ -1,6 +1,5 @@
 import { AtpAgent } from '@atproto/api'
 import { RecordRef, SeedClient, TestNetwork, usersSeed } from '@atproto/dev-env'
-
 import { ids } from '../../src/lexicon/lexicons'
 
 describe('thread mutes', () => {

@@ -1,6 +1,5 @@
 import { AtpAgent } from '@atproto/api'
 import { MINUTE } from '@atproto/common'
-
 import { BackgroundQueue } from './background'
 import { crawlerLogger as log } from './logger'
 

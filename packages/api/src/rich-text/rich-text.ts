@@ -92,7 +92,6 @@ F: 0 1 2 3 4 5 6 7 8 910   // string indices
  */
 
 import { AppBskyFeedPost, AppBskyRichtextFacet, AtpBaseClient } from '../client'
-
 import { detectFacets } from './detection'
 import { sanitizeRichText } from './sanitization'
 import { UnicodeString } from './unicode'

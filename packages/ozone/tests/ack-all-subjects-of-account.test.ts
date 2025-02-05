@@ -6,7 +6,6 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-
 import { isRepoRef } from '../src/lexicon/types/com/atproto/admin/defs'
 import {
   REASONAPPEAL,

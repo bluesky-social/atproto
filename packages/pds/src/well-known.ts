@@ -1,5 +1,4 @@
 import { Router } from 'express'
-
 import { AppContext } from './context'
 
 export const createRouter = (ctx: AppContext): Router => {

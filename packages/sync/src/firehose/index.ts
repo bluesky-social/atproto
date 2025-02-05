@@ -1,6 +1,5 @@
 import { CID } from 'multiformats/cid'
 import type { ClientOptions } from 'ws'
-
 import { Deferrable, createDeferrable, wait } from '@atproto/common'
 import {
   DidDocument,
@@ -17,7 +16,6 @@ import {
 } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
 import { Subscription } from '@atproto/xrpc-server'
-
 import {
   AccountEvt,
   AccountStatus,
@@ -28,7 +26,6 @@ import {
 } from '../events'
 import { EventRunner } from '../runner'
 import { didAndSeqForEvt } from '../util'
-
 import {
   type Account,
   type Commit,

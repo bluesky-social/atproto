@@ -1,8 +1,6 @@
 import { Selectable } from 'kysely'
 import { CID } from 'multiformats/cid'
-
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
-
 import * as lex from '../../../../lexicon/lexicons'
 import * as List from '../../../../lexicon/types/app/bsky/graph/list'
 import { BackgroundQueue } from '../../background'

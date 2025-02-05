@@ -1,6 +1,5 @@
 import AtpAgent from '@atproto/api'
 import { SeedClient, TestNetwork } from '@atproto/dev-env'
-
 import { ids } from '../../src/lexicon/lexicons'
 import { Users, feedHiddenRepliesSeed } from '../seed/feed-hidden-replies'
 

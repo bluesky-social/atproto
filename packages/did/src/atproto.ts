@@ -1,5 +1,4 @@
 import { z } from 'zod'
-
 import { InvalidDidError } from './did-error.js'
 import { Did } from './did.js'
 import {

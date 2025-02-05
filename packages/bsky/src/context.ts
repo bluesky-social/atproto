@@ -1,11 +1,9 @@
 import * as plc from '@did-plc/lib'
 import express from 'express'
 import { Dispatcher } from 'undici'
-
 import { AtpAgent } from '@atproto/api'
 import { Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
-
 import { AuthVerifier } from './auth-verifier'
 import { BsyncClient } from './bsync'
 import { ServerConfig } from './config'

@@ -3,7 +3,6 @@ import { cborDecode, cborEncode } from '@atproto/common'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { PreparedWrite, sequencer } from '@atproto/pds'
 import { CommitData } from '@atproto/repo'
-
 import { DatabaseSchemaType } from '../../src/data-plane/server/db/database-schema'
 import { ids } from '../../src/lexicon/lexicons'
 import { forSnapshot } from '../_util'

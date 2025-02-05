@@ -1,8 +1,6 @@
 import { TypeOf, z } from 'zod'
-
 import { atprotoDidSchema } from '@atproto/did'
 import { oauthTokenResponseSchema } from '@atproto/oauth-types'
-
 import { SpaceSeparatedValue, includesSpaceSeparatedValue } from './util'
 
 export type AtprotoScope = SpaceSeparatedValue<'atproto'>

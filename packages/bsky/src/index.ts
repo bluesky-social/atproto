@@ -1,17 +1,14 @@
 import events from 'node:events'
 import http from 'node:http'
 import { AddressInfo } from 'node:net'
-
 import compression from 'compression'
 import cors from 'cors'
 import express from 'express'
 import { HttpTerminator, createHttpTerminator } from 'http-terminator'
-
 import { AtpAgent } from '@atproto/api'
 import { DAY, SECOND } from '@atproto/common'
 import { Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
-
 import API, { blobResolver, health, wellKnown } from './api'
 import { createBlobDispatcher } from './api/blob-dispatcher'
 import { AuthVerifier, createPublicKeyObject } from './auth-verifier'

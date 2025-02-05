@@ -1,6 +1,5 @@
 import { AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
-
 import basicSeed from '../seeds/basic'
 
 describe('sync listing', () => {

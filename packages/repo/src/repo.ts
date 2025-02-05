@@ -1,9 +1,7 @@
 import { CID } from 'multiformats/cid'
-
 import { TID, dataToCborBlock } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
 import { lexToIpld } from '@atproto/lexicon'
-
 import { BlockMap } from './block-map'
 import { CidSet } from './cid-set'
 import { DataDiff } from './data-diff'

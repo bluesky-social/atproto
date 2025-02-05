@@ -7,7 +7,6 @@ import {
   XrpcClient,
   errorResponseBody,
 } from '@atproto/xrpc'
-
 import { Agent } from './agent'
 import {
   ComAtprotoServerCreateAccount,

@@ -1,6 +1,5 @@
 import { CID } from 'multiformats/cid'
 import * as uint8arrays from 'uint8arrays'
-
 import { dataToCborBlock } from '@atproto/common'
 import { LexValue, lexToIpld } from '@atproto/lexicon'
 

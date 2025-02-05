@@ -1,5 +1,4 @@
 import { PassThrough, Readable } from 'node:stream'
-
 import * as streams from '../src/streams'
 
 describe('streams', () => {

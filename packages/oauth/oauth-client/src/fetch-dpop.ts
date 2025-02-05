@@ -1,5 +1,4 @@
 import { base64url } from 'multiformats/bases/base64'
-
 import { Key } from '@atproto/jwk'
 import { Fetch, FetchContext, cancelBody, peekJson } from '@atproto-labs/fetch'
 import { SimpleStore } from '@atproto-labs/simple-store'

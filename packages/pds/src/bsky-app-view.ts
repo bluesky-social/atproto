@@ -1,5 +1,4 @@
 import { format } from 'node:util'
-
 import { AtpAgent } from '@atproto/api'
 
 export type AppViewOptions = {

@@ -1,8 +1,6 @@
 import * as ident from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-
 import { AppContext } from '../context'
-
 import { hasExplicitSlur } from './explicit-slurs'
 import { reservedSubdomains } from './reserved'
 

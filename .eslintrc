@@ -28,7 +28,7 @@
         "named": true,
         "distinctGroup": true,
         "alphabetize": { "order": "asc" },
-        "newlines-between": "always",
+        "newlines-between": "never",
         "groups": [
           "builtin",
           "external",

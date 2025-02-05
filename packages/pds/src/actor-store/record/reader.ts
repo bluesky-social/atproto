@@ -1,10 +1,8 @@
 import { CID } from 'multiformats/cid'
-
 import { RepoRecord } from '@atproto/lexicon'
 import { CidSet, cborToLexRecord, formatDataKey } from '@atproto/repo'
 import * as syntax from '@atproto/syntax'
 import { AtUri, ensureValidAtUri } from '@atproto/syntax'
-
 import { countAll, notSoftDeletedClause } from '../../db/util'
 import { ids } from '../../lexicon/lexicons'
 import { Record as ProfileRecord } from '../../lexicon/types/app/bsky/actor/profile'

@@ -1,5 +1,4 @@
 import { Insertable, Selectable } from 'kysely'
-
 import {
   Code,
   FoundRequestResult,
@@ -7,7 +6,6 @@ import {
   RequestId,
   UpdateRequestData,
 } from '@atproto/oauth-provider'
-
 import { fromDateISO, fromJsonObject, toDateISO, toJsonObject } from '../../db'
 import { AccountDb, AuthorizationRequest } from '../db'
 

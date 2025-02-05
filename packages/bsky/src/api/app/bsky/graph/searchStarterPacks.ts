@@ -1,6 +1,5 @@
 import { AtpAgent } from '@atproto/api'
 import { mapDefined } from '@atproto/common'
-
 import { AppContext } from '../../../../context'
 import { DataPlaneClient } from '../../../../data-plane'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'

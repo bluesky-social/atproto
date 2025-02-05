@@ -1,8 +1,6 @@
 import { CID } from 'multiformats/cid'
-
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-
 import * as lex from '../../../../lexicon/lexicons'
 import * as Threadgate from '../../../../lexicon/types/app/bsky/feed/threadgate'
 import { BackgroundQueue } from '../../background'

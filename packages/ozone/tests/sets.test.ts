@@ -3,9 +3,7 @@ import AtpAgent, {
   ToolsOzoneSetQuerySets,
 } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-
 import { ids } from '../src/lexicon/lexicons'
-
 import { forSnapshot } from './_util'
 
 describe('ozone-sets', () => {

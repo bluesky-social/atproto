@@ -1,10 +1,8 @@
 import { CID } from 'multiformats'
-
 import { DataAdd, DataDelete, DataDiff, DataUpdate } from '../src/data-diff'
 import { MST } from '../src/mst'
 import { InvalidMstKeyError, countPrefixLen } from '../src/mst/util'
 import { MemoryBlockstore } from '../src/storage'
-
 import * as util from './_util'
 
 describe('Merkle Search Tree', () => {

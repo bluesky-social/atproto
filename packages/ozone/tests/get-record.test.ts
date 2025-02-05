@@ -7,13 +7,11 @@ import {
   basicSeed,
 } from '@atproto/dev-env'
 import { AtUri } from '@atproto/syntax'
-
 import { ids } from '../src/lexicon/lexicons'
 import {
   REASONOTHER,
   REASONSPAM,
 } from '../src/lexicon/types/com/atproto/moderation/defs'
-
 import { forSnapshot } from './_util'
 
 describe('admin get record view', () => {

@@ -1,5 +1,4 @@
 import { Awaitable } from '../lib/util/type.js'
-
 import { Code } from './code.js'
 import { RequestData } from './request-data.js'
 import { RequestId } from './request-id.js'

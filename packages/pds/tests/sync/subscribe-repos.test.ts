@@ -1,6 +1,5 @@
 import { CID } from 'multiformats/cid'
 import { WebSocket } from 'ws'
-
 import { AtpAgent } from '@atproto/api'
 import {
   HOUR,
@@ -14,7 +13,6 @@ import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import * as repo from '@atproto/repo'
 import { readCar } from '@atproto/repo'
 import { ErrorFrame, Frame, MessageFrame, byFrame } from '@atproto/xrpc-server'
-
 import { AppContext } from '../../src'
 import { AccountStatus } from '../../src/account-manager'
 import {

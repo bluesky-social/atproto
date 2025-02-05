@@ -1,8 +1,6 @@
 import { randomBytes } from 'node:crypto'
-
 import { parse as parseCookie, serialize as serializeCookie } from 'cookie'
 import createHttpError from 'http-errors'
-
 import { appendHeader } from './response.js'
 import { IncomingMessage, ServerResponse } from './types.js'
 import { UrlReference, urlMatch } from './url.js'

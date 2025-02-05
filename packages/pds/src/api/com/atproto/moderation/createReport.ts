@@ -1,5 +1,4 @@
 import { AtpAgent } from '@atproto/api'
-
 import { AuthScope } from '../../../../auth-verifier'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'

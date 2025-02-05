@@ -1,5 +1,4 @@
 import type { CID } from 'multiformats/cid'
-
 import { DidDocument } from '@atproto/identity'
 import type { RepoRecord } from '@atproto/lexicon'
 import { BlockMap } from '@atproto/repo'

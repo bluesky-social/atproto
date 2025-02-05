@@ -1,11 +1,9 @@
 import { TID } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
 import { Secp256k1Keypair } from '@atproto/crypto'
-
 import { RepoContents, WriteOpAction, verifyCommitSig } from '../src'
 import { Repo } from '../src/repo'
 import { MemoryBlockstore } from '../src/storage'
-
 import * as util from './_util'
 
 describe('Repo', () => {

@@ -1,13 +1,10 @@
 import { CID } from 'multiformats/cid'
-
 import { RepoRecord } from '@atproto/lexicon'
 import { BlobStore, WriteOpAction } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
-
 import { StatusAttr } from '../../lexicon/types/com/atproto/admin/defs'
 import { dbLogger as log } from '../../logger'
 import { ActorDb, Backlink } from '../db'
-
 import { RecordReader, getBacklinks } from './reader'
 
 export class RecordTransactor extends RecordReader {

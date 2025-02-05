@@ -1,6 +1,5 @@
 import { CID } from 'multiformats/cid'
 import * as ui8 from 'uint8arrays'
-
 import { cborDecodeMulti, cborEncode } from '../src'
 
 describe('ipld decode multi', () => {

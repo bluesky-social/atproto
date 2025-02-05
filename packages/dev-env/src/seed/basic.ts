@@ -2,7 +2,6 @@ import { TestBsky } from '../bsky'
 import { EXAMPLE_LABELER } from '../const'
 import { TestNetwork } from '../network'
 import { TestNetworkNoAppView } from '../network-no-appview'
-
 import { SeedClient } from './client'
 import usersSeed from './users'
 

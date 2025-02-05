@@ -1,7 +1,5 @@
 import PQueue from 'p-queue'
-
 import { dbLogger } from '../../logger'
-
 import { Database } from './db'
 
 // A simple queue for in-process, out-of-band/backgrounded work

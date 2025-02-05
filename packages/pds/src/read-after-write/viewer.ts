@@ -1,6 +1,5 @@
 import { AtUri, INVALID_HANDLE } from '@atproto/syntax'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
-
 import { AccountManager } from '../account-manager'
 import { ActorStoreReader } from '../actor-store/actor-store-reader'
 import { BskyAppView } from '../bsky-app-view'
@@ -37,7 +36,6 @@ import {
 } from '../lexicon/types/app/bsky/feed/defs'
 import { Record as PostRecord } from '../lexicon/types/app/bsky/feed/post'
 import { ListView } from '../lexicon/types/app/bsky/graph/defs'
-
 import { LocalRecords, RecordDescript } from './types'
 
 type CommonSignedUris = 'avatar' | 'banner' | 'feed_thumbnail' | 'feed_fullsize'

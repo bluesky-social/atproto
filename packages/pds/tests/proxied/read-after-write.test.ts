@@ -1,11 +1,8 @@
 import assert from 'node:assert'
 import util from 'node:util'
-
 import { request } from 'undici'
-
 import { AtpAgent } from '@atproto/api'
 import { RecordRef, SeedClient, TestNetwork } from '@atproto/dev-env'
-
 import { View as ExternalEmbedView } from '../../src/lexicon/types/app/bsky/embed/external'
 import { View as ImagesEmbedView } from '../../src/lexicon/types/app/bsky/embed/images'
 import { View as RecordEmbedView } from '../../src/lexicon/types/app/bsky/embed/record'

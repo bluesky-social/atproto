@@ -1,7 +1,5 @@
 import { z } from 'zod'
-
 import { NSID } from '@atproto/syntax'
-
 import { requiredPropertiesRefinement } from './util'
 
 // primitives

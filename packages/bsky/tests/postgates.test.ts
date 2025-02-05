@@ -1,8 +1,6 @@
 import AtpAgent, { AppBskyEmbedRecord } from '@atproto/api'
 import { SeedClient, TestNetwork } from '@atproto/dev-env'
-
 import { ids } from '../src/lexicon/lexicons'
-
 import { Users, postgatesSeed } from './seed/postgates'
 
 describe('postgates', () => {

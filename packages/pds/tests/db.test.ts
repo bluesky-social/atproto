@@ -1,5 +1,4 @@
 import { TestNetworkNoAppView } from '@atproto/dev-env'
-
 import { AccountDb } from '../src/account-manager/db'
 
 describe('db', () => {

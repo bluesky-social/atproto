@@ -9,7 +9,6 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-
 import { REVIEWOPEN } from '../src/lexicon/types/tools/ozone/moderation/defs'
 
 describe('record and account events on moderation subjects', () => {

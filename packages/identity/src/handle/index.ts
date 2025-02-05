@@ -1,5 +1,4 @@
 import dns from 'node:dns/promises'
-
 import { HandleResolverOpts } from '../types'
 
 const SUBDOMAIN = '_atproto'

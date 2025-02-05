@@ -1,10 +1,8 @@
 import { CID } from 'multiformats'
 import { z } from 'zod'
-
 import { schema as common } from '@atproto/common'
 import { def as commonDef } from '@atproto/common-web'
 import { RepoRecord } from '@atproto/lexicon'
-
 import { BlockMap } from './block-map'
 import { CidSet } from './cid-set'
 

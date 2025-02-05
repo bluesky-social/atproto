@@ -1,5 +1,4 @@
 import { z } from 'zod'
-
 import { oauthAccessTokenSchema } from './oauth-access-token.js'
 import { oauthRefreshTokenSchema } from './oauth-refresh-token.js'
 

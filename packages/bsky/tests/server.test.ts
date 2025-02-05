@@ -1,14 +1,10 @@
 import { once } from 'node:events'
 import { AddressInfo } from 'node:net'
 import { finished } from 'node:stream/promises'
-
 import express from 'express'
 import { request } from 'undici'
-
 import { TestNetwork, basicSeed } from '@atproto/dev-env'
-
 import { handler as errorHandler } from '../src/error'
-
 import { startServer } from './_util'
 
 describe('server', () => {

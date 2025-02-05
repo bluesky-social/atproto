@@ -1,5 +1,4 @@
 import { Generated, Selectable } from 'kysely'
-
 import {
   Code,
   DeviceId,
@@ -8,7 +7,6 @@ import {
   Sub,
   TokenId,
 } from '@atproto/oauth-provider'
-
 import { DateISO, JsonArray, JsonObject } from '../../../db/cast'
 
 export interface Token {

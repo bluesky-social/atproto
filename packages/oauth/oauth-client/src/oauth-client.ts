@@ -25,7 +25,6 @@ import {
 } from '@atproto-labs/handle-resolver'
 import { IdentityResolver } from '@atproto-labs/identity-resolver'
 import { SimpleStoreMemory } from '@atproto-labs/simple-store-memory'
-
 import { FALLBACK_ALG } from './constants.js'
 import { TokenRevokedError } from './errors/token-revoked-error.js'
 import {

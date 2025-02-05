@@ -1,6 +1,5 @@
 import { mapDefined } from '@atproto/common'
 import { INVALID_HANDLE } from '@atproto/syntax'
-
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 

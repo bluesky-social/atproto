@@ -1,10 +1,8 @@
 import assert from 'node:assert'
 import { IncomingMessage } from 'node:http'
 import { Duplex, Readable, pipeline } from 'node:stream'
-
 import express from 'express'
 import mime from 'mime-types'
-
 import { MaxSizeChecker, createDecoders } from '@atproto/common'
 import {
   LexXrpcProcedure,
@@ -14,7 +12,6 @@ import {
   jsonToLex,
 } from '@atproto/lexicon'
 import { ResponseType } from '@atproto/xrpc'
-
 import {
   HandlerInput,
   HandlerSuccess,

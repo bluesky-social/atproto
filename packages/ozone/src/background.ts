@@ -1,5 +1,4 @@
 import PQueue from 'p-queue'
-
 import { Database } from './db'
 import { dbLogger } from './logger'
 import { boundAbortController, isCausedBySignal, startInterval } from './util'

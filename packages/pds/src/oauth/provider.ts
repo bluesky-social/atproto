@@ -3,7 +3,6 @@ import {
   OAuthProvider,
   OAuthProviderOptions,
 } from '@atproto/oauth-provider'
-
 import { AccountManager } from '../account-manager/index'
 import { oauthLogger } from '../logger'
 

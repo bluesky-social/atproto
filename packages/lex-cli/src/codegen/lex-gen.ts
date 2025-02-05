@@ -1,7 +1,5 @@
 import { relative as getRelativePath } from 'node:path'
-
 import { SourceFile, VariableDeclarationKind } from 'ts-morph'
-
 import {
   LexArray,
   LexBlob,
@@ -14,7 +12,6 @@ import {
   LexUserType,
   Lexicons,
 } from '@atproto/lexicon'
-
 import { toCamelCase, toScreamingSnakeCase, toTitleCase } from './util'
 
 interface Commentable<T> {

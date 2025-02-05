@@ -1,5 +1,4 @@
 import * as jose from 'jose'
-
 import { AtpAgent } from '@atproto/api'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 

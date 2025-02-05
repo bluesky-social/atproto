@@ -1,5 +1,4 @@
 import { z } from 'zod'
-
 import { oauthRedirectUriSchema } from './oauth-redirect-uri.js'
 
 export const oauthAuthorizationCodeGrantTokenRequestSchema = z.object({

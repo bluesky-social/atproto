@@ -1,6 +1,5 @@
 import { createHash } from 'node:crypto'
 import { ServerResponse } from 'node:http'
-
 import {
   AssetRef,
   BuildDocumentOptions,

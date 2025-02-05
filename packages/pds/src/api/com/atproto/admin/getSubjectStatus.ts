@@ -1,8 +1,6 @@
 import { CID } from 'multiformats/cid'
-
 import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { OutputSchema } from '../../../../lexicon/types/com/atproto/admin/getSubjectStatus'

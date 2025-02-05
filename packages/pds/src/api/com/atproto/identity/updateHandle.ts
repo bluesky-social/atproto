@@ -1,8 +1,6 @@
 import assert from 'node:assert'
-
 import { DAY, MINUTE } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-
 import { AppContext } from '../../../../context'
 import { normalizeAndValidateHandle } from '../../../../handle'
 import { Server } from '../../../../lexicon'

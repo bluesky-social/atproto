@@ -1,5 +1,4 @@
 import { ZodError } from 'zod'
-
 import { check } from '../src/index'
 
 describe('check', () => {

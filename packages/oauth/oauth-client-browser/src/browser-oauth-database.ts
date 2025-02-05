@@ -8,7 +8,6 @@ import {
 } from '@atproto/oauth-types'
 import { ResolvedHandle } from '@atproto-labs/handle-resolver'
 import { SimpleStore, Value } from '@atproto-labs/simple-store'
-
 import { DB, DBObjectStore } from './indexed-db/index.js'
 import { TupleUnion } from './util.js'
 

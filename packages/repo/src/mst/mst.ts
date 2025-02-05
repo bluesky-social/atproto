@@ -1,15 +1,12 @@
 import { BlockWriter } from '@ipld/car/writer'
 import { CID } from 'multiformats'
 import { z } from 'zod'
-
 import { cidForCbor, dataToCborBlock, schema as common } from '@atproto/common'
-
 import { BlockMap } from '../block-map'
 import { CidSet } from '../cid-set'
 import { MissingBlockError, MissingBlocksError } from '../error'
 import * as parse from '../parse'
 import { ReadableBlockstore } from '../storage'
-
 import * as util from './util'
 
 /**

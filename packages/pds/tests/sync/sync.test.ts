@@ -1,5 +1,4 @@
 import { CID } from 'multiformats/cid'
-
 import { AtpAgent } from '@atproto/api'
 import { TID, cidForCbor } from '@atproto/common'
 import { Keypair, randomStr } from '@atproto/crypto'

@@ -1,6 +1,5 @@
 import { AtpAgent } from '@atproto/api'
 import { Secp256k1Keypair } from '@atproto/crypto'
-
 import { TestPds } from './pds'
 
 export class OzoneServiceProfile {

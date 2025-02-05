@@ -1,7 +1,5 @@
 import { Router } from 'express'
-
 import { oauthProtectedResourceMetadataSchema } from '@atproto/oauth-provider'
-
 import { AppContext } from './context'
 
 export const createRouter = ({ authProvider, cfg }: AppContext): Router => {

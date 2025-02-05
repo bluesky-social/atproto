@@ -1,5 +1,4 @@
 import { ClientOptions } from 'ws'
-
 import { ensureChunkIsMessage } from './stream'
 import { WebSocketKeepAlive } from './websocket-keepalive'
 

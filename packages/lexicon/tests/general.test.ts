@@ -1,7 +1,5 @@
 import { CID } from 'multiformats/cid'
-
 import { LexiconDoc, Lexicons, parseLexiconDoc } from '../src/index'
-
 import LexiconDocs from './_scaffolds/lexicons'
 
 describe('Lexicons collection', () => {

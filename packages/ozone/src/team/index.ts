@@ -1,8 +1,6 @@
 import { Selectable } from 'kysely'
-
 import { chunkArray } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-
 import { AppContext } from '../context'
 import { Database } from '../db'
 import { Member } from '../db/schema/member'

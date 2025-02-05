@@ -1,12 +1,10 @@
 import { Code, ConnectError, ServiceImpl } from '@connectrpc/connect'
 import { sql } from 'kysely'
-
 import { AppContext } from '../context'
 import { Database } from '../db'
 import { createNotifOpChannel } from '../db/schema/notif_op'
 import { Service } from '../proto/bsync_connect'
 import { AddNotifOperationResponse } from '../proto/bsync_pb'
-
 import { authWithApiKey } from './auth'
 import { isValidDid } from './util'
 

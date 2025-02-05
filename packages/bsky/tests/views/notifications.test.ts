@@ -1,6 +1,5 @@
 import { AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-
 import { ids } from '../../src/lexicon/lexicons'
 import { Notification } from '../../src/lexicon/types/app/bsky/notification/listNotifications'
 import { forSnapshot, paginateAll } from '../_util'

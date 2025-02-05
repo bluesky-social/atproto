@@ -7,12 +7,10 @@ import {
 import { randomStr } from '@atproto/crypto'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import { readCarWithRoot } from '@atproto/repo'
-
 import { repoPrepare, sequencer } from '../../pds'
 import { ids } from '../src/lexicon/lexicons'
 import { SeqEvt, Sequencer, formatSeqCommit } from '../src/sequencer'
 import { Outbox } from '../src/sequencer/outbox'
-
 import userSeed from './seeds/users'
 
 describe('sequencer', () => {

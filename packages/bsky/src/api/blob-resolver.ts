@@ -1,10 +1,8 @@
 import { Duplex, Transform, Writable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
-
 import createError, { isHttpError } from 'http-errors'
 import { CID } from 'multiformats/cid'
 import { Dispatcher } from 'undici'
-
 import {
   VerifyCidError,
   VerifyCidTransform,
@@ -17,7 +15,6 @@ import {
   buildProxiedContentEncoding,
   formatAcceptHeader,
 } from '@atproto-labs/xrpc-utils'
-
 import { ServerConfig } from '../config'
 import { AppContext } from '../context'
 import {
@@ -30,7 +27,6 @@ import {
 import { parseCid } from '../hydration/util'
 import { httpLogger as log } from '../logger'
 import { Middleware, proxyResponseHeaders, responseSignal } from '../util/http'
-
 import { BSKY_USER_AGENT } from './util'
 
 export function createMiddleware(ctx: AppContext): Middleware {

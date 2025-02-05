@@ -1,6 +1,5 @@
 import assert from 'node:assert'
 import { EventEmitter } from 'node:stream'
-
 import {
   Kysely,
   KyselyPlugin,
@@ -14,9 +13,7 @@ import {
 } from 'kysely'
 import { Pool as PgPool, types as pgTypes } from 'pg'
 import TypedEmitter from 'typed-emitter'
-
 import { dbLogger } from '../logger'
-
 import * as migrations from './migrations'
 import { DbMigrationProvider } from './migrations/provider'
 import { DatabaseSchema, DatabaseSchemaType } from './schema'

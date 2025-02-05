@@ -1,6 +1,5 @@
 import { BlockWriter } from '@ipld/car/writer'
 import { CID } from 'multiformats/cid'
-
 import { CidSet } from '../cid-set'
 import { MissingBlocksError } from '../error'
 import { MST } from '../mst'

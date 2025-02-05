@@ -12,7 +12,6 @@ import {
   errors,
   jwtVerify,
 } from 'jose'
-
 import { Jwks } from '@atproto/jwk'
 import {
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
@@ -21,7 +20,6 @@ import {
   OAuthClientMetadata,
   OAuthRedirectUri,
 } from '@atproto/oauth-types'
-
 import { CLIENT_ASSERTION_MAX_AGE, JAR_MAX_AGE } from '../constants.js'
 import { InvalidAuthorizationDetailsError } from '../errors/invalid-authorization-details-error.js'
 import { InvalidClientError } from '../errors/invalid-client-error.js'
@@ -30,7 +28,6 @@ import { InvalidParametersError } from '../errors/invalid-parameters-error.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { InvalidScopeError } from '../errors/invalid-scope-error.js'
 import { compareRedirectUri } from '../lib/util/redirect-uri.js'
-
 import { ClientAuth, authJwkThumbprint } from './client-auth.js'
 import { ClientId } from './client-id.js'
 import { ClientInfo } from './client-info.js'

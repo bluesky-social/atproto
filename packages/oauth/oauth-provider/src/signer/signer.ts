@@ -10,11 +10,9 @@ import {
   OAuthAuthorizationDetails,
   OAuthAuthorizationRequestParameters,
 } from '@atproto/oauth-types'
-
 import { Client } from '../client/client.js'
 import { dateToEpoch } from '../lib/util/date.js'
 import { TokenId } from '../token/token-id.js'
-
 import {
   SignedTokenPayload,
   signedTokenPayloadSchema,

@@ -1,5 +1,4 @@
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
-
 import { AdminTokenOutput, ModeratorOutput } from '../../auth-verifier'
 import { AppContext } from '../../context'
 import { Server } from '../../lexicon'

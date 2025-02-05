@@ -1,5 +1,4 @@
 import { DataDiff } from '../data-diff'
-
 import { MST } from './mst'
 import { MstWalker } from './walker'
 

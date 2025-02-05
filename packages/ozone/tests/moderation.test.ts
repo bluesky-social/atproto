@@ -10,7 +10,6 @@ import {
   basicSeed,
 } from '@atproto/dev-env'
 import { AtUri } from '@atproto/syntax'
-
 import { EventReverser } from '../src'
 import { ImageInvalidator } from '../src/image-invalidator'
 import { ids } from '../src/lexicon/lexicons'
@@ -25,7 +24,6 @@ import {
   REVIEWESCALATED,
 } from '../src/lexicon/types/tools/ozone/moderation/defs'
 import { TAKEDOWN_LABEL } from '../src/mod-service'
-
 import { forSnapshot } from './_util'
 
 describe('moderation', () => {

@@ -1,6 +1,5 @@
 import { CID } from 'multiformats/cid'
 import { request } from 'undici'
-
 import { cidForCbor, verifyCidForBytes } from '@atproto/common'
 import { randomBytes } from '@atproto/crypto'
 import { TestNetwork, basicSeed } from '@atproto/dev-env'

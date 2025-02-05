@@ -1,8 +1,6 @@
 import { CID } from 'multiformats/cid'
-
 import { WriteOpAction } from '@atproto/repo'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
-
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import {

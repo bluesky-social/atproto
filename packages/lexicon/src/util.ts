@@ -1,5 +1,4 @@
 import { z } from 'zod'
-
 import { Lexicons } from './lexicons'
 import { LexRefVariant, LexUserType } from './types'
 

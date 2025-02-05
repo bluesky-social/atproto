@@ -1,6 +1,5 @@
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-
 import { isValidDidDocForService } from './util'
 
 export default function (server: Server, ctx: AppContext) {

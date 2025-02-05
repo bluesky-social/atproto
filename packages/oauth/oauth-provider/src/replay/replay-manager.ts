@@ -5,7 +5,6 @@ import {
   DPOP_NONCE_MAX_AGE,
   JAR_MAX_AGE,
 } from '../constants.js'
-
 import { ReplayStore } from './replay-store.js'
 
 const SECURITY_RATIO = 1.1 // 10% extra time for security

@@ -2,7 +2,6 @@ import { getPdsEndpoint, getSigningDidKey } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
 import { DidDocument } from '@atproto/identity'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-
 import { ServerConfig } from '../../../../config'
 import { AppContext } from '../../../../context'
 import { httpLogger } from '../../../../logger'

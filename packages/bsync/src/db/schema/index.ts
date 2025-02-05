@@ -1,5 +1,4 @@
 import { Kysely } from 'kysely'
-
 import * as muteItem from './mute_item'
 import * as muteOp from './mute_op'
 import * as notifItem from './notif_item'

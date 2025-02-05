@@ -9,7 +9,6 @@ import {
   ConnectTransportOptions,
   createConnectTransport,
 } from '@connectrpc/connect-node'
-
 import { Service } from './proto/courier_connect'
 
 export type CourierClient = PromiseClient<typeof Service>

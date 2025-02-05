@@ -1,11 +1,9 @@
 import { Readable } from 'node:stream'
 import { setImmediate } from 'node:timers/promises'
-
 import { CarBlockIterator } from '@ipld/car/iterator'
 import { BlockWriter, CarWriter } from '@ipld/car/writer'
 import * as cbor from '@ipld/dag-cbor'
 import { CID } from 'multiformats/cid'
-
 import {
   TID,
   byteIterableToStream,
@@ -19,7 +17,6 @@ import {
 import * as crypto from '@atproto/crypto'
 import { Keypair } from '@atproto/crypto'
 import { LexValue, RepoRecord, ipldToLex, lexToIpld } from '@atproto/lexicon'
-
 import { BlockMap } from './block-map'
 import { DataDiff } from './data-diff'
 import {

@@ -1,5 +1,4 @@
 import { IncomingMessage } from 'node:http'
-
 import { Headers } from '@atproto/xrpc'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 

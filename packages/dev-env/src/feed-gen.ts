@@ -1,10 +1,8 @@
 import events from 'node:events'
 import http from 'node:http'
-
 import * as plc from '@did-plc/lib'
 import express from 'express'
 import getPort from 'get-port'
-
 import { Secp256k1Keypair } from '@atproto/crypto'
 import { SkeletonHandler, createLexiconServer } from '@atproto/pds'
 import { InvalidRequestError } from '@atproto/xrpc-server'

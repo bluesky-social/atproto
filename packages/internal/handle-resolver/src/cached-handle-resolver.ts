@@ -1,6 +1,5 @@
 import { CachedGetter, SimpleStore } from '@atproto-labs/simple-store'
 import { SimpleStoreMemory } from '@atproto-labs/simple-store-memory'
-
 import {
   HandleResolver,
   ResolveHandleOptions,

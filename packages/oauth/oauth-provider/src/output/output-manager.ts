@@ -1,9 +1,7 @@
 import { ServerResponse } from 'node:http'
-
 import { Asset } from '../assets/asset.js'
 import { getAsset } from '../assets/index.js'
 import { Html, cssCode, html } from '../lib/html/index.js'
-
 import {
   AuthorizationResultAuthorize,
   buildAuthorizeData,

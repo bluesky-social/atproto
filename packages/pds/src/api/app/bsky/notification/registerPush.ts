@@ -1,7 +1,6 @@
 import { AtpAgent } from '@atproto/api'
 import { getNotif } from '@atproto/identity'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-
 import { AuthScope } from '../../../../auth-verifier'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'

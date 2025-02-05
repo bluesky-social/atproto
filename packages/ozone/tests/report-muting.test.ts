@@ -8,7 +8,6 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-
 import {
   REVIEWNONE,
   REVIEWOPEN,

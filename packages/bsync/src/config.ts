@@ -1,5 +1,4 @@
 import assert from 'node:assert'
-
 import { envBool, envInt, envList, envStr } from '@atproto/common'
 
 export const envToCfg = (env: ServerEnvironment): ServerConfig => {

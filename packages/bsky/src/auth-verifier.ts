@@ -1,10 +1,8 @@
 import crypto, { KeyObject } from 'node:crypto'
-
 import express from 'express'
 import * as jose from 'jose'
 import KeyEncoder from 'key-encoder'
 import * as ui8 from 'uint8arrays'
-
 import { SECP256K1_JWT_ALG, parseDidKey } from '@atproto/crypto'
 import {
   AuthRequiredError,
@@ -13,7 +11,6 @@ import {
   parseReqNsid,
   verifyJwt as verifyServiceJwt,
 } from '@atproto/xrpc-server'
-
 import {
   Code,
   DataPlaneClient,

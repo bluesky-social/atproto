@@ -1,5 +1,4 @@
 import { TypeOf, ZodIssueCode } from 'zod'
-
 import { oauthClientIdSchema } from './oauth-client-id.js'
 import {
   OAuthLoopbackRedirectURI,

@@ -1,7 +1,5 @@
 import { CID } from 'multiformats/cid'
-
 import { AtUri } from '@atproto/syntax'
-
 import * as lex from '../../../../lexicon/lexicons'
 import * as Profile from '../../../../lexicon/types/app/bsky/actor/profile'
 import { BackgroundQueue } from '../../background'

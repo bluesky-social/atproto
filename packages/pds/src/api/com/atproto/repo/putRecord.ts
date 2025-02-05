@@ -1,10 +1,8 @@
 import { CID } from 'multiformats/cid'
-
 import { BlobRef } from '@atproto/lexicon'
 import { CommitData } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
-
 import { ActorStoreTransactor } from '../../../../actor-store/actor-store-transactor'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'

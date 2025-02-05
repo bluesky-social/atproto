@@ -1,5 +1,4 @@
 import { CID } from 'multiformats/cid'
-
 import { TID, check, dataToCborBlock } from '@atproto/common'
 import {
   BlobRef,
@@ -23,7 +22,6 @@ import {
   ensureValidDatetime,
   ensureValidRecordKey,
 } from '@atproto/syntax'
-
 import { hasExplicitSlur } from '../handle/explicit-slurs'
 import * as lex from '../lexicon/lexicons'
 import { isRecord as isProfile } from '../lexicon/types/app/bsky/actor/profile'
@@ -32,7 +30,6 @@ import { isRecord as isPost } from '../lexicon/types/app/bsky/feed/post'
 import { isRecord as isList } from '../lexicon/types/app/bsky/graph/list'
 import { isRecord as isStarterPack } from '../lexicon/types/app/bsky/graph/starterpack'
 import { isTag } from '../lexicon/types/app/bsky/richtext/facet'
-
 import {
   InvalidRecordError,
   PreparedBlobRef,

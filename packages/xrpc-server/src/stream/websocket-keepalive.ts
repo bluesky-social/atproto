@@ -1,7 +1,5 @@
 import { ClientOptions, WebSocket } from 'ws'
-
 import { SECOND, wait } from '@atproto/common'
-
 import { streamByteChunks } from './stream'
 import { CloseCode, DisconnectError } from './types'
 

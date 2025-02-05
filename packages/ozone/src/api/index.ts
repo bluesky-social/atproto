@@ -1,6 +1,5 @@
 import { AppContext } from '../context'
 import { Server } from '../lexicon'
-
 import chat from './chat'
 import createTemplate from './communication/createTemplate'
 import deleteTemplate from './communication/deleteTemplate'

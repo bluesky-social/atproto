@@ -1,5 +1,4 @@
 import { MINUTE } from '@atproto/common'
-
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { authPassthru } from '../../../proxy'

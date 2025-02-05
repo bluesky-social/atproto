@@ -1,5 +1,4 @@
 import assert from 'node:assert'
-
 import { AtpAgent } from '@atproto/api'
 import {
   EXAMPLE_LABELER,
@@ -7,7 +6,6 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-
 import { Database } from '../../src'
 import { ids } from '../../src/lexicon/lexicons'
 import { FeedViewPost } from '../../src/lexicon/types/app/bsky/feed/defs'

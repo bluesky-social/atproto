@@ -1,7 +1,5 @@
 import express from 'express'
-
 import { INVALID_HANDLE } from '@atproto/syntax'
-
 import { ActorAccount } from '../../../../account-manager/helpers/account'
 import { CodeDetail } from '../../../../account-manager/helpers/invite'
 

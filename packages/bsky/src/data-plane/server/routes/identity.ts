@@ -1,8 +1,6 @@
 import { Timestamp } from '@bufbuild/protobuf'
 import { Code, ConnectError, ServiceImpl } from '@connectrpc/connect'
-
 import { DidDocument, IdResolver, getDid, getHandle } from '@atproto/identity'
-
 import { Service } from '../../../proto/bsky_connect'
 import { Database } from '../db'
 

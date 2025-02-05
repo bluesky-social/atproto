@@ -1,5 +1,4 @@
 import { Code, ConnectError } from '@connectrpc/connect'
-
 import {
   InvalidDidError,
   ensureValidAtUri,

@@ -1,7 +1,5 @@
 import fs from 'node:fs'
-
 import { CID } from 'multiformats'
-
 import { Fanout, MST, MemoryBlockstore, NodeEntry } from '../src'
 import * as util from '../tests/_util'
 

@@ -1,7 +1,5 @@
 import { z } from 'zod'
-
 import { signedJwtSchema } from '@atproto/jwk'
-
 import { oauthAuthorizationDetailsSchema } from './oauth-authorization-details.js'
 import { oauthClientIdSchema } from './oauth-client-id.js'
 import { oauthCodeChallengeMethodSchema } from './oauth-code-challenge-method.js'

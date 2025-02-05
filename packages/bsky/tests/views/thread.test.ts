@@ -1,6 +1,5 @@
 import { AppBskyFeedGetPostThread, AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-
 import { ids } from '../../src/lexicon/lexicons'
 import {
   assertIsThreadViewPost,

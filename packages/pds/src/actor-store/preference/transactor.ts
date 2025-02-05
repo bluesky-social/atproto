@@ -1,7 +1,5 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-
 import { AuthScope } from '../../auth-verifier'
-
 import {
   AccountPreference,
   PreferenceReader,

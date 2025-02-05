@@ -1,5 +1,4 @@
 import { CID } from 'multiformats/cid'
-
 import { RepoRecord } from '@atproto/lexicon'
 import { WriteOpAction } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'

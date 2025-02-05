@@ -1,8 +1,6 @@
 import { CID } from 'multiformats/cid'
-
 import { BlockMap } from '../block-map'
 import { CommitData } from '../types'
-
 import { ReadableBlockstore } from './readable-blockstore'
 import { RepoStorage } from './types'
 

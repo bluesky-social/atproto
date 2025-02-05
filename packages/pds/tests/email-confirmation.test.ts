@@ -1,16 +1,12 @@
 import { EventEmitter, once } from 'node:events'
-
 import Mail from 'nodemailer/lib/mailer'
-
 import {
   AtpAgent,
   ComAtprotoServerConfirmEmail,
   ComAtprotoServerUpdateEmail,
 } from '@atproto/api'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
-
 import { ServerMailer } from '../src/mailer'
-
 import userSeed from './seeds/users'
 
 describe('email confirmation', () => {

@@ -1,5 +1,4 @@
 import assert from 'node:assert'
-
 import { AtUri, AtpAgent } from '@atproto/api'
 import {
   SeedClient,
@@ -8,7 +7,6 @@ import {
   mockNetworkUtilities,
 } from '@atproto/dev-env'
 import { readCar } from '@atproto/repo'
-
 import { ids } from '../src/lexicon/lexicons'
 
 describe('account migration', () => {

@@ -2,7 +2,6 @@ import {
   InvalidRequestError,
   MethodNotImplementedError,
 } from '@atproto/xrpc-server'
-
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { AppPlatform } from '../../../../proto/courier_pb'

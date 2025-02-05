@@ -1,7 +1,5 @@
 import { CID } from 'multiformats/cid'
-
 import { graphemeLen, utf8Len } from '@atproto/common-web'
-
 import { Lexicons } from '../lexicons'
 import {
   LexBoolean,
@@ -12,7 +10,6 @@ import {
   ValidationError,
   ValidationResult,
 } from '../types'
-
 import * as formats from './formats'
 
 export function validate(

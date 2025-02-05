@@ -1,5 +1,4 @@
 import { DeviceId } from '@atproto/oauth-provider'
-
 import { DateISO, JsonArray } from '../../../db'
 
 export interface DeviceAccount {

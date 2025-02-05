@@ -1,9 +1,7 @@
 import events from 'node:events'
 import http from 'node:http'
-
 import { connectNodeAdapter } from '@connectrpc/connect-node'
 import { HttpTerminator, createHttpTerminator } from 'http-terminator'
-
 import { ServerConfig } from './config'
 import { AppContext, AppContextOptions } from './context'
 import { createMuteOpChannel } from './db/schema/mute_op'

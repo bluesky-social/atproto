@@ -2,15 +2,12 @@ import * as http from 'node:http'
 import { AddressInfo } from 'node:net'
 import { Readable } from 'node:stream'
 import { brotliCompressSync, deflateSync, gzipSync } from 'node:zlib'
-
 import { cidForCbor } from '@atproto/common'
 import { randomBytes } from '@atproto/crypto'
 import { LexiconDoc } from '@atproto/lexicon'
 import { ResponseType, XrpcClient } from '@atproto/xrpc'
-
 import * as xrpcServer from '../src'
 import { logger } from '../src/logger'
-
 import { closeServer, createServer } from './_util'
 
 const LEXICONS: LexiconDoc[] = [

@@ -1,7 +1,5 @@
 import { CID } from 'multiformats/cid'
-
 import { RepoRecord } from '@atproto/lexicon'
-
 import { MissingBlocksError } from './error'
 import log from './logger'
 import { MST } from './mst'

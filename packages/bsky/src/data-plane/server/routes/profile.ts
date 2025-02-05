@@ -1,12 +1,9 @@
 import { ServiceImpl } from '@connectrpc/connect'
 import { sql } from 'kysely'
-
 import { keyBy } from '@atproto/common'
-
 import { parseRecordBytes } from '../../../hydration/util'
 import { Service } from '../../../proto/bsky_connect'
 import { Database } from '../db'
-
 import { getRecords } from './records'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({

@@ -15,9 +15,7 @@
 import { createReadStream } from 'node:fs'
 import { join, posix } from 'node:path'
 import { Readable } from 'node:stream'
-
 import type { ManifestItem } from '@atproto-labs/rollup-plugin-bundle-manifest'
-
 // @ts-expect-error: This file is generated at build time
 // eslint-disable-next-line import/no-unresolved
 import appBundleManifestJson from './app/bundle-manifest.json'

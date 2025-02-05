@@ -1,7 +1,5 @@
 import type { IncomingMessage } from 'node:http'
-
 import type { CID } from 'multiformats/cid'
-
 import { type LexiconDoc, Lexicons } from '@atproto/lexicon'
 import type { ErrorFrame, HandlerAuth } from '@atproto/xrpc-server'
 

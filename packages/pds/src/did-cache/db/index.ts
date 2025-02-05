@@ -1,5 +1,4 @@
 import { Database, Migrator } from '../../db'
-
 import migrations from './migrations'
 import { DidCacheSchema } from './schema'
 

@@ -1,9 +1,7 @@
 import { Readable } from 'node:stream'
 import { finished, pipeline } from 'node:stream/promises'
-
 import { CID } from 'multiformats/cid'
 import * as undici from 'undici'
-
 import {
   VerifyCidTransform,
   allFulfilled,
@@ -12,7 +10,6 @@ import {
 } from '@atproto/common'
 import { IdResolver } from '@atproto/identity'
 import { ResponseType, XRPCError } from '@atproto/xrpc'
-
 import { BlobDivertConfig } from '../config'
 import { Database } from '../db'
 import { retryHttp } from '../util'

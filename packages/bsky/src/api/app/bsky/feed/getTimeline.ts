@@ -1,5 +1,4 @@
 import { mapDefined } from '@atproto/common'
-
 import { AppContext } from '../../../../context'
 import { DataPlaneClient } from '../../../../data-plane'
 import { FeedItem } from '../../../../hydration/feed'

@@ -1,8 +1,6 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-
 import { formatAccountInfo } from './util'
 
 export default function (server: Server, ctx: AppContext) {

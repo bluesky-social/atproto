@@ -1,8 +1,6 @@
 import * as jose from 'jose'
-
 import { AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
-
 import { createRefreshToken } from '../src/account-manager/helpers/auth'
 
 describe('auth', () => {

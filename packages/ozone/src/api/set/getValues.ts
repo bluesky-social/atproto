@@ -1,5 +1,4 @@
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
-
 import { AppContext } from '../../context'
 import { Server } from '../../lexicon'
 

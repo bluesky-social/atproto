@@ -8,7 +8,6 @@ import {
   basicSeed,
   createOzoneDid,
 } from '@atproto/dev-env'
-
 import { ids } from '../src/lexicon/lexicons'
 import { LABELER_HEADER_NAME } from '../src/util'
 

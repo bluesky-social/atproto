@@ -1,5 +1,4 @@
 import { Kysely } from 'kysely'
-
 import * as accountEventsStats from './account_events_stats'
 import * as accountRecordEventsStats from './account_record_events_stats'
 import * as accountRecordStatusStats from './account_record_status_stats'

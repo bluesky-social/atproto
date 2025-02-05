@@ -1,5 +1,4 @@
 import { OAuthAuthorizationRequestParameters } from '@atproto/oauth-types'
-
 import { AccessDeniedError } from './access-denied-error.js'
 
 export class AccountSelectionRequiredError extends AccessDeniedError {

@@ -1,11 +1,9 @@
 import { sql } from 'kysely'
-
 import { AppBskyFeedDefs, AtpAgent } from '@atproto/api'
 import { dedupeStrs } from '@atproto/common'
 import { Keypair } from '@atproto/crypto'
 import { BlobRef } from '@atproto/lexicon'
 import { AtUri, INVALID_HANDLE, normalizeDatetimeAlways } from '@atproto/syntax'
-
 import { Database } from '../db'
 import { LabelRow } from '../db/schema/label'
 import { ids } from '../lexicon/lexicons'
@@ -24,7 +22,6 @@ import {
 } from '../lexicon/types/tools/ozone/moderation/defs'
 import { dbLogger, httpLogger } from '../logger'
 import { ParsedLabelers } from '../util'
-
 import { moderationSubjectStatusQueryBuilder } from './status'
 import { subjectFromEventRow, subjectFromStatusRow } from './subject'
 import {

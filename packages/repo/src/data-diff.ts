@@ -1,5 +1,4 @@
 import { CID } from 'multiformats'
-
 import { BlockMap } from './block-map'
 import { CidSet } from './cid-set'
 import { MST, NodeEntry, mstDiff } from './mst'

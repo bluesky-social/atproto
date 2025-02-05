@@ -4,7 +4,6 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-
 import {
   ROLEADMIN,
   ROLEMODERATOR,

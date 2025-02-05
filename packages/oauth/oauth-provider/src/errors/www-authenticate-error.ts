@@ -1,5 +1,4 @@
 import { VERIFY_ALGOS } from '../lib/util/crypto.js'
-
 import { OAuthError } from './oauth-error.js'
 
 export type WWWAuthenticateParams = Record<string, string | undefined>

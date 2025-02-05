@@ -1,5 +1,4 @@
 import { Generated } from 'kysely'
-
 import {
   REVIEWCLOSED,
   REVIEWESCALATED,

@@ -1,5 +1,4 @@
 import assert from 'node:assert'
-
 import {
   ToolsOzoneModerationDefs,
   ToolsOzoneModerationQueryStatuses,
@@ -10,7 +9,6 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-
 import {
   REASONMISLEADING,
   REASONSPAM,
@@ -19,7 +17,6 @@ import {
   REVIEWNONE,
   REVIEWOPEN,
 } from '../src/lexicon/types/tools/ozone/moderation/defs'
-
 import { forSnapshot } from './_util'
 
 describe('moderation-statuses', () => {

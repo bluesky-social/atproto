@@ -1,5 +1,4 @@
 import * as aws from '@aws-sdk/client-cloudfront'
-
 import { ImageInvalidator } from './types'
 
 export type CloudfrontConfig = {

@@ -1,7 +1,5 @@
 import assert from 'node:assert'
-
 import { InvalidRequestError } from '@atproto/xrpc-server'
-
 import { AuthScope } from '../../../../auth-verifier'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'

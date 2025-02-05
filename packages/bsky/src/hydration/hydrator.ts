@@ -1,8 +1,6 @@
 import assert from 'node:assert'
-
 import { mapDefined } from '@atproto/common'
 import { AtUri } from '@atproto/syntax'
-
 import { DataPlaneClient } from '../data-plane/client'
 import { ids } from '../lexicon/lexicons'
 import { isMain as isEmbedRecord } from '../lexicon/types/app/bsky/embed/record'
@@ -12,7 +10,6 @@ import { hydrationLogger } from '../logger'
 import { Notification } from '../proto/bsky_pb'
 import { ParsedLabelers } from '../util'
 import { uriToDid, uriToDid as didFromUri } from '../util/uris'
-
 import {
   ActorHydrator,
   Actors,

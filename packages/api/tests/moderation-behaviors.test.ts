@@ -1,5 +1,4 @@
 import { moderatePost, moderateProfile } from '../src'
-
 import {
   ModerationBehaviorSuiteRunner,
   ModerationTestSuiteScenario,

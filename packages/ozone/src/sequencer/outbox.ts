@@ -1,6 +1,5 @@
 import { AsyncBuffer, AsyncBufferFullError } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-
 import { LabelsEvt, Sequencer } from './sequencer'
 
 export type OutboxOpts = {

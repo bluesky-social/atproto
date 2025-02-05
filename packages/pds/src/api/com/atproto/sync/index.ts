@@ -1,6 +1,5 @@
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-
 import getCheckout from './deprecated/getCheckout'
 import getHead from './deprecated/getHead'
 import getBlob from './getBlob'

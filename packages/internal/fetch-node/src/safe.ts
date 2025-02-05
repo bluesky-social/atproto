@@ -11,7 +11,6 @@ import {
   toRequestTransformer,
 } from '@atproto-labs/fetch'
 import { pipe } from '@atproto-labs/pipe'
-
 import { unicastFetchWrap } from './unicast.js'
 
 export type SafeFetchWrapOptions = NonNullable<

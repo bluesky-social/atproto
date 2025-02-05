@@ -1,10 +1,7 @@
 import stream from 'node:stream'
-
 import { CID } from 'multiformats/cid'
-
 import { check } from '@atproto/common'
 import { RepoRecord } from '@atproto/lexicon'
-
 import { BlockMap } from '../block-map'
 import { CommitData } from '../types'
 

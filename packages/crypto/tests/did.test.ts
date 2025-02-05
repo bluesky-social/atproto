@@ -1,5 +1,4 @@
 import * as uint8arrays from 'uint8arrays'
-
 import { P256Keypair, Secp256k1Keypair } from '../src'
 import * as did from '../src/did'
 

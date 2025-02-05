@@ -1,6 +1,5 @@
 import { ModerationDecision } from '../decision'
 import { ModerationOpts, ModerationSubjectFeedGenerator } from '../types'
-
 import { decideAccount } from './account'
 import { decideProfile } from './profile'
 

@@ -1,12 +1,10 @@
 import { Selectable } from 'kysely'
-
 import {
   Code,
   DeviceId,
   OAuthClientId,
   RequestId,
 } from '@atproto/oauth-provider'
-
 import { DateISO, JsonObject } from '../../../db'
 
 export interface AuthorizationRequest {

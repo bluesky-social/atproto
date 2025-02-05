@@ -7,7 +7,6 @@ import {
   ConnectTransportOptions,
   createConnectTransport,
 } from '@connectrpc/connect-node'
-
 import { Service } from './proto/bsync_connect'
 
 export type BsyncClient = PromiseClient<typeof Service>

@@ -1,5 +1,4 @@
 import { mapDefined } from '@atproto/common'
-
 import { AppContext } from '../../../../context'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { Server } from '../../../../lexicon'

@@ -6,7 +6,6 @@ import {
   ToolsOzoneSettingRemoveOptions,
   ToolsOzoneSettingUpsertOption,
 } from '@atproto/api'
-
 import { TestOzone } from './ozone'
 
 type TakeActionInput = EmitModerationEvent.InputSchema

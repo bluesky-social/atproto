@@ -4,7 +4,6 @@ import {
   AppBskyLabelerDefs,
   ComAtprotoLabelDefs,
 } from '../client'
-
 import {
   InterpretedLabelValueDefinition,
   LabelPreference,

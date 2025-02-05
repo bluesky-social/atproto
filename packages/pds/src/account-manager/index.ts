@@ -1,8 +1,6 @@
 import { KeyObject } from 'node:crypto'
-
 import { Selectable } from 'kysely'
 import { CID } from 'multiformats/cid'
-
 import { HOUR, wait } from '@atproto/common'
 import {
   Account,
@@ -26,14 +24,12 @@ import {
   UpdateRequestData,
 } from '@atproto/oauth-provider'
 import { AuthRequiredError } from '@atproto/xrpc-server'
-
 import { ActorStore } from '../actor-store/actor-store'
 import { AuthScope } from '../auth-verifier'
 import { BackgroundQueue } from '../background'
 import { softDeleted } from '../db'
 import { ImageUrlBuilder } from '../image/image-url-builder'
 import { StatusAttr } from '../lexicon/types/com/atproto/admin/defs'
-
 import { AccountDb, EmailTokenPurpose, getDb, getMigrator } from './db'
 import * as account from './helpers/account'
 import { AccountStatus, ActorAccount } from './helpers/account'

@@ -1,10 +1,8 @@
 import { CID } from 'multiformats/cid'
-
 import * as crypto from '@atproto/crypto'
 import { BlobStore, CommitData, Repo, WriteOpAction } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-
 import { BackgroundQueue } from '../../background'
 import { createWriteToOp, writeToOp } from '../../repo'
 import {
@@ -16,7 +14,6 @@ import {
 import { BlobTransactor } from '../blob/transactor'
 import { ActorDb } from '../db'
 import { RecordTransactor } from '../record/transactor'
-
 import { RepoReader } from './reader'
 import { SqlRepoTransactor } from './sql-repo-transactor'
 

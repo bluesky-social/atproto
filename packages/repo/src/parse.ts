@@ -1,8 +1,6 @@
 import { CID } from 'multiformats/cid'
-
 import { cborDecode, check } from '@atproto/common'
 import { RepoRecord } from '@atproto/lexicon'
-
 import { BlockMap } from './block-map'
 import { MissingBlockError, UnexpectedObjectError } from './error'
 import { cborToLexRecord } from './util'

@@ -1,7 +1,5 @@
 import TLDs from 'tlds'
-
 import { AppBskyRichtextFacet } from '../client'
-
 import { UnicodeString } from './unicode'
 import {
   MENTION_REGEX,

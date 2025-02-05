@@ -1,6 +1,5 @@
 import { sql } from 'kysely'
 import { CID } from 'multiformats/cid'
-
 import { AtpAgent, ComAtprotoSyncGetLatestCommit } from '@atproto/api'
 import { DAY, HOUR } from '@atproto/common'
 import { IdResolver, getPds } from '@atproto/identity'
@@ -13,13 +12,11 @@ import {
   verifyRepo,
 } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
-
 import { subLogger } from '../../../logger'
 import { retryXrpc } from '../../../util/retry'
 import { BackgroundQueue } from '../background'
 import { Database } from '../db'
 import { Actor } from '../db/tables/actor'
-
 import * as Block from './plugins/block'
 import * as ChatDeclaration from './plugins/chat-declaration'
 import * as FeedGenerator from './plugins/feed-generator'

@@ -1,9 +1,7 @@
 import { randomStr } from '@atproto/crypto'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-
 import { AppPassword } from '../../lexicon/types/com/atproto/server/createAppPassword'
 import { AccountDb } from '../db'
-
 import * as scrypt from './scrypt'
 
 export type AppPassDescript = {

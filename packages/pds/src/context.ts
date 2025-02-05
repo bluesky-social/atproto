@@ -1,10 +1,8 @@
 import assert from 'node:assert'
-
 import * as plc from '@did-plc/lib'
 import { Redis } from 'ioredis'
 import * as nodemailer from 'nodemailer'
 import * as undici from 'undici'
-
 import { AtpAgent } from '@atproto/api'
 import { KmsKeypair, S3BlobStore } from '@atproto/aws'
 import * as crypto from '@atproto/crypto'
@@ -25,7 +23,6 @@ import {
   safeFetchWrap,
   unicastLookup,
 } from '@atproto-labs/fetch-node'
-
 import { AccountManager } from './account-manager'
 import { ActorStore } from './actor-store/actor-store'
 import {

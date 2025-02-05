@@ -1,6 +1,5 @@
 import { AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetwork, likesSeed } from '@atproto/dev-env'
-
 import { ids } from '../../src/lexicon/lexicons'
 import { constantDate, forSnapshot, paginateAll, stripViewer } from '../_util'
 

@@ -1,5 +1,4 @@
 import { z } from 'zod'
-
 import { dangerousUriSchema } from './uri.js'
 
 /**

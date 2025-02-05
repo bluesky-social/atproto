@@ -1,10 +1,8 @@
 import assert from 'node:assert'
 import * as nodeCrypto from 'node:crypto'
-
 import * as jose from 'jose'
 import KeyEncoder from 'key-encoder'
 import * as ui8 from 'uint8arrays'
-
 import { AtUri, AtpAgent } from '@atproto/api'
 import { MINUTE } from '@atproto/common'
 import * as crypto from '@atproto/crypto'

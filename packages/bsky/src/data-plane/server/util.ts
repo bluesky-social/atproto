@@ -1,12 +1,10 @@
 import { sql } from 'kysely'
-
 import {
   Record as PostRecord,
   ReplyRef,
 } from '../../lexicon/types/app/bsky/feed/post'
 import { Record as GateRecord } from '../../lexicon/types/app/bsky/feed/threadgate'
 import { parseThreadGate } from '../../views/util'
-
 import { DatabaseSchema } from './db/database-schema'
 import { valuesList } from './db/util'
 

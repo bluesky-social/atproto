@@ -1,8 +1,6 @@
 import assert from 'node:assert'
-
 import { AtUri, AtpAgent } from '@atproto/api'
 import { RecordRef, SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-
 import { ids } from '../../src/lexicon/lexicons'
 import { assertIsThreadViewPost, forSnapshot } from '../_util'
 

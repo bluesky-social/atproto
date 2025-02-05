@@ -1,5 +1,4 @@
 import { CID } from 'multiformats/cid'
-
 import { BlockMap } from '../block-map'
 import { DataDiff } from '../data-diff'
 import { MST } from '../mst'

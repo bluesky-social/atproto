@@ -4,9 +4,7 @@ import {
   AppBskyFeedPost,
   AppBskyGraphList,
 } from '@atproto/api'
-
 import { langLogger as log } from '../logger'
-
 import { ContentTagger } from './content-tagger'
 import { code3ToCode2 } from './language-data'
 

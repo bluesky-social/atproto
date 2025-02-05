@@ -1,6 +1,5 @@
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-
 import getActorLikes from './getActorLikes'
 import getAuthorFeed from './getAuthorFeed'
 import getFeed from './getFeed'

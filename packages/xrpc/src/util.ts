@@ -4,7 +4,6 @@ import {
   jsonStringToLex,
   stringifyLex,
 } from '@atproto/lexicon'
-
 import {
   CallOptions,
   ErrorResponseBody,

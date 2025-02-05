@@ -1,9 +1,6 @@
 import assert from 'node:assert'
-
 import { Selectable } from 'kysely'
-
 import { InvalidRequestError } from '@atproto/xrpc-server'
-
 import { Database } from '../db'
 import { Member } from '../db/schema/member'
 import { Setting, SettingScope } from '../db/schema/setting'

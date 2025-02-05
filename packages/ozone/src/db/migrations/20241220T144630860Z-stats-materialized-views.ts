@@ -1,5 +1,4 @@
 import { Kysely, sql } from 'kysely'
-
 import { REASONAPPEAL } from '../../lexicon/types/com/atproto/moderation/defs'
 import {
   REVIEWESCALATED,

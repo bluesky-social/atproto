@@ -7,7 +7,6 @@ import {
   ResolveIdentityOptions,
   ResolvedIdentity,
 } from '@atproto-labs/identity-resolver'
-
 import {
   GetCachedOptions,
   OAuthAuthorizationServerMetadataResolver,

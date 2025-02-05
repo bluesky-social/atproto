@@ -1,5 +1,4 @@
 import { mediaType } from '@hapi/accept'
-
 import { SubCtx, subCtx } from './context.js'
 import {
   IncomingMessage,

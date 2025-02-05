@@ -9,7 +9,6 @@ import {
   isDiscriminatedObject,
 } from '../types'
 import { toConcreteTypes, toLexUri } from '../util'
-
 import { blob } from './blob'
 import { boolean, bytes, cidLink, integer, string, unknown } from './primitives'
 

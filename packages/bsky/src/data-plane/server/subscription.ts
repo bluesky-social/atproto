@@ -1,9 +1,7 @@
 import { IdResolver } from '@atproto/identity'
 import { WriteOpAction } from '@atproto/repo'
 import { Firehose, MemoryRunner } from '@atproto/sync'
-
 import { subLogger as log } from '../../logger'
-
 import { BackgroundQueue } from './background'
 import { Database } from './db'
 import { IndexingService } from './indexing'

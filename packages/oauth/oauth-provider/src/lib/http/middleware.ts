@@ -1,5 +1,4 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
-
 import { writeJson } from './response.js'
 import { Handler, Middleware, NextFunction } from './types.js'
 

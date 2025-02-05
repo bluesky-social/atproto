@@ -1,5 +1,4 @@
 import { z } from 'zod'
-
 import { ValidationError } from '@atproto/lexicon'
 
 export type QueryParams = Record<string, any>

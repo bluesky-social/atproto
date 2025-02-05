@@ -1,11 +1,8 @@
 import * as plc from '@did-plc/lib'
 import { Database as DidPlcDb, PlcServer } from '@did-plc/server'
 import getPort from 'get-port'
-
 import { Secp256k1Keypair } from '@atproto/crypto'
-
 import { DidDocument, DidResolver } from '../src'
-
 import { DidWebDb } from './web/db'
 import { DidWebServer } from './web/server'
 

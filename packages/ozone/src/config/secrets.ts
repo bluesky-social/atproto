@@ -1,5 +1,4 @@
 import assert from 'node:assert'
-
 import { OzoneEnvironment } from './env'
 
 export const envToSecrets = (env: OzoneEnvironment): OzoneSecrets => {

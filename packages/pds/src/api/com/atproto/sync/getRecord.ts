@@ -1,15 +1,11 @@
 import stream from 'node:stream'
-
 import { CID } from 'multiformats/cid'
-
 import { byteIterableToStream } from '@atproto/common'
 import * as repo from '@atproto/repo'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-
 import { SqlRepoReader } from '../../../../actor-store/repo/sql-repo-reader'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-
 import { assertRepoAvailability } from './util'
 
 export default function (server: Server, ctx: AppContext) {

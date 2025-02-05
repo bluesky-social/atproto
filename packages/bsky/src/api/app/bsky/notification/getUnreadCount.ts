@@ -1,5 +1,4 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-
 import { AppContext } from '../../../../context'
 import { Hydrator } from '../../../../hydration/hydrator'
 import { Server } from '../../../../lexicon'

@@ -1,15 +1,11 @@
 import EventEmitter from 'node:events'
-
 import TypedEmitter from 'typed-emitter'
-
 import { SECOND, cborDecode, wait } from '@atproto/common'
 import { CommitData } from '@atproto/repo'
-
 import { AccountStatus } from '../account-manager/helpers/account'
 import { Crawlers } from '../crawlers'
 import { seqLogger as log } from '../logger'
 import { PreparedWrite } from '../repo'
-
 import {
   RepoSeqEntry,
   RepoSeqInsert,

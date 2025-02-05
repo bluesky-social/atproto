@@ -1,7 +1,5 @@
 import * as uint8arrays from 'uint8arrays'
-
 import { cborDecodeMulti, cborEncode } from '@atproto/common'
-
 import {
   ErrorFrameBody,
   ErrorFrameHeader,

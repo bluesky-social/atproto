@@ -1,15 +1,12 @@
 import assert from 'node:assert'
 import { once } from 'node:events'
 import { EventEmitter } from 'node:stream'
-
 import * as plc from '@did-plc/lib'
 import Mail from 'nodemailer/lib/mailer'
-
 import { AtpAgent } from '@atproto/api'
 import { check } from '@atproto/common'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import { SeedClient, TestNetworkNoAppView, basicSeed } from '@atproto/dev-env'
-
 import { AppContext } from '../src'
 
 describe('plc operations', () => {

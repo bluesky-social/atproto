@@ -14,7 +14,6 @@ require('dd-trace') // Only works with commonjs
 
 // Tracer code above must come before anything else
 const path = require('node:path')
-
 const {
   BunnyInvalidator,
   CloudfrontInvalidator,

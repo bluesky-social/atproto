@@ -1,5 +1,4 @@
 import { DAY, HOUR } from '@atproto/common-web'
-
 import { CacheResult, DidCache, DidDocument } from '../types'
 
 type CacheVal = {

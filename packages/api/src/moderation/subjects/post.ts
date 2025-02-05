@@ -9,7 +9,6 @@ import {
 import { ModerationDecision } from '../decision'
 import { hasMutedWord } from '../mutewords'
 import { ModerationOpts, ModerationSubjectPost } from '../types'
-
 import { decideAccount } from './account'
 import { decideProfile } from './profile'
 

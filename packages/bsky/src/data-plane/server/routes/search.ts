@@ -1,5 +1,4 @@
 import { ServiceImpl } from '@connectrpc/connect'
-
 import { Service } from '../../../proto/bsky_connect'
 import { Database } from '../db'
 import { IndexedAtDidKeyset, TimeCidKeyset, paginate } from '../db/pagination'

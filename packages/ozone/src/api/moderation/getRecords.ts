@@ -1,5 +1,4 @@
 import { AtUri } from '@atproto/syntax'
-
 import { AppContext } from '../../context'
 import { Server } from '../../lexicon'
 import { addAccountInfoToRepoView, getPdsAccountInfos } from '../util'

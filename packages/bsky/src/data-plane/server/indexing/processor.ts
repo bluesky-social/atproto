@@ -1,10 +1,8 @@
 import { Insertable } from 'kysely'
 import { CID } from 'multiformats/cid'
-
 import { chunkArray } from '@atproto/common'
 import { jsonStringToLex, stringifyLex } from '@atproto/lexicon'
 import { AtUri } from '@atproto/syntax'
-
 import { lexicons } from '../../../lexicon/lexicons'
 import { BackgroundQueue } from '../background'
 import { Database } from '../db'

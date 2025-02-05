@@ -12,7 +12,6 @@ import {
 } from '@atproto/oauth-types'
 import { Fetch, Json, bindFetch, fetchJsonProcessor } from '@atproto-labs/fetch'
 import { SimpleStore } from '@atproto-labs/simple-store'
-
 import {
   AtprotoScope,
   AtprotoTokenResponse,

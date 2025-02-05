@@ -5,7 +5,6 @@ import {
   AppBskyNotificationListNotifications,
   ComAtprotoLabelDefs,
 } from '../client/index'
-
 import { KnownLabelValue } from './const/labels'
 
 // syntax

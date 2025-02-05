@@ -2,9 +2,7 @@ import assert from 'node:assert'
 import { once } from 'node:events'
 import { Server, createServer } from 'node:http'
 import { AddressInfo } from 'node:net'
-
 import { Browser, Page, launch } from 'puppeteer'
-
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 // @ts-expect-error (json file)
 import files from '@atproto/oauth-client-browser-example'

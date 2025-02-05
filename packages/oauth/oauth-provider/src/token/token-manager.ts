@@ -1,5 +1,4 @@
 import { createHash } from 'node:crypto'
-
 import { isSignedJwt } from '@atproto/jwk'
 import {
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
@@ -12,7 +11,6 @@ import {
   OAuthTokenResponse,
   OAuthTokenType,
 } from '@atproto/oauth-types'
-
 import { AccessTokenType } from '../access-token/access-token-type.js'
 import { DeviceAccountInfo } from '../account/account-store.js'
 import { Account } from '../account/account.js'
@@ -36,7 +34,6 @@ import { callAsync } from '../lib/util/function.js'
 import { OAuthHooks } from '../oauth-hooks.js'
 import { Code, isCode } from '../request/code.js'
 import { Signer } from '../signer/signer.js'
-
 import {
   generateRefreshToken,
   isRefreshToken,

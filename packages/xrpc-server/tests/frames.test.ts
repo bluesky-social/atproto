@@ -1,6 +1,5 @@
 import * as cborx from 'cbor-x'
 import * as uint8arrays from 'uint8arrays'
-
 import { ErrorFrame, Frame, FrameType, MessageFrame } from '../src'
 
 describe('Frames', () => {

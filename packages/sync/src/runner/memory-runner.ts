@@ -1,5 +1,4 @@
 import PQueue from 'p-queue'
-
 import { ConsecutiveList } from './consecutive-list'
 import { EventRunner } from './types'
 

@@ -1,5 +1,4 @@
 import { Lexicons } from '@atproto/lexicon'
-
 import { lexicons as internalLexicons } from './client/lexicons'
 
 export { AtUri } from '@atproto/syntax'

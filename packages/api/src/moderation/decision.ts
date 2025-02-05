@@ -1,5 +1,4 @@
 import { AppBskyGraphDefs } from '../client/index'
-
 import { LABELS } from './const/labels'
 import {
   BLOCK_BEHAVIOR,

@@ -10,7 +10,6 @@ import {
   SqliteQueryCompiler,
   sql,
 } from 'kysely'
-
 import { retry } from '@atproto/common'
 
 // Applies to repo_root or record table

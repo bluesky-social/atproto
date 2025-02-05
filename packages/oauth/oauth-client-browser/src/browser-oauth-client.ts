@@ -15,7 +15,6 @@ import {
   atprotoLoopbackClientMetadata,
   isOAuthClientIdLoopback,
 } from '@atproto/oauth-types'
-
 import { BrowserOAuthDatabase } from './browser-oauth-database.js'
 import { BrowserRuntimeImplementation } from './browser-runtime-implementation.js'
 import { LoginContinuedInParentWindowError } from './errors.js'

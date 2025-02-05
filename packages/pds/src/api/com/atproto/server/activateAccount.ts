@@ -1,11 +1,9 @@
 import { CidSet } from '@atproto/repo'
 import { INVALID_HANDLE } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { authPassthru } from '../../../proxy'
-
 import { assertValidDidDocumentForService } from './util'
 
 export default function (server: Server, ctx: AppContext) {

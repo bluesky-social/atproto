@@ -1,7 +1,6 @@
 import { AtpAgent } from '@atproto/api'
 import { mapDefined, noUndefinedVals } from '@atproto/common'
 import { HeadersMap } from '@atproto/xrpc'
-
 import { AppContext } from '../../../../context'
 import { DataPlaneClient } from '../../../../data-plane'
 import {

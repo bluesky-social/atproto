@@ -3,7 +3,6 @@ import { cborEncode } from '@atproto/common'
 import { Secp256k1Keypair, verifySignature } from '@atproto/crypto'
 import { EXAMPLE_LABELER, TestNetwork } from '@atproto/dev-env'
 import { DisconnectError, Subscription } from '@atproto/xrpc-server'
-
 import { ids, lexicons } from '../src/lexicon/lexicons'
 import { Label } from '../src/lexicon/types/com/atproto/label/defs'
 import {

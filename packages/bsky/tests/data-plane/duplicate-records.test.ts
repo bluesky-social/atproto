@@ -2,7 +2,6 @@ import { TID, cidForCbor } from '@atproto/common'
 import { TestNetwork } from '@atproto/dev-env'
 import { WriteOpAction } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
-
 import * as lex from '../../src/lexicon/lexicons'
 
 type Database = TestNetwork['bsky']['db']

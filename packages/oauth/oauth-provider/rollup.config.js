@@ -6,7 +6,6 @@ const { default: replace } = require('@rollup/plugin-replace')
 const { default: terser } = require('@rollup/plugin-terser')
 const { default: typescript } = require('@rollup/plugin-typescript')
 const { defineConfig } = require('rollup')
-
 const {
   default: manifest,
 } = require('@atproto-labs/rollup-plugin-bundle-manifest')

@@ -1,6 +1,5 @@
 import assert from 'node:assert'
 import { randomInt } from 'node:crypto'
-
 import {
   Code,
   ConnectError,
@@ -10,9 +9,7 @@ import {
 } from '@connectrpc/connect'
 import { createGrpcTransport } from '@connectrpc/connect-node'
 import * as ui8 from 'uint8arrays'
-
 import { getDidKeyFromMultibase } from '@atproto/identity'
-
 import { Service } from '../proto/bsky_connect'
 
 export type DataPlaneClient = PromiseClient<typeof Service>

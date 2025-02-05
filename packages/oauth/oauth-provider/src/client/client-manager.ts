@@ -23,7 +23,6 @@ import {
   GetCachedOptions,
   SimpleStore,
 } from '@atproto-labs/simple-store'
-
 import { InvalidClientMetadataError } from '../errors/invalid-client-metadata-error.js'
 import { InvalidRedirectUriError } from '../errors/invalid-redirect-uri-error.js'
 import { callAsync } from '../lib/util/function.js'
@@ -34,7 +33,6 @@ import {
 } from '../lib/util/hostname.js'
 import { Awaitable } from '../lib/util/type.js'
 import { OAuthHooks } from '../oauth-hooks.js'
-
 import { ClientId } from './client-id.js'
 import { ClientStore } from './client-store.js'
 import { parseDiscoverableClientId, parseRedirectUri } from './client-utils.js'

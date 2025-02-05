@@ -9,7 +9,6 @@ import {
   SqliteQueryCompiler,
   sql,
 } from 'kysely'
-
 import { DatabaseSchema, DatabaseSchemaType } from './database-schema'
 
 export const actorWhereClause = (actor: string) => {

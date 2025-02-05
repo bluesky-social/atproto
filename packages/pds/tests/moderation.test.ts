@@ -1,13 +1,11 @@
 import { AtpAgent } from '@atproto/api'
 import { ImageRef, SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import { BlobNotFoundError } from '@atproto/repo'
-
 import {
   RepoBlobRef,
   RepoRef,
 } from '../src/lexicon/types/com/atproto/admin/defs'
 import { Main as StrongRef } from '../src/lexicon/types/com/atproto/repo/strongRef'
-
 import basicSeed from './seeds/basic'
 
 describe('moderation', () => {

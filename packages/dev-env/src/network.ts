@@ -1,11 +1,8 @@
 import assert from 'node:assert'
-
 import getPort from 'get-port'
 import * as uint8arrays from 'uint8arrays'
-
 import { wait } from '@atproto/common-web'
 import { createServiceJwt } from '@atproto/xrpc-server'
-
 import { TestBsky } from './bsky'
 import { EXAMPLE_LABELER } from './const'
 import { IntrospectServer } from './introspect'

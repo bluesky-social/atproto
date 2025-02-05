@@ -3,13 +3,11 @@ import { allFulfilled } from '@atproto/common'
 import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
-
 import { BackgroundQueue } from '../background'
 import { OzoneConfig, OzoneSecrets } from '../config'
 import { Database } from '../db'
 import { ModerationService } from '../mod-service'
 import { getSigningKeyId } from '../util'
-
 import { EventPusher } from './event-pusher'
 import { EventReverser } from './event-reverser'
 import { MaterializedViewRefresher } from './materialized-view-refresher'

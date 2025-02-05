@@ -6,13 +6,11 @@ import {
   TestOzone,
   basicSeed,
 } from '@atproto/dev-env'
-
 import { ids } from '../src/lexicon/lexicons'
 import {
   REASONOTHER,
   REASONSPAM,
 } from '../src/lexicon/types/com/atproto/moderation/defs'
-
 import { forSnapshot } from './_util'
 
 describe('admin get multiple repos', () => {

@@ -7,7 +7,6 @@ import {
   TestOzone,
   basicSeed,
 } from '@atproto/dev-env'
-
 import { ids } from '../src/lexicon/lexicons'
 import { TAKEDOWN_LABEL } from '../src/mod-service'
 

@@ -1,7 +1,5 @@
 import stream from 'node:stream'
-
 import { InvalidRequestError } from '@atproto/xrpc-server'
-
 import {
   RepoRootNotFoundError,
   SqlRepoReader,
@@ -9,7 +7,6 @@ import {
 import { AuthScope } from '../../../../auth-verifier'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-
 import { assertRepoAvailability } from './util'
 
 export default function (server: Server, ctx: AppContext) {

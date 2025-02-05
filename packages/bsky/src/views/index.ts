@@ -1,6 +1,5 @@
 import { mapDefined } from '@atproto/common'
 import { AtUri, INVALID_HANDLE, normalizeDatetimeAlways } from '@atproto/syntax'
-
 import { ProfileViewerState } from '../hydration/actor'
 import { FeedItem, Post, Repost } from '../hydration/feed'
 import { HydrationState } from '../hydration/hydrator'
@@ -48,7 +47,6 @@ import {
   uriToDid,
   uriToDid as creatorFromUri,
 } from '../util/uris'
-
 import {
   Embed,
   EmbedBlocked,

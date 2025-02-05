@@ -1,8 +1,6 @@
 import { CID } from 'multiformats/cid'
-
 import { check } from '@atproto/common'
 import { RepoRecord } from '@atproto/lexicon'
-
 import { BlockMap } from '../block-map'
 import { MissingBlockError } from '../error'
 import * as parse from '../parse'

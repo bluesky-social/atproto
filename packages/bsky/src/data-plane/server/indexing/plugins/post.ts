@@ -1,9 +1,7 @@
 import { Insertable, Selectable, sql } from 'kysely'
 import { CID } from 'multiformats/cid'
-
 import { jsonStringToLex } from '@atproto/lexicon'
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
-
 import * as lex from '../../../../lexicon/lexicons'
 import { isMain as isEmbedExternal } from '../../../../lexicon/types/app/bsky/embed/external'
 import { isMain as isEmbedImage } from '../../../../lexicon/types/app/bsky/embed/images'

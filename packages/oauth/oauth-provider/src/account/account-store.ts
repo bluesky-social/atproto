@@ -1,10 +1,8 @@
 import { z } from 'zod'
-
 import { ClientId } from '../client/client-id.js'
 import { DeviceId } from '../device/device-id.js'
 import { Awaitable } from '../lib/util/type.js'
 import { Sub } from '../oidc/sub.js'
-
 import { Account } from './account.js'
 
 export const signInCredentialsSchema = z.object({

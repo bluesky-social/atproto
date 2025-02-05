@@ -1,5 +1,4 @@
 import { dedupeStrs } from '@atproto/common'
-
 import { DataPlaneClient } from '../data-plane/client'
 import { Record as FeedGenRecord } from '../lexicon/types/app/bsky/feed/generator'
 import { Record as LikeRecord } from '../lexicon/types/app/bsky/feed/like'
@@ -12,7 +11,6 @@ import {
   postUriToThreadgateUri,
   uriToDid as didFromUri,
 } from '../util/uris'
-
 import {
   HydrationMap,
   ItemRef,

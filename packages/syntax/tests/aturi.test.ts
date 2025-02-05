@@ -1,6 +1,5 @@
 import * as fs from 'node:fs'
 import * as readline from 'node:readline'
-
 import { AtUri, ensureValidAtUri, ensureValidAtUriRegex } from '../src/index'
 
 describe('At Uris', () => {

@@ -1,8 +1,6 @@
 import { z } from 'zod'
-
 import { TID } from '@atproto/common-web'
 import { AtUri } from '@atproto/syntax'
-
 import { AppBskyActorDefs } from './client'
 import { Nux } from './client/types/app/bsky/actor/defs'
 

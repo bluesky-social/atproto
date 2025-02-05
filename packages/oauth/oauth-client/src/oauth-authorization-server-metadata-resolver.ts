@@ -14,7 +14,6 @@ import {
   GetCachedOptions,
   SimpleStore,
 } from '@atproto-labs/simple-store'
-
 import { contentMime } from './util.js'
 
 export type { GetCachedOptions, OAuthAuthorizationServerMetadata }
