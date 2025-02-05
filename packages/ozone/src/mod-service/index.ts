@@ -23,6 +23,8 @@ import { RepoBlobRef, RepoRef } from '../lexicon/types/com/atproto/admin/defs'
 import { Label } from '../lexicon/types/com/atproto/label/defs'
 import { Main as StrongRef } from '../lexicon/types/com/atproto/repo/strongRef'
 import {
+  REVIEWESCALATED,
+  REVIEWOPEN,
   isAccountEvent,
   isIdentityEvent,
   isModEventAcknowledge,
@@ -30,13 +32,11 @@ import {
   isModEventEmail,
   isModEventLabel,
   isModEventMute,
+  isModEventPriorityScore,
   isModEventReport,
   isModEventTag,
   isModEventTakedown,
-  isModEventPriorityScore,
   isRecordEvent,
-  REVIEWESCALATED,
-  REVIEWOPEN,
 } from '../lexicon/types/tools/ozone/moderation/defs'
 import { QueryParams as QueryStatusParams } from '../lexicon/types/tools/ozone/moderation/queryStatuses'
 import { httpLogger as log } from '../logger'
