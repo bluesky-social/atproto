@@ -6,12 +6,12 @@ import {
   AppBskyEmbedRecordWithMedia,
   AppBskyFeedPost,
 } from '../../client'
+import { $Typed } from '../../client/util'
 import { ModerationDecision } from '../decision'
 import { hasMutedWord } from '../mutewords'
 import { ModerationOpts, ModerationSubjectPost } from '../types'
 import { decideAccount } from './account'
 import { decideProfile } from './profile'
-import { $Typed } from '../../client/util'
 
 export function decidePost(
   subject: ModerationSubjectPost,

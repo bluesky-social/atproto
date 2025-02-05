@@ -7,12 +7,12 @@ import {
   ComAtprotoRepoPutRecord,
   DEFAULT_LABEL_SETTINGS,
 } from '../src'
+import { asPredicate } from '../src/client/util'
 import {
   getSavedFeedType,
   savedFeedsToUriArrays,
   validateSavedFeed,
 } from '../src/util'
-import { asPredicate } from '../src/client/util'
 
 describe('agent', () => {
   let network: TestNetworkNoAppView

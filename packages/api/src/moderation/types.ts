@@ -3,8 +3,8 @@ import {
   AppBskyFeedDefs,
   AppBskyGraphDefs,
   AppBskyNotificationListNotifications,
-  ComAtprotoLabelDefs,
   ChatBskyActorDefs,
+  ComAtprotoLabelDefs,
 } from '../client/index'
 import { KnownLabelValue } from './const/labels'
 

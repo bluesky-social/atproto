@@ -1,17 +1,17 @@
+import assert from 'node:assert'
 import { AtpAgent } from '@atproto/api'
 import { ImageRef, SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import {
-  isRepoBlobRef,
-  isRepoRef,
   RepoBlobRef,
   RepoRef,
+  isRepoBlobRef,
+  isRepoRef,
 } from '../../src/lexicon/types/com/atproto/admin/defs'
 import {
   Main as StrongRef,
   isMain as isStrongRef,
 } from '../../src/lexicon/types/com/atproto/repo/strongRef'
 import { $Typed } from '../../src/lexicon/util'
-import assert from 'node:assert'
 
 describe('moderation', () => {
   let network: TestNetwork
