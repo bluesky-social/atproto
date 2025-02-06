@@ -30,6 +30,7 @@ export interface External {
   title: string
   description: string
   thumb?: BlobRef
+  aspectRatio?: AspectRatio
   [k: string]: unknown
 }
 
@@ -43,6 +44,25 @@ export function isExternal(v: unknown): v is External {
 
 export function validateExternal(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.embed.external#external', v)
+}
+
+/** width:height represents an aspect ratio. It may be approximate, and may not correspond to absolute dimensions in any given unit. */
+export interface AspectRatio {
+  width: number
+  height: number
+  [k: string]: unknown
+}
+
+export function isAspectRatio(v: unknown): v is AspectRatio {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.embed.external#aspectRatio'
+  )
+}
+
+export function validateAspectRatio(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.embed.external#aspectRatio', v)
 }
 
 export interface View {
@@ -67,6 +87,7 @@ export interface ViewExternal {
   title: string
   description: string
   thumb?: string
+  aspectRatio?: AspectRatio
   [k: string]: unknown
 }
 
