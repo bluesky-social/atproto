@@ -207,6 +207,6 @@ const refsContainType = (refs: string[], type: string) => {
   if (lexUri.endsWith('#main')) {
     return refs.includes(lexUri.slice(0, -5))
   } else {
-    return refs.includes(lexUri + '#main')
+    return !lexUri.includes('#') && refs.includes(`${lexUri}#main`)
   }
 }
