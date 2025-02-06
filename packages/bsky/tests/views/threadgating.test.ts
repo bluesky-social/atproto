@@ -22,6 +22,11 @@ describe('views with thread gating', () => {
     pdsAgent = network.pds.getClient()
     sc = network.getSeedClient()
     await basicSeed(sc)
+    await sc.createAccount('eve', {
+      handle: 'eve.test',
+      email: 'eve@eve.com',
+      password: 'hunter2',
+    })
     await network.processAll()
   })
 
@@ -242,8 +247,72 @@ describe('views with thread gating', () => {
     expect(reply.post.uri).toEqual(aliceReply.ref.uriStr)
   })
 
+  it('applies gate for follower rule.', async () => {
+    const post = await sc.post(sc.dids.carol, 'follower rule')
+    await pdsAgent.api.app.bsky.feed.threadgate.create(
+      { repo: sc.dids.carol, rkey: post.ref.uri.rkey },
+      {
+        post: post.ref.uriStr,
+        createdAt: iso(),
+        allow: [{ $type: 'app.bsky.feed.threadgate#followerRule' }],
+      },
+      sc.getHeaders(sc.dids.carol),
+    )
+    await network.processAll()
+
+    // dan does not follow carol, can't reply
+    await sc.reply(
+      sc.dids.dan,
+      post.ref,
+      post.ref,
+      'follower rule reply disallow',
+    )
+
+    // alice follows carol, can reply
+    const aliceReply = await sc.reply(
+      sc.dids.alice,
+      post.ref,
+      post.ref,
+      'follower rule reply allow',
+    )
+    await network.processAll()
+    const {
+      data: { thread: danThread },
+    } = await agent.api.app.bsky.feed.getPostThread(
+      { uri: post.ref.uriStr },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.dan,
+          ids.AppBskyFeedGetPostThread,
+        ),
+      },
+    )
+    assert(isThreadViewPost(danThread))
+    expect(danThread.post.viewer?.replyDisabled).toBe(true)
+    await checkReplyDisabled(post.ref.uriStr, sc.dids.dan, true)
+    const {
+      data: { thread: aliceThread },
+    } = await agent.api.app.bsky.feed.getPostThread(
+      { uri: post.ref.uriStr },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.alice,
+          ids.AppBskyFeedGetPostThread,
+        ),
+      },
+    )
+    assert(isThreadViewPost(aliceThread))
+    expect(forSnapshot(aliceThread.post.threadgate)).toMatchSnapshot()
+    expect(aliceThread.post.viewer?.replyDisabled).toBe(false)
+    await checkReplyDisabled(post.ref.uriStr, sc.dids.alice, false)
+    const [reply, ...otherReplies] = aliceThread.replies ?? []
+    assert(isThreadViewPost(reply))
+    expect(otherReplies.length).toEqual(0)
+    expect(reply.post.uri).toEqual(aliceReply.ref.uriStr)
+  })
+
   it('applies gate for list rule.', async () => {
-    const post = await sc.post(sc.dids.carol, 'following rule')
+    const post = await sc.post(sc.dids.carol, 'list rule')
     // setup lists to allow alice and dan
     const listA = await pdsAgent.api.app.bsky.graph.list.create(
       { repo: sc.dids.carol },
@@ -419,14 +488,21 @@ describe('views with thread gating', () => {
         createdAt: iso(),
         allow: [
           { $type: 'app.bsky.feed.threadgate#mentionRule' },
+          { $type: 'app.bsky.feed.threadgate#followerRule' },
           { $type: 'app.bsky.feed.threadgate#followingRule' },
         ],
       },
       sc.getHeaders(sc.dids.carol),
     )
     await network.processAll()
-    // carol only follows alice, and the post mentions dan.
-    await sc.reply(sc.dids.bob, post.ref, post.ref, 'multi rule reply disallow')
+
+    await sc.reply(sc.dids.eve, post.ref, post.ref, 'multi rule reply disallow')
+    const bobReply = await sc.reply(
+      sc.dids.bob,
+      post.ref,
+      post.ref,
+      'multi rule reply allow (follower)',
+    )
     const aliceReply = await sc.reply(
       sc.dids.alice,
       post.ref,
@@ -440,6 +516,23 @@ describe('views with thread gating', () => {
       'multi rule reply allow (mention)',
     )
     await network.processAll()
+
+    const {
+      data: { thread: eveThread },
+    } = await agent.api.app.bsky.feed.getPostThread(
+      { uri: post.ref.uriStr },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.eve,
+          ids.AppBskyFeedGetPostThread,
+        ),
+      },
+    )
+    assert(isThreadViewPost(eveThread))
+    // eve cannot interact
+    expect(eveThread.post.viewer?.replyDisabled).toBe(true)
+    await checkReplyDisabled(post.ref.uriStr, sc.dids.eve, true)
+
     const {
       data: { thread: bobThread },
     } = await agent.api.app.bsky.feed.getPostThread(
@@ -452,8 +545,10 @@ describe('views with thread gating', () => {
       },
     )
     assert(isThreadViewPost(bobThread))
-    expect(bobThread.post.viewer?.replyDisabled).toBe(true)
-    await checkReplyDisabled(post.ref.uriStr, sc.dids.bob, true)
+    // bob follows carol, followers can reply
+    expect(bobThread.post.viewer?.replyDisabled).toBe(false)
+    await checkReplyDisabled(post.ref.uriStr, sc.dids.bob, false)
+
     const {
       data: { thread: aliceThread },
     } = await agent.api.app.bsky.feed.getPostThread(
@@ -466,8 +561,10 @@ describe('views with thread gating', () => {
       },
     )
     assert(isThreadViewPost(aliceThread))
+    // carol follows alice, followed users can reply
     expect(aliceThread.post.viewer?.replyDisabled).toBe(false)
     await checkReplyDisabled(post.ref.uriStr, sc.dids.alice, false)
+
     const {
       data: { thread: danThread },
     } = await agent.api.app.bsky.feed.getPostThread(
@@ -481,14 +578,17 @@ describe('views with thread gating', () => {
     )
     assert(isThreadViewPost(danThread))
     expect(forSnapshot(danThread.post.threadgate)).toMatchSnapshot()
+    // dan was mentioned, mentioned users can reply
     expect(danThread.post.viewer?.replyDisabled).toBe(false)
     await checkReplyDisabled(post.ref.uriStr, sc.dids.dan, false)
-    const [reply1, reply2, ...otherReplies] = aliceThread.replies ?? []
+
+    const [reply1, reply2, reply3, ...otherReplies] = aliceThread.replies ?? []
     assert(isThreadViewPost(reply1))
     assert(isThreadViewPost(reply2))
+    assert(isThreadViewPost(reply3))
     expect(otherReplies.length).toEqual(0)
-    expect([reply1.post.uri, reply2.post.uri].sort()).toEqual(
-      [aliceReply.ref.uriStr, danReply.ref.uriStr].sort(),
+    expect([reply1.post.uri, reply2.post.uri, reply3.post.uri].sort()).toEqual(
+      [aliceReply.ref.uriStr, danReply.ref.uriStr, bobReply.ref.uriStr].sort(),
     )
   })
 

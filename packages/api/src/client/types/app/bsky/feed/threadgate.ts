@@ -12,6 +12,7 @@ export interface Record {
   /** List of rules defining who can reply to this post. If value is an empty array, no one can reply. If value is undefined, anyone can reply. */
   allow?: (
     | MentionRule
+    | FollowerRule
     | FollowingRule
     | ListRule
     | { $type: string; [k: string]: unknown }
@@ -50,6 +51,23 @@ export function isMentionRule(v: unknown): v is MentionRule {
 
 export function validateMentionRule(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.feed.threadgate#mentionRule', v)
+}
+
+/** Allow replies from actors who follow you. */
+export interface FollowerRule {
+  [k: string]: unknown
+}
+
+export function isFollowerRule(v: unknown): v is FollowerRule {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.feed.threadgate#followerRule'
+  )
+}
+
+export function validateFollowerRule(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.feed.threadgate#followerRule', v)
 }
 
 /** Allow replies from actors you follow. */
