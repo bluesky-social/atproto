@@ -1104,7 +1104,7 @@ export class ModerationService {
       )
     }
 
-    if (minPriorityScore != null && minPriorityScore > 0) {
+    if (minPriorityScore != null && minPriorityScore >= 0) {
       builder = builder.where(
         'moderation_subject_status.priorityScore',
         '>=',
