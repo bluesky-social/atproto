@@ -30,7 +30,8 @@ export async function main() {
     stream: 'firehose',
     // highWaterMark: 100,
   })
-  metricsRegistry.registerMetric(firehose.eventCounter)
+  metricsRegistry.registerMetric(firehose.firehoseEventCounter)
+  metricsRegistry.registerMetric(firehose.streamEventCounter)
   const backfill = new BackfillIngester({
     redis,
     host,

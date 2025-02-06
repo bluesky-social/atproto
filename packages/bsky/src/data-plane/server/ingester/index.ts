@@ -1,14 +1,12 @@
 import assert from 'node:assert'
 import { Subscription } from '@atproto/xrpc-server'
-import { Agent } from '@atproto/api'
+import { Agent, lexToJson } from '@atproto/api'
+import { parseCommitUnauthenticated } from '@atproto/sync'
 import { Counter } from 'prom-client'
 import { ids } from '../../../lexicon/lexicons'
 import {
-  Commit as CommitEvent,
   isCommit as isCommitEvent,
-  Account as AccountEvent,
   isAccount as isAccountEvent,
-  Identity as IdentityEvent,
   isIdentity as isIdentityEvent,
 } from '../../../lexicon/types/com/atproto/sync/subscribeRepos'
 import { OutputSchema as ListReposOutput } from '@atproto/api/dist/client/types/com/atproto/sync/listRepos'
@@ -16,6 +14,7 @@ import { Redis } from '../../../redis'
 import { Batcher } from './batcher'
 import { streamLengthBackpressure, cursorFor, wait } from './util'
 import { dataplaneLogger as logger } from '../../../logger'
+import { StreamEvent, FirehoseEvent } from '../types'
 
 export type IngesterOptions = {
   host: string
@@ -24,19 +23,22 @@ export type IngesterOptions = {
   highWaterMark?: number
 }
 
-type SubscriptionEvent = CommitEvent | AccountEvent | IdentityEvent
-
 export class FirehoseIngester {
   started = false
   ac = new AbortController()
-  batcher: Batcher<SubscriptionEvent>
-  eventCounter = new Counter({
-    name: 'ingester_events_total',
+  batcher: Batcher<FirehoseEvent>
+  firehoseEventCounter = new Counter({
+    name: 'firehose_events_total',
     help: 'total ingested firehose events',
-    labelNames: ['stream'],
+    labelNames: ['stream', 'host'],
+  })
+  streamEventCounter = new Counter({
+    name: 'stream_events_total',
+    help: 'total ingested stream events',
+    labelNames: ['stream', 'host'],
   })
   constructor(private opts: IngesterOptions) {
-    this.batcher = new Batcher<SubscriptionEvent>({
+    this.batcher = new Batcher<FirehoseEvent>({
       process: (events) => this.process(events),
       backpressure: streamLengthBackpressure(opts),
     })
@@ -54,7 +56,7 @@ export class FirehoseIngester {
     })()
   }
   private async subscribe() {
-    const sub = new Subscription<SubscriptionEvent>({
+    const sub = new Subscription<FirehoseEvent>({
       signal: this.ac.signal,
       method: ids.ComAtprotoSyncSubscribeRepos,
       service: this.opts.host.replace(/^http/, 'ws'),
@@ -74,21 +76,29 @@ export class FirehoseIngester {
       await this.batcher.add(event)
     }
   }
-  private async process(events: SubscriptionEvent[]) {
+  private async process(firehoseEvents: FirehoseEvent[]) {
+    const streamEvents: StreamEvent[] = (
+      await Promise.all(firehoseEvents.map(firehoseToStreamEvents))
+    ).flat()
     await this.opts.redis.addMultiToStream(
-      events.map((event) => ({
+      streamEvents.map((evt) => ({
         id: '*',
         key: this.opts.stream,
         fields: Object.entries({
-          event: JSON.stringify(event),
+          event: JSON.stringify(evt),
         }),
       })),
     )
-    const last = events.at(-1)
+    const last = firehoseEvents.at(-1)
     if (last) {
       await this.opts.redis.set(cursorFor(this.opts.stream), last.seq)
     }
-    this.eventCounter.labels({ stream: this.opts.stream }).inc(events.length)
+    this.firehoseEventCounter
+      .labels({ stream: this.opts.stream, host: this.opts.host })
+      .inc(firehoseEvents.length)
+    this.streamEventCounter
+      .labels({ stream: this.opts.stream, host: this.opts.host })
+      .inc(streamEvents.length)
   }
   async stop() {
     this.ac.abort()
@@ -153,4 +163,67 @@ export class BackfillIngester {
     this.ac.abort()
     await this.running
   }
+}
+
+async function firehoseToStreamEvents(
+  evt: FirehoseEvent,
+): Promise<StreamEvent[]> {
+  if (isCommitEvent(evt)) {
+    const ops = await parseCommitUnauthenticated(evt)
+    return ops.map((op) => {
+      const base = {
+        seq: op.seq,
+        time: op.time,
+        did: op.did,
+        commit: op.commit.toString(),
+        rev: op.rev,
+        collection: op.collection,
+        rkey: op.rkey,
+      }
+      if (op.event === 'update') {
+        return {
+          event: 'update',
+          record: lexToJson(op.record),
+          cid: op.cid.toString(),
+          ...base,
+        }
+      } else if (op.event === 'create') {
+        return {
+          event: 'create',
+          record: lexToJson(op.record),
+          cid: op.cid.toString(),
+          ...base,
+        }
+      } else if (op.event === 'delete') {
+        return { event: 'delete', ...base }
+      } else {
+        const exhaustiveCheck: never = op['event']
+        assert.fail(`unknown event: ${exhaustiveCheck}`)
+      }
+    })
+  }
+  if (isAccountEvent(evt)) {
+    return [
+      {
+        event: 'account',
+        seq: evt.seq,
+        time: evt.time,
+        did: evt.did,
+        active: evt.active,
+        status: evt.status,
+      },
+    ]
+  }
+  if (isIdentityEvent(evt)) {
+    return [
+      {
+        event: 'identity',
+        seq: evt.seq,
+        time: evt.time,
+        did: evt.did,
+        handle: evt.handle,
+      },
+    ]
+  }
+  return []
 }
