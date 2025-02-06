@@ -24,7 +24,17 @@
           "type": "blob",
           "accept": ["image/*"],
           "maxSize": 1000000
-        }
+        },
+        "aspectRatio": {"type": "ref", "ref": "#aspectRatio"}
+      }
+    },
+    "aspectRatio": {
+      "type": "object",
+      "description": "width:height represents an aspect ratio. It may be approximate, and may not correspond to absolute dimensions in any given unit.",
+      "required": ["width", "height"],
+      "properties": {
+        "width": {"type": "integer", "minimum": 1},
+        "height": {"type": "integer", "minimum": 1}
       }
     },
     "view": {
@@ -44,7 +54,8 @@
         "uri": { "type": "string", "format": "uri" },
         "title": { "type": "string" },
         "description": { "type": "string" },
-        "thumb": { "type": "string", "format": "uri" }
+        "thumb": { "type": "string", "format": "uri" },
+        "aspectRatio": {"type": "ref", "ref": "#aspectRatio"}
       }
     }
   }

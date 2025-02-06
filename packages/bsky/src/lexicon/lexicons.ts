@@ -5134,6 +5134,26 @@ export const schemaDict = {
             accept: ['image/*'],
             maxSize: 1000000,
           },
+          aspectRatio: {
+            type: 'ref',
+            ref: 'lex:app.bsky.embed.external#aspectRatio',
+          },
+        },
+      },
+      aspectRatio: {
+        type: 'object',
+        description:
+          'width:height represents an aspect ratio. It may be approximate, and may not correspond to absolute dimensions in any given unit.',
+        required: ['width', 'height'],
+        properties: {
+          width: {
+            type: 'integer',
+            minimum: 1,
+          },
+          height: {
+            type: 'integer',
+            minimum: 1,
+          },
         },
       },
       view: {
@@ -5163,6 +5183,10 @@ export const schemaDict = {
           thumb: {
             type: 'string',
             format: 'uri',
+          },
+          aspectRatio: {
+            type: 'ref',
+            ref: 'lex:app.bsky.embed.external#aspectRatio',
           },
         },
       },
