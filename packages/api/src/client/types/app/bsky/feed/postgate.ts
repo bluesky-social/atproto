@@ -14,6 +14,8 @@ export interface Record {
   detachedEmbeddingUris?: string[]
   /** List of rules defining who can embed this post. If value is an empty array or is undefined, no particular rules apply and anyone can embed. */
   embeddingRules?: (DisableRule | { $type: string; [k: string]: unknown })[]
+  /** List of rules defining who can repost this post. If value is an empty array or is undefined, no particular rules apply and anyone can repost. */
+  repostRules?: (RepostDisableRule | { $type: string; [k: string]: unknown })[]
   [k: string]: unknown
 }
 
@@ -45,4 +47,21 @@ export function isDisableRule(v: unknown): v is DisableRule {
 
 export function validateDisableRule(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.feed.postgate#disableRule', v)
+}
+
+/** Disables repost of this post. */
+export interface RepostDisableRule {
+  [k: string]: unknown
+}
+
+export function isRepostDisableRule(v: unknown): v is RepostDisableRule {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.feed.postgate#repostDisableRule'
+  )
+}
+
+export function validateRepostDisableRule(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.feed.postgate#repostDisableRule', v)
 }

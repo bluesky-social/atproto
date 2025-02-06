@@ -7162,12 +7162,27 @@ export const schemaDict = {
                 refs: ['lex:app.bsky.feed.postgate#disableRule'],
               },
             },
+            repostRules: {
+              description:
+                'List of rules defining who can repost this post. If value is an empty array or is undefined, no particular rules apply and anyone can repost.',
+              type: 'array',
+              maxLength: 5,
+              items: {
+                type: 'union',
+                refs: ['lex:app.bsky.feed.postgate#repostDisableRule'],
+              },
+            },
           },
         },
       },
       disableRule: {
         type: 'object',
         description: 'Disables embedding of this post.',
+        properties: {},
+      },
+      repostDisableRule: {
+        type: 'object',
+        description: 'Disables repost of this post.',
         properties: {},
       },
     },
