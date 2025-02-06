@@ -483,6 +483,7 @@
             "type": "union",
             "refs": [
               "app.bsky.feed.threadgate#mentionRule",
+              "app.bsky.feed.threadgate#followerRule",
               "app.bsky.feed.threadgate#followingRule",
               "app.bsky.feed.threadgate#listRule"
             ]
