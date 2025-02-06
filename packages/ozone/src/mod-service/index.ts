@@ -32,6 +32,7 @@ import {
   isModEventEmail,
   isModEventLabel,
   isModEventMute,
+  isModEventPriorityScore,
   isModEventReport,
   isModEventTag,
   isModEventTakedown,
@@ -403,7 +404,7 @@ export class ModerationService {
         ? event.negateLabelVals.join(' ')
         : undefined
 
-    const meta: Record<string, string | boolean> = {}
+    const meta: Record<string, string | number | boolean> = {}
 
     const addedTags = isModEventTag(event) ? jsonb(event.add) : null
     const removedTags = isModEventTag(event) ? jsonb(event.remove) : null
@@ -427,6 +428,10 @@ export class ModerationService {
       meta.active = event.active
       meta.timestamp = event.timestamp
       if (event.status) meta.status = event.status
+    }
+
+    if (isModEventPriorityScore(event)) {
+      meta.priorityScore = event.score
     }
 
     if (isIdentityEvent(event)) {
@@ -842,6 +847,7 @@ export class ModerationService {
     minAccountSuspendCount,
     minReportedRecordsCount,
     minTakendownRecordsCount,
+    minPriorityScore,
   }: QueryStatusParams): Promise<{
     statuses: ModerationSubjectStatusRowWithHandle[]
     cursor?: string
@@ -1098,12 +1104,22 @@ export class ModerationService {
       )
     }
 
+    if (minPriorityScore != null && minPriorityScore >= 0) {
+      builder = builder.where(
+        'moderation_subject_status.priorityScore',
+        '>=',
+        minPriorityScore,
+      )
+    }
+
     const keyset = new StatusKeyset(
       sortField === 'reportedRecordsCount'
         ? ref(`account_record_events_stats.reportedCount`)
         : sortField === 'takendownRecordsCount'
           ? ref(`account_record_status_stats.takendownCount`)
-          : ref(`moderation_subject_status.${sortField}`),
+          : sortField === 'priorityScore'
+            ? ref(`moderation_subject_status.priorityScore`)
+            : ref(`moderation_subject_status.${sortField}`),
       ref('moderation_subject_status.id'),
     )
     const paginatedBuilder = paginate(builder, {

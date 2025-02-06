@@ -33,6 +33,7 @@ export interface ModEventView {
     | AccountEvent
     | IdentityEvent
     | RecordEvent
+    | ModEventPriorityScore
     | { $type: string; [k: string]: unknown }
   subject:
     | ComAtprotoAdminDefs.RepoRef
@@ -80,6 +81,7 @@ export interface ModEventViewDetail {
     | AccountEvent
     | IdentityEvent
     | RecordEvent
+    | ModEventPriorityScore
     | { $type: string; [k: string]: unknown }
   subject:
     | RepoView
@@ -124,6 +126,8 @@ export interface SubjectStatusView {
   reviewState: SubjectReviewState
   /** Sticky comment on the subject. */
   comment?: string
+  /** Numeric value representing the level of priority. Higher score means higher priority. */
+  priorityScore?: number
   muteUntil?: string
   muteReportingUntil?: string
   lastReviewedBy?: string
@@ -362,6 +366,30 @@ export function isModEventLabel(v: unknown): v is ModEventLabel {
 
 export function validateModEventLabel(v: unknown): ValidationResult {
   return lexicons.validate('tools.ozone.moderation.defs#modEventLabel', v)
+}
+
+/** Set priority score of the subject. Higher score means higher priority. */
+export interface ModEventPriorityScore {
+  comment?: string
+  score: number
+  [k: string]: unknown
+}
+
+export function isModEventPriorityScore(
+  v: unknown,
+): v is ModEventPriorityScore {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'tools.ozone.moderation.defs#modEventPriorityScore'
+  )
+}
+
+export function validateModEventPriorityScore(v: unknown): ValidationResult {
+  return lexicons.validate(
+    'tools.ozone.moderation.defs#modEventPriorityScore',
+    v,
+  )
 }
 
 export interface ModEventAcknowledge {
