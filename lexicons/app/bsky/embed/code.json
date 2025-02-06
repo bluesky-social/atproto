@@ -1,0 +1,37 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.embed.code",
+  "description": "A code snippet embedded in a Bluesky record.",
+  "defs": {
+    "main": {
+      "type": "object",
+      "required": ["code"],
+      "properties": {
+        "code": {
+          "type": "string",
+          "description": "The source code content.",
+          "maxLength": 8000
+        },
+        "lang": {
+          "type": "string",
+          "description": "The programming language identifier.",
+          "maxLength": 20
+        }
+      }
+    },
+    "view": {
+      "type": "object",
+      "required": ["code"],
+      "properties": {
+        "code": {
+          "type": "string",
+          "description": "The source code content."
+        },
+        "lang": {
+          "type": "string",
+          "description": "The programming language identifier."
+        }
+      }
+    }
+  }
+}
