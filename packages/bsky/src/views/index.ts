@@ -48,6 +48,8 @@ import {
   uriToDid as creatorFromUri,
 } from '../util/uris'
 import {
+  CodeEmbed,
+  CodeEmbedView,
   Embed,
   EmbedBlocked,
   EmbedDetached,
@@ -67,6 +69,7 @@ import {
   RecordWithMediaView,
   VideoEmbed,
   VideoEmbedView,
+  isCodeEmbed,
   isExternalEmbed,
   isImagesEmbed,
   isRecordEmbed,
@@ -933,6 +936,8 @@ export class Views {
       return this.videoEmbed(creatorFromUri(postUri), embed)
     } else if (isExternalEmbed(embed)) {
       return this.externalEmbed(creatorFromUri(postUri), embed)
+    } else if (isCodeEmbed(embed)) {
+      return this.codeEmbed(embed)
     } else if (isRecordEmbed(embed)) {
       return this.recordEmbed(postUri, embed, state, depth)
     } else if (isRecordWithMedia(embed)) {
@@ -972,6 +977,14 @@ export class Views {
       thumbnail: this.videoUriBuilder.thumbnail({ did, cid }),
       alt: embed.alt,
       aspectRatio: embed.aspectRatio,
+    }
+  }
+
+  codeEmbed(embed: CodeEmbed): CodeEmbedView {
+    return {
+      $type: 'app.bsky.embed.code#view',
+      code: embed.code,
+      lang: embed.lang,
     }
   }
 
