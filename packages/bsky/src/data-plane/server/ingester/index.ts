@@ -1,5 +1,7 @@
 import assert from 'node:assert'
 import { Subscription } from '@atproto/xrpc-server'
+import { Agent } from '@atproto/api'
+import { Counter } from 'prom-client'
 import { ids } from '../../../lexicon/lexicons'
 import {
   Commit as CommitEvent,
@@ -13,7 +15,6 @@ import { OutputSchema as ListReposOutput } from '@atproto/api/dist/client/types/
 import { Redis } from '../../../redis'
 import { Batcher } from './batcher'
 import { streamLengthBackpressure, cursorFor, wait } from './util'
-import { Agent } from '@atproto/api'
 import { dataplaneLogger as logger } from '../../../logger'
 
 export type IngesterOptions = {
@@ -29,6 +30,11 @@ export class FirehoseIngester {
   started = false
   ac = new AbortController()
   batcher: Batcher<SubscriptionEvent>
+  eventCounter = new Counter({
+    name: 'ingester_events_total',
+    help: 'total ingested firehose events',
+    labelNames: ['stream'],
+  })
   constructor(private opts: IngesterOptions) {
     this.batcher = new Batcher<SubscriptionEvent>({
       process: (events) => this.process(events),
@@ -82,6 +88,7 @@ export class FirehoseIngester {
     if (last) {
       await this.opts.redis.set(cursorFor(this.opts.stream), last.seq)
     }
+    this.eventCounter.labels({ stream: this.opts.stream }).inc(events.length)
   }
   async stop() {
     this.ac.abort()

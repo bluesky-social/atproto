@@ -60,6 +60,7 @@
     "pg": "^8.10.0",
     "pino": "^8.21.0",
     "pino-http": "^8.2.1",
+    "prom-client": "^15.1.3",
     "sharp": "^0.33.5",
     "statsig-node": "^5.23.1",
     "structured-headers": "^1.0.1",
