@@ -1,5 +1,13 @@
 # @atproto/api
 
+## 0.13.34
+
+### Patch Changes
+
+- [#3496](https://github.com/bluesky-social/atproto/pull/3496) [`dc8a7842e`](https://github.com/bluesky-social/atproto/commit/dc8a7842e67f5f3709e88310d2a60d384453b486) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Add followerRule threadgate
+
+- [#3501](https://github.com/bluesky-social/atproto/pull/3501) [`636951e47`](https://github.com/bluesky-social/atproto/commit/636951e4728cd52c2e5355eb93b47d7e869b67e9) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Include `followerRule` as valid setting in `postInteractionSettings` pref
+
 ## 0.13.33
 
 ### Patch Changes
