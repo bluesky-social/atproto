@@ -1209,38 +1209,32 @@ export class Agent extends XrpcClient {
 
   async bskyAppQueueNudges(nudges: string | string[]) {
     await this.updatePreferences((prefs: AppBskyActorDefs.Preferences) => {
-      const bskyAppStatePref = prefs.findLast(
-        predicate.isValidBskyAppStatePref,
-      ) || {
+      const pref = prefs.findLast(predicate.isValidBskyAppStatePref) || {
         $type: 'app.bsky.actor.defs#bskyAppStatePref',
       }
 
-      bskyAppStatePref.queuedNudges = (
-        bskyAppStatePref.queuedNudges || []
-      ).concat(nudges)
+      pref.queuedNudges = (pref.queuedNudges || []).concat(nudges)
 
       return prefs
         .filter((p) => !AppBskyActorDefs.isBskyAppStatePref(p))
-        .concat(bskyAppStatePref)
+        .concat(pref)
     })
   }
 
   async bskyAppDismissNudges(nudges: string | string[]) {
     await this.updatePreferences((prefs: AppBskyActorDefs.Preferences) => {
-      const bskyAppStatePref = prefs.findLast(
-        predicate.isValidBskyAppStatePref,
-      ) || {
+      const pref = prefs.findLast(predicate.isValidBskyAppStatePref) || {
         $type: 'app.bsky.actor.defs#bskyAppStatePref',
       }
 
       nudges = Array.isArray(nudges) ? nudges : [nudges]
-      bskyAppStatePref.queuedNudges = (
-        bskyAppStatePref.queuedNudges || []
-      ).filter((nudge) => !nudges.includes(nudge))
+      pref.queuedNudges = (pref.queuedNudges || []).filter(
+        (nudge) => !nudges.includes(nudge),
+      )
 
       return prefs
         .filter((p) => !AppBskyActorDefs.isBskyAppStatePref(p))
-        .concat(bskyAppStatePref)
+        .concat(pref)
     })
   }
 
@@ -1253,17 +1247,15 @@ export class Agent extends XrpcClient {
     }
 
     await this.updatePreferences((prefs: AppBskyActorDefs.Preferences) => {
-      const bskyAppStatePref = prefs.findLast(
-        predicate.isValidBskyAppStatePref,
-      ) || {
+      const pref = prefs.findLast(predicate.isValidBskyAppStatePref) || {
         $type: 'app.bsky.actor.defs#bskyAppStatePref',
       }
 
-      bskyAppStatePref.activeProgressGuide = guide
+      pref.activeProgressGuide = guide
 
       return prefs
         .filter((p) => !AppBskyActorDefs.isBskyAppStatePref(p))
-        .concat(bskyAppStatePref)
+        .concat(pref)
     })
   }
 
@@ -1274,15 +1266,13 @@ export class Agent extends XrpcClient {
     validateNux(nux)
 
     await this.updatePreferences((prefs: AppBskyActorDefs.Preferences) => {
-      const bskyAppStatePref = prefs.findLast(
-        predicate.isValidBskyAppStatePref,
-      ) || {
+      const pref = prefs.findLast(predicate.isValidBskyAppStatePref) || {
         $type: 'app.bsky.actor.defs#bskyAppStatePref',
       }
 
-      bskyAppStatePref.nuxs = bskyAppStatePref.nuxs || []
+      pref.nuxs = pref.nuxs || []
 
-      const existing = bskyAppStatePref.nuxs?.find((n) => {
+      const existing = pref.nuxs?.find((n) => {
         return n.id === nux.id
       })
 
@@ -1300,13 +1290,11 @@ export class Agent extends XrpcClient {
       }
 
       // remove duplicates and append
-      bskyAppStatePref.nuxs = bskyAppStatePref.nuxs
-        .filter((n) => n.id !== nux.id)
-        .concat(next)
+      pref.nuxs = pref.nuxs.filter((n) => n.id !== nux.id).concat(next)
 
       return prefs
         .filter((p) => !AppBskyActorDefs.isBskyAppStatePref(p))
-        .concat(bskyAppStatePref)
+        .concat(pref)
     })
   }
 
@@ -1315,62 +1303,42 @@ export class Agent extends XrpcClient {
    */
   async bskyAppRemoveNuxs(ids: string[]) {
     await this.updatePreferences((prefs: AppBskyActorDefs.Preferences) => {
-      const bskyAppStatePref = prefs.findLast(
-        predicate.isValidBskyAppStatePref,
-      ) || {
+      const pref = prefs.findLast(predicate.isValidBskyAppStatePref) || {
         $type: 'app.bsky.actor.defs#bskyAppStatePref',
       }
 
-      bskyAppStatePref.nuxs = (bskyAppStatePref.nuxs || []).filter((nux) => {
-        return !ids.includes(nux.id)
-      })
+      pref.nuxs = (pref.nuxs || []).filter((nux) => !ids.includes(nux.id))
 
       return prefs
         .filter((p) => !AppBskyActorDefs.isBskyAppStatePref(p))
-        .concat(bskyAppStatePref)
+        .concat(pref)
     })
   }
 
   async setPostInteractionSettings(
     settings: AppBskyActorDefs.PostInteractionSettingsPref,
   ) {
-    if (
-      !AppBskyActorDefs.validatePostInteractionSettingsPref(settings).success
-    ) {
-      throw new Error('Invalid post interaction settings')
-    }
+    const result =
+      AppBskyActorDefs.validatePostInteractionSettingsPref(settings)
+    // Fool-proofing (should not be needed because of type safety)
+    if (!result.success) throw result.error
 
     await this.updatePreferences((prefs: AppBskyActorDefs.Preferences) => {
-      let prev = prefs.findLast(
-        (pref) =>
-          AppBskyActorDefs.isPostInteractionSettingsPref(pref) &&
-          AppBskyActorDefs.validatePostInteractionSettingsPref(pref).success,
-      ) as AppBskyActorDefs.PostInteractionSettingsPref
-
-      if (!prev) {
-        prev = {
-          /**
-           * Matches handling of `threadgate.allow` where `undefined` means "everyone"
-           */
-          threadgateAllowRules: undefined,
-          postgateEmbeddingRules: undefined,
-        }
+      const pref = prefs.findLast(
+        predicate.isValidPostInteractionSettingsPref,
+      ) || {
+        $type: 'app.bsky.actor.defs#postInteractionSettingsPref',
       }
 
       /**
        * Matches handling of `threadgate.allow` where `undefined` means "everyone"
        */
-      prev.threadgateAllowRules = settings.threadgateAllowRules
-      prev.postgateEmbeddingRules = settings.postgateEmbeddingRules
+      pref.threadgateAllowRules = settings.threadgateAllowRules
+      pref.postgateEmbeddingRules = settings.postgateEmbeddingRules
 
       return prefs
         .filter((p) => !AppBskyActorDefs.isPostInteractionSettingsPref(p))
-        .concat([
-          {
-            ...prev,
-            $type: 'app.bsky.actor.defs#postInteractionSettingsPref',
-          },
-        ])
+        .concat(pref)
     })
   }
 

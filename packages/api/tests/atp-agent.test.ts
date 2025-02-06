@@ -3496,6 +3496,7 @@ describe('agent', () => {
       it('validates inputs', async () => {
         expect(() =>
           agent.setPostInteractionSettings({
+            // @ts-expect-error we are testing invalid inputs
             threadgateAllowRules: [{ key: 'string' }],
             postgateEmbeddingRules: [],
           }),
