@@ -4730,6 +4730,7 @@ export const schemaDict = {
               type: 'union',
               refs: [
                 'lex:app.bsky.feed.threadgate#mentionRule',
+                'lex:app.bsky.feed.threadgate#followerRule',
                 'lex:app.bsky.feed.threadgate#followingRule',
                 'lex:app.bsky.feed.threadgate#listRule',
               ],

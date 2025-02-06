@@ -541,6 +541,7 @@ export interface PostInteractionSettingsPref {
   /** Matches threadgate record. List of rules defining who can reply to this users posts. If value is an empty array, no one can reply. If value is undefined, anyone can reply. */
   threadgateAllowRules?: (
     | AppBskyFeedThreadgate.MentionRule
+    | AppBskyFeedThreadgate.FollowerRule
     | AppBskyFeedThreadgate.FollowingRule
     | AppBskyFeedThreadgate.ListRule
     | { $type: string; [k: string]: unknown }
