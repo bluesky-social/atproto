@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { cborEncode, schema } from '@atproto/common'
+import { cborEncode, noUndefinedVals, schema } from '@atproto/common'
 import { BlockMap, blocksToCarFile } from '@atproto/repo'
 import { AccountStatus } from '../account-manager'
 import { CommitDataWithOps } from '../repo'
@@ -55,7 +55,7 @@ export const formatSeqCommit = async (
   return {
     did,
     eventType: 'append' as const,
-    event: cborEncode(evt),
+    event: cborEncode(noUndefinedVals(evt)),
     sequencedAt: new Date().toISOString(),
   }
 }
