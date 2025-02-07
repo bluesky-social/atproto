@@ -1,10 +1,13 @@
 import assert from 'node:assert'
 import PQueue from 'p-queue'
 import { Counter, Gauge, Registry } from 'prom-client'
+import { CID } from 'multiformats/cid'
+import { AtUri } from '@atproto/syntax'
+import { WriteOpAction } from '@atproto/repo'
 import { Redis, StreamOutputMessage } from '../../../redis'
 import { dataplaneLogger } from '../../../logger'
 import { StreamEvent } from '../types'
-import { wait } from '../ingester/util'
+import { IndexingService } from '../indexing'
 
 export class StreamIndexer {
   started = false
@@ -22,6 +25,7 @@ export class StreamIndexer {
       group: string
       consumer: string
       concurrency?: number
+      indexingService: IndexingService
     },
   ) {
     this.queue = new PQueue({
@@ -59,9 +63,46 @@ export class StreamIndexer {
       }
     })()
   }
-  private async process(_event: StreamEvent) {
-    // @TODO
-    await wait(100, this.ac.signal)
+  private async process(event: StreamEvent) {
+    // @TODO index handles, account, and identity events
+    const { indexingService } = this.opts
+    if (
+      event.type === 'create' ||
+      event.type === 'update' ||
+      event.type === 'delete'
+    ) {
+      if (event.type === 'create') {
+        await indexingService.indexRecord(
+          AtUri.make(event.did, event.collection, event.rkey),
+          CID.parse(event.cid),
+          event.record,
+          WriteOpAction.Create,
+          event.time,
+          event.rev,
+          { disableNotifs: true },
+        )
+      } else if (event.type === 'update') {
+        await indexingService.indexRecord(
+          AtUri.make(event.did, event.collection, event.rkey),
+          CID.parse(event.cid),
+          event.record,
+          WriteOpAction.Update,
+          event.time,
+          event.rev,
+          { disableNotifs: true },
+        )
+      } else if (event.type === 'delete') {
+        await indexingService.deleteRecord(
+          AtUri.make(event.did, event.collection, event.rkey),
+          event.rev,
+        )
+      }
+      await indexingService.setCommitLastSeen(
+        event.did,
+        CID.parse(event.commit),
+        event.rev,
+      )
+    }
   }
   private async handleMessage(msg: StreamOutputMessage) {
     try {

@@ -231,6 +231,7 @@ export class IndexingService {
 
   async setCommitLastSeen(did: string, commit: CID, rev: string) {
     const { ref } = this.db.db.dynamic
+    const excluded = (col: string) => ref(`excluded.${col}`)
     await this.db.db
       .insertInto('actor_sync')
       .values({
@@ -239,11 +240,13 @@ export class IndexingService {
         repoRev: rev ?? null,
       })
       .onConflict((oc) => {
-        const excluded = (col: string) => ref(`excluded.${col}`)
-        return oc.column('did').doUpdateSet({
-          commitCid: sql`${excluded('commitCid')}`,
-          repoRev: sql`${excluded('repoRev')}`,
-        })
+        return oc
+          .column('did')
+          .doUpdateSet({
+            commitCid: sql`${excluded('commitCid')}`,
+            repoRev: sql`${excluded('repoRev')}`,
+          })
+          .whereRef('actor_sync.repoRev', '<=', excluded('repoRev'))
       })
       .execute()
   }

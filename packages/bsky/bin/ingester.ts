@@ -16,7 +16,7 @@ export async function main() {
   const firehoseStream = process.env.INGESTER_FIREHOSE_STREAM || 'firehose'
   const backfillStream = process.env.INGESTER_BACKFILL_STREAM
   const redisHost = process.env.REDIS_HOST
-  const metricsPort = parseInt(process.env.METRICS_PORT || '3000', 10)
+  const metricsPort = parseInt(process.env.METRICS_PORT || '4000', 10)
   assert(
     host,
     'must set INGESTER_HOST, e.g. https://morel.us-east.host.bsky.network',
