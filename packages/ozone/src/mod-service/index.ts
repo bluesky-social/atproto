@@ -61,6 +61,7 @@ import {
 } from './types'
 import { formatLabel, formatLabelRow, signLabel } from './util'
 import { AuthHeaders, ModerationViews } from './views'
+import { ReporterStatsRow } from '../db/schema/reporter_stats'
 
 export type ModerationServiceCreator = (db: Database) => ModerationService
 
@@ -1265,6 +1266,14 @@ export class ModerationService {
     if (!delivery.sent) {
       throw new InvalidRequestError('Email was accepted but not sent')
     }
+  }
+
+  async getReporterStats(dids: string[]) {
+    return this.db.db
+      .selectFrom('reporter_stats')
+      .where('did', 'in', dids)
+      .selectAll()
+      .execute()
   }
 }
 

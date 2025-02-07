@@ -931,3 +931,36 @@ export function isRecordHosting(v: unknown): v is RecordHosting {
 export function validateRecordHosting(v: unknown): ValidationResult {
   return lexicons.validate('tools.ozone.moderation.defs#recordHosting', v)
 }
+
+export interface ReporterStats {
+  did: string
+  /** The total number of reports made by the user on accounts. */
+  accountReportCount: number
+  /** The total number of reports made by the user on records. */
+  recordReportCount: number
+  /** The total number of accounts reported by the user. */
+  reportedAccountCount: number
+  /** The total number of records reported by the user. */
+  reportedRecordCount: number
+  /** The total number of accounts taken down as a result of the user's reports. */
+  takendownAccountCount: number
+  /** The total number of records taken down as a result of the user's reports. */
+  takendownRecordCount: number
+  /** The total number of accounts labeled as a result of the user's reports. */
+  labeledAccountCount: number
+  /** The total number of records labeled as a result of the user's reports. */
+  labeledRecordCount: number
+  [k: string]: unknown
+}
+
+export function isReporterStats(v: unknown): v is ReporterStats {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'tools.ozone.moderation.defs#reporterStats'
+  )
+}
+
+export function validateReporterStats(v: unknown): ValidationResult {
+  return lexicons.validate('tools.ozone.moderation.defs#reporterStats', v)
+}

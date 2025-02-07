@@ -207,6 +207,7 @@ import * as ToolsOzoneModerationGetEvent from './types/tools/ozone/moderation/ge
 import * as ToolsOzoneModerationGetRecord from './types/tools/ozone/moderation/getRecord'
 import * as ToolsOzoneModerationGetRecords from './types/tools/ozone/moderation/getRecords'
 import * as ToolsOzoneModerationGetRepo from './types/tools/ozone/moderation/getRepo'
+import * as ToolsOzoneModerationGetReporterStats from './types/tools/ozone/moderation/getReporterStats'
 import * as ToolsOzoneModerationGetRepos from './types/tools/ozone/moderation/getRepos'
 import * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents'
 import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses'
@@ -436,6 +437,7 @@ export * as ToolsOzoneModerationGetEvent from './types/tools/ozone/moderation/ge
 export * as ToolsOzoneModerationGetRecord from './types/tools/ozone/moderation/getRecord'
 export * as ToolsOzoneModerationGetRecords from './types/tools/ozone/moderation/getRecords'
 export * as ToolsOzoneModerationGetRepo from './types/tools/ozone/moderation/getRepo'
+export * as ToolsOzoneModerationGetReporterStats from './types/tools/ozone/moderation/getReporterStats'
 export * as ToolsOzoneModerationGetRepos from './types/tools/ozone/moderation/getRepos'
 export * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents'
 export * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses'
@@ -3714,6 +3716,18 @@ export class ToolsOzoneModerationNS {
       .catch((e) => {
         throw ToolsOzoneModerationGetRepo.toKnownErr(e)
       })
+  }
+
+  getReporterStats(
+    params?: ToolsOzoneModerationGetReporterStats.QueryParams,
+    opts?: ToolsOzoneModerationGetReporterStats.CallOptions,
+  ): Promise<ToolsOzoneModerationGetReporterStats.Response> {
+    return this._client.call(
+      'tools.ozone.moderation.getReporterStats',
+      params,
+      undefined,
+      opts,
+    )
   }
 
   getRepos(
