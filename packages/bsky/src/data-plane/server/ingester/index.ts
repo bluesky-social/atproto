@@ -61,7 +61,7 @@ export class FirehoseIngester {
         if (isIdentityEvent(obj)) return obj
       },
       getParams: async () => {
-        const cursor = await this.opts.redis.get(cursorFor(this.opts.stream))
+        const cursor = await this.opts.redis.get(cursorFor(this.opts))
         if (cursor === null) return // pickup from live
         return { cursor }
       },
@@ -85,7 +85,7 @@ export class FirehoseIngester {
     )
     const last = firehoseEvents.at(-1)
     if (last) {
-      await this.opts.redis.set(cursorFor(this.opts.stream), last.seq)
+      await this.opts.redis.set(cursorFor(this.opts), last.seq)
     }
     this.metrics.firehoseEvent.inc(firehoseEvents.length)
     this.metrics.streamEvent.inc(streamEvents.length)
@@ -133,7 +133,7 @@ export class BackfillIngester {
     const backpressure = streamLengthBackpressure(this.opts)
     this.running = (async () => {
       let cursor =
-        (await this.opts.redis.get(cursorFor(this.opts.stream))) ?? undefined
+        (await this.opts.redis.get(cursorFor(this.opts))) ?? undefined
       while (cursor !== CURSOR_DONE) {
         await backpressure(this.ac.signal)
         if (this.ac.signal.aborted) return
@@ -166,7 +166,7 @@ export class BackfillIngester {
           )
         }
         cursor = result.cursor ?? CURSOR_DONE
-        await this.opts.redis.set(cursorFor(this.opts.stream), cursor)
+        await this.opts.redis.set(cursorFor(this.opts), cursor)
       }
       this.running = null
     })()

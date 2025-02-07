@@ -32,8 +32,8 @@ export function streamLengthBackpressure(opts: {
   }
 }
 
-export function cursorFor(stream: string) {
-  return `${stream}:cursor`
+export function cursorFor({ stream, host }: { stream: string; host: string }) {
+  return `${stream}:cursor:${host.replace(/^https?:\/\//, '')}`
 }
 
 export function wait(ms: number, signal: AbortSignal) {
