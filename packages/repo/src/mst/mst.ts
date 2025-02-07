@@ -755,19 +755,89 @@ export class MST {
     return cids
   }
 
-  async addBlocksForPath(key: string, blocks: BlockMap) {
+  async addSelf(blocks: BlockMap) {
     const serialized = await this.serialize()
     blocks.set(serialized.cid, serialized.bytes)
+    return blocks
+  }
+
+  async proofForLeftSib(key: string): Promise<BlockMap> {
+    const index = await this.findGtOrEqualLeafIndex(key)
+    const prev = await this.atIndex(index - 1)
+    let blocks: BlockMap
+    if (!prev || prev.isLeaf()) {
+      blocks = new BlockMap()
+    } else {
+      blocks = await prev.proofForLeftSib(key)
+    }
+    return this.addSelf(blocks)
+  }
+
+  async proofForRightSib(key: string): Promise<BlockMap> {
     const index = await this.findGtOrEqualLeafIndex(key)
     const found = await this.atIndex(index)
-    if (found && found.isLeaf() && found.key === key) {
-      return
+    let blocks: BlockMap
+    if (!found) {
+      // shouldn't ever hit, null case
+      blocks = new BlockMap()
+    } else if (found.isTree()) {
+      blocks = await found.proofForRightSib(key)
+      // recurse down
+    } else {
+      const node =
+        found.key === key
+          ? await this.atIndex(index + 1)
+          : await this.atIndex(index - 1)
+      if (!node || node.isLeaf()) {
+        blocks = new BlockMap()
+      } else {
+        blocks = await node.proofForRightSib(key)
+      }
     }
-    const prev = await this.atIndex(index - 1)
-    if (prev && prev.isTree()) {
-      await prev.addBlocksForPath(key, blocks)
-    }
+    return this.addSelf(blocks)
   }
+
+  async proofForKey(key: string): Promise<BlockMap> {
+    const index = await this.findGtOrEqualLeafIndex(key)
+    const found = await this.atIndex(index)
+    let blocks: BlockMap
+    if (found && found.isLeaf() && found.key === key) {
+      blocks = new BlockMap()
+    } else {
+      const prev = await this.atIndex(index - 1)
+      if (!prev || prev.isLeaf()) {
+        return new BlockMap()
+      } else {
+        blocks = await prev.proofForKey(key)
+      }
+    }
+    return this.addSelf(blocks)
+  }
+
+  async getCoveringProof(key: string): Promise<BlockMap> {
+    const [self, left, right] = await Promise.all([
+      this.proofForKey(key),
+      this.proofForLeftSib(key),
+      this.proofForRightSib(key),
+    ])
+    return self.addMap(left).addMap(right)
+  }
+
+  // @TODO delete
+
+  // async addBlocksForPath(key: string, blocks: BlockMap) {
+  //   const serialized = await this.serialize()
+  //   blocks.set(serialized.cid, serialized.bytes)
+  //   const index = await this.findGtOrEqualLeafIndex(key)
+  //   const found = await this.atIndex(index)
+  //   if (found && found.isLeaf() && found.key === key) {
+  //     return
+  //   }
+  //   const prev = await this.atIndex(index - 1)
+  //   if (prev && prev.isTree()) {
+  //     await prev.addBlocksForPath(key, blocks)
+  //   }
+  // }
 
   // Matching Leaf interface
   // -------------------

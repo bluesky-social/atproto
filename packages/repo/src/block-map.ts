@@ -66,6 +66,7 @@ export class BlockMap {
     toAdd.forEach((bytes, cid) => {
       this.set(cid, bytes)
     })
+    return this
   }
 
   get size(): number {
