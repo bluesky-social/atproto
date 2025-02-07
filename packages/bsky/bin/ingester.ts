@@ -10,6 +10,7 @@ import {
   BackfillIngester,
   FirehoseIngester,
 } from '../src/data-plane/server/ingester'
+import { StreamIndexer } from '../src/data-plane/server/indexer'
 import { httpLogger } from '../src/logger'
 
 export async function main() {
@@ -24,28 +25,52 @@ export async function main() {
   collectDefaultMetrics({ register: metricsRegistry })
   const server = createMetricsServer(metricsRegistry)
   const redis = new Redis({ host: redisHost })
+  // firehose ingester
   const firehose = new FirehoseIngester({
     redis,
     host,
     stream: 'firehose',
-    // highWaterMark: 100,
   })
-  metricsRegistry.registerMetric(firehose.firehoseEventCounter)
-  metricsRegistry.registerMetric(firehose.streamEventCounter)
+  FirehoseIngester.metrics.register(metricsRegistry)
+  // backfill ingester
   const backfill = new BackfillIngester({
     redis,
     host,
     stream: 'backfill',
-    // highWaterMark: 10000,
   })
+  // redis stream indexers
+  const indexer1 = new StreamIndexer({
+    stream: 'firehose',
+    group: 'firehose_group',
+    consumer: 'one',
+    redis,
+    concurrency: 10,
+  })
+  const indexer2 = new StreamIndexer({
+    stream: 'firehose',
+    group: 'firehose_group',
+    consumer: 'two',
+    redis,
+    concurrency: 50,
+  })
+  StreamIndexer.metrics.register(metricsRegistry)
+  // start
   await once(server.listen(3000), 'listening')
   httpLogger.info({ address: server.address() }, 'server listening')
   firehose.run()
+  indexer1.run()
+  indexer2.run()
   backfill.run()
-  await wait(60000)
+  await wait(120000)
+  // stop
+  httpLogger.info('stopping')
   await firehose.stop()
+  await indexer1.stop()
+  await indexer2.stop()
   await backfill.stop()
   await redis.destroy()
+  server.close()
+  await once(server, 'close')
 }
 
 main()

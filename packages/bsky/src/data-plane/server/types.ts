@@ -7,11 +7,11 @@ import {
 export type FirehoseEvent = CommitEvent | AccountEvent | IdentityEvent
 
 export type StreamEvent =
-  | ({ event: 'create'; record: unknown; cid: string } & BaseOpEvent)
-  | ({ event: 'update'; record: unknown; cid: string } & BaseOpEvent)
-  | ({ event: 'delete' } & BaseOpEvent)
-  | ({ event: 'account' } & AccountEvent)
-  | ({ event: 'identity' } & IdentityEvent)
+  | ({ type: 'create'; record: unknown; cid: string } & BaseOpEvent)
+  | ({ type: 'update'; record: unknown; cid: string } & BaseOpEvent)
+  | ({ type: 'delete' } & BaseOpEvent)
+  | ({ type: 'account' } & AccountEvent)
+  | ({ type: 'identity' } & IdentityEvent)
 
 type BaseOpEvent = {
   seq: number

@@ -37,7 +37,7 @@ export class Redis {
     streams: StreamRef[],
     opts: { count: number; blockMs?: number },
   ) {
-    const allRead = await this.driver.xreadBuffer(
+    const read = await this.driver.xread(
       'COUNT',
       opts.count, // events per stream
       'BLOCK',
@@ -46,24 +46,50 @@ export class Redis {
       ...streams.map((s) => this.ns(s.key)),
       ...streams.map((s) => s.cursor),
     )
-    const results: StreamOutput[] = []
-    for (const [key, messages] of allRead ?? []) {
-      const result: StreamOutput = {
-        key: this.rmns(key.toString()),
-        messages: [],
-      }
-      results.push(result)
-      for (const [seqBuf, values] of messages) {
-        const message = { cursor: seqBuf.toString(), contents: {} }
-        result.messages.push(message)
-        for (let i = 0; i < values.length; ++i) {
-          if (i % 2 === 0) continue
-          const field = values[i - 1].toString()
-          message.contents[field] = values[i]
-        }
+    return this.formatStreamOutput(read)
+  }
+
+  async readConsumerGroup(
+    stream: StreamRef,
+    opts: { count: number; group: string; consumer: string; blockMs?: number },
+  ) {
+    const read = await this.driver.xreadgroup(
+      'GROUP',
+      opts.group,
+      opts.consumer,
+      'COUNT',
+      opts.count, // events per stream
+      'BLOCK',
+      opts.blockMs ?? 1000, // millis
+      'STREAMS',
+      this.ns(stream.key),
+      stream.cursor,
+    )
+    return this.formatStreamOutput(read as StreamRead).flatMap(
+      (out) => out.messages,
+    )
+  }
+
+  async ensureConsumerGroup(opts: { group: string; stream: string }) {
+    try {
+      await this.driver.xgroup(
+        'CREATE',
+        opts.stream,
+        opts.group,
+        '0',
+        'MKSTREAM',
+      )
+    } catch (err) {
+      if (err instanceof Error && err.message.startsWith('BUSYGROUP')) {
+        // noop
+      } else {
+        throw err
       }
     }
-    return results
+  }
+
+  async ackMessage(opts: { group: string; stream: string; id: string }) {
+    await this.driver.xack(opts.stream, opts.group, opts.id)
   }
 
   async addToStream(
@@ -174,13 +200,39 @@ export class Redis {
       ? key.replace(`${this.namespace}:`, '')
       : key
   }
+
+  private formatStreamOutput(read: StreamRead) {
+    const results: StreamOutput[] = []
+    for (const [key, messages] of read ?? []) {
+      const result: StreamOutput = {
+        key: this.rmns(key),
+        messages: [],
+      }
+      results.push(result)
+      for (const [cursor, values] of messages) {
+        const message: StreamOutputMessage = { cursor, contents: {} }
+        result.messages.push(message)
+        for (let i = 0; i < values.length; ++i) {
+          if (i % 2 === 0) continue
+          const field = values[i - 1]
+          message.contents[field] = values[i]
+        }
+      }
+    }
+    return results
+  }
 }
 
 type StreamRef = { key: string; cursor: string | number }
 
-type StreamOutput = {
+export type StreamOutput = {
   key: string
-  messages: { cursor: string; contents: Record<string, Buffer | undefined> }[]
+  messages: StreamOutputMessage[]
+}
+
+export type StreamOutputMessage = {
+  cursor: string
+  contents: Record<string, string>
 }
 
 export type RedisOptions = (
@@ -203,3 +255,5 @@ export function addressParts(
   assert(host && !isNaN(port) && !others.length, `invalid address: ${addr}`)
   return { host, port }
 }
+
+type StreamRead = Awaited<ReturnType<InstanceType<typeof RedisDriver>['xread']>>

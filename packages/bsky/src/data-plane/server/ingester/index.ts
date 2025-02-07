@@ -2,7 +2,7 @@ import assert from 'node:assert'
 import { Subscription } from '@atproto/xrpc-server'
 import { Agent, lexToJson } from '@atproto/api'
 import { parseCommitUnauthenticated } from '@atproto/sync'
-import { Counter } from 'prom-client'
+import { Counter, Registry } from 'prom-client'
 import { ids } from '../../../lexicon/lexicons'
 import {
   isCommit as isCommitEvent,
@@ -27,15 +27,9 @@ export class FirehoseIngester {
   started = false
   ac = new AbortController()
   batcher: Batcher<FirehoseEvent>
-  firehoseEventCounter = new Counter({
-    name: 'firehose_events_total',
-    help: 'total ingested firehose events',
-    labelNames: ['stream', 'host'],
-  })
-  streamEventCounter = new Counter({
-    name: 'stream_events_total',
-    help: 'total ingested stream events',
-    labelNames: ['stream', 'host'],
+  metrics = FirehoseIngester.metrics.labels({
+    stream: this.opts.stream,
+    host: this.opts.host,
   })
   constructor(private opts: IngesterOptions) {
     this.batcher = new Batcher<FirehoseEvent>({
@@ -43,7 +37,7 @@ export class FirehoseIngester {
       backpressure: streamLengthBackpressure(opts),
     })
   }
-  async run() {
+  run() {
     assert(!this.started, 'ingester must not be started')
     this.started = true
     ;(async () => {
@@ -93,16 +87,34 @@ export class FirehoseIngester {
     if (last) {
       await this.opts.redis.set(cursorFor(this.opts.stream), last.seq)
     }
-    this.firehoseEventCounter
-      .labels({ stream: this.opts.stream, host: this.opts.host })
-      .inc(firehoseEvents.length)
-    this.streamEventCounter
-      .labels({ stream: this.opts.stream, host: this.opts.host })
-      .inc(streamEvents.length)
+    this.metrics.firehoseEvent.inc(firehoseEvents.length)
+    this.metrics.streamEvent.inc(streamEvents.length)
   }
   async stop() {
     this.ac.abort()
     await this.batcher.stop()
+  }
+  static metrics = {
+    firehoseEvent: new Counter({
+      name: 'firehose_events_total',
+      help: 'total ingested firehose events',
+      labelNames: ['stream', 'host'],
+    }),
+    streamEvent: new Counter({
+      name: 'stream_events_total',
+      help: 'total ingested stream events',
+      labelNames: ['stream', 'host'],
+    }),
+    labels(labels: { stream: string; host: string }) {
+      return {
+        firehoseEvent: this.firehoseEvent.labels(labels),
+        streamEvent: this.streamEvent.labels(labels),
+      }
+    },
+    register(registry: Registry) {
+      registry.registerMetric(this.firehoseEvent)
+      registry.registerMetric(this.streamEvent)
+    },
   }
 }
 
@@ -182,20 +194,20 @@ async function firehoseToStreamEvents(
       }
       if (op.event === 'update') {
         return {
-          event: 'update',
+          type: 'update',
           record: lexToJson(op.record),
           cid: op.cid.toString(),
           ...base,
         }
       } else if (op.event === 'create') {
         return {
-          event: 'create',
+          type: 'create',
           record: lexToJson(op.record),
           cid: op.cid.toString(),
           ...base,
         }
       } else if (op.event === 'delete') {
-        return { event: 'delete', ...base }
+        return { type: 'delete', ...base }
       } else {
         const exhaustiveCheck: never = op['event']
         assert.fail(`unknown event: ${exhaustiveCheck}`)
@@ -205,7 +217,7 @@ async function firehoseToStreamEvents(
   if (isAccountEvent(evt)) {
     return [
       {
-        event: 'account',
+        type: 'account',
         seq: evt.seq,
         time: evt.time,
         did: evt.did,
@@ -217,7 +229,7 @@ async function firehoseToStreamEvents(
   if (isIdentityEvent(evt)) {
     return [
       {
-        event: 'identity',
+        type: 'identity',
         seq: evt.seq,
         time: evt.time,
         did: evt.did,
