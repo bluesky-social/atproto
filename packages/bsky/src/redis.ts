@@ -88,8 +88,18 @@ export class Redis {
     }
   }
 
-  async ackMessage(opts: { group: string; stream: string; id: string }) {
-    await this.driver.xack(opts.stream, opts.group, opts.id)
+  async ackMessage(opts: {
+    group: string
+    stream: string
+    id: string
+    del?: boolean
+  }) {
+    const pipeline = this.driver.pipeline()
+    pipeline.xack(opts.stream, opts.group, opts.id)
+    if (opts.del) {
+      pipeline.xdel(opts.stream, opts.id)
+    }
+    await pipeline.exec()
   }
 
   async addToStream(

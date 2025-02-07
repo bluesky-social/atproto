@@ -5,6 +5,7 @@ import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/syntax'
 import { WriteOpAction } from '@atproto/repo'
 import { jsonToLex } from '@atproto/lexicon'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Redis, StreamOutputMessage } from '../../../redis'
 import { dataplaneLogger } from '../../../logger'
 import { StreamEvent } from '../types'
@@ -119,14 +120,16 @@ export class StreamIndexer {
           'skipping bad indexer stream message',
         )
         await this.opts.redis.ackMessage({
+          del: true,
           id: msg.cursor,
           group: this.opts.group,
           stream: this.opts.stream,
         })
         return
       }
-      await this.process(event)
+      await this.process(event).catch(ignoreSkipErrors.bind(null, event))
       await this.opts.redis.ackMessage({
+        del: true,
         id: msg.cursor,
         group: this.opts.group,
         stream: this.opts.stream,
@@ -183,6 +186,13 @@ export class StreamIndexer {
       registry.registerMetric(this.running)
     },
   }
+}
+
+function ignoreSkipErrors(event: StreamEvent, err: unknown) {
+  if (err instanceof InvalidRequestError) {
+    return dataplaneLogger.warn({ err, event }, 'event skipped by indexer')
+  }
+  throw err
 }
 
 function safeParse<T>(val: string) {
