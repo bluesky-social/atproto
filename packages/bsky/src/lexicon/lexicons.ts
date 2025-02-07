@@ -5468,6 +5468,17 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.embed.defs#aspectRatio',
           },
+          attribution: {
+            type: 'string',
+            description:
+              'Attribution for the video, e.g. the creator or source.',
+            maxGraphemes: 300,
+            maxLength: 3000,
+          },
+          licenseUri: {
+            type: 'string',
+            format: 'uri',
+          },
         },
       },
       caption: {
@@ -5509,6 +5520,15 @@ export const schemaDict = {
           aspectRatio: {
             type: 'ref',
             ref: 'lex:app.bsky.embed.defs#aspectRatio',
+          },
+          attribution: {
+            type: 'string',
+            maxGraphemes: 300,
+            maxLength: 3000,
+          },
+          licenseUri: {
+            type: 'string',
+            format: 'uri',
           },
         },
       },
