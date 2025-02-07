@@ -7,7 +7,7 @@ export function streamLengthBackpressure(opts: {
   stream: string
   highWaterMark?: number
 }) {
-  const { redis, stream, highWaterMark = 1000000 } = opts
+  const { redis, stream, highWaterMark = 100000 } = opts
   let lastLengthCheck = 0
   return async function checkLength(signal: AbortSignal) {
     if (signal.aborted) {
