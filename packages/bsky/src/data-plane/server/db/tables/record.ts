@@ -2,6 +2,7 @@ export interface Record {
   uri: string
   cid: string
   did: string
+  rev: string
   json: string
   indexedAt: string
   takedownRef: string | null

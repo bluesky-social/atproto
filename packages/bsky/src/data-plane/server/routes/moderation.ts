@@ -35,6 +35,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     const res = await db.db
       .selectFrom('record')
       .where('uri', '=', recordUri)
+      .where('json', '!=', '')
       .select('takedownRef')
       .executeTakeFirst()
     return {

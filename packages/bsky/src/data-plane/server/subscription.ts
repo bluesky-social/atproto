@@ -1,4 +1,4 @@
-import { Firehose, MemoryRunner } from '@atproto/sync'
+import { Firehose, MemoryRunner, Event as SyncEvent } from '@atproto/sync'
 import { IdResolver } from '@atproto/identity'
 import { WriteOpAction } from '@atproto/repo'
 import { subLogger as log } from '../../logger'
@@ -70,7 +70,7 @@ const createFirehose = (opts: {
     unauthenticatedHandles: true, // indexing service handles these
     unauthenticatedCommits: true, // @TODO there seems to be a very rare issue where the authenticator thinks a block is missing in deletion ops
     onError: (err) => log.error({ err }, 'error in subscription'),
-    handleEvent: async (evt) => {
+    handleEvent: async (evt: SyncEvent) => {
       if (evt.event === 'identity') {
         await indexingSvc.indexHandle(evt.did, evt.time, true)
       } else if (evt.event === 'account') {
@@ -82,7 +82,7 @@ const createFirehose = (opts: {
       } else {
         const indexFn =
           evt.event === 'delete'
-            ? indexingSvc.deleteRecord(evt.uri)
+            ? indexingSvc.deleteRecord(evt.uri, evt.rev)
             : indexingSvc.indexRecord(
                 evt.uri,
                 evt.cid,
@@ -91,6 +91,7 @@ const createFirehose = (opts: {
                   ? WriteOpAction.Create
                   : WriteOpAction.Update,
                 evt.time,
+                evt.rev,
               )
         await Promise.all([
           indexFn,

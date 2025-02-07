@@ -88,6 +88,7 @@ export class IndexingService {
     obj: unknown,
     action: WriteOpAction.Create | WriteOpAction.Update,
     timestamp: string,
+    rev: string,
     opts?: { disableNotifs?: boolean; disableLabels?: boolean },
   ) {
     this.db.assertNotTransaction()
@@ -96,20 +97,20 @@ export class IndexingService {
       const indexer = indexingTx.findIndexerForCollection(uri.collection)
       if (!indexer) return
       if (action === WriteOpAction.Create) {
-        await indexer.insertRecord(uri, cid, obj, timestamp, opts)
+        await indexer.insertRecord(uri, cid, obj, timestamp, rev, opts)
       } else {
-        await indexer.updateRecord(uri, cid, obj, timestamp)
+        await indexer.updateRecord(uri, cid, obj, timestamp, rev)
       }
     })
   }
 
-  async deleteRecord(uri: AtUri, cascading = false) {
+  async deleteRecord(uri: AtUri, rev: string, cascading = false) {
     this.db.assertNotTransaction()
     await this.db.transaction(async (txn) => {
       const indexingTx = this.transact(txn)
       const indexer = indexingTx.findIndexerForCollection(uri.collection)
       if (!indexer) return
-      await indexer.deleteRecord(uri, cascading)
+      await indexer.deleteRecord(uri, rev, cascading)
     })
   }
 
@@ -174,13 +175,13 @@ export class IndexingService {
     const currRecords = await this.getCurrentRecords(did)
     const repoRecords = formatCheckout(did, verifiedRepo)
     const diff = findDiffFromCheckout(currRecords, repoRecords)
-
+    const { rev } = verifiedRepo.commit
     await Promise.all(
       diff.map(async (op) => {
         const { uri, cid } = op
         try {
           if (op.op === 'delete') {
-            await this.deleteRecord(uri)
+            await this.deleteRecord(uri, rev)
           } else {
             const parsed = await getAndParseRecord(blocks, cid)
             await this.indexRecord(
@@ -189,6 +190,7 @@ export class IndexingService {
               parsed.record,
               op.op === 'create' ? WriteOpAction.Create : WriteOpAction.Update,
               now,
+              rev,
             )
           }
         } catch (err) {
@@ -212,6 +214,7 @@ export class IndexingService {
     const res = await this.db.db
       .selectFrom('record')
       .where('did', '=', did)
+      .where('json', '!=', '')
       .select(['uri', 'cid'])
       .execute()
     return res.reduce(
