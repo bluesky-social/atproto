@@ -4,6 +4,7 @@ import { Counter, Gauge, Registry } from 'prom-client'
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/syntax'
 import { WriteOpAction } from '@atproto/repo'
+import { jsonToLex } from '@atproto/lexicon'
 import { Redis, StreamOutputMessage } from '../../../redis'
 import { dataplaneLogger } from '../../../logger'
 import { StreamEvent } from '../types'
@@ -75,7 +76,7 @@ export class StreamIndexer {
         await indexingService.indexRecord(
           AtUri.make(event.did, event.collection, event.rkey),
           CID.parse(event.cid),
-          event.record,
+          jsonToLex(event.record),
           WriteOpAction.Create,
           event.time,
           event.rev,
@@ -85,7 +86,7 @@ export class StreamIndexer {
         await indexingService.indexRecord(
           AtUri.make(event.did, event.collection, event.rkey),
           CID.parse(event.cid),
-          event.record,
+          jsonToLex(event.record),
           WriteOpAction.Update,
           event.time,
           event.rev,
