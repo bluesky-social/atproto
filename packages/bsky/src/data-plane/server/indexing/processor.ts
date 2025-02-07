@@ -68,7 +68,7 @@ export class RecordProcessor<T, S> {
     obj: unknown,
     timestamp: string,
     rev: string,
-    opts?: { disableNotifs?: boolean; force?: true },
+    opts?: { disableNotifs?: boolean },
   ) {
     this.assertValidRecord(obj)
     const applied = await this.db
@@ -90,11 +90,11 @@ export class RecordProcessor<T, S> {
             json: excluded(this.db, 'json'),
             indexedAt: excluded(this.db, 'indexedAt'),
           })
-          .where('record.rev', '<', excluded(this.db, 'rev')),
+          .where('record.rev', '<=', excluded(this.db, 'rev')),
       )
       .returning('uri')
       .executeTakeFirst()
-    if (!applied && !opts?.force) return // stale write
+    if (!applied) return // stale write
     const inserted = await this.params.insertFn(
       this.db,
       uri,
@@ -157,7 +157,7 @@ export class RecordProcessor<T, S> {
             json: excluded(this.db, 'json'),
             indexedAt: excluded(this.db, 'indexedAt'),
           })
-          .where('record.rev', '<', excluded(this.db, 'rev')),
+          .where('record.rev', '<=', excluded(this.db, 'rev')),
       )
       .returning('uri')
       .executeTakeFirst()
@@ -184,7 +184,7 @@ export class RecordProcessor<T, S> {
     const deleted = await this.params.deleteFn(this.db, uri)
     if (!deleted) {
       // If a record was updated but hadn't been indexed yet, treat it like a plain insert.
-      return this.insertRecord(uri, cid, obj, timestamp, rev, { force: true })
+      return this.insertRecord(uri, cid, obj, timestamp, rev, opts)
     }
     this.aggregateOnCommit(deleted)
     const inserted = await this.params.insertFn(
@@ -206,10 +206,11 @@ export class RecordProcessor<T, S> {
   }
 
   async deleteRecord(uri: AtUri, rev: string, cascading = false) {
+    // @TODO track timestamp from deletion. periodically cleanup tombstones?
     const applied = await this.db
       .updateTable('record')
       .where('uri', '=', uri.toString())
-      .where('rev', '<', rev)
+      .where('rev', '<=', rev)
       .set({ rev, json: '', cid: '' })
       .returning('uri')
       .executeTakeFirst()
