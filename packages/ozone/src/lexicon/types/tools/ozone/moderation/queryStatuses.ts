@@ -54,6 +54,7 @@ export interface QueryParams {
     | 'lastReportedAt'
     | 'reportedRecordsCount'
     | 'takendownRecordsCount'
+    | 'priorityScore'
   sortDirection: 'asc' | 'desc'
   /** Get subjects that were taken down */
   takendown?: boolean
@@ -73,6 +74,8 @@ export interface QueryParams {
   minReportedRecordsCount?: number
   /** If specified, only subjects that belong to an account that has at least this many taken down records will be returned. */
   minTakendownRecordsCount?: number
+  /** If specified, only subjects that have priority score value above the given value will be returned. */
+  minPriorityScore?: number
 }
 
 export type InputSchema = undefined

@@ -159,6 +159,7 @@ Object {
         "lastReportedAt": "1970-01-01T00:00:00.000Z",
         "lastReviewedAt": "1970-01-01T00:00:00.000Z",
         "lastReviewedBy": "user(1)",
+        "priorityScore": 0,
         "recordsStats": Object {
           "$type": "tools.ozone.moderation.defs#recordsStats",
           "appealedCount": 0,
@@ -275,6 +276,7 @@ Object {
       "id": 5,
       "lastReviewedAt": "1970-01-01T00:00:00.000Z",
       "lastReviewedBy": "user(1)",
+      "priorityScore": 0,
       "recordsStats": Object {
         "$type": "tools.ozone.moderation.defs#recordsStats",
         "appealedCount": 0,
@@ -356,6 +358,7 @@ Object {
         "lastReportedAt": "1970-01-01T00:00:00.000Z",
         "lastReviewedAt": "1970-01-01T00:00:00.000Z",
         "lastReviewedBy": "user(1)",
+        "priorityScore": 0,
         "recordsStats": Object {
           "$type": "tools.ozone.moderation.defs#recordsStats",
           "appealedCount": 0,

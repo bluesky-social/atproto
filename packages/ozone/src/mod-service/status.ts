@@ -373,6 +373,14 @@ export const adjustModerationSubjectStatus = async (
   }
 
   if (
+    action === 'tools.ozone.moderation.defs#modEventPriorityScore' &&
+    typeof meta?.priorityScore === 'number'
+  ) {
+    newStatus.priorityScore = meta?.priorityScore
+    subjectStatus.priorityScore = meta?.priorityScore
+  }
+
+  if (
     action === 'tools.ozone.moderation.defs#modEventReverseTakedown' &&
     !subjectStatus.takendown
   ) {

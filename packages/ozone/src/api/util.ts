@@ -157,6 +157,7 @@ const eventTypes = new Set([
   'tools.ozone.moderation.defs#accountEvent',
   'tools.ozone.moderation.defs#identityEvent',
   'tools.ozone.moderation.defs#recordEvent',
+  'tools.ozone.moderation.defs#modEventPriorityScore',
 ])
 
 export const getMemberRole = (role: string) => {

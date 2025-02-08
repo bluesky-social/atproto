@@ -7,6 +7,7 @@ import {
 } from '../lexicon/types/app/bsky/feed/postgate'
 import {
   Record as GateRecord,
+  isFollowerRule,
   isFollowingRule,
   isListRule,
   isMentionRule,
@@ -28,6 +29,7 @@ export const parseThreadGate = (
   }
 
   const allowMentions = gate.allow.some(isMentionRule)
+  const allowFollower = gate.allow.some(isFollowerRule)
   const allowFollowing = gate.allow.some(isFollowingRule)
   const allowListUris = gate.allow?.filter(isListRule).map((item) => item.list)
 
@@ -39,15 +41,22 @@ export const parseThreadGate = (
       )
     })
     if (isMentioned) {
-      return { canReply: true, allowMentions, allowFollowing, allowListUris }
+      return {
+        canReply: true,
+        allowMentions,
+        allowFollower,
+        allowFollowing,
+        allowListUris,
+      }
     }
   }
-  return { allowMentions, allowFollowing, allowListUris }
+  return { allowMentions, allowFollower, allowFollowing, allowListUris }
 }
 
 type ParsedThreadGate = {
   canReply?: boolean
   allowMentions?: boolean
+  allowFollower?: boolean
   allowFollowing?: boolean
   allowListUris?: string[]
 }

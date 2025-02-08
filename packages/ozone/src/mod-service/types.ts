@@ -55,6 +55,7 @@ export type ModEventType =
   | ToolsOzoneModerationDefs.AccountEvent
   | ToolsOzoneModerationDefs.IdentityEvent
   | ToolsOzoneModerationDefs.RecordEvent
+  | ToolsOzoneModerationDefs.ModEventPriorityScore
 
 type AccountHostingView = {
   $type: 'tools.ozone.moderation.defs#accountHosting'

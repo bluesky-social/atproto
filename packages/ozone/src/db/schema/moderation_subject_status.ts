@@ -38,6 +38,7 @@ export interface ModerationSubjectStatus {
   appealed: boolean | null
   comment: string | null
   tags: string[] | null
+  priorityScore?: number
 }
 
 export type PartialDB = {

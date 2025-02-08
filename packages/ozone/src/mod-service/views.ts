@@ -114,11 +114,19 @@ export class ModerationViews {
         'tools.ozone.moderation.defs#modEventTakedown',
         'tools.ozone.moderation.defs#modEventLabel',
         'tools.ozone.moderation.defs#modEventMute',
+        'tools.ozone.moderation.defs#modEventPriorityScore',
       ].includes(event.action)
     ) {
       eventView.event = {
         ...eventView.event,
         durationInHours: event.durationInHours ?? undefined,
+      }
+    }
+
+    if (event.action === 'tools.ozone.moderation.defs#modEventPriorityScore') {
+      eventView.event = {
+        ...eventView.event,
+        score: event.meta?.priorityScore ?? 0,
       }
     }
 
@@ -612,6 +620,7 @@ export class ModerationViews {
       subjectRepoHandle: status.handle ?? undefined,
       subjectBlobCids: status.blobCids || [],
       tags: status.tags || [],
+      priorityScore: status.priorityScore,
       subject: subjectFromStatusRow(status).lex(),
 
       accountStats: {
