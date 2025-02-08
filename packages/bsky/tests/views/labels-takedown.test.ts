@@ -121,6 +121,7 @@ describe('bsky takedown labels', () => {
       uri,
       cid: '',
       val: '!takedown',
+      exp: null,
       neg: false,
       cts,
     }))

@@ -1,5 +1,5 @@
 import { ServiceImpl } from '@connectrpc/connect'
-import { Selectable } from 'kysely'
+import { Selectable, sql } from 'kysely'
 import * as ui8 from 'uint8arrays'
 import { noUndefinedVals } from '@atproto/common'
 import { Service } from '../../../proto/bsky_connect'
@@ -14,10 +14,14 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     if (subjects.length === 0 || issuers.length === 0) {
       return { labels: [] }
     }
+
     const res: LabelRow[] = await db.db
       .selectFrom('label')
       .where('uri', 'in', subjects)
       .where('src', 'in', issuers)
+      .where((qb) =>
+        qb.where('exp', 'is', null).orWhere(sql`exp::timestamp > now()`),
+      )
       .selectAll()
       .execute()
 
@@ -34,6 +38,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       return labelsForSub.map((l) => {
         const formatted = noUndefinedVals({
           ...l,
+          exp: l.exp === null ? undefined : l.exp,
           cid: l.cid === '' ? undefined : l.cid,
           neg: l.neg === true ? true : undefined,
         })
