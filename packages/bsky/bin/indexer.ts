@@ -33,12 +33,13 @@ export async function main() {
   const db = new Database({ url: postgresUrl })
   await db.migrateToLatestOrThrow()
   // redis stream indexers
-  const indexers = streams.split(',').map((stream) => {
+  const redises = streams.split(',').map(() => new Redis({ host: redisHost }))
+  const indexers = streams.split(',').map((stream, i) => {
     return new StreamIndexer({
       stream,
       group: `${stream}_group`,
       consumer: `${stream}_group_${consumer}`,
-      redis,
+      redis: redises[i],
       concurrency,
       indexingService: new IndexingService(
         db,
@@ -57,6 +58,7 @@ export async function main() {
   process.on('SIGINT', async () => {
     httpLogger.info('stopping')
     await Promise.all(indexers.map((indexer) => indexer.stop()))
+    await Promise.all(redises.map((redis) => redis.destroy()))
     await redis.destroy()
     await db.close()
     server.close()
