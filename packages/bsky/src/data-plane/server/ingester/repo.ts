@@ -82,7 +82,7 @@ export class RepoIngester {
           collection: op.collection,
           rkey: op.rkey,
           cid: op.cid.toString(),
-          record: await getAndParseRecord(blocks, op.cid),
+          record: (await getAndParseRecord(blocks, op.cid)).record,
           commit: root.toString(),
           rev: repo.commit.rev,
           seq: -1,
