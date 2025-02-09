@@ -1,6 +1,6 @@
 import assert from 'node:assert'
 import PQueue from 'p-queue'
-import { Counter, Gauge, Registry } from 'prom-client'
+import { Counter, Gauge, Histogram, Registry } from 'prom-client'
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/syntax'
 import { WriteOpAction } from '@atproto/repo'
@@ -127,7 +127,16 @@ export class StreamIndexer {
         })
         return
       }
+      const startTime = process.hrtime.bigint()
       await this.process(event).catch(ignoreSkipErrors.bind(null, event))
+      const endTime = process.hrtime.bigint()
+      this.metrics.timing
+        .labels({
+          ...this.metrics.labels,
+          type:
+            event.type + ('collection' in event ? `-${event.collection}` : ''),
+        })
+        .observe(Number(endTime - startTime) / 1e6) // ms
       await this.opts.redis.ackMessage({
         del: true,
         id: msg.cursor,
@@ -171,12 +180,19 @@ export class StreamIndexer {
       help: 'count of running stream messages',
       labelNames: ['stream', 'group', 'consumer'],
     }),
+    timing: new Histogram({
+      name: 'message_processing_time',
+      help: 'time to process each message',
+      labelNames: ['stream', 'group', 'consumer', 'type'],
+    }),
     labels(labels: { stream: string; group: string; consumer: string }) {
       return {
+        labels,
         processed: this.processed.labels(labels),
         failed: this.failed.labels(labels),
         waiting: this.waiting.labels(labels),
         running: this.running.labels(labels),
+        timing: this.timing,
       }
     },
     register(registry: Registry) {
@@ -184,6 +200,7 @@ export class StreamIndexer {
       registry.registerMetric(this.failed)
       registry.registerMetric(this.waiting)
       registry.registerMetric(this.running)
+      registry.registerMetric(this.timing)
     },
   }
 }
