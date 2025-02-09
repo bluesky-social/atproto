@@ -32,8 +32,10 @@ export async function main() {
   const redis = new Redis({ host: redisHost })
   const db = new Database({ url: postgresUrl })
   await db.migrateToLatestOrThrow()
+  await db.close()
   // redis stream indexers
   const indexers = streams.split(',').map((stream) => {
+    const db = new Database({ url: postgresUrl })
     return new StreamIndexer({
       stream,
       group,
