@@ -12,6 +12,7 @@ export interface Record {
   post: string
   /** List of AT-URIs embedding this post that the author has detached from. */
   detachedEmbeddingUris?: string[]
+  /** List of rules defining who can embed this post. If value is an empty array or is undefined, no particular rules apply and anyone can embed. */
   embeddingRules?: (DisableRule | { $type: string; [k: string]: unknown })[]
   [k: string]: unknown
 }

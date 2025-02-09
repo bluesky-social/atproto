@@ -208,7 +208,11 @@ export const getRefreshTokenId = () => {
   return ui8.toString(crypto.randomBytes(32), 'base64')
 }
 
-export const formatScope = (appPassword: AppPassDescript | null): AuthScope => {
+export const formatScope = (
+  appPassword: AppPassDescript | null,
+  isSoftDeleted?: boolean,
+): AuthScope => {
+  if (isSoftDeleted) return AuthScope.Takendown
   if (!appPassword) return AuthScope.Access
   return appPassword.privileged
     ? AuthScope.AppPassPrivileged

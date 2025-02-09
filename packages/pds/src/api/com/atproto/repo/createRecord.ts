@@ -1,14 +1,15 @@
 import { CID } from 'multiformats/cid'
-import { InvalidRequestError, AuthRequiredError } from '@atproto/xrpc-server'
 import { InvalidRecordKeyError } from '@atproto/syntax'
-import { prepareCreate, prepareDelete } from '../../../../repo'
+import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import {
   BadCommitSwapError,
   InvalidRecordError,
   PreparedCreate,
+  prepareCreate,
+  prepareDelete,
 } from '../../../../repo'
-import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.createRecord({

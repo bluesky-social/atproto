@@ -1,16 +1,16 @@
+import { CID } from 'multiformats/cid'
 import { z } from 'zod'
 import { cborEncode, schema } from '@atproto/common'
 import {
   BlockMap,
-  blocksToCarFile,
   CidSet,
   CommitData,
   WriteOpAction,
+  blocksToCarFile,
 } from '@atproto/repo'
-import { PreparedWrite } from '../repo'
-import { CID } from 'multiformats/cid'
-import { RepoSeqInsert } from './db'
 import { AccountStatus } from '../account-manager'
+import { PreparedWrite } from '../repo'
+import { RepoSeqInsert } from './db'
 
 export const formatSeqCommit = async (
   did: string,

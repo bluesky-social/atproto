@@ -36,6 +36,11 @@ export enum FeedType {
    * @generated from enum value: FEED_TYPE_POSTS_WITH_MEDIA = 3;
    */
   POSTS_WITH_MEDIA = 3,
+
+  /**
+   * @generated from enum value: FEED_TYPE_POSTS_WITH_VIDEO = 4;
+   */
+  POSTS_WITH_VIDEO = 4,
 }
 // Retrieve enum metadata with: proto3.getEnumType(FeedType)
 proto3.util.setEnumType(FeedType, 'bsky.FeedType', [
@@ -43,6 +48,7 @@ proto3.util.setEnumType(FeedType, 'bsky.FeedType', [
   { no: 1, name: 'FEED_TYPE_POSTS_AND_AUTHOR_THREADS' },
   { no: 2, name: 'FEED_TYPE_POSTS_NO_REPLIES' },
   { no: 3, name: 'FEED_TYPE_POSTS_WITH_MEDIA' },
+  { no: 4, name: 'FEED_TYPE_POSTS_WITH_VIDEO' },
 ])
 
 /**
@@ -975,6 +981,11 @@ export class PostRecordMeta extends Message<PostRecordMeta> {
    */
   hasThreadGate = false
 
+  /**
+   * @generated from field: bool has_video = 7;
+   */
+  hasVideo = false
+
   constructor(data?: PartialMessage<PostRecordMeta>) {
     super()
     proto3.util.initPartial(data, this)
@@ -1009,6 +1020,7 @@ export class PostRecordMeta extends Message<PostRecordMeta> {
       kind: 'scalar',
       T: 8 /* ScalarType.BOOL */,
     },
+    { no: 7, name: 'has_video', kind: 'scalar', T: 8 /* ScalarType.BOOL */ },
   ])
 
   static fromBinary(
@@ -8540,6 +8552,11 @@ export class AuthorFeedItem extends Message<AuthorFeedItem> {
    */
   isQuotePost = false
 
+  /**
+   * @generated from field: bool posts_with_video = 11;
+   */
+  postsWithVideo = false
+
   constructor(data?: PartialMessage<AuthorFeedItem>) {
     super()
     proto3.util.initPartial(data, this)
@@ -8575,6 +8592,12 @@ export class AuthorFeedItem extends Message<AuthorFeedItem> {
     {
       no: 10,
       name: 'is_quote_post',
+      kind: 'scalar',
+      T: 8 /* ScalarType.BOOL */,
+    },
+    {
+      no: 11,
+      name: 'posts_with_video',
       kind: 'scalar',
       T: 8 /* ScalarType.BOOL */,
     },

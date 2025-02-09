@@ -1,17 +1,16 @@
 import { ServerResponse } from 'node:http'
-
 import { Asset } from '../assets/asset.js'
 import { getAsset } from '../assets/index.js'
-import { cssCode, Html, html } from '../lib/html/index.js'
+import { Html, cssCode, html } from '../lib/html/index.js'
 import {
   AuthorizationResultAuthorize,
   buildAuthorizeData,
 } from './build-authorize-data.js'
 import { buildErrorPayload, buildErrorStatus } from './build-error-payload.js'
 import {
+  Customization,
   buildCustomizationCss,
   buildCustomizationData,
-  Customization,
 } from './customization.js'
 import { declareBackendData, sendWebPage } from './send-web-page.js'
 

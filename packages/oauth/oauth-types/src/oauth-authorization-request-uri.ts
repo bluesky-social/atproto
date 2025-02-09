@@ -1,5 +1,4 @@
 import { z } from 'zod'
-
 import { oauthRequestUriSchema } from './oauth-request-uri.js'
 
 export const oauthAuthorizationRequestUriSchema = z.object({

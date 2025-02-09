@@ -1,22 +1,24 @@
+import { Readable } from 'node:stream'
 import { setImmediate } from 'node:timers/promises'
-import { CID } from 'multiformats/cid'
-import * as cbor from '@ipld/dag-cbor'
 import { CarBlockIterator } from '@ipld/car/iterator'
 import { BlockWriter, CarWriter } from '@ipld/car/writer'
+import * as cbor from '@ipld/dag-cbor'
+import { CID } from 'multiformats/cid'
 import {
-  streamToBuffer,
-  verifyCidForBytes,
+  TID,
+  byteIterableToStream,
   cborDecode,
   check,
-  schema,
   cidForCbor,
-  byteIterableToStream,
-  TID,
+  schema,
+  streamToBuffer,
+  verifyCidForBytes,
 } from '@atproto/common'
-import { ipldToLex, lexToIpld, LexValue, RepoRecord } from '@atproto/lexicon'
-
 import * as crypto from '@atproto/crypto'
-import DataDiff from './data-diff'
+import { Keypair } from '@atproto/crypto'
+import { LexValue, RepoRecord, ipldToLex, lexToIpld } from '@atproto/lexicon'
+import { BlockMap } from './block-map'
+import { DataDiff } from './data-diff'
 import {
   CarBlock,
   Commit,
@@ -29,9 +31,6 @@ import {
   UnsignedCommit,
   WriteOpAction,
 } from './types'
-import BlockMap from './block-map'
-import { Keypair } from '@atproto/crypto'
-import { Readable } from 'stream'
 
 export async function* verifyIncomingCarBlocks(
   car: AsyncIterable<CarBlock>,

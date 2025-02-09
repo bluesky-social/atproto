@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { ValidationError } from '@atproto/lexicon'
 
 export type QueryParams = Record<string, any>
-export type HeadersMap = Record<string, string>
+export type HeadersMap = Record<string, string | undefined>
 
 export type {
   /** @deprecated not to be confused with the WHATWG Headers constructor */

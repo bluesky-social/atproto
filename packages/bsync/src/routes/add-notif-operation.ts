@@ -1,11 +1,11 @@
-import { sql } from 'kysely'
 import { Code, ConnectError, ServiceImpl } from '@connectrpc/connect'
+import { sql } from 'kysely'
+import { AppContext } from '../context'
+import { Database } from '../db'
+import { createNotifOpChannel } from '../db/schema/notif_op'
 import { Service } from '../proto/bsync_connect'
 import { AddNotifOperationResponse } from '../proto/bsync_pb'
-import AppContext from '../context'
 import { authWithApiKey } from './auth'
-import Database from '../db'
-import { createNotifOpChannel } from '../db/schema/notif_op'
 import { isValidDid } from './util'
 
 export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({

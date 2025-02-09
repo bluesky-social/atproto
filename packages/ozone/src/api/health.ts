@@ -1,9 +1,16 @@
-import express from 'express'
+import { Router } from 'express'
 import { sql } from 'kysely'
-import AppContext from '../context'
+import { AppContext } from '../context'
 
-export const createRouter = (ctx: AppContext): express.Router => {
-  const router = express.Router()
+export const createRouter = (ctx: AppContext): Router => {
+  const router = Router()
+
+  router.get('/robots.txt', function (req, res) {
+    res.type('text/plain')
+    res.send(
+      '# Hello Friends!\n\n# Crawling the public parts of the API is allowed. HTTP 429 ("backoff") status codes are used for rate-limiting. Up to a handful concurrent requests should be ok.\nUser-agent: *\nAllow: /',
+    )
+  })
 
   router.get('/xrpc/_health', async function (req, res) {
     const { version } = ctx.cfg.service

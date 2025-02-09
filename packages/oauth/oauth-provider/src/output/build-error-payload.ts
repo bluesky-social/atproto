@@ -1,7 +1,6 @@
-import { JwtVerifyError } from '@atproto/jwk'
 import { errors } from 'jose'
 import { ZodError } from 'zod'
-
+import { JwtVerifyError } from '@atproto/jwk'
 import { OAuthError } from '../errors/oauth-error.js'
 
 const { JOSEError } = errors

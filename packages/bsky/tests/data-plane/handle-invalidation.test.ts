@@ -1,6 +1,6 @@
-import { DAY } from '@atproto/common'
-import { TestNetwork, SeedClient, usersSeed } from '@atproto/dev-env'
 import { AtpAgent } from '@atproto/api'
+import { DAY } from '@atproto/common'
+import { SeedClient, TestNetwork, usersSeed } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
 
 describe('handle invalidation', () => {

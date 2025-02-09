@@ -1,13 +1,13 @@
-import Database from '../db'
 import { Selectable } from 'kysely'
-import { Member } from '../db/schema/member'
-import { Member as TeamMember } from '../lexicon/types/tools/ozone/team/defs'
-import { ProfileViewDetailed } from '../lexicon/types/app/bsky/actor/defs'
-import { InvalidRequestError } from '@atproto/xrpc-server'
 import { chunkArray } from '@atproto/common'
-import AppContext from '../context'
-import { httpLogger } from '../logger'
+import { InvalidRequestError } from '@atproto/xrpc-server'
+import { AppContext } from '../context'
+import { Database } from '../db'
+import { Member } from '../db/schema/member'
 import { ids } from '../lexicon/lexicons'
+import { ProfileViewDetailed } from '../lexicon/types/app/bsky/actor/defs'
+import { Member as TeamMember } from '../lexicon/types/tools/ozone/team/defs'
+import { httpLogger } from '../logger'
 
 export type TeamServiceCreator = (db: Database) => TeamService
 

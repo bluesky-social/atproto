@@ -1,6 +1,6 @@
+import * as jose from 'jose'
 import { AtpAgent } from '@atproto/api'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
-import * as jose from 'jose'
 
 describe('app_passwords', () => {
   let network: TestNetworkNoAppView

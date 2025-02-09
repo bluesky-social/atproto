@@ -1,5 +1,5 @@
+import { AppContext } from '../../context'
 import { Server } from '../../lexicon'
-import AppContext from '../../context'
 import { getEventType } from '../util'
 
 export default function (server: Server, ctx: AppContext) {
@@ -25,6 +25,7 @@ export default function (server: Server, ctx: AppContext) {
         reportTypes,
         collections = [],
         subjectType,
+        policies,
       } = params
       const db = ctx.db
       const modService = ctx.modService(db)
@@ -47,6 +48,7 @@ export default function (server: Server, ctx: AppContext) {
         reportTypes,
         collections,
         subjectType,
+        policies,
       })
       return {
         encoding: 'application/json',

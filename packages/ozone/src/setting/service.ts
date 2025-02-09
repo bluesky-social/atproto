@@ -1,10 +1,10 @@
-import Database from '../db'
-import { Selectable } from 'kysely'
-import { Option } from '../lexicon/types/tools/ozone/setting/defs'
-import { Setting, SettingScope } from '../db/schema/setting'
-import { Member } from '../db/schema/member'
 import assert from 'node:assert'
+import { Selectable } from 'kysely'
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { Database } from '../db'
+import { Member } from '../db/schema/member'
+import { Setting, SettingScope } from '../db/schema/setting'
+import { Option } from '../lexicon/types/tools/ozone/setting/defs'
 
 export type SettingServiceCreator = (db: Database) => SettingService
 

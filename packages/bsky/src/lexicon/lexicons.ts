@@ -1122,6 +1122,29 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoLexiconSchema: {
+    lexicon: 1,
+    id: 'com.atproto.lexicon.schema',
+    defs: {
+      main: {
+        type: 'record',
+        description:
+          "Representation of Lexicon schemas themselves, when published as atproto records. Note that the schema language is not defined in Lexicon; this meta schema currently only includes a single version field ('lexicon'). See the atproto specifications for description of the other expected top-level fields ('id', 'defs', etc).",
+        key: 'nsid',
+        record: {
+          type: 'object',
+          required: ['lexicon'],
+          properties: {
+            lexicon: {
+              type: 'integer',
+              description:
+                "Indicates the 'version' of the Lexicon language. Must be '1' for the current atproto/Lexicon schema system.",
+            },
+          },
+        },
+      },
+    },
+  },
   ComAtprotoModerationCreateReport: {
     lexicon: 1,
     id: 'com.atproto.moderation.createReport',
@@ -2411,6 +2434,11 @@ export const schemaDict = {
               },
               authFactorToken: {
                 type: 'string',
+              },
+              allowTakendown: {
+                type: 'boolean',
+                description:
+                  'When true, instead of throwing error for takendown accounts, a valid response with a narrow scoped token will be returned',
               },
             },
           },
@@ -4353,6 +4381,7 @@ export const schemaDict = {
             'lex:app.bsky.actor.defs#hiddenPostsPref',
             'lex:app.bsky.actor.defs#bskyAppStatePref',
             'lex:app.bsky.actor.defs#labelersPref',
+            'lex:app.bsky.actor.defs#postInteractionSettingsPref',
           ],
         },
       },
@@ -4686,6 +4715,39 @@ export const schemaDict = {
           },
         },
       },
+      postInteractionSettingsPref: {
+        type: 'object',
+        description:
+          'Default post interaction settings for the account. These values should be applied as default values when creating new posts. These refs should mirror the threadgate and postgate records exactly.',
+        required: [],
+        properties: {
+          threadgateAllowRules: {
+            description:
+              'Matches threadgate record. List of rules defining who can reply to this users posts. If value is an empty array, no one can reply. If value is undefined, anyone can reply.',
+            type: 'array',
+            maxLength: 5,
+            items: {
+              type: 'union',
+              refs: [
+                'lex:app.bsky.feed.threadgate#mentionRule',
+                'lex:app.bsky.feed.threadgate#followerRule',
+                'lex:app.bsky.feed.threadgate#followingRule',
+                'lex:app.bsky.feed.threadgate#listRule',
+              ],
+            },
+          },
+          postgateEmbeddingRules: {
+            description:
+              'Matches postgate record. List of rules defining who can embed this users posts. If value is an empty array or is undefined, no particular rules apply and anyone can embed.',
+            type: 'array',
+            maxLength: 5,
+            items: {
+              type: 'union',
+              refs: ['lex:app.bsky.feed.postgate#disableRule'],
+            },
+          },
+        },
+      },
     },
   },
   AppBskyActorGetPreferences: {
@@ -4822,6 +4884,11 @@ export const schemaDict = {
                   type: 'ref',
                   ref: 'lex:app.bsky.actor.defs#profileView',
                 },
+              },
+              recId: {
+                type: 'integer',
+                description:
+                  'Snowflake for this recommendation, use when submitting recommendation events.',
               },
             },
           },
@@ -5540,6 +5607,17 @@ export const schemaDict = {
           },
         },
       },
+      threadContext: {
+        type: 'object',
+        description:
+          'Metadata about this post within the context of the thread it is in.',
+        properties: {
+          rootAuthorLike: {
+            type: 'string',
+            format: 'at-uri',
+          },
+        },
+      },
       feedViewPost: {
         type: 'object',
         required: ['post'],
@@ -5639,6 +5717,10 @@ export const schemaDict = {
                 'lex:app.bsky.feed.defs#blockedPost',
               ],
             },
+          },
+          threadContext: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.defs#threadContext',
           },
         },
       },
@@ -5744,6 +5826,13 @@ export const schemaDict = {
           viewer: {
             type: 'ref',
             ref: 'lex:app.bsky.feed.defs#generatorViewerState',
+          },
+          contentMode: {
+            type: 'string',
+            knownValues: [
+              'app.bsky.feed.defs#contentModeUnspecified',
+              'app.bsky.feed.defs#contentModeVideo',
+            ],
           },
           indexedAt: {
             type: 'string',
@@ -5879,6 +5968,15 @@ export const schemaDict = {
         description:
           'User clicked through to the embedded content of the feed item',
       },
+      contentModeUnspecified: {
+        type: 'token',
+        description: 'Declares the feed generator returns any types of posts.',
+      },
+      contentModeVideo: {
+        type: 'token',
+        description:
+          'Declares the feed generator returns posts containing app.bsky.embed.video embeds.',
+      },
       interactionSeen: {
         type: 'token',
         description: 'Feed item was seen by user',
@@ -6009,6 +6107,13 @@ export const schemaDict = {
               type: 'union',
               description: 'Self-label values',
               refs: ['lex:com.atproto.label.defs#selfLabels'],
+            },
+            contentMode: {
+              type: 'string',
+              knownValues: [
+                'app.bsky.feed.defs#contentModeUnspecified',
+                'app.bsky.feed.defs#contentModeVideo',
+              ],
             },
             createdAt: {
               type: 'string',
@@ -6159,6 +6264,7 @@ export const schemaDict = {
                 'posts_no_replies',
                 'posts_with_media',
                 'posts_and_author_threads',
+                'posts_with_video',
               ],
               default: 'posts_with_replies',
             },
@@ -7048,6 +7154,8 @@ export const schemaDict = {
                 'List of AT-URIs embedding this post that the author has detached from.',
             },
             embeddingRules: {
+              description:
+                'List of rules defining who can embed this post. If value is an empty array or is undefined, no particular rules apply and anyone can embed.',
               type: 'array',
               maxLength: 5,
               items: {
@@ -7261,12 +7369,15 @@ export const schemaDict = {
               description: 'Reference (AT-URI) to the post record.',
             },
             allow: {
+              description:
+                'List of rules defining who can reply to this post. If value is an empty array, no one can reply. If value is undefined, anyone can reply.',
               type: 'array',
               maxLength: 5,
               items: {
                 type: 'union',
                 refs: [
                   'lex:app.bsky.feed.threadgate#mentionRule',
+                  'lex:app.bsky.feed.threadgate#followerRule',
                   'lex:app.bsky.feed.threadgate#followingRule',
                   'lex:app.bsky.feed.threadgate#listRule',
                 ],
@@ -7291,6 +7402,11 @@ export const schemaDict = {
       mentionRule: {
         type: 'object',
         description: 'Allow replies from actors mentioned in your post.',
+        properties: {},
+      },
+      followerRule: {
+        type: 'object',
+        description: 'Allow replies from actors who follow you.',
         properties: {},
       },
       followingRule: {
@@ -8330,6 +8446,11 @@ export const schemaDict = {
                   'If true, response has fallen-back to generic results, and is not scoped using relativeToDid',
                 default: false,
               },
+              recId: {
+                type: 'integer',
+                description:
+                  'Snowflake for this recommendation, use when submitting recommendation events.',
+              },
             },
           },
         },
@@ -9257,6 +9378,24 @@ export const schemaDict = {
           },
         },
       },
+      trendingTopic: {
+        type: 'object',
+        required: ['topic', 'link'],
+        properties: {
+          topic: {
+            type: 'string',
+          },
+          displayName: {
+            type: 'string',
+          },
+          description: {
+            type: 'string',
+          },
+          link: {
+            type: 'string',
+          },
+        },
+      },
     },
   },
   AppBskyUnspeccedGetConfig: {
@@ -9383,6 +9522,11 @@ export const schemaDict = {
                 description:
                   'DID of the account these suggestions are relative to. If this is returned undefined, suggestions are based on the viewer.',
               },
+              recId: {
+                type: 'integer',
+                description:
+                  'Snowflake for this recommendation, use when submitting recommendation events.',
+              },
             },
           },
         },
@@ -9432,6 +9576,56 @@ export const schemaDict = {
           subject: {
             type: 'string',
             format: 'uri',
+          },
+        },
+      },
+    },
+  },
+  AppBskyUnspeccedGetTrendingTopics: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.getTrendingTopics',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get a list of trending topics',
+        parameters: {
+          type: 'params',
+          properties: {
+            viewer: {
+              type: 'string',
+              format: 'did',
+              description:
+                'DID of the account making the request (not included for public/unauthenticated queries). Used to boost followed accounts in ranking.',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 25,
+              default: 10,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['topics', 'suggested'],
+            properties: {
+              topics: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.unspecced.defs#trendingTopic',
+                },
+              },
+              suggested: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.unspecced.defs#trendingTopic',
+                },
+              },
+            },
           },
         },
       },
@@ -10771,6 +10965,7 @@ export const ids = {
   ComAtprotoLabelDefs: 'com.atproto.label.defs',
   ComAtprotoLabelQueryLabels: 'com.atproto.label.queryLabels',
   ComAtprotoLabelSubscribeLabels: 'com.atproto.label.subscribeLabels',
+  ComAtprotoLexiconSchema: 'com.atproto.lexicon.schema',
   ComAtprotoModerationCreateReport: 'com.atproto.moderation.createReport',
   ComAtprotoModerationDefs: 'com.atproto.moderation.defs',
   ComAtprotoRepoApplyWrites: 'com.atproto.repo.applyWrites',
@@ -10920,6 +11115,7 @@ export const ids = {
     'app.bsky.unspecced.getSuggestionsSkeleton',
   AppBskyUnspeccedGetTaggedSuggestions:
     'app.bsky.unspecced.getTaggedSuggestions',
+  AppBskyUnspeccedGetTrendingTopics: 'app.bsky.unspecced.getTrendingTopics',
   AppBskyUnspeccedSearchActorsSkeleton:
     'app.bsky.unspecced.searchActorsSkeleton',
   AppBskyUnspeccedSearchPostsSkeleton: 'app.bsky.unspecced.searchPostsSkeleton',

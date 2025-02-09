@@ -1,18 +1,18 @@
-import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getTimeline'
-import { clearlyBadCursor, resHeaders } from '../../../util'
-import { createPipeline } from '../../../../pipeline'
+import { mapDefined } from '@atproto/common'
+import { AppContext } from '../../../../context'
+import { DataPlaneClient } from '../../../../data-plane'
+import { FeedItem } from '../../../../hydration/feed'
 import {
   HydrateCtx,
   HydrationState,
   Hydrator,
 } from '../../../../hydration/hydrator'
-import { Views } from '../../../../views'
-import { DataPlaneClient } from '../../../../data-plane'
 import { parseString } from '../../../../hydration/util'
-import { mapDefined } from '@atproto/common'
-import { FeedItem } from '../../../../hydration/feed'
+import { Server } from '../../../../lexicon'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getTimeline'
+import { createPipeline } from '../../../../pipeline'
+import { Views } from '../../../../views'
+import { clearlyBadCursor, resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   const getTimeline = createPipeline(

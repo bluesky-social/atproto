@@ -1,7 +1,7 @@
-import murmur from 'murmurhash'
 import { Struct, Timestamp } from '@bufbuild/protobuf'
+import { v3 as murmurV3 } from 'murmurhash'
+import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.notification.updateSeen({
@@ -45,5 +45,5 @@ function getNotifId(viewer: string, seenAt: Date) {
   const key = ['mark-read-generic', viewer, seenAt.getTime().toString()].join(
     '::',
   )
-  return murmur.v3(key).toString(16)
+  return murmurV3(key).toString(16)
 }

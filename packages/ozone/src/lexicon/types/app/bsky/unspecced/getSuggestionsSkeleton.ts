@@ -25,6 +25,8 @@ export interface OutputSchema {
   actors: AppBskyUnspeccedDefs.SkeletonSearchActor[]
   /** DID of the account these suggestions are relative to. If this is returned undefined, suggestions are based on the viewer. */
   relativeToDid?: string
+  /** Snowflake for this recommendation, use when submitting recommendation events. */
+  recId?: number
   [k: string]: unknown
 }
 
@@ -48,6 +50,7 @@ export type HandlerReqCtx<HA extends HandlerAuth = never> = {
   input: HandlerInput
   req: express.Request
   res: express.Response
+  resetRouteRateLimits: () => Promise<void>
 }
 export type Handler<HA extends HandlerAuth = never> = (
   ctx: HandlerReqCtx<HA>,

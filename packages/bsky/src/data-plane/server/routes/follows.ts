@@ -1,5 +1,5 @@
-import { keyBy } from '@atproto/common'
 import { ServiceImpl } from '@connectrpc/connect'
+import { keyBy } from '@atproto/common'
 import { Service } from '../../../proto/bsky_connect'
 import { FollowsFollowing } from '../../../proto/bsky_pb'
 import { Database } from '../db'
@@ -18,7 +18,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .selectAll()
       .execute()
     const bySubject = keyBy(res, 'subjectDid')
-    const uris = targetDids.map((did) => bySubject[did]?.uri ?? '')
+    const uris = targetDids.map((did) => bySubject.get(did)?.uri ?? '')
     return {
       uris,
     }

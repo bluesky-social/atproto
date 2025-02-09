@@ -1,38 +1,39 @@
-import express from 'express'
-import http from 'http'
-import { AddressInfo } from 'net'
-import events from 'events'
-import { createHttpTerminator, HttpTerminator } from 'http-terminator'
-import cors from 'cors'
+import events from 'node:events'
+import http from 'node:http'
+import { AddressInfo } from 'node:net'
 import compression from 'compression'
+import cors from 'cors'
+import express from 'express'
+import { HttpTerminator, createHttpTerminator } from 'http-terminator'
 import { AtpAgent } from '@atproto/api'
-import { IdResolver } from '@atproto/identity'
 import { DAY, SECOND } from '@atproto/common'
-import API, { health, wellKnown, blobResolver } from './api'
-import * as error from './error'
-import { loggerMiddleware } from './logger'
-import { ServerConfig } from './config'
-import { createServer } from './lexicon'
-import { ImageUriBuilder } from './image/uri'
-import { BlobDiskCache, ImageProcessingServer } from './image/server'
-import AppContext from './context'
 import { Keypair } from '@atproto/crypto'
-import { createDataPlaneClient } from './data-plane/client'
-import { Hydrator } from './hydration/hydrator'
-import { Views } from './views'
+import { IdResolver } from '@atproto/identity'
+import API, { blobResolver, health, wellKnown } from './api'
+import { createBlobDispatcher } from './api/blob-dispatcher'
 import { AuthVerifier, createPublicKeyObject } from './auth-verifier'
 import { authWithApiKey as bsyncAuth, createBsyncClient } from './bsync'
+import { ServerConfig } from './config'
+import { AppContext } from './context'
 import { authWithApiKey as courierAuth, createCourierClient } from './courier'
+import { createDataPlaneClient } from './data-plane/client'
+import * as error from './error'
 import { FeatureGates } from './feature-gates'
+import { Hydrator } from './hydration/hydrator'
+import * as imageServer from './image/server'
+import { ImageUriBuilder } from './image/uri'
+import { createServer } from './lexicon'
+import { loggerMiddleware } from './logger'
+import { Views } from './views'
 import { VideoUriBuilder } from './views/util'
 
-export * from './data-plane'
-export type { ServerConfigValues } from './config'
 export { ServerConfig } from './config'
+export type { ServerConfigValues } from './config'
+export { AppContext } from './context'
+export * from './data-plane'
+export { BackgroundQueue } from './data-plane/server/background'
 export { Database } from './data-plane/server/db'
 export { Redis } from './redis'
-export { AppContext } from './context'
-export { BackgroundQueue } from './data-plane/server/background'
 
 export class BskyAppView {
   public ctx: AppContext
@@ -73,15 +74,6 @@ export class BskyAppView {
         `${config.publicUrl}/vid/%s/%s/thumbnail.jpg`,
     })
 
-    let imgProcessingServer: ImageProcessingServer | undefined
-    if (!config.cdnUrl) {
-      const imgProcessingCache = new BlobDiskCache(config.blobCacheLocation)
-      imgProcessingServer = new ImageProcessingServer(
-        config,
-        imgProcessingCache,
-      )
-    }
-
     const searchAgent = config.searchUrl
       ? new AtpAgent({ service: config.searchUrl })
       : undefined
@@ -93,6 +85,16 @@ export class BskyAppView {
       suggestionsAgent.api.setHeader(
         'authorization',
         `Bearer ${config.suggestionsApiKey}`,
+      )
+    }
+
+    const topicsAgent = config.topicsUrl
+      ? new AtpAgent({ service: config.topicsUrl })
+      : undefined
+    if (topicsAgent && config.topicsApiKey) {
+      topicsAgent.api.setHeader(
+        'authorization',
+        `Bearer ${config.topicsApiKey}`,
       )
     }
 
@@ -141,11 +143,14 @@ export class BskyAppView {
       env: config.statsigEnv,
     })
 
+    const blobDispatcher = createBlobDispatcher(config)
+
     const ctx = new AppContext({
       cfg: config,
       dataplane,
       searchAgent,
       suggestionsAgent,
+      topicsAgent,
       hydrator,
       views,
       signingKey,
@@ -154,6 +159,7 @@ export class BskyAppView {
       courierClient,
       authVerifier,
       featureGates,
+      blobDispatcher,
     })
 
     let server = createServer({
@@ -169,10 +175,8 @@ export class BskyAppView {
 
     app.use(health.createRouter(ctx))
     app.use(wellKnown.createRouter(ctx))
-    app.use(blobResolver.createRouter(ctx))
-    if (imgProcessingServer) {
-      app.use('/img', imgProcessingServer.app)
-    }
+    app.use(blobResolver.createMiddleware(ctx))
+    app.use(imageServer.createMiddleware(ctx, { prefix: '/img/' }))
     app.use(server.xrpc.router)
     app.use(error.handler)
 

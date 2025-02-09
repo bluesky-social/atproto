@@ -1,11 +1,11 @@
 import assert from 'node:assert'
-import { InvalidRequestError } from '@atproto/xrpc-server'
 import { DAY, MINUTE } from '@atproto/common'
+import { InvalidRequestError } from '@atproto/xrpc-server'
+import { AppContext } from '../../../../context'
 import { normalizeAndValidateHandle } from '../../../../handle'
 import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
-import { httpLogger } from '../../../../logger'
 import { ids } from '../../../../lexicon/lexicons'
+import { httpLogger } from '../../../../logger'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.identity.updateHandle({

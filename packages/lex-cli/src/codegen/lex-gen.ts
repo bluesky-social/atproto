@@ -1,18 +1,18 @@
+import { relative as getRelativePath } from 'node:path'
 import { SourceFile, VariableDeclarationKind } from 'ts-morph'
-import { relative as getRelativePath } from 'path'
 import {
-  Lexicons,
-  LexUserType,
-  LexObject,
   LexArray,
-  LexPrimitive,
   LexBlob,
-  LexToken,
-  LexCidLink,
   LexBytes,
+  LexCidLink,
   LexIpldType,
+  LexObject,
+  LexPrimitive,
+  LexToken,
+  LexUserType,
+  Lexicons,
 } from '@atproto/lexicon'
-import { toCamelCase, toTitleCase, toScreamingSnakeCase } from './util'
+import { toCamelCase, toScreamingSnakeCase, toTitleCase } from './util'
 
 interface Commentable<T> {
   addJsDoc: ({ description }: { description: string }) => T

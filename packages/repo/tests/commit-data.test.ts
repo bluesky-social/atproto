@@ -1,6 +1,6 @@
 import { Secp256k1Keypair } from '@atproto/crypto'
+import { Repo, WriteOpAction, blocksToCarFile, verifyProofs } from '../src'
 import { MemoryBlockstore } from '../src/storage'
-import { blocksToCarFile, Repo, verifyProofs, WriteOpAction } from '../src'
 
 describe('Commit data', () => {
   // @NOTE this test uses a fully deterministic tree structure

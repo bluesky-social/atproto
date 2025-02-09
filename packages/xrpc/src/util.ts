@@ -1,17 +1,17 @@
 import {
-  jsonStringToLex,
   LexXrpcProcedure,
   LexXrpcQuery,
+  jsonStringToLex,
   stringifyLex,
 } from '@atproto/lexicon'
 import {
   CallOptions,
-  errorResponseBody,
   ErrorResponseBody,
   Gettable,
   QueryParams,
   ResponseType,
   XRPCError,
+  errorResponseBody,
 } from './types'
 
 const ReadableStream =

@@ -1,39 +1,30 @@
-import AppContext from '../../../../context'
+import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-
-import describeServer from './describeServer'
-
+import activateAccount from './activateAccount'
+import checkAccountStatus from './checkAccountStatus'
+import confirmEmail from './confirmEmail'
 import createAccount from './createAccount'
+import createAppPassword from './createAppPassword'
 import createInviteCode from './createInviteCode'
 import createInviteCodes from './createInviteCodes'
-import getAccountInviteCodes from './getAccountInviteCodes'
-import reserveSigningKey from './reserveSigningKey'
-
-import requestDelete from './requestAccountDelete'
-import deleteAccount from './deleteAccount'
-
-import requestPasswordReset from './requestPasswordReset'
-import resetPassword from './resetPassword'
-
-import requestEmailConfirmation from './requestEmailConfirmation'
-import confirmEmail from './confirmEmail'
-
-import requestEmailUpdate from './requestEmailUpdate'
-import updateEmail from './updateEmail'
-
 import createSession from './createSession'
-import deleteSession from './deleteSession'
-import getSession from './getSession'
-import refreshSession from './refreshSession'
-
-import createAppPassword from './createAppPassword'
-import listAppPasswords from './listAppPasswords'
-import revokeAppPassword from './revokeAppPassword'
-
-import getServiceAuth from './getServiceAuth'
-import checkAccountStatus from './checkAccountStatus'
-import activateAccount from './activateAccount'
 import deactivateAccount from './deactivateAccount'
+import deleteAccount from './deleteAccount'
+import deleteSession from './deleteSession'
+import describeServer from './describeServer'
+import getAccountInviteCodes from './getAccountInviteCodes'
+import getServiceAuth from './getServiceAuth'
+import getSession from './getSession'
+import listAppPasswords from './listAppPasswords'
+import refreshSession from './refreshSession'
+import requestDelete from './requestAccountDelete'
+import requestEmailConfirmation from './requestEmailConfirmation'
+import requestEmailUpdate from './requestEmailUpdate'
+import requestPasswordReset from './requestPasswordReset'
+import reserveSigningKey from './reserveSigningKey'
+import resetPassword from './resetPassword'
+import revokeAppPassword from './revokeAppPassword'
+import updateEmail from './updateEmail'
 
 export default function (server: Server, ctx: AppContext) {
   describeServer(server, ctx)

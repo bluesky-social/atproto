@@ -52,6 +52,7 @@ export type HandlerReqCtx<HA extends HandlerAuth = never> = {
   input: HandlerInput
   req: express.Request
   res: express.Response
+  resetRouteRateLimits: () => Promise<void>
 }
 export type Handler<HA extends HandlerAuth = never> = (
   ctx: HandlerReqCtx<HA>,

@@ -1,17 +1,17 @@
+import { AtpAgent } from '@atproto/api'
 import {
+  ModeratorClient,
   SeedClient,
   TestNetwork,
   TestOzone,
   basicSeed,
-  ModeratorClient,
 } from '@atproto/dev-env'
-import { AtpAgent } from '@atproto/api'
+import { ids } from '../src/lexicon/lexicons'
 import {
   REASONOTHER,
   REASONSPAM,
 } from '../src/lexicon/types/com/atproto/moderation/defs'
 import { forSnapshot } from './_util'
-import { ids } from '../src/lexicon/lexicons'
 
 describe('admin get repo view', () => {
   let network: TestNetwork
@@ -35,6 +35,10 @@ describe('admin get repo view', () => {
       {},
       { encoding: 'application/json', headers: sc.getHeaders(sc.dids.dan) },
     )
+    await network.processAll()
+  })
+
+  beforeEach(async () => {
     await network.processAll()
   })
 

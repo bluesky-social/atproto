@@ -9,6 +9,13 @@
       "options": {
         "singleQuote": false
       }
+    },
+    {
+      "files": [".eslintrc"],
+      "options": {
+        "parser": "json",
+        "trailingComma": "none"
+      }
     }
   ]
 }

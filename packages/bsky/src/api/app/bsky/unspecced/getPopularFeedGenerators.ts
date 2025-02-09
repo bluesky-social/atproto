@@ -1,7 +1,7 @@
 import { mapDefined } from '@atproto/common'
-import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
+import { AppContext } from '../../../../context'
 import { parseString } from '../../../../hydration/util'
+import { Server } from '../../../../lexicon'
 import { clearlyBadCursor, resHeaders } from '../../../util'
 
 // THIS IS A TEMPORARY UNSPECCED ROUTE

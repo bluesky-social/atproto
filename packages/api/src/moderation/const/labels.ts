@@ -9,6 +9,7 @@ export type KnownLabelValue =
   | 'sexual'
   | 'nudity'
   | 'graphic-media'
+  | 'gore'
 
 export const DEFAULT_LABEL_SETTINGS: Record<string, LabelPreference> = {
   porn: 'hide',
@@ -173,6 +174,29 @@ export const LABELS: Record<KnownLabelValue, InterpretedLabelValueDefinition> =
     },
     'graphic-media': {
       identifier: 'graphic-media',
+      flags: ['adult'],
+      configurable: true,
+      defaultSetting: 'warn',
+      severity: 'none',
+      blurs: 'media',
+      behaviors: {
+        account: {
+          avatar: 'blur',
+          banner: 'blur',
+        },
+        profile: {
+          avatar: 'blur',
+          banner: 'blur',
+        },
+        content: {
+          contentMedia: 'blur',
+        },
+      },
+      locales: [],
+    },
+    /** @deprecated alias for `graphic-media` */
+    gore: {
+      identifier: 'gore',
       flags: ['adult'],
       configurable: true,
       defaultSetting: 'warn',

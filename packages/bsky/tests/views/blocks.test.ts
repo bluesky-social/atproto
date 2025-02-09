@@ -1,8 +1,8 @@
-import assert from 'assert'
-import { TestNetwork, RecordRef, SeedClient, basicSeed } from '@atproto/dev-env'
-import { AtpAgent, AtUri } from '@atproto/api'
-import { assertIsThreadViewPost, forSnapshot } from '../_util'
+import assert from 'node:assert'
+import { AtUri, AtpAgent } from '@atproto/api'
+import { RecordRef, SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
+import { assertIsThreadViewPost, forSnapshot } from '../_util'
 
 describe('pds views with blocking', () => {
   let network: TestNetwork

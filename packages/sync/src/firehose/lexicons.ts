@@ -1,8 +1,7 @@
 import type { IncomingMessage } from 'node:http'
-
+import type { CID } from 'multiformats/cid'
 import { type LexiconDoc, Lexicons } from '@atproto/lexicon'
 import type { ErrorFrame, HandlerAuth } from '@atproto/xrpc-server'
-import type { CID } from 'multiformats/cid'
 
 // @NOTE: this file is an ugly copy job of codegen output. I'd like to clean this whole thing up
 

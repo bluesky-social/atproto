@@ -1,19 +1,18 @@
-import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
-import { ActorStoreTransactor } from '../../../../actor-store'
+import { CID } from 'multiformats/cid'
+import PQueue from 'p-queue'
 import { TID } from '@atproto/common'
+import { BlobRef, LexValue, RepoRecord } from '@atproto/lexicon'
 import {
-  Repo,
   WriteOpAction,
   getAndParseRecord,
   readCarStream,
   verifyDiff,
 } from '@atproto/repo'
-import { InvalidRequestError } from '@atproto/xrpc-server'
-import { CID } from 'multiformats/cid'
-import PQueue from 'p-queue'
 import { AtUri } from '@atproto/syntax'
-import { BlobRef, LexValue, RepoRecord } from '@atproto/lexicon'
+import { InvalidRequestError } from '@atproto/xrpc-server'
+import { ActorStoreTransactor } from '../../../../actor-store/actor-store-transactor'
+import { AppContext } from '../../../../context'
+import { Server } from '../../../../lexicon'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.importRepo({
@@ -44,13 +43,7 @@ const importRepo = async (
   if (roots.length !== 1) {
     throw new InvalidRequestError('expected one root')
   }
-  const currRoot = await actorStore.db.db
-    .selectFrom('repo_root')
-    .selectAll()
-    .executeTakeFirst()
-  const currRepo = currRoot
-    ? await Repo.load(actorStore.repo.storage, CID.parse(currRoot.cid))
-    : null
+  const currRepo = await actorStore.repo.maybeLoadRepo()
   const diff = await verifyDiff(
     currRepo,
     blocks,
@@ -89,18 +82,10 @@ const importRepo = async (
               now,
             )
             const recordBlobs = findBlobRefs(parsedRecord)
-            const blobValues = recordBlobs.map((cid) => ({
-              recordUri: uri.toString(),
-              blobCid: cid.ref.toString(),
-            }))
-            const indexRecordBlobs =
-              blobValues.length > 0
-                ? actorStore.db.db
-                    .insertInto('record_blob')
-                    .values(blobValues)
-                    .onConflict((oc) => oc.doNothing())
-                    .execute()
-                : Promise.resolve()
+            const indexRecordBlobs = actorStore.repo.blob.insertBlobs(
+              uri.toString(),
+              recordBlobs,
+            )
             await Promise.all([indexRecord, indexRecordBlobs])
           }
         },

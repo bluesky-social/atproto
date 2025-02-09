@@ -2,10 +2,10 @@ import TLDs from 'tlds'
 import { AppBskyRichtextFacet } from '../client'
 import { UnicodeString } from './unicode'
 import {
-  URL_REGEX,
   MENTION_REGEX,
   TAG_REGEX,
   TRAILING_PUNCTUATION_REGEX,
+  URL_REGEX,
 } from './util'
 
 export type Facet = AppBskyRichtextFacet.Main

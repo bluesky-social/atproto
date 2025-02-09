@@ -309,6 +309,7 @@ export class CredentialSession implements SessionManager {
         identifier: opts.identifier,
         password: opts.password,
         authFactorToken: opts.authFactorToken,
+        allowTakendown: opts.allowTakendown,
       })
       this.session = {
         accessJwt: res.data.accessJwt,

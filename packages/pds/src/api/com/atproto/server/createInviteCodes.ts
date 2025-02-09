@@ -1,8 +1,8 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
-import { genInvCodes } from './util'
 import { AccountCodes } from '../../../../lexicon/types/com/atproto/server/createInviteCodes'
+import { genInvCodes } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.createInviteCodes({

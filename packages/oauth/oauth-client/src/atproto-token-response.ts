@@ -1,8 +1,7 @@
+import { TypeOf, z } from 'zod'
 import { atprotoDidSchema } from '@atproto/did'
 import { oauthTokenResponseSchema } from '@atproto/oauth-types'
-import { z, TypeOf } from 'zod'
-
-import { includesSpaceSeparatedValue, SpaceSeparatedValue } from './util'
+import { SpaceSeparatedValue, includesSpaceSeparatedValue } from './util'
 
 export type AtprotoScope = SpaceSeparatedValue<'atproto'>
 export const isAtprotoScope = (input: string): input is AtprotoScope =>

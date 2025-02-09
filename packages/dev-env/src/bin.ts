@@ -30,6 +30,7 @@ const run = async () => {
       port: 2587,
       chatUrl: 'http://localhost:2590', // must run separate chat service
       chatDid: 'did:example:chat',
+      dbMaterializedViewRefreshIntervalMs: 30_000,
     },
     introspect: { port: 2581 },
   })

@@ -1,13 +1,12 @@
-import { decodeStream, streamToNodeBuffer } from '@atproto/common'
-import createHttpError from 'http-errors'
 import { IncomingMessage } from 'node:http'
 import { Readable } from 'node:stream'
-
+import createHttpError from 'http-errors'
+import { decodeStream, streamToNodeBuffer } from '@atproto/common'
 import {
   KnownNames,
   KnownParser,
-  parseContentType,
   ParserResult,
+  parseContentType,
   parsers,
 } from './parser.js'
 

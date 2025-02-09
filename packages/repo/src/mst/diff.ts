@@ -1,6 +1,6 @@
 import { DataDiff } from '../data-diff'
-import MST from './mst'
-import MstWalker from './walker'
+import { MST } from './mst'
+import { MstWalker } from './walker'
 
 export const nullDiff = async (tree: MST): Promise<DataDiff> => {
   const diff = new DataDiff()

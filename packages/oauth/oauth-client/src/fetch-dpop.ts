@@ -1,7 +1,7 @@
+import { base64url } from 'multiformats/bases/base64'
+import { Key } from '@atproto/jwk'
 import { Fetch, FetchContext, cancelBody, peekJson } from '@atproto-labs/fetch'
 import { SimpleStore } from '@atproto-labs/simple-store'
-import { Key } from '@atproto/jwk'
-import { base64url } from 'multiformats/bases/base64'
 
 // "undefined" in non https environments or environments without crypto
 const subtle = globalThis.crypto?.subtle as SubtleCrypto | undefined

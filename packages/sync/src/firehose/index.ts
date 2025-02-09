@@ -1,20 +1,31 @@
-import { createDeferrable, Deferrable, wait } from '@atproto/common'
+import { CID } from 'multiformats/cid'
+import type { ClientOptions } from 'ws'
+import { Deferrable, createDeferrable, wait } from '@atproto/common'
 import {
+  DidDocument,
   IdResolver,
   parseToAtprotoDocument,
-  DidDocument,
 } from '@atproto/identity'
 import {
+  RepoVerificationError,
   cborToLexRecord,
   formatDataKey,
   parseDataKey,
   readCar,
-  RepoVerificationError,
   verifyProofs,
 } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
 import { Subscription } from '@atproto/xrpc-server'
-import type { ClientOptions } from 'ws'
+import {
+  AccountEvt,
+  AccountStatus,
+  CommitEvt,
+  CommitMeta,
+  Event,
+  IdentityEvt,
+} from '../events'
+import { EventRunner } from '../runner'
+import { didAndSeqForEvt } from '../util'
 import {
   type Account,
   type Commit,
@@ -26,17 +37,6 @@ import {
   isIdentity,
   isValidRepoEvent,
 } from './lexicons'
-import {
-  Event,
-  CommitMeta,
-  CommitEvt,
-  AccountEvt,
-  AccountStatus,
-  IdentityEvt,
-} from '../events'
-import { CID } from 'multiformats/cid'
-import { EventRunner } from '../runner'
-import { didAndSeqForEvt } from '../util'
 
 export type FirehoseOptions = ClientOptions & {
   idResolver: IdResolver

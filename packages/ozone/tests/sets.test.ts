@@ -1,10 +1,10 @@
-import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
 import AtpAgent, {
   ToolsOzoneSetDefs,
   ToolsOzoneSetQuerySets,
 } from '@atproto/api'
-import { forSnapshot } from './_util'
+import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { ids } from '../src/lexicon/lexicons'
+import { forSnapshot } from './_util'
 
 describe('ozone-sets', () => {
   let network: TestNetwork

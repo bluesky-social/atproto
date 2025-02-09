@@ -26,6 +26,7 @@
             "description": "List of AT-URIs embedding this post that the author has detached from."
           },
           "embeddingRules": {
+            "description": "List of rules defining who can embed this post. If value is an empty array or is undefined, no particular rules apply and anyone can embed.",
             "type": "array",
             "maxLength": 5,
             "items": {

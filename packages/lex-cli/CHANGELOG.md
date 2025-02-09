@@ -1,5 +1,36 @@
 # @atproto/lex-cli
 
+## 0.5.7
+
+### Patch Changes
+
+- [#3220](https://github.com/bluesky-social/atproto/pull/3220) [`61dc0d60e`](https://github.com/bluesky-social/atproto/commit/61dc0d60e19b88c6427a54c6d95a391b5f4da7bd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Apply new linting rules regarding import order
+
+- [#3220](https://github.com/bluesky-social/atproto/pull/3220) [`61dc0d60e`](https://github.com/bluesky-social/atproto/commit/61dc0d60e19b88c6427a54c6d95a391b5f4da7bd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update NodeJS engine requirement to >=18.7.0
+
+- Updated dependencies [[`61dc0d60e`](https://github.com/bluesky-social/atproto/commit/61dc0d60e19b88c6427a54c6d95a391b5f4da7bd)]:
+  - @atproto/lexicon@0.4.6
+  - @atproto/syntax@0.3.2
+
+## 0.5.6
+
+### Patch Changes
+
+- [#3420](https://github.com/bluesky-social/atproto/pull/3420) [`6241f6b00`](https://github.com/bluesky-social/atproto/commit/6241f6b00b8728cd5f5e879591b0ca98308edab0) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Expose resetRouteRateLimits to the handler context
+
+## 0.5.5
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lexicon@0.4.5
+
+## 0.5.4
+
+### Patch Changes
+
+- [#3274](https://github.com/bluesky-social/atproto/pull/3274) [`672243a9e`](https://github.com/bluesky-social/atproto/commit/672243a9ea0a2cbd0cfaa4e255c58de658ed22e2) Thanks [@dholms](https://github.com/dholms)! - Allow ratelimit calcKey to return null
+
 ## 0.5.3
 
 ### Patch Changes

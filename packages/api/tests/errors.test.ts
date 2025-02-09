@@ -1,5 +1,5 @@
-import { AtpAgent, ComAtprotoServerCreateAccount } from '..'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
+import { AtpAgent, ComAtprotoServerCreateAccount } from '..'
 
 describe('errors', () => {
   let network: TestNetworkNoAppView

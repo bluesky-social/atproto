@@ -4,26 +4,26 @@ import {
   SourceFile,
   VariableDeclarationKind,
 } from 'ts-morph'
-import { Lexicons, LexiconDoc, LexRecord } from '@atproto/lexicon'
+import { LexRecord, LexiconDoc, Lexicons } from '@atproto/lexicon'
 import { NSID } from '@atproto/syntax'
-import { gen, utilTs, lexiconsTs } from './common'
 import { GeneratedAPI } from '../types'
+import { gen, lexiconsTs, utilTs } from './common'
 import {
   genImports,
-  genUserType,
+  genObjHelpers,
   genObject,
-  genXrpcParams,
+  genUserType,
   genXrpcInput,
   genXrpcOutput,
-  genObjHelpers,
+  genXrpcParams,
 } from './lex-gen'
 import {
-  lexiconsToDefTree,
   DefTreeNode,
+  lexiconsToDefTree,
   schemasToNsidTokens,
   toCamelCase,
-  toTitleCase,
   toScreamingSnakeCase,
+  toTitleCase,
 } from './util'
 
 const ATP_METHODS = {

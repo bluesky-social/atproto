@@ -1,14 +1,13 @@
-import z from 'zod'
-import { CID } from 'multiformats'
-
-import { ReadableBlockstore } from '../storage'
-import { schema as common, cidForCbor, dataToCborBlock } from '@atproto/common'
 import { BlockWriter } from '@ipld/car/writer'
-import * as util from './util'
-import BlockMap from '../block-map'
-import CidSet from '../cid-set'
+import { CID } from 'multiformats'
+import { z } from 'zod'
+import { cidForCbor, dataToCborBlock, schema as common } from '@atproto/common'
+import { BlockMap } from '../block-map'
+import { CidSet } from '../cid-set'
 import { MissingBlockError, MissingBlocksError } from '../error'
 import * as parse from '../parse'
+import { ReadableBlockstore } from '../storage'
+import * as util from './util'
 
 /**
  * This is an implementation of a Merkle Search Tree (MST)
@@ -811,5 +810,3 @@ export class Leaf {
     }
   }
 }
-
-export default MST

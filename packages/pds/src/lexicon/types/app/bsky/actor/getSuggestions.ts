@@ -19,6 +19,8 @@ export type InputSchema = undefined
 export interface OutputSchema {
   cursor?: string
   actors: AppBskyActorDefs.ProfileView[]
+  /** Snowflake for this recommendation, use when submitting recommendation events. */
+  recId?: number
   [k: string]: unknown
 }
 
@@ -42,6 +44,7 @@ export type HandlerReqCtx<HA extends HandlerAuth = never> = {
   input: HandlerInput
   req: express.Request
   res: express.Response
+  resetRouteRateLimits: () => Promise<void>
 }
 export type Handler<HA extends HandlerAuth = never> = (
   ctx: HandlerReqCtx<HA>,

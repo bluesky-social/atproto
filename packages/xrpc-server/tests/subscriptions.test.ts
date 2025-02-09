@@ -1,17 +1,17 @@
 import * as http from 'node:http'
 import { AddressInfo } from 'node:net'
-import { WebSocket, WebSocketServer, createWebSocketStream } from 'ws'
 import getPort from 'get-port'
+import { WebSocket, WebSocketServer, createWebSocketStream } from 'ws'
 import { wait } from '@atproto/common'
 import { LexiconDoc } from '@atproto/lexicon'
-import { byFrame, MessageFrame, ErrorFrame, Frame, Subscription } from '../src'
+import { ErrorFrame, Frame, MessageFrame, Subscription, byFrame } from '../src'
+import * as xrpcServer from '../src'
 import {
-  createServer,
+  basicAuthHeaders,
   closeServer,
   createBasicAuth,
-  basicAuthHeaders,
+  createServer,
 } from './_util'
-import * as xrpcServer from '../src'
 
 const LEXICONS: LexiconDoc[] = [
   {

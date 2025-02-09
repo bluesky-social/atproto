@@ -1,12 +1,12 @@
+import { CID } from 'multiformats/cid'
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { CID } from 'multiformats/cid'
-import * as Postgate from '../../../../lexicon/types/app/bsky/feed/postgate'
 import * as lex from '../../../../lexicon/lexicons'
-import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
-import { Database } from '../../db'
-import RecordProcessor from '../processor'
+import * as Postgate from '../../../../lexicon/types/app/bsky/feed/postgate'
 import { BackgroundQueue } from '../../background'
+import { Database } from '../../db'
+import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
+import { RecordProcessor } from '../processor'
 
 const lexId = lex.ids.AppBskyFeedPostgate
 type IndexedGate = DatabaseSchemaType['post_gate']

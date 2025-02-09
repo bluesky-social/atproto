@@ -1,13 +1,16 @@
-import { AtUri } from '@atproto/syntax'
-import { lexToJson } from '@atproto/lexicon'
+import { Server } from 'node:http'
+import { AddressInfo } from 'node:net'
+import { type Express } from 'express'
 import { CID } from 'multiformats/cid'
+import { lexToJson } from '@atproto/lexicon'
+import { AtUri } from '@atproto/syntax'
+import { isViewRecord } from '../src/lexicon/types/app/bsky/embed/record'
 import {
   FeedViewPost,
   PostView,
   isPostView,
   isThreadViewPost,
 } from '../src/lexicon/types/app/bsky/feed/defs'
-import { isViewRecord } from '../src/lexicon/types/app/bsky/embed/record'
 
 // Swap out identifiers and dates with stable
 // values for the purpose of snapshot testing
@@ -194,4 +197,47 @@ export const stripViewerFromThread = <T>(thread: T): T => {
     thread.replies = thread.replies.map(stripViewerFromThread)
   }
   return thread
+}
+
+export async function startServer(app: Express) {
+  return new Promise<{
+    origin: string
+    server: Server
+    stop: () => Promise<void>
+  }>((resolve, reject) => {
+    const onListen = () => {
+      const port = (server.address() as AddressInfo).port
+      resolve({
+        server,
+        origin: `http://localhost:${port}`,
+        stop: () => stopServer(server),
+      })
+      cleanup()
+    }
+    const onError = (err: Error) => {
+      reject(err)
+      cleanup()
+    }
+    const cleanup = () => {
+      server.removeListener('listening', onListen)
+      server.removeListener('error', onError)
+    }
+
+    const server = app
+      .listen(0)
+      .once('listening', onListen)
+      .once('error', onError)
+  })
+}
+
+export async function stopServer(server: Server) {
+  return new Promise<void>((resolve, reject) => {
+    server.close((err) => {
+      if (err) {
+        reject(err)
+      } else {
+        resolve()
+      }
+    })
+  })
 }

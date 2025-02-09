@@ -1,6 +1,6 @@
 import { Database, Migrator } from '../../db'
-import { DidCacheSchema } from './schema'
 import migrations from './migrations'
+import { DidCacheSchema } from './schema'
 
 export * from './schema'
 

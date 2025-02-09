@@ -1,8 +1,8 @@
-import P256Keypair from '../src/p256/keypair'
-import Secp256k1Keypair from '../src/secp256k1/keypair'
-import * as secpEncoding from '../src/secp256k1/encoding'
-import * as p256Encoding from '../src/p256/encoding'
 import * as did from '../src/did'
+import * as p256Encoding from '../src/p256/encoding'
+import { P256Keypair } from '../src/p256/keypair'
+import * as secpEncoding from '../src/secp256k1/encoding'
+import { Secp256k1Keypair } from '../src/secp256k1/keypair'
 
 describe('public key compression', () => {
   describe('secp256k1', () => {

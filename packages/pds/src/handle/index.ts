@@ -1,8 +1,8 @@
 import * as ident from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { reservedSubdomains } from './reserved'
+import { AppContext } from '../context'
 import { hasExplicitSlur } from './explicit-slurs'
-import AppContext from '../context'
+import { reservedSubdomains } from './reserved'
 
 export const normalizeAndValidateHandle = async (opts: {
   ctx: AppContext

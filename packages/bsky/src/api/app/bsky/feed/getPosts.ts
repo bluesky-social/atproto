@@ -1,17 +1,17 @@
 import { dedupeStrs, mapDefined } from '@atproto/common'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getPosts'
-import AppContext from '../../../../context'
-import { createPipeline } from '../../../../pipeline'
+import { AppContext } from '../../../../context'
 import {
   HydrateCtx,
   HydrationState,
   Hydrator,
 } from '../../../../hydration/hydrator'
-import { Views } from '../../../../views'
-import { uriToDid as creatorFromUri } from '../../../../util/uris'
-import { resHeaders } from '../../../util'
+import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getPosts'
+import { createPipeline } from '../../../../pipeline'
+import { uriToDid as creatorFromUri } from '../../../../util/uris'
+import { Views } from '../../../../views'
+import { resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   const getPosts = createPipeline(skeleton, hydration, noBlocks, presentation)

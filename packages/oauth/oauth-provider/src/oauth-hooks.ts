@@ -5,7 +5,6 @@ import {
   OAuthClientMetadata,
   OAuthTokenResponse,
 } from '@atproto/oauth-types'
-
 import { Account } from './account/account.js'
 import { ClientAuth } from './client/client-auth.js'
 import { ClientId } from './client/client-id.js'

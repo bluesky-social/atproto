@@ -1,5 +1,4 @@
 import { z } from 'zod'
-
 import { SESSION_ID_BYTES_LENGTH, SESSION_ID_PREFIX } from '../constants.js'
 import { randomHexId } from '../lib/util/crypto.js'
 

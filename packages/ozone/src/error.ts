@@ -1,5 +1,5 @@
-import { XRPCError } from '@atproto/xrpc-server'
 import { ErrorRequestHandler } from 'express'
+import { XRPCError } from '@atproto/xrpc-server'
 import { httpLogger as log } from './logger'
 
 export const handler: ErrorRequestHandler = (err, _req, res, next) => {

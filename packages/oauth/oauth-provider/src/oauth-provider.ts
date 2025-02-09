@@ -1,6 +1,7 @@
-import { safeFetchWrap } from '@atproto-labs/fetch-node'
-import { SimpleStore } from '@atproto-labs/simple-store'
-import { SimpleStoreMemory } from '@atproto-labs/simple-store-memory'
+import { mediaType } from '@hapi/accept'
+import createHttpError from 'http-errors'
+import type { Redis, RedisOptions } from 'ioredis'
+import { ZodError, z } from 'zod'
 import { Jwks, Keyset } from '@atproto/jwk'
 import {
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
@@ -29,11 +30,9 @@ import {
   oauthTokenIdentificationSchema,
   oauthTokenRequestSchema,
 } from '@atproto/oauth-types'
-import { mediaType } from '@hapi/accept'
-import createHttpError from 'http-errors'
-import type { Redis, RedisOptions } from 'ioredis'
-import z, { ZodError } from 'zod'
-
+import { safeFetchWrap } from '@atproto-labs/fetch-node'
+import { SimpleStore } from '@atproto-labs/simple-store'
+import { SimpleStoreMemory } from '@atproto-labs/simple-store-memory'
 import { AccessTokenType } from './access-token/access-token-type.js'
 import { AccountManager } from './account/account-manager.js'
 import {
@@ -125,10 +124,10 @@ export type OAuthProviderStore = Partial<
 >
 
 export {
-  Keyset,
   type CustomMetadata,
   type Customization,
   type Handler,
+  Keyset,
   type OAuthAuthorizationServerMetadata,
 }
 

@@ -140,6 +140,7 @@ import * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
 import * as AppBskyUnspeccedGetSuggestionsSkeleton from './types/app/bsky/unspecced/getSuggestionsSkeleton'
 import * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions'
+import * as AppBskyUnspeccedGetTrendingTopics from './types/app/bsky/unspecced/getTrendingTopics'
 import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton'
 import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
 import * as AppBskyUnspeccedSearchStarterPacksSkeleton from './types/app/bsky/unspecced/searchStarterPacksSkeleton'
@@ -210,6 +211,8 @@ export const APP_BSKY_FEED = {
   DefsClickthroughAuthor: 'app.bsky.feed.defs#clickthroughAuthor',
   DefsClickthroughReposter: 'app.bsky.feed.defs#clickthroughReposter',
   DefsClickthroughEmbed: 'app.bsky.feed.defs#clickthroughEmbed',
+  DefsContentModeUnspecified: 'app.bsky.feed.defs#contentModeUnspecified',
+  DefsContentModeVideo: 'app.bsky.feed.defs#contentModeVideo',
   DefsInteractionSeen: 'app.bsky.feed.defs#interactionSeen',
   DefsInteractionLike: 'app.bsky.feed.defs#interactionLike',
   DefsInteractionRepost: 'app.bsky.feed.defs#interactionRepost',
@@ -269,6 +272,7 @@ export class ComAtprotoNS {
   admin: ComAtprotoAdminNS
   identity: ComAtprotoIdentityNS
   label: ComAtprotoLabelNS
+  lexicon: ComAtprotoLexiconNS
   moderation: ComAtprotoModerationNS
   repo: ComAtprotoRepoNS
   server: ComAtprotoServerNS
@@ -280,6 +284,7 @@ export class ComAtprotoNS {
     this.admin = new ComAtprotoAdminNS(server)
     this.identity = new ComAtprotoIdentityNS(server)
     this.label = new ComAtprotoLabelNS(server)
+    this.lexicon = new ComAtprotoLexiconNS(server)
     this.moderation = new ComAtprotoModerationNS(server)
     this.repo = new ComAtprotoRepoNS(server)
     this.server = new ComAtprotoServerNS(server)
@@ -555,6 +560,14 @@ export class ComAtprotoLabelNS {
   ) {
     const nsid = 'com.atproto.label.subscribeLabels' // @ts-ignore
     return this._server.xrpc.streamMethod(nsid, cfg)
+  }
+}
+
+export class ComAtprotoLexiconNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
   }
 }
 
@@ -1896,6 +1909,17 @@ export class AppBskyUnspeccedNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  getTrendingTopics<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyUnspeccedGetTrendingTopics.Handler<ExtractAuth<AV>>,
+      AppBskyUnspeccedGetTrendingTopics.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.unspecced.getTrendingTopics' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   searchActorsSkeleton<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -2626,13 +2650,13 @@ export class ToolsOzoneTeamNS {
 
 type SharedRateLimitOpts<T> = {
   name: string
-  calcKey?: (ctx: T) => string
+  calcKey?: (ctx: T) => string | null
   calcPoints?: (ctx: T) => number
 }
 type RouteRateLimitOpts<T> = {
   durationMs: number
   points: number
-  calcKey?: (ctx: T) => string
+  calcKey?: (ctx: T) => string | null
   calcPoints?: (ctx: T) => number
 }
 type HandlerOpts = { blobLimit?: number }

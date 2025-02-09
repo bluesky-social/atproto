@@ -1,20 +1,19 @@
 import { mapDefined } from '@atproto/common'
 import { normalizeDatetimeAlways } from '@atproto/syntax'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getLikes'
-import AppContext from '../../../../context'
-import { createPipeline, RulesFnInput } from '../../../../pipeline'
+import { InvalidRequestError } from '@atproto/xrpc-server'
+import { AppContext } from '../../../../context'
 import {
   HydrateCtx,
   HydrationState,
   Hydrator,
-  mergeStates,
 } from '../../../../hydration/hydrator'
-import { Views } from '../../../../views'
 import { parseString } from '../../../../hydration/util'
+import { Server } from '../../../../lexicon'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getLikes'
+import { RulesFnInput, createPipeline } from '../../../../pipeline'
 import { uriToDid as creatorFromUri } from '../../../../util/uris'
+import { Views } from '../../../../views'
 import { clearlyBadCursor, resHeaders } from '../../../util'
-import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export default function (server: Server, ctx: AppContext) {
   const getLikes = createPipeline(skeleton, hydration, noBlocks, presentation)

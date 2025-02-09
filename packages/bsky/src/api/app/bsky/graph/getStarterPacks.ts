@@ -1,15 +1,15 @@
 import { dedupeStrs, mapDefined } from '@atproto/common'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getStarterPacks'
-import AppContext from '../../../../context'
-import { resHeaders } from '../../../util'
-import { createPipeline, noRules } from '../../../../pipeline'
+import { AppContext } from '../../../../context'
 import {
   HydrateCtx,
   HydrationState,
   Hydrator,
 } from '../../../../hydration/hydrator'
+import { Server } from '../../../../lexicon'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getStarterPacks'
+import { createPipeline, noRules } from '../../../../pipeline'
 import { Views } from '../../../../views'
+import { resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   const getStarterPacks = createPipeline(

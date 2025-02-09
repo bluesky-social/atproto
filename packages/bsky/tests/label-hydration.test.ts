@@ -1,6 +1,5 @@
 import { AtpAgent } from '@atproto/api'
-import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
-import axios from 'axios'
+import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 
 describe('label hydration', () => {
   let network: TestNetwork
@@ -74,22 +73,26 @@ describe('label hydration', () => {
     expect(res.data.labels?.find((l) => l.src === labelerDid)?.val).toEqual(
       'misleading',
     )
-    const labelerHeaderDids = res.headers['atproto-content-labelers'].split(',')
-    expect(labelerHeaderDids.sort()).toEqual(
+    const labelerHeaderDids = res.headers['atproto-content-labelers']
+      ?.split(',')
+      .sort()
+
+    expect(labelerHeaderDids).toEqual(
       [alice, `${bob};redact`, labelerDid].sort(),
     )
   })
 
   it('defaults to service labels when no labeler header is provided', async () => {
-    const res = await axios.get(
+    const res = await fetch(
       `${network.pds.url}/xrpc/app.bsky.actor.getProfile?actor=${carol}`,
       { headers: sc.getHeaders(bob) },
     )
-    expect(res.data.labels?.length).toBe(1)
-    expect(res.data.labels?.[0].src).toBe(labelerDid)
-    expect(res.data.labels?.[0].val).toBe('misleading')
+    const data = await res.json()
+    expect(data.labels?.length).toBe(1)
+    expect(data.labels?.[0].src).toBe(labelerDid)
+    expect(data.labels?.[0].val).toBe('misleading')
 
-    expect(res.headers['atproto-content-labelers']).toEqual(
+    expect(res.headers.get('atproto-content-labelers')).toEqual(
       network.bsky.ctx.cfg.labelsFromIssuerDids
         .map((did) => `${did};redact`)
         .join(','),

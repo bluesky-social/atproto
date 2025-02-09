@@ -1,5 +1,4 @@
-import z from 'zod'
-
+import { z } from 'zod'
 import { ClientId } from '../client/client-id.js'
 import { DeviceId } from '../device/device-id.js'
 import { Awaitable } from '../lib/util/type.js'

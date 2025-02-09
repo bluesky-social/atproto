@@ -1,7 +1,7 @@
 import { AtpAgent } from '@atproto/api'
-import { TestNetwork, SeedClient, basicSeed, RecordRef } from '@atproto/dev-env'
-import { forSnapshot, stripViewerFromLabeler } from '../_util'
+import { RecordRef, SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
+import { forSnapshot, stripViewerFromLabeler } from '../_util'
 
 describe('labeler service views', () => {
   let network: TestNetwork

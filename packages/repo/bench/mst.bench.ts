@@ -1,7 +1,7 @@
+import fs from 'node:fs'
 import { CID } from 'multiformats'
-import { Fanout, MemoryBlockstore, MST, NodeEntry } from '../src'
+import { Fanout, MST, MemoryBlockstore, NodeEntry } from '../src'
 import * as util from '../tests/_util'
-import fs from 'fs'
 
 type BenchmarkData = {
   fanout: number

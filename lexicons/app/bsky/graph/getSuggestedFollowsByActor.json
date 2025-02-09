@@ -29,6 +29,10 @@
               "type": "boolean",
               "description": "If true, response has fallen-back to generic results, and is not scoped using relativeToDid",
               "default": false
+            },
+            "recId": {
+              "type": "integer",
+              "description": "Snowflake for this recommendation, use when submitting recommendation events."
             }
           }
         }

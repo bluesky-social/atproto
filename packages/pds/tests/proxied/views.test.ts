@@ -1,7 +1,7 @@
-import { AtpAgent, AtUri } from '@atproto/api'
-import { TestNetwork, SeedClient } from '@atproto/dev-env'
-import basicSeed from '../seeds/basic'
+import { AtUri, AtpAgent } from '@atproto/api'
+import { SeedClient, TestNetwork } from '@atproto/dev-env'
 import { forSnapshot } from '../_util'
+import basicSeed from '../seeds/basic'
 
 describe('proxies view requests', () => {
   let network: TestNetwork

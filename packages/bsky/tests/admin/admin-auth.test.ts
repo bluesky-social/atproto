@@ -1,9 +1,9 @@
-import { SeedClient, usersSeed, TestNetwork } from '@atproto/dev-env'
 import { AtpAgent } from '@atproto/api'
 import { Secp256k1Keypair } from '@atproto/crypto'
+import { SeedClient, TestNetwork, usersSeed } from '@atproto/dev-env'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
-import { RepoRef } from '../../src/lexicon/types/com/atproto/admin/defs'
 import { ids } from '../../src/lexicon/lexicons'
+import { RepoRef } from '../../src/lexicon/types/com/atproto/admin/defs'
 
 describe('admin auth', () => {
   let network: TestNetwork

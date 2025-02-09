@@ -7,7 +7,6 @@ import {
   LexXrpcQuery,
   LexXrpcSubscription,
 } from './types'
-
 import { object, validateOneOf } from './validators/complex'
 import { params } from './validators/xrpc'
 

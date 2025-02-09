@@ -1,12 +1,12 @@
-import fs from 'fs/promises'
-import fsSync from 'fs'
-import stream from 'stream'
-import path from 'path'
+import fsSync from 'node:fs'
+import fs from 'node:fs/promises'
+import path from 'node:path'
+import stream from 'node:stream'
 import { CID } from 'multiformats/cid'
-import { BlobNotFoundError, BlobStore } from '@atproto/repo'
+import { fileExists, isErrnoException, rmIfExists } from '@atproto/common'
 import { randomStr } from '@atproto/crypto'
+import { BlobNotFoundError, BlobStore } from '@atproto/repo'
 import { httpLogger as log } from './logger'
-import { isErrnoException, fileExists, rmIfExists } from '@atproto/common'
 
 export class DiskBlobStore implements BlobStore {
   constructor(
@@ -153,5 +153,3 @@ const translateErr = (err: unknown): BlobNotFoundError | unknown => {
   }
   return err
 }
-
-export default DiskBlobStore

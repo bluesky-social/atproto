@@ -40,6 +40,7 @@ export interface QueryParams {
   /** If specified, only events where all of these tags were removed are returned */
   removedTags?: string[]
   reportTypes?: string[]
+  policies?: string[]
   cursor?: string
 }
 
@@ -71,6 +72,7 @@ export type HandlerReqCtx<HA extends HandlerAuth = never> = {
   input: HandlerInput
   req: express.Request
   res: express.Response
+  resetRouteRateLimits: () => Promise<void>
 }
 export type Handler<HA extends HandlerAuth = never> = (
   ctx: HandlerReqCtx<HA>,

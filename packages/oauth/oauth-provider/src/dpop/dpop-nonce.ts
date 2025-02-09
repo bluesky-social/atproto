@@ -1,5 +1,4 @@
 import { createHmac, randomBytes } from 'node:crypto'
-
 import { DPOP_NONCE_MAX_AGE } from '../constants.js'
 
 function numTo64bits(num: number) {

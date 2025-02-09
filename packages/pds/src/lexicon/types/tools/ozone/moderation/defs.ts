@@ -33,6 +33,7 @@ export interface ModEventView {
     | AccountEvent
     | IdentityEvent
     | RecordEvent
+    | ModEventPriorityScore
     | { $type: string; [k: string]: unknown }
   subject:
     | ComAtprotoAdminDefs.RepoRef
@@ -80,6 +81,7 @@ export interface ModEventViewDetail {
     | AccountEvent
     | IdentityEvent
     | RecordEvent
+    | ModEventPriorityScore
     | { $type: string; [k: string]: unknown }
   subject:
     | RepoView
@@ -124,6 +126,8 @@ export interface SubjectStatusView {
   reviewState: SubjectReviewState
   /** Sticky comment on the subject. */
   comment?: string
+  /** Numeric value representing the level of priority. Higher score means higher priority. */
+  priorityScore?: number
   muteUntil?: string
   muteReportingUntil?: string
   lastReviewedBy?: string
@@ -136,6 +140,8 @@ export interface SubjectStatusView {
   appealed?: boolean
   suspendUntil?: string
   tags?: string[]
+  accountStats?: AccountStats
+  recordsStats?: RecordsStats
   [k: string]: unknown
 }
 
@@ -149,6 +155,66 @@ export function isSubjectStatusView(v: unknown): v is SubjectStatusView {
 
 export function validateSubjectStatusView(v: unknown): ValidationResult {
   return lexicons.validate('tools.ozone.moderation.defs#subjectStatusView', v)
+}
+
+/** Statistics about a particular account subject */
+export interface AccountStats {
+  /** Total number of reports on the account */
+  reportCount?: number
+  /** Total number of appeals against a moderation action on the account */
+  appealCount?: number
+  /** Number of times the account was suspended */
+  suspendCount?: number
+  /** Number of times the account was escalated */
+  escalateCount?: number
+  /** Number of times the account was taken down */
+  takedownCount?: number
+  [k: string]: unknown
+}
+
+export function isAccountStats(v: unknown): v is AccountStats {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'tools.ozone.moderation.defs#accountStats'
+  )
+}
+
+export function validateAccountStats(v: unknown): ValidationResult {
+  return lexicons.validate('tools.ozone.moderation.defs#accountStats', v)
+}
+
+/** Statistics about a set of record subject items */
+export interface RecordsStats {
+  /** Cumulative sum of the number of reports on the items in the set */
+  totalReports?: number
+  /** Number of items that were reported at least once */
+  reportedCount?: number
+  /** Number of items that were escalated at least once */
+  escalatedCount?: number
+  /** Number of items that were appealed at least once */
+  appealedCount?: number
+  /** Total number of item in the set */
+  subjectCount?: number
+  /** Number of item currently in "reviewOpen" or "reviewEscalated" state */
+  pendingCount?: number
+  /** Number of item currently in "reviewNone" or "reviewClosed" state */
+  processedCount?: number
+  /** Number of item currently taken down */
+  takendownCount?: number
+  [k: string]: unknown
+}
+
+export function isRecordsStats(v: unknown): v is RecordsStats {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'tools.ozone.moderation.defs#recordsStats'
+  )
+}
+
+export function validateRecordsStats(v: unknown): ValidationResult {
+  return lexicons.validate('tools.ozone.moderation.defs#recordsStats', v)
 }
 
 export type SubjectReviewState =
@@ -174,6 +240,8 @@ export interface ModEventTakedown {
   durationInHours?: number
   /** If true, all other reports on content authored by this account will be resolved (acknowledged). */
   acknowledgeAccountSubjects?: boolean
+  /** Names/Keywords of the policies that drove the decision. */
+  policies?: string[]
   [k: string]: unknown
 }
 
@@ -283,6 +351,8 @@ export interface ModEventLabel {
   comment?: string
   createLabelVals: string[]
   negateLabelVals: string[]
+  /** Indicates how long the label will remain on the subject. Only applies on labels that are being added. */
+  durationInHours?: number
   [k: string]: unknown
 }
 
@@ -296,6 +366,30 @@ export function isModEventLabel(v: unknown): v is ModEventLabel {
 
 export function validateModEventLabel(v: unknown): ValidationResult {
   return lexicons.validate('tools.ozone.moderation.defs#modEventLabel', v)
+}
+
+/** Set priority score of the subject. Higher score means higher priority. */
+export interface ModEventPriorityScore {
+  comment?: string
+  score: number
+  [k: string]: unknown
+}
+
+export function isModEventPriorityScore(
+  v: unknown,
+): v is ModEventPriorityScore {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'tools.ozone.moderation.defs#modEventPriorityScore'
+  )
+}
+
+export function validateModEventPriorityScore(v: unknown): ValidationResult {
+  return lexicons.validate(
+    'tools.ozone.moderation.defs#modEventPriorityScore',
+    v,
+  )
 }
 
 export interface ModEventAcknowledge {

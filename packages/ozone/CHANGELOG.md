@@ -1,5 +1,178 @@
 # @atproto/ozone
 
+## 0.1.77
+
+### Patch Changes
+
+- [#3495](https://github.com/bluesky-social/atproto/pull/3495) [`709a85b0b`](https://github.com/bluesky-social/atproto/commit/709a85b0b633b5483b7161db64b429c746239153) Thanks [@foysalit](https://github.com/foysalit)! - Add a priority score to ozone subjects
+
+- Updated dependencies [[`709a85b0b`](https://github.com/bluesky-social/atproto/commit/709a85b0b633b5483b7161db64b429c746239153)]:
+  - @atproto/api@0.13.35
+
+## 0.1.76
+
+### Patch Changes
+
+- Updated dependencies [[`dc8a7842e`](https://github.com/bluesky-social/atproto/commit/dc8a7842e67f5f3709e88310d2a60d384453b486), [`636951e47`](https://github.com/bluesky-social/atproto/commit/636951e4728cd52c2e5355eb93b47d7e869b67e9)]:
+  - @atproto/api@0.13.34
+
+## 0.1.75
+
+### Patch Changes
+
+- [#3220](https://github.com/bluesky-social/atproto/pull/3220) [`61dc0d60e`](https://github.com/bluesky-social/atproto/commit/61dc0d60e19b88c6427a54c6d95a391b5f4da7bd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Apply new linting rules regarding import order
+
+- [#3220](https://github.com/bluesky-social/atproto/pull/3220) [`61dc0d60e`](https://github.com/bluesky-social/atproto/commit/61dc0d60e19b88c6427a54c6d95a391b5f4da7bd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update NodeJS engine requirement to >=18.7.0
+
+- Updated dependencies [[`61dc0d60e`](https://github.com/bluesky-social/atproto/commit/61dc0d60e19b88c6427a54c6d95a391b5f4da7bd), [`61dc0d60e`](https://github.com/bluesky-social/atproto/commit/61dc0d60e19b88c6427a54c6d95a391b5f4da7bd), [`87ed907a6`](https://github.com/bluesky-social/atproto/commit/87ed907a6b96b408c02c9af819cec8380a453254)]:
+  - @atproto/xrpc-server@0.7.10
+  - @atproto/identity@0.4.6
+  - @atproto/lexicon@0.4.6
+  - @atproto/common@0.4.8
+  - @atproto/crypto@0.4.4
+  - @atproto/syntax@0.3.2
+  - @atproto/xrpc@0.6.8
+  - @atproto/api@0.13.33
+
+## 0.1.74
+
+### Patch Changes
+
+- [#3437](https://github.com/bluesky-social/atproto/pull/3437) [`da7a831a7`](https://github.com/bluesky-social/atproto/commit/da7a831a7318343ba1ee98de3811ba337c043dbd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Code cleanup
+
+- [#3352](https://github.com/bluesky-social/atproto/pull/3352) [`7f52e6735`](https://github.com/bluesky-social/atproto/commit/7f52e67354906c3bf9830d7a2924ab58d6160905) Thanks [@foysalit](https://github.com/foysalit)! - Auto resolve appeals when taking down
+
+- [#3463](https://github.com/bluesky-social/atproto/pull/3463) [`8810885b8`](https://github.com/bluesky-social/atproto/commit/8810885b8e7fa0377e6c000c091eec1dd85ed261) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix typo in recordsStats's $type property
+
+- Updated dependencies [[`4f2841efe`](https://github.com/bluesky-social/atproto/commit/4f2841efeb410e710e0c8da7c9204468f6256a75), [`7f52e6735`](https://github.com/bluesky-social/atproto/commit/7f52e67354906c3bf9830d7a2924ab58d6160905), [`4f2841efe`](https://github.com/bluesky-social/atproto/commit/4f2841efeb410e710e0c8da7c9204468f6256a75), [`fb64d50ee`](https://github.com/bluesky-social/atproto/commit/fb64d50ee220316b9f1183e5c3259629489734c9), [`52c687a05`](https://github.com/bluesky-social/atproto/commit/52c687a05c70d5660fae1de9e1bbc6297f37f1f4)]:
+  - @atproto/xrpc-server@0.7.9
+  - @atproto/api@0.13.32
+  - @atproto/xrpc@0.6.7
+  - @atproto/common@0.4.7
+  - @atproto/crypto@0.4.3
+
+## 0.1.73
+
+### Patch Changes
+
+- Updated dependencies [[`8c6c7813a`](https://github.com/bluesky-social/atproto/commit/8c6c7813a9c2110c8fe21acdca8f09554a1983ce)]:
+  - @atproto/api@0.13.31
+
+## 0.1.72
+
+### Patch Changes
+
+- [#3426](https://github.com/bluesky-social/atproto/pull/3426) [`1ada2d093`](https://github.com/bluesky-social/atproto/commit/1ada2d093427e45b6d59a16cf146bf5282560c7b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix getSubjectStatuses query
+
+- Updated dependencies [[`e6e6aea38`](https://github.com/bluesky-social/atproto/commit/e6e6aea3814e3d0bb42a537f80d77947e85fa73f), [`c0a75d310`](https://github.com/bluesky-social/atproto/commit/c0a75d310aa92c067799a97d1acc5bd0543114c5)]:
+  - @atproto/api@0.13.30
+
+## 0.1.71
+
+### Patch Changes
+
+- Updated dependencies [[`1015d9692`](https://github.com/bluesky-social/atproto/commit/1015d96925898149cc60b434561e19730a1bea12)]:
+  - @atproto/xrpc-server@0.7.8
+
+## 0.1.70
+
+### Patch Changes
+
+- [#3416](https://github.com/bluesky-social/atproto/pull/3416) [`50603b4f2`](https://github.com/bluesky-social/atproto/commit/50603b4f2ef08bd618730107ec164a57f27dcca6) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add account and record level statistics when querring `tools.ozone.moderation.queryStatuses`.
+
+- Updated dependencies [[`50603b4f2`](https://github.com/bluesky-social/atproto/commit/50603b4f2ef08bd618730107ec164a57f27dcca6)]:
+  - @atproto/api@0.13.29
+
+## 0.1.69
+
+### Patch Changes
+
+- Updated dependencies [[`cbf17066f`](https://github.com/bluesky-social/atproto/commit/cbf17066f314fbc7f2e943127ee4a9f589f8bec2)]:
+  - @atproto/api@0.13.28
+
+## 0.1.68
+
+### Patch Changes
+
+- Updated dependencies [[`0832a377d`](https://github.com/bluesky-social/atproto/commit/0832a377d269584a906d5062ebb5e2e6307f9c61)]:
+  - @atproto/xrpc-server@0.7.7
+
+## 0.1.67
+
+### Patch Changes
+
+- [#3344](https://github.com/bluesky-social/atproto/pull/3344) [`48a0e9d60`](https://github.com/bluesky-social/atproto/commit/48a0e9d6060c2dc93899f13f2fc7cc76c04fbcd9) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Properly dispose of unused http responses
+
+- Updated dependencies [[`e277158f7`](https://github.com/bluesky-social/atproto/commit/e277158f70a831b04fde3ec84b3c1eaa6ce82e9d)]:
+  - @atproto/api@0.13.27
+
+## 0.1.66
+
+### Patch Changes
+
+- Updated dependencies [[`1abfd74ec`](https://github.com/bluesky-social/atproto/commit/1abfd74ec7114e5d8e2411f7a4fa10bdce97e277)]:
+  - @atproto/crypto@0.4.3
+  - @atproto/identity@0.4.5
+  - @atproto/xrpc-server@0.7.6
+
+## 0.1.65
+
+### Patch Changes
+
+- [#3177](https://github.com/bluesky-social/atproto/pull/3177) [`72eba67af`](https://github.com/bluesky-social/atproto/commit/72eba67af1af8320b5400bcb9319d5c3c8407d99) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove dependency on Axios
+
+- Updated dependencies [[`72eba67af`](https://github.com/bluesky-social/atproto/commit/72eba67af1af8320b5400bcb9319d5c3c8407d99)]:
+  - @atproto/identity@0.4.4
+  - @atproto/api@0.13.26
+  - @atproto/common@0.4.6
+  - @atproto/lexicon@0.4.5
+  - @atproto/crypto@0.4.2
+  - @atproto/xrpc-server@0.7.5
+  - @atproto/xrpc@0.6.6
+
+## 0.1.64
+
+### Patch Changes
+
+- [#3271](https://github.com/bluesky-social/atproto/pull/3271) [`53621f8e1`](https://github.com/bluesky-social/atproto/commit/53621f8e100a3aa3c1caff10a08d3f4ea919875a) Thanks [@foysalit](https://github.com/foysalit)! - Allow setting policy names with takedown actions and when querying events
+
+- Updated dependencies [[`53621f8e1`](https://github.com/bluesky-social/atproto/commit/53621f8e100a3aa3c1caff10a08d3f4ea919875a)]:
+  - @atproto/api@0.13.25
+
+## 0.1.63
+
+### Patch Changes
+
+- [#3294](https://github.com/bluesky-social/atproto/pull/3294) [`d90d999de`](https://github.com/bluesky-social/atproto/commit/d90d999defda01a9b04dbce129e254990062c283) Thanks [@foysalit](https://github.com/foysalit)! - Limit tags filter to 25 max and remove 25 char limit for tag item
+
+- [#3310](https://github.com/bluesky-social/atproto/pull/3310) [`6d1ad3783`](https://github.com/bluesky-social/atproto/commit/6d1ad37836f275e03bc115e944a3195b82f3398d) Thanks [@foysalit](https://github.com/foysalit)! - Remove ASCII landing page for ozone in favor of client app
+
+- Updated dependencies [[`d90d999de`](https://github.com/bluesky-social/atproto/commit/d90d999defda01a9b04dbce129e254990062c283)]:
+  - @atproto/api@0.13.24
+
+## 0.1.62
+
+### Patch Changes
+
+- [#3280](https://github.com/bluesky-social/atproto/pull/3280) [`9ea2cce9a`](https://github.com/bluesky-social/atproto/commit/9ea2cce9a4c0a08994a8cb5abc81dc4bc2221d0c) Thanks [@foysalit](https://github.com/foysalit)! - Apply ozone queue splitting at the database query level
+
+- Updated dependencies [[`6d308b857`](https://github.com/bluesky-social/atproto/commit/6d308b857ba2a514ee3c75ebdef7225e298ed7d7), [`9ea2cce9a`](https://github.com/bluesky-social/atproto/commit/9ea2cce9a4c0a08994a8cb5abc81dc4bc2221d0c)]:
+  - @atproto/api@0.13.23
+
+## 0.1.61
+
+### Patch Changes
+
+- Updated dependencies [[`f22383cee`](https://github.com/bluesky-social/atproto/commit/f22383cee8feb8b9f761c801ab6e07ad8dc019ed)]:
+  - @atproto/api@0.13.22
+
+## 0.1.60
+
+### Patch Changes
+
+- Updated dependencies [[`dced566de`](https://github.com/bluesky-social/atproto/commit/dced566de5079ef4208801db476a7e7416f5e5aa)]:
+  - @atproto/api@0.13.21
+
 ## 0.1.59
 
 ### Patch Changes

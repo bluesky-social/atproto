@@ -1,14 +1,14 @@
-import * as crypto from '@atproto/crypto'
 import { check } from '@atproto/common-web'
+import * as crypto from '@atproto/crypto'
+import { DidNotFoundError, PoorlyFormattedDidDocumentError } from '../errors'
 import {
-  DidCache,
   AtprotoData,
+  CacheResult,
+  DidCache,
   DidDocument,
   didDocument,
-  CacheResult,
 } from '../types'
 import * as atprotoData from './atproto-data'
-import { DidNotFoundError, PoorlyFormattedDidDocumentError } from '../errors'
 
 export abstract class BaseResolver {
   constructor(public cache?: DidCache) {}
@@ -98,5 +98,3 @@ export abstract class BaseResolver {
     return crypto.verifySignature(signingKey, data, sig)
   }
 }
-
-export default BaseResolver

@@ -1,5 +1,5 @@
 import { ModerationDecision } from '../decision'
-import { ModerationSubjectNotification, ModerationOpts } from '../types'
+import { ModerationOpts, ModerationSubjectNotification } from '../types'
 import { decideAccount } from './account'
 import { decideProfile } from './profile'
 

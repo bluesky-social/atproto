@@ -1,6 +1,6 @@
-import * as http from 'http'
-import { once } from 'events'
-import { AddressInfo } from 'net'
+import { once } from 'node:events'
+import * as http from 'node:http'
+import { AddressInfo } from 'node:net'
 import { WebSocket } from 'ws'
 import { XRPCError } from '@atproto/xrpc'
 import {

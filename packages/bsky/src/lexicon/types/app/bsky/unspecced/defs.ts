@@ -63,3 +63,23 @@ export function validateSkeletonSearchStarterPack(
     v,
   )
 }
+
+export interface TrendingTopic {
+  topic: string
+  displayName?: string
+  description?: string
+  link: string
+  [k: string]: unknown
+}
+
+export function isTrendingTopic(v: unknown): v is TrendingTopic {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.unspecced.defs#trendingTopic'
+  )
+}
+
+export function validateTrendingTopic(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.unspecced.defs#trendingTopic', v)
+}

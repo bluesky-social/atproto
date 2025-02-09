@@ -1,5 +1,115 @@
 # @atproto/api
 
+## 0.13.35
+
+### Patch Changes
+
+- [#3495](https://github.com/bluesky-social/atproto/pull/3495) [`709a85b0b`](https://github.com/bluesky-social/atproto/commit/709a85b0b633b5483b7161db64b429c746239153) Thanks [@foysalit](https://github.com/foysalit)! - Add a priority score to ozone subjects
+
+## 0.13.34
+
+### Patch Changes
+
+- [#3496](https://github.com/bluesky-social/atproto/pull/3496) [`dc8a7842e`](https://github.com/bluesky-social/atproto/commit/dc8a7842e67f5f3709e88310d2a60d384453b486) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Add followerRule threadgate
+
+- [#3501](https://github.com/bluesky-social/atproto/pull/3501) [`636951e47`](https://github.com/bluesky-social/atproto/commit/636951e4728cd52c2e5355eb93b47d7e869b67e9) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Include `followerRule` as valid setting in `postInteractionSettings` pref
+
+## 0.13.33
+
+### Patch Changes
+
+- [#3220](https://github.com/bluesky-social/atproto/pull/3220) [`61dc0d60e`](https://github.com/bluesky-social/atproto/commit/61dc0d60e19b88c6427a54c6d95a391b5f4da7bd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Apply new linting rules regarding import order
+
+- [#3494](https://github.com/bluesky-social/atproto/pull/3494) [`87ed907a6`](https://github.com/bluesky-social/atproto/commit/87ed907a6b96b408c02c9af819cec8380a453254) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add `setPostInteractionSettings` for configuring default interaction settings for creation of posts
+
+- Updated dependencies [[`61dc0d60e`](https://github.com/bluesky-social/atproto/commit/61dc0d60e19b88c6427a54c6d95a391b5f4da7bd), [`8a30e0ed9`](https://github.com/bluesky-social/atproto/commit/8a30e0ed9239cb2037d54fb98e70e8b0cfbc3e39)]:
+  - @atproto/common-web@0.4.0
+  - @atproto/lexicon@0.4.6
+  - @atproto/syntax@0.3.2
+  - @atproto/xrpc@0.6.8
+
+## 0.13.32
+
+### Patch Changes
+
+- [#3352](https://github.com/bluesky-social/atproto/pull/3352) [`7f52e6735`](https://github.com/bluesky-social/atproto/commit/7f52e67354906c3bf9830d7a2924ab58d6160905) Thanks [@foysalit](https://github.com/foysalit)! - Auto resolve appeals when taking down
+
+- Updated dependencies [[`fb64d50ee`](https://github.com/bluesky-social/atproto/commit/fb64d50ee220316b9f1183e5c3259629489734c9)]:
+  - @atproto/xrpc@0.6.7
+
+## 0.13.31
+
+### Patch Changes
+
+- [#3441](https://github.com/bluesky-social/atproto/pull/3441) [`8c6c7813a`](https://github.com/bluesky-social/atproto/commit/8c6c7813a9c2110c8fe21acdca8f09554a1983ce) Thanks [@mozzius](https://github.com/mozzius)! - Allow passing `allowTakendown` to createSession
+
+## 0.13.30
+
+### Patch Changes
+
+- [#3429](https://github.com/bluesky-social/atproto/pull/3429) [`e6e6aea38`](https://github.com/bluesky-social/atproto/commit/e6e6aea3814e3d0bb42a537f80d77947e85fa73f) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - add feedViewPost.threadContext defs
+
+- [#3390](https://github.com/bluesky-social/atproto/pull/3390) [`c0a75d310`](https://github.com/bluesky-social/atproto/commit/c0a75d310aa92c067799a97d1acc5bd0543114c5) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - posts_with_video filter in getAuthorFeed
+
+## 0.13.29
+
+### Patch Changes
+
+- [#3416](https://github.com/bluesky-social/atproto/pull/3416) [`50603b4f2`](https://github.com/bluesky-social/atproto/commit/50603b4f2ef08bd618730107ec164a57f27dcca6) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update `tools.ozone.moderation.queryStatuses` lexicon
+
+## 0.13.28
+
+### Patch Changes
+
+- [#3389](https://github.com/bluesky-social/atproto/pull/3389) [`cbf17066f`](https://github.com/bluesky-social/atproto/commit/cbf17066f314fbc7f2e943127ee4a9f589f8bec2) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - add feedgen content mode lexicon spec
+
+## 0.13.27
+
+### Patch Changes
+
+- [#3364](https://github.com/bluesky-social/atproto/pull/3364) [`e277158f7`](https://github.com/bluesky-social/atproto/commit/e277158f70a831b04fde3ec84b3c1eaa6ce82e9d) Thanks [@iwsmith](https://github.com/iwsmith)! - add recId to getSuggestions
+
+## 0.13.26
+
+### Patch Changes
+
+- Updated dependencies [[`72eba67af`](https://github.com/bluesky-social/atproto/commit/72eba67af1af8320b5400bcb9319d5c3c8407d99), [`72eba67af`](https://github.com/bluesky-social/atproto/commit/72eba67af1af8320b5400bcb9319d5c3c8407d99)]:
+  - @atproto/common-web@0.3.2
+  - @atproto/lexicon@0.4.5
+  - @atproto/xrpc@0.6.6
+
+## 0.13.25
+
+### Patch Changes
+
+- [#3271](https://github.com/bluesky-social/atproto/pull/3271) [`53621f8e1`](https://github.com/bluesky-social/atproto/commit/53621f8e100a3aa3c1caff10a08d3f4ea919875a) Thanks [@foysalit](https://github.com/foysalit)! - Allow setting policy names with takedown actions and when querying events
+
+## 0.13.24
+
+### Patch Changes
+
+- [#3294](https://github.com/bluesky-social/atproto/pull/3294) [`d90d999de`](https://github.com/bluesky-social/atproto/commit/d90d999defda01a9b04dbce129e254990062c283) Thanks [@foysalit](https://github.com/foysalit)! - Limit tags filter to 25 max and remove 25 char limit for tag item
+
+## 0.13.23
+
+### Patch Changes
+
+- [#3251](https://github.com/bluesky-social/atproto/pull/3251) [`6d308b857`](https://github.com/bluesky-social/atproto/commit/6d308b857ba2a514ee3c75ebdef7225e298ed7d7) Thanks [@foysalit](https://github.com/foysalit)! - Allow createSession to request takendown account scope
+
+- [#3280](https://github.com/bluesky-social/atproto/pull/3280) [`9ea2cce9a`](https://github.com/bluesky-social/atproto/commit/9ea2cce9a4c0a08994a8cb5abc81dc4bc2221d0c) Thanks [@foysalit](https://github.com/foysalit)! - Apply ozone queue splitting at the database query level
+
+## 0.13.22
+
+### Patch Changes
+
+- [#3270](https://github.com/bluesky-social/atproto/pull/3270) [`f22383cee`](https://github.com/bluesky-social/atproto/commit/f22383cee8feb8b9f761c801ab6e07ad8dc019ed) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add support for label def aliases, deprecation notices. This provides support for the deprecated `gore` label until a full cleanup effort can be completed.
+
+## 0.13.21
+
+### Patch Changes
+
+- [#3250](https://github.com/bluesky-social/atproto/pull/3250) [`dced566de`](https://github.com/bluesky-social/atproto/commit/dced566de5079ef4208801db476a7e7416f5e5aa) Thanks [@haileyok](https://github.com/haileyok)! - add trending topics
+
 ## 0.13.20
 
 ### Patch Changes

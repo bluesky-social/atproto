@@ -1,5 +1,4 @@
 import { z } from 'zod'
-
 import { RequestId, requestIdSchema } from './request-id.js'
 
 export const REQUEST_URI_PREFIX = 'urn:ietf:params:oauth:request_uri:'

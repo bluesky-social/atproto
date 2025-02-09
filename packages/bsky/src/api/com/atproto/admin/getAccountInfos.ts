@@ -1,7 +1,7 @@
-import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
 import { mapDefined } from '@atproto/common'
 import { INVALID_HANDLE } from '@atproto/syntax'
+import { AppContext } from '../../../../context'
+import { Server } from '../../../../lexicon'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getAccountInfos({

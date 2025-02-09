@@ -1,6 +1,6 @@
 import { ClientOptions } from 'ws'
-import { WebSocketKeepAlive } from './websocket-keepalive'
 import { ensureChunkIsMessage } from './stream'
+import { WebSocketKeepAlive } from './websocket-keepalive'
 
 export class Subscription<T = unknown> {
   constructor(

@@ -1,23 +1,23 @@
 import assert from 'node:assert'
 import {
-  TestNetwork,
-  SeedClient,
-  basicSeed,
-  ModeratorClient,
-} from '@atproto/dev-env'
-import {
   ToolsOzoneModerationDefs,
   ToolsOzoneModerationQueryStatuses,
 } from '@atproto/api'
-import { forSnapshot } from './_util'
+import {
+  ModeratorClient,
+  SeedClient,
+  TestNetwork,
+  basicSeed,
+} from '@atproto/dev-env'
 import {
   REASONMISLEADING,
   REASONSPAM,
 } from '../src/lexicon/types/com/atproto/moderation/defs'
 import {
-  REVIEWOPEN,
   REVIEWNONE,
+  REVIEWOPEN,
 } from '../src/lexicon/types/tools/ozone/moderation/defs'
+import { forSnapshot } from './_util'
 
 describe('moderation-statuses', () => {
   let network: TestNetwork
@@ -71,6 +71,10 @@ describe('moderation-statuses', () => {
     await basicSeed(sc)
     await network.processAll()
     await seedEvents()
+  })
+
+  beforeEach(async () => {
+    await network.processAll()
   })
 
   afterAll(async () => {

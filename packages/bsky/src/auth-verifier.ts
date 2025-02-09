@@ -1,15 +1,16 @@
 import crypto, { KeyObject } from 'node:crypto'
+import express from 'express'
+import * as jose from 'jose'
+import KeyEncoder from 'key-encoder'
+import * as ui8 from 'uint8arrays'
+import { SECP256K1_JWT_ALG, parseDidKey } from '@atproto/crypto'
 import {
   AuthRequiredError,
+  VerifySignatureWithKeyFn,
   cryptoVerifySignatureWithKey,
   parseReqNsid,
   verifyJwt as verifyServiceJwt,
-  VerifySignatureWithKeyFn,
 } from '@atproto/xrpc-server'
-import KeyEncoder from 'key-encoder'
-import * as ui8 from 'uint8arrays'
-import * as jose from 'jose'
-import express from 'express'
 import {
   Code,
   DataPlaneClient,
@@ -18,7 +19,6 @@ import {
   unpackIdentityKeys,
 } from './data-plane'
 import { GetIdentityByDidResponse } from './proto/bsky_pb'
-import { parseDidKey, SECP256K1_JWT_ALG } from '@atproto/crypto'
 
 type ReqCtx = {
   req: express.Request

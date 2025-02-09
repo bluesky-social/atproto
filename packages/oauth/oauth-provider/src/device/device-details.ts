@@ -1,5 +1,4 @@
 import { IncomingMessage } from 'node:http'
-
 import { z } from 'zod'
 
 export const deviceDetailsSchema = z.object({

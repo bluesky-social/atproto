@@ -1,13 +1,16 @@
 import { CID } from 'multiformats/cid'
-import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
-import { InvalidRequestError } from '@atproto/xrpc-server'
 import { BlobNotFoundError } from '@atproto/repo'
+import { InvalidRequestError } from '@atproto/xrpc-server'
+import { AuthScope } from '../../../../auth-verifier'
+import { AppContext } from '../../../../context'
+import { Server } from '../../../../lexicon'
 import { assertRepoAvailability } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.getBlob({
-    auth: ctx.authVerifier.optionalAccessOrAdminToken,
+    auth: ctx.authVerifier.optionalAccessOrAdminToken({
+      additional: [AuthScope.Takendown],
+    }),
     handler: async ({ params, res, auth }) => {
       const { did } = params
       await assertRepoAvailability(

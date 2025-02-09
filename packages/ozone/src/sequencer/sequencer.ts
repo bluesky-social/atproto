@@ -1,11 +1,11 @@
-import EventEmitter from 'events'
-import TypedEmitter from 'typed-emitter'
+import EventEmitter from 'node:events'
 import { Selectable } from 'kysely'
 import { PoolClient } from 'pg'
-import { seqLogger as log } from '../logger'
-import Database from '../db'
+import TypedEmitter from 'typed-emitter'
+import { Database } from '../db'
+import { Label as LabelTable, LabelChannel } from '../db/schema/label'
 import { Labels as LabelsEvt } from '../lexicon/types/com/atproto/label/subscribeLabels'
-import { LabelChannel, Label as LabelTable } from '../db/schema/label'
+import { seqLogger as log } from '../logger'
 import { ModerationService } from '../mod-service'
 
 export type { Labels as LabelsEvt } from '../lexicon/types/com/atproto/label/subscribeLabels'
@@ -143,5 +143,3 @@ type SequencerEvents = {
 }
 
 export type SequencerEmitter = TypedEmitter<SequencerEvents>
-
-export default Sequencer

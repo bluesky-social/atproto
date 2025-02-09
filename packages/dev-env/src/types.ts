@@ -1,8 +1,8 @@
-import * as pds from '@atproto/pds'
 import * as bsky from '@atproto/bsky'
 import * as bsync from '@atproto/bsync'
-import * as ozone from '@atproto/ozone'
 import { ExportableKeypair, Keypair } from '@atproto/crypto'
+import * as ozone from '@atproto/ozone'
+import * as pds from '@atproto/pds'
 
 export type IntrospectConfig = {
   port?: number

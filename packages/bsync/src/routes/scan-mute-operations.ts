@@ -1,9 +1,9 @@
 import { once } from 'node:events'
 import { ServiceImpl } from '@connectrpc/connect'
+import { AppContext } from '../context'
+import { createMuteOpChannel } from '../db/schema/mute_op'
 import { Service } from '../proto/bsync_connect'
 import { ScanMuteOperationsResponse } from '../proto/bsync_pb'
-import AppContext from '../context'
-import { createMuteOpChannel } from '../db/schema/mute_op'
 import { authWithApiKey } from './auth'
 import { combineSignals, validCursor } from './util'
 

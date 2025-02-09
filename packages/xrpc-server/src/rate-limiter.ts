@@ -11,6 +11,7 @@ import {
   RateLimitExceededError,
   RateLimiterConsume,
   RateLimiterI,
+  RateLimiterReset,
   RateLimiterStatus,
   XRPCReqContext,
 } from './types'
@@ -109,6 +110,22 @@ export class RateLimiter implements RateLimiterI {
       }
     }
   }
+
+  async reset(
+    ctx: XRPCReqContext,
+    opts?: { calcKey?: CalcKeyFn },
+  ): Promise<void> {
+    const key = opts?.calcKey ? opts.calcKey(ctx) : this.calcKey(ctx)
+    if (key === null) {
+      return
+    }
+
+    try {
+      await this.limiter.delete(key)
+    } catch (cause) {
+      throw new Error(`rate limiter failed to reset key: ${key}`, { cause })
+    }
+  }
 }
 
 export const formatLimiterStatus = (
@@ -141,6 +158,14 @@ export const consumeMany = async (
     setResHeaders(ctx, tightestLimit)
     return tightestLimit
   }
+}
+
+export const resetMany = async (
+  ctx: XRPCReqContext,
+  fns: RateLimiterReset[],
+): Promise<void> => {
+  if (fns.length === 0) return
+  await Promise.all(fns.map((fn) => fn(ctx)))
 }
 
 export const setResHeaders = (

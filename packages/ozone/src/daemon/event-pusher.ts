@@ -1,14 +1,14 @@
 import assert from 'node:assert'
+import { Insertable, Selectable } from 'kysely'
 import { AtpAgent } from '@atproto/api'
 import { SECOND } from '@atproto/common'
-import Database from '../db'
-import { RepoPushEventType } from '../db/schema/repo_push_event'
-import { retryHttp } from '../util'
-import { dbLogger } from '../logger'
-import { InputSchema } from '../lexicon/types/com/atproto/admin/updateSubjectStatus'
+import { Database } from '../db'
 import { BlobPushEvent } from '../db/schema/blob_push_event'
-import { Insertable, Selectable } from 'kysely'
+import { RepoPushEventType } from '../db/schema/repo_push_event'
 import { ids } from '../lexicon/lexicons'
+import { InputSchema } from '../lexicon/types/com/atproto/admin/updateSubjectStatus'
+import { dbLogger } from '../logger'
+import { retryHttp } from '../util'
 
 type EventSubject = InputSchema['subject']
 

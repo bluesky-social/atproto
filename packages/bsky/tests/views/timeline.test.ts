@@ -1,15 +1,15 @@
-import assert from 'assert'
+import assert from 'node:assert'
 import { AtpAgent } from '@atproto/api'
 import {
-  TestNetwork,
-  SeedClient,
-  basicSeed,
   EXAMPLE_LABELER,
+  SeedClient,
+  TestNetwork,
+  basicSeed,
 } from '@atproto/dev-env'
-import { forSnapshot, getOriginator, paginateAll } from '../_util'
-import { FeedViewPost } from '../../src/lexicon/types/app/bsky/feed/defs'
 import { Database } from '../../src'
 import { ids } from '../../src/lexicon/lexicons'
+import { FeedViewPost } from '../../src/lexicon/types/app/bsky/feed/defs'
+import { forSnapshot, getOriginator, paginateAll } from '../_util'
 
 const REVERSE_CHRON = 'reverse-chronological'
 

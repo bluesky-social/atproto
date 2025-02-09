@@ -1,15 +1,15 @@
 import { mapDefined } from '@atproto/common'
+import { AppContext } from '../../../../context'
+import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getBlocks'
-import AppContext from '../../../../context'
 import {
-  createPipeline,
   HydrationFnInput,
-  noRules,
   PresentationFnInput,
   SkeletonFnInput,
+  createPipeline,
+  noRules,
 } from '../../../../pipeline'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 import { clearlyBadCursor, resHeaders } from '../../../util'
 

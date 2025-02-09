@@ -1,6 +1,6 @@
 import { IncomingMessage } from 'node:http'
 import { stdSerializers } from 'pino'
-import pinoHttp from 'pino-http'
+import { pinoHttp } from 'pino-http'
 import { obfuscateHeaders, subsystemLogger } from '@atproto/common'
 
 export const dbLogger: ReturnType<typeof subsystemLogger> =

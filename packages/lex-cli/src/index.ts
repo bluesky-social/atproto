@@ -1,18 +1,18 @@
 #!/usr/bin/env node
 
-import path from 'path'
+import path from 'node:path'
 import { Command } from 'commander'
 import yesno from 'yesno'
-import {
-  readAllLexicons,
-  genTsObj,
-  genFileDiff,
-  printFileDiff,
-  applyFileDiff,
-} from './util'
-import * as mdGen from './mdgen'
 import { genClientApi } from './codegen/client'
 import { genServerApi } from './codegen/server'
+import * as mdGen from './mdgen'
+import {
+  applyFileDiff,
+  genFileDiff,
+  genTsObj,
+  printFileDiff,
+  readAllLexicons,
+} from './util'
 
 const program = new Command()
 program.name('lex').description('Lexicon CLI').version('0.0.0')

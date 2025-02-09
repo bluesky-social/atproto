@@ -1,12 +1,12 @@
 import { CID } from 'multiformats/cid'
-import { def, RepoContents, Commit } from './types'
-import { ReadableBlockstore } from './storage'
-import { MST } from './mst'
-import log from './logger'
-import * as util from './util'
-import * as parse from './parse'
-import { MissingBlocksError } from './error'
 import { RepoRecord } from '@atproto/lexicon'
+import { MissingBlocksError } from './error'
+import log from './logger'
+import { MST } from './mst'
+import * as parse from './parse'
+import { ReadableBlockstore } from './storage'
+import { Commit, RepoContents, def } from './types'
+import * as util from './util'
 
 type Params = {
   storage: ReadableBlockstore
@@ -85,5 +85,3 @@ export class ReadableRepo {
     return contents
   }
 }
-
-export default ReadableRepo

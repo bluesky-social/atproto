@@ -1,12 +1,7 @@
+import AwaitLock from 'await-lock'
 import { TID } from '@atproto/common-web'
 import { AtUri, ensureValidDid } from '@atproto/syntax'
-import {
-  buildFetchHandler,
-  BuildFetchHandlerOptions,
-  FetchHandler,
-  XrpcClient,
-} from '@atproto/xrpc'
-import AwaitLock from 'await-lock'
+import { FetchHandler, XrpcClient, buildFetchHandler } from '@atproto/xrpc'
 import {
   AppBskyActorDefs,
   AppBskyActorProfile,
@@ -38,14 +33,14 @@ import {
   BskyThreadViewPreference,
 } from './types'
 import {
-  asDid,
   Did,
+  asDid,
   getSavedFeedType,
   isDid,
   sanitizeMutedWordValue,
   savedFeedsToUriArrays,
-  validateSavedFeed,
   validateNux,
+  validateSavedFeed,
 } from './util'
 
 const FEED_VIEW_PREF_DEFAULTS = {
@@ -588,6 +583,10 @@ export class Agent extends XrpcClient {
         activeProgressGuide: undefined,
         nuxs: [],
       },
+      postInteractionSettings: {
+        threadgateAllowRules: undefined,
+        postgateEmbeddingRules: undefined,
+      },
     }
     const res = await this.app.bsky.actor.getPreferences({})
     const labelPrefs: AppBskyActorDefs.ContentLabelPref[] = []
@@ -692,6 +691,14 @@ export class Agent extends XrpcClient {
         prefs.bskyAppState.queuedNudges = v.queuedNudges || []
         prefs.bskyAppState.activeProgressGuide = v.activeProgressGuide
         prefs.bskyAppState.nuxs = v.nuxs || []
+      } else if (
+        AppBskyActorDefs.isPostInteractionSettingsPref(pref) &&
+        AppBskyActorDefs.validatePostInteractionSettingsPref(pref).success
+      ) {
+        prefs.postInteractionSettings.threadgateAllowRules =
+          pref.threadgateAllowRules
+        prefs.postInteractionSettings.postgateEmbeddingRules =
+          pref.postgateEmbeddingRules
       }
     }
 
@@ -1463,6 +1470,49 @@ export class Agent extends XrpcClient {
           {
             ...bskyAppStatePref,
             $type: 'app.bsky.actor.defs#bskyAppStatePref',
+          },
+        ])
+    })
+  }
+
+  async setPostInteractionSettings(
+    settings: AppBskyActorDefs.PostInteractionSettingsPref,
+  ) {
+    if (
+      !AppBskyActorDefs.validatePostInteractionSettingsPref(settings).success
+    ) {
+      throw new Error('Invalid post interaction settings')
+    }
+
+    await this.updatePreferences((prefs: AppBskyActorDefs.Preferences) => {
+      let prev = prefs.findLast(
+        (pref) =>
+          AppBskyActorDefs.isPostInteractionSettingsPref(pref) &&
+          AppBskyActorDefs.validatePostInteractionSettingsPref(pref).success,
+      ) as AppBskyActorDefs.PostInteractionSettingsPref
+
+      if (!prev) {
+        prev = {
+          /**
+           * Matches handling of `threadgate.allow` where `undefined` means "everyone"
+           */
+          threadgateAllowRules: undefined,
+          postgateEmbeddingRules: undefined,
+        }
+      }
+
+      /**
+       * Matches handling of `threadgate.allow` where `undefined` means "everyone"
+       */
+      prev.threadgateAllowRules = settings.threadgateAllowRules
+      prev.postgateEmbeddingRules = settings.postgateEmbeddingRules
+
+      return prefs
+        .filter((p) => !AppBskyActorDefs.isPostInteractionSettingsPref(p))
+        .concat([
+          {
+            ...prev,
+            $type: 'app.bsky.actor.defs#postInteractionSettingsPref',
           },
         ])
     })

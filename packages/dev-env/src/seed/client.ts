@@ -1,22 +1,30 @@
-import fs from 'fs/promises'
+import fs from 'node:fs/promises'
+import path from 'node:path'
 import { CID } from 'multiformats/cid'
 import {
-  ComAtprotoModerationCreateReport,
-  AppBskyFeedPost,
-  AppBskyRichtextFacet,
   AppBskyFeedLike,
+  AppBskyFeedPost,
   AppBskyGraphFollow,
   AppBskyGraphList,
+  AppBskyRichtextFacet,
   AtpAgent,
+  ComAtprotoModerationCreateReport,
 } from '@atproto/api'
-import { AtUri } from '@atproto/syntax'
 import { BlobRef } from '@atproto/lexicon'
+import { AtUri } from '@atproto/syntax'
 import { TestNetworkNoAppView } from '../network-no-appview'
 
 // Makes it simple to create data via the XRPC client,
 // and keeps track of all created data in memory for convenience.
 
 let AVATAR_IMG: Uint8Array | undefined
+
+// AVATAR_PATH is defined in a non-CWD-dependant way, so this works
+// for any consumer of this package, even outside the atproto repo.
+const AVATAR_PATH = path.resolve(
+  __dirname,
+  '../../assets/key-portrait-small.jpg',
+)
 
 export type ImageRef = {
   image: BlobRef
@@ -164,9 +172,7 @@ export class SeedClient<
     ref: RecordRef
     joinedViaStarterPack?: RecordRef
   }> {
-    AVATAR_IMG ??= await fs.readFile(
-      '../dev-env/src/seed/img/key-portrait-small.jpg',
-    )
+    AVATAR_IMG ??= await fs.readFile(AVATAR_PATH)
 
     let avatarBlob
     {

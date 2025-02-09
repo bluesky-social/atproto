@@ -1,5 +1,4 @@
 import { OAuthAccessToken, OAuthTokenType } from '@atproto/oauth-types'
-
 import { InvalidDpopKeyBindingError } from '../errors/invalid-dpop-key-binding-error.js'
 import { InvalidDpopProofError } from '../errors/invalid-dpop-proof-error.js'
 import { asArray } from '../lib/util/cast.js'

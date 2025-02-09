@@ -1,15 +1,15 @@
+import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
 import { OutputSchema } from '../../../../lexicon/types/app/bsky/actor/getProfile'
 import {
-  LocalViewer,
   LocalRecords,
+  LocalViewer,
   pipethroughReadAfterWrite,
 } from '../../../../read-after-write'
 
 export default function (server: Server, ctx: AppContext) {
-  const { bskyAppView } = ctx.cfg
-  if (!bskyAppView) return
+  if (!ctx.bskyAppView) return
+
   server.app.bsky.actor.getProfile({
     auth: ctx.authVerifier.accessStandard(),
     handler: async (reqCtx) => {

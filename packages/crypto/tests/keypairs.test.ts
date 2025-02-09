@@ -1,8 +1,8 @@
-import P256Keypair from '../src/p256/keypair'
-import Secp256k1Keypair from '../src/secp256k1/keypair'
-import * as p256 from '../src/p256/operations'
-import * as secp from '../src/secp256k1/operations'
 import { randomBytes } from '../src'
+import { P256Keypair } from '../src/p256/keypair'
+import * as p256 from '../src/p256/operations'
+import { Secp256k1Keypair } from '../src/secp256k1/keypair'
+import * as secp from '../src/secp256k1/operations'
 
 describe('keypairs', () => {
   describe('secp256k1', () => {

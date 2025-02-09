@@ -1,16 +1,16 @@
-import { utf8Len, graphemeLen } from '@atproto/common-web'
 import { CID } from 'multiformats/cid'
+import { graphemeLen, utf8Len } from '@atproto/common-web'
 import { Lexicons } from '../lexicons'
-import * as formats from './formats'
 import {
-  LexUserType,
   LexBoolean,
+  LexBytes,
   LexInteger,
   LexString,
-  ValidationResult,
+  LexUserType,
   ValidationError,
-  LexBytes,
+  ValidationResult,
 } from '../types'
+import * as formats from './formats'
 
 export function validate(
   lexicons: Lexicons,

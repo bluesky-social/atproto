@@ -1,11 +1,11 @@
-import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
 import {
   AppBskyFeedPost,
-  AtUri,
-  RichText,
   AppBskyRichtextFacet,
+  AtUri,
   AtpAgent,
+  RichText,
 } from '@atproto/api'
+import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import basicSeed from './seeds/basic'
 
 describe('pds posts record creation', () => {

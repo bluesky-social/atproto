@@ -1,20 +1,20 @@
 import { AppBskyGraphDefs } from '../client/index'
+import { LABELS } from './const/labels'
 import {
   BLOCK_BEHAVIOR,
-  MUTE_BEHAVIOR,
-  MUTEWORD_BEHAVIOR,
+  CUSTOM_LABEL_VALUE_RE,
   HIDE_BEHAVIOR,
-  NOOP_BEHAVIOR,
   Label,
   LabelPreference,
+  LabelTarget,
+  MUTEWORD_BEHAVIOR,
+  MUTE_BEHAVIOR,
+  ModerationBehavior,
   ModerationCause,
   ModerationOpts,
-  LabelTarget,
-  ModerationBehavior,
-  CUSTOM_LABEL_VALUE_RE,
+  NOOP_BEHAVIOR,
 } from './types'
 import { ModerationUI } from './ui'
-import { LABELS } from './const/labels'
 
 enum ModerationBehaviorSeverity {
   High,

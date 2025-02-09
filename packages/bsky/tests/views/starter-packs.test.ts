@@ -1,9 +1,9 @@
+import assert from 'node:assert'
 import { AtpAgent } from '@atproto/api'
-import { TestNetwork, SeedClient, RecordRef, basicSeed } from '@atproto/dev-env'
+import { RecordRef, SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import { ids } from '../../src/lexicon/lexicons'
 import { isRecord as isProfile } from '../../src/lexicon/types/app/bsky/actor/profile'
 import { forSnapshot } from '../_util'
-import assert from 'assert'
-import { ids } from '../../src/lexicon/lexicons'
 
 describe('starter packs', () => {
   let network: TestNetwork

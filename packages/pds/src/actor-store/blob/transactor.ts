@@ -1,24 +1,24 @@
-import stream from 'stream'
-import crypto from 'crypto'
-import { CID } from 'multiformats/cid'
+import crypto from 'node:crypto'
+import stream from 'node:stream'
 import bytes from 'bytes'
 import { fromStream as fileTypeFromStream } from 'file-type'
+import { CID } from 'multiformats/cid'
+import { cloneStream, sha256RawToCid, streamSize } from '@atproto/common'
+import { BlobRef } from '@atproto/lexicon'
 import { BlobNotFoundError, BlobStore, WriteOpAction } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
-import { cloneStream, sha256RawToCid, streamSize } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { BlobRef } from '@atproto/lexicon'
-import { ActorDb, Blob as BlobTable } from '../db'
+import { BackgroundQueue } from '../../background'
+import * as img from '../../image'
+import { StatusAttr } from '../../lexicon/types/com/atproto/admin/defs'
 import {
   PreparedBlobRef,
-  PreparedWrite,
   PreparedDelete,
   PreparedUpdate,
+  PreparedWrite,
 } from '../../repo/types'
-import * as img from '../../image'
-import { BackgroundQueue } from '../../background'
+import { ActorDb, Blob as BlobTable } from '../db'
 import { BlobReader } from './reader'
-import { StatusAttr } from '../../lexicon/types/com/atproto/admin/defs'
 
 export type BlobMetadata = {
   tempKey: string
@@ -36,6 +36,21 @@ export class BlobTransactor extends BlobReader {
     public backgroundQueue: BackgroundQueue,
   ) {
     super(db, blobstore)
+  }
+
+  async insertBlobs(recordUri: string, blobs: Iterable<BlobRef>) {
+    const values = Array.from(blobs, (cid) => ({
+      recordUri,
+      blobCid: cid.ref.toString(),
+    }))
+
+    if (values.length) {
+      await this.db.db
+        .insertInto('record_blob')
+        .values(values)
+        .onConflict((oc) => oc.doNothing())
+        .execute()
+    }
   }
 
   async uploadBlobAndGetMetadata(

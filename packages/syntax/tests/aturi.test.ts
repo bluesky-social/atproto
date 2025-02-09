@@ -1,6 +1,6 @@
+import * as fs from 'node:fs'
+import * as readline from 'node:readline'
 import { AtUri, ensureValidAtUri, ensureValidAtUriRegex } from '../src/index'
-import * as readline from 'readline'
-import * as fs from 'fs'
 
 describe('At Uris', () => {
   it('parses valid at uris', () => {

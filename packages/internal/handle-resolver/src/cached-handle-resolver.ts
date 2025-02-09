@@ -2,8 +2,8 @@ import { CachedGetter, SimpleStore } from '@atproto-labs/simple-store'
 import { SimpleStoreMemory } from '@atproto-labs/simple-store-memory'
 import {
   HandleResolver,
-  ResolvedHandle,
   ResolveHandleOptions,
+  ResolvedHandle,
 } from './types.js'
 
 export type HandleCache = SimpleStore<string, ResolvedHandle>

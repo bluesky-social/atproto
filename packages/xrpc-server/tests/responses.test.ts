@@ -1,10 +1,10 @@
 import * as http from 'node:http'
 import { AddressInfo } from 'node:net'
+import { byteIterableToStream } from '@atproto/common'
 import { LexiconDoc } from '@atproto/lexicon'
 import { XrpcClient } from '@atproto/xrpc'
-import { byteIterableToStream } from '@atproto/common'
-import { createServer, closeServer } from './_util'
 import * as xrpcServer from '../src'
+import { closeServer, createServer } from './_util'
 
 const LEXICONS: LexiconDoc[] = [
   {

@@ -1,4 +1,4 @@
-import { RichText, sanitizeRichText, Facet, UnicodeString } from '../src'
+import { Facet, RichText, UnicodeString, sanitizeRichText } from '../src'
 
 describe('sanitizeRichText: cleanNewlines', () => {
   it('removes more than two consecutive new lines', () => {

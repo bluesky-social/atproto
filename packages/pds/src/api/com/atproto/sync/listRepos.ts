@@ -1,8 +1,8 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
-import { Cursor, GenericKeyset, paginate } from '../../../../db/pagination'
 import { formatAccountStatus } from '../../../../account-manager'
+import { AppContext } from '../../../../context'
+import { Cursor, GenericKeyset, paginate } from '../../../../db/pagination'
+import { Server } from '../../../../lexicon'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.listRepos(async ({ params }) => {

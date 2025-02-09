@@ -1,5 +1,6 @@
 import { ParsedLabelers, formatLabelerHeader } from '../util'
 
+export const BSKY_USER_AGENT = 'BskyAppView'
 export const ATPROTO_CONTENT_LABELERS = 'Atproto-Content-Labelers'
 export const ATPROTO_REPO_REV = 'Atproto-Repo-Rev'
 

@@ -1,6 +1,6 @@
-import { Server } from '../../lexicon'
-import AppContext from '../../context'
 import { mapDefined } from '@atproto/common'
+import { AppContext } from '../../context'
+import { Server } from '../../lexicon'
 import { ids } from '../../lexicon/lexicons'
 
 export default function (server: Server, ctx: AppContext) {

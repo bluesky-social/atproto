@@ -5,12 +5,12 @@ import { RefinementCtx, ZodIssueCode } from 'zod'
 export type Simplify<T> = { [K in keyof T]: T[K] } & {}
 export type Override<T, V> = Simplify<V & Omit<T, keyof V>>
 
-export type RequiredKey<T, K extends string> = Simplify<
-  string extends K
-    ? T
-    : {
-        [L in K]: Exclude<L extends keyof T ? T[L] : unknown, undefined>
-      } & Omit<T, K>
+export type RequiredKey<T, K extends keyof T = never> = Simplify<
+  T & {
+    [L in K]-?: unknown extends T[L]
+      ? NonNullable<unknown> | null
+      : Exclude<T[L], undefined>
+  }
 >
 
 // eslint-disable-next-line @typescript-eslint/ban-types

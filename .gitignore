@@ -5,12 +5,12 @@ yarn-error.log
 packages/**/dist
 .idea
 packages/*/coverage
-.vscode/
 test.sqlite
 .DS_Store
 *.log
 *.tsbuildinfo
 .*.env
+.env.*
 .env
 \#*\#
 *~

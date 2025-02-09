@@ -1,9 +1,9 @@
+import { ServiceImpl } from '@connectrpc/connect'
+import { Selectable } from 'kysely'
 import * as ui8 from 'uint8arrays'
 import { noUndefinedVals } from '@atproto/common'
-import { ServiceImpl } from '@connectrpc/connect'
 import { Service } from '../../../proto/bsky_connect'
 import { Database } from '../db'
-import { Selectable } from 'kysely'
 import { Label } from '../db/tables/label'
 
 type LabelRow = Selectable<Label>

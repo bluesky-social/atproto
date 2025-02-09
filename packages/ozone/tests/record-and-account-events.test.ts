@@ -1,15 +1,16 @@
 import {
-  TestNetwork,
-  SeedClient,
-  basicSeed,
-  ModeratorClient,
-} from '@atproto/dev-env'
-import {
   ComAtprotoModerationDefs,
   ToolsOzoneModerationDefs,
+  ToolsOzoneModerationEmitEvent as EmitModerationEvent,
 } from '@atproto/api'
+import {
+  ModeratorClient,
+  SeedClient,
+  TestNetwork,
+  basicSeed,
+} from '@atproto/dev-env'
 import { REVIEWOPEN } from '../src/lexicon/types/tools/ozone/moderation/defs'
-import { ToolsOzoneModerationEmitEvent as EmitModerationEvent } from '@atproto/api'
+
 describe('record and account events on moderation subjects', () => {
   let network: TestNetwork
   let sc: SeedClient

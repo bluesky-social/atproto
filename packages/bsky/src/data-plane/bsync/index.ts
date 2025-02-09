@@ -1,14 +1,14 @@
-import http from 'http'
-import events from 'events'
-import assert from 'assert'
-import express from 'express'
+import assert from 'node:assert'
+import events from 'node:events'
+import http from 'node:http'
 import { ConnectRouter } from '@connectrpc/connect'
 import { expressConnectMiddleware } from '@connectrpc/connect-express'
+import express from 'express'
 import { AtUri } from '@atproto/syntax'
-import { Database } from '../server/db'
+import { ids } from '../../lexicon/lexicons'
 import { Service } from '../../proto/bsync_connect'
 import { MuteOperation_Type } from '../../proto/bsync_pb'
-import { ids } from '../../lexicon/lexicons'
+import { Database } from '../server/db'
 
 export class MockBsync {
   constructor(public server: http.Server) {}

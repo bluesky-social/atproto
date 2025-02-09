@@ -1,10 +1,10 @@
+import { TID } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
+import { Secp256k1Keypair } from '@atproto/crypto'
+import { RepoContents, WriteOpAction, verifyCommitSig } from '../src'
 import { Repo } from '../src/repo'
 import { MemoryBlockstore } from '../src/storage'
 import * as util from './_util'
-import { TID } from '@atproto/common'
-import { RepoContents, verifyCommitSig, WriteOpAction } from '../src'
-import { Secp256k1Keypair } from '@atproto/crypto'
 
 describe('Repo', () => {
   const collName = 'com.example.posts'

@@ -30,6 +30,10 @@
                 "type": "ref",
                 "ref": "app.bsky.actor.defs#profileView"
               }
+            },
+            "recId": {
+              "type": "integer",
+              "description": "Snowflake for this recommendation, use when submitting recommendation events."
             }
           }
         }

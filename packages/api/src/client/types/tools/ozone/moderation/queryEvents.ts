@@ -39,6 +39,7 @@ export interface QueryParams {
   /** If specified, only events where all of these tags were removed are returned */
   removedTags?: string[]
   reportTypes?: string[]
+  policies?: string[]
   cursor?: string
 }
 

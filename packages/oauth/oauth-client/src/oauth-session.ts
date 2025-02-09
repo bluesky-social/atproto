@@ -1,7 +1,6 @@
-import { bindFetch, Fetch } from '@atproto-labs/fetch'
 import { AtprotoDid } from '@atproto/did'
 import { OAuthAuthorizationServerMetadata } from '@atproto/oauth-types'
-
+import { Fetch, bindFetch } from '@atproto-labs/fetch'
 import { AtprotoScope } from './atproto-token-response.js'
 import { TokenInvalidError } from './errors/token-invalid-error.js'
 import { TokenRevokedError } from './errors/token-revoked-error.js'
