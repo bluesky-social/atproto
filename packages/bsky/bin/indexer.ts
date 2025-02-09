@@ -14,7 +14,7 @@ import { BackgroundQueue } from '../src/data-plane/server/background'
 
 export async function main() {
   const streams = process.env.INDEXER_STREAMS || 'firehose,firehose_backfill'
-  const group = process.env.INDEXER_GROUP || 'firehose_group'
+  // const group = process.env.INDEXER_GROUP || 'firehose_group'
   const consumer = process.env.INDEXER_CONSUMER
   const concurrency = parseInt(process.env.INDEXER_CONCURRENCY || '10', 10)
   const redisHost = process.env.REDIS_HOST
@@ -32,13 +32,11 @@ export async function main() {
   const redis = new Redis({ host: redisHost })
   const db = new Database({ url: postgresUrl })
   await db.migrateToLatestOrThrow()
-  await db.close()
   // redis stream indexers
   const indexers = streams.split(',').map((stream) => {
-    const db = new Database({ url: postgresUrl })
     return new StreamIndexer({
       stream,
-      group,
+      group: `${stream}_group`,
       consumer,
       redis,
       concurrency,
@@ -60,6 +58,7 @@ export async function main() {
     httpLogger.info('stopping')
     await Promise.all(indexers.map((indexer) => indexer.stop()))
     await redis.destroy()
+    await db.close()
     server.close()
     await once(server, 'close')
   })
