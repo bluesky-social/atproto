@@ -219,9 +219,10 @@ export class Redis {
         messages: [],
       }
       results.push(result)
-      for (const [cursor, values = []] of messages) {
+      for (const [cursor, values] of messages) {
         const message: StreamOutputMessage = { cursor, contents: {} }
         result.messages.push(message)
+        if (!values) continue // may be null
         for (let i = 0; i < values.length; ++i) {
           if (i % 2 === 0) continue
           const field = values[i - 1]
