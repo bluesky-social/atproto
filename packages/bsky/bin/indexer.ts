@@ -29,7 +29,6 @@ export async function main() {
   const metricsRegistry = new Registry()
   collectDefaultMetrics({ register: metricsRegistry })
   const server = createMetricsServer(metricsRegistry)
-  const redis = new Redis({ host: redisHost })
   const db = new Database({ url: postgresUrl })
   await db.migrateToLatestOrThrow()
   // redis stream indexers
@@ -59,7 +58,6 @@ export async function main() {
     httpLogger.info('stopping')
     await Promise.all(indexers.map((indexer) => indexer.stop()))
     await Promise.all(redises.map((redis) => redis.destroy()))
-    await redis.destroy()
     await db.close()
     server.close()
     await once(server, 'close')
