@@ -13,6 +13,14 @@ export type StreamEvent =
   | ({ type: 'account' } & AccountEvent)
   | ({ type: 'identity' } & IdentityEvent)
 
+export type BackfillEvent = {
+  did: string
+  host: string
+  rev: string
+  status: string | undefined
+  active: boolean | undefined
+}
+
 type BaseOpEvent = {
   seq: number
   time: string

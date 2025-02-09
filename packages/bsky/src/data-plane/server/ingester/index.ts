@@ -14,7 +14,7 @@ import { Redis } from '../../../redis'
 import { Batcher } from './batcher'
 import { streamLengthBackpressure, cursorFor, wait } from './util'
 import { dataplaneLogger as logger } from '../../../logger'
-import { StreamEvent, FirehoseEvent } from '../types'
+import { StreamEvent, FirehoseEvent, BackfillEvent } from '../types'
 
 export type IngesterOptions = {
   host: string
@@ -157,10 +157,11 @@ export class BackfillIngester {
               fields: Object.entries({
                 repo: JSON.stringify({
                   did: repo.did,
+                  host: this.opts.host,
                   rev: repo.rev,
                   status: repo.status,
                   active: repo.active,
-                }),
+                } satisfies BackfillEvent),
               }),
             })),
           )
