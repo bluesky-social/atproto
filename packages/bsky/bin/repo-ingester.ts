@@ -14,8 +14,9 @@ export async function main() {
   const concurrency = process.env.INGESTER_CONCURRENCY
     ? parseInt(process.env.INGESTER_CONCURRENCY, 10)
     : undefined
-  const firehoseStream = process.env.INGESTER_FIREHOSE_STREAM || 'firehose'
-  const backfillStream = process.env.INGESTER_BACKFILL_STREAM || 'backfill'
+  const repoStream = process.env.INGESTER_BACKFILL_STREAM || 'repo_backfill'
+  const firehoseStream =
+    process.env.INGESTER_FIREHOSE_STREAM || 'firehose_backfill'
   const redisHost = process.env.REDIS_HOST
   const metricsPort = parseInt(process.env.METRICS_PORT || '4010', 10)
   assert(redisHost, 'must set REDIS_HOST, e.g. redis://localhost:6380')
@@ -27,7 +28,7 @@ export async function main() {
   // repo ingester
   const ingester = new RepoIngester({
     redis,
-    streamIn: backfillStream,
+    streamIn: repoStream,
     streamOut: firehoseStream,
     group,
     consumer,

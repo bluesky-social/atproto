@@ -13,7 +13,7 @@ import { IndexingService } from '../src/data-plane/server/indexing'
 import { BackgroundQueue } from '../src/data-plane/server/background'
 
 export async function main() {
-  const stream = process.env.INDEXER_STREAM || 'firehose'
+  const streams = process.env.INDEXER_STREAMS || 'firehose,firehose_backfill'
   const group = process.env.INDEXER_GROUP || 'firehose_group'
   const consumer = process.env.INDEXER_CONSUMER
   const concurrency = parseInt(process.env.INDEXER_CONCURRENCY || '10', 10)
@@ -33,27 +33,30 @@ export async function main() {
   const db = new Database({ url: postgresUrl })
   await db.migrateToLatestOrThrow()
   // redis stream indexers
-  const indexer = new StreamIndexer({
-    stream,
-    group,
-    consumer,
-    redis,
-    concurrency,
-    indexingService: new IndexingService(
-      db,
-      new IdResolver(), // @TODO redis-cached
-      new BackgroundQueue(db),
-    ),
+  const indexers = streams.split(',').map((stream) => {
+    return new StreamIndexer({
+      stream,
+      group,
+      consumer,
+      redis,
+      concurrency,
+      indexingService: new IndexingService(
+        db,
+        new IdResolver(), // @TODO redis-cached
+        new BackgroundQueue(db),
+      ),
+    })
   })
+
   StreamIndexer.metrics.register(metricsRegistry)
   // start
   await once(server.listen(metricsPort), 'listening')
   httpLogger.info({ address: server.address() }, 'server listening')
-  indexer.run()
+  indexers.map((indexer) => indexer.run())
   // stop
   process.on('SIGINT', async () => {
     httpLogger.info('stopping')
-    await indexer.stop()
+    await Promise.all(indexers.map((indexer) => indexer.stop()))
     await redis.destroy()
     server.close()
     await once(server, 'close')
