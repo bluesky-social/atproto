@@ -1,10 +1,11 @@
 import assert from 'node:assert'
 import PQueue from 'p-queue'
+import { chunkArray } from '@atproto/common'
+import { getAndParseRecord, readCarWithRoot, verifyRepo } from '@atproto/repo'
 import { Redis, StreamOutputMessage } from '../../../redis'
 import { dataplaneLogger } from '../../../logger'
 import { BackfillEvent, StreamEvent } from '../types'
-import { getAndParseRecord, readCarWithRoot, verifyRepo } from '@atproto/repo'
-import { chunkArray } from '@atproto/common'
+import { streamLengthBackpressure } from './util'
 // import { Counter, Gauge, Registry } from 'prom-client'
 
 export class RepoIngester {
@@ -16,6 +17,7 @@ export class RepoIngester {
   //   group: this.opts.group,
   //   consumer: this.opts.consumer,
   // })
+  backpressure: ReturnType<typeof streamLengthBackpressure>
   constructor(
     private opts: {
       redis: Redis
@@ -28,6 +30,10 @@ export class RepoIngester {
   ) {
     this.queue = new PQueue({
       concurrency: opts.concurrency ?? 2,
+    })
+    this.backpressure = streamLengthBackpressure({
+      redis: opts.redis,
+      stream: opts.streamOut,
     })
   }
   run() {
@@ -121,6 +127,8 @@ export class RepoIngester {
         })
         return
       }
+      await this.backpressure(this.ac.signal)
+      this.ac.signal.throwIfAborted()
       await this.process(event)
       await this.opts.redis.ackMessage({
         del: true,
