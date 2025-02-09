@@ -37,7 +37,7 @@ export async function main() {
     return new StreamIndexer({
       stream,
       group: `${stream}_group`,
-      consumer,
+      consumer: `${stream}_group_${consumer}`,
       redis,
       concurrency,
       indexingService: new IndexingService(
