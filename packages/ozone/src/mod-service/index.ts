@@ -61,7 +61,6 @@ import {
 } from './types'
 import { formatLabel, formatLabelRow, signLabel } from './util'
 import { AuthHeaders, ModerationViews } from './views'
-import { ReporterStatsRow } from '../db/schema/reporter_stats'
 
 export type ModerationServiceCreator = (db: Database) => ModerationService
 

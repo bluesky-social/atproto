@@ -815,7 +815,17 @@
     },
     "reporterStats": {
       "type": "object",
-      "required": ["did", "accountReportCount", "recordReportCount", "reportedAccountCount", "reportedRecordCount", "takendownAccountCount", "takendownRecordCount", "labeledAccountCount", "labeledRecordCount"],
+      "required": [
+        "did",
+        "accountReportCount",
+        "recordReportCount",
+        "reportedAccountCount",
+        "reportedRecordCount",
+        "takendownAccountCount",
+        "takendownRecordCount",
+        "labeledAccountCount",
+        "labeledRecordCount"
+      ],
       "properties": {
         "did": {
           "type": "string",
