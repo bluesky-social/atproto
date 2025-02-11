@@ -10,7 +10,7 @@
         "handle": {
           "type": "string",
           "format": "handle",
-          "description": "The validated handle of the account; or 'handle.invalid' if the handle did not resolve successfully."
+          "description": "The validated handle of the account; or 'handle.invalid' if the handle did not bi-directionally match the DID document."
         },
         "tombstoned": {
           "type": "boolean",

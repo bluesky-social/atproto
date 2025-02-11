@@ -22,7 +22,17 @@
           "type": "ref",
           "ref": "com.atproto.identity.defs#atprotoIdentity"
         }
-      }
+      },
+      "errors": [
+        {
+          "name": "HandleNotFound",
+          "description": "The resolution process confirmed that the handle does not resolve to any DID."
+        },
+        {
+          "name": "DidNotFound",
+          "description": "The DID resolution process confirmed that there is no current DID."
+        }
+      ]
     }
   }
 }
