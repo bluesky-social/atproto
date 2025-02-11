@@ -775,7 +775,10 @@ export class MST {
 
   async proofForRightSib(key: string): Promise<BlockMap> {
     const index = await this.findGtOrEqualLeafIndex(key)
-    const found = await this.atIndex(index)
+    let found = await this.atIndex(index)
+    if (!found) {
+      found = await this.atIndex(index - 1)
+    }
     let blocks: BlockMap
     if (!found) {
       // shouldn't ever hit, null case
