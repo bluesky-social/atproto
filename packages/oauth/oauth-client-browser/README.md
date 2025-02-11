@@ -153,6 +153,8 @@ following optional configuration options:
   needed unless you run an entire atproto stack locally. Defaults to
   `https://plc.directory`.
 
+- `namespace`: An optional string used by the client to generate keys for browser storage (LocalStorage and IndexedDB). This is typically only needed if you are hosting multiple AppViews on the same domain in order to keep the OAuth response data separate from one another.
+
 ## Usage
 
 Once the `client` is set up, it can be used to initiate & manage OAuth sessions.
