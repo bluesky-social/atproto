@@ -19,13 +19,13 @@
       "output": {
         "encoding": "application/json",
         "schema": {
-      	  "type": "object",
-      	  "required": ["didDoc"],
+          "type": "object",
+          "required": ["didDoc"],
           "properties": {
-        	"didDoc": {
-          	  "type": "unknown",
-          	  "description": "The complete DID document for the identity."
-        	}
+            "didDoc": {
+              "type": "unknown",
+              "description": "The complete DID document for the identity."
+            }
           }
         }
       },
