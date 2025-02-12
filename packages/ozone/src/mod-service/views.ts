@@ -32,6 +32,7 @@ import {
   isModEventLabel,
   isModEventMute,
   isModEventMuteReporter,
+  isModEventPriorityScore,
   isModEventReport,
   isModEventTag,
   isModEventTakedown,
@@ -54,6 +55,8 @@ const ifString = (val: unknown): string | undefined =>
   typeof val === 'string' ? val : undefined
 const ifBoolean = (val: unknown): boolean | undefined =>
   typeof val === 'boolean' ? val : undefined
+const ifNumber = (val: unknown): number | undefined =>
+  typeof val === 'number' ? val : undefined
 
 export type AuthHeaders = {
   headers: {
@@ -144,17 +147,8 @@ export class ModerationViews {
       event.durationInHours = row.durationInHours ?? undefined
     }
 
-    // 'tools.ozone.moderation.defs#modEventMuteReporter',
-    // 'tools.ozone.moderation.defs#modEventTakedown',
-    // 'tools.ozone.moderation.defs#modEventLabel',
-    // 'tools.ozone.moderation.defs#modEventMute',
-    // 'tools.ozone.moderation.defs#modEventPriorityScore',
     if (
-      (isModEventMuteReporter(event) ||
-        isModEventLabel(event) ||
-        isModEventMute(event) ||
-        isModEventTakedown(event) ||
-        isModEventAcknowledge(event)) &&
+      (isModEventTakedown(event) || isModEventAcknowledge(event)) &&
       meta.acknowledgeAccountSubjects
     ) {
       event.acknowledgeAccountSubjects = ifBoolean(
@@ -162,11 +156,8 @@ export class ModerationViews {
       )!
     }
 
-    if (event.action === 'tools.ozone.moderation.defs#modEventPriorityScore') {
-      eventView.event = {
-        ...eventView.event,
-        score: event.meta?.priorityScore ?? 0,
-      }
+    if (isModEventPriorityScore(event)) {
+      event.score = ifNumber(meta?.priorityScore) ?? 0
     }
 
     if (
