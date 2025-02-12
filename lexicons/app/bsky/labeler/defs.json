@@ -65,6 +65,110 @@
           }
         }
       }
+    },
+    "reasonType": {
+      "type": "array",
+      "items": {
+          "type": "string",
+          "knownValues": [
+            "com.atproto.moderation.defs#reasonSpam",
+            "com.atproto.moderation.defs#reasonMisleading",
+            "com.atproto.moderation.defs#reasonSexual",
+            "com.atproto.moderation.defs#reasonOther",
+            "com.atproto.moderation.defs#reasonAppeal",
+            "com.atproto.moderation.defs#reasonAppeal",
+            "app.bsky.labeler.defs#reasonHarassment",
+            "app.bsky.labeler.defs#reasonAnimalAbuse",
+            "app.bsky.labeler.defs#reasonGraphi",
+            "app.bsky.labeler.defs#reasonScam",
+            "app.bsky.labeler.defs#reasonProhibitedCommerce",
+            "app.bsky.labeler.defs#reasonInauthentic",
+            "app.bsky.labeler.defs#reasonImpersonation",
+            "app.bsky.labeler.defs#reasonBanEvasion",
+            "app.bsky.labeler.defs#reasonChildSafety",
+            "app.bsky.labeler.defs#reasonSelfHarm",
+            "app.bsky.labeler.defs#reasonThreat",
+            "app.bsky.labeler.defs#reasonTntolerance",
+            "app.bsky.labeler.defs#reasonPrivateInfo",
+            "app.bsky.labeler.defs#reasonSexualAbuse",
+            "app.bsky.labeler.defs#reasonSiteSecurity",
+            "app.bsky.labeler.defs#reasonTerrorViolentExtremist",
+            "app.bsky.labeler.defs#reasonSpoiler",
+            "app.bsky.labeler.defs#reasonGrowthHack"
+          ]
+      }
+    },
+    "reasonHarassment": {
+      "type": "token",
+      "description": "Harassment"
+    },
+    "reasonAnimalAbuse": {
+      "type": "token",
+      "description": "Animal Abuse"
+    },
+    "reasonGraphic": {
+      "type": "token",
+      "description": "Graphic: violent or disturbing images"
+    },
+    "reasonScam": {
+      "type": "token",
+      "description": "Scams"
+    },
+    "reasonProhibitedCommerce": {
+      "type": "token",
+      "description": "Prohibited Commerce: trading in banned goods or services"
+    },
+    "reasonInauthentic": {
+      "type": "token",
+      "description": "Inauthentic: bots pretending to be human, fake accounts"
+    },
+    "reasonImpersonation": {
+      "type": "token",
+      "description": "Impersonation: of a specific person or organization"
+    },
+    "reasonBanEvasion": {
+      "type": "token",
+      "description": "Ban Evasion: new accounts from previously taken down users"
+    },
+    "reasonChildSafety": {
+      "type": "token",
+      "description": "Child Safety: CSAM/CSEM, grooming"
+    },
+    "reasonSelfHarm": {
+      "type": "token",
+      "description": "Self-Harm"
+    },
+    "reasonThreat": {
+      "type": "token",
+      "description": "Threat"
+    },
+    "reasonTntolerance": {
+      "type": "token",
+      "description": "Intolerance: slurs, isms"
+    },
+    "reasonPrivateInfo": {
+      "type": "token",
+      "description": "Private Information: doxxing"
+    },
+    "reasonSexualAbuse": {
+      "type": "token",
+      "description": "Sexual Abuse: trafficing, non-consentual intimate images (NCII), deepfake porn"
+    },
+    "reasonSiteSecurity": {
+      "type": "token",
+      "description": "Site Security: account security, hacking"
+    },
+    "reasonTerrorViolentExtremist": {
+      "type": "token",
+      "description": "Terrorist, Violence, and Extremist (TVEC)"
+    },
+    "reasonSpoiler": {
+      "type": "token",
+      "description": "Spoilers (example reason)"
+    },
+    "reasonGrowthHack": {
+      "type": "token",
+      "description": "Growth Hack: engagement farming (example reason)"
     }
   }
 }
