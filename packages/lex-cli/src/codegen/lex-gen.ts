@@ -52,7 +52,7 @@ export function genCommonImports(file: SourceFile, baseNsid: string) {
     })
     .addNamedImports([{ name: 'validate', alias: '_validate' }])
 
-  //= import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../util.ts'
+  //= import { $Typed, is$typed as _is$typed, OmitKey } from '../[...]/util.ts'
   file
     .addImportDeclaration({
       moduleSpecifier: `${baseNsid
@@ -61,7 +61,6 @@ export function genCommonImports(file: SourceFile, baseNsid: string) {
         .join('/')}/util`,
     })
     .addNamedImports([
-      { name: '$Type' },
       { name: '$Typed' },
       { name: 'is$typed', alias: '_is$typed' },
       { name: 'OmitKey' },
@@ -181,7 +180,12 @@ function genObject(
     //= $type?: <uri>
     iface.addProperty({
       name: typeProperty === 'required' ? `$type` : `$type?`,
-      type: `$Type<${JSON.stringify(baseNsid)}, ${JSON.stringify(hash)}>`,
+      type:
+        // Not using $Type here because it is less readable than a plain string
+        // `$Type<${JSON.stringify(baseNsid)}, ${JSON.stringify(hash)}>`
+        hash === 'main'
+          ? JSON.stringify(`${baseNsid}`)
+          : JSON.stringify(`${baseNsid}#${hash}`),
     })
   }
 
