@@ -3,7 +3,9 @@ import { Kysely, sql } from 'kysely'
 // support lookup for chat.bsky.moderation.getMessageContext
 
 export async function up(db: Kysely<unknown>): Promise<void> {
-  await db.schema.dropIndex('moderation_event_message_id_index')
+  // @NOTE: These queries should be run with the "CONCURRENTLY" option in
+  // production to avoid locking the table. This is not supported by Kysely.
+  await db.schema.dropIndex('moderation_event_message_id_index').execute()
   await db.schema
     .createIndex('moderation_event_message_id_idx')
     .on('moderation_event')
@@ -15,7 +17,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {
-  await db.schema.dropIndex('moderation_event_message_id_idx')
+  await db.schema.dropIndex('moderation_event_message_id_idx').execute()
   await db.schema
     .createIndex('moderation_event_message_id_index')
     .on('moderation_event')
