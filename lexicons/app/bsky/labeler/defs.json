@@ -76,7 +76,6 @@
             "com.atproto.moderation.defs#reasonSexual",
             "com.atproto.moderation.defs#reasonOther",
             "com.atproto.moderation.defs#reasonAppeal",
-            "com.atproto.moderation.defs#reasonAppeal",
             "app.bsky.labeler.defs#reasonHarassment",
             "app.bsky.labeler.defs#reasonAnimalAbuse",
             "app.bsky.labeler.defs#reasonGraphic",
