@@ -29,6 +29,14 @@
                 "com.atproto.repo.strongRef"
               ]
             }
+          },
+          "reasonContexts": {
+            "description": "Set of context tags relevant to this report.",
+            "type": "array",
+            "items": {
+              "type": "ref",
+              "ref": "com.atproto.moderation.defs#reasonContext"
+            }
           }
         }
       },
