@@ -46,12 +46,6 @@ export class PdsOAuthProvider extends OAuthProvider {
       // the PDS can use tokenId as access tokens. This allows the PDS to
       // always use up-to-date token data from the token store.
       accessTokenType: AccessTokenType.id,
-
-      onClientInfo: (clientId) => ({
-        isFirstParty: clientId === 'https://bsky.app/',
-        // @TODO make client client list configurable:
-        isTrusted: undefined,
-      }),
     })
   }
 

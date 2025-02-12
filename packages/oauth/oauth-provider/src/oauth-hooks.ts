@@ -12,8 +12,11 @@ import { ClientInfo } from './client/client-info.js'
 import { Client } from './client/client.js'
 import { InvalidAuthorizationDetailsError } from './errors/invalid-authorization-details-error.js'
 import { Awaitable } from './lib/util/type.js'
+import { AccessDeniedError, OAuthError } from './oauth-errors.js'
+import { DeviceId } from './oauth-store.js'
 
 // Make sure all types needed to implement the OAuthHooks are exported
+export { AccessDeniedError, OAuthError }
 export type {
   Account,
   Client,
@@ -36,10 +39,10 @@ export type OAuthHooks = {
    * @throws {InvalidClientMetadataError} if the metadata is invalid
    * @see {@link InvalidClientMetadataError}
    */
-  onClientInfo?: (
+  getClientInfo?: (
     clientId: ClientId,
     data: { metadata: OAuthClientMetadata; jwks?: Jwks },
-  ) => Awaitable<void | undefined | Partial<ClientInfo>>
+  ) => Awaitable<undefined | Partial<ClientInfo>>
 
   /**
    * Allows enriching the authorization details with additional information
@@ -47,9 +50,48 @@ export type OAuthHooks = {
    *
    * @see {@link https://datatracker.ietf.org/doc/html/rfc9396 | RFC 9396}
    */
-  onAuthorizationDetails?: (data: {
+  getAuthorizationDetails?: (data: {
     client: Client
     parameters: OAuthAuthorizationRequestParameters
     account: Account
   }) => Awaitable<undefined | OAuthAuthorizationDetails>
+
+  /**
+   * This hook is called when a client is authorized.
+   *
+   * @throws {AccessDeniedError} to deny the authorization request and redirect
+   * the user to the client with an OAuth error (other errors will result in an
+   * internal server error being displayed to the user)
+   */
+  onAuthorized?: (data: {
+    client: Client
+    account: Account
+    parameters: OAuthAuthorizationRequestParameters
+    deviceId: null | DeviceId
+  }) => Awaitable<void>
+
+  /**
+   * This hook is called when an authorized client exchanges an authorization
+   * code for an access token.
+   *
+   * @throws {OAuthError} to cancel the token creation and revoke the session
+   */
+  onTokenCreated?: (data: {
+    client: Client
+    account: Account
+    parameters: OAuthAuthorizationRequestParameters
+    deviceId: null | DeviceId
+  }) => Awaitable<void>
+
+  /**
+   * This hook is called when an authorized client refreshes an access token.
+   *
+   * @throws {OAuthError} to cancel the token refresh and revoke the session
+   */
+  onTokenRefreshed?: (data: {
+    client: Client
+    account: Account
+    parameters: OAuthAuthorizationRequestParameters
+    deviceId: null | DeviceId
+  }) => Awaitable<void>
 }
