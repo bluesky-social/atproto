@@ -16,7 +16,7 @@ export function extractDeviceDetails(
   const ipAddress = extractIpAddress(req, trustProxy) || null
   const port = extractPort(req, trustProxy)
 
-  if (!ipAddress || !port) {
+  if (!ipAddress || port == null) {
     throw new Error('Could not determine IP address')
   }
 
