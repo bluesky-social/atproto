@@ -4,6 +4,7 @@ import { z } from 'zod'
 export const deviceDetailsSchema = z.object({
   userAgent: z.string().nullable(),
   ipAddress: z.string(),
+  port: z.number(),
 })
 export type DeviceDetails = z.infer<typeof deviceDetailsSchema>
 
@@ -13,12 +14,13 @@ export function extractDeviceDetails(
 ): DeviceDetails {
   const userAgent = req.headers['user-agent'] || null
   const ipAddress = extractIpAddress(req, trustProxy) || null
+  const port = extractPort(req, trustProxy)
 
-  if (!ipAddress) {
+  if (!ipAddress || !port) {
     throw new Error('Could not determine IP address')
   }
 
-  return { userAgent, ipAddress }
+  return { userAgent, ipAddress, port }
 }
 
 export function extractIpAddress(
@@ -39,4 +41,22 @@ export function extractIpAddress(
   }
 
   return req.socket.remoteAddress
+}
+
+export function extractPort(
+  req: IncomingMessage,
+  trustProxy: boolean,
+): number | undefined {
+  if (trustProxy) {
+    const forwardedPort = req.headers['x-forwarded-port']
+    if (typeof forwardedPort === 'string') {
+      const port = Number(forwardedPort.trim())
+      if (!Number.isInteger(port) || port < 0 || port > 65535) {
+        throw new Error('Invalid forwarded port')
+      }
+      return port
+    }
+  }
+
+  return req.socket.remotePort
 }

@@ -1,6 +1,5 @@
 import { IncomingMessage, ServerResponse } from 'node:http'
 import { serialize as serializeCookie } from 'cookie'
-import type Keygrip from 'keygrip'
 import { z } from 'zod'
 import { SESSION_FIXATION_MAX_AGE } from '../constants.js'
 import { appendHeader, parseHttpCookies } from '../lib/http/index.js'
@@ -10,75 +9,81 @@ import { DeviceId, deviceIdSchema, generateDeviceId } from './device-id.js'
 import { DeviceStore } from './device-store.js'
 import { generateSessionId, sessionIdSchema } from './session-id.js'
 
-export const DEFAULT_OPTIONS = {
+/**
+ * @see {@link https://www.npmjs.com/package/keygrip | Keygrip}
+ */
+export const keygripSchema = z.object({
+  sign: z.function().args(z.any()).returns(z.string()),
+  verify: z.function().args(z.any(), z.string()).returns(z.boolean()),
+  index: z.function().args(z.any(), z.string()).returns(z.number()),
+})
+
+export const deviceManagerOptionsSchema = z.object({
   /**
    * Controls whether the IP address is read from the `X-Forwarded-For` header
    * (if `true`), or from the `req.socket.remoteAddress` property (if `false`).
    *
    * @default true // (nowadays, most requests are proxied)
    */
-  trustProxy: true,
-
+  trustProxy: z.boolean().default(true),
   /**
    * Amount of time (in ms) after which session IDs will be rotated
    *
    * @default 300e3 // (5 minutes)
    */
-  rotationRate: 5 * 60e3,
-
+  rotationRate: z.number().default(300e3),
   /**
    * Cookie options
    */
-  cookie: {
-    keys: undefined as undefined | Keygrip,
+  cookie: z
+    .object({
+      keys: keygripSchema.optional(),
+      /**
+       * Name of the cookie used to identify the device
+       *
+       * @default 'session-id'
+       */
+      device: z.string().default('device-id'),
+      /**
+       * Name of the cookie used to identify the session
+       *
+       * @default 'session-id'
+       */
+      session: z.string().default('session-id'),
+      /**
+       * Url path for the cookie
+       *
+       * @default '/oauth/authorize'
+       */
+      path: z.string().default('/oauth/authorize'),
+      /**
+       * Amount of time (in ms) after which the session cookie will expire.
+       * If set to `null`, the cookie will be a session cookie (deleted when the
+       * browser is closed).
+       *
+       * @default 10 years
+       */
+      age: z
+        .number()
+        .nullable()
+        .default(10 * 365.2 * 24 * 60 * 60e3),
+      /**
+       * Controls whether the cookie is only sent over HTTPS (if `true`), or also
+       * over HTTP (if `false`). This should **NOT** be set to `false` in
+       * production.
+       */
+      secure: z.boolean().default(true),
+      /**
+       * Controls whether the cookie is sent along with cross-site requests.
+       *
+       * @default 'lax'
+       */
+      sameSite: z.enum(['lax', 'strict']).default('lax'),
+    })
+    .default({}),
+})
 
-    /**
-     * Name of the cookie used to identify the device
-     *
-     * @default 'session-id'
-     */
-    device: 'device-id',
-
-    /**
-     * Name of the cookie used to identify the session
-     *
-     * @default 'session-id'
-     */
-    session: 'session-id',
-
-    /**
-     * Url path for the cookie
-     *
-     * @default '/oauth/authorize'
-     */
-    path: '/oauth/authorize',
-
-    /**
-     * Amount of time (in ms) after which the session cookie will expire.
-     * If set to `null`, the cookie will be a session cookie (deleted when the
-     * browser is closed).
-     *
-     * @default 10 * 365.2 * 24 * 60 * 60e3 // 10 years (in ms)
-     */
-    age: <number | null>(10 * 365.2 * 24 * 60 * 60e3),
-
-    /**
-     * Controls whether the cookie is only sent over HTTPS (if `true`), or also
-     * over HTTP (if `false`). This should **NOT** be set to `false` in
-     * production.
-     */
-    secure: true,
-
-    /**
-     * Controls whether the cookie is sent along with cross-site requests.
-     *
-     * @default 'lax'
-     */
-    sameSite: 'lax' as 'lax' | 'strict',
-  },
-}
-
-export type DeviceDeviceManagerOptions = typeof DEFAULT_OPTIONS
+export type DeviceManagerOptions = z.input<typeof deviceManagerOptionsSchema>
 
 const cookieValueSchema = z.tuple([deviceIdSchema, sessionIdSchema])
 type CookieValue = z.infer<typeof cookieValueSchema>
@@ -94,10 +99,14 @@ type SessionData = {
  * identify the session.
  */
 export class DeviceManager {
+  private readonly options: z.infer<typeof deviceManagerOptionsSchema>
+
   constructor(
     private readonly store: DeviceStore,
-    private readonly options: DeviceDeviceManagerOptions = DEFAULT_OPTIONS,
-  ) {}
+    options?: DeviceManagerOptions,
+  ) {
+    this.options = deviceManagerOptionsSchema.parse(options)
+  }
 
   public async load(
     req: IncomingMessage,

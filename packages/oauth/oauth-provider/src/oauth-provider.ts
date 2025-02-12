@@ -55,7 +55,7 @@ import { Client } from './client/client.js'
 import { AUTHENTICATION_MAX_AGE, TOKEN_MAX_AGE } from './constants.js'
 import { DeviceDetails } from './device/device-details.js'
 import { DeviceId } from './device/device-id.js'
-import { DeviceManager } from './device/device-manager.js'
+import { DeviceManager, DeviceManagerOptions } from './device/device-manager.js'
 import { DeviceStore, asDeviceStore } from './device/device-store.js'
 import { AccessDeniedError } from './errors/access-denied-error.js'
 import { AccountSelectionRequiredError } from './errors/account-selection-required-error.js'
@@ -135,7 +135,7 @@ export {
 export type RouterOptions<
   Req extends IncomingMessage = IncomingMessage,
   Res extends ServerResponse = ServerResponse,
-> = {
+> = DeviceManagerOptions & {
   onError?: (req: Req, res: Res, err: unknown, message: string) => void
 }
 
@@ -1003,8 +1003,8 @@ export class OAuthProvider extends OAuthVerifier {
     T = void,
     Req extends IncomingMessage = IncomingMessage,
     Res extends ServerResponse = ServerResponse,
-  >(options?: RouterOptions<Req, Res>) {
-    const deviceManager = new DeviceManager(this.deviceStore)
+  >(options: RouterOptions<Req, Res> = {}) {
+    const deviceManager = new DeviceManager(this.deviceStore, options)
     const outputManager = new OutputManager(this.customization)
 
     // eslint-disable-next-line @typescript-eslint/no-this-alias
