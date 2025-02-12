@@ -142,6 +142,7 @@ export class ModerationViews {
     if (
       isModEventMuteReporter(event) ||
       isModEventTakedown(event) ||
+      isModEventLabel(event) ||
       isModEventMute(event)
     ) {
       event.durationInHours = row.durationInHours ?? undefined
@@ -175,14 +176,14 @@ export class ModerationViews {
       event.negateLabelVals = row.negateLabelVals?.length
         ? row.negateLabelVals.split(' ')
         : []
-    }
-
-    // This is for legacy data only, for new events, these types of events won't have labels attached
-    if (
+    } else if (
       isModEventAcknowledge(event) ||
       isModEventTakedown(event) ||
       isModEventEscalate(event)
     ) {
+      // This is for legacy data only, for new events, these types of events
+      // won't have labels attached:
+
       if (row.createLabelVals?.length) {
         // @ts-expect-error legacy
         event.createLabelVals = row.createLabelVals.split(' ')
