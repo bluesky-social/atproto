@@ -544,23 +544,42 @@ export class MST {
   // @TODO write tests for these
 
   // Walk tree starting at key
-  async *walkLeavesFrom(key: string): AsyncIterable<Leaf> {
+  async *walkFrom(key: string): AsyncIterable<NodeEntry> {
+    yield this
     const index = await this.findGtOrEqualLeafIndex(key)
     const entries = await this.getEntries()
-    const prev = entries[index - 1]
-    if (prev && prev.isTree()) {
-      for await (const e of prev.walkLeavesFrom(key)) {
-        yield e
+    const found = entries[index]
+    if (found && found.isLeaf() && found.key === key) {
+      yield found
+    } else {
+      const prev = entries[index - 1]
+      if (prev) {
+        if (prev.isLeaf() && prev.key === key) {
+          yield prev
+        } else if (prev.isTree()) {
+          for await (const e of prev.walkFrom(key)) {
+            yield e
+          }
+        }
       }
     }
+
     for (let i = index; i < entries.length; i++) {
       const entry = entries[i]
       if (entry.isLeaf()) {
         yield entry
       } else {
-        for await (const e of entry.walkLeavesFrom(key)) {
-          yield e
+        for await (const node of entry.walkFrom(key)) {
+          yield node
         }
+      }
+    }
+  }
+
+  async *walkLeavesFrom(key: string): AsyncIterable<Leaf> {
+    for await (const node of this.walkFrom(key)) {
+      if (node.isLeaf()) {
+        yield node
       }
     }
   }
@@ -755,92 +774,35 @@ export class MST {
     return cids
   }
 
-  async addSelf(blocks: BlockMap) {
-    const serialized = await this.serialize()
-    blocks.set(serialized.cid, serialized.bytes)
+  // A covering proof is all MST nodes (leaves excluded) needed to prove the value of a given leaf
+  // and its siblings to its immediate right and left (if applicable)
+  // We simply find the immediately preceeding node and then walk from that node until we reach the
+  // first key that is greater than the requested key (the right sibling)
+  async getCoveringProof(key: string): Promise<BlockMap> {
+    const leftSibling = await this.preceedingKey(key)
+    const blocks = new BlockMap()
+    for await (const node of this.walkFrom(leftSibling)) {
+      if (node.isTree()) {
+        const serialized = await node.serialize()
+        blocks.set(serialized.cid, serialized.bytes)
+      } else if (node.key > key) {
+        break
+      }
+    }
     return blocks
   }
 
-  async proofForLeftSib(key: string): Promise<BlockMap> {
+  async preceedingKey(key: string): Promise<string> {
     const index = await this.findGtOrEqualLeafIndex(key)
     const prev = await this.atIndex(index - 1)
-    let blocks: BlockMap
-    if (!prev || prev.isLeaf()) {
-      blocks = new BlockMap()
+    if (!prev) {
+      return ''
+    } else if (prev.isLeaf()) {
+      return prev.key
     } else {
-      blocks = await prev.proofForLeftSib(key)
+      return prev.preceedingKey(key)
     }
-    return this.addSelf(blocks)
   }
-
-  async proofForRightSib(key: string): Promise<BlockMap> {
-    const index = await this.findGtOrEqualLeafIndex(key)
-    let found = await this.atIndex(index)
-    if (!found) {
-      found = await this.atIndex(index - 1)
-    }
-    let blocks: BlockMap
-    if (!found) {
-      // shouldn't ever hit, null case
-      blocks = new BlockMap()
-    } else if (found.isTree()) {
-      blocks = await found.proofForRightSib(key)
-      // recurse down
-    } else {
-      const node =
-        found.key === key
-          ? await this.atIndex(index + 1)
-          : await this.atIndex(index - 1)
-      if (!node || node.isLeaf()) {
-        blocks = new BlockMap()
-      } else {
-        blocks = await node.proofForRightSib(key)
-      }
-    }
-    return this.addSelf(blocks)
-  }
-
-  async proofForKey(key: string): Promise<BlockMap> {
-    const index = await this.findGtOrEqualLeafIndex(key)
-    const found = await this.atIndex(index)
-    let blocks: BlockMap
-    if (found && found.isLeaf() && found.key === key) {
-      blocks = new BlockMap()
-    } else {
-      const prev = await this.atIndex(index - 1)
-      if (!prev || prev.isLeaf()) {
-        return new BlockMap()
-      } else {
-        blocks = await prev.proofForKey(key)
-      }
-    }
-    return this.addSelf(blocks)
-  }
-
-  async getCoveringProof(key: string): Promise<BlockMap> {
-    const [self, left, right] = await Promise.all([
-      this.proofForKey(key),
-      this.proofForLeftSib(key),
-      this.proofForRightSib(key),
-    ])
-    return self.addMap(left).addMap(right)
-  }
-
-  // @TODO delete
-
-  // async addBlocksForPath(key: string, blocks: BlockMap) {
-  //   const serialized = await this.serialize()
-  //   blocks.set(serialized.cid, serialized.bytes)
-  //   const index = await this.findGtOrEqualLeafIndex(key)
-  //   const found = await this.atIndex(index)
-  //   if (found && found.isLeaf() && found.key === key) {
-  //     return
-  //   }
-  //   const prev = await this.atIndex(index - 1)
-  //   if (prev && prev.isTree()) {
-  //     await prev.addBlocksForPath(key, blocks)
-  //   }
-  // }
 
   // Matching Leaf interface
   // -------------------
