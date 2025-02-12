@@ -53,6 +53,7 @@ import {
 import { ClientStore, ifClientStore } from './client/client-store.js'
 import { Client } from './client/client.js'
 import { AUTHENTICATION_MAX_AGE, TOKEN_MAX_AGE } from './constants.js'
+import { DeviceDetails } from './device/device-details.js'
 import { DeviceId } from './device/device-id.js'
 import { DeviceManager } from './device/device-manager.js'
 import { DeviceStore, asDeviceStore } from './device/device-store.js'
@@ -529,9 +530,10 @@ export class OAuthProvider extends OAuthVerifier {
    * @see {@link https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-11#section-4.1.1}
    */
   protected async authorize(
-    deviceId: DeviceId,
-    credentials: OAuthClientCredentialsNone,
+    clientCredentials: OAuthClientCredentialsNone,
     query: OAuthAuthorizationRequestQuery,
+    deviceId: DeviceId,
+    deviceDetails: DeviceDetails,
   ): Promise<AuthorizationResultRedirect | AuthorizationResultAuthorize> {
     const { issuer } = this
 
@@ -546,7 +548,7 @@ export class OAuthProvider extends OAuthVerifier {
         : null
 
     const client = await this.clientManager
-      .getClient(credentials.client_id)
+      .getClient(clientCredentials.client_id)
       .catch(accessDeniedCatcher)
 
     const { clientAuth, parameters, uri } =
@@ -580,10 +582,11 @@ export class OAuthProvider extends OAuthVerifier {
         }
 
         const code = await this.requestManager.setAuthorized(
-          client,
           uri,
-          deviceId,
+          client,
           ssoSession.account,
+          deviceId,
+          deviceDetails,
         )
 
         return { issuer, client, parameters, redirect: { code } }
@@ -596,10 +599,11 @@ export class OAuthProvider extends OAuthVerifier {
           const ssoSession = ssoSessions[0]!
           if (!ssoSession.loginRequired && !ssoSession.consentRequired) {
             const code = await this.requestManager.setAuthorized(
-              client,
               uri,
-              deviceId,
+              client,
               ssoSession.account,
+              deviceId,
+              deviceDetails,
             )
 
             return { issuer, client, parameters, redirect: { code } }
@@ -720,10 +724,11 @@ export class OAuthProvider extends OAuthVerifier {
   }
 
   protected async acceptRequest(
-    deviceId: DeviceId,
     uri: RequestUri,
     clientId: ClientId,
     sub: string,
+    deviceId: DeviceId,
+    deviceDetails: DeviceDetails,
   ): Promise<AuthorizationResultRedirect> {
     const { issuer } = this
     const client = await this.clientManager.getClient(clientId)
@@ -746,10 +751,11 @@ export class OAuthProvider extends OAuthVerifier {
       }
 
       const code = await this.requestManager.setAuthorized(
-        client,
         uri,
-        deviceId,
+        client,
         account,
+        deviceId,
+        deviceDetails,
       )
 
       await this.accountManager.addAuthorizedClient(
@@ -1313,11 +1319,11 @@ export class OAuthProvider extends OAuthVerifier {
 
         const query = Object.fromEntries(this.url.searchParams)
 
-        const credentials = await oauthClientCredentialsSchema
+        const clientCredentials = await oauthClientCredentialsSchema
           .parseAsync(query, { path: ['body'] })
           .catch(throwInvalidRequest)
 
-        if ('client_secret' in credentials) {
+        if ('client_secret' in clientCredentials) {
           throw new InvalidRequestError('Client secret must not be provided')
         }
 
@@ -1325,10 +1331,15 @@ export class OAuthProvider extends OAuthVerifier {
           .parseAsync(query, { path: ['query'] })
           .catch(throwInvalidRequest)
 
-        const { deviceId } = await deviceManager.load(req, res)
+        const { deviceId, deviceDetails } = await deviceManager.load(req, res)
 
         const data = await server
-          .authorize(deviceId, credentials, authorizationRequest)
+          .authorize(
+            clientCredentials,
+            authorizationRequest,
+            deviceId,
+            deviceDetails,
+          )
           .catch((err) => accessDeniedToRedirectCatcher(req, res, err))
 
         switch (true) {
@@ -1431,14 +1442,15 @@ export class OAuthProvider extends OAuthVerifier {
           true,
         )
 
-        const { deviceId } = await deviceManager.load(req, res)
+        const { deviceId, deviceDetails } = await deviceManager.load(req, res)
 
         const data = await server
           .acceptRequest(
-            deviceId,
             input.request_uri,
             input.client_id,
             input.account_sub,
+            deviceId,
+            deviceDetails,
           )
           .catch((err) => accessDeniedToRedirectCatcher(req, res, err))
 

@@ -12,6 +12,7 @@ import {
   PAR_EXPIRES_IN,
   TOKEN_MAX_AGE,
 } from '../constants.js'
+import { DeviceDetails } from '../device/device-details.js'
 import { DeviceId } from '../device/device-id.js'
 import { AccessDeniedError } from '../errors/access-denied-error.js'
 import { ConsentRequiredError } from '../errors/consent-required-error.js'
@@ -370,10 +371,11 @@ export class RequestManager {
   }
 
   async setAuthorized(
-    client: Client,
     uri: RequestUri,
-    deviceId: DeviceId,
+    client: Client,
     account: Account,
+    deviceId: DeviceId,
+    deviceDetails: DeviceDetails,
   ): Promise<Code> {
     const id = decodeRequestUri(uri)
 
@@ -419,6 +421,7 @@ export class RequestManager {
         account,
         parameters: data.parameters,
         deviceId,
+        deviceDetails,
       })
 
       return code

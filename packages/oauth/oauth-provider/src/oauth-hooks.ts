@@ -10,25 +10,30 @@ import { ClientAuth } from './client/client-auth.js'
 import { ClientId } from './client/client-id.js'
 import { ClientInfo } from './client/client-info.js'
 import { Client } from './client/client.js'
+import { DeviceDetails } from './device/device-details.js'
 import { InvalidAuthorizationDetailsError } from './errors/invalid-authorization-details-error.js'
 import { Awaitable } from './lib/util/type.js'
 import { AccessDeniedError, OAuthError } from './oauth-errors.js'
 import { DeviceId } from './oauth-store.js'
 
 // Make sure all types needed to implement the OAuthHooks are exported
-export { AccessDeniedError, OAuthError }
-export type {
-  Account,
+export {
+  AccessDeniedError,
+  type Account,
+  type Awaitable,
   Client,
-  ClientAuth,
-  ClientId,
-  ClientInfo,
+  type ClientAuth,
+  type ClientId,
+  type ClientInfo,
+  type DeviceDetails,
+  type DeviceId,
   InvalidAuthorizationDetailsError,
-  Jwks,
-  OAuthAuthorizationDetails,
-  OAuthAuthorizationRequestParameters,
-  OAuthClientMetadata,
-  OAuthTokenResponse,
+  type Jwks,
+  type OAuthAuthorizationDetails,
+  type OAuthAuthorizationRequestParameters,
+  type OAuthClientMetadata,
+  OAuthError,
+  type OAuthTokenResponse,
 }
 
 export type OAuthHooks = {
@@ -67,7 +72,8 @@ export type OAuthHooks = {
     client: Client
     account: Account
     parameters: OAuthAuthorizationRequestParameters
-    deviceId: null | DeviceId
+    deviceId: DeviceId
+    deviceDetails: DeviceDetails
   }) => Awaitable<void>
 
   /**
@@ -80,6 +86,7 @@ export type OAuthHooks = {
     client: Client
     account: Account
     parameters: OAuthAuthorizationRequestParameters
+    /** null when "password grant" used (in which case {@link onAuthorized} won't have been called) */
     deviceId: null | DeviceId
   }) => Awaitable<void>
 
@@ -92,6 +99,7 @@ export type OAuthHooks = {
     client: Client
     account: Account
     parameters: OAuthAuthorizationRequestParameters
+    /** null when "password grant" used (in which case {@link onAuthorized} won't have been called) */
     deviceId: null | DeviceId
   }) => Awaitable<void>
 }

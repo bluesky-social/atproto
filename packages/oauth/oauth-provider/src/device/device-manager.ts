@@ -5,7 +5,7 @@ import { z } from 'zod'
 import { SESSION_FIXATION_MAX_AGE } from '../constants.js'
 import { appendHeader, parseHttpCookies } from '../lib/http/index.js'
 import { DeviceData } from './device-data.js'
-import { extractDeviceDetails } from './device-details.js'
+import { DeviceDetails, extractDeviceDetails } from './device-details.js'
 import { DeviceId, deviceIdSchema, generateDeviceId } from './device-id.js'
 import { DeviceStore } from './device-store.js'
 import { generateSessionId, sessionIdSchema } from './session-id.js'
@@ -83,6 +83,11 @@ export type DeviceDeviceManagerOptions = typeof DEFAULT_OPTIONS
 const cookieValueSchema = z.tuple([deviceIdSchema, sessionIdSchema])
 type CookieValue = z.infer<typeof cookieValueSchema>
 
+type SessionData = {
+  deviceId: DeviceId
+  deviceDetails: DeviceDetails
+}
+
 /**
  * This class provides an abstraction for keeping track of DEVICE sessions. It
  * relies on a {@link DeviceStore} to persist session data and a cookie to
@@ -98,7 +103,7 @@ export class DeviceManager {
     req: IncomingMessage,
     res: ServerResponse,
     forceRotate = false,
-  ): Promise<{ deviceId: DeviceId }> {
+  ): Promise<SessionData> {
     const cookie = await this.getCookie(req)
     if (cookie) {
       return this.refresh(
@@ -115,8 +120,8 @@ export class DeviceManager {
   private async create(
     req: IncomingMessage,
     res: ServerResponse,
-  ): Promise<{ deviceId: DeviceId }> {
-    const { userAgent, ipAddress } = this.getDeviceDetails(req)
+  ): Promise<SessionData> {
+    const deviceDetails = this.getDeviceDetails(req)
 
     const [deviceId, sessionId] = await Promise.all([
       generateDeviceId(),
@@ -126,13 +131,13 @@ export class DeviceManager {
     await this.store.createDevice(deviceId, {
       sessionId,
       lastSeenAt: new Date(),
-      userAgent,
-      ipAddress,
+      userAgent: deviceDetails.userAgent,
+      ipAddress: deviceDetails.ipAddress,
     })
 
     this.setCookie(res, [deviceId, sessionId])
 
-    return { deviceId }
+    return { deviceId, deviceDetails }
   }
 
   private async refresh(
@@ -140,7 +145,7 @@ export class DeviceManager {
     res: ServerResponse,
     [deviceId, sessionId]: CookieValue,
     forceRotate = false,
-  ): Promise<{ deviceId: DeviceId }> {
+  ): Promise<SessionData> {
     const data = await this.store.readDevice(deviceId)
     if (!data) return this.create(req, res)
 
@@ -159,24 +164,24 @@ export class DeviceManager {
       }
     }
 
-    const details = this.getDeviceDetails(req)
+    const deviceDetails = this.getDeviceDetails(req)
 
     if (
       forceRotate ||
-      details.ipAddress !== data.ipAddress ||
-      details.userAgent !== data.userAgent ||
+      deviceDetails.ipAddress !== data.ipAddress ||
+      deviceDetails.userAgent !== data.userAgent ||
       age > this.options.rotationRate
     ) {
       await this.rotate(req, res, deviceId, {
-        ipAddress: details.ipAddress,
-        userAgent: details.userAgent || data.userAgent,
+        ipAddress: deviceDetails.ipAddress,
+        userAgent: deviceDetails.userAgent || data.userAgent,
       })
     }
 
-    return { deviceId }
+    return { deviceId, deviceDetails }
   }
 
-  public async rotate(
+  private async rotate(
     req: IncomingMessage,
     res: ServerResponse,
     deviceId: DeviceId,
