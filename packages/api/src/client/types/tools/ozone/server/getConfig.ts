@@ -5,7 +5,7 @@ import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { validate as _validate } from '../../../../lexicons'
-import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 
 const is$typed = _is$typed,
   validate = _validate
@@ -39,7 +39,7 @@ export function toKnownErr(e: any) {
 }
 
 export interface ServiceConfig {
-  $type?: $Type<'tools.ozone.server.getConfig', 'serviceConfig'>
+  $type?: 'tools.ozone.server.getConfig#serviceConfig'
   url?: string
 }
 
@@ -54,7 +54,7 @@ export function validateServiceConfig<V>(v: V) {
 }
 
 export interface ViewerConfig {
-  $type?: $Type<'tools.ozone.server.getConfig', 'viewerConfig'>
+  $type?: 'tools.ozone.server.getConfig#viewerConfig'
   role?:
     | 'tools.ozone.team.defs#roleAdmin'
     | 'tools.ozone.team.defs#roleModerator'

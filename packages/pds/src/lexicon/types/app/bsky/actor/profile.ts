@@ -4,7 +4,7 @@
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { validate as _validate } from '../../../../lexicons'
-import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 import type * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs.js'
 import type * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef.js'
 
@@ -13,7 +13,7 @@ const is$typed = _is$typed,
 const id = 'app.bsky.actor.profile'
 
 export interface Record {
-  $type: $Type<'app.bsky.actor.profile', 'main'>
+  $type: 'app.bsky.actor.profile'
   displayName?: string
   /** Free-form profile description text. */
   description?: string

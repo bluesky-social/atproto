@@ -4,14 +4,14 @@
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { validate as _validate } from '../../../../lexicons'
-import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 
 const is$typed = _is$typed,
   validate = _validate
 const id = 'app.bsky.graph.listitem'
 
 export interface Record {
-  $type: $Type<'app.bsky.graph.listitem', 'main'>
+  $type: 'app.bsky.graph.listitem'
   /** The account which is included on the list. */
   subject: string
   /** Reference (AT-URI) to the list record (app.bsky.graph.list). */

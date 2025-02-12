@@ -4,14 +4,14 @@
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { validate as _validate } from '../../../../lexicons'
-import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 
 const is$typed = _is$typed,
   validate = _validate
 const id = 'tools.ozone.signature.defs'
 
 export interface SigDetail {
-  $type?: $Type<'tools.ozone.signature.defs', 'sigDetail'>
+  $type?: 'tools.ozone.signature.defs#sigDetail'
   property: string
   value: string
 }

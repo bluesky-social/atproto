@@ -4,14 +4,14 @@
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { validate as _validate } from '../../../../lexicons'
-import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 
 const is$typed = _is$typed,
   validate = _validate
 const id = 'app.bsky.feed.threadgate'
 
 export interface Record {
-  $type: $Type<'app.bsky.feed.threadgate', 'main'>
+  $type: 'app.bsky.feed.threadgate'
   /** Reference (AT-URI) to the post record. */
   post: string
   /** List of rules defining who can reply to this post. If value is an empty array, no one can reply. If value is undefined, anyone can reply. */
@@ -40,7 +40,7 @@ export function validateRecord<V>(v: V) {
 
 /** Allow replies from actors mentioned in your post. */
 export interface MentionRule {
-  $type?: $Type<'app.bsky.feed.threadgate', 'mentionRule'>
+  $type?: 'app.bsky.feed.threadgate#mentionRule'
 }
 
 const hashMentionRule = 'mentionRule'
@@ -55,7 +55,7 @@ export function validateMentionRule<V>(v: V) {
 
 /** Allow replies from actors who follow you. */
 export interface FollowerRule {
-  $type?: $Type<'app.bsky.feed.threadgate', 'followerRule'>
+  $type?: 'app.bsky.feed.threadgate#followerRule'
 }
 
 const hashFollowerRule = 'followerRule'
@@ -70,7 +70,7 @@ export function validateFollowerRule<V>(v: V) {
 
 /** Allow replies from actors you follow. */
 export interface FollowingRule {
-  $type?: $Type<'app.bsky.feed.threadgate', 'followingRule'>
+  $type?: 'app.bsky.feed.threadgate#followingRule'
 }
 
 const hashFollowingRule = 'followingRule'
@@ -85,7 +85,7 @@ export function validateFollowingRule<V>(v: V) {
 
 /** Allow replies from actors on a list. */
 export interface ListRule {
-  $type?: $Type<'app.bsky.feed.threadgate', 'listRule'>
+  $type?: 'app.bsky.feed.threadgate#listRule'
   list: string
 }
 

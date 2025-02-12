@@ -4,7 +4,7 @@
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { validate as _validate } from '../../../../lexicons'
-import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 import type * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef.js'
 import type * as AppBskyFeedDefs from '../feed/defs.js'
 import type * as AppBskyGraphDefs from '../graph/defs.js'
@@ -21,7 +21,7 @@ const is$typed = _is$typed,
 const id = 'app.bsky.embed.record'
 
 export interface Main {
-  $type?: $Type<'app.bsky.embed.record', 'main'>
+  $type?: 'app.bsky.embed.record'
   record: ComAtprotoRepoStrongRef.Main
 }
 
@@ -36,7 +36,7 @@ export function validateMain<V>(v: V) {
 }
 
 export interface View {
-  $type?: $Type<'app.bsky.embed.record', 'view'>
+  $type?: 'app.bsky.embed.record#view'
   record:
     | $Typed<ViewRecord>
     | $Typed<ViewNotFound>
@@ -60,7 +60,7 @@ export function validateView<V>(v: V) {
 }
 
 export interface ViewRecord {
-  $type?: $Type<'app.bsky.embed.record', 'viewRecord'>
+  $type?: 'app.bsky.embed.record#viewRecord'
   uri: string
   cid: string
   author: AppBskyActorDefs.ProfileViewBasic
@@ -93,7 +93,7 @@ export function validateViewRecord<V>(v: V) {
 }
 
 export interface ViewNotFound {
-  $type?: $Type<'app.bsky.embed.record', 'viewNotFound'>
+  $type?: 'app.bsky.embed.record#viewNotFound'
   uri: string
   notFound: true
 }
@@ -109,7 +109,7 @@ export function validateViewNotFound<V>(v: V) {
 }
 
 export interface ViewBlocked {
-  $type?: $Type<'app.bsky.embed.record', 'viewBlocked'>
+  $type?: 'app.bsky.embed.record#viewBlocked'
   uri: string
   blocked: true
   author: AppBskyFeedDefs.BlockedAuthor
@@ -126,7 +126,7 @@ export function validateViewBlocked<V>(v: V) {
 }
 
 export interface ViewDetached {
-  $type?: $Type<'app.bsky.embed.record', 'viewDetached'>
+  $type?: 'app.bsky.embed.record#viewDetached'
   uri: string
   detached: true
 }

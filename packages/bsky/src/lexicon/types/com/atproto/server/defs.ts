@@ -4,14 +4,14 @@
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { validate as _validate } from '../../../../lexicons'
-import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 
 const is$typed = _is$typed,
   validate = _validate
 const id = 'com.atproto.server.defs'
 
 export interface InviteCode {
-  $type?: $Type<'com.atproto.server.defs', 'inviteCode'>
+  $type?: 'com.atproto.server.defs#inviteCode'
   code: string
   available: number
   disabled: boolean
@@ -32,7 +32,7 @@ export function validateInviteCode<V>(v: V) {
 }
 
 export interface InviteCodeUse {
-  $type?: $Type<'com.atproto.server.defs', 'inviteCodeUse'>
+  $type?: 'com.atproto.server.defs#inviteCodeUse'
   usedBy: string
   usedAt: string
 }

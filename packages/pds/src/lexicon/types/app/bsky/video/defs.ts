@@ -4,14 +4,14 @@
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { validate as _validate } from '../../../../lexicons'
-import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 
 const is$typed = _is$typed,
   validate = _validate
 const id = 'app.bsky.video.defs'
 
 export interface JobStatus {
-  $type?: $Type<'app.bsky.video.defs', 'jobStatus'>
+  $type?: 'app.bsky.video.defs#jobStatus'
   jobId: string
   did: string
   /** The state of the video processing job. All values not listed as a known value indicate that the job is in process. */

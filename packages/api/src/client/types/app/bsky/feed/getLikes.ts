@@ -5,7 +5,7 @@ import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { validate as _validate } from '../../../../lexicons'
-import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 import type * as AppBskyActorDefs from '../actor/defs.js'
 
 const is$typed = _is$typed,
@@ -46,7 +46,7 @@ export function toKnownErr(e: any) {
 }
 
 export interface Like {
-  $type?: $Type<'app.bsky.feed.getLikes', 'like'>
+  $type?: 'app.bsky.feed.getLikes#like'
   indexedAt: string
   createdAt: string
   actor: AppBskyActorDefs.ProfileView

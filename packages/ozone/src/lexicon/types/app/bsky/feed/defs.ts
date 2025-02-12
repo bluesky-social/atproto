@@ -4,7 +4,7 @@
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { validate as _validate } from '../../../../lexicons'
-import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 import type * as AppBskyActorDefs from '../actor/defs.js'
 import type * as AppBskyEmbedImages from '../embed/images.js'
 import type * as AppBskyEmbedVideo from '../embed/video.js'
@@ -20,7 +20,7 @@ const is$typed = _is$typed,
 const id = 'app.bsky.feed.defs'
 
 export interface PostView {
-  $type?: $Type<'app.bsky.feed.defs', 'postView'>
+  $type?: 'app.bsky.feed.defs#postView'
   uri: string
   cid: string
   author: AppBskyActorDefs.ProfileViewBasic
@@ -54,7 +54,7 @@ export function validatePostView<V>(v: V) {
 
 /** Metadata about the requesting account's relationship with the subject content. Only has meaningful content for authed requests. */
 export interface ViewerState {
-  $type?: $Type<'app.bsky.feed.defs', 'viewerState'>
+  $type?: 'app.bsky.feed.defs#viewerState'
   repost?: string
   like?: string
   threadMuted?: boolean
@@ -75,7 +75,7 @@ export function validateViewerState<V>(v: V) {
 
 /** Metadata about this post within the context of the thread it is in. */
 export interface ThreadContext {
-  $type?: $Type<'app.bsky.feed.defs', 'threadContext'>
+  $type?: 'app.bsky.feed.defs#threadContext'
   rootAuthorLike?: string
 }
 
@@ -90,7 +90,7 @@ export function validateThreadContext<V>(v: V) {
 }
 
 export interface FeedViewPost {
-  $type?: $Type<'app.bsky.feed.defs', 'feedViewPost'>
+  $type?: 'app.bsky.feed.defs#feedViewPost'
   post: PostView
   reply?: ReplyRef
   reason?: $Typed<ReasonRepost> | $Typed<ReasonPin> | { $type: string }
@@ -109,7 +109,7 @@ export function validateFeedViewPost<V>(v: V) {
 }
 
 export interface ReplyRef {
-  $type?: $Type<'app.bsky.feed.defs', 'replyRef'>
+  $type?: 'app.bsky.feed.defs#replyRef'
   root:
     | $Typed<PostView>
     | $Typed<NotFoundPost>
@@ -134,7 +134,7 @@ export function validateReplyRef<V>(v: V) {
 }
 
 export interface ReasonRepost {
-  $type?: $Type<'app.bsky.feed.defs', 'reasonRepost'>
+  $type?: 'app.bsky.feed.defs#reasonRepost'
   by: AppBskyActorDefs.ProfileViewBasic
   indexedAt: string
 }
@@ -150,7 +150,7 @@ export function validateReasonRepost<V>(v: V) {
 }
 
 export interface ReasonPin {
-  $type?: $Type<'app.bsky.feed.defs', 'reasonPin'>
+  $type?: 'app.bsky.feed.defs#reasonPin'
 }
 
 const hashReasonPin = 'reasonPin'
@@ -164,7 +164,7 @@ export function validateReasonPin<V>(v: V) {
 }
 
 export interface ThreadViewPost {
-  $type?: $Type<'app.bsky.feed.defs', 'threadViewPost'>
+  $type?: 'app.bsky.feed.defs#threadViewPost'
   post: PostView
   parent?:
     | $Typed<ThreadViewPost>
@@ -191,7 +191,7 @@ export function validateThreadViewPost<V>(v: V) {
 }
 
 export interface NotFoundPost {
-  $type?: $Type<'app.bsky.feed.defs', 'notFoundPost'>
+  $type?: 'app.bsky.feed.defs#notFoundPost'
   uri: string
   notFound: true
 }
@@ -207,7 +207,7 @@ export function validateNotFoundPost<V>(v: V) {
 }
 
 export interface BlockedPost {
-  $type?: $Type<'app.bsky.feed.defs', 'blockedPost'>
+  $type?: 'app.bsky.feed.defs#blockedPost'
   uri: string
   blocked: true
   author: BlockedAuthor
@@ -224,7 +224,7 @@ export function validateBlockedPost<V>(v: V) {
 }
 
 export interface BlockedAuthor {
-  $type?: $Type<'app.bsky.feed.defs', 'blockedAuthor'>
+  $type?: 'app.bsky.feed.defs#blockedAuthor'
   did: string
   viewer?: AppBskyActorDefs.ViewerState
 }
@@ -240,7 +240,7 @@ export function validateBlockedAuthor<V>(v: V) {
 }
 
 export interface GeneratorView {
-  $type?: $Type<'app.bsky.feed.defs', 'generatorView'>
+  $type?: 'app.bsky.feed.defs#generatorView'
   uri: string
   cid: string
   did: string
@@ -271,7 +271,7 @@ export function validateGeneratorView<V>(v: V) {
 }
 
 export interface GeneratorViewerState {
-  $type?: $Type<'app.bsky.feed.defs', 'generatorViewerState'>
+  $type?: 'app.bsky.feed.defs#generatorViewerState'
   like?: string
 }
 
@@ -286,7 +286,7 @@ export function validateGeneratorViewerState<V>(v: V) {
 }
 
 export interface SkeletonFeedPost {
-  $type?: $Type<'app.bsky.feed.defs', 'skeletonFeedPost'>
+  $type?: 'app.bsky.feed.defs#skeletonFeedPost'
   post: string
   reason?:
     | $Typed<SkeletonReasonRepost>
@@ -307,7 +307,7 @@ export function validateSkeletonFeedPost<V>(v: V) {
 }
 
 export interface SkeletonReasonRepost {
-  $type?: $Type<'app.bsky.feed.defs', 'skeletonReasonRepost'>
+  $type?: 'app.bsky.feed.defs#skeletonReasonRepost'
   repost: string
 }
 
@@ -322,7 +322,7 @@ export function validateSkeletonReasonRepost<V>(v: V) {
 }
 
 export interface SkeletonReasonPin {
-  $type?: $Type<'app.bsky.feed.defs', 'skeletonReasonPin'>
+  $type?: 'app.bsky.feed.defs#skeletonReasonPin'
 }
 
 const hashSkeletonReasonPin = 'skeletonReasonPin'
@@ -336,7 +336,7 @@ export function validateSkeletonReasonPin<V>(v: V) {
 }
 
 export interface ThreadgateView {
-  $type?: $Type<'app.bsky.feed.defs', 'threadgateView'>
+  $type?: 'app.bsky.feed.defs#threadgateView'
   uri?: string
   cid?: string
   record?: { [_ in string]: unknown }
@@ -354,7 +354,7 @@ export function validateThreadgateView<V>(v: V) {
 }
 
 export interface Interaction {
-  $type?: $Type<'app.bsky.feed.defs', 'interaction'>
+  $type?: 'app.bsky.feed.defs#interaction'
   item?: string
   event?:
     | 'app.bsky.feed.defs#requestLess'

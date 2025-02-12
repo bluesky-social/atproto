@@ -4,7 +4,7 @@
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { validate as _validate } from '../../../../lexicons'
-import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 import type * as AppBskyRichtextFacet from '../richtext/facet.js'
 import type * as AppBskyEmbedImages from '../embed/images.js'
 import type * as AppBskyEmbedVideo from '../embed/video.js'
@@ -19,7 +19,7 @@ const is$typed = _is$typed,
 const id = 'app.bsky.feed.post'
 
 export interface Record {
-  $type: $Type<'app.bsky.feed.post', 'main'>
+  $type: 'app.bsky.feed.post'
   /** The primary post content. May be an empty string, if there are embeds. */
   text: string
   /** DEPRECATED: replaced by app.bsky.richtext.facet. */
@@ -55,7 +55,7 @@ export function validateRecord<V>(v: V) {
 }
 
 export interface ReplyRef {
-  $type?: $Type<'app.bsky.feed.post', 'replyRef'>
+  $type?: 'app.bsky.feed.post#replyRef'
   root: ComAtprotoRepoStrongRef.Main
   parent: ComAtprotoRepoStrongRef.Main
 }
@@ -72,7 +72,7 @@ export function validateReplyRef<V>(v: V) {
 
 /** Deprecated: use facets instead. */
 export interface Entity {
-  $type?: $Type<'app.bsky.feed.post', 'entity'>
+  $type?: 'app.bsky.feed.post#entity'
   index: TextSlice
   /** Expected values are 'mention' and 'link'. */
   type: string
@@ -91,7 +91,7 @@ export function validateEntity<V>(v: V) {
 
 /** Deprecated. Use app.bsky.richtext instead -- A text segment. Start is inclusive, end is exclusive. Indices are for utf16-encoded strings. */
 export interface TextSlice {
-  $type?: $Type<'app.bsky.feed.post', 'textSlice'>
+  $type?: 'app.bsky.feed.post#textSlice'
   start: number
   end: number
 }

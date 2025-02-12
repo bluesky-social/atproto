@@ -19,7 +19,7 @@ function isObject<V>(v: V): v is V & object {
   return v != null && typeof v === 'object'
 }
 
-function compare$type<Id extends string, Hash extends string>(
+function is$type<Id extends string, Hash extends string>(
   $type: unknown,
   id: Id,
   hash: Hash,
@@ -53,7 +53,7 @@ export function is$typed<V, Id extends string, Hash extends string>(
   id: Id,
   hash: Hash,
 ): v is $TypedObject<V, Id, Hash> {
-  return isObject(v) && '$type' in v && compare$type(v.$type, id, hash)
+  return isObject(v) && '$type' in v && is$type(v.$type, id, hash)
 }
 
 export function maybe$typed<V, Id extends string, Hash extends string>(
@@ -63,9 +63,7 @@ export function maybe$typed<V, Id extends string, Hash extends string>(
 ): v is V & object & { $type?: $Type<Id, Hash> } {
   return (
     isObject(v) &&
-    ('$type' in v
-      ? v.$type === undefined || compare$type(v.$type, id, hash)
-      : true)
+    ('$type' in v ? v.$type === undefined || is$type(v.$type, id, hash) : true)
   )
 }
 

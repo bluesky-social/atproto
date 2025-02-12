@@ -4,14 +4,14 @@
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { validate as _validate } from '../../../../lexicons'
-import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 
 const is$typed = _is$typed,
   validate = _validate
 const id = 'app.bsky.unspecced.defs'
 
 export interface SkeletonSearchPost {
-  $type?: $Type<'app.bsky.unspecced.defs', 'skeletonSearchPost'>
+  $type?: 'app.bsky.unspecced.defs#skeletonSearchPost'
   uri: string
 }
 
@@ -26,7 +26,7 @@ export function validateSkeletonSearchPost<V>(v: V) {
 }
 
 export interface SkeletonSearchActor {
-  $type?: $Type<'app.bsky.unspecced.defs', 'skeletonSearchActor'>
+  $type?: 'app.bsky.unspecced.defs#skeletonSearchActor'
   did: string
 }
 
@@ -41,7 +41,7 @@ export function validateSkeletonSearchActor<V>(v: V) {
 }
 
 export interface SkeletonSearchStarterPack {
-  $type?: $Type<'app.bsky.unspecced.defs', 'skeletonSearchStarterPack'>
+  $type?: 'app.bsky.unspecced.defs#skeletonSearchStarterPack'
   uri: string
 }
 
@@ -60,7 +60,7 @@ export function validateSkeletonSearchStarterPack<V>(v: V) {
 }
 
 export interface TrendingTopic {
-  $type?: $Type<'app.bsky.unspecced.defs', 'trendingTopic'>
+  $type?: 'app.bsky.unspecced.defs#trendingTopic'
   topic: string
   displayName?: string
   description?: string

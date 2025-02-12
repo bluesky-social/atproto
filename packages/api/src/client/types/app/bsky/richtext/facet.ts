@@ -4,7 +4,7 @@
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { validate as _validate } from '../../../../lexicons'
-import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 
 const is$typed = _is$typed,
   validate = _validate
@@ -12,7 +12,7 @@ const id = 'app.bsky.richtext.facet'
 
 /** Annotation of a sub-string within rich text. */
 export interface Main {
-  $type?: $Type<'app.bsky.richtext.facet', 'main'>
+  $type?: 'app.bsky.richtext.facet'
   index: ByteSlice
   features: ($Typed<Mention> | $Typed<Link> | $Typed<Tag> | { $type: string })[]
 }
@@ -29,7 +29,7 @@ export function validateMain<V>(v: V) {
 
 /** Facet feature for mention of another account. The text is usually a handle, including a '@' prefix, but the facet reference is a DID. */
 export interface Mention {
-  $type?: $Type<'app.bsky.richtext.facet', 'mention'>
+  $type?: 'app.bsky.richtext.facet#mention'
   did: string
 }
 
@@ -45,7 +45,7 @@ export function validateMention<V>(v: V) {
 
 /** Facet feature for a URL. The text URL may have been simplified or truncated, but the facet reference should be a complete URL. */
 export interface Link {
-  $type?: $Type<'app.bsky.richtext.facet', 'link'>
+  $type?: 'app.bsky.richtext.facet#link'
   uri: string
 }
 
@@ -61,7 +61,7 @@ export function validateLink<V>(v: V) {
 
 /** Facet feature for a hashtag. The text usually includes a '#' prefix, but the facet reference should not (except in the case of 'double hash tags'). */
 export interface Tag {
-  $type?: $Type<'app.bsky.richtext.facet', 'tag'>
+  $type?: 'app.bsky.richtext.facet#tag'
   tag: string
 }
 
@@ -77,7 +77,7 @@ export function validateTag<V>(v: V) {
 
 /** Specifies the sub-string range a facet feature applies to. Start index is inclusive, end index is exclusive. Indices are zero-indexed, counting bytes of the UTF-8 encoded text. NOTE: some languages, like Javascript, use UTF-16 or Unicode codepoints for string slice indexing; in these languages, convert to byte arrays before working with facets. */
 export interface ByteSlice {
-  $type?: $Type<'app.bsky.richtext.facet', 'byteSlice'>
+  $type?: 'app.bsky.richtext.facet#byteSlice'
   byteStart: number
   byteEnd: number
 }

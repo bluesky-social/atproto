@@ -4,7 +4,7 @@
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { validate as _validate } from '../../../../lexicons'
-import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 
 const is$typed = _is$typed,
   validate = _validate
@@ -12,7 +12,7 @@ const id = 'app.bsky.embed.external'
 
 /** A representation of some externally linked content (eg, a URL and 'card'), embedded in a Bluesky record (eg, a post). */
 export interface Main {
-  $type?: $Type<'app.bsky.embed.external', 'main'>
+  $type?: 'app.bsky.embed.external'
   external: External
 }
 
@@ -27,7 +27,7 @@ export function validateMain<V>(v: V) {
 }
 
 export interface External {
-  $type?: $Type<'app.bsky.embed.external', 'external'>
+  $type?: 'app.bsky.embed.external#external'
   uri: string
   title: string
   description: string
@@ -45,7 +45,7 @@ export function validateExternal<V>(v: V) {
 }
 
 export interface View {
-  $type?: $Type<'app.bsky.embed.external', 'view'>
+  $type?: 'app.bsky.embed.external#view'
   external: ViewExternal
 }
 
@@ -60,7 +60,7 @@ export function validateView<V>(v: V) {
 }
 
 export interface ViewExternal {
-  $type?: $Type<'app.bsky.embed.external', 'viewExternal'>
+  $type?: 'app.bsky.embed.external#viewExternal'
   uri: string
   title: string
   description: string

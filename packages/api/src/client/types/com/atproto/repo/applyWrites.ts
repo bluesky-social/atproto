@@ -5,7 +5,7 @@ import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { validate as _validate } from '../../../../lexicons'
-import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 import type * as ComAtprotoRepoDefs from './defs.js'
 
 const is$typed = _is$typed,
@@ -62,7 +62,7 @@ export function toKnownErr(e: any) {
 
 /** Operation which creates a new record. */
 export interface Create {
-  $type?: $Type<'com.atproto.repo.applyWrites', 'create'>
+  $type?: 'com.atproto.repo.applyWrites#create'
   collection: string
   rkey?: string
   value: { [_ in string]: unknown }
@@ -80,7 +80,7 @@ export function validateCreate<V>(v: V) {
 
 /** Operation which updates an existing record. */
 export interface Update {
-  $type?: $Type<'com.atproto.repo.applyWrites', 'update'>
+  $type?: 'com.atproto.repo.applyWrites#update'
   collection: string
   rkey: string
   value: { [_ in string]: unknown }
@@ -98,7 +98,7 @@ export function validateUpdate<V>(v: V) {
 
 /** Operation which deletes an existing record. */
 export interface Delete {
-  $type?: $Type<'com.atproto.repo.applyWrites', 'delete'>
+  $type?: 'com.atproto.repo.applyWrites#delete'
   collection: string
   rkey: string
 }
@@ -114,7 +114,7 @@ export function validateDelete<V>(v: V) {
 }
 
 export interface CreateResult {
-  $type?: $Type<'com.atproto.repo.applyWrites', 'createResult'>
+  $type?: 'com.atproto.repo.applyWrites#createResult'
   uri: string
   cid: string
   validationStatus?: 'valid' | 'unknown' | (string & {})
@@ -131,7 +131,7 @@ export function validateCreateResult<V>(v: V) {
 }
 
 export interface UpdateResult {
-  $type?: $Type<'com.atproto.repo.applyWrites', 'updateResult'>
+  $type?: 'com.atproto.repo.applyWrites#updateResult'
   uri: string
   cid: string
   validationStatus?: 'valid' | 'unknown' | (string & {})
@@ -148,7 +148,7 @@ export function validateUpdateResult<V>(v: V) {
 }
 
 export interface DeleteResult {
-  $type?: $Type<'com.atproto.repo.applyWrites', 'deleteResult'>
+  $type?: 'com.atproto.repo.applyWrites#deleteResult'
 }
 
 const hashDeleteResult = 'deleteResult'

@@ -4,7 +4,7 @@
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { validate as _validate } from '../../../../lexicons'
-import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 import type * as ComAtprotoAdminDefs from '../../../com/atproto/admin/defs.js'
 import type * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef.js'
 import type * as ChatBskyConvoDefs from '../../../chat/bsky/convo/defs.js'
@@ -17,7 +17,7 @@ const is$typed = _is$typed,
 const id = 'tools.ozone.moderation.defs'
 
 export interface ModEventView {
-  $type?: $Type<'tools.ozone.moderation.defs', 'modEventView'>
+  $type?: 'tools.ozone.moderation.defs#modEventView'
   id: number
   event:
     | $Typed<ModEventTakedown>
@@ -63,7 +63,7 @@ export function validateModEventView<V>(v: V) {
 }
 
 export interface ModEventViewDetail {
-  $type?: $Type<'tools.ozone.moderation.defs', 'modEventViewDetail'>
+  $type?: 'tools.ozone.moderation.defs#modEventViewDetail'
   id: number
   event:
     | $Typed<ModEventTakedown>
@@ -108,7 +108,7 @@ export function validateModEventViewDetail<V>(v: V) {
 }
 
 export interface SubjectStatusView {
-  $type?: $Type<'tools.ozone.moderation.defs', 'subjectStatusView'>
+  $type?: 'tools.ozone.moderation.defs#subjectStatusView'
   id: number
   subject:
     | $Typed<ComAtprotoAdminDefs.RepoRef>
@@ -154,7 +154,7 @@ export function validateSubjectStatusView<V>(v: V) {
 
 /** Statistics about a particular account subject */
 export interface AccountStats {
-  $type?: $Type<'tools.ozone.moderation.defs', 'accountStats'>
+  $type?: 'tools.ozone.moderation.defs#accountStats'
   /** Total number of reports on the account */
   reportCount?: number
   /** Total number of appeals against a moderation action on the account */
@@ -179,7 +179,7 @@ export function validateAccountStats<V>(v: V) {
 
 /** Statistics about a set of record subject items */
 export interface RecordsStats {
-  $type?: $Type<'tools.ozone.moderation.defs', 'recordsStats'>
+  $type?: 'tools.ozone.moderation.defs#recordsStats'
   /** Cumulative sum of the number of reports on the items in the set */
   totalReports?: number
   /** Number of items that were reported at least once */
@@ -226,7 +226,7 @@ export const REVIEWNONE = `${id}#reviewNone`
 
 /** Take down a subject permanently or temporarily */
 export interface ModEventTakedown {
-  $type?: $Type<'tools.ozone.moderation.defs', 'modEventTakedown'>
+  $type?: 'tools.ozone.moderation.defs#modEventTakedown'
   comment?: string
   /** Indicates how long the takedown should be in effect before automatically expiring. */
   durationInHours?: number
@@ -248,7 +248,7 @@ export function validateModEventTakedown<V>(v: V) {
 
 /** Revert take down action on a subject */
 export interface ModEventReverseTakedown {
-  $type?: $Type<'tools.ozone.moderation.defs', 'modEventReverseTakedown'>
+  $type?: 'tools.ozone.moderation.defs#modEventReverseTakedown'
   /** Describe reasoning behind the reversal. */
   comment?: string
 }
@@ -269,7 +269,7 @@ export function validateModEventReverseTakedown<V>(v: V) {
 
 /** Resolve appeal on a subject */
 export interface ModEventResolveAppeal {
-  $type?: $Type<'tools.ozone.moderation.defs', 'modEventResolveAppeal'>
+  $type?: 'tools.ozone.moderation.defs#modEventResolveAppeal'
   /** Describe resolution. */
   comment?: string
 }
@@ -286,7 +286,7 @@ export function validateModEventResolveAppeal<V>(v: V) {
 
 /** Add a comment to a subject */
 export interface ModEventComment {
-  $type?: $Type<'tools.ozone.moderation.defs', 'modEventComment'>
+  $type?: 'tools.ozone.moderation.defs#modEventComment'
   comment: string
   /** Make the comment persistent on the subject */
   sticky?: boolean
@@ -304,7 +304,7 @@ export function validateModEventComment<V>(v: V) {
 
 /** Report a subject */
 export interface ModEventReport {
-  $type?: $Type<'tools.ozone.moderation.defs', 'modEventReport'>
+  $type?: 'tools.ozone.moderation.defs#modEventReport'
   comment?: string
   /** Set to true if the reporter was muted from reporting at the time of the event. These reports won't impact the reviewState of the subject. */
   isReporterMuted?: boolean
@@ -323,7 +323,7 @@ export function validateModEventReport<V>(v: V) {
 
 /** Apply/Negate labels on a subject */
 export interface ModEventLabel {
-  $type?: $Type<'tools.ozone.moderation.defs', 'modEventLabel'>
+  $type?: 'tools.ozone.moderation.defs#modEventLabel'
   comment?: string
   createLabelVals: string[]
   negateLabelVals: string[]
@@ -343,7 +343,7 @@ export function validateModEventLabel<V>(v: V) {
 
 /** Set priority score of the subject. Higher score means higher priority. */
 export interface ModEventPriorityScore {
-  $type?: $Type<'tools.ozone.moderation.defs', 'modEventPriorityScore'>
+  $type?: 'tools.ozone.moderation.defs#modEventPriorityScore'
   comment?: string
   score: number
 }
@@ -359,7 +359,7 @@ export function validateModEventPriorityScore<V>(v: V) {
 }
 
 export interface ModEventAcknowledge {
-  $type?: $Type<'tools.ozone.moderation.defs', 'modEventAcknowledge'>
+  $type?: 'tools.ozone.moderation.defs#modEventAcknowledge'
   comment?: string
   /** If true, all other reports on content authored by this account will be resolved (acknowledged). */
   acknowledgeAccountSubjects?: boolean
@@ -376,7 +376,7 @@ export function validateModEventAcknowledge<V>(v: V) {
 }
 
 export interface ModEventEscalate {
-  $type?: $Type<'tools.ozone.moderation.defs', 'modEventEscalate'>
+  $type?: 'tools.ozone.moderation.defs#modEventEscalate'
   comment?: string
 }
 
@@ -392,7 +392,7 @@ export function validateModEventEscalate<V>(v: V) {
 
 /** Mute incoming reports on a subject */
 export interface ModEventMute {
-  $type?: $Type<'tools.ozone.moderation.defs', 'modEventMute'>
+  $type?: 'tools.ozone.moderation.defs#modEventMute'
   comment?: string
   /** Indicates how long the subject should remain muted. */
   durationInHours: number
@@ -410,7 +410,7 @@ export function validateModEventMute<V>(v: V) {
 
 /** Unmute action on a subject */
 export interface ModEventUnmute {
-  $type?: $Type<'tools.ozone.moderation.defs', 'modEventUnmute'>
+  $type?: 'tools.ozone.moderation.defs#modEventUnmute'
   /** Describe reasoning behind the reversal. */
   comment?: string
 }
@@ -427,7 +427,7 @@ export function validateModEventUnmute<V>(v: V) {
 
 /** Mute incoming reports from an account */
 export interface ModEventMuteReporter {
-  $type?: $Type<'tools.ozone.moderation.defs', 'modEventMuteReporter'>
+  $type?: 'tools.ozone.moderation.defs#modEventMuteReporter'
   comment?: string
   /** Indicates how long the account should remain muted. Falsy value here means a permanent mute. */
   durationInHours?: number
@@ -445,7 +445,7 @@ export function validateModEventMuteReporter<V>(v: V) {
 
 /** Unmute incoming reports from an account */
 export interface ModEventUnmuteReporter {
-  $type?: $Type<'tools.ozone.moderation.defs', 'modEventUnmuteReporter'>
+  $type?: 'tools.ozone.moderation.defs#modEventUnmuteReporter'
   /** Describe reasoning behind the reversal. */
   comment?: string
 }
@@ -462,7 +462,7 @@ export function validateModEventUnmuteReporter<V>(v: V) {
 
 /** Keep a log of outgoing email to a user */
 export interface ModEventEmail {
-  $type?: $Type<'tools.ozone.moderation.defs', 'modEventEmail'>
+  $type?: 'tools.ozone.moderation.defs#modEventEmail'
   /** The subject line of the email sent to the user. */
   subjectLine: string
   /** The content of the email sent to the user. */
@@ -483,7 +483,7 @@ export function validateModEventEmail<V>(v: V) {
 
 /** Divert a record's blobs to a 3rd party service for further scanning/tagging */
 export interface ModEventDivert {
-  $type?: $Type<'tools.ozone.moderation.defs', 'modEventDivert'>
+  $type?: 'tools.ozone.moderation.defs#modEventDivert'
   comment?: string
 }
 
@@ -499,7 +499,7 @@ export function validateModEventDivert<V>(v: V) {
 
 /** Add/Remove a tag on a subject */
 export interface ModEventTag {
-  $type?: $Type<'tools.ozone.moderation.defs', 'modEventTag'>
+  $type?: 'tools.ozone.moderation.defs#modEventTag'
   /** Tags to be added to the subject. If already exists, won't be duplicated. */
   add: string[]
   /** Tags to be removed to the subject. Ignores a tag If it doesn't exist, won't be duplicated. */
@@ -520,7 +520,7 @@ export function validateModEventTag<V>(v: V) {
 
 /** Logs account status related events on a repo subject. Normally captured by automod from the firehose and emitted to ozone for historical tracking. */
 export interface AccountEvent {
-  $type?: $Type<'tools.ozone.moderation.defs', 'accountEvent'>
+  $type?: 'tools.ozone.moderation.defs#accountEvent'
   comment?: string
   /** Indicates that the account has a repository which can be fetched from the host that emitted this event. */
   active: boolean
@@ -547,7 +547,7 @@ export function validateAccountEvent<V>(v: V) {
 
 /** Logs identity related events on a repo subject. Normally captured by automod from the firehose and emitted to ozone for historical tracking. */
 export interface IdentityEvent {
-  $type?: $Type<'tools.ozone.moderation.defs', 'identityEvent'>
+  $type?: 'tools.ozone.moderation.defs#identityEvent'
   comment?: string
   handle?: string
   pdsHost?: string
@@ -567,7 +567,7 @@ export function validateIdentityEvent<V>(v: V) {
 
 /** Logs lifecycle event on a record subject. Normally captured by automod from the firehose and emitted to ozone for historical tracking. */
 export interface RecordEvent {
-  $type?: $Type<'tools.ozone.moderation.defs', 'recordEvent'>
+  $type?: 'tools.ozone.moderation.defs#recordEvent'
   comment?: string
   op: 'create' | 'update' | 'delete' | (string & {})
   cid?: string
@@ -585,7 +585,7 @@ export function validateRecordEvent<V>(v: V) {
 }
 
 export interface RepoView {
-  $type?: $Type<'tools.ozone.moderation.defs', 'repoView'>
+  $type?: 'tools.ozone.moderation.defs#repoView'
   did: string
   handle: string
   email?: string
@@ -610,7 +610,7 @@ export function validateRepoView<V>(v: V) {
 }
 
 export interface RepoViewDetail {
-  $type?: $Type<'tools.ozone.moderation.defs', 'repoViewDetail'>
+  $type?: 'tools.ozone.moderation.defs#repoViewDetail'
   did: string
   handle: string
   email?: string
@@ -638,7 +638,7 @@ export function validateRepoViewDetail<V>(v: V) {
 }
 
 export interface RepoViewNotFound {
-  $type?: $Type<'tools.ozone.moderation.defs', 'repoViewNotFound'>
+  $type?: 'tools.ozone.moderation.defs#repoViewNotFound'
   did: string
 }
 
@@ -653,7 +653,7 @@ export function validateRepoViewNotFound<V>(v: V) {
 }
 
 export interface RecordView {
-  $type?: $Type<'tools.ozone.moderation.defs', 'recordView'>
+  $type?: 'tools.ozone.moderation.defs#recordView'
   uri: string
   cid: string
   value: { [_ in string]: unknown }
@@ -674,7 +674,7 @@ export function validateRecordView<V>(v: V) {
 }
 
 export interface RecordViewDetail {
-  $type?: $Type<'tools.ozone.moderation.defs', 'recordViewDetail'>
+  $type?: 'tools.ozone.moderation.defs#recordViewDetail'
   uri: string
   cid: string
   value: { [_ in string]: unknown }
@@ -696,7 +696,7 @@ export function validateRecordViewDetail<V>(v: V) {
 }
 
 export interface RecordViewNotFound {
-  $type?: $Type<'tools.ozone.moderation.defs', 'recordViewNotFound'>
+  $type?: 'tools.ozone.moderation.defs#recordViewNotFound'
   uri: string
 }
 
@@ -711,7 +711,7 @@ export function validateRecordViewNotFound<V>(v: V) {
 }
 
 export interface Moderation {
-  $type?: $Type<'tools.ozone.moderation.defs', 'moderation'>
+  $type?: 'tools.ozone.moderation.defs#moderation'
   subjectStatus?: SubjectStatusView
 }
 
@@ -726,7 +726,7 @@ export function validateModeration<V>(v: V) {
 }
 
 export interface ModerationDetail {
-  $type?: $Type<'tools.ozone.moderation.defs', 'moderationDetail'>
+  $type?: 'tools.ozone.moderation.defs#moderationDetail'
   subjectStatus?: SubjectStatusView
 }
 
@@ -741,7 +741,7 @@ export function validateModerationDetail<V>(v: V) {
 }
 
 export interface BlobView {
-  $type?: $Type<'tools.ozone.moderation.defs', 'blobView'>
+  $type?: 'tools.ozone.moderation.defs#blobView'
   cid: string
   mimeType: string
   size: number
@@ -761,7 +761,7 @@ export function validateBlobView<V>(v: V) {
 }
 
 export interface ImageDetails {
-  $type?: $Type<'tools.ozone.moderation.defs', 'imageDetails'>
+  $type?: 'tools.ozone.moderation.defs#imageDetails'
   width: number
   height: number
 }
@@ -777,7 +777,7 @@ export function validateImageDetails<V>(v: V) {
 }
 
 export interface VideoDetails {
-  $type?: $Type<'tools.ozone.moderation.defs', 'videoDetails'>
+  $type?: 'tools.ozone.moderation.defs#videoDetails'
   width: number
   height: number
   length: number
@@ -794,7 +794,7 @@ export function validateVideoDetails<V>(v: V) {
 }
 
 export interface AccountHosting {
-  $type?: $Type<'tools.ozone.moderation.defs', 'accountHosting'>
+  $type?: 'tools.ozone.moderation.defs#accountHosting'
   status:
     | 'takendown'
     | 'suspended'
@@ -820,7 +820,7 @@ export function validateAccountHosting<V>(v: V) {
 }
 
 export interface RecordHosting {
-  $type?: $Type<'tools.ozone.moderation.defs', 'recordHosting'>
+  $type?: 'tools.ozone.moderation.defs#recordHosting'
   status: 'deleted' | 'unknown' | (string & {})
   updatedAt?: string
   createdAt?: string

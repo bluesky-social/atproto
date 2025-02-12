@@ -4,7 +4,7 @@
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { validate as _validate } from '../../../../lexicons'
-import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, ErrorFrame } from '@atproto/xrpc-server'
 import { IncomingMessage } from 'node:http'
 
@@ -40,7 +40,7 @@ export type Handler<HA extends HandlerAuth = never> = (
 
 /** Represents an update of repository state. Note that empty commits are allowed, which include no repo data changes, but an update to rev and signature. */
 export interface Commit {
-  $type?: $Type<'com.atproto.sync.subscribeRepos', 'commit'>
+  $type?: 'com.atproto.sync.subscribeRepos#commit'
   /** The stream sequence number of this message. */
   seq: number
   /** DEPRECATED -- unused */
@@ -77,7 +77,7 @@ export function validateCommit<V>(v: V) {
 
 /** Represents a change to an account's identity. Could be an updated handle, signing key, or pds hosting endpoint. Serves as a prod to all downstream services to refresh their identity cache. */
 export interface Identity {
-  $type?: $Type<'com.atproto.sync.subscribeRepos', 'identity'>
+  $type?: 'com.atproto.sync.subscribeRepos#identity'
   seq: number
   did: string
   time: string
@@ -97,7 +97,7 @@ export function validateIdentity<V>(v: V) {
 
 /** Represents a change to an account's status on a host (eg, PDS or Relay). The semantics of this event are that the status is at the host which emitted the event, not necessarily that at the currently active PDS. Eg, a Relay takedown would emit a takedown with active=false, even if the PDS is still active. */
 export interface Account {
-  $type?: $Type<'com.atproto.sync.subscribeRepos', 'account'>
+  $type?: 'com.atproto.sync.subscribeRepos#account'
   seq: number
   did: string
   time: string
@@ -119,7 +119,7 @@ export function validateAccount<V>(v: V) {
 
 /** DEPRECATED -- Use #identity event instead */
 export interface Handle {
-  $type?: $Type<'com.atproto.sync.subscribeRepos', 'handle'>
+  $type?: 'com.atproto.sync.subscribeRepos#handle'
   seq: number
   did: string
   handle: string
@@ -138,7 +138,7 @@ export function validateHandle<V>(v: V) {
 
 /** DEPRECATED -- Use #account event instead */
 export interface Migrate {
-  $type?: $Type<'com.atproto.sync.subscribeRepos', 'migrate'>
+  $type?: 'com.atproto.sync.subscribeRepos#migrate'
   seq: number
   did: string
   migrateTo: string | null
@@ -157,7 +157,7 @@ export function validateMigrate<V>(v: V) {
 
 /** DEPRECATED -- Use #account event instead */
 export interface Tombstone {
-  $type?: $Type<'com.atproto.sync.subscribeRepos', 'tombstone'>
+  $type?: 'com.atproto.sync.subscribeRepos#tombstone'
   seq: number
   did: string
   time: string
@@ -174,7 +174,7 @@ export function validateTombstone<V>(v: V) {
 }
 
 export interface Info {
-  $type?: $Type<'com.atproto.sync.subscribeRepos', 'info'>
+  $type?: 'com.atproto.sync.subscribeRepos#info'
   name: 'OutdatedCursor' | (string & {})
   message?: string
 }
@@ -191,7 +191,7 @@ export function validateInfo<V>(v: V) {
 
 /** A repo operation, ie a mutation of a single record. */
 export interface RepoOp {
-  $type?: $Type<'com.atproto.sync.subscribeRepos', 'repoOp'>
+  $type?: 'com.atproto.sync.subscribeRepos#repoOp'
   action: 'create' | 'update' | 'delete' | (string & {})
   path: string
   /** For creates and updates, the new record CID. For deletions, null. */

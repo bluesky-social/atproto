@@ -4,7 +4,7 @@
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { validate as _validate } from '../../../../lexicons'
-import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 import type * as AppBskyActorDefs from '../../../app/bsky/actor/defs.js'
 
 const is$typed = _is$typed,
@@ -12,7 +12,7 @@ const is$typed = _is$typed,
 const id = 'tools.ozone.team.defs'
 
 export interface Member {
-  $type?: $Type<'tools.ozone.team.defs', 'member'>
+  $type?: 'tools.ozone.team.defs#member'
   did: string
   disabled?: boolean
   profile?: AppBskyActorDefs.ProfileViewDetailed

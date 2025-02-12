@@ -4,14 +4,14 @@
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { validate as _validate } from '../../../../lexicons'
-import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 
 const is$typed = _is$typed,
   validate = _validate
 const id = 'app.bsky.feed.postgate'
 
 export interface Record {
-  $type: $Type<'app.bsky.feed.postgate', 'main'>
+  $type: 'app.bsky.feed.postgate'
   createdAt: string
   /** Reference (AT-URI) to the post record. */
   post: string
@@ -34,7 +34,7 @@ export function validateRecord<V>(v: V) {
 
 /** Disables embedding of this post. */
 export interface DisableRule {
-  $type?: $Type<'app.bsky.feed.postgate', 'disableRule'>
+  $type?: 'app.bsky.feed.postgate#disableRule'
 }
 
 const hashDisableRule = 'disableRule'

@@ -4,7 +4,7 @@
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { validate as _validate } from '../../../../lexicons'
-import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 import type * as AppBskyRichtextFacet from '../../../app/bsky/richtext/facet.js'
 import type * as AppBskyEmbedRecord from '../../../app/bsky/embed/record.js'
 import type * as ChatBskyActorDefs from '../actor/defs.js'
@@ -14,7 +14,7 @@ const is$typed = _is$typed,
 const id = 'chat.bsky.convo.defs'
 
 export interface MessageRef {
-  $type?: $Type<'chat.bsky.convo.defs', 'messageRef'>
+  $type?: 'chat.bsky.convo.defs#messageRef'
   did: string
   convoId: string
   messageId: string
@@ -31,7 +31,7 @@ export function validateMessageRef<V>(v: V) {
 }
 
 export interface MessageInput {
-  $type?: $Type<'chat.bsky.convo.defs', 'messageInput'>
+  $type?: 'chat.bsky.convo.defs#messageInput'
   text: string
   /** Annotations of text (mentions, URLs, hashtags, etc) */
   facets?: AppBskyRichtextFacet.Main[]
@@ -49,7 +49,7 @@ export function validateMessageInput<V>(v: V) {
 }
 
 export interface MessageView {
-  $type?: $Type<'chat.bsky.convo.defs', 'messageView'>
+  $type?: 'chat.bsky.convo.defs#messageView'
   id: string
   rev: string
   text: string
@@ -71,7 +71,7 @@ export function validateMessageView<V>(v: V) {
 }
 
 export interface DeletedMessageView {
-  $type?: $Type<'chat.bsky.convo.defs', 'deletedMessageView'>
+  $type?: 'chat.bsky.convo.defs#deletedMessageView'
   id: string
   rev: string
   sender: MessageViewSender
@@ -89,7 +89,7 @@ export function validateDeletedMessageView<V>(v: V) {
 }
 
 export interface MessageViewSender {
-  $type?: $Type<'chat.bsky.convo.defs', 'messageViewSender'>
+  $type?: 'chat.bsky.convo.defs#messageViewSender'
   did: string
 }
 
@@ -104,7 +104,7 @@ export function validateMessageViewSender<V>(v: V) {
 }
 
 export interface ConvoView {
-  $type?: $Type<'chat.bsky.convo.defs', 'convoView'>
+  $type?: 'chat.bsky.convo.defs#convoView'
   id: string
   rev: string
   members: ChatBskyActorDefs.ProfileViewBasic[]
@@ -128,7 +128,7 @@ export function validateConvoView<V>(v: V) {
 }
 
 export interface LogBeginConvo {
-  $type?: $Type<'chat.bsky.convo.defs', 'logBeginConvo'>
+  $type?: 'chat.bsky.convo.defs#logBeginConvo'
   rev: string
   convoId: string
 }
@@ -144,7 +144,7 @@ export function validateLogBeginConvo<V>(v: V) {
 }
 
 export interface LogLeaveConvo {
-  $type?: $Type<'chat.bsky.convo.defs', 'logLeaveConvo'>
+  $type?: 'chat.bsky.convo.defs#logLeaveConvo'
   rev: string
   convoId: string
 }
@@ -160,7 +160,7 @@ export function validateLogLeaveConvo<V>(v: V) {
 }
 
 export interface LogCreateMessage {
-  $type?: $Type<'chat.bsky.convo.defs', 'logCreateMessage'>
+  $type?: 'chat.bsky.convo.defs#logCreateMessage'
   rev: string
   convoId: string
   message: $Typed<MessageView> | $Typed<DeletedMessageView> | { $type: string }
@@ -177,7 +177,7 @@ export function validateLogCreateMessage<V>(v: V) {
 }
 
 export interface LogDeleteMessage {
-  $type?: $Type<'chat.bsky.convo.defs', 'logDeleteMessage'>
+  $type?: 'chat.bsky.convo.defs#logDeleteMessage'
   rev: string
   convoId: string
   message: $Typed<MessageView> | $Typed<DeletedMessageView> | { $type: string }

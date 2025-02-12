@@ -4,7 +4,7 @@
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { validate as _validate } from '../../../../lexicons'
-import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 import type * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs.js'
 import type * as AppBskyActorDefs from '../actor/defs.js'
 import type * as AppBskyRichtextFacet from '../richtext/facet.js'
@@ -15,7 +15,7 @@ const is$typed = _is$typed,
 const id = 'app.bsky.graph.defs'
 
 export interface ListViewBasic {
-  $type?: $Type<'app.bsky.graph.defs', 'listViewBasic'>
+  $type?: 'app.bsky.graph.defs#listViewBasic'
   uri: string
   cid: string
   name: string
@@ -38,7 +38,7 @@ export function validateListViewBasic<V>(v: V) {
 }
 
 export interface ListView {
-  $type?: $Type<'app.bsky.graph.defs', 'listView'>
+  $type?: 'app.bsky.graph.defs#listView'
   uri: string
   cid: string
   creator: AppBskyActorDefs.ProfileView
@@ -64,7 +64,7 @@ export function validateListView<V>(v: V) {
 }
 
 export interface ListItemView {
-  $type?: $Type<'app.bsky.graph.defs', 'listItemView'>
+  $type?: 'app.bsky.graph.defs#listItemView'
   uri: string
   subject: AppBskyActorDefs.ProfileView
 }
@@ -80,7 +80,7 @@ export function validateListItemView<V>(v: V) {
 }
 
 export interface StarterPackView {
-  $type?: $Type<'app.bsky.graph.defs', 'starterPackView'>
+  $type?: 'app.bsky.graph.defs#starterPackView'
   uri: string
   cid: string
   record: { [_ in string]: unknown }
@@ -105,7 +105,7 @@ export function validateStarterPackView<V>(v: V) {
 }
 
 export interface StarterPackViewBasic {
-  $type?: $Type<'app.bsky.graph.defs', 'starterPackViewBasic'>
+  $type?: 'app.bsky.graph.defs#starterPackViewBasic'
   uri: string
   cid: string
   record: { [_ in string]: unknown }
@@ -141,7 +141,7 @@ export const CURATELIST = `${id}#curatelist`
 export const REFERENCELIST = `${id}#referencelist`
 
 export interface ListViewerState {
-  $type?: $Type<'app.bsky.graph.defs', 'listViewerState'>
+  $type?: 'app.bsky.graph.defs#listViewerState'
   muted?: boolean
   blocked?: string
 }
@@ -158,7 +158,7 @@ export function validateListViewerState<V>(v: V) {
 
 /** indicates that a handle or DID could not be resolved */
 export interface NotFoundActor {
-  $type?: $Type<'app.bsky.graph.defs', 'notFoundActor'>
+  $type?: 'app.bsky.graph.defs#notFoundActor'
   actor: string
   notFound: true
 }
@@ -175,7 +175,7 @@ export function validateNotFoundActor<V>(v: V) {
 
 /** lists the bi-directional graph relationships between one actor (not indicated in the object), and the target actors (the DID included in the object) */
 export interface Relationship {
-  $type?: $Type<'app.bsky.graph.defs', 'relationship'>
+  $type?: 'app.bsky.graph.defs#relationship'
   did: string
   /** if the actor follows this DID, this is the AT-URI of the follow record */
   following?: string

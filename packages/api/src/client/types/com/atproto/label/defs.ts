@@ -4,7 +4,7 @@
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { validate as _validate } from '../../../../lexicons'
-import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 
 const is$typed = _is$typed,
   validate = _validate
@@ -12,7 +12,7 @@ const id = 'com.atproto.label.defs'
 
 /** Metadata tag on an atproto resource (eg, repo or record). */
 export interface Label {
-  $type?: $Type<'com.atproto.label.defs', 'label'>
+  $type?: 'com.atproto.label.defs#label'
   /** The AT Protocol version of the label object. */
   ver?: number
   /** DID of the actor who created this label. */
@@ -45,7 +45,7 @@ export function validateLabel<V>(v: V) {
 
 /** Metadata tags on an atproto record, published by the author within the record. */
 export interface SelfLabels {
-  $type?: $Type<'com.atproto.label.defs', 'selfLabels'>
+  $type?: 'com.atproto.label.defs#selfLabels'
   values: SelfLabel[]
 }
 
@@ -61,7 +61,7 @@ export function validateSelfLabels<V>(v: V) {
 
 /** Metadata tag on an atproto record, published by the author within the record. Note that schemas should use #selfLabels, not #selfLabel. */
 export interface SelfLabel {
-  $type?: $Type<'com.atproto.label.defs', 'selfLabel'>
+  $type?: 'com.atproto.label.defs#selfLabel'
   /** The short string name of the value or type of this label. */
   val: string
 }
@@ -78,7 +78,7 @@ export function validateSelfLabel<V>(v: V) {
 
 /** Declares a label value and its expected interpretations and behaviors. */
 export interface LabelValueDefinition {
-  $type?: $Type<'com.atproto.label.defs', 'labelValueDefinition'>
+  $type?: 'com.atproto.label.defs#labelValueDefinition'
   /** The value of the label being defined. Must only include lowercase ascii and the '-' character ([a-z-]+). */
   identifier: string
   /** How should a client visually convey this label? 'inform' means neutral and informational; 'alert' means negative and warning; 'none' means show nothing. */
@@ -104,7 +104,7 @@ export function validateLabelValueDefinition<V>(v: V) {
 
 /** Strings which describe the label in the UI, localized into a specific language. */
 export interface LabelValueDefinitionStrings {
-  $type?: $Type<'com.atproto.label.defs', 'labelValueDefinitionStrings'>
+  $type?: 'com.atproto.label.defs#labelValueDefinitionStrings'
   /** The code of the language these strings are written in. */
   lang: string
   /** A short human-readable name for the label. */

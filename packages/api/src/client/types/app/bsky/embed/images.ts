@@ -4,7 +4,7 @@
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { validate as _validate } from '../../../../lexicons'
-import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 import type * as AppBskyEmbedDefs from './defs.js'
 
 const is$typed = _is$typed,
@@ -12,7 +12,7 @@ const is$typed = _is$typed,
 const id = 'app.bsky.embed.images'
 
 export interface Main {
-  $type?: $Type<'app.bsky.embed.images', 'main'>
+  $type?: 'app.bsky.embed.images'
   images: Image[]
 }
 
@@ -27,7 +27,7 @@ export function validateMain<V>(v: V) {
 }
 
 export interface Image {
-  $type?: $Type<'app.bsky.embed.images', 'image'>
+  $type?: 'app.bsky.embed.images#image'
   image: BlobRef
   /** Alt text description of the image, for accessibility. */
   alt: string
@@ -45,7 +45,7 @@ export function validateImage<V>(v: V) {
 }
 
 export interface View {
-  $type?: $Type<'app.bsky.embed.images', 'view'>
+  $type?: 'app.bsky.embed.images#view'
   images: ViewImage[]
 }
 
@@ -60,7 +60,7 @@ export function validateView<V>(v: V) {
 }
 
 export interface ViewImage {
-  $type?: $Type<'app.bsky.embed.images', 'viewImage'>
+  $type?: 'app.bsky.embed.images#viewImage'
   /** Fully-qualified URL where a thumbnail of the image can be fetched. For example, CDN location provided by the App View. */
   thumb: string
   /** Fully-qualified URL where a large version of the image can be fetched. May or may not be the exact original blob. For example, CDN location provided by the App View. */

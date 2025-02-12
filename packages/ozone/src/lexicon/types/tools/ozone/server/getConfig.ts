@@ -5,7 +5,7 @@ import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { validate as _validate } from '../../../../lexicons'
-import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 
 const is$typed = _is$typed,
@@ -51,7 +51,7 @@ export type Handler<HA extends HandlerAuth = never> = (
 ) => Promise<HandlerOutput> | HandlerOutput
 
 export interface ServiceConfig {
-  $type?: $Type<'tools.ozone.server.getConfig', 'serviceConfig'>
+  $type?: 'tools.ozone.server.getConfig#serviceConfig'
   url?: string
 }
 
@@ -66,7 +66,7 @@ export function validateServiceConfig<V>(v: V) {
 }
 
 export interface ViewerConfig {
-  $type?: $Type<'tools.ozone.server.getConfig', 'viewerConfig'>
+  $type?: 'tools.ozone.server.getConfig#viewerConfig'
   role?:
     | 'tools.ozone.team.defs#roleAdmin'
     | 'tools.ozone.team.defs#roleModerator'

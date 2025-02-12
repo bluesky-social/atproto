@@ -4,14 +4,14 @@
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { validate as _validate } from '../../../../lexicons'
-import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 
 const is$typed = _is$typed,
   validate = _validate
 const id = 'app.bsky.graph.follow'
 
 export interface Record {
-  $type: $Type<'app.bsky.graph.follow', 'main'>
+  $type: 'app.bsky.graph.follow'
   subject: string
   createdAt: string
   [k: string]: unknown

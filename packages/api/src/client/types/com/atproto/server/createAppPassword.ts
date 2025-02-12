@@ -5,7 +5,7 @@ import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { validate as _validate } from '../../../../lexicons'
-import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 
 const is$typed = _is$typed,
   validate = _validate
@@ -50,7 +50,7 @@ export function toKnownErr(e: any) {
 }
 
 export interface AppPassword {
-  $type?: $Type<'com.atproto.server.createAppPassword', 'appPassword'>
+  $type?: 'com.atproto.server.createAppPassword#appPassword'
   name: string
   password: string
   createdAt: string

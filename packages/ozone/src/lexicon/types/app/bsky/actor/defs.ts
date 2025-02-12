@@ -4,7 +4,7 @@
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { validate as _validate } from '../../../../lexicons'
-import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 import type * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs.js'
 import type * as AppBskyGraphDefs from '../graph/defs.js'
 import type * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef.js'
@@ -16,7 +16,7 @@ const is$typed = _is$typed,
 const id = 'app.bsky.actor.defs'
 
 export interface ProfileViewBasic {
-  $type?: $Type<'app.bsky.actor.defs', 'profileViewBasic'>
+  $type?: 'app.bsky.actor.defs#profileViewBasic'
   did: string
   handle: string
   displayName?: string
@@ -38,7 +38,7 @@ export function validateProfileViewBasic<V>(v: V) {
 }
 
 export interface ProfileView {
-  $type?: $Type<'app.bsky.actor.defs', 'profileView'>
+  $type?: 'app.bsky.actor.defs#profileView'
   did: string
   handle: string
   displayName?: string
@@ -62,7 +62,7 @@ export function validateProfileView<V>(v: V) {
 }
 
 export interface ProfileViewDetailed {
-  $type?: $Type<'app.bsky.actor.defs', 'profileViewDetailed'>
+  $type?: 'app.bsky.actor.defs#profileViewDetailed'
   did: string
   handle: string
   displayName?: string
@@ -92,7 +92,7 @@ export function validateProfileViewDetailed<V>(v: V) {
 }
 
 export interface ProfileAssociated {
-  $type?: $Type<'app.bsky.actor.defs', 'profileAssociated'>
+  $type?: 'app.bsky.actor.defs#profileAssociated'
   lists?: number
   feedgens?: number
   starterPacks?: number
@@ -111,7 +111,7 @@ export function validateProfileAssociated<V>(v: V) {
 }
 
 export interface ProfileAssociatedChat {
-  $type?: $Type<'app.bsky.actor.defs', 'profileAssociatedChat'>
+  $type?: 'app.bsky.actor.defs#profileAssociatedChat'
   allowIncoming: 'all' | 'none' | 'following' | (string & {})
 }
 
@@ -127,7 +127,7 @@ export function validateProfileAssociatedChat<V>(v: V) {
 
 /** Metadata about the requesting account's relationship with the subject account. Only has meaningful content for authed requests. */
 export interface ViewerState {
-  $type?: $Type<'app.bsky.actor.defs', 'viewerState'>
+  $type?: 'app.bsky.actor.defs#viewerState'
   muted?: boolean
   mutedByList?: AppBskyGraphDefs.ListViewBasic
   blockedBy?: boolean
@@ -150,7 +150,7 @@ export function validateViewerState<V>(v: V) {
 
 /** The subject's followers whom you also follow */
 export interface KnownFollowers {
-  $type?: $Type<'app.bsky.actor.defs', 'knownFollowers'>
+  $type?: 'app.bsky.actor.defs#knownFollowers'
   count: number
   followers: ProfileViewBasic[]
 }
@@ -183,7 +183,7 @@ export type Preferences = (
 )[]
 
 export interface AdultContentPref {
-  $type?: $Type<'app.bsky.actor.defs', 'adultContentPref'>
+  $type?: 'app.bsky.actor.defs#adultContentPref'
   enabled: boolean
 }
 
@@ -198,7 +198,7 @@ export function validateAdultContentPref<V>(v: V) {
 }
 
 export interface ContentLabelPref {
-  $type?: $Type<'app.bsky.actor.defs', 'contentLabelPref'>
+  $type?: 'app.bsky.actor.defs#contentLabelPref'
   /** Which labeler does this preference apply to? If undefined, applies globally. */
   labelerDid?: string
   label: string
@@ -216,7 +216,7 @@ export function validateContentLabelPref<V>(v: V) {
 }
 
 export interface SavedFeed {
-  $type?: $Type<'app.bsky.actor.defs', 'savedFeed'>
+  $type?: 'app.bsky.actor.defs#savedFeed'
   id: string
   type: 'feed' | 'list' | 'timeline' | (string & {})
   value: string
@@ -234,7 +234,7 @@ export function validateSavedFeed<V>(v: V) {
 }
 
 export interface SavedFeedsPrefV2 {
-  $type?: $Type<'app.bsky.actor.defs', 'savedFeedsPrefV2'>
+  $type?: 'app.bsky.actor.defs#savedFeedsPrefV2'
   items: SavedFeed[]
 }
 
@@ -249,7 +249,7 @@ export function validateSavedFeedsPrefV2<V>(v: V) {
 }
 
 export interface SavedFeedsPref {
-  $type?: $Type<'app.bsky.actor.defs', 'savedFeedsPref'>
+  $type?: 'app.bsky.actor.defs#savedFeedsPref'
   pinned: string[]
   saved: string[]
   timelineIndex?: number
@@ -266,7 +266,7 @@ export function validateSavedFeedsPref<V>(v: V) {
 }
 
 export interface PersonalDetailsPref {
-  $type?: $Type<'app.bsky.actor.defs', 'personalDetailsPref'>
+  $type?: 'app.bsky.actor.defs#personalDetailsPref'
   /** The birth date of account owner. */
   birthDate?: string
 }
@@ -282,7 +282,7 @@ export function validatePersonalDetailsPref<V>(v: V) {
 }
 
 export interface FeedViewPref {
-  $type?: $Type<'app.bsky.actor.defs', 'feedViewPref'>
+  $type?: 'app.bsky.actor.defs#feedViewPref'
   /** The URI of the feed, or an identifier which describes the feed. */
   feed: string
   /** Hide replies in the feed. */
@@ -308,7 +308,7 @@ export function validateFeedViewPref<V>(v: V) {
 }
 
 export interface ThreadViewPref {
-  $type?: $Type<'app.bsky.actor.defs', 'threadViewPref'>
+  $type?: 'app.bsky.actor.defs#threadViewPref'
   /** Sorting mode for threads. */
   sort?:
     | 'oldest'
@@ -332,7 +332,7 @@ export function validateThreadViewPref<V>(v: V) {
 }
 
 export interface InterestsPref {
-  $type?: $Type<'app.bsky.actor.defs', 'interestsPref'>
+  $type?: 'app.bsky.actor.defs#interestsPref'
   /** A list of tags which describe the account owner's interests gathered during onboarding. */
   tags: string[]
 }
@@ -351,7 +351,7 @@ export type MutedWordTarget = 'content' | 'tag' | (string & {})
 
 /** A word that the account owner has muted. */
 export interface MutedWord {
-  $type?: $Type<'app.bsky.actor.defs', 'mutedWord'>
+  $type?: 'app.bsky.actor.defs#mutedWord'
   id?: string
   /** The muted word itself. */
   value: string
@@ -374,7 +374,7 @@ export function validateMutedWord<V>(v: V) {
 }
 
 export interface MutedWordsPref {
-  $type?: $Type<'app.bsky.actor.defs', 'mutedWordsPref'>
+  $type?: 'app.bsky.actor.defs#mutedWordsPref'
   /** A list of words the account owner has muted. */
   items: MutedWord[]
 }
@@ -390,7 +390,7 @@ export function validateMutedWordsPref<V>(v: V) {
 }
 
 export interface HiddenPostsPref {
-  $type?: $Type<'app.bsky.actor.defs', 'hiddenPostsPref'>
+  $type?: 'app.bsky.actor.defs#hiddenPostsPref'
   /** A list of URIs of posts the account owner has hidden. */
   items: string[]
 }
@@ -406,7 +406,7 @@ export function validateHiddenPostsPref<V>(v: V) {
 }
 
 export interface LabelersPref {
-  $type?: $Type<'app.bsky.actor.defs', 'labelersPref'>
+  $type?: 'app.bsky.actor.defs#labelersPref'
   labelers: LabelerPrefItem[]
 }
 
@@ -421,7 +421,7 @@ export function validateLabelersPref<V>(v: V) {
 }
 
 export interface LabelerPrefItem {
-  $type?: $Type<'app.bsky.actor.defs', 'labelerPrefItem'>
+  $type?: 'app.bsky.actor.defs#labelerPrefItem'
   did: string
 }
 
@@ -437,7 +437,7 @@ export function validateLabelerPrefItem<V>(v: V) {
 
 /** A grab bag of state that's specific to the bsky.app program. Third-party apps shouldn't use this. */
 export interface BskyAppStatePref {
-  $type?: $Type<'app.bsky.actor.defs', 'bskyAppStatePref'>
+  $type?: 'app.bsky.actor.defs#bskyAppStatePref'
   activeProgressGuide?: BskyAppProgressGuide
   /** An array of tokens which identify nudges (modals, popups, tours, highlight dots) that should be shown to the user. */
   queuedNudges?: string[]
@@ -457,7 +457,7 @@ export function validateBskyAppStatePref<V>(v: V) {
 
 /** If set, an active progress guide. Once completed, can be set to undefined. Should have unspecced fields tracking progress. */
 export interface BskyAppProgressGuide {
-  $type?: $Type<'app.bsky.actor.defs', 'bskyAppProgressGuide'>
+  $type?: 'app.bsky.actor.defs#bskyAppProgressGuide'
   guide: string
 }
 
@@ -473,7 +473,7 @@ export function validateBskyAppProgressGuide<V>(v: V) {
 
 /** A new user experiences (NUX) storage object */
 export interface Nux {
-  $type?: $Type<'app.bsky.actor.defs', 'nux'>
+  $type?: 'app.bsky.actor.defs#nux'
   id: string
   completed: boolean
   /** Arbitrary data for the NUX. The structure is defined by the NUX itself. Limited to 300 characters. */
@@ -494,7 +494,7 @@ export function validateNux<V>(v: V) {
 
 /** Default post interaction settings for the account. These values should be applied as default values when creating new posts. These refs should mirror the threadgate and postgate records exactly. */
 export interface PostInteractionSettingsPref {
-  $type?: $Type<'app.bsky.actor.defs', 'postInteractionSettingsPref'>
+  $type?: 'app.bsky.actor.defs#postInteractionSettingsPref'
   /** Matches threadgate record. List of rules defining who can reply to this users posts. If value is an empty array, no one can reply. If value is undefined, anyone can reply. */
   threadgateAllowRules?: (
     | $Typed<AppBskyFeedThreadgate.MentionRule>

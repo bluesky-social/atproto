@@ -5,7 +5,7 @@ import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { validate as _validate } from '../../../../lexicons'
-import { $Type, $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 
 const is$typed = _is$typed,
   validate = _validate
@@ -37,7 +37,7 @@ export function toKnownErr(e: any) {
 }
 
 export interface Feed {
-  $type?: $Type<'app.bsky.feed.describeFeedGenerator', 'feed'>
+  $type?: 'app.bsky.feed.describeFeedGenerator#feed'
   uri: string
 }
 
@@ -52,7 +52,7 @@ export function validateFeed<V>(v: V) {
 }
 
 export interface Links {
-  $type?: $Type<'app.bsky.feed.describeFeedGenerator', 'links'>
+  $type?: 'app.bsky.feed.describeFeedGenerator#links'
   privacyPolicy?: string
   termsOfService?: string
 }
