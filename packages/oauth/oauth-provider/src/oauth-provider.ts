@@ -1003,7 +1003,7 @@ export class OAuthProvider extends OAuthVerifier {
     T = void,
     Req extends IncomingMessage = IncomingMessage,
     Res extends ServerResponse = ServerResponse,
-  >(options: RouterOptions<Req, Res> = {}) {
+  >(options?: RouterOptions<Req, Res>) {
     const deviceManager = new DeviceManager(this.deviceStore, options)
     const outputManager = new OutputManager(this.customization)
 
