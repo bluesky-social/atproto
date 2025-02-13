@@ -135,7 +135,7 @@
     "aspect": {
       "type": "string",
       "description": "Tag describing an aspect of a moderation subject relevant to a report.",
-      "knownValues": ["image", "video", "link", "interaction"]
+      "knownValues": ["image", "video", "external", "interaction"]
     },
     "subjectType": {
       "type": "string",
