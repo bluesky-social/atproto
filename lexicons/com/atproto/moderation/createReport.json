@@ -28,14 +28,14 @@
                 "com.atproto.admin.defs#repoRef",
                 "com.atproto.repo.strongRef"
               ]
-            }
-          },
-          "reasonContexts": {
-            "description": "Set of context tags relevant to this report.",
-            "type": "array",
-            "items": {
-              "type": "ref",
-              "ref": "com.atproto.moderation.defs#reasonContext"
+            },
+            "aspects": {
+              "description": "Set of aspect tags relevant to this report.",
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "com.atproto.moderation.defs#aspects"
+              }
             }
           }
         }

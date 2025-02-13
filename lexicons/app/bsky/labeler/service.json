@@ -24,7 +24,7 @@
             "type": "array",
             "items": {
               "type": "ref",
-              "ref": "app.bsky.labeler.defs#reasonType"
+              "ref": "com.atproto.moderation.defs#reasonType"
             }
           },
           "subjectTypes": {
@@ -35,12 +35,12 @@
               "ref": "com.atproto.moderation.defs#subjectType"
             }
           },
-          "reasonContexts": {
-            "description": "The set of report reason context tags which are in-scope of this service to review and action. If not defined (distinct from empty array), default is 'account' and 'record'.",
+          "aspects": {
+            "description": "The set of aspect tags which are in-scope of this service to review and action. If not defined (distinct from empty array), default is 'account' and 'record'.",
             "type": "array",
             "items": {
               "type": "ref",
-              "ref": "com.atproto.moderation.defs#reasonContext"
+              "ref": "com.atproto.moderation.defs#aspect"
             }
           },
           "subjectCollections": {
