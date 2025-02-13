@@ -7,7 +7,7 @@ import {
   ValidationError,
   ValidationResult,
 } from '@atproto/lexicon'
-import { $Typed, is$typed, maybe$typed } from './util'
+import { $Typed, is$typed, maybe$typed } from './util.js'
 
 export const schemaDict = {
   ComAtprotoAdminDefs: {
