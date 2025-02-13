@@ -2,4 +2,5 @@
 "@atproto/oauth-provider": minor
 ---
 
-Rework of authorization request hooks
+Rename `onClientInfo` and `onAuthorizationDetails` hooks to `getClientInfo` and `getAuthorizationDetails` respectively.
+
