@@ -10,8 +10,8 @@ import { ClientAuth } from './client/client-auth.js'
 import { ClientId } from './client/client-id.js'
 import { ClientInfo } from './client/client-info.js'
 import { Client } from './client/client.js'
-import { DeviceDetails } from './device/device-details.js'
 import { InvalidAuthorizationDetailsError } from './errors/invalid-authorization-details-error.js'
+import { RequestMetadata } from './lib/http/request.js'
 import { Awaitable } from './lib/util/type.js'
 import { AccessDeniedError, OAuthError } from './oauth-errors.js'
 import { DeviceId } from './oauth-store.js'
@@ -25,7 +25,6 @@ export {
   type ClientAuth,
   type ClientId,
   type ClientInfo,
-  type DeviceDetails,
   type DeviceId,
   InvalidAuthorizationDetailsError,
   type Jwks,
@@ -34,6 +33,7 @@ export {
   type OAuthClientMetadata,
   OAuthError,
   type OAuthTokenResponse,
+  type RequestMetadata,
 }
 
 export type OAuthHooks = {
@@ -57,6 +57,8 @@ export type OAuthHooks = {
    */
   getAuthorizationDetails?: (data: {
     client: Client
+    clientAuth: ClientAuth
+    clientMetadata: RequestMetadata
     parameters: OAuthAuthorizationRequestParameters
     account: Account
   }) => Awaitable<undefined | OAuthAuthorizationDetails>
@@ -67,13 +69,17 @@ export type OAuthHooks = {
    * @throws {AccessDeniedError} to deny the authorization request and redirect
    * the user to the client with an OAuth error (other errors will result in an
    * internal server error being displayed to the user)
+   *
+   * @note We use `deviceMetadata` instead of `clientMetadata` to make it clear
+   * that this metadata is from the user device, which might be different from
+   * the client metadata (because the OAuth client could live in a backend).
    */
   onAuthorized?: (data: {
     client: Client
     account: Account
     parameters: OAuthAuthorizationRequestParameters
     deviceId: DeviceId
-    deviceDetails: DeviceDetails
+    deviceMetadata: RequestMetadata
   }) => Awaitable<void>
 
   /**
@@ -84,6 +90,8 @@ export type OAuthHooks = {
    */
   onTokenCreated?: (data: {
     client: Client
+    clientAuth: ClientAuth
+    clientMetadata: RequestMetadata
     account: Account
     parameters: OAuthAuthorizationRequestParameters
     /** null when "password grant" used (in which case {@link onAuthorized} won't have been called) */
@@ -97,6 +105,8 @@ export type OAuthHooks = {
    */
   onTokenRefreshed?: (data: {
     client: Client
+    clientAuth: ClientAuth
+    clientMetadata: RequestMetadata
     account: Account
     parameters: OAuthAuthorizationRequestParameters
     /** null when "password grant" used (in which case {@link onAuthorized} won't have been called) */

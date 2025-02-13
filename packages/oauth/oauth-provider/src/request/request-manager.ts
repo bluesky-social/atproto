@@ -12,7 +12,6 @@ import {
   PAR_EXPIRES_IN,
   TOKEN_MAX_AGE,
 } from '../constants.js'
-import { DeviceDetails } from '../device/device-details.js'
 import { DeviceId } from '../device/device-id.js'
 import { AccessDeniedError } from '../errors/access-denied-error.js'
 import { ConsentRequiredError } from '../errors/consent-required-error.js'
@@ -21,6 +20,7 @@ import { InvalidGrantError } from '../errors/invalid-grant-error.js'
 import { InvalidParametersError } from '../errors/invalid-parameters-error.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { InvalidScopeError } from '../errors/invalid-scope-error.js'
+import { RequestMetadata } from '../lib/http/request.js'
 import { callAsync } from '../lib/util/function.js'
 import { OAuthHooks } from '../oauth-hooks.js'
 import { Signer } from '../signer/signer.js'
@@ -375,7 +375,7 @@ export class RequestManager {
     client: Client,
     account: Account,
     deviceId: DeviceId,
-    deviceDetails: DeviceDetails,
+    deviceMetadata: RequestMetadata,
   ): Promise<Code> {
     const id = decodeRequestUri(uri)
 
@@ -421,7 +421,7 @@ export class RequestManager {
         account,
         parameters: data.parameters,
         deviceId,
-        deviceDetails,
+        deviceMetadata,
       })
 
       return code

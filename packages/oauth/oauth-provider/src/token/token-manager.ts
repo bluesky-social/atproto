@@ -29,6 +29,7 @@ import { InvalidDpopProofError } from '../errors/invalid-dpop-proof-error.js'
 import { InvalidGrantError } from '../errors/invalid-grant-error.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { InvalidTokenError } from '../errors/invalid-token-error.js'
+import { RequestMetadata } from '../lib/http/request.js'
 import { dateToEpoch, dateToRelativeSeconds } from '../lib/util/date.js'
 import { callAsync } from '../lib/util/function.js'
 import { OAuthHooks } from '../oauth-hooks.js'
@@ -82,6 +83,7 @@ export class TokenManager {
   async create(
     client: Client,
     clientAuth: ClientAuth,
+    clientMetadata: RequestMetadata,
     account: Account,
     device: null | { id: DeviceId; info: DeviceAccountInfo },
     parameters: OAuthAuthorizationRequestParameters,
@@ -211,6 +213,8 @@ export class TokenManager {
       this.hooks.getAuthorizationDetails,
       {
         client,
+        clientAuth,
+        clientMetadata,
         parameters,
         account,
       },
@@ -259,9 +263,11 @@ export class TokenManager {
 
       await callAsync(this.hooks.onTokenCreated, {
         client,
+        clientAuth,
+        clientMetadata,
         account,
         parameters,
-        deviceId: device?.id ?? null,
+        deviceId: device ? device.id : null,
       })
 
       return response
@@ -326,6 +332,7 @@ export class TokenManager {
   async refresh(
     client: Client,
     clientAuth: ClientAuth,
+    clientMetadata: RequestMetadata,
     input: OAuthRefreshTokenGrantTokenRequest,
     dpopJkt: null | string,
   ): Promise<OAuthTokenResponse> {
@@ -391,6 +398,8 @@ export class TokenManager {
         this.hooks.getAuthorizationDetails,
         {
           client,
+          clientAuth,
+          clientMetadata,
           parameters,
           account,
         },
@@ -452,6 +461,8 @@ export class TokenManager {
 
       await callAsync(this.hooks.onTokenRefreshed, {
         client,
+        clientAuth,
+        clientMetadata,
         account,
         parameters,
         deviceId: tokenInfo.data.deviceId,

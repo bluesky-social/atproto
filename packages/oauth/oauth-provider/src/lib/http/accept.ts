@@ -1,11 +1,7 @@
+import type { IncomingMessage, ServerResponse } from 'node:http'
 import { mediaType } from '@hapi/accept'
 import { SubCtx, subCtx } from './context.js'
-import {
-  IncomingMessage,
-  Middleware,
-  NextFunction,
-  ServerResponse,
-} from './types.js'
+import { Middleware, NextFunction } from './types.js'
 
 type View<
   T,
