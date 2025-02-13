@@ -1434,7 +1434,9 @@ export class Agent extends XrpcClient {
       const newSavedFeeds = cb(existingV2Pref.items)
 
       // enforce ordering: pinned first, then saved
-      existingV2Pref.items = [...newSavedFeeds].sort((a) => (a.pinned ? -1 : 1))
+      const pinned = newSavedFeeds.filter((i) => i.pinned)
+      const saved = newSavedFeeds.filter((i) => !i.pinned)
+      existingV2Pref.items = pinned.concat(saved)
 
       // Store the return value
       maybeMutatedSavedFeeds = newSavedFeeds
