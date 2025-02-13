@@ -1,5 +1,22 @@
 # @atproto/api
 
+## 0.14.0
+
+### Minor Changes
+
+- [#2999](https://github.com/bluesky-social/atproto/pull/2999) [`c53d943c8`](https://github.com/bluesky-social/atproto/commit/c53d943c8be5b8886254e020970a68c0f745b14c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update Lexicon derived code to better reflect data typings. In particular, Lexicon derived interfaces will now explicitly include the `$type` property that can be present in the data.
+
+- [#2999](https://github.com/bluesky-social/atproto/pull/2999) [`c53d943c8`](https://github.com/bluesky-social/atproto/commit/c53d943c8be5b8886254e020970a68c0f745b14c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Helper functions (e.g. `NS.isRecord`) no longer casts the output value. Use `asPredicate(NS.validateRecord)` to create a predicate function that will ensure that an unknown value is indeed an `NS.Record`. The `isX` helper function's purpose is to discriminate between `$type`d values from unions.
+
+### Patch Changes
+
+- [#2999](https://github.com/bluesky-social/atproto/pull/2999) [`c53d943c8`](https://github.com/bluesky-social/atproto/commit/c53d943c8be5b8886254e020970a68c0f745b14c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fixes a bug that would clear interests prefs when updating hidden posts
+
+- Updated dependencies [[`c53d943c8`](https://github.com/bluesky-social/atproto/commit/c53d943c8be5b8886254e020970a68c0f745b14c), [`c53d943c8`](https://github.com/bluesky-social/atproto/commit/c53d943c8be5b8886254e020970a68c0f745b14c), [`c53d943c8`](https://github.com/bluesky-social/atproto/commit/c53d943c8be5b8886254e020970a68c0f745b14c)]:
+  - @atproto/syntax@0.3.3
+  - @atproto/lexicon@0.4.7
+  - @atproto/xrpc@0.6.9
+
 ## 0.13.35
 
 ### Patch Changes
