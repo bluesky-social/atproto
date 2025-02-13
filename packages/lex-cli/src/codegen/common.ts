@@ -156,7 +156,7 @@ export const lexiconsTs = (project, lexicons: LexiconDoc[]) =>
     //= import {is$typed, maybe$typed, $Typed} from './util'
     file
       .addImportDeclaration({
-        moduleSpecifier: './util',
+        moduleSpecifier: './util.js',
       })
       .addNamedImports([
         { name: '$Typed' },
