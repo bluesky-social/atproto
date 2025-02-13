@@ -1,4 +1,4 @@
-import { IncomingMessage, ServerResponse } from 'node:http'
+import type { IncomingMessage, ServerResponse } from 'node:http'
 import { SubCtx, subCtx } from './context.js'
 import { MethodMatcherInput, createMethodMatcher } from './method.js'
 import { combineMiddlewares } from './middleware.js'

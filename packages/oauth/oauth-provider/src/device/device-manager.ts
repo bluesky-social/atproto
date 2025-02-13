@@ -98,7 +98,7 @@ export class DeviceManager {
 
   constructor(
     private readonly store: DeviceStore,
-    options?: DeviceManagerOptions,
+    options: DeviceManagerOptions = {},
   ) {
     this.options = deviceManagerOptionsSchema.parse(options)
   }
