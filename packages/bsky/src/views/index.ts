@@ -176,13 +176,23 @@ export class Views {
     return uri
   }
 
-  viewerSeesNeedsReview(did: string, state: HydrationState): boolean {
+  viewerSeesNeedsReview(
+    { did, uri }: { did?: string; uri?: string },
+    state: HydrationState,
+  ): boolean {
     const { labels, profileViewers, ctx } = state
-    return (
-      !labels?.get(did)?.needsReview ||
-      ctx?.viewer === did ||
-      !!profileViewers?.get(did)?.following
-    )
+    did = did || (uri && uriToDid(uri))
+    if (!did) {
+      return true
+    }
+    if (
+      labels?.get(did)?.needsReview ||
+      (uri && labels?.get(uri)?.needsReview)
+    ) {
+      // content marked as needs review
+      return ctx?.viewer === did || !!profileViewers?.get(did)?.following
+    }
+    return true
   }
 
   replyIsHiddenByThreadgate(
@@ -972,7 +982,7 @@ export class Views {
       if (this.viewerBlockExists(post.author.did, state)) {
         return this.blockedPost(uri, post.author.did, state)
       }
-      if (!this.viewerSeesNeedsReview(post.author.did, state)) {
+      if (!this.viewerSeesNeedsReview({ uri, did: post.author.did }, state)) {
         return undefined
       }
       return {

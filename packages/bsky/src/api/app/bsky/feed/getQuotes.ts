@@ -82,7 +82,7 @@ const noBlocksOrNeedsReview = (inputs: {
     return (
       !ctx.views.viewerBlockExists(authorDid, hydration) &&
       !hydration.postBlocks?.get(uri)?.embed &&
-      ctx.views.viewerSeesNeedsReview(authorDid, hydration)
+      ctx.views.viewerSeesNeedsReview({ did: authorDid, uri }, hydration)
     )
   })
   return skeleton
