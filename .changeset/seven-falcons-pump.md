@@ -2,4 +2,4 @@
 "@atproto/pds": patch
 ---
 
-Code cleanup
+Dead code cleanup.
