@@ -934,43 +934,37 @@ export class Agent extends XrpcClient {
   }
 
   async addLabeler(did: string) {
-    const prefs = await this.updatePreferences(
-      (prefs: AppBskyActorDefs.Preferences) => {
-        const labelersPref = prefs.findLast(predicate.isValidLabelersPref) || {
-          $type: 'app.bsky.actor.defs#labelersPref',
-          labelers: [],
-        }
+    const prefs = await this.updatePreferences((prefs) => {
+      const labelersPref = prefs.findLast(predicate.isValidLabelersPref) || {
+        $type: 'app.bsky.actor.defs#labelersPref',
+        labelers: [],
+      }
 
-        if (!labelersPref.labelers.some((labeler) => labeler.did === did)) {
-          labelersPref.labelers.push({ did })
-        }
+      if (!labelersPref.labelers.some((labeler) => labeler.did === did)) {
+        labelersPref.labelers.push({ did })
+      }
 
-        return prefs
-          .filter((pref) => !AppBskyActorDefs.isLabelersPref(pref))
-          .concat(labelersPref)
-      },
-    )
+      return prefs
+        .filter((pref) => !AppBskyActorDefs.isLabelersPref(pref))
+        .concat(labelersPref)
+    })
     // automatically configure the client
     this.configureLabelers(prefsArrayToLabelerDids(prefs))
   }
 
   async removeLabeler(did: string) {
-    const prefs = await this.updatePreferences(
-      (prefs: AppBskyActorDefs.Preferences) => {
-        const labelersPref = prefs.findLast(predicate.isValidLabelersPref) || {
-          $type: 'app.bsky.actor.defs#labelersPref',
-          labelers: [],
-        }
+    const prefs = await this.updatePreferences((prefs) => {
+      const labelersPref = prefs.findLast(predicate.isValidLabelersPref) || {
+        $type: 'app.bsky.actor.defs#labelersPref',
+        labelers: [],
+      }
 
-        labelersPref.labelers = labelersPref.labelers.filter(
-          (labeler) => labeler.did !== did,
-        )
+      labelersPref.labelers = labelersPref.labelers.filter((l) => l.did !== did)
 
-        return prefs
-          .filter((pref) => !AppBskyActorDefs.isLabelersPref(pref))
-          .concat(labelersPref)
-      },
-    )
+      return prefs
+        .filter((pref) => !AppBskyActorDefs.isLabelersPref(pref))
+        .concat(labelersPref)
+    })
     // automatically configure the client
     this.configureLabelers(prefsArrayToLabelerDids(prefs))
   }
