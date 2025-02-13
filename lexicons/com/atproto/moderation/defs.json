@@ -118,11 +118,11 @@
     },
     "reasonSpoiler": {
       "type": "token",
-      "description": "Spoilers (example reason)"
+      "description": "Spoilers"
     },
     "reasonGrowthHack": {
       "type": "token",
-      "description": "Growth Hack: engagement farming (example reason)"
+      "description": "Growth Hack: engagement farming"
     },
     "reasonOther": {
       "type": "token",
