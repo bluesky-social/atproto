@@ -50,6 +50,7 @@ describe('bsky needs-review labels', () => {
         uri: sc.dids.geoff,
         cid: '',
         val: 'needs-review',
+        exp: null,
         neg: false,
         cts: new Date().toISOString(),
       })

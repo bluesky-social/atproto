@@ -315,6 +315,7 @@ const createLabel = async (
       cid: opts.cid,
       val: opts.val,
       cts: new Date().toISOString(),
+      exp: null,
       neg: false,
       src: EXAMPLE_LABELER,
     })
