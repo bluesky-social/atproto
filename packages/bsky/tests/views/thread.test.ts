@@ -1,6 +1,8 @@
+import assert from 'node:assert'
 import { AppBskyFeedGetPostThread, AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
+import { isThreadViewPost } from '../../src/lexicon/types/app/bsky/feed/defs'
 import {
   assertIsThreadViewPost,
   forSnapshot,
@@ -404,7 +406,10 @@ describe('pds thread views', () => {
         },
       )
 
-      const parent = threadPreTakedown.data.thread.parent?.['post']
+      assert(isThreadViewPost(threadPreTakedown.data.thread))
+      assert(isThreadViewPost(threadPreTakedown.data.thread.parent))
+
+      const parent = threadPreTakedown.data.thread.parent.post
 
       await network.bsky.ctx.dataplane.takedownRecord({
         recordUri: parent.uri,
@@ -439,8 +444,18 @@ describe('pds thread views', () => {
           ),
         },
       )
+
+      assert(isThreadViewPost(threadPreTakedown.data.thread))
+      assert(isThreadViewPost(threadPreTakedown.data.thread.replies?.[0]))
+      assert(isThreadViewPost(threadPreTakedown.data.thread.replies?.[1]))
+      assert(
+        isThreadViewPost(
+          threadPreTakedown.data.thread.replies?.[1].replies?.[0],
+        ),
+      )
+
       const post1 = threadPreTakedown.data.thread.replies?.[0].post
-      const post2 = threadPreTakedown.data.thread.replies?.[1].replies[0].post
+      const post2 = threadPreTakedown.data.thread.replies?.[1].replies?.[0].post
 
       await Promise.all(
         [post1, post2].map((post) =>

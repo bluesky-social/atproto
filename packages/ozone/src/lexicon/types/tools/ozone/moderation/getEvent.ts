@@ -3,11 +3,15 @@
  */
 import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
-import * as ToolsOzoneModerationDefs from './defs'
+import type * as ToolsOzoneModerationDefs from './defs.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'tools.ozone.moderation.getEvent'
 
 export interface QueryParams {
   id: number

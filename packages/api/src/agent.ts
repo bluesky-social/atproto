@@ -1,5 +1,5 @@
 import AwaitLock from 'await-lock'
-import { TID } from '@atproto/common-web'
+import { TID, retry } from '@atproto/common-web'
 import { AtUri, ensureValidDid } from '@atproto/syntax'
 import { FetchHandler, XrpcClient, buildFetchHandler } from '@atproto/xrpc'
 import {
@@ -15,6 +15,7 @@ import {
 } from './client/index'
 import { schemas } from './client/lexicons'
 import { MutedWord, Nux } from './client/types/app/bsky/actor/defs'
+import { $Typed, Un$Typed } from './client/util'
 import { BSKY_LABELER_DID } from './const'
 import { interpretLabelValueDefinitions } from './moderation'
 import { DEFAULT_LABEL_SETTINGS } from './moderation/const/labels'
@@ -23,6 +24,7 @@ import {
   LabelPreference,
   ModerationPrefs,
 } from './moderation/types'
+import * as predicate from './predicate'
 import { SessionManager } from './session-manager'
 import {
   AtpAgentGlobalOpts,
@@ -54,15 +56,6 @@ const FEED_VIEW_PREF_DEFAULTS = {
 const THREAD_VIEW_PREF_DEFAULTS = {
   sort: 'hotness',
   prioritizeFollowedUsers: true,
-}
-
-declare global {
-  interface Array<T> {
-    findLast(
-      predicate: (value: T, index: number, obj: T[]) => unknown,
-      thisArg?: any,
-    ): T
-  }
 }
 
 export type { FetchHandler }
@@ -447,59 +440,56 @@ export class Agent extends XrpcClient {
     })
   }
 
+  /**
+   * @note: Using this method will reset the whole profile record if it
+   * previously contained invalid values (wrt to the profile lexicon).
+   */
   async upsertProfile(
     updateFn: (
       existing: AppBskyActorProfile.Record | undefined,
-    ) => AppBskyActorProfile.Record | Promise<AppBskyActorProfile.Record>,
-  ) {
-    const repo = this.accountDid
+    ) =>
+      | Un$Typed<AppBskyActorProfile.Record>
+      | Promise<Un$Typed<AppBskyActorProfile.Record>>,
+  ): Promise<void> {
+    const upsert = async () => {
+      const repo = this.assertDid
+      const collection = 'app.bsky.actor.profile'
 
-    let retriesRemaining = 5
-    while (retriesRemaining >= 0) {
-      // fetch existing
       const existing = await this.com.atproto.repo
-        .getRecord({
-          repo,
-          collection: 'app.bsky.actor.profile',
-          rkey: 'self',
-        })
+        .getRecord({ repo, collection, rkey: 'self' })
         .catch((_) => undefined)
 
-      // run the update
-      const updated = await updateFn(existing?.data.value)
-      if (updated) {
-        updated.$type = 'app.bsky.actor.profile'
-      }
+      const existingRecord: AppBskyActorProfile.Record | undefined =
+        existing && predicate.isValidProfile(existing.data.value)
+          ? existing.data.value
+          : undefined
 
-      // validate the record
-      const validation = AppBskyActorProfile.validateRecord(updated)
+      // run the update
+      const updated = await updateFn(existingRecord)
+
+      // validate the value returned by the update function
+      const validation = AppBskyActorProfile.validateRecord({
+        $type: collection,
+        ...updated,
+      })
+
       if (!validation.success) {
         throw validation.error
       }
 
-      try {
-        // attempt the put
-        await this.com.atproto.repo.putRecord({
-          repo,
-          collection: 'app.bsky.actor.profile',
-          rkey: 'self',
-          record: updated,
-          swapRecord: existing?.data.cid || null,
-        })
-      } catch (e: unknown) {
-        if (
-          retriesRemaining > 0 &&
-          e instanceof ComAtprotoRepoPutRecord.InvalidSwapError
-        ) {
-          // try again
-          retriesRemaining--
-          continue
-        } else {
-          throw e
-        }
-      }
-      break
+      await this.com.atproto.repo.putRecord({
+        repo,
+        collection,
+        rkey: 'self',
+        record: validation.value,
+        swapRecord: existing?.data.cid || null,
+      })
     }
+
+    return retry(upsert, {
+      maxRetries: 5,
+      retryable: (e) => e instanceof ComAtprotoRepoPutRecord.InvalidSwapError,
+    })
   }
 
   async mute(actor: string) {
@@ -591,23 +581,14 @@ export class Agent extends XrpcClient {
     const res = await this.app.bsky.actor.getPreferences({})
     const labelPrefs: AppBskyActorDefs.ContentLabelPref[] = []
     for (const pref of res.data.preferences) {
-      if (
-        AppBskyActorDefs.isAdultContentPref(pref) &&
-        AppBskyActorDefs.validateAdultContentPref(pref).success
-      ) {
+      if (predicate.isValidAdultContentPref(pref)) {
         // adult content preferences
         prefs.moderationPrefs.adultContentEnabled = pref.enabled
-      } else if (
-        AppBskyActorDefs.isContentLabelPref(pref) &&
-        AppBskyActorDefs.validateContentLabelPref(pref).success
-      ) {
+      } else if (predicate.isValidContentLabelPref(pref)) {
         // content label preference
         const adjustedPref = adjustLegacyContentLabelPref(pref)
         labelPrefs.push(adjustedPref)
-      } else if (
-        AppBskyActorDefs.isLabelersPref(pref) &&
-        AppBskyActorDefs.validateLabelersPref(pref).success
-      ) {
+      } else if (predicate.isValidLabelersPref(pref)) {
         // labelers preferences
         prefs.moderationPrefs.labelers = this.appLabelers
           .map((did: string) => ({ did, labels: {} }))
@@ -617,56 +598,30 @@ export class Agent extends XrpcClient {
               labels: {},
             })),
           )
-      } else if (
-        AppBskyActorDefs.isSavedFeedsPrefV2(pref) &&
-        AppBskyActorDefs.validateSavedFeedsPrefV2(pref).success
-      ) {
+      } else if (predicate.isValidSavedFeedsPrefV2(pref)) {
         prefs.savedFeeds = pref.items
-      } else if (
-        AppBskyActorDefs.isSavedFeedsPref(pref) &&
-        AppBskyActorDefs.validateSavedFeedsPref(pref).success
-      ) {
+      } else if (predicate.isValidSavedFeedsPref(pref)) {
         // saved and pinned feeds
         prefs.feeds.saved = pref.saved
         prefs.feeds.pinned = pref.pinned
-      } else if (
-        AppBskyActorDefs.isPersonalDetailsPref(pref) &&
-        AppBskyActorDefs.validatePersonalDetailsPref(pref).success
-      ) {
+      } else if (predicate.isValidPersonalDetailsPref(pref)) {
         // birth date (irl)
         if (pref.birthDate) {
           prefs.birthDate = new Date(pref.birthDate)
         }
-      } else if (
-        AppBskyActorDefs.isFeedViewPref(pref) &&
-        AppBskyActorDefs.validateFeedViewPref(pref).success
-      ) {
+      } else if (predicate.isValidFeedViewPref(pref)) {
         // feed view preferences
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { $type, feed, ...v } = pref
-        prefs.feedViewPrefs[pref.feed] = { ...FEED_VIEW_PREF_DEFAULTS, ...v }
-      } else if (
-        AppBskyActorDefs.isThreadViewPref(pref) &&
-        AppBskyActorDefs.validateThreadViewPref(pref).success
-      ) {
+        const { $type: _, feed, ...v } = pref
+        prefs.feedViewPrefs[feed] = { ...FEED_VIEW_PREF_DEFAULTS, ...v }
+      } else if (predicate.isValidThreadViewPref(pref)) {
         // thread view preferences
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { $type, ...v } = pref
+        const { $type: _, ...v } = pref
         prefs.threadViewPrefs = { ...prefs.threadViewPrefs, ...v }
-      } else if (
-        AppBskyActorDefs.isInterestsPref(pref) &&
-        AppBskyActorDefs.validateInterestsPref(pref).success
-      ) {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { $type, ...v } = pref
+      } else if (predicate.isValidInterestsPref(pref)) {
+        const { $type: _, ...v } = pref
         prefs.interests = { ...prefs.interests, ...v }
-      } else if (
-        AppBskyActorDefs.isMutedWordsPref(pref) &&
-        AppBskyActorDefs.validateMutedWordsPref(pref).success
-      ) {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { $type, ...v } = pref
-        prefs.moderationPrefs.mutedWords = v.items
+      } else if (predicate.isValidMutedWordsPref(pref)) {
+        prefs.moderationPrefs.mutedWords = pref.items
 
         if (prefs.moderationPrefs.mutedWords.length) {
           prefs.moderationPrefs.mutedWords =
@@ -675,26 +630,13 @@ export class Agent extends XrpcClient {
               return word
             })
         }
-      } else if (
-        AppBskyActorDefs.isHiddenPostsPref(pref) &&
-        AppBskyActorDefs.validateHiddenPostsPref(pref).success
-      ) {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { $type, ...v } = pref
-        prefs.moderationPrefs.hiddenPosts = v.items
-      } else if (
-        AppBskyActorDefs.isBskyAppStatePref(pref) &&
-        AppBskyActorDefs.validateBskyAppStatePref(pref).success
-      ) {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { $type, ...v } = pref
-        prefs.bskyAppState.queuedNudges = v.queuedNudges || []
-        prefs.bskyAppState.activeProgressGuide = v.activeProgressGuide
-        prefs.bskyAppState.nuxs = v.nuxs || []
-      } else if (
-        AppBskyActorDefs.isPostInteractionSettingsPref(pref) &&
-        AppBskyActorDefs.validatePostInteractionSettingsPref(pref).success
-      ) {
+      } else if (predicate.isValidHiddenPostsPref(pref)) {
+        prefs.moderationPrefs.hiddenPosts = pref.items
+      } else if (predicate.isValidBskyAppStatePref(pref)) {
+        prefs.bskyAppState.queuedNudges = pref.queuedNudges || []
+        prefs.bskyAppState.activeProgressGuide = pref.activeProgressGuide
+        prefs.bskyAppState.nuxs = pref.nuxs || []
+      } else if (predicate.isValidPostInteractionSettingsPref(pref)) {
         prefs.postInteractionSettings.threadgateAllowRules =
           pref.threadgateAllowRules
         prefs.postInteractionSettings.postgateEmbeddingRules =
@@ -900,23 +842,19 @@ export class Agent extends XrpcClient {
   }
 
   async setAdultContentEnabled(v: boolean) {
-    await this.updatePreferences((prefs: AppBskyActorDefs.Preferences) => {
-      let adultContentPref = prefs.findLast(
-        (pref) =>
-          AppBskyActorDefs.isAdultContentPref(pref) &&
-          AppBskyActorDefs.validateAdultContentPref(pref).success,
-      )
-      if (adultContentPref) {
-        adultContentPref.enabled = v
-      } else {
-        adultContentPref = {
-          $type: 'app.bsky.actor.defs#adultContentPref',
-          enabled: v,
-        }
+    await this.updatePreferences((prefs) => {
+      const adultContentPref = prefs.findLast(
+        predicate.isValidAdultContentPref,
+      ) || {
+        $type: 'app.bsky.actor.defs#adultContentPref',
+        enabled: v,
       }
+
+      adultContentPref.enabled = v
+
       return prefs
         .filter((pref) => !AppBskyActorDefs.isAdultContentPref(pref))
-        .concat([adultContentPref])
+        .concat(adultContentPref)
     })
   }
 
@@ -928,27 +866,21 @@ export class Agent extends XrpcClient {
     if (labelerDid) {
       ensureValidDid(labelerDid)
     }
-    await this.updatePreferences((prefs: AppBskyActorDefs.Preferences) => {
-      let labelPref = prefs.findLast(
-        (pref) =>
-          AppBskyActorDefs.isContentLabelPref(pref) &&
-          AppBskyActorDefs.validateContentLabelPref(pref).success &&
-          pref.label === key &&
-          pref.labelerDid === labelerDid,
-      )
-      let legacyLabelPref: AppBskyActorDefs.ContentLabelPref | undefined
-
-      if (labelPref) {
-        labelPref.visibility = value
-      } else {
-        labelPref = {
-          $type: 'app.bsky.actor.defs#contentLabelPref',
-          label: key,
-          labelerDid,
-          visibility: value,
-        }
+    await this.updatePreferences((prefs) => {
+      const labelPref = prefs
+        .filter(predicate.isValidContentLabelPref)
+        .findLast(
+          (pref) => pref.label === key && pref.labelerDid === labelerDid,
+        ) || {
+        $type: 'app.bsky.actor.defs#contentLabelPref',
+        label: key,
+        labelerDid,
+        visibility: value,
       }
 
+      labelPref.visibility = value
+
+      let legacyLabelPref: $Typed<AppBskyActorDefs.ContentLabelPref> | undefined
       if (AppBskyActorDefs.isContentLabelPref(labelPref)) {
         // is global
         if (!labelPref.labelerDid) {
@@ -956,28 +888,26 @@ export class Agent extends XrpcClient {
             'graphic-media': 'gore',
             porn: 'nsfw',
             sexual: 'suggestive',
+            // Protect against using toString, hasOwnProperty, etc. as a label:
+            __proto__: null,
           }[labelPref.label]
 
           // if it's a legacy label, double-write the legacy label
           if (legacyLabelValue) {
-            legacyLabelPref = prefs.findLast(
-              (pref) =>
-                AppBskyActorDefs.isContentLabelPref(pref) &&
-                AppBskyActorDefs.validateContentLabelPref(pref).success &&
-                pref.label === legacyLabelValue &&
-                pref.labelerDid === undefined,
-            ) as AppBskyActorDefs.ContentLabelPref | undefined
-
-            if (legacyLabelPref) {
-              legacyLabelPref.visibility = value
-            } else {
-              legacyLabelPref = {
-                $type: 'app.bsky.actor.defs#contentLabelPref',
-                label: legacyLabelValue,
-                labelerDid: undefined,
-                visibility: value,
-              }
+            legacyLabelPref = prefs
+              .filter(predicate.isValidContentLabelPref)
+              .findLast(
+                (pref) =>
+                  pref.label === legacyLabelValue &&
+                  pref.labelerDid === undefined,
+              ) || {
+              $type: 'app.bsky.actor.defs#contentLabelPref',
+              label: legacyLabelValue,
+              labelerDid: undefined,
+              visibility: value,
             }
+
+            legacyLabelPref!.visibility = value
           }
         }
       }
@@ -988,7 +918,7 @@ export class Agent extends XrpcClient {
             !AppBskyActorDefs.isContentLabelPref(pref) ||
             !(pref.label === key && pref.labelerDid === labelerDid),
         )
-        .concat([labelPref])
+        .concat(labelPref)
         .filter((pref) => {
           if (!legacyLabelPref) return true
           return (
@@ -1004,63 +934,37 @@ export class Agent extends XrpcClient {
   }
 
   async addLabeler(did: string) {
-    const prefs = await this.updatePreferences(
-      (prefs: AppBskyActorDefs.Preferences) => {
-        let labelersPref = prefs.findLast(
-          (pref) =>
-            AppBskyActorDefs.isLabelersPref(pref) &&
-            AppBskyActorDefs.validateLabelersPref(pref).success,
-        )
-        if (!labelersPref) {
-          labelersPref = {
-            $type: 'app.bsky.actor.defs#labelersPref',
-            labelers: [],
-          }
-        }
-        if (AppBskyActorDefs.isLabelersPref(labelersPref)) {
-          let labelerPrefItem = labelersPref.labelers.find(
-            (labeler) => labeler.did === did,
-          )
-          if (!labelerPrefItem) {
-            labelerPrefItem = {
-              did,
-            }
-            labelersPref.labelers.push(labelerPrefItem)
-          }
-        }
-        return prefs
-          .filter((pref) => !AppBskyActorDefs.isLabelersPref(pref))
-          .concat([labelersPref])
-      },
-    )
+    const prefs = await this.updatePreferences((prefs) => {
+      const labelersPref = prefs.findLast(predicate.isValidLabelersPref) || {
+        $type: 'app.bsky.actor.defs#labelersPref',
+        labelers: [],
+      }
+
+      if (!labelersPref.labelers.some((labeler) => labeler.did === did)) {
+        labelersPref.labelers.push({ did })
+      }
+
+      return prefs
+        .filter((pref) => !AppBskyActorDefs.isLabelersPref(pref))
+        .concat(labelersPref)
+    })
     // automatically configure the client
     this.configureLabelers(prefsArrayToLabelerDids(prefs))
   }
 
   async removeLabeler(did: string) {
-    const prefs = await this.updatePreferences(
-      (prefs: AppBskyActorDefs.Preferences) => {
-        let labelersPref = prefs.findLast(
-          (pref) =>
-            AppBskyActorDefs.isLabelersPref(pref) &&
-            AppBskyActorDefs.validateLabelersPref(pref).success,
-        )
-        if (!labelersPref) {
-          labelersPref = {
-            $type: 'app.bsky.actor.defs#labelersPref',
-            labelers: [],
-          }
-        }
-        if (AppBskyActorDefs.isLabelersPref(labelersPref)) {
-          labelersPref.labelers = labelersPref.labelers.filter(
-            (labeler) => labeler.did !== did,
-          )
-        }
-        return prefs
-          .filter((pref) => !AppBskyActorDefs.isLabelersPref(pref))
-          .concat([labelersPref])
-      },
-    )
+    const prefs = await this.updatePreferences((prefs) => {
+      const labelersPref = prefs.findLast(predicate.isValidLabelersPref) || {
+        $type: 'app.bsky.actor.defs#labelersPref',
+        labelers: [],
+      }
+
+      labelersPref.labelers = labelersPref.labelers.filter((l) => l.did !== did)
+
+      return prefs
+        .filter((pref) => !AppBskyActorDefs.isLabelersPref(pref))
+        .concat(labelersPref)
+    })
     // automatically configure the client
     this.configureLabelers(prefsArrayToLabelerDids(prefs))
   }
@@ -1070,75 +974,64 @@ export class Agent extends XrpcClient {
   }: {
     birthDate: string | Date | undefined
   }) {
-    birthDate = birthDate instanceof Date ? birthDate.toISOString() : birthDate
-    await this.updatePreferences((prefs: AppBskyActorDefs.Preferences) => {
-      let personalDetailsPref = prefs.findLast(
-        (pref) =>
-          AppBskyActorDefs.isPersonalDetailsPref(pref) &&
-          AppBskyActorDefs.validatePersonalDetailsPref(pref).success,
-      )
-      if (personalDetailsPref) {
-        personalDetailsPref.birthDate = birthDate
-      } else {
-        personalDetailsPref = {
-          $type: 'app.bsky.actor.defs#personalDetailsPref',
-          birthDate,
-        }
+    await this.updatePreferences((prefs) => {
+      const personalDetailsPref = prefs.findLast(
+        predicate.isValidPersonalDetailsPref,
+      ) || {
+        $type: 'app.bsky.actor.defs#personalDetailsPref',
       }
+
+      personalDetailsPref.birthDate =
+        birthDate instanceof Date ? birthDate.toISOString() : birthDate
+
       return prefs
         .filter((pref) => !AppBskyActorDefs.isPersonalDetailsPref(pref))
-        .concat([personalDetailsPref])
+        .concat(personalDetailsPref)
     })
   }
 
   async setFeedViewPrefs(feed: string, pref: Partial<BskyFeedViewPreference>) {
-    await this.updatePreferences((prefs: AppBskyActorDefs.Preferences) => {
-      const existing = prefs.findLast(
-        (pref) =>
-          AppBskyActorDefs.isFeedViewPref(pref) &&
-          AppBskyActorDefs.validateFeedViewPref(pref).success &&
-          pref.feed === feed,
-      )
-      if (existing) {
-        pref = { ...existing, ...pref }
-      }
+    await this.updatePreferences((prefs) => {
+      const existing = prefs
+        .filter(predicate.isValidFeedViewPref)
+        .findLast((pref) => pref.feed === feed)
+
       return prefs
-        .filter(
-          (p) => !AppBskyActorDefs.isFeedViewPref(pref) || p.feed !== feed,
-        )
-        .concat([{ ...pref, $type: 'app.bsky.actor.defs#feedViewPref', feed }])
+        .filter((p) => !AppBskyActorDefs.isFeedViewPref(p) || p.feed !== feed)
+        .concat({
+          ...existing,
+          ...pref,
+          $type: 'app.bsky.actor.defs#feedViewPref',
+          feed,
+        })
     })
   }
 
   async setThreadViewPrefs(pref: Partial<BskyThreadViewPreference>) {
-    await this.updatePreferences((prefs: AppBskyActorDefs.Preferences) => {
-      const existing = prefs.findLast(
-        (pref) =>
-          AppBskyActorDefs.isThreadViewPref(pref) &&
-          AppBskyActorDefs.validateThreadViewPref(pref).success,
-      )
-      if (existing) {
-        pref = { ...existing, ...pref }
-      }
+    await this.updatePreferences((prefs) => {
+      const existing = prefs.findLast(predicate.isValidThreadViewPref)
+
       return prefs
         .filter((p) => !AppBskyActorDefs.isThreadViewPref(p))
-        .concat([{ ...pref, $type: 'app.bsky.actor.defs#threadViewPref' }])
+        .concat({
+          ...existing,
+          ...pref,
+          $type: 'app.bsky.actor.defs#threadViewPref',
+        })
     })
   }
 
   async setInterestsPref(pref: Partial<BskyInterestsPreference>) {
-    await this.updatePreferences((prefs: AppBskyActorDefs.Preferences) => {
-      const existing = prefs.findLast(
-        (pref) =>
-          AppBskyActorDefs.isInterestsPref(pref) &&
-          AppBskyActorDefs.validateInterestsPref(pref).success,
-      )
-      if (existing) {
-        pref = { ...existing, ...pref }
-      }
+    await this.updatePreferences((prefs) => {
+      const existing = prefs.findLast(predicate.isValidInterestsPref)
+
       return prefs
         .filter((p) => !AppBskyActorDefs.isInterestsPref(p))
-        .concat([{ ...pref, $type: 'app.bsky.actor.defs#interestsPref' }])
+        .concat({
+          ...existing,
+          ...pref,
+          $type: 'app.bsky.actor.defs#interestsPref',
+        })
     })
   }
 
@@ -1155,12 +1048,8 @@ export class Agent extends XrpcClient {
 
     if (!sanitizedValue) return
 
-    await this.updatePreferences((prefs: AppBskyActorDefs.Preferences) => {
-      let mutedWordsPref = prefs.findLast(
-        (pref) =>
-          AppBskyActorDefs.isMutedWordsPref(pref) &&
-          AppBskyActorDefs.validateMutedWordsPref(pref).success,
-      )
+    await this.updatePreferences((prefs) => {
+      let mutedWordsPref = prefs.findLast(predicate.isValidMutedWordsPref)
 
       const newMutedWord: AppBskyActorDefs.MutedWord = {
         id: TID.nextStr(),
@@ -1170,7 +1059,7 @@ export class Agent extends XrpcClient {
         expiresAt: mutedWord.expiresAt || undefined,
       }
 
-      if (mutedWordsPref && AppBskyActorDefs.isMutedWordsPref(mutedWordsPref)) {
+      if (mutedWordsPref) {
         mutedWordsPref.items.push(newMutedWord)
 
         /**
@@ -1182,15 +1071,14 @@ export class Agent extends XrpcClient {
       } else {
         // if the pref doesn't exist, create it
         mutedWordsPref = {
+          $type: 'app.bsky.actor.defs#mutedWordsPref',
           items: [newMutedWord],
         }
       }
 
       return prefs
         .filter((p) => !AppBskyActorDefs.isMutedWordsPref(p))
-        .concat([
-          { ...mutedWordsPref, $type: 'app.bsky.actor.defs#mutedWordsPref' },
-        ])
+        .concat(mutedWordsPref)
     })
   }
 
@@ -1217,14 +1105,10 @@ export class Agent extends XrpcClient {
    * Update a muted word in user preferences.
    */
   async updateMutedWord(mutedWord: AppBskyActorDefs.MutedWord) {
-    await this.updatePreferences((prefs: AppBskyActorDefs.Preferences) => {
-      const mutedWordsPref = prefs.findLast(
-        (pref) =>
-          AppBskyActorDefs.isMutedWordsPref(pref) &&
-          AppBskyActorDefs.validateMutedWordsPref(pref).success,
-      )
+    await this.updatePreferences((prefs) => {
+      const mutedWordsPref = prefs.findLast(predicate.isValidMutedWordsPref)
 
-      if (mutedWordsPref && AppBskyActorDefs.isMutedWordsPref(mutedWordsPref)) {
+      if (mutedWordsPref) {
         mutedWordsPref.items = mutedWordsPref.items.map((existingItem) => {
           const match = matchMutedWord(existingItem, mutedWord)
 
@@ -1255,9 +1139,7 @@ export class Agent extends XrpcClient {
 
         return prefs
           .filter((p) => !AppBskyActorDefs.isMutedWordsPref(p))
-          .concat([
-            { ...mutedWordsPref, $type: 'app.bsky.actor.defs#mutedWordsPref' },
-          ])
+          .concat(mutedWordsPref)
       }
 
       return prefs
@@ -1268,14 +1150,10 @@ export class Agent extends XrpcClient {
    * Remove a muted word from user preferences.
    */
   async removeMutedWord(mutedWord: AppBskyActorDefs.MutedWord) {
-    await this.updatePreferences((prefs: AppBskyActorDefs.Preferences) => {
-      const mutedWordsPref = prefs.findLast(
-        (pref) =>
-          AppBskyActorDefs.isMutedWordsPref(pref) &&
-          AppBskyActorDefs.validateMutedWordsPref(pref).success,
-      )
+    await this.updatePreferences((prefs) => {
+      const mutedWordsPref = prefs.findLast(predicate.isValidMutedWordsPref)
 
-      if (mutedWordsPref && AppBskyActorDefs.isMutedWordsPref(mutedWordsPref)) {
+      if (mutedWordsPref) {
         for (let i = 0; i < mutedWordsPref.items.length; i++) {
           const match = matchMutedWord(mutedWordsPref.items[i], mutedWord)
 
@@ -1294,9 +1172,7 @@ export class Agent extends XrpcClient {
 
         return prefs
           .filter((p) => !AppBskyActorDefs.isMutedWordsPref(p))
-          .concat([
-            { ...mutedWordsPref, $type: 'app.bsky.actor.defs#mutedWordsPref' },
-          ])
+          .concat(mutedWordsPref)
       }
 
       return prefs
@@ -1319,83 +1195,54 @@ export class Agent extends XrpcClient {
   }
 
   async bskyAppQueueNudges(nudges: string | string[]) {
-    await this.updatePreferences((prefs: AppBskyActorDefs.Preferences) => {
-      let bskyAppStatePref: AppBskyActorDefs.BskyAppStatePref = prefs.findLast(
-        (pref) =>
-          AppBskyActorDefs.isBskyAppStatePref(pref) &&
-          AppBskyActorDefs.validateBskyAppStatePref(pref).success,
-      )
+    await this.updatePreferences((prefs) => {
+      const pref = prefs.findLast(predicate.isValidBskyAppStatePref) || {
+        $type: 'app.bsky.actor.defs#bskyAppStatePref',
+      }
 
-      bskyAppStatePref = bskyAppStatePref || {}
-      nudges = Array.isArray(nudges) ? nudges : [nudges]
-      bskyAppStatePref.queuedNudges = (
-        bskyAppStatePref.queuedNudges || []
-      ).concat(nudges)
+      pref.queuedNudges = (pref.queuedNudges || []).concat(nudges)
 
       return prefs
         .filter((p) => !AppBskyActorDefs.isBskyAppStatePref(p))
-        .concat([
-          {
-            ...bskyAppStatePref,
-            $type: 'app.bsky.actor.defs#bskyAppStatePref',
-          },
-        ])
+        .concat(pref)
     })
   }
 
   async bskyAppDismissNudges(nudges: string | string[]) {
-    await this.updatePreferences((prefs: AppBskyActorDefs.Preferences) => {
-      let bskyAppStatePref: AppBskyActorDefs.BskyAppStatePref = prefs.findLast(
-        (pref) =>
-          AppBskyActorDefs.isBskyAppStatePref(pref) &&
-          AppBskyActorDefs.validateBskyAppStatePref(pref).success,
-      )
+    await this.updatePreferences((prefs) => {
+      const pref = prefs.findLast(predicate.isValidBskyAppStatePref) || {
+        $type: 'app.bsky.actor.defs#bskyAppStatePref',
+      }
 
-      bskyAppStatePref = bskyAppStatePref || {}
       nudges = Array.isArray(nudges) ? nudges : [nudges]
-      bskyAppStatePref.queuedNudges = (
-        bskyAppStatePref.queuedNudges || []
-      ).filter((nudge) => !nudges.includes(nudge))
+      pref.queuedNudges = (pref.queuedNudges || []).filter(
+        (nudge) => !nudges.includes(nudge),
+      )
 
       return prefs
         .filter((p) => !AppBskyActorDefs.isBskyAppStatePref(p))
-        .concat([
-          {
-            ...bskyAppStatePref,
-            $type: 'app.bsky.actor.defs#bskyAppStatePref',
-          },
-        ])
+        .concat(pref)
     })
   }
 
   async bskyAppSetActiveProgressGuide(
     guide: AppBskyActorDefs.BskyAppProgressGuide | undefined,
   ) {
-    if (
-      guide &&
-      !AppBskyActorDefs.validateBskyAppProgressGuide(guide).success
-    ) {
-      throw new Error('Invalid progress guide')
+    if (guide) {
+      const result = AppBskyActorDefs.validateBskyAppProgressGuide(guide)
+      if (!result.success) throw result.error
     }
 
-    await this.updatePreferences((prefs: AppBskyActorDefs.Preferences) => {
-      let bskyAppStatePref: AppBskyActorDefs.BskyAppStatePref = prefs.findLast(
-        (pref) =>
-          AppBskyActorDefs.isBskyAppStatePref(pref) &&
-          AppBskyActorDefs.validateBskyAppStatePref(pref).success,
-      )
+    await this.updatePreferences((prefs) => {
+      const pref = prefs.findLast(predicate.isValidBskyAppStatePref) || {
+        $type: 'app.bsky.actor.defs#bskyAppStatePref',
+      }
 
-      bskyAppStatePref = bskyAppStatePref || {}
-      bskyAppStatePref.activeProgressGuide = guide
+      pref.activeProgressGuide = guide
 
       return prefs
         .filter((p) => !AppBskyActorDefs.isBskyAppStatePref(p))
-        .concat([
-          {
-            ...bskyAppStatePref,
-            $type: 'app.bsky.actor.defs#bskyAppStatePref',
-          },
-        ])
+        .concat(pref)
     })
   }
 
@@ -1405,17 +1252,14 @@ export class Agent extends XrpcClient {
   async bskyAppUpsertNux(nux: Nux) {
     validateNux(nux)
 
-    await this.updatePreferences((prefs: AppBskyActorDefs.Preferences) => {
-      let bskyAppStatePref: AppBskyActorDefs.BskyAppStatePref = prefs.findLast(
-        (pref) =>
-          AppBskyActorDefs.isBskyAppStatePref(pref) &&
-          AppBskyActorDefs.validateBskyAppStatePref(pref).success,
-      )
+    await this.updatePreferences((prefs) => {
+      const pref = prefs.findLast(predicate.isValidBskyAppStatePref) || {
+        $type: 'app.bsky.actor.defs#bskyAppStatePref',
+      }
 
-      bskyAppStatePref = bskyAppStatePref || {}
-      bskyAppStatePref.nuxs = bskyAppStatePref.nuxs || []
+      pref.nuxs = pref.nuxs || []
 
-      const existing = bskyAppStatePref.nuxs?.find((n) => {
+      const existing = pref.nuxs?.find((n) => {
         return n.id === nux.id
       })
 
@@ -1433,18 +1277,11 @@ export class Agent extends XrpcClient {
       }
 
       // remove duplicates and append
-      bskyAppStatePref.nuxs = bskyAppStatePref.nuxs
-        .filter((n) => n.id !== nux.id)
-        .concat(next)
+      pref.nuxs = pref.nuxs.filter((n) => n.id !== nux.id).concat(next)
 
       return prefs
         .filter((p) => !AppBskyActorDefs.isBskyAppStatePref(p))
-        .concat([
-          {
-            ...bskyAppStatePref,
-            $type: 'app.bsky.actor.defs#bskyAppStatePref',
-          },
-        ])
+        .concat(pref)
     })
   }
 
@@ -1452,69 +1289,43 @@ export class Agent extends XrpcClient {
    * Removes NUXs from user preferences.
    */
   async bskyAppRemoveNuxs(ids: string[]) {
-    await this.updatePreferences((prefs: AppBskyActorDefs.Preferences) => {
-      let bskyAppStatePref: AppBskyActorDefs.BskyAppStatePref = prefs.findLast(
-        (pref) =>
-          AppBskyActorDefs.isBskyAppStatePref(pref) &&
-          AppBskyActorDefs.validateBskyAppStatePref(pref).success,
-      )
+    await this.updatePreferences((prefs) => {
+      const pref = prefs.findLast(predicate.isValidBskyAppStatePref) || {
+        $type: 'app.bsky.actor.defs#bskyAppStatePref',
+      }
 
-      bskyAppStatePref = bskyAppStatePref || {}
-      bskyAppStatePref.nuxs = (bskyAppStatePref.nuxs || []).filter((nux) => {
-        return !ids.includes(nux.id)
-      })
+      pref.nuxs = (pref.nuxs || []).filter((nux) => !ids.includes(nux.id))
 
       return prefs
         .filter((p) => !AppBskyActorDefs.isBskyAppStatePref(p))
-        .concat([
-          {
-            ...bskyAppStatePref,
-            $type: 'app.bsky.actor.defs#bskyAppStatePref',
-          },
-        ])
+        .concat(pref)
     })
   }
 
   async setPostInteractionSettings(
     settings: AppBskyActorDefs.PostInteractionSettingsPref,
   ) {
-    if (
-      !AppBskyActorDefs.validatePostInteractionSettingsPref(settings).success
-    ) {
-      throw new Error('Invalid post interaction settings')
-    }
+    const result =
+      AppBskyActorDefs.validatePostInteractionSettingsPref(settings)
+    // Fool-proofing (should not be needed because of type safety)
+    if (!result.success) throw result.error
 
-    await this.updatePreferences((prefs: AppBskyActorDefs.Preferences) => {
-      let prev = prefs.findLast(
-        (pref) =>
-          AppBskyActorDefs.isPostInteractionSettingsPref(pref) &&
-          AppBskyActorDefs.validatePostInteractionSettingsPref(pref).success,
-      ) as AppBskyActorDefs.PostInteractionSettingsPref
-
-      if (!prev) {
-        prev = {
-          /**
-           * Matches handling of `threadgate.allow` where `undefined` means "everyone"
-           */
-          threadgateAllowRules: undefined,
-          postgateEmbeddingRules: undefined,
-        }
+    await this.updatePreferences((prefs) => {
+      const pref = prefs.findLast(
+        predicate.isValidPostInteractionSettingsPref,
+      ) || {
+        $type: 'app.bsky.actor.defs#postInteractionSettingsPref',
       }
 
       /**
        * Matches handling of `threadgate.allow` where `undefined` means "everyone"
        */
-      prev.threadgateAllowRules = settings.threadgateAllowRules
-      prev.postgateEmbeddingRules = settings.postgateEmbeddingRules
+      pref.threadgateAllowRules = settings.threadgateAllowRules
+      pref.postgateEmbeddingRules = settings.postgateEmbeddingRules
 
       return prefs
         .filter((p) => !AppBskyActorDefs.isPostInteractionSettingsPref(p))
-        .concat([
-          {
-            ...prev,
-            $type: 'app.bsky.actor.defs#postInteractionSettingsPref',
-          },
-        ])
+        .concat(pref)
     })
   }
 
@@ -1552,28 +1363,22 @@ export class Agent extends XrpcClient {
   }
 
   private async updateHiddenPost(postUri: string, action: 'hide' | 'unhide') {
-    await this.updatePreferences((prefs: AppBskyActorDefs.Preferences) => {
-      let pref = prefs.findLast(
-        (pref) =>
-          AppBskyActorDefs.isHiddenPostsPref(pref) &&
-          AppBskyActorDefs.validateHiddenPostsPref(pref).success,
-      )
-      if (pref && AppBskyActorDefs.isHiddenPostsPref(pref)) {
-        pref.items =
-          action === 'hide'
-            ? Array.from(new Set([...pref.items, postUri]))
-            : pref.items.filter((uri) => uri !== postUri)
-      } else {
-        if (action === 'hide') {
-          pref = {
-            $type: 'app.bsky.actor.defs#hiddenPostsPref',
-            items: [postUri],
-          }
-        }
+    await this.updatePreferences((prefs) => {
+      const pref = prefs.findLast(predicate.isValidHiddenPostsPref) || {
+        $type: 'app.bsky.actor.defs#hiddenPostsPref',
+        items: [],
       }
+
+      const hiddenItems = new Set(pref.items)
+
+      if (action === 'hide') hiddenItems.add(postUri)
+      else hiddenItems.delete(postUri)
+
+      pref.items = [...hiddenItems]
+
       return prefs
-        .filter((p) => !AppBskyActorDefs.isInterestsPref(p))
-        .concat([{ ...pref, $type: 'app.bsky.actor.defs#hiddenPostsPref' }])
+        .filter((p) => !AppBskyActorDefs.isHiddenPostsPref(p))
+        .concat(pref)
     })
   }
 
@@ -1587,27 +1392,20 @@ export class Agent extends XrpcClient {
     ) => { saved: string[]; pinned: string[] },
   ): Promise<{ saved: string[]; pinned: string[] }> {
     let res
-    await this.updatePreferences((prefs: AppBskyActorDefs.Preferences) => {
-      let feedsPref = prefs.findLast(
-        (pref) =>
-          AppBskyActorDefs.isSavedFeedsPref(pref) &&
-          AppBskyActorDefs.validateSavedFeedsPref(pref).success,
-      ) as AppBskyActorDefs.SavedFeedsPref | undefined
-      if (feedsPref) {
-        res = cb(feedsPref.saved, feedsPref.pinned)
-        feedsPref.saved = res.saved
-        feedsPref.pinned = res.pinned
-      } else {
-        res = cb([], [])
-        feedsPref = {
-          $type: 'app.bsky.actor.defs#savedFeedsPref',
-          saved: res.saved,
-          pinned: res.pinned,
-        }
+    await this.updatePreferences((prefs) => {
+      const feedsPref = prefs.findLast(predicate.isValidSavedFeedsPref) || {
+        $type: 'app.bsky.actor.defs#savedFeedsPref',
+        saved: [],
+        pinned: [],
       }
+
+      res = cb(feedsPref.saved, feedsPref.pinned)
+      feedsPref.saved = res.saved
+      feedsPref.pinned = res.pinned
+
       return prefs
         .filter((pref) => !AppBskyActorDefs.isSavedFeedsPref(pref))
-        .concat([feedsPref])
+        .concat(feedsPref)
     })
     return res
   }
@@ -1619,36 +1417,24 @@ export class Agent extends XrpcClient {
   ): Promise<AppBskyActorDefs.SavedFeed[]> {
     let maybeMutatedSavedFeeds: AppBskyActorDefs.SavedFeed[] = []
 
-    await this.updatePreferences((prefs: AppBskyActorDefs.Preferences) => {
-      let existingV2Pref = prefs.findLast(
-        (pref) =>
-          AppBskyActorDefs.isSavedFeedsPrefV2(pref) &&
-          AppBskyActorDefs.validateSavedFeedsPrefV2(pref).success,
-      ) as AppBskyActorDefs.SavedFeedsPrefV2 | undefined
-      let existingV1Pref = prefs.findLast(
-        (pref) =>
-          AppBskyActorDefs.isSavedFeedsPref(pref) &&
-          AppBskyActorDefs.validateSavedFeedsPref(pref).success,
-      ) as AppBskyActorDefs.SavedFeedsPref | undefined
-
-      if (existingV2Pref) {
-        maybeMutatedSavedFeeds = cb(existingV2Pref.items)
-        existingV2Pref = {
-          ...existingV2Pref,
-          items: maybeMutatedSavedFeeds,
-        }
-      } else {
-        maybeMutatedSavedFeeds = cb([])
-        existingV2Pref = {
-          $type: 'app.bsky.actor.defs#savedFeedsPrefV2',
-          items: maybeMutatedSavedFeeds,
-        }
+    await this.updatePreferences((prefs) => {
+      const existingV2Pref = prefs.findLast(
+        predicate.isValidSavedFeedsPrefV2,
+      ) || {
+        $type: 'app.bsky.actor.defs#savedFeedsPrefV2',
+        items: [],
       }
 
-      // enforce ordering, pinned then saved
-      const pinned = existingV2Pref.items.filter((i) => i.pinned)
-      const saved = existingV2Pref.items.filter((i) => !i.pinned)
-      existingV2Pref.items = pinned.concat(saved)
+      const newSavedFeeds = cb(existingV2Pref.items)
+
+      // enforce ordering: pinned first, then saved
+      existingV2Pref.items = [...newSavedFeeds].sort((a, b) =>
+        // @NOTE: preserve order of items with the same pinned status
+        a.pinned === b.pinned ? 0 : a.pinned ? -1 : 1,
+      )
+
+      // Store the return value
+      maybeMutatedSavedFeeds = newSavedFeeds
 
       let updatedPrefs = prefs
         .filter((pref) => !AppBskyActorDefs.isSavedFeedsPrefV2(pref))
@@ -1659,6 +1445,7 @@ export class Agent extends XrpcClient {
        * to v2. During the transition period, we double write v2 prefs back to
        * v1, but NOT the other way around.
        */
+      let existingV1Pref = prefs.findLast(predicate.isValidSavedFeedsPref)
       if (existingV1Pref) {
         const { saved, pinned } = existingV1Pref
         const v2Compat = savedFeedsToUriArrays(
@@ -1730,11 +1517,7 @@ function remapLegacyLabels(
 function prefsArrayToLabelerDids(
   prefs: AppBskyActorDefs.Preferences,
 ): string[] {
-  const labelersPref = prefs.findLast(
-    (pref) =>
-      AppBskyActorDefs.isLabelersPref(pref) &&
-      AppBskyActorDefs.validateLabelersPref(pref).success,
-  )
+  const labelersPref = prefs.findLast(predicate.isValidLabelersPref)
   let dids: string[] = []
   if (labelersPref) {
     dids = (labelersPref as AppBskyActorDefs.LabelersPref).labelers.map(

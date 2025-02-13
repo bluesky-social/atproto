@@ -3,10 +3,14 @@
  */
 import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.atproto.server.createAppPassword'
 
 export interface QueryParams {}
 
@@ -15,7 +19,6 @@ export interface InputSchema {
   name: string
   /** If an app password has 'privileged' access to possibly sensitive account state. Meant for use with trusted clients. */
   privileged?: boolean
-  [k: string]: unknown
 }
 
 export type OutputSchema = AppPassword
@@ -51,24 +54,19 @@ export type Handler<HA extends HandlerAuth = never> = (
 ) => Promise<HandlerOutput> | HandlerOutput
 
 export interface AppPassword {
+  $type?: 'com.atproto.server.createAppPassword#appPassword'
   name: string
   password: string
   createdAt: string
   privileged?: boolean
-  [k: string]: unknown
 }
 
-export function isAppPassword(v: unknown): v is AppPassword {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'com.atproto.server.createAppPassword#appPassword'
-  )
+const hashAppPassword = 'appPassword'
+
+export function isAppPassword<V>(v: V) {
+  return is$typed(v, id, hashAppPassword)
 }
 
-export function validateAppPassword(v: unknown): ValidationResult {
-  return lexicons.validate(
-    'com.atproto.server.createAppPassword#appPassword',
-    v,
-  )
+export function validateAppPassword<V>(v: V) {
+  return validate<AppPassword & V>(v, id, hashAppPassword)
 }

@@ -3,9 +3,13 @@
  */
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.atproto.server.checkAccountStatus'
 
 export interface QueryParams {}
 
@@ -21,7 +25,6 @@ export interface OutputSchema {
   privateStateValues: number
   expectedBlobs: number
   importedBlobs: number
-  [k: string]: unknown
 }
 
 export interface CallOptions {

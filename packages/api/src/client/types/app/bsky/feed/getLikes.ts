@@ -3,10 +3,14 @@
  */
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
-import * as AppBskyActorDefs from '../actor/defs'
+import { validate as _validate } from '../../../../lexicons'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import type * as AppBskyActorDefs from '../actor/defs.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'app.bsky.feed.getLikes'
 
 export interface QueryParams {
   /** AT-URI of the subject (eg, a post record). */
@@ -24,7 +28,6 @@ export interface OutputSchema {
   cid?: string
   cursor?: string
   likes: Like[]
-  [k: string]: unknown
 }
 
 export interface CallOptions {
@@ -43,18 +46,18 @@ export function toKnownErr(e: any) {
 }
 
 export interface Like {
+  $type?: 'app.bsky.feed.getLikes#like'
   indexedAt: string
   createdAt: string
   actor: AppBskyActorDefs.ProfileView
-  [k: string]: unknown
 }
 
-export function isLike(v: unknown): v is Like {
-  return (
-    isObj(v) && hasProp(v, '$type') && v.$type === 'app.bsky.feed.getLikes#like'
-  )
+const hashLike = 'like'
+
+export function isLike<V>(v: V) {
+  return is$typed(v, id, hashLike)
 }
 
-export function validateLike(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.feed.getLikes#like', v)
+export function validateLike<V>(v: V) {
+  return validate<Like & V>(v, id, hashLike)
 }

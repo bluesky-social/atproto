@@ -3,13 +3,17 @@
  */
 import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
-import * as ComAtprotoModerationDefs from './defs'
-import * as ComAtprotoAdminDefs from '../admin/defs'
-import * as ComAtprotoRepoStrongRef from '../repo/strongRef'
+import type * as ComAtprotoModerationDefs from './defs.js'
+import type * as ComAtprotoAdminDefs from '../admin/defs.js'
+import type * as ComAtprotoRepoStrongRef from '../repo/strongRef.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.atproto.moderation.createReport'
 
 export interface QueryParams {}
 
@@ -18,10 +22,9 @@ export interface InputSchema {
   /** Additional context about the content and violation. */
   reason?: string
   subject:
-    | ComAtprotoAdminDefs.RepoRef
-    | ComAtprotoRepoStrongRef.Main
-    | { $type: string; [k: string]: unknown }
-  [k: string]: unknown
+    | $Typed<ComAtprotoAdminDefs.RepoRef>
+    | $Typed<ComAtprotoRepoStrongRef.Main>
+    | { $type: string }
 }
 
 export interface OutputSchema {
@@ -29,12 +32,11 @@ export interface OutputSchema {
   reasonType: ComAtprotoModerationDefs.ReasonType
   reason?: string
   subject:
-    | ComAtprotoAdminDefs.RepoRef
-    | ComAtprotoRepoStrongRef.Main
-    | { $type: string; [k: string]: unknown }
+    | $Typed<ComAtprotoAdminDefs.RepoRef>
+    | $Typed<ComAtprotoRepoStrongRef.Main>
+    | { $type: string }
   reportedBy: string
   createdAt: string
-  [k: string]: unknown
 }
 
 export interface HandlerInput {

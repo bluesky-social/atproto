@@ -3,6 +3,7 @@ import { mapDefined } from '@atproto/common'
 import { AtUri } from '@atproto/syntax'
 import { DataPlaneClient } from '../data-plane/client'
 import { ids } from '../lexicon/lexicons'
+import { Record as ProfileRecord } from '../lexicon/types/app/bsky/actor/profile'
 import { isMain as isEmbedRecord } from '../lexicon/types/app/bsky/embed/record'
 import { isMain as isEmbedRecordWithMedia } from '../lexicon/types/app/bsky/embed/recordWithMedia'
 import { isListRule as isThreadgateListRule } from '../lexicon/types/app/bsky/feed/threadgate'
@@ -998,10 +999,7 @@ export class Hydrator {
 
   // ad-hoc record hydration
   // in com.atproto.repo.getRecord
-  async getRecord(
-    uri: string,
-    includeTakedowns = false,
-  ): Promise<RecordInfo<Record<string, unknown>> | undefined> {
+  async getRecord(uri: string, includeTakedowns = false) {
     const parsed = new AtUri(uri)
     const collection = parsed.collection
     if (collection === ids.AppBskyFeedPost) {
@@ -1081,13 +1079,15 @@ export class Hydrator {
         did,
       )
       if (!actor?.profile || !actor?.profileCid) return undefined
-      return {
+      const recordInfo: RecordInfo<ProfileRecord> = {
         record: actor.profile,
         cid: actor.profileCid,
         sortedAt: actor.sortedAt ?? new Date(0), // @NOTE will be present since profile record is present
         indexedAt: actor.indexedAt ?? new Date(0), // @NOTE will be present since profile record is present
         takedownRef: actor.profileTakedownRef,
       }
+
+      return recordInfo
     }
   }
 

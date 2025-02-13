@@ -2,47 +2,47 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'app.bsky.feed.postgate'
 
 export interface Record {
+  $type: 'app.bsky.feed.postgate'
   createdAt: string
   /** Reference (AT-URI) to the post record. */
   post: string
   /** List of AT-URIs embedding this post that the author has detached from. */
   detachedEmbeddingUris?: string[]
   /** List of rules defining who can embed this post. If value is an empty array or is undefined, no particular rules apply and anyone can embed. */
-  embeddingRules?: (DisableRule | { $type: string; [k: string]: unknown })[]
+  embeddingRules?: ($Typed<DisableRule> | { $type: string })[]
   [k: string]: unknown
 }
 
-export function isRecord(v: unknown): v is Record {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    (v.$type === 'app.bsky.feed.postgate#main' ||
-      v.$type === 'app.bsky.feed.postgate')
-  )
+const hashRecord = 'main'
+
+export function isRecord<V>(v: V) {
+  return is$typed(v, id, hashRecord)
 }
 
-export function validateRecord(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.feed.postgate#main', v)
+export function validateRecord<V>(v: V) {
+  return validate<Record & V>(v, id, hashRecord, true)
 }
 
 /** Disables embedding of this post. */
 export interface DisableRule {
-  [k: string]: unknown
+  $type?: 'app.bsky.feed.postgate#disableRule'
 }
 
-export function isDisableRule(v: unknown): v is DisableRule {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.feed.postgate#disableRule'
-  )
+const hashDisableRule = 'disableRule'
+
+export function isDisableRule<V>(v: V) {
+  return is$typed(v, id, hashDisableRule)
 }
 
-export function validateDisableRule(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.feed.postgate#disableRule', v)
+export function validateDisableRule<V>(v: V) {
+  return validate<DisableRule & V>(v, id, hashDisableRule)
 }

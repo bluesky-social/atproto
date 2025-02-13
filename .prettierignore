@@ -6,3 +6,9 @@ pnpm-lock.yaml
 .pnpm*
 .changeset
 CHANGELOG.md
+
+# Prettier is used to format the code during codegen
+packages/api/src/client
+packages/bsky/src/lexicon
+packages/pds/src/lexicon
+packages/ozone/src/lexicon

@@ -24,12 +24,13 @@ import {
 } from '@atproto/syntax'
 import { hasExplicitSlur } from '../handle/explicit-slurs'
 import * as lex from '../lexicon/lexicons'
-import { isRecord as isProfile } from '../lexicon/types/app/bsky/actor/profile'
-import { isRecord as isFeedGenerator } from '../lexicon/types/app/bsky/feed/generator'
-import { isRecord as isPost } from '../lexicon/types/app/bsky/feed/post'
-import { isRecord as isList } from '../lexicon/types/app/bsky/graph/list'
-import { isRecord as isStarterPack } from '../lexicon/types/app/bsky/graph/starterpack'
+import * as AppBskyActorProfile from '../lexicon/types/app/bsky/actor/profile'
+import * as AppBskyFeedGenerator from '../lexicon/types/app/bsky/feed/generator'
+import * as AppBskyFeedPost from '../lexicon/types/app/bsky/feed/post'
+import * as AppBskyGraphList from '../lexicon/types/app/bsky/graph/list'
+import * as AppBskyGraphStarterpack from '../lexicon/types/app/bsky/graph/starterpack'
 import { isTag } from '../lexicon/types/app/bsky/richtext/facet'
+import { asPredicate } from '../lexicon/util'
 import {
   InvalidRecordError,
   PreparedBlobRef,
@@ -39,6 +40,12 @@ import {
   PreparedWrite,
   ValidationStatus,
 } from './types'
+
+const isValidFeedGenerator = asPredicate(AppBskyFeedGenerator.validateRecord)
+const isValidStarterPack = asPredicate(AppBskyGraphStarterpack.validateRecord)
+const isValidPost = asPredicate(AppBskyFeedPost.validateRecord)
+const isValidList = asPredicate(AppBskyGraphList.validateRecord)
+const isValidProfile = asPredicate(AppBskyActorProfile.validateRecord)
 
 export const assertValidRecordWithStatus = (
   record: Record<string, unknown>,
@@ -222,30 +229,31 @@ async function cidForSafeRecord(record: RepoRecord) {
 }
 
 function assertNoExplicitSlurs(rkey: string, record: RepoRecord) {
-  let toCheck = ''
-  if (isProfile(record)) {
-    toCheck += ' ' + record.displayName
-  } else if (isList(record)) {
-    toCheck += ' ' + record.name
-  } else if (isStarterPack(record)) {
-    toCheck += ' ' + record.name
-  } else if (isFeedGenerator(record)) {
-    toCheck += ' ' + rkey
-    toCheck += ' ' + record.displayName
-  } else if (isPost(record)) {
+  const toCheck: string[] = []
+
+  if (isValidProfile(record)) {
+    if (record.displayName) toCheck.push(record.displayName)
+  } else if (isValidList(record)) {
+    toCheck.push(record.name)
+  } else if (isValidStarterPack(record)) {
+    toCheck.push(record.name)
+  } else if (isValidFeedGenerator(record)) {
+    toCheck.push(rkey)
+    toCheck.push(record.displayName)
+  } else if (isValidPost(record)) {
     if (record.tags) {
-      toCheck += record.tags.join(' ')
+      toCheck.push(...record.tags)
     }
 
     for (const facet of record.facets || []) {
       for (const feat of facet.features) {
         if (isTag(feat)) {
-          toCheck += ' ' + feat.tag
+          toCheck.push(feat.tag)
         }
       }
     }
   }
-  if (hasExplicitSlur(toCheck)) {
+  if (hasExplicitSlur(toCheck.join(' '))) {
     throw new InvalidRecordError('Unacceptable slur in record')
   }
 }

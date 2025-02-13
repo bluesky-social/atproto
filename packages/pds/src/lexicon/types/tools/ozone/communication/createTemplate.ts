@@ -3,11 +3,15 @@
  */
 import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
-import * as ToolsOzoneCommunicationDefs from './defs'
+import type * as ToolsOzoneCommunicationDefs from './defs.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'tools.ozone.communication.createTemplate'
 
 export interface QueryParams {}
 
@@ -22,7 +26,6 @@ export interface InputSchema {
   lang?: string
   /** DID of the user who is creating the template. */
   createdBy?: string
-  [k: string]: unknown
 }
 
 export type OutputSchema = ToolsOzoneCommunicationDefs.TemplateView

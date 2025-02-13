@@ -3,11 +3,15 @@
  */
 import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
-import * as ToolsOzoneTeamDefs from './defs'
+import type * as ToolsOzoneTeamDefs from './defs.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'tools.ozone.team.listMembers'
 
 export interface QueryParams {
   limit: number
@@ -19,7 +23,6 @@ export type InputSchema = undefined
 export interface OutputSchema {
   cursor?: string
   members: ToolsOzoneTeamDefs.Member[]
-  [k: string]: unknown
 }
 
 export type HandlerInput = undefined

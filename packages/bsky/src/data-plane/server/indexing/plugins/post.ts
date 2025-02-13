@@ -18,11 +18,13 @@ import {
   isLink,
   isMention,
 } from '../../../../lexicon/types/app/bsky/richtext/facet'
+import { $Typed } from '../../../../lexicon/util'
 import {
   postUriToPostgateUri,
   postUriToThreadgateUri,
   uriToDid,
 } from '../../../../util/uris'
+import { RecordWithMedia } from '../../../../views/types'
 import { parsePostgate } from '../../../../views/util'
 import { BackgroundQueue } from '../../background'
 import { Database } from '../../db'
@@ -521,7 +523,13 @@ export const makePlugin = (
 
 export default makePlugin
 
-function separateEmbeds(embed: PostRecord['embed']) {
+function separateEmbeds(
+  embed: PostRecord['embed'],
+): Array<
+  | RecordWithMedia['media']
+  | $Typed<RecordWithMedia['record']>
+  | NonNullable<PostRecord['embed']>
+> {
   if (!embed) {
     return []
   }

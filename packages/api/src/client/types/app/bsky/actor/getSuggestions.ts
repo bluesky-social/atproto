@@ -3,10 +3,14 @@
  */
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
-import * as AppBskyActorDefs from './defs'
+import { validate as _validate } from '../../../../lexicons'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import type * as AppBskyActorDefs from './defs.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'app.bsky.actor.getSuggestions'
 
 export interface QueryParams {
   limit?: number
@@ -20,7 +24,6 @@ export interface OutputSchema {
   actors: AppBskyActorDefs.ProfileView[]
   /** Snowflake for this recommendation, use when submitting recommendation events. */
   recId?: number
-  [k: string]: unknown
 }
 
 export interface CallOptions {

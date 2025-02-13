@@ -3,11 +3,15 @@
  */
 import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
-import * as ComAtprotoRepoDefs from './defs'
+import type * as ComAtprotoRepoDefs from './defs.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.atproto.repo.deleteRecord'
 
 export interface QueryParams {}
 
@@ -22,12 +26,10 @@ export interface InputSchema {
   swapRecord?: string
   /** Compare and swap with the previous commit by CID. */
   swapCommit?: string
-  [k: string]: unknown
 }
 
 export interface OutputSchema {
   commit?: ComAtprotoRepoDefs.CommitMeta
-  [k: string]: unknown
 }
 
 export interface HandlerInput {

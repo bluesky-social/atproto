@@ -9,9 +9,9 @@ import { NSID } from '@atproto/syntax'
 import { GeneratedAPI } from '../types'
 import { gen, lexiconsTs, utilTs } from './common'
 import {
+  genCommonImports,
   genImports,
-  genObjHelpers,
-  genObject,
+  genRecord,
   genUserType,
   genXrpcInput,
   genXrpcOutput,
@@ -73,10 +73,10 @@ const indexTs = (
         { name: 'StreamAuthVerifier' },
       ],
     })
-    //= import {schemas} from './lexicons'
+    //= import {schemas} from './lexicons.js'
     file
       .addImportDeclaration({
-        moduleSpecifier: './lexicons',
+        moduleSpecifier: './lexicons.js',
       })
       .addNamedImport({
         name: 'schemas',
@@ -93,7 +93,7 @@ const indexTs = (
       }
       file
         .addImportDeclaration({
-          moduleSpecifier: `./types/${lexiconDoc.id.split('.').join('/')}`,
+          moduleSpecifier: `./types/${lexiconDoc.id.split('.').join('/')}.js`,
         })
         .setNamespaceImport(toTitleCase(lexiconDoc.id))
     }
@@ -319,8 +319,6 @@ const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
     project,
     `/types/${lexiconDoc.id.split('.').join('/')}.ts`,
     async (file) => {
-      const imports: Set<string> = new Set()
-
       const main = lexiconDoc.defs.main
       if (main?.type === 'query' || main?.type === 'procedure') {
         //= import express from 'express'
@@ -335,44 +333,17 @@ const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
           !main.input.schema
         const streamingOutput = main.output?.encoding && !main.output.schema
         if (streamingInput || streamingOutput) {
-          //= import stream from 'stream'
+          //= import stream from 'node:stream'
           file.addImportDeclaration({
-            moduleSpecifier: 'stream',
+            moduleSpecifier: 'node:stream',
             defaultImport: 'stream',
           })
         }
       }
-      //= import {ValidationResult, BlobRef} from '@atproto/lexicon'
-      file
-        .addImportDeclaration({
-          moduleSpecifier: '@atproto/lexicon',
-        })
-        .addNamedImports([{ name: 'ValidationResult' }, { name: 'BlobRef' }])
-      //= import {lexicons} from '../../lexicons.ts'
-      file
-        .addImportDeclaration({
-          moduleSpecifier: `${lexiconDoc.id
-            .split('.')
-            .map((_str) => '..')
-            .join('/')}/lexicons`,
-        })
-        .addNamedImports([{ name: 'lexicons' }])
-      //= import {isObj, hasProp} from '../../util.ts'
-      file
-        .addImportDeclaration({
-          moduleSpecifier: `${lexiconDoc.id
-            .split('.')
-            .map((_str) => '..')
-            .join('/')}/util`,
-        })
-        .addNamedImports([{ name: 'isObj' }, { name: 'hasProp' }])
-      //= import {CID} from 'multiformats/cid'
-      file
-        .addImportDeclaration({
-          moduleSpecifier: 'multiformats/cid',
-        })
-        .addNamedImports([{ name: 'CID' }])
 
+      genCommonImports(file, lexiconDoc.id)
+
+      const imports: Set<string> = new Set()
       for (const defId in lexiconDoc.defs) {
         const def = lexiconDoc.defs[defId]
         const lexUri = `${lexiconDoc.id}#${defId}`
@@ -387,7 +358,7 @@ const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
             genXrpcOutput(file, imports, lexicons, lexUri, false)
             genServerXrpcStreaming(file, lexicons, lexUri)
           } else if (def.type === 'record') {
-            genServerRecord(file, imports, lexicons, lexUri)
+            genRecord(file, imports, lexicons, lexUri)
           } else {
             genUserType(file, imports, lexicons, lexUri)
           }
@@ -547,7 +518,7 @@ function genServerXrpcStreaming(
   })
 
   file.addImportDeclaration({
-    moduleSpecifier: 'http',
+    moduleSpecifier: 'node:http',
     namedImports: [{ name: 'IncomingMessage' }],
   })
 
@@ -587,20 +558,6 @@ function genServerXrpcStreaming(
     ],
     type: `(ctx: HandlerReqCtx<HA>) => AsyncIterable<HandlerOutput>`,
   })
-}
-
-function genServerRecord(
-  file: SourceFile,
-  imports: Set<string>,
-  lexicons: Lexicons,
-  lexUri: string,
-) {
-  const def = lexicons.getDefOrThrow(lexUri, ['record'])
-
-  //= export interface Record {...}
-  genObject(file, imports, lexUri, def.record, 'Record')
-  //= export function isRecord(v: unknown): v is Record {...}
-  genObjHelpers(file, lexUri, 'Record')
 }
 
 function arrayToUnion(arr?: string[]) {

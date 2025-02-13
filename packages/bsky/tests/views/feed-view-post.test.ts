@@ -1,3 +1,4 @@
+import assert from 'node:assert'
 import { AppBskyFeedDefs, AtUri, AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
@@ -87,8 +88,8 @@ describe('pds thread views', () => {
       throw new Error('sliceA or sliceB is undefined')
     }
 
-    expect(AppBskyFeedDefs.isBlockedPost(sliceB.reply?.parent)).toBe(true)
-    expect(AppBskyFeedDefs.isBlockedPost(sliceB.reply?.root)).toBe(true)
+    assert(AppBskyFeedDefs.isBlockedPost(sliceB.reply?.parent))
+    assert(AppBskyFeedDefs.isBlockedPost(sliceB.reply?.root))
 
     await pdsAgent.api.app.bsky.graph.block.delete(
       { repo: alice, rkey: new AtUri(block.uri).rkey },
@@ -129,10 +130,10 @@ describe('pds thread views', () => {
       throw new Error('sliceC is undefined')
     }
 
+    assert(AppBskyFeedDefs.isPostView(sliceC.reply.parent))
     expect(sliceC.reply.parent.uri).toEqual(B.ref.uriStr)
+    assert(AppBskyFeedDefs.isBlockedPost(sliceC.reply.root))
     expect(sliceC.reply.root.uri).toEqual(A.ref.uriStr)
-    expect(AppBskyFeedDefs.isPostView(sliceC.reply.parent)).toBe(true)
-    expect(AppBskyFeedDefs.isBlockedPost(sliceC.reply.root)).toBe(true)
 
     await pdsAgent.api.app.bsky.graph.block.delete(
       { repo: alice, rkey: new AtUri(block.uri).rkey },
@@ -249,10 +250,10 @@ describe('pds thread views', () => {
       throw new Error('sliceD is undefined')
     }
 
+    assert(AppBskyFeedDefs.isPostView(sliceD.reply.parent))
     expect(sliceD.reply.parent.uri).toEqual(C.ref.uriStr)
+    assert(AppBskyFeedDefs.isBlockedPost(sliceD.reply.root))
     expect(sliceD.reply.root.uri).toEqual(A.ref.uriStr)
-    expect(AppBskyFeedDefs.isPostView(sliceD.reply.parent)).toBe(true)
-    expect(AppBskyFeedDefs.isBlockedPost(sliceD.reply.root)).toBe(true)
 
     await pdsAgent.api.app.bsky.graph.block.delete(
       { repo: alice, rkey: new AtUri(block.uri).rkey },
@@ -292,10 +293,10 @@ describe('pds thread views', () => {
       throw new Error('sliceD is undefined')
     }
 
+    assert(AppBskyFeedDefs.isPostView(sliceD.reply.parent))
     expect(sliceD.reply.parent.uri).toEqual(C.ref.uriStr)
+    assert(AppBskyFeedDefs.isBlockedPost(sliceD.reply.root))
     expect(sliceD.reply.root.uri).toEqual(A.ref.uriStr)
-    expect(AppBskyFeedDefs.isPostView(sliceD.reply.parent)).toBe(true)
-    expect(AppBskyFeedDefs.isBlockedPost(sliceD.reply.root)).toBe(true)
 
     await pdsAgent.api.app.bsky.graph.block.delete(
       { repo: alice, rkey: new AtUri(block.uri).rkey },
@@ -338,13 +339,13 @@ describe('pds thread views', () => {
       throw new Error('sliceD is undefined')
     }
 
+    assert(AppBskyFeedDefs.isPostView(sliceD.reply.parent))
     expect(sliceD.reply.parent.uri).toEqual(C.ref.uriStr)
-    expect(sliceD.reply.root.uri).toEqual(A.ref.uriStr)
-    expect(AppBskyFeedDefs.isPostView(sliceD.reply.parent)).toBe(true)
     /*
      * We don't walk the reply ancestors past whats available in the ReplyRef
      */
-    expect(AppBskyFeedDefs.isPostView(sliceD.reply.root)).toBe(true)
+    assert(AppBskyFeedDefs.isPostView(sliceD.reply.root))
+    expect(sliceD.reply.root.uri).toEqual(A.ref.uriStr)
 
     await pdsAgent.api.app.bsky.graph.block.delete(
       { repo: alice, rkey: new AtUri(block.uri).rkey },
@@ -384,13 +385,14 @@ describe('pds thread views', () => {
       throw new Error('sliceD is undefined')
     }
 
+    assert(AppBskyFeedDefs.isPostView(sliceD.reply.parent))
     expect(sliceD.reply.parent.uri).toEqual(C.ref.uriStr)
-    expect(sliceD.reply.root.uri).toEqual(A.ref.uriStr)
-    expect(AppBskyFeedDefs.isPostView(sliceD.reply.parent)).toBe(true)
+
     /*
      * We don't walk the reply ancestors past whats available in the ReplyRef
      */
-    expect(AppBskyFeedDefs.isPostView(sliceD.reply.root)).toBe(true)
+    assert(AppBskyFeedDefs.isPostView(sliceD.reply.root))
+    expect(sliceD.reply.root.uri).toEqual(A.ref.uriStr)
 
     await pdsAgent.api.app.bsky.graph.block.delete(
       { repo: bob, rkey: new AtUri(block.uri).rkey },
@@ -434,9 +436,9 @@ describe('pds thread views', () => {
       throw new Error('sliceD or sliceC is undefined')
     }
 
-    expect(AppBskyFeedDefs.isBlockedPost(sliceD.reply?.root)).toBe(true)
-    expect(AppBskyFeedDefs.isPostView(sliceC.reply?.parent)).toBe(true)
-    expect(AppBskyFeedDefs.isPostView(sliceC.reply?.root)).toBe(true)
+    assert(AppBskyFeedDefs.isBlockedPost(sliceD.reply?.root))
+    assert(AppBskyFeedDefs.isPostView(sliceC.reply?.parent))
+    assert(AppBskyFeedDefs.isPostView(sliceC.reply?.root))
 
     await pdsAgent.api.app.bsky.graph.block.delete(
       { repo: alice, rkey: new AtUri(block.uri).rkey },
@@ -488,10 +490,10 @@ describe('pds thread views', () => {
       throw new Error('sliceD is undefined')
     }
 
+    assert(AppBskyFeedDefs.isPostView(sliceD.reply.parent))
     expect(sliceD.reply.parent.uri).toEqual(C.ref.uriStr)
+    assert(AppBskyFeedDefs.isBlockedPost(sliceD.reply.root))
     expect(sliceD.reply.root.uri).toEqual(A.ref.uriStr)
-    expect(AppBskyFeedDefs.isPostView(sliceD.reply.parent)).toBe(true)
-    expect(AppBskyFeedDefs.isBlockedPost(sliceD.reply.root)).toBe(true)
 
     await pdsAgent.api.app.bsky.graph.block.delete(
       { repo: alice, rkey: new AtUri(block.uri).rkey },

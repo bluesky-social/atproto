@@ -7,6 +7,7 @@ import {
   AppBskyNotificationListNotifications,
   ComAtprotoLabelDefs,
 } from './client'
+import { $Typed, Un$Typed } from './client/util'
 
 const FAKE_CID = 'bafyreiclp443lavogvhj3d2ob2cxbfuscni2k5jk7bebjzg7khl3esabwq'
 
@@ -21,7 +22,7 @@ export const mock = {
     facets?: AppBskyFeedPost.Record['facets']
     reply?: AppBskyFeedPost.ReplyRef
     embed?: AppBskyFeedPost.Record['embed']
-  }): AppBskyFeedPost.Record {
+  }): $Typed<AppBskyFeedPost.Record> {
     return {
       $type: 'app.bsky.feed.post',
       text,
@@ -51,7 +52,7 @@ export const mock = {
     likeCount?: number
     viewer?: AppBskyFeedDefs.ViewerState
     labels?: ComAtprotoLabelDefs.Label[]
-  }): AppBskyFeedDefs.PostView {
+  }): $Typed<AppBskyFeedDefs.PostView> {
     return {
       $type: 'app.bsky.feed.defs#postView',
       uri: `at://${author.did}/app.bsky.feed.post/fake`,
@@ -76,7 +77,7 @@ export const mock = {
     record: AppBskyFeedPost.Record
     author: AppBskyActorDefs.ProfileViewBasic
     labels?: ComAtprotoLabelDefs.Label[]
-  }): AppBskyEmbedRecord.View {
+  }): $Typed<AppBskyEmbedRecord.View> {
     return {
       $type: 'app.bsky.embed.record#view',
       record: {
@@ -108,7 +109,8 @@ export const mock = {
       did: `did:web:${handle}`,
       handle,
       displayName,
-      description, // technically not in ProfileViewBasic but useful in some cases
+      // @ts-expect-error technically not in ProfileViewBasic but useful in some cases
+      description,
       viewer,
       labels,
     }
@@ -158,7 +160,7 @@ export const mock = {
     labels,
   }: {
     record: AppBskyFeedPost.Record
-    author: AppBskyActorDefs.ProfileViewBasic
+    author: Un$Typed<AppBskyActorDefs.ProfileViewBasic>
     labels?: ComAtprotoLabelDefs.Label[]
   }): AppBskyNotificationListNotifications.Notification {
     return {
@@ -179,7 +181,7 @@ export const mock = {
     subjectDid,
     labels,
   }: {
-    author: AppBskyActorDefs.ProfileViewBasic
+    author: Un$Typed<AppBskyActorDefs.ProfileViewBasic>
     subjectDid: string
     labels?: ComAtprotoLabelDefs.Label[]
   }): AppBskyNotificationListNotifications.Notification {

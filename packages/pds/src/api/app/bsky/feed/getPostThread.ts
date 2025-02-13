@@ -13,6 +13,7 @@ import {
   QueryParams,
 } from '../../../../lexicon/types/app/bsky/feed/getPostThread'
 import { Record as PostRecord } from '../../../../lexicon/types/app/bsky/feed/post'
+import { $Typed } from '../../../../lexicon/util'
 import {
   LocalRecords,
   LocalViewer,
@@ -98,12 +99,12 @@ const getPostThreadMunge = async (
 
 const addPostsToThread = async (
   localViewer: LocalViewer,
-  original: ThreadViewPost,
+  original: $Typed<ThreadViewPost>,
   posts: RecordDescript<PostRecord>[],
 ) => {
   const inThread = findPostsInThread(original, posts)
   if (inThread.length === 0) return original
-  let thread: ThreadViewPost = original
+  let thread: $Typed<ThreadViewPost> = original
   for (const record of inThread) {
     thread = await insertIntoThreadReplies(localViewer, thread, record)
   }
@@ -124,9 +125,9 @@ const findPostsInThread = (
 
 const insertIntoThreadReplies = async (
   localViewer: LocalViewer,
-  view: ThreadViewPost,
+  view: $Typed<ThreadViewPost>,
   descript: RecordDescript<PostRecord>,
-): Promise<ThreadViewPost> => {
+): Promise<$Typed<ThreadViewPost>> => {
   if (descript.record.reply?.parent.uri === view.post.uri) {
     const postView = await threadPostView(localViewer, descript)
     if (!postView) return view
@@ -153,7 +154,7 @@ const insertIntoThreadReplies = async (
 const threadPostView = async (
   localViewer: LocalViewer,
   descript: RecordDescript<PostRecord>,
-): Promise<ThreadViewPost | null> => {
+): Promise<$Typed<ThreadViewPost> | null> => {
   const postView = await localViewer.getPost(descript)
   if (!postView) return null
   return {
