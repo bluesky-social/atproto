@@ -45,7 +45,7 @@
           },
           "subjectCollections": {
             "type": "array",
-            "description": "Set of record types (collection NSIDs) which can be reported to this service. If not defined (distinct from empty array), default is bsky post and profile records.",
+            "description": "Set of record types (collection NSIDs) which can be reported to this service. If not defined (distinct from empty array), default is any record type.",
             "items": { "type": "string", "format": "nsid" }
           }
         }
