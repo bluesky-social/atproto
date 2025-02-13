@@ -842,7 +842,7 @@ export class Agent extends XrpcClient {
   }
 
   async setAdultContentEnabled(v: boolean) {
-    await this.updatePreferences((prefs: AppBskyActorDefs.Preferences) => {
+    await this.updatePreferences((prefs) => {
       const adultContentPref = prefs.findLast(
         predicate.isValidAdultContentPref,
       ) || {
@@ -866,7 +866,7 @@ export class Agent extends XrpcClient {
     if (labelerDid) {
       ensureValidDid(labelerDid)
     }
-    await this.updatePreferences((prefs: AppBskyActorDefs.Preferences) => {
+    await this.updatePreferences((prefs) => {
       const labelPref = prefs
         .filter(predicate.isValidContentLabelPref)
         .findLast(
@@ -980,16 +980,15 @@ export class Agent extends XrpcClient {
   }: {
     birthDate: string | Date | undefined
   }) {
-    birthDate = birthDate instanceof Date ? birthDate.toISOString() : birthDate
-    await this.updatePreferences((prefs: AppBskyActorDefs.Preferences) => {
+    await this.updatePreferences((prefs) => {
       const personalDetailsPref = prefs.findLast(
         predicate.isValidPersonalDetailsPref,
       ) || {
         $type: 'app.bsky.actor.defs#personalDetailsPref',
-        birthDate,
       }
 
-      personalDetailsPref.birthDate = birthDate
+      personalDetailsPref.birthDate =
+        birthDate instanceof Date ? birthDate.toISOString() : birthDate
 
       return prefs
         .filter((pref) => !AppBskyActorDefs.isPersonalDetailsPref(pref))
@@ -998,7 +997,7 @@ export class Agent extends XrpcClient {
   }
 
   async setFeedViewPrefs(feed: string, pref: Partial<BskyFeedViewPreference>) {
-    await this.updatePreferences((prefs: AppBskyActorDefs.Preferences) => {
+    await this.updatePreferences((prefs) => {
       const existing = prefs
         .filter(predicate.isValidFeedViewPref)
         .findLast((pref) => pref.feed === feed)
@@ -1015,7 +1014,7 @@ export class Agent extends XrpcClient {
   }
 
   async setThreadViewPrefs(pref: Partial<BskyThreadViewPreference>) {
-    await this.updatePreferences((prefs: AppBskyActorDefs.Preferences) => {
+    await this.updatePreferences((prefs) => {
       const existing = prefs.findLast(predicate.isValidThreadViewPref)
 
       return prefs
@@ -1029,7 +1028,7 @@ export class Agent extends XrpcClient {
   }
 
   async setInterestsPref(pref: Partial<BskyInterestsPreference>) {
-    await this.updatePreferences((prefs: AppBskyActorDefs.Preferences) => {
+    await this.updatePreferences((prefs) => {
       const existing = prefs.findLast(predicate.isValidInterestsPref)
 
       return prefs
@@ -1055,7 +1054,7 @@ export class Agent extends XrpcClient {
 
     if (!sanitizedValue) return
 
-    await this.updatePreferences((prefs: AppBskyActorDefs.Preferences) => {
+    await this.updatePreferences((prefs) => {
       let mutedWordsPref = prefs.findLast(predicate.isValidMutedWordsPref)
 
       const newMutedWord: AppBskyActorDefs.MutedWord = {
@@ -1066,7 +1065,7 @@ export class Agent extends XrpcClient {
         expiresAt: mutedWord.expiresAt || undefined,
       }
 
-      if (mutedWordsPref && AppBskyActorDefs.isMutedWordsPref(mutedWordsPref)) {
+      if (mutedWordsPref) {
         mutedWordsPref.items.push(newMutedWord)
 
         /**
@@ -1112,10 +1111,10 @@ export class Agent extends XrpcClient {
    * Update a muted word in user preferences.
    */
   async updateMutedWord(mutedWord: AppBskyActorDefs.MutedWord) {
-    await this.updatePreferences((prefs: AppBskyActorDefs.Preferences) => {
+    await this.updatePreferences((prefs) => {
       const mutedWordsPref = prefs.findLast(predicate.isValidMutedWordsPref)
 
-      if (mutedWordsPref && AppBskyActorDefs.isMutedWordsPref(mutedWordsPref)) {
+      if (mutedWordsPref) {
         mutedWordsPref.items = mutedWordsPref.items.map((existingItem) => {
           const match = matchMutedWord(existingItem, mutedWord)
 
@@ -1146,10 +1145,7 @@ export class Agent extends XrpcClient {
 
         return prefs
           .filter((p) => !AppBskyActorDefs.isMutedWordsPref(p))
-          .concat({
-            ...mutedWordsPref,
-            $type: 'app.bsky.actor.defs#mutedWordsPref',
-          })
+          .concat(mutedWordsPref)
       }
 
       return prefs
@@ -1160,10 +1156,10 @@ export class Agent extends XrpcClient {
    * Remove a muted word from user preferences.
    */
   async removeMutedWord(mutedWord: AppBskyActorDefs.MutedWord) {
-    await this.updatePreferences((prefs: AppBskyActorDefs.Preferences) => {
+    await this.updatePreferences((prefs) => {
       const mutedWordsPref = prefs.findLast(predicate.isValidMutedWordsPref)
 
-      if (mutedWordsPref && AppBskyActorDefs.isMutedWordsPref(mutedWordsPref)) {
+      if (mutedWordsPref) {
         for (let i = 0; i < mutedWordsPref.items.length; i++) {
           const match = matchMutedWord(mutedWordsPref.items[i], mutedWord)
 
@@ -1182,10 +1178,7 @@ export class Agent extends XrpcClient {
 
         return prefs
           .filter((p) => !AppBskyActorDefs.isMutedWordsPref(p))
-          .concat({
-            ...mutedWordsPref,
-            $type: 'app.bsky.actor.defs#mutedWordsPref',
-          })
+          .concat(mutedWordsPref)
       }
 
       return prefs
@@ -1208,7 +1201,7 @@ export class Agent extends XrpcClient {
   }
 
   async bskyAppQueueNudges(nudges: string | string[]) {
-    await this.updatePreferences((prefs: AppBskyActorDefs.Preferences) => {
+    await this.updatePreferences((prefs) => {
       const pref = prefs.findLast(predicate.isValidBskyAppStatePref) || {
         $type: 'app.bsky.actor.defs#bskyAppStatePref',
       }
@@ -1222,7 +1215,7 @@ export class Agent extends XrpcClient {
   }
 
   async bskyAppDismissNudges(nudges: string | string[]) {
-    await this.updatePreferences((prefs: AppBskyActorDefs.Preferences) => {
+    await this.updatePreferences((prefs) => {
       const pref = prefs.findLast(predicate.isValidBskyAppStatePref) || {
         $type: 'app.bsky.actor.defs#bskyAppStatePref',
       }
@@ -1246,7 +1239,7 @@ export class Agent extends XrpcClient {
       if (!result.success) throw result.error
     }
 
-    await this.updatePreferences((prefs: AppBskyActorDefs.Preferences) => {
+    await this.updatePreferences((prefs) => {
       const pref = prefs.findLast(predicate.isValidBskyAppStatePref) || {
         $type: 'app.bsky.actor.defs#bskyAppStatePref',
       }
@@ -1265,7 +1258,7 @@ export class Agent extends XrpcClient {
   async bskyAppUpsertNux(nux: Nux) {
     validateNux(nux)
 
-    await this.updatePreferences((prefs: AppBskyActorDefs.Preferences) => {
+    await this.updatePreferences((prefs) => {
       const pref = prefs.findLast(predicate.isValidBskyAppStatePref) || {
         $type: 'app.bsky.actor.defs#bskyAppStatePref',
       }
@@ -1302,7 +1295,7 @@ export class Agent extends XrpcClient {
    * Removes NUXs from user preferences.
    */
   async bskyAppRemoveNuxs(ids: string[]) {
-    await this.updatePreferences((prefs: AppBskyActorDefs.Preferences) => {
+    await this.updatePreferences((prefs) => {
       const pref = prefs.findLast(predicate.isValidBskyAppStatePref) || {
         $type: 'app.bsky.actor.defs#bskyAppStatePref',
       }
@@ -1323,7 +1316,7 @@ export class Agent extends XrpcClient {
     // Fool-proofing (should not be needed because of type safety)
     if (!result.success) throw result.error
 
-    await this.updatePreferences((prefs: AppBskyActorDefs.Preferences) => {
+    await this.updatePreferences((prefs) => {
       const pref = prefs.findLast(
         predicate.isValidPostInteractionSettingsPref,
       ) || {
@@ -1376,7 +1369,7 @@ export class Agent extends XrpcClient {
   }
 
   private async updateHiddenPost(postUri: string, action: 'hide' | 'unhide') {
-    await this.updatePreferences((prefs: AppBskyActorDefs.Preferences) => {
+    await this.updatePreferences((prefs) => {
       const pref = prefs.findLast(predicate.isValidHiddenPostsPref) || {
         $type: 'app.bsky.actor.defs#hiddenPostsPref',
         items: [],
@@ -1405,7 +1398,7 @@ export class Agent extends XrpcClient {
     ) => { saved: string[]; pinned: string[] },
   ): Promise<{ saved: string[]; pinned: string[] }> {
     let res
-    await this.updatePreferences((prefs: AppBskyActorDefs.Preferences) => {
+    await this.updatePreferences((prefs) => {
       const feedsPref = prefs.findLast(predicate.isValidSavedFeedsPref) || {
         $type: 'app.bsky.actor.defs#savedFeedsPref',
         saved: [],
@@ -1430,28 +1423,21 @@ export class Agent extends XrpcClient {
   ): Promise<AppBskyActorDefs.SavedFeed[]> {
     let maybeMutatedSavedFeeds: AppBskyActorDefs.SavedFeed[] = []
 
-    await this.updatePreferences((prefs: AppBskyActorDefs.Preferences) => {
-      let existingV2Pref = prefs.findLast(predicate.isValidSavedFeedsPrefV2)
-      let existingV1Pref = prefs.findLast(predicate.isValidSavedFeedsPref)
-
-      if (existingV2Pref) {
-        maybeMutatedSavedFeeds = cb(existingV2Pref.items)
-        existingV2Pref = {
-          ...existingV2Pref,
-          items: maybeMutatedSavedFeeds,
-        }
-      } else {
-        maybeMutatedSavedFeeds = cb([])
-        existingV2Pref = {
-          $type: 'app.bsky.actor.defs#savedFeedsPrefV2',
-          items: maybeMutatedSavedFeeds,
-        }
+    await this.updatePreferences((prefs) => {
+      const existingV2Pref = prefs.findLast(
+        predicate.isValidSavedFeedsPrefV2,
+      ) || {
+        $type: 'app.bsky.actor.defs#savedFeedsPrefV2',
+        items: [],
       }
 
-      // enforce ordering, pinned then saved
-      const pinned = existingV2Pref.items.filter((i) => i.pinned)
-      const saved = existingV2Pref.items.filter((i) => !i.pinned)
-      existingV2Pref.items = pinned.concat(saved)
+      const newSavedFeeds = cb(existingV2Pref.items)
+
+      // enforce ordering: pinned first, then saved
+      existingV2Pref.items = [...newSavedFeeds].sort((a) => (a.pinned ? -1 : 1))
+
+      // Store the return value
+      maybeMutatedSavedFeeds = newSavedFeeds
 
       let updatedPrefs = prefs
         .filter((pref) => !AppBskyActorDefs.isSavedFeedsPrefV2(pref))
@@ -1462,6 +1448,7 @@ export class Agent extends XrpcClient {
        * to v2. During the transition period, we double write v2 prefs back to
        * v1, but NOT the other way around.
        */
+      let existingV1Pref = prefs.findLast(predicate.isValidSavedFeedsPref)
       if (existingV1Pref) {
         const { saved, pinned } = existingV1Pref
         const v2Compat = savedFeedsToUriArrays(
