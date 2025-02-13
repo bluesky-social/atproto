@@ -1383,7 +1383,7 @@ export class Agent extends XrpcClient {
       pref.items = [...hiddenItems]
 
       return prefs
-        .filter((p) => !AppBskyActorDefs.isInterestsPref(p))
+        .filter((p) => !AppBskyActorDefs.isHiddenPostsPref(p))
         .concat(pref)
     })
   }
