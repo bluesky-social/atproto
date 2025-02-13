@@ -1,9 +1,10 @@
 ---
 "@atproto/ozone": patch
 "@atproto/bsky": patch
-"@atproto/api": patch
+"@atproto/api": minor
 "@atproto/pds": patch
 ---
 
-Update generated code to better reflect actual entity structure
+Update Lexicon derived code to better reflect data typings. In particular, Lexicon derived interfaces will now explicitly include the `$type` property that can be present in the data.
+
 

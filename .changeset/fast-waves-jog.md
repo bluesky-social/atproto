@@ -1,5 +1,5 @@
 ---
-"@atproto/lex-cli": patch
+"@atproto/lex-cli": minor
 ---
 
-Strongly type result of generated validation helpers
+Update the code generation to better reflect the data typings. In particular this change will cause generated code to explicit the `$type` property that can be present in the data.

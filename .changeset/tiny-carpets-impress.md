@@ -2,4 +2,4 @@
 "@atproto/lex-cli": patch
 ---
 
-Properly type empty "schemas" array as `LexiconDoc[]`.
+Ensures that empty `schemas` arrays are typed as `LexiconDoc[]`.
