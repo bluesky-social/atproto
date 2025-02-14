@@ -33,7 +33,7 @@ describe('covering proofs', () => {
     mst = await mst.add(k.F1, cid)
     mst = await mst.add(k.G0, cid)
 
-    const pointerBeforeOp = await mst.getPointer()
+    const rootBeforeCommit = await mst.getPointer()
 
     mst = await mst.add(k.D2, cid)
     const proof = await mst.getCoveringProof(k.D2)
@@ -41,8 +41,8 @@ describe('covering proofs', () => {
     const proofStorage = new MemoryBlockstore(proof)
     let proofMst = await MST.load(proofStorage, await mst.getPointer())
     proofMst = await proofMst.delete(k.D2)
-    const pointerAfterInvert = await proofMst.getPointer()
-    expect(pointerAfterInvert.equals(pointerBeforeOp)).toBe(true)
+    const rootAfterInvert = await proofMst.getPointer()
+    expect(rootAfterInvert.equals(rootBeforeCommit)).toBe(true)
   })
 
   /**
@@ -71,7 +71,7 @@ describe('covering proofs', () => {
     mst = await mst.add(k.D0, cid)
     mst = await mst.add(k.E0, cid)
 
-    const pointerBeforeOp = await mst.getPointer()
+    const rootBeforeCommit = await mst.getPointer()
 
     mst = await mst.add(k.C2, cid)
     const proof = await mst.getCoveringProof(k.C2)
@@ -79,8 +79,8 @@ describe('covering proofs', () => {
     const proofStorage = new MemoryBlockstore(proof)
     let proofMst = await MST.load(proofStorage, await mst.getPointer())
     proofMst = await proofMst.delete(k.C2)
-    const pointerAfterInvert = await proofMst.getPointer()
-    expect(pointerAfterInvert.equals(pointerBeforeOp)).toBe(true)
+    const rootAfterInvert = await proofMst.getPointer()
+    expect(rootAfterInvert.equals(rootBeforeCommit)).toBe(true)
   })
 
   /**
@@ -108,7 +108,7 @@ describe('covering proofs', () => {
     mst = await mst.add(k.B2, cid)
     mst = await mst.add(k.C0, cid)
 
-    const pointerBeforeOp = await mst.getPointer()
+    const rootBeforeCommit = await mst.getPointer()
 
     mst = await mst.add(k.D2, cid)
     const proof = await mst.getCoveringProof(k.D2)
@@ -116,8 +116,8 @@ describe('covering proofs', () => {
     const proofStorage = new MemoryBlockstore(proof)
     let proofMst = await MST.load(proofStorage, await mst.getPointer())
     proofMst = await proofMst.delete(k.D2)
-    const pointerAfterInvert = await proofMst.getPointer()
-    expect(pointerAfterInvert.equals(pointerBeforeOp)).toBe(true)
+    const rootAfterInvert = await proofMst.getPointer()
+    expect(rootAfterInvert.equals(rootBeforeCommit)).toBe(true)
   })
 
   /**
@@ -146,7 +146,7 @@ describe('covering proofs', () => {
     mst = await mst.add(k.D2, cid)
     mst = await mst.add(k.E0, cid)
 
-    const pointerBeforeOp = await mst.getPointer()
+    const rootBeforeCommit = await mst.getPointer()
 
     mst = await mst.delete(k.B2)
     mst = await mst.delete(k.D2)
@@ -169,8 +169,8 @@ describe('covering proofs', () => {
       for (const fn of fns) {
         proofMst = await fn(proofMst)
       }
-      const pointerAfterInvert = await proofMst.getPointer()
-      expect(pointerAfterInvert.equals(pointerBeforeOp)).toBe(true)
+      const rootAfterInvert = await proofMst.getPointer()
+      expect(rootAfterInvert.equals(rootBeforeCommit)).toBe(true)
     }
 
     // test that the operations work in any order
@@ -214,7 +214,7 @@ describe('covering proofs', () => {
     mst = await mst.add(k.F0, cid)
     mst = await mst.add(k.H0, cid)
 
-    const pointerBeforeOp = await mst.getPointer()
+    const rootBeforeCommit = await mst.getPointer()
 
     mst = await mst.add(k.A2, cid)
     mst = await mst.add(k.G2, cid)
@@ -237,8 +237,8 @@ describe('covering proofs', () => {
       for (const fn of fns) {
         proofMst = await fn(proofMst)
       }
-      const pointerAfterInvert = await proofMst.getPointer()
-      expect(pointerAfterInvert.equals(pointerBeforeOp)).toBe(true)
+      const rootAfterInvert = await proofMst.getPointer()
+      expect(rootAfterInvert.equals(rootBeforeCommit)).toBe(true)
     }
 
     // test that the operations work in any order
