@@ -4,6 +4,7 @@ import {
   AppBskyLabelerDefs,
   ComAtprotoLabelDefs,
 } from '../client'
+import { asPredicate } from '../client/util'
 import {
   InterpretedLabelValueDefinition,
   LabelPreference,
@@ -103,10 +104,7 @@ export function interpretLabelValueDefinitions(
   labelerView: AppBskyLabelerDefs.LabelerViewDetailed,
 ): InterpretedLabelValueDefinition[] {
   return (labelerView.policies?.labelValueDefinitions || [])
-    .filter(
-      (labelValDef) =>
-        ComAtprotoLabelDefs.validateLabelValueDefinition(labelValDef).success,
-    )
+    .filter(asPredicate(ComAtprotoLabelDefs.validateLabelValueDefinition))
     .map((labelValDef) =>
       interpretLabelValueDefinition(labelValDef, labelerView.creator.did),
     )

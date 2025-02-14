@@ -136,7 +136,7 @@ Object {
   },
   "id": 2,
   "subject": Object {
-    "$type": "com.atproto.admin.defs#repoView",
+    "$type": "tools.ozone.moderation.defs#repoView",
     "did": "user(0)",
     "handle": "bob.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",

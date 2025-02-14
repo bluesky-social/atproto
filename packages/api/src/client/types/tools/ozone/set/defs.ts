@@ -2,43 +2,45 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'tools.ozone.set.defs'
 
 export interface Set {
+  $type?: 'tools.ozone.set.defs#set'
   name: string
   description?: string
-  [k: string]: unknown
 }
 
-export function isSet(v: unknown): v is Set {
-  return (
-    isObj(v) && hasProp(v, '$type') && v.$type === 'tools.ozone.set.defs#set'
-  )
+const hashSet = 'set'
+
+export function isSet<V>(v: V) {
+  return is$typed(v, id, hashSet)
 }
 
-export function validateSet(v: unknown): ValidationResult {
-  return lexicons.validate('tools.ozone.set.defs#set', v)
+export function validateSet<V>(v: V) {
+  return validate<Set & V>(v, id, hashSet)
 }
 
 export interface SetView {
+  $type?: 'tools.ozone.set.defs#setView'
   name: string
   description?: string
   setSize: number
   createdAt: string
   updatedAt: string
-  [k: string]: unknown
 }
 
-export function isSetView(v: unknown): v is SetView {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'tools.ozone.set.defs#setView'
-  )
+const hashSetView = 'setView'
+
+export function isSetView<V>(v: V) {
+  return is$typed(v, id, hashSetView)
 }
 
-export function validateSetView(v: unknown): ValidationResult {
-  return lexicons.validate('tools.ozone.set.defs#setView', v)
+export function validateSetView<V>(v: V) {
+  return validate<SetView & V>(v, id, hashSetView)
 }

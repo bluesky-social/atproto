@@ -39,7 +39,7 @@ export function validate(
   }
 }
 
-export function boolean(
+function boolean(
   lexicons: Lexicons,
   path: string,
   def: LexUserType,
@@ -77,7 +77,7 @@ export function boolean(
   return { success: true, value }
 }
 
-export function integer(
+function integer(
   lexicons: Lexicons,
   path: string,
   def: LexUserType,
@@ -151,7 +151,7 @@ export function integer(
   return { success: true, value }
 }
 
-export function string(
+function string(
   lexicons: Lexicons,
   path: string,
   def: LexUserType,
@@ -340,7 +340,7 @@ export function string(
   return { success: true, value }
 }
 
-export function bytes(
+function bytes(
   lexicons: Lexicons,
   path: string,
   def: LexUserType,
@@ -382,7 +382,7 @@ export function bytes(
   return { success: true, value }
 }
 
-export function cidLink(
+function cidLink(
   lexicons: Lexicons,
   path: string,
   def: LexUserType,
@@ -398,7 +398,7 @@ export function cidLink(
   return { success: true, value }
 }
 
-export function unknown(
+function unknown(
   lexicons: Lexicons,
   path: string,
   def: LexUserType,

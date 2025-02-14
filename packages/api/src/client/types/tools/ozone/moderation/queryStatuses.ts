@@ -3,10 +3,14 @@
  */
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
-import * as ToolsOzoneModerationDefs from './defs'
+import { validate as _validate } from '../../../../lexicons'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import type * as ToolsOzoneModerationDefs from './defs.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'tools.ozone.moderation.queryStatuses'
 
 export interface QueryParams {
   /** Number of queues being used by moderators. Subjects will be split among all queues. */
@@ -82,7 +86,6 @@ export type InputSchema = undefined
 export interface OutputSchema {
   cursor?: string
   subjectStatuses: ToolsOzoneModerationDefs.SubjectStatusView[]
-  [k: string]: unknown
 }
 
 export interface CallOptions {

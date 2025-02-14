@@ -3,11 +3,15 @@
  */
 import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
-import * as ComAtprotoLabelDefs from '../label/defs'
+import type * as ComAtprotoLabelDefs from '../label/defs.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.atproto.temp.fetchLabels'
 
 export interface QueryParams {
   since?: number
@@ -18,7 +22,6 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   labels: ComAtprotoLabelDefs.Label[]
-  [k: string]: unknown
 }
 
 export type HandlerInput = undefined

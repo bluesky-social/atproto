@@ -3,43 +3,46 @@
  */
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
-import * as ToolsOzoneModerationDefs from './defs'
-import * as ComAtprotoAdminDefs from '../../../com/atproto/admin/defs'
-import * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef'
+import { validate as _validate } from '../../../../lexicons'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import type * as ToolsOzoneModerationDefs from './defs.js'
+import type * as ComAtprotoAdminDefs from '../../../com/atproto/admin/defs.js'
+import type * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'tools.ozone.moderation.emitEvent'
 
 export interface QueryParams {}
 
 export interface InputSchema {
   event:
-    | ToolsOzoneModerationDefs.ModEventTakedown
-    | ToolsOzoneModerationDefs.ModEventAcknowledge
-    | ToolsOzoneModerationDefs.ModEventEscalate
-    | ToolsOzoneModerationDefs.ModEventComment
-    | ToolsOzoneModerationDefs.ModEventLabel
-    | ToolsOzoneModerationDefs.ModEventReport
-    | ToolsOzoneModerationDefs.ModEventMute
-    | ToolsOzoneModerationDefs.ModEventUnmute
-    | ToolsOzoneModerationDefs.ModEventMuteReporter
-    | ToolsOzoneModerationDefs.ModEventUnmuteReporter
-    | ToolsOzoneModerationDefs.ModEventReverseTakedown
-    | ToolsOzoneModerationDefs.ModEventResolveAppeal
-    | ToolsOzoneModerationDefs.ModEventEmail
-    | ToolsOzoneModerationDefs.ModEventTag
-    | ToolsOzoneModerationDefs.AccountEvent
-    | ToolsOzoneModerationDefs.IdentityEvent
-    | ToolsOzoneModerationDefs.RecordEvent
-    | ToolsOzoneModerationDefs.ModEventPriorityScore
-    | { $type: string; [k: string]: unknown }
+    | $Typed<ToolsOzoneModerationDefs.ModEventTakedown>
+    | $Typed<ToolsOzoneModerationDefs.ModEventAcknowledge>
+    | $Typed<ToolsOzoneModerationDefs.ModEventEscalate>
+    | $Typed<ToolsOzoneModerationDefs.ModEventComment>
+    | $Typed<ToolsOzoneModerationDefs.ModEventLabel>
+    | $Typed<ToolsOzoneModerationDefs.ModEventReport>
+    | $Typed<ToolsOzoneModerationDefs.ModEventMute>
+    | $Typed<ToolsOzoneModerationDefs.ModEventUnmute>
+    | $Typed<ToolsOzoneModerationDefs.ModEventMuteReporter>
+    | $Typed<ToolsOzoneModerationDefs.ModEventUnmuteReporter>
+    | $Typed<ToolsOzoneModerationDefs.ModEventReverseTakedown>
+    | $Typed<ToolsOzoneModerationDefs.ModEventResolveAppeal>
+    | $Typed<ToolsOzoneModerationDefs.ModEventEmail>
+    | $Typed<ToolsOzoneModerationDefs.ModEventTag>
+    | $Typed<ToolsOzoneModerationDefs.AccountEvent>
+    | $Typed<ToolsOzoneModerationDefs.IdentityEvent>
+    | $Typed<ToolsOzoneModerationDefs.RecordEvent>
+    | $Typed<ToolsOzoneModerationDefs.ModEventPriorityScore>
+    | { $type: string }
   subject:
-    | ComAtprotoAdminDefs.RepoRef
-    | ComAtprotoRepoStrongRef.Main
-    | { $type: string; [k: string]: unknown }
+    | $Typed<ComAtprotoAdminDefs.RepoRef>
+    | $Typed<ComAtprotoRepoStrongRef.Main>
+    | { $type: string }
   subjectBlobCids?: string[]
   createdBy: string
-  [k: string]: unknown
 }
 
 export type OutputSchema = ToolsOzoneModerationDefs.ModEventView

@@ -1,3 +1,5 @@
+import assert from 'node:assert'
+import { ComAtprotoAdminDefs, ToolsOzoneModerationDefs } from '@atproto/api'
 import {
   ModeratorClient,
   SeedClient,
@@ -37,12 +39,15 @@ describe('moderation', () => {
     })
 
     // Verify that that the takedown even exposes the policy specified for it
-    const { events } = await modClient.queryEvents({
+    const { events: eventViews } = await modClient.queryEvents({
       subject: sc.dids.bob,
       types: ['tools.ozone.moderation.defs#modEventTakedown'],
     })
 
-    expect(events[0].event.policies?.[0]).toEqual('trolling')
+    const { event } = eventViews[0]
+
+    assert(ToolsOzoneModerationDefs.isModEventTakedown(event))
+    expect(event.policies?.[0]).toEqual('trolling')
 
     // Verify that event stream can be filtered by policy
     const { events: filteredEvents } = await modClient.queryEvents({
@@ -50,6 +55,9 @@ describe('moderation', () => {
       policies: ['trolling'],
     })
 
-    expect(filteredEvents[0].subject.did).toEqual(sc.dids.bob)
+    const { subject } = filteredEvents[0]
+
+    assert(ComAtprotoAdminDefs.isRepoRef(subject))
+    expect(subject.did).toEqual(sc.dids.bob)
   })
 })

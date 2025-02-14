@@ -7,6 +7,7 @@ import {
   ComAtprotoRepoPutRecord,
   DEFAULT_LABEL_SETTINGS,
 } from '../src'
+import { asPredicate } from '../src/client/util'
 import {
   getSavedFeedType,
   savedFeedsToUriArrays,
@@ -2320,38 +2321,22 @@ describe('agent', () => {
 
       async function addLegacyMutedWord(mutedWord: AppBskyActorDefs.MutedWord) {
         await updatePreferences(agent, (prefs) => {
-          let mutedWordsPref = prefs.findLast(
-            (pref) =>
-              AppBskyActorDefs.isMutedWordsPref(pref) &&
-              AppBskyActorDefs.validateMutedWordsPref(pref).success,
-          )
+          const mutedWordsPref = prefs.findLast(
+            asPredicate(AppBskyActorDefs.validateMutedWordsPref),
+          ) || {
+            $type: 'app.bsky.actor.defs#mutedWordsPref',
+            items: [],
+          }
 
-          const newMutedWord: AppBskyActorDefs.MutedWord = {
+          mutedWordsPref.items.push({
             value: mutedWord.value,
             targets: mutedWord.targets,
             actorTarget: 'all',
-          }
-
-          if (
-            mutedWordsPref &&
-            AppBskyActorDefs.isMutedWordsPref(mutedWordsPref)
-          ) {
-            mutedWordsPref.items.push(newMutedWord)
-          } else {
-            // if the pref doesn't exist, create it
-            mutedWordsPref = {
-              items: [newMutedWord],
-            }
-          }
+          })
 
           return prefs
             .filter((p) => !AppBskyActorDefs.isMutedWordsPref(p))
-            .concat([
-              {
-                ...mutedWordsPref,
-                $type: 'app.bsky.actor.defs#mutedWordsPref',
-              },
-            ])
+            .concat([mutedWordsPref])
         })
       }
 
@@ -3350,6 +3335,7 @@ describe('agent', () => {
 
         await agent.bskyAppSetActiveProgressGuide({
           guide: 'test-guide',
+          // @ts-expect-error unspecced field
           numThings: 0,
         })
         await expect(agent.getPreferences()).resolves.toHaveProperty(
@@ -3358,6 +3344,7 @@ describe('agent', () => {
         )
         await agent.bskyAppSetActiveProgressGuide({
           guide: 'test-guide',
+          // @ts-expect-error unspecced field
           numThings: 1,
         })
         await expect(agent.getPreferences()).resolves.toHaveProperty(
@@ -3436,6 +3423,7 @@ describe('agent', () => {
         // @ts-expect-error
         expect(() => agent.bskyAppUpsertNux({ name: 'a' })).rejects.toThrow()
         expect(() =>
+          // @ts-expect-error
           agent.bskyAppUpsertNux({ id: 'a', completed: false, foo: 'bar' }),
         ).rejects.toThrow()
       })
@@ -3508,6 +3496,7 @@ describe('agent', () => {
       it('validates inputs', async () => {
         expect(() =>
           agent.setPostInteractionSettings({
+            // @ts-expect-error we are testing invalid inputs
             threadgateAllowRules: [{ key: 'string' }],
             postgateEmbeddingRules: [],
           }),

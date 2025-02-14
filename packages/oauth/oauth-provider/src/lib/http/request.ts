@@ -1,8 +1,8 @@
 import { randomBytes } from 'node:crypto'
+import type { IncomingMessage, ServerResponse } from 'node:http'
 import { parse as parseCookie, serialize as serializeCookie } from 'cookie'
 import createHttpError from 'http-errors'
 import { appendHeader } from './response.js'
-import { IncomingMessage, ServerResponse } from './types.js'
 import { UrlReference, urlMatch } from './url.js'
 
 export function validateHeaderValue(
@@ -161,4 +161,67 @@ export function parseHttpCookies(
     : req.headers['cookie']
       ? ((req as any).cookies = parseCookie(req.headers['cookie']))
       : null
+}
+
+export type ExtractRequestMetadataOptions = {
+  trustProxy?: boolean
+}
+
+export type RequestMetadata = {
+  userAgent: string | null
+  ipAddress: string
+  port: number
+}
+
+export function extractRequestMetadata(
+  req: IncomingMessage,
+  options?: ExtractRequestMetadataOptions,
+): RequestMetadata {
+  const userAgent = req.headers['user-agent'] || null
+  const ipAddress = extractIpAddress(req, options) || null
+  const port = extractPort(req, options)
+
+  if (ipAddress == null || port == null) {
+    throw new Error('Could not determine IP address')
+  }
+
+  return { userAgent, ipAddress, port }
+}
+
+function extractIpAddress(
+  req: IncomingMessage,
+  options?: ExtractRequestMetadataOptions,
+): string | undefined {
+  // Express app compatibility
+  if ('ip' in req && typeof req.ip === 'string') {
+    return req.ip
+  }
+
+  if (options?.trustProxy) {
+    const forwardedFor = req.headers['x-forwarded-for']
+    if (typeof forwardedFor === 'string') {
+      const firstForward = forwardedFor.split(',')[0]!.trim()
+      if (firstForward) return firstForward
+    }
+  }
+
+  return req.socket.remoteAddress
+}
+
+function extractPort(
+  req: IncomingMessage,
+  options?: ExtractRequestMetadataOptions,
+): number | undefined {
+  if (options?.trustProxy) {
+    const forwardedPort = req.headers['x-forwarded-port']
+    if (typeof forwardedPort === 'string') {
+      const port = Number(forwardedPort.trim())
+      if (!Number.isInteger(port) || port < 0 || port > 65535) {
+        throw new Error('Invalid forwarded port')
+      }
+      return port
+    }
+  }
+
+  return req.socket.remotePort
 }

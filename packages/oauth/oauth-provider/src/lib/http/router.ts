@@ -1,9 +1,10 @@
+import type { IncomingMessage, ServerResponse } from 'node:http'
 import { SubCtx, subCtx } from './context.js'
 import { MethodMatcherInput } from './method.js'
 import { asHandler, combineMiddlewares } from './middleware.js'
 import { Params, Path } from './path.js'
 import { RouteMiddleware, createRoute } from './route.js'
-import { IncomingMessage, Middleware, ServerResponse } from './types.js'
+import { Middleware } from './types.js'
 
 export type RouterCtx<T> = SubCtx<T, { url: Readonly<URL> }>
 export type RouterMiddleware<

@@ -3,11 +3,15 @@
  */
 import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
-import * as ChatBskyConvoDefs from './defs'
+import type * as ChatBskyConvoDefs from './defs.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'chat.bsky.convo.getLog'
 
 export interface QueryParams {
   cursor?: string
@@ -18,13 +22,12 @@ export type InputSchema = undefined
 export interface OutputSchema {
   cursor?: string
   logs: (
-    | ChatBskyConvoDefs.LogBeginConvo
-    | ChatBskyConvoDefs.LogLeaveConvo
-    | ChatBskyConvoDefs.LogCreateMessage
-    | ChatBskyConvoDefs.LogDeleteMessage
-    | { $type: string; [k: string]: unknown }
+    | $Typed<ChatBskyConvoDefs.LogBeginConvo>
+    | $Typed<ChatBskyConvoDefs.LogLeaveConvo>
+    | $Typed<ChatBskyConvoDefs.LogCreateMessage>
+    | $Typed<ChatBskyConvoDefs.LogDeleteMessage>
+    | { $type: string }
   )[]
-  [k: string]: unknown
 }
 
 export type HandlerInput = undefined

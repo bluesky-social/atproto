@@ -21,15 +21,15 @@ export default function (server: Server, ctx: AppContext) {
           const view = ctx.views.labelerDetailed(did, hydration)
           if (!view) return
           return {
-            $type: 'app.bsky.labeler.defs#labelerViewDetailed',
             ...view,
+            $type: 'app.bsky.labeler.defs#labelerViewDetailed',
           }
         } else {
           const view = ctx.views.labeler(did, hydration)
           if (!view) return
           return {
-            $type: 'app.bsky.labeler.defs#labelerView',
             ...view,
+            $type: 'app.bsky.labeler.defs#labelerView',
           }
         }
       })

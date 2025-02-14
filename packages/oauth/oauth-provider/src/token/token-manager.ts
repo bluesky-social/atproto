@@ -29,6 +29,7 @@ import { InvalidDpopProofError } from '../errors/invalid-dpop-proof-error.js'
 import { InvalidGrantError } from '../errors/invalid-grant-error.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { InvalidTokenError } from '../errors/invalid-token-error.js'
+import { RequestMetadata } from '../lib/http/request.js'
 import { dateToEpoch, dateToRelativeSeconds } from '../lib/util/date.js'
 import { callAsync } from '../lib/util/function.js'
 import { OAuthHooks } from '../oauth-hooks.js'
@@ -82,6 +83,7 @@ export class TokenManager {
   async create(
     client: Client,
     clientAuth: ClientAuth,
+    clientMetadata: RequestMetadata,
     account: Account,
     device: null | { id: DeviceId; info: DeviceAccountInfo },
     parameters: OAuthAuthorizationRequestParameters,
@@ -207,13 +209,16 @@ export class TokenManager {
     const now = new Date()
     const expiresAt = this.createTokenExpiry(now)
 
-    const authorizationDetails = this.hooks.onAuthorizationDetails
-      ? await callAsync(this.hooks.onAuthorizationDetails, {
-          client,
-          parameters,
-          account,
-        })
-      : undefined
+    const authorizationDetails = await callAsync(
+      this.hooks.getAuthorizationDetails,
+      {
+        client,
+        clientAuth,
+        clientMetadata,
+        parameters,
+        account,
+      },
+    )
 
     const tokenData: TokenData = {
       createdAt: now,
@@ -246,7 +251,7 @@ export class TokenManager {
             authorization_details: authorizationDetails,
           })
 
-      return this.buildTokenResponse(
+      const response = await this.buildTokenResponse(
         client,
         accessToken,
         refreshToken,
@@ -255,6 +260,17 @@ export class TokenManager {
         account,
         authorizationDetails,
       )
+
+      await callAsync(this.hooks.onTokenCreated, {
+        client,
+        clientAuth,
+        clientMetadata,
+        account,
+        parameters,
+        deviceId: device ? device.id : null,
+      })
+
+      return response
     } catch (err) {
       // Just in case the token could not be issued, we delete it from the store
       await this.store.deleteToken(tokenId)
@@ -316,6 +332,7 @@ export class TokenManager {
   async refresh(
     client: Client,
     clientAuth: ClientAuth,
+    clientMetadata: RequestMetadata,
     input: OAuthRefreshTokenGrantTokenRequest,
     dpopJkt: null | string,
   ): Promise<OAuthTokenResponse> {
@@ -377,13 +394,16 @@ export class TokenManager {
         throw new InvalidGrantError(`Refresh token expired`)
       }
 
-      const authorization_details = this.hooks.onAuthorizationDetails
-        ? await callAsync(this.hooks.onAuthorizationDetails, {
-            client,
-            parameters,
-            account,
-          })
-        : undefined
+      const authorizationDetails = await callAsync(
+        this.hooks.getAuthorizationDetails,
+        {
+          client,
+          clientAuth,
+          clientMetadata,
+          parameters,
+          account,
+        },
+      )
 
       const nextTokenId = await generateTokenId()
       const nextRefreshToken = await generateRefreshToken()
@@ -426,24 +446,33 @@ export class TokenManager {
             iat: now,
             jti: nextTokenId,
             cnf: parameters.dpop_jkt ? { jkt: parameters.dpop_jkt } : undefined,
-            authorization_details,
+            authorization_details: authorizationDetails,
           })
 
-      return this.buildTokenResponse(
+      const response = await this.buildTokenResponse(
         client,
         accessToken,
         nextRefreshToken,
         expiresAt,
         parameters,
         account,
-        authorization_details,
+        authorizationDetails,
       )
+
+      await callAsync(this.hooks.onTokenRefreshed, {
+        client,
+        clientAuth,
+        clientMetadata,
+        account,
+        parameters,
+        deviceId: tokenInfo.data.deviceId,
+      })
+
+      return response
     } catch (err) {
-      if (err instanceof InvalidRequestError) {
-        // Consider the refresh token might be compromised if sanity checks
-        // failed.
-        await this.store.deleteToken(tokenInfo.id)
-      }
+      // Just in case the token could not be refreshed, we delete it from the store
+      await this.store.deleteToken(tokenInfo.id)
+
       throw err
     }
   }

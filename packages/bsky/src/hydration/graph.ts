@@ -176,7 +176,10 @@ export class GraphHydrator {
     }, new HydrationMap<Follow>())
   }
 
-  async getBlocks(uris: string[], includeTakedowns = false): Promise<Follows> {
+  async getBlocks(
+    uris: string[],
+    includeTakedowns = false,
+  ): Promise<HydrationMap<Block>> {
     if (!uris.length) return new HydrationMap<Block>()
     const res = await this.dataplane.getBlockRecords({ uris })
     return uris.reduce((acc, uri, i) => {

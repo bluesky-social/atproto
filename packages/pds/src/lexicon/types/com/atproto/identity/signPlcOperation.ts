@@ -3,10 +3,14 @@
  */
 import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.atproto.identity.signPlcOperation'
 
 export interface QueryParams {}
 
@@ -15,15 +19,13 @@ export interface InputSchema {
   token?: string
   rotationKeys?: string[]
   alsoKnownAs?: string[]
-  verificationMethods?: {}
-  services?: {}
-  [k: string]: unknown
+  verificationMethods?: { [_ in string]: unknown }
+  services?: { [_ in string]: unknown }
 }
 
 export interface OutputSchema {
   /** A signed DID PLC operation. */
-  operation: {}
-  [k: string]: unknown
+  operation: { [_ in string]: unknown }
 }
 
 export interface HandlerInput {

@@ -110,17 +110,15 @@ export class ClientManager {
         })
       : undefined
 
-    const partialInfo = this.hooks.onClientInfo
-      ? await callAsync(this.hooks.onClientInfo, clientId, {
-          metadata,
-          jwks,
-        }).catch((err) => {
-          throw InvalidClientMetadataError.from(
-            err,
-            `Rejected client information for "${clientId}"`,
-          )
-        })
-      : undefined
+    const partialInfo = await callAsync(this.hooks.getClientInfo, clientId, {
+      metadata,
+      jwks,
+    }).catch((err) => {
+      throw InvalidClientMetadataError.from(
+        err,
+        `Rejected client information for "${clientId}"`,
+      )
+    })
 
     const isFirstParty = partialInfo?.isFirstParty ?? false
     const isTrusted = partialInfo?.isTrusted ?? isFirstParty

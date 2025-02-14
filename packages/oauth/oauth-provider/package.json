@@ -47,7 +47,6 @@
     "http-errors": "^2.0.0",
     "ioredis": "^5.3.2",
     "jose": "^5.2.0",
-    "keygrip": "^1.1.0",
     "psl": "^1.9.0",
     "zod": "^3.23.8"
   },
@@ -59,7 +58,6 @@
     "@rollup/plugin-terser": "^0.4.4",
     "@rollup/plugin-typescript": "^11.1.6",
     "@types/cookie": "^0.6.0",
-    "@types/keygrip": "^1.0.6",
     "@types/psl": "1.1.3",
     "@types/react": "^18.2.50",
     "@types/react-dom": "^18.2.18",

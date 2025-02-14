@@ -3,10 +3,14 @@
  */
 import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'app.bsky.feed.describeFeedGenerator'
 
 export interface QueryParams {}
 
@@ -16,7 +20,6 @@ export interface OutputSchema {
   did: string
   feeds: Feed[]
   links?: Links
-  [k: string]: unknown
 }
 
 export type HandlerInput = undefined
@@ -46,36 +49,32 @@ export type Handler<HA extends HandlerAuth = never> = (
 ) => Promise<HandlerOutput> | HandlerOutput
 
 export interface Feed {
+  $type?: 'app.bsky.feed.describeFeedGenerator#feed'
   uri: string
-  [k: string]: unknown
 }
 
-export function isFeed(v: unknown): v is Feed {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.feed.describeFeedGenerator#feed'
-  )
+const hashFeed = 'feed'
+
+export function isFeed<V>(v: V) {
+  return is$typed(v, id, hashFeed)
 }
 
-export function validateFeed(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.feed.describeFeedGenerator#feed', v)
+export function validateFeed<V>(v: V) {
+  return validate<Feed & V>(v, id, hashFeed)
 }
 
 export interface Links {
+  $type?: 'app.bsky.feed.describeFeedGenerator#links'
   privacyPolicy?: string
   termsOfService?: string
-  [k: string]: unknown
 }
 
-export function isLinks(v: unknown): v is Links {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.feed.describeFeedGenerator#links'
-  )
+const hashLinks = 'links'
+
+export function isLinks<V>(v: V) {
+  return is$typed(v, id, hashLinks)
 }
 
-export function validateLinks(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.feed.describeFeedGenerator#links', v)
+export function validateLinks<V>(v: V) {
+  return validate<Links & V>(v, id, hashLinks)
 }

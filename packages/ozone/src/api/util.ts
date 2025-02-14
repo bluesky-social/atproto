@@ -13,6 +13,7 @@ import {
   REASONSEXUAL,
   REASONSPAM,
   REASONVIOLATION,
+  ReasonType,
 } from '../lexicon/types/com/atproto/moderation/defs'
 import {
   REVIEWCLOSED,
@@ -51,12 +52,26 @@ export const getPdsAccountInfos = async (
   }
 }
 
+function un$type<T extends object>(obj: T): Omit<T, '$type'> {
+  if ('$type' in obj) {
+    const { $type: _, ...rest } = obj
+    return rest
+  }
+  return obj
+}
+
 export const addAccountInfoToRepoViewDetail = (
-  repoView: RepoViewDetail,
+  repoView: RepoView | RepoViewDetail,
   accountInfo: AccountView | null,
   includeEmail = false,
 ): RepoViewDetail => {
-  if (!accountInfo) return repoView
+  if (!accountInfo) {
+    return un$type({
+      ...repoView,
+      moderation: un$type(repoView.moderation),
+    })
+  }
+
   const {
     email,
     deactivatedAt,
@@ -67,6 +82,7 @@ export const addAccountInfoToRepoViewDetail = (
     invitesDisabled,
     threatSignatures,
     // pick some duplicate/unwanted details out
+    $type: _accountType,
     did: _did,
     handle: _handle,
     indexedAt: _indexedAt,
@@ -75,7 +91,8 @@ export const addAccountInfoToRepoViewDetail = (
   } = accountInfo
   return {
     ...otherAccountInfo,
-    ...repoView,
+    ...un$type(repoView),
+    moderation: un$type(repoView.moderation),
     email: includeEmail ? email : undefined,
     invitedBy,
     invitesDisabled,
@@ -106,7 +123,7 @@ export const addAccountInfoToRepoView = (
 
 export const getReasonType = (reasonType: ReportInput['reasonType']) => {
   if (reasonTypes.has(reasonType)) {
-    return reasonType as NonNullable<ModerationEvent['meta']>['reportType']
+    return reasonType
   }
   throw new InvalidRequestError('Invalid reason type')
 }
@@ -128,7 +145,7 @@ export const getReviewState = (reviewState?: string) => {
 
 const reviewStates = new Set([REVIEWCLOSED, REVIEWESCALATED, REVIEWOPEN])
 
-const reasonTypes = new Set([
+const reasonTypes = new Set<ReasonType>([
   REASONOTHER,
   REASONSPAM,
   REASONMISLEADING,

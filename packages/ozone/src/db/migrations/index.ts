@@ -20,3 +20,4 @@ export * as _20241026T205730722Z from './20241026T205730722Z-add-hosting-status-
 export * as _20241220T144630860Z from './20241220T144630860Z-stats-materialized-views'
 export * as _20250204T003647759Z from './20250204T003647759Z-add-subject-priority-score'
 export * as _20250211T003647759Z from './20250211T003647759Z-add-reporter-stats-index'
+export * as _20250211T132135150Z from './20250211T132135150Z-moderation-event-message-partial-idx'

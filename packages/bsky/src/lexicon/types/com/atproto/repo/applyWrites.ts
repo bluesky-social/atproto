@@ -3,11 +3,15 @@
  */
 import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
-import * as ComAtprotoRepoDefs from './defs'
+import type * as ComAtprotoRepoDefs from './defs.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.atproto.repo.applyWrites'
 
 export interface QueryParams {}
 
@@ -16,16 +20,18 @@ export interface InputSchema {
   repo: string
   /** Can be set to 'false' to skip Lexicon schema validation of record data across all operations, 'true' to require it, or leave unset to validate only for known Lexicons. */
   validate?: boolean
-  writes: (Create | Update | Delete)[]
+  writes: ($Typed<Create> | $Typed<Update> | $Typed<Delete>)[]
   /** If provided, the entire operation will fail if the current repo commit CID does not match this value. Used to prevent conflicting repo mutations. */
   swapCommit?: string
-  [k: string]: unknown
 }
 
 export interface OutputSchema {
   commit?: ComAtprotoRepoDefs.CommitMeta
-  results?: (CreateResult | UpdateResult | DeleteResult)[]
-  [k: string]: unknown
+  results?: (
+    | $Typed<CreateResult>
+    | $Typed<UpdateResult>
+    | $Typed<DeleteResult>
+  )[]
 }
 
 export interface HandlerInput {
@@ -60,113 +66,101 @@ export type Handler<HA extends HandlerAuth = never> = (
 
 /** Operation which creates a new record. */
 export interface Create {
+  $type?: 'com.atproto.repo.applyWrites#create'
   collection: string
   rkey?: string
-  value: {}
-  [k: string]: unknown
+  value: { [_ in string]: unknown }
 }
 
-export function isCreate(v: unknown): v is Create {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'com.atproto.repo.applyWrites#create'
-  )
+const hashCreate = 'create'
+
+export function isCreate<V>(v: V) {
+  return is$typed(v, id, hashCreate)
 }
 
-export function validateCreate(v: unknown): ValidationResult {
-  return lexicons.validate('com.atproto.repo.applyWrites#create', v)
+export function validateCreate<V>(v: V) {
+  return validate<Create & V>(v, id, hashCreate)
 }
 
 /** Operation which updates an existing record. */
 export interface Update {
+  $type?: 'com.atproto.repo.applyWrites#update'
   collection: string
   rkey: string
-  value: {}
-  [k: string]: unknown
+  value: { [_ in string]: unknown }
 }
 
-export function isUpdate(v: unknown): v is Update {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'com.atproto.repo.applyWrites#update'
-  )
+const hashUpdate = 'update'
+
+export function isUpdate<V>(v: V) {
+  return is$typed(v, id, hashUpdate)
 }
 
-export function validateUpdate(v: unknown): ValidationResult {
-  return lexicons.validate('com.atproto.repo.applyWrites#update', v)
+export function validateUpdate<V>(v: V) {
+  return validate<Update & V>(v, id, hashUpdate)
 }
 
 /** Operation which deletes an existing record. */
 export interface Delete {
+  $type?: 'com.atproto.repo.applyWrites#delete'
   collection: string
   rkey: string
-  [k: string]: unknown
 }
 
-export function isDelete(v: unknown): v is Delete {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'com.atproto.repo.applyWrites#delete'
-  )
+const hashDelete = 'delete'
+
+export function isDelete<V>(v: V) {
+  return is$typed(v, id, hashDelete)
 }
 
-export function validateDelete(v: unknown): ValidationResult {
-  return lexicons.validate('com.atproto.repo.applyWrites#delete', v)
+export function validateDelete<V>(v: V) {
+  return validate<Delete & V>(v, id, hashDelete)
 }
 
 export interface CreateResult {
+  $type?: 'com.atproto.repo.applyWrites#createResult'
   uri: string
   cid: string
   validationStatus?: 'valid' | 'unknown' | (string & {})
-  [k: string]: unknown
 }
 
-export function isCreateResult(v: unknown): v is CreateResult {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'com.atproto.repo.applyWrites#createResult'
-  )
+const hashCreateResult = 'createResult'
+
+export function isCreateResult<V>(v: V) {
+  return is$typed(v, id, hashCreateResult)
 }
 
-export function validateCreateResult(v: unknown): ValidationResult {
-  return lexicons.validate('com.atproto.repo.applyWrites#createResult', v)
+export function validateCreateResult<V>(v: V) {
+  return validate<CreateResult & V>(v, id, hashCreateResult)
 }
 
 export interface UpdateResult {
+  $type?: 'com.atproto.repo.applyWrites#updateResult'
   uri: string
   cid: string
   validationStatus?: 'valid' | 'unknown' | (string & {})
-  [k: string]: unknown
 }
 
-export function isUpdateResult(v: unknown): v is UpdateResult {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'com.atproto.repo.applyWrites#updateResult'
-  )
+const hashUpdateResult = 'updateResult'
+
+export function isUpdateResult<V>(v: V) {
+  return is$typed(v, id, hashUpdateResult)
 }
 
-export function validateUpdateResult(v: unknown): ValidationResult {
-  return lexicons.validate('com.atproto.repo.applyWrites#updateResult', v)
+export function validateUpdateResult<V>(v: V) {
+  return validate<UpdateResult & V>(v, id, hashUpdateResult)
 }
 
 export interface DeleteResult {
-  [k: string]: unknown
+  $type?: 'com.atproto.repo.applyWrites#deleteResult'
 }
 
-export function isDeleteResult(v: unknown): v is DeleteResult {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'com.atproto.repo.applyWrites#deleteResult'
-  )
+const hashDeleteResult = 'deleteResult'
+
+export function isDeleteResult<V>(v: V) {
+  return is$typed(v, id, hashDeleteResult)
 }
 
-export function validateDeleteResult(v: unknown): ValidationResult {
-  return lexicons.validate('com.atproto.repo.applyWrites#deleteResult', v)
+export function validateDeleteResult<V>(v: V) {
+  return validate<DeleteResult & V>(v, id, hashDeleteResult)
 }
