@@ -141,7 +141,7 @@ export class DeviceManager {
     await this.store.createDevice(deviceId, {
       sessionId,
       lastSeenAt: new Date(),
-      userAgent: deviceMetadata.userAgent,
+      userAgent: deviceMetadata.userAgent ?? null,
       ipAddress: deviceMetadata.ipAddress,
     })
 
