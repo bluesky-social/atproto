@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.14.1
+
+### Patch Changes
+
+- [#3535](https://github.com/bluesky-social/atproto/pull/3535) [`ba5bb6e66`](https://github.com/bluesky-social/atproto/commit/ba5bb6e667fb58bbefd332844957de575e102ca3) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix bug preventing "logout()" calls from working.
+
 ## 0.14.0
 
 ### Minor Changes

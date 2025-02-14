@@ -1,5 +1,14 @@
 # @atproto/bsky
 
+## 0.0.118
+
+### Patch Changes
+
+- [#3537](https://github.com/bluesky-social/atproto/pull/3537) [`3f58dd0e7`](https://github.com/bluesky-social/atproto/commit/3f58dd0e742cdfed9c3eae0118bc57f539de78f1) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Apply needs-review to individual records
+
+- Updated dependencies [[`ba5bb6e66`](https://github.com/bluesky-social/atproto/commit/ba5bb6e667fb58bbefd332844957de575e102ca3)]:
+  - @atproto/api@0.14.1
+
 ## 0.0.117
 
 ### Patch Changes

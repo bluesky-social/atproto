@@ -1,5 +1,11 @@
 # @atproto/lex-cli
 
+## 0.6.1
+
+### Patch Changes
+
+- [#3534](https://github.com/bluesky-social/atproto/pull/3534) [`175f89f8f`](https://github.com/bluesky-social/atproto/commit/175f89f8fe0e570518e32b48e49f5bbf63395b67) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve compatibility with Windows runtimes.
+
 ## 0.6.0
 
 ### Minor Changes
