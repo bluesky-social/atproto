@@ -1,5 +1,11 @@
 # @atproto/oauth-provider
 
+## 0.3.1
+
+### Patch Changes
+
+- [#3538](https://github.com/bluesky-social/atproto/pull/3538) [`bde6f71c4`](https://github.com/bluesky-social/atproto/commit/bde6f71c4cd33022d29da0ff23463a5838c4de24) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Mark "userAgent" as optional in `RequestMetadata`
+
 ## 0.3.0
 
 ### Minor Changes
