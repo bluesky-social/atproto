@@ -1,5 +1,4 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
-export { IncomingMessage, ServerResponse }
 
 export type NextFunction = (err?: unknown) => void
 
