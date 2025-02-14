@@ -182,7 +182,7 @@ const noBlockOrMutesOrNeedsReview = (
       item.reason === 'like' ||
       item.reason === 'follow'
     ) {
-      if (!ctx.views.viewerSeesNeedsReview(did, hydration)) {
+      if (!ctx.views.viewerSeesNeedsReview({ did, uri: item.uri }, hydration)) {
         return false
       }
     }

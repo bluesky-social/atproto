@@ -43,127 +43,272 @@ describe('bsky needs-review labels', () => {
     await network.processAll()
 
     AtpAgent.configure({ appLabelers: [network.ozone.ctx.cfg.service.did] })
-    await network.bsky.db.db
-      .insertInto('label')
-      .values({
-        src: network.ozone.ctx.cfg.service.did,
-        uri: sc.dids.geoff,
-        cid: '',
-        val: 'needs-review',
-        exp: null,
-        neg: false,
-        cts: new Date().toISOString(),
-      })
-      .execute()
   })
 
   afterAll(async () => {
     await network.close()
   })
 
-  it('applies to thread replies.', async () => {
-    const {
-      data: { thread },
-    } = await agent.app.bsky.feed.getPostThread({
-      uri: sc.posts[sc.dids.alice][0].ref.uriStr,
+  describe('account-level', () => {
+    beforeAll(async () => {
+      await network.bsky.db.db
+        .insertInto('label')
+        .values({
+          src: network.ozone.ctx.cfg.service.did,
+          uri: sc.dids.geoff,
+          cid: '',
+          val: 'needs-review',
+          exp: null,
+          neg: false,
+          cts: new Date().toISOString(),
+        })
+        .execute()
     })
-    assert(isThreadViewPost(thread))
-    expect(
-      thread.replies?.some((reply) => {
-        return (
-          isThreadViewPost(reply) && reply.post.author.did === sc.dids.geoff
-        )
-      }),
-    ).toBe(false)
-  })
 
-  it('applies to quote lists.', async () => {
-    const {
-      data: { posts },
-    } = await agent.app.bsky.feed.getQuotes({
-      uri: sc.posts[sc.dids.alice][0].ref.uriStr,
+    afterAll(async () => {
+      await network.bsky.db.db
+        .deleteFrom('label')
+        .where('src', '=', network.ozone.ctx.cfg.service.did)
+        .execute()
     })
-    expect(
-      posts.some((post) => {
-        return post.author.did === sc.dids.geoff
-      }),
-    ).toBe(false)
-  })
 
-  it('applies to reply, quote, and mention notifications.', async () => {
-    const {
-      data: { notifications },
-    } = await agent.app.bsky.notification.listNotifications(
-      {},
-      {
-        headers: await network.serviceHeaders(
-          sc.dids.alice,
-          ids.AppBskyNotificationListNotifications,
-        ),
-      },
-    )
-    expect(
-      notifications.some((notif) => {
-        return notif.reason === 'reply' && notif.author.did === sc.dids.geoff
-      }),
-    ).toBe(false)
-    expect(
-      notifications.some((notif) => {
-        return notif.reason === 'quote' && notif.author.did === sc.dids.geoff
-      }),
-    ).toBe(false)
-    expect(
-      notifications.some((notif) => {
-        return notif.reason === 'mention' && notif.author.did === sc.dids.geoff
-      }),
-    ).toBe(false)
-  })
-
-  it('does not apply to self.', async () => {
-    const {
-      data: { thread },
-    } = await agent.app.bsky.feed.getPostThread(
-      {
+    it('applies to thread replies.', async () => {
+      const {
+        data: { thread },
+      } = await agent.app.bsky.feed.getPostThread({
         uri: sc.posts[sc.dids.alice][0].ref.uriStr,
-      },
-      {
-        headers: await network.serviceHeaders(
-          sc.dids.geoff,
-          ids.AppBskyFeedGetPostThread,
-        ),
-      },
-    )
-    assert(isThreadViewPost(thread))
-    expect(
-      thread.replies?.some((reply) => {
-        return (
-          isThreadViewPost(reply) && reply.post.author.did === sc.dids.geoff
-        )
-      }),
-    ).toBe(true)
+      })
+      assert(isThreadViewPost(thread))
+      expect(
+        thread.replies?.some((reply) => {
+          return (
+            isThreadViewPost(reply) && reply.post.author.did === sc.dids.geoff
+          )
+        }),
+      ).toBe(false)
+    })
+
+    it('applies to quote lists.', async () => {
+      const {
+        data: { posts },
+      } = await agent.app.bsky.feed.getQuotes({
+        uri: sc.posts[sc.dids.alice][0].ref.uriStr,
+      })
+      expect(
+        posts.some((post) => {
+          return post.author.did === sc.dids.geoff
+        }),
+      ).toBe(false)
+    })
+
+    it('applies to reply, quote, and mention notifications.', async () => {
+      const {
+        data: { notifications },
+      } = await agent.app.bsky.notification.listNotifications(
+        {},
+        {
+          headers: await network.serviceHeaders(
+            sc.dids.alice,
+            ids.AppBskyNotificationListNotifications,
+          ),
+        },
+      )
+      expect(
+        notifications.some((notif) => {
+          return notif.reason === 'reply' && notif.author.did === sc.dids.geoff
+        }),
+      ).toBe(false)
+      expect(
+        notifications.some((notif) => {
+          return notif.reason === 'quote' && notif.author.did === sc.dids.geoff
+        }),
+      ).toBe(false)
+      expect(
+        notifications.some((notif) => {
+          return (
+            notif.reason === 'mention' && notif.author.did === sc.dids.geoff
+          )
+        }),
+      ).toBe(false)
+    })
+
+    it('does not apply to self.', async () => {
+      const {
+        data: { thread },
+      } = await agent.app.bsky.feed.getPostThread(
+        {
+          uri: sc.posts[sc.dids.alice][0].ref.uriStr,
+        },
+        {
+          headers: await network.serviceHeaders(
+            sc.dids.geoff,
+            ids.AppBskyFeedGetPostThread,
+          ),
+        },
+      )
+      assert(isThreadViewPost(thread))
+      expect(
+        thread.replies?.some((reply) => {
+          return (
+            isThreadViewPost(reply) && reply.post.author.did === sc.dids.geoff
+          )
+        }),
+      ).toBe(true)
+    })
+
+    it('does not apply to followers.', async () => {
+      const {
+        data: { thread },
+      } = await agent.app.bsky.feed.getPostThread(
+        {
+          uri: sc.posts[sc.dids.alice][0].ref.uriStr,
+        },
+        {
+          headers: await network.serviceHeaders(
+            sc.dids.bob, // follows geoff
+            ids.AppBskyFeedGetPostThread,
+          ),
+        },
+      )
+      assert(isThreadViewPost(thread))
+      expect(
+        thread.replies?.some((reply) => {
+          return (
+            isThreadViewPost(reply) && reply.post.author.did === sc.dids.geoff
+          )
+        }),
+      ).toBe(true)
+    })
   })
 
-  it('does not apply to followers.', async () => {
-    const {
-      data: { thread },
-    } = await agent.app.bsky.feed.getPostThread(
-      {
-        uri: sc.posts[sc.dids.alice][0].ref.uriStr,
-      },
-      {
-        headers: await network.serviceHeaders(
-          sc.dids.bob, // follows geoff
-          ids.AppBskyFeedGetPostThread,
-        ),
-      },
-    )
-    assert(isThreadViewPost(thread))
-    expect(
-      thread.replies?.some((reply) => {
-        return (
-          isThreadViewPost(reply) && reply.post.author.did === sc.dids.geoff
+  describe('record-level', () => {
+    beforeAll(async () => {
+      const geoffPostUris = [
+        ...sc.posts[sc.dids.geoff],
+        ...sc.replies[sc.dids.geoff],
+      ].map((post) => post.ref.uriStr)
+      await network.bsky.db.db
+        .insertInto('label')
+        .values(
+          geoffPostUris.map((uri) => ({
+            src: network.ozone.ctx.cfg.service.did,
+            uri,
+            cid: '',
+            val: 'needs-review',
+            exp: null,
+            neg: false,
+            cts: new Date().toISOString(),
+          })),
         )
-      }),
-    ).toBe(true)
+        .execute()
+    })
+
+    it('applies to thread replies.', async () => {
+      const {
+        data: { thread },
+      } = await agent.app.bsky.feed.getPostThread({
+        uri: sc.posts[sc.dids.alice][0].ref.uriStr,
+      })
+      assert(isThreadViewPost(thread))
+      expect(
+        thread.replies?.some((reply) => {
+          return (
+            isThreadViewPost(reply) && reply.post.author.did === sc.dids.geoff
+          )
+        }),
+      ).toBe(false)
+    })
+
+    it('applies to quote lists.', async () => {
+      const {
+        data: { posts },
+      } = await agent.app.bsky.feed.getQuotes({
+        uri: sc.posts[sc.dids.alice][0].ref.uriStr,
+      })
+      expect(
+        posts.some((post) => {
+          return post.author.did === sc.dids.geoff
+        }),
+      ).toBe(false)
+    })
+
+    it('applies to reply, quote, and mention notifications.', async () => {
+      const {
+        data: { notifications },
+      } = await agent.app.bsky.notification.listNotifications(
+        {},
+        {
+          headers: await network.serviceHeaders(
+            sc.dids.alice,
+            ids.AppBskyNotificationListNotifications,
+          ),
+        },
+      )
+      expect(
+        notifications.some((notif) => {
+          return notif.reason === 'reply' && notif.author.did === sc.dids.geoff
+        }),
+      ).toBe(false)
+      expect(
+        notifications.some((notif) => {
+          return notif.reason === 'quote' && notif.author.did === sc.dids.geoff
+        }),
+      ).toBe(false)
+      expect(
+        notifications.some((notif) => {
+          return (
+            notif.reason === 'mention' && notif.author.did === sc.dids.geoff
+          )
+        }),
+      ).toBe(false)
+    })
+
+    it('does not apply to self.', async () => {
+      const {
+        data: { thread },
+      } = await agent.app.bsky.feed.getPostThread(
+        {
+          uri: sc.posts[sc.dids.alice][0].ref.uriStr,
+        },
+        {
+          headers: await network.serviceHeaders(
+            sc.dids.geoff,
+            ids.AppBskyFeedGetPostThread,
+          ),
+        },
+      )
+      assert(isThreadViewPost(thread))
+      expect(
+        thread.replies?.some((reply) => {
+          return (
+            isThreadViewPost(reply) && reply.post.author.did === sc.dids.geoff
+          )
+        }),
+      ).toBe(true)
+    })
+
+    it('does not apply to followers.', async () => {
+      const {
+        data: { thread },
+      } = await agent.app.bsky.feed.getPostThread(
+        {
+          uri: sc.posts[sc.dids.alice][0].ref.uriStr,
+        },
+        {
+          headers: await network.serviceHeaders(
+            sc.dids.bob, // follows geoff
+            ids.AppBskyFeedGetPostThread,
+          ),
+        },
+      )
+      assert(isThreadViewPost(thread))
+      expect(
+        thread.replies?.some((reply) => {
+          return (
+            isThreadViewPost(reply) && reply.post.author.did === sc.dids.geoff
+          )
+        }),
+      ).toBe(true)
+    })
   })
 })
