@@ -1,5 +1,14 @@
 # @atproto/ozone
 
+## 0.1.79
+
+### Patch Changes
+
+- [#3520](https://github.com/bluesky-social/atproto/pull/3520) [`20e57bacf`](https://github.com/bluesky-social/atproto/commit/20e57bacf9bb2ae8a118eadbfc291f3213b8dc2f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve indexing for "chat.bsky.moderation.getMessageContext"
+
+- Updated dependencies [[`ba5bb6e66`](https://github.com/bluesky-social/atproto/commit/ba5bb6e667fb58bbefd332844957de575e102ca3)]:
+  - @atproto/api@0.14.1
+
 ## 0.1.78
 
 ### Patch Changes

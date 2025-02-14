@@ -1,5 +1,21 @@
 # @atproto/oauth-provider
 
+## 0.3.0
+
+### Minor Changes
+
+- [#3525](https://github.com/bluesky-social/atproto/pull/3525) [`6ea9c961a`](https://github.com/bluesky-social/atproto/commit/6ea9c961af964cd9b0d00b5073c695c5e0b3345a) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Rename `onClientInfo` and `onAuthorizationDetails` hooks to `getClientInfo` and `getAuthorizationDetails` respectively.
+
+### Patch Changes
+
+- [#3525](https://github.com/bluesky-social/atproto/pull/3525) [`6ea9c961a`](https://github.com/bluesky-social/atproto/commit/6ea9c961af964cd9b0d00b5073c695c5e0b3345a) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add the following hooks in the `OAuthProvider`:
+
+  - `onAuthorized` which is triggered when the user "authorized" a client (a `code` is issued)
+  - `onTokenCreated` which is triggered when the code is exchanged for a token
+  - `onTokenRefreshed` which is triggered when a refresh token is exchanged for a new access token
+
+- [#3514](https://github.com/bluesky-social/atproto/pull/3514) [`e69e89a03`](https://github.com/bluesky-social/atproto/commit/e69e89a037829bd4f6656d6aa42b77b97b4934e5) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Properly compute sleep time in contantTime util
+
 ## 0.2.17
 
 ### Patch Changes
