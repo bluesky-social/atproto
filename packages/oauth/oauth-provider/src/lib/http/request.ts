@@ -168,7 +168,7 @@ export type ExtractRequestMetadataOptions = {
 }
 
 export type RequestMetadata = {
-  userAgent: string | null
+  userAgent?: string
   ipAddress: string
   port: number
 }
@@ -177,7 +177,7 @@ export function extractRequestMetadata(
   req: IncomingMessage,
   options?: ExtractRequestMetadataOptions,
 ): RequestMetadata {
-  const userAgent = req.headers['user-agent'] || null
+  const userAgent = req.headers['user-agent'] || undefined
   const ipAddress = extractIpAddress(req, options) || null
   const port = extractPort(req, options)
 
