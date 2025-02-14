@@ -83,6 +83,105 @@ describe('covering proofs', () => {
     expect(pointerAfterInvert.equals(pointerBeforeOp)).toBe(true)
   })
 
+  /**
+   *
+   *               *                            *
+   *           ____|____                    ____|____
+   *          |    b    |                  |   |  |  |
+   *          *         *          ->      *   b  *  d
+   *          |         |                  |      |
+   *          a         c                  a      c
+   *
+   *
+   *
+   *
+   *
+   */
+  it('add on edge with neighbor two layers down', async () => {
+    const storage = new MemoryBlockstore()
+    const cid = CID.parse(
+      'bafyreie5cvv4h45feadgeuwhbcutmh6t2ceseocckahdoe6uat64zmz454',
+    )
+
+    let mst = await MST.create(storage)
+    mst = await mst.add(k.A0, cid)
+    mst = await mst.add(k.B2, cid)
+    mst = await mst.add(k.C0, cid)
+
+    const pointerBeforeOp = await mst.getPointer()
+
+    mst = await mst.add(k.D2, cid)
+    const proof = await mst.getCoveringProof(k.D2)
+
+    const proofStorage = new MemoryBlockstore(proof)
+    let proofMst = await MST.load(proofStorage, await mst.getPointer())
+    proofMst = await proofMst.delete(k.D2)
+    const pointerAfterInvert = await proofMst.getPointer()
+    expect(pointerAfterInvert.equals(pointerBeforeOp)).toBe(true)
+  })
+
+  /**
+   *
+   *                *                           *
+   *           _____|_____                 _____|_____
+   *          |   |   |   |               |     |     |
+   *          *   b   d   *     ->        *     c     *
+   *          |           |               |           |
+   *          a           e               a           e
+   *
+   *
+   *
+   *
+   *
+   */
+  it('merge and split in multi op commit', async () => {
+    const storage = new MemoryBlockstore()
+    const cid = CID.parse(
+      'bafyreie5cvv4h45feadgeuwhbcutmh6t2ceseocckahdoe6uat64zmz454',
+    )
+
+    let mst = await MST.create(storage)
+    mst = await mst.add(k.A0, cid)
+    mst = await mst.add(k.B2, cid)
+    mst = await mst.add(k.D2, cid)
+    mst = await mst.add(k.E0, cid)
+
+    const pointerBeforeOp = await mst.getPointer()
+
+    mst = await mst.delete(k.B2)
+    mst = await mst.delete(k.D2)
+    mst = await mst.add(k.C2, cid)
+
+    const proofs = await Promise.all([
+      mst.getCoveringProof(k.B2),
+      mst.getCoveringProof(k.D2),
+      mst.getCoveringProof(k.C2),
+    ])
+    const proof = proofs.reduce((acc, cur) => acc.addMap(cur), new BlockMap())
+    const proofStorage = new MemoryBlockstore(proof)
+
+    const addB = async (mst: MST) => mst.add(k.B2, cid)
+    const addD = async (mst: MST) => mst.add(k.D2, cid)
+    const delC = async (mst: MST) => mst.delete(k.C2)
+
+    const testOrder = async (fns: ((mst: MST) => Promise<MST>)[]) => {
+      let proofMst = await MST.load(proofStorage, await mst.getPointer())
+      for (const fn of fns) {
+        proofMst = await fn(proofMst)
+      }
+      const pointerAfterInvert = await proofMst.getPointer()
+      expect(pointerAfterInvert.equals(pointerBeforeOp)).toBe(true)
+    }
+
+    // test that the operations work in any order
+    await testOrder([addB, addD, delC])
+    await testOrder([addB, delC, addD])
+    await testOrder([addD, addB, delC])
+    await testOrder([addD, delC, addB])
+    await testOrder([delC, addB, addD])
+    await testOrder([delC, addD, addB])
+  })
+
   // This complex multi op commit includes:
   // - a two deep split
   // - a two deep merge
