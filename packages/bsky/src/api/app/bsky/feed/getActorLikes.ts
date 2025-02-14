@@ -1,58 +1,46 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
 import { mapDefined } from '@atproto/common'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getActorLikes'
+import { InvalidRequestError } from '@atproto/xrpc-server'
+
 import AppContext from '../../../../context'
-import { clearlyBadCursor, resHeaders } from '../../../util'
-import { createPipeline } from '../../../../pipeline'
-import {
-  HydrateCtx,
-  HydrationState,
-  Hydrator,
-} from '../../../../hydration/hydrator'
-import { Views } from '../../../../views'
-import { DataPlaneClient } from '../../../../data-plane'
-import { parseString } from '../../../../hydration/util'
-import { uriToDid as creatorFromUri } from '../../../../util/uris'
 import { FeedItem } from '../../../../hydration/feed'
+import { parseString } from '../../../../hydration/util'
+import { Server } from '../../../../lexicon/index'
+import {
+  OutputSchema,
+  QueryParams,
+} from '../../../../lexicon/types/app/bsky/feed/getActorLikes'
+import {
+  HydrationFn,
+  PresentationFn,
+  RulesFn,
+  SkeletonFn,
+} from '../../../../pipeline'
+import { uriToDid as creatorFromUri } from '../../../../util/uris'
+import { clearlyBadCursor } from '../../../util'
+
+type Skeleton = {
+  items: FeedItem[]
+  cursor?: string
+}
 
 export default function (server: Server, ctx: AppContext) {
-  const getActorLikes = createPipeline(
-    skeleton,
-    hydration,
-    noPostBlocks,
-    presentation,
-  )
   server.app.bsky.feed.getActorLikes({
     auth: ctx.authVerifier.standardOptional,
-    handler: async ({ params, auth, req }) => {
-      const viewer = auth.credentials.iss
-      const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
-
-      const result = await getActorLikes({ ...params, hydrateCtx }, ctx)
-
-      const repoRev = await ctx.hydrator.actor.getRepoRevSafe(viewer)
-
-      return {
-        encoding: 'application/json',
-        body: result,
-        headers: resHeaders({
-          repoRev,
-          labelers: hydrateCtx.labelers,
-        }),
-      }
-    },
+    handler: ctx.createPipelineHandler(
+      skeleton,
+      hydration,
+      noPostBlocks,
+      presentation,
+      {
+        exposeRepoRev: true,
+      },
+    ),
   })
 }
 
-const skeleton = async (inputs: {
-  ctx: Context
-  params: Params
-}): Promise<Skeleton> => {
-  const { ctx, params } = inputs
-  const { actor, limit, cursor } = params
-  const viewer = params.hydrateCtx.viewer
+const skeleton: SkeletonFn<Skeleton, QueryParams> = async (ctx) => {
+  const { actor, limit, cursor } = ctx.params
+  const viewer = ctx.viewer
   if (clearlyBadCursor(cursor)) {
     return { items: [] }
   }
@@ -75,21 +63,15 @@ const skeleton = async (inputs: {
   }
 }
 
-const hydration = async (inputs: {
-  ctx: Context
-  params: Params
-  skeleton: Skeleton
-}) => {
-  const { ctx, params, skeleton } = inputs
-  return await ctx.hydrator.hydrateFeedItems(skeleton.items, params.hydrateCtx)
+const hydration: HydrationFn<Skeleton, QueryParams> = async (ctx, skeleton) => {
+  return ctx.hydrator.hydrateFeedItems(skeleton.items, ctx)
 }
 
-const noPostBlocks = (inputs: {
-  ctx: Context
-  skeleton: Skeleton
-  hydration: HydrationState
-}) => {
-  const { ctx, skeleton, hydration } = inputs
+const noPostBlocks: RulesFn<Skeleton, QueryParams> = (
+  ctx,
+  skeleton,
+  hydration,
+) => {
   skeleton.items = skeleton.items.filter((item) => {
     const creator = creatorFromUri(item.post.uri)
     return !ctx.views.viewerBlockExists(creator, hydration)
@@ -97,30 +79,18 @@ const noPostBlocks = (inputs: {
   return skeleton
 }
 
-const presentation = (inputs: {
-  ctx: Context
-  skeleton: Skeleton
-  hydration: HydrationState
-}) => {
-  const { ctx, skeleton, hydration } = inputs
+const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = (
+  ctx,
+  skeleton,
+  hydration,
+) => {
   const feed = mapDefined(skeleton.items, (item) =>
     ctx.views.feedViewPost(item, hydration),
   )
   return {
-    feed,
-    cursor: skeleton.cursor,
+    body: {
+      feed,
+      cursor: skeleton.cursor,
+    },
   }
-}
-
-type Context = {
-  hydrator: Hydrator
-  views: Views
-  dataplane: DataPlaneClient
-}
-
-type Params = QueryParams & { hydrateCtx: HydrateCtx }
-
-type Skeleton = {
-  items: FeedItem[]
-  cursor?: string
 }

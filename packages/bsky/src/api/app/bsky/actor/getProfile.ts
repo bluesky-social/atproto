@@ -1,80 +1,60 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/actor/getProfile'
+
 import AppContext from '../../../../context'
-import { resHeaders } from '../../../util'
-import { createPipeline, noRules } from '../../../../pipeline'
+import { Server } from '../../../../lexicon/index'
 import {
-  HydrateCtx,
-  HydrationState,
-  Hydrator,
-} from '../../../../hydration/hydrator'
-import { Views } from '../../../../views'
+  OutputSchema,
+  QueryParams,
+} from '../../../../lexicon/types/app/bsky/actor/getProfile'
+import {
+  HydrationFn,
+  noRules,
+  PresentationFn,
+  SkeletonFn,
+} from '../../../../pipeline'
+
+type Skeleton = { did: string }
 
 export default function (server: Server, ctx: AppContext) {
-  const getProfile = createPipeline(skeleton, hydration, noRules, presentation)
   server.app.bsky.actor.getProfile({
     auth: ctx.authVerifier.optionalStandardOrRole,
-    handler: async ({ auth, params, req }) => {
-      const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
-      const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({
-        labelers,
-        viewer,
-        includeTakedowns,
-      })
-
-      const result = await getProfile({ ...params, hydrateCtx }, ctx)
-
-      const repoRev = await ctx.hydrator.actor.getRepoRevSafe(viewer)
-
-      return {
-        encoding: 'application/json',
-        body: result,
-        headers: resHeaders({
-          repoRev,
-          labelers: hydrateCtx.labelers,
-        }),
-      }
-    },
+    handler: ctx.createPipelineHandler(
+      skeleton,
+      hydration,
+      noRules,
+      presentation,
+      {
+        exposeRepoRev: true,
+        includeTakedowns: true,
+      },
+    ),
   })
 }
 
-const skeleton = async (input: {
-  ctx: Context
-  params: Params
-}): Promise<SkeletonState> => {
-  const { ctx, params } = input
-  const [did] = await ctx.hydrator.actor.getDids([params.actor])
+const skeleton: SkeletonFn<Skeleton, QueryParams> = async (ctx) => {
+  const [did] = await ctx.hydrator.actor.getDids([ctx.params.actor])
   if (!did) {
     throw new InvalidRequestError('Profile not found')
   }
   return { did }
 }
 
-const hydration = async (input: {
-  ctx: Context
-  params: Params
-  skeleton: SkeletonState
-}) => {
-  const { ctx, params, skeleton } = input
+const hydration: HydrationFn<Skeleton, QueryParams> = async (ctx, skeleton) => {
   return ctx.hydrator.hydrateProfilesDetailed(
     [skeleton.did],
-    params.hydrateCtx.copy({ includeTakedowns: true }),
+    ctx.copy({ includeTakedowns: true }),
   )
 }
 
-const presentation = (input: {
-  ctx: Context
-  params: Params
-  skeleton: SkeletonState
-  hydration: HydrationState
-}) => {
-  const { ctx, params, skeleton, hydration } = input
+const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = (
+  ctx,
+  skeleton,
+  hydration,
+) => {
   const profile = ctx.views.profileDetailed(skeleton.did, hydration)
   if (!profile) {
     throw new InvalidRequestError('Profile not found')
-  } else if (!params.hydrateCtx.includeTakedowns) {
+  } else if (!ctx.includeTakedowns) {
     if (ctx.views.actorIsTakendown(skeleton.did, hydration)) {
       throw new InvalidRequestError(
         'Account has been suspended',
@@ -87,16 +67,6 @@ const presentation = (input: {
       )
     }
   }
-  return profile
-}
 
-type Context = {
-  hydrator: Hydrator
-  views: Views
+  return { body: profile }
 }
-
-type Params = QueryParams & {
-  hydrateCtx: HydrateCtx
-}
-
-type SkeletonState = { did: string }

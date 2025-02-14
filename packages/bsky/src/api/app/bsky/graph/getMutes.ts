@@ -1,48 +1,47 @@
 import { mapDefined } from '@atproto/common'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getMutes'
+import { StandardOutput } from '../../../../auth-verifier'
 import AppContext from '../../../../context'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
-import { Views } from '../../../../views'
+import { Server } from '../../../../lexicon/index'
 import {
-  HydrationFnInput,
-  PresentationFnInput,
-  SkeletonFnInput,
-  createPipeline,
+  OutputSchema,
+  QueryParams,
+} from '../../../../lexicon/types/app/bsky/graph/getMutes'
+import {
+  HydrationFn,
+  PresentationFn,
+  SkeletonFn,
   noRules,
 } from '../../../../pipeline'
-import { clearlyBadCursor, resHeaders } from '../../../util'
+import { clearlyBadCursor } from '../../../util'
+
+type Skeleton = {
+  mutedDids: string[]
+  cursor?: string
+}
 
 export default function (server: Server, ctx: AppContext) {
-  const getMutes = createPipeline(skeleton, hydration, noRules, presentation)
   server.app.bsky.graph.getMutes({
     auth: ctx.authVerifier.standard,
-    handler: async ({ params, auth, req }) => {
-      const viewer = auth.credentials.iss
-      const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
-      const result = await getMutes(
-        { ...params, hydrateCtx: hydrateCtx.copy({ viewer }) },
-        ctx,
-      )
-      return {
-        encoding: 'application/json',
-        body: result,
-        headers: resHeaders({ labelers: hydrateCtx.labelers }),
-      }
-    },
+    handler: ctx.createPipelineHandler(
+      skeleton,
+      hydration,
+      noRules,
+      presentation,
+    ),
   })
 }
 
-const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
-  const { params, ctx } = input
-  if (clearlyBadCursor(params.cursor)) {
+const skeleton: SkeletonFn<Skeleton, QueryParams, StandardOutput> = async (
+  ctx,
+) => {
+  if (clearlyBadCursor(ctx.params.cursor)) {
     return { mutedDids: [] }
   }
+
   const { dids, cursor } = await ctx.hydrator.dataplane.getMutes({
-    actorDid: params.hydrateCtx.viewer,
-    cursor: params.cursor,
-    limit: params.limit,
+    actorDid: ctx.viewer,
+    cursor: ctx.params.cursor,
+    limit: ctx.params.limit,
   })
   return {
     mutedDids: dids,
@@ -50,35 +49,18 @@ const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
   }
 }
 
-const hydration = async (
-  input: HydrationFnInput<Context, Params, SkeletonState>,
-) => {
-  const { ctx, params, skeleton } = input
-  const { mutedDids } = skeleton
-  return ctx.hydrator.hydrateProfiles(mutedDids, params.hydrateCtx)
+const hydration: HydrationFn<Skeleton, QueryParams> = async (ctx, skeleton) => {
+  return ctx.hydrator.hydrateProfiles(skeleton.mutedDids, ctx)
 }
 
-const presentation = (
-  input: PresentationFnInput<Context, Params, SkeletonState>,
+const presentation: PresentationFn<Skeleton, QueryParams, OutputSchema> = (
+  ctx,
+  skeleton,
+  hydration,
 ) => {
-  const { ctx, hydration, skeleton } = input
   const { mutedDids, cursor } = skeleton
   const mutes = mapDefined(mutedDids, (did) => {
     return ctx.views.profile(did, hydration)
   })
-  return { mutes, cursor }
-}
-
-type Context = {
-  hydrator: Hydrator
-  views: Views
-}
-
-type Params = QueryParams & {
-  hydrateCtx: HydrateCtx & { viewer: string }
-}
-
-type SkeletonState = {
-  mutedDids: string[]
-  cursor?: string
+  return { body: { mutes, cursor } }
 }

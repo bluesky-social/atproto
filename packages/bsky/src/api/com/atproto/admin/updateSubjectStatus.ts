@@ -1,25 +1,29 @@
-import { Timestamp } from '@bufbuild/protobuf'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
-import { Server } from '../../../../lexicon'
+import { Timestamp } from '@bufbuild/protobuf'
+
 import AppContext from '../../../../context'
+import { Server } from '../../../../lexicon/index'
 import {
-  isRepoRef,
   isRepoBlobRef,
+  isRepoRef,
 } from '../../../../lexicon/types/com/atproto/admin/defs'
 import { isMain as isStrongRef } from '../../../../lexicon/types/com/atproto/repo/strongRef'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.updateSubjectStatus({
     auth: ctx.authVerifier.roleOrModService,
-    handler: async ({ input, auth }) => {
-      const { canPerformTakedown } = ctx.authVerifier.parseCreds(auth)
+    handler: ctx.createHandler(async (ctx) => {
+      const { auth } = ctx
+      const canPerformTakedown =
+        (auth.credentials.type === 'role' && auth.credentials.admin) ||
+        auth.credentials.type === 'mod_service'
+
       if (!canPerformTakedown) {
-        throw new AuthRequiredError(
-          'Must be a full moderator to update subject state',
-        )
+        throw new AuthRequiredError('Must be a full moderator')
       }
+
       const now = new Date()
-      const { subject, takedown } = input.body
+      const { subject, takedown } = ctx.input.body
       if (takedown) {
         if (isRepoRef(subject)) {
           if (takedown.applied) {
@@ -74,6 +78,6 @@ export default function (server: Server, ctx: AppContext) {
           takedown,
         },
       }
-    },
+    }),
   })
 }

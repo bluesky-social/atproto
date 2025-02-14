@@ -1,24 +1,22 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { Server } from '../../../../lexicon'
+
 import AppContext from '../../../../context'
-import { GetIdentityByDidResponse } from '../../../../proto/bsky_pb'
 import {
   Code,
   getServiceEndpoint,
   isDataplaneError,
   unpackIdentityServices,
-} from '../../../../data-plane'
-import { resHeaders } from '../../../util'
+} from '../../../../data-plane/index'
+import { Server } from '../../../../lexicon/index'
+import { GetIdentityByDidResponse } from '../../../../proto/bsky_pb'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getFeedGenerator({
     auth: ctx.authVerifier.standardOptional,
-    handler: async ({ params, auth, req }) => {
-      const { feed } = params
-      const viewer = auth.credentials.iss
-      const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
-      const hydration = await ctx.hydrator.hydrateFeedGens([feed], hydrateCtx)
+    handler: ctx.createHandler(async (ctx) => {
+      const { feed } = ctx.params
+
+      const hydration = await ctx.hydrator.hydrateFeedGens([feed], ctx)
       const feedInfo = hydration.feedgens?.get(feed)
       if (!feedInfo) {
         throw new InvalidRequestError('could not find feed')
@@ -61,8 +59,7 @@ export default function (server: Server, ctx: AppContext) {
           isOnline: true,
           isValid: true,
         },
-        headers: resHeaders({ labelers: hydrateCtx.labelers }),
       }
-    },
+    }),
   })
 }
