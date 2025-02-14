@@ -1,4 +1,4 @@
-import { relative as getRelativePath } from 'node:path'
+import { relative as getRelativePath } from 'node:path/posix'
 import { SourceFile, VariableDeclarationKind } from 'ts-morph'
 import {
   LexArray,
