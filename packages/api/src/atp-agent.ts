@@ -337,7 +337,7 @@ export class CredentialSession implements SessionManager {
       try {
         await this.server.deleteSession(undefined, {
           headers: {
-            authorization: `Bearer ${this.session.accessJwt}`,
+            authorization: `Bearer ${this.session.refreshJwt}`,
           },
         })
       } catch {
