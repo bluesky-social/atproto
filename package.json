@@ -54,6 +54,11 @@
     "prettier-config-standard": "^7.0.0",
     "typescript": "^5.6.3"
   },
+  "pnpm": {
+    "overrides": {
+      "node-gyp": "^11.1.0"
+    }
+  },
   "workspaces": {
     "packages": [
       "packages/*",
