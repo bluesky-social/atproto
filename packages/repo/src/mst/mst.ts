@@ -702,7 +702,26 @@ export class MST {
 
   // Sync Protocol
 
-  async writeToCarStream(car: BlockWriter): Promise<void> {
+  async writeToCarStream(
+    car: BlockWriter,
+    opts?: { includeLeaves?: boolean },
+  ): Promise<void> {
+    const { includeLeaves = true } = opts ?? {}
+    for await (const node of this.walk()) {
+      if (node.isTree()) {
+        const serialized = await node.serialize()
+        await car.put(serialized)
+      } else if (includeLeaves) {
+        const got = await this.storage.getBytes(node.value)
+        if (!got) {
+          throw new MissingBlocksError('mst leaf', [node.value])
+        }
+        await car.put({ cid: node.value, bytes: got })
+      }
+    }
+  }
+
+  async writeToCarStreamOld(car: BlockWriter): Promise<void> {
     const leaves = new CidSet()
     let toFetch = new CidSet()
     toFetch.add(await this.getPointer())
