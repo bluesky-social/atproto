@@ -7,11 +7,13 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
+import { isRepoRef } from '../src/lexicon/types/com/atproto/admin/defs'
 import {
   REASONAPPEAL,
   REASONMISLEADING,
   REASONSPAM,
 } from '../src/lexicon/types/com/atproto/moderation/defs'
+import { isMain as isStrongRef } from '../src/lexicon/types/com/atproto/repo/strongRef'
 import { forSnapshot } from './_util'
 
 describe('moderation-events', () => {
@@ -361,6 +363,7 @@ describe('moderation-events', () => {
 
       expect(addAndRemoveEvent.id).toEqual(addAndRemoveFinder.events[0].id)
       expect(addAndRemoveEvent.id).toEqual(addAndRemoveFinder.events[0].id)
+      assert(ToolsOzoneModerationDefs.isModEventTag(addAndRemoveEvent.event))
       expect(addAndRemoveEvent.event.add).toEqual(['L3'])
       expect(addAndRemoveEvent.event.remove).toEqual(['L2'])
     })
@@ -411,11 +414,13 @@ describe('moderation-events', () => {
       ])
 
       expect(onlyStarterPackReports.events.length).toEqual(1)
+      assert(isStrongRef(onlyStarterPackReports.events[0].subject))
       expect(onlyStarterPackReports.events[0].subject.uri).toContain(
         'app.bsky.graph.starterpack',
       )
 
       expect(onlyAlicesStarterPackReports.events.length).toEqual(1)
+      assert(isStrongRef(onlyAlicesStarterPackReports.events[0].subject))
       expect(onlyAlicesStarterPackReports.events[0].subject.uri).toContain(
         sp.uriStr,
       )
@@ -441,20 +446,24 @@ describe('moderation-events', () => {
           }),
         ])
 
-      // only account reports are returned, no event has a uri
-      expect(
-        onlyAccountReports.events.every((e) => !e.subject.uri),
-      ).toBeTruthy()
+      assert(
+        onlyAccountReports.events.every((e) => !isStrongRef(e.subject)),
+        'only account reports are returned, no event has a uri',
+      )
 
-      // only record reports are returned, all events have a uri
-      expect(onlyRecordReports.events.every((e) => e.subject.uri)).toBeTruthy()
-
-      // only bob's account reports are returned, no events have a URI even though the subjectType is record
-      expect(
-        onlyReportsOnBobsAccount.events.every(
-          (e) => !e.subject.uri && e.subject.did === sc.dids.bob,
+      assert(
+        onlyRecordReports.events.every(
+          (e) => isStrongRef(e.subject) && e.subject.uri,
         ),
-      ).toBeTruthy()
+        'only record reports are returned, all events have a uri',
+      )
+
+      assert(
+        onlyReportsOnBobsAccount.events.every(
+          (e) => isRepoRef(e.subject) && e.subject.did === sc.dids.bob,
+        ),
+        "only bob's account reports are returned, no events have a URI even though the subjectType is record",
+      )
     })
   })
 

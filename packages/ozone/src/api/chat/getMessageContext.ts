@@ -19,6 +19,8 @@ export default function (server: Server, ctx: AppContext) {
         .selectFrom('moderation_event')
         .select('id')
         .where('subjectMessageId', '=', params.messageId)
+        // uses "moderation_event_message_id_idx" index
+        .where('subjectMessageId', 'is not', null)
         .where('action', '=', 'tools.ozone.moderation.defs#modEventReport')
         .limit(1)
         .executeTakeFirst()

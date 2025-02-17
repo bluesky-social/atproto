@@ -13,10 +13,12 @@ import {
 import { Record as ProfileRecord } from '../lexicon/types/app/bsky/actor/profile'
 import {
   Main as EmbedExternal,
+  View as EmbedExternalView,
   isMain as isEmbedExternal,
 } from '../lexicon/types/app/bsky/embed/external'
 import {
   Main as EmbedImages,
+  View as EmbedImagesView,
   isMain as isEmbedImages,
 } from '../lexicon/types/app/bsky/embed/images'
 import {
@@ -36,6 +38,7 @@ import {
 } from '../lexicon/types/app/bsky/feed/defs'
 import { Record as PostRecord } from '../lexicon/types/app/bsky/feed/post'
 import { ListView } from '../lexicon/types/app/bsky/graph/defs'
+import { $Typed } from '../lexicon/util'
 import { LocalRecords, RecordDescript } from './types'
 
 type CommonSignedUris = 'avatar' | 'banner' | 'feed_thumbnail' | 'feed_fullsize'
@@ -167,7 +170,9 @@ export class LocalViewer {
     }
   }
 
-  async formatSimpleEmbed(embed: EmbedImages | EmbedExternal) {
+  async formatSimpleEmbed(
+    embed: $Typed<EmbedImages> | $Typed<EmbedExternal>,
+  ): Promise<$Typed<EmbedImagesView> | $Typed<EmbedExternalView>> {
     if (isEmbedImages(embed)) {
       const images = embed.images.map((img) => ({
         thumb: this.getImageUrl('feed_thumbnail', img.image.ref.toString()),
@@ -179,7 +184,7 @@ export class LocalViewer {
         $type: 'app.bsky.embed.images#view',
         images,
       }
-    } else {
+    } else if (isEmbedExternal(embed)) {
       const { uri, title, description, thumb } = embed.external
       return {
         $type: 'app.bsky.embed.external#view',
@@ -192,10 +197,15 @@ export class LocalViewer {
             : undefined,
         },
       }
+    } else {
+      // @ts-expect-error
+      throw new TypeError(`Unexpected embed type: ${embed.$type}`)
     }
   }
 
-  async formatRecordEmbed(embed: EmbedRecord): Promise<EmbedRecordView> {
+  async formatRecordEmbed(
+    embed: EmbedRecord,
+  ): Promise<$Typed<EmbedRecordView>> {
     const view = await this.formatRecordEmbedInternal(embed)
     return {
       $type: 'app.bsky.embed.record#view',
@@ -211,7 +221,9 @@ export class LocalViewer {
 
   private async formatRecordEmbedInternal(
     embed: EmbedRecord,
-  ): Promise<null | ViewRecord | GeneratorView | ListView> {
+  ): Promise<
+    null | $Typed<ViewRecord> | $Typed<GeneratorView> | $Typed<ListView>
+  > {
     if (!this.bskyAppView) {
       return null
     }
@@ -271,10 +283,9 @@ export class LocalViewer {
     }
   }
 
-  updateProfileViewBasic(
-    view: ProfileViewBasic,
-    record: ProfileRecord,
-  ): ProfileViewBasic {
+  updateProfileViewBasic<
+    T extends ProfileViewDetailed | ProfileViewBasic | ProfileView,
+  >(view: T, record: ProfileRecord): T {
     return {
       ...view,
       displayName: record.displayName,
@@ -284,17 +295,19 @@ export class LocalViewer {
     }
   }
 
-  updateProfileView(view: ProfileView, record: ProfileRecord): ProfileView {
+  updateProfileView<
+    T extends ProfileViewDetailed | ProfileViewBasic | ProfileView,
+  >(view: T, record: ProfileRecord): T {
     return {
       ...this.updateProfileViewBasic(view, record),
       description: record.description,
     }
   }
 
-  updateProfileDetailed(
-    view: ProfileViewDetailed,
+  updateProfileDetailed<T extends ProfileViewDetailed>(
+    view: T,
     record: ProfileRecord,
-  ): ProfileViewDetailed {
+  ): T {
     return {
       ...this.updateProfileView(view, record),
       banner: record.banner

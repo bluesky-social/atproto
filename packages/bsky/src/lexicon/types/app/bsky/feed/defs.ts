@@ -2,31 +2,36 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
-import * as AppBskyActorDefs from '../actor/defs'
-import * as AppBskyEmbedImages from '../embed/images'
-import * as AppBskyEmbedVideo from '../embed/video'
-import * as AppBskyEmbedExternal from '../embed/external'
-import * as AppBskyEmbedRecord from '../embed/record'
-import * as AppBskyEmbedRecordWithMedia from '../embed/recordWithMedia'
-import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
-import * as AppBskyRichtextFacet from '../richtext/facet'
-import * as AppBskyGraphDefs from '../graph/defs'
+import { validate as _validate } from '../../../../lexicons'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import type * as AppBskyActorDefs from '../actor/defs.js'
+import type * as AppBskyEmbedImages from '../embed/images.js'
+import type * as AppBskyEmbedVideo from '../embed/video.js'
+import type * as AppBskyEmbedExternal from '../embed/external.js'
+import type * as AppBskyEmbedRecord from '../embed/record.js'
+import type * as AppBskyEmbedRecordWithMedia from '../embed/recordWithMedia.js'
+import type * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs.js'
+import type * as AppBskyRichtextFacet from '../richtext/facet.js'
+import type * as AppBskyGraphDefs from '../graph/defs.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'app.bsky.feed.defs'
 
 export interface PostView {
+  $type?: 'app.bsky.feed.defs#postView'
   uri: string
   cid: string
   author: AppBskyActorDefs.ProfileViewBasic
-  record: {}
+  record: { [_ in string]: unknown }
   embed?:
-    | AppBskyEmbedImages.View
-    | AppBskyEmbedVideo.View
-    | AppBskyEmbedExternal.View
-    | AppBskyEmbedRecord.View
-    | AppBskyEmbedRecordWithMedia.View
-    | { $type: string; [k: string]: unknown }
+    | $Typed<AppBskyEmbedImages.View>
+    | $Typed<AppBskyEmbedVideo.View>
+    | $Typed<AppBskyEmbedExternal.View>
+    | $Typed<AppBskyEmbedRecord.View>
+    | $Typed<AppBskyEmbedRecordWithMedia.View>
+    | { $type: string }
   replyCount?: number
   repostCount?: number
   likeCount?: number
@@ -35,225 +40,207 @@ export interface PostView {
   viewer?: ViewerState
   labels?: ComAtprotoLabelDefs.Label[]
   threadgate?: ThreadgateView
-  [k: string]: unknown
 }
 
-export function isPostView(v: unknown): v is PostView {
-  return (
-    isObj(v) && hasProp(v, '$type') && v.$type === 'app.bsky.feed.defs#postView'
-  )
+const hashPostView = 'postView'
+
+export function isPostView<V>(v: V) {
+  return is$typed(v, id, hashPostView)
 }
 
-export function validatePostView(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.feed.defs#postView', v)
+export function validatePostView<V>(v: V) {
+  return validate<PostView & V>(v, id, hashPostView)
 }
 
 /** Metadata about the requesting account's relationship with the subject content. Only has meaningful content for authed requests. */
 export interface ViewerState {
+  $type?: 'app.bsky.feed.defs#viewerState'
   repost?: string
   like?: string
   threadMuted?: boolean
   replyDisabled?: boolean
   embeddingDisabled?: boolean
   pinned?: boolean
-  [k: string]: unknown
 }
 
-export function isViewerState(v: unknown): v is ViewerState {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.feed.defs#viewerState'
-  )
+const hashViewerState = 'viewerState'
+
+export function isViewerState<V>(v: V) {
+  return is$typed(v, id, hashViewerState)
 }
 
-export function validateViewerState(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.feed.defs#viewerState', v)
+export function validateViewerState<V>(v: V) {
+  return validate<ViewerState & V>(v, id, hashViewerState)
 }
 
 /** Metadata about this post within the context of the thread it is in. */
 export interface ThreadContext {
+  $type?: 'app.bsky.feed.defs#threadContext'
   rootAuthorLike?: string
-  [k: string]: unknown
 }
 
-export function isThreadContext(v: unknown): v is ThreadContext {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.feed.defs#threadContext'
-  )
+const hashThreadContext = 'threadContext'
+
+export function isThreadContext<V>(v: V) {
+  return is$typed(v, id, hashThreadContext)
 }
 
-export function validateThreadContext(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.feed.defs#threadContext', v)
+export function validateThreadContext<V>(v: V) {
+  return validate<ThreadContext & V>(v, id, hashThreadContext)
 }
 
 export interface FeedViewPost {
+  $type?: 'app.bsky.feed.defs#feedViewPost'
   post: PostView
   reply?: ReplyRef
-  reason?: ReasonRepost | ReasonPin | { $type: string; [k: string]: unknown }
+  reason?: $Typed<ReasonRepost> | $Typed<ReasonPin> | { $type: string }
   /** Context provided by feed generator that may be passed back alongside interactions. */
   feedContext?: string
-  [k: string]: unknown
 }
 
-export function isFeedViewPost(v: unknown): v is FeedViewPost {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.feed.defs#feedViewPost'
-  )
+const hashFeedViewPost = 'feedViewPost'
+
+export function isFeedViewPost<V>(v: V) {
+  return is$typed(v, id, hashFeedViewPost)
 }
 
-export function validateFeedViewPost(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.feed.defs#feedViewPost', v)
+export function validateFeedViewPost<V>(v: V) {
+  return validate<FeedViewPost & V>(v, id, hashFeedViewPost)
 }
 
 export interface ReplyRef {
+  $type?: 'app.bsky.feed.defs#replyRef'
   root:
-    | PostView
-    | NotFoundPost
-    | BlockedPost
-    | { $type: string; [k: string]: unknown }
+    | $Typed<PostView>
+    | $Typed<NotFoundPost>
+    | $Typed<BlockedPost>
+    | { $type: string }
   parent:
-    | PostView
-    | NotFoundPost
-    | BlockedPost
-    | { $type: string; [k: string]: unknown }
+    | $Typed<PostView>
+    | $Typed<NotFoundPost>
+    | $Typed<BlockedPost>
+    | { $type: string }
   grandparentAuthor?: AppBskyActorDefs.ProfileViewBasic
-  [k: string]: unknown
 }
 
-export function isReplyRef(v: unknown): v is ReplyRef {
-  return (
-    isObj(v) && hasProp(v, '$type') && v.$type === 'app.bsky.feed.defs#replyRef'
-  )
+const hashReplyRef = 'replyRef'
+
+export function isReplyRef<V>(v: V) {
+  return is$typed(v, id, hashReplyRef)
 }
 
-export function validateReplyRef(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.feed.defs#replyRef', v)
+export function validateReplyRef<V>(v: V) {
+  return validate<ReplyRef & V>(v, id, hashReplyRef)
 }
 
 export interface ReasonRepost {
+  $type?: 'app.bsky.feed.defs#reasonRepost'
   by: AppBskyActorDefs.ProfileViewBasic
   indexedAt: string
-  [k: string]: unknown
 }
 
-export function isReasonRepost(v: unknown): v is ReasonRepost {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.feed.defs#reasonRepost'
-  )
+const hashReasonRepost = 'reasonRepost'
+
+export function isReasonRepost<V>(v: V) {
+  return is$typed(v, id, hashReasonRepost)
 }
 
-export function validateReasonRepost(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.feed.defs#reasonRepost', v)
+export function validateReasonRepost<V>(v: V) {
+  return validate<ReasonRepost & V>(v, id, hashReasonRepost)
 }
 
 export interface ReasonPin {
-  [k: string]: unknown
+  $type?: 'app.bsky.feed.defs#reasonPin'
 }
 
-export function isReasonPin(v: unknown): v is ReasonPin {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.feed.defs#reasonPin'
-  )
+const hashReasonPin = 'reasonPin'
+
+export function isReasonPin<V>(v: V) {
+  return is$typed(v, id, hashReasonPin)
 }
 
-export function validateReasonPin(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.feed.defs#reasonPin', v)
+export function validateReasonPin<V>(v: V) {
+  return validate<ReasonPin & V>(v, id, hashReasonPin)
 }
 
 export interface ThreadViewPost {
+  $type?: 'app.bsky.feed.defs#threadViewPost'
   post: PostView
   parent?:
-    | ThreadViewPost
-    | NotFoundPost
-    | BlockedPost
-    | { $type: string; [k: string]: unknown }
+    | $Typed<ThreadViewPost>
+    | $Typed<NotFoundPost>
+    | $Typed<BlockedPost>
+    | { $type: string }
   replies?: (
-    | ThreadViewPost
-    | NotFoundPost
-    | BlockedPost
-    | { $type: string; [k: string]: unknown }
+    | $Typed<ThreadViewPost>
+    | $Typed<NotFoundPost>
+    | $Typed<BlockedPost>
+    | { $type: string }
   )[]
   threadContext?: ThreadContext
-  [k: string]: unknown
 }
 
-export function isThreadViewPost(v: unknown): v is ThreadViewPost {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.feed.defs#threadViewPost'
-  )
+const hashThreadViewPost = 'threadViewPost'
+
+export function isThreadViewPost<V>(v: V) {
+  return is$typed(v, id, hashThreadViewPost)
 }
 
-export function validateThreadViewPost(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.feed.defs#threadViewPost', v)
+export function validateThreadViewPost<V>(v: V) {
+  return validate<ThreadViewPost & V>(v, id, hashThreadViewPost)
 }
 
 export interface NotFoundPost {
+  $type?: 'app.bsky.feed.defs#notFoundPost'
   uri: string
   notFound: true
-  [k: string]: unknown
 }
 
-export function isNotFoundPost(v: unknown): v is NotFoundPost {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.feed.defs#notFoundPost'
-  )
+const hashNotFoundPost = 'notFoundPost'
+
+export function isNotFoundPost<V>(v: V) {
+  return is$typed(v, id, hashNotFoundPost)
 }
 
-export function validateNotFoundPost(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.feed.defs#notFoundPost', v)
+export function validateNotFoundPost<V>(v: V) {
+  return validate<NotFoundPost & V>(v, id, hashNotFoundPost)
 }
 
 export interface BlockedPost {
+  $type?: 'app.bsky.feed.defs#blockedPost'
   uri: string
   blocked: true
   author: BlockedAuthor
-  [k: string]: unknown
 }
 
-export function isBlockedPost(v: unknown): v is BlockedPost {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.feed.defs#blockedPost'
-  )
+const hashBlockedPost = 'blockedPost'
+
+export function isBlockedPost<V>(v: V) {
+  return is$typed(v, id, hashBlockedPost)
 }
 
-export function validateBlockedPost(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.feed.defs#blockedPost', v)
+export function validateBlockedPost<V>(v: V) {
+  return validate<BlockedPost & V>(v, id, hashBlockedPost)
 }
 
 export interface BlockedAuthor {
+  $type?: 'app.bsky.feed.defs#blockedAuthor'
   did: string
   viewer?: AppBskyActorDefs.ViewerState
-  [k: string]: unknown
 }
 
-export function isBlockedAuthor(v: unknown): v is BlockedAuthor {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.feed.defs#blockedAuthor'
-  )
+const hashBlockedAuthor = 'blockedAuthor'
+
+export function isBlockedAuthor<V>(v: V) {
+  return is$typed(v, id, hashBlockedAuthor)
 }
 
-export function validateBlockedAuthor(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.feed.defs#blockedAuthor', v)
+export function validateBlockedAuthor<V>(v: V) {
+  return validate<BlockedAuthor & V>(v, id, hashBlockedAuthor)
 }
 
 export interface GeneratorView {
+  $type?: 'app.bsky.feed.defs#generatorView'
   uri: string
   cid: string
   did: string
@@ -271,115 +258,103 @@ export interface GeneratorView {
     | 'app.bsky.feed.defs#contentModeVideo'
     | (string & {})
   indexedAt: string
-  [k: string]: unknown
 }
 
-export function isGeneratorView(v: unknown): v is GeneratorView {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.feed.defs#generatorView'
-  )
+const hashGeneratorView = 'generatorView'
+
+export function isGeneratorView<V>(v: V) {
+  return is$typed(v, id, hashGeneratorView)
 }
 
-export function validateGeneratorView(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.feed.defs#generatorView', v)
+export function validateGeneratorView<V>(v: V) {
+  return validate<GeneratorView & V>(v, id, hashGeneratorView)
 }
 
 export interface GeneratorViewerState {
+  $type?: 'app.bsky.feed.defs#generatorViewerState'
   like?: string
-  [k: string]: unknown
 }
 
-export function isGeneratorViewerState(v: unknown): v is GeneratorViewerState {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.feed.defs#generatorViewerState'
-  )
+const hashGeneratorViewerState = 'generatorViewerState'
+
+export function isGeneratorViewerState<V>(v: V) {
+  return is$typed(v, id, hashGeneratorViewerState)
 }
 
-export function validateGeneratorViewerState(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.feed.defs#generatorViewerState', v)
+export function validateGeneratorViewerState<V>(v: V) {
+  return validate<GeneratorViewerState & V>(v, id, hashGeneratorViewerState)
 }
 
 export interface SkeletonFeedPost {
+  $type?: 'app.bsky.feed.defs#skeletonFeedPost'
   post: string
   reason?:
-    | SkeletonReasonRepost
-    | SkeletonReasonPin
-    | { $type: string; [k: string]: unknown }
+    | $Typed<SkeletonReasonRepost>
+    | $Typed<SkeletonReasonPin>
+    | { $type: string }
   /** Context that will be passed through to client and may be passed to feed generator back alongside interactions. */
   feedContext?: string
-  [k: string]: unknown
 }
 
-export function isSkeletonFeedPost(v: unknown): v is SkeletonFeedPost {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.feed.defs#skeletonFeedPost'
-  )
+const hashSkeletonFeedPost = 'skeletonFeedPost'
+
+export function isSkeletonFeedPost<V>(v: V) {
+  return is$typed(v, id, hashSkeletonFeedPost)
 }
 
-export function validateSkeletonFeedPost(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.feed.defs#skeletonFeedPost', v)
+export function validateSkeletonFeedPost<V>(v: V) {
+  return validate<SkeletonFeedPost & V>(v, id, hashSkeletonFeedPost)
 }
 
 export interface SkeletonReasonRepost {
+  $type?: 'app.bsky.feed.defs#skeletonReasonRepost'
   repost: string
-  [k: string]: unknown
 }
 
-export function isSkeletonReasonRepost(v: unknown): v is SkeletonReasonRepost {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.feed.defs#skeletonReasonRepost'
-  )
+const hashSkeletonReasonRepost = 'skeletonReasonRepost'
+
+export function isSkeletonReasonRepost<V>(v: V) {
+  return is$typed(v, id, hashSkeletonReasonRepost)
 }
 
-export function validateSkeletonReasonRepost(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.feed.defs#skeletonReasonRepost', v)
+export function validateSkeletonReasonRepost<V>(v: V) {
+  return validate<SkeletonReasonRepost & V>(v, id, hashSkeletonReasonRepost)
 }
 
 export interface SkeletonReasonPin {
-  [k: string]: unknown
+  $type?: 'app.bsky.feed.defs#skeletonReasonPin'
 }
 
-export function isSkeletonReasonPin(v: unknown): v is SkeletonReasonPin {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.feed.defs#skeletonReasonPin'
-  )
+const hashSkeletonReasonPin = 'skeletonReasonPin'
+
+export function isSkeletonReasonPin<V>(v: V) {
+  return is$typed(v, id, hashSkeletonReasonPin)
 }
 
-export function validateSkeletonReasonPin(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.feed.defs#skeletonReasonPin', v)
+export function validateSkeletonReasonPin<V>(v: V) {
+  return validate<SkeletonReasonPin & V>(v, id, hashSkeletonReasonPin)
 }
 
 export interface ThreadgateView {
+  $type?: 'app.bsky.feed.defs#threadgateView'
   uri?: string
   cid?: string
-  record?: {}
+  record?: { [_ in string]: unknown }
   lists?: AppBskyGraphDefs.ListViewBasic[]
-  [k: string]: unknown
 }
 
-export function isThreadgateView(v: unknown): v is ThreadgateView {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.feed.defs#threadgateView'
-  )
+const hashThreadgateView = 'threadgateView'
+
+export function isThreadgateView<V>(v: V) {
+  return is$typed(v, id, hashThreadgateView)
 }
 
-export function validateThreadgateView(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.feed.defs#threadgateView', v)
+export function validateThreadgateView<V>(v: V) {
+  return validate<ThreadgateView & V>(v, id, hashThreadgateView)
 }
 
 export interface Interaction {
+  $type?: 'app.bsky.feed.defs#interaction'
   item?: string
   event?:
     | 'app.bsky.feed.defs#requestLess'
@@ -397,47 +372,43 @@ export interface Interaction {
     | (string & {})
   /** Context on a feed item that was originally supplied by the feed generator on getFeedSkeleton. */
   feedContext?: string
-  [k: string]: unknown
 }
 
-export function isInteraction(v: unknown): v is Interaction {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.feed.defs#interaction'
-  )
+const hashInteraction = 'interaction'
+
+export function isInteraction<V>(v: V) {
+  return is$typed(v, id, hashInteraction)
 }
 
-export function validateInteraction(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.feed.defs#interaction', v)
+export function validateInteraction<V>(v: V) {
+  return validate<Interaction & V>(v, id, hashInteraction)
 }
 
 /** Request that less content like the given feed item be shown in the feed */
-export const REQUESTLESS = 'app.bsky.feed.defs#requestLess'
+export const REQUESTLESS = `${id}#requestLess`
 /** Request that more content like the given feed item be shown in the feed */
-export const REQUESTMORE = 'app.bsky.feed.defs#requestMore'
+export const REQUESTMORE = `${id}#requestMore`
 /** User clicked through to the feed item */
-export const CLICKTHROUGHITEM = 'app.bsky.feed.defs#clickthroughItem'
+export const CLICKTHROUGHITEM = `${id}#clickthroughItem`
 /** User clicked through to the author of the feed item */
-export const CLICKTHROUGHAUTHOR = 'app.bsky.feed.defs#clickthroughAuthor'
+export const CLICKTHROUGHAUTHOR = `${id}#clickthroughAuthor`
 /** User clicked through to the reposter of the feed item */
-export const CLICKTHROUGHREPOSTER = 'app.bsky.feed.defs#clickthroughReposter'
+export const CLICKTHROUGHREPOSTER = `${id}#clickthroughReposter`
 /** User clicked through to the embedded content of the feed item */
-export const CLICKTHROUGHEMBED = 'app.bsky.feed.defs#clickthroughEmbed'
+export const CLICKTHROUGHEMBED = `${id}#clickthroughEmbed`
 /** Declares the feed generator returns any types of posts. */
-export const CONTENTMODEUNSPECIFIED =
-  'app.bsky.feed.defs#contentModeUnspecified'
+export const CONTENTMODEUNSPECIFIED = `${id}#contentModeUnspecified`
 /** Declares the feed generator returns posts containing app.bsky.embed.video embeds. */
-export const CONTENTMODEVIDEO = 'app.bsky.feed.defs#contentModeVideo'
+export const CONTENTMODEVIDEO = `${id}#contentModeVideo`
 /** Feed item was seen by user */
-export const INTERACTIONSEEN = 'app.bsky.feed.defs#interactionSeen'
+export const INTERACTIONSEEN = `${id}#interactionSeen`
 /** User liked the feed item */
-export const INTERACTIONLIKE = 'app.bsky.feed.defs#interactionLike'
+export const INTERACTIONLIKE = `${id}#interactionLike`
 /** User reposted the feed item */
-export const INTERACTIONREPOST = 'app.bsky.feed.defs#interactionRepost'
+export const INTERACTIONREPOST = `${id}#interactionRepost`
 /** User replied to the feed item */
-export const INTERACTIONREPLY = 'app.bsky.feed.defs#interactionReply'
+export const INTERACTIONREPLY = `${id}#interactionReply`
 /** User quoted the feed item */
-export const INTERACTIONQUOTE = 'app.bsky.feed.defs#interactionQuote'
+export const INTERACTIONQUOTE = `${id}#interactionQuote`
 /** User shared the feed item */
-export const INTERACTIONSHARE = 'app.bsky.feed.defs#interactionShare'
+export const INTERACTIONSHARE = `${id}#interactionShare`

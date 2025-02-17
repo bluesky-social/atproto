@@ -4,6 +4,7 @@ import { CID } from 'multiformats/cid'
 import {
   AppBskyFeedLike,
   AppBskyFeedPost,
+  AppBskyGraphBlock,
   AppBskyGraphFollow,
   AppBskyGraphList,
   AppBskyRichtextFacet,
@@ -264,7 +265,7 @@ export class SeedClient<
   async block(
     from: string,
     to: string,
-    overrides?: Partial<AppBskyGraphFollow.Record>,
+    overrides?: Partial<AppBskyGraphBlock.Record>,
   ) {
     const res = await this.agent.app.bsky.graph.block.create(
       { repo: from },

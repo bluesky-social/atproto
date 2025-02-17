@@ -472,7 +472,7 @@ function* responseHeaders(
 // Utils
 // -------------------
 
-export const PRIVILEGED_METHODS = new Set([
+export const PRIVILEGED_METHODS = new Set<string>([
   ids.ChatBskyActorDeleteAccount,
   ids.ChatBskyActorExportAccountData,
   ids.ChatBskyConvoDeleteMessageForSelf,
@@ -493,7 +493,7 @@ export const PRIVILEGED_METHODS = new Set([
 // These endpoints are related to account management and must be used directly,
 // not proxied or service-authed. Service auth may be utilized between PDS and
 // entryway for these methods.
-export const PROTECTED_METHODS = new Set([
+export const PROTECTED_METHODS = new Set<string>([
   ids.ComAtprotoAdminSendEmail,
   ids.ComAtprotoIdentityRequestPlcOperationSignature,
   ids.ComAtprotoIdentitySignPlcOperation,

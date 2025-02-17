@@ -2,6 +2,8 @@ import assert from 'node:assert'
 import { AtUri, AtpAgent } from '@atproto/api'
 import { RecordRef, SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
+import { isView as isRecordEmbedView } from '../../src/lexicon/types/app/bsky/embed/record'
+import { isPostView } from '../../src/lexicon/types/app/bsky/feed/defs'
 import { assertIsThreadViewPost, forSnapshot } from '../_util'
 
 describe('pds views with blocking', () => {
@@ -220,7 +222,8 @@ describe('pds views with blocking', () => {
       resCarol.data.feed.some(
         (post) =>
           post.post.author.did === dan ||
-          post.reply?.parent.author?.['did'] === dan ||
+          (isPostView(post.reply?.parent) &&
+            post.reply.parent.author.did === dan) ||
           post.reply?.grandparentAuthor?.did === dan,
       ),
     ).toBeFalsy()
@@ -235,7 +238,8 @@ describe('pds views with blocking', () => {
       resDan.data.feed.some(
         (post) =>
           post.post.author.did === carol ||
-          post.reply?.parent.author?.['did'] === carol ||
+          (isPostView(post.reply?.parent) &&
+            post.reply.parent.author.did === carol) ||
           post.reply?.grandparentAuthor?.did === carol,
       ),
     ).toBeFalsy()
@@ -658,7 +662,8 @@ describe('pds views with blocking', () => {
 
     assertIsThreadViewPost(embedThenBlock.thread)
 
-    expect(embedThenBlock.thread.post.embed?.record).toMatchObject({
+    assert(isRecordEmbedView(embedThenBlock.thread.post.embed))
+    expect(embedThenBlock.thread.post.embed.record).toMatchObject({
       $type: 'app.bsky.embed.record#viewBlocked',
     })
 
@@ -680,7 +685,8 @@ describe('pds views with blocking', () => {
 
     assertIsThreadViewPost(unblock.thread)
 
-    expect(unblock.thread.post?.embed?.record).toMatchObject({
+    assert(isRecordEmbedView(unblock.thread.post?.embed))
+    expect(unblock.thread.post?.embed.record).toMatchObject({
       $type: 'app.bsky.embed.record#viewRecord',
     })
 
@@ -709,8 +715,8 @@ describe('pds views with blocking', () => {
         },
       )
     assertIsThreadViewPost(blockThenEmbed.thread)
-
-    expect(blockThenEmbed.thread.post.embed?.record).toMatchObject({
+    assert(isRecordEmbedView(blockThenEmbed.thread.post.embed))
+    expect(blockThenEmbed.thread.post.embed.record).toMatchObject({
       $type: 'app.bsky.embed.record#viewBlocked',
     })
 
@@ -753,7 +759,8 @@ describe('pds views with blocking', () => {
       (item) => item.post.uri === embedBlockedUri,
     )
     assert(embedBlockedPost)
-    expect(embedBlockedPost.post.embed?.record).toMatchObject({
+    assert(isRecordEmbedView(embedBlockedPost.post.embed))
+    expect(embedBlockedPost.post.embed.record).toMatchObject({
       $type: 'app.bsky.embed.record#viewBlocked',
     })
   })

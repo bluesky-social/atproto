@@ -4,13 +4,21 @@ import { type Express } from 'express'
 import { CID } from 'multiformats/cid'
 import { lexToJson } from '@atproto/lexicon'
 import { AtUri } from '@atproto/syntax'
-import { isViewRecord } from '../src/lexicon/types/app/bsky/embed/record'
+import {
+  isView as isEmbedRecordView,
+  isViewRecord,
+} from '../src/lexicon/types/app/bsky/embed/record'
+import { isView as isEmbedRecordWithMediaView } from '../src/lexicon/types/app/bsky/embed/recordWithMedia'
 import {
   FeedViewPost,
   PostView,
+  ThreadViewPost,
   isPostView,
+  isReasonRepost,
   isThreadViewPost,
 } from '../src/lexicon/types/app/bsky/feed/defs'
+
+export const identity = <T>(x: T) => x
 
 // Swap out identifiers and dates with stable
 // values for the purpose of snapshot testing
@@ -86,10 +94,10 @@ export const forSnapshot = (obj: unknown) => {
 // Feed testing utils
 
 export const getOriginator = (item: FeedViewPost) => {
-  if (!item.reason) {
-    return item.post.author.did
+  if (isReasonRepost(item.reason)) {
+    return item.reason.by.did
   } else {
-    return (item.reason.by as { [did: string]: string }).did
+    return item.post.author.did
   }
 }
 
@@ -149,34 +157,35 @@ export const paginateAll = async <T extends { cursor?: string }>(
 }
 
 // @NOTE mutates
-export const stripViewer = <T extends { viewer?: Record<string, unknown> }>(
-  val: T,
-): T => {
+export const stripViewer = <T extends { viewer?: unknown }>(val: T): T => {
   delete val.viewer
   return val
 }
 
+const extractRecordEmbed = (embed: PostView['embed']) =>
+  isEmbedRecordView(embed)
+    ? isViewRecord(embed.record)
+      ? embed.record
+      : undefined
+    : isEmbedRecordWithMediaView(embed)
+      ? isViewRecord(embed.record.record)
+        ? embed.record.record
+        : undefined
+      : undefined
+
 // @NOTE mutates
-export const stripViewerFromPost = (postUnknown: unknown): PostView => {
-  if (postUnknown?.['$type'] && !isPostView(postUnknown)) {
+export const stripViewerFromPost = (postUnknown: object): PostView => {
+  if ('$type' in postUnknown && !isPostView(postUnknown)) {
     throw new Error('Expected post view')
   }
   const post = postUnknown as PostView
   post.author = stripViewer(post.author)
-  const recordEmbed =
-    post.embed && isViewRecord(post.embed.record)
-      ? post.embed.record // Record from record embed
-      : post.embed?.['record'] && isViewRecord(post.embed['record']['record'])
-        ? post.embed['record']['record'] // Record from record-with-media embed
-        : undefined
+
+  const recordEmbed = extractRecordEmbed(post.embed)
   if (recordEmbed) {
     recordEmbed.author = stripViewer(recordEmbed.author)
     recordEmbed.embeds?.forEach((deepEmbed) => {
-      const deepRecordEmbed = isViewRecord(deepEmbed.record)
-        ? deepEmbed.record // Record from record embed
-        : deepEmbed['record'] && isViewRecord(deepEmbed['record']['record'])
-          ? deepEmbed['record']['record'] // Record from record-with-media embed
-          : undefined
+      const deepRecordEmbed = extractRecordEmbed(deepEmbed)
       if (deepRecordEmbed) {
         deepRecordEmbed.author = stripViewer(deepRecordEmbed.author)
       }
@@ -186,15 +195,20 @@ export const stripViewerFromPost = (postUnknown: unknown): PostView => {
 }
 
 // @NOTE mutates
-export const stripViewerFromThread = <T>(thread: T): T => {
+export const stripViewerFromThread = <T extends ThreadViewPost>(
+  thread: T,
+): Omit<T, 'viewer'> => {
   if (!isThreadViewPost(thread)) return thread
+  // @ts-expect-error
   delete thread.viewer
   thread.post = stripViewerFromPost(thread.post)
   if (isThreadViewPost(thread.parent)) {
     thread.parent = stripViewerFromThread(thread.parent)
   }
   if (thread.replies) {
-    thread.replies = thread.replies.map(stripViewerFromThread)
+    thread.replies = thread.replies.map((r) =>
+      isThreadViewPost(r) ? stripViewerFromThread(r) : r,
+    )
   }
   return thread
 }

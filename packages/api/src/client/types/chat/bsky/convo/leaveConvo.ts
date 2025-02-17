@@ -3,21 +3,23 @@
  */
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'chat.bsky.convo.leaveConvo'
 
 export interface QueryParams {}
 
 export interface InputSchema {
   convoId: string
-  [k: string]: unknown
 }
 
 export interface OutputSchema {
   convoId: string
   rev: string
-  [k: string]: unknown
 }
 
 export interface CallOptions {

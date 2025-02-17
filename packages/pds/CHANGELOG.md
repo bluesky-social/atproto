@@ -1,5 +1,40 @@
 # @atproto/pds
 
+## 0.4.97
+
+### Patch Changes
+
+- Updated dependencies [[`bde6f71c4`](https://github.com/bluesky-social/atproto/commit/bde6f71c4cd33022d29da0ff23463a5838c4de24)]:
+  - @atproto/oauth-provider@0.3.1
+
+## 0.4.96
+
+### Patch Changes
+
+- [#3525](https://github.com/bluesky-social/atproto/pull/3525) [`6ea9c961a`](https://github.com/bluesky-social/atproto/commit/6ea9c961af964cd9b0d00b5073c695c5e0b3345a) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Dead code cleanup.
+
+- Updated dependencies [[`6ea9c961a`](https://github.com/bluesky-social/atproto/commit/6ea9c961af964cd9b0d00b5073c695c5e0b3345a), [`6ea9c961a`](https://github.com/bluesky-social/atproto/commit/6ea9c961af964cd9b0d00b5073c695c5e0b3345a), [`ba5bb6e66`](https://github.com/bluesky-social/atproto/commit/ba5bb6e667fb58bbefd332844957de575e102ca3), [`e69e89a03`](https://github.com/bluesky-social/atproto/commit/e69e89a037829bd4f6656d6aa42b77b97b4934e5)]:
+  - @atproto/oauth-provider@0.3.0
+  - @atproto/api@0.14.1
+
+## 0.4.95
+
+### Patch Changes
+
+- [#2999](https://github.com/bluesky-social/atproto/pull/2999) [`c53d943c8`](https://github.com/bluesky-social/atproto/commit/c53d943c8be5b8886254e020970a68c0f745b14c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update Lexicon derived code to better reflect data typings. In particular, Lexicon derived interfaces will now explicitly include the `$type` property that can be present in the data.
+
+- [#2999](https://github.com/bluesky-social/atproto/pull/2999) [`c53d943c8`](https://github.com/bluesky-social/atproto/commit/c53d943c8be5b8886254e020970a68c0f745b14c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Minor typing fixes
+
+- Updated dependencies [[`c53d943c8`](https://github.com/bluesky-social/atproto/commit/c53d943c8be5b8886254e020970a68c0f745b14c), [`c53d943c8`](https://github.com/bluesky-social/atproto/commit/c53d943c8be5b8886254e020970a68c0f745b14c), [`c53d943c8`](https://github.com/bluesky-social/atproto/commit/c53d943c8be5b8886254e020970a68c0f745b14c), [`c53d943c8`](https://github.com/bluesky-social/atproto/commit/c53d943c8be5b8886254e020970a68c0f745b14c), [`c53d943c8`](https://github.com/bluesky-social/atproto/commit/c53d943c8be5b8886254e020970a68c0f745b14c), [`c53d943c8`](https://github.com/bluesky-social/atproto/commit/c53d943c8be5b8886254e020970a68c0f745b14c)]:
+  - @atproto/api@0.14.0
+  - @atproto/syntax@0.3.3
+  - @atproto/lexicon@0.4.7
+  - @atproto/repo@0.6.5
+  - @atproto/xrpc@0.6.9
+  - @atproto/xrpc-server@0.7.11
+  - @atproto/aws@0.2.15
+  - @atproto-labs/xrpc-utils@0.0.7
+
 ## 0.4.94
 
 ### Patch Changes

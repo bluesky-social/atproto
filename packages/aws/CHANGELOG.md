@@ -1,5 +1,12 @@
 # @atproto/aws
 
+## 0.2.15
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/repo@0.6.5
+
 ## 0.2.14
 
 ### Patch Changes

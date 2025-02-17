@@ -20,6 +20,8 @@ import { InvalidGrantError } from '../errors/invalid-grant-error.js'
 import { InvalidParametersError } from '../errors/invalid-parameters-error.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { InvalidScopeError } from '../errors/invalid-scope-error.js'
+import { RequestMetadata } from '../lib/http/request.js'
+import { callAsync } from '../lib/util/function.js'
 import { OAuthHooks } from '../oauth-hooks.js'
 import { Signer } from '../signer/signer.js'
 import { Code, generateCode } from './code.js'
@@ -369,10 +371,11 @@ export class RequestManager {
   }
 
   async setAuthorized(
-    client: Client,
     uri: RequestUri,
-    deviceId: DeviceId,
+    client: Client,
     account: Account,
+    deviceId: DeviceId,
+    deviceMetadata: RequestMetadata,
   ): Promise<Code> {
     const id = decodeRequestUri(uri)
 
@@ -411,6 +414,14 @@ export class RequestManager {
         code,
         // Allow the client to exchange the code for a token within the next 60 seconds.
         expiresAt: new Date(Date.now() + AUTHORIZATION_INACTIVITY_TIMEOUT),
+      })
+
+      await callAsync(this.hooks.onAuthorized, {
+        client,
+        account,
+        parameters: data.parameters,
+        deviceId,
+        deviceMetadata,
       })
 
       return code

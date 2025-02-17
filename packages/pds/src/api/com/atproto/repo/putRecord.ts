@@ -147,7 +147,7 @@ export default function (server: Server, ctx: AppContext) {
 // WARNING: mutates object
 const updateProfileLegacyBlobRef = async (
   actorStore: ActorStoreTransactor,
-  record: ProfileRecord,
+  record: Partial<ProfileRecord>,
 ) => {
   if (record.avatar && !record.avatar.original['$type']) {
     const blob = await actorStore.repo.blob.getBlobMetadata(record.avatar.ref)

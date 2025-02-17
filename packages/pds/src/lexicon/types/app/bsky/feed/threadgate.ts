@@ -2,20 +2,25 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'app.bsky.feed.threadgate'
 
 export interface Record {
+  $type: 'app.bsky.feed.threadgate'
   /** Reference (AT-URI) to the post record. */
   post: string
   /** List of rules defining who can reply to this post. If value is an empty array, no one can reply. If value is undefined, anyone can reply. */
   allow?: (
-    | MentionRule
-    | FollowerRule
-    | FollowingRule
-    | ListRule
-    | { $type: string; [k: string]: unknown }
+    | $Typed<MentionRule>
+    | $Typed<FollowerRule>
+    | $Typed<FollowingRule>
+    | $Typed<ListRule>
+    | { $type: string }
   )[]
   createdAt: string
   /** List of hidden reply URIs. */
@@ -23,84 +28,73 @@ export interface Record {
   [k: string]: unknown
 }
 
-export function isRecord(v: unknown): v is Record {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    (v.$type === 'app.bsky.feed.threadgate#main' ||
-      v.$type === 'app.bsky.feed.threadgate')
-  )
+const hashRecord = 'main'
+
+export function isRecord<V>(v: V) {
+  return is$typed(v, id, hashRecord)
 }
 
-export function validateRecord(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.feed.threadgate#main', v)
+export function validateRecord<V>(v: V) {
+  return validate<Record & V>(v, id, hashRecord, true)
 }
 
 /** Allow replies from actors mentioned in your post. */
 export interface MentionRule {
-  [k: string]: unknown
+  $type?: 'app.bsky.feed.threadgate#mentionRule'
 }
 
-export function isMentionRule(v: unknown): v is MentionRule {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.feed.threadgate#mentionRule'
-  )
+const hashMentionRule = 'mentionRule'
+
+export function isMentionRule<V>(v: V) {
+  return is$typed(v, id, hashMentionRule)
 }
 
-export function validateMentionRule(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.feed.threadgate#mentionRule', v)
+export function validateMentionRule<V>(v: V) {
+  return validate<MentionRule & V>(v, id, hashMentionRule)
 }
 
 /** Allow replies from actors who follow you. */
 export interface FollowerRule {
-  [k: string]: unknown
+  $type?: 'app.bsky.feed.threadgate#followerRule'
 }
 
-export function isFollowerRule(v: unknown): v is FollowerRule {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.feed.threadgate#followerRule'
-  )
+const hashFollowerRule = 'followerRule'
+
+export function isFollowerRule<V>(v: V) {
+  return is$typed(v, id, hashFollowerRule)
 }
 
-export function validateFollowerRule(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.feed.threadgate#followerRule', v)
+export function validateFollowerRule<V>(v: V) {
+  return validate<FollowerRule & V>(v, id, hashFollowerRule)
 }
 
 /** Allow replies from actors you follow. */
 export interface FollowingRule {
-  [k: string]: unknown
+  $type?: 'app.bsky.feed.threadgate#followingRule'
 }
 
-export function isFollowingRule(v: unknown): v is FollowingRule {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.feed.threadgate#followingRule'
-  )
+const hashFollowingRule = 'followingRule'
+
+export function isFollowingRule<V>(v: V) {
+  return is$typed(v, id, hashFollowingRule)
 }
 
-export function validateFollowingRule(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.feed.threadgate#followingRule', v)
+export function validateFollowingRule<V>(v: V) {
+  return validate<FollowingRule & V>(v, id, hashFollowingRule)
 }
 
 /** Allow replies from actors on a list. */
 export interface ListRule {
+  $type?: 'app.bsky.feed.threadgate#listRule'
   list: string
-  [k: string]: unknown
 }
 
-export function isListRule(v: unknown): v is ListRule {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.feed.threadgate#listRule'
-  )
+const hashListRule = 'listRule'
+
+export function isListRule<V>(v: V) {
+  return is$typed(v, id, hashListRule)
 }
 
-export function validateListRule(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.feed.threadgate#listRule', v)
+export function validateListRule<V>(v: V) {
+  return validate<ListRule & V>(v, id, hashListRule)
 }

@@ -3,11 +3,15 @@
  */
 import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
-import * as AppBskyFeedDefs from './defs'
+import type * as AppBskyFeedDefs from './defs.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'app.bsky.feed.getFeedGenerators'
 
 export interface QueryParams {
   feeds: string[]
@@ -17,7 +21,6 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   feeds: AppBskyFeedDefs.GeneratorView[]
-  [k: string]: unknown
 }
 
 export type HandlerInput = undefined

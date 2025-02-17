@@ -1,3 +1,5 @@
+import assert from 'node:assert'
+import { ComAtprotoAdminDefs } from '@atproto/api'
 import {
   ModeratorClient,
   SeedClient,
@@ -96,14 +98,17 @@ describe('moderation-status-tags', () => {
 
       // Verify that the queue only contains 1 item with both en and ja tags which is alice's account
       expect(englishAndJapaneseQueue.subjectStatuses.length).toEqual(1)
-      expect(englishAndJapaneseQueue.subjectStatuses[0].subject.did).toEqual(
-        sc.dids.alice,
-      )
+      const { subject } = englishAndJapaneseQueue.subjectStatuses[0]
+      assert(ComAtprotoAdminDefs.isRepoRef(subject))
+      expect(subject.did).toEqual(sc.dids.alice)
 
       // Verify that when querying for either en or ja tags, both alice and bob are returned
       expect(englishOrJapaneseQueue.subjectStatuses.length).toEqual(2)
       const englishOrJapaneseDids = englishOrJapaneseQueue.subjectStatuses.map(
-        ({ subject }) => subject.did,
+        ({ subject }) => {
+          assert(ComAtprotoAdminDefs.isRepoRef(subject))
+          return subject.did
+        },
       )
       expect(englishOrJapaneseDids).toContain(sc.dids.alice)
       expect(englishOrJapaneseDids).toContain(sc.dids.bob)

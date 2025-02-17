@@ -2,9 +2,13 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.atproto.moderation.defs'
 
 export type ReasonType =
   | 'com.atproto.moderation.defs#reasonSpam'
@@ -17,16 +21,16 @@ export type ReasonType =
   | (string & {})
 
 /** Spam: frequent unwanted promotion, replies, mentions */
-export const REASONSPAM = 'com.atproto.moderation.defs#reasonSpam'
+export const REASONSPAM = `${id}#reasonSpam`
 /** Direct violation of server rules, laws, terms of service */
-export const REASONVIOLATION = 'com.atproto.moderation.defs#reasonViolation'
+export const REASONVIOLATION = `${id}#reasonViolation`
 /** Misleading identity, affiliation, or content */
-export const REASONMISLEADING = 'com.atproto.moderation.defs#reasonMisleading'
+export const REASONMISLEADING = `${id}#reasonMisleading`
 /** Unwanted or mislabeled sexual content */
-export const REASONSEXUAL = 'com.atproto.moderation.defs#reasonSexual'
+export const REASONSEXUAL = `${id}#reasonSexual`
 /** Rude, harassing, explicit, or otherwise unwelcoming behavior */
-export const REASONRUDE = 'com.atproto.moderation.defs#reasonRude'
+export const REASONRUDE = `${id}#reasonRude`
 /** Other: reports not falling under another report category */
-export const REASONOTHER = 'com.atproto.moderation.defs#reasonOther'
+export const REASONOTHER = `${id}#reasonOther`
 /** Appeal: appeal a previously taken moderation action */
-export const REASONAPPEAL = 'com.atproto.moderation.defs#reasonAppeal'
+export const REASONAPPEAL = `${id}#reasonAppeal`

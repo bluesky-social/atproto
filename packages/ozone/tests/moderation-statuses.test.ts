@@ -9,10 +9,12 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
+import { isRepoRef } from '../src/lexicon/types/com/atproto/admin/defs'
 import {
   REASONMISLEADING,
   REASONSPAM,
 } from '../src/lexicon/types/com/atproto/moderation/defs'
+import { isMain as isStrongRef } from '../src/lexicon/types/com/atproto/repo/strongRef'
 import {
   REVIEWNONE,
   REVIEWOPEN,
@@ -220,10 +222,14 @@ describe('moderation-statuses', () => {
       ])
 
       expect(onlyStarterPackStatuses.subjectStatuses.length).toEqual(1)
+      assert(isStrongRef(onlyStarterPackStatuses.subjectStatuses[0].subject))
       expect(onlyStarterPackStatuses.subjectStatuses[0].subject.uri).toContain(
         'app.bsky.graph.starterpack',
       )
       expect(onlyAlicesStarterPackStatuses.subjectStatuses.length).toEqual(1)
+      assert(
+        isStrongRef(onlyAlicesStarterPackStatuses.subjectStatuses[0].subject),
+      )
       expect(
         onlyAlicesStarterPackStatuses.subjectStatuses[0].subject.uri,
       ).toEqual(sp.uriStr)
@@ -249,22 +255,26 @@ describe('moderation-statuses', () => {
         }),
       ])
 
-      // only account statuses are returned, no event has a uri
-      expect(
-        onlyAccountStatuses.subjectStatuses.every((e) => !e.subject.uri),
-      ).toBeTruthy()
-
-      // only record statuses are returned, all events have a uri
-      expect(
-        onlyRecordStatuses.subjectStatuses.every((e) => e.subject.uri),
-      ).toBeTruthy()
-
-      // only bob's account statuses are returned, no events have a URI even though the subjectType is record
-      expect(
-        onlyStatusesOnBobsAccount.subjectStatuses.every(
-          (e) => !e.subject.uri && e.subject.did === sc.dids.bob,
+      assert(
+        onlyAccountStatuses.subjectStatuses.every(
+          (e) => !isStrongRef(e.subject),
         ),
-      ).toBeTruthy()
+        'only account statuses are returned, no event has a uri',
+      )
+
+      assert(
+        onlyRecordStatuses.subjectStatuses.every(
+          (e) => isStrongRef(e.subject) && e.subject.uri,
+        ),
+        'only record statuses are returned, all events have a uri',
+      )
+
+      assert(
+        onlyStatusesOnBobsAccount.subjectStatuses.every(
+          (e) => isRepoRef(e.subject) && e.subject.did === sc.dids.bob,
+        ),
+        "only bob's account statuses are returned, no events have a URI even though the subjectType is record",
+      )
     })
   })
 

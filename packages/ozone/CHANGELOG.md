@@ -1,5 +1,27 @@
 # @atproto/ozone
 
+## 0.1.79
+
+### Patch Changes
+
+- [#3520](https://github.com/bluesky-social/atproto/pull/3520) [`20e57bacf`](https://github.com/bluesky-social/atproto/commit/20e57bacf9bb2ae8a118eadbfc291f3213b8dc2f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve indexing for "chat.bsky.moderation.getMessageContext"
+
+- Updated dependencies [[`ba5bb6e66`](https://github.com/bluesky-social/atproto/commit/ba5bb6e667fb58bbefd332844957de575e102ca3)]:
+  - @atproto/api@0.14.1
+
+## 0.1.78
+
+### Patch Changes
+
+- [#2999](https://github.com/bluesky-social/atproto/pull/2999) [`c53d943c8`](https://github.com/bluesky-social/atproto/commit/c53d943c8be5b8886254e020970a68c0f745b14c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update Lexicon derived code to better reflect data typings. In particular, Lexicon derived interfaces will now explicitly include the `$type` property that can be present in the data.
+
+- Updated dependencies [[`c53d943c8`](https://github.com/bluesky-social/atproto/commit/c53d943c8be5b8886254e020970a68c0f745b14c), [`c53d943c8`](https://github.com/bluesky-social/atproto/commit/c53d943c8be5b8886254e020970a68c0f745b14c), [`c53d943c8`](https://github.com/bluesky-social/atproto/commit/c53d943c8be5b8886254e020970a68c0f745b14c), [`c53d943c8`](https://github.com/bluesky-social/atproto/commit/c53d943c8be5b8886254e020970a68c0f745b14c), [`c53d943c8`](https://github.com/bluesky-social/atproto/commit/c53d943c8be5b8886254e020970a68c0f745b14c), [`c53d943c8`](https://github.com/bluesky-social/atproto/commit/c53d943c8be5b8886254e020970a68c0f745b14c)]:
+  - @atproto/api@0.14.0
+  - @atproto/syntax@0.3.3
+  - @atproto/lexicon@0.4.7
+  - @atproto/xrpc@0.6.9
+  - @atproto/xrpc-server@0.7.11
+
 ## 0.1.77
 
 ### Patch Changes

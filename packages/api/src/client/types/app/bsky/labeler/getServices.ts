@@ -3,10 +3,14 @@
  */
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
-import * as AppBskyLabelerDefs from './defs'
+import { validate as _validate } from '../../../../lexicons'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import type * as AppBskyLabelerDefs from './defs.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'app.bsky.labeler.getServices'
 
 export interface QueryParams {
   dids: string[]
@@ -17,11 +21,10 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   views: (
-    | AppBskyLabelerDefs.LabelerView
-    | AppBskyLabelerDefs.LabelerViewDetailed
-    | { $type: string; [k: string]: unknown }
+    | $Typed<AppBskyLabelerDefs.LabelerView>
+    | $Typed<AppBskyLabelerDefs.LabelerViewDetailed>
+    | { $type: string }
   )[]
-  [k: string]: unknown
 }
 
 export interface CallOptions {
