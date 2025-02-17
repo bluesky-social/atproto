@@ -12219,6 +12219,64 @@ export const schemaDict = {
           },
         },
       },
+      reporterStats: {
+        type: 'object',
+        required: [
+          'did',
+          'accountReportCount',
+          'recordReportCount',
+          'reportedAccountCount',
+          'reportedRecordCount',
+          'takendownAccountCount',
+          'takendownRecordCount',
+          'labeledAccountCount',
+          'labeledRecordCount',
+        ],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          accountReportCount: {
+            type: 'integer',
+            description:
+              'The total number of reports made by the user on accounts.',
+          },
+          recordReportCount: {
+            type: 'integer',
+            description:
+              'The total number of reports made by the user on records.',
+          },
+          reportedAccountCount: {
+            type: 'integer',
+            description: 'The total number of accounts reported by the user.',
+          },
+          reportedRecordCount: {
+            type: 'integer',
+            description: 'The total number of records reported by the user.',
+          },
+          takendownAccountCount: {
+            type: 'integer',
+            description:
+              "The total number of accounts taken down as a result of the user's reports.",
+          },
+          takendownRecordCount: {
+            type: 'integer',
+            description:
+              "The total number of records taken down as a result of the user's reports.",
+          },
+          labeledAccountCount: {
+            type: 'integer',
+            description:
+              "The total number of accounts labeled as a result of the user's reports.",
+          },
+          labeledRecordCount: {
+            type: 'integer',
+            description:
+              "The total number of records labeled as a result of the user's reports.",
+          },
+        },
+      },
     },
   },
   ToolsOzoneModerationEmitEvent: {
@@ -12427,6 +12485,46 @@ export const schemaDict = {
             name: 'RepoNotFound',
           },
         ],
+      },
+    },
+  },
+  ToolsOzoneModerationGetReporterStats: {
+    lexicon: 1,
+    id: 'tools.ozone.moderation.getReporterStats',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get reporter stats for a list of users.',
+        parameters: {
+          type: 'params',
+          required: ['dids'],
+          properties: {
+            dids: {
+              type: 'array',
+              maxLength: 100,
+              items: {
+                type: 'string',
+                format: 'did',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['stats'],
+            properties: {
+              stats: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.moderation.defs#reporterStats',
+                },
+              },
+            },
+          },
+        },
       },
     },
   },
@@ -14133,6 +14231,8 @@ export const ids = {
   ToolsOzoneModerationGetRecord: 'tools.ozone.moderation.getRecord',
   ToolsOzoneModerationGetRecords: 'tools.ozone.moderation.getRecords',
   ToolsOzoneModerationGetRepo: 'tools.ozone.moderation.getRepo',
+  ToolsOzoneModerationGetReporterStats:
+    'tools.ozone.moderation.getReporterStats',
   ToolsOzoneModerationGetRepos: 'tools.ozone.moderation.getRepos',
   ToolsOzoneModerationQueryEvents: 'tools.ozone.moderation.queryEvents',
   ToolsOzoneModerationQueryStatuses: 'tools.ozone.moderation.queryStatuses',

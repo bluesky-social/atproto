@@ -45,6 +45,19 @@ export class ModeratorClient {
     return result.data
   }
 
+  async getReporterStats(dids: string[]) {
+    const result = await this.agent.tools.ozone.moderation.getReporterStats(
+      { dids },
+      {
+        headers: await this.ozone.modHeaders(
+          'tools.ozone.moderation.getReporterStats',
+          'admin',
+        ),
+      },
+    )
+    return result.data
+  }
+
   async queryEvents(input: QueryEventsParams, role?: ModLevel) {
     const result = await this.agent.tools.ozone.moderation.queryEvents(input, {
       headers: await this.ozone.modHeaders(

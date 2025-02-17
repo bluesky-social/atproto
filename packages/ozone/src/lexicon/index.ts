@@ -173,6 +173,7 @@ import * as ToolsOzoneModerationGetEvent from './types/tools/ozone/moderation/ge
 import * as ToolsOzoneModerationGetRecord from './types/tools/ozone/moderation/getRecord.js'
 import * as ToolsOzoneModerationGetRecords from './types/tools/ozone/moderation/getRecords.js'
 import * as ToolsOzoneModerationGetRepo from './types/tools/ozone/moderation/getRepo.js'
+import * as ToolsOzoneModerationGetReporterStats from './types/tools/ozone/moderation/getReporterStats.js'
 import * as ToolsOzoneModerationGetRepos from './types/tools/ozone/moderation/getRepos.js'
 import * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents.js'
 import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses.js'
@@ -2373,6 +2374,17 @@ export class ToolsOzoneModerationNS {
     >,
   ) {
     const nsid = 'tools.ozone.moderation.getRepo' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getReporterStats<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneModerationGetReporterStats.Handler<ExtractAuth<AV>>,
+      ToolsOzoneModerationGetReporterStats.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.moderation.getReporterStats' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

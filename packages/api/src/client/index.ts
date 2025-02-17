@@ -208,6 +208,7 @@ import * as ToolsOzoneModerationGetEvent from './types/tools/ozone/moderation/ge
 import * as ToolsOzoneModerationGetRecord from './types/tools/ozone/moderation/getRecord.js'
 import * as ToolsOzoneModerationGetRecords from './types/tools/ozone/moderation/getRecords.js'
 import * as ToolsOzoneModerationGetRepo from './types/tools/ozone/moderation/getRepo.js'
+import * as ToolsOzoneModerationGetReporterStats from './types/tools/ozone/moderation/getReporterStats.js'
 import * as ToolsOzoneModerationGetRepos from './types/tools/ozone/moderation/getRepos.js'
 import * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents.js'
 import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses.js'
@@ -437,6 +438,7 @@ export * as ToolsOzoneModerationGetEvent from './types/tools/ozone/moderation/ge
 export * as ToolsOzoneModerationGetRecord from './types/tools/ozone/moderation/getRecord.js'
 export * as ToolsOzoneModerationGetRecords from './types/tools/ozone/moderation/getRecords.js'
 export * as ToolsOzoneModerationGetRepo from './types/tools/ozone/moderation/getRepo.js'
+export * as ToolsOzoneModerationGetReporterStats from './types/tools/ozone/moderation/getReporterStats.js'
 export * as ToolsOzoneModerationGetRepos from './types/tools/ozone/moderation/getRepos.js'
 export * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents.js'
 export * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses.js'
@@ -3720,6 +3722,18 @@ export class ToolsOzoneModerationNS {
       .catch((e) => {
         throw ToolsOzoneModerationGetRepo.toKnownErr(e)
       })
+  }
+
+  getReporterStats(
+    params?: ToolsOzoneModerationGetReporterStats.QueryParams,
+    opts?: ToolsOzoneModerationGetReporterStats.CallOptions,
+  ): Promise<ToolsOzoneModerationGetReporterStats.Response> {
+    return this._client.call(
+      'tools.ozone.moderation.getReporterStats',
+      params,
+      undefined,
+      opts,
+    )
   }
 
   getRepos(

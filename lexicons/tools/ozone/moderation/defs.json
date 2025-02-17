@@ -812,6 +812,58 @@
           "format": "datetime"
         }
       }
+    },
+    "reporterStats": {
+      "type": "object",
+      "required": [
+        "did",
+        "accountReportCount",
+        "recordReportCount",
+        "reportedAccountCount",
+        "reportedRecordCount",
+        "takendownAccountCount",
+        "takendownRecordCount",
+        "labeledAccountCount",
+        "labeledRecordCount"
+      ],
+      "properties": {
+        "did": {
+          "type": "string",
+          "format": "did"
+        },
+        "accountReportCount": {
+          "type": "integer",
+          "description": "The total number of reports made by the user on accounts."
+        },
+        "recordReportCount": {
+          "type": "integer",
+          "description": "The total number of reports made by the user on records."
+        },
+        "reportedAccountCount": {
+          "type": "integer",
+          "description": "The total number of accounts reported by the user."
+        },
+        "reportedRecordCount": {
+          "type": "integer",
+          "description": "The total number of records reported by the user."
+        },
+        "takendownAccountCount": {
+          "type": "integer",
+          "description": "The total number of accounts taken down as a result of the user's reports."
+        },
+        "takendownRecordCount": {
+          "type": "integer",
+          "description": "The total number of records taken down as a result of the user's reports."
+        },
+        "labeledAccountCount": {
+          "type": "integer",
+          "description": "The total number of accounts labeled as a result of the user's reports."
+        },
+        "labeledRecordCount": {
+          "type": "integer",
+          "description": "The total number of records labeled as a result of the user's reports."
+        }
+      }
     }
   }
 }

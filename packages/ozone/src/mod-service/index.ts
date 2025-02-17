@@ -58,6 +58,8 @@ import {
   ModerationEventRow,
   ModerationSubjectStatusRow,
   ModerationSubjectStatusRowWithHandle,
+  ReporterStats,
+  ReporterStatsResult,
   ReversibleModerationEvent,
 } from './types'
 import { formatLabel, formatLabelRow, signLabel } from './util'
@@ -1271,6 +1273,130 @@ export class ModerationService {
     if (!delivery.sent) {
       throw new InvalidRequestError('Email was accepted but not sent')
     }
+  }
+
+  buildModerationQuery(
+    subjectType: 'account' | 'record',
+    createdByDids: string[],
+    isActionQuery: boolean,
+  ): Promise<(Partial<ReporterStatsResult> & { did: string })[]> {
+    const isAccount = subjectType === 'account'
+    const actionTypes = [
+      'tools.ozone.moderation.defs#modEventTakedown',
+      'tools.ozone.moderation.defs#modEventLabel',
+    ] as const
+
+    const query = this.db.db
+      .selectFrom('moderation_event as reports')
+      .where(
+        'reports.action',
+        '=',
+        'tools.ozone.moderation.defs#modEventReport',
+      )
+      .where('reports.subjectUri', isAccount ? 'is' : 'is not', null)
+      .where('reports.createdBy', 'in', createdByDids)
+      .select(['reports.createdBy as did'])
+
+    if (isActionQuery) {
+      return query
+        .leftJoin('moderation_event as actions', (join) =>
+          join
+            .onRef('actions.subjectDid', '=', 'reports.subjectDid')
+            .on('actions.subjectUri', isAccount ? 'is' : 'is not', null)
+            .onRef('actions.createdAt', '>', 'reports.createdAt')
+            .on('actions.action', 'in', actionTypes),
+        )
+        .select([
+          () =>
+            sql<number>`COUNT(DISTINCT actions."subjectDid") FILTER (
+              WHERE actions."action" = 'tools.ozone.moderation.defs#modEventTakedown'
+            )`.as(`takendown${isAccount ? 'Account' : 'Record'}Count`),
+
+          () =>
+            sql<number>`COUNT(DISTINCT actions."subjectDid") FILTER (
+              WHERE actions."action" = 'tools.ozone.moderation.defs#modEventLabel'
+            )`.as(`labeled${isAccount ? 'Account' : 'Record'}Count`),
+        ])
+        .groupBy('reports.createdBy')
+        .execute()
+    }
+
+    return query
+      .select([
+        (eb) =>
+          eb.fn.count<number>('reports.id').as(`${subjectType}ReportCount`),
+        (eb) =>
+          eb.fn
+            .count<number>(
+              isAccount ? 'reports.subjectDid' : 'reports.subjectUri',
+            )
+            .distinct()
+            .as(`reported${isAccount ? 'Account' : 'Record'}Count`),
+      ])
+      .groupBy('reports.createdBy')
+      .execute()
+  }
+
+  async getReporterStats(dids: string[]) {
+    const [accountReports, recordReports, accountActions, recordActions] =
+      await Promise.all([
+        this.buildModerationQuery('account', dids, false),
+        this.buildModerationQuery('record', dids, false),
+        this.buildModerationQuery('account', dids, true),
+        this.buildModerationQuery('record', dids, true),
+      ])
+
+    // Create a map to hold the aggregated stats for each `did`
+    const statsMap = new Map<string, ReporterStats>()
+
+    // Helper function to ensure a `did` entry exists in the map
+    const ensureDidEntry = (did: string) => {
+      if (!statsMap.has(did)) {
+        statsMap.set(did, {
+          did,
+          accountReportCount: 0,
+          recordReportCount: 0,
+          reportedAccountCount: 0,
+          reportedRecordCount: 0,
+          takendownAccountCount: 0,
+          takendownRecordCount: 0,
+          labeledAccountCount: 0,
+          labeledRecordCount: 0,
+        })
+      }
+      return statsMap.get(did)!
+    }
+
+    // Merge accountReports
+    for (const report of accountReports) {
+      const entry = ensureDidEntry(report.did)
+      entry.accountReportCount = report.accountReportCount ?? 0
+      entry.reportedAccountCount = report.reportedAccountCount ?? 0
+    }
+
+    // Merge recordReports
+    for (const report of recordReports) {
+      const entry = ensureDidEntry(report.did)
+      entry.recordReportCount = report.recordReportCount ?? 0
+      entry.reportedRecordCount = report.reportedRecordCount ?? 0
+    }
+
+    // Merge accountActions
+    for (const action of accountActions) {
+      const entry = ensureDidEntry(action.did)
+      entry.takendownAccountCount = action.takendownAccountCount ?? 0
+      entry.labeledAccountCount = action.labeledAccountCount ?? 0
+    }
+
+    // Merge recordActions
+    for (const action of recordActions) {
+      const entry = ensureDidEntry(action.did)
+      entry.takendownRecordCount = action.takendownRecordCount ?? 0
+      entry.labeledRecordCount = action.labeledRecordCount ?? 0
+    }
+
+    // Convert map values to an array and return
+    return Array.from(statsMap.values())
   }
 }
 

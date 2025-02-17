@@ -65,3 +65,26 @@ type RecordHostingView = {
 export type ModerationSubjectHostingView =
   | AccountHostingView
   | RecordHostingView
+
+export type ReporterStats = {
+  did: string
+  accountReportCount: number
+  recordReportCount: number
+  reportedAccountCount: number
+  reportedRecordCount: number
+  takendownAccountCount: number
+  takendownRecordCount: number
+  labeledAccountCount: number
+  labeledRecordCount: number
+}
+
+export type ReporterStatsResult = {
+  accountReportCount?: number
+  recordReportCount?: number
+  reportedAccountCount?: number
+  reportedRecordCount?: number
+  takendownAccountCount?: number
+  takendownRecordCount?: number
+  labeledAccountCount?: number
+  labeledRecordCount?: number
+}
