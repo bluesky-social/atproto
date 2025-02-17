@@ -1,8 +1,8 @@
-import fixtures from './commit-proof-fixtures.json'
 import { CID } from 'multiformats'
+import { BlockMap } from '../src'
 import { MST } from '../src/mst'
 import { MemoryBlockstore } from '../src/storage'
-import { BlockMap } from '../src'
+import fixtures from './commit-proof-fixtures.json'
 
 describe('commit proofs', () => {
   for (const fixture of fixtures) {

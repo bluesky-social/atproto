@@ -1,8 +1,8 @@
 import { CID } from 'multiformats'
+import { BlockMap } from '../src'
 import { MST } from '../src/mst'
 import { MemoryBlockstore } from '../src/storage'
 import * as k from './_keys'
-import { BlockMap } from '../src'
 
 describe('covering proofs', () => {
   /**
