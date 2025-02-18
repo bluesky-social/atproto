@@ -188,7 +188,7 @@
         "status": {
           "type": "string",
           "description": "If active=false, this optional field indicates a reason for why the account is not active.",
-          "knownValues": ["takendown", "suspended", "deleted", "deactivated"]
+          "knownValues": ["takendown", "suspended", "deleted", "deactivated", "broken", "throttled"]
         }
       }
     },
