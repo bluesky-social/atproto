@@ -120,14 +120,7 @@
     "sync": {
       "type": "object",
       "description": "Updates the repo to a new state, without necessarily including that state on the firehose. Used to recover from broken commit streams, data loss incidents, or in situations where upstream host does not know recent state of the repository.",
-      "required": [
-        "seq",
-        "did",
-        "blocks",
-        "rev",
-        "data",
-        "time"
-      ],
+      "required": ["seq", "did", "blocks", "rev", "data", "time"],
       "properties": {
         "seq": {
           "type": "integer",
@@ -188,7 +181,14 @@
         "status": {
           "type": "string",
           "description": "If active=false, this optional field indicates a reason for why the account is not active.",
-          "knownValues": ["takendown", "suspended", "deleted", "deactivated", "broken", "throttled"]
+          "knownValues": [
+            "takendown",
+            "suspended",
+            "deleted",
+            "deactivated",
+            "broken",
+            "throttled"
+          ]
         }
       }
     },
