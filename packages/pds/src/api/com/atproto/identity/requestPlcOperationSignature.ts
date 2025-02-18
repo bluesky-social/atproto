@@ -4,20 +4,23 @@ import { AuthScope } from '../../../../auth-verifier'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
+import { forwardIp } from '../server/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.identity.requestPlcOperationSignature({
     auth: ctx.authVerifier.accessFull({ additional: [AuthScope.Takendown] }),
-    handler: async ({ auth }) => {
+    handler: async ({ auth, req }) => {
       if (ctx.entrywayAgent) {
         assert(ctx.cfg.entryway)
         await ctx.entrywayAgent.com.atproto.identity.requestPlcOperationSignature(
           undefined,
-          await ctx.serviceAuthHeaders(
-            auth.credentials.did,
-            ctx.cfg.entryway.did,
-            ids.ComAtprotoIdentityRequestPlcOperationSignature,
-          ),
+          await ctx
+            .serviceAuthHeaders(
+              auth.credentials.did,
+              ctx.cfg.entryway.did,
+              ids.ComAtprotoIdentityRequestPlcOperationSignature,
+            )
+            .then((x) => forwardIp(req, x)),
         )
         return
       }

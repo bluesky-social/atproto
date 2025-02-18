@@ -5,7 +5,7 @@ import { AuthScope } from '../../../../auth-verifier'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { authPassthru, resultPassthru } from '../../../proxy'
-import { didDocForSession } from './util'
+import { didDocForSession, forwardIp } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.getSession({
@@ -17,7 +17,7 @@ export default function (server: Server, ctx: AppContext) {
         return resultPassthru(
           await ctx.entrywayAgent.com.atproto.server.getSession(
             undefined,
-            authPassthru(req),
+            forwardIp(req, authPassthru(req)),
           ),
         )
       }

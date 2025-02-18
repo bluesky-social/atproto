@@ -1,5 +1,6 @@
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
+import { forwardIp } from '../server/util'
 import { authPassthru } from './util'
 
 export default function (server: Server, ctx: AppContext) {
@@ -9,7 +10,7 @@ export default function (server: Server, ctx: AppContext) {
       if (ctx.entrywayAgent) {
         await ctx.entrywayAgent.com.atproto.admin.updateAccountPassword(
           input.body,
-          authPassthru(req, true),
+          forwardIp(req, authPassthru(req, true)),
         )
         return
       }

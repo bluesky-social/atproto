@@ -4,6 +4,7 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
+import { forwardIp } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.requestEmailConfirmation({
@@ -20,7 +21,7 @@ export default function (server: Server, ctx: AppContext) {
       },
     ],
     auth: ctx.authVerifier.accessStandard({ checkTakedown: true }),
-    handler: async ({ auth }) => {
+    handler: async ({ auth, req }) => {
       const did = auth.credentials.did
       const account = await ctx.accountManager.getAccount(did, {
         includeDeactivated: true,
@@ -34,11 +35,13 @@ export default function (server: Server, ctx: AppContext) {
         assert(ctx.cfg.entryway)
         await ctx.entrywayAgent.com.atproto.server.requestEmailConfirmation(
           undefined,
-          await ctx.serviceAuthHeaders(
-            auth.credentials.did,
-            ctx.cfg.entryway.did,
-            ids.ComAtprotoServerRequestEmailConfirmation,
-          ),
+          await ctx
+            .serviceAuthHeaders(
+              auth.credentials.did,
+              ctx.cfg.entryway.did,
+              ids.ComAtprotoServerRequestEmailConfirmation,
+            )
+            .then((x) => forwardIp(req, x)),
         )
         return
       }

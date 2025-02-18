@@ -5,22 +5,24 @@ import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
 import { resultPassthru } from '../../../proxy'
-import { genInvCodes } from './util'
+import { forwardIp, genInvCodes } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.getAccountInviteCodes({
     auth: ctx.authVerifier.accessFull({ checkTakedown: true }),
-    handler: async ({ params, auth }) => {
+    handler: async ({ params, auth, req }) => {
       if (ctx.entrywayAgent) {
         assert(ctx.cfg.entryway)
         return resultPassthru(
           await ctx.entrywayAgent.com.atproto.server.getAccountInviteCodes(
             params,
-            await ctx.serviceAuthHeaders(
-              auth.credentials.did,
-              ctx.cfg.entryway.did,
-              ids.ComAtprotoServerGetAccountInviteCodes,
-            ),
+            await ctx
+              .serviceAuthHeaders(
+                auth.credentials.did,
+                ctx.cfg.entryway.did,
+                ids.ComAtprotoServerGetAccountInviteCodes,
+              )
+              .then((x) => forwardIp(req, x)),
           ),
         )
       }

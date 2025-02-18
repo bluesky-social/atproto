@@ -6,21 +6,24 @@ import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
 import { resultPassthru } from '../../../proxy'
+import { forwardIp } from '../server/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.identity.signPlcOperation({
     auth: ctx.authVerifier.accessFull(),
-    handler: async ({ auth, input }) => {
+    handler: async ({ auth, input, req }) => {
       if (ctx.entrywayAgent) {
         assert(ctx.cfg.entryway)
         return resultPassthru(
           await ctx.entrywayAgent.com.atproto.identity.signPlcOperation(
             input.body,
-            await ctx.serviceAuthHeaders(
-              auth.credentials.did,
-              ctx.cfg.entryway.did,
-              ids.ComAtprotoIdentitySignPlcOperation,
-            ),
+            await ctx
+              .serviceAuthHeaders(
+                auth.credentials.did,
+                ctx.cfg.entryway.did,
+                ids.ComAtprotoIdentitySignPlcOperation,
+              )
+              .then((x) => forwardIp(req, x)),
           ),
         )
       }

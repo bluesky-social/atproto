@@ -5,6 +5,7 @@ import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
 import { resultPassthru } from '../../../proxy'
+import { forwardIp } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.requestEmailUpdate({
@@ -21,7 +22,7 @@ export default function (server: Server, ctx: AppContext) {
       },
     ],
     auth: ctx.authVerifier.accessStandard({ checkTakedown: true }),
-    handler: async ({ auth }) => {
+    handler: async ({ auth, req }) => {
       const did = auth.credentials.did
       const account = await ctx.accountManager.getAccount(did, {
         includeDeactivated: true,
@@ -36,11 +37,13 @@ export default function (server: Server, ctx: AppContext) {
         return resultPassthru(
           await ctx.entrywayAgent.com.atproto.server.requestEmailUpdate(
             undefined,
-            await ctx.serviceAuthHeaders(
-              auth.credentials.did,
-              ctx.cfg.entryway.did,
-              ids.ComAtprotoServerRequestEmailUpdate,
-            ),
+            await ctx
+              .serviceAuthHeaders(
+                auth.credentials.did,
+                ctx.cfg.entryway.did,
+                ids.ComAtprotoServerRequestEmailUpdate,
+              )
+              .then((x) => forwardIp(req, x)),
           ),
         )
       }

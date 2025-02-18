@@ -6,11 +6,12 @@ import { UserAlreadyExistsError } from '../../../../account-manager/helpers/acco
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
+import { forwardIp } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.updateEmail({
     auth: ctx.authVerifier.accessFull({ checkTakedown: true }),
-    handler: async ({ auth, input }) => {
+    handler: async ({ auth, input, req }) => {
       const did = auth.credentials.did
       const { token, email } = input.body
       if (!isEmailValid(email) || isDisposableEmail(email)) {
@@ -29,11 +30,13 @@ export default function (server: Server, ctx: AppContext) {
         assert(ctx.cfg.entryway)
         await ctx.entrywayAgent.com.atproto.server.updateEmail(
           input.body,
-          await ctx.serviceAuthHeaders(
-            auth.credentials.did,
-            ctx.cfg.entryway.did,
-            ids.ComAtprotoServerUpdateEmail,
-          ),
+          await ctx
+            .serviceAuthHeaders(
+              auth.credentials.did,
+              ctx.cfg.entryway.did,
+              ids.ComAtprotoServerUpdateEmail,
+            )
+            .then((x) => forwardIp(req, x)),
         )
         return
       }

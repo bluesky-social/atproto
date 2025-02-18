@@ -4,6 +4,7 @@ import { AccountStatus } from '../../../../account-manager'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { authPassthru } from '../../../proxy'
+import { forwardIp } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.deleteAccount({
@@ -25,7 +26,7 @@ export default function (server: Server, ctx: AppContext) {
       if (ctx.entrywayAgent) {
         await ctx.entrywayAgent.com.atproto.server.deleteAccount(
           input.body,
-          authPassthru(req, true),
+          forwardIp(req, authPassthru(req, true)),
         )
         return
       }

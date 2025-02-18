@@ -5,7 +5,7 @@ import { AppContext } from '../../../../context'
 import { softDeleted } from '../../../../db/util'
 import { Server } from '../../../../lexicon'
 import { authPassthru, resultPassthru } from '../../../proxy'
-import { didDocForSession } from './util'
+import { didDocForSession, forwardIp } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.refreshSession({
@@ -32,7 +32,7 @@ export default function (server: Server, ctx: AppContext) {
         return resultPassthru(
           await ctx.entrywayAgent.com.atproto.server.refreshSession(
             undefined,
-            authPassthru(req),
+            forwardIp(req, authPassthru(req)),
           ),
         )
       }

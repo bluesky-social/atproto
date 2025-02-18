@@ -4,11 +4,12 @@ import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
 import { resultPassthru } from '../../../proxy'
+import { forwardIp } from '../server/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.sendEmail({
     auth: ctx.authVerifier.moderator,
-    handler: async ({ input }) => {
+    handler: async ({ input, req }) => {
       const {
         content,
         recipientDid,
@@ -28,11 +29,13 @@ export default function (server: Server, ctx: AppContext) {
         return resultPassthru(
           await ctx.entrywayAgent.com.atproto.admin.sendEmail(
             input.body,
-            await ctx.serviceAuthHeaders(
-              recipientDid,
-              ctx.cfg.entryway.did,
-              ids.ComAtprotoAdminSendEmail,
-            ),
+            await ctx
+              .serviceAuthHeaders(
+                recipientDid,
+                ctx.cfg.entryway.did,
+                ids.ComAtprotoAdminSendEmail,
+              )
+              .then((x) => forwardIp(req, x)),
           ),
         )
       }
