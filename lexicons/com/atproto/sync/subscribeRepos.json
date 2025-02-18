@@ -19,7 +19,7 @@
           "type": "union",
           "refs": [
             "#commit",
-            "#resync",
+            "#sync",
             "#identity",
             "#account",
             "#handle",
@@ -62,7 +62,7 @@
         "rebase": { "type": "boolean", "description": "DEPRECATED -- unused" },
         "tooBig": {
           "type": "boolean",
-          "description": "DEPRECATED -- replaced by #resync event and data limits. Indicates that this commit contained too many ops, or data size was too large. Consumers will need to make a separate request to get missing data."
+          "description": "DEPRECATED -- replaced by #sync event and data limits. Indicates that this commit contained too many ops, or data size was too large. Consumers will need to make a separate request to get missing data."
         },
         "repo": {
           "type": "string",
@@ -87,7 +87,7 @@
         },
         "blocks": {
           "type": "bytes",
-          "description": "CAR file containing relevant blocks, as a diff since the previous repo state.",
+          "description": "CAR file containing relevant blocks, as a diff since the previous repo state. The commit must be included as a block, and the commit block CID must be the first entry in the CAR header 'roots' list.",
           "maxLength": 1000000
         },
         "ops": {
@@ -117,13 +117,15 @@
         }
       }
     },
-    "resync": {
+    "sync": {
       "type": "object",
       "description": "Updates the repo to a new state, without necessarily including that state on the firehose. Used to recover from broken commit streams, data loss incidents, or in situations where upstream host does not know recent state of the repository.",
       "required": [
         "seq",
         "did",
-        "commit",
+        "blocks",
+        "rev",
+        "data",
         "time"
       ],
       "properties": {
@@ -134,12 +136,20 @@
         "did": {
           "type": "string",
           "format": "did",
-          "description": "The account this repo event corresponds to."
+          "description": "The account this repo event corresponds to. Must match that in the commit object."
         },
-        "commit": {
+        "blocks": {
           "type": "bytes",
-          "description": "CBOR block encoding the commit object (including signature).",
-          "maxLength": 100000
+          "description": "CAR file containing the commit, as a block. The CAR header must include the commit block CID as the first 'root'.",
+          "maxLength": 10000
+        },
+        "rev": {
+          "type": "string",
+          "description": "The rev of the commit. This value must match that in the commit object."
+        },
+        "data": {
+          "type": "cid-link",
+          "description": "The MST root node CID in the commit. Must match the 'data' field in the commit object."
         },
         "time": {
           "type": "string",
@@ -241,11 +251,11 @@
         "path": { "type": "string" },
         "cid": {
           "type": "cid-link",
-          "description": "For creates and updates, the new record CID. For deletions, null."
+          "description": "For creates and updates, the new record CID. For deletions, field should not be defined."
         },
         "prev": {
           "type": "cid-link",
-          "description": "For updates and deletes, the previous record CID (required). For creations, null."
+          "description": "For updates and deletes, the previous record CID (required for inductive firehose). For creations, field should not be defined."
         }
       }
     }
