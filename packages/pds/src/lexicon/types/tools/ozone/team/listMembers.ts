@@ -14,6 +14,8 @@ const is$typed = _is$typed,
 const id = 'tools.ozone.team.listMembers'
 
 export interface QueryParams {
+  disabled?: boolean
+  roles?: string[]
   limit: number
   cursor?: string
 }

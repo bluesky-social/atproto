@@ -18,16 +18,36 @@ export class TeamService {
     return (db: Database) => new TeamService(db)
   }
 
+  getRolesList(roles: string[]): Member['role'][] {
+    return roles.filter((role) => {
+      return [
+        'tools.ozone.team.defs#roleAdmin',
+        'tools.ozone.team.defs#roleModerator',
+        'tools.ozone.team.defs#roleTriage',
+      ].includes(role)
+    }) as Member['role'][]
+  }
+
   async list({
     cursor,
     limit = 25,
+    roles,
+    disabled,
   }: {
     cursor?: string
     limit?: number
+    disabled?: boolean
+    roles?: string[]
   }): Promise<{ members: Selectable<Member>[]; cursor?: string }> {
     let builder = this.db.db.selectFrom('member').selectAll()
     if (cursor) {
       builder = builder.where('createdAt', '>', new Date(cursor))
+    }
+    if (roles?.length) {
+      builder = builder.where('role', 'in', this.getRolesList(roles))
+    }
+    if (disabled !== undefined) {
+      builder = builder.where('disabled', disabled ? 'is' : 'is not', true)
     }
     const members = await builder
       .limit(limit)
