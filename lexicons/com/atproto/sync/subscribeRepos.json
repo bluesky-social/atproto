@@ -53,7 +53,7 @@
         "blobs",
         "time"
       ],
-      "nullable": ["prev", "since"],
+      "nullable": ["since"],
       "properties": {
         "seq": {
           "type": "integer",
@@ -73,10 +73,6 @@
           "type": "cid-link",
           "description": "Repo commit object CID."
         },
-        "prev": {
-          "type": "cid-link",
-          "description": "DEPRECATED -- unused. WARNING -- nullable and optional; stick with optional to ensure golang interoperability."
-        },
         "rev": {
           "type": "string",
           "description": "The rev of the emitted commit. Note that this information is also in the commit object included in blocks, unless this is a tooBig event."
@@ -88,7 +84,7 @@
         "blocks": {
           "type": "bytes",
           "description": "CAR file containing relevant blocks, as a diff since the previous repo state. The commit must be included as a block, and the commit block CID must be the first entry in the CAR header 'roots' list.",
-          "maxLength": 1000000
+          "maxLength": 2000000
         },
         "ops": {
           "type": "array",
@@ -186,7 +182,7 @@
             "suspended",
             "deleted",
             "deactivated",
-            "broken",
+            "desynchronized",
             "throttled"
           ]
         }

@@ -52,7 +52,7 @@
             "suspended",
             "deleted",
             "deactivated",
-            "broken",
+            "desynchronized",
             "throttled"
           ]
         }
