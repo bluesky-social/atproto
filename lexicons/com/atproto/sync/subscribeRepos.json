@@ -116,7 +116,7 @@
     "sync": {
       "type": "object",
       "description": "Updates the repo to a new state, without necessarily including that state on the firehose. Used to recover from broken commit streams, data loss incidents, or in situations where upstream host does not know recent state of the repository.",
-      "required": ["seq", "did", "blocks", "rev", "data", "time"],
+      "required": ["seq", "did", "blocks", "rev", "time"],
       "properties": {
         "seq": {
           "type": "integer",
@@ -135,10 +135,6 @@
         "rev": {
           "type": "string",
           "description": "The rev of the commit. This value must match that in the commit object."
-        },
-        "data": {
-          "type": "cid-link",
-          "description": "The MST root node CID in the commit. Must match the 'data' field in the commit object."
         },
         "time": {
           "type": "string",
