@@ -32,9 +32,7 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": [
-            "members"
-          ],
+          "required": ["members"],
           "properties": {
             "cursor": {
               "type": "string"
