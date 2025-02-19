@@ -1,5 +1,11 @@
 # @atproto/ozone
 
+## 0.1.81
+
+### Patch Changes
+
+- [#3554](https://github.com/bluesky-social/atproto/pull/3554) [`7449f8607`](https://github.com/bluesky-social/atproto/commit/7449f8607c1be948a0b55611c21075757c3d7261) Thanks [@foysalit](https://github.com/foysalit)! - Allow filtering Ozone members based on role and status
+
 ## 0.1.80
 
 ### Patch Changes
