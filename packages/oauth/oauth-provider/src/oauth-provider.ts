@@ -134,12 +134,12 @@ export {
 export type RouterOptions<
   Req extends IncomingMessage = IncomingMessage,
   Res extends ServerResponse = ServerResponse,
-> = DeviceManagerOptions & {
+> = {
   onError?: (req: Req, res: Res, err: unknown, message: string) => void
 }
 
 export type OAuthProviderOptions = Override<
-  OAuthVerifierOptions & OAuthHooks,
+  OAuthVerifierOptions & OAuthHooks & DeviceManagerOptions,
   {
     /**
      * Maximum age a device/account session can be before requiring
@@ -223,15 +223,15 @@ export type OAuthProviderOptions = Override<
 
 export class OAuthProvider extends OAuthVerifier {
   public readonly metadata: OAuthAuthorizationServerMetadata
-  public readonly customization?: Customization
 
   public readonly authenticationMaxAge: number
 
   public readonly accountManager: AccountManager
-  public readonly deviceStore: DeviceStore
+  public readonly deviceManager: DeviceManager
   public readonly clientManager: ClientManager
   public readonly requestManager: RequestManager
   public readonly tokenManager: TokenManager
+  public readonly outputManager: OutputManager
 
   public constructor({
     metadata,
@@ -264,7 +264,7 @@ export class OAuthProvider extends OAuthVerifier {
 
     loopbackMetadata = atprotoLoopbackClientMetadata,
 
-    // OAuthHooks & OAuthVerifierOptions
+    // OAuthHooks & OAuthVerifierOptions & DeviceManagerOptions
     ...rest
   }: OAuthProviderOptions) {
     super({ replayStore, redis, ...rest })
@@ -275,10 +275,9 @@ export class OAuthProvider extends OAuthVerifier {
 
     this.authenticationMaxAge = authenticationMaxAge
     this.metadata = buildMetadata(this.issuer, this.keyset, metadata)
-    this.customization = customization
 
-    this.deviceStore = deviceStore
-
+    this.deviceManager = new DeviceManager(deviceStore, rest)
+    this.outputManager = new OutputManager(customization)
     this.accountManager = new AccountManager(accountStore)
     this.clientManager = new ClientManager(
       this.metadata,
@@ -1025,10 +1024,7 @@ export class OAuthProvider extends OAuthVerifier {
     T = void,
     Req extends IncomingMessage = IncomingMessage,
     Res extends ServerResponse = ServerResponse,
-  >(options?: RouterOptions<Req, Res>) {
-    const deviceManager = new DeviceManager(this.deviceStore, options)
-    const outputManager = new OutputManager(this.customization)
-
+  >(options?: RouterOptions<Req, Res>): Router<T, Req, Res> {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const server = this
     const issuerUrl = new URL(server.issuer)
@@ -1145,7 +1141,7 @@ export class OAuthProvider extends OAuthVerifier {
           )
 
           if (!res.headersSent) {
-            await outputManager.sendErrorPage(res, err)
+            await server.outputManager.sendErrorPage(res, err)
           }
         }
       }
@@ -1252,7 +1248,8 @@ export class OAuthProvider extends OAuthVerifier {
       jsonHandler(async function (req, _res) {
         const payload = await parseHttpRequest(req, ['json', 'urlencoded'])
 
-        const clientMetadata = await deviceManager.getRequestMetadata(req)
+        const clientMetadata =
+          await server.deviceManager.getRequestMetadata(req)
 
         const clientCredentials = await oauthClientCredentialsSchema
           .parseAsync(payload, { path: ['body'] })
@@ -1360,7 +1357,10 @@ export class OAuthProvider extends OAuthVerifier {
           .parseAsync(query, { path: ['query'] })
           .catch(throwInvalidRequest)
 
-        const { deviceId, deviceMetadata } = await deviceManager.load(req, res)
+        const { deviceId, deviceMetadata } = await server.deviceManager.load(
+          req,
+          res,
+        )
 
         const data = await server
           .authorize(
@@ -1377,7 +1377,7 @@ export class OAuthProvider extends OAuthVerifier {
           }
           case 'authorize' in data: {
             await setupCsrfToken(req, res, csrfCookie(data.authorize.uri))
-            return outputManager.sendAuthorizePage(res, data)
+            return server.outputManager.sendAuthorizePage(res, data)
           }
           default: {
             // Should never happen
@@ -1418,7 +1418,7 @@ export class OAuthProvider extends OAuthVerifier {
           csrfCookie(input.request_uri),
         )
 
-        const { deviceId } = await deviceManager.load(req, res, true)
+        const { deviceId } = await server.deviceManager.load(req, res, true)
 
         return server.signIn(
           deviceId,
@@ -1471,7 +1471,10 @@ export class OAuthProvider extends OAuthVerifier {
           true,
         )
 
-        const { deviceId, deviceMetadata } = await deviceManager.load(req, res)
+        const { deviceId, deviceMetadata } = await server.deviceManager.load(
+          req,
+          res,
+        )
 
         const data = await server
           .acceptRequest(
@@ -1528,7 +1531,7 @@ export class OAuthProvider extends OAuthVerifier {
           true,
         )
 
-        const { deviceId } = await deviceManager.load(req, res)
+        const { deviceId } = await server.deviceManager.load(req, res)
 
         const data = await server
           .rejectRequest(deviceId, input.request_uri, input.client_id)
