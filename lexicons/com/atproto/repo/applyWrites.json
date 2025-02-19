@@ -71,7 +71,12 @@
       "required": ["collection", "value"],
       "properties": {
         "collection": { "type": "string", "format": "nsid" },
-        "rkey": { "type": "string", "format": "record-key" },
+        "rkey": {
+          "type": "string",
+          "maxLength": 512,
+          "format": "record-key",
+          "description": "NOTE: maxLength is redundant with record-key format. Keeping it temporarily to ensure backwards compatibility."
+        },
         "value": { "type": "unknown" }
       }
     },
