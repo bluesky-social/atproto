@@ -1,5 +1,13 @@
 # @atproto/api
 
+## 0.14.2
+
+### Patch Changes
+
+- [#3524](https://github.com/bluesky-social/atproto/pull/3524) [`010f10c6f`](https://github.com/bluesky-social/atproto/commit/010f10c6f212f699ad42c0349a58bbcf2172e3cc) Thanks [@bnewbold](https://github.com/bnewbold)! - add com.atproto.sync.listReposByCollection Lexicon
+
+- [#3546](https://github.com/bluesky-social/atproto/pull/3546) [`a9887f687`](https://github.com/bluesky-social/atproto/commit/a9887f68778c49932d92cfea98aadcfa4d5b62e9) Thanks [@foysalit](https://github.com/foysalit)! - Add reporter stats endpoint on ozone service
+
 ## 0.14.1
 
 ### Patch Changes
