@@ -71,7 +71,7 @@
       "required": ["collection", "value"],
       "properties": {
         "collection": { "type": "string", "format": "nsid" },
-        "rkey": { "type": "string", "maxLength": 512, "format": "record-key" },
+        "rkey": { "type": "string", "format": "record-key" },
         "value": { "type": "unknown" }
       }
     },

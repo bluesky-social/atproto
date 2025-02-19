@@ -31,6 +31,7 @@
             },
             "rev": {
               "type": "string",
+              "format": "tid",
               "description": "Optional field, the current rev of the repo, if active=true"
             }
           }
