@@ -13953,6 +13953,15 @@ export const schemaDict = {
         parameters: {
           type: 'params',
           properties: {
+            disabled: {
+              type: 'boolean',
+            },
+            roles: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+            },
             limit: {
               type: 'integer',
               minimum: 1,
