@@ -1,6 +1,7 @@
 import { randomBytes } from 'node:crypto'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { parse as parseCookie, serialize as serializeCookie } from 'cookie'
+import forwarded from 'forwarded'
 import createHttpError from 'http-errors'
 import { appendHeader } from './response.js'
 import { UrlReference, urlMatch } from './url.js'
@@ -164,7 +165,7 @@ export function parseHttpCookies(
 }
 
 export type ExtractRequestMetadataOptions = {
-  trustProxy?: boolean
+  trustProxy?: (addr: string, i: number) => boolean
 }
 
 export type RequestMetadata = {
@@ -177,42 +178,42 @@ export function extractRequestMetadata(
   req: IncomingMessage,
   options?: ExtractRequestMetadataOptions,
 ): RequestMetadata {
-  const userAgent = req.headers['user-agent'] || undefined
-  const ipAddress = extractIpAddress(req, options) || null
-  const port = extractPort(req, options)
-
-  if (ipAddress == null || port == null) {
-    throw new Error('Could not determine IP address')
+  const ip = extractIp(req, options)
+  return {
+    userAgent: req.headers['user-agent'],
+    ipAddress: ip,
+    port: extractPort(req, ip),
   }
-
-  return { userAgent, ipAddress, port }
 }
 
-function extractIpAddress(
+function extractIp(
   req: IncomingMessage,
   options?: ExtractRequestMetadataOptions,
-): string | undefined {
-  // Express app compatibility
-  if ('ip' in req && typeof req.ip === 'string') {
-    return req.ip
-  }
-
-  if (options?.trustProxy) {
-    const forwardedFor = req.headers['x-forwarded-for']
-    if (typeof forwardedFor === 'string') {
-      const firstForward = forwardedFor.split(',')[0]!.trim()
-      if (firstForward) return firstForward
+): string {
+  const trust = options?.trustProxy
+  if (trust) {
+    const ips = forwarded(req)
+    for (let i = 0; i < ips.length; i++) {
+      if (!trust(ips[i], i)) return ips[i]
     }
   }
 
-  return req.socket.remoteAddress
+  // Express app compatibility (see "trust proxy" setting)
+  if ('ip' in req) {
+    const ip = req.ip
+    if (typeof ip === 'string') return ip
+  }
+
+  const ip = req.socket.remoteAddress
+  if (ip) return ip
+
+  throw new Error('Could not determine IP address')
 }
 
-function extractPort(
-  req: IncomingMessage,
-  options?: ExtractRequestMetadataOptions,
-): number | undefined {
-  if (options?.trustProxy) {
+function extractPort(req: IncomingMessage, ip: string): number {
+  if (ip !== req.socket.remoteAddress) {
+    // Trust the X-Forwarded-Port header only if the IP address was a trusted
+    // proxied IP.
     const forwardedPort = req.headers['x-forwarded-port']
     if (typeof forwardedPort === 'string') {
       const port = Number(forwardedPort.trim())
@@ -223,5 +224,8 @@ function extractPort(
     }
   }
 
-  return req.socket.remotePort
+  const port = req.socket.remotePort
+  if (port != null) return port
+
+  throw new Error('Could not determine port')
 }

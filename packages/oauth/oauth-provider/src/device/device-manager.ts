@@ -25,7 +25,12 @@ export const deviceManagerOptionsSchema = z.object({
    *
    * @default true // (nowadays, most requests are proxied)
    */
-  trustProxy: z.boolean().default(true),
+  trustProxy: z
+    .function()
+    .args(z.string(), z.number())
+    .returns(z.boolean())
+    .optional(),
+
   /**
    * Amount of time (in ms) after which session IDs will be rotated
    *
