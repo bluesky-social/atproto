@@ -196,6 +196,8 @@ function extractIp(
     for (let i = 0; i < ips.length; i++) {
       if (!trust(ips[i], i)) return ips[i]
     }
+    // The "trustProxy" function and/or the proxy configuration is not correct
+    throw new Error('No untrusted IP address found')
   }
 
   // Express app compatibility (see "trust proxy" setting)
