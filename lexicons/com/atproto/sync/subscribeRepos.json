@@ -67,7 +67,7 @@
         "repo": {
           "type": "string",
           "format": "did",
-          "description": "The repo this event comes from."
+          "description": "The repo this event comes from. Note that all other message types name this field 'did'."
         },
         "commit": {
           "type": "cid-link",
