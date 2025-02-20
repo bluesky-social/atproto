@@ -11,24 +11,17 @@ import type * as ChatBskyConvoDefs from './defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
-const id = 'chat.bsky.convo.getLog'
+const id = 'chat.bsky.convo.getConvoAvailability'
 
 export interface QueryParams {
-  cursor?: string
+  members: string[]
 }
 
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  cursor?: string
-  logs: (
-    | $Typed<ChatBskyConvoDefs.LogBeginConvo>
-    | $Typed<ChatBskyConvoDefs.LogAcceptConvo>
-    | $Typed<ChatBskyConvoDefs.LogLeaveConvo>
-    | $Typed<ChatBskyConvoDefs.LogCreateMessage>
-    | $Typed<ChatBskyConvoDefs.LogDeleteMessage>
-    | { $type: string }
-  )[]
+  canChat: boolean
+  convo?: ChatBskyConvoDefs.ConvoView
 }
 
 export type HandlerInput = undefined

@@ -10206,6 +10206,40 @@ export const schemaDict = {
       },
     },
   },
+  ChatBskyConvoAcceptConvo: {
+    lexicon: 1,
+    id: 'chat.bsky.convo.acceptConvo',
+    defs: {
+      main: {
+        type: 'procedure',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['convoId'],
+            properties: {
+              convoId: {
+                type: 'string',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              rev: {
+                description:
+                  'Rev when the convo was accepted. If not present, the convo was already accepted.',
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ChatBskyConvoDefs: {
     lexicon: 1,
     id: 'chat.bsky.convo.defs',
@@ -10343,8 +10377,9 @@ export const schemaDict = {
           muted: {
             type: 'boolean',
           },
-          opened: {
-            type: 'boolean',
+          status: {
+            type: 'string',
+            knownValues: ['request', 'accepted'],
           },
           unreadCount: {
             type: 'integer',
@@ -10363,7 +10398,43 @@ export const schemaDict = {
           },
         },
       },
+      logAcceptConvo: {
+        type: 'object',
+        required: ['rev', 'convoId'],
+        properties: {
+          rev: {
+            type: 'string',
+          },
+          convoId: {
+            type: 'string',
+          },
+        },
+      },
       logLeaveConvo: {
+        type: 'object',
+        required: ['rev', 'convoId'],
+        properties: {
+          rev: {
+            type: 'string',
+          },
+          convoId: {
+            type: 'string',
+          },
+        },
+      },
+      logMuteConvo: {
+        type: 'object',
+        required: ['rev', 'convoId'],
+        properties: {
+          rev: {
+            type: 'string',
+          },
+          convoId: {
+            type: 'string',
+          },
+        },
+      },
+      logUnmuteConvo: {
         type: 'object',
         required: ['rev', 'convoId'],
         properties: {
@@ -10395,6 +10466,25 @@ export const schemaDict = {
         },
       },
       logDeleteMessage: {
+        type: 'object',
+        required: ['rev', 'convoId', 'message'],
+        properties: {
+          rev: {
+            type: 'string',
+          },
+          convoId: {
+            type: 'string',
+          },
+          message: {
+            type: 'union',
+            refs: [
+              'lex:chat.bsky.convo.defs#messageView',
+              'lex:chat.bsky.convo.defs#deletedMessageView',
+            ],
+          },
+        },
+      },
+      logReadMessage: {
         type: 'object',
         required: ['rev', 'convoId', 'message'],
         properties: {
@@ -10477,6 +10567,48 @@ export const schemaDict = {
       },
     },
   },
+  ChatBskyConvoGetConvoAvailability: {
+    lexicon: 1,
+    id: 'chat.bsky.convo.getConvoAvailability',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get whether the requester and the other members can chat. If an existing convo is found for these members, it is returned.',
+        parameters: {
+          type: 'params',
+          required: ['members'],
+          properties: {
+            members: {
+              type: 'array',
+              minLength: 1,
+              maxLength: 10,
+              items: {
+                type: 'string',
+                format: 'did',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['canChat'],
+            properties: {
+              canChat: {
+                type: 'boolean',
+              },
+              convo: {
+                type: 'ref',
+                ref: 'lex:chat.bsky.convo.defs#convoView',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ChatBskyConvoGetConvoForMembers: {
     lexicon: 1,
     id: 'chat.bsky.convo.getConvoForMembers',
@@ -10544,6 +10676,7 @@ export const schemaDict = {
                   type: 'union',
                   refs: [
                     'lex:chat.bsky.convo.defs#logBeginConvo',
+                    'lex:chat.bsky.convo.defs#logAcceptConvo',
                     'lex:chat.bsky.convo.defs#logLeaveConvo',
                     'lex:chat.bsky.convo.defs#logCreateMessage',
                     'lex:chat.bsky.convo.defs#logDeleteMessage',
@@ -10658,6 +10791,14 @@ export const schemaDict = {
             },
             cursor: {
               type: 'string',
+            },
+            readState: {
+              type: 'string',
+              knownValues: ['unread'],
+            },
+            status: {
+              type: 'string',
+              knownValues: ['request', 'accepted'],
             },
           },
         },
@@ -11244,9 +11385,11 @@ export const ids = {
   ChatBskyActorDefs: 'chat.bsky.actor.defs',
   ChatBskyActorDeleteAccount: 'chat.bsky.actor.deleteAccount',
   ChatBskyActorExportAccountData: 'chat.bsky.actor.exportAccountData',
+  ChatBskyConvoAcceptConvo: 'chat.bsky.convo.acceptConvo',
   ChatBskyConvoDefs: 'chat.bsky.convo.defs',
   ChatBskyConvoDeleteMessageForSelf: 'chat.bsky.convo.deleteMessageForSelf',
   ChatBskyConvoGetConvo: 'chat.bsky.convo.getConvo',
+  ChatBskyConvoGetConvoAvailability: 'chat.bsky.convo.getConvoAvailability',
   ChatBskyConvoGetConvoForMembers: 'chat.bsky.convo.getConvoForMembers',
   ChatBskyConvoGetLog: 'chat.bsky.convo.getLog',
   ChatBskyConvoGetMessages: 'chat.bsky.convo.getMessages',

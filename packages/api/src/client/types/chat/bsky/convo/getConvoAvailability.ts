@@ -10,20 +10,17 @@ import type * as ChatBskyConvoDefs from './defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
-const id = 'chat.bsky.convo.listConvos'
+const id = 'chat.bsky.convo.getConvoAvailability'
 
 export interface QueryParams {
-  limit?: number
-  cursor?: string
-  readState?: 'unread' | (string & {})
-  status?: 'request' | 'accepted' | (string & {})
+  members: string[]
 }
 
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  cursor?: string
-  convos: ChatBskyConvoDefs.ConvoView[]
+  canChat: boolean
+  convo?: ChatBskyConvoDefs.ConvoView
 }
 
 export interface CallOptions {

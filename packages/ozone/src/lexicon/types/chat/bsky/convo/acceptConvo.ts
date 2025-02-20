@@ -7,31 +7,26 @@ import { CID } from 'multiformats/cid'
 import { validate as _validate } from '../../../../lexicons'
 import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
-import type * as ChatBskyConvoDefs from './defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
-const id = 'chat.bsky.convo.getLog'
+const id = 'chat.bsky.convo.acceptConvo'
 
-export interface QueryParams {
-  cursor?: string
+export interface QueryParams {}
+
+export interface InputSchema {
+  convoId: string
 }
-
-export type InputSchema = undefined
 
 export interface OutputSchema {
-  cursor?: string
-  logs: (
-    | $Typed<ChatBskyConvoDefs.LogBeginConvo>
-    | $Typed<ChatBskyConvoDefs.LogAcceptConvo>
-    | $Typed<ChatBskyConvoDefs.LogLeaveConvo>
-    | $Typed<ChatBskyConvoDefs.LogCreateMessage>
-    | $Typed<ChatBskyConvoDefs.LogDeleteMessage>
-    | { $type: string }
-  )[]
+  /** Rev when the convo was accepted. If not present, the convo was already accepted. */
+  rev?: string
 }
 
-export type HandlerInput = undefined
+export interface HandlerInput {
+  encoding: 'application/json'
+  body: InputSchema
+}
 
 export interface HandlerSuccess {
   encoding: 'application/json'

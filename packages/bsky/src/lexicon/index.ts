@@ -150,8 +150,10 @@ import * as AppBskyVideoGetUploadLimits from './types/app/bsky/video/getUploadLi
 import * as AppBskyVideoUploadVideo from './types/app/bsky/video/uploadVideo.js'
 import * as ChatBskyActorDeleteAccount from './types/chat/bsky/actor/deleteAccount.js'
 import * as ChatBskyActorExportAccountData from './types/chat/bsky/actor/exportAccountData.js'
+import * as ChatBskyConvoAcceptConvo from './types/chat/bsky/convo/acceptConvo.js'
 import * as ChatBskyConvoDeleteMessageForSelf from './types/chat/bsky/convo/deleteMessageForSelf.js'
 import * as ChatBskyConvoGetConvo from './types/chat/bsky/convo/getConvo.js'
+import * as ChatBskyConvoGetConvoAvailability from './types/chat/bsky/convo/getConvoAvailability.js'
 import * as ChatBskyConvoGetConvoForMembers from './types/chat/bsky/convo/getConvoForMembers.js'
 import * as ChatBskyConvoGetLog from './types/chat/bsky/convo/getLog.js'
 import * as ChatBskyConvoGetMessages from './types/chat/bsky/convo/getMessages.js'
@@ -2025,6 +2027,17 @@ export class ChatBskyConvoNS {
     this._server = server
   }
 
+  acceptConvo<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyConvoAcceptConvo.Handler<ExtractAuth<AV>>,
+      ChatBskyConvoAcceptConvo.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.acceptConvo' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   deleteMessageForSelf<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -2044,6 +2057,17 @@ export class ChatBskyConvoNS {
     >,
   ) {
     const nsid = 'chat.bsky.convo.getConvo' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getConvoAvailability<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyConvoGetConvoAvailability.Handler<ExtractAuth<AV>>,
+      ChatBskyConvoGetConvoAvailability.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.getConvoAvailability' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

@@ -22,6 +22,7 @@ export interface OutputSchema {
   cursor?: string
   logs: (
     | $Typed<ChatBskyConvoDefs.LogBeginConvo>
+    | $Typed<ChatBskyConvoDefs.LogAcceptConvo>
     | $Typed<ChatBskyConvoDefs.LogLeaveConvo>
     | $Typed<ChatBskyConvoDefs.LogCreateMessage>
     | $Typed<ChatBskyConvoDefs.LogDeleteMessage>
