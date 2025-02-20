@@ -3831,7 +3831,7 @@ export const schemaDict = {
           'blobs',
           'time',
         ],
-        nullable: ['prev', 'since'],
+        nullable: ['since'],
         properties: {
           seq: {
             type: 'integer',
@@ -3854,11 +3854,6 @@ export const schemaDict = {
           commit: {
             type: 'cid-link',
             description: 'Repo commit object CID.',
-          },
-          prev: {
-            type: 'cid-link',
-            description:
-              'DEPRECATED -- unused. WARNING -- nullable and optional; stick with optional to ensure golang interoperability.',
           },
           rev: {
             type: 'string',

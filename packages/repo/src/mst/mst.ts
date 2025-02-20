@@ -557,9 +557,7 @@ export class MST {
         if (prev.isLeaf() && prev.key === key) {
           yield prev
         } else if (prev.isTree()) {
-          for await (const e of prev.walkFrom(key)) {
-            yield e
-          }
+          yield* prev.walkFrom(key)
         }
       }
     }
@@ -569,9 +567,7 @@ export class MST {
       if (entry.isLeaf()) {
         yield entry
       } else {
-        for await (const node of entry.walkFrom(key)) {
-          yield node
-        }
+        yield* entry.walkFrom(key)
       }
     }
   }

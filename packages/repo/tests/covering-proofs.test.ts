@@ -4,6 +4,10 @@ import { MST } from '../src/mst'
 import { MemoryBlockstore } from '../src/storage'
 import * as k from './_keys'
 
+// @NOTE these tests are the exact same as the tests in commit-proof-fixtures.json but in code from
+// kept around currently because they are a bit easier to understand/work with
+// we should delete in the future once the fixtures are pulled into our test suite
+
 describe('covering proofs', () => {
   /**
    *
