@@ -262,12 +262,14 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
         issuer: serviceCfg.publicUrl,
         provider: {
           customization: {
+            hcaptchaSiteKey: env.hcaptchaSiteKey,
             name: env.serviceName ?? 'Personal PDS',
             logo: env.logoUrl,
             colors: {
               brand: env.brandColor,
               error: env.errorColor,
               warning: env.warningColor,
+              success: env.successColor,
             },
             links: [
               {
@@ -435,7 +437,10 @@ export type OAuthConfig = {
   provider:
     | false
     | {
-        customization: Customization
+        customization: Omit<
+          Customization,
+          'inviteCodeRequired' | 'availableUserDomains'
+        >
       }
 }
 

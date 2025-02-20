@@ -1,10 +1,16 @@
 // Matches colors defined in tailwind.config.js
-const colorNames = ['brand', 'error', 'warning'] as const
+const colorNames = ['brand', 'error', 'warning', 'success'] as const
 type ColorName = (typeof colorNames)[number]
 const isColorName = (name: string): name is ColorName =>
   (colorNames as readonly string[]).includes(name)
 
 export type Customization = {
+  // Functional customization
+  inviteCodeRequired?: boolean
+  availableUserDomains?: string[]
+  hcaptchaSiteKey?: string
+
+  // Aesthetic customization
   name?: string
   logo?: string
   colors?: { [_ in ColorName]?: string }
@@ -19,11 +25,19 @@ export function buildCustomizationData({
   name,
   logo,
   links,
+  hcaptchaSiteKey,
+  inviteCodeRequired,
+  availableUserDomains,
 }: Customization = {}) {
+  // @NOTE the front end does not need colors here as they will be injected as
+  // CSS variables.
   return {
     name,
     logo,
     links,
+    hcaptchaSiteKey,
+    inviteCodeRequired,
+    availableUserDomains,
   }
 }
 
@@ -49,7 +63,10 @@ export function* buildCustomizationVars(customization?: Customization) {
       // Tailwind does not apply alpha values to base colors
       if (a !== undefined) throw new TypeError('Alpha not supported')
 
+      const contrast = computeLuma({ r, g, b }) > 128 ? '0 0 0' : '255 255 255'
+
       yield `--color-${name}: ${r} ${g} ${b};`
+      yield `--color-${name}-c: ${contrast};`
     }
   }
 }
@@ -102,6 +119,10 @@ function parseColor(color: unknown): RgbaColor {
   }
 
   throw new TypeError(`Unsupported color format: ${color}`)
+}
+
+function computeLuma({ r, g, b }: RgbaColor) {
+  return 0.299 * r + 0.587 * g + 0.114 * b
 }
 
 function parseUi8Hex(v: string) {

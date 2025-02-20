@@ -47,7 +47,6 @@ export type AuthorizeData = {
   clientMetadata: OAuthClientMetadata
   clientTrusted: boolean
   requestUri: string
-  csrfCookie: string
   loginHint?: string
   scopeDetails?: ScopeDetail[]
   newSessionsRequireConsent: boolean
@@ -62,7 +61,6 @@ export function buildAuthorizeData(
     clientMetadata: data.client.metadata,
     clientTrusted: data.client.info.isTrusted,
     requestUri: data.authorize.uri,
-    csrfCookie: `csrf-${data.authorize.uri}`,
     loginHint: data.parameters.login_hint,
     newSessionsRequireConsent: data.parameters.prompt === 'consent',
     scopeDetails: data.authorize.scopeDetails,

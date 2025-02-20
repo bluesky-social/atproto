@@ -250,10 +250,12 @@ export class AppContext {
       actorStore,
       imageUrlBuilder,
       backgroundQueue,
+      mailer,
       cfg.db.accountDbLoc,
       jwtSecretKey,
       cfg.service.did,
       cfg.db.disableWalAutoCheckpoint,
+      cfg.identity.serviceHandleDomains,
     )
     await accountManager.migrateOrThrow()
 
@@ -326,14 +328,15 @@ export class AppContext {
     const authProvider = cfg.oauth.provider
       ? new PdsOAuthProvider({
           issuer: cfg.oauth.issuer,
-          keyset: [
-            // Note: OpenID compatibility would require an RS256 private key in this list
-            await JoseKey.fromKeyLike(jwtSecretKey, undefined, 'HS256'),
-          ],
+          keyset: [await JoseKey.fromKeyLike(jwtSecretKey, undefined, 'HS256')],
           accountManager,
           redis: redisScratch,
           dpopSecret: secrets.dpopSecret,
-          customization: cfg.oauth.provider.customization,
+          customization: {
+            ...cfg.oauth.provider.customization,
+            inviteCodeRequired: cfg.invites.required,
+            availableUserDomains: cfg.identity.serviceHandleDomains,
+          },
           safeFetch,
           // @TODO: Make this configurable. The legacy implementation used to
           // blindly trust the X-Forwarded-For header.

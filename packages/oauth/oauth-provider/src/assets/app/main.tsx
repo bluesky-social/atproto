@@ -1,10 +1,9 @@
 // This must be loaded before any dependency to ensure that global variables
 // cannot be accessed by JS from node_modules.
-import * as backendData from './backend-data'
 
 import { createRoot } from 'react-dom/client'
-
 import { App } from './app'
+import * as backendData from './backend-data'
 import './main.css'
 
 const { authorizeData } = backendData

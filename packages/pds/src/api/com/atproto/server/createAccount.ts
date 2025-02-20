@@ -60,7 +60,7 @@ export default function (server: Server, ctx: AppContext) {
 
         didDoc = await safeResolveDidDoc(ctx, did, true)
 
-        creds = await ctx.accountManager.createAccount({
+        creds = await ctx.accountManager.createAccountAndSession({
           did,
           handle,
           email,

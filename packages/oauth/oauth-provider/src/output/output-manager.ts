@@ -1,6 +1,7 @@
 import type { ServerResponse } from 'node:http'
 import { Asset } from '../assets/asset.js'
 import { getAsset } from '../assets/index.js'
+import { CspConfig } from '../lib/csp/index.js'
 import { Html, cssCode, html } from '../lib/html/index.js'
 import {
   AuthorizationResultAuthorize,
@@ -14,10 +15,18 @@ import {
 } from './customization.js'
 import { declareBackendData, sendWebPage } from './send-web-page.js'
 
+const HCAPTCHA_CSP = {
+  'script-src': ['https://hcaptcha.com', 'https://*.hcaptcha.com'],
+  'frame-src': ['https://hcaptcha.com', 'https://*.hcaptcha.com'],
+  'style-src': ['https://hcaptcha.com', 'https://*.hcaptcha.com'],
+  'connect-src': ['https://hcaptcha.com', 'https://*.hcaptcha.com'],
+} as const satisfies CspConfig
+
 export class OutputManager {
   readonly customizationScript: Html
   readonly customizationStyle: Html
   readonly customizationLinks?: Customization['links']
+  readonly customizationCsp?: CspConfig
 
   // Could technically cause an "UnhandledPromiseRejection", which might cause
   // the process to exit. This is intentional, as it's a critical error. It
@@ -38,6 +47,9 @@ export class OutputManager {
     )
     this.customizationStyle = cssCode(buildCustomizationCss(customization))
     this.customizationLinks = customization?.links
+    this.customizationCsp = customization?.hcaptchaSiteKey
+      ? HCAPTCHA_CSP
+      : undefined
   }
 
   async sendAuthorizePage(
@@ -60,6 +72,7 @@ export class OutputManager {
       htmlAttrs: { lang: 'en' },
       title: 'Authorize',
       body: html`<div id="root"></div>`,
+      csp: this.customizationCsp,
     })
   }
 

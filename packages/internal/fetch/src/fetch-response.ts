@@ -1,4 +1,3 @@
-import type { ParseParams, TypeOf, ZodTypeAny } from 'zod'
 import { Transformer, pipe } from '@atproto-labs/pipe'
 import { FetchError } from './fetch-error.js'
 import { TransformedResponse } from './transformed-response.js'
@@ -6,7 +5,6 @@ import {
   Json,
   MaxBytesTransformStream,
   cancelBody,
-  ifObject,
   ifString,
   logCancellationError,
 } from './util.js'
@@ -69,15 +67,16 @@ const extractResponseMessage: ResponseMessageGetter = async (response) => {
       const json: unknown = await response.json()
 
       if (typeof json === 'string') return json
+      if (typeof json === 'object' && json != null) {
+        const errorDescription = ifString(json['error_description'])
+        if (errorDescription) return errorDescription
 
-      const errorDescription = ifString(ifObject(json)?.['error_description'])
-      if (errorDescription) return errorDescription
+        const error = ifString(json['error'])
+        if (error) return error
 
-      const error = ifString(ifObject(json)?.['error'])
-      if (error) return error
-
-      const message = ifString(ifObject(json)?.['message'])
-      if (message) return message
+        const message = ifString(json['message'])
+        if (message) return message
+      }
     }
   } catch {
     // noop
@@ -283,10 +282,19 @@ export function fetchJsonProcessor<T = Json>(
   )
 }
 
-export function fetchJsonZodProcessor<S extends ZodTypeAny>(
-  schema: S,
-  params?: Partial<ParseParams>,
-): Transformer<ParsedJsonResponse, TypeOf<S>> {
-  return async (jsonResponse: ParsedJsonResponse): Promise<TypeOf<S>> =>
+// We are not using actual types imported from "zod" here to avoid
+// compatibility issues with different versions of the library.
+
+type ParseParams = {
+  path?: (string | number)[]
+}
+
+export function fetchJsonZodProcessor<S>(
+  schema: {
+    parseAsync(value: unknown, params?: ParseParams): PromiseLike<S>
+  },
+  params?: ParseParams,
+): Transformer<ParsedJsonResponse, S> {
+  return async (jsonResponse: ParsedJsonResponse): Promise<S> =>
     schema.parseAsync(jsonResponse.json, params)
 }

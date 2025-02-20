@@ -14,7 +14,12 @@ import { InvalidAuthorizationDetailsError } from './errors/invalid-authorization
 import { RequestMetadata } from './lib/http/request.js'
 import { Awaitable } from './lib/util/type.js'
 import { AccessDeniedError, OAuthError } from './oauth-errors.js'
-import { DeviceId } from './oauth-store.js'
+import {
+  DeviceAccountInfo,
+  DeviceId,
+  SignInData,
+  SignUpData,
+} from './oauth-store.js'
 
 // Make sure all types needed to implement the OAuthHooks are exported
 export {
@@ -25,6 +30,7 @@ export {
   type ClientAuth,
   type ClientId,
   type ClientInfo,
+  type DeviceAccountInfo,
   type DeviceId,
   InvalidAuthorizationDetailsError,
   type Jwks,
@@ -34,6 +40,8 @@ export {
   OAuthError,
   type OAuthTokenResponse,
   type RequestMetadata,
+  type SignInData,
+  type SignUpData,
 }
 
 export type OAuthHooks = {
@@ -62,6 +70,32 @@ export type OAuthHooks = {
     parameters: OAuthAuthorizationRequestParameters
     account: Account
   }) => Awaitable<undefined | OAuthAuthorizationDetails>
+
+  /**
+   * This hook is called when a user successfully signs up.
+   *
+   * @throws {AccessDeniedError} to deny the sign-up
+   */
+  onSignedUp?: (data: {
+    data: SignUpData
+    info: DeviceAccountInfo
+    account: Account
+    deviceId: DeviceId
+    deviceMetadata: RequestMetadata
+  }) => Awaitable<void>
+
+  /**
+   * This hook is called when a user successfully signs in.
+   *
+   * @throws {InvalidRequestError} when the sing-in should be denied
+   */
+  onSignedIn?: (data: {
+    data: SignInData
+    info: DeviceAccountInfo
+    account: Account
+    deviceId: DeviceId
+    deviceMetadata: RequestMetadata
+  }) => Awaitable<void>
 
   /**
    * This hook is called when a client is authorized.
