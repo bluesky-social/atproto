@@ -109,6 +109,7 @@ export class TestNetwork extends TestNetworkNoAppView {
         )
       inviteCode = invite.code
     }
+    await bsky.sub.processAll()
     await ozoneServiceProfile.createServiceDetails(pds, modServiceUrl, {
       inviteCode,
     })
