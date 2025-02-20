@@ -49,7 +49,7 @@ export default function (server: Server, ctx: AppContext) {
       // @NOTE: we're over-emitting for now for backwards compatibility, can reduce this in the future
       const status = await ctx.accountManager.getAccountStatus(requester)
       await ctx.sequencer.sequenceAccountEvt(requester, status)
-      await ctx.sequencer.sequenceHandleUpdate(
+      await ctx.sequencer.sequenceIdentityEvt(
         requester,
         account.handle ?? INVALID_HANDLE,
       )
