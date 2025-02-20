@@ -1371,6 +1371,9 @@ export const schemaDict = {
           rkey: {
             type: 'string',
             maxLength: 512,
+            format: 'record-key',
+            description:
+              'NOTE: maxLength is redundant with record-key format. Keeping it temporarily to ensure backwards compatibility.',
           },
           value: {
             type: 'unknown',
@@ -1388,6 +1391,7 @@ export const schemaDict = {
           },
           rkey: {
             type: 'string',
+            format: 'record-key',
           },
           value: {
             type: 'unknown',
@@ -1405,6 +1409,7 @@ export const schemaDict = {
           },
           rkey: {
             type: 'string',
+            format: 'record-key',
           },
         },
       },
@@ -1478,6 +1483,7 @@ export const schemaDict = {
               },
               rkey: {
                 type: 'string',
+                format: 'record-key',
                 description: 'The Record Key.',
                 maxLength: 512,
               },
@@ -1548,6 +1554,7 @@ export const schemaDict = {
           },
           rev: {
             type: 'string',
+            format: 'tid',
           },
         },
       },
@@ -1580,6 +1587,7 @@ export const schemaDict = {
               },
               rkey: {
                 type: 'string',
+                format: 'record-key',
                 description: 'The Record Key.',
               },
               swapRecord: {
@@ -1705,6 +1713,7 @@ export const schemaDict = {
             rkey: {
               type: 'string',
               description: 'The Record Key.',
+              format: 'record-key',
             },
             cid: {
               type: 'string',
@@ -1929,6 +1938,7 @@ export const schemaDict = {
               },
               rkey: {
                 type: 'string',
+                format: 'record-key',
                 description: 'The Record Key.',
                 maxLength: 512,
               },
@@ -3347,6 +3357,7 @@ export const schemaDict = {
               },
               rev: {
                 type: 'string',
+                format: 'tid',
               },
             },
           },
@@ -3392,6 +3403,7 @@ export const schemaDict = {
             rkey: {
               type: 'string',
               description: 'Record Key',
+              format: 'record-key',
             },
             commit: {
               type: 'string',
@@ -3443,6 +3455,7 @@ export const schemaDict = {
             },
             since: {
               type: 'string',
+              format: 'tid',
               description:
                 "The revision ('rev') of the repo to create a diff from.",
             },
@@ -3508,6 +3521,7 @@ export const schemaDict = {
               },
               rev: {
                 type: 'string',
+                format: 'tid',
                 description:
                   'Optional field, the current rev of the repo, if active=true',
               },
@@ -3541,6 +3555,7 @@ export const schemaDict = {
             },
             since: {
               type: 'string',
+              format: 'tid',
               description: 'Optional revision of the repo to list blobs since.',
             },
             limit: {
@@ -3647,6 +3662,7 @@ export const schemaDict = {
           },
           rev: {
             type: 'string',
+            format: 'tid',
           },
           active: {
             type: 'boolean',
@@ -3862,11 +3878,13 @@ export const schemaDict = {
           },
           rev: {
             type: 'string',
+            format: 'tid',
             description:
               'The rev of the emitted commit. Note that this information is also in the commit object included in blocks, unless this is a tooBig event.',
           },
           since: {
             type: 'string',
+            format: 'tid',
             description:
               'The rev of the last emitted commit from this repo (if any).',
           },
