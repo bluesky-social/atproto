@@ -611,7 +611,7 @@ describe('crud operations', () => {
         },
         rkey: '..',
       }),
-    ).rejects.toThrow('record key can not be "." or ".."')
+    ).rejects.toThrow('Input/rkey must be a valid Record Key')
   })
 
   it('validates the record on write', async () => {
