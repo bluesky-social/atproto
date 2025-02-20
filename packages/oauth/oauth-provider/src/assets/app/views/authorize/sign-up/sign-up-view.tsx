@@ -1,0 +1,145 @@
+import { Trans } from '@lingui/react/macro'
+import { useState } from 'react'
+import { CustomizationData } from '../../../backend-types.ts'
+import { WizardCard } from '../../../components/forms/wizard-card.tsx'
+import {
+  LayoutTitlePage,
+  LayoutTitlePageProps,
+} from '../../../components/layouts/layout-title-page.tsx'
+import { HelpCard } from '../../../components/utils/help-card.tsx'
+import { Override } from '../../../lib/util.ts'
+import {
+  SignUpAccountForm,
+  SignUpAccountFormOutput,
+} from './sign-up-account-form.tsx'
+import { SignUpDisclaimer } from './sign-up-disclaimer.tsx'
+import { SignUpHandleForm } from './sign-up-handle-form.tsx'
+import { SignUpHcaptchaForm } from './sign-up-hcaptcha-form.tsx'
+
+export type SignUpViewProps = Override<
+  LayoutTitlePageProps,
+  {
+    customizationData?: CustomizationData
+
+    onBack?: () => void
+    onValidateNewHandle: (
+      data: { handle: string },
+      signal?: AbortSignal,
+    ) => void | PromiseLike<void>
+    onDone: (
+      data: SignUpAccountFormOutput & {
+        handle: string
+        hcaptchaToken?: string
+      },
+      signal?: AbortSignal,
+    ) => void | PromiseLike<void>
+  }
+>
+
+export function SignUpView({
+  customizationData: {
+    availableUserDomains = [],
+    hcaptchaSiteKey = undefined,
+    inviteCodeRequired = true,
+    links,
+  } = {},
+
+  onValidateNewHandle,
+  onDone,
+  onBack,
+
+  // LayoutTitlePage
+  title = <Trans>Create Account</Trans>,
+  subtitle = <Trans>We're so excited to have you join us!</Trans>,
+  ...props
+}: SignUpViewProps) {
+  const [credentials, setCredentials] = useState<
+    undefined | SignUpAccountFormOutput
+  >(undefined)
+  const [handle, setHandle] = useState<undefined | string>(undefined)
+  const [hcaptcha, setHcaptcha] = useState<undefined | string>(undefined)
+
+  const hcaptchaToken = hcaptchaSiteKey == null ? undefined : hcaptcha || false
+
+  return (
+    <LayoutTitlePage {...props} title={title} subtitle={subtitle}>
+      <WizardCard
+        doneLabel={<Trans>Sign Up</Trans>}
+        onBack={onBack}
+        onDone={(signal: AbortSignal) => {
+          if (credentials && handle && hcaptchaToken !== false) {
+            return onDone({ ...credentials, handle, hcaptchaToken }, signal)
+          }
+        }}
+        steps={[
+          // We use the handle input first since the "onValidateNewHandle" check
+          // will make it less likely that the actual signup call will fail, and
+          // will result in a better user experience, especially if there is an
+          // issue with the email address (e.g. already in use).
+          {
+            invalid: !handle,
+            titleRender: (_data) => <Trans>Choose a username</Trans>,
+            contentRender: ({ prev, prevLabel, next, nextLabel, invalid }) => (
+              <SignUpHandleForm
+                className="flex-grow"
+                invalid={invalid}
+                domains={availableUserDomains}
+                handle={handle}
+                onHandle={setHandle}
+                prevLabel={prevLabel}
+                onPrev={prev}
+                nextLabel={nextLabel}
+                onNext={async (signal) => {
+                  if (handle) await onValidateNewHandle({ handle }, signal)
+                  if (!signal.aborted) return next(signal)
+                }}
+              >
+                <SignUpDisclaimer links={links} />
+              </SignUpHandleForm>
+            ),
+          },
+          {
+            invalid: !credentials,
+            titleRender: (_data) => <Trans>Your account</Trans>,
+            contentRender: ({ prev, prevLabel, next, nextLabel, invalid }) => (
+              <SignUpAccountForm
+                className="flex-grow"
+                invalid={invalid}
+                prevLabel={prevLabel}
+                onPrev={prev}
+                nextLabel={nextLabel}
+                onNext={next}
+                inviteCodeRequired={inviteCodeRequired}
+                credentials={credentials}
+                onCredentials={setCredentials}
+              >
+                <SignUpDisclaimer links={links} />
+              </SignUpAccountForm>
+            ),
+          },
+          hcaptchaSiteKey != null && {
+            invalid: hcaptchaToken === false,
+            titleRender: (_data) => <Trans>Verify you are human</Trans>,
+            contentRender: ({ prev, prevLabel, next, nextLabel, invalid }) => (
+              <SignUpHcaptchaForm
+                className="flex-grow"
+                invalid={invalid}
+                siteKey={hcaptchaSiteKey}
+                token={hcaptcha}
+                onToken={setHcaptcha}
+                prevLabel={prevLabel}
+                onPrev={prev}
+                nextLabel={nextLabel}
+                onNext={next}
+              >
+                <SignUpDisclaimer links={links} />
+              </SignUpHcaptchaForm>
+            ),
+          },
+        ]}
+      />
+
+      <HelpCard className="mt-4" links={links} />
+    </LayoutTitlePage>
+  )
+}

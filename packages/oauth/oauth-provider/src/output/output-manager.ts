@@ -1,23 +1,33 @@
 import type { ServerResponse } from 'node:http'
 import { Asset } from '../assets/asset.js'
 import { getAsset } from '../assets/index.js'
+import { CspConfig } from '../lib/csp/index.js'
 import { Html, cssCode, html } from '../lib/html/index.js'
 import {
   AuthorizationResultAuthorize,
   buildAuthorizeData,
 } from './build-authorize-data.js'
-import { buildErrorPayload, buildErrorStatus } from './build-error-payload.js'
 import {
   Customization,
+  LinkDefinition,
   buildCustomizationCss,
   buildCustomizationData,
-} from './customization.js'
+} from './build-customization-data.js'
+import { buildErrorPayload, buildErrorStatus } from './build-error-payload.js'
 import { declareBackendData, sendWebPage } from './send-web-page.js'
+
+const HCAPTCHA_CSP = {
+  'script-src': ['https://hcaptcha.com', 'https://*.hcaptcha.com'],
+  'frame-src': ['https://hcaptcha.com', 'https://*.hcaptcha.com'],
+  'style-src': ['https://hcaptcha.com', 'https://*.hcaptcha.com'],
+  'connect-src': ['https://hcaptcha.com', 'https://*.hcaptcha.com'],
+} as const satisfies CspConfig
 
 export class OutputManager {
   readonly customizationScript: Html
   readonly customizationStyle: Html
-  readonly customizationLinks?: Customization['links']
+  readonly customizationLinks?: readonly LinkDefinition[]
+  readonly customizationCsp?: CspConfig
 
   // Could technically cause an "UnhandledPromiseRejection", which might cause
   // the process to exit. This is intentional, as it's a critical error. It
@@ -28,16 +38,17 @@ export class OutputManager {
     getAsset('main.css'),
   ] as const)
 
-  constructor(customization?: Customization) {
+  constructor(customization: Customization) {
     // Note: building this here for two reasons:
     // 1. To avoid re-building it on every request
-    // 2. To throw during init if the customization is invalid
+    // 2. To throw during init if the customization/config is invalid
     this.customizationScript = declareBackendData(
       '__customizationData',
       buildCustomizationData(customization),
     )
     this.customizationStyle = cssCode(buildCustomizationCss(customization))
-    this.customizationLinks = customization?.links
+    this.customizationLinks = customization.branding?.links
+    this.customizationCsp = customization?.hcaptcha ? HCAPTCHA_CSP : undefined
   }
 
   async sendAuthorizePage(
@@ -58,8 +69,8 @@ export class OutputManager {
       ],
       links: this.customizationLinks,
       htmlAttrs: { lang: 'en' },
-      title: 'Authorize',
       body: html`<div id="root"></div>`,
+      csp: this.customizationCsp,
     })
   }
 
@@ -79,7 +90,6 @@ export class OutputManager {
       ],
       links: this.customizationLinks,
       htmlAttrs: { lang: 'en' },
-      title: 'Error',
       body: html`<div id="root"></div>`,
     })
   }

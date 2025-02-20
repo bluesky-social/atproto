@@ -1,13 +1,17 @@
+// The imports from backend-data are marked as deprecated to avoid their use
+// from other places.
+/* eslint-disable import/no-deprecated */
+
 // This must be loaded before any dependency to ensure that global variables
-// cannot be accessed by JS from node_modules.
-import * as backendData from './backend-data'
+// cannot be accessed by other bundled JS files from node_modules:
+// eslint-disable-next-line import/order
+import { authorizeData, customizationData, errorData } from './backend-data.ts'
 
+import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-
-import { App } from './app'
+import { App } from './app.tsx'
 import './main.css'
 
-const { authorizeData } = backendData
 if (authorizeData) {
   // When the user is logging in, make sure the page URL contains the
   // "request_uri" in case the user refreshes the page.
@@ -25,4 +29,12 @@ if (authorizeData) {
 
 const container = document.getElementById('root')!
 const root = createRoot(container)
-root.render(<App {...backendData} />)
+root.render(
+  <StrictMode>
+    <App
+      authorizeData={authorizeData}
+      customizationData={customizationData}
+      errorData={errorData}
+    />
+  </StrictMode>,
+)

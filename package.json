@@ -11,7 +11,7 @@
   "packageManager": "pnpm@8.15.9",
   "scripts": {
     "lint:fix": "pnpm lint --fix",
-    "lint": "eslint . --ext .ts,.js",
+    "lint": "eslint . --ext .ts,.js,.tsx,.jsx",
     "style:fix": "prettier --write .",
     "style": "prettier --check .",
     "verify": "pnpm --stream '/^verify:.+$/'",

@@ -1,7 +1,7 @@
 import { DAY, MINUTE } from '@atproto/common'
 import { INVALID_HANDLE } from '@atproto/syntax'
 import { AuthRequiredError } from '@atproto/xrpc-server'
-import { formatAccountStatus } from '../../../../account-manager'
+import { formatAccountStatus } from '../../../../account-manager/account-manager'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { resultPassthru } from '../../../proxy'
