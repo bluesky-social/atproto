@@ -165,6 +165,18 @@ export function parseHttpCookies(
 }
 
 export type ExtractRequestMetadataOptions = {
+  /**
+   * A function that determines whether a given IP address is trusted. The
+   * function is called with the IP addresses and its index in the list of
+   * forwarded addresses (starting from 0, 0 corresponding to the ip of the
+   * incoming HTTP connection, and the last item being the first proxied IP
+   * address in the proxy chain, deduced from the `X-Forwarded-For` header). The
+   * function should return `true` if the IP address is trusted, and `false`
+   * otherwise.
+   *
+   * @see {@link https://www.npmjs.com/package/proxy-addr} for a utility that
+   * allows you to create a trust function.
+   */
   trustProxy?: (addr: string, i: number) => boolean
 }
 
@@ -194,10 +206,15 @@ function extractIp(
   if (trust) {
     const ips = forwarded(req)
     for (let i = 0; i < ips.length; i++) {
-      if (!trust(ips[i], i)) return ips[i]
+      const isTrusted = trust(ips[i], i)
+      if (!isTrusted) return ips[i]
     }
-    // The "trustProxy" function and/or the proxy configuration is not correct
-    throw new Error('No untrusted IP address found')
+    // Let's return the last ("furthest") IP address in the chain if all of them
+    // are trusted. Note that this may indicate an issue with either the trust
+    // function (too permissive), or the proxy configuration (one of them not
+    // setting the X-Forwarded-For header).
+    const ip = ips[ips.length - 1]
+    if (ip) return ip
   }
 
   // Express app compatibility (see "trust proxy" setting)
