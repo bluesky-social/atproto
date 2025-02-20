@@ -80,6 +80,7 @@ import * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo.js'
 import * as ComAtprotoSyncGetRepoStatus from './types/com/atproto/sync/getRepoStatus.js'
 import * as ComAtprotoSyncListBlobs from './types/com/atproto/sync/listBlobs.js'
 import * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos.js'
+import * as ComAtprotoSyncListReposByCollection from './types/com/atproto/sync/listReposByCollection.js'
 import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate.js'
 import * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl.js'
 import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos.js'
@@ -310,6 +311,7 @@ export * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo.js'
 export * as ComAtprotoSyncGetRepoStatus from './types/com/atproto/sync/getRepoStatus.js'
 export * as ComAtprotoSyncListBlobs from './types/com/atproto/sync/listBlobs.js'
 export * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos.js'
+export * as ComAtprotoSyncListReposByCollection from './types/com/atproto/sync/listReposByCollection.js'
 export * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate.js'
 export * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl.js'
 export * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos.js'
@@ -1467,6 +1469,18 @@ export class ComAtprotoSyncNS {
   ): Promise<ComAtprotoSyncListRepos.Response> {
     return this._client.call(
       'com.atproto.sync.listRepos',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  listReposByCollection(
+    params?: ComAtprotoSyncListReposByCollection.QueryParams,
+    opts?: ComAtprotoSyncListReposByCollection.CallOptions,
+  ): Promise<ComAtprotoSyncListReposByCollection.Response> {
+    return this._client.call(
+      'com.atproto.sync.listReposByCollection',
       params,
       undefined,
       opts,

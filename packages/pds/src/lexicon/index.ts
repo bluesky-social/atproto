@@ -77,6 +77,7 @@ import * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo.js'
 import * as ComAtprotoSyncGetRepoStatus from './types/com/atproto/sync/getRepoStatus.js'
 import * as ComAtprotoSyncListBlobs from './types/com/atproto/sync/listBlobs.js'
 import * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos.js'
+import * as ComAtprotoSyncListReposByCollection from './types/com/atproto/sync/listReposByCollection.js'
 import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate.js'
 import * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl.js'
 import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos.js'
@@ -1106,6 +1107,17 @@ export class ComAtprotoSyncNS {
     >,
   ) {
     const nsid = 'com.atproto.sync.listRepos' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  listReposByCollection<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoSyncListReposByCollection.Handler<ExtractAuth<AV>>,
+      ComAtprotoSyncListReposByCollection.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.sync.listReposByCollection' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

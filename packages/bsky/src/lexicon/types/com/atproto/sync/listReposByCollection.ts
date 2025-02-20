@@ -7,15 +7,14 @@ import { CID } from 'multiformats/cid'
 import { validate as _validate } from '../../../../lexicons'
 import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
-import type * as ToolsOzoneTeamDefs from './defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
-const id = 'tools.ozone.team.listMembers'
+const id = 'com.atproto.sync.listReposByCollection'
 
 export interface QueryParams {
-  disabled?: boolean
-  roles?: string[]
+  collection: string
+  /** Maximum size of response set. Recommend setting a large maximum (1000+) when enumerating large DID lists. */
   limit: number
   cursor?: string
 }
@@ -24,7 +23,7 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   cursor?: string
-  members: ToolsOzoneTeamDefs.Member[]
+  repos: Repo[]
 }
 
 export type HandlerInput = undefined
@@ -52,3 +51,18 @@ export type HandlerReqCtx<HA extends HandlerAuth = never> = {
 export type Handler<HA extends HandlerAuth = never> = (
   ctx: HandlerReqCtx<HA>,
 ) => Promise<HandlerOutput> | HandlerOutput
+
+export interface Repo {
+  $type?: 'com.atproto.sync.listReposByCollection#repo'
+  did: string
+}
+
+const hashRepo = 'repo'
+
+export function isRepo<V>(v: V) {
+  return is$typed(v, id, hashRepo)
+}
+
+export function validateRepo<V>(v: V) {
+  return validate<Repo & V>(v, id, hashRepo)
+}

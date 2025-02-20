@@ -1,4 +1,4 @@
-import { AtpAgent } from '@atproto/api'
+import { AtpAgent, ToolsOzoneTeamDefs } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { forSnapshot } from './_util'
 
@@ -38,8 +38,8 @@ describe('team management', () => {
   describe('listMembers', () => {
     it('allows all members to list all members', async () => {
       const [{ data: forAdmin }, { data: forTriage }] = await Promise.all([
-        adminAgent.api.tools.ozone.team.listMembers({}),
-        triageAgent.api.tools.ozone.team.listMembers({}),
+        adminAgent.tools.ozone.team.listMembers({}),
+        triageAgent.tools.ozone.team.listMembers({}),
       ])
       expect(forSnapshot(forAdmin.members)).toMatchSnapshot()
       expect(forSnapshot(forTriage.members)).toMatchSnapshot()
@@ -47,20 +47,50 @@ describe('team management', () => {
 
       expect(forAdmin.members.length).toEqual(forTriage.members.length)
     })
-  })
-  describe('listMembers', () => {
-    it('allows all members to list all members', async () => {
-      const [{ data: forAdmin }, { data: forTriage }] = await Promise.all([
-        adminAgent.api.tools.ozone.team.listMembers({}),
-        triageAgent.api.tools.ozone.team.listMembers({}),
+    it('allows filtering members by role', async () => {
+      const [{ data: onlyAdmins }, { data: onlyTriage }] = await Promise.all([
+        adminAgent.tools.ozone.team.listMembers({
+          roles: [ToolsOzoneTeamDefs.ROLEADMIN],
+        }),
+        adminAgent.tools.ozone.team.listMembers({
+          roles: [ToolsOzoneTeamDefs.ROLETRIAGE],
+        }),
       ])
-      expect(forSnapshot(forAdmin.members)).toMatchSnapshot()
-      expect(forSnapshot(forTriage.members)).toMatchSnapshot()
-      // Validate that the list looks the same to both admin and triage members
 
-      expect(forAdmin.members.length).toEqual(forTriage.members.length)
+      expect(
+        onlyAdmins.members.find(
+          ({ role }) => role !== ToolsOzoneTeamDefs.ROLEADMIN,
+        ),
+      ).toBeUndefined()
+
+      expect(
+        onlyTriage.members.find(
+          ({ role }) => role !== ToolsOzoneTeamDefs.ROLETRIAGE,
+        ),
+      ).toBeUndefined()
+    })
+    it('allows filtering members by disabled status', async () => {
+      const [{ data: onlyDisabled }, { data: onlyEnabled }] = await Promise.all(
+        [
+          adminAgent.tools.ozone.team.listMembers({
+            disabled: true,
+          }),
+          adminAgent.tools.ozone.team.listMembers({
+            disabled: false,
+          }),
+        ],
+      )
+
+      expect(
+        onlyDisabled.members.find(({ disabled }) => !disabled),
+      ).toBeUndefined()
+
+      expect(
+        onlyEnabled.members.find(({ disabled }) => disabled),
+      ).toBeUndefined()
     })
   })
+
   describe('addMember', () => {
     const newMemberData = {
       did: 'did:plc:newMember',
@@ -69,15 +99,15 @@ describe('team management', () => {
     }
     it('only allows admins to add member', async () => {
       await expect(
-        triageAgent.api.tools.ozone.team.addMember(newMemberData),
+        triageAgent.tools.ozone.team.addMember(newMemberData),
       ).rejects.toThrow('Must be an admin to add a member')
       const { data: newMember } =
-        await adminAgent.api.tools.ozone.team.addMember(newMemberData)
+        await adminAgent.tools.ozone.team.addMember(newMemberData)
       expect(forSnapshot(newMember)).toMatchSnapshot()
     })
     it('throws error when trying to add existing member', async () => {
       await expect(
-        adminAgent.api.tools.ozone.team.addMember(newMemberData),
+        adminAgent.tools.ozone.team.addMember(newMemberData),
       ).rejects.toThrow('member already exists')
     })
   })
@@ -85,19 +115,19 @@ describe('team management', () => {
     it('only allows admins to delete members', async () => {
       const {
         data: { members: initialMembers },
-      } = await adminAgent.api.tools.ozone.team.listMembers({})
+      } = await adminAgent.tools.ozone.team.listMembers({})
       await expect(
-        triageAgent.api.tools.ozone.team.deleteMember({
+        triageAgent.tools.ozone.team.deleteMember({
           did: sc.dids.bob,
         }),
       ).rejects.toThrow('Must be an admin to delete a member')
 
-      await adminAgent.api.tools.ozone.team.deleteMember({
+      await adminAgent.tools.ozone.team.deleteMember({
         did: sc.dids.bob,
       })
       const {
         data: { members: membersAfterDelete },
-      } = await adminAgent.api.tools.ozone.team.listMembers({})
+      } = await adminAgent.tools.ozone.team.listMembers({})
 
       expect(membersAfterDelete.length).toEqual(initialMembers.length - 1)
       expect(membersAfterDelete.map(({ did }) => did)).not.toContain(
@@ -107,7 +137,7 @@ describe('team management', () => {
 
     it('throws error when trying to remove non-existent member', async () => {
       await expect(
-        adminAgent.api.tools.ozone.team.deleteMember({
+        adminAgent.tools.ozone.team.deleteMember({
           did: 'did:plc:test',
         }),
       ).rejects.toThrow('member not found')
@@ -118,19 +148,19 @@ describe('team management', () => {
       const getCarol = async () => {
         const {
           data: { members },
-        } = await adminAgent.api.tools.ozone.team.listMembers({})
+        } = await adminAgent.tools.ozone.team.listMembers({})
 
         return members.find(({ did }) => did === sc.dids.carol)
       }
       await expect(
-        triageAgent.api.tools.ozone.team.updateMember({
+        triageAgent.tools.ozone.team.updateMember({
           disabled: false,
           did: sc.dids.carol,
           role: 'tools.ozone.team.defs#roleAdmin',
         }),
       ).rejects.toThrow('Must be an admin to update a member')
 
-      await adminAgent.api.tools.ozone.team.updateMember({
+      await adminAgent.tools.ozone.team.updateMember({
         did: sc.dids.carol,
         role: 'tools.ozone.team.defs#roleAdmin',
       })
@@ -141,7 +171,7 @@ describe('team management', () => {
       // Verify that params that we didn't send did not get updated
       expect(carolAfterRoleChange?.disabled).toEqual(false)
 
-      await adminAgent.api.tools.ozone.team.updateMember({
+      await adminAgent.tools.ozone.team.updateMember({
         did: sc.dids.carol,
         disabled: true,
       })
@@ -152,7 +182,7 @@ describe('team management', () => {
     })
     it('throws error when trying to update non-existent member', async () => {
       await expect(
-        adminAgent.api.tools.ozone.team.updateMember({
+        adminAgent.tools.ozone.team.updateMember({
           disabled: false,
           did: 'did:plc:test',
           role: 'tools.ozone.team.defs#roleAdmin',
