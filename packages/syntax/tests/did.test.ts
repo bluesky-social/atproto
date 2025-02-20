@@ -68,6 +68,7 @@ describe('DID permissive validation', () => {
   })
 
   it('conforms to interop valid DIDs', () => {
+    // NOTE: these test vector files are maintained in: https://github.com/bluesky-social/atproto-interop-tests
     const lineReader = readline.createInterface({
       input: fs.createReadStream(
         `${__dirname}/interop-files/did_syntax_valid.txt`,
@@ -83,6 +84,7 @@ describe('DID permissive validation', () => {
   })
 
   it('conforms to interop invalid DIDs', () => {
+    // NOTE: these test vector files are maintained in: https://github.com/bluesky-social/atproto-interop-tests
     const lineReader = readline.createInterface({
       input: fs.createReadStream(
         `${__dirname}/interop-files/did_syntax_invalid.txt`,

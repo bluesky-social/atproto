@@ -11,6 +11,7 @@ describe('recordkey validation', () => {
   }
 
   it('conforms to interop valid recordkey', () => {
+    // NOTE: these test vector files are maintained in: https://github.com/bluesky-social/atproto-interop-tests
     const lineReader = readline.createInterface({
       input: fs.createReadStream(
         `${__dirname}/interop-files/recordkey_syntax_valid.txt`,
@@ -26,6 +27,7 @@ describe('recordkey validation', () => {
   })
 
   it('conforms to interop invalid recordkeys', () => {
+    // NOTE: these test vector files are maintained in: https://github.com/bluesky-social/atproto-interop-tests
     const lineReader = readline.createInterface({
       input: fs.createReadStream(
         `${__dirname}/interop-files/recordkey_syntax_invalid.txt`,
