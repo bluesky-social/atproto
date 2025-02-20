@@ -30,7 +30,6 @@ export class OzoneServiceProfile {
     ozoneUrl: string,
     userDetails: { inviteCode?: string } = {},
   ) {
-    // in here
     if (!this.did || !this.key) {
       throw new Error('No DID/key found!')
     }
