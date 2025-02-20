@@ -14,6 +14,7 @@ import {
   isModEventTakedown,
   isModEventUnmuteReporter,
   validateModEventDivert,
+  validateModEventReport,
 } from '../../lexicon/types/tools/ozone/moderation/defs'
 import { HandlerInput } from '../../lexicon/types/tools/ozone/moderation/emitEvent'
 import { asPredicate } from '../../lexicon/util'
@@ -26,6 +27,7 @@ import { getTagForReport } from '../../tag-service/util'
 import { retryHttp } from '../../util'
 
 const isValidModEventDivert = asPredicate(validateModEventDivert)
+const isValidModEventReport = asPredicate(validateModEventReport)
 
 const handleModerationEvent = async ({
   ctx,
@@ -165,7 +167,8 @@ const handleModerationEvent = async ({
       ctx.cfg.service.did,
       moderationTxn,
     )
-    const initialTags = isModEventReport(event)
+
+    const initialTags = isValidModEventReport(event)
       ? [getTagForReport(event.reportType)]
       : undefined
     await tagService.evaluateForSubject(initialTags)

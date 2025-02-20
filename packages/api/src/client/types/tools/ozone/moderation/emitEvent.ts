@@ -31,6 +31,7 @@ export interface InputSchema {
     | $Typed<ToolsOzoneModerationDefs.ModEventReverseTakedown>
     | $Typed<ToolsOzoneModerationDefs.ModEventResolveAppeal>
     | $Typed<ToolsOzoneModerationDefs.ModEventEmail>
+    | $Typed<ToolsOzoneModerationDefs.ModEventDivert>
     | $Typed<ToolsOzoneModerationDefs.ModEventTag>
     | $Typed<ToolsOzoneModerationDefs.AccountEvent>
     | $Typed<ToolsOzoneModerationDefs.IdentityEvent>
