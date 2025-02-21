@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.14.4
+
+### Patch Changes
+
+- [#3561](https://github.com/bluesky-social/atproto/pull/3561) [`b9cb049d9`](https://github.com/bluesky-social/atproto/commit/b9cb049d940cc706681142ef498238f74e2f539c) Thanks [@foysalit](https://github.com/foysalit)! - Add Divert event to the list of allowed ozone events
+
 ## 0.14.3
 
 ### Patch Changes
