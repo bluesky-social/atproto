@@ -1,3 +1,4 @@
+import { isModEventDivert } from '@atproto/api/dist/client/types/tools/ozone/moderation/defs'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { AdminTokenOutput, ModeratorOutput } from '../../auth-verifier'
 import { AppContext } from '../../context'
@@ -13,11 +14,8 @@ import {
   isModEventTag,
   isModEventTakedown,
   isModEventUnmuteReporter,
-  validateModEventDivert,
-  validateModEventReport,
 } from '../../lexicon/types/tools/ozone/moderation/defs'
 import { HandlerInput } from '../../lexicon/types/tools/ozone/moderation/emitEvent'
-import { asPredicate } from '../../lexicon/util'
 import { subjectFromInput } from '../../mod-service/subject'
 import { ProtectedTagSettingKey } from '../../setting/constants'
 import { SettingService } from '../../setting/service'
@@ -25,9 +23,6 @@ import { ProtectedTagSetting } from '../../setting/types'
 import { TagService } from '../../tag-service'
 import { getTagForReport } from '../../tag-service/util'
 import { retryHttp } from '../../util'
-
-const isValidModEventDivert = asPredicate(validateModEventDivert)
-const isValidModEventReport = asPredicate(validateModEventReport)
 
 const handleModerationEvent = async ({
   ctx,
@@ -132,7 +127,7 @@ const handleModerationEvent = async ({
     )
   }
 
-  if (isValidModEventDivert(event) && subject.isRecord()) {
+  if (isModEventDivert(event) && subject.isRecord()) {
     if (!ctx.blobDiverter) {
       throw new InvalidRequestError(
         'BlobDiverter not configured for this service',
@@ -168,7 +163,7 @@ const handleModerationEvent = async ({
       moderationTxn,
     )
 
-    const initialTags = isValidModEventReport(event)
+    const initialTags = isModEventReport(event)
       ? [getTagForReport(event.reportType)]
       : undefined
     await tagService.evaluateForSubject(initialTags)
@@ -234,7 +229,7 @@ export default function (server: Server, ctx: AppContext) {
       })
 
       // On divert events, we need to automatically take down the blobs
-      if (isValidModEventDivert(input.body.event)) {
+      if (isModEventDivert(input.body.event)) {
         await handleModerationEvent({
           auth,
           ctx,
