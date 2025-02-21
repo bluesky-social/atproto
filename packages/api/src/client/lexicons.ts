@@ -5976,7 +5976,7 @@ export const schemaDict = {
         type: 'object',
         description:
           'The existence of this reason on a skeletonFeedPost indicates the post is being displayed to the user in a promotional capacity (i.e., as sponsored content).',
-        required: ['promotionCreator', 'promotionManager'],
+        required: ['by', 'on'],
         properties: {
           info: {
             type: 'string',
@@ -5984,17 +5984,17 @@ export const schemaDict = {
               'Extended information about sponsored content, provided by the feed generator for transparency purposes.',
             maxLength: 2000,
           },
-          promotionCreator: {
-            type: 'string',
-            format: 'did',
+          by: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileViewBasic',
             description:
-              'DID of the account sponsoring or paying for the promotion. This is most likely the author of the post.',
+              'The account sponsoring or paying for the promotion. This is most likely the author of the post.',
           },
-          promotionManager: {
+          on: {
             type: 'string',
-            format: 'did',
+            format: 'at-uri',
             description:
-              'DID of the account responsible for managing or running the promotion. This is most likely the owner of the feed.',
+              'URI of the feed record responsible for the promotion.',
           },
         },
       },

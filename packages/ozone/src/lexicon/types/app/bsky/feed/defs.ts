@@ -341,10 +341,9 @@ export interface SkeletonReasonPromoted {
   $type?: 'app.bsky.feed.defs#skeletonReasonPromoted'
   /** Extended information about sponsored content, provided by the feed generator for transparency purposes. */
   info?: string
-  /** DID of the account sponsoring or paying for the promotion. This is most likely the author of the post. */
-  promotionCreator: string
-  /** DID of the account responsible for managing or running the promotion. This is most likely the owner of the feed. */
-  promotionManager: string
+  by: AppBskyActorDefs.ProfileViewBasic
+  /** URI of the feed record responsible for the promotion. */
+  on: string
 }
 
 const hashSkeletonReasonPromoted = 'skeletonReasonPromoted'
