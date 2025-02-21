@@ -3847,7 +3847,7 @@ export const schemaDict = {
           'blobs',
           'time',
         ],
-        nullable: ['prev', 'since'],
+        nullable: ['since'],
         properties: {
           seq: {
             type: 'integer',
@@ -3870,11 +3870,6 @@ export const schemaDict = {
           commit: {
             type: 'cid-link',
             description: 'Repo commit object CID.',
-          },
-          prev: {
-            type: 'cid-link',
-            description:
-              'DEPRECATED -- unused. WARNING -- nullable and optional; stick with optional to ensure golang interoperability.',
           },
           rev: {
             type: 'string',
@@ -3911,6 +3906,11 @@ export const schemaDict = {
               description:
                 'List of new blobs (by CID) referenced by records in this commit.',
             },
+          },
+          prevData: {
+            type: 'cid-link',
+            description:
+              "EXPERIMENTAL. The root CID of the MST tree for the previous commit from this repo (indicated by the 'since' revision field in this message). Corresponds to the 'data' field in the repo commit object. NOTE: this field is effectively required for the 'inductive' version of firehose.",
           },
           time: {
             type: 'string',
@@ -4067,6 +4067,11 @@ export const schemaDict = {
             type: 'cid-link',
             description:
               'For creates and updates, the new record CID. For deletions, null.',
+          },
+          prev: {
+            type: 'cid-link',
+            description:
+              'EXPERIMENTAL. For deletes and updates, the CID  of the previous record. For creates, undefined.',
           },
         },
       },

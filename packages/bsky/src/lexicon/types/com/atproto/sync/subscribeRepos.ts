@@ -51,8 +51,6 @@ export interface Commit {
   repo: string
   /** Repo commit object CID. */
   commit: CID
-  /** DEPRECATED -- unused. WARNING -- nullable and optional; stick with optional to ensure golang interoperability. */
-  prev?: CID | null
   /** The rev of the emitted commit. Note that this information is also in the commit object included in blocks, unless this is a tooBig event. */
   rev: string
   /** The rev of the last emitted commit from this repo (if any). */
@@ -61,6 +59,8 @@ export interface Commit {
   blocks: Uint8Array
   ops: RepoOp[]
   blobs: CID[]
+  /** EXPERIMENTAL. The root CID of the MST tree for the previous commit from this repo (indicated by the 'since' revision field in this message). Corresponds to the 'data' field in the repo commit object. NOTE: this field is effectively required for the 'inductive' version of firehose. */
+  prevData?: CID
   /** Timestamp of when this message was originally broadcast. */
   time: string
 }
@@ -196,6 +196,8 @@ export interface RepoOp {
   path: string
   /** For creates and updates, the new record CID. For deletions, null. */
   cid: CID | null
+  /** EXPERIMENTAL. For deletes and updates, the CID  of the previous record. For creates, undefined. */
+  prev?: CID
 }
 
 const hashRepoOp = 'repoOp'

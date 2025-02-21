@@ -1,6 +1,6 @@
 import { CID } from 'multiformats/cid'
 import * as crypto from '@atproto/crypto'
-import { BlobStore, CommitData, Repo, WriteOpAction } from '@atproto/repo'
+import { BlobStore, Repo, WriteOpAction, formatDataKey } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { BackgroundQueue } from '../../background'
@@ -8,6 +8,8 @@ import { createWriteToOp, writeToOp } from '../../repo'
 import {
   BadCommitSwapError,
   BadRecordSwapError,
+  CommitDataWithOps,
+  CommitOp,
   PreparedCreate,
   PreparedWrite,
 } from '../../repo/types'
@@ -16,6 +18,7 @@ import { ActorDb } from '../db'
 import { RecordTransactor } from '../record/transactor'
 import { RepoReader } from './reader'
 import { SqlRepoTransactor } from './sql-repo-transactor'
+import { blobCidsFromWrites, commitOpsFromCreates } from './util'
 
 export class RepoTransactor extends RepoReader {
   blob: BlobTransactor
@@ -45,24 +48,31 @@ export class RepoTransactor extends RepoReader {
     return res ? Repo.load(this.storage, CID.parse(res.cid)) : null
   }
 
-  async createRepo(writes: PreparedCreate[]): Promise<CommitData> {
+  async createRepo(writes: PreparedCreate[]): Promise<CommitDataWithOps> {
     this.db.assertTransaction()
-    const writeOps = writes.map(createWriteToOp)
     const commit = await Repo.formatInitCommit(
       this.storage,
       this.did,
       this.signingKey,
-      writeOps,
+      writes.map(createWriteToOp),
     )
     await Promise.all([
       this.storage.applyCommit(commit, true),
       this.indexWrites(writes, commit.rev),
       this.blob.processWriteBlobs(commit.rev, writes),
     ])
-    return commit
+    return {
+      ...commit,
+      ops: commitOpsFromCreates(writes),
+      blobs: blobCidsFromWrites(writes),
+      prevData: null,
+    }
   }
 
-  async processWrites(writes: PreparedWrite[], swapCommitCid?: CID) {
+  async processWrites(
+    writes: PreparedWrite[],
+    swapCommitCid?: CID,
+  ): Promise<CommitDataWithOps> {
     this.db.assertTransaction()
     const commit = await this.formatCommit(writes, swapCommitCid)
     await Promise.all([
@@ -79,7 +89,7 @@ export class RepoTransactor extends RepoReader {
   async formatCommit(
     writes: PreparedWrite[],
     swapCommit?: CID,
-  ): Promise<CommitData> {
+  ): Promise<CommitDataWithOps> {
     // this is not in a txn, so this won't actually hold the lock,
     // we just check if it is currently held by another txn
     const currRoot = await this.storage.getRootDetailed()
@@ -93,6 +103,7 @@ export class RepoTransactor extends RepoReader {
     await this.storage.cacheRev(currRoot.rev)
     const newRecordCids: CID[] = []
     const delAndUpdateUris: AtUri[] = []
+    const commitOps: CommitOp[] = []
     for (const write of writes) {
       const { action, uri, swapCid } = write
       if (action !== WriteOpAction.Delete) {
@@ -101,26 +112,36 @@ export class RepoTransactor extends RepoReader {
       if (action !== WriteOpAction.Create) {
         delAndUpdateUris.push(uri)
       }
-      if (swapCid === undefined) {
-        continue
-      }
       const record = await this.record.getRecord(uri, null, true)
-      const currRecord = record && CID.parse(record.cid)
-      if (action === WriteOpAction.Create && swapCid !== null) {
-        throw new BadRecordSwapError(currRecord) // There should be no current record for a create
+      const currRecord = record ? CID.parse(record.cid) : null
+
+      const op: CommitOp = {
+        action,
+        path: formatDataKey(uri.collection, uri.rkey),
+        cid: write.action === WriteOpAction.Delete ? null : write.cid,
       }
-      if (action === WriteOpAction.Update && swapCid === null) {
-        throw new BadRecordSwapError(currRecord) // There should be a current record for an update
+      if (currRecord) {
+        op.prev = currRecord
       }
-      if (action === WriteOpAction.Delete && swapCid === null) {
-        throw new BadRecordSwapError(currRecord) // There should be a current record for a delete
-      }
-      if ((currRecord || swapCid) && !currRecord?.equals(swapCid)) {
-        throw new BadRecordSwapError(currRecord)
+      commitOps.push(op)
+      if (swapCid !== undefined) {
+        if (action === WriteOpAction.Create && swapCid !== null) {
+          throw new BadRecordSwapError(currRecord) // There should be no current record for a create
+        }
+        if (action === WriteOpAction.Update && swapCid === null) {
+          throw new BadRecordSwapError(currRecord) // There should be a current record for an update
+        }
+        if (action === WriteOpAction.Delete && swapCid === null) {
+          throw new BadRecordSwapError(currRecord) // There should be a current record for a delete
+        }
+        if ((currRecord || swapCid) && !currRecord?.equals(swapCid)) {
+          throw new BadRecordSwapError(currRecord)
+        }
       }
     }
 
     const repo = await Repo.load(this.storage, currRoot.cid)
+    const prevData = repo.commit.data
     const writeOps = writes.map(writeToOp)
     const commit = await repo.formatCommit(writeOps, this.signingKey)
 
@@ -142,7 +163,12 @@ export class RepoTransactor extends RepoReader {
       )
       commit.relevantBlocks.addMap(missingBlocks.blocks)
     }
-    return commit
+    return {
+      ...commit,
+      ops: commitOps,
+      blobs: blobCidsFromWrites(writes),
+      prevData,
+    }
   }
 
   async indexWrites(writes: PreparedWrite[], rev: string) {

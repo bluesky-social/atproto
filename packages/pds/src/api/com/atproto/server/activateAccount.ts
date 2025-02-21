@@ -43,6 +43,9 @@ export default function (server: Server, ctx: AppContext) {
           newBlocks: blocks.blocks,
           relevantBlocks: blocks.blocks,
           removedCids: new CidSet(),
+          ops: [],
+          blobs: new CidSet(),
+          prevData: null,
         }
       })
 
@@ -53,7 +56,7 @@ export default function (server: Server, ctx: AppContext) {
         requester,
         account.handle ?? INVALID_HANDLE,
       )
-      await ctx.sequencer.sequenceCommit(requester, commitData, [])
+      await ctx.sequencer.sequenceCommit(requester, commitData)
     },
   })
 }

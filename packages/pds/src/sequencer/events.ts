@@ -1,74 +1,59 @@
-import { CID } from 'multiformats/cid'
 import { z } from 'zod'
-import { cborEncode, schema } from '@atproto/common'
-import {
-  BlockMap,
-  CidSet,
-  CommitData,
-  WriteOpAction,
-  blocksToCarFile,
-} from '@atproto/repo'
+import { cborEncode, noUndefinedVals, schema } from '@atproto/common'
+import { BlockMap, blocksToCarFile } from '@atproto/repo'
 import { AccountStatus } from '../account-manager'
-import { PreparedWrite } from '../repo'
+import { CommitDataWithOps } from '../repo'
 import { RepoSeqInsert } from './db'
 
 export const formatSeqCommit = async (
   did: string,
-  commitData: CommitData,
-  writes: PreparedWrite[],
+  commitData: CommitDataWithOps,
 ): Promise<RepoSeqInsert> => {
-  let tooBig: boolean
-  const ops: CommitEvtOp[] = []
-  const blobs = new CidSet()
-  let carSlice: Uint8Array
-
   const blocksToSend = new BlockMap()
   blocksToSend.addMap(commitData.newBlocks)
   blocksToSend.addMap(commitData.relevantBlocks)
 
-  // max 200 ops or 1MB of data
-  if (writes.length > 200 || blocksToSend.byteSize > 1000000) {
-    tooBig = true
+  let evt: CommitEvt
+
+  // If event is too big (max 200 ops or 1MB of data)
+  if (commitData.ops.length > 200 || blocksToSend.byteSize > 1000000) {
     const justRoot = new BlockMap()
     const rootBlock = blocksToSend.get(commitData.cid)
     if (rootBlock) {
       justRoot.set(commitData.cid, rootBlock)
     }
-    carSlice = await blocksToCarFile(commitData.cid, justRoot)
-  } else {
-    tooBig = false
-    for (const w of writes) {
-      const path = w.uri.collection + '/' + w.uri.rkey
-      let cid: CID | null
-      if (w.action === WriteOpAction.Delete) {
-        cid = null
-      } else {
-        cid = w.cid
-        w.blobs.forEach((blob) => {
-          blobs.add(blob.cid)
-        })
-      }
-      ops.push({ action: w.action, path, cid })
+
+    evt = {
+      rebase: false,
+      tooBig: true,
+      repo: did,
+      commit: commitData.cid,
+      rev: commitData.rev,
+      since: commitData.since,
+      blocks: await blocksToCarFile(commitData.cid, justRoot),
+      ops: [],
+      blobs: [],
+      prevData: commitData.prevData ?? undefined,
     }
-    carSlice = await blocksToCarFile(commitData.cid, blocksToSend)
+  } else {
+    evt = {
+      rebase: false,
+      tooBig: false,
+      repo: did,
+      commit: commitData.cid,
+      rev: commitData.rev,
+      since: commitData.since,
+      blocks: await blocksToCarFile(commitData.cid, blocksToSend),
+      ops: commitData.ops,
+      blobs: commitData.blobs.toList(),
+      prevData: commitData.prevData ?? undefined,
+    }
   }
 
-  const evt: CommitEvt = {
-    rebase: false,
-    tooBig,
-    repo: did,
-    commit: commitData.cid,
-    prev: commitData.prev,
-    rev: commitData.rev,
-    since: commitData.since,
-    ops,
-    blocks: carSlice,
-    blobs: blobs.toList(),
-  }
   return {
     did,
     eventType: 'append' as const,
-    event: cborEncode(evt),
+    event: cborEncode(noUndefinedVals(evt)),
     sequencedAt: new Date().toISOString(),
   }
 }
@@ -149,6 +134,7 @@ export const commitEvtOp = z.object({
   ]),
   path: z.string(),
   cid: schema.cid.nullable(),
+  prev: schema.cid.optional(),
 })
 export type CommitEvtOp = z.infer<typeof commitEvtOp>
 
@@ -157,12 +143,12 @@ export const commitEvt = z.object({
   tooBig: z.boolean(),
   repo: z.string(),
   commit: schema.cid,
-  prev: schema.cid.nullable(),
   rev: z.string(),
   since: z.string().nullable(),
   blocks: schema.bytes,
   ops: z.array(commitEvtOp),
   blobs: z.array(schema.cid),
+  prevData: schema.cid.optional(),
 })
 export type CommitEvt = z.infer<typeof commitEvt>
 

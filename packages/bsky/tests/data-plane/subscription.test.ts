@@ -1,8 +1,7 @@
 import { AtpAgent } from '@atproto/api'
 import { cborDecode, cborEncode } from '@atproto/common'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { PreparedWrite, sequencer } from '@atproto/pds'
-import { CommitData } from '@atproto/repo'
+import { CommitDataWithOps, sequencer } from '@atproto/pds'
 import { DatabaseSchemaType } from '../../src/data-plane/server/db/database-schema'
 import { ids } from '../../src/lexicon/lexicons'
 import { forSnapshot } from '../_util'
@@ -74,10 +73,9 @@ describe('sync', () => {
     const sequenceCommitOrig = network.pds.ctx.sequencer.sequenceCommit
     network.pds.ctx.sequencer.sequenceCommit = async function (
       did: string,
-      commitData: CommitData,
-      writes: PreparedWrite[],
+      commitData: CommitDataWithOps,
     ) {
-      const seqEvt = await sequencer.formatSeqCommit(did, commitData, writes)
+      const seqEvt = await sequencer.formatSeqCommit(did, commitData)
       const evt = cborDecode(seqEvt.event) as sequencer.CommitEvt
       evt.blocks = new Uint8Array() // bad blocks
       seqEvt.event = cborEncode(evt)
