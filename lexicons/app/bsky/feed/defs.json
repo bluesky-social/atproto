@@ -196,7 +196,7 @@
           "refs": [
             "#skeletonReasonRepost",
             "#skeletonReasonPin",
-            "#skeletonReasonSponsored"
+            "#skeletonReasonPromoted"
           ]
         },
         "feedContext": {

@@ -291,6 +291,7 @@ export interface SkeletonFeedPost {
   reason?:
     | $Typed<SkeletonReasonRepost>
     | $Typed<SkeletonReasonPin>
+    | $Typed<SkeletonReasonPromoted>
     | { $type: string }
   /** Context that will be passed through to client and may be passed to feed generator back alongside interactions. */
   feedContext?: string
@@ -333,6 +334,27 @@ export function isSkeletonReasonPin<V>(v: V) {
 
 export function validateSkeletonReasonPin<V>(v: V) {
   return validate<SkeletonReasonPin & V>(v, id, hashSkeletonReasonPin)
+}
+
+/** The existence of this reason on a skeletonFeedPost indicates the post is being displayed to the user in a promotional capacity (i.e., as sponsored content). */
+export interface SkeletonReasonPromoted {
+  $type?: 'app.bsky.feed.defs#skeletonReasonPromoted'
+  /** Extended information about sponsored content, provided by the feed generator for transparency purposes. */
+  info?: string
+  /** DID of the account sponsoring or paying for the promotion. This is most likely the author of the post. */
+  promotionCreator: string
+  /** DID of the account responsible for managing or running the promotion. This is most likely the owner of the feed. */
+  promotionManager: string
+}
+
+const hashSkeletonReasonPromoted = 'skeletonReasonPromoted'
+
+export function isSkeletonReasonPromoted<V>(v: V) {
+  return is$typed(v, id, hashSkeletonReasonPromoted)
+}
+
+export function validateSkeletonReasonPromoted<V>(v: V) {
+  return validate<SkeletonReasonPromoted & V>(v, id, hashSkeletonReasonPromoted)
 }
 
 export interface ThreadgateView {
