@@ -1,5 +1,13 @@
 # @atproto/api
 
+## 0.14.3
+
+### Patch Changes
+
+- [#3564](https://github.com/bluesky-social/atproto/pull/3564) [`22af31a89`](https://github.com/bluesky-social/atproto/commit/22af31a898476c5e317aea263af366bddda120d6) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Update chat lexicons
+
+- [#2378](https://github.com/bluesky-social/atproto/pull/2378) [`01874c4be`](https://github.com/bluesky-social/atproto/commit/01874c4be73a41ffb8fe28378f674949aa2c938f) Thanks [@bnewbold](https://github.com/bnewbold)! - set 'tid' and 'record-key' formats on com.atproto.sync and com.atproto.repo lexicons
+
 ## 0.14.2
 
 ### Patch Changes
