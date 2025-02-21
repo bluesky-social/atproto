@@ -16,6 +16,8 @@ const id = 'chat.bsky.convo.listConvos'
 export interface QueryParams {
   limit: number
   cursor?: string
+  readState?: 'unread' | (string & {})
+  status?: 'request' | 'accepted' | (string & {})
 }
 
 export type InputSchema = undefined

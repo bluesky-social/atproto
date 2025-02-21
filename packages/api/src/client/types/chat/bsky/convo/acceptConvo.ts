@@ -6,29 +6,27 @@ import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { validate as _validate } from '../../../../lexicons'
 import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
-import type * as ChatBskyConvoDefs from './defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
-const id = 'chat.bsky.convo.listConvos'
+const id = 'chat.bsky.convo.acceptConvo'
 
-export interface QueryParams {
-  limit?: number
-  cursor?: string
-  readState?: 'unread' | (string & {})
-  status?: 'request' | 'accepted' | (string & {})
+export interface QueryParams {}
+
+export interface InputSchema {
+  convoId: string
 }
 
-export type InputSchema = undefined
-
 export interface OutputSchema {
-  cursor?: string
-  convos: ChatBskyConvoDefs.ConvoView[]
+  /** Rev when the convo was accepted. If not present, the convo was already accepted. */
+  rev?: string
 }
 
 export interface CallOptions {
   signal?: AbortSignal
   headers?: HeadersMap
+  qp?: QueryParams
+  encoding?: 'application/json'
 }
 
 export interface Response {

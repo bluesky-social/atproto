@@ -113,7 +113,7 @@ export interface ConvoView {
     | $Typed<DeletedMessageView>
     | { $type: string }
   muted: boolean
-  opened?: boolean
+  status?: 'request' | 'accepted' | (string & {})
   unreadCount: number
 }
 
@@ -143,6 +143,22 @@ export function validateLogBeginConvo<V>(v: V) {
   return validate<LogBeginConvo & V>(v, id, hashLogBeginConvo)
 }
 
+export interface LogAcceptConvo {
+  $type?: 'chat.bsky.convo.defs#logAcceptConvo'
+  rev: string
+  convoId: string
+}
+
+const hashLogAcceptConvo = 'logAcceptConvo'
+
+export function isLogAcceptConvo<V>(v: V) {
+  return is$typed(v, id, hashLogAcceptConvo)
+}
+
+export function validateLogAcceptConvo<V>(v: V) {
+  return validate<LogAcceptConvo & V>(v, id, hashLogAcceptConvo)
+}
+
 export interface LogLeaveConvo {
   $type?: 'chat.bsky.convo.defs#logLeaveConvo'
   rev: string
@@ -157,6 +173,38 @@ export function isLogLeaveConvo<V>(v: V) {
 
 export function validateLogLeaveConvo<V>(v: V) {
   return validate<LogLeaveConvo & V>(v, id, hashLogLeaveConvo)
+}
+
+export interface LogMuteConvo {
+  $type?: 'chat.bsky.convo.defs#logMuteConvo'
+  rev: string
+  convoId: string
+}
+
+const hashLogMuteConvo = 'logMuteConvo'
+
+export function isLogMuteConvo<V>(v: V) {
+  return is$typed(v, id, hashLogMuteConvo)
+}
+
+export function validateLogMuteConvo<V>(v: V) {
+  return validate<LogMuteConvo & V>(v, id, hashLogMuteConvo)
+}
+
+export interface LogUnmuteConvo {
+  $type?: 'chat.bsky.convo.defs#logUnmuteConvo'
+  rev: string
+  convoId: string
+}
+
+const hashLogUnmuteConvo = 'logUnmuteConvo'
+
+export function isLogUnmuteConvo<V>(v: V) {
+  return is$typed(v, id, hashLogUnmuteConvo)
+}
+
+export function validateLogUnmuteConvo<V>(v: V) {
+  return validate<LogUnmuteConvo & V>(v, id, hashLogUnmuteConvo)
 }
 
 export interface LogCreateMessage {
@@ -191,4 +239,21 @@ export function isLogDeleteMessage<V>(v: V) {
 
 export function validateLogDeleteMessage<V>(v: V) {
   return validate<LogDeleteMessage & V>(v, id, hashLogDeleteMessage)
+}
+
+export interface LogReadMessage {
+  $type?: 'chat.bsky.convo.defs#logReadMessage'
+  rev: string
+  convoId: string
+  message: $Typed<MessageView> | $Typed<DeletedMessageView> | { $type: string }
+}
+
+const hashLogReadMessage = 'logReadMessage'
+
+export function isLogReadMessage<V>(v: V) {
+  return is$typed(v, id, hashLogReadMessage)
+}
+
+export function validateLogReadMessage<V>(v: V) {
+  return validate<LogReadMessage & V>(v, id, hashLogReadMessage)
 }
