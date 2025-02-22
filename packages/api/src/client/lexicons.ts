@@ -14031,6 +14031,12 @@ export const schemaDict = {
             type: 'string',
             format: 'did',
           },
+          handle: {
+            type: 'string',
+          },
+          displayName: {
+            type: 'string',
+          },
           disabled: {
             type: 'boolean',
           },
@@ -14118,6 +14124,9 @@ export const schemaDict = {
         parameters: {
           type: 'params',
           properties: {
+            q: {
+              type: 'string',
+            },
             disabled: {
               type: 'boolean',
             },

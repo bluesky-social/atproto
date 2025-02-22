@@ -23,7 +23,9 @@ export class TeamService {
     limit = 25,
     roles,
     disabled,
+    q,
   }: {
+    q?: string
     cursor?: string
     limit?: number
     disabled?: boolean
@@ -48,6 +50,13 @@ export class TeamService {
     }
     if (disabled !== undefined) {
       builder = builder.where('disabled', disabled ? 'is' : 'is not', true)
+    }
+    if (q) {
+      builder = builder.where((qb) =>
+        qb
+          .orWhere('handle', 'ilike', `%${q}%`)
+          .orWhere('displayName', 'ilike', `%${q}%`),
+      )
     }
     const members = await builder
       .limit(limit)

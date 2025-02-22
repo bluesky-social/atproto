@@ -26,8 +26,14 @@ export default function (server: Server, ctx: AppContext) {
           )
         }
 
+        const { data: profile } = await ctx.appviewAgent.getProfile({
+          actor: did,
+        })
+
         const member = await teamService.create({
           did,
+          handle: profile.handle || null,
+          displayName: profile.displayName || null,
           disabled: false,
           role: getMemberRole(role),
           lastUpdatedBy:
