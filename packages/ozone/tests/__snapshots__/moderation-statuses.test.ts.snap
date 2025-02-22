@@ -3,6 +3,7 @@
 exports[`moderation-statuses query statuses returns statuses filtered by subject language 1`] = `
 Array [
   Object {
+    "$type": "tools.ozone.moderation.defs#subjectStatusView",
     "accountStats": Object {
       "$type": "tools.ozone.moderation.defs#accountStats",
       "appealCount": 0,
@@ -47,6 +48,7 @@ Array [
     "updatedAt": "1970-01-01T00:00:00.000Z",
   },
   Object {
+    "$type": "tools.ozone.moderation.defs#subjectStatusView",
     "accountStats": Object {
       "$type": "tools.ozone.moderation.defs#accountStats",
       "appealCount": 0,
@@ -95,6 +97,7 @@ Array [
 exports[`moderation-statuses query statuses returns statuses for subjects that received moderation events 1`] = `
 Array [
   Object {
+    "$type": "tools.ozone.moderation.defs#subjectStatusView",
     "accountStats": Object {
       "$type": "tools.ozone.moderation.defs#accountStats",
       "appealCount": 0,
@@ -139,6 +142,7 @@ Array [
     "updatedAt": "1970-01-01T00:00:00.000Z",
   },
   Object {
+    "$type": "tools.ozone.moderation.defs#subjectStatusView",
     "accountStats": Object {
       "$type": "tools.ozone.moderation.defs#accountStats",
       "appealCount": 0,
@@ -182,6 +186,7 @@ Array [
     "updatedAt": "1970-01-01T00:00:00.000Z",
   },
   Object {
+    "$type": "tools.ozone.moderation.defs#subjectStatusView",
     "accountStats": Object {
       "$type": "tools.ozone.moderation.defs#accountStats",
       "appealCount": 0,
@@ -225,6 +230,7 @@ Array [
     "updatedAt": "1970-01-01T00:00:00.000Z",
   },
   Object {
+    "$type": "tools.ozone.moderation.defs#subjectStatusView",
     "accountStats": Object {
       "$type": "tools.ozone.moderation.defs#accountStats",
       "appealCount": 0,

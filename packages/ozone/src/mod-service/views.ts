@@ -617,6 +617,7 @@ export class ModerationViews {
     status: ModerationSubjectStatusRowWithHandle,
   ): SubjectStatusView {
     const statusView: SubjectStatusView = {
+      $type: 'tools.ozone.moderation.defs#subjectStatusView',
       id: status.id,
       reviewState: status.reviewState,
       createdAt: status.createdAt,
