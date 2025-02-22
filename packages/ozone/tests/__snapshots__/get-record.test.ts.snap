@@ -28,6 +28,7 @@ Object {
   ],
   "moderation": Object {
     "subjectStatus": Object {
+      "$type": "tools.ozone.moderation.defs#subjectStatusView",
       "accountStats": Object {
         "$type": "tools.ozone.moderation.defs#accountStats",
       },
@@ -149,6 +150,7 @@ Object {
   ],
   "moderation": Object {
     "subjectStatus": Object {
+      "$type": "tools.ozone.moderation.defs#subjectStatusView",
       "accountStats": Object {
         "$type": "tools.ozone.moderation.defs#accountStats",
       },
