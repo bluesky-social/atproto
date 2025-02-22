@@ -1,9 +1,10 @@
-import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
 import { AuthScope } from '../../../../auth-verifier'
+import { AppContext } from '../../../../context'
+import { Server } from '../../../../lexicon'
 
 export default function (server: Server, ctx: AppContext) {
-  if (!ctx.cfg.bskyAppView) return
+  if (!ctx.bskyAppView) return
+
   server.app.bsky.actor.getPreferences({
     auth: ctx.authVerifier.accessStandard({
       additional: [AuthScope.Takendown],

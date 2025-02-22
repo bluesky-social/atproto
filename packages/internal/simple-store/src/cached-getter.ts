@@ -1,4 +1,4 @@
-import { Awaitable, SimpleStore, Key, Value } from './simple-store.js'
+import { Awaitable, Key, SimpleStore, Value } from './simple-store.js'
 
 export type GetCachedOptions = {
   signal?: AbortSignal

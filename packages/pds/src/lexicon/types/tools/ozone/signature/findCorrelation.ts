@@ -3,11 +3,15 @@
  */
 import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
-import * as ToolsOzoneSignatureDefs from './defs'
+import type * as ToolsOzoneSignatureDefs from './defs.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'tools.ozone.signature.findCorrelation'
 
 export interface QueryParams {
   dids: string[]
@@ -17,7 +21,6 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   details: ToolsOzoneSignatureDefs.SigDetail[]
-  [k: string]: unknown
 }
 
 export type HandlerInput = undefined
@@ -40,6 +43,7 @@ export type HandlerReqCtx<HA extends HandlerAuth = never> = {
   input: HandlerInput
   req: express.Request
   res: express.Response
+  resetRouteRateLimits: () => Promise<void>
 }
 export type Handler<HA extends HandlerAuth = never> = (
   ctx: HandlerReqCtx<HA>,

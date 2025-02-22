@@ -1,7 +1,7 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { AppContext } from '../../../../context'
 import { normalizeAndValidateHandle } from '../../../../handle'
 import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
 import { httpLogger } from '../../../../logger'
 
 export default function (server: Server, ctx: AppContext) {

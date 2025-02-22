@@ -1,12 +1,5 @@
-import { check, schema } from '@atproto/common'
-import {
-  LexiconDoc,
-  Lexicons,
-  lexToJson,
-  LexXrpcProcedure,
-  LexXrpcQuery,
-  LexXrpcSubscription,
-} from '@atproto/lexicon'
+import { Readable } from 'node:stream'
+import { pipeline } from 'node:stream/promises'
 import express, {
   Application,
   ErrorRequestHandler,
@@ -16,10 +9,18 @@ import express, {
   RequestHandler,
   Response,
   Router,
+  json as jsonParser,
+  text as textParser,
 } from 'express'
-import { Readable } from 'node:stream'
-import { pipeline } from 'node:stream/promises'
-
+import { check, schema } from '@atproto/common'
+import {
+  LexXrpcProcedure,
+  LexXrpcQuery,
+  LexXrpcSubscription,
+  LexiconDoc,
+  Lexicons,
+  lexToJson,
+} from '@atproto/lexicon'
 import log from './logger'
 import { consumeMany, resetMany } from './rate-limiter'
 import { ErrorFrame, Frame, MessageFrame, XrpcStreamServer } from './stream'
@@ -30,21 +31,21 @@ import {
   HandlerSuccess,
   InternalServerError,
   InvalidRequestError,
-  isHandlerError,
-  isHandlerPipeThroughBuffer,
-  isHandlerPipeThroughStream,
-  isShared,
   MethodNotImplementedError,
   Options,
   Params,
-  RateLimiterI,
   RateLimitExceededError,
+  RateLimiterI,
   XRPCError,
   XRPCHandler,
   XRPCHandlerConfig,
   XRPCReqContext,
   XRPCStreamHandler,
   XRPCStreamHandlerConfig,
+  isHandlerError,
+  isHandlerPipeThroughBuffer,
+  isHandlerPipeThroughStream,
+  isShared,
 } from './types'
 import {
   decodeQueryParams,
@@ -59,7 +60,7 @@ export function createServer(lexicons?: LexiconDoc[], options?: Options) {
 
 export class Server {
   router: Express = express()
-  routes: Router = express.Router()
+  routes: Router = Router()
   subscriptions = new Map<string, XrpcStreamServer>()
   lex = new Lexicons()
   options: Options
@@ -68,20 +69,20 @@ export class Server {
   sharedRateLimiters: Record<string, RateLimiterI>
   routeRateLimiters: Record<string, RateLimiterI[]>
 
-  constructor(lexicons?: LexiconDoc[], opts?: Options) {
+  constructor(lexicons?: LexiconDoc[], opts: Options = {}) {
     if (lexicons) {
       this.addLexicons(lexicons)
     }
     this.router.use(this.routes)
     this.router.use('/xrpc/:methodId', this.catchall.bind(this))
-    this.router.use(errorMiddleware)
+    this.router.use(createErrorMiddleware(opts))
     this.router.once('mount', (app: Application) => {
       this.enableStreamingOnListen(app)
     })
-    this.options = opts ?? {}
+    this.options = opts
     this.middleware = {
-      json: express.json({ limit: opts?.payload?.jsonLimit }),
-      text: express.text({ limit: opts?.payload?.textLimit }),
+      json: jsonParser({ limit: opts?.payload?.jsonLimit }),
+      text: textParser({ limit: opts?.payload?.textLimit }),
     }
     this.globalRateLimiters = []
     this.sharedRateLimiters = {}
@@ -535,26 +536,30 @@ function createAuthMiddleware(verifier: AuthVerifier): RequestHandler {
   }
 }
 
-const errorMiddleware: ErrorRequestHandler = function (err, req, res, next) {
-  const locals: RequestLocals | undefined = req[kRequestLocals]
-  const methodSuffix = locals ? ` method ${locals.nsid}` : ''
-  const xrpcError = XRPCError.fromError(err)
-  if (xrpcError instanceof InternalServerError) {
-    // log trace for unhandled exceptions
-    log.error(err, `unhandled exception in xrpc${methodSuffix}`)
-  } else {
-    // do not log trace for known xrpc errors
-    log.error(
-      {
-        status: xrpcError.type,
-        message: xrpcError.message,
-        name: xrpcError.customErrorName,
-      },
-      `error in xrpc${methodSuffix}`,
-    )
+function createErrorMiddleware({
+  errorParser = (err) => XRPCError.fromError(err),
+}: Options): ErrorRequestHandler {
+  return (err, req, res, next) => {
+    const locals: RequestLocals | undefined = req[kRequestLocals]
+    const methodSuffix = locals ? ` method ${locals.nsid}` : ''
+    const xrpcError = errorParser(err)
+    if (xrpcError instanceof InternalServerError) {
+      // log trace for unhandled exceptions
+      log.error(err, `unhandled exception in xrpc${methodSuffix}`)
+    } else {
+      // do not log trace for known xrpc errors
+      log.error(
+        {
+          status: xrpcError.type,
+          message: xrpcError.message,
+          name: xrpcError.customErrorName,
+        },
+        `error in xrpc${methodSuffix}`,
+      )
+    }
+    if (res.headersSent) {
+      return next(err)
+    }
+    return res.status(xrpcError.type).json(xrpcError.payload)
   }
-  if (res.headersSent) {
-    return next(err)
-  }
-  return res.status(xrpcError.type).json(xrpcError.payload)
 }

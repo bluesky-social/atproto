@@ -1,7 +1,7 @@
 import { mapDefined } from '@atproto/common'
-import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
+import { AppContext } from '../../../../context'
 import { parseString } from '../../../../hydration/util'
+import { Server } from '../../../../lexicon'
 import { resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {

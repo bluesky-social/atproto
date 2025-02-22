@@ -1,5 +1,64 @@
 # @atproto/oauth-provider
 
+## 0.3.1
+
+### Patch Changes
+
+- [#3538](https://github.com/bluesky-social/atproto/pull/3538) [`bde6f71c4`](https://github.com/bluesky-social/atproto/commit/bde6f71c4cd33022d29da0ff23463a5838c4de24) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Mark "userAgent" as optional in `RequestMetadata`
+
+## 0.3.0
+
+### Minor Changes
+
+- [#3525](https://github.com/bluesky-social/atproto/pull/3525) [`6ea9c961a`](https://github.com/bluesky-social/atproto/commit/6ea9c961af964cd9b0d00b5073c695c5e0b3345a) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Rename `onClientInfo` and `onAuthorizationDetails` hooks to `getClientInfo` and `getAuthorizationDetails` respectively.
+
+### Patch Changes
+
+- [#3525](https://github.com/bluesky-social/atproto/pull/3525) [`6ea9c961a`](https://github.com/bluesky-social/atproto/commit/6ea9c961af964cd9b0d00b5073c695c5e0b3345a) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add the following hooks in the `OAuthProvider`:
+
+  - `onAuthorized` which is triggered when the user "authorized" a client (a `code` is issued)
+  - `onTokenCreated` which is triggered when the code is exchanged for a token
+  - `onTokenRefreshed` which is triggered when a refresh token is exchanged for a new access token
+
+- [#3514](https://github.com/bluesky-social/atproto/pull/3514) [`e69e89a03`](https://github.com/bluesky-social/atproto/commit/e69e89a037829bd4f6656d6aa42b77b97b4934e5) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Properly compute sleep time in contantTime util
+
+## 0.2.17
+
+### Patch Changes
+
+- [#3220](https://github.com/bluesky-social/atproto/pull/3220) [`61dc0d60e`](https://github.com/bluesky-social/atproto/commit/61dc0d60e19b88c6427a54c6d95a391b5f4da7bd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Apply new linting rules regarding import order
+
+- [#3220](https://github.com/bluesky-social/atproto/pull/3220) [`61dc0d60e`](https://github.com/bluesky-social/atproto/commit/61dc0d60e19b88c6427a54c6d95a391b5f4da7bd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update NodeJS engine requirement to >=18.7.0
+
+- Updated dependencies [[`61dc0d60e`](https://github.com/bluesky-social/atproto/commit/61dc0d60e19b88c6427a54c6d95a391b5f4da7bd), [`61dc0d60e`](https://github.com/bluesky-social/atproto/commit/61dc0d60e19b88c6427a54c6d95a391b5f4da7bd), [`61dc0d60e`](https://github.com/bluesky-social/atproto/commit/61dc0d60e19b88c6427a54c6d95a391b5f4da7bd)]:
+  - @atproto-labs/simple-store-memory@0.1.2
+  - @atproto-labs/simple-store@0.1.2
+  - @atproto-labs/fetch-node@0.1.7
+  - @atproto/oauth-types@0.2.3
+  - @atproto-labs/fetch@0.2.1
+  - @atproto/jwk-jose@0.1.4
+  - @atproto/jwk@0.1.3
+  - @atproto/common@0.4.8
+
+## 0.2.16
+
+### Patch Changes
+
+- Updated dependencies [[`52c687a05`](https://github.com/bluesky-social/atproto/commit/52c687a05c70d5660fae1de9e1bbc6297f37f1f4)]:
+  - @atproto/common@0.4.7
+
+## 0.2.15
+
+### Patch Changes
+
+- [#3432](https://github.com/bluesky-social/atproto/pull/3432) [`b04943191`](https://github.com/bluesky-social/atproto/commit/b04943191b9f89a5263a77358d47d1362a6454a6) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add user friendly description for transition:\* scopes
+
+## 0.2.14
+
+### Patch Changes
+
+- [#3415](https://github.com/bluesky-social/atproto/pull/3415) [`c5a4cdb0a`](https://github.com/bluesky-social/atproto/commit/c5a4cdb0a52f4583ffe783a0b259e80263f24a8c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve error description in case invalid DPoP nonce is used
+
 ## 0.2.13
 
 ### Patch Changes

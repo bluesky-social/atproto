@@ -1,48 +1,74 @@
-import { AtUri, INVALID_HANDLE, normalizeDatetimeAlways } from '@atproto/syntax'
 import { mapDefined } from '@atproto/common'
-import { ImageUriBuilder } from '../image/uri'
+import { AtUri, INVALID_HANDLE, normalizeDatetimeAlways } from '@atproto/syntax'
+import { ProfileViewerState } from '../hydration/actor'
+import { FeedItem, Like, Post, Repost } from '../hydration/feed'
+import { Follow } from '../hydration/graph'
 import { HydrationState } from '../hydration/hydrator'
+import { Label } from '../hydration/label'
+import { RecordInfo } from '../hydration/util'
+import { ImageUriBuilder } from '../image/uri'
 import { ids } from '../lexicon/lexicons'
 import {
-  ProfileViewDetailed,
+  KnownFollowers,
   ProfileView,
   ProfileViewBasic,
-  ViewerState as ProfileViewerState,
+  ProfileViewDetailed,
+  ViewerState as ProfileViewer,
 } from '../lexicon/types/app/bsky/actor/defs'
+import {
+  Record as ProfileRecord,
+  isRecord as isProfileRecord,
+} from '../lexicon/types/app/bsky/actor/profile'
 import {
   BlockedPost,
   FeedViewPost,
   GeneratorView,
   NotFoundPost,
   PostView,
-  ReasonRepost,
   ReasonPin,
+  ReasonRepost,
   ReplyRef,
   ThreadViewPost,
   ThreadgateView,
   isPostView,
 } from '../lexicon/types/app/bsky/feed/defs'
-import { isRecord as isPostRecord } from '../lexicon/types/app/bsky/feed/post'
+import { Record as LikeRecord } from '../lexicon/types/app/bsky/feed/like'
+import {
+  Record as PostRecord,
+  isRecord as isPostRecord,
+} from '../lexicon/types/app/bsky/feed/post'
+import { Record as RepostRecord } from '../lexicon/types/app/bsky/feed/repost'
+import { isListRule } from '../lexicon/types/app/bsky/feed/threadgate'
 import {
   ListView,
   ListViewBasic,
   StarterPackView,
   StarterPackViewBasic,
 } from '../lexicon/types/app/bsky/graph/defs'
+import { Record as FollowRecord } from '../lexicon/types/app/bsky/graph/follow'
 import {
-  parseThreadGate,
-  cidFromBlobJson,
-  VideoUriBuilder,
-  parsePostgate,
-} from './util'
-import { uriToDid as creatorFromUri, safePinnedPost } from '../util/uris'
-import { isListRule } from '../lexicon/types/app/bsky/feed/threadgate'
+  LabelerView,
+  LabelerViewDetailed,
+} from '../lexicon/types/app/bsky/labeler/defs'
+import {
+  Record as LabelerRecord,
+  isRecord as isLabelerRecord,
+} from '../lexicon/types/app/bsky/labeler/service'
 import { isSelfLabels } from '../lexicon/types/com/atproto/label/defs'
+import { $Typed, Un$Typed } from '../lexicon/util'
+import { Notification } from '../proto/bsky_pb'
+import {
+  postUriToPostgateUri,
+  postUriToThreadgateUri,
+  safePinnedPost,
+  uriToDid,
+  uriToDid as creatorFromUri,
+} from '../util/uris'
 import {
   Embed,
   EmbedBlocked,
-  EmbedNotFound,
   EmbedDetached,
+  EmbedNotFound,
   EmbedView,
   ExternalEmbed,
   ExternalEmbedView,
@@ -64,15 +90,12 @@ import {
   isRecordWithMedia,
   isVideoEmbed,
 } from './types'
-import { Label } from '../hydration/label'
-import { FeedItem, Post, Repost } from '../hydration/feed'
-import { RecordInfo } from '../hydration/util'
 import {
-  LabelerView,
-  LabelerViewDetailed,
-} from '../lexicon/types/app/bsky/labeler/defs'
-import { Notification } from '../proto/bsky_pb'
-import { postUriToThreadgateUri, postUriToPostgateUri } from '../util/uris'
+  VideoUriBuilder,
+  cidFromBlobJson,
+  parsePostgate,
+  parseThreadGate,
+} from './util'
 
 export class Views {
   public imgUriBuilder: ImageUriBuilder = this.opts.imgUriBuilder
@@ -101,9 +124,10 @@ export class Views {
   }
 
   actorIsTakendown(did: string, state: HydrationState): boolean {
-    if (state.actors?.get(did)?.takedownRef) return true
-    if (state.actors?.get(did)?.upstreamStatus === 'takendown') return true
-    if (state.actors?.get(did)?.upstreamStatus === 'suspended') return true
+    const actor = state.actors?.get(did)
+    if (actor?.takedownRef) return true
+    if (actor?.upstreamStatus === 'takendown') return true
+    if (actor?.upstreamStatus === 'suspended') return true
     if (state.labels?.get(did)?.isTakendown) return true
     return false
   }
@@ -111,27 +135,64 @@ export class Views {
   viewerBlockExists(did: string, state: HydrationState): boolean {
     const actor = state.profileViewers?.get(did)
     if (!actor) return false
-    return (
-      !!actor.blockedBy ||
-      !!actor.blocking ||
-      !!actor.blockedByList ||
-      !!actor.blockingByList
+    return !!(
+      actor.blockedBy ||
+      actor.blocking ||
+      this.blockedByList(actor, state) ||
+      this.blockingByList(actor, state)
     )
   }
 
   viewerMuteExists(did: string, state: HydrationState): boolean {
     const actor = state.profileViewers?.get(did)
     if (!actor) return false
-    return actor.muted || !!actor.mutedByList
+    return !!(actor.muted || this.mutedByList(actor, state))
   }
 
-  viewerSeesNeedsReview(did: string, state: HydrationState): boolean {
-    const { labels, profileViewers, ctx } = state
+  blockingByList(viewer: ProfileViewerState, state: HydrationState) {
     return (
-      !labels?.get(did)?.needsReview ||
-      ctx?.viewer === did ||
-      !!profileViewers?.get(did)?.following
+      viewer.blockingByList && this.recordActive(viewer.blockingByList, state)
     )
+  }
+
+  blockedByList(viewer: ProfileViewerState, state: HydrationState) {
+    return (
+      viewer.blockedByList && this.recordActive(viewer.blockedByList, state)
+    )
+  }
+
+  mutedByList(viewer: ProfileViewerState, state: HydrationState) {
+    return viewer.mutedByList && this.recordActive(viewer.mutedByList, state)
+  }
+
+  recordActive(uri: string, state: HydrationState) {
+    const did = uriToDid(uri)
+    const actor = state.actors?.get(did)
+    if (!actor || this.actorIsTakendown(did, state)) {
+      // actor may not be present when takedowns are eagerly applied during hydration.
+      // so it's important to _try_ to hydrate the actor for records checked this way.
+      return
+    }
+    return uri
+  }
+
+  viewerSeesNeedsReview(
+    { did, uri }: { did?: string; uri?: string },
+    state: HydrationState,
+  ): boolean {
+    const { labels, profileViewers, ctx } = state
+    did = did || (uri && uriToDid(uri))
+    if (!did) {
+      return true
+    }
+    if (
+      labels?.get(did)?.needsReview ||
+      (uri && labels?.get(uri)?.needsReview)
+    ) {
+      // content marked as needs review
+      return ctx?.viewer === did || !!profileViewers?.get(did)?.following
+    }
+    return true
   }
 
   replyIsHiddenByThreadgate(
@@ -147,7 +208,7 @@ export class Views {
   profileDetailed(
     did: string,
     state: HydrationState,
-  ): ProfileViewDetailed | undefined {
+  ): Un$Typed<ProfileViewDetailed> | undefined {
     const actor = state.actors?.get(did)
     if (!actor) return
     const baseView = this.profile(did, state)
@@ -189,7 +250,10 @@ export class Views {
     }
   }
 
-  profile(did: string, state: HydrationState): ProfileView | undefined {
+  profile(
+    did: string,
+    state: HydrationState,
+  ): Un$Typed<ProfileView> | undefined {
     const actor = state.actors?.get(did)
     if (!actor) return
     const basicView = this.profileBasic(did, state)
@@ -210,7 +274,7 @@ export class Views {
   profileBasic(
     did: string,
     state: HydrationState,
-  ): ProfileViewBasic | undefined {
+  ): Un$Typed<ProfileViewBasic> | undefined {
     const actor = state.actors?.get(did)
     if (!actor) return
     const profileUri = AtUri.make(
@@ -276,31 +340,32 @@ export class Views {
     }
   }
 
-  profileViewer(
-    did: string,
-    state: HydrationState,
-  ): ProfileViewerState | undefined {
+  profileViewer(did: string, state: HydrationState): ProfileViewer | undefined {
     const viewer = state.profileViewers?.get(did)
     if (!viewer) return
-    const blockedByUri = viewer.blockedBy || viewer.blockedByList
-    const blockingUri = viewer.blocking || viewer.blockingByList
+    const blockedByList = this.blockedByList(viewer, state)
+    const blockedByUri = viewer.blockedBy || blockedByList
+    const blockingByList = this.blockingByList(viewer, state)
+    const blockingUri = viewer.blocking || blockingByList
     const block = !!blockedByUri || !!blockingUri
+    const mutedByList = this.mutedByList(viewer, state)
     return {
-      muted: viewer.muted || !!viewer.mutedByList,
-      mutedByList: viewer.mutedByList
-        ? this.listBasic(viewer.mutedByList, state)
-        : undefined,
+      muted: !!(viewer.muted || mutedByList),
+      mutedByList: mutedByList ? this.listBasic(mutedByList, state) : undefined,
       blockedBy: !!blockedByUri,
       blocking: blockingUri,
-      blockingByList: viewer.blockingByList
-        ? this.listBasic(viewer.blockingByList, state)
+      blockingByList: blockingByList
+        ? this.listBasic(blockingByList, state)
         : undefined,
       following: viewer.following && !block ? viewer.following : undefined,
       followedBy: viewer.followedBy && !block ? viewer.followedBy : undefined,
     }
   }
 
-  knownFollowers(did: string, state: HydrationState) {
+  knownFollowers(
+    did: string,
+    state: HydrationState,
+  ): KnownFollowers | undefined {
     const knownFollowers = state.knownFollowers?.get(did)
     if (!knownFollowers) return
     const blocks = state.bidirectionalBlocks?.get(did)
@@ -323,11 +388,11 @@ export class Views {
   blockedProfileViewer(
     did: string,
     state: HydrationState,
-  ): ProfileViewerState | undefined {
+  ): ProfileViewer | undefined {
     const viewer = state.profileViewers?.get(did)
     if (!viewer) return
-    const blockedByUri = viewer.blockedBy || viewer.blockedByList
-    const blockingUri = viewer.blocking || viewer.blockingByList
+    const blockedByUri = viewer.blockedBy || this.blockedByList(viewer, state)
+    const blockingUri = viewer.blocking || this.blockingByList(viewer, state)
     return {
       blockedBy: !!blockedByUri,
       blocking: blockingUri,
@@ -337,7 +402,7 @@ export class Views {
   // Graph
   // ------------
 
-  list(uri: string, state: HydrationState): ListView | undefined {
+  list(uri: string, state: HydrationState): Un$Typed<ListView> | undefined {
     const creatorDid = creatorFromUri(uri)
     const list = state.lists?.get(uri)
     if (!list) return
@@ -355,7 +420,10 @@ export class Views {
     }
   }
 
-  listBasic(uri: string, state: HydrationState): ListViewBasic | undefined {
+  listBasic(
+    uri: string,
+    state: HydrationState,
+  ): Un$Typed<ListViewBasic> | undefined {
     const list = state.lists?.get(uri)
     if (!list) {
       return undefined
@@ -391,7 +459,7 @@ export class Views {
   starterPackBasic(
     uri: string,
     state: HydrationState,
-  ): StarterPackViewBasic | undefined {
+  ): Un$Typed<StarterPackViewBasic> | undefined {
     const sp = state.starterPacks?.get(uri)
     if (!sp) return
     const parsedUri = new AtUri(uri)
@@ -411,7 +479,10 @@ export class Views {
     }
   }
 
-  starterPack(uri: string, state: HydrationState): StarterPackView | undefined {
+  starterPack(
+    uri: string,
+    state: HydrationState,
+  ): Un$Typed<StarterPackView> | undefined {
     const sp = state.starterPacks?.get(uri)
     const basicView = this.starterPackBasic(uri, state)
     if (!sp || !basicView) return
@@ -438,14 +509,37 @@ export class Views {
   // Labels
   // ------------
 
-  selfLabels(details: {
+  selfLabels({
+    uri,
+    cid,
+    record,
+  }: {
     uri?: string
     cid?: string
-    record?: Record<string, unknown>
+    record?:
+      | PostRecord
+      | LikeRecord
+      | RepostRecord
+      | FollowRecord
+      | ProfileRecord
+      | LabelerRecord
   }): Label[] {
-    const { uri, cid, record } = details
     if (!uri || !cid || !record) return []
-    if (!isSelfLabels(record.labels)) return []
+
+    // Only these have a "labels" property:
+    if (
+      !isPostRecord(record) &&
+      !isProfileRecord(record) &&
+      !isLabelerRecord(record)
+    ) {
+      return []
+    }
+
+    // Ignore if no labels defines
+    if (!isSelfLabels(record.labels) || !record.labels.values.length) {
+      return []
+    }
+
     const src = creatorFromUri(uri) // record creator
     const cts =
       typeof record.createdAt === 'string'
@@ -456,7 +550,10 @@ export class Views {
     })
   }
 
-  labeler(did: string, state: HydrationState): LabelerView | undefined {
+  labeler(
+    did: string,
+    state: HydrationState,
+  ): Un$Typed<LabelerView> | undefined {
     const labeler = state.labelers?.get(did)
     if (!labeler) return
     const creator = this.profile(did, state)
@@ -492,7 +589,7 @@ export class Views {
   labelerDetailed(
     did: string,
     state: HydrationState,
-  ): LabelerViewDetailed | undefined {
+  ): Un$Typed<LabelerViewDetailed> | undefined {
     const baseView = this.labeler(did, state)
     if (!baseView) return
     const record = state.labelers?.get(did)
@@ -540,7 +637,10 @@ export class Views {
     }
   }
 
-  feedGenerator(uri: string, state: HydrationState): GeneratorView | undefined {
+  feedGenerator(
+    uri: string,
+    state: HydrationState,
+  ): Un$Typed<GeneratorView> | undefined {
     const feedgen = state.feedgens?.get(uri)
     if (!feedgen) return
     const creatorDid = creatorFromUri(uri)
@@ -577,7 +677,10 @@ export class Views {
     }
   }
 
-  threadgate(uri: string, state: HydrationState): ThreadgateView | undefined {
+  threadgate(
+    uri: string,
+    state: HydrationState,
+  ): Un$Typed<ThreadgateView> | undefined {
     const gate = state.threadgates?.get(uri)
     if (!gate) return
     return {
@@ -591,7 +694,11 @@ export class Views {
     }
   }
 
-  post(uri: string, state: HydrationState, depth = 0): PostView | undefined {
+  post(
+    uri: string,
+    state: HydrationState,
+    depth = 0,
+  ): Un$Typed<PostView> | undefined {
     const post = state.posts?.get(uri)
     if (!post) return
     const parsedUri = new AtUri(uri)
@@ -643,9 +750,9 @@ export class Views {
   feedViewPost(
     item: FeedItem,
     state: HydrationState,
-  ): FeedViewPost | undefined {
+  ): Un$Typed<FeedViewPost> | undefined {
     const postInfo = state.posts?.get(item.post.uri)
-    let reason: ReasonRepost | ReasonPin | undefined
+    let reason: $Typed<ReasonRepost> | $Typed<ReasonPin> | undefined
     if (item.authorPinned) {
       reason = this.reasonPin()
     } else if (item.repost) {
@@ -667,7 +774,7 @@ export class Views {
     }
   }
 
-  replyRef(uri: string, state: HydrationState): ReplyRef | undefined {
+  replyRef(uri: string, state: HydrationState): Un$Typed<ReplyRef> | undefined {
     const postRecord = state.posts?.get(uri.toString())?.record
     if (!postRecord?.reply) return
     let root = this.maybePost(postRecord.reply.root.uri, state)
@@ -685,8 +792,13 @@ export class Views {
       }
     }
     let grandparentAuthor: ProfileViewBasic | undefined
-    if (isPostRecord(parent.record) && parent.record.reply) {
+    if (
+      isPostView(parent) &&
+      isPostRecord(parent.record) &&
+      parent.record.reply
+    ) {
       grandparentAuthor = this.profileBasic(
+        // @ts-expect-error isValidPostRecord(parent.record) should be used but the "parent" is not IPDL decoded
         creatorFromUri(parent.record.reply.parent.uri),
         state,
       )
@@ -698,7 +810,7 @@ export class Views {
     }
   }
 
-  maybePost(uri: string, state: HydrationState): MaybePostView {
+  maybePost(uri: string, state: HydrationState): $Typed<MaybePostView> {
     const post = this.post(uri, state)
     if (!post) {
       return this.notFoundPost(uri)
@@ -707,8 +819,8 @@ export class Views {
       return this.blockedPost(uri, post.author.did, state)
     }
     return {
-      $type: 'app.bsky.feed.defs#postView',
       ...post,
+      $type: 'app.bsky.feed.defs#postView',
     }
   }
 
@@ -716,7 +828,7 @@ export class Views {
     uri: string,
     authorDid: string,
     state: HydrationState,
-  ): BlockedPost {
+  ): $Typed<BlockedPost> {
     return {
       $type: 'app.bsky.feed.defs#blockedPost',
       uri,
@@ -728,7 +840,7 @@ export class Views {
     }
   }
 
-  notFoundPost(uri: string): NotFoundPost {
+  notFoundPost(uri: string): $Typed<NotFoundPost> {
     return {
       $type: 'app.bsky.feed.defs#notFoundPost',
       uri,
@@ -740,7 +852,7 @@ export class Views {
     creatorDid: string,
     repost: Repost,
     state: HydrationState,
-  ): ReasonRepost | undefined {
+  ): $Typed<ReasonRepost> | undefined {
     const creator = this.profileBasic(creatorDid, state)
     if (!creator) return
     return {
@@ -750,7 +862,7 @@ export class Views {
     }
   }
 
-  reasonPin() {
+  reasonPin(): $Typed<ReasonPin> {
     return {
       $type: 'app.bsky.feed.defs#reasonPin',
     }
@@ -763,7 +875,7 @@ export class Views {
     skele: { anchor: string; uris: string[] },
     state: HydrationState,
     opts: { height: number; depth: number },
-  ): ThreadViewPost | NotFoundPost | BlockedPost {
+  ): $Typed<ThreadViewPost> | $Typed<NotFoundPost> | $Typed<BlockedPost> {
     const { anchor, uris } = skele
     const post = this.post(anchor, state)
     const postInfo = state.posts?.get(anchor)
@@ -800,6 +912,9 @@ export class Views {
             opts.depth,
           )
         : undefined,
+      threadContext: {
+        rootAuthorLike: state.threadContexts?.get(post.uri)?.like,
+      },
     }
   }
 
@@ -808,7 +923,11 @@ export class Views {
     rootUri: string,
     state: HydrationState,
     height: number,
-  ): ThreadViewPost | NotFoundPost | BlockedPost | undefined {
+  ):
+    | $Typed<ThreadViewPost>
+    | $Typed<NotFoundPost>
+    | $Typed<BlockedPost>
+    | undefined {
     if (height < 1) return undefined
     const parentUri = state.posts?.get(childUri)?.record.reply?.parent.uri
     if (!parentUri) return undefined
@@ -829,6 +948,9 @@ export class Views {
       $type: 'app.bsky.feed.defs#threadViewPost',
       post,
       parent: this.threadParent(parentUri, rootUri, state, height - 1),
+      threadContext: {
+        rootAuthorLike: state.threadContexts?.get(post.uri)?.like,
+      },
     }
   }
 
@@ -838,7 +960,7 @@ export class Views {
     childrenByParentUri: Record<string, string[]>,
     state: HydrationState,
     depth: number,
-  ): (ThreadViewPost | BlockedPost)[] | undefined {
+  ): ($Typed<ThreadViewPost> | $Typed<BlockedPost>)[] | undefined {
     if (depth < 1) return undefined
     const childrenUris = childrenByParentUri[parentUri] ?? []
     return mapDefined(childrenUris, (uri) => {
@@ -860,7 +982,7 @@ export class Views {
       if (this.viewerBlockExists(post.author.did, state)) {
         return this.blockedPost(uri, post.author.did, state)
       }
-      if (!this.viewerSeesNeedsReview(post.author.did, state)) {
+      if (!this.viewerSeesNeedsReview({ uri, did: post.author.did }, state)) {
         return undefined
       }
       return {
@@ -873,6 +995,9 @@ export class Views {
           state,
           depth - 1,
         ),
+        threadContext: {
+          rootAuthorLike: state.threadContexts?.get(post.uri)?.like,
+        },
       }
     })
   }
@@ -885,7 +1010,7 @@ export class Views {
     embed: Embed | { $type: string },
     state: HydrationState,
     depth: number,
-  ): EmbedView | undefined {
+  ): $Typed<EmbedView> | undefined {
     if (isImagesEmbed(embed)) {
       return this.imagesEmbed(creatorFromUri(postUri), embed)
     } else if (isVideoEmbed(embed)) {
@@ -901,7 +1026,7 @@ export class Views {
     }
   }
 
-  imagesEmbed(did: string, embed: ImagesEmbed): ImagesEmbedView {
+  imagesEmbed(did: string, embed: ImagesEmbed): $Typed<ImagesEmbedView> {
     const imgViews = embed.images.map((img) => ({
       thumb: this.imgUriBuilder.getPresetUri(
         'feed_thumbnail',
@@ -922,7 +1047,7 @@ export class Views {
     }
   }
 
-  videoEmbed(did: string, embed: VideoEmbed): VideoEmbedView {
+  videoEmbed(did: string, embed: VideoEmbed): $Typed<VideoEmbedView> {
     const cid = cidFromBlobJson(embed.video)
     return {
       $type: 'app.bsky.embed.video#view',
@@ -934,7 +1059,7 @@ export class Views {
     }
   }
 
-  externalEmbed(did: string, embed: ExternalEmbed): ExternalEmbedView {
+  externalEmbed(did: string, embed: ExternalEmbed): $Typed<ExternalEmbedView> {
     const { uri, title, description, thumb } = embed.external
     return {
       $type: 'app.bsky.embed.external#view',
@@ -953,7 +1078,10 @@ export class Views {
     }
   }
 
-  embedNotFound(uri: string): { $type: string; record: EmbedNotFound } {
+  embedNotFound(uri: string): {
+    $type: 'app.bsky.embed.record#view'
+    record: $Typed<EmbedNotFound>
+  } {
     return {
       $type: 'app.bsky.embed.record#view',
       record: {
@@ -964,7 +1092,10 @@ export class Views {
     }
   }
 
-  embedDetached(uri: string): { $type: string; record: EmbedDetached } {
+  embedDetached(uri: string): {
+    $type: 'app.bsky.embed.record#view'
+    record: $Typed<EmbedDetached>
+  } {
     return {
       $type: 'app.bsky.embed.record#view',
       record: {
@@ -978,7 +1109,10 @@ export class Views {
   embedBlocked(
     uri: string,
     state: HydrationState,
-  ): { $type: string; record: EmbedBlocked } {
+  ): {
+    $type: 'app.bsky.embed.record#view'
+    record: $Typed<EmbedBlocked>
+  } {
     const creator = creatorFromUri(uri)
     return {
       $type: 'app.bsky.embed.record#view',
@@ -998,7 +1132,7 @@ export class Views {
     uri: string,
     state: HydrationState,
     depth: number,
-  ): PostEmbedView | undefined {
+  ): $Typed<PostEmbedView> | undefined {
     const postView = this.post(uri, state, depth)
     if (!postView) return
     return {
@@ -1017,6 +1151,20 @@ export class Views {
     }
   }
 
+  recordEmbed(
+    postUri: string,
+    embed: RecordEmbed,
+    state: HydrationState,
+    depth: number,
+    withTypeTag: false,
+  ): RecordEmbedView
+  recordEmbed(
+    postUri: string,
+    embed: RecordEmbed,
+    state: HydrationState,
+    depth: number,
+    withTypeTag?: true,
+  ): $Typed<RecordEmbedView>
   recordEmbed(
     postUri: string,
     embed: RecordEmbed,
@@ -1050,35 +1198,43 @@ export class Views {
     } else if (parsedUri.collection === ids.AppBskyFeedGenerator) {
       const view = this.feedGenerator(uri, state)
       if (!view) return this.embedNotFound(uri)
-      view.$type = 'app.bsky.feed.defs#generatorView'
-      return this.recordEmbedWrapper(view, withTypeTag)
+      return this.recordEmbedWrapper(
+        { ...view, $type: 'app.bsky.feed.defs#generatorView' },
+        withTypeTag,
+      )
     } else if (parsedUri.collection === ids.AppBskyGraphList) {
       const view = this.list(uri, state)
       if (!view) return this.embedNotFound(uri)
-      view.$type = 'app.bsky.graph.defs#listView'
-      return this.recordEmbedWrapper(view, withTypeTag)
+      return this.recordEmbedWrapper(
+        { ...view, $type: 'app.bsky.graph.defs#listView' },
+        withTypeTag,
+      )
     } else if (parsedUri.collection === ids.AppBskyLabelerService) {
       const view = this.labeler(parsedUri.hostname, state)
       if (!view) return this.embedNotFound(uri)
-      view.$type = 'app.bsky.labeler.defs#labelerView'
-      return this.recordEmbedWrapper(view, withTypeTag)
+      return this.recordEmbedWrapper(
+        { ...view, $type: 'app.bsky.labeler.defs#labelerView' },
+        withTypeTag,
+      )
     } else if (parsedUri.collection === ids.AppBskyGraphStarterpack) {
       const view = this.starterPackBasic(uri, state)
       if (!view) return this.embedNotFound(uri)
-      view.$type = 'app.bsky.graph.defs#starterPackViewBasic'
-      return this.recordEmbedWrapper(view, withTypeTag)
+      return this.recordEmbedWrapper(
+        { ...view, $type: 'app.bsky.graph.defs#starterPackViewBasic' },
+        withTypeTag,
+      )
     }
     return this.embedNotFound(uri)
   }
 
-  private recordEmbedWrapper(
-    record: RecordEmbedViewInternal,
+  private recordEmbedWrapper<T extends $Typed<RecordEmbedViewInternal>>(
+    record: T,
     withTypeTag: boolean,
-  ): RecordEmbedView {
+  ) {
     return {
-      $type: withTypeTag ? 'app.bsky.embed.record#view' : undefined,
+      $type: withTypeTag ? ('app.bsky.embed.record#view' as const) : undefined,
       record,
-    }
+    } satisfies RecordEmbedView
   }
 
   recordWithMediaEmbed(
@@ -1086,9 +1242,12 @@ export class Views {
     embed: RecordWithMedia,
     state: HydrationState,
     depth: number,
-  ): RecordWithMediaView | undefined {
+  ): $Typed<RecordWithMediaView> | undefined {
     const creator = creatorFromUri(postUri)
-    let mediaEmbed: ImagesEmbedView | VideoEmbedView | ExternalEmbedView
+    let mediaEmbed:
+      | $Typed<ImagesEmbedView>
+      | $Typed<VideoEmbedView>
+      | $Typed<ExternalEmbedView>
     if (isImagesEmbed(embed.media)) {
       mediaEmbed = this.imagesEmbed(creator, embed.media)
     } else if (isVideoEmbed(embed.media)) {
@@ -1122,10 +1281,14 @@ export class Views {
     const ownerDid = creatorFromUri(rootUriStr)
     const {
       canReply,
+      allowFollower,
       allowFollowing,
       allowListUris = [],
     } = parseThreadGate(viewer, ownerDid, rootPost ?? null, gate)
     if (canReply) {
+      return false
+    }
+    if (allowFollower && state.profileViewers?.get(ownerDid)?.following) {
       return false
     }
     if (allowFollowing && state.profileViewers?.get(ownerDid)?.followedBy) {
@@ -1177,13 +1340,22 @@ export class Views {
     notif: Notification,
     lastSeenAt: string | undefined,
     state: HydrationState,
-  ): NotificationView | undefined {
+  ): Un$Typed<NotificationView> | undefined {
     if (!notif.timestamp || !notif.reason) return
     const uri = new AtUri(notif.uri)
     const authorDid = uri.hostname
     const author = this.profile(authorDid, state)
     if (!author) return
-    let recordInfo: RecordInfo<Record<string, unknown>> | null | undefined
+
+    let recordInfo:
+      | Post
+      | Like
+      | Repost
+      | Follow
+      | RecordInfo<ProfileRecord>
+      | undefined
+      | null
+
     if (uri.collection === ids.AppBskyFeedPost) {
       recordInfo = state.posts?.get(notif.uri)
     } else if (uri.collection === ids.AppBskyFeedLike) {
@@ -1203,9 +1375,10 @@ export class Views {
               indexedAt: actor.indexedAt ?? new Date(0), // @NOTE will be present since profile record is present
               takedownRef: actor.profileTakedownRef,
             }
-          : null
+          : undefined
     }
     if (!recordInfo) return
+
     const labels = state.labels?.getBySubject(notif.uri) ?? []
     const selfLabels = this.selfLabels({
       uri: notif.uri,

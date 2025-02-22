@@ -1,7 +1,6 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-
 import { Agent } from '@atproto/api'
 import {
   BrowserOAuthClient,

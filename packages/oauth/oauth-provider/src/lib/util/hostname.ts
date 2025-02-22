@@ -1,4 +1,4 @@
-import { parse, ParsedDomain } from 'psl'
+import { ParsedDomain, parse } from 'psl'
 
 export function isInternetUrl(url: URL): boolean {
   return parseUrlPublicSuffix(url) !== null

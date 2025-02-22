@@ -1,9 +1,9 @@
 import { CID } from 'multiformats/cid'
-import { InvalidRequestError } from '@atproto/xrpc-server'
 import { byteIterableToStream } from '@atproto/common'
 import { blocksToCarStream } from '@atproto/repo'
+import { InvalidRequestError } from '@atproto/xrpc-server'
+import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
 import { assertRepoAvailability } from './util'
 
 export default function (server: Server, ctx: AppContext) {

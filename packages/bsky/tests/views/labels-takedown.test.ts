@@ -1,5 +1,6 @@
-import { AtpAgent } from '@atproto/api'
-import { TestNetwork, SeedClient, basicSeed, RecordRef } from '@atproto/dev-env'
+import assert from 'node:assert'
+import { AppBskyLabelerDefs, AtpAgent } from '@atproto/api'
+import { RecordRef, SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
 
 describe('bsky takedown labels', () => {
@@ -37,6 +38,16 @@ describe('bsky takedown labels', () => {
       sc.getHeaders(sc.dids.carol),
     )
     carolListRef = await sc.createList(sc.dids.carol, 'carol list', 'mod')
+    // alice blocks dan via carol's list, and carol is takendown
+    await sc.addToList(sc.dids.carol, sc.dids.dan, carolListRef)
+    await pdsAgent.app.bsky.graph.listblock.create(
+      { repo: sc.dids.alice },
+      {
+        subject: carolListRef.uriStr,
+        createdAt: new Date().toISOString(),
+      },
+      sc.getHeaders(sc.dids.alice),
+    )
     aliceGenRef = await sc.createFeedGen(
       sc.dids.alice,
       'did:web:example.com',
@@ -111,6 +122,7 @@ describe('bsky takedown labels', () => {
       uri,
       cid: '',
       val: '!takedown',
+      exp: null,
       neg: false,
       cts,
     }))
@@ -190,6 +202,25 @@ describe('bsky takedown labels', () => {
     expect(profile.viewer?.blockingByList).toBeUndefined()
   })
 
+  it('author takedown halts application of mod lists', async () => {
+    const { data: profile } = await agent.app.bsky.actor.getProfile(
+      {
+        actor: sc.dids.dan, // blocked via carol's list, and carol is takendown
+      },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.alice,
+          ids.AppBskyActorGetProfile,
+        ),
+      },
+    )
+    expect(profile.did).toBe(sc.dids.dan)
+    expect(profile.viewer).not.toBeUndefined()
+    expect(profile.viewer?.blockedBy).toBe(false)
+    expect(profile.viewer?.blocking).toBeUndefined()
+    expect(profile.viewer?.blockingByList).toBeUndefined()
+  })
+
   it('takesdown feed generators', async () => {
     const res = await agent.api.app.bsky.feed.getFeedGenerators({
       feeds: [aliceGenRef.uriStr, bobGenRef.uriStr, carolGenRef.uriStr],
@@ -203,7 +234,8 @@ describe('bsky takedown labels', () => {
       dids: [sc.dids.labeler1, sc.dids.labeler2],
     })
     expect(res.data.views.length).toBe(1)
-    expect(res.data.views[0].creator?.['did']).toBe(sc.dids.labeler2)
+    assert(AppBskyLabelerDefs.isLabelerView(res.data.views[0]))
+    expect(res.data.views[0].creator.did).toBe(sc.dids.labeler2)
   })
 
   it('only applies if the relevant labeler is configured', async () => {

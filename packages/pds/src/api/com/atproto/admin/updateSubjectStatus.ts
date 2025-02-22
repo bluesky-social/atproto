@@ -1,13 +1,13 @@
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/syntax'
+import { InvalidRequestError } from '@atproto/xrpc-server'
+import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
 import {
-  isRepoRef,
   isRepoBlobRef,
+  isRepoRef,
 } from '../../../../lexicon/types/com/atproto/admin/defs'
 import { isMain as isStrongRef } from '../../../../lexicon/types/com/atproto/repo/strongRef'
-import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.updateSubjectStatus({

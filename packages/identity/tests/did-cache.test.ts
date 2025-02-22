@@ -1,10 +1,10 @@
-import getPort from 'get-port'
 import * as plc from '@did-plc/lib'
 import { Database as DidPlcDb, PlcServer } from '@did-plc/server'
-import { MemoryCache } from '../src/did/memory-cache'
-import { DidResolver } from '../src'
-import { Secp256k1Keypair } from '@atproto/crypto'
+import getPort from 'get-port'
 import { wait } from '@atproto/common-web'
+import { Secp256k1Keypair } from '@atproto/crypto'
+import { DidResolver } from '../src'
+import { MemoryCache } from '../src/did/memory-cache'
 
 describe('did cache', () => {
   let close: () => Promise<void>

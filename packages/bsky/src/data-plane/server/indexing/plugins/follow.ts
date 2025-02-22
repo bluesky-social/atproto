@@ -1,13 +1,13 @@
 import { Selectable } from 'kysely'
-import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import { CID } from 'multiformats/cid'
-import * as Follow from '../../../../lexicon/types/app/bsky/graph/follow'
+import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import * as lex from '../../../../lexicon/lexicons'
-import RecordProcessor from '../processor'
-import { Database } from '../../db'
-import { countAll, excluded } from '../../db/util'
-import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
+import * as Follow from '../../../../lexicon/types/app/bsky/graph/follow'
 import { BackgroundQueue } from '../../background'
+import { Database } from '../../db'
+import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
+import { countAll, excluded } from '../../db/util'
+import { RecordProcessor } from '../processor'
 
 const lexId = lex.ids.AppBskyGraphFollow
 type IndexedFollow = Selectable<DatabaseSchemaType['follow']>

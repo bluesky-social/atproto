@@ -1,5 +1,3 @@
-import { Fetch, Json, bindFetch, fetchJsonProcessor } from '@atproto-labs/fetch'
-import { SimpleStore } from '@atproto-labs/simple-store'
 import { AtprotoDid } from '@atproto/did'
 import { Key, Keyset } from '@atproto/jwk'
 import {
@@ -12,7 +10,8 @@ import {
   OAuthTokenRequest,
   oauthParResponseSchema,
 } from '@atproto/oauth-types'
-
+import { Fetch, Json, bindFetch, fetchJsonProcessor } from '@atproto-labs/fetch'
+import { SimpleStore } from '@atproto-labs/simple-store'
 import {
   AtprotoScope,
   AtprotoTokenResponse,

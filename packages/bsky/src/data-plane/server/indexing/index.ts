@@ -1,38 +1,38 @@
 import { sql } from 'kysely'
 import { CID } from 'multiformats/cid'
 import { AtpAgent, ComAtprotoSyncGetLatestCommit } from '@atproto/api'
+import { DAY, HOUR } from '@atproto/common'
+import { IdResolver, getPds } from '@atproto/identity'
+import { ValidationError } from '@atproto/lexicon'
 import {
-  readCarWithRoot,
-  WriteOpAction,
-  verifyRepo,
   VerifiedRepo,
+  WriteOpAction,
   getAndParseRecord,
+  readCarWithRoot,
+  verifyRepo,
 } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
-import { IdResolver, getPds } from '@atproto/identity'
-import { DAY, HOUR } from '@atproto/common'
-import { ValidationError } from '@atproto/lexicon'
-import { Database } from '../db'
-import { Actor } from '../db/tables/actor'
-import * as Post from './plugins/post'
-import * as Threadgate from './plugins/thread-gate'
-import * as Postgate from './plugins/post-gate'
-import * as Like from './plugins/like'
-import * as Repost from './plugins/repost'
-import * as Follow from './plugins/follow'
-import * as Profile from './plugins/profile'
-import * as List from './plugins/list'
-import * as ListItem from './plugins/list-item'
-import * as ListBlock from './plugins/list-block'
-import * as Block from './plugins/block'
-import * as FeedGenerator from './plugins/feed-generator'
-import * as StarterPack from './plugins/starter-pack'
-import * as Labeler from './plugins/labeler'
-import * as ChatDeclaration from './plugins/chat-declaration'
-import RecordProcessor from './processor'
 import { subLogger } from '../../../logger'
 import { retryXrpc } from '../../../util/retry'
 import { BackgroundQueue } from '../background'
+import { Database } from '../db'
+import { Actor } from '../db/tables/actor'
+import * as Block from './plugins/block'
+import * as ChatDeclaration from './plugins/chat-declaration'
+import * as FeedGenerator from './plugins/feed-generator'
+import * as Follow from './plugins/follow'
+import * as Labeler from './plugins/labeler'
+import * as Like from './plugins/like'
+import * as List from './plugins/list'
+import * as ListBlock from './plugins/list-block'
+import * as ListItem from './plugins/list-item'
+import * as Post from './plugins/post'
+import * as Postgate from './plugins/post-gate'
+import * as Profile from './plugins/profile'
+import * as Repost from './plugins/repost'
+import * as StarterPack from './plugins/starter-pack'
+import * as Threadgate from './plugins/thread-gate'
+import { RecordProcessor } from './processor'
 
 export class IndexingService {
   records: {

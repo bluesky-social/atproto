@@ -1,5 +1,4 @@
 import { z } from 'zod'
-
 import {
   REFRESH_TOKEN_BYTES_LENGTH,
   REFRESH_TOKEN_PREFIX,

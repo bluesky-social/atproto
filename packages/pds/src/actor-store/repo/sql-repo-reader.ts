@@ -1,14 +1,14 @@
+import { sql } from 'kysely'
+import { CID } from 'multiformats/cid'
+import { chunkArray, wait } from '@atproto/common'
 import {
   BlockMap,
   CidSet,
   ReadableBlockstore,
   writeCarStream,
 } from '@atproto/repo'
-import { chunkArray, wait } from '@atproto/common'
-import { CID } from 'multiformats/cid'
-import { ActorDb } from '../db'
-import { sql } from 'kysely'
 import { countAll } from '../../db'
+import { ActorDb } from '../db'
 
 export class SqlRepoReader extends ReadableBlockstore {
   cache: BlockMap = new BlockMap()
@@ -19,13 +19,14 @@ export class SqlRepoReader extends ReadableBlockstore {
 
   async getRoot(): Promise<CID> {
     const root = await this.getRootDetailed()
-    return root?.cid ?? null
+    return root.cid
   }
 
   async getRootDetailed(): Promise<{ cid: CID; rev: string }> {
     const res = await this.db.db
       .selectFrom('repo_root')
-      .selectAll()
+      .select(['cid', 'rev'])
+      .limit(1)
       .executeTakeFirstOrThrow()
     return {
       cid: CID.parse(res.cid),

@@ -1,14 +1,14 @@
-import fs from 'fs/promises'
-import { gzipSync } from 'zlib'
-import { AtpAgent } from '@atproto/api'
-import { AppContext } from '../src'
-import DiskBlobStore from '../src/disk-blobstore'
+import fs from 'node:fs/promises'
+import { gzipSync } from 'node:zlib'
 import * as uint8arrays from 'uint8arrays'
+import { AtpAgent } from '@atproto/api'
 import { randomBytes } from '@atproto/crypto'
-import { BlobRef } from '@atproto/lexicon'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
-import { users } from './seeds/users'
+import { BlobRef } from '@atproto/lexicon'
+import { AppContext } from '../src'
 import { ActorDb } from '../src/actor-store/db'
+import { DiskBlobStore } from '../src/disk-blobstore'
+import { users } from './seeds/users'
 
 describe('file uploads', () => {
   let network: TestNetworkNoAppView
@@ -182,6 +182,7 @@ describe('file uploads', () => {
       repo: alice,
       rkey: 'self',
     })
+    // @ts-expect-error "cid" is not documented as "com.atproto.repo.uploadBlob" output
     expect((profileA.value as any).avatar.cid).toEqual(uploadA.cid)
     await sc.updateProfile(bob, {
       displayName: 'Bob',
@@ -191,6 +192,7 @@ describe('file uploads', () => {
       repo: bob,
       rkey: 'self',
     })
+    // @ts-expect-error "cid" is not documented as "com.atproto.repo.uploadBlob" output
     expect((profileB.value as any).avatar.cid).toEqual(uploadA.cid)
     const { data: uploadAfterPermanent } =
       await agent.api.com.atproto.repo.uploadBlob(file, {

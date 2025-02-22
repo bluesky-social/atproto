@@ -137,6 +137,7 @@ Object {
         "threadMuted": false,
       },
     },
+    "threadContext": Object {},
   },
 }
 `;
@@ -215,6 +216,7 @@ Object {
       },
     },
     "replies": Array [],
+    "threadContext": Object {},
   },
 }
 `;
@@ -298,6 +300,7 @@ Object {
         "uri": "record(7)",
       },
     ],
+    "threadContext": Object {},
   },
 }
 `;

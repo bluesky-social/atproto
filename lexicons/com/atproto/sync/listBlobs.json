@@ -16,6 +16,7 @@
           },
           "since": {
             "type": "string",
+            "format": "tid",
             "description": "Optional revision of the repo to list blobs since."
           },
           "limit": {

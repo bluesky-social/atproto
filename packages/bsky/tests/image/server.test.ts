@@ -1,7 +1,7 @@
+import { Readable } from 'node:stream'
+import { CID } from 'multiformats/cid'
 import { cidForCbor } from '@atproto/common'
 import { TestNetwork, basicSeed } from '@atproto/dev-env'
-import { CID } from 'multiformats/cid'
-import { Readable } from 'node:stream'
 import { getInfo } from '../../src/image/sharp'
 import { ImageUriBuilder } from '../../src/image/uri'
 

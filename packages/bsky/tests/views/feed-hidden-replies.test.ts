@@ -1,8 +1,7 @@
-import { TestNetwork, SeedClient } from '@atproto/dev-env'
 import AtpAgent from '@atproto/api'
-
+import { SeedClient, TestNetwork } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
-import { feedHiddenRepliesSeed, Users } from '../seed/feed-hidden-replies'
+import { Users, feedHiddenRepliesSeed } from '../seed/feed-hidden-replies'
 
 describe('feed hidden replies', () => {
   let network: TestNetwork

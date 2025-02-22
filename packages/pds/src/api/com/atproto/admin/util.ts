@@ -1,6 +1,6 @@
 import express from 'express'
-import { ActorAccount } from '../../../../account-manager/helpers/account'
 import { INVALID_HANDLE } from '@atproto/syntax'
+import { ActorAccount } from '../../../../account-manager/helpers/account'
 import { CodeDetail } from '../../../../account-manager/helpers/invite'
 
 // Output designed to passed as second arg to AtpAgent methods.

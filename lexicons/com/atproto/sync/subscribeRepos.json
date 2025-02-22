@@ -75,10 +75,12 @@
         },
         "rev": {
           "type": "string",
+          "format": "tid",
           "description": "The rev of the emitted commit. Note that this information is also in the commit object included in blocks, unless this is a tooBig event."
         },
         "since": {
           "type": "string",
+          "format": "tid",
           "description": "The rev of the last emitted commit from this repo (if any)."
         },
         "blocks": {
@@ -243,7 +245,7 @@
         "path": { "type": "string" },
         "cid": {
           "type": "cid-link",
-          "description": "For creates and updates, the new record CID. For deletions, field should not be defined."
+          "description": "For creates and updates, the new record CID. For deletions, null."
         },
         "prev": {
           "type": "cid-link",

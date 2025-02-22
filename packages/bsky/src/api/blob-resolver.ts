@@ -1,23 +1,22 @@
+import { Duplex, Transform, Writable } from 'node:stream'
+import { pipeline } from 'node:stream/promises'
+import createError, { isHttpError } from 'http-errors'
+import { CID } from 'multiformats/cid'
+import { Dispatcher } from 'undici'
+import {
+  VerifyCidError,
+  VerifyCidTransform,
+  createDecoders,
+} from '@atproto/common'
+import { AtprotoDid, isAtprotoDid } from '@atproto/did'
 import {
   ACCEPT_ENCODING_COMPRESSED,
   ACCEPT_ENCODING_UNCOMPRESSED,
   buildProxiedContentEncoding,
   formatAcceptHeader,
 } from '@atproto-labs/xrpc-utils'
-import {
-  createDecoders,
-  VerifyCidError,
-  VerifyCidTransform,
-} from '@atproto/common'
-import { AtprotoDid, isAtprotoDid } from '@atproto/did'
-import createError, { isHttpError } from 'http-errors'
-import { CID } from 'multiformats/cid'
-import { Duplex, Transform, Writable } from 'node:stream'
-import { pipeline } from 'node:stream/promises'
-import { Dispatcher } from 'undici'
-
 import { ServerConfig } from '../config'
-import AppContext from '../context'
+import { AppContext } from '../context'
 import {
   Code,
   DataPlaneClient,
@@ -28,6 +27,7 @@ import {
 import { parseCid } from '../hydration/util'
 import { httpLogger as log } from '../logger'
 import { Middleware, proxyResponseHeaders, responseSignal } from '../util/http'
+import { BSKY_USER_AGENT } from './util'
 
 export function createMiddleware(ctx: AppContext): Middleware {
   return async (req, res, next) => {
@@ -297,6 +297,8 @@ function getBlobHeaders(
   url: URL,
 ): Map<string, string> {
   const headers = new Map<string, string>()
+
+  headers.set('user-agent', BSKY_USER_AGENT)
 
   if (bypassKey && bypassHostname) {
     const matchesUrl = bypassHostname.startsWith('.')

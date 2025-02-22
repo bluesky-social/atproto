@@ -1,7 +1,7 @@
 import { AtpAgent } from '@atproto/api'
-import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
-import usersSeed from './seeds/users'
+import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import { AuthScope } from '../dist/auth-verifier'
+import usersSeed from './seeds/users'
 
 describe('user preferences', () => {
   let network: TestNetworkNoAppView
@@ -163,6 +163,7 @@ describe('user preferences', () => {
           { $type: 'app.bsky.actor.defs#adultContentPref', enabled: false },
           {
             $type: 'com.atproto.server.defs#unknown',
+            // @ts-expect-error un-spec'ed prop
             hello: 'world',
           },
         ],
@@ -179,6 +180,7 @@ describe('user preferences', () => {
       {
         preferences: [
           { $type: 'app.bsky.actor.defs#adultContentPref', enabled: false },
+          // @ts-expect-error this is what we are testing !
           {
             label: 'dogs',
             visibility: 'warn',

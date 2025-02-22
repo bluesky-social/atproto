@@ -1,6 +1,6 @@
-import { ensureValidRecordKey, InvalidRecordKeyError } from '../src'
-import * as readline from 'readline'
-import * as fs from 'fs'
+import * as fs from 'node:fs'
+import * as readline from 'node:readline'
+import { InvalidRecordKeyError, ensureValidRecordKey } from '../src'
 
 describe('recordkey validation', () => {
   const expectValid = (r: string) => {

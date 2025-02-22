@@ -1,10 +1,8 @@
 import assert from 'node:assert'
-
+import * as plc from '@did-plc/lib'
 import { check } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import * as plc from '@did-plc/lib'
-
-import AppContext from '../../../../context'
+import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
 import { resultPassthru } from '../../../proxy'
@@ -52,8 +50,16 @@ export default function (server: Server, ctx: AppContext) {
           rotationKeys: input.body.rotationKeys ?? lastOp.rotationKeys,
           alsoKnownAs: input.body.alsoKnownAs ?? lastOp.alsoKnownAs,
           verificationMethods:
-            input.body.verificationMethods ?? lastOp.verificationMethods,
-          services: input.body.services ?? lastOp.services,
+            // @TODO: actually validate instead of type casting
+            (input.body.verificationMethods as
+              | undefined
+              | Record<string, string>) ?? lastOp.verificationMethods,
+          services:
+            // @TODO: actually validate instead of type casting
+            (input.body.services as
+              | undefined
+              | Record<string, { type: string; endpoint: string }>) ??
+            lastOp.services,
         }),
       )
       return {

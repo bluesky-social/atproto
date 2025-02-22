@@ -1,6 +1,18 @@
+import { Jwks, Keyset, jwksSchema } from '@atproto/jwk'
 import {
-  bindFetch,
+  OAuthAuthorizationServerMetadata,
+  OAuthClientIdDiscoverable,
+  OAuthClientIdLoopback,
+  OAuthClientMetadata,
+  OAuthClientMetadataInput,
+  isLoopbackHost,
+  isOAuthClientIdDiscoverable,
+  isOAuthClientIdLoopback,
+  oauthClientMetadataSchema,
+} from '@atproto/oauth-types'
+import {
   Fetch,
+  bindFetch,
   fetchJsonProcessor,
   fetchJsonZodProcessor,
   fetchOkProcessor,
@@ -11,19 +23,6 @@ import {
   GetCachedOptions,
   SimpleStore,
 } from '@atproto-labs/simple-store'
-import { Jwks, jwksSchema, Keyset } from '@atproto/jwk'
-import {
-  isLoopbackHost,
-  isOAuthClientIdDiscoverable,
-  isOAuthClientIdLoopback,
-  OAuthAuthorizationServerMetadata,
-  OAuthClientIdDiscoverable,
-  OAuthClientIdLoopback,
-  OAuthClientMetadata,
-  OAuthClientMetadataInput,
-  oauthClientMetadataSchema,
-} from '@atproto/oauth-types'
-
 import { InvalidClientMetadataError } from '../errors/invalid-client-metadata-error.js'
 import { InvalidRedirectUriError } from '../errors/invalid-redirect-uri-error.js'
 import { callAsync } from '../lib/util/function.js'
@@ -111,17 +110,15 @@ export class ClientManager {
         })
       : undefined
 
-    const partialInfo = this.hooks.onClientInfo
-      ? await callAsync(this.hooks.onClientInfo, clientId, {
-          metadata,
-          jwks,
-        }).catch((err) => {
-          throw InvalidClientMetadataError.from(
-            err,
-            `Rejected client information for "${clientId}"`,
-          )
-        })
-      : undefined
+    const partialInfo = await callAsync(this.hooks.getClientInfo, clientId, {
+      metadata,
+      jwks,
+    }).catch((err) => {
+      throw InvalidClientMetadataError.from(
+        err,
+        `Rejected client information for "${clientId}"`,
+      )
+    })
 
     const isFirstParty = partialInfo?.isFirstParty ?? false
     const isTrusted = partialInfo?.isTrusted ?? isFirstParty

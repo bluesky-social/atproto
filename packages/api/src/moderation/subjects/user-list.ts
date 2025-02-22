@@ -1,7 +1,7 @@
 import { AtUri } from '@atproto/syntax'
 import { AppBskyActorDefs } from '../../client/index'
 import { ModerationDecision } from '../decision'
-import { ModerationSubjectUserList, ModerationOpts } from '../types'
+import { ModerationOpts, ModerationSubjectUserList } from '../types'
 import { decideAccount } from './account'
 import { decideProfile } from './profile'
 
@@ -11,7 +11,11 @@ export function decideUserList(
 ): ModerationDecision {
   const acc = new ModerationDecision()
 
-  const creator = isProfile(subject.creator) ? subject.creator : undefined
+  const creator =
+    // Note: ListViewBasic should not contain a creator field, but let's support it anyway
+    'creator' in subject && isProfile(subject.creator)
+      ? subject.creator
+      : undefined
 
   if (creator) {
     acc.setDid(creator.did)

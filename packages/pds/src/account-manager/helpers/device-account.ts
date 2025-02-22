@@ -1,11 +1,10 @@
+import { Insertable, Selectable } from 'kysely'
 import {
   Account,
   DeviceAccountInfo,
   DeviceId,
   OAuthClientId,
 } from '@atproto/oauth-provider'
-import { Insertable, Selectable } from 'kysely'
-
 import { fromDateISO, fromJsonArray, toDateISO, toJsonArray } from '../../db'
 import { AccountDb } from '../db'
 import { DeviceAccount } from '../db/schema/device-account'

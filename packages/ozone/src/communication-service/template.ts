@@ -1,5 +1,5 @@
-import Database from '../db'
 import { Selectable } from 'kysely'
+import { Database } from '../db'
 import { CommunicationTemplate } from '../db/schema/communication_template'
 import { TemplateView } from '../lexicon/types/tools/ozone/communication/defs'
 

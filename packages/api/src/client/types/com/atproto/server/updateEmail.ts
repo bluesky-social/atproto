@@ -3,9 +3,13 @@
  */
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.atproto.server.updateEmail'
 
 export interface QueryParams {}
 
@@ -14,7 +18,6 @@ export interface InputSchema {
   emailAuthFactor?: boolean
   /** Requires a token from com.atproto.sever.requestEmailUpdate if the account's email has been confirmed. */
   token?: string
-  [k: string]: unknown
 }
 
 export interface CallOptions {
