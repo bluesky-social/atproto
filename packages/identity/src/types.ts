@@ -4,6 +4,7 @@ export { didDocument } from '@atproto/common-web'
 export type { DidDocument } from '@atproto/common-web'
 
 export type IdentityResolverOpts = {
+  fetch?: typeof globalThis.fetch
   timeout?: number
   plcUrl?: string
   didCache?: DidCache
@@ -11,11 +12,13 @@ export type IdentityResolverOpts = {
 }
 
 export type HandleResolverOpts = {
+  fetch?: typeof globalThis.fetch
   timeout?: number
   backupNameservers?: string[]
 }
 
 export type DidResolverOpts = {
+  fetch?: typeof globalThis.fetch
   timeout?: number
   plcUrl?: string
   didCache?: DidCache

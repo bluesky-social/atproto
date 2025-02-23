@@ -5,11 +5,13 @@ const SUBDOMAIN = '_atproto'
 const PREFIX = 'did='
 
 export class HandleResolver {
+  public fetch: typeof globalThis.fetch
   public timeout: number
   private backupNameservers: string[] | undefined
   private backupNameserverIps: string[] | undefined
 
   constructor(opts: HandleResolverOpts = {}) {
+    this.fetch = opts.fetch ?? globalThis.fetch
     this.timeout = opts.timeout ?? 3000
     this.backupNameservers = opts.backupNameservers
   }
@@ -49,7 +51,7 @@ export class HandleResolver {
   ): Promise<string | undefined> {
     const url = new URL('/.well-known/atproto-did', `https://${handle}`)
     try {
-      const res = await fetch(url, { signal })
+      const res = await this.fetch(url, { signal })
       const did = (await res.text()).split('\n')[0].trim()
       if (typeof did === 'string' && did.startsWith('did:')) {
         return did
