@@ -13,12 +13,16 @@ describe('secp256k1 did:key', () => {
 
   it('converts between bytes and did', async () => {
     for (const vector of secpTestVectors) {
-      const keypair = await Secp256k1Keypair.import(vector.seed)
+      const keypair = await Secp256k1Keypair.import(vector.seed, {
+        isCompressed: false,
+      })
       const didKey = did.formatDidKey('ES256K', keypair.publicKeyBytes())
       expect(didKey).toEqual(vector.id)
       const { jwtAlg, keyBytes } = did.parseDidKey(didKey)
       expect(jwtAlg).toBe('ES256K')
-      expect(uint8arrays.equals(keyBytes, keypair.publicKeyBytes())).toBeTruthy
+      expect(
+        uint8arrays.equals(keyBytes, keypair.publicKeyBytes()),
+      ).toBeTruthy()
     }
   })
 })
@@ -36,12 +40,16 @@ describe('P-256 did:key', () => {
   it('converts between bytes and did', async () => {
     for (const vector of p256TestVectors) {
       const bytes = uint8arrays.fromString(vector.privateKeyBase58, 'base58btc')
-      const keypair = await P256Keypair.import(bytes)
+      const keypair = await P256Keypair.import(bytes, {
+        isCompressed: false,
+      })
       const didKey = did.formatDidKey('ES256', keypair.publicKeyBytes())
       expect(didKey).toEqual(vector.id)
       const { jwtAlg, keyBytes } = did.parseDidKey(didKey)
       expect(jwtAlg).toBe('ES256')
-      expect(uint8arrays.equals(keyBytes, keypair.publicKeyBytes())).toBeTruthy
+      expect(
+        uint8arrays.equals(keyBytes, keypair.publicKeyBytes()),
+      ).toBeTruthy()
     }
   })
 })
