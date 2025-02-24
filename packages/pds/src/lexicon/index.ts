@@ -163,6 +163,7 @@ import * as ChatBskyConvoMuteConvo from './types/chat/bsky/convo/muteConvo.js'
 import * as ChatBskyConvoSendMessage from './types/chat/bsky/convo/sendMessage.js'
 import * as ChatBskyConvoSendMessageBatch from './types/chat/bsky/convo/sendMessageBatch.js'
 import * as ChatBskyConvoUnmuteConvo from './types/chat/bsky/convo/unmuteConvo.js'
+import * as ChatBskyConvoUpdateAllRead from './types/chat/bsky/convo/updateAllRead.js'
 import * as ChatBskyConvoUpdateRead from './types/chat/bsky/convo/updateRead.js'
 import * as ChatBskyModerationGetActorMetadata from './types/chat/bsky/moderation/getActorMetadata.js'
 import * as ChatBskyModerationGetMessageContext from './types/chat/bsky/moderation/getMessageContext.js'
@@ -2211,6 +2212,17 @@ export class ChatBskyConvoNS {
     >,
   ) {
     const nsid = 'chat.bsky.convo.unmuteConvo' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  updateAllRead<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyConvoUpdateAllRead.Handler<ExtractAuth<AV>>,
+      ChatBskyConvoUpdateAllRead.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.updateAllRead' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

@@ -11042,6 +11042,40 @@ export const schemaDict = {
       },
     },
   },
+  ChatBskyConvoUpdateAllRead: {
+    lexicon: 1,
+    id: 'chat.bsky.convo.updateAllRead',
+    defs: {
+      main: {
+        type: 'procedure',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              status: {
+                type: 'string',
+                knownValues: ['request', 'accepted'],
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['updatedCount'],
+            properties: {
+              updatedCount: {
+                description: 'The count of updated convos.',
+                type: 'integer',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ChatBskyConvoUpdateRead: {
     lexicon: 1,
     id: 'chat.bsky.convo.updateRead',
@@ -14508,6 +14542,7 @@ export const ids = {
   ChatBskyConvoSendMessage: 'chat.bsky.convo.sendMessage',
   ChatBskyConvoSendMessageBatch: 'chat.bsky.convo.sendMessageBatch',
   ChatBskyConvoUnmuteConvo: 'chat.bsky.convo.unmuteConvo',
+  ChatBskyConvoUpdateAllRead: 'chat.bsky.convo.updateAllRead',
   ChatBskyConvoUpdateRead: 'chat.bsky.convo.updateRead',
   ChatBskyModerationGetActorMetadata: 'chat.bsky.moderation.getActorMetadata',
   ChatBskyModerationGetMessageContext: 'chat.bsky.moderation.getMessageContext',
