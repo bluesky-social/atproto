@@ -3,7 +3,7 @@ import { ServiceImpl } from '@connectrpc/connect'
 import { sql } from 'kysely'
 import { Service } from '../../../proto/bsky_connect'
 import { Database } from '../db'
-import { IsoSortAtKey, paginateWithSingleKey } from '../db/pagination'
+import { IsoSortAtKey } from '../db/pagination'
 import { countAll, notSoftDeletedClause } from '../db/util'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
@@ -42,10 +42,9 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .select(priorityFollowQb.as('priority'))
 
     const key = new IsoSortAtKey(ref('notif.sortAt'))
-    builder = paginateWithSingleKey(builder, {
+    builder = key.paginate(builder, {
       cursor,
       limit,
-      key,
     })
 
     const notifsRes = await builder.execute()

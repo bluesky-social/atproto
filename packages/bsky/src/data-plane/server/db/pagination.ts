@@ -79,6 +79,39 @@ export abstract class GenericKeyset<R, LR extends KeysetLabeledResult> {
       }
     }
   }
+  paginate<QB extends AnyQb>(
+    qb: QB,
+    opts: {
+      limit?: number
+      cursor?: string
+      direction?: 'asc' | 'desc'
+      tryIndex?: boolean
+      // By default, pg does nullsFirst
+      nullsLast?: boolean
+    },
+  ): QB {
+    const { limit, cursor, direction = 'desc', tryIndex, nullsLast } = opts
+    const keysetSql = this.getSql(this.unpack(cursor), direction, tryIndex)
+    return qb
+      .if(!!limit, (q) => q.limit(limit as number))
+      .if(!nullsLast, (q) =>
+        q.orderBy(this.primary, direction).orderBy(this.secondary, direction),
+      )
+      .if(!!nullsLast, (q) =>
+        q
+          .orderBy(
+            direction === 'asc'
+              ? sql`${this.primary} asc nulls last`
+              : sql`${this.primary} desc nulls last`,
+          )
+          .orderBy(
+            direction === 'asc'
+              ? sql`${this.secondary} asc nulls last`
+              : sql`${this.secondary} desc nulls last`,
+          ),
+      )
+      .if(!!keysetSql, (qb) => (keysetSql ? qb.where(keysetSql) : qb)) as QB
+  }
 }
 
 type SortAtCidResult = { sortAt: string; cid: string }
@@ -127,6 +160,9 @@ export class IndexedAtDidKeyset extends TimeCidKeyset<{
   }
 }
 
+/**
+ * @deprecated Use {@link GenericKeyset#paginate} instead.
+ */
 export const paginate = <
   QB extends AnyQb,
   K extends GenericKeyset<unknown, any>,
@@ -142,34 +178,7 @@ export const paginate = <
     nullsLast?: boolean
   },
 ): QB => {
-  const {
-    limit,
-    cursor,
-    keyset,
-    direction = 'desc',
-    tryIndex,
-    nullsLast,
-  } = opts
-  const keysetSql = keyset.getSql(keyset.unpack(cursor), direction, tryIndex)
-  return qb
-    .if(!!limit, (q) => q.limit(limit as number))
-    .if(!nullsLast, (q) =>
-      q.orderBy(keyset.primary, direction).orderBy(keyset.secondary, direction),
-    )
-    .if(!!nullsLast, (q) =>
-      q
-        .orderBy(
-          direction === 'asc'
-            ? sql`${keyset.primary} asc nulls last`
-            : sql`${keyset.primary} desc nulls last`,
-        )
-        .orderBy(
-          direction === 'asc'
-            ? sql`${keyset.secondary} asc nulls last`
-            : sql`${keyset.secondary} desc nulls last`,
-        ),
-    )
-    .if(!!keysetSql, (qb) => (keysetSql ? qb.where(keysetSql) : qb)) as QB
+  return opts.keyset.paginate(qb, opts)
 }
 
 type SingleKeyCursor = {
@@ -225,6 +234,30 @@ export abstract class GenericSingleKey<R, LR extends SingleKeyLabeledResult> {
     }
     return sql`${this.primary} < ${labeled.primary}`
   }
+  paginate<QB extends AnyQb>(
+    qb: QB,
+    opts: {
+      limit?: number
+      cursor?: string
+      direction?: 'asc' | 'desc'
+      // By default, pg does nullsFirst
+      nullsLast?: boolean
+    },
+  ): QB {
+    const { limit, cursor, direction = 'desc', nullsLast } = opts
+    const keySql = this.getSql(this.unpack(cursor), direction)
+    return qb
+      .if(!!limit, (q) => q.limit(limit as number))
+      .if(!nullsLast, (q) => q.orderBy(this.primary, direction))
+      .if(!!nullsLast, (q) =>
+        q.orderBy(
+          direction === 'asc'
+            ? sql`${this.primary} asc nulls last`
+            : sql`${this.primary} desc nulls last`,
+        ),
+      )
+      .if(!!keySql, (qb) => (keySql ? qb.where(keySql) : qb)) as QB
+  }
 }
 
 type SortAtResult = { sortAt: string }
@@ -260,33 +293,4 @@ export class IsoSortAtKey extends IsoTimeKey<{
   labelResult(result: { sortAt: string }) {
     return { primary: result.sortAt }
   }
-}
-
-export const paginateWithSingleKey = <
-  QB extends AnyQb,
-  K extends GenericSingleKey<unknown, any>,
->(
-  qb: QB,
-  opts: {
-    limit?: number
-    cursor?: string
-    direction?: 'asc' | 'desc'
-    key: K
-    // By default, pg does nullsFirst
-    nullsLast?: boolean
-  },
-): QB => {
-  const { limit, cursor, key, direction = 'desc', nullsLast } = opts
-  const keySql = key.getSql(key.unpack(cursor), direction)
-  return qb
-    .if(!!limit, (q) => q.limit(limit as number))
-    .if(!nullsLast, (q) => q.orderBy(key.primary, direction))
-    .if(!!nullsLast, (q) =>
-      q.orderBy(
-        direction === 'asc'
-          ? sql`${key.primary} asc nulls last`
-          : sql`${key.primary} desc nulls last`,
-      ),
-    )
-    .if(!!keySql, (qb) => (keySql ? qb.where(keySql) : qb)) as QB
 }
