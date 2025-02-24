@@ -1,7 +1,7 @@
 import { AtUri } from '@atproto/syntax'
-import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { AppContext } from '../../../../context'
+import { Server } from '../../../../lexicon'
 import { pipethrough } from '../../../../pipethrough'
 
 export default function (server: Server, ctx: AppContext) {

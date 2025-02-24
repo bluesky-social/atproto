@@ -1,3 +1,5 @@
+import { CarReader } from '@ipld/car/reader'
+import { streamToBuffer } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
 import {
   CidSet,
@@ -9,10 +11,7 @@ import {
 } from '../src'
 import { MemoryBlockstore } from '../src/storage'
 import * as sync from '../src/sync'
-
 import * as util from './_util'
-import { streamToBuffer } from '@atproto/common'
-import { CarReader } from '@ipld/car/reader'
 
 describe('Repo Sync', () => {
   let storage: MemoryBlockstore

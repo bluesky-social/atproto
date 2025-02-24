@@ -1,7 +1,7 @@
 import { chunkArray } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { AccountDb, InviteCode } from '../db'
 import { countAll } from '../../db'
+import { AccountDb, InviteCode } from '../db'
 
 export const createInviteCodes = async (
   db: AccountDb,

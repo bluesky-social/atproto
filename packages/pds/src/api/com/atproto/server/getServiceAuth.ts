@@ -1,16 +1,29 @@
-import { InvalidRequestError, createServiceJwt } from '@atproto/xrpc-server'
 import { HOUR, MINUTE } from '@atproto/common'
-import AppContext from '../../../../context'
+import { InvalidRequestError, createServiceJwt } from '@atproto/xrpc-server'
+import { AuthScope } from '../../../../auth-verifier'
+import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
+import { ids } from '../../../../lexicon/lexicons'
 import { PRIVILEGED_METHODS, PROTECTED_METHODS } from '../../../../pipethrough'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.getServiceAuth({
-    auth: ctx.authVerifier.accessStandard(),
+    auth: ctx.authVerifier.accessStandard({
+      additional: [AuthScope.Takendown],
+    }),
     handler: async ({ params, auth }) => {
       const did = auth.credentials.did
       const { aud, lxm = null } = params
       const exp = params.exp ? params.exp * 1000 : undefined
+
+      // Takendown accounts should not be able to generate service auth tokens except for methods necessary for account migration
+      if (
+        auth.credentials.scope === AuthScope.Takendown &&
+        lxm !== ids.ComAtprotoServerCreateAccount
+      ) {
+        throw new InvalidRequestError('Bad token scope', 'InvalidToken')
+      }
+
       if (exp) {
         const diff = exp - Date.now()
         if (diff < 0) {

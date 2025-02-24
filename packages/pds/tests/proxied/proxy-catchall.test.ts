@@ -1,13 +1,13 @@
-import AtpAgent from '@atproto/api'
-import { Keypair } from '@atproto/crypto'
-import { TestNetworkNoAppView } from '@atproto/dev-env'
-import { LexiconDoc } from '@atproto/lexicon'
-import * as plc from '@did-plc/lib'
-import express from 'express'
 import { once } from 'node:events'
 import http from 'node:http'
 import { AddressInfo } from 'node:net'
 import { setTimeout as sleep } from 'node:timers/promises'
+import * as plc from '@did-plc/lib'
+import express from 'express'
+import AtpAgent from '@atproto/api'
+import { Keypair } from '@atproto/crypto'
+import { TestNetworkNoAppView } from '@atproto/dev-env'
+import { LexiconDoc } from '@atproto/lexicon'
 
 const lexicons = [
   {

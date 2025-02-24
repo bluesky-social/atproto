@@ -1,4 +1,8 @@
 import {
+  OAuthProtectedResourceMetadata,
+  oauthProtectedResourceMetadataSchema,
+} from '@atproto/oauth-types'
+import {
   Fetch,
   FetchResponseError,
   bindFetch,
@@ -9,10 +13,6 @@ import {
   GetCachedOptions,
   SimpleStore,
 } from '@atproto-labs/simple-store'
-import {
-  OAuthProtectedResourceMetadata,
-  oauthProtectedResourceMetadataSchema,
-} from '@atproto/oauth-types'
 import { contentMime } from './util.js'
 
 export type { GetCachedOptions, OAuthProtectedResourceMetadata }

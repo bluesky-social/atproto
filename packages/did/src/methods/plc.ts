@@ -28,15 +28,15 @@ export function assertDidPlc(input: unknown): asserts input is Did<'plc'> {
     throw new InvalidDidError(typeof input, `DID must be a string`)
   }
 
+  if (!input.startsWith(DID_PLC_PREFIX)) {
+    throw new InvalidDidError(input, `Invalid did:plc prefix`)
+  }
+
   if (input.length !== DID_PLC_LENGTH) {
     throw new InvalidDidError(
       input,
       `did:plc must be ${DID_PLC_LENGTH} characters long`,
     )
-  }
-
-  if (!input.startsWith(DID_PLC_PREFIX)) {
-    throw new InvalidDidError(input, `Invalid did:plc prefix`)
   }
 
   // The following check is not necessary, as the check below is more strict:

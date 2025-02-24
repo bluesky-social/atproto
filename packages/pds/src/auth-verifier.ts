@@ -1,6 +1,7 @@
 import { KeyObject, createPublicKey, createSecretKey } from 'node:crypto'
 import { IncomingMessage, ServerResponse } from 'node:http'
-
+import * as jose from 'jose'
+import KeyEncoder from 'key-encoder'
 import { getVerificationMaterial } from '@atproto/common'
 import { IdResolver, getDidKeyFromMultibase } from '@atproto/identity'
 import {
@@ -18,8 +19,6 @@ import {
   parseReqNsid,
   verifyJwt as verifyServiceJwt,
 } from '@atproto/xrpc-server'
-import * as jose from 'jose'
-import KeyEncoder from 'key-encoder'
 import { AccountManager } from './account-manager'
 import { softDeleted } from './db'
 
@@ -32,6 +31,7 @@ export enum AuthScope {
   AppPass = 'com.atproto.appPass',
   AppPassPrivileged = 'com.atproto.appPassPrivileged',
   SignupQueued = 'com.atproto.signupQueued',
+  Takendown = 'com.atproto.takendown',
 }
 
 export type AccessOpts = {
@@ -209,17 +209,19 @@ export class AuthVerifier {
     return this.validateAdminToken(ctx)
   }
 
-  optionalAccessOrAdminToken = async (
-    ctx: ReqCtx,
-  ): Promise<AccessOutput | AdminTokenOutput | NullOutput> => {
-    if (isAccessToken(ctx.req)) {
-      return await this.accessStandard()(ctx)
-    } else if (isBasicToken(ctx.req)) {
-      return await this.adminToken(ctx)
-    } else {
-      return this.null(ctx)
+  optionalAccessOrAdminToken =
+    (opts: Partial<AccessOpts> = {}) =>
+    async (
+      ctx: ReqCtx,
+    ): Promise<AccessOutput | AdminTokenOutput | NullOutput> => {
+      if (isAccessToken(ctx.req)) {
+        return await this.accessStandard(opts)(ctx)
+      } else if (isBasicToken(ctx.req)) {
+        return await this.adminToken(ctx)
+      } else {
+        return this.null(ctx)
+      }
     }
-  }
 
   userServiceAuth = async (ctx: ReqCtx): Promise<UserServiceAuthOutput> => {
     const payload = await this.verifyServiceJwt(ctx, {

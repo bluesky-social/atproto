@@ -1,8 +1,8 @@
-import fs from 'fs/promises'
+import fs from 'node:fs/promises'
 import { AtpAgent } from '@atproto/api'
-import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
-import { forSnapshot, stripViewer } from '../_util'
+import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
+import { forSnapshot, stripViewer } from '../_util'
 
 describe('pds profile views', () => {
   let network: TestNetwork
@@ -118,10 +118,10 @@ describe('pds profile views', () => {
 
   it('presents avatars & banners', async () => {
     const avatarImg = await fs.readFile(
-      '../dev-env/src/seed/img/key-portrait-small.jpg',
+      '../dev-env/assets/key-portrait-small.jpg',
     )
     const bannerImg = await fs.readFile(
-      '../dev-env/src/seed/img/key-landscape-small.jpg',
+      '../dev-env/assets/key-landscape-small.jpg',
     )
     const avatarRes = await pdsAgent.api.com.atproto.repo.uploadBlob(
       avatarImg,

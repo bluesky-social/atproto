@@ -47,6 +47,7 @@ export interface AtpAgentLoginOpts {
   identifier: string
   password: string
   authFactorToken?: string | undefined
+  allowTakendown?: boolean
 }
 
 /**
@@ -108,4 +109,5 @@ export interface BskyPreferences {
     activeProgressGuide: AppBskyActorDefs.BskyAppProgressGuide | undefined
     nuxs: AppBskyActorDefs.Nux[]
   }
+  postInteractionSettings: AppBskyActorDefs.PostInteractionSettingsPref
 }

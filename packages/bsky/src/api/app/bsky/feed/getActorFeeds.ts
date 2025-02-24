@@ -1,17 +1,17 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
 import { mapDefined } from '@atproto/common'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getActorFeeds'
-import AppContext from '../../../../context'
-import { createPipeline, noRules } from '../../../../pipeline'
+import { InvalidRequestError } from '@atproto/xrpc-server'
+import { AppContext } from '../../../../context'
+import { DataPlaneClient } from '../../../../data-plane'
 import {
   HydrateCtx,
   HydrationState,
   Hydrator,
 } from '../../../../hydration/hydrator'
-import { Views } from '../../../../views'
-import { DataPlaneClient } from '../../../../data-plane'
 import { parseString } from '../../../../hydration/util'
+import { Server } from '../../../../lexicon'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getActorFeeds'
+import { createPipeline, noRules } from '../../../../pipeline'
+import { Views } from '../../../../views'
 import { clearlyBadCursor, resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {

@@ -1,6 +1,6 @@
-import getPort from 'get-port'
 import { Client as PlcClient } from '@did-plc/lib'
 import * as plc from '@did-plc/server'
+import getPort from 'get-port'
 import { PlcConfig } from './types'
 
 export class TestPlc {

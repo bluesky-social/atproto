@@ -3,9 +3,13 @@
  */
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.atproto.sync.getRepoStatus'
 
 export interface QueryParams {
   /** The DID of the repo. */
@@ -18,10 +22,16 @@ export interface OutputSchema {
   did: string
   active: boolean
   /** If active=false, this optional field indicates a possible reason for why the account is not active. If active=false and no status is supplied, then the host makes no claim for why the repository is no longer being hosted. */
-  status?: 'takendown' | 'suspended' | 'deactivated' | (string & {})
+  status?:
+    | 'takendown'
+    | 'suspended'
+    | 'deleted'
+    | 'deactivated'
+    | 'desynchronized'
+    | 'throttled'
+    | (string & {})
   /** Optional field, the current rev of the repo, if active=true */
   rev?: string
-  [k: string]: unknown
 }
 
 export interface CallOptions {

@@ -1,16 +1,16 @@
+import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
+import getCheckout from './deprecated/getCheckout'
+import getHead from './deprecated/getHead'
 import getBlob from './getBlob'
 import getBlocks from './getBlocks'
 import getLatestCommit from './getLatestCommit'
-import getRepoStatus from './getRepoStatus'
 import getRecord from './getRecord'
 import getRepo from './getRepo'
-import subscribeRepos from './subscribeRepos'
+import getRepoStatus from './getRepoStatus'
 import listBlobs from './listBlobs'
 import listRepos from './listRepos'
-import getCheckout from './deprecated/getCheckout'
-import getHead from './deprecated/getHead'
+import subscribeRepos from './subscribeRepos'
 
 export default function (server: Server, ctx: AppContext) {
   getBlob(server, ctx)

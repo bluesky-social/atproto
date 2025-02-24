@@ -1,5 +1,4 @@
 import { z } from 'zod'
-
 import { oauthCodeChallengeMethodSchema } from './oauth-code-challenge-method.js'
 import { oauthIssuerIdentifierSchema } from './oauth-issuer-identifier.js'
 import { webUriSchema } from './uri.js'

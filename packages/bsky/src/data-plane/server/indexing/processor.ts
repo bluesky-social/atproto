@@ -1,13 +1,13 @@
 import { Insertable } from 'kysely'
 import { CID } from 'multiformats/cid'
-import { AtUri } from '@atproto/syntax'
 import { chunkArray } from '@atproto/common'
 import { jsonStringToLex, stringifyLex } from '@atproto/lexicon'
+import { AtUri } from '@atproto/syntax'
 import { lexicons } from '../../../lexicon/lexicons'
-import { Database } from '../db'
-import DatabaseSchema from '../db/database-schema'
-import { Notification } from '../db/tables/notification'
 import { BackgroundQueue } from '../background'
+import { Database } from '../db'
+import { DatabaseSchema } from '../db/database-schema'
+import { Notification } from '../db/tables/notification'
 
 // @NOTE re: insertions and deletions. Due to how record updates are handled,
 // (insertFn) should have the same effect as (insertFn -> deleteFn -> insertFn).

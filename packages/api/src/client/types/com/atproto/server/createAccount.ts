@@ -3,9 +3,13 @@
  */
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.atproto.server.createAccount'
 
 export interface QueryParams {}
 
@@ -23,8 +27,7 @@ export interface InputSchema {
   /** DID PLC rotation key (aka, recovery key) to be included in PLC creation operation. */
   recoveryKey?: string
   /** A signed DID PLC operation to be submitted as part of importing an existing account to this instance. NOTE: this optional field may be updated when full account migration is implemented. */
-  plcOp?: {}
-  [k: string]: unknown
+  plcOp?: { [_ in string]: unknown }
 }
 
 /** Account login session returned on successful account creation. */
@@ -35,8 +38,7 @@ export interface OutputSchema {
   /** The DID of the new account. */
   did: string
   /** Complete DID document. */
-  didDoc?: {}
-  [k: string]: unknown
+  didDoc?: { [_ in string]: unknown }
 }
 
 export interface CallOptions {

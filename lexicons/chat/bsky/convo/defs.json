@@ -90,7 +90,10 @@
           "refs": ["#messageView", "#deletedMessageView"]
         },
         "muted": { "type": "boolean" },
-        "opened": { "type": "boolean" },
+        "status": {
+          "type": "string",
+          "knownValues": ["request", "accepted"]
+        },
         "unreadCount": { "type": "integer" }
       }
     },
@@ -102,7 +105,31 @@
         "convoId": { "type": "string" }
       }
     },
+    "logAcceptConvo": {
+      "type": "object",
+      "required": ["rev", "convoId"],
+      "properties": {
+        "rev": { "type": "string" },
+        "convoId": { "type": "string" }
+      }
+    },
     "logLeaveConvo": {
+      "type": "object",
+      "required": ["rev", "convoId"],
+      "properties": {
+        "rev": { "type": "string" },
+        "convoId": { "type": "string" }
+      }
+    },
+    "logMuteConvo": {
+      "type": "object",
+      "required": ["rev", "convoId"],
+      "properties": {
+        "rev": { "type": "string" },
+        "convoId": { "type": "string" }
+      }
+    },
+    "logUnmuteConvo": {
       "type": "object",
       "required": ["rev", "convoId"],
       "properties": {
@@ -123,6 +150,18 @@
       }
     },
     "logDeleteMessage": {
+      "type": "object",
+      "required": ["rev", "convoId", "message"],
+      "properties": {
+        "rev": { "type": "string" },
+        "convoId": { "type": "string" },
+        "message": {
+          "type": "union",
+          "refs": ["#messageView", "#deletedMessageView"]
+        }
+      }
+    },
+    "logReadMessage": {
       "type": "object",
       "required": ["rev", "convoId", "message"],
       "properties": {

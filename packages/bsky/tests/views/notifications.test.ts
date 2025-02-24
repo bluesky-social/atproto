@@ -1,8 +1,8 @@
 import { AtpAgent } from '@atproto/api'
-import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
-import { forSnapshot, paginateAll } from '../_util'
-import { Notification } from '../../src/lexicon/types/app/bsky/notification/listNotifications'
+import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
+import { Notification } from '../../src/lexicon/types/app/bsky/notification/listNotifications'
+import { forSnapshot, paginateAll } from '../_util'
 
 describe('notification views', () => {
   let network: TestNetwork
@@ -417,6 +417,84 @@ describe('notification views', () => {
       ),
     ).toBe(true)
     expect(forSnapshot(notifs.data)).toMatchSnapshot()
+    await agent.api.app.bsky.notification.putPreferences(
+      { priority: false },
+      {
+        encoding: 'application/json',
+        headers: await network.serviceHeaders(
+          sc.dids.carol,
+          ids.AppBskyNotificationPutPreferences,
+        ),
+      },
+    )
+    await network.processAll()
+  })
+
+  it('filters notifications by reason', async () => {
+    const res = await agent.app.bsky.notification.listNotifications(
+      {
+        reasons: ['mention'],
+      },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.alice,
+          ids.AppBskyNotificationListNotifications,
+        ),
+      },
+    )
+    expect(res.data.notifications.length).toBe(1)
+    expect(forSnapshot(res.data)).toMatchSnapshot()
+  })
+
+  it('filters notifications by multiple reasons', async () => {
+    const res = await agent.app.bsky.notification.listNotifications(
+      {
+        reasons: ['mention', 'reply'],
+      },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.alice,
+          ids.AppBskyNotificationListNotifications,
+        ),
+      },
+    )
+    expect(res.data.notifications.length).toBe(4)
+    expect(forSnapshot(res.data)).toMatchSnapshot()
+  })
+
+  it('paginates filtered notifications', async () => {
+    const results = (results) =>
+      sort(results.flatMap((res) => res.notifications))
+    const paginator = async (cursor?: string) => {
+      const res = await agent.app.bsky.notification.listNotifications(
+        { reasons: ['mention', 'reply'], cursor, limit: 2 },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyNotificationListNotifications,
+          ),
+        },
+      )
+      return res.data
+    }
+
+    const paginatedAll = await paginateAll(paginator)
+    paginatedAll.forEach((res) =>
+      expect(res.notifications.length).toBeLessThanOrEqual(2),
+    )
+
+    const full = await agent.app.bsky.notification.listNotifications(
+      { reasons: ['mention', 'reply'] },
+      {
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyNotificationListNotifications,
+        ),
+      },
+    )
+
+    expect(full.data.notifications.length).toBe(4)
+    expect(results(paginatedAll)).toEqual(results([full.data]))
   })
 
   it('fails open on clearly bad cursor.', async () => {

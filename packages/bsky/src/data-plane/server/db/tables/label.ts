@@ -7,6 +7,7 @@ export interface Label {
   val: string
   neg: boolean
   cts: string
+  exp: string | null
 }
 
 export type PartialDB = { [tableName]: Label }

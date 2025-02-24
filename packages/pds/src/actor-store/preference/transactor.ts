@@ -1,10 +1,10 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { AuthScope } from '../../auth-verifier'
 import {
-  PreferenceReader,
   AccountPreference,
+  PreferenceReader,
   prefMatchNamespace,
 } from './reader'
-import { AuthScope } from '../../auth-verifier'
 import { prefInScope } from './util'
 
 export class PreferenceTransactor extends PreferenceReader {

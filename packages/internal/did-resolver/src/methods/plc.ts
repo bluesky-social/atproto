@@ -1,3 +1,4 @@
+import { Did, assertDidPlc, didDocumentValidator } from '@atproto/did'
 import {
   Fetch,
   bindFetch,
@@ -6,8 +7,6 @@ import {
   fetchOkProcessor,
 } from '@atproto-labs/fetch'
 import { pipe } from '@atproto-labs/pipe'
-import { Did, assertDidPlc, didDocumentValidator } from '@atproto/did'
-
 import { DidMethod, ResolveDidOptions } from '../did-method.js'
 
 const fetchSuccessHandler = pipe(
@@ -45,7 +44,8 @@ export class DidPlcMethod implements DidMethod<'plc'> {
     // should still check if the msid is valid.
     assertDidPlc(did)
 
-    const url = new URL(`/${did}`, this.plcDirectoryUrl)
+    // Should never throw
+    const url = new URL(`/${encodeURIComponent(did)}`, this.plcDirectoryUrl)
 
     return this.fetch(url, {
       redirect: 'error',

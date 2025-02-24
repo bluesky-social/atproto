@@ -1,6 +1,6 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
 import { OutputSchema } from '../../../../lexicon/types/com/atproto/admin/getSubjectStatus'
 
 export default function (server: Server, ctx: AppContext) {

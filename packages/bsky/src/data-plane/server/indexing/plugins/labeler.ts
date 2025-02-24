@@ -1,12 +1,12 @@
 import { Selectable } from 'kysely'
-import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import { CID } from 'multiformats/cid'
-import * as Labeler from '../../../../lexicon/types/app/bsky/labeler/service'
+import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import * as lex from '../../../../lexicon/lexicons'
+import * as Labeler from '../../../../lexicon/types/app/bsky/labeler/service'
+import { BackgroundQueue } from '../../background'
 import { Database } from '../../db'
 import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
-import RecordProcessor from '../processor'
-import { BackgroundQueue } from '../../background'
+import { RecordProcessor } from '../processor'
 
 const lexId = lex.ids.AppBskyLabelerService
 type IndexedLabeler = Selectable<DatabaseSchemaType['labeler']>

@@ -2,97 +2,92 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'app.bsky.richtext.facet'
 
 /** Annotation of a sub-string within rich text. */
 export interface Main {
+  $type?: 'app.bsky.richtext.facet'
   index: ByteSlice
-  features: (Mention | Link | Tag | { $type: string; [k: string]: unknown })[]
-  [k: string]: unknown
+  features: ($Typed<Mention> | $Typed<Link> | $Typed<Tag> | { $type: string })[]
 }
 
-export function isMain(v: unknown): v is Main {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    (v.$type === 'app.bsky.richtext.facet#main' ||
-      v.$type === 'app.bsky.richtext.facet')
-  )
+const hashMain = 'main'
+
+export function isMain<V>(v: V) {
+  return is$typed(v, id, hashMain)
 }
 
-export function validateMain(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.richtext.facet#main', v)
+export function validateMain<V>(v: V) {
+  return validate<Main & V>(v, id, hashMain)
 }
 
 /** Facet feature for mention of another account. The text is usually a handle, including a '@' prefix, but the facet reference is a DID. */
 export interface Mention {
+  $type?: 'app.bsky.richtext.facet#mention'
   did: string
-  [k: string]: unknown
 }
 
-export function isMention(v: unknown): v is Mention {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.richtext.facet#mention'
-  )
+const hashMention = 'mention'
+
+export function isMention<V>(v: V) {
+  return is$typed(v, id, hashMention)
 }
 
-export function validateMention(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.richtext.facet#mention', v)
+export function validateMention<V>(v: V) {
+  return validate<Mention & V>(v, id, hashMention)
 }
 
 /** Facet feature for a URL. The text URL may have been simplified or truncated, but the facet reference should be a complete URL. */
 export interface Link {
+  $type?: 'app.bsky.richtext.facet#link'
   uri: string
-  [k: string]: unknown
 }
 
-export function isLink(v: unknown): v is Link {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.richtext.facet#link'
-  )
+const hashLink = 'link'
+
+export function isLink<V>(v: V) {
+  return is$typed(v, id, hashLink)
 }
 
-export function validateLink(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.richtext.facet#link', v)
+export function validateLink<V>(v: V) {
+  return validate<Link & V>(v, id, hashLink)
 }
 
 /** Facet feature for a hashtag. The text usually includes a '#' prefix, but the facet reference should not (except in the case of 'double hash tags'). */
 export interface Tag {
+  $type?: 'app.bsky.richtext.facet#tag'
   tag: string
-  [k: string]: unknown
 }
 
-export function isTag(v: unknown): v is Tag {
-  return (
-    isObj(v) && hasProp(v, '$type') && v.$type === 'app.bsky.richtext.facet#tag'
-  )
+const hashTag = 'tag'
+
+export function isTag<V>(v: V) {
+  return is$typed(v, id, hashTag)
 }
 
-export function validateTag(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.richtext.facet#tag', v)
+export function validateTag<V>(v: V) {
+  return validate<Tag & V>(v, id, hashTag)
 }
 
 /** Specifies the sub-string range a facet feature applies to. Start index is inclusive, end index is exclusive. Indices are zero-indexed, counting bytes of the UTF-8 encoded text. NOTE: some languages, like Javascript, use UTF-16 or Unicode codepoints for string slice indexing; in these languages, convert to byte arrays before working with facets. */
 export interface ByteSlice {
+  $type?: 'app.bsky.richtext.facet#byteSlice'
   byteStart: number
   byteEnd: number
-  [k: string]: unknown
 }
 
-export function isByteSlice(v: unknown): v is ByteSlice {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.richtext.facet#byteSlice'
-  )
+const hashByteSlice = 'byteSlice'
+
+export function isByteSlice<V>(v: V) {
+  return is$typed(v, id, hashByteSlice)
 }
 
-export function validateByteSlice(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.richtext.facet#byteSlice', v)
+export function validateByteSlice<V>(v: V) {
+  return validate<ByteSlice & V>(v, id, hashByteSlice)
 }

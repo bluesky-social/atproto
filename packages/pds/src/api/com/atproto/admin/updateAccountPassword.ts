@@ -1,5 +1,5 @@
+import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
 import { authPassthru } from './util'
 
 export default function (server: Server, ctx: AppContext) {

@@ -1,6 +1,7 @@
 export const imageTableName = 'post_embed_image'
 export const externalTableName = 'post_embed_external'
 export const recordTableName = 'post_embed_record'
+export const videoTableName = 'post_embed_video'
 
 export interface PostEmbedImage {
   postUri: string
@@ -23,8 +24,15 @@ export interface PostEmbedRecord {
   embedCid: string
 }
 
+export interface PostEmbedVideo {
+  postUri: string
+  videoCid: string
+  alt: string | null
+}
+
 export type PartialDB = {
   [imageTableName]: PostEmbedImage
   [externalTableName]: PostEmbedExternal
   [recordTableName]: PostEmbedRecord
+  [videoTableName]: PostEmbedVideo
 }

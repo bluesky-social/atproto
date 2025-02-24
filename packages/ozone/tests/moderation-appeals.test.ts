@@ -1,13 +1,13 @@
 import {
-  TestNetwork,
-  SeedClient,
-  basicSeed,
-  ModeratorClient,
-} from '@atproto/dev-env'
-import {
   ComAtprotoModerationDefs,
   ToolsOzoneModerationDefs,
 } from '@atproto/api'
+import {
+  ModeratorClient,
+  SeedClient,
+  TestNetwork,
+  basicSeed,
+} from '@atproto/dev-env'
 import {
   REASONMISLEADING,
   REASONSPAM,
@@ -98,6 +98,7 @@ describe('moderation-appeals', () => {
 
       // Verify that appeal status changed when appeal report was emitted by moderator
       const status = await assertBobsPostStatus(REVIEWESCALATED, true)
+      // @ts-expect-error unspecced ?
       expect(status?.appealedAt).not.toBeNull()
 
       // Create a report as normal user for carol's post

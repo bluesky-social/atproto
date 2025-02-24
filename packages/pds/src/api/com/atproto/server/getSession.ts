@@ -1,12 +1,11 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
 import { INVALID_HANDLE } from '@atproto/syntax'
-
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import { formatAccountStatus } from '../../../../account-manager'
-import AppContext from '../../../../context'
+import { AuthScope } from '../../../../auth-verifier'
+import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { authPassthru, resultPassthru } from '../../../proxy'
 import { didDocForSession } from './util'
-import { AuthScope } from '../../../../auth-verifier'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.getSession({

@@ -1,5 +1,4 @@
 import { z } from 'zod'
-
 import { jwkPubSchema, jwkSchema } from './jwk.js'
 
 export const jwksSchema = z.object({

@@ -1,6 +1,6 @@
-import crypto from 'crypto'
-import { sha256 } from '@atproto/crypto'
+import crypto from 'node:crypto'
 import * as ui8 from 'uint8arrays'
+import { sha256 } from '@atproto/crypto'
 
 export const genSaltAndHash = (password: string): Promise<string> => {
   const salt = crypto.randomBytes(16).toString('hex')

@@ -1,17 +1,17 @@
-import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
-import { randomStr } from '@atproto/crypto'
 import {
   cborDecode,
   cborEncode,
   readFromGenerator,
   wait,
 } from '@atproto/common'
-import { Sequencer, SeqEvt, formatSeqCommit } from '../src/sequencer'
-import { sequencer, repoPrepare } from '../../pds'
-import Outbox from '../src/sequencer/outbox'
-import userSeed from './seeds/users'
-import { ids } from '../src/lexicon/lexicons'
+import { randomStr } from '@atproto/crypto'
+import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import { readCarWithRoot } from '@atproto/repo'
+import { repoPrepare, sequencer } from '../../pds'
+import { ids } from '../src/lexicon/lexicons'
+import { SeqEvt, Sequencer, formatSeqCommit } from '../src/sequencer'
+import { Outbox } from '../src/sequencer/outbox'
+import userSeed from './seeds/users'
 
 describe('sequencer', () => {
   let network: TestNetworkNoAppView
@@ -35,6 +35,10 @@ describe('sequencer', () => {
     bob = sc.dids.bob
     // 14 events in userSeed
     totalEvts = 14
+  })
+
+  beforeEach(async () => {
+    await network.processAll()
   })
 
   afterAll(async () => {
@@ -237,11 +241,7 @@ describe('sequencer', () => {
       (store) => store.repo.formatCommit(writes),
     )
 
-    const repoSeqInsert = await formatSeqCommit(
-      sc.dids.alice,
-      writeCommit,
-      writes,
-    )
+    const repoSeqInsert = await formatSeqCommit(sc.dids.alice, writeCommit)
 
     const evt = cborDecode<sequencer.CommitEvt>(repoSeqInsert.event)
     expect(evt.tooBig).toBe(true)

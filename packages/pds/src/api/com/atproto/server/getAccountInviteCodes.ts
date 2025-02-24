@@ -1,13 +1,11 @@
 import assert from 'node:assert'
-
 import { InvalidRequestError } from '@atproto/xrpc-server'
-
 import { CodeDetail } from '../../../../account-manager/helpers/invite'
-import AppContext from '../../../../context'
+import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
+import { ids } from '../../../../lexicon/lexicons'
 import { resultPassthru } from '../../../proxy'
 import { genInvCodes } from './util'
-import { ids } from '../../../../lexicon/lexicons'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.getAccountInviteCodes({

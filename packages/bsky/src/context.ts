@@ -1,22 +1,23 @@
-import express from 'express'
 import * as plc from '@did-plc/lib'
-import { IdResolver } from '@atproto/identity'
+import express from 'express'
+import { Dispatcher } from 'undici'
 import { AtpAgent } from '@atproto/api'
 import { Keypair } from '@atproto/crypto'
-import { ServerConfig } from './config'
-import { DataPlaneClient } from './data-plane/client'
-import { Hydrator } from './hydration/hydrator'
-import { Views } from './views'
+import { IdResolver } from '@atproto/identity'
 import { AuthVerifier } from './auth-verifier'
 import { BsyncClient } from './bsync'
+import { ServerConfig } from './config'
 import { CourierClient } from './courier'
+import { DataPlaneClient } from './data-plane/client'
 import { FeatureGates } from './feature-gates'
+import { Hydrator } from './hydration/hydrator'
+import { httpLogger as log } from './logger'
 import {
   ParsedLabelers,
   defaultLabelerHeader,
   parseLabelerHeader,
 } from './util'
-import { httpLogger as log } from './logger'
+import { Views } from './views'
 
 export class AppContext {
   constructor(
@@ -25,6 +26,7 @@ export class AppContext {
       dataplane: DataPlaneClient
       searchAgent: AtpAgent | undefined
       suggestionsAgent: AtpAgent | undefined
+      topicsAgent: AtpAgent | undefined
       hydrator: Hydrator
       views: Views
       signingKey: Keypair
@@ -33,6 +35,7 @@ export class AppContext {
       courierClient: CourierClient | undefined
       authVerifier: AuthVerifier
       featureGates: FeatureGates
+      blobDispatcher: Dispatcher
     },
   ) {}
 
@@ -50,6 +53,10 @@ export class AppContext {
 
   get suggestionsAgent(): AtpAgent | undefined {
     return this.opts.suggestionsAgent
+  }
+
+  get topicsAgent(): AtpAgent | undefined {
+    return this.opts.topicsAgent
   }
 
   get hydrator(): Hydrator {
@@ -88,6 +95,10 @@ export class AppContext {
     return this.opts.featureGates
   }
 
+  get blobDispatcher(): Dispatcher {
+    return this.opts.blobDispatcher
+  }
+
   reqLabelers(req: express.Request): ParsedLabelers {
     const val = req.header('atproto-accept-labelers')
     let parsed: ParsedLabelers | null
@@ -101,5 +112,3 @@ export class AppContext {
     return parsed
   }
 }
-
-export default AppContext

@@ -3,10 +3,14 @@
  */
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
-import * as ComAtprotoRepoDefs from './defs'
+import { validate as _validate } from '../../../../lexicons'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import type * as ComAtprotoRepoDefs from './defs.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.atproto.repo.createRecord'
 
 export interface QueryParams {}
 
@@ -20,10 +24,9 @@ export interface InputSchema {
   /** Can be set to 'false' to skip Lexicon schema validation of record data, 'true' to require it, or leave unset to validate only for known Lexicons. */
   validate?: boolean
   /** The record itself. Must contain a $type field. */
-  record: {}
+  record: { [_ in string]: unknown }
   /** Compare and swap with the previous commit by CID. */
   swapCommit?: string
-  [k: string]: unknown
 }
 
 export interface OutputSchema {
@@ -31,7 +34,6 @@ export interface OutputSchema {
   cid: string
   commit?: ComAtprotoRepoDefs.CommitMeta
   validationStatus?: 'valid' | 'unknown' | (string & {})
-  [k: string]: unknown
 }
 
 export interface CallOptions {

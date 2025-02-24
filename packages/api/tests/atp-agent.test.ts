@@ -1,5 +1,5 @@
-import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { TID } from '@atproto/common-web'
+import { TestNetworkNoAppView } from '@atproto/dev-env'
 import {
   AppBskyActorDefs,
   AppBskyActorProfile,
@@ -7,6 +7,7 @@ import {
   ComAtprotoRepoPutRecord,
   DEFAULT_LABEL_SETTINGS,
 } from '../src'
+import { asPredicate } from '../src/client/util'
 import {
   getSavedFeedType,
   savedFeedsToUriArrays,
@@ -278,6 +279,10 @@ describe('agent', () => {
           queuedNudges: [],
           nuxs: [],
         },
+        postInteractionSettings: {
+          threadgateAllowRules: undefined,
+          postgateEmbeddingRules: undefined,
+        },
       })
 
       await agent.setAdultContentEnabled(true)
@@ -319,6 +324,10 @@ describe('agent', () => {
           activeProgressGuide: undefined,
           queuedNudges: [],
           nuxs: [],
+        },
+        postInteractionSettings: {
+          threadgateAllowRules: undefined,
+          postgateEmbeddingRules: undefined,
         },
       })
 
@@ -362,6 +371,10 @@ describe('agent', () => {
           queuedNudges: [],
           nuxs: [],
         },
+        postInteractionSettings: {
+          threadgateAllowRules: undefined,
+          postgateEmbeddingRules: undefined,
+        },
       })
 
       await agent.setContentLabelPref('misinfo', 'hide')
@@ -403,6 +416,10 @@ describe('agent', () => {
           activeProgressGuide: undefined,
           queuedNudges: [],
           nuxs: [],
+        },
+        postInteractionSettings: {
+          threadgateAllowRules: undefined,
+          postgateEmbeddingRules: undefined,
         },
       })
 
@@ -449,6 +466,10 @@ describe('agent', () => {
           activeProgressGuide: undefined,
           queuedNudges: [],
           nuxs: [],
+        },
+        postInteractionSettings: {
+          threadgateAllowRules: undefined,
+          postgateEmbeddingRules: undefined,
         },
       })
 
@@ -499,6 +520,10 @@ describe('agent', () => {
           queuedNudges: [],
           nuxs: [],
         },
+        postInteractionSettings: {
+          threadgateAllowRules: undefined,
+          postgateEmbeddingRules: undefined,
+        },
       })
 
       await agent.addPinnedFeed('at://bob.com/app.bsky.feed.generator/fake')
@@ -547,6 +572,10 @@ describe('agent', () => {
           activeProgressGuide: undefined,
           queuedNudges: [],
           nuxs: [],
+        },
+        postInteractionSettings: {
+          threadgateAllowRules: undefined,
+          postgateEmbeddingRules: undefined,
         },
       })
 
@@ -597,6 +626,10 @@ describe('agent', () => {
           queuedNudges: [],
           nuxs: [],
         },
+        postInteractionSettings: {
+          threadgateAllowRules: undefined,
+          postgateEmbeddingRules: undefined,
+        },
       })
 
       await agent.removeSavedFeed('at://bob.com/app.bsky.feed.generator/fake')
@@ -646,6 +679,10 @@ describe('agent', () => {
           queuedNudges: [],
           nuxs: [],
         },
+        postInteractionSettings: {
+          threadgateAllowRules: undefined,
+          postgateEmbeddingRules: undefined,
+        },
       })
 
       await agent.addPinnedFeed('at://bob.com/app.bsky.feed.generator/fake')
@@ -694,6 +731,10 @@ describe('agent', () => {
           activeProgressGuide: undefined,
           queuedNudges: [],
           nuxs: [],
+        },
+        postInteractionSettings: {
+          threadgateAllowRules: undefined,
+          postgateEmbeddingRules: undefined,
         },
       })
 
@@ -750,6 +791,10 @@ describe('agent', () => {
           queuedNudges: [],
           nuxs: [],
         },
+        postInteractionSettings: {
+          threadgateAllowRules: undefined,
+          postgateEmbeddingRules: undefined,
+        },
       })
 
       await agent.removeSavedFeed('at://bob.com/app.bsky.feed.generator/fake')
@@ -798,6 +843,10 @@ describe('agent', () => {
           activeProgressGuide: undefined,
           queuedNudges: [],
           nuxs: [],
+        },
+        postInteractionSettings: {
+          threadgateAllowRules: undefined,
+          postgateEmbeddingRules: undefined,
         },
       })
 
@@ -848,6 +897,10 @@ describe('agent', () => {
           queuedNudges: [],
           nuxs: [],
         },
+        postInteractionSettings: {
+          threadgateAllowRules: undefined,
+          postgateEmbeddingRules: undefined,
+        },
       })
 
       await agent.setFeedViewPrefs('home', { hideReplies: true })
@@ -897,6 +950,10 @@ describe('agent', () => {
           queuedNudges: [],
           nuxs: [],
         },
+        postInteractionSettings: {
+          threadgateAllowRules: undefined,
+          postgateEmbeddingRules: undefined,
+        },
       })
 
       await agent.setFeedViewPrefs('home', { hideReplies: false })
@@ -945,6 +1002,10 @@ describe('agent', () => {
           activeProgressGuide: undefined,
           queuedNudges: [],
           nuxs: [],
+        },
+        postInteractionSettings: {
+          threadgateAllowRules: undefined,
+          postgateEmbeddingRules: undefined,
         },
       })
 
@@ -1002,6 +1063,10 @@ describe('agent', () => {
           queuedNudges: [],
           nuxs: [],
         },
+        postInteractionSettings: {
+          threadgateAllowRules: undefined,
+          postgateEmbeddingRules: undefined,
+        },
       })
 
       await agent.setThreadViewPrefs({ sort: 'random' })
@@ -1057,6 +1122,10 @@ describe('agent', () => {
           activeProgressGuide: undefined,
           queuedNudges: [],
           nuxs: [],
+        },
+        postInteractionSettings: {
+          threadgateAllowRules: undefined,
+          postgateEmbeddingRules: undefined,
         },
       })
 
@@ -1114,6 +1183,10 @@ describe('agent', () => {
           queuedNudges: [],
           nuxs: [],
         },
+        postInteractionSettings: {
+          threadgateAllowRules: undefined,
+          postgateEmbeddingRules: undefined,
+        },
       })
 
       await agent.setInterestsPref({ tags: ['foo', 'bar'] })
@@ -1169,6 +1242,10 @@ describe('agent', () => {
           activeProgressGuide: undefined,
           queuedNudges: [],
           nuxs: [],
+        },
+        postInteractionSettings: {
+          threadgateAllowRules: undefined,
+          postgateEmbeddingRules: undefined,
         },
       })
     })
@@ -1353,6 +1430,10 @@ describe('agent', () => {
           queuedNudges: ['two'],
           nuxs: [],
         },
+        postInteractionSettings: {
+          threadgateAllowRules: undefined,
+          postgateEmbeddingRules: undefined,
+        },
       })
 
       await agent.setAdultContentEnabled(false)
@@ -1410,6 +1491,10 @@ describe('agent', () => {
           activeProgressGuide: undefined,
           queuedNudges: ['two'],
           nuxs: [],
+        },
+        postInteractionSettings: {
+          threadgateAllowRules: undefined,
+          postgateEmbeddingRules: undefined,
         },
       })
 
@@ -1470,6 +1555,10 @@ describe('agent', () => {
           queuedNudges: ['two'],
           nuxs: [],
         },
+        postInteractionSettings: {
+          threadgateAllowRules: undefined,
+          postgateEmbeddingRules: undefined,
+        },
       })
 
       await agent.removeLabeler('did:plc:other')
@@ -1524,6 +1613,10 @@ describe('agent', () => {
           activeProgressGuide: undefined,
           queuedNudges: ['two'],
           nuxs: [],
+        },
+        postInteractionSettings: {
+          threadgateAllowRules: undefined,
+          postgateEmbeddingRules: undefined,
         },
       })
 
@@ -1580,6 +1673,10 @@ describe('agent', () => {
           queuedNudges: ['two'],
           nuxs: [],
         },
+        postInteractionSettings: {
+          threadgateAllowRules: undefined,
+          postgateEmbeddingRules: undefined,
+        },
       })
 
       await agent.setPersonalDetails({ birthDate: '2023-09-11T18:05:42.556Z' })
@@ -1634,6 +1731,10 @@ describe('agent', () => {
           activeProgressGuide: undefined,
           queuedNudges: ['two'],
           nuxs: [],
+        },
+        postInteractionSettings: {
+          threadgateAllowRules: undefined,
+          postgateEmbeddingRules: undefined,
         },
       })
 
@@ -1701,6 +1802,10 @@ describe('agent', () => {
           activeProgressGuide: undefined,
           queuedNudges: ['two', 'three'],
           nuxs: [],
+        },
+        postInteractionSettings: {
+          threadgateAllowRules: undefined,
+          postgateEmbeddingRules: undefined,
         },
       })
 
@@ -2216,38 +2321,22 @@ describe('agent', () => {
 
       async function addLegacyMutedWord(mutedWord: AppBskyActorDefs.MutedWord) {
         await updatePreferences(agent, (prefs) => {
-          let mutedWordsPref = prefs.findLast(
-            (pref) =>
-              AppBskyActorDefs.isMutedWordsPref(pref) &&
-              AppBskyActorDefs.validateMutedWordsPref(pref).success,
-          )
+          const mutedWordsPref = prefs.findLast(
+            asPredicate(AppBskyActorDefs.validateMutedWordsPref),
+          ) || {
+            $type: 'app.bsky.actor.defs#mutedWordsPref',
+            items: [],
+          }
 
-          const newMutedWord: AppBskyActorDefs.MutedWord = {
+          mutedWordsPref.items.push({
             value: mutedWord.value,
             targets: mutedWord.targets,
             actorTarget: 'all',
-          }
-
-          if (
-            mutedWordsPref &&
-            AppBskyActorDefs.isMutedWordsPref(mutedWordsPref)
-          ) {
-            mutedWordsPref.items.push(newMutedWord)
-          } else {
-            // if the pref doesn't exist, create it
-            mutedWordsPref = {
-              items: [newMutedWord],
-            }
-          }
+          })
 
           return prefs
             .filter((p) => !AppBskyActorDefs.isMutedWordsPref(p))
-            .concat([
-              {
-                ...mutedWordsPref,
-                $type: 'app.bsky.actor.defs#mutedWordsPref',
-              },
-            ])
+            .concat([mutedWordsPref])
         })
       }
 
@@ -3246,6 +3335,7 @@ describe('agent', () => {
 
         await agent.bskyAppSetActiveProgressGuide({
           guide: 'test-guide',
+          // @ts-expect-error unspecced field
           numThings: 0,
         })
         await expect(agent.getPreferences()).resolves.toHaveProperty(
@@ -3254,6 +3344,7 @@ describe('agent', () => {
         )
         await agent.bskyAppSetActiveProgressGuide({
           guide: 'test-guide',
+          // @ts-expect-error unspecced field
           numThings: 1,
         })
         await expect(agent.getPreferences()).resolves.toHaveProperty(
@@ -3332,7 +3423,83 @@ describe('agent', () => {
         // @ts-expect-error
         expect(() => agent.bskyAppUpsertNux({ name: 'a' })).rejects.toThrow()
         expect(() =>
+          // @ts-expect-error
           agent.bskyAppUpsertNux({ id: 'a', completed: false, foo: 'bar' }),
+        ).rejects.toThrow()
+      })
+    })
+
+    describe('setPostInteractionSettings', () => {
+      let agent: AtpAgent
+
+      beforeAll(async () => {
+        agent = new AtpAgent({ service: network.pds.url })
+
+        await agent.createAccount({
+          handle: 'pints.test',
+          email: 'pints@test.com',
+          password: 'password',
+        })
+      })
+
+      it('works', async () => {
+        const next: AppBskyActorDefs.PostInteractionSettingsPref = {
+          threadgateAllowRules: [
+            { $type: 'app.bsky.feed.threadgate#mentionRule' },
+          ],
+          postgateEmbeddingRules: [],
+        }
+
+        await agent.setPostInteractionSettings(next)
+
+        const prefs = await agent.getPreferences()
+
+        expect(prefs.postInteractionSettings).toEqual(next)
+      })
+
+      it('clears', async () => {
+        const next: AppBskyActorDefs.PostInteractionSettingsPref = {
+          threadgateAllowRules: [],
+          postgateEmbeddingRules: [],
+        }
+
+        await agent.setPostInteractionSettings(next)
+
+        const prefs = await agent.getPreferences()
+
+        expect(prefs.postInteractionSettings).toEqual(next)
+      })
+
+      /**
+       * Logic matches threadgate `allow` logic, where `undefined` means "anyone
+       * can reply" and an empty array means "no one can reply".
+       *
+       * Postgate `embeddingRules` behaves differently, where `undefined` and
+       * an empty array both mean "no particular rules applied".
+       *
+       * Both props are optional though, so for easier sharing of types, we
+       * allow `undefined`.
+       */
+      it('clears using undefined', async () => {
+        const next: AppBskyActorDefs.PostInteractionSettingsPref = {
+          threadgateAllowRules: undefined,
+          postgateEmbeddingRules: undefined,
+        }
+
+        await agent.setPostInteractionSettings(next)
+
+        const prefs = await agent.getPreferences()
+
+        expect(prefs.postInteractionSettings).toEqual(next)
+      })
+
+      it('validates inputs', async () => {
+        expect(() =>
+          agent.setPostInteractionSettings({
+            // @ts-expect-error we are testing invalid inputs
+            threadgateAllowRules: [{ key: 'string' }],
+            postgateEmbeddingRules: [],
+          }),
         ).rejects.toThrow()
       })
     })

@@ -1,6 +1,6 @@
-import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
 import { mapDefined } from '@atproto/common'
+import { AppContext } from '../../../../context'
+import { Server } from '../../../../lexicon'
 import { resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
@@ -21,15 +21,15 @@ export default function (server: Server, ctx: AppContext) {
           const view = ctx.views.labelerDetailed(did, hydration)
           if (!view) return
           return {
-            $type: 'app.bsky.labeler.defs#labelerViewDetailed',
             ...view,
+            $type: 'app.bsky.labeler.defs#labelerViewDetailed',
           }
         } else {
           const view = ctx.views.labeler(did, hydration)
           if (!view) return
           return {
-            $type: 'app.bsky.labeler.defs#labelerView',
             ...view,
+            $type: 'app.bsky.labeler.defs#labelerView',
           }
         }
       })

@@ -324,6 +324,7 @@ Array [
   },
   Object {
     "cid": "cids(3)",
+    "contentMode": "app.bsky.feed.defs#contentModeVideo",
     "creator": Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(1)@jpeg",
       "createdAt": "1970-01-01T00:00:00.000Z",
@@ -355,9 +356,9 @@ Array [
         "muted": false,
       },
     },
-    "description": "Provides all feed candidates when authed",
+    "description": "Has a contentMode specified",
     "did": "user(0)",
-    "displayName": "Needs Auth",
+    "displayName": "Content mode video",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
     "likeCount": 0,
@@ -397,9 +398,9 @@ Array [
         "muted": false,
       },
     },
-    "description": "Echoes back the same cursor it received",
+    "description": "Provides all feed candidates when authed",
     "did": "user(0)",
-    "displayName": "Bad Pagination Cursor",
+    "displayName": "Needs Auth",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
     "likeCount": 0,
@@ -439,9 +440,9 @@ Array [
         "muted": false,
       },
     },
-    "description": "Provides all feed candidates, blindly ignoring pagination limit",
+    "description": "Echoes back the same cursor it received",
     "did": "user(0)",
-    "displayName": "Bad Pagination Limit",
+    "displayName": "Bad Pagination Cursor",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
     "likeCount": 0,
@@ -481,9 +482,9 @@ Array [
         "muted": false,
       },
     },
-    "description": "Provides even-indexed feed candidates",
+    "description": "Provides all feed candidates, blindly ignoring pagination limit",
     "did": "user(0)",
-    "displayName": "Even",
+    "displayName": "Bad Pagination Limit",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
     "likeCount": 0,
@@ -523,15 +524,57 @@ Array [
         "muted": false,
       },
     },
+    "description": "Provides even-indexed feed candidates",
+    "did": "user(0)",
+    "displayName": "Even",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
+    "likeCount": 0,
+    "uri": "record(8)",
+    "viewer": Object {},
+  },
+  Object {
+    "cid": "cids(8)",
+    "creator": Object {
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(1)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "description": "its me!",
+      "did": "user(1)",
+      "displayName": "ali",
+      "handle": "alice.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [
+        Object {
+          "cid": "cids(2)",
+          "cts": "1970-01-01T00:00:00.000Z",
+          "src": "user(1)",
+          "uri": "record(3)",
+          "val": "self-label-a",
+        },
+        Object {
+          "cid": "cids(2)",
+          "cts": "1970-01-01T00:00:00.000Z",
+          "src": "user(1)",
+          "uri": "record(3)",
+          "val": "self-label-b",
+        },
+      ],
+      "viewer": Object {
+        "blockedBy": false,
+        "followedBy": "record(2)",
+        "following": "record(1)",
+        "muted": false,
+      },
+    },
     "description": "Provides all feed candidates",
     "did": "user(0)",
     "displayName": "All",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
     "likeCount": 2,
-    "uri": "record(8)",
+    "uri": "record(9)",
     "viewer": Object {
-      "like": "record(9)",
+      "like": "record(10)",
     },
   },
 ]
@@ -665,12 +708,12 @@ Array [
           "$type": "app.bsky.embed.images#view",
           "images": Array [
             Object {
-              "alt": "../dev-env/src/seed/img/key-landscape-small.jpg",
+              "alt": "../dev-env/assets/key-landscape-small.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(5)/cids(5)@jpeg",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(5)/cids(5)@jpeg",
             },
             Object {
-              "alt": "../dev-env/src/seed/img/key-alt.jpg",
+              "alt": "../dev-env/assets/key-alt.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(5)/cids(6)@jpeg",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(5)/cids(6)@jpeg",
             },
@@ -727,7 +770,7 @@ Array [
             "$type": "app.bsky.embed.images",
             "images": Array [
               Object {
-                "alt": "../dev-env/src/seed/img/key-landscape-small.jpg",
+                "alt": "../dev-env/assets/key-landscape-small.jpg",
                 "image": Object {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
@@ -738,7 +781,7 @@ Array [
                 },
               },
               Object {
-                "alt": "../dev-env/src/seed/img/key-alt.jpg",
+                "alt": "../dev-env/assets/key-alt.jpg",
                 "image": Object {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
@@ -950,12 +993,12 @@ Array [
                 "$type": "app.bsky.embed.images#view",
                 "images": Array [
                   Object {
-                    "alt": "../dev-env/src/seed/img/key-landscape-small.jpg",
+                    "alt": "../dev-env/assets/key-landscape-small.jpg",
                     "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(5)/cids(5)@jpeg",
                     "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(5)/cids(5)@jpeg",
                   },
                   Object {
-                    "alt": "../dev-env/src/seed/img/key-alt.jpg",
+                    "alt": "../dev-env/assets/key-alt.jpg",
                     "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(5)/cids(6)@jpeg",
                     "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(5)/cids(6)@jpeg",
                   },
@@ -1015,7 +1058,7 @@ Array [
                 "$type": "app.bsky.embed.images",
                 "images": Array [
                   Object {
-                    "alt": "../dev-env/src/seed/img/key-landscape-small.jpg",
+                    "alt": "../dev-env/assets/key-landscape-small.jpg",
                     "image": Object {
                       "$type": "blob",
                       "mimeType": "image/jpeg",
@@ -1026,7 +1069,7 @@ Array [
                     },
                   },
                   Object {
-                    "alt": "../dev-env/src/seed/img/key-alt.jpg",
+                    "alt": "../dev-env/assets/key-alt.jpg",
                     "image": Object {
                       "$type": "blob",
                       "mimeType": "image/jpeg",
@@ -1180,12 +1223,12 @@ Array [
           "$type": "app.bsky.embed.images#view",
           "images": Array [
             Object {
-              "alt": "../dev-env/src/seed/img/key-landscape-small.jpg",
+              "alt": "../dev-env/assets/key-landscape-small.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(3)/cids(4)@jpeg",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(3)/cids(4)@jpeg",
             },
             Object {
-              "alt": "../dev-env/src/seed/img/key-alt.jpg",
+              "alt": "../dev-env/assets/key-alt.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(3)/cids(5)@jpeg",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(3)/cids(5)@jpeg",
             },
@@ -1236,7 +1279,7 @@ Array [
             "$type": "app.bsky.embed.images",
             "images": Array [
               Object {
-                "alt": "../dev-env/src/seed/img/key-landscape-small.jpg",
+                "alt": "../dev-env/assets/key-landscape-small.jpg",
                 "image": Object {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
@@ -1247,7 +1290,7 @@ Array [
                 },
               },
               Object {
-                "alt": "../dev-env/src/seed/img/key-alt.jpg",
+                "alt": "../dev-env/assets/key-alt.jpg",
                 "image": Object {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
@@ -1477,12 +1520,12 @@ Array [
           "$type": "app.bsky.embed.images#view",
           "images": Array [
             Object {
-              "alt": "../dev-env/src/seed/img/key-landscape-small.jpg",
+              "alt": "../dev-env/assets/key-landscape-small.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(3)/cids(4)@jpeg",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(3)/cids(4)@jpeg",
             },
             Object {
-              "alt": "../dev-env/src/seed/img/key-alt.jpg",
+              "alt": "../dev-env/assets/key-alt.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(3)/cids(5)@jpeg",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(3)/cids(5)@jpeg",
             },
@@ -1539,7 +1582,7 @@ Array [
             "$type": "app.bsky.embed.images",
             "images": Array [
               Object {
-                "alt": "../dev-env/src/seed/img/key-landscape-small.jpg",
+                "alt": "../dev-env/assets/key-landscape-small.jpg",
                 "image": Object {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
@@ -1550,7 +1593,7 @@ Array [
                 },
               },
               Object {
-                "alt": "../dev-env/src/seed/img/key-alt.jpg",
+                "alt": "../dev-env/assets/key-alt.jpg",
                 "image": Object {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
@@ -1721,6 +1764,56 @@ Array [
     },
   },
 ]
+`;
+
+exports[`feed generation getFeedGenerator describes a feed gen & returns content mode 1`] = `
+Object {
+  "isOnline": true,
+  "isValid": true,
+  "view": Object {
+    "cid": "cids(0)",
+    "contentMode": "app.bsky.feed.defs#contentModeVideo",
+    "creator": Object {
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(1)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "description": "its me!",
+      "did": "user(1)",
+      "displayName": "ali",
+      "handle": "alice.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [
+        Object {
+          "cid": "cids(2)",
+          "cts": "1970-01-01T00:00:00.000Z",
+          "src": "user(1)",
+          "uri": "record(3)",
+          "val": "self-label-a",
+        },
+        Object {
+          "cid": "cids(2)",
+          "cts": "1970-01-01T00:00:00.000Z",
+          "src": "user(1)",
+          "uri": "record(3)",
+          "val": "self-label-b",
+        },
+      ],
+      "viewer": Object {
+        "blockedBy": false,
+        "followedBy": "record(2)",
+        "following": "record(1)",
+        "muted": false,
+      },
+    },
+    "description": "Has a contentMode specified",
+    "did": "user(0)",
+    "displayName": "Content mode video",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
+    "likeCount": 0,
+    "uri": "record(0)",
+    "viewer": Object {},
+  },
+}
 `;
 
 exports[`feed generation getFeedGenerator describes a feed gen & returns online status 1`] = `

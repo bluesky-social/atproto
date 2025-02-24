@@ -1,6 +1,6 @@
 import { AsyncBuffer, AsyncBufferFullError } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { Sequencer, LabelsEvt } from './sequencer'
+import { LabelsEvt, Sequencer } from './sequencer'
 
 export type OutboxOpts = {
   maxBufferSize: number
@@ -121,5 +121,3 @@ export class Outbox {
     }
   }
 }
-
-export default Outbox

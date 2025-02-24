@@ -13,19 +13,19 @@ require('dd-trace') // Only works with commonjs
   })
 
 // Tracer code above must come before anything else
-const path = require('path')
+const path = require('node:path')
 const {
   BunnyInvalidator,
   CloudfrontInvalidator,
   MultiImageInvalidator,
 } = require('@atproto/aws')
 const {
+  Database,
   OzoneService,
   envToCfg,
   envToSecrets,
-  readEnv,
   httpLogger,
-  Database,
+  readEnv,
 } = require('@atproto/ozone')
 
 const main = async () => {

@@ -1,7 +1,7 @@
-import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
-import { assertRepoAvailability } from './util'
 import { formatAccountStatus } from '../../../../account-manager'
+import { AppContext } from '../../../../context'
+import { Server } from '../../../../lexicon'
+import { assertRepoAvailability } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.getRepoStatus({

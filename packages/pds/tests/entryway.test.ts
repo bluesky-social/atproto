@@ -1,15 +1,15 @@
+import assert from 'node:assert'
 import * as os from 'node:os'
 import * as path from 'node:path'
-import assert from 'node:assert'
-import { decodeJwt } from 'jose'
 import * as plcLib from '@did-plc/lib'
-import { parseReqNsid } from '@atproto/xrpc-server'
+import getPort from 'get-port'
+import { decodeJwt } from 'jose'
+import * as ui8 from 'uint8arrays'
 import { AtpAgent } from '@atproto/api'
 import { Secp256k1Keypair, randomStr } from '@atproto/crypto'
 import { SeedClient, TestPds, TestPlc, mockResolvers } from '@atproto/dev-env'
 import * as pdsEntryway from '@atproto/pds-entryway'
-import * as ui8 from 'uint8arrays'
-import getPort from 'get-port'
+import { parseReqNsid } from '@atproto/xrpc-server'
 
 describe('entryway', () => {
   let plc: TestPlc

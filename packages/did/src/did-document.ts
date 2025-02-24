@@ -1,5 +1,4 @@
 import { z } from 'zod'
-
 import { Did, didSchema } from './did.js'
 
 /**

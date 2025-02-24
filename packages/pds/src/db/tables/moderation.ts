@@ -1,10 +1,10 @@
 import { Generated } from 'kysely'
 import {
-  REASONOTHER,
-  REASONSPAM,
   REASONMISLEADING,
+  REASONOTHER,
   REASONRUDE,
   REASONSEXUAL,
+  REASONSPAM,
   REASONVIOLATION,
 } from '../../lexicon/types/com/atproto/moderation/defs'
 
@@ -30,6 +30,10 @@ export interface ModerationAction {
     | 'tools.ozone.moderation.defs#modEventEmail'
     | 'tools.ozone.moderation.defs#modEventResolveAppeal'
     | 'tools.ozone.moderation.defs#modEventDivert'
+    | 'tools.ozone.moderation.defs#accountEvent'
+    | 'tools.ozone.moderation.defs#identityEvent'
+    | 'tools.ozone.moderation.defs#recordEvent'
+    | 'tools.ozone.moderation.defs#modEventPriorityScore'
   subjectType: 'com.atproto.admin.defs#repoRef' | 'com.atproto.repo.strongRef'
   subjectDid: string
   subjectUri: string | null

@@ -2,66 +2,65 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
-import * as AppBskyEmbedDefs from './defs'
+import { validate as _validate } from '../../../../lexicons'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import type * as AppBskyEmbedDefs from './defs.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'app.bsky.embed.video'
 
 export interface Main {
+  $type?: 'app.bsky.embed.video'
   video: BlobRef
   captions?: Caption[]
   /** Alt text description of the video, for accessibility. */
   alt?: string
   aspectRatio?: AppBskyEmbedDefs.AspectRatio
-  [k: string]: unknown
 }
 
-export function isMain(v: unknown): v is Main {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    (v.$type === 'app.bsky.embed.video#main' ||
-      v.$type === 'app.bsky.embed.video')
-  )
+const hashMain = 'main'
+
+export function isMain<V>(v: V) {
+  return is$typed(v, id, hashMain)
 }
 
-export function validateMain(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.embed.video#main', v)
+export function validateMain<V>(v: V) {
+  return validate<Main & V>(v, id, hashMain)
 }
 
 export interface Caption {
+  $type?: 'app.bsky.embed.video#caption'
   lang: string
   file: BlobRef
-  [k: string]: unknown
 }
 
-export function isCaption(v: unknown): v is Caption {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.embed.video#caption'
-  )
+const hashCaption = 'caption'
+
+export function isCaption<V>(v: V) {
+  return is$typed(v, id, hashCaption)
 }
 
-export function validateCaption(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.embed.video#caption', v)
+export function validateCaption<V>(v: V) {
+  return validate<Caption & V>(v, id, hashCaption)
 }
 
 export interface View {
+  $type?: 'app.bsky.embed.video#view'
   cid: string
   playlist: string
   thumbnail?: string
   alt?: string
   aspectRatio?: AppBskyEmbedDefs.AspectRatio
-  [k: string]: unknown
 }
 
-export function isView(v: unknown): v is View {
-  return (
-    isObj(v) && hasProp(v, '$type') && v.$type === 'app.bsky.embed.video#view'
-  )
+const hashView = 'view'
+
+export function isView<V>(v: V) {
+  return is$typed(v, id, hashView)
 }
 
-export function validateView(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.embed.video#view', v)
+export function validateView<V>(v: V) {
+  return validate<View & V>(v, id, hashView)
 }

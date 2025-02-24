@@ -1,11 +1,13 @@
 import assert from 'node:assert'
+import { ToolsOzoneModerationDefs } from '@atproto/api'
 import {
   ModeratorClient,
   SeedClient,
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import { forSnapshot } from './_util'
+import { ResponseType, XRPCError } from '@atproto/xrpc'
+import { forSnapshot, identity } from './_util'
 
 describe('blob divert', () => {
   let network: TestNetwork
@@ -30,13 +32,16 @@ describe('blob divert', () => {
     await network.close()
   })
 
-  const mockReportServiceResponse = (result: boolean) => {
+  const mockReportServiceResponse = (succeeds: boolean) => {
     const blobDiverter = network.ozone.ctx.blobDiverter
     assert(blobDiverter)
     return jest
-      .spyOn(blobDiverter, 'sendImage')
+      .spyOn(blobDiverter, 'uploadBlob')
       .mockImplementation(async () => {
-        return result
+        if (!succeeds) {
+          // Using an XRPCError to trigger retries
+          throw new XRPCError(ResponseType.Unknown, undefined)
+        }
       })
   }
 
@@ -46,18 +51,19 @@ describe('blob divert', () => {
     cid: sc.posts[sc.dids.carol][0].ref.cidStr,
   })
 
+  const getImages = () => sc.posts[sc.dids.carol][0].images
+
   const emitDivertEvent = async () =>
     modClient.emitEvent(
       {
         subject: getSubject(),
-        event: {
+        // @ts-expect-error "tools.ozone.moderation.defs#modEventDivert" is not part of the event open union
+        event: identity<ToolsOzoneModerationDefs.ModEventDivert>({
           $type: 'tools.ozone.moderation.defs#modEventDivert',
           comment: 'Diverting for test',
-        },
+        }),
         createdBy: sc.dids.alice,
-        subjectBlobCids: sc.posts[sc.dids.carol][0].images.map((img) =>
-          img.image.ref.toString(),
-        ),
+        subjectBlobCids: getImages().map((img) => img.image.ref.toString()),
       },
       'moderator',
     )
@@ -65,25 +71,32 @@ describe('blob divert', () => {
   it('fails and keeps attempt count when report service fails to accept upload.', async () => {
     // Simulate failure to fail upload
     const reportServiceRequest = mockReportServiceResponse(false)
+    try {
+      await expect(emitDivertEvent()).rejects.toThrow('Failed to process blobs')
 
-    await expect(emitDivertEvent()).rejects.toThrow()
-
-    expect(reportServiceRequest).toHaveBeenCalled()
+      // 1 initial attempt + 3 retries
+      expect(reportServiceRequest).toHaveBeenCalledTimes(getImages().length * 4)
+    } finally {
+      reportServiceRequest.mockRestore()
+    }
   })
 
   it('sends blobs to configured divert service and marks divert date', async () => {
-    // Simulate failure to accept upload
+    // Simulate success to accept upload
     const reportServiceRequest = mockReportServiceResponse(true)
+    try {
+      const divertEvent = await emitDivertEvent()
 
-    const divertEvent = await emitDivertEvent()
+      expect(reportServiceRequest).toHaveBeenCalledTimes(getImages().length)
+      expect(forSnapshot(divertEvent)).toMatchSnapshot()
 
-    expect(reportServiceRequest).toHaveBeenCalled()
-    expect(forSnapshot(divertEvent)).toMatchSnapshot()
+      const { subjectStatuses } = await modClient.queryStatuses({
+        subject: getSubject().uri,
+      })
 
-    const { subjectStatuses } = await modClient.queryStatuses({
-      subject: getSubject().uri,
-    })
-
-    expect(subjectStatuses[0].takendown).toBe(true)
+      expect(subjectStatuses[0].takendown).toBe(true)
+    } finally {
+      reportServiceRequest.mockRestore()
+    }
   })
 })

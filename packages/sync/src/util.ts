@@ -1,4 +1,4 @@
-import { isAccount, isCommit, isIdentity, RepoEvent } from './firehose/lexicons'
+import { RepoEvent, isAccount, isCommit, isIdentity } from './firehose/lexicons'
 
 export const didAndSeqForEvt = (
   evt: RepoEvent,

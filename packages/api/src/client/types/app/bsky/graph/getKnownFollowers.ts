@@ -3,10 +3,14 @@
  */
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
-import * as AppBskyActorDefs from '../actor/defs'
+import { validate as _validate } from '../../../../lexicons'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import type * as AppBskyActorDefs from '../actor/defs.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'app.bsky.graph.getKnownFollowers'
 
 export interface QueryParams {
   actor: string
@@ -20,7 +24,6 @@ export interface OutputSchema {
   subject: AppBskyActorDefs.ProfileView
   cursor?: string
   followers: AppBskyActorDefs.ProfileView[]
-  [k: string]: unknown
 }
 
 export interface CallOptions {

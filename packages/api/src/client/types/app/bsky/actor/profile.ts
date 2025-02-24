@@ -2,13 +2,18 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
-import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
-import * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef'
+import { validate as _validate } from '../../../../lexicons'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import type * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs.js'
+import type * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'app.bsky.actor.profile'
 
 export interface Record {
+  $type: 'app.bsky.actor.profile'
   displayName?: string
   /** Free-form profile description text. */
   description?: string
@@ -16,24 +21,19 @@ export interface Record {
   avatar?: BlobRef
   /** Larger horizontal image to display behind profile view. */
   banner?: BlobRef
-  labels?:
-    | ComAtprotoLabelDefs.SelfLabels
-    | { $type: string; [k: string]: unknown }
+  labels?: $Typed<ComAtprotoLabelDefs.SelfLabels> | { $type: string }
   joinedViaStarterPack?: ComAtprotoRepoStrongRef.Main
   pinnedPost?: ComAtprotoRepoStrongRef.Main
   createdAt?: string
   [k: string]: unknown
 }
 
-export function isRecord(v: unknown): v is Record {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    (v.$type === 'app.bsky.actor.profile#main' ||
-      v.$type === 'app.bsky.actor.profile')
-  )
+const hashRecord = 'main'
+
+export function isRecord<V>(v: V) {
+  return is$typed(v, id, hashRecord)
 }
 
-export function validateRecord(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.actor.profile#main', v)
+export function validateRecord<V>(v: V) {
+  return validate<Record & V>(v, id, hashRecord, true)
 }

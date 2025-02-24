@@ -3,10 +3,14 @@
  */
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
-import * as AppBskyFeedDefs from './defs'
+import { validate as _validate } from '../../../../lexicons'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import type * as AppBskyFeedDefs from './defs.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'app.bsky.feed.getFeedGenerator'
 
 export interface QueryParams {
   /** AT-URI of the feed generator record. */
@@ -21,7 +25,6 @@ export interface OutputSchema {
   isOnline: boolean
   /** Indicates whether the feed generator service is compatible with the record declaration. */
   isValid: boolean
-  [k: string]: unknown
 }
 
 export interface CallOptions {

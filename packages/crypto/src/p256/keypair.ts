@@ -1,13 +1,12 @@
 import { p256 } from '@noble/curves/p256'
 import { sha256 } from '@noble/hashes/sha256'
-import { SupportedEncodings } from 'uint8arrays/to-string'
 import {
   fromString as ui8FromString,
   toString as ui8ToString,
 } from 'uint8arrays'
-
-import * as did from '../did'
+import { SupportedEncodings } from 'uint8arrays/to-string'
 import { P256_JWT_ALG } from '../const'
+import * as did from '../did'
 import { Keypair } from '../types'
 
 export type P256KeypairOptions = {
@@ -69,5 +68,3 @@ export class P256Keypair implements Keypair {
     return this.privateKey
   }
 }
-
-export default P256Keypair

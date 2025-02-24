@@ -1,33 +1,33 @@
-import express from 'express'
+import assert from 'node:assert'
 import * as plc from '@did-plc/lib'
-import { DidCache, IdResolver, MemoryCache } from '@atproto/identity'
+import express from 'express'
 import { AtpAgent } from '@atproto/api'
 import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
+import { DidCache, IdResolver, MemoryCache } from '@atproto/identity'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
-import { Database } from './db'
-import { OzoneConfig, OzoneSecrets } from './config'
-import { ModerationService, ModerationServiceCreator } from './mod-service'
+import { AuthVerifier } from './auth-verifier'
 import { BackgroundQueue } from './background'
-import assert from 'assert'
-import { EventPusher } from './daemon'
-import Sequencer from './sequencer/sequencer'
 import {
   CommunicationTemplateService,
   CommunicationTemplateServiceCreator,
 } from './communication-service/template'
+import { OzoneConfig, OzoneSecrets } from './config'
+import { EventPusher } from './daemon'
 import { BlobDiverter } from './daemon/blob-diverter'
-import { AuthVerifier } from './auth-verifier'
+import { Database } from './db'
 import { ImageInvalidator } from './image-invalidator'
-import { TeamService, TeamServiceCreator } from './team'
-import {
-  defaultLabelerHeader,
-  getSigningKeyId,
-  LABELER_HEADER_NAME,
-  ParsedLabelers,
-  parseLabelerHeader,
-} from './util'
+import { ModerationService, ModerationServiceCreator } from './mod-service'
+import { Sequencer } from './sequencer/sequencer'
 import { SetService, SetServiceCreator } from './set/service'
 import { SettingService, SettingServiceCreator } from './setting/service'
+import { TeamService, TeamServiceCreator } from './team'
+import {
+  LABELER_HEADER_NAME,
+  ParsedLabelers,
+  defaultLabelerHeader,
+  getSigningKeyId,
+  parseLabelerHeader,
+} from './util'
 
 export type AppContextOptions = {
   db: Database
@@ -289,4 +289,3 @@ export class AppContext {
     return parsed
   }
 }
-export default AppContext

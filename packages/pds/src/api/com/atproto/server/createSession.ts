@@ -1,8 +1,8 @@
 import { DAY, MINUTE } from '@atproto/common'
 import { INVALID_HANDLE } from '@atproto/syntax'
-
+import { AuthRequiredError } from '@atproto/xrpc-server'
 import { formatAccountStatus } from '../../../../account-manager'
-import AppContext from '../../../../context'
+import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { authPassthru, resultPassthru } from '../../../proxy'
 import { didDocForSession } from './util'
@@ -31,10 +31,18 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
-      const { user, appPassword } = await ctx.accountManager.login(input.body)
+      const { user, isSoftDeleted, appPassword } =
+        await ctx.accountManager.login(input.body)
+
+      if (!input.body.allowTakendown && isSoftDeleted) {
+        throw new AuthRequiredError(
+          'Account has been taken down',
+          'AccountTakedown',
+        )
+      }
 
       const [{ accessJwt, refreshJwt }, didDoc] = await Promise.all([
-        ctx.accountManager.createSession(user.did, appPassword),
+        ctx.accountManager.createSession(user.did, appPassword, isSoftDeleted),
         didDocForSession(ctx, user.did),
       ])
 

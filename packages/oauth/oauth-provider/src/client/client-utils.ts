@@ -2,7 +2,6 @@ import {
   OAuthClientIdDiscoverable,
   parseOAuthDiscoverableClientId,
 } from '@atproto/oauth-types'
-
 import { InvalidClientIdError } from '../errors/invalid-client-id-error.js'
 import { InvalidRedirectUriError } from '../errors/invalid-redirect-uri-error.js'
 import { isInternetHost } from '../lib/util/hostname.js'

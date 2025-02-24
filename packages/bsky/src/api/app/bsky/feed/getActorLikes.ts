@@ -1,20 +1,20 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
 import { mapDefined } from '@atproto/common'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getActorLikes'
-import AppContext from '../../../../context'
-import { clearlyBadCursor, resHeaders } from '../../../util'
-import { createPipeline } from '../../../../pipeline'
+import { InvalidRequestError } from '@atproto/xrpc-server'
+import { AppContext } from '../../../../context'
+import { DataPlaneClient } from '../../../../data-plane'
+import { FeedItem } from '../../../../hydration/feed'
 import {
   HydrateCtx,
   HydrationState,
   Hydrator,
 } from '../../../../hydration/hydrator'
-import { Views } from '../../../../views'
-import { DataPlaneClient } from '../../../../data-plane'
 import { parseString } from '../../../../hydration/util'
+import { Server } from '../../../../lexicon'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getActorLikes'
+import { createPipeline } from '../../../../pipeline'
 import { uriToDid as creatorFromUri } from '../../../../util/uris'
-import { FeedItem } from '../../../../hydration/feed'
+import { Views } from '../../../../views'
+import { clearlyBadCursor, resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   const getActorLikes = createPipeline(

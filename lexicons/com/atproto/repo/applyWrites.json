@@ -70,7 +70,12 @@
       "required": ["collection", "value"],
       "properties": {
         "collection": { "type": "string", "format": "nsid" },
-        "rkey": { "type": "string", "maxLength": 512 },
+        "rkey": {
+          "type": "string",
+          "maxLength": 512,
+          "format": "record-key",
+          "description": "NOTE: maxLength is redundant with record-key format. Keeping it temporarily to ensure backwards compatibility."
+        },
         "value": { "type": "unknown" }
       }
     },
@@ -80,7 +85,7 @@
       "required": ["collection", "rkey", "value"],
       "properties": {
         "collection": { "type": "string", "format": "nsid" },
-        "rkey": { "type": "string" },
+        "rkey": { "type": "string", "format": "record-key" },
         "value": { "type": "unknown" }
       }
     },
@@ -90,7 +95,7 @@
       "required": ["collection", "rkey"],
       "properties": {
         "collection": { "type": "string", "format": "nsid" },
-        "rkey": { "type": "string" }
+        "rkey": { "type": "string", "format": "record-key" }
       }
     },
     "createResult": {

@@ -2,7 +2,6 @@ import {
   OAuthAuthorizationRequestParameters,
   OAuthClientMetadata,
 } from '@atproto/oauth-types'
-
 import { DeviceAccountInfo } from '../account/account-store.js'
 import { Account } from '../account/account.js'
 import { Client } from '../client/client.js'

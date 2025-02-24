@@ -1,5 +1,5 @@
+import { AppContext } from '../../context'
 import { Server } from '../../lexicon'
-import AppContext from '../../context'
 import getActorMetadata from './getActorMetadata'
 import getMessageContext from './getMessageContext'
 

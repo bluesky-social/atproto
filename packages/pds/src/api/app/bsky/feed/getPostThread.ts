@@ -1,32 +1,32 @@
 import assert from 'node:assert'
 import { AtUri } from '@atproto/syntax'
 import { XRPCError } from '@atproto/xrpc'
-
+import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
+import { ids } from '../../../../lexicon/lexicons'
 import {
   ThreadViewPost,
   isThreadViewPost,
 } from '../../../../lexicon/types/app/bsky/feed/defs'
-import { Record as PostRecord } from '../../../../lexicon/types/app/bsky/feed/post'
 import {
   OutputSchema,
   QueryParams,
 } from '../../../../lexicon/types/app/bsky/feed/getPostThread'
+import { Record as PostRecord } from '../../../../lexicon/types/app/bsky/feed/post'
+import { $Typed } from '../../../../lexicon/util'
 import {
+  LocalRecords,
   LocalViewer,
+  RecordDescript,
+  formatMungedResponse,
   getLocalLag,
   getRepoRev,
-  LocalRecords,
-  RecordDescript,
   pipethroughReadAfterWrite,
-  formatMungedResponse,
 } from '../../../../read-after-write'
-import { ids } from '../../../../lexicon/lexicons'
 
 export default function (server: Server, ctx: AppContext) {
-  const { bskyAppView } = ctx.cfg
-  if (!bskyAppView) return
+  if (!ctx.bskyAppView) return
+
   server.app.bsky.feed.getPostThread({
     auth: ctx.authVerifier.accessStandard(),
     handler: async (reqCtx) => {
@@ -99,12 +99,12 @@ const getPostThreadMunge = async (
 
 const addPostsToThread = async (
   localViewer: LocalViewer,
-  original: ThreadViewPost,
+  original: $Typed<ThreadViewPost>,
   posts: RecordDescript<PostRecord>[],
 ) => {
   const inThread = findPostsInThread(original, posts)
   if (inThread.length === 0) return original
-  let thread: ThreadViewPost = original
+  let thread: $Typed<ThreadViewPost> = original
   for (const record of inThread) {
     thread = await insertIntoThreadReplies(localViewer, thread, record)
   }
@@ -125,9 +125,9 @@ const findPostsInThread = (
 
 const insertIntoThreadReplies = async (
   localViewer: LocalViewer,
-  view: ThreadViewPost,
+  view: $Typed<ThreadViewPost>,
   descript: RecordDescript<PostRecord>,
-): Promise<ThreadViewPost> => {
+): Promise<$Typed<ThreadViewPost>> => {
   if (descript.record.reply?.parent.uri === view.post.uri) {
     const postView = await threadPostView(localViewer, descript)
     if (!postView) return view
@@ -154,7 +154,7 @@ const insertIntoThreadReplies = async (
 const threadPostView = async (
   localViewer: LocalViewer,
   descript: RecordDescript<PostRecord>,
-): Promise<ThreadViewPost | null> => {
+): Promise<$Typed<ThreadViewPost> | null> => {
   const postView = await localViewer.getPost(descript)
   if (!postView) return null
   return {
@@ -191,11 +191,12 @@ const readAfterWriteNotFound = async (
   const highestParent = getHighestParent(thread)
   if (highestParent) {
     try {
-      assert(ctx.appViewAgent)
-      const parentsRes = await ctx.appViewAgent.api.app.bsky.feed.getPostThread(
-        { uri: highestParent, parentHeight: params.parentHeight, depth: 0 },
-        await ctx.appviewAuthHeaders(requester, ids.AppBskyFeedGetPostThread),
-      )
+      assert(ctx.bskyAppView)
+      const parentsRes =
+        await ctx.bskyAppView.agent.app.bsky.feed.getPostThread(
+          { uri: highestParent, parentHeight: params.parentHeight, depth: 0 },
+          await ctx.appviewAuthHeaders(requester, ids.AppBskyFeedGetPostThread),
+        )
       thread.parent = parentsRes.data.thread
     } catch (err) {
       // do nothing

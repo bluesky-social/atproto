@@ -309,6 +309,7 @@ export class CredentialSession implements SessionManager {
         identifier: opts.identifier,
         password: opts.password,
         authFactorToken: opts.authFactorToken,
+        allowTakendown: opts.allowTakendown,
       })
       this.session = {
         accessJwt: res.data.accessJwt,
@@ -336,7 +337,7 @@ export class CredentialSession implements SessionManager {
       try {
         await this.server.deleteSession(undefined, {
           headers: {
-            authorization: `Bearer ${this.session.accessJwt}`,
+            authorization: `Bearer ${this.session.refreshJwt}`,
           },
         })
       } catch {

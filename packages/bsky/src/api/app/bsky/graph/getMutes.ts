@@ -1,9 +1,8 @@
 import { mapDefined } from '@atproto/common'
+import { AppContext } from '../../../../context'
+import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getMutes'
-import AppContext from '../../../../context'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
-import { Views } from '../../../../views'
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -11,6 +10,7 @@ import {
   createPipeline,
   noRules,
 } from '../../../../pipeline'
+import { Views } from '../../../../views'
 import { clearlyBadCursor, resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {

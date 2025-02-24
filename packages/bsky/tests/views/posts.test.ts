@@ -1,9 +1,9 @@
-import { AppBskyFeedPost, AtpAgent } from '@atproto/api'
-import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
-import { forSnapshot, stripViewerFromPost } from '../_util'
-import { RecordEmbed, VideoEmbed } from '../../src/views/types'
+import { AppBskyFeedPost, AtpAgent, Un$Typed } from '@atproto/api'
+import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { RecordWithMedia } from '../../dist/views/types'
 import { ids } from '../../src/lexicon/lexicons'
+import { RecordEmbed, VideoEmbed } from '../../src/views/types'
+import { forSnapshot, stripViewerFromPost } from '../_util'
 
 describe('pds posts views', () => {
   let network: TestNetwork
@@ -96,7 +96,7 @@ describe('pds posts views', () => {
   })
 
   it('allows for creating posts with tags', async () => {
-    const post: AppBskyFeedPost.Record = {
+    const post: Un$Typed<AppBskyFeedPost.Record> = {
       text: 'hello world',
       tags: ['javascript', 'hehe'],
       createdAt: new Date().toISOString(),

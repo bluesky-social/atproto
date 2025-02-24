@@ -1,8 +1,7 @@
 import { z } from 'zod'
 import { signedJwtSchema } from '@atproto/jwk'
-
-import { oauthClientIdSchema } from './oauth-client-id.js'
 import { CLIENT_ASSERTION_TYPE_JWT_BEARER } from './constants.js'
+import { oauthClientIdSchema } from './oauth-client-id.js'
 
 export const oauthClientCredentialsJwtBearerSchema = z.object({
   client_id: oauthClientIdSchema,

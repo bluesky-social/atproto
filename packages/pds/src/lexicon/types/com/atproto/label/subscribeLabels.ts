@@ -2,22 +2,23 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, ErrorFrame } from '@atproto/xrpc-server'
-import { IncomingMessage } from 'http'
-import * as ComAtprotoLabelDefs from './defs'
+import { IncomingMessage } from 'node:http'
+import type * as ComAtprotoLabelDefs from './defs.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.atproto.label.subscribeLabels'
 
 export interface QueryParams {
   /** The last known event seq number to backfill from. */
   cursor?: number
 }
 
-export type OutputSchema =
-  | Labels
-  | Info
-  | { $type: string; [k: string]: unknown }
+export type OutputSchema = $Typed<Labels> | $Typed<Info> | { $type: string }
 export type HandlerError = ErrorFrame<'FutureCursor'>
 export type HandlerOutput = HandlerError | OutputSchema
 export type HandlerReqCtx<HA extends HandlerAuth = never> = {
@@ -31,37 +32,33 @@ export type Handler<HA extends HandlerAuth = never> = (
 ) => AsyncIterable<HandlerOutput>
 
 export interface Labels {
+  $type?: 'com.atproto.label.subscribeLabels#labels'
   seq: number
   labels: ComAtprotoLabelDefs.Label[]
-  [k: string]: unknown
 }
 
-export function isLabels(v: unknown): v is Labels {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'com.atproto.label.subscribeLabels#labels'
-  )
+const hashLabels = 'labels'
+
+export function isLabels<V>(v: V) {
+  return is$typed(v, id, hashLabels)
 }
 
-export function validateLabels(v: unknown): ValidationResult {
-  return lexicons.validate('com.atproto.label.subscribeLabels#labels', v)
+export function validateLabels<V>(v: V) {
+  return validate<Labels & V>(v, id, hashLabels)
 }
 
 export interface Info {
+  $type?: 'com.atproto.label.subscribeLabels#info'
   name: 'OutdatedCursor' | (string & {})
   message?: string
-  [k: string]: unknown
 }
 
-export function isInfo(v: unknown): v is Info {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'com.atproto.label.subscribeLabels#info'
-  )
+const hashInfo = 'info'
+
+export function isInfo<V>(v: V) {
+  return is$typed(v, id, hashInfo)
 }
 
-export function validateInfo(v: unknown): ValidationResult {
-  return lexicons.validate('com.atproto.label.subscribeLabels#info', v)
+export function validateInfo<V>(v: V) {
+  return validate<Info & V>(v, id, hashInfo)
 }

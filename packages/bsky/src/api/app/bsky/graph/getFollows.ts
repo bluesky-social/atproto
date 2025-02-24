@@ -1,8 +1,13 @@
 import { mapDefined } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { AppContext } from '../../../../context'
+import {
+  HydrateCtx,
+  Hydrator,
+  mergeStates,
+} from '../../../../hydration/hydrator'
 import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getFollowers'
-import AppContext from '../../../../context'
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -10,11 +15,6 @@ import {
   SkeletonFnInput,
   createPipeline,
 } from '../../../../pipeline'
-import {
-  HydrateCtx,
-  Hydrator,
-  mergeStates,
-} from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 import { clearlyBadCursor, resHeaders } from '../../../util'
 

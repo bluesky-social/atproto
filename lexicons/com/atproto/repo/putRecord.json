@@ -24,6 +24,7 @@
             },
             "rkey": {
               "type": "string",
+              "format": "record-key",
               "description": "The Record Key.",
               "maxLength": 512
             },

@@ -1,16 +1,16 @@
 import { mapDefined } from '@atproto/common'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/actor/getProfiles'
-import AppContext from '../../../../context'
-import { resHeaders } from '../../../util'
-import { createPipeline, noRules } from '../../../../pipeline'
+import { AppContext } from '../../../../context'
 import {
   HydrateCtx,
   HydrationState,
   Hydrator,
 } from '../../../../hydration/hydrator'
-import { Views } from '../../../../views'
+import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/actor/getProfiles'
+import { createPipeline, noRules } from '../../../../pipeline'
+import { Views } from '../../../../views'
+import { resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   const getProfile = createPipeline(skeleton, hydration, noRules, presentation)
@@ -25,9 +25,13 @@ export default function (server: Server, ctx: AppContext) {
       },
     }),
     handler: async ({ auth, params, req }) => {
-      const viewer = auth.credentials.iss
+      const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({ viewer, labelers })
+      const hydrateCtx = await ctx.hydrator.createContext({
+        viewer,
+        labelers,
+        includeTakedowns,
+      })
 
       const result = await getProfile({ ...params, hydrateCtx }, ctx)
 

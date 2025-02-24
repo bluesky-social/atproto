@@ -1,14 +1,15 @@
 import { CID } from 'multiformats/cid'
-import { InvalidRequestError, AuthRequiredError } from '@atproto/xrpc-server'
 import { InvalidRecordKeyError } from '@atproto/syntax'
-import { prepareCreate, prepareDelete } from '../../../../repo'
+import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import {
   BadCommitSwapError,
   InvalidRecordError,
   PreparedCreate,
+  prepareCreate,
+  prepareDelete,
 } from '../../../../repo'
-import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.createRecord({
@@ -65,40 +66,37 @@ export default function (server: Server, ctx: AppContext) {
         throw err
       }
 
-      const { commit, writes } = await ctx.actorStore.transact(
-        did,
-        async (actorTxn) => {
-          const backlinkConflicts =
-            validate !== false
-              ? await actorTxn.record.getBacklinkConflicts(
-                  write.uri,
-                  write.record,
-                )
-              : []
-          const backlinkDeletions = backlinkConflicts.map((uri) =>
-            prepareDelete({
-              did: uri.hostname,
-              collection: uri.collection,
-              rkey: uri.rkey,
-            }),
+      const commit = await ctx.actorStore.transact(did, async (actorTxn) => {
+        const backlinkConflicts =
+          validate !== false
+            ? await actorTxn.record.getBacklinkConflicts(
+                write.uri,
+                write.record,
+              )
+            : []
+        const backlinkDeletions = backlinkConflicts.map((uri) =>
+          prepareDelete({
+            did: uri.hostname,
+            collection: uri.collection,
+            rkey: uri.rkey,
+          }),
+        )
+        const writes = [...backlinkDeletions, write]
+        try {
+          const commit = await actorTxn.repo.processWrites(
+            writes,
+            swapCommitCid,
           )
-          const writes = [...backlinkDeletions, write]
-          try {
-            const commit = await actorTxn.repo.processWrites(
-              writes,
-              swapCommitCid,
-            )
-            return { commit, writes }
-          } catch (err) {
-            if (err instanceof BadCommitSwapError) {
-              throw new InvalidRequestError(err.message, 'InvalidSwap')
-            }
-            throw err
+          return commit
+        } catch (err) {
+          if (err instanceof BadCommitSwapError) {
+            throw new InvalidRequestError(err.message, 'InvalidSwap')
           }
-        },
-      )
+          throw err
+        }
+      })
 
-      await ctx.sequencer.sequenceCommit(did, commit, writes)
+      await ctx.sequencer.sequenceCommit(did, commit)
       await ctx.accountManager.updateRepoRoot(did, commit.cid, commit.rev)
 
       return {

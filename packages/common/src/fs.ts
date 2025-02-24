@@ -1,6 +1,6 @@
+import { constants } from 'node:fs'
+import fs from 'node:fs/promises'
 import { isErrnoException } from '@atproto/common-web'
-import { constants } from 'fs'
-import fs from 'fs/promises'
 
 export const fileExists = async (location: string): Promise<boolean> => {
   try {

@@ -1,7 +1,6 @@
 import { secp256k1 as k256 } from '@noble/curves/secp256k1'
 import { sha256 } from '@noble/hashes/sha256'
 import * as ui8 from 'uint8arrays'
-
 import { SECP256K1_DID_PREFIX } from '../const'
 import { VerifyOptions } from '../types'
 import { extractMultikey, extractPrefixedBytes, hasPrefix } from '../utils'
@@ -28,12 +27,8 @@ export const verifySig = async (
 ): Promise<boolean> => {
   const allowMalleable = opts?.allowMalleableSig ?? false
   const msgHash = await sha256(data)
-  // parse as compact sig to prevent signature malleability
-  // library supports sigs in 2 different formats: https://github.com/paulmillr/noble-curves/issues/99
-  if (!allowMalleable && !isCompactFormat(sig)) {
-    return false
-  }
   return k256.verify(sig, msgHash, publicKey, {
+    format: allowMalleable ? undefined : 'compact', // prevent DER-encoded signatures
     lowS: !allowMalleable,
   })
 }

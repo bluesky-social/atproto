@@ -1,13 +1,12 @@
+import { Did, DidError, didDocumentValidator, didWebToUrl } from '@atproto/did'
 import {
-  bindFetch,
   Fetch,
+  bindFetch,
   fetchJsonProcessor,
   fetchJsonZodProcessor,
   fetchOkProcessor,
 } from '@atproto-labs/fetch'
 import { pipe } from '@atproto-labs/pipe'
-import { Did, didDocumentValidator, didWebToUrl } from '@atproto/did'
-
 import { DidMethod, ResolveDidOptions } from '../did-method.js'
 
 const fetchSuccessHandler = pipe(
@@ -38,8 +37,10 @@ export class DidWebMethod implements DidMethod<'web'> {
     const didDocumentUrl = buildDidWebDocumentUrl(did)
 
     if (!this.allowHttp && didDocumentUrl.protocol === 'http:') {
-      throw new Error(
-        `Cannot resolve DID document for localhost: ${didDocumentUrl}`,
+      throw new DidError(
+        did,
+        'Resolution of "http" did:web is not allowed',
+        'did-web-http-not-allowed',
       )
     }
 

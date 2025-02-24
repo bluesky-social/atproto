@@ -1,5 +1,11 @@
-import { createReadStream } from 'fs'
-import { Options, getInfo, resize } from '../../src/image/sharp'
+import { createReadStream } from 'node:fs'
+import { pipeline } from 'node:stream/promises'
+import {
+  Options,
+  createImageProcessor,
+  createImageUpscaler,
+  getInfo,
+} from '../../src/image/sharp'
 
 describe('sharp image processor', () => {
   it('scales up to cover.', async () => {
@@ -178,8 +184,15 @@ describe('sharp image processor', () => {
   })
 
   async function processFixture(fixture: string, options: Options) {
-    const image = createReadStream(`../dev-env/src/seed/img/${fixture}`)
-    const resized = await resize(image, options)
-    return await getInfo(resized)
+    const image = createReadStream(`../dev-env/assets/${fixture}`)
+    const upscaler = createImageUpscaler(options)
+    const processor = createImageProcessor(options)
+
+    const [info] = await Promise.all([
+      getInfo(processor),
+      pipeline([image, upscaler, processor]),
+    ])
+
+    return info
   }
 })

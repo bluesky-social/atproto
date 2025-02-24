@@ -3,16 +3,19 @@
  */
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.atproto.sync.notifyOfUpdate'
 
 export interface QueryParams {}
 
 export interface InputSchema {
   /** Hostname of the current service (usually a PDS) that is notifying of update. */
   hostname: string
-  [k: string]: unknown
 }
 
 export interface CallOptions {

@@ -5,7 +5,6 @@ import {
   toString as ui8ToString,
 } from 'uint8arrays'
 import { SupportedEncodings } from 'uint8arrays/to-string'
-
 import { SECP256K1_JWT_ALG } from '../const'
 import * as did from '../did'
 import { Keypair } from '../types'
@@ -69,5 +68,3 @@ export class Secp256k1Keypair implements Keypair {
     return this.privateKey
   }
 }
-
-export default Secp256k1Keypair

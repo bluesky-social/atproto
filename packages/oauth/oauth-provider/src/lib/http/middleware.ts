@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { writeJson } from './response.js'
-import { Middleware, Handler, NextFunction } from './types.js'
+import { Handler, Middleware, NextFunction } from './types.js'
 
 export function combineMiddlewares<M extends Middleware<any, any, any>>(
   middlewares: Iterable<null | undefined | M>,

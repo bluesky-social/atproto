@@ -1,11 +1,11 @@
-import { AtUri } from '@atproto/syntax'
 import { CID } from 'multiformats/cid'
-import * as Profile from '../../../../lexicon/types/app/bsky/actor/profile'
+import { AtUri } from '@atproto/syntax'
 import * as lex from '../../../../lexicon/lexicons'
-import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
-import RecordProcessor from '../processor'
-import { Database } from '../../db'
+import * as Profile from '../../../../lexicon/types/app/bsky/actor/profile'
 import { BackgroundQueue } from '../../background'
+import { Database } from '../../db'
+import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
+import { RecordProcessor } from '../processor'
 
 const lexId = lex.ids.AppBskyActorProfile
 type IndexedProfile = DatabaseSchemaType['profile']

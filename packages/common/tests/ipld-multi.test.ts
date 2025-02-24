@@ -1,6 +1,6 @@
 import { CID } from 'multiformats/cid'
 import * as ui8 from 'uint8arrays'
-import { cborEncode, cborDecodeMulti } from '../src'
+import { cborDecodeMulti, cborEncode } from '../src'
 
 describe('ipld decode multi', () => {
   it('decodes concatenated dag-cbor messages', async () => {
@@ -21,5 +21,14 @@ describe('ipld decode multi', () => {
     expect(decoded.length).toBe(2)
     expect(decoded[0]).toEqual(one)
     expect(decoded[1]).toEqual(two)
+  })
+
+  it('parses safe ints as number', async () => {
+    const one = {
+      test: Number.MAX_SAFE_INTEGER,
+    }
+    const encoded = cborEncode(one)
+    const decoded = cborDecodeMulti(encoded)
+    expect(Number.isInteger(decoded[0]?.['test'])).toBe(true)
   })
 })

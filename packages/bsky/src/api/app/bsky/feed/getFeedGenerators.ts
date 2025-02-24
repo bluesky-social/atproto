@@ -1,13 +1,13 @@
 import { mapDefined } from '@atproto/common'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getFeedGenerators'
-import AppContext from '../../../../context'
-import { createPipeline, noRules } from '../../../../pipeline'
+import { AppContext } from '../../../../context'
 import {
   HydrateCtx,
   HydrationState,
   Hydrator,
 } from '../../../../hydration/hydrator'
+import { Server } from '../../../../lexicon'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getFeedGenerators'
+import { createPipeline, noRules } from '../../../../pipeline'
 import { Views } from '../../../../views'
 import { resHeaders } from '../../../util'
 

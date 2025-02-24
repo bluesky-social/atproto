@@ -1,7 +1,7 @@
-import { AtpAgent, AtUri } from '@atproto/api'
-import { TestNetwork, SeedClient, RecordRef, basicSeed } from '@atproto/dev-env'
-import { forSnapshot } from '../_util'
+import { AtUri, AtpAgent } from '@atproto/api'
+import { RecordRef, SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
+import { forSnapshot } from '../_util'
 
 describe('pds views with blocking from block lists', () => {
   let network: TestNetwork
@@ -48,7 +48,7 @@ describe('pds views with blocking from block lists', () => {
   it('creates a list with some items', async () => {
     const avatar = await sc.uploadFile(
       alice,
-      '../dev-env/src/seed/img/key-portrait-small.jpg',
+      '../dev-env/assets/key-portrait-small.jpg',
       'image/jpeg',
     )
     // alice creates block list with bob & carol that dan uses

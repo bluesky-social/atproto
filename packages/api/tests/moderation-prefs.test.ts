@@ -1,5 +1,6 @@
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { DEFAULT_LABEL_SETTINGS } from '../src'
+import { isContentLabelPref } from '../src/client/types/app/bsky/actor/defs'
 import './util/moderation-behavior'
 
 describe('agent', () => {
@@ -86,6 +87,10 @@ describe('agent', () => {
         queuedNudges: [],
         nuxs: [],
       },
+      postInteractionSettings: {
+        threadgateAllowRules: undefined,
+        postgateEmbeddingRules: undefined,
+      },
     })
   })
 
@@ -136,6 +141,10 @@ describe('agent', () => {
         queuedNudges: [],
         nuxs: [],
       },
+      postInteractionSettings: {
+        threadgateAllowRules: undefined,
+        postgateEmbeddingRules: undefined,
+      },
     })
     expect(agent.labelers).toStrictEqual(['did:plc:other'])
 
@@ -170,6 +179,10 @@ describe('agent', () => {
         activeProgressGuide: undefined,
         queuedNudges: [],
         nuxs: [],
+      },
+      postInteractionSettings: {
+        threadgateAllowRules: undefined,
+        postgateEmbeddingRules: undefined,
       },
     })
     expect(agent.labelers).toStrictEqual([])
@@ -227,6 +240,10 @@ describe('agent', () => {
         activeProgressGuide: undefined,
         queuedNudges: [],
         nuxs: [],
+      },
+      postInteractionSettings: {
+        threadgateAllowRules: undefined,
+        postgateEmbeddingRules: undefined,
       },
     })
   })
@@ -335,7 +352,7 @@ describe('agent', () => {
     const a = await agent.app.bsky.actor.getPreferences({})
 
     const nsfwSettings = a.data.preferences.filter(
-      (pref) => pref.label === 'nsfw',
+      (pref) => isContentLabelPref(pref) && pref.label === 'nsfw',
     )
     expect(nsfwSettings.length).toEqual(1)
   })

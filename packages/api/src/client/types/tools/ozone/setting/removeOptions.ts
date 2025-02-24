@@ -3,21 +3,22 @@
  */
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'tools.ozone.setting.removeOptions'
 
 export interface QueryParams {}
 
 export interface InputSchema {
   keys: string[]
   scope: 'instance' | 'personal' | (string & {})
-  [k: string]: unknown
 }
 
-export interface OutputSchema {
-  [k: string]: unknown
-}
+export interface OutputSchema {}
 
 export interface CallOptions {
   signal?: AbortSignal

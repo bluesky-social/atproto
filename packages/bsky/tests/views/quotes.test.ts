@@ -1,7 +1,7 @@
-import { quotesSeed, SeedClient, TestNetwork } from '@atproto/dev-env'
 import AtpAgent from '@atproto/api'
-import { forSnapshot } from '../_util'
+import { SeedClient, TestNetwork, quotesSeed } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
+import { forSnapshot } from '../_util'
 
 describe('pds quote views', () => {
   let network: TestNetwork

@@ -2,12 +2,17 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
-import * as AppBskyRichtextFacet from '../richtext/facet'
+import { validate as _validate } from '../../../../lexicons'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import type * as AppBskyRichtextFacet from '../richtext/facet.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'app.bsky.graph.starterpack'
 
 export interface Record {
+  $type: 'app.bsky.graph.starterpack'
   /** Display name for starter pack; can not be empty. */
   name: string
   description?: string
@@ -19,32 +24,27 @@ export interface Record {
   [k: string]: unknown
 }
 
-export function isRecord(v: unknown): v is Record {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    (v.$type === 'app.bsky.graph.starterpack#main' ||
-      v.$type === 'app.bsky.graph.starterpack')
-  )
+const hashRecord = 'main'
+
+export function isRecord<V>(v: V) {
+  return is$typed(v, id, hashRecord)
 }
 
-export function validateRecord(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.graph.starterpack#main', v)
+export function validateRecord<V>(v: V) {
+  return validate<Record & V>(v, id, hashRecord, true)
 }
 
 export interface FeedItem {
+  $type?: 'app.bsky.graph.starterpack#feedItem'
   uri: string
-  [k: string]: unknown
 }
 
-export function isFeedItem(v: unknown): v is FeedItem {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.graph.starterpack#feedItem'
-  )
+const hashFeedItem = 'feedItem'
+
+export function isFeedItem<V>(v: V) {
+  return is$typed(v, id, hashFeedItem)
 }
 
-export function validateFeedItem(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.graph.starterpack#feedItem', v)
+export function validateFeedItem<V>(v: V) {
+  return validate<FeedItem & V>(v, id, hashFeedItem)
 }

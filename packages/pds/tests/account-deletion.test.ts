@@ -1,21 +1,21 @@
-import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
-import { once, EventEmitter } from 'events'
+import { EventEmitter, once } from 'node:events'
 import { Selectable } from 'kysely'
 import Mail from 'nodemailer/lib/mailer'
 import { AtpAgent } from '@atproto/api'
-import basicSeed from './seeds/basic'
-import { ServerMailer } from '../src/mailer'
+import { fileExists } from '@atproto/common'
+import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import { BlobNotFoundError } from '@atproto/repo'
+import { AppContext } from '../src'
 import {
-  RepoRoot,
   Account,
   AppPassword,
   EmailToken,
   RefreshToken,
+  RepoRoot,
 } from '../src/account-manager/db'
-import { fileExists } from '@atproto/common'
-import { AppContext } from '../src'
+import { ServerMailer } from '../src/mailer'
 import { RepoSeq } from '../src/sequencer/db'
+import basicSeed from './seeds/basic'
 
 describe('account deletion', () => {
   let network: TestNetworkNoAppView

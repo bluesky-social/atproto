@@ -3,10 +3,14 @@
  */
 import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.atproto.repo.listMissingBlobs'
 
 export interface QueryParams {
   limit: number
@@ -18,7 +22,6 @@ export type InputSchema = undefined
 export interface OutputSchema {
   cursor?: string
   blobs: RecordBlob[]
-  [k: string]: unknown
 }
 
 export type HandlerInput = undefined
@@ -41,25 +44,24 @@ export type HandlerReqCtx<HA extends HandlerAuth = never> = {
   input: HandlerInput
   req: express.Request
   res: express.Response
+  resetRouteRateLimits: () => Promise<void>
 }
 export type Handler<HA extends HandlerAuth = never> = (
   ctx: HandlerReqCtx<HA>,
 ) => Promise<HandlerOutput> | HandlerOutput
 
 export interface RecordBlob {
+  $type?: 'com.atproto.repo.listMissingBlobs#recordBlob'
   cid: string
   recordUri: string
-  [k: string]: unknown
 }
 
-export function isRecordBlob(v: unknown): v is RecordBlob {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'com.atproto.repo.listMissingBlobs#recordBlob'
-  )
+const hashRecordBlob = 'recordBlob'
+
+export function isRecordBlob<V>(v: V) {
+  return is$typed(v, id, hashRecordBlob)
 }
 
-export function validateRecordBlob(v: unknown): ValidationResult {
-  return lexicons.validate('com.atproto.repo.listMissingBlobs#recordBlob', v)
+export function validateRecordBlob<V>(v: V) {
+  return validate<RecordBlob & V>(v, id, hashRecordBlob)
 }

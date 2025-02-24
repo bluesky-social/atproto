@@ -1,23 +1,23 @@
-import assert from 'assert'
+import assert from 'node:assert'
+import { EventEmitter } from 'node:stream'
 import {
   Kysely,
-  PostgresDialect,
-  Migrator,
   KyselyPlugin,
+  Migrator,
   PluginTransformQueryArgs,
   PluginTransformResultArgs,
-  RootOperationNode,
+  PostgresDialect,
   QueryResult,
+  RootOperationNode,
   UnknownRow,
 } from 'kysely'
-import TypedEmitter from 'typed-emitter'
 import { Pool as PgPool, types as pgTypes } from 'pg'
-import DatabaseSchema, { DatabaseSchemaType } from './schema'
-import { PgOptions } from './types'
+import TypedEmitter from 'typed-emitter'
 import { dbLogger } from '../logger'
-import { EventEmitter } from 'stream'
 import * as migrations from './migrations'
 import { CtxMigrationProvider } from './migrations/provider'
+import { DatabaseSchema, DatabaseSchemaType } from './schema'
+import { PgOptions } from './types'
 
 export class Database {
   pool: PgPool

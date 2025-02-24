@@ -1,20 +1,20 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
 import { mapDefined } from '@atproto/common'
+import { InvalidRequestError } from '@atproto/xrpc-server'
+import { AppContext } from '../../../../context'
+import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/notification/listNotifications'
 import { isRecord as isPostRecord } from '../../../../lexicon/types/app/bsky/feed/post'
-import AppContext from '../../../../context'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/notification/listNotifications'
 import {
-  createPipeline,
   HydrationFnInput,
   PresentationFnInput,
   RulesFnInput,
   SkeletonFnInput,
+  createPipeline,
 } from '../../../../pipeline'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
-import { Views } from '../../../../views'
 import { Notification } from '../../../../proto/bsky_pb'
 import { uriToDid as didFromUri } from '../../../../util/uris'
+import { Views } from '../../../../views'
 import { clearlyBadCursor, resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
@@ -43,6 +43,56 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
+const paginateNotifications = async (opts: {
+  ctx: Context
+  priority: boolean
+  reasons?: string[]
+  cursor?: string
+  limit: number
+  viewer: string
+}) => {
+  const { ctx, priority, reasons, limit, viewer } = opts
+
+  // if not filtering, then just pass through the response from dataplane
+  if (!reasons) {
+    const res = await ctx.hydrator.dataplane.getNotifications({
+      actorDid: viewer,
+      priority,
+      cursor: opts.cursor,
+      limit,
+    })
+    return {
+      notifications: res.notifications,
+      cursor: res.cursor,
+    }
+  }
+
+  let nextCursor: string | undefined = opts.cursor
+  let toReturn: Notification[] = []
+  const maxAttempts = 10
+  const attemptSize = Math.ceil(limit / 2)
+  for (let i = 0; i < maxAttempts; i++) {
+    const res = await ctx.hydrator.dataplane.getNotifications({
+      actorDid: viewer,
+      priority,
+      cursor: nextCursor,
+      limit,
+    })
+    const filtered = res.notifications.filter((notif) =>
+      reasons.includes(notif.reason),
+    )
+    toReturn = [...toReturn, ...filtered]
+    nextCursor = res.cursor ?? undefined
+    if (toReturn.length >= attemptSize || !nextCursor) {
+      break
+    }
+  }
+  return {
+    notifications: toReturn,
+    cursor: nextCursor,
+  }
+}
+
 const skeleton = async (
   input: SkeletonFnInput<Context, Params>,
 ): Promise<SkeletonState> => {
@@ -56,11 +106,13 @@ const skeleton = async (
     return { notifs: [], priority }
   }
   const [res, lastSeenRes] = await Promise.all([
-    ctx.hydrator.dataplane.getNotifications({
-      actorDid: viewer,
+    paginateNotifications({
+      ctx,
       priority,
+      reasons: params.reasons,
       cursor: params.cursor,
       limit: params.limit,
+      viewer,
     }),
     ctx.hydrator.dataplane.getNotificationSeen({
       actorDid: viewer,
@@ -126,9 +178,11 @@ const noBlockOrMutesOrNeedsReview = (
     if (
       item.reason === 'reply' ||
       item.reason === 'quote' ||
-      item.reason === 'mention'
+      item.reason === 'mention' ||
+      item.reason === 'like' ||
+      item.reason === 'follow'
     ) {
-      if (!ctx.views.viewerSeesNeedsReview(did, hydration)) {
+      if (!ctx.views.viewerSeesNeedsReview({ did, uri: item.uri }, hydration)) {
         return false
       }
     }

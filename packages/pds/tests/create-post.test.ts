@@ -1,11 +1,12 @@
-import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
 import {
   AppBskyFeedPost,
-  AtUri,
-  RichText,
   AppBskyRichtextFacet,
+  AtUri,
   AtpAgent,
+  RichText,
+  Un$Typed,
 } from '@atproto/api'
+import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import basicSeed from './seeds/basic'
 
 describe('pds posts record creation', () => {
@@ -28,7 +29,7 @@ describe('pds posts record creation', () => {
   })
 
   it('allows for creating posts with tags', async () => {
-    const post: AppBskyFeedPost.Record = {
+    const post: Un$Typed<AppBskyFeedPost.Record> = {
       text: 'hello world',
       tags: ['javascript', 'hehe'],
       createdAt: new Date().toISOString(),
@@ -52,7 +53,7 @@ describe('pds posts record creation', () => {
     const rt = new RichText({ text: 'hello #world' })
     await rt.detectFacets(agent)
 
-    const post: AppBskyFeedPost.Record = {
+    const post: Un$Typed<AppBskyFeedPost.Record> = {
       text: rt.text,
       facets: rt.facets,
       createdAt: new Date().toISOString(),

@@ -1,24 +1,48 @@
 {
   "root": true,
-  // parse TypeScript files
-  // https://github.com/typescript-eslint/typescript-eslint/tree/master/packages/parser
-  "parser": "@typescript-eslint/parser",
-  // configure eslint using options described at
-  // https://github.com/typescript-eslint/typescript-eslint/tree/master/packages/eslint-plugin
-  "plugins": ["@typescript-eslint"],
   "extends": [
     "eslint:recommended",
+    "plugin:@typescript-eslint/base",
     "plugin:@typescript-eslint/eslint-recommended",
     "plugin:@typescript-eslint/recommended",
     "plugin:prettier/recommended",
-    "prettier"
+    "plugin:import/recommended",
+    "plugin:import/typescript"
   ],
+  "plugins": ["n"],
   "ignorePatterns": ["dist", "node_modules"],
   "rules": {
     "no-var": "error",
     "prefer-const": "warn",
     "no-misleading-character-class": "warn",
     "eqeqeq": ["error", "always", { "null": "ignore" }],
+    "n/global-require": "error",
+    "n/no-extraneous-import": "error",
+    "n/prefer-node-protocol": "error",
+    "import/extensions": ["off", "ignorePackages"],
+    "import/export": "off",
+    "import/namespace": "off",
+    "import/no-deprecated": "error",
+    "import/no-absolute-path": "error",
+    "import/no-dynamic-require": "error",
+    "import/no-self-import": "error",
+    "import/order": [
+      "error",
+      {
+        "named": true,
+        "distinctGroup": true,
+        "alphabetize": { "order": "asc" },
+        "newlines-between": "never",
+        "groups": [
+          "builtin",
+          "external",
+          "internal",
+          "parent",
+          ["index", "sibling"],
+          "object"
+        ]
+      }
+    ],
     "@typescript-eslint/no-unused-vars": [
       "warn",
       { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }
@@ -43,6 +67,33 @@
       "rules": {
         "@typescript-eslint/no-var-requires": "off"
       }
+    },
+    {
+      "files": ["**/*.test.ts", "**/tests/**/*.ts"],
+      "rules": {
+        "n/no-extraneous-import": [
+          "error",
+          { "allowModules": ["@atproto/dev-env"] }
+        ]
+      }
     }
-  ]
+  ],
+  "settings": {
+    "node": { "version": ">=18.7.0" },
+    "import/internal-regex": "^@atproto(?:-labs)?/",
+    "import/parsers": { "@typescript-eslint/parser": [".ts", ".tsx"] },
+    "import/resolver": {
+      "typescript": {
+        "project": [
+          "tsconfig.json",
+          "packages/oauth/*/tsconfig.json",
+          "packages/internal/*/tsconfig.json",
+          "packages/*/tsconfig.json"
+        ]
+      },
+      "node": {
+        "extensions": [".js", ".jsx", ".json"]
+      }
+    }
+  }
 }

@@ -1,29 +1,20 @@
-import assert from 'node:assert'
-
 import { CidSet } from '@atproto/repo'
 import { INVALID_HANDLE } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-
-import AppContext from '../../../../context'
+import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import { ids } from '../../../../lexicon/lexicons'
+import { authPassthru } from '../../../proxy'
 import { assertValidDidDocumentForService } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.activateAccount({
     auth: ctx.authVerifier.accessFull(),
-    handler: async ({ auth }) => {
+    handler: async ({ req, auth }) => {
       // in the case of entryway, the full flow is activateAccount (PDS) -> activateAccount (Entryway) -> updateSubjectStatus(PDS)
       if (ctx.entrywayAgent) {
-        assert(ctx.cfg.entryway)
-
         await ctx.entrywayAgent.com.atproto.server.activateAccount(
           undefined,
-          await ctx.serviceAuthHeaders(
-            auth.credentials.did,
-            ctx.cfg.entryway.did,
-            ids.ComAtprotoServerActivateAccount,
-          ),
+          authPassthru(req),
         )
         return
       }
@@ -50,18 +41,22 @@ export default function (server: Server, ctx: AppContext) {
           since: null,
           prev: null,
           newBlocks: blocks.blocks,
+          relevantBlocks: blocks.blocks,
           removedCids: new CidSet(),
+          ops: [],
+          blobs: new CidSet(),
+          prevData: null,
         }
       })
 
       // @NOTE: we're over-emitting for now for backwards compatibility, can reduce this in the future
       const status = await ctx.accountManager.getAccountStatus(requester)
       await ctx.sequencer.sequenceAccountEvt(requester, status)
-      await ctx.sequencer.sequenceHandleUpdate(
+      await ctx.sequencer.sequenceIdentityEvt(
         requester,
         account.handle ?? INVALID_HANDLE,
       )
-      await ctx.sequencer.sequenceCommit(requester, commitData, [])
+      await ctx.sequencer.sequenceCommit(requester, commitData)
     },
   })
 }

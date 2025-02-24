@@ -1,13 +1,13 @@
-import Database from '../db'
 import { Selectable } from 'kysely'
-import { Member } from '../db/schema/member'
-import { Member as TeamMember } from '../lexicon/types/tools/ozone/team/defs'
-import { ProfileViewDetailed } from '../lexicon/types/app/bsky/actor/defs'
-import { InvalidRequestError } from '@atproto/xrpc-server'
 import { chunkArray } from '@atproto/common'
-import AppContext from '../context'
-import { httpLogger } from '../logger'
+import { InvalidRequestError } from '@atproto/xrpc-server'
+import { AppContext } from '../context'
+import { Database } from '../db'
+import { Member } from '../db/schema/member'
 import { ids } from '../lexicon/lexicons'
+import { ProfileViewDetailed } from '../lexicon/types/app/bsky/actor/defs'
+import { Member as TeamMember } from '../lexicon/types/tools/ozone/team/defs'
+import { httpLogger } from '../logger'
 
 export type TeamServiceCreator = (db: Database) => TeamService
 
@@ -21,13 +21,33 @@ export class TeamService {
   async list({
     cursor,
     limit = 25,
+    roles,
+    disabled,
   }: {
     cursor?: string
     limit?: number
+    disabled?: boolean
+    roles?: string[]
   }): Promise<{ members: Selectable<Member>[]; cursor?: string }> {
     let builder = this.db.db.selectFrom('member').selectAll()
     if (cursor) {
       builder = builder.where('createdAt', '>', new Date(cursor))
+    }
+    if (roles !== undefined) {
+      const knownRoles = roles.filter(
+        (r) =>
+          r === 'tools.ozone.team.defs#roleAdmin' ||
+          r === 'tools.ozone.team.defs#roleModerator' ||
+          r === 'tools.ozone.team.defs#roleTriage',
+      )
+
+      // Optimization: no need to query to know that no values will be returned
+      if (!knownRoles.length) return { members: [] }
+
+      builder = builder.where('role', 'in', knownRoles)
+    }
+    if (disabled !== undefined) {
+      builder = builder.where('disabled', disabled ? 'is' : 'is not', true)
     }
     const members = await builder
       .limit(limit)

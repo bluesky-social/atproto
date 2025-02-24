@@ -1,7 +1,7 @@
 import { AtpAgent } from '@atproto/api'
-import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
-import { forSnapshot } from '../_util'
+import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
+import { forSnapshot } from '../_util'
 
 describe('bsky actor likes feed views', () => {
   let network: TestNetwork

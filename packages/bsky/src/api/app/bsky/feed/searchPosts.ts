@@ -1,7 +1,10 @@
-import AppContext from '../../../../context'
-import { Server } from '../../../../lexicon'
 import { AtpAgent } from '@atproto/api'
 import { mapDefined } from '@atproto/common'
+import { AppContext } from '../../../../context'
+import { DataPlaneClient } from '../../../../data-plane'
+import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
+import { parseString } from '../../../../hydration/util'
+import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/searchPosts'
 import {
   HydrationFnInput,
@@ -10,11 +13,8 @@ import {
   SkeletonFnInput,
   createPipeline,
 } from '../../../../pipeline'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
-import { Views } from '../../../../views'
-import { DataPlaneClient } from '../../../../data-plane'
-import { parseString } from '../../../../hydration/util'
 import { uriToDid as creatorFromUri } from '../../../../util/uris'
+import { Views } from '../../../../views'
 import { resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {

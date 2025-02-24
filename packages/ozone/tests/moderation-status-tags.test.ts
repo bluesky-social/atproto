@@ -1,8 +1,10 @@
+import assert from 'node:assert'
+import { ComAtprotoAdminDefs } from '@atproto/api'
 import {
-  TestNetwork,
-  SeedClient,
-  basicSeed,
   ModeratorClient,
+  SeedClient,
+  TestNetwork,
+  basicSeed,
 } from '@atproto/dev-env'
 import { REASONSPAM } from '../src/lexicon/types/com/atproto/moderation/defs'
 
@@ -70,6 +72,46 @@ describe('moderation-status-tags', () => {
       expect(statusAfterFollowTag.subjectStatuses[0].tags).toContain(
         'follow-churn',
       )
+    })
+
+    it('allows filtering by tags', async () => {
+      await modClient.emitEvent({
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: sc.dids.alice,
+        },
+        event: {
+          $type: 'tools.ozone.moderation.defs#modEventTag',
+          add: ['report:spam', 'lang:ja', 'lang:en'],
+          remove: [],
+        },
+      })
+      const [englishAndJapaneseQueue, englishOrJapaneseQueue] =
+        await Promise.all([
+          modClient.queryStatuses({
+            tags: ['lang:ja&&lang:en'],
+          }),
+          modClient.queryStatuses({
+            tags: ['report:ja', 'lang:en'],
+          }),
+        ])
+
+      // Verify that the queue only contains 1 item with both en and ja tags which is alice's account
+      expect(englishAndJapaneseQueue.subjectStatuses.length).toEqual(1)
+      const { subject } = englishAndJapaneseQueue.subjectStatuses[0]
+      assert(ComAtprotoAdminDefs.isRepoRef(subject))
+      expect(subject.did).toEqual(sc.dids.alice)
+
+      // Verify that when querying for either en or ja tags, both alice and bob are returned
+      expect(englishOrJapaneseQueue.subjectStatuses.length).toEqual(2)
+      const englishOrJapaneseDids = englishOrJapaneseQueue.subjectStatuses.map(
+        ({ subject }) => {
+          assert(ComAtprotoAdminDefs.isRepoRef(subject))
+          return subject.did
+        },
+      )
+      expect(englishOrJapaneseDids).toContain(sc.dids.alice)
+      expect(englishOrJapaneseDids).toContain(sc.dids.bob)
     })
   })
 })

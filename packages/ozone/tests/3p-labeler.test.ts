@@ -1,15 +1,15 @@
-import {
-  SeedClient,
-  TestNetwork,
-  basicSeed,
-  TestOzone,
-  ModeratorClient,
-  createOzoneDid,
-} from '@atproto/dev-env'
 import { AtpAgent } from '@atproto/api'
 import { Secp256k1Keypair } from '@atproto/crypto'
-import { LABELER_HEADER_NAME } from '../src/util'
+import {
+  ModeratorClient,
+  SeedClient,
+  TestNetwork,
+  TestOzone,
+  basicSeed,
+  createOzoneDid,
+} from '@atproto/dev-env'
 import { ids } from '../src/lexicon/lexicons'
+import { LABELER_HEADER_NAME } from '../src/util'
 
 describe('labels from 3p labelers', () => {
   let network: TestNetwork

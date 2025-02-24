@@ -1,17 +1,15 @@
 import dns, { LookupAddress } from 'node:dns'
 import { LookupFunction } from 'node:net'
-
+import ipaddr from 'ipaddr.js'
+import { parse as pslParse } from 'psl'
+import { Agent, Client } from 'undici'
 import {
-  asRequest,
-  extractUrl,
   Fetch,
   FetchContext,
   FetchRequestError,
+  asRequest,
+  extractUrl,
 } from '@atproto-labs/fetch'
-import ipaddr from 'ipaddr.js'
-import { isValid as isValidDomain } from 'psl'
-import { Agent, Client } from 'undici'
-
 import { isUnicastIp } from './util.js'
 
 const { IPv4, IPv6 } = ipaddr
@@ -183,6 +181,14 @@ export function unicastLookup(
       }
     }
   })
+}
+
+// see lupomontero/psl#258 for context on psl usage.
+// in short, this ensures a structurally valid domain
+// plus a "listed" tld.
+function isValidDomain(domain: string) {
+  const parsed = pslParse(domain)
+  return !parsed.error && parsed.listed
 }
 
 function isNotUnicast(ip: ipaddr.IPv4 | ipaddr.IPv6): boolean {

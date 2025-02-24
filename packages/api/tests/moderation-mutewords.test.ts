@@ -1,5 +1,4 @@
 import { RichText, mock, moderatePost } from '../src/'
-
 import { hasMutedWord } from '../src/moderation/mutewords'
 
 describe(`hasMutedWord`, () => {
@@ -832,6 +831,7 @@ describe(`hasMutedWord`, () => {
             features: [
               {
                 $type: 'com.example.richtext.facet#other',
+                // @ts-expect-error
                 foo: 'bar',
               },
               {

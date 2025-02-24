@@ -1,0 +1,96 @@
+[
+  {
+    "comment": "two deep split",
+    "leafValue": "bafyreie5cvv4h45feadgeuwhbcutmh6t2ceseocckahdoe6uat64zmz454",
+    "keys": [
+      "A0/501344",
+      "B1/293486",
+      "C0/535043",
+      "E0/922708",
+      "F1/415452",
+      "G0/714257"
+    ],
+    "adds": ["D2/915466"],
+    "dels": [],
+    "rootBeforeCommit": "bafyreibthlzzn3rwvmomwf4dz6utt7yeh5eyn6qwbumvjfv35gwanh7ovq",
+    "rootAfterCommit": "bafyreidb6bxxylhmlzs4a6ruhcunv3fd32o6i5phlzkmjk6arletj2ua6a",
+    "blocksInProof": [
+      "bafyreidb6bxxylhmlzs4a6ruhcunv3fd32o6i5phlzkmjk6arletj2ua6a",
+      "bafyreifjsxnultnc3tbvnrawqpmrk6d76ymcstwcr5e3hn6u472nasb2xq",
+      "bafyreibzch5k5j5xkg6dcwmur2p6jqwavyjhdtvifr6g2gnccwhixibzsi",
+      "bafyreiamcu5ud3j4ovclrgq2sdyev5oajsmpnl2fdu5ffgpfint64n2jme",
+      "bafyreidxvw3sbdg4t5b2mbtozitnyu7kjien2zcrtgdj4ssgmjb72mzawe"
+    ]
+  },
+  {
+    "comment": "two deep leafless split",
+    "leafValue": "bafyreie5cvv4h45feadgeuwhbcutmh6t2ceseocckahdoe6uat64zmz454",
+    "keys": ["A0/501344", "B0/436099", "D0/360671", "E0/922708"],
+    "adds": ["C2/953910"],
+    "dels": [],
+    "rootBeforeCommit": "bafyreid7jnvjg7mr4akmyf7rtaz47duex2l47rz36nvs4i7yjnpuhfmehe",
+    "rootAfterCommit": "bafyreih2ry5gae5r4m47unhhuw4w2qjdhe6oprw3w2uico2tzbflwi74eu",
+    "blocksInProof": [
+      "bafyreih2ry5gae5r4m47unhhuw4w2qjdhe6oprw3w2uico2tzbflwi74eu",
+      "bafyreiag5ata5gtynbpef26l4kus2uz4nshuo526h275oljwlm5dwsvhqm",
+      "bafyreiaybgpm7ahyiy7fko7c4czjokhzajvimot6lfi6mxqzw2bzwoddn4",
+      "bafyreiheqxxydll4b4zlyemmegb7q3chs7aacczuotpxkqils6bufnsyse",
+      "bafyreigkijiuasyl5x4f2j3kxzou2vsdyc3vockx63r6bvgoip4ybhj2sa"
+    ]
+  },
+  {
+    "comment": "add on edge with neighbor two layers down",
+    "leafValue": "bafyreie5cvv4h45feadgeuwhbcutmh6t2ceseocckahdoe6uat64zmz454",
+    "keys": ["A0/501344", "B2/303249", "C0/535043"],
+    "adds": ["D2/915466"],
+    "dels": [],
+    "rootBeforeCommit": "bafyreifoy7ierkqljk37wozudqhqjuuahjnubqvd3qprx5ocwcfrx5v3hm",
+    "rootAfterCommit": "bafyreid2i3nxmsvv3ifb53nlkjh3qaymygrrxuno6z22gctzdme5lbptky",
+    "blocksInProof": [
+      "bafyreid2i3nxmsvv3ifb53nlkjh3qaymygrrxuno6z22gctzdme5lbptky",
+      "bafyreiagiwrefvm27hvgryirykp7reqcpz56v6txzksgbargjlibtpsqwu",
+      "bafyreiewdvzcopoza6bdntvhmvdfqeolql6sckkiu75jpvfnwwnfi57jia"
+    ]
+  },
+  {
+    "comment": "merge and split in multi-op commit",
+    "leafValue": "bafyreie5cvv4h45feadgeuwhbcutmh6t2ceseocckahdoe6uat64zmz454",
+    "keys": ["A0/501344", "B2/303249", "D2/915466", "E0/922708"],
+    "adds": ["C2/953910"],
+    "dels": ["B2/303249", "D2/915466"],
+    "rootBeforeCommit": "bafyreielnllkafudlseizljjx32rkkivlgxziqayhctgbxncw2srrox7ny",
+    "rootAfterCommit": "bafyreih6464tr7ue67qgllhiekgfmwiz45zuthrv72gwi2tjpuu5dbxt3a",
+    "blocksInProof": [
+      "bafyreih6464tr7ue67qgllhiekgfmwiz45zuthrv72gwi2tjpuu5dbxt3a",
+      "bafyreihexby6fnhajsjzzqkmegqpqt2lrr3rpesyl6kt3t3xppid7tuvfy",
+      "bafyreiciix65xuk62hu6ew6jdy3m2swqstvnuhuwcwffidk3nduf7eaoh4",
+      "bafyreieneexkszoung4zc5jzkjukjbbxm74ukz6mylydj7q2v42zqp6vmy",
+      "bafyreidxvw3sbdg4t5b2mbtozitnyu7kjien2zcrtgdj4ssgmjb72mzawe"
+    ]
+  },
+  {
+    "comment": "complex multi-op commit",
+    "leafValue": "bafyreie5cvv4h45feadgeuwhbcutmh6t2ceseocckahdoe6uat64zmz454",
+    "keys": [
+      "B0/436099",
+      "C2/953910",
+      "D0/360671",
+      "E2/413113",
+      "F0/606463",
+      "H0/740256"
+    ],
+    "adds": ["A2/239654", "G2/536869"],
+    "dels": ["C2/953910"],
+    "rootBeforeCommit": "bafyreiej4jqggfhidabjfrjgogdwed5eglhnboepxscbwfrss4uclnrrmi",
+    "rootAfterCommit": "bafyreifykpu67c4w4ynkx4lvjfjwxdofax6gx7j2wxrl6ewt3yslezcb6i",
+    "blocksInProof": [
+      "bafyreifykpu67c4w4ynkx4lvjfjwxdofax6gx7j2wxrl6ewt3yslezcb6i",
+      "bafyreig5pe2hdnhfbqleo6yyipkw3tdiju7tlm4sqp7btsiicxe4tex5de",
+      "bafyreievjgro75jk6ma3xwuqvalsydtzgvbbaduhazbvajvslaf3l6kcxu",
+      "bafyreieax6243224jnbout6ynursux2dvt6fabonofdu47dxupkxvmflvu",
+      "bafyreie44qmlnwlyeh6ubb2eocfko6st7gmbarplmcci6c7ilx24vh4iym",
+      "bafyreihlhqn4quwcgbum5g4wzkini2c42j7zi5dsjdgkzm55jxyvebndue",
+      "bafyreiggcbzkb2wgenvyfhkh2nggf7pohb7uzjm6bs7hixhjxw2xpmnq6u"
+    ]
+  }
+]

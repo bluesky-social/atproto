@@ -3,10 +3,14 @@
  */
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
-import * as AppBskyGraphDefs from './defs'
+import { validate as _validate } from '../../../../lexicons'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import type * as AppBskyGraphDefs from './defs.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'app.bsky.graph.getList'
 
 export interface QueryParams {
   /** Reference (AT-URI) of the list record to hydrate. */
@@ -21,7 +25,6 @@ export interface OutputSchema {
   cursor?: string
   list: AppBskyGraphDefs.ListView
   items: AppBskyGraphDefs.ListItemView[]
-  [k: string]: unknown
 }
 
 export interface CallOptions {

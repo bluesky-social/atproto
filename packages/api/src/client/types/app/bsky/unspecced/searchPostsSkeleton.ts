@@ -3,10 +3,14 @@
  */
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
-import * as AppBskyUnspeccedDefs from './defs'
+import { validate as _validate } from '../../../../lexicons'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import type * as AppBskyUnspeccedDefs from './defs.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'app.bsky.unspecced.searchPostsSkeleton'
 
 export interface QueryParams {
   /** Search query string; syntax, phrase, boolean, and faceting is unspecified, but Lucene query syntax is recommended. */
@@ -43,7 +47,6 @@ export interface OutputSchema {
   /** Count of search hits. Optional, may be rounded/truncated, and may not be possible to paginate through all hits. */
   hitsTotal?: number
   posts: AppBskyUnspeccedDefs.SkeletonSearchPost[]
-  [k: string]: unknown
 }
 
 export interface CallOptions {

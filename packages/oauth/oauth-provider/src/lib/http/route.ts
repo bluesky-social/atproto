@@ -1,8 +1,9 @@
+import type { IncomingMessage, ServerResponse } from 'node:http'
 import { SubCtx, subCtx } from './context.js'
 import { MethodMatcherInput, createMethodMatcher } from './method.js'
 import { combineMiddlewares } from './middleware.js'
 import { Params, Path, createPathMatcher } from './path.js'
-import { IncomingMessage, Middleware, ServerResponse } from './types.js'
+import { Middleware } from './types.js'
 
 export type RouteCtx<T, P extends Params> = SubCtx<T, { params: Readonly<P> }>
 export type RouteMiddleware<

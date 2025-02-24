@@ -1,10 +1,10 @@
 import { ServiceImpl } from '@connectrpc/connect'
-import { Service } from '../../../proto/bsky_connect'
-import { keyBy } from '@atproto/common'
-import { getRecords } from './records'
-import { Database } from '../db'
 import { sql } from 'kysely'
+import { keyBy } from '@atproto/common'
 import { parseRecordBytes } from '../../../hydration/util'
+import { Service } from '../../../proto/bsky_connect'
+import { Database } from '../db'
+import { getRecords } from './records'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getActors(req) {
@@ -39,7 +39,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     ])
     const byDid = keyBy(handlesRes, 'did')
     const actors = dids.map((did, i) => {
-      const row = byDid[did]
+      const row = byDid.get(did)
       const chatDeclaration = parseRecordBytes(
         chatDeclarations.records[i].record,
       )
@@ -74,7 +74,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .selectAll()
       .execute()
     const byHandle = keyBy(res, 'handle')
-    const dids = handles.map((handle) => byHandle[handle]?.did ?? '')
+    const dids = handles.map((handle) => byHandle.get(handle)?.did ?? '')
     return { dids }
   },
 

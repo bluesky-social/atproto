@@ -3,43 +3,43 @@
  */
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
-import * as ComAtprotoLabelDefs from './defs'
+import { validate as _validate } from '../../../../lexicons'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import type * as ComAtprotoLabelDefs from './defs.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.atproto.label.subscribeLabels'
 
 export interface Labels {
+  $type?: 'com.atproto.label.subscribeLabels#labels'
   seq: number
   labels: ComAtprotoLabelDefs.Label[]
-  [k: string]: unknown
 }
 
-export function isLabels(v: unknown): v is Labels {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'com.atproto.label.subscribeLabels#labels'
-  )
+const hashLabels = 'labels'
+
+export function isLabels<V>(v: V) {
+  return is$typed(v, id, hashLabels)
 }
 
-export function validateLabels(v: unknown): ValidationResult {
-  return lexicons.validate('com.atproto.label.subscribeLabels#labels', v)
+export function validateLabels<V>(v: V) {
+  return validate<Labels & V>(v, id, hashLabels)
 }
 
 export interface Info {
+  $type?: 'com.atproto.label.subscribeLabels#info'
   name: 'OutdatedCursor' | (string & {})
   message?: string
-  [k: string]: unknown
 }
 
-export function isInfo(v: unknown): v is Info {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'com.atproto.label.subscribeLabels#info'
-  )
+const hashInfo = 'info'
+
+export function isInfo<V>(v: V) {
+  return is$typed(v, id, hashInfo)
 }
 
-export function validateInfo(v: unknown): ValidationResult {
-  return lexicons.validate('com.atproto.label.subscribeLabels#info', v)
+export function validateInfo<V>(v: V) {
+  return validate<Info & V>(v, id, hashInfo)
 }

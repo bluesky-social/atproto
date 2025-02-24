@@ -1,3 +1,4 @@
+import express from 'express'
 import { jsonToLex } from '@atproto/lexicon'
 import { HeadersMap } from '@atproto/xrpc'
 import {
@@ -5,9 +6,7 @@ import {
   HandlerPipeThroughBuffer,
   parseReqNsid,
 } from '@atproto/xrpc-server'
-import express from 'express'
-
-import AppContext from '../context'
+import { AppContext } from '../context'
 import { lexicons } from '../lexicon/lexicons'
 import { readStickyLogger as log } from '../logger'
 import {
@@ -16,7 +15,6 @@ import {
   pipethrough,
 } from '../pipethrough'
 import { HandlerResponse, LocalRecords, MungeFn } from './types'
-import { getRecordsSinceRev } from './viewer'
 
 const REPO_REV_HEADER = 'atproto-repo-rev'
 
@@ -62,7 +60,7 @@ export const pipethroughReadAfterWrite = async <T>(
     const lxm = parseReqNsid(req)
 
     return await ctx.actorStore.read(requester, async (store) => {
-      const local = await getRecordsSinceRev(store, rev)
+      const local = await store.record.getRecordsSinceRev(rev)
       if (local.count === 0) return streamRes
 
       const { buffer } = (bufferRes = await asPipeThroughBuffer(streamRes))

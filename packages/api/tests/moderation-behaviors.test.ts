@@ -1,10 +1,10 @@
-import { moderateProfile, moderatePost } from '../src'
+import { moderatePost, moderateProfile } from '../src'
 import {
   ModerationBehaviorSuiteRunner,
-  SuiteUsers,
+  ModerationTestSuiteScenario,
   SuiteConfigurations,
   SuiteScenarios,
-  ModerationTestSuiteScenario,
+  SuiteUsers,
 } from './util/moderation-behavior'
 
 const USERS: SuiteUsers = {

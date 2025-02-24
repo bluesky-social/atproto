@@ -1,8 +1,8 @@
 import { ServiceImpl } from '@connectrpc/connect'
 import { Service } from '../../../proto/bsky_connect'
+import { FeedType } from '../../../proto/bsky_pb'
 import { Database } from '../db'
 import { TimeCidKeyset, paginate } from '../db/pagination'
-import { FeedType } from '../../../proto/bsky_pb'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getAuthorFeed(req) {
@@ -26,6 +26,17 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
             .selectFrom('post_embed_image')
             .select('post_embed_image.postUri')
             .whereRef('post_embed_image.postUri', '=', 'feed_item.postUri'),
+        )
+    } else if (feedType === FeedType.POSTS_WITH_VIDEO) {
+      builder = builder
+        // only your own posts
+        .where('type', '=', 'post')
+        // only posts with video
+        .whereExists((qb) =>
+          qb
+            .selectFrom('post_embed_video')
+            .select('post_embed_video.postUri')
+            .whereRef('post_embed_video.postUri', '=', 'feed_item.postUri'),
         )
     } else if (feedType === FeedType.POSTS_NO_REPLIES) {
       builder = builder.where((qb) =>

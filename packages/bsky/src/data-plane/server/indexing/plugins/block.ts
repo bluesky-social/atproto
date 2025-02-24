@@ -1,12 +1,12 @@
 import { Selectable } from 'kysely'
-import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import { CID } from 'multiformats/cid'
-import * as Block from '../../../../lexicon/types/app/bsky/graph/block'
+import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import * as lex from '../../../../lexicon/lexicons'
+import * as Block from '../../../../lexicon/types/app/bsky/graph/block'
+import { BackgroundQueue } from '../../background'
 import { Database } from '../../db'
 import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
-import RecordProcessor from '../processor'
-import { BackgroundQueue } from '../../background'
+import { RecordProcessor } from '../processor'
 
 const lexId = lex.ids.AppBskyGraphBlock
 type IndexedBlock = Selectable<DatabaseSchemaType['actor_block']>

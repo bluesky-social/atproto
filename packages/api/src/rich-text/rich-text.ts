@@ -92,9 +92,9 @@ F: 0 1 2 3 4 5 6 7 8 910   // string indices
  */
 
 import { AppBskyFeedPost, AppBskyRichtextFacet, AtpBaseClient } from '../client'
-import { UnicodeString } from './unicode'
-import { sanitizeRichText } from './sanitization'
 import { detectFacets } from './detection'
+import { sanitizeRichText } from './sanitization'
+import { UnicodeString } from './unicode'
 
 export type Facet = AppBskyRichtextFacet.Main
 export type FacetLink = AppBskyRichtextFacet.Link
@@ -122,11 +122,7 @@ export class RichTextSegment {
   ) {}
 
   get link(): FacetLink | undefined {
-    const link = this.facet?.features.find(AppBskyRichtextFacet.isLink)
-    if (AppBskyRichtextFacet.isLink(link)) {
-      return link
-    }
-    return undefined
+    return this.facet?.features.find(AppBskyRichtextFacet.isLink)
   }
 
   isLink() {
@@ -134,11 +130,7 @@ export class RichTextSegment {
   }
 
   get mention(): FacetMention | undefined {
-    const mention = this.facet?.features.find(AppBskyRichtextFacet.isMention)
-    if (AppBskyRichtextFacet.isMention(mention)) {
-      return mention
-    }
-    return undefined
+    return this.facet?.features.find(AppBskyRichtextFacet.isMention)
   }
 
   isMention() {
@@ -146,11 +138,7 @@ export class RichTextSegment {
   }
 
   get tag(): FacetTag | undefined {
-    const tag = this.facet?.features.find(AppBskyRichtextFacet.isTag)
-    if (AppBskyRichtextFacet.isTag(tag)) {
-      return tag
-    }
-    return undefined
+    return this.facet?.features.find(AppBskyRichtextFacet.isTag)
   }
 
   isTag() {

@@ -1,11 +1,11 @@
 import {
   Duplex,
   PassThrough,
-  pipeline,
   Readable,
   Stream,
   Transform,
   TransformCallback,
+  pipeline,
 } from 'node:stream'
 import { createBrotliDecompress, createGunzip, createInflate } from 'node:zlib'
 

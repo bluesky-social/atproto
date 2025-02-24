@@ -1,5 +1,4 @@
 import { z } from 'zod'
-
 import { oauthIssuerIdentifierSchema } from './oauth-issuer-identifier.js'
 import { webUriSchema } from './uri.js'
 
