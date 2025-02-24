@@ -52,78 +52,6 @@
       "type": "token",
       "description": "Rude, harassing, explicit, or otherwise unwelcoming behavior"
     },
-    "reasonHarassment": {
-      "type": "token",
-      "description": "Harassment"
-    },
-    "reasonAnimalAbuse": {
-      "type": "token",
-      "description": "Animal Abuse"
-    },
-    "reasonGraphic": {
-      "type": "token",
-      "description": "Graphic: violent or disturbing images"
-    },
-    "reasonScam": {
-      "type": "token",
-      "description": "Scams"
-    },
-    "reasonProhibitedCommerce": {
-      "type": "token",
-      "description": "Prohibited Commerce: trading in banned goods or services"
-    },
-    "reasonInauthentic": {
-      "type": "token",
-      "description": "Inauthentic: bots pretending to be human, fake accounts"
-    },
-    "reasonImpersonation": {
-      "type": "token",
-      "description": "Impersonation: of a specific person or organization"
-    },
-    "reasonBanEvasion": {
-      "type": "token",
-      "description": "Ban Evasion: new accounts from previously taken down users"
-    },
-    "reasonChildSafety": {
-      "type": "token",
-      "description": "Child Safety: CSAM/CSEM, grooming"
-    },
-    "reasonSelfHarm": {
-      "type": "token",
-      "description": "Self-Harm"
-    },
-    "reasonThreat": {
-      "type": "token",
-      "description": "Threat"
-    },
-    "reasonIntolerance": {
-      "type": "token",
-      "description": "Intolerance: slurs, isms"
-    },
-    "reasonPrivateInfo": {
-      "type": "token",
-      "description": "Private Information: doxxing"
-    },
-    "reasonSexualAbuse": {
-      "type": "token",
-      "description": "Sexual Abuse: trafficking, non-consensual intimate images (NCII), deepfake porn"
-    },
-    "reasonSiteSecurity": {
-      "type": "token",
-      "description": "Site Security: account security, hacking"
-    },
-    "reasonTerrorViolentExtremist": {
-      "type": "token",
-      "description": "Terrorist, Violence, and Extremist (TVEC)"
-    },
-    "reasonSpoiler": {
-      "type": "token",
-      "description": "Spoilers"
-    },
-    "reasonGrowthHack": {
-      "type": "token",
-      "description": "Growth Hack: engagement farming"
-    },
     "reasonOther": {
       "type": "token",
       "description": "Other: reports not falling under another report category"
@@ -131,11 +59,6 @@
     "reasonAppeal": {
       "type": "token",
       "description": "Appeal: appeal a previously taken moderation action"
-    },
-    "aspect": {
-      "type": "string",
-      "description": "Tag describing an aspect of a moderation subject relevant to a report.",
-      "knownValues": ["image", "video", "external", "interaction"]
     },
     "subjectType": {
       "type": "string",

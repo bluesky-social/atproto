@@ -35,14 +35,6 @@
               "ref": "com.atproto.moderation.defs#subjectType"
             }
           },
-          "aspects": {
-            "description": "The set of aspect tags which are in-scope of this service to review and action. If not defined (distinct from empty array), default is 'account' and 'record'.",
-            "type": "array",
-            "items": {
-              "type": "ref",
-              "ref": "com.atproto.moderation.defs#aspect"
-            }
-          },
           "subjectCollections": {
             "type": "array",
             "description": "Set of record types (collection NSIDs) which can be reported to this service. If not defined (distinct from empty array), default is any record type.",

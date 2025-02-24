@@ -28,14 +28,6 @@
                 "com.atproto.admin.defs#repoRef",
                 "com.atproto.repo.strongRef"
               ]
-            },
-            "aspects": {
-              "description": "Set of aspect tags relevant to this report.",
-              "type": "array",
-              "items": {
-                "type": "ref",
-                "ref": "com.atproto.moderation.defs#aspects"
-              }
             }
           }
         }
