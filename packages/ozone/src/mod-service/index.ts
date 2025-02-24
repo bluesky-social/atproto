@@ -475,10 +475,9 @@ export class ModerationService {
       .insertInto('moderation_event')
       .values({
         comment:
-          ('comment' in event &&
-            typeof event.comment === 'string' &&
-            event.comment) ||
-          null,
+          'comment' in event && typeof event.comment === 'string'
+            ? event.comment
+            : null,
         action: event.$type as ModerationEvent['action'],
         createdAt: createdAt.toISOString(),
         createdBy,
