@@ -11840,7 +11840,8 @@ export const schemaDict = {
       },
       modEventComment: {
         type: 'object',
-        description: 'Add a comment to a subject',
+        description:
+          'Add a comment to a subject. An empty comment will clear any previously set sticky comment.',
         properties: {
           comment: {
             type: 'string',
