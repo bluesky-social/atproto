@@ -11841,7 +11841,6 @@ export const schemaDict = {
       modEventComment: {
         type: 'object',
         description: 'Add a comment to a subject',
-        required: ['comment'],
         properties: {
           comment: {
             type: 'string',

@@ -287,7 +287,7 @@ export function validateModEventResolveAppeal<V>(v: V) {
 /** Add a comment to a subject */
 export interface ModEventComment {
   $type?: 'tools.ozone.moderation.defs#modEventComment'
-  comment: string
+  comment?: string
   /** Make the comment persistent on the subject */
   sticky?: boolean
 }
