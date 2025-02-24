@@ -1278,6 +1278,11 @@ export const schemaDict = {
         type: 'token',
         description: 'Appeal: appeal a previously taken moderation action',
       },
+      subjectType: {
+        type: 'string',
+        description: 'Tag describing a type of subject that might be reported.',
+        knownValues: ['account', 'record', 'chat'],
+      },
     },
   },
   ComAtprotoRepoApplyWrites: {
@@ -9161,6 +9166,33 @@ export const schemaDict = {
             createdAt: {
               type: 'string',
               format: 'datetime',
+            },
+            reasonTypes: {
+              description:
+                "The set of report reason 'codes' which are in-scope for this service to review and action. These usually align to policy categories. If not defined (distinct from empty array), all reason types are allowed.",
+              type: 'array',
+              items: {
+                type: 'ref',
+                ref: 'lex:com.atproto.moderation.defs#reasonType',
+              },
+            },
+            subjectTypes: {
+              description:
+                'The set of subject types (account, record, etc) this service accepts reports on.',
+              type: 'array',
+              items: {
+                type: 'ref',
+                ref: 'lex:com.atproto.moderation.defs#subjectType',
+              },
+            },
+            subjectCollections: {
+              type: 'array',
+              description:
+                'Set of record types (collection NSIDs) which can be reported to this service. If not defined (distinct from empty array), default is any record type.',
+              items: {
+                type: 'string',
+                format: 'nsid',
+              },
             },
           },
         },
