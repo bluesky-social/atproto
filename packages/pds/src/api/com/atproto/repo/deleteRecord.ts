@@ -2,6 +2,7 @@ import { CID } from 'multiformats/cid'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
+import { dbLogger } from '../../../../logger'
 import {
   BadCommitSwapError,
   BadRecordSwapError,
@@ -75,8 +76,16 @@ export default function (server: Server, ctx: AppContext) {
       })
 
       if (commit !== null) {
-        await ctx.accountManager.updateRepoRoot(did, commit.cid, commit.rev)
+        await ctx.accountManager
+          .updateRepoRoot(did, commit.cid, commit.rev)
+          .catch((err) => {
+            dbLogger.error(
+              { err, did, cid: commit.cid, rev: commit.rev },
+              'failed to update account root',
+            )
+          })
       }
+
       return {
         encoding: 'application/json',
         body: {

@@ -12,6 +12,7 @@ import {
   isDelete,
   isUpdate,
 } from '../../../../lexicon/types/com/atproto/repo/applyWrites'
+import { dbLogger } from '../../../../logger'
 import {
   BadCommitSwapError,
   InvalidRecordError,
@@ -133,7 +134,14 @@ export default function (server: Server, ctx: AppContext) {
         return commit
       })
 
-      await ctx.accountManager.updateRepoRoot(did, commit.cid, commit.rev)
+      await ctx.accountManager
+        .updateRepoRoot(did, commit.cid, commit.rev)
+        .catch((err) => {
+          dbLogger.error(
+            { err, did, cid: commit.cid, rev: commit.rev },
+            'failed to update account root',
+          )
+        })
 
       return {
         encoding: 'application/json',
