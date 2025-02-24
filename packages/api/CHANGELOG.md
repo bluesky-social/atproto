@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.14.6
+
+### Patch Changes
+
+- [#3576](https://github.com/bluesky-social/atproto/pull/3576) [`44f81f2eb`](https://github.com/bluesky-social/atproto/commit/44f81f2eb9229e21aec4472b3a05e855396dbec5) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Add chat.bsky.convo.updateAllRead lex
+
 ## 0.14.5
 
 ### Patch Changes
