@@ -592,12 +592,15 @@ export class Views {
   ): Un$Typed<LabelerViewDetailed> | undefined {
     const baseView = this.labeler(did, state)
     if (!baseView) return
-    const record = state.labelers?.get(did)
-    if (!record) return
+    const labeler = state.labelers?.get(did)
+    if (!labeler) return
 
     return {
       ...baseView,
-      policies: record.record.policies,
+      policies: labeler.record.policies,
+      reasonTypes: labeler.record.reasonTypes,
+      subjectTypes: labeler.record.subjectTypes,
+      subjectCollections: labeler.record.subjectCollections,
     }
   }
 
