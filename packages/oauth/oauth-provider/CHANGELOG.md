@@ -1,5 +1,13 @@
 # @atproto/oauth-provider
 
+## 0.4.0
+
+### Minor Changes
+
+- [#3557](https://github.com/bluesky-social/atproto/pull/3557) [`82d5a2d36`](https://github.com/bluesky-social/atproto/commit/82d5a2d3617c40caab7a18e46c709c4b3c48e7f8) Thanks [@matthieusieben](https://github.com/matthieusieben)! - DeviceManager options can now be passed as argument to the OAuthProvider constructor
+
+- [#3557](https://github.com/bluesky-social/atproto/pull/3557) [`82d5a2d36`](https://github.com/bluesky-social/atproto/commit/82d5a2d3617c40caab7a18e46c709c4b3c48e7f8) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update "trustProxy" options to allow function
+
 ## 0.3.1
 
 ### Patch Changes
