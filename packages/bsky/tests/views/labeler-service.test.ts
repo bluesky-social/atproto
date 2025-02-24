@@ -1,4 +1,8 @@
-import { AtpAgent, ComAtprotoModerationDefs, AppBskyLabelerDefs } from '@atproto/api'
+import {
+  AtpAgent,
+  ComAtprotoModerationDefs,
+  AppBskyLabelerDefs,
+} from '@atproto/api'
 import { RecordRef, SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
 import { forSnapshot, stripViewerFromLabeler } from '../_util'
