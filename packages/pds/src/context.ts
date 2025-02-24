@@ -333,6 +333,9 @@ export class AppContext {
           dpopSecret: secrets.dpopSecret,
           customization: cfg.oauth.provider.customization,
           safeFetch,
+          // @TODO: Make this configurable. The legacy implementation used to
+          // blindly trust the X-Forwarded-For header.
+          trustProxy: (_addr: string, _i: number) => true,
         })
       : undefined
 

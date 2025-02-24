@@ -22,10 +22,13 @@ export const deviceManagerOptionsSchema = z.object({
   /**
    * Controls whether the IP address is read from the `X-Forwarded-For` header
    * (if `true`), or from the `req.socket.remoteAddress` property (if `false`).
-   *
-   * @default true // (nowadays, most requests are proxied)
    */
-  trustProxy: z.boolean().default(true),
+  trustProxy: z
+    .function()
+    .args<[addr: z.ZodString, i: z.ZodNumber]>(z.string(), z.number())
+    .returns(z.boolean())
+    .optional(),
+
   /**
    * Amount of time (in ms) after which session IDs will be rotated
    *

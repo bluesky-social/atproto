@@ -1,6 +1,7 @@
 import { randomBytes } from 'node:crypto'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { parse as parseCookie, serialize as serializeCookie } from 'cookie'
+import forwarded from 'forwarded'
 import createHttpError from 'http-errors'
 import { appendHeader } from './response.js'
 import { UrlReference, urlMatch } from './url.js'
@@ -164,7 +165,19 @@ export function parseHttpCookies(
 }
 
 export type ExtractRequestMetadataOptions = {
-  trustProxy?: boolean
+  /**
+   * A function that determines whether a given IP address is trusted. The
+   * function is called with the IP addresses and its index in the list of
+   * forwarded addresses (starting from 0, 0 corresponding to the ip of the
+   * incoming HTTP connection, and the last item being the first proxied IP
+   * address in the proxy chain, deduced from the `X-Forwarded-For` header). The
+   * function should return `true` if the IP address is trusted, and `false`
+   * otherwise.
+   *
+   * @see {@link https://www.npmjs.com/package/proxy-addr} for a utility that
+   * allows you to create a trust function.
+   */
+  trustProxy?: (addr: string, i: number) => boolean
 }
 
 export type RequestMetadata = {
@@ -177,42 +190,49 @@ export function extractRequestMetadata(
   req: IncomingMessage,
   options?: ExtractRequestMetadataOptions,
 ): RequestMetadata {
-  const userAgent = req.headers['user-agent'] || undefined
-  const ipAddress = extractIpAddress(req, options) || null
-  const port = extractPort(req, options)
-
-  if (ipAddress == null || port == null) {
-    throw new Error('Could not determine IP address')
+  const ip = extractIp(req, options)
+  return {
+    userAgent: req.headers['user-agent'],
+    ipAddress: ip,
+    port: extractPort(req, ip),
   }
-
-  return { userAgent, ipAddress, port }
 }
 
-function extractIpAddress(
+function extractIp(
   req: IncomingMessage,
   options?: ExtractRequestMetadataOptions,
-): string | undefined {
-  // Express app compatibility
-  if ('ip' in req && typeof req.ip === 'string') {
-    return req.ip
-  }
-
-  if (options?.trustProxy) {
-    const forwardedFor = req.headers['x-forwarded-for']
-    if (typeof forwardedFor === 'string') {
-      const firstForward = forwardedFor.split(',')[0]!.trim()
-      if (firstForward) return firstForward
+): string {
+  const trust = options?.trustProxy
+  if (trust) {
+    const ips = forwarded(req)
+    for (let i = 0; i < ips.length; i++) {
+      const isTrusted = trust(ips[i], i)
+      if (!isTrusted) return ips[i]
     }
+    // Let's return the last ("furthest") IP address in the chain if all of them
+    // are trusted. Note that this may indicate an issue with either the trust
+    // function (too permissive), or the proxy configuration (one of them not
+    // setting the X-Forwarded-For header).
+    const ip = ips[ips.length - 1]
+    if (ip) return ip
   }
 
-  return req.socket.remoteAddress
+  // Express app compatibility (see "trust proxy" setting)
+  if ('ip' in req) {
+    const ip = req.ip
+    if (typeof ip === 'string') return ip
+  }
+
+  const ip = req.socket.remoteAddress
+  if (ip) return ip
+
+  throw new Error('Could not determine IP address')
 }
 
-function extractPort(
-  req: IncomingMessage,
-  options?: ExtractRequestMetadataOptions,
-): number | undefined {
-  if (options?.trustProxy) {
+function extractPort(req: IncomingMessage, ip: string): number {
+  if (ip !== req.socket.remoteAddress) {
+    // Trust the X-Forwarded-Port header only if the IP address was a trusted
+    // proxied IP.
     const forwardedPort = req.headers['x-forwarded-port']
     if (typeof forwardedPort === 'string') {
       const port = Number(forwardedPort.trim())
@@ -223,5 +243,8 @@ function extractPort(
     }
   }
 
-  return req.socket.remotePort
+  const port = req.socket.remotePort
+  if (port != null) return port
+
+  throw new Error('Could not determine port')
 }
