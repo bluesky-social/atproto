@@ -284,10 +284,10 @@ export function validateModEventResolveAppeal<V>(v: V) {
   return validate<ModEventResolveAppeal & V>(v, id, hashModEventResolveAppeal)
 }
 
-/** Add a comment to a subject */
+/** Add a comment to a subject. An empty comment will clear any previously set sticky comment. */
 export interface ModEventComment {
   $type?: 'tools.ozone.moderation.defs#modEventComment'
-  comment: string
+  comment?: string
   /** Make the comment persistent on the subject */
   sticky?: boolean
 }
