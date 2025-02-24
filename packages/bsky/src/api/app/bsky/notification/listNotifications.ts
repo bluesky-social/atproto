@@ -15,7 +15,7 @@ import {
 import { Notification } from '../../../../proto/bsky_pb'
 import { uriToDid as didFromUri } from '../../../../util/uris'
 import { Views } from '../../../../views'
-import { clearlyBadCursor, resHeaders } from '../../../util'
+import { resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   const listNotifications = createPipeline(
@@ -102,9 +102,6 @@ const skeleton = async (
   }
   const viewer = params.hydrateCtx.viewer
   const priority = params.priority ?? (await getPriority(ctx, viewer))
-  if (clearlyBadCursor(params.cursor)) {
-    return { notifs: [], priority }
-  }
   const [res, lastSeenRes] = await Promise.all([
     paginateNotifications({
       ctx,

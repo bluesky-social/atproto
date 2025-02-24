@@ -2,8 +2,8 @@ import { sql } from 'kysely'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AnyQb, DbRef } from './util'
 
-export type Cursor = { primary: string; secondary: string }
-export type LabeledResult = {
+type KeysetCursor = { primary: string; secondary: string }
+type KeysetLabeledResult = {
   primary: string | number
   secondary: string | number
 }
@@ -22,14 +22,14 @@ export type LabeledResult = {
  *   Result -*-> LabeledResult <-*-> Cursor <--> packed/string cursor
  *                     ↳ SQL Condition
  */
-export abstract class GenericKeyset<R, LR extends LabeledResult> {
+export abstract class GenericKeyset<R, LR extends KeysetLabeledResult> {
   constructor(
     public primary: DbRef,
     public secondary: DbRef,
   ) {}
   abstract labelResult(result: R): LR
-  abstract labeledResultToCursor(labeled: LR): Cursor
-  abstract cursorToLabeledResult(cursor: Cursor): LR
+  abstract labeledResultToCursor(labeled: LR): KeysetCursor
+  abstract cursorToLabeledResult(cursor: KeysetCursor): LR
   packFromResult(results: R | R[]): string | undefined {
     const result = Array.isArray(results) ? results.at(-1) : results
     if (!result) return
@@ -45,11 +45,11 @@ export abstract class GenericKeyset<R, LR extends LabeledResult> {
     if (!cursor) return
     return this.cursorToLabeledResult(cursor)
   }
-  packCursor(cursor?: Cursor): string | undefined {
+  packCursor(cursor?: KeysetCursor): string | undefined {
     if (!cursor) return
     return `${cursor.primary}__${cursor.secondary}`
   }
-  unpackCursor(cursorStr?: string): Cursor | undefined {
+  unpackCursor(cursorStr?: string): KeysetCursor | undefined {
     if (!cursorStr) return
     const result = cursorStr.split('__')
     const [primary, secondary, ...others] = result
@@ -82,7 +82,7 @@ export abstract class GenericKeyset<R, LR extends LabeledResult> {
 }
 
 type SortAtCidResult = { sortAt: string; cid: string }
-type TimeCidLabeledResult = Cursor
+type TimeCidLabeledResult = KeysetCursor
 
 export class TimeCidKeyset<
   TimeCidResult = SortAtCidResult,
@@ -97,7 +97,7 @@ export class TimeCidKeyset<
       secondary: labeled.secondary,
     }
   }
-  cursorToLabeledResult(cursor: Cursor) {
+  cursorToLabeledResult(cursor: KeysetCursor) {
     const primaryDate = new Date(parseInt(cursor.primary, 10))
     if (isNaN(primaryDate.getTime())) {
       throw new InvalidRequestError('Malformed cursor')
@@ -170,4 +170,123 @@ export const paginate = <
         ),
     )
     .if(!!keysetSql, (qb) => (keysetSql ? qb.where(keysetSql) : qb)) as QB
+}
+
+type SingleKeyCursor = {
+  primary: string
+}
+
+type SingleKeyLabeledResult = {
+  primary: string | number
+}
+
+/**
+ * GenericSingleKey is similar to {@link GenericKeyset} but for a single key cursor.
+ */
+export abstract class GenericSingleKey<R, LR extends SingleKeyLabeledResult> {
+  constructor(public primary: DbRef) {}
+  abstract labelResult(result: R): LR
+  abstract labeledResultToCursor(labeled: LR): SingleKeyCursor
+  abstract cursorToLabeledResult(cursor: SingleKeyCursor): LR
+  packFromResult(results: R | R[]): string | undefined {
+    const result = Array.isArray(results) ? results.at(-1) : results
+    if (!result) return
+    return this.pack(this.labelResult(result))
+  }
+  pack(labeled?: LR): string | undefined {
+    if (!labeled) return
+    const cursor = this.labeledResultToCursor(labeled)
+    return this.packCursor(cursor)
+  }
+  unpack(cursorStr?: string): LR | undefined {
+    const cursor = this.unpackCursor(cursorStr)
+    if (!cursor) return
+    return this.cursorToLabeledResult(cursor)
+  }
+  packCursor(cursor?: SingleKeyCursor): string | undefined {
+    if (!cursor) return
+    return cursor.primary
+  }
+  unpackCursor(cursorStr?: string): SingleKeyCursor | undefined {
+    if (!cursorStr) return
+    const result = cursorStr.split('__')
+    const [primary, ...others] = result
+    if (!primary || others.length > 0) {
+      throw new InvalidRequestError('Malformed cursor')
+    }
+    return {
+      primary,
+    }
+  }
+  getSql(labeled?: LR, direction?: 'asc' | 'desc') {
+    if (labeled === undefined) return
+    if (direction === 'asc') {
+      return sql`${this.primary} > ${labeled.primary}`
+    }
+    return sql`${this.primary} < ${labeled.primary}`
+  }
+}
+
+type SortAtResult = { sortAt: string }
+type TimeLabeledResult = SingleKeyCursor
+
+export class IsoTimeKey<TimeResult = SortAtResult> extends GenericSingleKey<
+  TimeResult,
+  TimeLabeledResult
+> {
+  labelResult(result: TimeResult): TimeLabeledResult
+  labelResult<TimeResult extends SortAtResult>(result: TimeResult) {
+    return { primary: result.sortAt }
+  }
+  labeledResultToCursor(labeled: TimeLabeledResult) {
+    return {
+      primary: new Date(labeled.primary).toISOString(),
+    }
+  }
+  cursorToLabeledResult(cursor: SingleKeyCursor) {
+    const primaryDate = new Date(cursor.primary)
+    if (isNaN(primaryDate.getTime())) {
+      throw new InvalidRequestError('Malformed cursor')
+    }
+    return {
+      primary: primaryDate.toISOString(),
+    }
+  }
+}
+
+export class IsoSortAtKey extends IsoTimeKey<{
+  sortAt: string
+}> {
+  labelResult(result: { sortAt: string }) {
+    return { primary: result.sortAt }
+  }
+}
+
+export const paginateWithSingleKey = <
+  QB extends AnyQb,
+  K extends GenericSingleKey<unknown, any>,
+>(
+  qb: QB,
+  opts: {
+    limit?: number
+    cursor?: string
+    direction?: 'asc' | 'desc'
+    key: K
+    // By default, pg does nullsFirst
+    nullsLast?: boolean
+  },
+): QB => {
+  const { limit, cursor, key, direction = 'desc', nullsLast } = opts
+  const keySql = key.getSql(key.unpack(cursor), direction)
+  return qb
+    .if(!!limit, (q) => q.limit(limit as number))
+    .if(!nullsLast, (q) => q.orderBy(key.primary, direction))
+    .if(!!nullsLast, (q) =>
+      q.orderBy(
+        direction === 'asc'
+          ? sql`${key.primary} asc nulls last`
+          : sql`${key.primary} desc nulls last`,
+      ),
+    )
+    .if(!!keySql, (qb) => (keySql ? qb.where(keySql) : qb)) as QB
 }

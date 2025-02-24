@@ -9233,6 +9233,7 @@ export const schemaDict = {
             },
             cursor: {
               type: 'string',
+              format: 'datetime',
             },
             seenAt: {
               type: 'string',
@@ -9248,6 +9249,7 @@ export const schemaDict = {
             properties: {
               cursor: {
                 type: 'string',
+                format: 'datetime',
               },
               notifications: {
                 type: 'array',

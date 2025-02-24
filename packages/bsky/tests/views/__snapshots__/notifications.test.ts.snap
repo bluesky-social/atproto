@@ -384,7 +384,7 @@ Array [
 
 exports[`notification views fetches notifications with default priority 1`] = `
 Object {
-  "cursor": "0000000000000__bafycid",
+  "cursor": "1970-01-01T00:00:00.000Z",
   "notifications": Array [
     Object {
       "author": Object {
@@ -486,7 +486,7 @@ Object {
 
 exports[`notification views fetches notifications with explicit priority 1`] = `
 Object {
-  "cursor": "0000000000000__bafycid",
+  "cursor": "1970-01-01T00:00:00.000Z",
   "notifications": Array [
     Object {
       "author": Object {
@@ -588,7 +588,7 @@ Object {
 
 exports[`notification views fetches notifications with explicit priority 2`] = `
 Object {
-  "cursor": "0000000000000__bafycid",
+  "cursor": "1970-01-01T00:00:00.000Z",
   "notifications": Array [
     Object {
       "author": Object {
