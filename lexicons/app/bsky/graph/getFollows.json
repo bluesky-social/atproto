@@ -34,11 +34,20 @@
               "type": "array",
               "items": {
                 "type": "ref",
-                "ref": "app.bsky.actor.defs#profileView"
+                "ref": "#follow"
               }
             }
           }
         }
+      }
+    },
+    "follow": {
+      "type": "object",
+      "required": ["indexedAt", "createdAt", "actor"],
+      "properties": {
+        "indexedAt": { "type": "string", "format": "datetime" },
+        "createdAt": { "type": "string", "format": "datetime" },
+        "actor": { "type": "ref", "ref": "app.bsky.actor.defs#profileView" }
       }
     }
   }
