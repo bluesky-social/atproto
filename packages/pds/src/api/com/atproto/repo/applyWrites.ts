@@ -119,18 +119,20 @@ export default function (server: Server, ctx: AppContext) {
       const swapCommitCid = swapCommit ? CID.parse(swapCommit) : undefined
 
       const commit = await ctx.actorStore.transact(did, async (actorTxn) => {
-        try {
-          return await actorTxn.repo.processWrites(writes, swapCommitCid)
-        } catch (err) {
-          if (err instanceof BadCommitSwapError) {
-            throw new InvalidRequestError(err.message, 'InvalidSwap')
-          } else {
-            throw err
-          }
-        }
+        const commit = await actorTxn.repo
+          .processWrites(writes, swapCommitCid)
+          .catch((err) => {
+            if (err instanceof BadCommitSwapError) {
+              throw new InvalidRequestError(err.message, 'InvalidSwap')
+            } else {
+              throw err
+            }
+          })
+
+        await ctx.sequencer.sequenceCommit(did, commit)
+        return commit
       })
 
-      await ctx.sequencer.sequenceCommit(did, commit)
       await ctx.accountManager.updateRepoRoot(did, commit.cid, commit.rev)
 
       return {

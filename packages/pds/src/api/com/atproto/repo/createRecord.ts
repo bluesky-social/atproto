@@ -82,21 +82,18 @@ export default function (server: Server, ctx: AppContext) {
           }),
         )
         const writes = [...backlinkDeletions, write]
-        try {
-          const commit = await actorTxn.repo.processWrites(
-            writes,
-            swapCommitCid,
-          )
-          return commit
-        } catch (err) {
-          if (err instanceof BadCommitSwapError) {
-            throw new InvalidRequestError(err.message, 'InvalidSwap')
-          }
-          throw err
-        }
+        const commit = await actorTxn.repo
+          .processWrites(writes, swapCommitCid)
+          .catch((err) => {
+            if (err instanceof BadCommitSwapError) {
+              throw new InvalidRequestError(err.message, 'InvalidSwap')
+            }
+            throw err
+          })
+        await ctx.sequencer.sequenceCommit(did, commit)
+        return commit
       })
 
-      await ctx.sequencer.sequenceCommit(did, commit)
       await ctx.accountManager.updateRepoRoot(did, commit.cid, commit.rev)
 
       return {

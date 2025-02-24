@@ -56,22 +56,25 @@ export default function (server: Server, ctx: AppContext) {
         if (!record) {
           return null // No-op if record already doesn't exist
         }
-        try {
-          return await actorTxn.repo.processWrites([write], swapCommitCid)
-        } catch (err) {
-          if (
-            err instanceof BadCommitSwapError ||
-            err instanceof BadRecordSwapError
-          ) {
-            throw new InvalidRequestError(err.message, 'InvalidSwap')
-          } else {
-            throw err
-          }
-        }
+
+        const commit = await actorTxn.repo
+          .processWrites([write], swapCommitCid)
+          .catch((err) => {
+            if (
+              err instanceof BadCommitSwapError ||
+              err instanceof BadRecordSwapError
+            ) {
+              throw new InvalidRequestError(err.message, 'InvalidSwap')
+            } else {
+              throw err
+            }
+          })
+
+        await ctx.sequencer.sequenceCommit(did, commit)
+        return commit
       })
 
       if (commit !== null) {
-        await ctx.sequencer.sequenceCommit(did, commit)
         await ctx.accountManager.updateRepoRoot(did, commit.cid, commit.rev)
       }
       return {

@@ -10,7 +10,6 @@ import { Record as ProfileRecord } from '../../../../lexicon/types/app/bsky/acto
 import {
   BadCommitSwapError,
   BadRecordSwapError,
-  CommitDataWithOps,
   InvalidRecordError,
   PreparedCreate,
   PreparedUpdate,
@@ -104,25 +103,26 @@ export default function (server: Server, ctx: AppContext) {
             }
           }
 
-          let commit: CommitDataWithOps
-          try {
-            commit = await actorTxn.repo.processWrites([write], swapCommitCid)
-          } catch (err) {
-            if (
-              err instanceof BadCommitSwapError ||
-              err instanceof BadRecordSwapError
-            ) {
-              throw new InvalidRequestError(err.message, 'InvalidSwap')
-            } else {
-              throw err
-            }
-          }
+          const commit = await actorTxn.repo
+            .processWrites([write], swapCommitCid)
+            .catch((err) => {
+              if (
+                err instanceof BadCommitSwapError ||
+                err instanceof BadRecordSwapError
+              ) {
+                throw new InvalidRequestError(err.message, 'InvalidSwap')
+              } else {
+                throw err
+              }
+            })
+
+          await ctx.sequencer.sequenceCommit(did, commit)
+
           return { commit, write }
         },
       )
 
       if (commit !== null) {
-        await ctx.sequencer.sequenceCommit(did, commit)
         await ctx.accountManager.updateRepoRoot(did, commit.cid, commit.rev)
       }
 
