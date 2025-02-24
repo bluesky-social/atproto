@@ -1,5 +1,14 @@
 # @atproto/pds
 
+## 0.4.103
+
+### Patch Changes
+
+- [#3557](https://github.com/bluesky-social/atproto/pull/3557) [`82d5a2d36`](https://github.com/bluesky-social/atproto/commit/82d5a2d3617c40caab7a18e46c709c4b3c48e7f8) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Only trust one level of proxying when computing IP during OAuthFlows
+
+- Updated dependencies [[`82d5a2d36`](https://github.com/bluesky-social/atproto/commit/82d5a2d3617c40caab7a18e46c709c4b3c48e7f8), [`82d5a2d36`](https://github.com/bluesky-social/atproto/commit/82d5a2d3617c40caab7a18e46c709c4b3c48e7f8)]:
+  - @atproto/oauth-provider@0.4.0
+
 ## 0.4.102
 
 ### Patch Changes
