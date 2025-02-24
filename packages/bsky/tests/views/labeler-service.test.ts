@@ -1,7 +1,7 @@
 import assert from 'node:assert'
 import {
-  AtpAgent,
   AppBskyLabelerDefs,
+  AtpAgent,
   ComAtprotoModerationDefs,
 } from '@atproto/api'
 import { RecordRef, SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
