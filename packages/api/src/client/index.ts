@@ -196,6 +196,7 @@ import * as ChatBskyConvoMuteConvo from './types/chat/bsky/convo/muteConvo.js'
 import * as ChatBskyConvoSendMessage from './types/chat/bsky/convo/sendMessage.js'
 import * as ChatBskyConvoSendMessageBatch from './types/chat/bsky/convo/sendMessageBatch.js'
 import * as ChatBskyConvoUnmuteConvo from './types/chat/bsky/convo/unmuteConvo.js'
+import * as ChatBskyConvoUpdateAllRead from './types/chat/bsky/convo/updateAllRead.js'
 import * as ChatBskyConvoUpdateRead from './types/chat/bsky/convo/updateRead.js'
 import * as ChatBskyModerationGetActorMetadata from './types/chat/bsky/moderation/getActorMetadata.js'
 import * as ChatBskyModerationGetMessageContext from './types/chat/bsky/moderation/getMessageContext.js'
@@ -429,6 +430,7 @@ export * as ChatBskyConvoMuteConvo from './types/chat/bsky/convo/muteConvo.js'
 export * as ChatBskyConvoSendMessage from './types/chat/bsky/convo/sendMessage.js'
 export * as ChatBskyConvoSendMessageBatch from './types/chat/bsky/convo/sendMessageBatch.js'
 export * as ChatBskyConvoUnmuteConvo from './types/chat/bsky/convo/unmuteConvo.js'
+export * as ChatBskyConvoUpdateAllRead from './types/chat/bsky/convo/updateAllRead.js'
 export * as ChatBskyConvoUpdateRead from './types/chat/bsky/convo/updateRead.js'
 export * as ChatBskyModerationGetActorMetadata from './types/chat/bsky/moderation/getActorMetadata.js'
 export * as ChatBskyModerationGetMessageContext from './types/chat/bsky/moderation/getMessageContext.js'
@@ -3558,6 +3560,18 @@ export class ChatBskyConvoNS {
   ): Promise<ChatBskyConvoUnmuteConvo.Response> {
     return this._client.call(
       'chat.bsky.convo.unmuteConvo',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
+  updateAllRead(
+    data?: ChatBskyConvoUpdateAllRead.InputSchema,
+    opts?: ChatBskyConvoUpdateAllRead.CallOptions,
+  ): Promise<ChatBskyConvoUpdateAllRead.Response> {
+    return this._client.call(
+      'chat.bsky.convo.updateAllRead',
       opts?.qp,
       data,
       opts,
