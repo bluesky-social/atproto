@@ -32,7 +32,7 @@ export class BasicHostList implements HostList {
     this.update()
   }
 
-  update() {
+  private update() {
     for (const handler of this.handlers) {
       handler(this.hosts)
     }
@@ -52,13 +52,9 @@ export class EtcdHostList implements HostList {
   private inner = new BasicHostList(new Set())
   private fallback: Set<string>
 
-  constructor(
-    private etcd: Etcd3,
-    private prefix: string,
-    fallback?: string[],
-  ) {
+  constructor(etcd: Etcd3, prefix: string, fallback?: string[]) {
     this.fallback = new Set(fallback)
-    this.kv = new EtcdMap(this.etcd, this.prefix)
+    this.kv = new EtcdMap(etcd, prefix)
     this.update() // init fallback if necessary
     this.kv.watcher.on('connected', (res) => {
       logger.warn(
@@ -87,7 +83,7 @@ export class EtcdHostList implements HostList {
     return this.inner.get()
   }
 
-  update() {
+  private update() {
     const hosts = new Set<string>()
     for (const host of this.kv.values()) {
       if (URL.canParse(host)) {

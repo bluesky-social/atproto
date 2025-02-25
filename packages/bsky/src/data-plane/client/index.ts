@@ -60,8 +60,8 @@ export { Code }
  * and other internal state when the underlying HostList is updated.
  */
 class DataPlaneClients {
-  clients: DataPlaneClient[] = []
-  clientsByHost = new Map<string, DataPlaneClient>()
+  private clients: DataPlaneClient[] = []
+  private clientsByHost = new Map<string, DataPlaneClient>()
 
   constructor(
     private hostList: HostList,
@@ -74,7 +74,7 @@ class DataPlaneClients {
     this.hostList.onUpdate(() => this.refresh())
   }
 
-  get() {
+  get(): readonly DataPlaneClient[] {
     return this.clients
   }
 
@@ -110,14 +110,14 @@ const createBaseClient = (
 }
 
 const getRemainingClients = (
-  clients: DataPlaneClient[],
+  clients: readonly DataPlaneClient[],
   lastClient: DataPlaneClient,
 ) => {
   if (clients.length < 2) return clients // no clients to choose from
   return clients.filter((c) => c !== lastClient)
 }
 
-const randomElement = <T>(arr: T[]): T | undefined => {
+const randomElement = <T>(arr: readonly T[]): T | undefined => {
   if (arr.length === 0) return
   return arr[randomInt(arr.length)]
 }
