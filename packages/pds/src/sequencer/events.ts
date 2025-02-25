@@ -3,7 +3,7 @@ import { cborEncode, noUndefinedVals, schema } from '@atproto/common'
 import { BlockMap, blocksToCarFile } from '@atproto/repo'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AccountStatus } from '../account-manager'
-import { CommitDataWithOps } from '../repo'
+import { CommitDataWithOps, SyncEvtData } from '../repo'
 import { RepoSeqInsert } from './db'
 
 export const formatSeqCommit = async (
@@ -41,17 +41,19 @@ export const formatSeqCommit = async (
   }
 }
 
-export const formatSeqHandleUpdate = async (
+export const formatSeqSyncEvt = async (
   did: string,
-  handle: string,
+  data: SyncEvtData,
 ): Promise<RepoSeqInsert> => {
-  const evt: HandleEvt = {
+  const blocks = await blocksToCarFile(data.cid, data.blocks)
+  const evt: SyncEvt = {
     did,
-    handle,
+    rev: data.rev,
+    blocks,
   }
   return {
     did,
-    eventType: 'handle',
+    eventType: 'sync',
     event: cborEncode(evt),
     sequencedAt: new Date().toISOString(),
   }
@@ -95,20 +97,6 @@ export const formatSeqAccountEvt = async (
   }
 }
 
-export const formatSeqTombstone = async (
-  did: string,
-): Promise<RepoSeqInsert> => {
-  const evt: TombstoneEvt = {
-    did,
-  }
-  return {
-    did,
-    eventType: 'tombstone',
-    event: cborEncode(evt),
-    sequencedAt: new Date().toISOString(),
-  }
-}
-
 export const commitEvtOp = z.object({
   action: z.union([
     z.literal('create'),
@@ -135,11 +123,12 @@ export const commitEvt = z.object({
 })
 export type CommitEvt = z.infer<typeof commitEvt>
 
-export const handleEvt = z.object({
+export const syncEvt = z.object({
   did: z.string(),
-  handle: z.string(),
+  blocks: schema.bytes,
+  rev: z.string(),
 })
-export type HandleEvt = z.infer<typeof handleEvt>
+export type SyncEvt = z.infer<typeof syncEvt>
 
 export const identityEvt = z.object({
   did: z.string(),
@@ -161,22 +150,17 @@ export const accountEvt = z.object({
 })
 export type AccountEvt = z.infer<typeof accountEvt>
 
-export const tombstoneEvt = z.object({
-  did: z.string(),
-})
-export type TombstoneEvt = z.infer<typeof tombstoneEvt>
-
 type TypedCommitEvt = {
   type: 'commit'
   seq: number
   time: string
   evt: CommitEvt
 }
-type TypedHandleEvt = {
-  type: 'handle'
+type TypedSyncEvt = {
+  type: 'sync'
   seq: number
   time: string
-  evt: HandleEvt
+  evt: SyncEvt
 }
 type TypedIdentityEvt = {
   type: 'identity'
@@ -190,15 +174,8 @@ type TypedAccountEvt = {
   time: string
   evt: AccountEvt
 }
-type TypedTombstoneEvt = {
-  type: 'tombstone'
-  seq: number
-  time: string
-  evt: TombstoneEvt
-}
 export type SeqEvt =
   | TypedCommitEvt
-  | TypedHandleEvt
+  | TypedSyncEvt
   | TypedIdentityEvt
   | TypedAccountEvt
-  | TypedTombstoneEvt
