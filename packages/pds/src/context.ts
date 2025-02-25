@@ -26,7 +26,7 @@ import {
 } from '@atproto-labs/fetch-node'
 import { AccountManager } from './account-manager'
 import { ActorStore } from './actor-store/actor-store'
-import { authPassthru, forwardFor } from './api/proxy'
+import { authPassthru, forwardedFor } from './api/proxy'
 import {
   AuthVerifier,
   createPublicKeyObject,
@@ -407,11 +407,11 @@ export class AppContext {
       this.cfg.entryway.did,
       lxm,
     )
-    return forwardFor(req, headers)
+    return forwardedFor(req, headers)
   }
 
   entrywayPassthruHeaders(req: express.Request) {
-    return forwardFor(req, authPassthru(req))
+    return forwardedFor(req, authPassthru(req))
   }
 
   async serviceAuthHeaders(did: string, aud: string, lxm: string) {

@@ -122,7 +122,7 @@ export class PDS {
     server = API(server, ctx)
 
     const app = express()
-    app.set('trust proxy', true)
+    app.set('trust proxy', ['loopback', 'linklocal', 'uniquelocal'])
     app.use(loggerMiddleware)
     app.use(compression())
     app.use(authRoutes.createRouter(ctx)) // Before CORS

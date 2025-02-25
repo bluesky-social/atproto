@@ -36,19 +36,17 @@ export function authPassthru(req: IncomingMessage) {
   }
 }
 
-export const forwardFor = (
+// @NOTE this function may mutate its params input
+// future improvement here would be to forward along all untrusted ips rather than just the first (req.ip)
+export const forwardedFor = (
   req: express.Request,
   params: HeadersParam | undefined,
 ) => {
   const result: HeadersParam = params ?? { headers: {} }
-  let forwarded: string[] = []
-  if (req.headers['x-forwarded-for']) {
-    forwarded = forwarded.concat(req.headers['x-forwarded-for'])
+  const ip = req.ip
+  if (ip) {
+    result.headers['x-forwarded-for'] = ip
   }
-  if (req.socket.remoteAddress) {
-    forwarded.push(req.socket.remoteAddress)
-  }
-  result.headers['x-forwarded-for'] = forwarded.join(',')
   return result
 }
 
