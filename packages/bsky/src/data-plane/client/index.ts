@@ -9,7 +9,7 @@ import {
 } from '@connectrpc/connect'
 import { createGrpcTransport } from '@connectrpc/connect-node'
 import { Service } from '../../proto/bsky_connect'
-import { HostList, BasicHostList } from './hosts'
+import { BasicHostList, HostList } from './hosts'
 
 export * from './hosts'
 export * from './util'

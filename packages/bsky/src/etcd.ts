@@ -4,6 +4,7 @@ import { Etcd3, Watcher } from 'etcd3'
 export class EtcdMap {
   inner = new Map<string, VersionedValue>()
   watcher: Watcher
+  connecting: Promise<void> | undefined
   handlers: ((self: EtcdMap) => void)[] = []
 
   constructor(
@@ -11,6 +12,7 @@ export class EtcdMap {
     private prefix = '',
   ) {
     this.watcher = etcd.watch().prefix(prefix).watcher()
+    this.connecting = connectWatcher(this.watcher)
   }
 
   async connect() {
@@ -26,7 +28,9 @@ export class EtcdMap {
       const rev = revToInt(kv.mod_revision)
       this.apply(key, { value, rev })
     })
-    await connectWatcher(this.watcher)
+    await this.connecting?.finally(() => {
+      this.connecting = undefined
+    })
     const { kvs } = await this.etcd.getAll().prefix(this.prefix).exec()
     for (const kv of kvs) {
       const key = kv.key.toString()

@@ -49,6 +49,7 @@ export class EtcdHostList implements HostList {
   ) {
     this.fallback = new Set(fallback)
     this.kv = new EtcdMap(this.etcd, this.prefix)
+    this.update() // init fallback if necessary
     this.kv.watcher.on('connected', (res) => {
       logger.warn(
         { watcherId: this.kv.watcher.id, header: res.header },
