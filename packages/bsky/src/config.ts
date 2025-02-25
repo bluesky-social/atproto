@@ -10,7 +10,9 @@ export interface ServerConfigValues {
   alternateAudienceDids: string[]
   entrywayJwtPublicKeyHex?: string
   // external services
+  etcdHosts: string[]
   dataplaneUrls: string[]
+  dataplaneUrlsEtcdKeyPrefix?: string
   dataplaneHttpVersion?: '1.1' | '2'
   dataplaneIgnoreBadTls?: boolean
   bsyncUrl: string
@@ -83,6 +85,10 @@ export class ServerConfig {
       ? process.env.BSKY_HANDLE_RESOLVE_NAMESERVERS.split(',')
       : []
     const cdnUrl = process.env.BSKY_CDN_URL || process.env.BSKY_IMG_URI_ENDPOINT
+    let etcdHosts = overrides?.etcdHosts
+    etcdHosts ??= process.env.BSKY_ETCD_HOSTS
+      ? process.env.BSKY_ETCD_HOSTS.split(',')
+      : []
     // e.g. https://video.invalid/watch/%s/%s/playlist.m3u8
     const videoPlaylistUrlPattern = process.env.BSKY_VIDEO_PLAYLIST_URL_PATTERN
     // e.g. https://video.invalid/watch/%s/%s/thumbnail.jpg
@@ -101,6 +107,8 @@ export class ServerConfig {
     dataplaneUrls ??= process.env.BSKY_DATAPLANE_URLS
       ? process.env.BSKY_DATAPLANE_URLS.split(',')
       : []
+    const dataplaneUrlsEtcdKeyPrefix =
+      process.env.BSKY_DATAPLANE_URLS_ETCD_KEY_PREFIX || undefined
     const dataplaneHttpVersion = process.env.BSKY_DATAPLANE_HTTP_VERSION || '2'
     const dataplaneIgnoreBadTls =
       process.env.BSKY_DATAPLANE_IGNORE_BAD_TLS === 'true'
@@ -133,7 +141,10 @@ export class ServerConfig {
     )
     const modServiceDid = process.env.MOD_SERVICE_DID
     assert(modServiceDid)
-    assert(dataplaneUrls.length)
+    assert(
+      dataplaneUrls.length || (etcdHosts.length && dataplaneUrlsEtcdKeyPrefix),
+      'dataplane urls are not configured directly nor with etcd',
+    )
     assert(dataplaneHttpVersion === '1.1' || dataplaneHttpVersion === '2')
     const statsigKey =
       process.env.NODE_ENV === 'test'
@@ -185,7 +196,9 @@ export class ServerConfig {
       serverDid,
       alternateAudienceDids,
       entrywayJwtPublicKeyHex,
+      etcdHosts,
       dataplaneUrls,
+      dataplaneUrlsEtcdKeyPrefix,
       dataplaneHttpVersion,
       dataplaneIgnoreBadTls,
       searchUrl,
@@ -265,6 +278,14 @@ export class ServerConfig {
 
   get entrywayJwtPublicKeyHex() {
     return this.cfg.entrywayJwtPublicKeyHex
+  }
+
+  get etcdHosts() {
+    return this.cfg.etcdHosts
+  }
+
+  get dataplaneUrlsEtcdKeyPrefix() {
+    return this.cfg.dataplaneUrlsEtcdKeyPrefix
   }
 
   get dataplaneUrls() {

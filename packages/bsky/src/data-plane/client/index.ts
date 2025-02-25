@@ -9,7 +9,7 @@ import {
 } from '@connectrpc/connect'
 import { createGrpcTransport } from '@connectrpc/connect-node'
 import { Service } from '../../proto/bsky_connect'
-import { BasicHostList, HostList } from './hosts'
+import { HostList } from './hosts'
 
 export * from './hosts'
 export * from './util'
@@ -19,14 +19,10 @@ type HttpVersion = '1.1' | '2'
 const MAX_RETRIES = 3
 
 export const createDataPlaneClient = (
-  hostList: HostList | string[],
+  hostList: HostList,
   opts: { httpVersion?: HttpVersion; rejectUnauthorized?: boolean },
 ) => {
-  const clients = new DataPlaneClients(
-    Array.isArray(hostList) ? new BasicHostList(hostList) : hostList,
-    opts,
-  )
-  assert(clients.get().length, 'no clients available')
+  const clients = new DataPlaneClients(hostList, opts)
   return makeAnyClient(Service, (method) => {
     return async (...args) => {
       let tries = 0
@@ -58,6 +54,11 @@ export const createDataPlaneClient = (
 
 export { Code }
 
+/**
+ * Uses a reactive HostList in order to maintain a pool of DataPlaneClients.
+ * Each DataPlaneClient is cached per host so that it maintains connections
+ * and other internal state when the underlying HostList is updated.
+ */
 class DataPlaneClients {
   clients: DataPlaneClient[] = []
   clientsByHost = new Map<string, DataPlaneClient>()

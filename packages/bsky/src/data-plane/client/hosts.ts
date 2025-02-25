@@ -2,6 +2,9 @@ import { Etcd3 } from 'etcd3'
 import { EtcdMap } from '../../etcd'
 import { dataplaneLogger as logger } from '../../logger'
 
+/**
+ * Interface for a reactive list of hosts, i.e. for use with the dataplane client.
+ */
 export interface HostList {
   get: () => Iterable<string>
   onUpdate(handler: HostListHandler): void
@@ -9,6 +12,9 @@ export interface HostList {
 
 type HostListHandler = (hosts: Iterable<string>) => void
 
+/**
+ * Maintains a reactive HostList based on a simple setter.
+ */
 export class BasicHostList implements HostList {
   private hosts: Iterable<string>
   private handlers: HostListHandler[] = []
@@ -37,6 +43,10 @@ export class BasicHostList implements HostList {
   }
 }
 
+/**
+ * Maintains a reactive HostList based on etcd key values under a given key prefix.
+ * When fallback is provided, ensures that this fallback is used whenever no hosts are available.
+ */
 export class EtcdHostList implements HostList {
   private kv: EtcdMap
   private inner = new BasicHostList(new Set())

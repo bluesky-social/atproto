@@ -3,6 +3,7 @@ import http from 'node:http'
 import { AddressInfo } from 'node:net'
 import compression from 'compression'
 import cors from 'cors'
+import { Etcd3 } from 'etcd3'
 import express from 'express'
 import { HttpTerminator, createHttpTerminator } from 'http-terminator'
 import { AtpAgent } from '@atproto/api'
@@ -16,7 +17,11 @@ import { authWithApiKey as bsyncAuth, createBsyncClient } from './bsync'
 import { ServerConfig } from './config'
 import { AppContext } from './context'
 import { authWithApiKey as courierAuth, createCourierClient } from './courier'
-import { createDataPlaneClient } from './data-plane/client'
+import {
+  BasicHostList,
+  EtcdHostList,
+  createDataPlaneClient,
+} from './data-plane/client'
 import * as error from './error'
 import { FeatureGates } from './feature-gates'
 import { Hydrator } from './hydration/hydrator'
@@ -98,7 +103,20 @@ export class BskyAppView {
       )
     }
 
-    const dataplane = createDataPlaneClient(config.dataplaneUrls, {
+    const etcd = config.etcdHosts.length
+      ? new Etcd3({ hosts: config.etcdHosts })
+      : undefined
+
+    const dataplaneHostList =
+      etcd && config.dataplaneUrlsEtcdKeyPrefix
+        ? new EtcdHostList(
+            etcd,
+            config.dataplaneUrlsEtcdKeyPrefix,
+            config.dataplaneUrls,
+          )
+        : new BasicHostList(config.dataplaneUrls)
+
+    const dataplane = createDataPlaneClient(dataplaneHostList, {
       httpVersion: config.dataplaneHttpVersion,
       rejectUnauthorized: !config.dataplaneIgnoreBadTls,
     })
@@ -147,7 +165,9 @@ export class BskyAppView {
 
     const ctx = new AppContext({
       cfg: config,
+      etcd,
       dataplane,
+      dataplaneHostList,
       searchAgent,
       suggestionsAgent,
       topicsAgent,
@@ -184,6 +204,9 @@ export class BskyAppView {
   }
 
   async start(): Promise<http.Server> {
+    if (this.ctx.dataplaneHostList instanceof EtcdHostList) {
+      await this.ctx.dataplaneHostList.connect()
+    }
     await this.ctx.featureGates.start()
     const server = this.app.listen(this.ctx.cfg.port)
     this.server = server
@@ -198,6 +221,7 @@ export class BskyAppView {
   async destroy(): Promise<void> {
     await this.terminator?.terminate()
     this.ctx.featureGates.destroy()
+    await this.ctx.etcd?.close()
   }
 }
 
