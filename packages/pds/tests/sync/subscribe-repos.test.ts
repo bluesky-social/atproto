@@ -97,6 +97,10 @@ describe('repo subscribe repos', () => {
     return evts
   }
 
+  const getSyncEvts = (frames: Frame[]): SyncEvt[] => {
+    return getEventType(frames, '#sync')
+  }
+
   const getAccountEvts = (frames: Frame[]): AccountEvt[] => {
     return getEventType(frames, '#account')
   }
@@ -131,6 +135,22 @@ describe('repo subscribe repos', () => {
     expect(typeof evt.time).toBe('string')
     expect(evt.active).toBe(active)
     expect(evt.status).toBe(status)
+  }
+
+  const verifySyncEvent = async (
+    evt: SyncEvt,
+    did: string,
+    commit: CID,
+    rev: string,
+  ) => {
+    expect(typeof evt.seq).toBe('number')
+    expect(evt.did).toBe(did)
+    expect(typeof evt.time).toBe('string')
+    expect(evt.rev).toBe(rev)
+    const car = await repo.readCarWithRoot(evt.blocks)
+    expect(car.root.equals(commit)).toBe(true)
+    expect(car.blocks.size).toBe(1)
+    expect(car.blocks.has(car.root)).toBe(true)
   }
 
   const verifyCommitEvents = async (frames: Frame[]) => {
@@ -459,6 +479,34 @@ describe('repo subscribe repos', () => {
     verifyAccountEvent(accountEvts[1], alice, false, AccountStatus.Takendown)
     verifyAccountEvent(accountEvts[2], alice, false, AccountStatus.Deactivated)
     verifyAccountEvent(accountEvts[3], alice, true)
+  })
+
+  it('emits sync event on account activation', async () => {
+    await agent.api.com.atproto.server.deactivateAccount(
+      {},
+      {
+        encoding: 'application/json',
+        headers: sc.getHeaders(alice),
+      },
+    )
+    await agent.api.com.atproto.server.activateAccount(undefined, {
+      headers: sc.getHeaders(alice),
+    })
+
+    const ws = new WebSocket(
+      `ws://${serverHost}/xrpc/com.atproto.sync.subscribeRepos?cursor=${-1}`,
+    )
+
+    const gen = byFrame(ws)
+    const evts = await readTillCaughtUp(gen)
+    ws.terminate()
+
+    const syncEvts = getSyncEvts(evts.slice(-1))
+    expect(syncEvts.length).toBe(1)
+    const root = await ctx.actorStore.read(alice, (store) =>
+      store.repo.storage.getRootDetailed(),
+    )
+    await verifySyncEvent(syncEvts[0], alice, root.cid, root.rev)
   })
 
   it('syncs account deletions (account evt)', async () => {
