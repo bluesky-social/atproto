@@ -513,7 +513,7 @@ describe('notification views', () => {
         bsky: {
           notificationsDelayMs: delay3s,
         },
-        dbPostgresSchema: 'bsky_views_notifications',
+        dbPostgresSchema: 'bsky_views_notifications_delay',
       })
       delayAgent = delayNetwork.bsky.getClient()
       delaySc = delayNetwork.getSeedClient()
@@ -566,11 +566,13 @@ describe('notification views', () => {
             ),
           },
         )
+
+      // @NOTE: This is not perfectly synchronized. It relies on it taking less than 3s to run between
+      // the seeds and the first queries. This assumption should be true in most test runs.
       expect(fullBeforeDelay.data.notifications.length).toEqual(0)
       expect(results(paginatedAllBeforeDelay)).toEqual(
         results([fullBeforeDelay.data]),
       )
-
       await new Promise((resolve) => setTimeout(resolve, delay3s))
 
       const paginatedAllAfterDelay = await paginateAll(paginator)

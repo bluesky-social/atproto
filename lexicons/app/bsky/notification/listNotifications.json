@@ -23,7 +23,7 @@
             "default": 50
           },
           "priority": { "type": "boolean" },
-          "cursor": { "type": "string", "format": "datetime" },
+          "cursor": { "type": "string" },
           "seenAt": { "type": "string", "format": "datetime" }
         }
       },
@@ -33,7 +33,7 @@
           "type": "object",
           "required": ["notifications"],
           "properties": {
-            "cursor": { "type": "string", "format": "datetime" },
+            "cursor": { "type": "string" },
             "notifications": {
               "type": "array",
               "items": { "type": "ref", "ref": "#notification" }
