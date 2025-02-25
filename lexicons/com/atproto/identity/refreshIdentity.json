@@ -11,7 +11,7 @@
           "type": "object",
           "required": ["identifier"],
           "properties": {
-            "hostname": {
+            "identifier": {
               "type": "string",
               "format": "at-identifier"
             }

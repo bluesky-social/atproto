@@ -9,7 +9,7 @@
         "type": "params",
         "required": ["identifier"],
         "properties": {
-          "handle": {
+          "identifier": {
             "type": "string",
             "format": "at-identifier",
             "description": "Handle or DID to resolve."
