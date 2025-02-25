@@ -1860,16 +1860,6 @@ export const schemaDict = {
             cursor: {
               type: 'string',
             },
-            rkeyStart: {
-              type: 'string',
-              description:
-                'DEPRECATED: The lowest sort-ordered rkey to start from (exclusive)',
-            },
-            rkeyEnd: {
-              type: 'string',
-              description:
-                'DEPRECATED: The highest sort-ordered rkey to stop at (exclusive)',
-            },
             reverse: {
               type: 'boolean',
               description: 'Flag to reverse the order of the returned records.',
@@ -3409,12 +3399,6 @@ export const schemaDict = {
               type: 'string',
               description: 'Record Key',
               format: 'record-key',
-            },
-            commit: {
-              type: 'string',
-              format: 'cid',
-              description:
-                'DEPRECATED: referenced a repo commit by CID, and retrieved record as of that commit',
             },
           },
         },
