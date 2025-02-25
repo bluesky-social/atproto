@@ -77,7 +77,10 @@ export const rebuildRepo = async (ctx: AppContext, args: string[]) => {
     }
   })
   await ctx.accountManager.updateRepoRoot(did, commit.cid, rev)
-  await ctx.sequencer.sequenceCommit(did, commit)
+  const syncData = await ctx.actorStore.read(did, (store) =>
+    store.repo.getSyncEventData(),
+  )
+  await ctx.sequencer.sequenceSyncEvt(did, syncData)
 }
 
 const promptContinue = async (): Promise<boolean> => {
