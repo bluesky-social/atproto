@@ -47,6 +47,8 @@ export interface ServerConfigValues {
   bigThreadUris: Set<string>
   bigThreadDepth?: number
   maxThreadDepth?: number
+  // notifications
+  notificationsDelayMs?: number
   // client config
   clientCheckEmailConfirmed?: boolean
   topicsEnabled?: boolean
@@ -161,6 +163,10 @@ export class ServerConfig {
       ? parseInt(process.env.BSKY_MAX_THREAD_DEPTH || '', 10)
       : undefined
 
+    const notificationsDelayMs = process.env.BSKY_NOTIFICATIONS_DELAY_MS
+      ? parseInt(process.env.BSKY_NOTIFICATIONS_DELAY_MS || '', 10)
+      : 0
+
     const disableSsrfProtection = process.env.BSKY_DISABLE_SSRF_PROTECTION
       ? process.env.BSKY_DISABLE_SSRF_PROTECTION === 'true'
       : debugMode
@@ -220,6 +226,7 @@ export class ServerConfig {
       bigThreadUris,
       bigThreadDepth,
       maxThreadDepth,
+      notificationsDelayMs,
       disableSsrfProtection,
       proxyAllowHTTP2,
       proxyHeadersTimeout,
@@ -405,6 +412,10 @@ export class ServerConfig {
 
   get maxThreadDepth() {
     return this.cfg.maxThreadDepth
+  }
+
+  get notificationsDelayMs() {
+    return this.cfg.notificationsDelayMs ?? 0
   }
 
   get disableSsrfProtection(): boolean {

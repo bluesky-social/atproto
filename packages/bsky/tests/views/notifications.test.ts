@@ -1,5 +1,6 @@
 import { AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import { delayCursor } from '../../src/api/app/bsky/notification/listNotifications'
 import { ids } from '../../src/lexicon/lexicons'
 import { Notification } from '../../src/lexicon/types/app/bsky/notification/listNotifications'
 import { forSnapshot, paginateAll } from '../_util'
@@ -495,5 +496,152 @@ describe('notification views', () => {
 
     expect(full.data.notifications.length).toBe(4)
     expect(results(paginatedAll)).toEqual(results([full.data]))
+  })
+
+  describe('notifications delay', () => {
+    const delay0s = 0
+    const delay3s = 3_000
+    const delay5s = 5_000
+
+    let delayNetwork: TestNetwork
+    let delayAgent: AtpAgent
+    let delaySc: SeedClient
+    let delayAlice: string
+
+    beforeAll(async () => {
+      delayNetwork = await TestNetwork.create({
+        bsky: {
+          notificationsDelayMs: delay3s,
+        },
+        dbPostgresSchema: 'bsky_views_notifications',
+      })
+      delayAgent = delayNetwork.bsky.getClient()
+      delaySc = delayNetwork.getSeedClient()
+      await basicSeed(delaySc)
+      await delayNetwork.processAll()
+      delayAlice = delaySc.dids.alice
+
+      // Add to reply chain, post ancestors: alice -> bob -> alice -> carol.
+      // Should have added one notification for each of alice and bob.
+      await delaySc.reply(
+        delaySc.dids.carol,
+        delaySc.posts[delayAlice][1].ref,
+        delaySc.replies[delayAlice][0].ref,
+        'indeed',
+      )
+    })
+
+    afterAll(async () => {
+      await delayNetwork.close()
+    })
+
+    it('paginates', async () => {
+      const results = (results) =>
+        sort(results.flatMap((res) => res.notifications))
+      const paginator = async (cursor?: string) => {
+        const res =
+          await delayAgent.api.app.bsky.notification.listNotifications(
+            { cursor, limit: 6 },
+            {
+              headers: await delayNetwork.serviceHeaders(
+                delayAlice,
+                ids.AppBskyNotificationListNotifications,
+              ),
+            },
+          )
+        return res.data
+      }
+
+      const paginatedAllBeforeDelay = await paginateAll(paginator)
+      paginatedAllBeforeDelay.forEach((res) =>
+        expect(res.notifications.length).toBe(0),
+      )
+      const fullBeforeDelay =
+        await delayAgent.api.app.bsky.notification.listNotifications(
+          {},
+          {
+            headers: await delayNetwork.serviceHeaders(
+              delayAlice,
+              ids.AppBskyNotificationListNotifications,
+            ),
+          },
+        )
+      expect(fullBeforeDelay.data.notifications.length).toEqual(0)
+      expect(results(paginatedAllBeforeDelay)).toEqual(
+        results([fullBeforeDelay.data]),
+      )
+
+      await new Promise((resolve) => setTimeout(resolve, delay3s))
+
+      const paginatedAllAfterDelay = await paginateAll(paginator)
+      paginatedAllAfterDelay.forEach((res) =>
+        expect(res.notifications.length).toBeLessThanOrEqual(6),
+      )
+      const fullAfterDelay =
+        await delayAgent.api.app.bsky.notification.listNotifications(
+          {},
+          {
+            headers: await delayNetwork.serviceHeaders(
+              delayAlice,
+              ids.AppBskyNotificationListNotifications,
+            ),
+          },
+        )
+
+      expect(fullAfterDelay.data.notifications.length).toEqual(13)
+      expect(results(paginatedAllAfterDelay)).toEqual(
+        results([fullAfterDelay.data]),
+      )
+    })
+
+    describe('cursor delay', () => {
+      const now = '2021-01-01T01:00:00.000Z'
+      const nowMinus2s = '2021-01-01T00:59:58.000Z'
+      const nowMinus5s = '2021-01-01T00:59:55.000Z'
+      const nowMinus8s = '2021-01-01T00:59:52.000Z'
+
+      beforeAll(async () => {
+        jest.useFakeTimers({ doNotFake: ['performance'] })
+        jest.setSystemTime(new Date(now))
+      })
+
+      afterAll(async () => {
+        jest.useRealTimers()
+      })
+
+      describe('for undefined cursor', () => {
+        it('returns now minus delay', async () => {
+          const delayedCursor = delayCursor(undefined, delay5s)
+          expect(delayedCursor).toBe(nowMinus5s)
+        })
+
+        it('returns now if delay is 0', async () => {
+          const delayedCursor = delayCursor(undefined, delay0s)
+          expect(delayedCursor).toBe(now)
+        })
+      })
+
+      describe('for defined cursor', () => {
+        it('returns original cursor if delay is 0', async () => {
+          const originalCursor = nowMinus2s
+          const delayedCursor = delayCursor(originalCursor, delay0s)
+          expect(delayedCursor).toBe(originalCursor)
+        })
+
+        it('returns "now minus delay" for cursor that is after that', async () => {
+          // Cursor is "now - 2s", should become "now - 5s"
+          const originalCursor = nowMinus2s
+          const cursor = delayCursor(originalCursor, delay5s)
+          expect(cursor).toBe(nowMinus5s)
+        })
+
+        it('returns original cursor for cursor that is before "now minus delay"', async () => {
+          // Cursor is "now - 8s", should stay like that.
+          const originalCursor = nowMinus8s
+          const cursor = delayCursor(originalCursor, delay5s)
+          expect(cursor).toBe(originalCursor)
+        })
+      })
+    })
   })
 })
