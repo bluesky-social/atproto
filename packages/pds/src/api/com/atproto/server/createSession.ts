@@ -4,7 +4,7 @@ import { AuthRequiredError } from '@atproto/xrpc-server'
 import { formatAccountStatus } from '../../../../account-manager'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import { authPassthru, resultPassthru } from '../../../proxy'
+import { resultPassthru } from '../../../proxy'
 import { didDocForSession } from './util'
 
 export default function (server: Server, ctx: AppContext) {
@@ -26,7 +26,7 @@ export default function (server: Server, ctx: AppContext) {
         return resultPassthru(
           await ctx.entrywayAgent.com.atproto.server.createSession(
             input.body,
-            authPassthru(req, true),
+            ctx.entrywayPassthruHeaders(req),
           ),
         )
       }

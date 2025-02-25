@@ -1,4 +1,3 @@
-import assert from 'node:assert'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { CodeDetail } from '../../../../account-manager/helpers/invite'
 import { AppContext } from '../../../../context'
@@ -10,15 +9,14 @@ import { genInvCodes } from './util'
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.getAccountInviteCodes({
     auth: ctx.authVerifier.accessFull({ checkTakedown: true }),
-    handler: async ({ params, auth }) => {
+    handler: async ({ params, auth, req }) => {
       if (ctx.entrywayAgent) {
-        assert(ctx.cfg.entryway)
         return resultPassthru(
           await ctx.entrywayAgent.com.atproto.server.getAccountInviteCodes(
             params,
-            await ctx.serviceAuthHeaders(
+            await ctx.entrywayAuthHeaders(
+              req,
               auth.credentials.did,
-              ctx.cfg.entryway.did,
               ids.ComAtprotoServerGetAccountInviteCodes,
             ),
           ),

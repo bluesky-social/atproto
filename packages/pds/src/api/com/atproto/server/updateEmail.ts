@@ -1,4 +1,3 @@
-import assert from 'node:assert'
 import { isEmailValid } from '@hapi/address'
 import { isDisposableEmail } from 'disposable-email-domains-js'
 import { InvalidRequestError } from '@atproto/xrpc-server'
@@ -10,7 +9,7 @@ import { ids } from '../../../../lexicon/lexicons'
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.updateEmail({
     auth: ctx.authVerifier.accessFull({ checkTakedown: true }),
-    handler: async ({ auth, input }) => {
+    handler: async ({ auth, input, req }) => {
       const did = auth.credentials.did
       const { token, email } = input.body
       if (!isEmailValid(email) || isDisposableEmail(email)) {
@@ -26,12 +25,11 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       if (ctx.entrywayAgent) {
-        assert(ctx.cfg.entryway)
         await ctx.entrywayAgent.com.atproto.server.updateEmail(
           input.body,
-          await ctx.serviceAuthHeaders(
+          await ctx.entrywayAuthHeaders(
+            req,
             auth.credentials.did,
-            ctx.cfg.entryway.did,
             ids.ComAtprotoServerUpdateEmail,
           ),
         )

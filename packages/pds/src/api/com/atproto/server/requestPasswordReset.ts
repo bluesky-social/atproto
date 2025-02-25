@@ -2,7 +2,6 @@ import { DAY, HOUR } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import { authPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.requestPasswordReset({
@@ -28,7 +27,7 @@ export default function (server: Server, ctx: AppContext) {
         if (ctx.entrywayAgent) {
           await ctx.entrywayAgent.com.atproto.server.requestPasswordReset(
             input.body,
-            authPassthru(req, true),
+            ctx.entrywayPassthruHeaders(req),
           )
           return
         }

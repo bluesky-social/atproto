@@ -1,5 +1,6 @@
 import assert from 'node:assert'
 import * as plc from '@did-plc/lib'
+import express from 'express'
 import { Redis } from 'ioredis'
 import * as nodemailer from 'nodemailer'
 import * as undici from 'undici'
@@ -25,6 +26,7 @@ import {
 } from '@atproto-labs/fetch-node'
 import { AccountManager } from './account-manager'
 import { ActorStore } from './actor-store/actor-store'
+import { authPassthru, forwardedFor } from './api/proxy'
 import {
   AuthVerifier,
   createPublicKeyObject,
@@ -396,6 +398,20 @@ export class AppContext {
   async appviewAuthHeaders(did: string, lxm: string) {
     assert(this.bskyAppView)
     return this.serviceAuthHeaders(did, this.bskyAppView.did, lxm)
+  }
+
+  async entrywayAuthHeaders(req: express.Request, did: string, lxm: string) {
+    assert(this.cfg.entryway)
+    const headers = await this.serviceAuthHeaders(
+      did,
+      this.cfg.entryway.did,
+      lxm,
+    )
+    return forwardedFor(req, headers)
+  }
+
+  entrywayPassthruHeaders(req: express.Request) {
+    return forwardedFor(req, authPassthru(req))
   }
 
   async serviceAuthHeaders(did: string, aud: string, lxm: string) {

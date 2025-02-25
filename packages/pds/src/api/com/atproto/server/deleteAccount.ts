@@ -3,7 +3,6 @@ import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { AccountStatus } from '../../../../account-manager'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import { authPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.deleteAccount({
@@ -25,7 +24,7 @@ export default function (server: Server, ctx: AppContext) {
       if (ctx.entrywayAgent) {
         await ctx.entrywayAgent.com.atproto.server.deleteAccount(
           input.body,
-          authPassthru(req, true),
+          ctx.entrywayPassthruHeaders(req),
         )
         return
       }
