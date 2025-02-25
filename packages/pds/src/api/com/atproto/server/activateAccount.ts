@@ -3,8 +3,7 @@ import { INVALID_HANDLE } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import { authPassthru } from '../../../proxy'
-import { assertValidDidDocumentForService, forwardIp } from './util'
+import { assertValidDidDocumentForService } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.activateAccount({
@@ -14,7 +13,7 @@ export default function (server: Server, ctx: AppContext) {
       if (ctx.entrywayAgent) {
         await ctx.entrywayAgent.com.atproto.server.activateAccount(
           undefined,
-          forwardIp(req, authPassthru(req)),
+          ctx.entrywayPassthruHeaders(req),
         )
         return
       }

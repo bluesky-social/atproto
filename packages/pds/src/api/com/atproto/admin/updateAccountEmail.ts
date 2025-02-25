@@ -1,8 +1,6 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import { forwardIp } from '../server/util'
-import { authPassthru } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.updateAccountEmail({
@@ -21,7 +19,7 @@ export default function (server: Server, ctx: AppContext) {
       if (ctx.entrywayAgent) {
         await ctx.entrywayAgent.com.atproto.admin.updateAccountEmail(
           input.body,
-          forwardIp(req, authPassthru(req, true)),
+          ctx.entrywayPassthruHeaders(req),
         )
         return
       }

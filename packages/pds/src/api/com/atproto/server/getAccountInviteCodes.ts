@@ -5,7 +5,7 @@ import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
 import { resultPassthru } from '../../../proxy'
-import { forwardIp, genInvCodes } from './util'
+import { genInvCodes } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.getAccountInviteCodes({
@@ -16,13 +16,11 @@ export default function (server: Server, ctx: AppContext) {
         return resultPassthru(
           await ctx.entrywayAgent.com.atproto.server.getAccountInviteCodes(
             params,
-            await ctx
-              .serviceAuthHeaders(
-                auth.credentials.did,
-                ctx.cfg.entryway.did,
-                ids.ComAtprotoServerGetAccountInviteCodes,
-              )
-              .then((x) => forwardIp(req, x)),
+            await ctx.entrywayAuthHeaders(
+              req,
+              auth.credentials.did,
+              ids.ComAtprotoServerGetAccountInviteCodes,
+            ),
           ),
         )
       }

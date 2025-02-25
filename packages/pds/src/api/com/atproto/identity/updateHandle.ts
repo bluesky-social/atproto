@@ -6,7 +6,6 @@ import { normalizeAndValidateHandle } from '../../../../handle'
 import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
 import { httpLogger } from '../../../../logger'
-import { forwardIp } from '../server/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.identity.updateHandle({
@@ -35,13 +34,11 @@ export default function (server: Server, ctx: AppContext) {
         await ctx.entrywayAgent.com.atproto.identity.updateHandle(
           // @ts-expect-error "did" is not in the schema
           { did: requester, handle: input.body.handle },
-          await ctx
-            .serviceAuthHeaders(
-              auth.credentials.did,
-              ctx.cfg.entryway.did,
-              ids.ComAtprotoIdentityUpdateHandle,
-            )
-            .then((x) => forwardIp(req, x)),
+          await ctx.entrywayAuthHeaders(
+            req,
+            auth.credentials.did,
+            ids.ComAtprotoIdentityUpdateHandle,
+          ),
         )
         return
       }

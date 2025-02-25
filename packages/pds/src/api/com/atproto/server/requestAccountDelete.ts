@@ -4,7 +4,6 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
-import { forwardIp } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.requestAccountDelete({
@@ -35,13 +34,11 @@ export default function (server: Server, ctx: AppContext) {
         assert(ctx.cfg.entryway)
         await ctx.entrywayAgent.com.atproto.server.requestAccountDelete(
           undefined,
-          await ctx
-            .serviceAuthHeaders(
-              auth.credentials.did,
-              ctx.cfg.entryway.did,
-              ids.ComAtprotoServerRequestAccountDelete,
-            )
-            .then((x) => forwardIp(req, x)),
+          await ctx.entrywayAuthHeaders(
+            req,
+            auth.credentials.did,
+            ids.ComAtprotoServerRequestAccountDelete,
+          ),
         )
         return
       }

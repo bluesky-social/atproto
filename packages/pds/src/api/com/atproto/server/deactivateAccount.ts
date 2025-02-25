@@ -1,8 +1,6 @@
 import { AuthScope } from '../../../../auth-verifier'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import { authPassthru } from '../../../proxy'
-import { forwardIp } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.deactivateAccount({
@@ -12,7 +10,7 @@ export default function (server: Server, ctx: AppContext) {
       if (ctx.entrywayAgent) {
         await ctx.entrywayAgent.com.atproto.server.deactivateAccount(
           input.body,
-          forwardIp(req, authPassthru(req)),
+          ctx.entrywayPassthruHeaders(req),
         )
         return
       }

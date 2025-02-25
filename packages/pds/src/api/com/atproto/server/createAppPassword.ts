@@ -3,7 +3,6 @@ import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
 import { resultPassthru } from '../../../proxy'
-import { forwardIp } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.createAppPassword({
@@ -17,13 +16,11 @@ export default function (server: Server, ctx: AppContext) {
         return resultPassthru(
           await ctx.entrywayAgent.com.atproto.server.createAppPassword(
             input.body,
-            await ctx
-              .serviceAuthHeaders(
-                auth.credentials.did,
-                ctx.cfg.entryway.did,
-                ids.ComAtprotoServerCreateAppPassword,
-              )
-              .then((x) => forwardIp(req, x)),
+            await ctx.entrywayAuthHeaders(
+              req,
+              auth.credentials.did,
+              ids.ComAtprotoServerCreateAppPassword,
+            ),
           ),
         )
       }

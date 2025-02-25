@@ -4,7 +4,6 @@ import { AuthScope } from '../../../../auth-verifier'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
-import { forwardIp } from '../server/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.identity.requestPlcOperationSignature({
@@ -14,13 +13,11 @@ export default function (server: Server, ctx: AppContext) {
         assert(ctx.cfg.entryway)
         await ctx.entrywayAgent.com.atproto.identity.requestPlcOperationSignature(
           undefined,
-          await ctx
-            .serviceAuthHeaders(
-              auth.credentials.did,
-              ctx.cfg.entryway.did,
-              ids.ComAtprotoIdentityRequestPlcOperationSignature,
-            )
-            .then((x) => forwardIp(req, x)),
+          await ctx.entrywayAuthHeaders(
+            req,
+            auth.credentials.did,
+            ids.ComAtprotoIdentityRequestPlcOperationSignature,
+          ),
         )
         return
       }

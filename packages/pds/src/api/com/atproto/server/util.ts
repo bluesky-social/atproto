@@ -118,26 +118,3 @@ const assertValidDocContents = async (
     )
   }
 }
-
-export const forwardIp: IForwardIp = <T extends HeadersParam>(
-  req: express.Request,
-  params: T | undefined,
-) => {
-  const ip = req.ip
-  const result: T | HeadersParam = params ?? { headers: {} }
-  if (ip) {
-    result.headers['x-forwarded-for'] = ip
-  }
-  return result
-}
-
-type IForwardIp = {
-  (req: express.Request, params: undefined): HeadersParam
-  <T extends HeadersParam>(req: express.Request, params: T): T
-  <T extends HeadersParam>(
-    req: express.Request,
-    params: T | undefined,
-  ): T | HeadersParam
-}
-
-type HeadersParam = { headers: Record<string, string> }

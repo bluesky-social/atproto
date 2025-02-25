@@ -1,10 +1,8 @@
-import assert from 'node:assert'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
 import { resultPassthru } from '../../../proxy'
-import { forwardIp } from '../server/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.sendEmail({
@@ -25,17 +23,14 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       if (ctx.entrywayAgent) {
-        assert(ctx.cfg.entryway)
         return resultPassthru(
           await ctx.entrywayAgent.com.atproto.admin.sendEmail(
             input.body,
-            await ctx
-              .serviceAuthHeaders(
-                recipientDid,
-                ctx.cfg.entryway.did,
-                ids.ComAtprotoAdminSendEmail,
-              )
-              .then((x) => forwardIp(req, x)),
+            await ctx.entrywayAuthHeaders(
+              req,
+              recipientDid,
+              ids.ComAtprotoAdminSendEmail,
+            ),
           ),
         )
       }

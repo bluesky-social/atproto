@@ -1,4 +1,5 @@
 import { IncomingMessage } from 'node:http'
+import express from 'express'
 import { Headers } from '@atproto/xrpc'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 
@@ -10,21 +11,7 @@ export const resultPassthru = <T>(result: { headers: Headers; data: T }) => {
   }
 }
 
-// Output designed to passed as second arg to AtpAgent methods.
-// The encoding field here is a quirk of the AtpAgent.
-export function authPassthru(
-  req: IncomingMessage,
-  withEncoding?: false,
-): { headers: { authorization: string }; encoding: undefined } | undefined
-
-export function authPassthru(
-  req: IncomingMessage,
-  withEncoding: true,
-):
-  | { headers: { authorization: string }; encoding: 'application/json' }
-  | undefined
-
-export function authPassthru(req: IncomingMessage, withEncoding?: boolean) {
+export function authPassthru(req: IncomingMessage) {
   const { authorization } = req.headers
 
   if (authorization) {
@@ -45,9 +32,24 @@ export function authPassthru(req: IncomingMessage, withEncoding?: boolean) {
       throw new InvalidRequestError('DPoP requests cannot be proxied')
     }
 
-    return {
-      headers: { authorization },
-      encoding: withEncoding ? 'application/json' : undefined,
-    }
+    return { headers: { authorization } }
   }
 }
+
+export const forwardFor = (
+  req: express.Request,
+  params: HeadersParam | undefined,
+) => {
+  const result: HeadersParam = params ?? { headers: {} }
+  let forwarded: string[] = []
+  if (req.headers['x-forwarded-for']) {
+    forwarded = forwarded.concat(req.headers['x-forwarded-for'])
+  }
+  if (req.socket.remoteAddress) {
+    forwarded.push(req.socket.remoteAddress)
+  }
+  result.headers['x-forwarded-for'] = forwarded.join(',')
+  return result
+}
+
+type HeadersParam = { headers: Record<string, string> }

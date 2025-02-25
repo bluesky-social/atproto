@@ -6,7 +6,6 @@ import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
 import { resultPassthru } from '../../../proxy'
-import { forwardIp } from '../server/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.identity.signPlcOperation({
@@ -17,13 +16,11 @@ export default function (server: Server, ctx: AppContext) {
         return resultPassthru(
           await ctx.entrywayAgent.com.atproto.identity.signPlcOperation(
             input.body,
-            await ctx
-              .serviceAuthHeaders(
-                auth.credentials.did,
-                ctx.cfg.entryway.did,
-                ids.ComAtprotoIdentitySignPlcOperation,
-              )
-              .then((x) => forwardIp(req, x)),
+            await ctx.entrywayAuthHeaders(
+              req,
+              auth.credentials.did,
+              ids.ComAtprotoIdentitySignPlcOperation,
+            ),
           ),
         )
       }

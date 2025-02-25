@@ -1,8 +1,7 @@
 import { AuthScope } from '../../../../auth-verifier'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import { authPassthru, resultPassthru } from '../../../proxy'
-import { forwardIp } from '../server/util'
+import { resultPassthru } from '../../../proxy'
 
 // THIS IS A TEMPORARY UNSPECCED ROUTE
 export default function (server: Server, ctx: AppContext) {
@@ -22,7 +21,7 @@ export default function (server: Server, ctx: AppContext) {
       return resultPassthru(
         await ctx.entrywayAgent.com.atproto.temp.checkSignupQueue(
           undefined,
-          forwardIp(req, authPassthru(req)),
+          ctx.entrywayPassthruHeaders(req),
         ),
       )
     },
