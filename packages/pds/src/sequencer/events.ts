@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { cborEncode, noUndefinedVals, schema } from '@atproto/common'
 import { BlockMap, blocksToCarFile } from '@atproto/repo'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AccountStatus } from '../account-manager'
 import { CommitDataWithOps } from '../repo'
 import { RepoSeqInsert } from './db'
@@ -13,41 +14,23 @@ export const formatSeqCommit = async (
   blocksToSend.addMap(commitData.newBlocks)
   blocksToSend.addMap(commitData.relevantBlocks)
 
-  let evt: CommitEvt
+  // If event is too big (max 200 ops or 2MB of data)
+  if (blocksToSend.byteSize > 2000000) {
+    throw new InvalidRequestError('Too many writes. Max event size: 2MB')
+  }
 
-  // If event is too big (max 200 ops or 1MB of data)
-  if (commitData.ops.length > 200 || blocksToSend.byteSize > 1000000) {
-    const justRoot = new BlockMap()
-    const rootBlock = blocksToSend.get(commitData.cid)
-    if (rootBlock) {
-      justRoot.set(commitData.cid, rootBlock)
-    }
-
-    evt = {
-      rebase: false,
-      tooBig: true,
-      repo: did,
-      commit: commitData.cid,
-      rev: commitData.rev,
-      since: commitData.since,
-      blocks: await blocksToCarFile(commitData.cid, justRoot),
-      ops: [],
-      blobs: [],
-      prevData: commitData.prevData ?? undefined,
-    }
-  } else {
-    evt = {
-      rebase: false,
-      tooBig: false,
-      repo: did,
-      commit: commitData.cid,
-      rev: commitData.rev,
-      since: commitData.since,
-      blocks: await blocksToCarFile(commitData.cid, blocksToSend),
-      ops: commitData.ops,
-      blobs: commitData.blobs.toList(),
-      prevData: commitData.prevData ?? undefined,
-    }
+  const evt = {
+    repo: did,
+    commit: commitData.cid,
+    rev: commitData.rev,
+    since: commitData.since,
+    blocks: await blocksToCarFile(commitData.cid, blocksToSend),
+    ops: commitData.ops,
+    prevData: commitData.prevData ?? undefined,
+    // deprecated (but still required) fileds
+    rebase: false,
+    tooBig: false,
+    blobs: [],
   }
 
   return {

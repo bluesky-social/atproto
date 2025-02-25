@@ -18,7 +18,6 @@ import { ActorDb } from '../db'
 import { RecordTransactor } from '../record/transactor'
 import { RepoReader } from './reader'
 import { SqlRepoTransactor } from './sql-repo-transactor'
-import { blobCidsFromWrites, commitOpsFromCreates } from './util'
 
 export class RepoTransactor extends RepoReader {
   blob: BlobTransactor
@@ -61,10 +60,14 @@ export class RepoTransactor extends RepoReader {
       this.indexWrites(writes, commit.rev),
       this.blob.processWriteBlobs(commit.rev, writes),
     ])
+    const ops = writes.map((w) => ({
+      action: 'create' as const,
+      path: formatDataKey(w.uri.collection, w.uri.rkey),
+      cid: w.cid,
+    }))
     return {
       ...commit,
-      ops: commitOpsFromCreates(writes),
-      blobs: blobCidsFromWrites(writes),
+      ops,
       prevData: null,
     }
   }
@@ -166,7 +169,6 @@ export class RepoTransactor extends RepoReader {
     return {
       ...commit,
       ops: commitOps,
-      blobs: blobCidsFromWrites(writes),
       prevData,
     }
   }
