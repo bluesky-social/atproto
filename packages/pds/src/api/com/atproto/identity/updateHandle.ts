@@ -1,4 +1,3 @@
-import assert from 'node:assert'
 import { DAY, MINUTE } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
@@ -26,8 +25,6 @@ export default function (server: Server, ctx: AppContext) {
       const requester = auth.credentials.did
 
       if (ctx.entrywayAgent) {
-        assert(ctx.cfg.entryway)
-
         // the full flow is:
         // -> entryway(identity.updateHandle) [update handle, submit plc op]
         // -> pds(admin.updateAccountHandle)  [track handle, sequence handle update]

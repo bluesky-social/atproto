@@ -1,4 +1,3 @@
-import assert from 'node:assert'
 import { isEmailValid } from '@hapi/address'
 import { isDisposableEmail } from 'disposable-email-domains-js'
 import { InvalidRequestError } from '@atproto/xrpc-server'
@@ -26,7 +25,6 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       if (ctx.entrywayAgent) {
-        assert(ctx.cfg.entryway)
         await ctx.entrywayAgent.com.atproto.server.updateEmail(
           input.body,
           await ctx.entrywayAuthHeaders(

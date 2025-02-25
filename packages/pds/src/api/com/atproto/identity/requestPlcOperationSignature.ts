@@ -1,4 +1,3 @@
-import assert from 'node:assert'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AuthScope } from '../../../../auth-verifier'
 import { AppContext } from '../../../../context'
@@ -10,7 +9,6 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.accessFull({ additional: [AuthScope.Takendown] }),
     handler: async ({ auth, req }) => {
       if (ctx.entrywayAgent) {
-        assert(ctx.cfg.entryway)
         await ctx.entrywayAgent.com.atproto.identity.requestPlcOperationSignature(
           undefined,
           await ctx.entrywayAuthHeaders(

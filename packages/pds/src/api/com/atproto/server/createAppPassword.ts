@@ -1,4 +1,3 @@
-import assert from 'node:assert'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
@@ -11,8 +10,6 @@ export default function (server: Server, ctx: AppContext) {
     }),
     handler: async ({ auth, input, req }) => {
       if (ctx.entrywayAgent) {
-        assert(ctx.cfg.entryway)
-
         return resultPassthru(
           await ctx.entrywayAgent.com.atproto.server.createAppPassword(
             input.body,

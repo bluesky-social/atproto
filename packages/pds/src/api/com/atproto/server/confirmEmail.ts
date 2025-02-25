@@ -1,4 +1,3 @@
-import assert from 'node:assert'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
@@ -18,7 +17,6 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       if (ctx.entrywayAgent) {
-        assert(ctx.cfg.entryway)
         await ctx.entrywayAgent.com.atproto.server.confirmEmail(
           input.body,
           await ctx.entrywayAuthHeaders(

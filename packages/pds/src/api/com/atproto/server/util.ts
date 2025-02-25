@@ -1,4 +1,3 @@
-import express from 'express'
 import { getPdsEndpoint, getSigningDidKey } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
 import { DidDocument } from '@atproto/identity'

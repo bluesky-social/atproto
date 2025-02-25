@@ -1,4 +1,3 @@
-import assert from 'node:assert'
 import { DAY, HOUR } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
@@ -31,7 +30,6 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       if (ctx.entrywayAgent) {
-        assert(ctx.cfg.entryway)
         await ctx.entrywayAgent.com.atproto.server.requestAccountDelete(
           undefined,
           await ctx.entrywayAuthHeaders(

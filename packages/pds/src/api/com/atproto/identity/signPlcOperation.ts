@@ -1,4 +1,3 @@
-import assert from 'node:assert'
 import * as plc from '@did-plc/lib'
 import { check } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
@@ -12,7 +11,6 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.accessFull(),
     handler: async ({ auth, input, req }) => {
       if (ctx.entrywayAgent) {
-        assert(ctx.cfg.entryway)
         return resultPassthru(
           await ctx.entrywayAgent.com.atproto.identity.signPlcOperation(
             input.body,
