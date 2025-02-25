@@ -17,13 +17,7 @@
       "message": {
         "schema": {
           "type": "union",
-          "refs": [
-            "#commit",
-            "#sync",
-            "#identity",
-            "#account",
-            "#info"
-          ]
+          "refs": ["#commit", "#sync", "#identity", "#account", "#info"]
         }
       },
       "errors": [
