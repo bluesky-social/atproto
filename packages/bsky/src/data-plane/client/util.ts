@@ -1,5 +1,5 @@
-import * as ui8 from 'uint8arrays'
 import { Code, ConnectError } from '@connectrpc/connect'
+import * as ui8 from 'uint8arrays'
 import { getDidKeyFromMultibase } from '@atproto/identity'
 
 export const isDataplaneError = (
