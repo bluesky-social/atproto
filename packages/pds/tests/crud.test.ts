@@ -611,7 +611,7 @@ describe('crud operations', () => {
         },
         rkey: '..',
       }),
-    ).rejects.toThrow('record key can not be "." or ".."')
+    ).rejects.toThrow('Input/rkey must be a valid Record Key')
   })
 
   it('validates the record on write', async () => {
@@ -1191,7 +1191,7 @@ describe('crud operations', () => {
           record: {
             text: 'x',
             createdAt: new Date().toISOString(),
-            deepObject: createDeepObject(3000),
+            deepObject: createDeepObject(4000),
           },
         }),
         {

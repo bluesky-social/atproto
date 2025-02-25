@@ -21,13 +21,33 @@ export class TeamService {
   async list({
     cursor,
     limit = 25,
+    roles,
+    disabled,
   }: {
     cursor?: string
     limit?: number
+    disabled?: boolean
+    roles?: string[]
   }): Promise<{ members: Selectable<Member>[]; cursor?: string }> {
     let builder = this.db.db.selectFrom('member').selectAll()
     if (cursor) {
       builder = builder.where('createdAt', '>', new Date(cursor))
+    }
+    if (roles !== undefined) {
+      const knownRoles = roles.filter(
+        (r) =>
+          r === 'tools.ozone.team.defs#roleAdmin' ||
+          r === 'tools.ozone.team.defs#roleModerator' ||
+          r === 'tools.ozone.team.defs#roleTriage',
+      )
+
+      // Optimization: no need to query to know that no values will be returned
+      if (!knownRoles.length) return { members: [] }
+
+      builder = builder.where('role', 'in', knownRoles)
+    }
+    if (disabled !== undefined) {
+      builder = builder.where('disabled', disabled ? 'is' : 'is not', true)
     }
     const members = await builder
       .limit(limit)

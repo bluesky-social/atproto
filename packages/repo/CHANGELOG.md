@@ -1,5 +1,11 @@
 # @atproto/repo
 
+## 0.7.0
+
+### Minor Changes
+
+- [#3449](https://github.com/bluesky-social/atproto/pull/3449) [`7e3678c08`](https://github.com/bluesky-social/atproto/commit/7e3678c089d2faa1a884a52a4fb80b8116c9854f) Thanks [@dholms](https://github.com/dholms)! - Updated subscribeRepo to include prev CIDs for operations and covering proofs for all ops.
+
 ## 0.6.5
 
 ### Patch Changes

@@ -1,6 +1,5 @@
 import { CID } from 'multiformats/cid'
 import { BlobRef } from '@atproto/lexicon'
-import { CommitData } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { ActorStoreTransactor } from '../../../../actor-store/actor-store-transactor'
@@ -11,6 +10,7 @@ import { Record as ProfileRecord } from '../../../../lexicon/types/app/bsky/acto
 import {
   BadCommitSwapError,
   BadRecordSwapError,
+  CommitDataWithOps,
   InvalidRecordError,
   PreparedCreate,
   PreparedUpdate,
@@ -104,7 +104,7 @@ export default function (server: Server, ctx: AppContext) {
             }
           }
 
-          let commit: CommitData
+          let commit: CommitDataWithOps
           try {
             commit = await actorTxn.repo.processWrites([write], swapCommitCid)
           } catch (err) {
@@ -122,7 +122,7 @@ export default function (server: Server, ctx: AppContext) {
       )
 
       if (commit !== null) {
-        await ctx.sequencer.sequenceCommit(did, commit, [write])
+        await ctx.sequencer.sequenceCommit(did, commit)
         await ctx.accountManager.updateRepoRoot(did, commit.cid, commit.rev)
       }
 

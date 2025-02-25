@@ -71,7 +71,7 @@ export default function (server: Server, ctx: AppContext) {
       })
 
       if (commit !== null) {
-        await ctx.sequencer.sequenceCommit(did, commit, [write])
+        await ctx.sequencer.sequenceCommit(did, commit)
         await ctx.accountManager.updateRepoRoot(did, commit.cid, commit.rev)
       }
       return {

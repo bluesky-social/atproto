@@ -241,11 +241,7 @@ describe('sequencer', () => {
       (store) => store.repo.formatCommit(writes),
     )
 
-    const repoSeqInsert = await formatSeqCommit(
-      sc.dids.alice,
-      writeCommit,
-      writes,
-    )
+    const repoSeqInsert = await formatSeqCommit(sc.dids.alice, writeCommit)
 
     const evt = cborDecode<sequencer.CommitEvt>(repoSeqInsert.event)
     expect(evt.tooBig).toBe(true)

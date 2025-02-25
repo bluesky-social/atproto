@@ -10,7 +10,7 @@ export type AuthProviderOptions = {
   accountManager: AccountManager
 } & Pick<
   OAuthProviderOptions,
-  'issuer' | 'redis' | 'keyset' | 'dpopSecret' | 'customization'
+  'issuer' | 'redis' | 'keyset' | 'dpopSecret' | 'customization' | 'trustProxy'
 > &
   Required<Pick<OAuthProviderOptions, 'safeFetch'>>
 
@@ -23,6 +23,7 @@ export class PdsOAuthProvider extends OAuthProvider {
     issuer,
     customization,
     safeFetch,
+    trustProxy,
   }: AuthProviderOptions) {
     super({
       issuer,
@@ -32,6 +33,7 @@ export class PdsOAuthProvider extends OAuthProvider {
       safeFetch,
       customization,
       store: accountManager,
+      trustProxy,
       metadata: {
         // PdsOAuthProvider is used when the PDS is both an authorization server
         // & resource server, in which case the issuer origin is also the

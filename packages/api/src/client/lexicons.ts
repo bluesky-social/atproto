@@ -1371,6 +1371,9 @@ export const schemaDict = {
           rkey: {
             type: 'string',
             maxLength: 512,
+            format: 'record-key',
+            description:
+              'NOTE: maxLength is redundant with record-key format. Keeping it temporarily to ensure backwards compatibility.',
           },
           value: {
             type: 'unknown',
@@ -1388,6 +1391,7 @@ export const schemaDict = {
           },
           rkey: {
             type: 'string',
+            format: 'record-key',
           },
           value: {
             type: 'unknown',
@@ -1405,6 +1409,7 @@ export const schemaDict = {
           },
           rkey: {
             type: 'string',
+            format: 'record-key',
           },
         },
       },
@@ -1478,6 +1483,7 @@ export const schemaDict = {
               },
               rkey: {
                 type: 'string',
+                format: 'record-key',
                 description: 'The Record Key.',
                 maxLength: 512,
               },
@@ -1548,6 +1554,7 @@ export const schemaDict = {
           },
           rev: {
             type: 'string',
+            format: 'tid',
           },
         },
       },
@@ -1580,6 +1587,7 @@ export const schemaDict = {
               },
               rkey: {
                 type: 'string',
+                format: 'record-key',
                 description: 'The Record Key.',
               },
               swapRecord: {
@@ -1705,6 +1713,7 @@ export const schemaDict = {
             rkey: {
               type: 'string',
               description: 'The Record Key.',
+              format: 'record-key',
             },
             cid: {
               type: 'string',
@@ -1929,6 +1938,7 @@ export const schemaDict = {
               },
               rkey: {
                 type: 'string',
+                format: 'record-key',
                 description: 'The Record Key.',
                 maxLength: 512,
               },
@@ -3347,6 +3357,7 @@ export const schemaDict = {
               },
               rev: {
                 type: 'string',
+                format: 'tid',
               },
             },
           },
@@ -3392,6 +3403,7 @@ export const schemaDict = {
             rkey: {
               type: 'string',
               description: 'Record Key',
+              format: 'record-key',
             },
             commit: {
               type: 'string',
@@ -3443,6 +3455,7 @@ export const schemaDict = {
             },
             since: {
               type: 'string',
+              format: 'tid',
               description:
                 "The revision ('rev') of the repo to create a diff from.",
             },
@@ -3504,10 +3517,18 @@ export const schemaDict = {
                 type: 'string',
                 description:
                   'If active=false, this optional field indicates a possible reason for why the account is not active. If active=false and no status is supplied, then the host makes no claim for why the repository is no longer being hosted.',
-                knownValues: ['takendown', 'suspended', 'deactivated'],
+                knownValues: [
+                  'takendown',
+                  'suspended',
+                  'deleted',
+                  'deactivated',
+                  'desynchronized',
+                  'throttled',
+                ],
               },
               rev: {
                 type: 'string',
+                format: 'tid',
                 description:
                   'Optional field, the current rev of the repo, if active=true',
               },
@@ -3541,6 +3562,7 @@ export const schemaDict = {
             },
             since: {
               type: 'string',
+              format: 'tid',
               description: 'Optional revision of the repo to list blobs since.',
             },
             limit: {
@@ -3647,6 +3669,7 @@ export const schemaDict = {
           },
           rev: {
             type: 'string',
+            format: 'tid',
           },
           active: {
             type: 'boolean',
@@ -3655,7 +3678,14 @@ export const schemaDict = {
             type: 'string',
             description:
               'If active=false, this optional field indicates a possible reason for why the account is not active. If active=false and no status is supplied, then the host makes no claim for why the repository is no longer being hosted.',
-            knownValues: ['takendown', 'suspended', 'deactivated'],
+            knownValues: [
+              'takendown',
+              'suspended',
+              'deleted',
+              'deactivated',
+              'desynchronized',
+              'throttled',
+            ],
           },
         },
       },
@@ -3794,6 +3824,7 @@ export const schemaDict = {
             type: 'union',
             refs: [
               'lex:com.atproto.sync.subscribeRepos#commit',
+              'lex:com.atproto.sync.subscribeRepos#sync',
               'lex:com.atproto.sync.subscribeRepos#identity',
               'lex:com.atproto.sync.subscribeRepos#account',
               'lex:com.atproto.sync.subscribeRepos#handle',
@@ -3831,7 +3862,7 @@ export const schemaDict = {
           'blobs',
           'time',
         ],
-        nullable: ['prev', 'since'],
+        nullable: ['since'],
         properties: {
           seq: {
             type: 'integer',
@@ -3844,37 +3875,35 @@ export const schemaDict = {
           tooBig: {
             type: 'boolean',
             description:
-              'Indicates that this commit contained too many ops, or data size was too large. Consumers will need to make a separate request to get missing data.',
+              'DEPRECATED -- replaced by #sync event and data limits. Indicates that this commit contained too many ops, or data size was too large. Consumers will need to make a separate request to get missing data.',
           },
           repo: {
             type: 'string',
             format: 'did',
-            description: 'The repo this event comes from.',
+            description:
+              "The repo this event comes from. Note that all other message types name this field 'did'.",
           },
           commit: {
             type: 'cid-link',
             description: 'Repo commit object CID.',
           },
-          prev: {
-            type: 'cid-link',
-            description:
-              'DEPRECATED -- unused. WARNING -- nullable and optional; stick with optional to ensure golang interoperability.',
-          },
           rev: {
             type: 'string',
+            format: 'tid',
             description:
               'The rev of the emitted commit. Note that this information is also in the commit object included in blocks, unless this is a tooBig event.',
           },
           since: {
             type: 'string',
+            format: 'tid',
             description:
               'The rev of the last emitted commit from this repo (if any).',
           },
           blocks: {
             type: 'bytes',
             description:
-              'CAR file containing relevant blocks, as a diff since the previous repo state.',
-            maxLength: 1000000,
+              "CAR file containing relevant blocks, as a diff since the previous repo state. The commit must be included as a block, and the commit block CID must be the first entry in the CAR header 'roots' list.",
+            maxLength: 2000000,
           },
           ops: {
             type: 'array',
@@ -3891,8 +3920,48 @@ export const schemaDict = {
             items: {
               type: 'cid-link',
               description:
-                'List of new blobs (by CID) referenced by records in this commit.',
+                'DEPRECATED -- will soon always be empty. List of new blobs (by CID) referenced by records in this commit.',
             },
+          },
+          prevData: {
+            type: 'cid-link',
+            description:
+              "The root CID of the MST tree for the previous commit from this repo (indicated by the 'since' revision field in this message). Corresponds to the 'data' field in the repo commit object. NOTE: this field is effectively required for the 'inductive' version of firehose.",
+          },
+          time: {
+            type: 'string',
+            format: 'datetime',
+            description:
+              'Timestamp of when this message was originally broadcast.',
+          },
+        },
+      },
+      sync: {
+        type: 'object',
+        description:
+          'Updates the repo to a new state, without necessarily including that state on the firehose. Used to recover from broken commit streams, data loss incidents, or in situations where upstream host does not know recent state of the repository.',
+        required: ['seq', 'did', 'blocks', 'rev', 'time'],
+        properties: {
+          seq: {
+            type: 'integer',
+            description: 'The stream sequence number of this message.',
+          },
+          did: {
+            type: 'string',
+            format: 'did',
+            description:
+              'The account this repo event corresponds to. Must match that in the commit object.',
+          },
+          blocks: {
+            type: 'bytes',
+            description:
+              "CAR file containing the commit, as a block. The CAR header must include the commit block CID as the first 'root'.",
+            maxLength: 10000,
+          },
+          rev: {
+            type: 'string',
+            description:
+              'The rev of the commit. This value must match that in the commit object.',
           },
           time: {
             type: 'string',
@@ -3953,7 +4022,14 @@ export const schemaDict = {
             type: 'string',
             description:
               'If active=false, this optional field indicates a reason for why the account is not active.',
-            knownValues: ['takendown', 'suspended', 'deleted', 'deactivated'],
+            knownValues: [
+              'takendown',
+              'suspended',
+              'deleted',
+              'deactivated',
+              'desynchronized',
+              'throttled',
+            ],
           },
         },
       },
@@ -4049,6 +4125,11 @@ export const schemaDict = {
             type: 'cid-link',
             description:
               'For creates and updates, the new record CID. For deletions, null.',
+          },
+          prev: {
+            type: 'cid-link',
+            description:
+              'For updates and deletes, the previous record CID (required for inductive firehose). For creations, field should not be defined.',
           },
         },
       },
@@ -10188,6 +10269,40 @@ export const schemaDict = {
       },
     },
   },
+  ChatBskyConvoAcceptConvo: {
+    lexicon: 1,
+    id: 'chat.bsky.convo.acceptConvo',
+    defs: {
+      main: {
+        type: 'procedure',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['convoId'],
+            properties: {
+              convoId: {
+                type: 'string',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              rev: {
+                description:
+                  'Rev when the convo was accepted. If not present, the convo was already accepted.',
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ChatBskyConvoDefs: {
     lexicon: 1,
     id: 'chat.bsky.convo.defs',
@@ -10325,8 +10440,9 @@ export const schemaDict = {
           muted: {
             type: 'boolean',
           },
-          opened: {
-            type: 'boolean',
+          status: {
+            type: 'string',
+            knownValues: ['request', 'accepted'],
           },
           unreadCount: {
             type: 'integer',
@@ -10345,7 +10461,43 @@ export const schemaDict = {
           },
         },
       },
+      logAcceptConvo: {
+        type: 'object',
+        required: ['rev', 'convoId'],
+        properties: {
+          rev: {
+            type: 'string',
+          },
+          convoId: {
+            type: 'string',
+          },
+        },
+      },
       logLeaveConvo: {
+        type: 'object',
+        required: ['rev', 'convoId'],
+        properties: {
+          rev: {
+            type: 'string',
+          },
+          convoId: {
+            type: 'string',
+          },
+        },
+      },
+      logMuteConvo: {
+        type: 'object',
+        required: ['rev', 'convoId'],
+        properties: {
+          rev: {
+            type: 'string',
+          },
+          convoId: {
+            type: 'string',
+          },
+        },
+      },
+      logUnmuteConvo: {
         type: 'object',
         required: ['rev', 'convoId'],
         properties: {
@@ -10377,6 +10529,25 @@ export const schemaDict = {
         },
       },
       logDeleteMessage: {
+        type: 'object',
+        required: ['rev', 'convoId', 'message'],
+        properties: {
+          rev: {
+            type: 'string',
+          },
+          convoId: {
+            type: 'string',
+          },
+          message: {
+            type: 'union',
+            refs: [
+              'lex:chat.bsky.convo.defs#messageView',
+              'lex:chat.bsky.convo.defs#deletedMessageView',
+            ],
+          },
+        },
+      },
+      logReadMessage: {
         type: 'object',
         required: ['rev', 'convoId', 'message'],
         properties: {
@@ -10459,6 +10630,48 @@ export const schemaDict = {
       },
     },
   },
+  ChatBskyConvoGetConvoAvailability: {
+    lexicon: 1,
+    id: 'chat.bsky.convo.getConvoAvailability',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get whether the requester and the other members can chat. If an existing convo is found for these members, it is returned.',
+        parameters: {
+          type: 'params',
+          required: ['members'],
+          properties: {
+            members: {
+              type: 'array',
+              minLength: 1,
+              maxLength: 10,
+              items: {
+                type: 'string',
+                format: 'did',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['canChat'],
+            properties: {
+              canChat: {
+                type: 'boolean',
+              },
+              convo: {
+                type: 'ref',
+                ref: 'lex:chat.bsky.convo.defs#convoView',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ChatBskyConvoGetConvoForMembers: {
     lexicon: 1,
     id: 'chat.bsky.convo.getConvoForMembers',
@@ -10526,6 +10739,7 @@ export const schemaDict = {
                   type: 'union',
                   refs: [
                     'lex:chat.bsky.convo.defs#logBeginConvo',
+                    'lex:chat.bsky.convo.defs#logAcceptConvo',
                     'lex:chat.bsky.convo.defs#logLeaveConvo',
                     'lex:chat.bsky.convo.defs#logCreateMessage',
                     'lex:chat.bsky.convo.defs#logDeleteMessage',
@@ -10640,6 +10854,14 @@ export const schemaDict = {
             },
             cursor: {
               type: 'string',
+            },
+            readState: {
+              type: 'string',
+              knownValues: ['unread'],
+            },
+            status: {
+              type: 'string',
+              knownValues: ['request', 'accepted'],
             },
           },
         },
@@ -10813,6 +11035,40 @@ export const schemaDict = {
               convo: {
                 type: 'ref',
                 ref: 'lex:chat.bsky.convo.defs#convoView',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ChatBskyConvoUpdateAllRead: {
+    lexicon: 1,
+    id: 'chat.bsky.convo.updateAllRead',
+    defs: {
+      main: {
+        type: 'procedure',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              status: {
+                type: 'string',
+                knownValues: ['request', 'accepted'],
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['updatedCount'],
+            properties: {
+              updatedCount: {
+                description: 'The count of updated convos.',
+                type: 'integer',
               },
             },
           },
@@ -11618,8 +11874,8 @@ export const schemaDict = {
       },
       modEventComment: {
         type: 'object',
-        description: 'Add a comment to a subject',
-        required: ['comment'],
+        description:
+          'Add a comment to a subject. An empty comment will clear any previously set sticky comment.',
         properties: {
           comment: {
             type: 'string',
@@ -12369,6 +12625,7 @@ export const schemaDict = {
                   'lex:tools.ozone.moderation.defs#modEventReverseTakedown',
                   'lex:tools.ozone.moderation.defs#modEventResolveAppeal',
                   'lex:tools.ozone.moderation.defs#modEventEmail',
+                  'lex:tools.ozone.moderation.defs#modEventDivert',
                   'lex:tools.ozone.moderation.defs#modEventTag',
                   'lex:tools.ozone.moderation.defs#accountEvent',
                   'lex:tools.ozone.moderation.defs#identityEvent',
@@ -13953,6 +14210,15 @@ export const schemaDict = {
         parameters: {
           type: 'params',
           properties: {
+            disabled: {
+              type: 'boolean',
+            },
+            roles: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+            },
             limit: {
               type: 'integer',
               minimum: 1,
@@ -14262,9 +14528,11 @@ export const ids = {
   ChatBskyActorDefs: 'chat.bsky.actor.defs',
   ChatBskyActorDeleteAccount: 'chat.bsky.actor.deleteAccount',
   ChatBskyActorExportAccountData: 'chat.bsky.actor.exportAccountData',
+  ChatBskyConvoAcceptConvo: 'chat.bsky.convo.acceptConvo',
   ChatBskyConvoDefs: 'chat.bsky.convo.defs',
   ChatBskyConvoDeleteMessageForSelf: 'chat.bsky.convo.deleteMessageForSelf',
   ChatBskyConvoGetConvo: 'chat.bsky.convo.getConvo',
+  ChatBskyConvoGetConvoAvailability: 'chat.bsky.convo.getConvoAvailability',
   ChatBskyConvoGetConvoForMembers: 'chat.bsky.convo.getConvoForMembers',
   ChatBskyConvoGetLog: 'chat.bsky.convo.getLog',
   ChatBskyConvoGetMessages: 'chat.bsky.convo.getMessages',
@@ -14274,6 +14542,7 @@ export const ids = {
   ChatBskyConvoSendMessage: 'chat.bsky.convo.sendMessage',
   ChatBskyConvoSendMessageBatch: 'chat.bsky.convo.sendMessageBatch',
   ChatBskyConvoUnmuteConvo: 'chat.bsky.convo.unmuteConvo',
+  ChatBskyConvoUpdateAllRead: 'chat.bsky.convo.updateAllRead',
   ChatBskyConvoUpdateRead: 'chat.bsky.convo.updateRead',
   ChatBskyModerationGetActorMetadata: 'chat.bsky.moderation.getActorMetadata',
   ChatBskyModerationGetMessageContext: 'chat.bsky.moderation.getMessageContext',

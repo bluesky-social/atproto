@@ -7,7 +7,7 @@
       "required": ["cid", "rev"],
       "properties": {
         "cid": { "type": "string", "format": "cid" },
-        "rev": { "type": "string" }
+        "rev": { "type": "string", "format": "tid" }
       }
     }
   }

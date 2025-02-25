@@ -12,16 +12,18 @@ export class BlockMap {
     return block.cid
   }
 
-  set(cid: CID, bytes: Uint8Array) {
+  set(cid: CID, bytes: Uint8Array): BlockMap {
     this.map.set(cid.toString(), bytes)
+    return this
   }
 
   get(cid: CID): Uint8Array | undefined {
     return this.map.get(cid.toString())
   }
 
-  delete(cid: CID) {
+  delete(cid: CID): BlockMap {
     this.map.delete(cid.toString())
+    return this
   }
 
   getMany(cids: CID[]): { blocks: BlockMap; missing: CID[] } {
@@ -62,10 +64,11 @@ export class BlockMap {
     return this.entries().map((e) => e.cid)
   }
 
-  addMap(toAdd: BlockMap) {
+  addMap(toAdd: BlockMap): BlockMap {
     toAdd.forEach((bytes, cid) => {
       this.set(cid, bytes)
     })
+    return this
   }
 
   get size(): number {

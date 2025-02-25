@@ -1,11 +1,10 @@
 import EventEmitter from 'node:events'
 import TypedEmitter from 'typed-emitter'
 import { SECOND, cborDecode, wait } from '@atproto/common'
-import { CommitData } from '@atproto/repo'
 import { AccountStatus } from '../account-manager/helpers/account'
 import { Crawlers } from '../crawlers'
 import { seqLogger as log } from '../logger'
-import { PreparedWrite } from '../repo'
+import { CommitDataWithOps } from '../repo'
 import {
   RepoSeqEntry,
   RepoSeqInsert,
@@ -217,10 +216,9 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
 
   async sequenceCommit(
     did: string,
-    commitData: CommitData,
-    writes: PreparedWrite[],
+    commitData: CommitDataWithOps,
   ): Promise<number> {
-    const evt = await formatSeqCommit(did, commitData, writes)
+    const evt = await formatSeqCommit(did, commitData)
     return await this.sequenceEvt(evt)
   }
 

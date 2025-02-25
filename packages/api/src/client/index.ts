@@ -182,9 +182,11 @@ import * as ChatBskyActorDeclaration from './types/chat/bsky/actor/declaration.j
 import * as ChatBskyActorDefs from './types/chat/bsky/actor/defs.js'
 import * as ChatBskyActorDeleteAccount from './types/chat/bsky/actor/deleteAccount.js'
 import * as ChatBskyActorExportAccountData from './types/chat/bsky/actor/exportAccountData.js'
+import * as ChatBskyConvoAcceptConvo from './types/chat/bsky/convo/acceptConvo.js'
 import * as ChatBskyConvoDefs from './types/chat/bsky/convo/defs.js'
 import * as ChatBskyConvoDeleteMessageForSelf from './types/chat/bsky/convo/deleteMessageForSelf.js'
 import * as ChatBskyConvoGetConvo from './types/chat/bsky/convo/getConvo.js'
+import * as ChatBskyConvoGetConvoAvailability from './types/chat/bsky/convo/getConvoAvailability.js'
 import * as ChatBskyConvoGetConvoForMembers from './types/chat/bsky/convo/getConvoForMembers.js'
 import * as ChatBskyConvoGetLog from './types/chat/bsky/convo/getLog.js'
 import * as ChatBskyConvoGetMessages from './types/chat/bsky/convo/getMessages.js'
@@ -194,6 +196,7 @@ import * as ChatBskyConvoMuteConvo from './types/chat/bsky/convo/muteConvo.js'
 import * as ChatBskyConvoSendMessage from './types/chat/bsky/convo/sendMessage.js'
 import * as ChatBskyConvoSendMessageBatch from './types/chat/bsky/convo/sendMessageBatch.js'
 import * as ChatBskyConvoUnmuteConvo from './types/chat/bsky/convo/unmuteConvo.js'
+import * as ChatBskyConvoUpdateAllRead from './types/chat/bsky/convo/updateAllRead.js'
 import * as ChatBskyConvoUpdateRead from './types/chat/bsky/convo/updateRead.js'
 import * as ChatBskyModerationGetActorMetadata from './types/chat/bsky/moderation/getActorMetadata.js'
 import * as ChatBskyModerationGetMessageContext from './types/chat/bsky/moderation/getMessageContext.js'
@@ -413,9 +416,11 @@ export * as ChatBskyActorDeclaration from './types/chat/bsky/actor/declaration.j
 export * as ChatBskyActorDefs from './types/chat/bsky/actor/defs.js'
 export * as ChatBskyActorDeleteAccount from './types/chat/bsky/actor/deleteAccount.js'
 export * as ChatBskyActorExportAccountData from './types/chat/bsky/actor/exportAccountData.js'
+export * as ChatBskyConvoAcceptConvo from './types/chat/bsky/convo/acceptConvo.js'
 export * as ChatBskyConvoDefs from './types/chat/bsky/convo/defs.js'
 export * as ChatBskyConvoDeleteMessageForSelf from './types/chat/bsky/convo/deleteMessageForSelf.js'
 export * as ChatBskyConvoGetConvo from './types/chat/bsky/convo/getConvo.js'
+export * as ChatBskyConvoGetConvoAvailability from './types/chat/bsky/convo/getConvoAvailability.js'
 export * as ChatBskyConvoGetConvoForMembers from './types/chat/bsky/convo/getConvoForMembers.js'
 export * as ChatBskyConvoGetLog from './types/chat/bsky/convo/getLog.js'
 export * as ChatBskyConvoGetMessages from './types/chat/bsky/convo/getMessages.js'
@@ -425,6 +430,7 @@ export * as ChatBskyConvoMuteConvo from './types/chat/bsky/convo/muteConvo.js'
 export * as ChatBskyConvoSendMessage from './types/chat/bsky/convo/sendMessage.js'
 export * as ChatBskyConvoSendMessageBatch from './types/chat/bsky/convo/sendMessageBatch.js'
 export * as ChatBskyConvoUnmuteConvo from './types/chat/bsky/convo/unmuteConvo.js'
+export * as ChatBskyConvoUpdateAllRead from './types/chat/bsky/convo/updateAllRead.js'
 export * as ChatBskyConvoUpdateRead from './types/chat/bsky/convo/updateRead.js'
 export * as ChatBskyModerationGetActorMetadata from './types/chat/bsky/moderation/getActorMetadata.js'
 export * as ChatBskyModerationGetMessageContext from './types/chat/bsky/moderation/getMessageContext.js'
@@ -3419,6 +3425,18 @@ export class ChatBskyConvoNS {
     this._client = client
   }
 
+  acceptConvo(
+    data?: ChatBskyConvoAcceptConvo.InputSchema,
+    opts?: ChatBskyConvoAcceptConvo.CallOptions,
+  ): Promise<ChatBskyConvoAcceptConvo.Response> {
+    return this._client.call(
+      'chat.bsky.convo.acceptConvo',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
   deleteMessageForSelf(
     data?: ChatBskyConvoDeleteMessageForSelf.InputSchema,
     opts?: ChatBskyConvoDeleteMessageForSelf.CallOptions,
@@ -3437,6 +3455,18 @@ export class ChatBskyConvoNS {
   ): Promise<ChatBskyConvoGetConvo.Response> {
     return this._client.call(
       'chat.bsky.convo.getConvo',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getConvoAvailability(
+    params?: ChatBskyConvoGetConvoAvailability.QueryParams,
+    opts?: ChatBskyConvoGetConvoAvailability.CallOptions,
+  ): Promise<ChatBskyConvoGetConvoAvailability.Response> {
+    return this._client.call(
+      'chat.bsky.convo.getConvoAvailability',
       params,
       undefined,
       opts,
@@ -3530,6 +3560,18 @@ export class ChatBskyConvoNS {
   ): Promise<ChatBskyConvoUnmuteConvo.Response> {
     return this._client.call(
       'chat.bsky.convo.unmuteConvo',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
+  updateAllRead(
+    data?: ChatBskyConvoUpdateAllRead.InputSchema,
+    opts?: ChatBskyConvoUpdateAllRead.CallOptions,
+  ): Promise<ChatBskyConvoUpdateAllRead.Response> {
+    return this._client.call(
+      'chat.bsky.convo.updateAllRead',
       opts?.qp,
       data,
       opts,

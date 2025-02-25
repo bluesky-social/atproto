@@ -1,6 +1,50 @@
 {
-  "typescript.tsdk": "node_modules/typescript/lib",
+  "cSpell.language": "en,en-US",
+  "cSpell.userWords": [
+    "algs",
+    "appview",
+    "atproto",
+    "blockstore",
+    "bluesky",
+    "bsky",
+    "bsync",
+    "clsx",
+    "consolas",
+    "dpop",
+    "googleusercontent",
+    "hexeditor",
+    "ingester",
+    "insertable",
+    "jwks",
+    "keypair",
+    "kysely",
+    "merkle",
+    "msid",
+    "multibase",
+    "multiformats",
+    "nameserver",
+    "oidc",
+    "pkce",
+    "ponyfill",
+    "proxied",
+    "ssrf",
+    "undici",
+    "webcrypto",
+    "whatwg",
+    "xrpc"
+  ],
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit",
+    "source.sortImports": "never"
+  },
   "files.associations": {
     "**/tsconfig/*.json": "jsonc"
-  }
+  },
+  "files.defaultLanguage": "ts",
+  "files.insertFinalNewline": true,
+  "files.trimTrailingWhitespace": true,
+  "prettier.semi": false,
+  "prettier.singleQuote": true,
+  "prettier.trailingComma": "es5",
+  "typescript.tsdk": "node_modules/typescript/lib"
 }

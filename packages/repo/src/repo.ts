@@ -142,15 +142,14 @@ export class Repo extends ReadableRepo {
     const newBlocks = diff.newMstBlocks
     const removedCids = diff.removedCids
 
-    const relevantBlocks = new BlockMap()
-    await Promise.all(
+    const proofs = await Promise.all(
       writes.map((op) =>
-        data.addBlocksForPath(
-          util.formatDataKey(op.collection, op.rkey),
-          relevantBlocks,
-        ),
+        data.getCoveringProof(util.formatDataKey(op.collection, op.rkey)),
       ),
     )
+    const relevantBlocks = proofs.reduce((acc, cur) => {
+      return acc.addMap(cur)
+    }, new BlockMap())
 
     const addedLeaves = leaves.getMany(diff.newLeafCids.toList())
     if (addedLeaves.missing.length > 0) {
