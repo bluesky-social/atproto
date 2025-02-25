@@ -12,6 +12,7 @@ import {
   isDelete,
   isUpdate,
 } from '../../../../lexicon/types/com/atproto/repo/applyWrites'
+import { dbLogger } from '../../../../logger'
 import {
   BadCommitSwapError,
   InvalidRecordError,
@@ -119,19 +120,28 @@ export default function (server: Server, ctx: AppContext) {
       const swapCommitCid = swapCommit ? CID.parse(swapCommit) : undefined
 
       const commit = await ctx.actorStore.transact(did, async (actorTxn) => {
-        try {
-          return await actorTxn.repo.processWrites(writes, swapCommitCid)
-        } catch (err) {
-          if (err instanceof BadCommitSwapError) {
-            throw new InvalidRequestError(err.message, 'InvalidSwap')
-          } else {
-            throw err
-          }
-        }
+        const commit = await actorTxn.repo
+          .processWrites(writes, swapCommitCid)
+          .catch((err) => {
+            if (err instanceof BadCommitSwapError) {
+              throw new InvalidRequestError(err.message, 'InvalidSwap')
+            } else {
+              throw err
+            }
+          })
+
+        await ctx.sequencer.sequenceCommit(did, commit)
+        return commit
       })
 
-      await ctx.sequencer.sequenceCommit(did, commit)
-      await ctx.accountManager.updateRepoRoot(did, commit.cid, commit.rev)
+      await ctx.accountManager
+        .updateRepoRoot(did, commit.cid, commit.rev)
+        .catch((err) => {
+          dbLogger.error(
+            { err, did, cid: commit.cid, rev: commit.rev },
+            'failed to update account root',
+          )
+        })
 
       return {
         encoding: 'application/json',

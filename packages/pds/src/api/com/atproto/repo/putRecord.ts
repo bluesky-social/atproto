@@ -7,10 +7,10 @@ import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
 import { Record as ProfileRecord } from '../../../../lexicon/types/app/bsky/actor/profile'
+import { dbLogger } from '../../../../logger'
 import {
   BadCommitSwapError,
   BadRecordSwapError,
-  CommitDataWithOps,
   InvalidRecordError,
   PreparedCreate,
   PreparedUpdate,
@@ -104,26 +104,34 @@ export default function (server: Server, ctx: AppContext) {
             }
           }
 
-          let commit: CommitDataWithOps
-          try {
-            commit = await actorTxn.repo.processWrites([write], swapCommitCid)
-          } catch (err) {
-            if (
-              err instanceof BadCommitSwapError ||
-              err instanceof BadRecordSwapError
-            ) {
-              throw new InvalidRequestError(err.message, 'InvalidSwap')
-            } else {
-              throw err
-            }
-          }
+          const commit = await actorTxn.repo
+            .processWrites([write], swapCommitCid)
+            .catch((err) => {
+              if (
+                err instanceof BadCommitSwapError ||
+                err instanceof BadRecordSwapError
+              ) {
+                throw new InvalidRequestError(err.message, 'InvalidSwap')
+              } else {
+                throw err
+              }
+            })
+
+          await ctx.sequencer.sequenceCommit(did, commit)
+
           return { commit, write }
         },
       )
 
       if (commit !== null) {
-        await ctx.sequencer.sequenceCommit(did, commit)
-        await ctx.accountManager.updateRepoRoot(did, commit.cid, commit.rev)
+        await ctx.accountManager
+          .updateRepoRoot(did, commit.cid, commit.rev)
+          .catch((err) => {
+            dbLogger.error(
+              { err, did, cid: commit.cid, rev: commit.rev },
+              'failed to update account root',
+            )
+          })
       }
 
       return {

@@ -2,6 +2,7 @@ import { CID } from 'multiformats/cid'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
+import { dbLogger } from '../../../../logger'
 import {
   BadCommitSwapError,
   BadRecordSwapError,
@@ -56,24 +57,35 @@ export default function (server: Server, ctx: AppContext) {
         if (!record) {
           return null // No-op if record already doesn't exist
         }
-        try {
-          return await actorTxn.repo.processWrites([write], swapCommitCid)
-        } catch (err) {
-          if (
-            err instanceof BadCommitSwapError ||
-            err instanceof BadRecordSwapError
-          ) {
-            throw new InvalidRequestError(err.message, 'InvalidSwap')
-          } else {
-            throw err
-          }
-        }
+
+        const commit = await actorTxn.repo
+          .processWrites([write], swapCommitCid)
+          .catch((err) => {
+            if (
+              err instanceof BadCommitSwapError ||
+              err instanceof BadRecordSwapError
+            ) {
+              throw new InvalidRequestError(err.message, 'InvalidSwap')
+            } else {
+              throw err
+            }
+          })
+
+        await ctx.sequencer.sequenceCommit(did, commit)
+        return commit
       })
 
       if (commit !== null) {
-        await ctx.sequencer.sequenceCommit(did, commit)
-        await ctx.accountManager.updateRepoRoot(did, commit.cid, commit.rev)
+        await ctx.accountManager
+          .updateRepoRoot(did, commit.cid, commit.rev)
+          .catch((err) => {
+            dbLogger.error(
+              { err, did, cid: commit.cid, rev: commit.rev },
+              'failed to update account root',
+            )
+          })
       }
+
       return {
         encoding: 'application/json',
         body: {
