@@ -93,6 +93,12 @@ const paginateNotifications = async (opts: {
   }
 }
 
+/**
+ * Applies a configurable delay to the datetime string of a cursor,
+ * effectively allowing for a delay on listing the notifications.
+ * This is useful to allow time for services to process notifications
+ * before they are listed to the user.
+ */
 export const delayCursor = (
   cursorStr: string | undefined,
   delayMs: number,

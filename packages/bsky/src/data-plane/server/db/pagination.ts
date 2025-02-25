@@ -161,7 +161,7 @@ export class IndexedAtDidKeyset extends TimeCidKeyset<{
 }
 
 /**
- * @deprecated Use {@link GenericKeyset#paginate} instead.
+ * This is being deprecated. Use {@link GenericKeyset#paginate} instead.
  */
 export const paginate = <
   QB extends AnyQb,
