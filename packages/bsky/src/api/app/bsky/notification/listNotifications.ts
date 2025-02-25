@@ -108,8 +108,12 @@ export const delayCursor = (
   if (cursorStr === undefined) {
     return new Date(nowMinusDelay).toISOString()
   }
-  const cursor = new Date(cursorStr).getTime()
-  return new Date(Math.min(cursor, nowMinusDelay)).toISOString()
+  try {
+    const cursor = new Date(cursorStr).getTime()
+    return new Date(Math.min(cursor, nowMinusDelay)).toISOString()
+  } catch (err) {
+    return cursorStr
+  }
 }
 
 const skeleton = async (

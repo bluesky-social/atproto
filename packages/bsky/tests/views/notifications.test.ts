@@ -1,4 +1,5 @@
 import { AtpAgent } from '@atproto/api'
+import { wait } from '@atproto/common'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { delayCursor } from '../../src/api/app/bsky/notification/listNotifications'
 import { ids } from '../../src/lexicon/lexicons'
@@ -573,7 +574,7 @@ describe('notification views', () => {
       expect(results(paginatedAllBeforeDelay)).toEqual(
         results([fullBeforeDelay.data]),
       )
-      await new Promise((resolve) => setTimeout(resolve, delay3s))
+      await wait(delay3s)
 
       const paginatedAllAfterDelay = await paginateAll(paginator)
       paginatedAllAfterDelay.forEach((res) =>
@@ -640,6 +641,12 @@ describe('notification views', () => {
         it('returns original cursor for cursor that is before "now minus delay"', async () => {
           // Cursor is "now - 8s", should stay like that.
           const originalCursor = nowMinus8s
+          const cursor = delayCursor(originalCursor, delay5s)
+          expect(cursor).toBe(originalCursor)
+        })
+
+        it('passes through a non-date cursor', async () => {
+          const originalCursor = '123_abc'
           const cursor = delayCursor(originalCursor, delay5s)
           expect(cursor).toBe(originalCursor)
         })
