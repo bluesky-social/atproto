@@ -1,11 +1,11 @@
-import { Record as FollowRecord } from '../lexicon/types/app/bsky/graph/follow'
+import { DataPlaneClient } from '../data-plane/client'
 import { Record as BlockRecord } from '../lexicon/types/app/bsky/graph/block'
-import { Record as StarterPackRecord } from '../lexicon/types/app/bsky/graph/starterpack'
+import { Record as FollowRecord } from '../lexicon/types/app/bsky/graph/follow'
 import { Record as ListRecord } from '../lexicon/types/app/bsky/graph/list'
 import { Record as ListItemRecord } from '../lexicon/types/app/bsky/graph/listitem'
-import { DataPlaneClient } from '../data-plane/client'
-import { HydrationMap, ItemRef, RecordInfo, parseRecord } from './util'
+import { Record as StarterPackRecord } from '../lexicon/types/app/bsky/graph/starterpack'
 import { FollowInfo } from '../proto/bsky_pb'
+import { HydrationMap, ItemRef, RecordInfo, parseRecord } from './util'
 
 export type List = RecordInfo<ListRecord>
 export type Lists = HydrationMap<List>
@@ -176,7 +176,10 @@ export class GraphHydrator {
     }, new HydrationMap<Follow>())
   }
 
-  async getBlocks(uris: string[], includeTakedowns = false): Promise<Follows> {
+  async getBlocks(
+    uris: string[],
+    includeTakedowns = false,
+  ): Promise<HydrationMap<Block>> {
     if (!uris.length) return new HydrationMap<Block>()
     const res = await this.dataplane.getBlockRecords({ uris })
     return uris.reduce((acc, uri, i) => {

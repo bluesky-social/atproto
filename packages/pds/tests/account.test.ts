@@ -1,9 +1,9 @@
+import { EventEmitter, once } from 'node:events'
+import Mail from 'nodemailer/lib/mailer'
 import { AtpAgent, ComAtprotoServerResetPassword } from '@atproto/api'
 import * as crypto from '@atproto/crypto'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { IdResolver } from '@atproto/identity'
-import { EventEmitter, once } from 'events'
-import Mail from 'nodemailer/lib/mailer'
 import { AppContext } from '../src'
 import { ServerMailer } from '../src/mailer'
 

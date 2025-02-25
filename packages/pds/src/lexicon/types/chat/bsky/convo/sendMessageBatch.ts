@@ -3,22 +3,24 @@
  */
 import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
-import * as ChatBskyConvoDefs from './defs'
+import type * as ChatBskyConvoDefs from './defs.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'chat.bsky.convo.sendMessageBatch'
 
 export interface QueryParams {}
 
 export interface InputSchema {
   items: BatchItem[]
-  [k: string]: unknown
 }
 
 export interface OutputSchema {
   items: ChatBskyConvoDefs.MessageView[]
-  [k: string]: unknown
 }
 
 export interface HandlerInput {
@@ -51,19 +53,17 @@ export type Handler<HA extends HandlerAuth = never> = (
 ) => Promise<HandlerOutput> | HandlerOutput
 
 export interface BatchItem {
+  $type?: 'chat.bsky.convo.sendMessageBatch#batchItem'
   convoId: string
   message: ChatBskyConvoDefs.MessageInput
-  [k: string]: unknown
 }
 
-export function isBatchItem(v: unknown): v is BatchItem {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'chat.bsky.convo.sendMessageBatch#batchItem'
-  )
+const hashBatchItem = 'batchItem'
+
+export function isBatchItem<V>(v: V) {
+  return is$typed(v, id, hashBatchItem)
 }
 
-export function validateBatchItem(v: unknown): ValidationResult {
-  return lexicons.validate('chat.bsky.convo.sendMessageBatch#batchItem', v)
+export function validateBatchItem<V>(v: V) {
+  return validate<BatchItem & V>(v, id, hashBatchItem)
 }

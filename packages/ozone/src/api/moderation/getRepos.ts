@@ -1,5 +1,5 @@
+import { AppContext } from '../../context'
 import { Server } from '../../lexicon'
-import AppContext from '../../context'
 import { addAccountInfoToRepoViewDetail, getPdsAccountInfos } from '../util'
 
 export default function (server: Server, ctx: AppContext) {
@@ -23,12 +23,12 @@ export default function (server: Server, ctx: AppContext) {
           }
         }
         return {
-          $type: 'tools.ozone.moderation.defs#repoViewDetail',
           ...addAccountInfoToRepoViewDetail(
             partialRepo,
             accountInfo.get(did) || null,
             auth.credentials.isModerator,
           ),
+          $type: 'tools.ozone.moderation.defs#repoViewDetail',
         }
       })
 

@@ -22,6 +22,7 @@ export interface ModerationEvent {
     | 'tools.ozone.moderation.defs#accountEvent'
     | 'tools.ozone.moderation.defs#identityEvent'
     | 'tools.ozone.moderation.defs#recordEvent'
+    | 'tools.ozone.moderation.defs#modEventPriorityScore'
   subjectType:
     | 'com.atproto.admin.defs#repoRef'
     | 'com.atproto.repo.strongRef'
@@ -38,7 +39,7 @@ export interface ModerationEvent {
   createdBy: string
   durationInHours: number | null
   expiresAt: string | null
-  meta: Record<string, string | boolean> | null
+  meta: Record<string, string | boolean | number> | null
   addedTags: string[] | null
   removedTags: string[] | null
   legacyRefId: number | null

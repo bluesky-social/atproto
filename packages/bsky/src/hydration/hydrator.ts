@@ -1,21 +1,41 @@
-import assert from 'assert'
+import assert from 'node:assert'
 import { mapDefined } from '@atproto/common'
 import { AtUri } from '@atproto/syntax'
 import { DataPlaneClient } from '../data-plane/client'
-import { Notification } from '../proto/bsky_pb'
 import { ids } from '../lexicon/lexicons'
+import { Record as ProfileRecord } from '../lexicon/types/app/bsky/actor/profile'
 import { isMain as isEmbedRecord } from '../lexicon/types/app/bsky/embed/record'
 import { isMain as isEmbedRecordWithMedia } from '../lexicon/types/app/bsky/embed/recordWithMedia'
 import { isListRule as isThreadgateListRule } from '../lexicon/types/app/bsky/feed/threadgate'
 import { hydrationLogger } from '../logger'
+import { Notification } from '../proto/bsky_pb'
+import { ParsedLabelers } from '../util'
+import { uriToDid, uriToDid as didFromUri } from '../util/uris'
 import {
   ActorHydrator,
-  ProfileAggs,
   Actors,
-  ProfileViewerStates,
-  ProfileViewerState,
   KnownFollowers,
+  ProfileAggs,
+  ProfileViewerState,
+  ProfileViewerStates,
 } from './actor'
+import {
+  FeedGenAggs,
+  FeedGenViewerStates,
+  FeedGens,
+  FeedHydrator,
+  FeedItem,
+  Likes,
+  Post,
+  PostAggs,
+  PostViewerStates,
+  Postgates,
+  Posts,
+  Reposts,
+  ThreadContexts,
+  ThreadRef,
+  Threadgates,
+} from './feed'
 import {
   Follows,
   GraphHydrator,
@@ -36,32 +56,13 @@ import {
 } from './label'
 import {
   HydrationMap,
-  RecordInfo,
   ItemRef,
-  urisByCollection,
+  RecordInfo,
+  mergeManyMaps,
   mergeMaps,
   mergeNestedMaps,
-  mergeManyMaps,
+  urisByCollection,
 } from './util'
-import { uriToDid as didFromUri, uriToDid } from '../util/uris'
-import {
-  FeedGenAggs,
-  FeedGens,
-  FeedGenViewerStates,
-  FeedHydrator,
-  Likes,
-  Post,
-  Posts,
-  Reposts,
-  PostAggs,
-  PostViewerStates,
-  Threadgates,
-  Postgates,
-  FeedItem,
-  ThreadContexts,
-  ThreadRef,
-} from './feed'
-import { ParsedLabelers } from '../util'
 
 export class HydrateCtx {
   labelers = this.vals.labelers
@@ -998,10 +999,7 @@ export class Hydrator {
 
   // ad-hoc record hydration
   // in com.atproto.repo.getRecord
-  async getRecord(
-    uri: string,
-    includeTakedowns = false,
-  ): Promise<RecordInfo<Record<string, unknown>> | undefined> {
+  async getRecord(uri: string, includeTakedowns = false) {
     const parsed = new AtUri(uri)
     const collection = parsed.collection
     if (collection === ids.AppBskyFeedPost) {
@@ -1081,13 +1079,15 @@ export class Hydrator {
         did,
       )
       if (!actor?.profile || !actor?.profileCid) return undefined
-      return {
+      const recordInfo: RecordInfo<ProfileRecord> = {
         record: actor.profile,
         cid: actor.profileCid,
         sortedAt: actor.sortedAt ?? new Date(0), // @NOTE will be present since profile record is present
         indexedAt: actor.indexedAt ?? new Date(0), // @NOTE will be present since profile record is present
         takedownRef: actor.profileTakedownRef,
       }
+
+      return recordInfo
     }
   }
 

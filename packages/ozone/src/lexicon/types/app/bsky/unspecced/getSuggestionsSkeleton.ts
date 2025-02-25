@@ -3,11 +3,15 @@
  */
 import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
-import * as AppBskyUnspeccedDefs from './defs'
+import type * as AppBskyUnspeccedDefs from './defs.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'app.bsky.unspecced.getSuggestionsSkeleton'
 
 export interface QueryParams {
   /** DID of the account making the request (not included for public/unauthenticated queries). Used to boost followed accounts in ranking. */
@@ -27,7 +31,6 @@ export interface OutputSchema {
   relativeToDid?: string
   /** Snowflake for this recommendation, use when submitting recommendation events. */
   recId?: number
-  [k: string]: unknown
 }
 
 export type HandlerInput = undefined

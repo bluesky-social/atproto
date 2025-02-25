@@ -6,8 +6,8 @@ const {
   PDS,
   envToCfg,
   envToSecrets,
-  readEnv,
   httpLogger,
+  readEnv,
 } = require('@atproto/pds')
 const pkg = require('@atproto/pds/package.json')
 

@@ -3,7 +3,7 @@
 import { HOUR } from '@atproto/common'
 import { AtUri } from '@atproto/syntax'
 import { Database } from '../db'
-import DatabaseSchema from '../db/schema'
+import { DatabaseSchema } from '../db/schema'
 import { jsonb } from '../db/types'
 import { REASONAPPEAL } from '../lexicon/types/com/atproto/moderation/defs'
 import {
@@ -370,6 +370,14 @@ export const adjustModerationSubjectStatus = async (
   const newStatus = {
     ...defaultData,
     ...subjectStatus,
+  }
+
+  if (
+    action === 'tools.ozone.moderation.defs#modEventPriorityScore' &&
+    typeof meta?.priorityScore === 'number'
+  ) {
+    newStatus.priorityScore = meta?.priorityScore
+    subjectStatus.priorityScore = meta?.priorityScore
   }
 
   if (

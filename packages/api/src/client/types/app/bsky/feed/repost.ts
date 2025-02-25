@@ -2,26 +2,28 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
-import * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef'
+import { validate as _validate } from '../../../../lexicons'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import type * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'app.bsky.feed.repost'
 
 export interface Record {
+  $type: 'app.bsky.feed.repost'
   subject: ComAtprotoRepoStrongRef.Main
   createdAt: string
   [k: string]: unknown
 }
 
-export function isRecord(v: unknown): v is Record {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    (v.$type === 'app.bsky.feed.repost#main' ||
-      v.$type === 'app.bsky.feed.repost')
-  )
+const hashRecord = 'main'
+
+export function isRecord<V>(v: V) {
+  return is$typed(v, id, hashRecord)
 }
 
-export function validateRecord(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.feed.repost#main', v)
+export function validateRecord<V>(v: V) {
+  return validate<Record & V>(v, id, hashRecord, true)
 }

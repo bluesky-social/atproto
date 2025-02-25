@@ -3,9 +3,13 @@
  */
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.atproto.server.describeServer'
 
 export interface QueryParams {}
 
@@ -21,7 +25,6 @@ export interface OutputSchema {
   links?: Links
   contact?: Contact
   did: string
-  [k: string]: unknown
 }
 
 export interface CallOptions {
@@ -40,36 +43,32 @@ export function toKnownErr(e: any) {
 }
 
 export interface Links {
+  $type?: 'com.atproto.server.describeServer#links'
   privacyPolicy?: string
   termsOfService?: string
-  [k: string]: unknown
 }
 
-export function isLinks(v: unknown): v is Links {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'com.atproto.server.describeServer#links'
-  )
+const hashLinks = 'links'
+
+export function isLinks<V>(v: V) {
+  return is$typed(v, id, hashLinks)
 }
 
-export function validateLinks(v: unknown): ValidationResult {
-  return lexicons.validate('com.atproto.server.describeServer#links', v)
+export function validateLinks<V>(v: V) {
+  return validate<Links & V>(v, id, hashLinks)
 }
 
 export interface Contact {
+  $type?: 'com.atproto.server.describeServer#contact'
   email?: string
-  [k: string]: unknown
 }
 
-export function isContact(v: unknown): v is Contact {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'com.atproto.server.describeServer#contact'
-  )
+const hashContact = 'contact'
+
+export function isContact<V>(v: V) {
+  return is$typed(v, id, hashContact)
 }
 
-export function validateContact(v: unknown): ValidationResult {
-  return lexicons.validate('com.atproto.server.describeServer#contact', v)
+export function validateContact<V>(v: V) {
+  return validate<Contact & V>(v, id, hashContact)
 }

@@ -1,13 +1,13 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
-import { GetIdentityByDidResponse } from '../../../../proto/bsky_pb'
+import { AppContext } from '../../../../context'
 import {
   Code,
   getServiceEndpoint,
   isDataplaneError,
   unpackIdentityServices,
 } from '../../../../data-plane'
+import { Server } from '../../../../lexicon'
+import { GetIdentityByDidResponse } from '../../../../proto/bsky_pb'
 import { resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {

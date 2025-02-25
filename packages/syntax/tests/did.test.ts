@@ -1,6 +1,6 @@
-import { ensureValidDid, ensureValidDidRegex, InvalidDidError } from '../src'
-import * as readline from 'readline'
-import * as fs from 'fs'
+import * as fs from 'node:fs'
+import * as readline from 'node:readline'
+import { InvalidDidError, ensureValidDid, ensureValidDidRegex } from '../src'
 
 describe('DID permissive validation', () => {
   const expectValid = (h: string) => {

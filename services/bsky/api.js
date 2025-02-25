@@ -1,4 +1,5 @@
 /* eslint-env node */
+/* eslint-disable import/order */
 
 'use strict'
 
@@ -39,11 +40,12 @@ dd.tracer._tracer.startSpan = function (name, options) {
 }
 
 // Tracer code above must come before anything else
-const path = require('node:path')
 const assert = require('node:assert')
-const cluster = require('cluster')
+const cluster = require('node:cluster')
+const path = require('node:path')
+
+const { BskyAppView, ServerConfig } = require('@atproto/bsky')
 const { Secp256k1Keypair } = require('@atproto/crypto')
-const { ServerConfig, BskyAppView } = require('@atproto/bsky')
 
 const main = async () => {
   const env = getEnv()

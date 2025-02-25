@@ -1,5 +1,5 @@
-import { Sub } from '../oidc/sub.js'
 import { Simplify } from '../lib/util/type.js'
+import { Sub } from '../oidc/sub.js'
 
 export type Account = Simplify<{
   sub: Sub // Account id

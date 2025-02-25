@@ -1,6 +1,6 @@
 {
   "name": "@atproto/aws",
-  "version": "0.2.13",
+  "version": "0.2.16",
   "license": "MIT",
   "description": "Shared AWS cloud API helpers for atproto services",
   "keywords": [
@@ -17,6 +17,9 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc --build tsconfig.build.json"
+  },
+  "engines": {
+    "node": ">=18.7.0"
   },
   "dependencies": {
     "@atproto/common": "workspace:^",

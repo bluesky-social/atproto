@@ -109,4 +109,5 @@ export interface BskyPreferences {
     activeProgressGuide: AppBskyActorDefs.BskyAppProgressGuide | undefined
     nuxs: AppBskyActorDefs.Nux[]
   }
+  postInteractionSettings: AppBskyActorDefs.PostInteractionSettingsPref
 }

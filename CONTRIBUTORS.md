@@ -20,4 +20,6 @@ ATProto receives so many contributions that we could never list everyone who des
 
 #### [DavidBuchanan314](https://github.com/DavidBuchanan314), Security disclosure, November 2024
 
+#### [daniel](https://hackerone.com/daniel), Security disclosure, November 2024
+
 #### [imax](https://github.com/imax9000), Security disclosure, January 2025

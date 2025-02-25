@@ -1,7 +1,6 @@
 import { p256 } from '@noble/curves/p256'
 import { sha256 } from '@noble/hashes/sha256'
 import { equals as ui8equals } from 'uint8arrays'
-
 import { P256_DID_PREFIX } from '../const'
 import { VerifyOptions } from '../types'
 import { extractMultikey, extractPrefixedBytes, hasPrefix } from '../utils'

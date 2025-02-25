@@ -1,5 +1,5 @@
-import { AtpSessionData, AtpAgent } from '@atproto/api'
 import { useCallback, useMemo, useState } from 'react'
+import { AtpAgent, AtpSessionData } from '@atproto/api'
 
 type Session = AtpSessionData & { service: string }
 

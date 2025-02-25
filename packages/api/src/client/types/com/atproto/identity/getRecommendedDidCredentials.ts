@@ -3,9 +3,13 @@
  */
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.atproto.identity.getRecommendedDidCredentials'
 
 export interface QueryParams {}
 
@@ -15,9 +19,8 @@ export interface OutputSchema {
   /** Recommended rotation keys for PLC dids. Should be undefined (or ignored) for did:webs. */
   rotationKeys?: string[]
   alsoKnownAs?: string[]
-  verificationMethods?: {}
-  services?: {}
-  [k: string]: unknown
+  verificationMethods?: { [_ in string]: unknown }
+  services?: { [_ in string]: unknown }
 }
 
 export interface CallOptions {

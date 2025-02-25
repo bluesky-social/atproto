@@ -1,14 +1,14 @@
+import { IncomingMessage } from 'node:http'
+import { Readable } from 'node:stream'
+import express from 'express'
+import { isHttpError } from 'http-errors'
+import { z } from 'zod'
 import {
   ResponseType,
   ResponseTypeNames,
   ResponseTypeStrings,
   XRPCError as XRPCClientError,
 } from '@atproto/xrpc'
-import express from 'express'
-import { IncomingMessage } from 'http'
-import { isHttpError } from 'http-errors'
-import { Readable } from 'stream'
-import zod from 'zod'
 
 export type CatchallHandler = (
   req: express.Request,
@@ -47,60 +47,56 @@ export type UndecodedParams = (typeof express.request)['query']
 export type Primitive = string | number | boolean
 export type Params = Record<string, Primitive | Primitive[] | undefined>
 
-export const handlerInput = zod.object({
-  encoding: zod.string(),
-  body: zod.any(),
+export const handlerInput = z.object({
+  encoding: z.string(),
+  body: z.any(),
 })
-export type HandlerInput = zod.infer<typeof handlerInput>
+export type HandlerInput = z.infer<typeof handlerInput>
 
-export const handlerAuth = zod.object({
-  credentials: zod.any(),
-  artifacts: zod.any(),
+export const handlerAuth = z.object({
+  credentials: z.any(),
+  artifacts: z.any(),
 })
-export type HandlerAuth = zod.infer<typeof handlerAuth>
+export type HandlerAuth = z.infer<typeof handlerAuth>
 
-export const headersSchema = zod.record(zod.string())
+export const headersSchema = z.record(z.string())
 
-export const handlerSuccess = zod.object({
-  encoding: zod.string(),
-  body: zod.any(),
+export const handlerSuccess = z.object({
+  encoding: z.string(),
+  body: z.any(),
   headers: headersSchema.optional(),
 })
-export type HandlerSuccess = zod.infer<typeof handlerSuccess>
+export type HandlerSuccess = z.infer<typeof handlerSuccess>
 
-export const handlerPipeThroughBuffer = zod.object({
-  encoding: zod.string(),
-  buffer: zod.instanceof(Buffer),
-  headers: headersSchema.optional(),
-})
-
-export type HandlerPipeThroughBuffer = zod.infer<
-  typeof handlerPipeThroughBuffer
->
-
-export const handlerPipeThroughStream = zod.object({
-  encoding: zod.string(),
-  stream: zod.instanceof(Readable),
+export const handlerPipeThroughBuffer = z.object({
+  encoding: z.string(),
+  buffer: z.instanceof(Buffer),
   headers: headersSchema.optional(),
 })
 
-export type HandlerPipeThroughStream = zod.infer<
-  typeof handlerPipeThroughStream
->
+export type HandlerPipeThroughBuffer = z.infer<typeof handlerPipeThroughBuffer>
 
-export const handlerPipeThrough = zod.union([
+export const handlerPipeThroughStream = z.object({
+  encoding: z.string(),
+  stream: z.instanceof(Readable),
+  headers: headersSchema.optional(),
+})
+
+export type HandlerPipeThroughStream = z.infer<typeof handlerPipeThroughStream>
+
+export const handlerPipeThrough = z.union([
   handlerPipeThroughBuffer,
   handlerPipeThroughStream,
 ])
 
-export type HandlerPipeThrough = zod.infer<typeof handlerPipeThrough>
+export type HandlerPipeThrough = z.infer<typeof handlerPipeThrough>
 
-export const handlerError = zod.object({
-  status: zod.number(),
-  error: zod.string().optional(),
-  message: zod.string().optional(),
+export const handlerError = z.object({
+  status: z.number(),
+  error: z.string().optional(),
+  message: z.string().optional(),
 })
-export type HandlerError = zod.infer<typeof handlerError>
+export type HandlerError = z.infer<typeof handlerError>
 
 export type HandlerOutput = HandlerSuccess | HandlerPipeThrough | HandlerError
 

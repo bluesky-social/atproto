@@ -3,11 +3,15 @@
  */
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
-import * as AppBskyActorDefs from '../actor/defs'
-import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
+import { validate as _validate } from '../../../../lexicons'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import type * as AppBskyActorDefs from '../actor/defs.js'
+import type * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'app.bsky.notification.listNotifications'
 
 export interface QueryParams {
   /** Notification reasons to include in response. */
@@ -25,7 +29,6 @@ export interface OutputSchema {
   notifications: Notification[]
   priority?: boolean
   seenAt?: string
-  [k: string]: unknown
 }
 
 export interface CallOptions {
@@ -44,6 +47,7 @@ export function toKnownErr(e: any) {
 }
 
 export interface Notification {
+  $type?: 'app.bsky.notification.listNotifications#notification'
   uri: string
   cid: string
   author: AppBskyActorDefs.ProfileView
@@ -58,24 +62,18 @@ export interface Notification {
     | 'starterpack-joined'
     | (string & {})
   reasonSubject?: string
-  record: {}
+  record: { [_ in string]: unknown }
   isRead: boolean
   indexedAt: string
   labels?: ComAtprotoLabelDefs.Label[]
-  [k: string]: unknown
 }
 
-export function isNotification(v: unknown): v is Notification {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.notification.listNotifications#notification'
-  )
+const hashNotification = 'notification'
+
+export function isNotification<V>(v: V) {
+  return is$typed(v, id, hashNotification)
 }
 
-export function validateNotification(v: unknown): ValidationResult {
-  return lexicons.validate(
-    'app.bsky.notification.listNotifications#notification',
-    v,
-  )
+export function validateNotification<V>(v: V) {
+  return validate<Notification & V>(v, id, hashNotification)
 }

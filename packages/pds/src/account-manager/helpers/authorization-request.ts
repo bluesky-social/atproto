@@ -1,3 +1,4 @@
+import { Insertable, Selectable } from 'kysely'
 import {
   Code,
   FoundRequestResult,
@@ -5,9 +6,8 @@ import {
   RequestId,
   UpdateRequestData,
 } from '@atproto/oauth-provider'
-import { AccountDb, AuthorizationRequest } from '../db'
 import { fromDateISO, fromJsonObject, toDateISO, toJsonObject } from '../../db'
-import { Insertable, Selectable } from 'kysely'
+import { AccountDb, AuthorizationRequest } from '../db'
 
 export const rowToRequestData = (
   row: Selectable<AuthorizationRequest>,

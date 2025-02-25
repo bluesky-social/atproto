@@ -1,7 +1,6 @@
 import * as uint8arrays from 'uint8arrays'
-
 import { BASE58_MULTIBASE_PREFIX, DID_KEY_PREFIX } from './const'
-import plugins from './plugins'
+import { plugins } from './plugins'
 import { extractMultikey, extractPrefixedBytes, hasPrefix } from './utils'
 
 export type ParsedMultikey = {

@@ -1,11 +1,9 @@
 import { CidSet } from '@atproto/repo'
 import { INVALID_HANDLE } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-
-import AppContext from '../../../../context'
+import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { assertValidDidDocumentForService } from './util'
-import { authPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.activateAccount({
@@ -15,7 +13,7 @@ export default function (server: Server, ctx: AppContext) {
       if (ctx.entrywayAgent) {
         await ctx.entrywayAgent.com.atproto.server.activateAccount(
           undefined,
-          authPassthru(req),
+          ctx.entrywayPassthruHeaders(req),
         )
         return
       }
@@ -44,17 +42,20 @@ export default function (server: Server, ctx: AppContext) {
           newBlocks: blocks.blocks,
           relevantBlocks: blocks.blocks,
           removedCids: new CidSet(),
+          ops: [],
+          blobs: new CidSet(),
+          prevData: null,
         }
       })
 
       // @NOTE: we're over-emitting for now for backwards compatibility, can reduce this in the future
       const status = await ctx.accountManager.getAccountStatus(requester)
       await ctx.sequencer.sequenceAccountEvt(requester, status)
-      await ctx.sequencer.sequenceHandleUpdate(
+      await ctx.sequencer.sequenceIdentityEvt(
         requester,
         account.handle ?? INVALID_HANDLE,
       )
-      await ctx.sequencer.sequenceCommit(requester, commitData, [])
+      await ctx.sequencer.sequenceCommit(requester, commitData)
     },
   })
 }

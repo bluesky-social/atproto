@@ -1,8 +1,8 @@
 import { AtUri } from '@atproto/syntax'
 import { ids } from '../lexicon/lexicons'
 import {
-  validateMain as validateStrongRef,
   Main as StrongRef,
+  validateMain as validateStrongRef,
 } from '../lexicon/types/com/atproto/repo/strongRef'
 
 /**

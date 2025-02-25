@@ -3,18 +3,20 @@
  */
 import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'chat.bsky.actor.deleteAccount'
 
 export interface QueryParams {}
 
 export type InputSchema = undefined
 
-export interface OutputSchema {
-  [k: string]: unknown
-}
+export interface OutputSchema {}
 
 export type HandlerInput = undefined
 

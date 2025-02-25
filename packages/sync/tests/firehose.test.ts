@@ -1,12 +1,12 @@
+import { createDeferrable, wait } from '@atproto/common'
 import {
-  mockResolvers,
   SeedClient,
   TestNetworkNoAppView,
+  mockResolvers,
 } from '@atproto/dev-env'
-import { Firehose, FirehoseOptions, MemoryRunner } from '../src'
 import { IdResolver } from '@atproto/identity'
+import { Firehose, FirehoseOptions, MemoryRunner } from '../src'
 import { Create, Event } from '../src/events'
-import { createDeferrable, wait } from '@atproto/common'
 
 describe('firehose', () => {
   let network: TestNetworkNoAppView

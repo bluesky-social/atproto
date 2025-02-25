@@ -1,5 +1,3 @@
-import type { ManifestItem } from '@atproto-labs/rollup-plugin-bundle-manifest'
-
 // If this library is used as a regular dependency (e.g. from node_modules), the
 // assets will simply be referenced from the node_modules directory. However, if
 // this library is bundled (e.g. via rollup), the assets need to be copied to
@@ -17,8 +15,9 @@ import type { ManifestItem } from '@atproto-labs/rollup-plugin-bundle-manifest'
 import { createReadStream } from 'node:fs'
 import { join, posix } from 'node:path'
 import { Readable } from 'node:stream'
-
+import type { ManifestItem } from '@atproto-labs/rollup-plugin-bundle-manifest'
 // @ts-expect-error: This file is generated at build time
+// eslint-disable-next-line import/no-unresolved
 import appBundleManifestJson from './app/bundle-manifest.json'
 import { Asset } from './asset'
 

@@ -1,23 +1,23 @@
 import { CID } from 'multiformats/cid'
-import { dataToCborBlock, TID } from '@atproto/common'
+import { TID, dataToCborBlock } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
 import { lexToIpld } from '@atproto/lexicon'
+import { BlockMap } from './block-map'
+import { CidSet } from './cid-set'
+import { DataDiff } from './data-diff'
+import log from './logger'
+import { MST } from './mst'
+import { ReadableRepo } from './readable-repo'
+import { RepoStorage } from './storage'
 import {
   Commit,
   CommitData,
-  def,
   RecordCreateOp,
   RecordWriteOp,
   WriteOpAction,
+  def,
 } from './types'
-import { RepoStorage } from './storage'
-import { MST } from './mst'
-import DataDiff from './data-diff'
-import log from './logger'
-import BlockMap from './block-map'
-import { ReadableRepo } from './readable-repo'
 import * as util from './util'
-import CidSet from './cid-set'
 
 type Params = {
   storage: RepoStorage
@@ -142,15 +142,14 @@ export class Repo extends ReadableRepo {
     const newBlocks = diff.newMstBlocks
     const removedCids = diff.removedCids
 
-    const relevantBlocks = new BlockMap()
-    await Promise.all(
+    const proofs = await Promise.all(
       writes.map((op) =>
-        data.addBlocksForPath(
-          util.formatDataKey(op.collection, op.rkey),
-          relevantBlocks,
-        ),
+        data.getCoveringProof(util.formatDataKey(op.collection, op.rkey)),
       ),
     )
+    const relevantBlocks = proofs.reduce((acc, cur) => {
+      return acc.addMap(cur)
+    }, new BlockMap())
 
     const addedLeaves = leaves.getMany(diff.newLeafCids.toList())
     if (addedLeaves.missing.length > 0) {

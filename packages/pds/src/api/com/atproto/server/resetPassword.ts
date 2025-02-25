@@ -1,7 +1,6 @@
-import AppContext from '../../../../context'
-import { Server } from '../../../../lexicon'
 import { MINUTE } from '@atproto/common'
-import { authPassthru } from '../../../proxy'
+import { AppContext } from '../../../../context'
+import { Server } from '../../../../lexicon'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.resetPassword({
@@ -15,7 +14,7 @@ export default function (server: Server, ctx: AppContext) {
       if (ctx.entrywayAgent) {
         await ctx.entrywayAgent.com.atproto.server.resetPassword(
           input.body,
-          authPassthru(req, true),
+          ctx.entrywayPassthruHeaders(req),
         )
         return
       }

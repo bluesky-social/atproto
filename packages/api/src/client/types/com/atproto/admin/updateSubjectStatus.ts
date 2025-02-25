@@ -3,33 +3,35 @@
  */
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
-import * as ComAtprotoAdminDefs from './defs'
-import * as ComAtprotoRepoStrongRef from '../repo/strongRef'
+import { validate as _validate } from '../../../../lexicons'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import type * as ComAtprotoAdminDefs from './defs.js'
+import type * as ComAtprotoRepoStrongRef from '../repo/strongRef.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.atproto.admin.updateSubjectStatus'
 
 export interface QueryParams {}
 
 export interface InputSchema {
   subject:
-    | ComAtprotoAdminDefs.RepoRef
-    | ComAtprotoRepoStrongRef.Main
-    | ComAtprotoAdminDefs.RepoBlobRef
-    | { $type: string; [k: string]: unknown }
+    | $Typed<ComAtprotoAdminDefs.RepoRef>
+    | $Typed<ComAtprotoRepoStrongRef.Main>
+    | $Typed<ComAtprotoAdminDefs.RepoBlobRef>
+    | { $type: string }
   takedown?: ComAtprotoAdminDefs.StatusAttr
   deactivated?: ComAtprotoAdminDefs.StatusAttr
-  [k: string]: unknown
 }
 
 export interface OutputSchema {
   subject:
-    | ComAtprotoAdminDefs.RepoRef
-    | ComAtprotoRepoStrongRef.Main
-    | ComAtprotoAdminDefs.RepoBlobRef
-    | { $type: string; [k: string]: unknown }
+    | $Typed<ComAtprotoAdminDefs.RepoRef>
+    | $Typed<ComAtprotoRepoStrongRef.Main>
+    | $Typed<ComAtprotoAdminDefs.RepoBlobRef>
+    | { $type: string }
   takedown?: ComAtprotoAdminDefs.StatusAttr
-  [k: string]: unknown
 }
 
 export interface CallOptions {

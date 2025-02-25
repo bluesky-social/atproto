@@ -1,5 +1,106 @@
 # @atproto/bsky
 
+## 0.0.123
+
+### Patch Changes
+
+- Updated dependencies [[`44f81f2eb`](https://github.com/bluesky-social/atproto/commit/44f81f2eb9229e21aec4472b3a05e855396dbec5)]:
+  - @atproto/api@0.14.6
+
+## 0.0.122
+
+### Patch Changes
+
+- Updated dependencies [[`7e3678c08`](https://github.com/bluesky-social/atproto/commit/7e3678c089d2faa1a884a52a4fb80b8116c9854f), [`9b643fbec`](https://github.com/bluesky-social/atproto/commit/9b643fbecac30de5cfdb80d0671bfa55e9f4512a), [`6e382f67a`](https://github.com/bluesky-social/atproto/commit/6e382f67aa73532efadfea80ff96a27b526cb178)]:
+  - @atproto/repo@0.7.0
+  - @atproto/api@0.14.5
+  - @atproto/sync@0.1.15
+
+## 0.0.121
+
+### Patch Changes
+
+- Updated dependencies [[`b9cb049d9`](https://github.com/bluesky-social/atproto/commit/b9cb049d940cc706681142ef498238f74e2f539c)]:
+  - @atproto/api@0.14.4
+
+## 0.0.120
+
+### Patch Changes
+
+- Updated dependencies [[`22af31a89`](https://github.com/bluesky-social/atproto/commit/22af31a898476c5e317aea263af366bddda120d6), [`01874c4be`](https://github.com/bluesky-social/atproto/commit/01874c4be73a41ffb8fe28378f674949aa2c938f)]:
+  - @atproto/api@0.14.3
+
+## 0.0.119
+
+### Patch Changes
+
+- Updated dependencies [[`010f10c6f`](https://github.com/bluesky-social/atproto/commit/010f10c6f212f699ad42c0349a58bbcf2172e3cc), [`a9887f687`](https://github.com/bluesky-social/atproto/commit/a9887f68778c49932d92cfea98aadcfa4d5b62e9)]:
+  - @atproto/api@0.14.2
+
+## 0.0.118
+
+### Patch Changes
+
+- [#3537](https://github.com/bluesky-social/atproto/pull/3537) [`3f58dd0e7`](https://github.com/bluesky-social/atproto/commit/3f58dd0e742cdfed9c3eae0118bc57f539de78f1) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Apply needs-review to individual records
+
+- Updated dependencies [[`ba5bb6e66`](https://github.com/bluesky-social/atproto/commit/ba5bb6e667fb58bbefd332844957de575e102ca3)]:
+  - @atproto/api@0.14.1
+
+## 0.0.117
+
+### Patch Changes
+
+- [#2999](https://github.com/bluesky-social/atproto/pull/2999) [`c53d943c8`](https://github.com/bluesky-social/atproto/commit/c53d943c8be5b8886254e020970a68c0f745b14c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update Lexicon derived code to better reflect data typings. In particular, Lexicon derived interfaces will now explicitly include the `$type` property that can be present in the data.
+
+- Updated dependencies [[`c53d943c8`](https://github.com/bluesky-social/atproto/commit/c53d943c8be5b8886254e020970a68c0f745b14c), [`c53d943c8`](https://github.com/bluesky-social/atproto/commit/c53d943c8be5b8886254e020970a68c0f745b14c), [`c53d943c8`](https://github.com/bluesky-social/atproto/commit/c53d943c8be5b8886254e020970a68c0f745b14c), [`c53d943c8`](https://github.com/bluesky-social/atproto/commit/c53d943c8be5b8886254e020970a68c0f745b14c), [`c53d943c8`](https://github.com/bluesky-social/atproto/commit/c53d943c8be5b8886254e020970a68c0f745b14c), [`c53d943c8`](https://github.com/bluesky-social/atproto/commit/c53d943c8be5b8886254e020970a68c0f745b14c)]:
+  - @atproto/api@0.14.0
+  - @atproto/syntax@0.3.3
+  - @atproto/lexicon@0.4.7
+  - @atproto/sync@0.1.14
+  - @atproto/repo@0.6.5
+  - @atproto/xrpc-server@0.7.11
+  - @atproto-labs/xrpc-utils@0.0.7
+
+## 0.0.116
+
+### Patch Changes
+
+- Updated dependencies [[`709a85b0b`](https://github.com/bluesky-social/atproto/commit/709a85b0b633b5483b7161db64b429c746239153)]:
+  - @atproto/api@0.13.35
+
+## 0.0.115
+
+### Patch Changes
+
+- [#3496](https://github.com/bluesky-social/atproto/pull/3496) [`dc8a7842e`](https://github.com/bluesky-social/atproto/commit/dc8a7842e67f5f3709e88310d2a60d384453b486) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Add followerRule threadgate
+
+- Updated dependencies [[`dc8a7842e`](https://github.com/bluesky-social/atproto/commit/dc8a7842e67f5f3709e88310d2a60d384453b486), [`636951e47`](https://github.com/bluesky-social/atproto/commit/636951e4728cd52c2e5355eb93b47d7e869b67e9)]:
+  - @atproto/api@0.13.34
+
+## 0.0.114
+
+### Patch Changes
+
+- [#3220](https://github.com/bluesky-social/atproto/pull/3220) [`61dc0d60e`](https://github.com/bluesky-social/atproto/commit/61dc0d60e19b88c6427a54c6d95a391b5f4da7bd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Apply new linting rules regarding import order
+
+- [#3220](https://github.com/bluesky-social/atproto/pull/3220) [`61dc0d60e`](https://github.com/bluesky-social/atproto/commit/61dc0d60e19b88c6427a54c6d95a391b5f4da7bd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update NodeJS engine requirement to >=18.7.0
+
+- [#3445](https://github.com/bluesky-social/atproto/pull/3445) [`8a30e0ed9`](https://github.com/bluesky-social/atproto/commit/8a30e0ed9239cb2037d54fb98e70e8b0cfbc3e39) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Replace undefined values with empty strings in mock dataplane
+
+- Updated dependencies [[`61dc0d60e`](https://github.com/bluesky-social/atproto/commit/61dc0d60e19b88c6427a54c6d95a391b5f4da7bd), [`61dc0d60e`](https://github.com/bluesky-social/atproto/commit/61dc0d60e19b88c6427a54c6d95a391b5f4da7bd), [`87ed907a6`](https://github.com/bluesky-social/atproto/commit/87ed907a6b96b408c02c9af819cec8380a453254)]:
+  - @atproto-labs/fetch-node@0.1.7
+  - @atproto/xrpc-server@0.7.10
+  - @atproto/identity@0.4.6
+  - @atproto/lexicon@0.4.6
+  - @atproto/common@0.4.8
+  - @atproto/crypto@0.4.4
+  - @atproto/syntax@0.3.2
+  - @atproto/repo@0.6.4
+  - @atproto/sync@0.1.13
+  - @atproto/api@0.13.33
+  - @atproto/did@0.1.5
+  - @atproto-labs/xrpc-utils@0.0.6
+
 ## 0.0.113
 
 ### Patch Changes

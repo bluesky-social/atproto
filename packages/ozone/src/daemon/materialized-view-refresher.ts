@@ -1,5 +1,5 @@
-import { MINUTE } from '@atproto/common'
 import { sql } from 'kysely'
+import { MINUTE } from '@atproto/common'
 import { BackgroundQueue, PeriodicBackgroundTask } from '../background'
 
 export class MaterializedViewRefresher extends PeriodicBackgroundTask {
@@ -10,6 +10,7 @@ export class MaterializedViewRefresher extends PeriodicBackgroundTask {
         'record_events_stats',
         'account_record_events_stats',
         'account_record_status_stats',
+        'reporter_stats',
       ]) {
         if (signal.aborted) break
 

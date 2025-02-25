@@ -1,5 +1,5 @@
-import { sql } from 'kysely'
 import { ServiceImpl } from '@connectrpc/connect'
+import { sql } from 'kysely'
 import { keyBy } from '@atproto/common'
 import { Service } from '../../../proto/bsky_connect'
 import { Database } from '../db'
@@ -72,16 +72,16 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .execute()
     const byDid = keyBy(res, 'did')
     const relationships = targetDids.map((did) => {
-      const row = byDid[did] ?? {}
+      const row = byDid.get(did)
       return {
-        muted: row.muted ?? false,
-        mutedByList: row.mutedByList ?? '',
-        blockedBy: row.blockedBy ?? '',
-        blocking: row.blocking ?? '',
-        blockedByList: row.blockedByList ?? '',
-        blockingByList: row.blockingByList ?? '',
-        following: row.following ?? '',
-        followedBy: row.followedBy ?? '',
+        muted: row?.muted ?? false,
+        mutedByList: row?.mutedByList ?? '',
+        blockedBy: row?.blockedBy ?? '',
+        blocking: row?.blocking ?? '',
+        blockedByList: row?.blockedByList ?? '',
+        blockingByList: row?.blockingByList ?? '',
+        following: row?.following ?? '',
+        followedBy: row?.followedBy ?? '',
       }
     })
     return { relationships }

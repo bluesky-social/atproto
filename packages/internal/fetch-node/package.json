@@ -1,6 +1,6 @@
 {
   "name": "@atproto-labs/fetch-node",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "license": "MIT",
   "description": "SSRF protection for fetch() in Node.js",
   "keywords": [
@@ -22,6 +22,9 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     }
+  },
+  "engines": {
+    "node": ">=18.7.0"
   },
   "dependencies": {
     "@atproto-labs/fetch": "workspace:*",

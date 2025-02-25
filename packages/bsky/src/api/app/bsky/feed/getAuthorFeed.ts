@@ -1,23 +1,23 @@
 import { mapDefined } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getAuthorFeed'
-import AppContext from '../../../../context'
-import { clearlyBadCursor, resHeaders } from '../../../util'
-import { createPipeline } from '../../../../pipeline'
+import { AppContext } from '../../../../context'
+import { DataPlaneClient } from '../../../../data-plane'
+import { Actor } from '../../../../hydration/actor'
+import { FeedItem, Post } from '../../../../hydration/feed'
 import {
   HydrateCtx,
   HydrationState,
   Hydrator,
   mergeStates,
 } from '../../../../hydration/hydrator'
-import { Views } from '../../../../views'
-import { DataPlaneClient } from '../../../../data-plane'
 import { parseString } from '../../../../hydration/util'
-import { safePinnedPost, uriToDid } from '../../../../util/uris'
-import { Actor } from '../../../../hydration/actor'
-import { FeedItem, Post } from '../../../../hydration/feed'
+import { Server } from '../../../../lexicon'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getAuthorFeed'
+import { createPipeline } from '../../../../pipeline'
 import { FeedType } from '../../../../proto/bsky_pb'
+import { safePinnedPost, uriToDid } from '../../../../util/uris'
+import { Views } from '../../../../views'
+import { clearlyBadCursor, resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   const getAuthorFeed = createPipeline(

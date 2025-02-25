@@ -1,5 +1,6 @@
-import { AtpAgent } from '@atproto/api'
-import { TestNetwork, SeedClient, basicSeed, RecordRef } from '@atproto/dev-env'
+import assert from 'node:assert'
+import { AppBskyLabelerDefs, AtpAgent } from '@atproto/api'
+import { RecordRef, SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
 
 describe('bsky takedown labels', () => {
@@ -121,6 +122,7 @@ describe('bsky takedown labels', () => {
       uri,
       cid: '',
       val: '!takedown',
+      exp: null,
       neg: false,
       cts,
     }))
@@ -232,7 +234,8 @@ describe('bsky takedown labels', () => {
       dids: [sc.dids.labeler1, sc.dids.labeler2],
     })
     expect(res.data.views.length).toBe(1)
-    expect(res.data.views[0].creator?.['did']).toBe(sc.dids.labeler2)
+    assert(AppBskyLabelerDefs.isLabelerView(res.data.views[0]))
+    expect(res.data.views[0].creator.did).toBe(sc.dids.labeler2)
   })
 
   it('only applies if the relevant labeler is configured', async () => {

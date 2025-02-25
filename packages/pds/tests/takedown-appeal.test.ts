@@ -1,7 +1,7 @@
 import { AtpAgent, ComAtprotoModerationDefs } from '@atproto/api'
 import { SeedClient, TestNetwork } from '@atproto/dev-env'
-import { forSubjectStatusSnapshot } from './_util'
 import { ids } from '../src/lexicon/lexicons'
+import { forSubjectStatusSnapshot } from './_util'
 
 describe('appeal account takedown', () => {
   let network: TestNetwork

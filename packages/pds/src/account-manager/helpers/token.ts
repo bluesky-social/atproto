@@ -1,3 +1,4 @@
+import { Selectable } from 'kysely'
 import {
   Code,
   NewTokenData,
@@ -7,7 +8,6 @@ import {
   TokenId,
   TokenInfo,
 } from '@atproto/oauth-provider'
-import { Selectable } from 'kysely'
 import {
   fromDateISO,
   fromJsonArray,

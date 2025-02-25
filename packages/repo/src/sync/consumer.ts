@@ -1,17 +1,17 @@
 import { CID } from 'multiformats/cid'
+import { BlockMap } from '../block-map'
+import { DataDiff } from '../data-diff'
+import { MST } from '../mst'
+import { ReadableRepo } from '../readable-repo'
 import { MemoryBlockstore, ReadableBlockstore, SyncStorage } from '../storage'
-import DataDiff from '../data-diff'
-import ReadableRepo from '../readable-repo'
-import * as util from '../util'
 import {
-  RecordClaim,
   RecordCidClaim,
+  RecordClaim,
   VerifiedDiff,
   VerifiedRepo,
+  def,
 } from '../types'
-import { def } from '../types'
-import { MST } from '../mst'
-import BlockMap from '../block-map'
+import * as util from '../util'
 
 export const verifyRepoCar = async (
   carBytes: Uint8Array,

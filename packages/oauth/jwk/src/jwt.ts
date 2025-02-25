@@ -1,5 +1,4 @@
 import { z } from 'zod'
-
 import { jwkPubSchema } from './jwk.js'
 import { jwtCharsRefinement, segmentedStringRefinementFactory } from './util.js'
 

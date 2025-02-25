@@ -1,15 +1,22 @@
 import {
-  TestNetwork,
-  TestOzone,
+  AtpAgent,
+  ChatBskyConvoDefs,
+  ToolsOzoneModerationEmitEvent,
+} from '@atproto/api'
+import { HOUR } from '@atproto/common'
+import {
   ImageRef,
+  ModeratorClient,
   RecordRef,
   SeedClient,
+  TestNetwork,
+  TestOzone,
   basicSeed,
-  ModeratorClient,
 } from '@atproto/dev-env'
-import { AtpAgent, ToolsOzoneModerationEmitEvent } from '@atproto/api'
 import { AtUri } from '@atproto/syntax'
-import { forSnapshot } from './_util'
+import { EventReverser } from '../src'
+import { ImageInvalidator } from '../src/image-invalidator'
+import { ids } from '../src/lexicon/lexicons'
 import {
   REASONMISLEADING,
   REASONOTHER,
@@ -20,11 +27,8 @@ import {
   REVIEWCLOSED,
   REVIEWESCALATED,
 } from '../src/lexicon/types/tools/ozone/moderation/defs'
-import { EventReverser } from '../src'
-import { ImageInvalidator } from '../src/image-invalidator'
 import { TAKEDOWN_LABEL } from '../src/mod-service'
-import { ids } from '../src/lexicon/lexicons'
-import { HOUR } from '@atproto/common'
+import { forSnapshot, identity } from './_util'
 
 describe('moderation', () => {
   let network: TestNetwork
@@ -158,23 +162,26 @@ describe('moderation', () => {
       const reportA = await sc.createReport({
         reportedBy: sc.dids.alice,
         reasonType: REASONSPAM,
-        subject: {
+        // @ts-expect-error "chat.bsky.convo.defs#messageRef" is not spec'd as subject
+        subject: identity<ChatBskyConvoDefs.MessageRef>({
           $type: 'chat.bsky.convo.defs#messageRef',
           did: sc.dids.carol,
           messageId: messageId1,
           convoId: 'testconvoid1',
-        },
+        }),
       })
       const reportB = await sc.createReport({
         reportedBy: sc.dids.carol,
         reasonType: REASONOTHER,
         reason: 'defamation',
-        subject: {
+        // @ts-expect-error "chat.bsky.convo.defs#messageRef" is not spec'd as subject
+        subject: identity<ChatBskyConvoDefs.MessageRef>({
           $type: 'chat.bsky.convo.defs#messageRef',
           did: sc.dids.carol,
           messageId: messageId2,
-          // @TODO convoId intentionally missing, restore once this behavior is deprecated
-        },
+          // @ts-expect-error convoId intentionally missing, restore once this behavior is deprecated
+          convoId: undefined,
+        }),
       })
       expect(forSnapshot([reportA, reportB])).toMatchSnapshot()
       const events = await ozone.ctx.db.db
@@ -731,7 +738,7 @@ describe('moderation', () => {
       },
     ) {
       const { createLabelVals, negateLabelVals, durationInHours } = opts
-      const result = await modClient.emitEvent({
+      const event = await modClient.emitEvent({
         event: {
           $type: 'tools.ozone.moderation.defs#modEventLabel',
           createLabelVals,
@@ -742,7 +749,7 @@ describe('moderation', () => {
         reason: 'Y',
         ...opts,
       })
-      return result.data
+      return event
     }
 
     async function reverse(

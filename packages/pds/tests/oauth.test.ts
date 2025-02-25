@@ -1,11 +1,11 @@
 import assert from 'node:assert'
+import { once } from 'node:events'
+import { Server, createServer } from 'node:http'
+import { AddressInfo } from 'node:net'
+import { Browser, Page, launch } from 'puppeteer'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 // @ts-expect-error (json file)
 import files from '@atproto/oauth-client-browser-example'
-import { Browser, launch, Page } from 'puppeteer'
-import { once } from 'node:events'
-import { createServer, Server } from 'node:http'
-import { AddressInfo } from 'node:net'
 
 const getVisibleElement = async (page: Page, selector: string) => {
   const elementHandle = await page.waitForSelector(selector)

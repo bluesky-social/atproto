@@ -1,8 +1,8 @@
-import express from 'express'
-import AppContext from './context'
+import { Router } from 'express'
+import { AppContext } from './context'
 
-export const createRouter = (ctx: AppContext): express.Router => {
-  const router = express.Router()
+export const createRouter = (ctx: AppContext): Router => {
+  const router = Router()
 
   router.get('/.well-known/atproto-did', async function (req, res) {
     const handle = req.hostname

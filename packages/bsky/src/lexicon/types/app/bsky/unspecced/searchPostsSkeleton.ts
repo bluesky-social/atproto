@@ -3,11 +3,15 @@
  */
 import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
-import * as AppBskyUnspeccedDefs from './defs'
+import type * as AppBskyUnspeccedDefs from './defs.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'app.bsky.unspecced.searchPostsSkeleton'
 
 export interface QueryParams {
   /** Search query string; syntax, phrase, boolean, and faceting is unspecified, but Lucene query syntax is recommended. */
@@ -44,7 +48,6 @@ export interface OutputSchema {
   /** Count of search hits. Optional, may be rounded/truncated, and may not be possible to paginate through all hits. */
   hitsTotal?: number
   posts: AppBskyUnspeccedDefs.SkeletonSearchPost[]
-  [k: string]: unknown
 }
 
 export type HandlerInput = undefined

@@ -1,10 +1,10 @@
-import getPort from 'get-port'
-import { Secp256k1Keypair } from '@atproto/crypto'
 import * as plc from '@did-plc/lib'
 import { Database as DidPlcDb, PlcServer } from '@did-plc/server'
-import { DidResolver, DidDocument } from '../src'
+import getPort from 'get-port'
+import { Secp256k1Keypair } from '@atproto/crypto'
+import { DidDocument, DidResolver } from '../src'
+import { DidWebDb } from './web/db'
 import { DidWebServer } from './web/server'
-import DidWebDb from './web/db'
 
 describe('did resolver', () => {
   let close: () => Promise<void>

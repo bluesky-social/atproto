@@ -1,4 +1,4 @@
-import TID from '../src/tid'
+import { TID } from '../src/tid'
 
 describe('TIDs', () => {
   it('creates a new TID', () => {
