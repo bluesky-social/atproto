@@ -9,17 +9,18 @@ import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 
 const is$typed = _is$typed,
   validate = _validate
-const id = 'com.atproto.identity.resolveHandle'
+const id = 'com.atproto.identity.resolveDid'
 
 export interface QueryParams {
-  /** The handle to resolve. */
-  handle: string
+  /** DID to resolve. */
+  did: string
 }
 
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  did: string
+  /** The complete DID document for the identity. */
+  didDoc: { [_ in string]: unknown }
 }
 
 export interface CallOptions {
@@ -33,7 +34,13 @@ export interface Response {
   data: OutputSchema
 }
 
-export class HandleNotFoundError extends XRPCError {
+export class DidNotFoundError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message, src.headers, { cause: src })
+  }
+}
+
+export class DidDeactivatedError extends XRPCError {
   constructor(src: XRPCError) {
     super(src.status, src.error, src.message, src.headers, { cause: src })
   }
@@ -41,7 +48,8 @@ export class HandleNotFoundError extends XRPCError {
 
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
-    if (e.error === 'HandleNotFound') return new HandleNotFoundError(e)
+    if (e.error === 'DidNotFound') return new DidNotFoundError(e)
+    if (e.error === 'DidDeactivated') return new DidDeactivatedError(e)
   }
 
   return e

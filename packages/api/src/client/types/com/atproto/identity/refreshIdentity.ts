@@ -6,25 +6,25 @@ import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { validate as _validate } from '../../../../lexicons'
 import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import type * as ComAtprotoIdentityDefs from './defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
-const id = 'com.atproto.identity.resolveHandle'
+const id = 'com.atproto.identity.refreshIdentity'
 
-export interface QueryParams {
-  /** The handle to resolve. */
-  handle: string
+export interface QueryParams {}
+
+export interface InputSchema {
+  identifier: string
 }
 
-export type InputSchema = undefined
-
-export interface OutputSchema {
-  did: string
-}
+export type OutputSchema = ComAtprotoIdentityDefs.IdentityInfo
 
 export interface CallOptions {
   signal?: AbortSignal
   headers?: HeadersMap
+  qp?: QueryParams
+  encoding?: 'application/json'
 }
 
 export interface Response {
@@ -39,9 +39,23 @@ export class HandleNotFoundError extends XRPCError {
   }
 }
 
+export class DidNotFoundError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message, src.headers, { cause: src })
+  }
+}
+
+export class DidDeactivatedError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message, src.headers, { cause: src })
+  }
+}
+
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
     if (e.error === 'HandleNotFound') return new HandleNotFoundError(e)
+    if (e.error === 'DidNotFound') return new DidNotFoundError(e)
+    if (e.error === 'DidDeactivated') return new DidDeactivatedError(e)
   }
 
   return e

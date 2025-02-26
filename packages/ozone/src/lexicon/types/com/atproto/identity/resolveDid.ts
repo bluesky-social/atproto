@@ -10,17 +10,18 @@ import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 
 const is$typed = _is$typed,
   validate = _validate
-const id = 'com.atproto.identity.resolveHandle'
+const id = 'com.atproto.identity.resolveDid'
 
 export interface QueryParams {
-  /** The handle to resolve. */
-  handle: string
+  /** DID to resolve. */
+  did: string
 }
 
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  did: string
+  /** The complete DID document for the identity. */
+  didDoc: { [_ in string]: unknown }
 }
 
 export type HandlerInput = undefined
@@ -34,7 +35,7 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
-  error?: 'HandleNotFound'
+  error?: 'DidNotFound' | 'DidDeactivated'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess | HandlerPipeThrough

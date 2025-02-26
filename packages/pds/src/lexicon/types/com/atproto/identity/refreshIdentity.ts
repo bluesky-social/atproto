@@ -7,23 +7,24 @@ import { CID } from 'multiformats/cid'
 import { validate as _validate } from '../../../../lexicons'
 import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
+import type * as ComAtprotoIdentityDefs from './defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
-const id = 'com.atproto.identity.resolveHandle'
+const id = 'com.atproto.identity.refreshIdentity'
 
-export interface QueryParams {
-  /** The handle to resolve. */
-  handle: string
+export interface QueryParams {}
+
+export interface InputSchema {
+  identifier: string
 }
 
-export type InputSchema = undefined
+export type OutputSchema = ComAtprotoIdentityDefs.IdentityInfo
 
-export interface OutputSchema {
-  did: string
+export interface HandlerInput {
+  encoding: 'application/json'
+  body: InputSchema
 }
-
-export type HandlerInput = undefined
 
 export interface HandlerSuccess {
   encoding: 'application/json'
@@ -34,7 +35,7 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
-  error?: 'HandleNotFound'
+  error?: 'HandleNotFound' | 'DidNotFound' | 'DidDeactivated'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess | HandlerPipeThrough
