@@ -1,15 +1,22 @@
 import { Selectable } from 'kysely'
+import AtpAgent from '@atproto/api'
 import { chunkArray } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AppContext } from '../context'
+import { DaemonContext } from '../daemon/context'
 import { Database } from '../db'
 import { Member } from '../db/schema/member'
 import { ids } from '../lexicon/lexicons'
 import { ProfileViewDetailed } from '../lexicon/types/app/bsky/actor/defs'
 import { Member as TeamMember } from '../lexicon/types/tools/ozone/team/defs'
 import { httpLogger } from '../logger'
+import { AuthHeaders } from '../mod-service/views'
 
 export type TeamServiceCreator = (db: Database) => TeamService
+export type AppviewCreator = {
+  createAuthHeaders: (method: string) => Promise<AuthHeaders>
+  agent: AtpAgent
+}
 
 export class TeamService {
   constructor(public db: Database) {}
@@ -58,6 +65,7 @@ export class TeamService {
           .orWhere('displayName', 'ilike', `%${q}%`),
       )
     }
+
     const members = await builder
       .limit(limit)
       .orderBy('createdAt', 'asc')
@@ -193,15 +201,17 @@ export class TeamService {
   // getProfiles() only allows 25 DIDs at a time so we need to query in chunks
   async getProfiles(
     dids: string[],
-    ctx: AppContext,
+    appviewCreator: AppviewCreator,
   ): Promise<Map<string, ProfileViewDetailed>> {
     const profiles = new Map<string, ProfileViewDetailed>()
 
     try {
-      const headers = await ctx.appviewAuth(ids.AppBskyActorGetProfiles)
+      const headers = await appviewCreator.createAuthHeaders(
+        ids.AppBskyActorGetProfiles,
+      )
 
       for (const actors of chunkArray(dids, 25)) {
-        const { data } = await ctx.appviewAgent.api.app.bsky.actor.getProfiles(
+        const { data } = await appviewCreator.agent.getProfiles(
           { actors },
           headers,
         )
@@ -220,13 +230,48 @@ export class TeamService {
     return profiles
   }
 
+  async syncMemberProfiles(appviewCreator: AppviewCreator): Promise<void> {
+    const { count } = await this.db.db
+      .selectFrom('member')
+      .select(this.db.db.fn.count<number>('did').as('count'))
+      .executeTakeFirstOrThrow()
+
+    let lastDid = ''
+    // Max 25 profiles can be fetched at a time so let's pull 25 members at a time from the db and update their profile details
+    for (let i = 0; i < count; i += 25) {
+      const members = await this.db.db
+        .selectFrom('member')
+        .select(['did'])
+        .limit(25)
+        .if(!!lastDid, (q) => q.where('did', '>', lastDid))
+        .orderBy('did', 'asc')
+        .execute()
+
+      const dids = members.map((member) => member.did)
+      const profiles = await this.getProfiles(dids, appviewCreator)
+
+      for (const profile of profiles.values()) {
+        await this.db.db
+          .updateTable('member')
+          .where('did', '=', profile.did)
+          .set({
+            handle: profile.handle,
+            displayName: profile.displayName || null,
+          })
+          .execute()
+      }
+
+      lastDid = dids.at(-1) || ''
+    }
+  }
+
   async view(
     members: Selectable<Member>[],
-    ctx: AppContext,
+    appviewCreator: AppviewCreator,
   ): Promise<TeamMember[]> {
     const profiles = await this.getProfiles(
       members.map(({ did }) => did),
-      ctx,
+      appviewCreator,
     )
     return members.map((member) => {
       return {

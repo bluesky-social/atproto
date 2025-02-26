@@ -7,8 +7,6 @@
       "required": ["did", "role"],
       "properties": {
         "did": { "type": "string", "format": "did" },
-        "handle": { "type": "string" },
-        "displayName": { "type": "string" },
         "disabled": { "type": "boolean" },
         "profile": {
           "type": "ref",

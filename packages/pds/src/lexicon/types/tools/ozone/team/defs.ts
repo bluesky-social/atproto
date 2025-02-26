@@ -14,8 +14,6 @@ const id = 'tools.ozone.team.defs'
 export interface Member {
   $type?: 'tools.ozone.team.defs#member'
   did: string
-  handle?: string
-  displayName?: string
   disabled?: boolean
   profile?: AppBskyActorDefs.ProfileViewDetailed
   createdAt?: string

@@ -34,7 +34,10 @@ export default function (server: Server, ctx: AppContext) {
           lastUpdatedBy:
             access.type === 'admin_token' ? 'admin_token' : access.iss,
         })
-        const memberView = await teamService.view([updated], ctx)
+        const memberView = await teamService.view([updated], {
+          agent: ctx.appviewAgent,
+          createAuthHeaders: ctx.appviewAuth.bind(ctx),
+        })
         return memberView[0]
       })
 
