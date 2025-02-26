@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Resolves a handle (domain name) to a DID.",
+      "description": "Resolves an atproto handle (hostname) to a DID. Does not necessarily bi-directionally verify against the the DID document.",
       "parameters": {
         "type": "params",
         "required": ["handle"],
@@ -25,7 +25,13 @@
             "did": { "type": "string", "format": "did" }
           }
         }
-      }
+      },
+      "errors": [
+        {
+          "name": "HandleNotFound",
+          "description": "The resolution process confirmed that the handle does not resolve to any DID."
+        }
+      ]
     }
   }
 }
