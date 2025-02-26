@@ -18,9 +18,8 @@ import { AccountStatus } from '../../src/account-manager'
 import {
   Account as AccountEvt,
   Commit as CommitEvt,
-  Handle as HandleEvt,
   Identity as IdentityEvt,
-  Tombstone as TombstoneEvt,
+  Sync as SyncEvt,
 } from '../../src/lexicon/types/com/atproto/sync/subscribeRepos'
 import basicSeed from '../seeds/basic'
 
@@ -74,10 +73,12 @@ describe('repo subscribe repos', () => {
         if (
           (frame.header.t === '#commit' &&
             (frame.body as CommitEvt).repo === userDid) ||
-          (frame.header.t === '#handle' &&
-            (frame.body as HandleEvt).did === userDid) ||
-          (frame.header.t === '#tombstone' &&
-            (frame.body as TombstoneEvt).did === userDid)
+          (frame.header.t === '#sync' &&
+            (frame.body as SyncEvt).did === userDid) ||
+          (frame.header.t === '#identity' &&
+            (frame.body as IdentityEvt).did === userDid) ||
+          (frame.header.t === '#account' &&
+            (frame.body as AccountEvt).did === userDid)
         ) {
           types.push(frame.body)
         }
@@ -96,20 +97,16 @@ describe('repo subscribe repos', () => {
     return evts
   }
 
+  const getSyncEvts = (frames: Frame[]): SyncEvt[] => {
+    return getEventType(frames, '#sync')
+  }
+
   const getAccountEvts = (frames: Frame[]): AccountEvt[] => {
     return getEventType(frames, '#account')
   }
 
   const getIdentityEvts = (frames: Frame[]): IdentityEvt[] => {
     return getEventType(frames, '#identity')
-  }
-
-  const getHandleEvts = (frames: Frame[]): HandleEvt[] => {
-    return getEventType(frames, '#handle')
-  }
-
-  const getTombstoneEvts = (frames: Frame[]): TombstoneEvt[] => {
-    return getEventType(frames, '#tombstone')
   }
 
   const getCommitEvents = (frames: Frame[]): CommitEvt[] => {
@@ -127,13 +124,6 @@ describe('repo subscribe repos', () => {
     expect(evt.handle).toEqual(handle)
   }
 
-  const verifyHandleEvent = (evt: HandleEvt, did: string, handle: string) => {
-    expect(typeof evt.seq).toBe('number')
-    expect(evt.did).toBe(did)
-    expect(evt.handle).toBe(handle)
-    expect(typeof evt.time).toBe('string')
-  }
-
   const verifyAccountEvent = (
     evt: AccountEvt,
     did: string,
@@ -147,10 +137,20 @@ describe('repo subscribe repos', () => {
     expect(evt.status).toBe(status)
   }
 
-  const verifyTombstoneEvent = (evt: unknown, did: string) => {
-    expect(evt?.['did']).toBe(did)
-    expect(typeof evt?.['time']).toBe('string')
-    expect(typeof evt?.['seq']).toBe('number')
+  const verifySyncEvent = async (
+    evt: SyncEvt,
+    did: string,
+    commit: CID,
+    rev: string,
+  ) => {
+    expect(typeof evt.seq).toBe('number')
+    expect(evt.did).toBe(did)
+    expect(typeof evt.time).toBe('string')
+    expect(evt.rev).toBe(rev)
+    const car = await repo.readCarWithRoot(evt.blocks)
+    expect(car.root.equals(commit)).toBe(true)
+    expect(car.blocks.size).toBe(1)
+    expect(car.blocks.has(car.root)).toBe(true)
   }
 
   const verifyCommitEvents = async (frames: Frame[]) => {
@@ -329,7 +329,7 @@ describe('repo subscribe repos', () => {
     }
   })
 
-  it('syncs handle changes', async () => {
+  it('syncs handle changes (identity evts)', async () => {
     await sc.updateHandle(alice, 'alice2.test')
     await sc.updateHandle(bob, 'bob2.test')
     await sc.updateHandle(bob, 'bob2.test') // idempotent update re-sends
@@ -344,20 +344,14 @@ describe('repo subscribe repos', () => {
 
     await verifyCommitEvents(evts)
 
-    const handleEvts = getHandleEvts(evts.slice(-6))
-    expect(handleEvts.length).toBe(3)
-    verifyHandleEvent(handleEvts[0], alice, 'alice2.test')
-    verifyHandleEvent(handleEvts[1], bob, 'bob2.test')
-    verifyHandleEvent(handleEvts[2], bob, 'bob2.test')
-
-    const identityEvts = getIdentityEvts(evts.slice(-6))
+    const identityEvts = getIdentityEvts(evts.slice(-3))
     expect(identityEvts.length).toBe(3)
     verifyIdentityEvent(identityEvts[0], alice, 'alice2.test')
     verifyIdentityEvent(identityEvts[1], bob, 'bob2.test')
     verifyIdentityEvent(identityEvts[2], bob, 'bob2.test')
   })
 
-  it('resends handle events on idempotent updates', async () => {
+  it('resends identity events on idempotent updates', async () => {
     const update = sc.updateHandle(bob, 'bob2.test')
 
     const ws = new WebSocket(
@@ -368,8 +362,8 @@ describe('repo subscribe repos', () => {
     const evts = await readTillCaughtUp(gen, update)
     ws.terminate()
 
-    const handleEvts = getHandleEvts(evts.slice(-2))
-    verifyHandleEvent(handleEvts[0], bob, 'bob2.test')
+    const identityEvts = getIdentityEvts(evts.slice(-1))
+    verifyIdentityEvent(identityEvts[0], bob, 'bob2.test')
   })
 
   it('syncs account events', async () => {
@@ -487,7 +481,35 @@ describe('repo subscribe repos', () => {
     verifyAccountEvent(accountEvts[3], alice, true)
   })
 
-  it('syncs tombstones', async () => {
+  it('emits sync event on account activation', async () => {
+    await agent.api.com.atproto.server.deactivateAccount(
+      {},
+      {
+        encoding: 'application/json',
+        headers: sc.getHeaders(alice),
+      },
+    )
+    await agent.api.com.atproto.server.activateAccount(undefined, {
+      headers: sc.getHeaders(alice),
+    })
+
+    const ws = new WebSocket(
+      `ws://${serverHost}/xrpc/com.atproto.sync.subscribeRepos?cursor=${-1}`,
+    )
+
+    const gen = byFrame(ws)
+    const evts = await readTillCaughtUp(gen)
+    ws.terminate()
+
+    const syncEvts = getSyncEvts(evts.slice(-1))
+    expect(syncEvts.length).toBe(1)
+    const root = await ctx.actorStore.read(alice, (store) =>
+      store.repo.storage.getRootDetailed(),
+    )
+    await verifySyncEvent(syncEvts[0], alice, root.cid, root.rev)
+  })
+
+  it('syncs account deletions (account evt)', async () => {
     const baddie1 = (
       await sc.createAccount('baddie1.test', {
         email: 'baddie1@test.com',
@@ -529,12 +551,7 @@ describe('repo subscribe repos', () => {
     const evts = await readTillCaughtUp(gen)
     ws.terminate()
 
-    const tombstoneEvts = getTombstoneEvts(evts.slice(-4))
-    expect(tombstoneEvts.length).toBe(2)
-    verifyTombstoneEvent(tombstoneEvts[0], baddie1)
-    verifyTombstoneEvent(tombstoneEvts[1], baddie2)
-
-    const accountEvts = getAccountEvts(evts.slice(-4))
+    const accountEvts = getAccountEvts(evts.slice(-2))
     expect(accountEvts.length).toBe(2)
     verifyAccountEvent(accountEvts[0], baddie1, false, AccountStatus.Deleted)
     verifyAccountEvent(accountEvts[1], baddie2, false, AccountStatus.Deleted)
@@ -571,7 +588,12 @@ describe('repo subscribe repos', () => {
 
     const didEvts = getAllEvents(baddie3, evts)
     expect(didEvts.length).toBe(1)
-    verifyTombstoneEvent(didEvts[0], baddie3)
+    verifyAccountEvent(
+      didEvts[0] as AccountEvt,
+      baddie3,
+      false,
+      AccountStatus.Deleted,
+    )
   })
 
   it('sends info frame on out of date cursor', async () => {

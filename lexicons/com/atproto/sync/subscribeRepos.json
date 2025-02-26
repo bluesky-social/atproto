@@ -17,16 +17,7 @@
       "message": {
         "schema": {
           "type": "union",
-          "refs": [
-            "#commit",
-            "#sync",
-            "#identity",
-            "#account",
-            "#handle",
-            "#migrate",
-            "#tombstone",
-            "#info"
-          ]
+          "refs": ["#commit", "#sync", "#identity", "#account", "#info"]
         }
       },
       "errors": [
@@ -184,39 +175,6 @@
             "throttled"
           ]
         }
-      }
-    },
-    "handle": {
-      "type": "object",
-      "description": "DEPRECATED -- Use #identity event instead",
-      "required": ["seq", "did", "handle", "time"],
-      "properties": {
-        "seq": { "type": "integer" },
-        "did": { "type": "string", "format": "did" },
-        "handle": { "type": "string", "format": "handle" },
-        "time": { "type": "string", "format": "datetime" }
-      }
-    },
-    "migrate": {
-      "type": "object",
-      "description": "DEPRECATED -- Use #account event instead",
-      "required": ["seq", "did", "migrateTo", "time"],
-      "nullable": ["migrateTo"],
-      "properties": {
-        "seq": { "type": "integer" },
-        "did": { "type": "string", "format": "did" },
-        "migrateTo": { "type": "string" },
-        "time": { "type": "string", "format": "datetime" }
-      }
-    },
-    "tombstone": {
-      "type": "object",
-      "description": "DEPRECATED -- Use #account event instead",
-      "required": ["seq", "did", "time"],
-      "properties": {
-        "seq": { "type": "integer" },
-        "did": { "type": "string", "format": "did" },
-        "time": { "type": "string", "format": "datetime" }
       }
     },
     "info": {

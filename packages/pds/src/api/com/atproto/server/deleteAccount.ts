@@ -48,8 +48,7 @@ export default function (server: Server, ctx: AppContext) {
         did,
         AccountStatus.Deleted,
       )
-      const tombstoneSeq = await ctx.sequencer.sequenceTombstone(did)
-      await ctx.sequencer.deleteAllForUser(did, [accountSeq, tombstoneSeq])
+      await ctx.sequencer.deleteAllForUser(did, [accountSeq])
     },
   })
 }
