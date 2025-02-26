@@ -1,5 +1,9 @@
 import assert from 'node:assert'
-import { AtpAgent } from '@atproto/api'
+import {
+  AppBskyLabelerDefs,
+  AtpAgent,
+  ComAtprotoModerationDefs,
+} from '@atproto/api'
 import { RecordRef, SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
 import { isView as isRecordEmbedView } from '../../src/lexicon/types/app/bsky/embed/record'
@@ -14,6 +18,7 @@ describe('labeler service views', () => {
   // account dids, for convenience
   let alice: string
   let bob: string
+  let carol: string
 
   let aliceService: RecordRef
 
@@ -27,6 +32,7 @@ describe('labeler service views', () => {
     await basicSeed(sc)
     alice = sc.dids.alice
     bob = sc.dids.bob
+    carol = sc.dids.carol
 
     const aliceRes = await pdsAgent.api.com.atproto.repo.createRecord(
       {
@@ -189,5 +195,48 @@ describe('labeler service views', () => {
 
     // Cleanup
     await network.bsky.ctx.dataplane.untakedownActor({ did: alice })
+  })
+
+  it(`returns additional labeler data`, async () => {
+    await pdsAgent.api.com.atproto.repo.createRecord(
+      {
+        repo: carol,
+        collection: ids.AppBskyLabelerService,
+        rkey: 'self',
+        record: {
+          policies: {
+            labelValues: ['spam', '!hide', 'scam', 'impersonation'],
+          },
+          createdAt: new Date().toISOString(),
+          reasonTypes: [ComAtprotoModerationDefs.REASONOTHER],
+          subjectTypes: ['record'],
+          subjectCollections: ['app.bsky.feed.post'],
+        },
+      },
+      { headers: sc.getHeaders(carol), encoding: 'application/json' },
+    )
+    await network.processAll()
+
+    const view = await agent.api.app.bsky.labeler.getServices(
+      { dids: [carol], detailed: true },
+      {
+        headers: await network.serviceHeaders(
+          bob,
+          ids.AppBskyLabelerGetServices,
+        ),
+      },
+    )
+
+    const labelerView = view.data.views[0]
+    expect(AppBskyLabelerDefs.isLabelerViewDetailed(labelerView)).toBe(true)
+    // for TS only
+    if (!AppBskyLabelerDefs.isLabelerViewDetailed(labelerView)) return
+    expect(labelerView).toBeTruthy()
+    expect(labelerView.reasonTypes).toEqual([
+      ComAtprotoModerationDefs.REASONOTHER,
+    ])
+    expect(labelerView.subjectTypes).toEqual(['record'])
+    expect(labelerView.subjectCollections).toEqual(['app.bsky.feed.post'])
+    expect(forSnapshot(view.data)).toMatchSnapshot()
   })
 })

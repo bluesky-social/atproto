@@ -170,3 +170,49 @@ Object {
   ],
 }
 `;
+
+exports[`labeler service views returns additional labeler data 1`] = `
+Object {
+  "views": Array [
+    Object {
+      "$type": "app.bsky.labeler.defs#labelerViewDetailed",
+      "cid": "cids(0)",
+      "creator": Object {
+        "associated": Object {
+          "labeler": true,
+        },
+        "did": "user(0)",
+        "handle": "carol.test",
+        "labels": Array [],
+        "viewer": Object {
+          "blockedBy": false,
+          "following": "record(1)",
+          "muted": false,
+        },
+      },
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
+      "likeCount": 0,
+      "policies": Object {
+        "labelValues": Array [
+          "spam",
+          "!hide",
+          "scam",
+          "impersonation",
+        ],
+      },
+      "reasonTypes": Array [
+        "com.atproto.moderation.defs#reasonOther",
+      ],
+      "subjectCollections": Array [
+        "app.bsky.feed.post",
+      ],
+      "subjectTypes": Array [
+        "record",
+      ],
+      "uri": "record(0)",
+      "viewer": Object {},
+    },
+  ],
+}
+`;
