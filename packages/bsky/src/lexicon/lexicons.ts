@@ -637,6 +637,32 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoIdentityDefs: {
+    lexicon: 1,
+    id: 'com.atproto.identity.defs',
+    defs: {
+      identityInfo: {
+        type: 'object',
+        required: ['did', 'handle', 'didDoc'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          handle: {
+            type: 'string',
+            format: 'handle',
+            description:
+              "The validated handle of the account; or 'handle.invalid' if the handle did not bi-directionally match the DID document.",
+          },
+          didDoc: {
+            type: 'unknown',
+            description: 'The complete DID document for the identity.',
+          },
+        },
+      },
+    },
+  },
   ComAtprotoIdentityGetRecommendedDidCredentials: {
     lexicon: 1,
     id: 'com.atproto.identity.getRecommendedDidCredentials',
@@ -676,6 +702,54 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoIdentityRefreshIdentity: {
+    lexicon: 1,
+    id: 'com.atproto.identity.refreshIdentity',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Request that the server re-resolve an identity (DID and handle). The server may ignore this request, or require authentication, depending on the role, implementation, and policy of the server.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['identifier'],
+            properties: {
+              identifier: {
+                type: 'string',
+                format: 'at-identifier',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:com.atproto.identity.defs#identityInfo',
+          },
+        },
+        errors: [
+          {
+            name: 'HandleNotFound',
+            description:
+              'The resolution process confirmed that the handle does not resolve to any DID.',
+          },
+          {
+            name: 'DidNotFound',
+            description:
+              'The DID resolution process confirmed that there is no current DID.',
+          },
+          {
+            name: 'DidDeactivated',
+            description:
+              'The DID previously existed, but has been deactivated.',
+          },
+        ],
+      },
+    },
+  },
   ComAtprotoIdentityRequestPlcOperationSignature: {
     lexicon: 1,
     id: 'com.atproto.identity.requestPlcOperationSignature',
@@ -687,13 +761,61 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoIdentityResolveDid: {
+    lexicon: 1,
+    id: 'com.atproto.identity.resolveDid',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Resolves DID to DID document. Does not bi-directionally verify handle.',
+        parameters: {
+          type: 'params',
+          required: ['did'],
+          properties: {
+            did: {
+              type: 'string',
+              format: 'did',
+              description: 'DID to resolve.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['didDoc'],
+            properties: {
+              didDoc: {
+                type: 'unknown',
+                description: 'The complete DID document for the identity.',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'DidNotFound',
+            description:
+              'The DID resolution process confirmed that there is no current DID.',
+          },
+          {
+            name: 'DidDeactivated',
+            description:
+              'The DID previously existed, but has been deactivated.',
+          },
+        ],
+      },
+    },
+  },
   ComAtprotoIdentityResolveHandle: {
     lexicon: 1,
     id: 'com.atproto.identity.resolveHandle',
     defs: {
       main: {
         type: 'query',
-        description: 'Resolves a handle (domain name) to a DID.',
+        description:
+          'Resolves an atproto handle (hostname) to a DID. Does not necessarily bi-directionally verify against the the DID document.',
         parameters: {
           type: 'params',
           required: ['handle'],
@@ -718,6 +840,59 @@ export const schemaDict = {
             },
           },
         },
+        errors: [
+          {
+            name: 'HandleNotFound',
+            description:
+              'The resolution process confirmed that the handle does not resolve to any DID.',
+          },
+        ],
+      },
+    },
+  },
+  ComAtprotoIdentityResolveIdentity: {
+    lexicon: 1,
+    id: 'com.atproto.identity.resolveIdentity',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Resolves an identity (DID or Handle) to a full identity (DID document and verified handle).',
+        parameters: {
+          type: 'params',
+          required: ['identifier'],
+          properties: {
+            identifier: {
+              type: 'string',
+              format: 'at-identifier',
+              description: 'Handle or DID to resolve.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:com.atproto.identity.defs#identityInfo',
+          },
+        },
+        errors: [
+          {
+            name: 'HandleNotFound',
+            description:
+              'The resolution process confirmed that the handle does not resolve to any DID.',
+          },
+          {
+            name: 'DidNotFound',
+            description:
+              'The DID resolution process confirmed that there is no current DID.',
+          },
+          {
+            name: 'DidDeactivated',
+            description:
+              'The DID previously existed, but has been deactivated.',
+          },
+        ],
       },
     },
   },
@@ -11364,11 +11539,15 @@ export const ids = {
   ComAtprotoAdminUpdateAccountPassword:
     'com.atproto.admin.updateAccountPassword',
   ComAtprotoAdminUpdateSubjectStatus: 'com.atproto.admin.updateSubjectStatus',
+  ComAtprotoIdentityDefs: 'com.atproto.identity.defs',
   ComAtprotoIdentityGetRecommendedDidCredentials:
     'com.atproto.identity.getRecommendedDidCredentials',
+  ComAtprotoIdentityRefreshIdentity: 'com.atproto.identity.refreshIdentity',
   ComAtprotoIdentityRequestPlcOperationSignature:
     'com.atproto.identity.requestPlcOperationSignature',
+  ComAtprotoIdentityResolveDid: 'com.atproto.identity.resolveDid',
   ComAtprotoIdentityResolveHandle: 'com.atproto.identity.resolveHandle',
+  ComAtprotoIdentityResolveIdentity: 'com.atproto.identity.resolveIdentity',
   ComAtprotoIdentitySignPlcOperation: 'com.atproto.identity.signPlcOperation',
   ComAtprotoIdentitySubmitPlcOperation:
     'com.atproto.identity.submitPlcOperation',

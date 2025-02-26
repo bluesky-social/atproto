@@ -20,9 +20,13 @@ import * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/up
 import * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle.js'
 import * as ComAtprotoAdminUpdateAccountPassword from './types/com/atproto/admin/updateAccountPassword.js'
 import * as ComAtprotoAdminUpdateSubjectStatus from './types/com/atproto/admin/updateSubjectStatus.js'
+import * as ComAtprotoIdentityDefs from './types/com/atproto/identity/defs.js'
 import * as ComAtprotoIdentityGetRecommendedDidCredentials from './types/com/atproto/identity/getRecommendedDidCredentials.js'
+import * as ComAtprotoIdentityRefreshIdentity from './types/com/atproto/identity/refreshIdentity.js'
 import * as ComAtprotoIdentityRequestPlcOperationSignature from './types/com/atproto/identity/requestPlcOperationSignature.js'
+import * as ComAtprotoIdentityResolveDid from './types/com/atproto/identity/resolveDid.js'
 import * as ComAtprotoIdentityResolveHandle from './types/com/atproto/identity/resolveHandle.js'
+import * as ComAtprotoIdentityResolveIdentity from './types/com/atproto/identity/resolveIdentity.js'
 import * as ComAtprotoIdentitySignPlcOperation from './types/com/atproto/identity/signPlcOperation.js'
 import * as ComAtprotoIdentitySubmitPlcOperation from './types/com/atproto/identity/submitPlcOperation.js'
 import * as ComAtprotoIdentityUpdateHandle from './types/com/atproto/identity/updateHandle.js'
@@ -254,9 +258,13 @@ export * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/up
 export * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle.js'
 export * as ComAtprotoAdminUpdateAccountPassword from './types/com/atproto/admin/updateAccountPassword.js'
 export * as ComAtprotoAdminUpdateSubjectStatus from './types/com/atproto/admin/updateSubjectStatus.js'
+export * as ComAtprotoIdentityDefs from './types/com/atproto/identity/defs.js'
 export * as ComAtprotoIdentityGetRecommendedDidCredentials from './types/com/atproto/identity/getRecommendedDidCredentials.js'
+export * as ComAtprotoIdentityRefreshIdentity from './types/com/atproto/identity/refreshIdentity.js'
 export * as ComAtprotoIdentityRequestPlcOperationSignature from './types/com/atproto/identity/requestPlcOperationSignature.js'
+export * as ComAtprotoIdentityResolveDid from './types/com/atproto/identity/resolveDid.js'
 export * as ComAtprotoIdentityResolveHandle from './types/com/atproto/identity/resolveHandle.js'
+export * as ComAtprotoIdentityResolveIdentity from './types/com/atproto/identity/resolveIdentity.js'
 export * as ComAtprotoIdentitySignPlcOperation from './types/com/atproto/identity/signPlcOperation.js'
 export * as ComAtprotoIdentitySubmitPlcOperation from './types/com/atproto/identity/submitPlcOperation.js'
 export * as ComAtprotoIdentityUpdateHandle from './types/com/atproto/identity/updateHandle.js'
@@ -766,6 +774,17 @@ export class ComAtprotoIdentityNS {
     )
   }
 
+  refreshIdentity(
+    data?: ComAtprotoIdentityRefreshIdentity.InputSchema,
+    opts?: ComAtprotoIdentityRefreshIdentity.CallOptions,
+  ): Promise<ComAtprotoIdentityRefreshIdentity.Response> {
+    return this._client
+      .call('com.atproto.identity.refreshIdentity', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoIdentityRefreshIdentity.toKnownErr(e)
+      })
+  }
+
   requestPlcOperationSignature(
     data?: ComAtprotoIdentityRequestPlcOperationSignature.InputSchema,
     opts?: ComAtprotoIdentityRequestPlcOperationSignature.CallOptions,
@@ -778,16 +797,37 @@ export class ComAtprotoIdentityNS {
     )
   }
 
+  resolveDid(
+    params?: ComAtprotoIdentityResolveDid.QueryParams,
+    opts?: ComAtprotoIdentityResolveDid.CallOptions,
+  ): Promise<ComAtprotoIdentityResolveDid.Response> {
+    return this._client
+      .call('com.atproto.identity.resolveDid', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoIdentityResolveDid.toKnownErr(e)
+      })
+  }
+
   resolveHandle(
     params?: ComAtprotoIdentityResolveHandle.QueryParams,
     opts?: ComAtprotoIdentityResolveHandle.CallOptions,
   ): Promise<ComAtprotoIdentityResolveHandle.Response> {
-    return this._client.call(
-      'com.atproto.identity.resolveHandle',
-      params,
-      undefined,
-      opts,
-    )
+    return this._client
+      .call('com.atproto.identity.resolveHandle', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoIdentityResolveHandle.toKnownErr(e)
+      })
+  }
+
+  resolveIdentity(
+    params?: ComAtprotoIdentityResolveIdentity.QueryParams,
+    opts?: ComAtprotoIdentityResolveIdentity.CallOptions,
+  ): Promise<ComAtprotoIdentityResolveIdentity.Response> {
+    return this._client
+      .call('com.atproto.identity.resolveIdentity', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoIdentityResolveIdentity.toKnownErr(e)
+      })
   }
 
   signPlcOperation(
