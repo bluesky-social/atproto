@@ -1,4 +1,8 @@
-import * as ident from '@atproto/syntax'
+import {
+  InvalidHandleError,
+  isValidTld,
+  normalizeAndEnsureValidHandle,
+} from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AppContext } from '../context'
 import { hasExplicitSlur } from './explicit-slurs'
@@ -14,7 +18,7 @@ export const normalizeAndValidateHandle = async (opts: {
   // base formatting validation
   const handle = baseNormalizeAndValidate(opts.handle)
   // tld validation
-  if (!ident.isValidTld(handle)) {
+  if (!isValidTld(handle)) {
     throw new InvalidRequestError(
       'Handle TLD is invalid or disallowed',
       'InvalidHandle',
@@ -52,10 +56,10 @@ export const normalizeAndValidateHandle = async (opts: {
 
 export const baseNormalizeAndValidate = (handle: string) => {
   try {
-    const normalized = ident.normalizeAndEnsureValidHandle(handle)
+    const normalized = normalizeAndEnsureValidHandle(handle)
     return normalized
   } catch (err) {
-    if (err instanceof ident.InvalidHandleError) {
+    if (err instanceof InvalidHandleError) {
       throw new InvalidRequestError(err.message, 'InvalidHandle')
     }
     throw err

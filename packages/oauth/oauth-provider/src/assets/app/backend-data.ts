@@ -28,6 +28,12 @@ export type LinkDefinition = {
 }
 
 export type CustomizationData = {
+  // Functional customization
+  hcaptchaSiteKey?: string
+  inviteCodeRequired?: boolean
+  availableUserDomains?: string[]
+
+  // Aesthetic customization
   name?: string
   logo?: string
   links?: LinkDefinition[]
@@ -48,7 +54,6 @@ export type AuthorizeData = {
   clientMetadata: OAuthClientMetadata
   clientTrusted: boolean
   requestUri: string
-  csrfCookie: string
   loginHint?: string
   scopeDetails?: ScopeDetail[]
   newSessionsRequireConsent: boolean

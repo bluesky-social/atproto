@@ -1,41 +1,38 @@
 import { useCallback, useMemo, useState } from 'react'
-import { Account, AuthorizeData, Session } from '../backend-data'
-import { Api } from '../lib/api'
+import { Session } from '../backend-data'
+import {
+  AcceptData,
+  Api,
+  ConfirmResetPasswordData,
+  InitiatePasswordResetData,
+  SessionResponse,
+  SignInData,
+  SignUpData,
+  VerifyHandleAvailabilityData,
+} from '../lib/api'
 import { upsert } from '../lib/util'
 import { useCsrfToken } from './use-csrf-token'
 
-export type SignInCredentials = {
-  username: string
-  password: string
-  emailOtp?: string
-
-  remember?: boolean
+export type UseApiOptions = {
+  requestUri: string
+  sessions?: readonly Session[]
+  newSessionsRequireConsent?: boolean
+  onRedirected?: () => void
 }
 
-export type SignUpData = {
-  username: string
-  password: string
-  extra?: Record<string, string>
-}
+export function useApi({
+  requestUri,
+  sessions: sessionsInit = [],
+  newSessionsRequireConsent = true,
+  onRedirected,
+}: UseApiOptions) {
+  const csrfToken = useCsrfToken(`csrf-${requestUri}`)
+  if (!csrfToken) throw new Error('CSRF token is missing')
 
-export function useApi(
-  {
-    clientId,
-    requestUri,
-    csrfCookie,
-    sessions: initialSessions,
-    newSessionsRequireConsent,
-  }: AuthorizeData,
-  {
-    onRedirected,
-  }: {
-    onRedirected?: () => void
-  } = {},
-) {
-  const csrfToken = useCsrfToken(csrfCookie) ?? '<csrf-token-missing>' // Invalid value
-  const [sessions, setSessions] = useState<readonly Session[]>(initialSessions)
+  const api = useMemo(() => new Api(csrfToken), [csrfToken])
+  const [sessions, setSessions] = useState(sessionsInit)
 
-  const setSession = useCallback(
+  const selectSub = useCallback(
     (sub: string | null) => {
       setSessions((sessions) =>
         sub === (sessions.find((s) => s.selected)?.account.sub || null)
@@ -46,9 +43,23 @@ export function useApi(
     [setSessions],
   )
 
-  const api = useMemo(
-    () => new Api(requestUri, clientId, csrfToken, newSessionsRequireConsent),
-    [requestUri, clientId, csrfToken, newSessionsRequireConsent],
+  const upsertSession = useCallback(
+    ({ account, consentRequired }: SessionResponse) => {
+      const session: Session = {
+        account,
+        selected: true,
+        loginRequired: false,
+        consentRequired: newSessionsRequireConsent || consentRequired,
+      }
+
+      setSessions((sessions) =>
+        upsert(sessions, session, (s) => s.account.sub === account.sub).map(
+          // Make sure to de-select any other selected session
+          (s) => (s === session || !s.selected ? s : { ...s, selected: false }),
+        ),
+      )
+    },
+    [setSessions, newSessionsRequireConsent],
   )
 
   const performRedirect = useCallback(
@@ -60,44 +71,61 @@ export function useApi(
   )
 
   const doSignIn = useCallback(
-    async (credentials: SignInCredentials): Promise<void> => {
-      const session = await api.signIn(credentials)
-      const { sub } = session.account
-
-      setSessions((sessions) => {
-        return upsert(sessions, session, (s) => s.account.sub === sub).map(
-          // Make sure to de-select any other selected session
-          (s) => (s === session || !s.selected ? s : { ...s, selected: false }),
-        )
-      })
+    async (data: SignInData, signal?: AbortSignal) => {
+      const response = await api.fetch('/sign-in', data, { signal })
+      upsertSession(response)
     },
-    [api, performRedirect, clientId, setSessions],
+    [api, upsertSession],
   )
 
-  const doSignUp = useCallback(
-    (_data: SignUpData) => {
-      //
-      throw new Error('Not implemented')
+  const doInitiatePasswordReset = useCallback(
+    async (data: InitiatePasswordResetData, signal?: AbortSignal) => {
+      await api.fetch('/reset-password-request', data, { signal })
     },
     [api],
   )
 
+  const doConfirmResetPassword = useCallback(
+    async (data: ConfirmResetPasswordData, signal?: AbortSignal) => {
+      await api.fetch('/reset-password-confirm', data, { signal })
+    },
+    [api],
+  )
+
+  const doValidateNewHandle = useCallback(
+    async (data: VerifyHandleAvailabilityData, signal?: AbortSignal) => {
+      await api.fetch('/verify-handle-availability', data, { signal })
+    },
+    [api],
+  )
+
+  const doSignUp = useCallback(
+    async (data: SignUpData, signal?: AbortSignal) => {
+      const response = await api.fetch('/sign-up', data, { signal })
+      upsertSession(response)
+    },
+    [api, upsertSession],
+  )
+
   const doAccept = useCallback(
-    async (account: Account) => {
-      performRedirect(await api.accept(account))
+    async (data: AcceptData) => {
+      performRedirect(api.buildAcceptUrl(data))
     },
     [api, performRedirect],
   )
 
   const doReject = useCallback(async () => {
-    performRedirect(await api.reject())
+    performRedirect(api.buildRejectUrl())
   }, [api, performRedirect])
 
   return {
     sessions,
-    setSession,
+    selectSub,
 
     doSignIn,
+    doInitiatePasswordReset,
+    doConfirmResetPassword,
+    doValidateNewHandle,
     doSignUp,
     doAccept,
     doReject,

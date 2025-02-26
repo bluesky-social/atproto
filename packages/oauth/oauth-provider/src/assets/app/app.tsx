@@ -3,8 +3,8 @@ import type {
   CustomizationData,
   ErrorData,
 } from './backend-data'
-import { AuthorizeView } from './views/authorize-view'
-import { ErrorView } from './views/error-view'
+import { AuthorizeView } from './views/authorize/authorize-view'
+import { ErrorView } from './views/error/error-view'
 
 export type AppProps = {
   authorizeData?: AuthorizeData

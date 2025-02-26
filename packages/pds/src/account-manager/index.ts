@@ -6,30 +6,44 @@ import {
   Account,
   AccountInfo,
   AccountStore,
+  AuthenticateAccountData,
   Code,
+  DeviceAccountInfo,
   DeviceData,
   DeviceId,
   DeviceStore,
   FoundRequestResult,
+  HandleUnavailableError,
+  InvalidRequestError,
   NewTokenData,
   RefreshToken,
   RequestData,
   RequestId,
   RequestStore,
-  SignInCredentials,
+  ResetPasswordConfirmData,
+  ResetPasswordRequestData,
+  SignUpData,
   TokenData,
   TokenId,
   TokenInfo,
   TokenStore,
   UpdateRequestData,
 } from '@atproto/oauth-provider'
+import {
+  InvalidHandleError,
+  isValidTld,
+  normalizeAndEnsureValidHandle,
+} from '@atproto/syntax'
 import { AuthRequiredError } from '@atproto/xrpc-server'
 import { ActorStore } from '../actor-store/actor-store'
 import { AuthScope } from '../auth-verifier'
 import { BackgroundQueue } from '../background'
 import { softDeleted } from '../db'
+import { ensureHandleServiceConstraints, isServiceDomain } from '../handle'
+import { hasExplicitSlur } from '../handle/explicit-slurs'
 import { ImageUrlBuilder } from '../image/image-url-builder'
 import { StatusAttr } from '../lexicon/types/com/atproto/admin/defs'
+import { ServerMailer } from '../mailer'
 import { AccountDb, EmailTokenPurpose, getDb, getMigrator } from './db'
 import * as account from './helpers/account'
 import { AccountStatus, ActorAccount } from './helpers/account'
@@ -56,10 +70,12 @@ export class AccountManager
     private actorStore: ActorStore,
     private imageUrlBuilder: ImageUrlBuilder,
     private backgroundQueue: BackgroundQueue,
+    private mailer: ServerMailer,
     dbLocation: string,
     private jwtKey: KeyObject,
     private serviceDid: string,
-    disableWalAutoCheckpoint = false,
+    disableWalAutoCheckpoint: boolean = false,
+    private serviceHandleDomains: string[],
   ) {
     this.db = getDb(dbLocation, disableWalAutoCheckpoint)
   }
@@ -121,7 +137,7 @@ export class AccountManager
     return res.active ? AccountStatus.Active : res.status
   }
 
-  async createAccount(opts: {
+  async createAccountAndSession(opts: {
     did: string
     handle: string
     email?: string
@@ -528,26 +544,54 @@ export class AccountManager
     return account
   }
 
-  async authenticateAccount(
-    { username: identifier, password, remember = false }: SignInCredentials,
-    deviceId: DeviceId,
-  ): Promise<AccountInfo | null> {
-    try {
-      const { user, appPassword } = await this.login({ identifier, password })
+  async createAccount(_data: SignUpData): Promise<Account> {
+    throw new Error('Method not implemented.')
+  }
 
-      if (appPassword) {
-        throw new AuthRequiredError('App passwords are not allowed')
+  async authenticateAccount({
+    username: identifier,
+    password,
+    // Not supported by the PDS (yet?)
+    emailOtp = undefined,
+  }: AuthenticateAccountData): Promise<Account> {
+    try {
+      // Should never happen
+      if (emailOtp != null) {
+        throw new Error('Email OTP is not supported')
       }
 
-      await this.db.executeWithRetry(
-        deviceAccount.createOrUpdateQB(this.db, deviceId, user.did, remember),
-      )
+      const { user, appPassword, isSoftDeleted } = await this.login({
+        identifier,
+        password,
+      })
 
-      return await this.getDeviceAccount(deviceId, user.did)
+      if (isSoftDeleted) {
+        throw new InvalidRequestError('Account was taken down')
+      }
+
+      if (appPassword) {
+        throw new InvalidRequestError('App passwords are not allowed')
+      }
+
+      return this.buildAccount(user)
     } catch (err) {
-      if (err instanceof AuthRequiredError) return null
+      if (err instanceof AuthRequiredError) {
+        throw new InvalidRequestError(err.message, err)
+      }
       throw err
     }
+  }
+
+  async addDeviceAccount(
+    deviceId: DeviceId,
+    sub: string,
+    remember: boolean,
+  ): Promise<DeviceAccountInfo> {
+    const [row] = await this.db.executeWithRetry(
+      deviceAccount.createOrUpdateQB(this.db, deviceId, sub, remember),
+    )
+    if (!row) throw new Error('Failed to create device account')
+    return deviceAccount.toDeviceAccountInfo(row)
   }
 
   async addAuthorizedClient(
@@ -604,6 +648,72 @@ export class AccountManager
     await this.db.executeWithRetry(
       deviceAccount.removeQB(this.db, deviceId, sub),
     )
+  }
+
+  async resetPasswordRequest({
+    email,
+  }: ResetPasswordRequestData): Promise<void> {
+    const account = await this.getAccountByEmail(email, {
+      includeDeactivated: true,
+      includeTakenDown: true,
+    })
+
+    if (!account?.email) return
+
+    const token = await this.createEmailToken(account.did, 'reset_password')
+
+    await this.mailer.sendConfirmEmail({ token }, { to: account.email })
+  }
+
+  async resetPasswordConfirm(data: ResetPasswordConfirmData): Promise<void> {
+    await this.resetPassword(data)
+  }
+
+  async verifyHandleAvailability(handle: string): Promise<void> {
+    try {
+      const normalized = normalizeAndEnsureValidHandle(handle)
+
+      if (!isValidTld(normalized)) {
+        throw new HandleUnavailableError('syntax', 'Invalid TLD')
+      }
+
+      if (hasExplicitSlur(handle)) {
+        throw new HandleUnavailableError(
+          'slur',
+          'Inappropriate language will not be tolerated',
+        )
+      }
+
+      if (!isServiceDomain(handle, this.serviceHandleDomains)) {
+        throw new HandleUnavailableError(
+          'domain',
+          'Handle is not a service domain',
+        )
+      }
+
+      try {
+        ensureHandleServiceConstraints(handle, this.serviceHandleDomains, false)
+      } catch (cause) {
+        const message = cause instanceof Error ? cause.message : 'Unknown error'
+        const reason = message === 'Reserved handle' ? 'taken' : 'domain'
+        throw new HandleUnavailableError(reason, message, cause)
+      }
+
+      const account = await this.getAccount(normalized, {
+        includeDeactivated: true,
+        includeTakenDown: true,
+      })
+
+      if (account) {
+        throw new HandleUnavailableError('taken')
+      }
+    } catch (err) {
+      if (err instanceof InvalidHandleError) {
+        throw new HandleUnavailableError('syntax', err.message)
+      }
+
+      throw err
+    }
   }
 
   // RequestStore

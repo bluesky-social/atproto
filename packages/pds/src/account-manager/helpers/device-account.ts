@@ -114,6 +114,7 @@ export const createOrUpdateQB = (
     .insertInto('device_account')
     .values({ did, deviceId, authorizedClients, ...values })
     .onConflict((oc) => oc.columns(['deviceId', 'did']).doUpdateSet(values))
+    .returning(['remember', 'authorizedClients', 'authenticatedAt'])
 }
 
 export const getAccountInfoQB = (

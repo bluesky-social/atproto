@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto'
 import type { ServerResponse } from 'node:http'
+import { CspConfig, CspValue, buildCsp, mergeCsp } from '../lib/csp/index.js'
 import {
   AssetRef,
   BuildDocumentOptions,
@@ -17,12 +18,27 @@ export function declareBackendData(name: string, data: unknown) {
   return js`window[${name}]=${data};document.currentScript.remove();`
 }
 
-export type SendWebPageOptions = BuildDocumentOptions & WriteResponseOptions
+export type SendWebPageOptions = BuildDocumentOptions &
+  WriteResponseOptions & {
+    csp?: CspConfig
+  }
 
 export async function sendWebPage(
   res: ServerResponse,
   options: SendWebPageOptions,
 ): Promise<void> {
+  const csp = mergeCsp(options.csp, {
+    'default-src': ["'none'"],
+    'base-uri': options.base?.origin as undefined | `https://${string}`,
+    'script-src': ["'self'", ...assetsToCsp(options.scripts)],
+    'style-src': ["'self'", ...assetsToCsp(options.styles)],
+    'img-src': ["'self'", 'data:', 'https:'],
+    'connect-src': ["'self'"],
+    'upgrade-insecure-requests': true,
+  })
+
+  res.setHeader('Content-Security-Policy', buildCsp(csp))
+
   // @TODO: make these headers configurable (?)
   res.setHeader('Permissions-Policy', 'otp-credentials=*, document-domain=()')
   res.setHeader('Cross-Origin-Embedder-Policy', 'credentialless')
@@ -33,36 +49,25 @@ export async function sendWebPage(
   res.setHeader('X-Content-Type-Options', 'nosniff')
   res.setHeader('X-XSS-Protection', '0')
   res.setHeader('Strict-Transport-Security', 'max-age=63072000')
-  res.setHeader(
-    'Content-Security-Policy',
-    [
-      `default-src 'none'`,
-      `frame-ancestors 'none'`,
-      `form-action 'none'`,
-      `base-uri ${options.base?.origin || `'none'`}`,
-      `script-src 'self' ${
-        options.scripts?.map(assetToHash).map(hashToCspRule).join(' ') ?? ''
-      }`,
-      `style-src 'self' ${
-        options.styles?.map(assetToHash).map(hashToCspRule).join(' ') ?? ''
-      }`,
-      `img-src 'self' data: https:`,
-      `connect-src 'self'`,
-      `upgrade-insecure-requests`,
-    ].join('; '),
-  )
 
   const html = buildDocument(options)
 
   return writeHtml(res, html.toString(), options)
 }
 
-function assetToHash(asset: Html | AssetRef): string {
-  return asset instanceof Html
-    ? createHash('sha256').update(asset.toString()).digest('base64')
-    : asset.sha256
-}
+function* assetsToCsp(
+  assets?: readonly (Html | AssetRef)[],
+): Generator<CspValue> {
+  if (!assets) return
 
-function hashToCspRule(hash: string): string {
-  return `'sha256-${hash}'`
+  for (const asset of assets) {
+    if (asset instanceof Html) {
+      const hash = createHash('sha256')
+        .update(asset.toString())
+        .digest('base64')
+      yield `'sha256-${hash}'`
+    } else {
+      yield `'sha256-${asset.sha256}'`
+    }
+  }
 }
