@@ -122,62 +122,6 @@ export function validateAccount<V>(v: V) {
   return validate<Account & V>(v, id, hashAccount)
 }
 
-/** DEPRECATED -- Use #identity event instead */
-export interface Handle {
-  $type?: 'com.atproto.sync.subscribeRepos#handle'
-  seq: number
-  did: string
-  handle: string
-  time: string
-}
-
-const hashHandle = 'handle'
-
-export function isHandle<V>(v: V) {
-  return is$typed(v, id, hashHandle)
-}
-
-export function validateHandle<V>(v: V) {
-  return validate<Handle & V>(v, id, hashHandle)
-}
-
-/** DEPRECATED -- Use #account event instead */
-export interface Migrate {
-  $type?: 'com.atproto.sync.subscribeRepos#migrate'
-  seq: number
-  did: string
-  migrateTo: string | null
-  time: string
-}
-
-const hashMigrate = 'migrate'
-
-export function isMigrate<V>(v: V) {
-  return is$typed(v, id, hashMigrate)
-}
-
-export function validateMigrate<V>(v: V) {
-  return validate<Migrate & V>(v, id, hashMigrate)
-}
-
-/** DEPRECATED -- Use #account event instead */
-export interface Tombstone {
-  $type?: 'com.atproto.sync.subscribeRepos#tombstone'
-  seq: number
-  did: string
-  time: string
-}
-
-const hashTombstone = 'tombstone'
-
-export function isTombstone<V>(v: V) {
-  return is$typed(v, id, hashTombstone)
-}
-
-export function validateTombstone<V>(v: V) {
-  return validate<Tombstone & V>(v, id, hashTombstone)
-}
-
 export interface Info {
   $type?: 'com.atproto.sync.subscribeRepos#info'
   name: 'OutdatedCursor' | (string & {})
