@@ -1,5 +1,5 @@
 import fs from 'node:fs'
-import { LexiconDoc } from '@atproto/lexicon'
+import { type LexiconDoc } from '@atproto/lexicon'
 
 const INSERT_START = [
   '<!-- START lex generated content. Please keep comment here to allow auto update -->',
