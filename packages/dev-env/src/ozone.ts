@@ -117,6 +117,8 @@ export class TestOzone {
     await this.ctx.teamService(this.ctx.db).create({
       did,
       disabled: false,
+      handle: null,
+      displayName: null,
       lastUpdatedBy: this.ctx.cfg.service.did,
       role: 'tools.ozone.team.defs#roleAdmin',
     })
@@ -127,6 +129,8 @@ export class TestOzone {
     await this.ctx.teamService(this.ctx.db).create({
       did,
       disabled: false,
+      handle: null,
+      displayName: null,
       lastUpdatedBy: this.ctx.cfg.service.did,
       role: 'tools.ozone.team.defs#roleModerator',
     })
@@ -137,6 +141,8 @@ export class TestOzone {
     await this.ctx.teamService(this.ctx.db).create({
       did,
       disabled: false,
+      handle: null,
+      displayName: null,
       lastUpdatedBy: this.ctx.cfg.service.did,
       role: 'tools.ozone.team.defs#roleTriage',
     })
