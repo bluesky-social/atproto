@@ -2,19 +2,15 @@
   "lexicon": 1,
   "id": "com.atproto.identity.defs",
   "defs": {
-    "atprotoIdentity": {
+    "combinedIdentity": {
       "type": "object",
-      "required": ["did"],
+      "required": ["did", "handle", "didDoc"],
       "properties": {
         "did": { "type": "string", "format": "did" },
         "handle": {
           "type": "string",
           "format": "handle",
           "description": "The validated handle of the account; or 'handle.invalid' if the handle did not bi-directionally match the DID document."
-        },
-        "tombstoned": {
-          "type": "boolean",
-          "description": "If true, the DID has been deleted, and the other optional fields (eg, handle and didDoc) should be null."
         },
         "didDoc": {
           "type": "unknown",

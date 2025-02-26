@@ -20,7 +20,7 @@
         "encoding": "application/json",
         "schema": {
           "type": "ref",
-          "ref": "com.atproto.identity.defs#atprotoIdentity"
+          "ref": "com.atproto.identity.defs#combinedIdentity"
         }
       },
       "errors": [
@@ -31,6 +31,10 @@
         {
           "name": "DidNotFound",
           "description": "The DID resolution process confirmed that there is no current DID."
+        },
+        {
+          "name": "DidDeactivated",
+          "description": "The DID previously existed, but has been deactivated."
         }
       ]
     }
