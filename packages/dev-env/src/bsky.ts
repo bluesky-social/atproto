@@ -82,6 +82,7 @@ export class TestBsky {
       disableSsrfProtection: true,
       ...cfg,
       adminPasswords: [ADMIN_PASSWORD],
+      etcdHosts: [],
     })
 
     // Separate migration db in case migration changes some connection state that we need in the tests, e.g. "alter database ... set ..."
