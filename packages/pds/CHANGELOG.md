@@ -1,5 +1,18 @@
 # @atproto/pds
 
+## 0.4.104
+
+### Patch Changes
+
+- [#3580](https://github.com/bluesky-social/atproto/pull/3580) [`d4e14b7bd`](https://github.com/bluesky-social/atproto/commit/d4e14b7bdc7752476757ecfe96343d146411b784) Thanks [@dholms](https://github.com/dholms)! - Fix bug where racing writes to the same repository can get sequenced out-of-order.
+
+- [#2506](https://github.com/bluesky-social/atproto/pull/2506) [`27b0a7be1`](https://github.com/bluesky-social/atproto/commit/27b0a7be1ed1b6e098114791d84ec9dc844db552) Thanks [@bnewbold](https://github.com/bnewbold)! - remove some deprecated fields from com.atproto Lexicons
+
+- [#3553](https://github.com/bluesky-social/atproto/pull/3553) [`5cce76670`](https://github.com/bluesky-social/atproto/commit/5cce7667058981561340107e0124093203e796e3) Thanks [@devinivy](https://github.com/devinivy)! - Add x-forwarded-for to PDS-proxied requests to entryway
+
+- Updated dependencies [[`99e2809ca`](https://github.com/bluesky-social/atproto/commit/99e2809ca2ebf70acaa10254f140a8dd0fad4305), [`27b0a7be1`](https://github.com/bluesky-social/atproto/commit/27b0a7be1ed1b6e098114791d84ec9dc844db552), [`11d8d21be`](https://github.com/bluesky-social/atproto/commit/11d8d21beac4b79ac44b930197761f9d08dbb492)]:
+  - @atproto/api@0.14.7
+
 ## 0.4.103
 
 ### Patch Changes

@@ -1,5 +1,14 @@
 # @atproto/bsky
 
+## 0.0.124
+
+### Patch Changes
+
+- [#3579](https://github.com/bluesky-social/atproto/pull/3579) [`11d8d21be`](https://github.com/bluesky-social/atproto/commit/11d8d21beac4b79ac44b930197761f9d08dbb492) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Include new labeler service record properties on the `labelerViewDetailed` reponse from the app view.
+
+- Updated dependencies [[`99e2809ca`](https://github.com/bluesky-social/atproto/commit/99e2809ca2ebf70acaa10254f140a8dd0fad4305), [`27b0a7be1`](https://github.com/bluesky-social/atproto/commit/27b0a7be1ed1b6e098114791d84ec9dc844db552), [`11d8d21be`](https://github.com/bluesky-social/atproto/commit/11d8d21beac4b79ac44b930197761f9d08dbb492)]:
+  - @atproto/api@0.14.7
+
 ## 0.0.123
 
 ### Patch Changes

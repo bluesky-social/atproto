@@ -1,5 +1,15 @@
 # @atproto/api
 
+## 0.14.7
+
+### Patch Changes
+
+- [#3521](https://github.com/bluesky-social/atproto/pull/3521) [`99e2809ca`](https://github.com/bluesky-social/atproto/commit/99e2809ca2ebf70acaa10254f140a8dd0fad4305) Thanks [@bnewbold](https://github.com/bnewbold)! - Add `reasonTypes`, `subjectTypes`, and `subjectCollections` properties to labeler service records.
+
+- [#2506](https://github.com/bluesky-social/atproto/pull/2506) [`27b0a7be1`](https://github.com/bluesky-social/atproto/commit/27b0a7be1ed1b6e098114791d84ec9dc844db552) Thanks [@bnewbold](https://github.com/bnewbold)! - remove some deprecated fields from com.atproto Lexicons
+
+- [#3579](https://github.com/bluesky-social/atproto/pull/3579) [`11d8d21be`](https://github.com/bluesky-social/atproto/commit/11d8d21beac4b79ac44b930197761f9d08dbb492) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Mirror new labeler service record properties on `labelerViewDetailed`.
+
 ## 0.14.6
 
 ### Patch Changes
