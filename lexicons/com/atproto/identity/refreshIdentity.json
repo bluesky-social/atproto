@@ -22,7 +22,7 @@
         "encoding": "application/json",
         "schema": {
           "type": "ref",
-          "ref": "com.atproto.identity.defs#combinedIdentity"
+          "ref": "com.atproto.identity.defs#identityInfo"
         }
       },
       "errors": [
