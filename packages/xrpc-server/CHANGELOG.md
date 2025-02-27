@@ -1,5 +1,52 @@
 # @atproto/xrpc-server
 
+## 0.7.11
+
+### Patch Changes
+
+- Updated dependencies [[`c53d943c8`](https://github.com/bluesky-social/atproto/commit/c53d943c8be5b8886254e020970a68c0f745b14c), [`c53d943c8`](https://github.com/bluesky-social/atproto/commit/c53d943c8be5b8886254e020970a68c0f745b14c)]:
+  - @atproto/lexicon@0.4.7
+  - @atproto/xrpc@0.6.9
+
+## 0.7.10
+
+### Patch Changes
+
+- [#3220](https://github.com/bluesky-social/atproto/pull/3220) [`61dc0d60e`](https://github.com/bluesky-social/atproto/commit/61dc0d60e19b88c6427a54c6d95a391b5f4da7bd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Apply new linting rules regarding import order
+
+- [#3220](https://github.com/bluesky-social/atproto/pull/3220) [`61dc0d60e`](https://github.com/bluesky-social/atproto/commit/61dc0d60e19b88c6427a54c6d95a391b5f4da7bd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update NodeJS engine requirement to >=18.7.0
+
+- Updated dependencies [[`61dc0d60e`](https://github.com/bluesky-social/atproto/commit/61dc0d60e19b88c6427a54c6d95a391b5f4da7bd), [`61dc0d60e`](https://github.com/bluesky-social/atproto/commit/61dc0d60e19b88c6427a54c6d95a391b5f4da7bd)]:
+  - @atproto/lexicon@0.4.6
+  - @atproto/common@0.4.8
+  - @atproto/crypto@0.4.4
+  - @atproto/xrpc@0.6.8
+
+## 0.7.9
+
+### Patch Changes
+
+- [#3439](https://github.com/bluesky-social/atproto/pull/3439) [`4f2841efe`](https://github.com/bluesky-social/atproto/commit/4f2841efeb410e710e0c8da7c9204468f6256a75) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Export the `ResponseType` type used in the `XRPCError` constructor
+
+- [#3439](https://github.com/bluesky-social/atproto/pull/3439) [`4f2841efe`](https://github.com/bluesky-social/atproto/commit/4f2841efeb410e710e0c8da7c9204468f6256a75) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow providing a custom `errorParser` option to XRPCServer
+
+- Updated dependencies [[`fb64d50ee`](https://github.com/bluesky-social/atproto/commit/fb64d50ee220316b9f1183e5c3259629489734c9), [`52c687a05`](https://github.com/bluesky-social/atproto/commit/52c687a05c70d5660fae1de9e1bbc6297f37f1f4)]:
+  - @atproto/xrpc@0.6.7
+  - @atproto/common@0.4.7
+  - @atproto/crypto@0.4.3
+
+## 0.7.8
+
+### Patch Changes
+
+- [#3422](https://github.com/bluesky-social/atproto/pull/3422) [`1015d9692`](https://github.com/bluesky-social/atproto/commit/1015d96925898149cc60b434561e19730a1bea12) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Fix rate limit reset binding
+
+## 0.7.7
+
+### Patch Changes
+
+- [#3348](https://github.com/bluesky-social/atproto/pull/3348) [`0832a377d`](https://github.com/bluesky-social/atproto/commit/0832a377d269584a906d5062ebb5e2e6307f9c61) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Add resetRouteRateLimits to req context
+
 ## 0.7.6
 
 ### Patch Changes

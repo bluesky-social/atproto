@@ -1,10 +1,10 @@
-import { sql } from 'kysely'
 import { ConnectRouter } from '@connectrpc/connect'
+import { sql } from 'kysely'
+import { AppContext } from '../context'
 import { Service } from '../proto/bsync_connect'
-import AppContext from '../context'
 import addMuteOperation from './add-mute-operation'
-import scanMuteOperations from './scan-mute-operations'
 import addNotifOperation from './add-notif-operation'
+import scanMuteOperations from './scan-mute-operations'
 import scanNotifOperations from './scan-notif-operations'
 
 export default (ctx: AppContext) => (router: ConnectRouter) => {

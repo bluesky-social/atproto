@@ -1,5 +1,48 @@
 # @atproto/oauth-client-node
 
+## 0.2.11
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/oauth-client@0.3.10
+
+## 0.2.10
+
+### Patch Changes
+
+- [#3220](https://github.com/bluesky-social/atproto/pull/3220) [`61dc0d60e`](https://github.com/bluesky-social/atproto/commit/61dc0d60e19b88c6427a54c6d95a391b5f4da7bd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Apply new linting rules regarding import order
+
+- [#3220](https://github.com/bluesky-social/atproto/pull/3220) [`61dc0d60e`](https://github.com/bluesky-social/atproto/commit/61dc0d60e19b88c6427a54c6d95a391b5f4da7bd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update NodeJS engine requirement to >=18.7.0
+
+- Updated dependencies [[`61dc0d60e`](https://github.com/bluesky-social/atproto/commit/61dc0d60e19b88c6427a54c6d95a391b5f4da7bd), [`61dc0d60e`](https://github.com/bluesky-social/atproto/commit/61dc0d60e19b88c6427a54c6d95a391b5f4da7bd), [`61dc0d60e`](https://github.com/bluesky-social/atproto/commit/61dc0d60e19b88c6427a54c6d95a391b5f4da7bd)]:
+  - @atproto-labs/handle-resolver-node@0.1.13
+  - @atproto-labs/did-resolver@0.1.10
+  - @atproto-labs/simple-store@0.1.2
+  - @atproto/jwk-webcrypto@0.1.4
+  - @atproto/oauth-client@0.3.9
+  - @atproto/oauth-types@0.2.3
+  - @atproto/jwk-jose@0.1.4
+  - @atproto/jwk@0.1.3
+  - @atproto/did@0.1.5
+
+## 0.2.9
+
+### Patch Changes
+
+- Updated dependencies [[`cc2a1222b`](https://github.com/bluesky-social/atproto/commit/cc2a1222bd2b8ddd70d70dad174c1c63246a2d87), [`cc2a1222b`](https://github.com/bluesky-social/atproto/commit/cc2a1222bd2b8ddd70d70dad174c1c63246a2d87)]:
+  - @atproto-labs/did-resolver@0.1.9
+  - @atproto/did@0.1.4
+  - @atproto/oauth-client@0.3.8
+  - @atproto-labs/handle-resolver-node@0.1.12
+
+## 0.2.8
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto-labs/handle-resolver-node@0.1.11
+
 ## 0.2.7
 
 ### Patch Changes

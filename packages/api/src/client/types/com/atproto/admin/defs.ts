@@ -2,34 +2,37 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
-import * as ComAtprotoServerDefs from '../server/defs'
+import { validate as _validate } from '../../../../lexicons'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import type * as ComAtprotoServerDefs from '../server/defs.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.atproto.admin.defs'
 
 export interface StatusAttr {
+  $type?: 'com.atproto.admin.defs#statusAttr'
   applied: boolean
   ref?: string
-  [k: string]: unknown
 }
 
-export function isStatusAttr(v: unknown): v is StatusAttr {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'com.atproto.admin.defs#statusAttr'
-  )
+const hashStatusAttr = 'statusAttr'
+
+export function isStatusAttr<V>(v: V) {
+  return is$typed(v, id, hashStatusAttr)
 }
 
-export function validateStatusAttr(v: unknown): ValidationResult {
-  return lexicons.validate('com.atproto.admin.defs#statusAttr', v)
+export function validateStatusAttr<V>(v: V) {
+  return validate<StatusAttr & V>(v, id, hashStatusAttr)
 }
 
 export interface AccountView {
+  $type?: 'com.atproto.admin.defs#accountView'
   did: string
   handle: string
   email?: string
-  relatedRecords?: {}[]
+  relatedRecords?: { [_ in string]: unknown }[]
   indexedAt: string
   invitedBy?: ComAtprotoServerDefs.InviteCode
   invites?: ComAtprotoServerDefs.InviteCode[]
@@ -38,71 +41,62 @@ export interface AccountView {
   inviteNote?: string
   deactivatedAt?: string
   threatSignatures?: ThreatSignature[]
-  [k: string]: unknown
 }
 
-export function isAccountView(v: unknown): v is AccountView {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'com.atproto.admin.defs#accountView'
-  )
+const hashAccountView = 'accountView'
+
+export function isAccountView<V>(v: V) {
+  return is$typed(v, id, hashAccountView)
 }
 
-export function validateAccountView(v: unknown): ValidationResult {
-  return lexicons.validate('com.atproto.admin.defs#accountView', v)
+export function validateAccountView<V>(v: V) {
+  return validate<AccountView & V>(v, id, hashAccountView)
 }
 
 export interface RepoRef {
+  $type?: 'com.atproto.admin.defs#repoRef'
   did: string
-  [k: string]: unknown
 }
 
-export function isRepoRef(v: unknown): v is RepoRef {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'com.atproto.admin.defs#repoRef'
-  )
+const hashRepoRef = 'repoRef'
+
+export function isRepoRef<V>(v: V) {
+  return is$typed(v, id, hashRepoRef)
 }
 
-export function validateRepoRef(v: unknown): ValidationResult {
-  return lexicons.validate('com.atproto.admin.defs#repoRef', v)
+export function validateRepoRef<V>(v: V) {
+  return validate<RepoRef & V>(v, id, hashRepoRef)
 }
 
 export interface RepoBlobRef {
+  $type?: 'com.atproto.admin.defs#repoBlobRef'
   did: string
   cid: string
   recordUri?: string
-  [k: string]: unknown
 }
 
-export function isRepoBlobRef(v: unknown): v is RepoBlobRef {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'com.atproto.admin.defs#repoBlobRef'
-  )
+const hashRepoBlobRef = 'repoBlobRef'
+
+export function isRepoBlobRef<V>(v: V) {
+  return is$typed(v, id, hashRepoBlobRef)
 }
 
-export function validateRepoBlobRef(v: unknown): ValidationResult {
-  return lexicons.validate('com.atproto.admin.defs#repoBlobRef', v)
+export function validateRepoBlobRef<V>(v: V) {
+  return validate<RepoBlobRef & V>(v, id, hashRepoBlobRef)
 }
 
 export interface ThreatSignature {
+  $type?: 'com.atproto.admin.defs#threatSignature'
   property: string
   value: string
-  [k: string]: unknown
 }
 
-export function isThreatSignature(v: unknown): v is ThreatSignature {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'com.atproto.admin.defs#threatSignature'
-  )
+const hashThreatSignature = 'threatSignature'
+
+export function isThreatSignature<V>(v: V) {
+  return is$typed(v, id, hashThreatSignature)
 }
 
-export function validateThreatSignature(v: unknown): ValidationResult {
-  return lexicons.validate('com.atproto.admin.defs#threatSignature', v)
+export function validateThreatSignature<V>(v: V) {
+  return validate<ThreatSignature & V>(v, id, hashThreatSignature)
 }

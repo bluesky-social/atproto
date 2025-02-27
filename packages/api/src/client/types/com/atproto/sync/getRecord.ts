@@ -3,9 +3,13 @@
  */
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.atproto.sync.getRecord'
 
 export interface QueryParams {
   /** The DID of the repo. */
@@ -13,8 +17,6 @@ export interface QueryParams {
   collection: string
   /** Record Key */
   rkey: string
-  /** DEPRECATED: referenced a repo commit by CID, and retrieved record as of that commit */
-  commit?: string
 }
 
 export type InputSchema = undefined

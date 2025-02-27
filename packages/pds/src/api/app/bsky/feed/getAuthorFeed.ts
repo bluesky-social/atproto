@@ -1,16 +1,16 @@
+import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
-import { OutputSchema } from '../../../../lexicon/types/app/bsky/feed/getAuthorFeed'
 import { isReasonRepost } from '../../../../lexicon/types/app/bsky/feed/defs'
+import { OutputSchema } from '../../../../lexicon/types/app/bsky/feed/getAuthorFeed'
 import {
+  LocalRecords,
   LocalViewer,
   pipethroughReadAfterWrite,
-  LocalRecords,
 } from '../../../../read-after-write'
 
 export default function (server: Server, ctx: AppContext) {
-  const { bskyAppView } = ctx.cfg
-  if (!bskyAppView) return
+  if (!ctx.bskyAppView) return
+
   server.app.bsky.feed.getAuthorFeed({
     auth: ctx.authVerifier.accessStandard(),
     handler: async (reqCtx) => {

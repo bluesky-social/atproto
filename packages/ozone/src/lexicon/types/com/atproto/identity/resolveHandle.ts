@@ -3,10 +3,14 @@
  */
 import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.atproto.identity.resolveHandle'
 
 export interface QueryParams {
   /** The handle to resolve. */
@@ -17,7 +21,6 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   did: string
-  [k: string]: unknown
 }
 
 export type HandlerInput = undefined
@@ -31,6 +34,7 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
+  error?: 'HandleNotFound'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess | HandlerPipeThrough
@@ -40,6 +44,7 @@ export type HandlerReqCtx<HA extends HandlerAuth = never> = {
   input: HandlerInput
   req: express.Request
   res: express.Response
+  resetRouteRateLimits: () => Promise<void>
 }
 export type Handler<HA extends HandlerAuth = never> = (
   ctx: HandlerReqCtx<HA>,

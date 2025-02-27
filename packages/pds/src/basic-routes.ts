@@ -1,9 +1,9 @@
-import express from 'express'
+import { Router } from 'express'
 import { sql } from 'kysely'
-import AppContext from './context'
+import { AppContext } from './context'
 
-export const createRouter = (ctx: AppContext): express.Router => {
-  const router = express.Router()
+export const createRouter = (ctx: AppContext): Router => {
+  const router = Router()
 
   router.get('/', function (req, res) {
     res.type('text/plain')

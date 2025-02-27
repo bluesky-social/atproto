@@ -82,6 +82,7 @@ message PostRecordMeta {
   bool violates_embedding_rules = 4;
   bool has_post_gate = 5;
   bool has_thread_gate = 6;
+  bool has_video = 7;
 }
 
 message GetPostRecordsRequest {
@@ -788,6 +789,7 @@ enum FeedType {
   FEED_TYPE_POSTS_AND_AUTHOR_THREADS = 1;
   FEED_TYPE_POSTS_NO_REPLIES = 2;
   FEED_TYPE_POSTS_WITH_MEDIA = 3;
+  FEED_TYPE_POSTS_WITH_VIDEO = 4;
 }
 
 // - Returns recent posts authored by a given DID, paginated
@@ -811,6 +813,7 @@ message AuthorFeedItem {
   bool is_reply = 8;
   bool is_repost = 9;
   bool is_quote_post = 10;
+  bool posts_with_video = 11;
 }
 
 message GetAuthorFeedResponse {

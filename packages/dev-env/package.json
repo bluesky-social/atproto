@@ -1,6 +1,6 @@
 {
   "name": "@atproto/dev-env",
-  "version": "0.3.76",
+  "version": "0.3.97",
   "license": "MIT",
   "description": "Local development environment helper for atproto development",
   "keywords": [
@@ -19,6 +19,9 @@
     "build": "tsc --build tsconfig.build.json",
     "start": "../dev-infra/with-test-redis-and-db.sh node dist/bin.js",
     "dev": "../dev-infra/with-test-redis-and-db.sh node --watch dist/bin.js"
+  },
+  "engines": {
+    "node": ">=18.7.0"
   },
   "dependencies": {
     "@atproto/api": "workspace:^",

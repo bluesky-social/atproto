@@ -1,3 +1,17 @@
+import {
+  type JWTPayload,
+  type JWTVerifyGetKey,
+  type JWTVerifyOptions,
+  type JWTVerifyResult,
+  type KeyLike,
+  type ResolvedKey,
+  UnsecuredJWT,
+  type UnsecuredResult,
+  createLocalJWKSet,
+  createRemoteJWKSet,
+  errors,
+  jwtVerify,
+} from 'jose'
 import { Jwks } from '@atproto/jwk'
 import {
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
@@ -6,21 +20,6 @@ import {
   OAuthClientMetadata,
   OAuthRedirectUri,
 } from '@atproto/oauth-types'
-import {
-  UnsecuredJWT,
-  createLocalJWKSet,
-  createRemoteJWKSet,
-  errors,
-  jwtVerify,
-  type JWTPayload,
-  type JWTVerifyGetKey,
-  type JWTVerifyOptions,
-  type JWTVerifyResult,
-  type KeyLike,
-  type ResolvedKey,
-  type UnsecuredResult,
-} from 'jose'
-
 import { CLIENT_ASSERTION_MAX_AGE, JAR_MAX_AGE } from '../constants.js'
 import { InvalidAuthorizationDetailsError } from '../errors/invalid-authorization-details-error.js'
 import { InvalidClientError } from '../errors/invalid-client-error.js'

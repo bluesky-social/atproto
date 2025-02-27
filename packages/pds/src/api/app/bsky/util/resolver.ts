@@ -1,6 +1,6 @@
 import { DidDocument, PoorlyFormattedDidDocumentError } from '@atproto/identity'
-import AppContext from '../../../../context'
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { AppContext } from '../../../../context'
 
 // provides http-friendly errors during did resolution
 export const getDidDoc = async (ctx: AppContext, did: string) => {

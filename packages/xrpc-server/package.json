@@ -1,6 +1,6 @@
 {
   "name": "@atproto/xrpc-server",
-  "version": "0.7.6",
+  "version": "0.7.11",
   "license": "MIT",
   "description": "atproto HTTP API (XRPC) server library",
   "keywords": [
@@ -12,6 +12,9 @@
     "type": "git",
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/xrpc-server"
+  },
+  "engines": {
+    "node": ">=18.7.0"
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

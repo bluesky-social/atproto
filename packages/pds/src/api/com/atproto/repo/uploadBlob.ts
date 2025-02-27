@@ -1,8 +1,8 @@
 import { DAY } from '@atproto/common'
 import { UpstreamTimeoutError } from '@atproto/xrpc-server'
-import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
 import { BlobMetadata } from '../../../../actor-store/blob/transactor'
+import { AppContext } from '../../../../context'
+import { Server } from '../../../../lexicon'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.uploadBlob({

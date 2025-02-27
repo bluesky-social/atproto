@@ -3,9 +3,13 @@
  */
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.atproto.repo.listMissingBlobs'
 
 export interface QueryParams {
   limit?: number
@@ -17,7 +21,6 @@ export type InputSchema = undefined
 export interface OutputSchema {
   cursor?: string
   blobs: RecordBlob[]
-  [k: string]: unknown
 }
 
 export interface CallOptions {
@@ -36,19 +39,17 @@ export function toKnownErr(e: any) {
 }
 
 export interface RecordBlob {
+  $type?: 'com.atproto.repo.listMissingBlobs#recordBlob'
   cid: string
   recordUri: string
-  [k: string]: unknown
 }
 
-export function isRecordBlob(v: unknown): v is RecordBlob {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'com.atproto.repo.listMissingBlobs#recordBlob'
-  )
+const hashRecordBlob = 'recordBlob'
+
+export function isRecordBlob<V>(v: V) {
+  return is$typed(v, id, hashRecordBlob)
 }
 
-export function validateRecordBlob(v: unknown): ValidationResult {
-  return lexicons.validate('com.atproto.repo.listMissingBlobs#recordBlob', v)
+export function validateRecordBlob<V>(v: V) {
+  return validate<RecordBlob & V>(v, id, hashRecordBlob)
 }

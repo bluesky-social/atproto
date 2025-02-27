@@ -1,6 +1,8 @@
-import { safeFetchWrap } from '@atproto-labs/fetch-node'
-import { SimpleStore } from '@atproto-labs/simple-store'
-import { SimpleStoreMemory } from '@atproto-labs/simple-store-memory'
+import type { IncomingMessage, ServerResponse } from 'node:http'
+import { mediaType } from '@hapi/accept'
+import createHttpError from 'http-errors'
+import type { Redis, RedisOptions } from 'ioredis'
+import { ZodError, z } from 'zod'
 import { Jwks, Keyset } from '@atproto/jwk'
 import {
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
@@ -29,11 +31,9 @@ import {
   oauthTokenIdentificationSchema,
   oauthTokenRequestSchema,
 } from '@atproto/oauth-types'
-import { mediaType } from '@hapi/accept'
-import createHttpError from 'http-errors'
-import type { Redis, RedisOptions } from 'ioredis'
-import z, { ZodError } from 'zod'
-
+import { safeFetchWrap } from '@atproto-labs/fetch-node'
+import { SimpleStore } from '@atproto-labs/simple-store'
+import { SimpleStoreMemory } from '@atproto-labs/simple-store-memory'
 import { AccessTokenType } from './access-token/access-token-type.js'
 import { AccountManager } from './account/account-manager.js'
 import {
@@ -55,7 +55,7 @@ import { ClientStore, ifClientStore } from './client/client-store.js'
 import { Client } from './client/client.js'
 import { AUTHENTICATION_MAX_AGE, TOKEN_MAX_AGE } from './constants.js'
 import { DeviceId } from './device/device-id.js'
-import { DeviceManager } from './device/device-manager.js'
+import { DeviceManager, DeviceManagerOptions } from './device/device-manager.js'
 import { DeviceStore, asDeviceStore } from './device/device-store.js'
 import { AccessDeniedError } from './errors/access-denied-error.js'
 import { AccountSelectionRequiredError } from './errors/account-selection-required-error.js'
@@ -70,10 +70,8 @@ import { UnauthorizedClientError } from './errors/unauthorized-client-error.js'
 import { WWWAuthenticateError } from './errors/www-authenticate-error.js'
 import {
   Handler,
-  IncomingMessage,
   Middleware,
   Router,
-  ServerResponse,
   combineMiddlewares,
   parseHttpRequest,
   setupCsrfToken,
@@ -86,6 +84,7 @@ import {
   validateSameOrigin,
   writeJson,
 } from './lib/http/index.js'
+import { RequestMetadata } from './lib/http/request.js'
 import { dateToEpoch, dateToRelativeSeconds } from './lib/util/date.js'
 import { Override } from './lib/util/type.js'
 import { CustomMetadata, buildMetadata } from './metadata/build-metadata.js'
@@ -125,10 +124,10 @@ export type OAuthProviderStore = Partial<
 >
 
 export {
-  Keyset,
   type CustomMetadata,
   type Customization,
   type Handler,
+  Keyset,
   type OAuthAuthorizationServerMetadata,
 }
 
@@ -140,7 +139,7 @@ export type RouterOptions<
 }
 
 export type OAuthProviderOptions = Override<
-  OAuthVerifierOptions & OAuthHooks,
+  OAuthVerifierOptions & OAuthHooks & DeviceManagerOptions,
   {
     /**
      * Maximum age a device/account session can be before requiring
@@ -224,15 +223,15 @@ export type OAuthProviderOptions = Override<
 
 export class OAuthProvider extends OAuthVerifier {
   public readonly metadata: OAuthAuthorizationServerMetadata
-  public readonly customization?: Customization
 
   public readonly authenticationMaxAge: number
 
   public readonly accountManager: AccountManager
-  public readonly deviceStore: DeviceStore
+  public readonly deviceManager: DeviceManager
   public readonly clientManager: ClientManager
   public readonly requestManager: RequestManager
   public readonly tokenManager: TokenManager
+  public readonly outputManager: OutputManager
 
   public constructor({
     metadata,
@@ -265,7 +264,7 @@ export class OAuthProvider extends OAuthVerifier {
 
     loopbackMetadata = atprotoLoopbackClientMetadata,
 
-    // OAuthHooks & OAuthVerifierOptions
+    // OAuthHooks & OAuthVerifierOptions & DeviceManagerOptions
     ...rest
   }: OAuthProviderOptions) {
     super({ replayStore, redis, ...rest })
@@ -276,10 +275,9 @@ export class OAuthProvider extends OAuthVerifier {
 
     this.authenticationMaxAge = authenticationMaxAge
     this.metadata = buildMetadata(this.issuer, this.keyset, metadata)
-    this.customization = customization
 
-    this.deviceStore = deviceStore
-
+    this.deviceManager = new DeviceManager(deviceStore, rest)
+    this.outputManager = new OutputManager(customization)
     this.accountManager = new AccountManager(accountStore)
     this.clientManager = new ClientManager(
       this.metadata,
@@ -530,9 +528,10 @@ export class OAuthProvider extends OAuthVerifier {
    * @see {@link https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-11#section-4.1.1}
    */
   protected async authorize(
-    deviceId: DeviceId,
-    credentials: OAuthClientCredentialsNone,
+    clientCredentials: OAuthClientCredentialsNone,
     query: OAuthAuthorizationRequestQuery,
+    deviceId: DeviceId,
+    deviceMetadata: RequestMetadata,
   ): Promise<AuthorizationResultRedirect | AuthorizationResultAuthorize> {
     const { issuer } = this
 
@@ -547,7 +546,7 @@ export class OAuthProvider extends OAuthVerifier {
         : null
 
     const client = await this.clientManager
-      .getClient(credentials.client_id)
+      .getClient(clientCredentials.client_id)
       .catch(accessDeniedCatcher)
 
     const { clientAuth, parameters, uri } =
@@ -581,10 +580,11 @@ export class OAuthProvider extends OAuthVerifier {
         }
 
         const code = await this.requestManager.setAuthorized(
-          client,
           uri,
-          deviceId,
+          client,
           ssoSession.account,
+          deviceId,
+          deviceMetadata,
         )
 
         return { issuer, client, parameters, redirect: { code } }
@@ -597,10 +597,11 @@ export class OAuthProvider extends OAuthVerifier {
           const ssoSession = ssoSessions[0]!
           if (!ssoSession.loginRequired && !ssoSession.consentRequired) {
             const code = await this.requestManager.setAuthorized(
-              client,
               uri,
-              deviceId,
+              client,
               ssoSession.account,
+              deviceId,
+              deviceMetadata,
             )
 
             return { issuer, client, parameters, redirect: { code } }
@@ -721,10 +722,11 @@ export class OAuthProvider extends OAuthVerifier {
   }
 
   protected async acceptRequest(
-    deviceId: DeviceId,
     uri: RequestUri,
     clientId: ClientId,
     sub: string,
+    deviceId: DeviceId,
+    deviceMetadata: RequestMetadata,
   ): Promise<AuthorizationResultRedirect> {
     const { issuer } = this
     const client = await this.clientManager.getClient(clientId)
@@ -747,10 +749,11 @@ export class OAuthProvider extends OAuthVerifier {
       }
 
       const code = await this.requestManager.setAuthorized(
-        client,
         uri,
-        deviceId,
+        client,
         account,
+        deviceId,
+        deviceMetadata,
       )
 
       await this.accountManager.addAuthorizedClient(
@@ -792,11 +795,13 @@ export class OAuthProvider extends OAuthVerifier {
   }
 
   protected async token(
-    credentials: OAuthClientCredentials,
+    clientCredentials: OAuthClientCredentials,
+    clientMetadata: RequestMetadata,
     request: OAuthTokenRequest,
     dpopJkt: null | string,
   ): Promise<OAuthTokenResponse> {
-    const [client, clientAuth] = await this.authenticateClient(credentials)
+    const [client, clientAuth] =
+      await this.authenticateClient(clientCredentials)
 
     if (!this.metadata.grant_types_supported?.includes(request.grant_type)) {
       throw new InvalidGrantError(
@@ -811,11 +816,23 @@ export class OAuthProvider extends OAuthVerifier {
     }
 
     if (request.grant_type === 'authorization_code') {
-      return this.codeGrant(client, clientAuth, request, dpopJkt)
+      return this.codeGrant(
+        client,
+        clientAuth,
+        clientMetadata,
+        request,
+        dpopJkt,
+      )
     }
 
     if (request.grant_type === 'refresh_token') {
-      return this.refreshTokenGrant(client, clientAuth, request, dpopJkt)
+      return this.refreshTokenGrant(
+        client,
+        clientAuth,
+        clientMetadata,
+        request,
+        dpopJkt,
+      )
     }
 
     throw new InvalidGrantError(
@@ -826,6 +843,7 @@ export class OAuthProvider extends OAuthVerifier {
   protected async codeGrant(
     client: Client,
     clientAuth: ClientAuth,
+    clientMetadata: RequestMetadata,
     input: OAuthAuthorizationCodeGrantTokenRequest,
     dpopJkt: null | string,
   ): Promise<OAuthTokenResponse> {
@@ -869,6 +887,7 @@ export class OAuthProvider extends OAuthVerifier {
       return await this.tokenManager.create(
         client,
         clientAuth,
+        clientMetadata,
         account,
         { id: deviceId, info },
         parameters,
@@ -891,10 +910,17 @@ export class OAuthProvider extends OAuthVerifier {
   async refreshTokenGrant(
     client: Client,
     clientAuth: ClientAuth,
+    clientMetadata: RequestMetadata,
     input: OAuthRefreshTokenGrantTokenRequest,
     dpopJkt: null | string,
   ): Promise<OAuthTokenResponse> {
-    return this.tokenManager.refresh(client, clientAuth, input, dpopJkt)
+    return this.tokenManager.refresh(
+      client,
+      clientAuth,
+      clientMetadata,
+      input,
+      dpopJkt,
+    )
   }
 
   /**
@@ -998,10 +1024,7 @@ export class OAuthProvider extends OAuthVerifier {
     T = void,
     Req extends IncomingMessage = IncomingMessage,
     Res extends ServerResponse = ServerResponse,
-  >(options?: RouterOptions<Req, Res>) {
-    const deviceManager = new DeviceManager(this.deviceStore)
-    const outputManager = new OutputManager(this.customization)
-
+  >(options?: RouterOptions<Req, Res>): Router<T, Req, Res> {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const server = this
     const issuerUrl = new URL(server.issuer)
@@ -1118,7 +1141,7 @@ export class OAuthProvider extends OAuthVerifier {
           )
 
           if (!res.headersSent) {
-            await outputManager.sendErrorPage(res, err)
+            await server.outputManager.sendErrorPage(res, err)
           }
         }
       }
@@ -1225,7 +1248,10 @@ export class OAuthProvider extends OAuthVerifier {
       jsonHandler(async function (req, _res) {
         const payload = await parseHttpRequest(req, ['json', 'urlencoded'])
 
-        const credentials = await oauthClientCredentialsSchema
+        const clientMetadata =
+          await server.deviceManager.getRequestMetadata(req)
+
+        const clientCredentials = await oauthClientCredentialsSchema
           .parseAsync(payload, { path: ['body'] })
           .catch(throwInvalidClient)
 
@@ -1239,7 +1265,12 @@ export class OAuthProvider extends OAuthVerifier {
           this.url,
         )
 
-        return server.token(credentials, tokenRequest, dpopJkt)
+        return server.token(
+          clientCredentials,
+          clientMetadata,
+          tokenRequest,
+          dpopJkt,
+        )
       }),
     )
 
@@ -1314,11 +1345,11 @@ export class OAuthProvider extends OAuthVerifier {
 
         const query = Object.fromEntries(this.url.searchParams)
 
-        const credentials = await oauthClientCredentialsSchema
+        const clientCredentials = await oauthClientCredentialsSchema
           .parseAsync(query, { path: ['body'] })
           .catch(throwInvalidRequest)
 
-        if ('client_secret' in credentials) {
+        if ('client_secret' in clientCredentials) {
           throw new InvalidRequestError('Client secret must not be provided')
         }
 
@@ -1326,10 +1357,18 @@ export class OAuthProvider extends OAuthVerifier {
           .parseAsync(query, { path: ['query'] })
           .catch(throwInvalidRequest)
 
-        const { deviceId } = await deviceManager.load(req, res)
+        const { deviceId, deviceMetadata } = await server.deviceManager.load(
+          req,
+          res,
+        )
 
         const data = await server
-          .authorize(deviceId, credentials, authorizationRequest)
+          .authorize(
+            clientCredentials,
+            authorizationRequest,
+            deviceId,
+            deviceMetadata,
+          )
           .catch((err) => accessDeniedToRedirectCatcher(req, res, err))
 
         switch (true) {
@@ -1338,7 +1377,7 @@ export class OAuthProvider extends OAuthVerifier {
           }
           case 'authorize' in data: {
             await setupCsrfToken(req, res, csrfCookie(data.authorize.uri))
-            return outputManager.sendAuthorizePage(res, data)
+            return server.outputManager.sendAuthorizePage(res, data)
           }
           default: {
             // Should never happen
@@ -1379,7 +1418,7 @@ export class OAuthProvider extends OAuthVerifier {
           csrfCookie(input.request_uri),
         )
 
-        const { deviceId } = await deviceManager.load(req, res, true)
+        const { deviceId } = await server.deviceManager.load(req, res, true)
 
         return server.signIn(
           deviceId,
@@ -1432,14 +1471,18 @@ export class OAuthProvider extends OAuthVerifier {
           true,
         )
 
-        const { deviceId } = await deviceManager.load(req, res)
+        const { deviceId, deviceMetadata } = await server.deviceManager.load(
+          req,
+          res,
+        )
 
         const data = await server
           .acceptRequest(
-            deviceId,
             input.request_uri,
             input.client_id,
             input.account_sub,
+            deviceId,
+            deviceMetadata,
           )
           .catch((err) => accessDeniedToRedirectCatcher(req, res, err))
 
@@ -1488,7 +1531,7 @@ export class OAuthProvider extends OAuthVerifier {
           true,
         )
 
-        const { deviceId } = await deviceManager.load(req, res)
+        const { deviceId } = await server.deviceManager.load(req, res)
 
         const data = await server
           .rejectRequest(deviceId, input.request_uri, input.client_id)

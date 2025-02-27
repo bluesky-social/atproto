@@ -1,20 +1,20 @@
-import * as crypto from '@atproto/crypto'
-import { DidDocument, AtprotoData } from '../types'
 import {
   getDid,
-  getHandle,
-  getPdsEndpoint,
   getFeedGenEndpoint,
+  getHandle,
   getNotifEndpoint,
+  getPdsEndpoint,
   getSigningKey,
 } from '@atproto/common-web'
+import * as crypto from '@atproto/crypto'
+import { AtprotoData, DidDocument } from '../types'
 
 export {
   getDid,
-  getHandle,
-  getPdsEndpoint as getPds,
   getFeedGenEndpoint as getFeedGen,
+  getHandle,
   getNotifEndpoint as getNotif,
+  getPdsEndpoint as getPds,
 }
 
 export const getKey = (doc: DidDocument): string | undefined => {

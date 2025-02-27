@@ -1,10 +1,5 @@
 /* eslint-env node */
 
-const { defineConfig } = require('rollup')
-
-const {
-  default: manifest,
-} = require('@atproto-labs/rollup-plugin-bundle-manifest')
 const { default: commonjs } = require('@rollup/plugin-commonjs')
 const { default: html, makeHtmlAttributes } = require('@rollup/plugin-html')
 const { default: json } = require('@rollup/plugin-json')
@@ -12,6 +7,10 @@ const { default: nodeResolve } = require('@rollup/plugin-node-resolve')
 const { default: replace } = require('@rollup/plugin-replace')
 const { default: terser } = require('@rollup/plugin-terser')
 const { default: typescript } = require('@rollup/plugin-typescript')
+const { defineConfig } = require('rollup')
+const {
+  default: manifest,
+} = require('@atproto-labs/rollup-plugin-bundle-manifest')
 const postcss = ((m) => m.default || m)(require('rollup-plugin-postcss'))
 const serve = ((m) => m.default || m)(require('rollup-plugin-serve'))
 

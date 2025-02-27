@@ -1,5 +1,5 @@
-import * as http from 'node:http'
 import { once } from 'node:events'
+import * as http from 'node:http'
 import express from 'express'
 import * as xrpc from '../src'
 import { AuthRequiredError } from '../src'

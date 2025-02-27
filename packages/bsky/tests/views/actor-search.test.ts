@@ -1,8 +1,8 @@
 import { AtpAgent } from '@atproto/api'
 import { wait } from '@atproto/common'
-import { TestNetwork, SeedClient, usersBulkSeed } from '@atproto/dev-env'
-import { forSnapshot, paginateAll, stripViewer } from '../_util'
+import { SeedClient, TestNetwork, usersBulkSeed } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
+import { forSnapshot, paginateAll, stripViewer } from '../_util'
 
 // @NOTE skipped to help with CI failures
 // The search code is not used in production & we should switch it out for tests on the search proxy interface

@@ -1,20 +1,14 @@
 import assert from 'node:assert'
-import * as undici from 'undici'
-import * as nodemailer from 'nodemailer'
-import { Redis } from 'ioredis'
-import * as ui8 from 'uint8arrays'
 import * as plc from '@did-plc/lib'
-import {
-  Fetch,
-  isUnicastIp,
-  loggedFetch,
-  safeFetchWrap,
-  unicastLookup,
-} from '@atproto-labs/fetch-node'
-import * as crypto from '@atproto/crypto'
-import { IdResolver } from '@atproto/identity'
+import express from 'express'
+import { Redis } from 'ioredis'
+import * as nodemailer from 'nodemailer'
+import * as ui8 from 'uint8arrays'
+import * as undici from 'undici'
 import { AtpAgent } from '@atproto/api'
 import { KmsKeypair, S3BlobStore } from '@atproto/aws'
+import * as crypto from '@atproto/crypto'
+import { IdResolver } from '@atproto/identity'
 import { JoseKey, OAuthVerifier } from '@atproto/oauth-provider'
 import { BlobStore } from '@atproto/repo'
 import {
@@ -24,26 +18,35 @@ import {
   createServiceAuthHeaders,
   createServiceJwt,
 } from '@atproto/xrpc-server'
-
-import { ServerConfig, ServerSecrets } from './config'
-import { PdsOAuthProvider } from './oauth/provider'
+import {
+  Fetch,
+  isUnicastIp,
+  loggedFetch,
+  safeFetchWrap,
+  unicastLookup,
+} from '@atproto-labs/fetch-node'
+import { AccountManager } from './account-manager'
+import { ActorStore } from './actor-store/actor-store'
+import { authPassthru, forwardedFor } from './api/proxy'
 import {
   AuthVerifier,
   createPublicKeyObject,
   createSecretKeyObject,
 } from './auth-verifier'
+import { BackgroundQueue } from './background'
+import { BskyAppView } from './bsky-app-view'
+import { ServerConfig, ServerSecrets } from './config'
+import { Crawlers } from './crawlers'
+import { DidSqliteCache } from './did-cache'
+import { DiskBlobStore } from './disk-blobstore'
+import { ImageUrlBuilder } from './image/image-url-builder'
 import { fetchLogger } from './logger'
 import { ServerMailer } from './mailer'
 import { ModerationMailer } from './mailer/moderation'
-import { AccountManager } from './account-manager'
-import { Sequencer } from './sequencer'
-import { BackgroundQueue } from './background'
-import { DidSqliteCache } from './did-cache'
-import { Crawlers } from './crawlers'
-import { DiskBlobStore } from './disk-blobstore'
-import { getRedisClient } from './redis'
-import { ActorStore } from './actor-store'
+import { PdsOAuthProvider } from './oauth/provider'
 import { LocalViewer, LocalViewerCreator } from './read-after-write/viewer'
+import { getRedisClient } from './redis'
+import { Sequencer } from './sequencer'
 
 export type AppContextOptions = {
   actorStore: ActorStore
@@ -60,7 +63,7 @@ export type AppContextOptions = {
   redisScratch?: Redis
   ratelimitCreator?: RateLimiterCreator
   crawlers: Crawlers
-  appViewAgent?: AtpAgent
+  bskyAppView?: BskyAppView
   moderationAgent?: AtpAgent
   reportingAgent?: AtpAgent
   entrywayAgent?: AtpAgent
@@ -88,7 +91,7 @@ export class AppContext {
   public redisScratch?: Redis
   public ratelimitCreator?: RateLimiterCreator
   public crawlers: Crawlers
-  public appViewAgent: AtpAgent | undefined
+  public bskyAppView?: BskyAppView
   public moderationAgent: AtpAgent | undefined
   public reportingAgent: AtpAgent | undefined
   public entrywayAgent: AtpAgent | undefined
@@ -115,7 +118,7 @@ export class AppContext {
     this.redisScratch = opts.redisScratch
     this.ratelimitCreator = opts.ratelimitCreator
     this.crawlers = opts.crawlers
-    this.appViewAgent = opts.appViewAgent
+    this.bskyAppView = opts.bskyAppView
     this.moderationAgent = opts.moderationAgent
     this.reportingAgent = opts.reportingAgent
     this.entrywayAgent = opts.entrywayAgent
@@ -218,9 +221,10 @@ export class AppContext {
       }
     }
 
-    const appViewAgent = cfg.bskyAppView
-      ? new AtpAgent({ service: cfg.bskyAppView.url })
+    const bskyAppView = cfg.bskyAppView
+      ? new BskyAppView(cfg.bskyAppView)
       : undefined
+
     const moderationAgent = cfg.modService
       ? new AtpAgent({ service: cfg.modService.url })
       : undefined
@@ -244,7 +248,19 @@ export class AppContext {
       ? createPublicKeyObject(cfg.entryway.jwtPublicKeyHex)
       : null
 
+    const imageUrlBuilder = new ImageUrlBuilder(
+      cfg.service.hostname,
+      bskyAppView,
+    )
+
+    const actorStore = new ActorStore(cfg.actorStore, {
+      blobstore,
+      backgroundQueue,
+    })
+
     const accountManager = new AccountManager(
+      actorStore,
+      imageUrlBuilder,
       backgroundQueue,
       cfg.db.accountDbLoc,
       jwtSecretKey,
@@ -262,18 +278,11 @@ export class AppContext {
             secrets.plcRotationKey.privateKeyHex,
           )
 
-    const actorStore = new ActorStore(cfg.actorStore, {
-      blobstore,
-      backgroundQueue,
-    })
-
-    const localViewer = LocalViewer.creator({
+    const localViewer = LocalViewer.creator(
       accountManager,
-      appViewAgent,
-      pdsHostname: cfg.service.hostname,
-      appviewDid: cfg.bskyAppView?.did,
-      appviewCdnUrlPattern: cfg.bskyAppView?.cdnUrlPattern,
-    })
+      imageUrlBuilder,
+      bskyAppView,
+    )
 
     // An agent for performing HTTP requests based on user provided URLs.
     const proxyAgentBase = new undici.Agent({
@@ -334,12 +343,13 @@ export class AppContext {
             await JoseKey.fromKeyLike(jwtSecretKey, undefined, 'HS256'),
           ],
           accountManager,
-          actorStore,
-          localViewer,
           redis: redisScratch,
           dpopSecret: secrets.dpopSecret,
           customization: cfg.oauth.provider.customization,
           safeFetch,
+          // @TODO: Make this configurable. The legacy implementation used to
+          // blindly trust the X-Forwarded-For header.
+          trustProxy: (_addr: string, _i: number) => true,
         })
       : undefined
 
@@ -383,7 +393,7 @@ export class AppContext {
       redisScratch,
       ratelimitCreator,
       crawlers,
-      appViewAgent,
+      bskyAppView,
       moderationAgent,
       reportingAgent,
       entrywayAgent,
@@ -399,8 +409,22 @@ export class AppContext {
   }
 
   async appviewAuthHeaders(did: string, lxm: string) {
-    assert(this.cfg.bskyAppView)
-    return this.serviceAuthHeaders(did, this.cfg.bskyAppView.did, lxm)
+    assert(this.bskyAppView)
+    return this.serviceAuthHeaders(did, this.bskyAppView.did, lxm)
+  }
+
+  async entrywayAuthHeaders(req: express.Request, did: string, lxm: string) {
+    assert(this.cfg.entryway)
+    const headers = await this.serviceAuthHeaders(
+      did,
+      this.cfg.entryway.did,
+      lxm,
+    )
+    return forwardedFor(req, headers)
+  }
+
+  entrywayPassthruHeaders(req: express.Request) {
+    return forwardedFor(req, authPassthru(req))
   }
 
   async serviceAuthHeaders(did: string, aud: string, lxm: string) {

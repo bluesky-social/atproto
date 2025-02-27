@@ -1,11 +1,11 @@
+import { CID } from 'multiformats/cid'
 import {
-  check,
   IpldValue,
+  JsonValue,
+  check,
   ipldToJson,
   jsonToIpld,
-  JsonValue,
 } from '@atproto/common-web'
-import { CID } from 'multiformats/cid'
 import { BlobRef, jsonBlobRef } from './blob-refs'
 
 export type LexValue =

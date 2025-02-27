@@ -1,7 +1,7 @@
 import { CID } from 'multiformats/cid'
+import { BlockMap } from '../block-map'
 import { CommitData } from '../types'
-import BlockMap from '../block-map'
-import ReadableBlockstore from './readable-blockstore'
+import { ReadableBlockstore } from './readable-blockstore'
 import { RepoStorage } from './types'
 
 export class MemoryBlockstore

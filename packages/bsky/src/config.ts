@@ -10,7 +10,9 @@ export interface ServerConfigValues {
   alternateAudienceDids: string[]
   entrywayJwtPublicKeyHex?: string
   // external services
+  etcdHosts: string[]
   dataplaneUrls: string[]
+  dataplaneUrlsEtcdKeyPrefix?: string
   dataplaneHttpVersion?: '1.1' | '2'
   dataplaneIgnoreBadTls?: boolean
   bsyncUrl: string
@@ -74,15 +76,15 @@ export class ServerConfig {
     const envPort = parseInt(process.env.BSKY_PORT || '', 10)
     const port = isNaN(envPort) ? 2584 : envPort
     const didPlcUrl = process.env.BSKY_DID_PLC_URL || 'http://localhost:2582'
-    const alternateAudienceDids = process.env.BSKY_ALT_AUDIENCE_DIDS
-      ? process.env.BSKY_ALT_AUDIENCE_DIDS.split(',')
-      : []
+    const alternateAudienceDids = envList(process.env.BSKY_ALT_AUDIENCE_DIDS)
     const entrywayJwtPublicKeyHex =
       process.env.BSKY_ENTRYWAY_JWT_PUBLIC_KEY_HEX || undefined
-    const handleResolveNameservers = process.env.BSKY_HANDLE_RESOLVE_NAMESERVERS
-      ? process.env.BSKY_HANDLE_RESOLVE_NAMESERVERS.split(',')
-      : []
+    const handleResolveNameservers = envList(
+      process.env.BSKY_HANDLE_RESOLVE_NAMESERVERS,
+    )
     const cdnUrl = process.env.BSKY_CDN_URL || process.env.BSKY_IMG_URI_ENDPOINT
+    const etcdHosts =
+      overrides?.etcdHosts ?? envList(process.env.BSKY_ETCD_HOSTS)
     // e.g. https://video.invalid/watch/%s/%s/playlist.m3u8
     const videoPlaylistUrlPattern = process.env.BSKY_VIDEO_PLAYLIST_URL_PATTERN
     // e.g. https://video.invalid/watch/%s/%s/thumbnail.jpg
@@ -97,16 +99,25 @@ export class ServerConfig {
     const suggestionsApiKey = process.env.BSKY_SUGGESTIONS_API_KEY || undefined
     const topicsUrl = process.env.BSKY_TOPICS_URL || undefined
     const topicsApiKey = process.env.BSKY_TOPICS_API_KEY
-    let dataplaneUrls = overrides?.dataplaneUrls
-    dataplaneUrls ??= process.env.BSKY_DATAPLANE_URLS
-      ? process.env.BSKY_DATAPLANE_URLS.split(',')
-      : []
+    const dataplaneUrls =
+      overrides?.dataplaneUrls ?? envList(process.env.BSKY_DATAPLANE_URLS)
+    const dataplaneUrlsEtcdKeyPrefix =
+      process.env.BSKY_DATAPLANE_URLS_ETCD_KEY_PREFIX || undefined
     const dataplaneHttpVersion = process.env.BSKY_DATAPLANE_HTTP_VERSION || '2'
     const dataplaneIgnoreBadTls =
       process.env.BSKY_DATAPLANE_IGNORE_BAD_TLS === 'true'
-    const labelsFromIssuerDids = process.env.BSKY_LABELS_FROM_ISSUER_DIDS
-      ? process.env.BSKY_LABELS_FROM_ISSUER_DIDS.split(',')
-      : []
+    assert(
+      !dataplaneUrlsEtcdKeyPrefix || etcdHosts.length,
+      'etcd prefix for dataplane urls may only be configured when there are etcd hosts',
+    )
+    assert(
+      dataplaneUrls.length || dataplaneUrlsEtcdKeyPrefix,
+      'dataplane urls are not configured directly nor with etcd',
+    )
+    assert(dataplaneHttpVersion === '1.1' || dataplaneHttpVersion === '2')
+    const labelsFromIssuerDids = envList(
+      process.env.BSKY_LABELS_FROM_ISSUER_DIDS,
+    )
     const bsyncUrl = process.env.BSKY_BSYNC_URL || undefined
     assert(bsyncUrl)
     const bsyncApiKey = process.env.BSKY_BSYNC_API_KEY || undefined
@@ -133,8 +144,6 @@ export class ServerConfig {
     )
     const modServiceDid = process.env.MOD_SERVICE_DID
     assert(modServiceDid)
-    assert(dataplaneUrls.length)
-    assert(dataplaneHttpVersion === '1.1' || dataplaneHttpVersion === '2')
     const statsigKey =
       process.env.NODE_ENV === 'test'
         ? 'secret-key'
@@ -185,7 +194,9 @@ export class ServerConfig {
       serverDid,
       alternateAudienceDids,
       entrywayJwtPublicKeyHex,
+      etcdHosts,
       dataplaneUrls,
+      dataplaneUrlsEtcdKeyPrefix,
       dataplaneHttpVersion,
       dataplaneIgnoreBadTls,
       searchUrl,
@@ -265,6 +276,14 @@ export class ServerConfig {
 
   get entrywayJwtPublicKeyHex() {
     return this.cfg.entrywayJwtPublicKeyHex
+  }
+
+  get etcdHosts() {
+    return this.cfg.etcdHosts
+  }
+
+  get dataplaneUrlsEtcdKeyPrefix() {
+    return this.cfg.dataplaneUrlsEtcdKeyPrefix
   }
 
   get dataplaneUrls() {

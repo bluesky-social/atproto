@@ -1,4 +1,4 @@
-import { sql, DynamicModule } from 'kysely'
+import { DynamicModule, sql } from 'kysely'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AnyQb, DbRef } from './types'
 

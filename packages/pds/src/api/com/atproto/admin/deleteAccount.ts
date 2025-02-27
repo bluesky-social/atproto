@@ -1,6 +1,6 @@
-import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
 import { AccountStatus } from '../../../../account-manager'
+import { AppContext } from '../../../../context'
+import { Server } from '../../../../lexicon'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.deleteAccount({

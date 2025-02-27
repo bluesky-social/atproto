@@ -1,9 +1,11 @@
+import { AtpAgent } from '@atproto/api'
 import { mapDefined, noUndefinedVals } from '@atproto/common'
+import { HeadersMap } from '@atproto/xrpc'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import AtpAgent from '@atproto/api'
+import { AppContext } from '../../../../context'
+import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getSuggestedFollowsByActor'
-import AppContext from '../../../../context'
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -11,7 +13,6 @@ import {
   SkeletonFnInput,
   createPipeline,
 } from '../../../../pipeline'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 import { resHeaders } from '../../../util'
 
@@ -133,12 +134,12 @@ type Context = {
 
 type Params = QueryParams & {
   hydrateCtx: HydrateCtx & { viewer: string }
-  headers: Record<string, string>
+  headers: HeadersMap
 }
 
 type SkeletonState = {
   isFallback: boolean
   suggestedDids: string[]
   recId?: number
-  headers?: Record<string, string>
+  headers?: HeadersMap
 }

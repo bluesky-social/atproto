@@ -16,7 +16,7 @@ export const formatLabel = (row: LabelRow): Label => {
     cts: row.cts,
     exp: row.exp ?? undefined,
     sig: row.sig ? new Uint8Array(row.sig) : undefined,
-  }) as Label
+  } satisfies Label) as unknown as Label
 }
 
 export const formatLabelRow = (
@@ -50,7 +50,7 @@ export const signLabel = async (
     neg: neg === true ? true : undefined,
     cts,
     exp,
-  }) as Label
+  } satisfies Label) as unknown as Label
 
   const bytes = cborEncode(reformatted)
   const sig = await signingKey.sign(bytes)

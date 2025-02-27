@@ -1,7 +1,7 @@
 import { Transporter } from 'nodemailer'
 import Mail from 'nodemailer/lib/mailer'
-import { htmlToText } from 'nodemailer-html-to-text'
 import SMTPTransport from 'nodemailer/lib/smtp-transport'
+import { htmlToText } from 'nodemailer-html-to-text'
 import { ServerConfig } from '../config'
 import { mailerLogger } from '../logger'
 

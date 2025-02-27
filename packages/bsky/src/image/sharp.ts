@@ -1,8 +1,8 @@
-import { errHasMsg } from '@atproto/common'
 import { PassThrough, Readable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 import sharp from 'sharp'
-import { formatsToMimes, ImageInfo, Options } from './util'
+import { errHasMsg } from '@atproto/common'
+import { ImageInfo, Options, formatsToMimes } from './util'
 
 export type { Options }
 

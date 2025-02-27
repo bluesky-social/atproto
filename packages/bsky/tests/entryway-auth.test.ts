@@ -1,12 +1,12 @@
+import assert from 'node:assert'
 import * as nodeCrypto from 'node:crypto'
+import * as jose from 'jose'
 import KeyEncoder from 'key-encoder'
 import * as ui8 from 'uint8arrays'
-import * as jose from 'jose'
-import * as crypto from '@atproto/crypto'
-import { AtpAgent, AtUri } from '@atproto/api'
-import { basicSeed, SeedClient, TestNetwork } from '@atproto/dev-env'
-import assert from 'node:assert'
+import { AtUri, AtpAgent } from '@atproto/api'
 import { MINUTE } from '@atproto/common'
+import * as crypto from '@atproto/crypto'
+import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 
 const keyEncoder = new KeyEncoder('secp256k1')
 

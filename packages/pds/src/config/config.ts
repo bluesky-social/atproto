@@ -1,5 +1,5 @@
-import path from 'node:path'
 import assert from 'node:assert'
+import path from 'node:path'
 import { DAY, HOUR, SECOND } from '@atproto/common'
 import { Customization } from '@atproto/oauth-provider'
 import { ServerEnvironment } from './env'

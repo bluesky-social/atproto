@@ -2,84 +2,77 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons'
+import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'app.bsky.unspecced.defs'
 
 export interface SkeletonSearchPost {
+  $type?: 'app.bsky.unspecced.defs#skeletonSearchPost'
   uri: string
-  [k: string]: unknown
 }
 
-export function isSkeletonSearchPost(v: unknown): v is SkeletonSearchPost {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.unspecced.defs#skeletonSearchPost'
-  )
+const hashSkeletonSearchPost = 'skeletonSearchPost'
+
+export function isSkeletonSearchPost<V>(v: V) {
+  return is$typed(v, id, hashSkeletonSearchPost)
 }
 
-export function validateSkeletonSearchPost(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.unspecced.defs#skeletonSearchPost', v)
+export function validateSkeletonSearchPost<V>(v: V) {
+  return validate<SkeletonSearchPost & V>(v, id, hashSkeletonSearchPost)
 }
 
 export interface SkeletonSearchActor {
+  $type?: 'app.bsky.unspecced.defs#skeletonSearchActor'
   did: string
-  [k: string]: unknown
 }
 
-export function isSkeletonSearchActor(v: unknown): v is SkeletonSearchActor {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.unspecced.defs#skeletonSearchActor'
-  )
+const hashSkeletonSearchActor = 'skeletonSearchActor'
+
+export function isSkeletonSearchActor<V>(v: V) {
+  return is$typed(v, id, hashSkeletonSearchActor)
 }
 
-export function validateSkeletonSearchActor(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.unspecced.defs#skeletonSearchActor', v)
+export function validateSkeletonSearchActor<V>(v: V) {
+  return validate<SkeletonSearchActor & V>(v, id, hashSkeletonSearchActor)
 }
 
 export interface SkeletonSearchStarterPack {
+  $type?: 'app.bsky.unspecced.defs#skeletonSearchStarterPack'
   uri: string
-  [k: string]: unknown
 }
 
-export function isSkeletonSearchStarterPack(
-  v: unknown,
-): v is SkeletonSearchStarterPack {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.unspecced.defs#skeletonSearchStarterPack'
-  )
+const hashSkeletonSearchStarterPack = 'skeletonSearchStarterPack'
+
+export function isSkeletonSearchStarterPack<V>(v: V) {
+  return is$typed(v, id, hashSkeletonSearchStarterPack)
 }
 
-export function validateSkeletonSearchStarterPack(
-  v: unknown,
-): ValidationResult {
-  return lexicons.validate(
-    'app.bsky.unspecced.defs#skeletonSearchStarterPack',
+export function validateSkeletonSearchStarterPack<V>(v: V) {
+  return validate<SkeletonSearchStarterPack & V>(
     v,
+    id,
+    hashSkeletonSearchStarterPack,
   )
 }
 
 export interface TrendingTopic {
+  $type?: 'app.bsky.unspecced.defs#trendingTopic'
   topic: string
   displayName?: string
   description?: string
   link: string
-  [k: string]: unknown
 }
 
-export function isTrendingTopic(v: unknown): v is TrendingTopic {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.unspecced.defs#trendingTopic'
-  )
+const hashTrendingTopic = 'trendingTopic'
+
+export function isTrendingTopic<V>(v: V) {
+  return is$typed(v, id, hashTrendingTopic)
 }
 
-export function validateTrendingTopic(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.unspecced.defs#trendingTopic', v)
+export function validateTrendingTopic<V>(v: V) {
+  return validate<TrendingTopic & V>(v, id, hashTrendingTopic)
 }

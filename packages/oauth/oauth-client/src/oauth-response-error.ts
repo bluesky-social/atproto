@@ -1,4 +1,4 @@
-import { Json, ifString, ifObject } from '@atproto-labs/fetch'
+import { Json, ifObject, ifString } from '@atproto-labs/fetch'
 
 export class OAuthResponseError extends Error {
   readonly error?: string

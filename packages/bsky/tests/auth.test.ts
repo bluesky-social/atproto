@@ -1,7 +1,7 @@
 import { AtpAgent } from '@atproto/api'
+import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { SeedClient, TestNetwork, usersSeed } from '@atproto/dev-env'
 import { createServiceJwt } from '@atproto/xrpc-server'
-import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { ids } from '../src/lexicon/lexicons'
 
 describe('auth', () => {

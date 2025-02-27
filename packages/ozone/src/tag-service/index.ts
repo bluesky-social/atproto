@@ -1,10 +1,10 @@
+import { langLogger as log } from '../logger'
 import { ModerationService } from '../mod-service'
 import { ModSubject } from '../mod-service/subject'
-import { langLogger as log } from '../logger'
-import { ContentTagger } from './content-tagger'
-import { LanguageTagger } from './language-tagger'
-import { EmbedTagger } from './embed-tagger'
 import { ModerationSubjectStatusRow } from '../mod-service/types'
+import { ContentTagger } from './content-tagger'
+import { EmbedTagger } from './embed-tagger'
+import { LanguageTagger } from './language-tagger'
 
 export class TagService {
   private taggers: ContentTagger[]
