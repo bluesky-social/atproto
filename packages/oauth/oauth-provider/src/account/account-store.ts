@@ -19,8 +19,8 @@ export const tokenSchema = z.string().regex(/^[A-Z2-7]{5}-[A-Z2-7]{5}$/)
 export const handleSchema = z
   .string()
   .min(3)
-  .max(18)
-  .regex(/^[a-z0-9][a-z0-9-]+[a-z0-9]$/)
+  .max(30)
+  .regex(/^[a-z0-9][a-z0-9-]+[a-z0-9](?:\.[a-z0-9][a-z0-9-]+[a-z0-9])+$/)
 export const emailSchema = z
   .string()
   .email()
