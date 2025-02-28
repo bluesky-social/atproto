@@ -1,7 +1,8 @@
 import { AccountManager } from '../../account-manager'
-import { ActorStore } from '../../actor-store'
+import { ActorStore } from '../../actor-store/actor-store'
 import { BackgroundQueue } from '../../background'
 import { Crawlers } from '../../crawlers'
+import { ImageUrlBuilder } from '../../image/image-url-builder'
 import { Sequencer } from '../../sequencer'
 import { parseIntArg } from '../util'
 import { Recoverer, RecovererContext } from './recoverer'
@@ -22,23 +23,24 @@ export const sequencerRecovery = async (
 
 const run = async () => {
   const backgroundQueue = new BackgroundQueue()
-  const sequencer = new Sequencer(
-    './backup/sequencer.sqlite',
-    new Crawlers('', [], backgroundQueue),
-  )
-  const accountManager = new AccountManager(
-    backgroundQueue,
-    './backup/account.sqlite',
-    {} as any,
-    '',
-  )
+  const sequencer = new Sequencer('', new Crawlers('', [], backgroundQueue))
   const actorStore = new ActorStore(
     {
-      directory: './backup/actors',
+      directory: '',
       cacheSize: 0,
       disableWalAutoCheckpoint: false,
     },
     { blobstore: () => ({}) as any, backgroundQueue },
+  )
+  const imageUrlBuilder = new ImageUrlBuilder('')
+
+  const accountManager = new AccountManager(
+    actorStore,
+    imageUrlBuilder,
+    backgroundQueue,
+    './backup/account.sqlite',
+    {} as any,
+    '',
   )
   const ctx = { sequencer, accountManager, actorStore }
   return sequencerRecovery(ctx, [])

@@ -233,6 +233,19 @@ export class BlobTransactor extends BlobReader {
     }
   }
 
+  async insertBlobMetadata(blob: PreparedBlobRef): Promise<void> {
+    await this.db.db
+      .insertInto('blob')
+      .values({
+        cid: blob.cid.toString(),
+        mimeType: blob.mimeType,
+        size: blob.size,
+        createdAt: new Date().toISOString(),
+      })
+      .onConflict((oc) => oc.doNothing())
+      .execute()
+  }
+
   async associateBlob(blob: PreparedBlobRef, recordUri: AtUri): Promise<void> {
     await this.db.db
       .insertInto('record_blob')

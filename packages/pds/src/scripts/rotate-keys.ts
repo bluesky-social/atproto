@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises'
 import PQueue from 'p-queue'
-import { CommitData } from '@atproto/repo'
-import AppContext from '../context'
+import { AppContext } from '../context'
+import { CommitDataWithOps } from '../repo'
 import { parseIntArg } from './util'
 
 export const rotateKeys = async (ctx: AppContext, args: string[]) => {
@@ -39,7 +39,7 @@ const rotateKeysForRepos = async (
         console.error(`failed to update key for ${did}: ${err}`)
         return
       }
-      let commit: CommitData
+      let commit: CommitDataWithOps
       try {
         commit = await ctx.actorStore.transact(did, async (actorTxn) => {
           return actorTxn.repo.processWrites([])
@@ -55,7 +55,7 @@ const rotateKeysForRepos = async (
         return
       }
       try {
-        await ctx.sequencer.sequenceCommit(did, commit, [])
+        await ctx.sequencer.sequenceCommit(did, commit)
       } catch (err) {
         console.error(`failed to sequence new commit for ${did}: ${err}`)
         return

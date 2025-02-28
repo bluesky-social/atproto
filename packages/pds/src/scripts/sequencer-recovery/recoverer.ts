@@ -1,3 +1,5 @@
+import { rmIfExists } from '@atproto/common'
+import { Secp256k1Keypair } from '@atproto/crypto'
 import {
   BlockMap,
   CidSet,
@@ -7,18 +9,17 @@ import {
   parseDataKey,
   readCar,
 } from '@atproto/repo'
-import { CommitEvt, SeqEvt, AccountEvt, Sequencer } from '../../sequencer'
+import { AccountManager, AccountStatus } from '../../account-manager'
+import { ActorStore } from '../../actor-store/actor-store'
+import { ActorStoreTransactor } from '../../actor-store/actor-store-transactor'
 import {
   PreparedWrite,
   prepareCreate,
   prepareDelete,
   prepareUpdate,
 } from '../../repo'
-import { Secp256k1Keypair } from '@atproto/crypto'
+import { AccountEvt, CommitEvt, SeqEvt, Sequencer } from '../../sequencer'
 import { UserQueues } from './user-queues'
-import { AccountManager, AccountStatus } from '../../account-manager'
-import { ActorStore, ActorStoreTransactor } from '../../actor-store'
-import { rmIfExists } from '@atproto/common'
 
 export type RecovererContext = {
   sequencer: Sequencer
@@ -116,7 +117,7 @@ export class Recoverer {
   }
 
   async trackBlobs(store: ActorStoreTransactor, writes: PreparedWrite[]) {
-    await store.repo.blob.deleteDereferencedBlobs(writes, true)
+    await store.repo.blob.deleteDereferencedBlobs(writes)
 
     for (const write of writes) {
       if (
@@ -124,24 +125,8 @@ export class Recoverer {
         write.action === WriteOpAction.Update
       ) {
         for (const blob of write.blobs) {
-          await store.db.db
-            .insertInto('record_blob')
-            .values({
-              blobCid: blob.cid.toString(),
-              recordUri: write.uri.toString(),
-            })
-            .onConflict((oc) => oc.doNothing())
-            .execute()
-          await store.db.db
-            .insertInto('blob')
-            .values({
-              cid: blob.cid.toString(),
-              mimeType: blob.mimeType,
-              size: blob.size,
-              createdAt: store.repo.now,
-            })
-            .onConflict((oc) => oc.doNothing())
-            .execute()
+          await store.repo.blob.insertBlobMetadata(blob)
+          await store.repo.blob.associateBlob(blob, write.uri)
         }
       }
     }
@@ -159,7 +144,7 @@ export class Recoverer {
       cid: evt.commit,
       rev: evt.rev,
       since: evt.since,
-      prev: evt.prev,
+      prev: null,
       newBlocks: blocks,
       relevantBlocks: new BlockMap(),
       removedCids: new CidSet(),
