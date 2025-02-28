@@ -1,5 +1,14 @@
 # @atproto/pds
 
+## 0.4.105
+
+### Patch Changes
+
+- [#3585](https://github.com/bluesky-social/atproto/pull/3585) [`38320191e`](https://github.com/bluesky-social/atproto/commit/38320191e559f8b928c6e951a9b4a6207240bfc1) Thanks [@dholms](https://github.com/dholms)! - Wrap sync v1.1 semantics. Add #sync event to subscribeRepos and deprecate #handle and #tombstone events
+
+- Updated dependencies [[`38320191e`](https://github.com/bluesky-social/atproto/commit/38320191e559f8b928c6e951a9b4a6207240bfc1), [`dc6e4ecb0`](https://github.com/bluesky-social/atproto/commit/dc6e4ecb0e09bbf4bc7a79c6ac43fb6da4166200)]:
+  - @atproto/api@0.14.8
+
 ## 0.4.104
 
 ### Patch Changes
