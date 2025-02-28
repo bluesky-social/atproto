@@ -85,16 +85,16 @@ export class Recoverer {
   processCommit(evt: CommitEvt) {
     const did = evt.repo
     this.queues.addToUser(did, async () => {
-      try {
-        const { writes, blocks } = await parseCommitEvt(evt)
-        if (evt.since === null) {
-          const actorExists = await this.ctx.actorStore.exists(did)
-          if (!actorExists) {
-            await this.processRepoCreation(evt, writes, blocks)
-            return
-          }
+      const { writes, blocks } = await parseCommitEvt(evt)
+      if (evt.since === null) {
+        const actorExists = await this.ctx.actorStore.exists(did)
+        if (!actorExists) {
+          await this.processRepoCreation(evt, writes, blocks)
+          return
         }
-        await this.ctx.actorStore.transact(did, async (actorTxn) => {
+      }
+      await this.ctx.actorStore
+        .transact(did, async (actorTxn) => {
           const root = await actorTxn.repo.storage.getRootDetailed()
           if (root.rev >= evt.rev) {
             return
@@ -109,10 +109,11 @@ export class Recoverer {
             this.trackBlobs(actorTxn, writes),
           ])
         })
-      } catch (err) {
-        console.log('DID: ', did)
-        throw err
-      }
+        .catch((err) => {
+          console.log(evt.repo)
+          console.log(writes)
+          throw err
+        })
     })
   }
 

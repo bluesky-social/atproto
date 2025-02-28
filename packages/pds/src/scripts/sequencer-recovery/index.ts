@@ -23,10 +23,13 @@ export const sequencerRecovery = async (
 
 const run = async () => {
   const backgroundQueue = new BackgroundQueue()
-  const sequencer = new Sequencer('', new Crawlers('', [], backgroundQueue))
+  const sequencer = new Sequencer(
+    './backup/sequencer.sqlite',
+    new Crawlers('', [], backgroundQueue),
+  )
   const actorStore = new ActorStore(
     {
-      directory: '',
+      directory: './backup/actors',
       cacheSize: 0,
       disableWalAutoCheckpoint: false,
     },
@@ -43,7 +46,7 @@ const run = async () => {
     '',
   )
   const ctx = { sequencer, accountManager, actorStore }
-  return sequencerRecovery(ctx, [])
+  return sequencerRecovery(ctx, ['14775345'])
 }
 
 run()
