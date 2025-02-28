@@ -7,9 +7,8 @@ import {
 import { randomStr } from '@atproto/crypto'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import { readCarWithRoot } from '@atproto/repo'
-import { repoPrepare, sequencer } from '../../pds'
-import { ids } from '../src/lexicon/lexicons'
-import { SeqEvt, Sequencer, formatSeqCommit } from '../src/sequencer'
+import { sequencer } from '../../pds'
+import { SeqEvt, Sequencer, formatSeqSyncEvt } from '../src/sequencer'
 import { Outbox } from '../src/sequencer/outbox'
 import userSeed from './seeds/users'
 
@@ -220,35 +219,27 @@ describe('sequencer', () => {
     lastSeen = results[0].at(-1)?.seq ?? lastSeen
   })
 
-  it('root block must be returned in tooBig seq commit', async () => {
-    // Create good records to exceed the event limit (the current limit is 200 events)
-    // it creates events completely locally, so it doesn't need to be in the network
-    const eventsToCreate = 250
-    const createPostRecord = () =>
-      repoPrepare.prepareCreate({
-        did: sc.dids.alice,
-        collection: ids.AppBskyFeedPost,
-        record: { text: 'valid', createdAt: new Date().toISOString() },
-      })
-    const writesPromises = Array.from(
-      { length: eventsToCreate },
-      createPostRecord,
-    )
-    const writes = await Promise.all(writesPromises)
-    // just format commit without processing writes
-    const writeCommit = await network.pds.ctx.actorStore.transact(
+  it('root block must be returned in sync event', async () => {
+    const syncData = await network.pds.ctx.actorStore.read(
       sc.dids.alice,
-      (store) => store.repo.formatCommit(writes),
+      async (store) => {
+        const root = await store.repo.storage.getRootDetailed()
+        const { blocks } = await store.repo.storage.getBlocks([root.cid])
+        return {
+          cid: root.cid,
+          rev: root.rev,
+          blocks,
+        }
+      },
     )
 
-    const repoSeqInsert = await formatSeqCommit(sc.dids.alice, writeCommit)
-
-    const evt = cborDecode<sequencer.CommitEvt>(repoSeqInsert.event)
-    expect(evt.tooBig).toBe(true)
-
+    const dbEvt = await formatSeqSyncEvt(sc.dids.alice, syncData)
+    const evt = cborDecode<sequencer.SyncEvt>(dbEvt.event)
+    expect(evt.did).toBe(sc.dids.alice)
     const car = await readCarWithRoot(evt.blocks)
-    expect(car.root.toString()).toBe(writeCommit.cid.toString())
+    expect(car.root.toString()).toBe(syncData.cid.toString())
     // in the case of tooBig, the blocks must contain the root block only
     expect(car.blocks.size).toBe(1)
+    expect(car.blocks.has(syncData.cid)).toBeTruthy()
   })
 })

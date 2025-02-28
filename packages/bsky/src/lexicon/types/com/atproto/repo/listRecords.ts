@@ -20,10 +20,6 @@ export interface QueryParams {
   /** The number of records to return. */
   limit: number
   cursor?: string
-  /** DEPRECATED: The lowest sort-ordered rkey to start from (exclusive) */
-  rkeyStart?: string
-  /** DEPRECATED: The highest sort-ordered rkey to stop at (exclusive) */
-  rkeyEnd?: string
   /** Flag to reverse the order of the returned records. */
   reverse?: boolean
 }

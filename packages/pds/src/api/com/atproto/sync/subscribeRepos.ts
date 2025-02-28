@@ -45,9 +45,9 @@ export default function (server: Server, ctx: AppContext) {
           time: evt.time,
           ...evt.evt,
         }
-      } else if (evt.type === 'handle') {
+      } else if (evt.type === 'sync') {
         yield {
-          $type: '#handle',
+          $type: '#sync',
           seq: evt.seq,
           time: evt.time,
           ...evt.evt,
@@ -62,13 +62,6 @@ export default function (server: Server, ctx: AppContext) {
       } else if (evt.type === 'account') {
         yield {
           $type: '#account',
-          seq: evt.seq,
-          time: evt.time,
-          ...evt.evt,
-        }
-      } else if (evt.type === 'tombstone') {
-        yield {
-          $type: '#tombstone',
           seq: evt.seq,
           time: evt.time,
           ...evt.evt,
