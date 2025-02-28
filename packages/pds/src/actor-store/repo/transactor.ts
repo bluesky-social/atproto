@@ -77,7 +77,16 @@ export class RepoTransactor extends RepoReader {
     swapCommitCid?: CID,
   ): Promise<CommitDataWithOps> {
     this.db.assertTransaction()
+    if (writes.length > 200) {
+      throw new InvalidRequestError('Too many writes. Max: 200')
+    }
+
     const commit = await this.formatCommit(writes, swapCommitCid)
+    // Do not allow commits > 2MB
+    if (commit.relevantBlocks.byteSize > 2000000) {
+      throw new InvalidRequestError('Too many writes. Max event size: 2MB')
+    }
+
     await Promise.all([
       // persist the commit to repo storage
       this.storage.applyCommit(commit),

@@ -213,7 +213,6 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
     return await this.sequenceEvt(evt)
   }
 
-  // @TODO
   async sequenceSyncEvt(did: string, data: SyncEvtData) {
     const evt = await formatSeqSyncEvt(did, data)
     return await this.sequenceEvt(evt)

@@ -1,7 +1,6 @@
 import { z } from 'zod'
 import { cborEncode, noUndefinedVals, schema } from '@atproto/common'
 import { BlockMap, blocksToCarFile } from '@atproto/repo'
-import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AccountStatus } from '../account-manager'
 import { CommitDataWithOps, SyncEvtData } from '../repo'
 import { RepoSeqInsert } from './db'
@@ -14,11 +13,6 @@ export const formatSeqCommit = async (
   blocksToSend.addMap(commitData.newBlocks)
   blocksToSend.addMap(commitData.relevantBlocks)
 
-  // If event is too big (max 200 ops or 2MB of data)
-  if (blocksToSend.byteSize > 2000000) {
-    throw new InvalidRequestError('Too many writes. Max event size: 2MB')
-  }
-
   const evt = {
     repo: did,
     commit: commitData.cid,
@@ -27,7 +21,7 @@ export const formatSeqCommit = async (
     blocks: await blocksToCarFile(commitData.cid, blocksToSend),
     ops: commitData.ops,
     prevData: commitData.prevData ?? undefined,
-    // deprecated (but still required) fileds
+    // deprecated (but still required) fields
     rebase: false,
     tooBig: false,
     blobs: [],
