@@ -147,11 +147,13 @@ Make user visit `url`. Then, once it was redirected to the callback URI, perform
 // Parse the query params from the callback URI
 const params = new URLSearchParams('code=...&state=...')
 
+if (params.state !== session.state) {
+  // fail authentication
+  return
+}
+
 // Process the callback using the OAuth client
 const result = await client.callback(params)
-
-// Verify the state (e.g. to link to an internal user)
-result.state === '434321' // true
 
 const oauthSession = result.session
 ```
