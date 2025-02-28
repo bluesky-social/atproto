@@ -4,9 +4,9 @@ import {
   SourceFile,
   VariableDeclarationKind,
 } from 'ts-morph'
-import { LexRecord, LexiconDoc, Lexicons } from '@atproto/lexicon'
+import { type LexRecord, type LexiconDoc, Lexicons } from '@atproto/lexicon'
 import { NSID } from '@atproto/syntax'
-import { GeneratedAPI } from '../types'
+import { type GeneratedAPI } from '../types'
 import { gen, lexiconsTs, utilTs } from './common'
 import {
   genCommonImports,
@@ -18,7 +18,7 @@ import {
   genXrpcParams,
 } from './lex-gen'
 import {
-  DefTreeNode,
+  type DefTreeNode,
   lexiconsToDefTree,
   schemasToNsidTokens,
   toCamelCase,
@@ -61,14 +61,14 @@ const indexTs = (
   nsidTokens: Record<string, string[]>,
 ) =>
   gen(project, '/index.ts', async (file) => {
-    //= import { XrpcClient, FetchHandler, FetchHandlerOptions } from '@atproto/xrpc'
+    //= import { XrpcClient, type FetchHandler, type FetchHandlerOptions } from '@atproto/xrpc'
     const xrpcImport = file.addImportDeclaration({
       moduleSpecifier: '@atproto/xrpc',
     })
     xrpcImport.addNamedImports([
       { name: 'XrpcClient' },
-      { name: 'FetchHandler' },
-      { name: 'FetchHandlerOptions' },
+      { name: 'FetchHandler', isTypeOnly: true },
+      { name: 'FetchHandlerOptions', isTypeOnly: true },
     ])
     //= import {schemas} from './lexicons.js'
     file
@@ -81,10 +81,13 @@ const indexTs = (
       })
       .addNamedImports([{ name: 'CID' }])
 
-    //= import {OmitKey} from './util.js'
+    //= import { type OmitKey, type Un$Typed } from './util.js'
     file
       .addImportDeclaration({ moduleSpecifier: `./util.js` })
-      .addNamedImports([{ name: 'OmitKey' }, { name: 'Un$Typed' }])
+      .addNamedImports([
+        { name: 'OmitKey', isTypeOnly: true },
+        { name: 'Un$Typed', isTypeOnly: true },
+      ])
 
     // generate type imports and re-exports
     for (const lexicon of lexiconDocs) {
