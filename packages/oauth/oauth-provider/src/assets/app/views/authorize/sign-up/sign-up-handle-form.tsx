@@ -1,0 +1,271 @@
+import { Trans, useLingui } from '@lingui/react/macro'
+import { JSX, ReactNode, useCallback, useEffect, useRef, useState } from 'react'
+import { Fieldset } from '../../../components/forms/fieldset.tsx'
+import {
+  AsyncActionController,
+  FormCardAsync,
+  FormCardAsyncProps,
+} from '../../../components/forms/form-card-async.tsx'
+import { InputText } from '../../../components/forms/input-text.tsx'
+import { ExpandTransition } from '../../../components/utils/expand-transition.tsx'
+import {
+  AtSymbolIcon,
+  CheckMarkIcon,
+  XMarkIcon,
+} from '../../../components/utils/icons.tsx'
+import { clsx } from '../../../lib/clsx.ts'
+import { mergeRefs } from '../../../lib/ref.ts'
+import { Override } from '../../../lib/util.ts'
+
+/**
+ * Spec limit is 63, but in practice, we've limited it to 18 in our implementations.
+ *
+ * @see {@link https://atproto.com/specs/handle | ATProto Handle Spec}
+ */
+const MAX_LENGTH = 18
+
+/**
+ * Spec limit is 1, but in practice, we've targeted at least 3 characters in handles.
+ *
+ * @see {@link https://atproto.com/specs/handle | ATProto Handle Spec}
+ */
+const MIN_LENGTH = 3
+
+/**
+ * Spec limit is 253, but in practice, we've targeted 30 characters in handles.
+ *
+ * @see {@link https://atproto.com/specs/handle | ATProto Handle Spec}
+ */
+const MAX_FULL_LENGTH = 30
+
+type ValidDomain = `.${string}`
+const isValidDomain = (domain: string): domain is ValidDomain =>
+  // Ignore domains that are so long that they would make the handle smaller
+  // than MIN_LENGTH characters
+  MIN_LENGTH + domain.length <= MAX_FULL_LENGTH &&
+  // Basic validation here
+  domain.startsWith('.') &&
+  !domain.endsWith('.')
+
+function useSegmentValidator(domain: ValidDomain) {
+  const minLength = MIN_LENGTH
+  const maxLength = Math.min(MAX_LENGTH, MAX_FULL_LENGTH - domain.length)
+
+  const validateSegment = useCallback(
+    (segment: string) => {
+      const validLength =
+        segment.length >= minLength && segment.length <= maxLength
+      const validCharset = /^[a-z0-9][a-z0-9-]+[a-z0-9]$/g.test(segment)
+
+      return { validLength, validCharset, valid: validLength && validCharset }
+    },
+    [maxLength, minLength],
+  )
+
+  return {
+    minLength,
+    maxLength,
+    validateSegment,
+  }
+}
+
+export type SignUpHandleFormProps = Override<
+  Omit<
+    FormCardAsyncProps,
+    'append' | 'onCancel' | 'cancelLabel' | 'onSubmit' | 'submitLabel'
+  >,
+  {
+    domains: string[]
+
+    onNext: (signal: AbortSignal) => void | PromiseLike<void>
+    nextLabel?: ReactNode
+
+    onPrev?: () => void
+    prevLabel?: ReactNode
+
+    handle?: string
+    onHandle?: (handle: string | undefined) => void
+  }
+>
+
+export function SignUpHandleForm({
+  domains: availableDomains,
+
+  onNext,
+  nextLabel,
+
+  onPrev,
+  prevLabel,
+
+  handle: handleInit,
+  onHandle,
+
+  // FormCardProps
+  invalid,
+  children,
+  ref,
+  ...props
+}: SignUpHandleFormProps) {
+  const { t } = useLingui()
+  const domains = availableDomains.filter(isValidDomain)
+
+  const formRef = useRef<AsyncActionController>(null)
+
+  const [domainIdx, setDomainIdx] = useState(() => {
+    const idx = domains.findIndex((d) => handleInit?.endsWith(d))
+    return idx === -1 ? 0 : idx
+  })
+  const [segment, setSegment] = useState(() => handleInit?.split('.')[0] || '')
+
+  // Automatically update the domain index when the list length changes
+  useEffect(() => {
+    setDomainIdx((v) => Math.min(v, domains.length - 1))
+  }, [domains.length])
+
+  const domain: ValidDomain | null = domains[domainIdx] || domains[0] || null
+
+  const { minLength, maxLength, validateSegment } = useSegmentValidator(domain)
+
+  const validity = validateSegment(segment)
+  const handle = domain && validity.valid ? `${segment}${domain}` : undefined
+  useEffect(() => {
+    // Whenever the user changes the handle, abort any pending form action
+    formRef.current?.reset()
+    onHandle?.(handle)
+  }, [onHandle, handle])
+
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  return (
+    <FormCardAsync
+      {...props}
+      ref={mergeRefs([ref, formRef])}
+      onCancel={onPrev}
+      cancelLabel={prevLabel}
+      onSubmit={onNext}
+      submitLabel={nextLabel}
+      invalid={invalid || !handle}
+      append={children}
+    >
+      <Fieldset label={<Trans>Type your desired username</Trans>}>
+        <InputText
+          ref={inputRef}
+          icon={<AtSymbolIcon className="w-5" />}
+          name="handle"
+          type="text"
+          placeholder={t`Type your desired username`}
+          aria-label={t`Type your desired username`}
+          title={t`Type your desired username`}
+          append={
+            domains.length > 1 && (
+              <select
+                onClick={(event) => event.stopPropagation()}
+                onMouseDown={(event) => event.stopPropagation()}
+                value={domainIdx}
+                aria-label={t`Select domain`}
+                onChange={(event) => {
+                  setDomainIdx(Number(event.target.value))
+                  inputRef.current?.focus()
+                }}
+                className={clsx(
+                  'block w-full',
+                  'sm:text-sm',
+                  'rounded-lg p-2',
+                  'bg-white dark:bg-slate-600',
+                )}
+              >
+                {domains.map((domain, idx) => (
+                  <option key={domain} value={idx}>
+                    {domain}
+                  </option>
+                ))}
+              </select>
+            )
+          }
+          pattern="[a-z0-9][a-z0-9\-]+[a-z0-9]"
+          minLength={minLength}
+          maxLength={maxLength}
+          autoCapitalize="none"
+          autoCorrect="off"
+          autoComplete="off"
+          dir="auto"
+          enterKeyHint="done"
+          autoFocus
+          required
+          value={segment}
+          onChange={(event) => {
+            const segment = event.target.value.toLowerCase()
+
+            // Ensure the input is always lowercase
+            const selectionStart = event.target.selectionStart
+            const selectionEnd = event.target.selectionEnd
+            event.target.value = segment
+            event.target.setSelectionRange(selectionStart, selectionEnd)
+
+            setSegment(segment)
+          }}
+        />
+      </Fieldset>
+
+      <ExpandTransition visible={!!segment} delayed>
+        <HandlePreview handle={handle || domain} />
+        <div>
+          <ValidationMessage valid={validity.validCharset}>
+            <Trans>Only contains letters, numbers, and hyphens</Trans>
+          </ValidationMessage>
+          <ValidationMessage valid={validity.validLength}>
+            <Trans>
+              Between {minLength} and {maxLength} characters
+            </Trans>
+          </ValidationMessage>
+        </div>
+
+        <p className="mt-3">
+          <Trans>
+            You can change to a custom domain handle after your account is set
+            up.
+          </Trans>
+        </p>
+      </ExpandTransition>
+    </FormCardAsync>
+  )
+}
+
+type HandlePreviewProps = JSX.IntrinsicElements['p'] & {
+  handle: string
+}
+
+function HandlePreview({ handle, ...props }: HandlePreviewProps) {
+  const preview = `@${handle}`
+  return (
+    <p {...props}>
+      <Trans>
+        Your full username will be <b>{preview}</b>
+      </Trans>
+    </p>
+  )
+}
+
+type ValidationMessageProps = JSX.IntrinsicElements['div'] & {
+  valid: boolean
+}
+
+function ValidationMessage({
+  valid,
+
+  // div
+  className,
+  children,
+  ...props
+}: ValidationMessageProps) {
+  return (
+    <div className={clsx(className)} {...props}>
+      {valid ? (
+        <CheckMarkIcon className="inline-block mr-2 w-4 text-success" />
+      ) : (
+        <XMarkIcon className="inline-block mr-2 w-4 text-error" />
+      )}
+      <span>{children}</span>
+    </div>
+  )
+}

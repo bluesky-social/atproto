@@ -5,12 +5,9 @@ import { DidDocument, MINUTE, check } from '@atproto/common'
 import { ExportableKeypair, Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { AtprotoData, ensureAtpDocument } from '@atproto/identity'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
-import { AccountStatus } from '../../../../account-manager'
+import { AccountStatus } from '../../../../account-manager/account-manager'
 import { AppContext } from '../../../../context'
-import {
-  baseNormalizeAndValidate,
-  normalizeAndValidateHandle,
-} from '../../../../handle'
+import { baseNormalizeAndValidate } from '../../../../handle'
 import { Server } from '../../../../lexicon'
 import { InputSchema as CreateAccountInput } from '../../../../lexicon/types/com/atproto/server/createAccount'
 import { safeResolveDidDoc } from './util'
@@ -60,7 +57,7 @@ export default function (server: Server, ctx: AppContext) {
 
         didDoc = await safeResolveDidDoc(ctx, did, true)
 
-        creds = await ctx.accountManager.createAccount({
+        creds = await ctx.accountManager.createAccountAndSession({
           did,
           handle,
           email,
@@ -183,11 +180,10 @@ const validateInputsForLocalPds = async (
   }
 
   // normalize & ensure valid handle
-  const handle = await normalizeAndValidateHandle({
-    ctx,
-    handle: input.handle,
-    did: input.did,
-  })
+  const handle = await ctx.accountManager.normalizeAndValidateHandle(
+    input.handle,
+    { did: input.did },
+  )
 
   // check that the invite code still has uses
   if (ctx.cfg.invites.required && inviteCode) {

@@ -308,13 +308,13 @@ export class RequestManager {
 
   async get(
     uri: RequestUri,
-    clientId: ClientId,
     deviceId: DeviceId,
+    clientId?: ClientId,
   ): Promise<RequestInfo> {
     const id = decodeRequestUri(uri)
 
     const data = await this.store.readRequest(id)
-    if (!data) throw new InvalidRequestError(`Unknown request_uri "${uri}"`)
+    if (!data) throw new InvalidRequestError('Unknown request_uri')
 
     const updates: UpdateRequestData = {}
 
@@ -336,7 +336,7 @@ export class RequestManager {
         )
       }
 
-      if (data.clientId !== clientId) {
+      if (clientId != null && data.clientId !== clientId) {
         throw new AccessDeniedError(
           data.parameters,
           'This request was initiated for another client',
@@ -380,7 +380,7 @@ export class RequestManager {
     const id = decodeRequestUri(uri)
 
     const data = await this.store.readRequest(id)
-    if (!data) throw new InvalidRequestError(`Unknown request_uri "${uri}"`)
+    if (!data) throw new InvalidRequestError('Unknown request_uri')
 
     try {
       if (data.expiresAt < new Date()) {

@@ -1,6 +1,7 @@
 import { Keyset } from '@atproto/jwk'
 import {
   OAuthAuthorizationServerMetadata,
+  OAuthIssuerIdentifier,
   oauthAuthorizationServerMetadataSchema,
 } from '@atproto/oauth-types'
 import { Client } from '../client/client.js'
@@ -17,7 +18,7 @@ export type CustomMetadata = {
  * @see {@link https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderMetadata}
  */
 export function buildMetadata(
-  issuer: string,
+  issuer: OAuthIssuerIdentifier,
   keyset: Keyset,
   customMetadata?: CustomMetadata,
 ): OAuthAuthorizationServerMetadata {

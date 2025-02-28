@@ -1,4 +1,4 @@
-import { AccountStatus } from '../../../../account-manager'
+import { AccountStatus } from '../../../../account-manager/account-manager'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 

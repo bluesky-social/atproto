@@ -19,7 +19,7 @@ import {
   parseReqNsid,
   verifyJwt as verifyServiceJwt,
 } from '@atproto/xrpc-server'
-import { AccountManager } from './account-manager'
+import { AccountManager } from './account-manager/account-manager'
 import { softDeleted } from './db'
 
 type ReqCtx = AuthVerifierContext | StreamAuthVerifierContext

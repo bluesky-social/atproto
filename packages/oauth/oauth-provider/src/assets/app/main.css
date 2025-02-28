@@ -6,7 +6,12 @@
 @layer base {
   :root {
     --color-brand: 255 115 179;
-    --color-error: 235 65 49;
+    --color-brand-c: 0 0 0;
+    --color-error: 218 44 67;
+    --color-error-c: 255 255 255;
     --color-warning: 255 201 73;
+    --color-warning-c: 0 0 0;
+    --color-success: 0 191 165;
+    --color-success-c: 255 255 255;
   }
 }

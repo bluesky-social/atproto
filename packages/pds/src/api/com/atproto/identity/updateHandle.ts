@@ -1,7 +1,6 @@
 import { DAY, MINUTE } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
-import { normalizeAndValidateHandle } from '../../../../handle'
 import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
 import { httpLogger } from '../../../../logger'
@@ -40,11 +39,10 @@ export default function (server: Server, ctx: AppContext) {
         return
       }
 
-      const handle = await normalizeAndValidateHandle({
-        ctx,
-        handle: input.body.handle,
-        did: requester,
-      })
+      const handle = await ctx.accountManager.normalizeAndValidateHandle(
+        input.body.handle,
+        { did: requester },
+      )
 
       // Pessimistic check to handle spam: also enforced by updateHandle() and the db.
       const account = await ctx.accountManager.getAccount(handle, {
