@@ -1,5 +1,4 @@
 import { AtpAgent } from '@atproto/api'
-import { wait } from '@atproto/common'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { delayCursor } from '../../src/api/app/bsky/notification/listNotifications'
 import { ids } from '../../src/lexicon/lexicons'
@@ -500,9 +499,7 @@ describe('notification views', () => {
   })
 
   describe('notifications delay', () => {
-    const delay0s = 0
-    const delay3s = 3_000
-    const delay5s = 5_000
+    const notificationsDelayMs = 5_000
 
     let delayNetwork: TestNetwork
     let delayAgent: AtpAgent
@@ -512,7 +509,7 @@ describe('notification views', () => {
     beforeAll(async () => {
       delayNetwork = await TestNetwork.create({
         bsky: {
-          notificationsDelayMs: delay3s,
+          notificationsDelayMs,
         },
         dbPostgresSchema: 'bsky_views_notifications_delay',
       })
@@ -530,13 +527,37 @@ describe('notification views', () => {
         delaySc.replies[delayAlice][0].ref,
         'indeed',
       )
+      await delayNetwork.processAll()
+
+      // @NOTE: Use fake timers after inserting seed data,
+      // to avoid inserting all notifications with the same timestamp.
+      jest.useFakeTimers({
+        doNotFake: [
+          'nextTick',
+          'performance',
+          'setImmediate',
+          'setInterval',
+          'setTimeout',
+        ],
+      })
     })
 
     afterAll(async () => {
+      jest.useRealTimers()
       await delayNetwork.close()
     })
 
     it('paginates', async () => {
+      const firstNotification = await delayNetwork.bsky.db.db
+        .selectFrom('notification')
+        .selectAll()
+        .limit(1)
+        .orderBy('sortAt', 'asc')
+        .executeTakeFirstOrThrow()
+      // Sets the system time to when the first notification happened.
+      // At this point we won't have any notifications that already crossed the delay threshold.
+      jest.setSystemTime(new Date(firstNotification.sortAt))
+
       const results = (results) =>
         sort(results.flatMap((res) => res.notifications))
       const paginator = async (cursor?: string) => {
@@ -568,13 +589,26 @@ describe('notification views', () => {
           },
         )
 
-      // @NOTE: This is not perfectly synchronized. It relies on it taking less than 3s to run between
-      // the seeds and the first queries. This assumption should be true in most test runs.
       expect(fullBeforeDelay.data.notifications.length).toEqual(0)
       expect(results(paginatedAllBeforeDelay)).toEqual(
         results([fullBeforeDelay.data]),
       )
-      await wait(delay3s)
+
+      const lastNotification = await delayNetwork.bsky.db.db
+        .selectFrom('notification')
+        .selectAll()
+        .limit(1)
+        .orderBy('sortAt', 'desc')
+        .executeTakeFirstOrThrow()
+      // Sets the system time to when the last notification happened and the delay has elapsed.
+      // At this point we all notifications already crossed the delay threshold.
+      jest.setSystemTime(
+        new Date(
+          new Date(lastNotification.sortAt).getTime() +
+            notificationsDelayMs +
+            1,
+        ),
+      )
 
       const paginatedAllAfterDelay = await paginateAll(paginator)
       paginatedAllAfterDelay.forEach((res) =>
@@ -598,6 +632,9 @@ describe('notification views', () => {
     })
 
     describe('cursor delay', () => {
+      const delay0s = 0
+      const delay5s = 5_000
+
       const now = '2021-01-01T01:00:00.000Z'
       const nowMinus2s = '2021-01-01T00:59:58.000Z'
       const nowMinus5s = '2021-01-01T00:59:55.000Z'
