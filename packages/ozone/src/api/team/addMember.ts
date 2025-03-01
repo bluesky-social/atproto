@@ -26,14 +26,23 @@ export default function (server: Server, ctx: AppContext) {
           )
         }
 
+        const appviewCreator = {
+          agent: ctx.appviewAgent,
+          createAuthHeaders: ctx.appviewAuth,
+        }
+        const profiles = await teamService.getProfiles([did], appviewCreator)
+        const profile = profiles.get(did)
+
         const member = await teamService.create({
           did,
+          handle: profile?.handle || null,
+          displayName: profile?.displayName || null,
           disabled: false,
           role: getMemberRole(role),
           lastUpdatedBy:
             access.type === 'admin_token' ? 'admin_token' : access.iss,
         })
-        const memberView = await teamService.view([member], ctx)
+        const memberView = await teamService.view([member], appviewCreator)
         return memberView[0]
       })
 
