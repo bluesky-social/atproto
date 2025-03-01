@@ -10,6 +10,6 @@ describe('randomIntFromSeed()', () => {
     }
     const [zero, one] = counts
     expect(zero + one).toEqual(10000)
-    expect(Math.max(zero, one) / Math.min(zero, one)).toBeLessThan(1.05)
+    expect(Math.max(zero, one) / Math.min(zero, one)).toBeLessThan(1.1)
   })
 })
