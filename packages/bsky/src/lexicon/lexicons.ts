@@ -7719,7 +7719,8 @@ export const schemaDict = {
           },
           name: {
             type: 'string',
-            maxLength: 64,
+            maxGraphemes: 64,
+            maxLength: 640,
             minLength: 1,
           },
           purpose: {
@@ -7769,7 +7770,8 @@ export const schemaDict = {
           },
           name: {
             type: 'string',
-            maxLength: 64,
+            maxGraphemes: 64,
+            maxLength: 640,
             minLength: 1,
           },
           purpose: {
@@ -8725,7 +8727,8 @@ export const schemaDict = {
             },
             name: {
               type: 'string',
-              maxLength: 64,
+              maxGraphemes: 64,
+              maxLength: 640,
               minLength: 1,
               description: 'Display name for list; can not be empty.',
             },
