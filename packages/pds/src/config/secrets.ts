@@ -31,6 +31,7 @@ export const envToSecrets = (env: ServerEnvironment): ServerSecrets => {
     jwtSecret: env.jwtSecret,
     adminPassword: env.adminPassword,
     plcRotationKey,
+    entrywayAdminToken: env.entrywayAdminToken ?? env.adminPassword,
   }
 }
 
@@ -39,6 +40,7 @@ export type ServerSecrets = {
   jwtSecret: string
   adminPassword: string
   plcRotationKey: SigningKeyKms | SigningKeyMemory
+  entrywayAdminToken?: string
 }
 
 export type SigningKeyKms = {
