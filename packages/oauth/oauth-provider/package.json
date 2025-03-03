@@ -94,5 +94,11 @@
     "build": "pnpm --parallel --stream '/^build:.+$/'",
     "start:ui": "vite",
     "dev": "pnpm --parallel --stream '/^(build:frontend|po:extract)$/' --watch"
+  },
+  "postcss": {
+    "plugins": {
+      "tailwindcss": {},
+      "autoprefixer": {}
+    }
   }
 }
