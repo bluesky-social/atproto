@@ -1,4 +1,4 @@
-import { Trans } from '@lingui/react/macro'
+import { Trans, useLingui } from '@lingui/react/macro'
 import { memo, useMemo } from 'react'
 import { InputInfoCard } from '../../components/forms/input-info-card.tsx'
 import {
@@ -20,13 +20,13 @@ export const ErrorView = memo(function ErrorView({
   error,
 
   // LayoutWelcome
-  title = <Trans>Error</Trans>,
   ...props
 }: ErrorViewProps) {
+  const { t } = useLingui()
   const apiError = useMemo(() => Api.parseError(error), [error])
 
   return (
-    <LayoutWelcome {...props} title={title}>
+    <LayoutWelcome {...props} title={props.title ?? t`Error`}>
       {apiError ? (
         <ErrorCard error={apiError} />
       ) : (

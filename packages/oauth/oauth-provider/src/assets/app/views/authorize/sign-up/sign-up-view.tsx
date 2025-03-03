@@ -1,4 +1,4 @@
-import { Trans } from '@lingui/react/macro'
+import { Trans, useLingui } from '@lingui/react/macro'
 import { useState } from 'react'
 import { CustomizationData } from '../../../backend-types.ts'
 import { WizardCard } from '../../../components/forms/wizard-card.tsx'
@@ -49,10 +49,9 @@ export function SignUpView({
   onBack,
 
   // LayoutTitlePage
-  title = <Trans>Create Account</Trans>,
-  subtitle = <Trans>We're so excited to have you join us!</Trans>,
   ...props
 }: SignUpViewProps) {
+  const { t } = useLingui()
   const [credentials, setCredentials] = useState<
     undefined | SignUpAccountFormOutput
   >(undefined)
@@ -62,7 +61,13 @@ export function SignUpView({
   const hcaptchaToken = hcaptchaSiteKey == null ? undefined : hcaptcha || false
 
   return (
-    <LayoutTitlePage {...props} title={title} subtitle={subtitle}>
+    <LayoutTitlePage
+      {...props}
+      title={props.title ?? t`Create Account`}
+      subtitle={
+        props.subtitle ?? <Trans>We're so excited to have you join us!</Trans>
+      }
+    >
       <WizardCard
         doneLabel={<Trans>Sign Up</Trans>}
         onBack={onBack}

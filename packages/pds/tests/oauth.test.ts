@@ -86,7 +86,7 @@ describe('oauth', () => {
       page.waitForNavigation(),
     ])
 
-    await expect(page.title()).resolves.toBe('Authorize')
+    await expect(page.title()).resolves.toBe('Sign in')
 
     const passwordInput = await getVisibleElement(
       page,
@@ -107,7 +107,7 @@ describe('oauth', () => {
 
     await rememberCheckbox.click()
 
-    const nextButton = await getVisibleElement(page, 'button::-p-text(Next)')
+    const nextButton = await getVisibleElement(page, 'button::-p-text(Submit)')
 
     await nextButton.click()
 

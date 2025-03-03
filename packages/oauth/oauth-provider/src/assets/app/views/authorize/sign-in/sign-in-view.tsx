@@ -1,4 +1,4 @@
-import { Trans } from '@lingui/react/macro'
+import { Trans, useLingui } from '@lingui/react/macro'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Session } from '../../../backend-types.ts'
 import {
@@ -35,14 +35,17 @@ export function SignInView({
   onBack,
 
   // LayoutTitlePage
-  title = <Trans>Sign in</Trans>,
+  title,
   subtitle,
   ...props
 }: SignInViewProps) {
+  const { t } = useLingui()
   const session = useMemo(() => sessions.find((s) => s.selected), [sessions])
   const clearSession = useCallback(() => selectSub(null), [selectSub])
   const accounts = useMemo(() => sessions.map((s) => s.account), [sessions])
   const [showSignInForm, setShowSignInForm] = useState(sessions.length === 0)
+
+  title ??= t`Sign in`
 
   useEffect(() => {
     // Make sure the "back" action shows the account picker instead of the

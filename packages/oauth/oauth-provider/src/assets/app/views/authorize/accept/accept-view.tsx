@@ -1,4 +1,4 @@
-import { Trans } from '@lingui/react/macro'
+import { Trans, useLingui } from '@lingui/react/macro'
 import type { OAuthClientMetadata } from '@atproto/oauth-types'
 import { Account, ScopeDetail } from '../../../backend-types.ts'
 import {
@@ -35,7 +35,7 @@ export function AcceptView({
   onBack,
 
   // LayoutTitlePage
-  title = <Trans>Authorize</Trans>,
+  title,
   subtitle = (
     <Trans>
       Grant access to your{' '}
@@ -47,8 +47,14 @@ export function AcceptView({
   ),
   ...props
 }: AcceptViewProps) {
+  const { t } = useLingui()
+
   return (
-    <LayoutTitlePage {...props} title={title} subtitle={subtitle}>
+    <LayoutTitlePage
+      {...props}
+      title={title ?? t`Authorize`}
+      subtitle={subtitle}
+    >
       <AcceptForm
         clientId={clientId}
         clientMetadata={clientMetadata}

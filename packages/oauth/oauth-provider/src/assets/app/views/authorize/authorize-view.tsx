@@ -1,4 +1,4 @@
-import { Trans } from '@lingui/react/macro'
+import { Trans, useLingui } from '@lingui/react/macro'
 import { useEffect, useState } from 'react'
 import type { AuthorizeData, CustomizationData } from '../../backend-types.ts'
 import {
@@ -36,9 +36,10 @@ export function AuthorizeView({
   customizationData,
 
   // LayoutTitlePage
-  title = <Trans>Login complete</Trans>,
   ...props
 }: AuthorizeViewProps) {
+  const { t } = useLingui()
+
   const forceSignIn = authorizeData?.loginHint != null
 
   const initialView = forceSignIn ? View.SignIn : View.Welcome
@@ -168,7 +169,7 @@ export function AuthorizeView({
 
   if (view === View.Done) {
     return (
-      <LayoutTitlePage {...props} title={title}>
+      <LayoutTitlePage {...props} title={props.title ?? t`Login complete`}>
         <Trans>You are being redirected...</Trans>
       </LayoutTitlePage>
     )

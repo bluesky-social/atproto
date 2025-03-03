@@ -1,4 +1,4 @@
-import { Trans } from '@lingui/react/macro'
+import { Trans, useLingui } from '@lingui/react/macro'
 import { Button } from '../../../components/forms/button.tsx'
 import {
   LayoutWelcome,
@@ -21,11 +21,11 @@ export function WelcomeView({
   onCancel,
 
   // LayoutWelcome
-  title = <Trans>Authenticate</Trans>,
   ...props
 }: WelcomeViewParams) {
+  const { t } = useLingui()
   return (
-    <LayoutWelcome {...props} title={title}>
+    <LayoutWelcome {...props} title={props.title ?? t`Authenticate`}>
       {onSignUp && (
         <Button
           className={'m-1 w-60 max-w-full'}

@@ -1,4 +1,4 @@
-import { Trans } from '@lingui/react/macro'
+import { Trans, useLingui } from '@lingui/react/macro'
 import { useState } from 'react'
 import { Button } from '../../../components/forms/button.tsx'
 import {
@@ -41,18 +41,19 @@ export function ResetPasswordView({
   onBack,
 
   // LayoutTitlePage
-  title = <Trans>Forgot Password</Trans>,
-  subtitle,
   ...props
 }: ResetPasswordViewProps) {
+  const { t } = useLingui()
   const [view, setView] = useState<View>(View.RequestReset)
 
   if (view === View.RequestReset) {
     return (
       <LayoutTitlePage
         {...props}
-        title={title}
-        subtitle={subtitle || <Trans>Let's get your password reset!</Trans>}
+        title={props.title || t`Forgot Password`}
+        subtitle={
+          props.subtitle || <Trans>Let's get your password reset!</Trans>
+        }
       >
         <ResetPasswordRequestForm
           emailDefault={emailDefault}
@@ -78,9 +79,9 @@ export function ResetPasswordView({
     return (
       <LayoutTitlePage
         {...props}
-        title={title}
+        title={props.title || t`Reset Password`}
         subtitle={
-          subtitle || (
+          props.subtitle || (
             <Trans>Enter the code you received to reset your password.</Trans>
           )
         }
@@ -102,8 +103,10 @@ export function ResetPasswordView({
     return (
       <LayoutTitlePage
         {...props}
-        title={title}
-        subtitle={subtitle || <Trans>Your password has been updated!</Trans>}
+        title={props.title || t`Password Updated`}
+        subtitle={
+          props.subtitle || <Trans>Your password has been updated!</Trans>
+        }
       >
         <center>
           <h2 className="text-xl font-bold">

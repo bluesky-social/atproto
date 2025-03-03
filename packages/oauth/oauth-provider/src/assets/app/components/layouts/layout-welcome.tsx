@@ -1,4 +1,4 @@
-import { JSX, ReactNode } from 'react'
+import { JSX } from 'react'
 import { CustomizationData } from '../../backend-types.ts'
 import { clsx } from '../../lib/clsx.ts'
 import { Override } from '../../lib/util.ts'
@@ -7,7 +7,7 @@ export type LayoutWelcomeProps = Override<
   JSX.IntrinsicElements['div'],
   {
     customizationData: CustomizationData | undefined
-    title?: ReactNode
+    title?: string
   }
 >
 

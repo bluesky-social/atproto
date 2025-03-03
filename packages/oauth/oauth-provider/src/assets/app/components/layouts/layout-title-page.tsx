@@ -5,7 +5,7 @@ import { Override } from '../../lib/util.ts'
 export type LayoutTitlePageProps = Override<
   JSX.IntrinsicElements['div'],
   {
-    title?: ReactNode
+    title?: string
     subtitle?: ReactNode
     children?: ReactNode
   }
