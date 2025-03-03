@@ -13,6 +13,7 @@ export default {
       plugins: [['@lingui/swc-plugin', {}]],
     }),
     lingui(),
+    // @ts-expect-error This package is wrongly typed
     postcss(),
   ],
 }
