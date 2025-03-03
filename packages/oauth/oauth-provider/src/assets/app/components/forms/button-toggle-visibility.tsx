@@ -1,3 +1,4 @@
+import { useLingui } from '@lingui/react/macro'
 import { Override } from '../../lib/util.ts'
 import { EyeIcon, EyeSlashIcon } from '../utils/icons.tsx'
 import { Button, ButtonProps } from './button.tsx'
@@ -21,6 +22,7 @@ export function ButtonToggleVisibility({
   onClick,
   ...props
 }: ButtonToggleVisibilityProps) {
+  const { t } = useLingui()
   return (
     <Button
       {...props}
@@ -29,7 +31,7 @@ export function ButtonToggleVisibility({
         onClick?.(event)
         if (!event.defaultPrevented) toggleVisible()
       }}
-      aria-label={visible ? 'Hide' : 'Make visible'}
+      aria-label={visible ? t`Hide` : t`Make visible`}
     >
       {visible ? (
         <EyeIcon className="w-5" aria-hidden />

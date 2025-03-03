@@ -43,7 +43,11 @@ export function InputCheckbox({
         <input
           {...props}
           disabled={disabled ?? ctx.disabled}
-          aria-labelledby={ariaLabelledBy ?? ctx.labelId}
+          aria-labelledby={
+            children
+              ? undefined // Prefer the local "<label>" element over the wrapping "<fieldset>" to describe the checkbox.
+              : ariaLabelledBy ?? ctx.labelId
+          }
           ref={mergeRefs([ref, inputRef])}
           id={htmlFor}
           className="accent-brand outline-none"
@@ -58,12 +62,14 @@ export function InputCheckbox({
         }
       }}
     >
-      <label
-        htmlFor={htmlFor}
-        className="block w-full leading-[1.6] select-none cursor-pointer"
-      >
-        {children}
-      </label>
+      {children && (
+        <label
+          htmlFor={htmlFor}
+          className="block w-full leading-[1.6] select-none cursor-pointer"
+        >
+          {children}
+        </label>
+      )}
     </InputContainer>
   )
 }

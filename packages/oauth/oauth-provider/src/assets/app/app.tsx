@@ -18,10 +18,7 @@ export type AppProps = {
 }
 
 const availableLocales = Object.keys(allMessages)
-
-console.error('availableLocales', availableLocales)
 const browserLocale = negotiateLocale(availableLocales)
-console.error('browserLocale', browserLocale)
 
 i18n.load(allMessages)
 i18n.activate(browserLocale ?? 'en')

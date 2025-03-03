@@ -49,8 +49,8 @@ export function InputPassword({
 
   return (
     <InputText
-      placeholder="password"
-      aria-label="password"
+      placeholder={t`Password`}
+      aria-label={t`Password`}
       title={t`Password`}
       {...props}
       ref={mergeRefs([ref, inputRef])}

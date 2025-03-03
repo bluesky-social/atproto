@@ -162,6 +162,20 @@ export function SignInForm({
         />
       </Fieldset>
 
+      <ExpandTransition visible={pwdFocus} delayed>
+        <InputInfoCard role="status">
+          <p className="font-bold text-brand leading-8">
+            <Trans>Warning</Trans>
+          </p>
+          <p>
+            <Trans>
+              Please verify the domain name of the website before entering your
+              password. Never enter your password on a domain you do not trust.
+            </Trans>
+          </p>
+        </InputInfoCard>
+      </ExpandTransition>
+
       <InputPassword
         name="password"
         onChange={(event) => {
@@ -178,6 +192,7 @@ export function SignInForm({
               onClick={() => {
                 onForgotPassword(username?.includes('@') ? username : undefined)
               }}
+              aria-label={t`Reset your password`}
             >
               <Trans>Forgot?</Trans>
             </Button>
@@ -187,20 +202,6 @@ export function SignInForm({
         disabled={loading}
         required
       />
-
-      <ExpandTransition visible={pwdFocus} delayed>
-        <InputInfoCard role="status">
-          <p className="font-bold text-brand leading-8">
-            <Trans>Warning</Trans>
-          </p>
-          <p>
-            <Trans>
-              Please verify the domain name of the website before entering your
-              password. Never enter your password on a domain you do not trust.
-            </Trans>
-          </p>
-        </InputInfoCard>
-      </ExpandTransition>
 
       <Fieldset
         key="remember"

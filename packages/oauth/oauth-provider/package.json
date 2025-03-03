@@ -85,10 +85,11 @@
   "scripts": {
     "po:extract": "lingui extract --clean",
     "po:compile": "lingui compile",
-    "prebuild:frontend": "pnpm run po:compile",
+    "build:frontend:compile": "pnpm po:compile",
+    "prebuild:frontend": "pnpm po:compile",
     "build:frontend": "rollup --config rollup.config.js",
     "build:backend": "tsc --build --force tsconfig.backend.json",
     "build": "pnpm --parallel --stream '/^build:.+$/'",
-    "dev": "rollup --config rollup.config.js --watch"
+    "dev": "pnpm --parallel --stream '/^build:frontend/' --watch"
   }
 }
