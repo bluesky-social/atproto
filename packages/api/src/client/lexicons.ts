@@ -5694,7 +5694,7 @@ export const schemaDict = {
           video: {
             type: 'blob',
             accept: ['video/mp4'],
-            maxSize: 50000000,
+            maxSize: 100000000,
           },
           captions: {
             type: 'array',
