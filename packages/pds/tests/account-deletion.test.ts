@@ -151,14 +151,12 @@ describe('account deletion', () => {
     expect(
       updatedDbContents.repoSeqs
         .filter((row) => row.did === carol.did)
-        .every(
-          (row) => row.eventType === 'tombstone' || row.eventType === 'account',
-        ),
+        .every((row) => row.eventType === 'account'),
     ).toBe(true)
-    // check we do have a tombstone for this did
+    // check we do have a account (deletion) event for this did
     expect(
       updatedDbContents.repoSeqs.filter(
-        (row) => row.did === carol.did && row.eventType === 'tombstone',
+        (row) => row.did === carol.did && row.eventType === 'account',
       ).length,
     ).toEqual(1)
     expect(updatedDbContents.appPasswords).toEqual(

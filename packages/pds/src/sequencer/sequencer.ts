@@ -4,7 +4,7 @@ import { SECOND, cborDecode, wait } from '@atproto/common'
 import { AccountStatus } from '../account-manager/helpers/account'
 import { Crawlers } from '../crawlers'
 import { seqLogger as log } from '../logger'
-import { CommitDataWithOps } from '../repo'
+import { CommitDataWithOps, SyncEvtData } from '../repo'
 import {
   RepoSeqEntry,
   RepoSeqInsert,
@@ -15,15 +15,13 @@ import {
 import {
   AccountEvt,
   CommitEvt,
-  HandleEvt,
   IdentityEvt,
   SeqEvt,
-  TombstoneEvt,
+  SyncEvt,
   formatSeqAccountEvt,
   formatSeqCommit,
-  formatSeqHandleUpdate,
   formatSeqIdentityEvt,
-  formatSeqTombstone,
+  formatSeqSyncEvt,
 } from './events'
 
 export * from './events'
@@ -135,19 +133,19 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
         continue
       }
       const evt = cborDecode(row.event)
-      if (row.eventType === 'append' || row.eventType === 'rebase') {
+      if (row.eventType === 'append') {
         seqEvts.push({
           type: 'commit',
           seq: row.seq,
           time: row.sequencedAt,
           evt: evt as CommitEvt,
         })
-      } else if (row.eventType === 'handle') {
+      } else if (row.eventType === 'sync') {
         seqEvts.push({
-          type: 'handle',
+          type: 'sync',
           seq: row.seq,
           time: row.sequencedAt,
-          evt: evt as HandleEvt,
+          evt: evt as SyncEvt,
         })
       } else if (row.eventType === 'identity') {
         seqEvts.push({
@@ -162,13 +160,6 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
           seq: row.seq,
           time: row.sequencedAt,
           evt: evt as AccountEvt,
-        })
-      } else if (row.eventType === 'tombstone') {
-        seqEvts.push({
-          type: 'tombstone',
-          seq: row.seq,
-          time: row.sequencedAt,
-          evt: evt as TombstoneEvt,
         })
       }
     }
@@ -222,8 +213,8 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
     return await this.sequenceEvt(evt)
   }
 
-  async sequenceHandleUpdate(did: string, handle: string): Promise<number> {
-    const evt = await formatSeqHandleUpdate(did, handle)
+  async sequenceSyncEvt(did: string, data: SyncEvtData) {
+    const evt = await formatSeqSyncEvt(did, data)
     return await this.sequenceEvt(evt)
   }
 
@@ -237,11 +228,6 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
     status: AccountStatus,
   ): Promise<number> {
     const evt = await formatSeqAccountEvt(did, status)
-    return await this.sequenceEvt(evt)
-  }
-
-  async sequenceTombstone(did: string): Promise<number> {
-    const evt = await formatSeqTombstone(did)
     return await this.sequenceEvt(evt)
   }
 

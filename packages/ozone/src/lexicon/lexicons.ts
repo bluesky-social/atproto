@@ -3991,9 +3991,6 @@ export const schemaDict = {
               'lex:com.atproto.sync.subscribeRepos#sync',
               'lex:com.atproto.sync.subscribeRepos#identity',
               'lex:com.atproto.sync.subscribeRepos#account',
-              'lex:com.atproto.sync.subscribeRepos#handle',
-              'lex:com.atproto.sync.subscribeRepos#migrate',
-              'lex:com.atproto.sync.subscribeRepos#tombstone',
               'lex:com.atproto.sync.subscribeRepos#info',
             ],
           },
@@ -4194,68 +4191,6 @@ export const schemaDict = {
               'desynchronized',
               'throttled',
             ],
-          },
-        },
-      },
-      handle: {
-        type: 'object',
-        description: 'DEPRECATED -- Use #identity event instead',
-        required: ['seq', 'did', 'handle', 'time'],
-        properties: {
-          seq: {
-            type: 'integer',
-          },
-          did: {
-            type: 'string',
-            format: 'did',
-          },
-          handle: {
-            type: 'string',
-            format: 'handle',
-          },
-          time: {
-            type: 'string',
-            format: 'datetime',
-          },
-        },
-      },
-      migrate: {
-        type: 'object',
-        description: 'DEPRECATED -- Use #account event instead',
-        required: ['seq', 'did', 'migrateTo', 'time'],
-        nullable: ['migrateTo'],
-        properties: {
-          seq: {
-            type: 'integer',
-          },
-          did: {
-            type: 'string',
-            format: 'did',
-          },
-          migrateTo: {
-            type: 'string',
-          },
-          time: {
-            type: 'string',
-            format: 'datetime',
-          },
-        },
-      },
-      tombstone: {
-        type: 'object',
-        description: 'DEPRECATED -- Use #account event instead',
-        required: ['seq', 'did', 'time'],
-        properties: {
-          seq: {
-            type: 'integer',
-          },
-          did: {
-            type: 'string',
-            format: 'did',
-          },
-          time: {
-            type: 'string',
-            format: 'datetime',
           },
         },
       },
