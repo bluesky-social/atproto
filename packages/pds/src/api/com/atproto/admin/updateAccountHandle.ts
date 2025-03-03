@@ -13,7 +13,7 @@ export default function (server: Server, ctx: AppContext) {
         ctx,
         handle: input.body.handle,
         did,
-        allowReserved: true,
+        allowAnyValid: true,
       })
 
       // Pessimistic check to handle spam: also enforced by updateHandle() and the db.
