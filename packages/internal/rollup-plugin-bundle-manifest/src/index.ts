@@ -14,11 +14,11 @@ type ChunkItem = {
   type: 'chunk'
   mime: string
   sha256: string
-  // dynamicImports: string[]
-  // isDynamicEntry: boolean
-  // isEntry: boolean
-  // isImplicitEntry: boolean
-  // name: string
+  dynamicImports: string[]
+  isDynamicEntry: boolean
+  isEntry: boolean
+  isImplicitEntry: boolean
+  name: string
   data?: string
 }
 
@@ -48,12 +48,19 @@ export default function bundleManifest({
             mime: mime.getType(extname(fileName)) || undefined,
             sha256: createHash('sha256').update(chunk.source).digest('base64'),
           }
-        } else if (chunk.type === 'chunk') {
+        }
+
+        if (chunk.type === 'chunk') {
           manifest[fileName] = {
             type: chunk.type,
             data: data ? Buffer.from(chunk.code).toString('base64') : undefined,
             mime: 'application/javascript',
             sha256: createHash('sha256').update(chunk.code).digest('base64'),
+            dynamicImports: chunk.dynamicImports,
+            isDynamicEntry: chunk.isDynamicEntry,
+            isEntry: chunk.isEntry,
+            isImplicitEntry: chunk.isImplicitEntry,
+            name: chunk.name,
           }
         }
       }
