@@ -38,9 +38,11 @@ const client = new NodeOAuthClient({
     policy_uri: 'https://my-app.com/policy',
     redirect_uris: ['https://my-app.com/callback'],
     grant_types: ['authorization_code', 'refresh_token'],
+    scope: 'atproto transition:generic',
     response_types: ['code'],
     application_type: 'web',
     token_endpoint_auth_method: 'private_key_jwt',
+    token_endpoint_auth_signing_alg: 'RS256',
     dpop_bound_access_tokens: true,
     jwks_uri: 'https://my-app.com/jwks.json',
   },
@@ -48,9 +50,9 @@ const client = new NodeOAuthClient({
   // Used to authenticate the client to the token endpoint. Will be used to
   // build the jwks object to be exposed on the "jwks_uri" endpoint.
   keyset: await Promise.all([
-    JoseKey.fromImportable(process.env.PRIVATE_KEY_1),
-    JoseKey.fromImportable(process.env.PRIVATE_KEY_2),
-    JoseKey.fromImportable(process.env.PRIVATE_KEY_3),
+    JoseKey.fromImportable(process.env.PRIVATE_KEY_1, 'key1'),
+    JoseKey.fromImportable(process.env.PRIVATE_KEY_2, 'key2'),
+    JoseKey.fromImportable(process.env.PRIVATE_KEY_3, 'key3'),
   ]),
 
   // Interface to store authorization state data (during authorization flows)
