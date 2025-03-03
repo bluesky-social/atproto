@@ -1,5 +1,15 @@
 # @atproto/api
 
+## 0.14.8
+
+### Patch Changes
+
+- [#3585](https://github.com/bluesky-social/atproto/pull/3585) [`38320191e`](https://github.com/bluesky-social/atproto/commit/38320191e559f8b928c6e951a9b4a6207240bfc1) Thanks [@dholms](https://github.com/dholms)! - Wrap sync v1.1 semantics. Add #sync event to subscribeRepos and deprecate #handle and #tombstone events
+
+- [#3602](https://github.com/bluesky-social/atproto/pull/3602) [`6bcbb6d8c`](https://github.com/bluesky-social/atproto/commit/6bcbb6d8cd3696280935ff7892d8e191fd21fa49) Thanks [@devinivy](https://github.com/devinivy)! - Permit 100mb video embeds.
+
+- [#2264](https://github.com/bluesky-social/atproto/pull/2264) [`dc6e4ecb0`](https://github.com/bluesky-social/atproto/commit/dc6e4ecb0e09bbf4bc7a79c6ac43fb6da4166200) Thanks [@bnewbold](https://github.com/bnewbold)! - new com.atproto.identity endpoints: resolveDid, resolveIdentity, refreshIdentity
+
 ## 0.14.7
 
 ### Patch Changes
