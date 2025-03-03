@@ -83,8 +83,9 @@
     "typescript": "^5.6.3"
   },
   "scripts": {
-    "extract": "lingui extract",
-    "prebuild:frontend": "lingui compile",
+    "po:extract": "lingui extract --clean",
+    "po:compile": "lingui compile",
+    "prebuild:frontend": "pnpm run po:compile",
     "build:frontend": "rollup --config rollup.config.js",
     "build:backend": "tsc --build --force tsconfig.backend.json",
     "build": "pnpm --parallel --stream '/^build:.+$/'",

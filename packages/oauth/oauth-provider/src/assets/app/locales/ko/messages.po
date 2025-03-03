@@ -322,10 +322,6 @@ msgstr ""
 msgid "Sign up"
 msgstr ""
 
-#: src/assets/app/views/authorize/sign-up/sign-up-view.tsx:69
-#~ msgid "Sign Up"
-#~ msgstr ""
-
 #: src/assets/app/components/forms/wizard-card.tsx:94
 msgid "Step {currentPosition} of {count}"
 msgstr ""
@@ -441,10 +437,6 @@ msgstr ""
 #: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:242
 msgid "Your full username will be <0>{preview}</0>"
 msgstr ""
-
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:242
-#~ msgid "Your full username will be <0>@{handle}</0>"
-#~ msgstr ""
 
 #: src/assets/app/views/authorize/reset-password/reset-password-view.tsx:108
 msgid "Your password has been updated!"
