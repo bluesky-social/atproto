@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react'
 import { OAuthSession } from '@atproto/oauth-client'
-import { useAuthContext } from './auth/auth-provider'
+import { useAuthContext } from './auth/auth-provider.tsx'
 
 function App() {
   const { pdsAgent, signOut, refresh } = useAuthContext()

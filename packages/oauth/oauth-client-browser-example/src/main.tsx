@@ -2,14 +2,14 @@ import './index.css'
 
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import App from './app'
-import { AuthProvider } from './auth/auth-provider'
+import App from './app.tsx'
+import { AuthProvider } from './auth/auth-provider.tsx'
 import {
   ENV,
   HANDLE_RESOLVER_URL,
   PLC_DIRECTORY_URL,
   SIGN_UP_URL,
-} from './constants'
+} from './constants.ts'
 
 const clientId = `http://localhost?${new URLSearchParams({
   scope: 'atproto transition:generic',

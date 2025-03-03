@@ -5,8 +5,7 @@
   ],
   "compilerOptions": {
     "rootDir": "src/assets/app",
-    "outDir": "dist/assets/app",
-    "allowImportingTsExtensions": true
+    "outDir": "dist/assets/app"
   },
   "include": ["src/assets/app/**/*.ts", "src/assets/app/**/*.tsx"]
 }

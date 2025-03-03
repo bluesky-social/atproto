@@ -2,9 +2,9 @@
 
 import { ReactNode, createContext, useContext, useMemo } from 'react'
 import { Agent } from '@atproto/api'
-import { AuthForm } from './auth-form'
-import { useCredentialAuth } from './credential/use-credential-auth'
-import { UseOAuthOptions, useOAuth } from './oauth/use-oauth'
+import { AuthForm } from './auth-form.tsx'
+import { useCredentialAuth } from './credential/use-credential-auth.ts'
+import { UseOAuthOptions, useOAuth } from './oauth/use-oauth.ts'
 
 export type AuthContextValue = {
   pdsAgent: Agent

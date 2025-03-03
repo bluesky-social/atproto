@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react'
 import {
   AtpSignIn,
   CredentialSignInForm,
-} from './credential/credential-sign-in-form'
-import { OAuthSignIn, OAuthSignInForm } from './oauth/oauth-sign-in-form'
+} from './credential/credential-sign-in-form.tsx'
+import { OAuthSignIn, OAuthSignInForm } from './oauth/oauth-sign-in-form.tsx'
 
 export type AuthFormProps = {
   atpSignIn?: AtpSignIn
