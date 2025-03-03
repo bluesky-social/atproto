@@ -92,7 +92,6 @@ msgstr "Birthdate"
 msgid "By clicking <0>Accept</0>, you allow this application to perform the following actions in accordance to their <1>terms of service</1> and <2>privacy policy</2>:"
 msgstr "By clicking <0>Accept</0>, you allow this application to perform the following actions in accordance to their <1>terms of service</1> and <2>privacy policy</2>:"
 
-#. placeholder {0}: relevantLinks && relevantLinks.length ? ( relevantLinks.map((l, i, a) => ( <span key={i}> {i > 0 && (i < a.length - 1 ? ', ' : <Trans> and </Trans>)} <a href={l.href} rel={l.rel} target="_blank" className="text-brand underline" > {l.title} </a> </span> )) ) : ( <Trans>Terms of Service and Privacy Policy</Trans> )
 #: src/assets/app/views/authorize/sign-up/sign-up-disclaimer.tsx:31
 msgid "By creating an account you agree to the {0}."
 msgstr "By creating an account you agree to the {0}."
@@ -102,7 +101,6 @@ msgstr "By creating an account you agree to the {0}."
 msgid "Cancel"
 msgstr "Cancel"
 
-#. placeholder {0}: secondFactor.hint
 #: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:240
 msgid "Check your {0} email for a login code and enter it here."
 msgstr "Check your {0} email for a login code and enter it here."
@@ -196,12 +194,10 @@ msgstr "Forgot Password"
 msgid "Forgot?"
 msgstr "Forgot?"
 
-#. placeholder {0}: account.preferred_username || account.email || account.sub
 #: src/assets/app/views/authorize/accept/accept-view.tsx:40
 msgid "Grant access to your <0>{0}</0> account"
 msgstr "Grant access to your <0>{0}</0> account"
 
-#. placeholder {0}: helpLink.title
 #: src/assets/app/components/utils/help-card.tsx:33
 msgid "Having trouble? <0>Contact {0}</0>"
 msgstr "Having trouble? <0>Contact {0}</0>"
@@ -328,7 +324,6 @@ msgstr "Session"
 msgid "Sign in"
 msgstr "Sign in"
 
-#. placeholder {0}: account.name
 #: src/assets/app/views/authorize/sign-in/sign-in-picker.tsx:74
 msgid "Sign in as {0}"
 msgstr "Sign in as {0}"

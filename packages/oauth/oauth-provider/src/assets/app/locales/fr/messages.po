@@ -92,7 +92,6 @@ msgstr "Date de naissance"
 msgid "By clicking <0>Accept</0>, you allow this application to perform the following actions in accordance to their <1>terms of service</1> and <2>privacy policy</2>:"
 msgstr "En cliquant sur <0>Authoriser l'accès</0>, vous autorisez cette application à effectuer les actions suivantes conformément à leurs <1>conditions d'utilisation</1> et leur <2>politique de confidentialité</2> :"
 
-#. placeholder {0}: relevantLinks && relevantLinks.length ? ( relevantLinks.map((l, i, a) => ( <span key={i}> {i > 0 && (i < a.length - 1 ? ', ' : <Trans> and </Trans>)} <a href={l.href} rel={l.rel} target="_blank" className="text-brand underline" > {l.title} </a> </span> )) ) : ( <Trans>Terms of Service and Privacy Policy</Trans> )
 #: src/assets/app/views/authorize/sign-up/sign-up-disclaimer.tsx:31
 msgid "By creating an account you agree to the {0}."
 msgstr "En créant un compte, vous acceptez les {0}."
@@ -102,7 +101,6 @@ msgstr "En créant un compte, vous acceptez les {0}."
 msgid "Cancel"
 msgstr "Annuler"
 
-#. placeholder {0}: secondFactor.hint
 #: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:240
 msgid "Check your {0} email for a login code and enter it here."
 msgstr "Vérifiez vos emails {0} pour un code de connexion et saisissez-le ici."
@@ -196,12 +194,10 @@ msgstr "Mot de passe oublié"
 msgid "Forgot?"
 msgstr "Oublié ?"
 
-#. placeholder {0}: account.preferred_username || account.email || account.sub
 #: src/assets/app/views/authorize/accept/accept-view.tsx:40
 msgid "Grant access to your <0>{0}</0> account"
 msgstr "Accorder l'accès à votre compte <0>{0}</0>"
 
-#. placeholder {0}: helpLink.title
 #: src/assets/app/components/utils/help-card.tsx:33
 msgid "Having trouble? <0>Contact {0}</0>"
 msgstr "Des difficultés ? <0>Contactez {0}</0>"
@@ -328,7 +324,6 @@ msgstr "Session"
 msgid "Sign in"
 msgstr "Se connecter"
 
-#. placeholder {0}: account.name
 #: src/assets/app/views/authorize/sign-in/sign-in-picker.tsx:74
 msgid "Sign in as {0}"
 msgstr "Se connecter en tant que {0}"

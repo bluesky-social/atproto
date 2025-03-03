@@ -83,13 +83,12 @@
     "typescript": "^5.6.3"
   },
   "scripts": {
-    "po:extract": "lingui extract --clean",
+    "po:extract": "lingui extract --clean --debounce 500",
     "po:compile": "lingui compile",
-    "build:frontend:compile": "pnpm po:compile",
     "prebuild:frontend": "pnpm po:compile",
     "build:frontend": "rollup --config rollup.config.js",
     "build:backend": "tsc --build --force tsconfig.backend.json",
     "build": "pnpm --parallel --stream '/^build:.+$/'",
-    "dev": "pnpm --parallel --stream '/^build:frontend/' --watch"
+    "dev": "pnpm --parallel --stream '/^(build:frontend|po:extract)$/' --watch"
   }
 }
