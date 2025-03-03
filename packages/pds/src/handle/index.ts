@@ -8,9 +8,9 @@ export const normalizeAndValidateHandle = async (opts: {
   ctx: AppContext
   handle: string
   did?: string
-  allowReserved?: boolean
+  allowAnyValid?: boolean
 }): Promise<string> => {
-  const { ctx, did, allowReserved } = opts
+  const { ctx, did, allowAnyValid } = opts
   // base formatting validation
   const handle = baseNormalizeAndValidate(opts.handle)
   // tld validation
@@ -21,7 +21,7 @@ export const normalizeAndValidateHandle = async (opts: {
     )
   }
   // slur check
-  if (hasExplicitSlur(handle)) {
+  if (!allowAnyValid && hasExplicitSlur(handle)) {
     throw new InvalidRequestError(
       'Inappropriate language in handle',
       'InvalidHandle',
@@ -32,7 +32,7 @@ export const normalizeAndValidateHandle = async (opts: {
     ensureHandleServiceConstraints(
       handle,
       ctx.cfg.identity.serviceHandleDomains,
-      allowReserved,
+      allowAnyValid,
     )
   } else {
     if (opts.did === undefined) {
