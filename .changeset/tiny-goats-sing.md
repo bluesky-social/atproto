@@ -2,4 +2,4 @@
 "@atproto-labs/fetch": patch
 ---
 
-Remove optional dependeny on "zod"
+Remove optional dependency on "zod"
