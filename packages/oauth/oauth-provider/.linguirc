@@ -49,6 +49,7 @@
         "<rootDir>/src/assets/app"
       ],
       "exclude": [
+        "**/dist/**",
         "**/node_modules/**"
       ]
     }

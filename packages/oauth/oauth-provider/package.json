@@ -86,14 +86,15 @@
     "vite": "^6.2.0"
   },
   "scripts": {
-    "po:extract": "lingui extract --clean --debounce 500",
+    "po:extract": "lingui extract --clean",
     "po:compile": "lingui compile --typescript",
     "prebuild:frontend": "pnpm po:compile",
     "build:frontend": "rollup --config rollup.config.js",
     "build:backend": "tsc --build --force tsconfig.backend.json",
-    "build": "pnpm --parallel --stream '/^build:.+$/'",
     "start:ui": "vite",
-    "dev": "pnpm --parallel --stream '/^(build:frontend|po:extract)$/' --watch"
+    "dev:frontend": "pnpm run build:frontend --watch",
+    "dev:catalogs": "pnpm run po:extract --debounce 250 --watch > /dev/null",
+    "dev:messages": "pnpm run po:compile --debounce 500 --watch"
   },
   "postcss": {
     "plugins": {
