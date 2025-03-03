@@ -69,7 +69,7 @@ export function SignUpView({
       }
     >
       <WizardCard
-        doneLabel={<Trans>Sign Up</Trans>}
+        doneLabel={<Trans>Sign up</Trans>}
         onBack={onBack}
         onDone={(signal: AbortSignal) => {
           if (credentials && handle && hcaptchaToken !== false) {
