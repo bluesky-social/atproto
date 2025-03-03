@@ -14363,6 +14363,9 @@ export const schemaDict = {
         parameters: {
           type: 'params',
           properties: {
+            q: {
+              type: 'string',
+            },
             disabled: {
               type: 'boolean',
             },

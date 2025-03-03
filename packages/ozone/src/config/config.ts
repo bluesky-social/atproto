@@ -25,6 +25,7 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     poolMaxUses: env.dbPoolMaxUses,
     poolIdleTimeoutMs: env.dbPoolIdleTimeoutMs,
     materializedViewRefreshIntervalMs: env.dbMaterializedViewRefreshIntervalMs,
+    teamProfileRefreshIntervalMs: env.dbTeamProfileRefreshIntervalMs,
   }
 
   assert(env.appviewUrl, 'appviewUrl is required')
@@ -124,6 +125,7 @@ export type DatabaseConfig = {
   poolMaxUses?: number
   poolIdleTimeoutMs?: number
   materializedViewRefreshIntervalMs?: number
+  teamProfileRefreshIntervalMs?: number
 }
 
 export type AppviewConfig = {
