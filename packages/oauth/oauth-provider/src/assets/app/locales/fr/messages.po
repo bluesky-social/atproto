@@ -21,7 +21,7 @@ msgstr " et "
 msgid "<0/> is asking for permission to access your account (<1/>)."
 msgstr "<0/> demande la permission d'accéder à votre compte (<1/>)."
 
-#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:226
+#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:227
 msgid "2FA Confirmation"
 msgstr "Confirmation 2FA"
 
@@ -41,7 +41,7 @@ msgstr "Accéder aux données de votre compte (sauf les messages de chat)"
 msgid "Access your chat messages"
 msgstr "Accéder à vos messages de chat"
 
-#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:139
+#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:140
 msgid "Account"
 msgstr "Compte d'utilisateur"
 
@@ -103,7 +103,7 @@ msgid "Cancel"
 msgstr "Annuler"
 
 #. placeholder {0}: secondFactor.hint
-#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:239
+#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:240
 msgid "Check your {0} email for a login code and enter it here."
 msgstr "Vérifiez vos emails {0} pour un code de connexion et saisissez-le ici."
 
@@ -115,11 +115,15 @@ msgstr "Choisissez un nom d'utilisateur"
 msgid "Code"
 msgstr "Code"
 
+#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:137
+msgid "Confirm"
+msgstr "Confirmer"
+
 #: src/assets/app/views/authorize/sign-in/sign-in-view.tsx:65
 msgid "Confirm your password to continue"
 msgstr "Confirmez votre mot de passe pour continuer"
 
-#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:230
+#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:231
 msgid "Confirmation code"
 msgstr "Code de confirmation"
 
@@ -188,7 +192,7 @@ msgstr "Erreur"
 msgid "Forgot Password"
 msgstr "Mot de passe oublié"
 
-#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:197
+#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:198
 msgid "Forgot?"
 msgstr "Oublié ?"
 
@@ -281,12 +285,12 @@ msgstr "Mot de passe mis à jour !"
 msgid "Password with at least {MIN_PASSWORD_LENGTH} characters"
 msgstr "Mot de passe d'au moins {MIN_PASSWORD_LENGTH} caractères"
 
-#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:171
+#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:172
 msgid "Please verify the domain name of the website before entering your password. Never enter your password on a domain you do not trust."
 msgstr "Veuillez vérifier le nom de domaine du site web avant de saisir votre mot de passe. N'entrez jamais votre mot de passe sur un domaine auquel vous ne faites pas confiance."
 
-#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:213
-#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:218
+#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:214
+#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:219
 msgid "Remember this account on this device"
 msgstr "Se souvenir de ce compte sur cet appareil"
 
@@ -302,7 +306,7 @@ msgstr "Code de réinitialisation"
 msgid "Reset Password"
 msgstr "Réinitialiser le mot de passe"
 
-#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:195
+#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:196
 msgid "Reset your password"
 msgstr "Réinitialisez votre mot de passe"
 
@@ -314,12 +318,13 @@ msgstr "Sélectionner le domaine"
 msgid "Select from an existing account"
 msgstr "Sélectionner parmi les comptes existants"
 
-#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:209
+#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:210
 msgid "Session"
 msgstr "Session"
 
 #: src/assets/app/views/authorize/welcome/welcome-view.tsx:45
 #: src/assets/app/views/authorize/sign-in/sign-in-view.tsx:48
+#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:137
 msgid "Sign in"
 msgstr "Se connecter"
 
@@ -399,12 +404,12 @@ msgstr "Réponse inattendue du serveur"
 msgid "Uniquely identify you"
 msgstr "Vous identifier de façon unique"
 
-#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:144
 #: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:145
+#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:146
 msgid "Username or email address"
 msgstr "Nom d'utilisateur ou adresse email"
 
-#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:155
+#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:156
 msgid "Valid email address or username"
 msgstr "Adresse email ou nom d'utilisateur valide"
 
@@ -412,7 +417,7 @@ msgstr "Adresse email ou nom d'utilisateur valide"
 msgid "Verify you are human"
 msgstr "Vérifiez que vous êtes humain"
 
-#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:168
+#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:169
 msgid "Warning"
 msgstr "Avertissement"
 
