@@ -2,6 +2,8 @@ import type { IncomingMessage, ServerResponse } from 'node:http'
 import { writeJson } from './response.js'
 import { Handler, Middleware, NextFunction } from './types.js'
 
+const isNonNullable = <X>(x: X): x is NonNullable<X> => x != null
+
 export function combineMiddlewares<M extends Middleware<any, any, any>>(
   middlewares: Iterable<null | undefined | M>,
   options?: { skipKeyword?: string },
@@ -15,12 +17,11 @@ export function combineMiddlewares(
   middlewares: Iterable<null | undefined | Middleware<unknown>>,
   { skipKeyword }: { skipKeyword?: string } = {},
 ): Middleware<unknown> {
-  const middlewaresArray = Array.from(middlewares).filter(
-    (x): x is NonNullable<typeof x> => x != null,
-  )
+  const middlewaresArray = Array.from(middlewares).filter(isNonNullable)
 
   // Optimization: if there are no middlewares, return a noop middleware.
   if (middlewaresArray.length === 0) return (req, res, next) => void next()
+  if (middlewaresArray.length === 1) return middlewaresArray[0]
 
   return function (req, res, next) {
     let i = 0

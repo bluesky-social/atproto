@@ -115,6 +115,9 @@ export const isValidTld = (handle: string): boolean => {
 }
 
 export class InvalidHandleError extends Error {}
+/** @deprecated Never used */
 export class ReservedHandleError extends Error {}
+/** @deprecated Never used */
 export class UnsupportedDomainError extends Error {}
+/** @deprecated Never used */
 export class DisallowedDomainError extends Error {}

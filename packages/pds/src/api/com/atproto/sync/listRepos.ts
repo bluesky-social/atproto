@@ -1,5 +1,5 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { formatAccountStatus } from '../../../../account-manager'
+import { formatAccountStatus } from '../../../../account-manager/account-manager'
 import { AppContext } from '../../../../context'
 import { Cursor, GenericKeyset, paginate } from '../../../../db/pagination'
 import { Server } from '../../../../lexicon'

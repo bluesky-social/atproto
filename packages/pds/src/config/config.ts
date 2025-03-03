@@ -1,7 +1,7 @@
 import assert from 'node:assert'
 import path from 'node:path'
 import { DAY, HOUR, SECOND } from '@atproto/common'
-import { Customization } from '@atproto/oauth-provider'
+import { BrandingConfig, HcaptchaConfig } from '@atproto/oauth-provider'
 import { ServerEnvironment } from './env'
 
 // off-config but still from env:
@@ -261,13 +261,24 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     : {
         issuer: serviceCfg.publicUrl,
         provider: {
-          customization: {
+          hcaptcha:
+            env.hcaptchaSiteKey &&
+            env.hcaptchaSecretKey &&
+            env.hcaptchaTokenSalt
+              ? {
+                  siteKey: env.hcaptchaSiteKey,
+                  secretKey: env.hcaptchaSecretKey,
+                  tokenSalt: env.hcaptchaTokenSalt,
+                }
+              : undefined,
+          branding: {
             name: env.serviceName ?? 'Personal PDS',
             logo: env.logoUrl,
             colors: {
               brand: env.brandColor,
               error: env.errorColor,
               warning: env.warningColor,
+              success: env.successColor,
             },
             links: [
               {
@@ -291,8 +302,8 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
                 rel: 'help',
               },
             ].filter(
-              (f): f is typeof f & { href: NonNullable<(typeof f)['href']> } =>
-                f.href != null,
+              <T extends { href?: string }>(f: T): f is T & { href: string } =>
+                f.href != null && f.href !== '',
             ),
           },
         },
@@ -435,7 +446,8 @@ export type OAuthConfig = {
   provider:
     | false
     | {
-        customization: Customization
+        hcaptcha?: HcaptchaConfig
+        branding: BrandingConfig
       }
 }
 

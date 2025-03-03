@@ -1,18 +1,17 @@
 import { useEffect, useState } from 'react'
-
 import {
   AtpSignIn,
   CredentialSignInForm,
-} from './credential/credential-sign-in-form'
-import { OAuthSignIn, OAuthSignInForm } from './oauth/oauth-sign-in-form'
+} from './credential/credential-sign-in-form.tsx'
+import { OAuthSignIn, OAuthSignInForm } from './oauth/oauth-sign-in-form.tsx'
 
-export function AuthForm({
-  atpSignIn,
-  oauthSignIn,
-}: {
+export type AuthFormProps = {
   atpSignIn?: AtpSignIn
   oauthSignIn?: OAuthSignIn
-}) {
+  signUpUrl?: string
+}
+
+export function AuthForm({ atpSignIn, oauthSignIn, signUpUrl }: AuthFormProps) {
   const defaultMethod = oauthSignIn
     ? 'oauth'
     : atpSignIn
@@ -58,7 +57,9 @@ export function AuthForm({
         </button>
       </div>
 
-      {method === 'oauth' && <OAuthSignInForm signIn={oauthSignIn!} />}
+      {method === 'oauth' && (
+        <OAuthSignInForm signIn={oauthSignIn!} signUpUrl={signUpUrl} />
+      )}
       {method === 'credential' && <CredentialSignInForm signIn={atpSignIn!} />}
       {method == null && <div>No auth method available</div>}
     </div>
