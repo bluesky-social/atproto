@@ -11,30 +11,29 @@ import {
 import { pipe } from '@atproto-labs/pipe'
 
 export const hcaptchaTokenSchema = z.string().min(1)
+export type HcaptchaToken = z.infer<typeof hcaptchaTokenSchema>
 
-export type HcaptchaConfig = {
+export const hcaptchaConfigSchema = z.object({
   /**
    * The hCaptcha site key to use for the sign-up form.
    */
-  siteKey: string
-
+  siteKey: z.string().min(1),
   /**
    * The hCaptcha secret key to use for the sign-up form.
    */
-  secretKey: string
-
+  secretKey: z.string().min(1),
   /**
    * A salt to use when hashing client tokens.
    */
-  tokenSalt: string
-
+  tokenSalt: z.string().min(1),
   /**
    * The risk score over which the user is considered a threat and will be
    * denied access. This will be ignored if the enterprise features are not
    * available.
    */
-  scoreThreshold?: number
-}
+  scoreThreshold: z.number().optional(),
+})
+export type HcaptchaConfig = z.infer<typeof hcaptchaConfigSchema>
 
 /**
  * @see {@link https://docs.hcaptcha.com/#verify-the-user-response-server-side hCaptcha API}

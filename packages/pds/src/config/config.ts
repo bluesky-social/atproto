@@ -302,8 +302,8 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
                 rel: 'help',
               },
             ].filter(
-              (f): f is typeof f & { href: NonNullable<(typeof f)['href']> } =>
-                f.href != null,
+              <T extends { href?: string }>(f: T): f is T & { href: string } =>
+                f.href != null && f.href !== '',
             ),
           },
         },

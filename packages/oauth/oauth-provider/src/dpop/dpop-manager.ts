@@ -1,30 +1,42 @@
 import { createHash } from 'node:crypto'
 import { EmbeddedJWK, calculateJwkThumbprint, errors, jwtVerify } from 'jose'
+import { z } from 'zod'
 import { DPOP_NONCE_MAX_AGE } from '../constants.js'
 import { InvalidDpopProofError } from '../errors/invalid-dpop-proof-error.js'
 import { UseDpopNonceError } from '../errors/use-dpop-nonce-error.js'
-import { DpopNonce, DpopNonceInput } from './dpop-nonce.js'
+import {
+  DpopNonce,
+  DpopSecret,
+  dpopSecretSchema,
+  rotationIntervalSchema,
+} from './dpop-nonce.js'
 
 const { JOSEError } = errors
 
-export { DpopNonce, type DpopNonceInput }
-export type DpopManagerOptions = {
+export { DpopNonce, type DpopSecret }
+
+export const dpopManagerOptionsSchema = z.object({
   /**
    * Set this to `false` to disable the use of nonces in DPoP proofs. Set this
    * to a secret Uint8Array or hex encoded string to use a predictable seed for
    * all nonces (typically useful when multiple instances are running). Leave
    * undefined to generate a random seed at startup.
    */
-  dpopSecret?: false | DpopNonceInput
-  dpopStep?: number
-}
+  dpopSecret: z.union([z.literal(false), dpopSecretSchema]).optional(),
+  dpopRotationInterval: rotationIntervalSchema.optional(),
+})
+export type DpopManagerOptions = z.input<typeof dpopManagerOptionsSchema>
 
 export class DpopManager {
   protected readonly dpopNonce?: DpopNonce
 
-  constructor({ dpopSecret, dpopStep }: DpopManagerOptions = {}) {
+  constructor(options: DpopManagerOptions = {}) {
+    const { dpopSecret, dpopRotationInterval } =
+      dpopManagerOptionsSchema.parse(options)
     this.dpopNonce =
-      dpopSecret === false ? undefined : DpopNonce.from(dpopSecret, dpopStep)
+      dpopSecret === false
+        ? undefined
+        : new DpopNonce(dpopSecret, dpopRotationInterval)
   }
 
   nextNonce(): string | undefined {

@@ -19,7 +19,8 @@ export function SignUpDisclaimer({
   ...attrs
 }: SignUpDisclaimerProps) {
   const relevantLinks = links?.filter(
-    (l) => l.rel === 'privacy-policy' || l.rel === 'terms-of-service',
+    (l) =>
+      l.href && (l.rel === 'privacy-policy' || l.rel === 'terms-of-service'),
   )
 
   return (
@@ -32,7 +33,7 @@ export function SignUpDisclaimer({
         {relevantLinks && relevantLinks.length ? (
           relevantLinks.map((l, i, a) => (
             <span key={i}>
-              {i > 0 && (i < a.length - 1 ? ', ' : ' and ')}
+              {i > 0 && (i < a.length - 1 ? ', ' : <Trans> and </Trans>)}
               <a
                 href={l.href}
                 rel={l.rel}

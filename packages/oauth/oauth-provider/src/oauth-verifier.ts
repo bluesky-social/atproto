@@ -94,8 +94,10 @@ export class OAuthVerifier {
       : new ReplayStoreMemory(),
     accessTokenType = AccessTokenType.jwt,
 
-    ...dpopMgrOptions
+    ...rest
   }: OAuthVerifierOptions) {
+    const dpopMgrOptions: DpopManagerOptions = rest
+
     const issuerParsed = oauthIssuerIdentifierSchema.parse(issuer)
     const issuerUrl = new URL(issuerParsed)
 

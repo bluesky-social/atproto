@@ -61,6 +61,7 @@ import {
   DeviceInfo,
   DeviceManager,
   DeviceManagerOptions,
+  deviceManagerOptionsSchema,
 } from './device/device-manager.js'
 import { DeviceStore, asDeviceStore } from './device/device-store.js'
 import { AccessDeniedError } from './errors/access-denied-error.js'
@@ -101,6 +102,7 @@ import { AuthorizationResultAuthorize } from './output/build-authorize-data.js'
 import {
   BrandingConfig,
   Customization,
+  customizationSchema,
 } from './output/build-customization-data.js'
 import {
   buildErrorPayload,
@@ -123,15 +125,6 @@ import { isTokenId } from './token/token-id.js'
 import { TokenManager } from './token/token-manager.js'
 import { TokenStore, asTokenStore } from './token/token-store.js'
 import { VerifyTokenClaimsOptions } from './token/verify-token-claims.js'
-
-export type OAuthProviderStore = Partial<
-  ClientStore &
-    AccountStore &
-    DeviceStore &
-    TokenStore &
-    RequestStore &
-    ReplayStore
->
 
 export {
   type BrandingConfig,
@@ -202,11 +195,18 @@ export type OAuthProviderOptions = Override<
      * this store implements all the interfaces not provided in the other
      * `<name>Store` options.
      */
-    store?: OAuthProviderStore
+    store?: Partial<
+      AccountStore &
+        ClientStore &
+        DeviceStore &
+        ReplayStore &
+        RequestStore &
+        TokenStore
+    >
 
     accountStore?: AccountStore
-    deviceStore?: DeviceStore
     clientStore?: ClientStore
+    deviceStore?: DeviceStore
     replayStore?: ReplayStore
     requestStore?: RequestStore
     tokenStore?: TokenStore
@@ -287,7 +287,24 @@ export class OAuthProvider extends OAuthVerifier {
     // Customization
     ...rest
   }: OAuthProviderOptions) {
-    super({ replayStore, redis, ...rest })
+    const customization: Customization = customizationSchema.parse(rest)
+    const deviceManagerOptions: DeviceManagerOptions =
+      deviceManagerOptionsSchema.parse(rest)
+
+    // @NOTE: hooks don't really need a type parser, as all zod can actually
+    // check at runtime is the fact that the values are functions. The only way
+    // we would benefit from zod here would be to wrap the functions with a
+    // validator for the provided function's return types, which we do not add
+    // because it would impact runtime performance and we trust the users of
+    // this lib (basically ourselves) to rely on the typing system to ensure the
+    // correct types are returned.
+    const hooks: OAuthHooks = rest
+
+    // @NOTE: validation of super params (if we wanted to implement it) should
+    // be the responsibility of the super class.
+    const superOptions: OAuthVerifierOptions = rest
+
+    super({ replayStore, redis, ...superOptions })
 
     requestStore ??= redis
       ? new RequestStoreRedis({ redis })
@@ -296,18 +313,18 @@ export class OAuthProvider extends OAuthVerifier {
     this.authenticationMaxAge = authenticationMaxAge
     this.metadata = buildMetadata(this.issuer, this.keyset, metadata)
 
-    this.deviceManager = new DeviceManager(deviceStore, rest)
-    this.outputManager = new OutputManager(rest)
+    this.deviceManager = new DeviceManager(deviceStore, deviceManagerOptions)
+    this.outputManager = new OutputManager(customization)
     this.accountManager = new AccountManager(
       this.issuer,
       accountStore,
-      rest,
-      rest,
+      hooks,
+      customization,
     )
     this.clientManager = new ClientManager(
       this.metadata,
       this.keyset,
-      rest,
+      hooks,
       clientStore || null,
       loopbackMetadata || null,
       safeFetch,
@@ -318,12 +335,12 @@ export class OAuthProvider extends OAuthVerifier {
       requestStore,
       this.signer,
       this.metadata,
-      rest,
+      hooks,
     )
     this.tokenManager = new TokenManager(
       tokenStore,
       this.signer,
-      rest,
+      hooks,
       this.accessTokenType,
       tokenMaxAge,
     )

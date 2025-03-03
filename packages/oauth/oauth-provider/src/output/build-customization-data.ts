@@ -1,51 +1,53 @@
-import { HcaptchaConfig } from '../lib/hcaptcha.js'
+import { z } from 'zod'
+import { hcaptchaConfigSchema } from '../lib/hcaptcha.js'
+export { type HcaptchaConfig, hcaptchaConfigSchema } from '../lib/hcaptcha.js'
 
 // Matches colors defined in tailwind.config.js
-const colorNames = ['brand', 'error', 'warning', 'success'] as const
-type ColorName = (typeof colorNames)[number]
+export const colorNames = ['brand', 'error', 'warning', 'success'] as const
+export const colorNameSchema = z.enum(colorNames)
+export type ColorName = z.infer<typeof colorNameSchema>
 
-export type ColorsDefinition = {
-  [_ in ColorName]?: string
-}
+export const ColorsDefinitionSchema = z.record(colorNameSchema, z.string())
+export type ColorsDefinition = z.infer<typeof ColorsDefinitionSchema>
 
-export type LinkDefinition = {
-  title: string
-  href: string
-  rel?: string
-}
+export const linkDefinitionSchema = z.object({
+  title: z.string(),
+  href: z.string().url(),
+  rel: z.string().optional(),
+})
+export type LinkDefinition = z.infer<typeof linkDefinitionSchema>
 
-export type BrandingConfig = {
-  // Aesthetic customization
-  name?: string
-  logo?: string
-  colors?: ColorsDefinition
-  links?: readonly LinkDefinition[]
-}
+/**
+ * Aesthetic customization
+ */
+export const brandingConfigSchema = z.object({
+  name: z.string().optional(),
+  logo: z.string().optional(),
+  colors: ColorsDefinitionSchema.optional(),
+  links: z.array(linkDefinitionSchema).readonly().optional(),
+})
+export type BrandingConfig = z.infer<typeof brandingConfigSchema>
 
-export { type HcaptchaConfig }
-
-export type Customization = {
+export const customizationSchema = z.object({
   /**
    * Available user domains that can be used to sign up. A non-empty array
    * is required to enable the sign-up feature.
    */
-  availableUserDomains?: string[]
-
+  availableUserDomains: z.array(z.string()).optional(),
   /**
    * UI customizations
    */
-  branding?: BrandingConfig
-
+  branding: brandingConfigSchema.optional(),
   /**
    * Is an invite code required to sign up?
    */
-  inviteCodeRequired?: boolean
-
+  inviteCodeRequired: z.boolean().optional(),
   /**
    * Enables hCaptcha during sign-up.
    */
-  hcaptcha?: HcaptchaConfig
-}
+  hcaptcha: hcaptchaConfigSchema.optional(),
+})
+export type Customization = z.infer<typeof customizationSchema>
 
 export type CustomizationData = {
   // Functional customization
