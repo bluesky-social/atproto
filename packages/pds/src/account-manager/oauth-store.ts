@@ -334,8 +334,6 @@ export class OAuthStore
           : new HandleUnavailableError('syntax', err.message)
       }
 
-      console.error('HERE', err)
-
       throw err
     }
   }
