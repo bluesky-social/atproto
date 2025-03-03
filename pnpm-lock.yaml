@@ -1095,6 +1095,9 @@ importers:
       '@lingui/core':
         specifier: ^5.2.0
         version: 5.2.0(@lingui/babel-plugin-lingui-macro@5.2.0)(babel-plugin-macros@3.1.0)
+      '@lingui/detect-locale':
+        specifier: ^5.2.0
+        version: 5.2.0
       '@lingui/react':
         specifier: ^5.2.0
         version: 5.2.0(react@19.0.0)
@@ -6122,6 +6125,11 @@ packages:
       '@lingui/message-utils': 5.2.0
       babel-plugin-macros: 3.1.0
       unraw: 3.0.0
+    dev: true
+
+  /@lingui/detect-locale@5.2.0:
+    resolution: {integrity: sha512-kwdUba3uheqb4J/U+Cqn7UdNvSJSKYV3GUqR1KYRWakFZojHPgGdxQwGqjli1/BrIa98D2YRm5+fNrsEtxUkjw==}
+    engines: {node: '>=20.0.0'}
     dev: true
 
   /@lingui/format-po@5.2.0(typescript@5.6.3):

@@ -87,8 +87,12 @@ export function AcceptForm({
 
       <p>
         <Trans>
-          By clicking <b>Accept</b>, you allow this application to perform the
-          following actions in accordance to their{' '}
+          By clicking{' '}
+          <b>
+            <Trans>Accept</Trans>
+          </b>
+          , you allow this application to perform the following actions in
+          accordance to their{' '}
           <a
             role="link"
             href={clientMetadata.tos_uri}

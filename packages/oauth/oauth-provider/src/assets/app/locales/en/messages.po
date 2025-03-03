@@ -33,11 +33,11 @@ msgstr "A second authentication factor is required"
 msgid "Accept"
 msgstr "Accept"
 
-#: src/assets/app/views/authorize/accept/accept-form.tsx:140
+#: src/assets/app/views/authorize/accept/accept-form.tsx:144
 msgid "Access your account data (except chat messages)"
 msgstr "Access your account data (except chat messages)"
 
-#: src/assets/app/views/authorize/accept/accept-form.tsx:142
+#: src/assets/app/views/authorize/accept/accept-form.tsx:146
 msgid "Access your chat messages"
 msgstr "Access your chat messages"
 
@@ -280,7 +280,7 @@ msgstr "Please verify the domain name of the website before entering your passwo
 msgid "Remember this account on this device"
 msgstr "Remember this account on this device"
 
-#: src/assets/app/views/authorize/accept/accept-form.tsx:119
+#: src/assets/app/views/authorize/accept/accept-form.tsx:123
 msgid "Requested permissions"
 msgstr "Requested permissions"
 
@@ -381,7 +381,7 @@ msgstr "Type your desired username"
 msgid "Unexpected server response"
 msgstr "Unexpected server response"
 
-#: src/assets/app/views/authorize/accept/accept-form.tsx:138
+#: src/assets/app/views/authorize/accept/accept-form.tsx:142
 msgid "Uniquely identify you"
 msgstr "Uniquely identify you"
 

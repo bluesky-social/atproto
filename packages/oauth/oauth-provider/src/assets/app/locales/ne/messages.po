@@ -33,11 +33,11 @@ msgstr ""
 msgid "Accept"
 msgstr ""
 
-#: src/assets/app/views/authorize/accept/accept-form.tsx:140
+#: src/assets/app/views/authorize/accept/accept-form.tsx:144
 msgid "Access your account data (except chat messages)"
 msgstr ""
 
-#: src/assets/app/views/authorize/accept/accept-form.tsx:142
+#: src/assets/app/views/authorize/accept/accept-form.tsx:146
 msgid "Access your chat messages"
 msgstr ""
 
@@ -280,7 +280,7 @@ msgstr ""
 msgid "Remember this account on this device"
 msgstr ""
 
-#: src/assets/app/views/authorize/accept/accept-form.tsx:119
+#: src/assets/app/views/authorize/accept/accept-form.tsx:123
 msgid "Requested permissions"
 msgstr ""
 
@@ -381,7 +381,7 @@ msgstr ""
 msgid "Unexpected server response"
 msgstr ""
 
-#: src/assets/app/views/authorize/accept/accept-form.tsx:138
+#: src/assets/app/views/authorize/accept/accept-form.tsx:142
 msgid "Uniquely identify you"
 msgstr ""
 

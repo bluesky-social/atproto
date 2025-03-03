@@ -6,6 +6,7 @@ import type {
   CustomizationData,
   ErrorData,
 } from './backend-types.ts'
+import { negotiateLocale } from './lib/locale.ts'
 import * as allMessages from './locales/index.ts'
 import { AuthorizeView } from './views/authorize/authorize-view.tsx'
 import { ErrorView } from './views/error/error-view.tsx'
@@ -16,8 +17,14 @@ export type AppProps = {
   errorData?: ErrorData
 }
 
+const availableLocales = Object.keys(allMessages)
+
+console.error('availableLocales', availableLocales)
+const browserLocale = negotiateLocale(availableLocales)
+console.error('browserLocale', browserLocale)
+
 i18n.load(allMessages)
-i18n.activate('en')
+i18n.activate(browserLocale ?? 'en')
 
 export function App({ authorizeData, customizationData, errorData }: AppProps) {
   return (
