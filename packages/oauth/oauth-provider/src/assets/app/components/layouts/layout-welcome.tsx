@@ -54,10 +54,10 @@ export function LayoutWelcome({
 
       {links != null && links.length > 0 && (
         <nav className="w-full max-w-screen-sm overflow-hidden mt-4 border-t border-t-slate-200 dark:border-t-slate-700 flex flex-wrap justify-center">
-          {links.map((link) => (
+          {links.map((link, i) => (
             <a
               role="link"
-              key={link.href}
+              key={i}
               href={link.href}
               rel={link.rel}
               target="_blank"

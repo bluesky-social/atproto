@@ -4,9 +4,10 @@ import type { OAuthClientMetadata } from '@atproto/oauth-types'
 
 export type Account = {
   sub: string
-  aud: string
+  aud: string | [string, ...string[]]
 
   email?: string
+  email_verified?: boolean
   name?: string
   preferred_username?: string
   picture?: string

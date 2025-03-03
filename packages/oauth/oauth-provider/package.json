@@ -60,6 +60,7 @@
     "@lingui/core": "^5.2.0",
     "@lingui/react": "^5.2.0",
     "@lingui/swc-plugin": "^5.4.0",
+    "@lingui/vite-plugin": "^5.2.0",
     "@rollup/plugin-commonjs": "^28.0.2",
     "@rollup/plugin-node-resolve": "^16.0.0",
     "@rollup/plugin-swc": "^0.4.0",
@@ -71,24 +72,27 @@
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
     "@types/send": "^0.17.4",
+    "@vitejs/plugin-react-swc": "^3.8.0",
     "@web/rollup-plugin-import-meta-assets": "^2.2.1",
     "autoprefixer": "^10.4.17",
-    "postcss": "^8.4.33",
+    "postcss": "^8.4.38",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-error-boundary": "^5.0.0",
     "rollup": "^4.13.0",
     "rollup-plugin-postcss": "^4.0.2",
-    "tailwindcss": "^3.4.1",
-    "typescript": "^5.6.3"
+    "tailwindcss": "^3.4.3",
+    "typescript": "^5.6.3",
+    "vite": "^6.2.0"
   },
   "scripts": {
     "po:extract": "lingui extract --clean --debounce 500",
-    "po:compile": "lingui compile",
+    "po:compile": "lingui compile --typescript",
     "prebuild:frontend": "pnpm po:compile",
     "build:frontend": "rollup --config rollup.config.js",
     "build:backend": "tsc --build --force tsconfig.backend.json",
     "build": "pnpm --parallel --stream '/^build:.+$/'",
+    "start:ui": "vite",
     "dev": "pnpm --parallel --stream '/^(build:frontend|po:extract)$/' --watch"
   }
 }

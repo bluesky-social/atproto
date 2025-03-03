@@ -23,7 +23,7 @@ export class JsonClient<E extends { [Path: string]: EndpointDefinition }> {
     payload: E[P]['input'],
     options?: Options,
   ): Promise<E[P]['output']> {
-    const request = new Request(`${this.baseUrl}${path}`, {
+    const response = await fetch(`${this.baseUrl}${path}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -33,8 +33,6 @@ export class JsonClient<E extends { [Path: string]: EndpointDefinition }> {
       body: JSON.stringify(payload),
       signal: options?.signal,
     })
-
-    const response = await fetch(request)
 
     if (response.status === 204) {
       return undefined
