@@ -35,8 +35,15 @@ export async function sendWebPage(
     'img-src': ["'self'", 'data:', 'https:'],
     'connect-src': ["'self'"],
     'upgrade-insecure-requests': true,
+
+    // Prevents the CSP to be embedded in a page <meta>:
+    'frame-ancestors': ["'none'"],
   })
 
+  // @NOTE the csp string might become too long. However, since we need to
+  // specify the "frame-ancestors" directive, we can't use a meta tag. For that
+  // reason, we won't try to avoid too long headers and let the proxy throw
+  // in case of a too long header.
   res.setHeader('Content-Security-Policy', buildCsp(csp))
 
   // @TODO: make these headers configurable (?)
