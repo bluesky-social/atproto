@@ -7,10 +7,12 @@ import { BackgroundQueue } from '../background'
 import { OzoneConfig, OzoneSecrets } from '../config'
 import { Database } from '../db'
 import { ModerationService } from '../mod-service'
+import { TeamService } from '../team'
 import { getSigningKeyId } from '../util'
 import { EventPusher } from './event-pusher'
 import { EventReverser } from './event-reverser'
 import { MaterializedViewRefresher } from './materialized-view-refresher'
+import { TeamProfileSynchronizer } from './team-profile-synchronizer'
 
 export type DaemonContextOptions = {
   db: Database
@@ -20,6 +22,7 @@ export type DaemonContextOptions = {
   eventPusher: EventPusher
   eventReverser: EventReverser
   materializedViewRefresher: MaterializedViewRefresher
+  teamProfileSynchronizer: TeamProfileSynchronizer
 }
 
 export class DaemonContext {
@@ -67,6 +70,17 @@ export class DaemonContext {
       appviewAgent,
       createAuthHeaders,
     )
+    const teamService = TeamService.creator()
+    const teamProfileSynchronizer = new TeamProfileSynchronizer(
+      backgroundQueue,
+      {
+        createAuthHeaders: (method: string) =>
+          createAuthHeaders(cfg.appview.did, method),
+        agent: appviewAgent,
+      },
+      teamService(db),
+      cfg.db.teamProfileRefreshIntervalMs,
+    )
 
     const eventReverser = new EventReverser(db, modService)
 
@@ -83,6 +97,7 @@ export class DaemonContext {
       eventPusher,
       eventReverser,
       materializedViewRefresher,
+      teamProfileSynchronizer,
       ...(overrides ?? {}),
     })
   }
@@ -111,16 +126,22 @@ export class DaemonContext {
     return this.opts.materializedViewRefresher
   }
 
+  get teamProfileSynchronizer(): TeamProfileSynchronizer {
+    return this.opts.teamProfileSynchronizer
+  }
+
   async start() {
     this.eventPusher.start()
     this.eventReverser.start()
     this.materializedViewRefresher.start()
+    this.teamProfileSynchronizer.start()
   }
 
   async processAll() {
     // Sequential because the materialized view values depend on the events.
     await this.eventPusher.processAll()
     await this.materializedViewRefresher.run()
+    await this.teamProfileSynchronizer.run()
   }
 
   async destroy() {
@@ -129,6 +150,7 @@ export class DaemonContext {
         this.eventReverser.destroy(),
         this.eventPusher.destroy(),
         this.materializedViewRefresher.destroy(),
+        this.teamProfileSynchronizer.destroy(),
       ])
     } finally {
       await this.backgroundQueue.destroy()
