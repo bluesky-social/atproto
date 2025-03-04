@@ -19,7 +19,7 @@ import type { ManifestItem } from '@atproto-labs/rollup-plugin-bundle-manifest'
 // @ts-expect-error: This file is generated at build time
 // eslint-disable-next-line import/no-unresolved
 import appBundleManifestJson from './app/bundle-manifest.json'
-import { Asset } from './asset'
+import { Asset } from './asset.js'
 
 const appBundleManifest: Map<string, ManifestItem> = new Map(
   Object.entries(appBundleManifestJson),
@@ -27,7 +27,20 @@ const appBundleManifest: Map<string, ManifestItem> = new Map(
 
 export const ASSETS_URL_PREFIX = '/@atproto/oauth-provider/~assets/'
 
-export async function getAsset(inputFilename: string): Promise<Asset> {
+export function* enumerateAssets(entry: string): IteratorObject<Asset, void> {
+  const manifest = appBundleManifest.get(entry)
+  if (!manifest) throw new AssetNotFoundError(entry)
+
+  yield manifestItemToAsset(entry, manifest)
+
+  if (manifest.type === 'chunk') {
+    for (const file of manifest.dynamicImports) {
+      yield* enumerateAssets(file)
+    }
+  }
+}
+
+export function getAsset(inputFilename: string): Asset {
   const filename = posix.normalize(inputFilename)
 
   if (
@@ -41,6 +54,10 @@ export async function getAsset(inputFilename: string): Promise<Asset> {
   const manifest = appBundleManifest.get(filename)
   if (!manifest) throw new AssetNotFoundError(filename)
 
+  return manifestItemToAsset(filename, manifest)
+}
+
+function manifestItemToAsset(filename: string, manifest: ManifestItem): Asset {
   // When this package is used as a regular "node_modules" dependency, and gets
   // bundled by the consumer, the assets should be copied to the bundle's output
   // directory. In case the bundler does not support copying assets from the

@@ -1,6 +1,6 @@
 import { AtUri, INVALID_HANDLE } from '@atproto/syntax'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
-import { AccountManager } from '../account-manager'
+import { AccountManager } from '../account-manager/account-manager'
 import { ActorStoreReader } from '../actor-store/actor-store-reader'
 import { BskyAppView } from '../bsky-app-view'
 import { ImageUrlBuilder } from '../image/image-url-builder'

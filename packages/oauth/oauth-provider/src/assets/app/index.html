@@ -1,0 +1,156 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="main.css" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script>
+      /*
+       * This file's purpose is to provide a way to develop the UI without a
+       * running OAuth server. It mocks the server responses and provides
+       * configuration data to the UI.
+       *
+       * This file is not part of the production build.
+       *
+       * Start the development server with the following command from the
+       * oauth-provider root:
+       *
+       * ```sh
+       * pnpm run start:ui
+       * ```
+       *
+       * Then open the browser at http://localhost:5173/
+       */
+
+      /*
+       * PDS branding configuration
+       */
+
+      const name = 'My PDS'
+      const links = [
+        {
+          title: 'Home',
+          href: 'https://bsky.app',
+          rel: 'bookmark',
+        },
+        {
+          title: 'Terms of Service',
+          href: 'https://bsky.app',
+          rel: 'terms-of-service',
+        },
+        {
+          title: 'Privacy Policy',
+          href: 'https://bsky.app',
+          rel: 'privacy-policy',
+        },
+        {
+          title: 'Support',
+          href: 'https://bsky.app',
+          rel: 'help',
+        },
+      ]
+      const logo =
+        'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAAAAAAALAAAAAABAAEAAAICRAEAOw'
+
+      // Provide a value here to test the "sing-in only" flow
+      const loginHint = undefined // 'alice.test'
+
+      // Use empty array to disable the "sing-up" flow
+      const availableUserDomains = ['.test', '.example']
+
+      // Use non empty string to enable hCaptcha during "sing-up" flow
+      const hcaptchaSiteKey = undefined
+
+      /*
+       * Client branding configuration
+       */
+
+      // Use an "http://" URL to test the "an app on your device" flow
+      const clientId = 'https://example.com/client.json'
+      const clientName = 'My App'
+      const clientPolicyUri = 'https://bsky.app'
+      const clientTosUri = 'https://bsky.app'
+      const clientLogoUri = 'https://bsky.app'
+
+      // Mock data
+
+      const requestUri = 'foo-bar'
+
+      document.cookie = `csrf-${requestUri}=xyz; path=/`
+
+      window.__customizationData = {
+        availableUserDomains,
+        inviteCodeRequired: false,
+        hcaptchaSiteKey,
+        name,
+        links,
+        logo,
+      }
+
+      window.__authorizeData = {
+        clientId: clientId,
+        clientMetadata: {
+          client_id: clientId,
+          client_name: clientName,
+          policy_uri: clientPolicyUri,
+          tos_uri: clientTosUri,
+          logo_uri: clientLogoUri,
+        },
+        clientTrusted: false,
+        requestUri,
+        loginHint,
+        newSessionsRequireConsent: true,
+        sessions: [],
+        scopeDetails: [
+          { scope: 'atproto' },
+          { scope: 'transition:generic' },
+          { scope: 'transition:chat.bsky' },
+        ],
+      }
+
+      const origFetch = window.fetch
+
+      async function mockFetch(...args) {
+        const [input, init] = args
+
+        if (typeof input === 'string' && init.method === 'POST') {
+          const url = new URL(input, window.location)
+          switch (url.pathname) {
+            case '/oauth/authorize/sign-up':
+            case '/oauth/authorize/sign-in':
+              return new Response(
+                JSON.stringify({
+                  consentRequired: false,
+                  account: {
+                    sub: 'did:plc:123',
+                    name: 'Alice',
+                    email: 'alice@test.com',
+                    email_verified: false,
+                    preferred_username: 'alice.test',
+                    picture: 'https://cat.com/cat.jpg',
+                  },
+                }),
+                { status: 200 },
+              )
+            case '/oauth/authorize/verify-handle-availability':
+            case '/oauth/authorize/reset-password-request':
+            case '/oauth/authorize/reset-password-confirm':
+              return new Response(null, { status: 204 })
+          }
+        }
+
+        return origFetch.call(this, ...args)
+      }
+
+      Object.defineProperty(window, 'fetch', {
+        value: mockFetch,
+        writable: true,
+        configurable: true,
+      })
+    </script>
+    <script src="./main.tsx" type="module"></script>
+  </body>
+</html>

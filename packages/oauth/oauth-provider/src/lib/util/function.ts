@@ -6,17 +6,14 @@
  *   particularly useful when the function is a member of a "private" object.
  */
 export async function callAsync<F extends (...args: any[]) => unknown>(
-  this: ThisParameterType<F>,
   fn: F,
   ...args: Parameters<F>
 ): Promise<Awaited<ReturnType<F>>>
 export async function callAsync<F extends (...args: any[]) => unknown>(
-  this: ThisParameterType<F>,
   fn?: F,
   ...args: Parameters<F>
 ): Promise<Awaited<ReturnType<F>> | undefined>
 export async function callAsync<F extends (...args: any[]) => unknown>(
-  this: ThisParameterType<F>,
   fn?: F,
   ...args: Parameters<F>
 ): Promise<Awaited<ReturnType<F>> | undefined> {

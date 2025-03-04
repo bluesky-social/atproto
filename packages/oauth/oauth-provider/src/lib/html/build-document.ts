@@ -50,6 +50,8 @@ export const buildDocument = ({
     ${base && html`<base href="${base.href}" />`}
     ${meta?.some(isViewportMeta) ? null : defaultViewport}
     ${meta?.map(metaToHtml)}
+    ${styles?.map(linkPreload('style'))}
+    ${scripts?.map(linkPreload('script'))}
     ${links?.map(linkToHtml)}
     ${head} ${styles?.map(styleToHtml)}
   </head>
@@ -83,16 +85,27 @@ function* attrsToHtml(attrs?: Attrs) {
   }
 }
 
+function assetUrl(asset: AssetRef) {
+  return `${asset.url}?${asset.sha256}`
+}
+
+function linkPreload(as: 'script' | 'style') {
+  return (style: Html | AssetRef) =>
+    style instanceof Html
+      ? undefined
+      : html`<link rel="preload" href="${assetUrl(style)}" as="${as}" />`
+}
+
 function* scriptToHtml(script: Html | AssetRef) {
   yield script instanceof Html
     ? // prettier-ignore
       html`<script>${script}</script>` // hash validity requires no space around the content
-    : html`<script type="module" src="${script.url}?${script.sha256}"></script>`
+    : html`<script type="module" src="${assetUrl(script)}"></script>`
 }
 
 function* styleToHtml(style: Html | AssetRef) {
   yield style instanceof Html
     ? // prettier-ignore
       html`<style>${style}</style>` // hash validity requires no space around the content
-    : html`<link rel="stylesheet" href="${style.url}?${style.sha256}" />`
+    : html`<link rel="stylesheet" href="${assetUrl(style)}" />`
 }

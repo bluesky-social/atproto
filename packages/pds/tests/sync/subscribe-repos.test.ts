@@ -14,7 +14,7 @@ import * as repo from '@atproto/repo'
 import { readCar } from '@atproto/repo'
 import { ErrorFrame, Frame, MessageFrame, byFrame } from '@atproto/xrpc-server'
 import { AppContext } from '../../src'
-import { AccountStatus } from '../../src/account-manager'
+import { AccountStatus } from '../../src/account-manager/account-manager'
 import {
   Account as AccountEvt,
   Commit as CommitEvt,
