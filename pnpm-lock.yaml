@@ -1081,7 +1081,7 @@ importers:
         version: 3.23.8
     devDependencies:
       '@atproto-labs/rollup-plugin-bundle-manifest':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../internal/rollup-plugin-bundle-manifest
       '@hcaptcha/react-hcaptcha':
         specifier: ^1.11.2
