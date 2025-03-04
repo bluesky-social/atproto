@@ -3,6 +3,6 @@ export interface EventRunner {
   trackEvent(
     did: string,
     seq: number,
-    hanlder: () => Promise<void>,
+    handler: () => Promise<void>,
   ): Promise<void>
 }
