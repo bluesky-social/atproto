@@ -82,12 +82,6 @@ msgstr "Retour"
 msgid "Between {minLength} and {maxLength} characters"
 msgstr "Entre {minLength} et {maxLength} caractères"
 
-#: src/assets/app/views/authorize/sign-up/sign-up-account-form.tsx:144
-#: src/assets/app/views/authorize/sign-up/sign-up-account-form.tsx:149
-#: src/assets/app/views/authorize/sign-up/sign-up-account-form.tsx:150
-msgid "Birthdate"
-msgstr "Date de naissance"
-
 #: src/assets/app/views/authorize/accept/accept-form.tsx:89
 msgid "By clicking <0>Accept</0>, you allow this application to perform the following actions in accordance to their <1>terms of service</1> and <2>privacy policy</2>:"
 msgstr "En cliquant sur <0>Authoriser l'accès</0>, vous autorisez cette application à effectuer les actions suivantes conformément à leurs <1>conditions d'utilisation</1> et leur <2>politique de confidentialité</2> :"
@@ -141,7 +135,7 @@ msgstr "Refuser l'accès"
 msgid "Description"
 msgstr "Description"
 
-#: src/assets/app/views/authorize/sign-up/sign-up-account-form.tsx:117
+#: src/assets/app/views/authorize/sign-up/sign-up-account-form.tsx:114
 #: src/assets/app/components/forms/input-email-address.tsx:49
 #: src/assets/app/components/forms/input-email-address.tsx:50
 #: src/assets/app/components/forms/input-email-address.tsx:51
@@ -214,9 +208,9 @@ msgstr "Identifiant"
 msgid "Interface language selector"
 msgstr ""
 
-#: src/assets/app/views/authorize/sign-up/sign-up-account-form.tsx:100
-#: src/assets/app/views/authorize/sign-up/sign-up-account-form.tsx:104
-#: src/assets/app/views/authorize/sign-up/sign-up-account-form.tsx:105
+#: src/assets/app/views/authorize/sign-up/sign-up-account-form.tsx:97
+#: src/assets/app/views/authorize/sign-up/sign-up-account-form.tsx:101
+#: src/assets/app/views/authorize/sign-up/sign-up-account-form.tsx:102
 msgid "Invite code"
 msgstr "Code d'invitation"
 
@@ -266,7 +260,7 @@ msgstr "OK"
 msgid "Only contains letters, numbers, and hyphens"
 msgstr "Ne contient que des lettres, des chiffres et des traits d'union"
 
-#: src/assets/app/views/authorize/sign-up/sign-up-account-form.tsx:131
+#: src/assets/app/views/authorize/sign-up/sign-up-account-form.tsx:128
 #: src/assets/app/components/forms/input-password.tsx:51
 #: src/assets/app/components/forms/input-password.tsx:52
 #: src/assets/app/components/forms/input-password.tsx:53

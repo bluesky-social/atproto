@@ -8,16 +8,13 @@ import {
 } from '../../../components/forms/form-card-async.tsx'
 import { InputEmailAddress } from '../../../components/forms/input-email-address.tsx'
 import { InputNewPassword } from '../../../components/forms/input-new-password.tsx'
-import { InputText } from '../../../components/forms/input-text.tsx'
 import { InputToken } from '../../../components/forms/input-token.tsx'
-import { CalendarIcon } from '../../../components/utils/icons.tsx'
 import { mergeRefs } from '../../../lib/ref.ts'
 import { Override } from '../../../lib/util.ts'
 
 export type SignUpAccountFormOutput = {
   email: string
   password: string
-  birthdate: string
   inviteCode?: string
 }
 
@@ -62,7 +59,6 @@ export function SignUpAccountForm({
 
   const [email, setEmail] = useState(creds?.email)
   const [password, setPassword] = useState(creds?.password)
-  const [birthdate, setBirthdate] = useState(creds?.birthdate)
   const [inviteCode, setInviteCode] = useState(creds?.inviteCode)
 
   const formRef = useRef<AsyncActionController>(null)
@@ -70,15 +66,14 @@ export function SignUpAccountForm({
 
   const credentials = useMemo(
     () =>
-      email && password && birthdate && (!inviteCodeRequired || inviteCode)
+      email && password && (!inviteCodeRequired || inviteCode)
         ? {
             email,
             password,
-            birthdate,
             inviteCode: inviteCodeRequired ? inviteCode : undefined,
           }
         : undefined,
-    [email, password, birthdate, inviteCode, inviteCodeRequired],
+    [email, password, inviteCode, inviteCodeRequired],
   )
 
   useEffect(() => {
@@ -136,27 +131,6 @@ export function SignUpAccountForm({
           password={password}
           onPassword={(value) => {
             setPassword(value)
-            resetForm()
-          }}
-        />
-      </Fieldset>
-
-      <Fieldset label={<Trans>Birthdate</Trans>}>
-        <InputText
-          icon={<CalendarIcon className="w-5" />}
-          name="birthdate"
-          type="date"
-          aria-label={t`Birthdate`}
-          title={t`Birthdate`}
-          autoComplete="bday"
-          dir="auto"
-          enterKeyHint="done"
-          required
-          min="1908-06-08"
-          max={new Date().toISOString().split('T')[0]}
-          defaultValue={birthdate}
-          onChange={(event) => {
-            setBirthdate(event.target.value)
             resetForm()
           }}
         />

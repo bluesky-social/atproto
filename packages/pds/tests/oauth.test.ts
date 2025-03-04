@@ -19,18 +19,19 @@ class PageHelper implements AsyncDisposable {
     await this.page.goto(url)
   }
 
-  async navigateAfter(run: () => Promise<unknown>): Promise<void> {
+  async waitForNetworkIdle() {
+    await this.page.waitForNetworkIdle()
+  }
+
+  async navigationAction(run: () => Promise<unknown>): Promise<void> {
     const promise = this.page.waitForNavigation()
     await run()
     await promise
-  }
-
-  async ensureVisibility(selector: string) {
-    await this.getVisibleElement(selector)
+    await this.waitForNetworkIdle()
   }
 
   async checkTitle(expected: string) {
-    await this.page.waitForNetworkIdle()
+    await this.waitForNetworkIdle()
     await expect(this.page.title()).resolves.toBe(expected)
   }
 
@@ -40,11 +41,23 @@ class PageHelper implements AsyncDisposable {
     return elementHandle
   }
 
+  async clickOnButton(text: string) {
+    return this.clickOn(`button::-p-text(${text})`)
+  }
+
   async typeIn(selector: string, text: string) {
     const elementHandle = await this.getVisibleElement(selector)
     elementHandle.focus()
     await elementHandle.type(text)
     return elementHandle
+  }
+
+  async typeInInput(name: string, text: string) {
+    return this.typeIn(`input[name="${name}"]`, text)
+  }
+
+  async ensureTextVisibility(text: string, tag = 'p') {
+    await this.page.waitForSelector(`${tag}::-p-text(${text})`)
   }
 
   protected async getVisibleElement(selector: string) {
@@ -127,45 +140,38 @@ describe('oauth', () => {
 
     await page.checkTitle('OAuth Client Example')
 
-    await page.navigateAfter(async () => {
-      await page.clickOn('button::-p-text(Sign up)')
+    await page.navigationAction(async () => {
+      await page.clickOnButton('Sign up')
     })
 
     await page.checkTitle('Authentification')
 
-    await page.clickOn('button::-p-text(Créer un nouveau compte)')
+    await page.clickOnButton('Créer un nouveau compte')
 
-    await page.typeIn(
-      'input[placeholder="Saisissez le nom d\'utilisateur souhaité"]',
-      'bob',
-    )
+    await page.typeInInput('handle', 'bob')
 
-    await page.clickOn('button::-p-text(Suivant)')
+    await page.clickOnButton('Suivant')
 
-    await page.typeIn('input[placeholder="Email"]', 'bob@test.com')
+    await page.typeInInput('email', 'bob@test.com')
+    await page.typeInInput('password', 'bob-pass')
 
-    await page.typeIn(
-      'input[placeholder="Saisissez un mot de passe"]',
-      'bob-pass',
-    )
-
-    await page.typeIn('input[type="date"]', '01/01/1999')
-
-    await page.clickOn("button::-p-text(S'inscrire)")
+    await page.clickOnButton("S'inscrire")
 
     // Make sure the new account is propagated to the PLC directory, allowing
     // the client to resolve the account's did
     await network.processAll()
 
-    await page.navigateAfter(async () => {
-      await page.clickOn("button::-p-text(Authoriser l'accès)")
+    await page.navigationAction(async () => {
+      await page.clickOnButton("Authoriser l'accès")
     })
 
     await page.checkTitle('OAuth Client Example')
 
-    await page.ensureVisibility('p::-p-text(Logged in!)')
+    await page.ensureTextVisibility('Logged in!')
 
-    await page.clickOn('button::-p-text(Sign-out)')
+    await page.clickOnButton('Sign-out')
+
+    await page.waitForNetworkIdle()
 
     // TODO: Find out why we can't use "using" here
     await page[Symbol.asyncDispose]()
@@ -178,7 +184,7 @@ describe('oauth', () => {
 
     await page.checkTitle('OAuth Client Example')
 
-    await page.navigateAfter(async () => {
+    await page.navigationAction(async () => {
       const input = await page.typeIn(
         'input[placeholder="@handle, DID or PDS url"]',
         'alice.test',
@@ -192,23 +198,25 @@ describe('oauth', () => {
     await page.typeIn('input[type="password"]', 'alice-pass')
 
     // Make sure the warning is visible
-    await page.ensureVisibility('p::-p-text(Avertissement)')
+    await page.ensureTextVisibility('Avertissement')
 
     await page.clickOn(
       'label::-p-text(Se souvenir de ce compte sur cet appareil)',
     )
 
-    await page.clickOn('button::-p-text(Se connecter)')
+    await page.clickOnButton('Se connecter')
 
-    await page.navigateAfter(async () => {
-      await page.clickOn("button::-p-text(Authoriser l'accès)")
+    await page.navigationAction(async () => {
+      await page.clickOnButton("Authoriser l'accès")
     })
 
     await page.checkTitle('OAuth Client Example')
 
-    await page.ensureVisibility('p::-p-text(Logged in!)')
+    await page.ensureTextVisibility('Logged in!')
 
-    await page.clickOn('button::-p-text(Sign-out)')
+    await page.clickOnButton('Sign-out')
+
+    await page.waitForNetworkIdle()
 
     // TODO: Find out why we can't use "using" here
     await page[Symbol.asyncDispose]()

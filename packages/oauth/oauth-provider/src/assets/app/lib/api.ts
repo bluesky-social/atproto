@@ -22,7 +22,6 @@ export type SignUpData = {
   handle: string
   email: string
   password: string
-  birthdate: string
   inviteCode?: string
   hcaptchaToken?: string
 }

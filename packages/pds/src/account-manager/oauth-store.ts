@@ -120,8 +120,6 @@ export class OAuthStore
     handle,
     email,
     password,
-    // @TODO: where is the birthdate saved ?
-    // birthdate,
   }: SignUpData): Promise<Account> {
     // @NOTE Password strength already enforced by the OAuthProvider
 

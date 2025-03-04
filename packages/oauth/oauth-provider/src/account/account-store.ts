@@ -51,7 +51,6 @@ export const createAccountDataSchema = z
     handle: handleSchema,
     email: emailSchema,
     password: z.intersection(oldPasswordSchema, newPasswordSchema),
-    birthdate: z.string().date(),
     inviteCode: tokenSchema.optional(),
   })
   .strict()
