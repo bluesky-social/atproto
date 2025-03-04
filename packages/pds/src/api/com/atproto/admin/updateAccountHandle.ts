@@ -12,7 +12,7 @@ export default function (server: Server, ctx: AppContext) {
         input.body.handle,
         {
           did,
-          allowReserved: true,
+          allowAnyValid: true,
         },
       )
 

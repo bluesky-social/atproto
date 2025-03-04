@@ -101,10 +101,10 @@ export class AccountManager {
     handle: string,
     {
       did,
-      allowReserved,
+      allowAnyValid,
     }: {
       did?: string
-      allowReserved?: boolean
+      allowAnyValid?: boolean
     } = {},
   ): Promise<string> {
     const normalized = baseNormalizeAndValidate(handle)
@@ -117,7 +117,7 @@ export class AccountManager {
       )
     }
     // slur check
-    if (hasExplicitSlur(normalized)) {
+    if (!allowAnyValid && hasExplicitSlur(normalized)) {
       throw new InvalidRequestError(
         'Inappropriate language in handle',
         'InvalidHandle',
@@ -128,7 +128,7 @@ export class AccountManager {
       ensureHandleServiceConstraints(
         normalized,
         this.serviceHandleDomains,
-        allowReserved,
+        allowAnyValid,
       )
     } else {
       if (did == null) {
