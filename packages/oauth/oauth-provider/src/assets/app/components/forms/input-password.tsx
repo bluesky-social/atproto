@@ -7,7 +7,7 @@ import { ButtonToggleVisibility } from './button-toggle-visibility.tsx'
 import { InputText, InputTextProps } from './input-text.tsx'
 
 export type InputPasswordProps = Override<
-  Omit<InputTextProps, 'type'>,
+  Omit<InputTextProps, 'type' | 'children'>,
   {
     autoHide?: boolean
   }
@@ -24,7 +24,6 @@ export function InputPassword({
   icon = <LockIcon className="w-5" />,
   value,
   defaultValue = value,
-  children,
   ref,
   dir = 'auto',
   autoCapitalize = 'none',
@@ -84,8 +83,6 @@ export function InputPassword({
           {append}
         </>
       }
-    >
-      {children}
-    </InputText>
+    />
   )
 }

@@ -4,6 +4,7 @@ import {
   validateFetchSite,
   writeStream,
 } from '../lib/http/index.js'
+import { Asset } from './asset.js'
 import { ASSETS_URL_PREFIX, getAsset } from './index.js'
 
 export function authorizeAssetsMiddleware(): Middleware {
@@ -18,8 +19,13 @@ export function authorizeAssetsMiddleware(): Middleware {
     const filename = pathname.slice(ASSETS_URL_PREFIX.length)
     if (!filename) return next()
 
-    const asset = await getAsset(filename).catch(() => null)
-    if (!asset) return next()
+    let asset: Asset
+    try {
+      asset = getAsset(filename)
+    } catch {
+      // Filename not found or not valid
+      return next()
+    }
 
     try {
       // Allow "null" (ie. no header) to allow loading assets outside of a

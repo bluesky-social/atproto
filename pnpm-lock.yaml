@@ -1104,6 +1104,9 @@ importers:
       '@rollup/plugin-commonjs':
         specifier: ^28.0.2
         version: 28.0.2(rollup@4.18.0)
+      '@rollup/plugin-dynamic-import-vars':
+        specifier: ^2.1.5
+        version: 2.1.5(rollup@4.18.0)
       '@rollup/plugin-node-resolve':
         specifier: ^16.0.0
         version: 16.0.0(rollup@4.18.0)
@@ -6664,8 +6667,8 @@ packages:
       rollup: 4.18.0
     dev: true
 
-  /@rollup/plugin-dynamic-import-vars@2.1.2(rollup@4.18.0):
-    resolution: {integrity: sha512-4lr2oXxs9hcxtGGaK8s0i9evfjzDrAs7ngw28TqruWKTEm0+U4Eljb+F6HXGYdFv8xRojQlrQwV7M/yxeh3yzQ==}
+  /@rollup/plugin-dynamic-import-vars@2.1.5(rollup@4.18.0):
+    resolution: {integrity: sha512-Mymi24fd9hlRifdZV/jYIFj1dn99F34imiYu3KzlAcgBcRi3i9SucgW/VRo5SQ9K4NuQ7dCep6pFWgNyhRdFHQ==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
       rollup: ^1.20.0||^2.0.0||^3.0.0||^4.0.0
@@ -6676,7 +6679,7 @@ packages:
       '@rollup/pluginutils': 5.1.0(rollup@4.18.0)
       astring: 1.8.6
       estree-walker: 2.0.2
-      fast-glob: 3.3.1
+      fast-glob: 3.3.2
       magic-string: 0.30.10
       rollup: 4.18.0
     dev: true
@@ -7968,7 +7971,7 @@ packages:
     resolution: {integrity: sha512-nG7nUQqSJWdl63pBTmnIElJuFi2V1x9eVje19BJuFvfz266jSmZtX3m30ncb7fOJxQt3/ge+FVL8tuNI9+63dQ==}
     engines: {node: '>=18.0.0'}
     dependencies:
-      '@rollup/plugin-dynamic-import-vars': 2.1.2(rollup@4.18.0)
+      '@rollup/plugin-dynamic-import-vars': 2.1.5(rollup@4.18.0)
       '@rollup/pluginutils': 5.1.0(rollup@4.18.0)
       estree-walker: 2.0.2
       globby: 13.2.2
@@ -10693,7 +10696,7 @@ packages:
       '@nodelib/fs.walk': 1.2.8
       glob-parent: 5.1.2
       merge2: 1.4.1
-      micromatch: 4.0.5
+      micromatch: 4.0.8
     dev: true
 
   /fast-json-stable-stringify@2.1.0:
@@ -11189,7 +11192,7 @@ packages:
     dependencies:
       array-union: 2.1.0
       dir-glob: 3.0.1
-      fast-glob: 3.3.1
+      fast-glob: 3.3.2
       ignore: 5.2.4
       merge2: 1.4.1
       slash: 3.0.0

@@ -1,6 +1,9 @@
 /* eslint-env node */
 
 const { default: commonjs } = require('@rollup/plugin-commonjs')
+const {
+  default: dynamicImportVars,
+} = require('@rollup/plugin-dynamic-import-vars')
 const { default: nodeResolve } = require('@rollup/plugin-node-resolve')
 const { default: swc } = require('@rollup/plugin-swc')
 const { defineConfig } = require('rollup')
@@ -25,8 +28,8 @@ module.exports = defineConfig(
       output: {
         manualChunks: undefined,
         sourcemap: true,
-        file: 'dist/assets/app/main.js',
-        format: 'iife',
+        dir: 'dist/assets/app',
+        format: 'module',
       },
       plugins: [
         {
@@ -84,6 +87,8 @@ module.exports = defineConfig(
             },
           },
         }),
+        dynamicImportVars({ errorWhenNoFilesFound: true }),
+
         // Change `data` to `true` to include assets data in the manifest,
         // allowing for easier bundling of the backend code (eg. using esbuild) as
         // bundlers know how to bundle JSON files but not how to bundle assets

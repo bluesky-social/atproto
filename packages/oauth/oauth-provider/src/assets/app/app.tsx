@@ -1,13 +1,10 @@
-import { i18n } from '@lingui/core'
-import { I18nProvider } from '@lingui/react'
 import { ErrorBoundary } from 'react-error-boundary'
 import type {
   AuthorizeData,
   CustomizationData,
   ErrorData,
 } from './backend-types.ts'
-import { negotiateLocale } from './lib/locale.ts'
-import * as allMessages from './locales/index.ts'
+import { LocaleProvider } from './locales/locale-provider.tsx'
 import { AuthorizeView } from './views/authorize/authorize-view.tsx'
 import { ErrorView } from './views/error/error-view.tsx'
 
@@ -17,15 +14,9 @@ export type AppProps = {
   errorData?: ErrorData
 }
 
-const availableLocales = Object.keys(allMessages)
-const browserLocale = negotiateLocale(availableLocales)
-
-i18n.load(allMessages)
-i18n.activate(browserLocale ?? 'en')
-
 export function App({ authorizeData, customizationData, errorData }: AppProps) {
   return (
-    <I18nProvider i18n={i18n}>
+    <LocaleProvider>
       <ErrorBoundary
         fallbackRender={({ error }) => (
           <ErrorView error={error} customizationData={customizationData} />
@@ -40,6 +31,6 @@ export function App({ authorizeData, customizationData, errorData }: AppProps) {
           />
         )}
       </ErrorBoundary>
-    </I18nProvider>
+    </LocaleProvider>
   )
 }

@@ -55,8 +55,8 @@ export async function sendWebPage(
   return writeHtml(res, html.toString(), options)
 }
 
-function* assetsToCsp(
-  assets?: readonly (Html | AssetRef)[],
+export function* assetsToCsp(
+  assets?: Iterable<Html | AssetRef>,
 ): Generator<CspValue> {
   if (!assets) return
 

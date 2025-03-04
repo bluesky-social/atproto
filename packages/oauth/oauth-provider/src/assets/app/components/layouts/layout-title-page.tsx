@@ -1,6 +1,7 @@
 import { JSX, ReactNode } from 'react'
 import { clsx } from '../../lib/clsx.ts'
 import { Override } from '../../lib/util.ts'
+import { LocaleSelector } from '../../locales/locale-selector.tsx'
 
 export type LayoutTitlePageProps = Override<
   JSX.IntrinsicElements['div'],
@@ -37,8 +38,9 @@ export function LayoutTitlePage({
       <div
         className={clsx(
           'px-6 pt-4',
-          'md:max-w-lg',
-          'md:grid md:content-center md:justify-items-end',
+          'w-full',
+          'md:w-auto md:max-w-lg',
+          'flex flex-row md:flex-col',
           'md:self-stretch',
           'md:w-1/2 md:max-w-fix md:p-4',
           'md:text-right',
@@ -46,17 +48,27 @@ export function LayoutTitlePage({
           'md:bg-slate-100 md:dark:bg-slate-800',
         )}
       >
-        {title && (
-          <h1 className="text-xl md:text-2xl lg:text-5xl md:mt-4 mb-4 font-semibold text-brand">
-            {title}
-          </h1>
-        )}
+        <div className="flex-grow grid content-center justify-items-center md:justify-items-end">
+          {title && (
+            <h1
+              key="title"
+              className="text-xl md:text-2xl lg:text-5xl md:m-4 font-semibold text-brand"
+            >
+              {title}
+            </h1>
+          )}
 
-        {subtitle && (
-          <p className="hidden md:block max-w-xs text-slate-600 dark:text-slate-400">
-            {subtitle}
-          </p>
-        )}
+          {subtitle && (
+            <p
+              key="subtitle"
+              className="hidden md:block max-w-xs text-slate-600 dark:text-slate-400"
+            >
+              {subtitle}
+            </p>
+          )}
+        </div>
+
+        <LocaleSelector key="localeSelector" className="m-1 md:m-2" />
       </div>
 
       <div className="w-full px-6 md:max-w-3xl md:px-12">{children}</div>

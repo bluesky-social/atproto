@@ -58,7 +58,7 @@ msgstr "An application on your device"
 msgid "An unknown error occurred"
 msgstr "An unknown error occurred"
 
-#: src/assets/app/views/authorize/sign-in/sign-in-picker.tsx:136
+#: src/assets/app/views/authorize/sign-in/sign-in-picker.tsx:110
 msgid "Another account"
 msgstr "Another account"
 
@@ -70,7 +70,7 @@ msgstr "Authenticate"
 msgid "Authorize"
 msgstr "Authorize"
 
-#: src/assets/app/views/authorize/sign-in/sign-in-picker.tsx:46
+#: src/assets/app/views/authorize/sign-in/sign-in-picker.tsx:47
 #: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:132
 #: src/assets/app/views/authorize/reset-password/reset-password-view.tsx:65
 #: src/assets/app/views/authorize/reset-password/reset-password-view.tsx:95
@@ -206,9 +206,13 @@ msgstr "Having trouble? <0>Contact {0}</0>"
 msgid "Hide"
 msgstr "Hide"
 
-#: src/assets/app/views/authorize/sign-in/sign-in-picker.tsx:112
+#: src/assets/app/views/authorize/sign-in/sign-in-picker.tsx:86
 msgid "Identifier"
 msgstr "Identifier"
+
+#: src/assets/app/locales/locale-selector.tsx:48
+msgid "Interface language selector"
+msgstr "Interface language selector"
 
 #: src/assets/app/views/authorize/sign-up/sign-up-account-form.tsx:100
 #: src/assets/app/views/authorize/sign-up/sign-up-account-form.tsx:104
@@ -224,7 +228,7 @@ msgstr "Let's get your password reset!"
 msgid "Login complete"
 msgstr "Login complete"
 
-#: src/assets/app/views/authorize/sign-in/sign-in-picker.tsx:130
+#: src/assets/app/views/authorize/sign-in/sign-in-picker.tsx:104
 msgid "Login to account that is not listed"
 msgstr "Login to account that is not listed"
 
@@ -240,7 +244,7 @@ msgstr "Make visible"
 msgid "Moderate"
 msgstr "Moderate"
 
-#: src/assets/app/views/authorize/sign-in/sign-in-picker.tsx:106
+#: src/assets/app/views/authorize/sign-in/sign-in-picker.tsx:80
 msgid "Name"
 msgstr "Name"
 
@@ -263,9 +267,9 @@ msgid "Only contains letters, numbers, and hyphens"
 msgstr "Only contains letters, numbers, and hyphens"
 
 #: src/assets/app/views/authorize/sign-up/sign-up-account-form.tsx:131
+#: src/assets/app/components/forms/input-password.tsx:51
 #: src/assets/app/components/forms/input-password.tsx:52
 #: src/assets/app/components/forms/input-password.tsx:53
-#: src/assets/app/components/forms/input-password.tsx:54
 msgid "Password"
 msgstr "Password"
 
@@ -324,11 +328,11 @@ msgstr "Session"
 msgid "Sign in"
 msgstr "Sign in"
 
-#: src/assets/app/views/authorize/sign-in/sign-in-picker.tsx:74
+#: src/assets/app/views/authorize/sign-in/sign-in-picker.tsx:75
 msgid "Sign in as {0}"
 msgstr "Sign in as {0}"
 
-#: src/assets/app/views/authorize/sign-in/sign-in-picker.tsx:52
+#: src/assets/app/views/authorize/sign-in/sign-in-picker.tsx:53
 msgid "Sign in as..."
 msgstr "Sign in as..."
 

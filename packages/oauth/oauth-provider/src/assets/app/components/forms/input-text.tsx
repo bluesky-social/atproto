@@ -1,18 +1,11 @@
-import {
-  JSX,
-  MouseEventHandler,
-  ReactNode,
-  useCallback,
-  useContext,
-  useRef,
-} from 'react'
+import { JSX, ReactNode, useContext, useRef } from 'react'
 import { mergeRefs } from '../../lib/ref.ts'
 import { Override } from '../../lib/util.ts'
 import { FieldsetContext } from './fieldset.tsx'
 import { InputContainer } from './input-container.tsx'
 
 export type InputTextProps = Override<
-  JSX.IntrinsicElements['input'],
+  Omit<JSX.IntrinsicElements['input'], 'children'>,
   {
     icon?: ReactNode
     append?: ReactNode
@@ -26,7 +19,6 @@ export function InputText({
   className,
 
   // input
-  children,
   onFocus,
   onBlur,
   ref,
@@ -39,43 +31,33 @@ export function InputText({
   const inputRef = useRef<HTMLInputElement>(null)
   const focusedRef = useRef(false) // ref instead of state to avoid re-renders
 
-  const handleClick = useCallback<MouseEventHandler<HTMLDivElement>>(
-    (event) => {
-      if (inputRef.current !== event.target) {
-        event.preventDefault()
-        event.stopPropagation()
-        inputRef.current?.focus()
-      }
-    },
-    [],
-  )
-
-  const handleMouseDown = useCallback<MouseEventHandler<HTMLDivElement>>(
-    (event) => {
-      if (focusedRef.current && event.target !== inputRef.current) {
-        // Prevent "blur" event from firing when clicking outside the input
-        event.preventDefault()
-        event.stopPropagation()
-      }
-    },
-    [],
-  )
-
   return (
     <InputContainer
       icon={icon}
       append={append}
       className={className}
       tabIndex={-1}
-      onClick={handleClick}
-      onMouseDown={handleMouseDown}
+      onClick={(event) => {
+        if (inputRef.current !== event.target) {
+          event.preventDefault()
+          event.stopPropagation()
+          inputRef.current?.focus()
+        }
+      }}
+      onMouseDown={(event) => {
+        if (focusedRef.current && event.target !== inputRef.current) {
+          // Prevent "blur" event from firing when clicking outside the input
+          event.preventDefault()
+          event.stopPropagation()
+        }
+      }}
     >
       <input
         {...props}
         disabled={disabled ?? ctx.disabled}
         aria-labelledby={ariaLabelledBy ?? ctx.labelId}
         ref={mergeRefs([ref, inputRef])}
-        className="w-full bg-transparent bg-clip-padding text-base text-inherit outline-none dark:placeholder-gray-500"
+        className="w-full bg-transparent bg-clip-padding text-base text-inherit outline-none dark:placeholder-gray-500 text-ellipsis"
         onFocus={(event) => {
           onFocus?.(event)
           if (!event.defaultPrevented) focusedRef.current = true
@@ -85,7 +67,6 @@ export function InputText({
           if (!event.defaultPrevented) focusedRef.current = false
         }}
       />
-      {children}
     </InputContainer>
   )
 }

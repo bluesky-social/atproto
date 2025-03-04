@@ -50,7 +50,7 @@ export function InputLayout({
       )}
       <div className="flex-auto relative">{children}</div>
       {append && (
-        <div className="grow-0 shrink-0 flex items-center">{append}</div>
+        <div className="ml-1 grow-0 shrink-0 flex items-center">{append}</div>
       )}
     </div>
   )
