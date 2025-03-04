@@ -1,1 +1,6 @@
-../../../../interop-test-files/syntax/tid_syntax_valid.txt
+# 13 digits
+# 234567abcdefghijklmnopqrstuvwxyz
+
+3jzfcijpj2z2a
+7777777777777
+3zzzzzzzzzzzz

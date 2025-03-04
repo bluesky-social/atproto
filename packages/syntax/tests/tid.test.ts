@@ -11,6 +11,7 @@ describe('tid validation', () => {
   }
 
   it('conforms to interop valid tid', () => {
+    // NOTE: these test vector files are maintained in: https://github.com/bluesky-social/atproto-interop-tests
     const lineReader = readline.createInterface({
       input: fs.createReadStream(
         `${__dirname}/interop-files/tid_syntax_valid.txt`,
@@ -26,6 +27,7 @@ describe('tid validation', () => {
   })
 
   it('conforms to interop invalid tids', () => {
+    // NOTE: these test vector files are maintained in: https://github.com/bluesky-social/atproto-interop-tests
     const lineReader = readline.createInterface({
       input: fs.createReadStream(
         `${__dirname}/interop-files/tid_syntax_invalid.txt`,
