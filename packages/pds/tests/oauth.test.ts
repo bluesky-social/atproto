@@ -1,6 +1,11 @@
 import assert from 'node:assert'
 import { once } from 'node:events'
-import { Server, createServer } from 'node:http'
+import {
+  IncomingMessage,
+  Server,
+  ServerResponse,
+  createServer,
+} from 'node:http'
 import { AddressInfo } from 'node:net'
 import { type Browser, type Page, launch } from 'puppeteer'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
@@ -66,7 +71,7 @@ class PageHelper implements AsyncDisposable {
 describe('oauth', () => {
   let browser: Browser
   let network: TestNetworkNoAppView
-  let server: Server
+  let client: Server
 
   let appUrl: string
 
@@ -95,9 +100,11 @@ describe('oauth', () => {
       password: 'alice-pass',
     })
 
-    server = await createClientServer()
+    client = createServer(clientHandler)
+    client.listen(0)
+    await once(client, 'listening')
 
-    const { port } = server.address() as AddressInfo
+    const { port } = client.address() as AddressInfo
 
     appUrl = `http://127.0.0.1:${port}?${new URLSearchParams({
       plc_directory_url: network.plc.url,
@@ -108,7 +115,7 @@ describe('oauth', () => {
   })
 
   afterAll(async () => {
-    await server?.close()
+    await client?.close()
     await network?.close()
     await browser?.close()
   })
@@ -159,6 +166,9 @@ describe('oauth', () => {
     await page.ensureVisibility('p::-p-text(Logged in!)')
 
     await page.clickOn('button::-p-text(Sign-out)')
+
+    // TODO: Find out why we can't use "using" here
+    await page[Symbol.asyncDispose]()
   })
 
   it('Allows to sign-in trough OAuth', async () => {
@@ -199,27 +209,29 @@ describe('oauth', () => {
     await page.ensureVisibility('p::-p-text(Logged in!)')
 
     await page.clickOn('button::-p-text(Sign-out)')
+
+    // TODO: Find out why we can't use "using" here
+    await page[Symbol.asyncDispose]()
   })
 })
 
-async function createClientServer() {
-  const server = createServer((req, res) => {
-    const path = req.url?.split('?')[0].slice(1) || 'index.html'
-    const file = Object.hasOwn(files, path) ? files[path] : null
+function clientHandler(
+  req: IncomingMessage,
+  res: ServerResponse,
+  next?: (err?: unknown) => void,
+): void {
+  const path = req.url?.split('?')[0].slice(1) || 'index.html'
+  const file = Object.hasOwn(files, path) ? files[path] : null
 
-    if (file) {
-      res
-        .writeHead(200, 'OK', { 'content-type': file.type })
-        .end(Buffer.from(file.data, 'base64'))
-    } else {
-      res
-        .writeHead(404, 'Not Found', { 'content-type': 'text/plain' })
-        .end('Page not found')
-    }
-  })
-
-  server.listen(0)
-  await once(server, 'listening')
-
-  return server
+  if (file) {
+    res
+      .writeHead(200, 'OK', { 'content-type': file.type })
+      .end(Buffer.from(file.data, 'base64'))
+  } else if (next) {
+    next()
+  } else {
+    res
+      .writeHead(404, 'Not Found', { 'content-type': 'text/plain' })
+      .end('Page not found')
+  }
 }
