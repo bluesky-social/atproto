@@ -39,7 +39,7 @@ export function LayoutTitlePage({
         className={clsx(
           'px-6 pt-4',
           'w-full',
-          'md:w-auto md:max-w-lg',
+          'md:max-w-lg',
           'flex flex-row md:flex-col',
           'md:self-stretch',
           'md:w-1/2 md:max-w-fix md:p-4',
@@ -48,7 +48,7 @@ export function LayoutTitlePage({
           'md:bg-slate-100 md:dark:bg-slate-800',
         )}
       >
-        <div className="flex-grow grid content-center justify-items-center md:justify-items-end">
+        <div className="flex-grow grid content-center md:justify-items-end">
           {title && (
             <h1
               key="title"
