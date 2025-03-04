@@ -76,9 +76,9 @@ describe('oauth', () => {
       args: ['--accept-lang=fr-BE,en-GB,en'],
 
       // For debugging:
-      headless: false,
+      // headless: false,
       // devtools: true,
-      slowMo: 250 / 2,
+      // slowMo: 250,
     })
 
     network = await TestNetworkNoAppView.create({
