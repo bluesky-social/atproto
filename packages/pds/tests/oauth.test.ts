@@ -25,6 +25,7 @@ class PageHelper implements AsyncDisposable {
   }
 
   async checkTitle(expected: string) {
+    await this.page.waitForNetworkIdle()
     await expect(this.page.title()).resolves.toBe(expected)
   }
 
@@ -52,12 +53,13 @@ class PageHelper implements AsyncDisposable {
     return elementHandle
   }
 
-  [Symbol.asyncDispose]() {
+  async [Symbol.asyncDispose]() {
     return this.page.close()
   }
 
   static async from(browser: Browser) {
-    return new PageHelper(await browser.newPage())
+    const page = await browser.newPage()
+    return new PageHelper(page)
   }
 }
 
