@@ -71,11 +71,14 @@ describe('oauth', () => {
   beforeAll(async () => {
     browser = await launch({
       browser: 'chrome',
+      // @NOTE We are using another language than "en" as default language to
+      // test the language negotiation.
+      args: ['--accept-lang=fr-BE,en-GB,en'],
 
       // For debugging:
-      // headless: false,
+      headless: false,
       // devtools: true,
-      // slowMo: 250,
+      slowMo: 250 / 2,
     })
 
     network = await TestNetworkNoAppView.create({
@@ -115,29 +118,39 @@ describe('oauth', () => {
 
     await page.checkTitle('OAuth Client Example')
 
-    await page.navigateAfter(() => page.clickOn('button::-p-text(Sign up)'))
+    await page.navigateAfter(async () => {
+      await page.clickOn('button::-p-text(Sign up)')
+    })
 
-    await page.checkTitle('Authenticate')
+    await page.checkTitle('Authentification')
 
-    await page.clickOn('button::-p-text(Create a new account)')
+    await page.clickOn('button::-p-text(Créer un nouveau compte)')
 
-    await page.typeIn('input[placeholder="Type your desired username"]', 'bob')
+    await page.typeIn(
+      'input[placeholder="Saisissez le nom d\'utilisateur souhaité"]',
+      'bob',
+    )
 
-    await page.clickOn('button::-p-text(Next)')
+    await page.clickOn('button::-p-text(Suivant)')
 
     await page.typeIn('input[placeholder="Email"]', 'bob@test.com')
 
-    await page.typeIn('input[placeholder="Enter a password"]', 'bob-pass')
+    await page.typeIn(
+      'input[placeholder="Saisissez un mot de passe"]',
+      'bob-pass',
+    )
 
     await page.typeIn('input[type="date"]', '01/01/1999')
 
-    await page.clickOn('button::-p-text(Sign up)')
+    await page.clickOn("button::-p-text(S'inscrire)")
 
     // Make sure the new account is propagated to the PLC directory, allowing
     // the client to resolve the account's did
     await network.processAll()
 
-    await page.navigateAfter(() => page.clickOn('button::-p-text(Accept)'))
+    await page.navigateAfter(async () => {
+      await page.clickOn("button::-p-text(Authoriser l'accès)")
+    })
 
     await page.checkTitle('OAuth Client Example')
 
@@ -162,18 +175,22 @@ describe('oauth', () => {
       await input.press('Enter')
     })
 
-    await page.checkTitle('Sign in')
+    await page.checkTitle('Se connecter')
 
     await page.typeIn('input[type="password"]', 'alice-pass')
 
     // Make sure the warning is visible
-    await page.ensureVisibility('p::-p-text(Warning)')
+    await page.ensureVisibility('p::-p-text(Avertissement)')
 
-    await page.clickOn('label::-p-text(Remember this account on this device)')
+    await page.clickOn(
+      'label::-p-text(Se souvenir de ce compte sur cet appareil)',
+    )
 
-    await page.clickOn('button::-p-text(Submit)')
+    await page.clickOn('button::-p-text(Se connecter)')
 
-    await page.navigateAfter(() => page.clickOn('button::-p-text(Accept)'))
+    await page.navigateAfter(async () => {
+      await page.clickOn("button::-p-text(Authoriser l'accès)")
+    })
 
     await page.checkTitle('OAuth Client Example')
 
