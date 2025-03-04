@@ -61,10 +61,7 @@ module.exports = defineConfig((commandLineArguments) => {
               plugins: [['@lingui/swc-plugin', {}]],
             },
             minify: {
-              compress: {
-                module: true,
-                unused: true,
-              },
+              compress: true,
               mangle: true,
             },
             externalHelpers: true,

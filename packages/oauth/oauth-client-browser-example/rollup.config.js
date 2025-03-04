@@ -46,15 +46,13 @@ module.exports = defineConfig((commandLineArguments) => {
           sourceMaps: true,
           minify: !devMode,
           jsc: {
-            minify: devMode
-              ? {}
-              : {
-                  compress: {
-                    module: true,
-                    unused: true,
-                  },
-                  mangle: true,
-                },
+            minify: {
+              compress: {
+                module: true,
+                unused: true,
+              },
+              mangle: true,
+            },
             externalHelpers: true,
             target: 'es2020',
             parser: { syntax: 'typescript', tsx: true },
@@ -62,7 +60,7 @@ module.exports = defineConfig((commandLineArguments) => {
               useDefineForClassFields: true,
               react: { runtime: 'automatic' },
               optimizer: {
-                simplify: !devMode,
+                simplify: true,
                 globals: {
                   vars: { 'process.env.NODE_ENV': JSON.stringify(NODE_ENV) },
                 },
