@@ -11,12 +11,12 @@ import {
 // @NOTE run "pnpm run po:compile" to compile the messages from the PO files
 import { messages as en } from './en/messages.ts'
 import { loadMessages } from './load.ts'
-import { Locale, locales, resolveLocale } from './locales.ts'
+import { KnownLocale, knownLocales, locales, resolveLocale } from './locales.ts'
 
 export type LocaleContextValue = {
   locale: string
-  locales: Record<Locale, { name: string; flag?: string }>
-  setLocale: (locale: Locale) => void
+  locales: Partial<Record<KnownLocale, { name: string; flag?: string }>>
+  setLocale: (locale: KnownLocale) => void
 }
 
 const LocaleContext = createContext<LocaleContextValue | null>(null)
@@ -30,21 +30,34 @@ export function useLocaleContext(): LocaleContextValue {
 }
 
 export type LocaleProviderProps = {
+  availableLocales?: readonly string[]
   children?: ReactNode
 }
 
-export function LocaleProvider({ children }: LocaleProviderProps) {
+export function LocaleProvider({
+  availableLocales,
+  children,
+}: LocaleProviderProps) {
   // Bundle "en" messages with the app
   const [i18n] = useState(() => new I18n({ locale: 'en', messages: { en } }))
 
-  const [desiredLocale, setDesiredLocale] = useState(detectLocale)
+  const [desiredLocale, setDesiredLocale] = useState<KnownLocale>(() =>
+    detectLocale(
+      knownLocales.filter(
+        (l) => !availableLocales || availableLocales.includes(l),
+      ),
+    ),
+  )
   const [currentLocale, setCurrentLocale] = useState<string>(() => i18n.locale)
 
   const [loaded, setLoaded] = useState(desiredLocale === currentLocale)
 
   // Keep currentLocale in sync with i18n
   useEffect(() => {
-    const onChange = () => setCurrentLocale(i18n.locale)
+    const onChange = () => {
+      setCurrentLocale(i18n.locale)
+      document.documentElement.setAttribute('lang', i18n.locale)
+    }
     i18n.on('change', onChange)
     return () => i18n.removeListener('change', onChange)
   }, [i18n])
@@ -75,10 +88,14 @@ export function LocaleProvider({ children }: LocaleProviderProps) {
   const value = useMemo<LocaleContextValue>(
     () => ({
       locale: currentLocale,
-      locales,
+      locales: Object.fromEntries(
+        knownLocales
+          .filter((l) => !availableLocales || availableLocales.includes(l))
+          .map((l) => [l, locales[l]]),
+      ),
       setLocale: setDesiredLocale,
     }),
-    [currentLocale, locales, setDesiredLocale],
+    [currentLocale, availableLocales, locales, setDesiredLocale],
   )
 
   return (
@@ -88,19 +105,30 @@ export function LocaleProvider({ children }: LocaleProviderProps) {
   )
 }
 
-function detectLocale(): Locale {
+function detectLocale<L extends string>(
+  availableLocales: readonly L[],
+  fallbackLocale: L | 'en' = 'en',
+): L {
+  // Use, in priority, the locale that was set by the backend
+  if (typeof document === 'object') {
+    const htmlLang = document.documentElement.getAttribute('lang')
+    const resolved = htmlLang && resolveLocale(htmlLang, availableLocales)
+    if (resolved) return resolved
+  }
+
+  // Should that fail (though it should probably never), negotiate with the browser
   if (typeof navigator === 'object' && navigator.languages) {
     for (const locale of navigator.languages) {
-      const resolved = resolveLocale(locale)
+      const resolved = resolveLocale(locale, availableLocales)
       if (resolved) return resolved
     }
   }
 
-  if (typeof document === 'object') {
-    const htmlLang = document.documentElement.getAttribute('lang')
-    const resolved = htmlLang && resolveLocale(htmlLang)
-    if (resolved) return resolved
-  }
+  const fallback = resolveLocale(fallbackLocale, availableLocales)
+  if (fallback) return fallback
 
-  return 'en'
+  // Type-safety
+  throw new TypeError(
+    `Available locales should always contain "${fallbackLocale}"`,
+  )
 }

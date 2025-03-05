@@ -1,6 +1,7 @@
 import { ErrorBoundary } from 'react-error-boundary'
 import type {
   AuthorizeData,
+  AvailableLocales,
   CustomizationData,
   ErrorData,
 } from './backend-types.ts'
@@ -9,14 +10,20 @@ import { AuthorizeView } from './views/authorize/authorize-view.tsx'
 import { ErrorView } from './views/error/error-view.tsx'
 
 export type AppProps = {
+  availableLocales?: AvailableLocales
   authorizeData?: AuthorizeData
   customizationData?: CustomizationData
   errorData?: ErrorData
 }
 
-export function App({ authorizeData, customizationData, errorData }: AppProps) {
+export function App({
+  availableLocales,
+  authorizeData,
+  customizationData,
+  errorData,
+}: AppProps) {
   return (
-    <LocaleProvider>
+    <LocaleProvider availableLocales={availableLocales}>
       <ErrorBoundary
         fallbackRender={({ error }) => (
           <ErrorView error={error} customizationData={customizationData} />

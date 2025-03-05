@@ -24,6 +24,8 @@ export type Session = {
 
 export type LocalizedString = string | ({ en: string } & Record<string, string>)
 
+export type AvailableLocales = readonly string[]
+
 export type LinkDefinition = {
   title: LocalizedString
   href: string

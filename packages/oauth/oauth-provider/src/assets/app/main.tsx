@@ -5,7 +5,12 @@
 // This must be loaded before any dependency to ensure that global variables
 // cannot be accessed by other bundled JS files from node_modules:
 // eslint-disable-next-line import/order
-import { authorizeData, customizationData, errorData } from './backend-data.ts'
+import {
+  authorizeData,
+  availableLocales,
+  customizationData,
+  errorData,
+} from './backend-data.ts'
 
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
@@ -31,6 +36,7 @@ const container = document.getElementById('root')!
 createRoot(container).render(
   <StrictMode>
     <App
+      availableLocales={availableLocales}
       authorizeData={authorizeData}
       customizationData={customizationData}
       errorData={errorData}

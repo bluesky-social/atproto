@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import { mediaType } from '@hapi/accept'
+import { languages, mediaType } from '@hapi/accept'
 import createHttpError from 'http-errors'
 import type { Redis, RedisOptions } from 'ioredis'
 import { ZodError, z } from 'zod'
@@ -93,6 +93,7 @@ import {
   writeJson,
 } from './lib/http/index.js'
 import { RequestMetadata } from './lib/http/request.js'
+import { ifString } from './lib/util/cast.js'
 import { dateToEpoch, dateToRelativeSeconds } from './lib/util/date.js'
 import { Awaitable, Override } from './lib/util/type.js'
 import { CustomMetadata, buildMetadata } from './metadata/build-metadata.js'
@@ -1276,7 +1277,11 @@ export class OAuthProvider extends OAuthVerifier {
           )
 
           if (!res.headersSent) {
-            await server.outputManager.sendErrorPage(res, err)
+            await server.outputManager.sendErrorPage(res, err, {
+              preferredLocales: languages(
+                ifString(req.headers['accept-language']),
+              ),
+            })
           }
         }
       }
@@ -1556,7 +1561,11 @@ export class OAuthProvider extends OAuthVerifier {
           return sendAuthorizeRedirect(res, result)
         } else {
           await setupCsrfToken(req, res, csrfCookie(result.authorize.uri))
-          return server.outputManager.sendAuthorizePage(res, result)
+          return server.outputManager.sendAuthorizePage(res, result, {
+            preferredLocales: languages(
+              ifString(req.headers['accept-language']),
+            ),
+          })
         }
       }),
     )
