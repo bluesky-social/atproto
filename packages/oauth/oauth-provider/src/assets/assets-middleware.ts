@@ -42,7 +42,7 @@ export function authorizeAssetsMiddleware(): Middleware {
 
     res.setHeader('ETag', asset.sha256)
 
-    if (query === asset.sha256) {
+    if (asset.immutable || asset.sha256 === query) {
       res.setHeader('Cache-Control', 'public, max-age=31536000, immutable')
     }
 

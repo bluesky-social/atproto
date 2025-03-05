@@ -71,6 +71,9 @@ function manifestItemToAsset(filename: string, manifest: ManifestItem): Asset {
     url: posix.join(ASSETS_URL_PREFIX, filename),
     type: manifest.mime,
     sha256: manifest.sha256,
+    // Chunks are generated with a hash in the filename, allowing them not
+    // to require the sha256 in the url to be immutable.
+    immutable: manifest.type === 'chunk' && manifest.isDynamicEntry,
     createStream: data
       ? () => Readable.from(Buffer.from(data, 'base64'))
       : () =>
