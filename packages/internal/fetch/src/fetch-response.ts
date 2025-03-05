@@ -282,19 +282,28 @@ export function fetchJsonProcessor<T = Json>(
   )
 }
 
-// We are not using actual types imported from "zod" here to avoid
-// compatibility issues with different versions of the library.
-
-type ParseParams = {
-  path?: (string | number)[]
+export type SyncValidationSchema<S, P = unknown> = {
+  parse(value: unknown, params?: P): S
 }
 
-export function fetchJsonZodProcessor<S>(
-  schema: {
-    parseAsync(value: unknown, params?: ParseParams): PromiseLike<S>
-  },
-  params?: ParseParams,
+export type AsyncValidationSchema<S, P = unknown> = {
+  parseAsync(value: unknown, params?: P): Promise<S>
+}
+
+export function fetchJsonValidatorProcessor<S, P = unknown>(
+  schema: SyncValidationSchema<S, P> | AsyncValidationSchema<S, P>,
+  params?: P,
 ): Transformer<ParsedJsonResponse, S> {
-  return async (jsonResponse: ParsedJsonResponse): Promise<S> =>
-    schema.parseAsync(jsonResponse.json, params)
+  if ('parseAsync' in schema && typeof schema.parseAsync === 'function') {
+    return async (jsonResponse: ParsedJsonResponse): Promise<S> =>
+      schema.parseAsync(jsonResponse.json, params)
+  }
+  if ('parse' in schema && typeof schema.parse === 'function') {
+    return async (jsonResponse: ParsedJsonResponse): Promise<S> =>
+      schema.parse(jsonResponse.json, params)
+  }
+  throw new Error('Invalid schema')
 }
+
+/** @note Use {@link fetchJsonValidatorProcessor} instead */
+export const fetchJsonZodProcessor = fetchJsonValidatorProcessor

@@ -2,4 +2,4 @@
 "@atproto-labs/fetch": patch
 ---
 
-Remove optional dependency on "zod"
+Remove explicit dependency on "zod". Improved typing of `fetchJsonZodProcessor` function.
