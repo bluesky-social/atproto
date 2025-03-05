@@ -41,12 +41,12 @@ export function LayoutWelcome({
             src={logo}
             alt={name || `Logo`}
             aria-hidden
-            className="w-16 h-16 md:w-24 md:h-24 mb-8"
+            className="w-16 h-16 md:w-24 md:h-24 mb-4 md:mb-8"
           />
         )}
 
         {name && (
-          <h1 className="text-2xl md:text-4xl mb-8 mx-4 text-center font-bold">
+          <h1 className="text-2xl md:text-4xl mb-4 md:mb-8 mx-4 text-center font-bold">
             {name}
           </h1>
         )}
@@ -68,7 +68,10 @@ export function LayoutWelcome({
           </a>
         ))}
 
-        <LocaleSelector className="m-1 md:m-2" key="localeSelector" />
+        <LocaleSelector
+          className="m-1 md:m-2 text-xs md:text-sm"
+          key="localeSelector"
+        />
       </nav>
     </div>
   )

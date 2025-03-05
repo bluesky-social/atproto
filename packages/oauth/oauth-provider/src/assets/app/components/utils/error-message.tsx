@@ -1,6 +1,7 @@
 import { Trans } from '@lingui/react/macro'
 import { ReactNode, memo } from 'react'
 import {
+  EmailTakenError,
   HandleUnavailableError,
   InvalidCredentialsError,
   RequestExpiredError,
@@ -18,6 +19,10 @@ export const ErrorMessage = memo(function ErrorMessage({
 }: ApiErrorMessageProps): ReactNode {
   if (error instanceof InvalidCredentialsError) {
     return <Trans>Wrong identifier or password</Trans>
+  }
+
+  if (error instanceof EmailTakenError) {
+    return <Trans>This email is already used</Trans>
   }
 
   if (error instanceof HandleUnavailableError) {

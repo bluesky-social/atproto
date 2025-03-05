@@ -109,7 +109,7 @@ export class OAuthStore
     })
 
     if (account) {
-      throw new InvalidRequestError(`Email already taken: ${email}`)
+      throw new InvalidRequestError(`Email already taken`)
     }
   }
 

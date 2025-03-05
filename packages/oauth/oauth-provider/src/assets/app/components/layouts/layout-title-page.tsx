@@ -52,7 +52,7 @@ export function LayoutTitlePage({
           {title && (
             <h1
               key="title"
-              className="text-xl md:text-2xl lg:text-5xl md:m-4 font-semibold text-brand"
+              className="text-xl md:text-2xl lg:text-5xl md:my-4 font-semibold text-brand"
             >
               {title}
             </h1>

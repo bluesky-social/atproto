@@ -97,6 +97,9 @@ export class Api extends JsonClient<{
     if (HandleUnavailableError.is(json)) {
       return new HandleUnavailableError(json)
     }
+    if (EmailTakenError.is(json)) {
+      return new EmailTakenError(json)
+    }
     if (RequestExpiredError.is(json)) {
       return new RequestExpiredError(json)
     }
@@ -180,6 +183,16 @@ export class UnknownRequestUriError<
 > extends InvalidRequestError<P> {
   static is(json: unknown): json is UnknownRequestPayload {
     return super.is(json) && json.error_description === 'Unknown request_uri'
+  }
+}
+export type EmailTakenPayload = InvalidRequestPayload & {
+  error_description: 'Email already taken'
+}
+export class EmailTakenError<
+  P extends EmailTakenPayload = EmailTakenPayload,
+> extends InvalidRequestError<P> {
+  static is(json: unknown): json is EmailTakenPayload {
+    return super.is(json) && json.error_description === 'Email already taken'
   }
 }
 

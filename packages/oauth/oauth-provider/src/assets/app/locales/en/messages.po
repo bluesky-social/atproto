@@ -26,7 +26,7 @@ msgstr "<0/> is asking for permission to access your account (<1/>)."
 msgid "2FA Confirmation"
 msgstr "2FA Confirmation"
 
-#: src/assets/app/components/utils/error-message.tsx:42
+#: src/assets/app/components/utils/error-message.tsx:47
 msgid "A second authentication factor is required"
 msgstr "A second authentication factor is required"
 
@@ -50,7 +50,7 @@ msgstr "Already have a code?"
 msgid "An application on your device"
 msgstr "An application on your device"
 
-#: src/assets/app/components/utils/error-message.tsx:56
+#: src/assets/app/components/utils/error-message.tsx:61
 msgid "An unknown error occurred"
 msgstr "An unknown error occurred"
 
@@ -365,31 +365,35 @@ msgstr "Support"
 msgid "Terms of Service"
 msgstr "Terms of Service"
 
-#: src/assets/app/components/utils/error-message.tsx:37
+#: src/assets/app/components/utils/error-message.tsx:42
 msgid "That handle cannot be used"
 msgstr "That handle cannot be used"
 
-#: src/assets/app/components/utils/error-message.tsx:28
+#: src/assets/app/components/utils/error-message.tsx:33
 msgid "The domain name is not allowed"
 msgstr "The domain name is not allowed"
 
-#: src/assets/app/components/utils/error-message.tsx:30
+#: src/assets/app/components/utils/error-message.tsx:35
 msgid "The handle contains inappropriate language"
 msgstr "The handle contains inappropriate language"
 
-#: src/assets/app/components/utils/error-message.tsx:35
+#: src/assets/app/components/utils/error-message.tsx:40
 msgid "The handle is already in use"
 msgstr "The handle is already in use"
 
-#: src/assets/app/components/utils/error-message.tsx:26
+#: src/assets/app/components/utils/error-message.tsx:31
 msgid "The handle is invalid"
 msgstr "The handle is invalid"
 
-#: src/assets/app/components/utils/error-message.tsx:33
+#: src/assets/app/components/utils/error-message.tsx:25
+msgid "This email is already used"
+msgstr "This email is already used"
+
+#: src/assets/app/components/utils/error-message.tsx:38
 msgid "This handle is reserved"
 msgstr "This handle is reserved"
 
-#: src/assets/app/components/utils/error-message.tsx:49
+#: src/assets/app/components/utils/error-message.tsx:54
 msgid "This sign-in session has expired"
 msgstr "This sign-in session has expired"
 
@@ -404,7 +408,7 @@ msgstr "Too short"
 msgid "Type your desired username"
 msgstr "Type your desired username"
 
-#: src/assets/app/components/utils/error-message.tsx:53
+#: src/assets/app/components/utils/error-message.tsx:58
 msgid "Unexpected server response"
 msgstr "Unexpected server response"
 
@@ -441,7 +445,7 @@ msgstr "We're so excited to have you join us!"
 msgid "Weak"
 msgstr "Weak"
 
-#: src/assets/app/components/utils/error-message.tsx:20
+#: src/assets/app/components/utils/error-message.tsx:21
 msgid "Wrong identifier or password"
 msgstr "Wrong identifier or password"
 
