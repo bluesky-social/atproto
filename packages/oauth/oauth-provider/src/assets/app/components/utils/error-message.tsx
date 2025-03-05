@@ -23,7 +23,7 @@ export const ErrorMessage = memo(function ErrorMessage({
   if (error instanceof HandleUnavailableError) {
     switch (error.reason) {
       case 'syntax':
-        return <Trans>The handle contains invalid characters</Trans>
+        return <Trans>The handle is invalid</Trans>
       case 'domain':
         return <Trans>The domain name is not allowed</Trans>
       case 'slur':

@@ -377,12 +377,12 @@ msgstr ""
 msgid "The handle contains inappropriate language"
 msgstr ""
 
-#: src/assets/app/components/utils/error-message.tsx:26
-msgid "The handle contains invalid characters"
-msgstr ""
-
 #: src/assets/app/components/utils/error-message.tsx:35
 msgid "The handle is already in use"
+msgstr ""
+
+#: src/assets/app/components/utils/error-message.tsx:26
+msgid "The handle is invalid"
 msgstr ""
 
 #: src/assets/app/components/utils/error-message.tsx:33

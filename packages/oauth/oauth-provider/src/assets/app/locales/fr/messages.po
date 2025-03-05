@@ -377,13 +377,13 @@ msgstr "Le nom de domaine n'est pas autorisé"
 msgid "The handle contains inappropriate language"
 msgstr "Le pseudonyme contient un langage inapproprié"
 
-#: src/assets/app/components/utils/error-message.tsx:26
-msgid "The handle contains invalid characters"
-msgstr "Le pseudonyme contient des caractères non valides"
-
 #: src/assets/app/components/utils/error-message.tsx:35
 msgid "The handle is already in use"
 msgstr "Ce pseudonyme est déjà utilisé"
+
+#: src/assets/app/components/utils/error-message.tsx:26
+msgid "The handle is invalid"
+msgstr "Le pseudonyme est invalide"
 
 #: src/assets/app/components/utils/error-message.tsx:33
 msgid "This handle is reserved"

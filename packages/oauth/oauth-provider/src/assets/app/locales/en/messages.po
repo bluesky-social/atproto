@@ -377,13 +377,13 @@ msgstr "The domain name is not allowed"
 msgid "The handle contains inappropriate language"
 msgstr "The handle contains inappropriate language"
 
-#: src/assets/app/components/utils/error-message.tsx:26
-msgid "The handle contains invalid characters"
-msgstr "The handle contains invalid characters"
-
 #: src/assets/app/components/utils/error-message.tsx:35
 msgid "The handle is already in use"
 msgstr "The handle is already in use"
+
+#: src/assets/app/components/utils/error-message.tsx:26
+msgid "The handle is invalid"
+msgstr "The handle is invalid"
 
 #: src/assets/app/components/utils/error-message.tsx:33
 msgid "This handle is reserved"
