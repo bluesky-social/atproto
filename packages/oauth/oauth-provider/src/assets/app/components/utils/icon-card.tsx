@@ -37,7 +37,6 @@ export function IconCard({
     >
       {icon && (
         <div
-          aria-hidden
           className={clsx(
             'self-start shrink-0 grow-0',
             'w-8 h-12',

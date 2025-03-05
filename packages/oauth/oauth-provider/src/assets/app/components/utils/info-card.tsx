@@ -28,6 +28,7 @@ export const InfoCard = memo(function InfoCard({
       )}
       icon={
         <AlertIcon
+          aria-hidden
           className={clsx(
             'fill-current h-4 w-4',
             role === 'alert' ? 'text-error-c' : 'text-brand',
