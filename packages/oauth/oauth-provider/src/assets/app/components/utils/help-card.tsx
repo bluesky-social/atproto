@@ -21,7 +21,6 @@ export function HelpCard({
 
   if (!helpLink) return null
 
-  // @TODO translate
   return (
     <p
       {...props}

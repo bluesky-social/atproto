@@ -62,8 +62,6 @@ export function FormCardAsync({
     onLoading,
   })
 
-  // @TODO translate button labels
-
   return (
     <FormCard
       {...props}
