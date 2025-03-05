@@ -2,7 +2,7 @@ import type { ServerResponse } from 'node:http'
 import { Asset } from '../assets/asset.js'
 import { enumerateAssets, getAsset } from '../assets/index.js'
 import { CspConfig, mergeCsp } from '../lib/csp/index.js'
-import { Html, cssCode, html } from '../lib/html/index.js'
+import { Html, LinkAttrs, cssCode, html, isLinkRel } from '../lib/html/index.js'
 import {
   AuthorizationResultAuthorize,
   buildAuthorizeData,
@@ -10,6 +10,7 @@ import {
 import {
   Customization,
   LinkDefinition,
+  Locale,
   buildCustomizationCss,
   buildCustomizationData,
 } from './build-customization-data.js'
@@ -68,20 +69,22 @@ export class OutputManager {
     res: ServerResponse,
     data: AuthorizationResultAuthorize,
   ): Promise<void> {
+    const lang: Locale = 'en'
     return sendWebPage(res, {
       scripts: [
         declareBackendData('__authorizeData', buildAuthorizeData(data)),
         ...this.scripts,
       ],
       styles: this.styles,
-      links: this.links,
-      htmlAttrs: { lang: 'en' },
+      links: this.buildLinks(lang),
+      htmlAttrs: { lang },
       body: html`<div id="root"></div>`,
       csp: this.csp,
     })
   }
 
   async sendErrorPage(res: ServerResponse, err: unknown): Promise<void> {
+    const lang: Locale = 'en'
     return sendWebPage(res, {
       status: buildErrorStatus(err),
       scripts: [
@@ -89,10 +92,22 @@ export class OutputManager {
         ...this.scripts,
       ],
       styles: this.styles,
-      links: this.links,
-      htmlAttrs: { lang: 'en' },
+      links: this.buildLinks(lang),
+      htmlAttrs: { lang },
       body: html`<div id="root"></div>`,
       csp: this.csp,
     })
+  }
+
+  buildLinks(locale: Locale) {
+    return this.links
+      ?.map(({ rel, href, title }: LinkDefinition): LinkAttrs | undefined =>
+        isLinkRel(rel)
+          ? typeof title === 'string'
+            ? { href, rel, title }
+            : { href, rel, title: title[locale] || title.en }
+          : undefined,
+      )
+      .filter((v) => v != null)
   }
 }

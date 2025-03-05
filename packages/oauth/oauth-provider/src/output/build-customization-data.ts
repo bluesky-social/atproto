@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { hcaptchaConfigSchema } from '../lib/hcaptcha.js'
+import { isLinkRel } from '../lib/html/build-document.js'
 export { type HcaptchaConfig, hcaptchaConfigSchema } from '../lib/hcaptcha.js'
 
 // Matches colors defined in tailwind.config.js
@@ -10,10 +11,30 @@ export type ColorName = z.infer<typeof colorNameSchema>
 export const ColorsDefinitionSchema = z.record(colorNameSchema, z.string())
 export type ColorsDefinition = z.infer<typeof ColorsDefinitionSchema>
 
+export const localeSchema = z
+  .string()
+  .regex(/^[a-z]{2}(-[A-Z]{2})?$/, 'Invalid locale')
+export type Locale = z.infer<typeof localeSchema>
+
+export const multiLangStringSchema = z.intersection(
+  z.object({ en: z.string() }), // en is required
+  z.record(localeSchema, z.union([z.string(), z.undefined()])),
+)
+export type MultiLangString = z.infer<typeof multiLangStringSchema>
+
+export const localizedStringSchema = z.union([
+  z.string(),
+  multiLangStringSchema,
+])
+export type LocalizedString = z.infer<typeof localizedStringSchema>
+
+export const linkRelSchema = z.string().refine(isLinkRel, 'Invalid link rel')
+export type LinkRel = z.infer<typeof linkRelSchema>
+
 export const linkDefinitionSchema = z.object({
-  title: z.string(),
+  title: localizedStringSchema,
   href: z.string().url(),
-  rel: z.string().optional(),
+  rel: linkRelSchema.optional(),
 })
 export type LinkDefinition = z.infer<typeof linkDefinitionSchema>
 

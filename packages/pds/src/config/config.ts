@@ -282,24 +282,24 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
             },
             links: [
               {
-                title: 'Home',
+                title: { en: 'Home', fr: 'Accueil' },
                 href: env.homeUrl,
-                rel: 'bookmark',
+                rel: 'canonical' as const, // Prevents login page from being indexed
               },
               {
-                title: 'Terms of Service',
+                title: { en: 'Terms of Service' },
                 href: env.termsOfServiceUrl,
-                rel: 'terms-of-service',
+                rel: 'terms-of-service' as const,
               },
               {
-                title: 'Privacy Policy',
+                title: { en: 'Privacy Policy' },
                 href: env.privacyPolicyUrl,
-                rel: 'privacy-policy',
+                rel: 'privacy-policy' as const,
               },
               {
-                title: 'Support',
+                title: { en: 'Support' },
                 href: env.supportUrl,
-                rel: 'help',
+                rel: 'help' as const,
               },
             ].filter(
               <T extends { href?: string }>(f: T): f is T & { href: string } =>

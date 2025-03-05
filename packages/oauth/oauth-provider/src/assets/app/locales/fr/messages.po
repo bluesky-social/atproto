@@ -197,7 +197,7 @@ msgstr "Vous rencontrez des difficultés ? <0>Contactez le support</0>"
 msgid "Hide"
 msgstr "Cacher"
 
-#: src/assets/app/components/utils/link-title.tsx:16
+#: src/assets/app/components/utils/link-title.tsx:15
 msgid "Home"
 msgstr "Accueil"
 
@@ -285,7 +285,7 @@ msgid "Please verify the domain name of the website before entering your passwor
 msgstr "Veuillez vérifier le nom de domaine du site web avant de saisir votre mot de passe. N'entrez jamais votre mot de passe sur un domaine auquel vous ne faites pas confiance."
 
 #: src/assets/app/views/authorize/sign-up/sign-up-disclaimer.tsx:52
-#: src/assets/app/components/utils/link-title.tsx:18
+#: src/assets/app/components/utils/link-title.tsx:17
 msgid "Privacy Policy"
 msgstr "Politique de Confidentialité"
 
@@ -352,12 +352,12 @@ msgstr "Fort"
 msgid "Submit"
 msgstr "Soumettre"
 
-#: src/assets/app/components/utils/link-title.tsx:22
+#: src/assets/app/components/utils/link-title.tsx:21
 msgid "Support"
 msgstr "Support"
 
 #: src/assets/app/views/authorize/sign-up/sign-up-disclaimer.tsx:50
-#: src/assets/app/components/utils/link-title.tsx:20
+#: src/assets/app/components/utils/link-title.tsx:19
 msgid "Terms of Service"
 msgstr "Conditions d'Utilisation"
 

@@ -197,7 +197,7 @@ msgstr ""
 msgid "Hide"
 msgstr ""
 
-#: src/assets/app/components/utils/link-title.tsx:16
+#: src/assets/app/components/utils/link-title.tsx:15
 msgid "Home"
 msgstr ""
 
@@ -285,7 +285,7 @@ msgid "Please verify the domain name of the website before entering your passwor
 msgstr ""
 
 #: src/assets/app/views/authorize/sign-up/sign-up-disclaimer.tsx:52
-#: src/assets/app/components/utils/link-title.tsx:18
+#: src/assets/app/components/utils/link-title.tsx:17
 msgid "Privacy Policy"
 msgstr ""
 
@@ -352,12 +352,12 @@ msgstr ""
 msgid "Submit"
 msgstr ""
 
-#: src/assets/app/components/utils/link-title.tsx:22
+#: src/assets/app/components/utils/link-title.tsx:21
 msgid "Support"
 msgstr ""
 
 #: src/assets/app/views/authorize/sign-up/sign-up-disclaimer.tsx:50
-#: src/assets/app/components/utils/link-title.tsx:20
+#: src/assets/app/components/utils/link-title.tsx:19
 msgid "Terms of Service"
 msgstr ""
 

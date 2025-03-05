@@ -8,7 +8,43 @@ export type AssetRef = {
 }
 
 export type Attrs = Record<string, boolean | string | undefined>
-export type LinkAttrs = { href: string } & Attrs
+
+/**
+ * @see {@link https://developer.mozilla.org/fr/docs/Web/HTML/Attributes/rel}
+ */
+const ALLOWED_LINK_REL_VALUES = Object.freeze([
+  'alternate',
+  'author',
+  'canonical',
+  'dns-prefetch',
+  'external',
+  'expect',
+  'help',
+  'icon',
+  'license',
+  'manifest',
+  'me',
+  'modulepreload',
+  'next',
+  'pingback',
+  'preconnect',
+  'prefetch',
+  'preload',
+  'prerender',
+  'prev',
+  'privacy-policy',
+  'search',
+  'stylesheet',
+  'terms-of-service',
+] as const)
+export type LinkRel = (typeof ALLOWED_LINK_REL_VALUES)[number]
+export const isLinkRel = (rel: unknown): rel is LinkRel =>
+  (ALLOWED_LINK_REL_VALUES as readonly unknown[]).includes(rel)
+
+export type LinkAttrs = Attrs & {
+  href: string
+  rel: LinkRel
+}
 export type MetaAttrs =
   | { name: string; content: string }
   | { 'http-equiv': string; content: string }
@@ -65,12 +101,12 @@ function isViewportMeta<T extends MetaAttrs>(
   return 'name' in attrs && attrs.name === 'viewport'
 }
 
-function* linkToHtml(attrs: LinkAttrs) {
-  yield html`<link${attrsToHtml(attrs)} />`
+function linkToHtml(attrs: LinkAttrs) {
+  return html`<link${attrsToHtml(attrs)} />`
 }
 
-function* metaToHtml(attrs: MetaAttrs) {
-  yield html`<meta${attrsToHtml(attrs)} />`
+function metaToHtml(attrs: MetaAttrs) {
+  return html`<meta${attrsToHtml(attrs)} />`
 }
 
 function* attrsToHtml(attrs?: Attrs) {
@@ -95,15 +131,15 @@ function linkPreload(as: 'script' | 'style') {
       : html`<link rel="preload" href="${assetUrl(style)}" as="${as}" />`
 }
 
-function* scriptToHtml(script: Html | AssetRef) {
-  yield script instanceof Html
+function scriptToHtml(script: Html | AssetRef) {
+  return script instanceof Html
     ? // prettier-ignore
       html`<script>${script}</script>` // hash validity requires no space around the content
     : html`<script type="module" src="${assetUrl(script)}"></script>`
 }
 
-function* styleToHtml(style: Html | AssetRef) {
-  yield style instanceof Html
+function styleToHtml(style: Html | AssetRef) {
+  return style instanceof Html
     ? // prettier-ignore
       html`<style>${style}</style>` // hash validity requires no space around the content
     : html`<link rel="stylesheet" href="${assetUrl(style)}" />`

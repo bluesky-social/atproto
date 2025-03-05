@@ -22,8 +22,10 @@ export type Session = {
   consentRequired: boolean
 }
 
+export type LocalizedString = string | ({ en: string } & Record<string, string>)
+
 export type LinkDefinition = {
-  title: string
+  title: LocalizedString
   href: string
   rel?: string
 }

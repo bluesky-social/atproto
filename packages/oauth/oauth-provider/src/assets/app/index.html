@@ -56,22 +56,22 @@
       const name = 'Bluesky'
       const links = [
         {
-          title: 'Home',
+          title: { en: 'Home' },
           href: 'https://bsky.social/',
-          rel: 'bookmark',
+          rel: 'canonical', // prevents the login page from being indexed by search engines
         },
         {
-          title: 'Terms of Service',
+          title: { en: 'Terms of Service' },
           href: 'https://bsky.social/about/support/tos',
           rel: 'terms-of-service',
         },
         {
-          title: 'Privacy Policy',
+          title: { en: 'Privacy Policy' },
           href: 'https://bsky.social/about/support/privacy-policy',
           rel: 'privacy-policy',
         },
         {
-          title: 'Support',
+          title: { en: 'Support' },
           href: 'https://blueskyweb.zendesk.com/hc/en-us',
           rel: 'help',
         },
