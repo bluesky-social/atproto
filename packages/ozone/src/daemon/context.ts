@@ -70,14 +70,13 @@ export class DaemonContext {
       appviewAgent,
       createAuthHeaders,
     )
-    const teamService = TeamService.creator()
+    const teamService = TeamService.creator(
+      appviewAgent,
+      cfg.appview.did,
+      createAuthHeaders,
+    )
     const teamProfileSynchronizer = new TeamProfileSynchronizer(
       backgroundQueue,
-      {
-        createAuthHeaders: (method: string) =>
-          createAuthHeaders(cfg.appview.did, method),
-        agent: appviewAgent,
-      },
       teamService(db),
       cfg.db.teamProfileRefreshIntervalMs,
     )

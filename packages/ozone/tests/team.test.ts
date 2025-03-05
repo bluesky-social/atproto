@@ -12,7 +12,7 @@ describe('team management', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'ozone_team_test',
       ozone: {
-        dbTeamProfileRefreshIntervalMs: 1000,
+        dbTeamProfileRefreshIntervalMs: 100,
       },
     })
     adminAgent = network.pds.getClient()

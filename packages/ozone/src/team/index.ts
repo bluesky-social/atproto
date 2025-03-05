@@ -2,8 +2,6 @@ import { Selectable } from 'kysely'
 import AtpAgent from '@atproto/api'
 import { chunkArray } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { AppContext } from '../context'
-import { DaemonContext } from '../daemon/context'
 import { Database } from '../db'
 import { Member } from '../db/schema/member'
 import { ids } from '../lexicon/lexicons'
@@ -13,16 +11,25 @@ import { httpLogger } from '../logger'
 import { AuthHeaders } from '../mod-service/views'
 
 export type TeamServiceCreator = (db: Database) => TeamService
-export type AppviewCreator = {
-  createAuthHeaders: (method: string) => Promise<AuthHeaders>
-  agent: AtpAgent
-}
 
 export class TeamService {
-  constructor(public db: Database) {}
+  constructor(
+    public db: Database,
+    private appviewAgent: AtpAgent,
+    private appviewDid: string,
+    private createAuthHeaders: (
+      aud: string,
+      method: string,
+    ) => Promise<AuthHeaders>,
+  ) {}
 
-  static creator() {
-    return (db: Database) => new TeamService(db)
+  static creator(
+    appviewAgent: AtpAgent,
+    appviewDid: string,
+    createAuthHeaders: (aud: string, method: string) => Promise<AuthHeaders>,
+  ) {
+    return (db: Database) =>
+      new TeamService(db, appviewAgent, appviewDid, createAuthHeaders)
   }
 
   async list({
@@ -199,19 +206,17 @@ export class TeamService {
   }
 
   // getProfiles() only allows 25 DIDs at a time so we need to query in chunks
-  async getProfiles(
-    dids: string[],
-    appviewCreator: AppviewCreator,
-  ): Promise<Map<string, ProfileViewDetailed>> {
+  async getProfiles(dids: string[]): Promise<Map<string, ProfileViewDetailed>> {
     const profiles = new Map<string, ProfileViewDetailed>()
 
     try {
-      const headers = await appviewCreator.createAuthHeaders(
+      const headers = await this.createAuthHeaders(
+        this.appviewDid,
         ids.AppBskyActorGetProfiles,
       )
 
       for (const actors of chunkArray(dids, 25)) {
-        const { data } = await appviewCreator.agent.getProfiles(
+        const { data } = await this.appviewAgent.getProfiles(
           { actors },
           headers,
         )
@@ -230,15 +235,10 @@ export class TeamService {
     return profiles
   }
 
-  async syncMemberProfiles(appviewCreator: AppviewCreator): Promise<void> {
-    const { count } = await this.db.db
-      .selectFrom('member')
-      .select(this.db.db.fn.count<number>('did').as('count'))
-      .executeTakeFirstOrThrow()
-
+  async syncMemberProfiles(): Promise<void> {
     let lastDid = ''
     // Max 25 profiles can be fetched at a time so let's pull 25 members at a time from the db and update their profile details
-    for (let i = 0; i < count; i += 25) {
+    do {
       const members = await this.db.db
         .selectFrom('member')
         .select(['did'])
@@ -248,7 +248,7 @@ export class TeamService {
         .execute()
 
       const dids = members.map((member) => member.did)
-      const profiles = await this.getProfiles(dids, appviewCreator)
+      const profiles = await this.getProfiles(dids)
 
       for (const profile of profiles.values()) {
         await this.db.db
@@ -262,17 +262,11 @@ export class TeamService {
       }
 
       lastDid = dids.at(-1) || ''
-    }
+    } while (lastDid)
   }
 
-  async view(
-    members: Selectable<Member>[],
-    appviewCreator: AppviewCreator,
-  ): Promise<TeamMember[]> {
-    const profiles = await this.getProfiles(
-      members.map(({ did }) => did),
-      appviewCreator,
-    )
+  async view(members: Selectable<Member>[]): Promise<TeamMember[]> {
+    const profiles = await this.getProfiles(members.map(({ did }) => did))
     return members.map((member) => {
       return {
         did: member.did,
