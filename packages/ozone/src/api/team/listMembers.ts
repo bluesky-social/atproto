@@ -12,10 +12,7 @@ export default function (server: Server, ctx: AppContext) {
         encoding: 'application/json',
         body: {
           cursor,
-          members: await teamService.view(members, {
-            agent: ctx.appviewAgent,
-            createAuthHeaders: ctx.appviewAuth.bind(ctx),
-          }),
+          members: await teamService.view(members),
         },
       }
     },
