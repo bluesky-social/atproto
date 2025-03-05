@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { clsx } from '../../lib/clsx.ts'
-import { InputLayout, InputLayoutProps } from './input-layout.tsx'
+import { IconCard, IconCardProps } from '../utils/icon-card.tsx'
 
-export type InputContainerProps = InputLayoutProps
+export type InputContainerProps = IconCardProps
 
 export function InputContainer({
   className,
@@ -14,7 +14,7 @@ export function InputContainer({
   const [focused, setFocused] = useState(false)
 
   return (
-    <InputLayout
+    <IconCard
       className={clsx(
         'accent-brand',
         // Background

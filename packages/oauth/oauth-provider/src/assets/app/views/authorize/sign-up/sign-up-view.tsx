@@ -1,5 +1,5 @@
 import { Trans, useLingui } from '@lingui/react/macro'
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { CustomizationData } from '../../../backend-types.ts'
 import { WizardCard } from '../../../components/forms/wizard-card.tsx'
 import {
@@ -58,7 +58,19 @@ export function SignUpView({
   const [handle, setHandle] = useState<undefined | string>(undefined)
   const [hcaptcha, setHcaptcha] = useState<undefined | string>(undefined)
 
+  /**
+   * "false" indicates that the hcaptcha token is invalid (required but not provided)
+   */
   const hcaptchaToken = hcaptchaSiteKey == null ? undefined : hcaptcha || false
+
+  const doDone = useCallback(
+    (signal: AbortSignal) => {
+      if (credentials && handle && hcaptchaToken !== false) {
+        return onDone({ ...credentials, handle, hcaptchaToken }, signal)
+      }
+    },
+    [credentials, handle, hcaptchaToken, onDone],
+  )
 
   return (
     <LayoutTitlePage
@@ -71,11 +83,7 @@ export function SignUpView({
       <WizardCard
         doneLabel={<Trans>Sign up</Trans>}
         onBack={onBack}
-        onDone={(signal: AbortSignal) => {
-          if (credentials && handle && hcaptchaToken !== false) {
-            return onDone({ ...credentials, handle, hcaptchaToken }, signal)
-          }
-        }}
+        onDone={doDone}
         steps={[
           // We use the handle input first since the "onValidateNewHandle" check
           // will make it less likely that the actual signup call will fail, and
@@ -83,7 +91,7 @@ export function SignUpView({
           // issue with the email address (e.g. already in use).
           {
             invalid: !handle,
-            titleRender: (_data) => <Trans>Choose a username</Trans>,
+            titleRender: () => <Trans>Choose a username</Trans>,
             contentRender: ({ prev, prevLabel, next, nextLabel, invalid }) => (
               <SignUpHandleForm
                 className="flex-grow"
@@ -105,7 +113,7 @@ export function SignUpView({
           },
           {
             invalid: !credentials,
-            titleRender: (_data) => <Trans>Your account</Trans>,
+            titleRender: () => <Trans>Your account</Trans>,
             contentRender: ({ prev, prevLabel, next, nextLabel, invalid }) => (
               <SignUpAccountForm
                 className="flex-grow"
@@ -124,7 +132,7 @@ export function SignUpView({
           },
           hcaptchaSiteKey != null && {
             invalid: hcaptchaToken === false,
-            titleRender: (_data) => <Trans>Verify you are human</Trans>,
+            titleRender: () => <Trans>Verify you are human</Trans>,
             contentRender: ({ prev, prevLabel, next, nextLabel, invalid }) => (
               <SignUpHcaptchaForm
                 className="flex-grow"

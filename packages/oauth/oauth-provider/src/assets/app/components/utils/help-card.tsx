@@ -38,7 +38,7 @@ export function HelpCard({
           target="_blank"
           className="text-brand"
         >
-          <Trans>Contact {helpLink.title}</Trans>
+          <Trans>Contact support</Trans>
         </a>
       </Trans>
     </p>

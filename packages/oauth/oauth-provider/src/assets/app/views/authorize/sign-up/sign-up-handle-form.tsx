@@ -136,6 +136,8 @@ export function SignUpHandleForm({
 
   const inputRef = useRef<HTMLInputElement>(null)
 
+  const preview = `@${segment}${domain}`
+
   return (
     <FormCardAsync
       {...props}
@@ -208,7 +210,6 @@ export function SignUpHandleForm({
       </Fieldset>
 
       <ExpandTransition visible={!!segment} delayed>
-        <HandlePreview handle={handle || domain} />
         <div>
           <ValidationMessage valid={validity.validCharset}>
             <Trans>Only contains letters, numbers, and hyphens</Trans>
@@ -220,29 +221,22 @@ export function SignUpHandleForm({
           </ValidationMessage>
         </div>
 
+        <ExpandTransition visible={!!handle} delayed>
+          <p className="mt-3">
+            <Trans>
+              Your full username will be <b>{preview}</b>
+            </Trans>
+          </p>
+        </ExpandTransition>
+
         <p className="mt-3">
           <Trans>
-            You can change to a custom domain handle after your account is set
-            up.
+            You can change this username to any domain name you control after
+            your account is set up.
           </Trans>
         </p>
       </ExpandTransition>
     </FormCardAsync>
-  )
-}
-
-type HandlePreviewProps = JSX.IntrinsicElements['p'] & {
-  handle: string
-}
-
-function HandlePreview({ handle, ...props }: HandlePreviewProps) {
-  const preview = `@${handle}`
-  return (
-    <p {...props}>
-      <Trans>
-        Your full username will be <b>{preview}</b>
-      </Trans>
-    </p>
   )
 }
 
@@ -254,12 +248,11 @@ function ValidationMessage({
   valid,
 
   // div
-  className,
   children,
   ...props
 }: ValidationMessageProps) {
   return (
-    <div className={clsx(className)} {...props}>
+    <div {...props}>
       {valid ? (
         <CheckMarkIcon className="inline-block mr-2 w-4 text-success" />
       ) : (

@@ -3,6 +3,7 @@ import { CustomizationData } from '../../backend-types.ts'
 import { clsx } from '../../lib/clsx.ts'
 import { Override } from '../../lib/util.ts'
 import { LocaleSelector } from '../../locales/locale-selector.tsx'
+import { LinkTitle } from '../utils/link-title.tsx'
 
 export type LayoutWelcomeProps = Override<
   JSX.IntrinsicElements['div'],
@@ -34,7 +35,7 @@ export function LayoutWelcome({
     >
       {title && <title>{title}</title>}
 
-      <div className="w-full max-w-screen-sm overflow-hidden flex-grow flex flex-col items-center justify-center text-brand">
+      <main className="w-full overflow-hidden flex-grow flex flex-col items-center justify-center">
         {logo && (
           <img
             src={logo}
@@ -51,9 +52,9 @@ export function LayoutWelcome({
         )}
 
         {children}
-      </div>
+      </main>
 
-      <nav className="w-full max-w-screen-sm overflow-hidden mt-4 border-t border-t-slate-200 dark:border-t-slate-700 flex flex-wrap justify-center content-center">
+      <nav className="w-full overflow-hidden mt-4 border-t border-t-slate-200 dark:border-t-slate-700 flex flex-wrap justify-center content-center">
         {links?.map((link, i) => (
           <a
             role="link"
@@ -63,7 +64,7 @@ export function LayoutWelcome({
             target="_blank"
             className="m-2 md:m-4 text-xs md:text-sm text-brand hover:underline"
           >
-            {link.title}
+            <LinkTitle link={link} />
           </a>
         ))}
 

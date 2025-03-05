@@ -1,68 +1,98 @@
 import { Trans } from '@lingui/react/macro'
-import { memo, useEffect, useState } from 'react'
+import { memo, useEffect, useMemo, useState } from 'react'
+import { useRandomString } from '../../hooks/use-random-string.ts'
+import { Api } from '../../lib/api.ts'
 import { JsonErrorResponse } from '../../lib/json-client.ts'
 import { Override } from '../../lib/util.ts'
-import { InputInfoCard, InputInfoCardProps } from '../forms/input-info-card.tsx'
 import { ErrorMessage } from './error-message.tsx'
 import { ExpandTransition } from './expand-transition.tsx'
+import { InfoCard, InfoCardProps } from './info-card.tsx'
 
-export type ApiErrorProps = Override<
-  Omit<InputInfoCardProps, 'onIconClick' | 'children'>,
+export type ErrorCardProps = Override<
+  Omit<InfoCardProps, 'role'>,
   {
     error: unknown
-    role?: InputInfoCardProps['role']
   }
 >
 export const ErrorCard = memo(function ErrorCard({
-  role = 'alert',
   error,
 
-  // InputInfoCard
+  // InfoCardProps
+  children,
   onClick,
+  onKeyDown,
   ...props
-}: ApiErrorProps) {
-  const [clickCount, setClickCount] = useState(0)
+}: ErrorCardProps) {
+  const [inputCount, setInputCount] = useState(0)
+  // Every 5th input will toggle showing the details
+  const showDetails = ((inputCount / 5) | 0) % 2 === 1
+
+  const detailsDivId = useRandomString('error-card-')
+
+  const parsedError = useMemo(
+    () =>
+      error instanceof JsonErrorResponse
+        ? // Already parsed:
+          error
+        : // If "error" is a json object, try parsing it as a JsonErrorResponse:
+          Api.parseError(error) ?? error,
+    [error],
+  )
 
   useEffect(() => {
     // For debugging purposes
-    console.warn('Displayed error details:', error)
+    console.warn('Displayed error details:', parsedError)
 
-    setClickCount(0)
-  }, [error])
+    // Reset the input count when the error changes
+    setInputCount(0)
+  }, [parsedError])
 
   return (
-    <InputInfoCard
-      role={role}
+    <InfoCard
+      role="alert"
+      aria-controls={detailsDivId}
+      tabIndex={0}
+      onKeyDown={(event) => {
+        onKeyDown?.(event)
+        if (!event.defaultPrevented) {
+          setInputCount((c) => c + 1)
+        }
+      }}
       onClick={(event) => {
         onClick?.(event)
-        if (!event.defaultPrevented) setClickCount((c) => c + 1)
+        if (!event.defaultPrevented) {
+          setInputCount((c) => c + 1)
+        }
       }}
       {...props}
     >
-      <ErrorMessage error={error} />
+      <ErrorMessage error={parsedError} />
+
+      {children && <div className="mt-2">{children}</div>}
 
       <ExpandTransition
-        // Every 5th click will toggle showing the details
-        visible={((clickCount / 5) | 0) % 2 === 1}
+        visible={showDetails}
+        id={detailsDivId}
+        aria-hidden={!showDetails}
       >
-        {error instanceof JsonErrorResponse ? (
+        {parsedError instanceof JsonErrorResponse ? (
           <dl className="mt-2 grid grid-cols-[auto,1fr] gap-x-2 text-sm">
             <dt className="font-semibold">
               <Trans>Code</Trans>
             </dt>
             <dd>
-              <code>{error.error}</code>
+              <code>{parsedError.error}</code>
             </dd>
 
             <dt className="font-semibold">
               <Trans>Description</Trans>
             </dt>
-            <dd>{error.description}</dd>
+            <dd>{parsedError.description}</dd>
           </dl>
         ) : (
-          <pre className="text-xs">{JSON.stringify(error, null, 2)}</pre>
+          <pre className="text-xs">{JSON.stringify(parsedError, null, 2)}</pre>
         )}
       </ExpandTransition>
-    </InputInfoCard>
+    </InfoCard>
   )
 })

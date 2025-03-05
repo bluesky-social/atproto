@@ -1,26 +1,27 @@
 import { memo } from 'react'
 import { clsx } from '../../lib/clsx.ts'
 import { Override } from '../../lib/util.ts'
-import { AlertIcon } from '../utils/icons.tsx'
-import { InputLayout, InputLayoutProps } from './input-layout.tsx'
+import { IconCard, IconCardProps } from './icon-card.tsx'
+import { AlertIcon } from './icons.tsx'
 
-export type InputInfoCardProps = Override<
-  Omit<InputLayoutProps, 'icon'>,
+export type InfoCardProps = Override<
+  Omit<IconCardProps, 'icon'>,
   {
     role: 'alert' | 'status'
   }
 >
-export const InputInfoCard = memo(function InputInfoCard({
+export const InfoCard = memo(function InfoCard({
   role = 'alert',
 
-  // InputLayoutProps
+  // IconCardProps
   children,
   className,
   ...props
-}: InputInfoCardProps) {
+}: InfoCardProps) {
   return (
-    <InputLayout
+    <IconCard
       {...props}
+      role={role}
       className={clsx(
         role === 'alert' ? 'bg-error' : 'bg-gray-100 dark:bg-slate-800',
         className,
@@ -42,6 +43,6 @@ export const InputInfoCard = memo(function InputInfoCard({
       >
         {children}
       </div>
-    </InputLayout>
+    </IconCard>
   )
 })

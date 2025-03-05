@@ -1,6 +1,7 @@
 import { Trans } from '@lingui/react/macro'
 import { HTMLAttributes } from 'react'
 import { LinkDefinition } from '../../../backend-types.ts'
+import { LinkTitle } from '../../../components/utils/link-title.tsx'
 import { clsx } from '../../../lib/clsx.ts'
 import { Override } from '../../../lib/util.ts'
 
@@ -33,21 +34,25 @@ export function SignUpDisclaimer({
         {relevantLinks && relevantLinks.length ? (
           relevantLinks.map((l, i, a) => (
             <span key={i}>
-              {i > 0 && (i < a.length - 1 ? ', ' : <Trans> and </Trans>)}
+              {i > 0 && (i < a.length - 1 ? ', ' : <Trans> and the </Trans>)}
               <a
                 href={l.href}
                 rel={l.rel}
                 target="_blank"
                 className="text-brand underline"
               >
-                {l.title}
+                <LinkTitle link={l} />
               </a>
             </span>
           ))
         ) : (
-          <Trans>Terms of Service and Privacy Policy</Trans>
-        )}
-        .
+          <span>
+            <Trans>Terms of Service</Trans>
+            <Trans> and the </Trans>
+            <Trans>Privacy Policy</Trans>
+          </span>
+        )}{' '}
+        of this service.
       </Trans>
     </p>
   )

@@ -2,7 +2,7 @@ import { JSX, ReactNode } from 'react'
 import { clsx } from '../../lib/clsx.ts'
 import { Override } from '../../lib/util.ts'
 
-export type InputLayoutProps = Override<
+export type IconCardProps = Override<
   JSX.IntrinsicElements['div'],
   {
     icon: ReactNode
@@ -10,15 +10,15 @@ export type InputLayoutProps = Override<
   }
 >
 
-export function InputLayout({
+export function IconCard({
   icon,
   append,
 
-  // HTMLDivElement
+  // div
   className,
   children,
   ...props
-}: InputLayoutProps) {
+}: IconCardProps) {
   return (
     <div
       {...props}

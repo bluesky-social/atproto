@@ -5,17 +5,26 @@ export type Step = {
   invalid: boolean
 }
 
-const isEnabled = (s: Step | DisabledStep): boolean => !!s
-const isRequired = (s: Step | DisabledStep): boolean => !!s && s.invalid
+const isEnabled = <S extends Step | DisabledStep>(
+  s: S,
+): s is S extends DisabledStep ? never : S => s != null && s !== false
+const isRequired = <S extends Step | DisabledStep>(
+  s: S,
+): s is S extends DisabledStep ? never : S & { invalid: true } =>
+  isEnabled(s) && s.invalid === true
+const isCompleted = <S extends Step | DisabledStep>(
+  s: S,
+): s is S extends DisabledStep ? S : S & { invalid: false } =>
+  !isEnabled(s) || s.invalid === false
 
 export function useStepper<const S extends Step>(
   steps: readonly (S | DisabledStep)[],
 ) {
-  const first = steps.findIndex(isEnabled)
-  const last = steps.findLastIndex(isEnabled)
-  const firstRequired = steps.findIndex(isRequired)
+  const firstIdx = steps.findIndex(isEnabled)
+  const lastIdx = steps.findLastIndex(isEnabled)
+  const requiredIdx = steps.findIndex(isRequired)
 
-  const [currentIdx, setCurrentIdx] = useState<number>(first)
+  const [currentIdx, setCurrentIdx] = useState<number>(firstIdx)
 
   const to = useCallback(
     (idx: number) => {
@@ -29,23 +38,29 @@ export function useStepper<const S extends Step>(
     [steps.map(isEnabled).join()],
   )
 
-  const prev = steps.findLastIndex((s, i) => s && i < currentIdx)
-  const next = steps.findIndex((s, i) => s && i > currentIdx)
+  const prevIdx = steps.findLastIndex((s, i) => isEnabled(s) && i < currentIdx)
+  const nextIdx = steps.findIndex((s, i) => isEnabled(s) && i > currentIdx)
 
-  const toFirst = useCallback(() => to(first), [to, first])
-  const toLast = useCallback(() => to(last), [to, last])
-  const toPrev = useCallback(() => to(prev), [to, prev])
-  const toNext = useCallback(() => to(next), [to, next])
-  const toRequired = useCallback(() => to(firstRequired), [to, firstRequired])
+  const toFirst = useCallback(() => to(firstIdx), [to, firstIdx])
+  const toLast = useCallback(() => to(lastIdx), [to, lastIdx])
+  const toPrev = useCallback(() => to(prevIdx), [to, prevIdx])
+  const toNext = useCallback(() => to(nextIdx), [to, nextIdx])
+  const toRequired = useCallback(() => to(requiredIdx), [to, requiredIdx])
 
   // Step number in user friendly terms (accounting for disabled steps)
   const currentPosition =
+    currentIdx +
+    // use "1 indexed position" (for user friendliness):
     1 +
-    currentIdx -
-    steps.reduce((acc, s, i) => (!s && i < currentIdx ? acc + 1 : acc), 0)
-  const count = steps.reduce((acc, s) => (s ? acc + 1 : acc), 0)
+    // Adjust the position by counting the number of disabled steps before the
+    // current step (if any):
+    steps.reduce(
+      (acc, s, i) => (i >= currentIdx || isEnabled(s) ? acc : acc - 1),
+      0,
+    )
 
-  const isCompleted = steps.every((s) => !s || !s.invalid)
+  const count = steps.filter(isEnabled).length
+  const completed = steps.every(isCompleted)
 
   const current =
     currentIdx === -1 || !steps[currentIdx] ? undefined : steps[currentIdx]
@@ -60,7 +75,7 @@ export function useStepper<const S extends Step>(
     current,
     currentPosition,
     count,
-    isCompleted,
+    completed,
     atFirst: currentPosition === 1,
     atLast: currentPosition === count,
     toFirst,

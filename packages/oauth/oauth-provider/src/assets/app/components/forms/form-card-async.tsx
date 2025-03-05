@@ -1,5 +1,5 @@
 import { Trans } from '@lingui/react/macro'
-import { ReactNode } from 'react'
+import { FormEvent, ReactNode, useCallback } from 'react'
 import {
   UseAsyncActionOptions,
   useAsyncAction,
@@ -62,16 +62,21 @@ export function FormCardAsync({
     onLoading,
   })
 
+  const doSubmit = useCallback(
+    (event: FormEvent<HTMLFormElement>) => {
+      event.preventDefault()
+
+      if (!event.currentTarget.reportValidity()) return
+
+      if (!disabled && !invalid) void run()
+    },
+    [disabled, invalid, run],
+  )
+
   return (
     <FormCard
       {...props}
-      onSubmit={(event) => {
-        event.preventDefault()
-
-        if (!event.currentTarget.reportValidity()) return
-
-        if (!disabled && !invalid) void run()
-      }}
+      onSubmit={doSubmit}
       disabled={disabled || loading}
       prepend={error != null ? errorRender({ error }) : undefined}
       cancel={

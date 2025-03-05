@@ -27,7 +27,7 @@ export type BuildDocumentOptions = {
   title?: HtmlValue
   scripts?: readonly (Html | AssetRef)[]
   styles?: readonly (Html | AssetRef)[]
-  body: HtmlValue
+  body?: HtmlValue
   bodyAttrs?: Attrs
 }
 
@@ -53,11 +53,10 @@ export const buildDocument = ({
     ${styles?.map(linkPreload('style'))}
     ${scripts?.map(linkPreload('script'))}
     ${links?.map(linkToHtml)}
-    ${head} ${styles?.map(styleToHtml)}
+    ${head}
+    ${styles?.map(styleToHtml)}
   </head>
-  <body${attrsToHtml(bodyAttrs)}>
-    ${body} ${scripts?.map(scriptToHtml)}
-  </body>
+  <body${attrsToHtml(bodyAttrs)}>${body}${scripts?.map(scriptToHtml)}</body>
 </html>`
 
 function isViewportMeta<T extends MetaAttrs>(

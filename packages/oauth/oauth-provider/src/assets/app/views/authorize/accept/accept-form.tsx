@@ -53,7 +53,7 @@ export function AcceptForm({
       actions={
         <>
           <Button type="submit" color="brand">
-            <Trans>Accept</Trans>
+            <Trans>Authorize</Trans>
           </Button>
 
           <Button onClick={onReject}>
@@ -89,7 +89,7 @@ export function AcceptForm({
         <Trans>
           By clicking{' '}
           <b>
-            <Trans>Accept</Trans>
+            <Trans>Authorize</Trans>
           </b>
           , you allow this application to perform the following actions in
           accordance to their{' '}

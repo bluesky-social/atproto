@@ -1,7 +1,7 @@
 import { useLingui } from '@lingui/react/macro'
 import { ChangeEvent, useCallback, useState } from 'react'
 import { Override } from '../../lib/util.ts'
-import { LockIcon } from '../utils/icons.tsx'
+import { AtSymbolIcon } from '../utils/icons.tsx'
 import { InputText, InputTextProps } from './input-text.tsx'
 
 export type InputEmailAddressProps = Override<
@@ -19,7 +19,7 @@ export function InputEmailAddress({
   autoComplete = 'email',
   autoCorrect = 'off',
   dir = 'auto',
-  icon = <LockIcon className="w-5" />,
+  icon = <AtSymbolIcon className="w-5" />,
   onBlur,
   onChange,
   pattern = '^[^@]+@[^@]+\\.[^@]+$',

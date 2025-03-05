@@ -1,4 +1,5 @@
 import { JSX, ReactNode, useContext, useMemo, useRef } from 'react'
+import { clsx } from '../../lib/clsx.ts'
 import { mergeRefs } from '../../lib/ref.ts'
 import { Override } from '../../lib/util.ts'
 import { FieldsetContext } from './fieldset.tsx'
@@ -38,7 +39,7 @@ export function InputCheckbox({
     <InputContainer
       id={id}
       ref={containerRef}
-      className={className}
+      className={clsx('cursor-pointer', className)}
       icon={
         <input
           {...props}

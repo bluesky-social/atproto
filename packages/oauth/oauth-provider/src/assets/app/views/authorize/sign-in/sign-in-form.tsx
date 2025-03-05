@@ -7,12 +7,12 @@ import {
   FormCardAsyncProps,
 } from '../../../components/forms/form-card-async.tsx'
 import { InputCheckbox } from '../../../components/forms/input-checkbox.tsx'
-import { InputInfoCard } from '../../../components/forms/input-info-card.tsx'
 import { InputPassword } from '../../../components/forms/input-password.tsx'
 import { InputText } from '../../../components/forms/input-text.tsx'
 import { InputToken } from '../../../components/forms/input-token.tsx'
 import { ExpandTransition } from '../../../components/utils/expand-transition.tsx'
 import { AtSymbolIcon } from '../../../components/utils/icons.tsx'
+import { InfoCard } from '../../../components/utils/info-card.tsx'
 import { AsyncActionController } from '../../../hooks/use-async-action.ts'
 import {
   InvalidCredentialsError,
@@ -164,7 +164,7 @@ export function SignInForm({
       </Fieldset>
 
       <ExpandTransition visible={pwdFocus} delayed>
-        <InputInfoCard role="status">
+        <InfoCard role="status">
           <p className="font-bold text-brand leading-8">
             <Trans>Warning</Trans>
           </p>
@@ -174,7 +174,7 @@ export function SignInForm({
               password. Never enter your password on a domain you do not trust.
             </Trans>
           </p>
-        </InputInfoCard>
+        </InfoCard>
       </ExpandTransition>
 
       <InputPassword
