@@ -221,7 +221,7 @@ export function SignUpHandleForm({
           </ValidationMessage>
         </div>
 
-        <ExpandTransition visible={!!handle} delayed>
+        <ExpandTransition visible={!!handle} delayed aria-hidden={!handle}>
           <p className="mt-3">
             <Trans>
               Your full username will be <b>{preview}</b>
@@ -251,12 +251,19 @@ function ValidationMessage({
   children,
   ...props
 }: ValidationMessageProps) {
+  const { t } = useLingui()
   return (
     <div {...props}>
       {valid ? (
-        <CheckMarkIcon className="inline-block mr-2 w-4 text-success" />
+        <CheckMarkIcon
+          className="inline-block mr-2 w-4 text-success"
+          title={t`Valid`}
+        />
       ) : (
-        <XMarkIcon className="inline-block mr-2 w-4 text-error" />
+        <XMarkIcon
+          className="inline-block mr-2 w-4 text-error"
+          title={t`Invalid`}
+        />
       )}
       <span>{children}</span>
     </div>

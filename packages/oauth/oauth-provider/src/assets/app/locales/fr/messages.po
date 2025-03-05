@@ -209,6 +209,10 @@ msgstr "Identifiant"
 msgid "Interface language selector"
 msgstr "Sélecteur de langue"
 
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:265
+msgid "Invalid"
+msgstr "Invalide"
+
 #: src/assets/app/views/authorize/sign-up/sign-up-account-form.tsx:95
 #: src/assets/app/views/authorize/sign-up/sign-up-account-form.tsx:99
 #: src/assets/app/views/authorize/sign-up/sign-up-account-form.tsx:100
@@ -412,6 +416,10 @@ msgstr "Vous identifier de façon unique"
 #: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:146
 msgid "Username or email address"
 msgstr "Nom d'utilisateur ou adresse email"
+
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:260
+msgid "Valid"
+msgstr "Valide"
 
 #: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:156
 msgid "Valid email address or username"
