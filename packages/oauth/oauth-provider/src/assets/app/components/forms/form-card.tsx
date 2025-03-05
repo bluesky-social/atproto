@@ -25,7 +25,7 @@ export function FormCard({
   ...props
 }: FormCardProps) {
   return (
-    <form {...props} inert={inert} className="flex flex-col space-y-4 py-4">
+    <form {...props} inert={inert} className="flex flex-col space-y-4">
       {prepend && <div key="prepend">{prepend}</div>}
 
       <div key="children" className="space-y-4">

@@ -35,7 +35,7 @@ export function LayoutWelcome({
     >
       {title && <title>{title}</title>}
 
-      <main className="w-full overflow-hidden flex-grow flex flex-col items-center justify-center">
+      <main className="w-full overflow-hidden flex-grow flex flex-col items-center justify-center p-6">
         {logo && (
           <img
             src={logo}
@@ -54,7 +54,7 @@ export function LayoutWelcome({
         {children}
       </main>
 
-      <nav className="w-full overflow-hidden mt-4 border-t border-t-slate-200 dark:border-t-slate-700 flex flex-wrap justify-center content-center">
+      <nav className="w-full overflow-hidden border-t border-t-slate-200 dark:border-t-slate-700 flex flex-wrap justify-center content-center">
         {links?.map((link, i) => (
           <a
             role="link"

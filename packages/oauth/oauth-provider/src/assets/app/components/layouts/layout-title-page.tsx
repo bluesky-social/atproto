@@ -71,7 +71,7 @@ export function LayoutTitlePage({
         <LocaleSelector key="localeSelector" className="m-1 md:m-2" />
       </div>
 
-      <main className="w-full px-6 md:max-w-3xl md:px-12">{children}</main>
+      <main className="w-full p-6 md:max-w-3xl md:px-12">{children}</main>
     </div>
   )
 }
