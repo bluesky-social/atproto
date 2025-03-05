@@ -1,10 +1,14 @@
 /**
  * GENERATED CODE - DO NOT MODIFY
  */
-import { ValidationResult, BlobRef } from '@atproto/lexicon'
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { validate as _validate } from '../../../../lexicons'
-import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util'
 import type * as AppBskyEmbedRecord from './record.js'
 import type * as AppBskyEmbedImages from './images.js'
 import type * as AppBskyEmbedVideo from './video.js'
