@@ -290,14 +290,18 @@ export class OAuthStore
       includeTakenDown: true,
     })
 
-    if (!account?.email) return
+    if (!account?.email || !account?.handle) return
 
+    const { handle } = account
     const token = await this.accountManager.createEmailToken(
       account.did,
       'reset_password',
     )
 
-    await this.mailer.sendConfirmEmail({ token }, { to: account.email })
+    await this.mailer.sendResetPassword(
+      { handle, token },
+      { to: account.email },
+    )
   }
 
   async resetPasswordConfirm(data: ResetPasswordConfirmData): Promise<void> {

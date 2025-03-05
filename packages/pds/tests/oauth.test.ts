@@ -177,6 +177,67 @@ describe('oauth', () => {
     await page[Symbol.asyncDispose]()
   })
 
+  it('allows resetting the password', async () => {
+    const sendTemplateMock = await withMokedMailer(network)
+
+    const page = await PageHelper.from(browser)
+
+    await page.goto(appUrl)
+
+    await page.checkTitle('OAuth Client Example')
+
+    await page.navigationAction(async () => {
+      const input = await page.typeIn(
+        'input[placeholder="@handle, DID or PDS url"]',
+        'alice.test',
+      )
+
+      await input.press('Enter')
+    })
+
+    await page.checkTitle('Se connecter')
+
+    await page.clickOnButton('Oublié ?')
+
+    await page.checkTitle('Mot de passe oublié')
+
+    await page.typeInInput('email', 'alice@test.com')
+
+    expect(sendTemplateMock).toHaveBeenCalledTimes(0)
+
+    await page.clickOnButton('Suivant')
+
+    await page.checkTitle('Réinitialiser le mot de passe')
+
+    expect(sendTemplateMock).toHaveBeenCalledTimes(1)
+
+    const [templateName, params] = sendTemplateMock.mock.calls[0]
+
+    expect(templateName).toBe('resetPassword')
+    expect(params).toEqual({
+      handle: 'alice.test',
+      token: expect.any(String),
+    })
+
+    const { token } = params as { token: string }
+
+    await page.typeInInput('code', token)
+
+    await page.typeInInput('password', 'alice-new-pass')
+
+    await page.clickOnButton('Suivant')
+
+    await page.checkTitle('Mot de passe mis à jour')
+
+    await page.ensureTextVisibility('Mot de passe mis à jour !', 'h2')
+
+    // TODO: Find out why we can't use "using" here
+    await page[Symbol.asyncDispose]()
+
+    // TODO: Find out why we can't use "using" here
+    sendTemplateMock[Symbol.dispose]()
+  })
+
   it('Allows to sign-in trough OAuth', async () => {
     const page = await PageHelper.from(browser)
 
@@ -195,7 +256,7 @@ describe('oauth', () => {
 
     await page.checkTitle('Se connecter')
 
-    await page.typeIn('input[type="password"]', 'alice-pass')
+    await page.typeIn('input[type="password"]', 'alice-new-pass')
 
     // Make sure the warning is visible
     await page.ensureTextVisibility('Avertissement')
@@ -205,6 +266,42 @@ describe('oauth', () => {
     )
 
     await page.clickOnButton('Se connecter')
+
+    await page.checkTitle("Authoriser l'accès")
+
+    await page.navigationAction(async () => {
+      await page.clickOnButton("Authoriser l'accès")
+    })
+
+    await page.checkTitle('OAuth Client Example')
+
+    await page.ensureTextVisibility('Logged in!')
+
+    await page.clickOnButton('Sign-out')
+
+    await page.waitForNetworkIdle()
+
+    // TODO: Find out why we can't use "using" here
+    await page[Symbol.asyncDispose]()
+  })
+
+  it('remembers the session', async () => {
+    const page = await PageHelper.from(browser)
+
+    await page.goto(appUrl)
+
+    await page.checkTitle('OAuth Client Example')
+
+    await page.navigationAction(async () => {
+      const input = await page.typeIn(
+        'input[placeholder="@handle, DID or PDS url"]',
+        'alice.test',
+      )
+
+      await input.press('Enter')
+    })
+
+    await page.checkTitle("Authoriser l'accès")
 
     await page.navigationAction(async () => {
       await page.clickOnButton("Authoriser l'accès")
@@ -222,6 +319,31 @@ describe('oauth', () => {
     await page[Symbol.asyncDispose]()
   })
 })
+
+async function withMokedMailer(network: TestNetworkNoAppView) {
+  // @ts-expect-error
+  const sendTemplateOrig = network.pds.ctx.mailer.sendTemplate
+  const sendTemplateMock = jest.fn(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    async (templateName: unknown, params: unknown, mailOpts: unknown) => {
+      //
+    },
+  ) as jest.Mock<
+    Promise<void>,
+    [templateName: unknown, params: unknown, mailOpts: unknown]
+  > &
+    Disposable
+
+  sendTemplateMock[Symbol.dispose] = () => {
+    // @ts-expect-error
+    network.pds.ctx.mailer.sendTemplate = sendTemplateOrig
+  }
+
+  // @ts-expect-error
+  network.pds.ctx.mailer.sendTemplate = sendTemplateMock
+
+  return sendTemplateMock
+}
 
 function clientHandler(
   req: IncomingMessage,
