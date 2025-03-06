@@ -17,7 +17,7 @@ msgstr ""
 msgid "<0/> is asking for permission to access your account (<1/>)."
 msgstr "<0/> is asking for permission to access your account (<1/>)."
 
-#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:227
+#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:224
 msgid "2FA Confirmation"
 msgstr "2FA Confirmation"
 
@@ -33,7 +33,7 @@ msgstr "Access your account data (except chat messages)"
 msgid "Access your chat messages"
 msgstr "Access your chat messages"
 
-#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:140
+#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:139
 msgid "Account"
 msgstr "Account"
 
@@ -63,14 +63,14 @@ msgid "Authorize"
 msgstr "Authorize"
 
 #: src/assets/app/views/authorize/sign-in/sign-in-picker.tsx:47
-#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:132
+#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:131
 #: src/assets/app/views/authorize/reset-password/reset-password-view.tsx:65
 #: src/assets/app/views/authorize/reset-password/reset-password-view.tsx:95
 #: src/assets/app/components/forms/wizard-card.tsx:93
 msgid "Back"
 msgstr "Back"
 
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:218
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:253
 msgid "Between {minLength} and {maxLength} characters"
 msgstr "Between {minLength} and {maxLength} characters"
 
@@ -87,7 +87,7 @@ msgstr "By creating an account you agree to the {0} and the {1} of this service.
 msgid "Cancel"
 msgstr "Cancel"
 
-#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:240
+#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:237
 msgid "Check your {0} email for a login code and enter it here."
 msgstr "Check your {0} email for a login code and enter it here."
 
@@ -99,7 +99,7 @@ msgstr "Choose a username"
 msgid "Code"
 msgstr "Code"
 
-#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:137
+#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:136
 msgid "Confirm"
 msgstr "Confirm"
 
@@ -107,7 +107,7 @@ msgstr "Confirm"
 msgid "Confirm your password to continue"
 msgstr "Confirm your password to continue"
 
-#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:231
+#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:228
 msgid "Confirmation code"
 msgstr "Confirmation code"
 
@@ -134,8 +134,8 @@ msgstr "Description"
 msgid "Email"
 msgstr "Email"
 
-#: src/assets/app/views/authorize/reset-password/reset-password-request-form.tsx:54
-#: src/assets/app/views/authorize/reset-password/reset-password-request-form.tsx:59
+#: src/assets/app/views/authorize/reset-password/reset-password-request-form.tsx:55
+#: src/assets/app/views/authorize/reset-password/reset-password-request-form.tsx:60
 msgid "Email address"
 msgstr "Email address"
 
@@ -147,11 +147,11 @@ msgstr "Enter a password"
 msgid "Enter the code you received to reset your password."
 msgstr "Enter the code you received to reset your password."
 
-#: src/assets/app/views/authorize/reset-password/reset-password-request-form.tsx:69
+#: src/assets/app/views/authorize/reset-password/reset-password-request-form.tsx:71
 msgid "Enter the email you used to create your account. We'll send you a \"reset code\" so you can set a new password."
 msgstr "Enter the email you used to create your account. We'll send you a \"reset code\" so you can set a new password."
 
-#: src/assets/app/views/authorize/reset-password/reset-password-request-form.tsx:57
+#: src/assets/app/views/authorize/reset-password/reset-password-request-form.tsx:58
 msgid "Enter your email address"
 msgstr "Enter your email address"
 
@@ -176,7 +176,7 @@ msgstr "Error"
 msgid "Forgot Password"
 msgstr "Forgot Password"
 
-#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:198
+#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:183
 msgid "Forgot?"
 msgstr "Forgot?"
 
@@ -204,7 +204,7 @@ msgstr "Identifier"
 msgid "Interface language selector"
 msgstr "Interface language selector"
 
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:265
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:297
 msgid "Invalid"
 msgstr "Invalid"
 
@@ -242,7 +242,7 @@ msgstr "Moderate"
 msgid "Name"
 msgstr "Name"
 
-#: src/assets/app/views/authorize/reset-password/reset-password-confirm-form.tsx:73
+#: src/assets/app/views/authorize/reset-password/reset-password-confirm-form.tsx:76
 msgid "New password"
 msgstr "New password"
 
@@ -256,7 +256,7 @@ msgstr "Next"
 msgid "Okay"
 msgstr "Okay"
 
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:215
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:247
 msgid "Only contains letters, numbers, and hyphens"
 msgstr "Only contains letters, numbers, and hyphens"
 
@@ -279,7 +279,7 @@ msgstr "Password updated!"
 msgid "Password with at least {MIN_PASSWORD_LENGTH} characters"
 msgstr "Password with at least {MIN_PASSWORD_LENGTH} characters"
 
-#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:172
+#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:197
 msgid "Please verify the domain name of the website before entering your password. Never enter your password on a domain you do not trust."
 msgstr "Please verify the domain name of the website before entering your password. Never enter your password on a domain you do not trust."
 
@@ -289,8 +289,8 @@ msgstr "Please verify the domain name of the website before entering your passwo
 msgid "Privacy Policy"
 msgstr "Privacy Policy"
 
-#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:214
-#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:219
+#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:211
+#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:216
 msgid "Remember this account on this device"
 msgstr "Remember this account on this device"
 
@@ -298,7 +298,7 @@ msgstr "Remember this account on this device"
 msgid "Requested permissions"
 msgstr "Requested permissions"
 
-#: src/assets/app/views/authorize/reset-password/reset-password-confirm-form.tsx:58
+#: src/assets/app/views/authorize/reset-password/reset-password-confirm-form.tsx:61
 msgid "Reset code"
 msgstr "Reset code"
 
@@ -306,11 +306,11 @@ msgstr "Reset code"
 msgid "Reset Password"
 msgstr "Reset Password"
 
-#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:196
+#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:181
 msgid "Reset your password"
 msgstr "Reset your password"
 
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:167
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:176
 msgid "Select domain"
 msgstr "Select domain"
 
@@ -318,13 +318,13 @@ msgstr "Select domain"
 msgid "Select from an existing account"
 msgstr "Select from an existing account"
 
-#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:210
+#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:207
 msgid "Session"
 msgstr "Session"
 
 #: src/assets/app/views/authorize/welcome/welcome-view.tsx:45
 #: src/assets/app/views/authorize/sign-in/sign-in-view.tsx:48
-#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:137
+#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:136
 msgid "Sign in"
 msgstr "Sign in"
 
@@ -398,10 +398,10 @@ msgstr "This sign-in session has expired"
 msgid "Too short"
 msgstr "Too short"
 
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:152
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:158
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:159
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:160
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:153
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:167
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:168
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:169
 msgid "Type your desired username"
 msgstr "Type your desired username"
 
@@ -413,16 +413,16 @@ msgstr "Unexpected server response"
 msgid "Uniquely identify you"
 msgstr "Uniquely identify you"
 
+#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:144
 #: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:145
-#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:146
 msgid "Username or email address"
 msgstr "Username or email address"
 
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:260
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:292
 msgid "Valid"
 msgstr "Valid"
 
-#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:156
+#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:155
 msgid "Valid email address or username"
 msgstr "Valid email address or username"
 
@@ -430,7 +430,7 @@ msgstr "Valid email address or username"
 msgid "Verify you are human"
 msgstr "Verify you are human"
 
-#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:169
+#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:194
 msgid "Warning"
 msgstr "Warning"
 
@@ -450,7 +450,7 @@ msgstr "Wrong identifier or password"
 msgid "You are being redirected..."
 msgstr "You are being redirected..."
 
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:233
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:261
 msgid "You can change this username to any domain name you control after your account is set up."
 msgstr "You can change this username to any domain name you control after your account is set up."
 
@@ -458,7 +458,7 @@ msgstr "You can change this username to any domain name you control after your a
 msgid "You can now sign in with your new password."
 msgstr "You can now sign in with your new password."
 
-#: src/assets/app/views/authorize/reset-password/reset-password-confirm-form.tsx:52
+#: src/assets/app/views/authorize/reset-password/reset-password-confirm-form.tsx:54
 msgid "You will receive an email with a \"reset code\". Enter that code here then enter your new password."
 msgstr "You will receive an email with a \"reset code\". Enter that code here then enter your new password."
 
@@ -466,9 +466,9 @@ msgstr "You will receive an email with a \"reset code\". Enter that code here th
 msgid "Your account"
 msgstr "Your account"
 
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:226
-msgid "Your full username will be <0>{preview}</0>"
-msgstr "Your full username will be <0>{preview}</0>"
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:228
+msgid "Your full username will be: {0}"
+msgstr "Your full username will be: {0}"
 
 #: src/assets/app/views/authorize/reset-password/reset-password-view.tsx:108
 msgid "Your password has been updated!"
