@@ -88,12 +88,15 @@ type UnionToTupleInternal<
 
 /**
  * This utility allows to create an assertion function that checks if a
- * particular interface is fully implemented but some value.
+ * particular interface is fully implemented by some value.
  *
  * The use of the (rather complex) {@link UnionToTuple} allows to ensure that,
  * at runtime, all the required interface keys are indeed checked, and that
  * future additions to the interface do not result in a false sense of type
  * safety.
+ *
+ * @note This function should not be made public, as it relies on a quirk of
+ * TypeScript to work properly.
  *
  * @example Valid use
  *
