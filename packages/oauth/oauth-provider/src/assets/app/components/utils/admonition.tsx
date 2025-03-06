@@ -1,4 +1,4 @@
-import { memo, JSX } from 'react'
+import { JSX, memo } from 'react'
 import { clsx, cx } from '../../lib/clsx.ts'
 import { Override } from '../../lib/util.ts'
 import { AlertIcon, EyeIcon } from './icons.tsx'
