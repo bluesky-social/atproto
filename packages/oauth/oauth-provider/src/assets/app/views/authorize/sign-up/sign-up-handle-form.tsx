@@ -13,7 +13,7 @@ import {
   CheckMarkIcon,
   XMarkIcon,
 } from '../../../components/utils/icons.tsx'
-import { clsx, cx } from '../../../lib/clsx.ts'
+import { clsx } from '../../../lib/clsx.ts'
 import { mergeRefs } from '../../../lib/ref.ts'
 import { Override } from '../../../lib/util.ts'
 
@@ -151,15 +151,15 @@ export function SignUpHandleForm({
     >
       <Fieldset label={<Trans>Type your desired username</Trans>}>
         <div
-          className={cx([
+          className={clsx(
             'bg-gray-200 dark:bg-slate-700',
             'rounded-lg',
             'overflow-hidden',
-          ])}
+          )}
         >
           <InputText
             ref={inputRef}
-            className={cx(['rounded-br-none', 'rounded-bl-none'])}
+            className="rounded-br-none rounded-bl-none"
             icon={<AtSymbolIcon className="w-5" />}
             name="handle"
             type="text"
@@ -217,12 +217,12 @@ export function SignUpHandleForm({
           />
 
           <p
-            className={cx([
+            className={clsx(
               'flex flex-row items-center gap-1',
               'text-sm italic',
               'text-gray-700 dark:text-gray-300',
               'px-3 py-2',
-            ])}
+            )}
           >
             <Trans>
               Your full username will be:{' '}

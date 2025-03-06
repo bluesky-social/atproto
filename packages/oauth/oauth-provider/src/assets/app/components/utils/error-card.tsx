@@ -4,12 +4,12 @@ import { useRandomString } from '../../hooks/use-random-string.ts'
 import { Api } from '../../lib/api.ts'
 import { JsonErrorResponse } from '../../lib/json-client.ts'
 import { Override } from '../../lib/util.ts'
+import { Admonition, AdmonitionProps } from './admonition.tsx'
 import { ErrorMessage } from './error-message.tsx'
 import { ExpandTransition } from './expand-transition.tsx'
-import { InfoCard, InfoCardProps } from './info-card.tsx'
 
 export type ErrorCardProps = Override<
-  Omit<InfoCardProps, 'role'>,
+  Omit<AdmonitionProps, 'role'>,
   {
     error: unknown
   }
@@ -17,7 +17,7 @@ export type ErrorCardProps = Override<
 export const ErrorCard = memo(function ErrorCard({
   error,
 
-  // InfoCardProps
+  // Admonition
   children,
   onClick,
   onKeyDown,
@@ -48,7 +48,7 @@ export const ErrorCard = memo(function ErrorCard({
   }, [parsedError])
 
   return (
-    <InfoCard
+    <Admonition
       role="alert"
       aria-controls={detailsDivId}
       tabIndex={0}
@@ -93,6 +93,6 @@ export const ErrorCard = memo(function ErrorCard({
           <pre className="text-xs">{JSON.stringify(parsedError, null, 2)}</pre>
         )}
       </ExpandTransition>
-    </InfoCard>
+    </Admonition>
   )
 })
