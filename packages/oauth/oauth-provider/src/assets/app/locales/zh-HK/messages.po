@@ -153,7 +153,7 @@ msgid "Enter the code you received to reset your password."
 msgstr ""
 
 #: src/assets/app/views/authorize/reset-password/reset-password-request-form.tsx:69
-msgid "Enter the email you used to create your account. We\\'ll send you a \"reset code\" so you can set a new password."
+msgid "Enter the email you used to create your account. We'll send you a \"reset code\" so you can set a new password."
 msgstr ""
 
 #: src/assets/app/views/authorize/reset-password/reset-password-request-form.tsx:57

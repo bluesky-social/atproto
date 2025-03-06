@@ -67,7 +67,7 @@ export function ResetPasswordRequestForm({
         />
         <p id={emailAriaId} className="text-sm mt-1">
           <Trans>
-            Enter the email you used to create your account. We\'ll send you a
+            Enter the email you used to create your account. We'll send you a
             "reset code" so you can set a new password.
           </Trans>
         </p>

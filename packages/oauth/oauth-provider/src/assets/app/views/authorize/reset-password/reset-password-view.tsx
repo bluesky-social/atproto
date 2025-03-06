@@ -65,7 +65,7 @@ export function ResetPasswordView({
           cancelLabel={<Trans>Back</Trans>}
           onCancel={onBack}
         />
-        <hr className="mb-2" />
+        <hr className="my-2" />
         <center>
           <Button transparent onClick={() => setView(View.ConfirmReset)}>
             <Trans>Already have a code?</Trans>
