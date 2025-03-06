@@ -26,7 +26,7 @@ export const Admonition = memo(function Admonition({
         'p-3',
         'rounded-lg',
         'border',
-        'border-gray-700',
+        'border-gray-300 dark:border-gray-700',
         role === 'alert' && 'bg-error',
         className,
       ])}
@@ -39,9 +39,7 @@ export const Admonition = memo(function Admonition({
         )}
       />
 
-      <div className='flex flex-1 flex-col'>
-        {children}
-      </div>
+      <div className="flex flex-1 flex-col">{children}</div>
     </div>
   )
 })

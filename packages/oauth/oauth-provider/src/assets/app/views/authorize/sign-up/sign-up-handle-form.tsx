@@ -13,9 +13,10 @@ import {
   CheckMarkIcon,
   XMarkIcon,
 } from '../../../components/utils/icons.tsx'
-import { clsx } from '../../../lib/clsx.ts'
+import { clsx, cx } from '../../../lib/clsx.ts'
 import { mergeRefs } from '../../../lib/ref.ts'
 import { Override } from '../../../lib/util.ts'
+import { Admonition } from '../../../components/utils/admonition.tsx'
 
 /**
  * Spec limit is 63, but in practice, we've limited it to 18 in our implementations.
@@ -150,102 +151,131 @@ export function SignUpHandleForm({
       append={children}
     >
       <Fieldset label={<Trans>Type your desired username</Trans>}>
-        <InputText
-          ref={inputRef}
-          icon={<AtSymbolIcon className="w-5" />}
-          name="handle"
-          type="text"
-          placeholder={t`Type your desired username`}
-          aria-label={t`Type your desired username`}
-          title={t`Type your desired username`}
-          append={
-            domains.length > 1 && (
-              <select
-                onClick={(event) => event.stopPropagation()}
-                onMouseDown={(event) => event.stopPropagation()}
-                value={domainIdx}
-                aria-label={t`Select domain`}
-                onChange={(event) => {
-                  setDomainIdx(Number(event.target.value))
-                  inputRef.current?.focus()
-                }}
-                className={clsx(
-                  'block w-full',
-                  'sm:text-sm',
-                  'rounded-lg p-2',
-                  'bg-white dark:bg-slate-600',
-                )}
-              >
-                {domains.map((domain, idx) => (
-                  <option key={domain} value={idx}>
-                    {domain}
-                  </option>
-                ))}
-              </select>
-            )
-          }
-          pattern="[a-z0-9][a-z0-9\-]+[a-z0-9]"
-          minLength={minLength}
-          maxLength={maxLength}
-          autoCapitalize="none"
-          autoCorrect="off"
-          autoComplete="off"
-          dir="auto"
-          enterKeyHint="done"
-          autoFocus
-          required
-          value={segment}
-          onChange={(event) => {
-            const segment = event.target.value.toLowerCase()
+        <div
+          className={cx([
+            'bg-gray-200 dark:bg-slate-700',
+            'rounded-lg',
+            'overflow-hidden',
+          ])}
+        >
+          <InputText
+            ref={inputRef}
+            className={cx(['rounded-br-none', 'rounded-bl-none'])}
+            icon={<AtSymbolIcon className="w-5" />}
+            name="handle"
+            type="text"
+            placeholder={t`Type your desired username`}
+            aria-label={t`Type your desired username`}
+            title={t`Type your desired username`}
+            append={
+              domains.length > 1 && (
+                <select
+                  onClick={(event) => event.stopPropagation()}
+                  onMouseDown={(event) => event.stopPropagation()}
+                  value={domainIdx}
+                  aria-label={t`Select domain`}
+                  onChange={(event) => {
+                    setDomainIdx(Number(event.target.value))
+                    inputRef.current?.focus()
+                  }}
+                  className={clsx(
+                    'block w-full',
+                    'text-sm',
+                    'rounded-lg p-2',
+                    'bg-white dark:bg-slate-600',
+                  )}
+                >
+                  {domains.map((domain, idx) => (
+                    <option key={domain} value={idx}>
+                      {domain}
+                    </option>
+                  ))}
+                </select>
+              )
+            }
+            pattern="[a-z0-9][a-z0-9\-]+[a-z0-9]"
+            minLength={minLength}
+            maxLength={maxLength}
+            autoCapitalize="none"
+            autoCorrect="off"
+            autoComplete="off"
+            dir="auto"
+            enterKeyHint="done"
+            autoFocus
+            required
+            value={segment}
+            onChange={(event) => {
+              const segment = event.target.value.toLowerCase()
 
-            // Ensure the input is always lowercase
-            const selectionStart = event.target.selectionStart
-            const selectionEnd = event.target.selectionEnd
-            event.target.value = segment
-            event.target.setSelectionRange(selectionStart, selectionEnd)
+              // Ensure the input is always lowercase
+              const selectionStart = event.target.selectionStart
+              const selectionEnd = event.target.selectionEnd
+              event.target.value = segment
+              event.target.setSelectionRange(selectionStart, selectionEnd)
 
-            setSegment(segment)
-          }}
-        />
-      </Fieldset>
+              setSegment(segment)
+            }}
+          />
 
-      <ExpandTransition visible={!!segment} delayed>
-        <div>
-          <ValidationMessage valid={validity.validCharset}>
-            <Trans>Only contains letters, numbers, and hyphens</Trans>
-          </ValidationMessage>
-          <ValidationMessage valid={validity.validLength}>
+          <p
+            className={cx([
+              'flex flex-row items-center gap-1',
+              'text-sm italic',
+              'text-gray-700 dark:text-gray-300',
+              'px-3 py-2',
+            ])}
+          >
             <Trans>
-              Between {minLength} and {maxLength} characters
-            </Trans>
-          </ValidationMessage>
-        </div>
-
-        <ExpandTransition visible={!!handle} delayed aria-hidden={!handle}>
-          <p className="mt-3">
-            <Trans>
-              Your full username will be <b>{preview}</b>
+              Your full username will be:{' '}
+              {segment.length ? (
+                <strong className="text-gray-800 dark:text-gray-200">
+                  {preview}
+                </strong>
+              ) : (
+                <div className="bg-gray-300 dark:bg-slate-600 rounded-md p-2 w-24" />
+              )}
             </Trans>
           </p>
-        </ExpandTransition>
+        </div>
+      </Fieldset>
 
-        <p className="mt-3">
+      <div>
+        <ValidationMessage
+          hasValue={!!segment.length}
+          valid={validity.validCharset}
+        >
+          <Trans>Only contains letters, numbers, and hyphens</Trans>
+        </ValidationMessage>
+        <ValidationMessage
+          hasValue={!!segment.length}
+          valid={validity.validLength}
+        >
+          <Trans>
+            Between {minLength} and {maxLength} characters
+          </Trans>
+        </ValidationMessage>
+      </div>
+
+      <Admonition role="status">
+        <p className="text-md">
           <Trans>
             You can change this username to any domain name you control after
             your account is set up.
           </Trans>
         </p>
-      </ExpandTransition>
+      </Admonition>
     </FormCardAsync>
   )
 }
 
 type ValidationMessageProps = JSX.IntrinsicElements['div'] & {
   valid: boolean
+  hasValue: boolean
 }
 
 function ValidationMessage({
   valid,
+  hasValue,
 
   // div
   children,
@@ -253,19 +283,27 @@ function ValidationMessage({
 }: ValidationMessageProps) {
   const { t } = useLingui()
   return (
-    <div {...props}>
-      {valid ? (
-        <CheckMarkIcon
-          className="inline-block mr-2 w-4 text-success"
-          title={t`Valid`}
-        />
+    <div {...props} className="flex flex-row items-center gap-2">
+      {hasValue ? (
+        <>
+          {valid ? (
+            <CheckMarkIcon
+              className="inline-block w-4 h-4 text-success"
+              title={t`Valid`}
+            />
+          ) : (
+            <XMarkIcon
+              className="inline-block w-4 h-4 text-error"
+              title={t`Invalid`}
+            />
+          )}
+        </>
       ) : (
-        <XMarkIcon
-          className="inline-block mr-2 w-4 text-error"
-          title={t`Invalid`}
-        />
+        <div className="w-4 h-4 flex items-center justify-center">
+          <div className="bg-gray-300 dark:bg-slate-600 rounded-full w-2 h-2" />
+        </div>
       )}
-      <span>{children}</span>
+      <div className="text-sm">{children}</div>
     </div>
   )
 }
