@@ -65,9 +65,9 @@ export function InputNewPassword({
         visible={focused && password.length > 0}
         className="flex flex-col"
       >
-        <PasswordStrengthMeter className="mt-2" password={password} />
+        <PasswordStrengthMeter className="mt-3" password={password} />
         <PasswordStrengthLabel
-          className="self-end text-xs"
+          className="text-xs mt-1 text-gray-500 dark:text-gray-400"
           password={password}
         />
       </ExpandTransition>

@@ -7,6 +7,7 @@ import {
   FormCardAsyncProps,
 } from '../../../components/forms/form-card-async.tsx'
 import { InputEmailAddress } from '../../../components/forms/input-email-address.tsx'
+import { Admonition } from '../../../components/utils/admonition.tsx'
 import { useRandomString } from '../../../hooks/use-random-string.ts'
 import { mergeRefs } from '../../../lib/ref.ts'
 import { Override } from '../../../lib/util.ts'
@@ -65,12 +66,14 @@ export function ResetPasswordRequestForm({
             setEmail(email)
           }}
         />
-        <p id={emailAriaId} className="text-sm mt-1">
-          <Trans>
-            Enter the email you used to create your account. We'll send you a
-            "reset code" so you can set a new password.
-          </Trans>
-        </p>
+        <Admonition role='info'>
+          <p id={emailAriaId} className="">
+            <Trans>
+              Enter the email you used to create your account. We'll send you a
+              "reset code" so you can set a new password.
+            </Trans>
+          </p>
+        </Admonition>
       </Fieldset>
     </FormCardAsync>
   )

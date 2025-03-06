@@ -7,6 +7,7 @@ import {
 } from '../../../components/forms/form-card-async.tsx'
 import { InputNewPassword } from '../../../components/forms/input-new-password.tsx'
 import { InputToken } from '../../../components/forms/input-token.tsx'
+import { Admonition } from '../../../components/utils/admonition.tsx'
 import { useRandomString } from '../../../hooks/use-random-string.ts'
 import { Override } from '../../../lib/util.ts'
 
@@ -48,12 +49,14 @@ export function ResetPasswordConfirmForm({
       }}
       invalid={invalid || !token || !password}
     >
-      <p id={tokenAriaId} className="text-sm">
-        <Trans>
-          You will receive an email with a "reset code". Enter that code here
-          then enter your new password.
-        </Trans>
-      </p>
+      <Admonition role="info">
+        <p id={tokenAriaId} className="text-md">
+          <Trans>
+            You will receive an email with a "reset code". Enter that code here
+            then enter your new password.
+          </Trans>
+        </p>
+      </Admonition>
 
       <Fieldset label={<Trans>Reset code</Trans>}>
         <InputToken

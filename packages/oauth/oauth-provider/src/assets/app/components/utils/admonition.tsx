@@ -1,12 +1,12 @@
 import { memo, JSX } from 'react'
 import { clsx, cx } from '../../lib/clsx.ts'
 import { Override } from '../../lib/util.ts'
-import { AlertIcon } from './icons.tsx'
+import { AlertIcon, EyeIcon } from './icons.tsx'
 
 export type Props = Override<
   JSX.IntrinsicElements['div'],
   {
-    role: 'alert' | 'status'
+    role: 'alert' | 'status' | 'info'
   }
 >
 
@@ -31,13 +31,23 @@ export const Admonition = memo(function Admonition({
         className,
       ])}
     >
-      <AlertIcon
-        aria-hidden
-        className={clsx(
-          'fill-current h-6 w-6',
-          role === 'alert' ? 'text-error-c' : 'text-brand',
-        )}
-      />
+      {role === 'info' ? (
+        <EyeIcon
+          aria-hidden
+          className={clsx(
+            'fill-current h-6 w-6',
+            'text-brand',
+          )}
+        />
+      ) : (
+        <AlertIcon
+          aria-hidden
+          className={clsx(
+            'fill-current h-6 w-6',
+            role === 'alert' ? 'text-error-c' : 'text-brand',
+          )}
+        />
+      )}
 
       <div className="flex flex-1 flex-col">{children}</div>
     </div>
