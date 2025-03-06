@@ -12,6 +12,7 @@ import {
 import { AccountManager, AccountStatus } from '../../account-manager'
 import { ActorStore } from '../../actor-store/actor-store'
 import { ActorStoreTransactor } from '../../actor-store/actor-store-transactor'
+import { countAll } from '../../db'
 import {
   PreparedWrite,
   prepareCreate,
@@ -19,32 +20,62 @@ import {
   prepareUpdate,
 } from '../../repo'
 import { AccountEvt, CommitEvt, SeqEvt, Sequencer } from '../../sequencer'
+import { RecoveryDb } from './recovery-db'
 import { UserQueues } from './user-queues'
 
 export type RecovererContext = {
+  recoveryDb: RecoveryDb
   sequencer: Sequencer
   accountManager: AccountManager
   actorStore: ActorStore
 }
 
+const PAGE_SIZE = 5000
+
 export class Recoverer {
-  cursor: number
   queues: UserQueues
+  failed: Set<string>
 
   constructor(
     public ctx: RecovererContext,
-    opts: { cursor: number; concurrency: number },
+    opts: { concurrency: number },
   ) {
-    this.cursor = opts.cursor
     this.queues = new UserQueues(opts.concurrency)
+    this.failed = new Set()
   }
 
-  async run() {
-    let done = false
-    while (!done) {
-      done = await this.loadNextPage()
-      await this.queues.onEmpty()
+  async run(startCursor = 0) {
+    const failed = await this.ctx.recoveryDb.db
+      .selectFrom('failed')
+      .select('did')
+      .execute()
+    for (const row of failed) {
+      this.failed.add(row.did)
     }
+
+    const totalRes = await this.ctx.sequencer.db.db
+      .selectFrom('repo_seq')
+      .select(countAll.as('count'))
+      .executeTakeFirstOrThrow()
+    const totalEvts = totalRes.count
+    let completed = 0
+
+    let cursor: number | undefined = startCursor
+    while (cursor !== undefined) {
+      const page = await this.ctx.sequencer.requestSeqRange({
+        earliestSeq: cursor,
+        limit: PAGE_SIZE,
+      })
+      page.forEach((evt) => this.processEvent(evt))
+      cursor = page.at(-1)?.seq
+
+      await this.queues.onEmpty()
+
+      completed += PAGE_SIZE
+      const percentComplete = (completed / totalEvts) * 100
+      console.log(`${percentComplete.toFixed(2)}% - ${cursor}`)
+    }
+
     await this.queues.processAll()
   }
 
@@ -54,22 +85,6 @@ export class Recoverer {
 
   async destroy() {
     await this.queues.destroy()
-  }
-
-  private async loadNextPage(): Promise<boolean> {
-    const page = await this.ctx.sequencer.requestSeqRange({
-      earliestSeq: this.cursor,
-      limit: 5000,
-    })
-    console.log('PAGE: ', page.at(-1)?.seq)
-    page.forEach((evt) => this.processEvent(evt))
-    const lastEvt = page.at(-1)
-    if (!lastEvt) {
-      return true
-    } else {
-      this.cursor = lastEvt.seq
-      return false
-    }
   }
 
   processEvent(evt: SeqEvt) {
@@ -85,6 +100,9 @@ export class Recoverer {
   processCommit(evt: CommitEvt) {
     const did = evt.repo
     this.queues.addToUser(did, async () => {
+      if (this.failed.has(did)) {
+        return
+      }
       const { writes, blocks } = await parseCommitEvt(evt)
       if (evt.since === null) {
         const actorExists = await this.ctx.actorStore.exists(did)
@@ -109,10 +127,8 @@ export class Recoverer {
             this.trackBlobs(actorTxn, writes),
           ])
         })
-        .catch((err) => {
-          console.log(evt.repo)
-          console.log(writes)
-          throw err
+        .catch(async (err) => {
+          await this.trackFailure(did, err)
         })
     })
   }
@@ -132,7 +148,6 @@ export class Recoverer {
       }
     }
   }
-
   async processRepoCreation(
     evt: CommitEvt,
     writes: PreparedWrite[],
@@ -157,7 +172,7 @@ export class Recoverer {
         actorTxn.repo.blob.processWriteBlobs(commit.rev, writes),
       ]),
     )
-    console.log(`created repo and keypair for ${did}`)
+    await this.trackNewAccount(did)
   }
 
   processAccountEvt(evt: AccountEvt) {
@@ -167,15 +182,34 @@ export class Recoverer {
     }
     const did = evt.did
     this.queues.addToUser(did, async () => {
-      try {
-        const { directory } = await this.ctx.actorStore.getLocation(did)
-        await rmIfExists(directory, true)
-        await this.ctx.accountManager.deleteAccount(did)
-      } catch (err) {
-        console.log('DID:', did)
-        throw err
-      }
+      const { directory } = await this.ctx.actorStore.getLocation(did)
+      await rmIfExists(directory, true)
+      await this.ctx.accountManager.deleteAccount(did)
     })
+  }
+
+  async trackFailure(did: string, err: unknown) {
+    this.failed.add(did)
+    await this.ctx.recoveryDb.db
+      .insertInto('failed')
+      .values({
+        did,
+        error: err?.toString(),
+        fixed: 0,
+      })
+      .onConflict((oc) => oc.doNothing())
+      .execute()
+  }
+
+  async trackNewAccount(did: string) {
+    await this.ctx.recoveryDb.db
+      .insertInto('new_account')
+      .values({
+        did,
+        published: 0,
+      })
+      .onConflict((oc) => oc.doNothing())
+      .execute()
   }
 }
 

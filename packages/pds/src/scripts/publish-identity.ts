@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises'
+import { wait } from '@atproto/common'
 import { Sequencer } from '../sequencer'
 import { parseIntArg } from './util'
-import { wait } from '@atproto/common'
 
 type Context = {
   sequencer: Sequencer

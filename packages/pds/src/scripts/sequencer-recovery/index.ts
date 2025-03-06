@@ -6,6 +6,7 @@ import { ImageUrlBuilder } from '../../image/image-url-builder'
 import { Sequencer } from '../../sequencer'
 import { parseIntArg } from '../util'
 import { Recoverer, RecovererContext } from './recoverer'
+import { getAndMigrateRecoveryDb } from './recovery-db'
 
 export const sequencerRecovery = async (
   ctx: RecovererContext,
@@ -15,10 +16,9 @@ export const sequencerRecovery = async (
   const concurrency = args[1] ? parseIntArg(args[1]) : 10
 
   const recover = new Recoverer(ctx, {
-    cursor,
     concurrency,
   })
-  await recover.run()
+  await recover.run(cursor)
 }
 
 const run = async () => {
@@ -45,8 +45,9 @@ const run = async () => {
     {} as any,
     '',
   )
-  const ctx = { sequencer, accountManager, actorStore }
-  return sequencerRecovery(ctx, ['14775345'])
+  const recoveryDb = await getAndMigrateRecoveryDb('./backup/recovery.sqlite')
+  const ctx = { sequencer, accountManager, actorStore, recoveryDb }
+  return sequencerRecovery(ctx, [])
 }
 
 run()
