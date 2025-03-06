@@ -7,12 +7,14 @@ export type InputContainerProps = Override<
   {
     icon: ReactNode
     append?: ReactNode
+    bellow?: ReactNode
   }
 >
 
 export function InputContainer({
   icon,
   append,
+  bellow,
 
   // div
   className,
@@ -36,41 +38,68 @@ export function InputContainer({
       }}
       className={clsx(
         // Layout
-        'pl-1 pr-2', // Less padding on the left because icon will provide some
         'min-h-12',
         'max-w-full',
-        'flex items-center justify-stretch',
-        // Font
-        'text-slate-600 dark:text-slate-300',
-        'accent-brand',
-        // Background
-        'bg-gray-100 focus:bg-slate-200 has-[:focus]:bg-slate-200',
-        'dark:bg-slate-800 dark:focus:bg-slate-700 dark:has-[:focus]:bg-slate-700',
+        'overflow-hidden',
         // Border
         'rounded-lg',
-        'outline-none',
-        'border-solid border-2 border-transparent',
-        'focus:border-brand has-[:focus]:border-brand',
-        'hover:border-gray-400 hover:focus:border-gray-400',
-        'dark:hover:border-gray-500 dark:hover:focus:border-gray-500',
         className,
       )}
     >
-      {icon && (
+      <div
+        className={clsx(
+          // Layout
+          'px-1',
+          'w-full',
+          'flex items-center justify-stretch',
+          // Border
+          'rounded-lg',
+          bellow ? 'rounded-br-none rounded-bl-none' : undefined,
+          'outline-none',
+          'border-solid border-2 border-transparent',
+          'focus:border-brand has-[:focus]:border-brand',
+          'hover:border-gray-400 hover:focus:border-gray-400',
+          'dark:hover:border-gray-500 dark:hover:focus:border-gray-500',
+          // Background
+          'bg-gray-100 focus:bg-slate-200 has-[:focus]:bg-slate-200',
+          'dark:bg-slate-800 dark:focus:bg-slate-700 dark:has-[:focus]:bg-slate-700',
+          // Font
+          'text-slate-600 dark:text-slate-300',
+          'accent-brand',
+        )}
+      >
+        {icon && (
+          <div
+            className={clsx(
+              'shrink-0 grow-0',
+              'w-8 h-12',
+              'flex items-center justify-center',
+              focused ? 'text-brand' : 'text-slate-500',
+            )}
+          >
+            {icon}
+          </div>
+        )}
+        <div className="flex-auto relative">{children}</div>
+        <div className="ml-1 grow-0 shrink-0 flex items-center">{append}</div>
+      </div>
+      {bellow && (
         <div
           className={clsx(
-            'self-start shrink-0 grow-0',
-            'w-8 h-12',
-            'flex items-center justify-center',
-            focused ? 'text-brand' : 'text-slate-500',
+            // Layout
+            'px-3 py-2 space-x-2',
+            'flex flex-row items-center gap-1',
+            // Border
+            'rounded-br-2 rounded-bl-2',
+            // Background
+            'bg-gray-200 dark:bg-slate-700',
+            // Font
+            'text-gray-700 dark:text-gray-300',
+            'text-sm italic',
           )}
         >
-          {icon}
+          {bellow}
         </div>
-      )}
-      <div className="flex-auto relative">{children}</div>
-      {append && (
-        <div className="ml-1 grow-0 shrink-0 flex items-center">{append}</div>
       )}
     </div>
   )

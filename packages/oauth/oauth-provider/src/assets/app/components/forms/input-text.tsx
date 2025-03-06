@@ -10,6 +10,7 @@ export type InputTextProps = Override<
   {
     icon?: ReactNode
     append?: ReactNode
+    bellow?: ReactNode
     className?: string
   }
 >
@@ -17,6 +18,7 @@ export type InputTextProps = Override<
 export function InputText({
   icon,
   append,
+  bellow,
   className,
 
   // input
@@ -36,6 +38,7 @@ export function InputText({
     <InputContainer
       icon={icon}
       append={append}
+      bellow={bellow}
       className={clsx('cursor-text', className)}
       tabIndex={-1}
       onClick={(event) => {

@@ -142,7 +142,7 @@ msgstr "Email"
 msgid "Email address"
 msgstr "Adresse email"
 
-#: src/assets/app/components/forms/input-new-password.tsx:56
+#: src/assets/app/components/forms/input-new-password.tsx:48
 msgid "Enter a password"
 msgstr "Saisissez un mot de passe"
 
@@ -158,7 +158,7 @@ msgstr "Saisissez l'email que vous avez utilisé pour créer votre compte. Nous 
 msgid "Enter your email address"
 msgstr "Saisissez votre adresse email"
 
-#: src/assets/app/components/forms/input-new-password.tsx:57
+#: src/assets/app/components/forms/input-new-password.tsx:49
 msgid "Enter your new password"
 msgstr "Saisissez votre nouveau mot de passe"
 
@@ -212,7 +212,7 @@ msgstr "Identifiant"
 msgid "Interface language selector"
 msgstr "Sélecteur de langue"
 
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:293
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:277
 msgid "Invalid"
 msgstr "Invalide"
 
@@ -295,7 +295,7 @@ msgstr "Mot de passe mis à jour"
 msgid "Password updated!"
 msgstr "Mot de passe mis à jour !"
 
-#: src/assets/app/components/forms/input-new-password.tsx:58
+#: src/assets/app/components/forms/input-new-password.tsx:50
 msgid "Password with at least {MIN_PASSWORD_LENGTH} characters"
 msgstr "Mot de passe d'au moins {MIN_PASSWORD_LENGTH} caractères"
 
@@ -330,7 +330,7 @@ msgstr "Réinitialiser le mot de passe"
 msgid "Reset your password"
 msgstr "Réinitialisez votre mot de passe"
 
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:183
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:198
 msgid "Select domain"
 msgstr "Sélectionner le domaine"
 
@@ -415,9 +415,9 @@ msgstr "Ce pseudonyme est réservé"
 msgid "This sign-in session has expired"
 msgstr "Cette session de connexion a expiré"
 
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:174
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:175
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:176
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:166
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:167
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:168
 msgid "Type your desired username"
 msgstr "Saisissez le nom d'utilisateur souhaité"
 
@@ -434,7 +434,7 @@ msgstr "Vous identifier de façon unique"
 msgid "Username or email address"
 msgstr "Nom d'utilisateur ou adresse email"
 
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:288
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:272
 msgid "Valid"
 msgstr "Valide"
 
@@ -466,7 +466,7 @@ msgstr "Identifiant ou mot de passe incorrect"
 msgid "You are being redirected..."
 msgstr "Vous êtes redirigé..."
 
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:253
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:237
 msgid "You can change this username to any domain name you control after your account is set up."
 msgstr "Vous pourrez changer ce nom d'utilisateur pour n'importe quel nom de domaine sous votre contrôle une fois votre compte créé."
 
@@ -483,7 +483,7 @@ msgid "Your account"
 msgstr "Votre compte"
 
 #. placeholder {0}: segment.length ? ( <strong className="text-gray-800 dark:text-gray-200"> {preview} </strong> ) : ( <span aria-hidden className="bg-gray-300 dark:bg-slate-600 rounded-md p-2 w-24" /> )
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:235
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:219
 msgid "Your full username will be: {0}"
 msgstr "Votre nom d'utilisateur complet sera : {0}"
 

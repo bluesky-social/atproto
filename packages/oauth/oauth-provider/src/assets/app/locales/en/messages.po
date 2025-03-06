@@ -142,7 +142,7 @@ msgstr "Email"
 msgid "Email address"
 msgstr "Email address"
 
-#: src/assets/app/components/forms/input-new-password.tsx:56
+#: src/assets/app/components/forms/input-new-password.tsx:48
 msgid "Enter a password"
 msgstr "Enter a password"
 
@@ -158,7 +158,7 @@ msgstr "Enter the email you used to create your account. We'll send you a \"rese
 msgid "Enter your email address"
 msgstr "Enter your email address"
 
-#: src/assets/app/components/forms/input-new-password.tsx:57
+#: src/assets/app/components/forms/input-new-password.tsx:49
 msgid "Enter your new password"
 msgstr "Enter your new password"
 
@@ -212,7 +212,7 @@ msgstr "Identifier"
 msgid "Interface language selector"
 msgstr "Interface language selector"
 
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:293
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:277
 msgid "Invalid"
 msgstr "Invalid"
 
@@ -295,7 +295,7 @@ msgstr "Password Updated"
 msgid "Password updated!"
 msgstr "Password updated!"
 
-#: src/assets/app/components/forms/input-new-password.tsx:58
+#: src/assets/app/components/forms/input-new-password.tsx:50
 msgid "Password with at least {MIN_PASSWORD_LENGTH} characters"
 msgstr "Password with at least {MIN_PASSWORD_LENGTH} characters"
 
@@ -330,7 +330,7 @@ msgstr "Reset Password"
 msgid "Reset your password"
 msgstr "Reset your password"
 
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:183
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:198
 msgid "Select domain"
 msgstr "Select domain"
 
@@ -415,9 +415,9 @@ msgstr "This handle is reserved"
 msgid "This sign-in session has expired"
 msgstr "This sign-in session has expired"
 
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:174
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:175
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:176
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:166
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:167
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:168
 msgid "Type your desired username"
 msgstr "Type your desired username"
 
@@ -434,7 +434,7 @@ msgstr "Uniquely identify you"
 msgid "Username or email address"
 msgstr "Username or email address"
 
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:288
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:272
 msgid "Valid"
 msgstr "Valid"
 
@@ -466,7 +466,7 @@ msgstr "Wrong identifier or password"
 msgid "You are being redirected..."
 msgstr "You are being redirected..."
 
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:253
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:237
 msgid "You can change this username to any domain name you control after your account is set up."
 msgstr "You can change this username to any domain name you control after your account is set up."
 
@@ -483,7 +483,7 @@ msgid "Your account"
 msgstr "Your account"
 
 #. placeholder {0}: segment.length ? ( <strong className="text-gray-800 dark:text-gray-200"> {preview} </strong> ) : ( <span aria-hidden className="bg-gray-300 dark:bg-slate-600 rounded-md p-2 w-24" /> )
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:235
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:219
 msgid "Your full username will be: {0}"
 msgstr "Your full username will be: {0}"
 
