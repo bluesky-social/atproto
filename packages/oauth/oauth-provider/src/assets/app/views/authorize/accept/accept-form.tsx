@@ -92,7 +92,7 @@ export function AcceptForm({
             <Trans>Authorize</Trans>
           </b>
           , you allow this application to perform the following actions in
-          accordance to their{' '}
+          accordance with their{' '}
           <a
             role="link"
             href={clientMetadata.tos_uri}
