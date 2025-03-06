@@ -17,7 +17,7 @@ msgstr ""
 msgid "<0/> is asking for permission to access your account (<1/>)."
 msgstr "<0/> demande la permission d'accéder à votre compte (<1/>)."
 
-#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:224
+#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:221
 msgid "2FA Confirmation"
 msgstr "Confirmation 2FA"
 
@@ -33,7 +33,7 @@ msgstr "Accéder aux données de votre compte (sauf les messages de chat)"
 msgid "Access your chat messages"
 msgstr "Accéder à vos messages de chat"
 
-#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:139
+#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:138
 msgid "Account"
 msgstr "Compte d'utilisateur"
 
@@ -63,14 +63,14 @@ msgid "Authorize"
 msgstr "Authoriser l'accès"
 
 #: src/assets/app/views/authorize/sign-in/sign-in-picker.tsx:47
-#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:131
+#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:130
 #: src/assets/app/views/authorize/reset-password/reset-password-view.tsx:65
 #: src/assets/app/views/authorize/reset-password/reset-password-view.tsx:95
 #: src/assets/app/components/forms/wizard-card.tsx:93
 msgid "Back"
 msgstr "Retour"
 
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:253
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:252
 msgid "Between {minLength} and {maxLength} characters"
 msgstr "Entre {minLength} et {maxLength} caractères"
 
@@ -87,7 +87,7 @@ msgstr "En créant un compte, vous acceptez les {0} et la {1} de ce service."
 msgid "Cancel"
 msgstr "Annuler"
 
-#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:237
+#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:234
 msgid "Check your {0} email for a login code and enter it here."
 msgstr "Vérifiez vos emails {0} pour un code de connexion et saisissez-le ici."
 
@@ -99,7 +99,7 @@ msgstr "Choisissez un nom d'utilisateur"
 msgid "Code"
 msgstr "Code"
 
-#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:136
+#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:135
 msgid "Confirm"
 msgstr "Confirmer"
 
@@ -107,7 +107,7 @@ msgstr "Confirmer"
 msgid "Confirm your password to continue"
 msgstr "Confirmez votre mot de passe pour continuer"
 
-#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:228
+#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:225
 msgid "Confirmation code"
 msgstr "Code de confirmation"
 
@@ -176,7 +176,7 @@ msgstr "Erreur"
 msgid "Forgot Password"
 msgstr "Mot de passe oublié"
 
-#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:183
+#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:180
 msgid "Forgot?"
 msgstr "Oublié ?"
 
@@ -204,7 +204,7 @@ msgstr "Identifiant"
 msgid "Interface language selector"
 msgstr "Sélecteur de langue"
 
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:297
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:296
 msgid "Invalid"
 msgstr "Invalide"
 
@@ -256,7 +256,7 @@ msgstr "Suivant"
 msgid "Okay"
 msgstr "OK"
 
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:247
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:246
 msgid "Only contains letters, numbers, and hyphens"
 msgstr "Ne contient que des lettres, des chiffres et des traits d'union"
 
@@ -279,7 +279,7 @@ msgstr "Mot de passe mis à jour !"
 msgid "Password with at least {MIN_PASSWORD_LENGTH} characters"
 msgstr "Mot de passe d'au moins {MIN_PASSWORD_LENGTH} caractères"
 
-#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:197
+#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:194
 msgid "Please verify the domain name of the website before entering your password. Never enter your password on a domain you do not trust."
 msgstr "Veuillez vérifier le nom de domaine du site web avant de saisir votre mot de passe. N'entrez jamais votre mot de passe sur un domaine auquel vous ne faites pas confiance."
 
@@ -289,8 +289,8 @@ msgstr "Veuillez vérifier le nom de domaine du site web avant de saisir votre m
 msgid "Privacy Policy"
 msgstr "Politique de Confidentialité"
 
-#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:211
-#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:216
+#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:208
+#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:213
 msgid "Remember this account on this device"
 msgstr "Se souvenir de ce compte sur cet appareil"
 
@@ -306,11 +306,11 @@ msgstr "Code de réinitialisation"
 msgid "Reset Password"
 msgstr "Réinitialiser le mot de passe"
 
-#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:181
+#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:178
 msgid "Reset your password"
 msgstr "Réinitialisez votre mot de passe"
 
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:176
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:175
 msgid "Select domain"
 msgstr "Sélectionner le domaine"
 
@@ -318,13 +318,13 @@ msgstr "Sélectionner le domaine"
 msgid "Select from an existing account"
 msgstr "Sélectionner un compte"
 
-#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:207
+#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:204
 msgid "Session"
 msgstr "Session"
 
 #: src/assets/app/views/authorize/welcome/welcome-view.tsx:45
 #: src/assets/app/views/authorize/sign-in/sign-in-view.tsx:48
-#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:136
+#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:135
 msgid "Sign in"
 msgstr "Se connecter"
 
@@ -398,10 +398,10 @@ msgstr "Cette session de connexion a expiré"
 msgid "Too short"
 msgstr "Trop court"
 
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:153
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:152
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:166
 #: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:167
 #: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:168
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:169
 msgid "Type your desired username"
 msgstr "Saisissez le nom d'utilisateur souhaité"
 
@@ -413,16 +413,16 @@ msgstr "Réponse inattendue du serveur"
 msgid "Uniquely identify you"
 msgstr "Vous identifier de façon unique"
 
+#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:143
 #: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:144
-#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:145
 msgid "Username or email address"
 msgstr "Nom d'utilisateur ou adresse email"
 
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:292
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:291
 msgid "Valid"
 msgstr "Valide"
 
-#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:155
+#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:154
 msgid "Valid email address or username"
 msgstr "Adresse email ou nom d'utilisateur valide"
 
@@ -430,7 +430,7 @@ msgstr "Adresse email ou nom d'utilisateur valide"
 msgid "Verify you are human"
 msgstr "Vérifiez que vous êtes humain"
 
-#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:194
+#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:191
 msgid "Warning"
 msgstr "Avertissement"
 
@@ -450,7 +450,7 @@ msgstr "Identifiant ou mot de passe incorrect"
 msgid "You are being redirected..."
 msgstr "Vous êtes redirigé..."
 
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:261
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:260
 msgid "You can change this username to any domain name you control after your account is set up."
 msgstr "Vous pourrez changer ce nom d'utilisateur pour n'importe quel nom de domaine sous votre contrôle une fois votre compte créé."
 
@@ -466,7 +466,7 @@ msgstr "Vous aver reçu un email avec un \"code de réinitialisation\". Saisisse
 msgid "Your account"
 msgstr "Votre compte"
 
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:228
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:227
 msgid "Your full username will be: {0}"
 msgstr "Votre nom d'utilisateur complet sera : {0}"
 

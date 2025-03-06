@@ -10,8 +10,8 @@ import { InputCheckbox } from '../../../components/forms/input-checkbox.tsx'
 import { InputPassword } from '../../../components/forms/input-password.tsx'
 import { InputText } from '../../../components/forms/input-text.tsx'
 import { InputToken } from '../../../components/forms/input-token.tsx'
-import { AtSymbolIcon } from '../../../components/utils/icons.tsx'
 import { Admonition } from '../../../components/utils/admonition.tsx'
+import { AtSymbolIcon } from '../../../components/utils/icons.tsx'
 import { AsyncActionController } from '../../../hooks/use-async-action.ts'
 import {
   InvalidCredentialsError,
@@ -67,7 +67,6 @@ export function SignInForm({
   const [secondFactor, setSecondFactor] =
     useState<null | SecondAuthenticationFactorRequiredError>(null)
 
-  const [pwdFocus, setPwdFocus] = useState(false)
   const [loading, setLoading] = useState(false)
 
   const formRef = useRef<AsyncActionController>(null)
@@ -168,8 +167,6 @@ export function SignInForm({
           resetState()
           setPassword(event.target.value)
         }}
-        onFocus={() => setPwdFocus(true)}
-        onBlur={() => setTimeout(setPwdFocus, 100, false)}
         append={
           onForgotPassword && (
             <Button

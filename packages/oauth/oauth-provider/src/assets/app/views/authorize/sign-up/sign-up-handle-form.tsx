@@ -7,7 +7,7 @@ import {
   FormCardAsyncProps,
 } from '../../../components/forms/form-card-async.tsx'
 import { InputText } from '../../../components/forms/input-text.tsx'
-import { ExpandTransition } from '../../../components/utils/expand-transition.tsx'
+import { Admonition } from '../../../components/utils/admonition.tsx'
 import {
   AtSymbolIcon,
   CheckMarkIcon,
@@ -16,7 +16,6 @@ import {
 import { clsx, cx } from '../../../lib/clsx.ts'
 import { mergeRefs } from '../../../lib/ref.ts'
 import { Override } from '../../../lib/util.ts'
-import { Admonition } from '../../../components/utils/admonition.tsx'
 
 /**
  * Spec limit is 63, but in practice, we've limited it to 18 in our implementations.
