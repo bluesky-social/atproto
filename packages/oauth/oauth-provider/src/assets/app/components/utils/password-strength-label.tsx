@@ -1,4 +1,4 @@
-import { Trans } from '@lingui/react/macro'
+import { Trans, useLingui } from '@lingui/react/macro'
 import { JSX } from 'react'
 import { PasswordStrength, getPasswordStrength } from '../../lib/password.ts'
 import { Override } from '../../lib/util.ts'
@@ -16,10 +16,11 @@ export function PasswordStrengthLabel({
   // span
   ...props
 }: PasswordStrengthLabelProps) {
+  const { t } = useLingui()
   const strength = getPasswordStrength(password)
 
   return (
-    <span {...props} aria-label="Password strength">
+    <span {...props} aria-label={t`Password strength`}>
       {strength === PasswordStrength.extra ? (
         <Trans>Extra</Trans>
       ) : strength === PasswordStrength.strong ? (

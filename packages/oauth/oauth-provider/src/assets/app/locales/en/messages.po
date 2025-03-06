@@ -172,7 +172,7 @@ msgstr "Enter your username and password"
 msgid "Error"
 msgstr "Error"
 
-#: src/assets/app/components/utils/password-strength-label.tsx:24
+#: src/assets/app/components/utils/password-strength-label.tsx:25
 msgid "Extra"
 msgstr "Extra"
 
@@ -238,11 +238,11 @@ msgstr "Looks like {example}"
 msgid "Make visible"
 msgstr "Make visible"
 
-#: src/assets/app/components/utils/password-strength-label.tsx:32
+#: src/assets/app/components/utils/password-strength-label.tsx:33
 msgid "Missing"
 msgstr "Missing"
 
-#: src/assets/app/components/utils/password-strength-label.tsx:28
+#: src/assets/app/components/utils/password-strength-label.tsx:29
 msgid "Moderate"
 msgstr "Moderate"
 
@@ -274,6 +274,10 @@ msgstr "Only letters, numbers, and hyphens"
 #: src/assets/app/components/forms/input-password.tsx:53
 msgid "Password"
 msgstr "Password"
+
+#: src/assets/app/components/utils/password-strength-label.tsx:23
+msgid "Password strength"
+msgstr "Password strength"
 
 #: src/assets/app/components/utils/password-strength-meter.tsx:45
 msgid "Password strength indicator"
@@ -356,7 +360,7 @@ msgstr "Sign up"
 msgid "Step {currentPosition} of {count}"
 msgstr "Step {currentPosition} of {count}"
 
-#: src/assets/app/components/utils/password-strength-label.tsx:26
+#: src/assets/app/components/utils/password-strength-label.tsx:27
 msgid "Strong"
 msgstr "Strong"
 
@@ -445,7 +449,7 @@ msgstr "Warning"
 msgid "We're so excited to have you join us!"
 msgstr "We're so excited to have you join us!"
 
-#: src/assets/app/components/utils/password-strength-label.tsx:30
+#: src/assets/app/components/utils/password-strength-label.tsx:31
 msgid "Weak"
 msgstr "Weak"
 
