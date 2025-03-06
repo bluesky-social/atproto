@@ -1,6 +1,5 @@
 import { Trans, useLingui } from '@lingui/react/macro'
 import { JSX, ReactNode, useCallback, useEffect, useRef, useState } from 'react'
-import { Fieldset } from '../../../components/forms/fieldset.tsx'
 import {
   AsyncActionController,
   FormCardAsync,
@@ -149,98 +148,6 @@ export function SignUpHandleForm({
       invalid={invalid || !handle}
       append={children}
     >
-      <Fieldset label={<Trans>Type your desired username</Trans>}>
-        <div
-          className={clsx(
-            'bg-gray-200 dark:bg-slate-700',
-            'rounded-lg',
-            'overflow-hidden',
-          )}
-        >
-          <InputText
-            ref={inputRef}
-            className="rounded-br-none rounded-bl-none"
-            icon={<AtSymbolIcon className="w-5" />}
-            name="handle"
-            type="text"
-            placeholder={t`Type your desired username`}
-            aria-label={t`Type your desired username`}
-            title={t`Type your desired username`}
-            append={
-              domains.length > 1 && (
-                <select
-                  onClick={(event) => event.stopPropagation()}
-                  onMouseDown={(event) => event.stopPropagation()}
-                  value={domainIdx}
-                  aria-label={t`Select domain`}
-                  onChange={(event) => {
-                    setDomainIdx(Number(event.target.value))
-                    inputRef.current?.focus()
-                  }}
-                  className={clsx(
-                    'block w-full',
-                    'text-sm',
-                    'rounded-lg p-2',
-                    'bg-white dark:bg-slate-600',
-                  )}
-                >
-                  {domains.map((domain, idx) => (
-                    <option key={domain} value={idx}>
-                      {domain}
-                    </option>
-                  ))}
-                </select>
-              )
-            }
-            pattern="[a-z0-9][a-z0-9\-]+[a-z0-9]"
-            minLength={minLength}
-            maxLength={maxLength}
-            autoCapitalize="none"
-            autoCorrect="off"
-            autoComplete="off"
-            dir="auto"
-            enterKeyHint="done"
-            autoFocus
-            required
-            value={segment}
-            onChange={(event) => {
-              const segment = event.target.value.toLowerCase()
-
-              // Ensure the input is always lowercase
-              const selectionStart = event.target.selectionStart
-              const selectionEnd = event.target.selectionEnd
-              event.target.value = segment
-              event.target.setSelectionRange(selectionStart, selectionEnd)
-
-              setSegment(segment)
-            }}
-          />
-
-          <p
-            className={clsx(
-              'flex flex-row items-center gap-1',
-              'text-sm italic',
-              'text-gray-700 dark:text-gray-300',
-              'px-3 py-2',
-            )}
-          >
-            <Trans>
-              Your full username will be:{' '}
-              {segment.length ? (
-                <strong className="text-gray-800 dark:text-gray-200">
-                  {preview}
-                </strong>
-              ) : (
-                <span
-                  aria-hidden
-                  className="bg-gray-300 dark:bg-slate-600 rounded-md p-2 w-24"
-                />
-              )}
-            </Trans>
-          </p>
-        </div>
-      </Fieldset>
-
       <div>
         <ValidationMessage
           hasValue={!!segment.length}
@@ -256,6 +163,96 @@ export function SignUpHandleForm({
             Between {minLength} and {maxLength} characters
           </Trans>
         </ValidationMessage>
+      </div>
+
+      <div
+        className={clsx(
+          'bg-gray-200 dark:bg-slate-700',
+          'rounded-lg',
+          'overflow-hidden',
+        )}
+      >
+        <InputText
+          ref={inputRef}
+          className="rounded-br-none rounded-bl-none"
+          icon={<AtSymbolIcon className="w-5" />}
+          name="handle"
+          type="text"
+          placeholder={t`Type your desired username`}
+          aria-label={t`Type your desired username`}
+          title={t`Type your desired username`}
+          append={
+            domains.length > 1 && (
+              <select
+                onClick={(event) => event.stopPropagation()}
+                onMouseDown={(event) => event.stopPropagation()}
+                value={domainIdx}
+                aria-label={t`Select domain`}
+                onChange={(event) => {
+                  setDomainIdx(Number(event.target.value))
+                  inputRef.current?.focus()
+                }}
+                className={clsx(
+                  'block w-full',
+                  'text-sm',
+                  'rounded-lg p-2',
+                  'bg-white dark:bg-slate-600',
+                )}
+              >
+                {domains.map((domain, idx) => (
+                  <option key={domain} value={idx}>
+                    {domain}
+                  </option>
+                ))}
+              </select>
+            )
+          }
+          pattern="[a-z0-9][a-z0-9\-]+[a-z0-9]"
+          minLength={minLength}
+          maxLength={maxLength}
+          autoCapitalize="none"
+          autoCorrect="off"
+          autoComplete="off"
+          dir="auto"
+          enterKeyHint="done"
+          autoFocus
+          required
+          value={segment}
+          onChange={(event) => {
+            const segment = event.target.value.toLowerCase()
+
+            // Ensure the input is always lowercase
+            const selectionStart = event.target.selectionStart
+            const selectionEnd = event.target.selectionEnd
+            event.target.value = segment
+            event.target.setSelectionRange(selectionStart, selectionEnd)
+
+            setSegment(segment)
+          }}
+        />
+
+        <p
+          className={clsx(
+            'flex flex-row items-center gap-1',
+            'text-sm italic',
+            'text-gray-700 dark:text-gray-300',
+            'px-3 py-2',
+          )}
+        >
+          <Trans>
+            Your full username will be:{' '}
+            {segment.length ? (
+              <strong className="text-gray-800 dark:text-gray-200">
+                {preview}
+              </strong>
+            ) : (
+              <span
+                aria-hidden
+                className="bg-gray-300 dark:bg-slate-600 rounded-md p-2 w-24"
+              />
+            )}
+          </Trans>
+        </p>
       </div>
 
       <Admonition role="status">

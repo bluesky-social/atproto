@@ -26,8 +26,10 @@ export function PasswordStrengthLabel({
         <Trans>Strong</Trans>
       ) : strength === PasswordStrength.moderate ? (
         <Trans>Moderate</Trans>
-      ) : (
+      ) : password ? (
         <Trans>Weak</Trans>
+      ) : (
+        <Trans>Missing</Trans>
       )}
     </span>
   )

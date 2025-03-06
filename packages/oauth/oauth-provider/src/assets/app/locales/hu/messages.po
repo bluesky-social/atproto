@@ -70,7 +70,7 @@ msgstr ""
 msgid "Back"
 msgstr ""
 
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:255
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:162
 msgid "Between {minLength} and {maxLength} characters"
 msgstr ""
 
@@ -208,7 +208,7 @@ msgstr ""
 msgid "Interface language selector"
 msgstr ""
 
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:299
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:296
 msgid "Invalid"
 msgstr ""
 
@@ -238,6 +238,10 @@ msgstr ""
 msgid "Make visible"
 msgstr ""
 
+#: src/assets/app/components/utils/password-strength-label.tsx:32
+msgid "Missing"
+msgstr ""
+
 #: src/assets/app/components/utils/password-strength-label.tsx:28
 msgid "Moderate"
 msgstr ""
@@ -260,7 +264,7 @@ msgstr ""
 msgid "Okay"
 msgstr ""
 
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:249
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:156
 msgid "Only contains letters, numbers, and hyphens"
 msgstr ""
 
@@ -318,7 +322,7 @@ msgstr ""
 msgid "Reset your password"
 msgstr ""
 
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:175
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:190
 msgid "Select domain"
 msgstr ""
 
@@ -402,14 +406,9 @@ msgstr ""
 msgid "This sign-in session has expired"
 msgstr ""
 
-#: src/assets/app/components/utils/password-strength-label.tsx:26
-msgid "Too short"
-msgstr ""
-
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:152
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:166
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:167
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:168
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:181
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:182
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:183
 msgid "Type your desired username"
 msgstr ""
 
@@ -426,7 +425,7 @@ msgstr ""
 msgid "Username or email address"
 msgstr ""
 
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:294
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:291
 msgid "Valid"
 msgstr ""
 
@@ -458,7 +457,7 @@ msgstr ""
 msgid "You are being redirected..."
 msgstr ""
 
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:263
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:260
 msgid "You can change this username to any domain name you control after your account is set up."
 msgstr ""
 
@@ -474,7 +473,7 @@ msgstr ""
 msgid "Your account"
 msgstr ""
 
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:227
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:242
 msgid "Your full username will be: {0}"
 msgstr ""
 
