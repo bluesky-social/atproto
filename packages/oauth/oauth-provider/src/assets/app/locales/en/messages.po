@@ -268,6 +268,10 @@ msgstr "Okay"
 msgid "Only contains letters, numbers, and hyphens"
 msgstr "Only contains letters, numbers, and hyphens"
 
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:156
+msgid "Only letters, numbers, and hyphens"
+msgstr "Only letters, numbers, and hyphens"
+
 #: src/assets/app/views/authorize/sign-up/sign-up-account-form.tsx:126
 #: src/assets/app/components/forms/input-password.tsx:51
 #: src/assets/app/components/forms/input-password.tsx:52

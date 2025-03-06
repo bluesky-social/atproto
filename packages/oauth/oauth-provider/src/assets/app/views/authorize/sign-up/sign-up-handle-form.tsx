@@ -153,7 +153,7 @@ export function SignUpHandleForm({
           hasValue={!!segment.length}
           valid={validity.validCharset}
         >
-          <Trans>Only contains letters, numbers, and hyphens</Trans>
+          <Trans>Only letters, numbers, and hyphens</Trans>
         </ValidationMessage>
         <ValidationMessage
           hasValue={!!segment.length}
