@@ -30,19 +30,19 @@ type UnionToFnUnion<T> = T extends any ? () => T : never
  * type A = UnionToIntersection<(() => 'a') | (() => 'b')> // (() => 'a') & (() => 'b')
  * ```
  */
-type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (
-  k: infer I,
+type UnionToIntersection<T> = (T extends any ? (x: T) => void : never) extends (
+  x: infer U,
 ) => void
-  ? I
+  ? U
   : never
 
 /**
  * @example
  * ```ts
- * type B = ExtractUnionType<'a' | 'b'> // 'b'
+ * type B = ExtractUnionItem<'a' | 'b'> // 'b'
  * ```
  */
-type ExtractUnionType<T> =
+type ExtractUnionItem<T> =
   // We first convert the input (T) union (e.g. 'a' | 'b') into a union of
   // functions that return the same results ((() => 'a') | (() => 'b')). We
   // transform that into an intersection (() => 'a') & (() => 'b'), which will
@@ -51,26 +51,34 @@ type ExtractUnionType<T> =
   UnionToIntersection<UnionToFnUnion<T>> extends () => infer R ? R : never
 
 /**
+ * Utility that turn a union of types (`'a' | 'b'`) into a tuple with matching
+ * types (`['a', 'b']`).
+ *
+ * @note this only work with unions of "const" types. Using this with globals
+ * types (`string`, etc.) will yield unexpected results.
+ *
  * @example
  * ```ts
  * type T = UnionToTuple<'a' | 'b'> // readonly ['a', 'b']
  * type T = UnionToTuple<'a' | 'b' | 'c'> // readonly ['a', 'b', 'c']
  * ```
  */
-type UnionToTuple<
+type UnionToTuple<T> = UnionToTupleInternal<T>
+
+type UnionToTupleInternal<
   T,
-  // Accumulator for recursive calls (initialized to an empty tuple)
+  // Accumulator for terminal recursivity (initialized to empty tuple)
   Acc extends readonly any[] = [],
-  // Extract one of the union items
-  Next = ExtractUnionType<T>,
-  // Determine if T contains more union items or if it is "empty" (never)
-  Done = [T] extends [never] ? true : false,
-> = true extends Done
-  ? // If T is "empty", we are done, return the result of previous iterations
-    Acc
-  : // Recursively call UnionToTuple by combining Next to the current
-    // accumulator, and excluding Next from the union:
-    UnionToTuple<Exclude<T, Next>, readonly [Next, ...Acc]>
+  // Get the next item from the union (if any)
+  Next = ExtractUnionItem<T>,
+> =
+  // If there were no more items to extract from the union T, then we are done
+  [Next] extends [never]
+    ? // Return result of previous recursive calls
+      Acc
+    : // Recursively call UnionToTupleInternal by Exclude'ing the Next item from
+      // the union (T) and adding it to the accumulator.
+      UnionToTupleInternal<Exclude<T, Next>, readonly [Next, ...Acc]>
 
 /**
  * This utility allows to create an assertion function that checks if a
