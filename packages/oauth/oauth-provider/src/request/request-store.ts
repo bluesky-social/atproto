@@ -1,12 +1,12 @@
-import { Awaitable } from '../lib/util/type.js'
+import { Awaitable, buildInterfaceChecker } from '../lib/util/type.js'
 import { Code } from './code.js'
 import { RequestData } from './request-data.js'
 import { RequestId } from './request-id.js'
 
 // Export all types needed to implement the RequestStore interface
 export * from './code.js'
-export * from './request-id.js'
 export * from './request-data.js'
+export * from './request-id.js'
 export type { Awaitable }
 
 export type UpdateRequestData = Pick<
@@ -31,21 +31,17 @@ export interface RequestStore {
   findRequestByCode(code: Code): Awaitable<FoundRequestResult | null>
 }
 
-export function isRequestStore(
-  implementation: Record<string, unknown> & Partial<RequestStore>,
-): implementation is Record<string, unknown> & RequestStore {
-  return (
-    typeof implementation.createRequest === 'function' &&
-    typeof implementation.readRequest === 'function' &&
-    typeof implementation.updateRequest === 'function' &&
-    typeof implementation.deleteRequest === 'function' &&
-    typeof implementation.findRequestByCode === 'function'
-  )
-}
+export const isRequestStore = buildInterfaceChecker<RequestStore>([
+  'createRequest',
+  'readRequest',
+  'updateRequest',
+  'deleteRequest',
+  'findRequestByCode',
+])
 
-export function ifRequestStore(
-  implementation?: Record<string, unknown> & Partial<RequestStore>,
-): RequestStore | undefined {
+export function ifRequestStore<V extends Partial<RequestStore>>(
+  implementation?: V,
+): (V & RequestStore) | undefined {
   if (implementation && isRequestStore(implementation)) {
     return implementation
   }

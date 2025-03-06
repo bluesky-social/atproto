@@ -1,6 +1,6 @@
 import type { OAuthClientMetadata } from '@atproto/oauth-types'
 
-// TODO: Find a way to share these types with the backend code
+// @TODO: Find a way to share these types with the backend code
 
 export type Account = {
   sub: string

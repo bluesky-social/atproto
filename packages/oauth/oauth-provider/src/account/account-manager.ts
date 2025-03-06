@@ -23,6 +23,7 @@ import { SignInData } from './sign-in-data.js'
 import { SignUpData } from './sign-up-data.js'
 
 const TIMING_ATTACK_MITIGATION_DELAY = 400
+const BRUTE_FORCE_MITIGATION_DELAY = 300
 
 export class AccountManager {
   protected readonly inviteCodeRequired: boolean
@@ -94,7 +95,9 @@ export class AccountManager {
   ): Promise<AccountInfo> {
     await this.verifySignupData(data, deviceId, deviceMetadata)
 
-    return constantTime(TIMING_ATTACK_MITIGATION_DELAY, async () => {
+    // Mitigation against brute forcing email of users.
+    // @TODO Add rate limit to all the OAuth routes.
+    return constantTime(BRUTE_FORCE_MITIGATION_DELAY, async () => {
       let account: Account
       try {
         account = await this.store.createAccount(data)

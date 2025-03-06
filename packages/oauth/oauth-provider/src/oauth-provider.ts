@@ -1131,7 +1131,7 @@ export class OAuthProvider extends OAuthVerifier {
     const corsPreflight: Middleware = combineMiddlewares([
       corsHeaders,
       (req, res) => {
-        res.writeHead(204).end()
+        res.writeHead(200).end()
       },
     ])
 

@@ -70,9 +70,10 @@ function matches(
   if (regexpsCountToMatch < 1 || regexpsCountToMatch > regexps.length) {
     throw new TypeError('Invalid regexpsCountToMatch')
   }
-  for (let i = 0; i < regexps.length; i++) {
-    if (regexps[i].test(pwd)) {
-      if (--regexpsCountToMatch === 0) return true
+  for (const regexp of regexps) {
+    if (regexp.test(pwd)) {
+      regexpsCountToMatch--
+      if (regexpsCountToMatch === 0) return true
     }
   }
   return false

@@ -29,9 +29,9 @@ function buildRandomString({
   length = 16,
   alphabet = ALPHANUMERIC,
 }: BuildRandomStringOptions = {}) {
-  return Array.from({ length }, getRandomCharFrom, alphabet).join('')
+  return Array.from({ length }, () => getRandomCharFrom(alphabet)).join('')
 }
 
-function getRandomCharFrom(this: string) {
-  return this.charAt((Math.random() * this.length) | 0)
+function getRandomCharFrom(alphabet: string) {
+  return alphabet.charAt((Math.random() * alphabet.length) | 0)
 }

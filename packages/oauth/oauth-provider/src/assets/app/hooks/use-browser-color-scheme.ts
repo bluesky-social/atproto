@@ -22,7 +22,10 @@ export function useBrowserColorScheme() {
     return () => {
       query.removeEventListener('change', listener)
     }
-  }, [query])
+
+    // @NOTE "query" is a global constant and does not need to be part of the
+    // array bellow:
+  }, [])
 
   return theme
 }

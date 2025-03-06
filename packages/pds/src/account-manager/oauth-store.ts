@@ -129,6 +129,9 @@ export class OAuthStore
       !inviteCode || this.accountManager.ensureInviteIsAvailable(inviteCode),
     ])
 
+    // @TODO The code bellow should probably be refactored to be common with the
+    // code of the `com.atproto.server.createAccount` XRPC endpoint.
+
     const signingKey = await Secp256k1Keypair.create({ exportable: true })
     const signingKeyDid = signingKey.did()
 

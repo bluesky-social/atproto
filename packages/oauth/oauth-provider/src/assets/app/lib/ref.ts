@@ -10,8 +10,7 @@ export function updateRef<T>(ref: ForwardedRef<T>, value: T | null) {
 
 export function mergeRefs<T>(refs: readonly (ForwardedRef<T> | undefined)[]) {
   return (value: T | null) => {
-    for (let i = 0; i < refs.length; i++) {
-      const ref = refs[i]
+    for (const ref of refs) {
       if (ref) updateRef(ref, value)
     }
   }

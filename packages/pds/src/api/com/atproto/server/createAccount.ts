@@ -20,6 +20,9 @@ export default function (server: Server, ctx: AppContext) {
     },
     auth: ctx.authVerifier.userServiceAuthOptional,
     handler: async ({ input, auth, req }) => {
+      // @NOTE Until this code and the OAuthStore's `createAccount` are
+      // refactored together, any change made here must be reflected over there.
+
       const requester = auth.credentials?.did ?? null
       const {
         did,

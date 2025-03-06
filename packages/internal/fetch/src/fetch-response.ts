@@ -298,11 +298,14 @@ export function fetchJsonValidatorProcessor<S, P = unknown>(
     return async (jsonResponse: ParsedJsonResponse): Promise<S> =>
       schema.parseAsync(jsonResponse.json, params)
   }
+
   if ('parse' in schema && typeof schema.parse === 'function') {
     return async (jsonResponse: ParsedJsonResponse): Promise<S> =>
       schema.parse(jsonResponse.json, params)
   }
-  throw new Error('Invalid schema')
+
+  // Needed for type safety (and allows fool proofing the usage of this function)
+  throw new TypeError('Invalid schema')
 }
 
 /** @note Use {@link fetchJsonValidatorProcessor} instead */

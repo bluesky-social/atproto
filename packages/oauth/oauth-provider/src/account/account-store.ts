@@ -3,7 +3,7 @@ import { isDisposableEmail } from 'disposable-email-domains-js'
 import { z } from 'zod'
 import { ClientId } from '../client/client-id.js'
 import { DeviceId } from '../device/device-id.js'
-import { Awaitable } from '../lib/util/type.js'
+import { Awaitable, buildInterfaceChecker } from '../lib/util/type.js'
 import {
   HandleUnavailableError,
   InvalidRequestError,
@@ -149,25 +149,20 @@ export interface AccountStore {
   verifyHandleAvailability(handle: string): Awaitable<void>
 }
 
-export function isAccountStore(
-  implementation: Record<string, unknown> & Partial<AccountStore>,
-): implementation is Record<string, unknown> & AccountStore {
-  return (
-    typeof implementation.authenticateAccount === 'function' &&
-    typeof implementation.addDeviceAccount === 'function' &&
-    typeof implementation.getDeviceAccount === 'function' &&
-    typeof implementation.addAuthorizedClient === 'function' &&
-    typeof implementation.listDeviceAccounts === 'function' &&
-    typeof implementation.removeDeviceAccount === 'function' &&
-    typeof implementation.resetPasswordRequest === 'function' &&
-    typeof implementation.resetPasswordConfirm === 'function' &&
-    typeof implementation.verifyHandleAvailability === 'function'
-  )
-}
+export const isAccountStore = buildInterfaceChecker<AccountStore>([
+  'createAccount',
+  'authenticateAccount',
+  'addAuthorizedClient',
+  'addDeviceAccount',
+  'getDeviceAccount',
+  'removeDeviceAccount',
+  'listDeviceAccounts',
+  'resetPasswordRequest',
+  'resetPasswordConfirm',
+  'verifyHandleAvailability',
+])
 
-export function asAccountStore(
-  implementation?: Record<string, unknown> & Partial<AccountStore>,
-): AccountStore {
+export function asAccountStore<V>(implementation: V): V & AccountStore {
   if (!implementation || !isAccountStore(implementation)) {
     throw new Error('Invalid AccountStore implementation')
   }
