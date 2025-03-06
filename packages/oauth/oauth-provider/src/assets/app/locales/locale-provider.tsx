@@ -1,33 +1,11 @@
 import { I18n } from '@lingui/core'
 import { I18nProvider } from '@lingui/react'
-import {
-  ReactNode,
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react'
+import { ReactNode, useEffect, useMemo, useState } from 'react'
 // @NOTE run "pnpm run po:compile" to compile the messages from the PO files
 import { messages as en } from './en/messages.ts'
 import { loadMessages } from './load.ts'
+import { LocaleContext, LocaleContextValue } from './locale-context.ts'
 import { KnownLocale, knownLocales, locales, resolveLocale } from './locales.ts'
-
-export type LocaleContextValue = {
-  locale: string
-  locales: Partial<Record<KnownLocale, { name: string; flag?: string }>>
-  setLocale: (locale: KnownLocale) => void
-}
-
-const LocaleContext = createContext<LocaleContextValue | null>(null)
-
-export function useLocaleContext(): LocaleContextValue {
-  const context = useContext(LocaleContext)
-  if (!context) {
-    throw new Error('useLocaleContext must be used within a LocaleProvider')
-  }
-  return context
-}
 
 export type LocaleProviderProps = {
   availableLocales?: readonly string[]
