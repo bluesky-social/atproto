@@ -23,18 +23,18 @@ export function InputContainer({
   onBlur,
   ...props
 }: InputContainerProps) {
-  const [focused, setFocused] = useState(false)
+  const [hasFocus, setHasFocus] = useState(false)
 
   return (
     <div
       {...props}
       onFocus={(event) => {
         onFocus?.(event)
-        if (!event.defaultPrevented) setFocused(true)
+        if (!event.defaultPrevented) setHasFocus(true)
       }}
       onBlur={(event) => {
         onBlur?.(event)
-        if (!event.defaultPrevented) setFocused(false)
+        if (!event.defaultPrevented) setHasFocus(false)
       }}
       className={clsx(
         // Layout
@@ -50,7 +50,7 @@ export function InputContainer({
         className={clsx(
           // Layout
           'px-1',
-          'w-full',
+          'w-full min-h-12',
           'flex items-center justify-stretch',
           // Border
           'rounded-lg',
@@ -72,15 +72,16 @@ export function InputContainer({
           <div
             className={clsx(
               'shrink-0 grow-0',
-              'w-8 h-12',
-              'flex items-center justify-center',
-              focused ? 'text-brand' : 'text-slate-500',
+              'mx-1',
+              hasFocus ? 'text-brand' : 'text-slate-500',
             )}
           >
             {icon}
           </div>
         )}
-        <div className="flex-auto relative">{children}</div>
+
+        {children}
+
         <div className="ml-1 grow-0 shrink-0 flex items-center">{append}</div>
       </div>
       {bellow && (
