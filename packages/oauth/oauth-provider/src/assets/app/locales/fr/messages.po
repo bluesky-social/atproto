@@ -70,7 +70,7 @@ msgstr "Authoriser l'accès"
 msgid "Back"
 msgstr "Retour"
 
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:252
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:255
 msgid "Between {minLength} and {maxLength} characters"
 msgstr "Entre {minLength} et {maxLength} caractères"
 
@@ -208,7 +208,7 @@ msgstr "Identifiant"
 msgid "Interface language selector"
 msgstr "Sélecteur de langue"
 
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:296
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:299
 msgid "Invalid"
 msgstr "Invalide"
 
@@ -260,7 +260,7 @@ msgstr "Suivant"
 msgid "Okay"
 msgstr "OK"
 
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:246
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:249
 msgid "Only contains letters, numbers, and hyphens"
 msgstr "Ne contient que des lettres, des chiffres et des traits d'union"
 
@@ -426,7 +426,7 @@ msgstr "Vous identifier de façon unique"
 msgid "Username or email address"
 msgstr "Nom d'utilisateur ou adresse email"
 
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:291
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:294
 msgid "Valid"
 msgstr "Valide"
 
@@ -458,7 +458,7 @@ msgstr "Identifiant ou mot de passe incorrect"
 msgid "You are being redirected..."
 msgstr "Vous êtes redirigé..."
 
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:260
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:263
 msgid "You can change this username to any domain name you control after your account is set up."
 msgstr "Vous pourrez changer ce nom d'utilisateur pour n'importe quel nom de domaine sous votre contrôle une fois votre compte créé."
 

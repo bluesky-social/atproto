@@ -231,7 +231,10 @@ export function SignUpHandleForm({
                   {preview}
                 </strong>
               ) : (
-                <div className="bg-gray-300 dark:bg-slate-600 rounded-md p-2 w-24" />
+                <span
+                  aria-hidden
+                  className="bg-gray-300 dark:bg-slate-600 rounded-md p-2 w-24"
+                />
               )}
             </Trans>
           </p>
