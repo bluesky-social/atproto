@@ -47,23 +47,22 @@ const isValidDomain = (domain: string): domain is ValidDomain =>
   !domain.endsWith('.')
 
 function useSegmentValidator(domain: ValidDomain) {
-  const minLength = MIN_LENGTH
-  const maxLength = Math.min(MAX_LENGTH, MAX_FULL_LENGTH - domain.length)
+  const minLen = MIN_LENGTH
+  const maxLen = Math.min(MAX_LENGTH, MAX_FULL_LENGTH - domain.length)
 
   const validateSegment = useCallback(
     (segment: string) => {
-      const validLength =
-        segment.length >= minLength && segment.length <= maxLength
+      const validLength = segment.length >= minLen && segment.length <= maxLen
       const validCharset = /^[a-z0-9][a-z0-9-]+[a-z0-9]$/g.test(segment)
 
       return { validLength, validCharset, valid: validLength && validCharset }
     },
-    [maxLength, minLength],
+    [maxLen, minLen],
   )
 
   return {
-    minLength,
-    maxLength,
+    minLength: minLen,
+    maxLength: maxLen,
     validateSegment,
   }
 }
@@ -149,19 +148,13 @@ export function SignUpHandleForm({
       append={children}
     >
       <div>
-        <ValidationMessage
-          hasValue={!!segment.length}
-          valid={validity.validCharset}
-        >
-          <Trans>Only letters, numbers, and hyphens</Trans>
-        </ValidationMessage>
-        <ValidationMessage
-          hasValue={!!segment.length}
-          valid={validity.validLength}
-        >
+        <ValidationMessage hasValue={!!segment} valid={validity.validLength}>
           <Trans>
             Between {minLength} and {maxLength} characters
           </Trans>
+        </ValidationMessage>
+        <ValidationMessage hasValue={!!segment} valid={validity.validCharset}>
+          <Trans>Only letters, numbers, and hyphens</Trans>
         </ValidationMessage>
       </div>
 
@@ -298,7 +291,7 @@ function ValidationMessage({
           )}
         </>
       ) : (
-        <div className="w-4 h-4 flex items-center justify-center">
+        <div aria-hidden className="w-4 h-4 flex items-center justify-center">
           <div className="bg-gray-300 dark:bg-slate-600 rounded-full w-2 h-2" />
         </div>
       )}
