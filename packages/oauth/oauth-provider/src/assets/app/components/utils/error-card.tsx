@@ -6,7 +6,6 @@ import { JsonErrorResponse } from '../../lib/json-client.ts'
 import { Override } from '../../lib/util.ts'
 import { Admonition, AdmonitionProps } from './admonition.tsx'
 import { ErrorMessage } from './error-message.tsx'
-import { ExpandTransition } from './expand-transition.tsx'
 
 export type ErrorCardProps = Override<
   Omit<AdmonitionProps, 'role'>,
@@ -70,11 +69,7 @@ export const ErrorCard = memo(function ErrorCard({
 
       {children && <div className="mt-2">{children}</div>}
 
-      <ExpandTransition
-        visible={showDetails}
-        id={detailsDivId}
-        aria-hidden={!showDetails}
-      >
+      <div hidden={!showDetails} id={detailsDivId} aria-hidden={!showDetails}>
         {parsedError instanceof JsonErrorResponse ? (
           <dl className="mt-2 grid grid-cols-[auto,1fr] gap-x-2 text-sm">
             <dt className="font-semibold">
@@ -92,7 +87,7 @@ export const ErrorCard = memo(function ErrorCard({
         ) : (
           <pre className="text-xs">{JSON.stringify(parsedError, null, 2)}</pre>
         )}
-      </ExpandTransition>
+      </div>
     </Admonition>
   )
 })
