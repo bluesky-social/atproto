@@ -28,6 +28,8 @@ type UnionToFnUnion<T> = T extends any ? () => T : never
  * @example
  * ```ts
  * type A = UnionToIntersection<(() => 'a') | (() => 'b')> // (() => 'a') & (() => 'b')
+ *
+ * UnionToIntersection<{ foo: string | number } | { foo: number; bar: 4 }> // { foo: number; bar: 4 }
  * ```
  */
 type UnionToIntersection<T> = (T extends any ? (x: T) => void : never) extends (
