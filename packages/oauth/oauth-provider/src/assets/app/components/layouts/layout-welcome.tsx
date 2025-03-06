@@ -3,7 +3,7 @@ import { CustomizationData } from '../../backend-types.ts'
 import { clsx } from '../../lib/clsx.ts'
 import { Override } from '../../lib/util.ts'
 import { LocaleSelector } from '../../locales/locale-selector.tsx'
-import { LinkTitle } from '../utils/link-title.tsx'
+import { LinkAnchor } from '../utils/link-anchor.tsx'
 
 export type LayoutWelcomeProps = Override<
   JSX.IntrinsicElements['div'],
@@ -56,16 +56,11 @@ export function LayoutWelcome({
 
       <nav className="w-full overflow-hidden border-t border-t-slate-200 dark:border-t-slate-700 flex flex-wrap justify-center content-center">
         {links?.map((link, i) => (
-          <a
-            role="link"
+          <LinkAnchor
             key={i}
-            href={link.href}
-            rel={link.rel}
-            target="_blank"
+            link={link}
             className="m-2 md:m-4 text-xs md:text-sm text-brand hover:underline"
-          >
-            <LinkTitle link={link} />
-          </a>
+          />
         ))}
 
         <LocaleSelector

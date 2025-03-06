@@ -13,11 +13,6 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: src/assets/app/views/authorize/sign-up/sign-up-disclaimer.tsx:37
-#: src/assets/app/views/authorize/sign-up/sign-up-disclaimer.tsx:51
-msgid " and the "
-msgstr " et la "
-
 #: src/assets/app/views/authorize/accept/accept-form.tsx:76
 msgid "<0/> is asking for permission to access your account (<1/>)."
 msgstr "<0/> demande la permission d'accéder à votre compte (<1/>)."
@@ -80,12 +75,12 @@ msgid "Between {minLength} and {maxLength} characters"
 msgstr "Entre {minLength} et {maxLength} caractères"
 
 #: src/assets/app/views/authorize/accept/accept-form.tsx:89
-msgid "By clicking <0>Authorize</0>, you allow this application to perform the following actions in accordance to their <1>terms of service</1> and <2>privacy policy</2>:"
+msgid "By clicking <0>Authorize</0>, you allow this application to perform the following actions in accordance with their <1>terms of service</1> and <2>privacy policy</2>:"
 msgstr "En cliquant sur <0>Authoriser l'accès</0>, vous autorisez cette application à effectuer les actions suivantes conformément à leurs <1>conditions d'utilisation</1> et leur <2>politique de confidentialité</2> :"
 
-#: src/assets/app/views/authorize/sign-up/sign-up-disclaimer.tsx:32
-msgid "By creating an account you agree to the {0} of this service."
-msgstr "En créant un compte, vous reconaissez avoir lu, et acceptez, les {0} de ce site web."
+#: src/assets/app/views/authorize/sign-up/sign-up-disclaimer.tsx:30
+msgid "By creating an account you agree to the {0} and the {1} of this service."
+msgstr "En créant un compte, vous acceptez les {0} et la {1} de ce service."
 
 #: src/assets/app/views/authorize/welcome/welcome-view.tsx:51
 #: src/assets/app/components/forms/form-card-async.tsx:85
@@ -288,7 +283,8 @@ msgstr "Mot de passe d'au moins {MIN_PASSWORD_LENGTH} caractères"
 msgid "Please verify the domain name of the website before entering your password. Never enter your password on a domain you do not trust."
 msgstr "Veuillez vérifier le nom de domaine du site web avant de saisir votre mot de passe. N'entrez jamais votre mot de passe sur un domaine auquel vous ne faites pas confiance."
 
-#: src/assets/app/views/authorize/sign-up/sign-up-disclaimer.tsx:52
+#: src/assets/app/views/authorize/sign-up/sign-up-disclaimer.tsx:42
+#: src/assets/app/views/authorize/sign-up/sign-up-disclaimer.tsx:45
 #: src/assets/app/components/utils/link-title.tsx:17
 msgid "Privacy Policy"
 msgstr "Politique de Confidentialité"
@@ -360,7 +356,8 @@ msgstr "Soumettre"
 msgid "Support"
 msgstr "Support"
 
-#: src/assets/app/views/authorize/sign-up/sign-up-disclaimer.tsx:50
+#: src/assets/app/views/authorize/sign-up/sign-up-disclaimer.tsx:34
+#: src/assets/app/views/authorize/sign-up/sign-up-disclaimer.tsx:37
 #: src/assets/app/components/utils/link-title.tsx:19
 msgid "Terms of Service"
 msgstr "Conditions d'Utilisation"
@@ -462,7 +459,7 @@ msgid "You can now sign in with your new password."
 msgstr "Vous pouvez maintenant vous connecter avec votre nouveau mot de passe."
 
 #: src/assets/app/views/authorize/reset-password/reset-password-confirm-form.tsx:52
-msgid "You will receive an email with a \"reset code\". enter that code here then enter your new password."
+msgid "You will receive an email with a \"reset code\". Enter that code here then enter your new password."
 msgstr "Vous aver reçu un email avec un \"code de réinitialisation\". Saisissez ce code ici puis entrez votre nouveau mot de passe."
 
 #: src/assets/app/views/authorize/sign-up/sign-up-view.tsx:116

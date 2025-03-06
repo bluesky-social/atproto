@@ -50,7 +50,7 @@ export function ResetPasswordConfirmForm({
     >
       <p id={tokenAriaId} className="text-sm">
         <Trans>
-          You will receive an email with a "reset code". enter that code here
+          You will receive an email with a "reset code". Enter that code here
           then enter your new password.
         </Trans>
       </p>

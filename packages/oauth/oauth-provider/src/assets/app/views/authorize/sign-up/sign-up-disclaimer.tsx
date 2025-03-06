@@ -1,12 +1,12 @@
 import { Trans } from '@lingui/react/macro'
-import { HTMLAttributes } from 'react'
+import { JSX } from 'react'
 import { LinkDefinition } from '../../../backend-types.ts'
-import { LinkTitle } from '../../../components/utils/link-title.tsx'
+import { LinkAnchor } from '../../../components/utils/link-anchor.tsx'
 import { clsx } from '../../../lib/clsx.ts'
 import { Override } from '../../../lib/util.ts'
 
 export type SignUpDisclaimerProps = Override<
-  Omit<HTMLAttributes<HTMLParagraphElement>, 'children'>,
+  Omit<JSX.IntrinsicElements['p'], 'children'>,
   {
     links?: readonly LinkDefinition[]
   }
@@ -15,14 +15,12 @@ export type SignUpDisclaimerProps = Override<
 export function SignUpDisclaimer({
   links,
 
-  // HTMLAttributes<HTMLParagraphElement>
+  // p
   className,
   ...attrs
 }: SignUpDisclaimerProps) {
-  const relevantLinks = links?.filter(
-    (l) =>
-      l.href && (l.rel === 'privacy-policy' || l.rel === 'terms-of-service'),
-  )
+  const tosLink = links?.find((l) => l.rel === 'terms-of-service')
+  const ppLink = links?.find((l) => l.rel === 'privacy-policy')
 
   return (
     <p
@@ -31,26 +29,20 @@ export function SignUpDisclaimer({
     >
       <Trans>
         By creating an account you agree to the{' '}
-        {relevantLinks && relevantLinks.length ? (
-          relevantLinks.map((l, i, a) => (
-            <span key={i}>
-              {i > 0 && (i < a.length - 1 ? ', ' : <Trans> and the </Trans>)}
-              <a
-                href={l.href}
-                rel={l.rel}
-                target="_blank"
-                className="text-brand underline"
-              >
-                <LinkTitle link={l} />
-              </a>
-            </span>
-          ))
-        ) : (
-          <span>
+        {tosLink ? (
+          <LinkAnchor className="text-brand underline" link={tosLink}>
             <Trans>Terms of Service</Trans>
-            <Trans> and the </Trans>
+          </LinkAnchor>
+        ) : (
+          <Trans>Terms of Service</Trans>
+        )}
+        {' and the '}
+        {ppLink ? (
+          <LinkAnchor className="text-brand underline" link={ppLink}>
             <Trans>Privacy Policy</Trans>
-          </span>
+          </LinkAnchor>
+        ) : (
+          <Trans>Privacy Policy</Trans>
         )}{' '}
         of this service.
       </Trans>
