@@ -7,3 +7,6 @@ export function clsx(
   if (a && b) return `${a} ${b}`
   return a || b
 }
+
+export const cx = (c: (string | boolean | undefined)[]) =>
+  c.filter(Boolean).join(' ')

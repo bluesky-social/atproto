@@ -10,9 +10,8 @@ import { InputCheckbox } from '../../../components/forms/input-checkbox.tsx'
 import { InputPassword } from '../../../components/forms/input-password.tsx'
 import { InputText } from '../../../components/forms/input-text.tsx'
 import { InputToken } from '../../../components/forms/input-token.tsx'
-import { ExpandTransition } from '../../../components/utils/expand-transition.tsx'
 import { AtSymbolIcon } from '../../../components/utils/icons.tsx'
-import { InfoCard } from '../../../components/utils/info-card.tsx'
+import { Admonition } from '../../../components/utils/admonition.tsx'
 import { AsyncActionController } from '../../../hooks/use-async-action.ts'
 import {
   InvalidCredentialsError,
@@ -163,20 +162,6 @@ export function SignInForm({
         />
       </Fieldset>
 
-      <ExpandTransition visible={pwdFocus} delayed>
-        <InfoCard role="status">
-          <p className="font-bold text-brand leading-8">
-            <Trans>Warning</Trans>
-          </p>
-          <p>
-            <Trans>
-              Please verify the domain name of the website before entering your
-              password. Never enter your password on a domain you do not trust.
-            </Trans>
-          </p>
-        </InfoCard>
-      </ExpandTransition>
-
       <InputPassword
         name="password"
         onChange={(event) => {
@@ -203,6 +188,18 @@ export function SignInForm({
         disabled={loading}
         required
       />
+
+      <Admonition role="status">
+        <p className="font-bold text-md text-brand pb-1">
+          <Trans>Warning</Trans>
+        </p>
+        <p className='text-sm'>
+          <Trans>
+            Please verify the domain name of the website before entering your
+            password. Never enter your password on a domain you do not trust.
+          </Trans>
+        </p>
+      </Admonition>
 
       <Fieldset
         key="remember"
