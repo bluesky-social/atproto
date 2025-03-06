@@ -1,3 +1,4 @@
+import { useLingui } from '@lingui/react/macro'
 import { useCallback, useMemo, useState } from 'react'
 import { useErrorBoundary } from 'react-error-boundary'
 import { Session } from '../backend-types.ts'
@@ -58,6 +59,9 @@ export function useApi({
   const api = useMemo(() => new Api(csrfToken), [csrfToken])
   const [sessions, setSessions] = useState(sessionsInit)
 
+  const { i18n } = useLingui()
+  const { locale } = i18n
+
   const selectSub = useCallback(
     (sub: string | null) => {
       setSessions((sessions) =>
@@ -97,18 +101,29 @@ export function useApi({
   )
 
   const doSignIn = useSafeCallback(
-    async (data: SignInData, signal?: AbortSignal) => {
-      const response = await api.fetch('/sign-in', data, { signal })
+    async (data: Omit<SignInData, 'locale'>, signal?: AbortSignal) => {
+      const response = await api.fetch(
+        '/sign-in',
+        { ...data, locale },
+        { signal },
+      )
       upsertSession(response)
     },
-    [api, upsertSession],
+    [api, locale, upsertSession],
   )
 
   const doInitiatePasswordReset = useSafeCallback(
-    async (data: InitiatePasswordResetData, signal?: AbortSignal) => {
-      await api.fetch('/reset-password-request', data, { signal })
+    async (
+      data: Omit<InitiatePasswordResetData, 'locale'>,
+      signal?: AbortSignal,
+    ) => {
+      await api.fetch(
+        '/reset-password-request',
+        { ...data, locale },
+        { signal },
+      )
     },
-    [api],
+    [api, locale],
   )
 
   const doConfirmResetPassword = useSafeCallback(
@@ -126,11 +141,15 @@ export function useApi({
   )
 
   const doSignUp = useSafeCallback(
-    async (data: SignUpData, signal?: AbortSignal) => {
-      const response = await api.fetch('/sign-up', data, { signal })
+    async (data: Omit<SignUpData, 'locale'>, signal?: AbortSignal) => {
+      const response = await api.fetch(
+        '/sign-up',
+        { ...data, locale },
+        { signal },
+      )
       upsertSession(response)
     },
-    [api, upsertSession],
+    [api, locale, upsertSession],
   )
 
   const doAccept = useSafeCallback(

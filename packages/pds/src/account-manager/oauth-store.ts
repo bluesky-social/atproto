@@ -116,11 +116,13 @@ export class OAuthStore
   // AccountStore
 
   async createAccount({
+    locale: _locale,
     inviteCode,
     handle,
     email,
     password,
   }: SignUpData): Promise<Account> {
+    // @TODO Send an account creation confirmation email (+verification link) to the user (in their locale)
     // @NOTE Password strength already enforced by the OAuthProvider
 
     await Promise.all([
@@ -186,11 +188,13 @@ export class OAuthStore
   }
 
   async authenticateAccount({
+    locale: _locale,
     username: identifier,
     password,
     // Not supported by the PDS (yet?)
     emailOtp = undefined,
   }: AuthenticateAccountData): Promise<Account> {
+    // @TODO (?) Send an email to the user to notify them of the login attempt
     try {
       // Should never happen
       if (emailOtp != null) {
@@ -286,6 +290,7 @@ export class OAuthStore
   }
 
   async resetPasswordRequest({
+    locale: _locale,
     email,
   }: ResetPasswordRequestData): Promise<void> {
     const account = await this.accountManager.getAccountByEmail(email, {
@@ -301,6 +306,7 @@ export class OAuthStore
       'reset_password',
     )
 
+    // @TODO Use the locale to send the email in the right language
     await this.mailer.sendResetPassword(
       { handle, token },
       { to: account.email },

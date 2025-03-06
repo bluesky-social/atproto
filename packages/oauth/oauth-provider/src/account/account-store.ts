@@ -3,6 +3,7 @@ import { isDisposableEmail } from 'disposable-email-domains-js'
 import { z } from 'zod'
 import { ClientId } from '../client/client-id.js'
 import { DeviceId } from '../device/device-id.js'
+import { localeSchema } from '../lib/locale.js'
 import { Awaitable, buildInterfaceChecker } from '../lib/util/type.js'
 import {
   HandleUnavailableError,
@@ -36,6 +37,7 @@ export const emailSchema = z
 
 export const authenticateAccountDataSchema = z
   .object({
+    locale: localeSchema,
     username: z.string(),
     password: oldPasswordSchema,
     emailOtp: z.string().optional(),
@@ -48,6 +50,7 @@ export type AuthenticateAccountData = z.TypeOf<
 
 export const createAccountDataSchema = z
   .object({
+    locale: localeSchema,
     handle: handleSchema,
     email: emailSchema,
     password: z.intersection(oldPasswordSchema, newPasswordSchema),
@@ -59,6 +62,7 @@ export type CreateAccountData = z.TypeOf<typeof createAccountDataSchema>
 
 export const resetPasswordRequestDataSchema = z
   .object({
+    locale: localeSchema,
     email: emailSchema,
   })
   .strict()

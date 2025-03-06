@@ -12,6 +12,7 @@ export type AcceptData = {
 }
 
 export type SignInData = {
+  locale: string
   username: string
   password: string
   emailOtp?: string
@@ -19,6 +20,7 @@ export type SignInData = {
 }
 
 export type SignUpData = {
+  locale: string
   handle: string
   email: string
   password: string
@@ -27,6 +29,7 @@ export type SignUpData = {
 }
 
 export type InitiatePasswordResetData = {
+  locale: string
   email: string
 }
 

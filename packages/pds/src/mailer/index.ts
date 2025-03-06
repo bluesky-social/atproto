@@ -6,6 +6,8 @@ import { ServerConfig } from '../config'
 import { mailerLogger } from '../logger'
 import * as templates from './templates'
 
+// @TODO Add support for i18n
+
 export class ServerMailer {
   constructor(
     public readonly transporter: Transporter<SMTPTransport.SentMessageInfo>,
