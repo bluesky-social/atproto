@@ -271,11 +271,15 @@ function ValidationMessage({
 
   // div
   children,
+  className,
   ...props
 }: ValidationMessageProps) {
   const { t } = useLingui()
   return (
-    <div {...props} className="flex flex-row items-center gap-2">
+    <div
+      {...props}
+      className={clsx('flex flex-row items-center gap-2', className)}
+    >
       {hasValue ? (
         <>
           {valid ? (

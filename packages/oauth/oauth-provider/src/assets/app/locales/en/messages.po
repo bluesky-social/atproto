@@ -208,7 +208,7 @@ msgstr "Identifier"
 msgid "Interface language selector"
 msgstr "Interface language selector"
 
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:289
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:293
 msgid "Invalid"
 msgstr "Invalid"
 
@@ -425,7 +425,7 @@ msgstr "Uniquely identify you"
 msgid "Username or email address"
 msgstr "Username or email address"
 
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:284
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:288
 msgid "Valid"
 msgstr "Valid"
 
