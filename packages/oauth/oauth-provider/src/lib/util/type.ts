@@ -80,13 +80,25 @@ type UnionToTuple<
  * runtime, all the required interface keys are indeed checked, and that future
  * additions to the interface do not result in a false sense of type safety.
  *
- * @example
+ * @example Valid use
  *
  * ```ts
- * // OK
- * buildInterfaceChecker<{ foo: string }>(['foo'])
- * buildInterfaceChecker<{ foo: string; bar: boolean }>(['bar', 'foo'])
- * // Error
+ * const isFoo = buildInterfaceChecker<{ foo: string }>(['foo'])
+ * const isFooBar = buildInterfaceChecker<{ foo: string; bar: boolean }>([
+ *   'foo',
+ *   'bar',
+ * ])
+ *
+ * declare const val: { foo?: string }
+ *
+ * if (isFoo(val)) {
+ *   val // { foo: string }
+ * }
+ * ```
+ *
+ * @example Use cases where the runtime keys do not match the interface keys
+ *
+ * ```ts
  * buildInterfaceChecker<{ foo: string }>([])
  * buildInterfaceChecker<{ foo: string }>(['fee'])
  * buildInterfaceChecker<{ foo: string; bar: string }>(['foo'])
