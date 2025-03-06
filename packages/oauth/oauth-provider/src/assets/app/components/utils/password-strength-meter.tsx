@@ -27,24 +27,15 @@ export function PasswordStrengthMeter({
   ...props
 }: PasswordStrengthMeterProps) {
   const { t } = useLingui()
-  const strength = getPasswordStrength(password)
+  const strength = password ? getPasswordStrength(password) : 0
 
   const colorBg = 'bg-gray-300 dark:bg-slate-500'
   const color =
-    strength === PasswordStrength.strong
+    strength === PasswordStrength.extra || strength === PasswordStrength.strong
       ? 'bg-success'
       : strength === PasswordStrength.moderate
         ? 'bg-warning'
         : 'bg-error'
-
-  const count =
-    strength === PasswordStrength.strong
-      ? 3
-      : strength === PasswordStrength.moderate
-        ? 2
-        : strength === PasswordStrength.weak
-          ? 1
-          : 0
 
   return (
     <div
@@ -53,13 +44,13 @@ export function PasswordStrengthMeter({
       role="meter"
       aria-label={t`Password strength indicator`}
       aria-valuemin={0}
-      aria-valuemax={3}
-      aria-valuenow={count}
+      aria-valuemax={PasswordStrength.extra}
+      aria-valuenow={strength}
     >
-      {Array.from({ length: 3 }, (_, i) => (
+      {Array.from({ length: 4 }, (_, i) => (
         <div
           key={i}
-          className={`rounded h-1 w-1/3 ${count > i ? color : colorBg}`}
+          className={`rounded h-1 w-1/4 ${strength > i ? color : colorBg}`}
         />
       ))}
     </div>

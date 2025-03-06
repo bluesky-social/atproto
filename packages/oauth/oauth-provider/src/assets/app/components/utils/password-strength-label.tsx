@@ -20,8 +20,8 @@ export function PasswordStrengthLabel({
 
   return (
     <span {...props} aria-label="Password strength">
-      {strength === undefined ? (
-        <Trans>Too short</Trans>
+      {strength === PasswordStrength.extra ? (
+        <Trans>Extra</Trans>
       ) : strength === PasswordStrength.strong ? (
         <Trans>Strong</Trans>
       ) : strength === PasswordStrength.moderate ? (

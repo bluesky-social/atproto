@@ -172,6 +172,10 @@ msgstr ""
 msgid "Error"
 msgstr ""
 
+#: src/assets/app/components/utils/password-strength-label.tsx:24
+msgid "Extra"
+msgstr ""
+
 #: src/assets/app/views/authorize/reset-password/reset-password-view.tsx:53
 msgid "Forgot Password"
 msgstr ""
@@ -267,7 +271,7 @@ msgstr ""
 msgid "Password"
 msgstr ""
 
-#: src/assets/app/components/utils/password-strength-meter.tsx:54
+#: src/assets/app/components/utils/password-strength-meter.tsx:45
 msgid "Password strength indicator"
 msgstr ""
 
@@ -398,7 +402,7 @@ msgstr ""
 msgid "This sign-in session has expired"
 msgstr ""
 
-#: src/assets/app/components/utils/password-strength-label.tsx:24
+#: src/assets/app/components/utils/password-strength-label.tsx:26
 msgid "Too short"
 msgstr ""
 

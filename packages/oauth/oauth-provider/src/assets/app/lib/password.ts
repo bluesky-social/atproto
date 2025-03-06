@@ -8,30 +8,48 @@ const DEC = /[0-9]/
 const SPECIAL = /[^a-zA-Z0-9]/
 
 export enum PasswordStrength {
-  weak,
-  moderate,
-  strong,
+  weak = 1,
+  moderate = 2,
+  strong = 3,
+  extra = 4,
 }
 
-export function getPasswordStrength(pwd: string): undefined | PasswordStrength {
+export function getPasswordStrength(pwd: string): PasswordStrength {
   if (pwd.length < MIN_PASSWORD_LENGTH) {
-    return undefined
+    return PasswordStrength.weak
   }
 
-  // Emojis make passwords strong
-  if (pwd.length >= MIN_PASSWORD_LENGTH && matches(pwd, [EMOJI])) {
+  // Very long passwords
+  if (pwd.length >= MIN_PASSWORD_LENGTH + 12) {
+    return PasswordStrength.extra
+  }
+
+  // Long passwords
+  if (pwd.length >= MIN_PASSWORD_LENGTH + 8) {
+    if (matches(pwd, [SPECIAL])) {
+      return PasswordStrength.extra
+    }
+    if (matches(pwd, [UPPER, LOWER, DEC], 2)) {
+      return PasswordStrength.extra
+    }
     return PasswordStrength.strong
   }
 
+  // Emojis make passwords strong
+  if (pwd.length >= MIN_PASSWORD_LENGTH) {
+    if (matches(pwd, [EMOJI])) {
+      return PasswordStrength.strong
+    }
+  }
+
   // Pretty long passwords
-  if (pwd.length >= MIN_PASSWORD_LENGTH + 8) {
+  if (pwd.length >= MIN_PASSWORD_LENGTH + 6) {
     if (matches(pwd, [SPECIAL])) {
       return PasswordStrength.strong
     }
     if (matches(pwd, [UPPER, LOWER, DEC], 2)) {
       return PasswordStrength.strong
     }
-
     // Only 1 type of alpha-num characters
     return PasswordStrength.moderate
   }
