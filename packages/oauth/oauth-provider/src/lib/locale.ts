@@ -10,3 +10,12 @@ export const multiLangStringSchema = z.intersection(
   z.record(localeSchema, z.union([z.string(), z.undefined()])),
 )
 export type MultiLangString = z.infer<typeof multiLangStringSchema>
+
+export const AVAILABLE_LOCALES = [
+  // TODO: Add more in this list as translations are added in the PO files
+  'en',
+  'fr',
+] as const satisfies readonly Locale[]
+export type AvailableLocale = (typeof AVAILABLE_LOCALES)[number]
+export const isAvailableLocale = (v: unknown): v is AvailableLocale =>
+  (AVAILABLE_LOCALES as readonly unknown[]).includes(v)

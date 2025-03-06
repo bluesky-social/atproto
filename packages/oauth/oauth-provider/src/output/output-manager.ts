@@ -10,7 +10,7 @@ import {
   html,
   isLinkRel,
 } from '../lib/html/index.js'
-import { Locale } from '../lib/locale.js'
+import { AVAILABLE_LOCALES, Locale, isAvailableLocale } from '../lib/locale.js'
 import {
   AuthorizationResultAuthorize,
   buildAuthorizeData,
@@ -27,12 +27,6 @@ import {
   declareBackendData,
   sendWebPage,
 } from './send-web-page.js'
-
-// TODO: Add more in this list as translations are added in the PO files
-const AVAILABLE_LOCALES = ['en', 'fr'] as const satisfies readonly Locale[]
-type AvailableLocale = Locale & (typeof AVAILABLE_LOCALES)[number]
-const isAvailableLocale = (v: unknown): v is AvailableLocale =>
-  (AVAILABLE_LOCALES as readonly unknown[]).includes(v)
 
 const HCAPTCHA_CSP = {
   'script-src': ['https://hcaptcha.com', 'https://*.hcaptcha.com'],

@@ -1,5 +1,4 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import { languages, mediaType } from '@hapi/accept'
 import createHttpError from 'http-errors'
 import type { Redis, RedisOptions } from 'ioredis'
 import { ZodError, z } from 'zod'
@@ -92,8 +91,11 @@ import {
   validateSameOrigin,
   writeJson,
 } from './lib/http/index.js'
-import { RequestMetadata } from './lib/http/request.js'
-import { ifString } from './lib/util/cast.js'
+import {
+  RequestMetadata,
+  extractLocales,
+  negotiateResponseContent as negotiateContent,
+} from './lib/http/request.js'
 import { dateToEpoch, dateToRelativeSeconds } from './lib/util/date.js'
 import { Awaitable, Override } from './lib/util/type.js'
 import { CustomMetadata, buildMetadata } from './metadata/build-metadata.js'
@@ -1151,7 +1153,7 @@ export class OAuthProvider extends OAuthVerifier {
 
           // Ensure we can agree on a content encoding & type before starting to
           // build the JSON response.
-          if (!mediaType(req.headers['accept'], ['application/json'])) {
+          if (!negotiateContent(req, ['application/json'])) {
             throw createHttpError(406, 'Unsupported media type')
           }
 
@@ -1278,9 +1280,7 @@ export class OAuthProvider extends OAuthVerifier {
 
           if (!res.headersSent) {
             await server.outputManager.sendErrorPage(res, err, {
-              preferredLocales: languages(
-                ifString(req.headers['accept-language']),
-              ),
+              preferredLocales: extractLocales(req),
             })
           }
         }
@@ -1562,9 +1562,7 @@ export class OAuthProvider extends OAuthVerifier {
         } else {
           await setupCsrfToken(req, res, csrfCookie(result.authorize.uri))
           return server.outputManager.sendAuthorizePage(res, result, {
-            preferredLocales: languages(
-              ifString(req.headers['accept-language']),
-            ),
+            preferredLocales: extractLocales(req),
           })
         }
       }),
