@@ -1,3 +1,4 @@
+import { useLingui } from '@lingui/react/macro'
 import { JSX } from 'react'
 import { clsx } from '../../lib/clsx.ts'
 import { PasswordStrength, getPasswordStrength } from '../../lib/password.ts'
@@ -25,9 +26,10 @@ export function PasswordStrengthMeter({
   className,
   ...props
 }: PasswordStrengthMeterProps) {
+  const { t } = useLingui()
   const strength = getPasswordStrength(password)
 
-  const colorBg = 'bg-gray-200 dark:bg-slate-400'
+  const colorBg = 'bg-gray-300 dark:bg-slate-500'
   const color =
     strength === PasswordStrength.strong
       ? 'bg-success'
@@ -37,27 +39,27 @@ export function PasswordStrengthMeter({
 
   const count =
     strength === PasswordStrength.strong
-      ? 4
+      ? 3
       : strength === PasswordStrength.moderate
-        ? 3
+        ? 2
         : strength === PasswordStrength.weak
-          ? 2
-          : 1
+          ? 1
+          : 0
 
   return (
     <div
       {...props}
       className={clsx('w-full h-1 flex space-x-2', className)}
       role="meter"
-      aria-label="Password strength indicator"
-      aria-valuemin={1}
-      aria-valuemax={4}
+      aria-label={t`Password strength indicator`}
+      aria-valuemin={0}
+      aria-valuemax={3}
       aria-valuenow={count}
     >
-      {Array.from({ length: 4 }, (_, i) => (
+      {Array.from({ length: 3 }, (_, i) => (
         <div
           key={i}
-          className={`rounded h-1 w-1/4 ${count > i ? color : colorBg}`}
+          className={`rounded h-1 w-1/3 ${count > i ? color : colorBg}`}
         />
       ))}
     </div>

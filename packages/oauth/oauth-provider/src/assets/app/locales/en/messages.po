@@ -95,7 +95,7 @@ msgstr "Check your {0} email for a login code and enter it here."
 msgid "Choose a username"
 msgstr "Choose a username"
 
-#: src/assets/app/components/utils/error-card.tsx:81
+#: src/assets/app/components/utils/error-card.tsx:76
 msgid "Code"
 msgstr "Code"
 
@@ -123,7 +123,7 @@ msgstr "Create Account"
 msgid "Deny access"
 msgstr "Deny access"
 
-#: src/assets/app/components/utils/error-card.tsx:88
+#: src/assets/app/components/utils/error-card.tsx:83
 msgid "Description"
 msgstr "Description"
 
@@ -139,7 +139,7 @@ msgstr "Email"
 msgid "Email address"
 msgstr "Email address"
 
-#: src/assets/app/components/forms/input-new-password.tsx:47
+#: src/assets/app/components/forms/input-new-password.tsx:56
 msgid "Enter a password"
 msgstr "Enter a password"
 
@@ -155,7 +155,7 @@ msgstr "Enter the email you used to create your account. We'll send you a \"rese
 msgid "Enter your email address"
 msgstr "Enter your email address"
 
-#: src/assets/app/components/forms/input-new-password.tsx:48
+#: src/assets/app/components/forms/input-new-password.tsx:57
 msgid "Enter your new password"
 msgstr "Enter your new password"
 
@@ -267,6 +267,10 @@ msgstr "Only contains letters, numbers, and hyphens"
 msgid "Password"
 msgstr "Password"
 
+#: src/assets/app/components/utils/password-strength-meter.tsx:54
+msgid "Password strength indicator"
+msgstr "Password strength indicator"
+
 #: src/assets/app/views/authorize/reset-password/reset-password-view.tsx:106
 msgid "Password Updated"
 msgstr "Password Updated"
@@ -275,7 +279,7 @@ msgstr "Password Updated"
 msgid "Password updated!"
 msgstr "Password updated!"
 
-#: src/assets/app/components/forms/input-new-password.tsx:49
+#: src/assets/app/components/forms/input-new-password.tsx:58
 msgid "Password with at least {MIN_PASSWORD_LENGTH} characters"
 msgstr "Password with at least {MIN_PASSWORD_LENGTH} characters"
 

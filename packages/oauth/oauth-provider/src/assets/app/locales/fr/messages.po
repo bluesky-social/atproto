@@ -95,7 +95,7 @@ msgstr "Vérifiez vos emails {0} pour un code de connexion et saisissez-le ici."
 msgid "Choose a username"
 msgstr "Choisissez un nom d'utilisateur"
 
-#: src/assets/app/components/utils/error-card.tsx:81
+#: src/assets/app/components/utils/error-card.tsx:76
 msgid "Code"
 msgstr "Code"
 
@@ -123,7 +123,7 @@ msgstr "Créer un compte"
 msgid "Deny access"
 msgstr "Refuser l'accès"
 
-#: src/assets/app/components/utils/error-card.tsx:88
+#: src/assets/app/components/utils/error-card.tsx:83
 msgid "Description"
 msgstr "Description"
 
@@ -139,7 +139,7 @@ msgstr "Email"
 msgid "Email address"
 msgstr "Adresse email"
 
-#: src/assets/app/components/forms/input-new-password.tsx:47
+#: src/assets/app/components/forms/input-new-password.tsx:56
 msgid "Enter a password"
 msgstr "Saisissez un mot de passe"
 
@@ -155,7 +155,7 @@ msgstr "Saisissez l'email que vous avez utilisé pour créer votre compte. Nous 
 msgid "Enter your email address"
 msgstr "Saisissez votre adresse email"
 
-#: src/assets/app/components/forms/input-new-password.tsx:48
+#: src/assets/app/components/forms/input-new-password.tsx:57
 msgid "Enter your new password"
 msgstr "Saisissez votre nouveau mot de passe"
 
@@ -267,6 +267,10 @@ msgstr "Ne contient que des lettres, des chiffres et des traits d'union"
 msgid "Password"
 msgstr "Mot de passe"
 
+#: src/assets/app/components/utils/password-strength-meter.tsx:54
+msgid "Password strength indicator"
+msgstr "Indicateur de complexité du mot de passe"
+
 #: src/assets/app/views/authorize/reset-password/reset-password-view.tsx:106
 msgid "Password Updated"
 msgstr "Mot de passe mis à jour"
@@ -275,7 +279,7 @@ msgstr "Mot de passe mis à jour"
 msgid "Password updated!"
 msgstr "Mot de passe mis à jour !"
 
-#: src/assets/app/components/forms/input-new-password.tsx:49
+#: src/assets/app/components/forms/input-new-password.tsx:58
 msgid "Password with at least {MIN_PASSWORD_LENGTH} characters"
 msgstr "Mot de passe d'au moins {MIN_PASSWORD_LENGTH} caractères"
 
