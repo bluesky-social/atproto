@@ -290,7 +290,7 @@ export function SignInForm({
               aria-label={secondFactorAria}
               autoCapitalize="none"
               autoCorrect="off"
-              autoComplete="off"
+              autoComplete="one-time-code"
               spellCheck="false"
               dir="auto"
               enterKeyHint="done"
