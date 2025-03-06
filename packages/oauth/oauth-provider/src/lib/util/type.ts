@@ -43,11 +43,17 @@ type UnionToIntersection<T> = (T extends any ? (x: T) => void : never) extends (
  * ```
  */
 type ExtractUnionItem<T> =
-  // We first convert the input (T) union (e.g. 'a' | 'b') into a union of
-  // functions that return the same results ((() => 'a') | (() => 'b')). We
-  // transform that into an intersection (() => 'a') & (() => 'b'), which will
-  // allow us to extract 'b' using a quirk in the way TypeScript works when
-  // inferring return types.
+  // There exists a quirk in the way TypeScript works when inferring return
+  // types of an (disjoined) intersection of functions:
+  //
+  // type AnB = (() => 'a') & (() => 'b')
+  // type B = AnB extends () => infer R ? R : never // 'b'
+  //
+  // By turning the input union T (e.g. 'a' | 'b') into a union of function
+  // (() => 'a') | (() => 'b') and then into an intersection of those functions
+  // (() => 'a') & (() => 'b'), we can exploit the special TypeScript behavior
+  // to infer only the last return type from the functions, which is effectively
+  // equal to the last item of the input union T.
   UnionToIntersection<UnionToFnUnion<T>> extends () => infer R ? R : never
 
 /**
@@ -59,8 +65,8 @@ type ExtractUnionItem<T> =
  *
  * @example
  * ```ts
- * type T = UnionToTuple<'a' | 'b'> // readonly ['a', 'b']
- * type T = UnionToTuple<'a' | 'b' | 'c'> // readonly ['a', 'b', 'c']
+ * type T = UnionToTuple<'a' | 'b'> // ['a', 'b']
+ * type T = UnionToTuple<'a' | 'b' | 'c'> // ['a', 'b', 'c']
  * ```
  */
 type UnionToTuple<T> = UnionToTupleInternal<T>
@@ -84,9 +90,10 @@ type UnionToTupleInternal<
  * This utility allows to create an assertion function that checks if a
  * particular interface is fully implemented but some value.
  *
- * This relies on the (rather complex) {@link UnionToTuple} to ensure that, at
- * runtime, all the required interface keys are indeed checked, and that future
- * additions to the interface do not result in a false sense of type safety.
+ * The use of the (rather complex) {@link UnionToTuple} allows to ensure that,
+ * at runtime, all the required interface keys are indeed checked, and that
+ * future additions to the interface do not result in a false sense of type
+ * safety.
  *
  * @example Valid use
  *
