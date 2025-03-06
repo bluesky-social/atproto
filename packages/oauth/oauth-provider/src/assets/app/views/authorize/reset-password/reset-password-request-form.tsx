@@ -66,7 +66,7 @@ export function ResetPasswordRequestForm({
             setEmail(email)
           }}
         />
-        <Admonition role='info'>
+        <Admonition role="info">
           <p id={emailAriaId} className="">
             <Trans>
               Enter the email you used to create your account. We'll send you a

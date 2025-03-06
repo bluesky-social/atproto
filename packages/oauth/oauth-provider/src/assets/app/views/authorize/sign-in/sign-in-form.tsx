@@ -193,7 +193,7 @@ export function SignInForm({
         <p className="font-bold text-md text-brand pb-1">
           <Trans>Warning</Trans>
         </p>
-        <p className='text-sm'>
+        <p className="text-sm">
           <Trans>
             Please verify the domain name of the website before entering your
             password. Never enter your password on a domain you do not trust.
