@@ -20,12 +20,13 @@ module.exports = defineConfig((commandLineArguments) => {
   const devMode = NODE_ENV === 'development'
 
   return {
-    input: 'src/assets/app/main.tsx',
+    input: ['src/assets/app/main.tsx', 'src/assets/app/main.css'],
     output: {
       manualChunks: undefined,
       sourcemap: true,
       dir: 'dist/assets/app',
       format: 'module',
+      entryFileNames: 'main-[hash].js',
     },
     plugins: [
       {

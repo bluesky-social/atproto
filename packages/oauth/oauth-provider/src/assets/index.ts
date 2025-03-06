@@ -27,15 +27,10 @@ const appBundleManifest: Map<string, ManifestItem> = new Map(
 
 export const ASSETS_URL_PREFIX = '/@atproto/oauth-provider/~assets/'
 
-export function* enumerateAssets(entry: string): IteratorObject<Asset, void> {
-  const manifest = appBundleManifest.get(entry)
-  if (!manifest) throw new AssetNotFoundError(entry)
-
-  yield manifestItemToAsset(entry, manifest)
-
-  if (manifest.type === 'chunk') {
-    for (const file of manifest.dynamicImports) {
-      yield* enumerateAssets(file)
+export function* enumerateAssets(mime: string): IteratorObject<Asset, void> {
+  for (const [filename, manifest] of appBundleManifest) {
+    if (manifest.mime === mime) {
+      yield manifestItemToAsset(filename, manifest)
     }
   }
 }
@@ -70,10 +65,8 @@ function manifestItemToAsset(filename: string, manifest: ManifestItem): Asset {
   return {
     url: posix.join(ASSETS_URL_PREFIX, filename),
     type: manifest.mime,
+    isEntry: manifest.type === 'chunk' && manifest.isEntry,
     sha256: manifest.sha256,
-    // Chunks are generated with a hash in the filename, allowing them not
-    // to require the sha256 in the url to be immutable.
-    immutable: manifest.type === 'chunk' && manifest.isDynamicEntry,
     createStream: data
       ? () => Readable.from(Buffer.from(data, 'base64'))
       : () =>

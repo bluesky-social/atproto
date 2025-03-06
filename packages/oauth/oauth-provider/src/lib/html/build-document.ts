@@ -120,27 +120,23 @@ function* attrsToHtml(attrs?: Attrs) {
   }
 }
 
-function assetUrl(asset: AssetRef) {
-  return `${asset.url}?${asset.sha256}`
-}
-
 function linkPreload(as: 'script' | 'style') {
   return (style: Html | AssetRef) =>
     style instanceof Html
       ? undefined
-      : html`<link rel="preload" href="${assetUrl(style)}" as="${as}" />`
+      : html`<link rel="preload" href="${style.url}" as="${as}" />`
 }
 
 function scriptToHtml(script: Html | AssetRef) {
   return script instanceof Html
     ? // prettier-ignore
       html`<script>${script}</script>` // hash validity requires no space around the content
-    : html`<script type="module" src="${assetUrl(script)}"></script>`
+    : html`<script type="module" src="${script.url}"></script>`
 }
 
 function styleToHtml(style: Html | AssetRef) {
   return style instanceof Html
     ? // prettier-ignore
       html`<style>${style}</style>` // hash validity requires no space around the content
-    : html`<link rel="stylesheet" href="${assetUrl(style)}" />`
+    : html`<link rel="stylesheet" href="${style.url}" />`
 }

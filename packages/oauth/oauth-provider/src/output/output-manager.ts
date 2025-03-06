@@ -1,6 +1,6 @@
 import type { ServerResponse } from 'node:http'
 import { Asset } from '../assets/asset.js'
-import { enumerateAssets, getAsset } from '../assets/index.js'
+import { enumerateAssets } from '../assets/index.js'
 import { CspConfig, mergeCsp } from '../lib/csp/index.js'
 import {
   Html,
@@ -22,11 +22,7 @@ import {
   buildCustomizationData,
 } from './build-customization-data.js'
 import { buildErrorPayload, buildErrorStatus } from './build-error-payload.js'
-import {
-  assetsToCsp,
-  declareBackendData,
-  sendWebPage,
-} from './send-web-page.js'
+import { assetToCsp, declareBackendData, sendWebPage } from './send-web-page.js'
 
 const HCAPTCHA_CSP = {
   'script-src': ['https://hcaptcha.com', 'https://*.hcaptcha.com'],
@@ -52,6 +48,9 @@ export class OutputManager {
   constructor(customization: Customization) {
     this.links = customization.branding?.links
 
+    const scripts = Array.from(enumerateAssets('application/javascript'))
+    const styles = Array.from(enumerateAssets('text/css'))
+
     // Note: building scripts/styles/csp here for two reasons:
     // 1. To avoid re-building it on every request
     // 2. To throw during init if the customization/config is invalid
@@ -63,19 +62,19 @@ export class OutputManager {
         buildCustomizationData(customization),
       ),
       // Last (to be able to read the "backend data" variables)
-      getAsset('main.js'),
+      ...scripts.filter((asset) => asset.isEntry),
     ]
 
     this.styles = [
       // First (to be overridden by customization)
-      getAsset('main.css'),
+      ...styles,
       cssCode(buildCustomizationCss(customization)),
     ]
 
     const customizationCsp = customization?.hcaptcha ? HCAPTCHA_CSP : undefined
     const assetsCsp: CspConfig = {
-      'script-src': [...assetsToCsp(enumerateAssets('main.js'))],
-      'style-src': [...assetsToCsp(enumerateAssets('main.css'))],
+      'script-src': scripts.map(assetToCsp),
+      'style-src': styles.map(assetToCsp),
     }
 
     this.csp = mergeCsp(customizationCsp, assetsCsp)

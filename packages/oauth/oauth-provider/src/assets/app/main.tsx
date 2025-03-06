@@ -15,7 +15,6 @@ import {
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { App } from './app.tsx'
-import './main.css'
 
 if (authorizeData) {
   // When the user is logging in, make sure the page URL contains the

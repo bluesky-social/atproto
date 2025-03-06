@@ -65,16 +65,18 @@ export async function sendWebPage(
 export function* assetsToCsp(
   assets?: Iterable<Html | AssetRef>,
 ): Generator<CspValue> {
-  if (!assets) return
-
-  for (const asset of assets) {
-    if (asset instanceof Html) {
-      const hash = createHash('sha256')
-        .update(asset.toString())
-        .digest('base64')
-      yield `'sha256-${hash}'`
-    } else {
-      yield `'sha256-${asset.sha256}'`
+  if (assets) {
+    for (const asset of assets) {
+      yield assetToCsp(asset)
     }
+  }
+}
+
+export function assetToCsp(asset: Html | AssetRef): CspValue {
+  if (asset instanceof Html) {
+    const hash = createHash('sha256').update(asset.toString()).digest('base64')
+    return `'sha256-${hash}'`
+  } else {
+    return `'sha256-${asset.sha256}'`
   }
 }

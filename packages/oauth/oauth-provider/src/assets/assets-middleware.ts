@@ -16,6 +16,8 @@ export function authorizeAssetsMiddleware(): Middleware {
       string,
       string | undefined,
     ]
+    if (query) return next()
+
     const filename = pathname.slice(ASSETS_URL_PREFIX.length)
     if (!filename) return next()
 
@@ -41,10 +43,7 @@ export function authorizeAssetsMiddleware(): Middleware {
     }
 
     res.setHeader('ETag', asset.sha256)
-
-    if (asset.immutable || asset.sha256 === query) {
-      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable')
-    }
+    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable')
 
     writeStream(res, asset.createStream(), { contentType: asset.type })
   }
