@@ -1,5 +1,13 @@
 # @atproto/sync
 
+## 0.1.17
+
+### Patch Changes
+
+- [#3599](https://github.com/bluesky-social/atproto/pull/3599) [`b20907a70`](https://github.com/bluesky-social/atproto/commit/b20907a7056970ab627e6c661882cb16491801e2) Thanks [@mozzius](https://github.com/mozzius)! - Fix types of `FirehoseOptions`
+
+- [`d96b03956`](https://github.com/bluesky-social/atproto/commit/d96b03956d5c26c238f586c6bdf257c080f12746) Thanks [@devinivy](https://github.com/devinivy)! - Support firehose sync event
+
 ## 0.1.16
 
 ### Patch Changes
