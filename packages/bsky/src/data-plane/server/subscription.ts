@@ -79,7 +79,7 @@ const createFirehose = (opts: {
         } else {
           await indexingSvc.updateActorStatus(evt.did, evt.active, evt.status)
         }
-      } else {
+      } else if (evt.event === 'commit') {
         const indexFn =
           evt.event === 'delete'
             ? indexingSvc.deleteRecord(evt.uri)
