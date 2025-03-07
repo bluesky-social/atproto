@@ -77,6 +77,29 @@ export function isCommit(v: unknown): v is Commit {
   )
 }
 
+/** Updates the repo to a new state, without necessarily including that state on the firehose. Used to recover from broken commit streams, data loss incidents, or in situations where upstream host does not know recent state of the repository. */
+export interface Sync {
+  $type?: 'com.atproto.sync.subscribeRepos#sync'
+  /** The stream sequence number of this message. */
+  seq: number
+  /** The account this repo event corresponds to. Must match that in the commit object. */
+  did: string
+  /** CAR file containing the commit, as a block. The CAR header must include the commit block CID as the first 'root'. */
+  blocks: Uint8Array
+  /** The rev of the commit. This value must match that in the commit object. */
+  rev: string
+  /** Timestamp of when this message was originally broadcast. */
+  time: string
+}
+
+export function isSync(v: unknown): v is Sync {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.sync.subscribeRepos#sync'
+  )
+}
+
 /** Represents a change to an account's identity. Could be an updated handle, signing key, or pds hosting endpoint. Serves as a prod to all downstream services to refresh their identity cache. */
 export interface Identity {
   seq: number

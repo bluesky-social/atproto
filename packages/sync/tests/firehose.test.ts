@@ -60,7 +60,7 @@ describe('firehose', () => {
   let alice: string
 
   it('reads events from firehose', async () => {
-    const evtsPromise = createAndReadFirehose(5)
+    const evtsPromise = createAndReadFirehose(6)
     await wait(10) // give the websocket just a second to spin up
     const aliceRes = await sc.createAccount('alice', {
       handle: 'alice.test',
@@ -73,7 +73,7 @@ describe('firehose', () => {
     await sc.post(alice, 'three')
 
     const evts = await evtsPromise
-    expect(evts.length).toBe(5)
+    expect(evts.length).toBe(6)
     expect(evts.at(0)).toMatchObject({
       event: 'identity',
       did: alice,
@@ -89,6 +89,10 @@ describe('firehose', () => {
       status: undefined,
     })
     expect(evts.at(2)).toMatchObject({
+      event: 'sync',
+      did: alice,
+    })
+    expect(evts.at(3)).toMatchObject({
       event: 'create',
       did: alice,
       collection: 'app.bsky.feed.post',
@@ -96,7 +100,7 @@ describe('firehose', () => {
         text: 'one',
       },
     })
-    expect(evts.at(3)).toMatchObject({
+    expect(evts.at(4)).toMatchObject({
       event: 'create',
       did: alice,
       collection: 'app.bsky.feed.post',
@@ -104,7 +108,7 @@ describe('firehose', () => {
         text: 'two',
       },
     })
-    expect(evts.at(4)).toMatchObject({
+    expect(evts.at(5)).toMatchObject({
       event: 'create',
       did: alice,
       collection: 'app.bsky.feed.post',
