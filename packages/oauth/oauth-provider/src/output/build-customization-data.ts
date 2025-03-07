@@ -9,9 +9,30 @@ export const colorNames = ['brand', 'error', 'warning', 'success'] as const
 export const colorNameSchema = z.enum(colorNames)
 export type ColorName = z.infer<typeof colorNameSchema>
 
+const parsedColorSchema = z.string().transform((value, ctx): RgbColor => {
+  try {
+    const { r, g, b, a } = parseColor(value)
+    if (a != null) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Alpha values are not supported',
+      })
+    }
+    return { r, g, b }
+  } catch (e) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: e instanceof Error ? e.message : 'Invalid color value',
+    })
+    // Won't actually be used (since an issue was added):
+    return { r: 0, g: 0, b: 0 }
+  }
+})
+export type ParsedColor = z.infer<typeof parsedColorSchema> // Same as RgbColor
+
 export const colorsDefinitionSchema = z.record(
   colorNameSchema,
-  z.string().optional(),
+  parsedColorSchema.optional(),
 )
 export type ColorsDefinition = z.infer<typeof colorsDefinitionSchema>
 
@@ -40,7 +61,8 @@ export const brandingConfigSchema = z.object({
   colors: colorsDefinitionSchema.optional(),
   links: z.array(linkDefinitionSchema).readonly().optional(),
 })
-export type BrandingConfig = z.infer<typeof brandingConfigSchema>
+export type BrandingInput = z.input<typeof brandingConfigSchema>
+export type Branding = z.infer<typeof brandingConfigSchema>
 
 export const customizationSchema = z.object({
   /**
@@ -61,6 +83,7 @@ export const customizationSchema = z.object({
    */
   hcaptcha: hcaptchaConfigSchema.optional(),
 })
+export type CustomizationInput = z.input<typeof customizationSchema>
 export type Customization = z.infer<typeof customizationSchema>
 
 export type CustomizationData = {
@@ -102,19 +125,13 @@ export function buildCustomizationCss({ branding }: Customization) {
   return ''
 }
 
-function* buildCustomizationVars(branding?: BrandingConfig) {
+function* buildCustomizationVars(branding?: Branding) {
   if (branding?.colors) {
     for (const name of colorNames) {
       const value = branding.colors[name]
-      if (!value) continue
+      if (!value) continue // Skip missing colors
 
-      // Skip undefined values
-      if (value === undefined) continue
-
-      const { r, g, b, a } = parseColor(value)
-
-      // Tailwind does not apply alpha values to base colors
-      if (a !== undefined) throw new TypeError('Alpha not supported')
+      const { r, g, b } = value
 
       const contrast = computeLuma({ r, g, b }) > 128 ? '0 0 0' : '255 255 255'
 
@@ -124,17 +141,18 @@ function* buildCustomizationVars(branding?: BrandingConfig) {
   }
 }
 
+type RgbColor = { r: number; g: number; b: number }
 type RgbaColor = { r: number; g: number; b: number; a?: number }
 function parseColor(color: string): RgbaColor {
   if (color.startsWith('#')) {
     return parseHexColor(color)
   }
 
-  if (color.startsWith('rgba')) {
+  if (color.startsWith('rgba(')) {
     return parseRgbaColor(color)
   }
 
-  if (color.startsWith('rgb')) {
+  if (color.startsWith('rgb(')) {
     return parseRgbColor(color)
   }
 
@@ -143,28 +161,25 @@ function parseColor(color: string): RgbaColor {
 }
 
 function parseHexColor(v: string) {
+  // parseInt('az', 16) does not return NaN so we need to check the format
+  if (!/^#[0-9a-f]+$/i.test(v)) {
+    throw new TypeError(`Invalid hex color value: ${v}`)
+  }
+
   if (v.length === 4 || v.length === 5) {
-    try {
-      const r = parseUi8Hex(v.slice(1, 2))
-      const g = parseUi8Hex(v.slice(2, 3))
-      const b = parseUi8Hex(v.slice(3, 4))
-      const a = v.length > 4 ? parseUi8Hex(v.slice(4, 5)) : undefined
-      return { r, g, b, a }
-    } catch (cause) {
-      throw new TypeError(`Invalid hex color value: ${v}`, { cause })
-    }
+    const r = parseUi8Hex(v.slice(1, 2))
+    const g = parseUi8Hex(v.slice(2, 3))
+    const b = parseUi8Hex(v.slice(3, 4))
+    const a = v.length > 4 ? parseUi8Hex(v.slice(4, 5)) : undefined
+    return { r, g, b, a }
   }
 
   if (v.length === 7 || v.length === 9) {
-    try {
-      const r = parseUi8Hex(v.slice(1, 3))
-      const g = parseUi8Hex(v.slice(3, 5))
-      const b = parseUi8Hex(v.slice(5, 7))
-      const a = v.length > 8 ? parseUi8Hex(v.slice(7, 9)) : undefined
-      return { r, g, b, a }
-    } catch (cause) {
-      throw new TypeError(`Invalid hex color value: ${v}`, { cause })
-    }
+    const r = parseUi8Hex(v.slice(1, 3))
+    const g = parseUi8Hex(v.slice(3, 5))
+    const b = parseUi8Hex(v.slice(5, 7))
+    const a = v.length > 8 ? parseUi8Hex(v.slice(7, 9)) : undefined
+    return { r, g, b, a }
   }
 
   throw new TypeError(`Invalid hex color value: ${v}`)
@@ -173,14 +188,11 @@ function parseHexColor(v: string) {
 function parseRgbColor(v: string) {
   const matches = v.match(/^\s*rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)\s*$/)
   if (!matches) throw new TypeError(`Invalid rgb color value: ${v}`)
-  try {
-    const r = parseUi8Dec(matches[1])
-    const g = parseUi8Dec(matches[2])
-    const b = parseUi8Dec(matches[3])
-    return { r, g, b }
-  } catch (cause) {
-    throw new TypeError(`Invalid rgb color value: ${v}`, { cause })
-  }
+
+  const r = parseUi8Dec(matches[1])
+  const g = parseUi8Dec(matches[2])
+  const b = parseUi8Dec(matches[3])
+  return { r, g, b }
 }
 
 function parseRgbaColor(v: string) {
@@ -188,15 +200,12 @@ function parseRgbaColor(v: string) {
     /^\s*rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)\s*$/,
   )
   if (!matches) throw new TypeError(`Invalid rgba color value: ${v}`)
-  try {
-    const r = parseUi8Dec(matches[1])
-    const g = parseUi8Dec(matches[2])
-    const b = parseUi8Dec(matches[3])
-    const a = parseUi8Dec(matches[4])
-    return { r, g, b, a }
-  } catch (cause) {
-    throw new TypeError(`Invalid rgba color value: ${v}`, { cause })
-  }
+
+  const r = parseUi8Dec(matches[1])
+  const g = parseUi8Dec(matches[2])
+  const b = parseUi8Dec(matches[3])
+  const a = parseUi8Dec(matches[4])
+  return { r, g, b, a }
 }
 
 function computeLuma({ r, g, b }: RgbaColor) {
@@ -213,5 +222,7 @@ function parseUi8Dec(v: string) {
 
 function asUi8(v: number) {
   if (v >= 0 && v <= 255 && v === (v | 0)) return v
-  throw new TypeError(`Invalid color component: ${v}`)
+  throw new TypeError(
+    `Invalid color component "${v}" (expected an integer between 0 and 255)`,
+  )
 }
