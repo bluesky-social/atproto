@@ -134,7 +134,7 @@ describe('firehose', () => {
     const runner = new MemoryRunner({
       startCursor: currCursor ?? undefined,
     })
-    const evtsPromise = createAndReadFirehose(20, { runner }, true)
+    const evtsPromise = createAndReadFirehose(24, { runner }, true)
     const createAndPost = async (name: string) => {
       const user = await sc.createAccount('name', {
         handle: `${name}.test`,
@@ -163,22 +163,29 @@ describe('firehose', () => {
     const user2Evts = evts.filter((e) => e.did === res[1].did)
     const user3Evts = evts.filter((e) => e.did === res[2].did)
     const user4Evts = evts.filter((e) => e.did === res[3].did)
-    const EVT_ORDER = ['identity', 'account', 'create', 'create', 'create']
+    const EVT_ORDER = [
+      'identity',
+      'account',
+      'sync',
+      'create',
+      'create',
+      'create',
+    ]
     expect(user1Evts.map((e) => e.event)).toEqual(EVT_ORDER)
     expect(user2Evts.map((e) => e.event)).toEqual(EVT_ORDER)
     expect(user3Evts.map((e) => e.event)).toEqual(EVT_ORDER)
     expect(user4Evts.map((e) => e.event)).toEqual(EVT_ORDER)
     expect(
-      user1Evts.slice(2, 5).map((e) => (e as Create).uri.toString()),
+      user1Evts.slice(3, 6).map((e) => (e as Create).uri.toString()),
     ).toEqual([res[0].post1, res[0].post2, res[0].post3])
     expect(
-      user2Evts.slice(2, 5).map((e) => (e as Create).uri.toString()),
+      user2Evts.slice(3, 6).map((e) => (e as Create).uri.toString()),
     ).toEqual([res[1].post1, res[1].post2, res[1].post3])
     expect(
-      user3Evts.slice(2, 5).map((e) => (e as Create).uri.toString()),
+      user3Evts.slice(3, 6).map((e) => (e as Create).uri.toString()),
     ).toEqual([res[2].post1, res[2].post2, res[2].post3])
     expect(
-      user4Evts.slice(2, 5).map((e) => (e as Create).uri.toString()),
+      user4Evts.slice(3, 6).map((e) => (e as Create).uri.toString()),
     ).toEqual([res[3].post1, res[3].post2, res[3].post3])
   })
 })
