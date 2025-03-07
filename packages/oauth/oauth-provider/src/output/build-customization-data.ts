@@ -61,7 +61,8 @@ export const brandingConfigSchema = z.object({
   colors: colorsDefinitionSchema.optional(),
   links: z.array(linkDefinitionSchema).readonly().optional(),
 })
-export type BrandingConfig = z.infer<typeof brandingConfigSchema>
+export type BrandingInput = z.input<typeof brandingConfigSchema>
+export type Branding = z.infer<typeof brandingConfigSchema>
 
 export const customizationSchema = z.object({
   /**
@@ -124,7 +125,7 @@ export function buildCustomizationCss({ branding }: Customization) {
   return ''
 }
 
-function* buildCustomizationVars(branding?: BrandingConfig) {
+function* buildCustomizationVars(branding?: Branding) {
   if (branding?.colors) {
     for (const name of colorNames) {
       const value = branding.colors[name]
