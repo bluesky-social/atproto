@@ -10,6 +10,7 @@ import { AppContext } from '../../../../context'
 import { baseNormalizeAndValidate } from '../../../../handle'
 import { Server } from '../../../../lexicon'
 import { InputSchema as CreateAccountInput } from '../../../../lexicon/types/com/atproto/server/createAccount'
+import { syncEvtDataFromCommit } from '../../../../sequencer'
 import { safeResolveDidDoc } from './util'
 
 export default function (server: Server, ctx: AppContext) {
@@ -75,6 +76,10 @@ export default function (server: Server, ctx: AppContext) {
           await ctx.sequencer.sequenceIdentityEvt(did, handle)
           await ctx.sequencer.sequenceAccountEvt(did, AccountStatus.Active)
           await ctx.sequencer.sequenceCommit(did, commit)
+          await ctx.sequencer.sequenceSyncEvt(
+            did,
+            syncEvtDataFromCommit(commit),
+          )
         }
         await ctx.accountManager.updateRepoRoot(did, commit.cid, commit.rev)
         await ctx.actorStore.clearReservedKeypair(signingKey.did(), did)

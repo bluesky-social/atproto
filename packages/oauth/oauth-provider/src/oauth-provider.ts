@@ -103,8 +103,10 @@ import { OAuthHooks, SignInData, SignUpData } from './oauth-hooks.js'
 import { OAuthVerifier, OAuthVerifierOptions } from './oauth-verifier.js'
 import { AuthorizationResultAuthorize } from './output/build-authorize-data.js'
 import {
-  BrandingConfig,
+  Branding,
+  BrandingInput,
   Customization,
+  CustomizationInput,
   customizationSchema,
 } from './output/build-customization-data.js'
 import {
@@ -130,9 +132,11 @@ import { TokenStore, asTokenStore } from './token/token-store.js'
 import { VerifyTokenClaimsOptions } from './token/verify-token-claims.js'
 
 export {
-  type BrandingConfig,
+  type Branding,
+  type BrandingInput,
   type CustomMetadata,
   type Customization,
+  type CustomizationInput,
   type Handler,
   type HcaptchaConfig,
   Keyset,
@@ -158,7 +162,7 @@ export type RouterOptions<
 }
 
 export type OAuthProviderOptions = Override<
-  OAuthVerifierOptions & OAuthHooks & DeviceManagerOptions & Customization,
+  OAuthVerifierOptions & OAuthHooks & DeviceManagerOptions & CustomizationInput,
   {
     /**
      * Maximum age a device/account session can be before requiring

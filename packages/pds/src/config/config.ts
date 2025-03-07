@@ -1,7 +1,7 @@
 import assert from 'node:assert'
 import path from 'node:path'
 import { DAY, HOUR, SECOND } from '@atproto/common'
-import { BrandingConfig, HcaptchaConfig } from '@atproto/oauth-provider'
+import { BrandingInput, HcaptchaConfig } from '@atproto/oauth-provider'
 import { ServerEnvironment } from './env'
 
 // off-config but still from env:
@@ -277,8 +277,8 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
             colors: {
               brand: env.brandColor,
               error: env.errorColor,
-              warning: env.warningColor,
               success: env.successColor,
+              warning: env.warningColor,
             },
             links: [
               {
@@ -447,7 +447,7 @@ export type OAuthConfig = {
     | false
     | {
         hcaptcha?: HcaptchaConfig
-        branding: BrandingConfig
+        branding: BrandingInput
       }
 }
 
