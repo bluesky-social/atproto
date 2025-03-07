@@ -51,7 +51,7 @@ export function roughSizeOfObject(value: unknown): number {
           for (let i = 0; i < keys.length; i++) {
             bytes += 4
             const key = keys[i]
-            const val = value[key]
+            const val: unknown = value[key as keyof typeof value]
             if (val !== undefined) stack.push(val)
             stack.push(key)
           }

@@ -1,3 +1,4 @@
+import assert from 'node:assert'
 import { wait } from '@atproto/common'
 import { Redis } from '../src/'
 import { ReadThroughCache } from '../src/cache/read-through'
@@ -6,7 +7,9 @@ describe('redis cache', () => {
   let redis: Redis
 
   beforeAll(async () => {
-    redis = new Redis({ host: process.env.REDIS_HOST || '' })
+    const host = process.env['REDIS_HOST']
+    assert(host, 'Missing redis host for tests')
+    redis = new Redis({ host })
   })
 
   afterAll(async () => {
@@ -40,27 +43,27 @@ describe('redis cache', () => {
       ns2.getMulti(['key1', 'key2']),
       redis.getMulti(['key1', 'key2']),
     ])
-    expect(gotMany[0]['key1']).toEqual('a')
-    expect(gotMany[0]['key2']).toEqual('b')
-    expect(gotMany[1]['key1']).toEqual('c')
-    expect(gotMany[1]['key2']).toEqual('d')
-    expect(gotMany[2]['key1']).toEqual('e')
-    expect(gotMany[2]['key2']).toEqual('f')
+    expect(gotMany[0].get('key1')).toEqual('a')
+    expect(gotMany[0].get('key2')).toEqual('b')
+    expect(gotMany[1].get('key1')).toEqual('c')
+    expect(gotMany[1].get('key2')).toEqual('d')
+    expect(gotMany[2].get('key1')).toEqual('e')
+    expect(gotMany[2].get('key2')).toEqual('f')
   })
 
   it('caches values when empty', async () => {
-    const vals = {
-      '1': 'a',
-      '2': 'b',
-      '3': 'c',
-    }
+    const vals = new Map<string, string>([
+      ['1', 'a'],
+      ['2', 'b'],
+      ['3', 'c'],
+    ])
     let hits = 0
     const cache = new ReadThroughCache<string>(redis.withNamespace('test1'), {
       staleTTL: 60000,
       maxTTL: 60000,
-      fetchMethod: async (key) => {
+      fetchMethod: async (key: string) => {
         hits++
-        return vals[key]
+        return vals.get(key) ?? null
       },
     })
     const got = await Promise.all([

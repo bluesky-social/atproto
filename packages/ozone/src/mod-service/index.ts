@@ -413,59 +413,59 @@ export class ModerationService {
     const removedTags = isModEventTag(event) ? jsonb(event.remove) : null
 
     if (isModEventReport(event)) {
-      meta.reportType = event.reportType
+      meta['reportType'] = event.reportType
     }
 
     if (isModEventComment(event) && event.sticky) {
-      meta.sticky = event.sticky
+      meta['sticky'] = event.sticky
     }
 
     if (isModEventEmail(event)) {
-      meta.subjectLine = event.subjectLine
+      meta['subjectLine'] = event.subjectLine
       if (event.content) {
-        meta.content = event.content
+        meta['content'] = event.content
       }
     }
 
     if (isAccountEvent(event)) {
-      meta.active = event.active
-      meta.timestamp = event.timestamp
-      if (event.status) meta.status = event.status
+      meta['active'] = event.active
+      meta['timestamp'] = event.timestamp
+      if (event.status) meta['status'] = event.status
     }
 
     if (isModEventPriorityScore(event)) {
-      meta.priorityScore = event.score
+      meta['priorityScore'] = event.score
     }
 
     if (isIdentityEvent(event)) {
-      meta.timestamp = event.timestamp
-      if (event.handle) meta.handle = event.handle
-      if (event.pdsHost) meta.pdsHost = event.pdsHost
-      if (event.tombstone) meta.tombstone = event.tombstone
+      meta['timestamp'] = event.timestamp
+      if (event.handle) meta['handle'] = event.handle
+      if (event.pdsHost) meta['pdsHost'] = event.pdsHost
+      if (event.tombstone) meta['tombstone'] = event.tombstone
     }
 
     if (isRecordEvent(event)) {
-      meta.timestamp = event.timestamp
-      meta.op = event.op
-      if (event.cid) meta.cid = event.cid
+      meta['timestamp'] = event.timestamp
+      meta['op'] = event.op
+      if (event.cid) meta['cid'] = event.cid
     }
 
     if (
       (isModEventTakedown(event) || isModEventAcknowledge(event)) &&
       event.acknowledgeAccountSubjects
     ) {
-      meta.acknowledgeAccountSubjects = true
+      meta['acknowledgeAccountSubjects'] = true
     }
 
     if (isModEventTakedown(event) && event.policies?.length) {
-      meta.policies = event.policies.join(',')
+      meta['policies'] = event.policies.join(',')
     }
 
     // Keep trace of reports that came in while the reporter was in muted stated
     if (isModEventReport(event)) {
       const isReportingMuted = await this.isReportingMutedForSubject(createdBy)
       if (isReportingMuted) {
-        meta.isReporterMuted = true
+        meta['isReporterMuted'] = true
       }
     }
 

@@ -1,5 +1,6 @@
 import { useLingui } from '@lingui/react/macro'
 import { memo } from 'react'
+import { Json } from '@atproto-labs/fetch'
 import {
   LayoutWelcome,
   LayoutWelcomeProps,
@@ -10,7 +11,7 @@ import { Override } from '../../lib/util.ts'
 export type ErrorViewProps = Override<
   LayoutWelcomeProps,
   {
-    error: unknown
+    error: Json
   }
 >
 

@@ -1,4 +1,5 @@
 import { Kysely, sql } from 'kysely'
+import { DatabaseError } from 'pg'
 
 // @TODO subject indexes, naming?
 // @TODO drop indexes in down()?
@@ -11,9 +12,16 @@ export async function up(db: Kysely<unknown>): Promise<void> {
       db,
     )
   } catch (err: unknown) {
-    // The "if not exists" isn't bulletproof against races, and we see test suites racing to
-    // create the extension. So we can just ignore errors indicating the extension already exists.
-    if (!err?.['detail']?.includes?.('(pg_trgm) already exists')) throw err
+    if (
+      err instanceof DatabaseError &&
+      err.detail?.includes('(pg_trgm) already exists')
+    ) {
+      // The "if not exists" isn't bulletproof against races, and we see test suites racing to
+      // create the extension. So we can just ignore errors indicating the extension already exists.
+      return
+    }
+
+    throw err
   }
 
   // duplicateRecords

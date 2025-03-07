@@ -87,7 +87,7 @@ export const createRefreshToken = (opts: {
 // @NOTE unsafe for verification, should only be used w/ direct output from createRefreshToken() or createTokens()
 export const decodeRefreshToken = (jwt: string) => {
   const token = jose.decodeJwt(jwt)
-  assert.ok(token.scope === AuthScope.Refresh, 'not a refresh token')
+  assert.ok(token['scope'] === AuthScope.Refresh, 'not a refresh token')
   return token as RefreshToken
 }
 

@@ -1,3 +1,4 @@
+import assert from 'node:assert'
 import { sql } from 'kysely'
 import { wait } from '@atproto/common'
 import { TestNetwork } from '@atproto/dev-env'
@@ -20,10 +21,12 @@ describe('db', () => {
 
   it('handles client errors without crashing.', async () => {
     const tryKillConnection = db.transaction(async (dbTxn) => {
-      const result = await sql`select pg_backend_pid() as pid;`.execute(
-        dbTxn.db,
-      )
-      const pid = result.rows[0]?.['pid'] as number
+      const result = await sql<{
+        pid: number
+      }>`select pg_backend_pid() as pid;`.execute(dbTxn.db)
+      const [row] = result.rows
+      assert(row)
+      const { pid } = row
       await sql`select pg_terminate_backend(${pid});`.execute(db.db)
       await sql`select 1;`.execute(dbTxn.db)
     })

@@ -10,12 +10,13 @@ const {
   default: manifest,
 } = require('@atproto-labs/rollup-plugin-bundle-manifest')
 const postcss = ((m) => m.default || m)(require('rollup-plugin-postcss'))
+// @ts-expect-error - missing types
 const serve = ((m) => m.default || m)(require('rollup-plugin-serve'))
 
 module.exports = defineConfig((commandLineArguments) => {
   const NODE_ENV =
     process.env['NODE_ENV'] ??
-    (commandLineArguments.watch ? 'development' : 'production')
+    (commandLineArguments['watch'] ? 'development' : 'production')
 
   const devMode = NODE_ENV === 'development'
 
@@ -73,18 +74,18 @@ module.exports = defineConfig((commandLineArguments) => {
         title: 'OAuth Client Example',
         template: ({ attributes, files, meta, publicPath, title }) => `
           <!DOCTYPE html>
-          <html${makeHtmlAttributes(attributes.html)}>
+          <html${makeHtmlAttributes(attributes['html'])}>
           <head>
             ${meta
               .map((attrs) => `<meta${makeHtmlAttributes(attrs)}>`)
               .join('\n')}
             <meta name="viewport" content="width=device-width, initial-scale=1">
             <title>${title}</title>
-            ${files.css
-              .map(
+            ${files['css']
+              ?.map(
                 (asset) =>
                   `<link${makeHtmlAttributes({
-                    ...attributes.link,
+                    ...attributes['link'],
                     rel: 'stylesheet',
                     href: `${publicPath}${asset.fileName}`,
                   })}>`,
@@ -93,11 +94,11 @@ module.exports = defineConfig((commandLineArguments) => {
           </head>
           <body class="bg-white dark:bg-slate-800">
             <div id="root"></div>
-            ${files.js
-              .map(
+            ${files['js']
+              ?.map(
                 (asset) =>
                   `<script${makeHtmlAttributes({
-                    ...attributes.script,
+                    ...attributes['script'],
                     src: `${publicPath}${asset.fileName}`,
                   })}></script>`,
               )
@@ -108,7 +109,7 @@ module.exports = defineConfig((commandLineArguments) => {
       }),
       manifest({ name: 'files.json', data: true }),
 
-      commandLineArguments.watch &&
+      commandLineArguments['watch'] &&
         serve({
           contentBase: 'dist',
           port: 8080,

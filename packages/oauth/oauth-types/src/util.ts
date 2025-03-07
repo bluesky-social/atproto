@@ -27,7 +27,7 @@ export function safeUrl(input: URL | string): URL | null {
   }
 }
 
-export function extractUrlPath(url) {
+export function extractUrlPath(url: string) {
   // Extracts the path from a URL, without relying on the URL constructor
   // (because it normalizes the URL)
   const endOfProtocol = url.startsWith('https://')

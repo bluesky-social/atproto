@@ -226,7 +226,6 @@ describe('feed generation', () => {
     await sc.like(sc.dids.carol, feedUriAllRef)
     await network.processAll()
 
-    const results = (results) => results.flatMap((res) => res.feeds)
     const paginator = async (cursor?: string) => {
       const res = await agent.api.app.bsky.feed.getActorFeeds(
         { actor: alice, cursor, limit: 2 },
@@ -240,7 +239,9 @@ describe('feed generation', () => {
       return res.data
     }
 
-    const paginatedAll = results(await paginateAll(paginator))
+    const paginatedAll = (await paginateAll(paginator)).flatMap(
+      (res) => res.feeds,
+    )
 
     expect(paginatedAll.length).toEqual(7)
     expect(paginatedAll[0].uri).toEqual(feedUriOdd)
@@ -632,7 +633,6 @@ describe('feed generation', () => {
     })
 
     it('paginates, handling replies and reposts.', async () => {
-      const results = (results) => results.flatMap((res) => res.feed)
       const paginator = async (cursor?: string) => {
         const res = await agent.api.app.bsky.feed.getFeed(
           { feed: feedUriAll, cursor, limit: 2 },
@@ -647,7 +647,9 @@ describe('feed generation', () => {
         return res.data
       }
 
-      const paginatedAll: FeedViewPost[] = results(await paginateAll(paginator))
+      const paginatedAll: FeedViewPost[] = (
+        await paginateAll(paginator)
+      ).flatMap((res) => res.feed)
 
       // Unknown post uri is omitted
       expect(paginatedAll.map((item) => item.post.uri)).toEqual([
@@ -734,8 +736,11 @@ describe('feed generation', () => {
           ),
         },
       )
+      // @ts-expect-error unspecced
       expect(feed.data['$auth']?.['aud']).toEqual(gen.did)
+      // @ts-expect-error unspecced
       expect(feed.data['$auth']?.['iss']).toEqual(alice)
+      // @ts-expect-error unspecced
       expect(feed.data['$auth']?.['lxm']).toEqual(
         ids.AppBskyFeedGetFeedSkeleton,
       )

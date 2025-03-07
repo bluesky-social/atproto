@@ -37,7 +37,7 @@ export type Users = typeof users
 export async function postgatesSeed(
   sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
 ) {
-  const u = structuredClone(users)
+  const u: Users & { [key: string]: User } = structuredClone(users)
 
   await sc.createAccount('quotee', u.quotee)
   await sc.createAccount('quoter', u.quoter)

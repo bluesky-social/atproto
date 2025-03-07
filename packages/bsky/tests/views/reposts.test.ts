@@ -57,7 +57,6 @@ describe('pds repost views', () => {
   })
 
   it('paginates', async () => {
-    const results = (results) => results.flatMap((res) => res.repostedBy)
     const paginator = async (cursor?: string) => {
       const res = await agent.api.app.bsky.feed.getRepostedBy(
         {
@@ -91,7 +90,9 @@ describe('pds repost views', () => {
     )
 
     expect(full.data.repostedBy.length).toEqual(4)
-    expect(results(paginatedAll)).toEqual(results([full.data]))
+    expect(paginatedAll.flatMap((res) => res.repostedBy)).toEqual(
+      full.data.repostedBy,
+    )
   })
 
   it('fetches reposted-by unauthed', async () => {

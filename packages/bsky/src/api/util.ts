@@ -12,7 +12,7 @@ type ResHeaderOpts = {
 export const resHeaders = (
   opts: Partial<ResHeaderOpts>,
 ): Record<string, string> => {
-  const headers = {}
+  const headers: Record<string, string> = {}
   if (opts.labelers) {
     headers[ATPROTO_CONTENT_LABELERS] = formatLabelerHeader(opts.labelers)
   }

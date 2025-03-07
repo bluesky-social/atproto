@@ -37,7 +37,7 @@ export class Html implements Iterable<string> {
     return result
   }
 
-  [Symbol.toPrimitive](hint): string {
+  [Symbol.toPrimitive](hint: string): string {
     switch (hint) {
       case 'string':
       case 'default':

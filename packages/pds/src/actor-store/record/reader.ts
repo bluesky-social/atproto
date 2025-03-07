@@ -1,4 +1,5 @@
 import { CID } from 'multiformats/cid'
+import { isCid, isTypeofObject } from '@atproto/common'
 import { RepoRecord } from '@atproto/lexicon'
 import { CidSet, cborToLexRecord, formatDataKey } from '@atproto/repo'
 import * as syntax from '@atproto/syntax'
@@ -347,7 +348,12 @@ export const getBacklinks = (uri: AtUri, record: RepoRecord): Backlink[] => {
     record?.['$type'] === ids.AppBskyFeedRepost
   ) {
     const subject = record['subject']
-    if (typeof subject?.['uri'] !== 'string') {
+    if (
+      !isTypeofObject(subject) ||
+      isCid(subject) ||
+      !('uri' in subject) ||
+      typeof subject['uri'] !== 'string'
+    ) {
       return []
     }
     try {

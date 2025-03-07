@@ -141,7 +141,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
             .as('blockedByList'),
       ])
       .execute()
-    const getKey = (a, b) => [a, b].sort().join(',')
+    const getKey = (a: string, b: string) => [a, b].sort().join(',')
     const lookup = res.reduce((acc, cur) => {
       const key = getKey(cur.source, cur.target)
       return acc.set(key, cur)

@@ -11,7 +11,7 @@ export interface RepoStorage {
   putBlock(cid: CID, block: Uint8Array, rev: string): Promise<void>
   putMany(blocks: BlockMap, rev: string): Promise<void>
   updateRoot(cid: CID, rev: string): Promise<void>
-  applyCommit(commit: CommitData)
+  applyCommit(commit: CommitData): Promise<void>
 
   // Readable
   getBytes(cid: CID): Promise<Uint8Array | null>

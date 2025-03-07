@@ -117,7 +117,7 @@ describe('pds user search views', () => {
       },
     )
     const { data: unauthed } = await agent.api.app.bsky.actor.getSuggestions({})
-    const omitViewerFollows = ({ did }) => {
+    const omitViewerFollows = ({ did }: { did: string }) => {
       return did !== sc.dids.carol && !sc.follows[sc.dids.carol][did]
     }
     expect(unauthed.actors.length).toBeGreaterThan(0)

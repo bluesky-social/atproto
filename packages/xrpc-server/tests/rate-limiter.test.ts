@@ -157,7 +157,7 @@ describe('Parameters', () => {
     rateLimit: {
       durationMs: 5 * MINUTE,
       points: 5,
-      calcKey: ({ params }) => params.str as string,
+      calcKey: (ctx) => (ctx.params as { str: string }).str,
     },
     handler: (ctx: { params: xrpcServer.Params }) => ({
       encoding: 'json',
@@ -169,8 +169,8 @@ describe('Parameters', () => {
       durationMs: 5 * MINUTE,
       points: 2,
     },
-    handler: (ctx: xrpcServer.XRPCReqContext) => {
-      if (ctx.params.count === 1) {
+    handler: (ctx) => {
+      if ((ctx.params as { count: number }).count === 1) {
         ctx.resetRouteRateLimits()
       }
 
@@ -183,7 +183,7 @@ describe('Parameters', () => {
   server.method('io.example.sharedLimitOne', {
     rateLimit: {
       name: 'shared-limit',
-      calcPoints: ({ params }) => params.points as number,
+      calcPoints: ({ params }) => (params as { points: number }).points,
     },
     handler: (ctx: { params: xrpcServer.Params }) => ({
       encoding: 'json',
@@ -193,7 +193,7 @@ describe('Parameters', () => {
   server.method('io.example.sharedLimitTwo', {
     rateLimit: {
       name: 'shared-limit',
-      calcPoints: ({ params }) => params.points as number,
+      calcPoints: ({ params }) => (params as { points: number }).points,
     },
     handler: (ctx: { params: xrpcServer.Params }) => ({
       encoding: 'json',
@@ -205,7 +205,7 @@ describe('Parameters', () => {
       {
         durationMs: 5 * MINUTE,
         points: 5,
-        calcPoints: ({ params }) => (params.shouldCount ? 1 : 0),
+        calcPoints: ({ params }) => (params['shouldCount'] ? 1 : 0),
       },
       {
         durationMs: 5 * MINUTE,

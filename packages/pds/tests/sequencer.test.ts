@@ -19,7 +19,7 @@ describe('sequencer', () => {
   let alice: string
   let bob: string
 
-  let totalEvts
+  let totalEvts: number
   let lastSeen: number
 
   beforeAll(async () => {

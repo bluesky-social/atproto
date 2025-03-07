@@ -1,3 +1,4 @@
+import assert from 'node:assert'
 import { EventEmitter, once } from 'node:events'
 import { Selectable } from 'kysely'
 import Mail from 'nodemailer/lib/mailer'
@@ -27,10 +28,15 @@ describe('account deletion', () => {
   let initialDbContents: DbContents
   let updatedDbContents: DbContents
   const mailCatcher = new EventEmitter()
-  let _origSendMail
+  let _origSendMail: Mail['sendMail']
 
   // chose carol because she has blobs
-  let carol
+  let carol: {
+    did: string
+    handle: string
+    email: string
+    password: string
+  }
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
@@ -60,19 +66,20 @@ describe('account deletion', () => {
     await network.close()
   })
 
-  const getMailFrom = async (promise): Promise<Mail.Options> => {
-    const result = await Promise.all([once(mailCatcher, 'mail'), promise])
-    return result[0][0]
+  const getMailFrom = async (promise: Promise<unknown>) => {
+    const mailResult = await once(mailCatcher, 'mail')
+    await promise
+    return mailResult[0] as Mail.Options
   }
 
   const getTokenFromMail = (mail: Mail.Options) =>
     mail.html?.toString().match(/>([a-z0-9]{5}-[a-z0-9]{5})</i)?.[1]
 
-  let token
+  let token: string
 
   it('requests account deletion', async () => {
     const mail = await getMailFrom(
-      agent.api.com.atproto.server.requestAccountDelete(undefined, {
+      agent.com.atproto.server.requestAccountDelete(undefined, {
         headers: sc.getHeaders(carol.did),
       }),
     )
@@ -80,14 +87,13 @@ describe('account deletion', () => {
     expect(mail.to).toEqual(carol.email)
     expect(mail.html).toContain('To permanently delete your account')
 
-    token = getTokenFromMail(mail)
-    if (!token) {
-      return expect(token).toBeDefined()
-    }
+    const mailToken = getTokenFromMail(mail)
+    assert(mailToken != null)
+    token = mailToken
   })
 
   it('fails account deletion with a bad token', async () => {
-    const attempt = agent.api.com.atproto.server.deleteAccount({
+    const attempt = agent.com.atproto.server.deleteAccount({
       token: '123456',
       did: carol.did,
       password: carol.password,
@@ -96,7 +102,7 @@ describe('account deletion', () => {
   })
 
   it('fails account deletion with a bad password', async () => {
-    const attempt = agent.api.com.atproto.server.deleteAccount({
+    const attempt = agent.com.atproto.server.deleteAccount({
       token,
       did: carol.did,
       password: 'bad-pass',
@@ -106,7 +112,7 @@ describe('account deletion', () => {
 
   it('deletes account with a valid token & password', async () => {
     // Perform account deletion, including when the account is already "taken down"
-    await agent.api.com.atproto.admin.updateSubjectStatus(
+    await agent.com.atproto.admin.updateSubjectStatus(
       {
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',
@@ -119,7 +125,7 @@ describe('account deletion', () => {
         headers: network.pds.adminAuthHeaders(),
       },
     )
-    await agent.api.com.atproto.server.deleteAccount({
+    await agent.com.atproto.server.deleteAccount({
       token,
       did: carol.did,
       password: carol.password,
@@ -128,7 +134,7 @@ describe('account deletion', () => {
   })
 
   it('no longer lets the user log in', async () => {
-    const attempt = agent.api.com.atproto.server.createSession({
+    const attempt = agent.com.atproto.server.createSession({
       identifier: carol.handle,
       password: carol.password,
     })
@@ -206,7 +212,7 @@ describe('account deletion', () => {
     })
 
     const mail = await getMailFrom(
-      agent.api.com.atproto.server.requestAccountDelete(undefined, {
+      agent.com.atproto.server.requestAccountDelete(undefined, {
         headers: sc.getHeaders(eve.did),
       }),
     )
@@ -215,7 +221,7 @@ describe('account deletion', () => {
     if (!token) {
       return expect(token).toBeDefined()
     }
-    await agent.api.com.atproto.server.deleteAccount({
+    await agent.com.atproto.server.deleteAccount({
       token,
       did: eve.did,
       password: eve.password,
@@ -229,18 +235,18 @@ describe('account deletion', () => {
       password: 'ferris-test',
     })
 
-    const tryUnauthed = agent.api.com.atproto.admin.deleteAccount({
+    const tryUnauthed = agent.com.atproto.admin.deleteAccount({
       did: ferris.did,
     })
     await expect(tryUnauthed).rejects.toThrow('Authentication Required')
 
-    const { data: acct } = await agent.api.com.atproto.admin.getAccountInfo(
+    const { data: acct } = await agent.com.atproto.admin.getAccountInfo(
       { did: ferris.did },
       { headers: network.pds.adminAuthHeaders() },
     )
     expect(acct.did).toBe(ferris.did)
 
-    await agent.api.com.atproto.admin.deleteAccount(
+    await agent.com.atproto.admin.deleteAccount(
       { did: ferris.did },
       {
         headers: network.pds.adminAuthHeaders(),
@@ -248,7 +254,7 @@ describe('account deletion', () => {
       },
     )
 
-    const tryGetAccountInfo = agent.api.com.atproto.admin.getAccountInfo(
+    const tryGetAccountInfo = agent.com.atproto.admin.getAccountInfo(
       { did: ferris.did },
       { headers: network.pds.adminAuthHeaders() },
     )

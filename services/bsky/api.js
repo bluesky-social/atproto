@@ -63,7 +63,7 @@ const main = async () => {
 }
 
 const getEnv = () => ({
-  serviceSigningKey: process.env.BSKY_SERVICE_SIGNING_KEY || undefined,
+  serviceSigningKey: process.env['BSKY_SERVICE_SIGNING_KEY'] || undefined,
 })
 
 const maybeParseInt = (str) => {
@@ -88,7 +88,7 @@ const maintainXrpcResource = (span, req) => {
   }
 }
 
-const workerCount = maybeParseInt(process.env.CLUSTER_WORKER_COUNT)
+const workerCount = maybeParseInt(process.env['CLUSTER_WORKER_COUNT'])
 
 if (workerCount) {
   if (cluster.isPrimary) {

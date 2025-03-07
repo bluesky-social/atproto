@@ -211,7 +211,6 @@ describe('mute views', () => {
   })
 
   it('paginates.', async () => {
-    const results = (results) => results.flatMap((res) => res.mutes)
     const paginator = async (cursor?: string) => {
       const { data: view } = await agent.api.app.bsky.graph.getMutes(
         { cursor, limit: 2 },
@@ -238,7 +237,7 @@ describe('mute views', () => {
     )
 
     expect(full.data.mutes.length).toEqual(8)
-    expect(results(paginatedAll)).toEqual(results([full.data]))
+    expect(paginatedAll.flatMap((res) => res.mutes)).toEqual(full.data.mutes)
   })
 
   it('removes mute.', async () => {

@@ -49,11 +49,11 @@ export type Deferrable = {
 }
 
 export const createDeferrable = (): Deferrable => {
-  let resolve
-  const promise: Promise<void> = new Promise((res) => {
+  let resolve: () => void
+  const promise = new Promise<void>((res) => {
     resolve = () => res()
   })
-  return { resolve, complete: promise }
+  return { resolve: resolve!, complete: promise }
 }
 
 export const createDeferrables = (count: number): Deferrable[] => {

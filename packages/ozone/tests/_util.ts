@@ -107,8 +107,14 @@ export const getOriginator = (item: FeedViewPost) => {
 // to this:
 //   [{ uri: '0'}, { uri: '1' }, { uri: '0'}]
 const kTake = Symbol('take')
-export function take(obj, value: string): string
-export function take(obj, value: string | undefined): string | undefined
+export function take(
+  obj: { [s: string]: number; [kTake]?: string },
+  value: string,
+): string
+export function take(
+  obj: { [s: string]: number; [kTake]?: string },
+  value: string | undefined,
+): string | undefined
 export function take(
   obj: { [s: string]: number; [kTake]?: string },
   value: string | undefined,
@@ -128,7 +134,10 @@ export function take(
 export const constantDate = new Date(0).toISOString()
 export const constantKeysetCursor = '0000000000000::bafycid'
 
-const mapLeafValues = (obj: unknown, fn: (val: unknown) => unknown) => {
+const mapLeafValues = (
+  obj: unknown,
+  fn: (val: unknown) => unknown,
+): unknown => {
   if (Array.isArray(obj)) {
     return obj.map((item) => mapLeafValues(item, fn))
   }

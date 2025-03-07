@@ -17,11 +17,11 @@ export interface DefTreeNode {
 export function lexiconsToDefTree(lexicons: LexiconDoc[]): DefTreeNode[] {
   const tree: DefTreeNode[] = []
   for (const lexicon of lexicons) {
-    if (!lexicon.defs.main) {
+    if (!lexicon.defs['main']) {
       continue
     }
     const node = getOrCreateNode(tree, lexicon.id.split('.').slice(0, -1))
-    node.userTypes.push({ nsid: lexicon.id, def: lexicon.defs.main })
+    node.userTypes.push({ nsid: lexicon.id, def: lexicon.defs['main'] })
   }
   return tree
 }

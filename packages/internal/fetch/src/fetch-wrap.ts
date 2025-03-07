@@ -13,7 +13,7 @@ export function loggedFetch<C = FetchContext>({
 }) {
   const onRequest =
     logRequest === true
-      ? async (request) => {
+      ? async (request: Request) => {
           const requestMessage = await stringifyMessage(request)
           console.info(
             `> ${request.method} ${request.url}\n${padLines(requestMessage, '  ')}`,
@@ -23,7 +23,7 @@ export function loggedFetch<C = FetchContext>({
 
   const onResponse =
     logResponse === true
-      ? async (response) => {
+      ? async (response: Response) => {
           const responseMessage = await stringifyMessage(response.clone())
           console.info(
             `< HTTP/1.1 ${response.status} ${response.statusText}\n${padLines(responseMessage, '  ')}`,
@@ -33,7 +33,7 @@ export function loggedFetch<C = FetchContext>({
 
   const onError =
     logError === true
-      ? async (error) => {
+      ? async (error: unknown) => {
           console.error(`< Error:`, error)
         }
       : logError || undefined

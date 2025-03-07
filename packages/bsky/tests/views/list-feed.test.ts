@@ -59,7 +59,6 @@ describe('list feed views', () => {
   })
 
   it('paginates', async () => {
-    const results = (results) => results.flatMap((res) => res.feed)
     const paginator = async (cursor?: string) => {
       const res = await agent.api.app.bsky.feed.getListFeed(
         {
@@ -93,7 +92,7 @@ describe('list feed views', () => {
     )
 
     expect(full.data.feed.length).toEqual(7)
-    expect(results(paginatedAll)).toEqual(results([full.data]))
+    expect(paginatedAll.flatMap((res) => res.feed)).toEqual(full.data.feed)
   })
 
   it('fetches results unauthed', async () => {

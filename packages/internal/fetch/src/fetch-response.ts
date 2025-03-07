@@ -64,10 +64,10 @@ const extractResponseMessage: ResponseMessageGetter = async (response) => {
     if (mimeType === 'text/plain') {
       return await response.text()
     } else if (JSON_MIME.test(mimeType)) {
-      const json: unknown = await response.json()
+      const json: Json = await response.json()
 
       if (typeof json === 'string') return json
-      if (typeof json === 'object' && json != null) {
+      if (typeof json === 'object' && json != null && !Array.isArray(json)) {
         const errorDescription = ifString(json['error_description'])
         if (errorDescription) return errorDescription
 

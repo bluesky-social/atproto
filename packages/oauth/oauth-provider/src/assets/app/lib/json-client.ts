@@ -52,7 +52,7 @@ export class JsonClient<E extends { [Path: string]: EndpointDefinition }> {
     return new Error('Invalid JSON response', { cause: response })
   }
 
-  public static parseError(json: unknown): undefined | JsonErrorResponse {
+  public static parseError(json: Json): undefined | JsonErrorResponse {
     if (JsonErrorResponse.is(json)) {
       return new JsonErrorResponse(json)
     }
@@ -82,10 +82,11 @@ export class JsonErrorResponse<
     return this.payload.error_description
   }
 
-  static is(json: unknown): json is JsonErrorPayload {
+  static is(json: Json): json is JsonErrorPayload {
     return (
       json != null &&
       typeof json === 'object' &&
+      !Array.isArray(json) &&
       typeof json['error'] === 'string' &&
       (json['error_description'] === undefined ||
         typeof json['error_description'] === 'string')

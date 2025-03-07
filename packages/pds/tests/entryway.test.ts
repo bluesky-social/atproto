@@ -170,7 +170,7 @@ const createEntryway = async (
     isEntryway: true,
     recoveryDidKey: recoveryKey.did(),
     serviceHandleDomains: ['.test'],
-    dbPostgresUrl: process.env.DB_POSTGRES_URL,
+    dbPostgresUrl: process.env['DB_POSTGRES_URL'],
     blobstoreDiskLocation: path.join(os.tmpdir(), randomStr(8, 'base32')),
     bskyAppViewUrl: 'https://appview.invalid',
     bskyAppViewDid: 'did:example:invalid',

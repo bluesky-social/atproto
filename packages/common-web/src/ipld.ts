@@ -7,7 +7,6 @@ export type JsonValue =
   | string
   | null
   | undefined
-  | unknown
   | Array<JsonValue>
   | { [key: string]: JsonValue }
 
@@ -18,16 +17,19 @@ export type IpldValue =
   | Array<IpldValue>
   | { [key: string]: IpldValue }
 
+export const isTypeofObject = <V>(val: V): val is V & object =>
+  val != null && typeof val === 'object'
+
 // @NOTE avoiding use of check.is() here only because it makes
 // these implementations slow, and they often live in hot paths.
 
 export const jsonToIpld = (val: JsonValue): IpldValue => {
   // walk arrays
   if (Array.isArray(val)) {
-    return val.map((item) => jsonToIpld(item))
+    return val.map(jsonToIpld)
   }
   // objects
-  if (val && typeof val === 'object') {
+  if (isTypeofObject(val)) {
     // check for dag json values
     if (typeof val['$link'] === 'string' && Object.keys(val).length === 1) {
       return CID.parse(val['$link'])
@@ -36,7 +38,7 @@ export const jsonToIpld = (val: JsonValue): IpldValue => {
       return ui8.fromString(val['$bytes'], 'base64')
     }
     // walk plain objects
-    const toReturn = {}
+    const toReturn: { [key: string]: IpldValue } = {}
     for (const key of Object.keys(val)) {
       toReturn[key] = jsonToIpld(val[key])
     }
@@ -60,13 +62,13 @@ export const ipldToJson = (val: IpldValue): JsonValue => {
       }
     }
     // convert cids
-    if (CID.asCID(val)) {
+    if (isCid(val)) {
       return {
-        $link: (val as CID).toString(),
+        $link: CID.asCID(val)!.toString(),
       }
     }
     // walk plain objects
-    const toReturn = {}
+    const toReturn: { [key: string]: JsonValue } = {}
     for (const key of Object.keys(val)) {
       toReturn[key] = ipldToJson(val[key])
     }
@@ -78,29 +80,50 @@ export const ipldToJson = (val: IpldValue): JsonValue => {
 
 export const ipldEquals = (a: IpldValue, b: IpldValue): boolean => {
   // walk arrays
-  if (Array.isArray(a) && Array.isArray(b)) {
+  if (Array.isArray(a)) {
+    if (!Array.isArray(b)) return false
+
     if (a.length !== b.length) return false
     for (let i = 0; i < a.length; i++) {
       if (!ipldEquals(a[i], b[i])) return false
     }
     return true
+  } else if (Array.isArray(b)) {
+    return false
   }
+
   // objects
-  if (a && b && typeof a === 'object' && typeof b === 'object') {
+  if (isTypeofObject(a)) {
+    if (!isTypeofObject(b)) return false
+
     // check bytes
-    if (a instanceof Uint8Array && b instanceof Uint8Array) {
-      return ui8.equals(a, b)
+    if (a instanceof Uint8Array) {
+      return b instanceof Uint8Array && ui8.equals(a, b)
+    } else if (b instanceof Uint8Array) {
+      return false
     }
+
     // check cids
-    if (CID.asCID(a) && CID.asCID(b)) {
-      return CID.asCID(a)?.equals(CID.asCID(b))
+    if (isCid(a)) {
+      return CID.asCID(b)?.equals(CID.asCID(a)!) ?? false
+    } else if (isCid(b)) {
+      return false
     }
+
     // walk plain objects
-    if (Object.keys(a).length !== Object.keys(b).length) return false
-    for (const key of Object.keys(a)) {
+    const aKeys = Object.keys(a)
+    if (aKeys.length !== Object.keys(b).length) return false
+    for (const key of aKeys) {
       if (!ipldEquals(a[key], b[key])) return false
     }
     return true
+  } else if (isTypeofObject(b)) {
+    return false
   }
+
   return a === b
+}
+
+export function isCid(value: unknown): value is CID {
+  return CID.asCID(value) != null
 }

@@ -244,6 +244,6 @@ export const saveMstEntries = (filename: string, entries: [string, CID][]) => {
 
 export const loadMstEntries = (filename: string): [string, CID][] => {
   const contents = fs.readFileSync(filename)
-  const parsed = JSON.parse(contents.toString())
+  const parsed = JSON.parse(contents.toString()) as [string, string][]
   return parsed.map(([key, value]) => [key, CID.parse(value)])
 }

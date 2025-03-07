@@ -71,7 +71,6 @@ describe('pds like views', () => {
   })
 
   it('paginates', async () => {
-    const results = (results) => results.flatMap((res) => res.likes)
     const paginator = async (cursor?: string) => {
       const res = await agent.api.app.bsky.feed.getLikes(
         {
@@ -97,7 +96,7 @@ describe('pds like views', () => {
     )
 
     expect(full.data.likes.length).toEqual(4)
-    expect(results(paginatedAll)).toEqual(results([full.data]))
+    expect(paginatedAll.flatMap((res) => res.likes)).toEqual(full.data.likes)
   })
 
   it('fetches post likes unauthed', async () => {
