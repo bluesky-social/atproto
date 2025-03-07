@@ -1,4 +1,3 @@
-import type { ParseParams, TypeOf, ZodTypeAny } from 'zod'
 import { Transformer, pipe } from '@atproto-labs/pipe'
 import { FetchError } from './fetch-error.js'
 import { TransformedResponse } from './transformed-response.js'
@@ -6,7 +5,6 @@ import {
   Json,
   MaxBytesTransformStream,
   cancelBody,
-  ifObject,
   ifString,
   logCancellationError,
 } from './util.js'
@@ -69,15 +67,16 @@ const extractResponseMessage: ResponseMessageGetter = async (response) => {
       const json: unknown = await response.json()
 
       if (typeof json === 'string') return json
+      if (typeof json === 'object' && json != null) {
+        const errorDescription = ifString(json['error_description'])
+        if (errorDescription) return errorDescription
 
-      const errorDescription = ifString(ifObject(json)?.['error_description'])
-      if (errorDescription) return errorDescription
+        const error = ifString(json['error'])
+        if (error) return error
 
-      const error = ifString(ifObject(json)?.['error'])
-      if (error) return error
-
-      const message = ifString(ifObject(json)?.['message'])
-      if (message) return message
+        const message = ifString(json['message'])
+        if (message) return message
+      }
     }
   } catch {
     // noop
@@ -283,10 +282,31 @@ export function fetchJsonProcessor<T = Json>(
   )
 }
 
-export function fetchJsonZodProcessor<S extends ZodTypeAny>(
-  schema: S,
-  params?: Partial<ParseParams>,
-): Transformer<ParsedJsonResponse, TypeOf<S>> {
-  return async (jsonResponse: ParsedJsonResponse): Promise<TypeOf<S>> =>
-    schema.parseAsync(jsonResponse.json, params)
+export type SyncValidationSchema<S, P = unknown> = {
+  parse(value: unknown, params?: P): S
 }
+
+export type AsyncValidationSchema<S, P = unknown> = {
+  parseAsync(value: unknown, params?: P): Promise<S>
+}
+
+export function fetchJsonValidatorProcessor<S, P = unknown>(
+  schema: SyncValidationSchema<S, P> | AsyncValidationSchema<S, P>,
+  params?: P,
+): Transformer<ParsedJsonResponse, S> {
+  if ('parseAsync' in schema && typeof schema.parseAsync === 'function') {
+    return async (jsonResponse: ParsedJsonResponse): Promise<S> =>
+      schema.parseAsync(jsonResponse.json, params)
+  }
+
+  if ('parse' in schema && typeof schema.parse === 'function') {
+    return async (jsonResponse: ParsedJsonResponse): Promise<S> =>
+      schema.parse(jsonResponse.json, params)
+  }
+
+  // Needed for type safety (and allows fool proofing the usage of this function)
+  throw new TypeError('Invalid schema')
+}
+
+/** @note Use {@link fetchJsonValidatorProcessor} instead */
+export const fetchJsonZodProcessor = fetchJsonValidatorProcessor

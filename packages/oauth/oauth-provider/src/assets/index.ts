@@ -19,7 +19,7 @@ import type { ManifestItem } from '@atproto-labs/rollup-plugin-bundle-manifest'
 // @ts-expect-error: This file is generated at build time
 // eslint-disable-next-line import/no-unresolved
 import appBundleManifestJson from './app/bundle-manifest.json'
-import { Asset } from './asset'
+import { Asset } from './asset.js'
 
 const appBundleManifest: Map<string, ManifestItem> = new Map(
   Object.entries(appBundleManifestJson),
@@ -27,7 +27,15 @@ const appBundleManifest: Map<string, ManifestItem> = new Map(
 
 export const ASSETS_URL_PREFIX = '/@atproto/oauth-provider/~assets/'
 
-export async function getAsset(inputFilename: string): Promise<Asset> {
+export function* enumerateAssets(mime: string): IteratorObject<Asset, void> {
+  for (const [filename, manifest] of appBundleManifest) {
+    if (manifest.mime === mime) {
+      yield manifestItemToAsset(filename, manifest)
+    }
+  }
+}
+
+export function getAsset(inputFilename: string): Asset {
   const filename = posix.normalize(inputFilename)
 
   if (
@@ -41,6 +49,10 @@ export async function getAsset(inputFilename: string): Promise<Asset> {
   const manifest = appBundleManifest.get(filename)
   if (!manifest) throw new AssetNotFoundError(filename)
 
+  return manifestItemToAsset(filename, manifest)
+}
+
+function manifestItemToAsset(filename: string, manifest: ManifestItem): Asset {
   // When this package is used as a regular "node_modules" dependency, and gets
   // bundled by the consumer, the assets should be copied to the bundle's output
   // directory. In case the bundler does not support copying assets from the
@@ -53,6 +65,7 @@ export async function getAsset(inputFilename: string): Promise<Asset> {
   return {
     url: posix.join(ASSETS_URL_PREFIX, filename),
     type: manifest.mime,
+    isEntry: manifest.type === 'chunk' && manifest.isEntry,
     sha256: manifest.sha256,
     createStream: data
       ? () => Readable.from(Buffer.from(data, 'base64'))

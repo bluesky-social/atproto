@@ -1,33 +1,99 @@
 import assert from 'node:assert'
 import { once } from 'node:events'
-import { Server, createServer } from 'node:http'
+import {
+  IncomingMessage,
+  Server,
+  ServerResponse,
+  createServer,
+} from 'node:http'
 import { AddressInfo } from 'node:net'
-import { Browser, Page, launch } from 'puppeteer'
+import { type Browser, type Page, launch } from 'puppeteer'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 // @ts-expect-error (json file)
 import files from '@atproto/oauth-client-browser-example'
 
-const getVisibleElement = async (page: Page, selector: string) => {
-  const elementHandle = await page.waitForSelector(selector)
+class PageHelper implements AsyncDisposable {
+  constructor(protected readonly page: Page) {}
 
-  expect(elementHandle).not.toBeNull()
-  assert(elementHandle)
+  async goto(url: string) {
+    await this.page.goto(url)
+  }
 
-  await expect(elementHandle.isVisible()).resolves.toBe(true)
+  async waitForNetworkIdle() {
+    await this.page.waitForNetworkIdle()
+  }
 
-  return elementHandle
+  async navigationAction(run: () => Promise<unknown>): Promise<void> {
+    const promise = this.page.waitForNavigation()
+    await run()
+    await promise
+    await this.waitForNetworkIdle()
+  }
+
+  async checkTitle(expected: string) {
+    await this.waitForNetworkIdle()
+    await expect(this.page.title()).resolves.toBe(expected)
+  }
+
+  async clickOn(selector: string) {
+    const elementHandle = await this.getVisibleElement(selector)
+    await elementHandle.click()
+    return elementHandle
+  }
+
+  async clickOnButton(text: string) {
+    return this.clickOn(`button::-p-text(${text})`)
+  }
+
+  async typeIn(selector: string, text: string) {
+    const elementHandle = await this.getVisibleElement(selector)
+    elementHandle.focus()
+    await elementHandle.type(text)
+    return elementHandle
+  }
+
+  async typeInInput(name: string, text: string) {
+    return this.typeIn(`input[name="${name}"]`, text)
+  }
+
+  async ensureTextVisibility(text: string, tag = 'p') {
+    await this.page.waitForSelector(`${tag}::-p-text(${text})`)
+  }
+
+  protected async getVisibleElement(selector: string) {
+    const elementHandle = await this.page.waitForSelector(selector)
+
+    expect(elementHandle).not.toBeNull()
+    assert(elementHandle)
+
+    await expect(elementHandle.isVisible()).resolves.toBe(true)
+
+    return elementHandle
+  }
+
+  async [Symbol.asyncDispose]() {
+    return this.page.close()
+  }
+
+  static async from(browser: Browser) {
+    const page = await browser.newPage()
+    return new PageHelper(page)
+  }
 }
 
 describe('oauth', () => {
   let browser: Browser
   let network: TestNetworkNoAppView
-  let server: Server
+  let client: Server
 
   let appUrl: string
 
   beforeAll(async () => {
     browser = await launch({
       browser: 'chrome',
+      // @NOTE We are using another language than "en" as default language to
+      // test the language negotiation.
+      args: ['--accept-lang=fr-BE,en-GB,en'],
 
       // For debugging:
       // headless: false,
@@ -47,106 +113,255 @@ describe('oauth', () => {
       password: 'alice-pass',
     })
 
-    server = await createClientServer()
+    client = createServer(clientHandler)
+    client.listen(0)
+    await once(client, 'listening')
 
-    const { port } = server.address() as AddressInfo
+    const { port } = client.address() as AddressInfo
 
     appUrl = `http://127.0.0.1:${port}?${new URLSearchParams({
       plc_directory_url: network.plc.url,
       handle_resolver: network.pds.url,
+      sign_up_url: network.pds.url,
       env: 'test',
     })}`
   })
 
   afterAll(async () => {
-    await server?.close()
+    await client?.close()
     await network?.close()
     await browser?.close()
   })
 
-  it('starts', async () => {
-    const page = await browser.newPage()
+  it('Allows to sign-up trough OAuth', async () => {
+    const page = await PageHelper.from(browser)
 
     await page.goto(appUrl)
 
-    await expect(page.title()).resolves.toBe('OAuth Client Example')
+    await page.checkTitle('OAuth Client Example')
 
-    const handleInput = await getVisibleElement(
-      page,
-      'input[placeholder="@handle, DID or PDS url"]',
-    )
+    await page.navigationAction(async () => {
+      await page.clickOnButton('Sign up')
+    })
 
-    await handleInput.focus()
+    await page.checkTitle('Authentification')
 
-    await handleInput.type('alice.test')
+    await page.clickOnButton('Créer un nouveau compte')
 
-    await Promise.all([
-      //
-      handleInput.press('Enter'),
-      page.waitForNavigation(),
-    ])
+    await page.typeInInput('handle', 'bob')
 
-    await expect(page.title()).resolves.toBe('Authorize')
+    await page.clickOnButton('Suivant')
 
-    const passwordInput = await getVisibleElement(
-      page,
-      'input[type="password"]',
-    )
+    await page.typeInInput('email', 'bob@test.com')
+    await page.typeInInput('password', 'bob-pass')
 
-    await passwordInput.focus()
+    await page.clickOnButton("S'inscrire")
+
+    // Make sure the new account is propagated to the PLC directory, allowing
+    // the client to resolve the account's did
+    await network.processAll()
+
+    await page.navigationAction(async () => {
+      await page.clickOnButton("Authoriser l'accès")
+    })
+
+    await page.checkTitle('OAuth Client Example')
+
+    await page.ensureTextVisibility('Logged in!')
+
+    await page.clickOnButton('Sign-out')
+
+    await page.waitForNetworkIdle()
+
+    // TODO: Find out why we can't use "using" here
+    await page[Symbol.asyncDispose]()
+  })
+
+  it('allows resetting the password', async () => {
+    const sendTemplateMock = await withMokedMailer(network)
+
+    const page = await PageHelper.from(browser)
+
+    await page.goto(appUrl)
+
+    await page.checkTitle('OAuth Client Example')
+
+    await page.navigationAction(async () => {
+      const input = await page.typeIn(
+        'input[placeholder="@handle, DID or PDS url"]',
+        'alice.test',
+      )
+
+      await input.press('Enter')
+    })
+
+    await page.checkTitle('Se connecter')
+
+    await page.clickOnButton('Oublié ?')
+
+    await page.checkTitle('Mot de passe oublié')
+
+    await page.typeInInput('email', 'alice@test.com')
+
+    expect(sendTemplateMock).toHaveBeenCalledTimes(0)
+
+    await page.clickOnButton('Suivant')
+
+    await page.checkTitle('Réinitialiser le mot de passe')
+
+    expect(sendTemplateMock).toHaveBeenCalledTimes(1)
+
+    const [templateName, params] = sendTemplateMock.mock.calls[0]
+
+    expect(templateName).toBe('resetPassword')
+    expect(params).toEqual({
+      handle: 'alice.test',
+      token: expect.any(String),
+    })
+
+    const { token } = params as { token: string }
+
+    await page.typeInInput('code', token)
+
+    await page.typeInInput('password', 'alice-new-pass')
+
+    await page.clickOnButton('Suivant')
+
+    await page.checkTitle('Mot de passe mis à jour')
+
+    await page.ensureTextVisibility('Mot de passe mis à jour !', 'h2')
+
+    // TODO: Find out why we can't use "using" here
+    await page[Symbol.asyncDispose]()
+
+    // TODO: Find out why we can't use "using" here
+    sendTemplateMock[Symbol.dispose]()
+  })
+
+  it('Allows to sign-in trough OAuth', async () => {
+    const page = await PageHelper.from(browser)
+
+    await page.goto(appUrl)
+
+    await page.checkTitle('OAuth Client Example')
+
+    await page.navigationAction(async () => {
+      const input = await page.typeIn(
+        'input[placeholder="@handle, DID or PDS url"]',
+        'alice.test',
+      )
+
+      await input.press('Enter')
+    })
+
+    await page.checkTitle('Se connecter')
+
+    await page.typeIn('input[type="password"]', 'alice-new-pass')
 
     // Make sure the warning is visible
-    await getVisibleElement(page, 'p::-p-text(Warning)')
+    await page.ensureTextVisibility('Avertissement')
 
-    await passwordInput.type('alice-pass')
-
-    const rememberCheckbox = await getVisibleElement(
-      page,
-      'label::-p-text(Remember this account on this device)',
+    await page.clickOn(
+      'label::-p-text(Se souvenir de ce compte sur cet appareil)',
     )
 
-    await rememberCheckbox.click()
+    await page.clickOnButton('Se connecter')
 
-    const nextButton = await getVisibleElement(page, 'button::-p-text(Next)')
+    await page.checkTitle("Authoriser l'accès")
 
-    await nextButton.click()
+    await page.navigationAction(async () => {
+      await page.clickOnButton("Authoriser l'accès")
+    })
 
-    const acceptButton = await getVisibleElement(
-      page,
-      'button::-p-text(Accept)',
-    )
+    await page.checkTitle('OAuth Client Example')
 
-    await Promise.all([
-      //
-      acceptButton.click(),
-      page.waitForNavigation(),
-    ])
+    await page.ensureTextVisibility('Logged in!')
 
-    await expect(page.title()).resolves.toBe('OAuth Client Example')
+    await page.clickOnButton('Sign-out')
 
-    // Check that the "Logged in!" message is visible
-    await getVisibleElement(page, 'p::-p-text(Logged in!)')
+    await page.waitForNetworkIdle()
+
+    // TODO: Find out why we can't use "using" here
+    await page[Symbol.asyncDispose]()
+  })
+
+  it('remembers the session', async () => {
+    const page = await PageHelper.from(browser)
+
+    await page.goto(appUrl)
+
+    await page.checkTitle('OAuth Client Example')
+
+    await page.navigationAction(async () => {
+      const input = await page.typeIn(
+        'input[placeholder="@handle, DID or PDS url"]',
+        'alice.test',
+      )
+
+      await input.press('Enter')
+    })
+
+    await page.checkTitle("Authoriser l'accès")
+
+    await page.navigationAction(async () => {
+      await page.clickOnButton("Authoriser l'accès")
+    })
+
+    await page.checkTitle('OAuth Client Example')
+
+    await page.ensureTextVisibility('Logged in!')
+
+    await page.clickOnButton('Sign-out')
+
+    await page.waitForNetworkIdle()
+
+    // TODO: Find out why we can't use "using" here
+    await page[Symbol.asyncDispose]()
   })
 })
 
-async function createClientServer() {
-  const server = createServer((req, res) => {
-    const path = req.url?.split('?')[0].slice(1) || 'index.html'
-    const file = Object.hasOwn(files, path) ? files[path] : null
+async function withMokedMailer(network: TestNetworkNoAppView) {
+  // @ts-expect-error
+  const sendTemplateOrig = network.pds.ctx.mailer.sendTemplate
+  const sendTemplateMock = jest.fn(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    async (templateName: unknown, params: unknown, mailOpts: unknown) => {
+      //
+    },
+  ) as jest.Mock<
+    Promise<void>,
+    [templateName: unknown, params: unknown, mailOpts: unknown]
+  > &
+    Disposable
 
-    if (file) {
-      res
-        .writeHead(200, 'OK', { 'content-type': file.type })
-        .end(Buffer.from(file.data, 'base64'))
-    } else {
-      res
-        .writeHead(404, 'Not Found', { 'content-type': 'text/plain' })
-        .end('Page not found')
-    }
-  })
+  sendTemplateMock[Symbol.dispose] = () => {
+    // @ts-expect-error
+    network.pds.ctx.mailer.sendTemplate = sendTemplateOrig
+  }
 
-  server.listen(0)
-  await once(server, 'listening')
+  // @ts-expect-error
+  network.pds.ctx.mailer.sendTemplate = sendTemplateMock
 
-  return server
+  return sendTemplateMock
+}
+
+function clientHandler(
+  req: IncomingMessage,
+  res: ServerResponse,
+  next?: (err?: unknown) => void,
+): void {
+  const path = req.url?.split('?')[0].slice(1) || 'index.html'
+  const file = Object.hasOwn(files, path) ? files[path] : null
+
+  if (file) {
+    res
+      .writeHead(200, 'OK', { 'content-type': file.type })
+      .end(Buffer.from(file.data, 'base64'))
+  } else if (next) {
+    next()
+  } else {
+    res
+      .writeHead(404, 'Not Found', { 'content-type': 'text/plain' })
+      .end('Page not found')
+  }
 }

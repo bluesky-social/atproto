@@ -91,6 +91,11 @@ export type DeviceManagerOptions = z.input<typeof deviceManagerOptionsSchema>
 const cookieValueSchema = z.tuple([deviceIdSchema, sessionIdSchema])
 type CookieValue = z.infer<typeof cookieValueSchema>
 
+export type DeviceInfo = {
+  deviceId: DeviceId
+  deviceMetadata: RequestMetadata
+}
+
 /**
  * This class provides an abstraction for keeping track of DEVICE sessions. It
  * relies on a {@link DeviceStore} to persist session data and a cookie to
@@ -110,10 +115,7 @@ export class DeviceManager {
     req: IncomingMessage,
     res: ServerResponse,
     forceRotate = false,
-  ): Promise<{
-    deviceId: DeviceId
-    deviceMetadata: RequestMetadata
-  }> {
+  ): Promise<DeviceInfo> {
     const cookie = await this.getCookie(req)
     if (cookie) {
       return this.refresh(
@@ -130,10 +132,7 @@ export class DeviceManager {
   private async create(
     req: IncomingMessage,
     res: ServerResponse,
-  ): Promise<{
-    deviceId: DeviceId
-    deviceMetadata: RequestMetadata
-  }> {
+  ): Promise<DeviceInfo> {
     const deviceMetadata = this.getRequestMetadata(req)
 
     const [deviceId, sessionId] = await Promise.all([
@@ -158,10 +157,7 @@ export class DeviceManager {
     res: ServerResponse,
     [deviceId, sessionId]: CookieValue,
     forceRotate = false,
-  ): Promise<{
-    deviceId: DeviceId
-    deviceMetadata: RequestMetadata
-  }> {
+  ): Promise<DeviceInfo> {
     const data = await this.store.readDevice(deviceId)
     if (!data) return this.create(req, res)
 

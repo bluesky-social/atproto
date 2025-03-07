@@ -1,6 +1,6 @@
 import type { ServerResponse } from 'node:http'
 import { type Readable, pipeline } from 'node:stream'
-import { Handler } from './types.js'
+import type { Handler, Middleware } from './types.js'
 
 export function appendHeader(
   res: ServerResponse,
@@ -53,14 +53,19 @@ export function writeStream(
 export function writeBuffer(
   res: ServerResponse,
   chunk: string | Buffer,
-  {
-    status = 200,
-    contentType = 'application/octet-stream',
-  }: WriteResponseOptions = {},
+  opts: WriteResponseOptions,
 ): void {
-  res.statusCode = status
-  res.setHeader('content-type', contentType)
+  if (opts?.status != null) res.statusCode = opts.status
+  res.setHeader('content-type', opts?.contentType || 'application/octet-stream')
   res.end(chunk)
+}
+
+export function toJsonBuffer(value: unknown): Buffer {
+  try {
+    return Buffer.from(JSON.stringify(value))
+  } catch (cause) {
+    throw new Error(`Failed to serialize as JSON`, { cause })
+  }
 }
 
 export function writeJson(
@@ -68,7 +73,7 @@ export function writeJson(
   payload: unknown,
   { contentType = 'application/json', ...options }: WriteResponseOptions = {},
 ): void {
-  const buffer = Buffer.from(JSON.stringify(payload))
+  const buffer = toJsonBuffer(payload)
   writeBuffer(res, buffer, { ...options, contentType })
 }
 
@@ -76,7 +81,7 @@ export function staticJsonMiddleware(
   value: unknown,
   { contentType = 'application/json', ...options }: WriteResponseOptions = {},
 ): Handler<unknown> {
-  const buffer = Buffer.from(JSON.stringify(value))
+  const buffer = toJsonBuffer(value)
   const staticOptions: WriteResponseOptions = { ...options, contentType }
   return function (req, res) {
     writeBuffer(res, buffer, staticOptions)
@@ -89,4 +94,12 @@ export function writeHtml(
   { contentType = 'text/html', ...options }: WriteResponseOptions = {},
 ): void {
   writeBuffer(res, html, { ...options, contentType })
+}
+
+export function cacheControlMiddleware(maxAge: number): Middleware<void> {
+  const header = `max-age=${maxAge}`
+  return function (req, res, next) {
+    res.setHeader('Cache-Control', header)
+    next()
+  }
 }

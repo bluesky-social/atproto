@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { cborEncode, noUndefinedVals, schema } from '@atproto/common'
 import { BlockMap, blocksToCarFile } from '@atproto/repo'
-import { AccountStatus } from '../account-manager'
+import { AccountStatus } from '../account-manager/account-manager'
 import { CommitDataWithOps, SyncEvtData } from '../repo'
 import { RepoSeqInsert } from './db'
 

@@ -1,6 +1,5 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
-import { normalizeAndValidateHandle } from '../../../../handle'
 import { Server } from '../../../../lexicon'
 import { httpLogger } from '../../../../logger'
 
@@ -9,12 +8,13 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.adminToken,
     handler: async ({ input }) => {
       const { did } = input.body
-      const handle = await normalizeAndValidateHandle({
-        ctx,
-        handle: input.body.handle,
-        did,
-        allowAnyValid: true,
-      })
+      const handle = await ctx.accountManager.normalizeAndValidateHandle(
+        input.body.handle,
+        {
+          did,
+          allowAnyValid: true,
+        },
+      )
 
       // Pessimistic check to handle spam: also enforced by updateHandle() and the db.
       const account = await ctx.accountManager.getAccount(handle, {

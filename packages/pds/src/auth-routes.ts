@@ -1,8 +1,9 @@
 import { Router } from 'express'
 import { oauthProtectedResourceMetadataSchema } from '@atproto/oauth-provider'
 import { AppContext } from './context'
+import { oauthLogger } from './logger'
 
-export const createRouter = ({ authProvider, cfg }: AppContext): Router => {
+export const createRouter = ({ oauthProvider, cfg }: AppContext): Router => {
   const router = Router()
 
   const oauthProtectedResourceMetadata =
@@ -28,8 +29,13 @@ export const createRouter = ({ authProvider, cfg }: AppContext): Router => {
     res.status(200).json(oauthProtectedResourceMetadata)
   })
 
-  if (authProvider) {
-    router.use(authProvider.createRouter())
+  if (oauthProvider) {
+    const oauthMiddleware = oauthProvider.httpHandler({
+      onError: (req, res, err, message) => {
+        oauthLogger.error({ err, req }, message)
+      },
+    })
+    router.use(oauthMiddleware)
   }
 
   return router

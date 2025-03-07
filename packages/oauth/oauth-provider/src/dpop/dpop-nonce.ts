@@ -1,48 +1,68 @@
 import { createHmac, randomBytes } from 'node:crypto'
+import { z } from 'zod'
 import { DPOP_NONCE_MAX_AGE } from '../constants.js'
 
-function numTo64bits(num: number) {
-  const arr = new Uint8Array(8)
-  arr[7] = (num = num | 0) & 0xff
-  arr[6] = (num >>= 8) & 0xff
-  arr[5] = (num >>= 8) & 0xff
-  arr[4] = (num >>= 8) & 0xff
-  arr[3] = (num >>= 8) & 0xff
-  arr[2] = (num >>= 8) & 0xff
-  arr[1] = (num >>= 8) & 0xff
-  arr[0] = (num >>= 8) & 0xff
-  return arr
-}
+const MAX_ROTATION_INTERVAL = DPOP_NONCE_MAX_AGE / 3
+const MIN_ROTATION_INTERVAL = Math.min(1000, MAX_ROTATION_INTERVAL)
 
-export type DpopNonceInput = string | Uint8Array | DpopNonce
+export const rotationIntervalSchema = z
+  .number()
+  .int()
+  .min(MIN_ROTATION_INTERVAL)
+  .max(MAX_ROTATION_INTERVAL)
+
+const SECRET_BYTE_LENGTH = 32
+
+export const secretBytesSchema = z
+  .instanceof(Uint8Array)
+  .refine((secret) => secret.length === SECRET_BYTE_LENGTH, {
+    message: `Secret must be exactly ${SECRET_BYTE_LENGTH} bytes long`,
+  })
+
+export const secretHexSchema = z
+  .string()
+  .regex(
+    /^[0-9a-f]+$/i,
+    `Secret must be a ${SECRET_BYTE_LENGTH * 2} chars hex string`,
+  )
+  .length(SECRET_BYTE_LENGTH * 2)
+  .transform((hex): Uint8Array => Buffer.from(hex, 'hex'))
+
+export const dpopSecretSchema = z.union([secretBytesSchema, secretHexSchema])
+export type DpopSecret = z.input<typeof dpopSecretSchema>
 
 export class DpopNonce {
-  #secret: Uint8Array
-  #counter: number
+  readonly #rotationInterval: number
+  readonly #secret: Uint8Array
 
+  // Nonce state
+  #counter: number
   #prev: string
   #now: string
   #next: string
 
   constructor(
-    protected readonly secret: Uint8Array,
-    protected readonly step: number,
+    secret: DpopSecret = randomBytes(SECRET_BYTE_LENGTH),
+    rotationInterval = MAX_ROTATION_INTERVAL,
   ) {
-    if (secret.length !== 32) throw new TypeError('Expected 32 bytes')
-    if (this.step < 0 || this.step > DPOP_NONCE_MAX_AGE / 3) {
-      throw new TypeError('Invalid step')
-    }
+    this.#rotationInterval = rotationIntervalSchema.parse(rotationInterval)
+    this.#secret = Uint8Array.from(dpopSecretSchema.parse(secret))
 
-    this.#secret = Uint8Array.from(secret)
-    this.#counter = (Date.now() / step) | 0
-
+    this.#counter = this.currentCounter
     this.#prev = this.compute(this.#counter - 1)
     this.#now = this.compute(this.#counter)
     this.#next = this.compute(this.#counter + 1)
   }
 
+  /**
+   * Returns the number of full rotations since the epoch
+   */
+  protected get currentCounter() {
+    return (Date.now() / this.#rotationInterval) | 0
+  }
+
   protected rotate() {
-    const counter = (Date.now() / this.step) | 0
+    const counter = this.currentCounter
     switch (counter - this.#counter) {
       case 0:
         // counter === this.#counter => nothing to do
@@ -84,20 +104,18 @@ export class DpopNonce {
   public check(nonce: string) {
     return this.#next === nonce || this.#now === nonce || this.#prev === nonce
   }
+}
 
-  static from(
-    input: DpopNonceInput = randomBytes(32),
-    step = DPOP_NONCE_MAX_AGE / 3,
-  ): DpopNonce {
-    if (input instanceof DpopNonce) {
-      return input
-    }
-    if (input instanceof Uint8Array) {
-      return new DpopNonce(input, step)
-    }
-    if (typeof input === 'string') {
-      return new DpopNonce(Buffer.from(input, 'hex'), step)
-    }
-    return new DpopNonce(input, step)
-  }
+function numTo64bits(num: number) {
+  const arr = new Uint8Array(8)
+  // @NOTE Assigning to an uint8 will only keep the last 8 int bits
+  arr[7] = num |= 0
+  arr[6] = num >>= 8
+  arr[5] = num >>= 8
+  arr[4] = num >>= 8
+  arr[3] = num >>= 8
+  arr[2] = num >>= 8
+  arr[1] = num >>= 8
+  arr[0] = num >>= 8
+  return arr
 }
