@@ -422,8 +422,8 @@ importers:
         specifier: 3.0.0
         version: 3.0.0
       unicode-segmenter:
-        specifier: ^0.11.3
-        version: 0.11.3
+        specifier: ^0.12.0
+        version: 0.12.0
       zod:
         specifier: ^3.23.8
         version: 3.23.8
@@ -16173,8 +16173,8 @@ packages:
     engines: {node: '>=18.17'}
     dev: false
 
-  /unicode-segmenter@0.11.3:
-    resolution: {integrity: sha512-j0NKkJjLOmwx4vvDIrgft6LgRTPNmx1sw02wG6Py7pOmVYw6juOMcCPgrSWvABCfFNHfc9Q5++/YDmqUL8SsiQ==}
+  /unicode-segmenter@0.12.0:
+    resolution: {integrity: sha512-PK6M1A1tt3ky6cFAJW/JOO9ml/sbEvim+SL75FM8slck08ACbF0TZj+tdUd3Mh8Tk5XieqUDPwmLjiyRQvb4pw==}
     dev: false
 
   /unique-filename@2.0.1:
