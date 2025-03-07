@@ -1,41 +1,68 @@
+import { useLingui } from '@lingui/react/macro'
 import { useCallback, useMemo, useState } from 'react'
-import { Account, AuthorizeData, Session } from '../backend-data'
-import { Api } from '../lib/api'
-import { upsert } from '../lib/util'
-import { useCsrfToken } from './use-csrf-token'
+import { useErrorBoundary } from 'react-error-boundary'
+import { Session } from '../backend-types.ts'
+import {
+  AcceptData,
+  Api,
+  ConfirmResetPasswordData,
+  InitiatePasswordResetData,
+  SessionResponse,
+  SignInData,
+  SignUpData,
+  UnknownRequestUriError,
+  VerifyHandleAvailabilityData,
+} from '../lib/api.ts'
+import { upsert } from '../lib/util.ts'
+import { useCsrfToken } from './use-csrf-token.ts'
 
-export type SignInCredentials = {
-  username: string
-  password: string
-  emailOtp?: string
+/**
+ * Any function wrapped with this helper will automatically show the error
+ * boundary when an `UnknownRequestUriError` is thrown. This typically happens
+ * in development, or if the user left its browser session open for a (very)
+ * long time.
+ *
+ * @note Requires an error boundary to be present in the component tree.
+ */
+function useSafeCallback<F extends (...a: any) => any>(fn: F, deps: unknown[]) {
+  const { showBoundary } = useErrorBoundary<UnknownRequestUriError>()
 
-  remember?: boolean
+  return useCallback(
+    async (...args: Parameters<F>): Promise<Awaited<ReturnType<F>>> => {
+      try {
+        return await fn(...args)
+      } catch (error) {
+        if (error instanceof UnknownRequestUriError) showBoundary(error)
+        throw error
+      }
+    },
+    deps.concat(showBoundary),
+  )
 }
 
-export type SignUpData = {
-  username: string
-  password: string
-  extra?: Record<string, string>
+export type UseApiOptions = {
+  requestUri: string
+  sessions?: readonly Session[]
+  newSessionsRequireConsent?: boolean
+  onRedirected?: () => void
 }
 
-export function useApi(
-  {
-    clientId,
-    requestUri,
-    csrfCookie,
-    sessions: initialSessions,
-    newSessionsRequireConsent,
-  }: AuthorizeData,
-  {
-    onRedirected,
-  }: {
-    onRedirected?: () => void
-  } = {},
-) {
-  const csrfToken = useCsrfToken(csrfCookie) ?? '<csrf-token-missing>' // Invalid value
-  const [sessions, setSessions] = useState<readonly Session[]>(initialSessions)
+export function useApi({
+  requestUri,
+  sessions: sessionsInit = [],
+  newSessionsRequireConsent = true,
+  onRedirected,
+}: UseApiOptions) {
+  const csrfToken = useCsrfToken(`csrf-${requestUri}`)
+  if (!csrfToken) throw new Error('CSRF token is missing')
 
-  const setSession = useCallback(
+  const api = useMemo(() => new Api(csrfToken), [csrfToken])
+  const [sessions, setSessions] = useState(sessionsInit)
+
+  const { i18n } = useLingui()
+  const { locale } = i18n
+
+  const selectSub = useCallback(
     (sub: string | null) => {
       setSessions((sessions) =>
         sub === (sessions.find((s) => s.selected)?.account.sub || null)
@@ -46,9 +73,23 @@ export function useApi(
     [setSessions],
   )
 
-  const api = useMemo(
-    () => new Api(requestUri, clientId, csrfToken, newSessionsRequireConsent),
-    [requestUri, clientId, csrfToken, newSessionsRequireConsent],
+  const upsertSession = useCallback(
+    ({ account, consentRequired }: SessionResponse) => {
+      const session: Session = {
+        account,
+        selected: true,
+        loginRequired: false,
+        consentRequired: newSessionsRequireConsent || consentRequired,
+      }
+
+      setSessions((sessions) =>
+        upsert(sessions, session, (s) => s.account.sub === account.sub).map(
+          // Make sure to de-select any other selected session
+          (s) => (s === session || !s.selected ? s : { ...s, selected: false }),
+        ),
+      )
+    },
+    [setSessions, newSessionsRequireConsent],
   )
 
   const performRedirect = useCallback(
@@ -59,45 +100,77 @@ export function useApi(
     [onRedirected],
   )
 
-  const doSignIn = useCallback(
-    async (credentials: SignInCredentials): Promise<void> => {
-      const session = await api.signIn(credentials)
-      const { sub } = session.account
-
-      setSessions((sessions) => {
-        return upsert(sessions, session, (s) => s.account.sub === sub).map(
-          // Make sure to de-select any other selected session
-          (s) => (s === session || !s.selected ? s : { ...s, selected: false }),
-        )
-      })
+  const doSignIn = useSafeCallback(
+    async (data: Omit<SignInData, 'locale'>, signal?: AbortSignal) => {
+      const response = await api.fetch(
+        '/sign-in',
+        { ...data, locale },
+        { signal },
+      )
+      upsertSession(response)
     },
-    [api, performRedirect, clientId, setSessions],
+    [api, locale, upsertSession],
   )
 
-  const doSignUp = useCallback(
-    (_data: SignUpData) => {
-      //
-      throw new Error('Not implemented')
+  const doInitiatePasswordReset = useSafeCallback(
+    async (
+      data: Omit<InitiatePasswordResetData, 'locale'>,
+      signal?: AbortSignal,
+    ) => {
+      await api.fetch(
+        '/reset-password-request',
+        { ...data, locale },
+        { signal },
+      )
+    },
+    [api, locale],
+  )
+
+  const doConfirmResetPassword = useSafeCallback(
+    async (data: ConfirmResetPasswordData, signal?: AbortSignal) => {
+      await api.fetch('/reset-password-confirm', data, { signal })
     },
     [api],
   )
 
-  const doAccept = useCallback(
-    async (account: Account) => {
-      performRedirect(await api.accept(account))
+  const doValidateNewHandle = useSafeCallback(
+    async (data: VerifyHandleAvailabilityData, signal?: AbortSignal) => {
+      await api.fetch('/verify-handle-availability', data, { signal })
+    },
+    [api],
+  )
+
+  const doSignUp = useSafeCallback(
+    async (data: Omit<SignUpData, 'locale'>, signal?: AbortSignal) => {
+      const response = await api.fetch(
+        '/sign-up',
+        { ...data, locale },
+        { signal },
+      )
+      upsertSession(response)
+    },
+    [api, locale, upsertSession],
+  )
+
+  const doAccept = useSafeCallback(
+    async (data: AcceptData) => {
+      performRedirect(api.buildAcceptUrl(data))
     },
     [api, performRedirect],
   )
 
-  const doReject = useCallback(async () => {
-    performRedirect(await api.reject())
+  const doReject = useSafeCallback(async () => {
+    performRedirect(api.buildRejectUrl())
   }, [api, performRedirect])
 
   return {
     sessions,
-    setSession,
+    selectSub,
 
     doSignIn,
+    doInitiatePasswordReset,
+    doConfirmResetPassword,
+    doValidateNewHandle,
     doSignUp,
     doAccept,
     doReject,

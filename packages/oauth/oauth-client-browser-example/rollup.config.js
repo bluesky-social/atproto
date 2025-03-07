@@ -4,9 +4,7 @@ const { default: commonjs } = require('@rollup/plugin-commonjs')
 const { default: html, makeHtmlAttributes } = require('@rollup/plugin-html')
 const { default: json } = require('@rollup/plugin-json')
 const { default: nodeResolve } = require('@rollup/plugin-node-resolve')
-const { default: replace } = require('@rollup/plugin-replace')
-const { default: terser } = require('@rollup/plugin-terser')
-const { default: typescript } = require('@rollup/plugin-typescript')
+const { default: swc } = require('@rollup/plugin-swc')
 const { defineConfig } = require('rollup')
 const {
   default: manifest,
@@ -19,7 +17,7 @@ module.exports = defineConfig((commandLineArguments) => {
     process.env['NODE_ENV'] ??
     (commandLineArguments.watch ? 'development' : 'production')
 
-  const minify = NODE_ENV !== 'development'
+  const devMode = NODE_ENV === 'development'
 
   return {
     input: 'src/main.tsx',
@@ -30,17 +28,46 @@ module.exports = defineConfig((commandLineArguments) => {
       format: 'iife',
     },
     plugins: [
+      {
+        name: 'resolve-swc-helpers',
+        resolveId(src) {
+          // For some reason, "nodeResolve" doesn't resolve these:
+          if (src.startsWith('@swc/helpers/')) return require.resolve(src)
+        },
+      },
       nodeResolve({ preferBuiltins: false, browser: true }),
       commonjs(),
       json(),
       postcss({ config: true, extract: true, minimize: false }),
-      typescript({
-        tsconfig: './tsconfig.build.json',
-        outputToFilesystem: true,
-      }),
-      replace({
-        preventAssignment: true,
-        values: { 'process.env.NODE_ENV': JSON.stringify(NODE_ENV) },
+      swc({
+        swc: {
+          swcrc: false,
+          configFile: false,
+          sourceMaps: true,
+          minify: !devMode,
+          jsc: {
+            minify: {
+              compress: {
+                module: true,
+                unused: true,
+              },
+              mangle: true,
+            },
+            externalHelpers: true,
+            target: 'es2020',
+            parser: { syntax: 'typescript', tsx: true },
+            transform: {
+              useDefineForClassFields: true,
+              react: { runtime: 'automatic' },
+              optimizer: {
+                simplify: true,
+                globals: {
+                  vars: { 'process.env.NODE_ENV': JSON.stringify(NODE_ENV) },
+                },
+              },
+            },
+          },
+        },
       }),
       html({
         title: 'OAuth Client Example',
@@ -79,7 +106,6 @@ module.exports = defineConfig((commandLineArguments) => {
           </html>
         `,
       }),
-      minify && terser({}),
       manifest({ name: 'files.json', data: true }),
 
       commandLineArguments.watch &&

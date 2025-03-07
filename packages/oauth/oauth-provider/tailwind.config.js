@@ -17,8 +17,13 @@ export default {
     extend: {
       colors: {
         brand: 'rgb(var(--color-brand) / <alpha-value>)',
+        'brand-c': 'rgb(var(--color-brand-c) / <alpha-value>)',
         error: 'rgb(var(--color-error) / <alpha-value>)',
+        'error-c': 'rgb(var(--color-error-c) / <alpha-value>)',
         warning: 'rgb(var(--color-warning) / <alpha-value>)',
+        'warning-c': 'rgb(var(--color-warning-c) / <alpha-value>)',
+        success: 'rgb(var(--color-success) / <alpha-value>)',
+        'success-c': 'rgb(var(--color-success-c) / <alpha-value>)',
       },
     },
   },

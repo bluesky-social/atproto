@@ -1,10 +1,10 @@
-import { Awaitable } from '../lib/util/type.js'
+import { Awaitable, buildInterfaceChecker } from '../lib/util/type.js'
 import { DeviceData } from './device-data.js'
 import { DeviceId } from './device-id.js'
 
 // Export all types needed to implement the DeviceStore interface
-export * from './device-id.js'
 export * from './device-data.js'
+export * from './device-id.js'
 export * from './session-id.js'
 
 export interface DeviceStore {
@@ -14,20 +14,14 @@ export interface DeviceStore {
   deleteDevice(deviceId: DeviceId): Awaitable<void>
 }
 
-export function isDeviceStore(
-  implementation: Record<string, unknown> & Partial<DeviceStore>,
-): implementation is Record<string, unknown> & DeviceStore {
-  return (
-    typeof implementation.createDevice === 'function' &&
-    typeof implementation.readDevice === 'function' &&
-    typeof implementation.updateDevice === 'function' &&
-    typeof implementation.deleteDevice === 'function'
-  )
-}
+export const isDeviceStore = buildInterfaceChecker<DeviceStore>([
+  'createDevice',
+  'readDevice',
+  'updateDevice',
+  'deleteDevice',
+])
 
-export function asDeviceStore(
-  implementation?: Record<string, unknown> & Partial<DeviceStore>,
-): DeviceStore {
+export function asDeviceStore<V>(implementation: V): V & DeviceStore {
   if (!implementation || !isDeviceStore(implementation)) {
     throw new Error('Invalid DeviceStore implementation')
   }

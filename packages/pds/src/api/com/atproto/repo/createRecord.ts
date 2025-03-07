@@ -3,6 +3,7 @@ import { InvalidRecordKeyError } from '@atproto/syntax'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
+import { dbLogger } from '../../../../logger'
 import {
   BadCommitSwapError,
   InvalidRecordError,
@@ -82,22 +83,26 @@ export default function (server: Server, ctx: AppContext) {
           }),
         )
         const writes = [...backlinkDeletions, write]
-        try {
-          const commit = await actorTxn.repo.processWrites(
-            writes,
-            swapCommitCid,
-          )
-          return commit
-        } catch (err) {
-          if (err instanceof BadCommitSwapError) {
-            throw new InvalidRequestError(err.message, 'InvalidSwap')
-          }
-          throw err
-        }
+        const commit = await actorTxn.repo
+          .processWrites(writes, swapCommitCid)
+          .catch((err) => {
+            if (err instanceof BadCommitSwapError) {
+              throw new InvalidRequestError(err.message, 'InvalidSwap')
+            }
+            throw err
+          })
+        await ctx.sequencer.sequenceCommit(did, commit)
+        return commit
       })
 
-      await ctx.sequencer.sequenceCommit(did, commit)
-      await ctx.accountManager.updateRepoRoot(did, commit.cid, commit.rev)
+      await ctx.accountManager
+        .updateRepoRoot(did, commit.cid, commit.rev)
+        .catch((err) => {
+          dbLogger.error(
+            { err, did, cid: commit.cid, rev: commit.rev },
+            'failed to update account root',
+          )
+        })
 
       return {
         encoding: 'application/json',

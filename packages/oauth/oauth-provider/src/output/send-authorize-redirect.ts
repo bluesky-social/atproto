@@ -11,31 +11,42 @@ import { sendWebPage } from './send-web-page.js'
 // https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-11#section-7.5.4
 const REDIRECT_STATUS_CODE = 303
 
-export type AuthorizationResponseParameters = {
-  // Will be added from AuthorizationResultRedirect['issuer']
-  // iss: string // rfc9207
+/**
+ * @note `iss` and `state` will be added from the
+ * {@link AuthorizationResultRedirect} object.
+ */
+export type AuthorizationRedirectParameters =
+  | {
+      // iss: string
+      // state?: string
+      code: Code
+      id_token?: string
+      access_token?: string
+      token_type?: OAuthTokenType
+      expires_in?: string
+    }
+  | {
+      // iss: string
+      // state?: string
+      error: string
+      error_description?: string
+      error_uri?: string
+    }
 
-  // Will be added from AuthorizationResultRedirect['parameters']
-  // state?: string
+const SUCCESS_REDIRECT_KEYS = [
+  'code',
+  'id_token',
+  'access_token',
+  'expires_in',
+  'token_type',
+] as const
 
-  code?: Code
-  id_token?: string
-  access_token?: string
-  token_type?: OAuthTokenType
-  expires_in?: string
-
-  response?: string // FAPI JARM
-  session_state?: string // OIDC Session Management
-
-  error?: string
-  error_description?: string
-  error_uri?: string
-}
+const ERROR_REDIRECT_KEYS = ['error', 'error_description', 'error_uri'] as const
 
 export type AuthorizationResultRedirect = {
   issuer: string
   parameters: OAuthAuthorizationRequestParameters
-  redirect: AuthorizationResponseParameters
+  redirect: AuthorizationRedirectParameters
 }
 
 export async function sendAuthorizeRedirect(
@@ -49,23 +60,19 @@ export async function sendAuthorizeRedirect(
 
   const mode = parameters.response_mode || 'query' // @TODO: default should depend on response_type
 
-  const entries: [string, string][] = Object.entries({
-    iss: issuer, // rfc9207
-    state: parameters.state,
+  const entries: [string, string][] = [
+    ['iss', issuer], // rfc9207
+  ]
 
-    response: redirect.response, // FAPI JARM
-    session_state: redirect.session_state, // OIDC Session Management
+  if (parameters.state != null) {
+    entries.push(['state', parameters.state])
+  }
 
-    code: redirect.code,
-    id_token: redirect.id_token,
-    access_token: redirect.access_token,
-    expires_in: redirect.expires_in,
-    token_type: redirect.token_type,
-
-    error: redirect.error,
-    error_description: redirect.error_description,
-    error_uri: redirect.error_uri,
-  }).filter((entry): entry is [string, string] => entry[1] != null)
+  const keys = 'code' in redirect ? SUCCESS_REDIRECT_KEYS : ERROR_REDIRECT_KEYS
+  for (const key of keys) {
+    const value = redirect[key]
+    if (value != null) entries.push([key, value])
+  }
 
   res.setHeader('Cache-Control', 'no-store')
 

@@ -12,3 +12,7 @@ export const PLC_DIRECTORY_URL: string | undefined =
 export const HANDLE_RESOLVER_URL: string =
   searchParams.get('handle_resolver') ??
   (ENV === 'development' ? 'http://localhost:2584' : 'https://bsky.social')
+
+export const SIGN_UP_URL: string =
+  searchParams.get('sign_up_url') ??
+  (ENV === 'development' ? 'http://localhost:2583' : 'https://bsky.social')

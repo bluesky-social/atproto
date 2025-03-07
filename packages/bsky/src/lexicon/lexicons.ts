@@ -637,6 +637,32 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoIdentityDefs: {
+    lexicon: 1,
+    id: 'com.atproto.identity.defs',
+    defs: {
+      identityInfo: {
+        type: 'object',
+        required: ['did', 'handle', 'didDoc'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          handle: {
+            type: 'string',
+            format: 'handle',
+            description:
+              "The validated handle of the account; or 'handle.invalid' if the handle did not bi-directionally match the DID document.",
+          },
+          didDoc: {
+            type: 'unknown',
+            description: 'The complete DID document for the identity.',
+          },
+        },
+      },
+    },
+  },
   ComAtprotoIdentityGetRecommendedDidCredentials: {
     lexicon: 1,
     id: 'com.atproto.identity.getRecommendedDidCredentials',
@@ -676,6 +702,54 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoIdentityRefreshIdentity: {
+    lexicon: 1,
+    id: 'com.atproto.identity.refreshIdentity',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Request that the server re-resolve an identity (DID and handle). The server may ignore this request, or require authentication, depending on the role, implementation, and policy of the server.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['identifier'],
+            properties: {
+              identifier: {
+                type: 'string',
+                format: 'at-identifier',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:com.atproto.identity.defs#identityInfo',
+          },
+        },
+        errors: [
+          {
+            name: 'HandleNotFound',
+            description:
+              'The resolution process confirmed that the handle does not resolve to any DID.',
+          },
+          {
+            name: 'DidNotFound',
+            description:
+              'The DID resolution process confirmed that there is no current DID.',
+          },
+          {
+            name: 'DidDeactivated',
+            description:
+              'The DID previously existed, but has been deactivated.',
+          },
+        ],
+      },
+    },
+  },
   ComAtprotoIdentityRequestPlcOperationSignature: {
     lexicon: 1,
     id: 'com.atproto.identity.requestPlcOperationSignature',
@@ -687,13 +761,61 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoIdentityResolveDid: {
+    lexicon: 1,
+    id: 'com.atproto.identity.resolveDid',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Resolves DID to DID document. Does not bi-directionally verify handle.',
+        parameters: {
+          type: 'params',
+          required: ['did'],
+          properties: {
+            did: {
+              type: 'string',
+              format: 'did',
+              description: 'DID to resolve.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['didDoc'],
+            properties: {
+              didDoc: {
+                type: 'unknown',
+                description: 'The complete DID document for the identity.',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'DidNotFound',
+            description:
+              'The DID resolution process confirmed that there is no current DID.',
+          },
+          {
+            name: 'DidDeactivated',
+            description:
+              'The DID previously existed, but has been deactivated.',
+          },
+        ],
+      },
+    },
+  },
   ComAtprotoIdentityResolveHandle: {
     lexicon: 1,
     id: 'com.atproto.identity.resolveHandle',
     defs: {
       main: {
         type: 'query',
-        description: 'Resolves a handle (domain name) to a DID.',
+        description:
+          'Resolves an atproto handle (hostname) to a DID. Does not necessarily bi-directionally verify against the the DID document.',
         parameters: {
           type: 'params',
           required: ['handle'],
@@ -718,6 +840,59 @@ export const schemaDict = {
             },
           },
         },
+        errors: [
+          {
+            name: 'HandleNotFound',
+            description:
+              'The resolution process confirmed that the handle does not resolve to any DID.',
+          },
+        ],
+      },
+    },
+  },
+  ComAtprotoIdentityResolveIdentity: {
+    lexicon: 1,
+    id: 'com.atproto.identity.resolveIdentity',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Resolves an identity (DID or Handle) to a full identity (DID document and verified handle).',
+        parameters: {
+          type: 'params',
+          required: ['identifier'],
+          properties: {
+            identifier: {
+              type: 'string',
+              format: 'at-identifier',
+              description: 'Handle or DID to resolve.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:com.atproto.identity.defs#identityInfo',
+          },
+        },
+        errors: [
+          {
+            name: 'HandleNotFound',
+            description:
+              'The resolution process confirmed that the handle does not resolve to any DID.',
+          },
+          {
+            name: 'DidNotFound',
+            description:
+              'The DID resolution process confirmed that there is no current DID.',
+          },
+          {
+            name: 'DidDeactivated',
+            description:
+              'The DID previously existed, but has been deactivated.',
+          },
+        ],
       },
     },
   },
@@ -1277,6 +1452,11 @@ export const schemaDict = {
       reasonAppeal: {
         type: 'token',
         description: 'Appeal: appeal a previously taken moderation action',
+      },
+      subjectType: {
+        type: 'string',
+        description: 'Tag describing a type of subject that might be reported.',
+        knownValues: ['account', 'record', 'chat'],
       },
     },
   },
@@ -1854,16 +2034,6 @@ export const schemaDict = {
             },
             cursor: {
               type: 'string',
-            },
-            rkeyStart: {
-              type: 'string',
-              description:
-                'DEPRECATED: The lowest sort-ordered rkey to start from (exclusive)',
-            },
-            rkeyEnd: {
-              type: 'string',
-              description:
-                'DEPRECATED: The highest sort-ordered rkey to stop at (exclusive)',
             },
             reverse: {
               type: 'boolean',
@@ -3405,12 +3575,6 @@ export const schemaDict = {
               description: 'Record Key',
               format: 'record-key',
             },
-            commit: {
-              type: 'string',
-              format: 'cid',
-              description:
-                'DEPRECATED: referenced a repo commit by CID, and retrieved record as of that commit',
-            },
           },
         },
         output: {
@@ -3517,7 +3681,14 @@ export const schemaDict = {
                 type: 'string',
                 description:
                   'If active=false, this optional field indicates a possible reason for why the account is not active. If active=false and no status is supplied, then the host makes no claim for why the repository is no longer being hosted.',
-                knownValues: ['takendown', 'suspended', 'deactivated'],
+                knownValues: [
+                  'takendown',
+                  'suspended',
+                  'deleted',
+                  'deactivated',
+                  'desynchronized',
+                  'throttled',
+                ],
               },
               rev: {
                 type: 'string',
@@ -3671,7 +3842,14 @@ export const schemaDict = {
             type: 'string',
             description:
               'If active=false, this optional field indicates a possible reason for why the account is not active. If active=false and no status is supplied, then the host makes no claim for why the repository is no longer being hosted.',
-            knownValues: ['takendown', 'suspended', 'deactivated'],
+            knownValues: [
+              'takendown',
+              'suspended',
+              'deleted',
+              'deactivated',
+              'desynchronized',
+              'throttled',
+            ],
           },
         },
       },
@@ -3745,7 +3923,7 @@ export const schemaDict = {
       main: {
         type: 'procedure',
         description:
-          'Notify a crawling service of a recent update, and that crawling should resume. Intended use is after a gap between repo stream events caused the crawling service to disconnect. Does not require auth; implemented by Relay.',
+          'Notify a crawling service of a recent update, and that crawling should resume. Intended use is after a gap between repo stream events caused the crawling service to disconnect. Does not require auth; implemented by Relay. DEPRECATED: just use com.atproto.sync.requestCrawl',
         input: {
           encoding: 'application/json',
           schema: {
@@ -3810,11 +3988,9 @@ export const schemaDict = {
             type: 'union',
             refs: [
               'lex:com.atproto.sync.subscribeRepos#commit',
+              'lex:com.atproto.sync.subscribeRepos#sync',
               'lex:com.atproto.sync.subscribeRepos#identity',
               'lex:com.atproto.sync.subscribeRepos#account',
-              'lex:com.atproto.sync.subscribeRepos#handle',
-              'lex:com.atproto.sync.subscribeRepos#migrate',
-              'lex:com.atproto.sync.subscribeRepos#tombstone',
               'lex:com.atproto.sync.subscribeRepos#info',
             ],
           },
@@ -3860,12 +4036,13 @@ export const schemaDict = {
           tooBig: {
             type: 'boolean',
             description:
-              'Indicates that this commit contained too many ops, or data size was too large. Consumers will need to make a separate request to get missing data.',
+              'DEPRECATED -- replaced by #sync event and data limits. Indicates that this commit contained too many ops, or data size was too large. Consumers will need to make a separate request to get missing data.',
           },
           repo: {
             type: 'string',
             format: 'did',
-            description: 'The repo this event comes from.',
+            description:
+              "The repo this event comes from. Note that all other message types name this field 'did'.",
           },
           commit: {
             type: 'cid-link',
@@ -3886,8 +4063,8 @@ export const schemaDict = {
           blocks: {
             type: 'bytes',
             description:
-              'CAR file containing relevant blocks, as a diff since the previous repo state.',
-            maxLength: 1000000,
+              "CAR file containing relevant blocks, as a diff since the previous repo state. The commit must be included as a block, and the commit block CID must be the first entry in the CAR header 'roots' list.",
+            maxLength: 2000000,
           },
           ops: {
             type: 'array',
@@ -3904,13 +4081,48 @@ export const schemaDict = {
             items: {
               type: 'cid-link',
               description:
-                'List of new blobs (by CID) referenced by records in this commit.',
+                'DEPRECATED -- will soon always be empty. List of new blobs (by CID) referenced by records in this commit.',
             },
           },
           prevData: {
             type: 'cid-link',
             description:
-              "EXPERIMENTAL. The root CID of the MST tree for the previous commit from this repo (indicated by the 'since' revision field in this message). Corresponds to the 'data' field in the repo commit object. NOTE: this field is effectively required for the 'inductive' version of firehose.",
+              "The root CID of the MST tree for the previous commit from this repo (indicated by the 'since' revision field in this message). Corresponds to the 'data' field in the repo commit object. NOTE: this field is effectively required for the 'inductive' version of firehose.",
+          },
+          time: {
+            type: 'string',
+            format: 'datetime',
+            description:
+              'Timestamp of when this message was originally broadcast.',
+          },
+        },
+      },
+      sync: {
+        type: 'object',
+        description:
+          'Updates the repo to a new state, without necessarily including that state on the firehose. Used to recover from broken commit streams, data loss incidents, or in situations where upstream host does not know recent state of the repository.',
+        required: ['seq', 'did', 'blocks', 'rev', 'time'],
+        properties: {
+          seq: {
+            type: 'integer',
+            description: 'The stream sequence number of this message.',
+          },
+          did: {
+            type: 'string',
+            format: 'did',
+            description:
+              'The account this repo event corresponds to. Must match that in the commit object.',
+          },
+          blocks: {
+            type: 'bytes',
+            description:
+              "CAR file containing the commit, as a block. The CAR header must include the commit block CID as the first 'root'.",
+            maxLength: 10000,
+          },
+          rev: {
+            type: 'string',
+            description:
+              'The rev of the commit. This value must match that in the commit object.',
           },
           time: {
             type: 'string',
@@ -3971,69 +4183,14 @@ export const schemaDict = {
             type: 'string',
             description:
               'If active=false, this optional field indicates a reason for why the account is not active.',
-            knownValues: ['takendown', 'suspended', 'deleted', 'deactivated'],
-          },
-        },
-      },
-      handle: {
-        type: 'object',
-        description: 'DEPRECATED -- Use #identity event instead',
-        required: ['seq', 'did', 'handle', 'time'],
-        properties: {
-          seq: {
-            type: 'integer',
-          },
-          did: {
-            type: 'string',
-            format: 'did',
-          },
-          handle: {
-            type: 'string',
-            format: 'handle',
-          },
-          time: {
-            type: 'string',
-            format: 'datetime',
-          },
-        },
-      },
-      migrate: {
-        type: 'object',
-        description: 'DEPRECATED -- Use #account event instead',
-        required: ['seq', 'did', 'migrateTo', 'time'],
-        nullable: ['migrateTo'],
-        properties: {
-          seq: {
-            type: 'integer',
-          },
-          did: {
-            type: 'string',
-            format: 'did',
-          },
-          migrateTo: {
-            type: 'string',
-          },
-          time: {
-            type: 'string',
-            format: 'datetime',
-          },
-        },
-      },
-      tombstone: {
-        type: 'object',
-        description: 'DEPRECATED -- Use #account event instead',
-        required: ['seq', 'did', 'time'],
-        properties: {
-          seq: {
-            type: 'integer',
-          },
-          did: {
-            type: 'string',
-            format: 'did',
-          },
-          time: {
-            type: 'string',
-            format: 'datetime',
+            knownValues: [
+              'takendown',
+              'suspended',
+              'deleted',
+              'deactivated',
+              'desynchronized',
+              'throttled',
+            ],
           },
         },
       },
@@ -4071,7 +4228,7 @@ export const schemaDict = {
           prev: {
             type: 'cid-link',
             description:
-              'EXPERIMENTAL. For deletes and updates, the CID  of the previous record. For creates, undefined.',
+              'For updates and deletes, the previous record CID (required for inductive firehose). For creations, field should not be defined.',
           },
         },
       },
@@ -5536,8 +5693,10 @@ export const schemaDict = {
         properties: {
           video: {
             type: 'blob',
+            description:
+              'The mp4 video file. May be up to 100mb, formerly limited to 50mb.',
             accept: ['video/mp4'],
-            maxSize: 50000000,
+            maxSize: 100000000,
           },
           captions: {
             type: 'array',
@@ -8997,6 +9156,33 @@ export const schemaDict = {
               ref: 'lex:com.atproto.label.defs#label',
             },
           },
+          reasonTypes: {
+            description:
+              "The set of report reason 'codes' which are in-scope for this service to review and action. These usually align to policy categories. If not defined (distinct from empty array), all reason types are allowed.",
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.moderation.defs#reasonType',
+            },
+          },
+          subjectTypes: {
+            description:
+              'The set of subject types (account, record, etc) this service accepts reports on.',
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.moderation.defs#subjectType',
+            },
+          },
+          subjectCollections: {
+            type: 'array',
+            description:
+              'Set of record types (collection NSIDs) which can be reported to this service. If not defined (distinct from empty array), default is any record type.',
+            items: {
+              type: 'string',
+              format: 'nsid',
+            },
+          },
         },
       },
       labelerViewerState: {
@@ -9103,6 +9289,33 @@ export const schemaDict = {
             createdAt: {
               type: 'string',
               format: 'datetime',
+            },
+            reasonTypes: {
+              description:
+                "The set of report reason 'codes' which are in-scope for this service to review and action. These usually align to policy categories. If not defined (distinct from empty array), all reason types are allowed.",
+              type: 'array',
+              items: {
+                type: 'ref',
+                ref: 'lex:com.atproto.moderation.defs#reasonType',
+              },
+            },
+            subjectTypes: {
+              description:
+                'The set of subject types (account, record, etc) this service accepts reports on.',
+              type: 'array',
+              items: {
+                type: 'ref',
+                ref: 'lex:com.atproto.moderation.defs#subjectType',
+              },
+            },
+            subjectCollections: {
+              type: 'array',
+              description:
+                'Set of record types (collection NSIDs) which can be reported to this service. If not defined (distinct from empty array), default is any record type.',
+              items: {
+                type: 'string',
+                format: 'nsid',
+              },
             },
           },
         },
@@ -10984,6 +11197,40 @@ export const schemaDict = {
       },
     },
   },
+  ChatBskyConvoUpdateAllRead: {
+    lexicon: 1,
+    id: 'chat.bsky.convo.updateAllRead',
+    defs: {
+      main: {
+        type: 'procedure',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              status: {
+                type: 'string',
+                knownValues: ['request', 'accepted'],
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['updatedCount'],
+            properties: {
+              updatedCount: {
+                description: 'The count of updated convos.',
+                type: 'integer',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ChatBskyConvoUpdateRead: {
     lexicon: 1,
     id: 'chat.bsky.convo.updateRead',
@@ -11213,11 +11460,15 @@ export const ids = {
   ComAtprotoAdminUpdateAccountPassword:
     'com.atproto.admin.updateAccountPassword',
   ComAtprotoAdminUpdateSubjectStatus: 'com.atproto.admin.updateSubjectStatus',
+  ComAtprotoIdentityDefs: 'com.atproto.identity.defs',
   ComAtprotoIdentityGetRecommendedDidCredentials:
     'com.atproto.identity.getRecommendedDidCredentials',
+  ComAtprotoIdentityRefreshIdentity: 'com.atproto.identity.refreshIdentity',
   ComAtprotoIdentityRequestPlcOperationSignature:
     'com.atproto.identity.requestPlcOperationSignature',
+  ComAtprotoIdentityResolveDid: 'com.atproto.identity.resolveDid',
   ComAtprotoIdentityResolveHandle: 'com.atproto.identity.resolveHandle',
+  ComAtprotoIdentityResolveIdentity: 'com.atproto.identity.resolveIdentity',
   ComAtprotoIdentitySignPlcOperation: 'com.atproto.identity.signPlcOperation',
   ComAtprotoIdentitySubmitPlcOperation:
     'com.atproto.identity.submitPlcOperation',
@@ -11404,6 +11655,7 @@ export const ids = {
   ChatBskyConvoSendMessage: 'chat.bsky.convo.sendMessage',
   ChatBskyConvoSendMessageBatch: 'chat.bsky.convo.sendMessageBatch',
   ChatBskyConvoUnmuteConvo: 'chat.bsky.convo.unmuteConvo',
+  ChatBskyConvoUpdateAllRead: 'chat.bsky.convo.updateAllRead',
   ChatBskyConvoUpdateRead: 'chat.bsky.convo.updateRead',
   ChatBskyModerationGetActorMetadata: 'chat.bsky.moderation.getActorMetadata',
   ChatBskyModerationGetMessageContext: 'chat.bsky.moderation.getMessageContext',

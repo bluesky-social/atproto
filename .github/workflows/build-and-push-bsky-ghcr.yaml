@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+      - divy/etcd-dp-host-list
 env:
   REGISTRY: ghcr.io
   USERNAME: ${{ github.actor }}

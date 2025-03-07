@@ -1,8 +1,6 @@
-import assert from 'node:assert'
 import { DAY, MINUTE } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
-import { normalizeAndValidateHandle } from '../../../../handle'
 import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
 import { httpLogger } from '../../../../logger'
@@ -22,32 +20,29 @@ export default function (server: Server, ctx: AppContext) {
         calcKey: ({ auth }) => auth.credentials.did,
       },
     ],
-    handler: async ({ auth, input }) => {
+    handler: async ({ auth, input, req }) => {
       const requester = auth.credentials.did
 
       if (ctx.entrywayAgent) {
-        assert(ctx.cfg.entryway)
-
         // the full flow is:
         // -> entryway(identity.updateHandle) [update handle, submit plc op]
         // -> pds(admin.updateAccountHandle)  [track handle, sequence handle update]
         await ctx.entrywayAgent.com.atproto.identity.updateHandle(
           // @ts-expect-error "did" is not in the schema
           { did: requester, handle: input.body.handle },
-          await ctx.serviceAuthHeaders(
+          await ctx.entrywayAuthHeaders(
+            req,
             auth.credentials.did,
-            ctx.cfg.entryway.did,
             ids.ComAtprotoIdentityUpdateHandle,
           ),
         )
         return
       }
 
-      const handle = await normalizeAndValidateHandle({
-        ctx,
-        handle: input.body.handle,
-        did: requester,
-      })
+      const handle = await ctx.accountManager.normalizeAndValidateHandle(
+        input.body.handle,
+        { did: requester },
+      )
 
       // Pessimistic check to handle spam: also enforced by updateHandle() and the db.
       const account = await ctx.accountManager.getAccount(handle, {
@@ -82,7 +77,6 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       try {
-        await ctx.sequencer.sequenceHandleUpdate(requester, handle)
         await ctx.sequencer.sequenceIdentityEvt(requester, handle)
       } catch (err) {
         httpLogger.error(

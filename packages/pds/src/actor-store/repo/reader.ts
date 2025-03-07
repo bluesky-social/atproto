@@ -1,4 +1,5 @@
 import { BlobStore } from '@atproto/repo'
+import { SyncEvtData } from '../../repo'
 import { BlobReader } from '../blob/reader'
 import { ActorDb } from '../db'
 import { RecordReader } from '../record/reader'
@@ -16,5 +17,15 @@ export class RepoReader {
     this.blob = new BlobReader(db, blobstore)
     this.record = new RecordReader(db)
     this.storage = new SqlRepoReader(db)
+  }
+
+  async getSyncEventData(): Promise<SyncEvtData> {
+    const root = await this.storage.getRootDetailed()
+    const { blocks } = await this.storage.getBlocks([root.cid])
+    return {
+      cid: root.cid,
+      rev: root.rev,
+      blocks,
+    }
   }
 }

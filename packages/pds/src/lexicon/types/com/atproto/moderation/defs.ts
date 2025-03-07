@@ -34,3 +34,6 @@ export const REASONRUDE = `${id}#reasonRude`
 export const REASONOTHER = `${id}#reasonOther`
 /** Appeal: appeal a previously taken moderation action */
 export const REASONAPPEAL = `${id}#reasonAppeal`
+
+/** Tag describing a type of subject that might be reported. */
+export type SubjectType = 'account' | 'record' | 'chat' | (string & {})

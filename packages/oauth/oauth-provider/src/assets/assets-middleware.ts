@@ -4,6 +4,7 @@ import {
   validateFetchSite,
   writeStream,
 } from '../lib/http/index.js'
+import { Asset } from './asset.js'
 import { ASSETS_URL_PREFIX, getAsset } from './index.js'
 
 export function authorizeAssetsMiddleware(): Middleware {
@@ -15,17 +16,24 @@ export function authorizeAssetsMiddleware(): Middleware {
       string,
       string | undefined,
     ]
+    if (query) return next()
+
     const filename = pathname.slice(ASSETS_URL_PREFIX.length)
     if (!filename) return next()
 
-    const asset = await getAsset(filename).catch(() => null)
-    if (!asset) return next()
+    let asset: Asset
+    try {
+      asset = getAsset(filename)
+    } catch {
+      // Filename not found or not valid
+      return next()
+    }
 
     try {
       // Allow "null" (ie. no header) to allow loading assets outside of a
       // fetch context (not from a web page).
-      validateFetchSite(req, res, [null, 'same-origin'])
-      validateFetchDest(req, res, [null, 'style', 'script'])
+      validateFetchSite(req, res, [null, 'none', 'cross-site', 'same-origin'])
+      validateFetchDest(req, res, [null, 'document', 'style', 'script'])
     } catch (err) {
       return next(err)
     }
@@ -35,10 +43,7 @@ export function authorizeAssetsMiddleware(): Middleware {
     }
 
     res.setHeader('ETag', asset.sha256)
-
-    if (query === asset.sha256) {
-      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable')
-    }
+    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable')
 
     writeStream(res, asset.createStream(), { contentType: asset.type })
   }

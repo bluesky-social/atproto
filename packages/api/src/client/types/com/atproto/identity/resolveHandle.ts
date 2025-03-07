@@ -33,6 +33,16 @@ export interface Response {
   data: OutputSchema
 }
 
+export class HandleNotFoundError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message, src.headers, { cause: src })
+  }
+}
+
 export function toKnownErr(e: any) {
+  if (e instanceof XRPCError) {
+    if (e.error === 'HandleNotFound') return new HandleNotFoundError(e)
+  }
+
   return e
 }

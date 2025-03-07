@@ -1,6 +1,6 @@
 import { CID } from 'multiformats/cid'
 import { RepoRecord } from '@atproto/lexicon'
-import { CidSet, CommitData, WriteOpAction } from '@atproto/repo'
+import { BlockMap, CommitData, WriteOpAction } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
 
 export type ValidationStatus = 'valid' | 'unknown' | undefined
@@ -51,11 +51,16 @@ export type CommitOp = {
 
 export type CommitDataWithOps = CommitData & {
   ops: CommitOp[]
-  blobs: CidSet
   prevData: CID | null
 }
 
 export type PreparedWrite = PreparedCreate | PreparedUpdate | PreparedDelete
+
+export type SyncEvtData = {
+  cid: CID
+  rev: string
+  blocks: BlockMap
+}
 
 export class InvalidRecordError extends Error {}
 

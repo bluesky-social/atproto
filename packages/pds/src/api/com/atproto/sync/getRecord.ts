@@ -1,5 +1,4 @@
 import stream from 'node:stream'
-import { CID } from 'multiformats/cid'
 import { byteIterableToStream } from '@atproto/common'
 import * as repo from '@atproto/repo'
 import { InvalidRequestError } from '@atproto/xrpc-server'
@@ -25,9 +24,7 @@ export default function (server: Server, ctx: AppContext) {
       let carStream: stream.Readable
       try {
         const storage = new SqlRepoReader(actorDb)
-        const commit = params.commit
-          ? CID.parse(params.commit)
-          : await storage.getRoot()
+        const commit = await storage.getRoot()
 
         if (!commit) {
           throw new InvalidRequestError(`Could not find repo for DID: ${did}`)

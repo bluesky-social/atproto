@@ -1,9 +1,6 @@
-export function clsx(
-  a?: string,
-  ...args: readonly (string | undefined)[]
-): string | undefined {
-  if (args.length === 0) return a
-  const b = clsx(...args)
-  if (a && b) return `${a} ${b}`
-  return a || b
+type ClsxArg = string | false | undefined
+
+export function clsx(...args: [ClsxArg, ...ClsxArg[]]): string | undefined {
+  const filtered = args.filter(Boolean) as string[]
+  return filtered.length > 0 ? filtered.join(' ') : undefined
 }
