@@ -277,8 +277,8 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
             colors: {
               brand: env.brandColor,
               error: env.errorColor,
-              warning: env.warningColor,
               success: env.successColor,
+              warning: env.warningColor,
             },
             links: [
               {

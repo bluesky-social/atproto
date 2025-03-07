@@ -98,7 +98,7 @@ msgstr "Vérifiez vos emails {0} pour un code de connexion et saisissez-le ici."
 msgid "Choose a username"
 msgstr "Choisissez un nom d'utilisateur"
 
-#: src/assets/app/components/utils/error-card.tsx:76
+#: src/assets/app/components/utils/error-card.tsx:78
 msgid "Code"
 msgstr "Code"
 
@@ -126,7 +126,7 @@ msgstr "Créer un compte"
 msgid "Deny access"
 msgstr "Refuser l'accès"
 
-#: src/assets/app/components/utils/error-card.tsx:83
+#: src/assets/app/components/utils/error-card.tsx:85
 msgid "Description"
 msgstr "Description"
 
@@ -142,7 +142,7 @@ msgstr "Email"
 msgid "Email address"
 msgstr "Adresse email"
 
-#: src/assets/app/components/forms/input-new-password.tsx:48
+#: src/assets/app/components/forms/input-new-password.tsx:44
 msgid "Enter a password"
 msgstr "Saisissez un mot de passe"
 
@@ -158,7 +158,7 @@ msgstr "Saisissez l'email que vous avez utilisé pour créer votre compte. Nous 
 msgid "Enter your email address"
 msgstr "Saisissez votre adresse email"
 
-#: src/assets/app/components/forms/input-new-password.tsx:49
+#: src/assets/app/components/forms/input-new-password.tsx:45
 msgid "Enter your new password"
 msgstr "Saisissez votre nouveau mot de passe"
 
@@ -171,7 +171,7 @@ msgstr "Saisissez votre mot de passe"
 msgid "Enter your username and password"
 msgstr "Saisissez votre nom d'utilisateur et votre mot de passe"
 
-#: src/assets/app/views/error/error-view.tsx:27
+#: src/assets/app/views/error/error-view.tsx:28
 msgid "Error"
 msgstr "Erreur"
 
@@ -295,7 +295,7 @@ msgstr "Mot de passe mis à jour"
 msgid "Password updated!"
 msgstr "Mot de passe mis à jour !"
 
-#: src/assets/app/components/forms/input-new-password.tsx:50
+#: src/assets/app/components/forms/input-new-password.tsx:46
 msgid "Password with at least {MIN_PASSWORD_LENGTH} characters"
 msgstr "Mot de passe d'au moins {MIN_PASSWORD_LENGTH} caractères"
 

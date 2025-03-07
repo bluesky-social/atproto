@@ -98,7 +98,7 @@ msgstr ""
 msgid "Choose a username"
 msgstr ""
 
-#: src/assets/app/components/utils/error-card.tsx:76
+#: src/assets/app/components/utils/error-card.tsx:78
 msgid "Code"
 msgstr ""
 
@@ -126,7 +126,7 @@ msgstr ""
 msgid "Deny access"
 msgstr ""
 
-#: src/assets/app/components/utils/error-card.tsx:83
+#: src/assets/app/components/utils/error-card.tsx:85
 msgid "Description"
 msgstr ""
 
@@ -142,7 +142,7 @@ msgstr ""
 msgid "Email address"
 msgstr ""
 
-#: src/assets/app/components/forms/input-new-password.tsx:48
+#: src/assets/app/components/forms/input-new-password.tsx:44
 msgid "Enter a password"
 msgstr ""
 
@@ -158,7 +158,7 @@ msgstr ""
 msgid "Enter your email address"
 msgstr ""
 
-#: src/assets/app/components/forms/input-new-password.tsx:49
+#: src/assets/app/components/forms/input-new-password.tsx:45
 msgid "Enter your new password"
 msgstr ""
 
@@ -171,7 +171,7 @@ msgstr ""
 msgid "Enter your username and password"
 msgstr ""
 
-#: src/assets/app/views/error/error-view.tsx:27
+#: src/assets/app/views/error/error-view.tsx:28
 msgid "Error"
 msgstr ""
 
@@ -295,7 +295,7 @@ msgstr ""
 msgid "Password updated!"
 msgstr ""
 
-#: src/assets/app/components/forms/input-new-password.tsx:50
+#: src/assets/app/components/forms/input-new-password.tsx:46
 msgid "Password with at least {MIN_PASSWORD_LENGTH} characters"
 msgstr ""
 
