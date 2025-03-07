@@ -1,5 +1,6 @@
 import { randomBytes } from 'node:crypto'
 import type { IncomingMessage, ServerResponse } from 'node:http'
+import { languages, mediaType } from '@hapi/accept'
 import { parse as parseCookie, serialize as serializeCookie } from 'cookie'
 import forwarded from 'forwarded'
 import createHttpError from 'http-errors'
@@ -83,6 +84,18 @@ export function validateReferer(
   req: IncomingMessage,
   res: ServerResponse,
   reference: UrlReference,
+  allowNull: true,
+): URL | null
+export function validateReferer(
+  req: IncomingMessage,
+  res: ServerResponse,
+  reference: UrlReference,
+  allowNull?: false,
+): URL
+export function validateReferer(
+  req: IncomingMessage,
+  res: ServerResponse,
+  reference: UrlReference,
   allowNull = false,
 ) {
   const referer = req.headers['referer']
@@ -90,6 +103,7 @@ export function validateReferer(
   if (refererUrl ? !urlMatch(refererUrl, reference) : !allowNull) {
     throw createHttpError(400, `Invalid referer ${referer}`)
   }
+  return refererUrl
 }
 
 export async function setupCsrfToken(
@@ -126,12 +140,13 @@ export function validateSameOrigin(
 export function validateCsrfToken(
   req: IncomingMessage,
   res: ServerResponse,
-  csrfToken: string,
+  csrfToken: unknown,
   cookieName = 'csrf_token',
   clearCookie = false,
 ) {
   const cookies = parseHttpCookies(req)
   if (
+    typeof csrfToken !== 'string' ||
     !csrfToken ||
     !cookies ||
     !cookieName ||
@@ -247,4 +262,19 @@ function extractPort(req: IncomingMessage, ip: string): number {
   if (port != null) return port
 
   throw new Error('Could not determine port')
+}
+
+export function extractLocales(req: IncomingMessage) {
+  const acceptLanguage = req.headers['accept-language']
+  return acceptLanguage ? languages(acceptLanguage) : []
+}
+
+export function negotiateResponseContent<T extends string>(
+  req: IncomingMessage,
+  types: readonly T[],
+): T | undefined {
+  const type = mediaType(req.headers['accept'], types)
+  if (type) return type as T
+
+  return undefined
 }

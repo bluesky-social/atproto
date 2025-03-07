@@ -9,7 +9,10 @@ import {
   parseDataKey,
   readCar,
 } from '@atproto/repo'
-import { AccountManager, AccountStatus } from '../../account-manager'
+import {
+  AccountManager,
+  AccountStatus,
+} from '../../account-manager/account-manager'
 import { ActorStore } from '../../actor-store/actor-store'
 import { ActorStoreTransactor } from '../../actor-store/actor-store-transactor'
 import { countAll } from '../../db'

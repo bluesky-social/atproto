@@ -1,8 +1,8 @@
-import { AccountManager } from '../../account-manager'
+import { IdResolver } from '@atproto/identity'
+import { AccountManager } from '../../account-manager/account-manager'
 import { ActorStore } from '../../actor-store/actor-store'
 import { BackgroundQueue } from '../../background'
 import { Crawlers } from '../../crawlers'
-import { ImageUrlBuilder } from '../../image/image-url-builder'
 import { Sequencer } from '../../sequencer'
 import { parseIntArg } from '../util'
 import { Recoverer, RecovererContext } from './recoverer'
@@ -35,15 +35,16 @@ const run = async () => {
     },
     { blobstore: () => ({}) as any, backgroundQueue },
   )
-  const imageUrlBuilder = new ImageUrlBuilder('')
 
   const accountManager = new AccountManager(
-    actorStore,
-    imageUrlBuilder,
-    backgroundQueue,
-    './backup/account.sqlite',
-    {} as any,
-    '',
+    new IdResolver(),
+    {} as any, // jwtKey
+    'did:example:serviceDid',
+    [], // service handle domains
+    {
+      accountDbLoc: './backup/account.sqlite',
+      disableWalAutoCheckpoint: false,
+    },
   )
   const recoveryDb = await getAndMigrateRecoveryDb('./backup/recovery.sqlite')
   const ctx = { sequencer, accountManager, actorStore, recoveryDb }

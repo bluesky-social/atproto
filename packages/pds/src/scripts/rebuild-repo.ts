@@ -7,7 +7,7 @@ import {
   MemoryBlockstore,
   signCommit,
 } from '@atproto/repo'
-import { AccountManager } from '../account-manager'
+import { AccountManager } from '../account-manager/account-manager'
 import { ActorStore } from '../actor-store/actor-store'
 import { Sequencer } from '../sequencer'
 
@@ -104,7 +104,10 @@ export const rebuildRepo = async (
     }
   })
   await ctx.accountManager.updateRepoRoot(did, commit.cid, commit.rev)
-  await ctx.sequencer.sequenceCommit(did, commit)
+  const syncData = await ctx.actorStore.read(did, (store) =>
+    store.repo.getSyncEventData(),
+  )
+  await ctx.sequencer.sequenceSyncEvt(did, syncData)
 }
 
 const promptContinue = async (): Promise<boolean> => {

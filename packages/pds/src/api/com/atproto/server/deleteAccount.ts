@@ -1,6 +1,6 @@
 import { MINUTE } from '@atproto/common'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
-import { AccountStatus } from '../../../../account-manager'
+import { AccountStatus } from '../../../../account-manager/account-manager'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 
@@ -48,8 +48,7 @@ export default function (server: Server, ctx: AppContext) {
         did,
         AccountStatus.Deleted,
       )
-      const tombstoneSeq = await ctx.sequencer.sequenceTombstone(did)
-      await ctx.sequencer.deleteAllForUser(did, [accountSeq, tombstoneSeq])
+      await ctx.sequencer.deleteAllForUser(did, [accountSeq])
     },
   })
 }

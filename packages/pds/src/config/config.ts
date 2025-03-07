@@ -1,7 +1,7 @@
 import assert from 'node:assert'
 import path from 'node:path'
 import { DAY, HOUR, SECOND } from '@atproto/common'
-import { Customization } from '@atproto/oauth-provider'
+import { BrandingConfig, HcaptchaConfig } from '@atproto/oauth-provider'
 import { ServerEnvironment } from './env'
 
 // off-config but still from env:
@@ -261,38 +261,49 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     : {
         issuer: serviceCfg.publicUrl,
         provider: {
-          customization: {
+          hcaptcha:
+            env.hcaptchaSiteKey &&
+            env.hcaptchaSecretKey &&
+            env.hcaptchaTokenSalt
+              ? {
+                  siteKey: env.hcaptchaSiteKey,
+                  secretKey: env.hcaptchaSecretKey,
+                  tokenSalt: env.hcaptchaTokenSalt,
+                }
+              : undefined,
+          branding: {
             name: env.serviceName ?? 'Personal PDS',
             logo: env.logoUrl,
             colors: {
               brand: env.brandColor,
               error: env.errorColor,
               warning: env.warningColor,
+              success: env.successColor,
             },
             links: [
               {
-                title: 'Home',
+                title: { en: 'Home', fr: 'Accueil' },
                 href: env.homeUrl,
-                rel: 'bookmark',
+                rel: 'canonical' as const, // Prevents login page from being indexed
               },
               {
-                title: 'Terms of Service',
+                title: { en: 'Terms of Service' },
                 href: env.termsOfServiceUrl,
-                rel: 'terms-of-service',
+                rel: 'terms-of-service' as const,
               },
               {
-                title: 'Privacy Policy',
+                title: { en: 'Privacy Policy' },
                 href: env.privacyPolicyUrl,
-                rel: 'privacy-policy',
+                rel: 'privacy-policy' as const,
               },
               {
-                title: 'Support',
+                title: { en: 'Support' },
                 href: env.supportUrl,
-                rel: 'help',
+                rel: 'help' as const,
               },
             ].filter(
-              (f): f is typeof f & { href: NonNullable<(typeof f)['href']> } =>
-                f.href != null,
+              <T extends { href?: string }>(f: T): f is T & { href: string } =>
+                f.href != null && f.href !== '',
             ),
           },
         },
@@ -435,7 +446,8 @@ export type OAuthConfig = {
   provider:
     | false
     | {
-        customization: Customization
+        hcaptcha?: HcaptchaConfig
+        branding: BrandingConfig
       }
 }
 

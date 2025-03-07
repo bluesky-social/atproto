@@ -66,7 +66,7 @@ export const oauthAuthorizationRequestParametersSchema = z.object({
 
   ui_locales: z
     .string()
-    .regex(/^[a-z]{2}(-[A-Z]{2})?( [a-z]{2}(-[A-Z]{2})?)*$/) // fr-CA fr en
+    .regex(/^[a-z]{2,3}(-[A-Z]{2})?( [a-z]{2,3}(-[A-Z]{2})?)*$/) // fr-CA fr en
     .optional(),
 
   // Previous ID Token, should be provided when prompt=none is used

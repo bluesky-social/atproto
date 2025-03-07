@@ -1,5 +1,6 @@
 import { mapDefined } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { ServerConfig } from '../../../../config'
 import { AppContext } from '../../../../context'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { Server } from '../../../../lexicon'
@@ -15,7 +16,7 @@ import {
 import { Notification } from '../../../../proto/bsky_pb'
 import { uriToDid as didFromUri } from '../../../../util/uris'
 import { Views } from '../../../../views'
-import { clearlyBadCursor, resHeaders } from '../../../util'
+import { resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   const listNotifications = createPipeline(
@@ -93,6 +94,23 @@ const paginateNotifications = async (opts: {
   }
 }
 
+/**
+ * Applies a configurable delay to the datetime string of a cursor,
+ * effectively allowing for a delay on listing the notifications.
+ * This is useful to allow time for services to process notifications
+ * before they are listed to the user.
+ */
+export const delayCursor = (
+  cursorStr: string | undefined,
+  delayMs: number,
+): string => {
+  const nowMinusDelay = Date.now() - delayMs
+  if (cursorStr === undefined) return new Date(nowMinusDelay).toISOString()
+  const cursor = new Date(cursorStr).getTime()
+  if (isNaN(cursor)) return cursorStr
+  return new Date(Math.min(cursor, nowMinusDelay)).toISOString()
+}
+
 const skeleton = async (
   input: SkeletonFnInput<Context, Params>,
 ): Promise<SkeletonState> => {
@@ -100,17 +118,20 @@ const skeleton = async (
   if (params.seenAt) {
     throw new InvalidRequestError('The seenAt parameter is unsupported')
   }
+
+  const originalCursor = params.cursor
+  const delayedCursor = delayCursor(
+    originalCursor,
+    ctx.cfg.notificationsDelayMs,
+  )
   const viewer = params.hydrateCtx.viewer
   const priority = params.priority ?? (await getPriority(ctx, viewer))
-  if (clearlyBadCursor(params.cursor)) {
-    return { notifs: [], priority }
-  }
   const [res, lastSeenRes] = await Promise.all([
     paginateNotifications({
       ctx,
       priority,
       reasons: params.reasons,
-      cursor: params.cursor,
+      cursor: delayedCursor,
       limit: params.limit,
       viewer,
     }),
@@ -122,7 +143,7 @@ const skeleton = async (
   // @NOTE for the first page of results if there's no last-seen time, consider top notification unread
   // rather than all notifications. bit of a hack to be more graceful when seen times are out of sync.
   let lastSeenDate = lastSeenRes.timestamp?.toDate()
-  if (!lastSeenDate && !params.cursor) {
+  if (!lastSeenDate && !originalCursor) {
     lastSeenDate = res.notifications.at(0)?.timestamp?.toDate()
   }
   return {
@@ -210,6 +231,7 @@ const presentation = (
 type Context = {
   hydrator: Hydrator
   views: Views
+  cfg: ServerConfig
 }
 
 type Params = QueryParams & {

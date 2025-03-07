@@ -1,5 +1,12 @@
 # @atproto/repo
 
+## 0.7.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lexicon@0.4.8
+
 ## 0.7.0
 
 ### Minor Changes

@@ -2,11 +2,32 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Matches colors defined in tailwind.config.js */
+/*
+ * These are the default branding variables for the oauth authorization page.
+ * The colors below are in the R G B format, with values ranging from 0 to 255.
+ *
+ * The variables defined here are typically overridden by the backend, based on
+ * the provided branding colors configuration, if any, by injecting a <style>
+ * tag into the head of the document. Any missing color from the branding config
+ * will result in the values defined here to be used.
+ *
+ * The variables suffixed with "-c" are the contrasting colors for the
+ * corresponding color name. The backend will automatically compute & inject
+ * those values for defined branding configuration colors.
+ *
+ * The colors names used here match those defined in tailwind.config.js,
+ * allowing to use these color names with tailwind classes (e.g. `bg-brand
+ * text-brand-c`).
+ */
 @layer base {
   :root {
     --color-brand: 255 115 179;
-    --color-error: 235 65 49;
+    --color-brand-c: 0 0 0;
+    --color-error: 218 44 67;
+    --color-error-c: 255 255 255;
     --color-warning: 255 201 73;
+    --color-warning-c: 0 0 0;
+    --color-success: 0 191 165;
+    --color-success-c: 255 255 255;
   }
 }
