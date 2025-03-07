@@ -103,6 +103,7 @@ import { OAuthHooks, SignInData, SignUpData } from './oauth-hooks.js'
 import { OAuthVerifier, OAuthVerifierOptions } from './oauth-verifier.js'
 import { AuthorizationResultAuthorize } from './output/build-authorize-data.js'
 import {
+  Branding,
   BrandingInput,
   Customization,
   CustomizationInput,
@@ -131,9 +132,11 @@ import { TokenStore, asTokenStore } from './token/token-store.js'
 import { VerifyTokenClaimsOptions } from './token/verify-token-claims.js'
 
 export {
+  type Branding,
   type BrandingInput,
   type CustomMetadata,
   type Customization,
+  type CustomizationInput,
   type Handler,
   type HcaptchaConfig,
   Keyset,
