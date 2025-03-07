@@ -1,5 +1,14 @@
 # @atproto/ozone
 
+## 0.1.88
+
+### Patch Changes
+
+- [#3587](https://github.com/bluesky-social/atproto/pull/3587) [`18fbfa000`](https://github.com/bluesky-social/atproto/commit/18fbfa00057dda9ef4eba77d8b4e87994893c952) Thanks [@foysalit](https://github.com/foysalit)! - Add searchable handle and displayName to ozone team members
+
+- Updated dependencies [[`18fbfa000`](https://github.com/bluesky-social/atproto/commit/18fbfa00057dda9ef4eba77d8b4e87994893c952)]:
+  - @atproto/api@0.14.9
+
 ## 0.1.87
 
 ### Patch Changes

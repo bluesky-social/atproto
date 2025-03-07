@@ -1,5 +1,18 @@
 # @atproto/dev-env
 
+## 0.3.99
+
+### Patch Changes
+
+- [#3587](https://github.com/bluesky-social/atproto/pull/3587) [`18fbfa000`](https://github.com/bluesky-social/atproto/commit/18fbfa00057dda9ef4eba77d8b4e87994893c952) Thanks [@foysalit](https://github.com/foysalit)! - Add searchable handle and displayName to ozone team members
+
+- Updated dependencies [[`b20907a70`](https://github.com/bluesky-social/atproto/commit/b20907a7056970ab627e6c661882cb16491801e2), [`d96b03956`](https://github.com/bluesky-social/atproto/commit/d96b03956d5c26c238f586c6bdf257c080f12746), [`18fbfa000`](https://github.com/bluesky-social/atproto/commit/18fbfa00057dda9ef4eba77d8b4e87994893c952), [`eab9c003f`](https://github.com/bluesky-social/atproto/commit/eab9c003f838d43f0135ded9d3ede3f449997597)]:
+  - @atproto/sync@0.1.17
+  - @atproto/ozone@0.1.88
+  - @atproto/api@0.14.9
+  - @atproto/pds@0.4.106
+  - @atproto/bsky@0.0.126
+
 ## 0.3.98
 
 ### Patch Changes

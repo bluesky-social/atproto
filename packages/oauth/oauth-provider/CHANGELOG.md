@@ -1,5 +1,13 @@
 # @atproto/oauth-provider
 
+## 0.5.1
+
+### Patch Changes
+
+- [#3611](https://github.com/bluesky-social/atproto/pull/3611) [`c01d7f5d1`](https://github.com/bluesky-social/atproto/commit/c01d7f5d155445d7741c09f91c84af64b31bdbed) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Make branding colors optional
+
+- [#3614](https://github.com/bluesky-social/atproto/pull/3614) [`8827ff433`](https://github.com/bluesky-social/atproto/commit/8827ff433a211d2db80840cfc4ee146a7fb44849) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve branding parsing
+
 ## 0.5.0
 
 ### Minor Changes

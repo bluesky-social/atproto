@@ -1,5 +1,17 @@
 # @atproto/pds
 
+## 0.4.106
+
+### Patch Changes
+
+- [#3587](https://github.com/bluesky-social/atproto/pull/3587) [`18fbfa000`](https://github.com/bluesky-social/atproto/commit/18fbfa00057dda9ef4eba77d8b4e87994893c952) Thanks [@foysalit](https://github.com/foysalit)! - Add searchable handle and displayName to ozone team members
+
+- [#3612](https://github.com/bluesky-social/atproto/pull/3612) [`eab9c003f`](https://github.com/bluesky-social/atproto/commit/eab9c003f838d43f0135ded9d3ede3f449997597) Thanks [@devinivy](https://github.com/devinivy)! - Emit sync event on account creation
+
+- Updated dependencies [[`c01d7f5d1`](https://github.com/bluesky-social/atproto/commit/c01d7f5d155445d7741c09f91c84af64b31bdbed), [`8827ff433`](https://github.com/bluesky-social/atproto/commit/8827ff433a211d2db80840cfc4ee146a7fb44849), [`18fbfa000`](https://github.com/bluesky-social/atproto/commit/18fbfa00057dda9ef4eba77d8b4e87994893c952)]:
+  - @atproto/oauth-provider@0.5.1
+  - @atproto/api@0.14.9
+
 ## 0.4.105
 
 ### Patch Changes
