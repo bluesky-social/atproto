@@ -11,6 +11,7 @@ export type BlobConstraint = {
 }
 
 export type PreparedBlobRef = {
+  size: number
   cid: CID
   mimeType: string
   constraints: BlobConstraint
