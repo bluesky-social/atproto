@@ -105,6 +105,7 @@ import { AuthorizationResultAuthorize } from './output/build-authorize-data.js'
 import {
   BrandingConfig,
   Customization,
+  CustomizationInput,
   customizationSchema,
 } from './output/build-customization-data.js'
 import {
@@ -158,7 +159,7 @@ export type RouterOptions<
 }
 
 export type OAuthProviderOptions = Override<
-  OAuthVerifierOptions & OAuthHooks & DeviceManagerOptions & Customization,
+  OAuthVerifierOptions & OAuthHooks & DeviceManagerOptions & CustomizationInput,
   {
     /**
      * Maximum age a device/account session can be before requiring
