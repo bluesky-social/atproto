@@ -128,52 +128,7 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
       return []
     }
 
-    const seqEvts: SeqEvt[] = []
-    for (const row of rows) {
-      // should never hit this because of WHERE clause
-      if (row.seq === null) {
-        continue
-      }
-      const evt = cborDecode(row.event)
-      if (row.eventType === 'append' || row.eventType === 'rebase') {
-        seqEvts.push({
-          type: 'commit',
-          seq: row.seq,
-          time: row.sequencedAt,
-          evt: evt as CommitEvt,
-        })
-      } else if (row.eventType === 'handle') {
-        seqEvts.push({
-          type: 'handle',
-          seq: row.seq,
-          time: row.sequencedAt,
-          evt: evt as HandleEvt,
-        })
-      } else if (row.eventType === 'identity') {
-        seqEvts.push({
-          type: 'identity',
-          seq: row.seq,
-          time: row.sequencedAt,
-          evt: evt as IdentityEvt,
-        })
-      } else if (row.eventType === 'account') {
-        seqEvts.push({
-          type: 'account',
-          seq: row.seq,
-          time: row.sequencedAt,
-          evt: evt as AccountEvt,
-        })
-      } else if (row.eventType === 'tombstone') {
-        seqEvts.push({
-          type: 'tombstone',
-          seq: row.seq,
-          time: row.sequencedAt,
-          evt: evt as TombstoneEvt,
-        })
-      }
-    }
-
-    return seqEvts
+    return parseRepoSeqRows(rows)
   }
 
   private async pollDb(): Promise<void> {
@@ -255,6 +210,54 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
         ),
     )
   }
+}
+
+export const parseRepoSeqRows = (rows: RepoSeqEntry[]): SeqEvt[] => {
+  const seqEvts: SeqEvt[] = []
+  for (const row of rows) {
+    // should never hit this because of WHERE clause
+    if (row.seq === null) {
+      continue
+    }
+    const evt = cborDecode(row.event)
+    if (row.eventType === 'append' || row.eventType === 'rebase') {
+      seqEvts.push({
+        type: 'commit',
+        seq: row.seq,
+        time: row.sequencedAt,
+        evt: evt as CommitEvt,
+      })
+    } else if (row.eventType === 'handle') {
+      seqEvts.push({
+        type: 'handle',
+        seq: row.seq,
+        time: row.sequencedAt,
+        evt: evt as HandleEvt,
+      })
+    } else if (row.eventType === 'identity') {
+      seqEvts.push({
+        type: 'identity',
+        seq: row.seq,
+        time: row.sequencedAt,
+        evt: evt as IdentityEvt,
+      })
+    } else if (row.eventType === 'account') {
+      seqEvts.push({
+        type: 'account',
+        seq: row.seq,
+        time: row.sequencedAt,
+        evt: evt as AccountEvt,
+      })
+    } else if (row.eventType === 'tombstone') {
+      seqEvts.push({
+        type: 'tombstone',
+        seq: row.seq,
+        time: row.sequencedAt,
+        evt: evt as TombstoneEvt,
+      })
+    }
+  }
+  return seqEvts
 }
 
 type SeqRow = RepoSeqEntry

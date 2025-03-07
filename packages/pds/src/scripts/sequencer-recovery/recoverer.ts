@@ -88,129 +88,142 @@ export class Recoverer {
   }
 
   processEvent(evt: SeqEvt) {
-    // only need to process commits & tombstones
-    if (evt.type === 'account') {
-      this.processAccountEvt(evt.evt)
+    const did = didFromEvt(evt)
+    if (!did) {
+      return
     }
-    if (evt.type === 'commit') {
-      this.processCommit(evt.evt)
-    }
-  }
-
-  processCommit(evt: CommitEvt) {
-    const did = evt.repo
     this.queues.addToUser(did, async () => {
       if (this.failed.has(did)) {
         return
       }
-      const { writes, blocks } = await parseCommitEvt(evt)
-      if (evt.since === null) {
-        const actorExists = await this.ctx.actorStore.exists(did)
-        if (!actorExists) {
-          await this.processRepoCreation(evt, writes, blocks)
-          return
-        }
-      }
-      await this.ctx.actorStore
-        .transact(did, async (actorTxn) => {
-          const root = await actorTxn.repo.storage.getRootDetailed()
-          if (root.rev >= evt.rev) {
-            return
-          }
-          const commit = await actorTxn.repo.formatCommit(writes)
-          commit.newBlocks = blocks
-          commit.cid = evt.commit
-          commit.rev = evt.rev
-          await Promise.all([
-            actorTxn.repo.storage.applyCommit(commit),
-            actorTxn.repo.indexWrites(writes, commit.rev),
-            this.trackBlobs(actorTxn, writes),
-          ])
-        })
-        .catch(async (err) => {
-          await this.trackFailure(did, err)
-        })
+      await processSeqEvt(this.ctx, evt).catch(async (err) => {
+        this.failed.add(did)
+        await trackFailure(this.ctx.recoveryDb, did, err)
+      })
     })
   }
+}
 
-  async trackBlobs(store: ActorStoreTransactor, writes: PreparedWrite[]) {
-    await store.repo.blob.deleteDereferencedBlobs(writes)
-
-    for (const write of writes) {
-      if (
-        write.action === WriteOpAction.Create ||
-        write.action === WriteOpAction.Update
-      ) {
-        for (const blob of write.blobs) {
-          await store.repo.blob.insertBlobMetadata(blob)
-          await store.repo.blob.associateBlob(blob, write.uri)
-        }
-      }
-    }
+export const processSeqEvt = async (ctx: RecovererContext, evt: SeqEvt) => {
+  // only need to process commits & tombstones
+  if (evt.type === 'account') {
+    await processAccountEvt(ctx, evt.evt)
   }
-  async processRepoCreation(
-    evt: CommitEvt,
-    writes: PreparedWrite[],
-    blocks: BlockMap,
-  ) {
-    const did = evt.repo
-    const keypair = await Secp256k1Keypair.create({ exportable: true })
-    await this.ctx.actorStore.create(did, keypair)
-    const commit: CommitData = {
-      cid: evt.commit,
-      rev: evt.rev,
-      since: evt.since,
-      prev: null,
-      newBlocks: blocks,
-      relevantBlocks: new BlockMap(),
-      removedCids: new CidSet(),
-    }
-    await this.ctx.actorStore.transact(did, (actorTxn) =>
-      Promise.all([
-        actorTxn.repo.storage.applyCommit(commit, true),
-        actorTxn.repo.indexWrites(writes, commit.rev),
-        actorTxn.repo.blob.processWriteBlobs(commit.rev, writes),
-      ]),
-    )
-    await this.trackNewAccount(did)
+  if (evt.type === 'commit') {
+    await processCommit(ctx, evt.evt).catch()
   }
+}
 
-  processAccountEvt(evt: AccountEvt) {
-    // do not need to process deactivation/takedowns because we backup account DB as well
-    if (evt.status !== AccountStatus.Deleted) {
+const processCommit = async (ctx: RecovererContext, evt: CommitEvt) => {
+  const did = evt.repo
+  const { writes, blocks } = await parseCommitEvt(evt)
+  if (evt.since === null) {
+    const actorExists = await ctx.actorStore.exists(did)
+    if (!actorExists) {
+      await processRepoCreation(ctx, evt, writes, blocks)
       return
     }
-    const did = evt.did
-    this.queues.addToUser(did, async () => {
-      const { directory } = await this.ctx.actorStore.getLocation(did)
-      await rmIfExists(directory, true)
-      await this.ctx.accountManager.deleteAccount(did)
+  }
+  await ctx.actorStore.transact(did, async (actorTxn) => {
+    const root = await actorTxn.repo.storage.getRootDetailed()
+    if (root.rev >= evt.rev) {
+      return
+    }
+    const commit = await actorTxn.repo.formatCommit(writes)
+    commit.newBlocks = blocks
+    commit.cid = evt.commit
+    commit.rev = evt.rev
+    await Promise.all([
+      actorTxn.repo.storage.applyCommit(commit),
+      actorTxn.repo.indexWrites(writes, commit.rev),
+      trackBlobs(actorTxn, writes),
+    ])
+  })
+}
+
+const processRepoCreation = async (
+  ctx: RecovererContext,
+  evt: CommitEvt,
+  writes: PreparedWrite[],
+  blocks: BlockMap,
+) => {
+  const did = evt.repo
+  const keypair = await Secp256k1Keypair.create({ exportable: true })
+  await ctx.actorStore.create(did, keypair)
+  const commit: CommitData = {
+    cid: evt.commit,
+    rev: evt.rev,
+    since: evt.since,
+    prev: null,
+    newBlocks: blocks,
+    relevantBlocks: new BlockMap(),
+    removedCids: new CidSet(),
+  }
+  await ctx.actorStore.transact(did, (actorTxn) =>
+    Promise.all([
+      actorTxn.repo.storage.applyCommit(commit, true),
+      actorTxn.repo.indexWrites(writes, commit.rev),
+      actorTxn.repo.blob.processWriteBlobs(commit.rev, writes),
+    ]),
+  )
+  await trackNewAccount(ctx.recoveryDb, did)
+}
+
+const processAccountEvt = async (ctx: RecovererContext, evt: AccountEvt) => {
+  // do not need to process deactivation/takedowns because we backup account DB as well
+  if (evt.status !== AccountStatus.Deleted) {
+    return
+  }
+  const { directory } = await ctx.actorStore.getLocation(evt.did)
+  await rmIfExists(directory, true)
+  await ctx.accountManager.deleteAccount(evt.did)
+}
+
+const trackBlobs = async (
+  store: ActorStoreTransactor,
+  writes: PreparedWrite[],
+) => {
+  await store.repo.blob.deleteDereferencedBlobs(writes)
+
+  for (const write of writes) {
+    if (
+      write.action === WriteOpAction.Create ||
+      write.action === WriteOpAction.Update
+    ) {
+      for (const blob of write.blobs) {
+        await store.repo.blob.insertBlobMetadata(blob)
+        await store.repo.blob.associateBlob(blob, write.uri)
+      }
+    }
+  }
+}
+
+const trackFailure = async (
+  recoveryDb: RecoveryDb,
+  did: string,
+  err: unknown,
+) => {
+  // this.failed.add(did) @TODO move elsewhere
+  await recoveryDb.db
+    .insertInto('failed')
+    .values({
+      did,
+      error: err?.toString(),
+      fixed: 0,
     })
-  }
+    .onConflict((oc) => oc.doNothing())
+    .execute()
+}
 
-  async trackFailure(did: string, err: unknown) {
-    this.failed.add(did)
-    await this.ctx.recoveryDb.db
-      .insertInto('failed')
-      .values({
-        did,
-        error: err?.toString(),
-        fixed: 0,
-      })
-      .onConflict((oc) => oc.doNothing())
-      .execute()
-  }
-
-  async trackNewAccount(did: string) {
-    await this.ctx.recoveryDb.db
-      .insertInto('new_account')
-      .values({
-        did,
-        published: 0,
-      })
-      .onConflict((oc) => oc.doNothing())
-      .execute()
-  }
+const trackNewAccount = async (recoveryDb: RecoveryDb, did: string) => {
+  await recoveryDb.db
+    .insertInto('new_account')
+    .values({
+      did,
+      published: 0,
+    })
+    .onConflict((oc) => oc.doNothing())
+    .execute()
 }
 
 const parseCommitEvt = async (
@@ -257,5 +270,15 @@ const parseCommitEvt = async (
   return {
     writes,
     blocks: evtCar.blocks,
+  }
+}
+
+const didFromEvt = (evt: SeqEvt): string | null => {
+  if (evt.type === 'account') {
+    return evt.evt.did
+  } else if (evt.type === 'commit') {
+    return evt.evt.repo
+  } else {
+    return null
   }
 }
