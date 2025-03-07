@@ -1,3 +1,4 @@
+import assert from 'node:assert'
 import { z } from 'zod'
 import { cborEncode, noUndefinedVals, schema } from '@atproto/common'
 import { BlockMap, blocksToCarFile } from '@atproto/repo'
@@ -50,6 +51,23 @@ export const formatSeqSyncEvt = async (
     eventType: 'sync',
     event: cborEncode(evt),
     sequencedAt: new Date().toISOString(),
+  }
+}
+
+export const syncEvtDataFromCommit = (
+  commitData: CommitDataWithOps,
+): SyncEvtData => {
+  const { blocks, missing } = commitData.relevantBlocks.getMany([
+    commitData.cid,
+  ])
+  assert(
+    !missing.length,
+    'commit block was not found, could not build sync event',
+  )
+  return {
+    rev: commitData.rev,
+    cid: commitData.cid,
+    blocks,
   }
 }
 
