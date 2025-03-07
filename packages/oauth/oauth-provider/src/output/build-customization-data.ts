@@ -9,8 +9,11 @@ export const colorNames = ['brand', 'error', 'warning', 'success'] as const
 export const colorNameSchema = z.enum(colorNames)
 export type ColorName = z.infer<typeof colorNameSchema>
 
-export const ColorsDefinitionSchema = z.record(colorNameSchema, z.string())
-export type ColorsDefinition = z.infer<typeof ColorsDefinitionSchema>
+export const colorsDefinitionSchema = z.record(
+  colorNameSchema,
+  z.string().optional(),
+)
+export type ColorsDefinition = z.infer<typeof colorsDefinitionSchema>
 
 export const localizedStringSchema = z.union([
   z.string(),
@@ -34,7 +37,7 @@ export type LinkDefinition = z.infer<typeof linkDefinitionSchema>
 export const brandingConfigSchema = z.object({
   name: z.string().optional(),
   logo: z.string().optional(),
-  colors: ColorsDefinitionSchema.optional(),
+  colors: colorsDefinitionSchema.optional(),
   links: z.array(linkDefinitionSchema).readonly().optional(),
 })
 export type BrandingConfig = z.infer<typeof brandingConfigSchema>
@@ -122,53 +125,78 @@ function* buildCustomizationVars(branding?: BrandingConfig) {
 }
 
 type RgbaColor = { r: number; g: number; b: number; a?: number }
-function parseColor(color: unknown): RgbaColor {
-  if (typeof color !== 'string') {
-    throw new TypeError(`Invalid color value: ${typeof color}`)
-  }
-
+function parseColor(color: string): RgbaColor {
   if (color.startsWith('#')) {
-    if (color.length === 4 || color.length === 5) {
-      const r = parseUi8Hex(color.slice(1, 2))
-      const g = parseUi8Hex(color.slice(2, 3))
-      const b = parseUi8Hex(color.slice(3, 4))
-      const a = color.length > 4 ? parseUi8Hex(color.slice(4, 5)) : undefined
-      return { r, g, b, a }
-    }
-
-    if (color.length === 7 || color.length === 9) {
-      const r = parseUi8Hex(color.slice(1, 3))
-      const g = parseUi8Hex(color.slice(3, 5))
-      const b = parseUi8Hex(color.slice(5, 7))
-      const a = color.length > 8 ? parseUi8Hex(color.slice(7, 9)) : undefined
-      return { r, g, b, a }
-    }
-
-    throw new TypeError(`Invalid hex color: ${color}`)
+    return parseHexColor(color)
   }
 
-  const rgbMatch = color.match(
-    /^\s*rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)\s*$/,
-  )
-  if (rgbMatch) {
-    const r = parseUi8Dec(rgbMatch[1])
-    const g = parseUi8Dec(rgbMatch[2])
-    const b = parseUi8Dec(rgbMatch[3])
+  if (color.startsWith('rgba')) {
+    return parseRgbaColor(color)
+  }
+
+  if (color.startsWith('rgb')) {
+    return parseRgbColor(color)
+  }
+
+  // Should never happen (as long as the input is a validated WebColor)
+  throw new TypeError(`Invalid color value: ${color}`)
+}
+
+function parseHexColor(v: string) {
+  if (v.length === 4 || v.length === 5) {
+    try {
+      const r = parseUi8Hex(v.slice(1, 2))
+      const g = parseUi8Hex(v.slice(2, 3))
+      const b = parseUi8Hex(v.slice(3, 4))
+      const a = v.length > 4 ? parseUi8Hex(v.slice(4, 5)) : undefined
+      return { r, g, b, a }
+    } catch (cause) {
+      throw new TypeError(`Invalid hex color value: ${v}`, { cause })
+    }
+  }
+
+  if (v.length === 7 || v.length === 9) {
+    try {
+      const r = parseUi8Hex(v.slice(1, 3))
+      const g = parseUi8Hex(v.slice(3, 5))
+      const b = parseUi8Hex(v.slice(5, 7))
+      const a = v.length > 8 ? parseUi8Hex(v.slice(7, 9)) : undefined
+      return { r, g, b, a }
+    } catch (cause) {
+      throw new TypeError(`Invalid hex color value: ${v}`, { cause })
+    }
+  }
+
+  throw new TypeError(`Invalid hex color value: ${v}`)
+}
+
+function parseRgbColor(v: string) {
+  const matches = v.match(/^\s*rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)\s*$/)
+  if (!matches) throw new TypeError(`Invalid rgb color value: ${v}`)
+  try {
+    const r = parseUi8Dec(matches[1])
+    const g = parseUi8Dec(matches[2])
+    const b = parseUi8Dec(matches[3])
     return { r, g, b }
+  } catch (cause) {
+    throw new TypeError(`Invalid rgb color value: ${v}`, { cause })
   }
+}
 
-  const rgbaMatch = color.match(
+function parseRgbaColor(v: string) {
+  const matches = v.match(
     /^\s*rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)\s*$/,
   )
-  if (rgbaMatch) {
-    const r = parseUi8Dec(rgbaMatch[1])
-    const g = parseUi8Dec(rgbaMatch[2])
-    const b = parseUi8Dec(rgbaMatch[3])
-    const a = parseUi8Dec(rgbaMatch[4])
+  if (!matches) throw new TypeError(`Invalid rgba color value: ${v}`)
+  try {
+    const r = parseUi8Dec(matches[1])
+    const g = parseUi8Dec(matches[2])
+    const b = parseUi8Dec(matches[3])
+    const a = parseUi8Dec(matches[4])
     return { r, g, b, a }
+  } catch (cause) {
+    throw new TypeError(`Invalid rgba color value: ${v}`, { cause })
   }
-
-  throw new TypeError(`Unsupported color format: ${color}`)
 }
 
 function computeLuma({ r, g, b }: RgbaColor) {

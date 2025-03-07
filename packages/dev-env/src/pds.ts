@@ -51,7 +51,9 @@ export class TestPds {
       serviceName: 'Development PDS',
       brandColor: '#8338ec',
       errorColor: '#ff006e',
-      warningColor: '#fb5607',
+      // Purposefully not setting warningColor to ensure that not all branding
+      // colors are required from a config perspective.
+      warningColor: undefined,
       successColor: '#02c39a',
       logoUrl:
         // Using a "data:" instead of a real URL to avoid making CORS requests in dev.
