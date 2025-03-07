@@ -20,7 +20,7 @@ describe('account', () => {
   let mailer: ServerMailer
   let idResolver: IdResolver
   const mailCatcher = new EventEmitter()
-  let _origSendMail
+  let _origSendMail: Mail['sendMail']
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
@@ -389,9 +389,10 @@ describe('account', () => {
     expect(res.data.email).toBe(email)
   })
 
-  const getMailFrom = async (promise): Promise<Mail.Options> => {
-    const result = await Promise.all([once(mailCatcher, 'mail'), promise])
-    return result[0][0]
+  const getMailFrom = async (promise: Promise<unknown>) => {
+    const mailResult = await once(mailCatcher, 'mail')
+    await promise
+    return mailResult[0] as Mail.Options
   }
 
   const getTokenFromMail = (mail: Mail.Options) =>

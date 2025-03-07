@@ -6,9 +6,13 @@
     "strict": true,
     "allowUnusedLabels": false,
     "allowUnreachableCode": false,
+    // @TODO For stronger type safety, next line should ideally be "true" (currently yields over 1k errors in this code base)
     "exactOptionalPropertyTypes": false,
+    // "falls through" are covered by eslint (because TS does not support those comments):
     "noFallthroughCasesInSwitch": false,
-    "noImplicitAny": false,
+    "noPropertyAccessFromIndexSignature": true,
+    "noImplicitAny": true,
+    // We want to allow TypeScript to infer the return type:
     "noImplicitReturns": false,
     "noUnusedLocals": true,
     "noUnusedParameters": false,

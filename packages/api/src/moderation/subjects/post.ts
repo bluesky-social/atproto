@@ -283,7 +283,7 @@ function checkMutedWords(
                 hasMutedWord({
                   mutedWords,
                   text: image.alt,
-                  languages: AppBskyFeedPost.isRecord(embeddedPost.record)
+                  languages: AppBskyFeedPost.isRecord(embeddedPost['record'])
                     ? embeddedPost.langs
                     : [],
                   actor: embedAuthor,

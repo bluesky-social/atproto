@@ -54,12 +54,15 @@ export class Redis {
       }
       results.push(result)
       for (const [seqBuf, values] of messages) {
-        const message = { cursor: seqBuf.toString(), contents: {} }
-        result.messages.push(message)
+        const contents: Record<string, Buffer | undefined> = {}
+        result.messages.push({
+          cursor: seqBuf.toString(),
+          contents,
+        })
         for (let i = 0; i < values.length; ++i) {
           if (i % 2 === 0) continue
           const field = values[i - 1].toString()
-          message.contents[field] = values[i]
+          contents[field] = values[i]
         }
       }
     }
@@ -116,10 +119,11 @@ export class Redis {
   async getMulti(keys: string[]) {
     const namespaced = keys.map((k) => this.ns(k))
     const got = await this.driver.mget(...namespaced)
-    const results = {}
+    const results = new Map<string, string>()
     for (let i = 0; i < keys.length; i++) {
       const key = keys[i]
-      results[key] = got[i]
+      const val = got[i]
+      if (val != null) results.set(key, val)
     }
     return results
   }

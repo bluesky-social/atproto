@@ -4,6 +4,7 @@ import { AuthRequiredError } from '@atproto/xrpc-server'
 import { AdminTokenOutput, ModeratorOutput } from '../../auth-verifier'
 import { AppContext } from '../../context'
 import { Member } from '../../db/schema/member'
+import { JsonObject } from '../../db/types'
 import { Server } from '../../lexicon'
 import { SettingService } from '../../setting/service'
 import { settingValidators } from '../../setting/validators'
@@ -33,7 +34,7 @@ export default function (server: Server, ctx: AppContext) {
       const now = new Date()
       const baseOption = {
         key,
-        value,
+        value: value as JsonObject,
         did: ownerDid,
         createdBy: ownerDid,
         lastUpdatedBy: ownerDid,

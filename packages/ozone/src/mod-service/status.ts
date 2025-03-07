@@ -142,17 +142,17 @@ const getSubjectStatusForRecordEvent = ({
   currentStatus?: ModerationSubjectStatusRow
 }): Partial<ModerationSubjectStatusRow> => {
   const timestamp =
-    typeof event.meta?.timestamp === 'string'
-      ? event.meta?.timestamp
+    typeof event.meta?.['timestamp'] === 'string'
+      ? event.meta?.['timestamp']
       : event.createdAt
 
   if (event.action === 'tools.ozone.moderation.defs#recordEvent') {
-    if (event.meta?.op === 'delete') {
+    if (event.meta?.['op'] === 'delete') {
       return {
         hostingStatus: 'deleted',
         hostingDeletedAt: timestamp,
       }
-    } else if (event.meta?.op === 'update') {
+    } else if (event.meta?.['op'] === 'update') {
       return {
         hostingStatus: 'active',
         hostingUpdatedAt: timestamp,
@@ -166,20 +166,20 @@ const getSubjectStatusForRecordEvent = ({
       hostingUpdatedAt: timestamp,
     }
 
-    if (event.meta?.status) {
-      status.hostingStatus = `${event.meta?.status}`
+    if (event.meta?.['status']) {
+      status.hostingStatus = `${event.meta?.['status']}`
     }
 
-    if (event.meta?.status === 'deleted') {
+    if (event.meta?.['status'] === 'deleted') {
       status.hostingDeletedAt = timestamp
-    } else if (event.meta?.status === 'deactivated') {
+    } else if (event.meta?.['status'] === 'deactivated') {
       status.hostingDeactivatedAt = timestamp
     } else {
       // When deactivated accounts are re-activated, we receive the event with just the active flag set to true
       // so we want to make sure that the hostingStatus is not set to an outdated value
       if (
         currentStatus?.hostingStatus === 'deactivated' &&
-        event.meta?.active
+        event.meta?.['active']
       ) {
         status.hostingStatus = 'active'
         status.hostingReactivatedAt = timestamp
@@ -194,7 +194,7 @@ const getSubjectStatusForRecordEvent = ({
       hostingUpdatedAt: timestamp,
     }
 
-    if (event.meta?.tombstone) {
+    if (event.meta?.['tombstone']) {
       status.hostingStatus = 'tombstoned'
       status.hostingDeletedAt = timestamp
     }
@@ -327,13 +327,13 @@ export const adjustModerationSubjectStatus = async (
   }
 
   // If reporting is muted for this reporter, we don't want to update the subject status
-  if (meta?.isReporterMuted) {
+  if (meta?.['isReporterMuted']) {
     return currentStatus || null
   }
 
   const isAppealEvent =
     action === 'tools.ozone.moderation.defs#modEventReport' &&
-    meta?.reportType === REASONAPPEAL
+    meta?.['reportType'] === REASONAPPEAL
 
   const subjectStatus = getSubjectStatusForModerationEvent({
     currentStatus,
@@ -374,10 +374,10 @@ export const adjustModerationSubjectStatus = async (
 
   if (
     action === 'tools.ozone.moderation.defs#modEventPriorityScore' &&
-    typeof meta?.priorityScore === 'number'
+    typeof meta?.['priorityScore'] === 'number'
   ) {
-    newStatus.priorityScore = meta?.priorityScore
-    subjectStatus.priorityScore = meta?.priorityScore
+    newStatus.priorityScore = meta?.['priorityScore']
+    subjectStatus.priorityScore = meta?.['priorityScore']
   }
 
   if (
@@ -408,7 +408,7 @@ export const adjustModerationSubjectStatus = async (
 
   if (
     action === 'tools.ozone.moderation.defs#modEventComment' &&
-    meta?.sticky
+    meta?.['sticky']
   ) {
     newStatus.comment = comment
     subjectStatus.comment = comment

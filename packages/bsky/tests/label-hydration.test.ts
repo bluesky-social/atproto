@@ -1,5 +1,5 @@
 import assert from 'node:assert'
-import { AtpAgent } from '@atproto/api'
+import { AppBskyActorGetProfile, AtpAgent } from '@atproto/api'
 import { MINUTE } from '@atproto/common'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 
@@ -121,7 +121,7 @@ describe('label hydration', () => {
       `${network.pds.url}/xrpc/app.bsky.actor.getProfile?actor=${carol}`,
       { headers: sc.getHeaders(bob) },
     )
-    const data = await res.json()
+    const data = (await res.json()) as AppBskyActorGetProfile.OutputSchema
 
     expect(data.labels?.length).toBe(2)
     assert(data.labels)

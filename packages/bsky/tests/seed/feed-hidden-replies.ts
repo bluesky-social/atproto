@@ -38,7 +38,7 @@ export type Users = typeof users
 export async function feedHiddenRepliesSeed(
   sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
 ) {
-  const u = structuredClone(users)
+  const u: Users & { [key: string]: User } = structuredClone(users)
 
   await sc.createAccount('poster', u.poster)
   await sc.createAccount('replier', u.replier)

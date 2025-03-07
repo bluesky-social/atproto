@@ -1,3 +1,4 @@
+import assert from 'node:assert'
 import { CID } from 'multiformats/cid'
 import * as ui8 from 'uint8arrays'
 import { cborDecodeMulti, cborEncode } from '../src'
@@ -28,7 +29,10 @@ describe('ipld decode multi', () => {
       test: Number.MAX_SAFE_INTEGER,
     }
     const encoded = cborEncode(one)
-    const decoded = cborDecodeMulti(encoded)
-    expect(Number.isInteger(decoded[0]?.['test'])).toBe(true)
+    const [decoded] = cborDecodeMulti(encoded)
+    assert(decoded != null)
+    assert(typeof decoded === 'object')
+    assert('test' in decoded)
+    expect(Number.isInteger(decoded['test'])).toBe(true)
   })
 })

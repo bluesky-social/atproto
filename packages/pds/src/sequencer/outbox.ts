@@ -49,7 +49,7 @@ export class Outbox {
 
     // streams updates from sequencer, but buffers them for cutover as it makes a last request
 
-    const addToBuffer = (evts) => {
+    const addToBuffer = (evts: SeqEvt[]) => {
       if (this.caughtUp) {
         this.outBuffer.pushMany(evts)
       } else {

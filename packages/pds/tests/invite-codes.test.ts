@@ -297,7 +297,7 @@ describe('account', () => {
       .where('forAccount', 'in', accounts)
       .execute()
     expect(fromDb.length).toBe(6)
-    const dbCodesByUser = {}
+    const dbCodesByUser: Record<string, string[]> = {}
     for (const row of fromDb) {
       expect(row.disabled).toBe(0)
       expect(row.availableUses).toBe(2)

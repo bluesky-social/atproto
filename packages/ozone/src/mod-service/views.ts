@@ -150,23 +150,23 @@ export class ModerationViews {
 
     if (
       (isModEventTakedown(event) || isModEventAcknowledge(event)) &&
-      meta.acknowledgeAccountSubjects
+      meta['acknowledgeAccountSubjects']
     ) {
       event.acknowledgeAccountSubjects = ifBoolean(
-        meta.acknowledgeAccountSubjects,
+        meta['acknowledgeAccountSubjects'],
       )!
     }
 
     if (isModEventPriorityScore(event)) {
-      event.score = ifNumber(meta?.priorityScore) ?? 0
+      event.score = ifNumber(meta['priorityScore']) ?? 0
     }
 
     if (
       isModEventTakedown(event) &&
-      typeof meta.policies === 'string' &&
-      meta.policies.length > 0
+      typeof meta['policies'] === 'string' &&
+      meta['policies'].length > 0
     ) {
-      event.policies = meta.policies.split(',')
+      event.policies = meta['policies'].split(',')
     }
 
     if (isModEventLabel(event)) {
@@ -196,16 +196,16 @@ export class ModerationViews {
     }
 
     if (isModEventReport(event)) {
-      event.isReporterMuted = !!meta.isReporterMuted
-      event.reportType = ifString(meta.reportType)!
+      event.isReporterMuted = !!meta['isReporterMuted']
+      event.reportType = ifString(meta['reportType'])!
     }
 
     if (isModEventEmail(event)) {
-      event.content = ifString(meta.content)!
-      event.subjectLine = ifString(meta.subjectLine)!
+      event.content = ifString(meta['content'])!
+      event.subjectLine = ifString(meta['subjectLine'])!
     }
 
-    if (isModEventComment(event) && meta.sticky) {
+    if (isModEventComment(event) && meta['sticky']) {
       event.sticky = true
     }
 
@@ -215,22 +215,22 @@ export class ModerationViews {
     }
 
     if (isAccountEvent(event)) {
-      event.active = !!meta.active
-      event.timestamp = ifString(meta.timestamp)!
-      event.status = ifString(meta.status)!
+      event.active = !!meta['active']
+      event.timestamp = ifString(meta['timestamp'])!
+      event.status = ifString(meta['status'])!
     }
 
     if (isIdentityEvent(event)) {
-      event.timestamp = ifString(meta.timestamp)!
-      event.handle = ifString(meta.handle)!
-      event.pdsHost = ifString(meta.pdsHost)!
-      event.tombstone = !!meta.tombstone
+      event.timestamp = ifString(meta['timestamp'])!
+      event.handle = ifString(meta['handle'])!
+      event.pdsHost = ifString(meta['pdsHost'])!
+      event.tombstone = !!meta['tombstone']
     }
 
     if (isRecordEvent(event)) {
-      event.op = ifString(meta.op)!
-      event.cid = ifString(meta.cid)!
-      event.timestamp = ifString(meta.timestamp)!
+      event.op = ifString(meta['op'])!
+      event.cid = ifString(meta['cid'])!
+      event.timestamp = ifString(meta['timestamp'])!
     }
 
     return eventView
@@ -452,9 +452,7 @@ export class ModerationViews {
       createdAt: report.createdAt,
       // Ideally, we would never have a report entry that does not have a reasonType but at the schema level
       // we are not guarantying that so in whatever case, if we end up with such entries, default to 'other'
-      reasonType: report.meta?.reportType
-        ? (report.meta?.reportType as string)
-        : REASONOTHER,
+      reasonType: ifString(report.meta?.['reportType']) ?? REASONOTHER,
       reason: report.comment ?? undefined,
       reportedBy: report.createdBy,
       subject: subjectFromEventRow(report).lex() as ReportOutput['subject'],
@@ -509,10 +507,11 @@ export class ModerationViews {
       )
       .selectAll()
       .executeTakeFirst()
-    const statusByCid = (modStatusResults?.blobCids || [])?.reduce(
-      (acc, cur) => Object.assign(acc, { [cur]: modStatusResults }),
-      {},
-    )
+    const statusByCid: Record<string, ModerationSubjectStatusRowWithHandle> =
+      modStatusResults?.blobCids?.reduce(
+        (acc, cur) => Object.assign(acc, { [cur]: modStatusResults }),
+        {},
+      ) ?? {}
     // Intentionally missing details field, since we don't have any on appview.
     // We also don't know when the blob was created, so we use a canned creation time.
     const unknownTime = new Date(0).toISOString()
@@ -744,13 +743,14 @@ export function getSelfLabels(details: {
 }): Label[] {
   const { uri, cid, record } = details
   if (!uri || !cid || !record) return []
-  if (!isValidSelfLabels(record.labels)) return []
+  const labels = record['labels']
+  if (!isValidSelfLabels(labels)) return []
   const src = new AtUri(uri).host // record creator
-  const cts =
-    typeof record.createdAt === 'string'
-      ? normalizeDatetimeAlways(record.createdAt)
-      : new Date(0).toISOString()
-  return record.labels.values.map(({ val }) => {
+  const createdAt = ifString(record['createdAt'])
+  const cts = createdAt
+    ? normalizeDatetimeAlways(createdAt)
+    : new Date(0).toISOString()
+  return labels.values.map(({ val }) => {
     return { src, uri, cid, val, cts }
   })
 }

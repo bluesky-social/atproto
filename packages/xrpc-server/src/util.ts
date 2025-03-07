@@ -2,7 +2,7 @@ import assert from 'node:assert'
 import { IncomingMessage } from 'node:http'
 import { Duplex, Readable, pipeline } from 'node:stream'
 import express from 'express'
-import mime from 'mime-types'
+import { contentType } from 'mime-types'
 import { MaxSizeChecker, createDecoders } from '@atproto/common'
 import {
   LexXrpcProcedure,
@@ -199,7 +199,7 @@ export function validateOutput(
 
 export function normalizeMime(v: string) {
   if (!v) return false
-  const fullType = mime.contentType(v)
+  const fullType = contentType(v)
   if (!fullType) return false
   const shortType = fullType.split(';')[0]
   if (!shortType) return false

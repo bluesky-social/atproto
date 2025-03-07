@@ -624,7 +624,7 @@ describe('indexing', () => {
   })
 
   describe('indexHandle', () => {
-    const getIndexedHandle = async (did) => {
+    const getIndexedHandle = async (did: string) => {
       const res = await agent.api.app.bsky.actor.getProfile(
         { actor: did },
         {

@@ -10,8 +10,10 @@ import { code3ToCode2 } from './language-data'
 
 const ifString = (value: unknown): string | undefined =>
   typeof value === 'string' ? value : undefined
-const isStringProp = (obj: object, prop: string): string | undefined =>
-  prop in obj ? ifString(obj[prop]) : undefined
+const isStringProp = (
+  obj: Record<string, unknown>,
+  prop: string,
+): string | undefined => (prop in obj ? ifString(obj[prop]) : undefined)
 
 export class LanguageTagger extends ContentTagger {
   tagPrefix = 'lang:'
@@ -65,8 +67,12 @@ export class LanguageTagger extends ContentTagger {
         this.subject.did,
       )
       feed.forEach((item) => {
-        const itemLangs = item.post.record['langs'] as string[] | null
-        if (itemLangs?.length) {
+        const itemLangs = (item.post.record as Record<string, unknown>)['langs']
+        if (
+          Array.isArray(itemLangs) &&
+          itemLangs.length > 0 &&
+          itemLangs.every((v) => typeof v === 'string')
+        ) {
           // Pick the first fragment of the lang code so that instead of `en-US` and `en-GB` we get `en`
           itemLangs.forEach((lang) => langs.add(lang.split('-')[0]))
         }
@@ -78,7 +84,7 @@ export class LanguageTagger extends ContentTagger {
         this.subject,
       ])
       const record = recordByUri.get(this.subject.uri)
-      const recordLang = record?.value.langs as string[] | null
+      const recordLang = record?.value['langs'] as string[] | null
       const recordText = record
         ? this.getTextFromRecord(record.value)
         : undefined

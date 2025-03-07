@@ -128,17 +128,18 @@ describe('pds author feed views', () => {
       },
     )
 
-    aliceForCarol.data.feed.forEach((postView) => {
+    for (const postView of aliceForCarol.data.feed) {
       const { viewer, uri } = postView.post
-      expect(viewer?.like).toEqual(sc.likes[carol][uri]?.toString())
-      expect(viewer?.repost).toEqual(sc.reposts[carol][uri]?.toString())
-    })
+      assert(viewer)
+      expect(viewer.like).toEqual(sc.likes[carol][uri]?.toString())
+      const repost = sc.reposts[carol]?.find((r) => r.uri.toString() === uri)
+      expect(viewer.repost).toEqual(repost?.toString())
+    }
 
     expect(forSnapshot(aliceForCarol.data.feed)).toMatchSnapshot()
   })
 
   it('paginates', async () => {
-    const results = (results) => results.flatMap((res) => res.feed)
     const paginator = async (cursor?: string) => {
       const res = await agent.api.app.bsky.feed.getAuthorFeed(
         {
@@ -172,7 +173,7 @@ describe('pds author feed views', () => {
     )
 
     expect(full.data.feed.length).toEqual(4)
-    expect(results(paginatedAll)).toEqual(results([full.data]))
+    expect(paginatedAll.flatMap((res) => res.feed)).toEqual(full.data.feed)
   })
 
   it('fetches results unauthed.', async () => {

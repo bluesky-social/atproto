@@ -1,3 +1,4 @@
+import assert from 'node:assert'
 import { CID } from 'multiformats/cid'
 import { LexiconDoc, Lexicons, parseLexiconDoc } from '../src/index'
 import LexiconDocs from './_scaffolds/lexicons'
@@ -11,22 +12,22 @@ describe('Lexicons collection', () => {
 
   it('Correctly references all definitions', () => {
     expect(lex.getDef('com.example.kitchenSink')).toEqual(
-      LexiconDocs[0].defs.main,
+      LexiconDocs[0].defs['main'],
     )
     expect(lex.getDef('lex:com.example.kitchenSink')).toEqual(
-      LexiconDocs[0].defs.main,
+      LexiconDocs[0].defs['main'],
     )
     expect(lex.getDef('com.example.kitchenSink#main')).toEqual(
-      LexiconDocs[0].defs.main,
+      LexiconDocs[0].defs['main'],
     )
     expect(lex.getDef('lex:com.example.kitchenSink#main')).toEqual(
-      LexiconDocs[0].defs.main,
+      LexiconDocs[0].defs['main'],
     )
     expect(lex.getDef('com.example.kitchenSink#object')).toEqual(
-      LexiconDocs[0].defs.object,
+      LexiconDocs[0].defs['object'],
     )
     expect(lex.getDef('lex:com.example.kitchenSink#object')).toEqual(
-      LexiconDocs[0].defs.object,
+      LexiconDocs[0].defs['object'],
     )
   })
 })
@@ -224,7 +225,7 @@ describe('General validation', () => {
         test: 123,
       },
     })
-    expect(result.success).toBeFalsy()
+    assert(!result.success)
     expect(result['error']?.message).toBe('Object/union/test must be a string')
 
     result = lexicon.validate('com.example.testImplicitMain', {
@@ -233,7 +234,7 @@ describe('General validation', () => {
         test: 123,
       },
     })
-    expect(result.success).toBeFalsy()
+    assert(!result.success)
     expect(result['error']?.message).toBe('Object/union/test must be a string')
 
     result = lexicon.validate('com.example.testExplicitMain', {
@@ -242,7 +243,7 @@ describe('General validation', () => {
         test: 123,
       },
     })
-    expect(result.success).toBeFalsy()
+    assert(!result.success)
     expect(result['error']?.message).toBe('Object/union/test must be a string')
 
     result = lexicon.validate('com.example.testExplicitMain', {
@@ -251,7 +252,7 @@ describe('General validation', () => {
         test: 123,
       },
     })
-    expect(result.success).toBeFalsy()
+    assert(!result.success)
     expect(result['error']?.message).toBe('Object/union/test must be a string')
   })
 })

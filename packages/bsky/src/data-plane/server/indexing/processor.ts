@@ -1,7 +1,7 @@
 import { Insertable } from 'kysely'
 import { CID } from 'multiformats/cid'
 import { chunkArray } from '@atproto/common'
-import { jsonStringToLex, stringifyLex } from '@atproto/lexicon'
+import { LexValue, jsonStringToLex, stringifyLex } from '@atproto/lexicon'
 import { AtUri } from '@atproto/syntax'
 import { lexicons } from '../../../lexicon/lexicons'
 import { BackgroundQueue } from '../background'
@@ -75,7 +75,7 @@ export class RecordProcessor<T, S> {
         uri: uri.toString(),
         cid: cid.toString(),
         did: uri.host,
-        json: stringifyLex(obj),
+        json: stringifyLex(obj as LexValue),
         indexedAt: timestamp,
       })
       .onConflict((oc) => oc.doNothing())
@@ -127,7 +127,7 @@ export class RecordProcessor<T, S> {
       .where('uri', '=', uri.toString())
       .set({
         cid: cid.toString(),
-        json: stringifyLex(obj),
+        json: stringifyLex(obj as LexValue),
         indexedAt: timestamp,
       })
       .execute()

@@ -1,6 +1,7 @@
 import { Selectable } from 'kysely'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Setting } from '../db/schema/setting'
+import { jsonIsObject } from '../db/types'
 import { PolicyListSettingKey, ProtectedTagSettingKey } from './constants'
 
 export const settingValidators = new Map<
@@ -16,11 +17,11 @@ export const settingValidators = new Map<
         )
       }
 
-      if (typeof setting.value !== 'object') {
+      if (!jsonIsObject(setting.value)) {
         throw new InvalidRequestError('Invalid value')
       }
       for (const [key, val] of Object.entries(setting.value)) {
-        if (!val || typeof val !== 'object') {
+        if (!jsonIsObject(val)) {
           throw new InvalidRequestError(`Invalid configuration for tag ${key}`)
         }
 
@@ -71,7 +72,7 @@ export const settingValidators = new Map<
         throw new InvalidRequestError('Invalid value')
       }
       for (const [key, val] of Object.entries(setting.value)) {
-        if (!val || typeof val !== 'object') {
+        if (!jsonIsObject(val)) {
           throw new InvalidRequestError(
             `Invalid configuration for policy ${key}`,
           )

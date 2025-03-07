@@ -1,16 +1,9 @@
-import compression from 'compression'
-import express from 'express'
+import compression, { filter as defaultFilter } from 'compression'
 
 export default function () {
   return compression({
-    filter,
+    filter: (req, res) =>
+      res.getHeader('Content-type') === 'application/vnd.ipld.car' ||
+      defaultFilter(req, res),
   })
-}
-
-function filter(_req: express.Request, res: express.Response) {
-  const contentType = res.getHeader('Content-type')
-  if (contentType === 'application/vnd.ipld.car') {
-    return true
-  }
-  return compression.filter(_req, res)
 }

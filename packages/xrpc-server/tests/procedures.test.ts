@@ -86,7 +86,7 @@ describe('Procedures', () => {
   let s: http.Server
   const server = xrpcServer.createServer(LEXICONS)
   server.method('io.example.pingOne', (ctx: { params: xrpcServer.Params }) => {
-    return { encoding: 'text/plain', body: ctx.params.message }
+    return { encoding: 'text/plain', body: ctx.params['message'] }
   })
   server.method(
     'io.example.pingTwo',

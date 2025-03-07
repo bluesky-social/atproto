@@ -43,7 +43,7 @@ export function detectFacets(text: UnicodeString): Facet[] | undefined {
     while ((match = re.exec(text.utf16))) {
       let uri = match[2]
       if (!uri.startsWith('http')) {
-        const domain = match.groups?.domain
+        const domain = match.groups?.['domain']
         if (!domain || !isValidDomain(domain)) {
           continue
         }

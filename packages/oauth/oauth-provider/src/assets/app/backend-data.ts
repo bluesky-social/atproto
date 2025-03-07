@@ -6,8 +6,15 @@ import {
 } from './backend-types.ts'
 
 function readBackendData<T>(key: string): T | undefined {
-  const value = window[key] as T | undefined
-  delete window[key] // Prevent accidental usage / potential leaks to dependencies
+  const keyTyped = key as keyof typeof window
+
+  if (typeof window === 'undefined') return undefined
+  if (!(keyTyped in window)) return undefined
+
+  const value = window[keyTyped] as T | undefined
+
+  // Prevent accidental usage / potential leaks to dependencies
+  delete window[keyTyped]
   return value
 }
 

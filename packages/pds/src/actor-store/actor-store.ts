@@ -63,7 +63,7 @@ export class ActorStore {
         db.db.selectFrom('repo_root').selectAll().execute(),
       )
     } catch (err) {
-      db.close()
+      await db.close()
       throw err
     }
 
@@ -76,7 +76,7 @@ export class ActorStore {
       const getKeypair = () => this.keypair(did)
       return await fn(new ActorStoreReader(did, db, this.resources, getKeypair))
     } finally {
-      db.close()
+      await db.close()
     }
   }
 
@@ -91,7 +91,7 @@ export class ActorStore {
         return fn(new ActorStoreTransactor(did, dbTxn, keypair, this.resources))
       })
     } finally {
-      db.close()
+      await db.close()
     }
   }
 
@@ -104,7 +104,7 @@ export class ActorStore {
     try {
       return await fn(new ActorStoreWriter(did, db, keypair, this.resources))
     } finally {
-      db.close()
+      await db.close()
     }
   }
 
@@ -125,7 +125,7 @@ export class ActorStore {
       const migrator = getMigrator(db)
       await migrator.migrateToLatestOrThrow()
     } finally {
-      db.close()
+      await db.close()
     }
   }
 

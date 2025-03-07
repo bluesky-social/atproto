@@ -254,7 +254,7 @@ describe('Bodies', () => {
     // 500 responses don't include details, so we nab details from the logger.
     let error: string | undefined
     const origError = logger.error
-    logger.error = (obj, ...args) => {
+    logger.error = (obj: any, ...args: unknown[]) => {
       error = obj.message
       logger.error = origError
       return logger.error(obj, ...args)

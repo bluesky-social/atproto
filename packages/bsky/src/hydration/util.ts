@@ -1,5 +1,6 @@
 import { CID } from 'multiformats/cid'
 import * as ui8 from 'uint8arrays'
+import { JsonValue, isTypeofObject } from '@atproto/common'
 import { jsonToLex } from '@atproto/lexicon'
 import { AtUri } from '@atproto/syntax'
 import { lexicons } from '../lexicon/lexicons'
@@ -83,8 +84,12 @@ export const parseRecord = <T extends UnknownRecord>(
 }
 
 const isValidRecord = (json: unknown) => {
-  const lexRecord = jsonToLex(json)
-  if (typeof lexRecord?.['$type'] !== 'string') {
+  const lexRecord = jsonToLex(json as JsonValue)
+  if (
+    !isTypeofObject(lexRecord) ||
+    !('$type' in lexRecord) ||
+    typeof lexRecord['$type'] !== 'string'
+  ) {
     return false
   }
   try {

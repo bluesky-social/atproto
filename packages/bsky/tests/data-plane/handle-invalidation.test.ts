@@ -11,7 +11,7 @@ describe('handle invalidation', () => {
   let alice: string
   let bob: string
 
-  const mockHandles = {}
+  const mockHandles = new Map<string, string | false>()
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -30,10 +30,11 @@ describe('handle invalidation', () => {
     network.bsky.dataplane.idResolver.handle.resolve = async (
       handle: string,
     ) => {
-      if (mockHandles[handle] === null) {
+      const mocked = mockHandles.get(handle)
+      if (mocked === false) {
         return undefined
-      } else if (mockHandles[handle]) {
-        return mockHandles[handle]
+      } else if (mocked) {
+        return mocked
       }
       return origResolve(handle)
     }
@@ -53,7 +54,7 @@ describe('handle invalidation', () => {
   }
 
   it('indexes an account with no proper handle', async () => {
-    mockHandles['eve.test'] = null
+    mockHandles.set('eve.test', false)
     const eveAccnt = await sc.createAccount('eve', {
       handle: 'eve.test',
       email: 'eve@test.com',
@@ -78,7 +79,7 @@ describe('handle invalidation', () => {
 
     const aliceHandle = sc.accounts[alice].handle
     // alice's handle no longer resolves
-    mockHandles[aliceHandle] = null
+    mockHandles.set(aliceHandle, false)
     await sc.post(alice, 'blah')
     await network.processAll()
     const res = await agent.api.app.bsky.actor.getProfile(
@@ -97,7 +98,7 @@ describe('handle invalidation', () => {
     await backdateIndexedAt(alice)
     const aliceHandle = sc.accounts[alice].handle
     // alice's handle no longer resolves
-    delete mockHandles[aliceHandle]
+    mockHandles.delete(aliceHandle)
 
     await sc.post(alice, 'blah')
     await network.processAll()

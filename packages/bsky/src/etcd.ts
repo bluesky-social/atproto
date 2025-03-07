@@ -65,7 +65,7 @@ export class EtcdMap {
     }
   }
 
-  private apply(key, vv: VersionedValue) {
+  private apply(key: string, vv: VersionedValue) {
     const curr = this.inner.get(key)
     if (curr && curr.rev > vv.rev) return
     this.inner.set(key, vv)

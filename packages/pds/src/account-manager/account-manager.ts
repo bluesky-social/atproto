@@ -45,8 +45,8 @@ export class AccountManager {
     await getMigrator(this.db).migrateToLatestOrThrow()
   }
 
-  close() {
-    this.db.close()
+  async close() {
+    await this.db.close()
   }
 
   // Account
@@ -278,7 +278,9 @@ export class AccountManager {
     return { accessJwt, refreshJwt }
   }
 
-  async rotateRefreshToken(id: string) {
+  async rotateRefreshToken(
+    id: string,
+  ): Promise<{ accessJwt: string; refreshJwt: string } | null> {
     const token = await auth.getRefreshToken(this.db, id)
     if (!token) return null
 

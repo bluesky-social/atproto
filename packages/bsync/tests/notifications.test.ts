@@ -19,7 +19,7 @@ describe('notifications', () => {
     bsync = await BsyncService.create(
       envToCfg({
         port: await getPort(),
-        dbUrl: process.env.DB_POSTGRES_URL,
+        dbUrl: process.env['DB_POSTGRES_URL'],
         dbSchema: 'bsync_notifications',
         apiKeys: ['key-1'],
         longPollTimeoutMs: 500,

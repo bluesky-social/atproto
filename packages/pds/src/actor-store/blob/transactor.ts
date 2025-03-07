@@ -1,6 +1,6 @@
 import crypto from 'node:crypto'
 import stream from 'node:stream'
-import bytes from 'bytes'
+import { format } from 'bytes'
 import { fromStream as fileTypeFromStream } from 'file-type'
 import { CID } from 'multiformats/cid'
 import { cloneStream, sha256RawToCid, streamSize } from '@atproto/common'
@@ -288,9 +288,9 @@ function verifyBlob(blob: PreparedBlobRef, found: BlobTable) {
   }
   if (blob.constraints.maxSize && found.size > blob.constraints.maxSize) {
     throwInvalid(
-      `This file is too large. It is ${bytes.format(
+      `This file is too large. It is ${format(
         found.size,
-      )} but the maximum size is ${bytes.format(blob.constraints.maxSize)}.`,
+      )} but the maximum size is ${format(blob.constraints.maxSize)}.`,
       'BlobTooLarge',
     )
   }

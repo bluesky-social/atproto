@@ -75,7 +75,7 @@ describe('server', () => {
 
   it('compresses large json responses', async () => {
     // first create a large record
-    const record = {
+    const record: Record<string, string | undefined> = {
       text: 'blahblabh',
       createdAt: new Date().toISOString(),
     }

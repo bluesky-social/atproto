@@ -13,7 +13,7 @@ export const loggerMiddleware = pinoHttp({
     paths: ['req.headers.authorization'],
   },
   serializers: {
-    err: (err: unknown) => ({
+    err: (err: any) => ({
       code: err?.['code'],
       message: err?.['message'],
     }),

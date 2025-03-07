@@ -2,6 +2,15 @@ import { parse as parseJson } from '@hapi/bourne'
 import { type as hapiContentType } from '@hapi/content'
 import createHttpError from 'http-errors'
 
+// No using the type definition from "@hapi/content" to avoid runtime dependency
+// on "@types/hapi__content". If "@hapi/content" ever emits its own .d.ts,
+// we can use that instead.
+export type ContentType = {
+  mime: string
+  charset?: string
+  boundary?: string
+}
+
 export type JsonScalar = string | number | boolean | null
 export type Json = JsonScalar | Json[] | { [_ in string]?: Json }
 
@@ -27,12 +36,6 @@ export function parseContentType(type: unknown): ContentType {
       err instanceof Error ? err.message : 'Invalid content-type',
     )
   }
-}
-
-export type ContentType = {
-  mime: string
-  charset?: string
-  boundary?: string
 }
 
 export type Parser<T extends string = string, R = unknown> = {

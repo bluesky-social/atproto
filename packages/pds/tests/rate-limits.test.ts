@@ -14,8 +14,8 @@ describe('rate limits', () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'rate_limits',
       pds: {
-        redisScratchAddress: process.env.REDIS_HOST,
-        redisScratchPassword: process.env.REDIS_PASSWORD,
+        redisScratchAddress: process.env['REDIS_HOST'],
+        redisScratchPassword: process.env['REDIS_PASSWORD'],
         rateLimitsEnabled: true,
       },
     })

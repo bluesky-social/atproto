@@ -73,7 +73,7 @@ export function isCommit(v: unknown): v is Commit {
   return (
     isObj(v) &&
     hasProp(v, '$type') &&
-    v.$type === 'com.atproto.sync.subscribeRepos#commit'
+    v['$type'] === 'com.atproto.sync.subscribeRepos#commit'
   )
 }
 
@@ -91,7 +91,7 @@ export function isIdentity(v: unknown): v is Identity {
   return (
     isObj(v) &&
     hasProp(v, '$type') &&
-    v.$type === 'com.atproto.sync.subscribeRepos#identity'
+    v['$type'] === 'com.atproto.sync.subscribeRepos#identity'
   )
 }
 
@@ -111,7 +111,7 @@ export function isAccount(v: unknown): v is Account {
   return (
     isObj(v) &&
     hasProp(v, '$type') &&
-    v.$type === 'com.atproto.sync.subscribeRepos#account'
+    v['$type'] === 'com.atproto.sync.subscribeRepos#account'
   )
 }
 
@@ -128,7 +128,7 @@ export function isHandle(v: unknown): v is Handle {
   return (
     isObj(v) &&
     hasProp(v, '$type') &&
-    v.$type === 'com.atproto.sync.subscribeRepos#handle'
+    v['$type'] === 'com.atproto.sync.subscribeRepos#handle'
   )
 }
 
@@ -145,7 +145,7 @@ export function isMigrate(v: unknown): v is Migrate {
   return (
     isObj(v) &&
     hasProp(v, '$type') &&
-    v.$type === 'com.atproto.sync.subscribeRepos#migrate'
+    v['$type'] === 'com.atproto.sync.subscribeRepos#migrate'
   )
 }
 
@@ -161,7 +161,7 @@ export function isTombstone(v: unknown): v is Tombstone {
   return (
     isObj(v) &&
     hasProp(v, '$type') &&
-    v.$type === 'com.atproto.sync.subscribeRepos#tombstone'
+    v['$type'] === 'com.atproto.sync.subscribeRepos#tombstone'
   )
 }
 
@@ -175,7 +175,7 @@ export function isInfo(v: unknown): v is Info {
   return (
     isObj(v) &&
     hasProp(v, '$type') &&
-    v.$type === 'com.atproto.sync.subscribeRepos#info'
+    v['$type'] === 'com.atproto.sync.subscribeRepos#info'
   )
 }
 
@@ -192,7 +192,7 @@ export function isRepoOp(v: unknown): v is RepoOp {
   return (
     isObj(v) &&
     hasProp(v, '$type') &&
-    v.$type === 'com.atproto.sync.subscribeRepos#repoOp'
+    v['$type'] === 'com.atproto.sync.subscribeRepos#repoOp'
   )
 }
 
