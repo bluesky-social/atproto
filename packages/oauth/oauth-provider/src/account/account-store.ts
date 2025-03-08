@@ -19,9 +19,18 @@ export const newPasswordSchema = z.string().min(8)
 export const tokenSchema = z.string().regex(/^[A-Z2-7]{5}-[A-Z2-7]{5}$/)
 export const handleSchema = z
   .string()
-  .min(3)
-  .max(30)
-  .regex(/^[a-z0-9][a-z0-9-]+[a-z0-9](?:\.[a-z0-9][a-z0-9-]+[a-z0-9])+$/)
+  .refine((value) => value.split('.').length >= 3, {
+    message: 'Handle must be on a subdomain (handle.domain.tld)',
+  })
+  .refine((value) => value.split('.')[0].length >= 3, {
+    message: 'Handle must be at least 3 characters long',
+  })
+  .refine((value) => value.split('.')[0].length <= 18, {
+    message: 'Handle must be at most 18 characters long',
+  })
+  .refine((value) => /^[a-z0-9]+$/.test(value.split('.')[0]), {
+    message: 'Handle must only contain lowercase letters and numbers',
+  })
 export const emailSchema = z
   .string()
   .email()
