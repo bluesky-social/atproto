@@ -508,6 +508,7 @@ describe('AtUri validation', () => {
 
   it('conforms to interop valid ATURIs', () => {
     const lineReader = readline.createInterface({
+      // NOTE: these test vector files are maintained in: https://github.com/bluesky-social/atproto-interop-tests
       input: fs.createReadStream(
         `${__dirname}/interop-files/aturi_syntax_valid.txt`,
       ),

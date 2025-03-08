@@ -20,6 +20,7 @@ describe('signatures', () => {
   let vectors: TestVector[]
 
   beforeAll(() => {
+    // NOTE: these test vector files are maintained in: https://github.com/bluesky-social/atproto-interop-tests
     vectors = JSON.parse(
       fs.readFileSync(`${__dirname}/signature-fixtures.json`).toString(),
     )

@@ -194,6 +194,7 @@ describe('handle validation', () => {
   })
 
   it('conforms to interop valid handles', () => {
+    // NOTE: these test vector files are maintained in: https://github.com/bluesky-social/atproto-interop-tests
     const lineReader = readline.createInterface({
       input: fs.createReadStream(
         `${__dirname}/interop-files/handle_syntax_valid.txt`,
@@ -209,6 +210,7 @@ describe('handle validation', () => {
   })
 
   it('conforms to interop invalid handles', () => {
+    // NOTE: these test vector files are maintained in: https://github.com/bluesky-social/atproto-interop-tests
     const lineReader = readline.createInterface({
       input: fs.createReadStream(
         `${__dirname}/interop-files/handle_syntax_invalid.txt`,
