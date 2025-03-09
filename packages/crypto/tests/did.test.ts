@@ -1,6 +1,27 @@
 import * as uint8arrays from 'uint8arrays'
-import { P256Keypair, Secp256k1Keypair } from '../src'
+import { P256Keypair, Secp256k1Keypair, Ed25519Keypair } from '../src'
 import * as did from '../src/did'
+
+describe('ed25519 did:key', () => {
+  it('derives the correct DID from the privatekey', async () => {
+    for (const vector of edTestVectors) {
+      const keypair = await Ed25519Keypair.import(vector.seed)
+      const did = keypair.did()
+      expect(did).toEqual(vector.id)
+    }
+  })
+
+  it('converts between bytes and did', async () => {
+    for (const vector of edTestVectors) {
+      const keypair = await Ed25519Keypair.import(vector.seed)
+      const didKey = did.formatDidKey('EdDSA', keypair.publicKeyBytes())
+      expect(didKey).toEqual(vector.id)
+      const { jwtAlg, keyBytes } = did.parseDidKey(didKey)
+      expect(jwtAlg).toBe('EdDSA')
+      expect(uint8arrays.equals(keyBytes, keypair.publicKeyBytes())).toBeTruthy
+    }
+  })
+})
 
 describe('secp256k1 did:key', () => {
   it('derives the correct DID from the privatekey', async () => {
@@ -45,6 +66,23 @@ describe('P-256 did:key', () => {
     }
   })
 })
+
+// did:key ed25519 test vectors from W3C
+// https://github.com/w3c-ccg/did-method-key/blob/main/test-vectors/ed25519-x25519.json
+const edTestVectors = [
+  {
+    seed: '0000000000000000000000000000000000000000000000000000000000000000',
+    id: 'did:key:z6MkiTBz1ymuepAQ4HEHYSF1H8quG5GLVVQR3djdX3mDooWp',
+  },
+  {
+    seed: '0000000000000000000000000000000000000000000000000000000000000001',
+    id: 'did:key:z6MkjchhfUsD6mmvni8mCdXHw216Xrm9bQe2mBH1P5RDjVJG',
+  },
+  {
+    seed: '0000000000000000000000000000000000000000000000000000000000000002',
+    id: 'did:key:z6MknGc3ocHs3zdPiJbnaaqDi58NGb4pk1Sp9WxWufuXSdxf',
+  },
+]
 
 // did:key secp256k1 test vectors from W3C
 // https://github.com/w3c-ccg/did-method-key/blob/main/test-vectors/secp256k1.json
