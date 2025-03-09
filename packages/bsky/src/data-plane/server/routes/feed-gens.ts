@@ -50,7 +50,11 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     const query = req.query.trim()
     let builder = db.db
       .selectFrom('feed_generator')
-      .if(!!query, (q) => q.where('displayName', 'ilike', `%${query}%`))
+      .if(!!query, (q) =>
+        q
+          .where('displayName', 'ilike', `%${query}%`)
+          .orWhere('description', 'ilike', `%${query}%`),
+      )
       .selectAll()
     const keyset = new TimeCidKeyset(
       ref('feed_generator.createdAt'),
