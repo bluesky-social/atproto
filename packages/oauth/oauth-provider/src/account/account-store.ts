@@ -28,8 +28,9 @@ export const handleSchema = z
   .refine((value) => value.split('.')[0].length <= 18, {
     message: 'Handle must be at most 18 characters long',
   })
-  .refine((value) => /^[a-z0-9]+$/.test(value.split('.')[0]), {
-    message: 'Handle must only contain lowercase letters and numbers',
+  .refine((value) => /^[a-z0-9][a-z0-9-]*[a-z0-9]$/.test(value.split('.')[0]), {
+    message:
+      'Handle must only contain lowercase letters, numbers, and dashes (dashes cannot be at the start or end)',
   })
 export const emailSchema = z
   .string()
