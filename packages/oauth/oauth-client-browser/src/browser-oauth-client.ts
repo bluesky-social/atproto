@@ -29,6 +29,7 @@ export type BrowserOAuthClientOptions = Simplify<
     clientMetadata?: Readonly<OAuthClientMetadataInput>
     responseMode?: Exclude<OAuthResponseMode, 'form_post'>
     fetch?: Fetch
+    namespace?: string
   } & Omit<
     OAuthClientOptions,
     // Overridden by this lib
@@ -48,12 +49,7 @@ export type BrowserOAuthClientOptions = Simplify<
   >
 >
 
-const NAMESPACE = `@@atproto/oauth-client-browser`
-
 //- Popup channel
-
-const POPUP_CHANNEL_NAME = `${NAMESPACE}(popup-channel)`
-const POPUP_STATE_PREFIX = `${NAMESPACE}(popup-state):`
 
 type PopupChannelResultData = {
   key: string
@@ -72,9 +68,6 @@ type PopupChannelData = PopupChannelResultData | PopupChannelAckData
 type SyncChannelMessage = {
   [K in keyof SessionEventMap]: [K, SessionEventMap[K]]
 }[keyof SessionEventMap]
-
-const syncChannel: TypedBroadcastChannel<SyncChannelMessage> =
-  new BroadcastChannel(`${NAMESPACE}(synchronization-channel)`)
 
 export type BrowserOAuthClientLoadOptions = Simplify<
   {
@@ -102,6 +95,11 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
 
   readonly [Symbol.dispose]: () => void
 
+  namespace: string
+  popupChannelName: string
+  popupStatePrefix: string
+  syncChannel: TypedBroadcastChannel<SyncChannelMessage>
+
   constructor({
     clientMetadata = atprotoLoopbackClientMetadata(
       buildLoopbackClientId(window.location),
@@ -119,7 +117,9 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
       throw new TypeError(`Invalid response mode: ${responseMode}`)
     }
 
-    const database = new BrowserOAuthDatabase()
+    const database = new BrowserOAuthDatabase({
+      name: options.namespace,
+    })
 
     super({
       ...options,
@@ -142,6 +142,13 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
         database.getProtectedResourceMetadataCache(),
     })
 
+    this.namespace = options.namespace ?? `@@atproto/oauth-client-browser`
+    this.popupChannelName = `${this.namespace}(popup-channel)`
+    this.popupStatePrefix = `${this.namespace}(popup-state):`
+    this.syncChannel = new BroadcastChannel(
+      `${this.namespace}(synchronization-channel)`,
+    )
+
     // TODO: replace with AsyncDisposableStack once they are standardized
     const ac = new AbortController()
     const { signal } = ac
@@ -154,8 +161,8 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
     // Keep track of the current session
 
     this.addEventListener('deleted', ({ detail: { sub } }) => {
-      if (localStorage.getItem(`${NAMESPACE}(sub)`) === sub) {
-        localStorage.removeItem(`${NAMESPACE}(sub)`)
+      if (localStorage.getItem(`${this.namespace}(sub)`) === sub) {
+        localStorage.removeItem(`${this.namespace}(sub)`)
       }
     })
 
@@ -164,11 +171,11 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
     for (const type of ['deleted', 'updated'] as const) {
       this.sessionGetter.addEventListener(type, ({ detail }) => {
         // Notify other tabs when a session is deleted or updated
-        syncChannel.postMessage([type, detail] as SyncChannelMessage)
+        this.syncChannel.postMessage([type, detail] as SyncChannelMessage)
       })
     }
 
-    syncChannel.addEventListener(
+    this.syncChannel.addEventListener(
       'message',
       (event) => {
         if (event.source !== window) {
@@ -187,17 +194,17 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
 
     const signInResult = await this.signInCallback()
     if (signInResult) {
-      localStorage.setItem(`${NAMESPACE}(sub)`, signInResult.session.sub)
+      localStorage.setItem(`${this.namespace}(sub)`, signInResult.session.sub)
       return signInResult
     }
 
-    const sub = localStorage.getItem(`${NAMESPACE}(sub)`)
+    const sub = localStorage.getItem(`${this.namespace}(sub)`)
     if (sub) {
       try {
         const session = await this.restore(sub, refresh)
         return { session }
       } catch (err) {
-        localStorage.removeItem(`${NAMESPACE}(sub)`)
+        localStorage.removeItem(`${this.namespace}(sub)`)
         throw err
       }
     }
@@ -205,12 +212,12 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
 
   async restore(sub: string, refresh?: boolean): Promise<OAuthSession> {
     const session = await super.restore(sub, refresh)
-    localStorage.setItem(`${NAMESPACE}(sub)`, session.sub)
+    localStorage.setItem(`${this.namespace}(sub)`, session.sub)
     return session
   }
 
   async revoke(sub: string) {
-    localStorage.removeItem(`${NAMESPACE}(sub)`)
+    localStorage.removeItem(`${this.namespace}(sub)`)
     return super.revoke(sub)
   }
 
@@ -267,7 +274,7 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
 
     const url = await this.authorize(input, {
       ...options,
-      state: `${POPUP_STATE_PREFIX}${stateKey}`,
+      state: `${this.popupStatePrefix}${stateKey}`,
       display: options?.display ?? 'popup',
     })
 
@@ -282,7 +289,7 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
     popup?.focus()
 
     return new Promise<OAuthSession>((resolve, reject) => {
-      const popupChannel = new BroadcastChannel(POPUP_CHANNEL_NAME)
+      const popupChannel = new BroadcastChannel(this.popupChannelName)
 
       const cleanup = () => {
         clearTimeout(timeout)
@@ -372,7 +379,7 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
 
     // Utility function to send the result of the popup to the parent window
     const sendPopupResult = (message: PopupChannelResultData) => {
-      const popupChannel = new BroadcastChannel(POPUP_CHANNEL_NAME)
+      const popupChannel = new BroadcastChannel(this.popupChannelName)
 
       return new Promise<boolean>((resolve) => {
         const cleanup = (result: boolean) => {
@@ -395,9 +402,9 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
 
     return this.callback(params)
       .then(async (result) => {
-        if (result.state?.startsWith(POPUP_STATE_PREFIX)) {
+        if (result.state?.startsWith(this.popupStatePrefix)) {
           const receivedByParent = await sendPopupResult({
-            key: result.state.slice(POPUP_STATE_PREFIX.length),
+            key: result.state.slice(this.popupStatePrefix.length),
             result: {
               status: 'fulfilled',
               value: result.session.sub,
@@ -415,10 +422,10 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
       .catch(async (err) => {
         if (
           err instanceof OAuthCallbackError &&
-          err.state?.startsWith(POPUP_STATE_PREFIX)
+          err.state?.startsWith(this.popupStatePrefix)
         ) {
           await sendPopupResult({
-            key: err.state.slice(POPUP_STATE_PREFIX.length),
+            key: err.state.slice(this.popupStatePrefix.length),
             result: {
               status: 'rejected',
               reason: {
