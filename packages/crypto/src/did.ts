@@ -1,5 +1,10 @@
 import * as uint8arrays from 'uint8arrays'
-import { BASE58_MULTIBASE_PREFIX, DID_KEY_PREFIX } from './const'
+import {
+  BASE58_MULTIBASE_PREFIX,
+  DID_KEY_PREFIX,
+  P256_JWT_ALG,
+  SECP256K1_JWT_ALG,
+} from './const'
 import { plugins } from './plugins'
 import { extractMultikey, extractPrefixedBytes, hasPrefix } from './utils'
 
