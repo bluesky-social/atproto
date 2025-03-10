@@ -1,5 +1,11 @@
 # @atproto/lex-cli
 
+## 0.7.0
+
+### Minor Changes
+
+- [#3282](https://github.com/bluesky-social/atproto/pull/3282) [`c501715b0`](https://github.com/bluesky-social/atproto/commit/c501715b0dbe6daad962e1df80986521d00f65aa) Thanks [@tcyrus](https://github.com/tcyrus)! - Fix type-only imports in codegen
+
 ## 0.6.2
 
 ### Patch Changes
