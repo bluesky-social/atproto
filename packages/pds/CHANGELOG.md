@@ -1,5 +1,15 @@
 # @atproto/pds
 
+## 0.4.107
+
+### Patch Changes
+
+- [#3624](https://github.com/bluesky-social/atproto/pull/3624) [`0ae7f416e`](https://github.com/bluesky-social/atproto/commit/0ae7f416e8055fe4d05b283449e44457161f6a93) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Emit "sync" event on account creation through OAuth
+
+- Updated dependencies [[`9e3eace8f`](https://github.com/bluesky-social/atproto/commit/9e3eace8f9c22141e6da80b7696cd3b3e7c38779), [`5ada66ceb`](https://github.com/bluesky-social/atproto/commit/5ada66ceb9d5b2c64f112bb62da0edc421c765bf)]:
+  - @atproto/oauth-provider@0.5.2
+  - @atproto/api@0.14.9
+
 ## 0.4.106
 
 ### Patch Changes

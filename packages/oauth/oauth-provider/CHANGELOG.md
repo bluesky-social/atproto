@@ -1,5 +1,13 @@
 # @atproto/oauth-provider
 
+## 0.5.2
+
+### Patch Changes
+
+- [#3622](https://github.com/bluesky-social/atproto/pull/3622) [`9e3eace8f`](https://github.com/bluesky-social/atproto/commit/9e3eace8f9c22141e6da80b7696cd3b3e7c38779) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Properly validate handle syntax during sign-up
+
+- [#3621](https://github.com/bluesky-social/atproto/pull/3621) [`5ada66ceb`](https://github.com/bluesky-social/atproto/commit/5ada66ceb9d5b2c64f112bb62da0edc421c765bf) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow invite codes in any format
+
 ## 0.5.1
 
 ### Patch Changes
