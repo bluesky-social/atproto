@@ -22,11 +22,13 @@ export function InputCheckbox({
   id,
   ref,
   disabled,
+  title,
+  'aria-label': ariaLabel = title,
   'aria-labelledby': ariaLabelledBy,
   ...props
 }: InputCheckboxProps) {
   const htmlFor = useRandomString('input-checkbox-')
-  const containerRef = useRef<HTMLDivElement>(null)
+  const labelRef = useRef<HTMLLabelElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const ctx = useContext(FieldsetContext)
 
@@ -34,12 +36,13 @@ export function InputCheckbox({
 
   return (
     <InputContainer
-      ref={containerRef}
       className={clsx('cursor-pointer', className)}
       icon={
         <input
           {...props}
           disabled={disabled ?? ctx.disabled}
+          title={title}
+          aria-label={ariaLabel}
           aria-labelledby={
             children
               ? // Prefer the local "<label>" element (through "htmlFor") over the wrapping "<fieldset>" to describe the checkbox.
@@ -53,15 +56,17 @@ export function InputCheckbox({
         />
       }
       tabIndex={-1}
-      onClick={(event) => {
-        if (event.target === containerRef.current && !event.defaultPrevented) {
-          inputRef.current?.click()
-          inputRef.current?.focus()
-        }
+      onClick={({ target }) => {
+        // Native behavior of clicking the label should toggle the checkbox.
+        if (target === labelRef.current) return
+        if (target === inputRef.current) return
+
+        inputRef.current?.click()
       }}
     >
       {children && (
         <label
+          ref={labelRef}
           htmlFor={inputId}
           className="block w-full leading-[1.6] select-none cursor-pointer"
         >

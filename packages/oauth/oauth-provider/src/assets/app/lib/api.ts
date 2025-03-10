@@ -51,7 +51,7 @@ export type SessionResponse = {
 export class Api extends JsonClient<{
   '/verify-handle-availability': {
     input: VerifyHandleAvailabilityData
-    output: void
+    output: { available: true }
   }
   '/sign-up': {
     input: SignUpData
@@ -63,11 +63,11 @@ export class Api extends JsonClient<{
   }
   '/reset-password-request': {
     input: InitiatePasswordResetData
-    output: void
+    output: { success: true }
   }
   '/reset-password-confirm': {
     input: ConfirmResetPasswordData
-    output: void
+    output: { success: true }
   }
 }> {
   constructor(csrfToken: string) {
@@ -95,6 +95,9 @@ export class Api extends JsonClient<{
     }
     if (InvalidCredentialsError.is(json)) {
       return new InvalidCredentialsError(json)
+    }
+    if (InvalidInviteCodeError.is(json)) {
+      return new InvalidInviteCodeError(json)
     }
     if (HandleUnavailableError.is(json)) {
       return new HandleUnavailableError(json)
@@ -147,6 +150,25 @@ export class InvalidRequestError<
 
   static is(json: Json): json is InvalidRequestPayload {
     return super.is(json) && json.error === 'invalid_request'
+  }
+}
+
+export type InvalidInviteCodePayload = InvalidRequestPayload & {
+  error_description: `This invite code is invalid.${string}`
+}
+export class InvalidInviteCodeError<
+  P extends InvalidInviteCodePayload = InvalidInviteCodePayload,
+> extends InvalidRequestError<P> {
+  constructor(payload: P) {
+    super(payload)
+  }
+
+  static is(json: unknown): json is InvalidInviteCodePayload {
+    return (
+      super.is(json) &&
+      json.error_description != null &&
+      json.error_description.startsWith('This invite code is invalid.')
+    )
   }
 }
 

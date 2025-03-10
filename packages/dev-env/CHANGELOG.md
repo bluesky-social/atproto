@@ -1,5 +1,33 @@
 # @atproto/dev-env
 
+## 0.3.99
+
+### Patch Changes
+
+- [#3587](https://github.com/bluesky-social/atproto/pull/3587) [`18fbfa000`](https://github.com/bluesky-social/atproto/commit/18fbfa00057dda9ef4eba77d8b4e87994893c952) Thanks [@foysalit](https://github.com/foysalit)! - Add searchable handle and displayName to ozone team members
+
+- Updated dependencies [[`b20907a70`](https://github.com/bluesky-social/atproto/commit/b20907a7056970ab627e6c661882cb16491801e2), [`d96b03956`](https://github.com/bluesky-social/atproto/commit/d96b03956d5c26c238f586c6bdf257c080f12746), [`18fbfa000`](https://github.com/bluesky-social/atproto/commit/18fbfa00057dda9ef4eba77d8b4e87994893c952), [`eab9c003f`](https://github.com/bluesky-social/atproto/commit/eab9c003f838d43f0135ded9d3ede3f449997597)]:
+  - @atproto/sync@0.1.17
+  - @atproto/ozone@0.1.88
+  - @atproto/api@0.14.9
+  - @atproto/pds@0.4.106
+  - @atproto/bsky@0.0.126
+
+## 0.3.98
+
+### Patch Changes
+
+- Updated dependencies [[`38320191e`](https://github.com/bluesky-social/atproto/commit/38320191e559f8b928c6e951a9b4a6207240bfc1), [`6bcbb6d8c`](https://github.com/bluesky-social/atproto/commit/6bcbb6d8cd3696280935ff7892d8e191fd21fa49), [`850e39843`](https://github.com/bluesky-social/atproto/commit/850e39843cb0ec9ea716675f7568c0c601f45e29), [`dc6e4ecb0`](https://github.com/bluesky-social/atproto/commit/dc6e4ecb0e09bbf4bc7a79c6ac43fb6da4166200), [`850e39843`](https://github.com/bluesky-social/atproto/commit/850e39843cb0ec9ea716675f7568c0c601f45e29)]:
+  - @atproto/api@0.14.8
+  - @atproto/pds@0.4.105
+  - @atproto/syntax@0.3.4
+  - @atproto/bsky@0.0.125
+  - @atproto/ozone@0.1.87
+  - @atproto/bsync@0.0.15
+  - @atproto/lexicon@0.4.8
+  - @atproto/sync@0.1.16
+  - @atproto/xrpc-server@0.7.12
+
 ## 0.3.97
 
 ### Patch Changes

@@ -120,7 +120,11 @@ export class AppContext {
     )
 
     const communicationTemplateService = CommunicationTemplateService.creator()
-    const teamService = TeamService.creator()
+    const teamService = TeamService.creator(
+      appviewAgent,
+      cfg.appview.did,
+      createAuthHeaders,
+    )
     const setService = SetService.creator()
     const settingService = SettingService.creator()
 

@@ -234,6 +234,28 @@ describe('repo subscribe repos', () => {
     return readFromGenerator(gen, isDone, waitFor)
   }
 
+  it('emits sync event on account creation, matching temporary commit event.', async () => {
+    const ws = new WebSocket(
+      `ws://${serverHost}/xrpc/com.atproto.sync.subscribeRepos?cursor=${-1}`,
+    )
+
+    const gen = byFrame(ws)
+    const evts = await readTillCaughtUp(gen)
+    ws.terminate()
+
+    const syncEvts = getSyncEvts(evts)
+    const commitEvts = getCommitEvents(evts).slice(0, 4)
+    expect(syncEvts.length).toBe(4)
+
+    let i = 0
+    for (const did of [alice, bob, carol, dan]) {
+      const syncEvt = syncEvts[i]
+      const commitEvt = commitEvts[i]
+      await verifySyncEvent(syncEvt, did, commitEvt.commit, commitEvt.rev)
+      i++
+    }
+  })
+
   it('sync backfilled events', async () => {
     const ws = new WebSocket(
       `ws://${serverHost}/xrpc/com.atproto.sync.subscribeRepos?cursor=${-1}`,

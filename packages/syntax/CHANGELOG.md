@@ -1,5 +1,11 @@
 # @atproto/syntax
 
+## 0.3.4
+
+### Patch Changes
+
+- [#2945](https://github.com/bluesky-social/atproto/pull/2945) [`850e39843`](https://github.com/bluesky-social/atproto/commit/850e39843cb0ec9ea716675f7568c0c601f45e29) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Deprecate unused classes
+
 ## 0.3.3
 
 ### Patch Changes

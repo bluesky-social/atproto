@@ -2,4 +2,4 @@
 "@atproto/oauth-provider": patch
 ---
 
-Add support for password reset
+Allow invite codes in any format

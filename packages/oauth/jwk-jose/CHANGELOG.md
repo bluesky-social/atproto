@@ -1,5 +1,12 @@
 # @atproto/jwk-jose
 
+## 0.1.5
+
+### Patch Changes
+
+- Updated dependencies [[`850e39843`](https://github.com/bluesky-social/atproto/commit/850e39843cb0ec9ea716675f7568c0c601f45e29)]:
+  - @atproto/jwk@0.1.4
+
 ## 0.1.4
 
 ### Patch Changes

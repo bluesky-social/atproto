@@ -4,9 +4,9 @@ import {
   SourceFile,
   VariableDeclarationKind,
 } from 'ts-morph'
-import { LexiconDoc, Lexicons } from '@atproto/lexicon'
+import { type LexiconDoc, Lexicons } from '@atproto/lexicon'
 import { NSID } from '@atproto/syntax'
-import { GeneratedAPI } from '../types'
+import { type GeneratedAPI } from '../types'
 import { gen, lexiconsTs, utilTs } from './common'
 import {
   genCommonImports,
@@ -18,7 +18,7 @@ import {
   genXrpcParams,
 } from './lex-gen'
 import {
-  DefTreeNode,
+  type DefTreeNode,
   lexiconsToDefTree,
   schemasToNsidTokens,
   toCamelCase,
@@ -68,9 +68,10 @@ const indexTs = (
         {
           name: 'Options',
           alias: 'XrpcOptions',
+          isTypeOnly: true,
         },
-        { name: 'AuthVerifier' },
-        { name: 'StreamAuthVerifier' },
+        { name: 'AuthVerifier', isTypeOnly: true },
+        { name: 'StreamAuthVerifier', isTypeOnly: true },
       ],
     })
     //= import {schemas} from './lexicons.js'

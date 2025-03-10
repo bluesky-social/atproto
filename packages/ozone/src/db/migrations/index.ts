@@ -21,3 +21,4 @@ export * as _20241220T144630860Z from './20241220T144630860Z-stats-materialized-
 export * as _20250204T003647759Z from './20250204T003647759Z-add-subject-priority-score'
 export * as _20250211T003647759Z from './20250211T003647759Z-add-reporter-stats-index'
 export * as _20250211T132135150Z from './20250211T132135150Z-moderation-event-message-partial-idx'
+export * as _20250221T132135150Z from './20250221T132135150Z-member-details'
