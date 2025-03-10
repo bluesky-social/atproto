@@ -1,7 +1,7 @@
 import { isEmailValid } from '@hapi/address'
 import { isDisposableEmail } from 'disposable-email-domains-js'
 import { z } from 'zod'
-import { ensureValidHandle } from '@atproto/syntax'
+import { ensureValidHandle, normalizeHandle } from '@atproto/syntax'
 import { ClientId } from '../client/client-id.js'
 import { DeviceId } from '../device/device-id.js'
 import { localeSchema } from '../lib/locale.js'
@@ -17,7 +17,9 @@ import { Account } from './account.js'
 // @NOTE Change the length here to force stronger passwords (through a reset)
 export const oldPasswordSchema = z.string().min(1)
 export const newPasswordSchema = z.string().min(8)
-export const tokenSchema = z.string().regex(/^[A-Z2-7]{5}-[A-Z2-7]{5}$/)
+export const tokenSchema = z
+  .string()
+  .regex(/^[A-Z2-7]{5}-[A-Z2-7]{5}$/, 'Invalid token format')
 export const handleSchema = z
   .string()
   // @NOTE: We only check against validity towards ATProto's syntax. Additional
@@ -32,6 +34,7 @@ export const handleSchema = z
       })
     }
   })
+  .transform(normalizeHandle)
 export const emailSchema = z
   .string()
   .email()
@@ -44,13 +47,14 @@ export const emailSchema = z
   .refine((email) => !isDisposableEmail(email), {
     message: 'Disposable email addresses are not allowed',
   })
+  .transform((value) => value.toLowerCase())
 
 export const authenticateAccountDataSchema = z
   .object({
     locale: localeSchema,
     username: z.string(),
     password: oldPasswordSchema,
-    emailOtp: z.string().optional(),
+    emailOtp: tokenSchema.optional(),
   })
   .strict()
 
