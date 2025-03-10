@@ -1,10 +1,15 @@
 import fs from 'node:fs/promises'
+import path from 'node:path'
 import * as ui8 from 'uint8arrays'
-import { SeedClient, TestNetworkNoAppView, basicSeed } from '@atproto/dev-env'
-import { AppContext, scripts } from '../dist'
 import AtpAgent from '@atproto/api'
-import { rmIfExists, renameIfExists } from '@atproto/common'
+import { renameIfExists, rmIfExists } from '@atproto/common'
+import { SeedClient, TestNetworkNoAppView, basicSeed } from '@atproto/dev-env'
 import { verifyRepoCar } from '@atproto/repo'
+import { AppContext, scripts } from '../dist'
+import {
+  RecoveryDb,
+  getAndMigrateRecoveryDb,
+} from '../src/scripts/sequencer-recovery/recovery-db'
 
 describe('recovery', () => {
   let network: TestNetworkNoAppView
@@ -14,6 +19,7 @@ describe('recovery', () => {
   let alice: string
   let bob: string
   let elli: string
+  let recoveryDb: RecoveryDb
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
@@ -26,6 +32,11 @@ describe('recovery', () => {
     alice = sc.dids.alice
     bob = sc.dids.bob
     await network.processAll()
+    const recoveryDbLoc = path.join(
+      path.dirname(network.pds.ctx.cfg.db.sequencerDbLoc),
+      'recovery.sqlite',
+    )
+    recoveryDb = await getAndMigrateRecoveryDb(recoveryDbLoc)
   })
 
   afterAll(async () => {
@@ -135,7 +146,11 @@ describe('recovery', () => {
     await restore([alice, bob, elli])
 
     // run recovery operation
-    await scripts['sequencer-recovery'](network.pds.ctx, ['0', '10', 'true'])
+    await scripts['sequencer-recovery']({ ...network.pds.ctx, recoveryDb }, [
+      '0',
+      '10',
+      'true',
+    ])
 
     // ensure alice's CAR is exactly the same as before the loss, including intermediate states based on tracked revs
     const startCarAfter = await getCar(alice, startRev)
