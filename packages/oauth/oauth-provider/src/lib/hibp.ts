@@ -31,22 +31,26 @@ export class HibpClient {
     const prefix = hash.slice(0, 5)
     const suffix = hash.slice(5)
 
-    const response = await this.fetch(`${HIBP_API_URL}/${prefix}`, {
-      headers: {
-        'Add-Padding': 'true', // https://haveibeenpwned.com/API/v3#PwnedPasswordsPadding
-        'User-Agent': 'atproto-oauth-provider',
-      },
-    }).then(pipe(fetchOkProcessor(), async (res) => res.text()))
+    try {
+      const response = await this.fetch(`${HIBP_API_URL}/${prefix}`, {
+        headers: {
+          'Add-Padding': 'true', // https://haveibeenpwned.com/API/v3#PwnedPasswordsPadding
+          'User-Agent': 'atproto-oauth-provider',
+        },
+      }).then(pipe(fetchOkProcessor(), async (res) => res.text()))
 
-    const lines = response.split('\n')
-    for (const line of lines) {
-      const [hashSuffix] = line.split(':')
+      const lines = response.split('\n')
+      for (const line of lines) {
+        const [hashSuffix] = line.split(':')
 
-      if (hashSuffix.trim() === suffix) {
-        return true
+        if (hashSuffix.trim() === suffix) {
+          return true
+        }
       }
-    }
 
-    return false
+      return false
+    } catch {
+      return false
+    }
   }
 }
