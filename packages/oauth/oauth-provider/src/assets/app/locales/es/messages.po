@@ -21,7 +21,7 @@ msgstr ""
 msgid "2FA Confirmation"
 msgstr ""
 
-#: src/assets/app/components/utils/error-message.tsx:27
+#: src/assets/app/components/utils/error-message.tsx:28
 msgid "A second authentication factor is required"
 msgstr ""
 
@@ -45,7 +45,7 @@ msgstr ""
 msgid "An application on your device"
 msgstr ""
 
-#: src/assets/app/components/utils/error-message.tsx:87
+#: src/assets/app/components/utils/error-message.tsx:99
 msgid "An unknown error occurred"
 msgstr ""
 
@@ -377,47 +377,51 @@ msgstr ""
 msgid "Terms of Service"
 msgstr ""
 
-#: src/assets/app/components/utils/error-message.tsx:52
+#: src/assets/app/components/utils/error-message.tsx:53
 msgid "That handle cannot be used"
 msgstr ""
 
-#: src/assets/app/components/utils/error-message.tsx:69
+#: src/assets/app/components/utils/error-message.tsx:81
 msgid "The data you submitted is invalid. Please check the form and try again."
 msgstr ""
 
-#: src/assets/app/components/utils/error-message.tsx:43
+#: src/assets/app/components/utils/error-message.tsx:44
 msgid "The domain name is not allowed"
 msgstr ""
 
-#: src/assets/app/components/utils/error-message.tsx:45
+#: src/assets/app/components/utils/error-message.tsx:46
 msgid "The handle contains inappropriate language"
 msgstr ""
 
-#: src/assets/app/components/utils/error-message.tsx:50
+#: src/assets/app/components/utils/error-message.tsx:51
 msgid "The handle is already in use"
 msgstr ""
 
-#: src/assets/app/components/utils/error-message.tsx:41
+#: src/assets/app/components/utils/error-message.tsx:42
 msgid "The handle is invalid"
 msgstr ""
 
-#: src/assets/app/components/utils/error-message.tsx:35
+#: src/assets/app/components/utils/error-message.tsx:36
 msgid "The invite code is not valid"
 msgstr ""
 
-#: src/assets/app/components/utils/error-message.tsx:77
+#: src/assets/app/components/utils/error-message.tsx:89
 msgid "This authorization request has been denied. Please try again."
 msgstr ""
 
-#: src/assets/app/components/utils/error-message.tsx:57
+#: src/assets/app/components/utils/error-message.tsx:58
 msgid "This email is already used"
 msgstr ""
 
-#: src/assets/app/components/utils/error-message.tsx:48
+#: src/assets/app/components/utils/error-message.tsx:49
 msgid "This handle is reserved"
 msgstr ""
 
-#: src/assets/app/components/utils/error-message.tsx:64
+#: src/assets/app/components/utils/error-message.tsx:70
+msgid "This password has appeared in one or more data breaches. For your security, please choose a different password that has not been compromised. Consider using a password manager to generate and store strong, unique passwords."
+msgstr ""
+
+#: src/assets/app/components/utils/error-message.tsx:65
 msgid "This sign-in session has expired"
 msgstr ""
 
@@ -425,7 +429,7 @@ msgstr ""
 msgid "Type your desired username"
 msgstr ""
 
-#: src/assets/app/components/utils/error-message.tsx:84
+#: src/assets/app/components/utils/error-message.tsx:96
 msgid "Unexpected server response"
 msgstr ""
 
@@ -457,7 +461,7 @@ msgstr ""
 msgid "Weak"
 msgstr ""
 
-#: src/assets/app/components/utils/error-message.tsx:31
+#: src/assets/app/components/utils/error-message.tsx:32
 msgid "Wrong identifier or password"
 msgstr ""
 
