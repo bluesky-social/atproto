@@ -136,6 +136,9 @@ export const readEnv = (): ServerEnvironment => {
     proxyMaxResponseSize: envInt('PDS_PROXY_MAX_RESPONSE_SIZE'),
     proxyMaxRetries: envInt('PDS_PROXY_MAX_RETRIES'),
     proxyPreferCompressed: envBool('PDS_PROXY_PREFER_COMPRESSED'),
+
+    // HIBP configuration
+    hibpEnabled: envBool('PDS_HIBP_ENABLED'),
   }
 }
 
@@ -269,4 +272,7 @@ export type ServerEnvironment = {
   proxyMaxResponseSize?: number
   proxyMaxRetries?: number
   proxyPreferCompressed?: boolean
+
+  // HIBP configuration
+  hibpEnabled?: boolean
 }

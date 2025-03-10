@@ -1,8 +1,10 @@
 import { z } from 'zod'
 import { hcaptchaConfigSchema } from '../lib/hcaptcha.js'
+import { hibpConfigSchema } from '../lib/hibp.js'
 import { isLinkRel } from '../lib/html/build-document.js'
 import { multiLangStringSchema } from '../lib/locale.js'
 export { type HcaptchaConfig, hcaptchaConfigSchema } from '../lib/hcaptcha.js'
+export { type HibpConfig, hibpConfigSchema } from '../lib/hibp.js'
 
 // Matches colors defined in tailwind.config.js
 export const colorNames = ['brand', 'error', 'warning', 'success'] as const
@@ -82,6 +84,10 @@ export const customizationSchema = z.object({
    * Enables hCaptcha during sign-up.
    */
   hcaptcha: hcaptchaConfigSchema.optional(),
+  /**
+   * Enables Have I Been Pwned password breach check during sign-up.
+   */
+  hibp: hibpConfigSchema.optional(),
 })
 export type CustomizationInput = z.input<typeof customizationSchema>
 export type Customization = z.infer<typeof customizationSchema>
@@ -91,6 +97,7 @@ export type CustomizationData = {
   hcaptchaSiteKey?: string
   inviteCodeRequired?: boolean
   availableUserDomains?: string[]
+  hibpEnabled?: boolean
 
   // Aesthetic customization
   name?: string
@@ -103,6 +110,7 @@ export function buildCustomizationData({
   availableUserDomains,
   inviteCodeRequired,
   hcaptcha,
+  hibp,
 }: Customization): CustomizationData {
   // @NOTE the front end does not need colors here as they will be injected as
   // CSS variables.
@@ -112,6 +120,7 @@ export function buildCustomizationData({
     availableUserDomains,
     inviteCodeRequired,
     hcaptchaSiteKey: hcaptcha?.siteKey,
+    hibpEnabled: hibp?.enabled,
     name: branding?.name,
     logo: branding?.logo,
     links: branding?.links,

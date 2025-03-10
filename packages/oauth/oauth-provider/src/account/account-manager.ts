@@ -6,6 +6,7 @@ import { Client } from '../client/client.js'
 import { DeviceId } from '../device/device-id.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { HCaptchaClient, HcaptchaVerifyResult } from '../lib/hcaptcha.js'
+import { HibpClient } from '../lib/hibp.js'
 import { callAsync } from '../lib/util/function.js'
 import { constantTime } from '../lib/util/time.js'
 import { OAuthHooks, RequestMetadata } from '../oauth-hooks.js'
@@ -28,6 +29,7 @@ const BRUTE_FORCE_MITIGATION_DELAY = 300
 export class AccountManager {
   protected readonly inviteCodeRequired: boolean
   protected readonly hcaptchaClient?: HCaptchaClient
+  protected readonly hibpClient?: HibpClient
 
   constructor(
     issuer: OAuthIssuerIdentifier,
@@ -39,6 +41,7 @@ export class AccountManager {
     this.hcaptchaClient = customization.hcaptcha
       ? new HCaptchaClient(new URL(issuer).hostname, customization.hcaptcha)
       : undefined
+    this.hibpClient = customization.hibp ? new HibpClient() : undefined
   }
 
   protected async verifySignupData(
@@ -78,6 +81,13 @@ export class AccountManager {
       }
 
       hcaptchaResult = result
+    }
+
+    if (this.hibpClient) {
+      const isBreached = await this.hibpClient.isPasswordBreached(data.password)
+      if (isBreached) {
+        throw new InvalidRequestError('Compromised password')
+      }
     }
 
     await callAsync(this.hooks.onSignupAttempt, {
