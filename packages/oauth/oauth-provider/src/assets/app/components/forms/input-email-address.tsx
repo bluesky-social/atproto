@@ -26,6 +26,7 @@ export function InputEmailAddress({
   spellCheck = 'false',
   value,
   defaultValue = value,
+  title,
   ...props
 }: InputEmailAddressProps) {
   const { t } = useLingui()
@@ -46,10 +47,8 @@ export function InputEmailAddress({
 
   return (
     <InputText
-      aria-label={t`Email`}
-      placeholder={t`Email`}
-      title={t`Email`}
       {...props}
+      title={title ?? t`Email address`}
       type="email"
       autoCapitalize={autoCapitalize}
       autoCorrect={autoCorrect}

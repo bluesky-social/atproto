@@ -17,11 +17,11 @@ msgstr ""
 msgid "<0/> is asking for permission to access your account (<1/>)."
 msgstr "<0/> is asking for permission to access your account (<1/>)."
 
-#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:221
+#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:219
 msgid "2FA Confirmation"
 msgstr "2FA Confirmation"
 
-#: src/assets/app/components/utils/error-message.tsx:47
+#: src/assets/app/components/utils/error-message.tsx:27
 msgid "A second authentication factor is required"
 msgstr "A second authentication factor is required"
 
@@ -45,7 +45,7 @@ msgstr "Already have a code?"
 msgid "An application on your device"
 msgstr "An application on your device"
 
-#: src/assets/app/components/utils/error-message.tsx:61
+#: src/assets/app/components/utils/error-message.tsx:87
 msgid "An unknown error occurred"
 msgstr "An unknown error occurred"
 
@@ -78,8 +78,6 @@ msgstr "Between {minLength} and {maxLength} characters"
 msgid "By clicking <0>Authorize</0>, you allow this application to perform the following actions in accordance with their <1>terms of service</1> and <2>privacy policy</2>:"
 msgstr "By clicking <0>Authorize</0>, you allow this application to perform the following actions in accordance with their <1>terms of service</1> and <2>privacy policy</2>:"
 
-#. placeholder {0}: tosLink ? ( <LinkAnchor className="text-brand underline" link={tosLink}> <Trans>Terms of Service</Trans> </LinkAnchor> ) : ( <Trans>Terms of Service</Trans> )
-#. placeholder {1}: ppLink ? ( <LinkAnchor className="text-brand underline" link={ppLink}> <Trans>Privacy Policy</Trans> </LinkAnchor> ) : ( <Trans>Privacy Policy</Trans> )
 #: src/assets/app/views/authorize/sign-up/sign-up-disclaimer.tsx:30
 msgid "By creating an account you agree to the {0} and the {1} of this service."
 msgstr "By creating an account you agree to the {0} and the {1} of this service."
@@ -89,8 +87,7 @@ msgstr "By creating an account you agree to the {0} and the {1} of this service.
 msgid "Cancel"
 msgstr "Cancel"
 
-#. placeholder {0}: secondFactor.hint
-#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:234
+#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:232
 msgid "Check your {0} email for a login code and enter it here."
 msgstr "Check your {0} email for a login code and enter it here."
 
@@ -98,7 +95,7 @@ msgstr "Check your {0} email for a login code and enter it here."
 msgid "Choose a username"
 msgstr "Choose a username"
 
-#: src/assets/app/components/utils/error-card.tsx:78
+#: src/assets/app/components/utils/error-card.tsx:76
 msgid "Code"
 msgstr "Code"
 
@@ -110,7 +107,7 @@ msgstr "Confirm"
 msgid "Confirm your password to continue"
 msgstr "Confirm your password to continue"
 
-#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:225
+#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:223
 msgid "Confirmation code"
 msgstr "Confirmation code"
 
@@ -126,19 +123,17 @@ msgstr "Create Account"
 msgid "Deny access"
 msgstr "Deny access"
 
-#: src/assets/app/components/utils/error-card.tsx:85
+#: src/assets/app/components/utils/error-card.tsx:83
 msgid "Description"
 msgstr "Description"
 
-#: src/assets/app/views/authorize/sign-up/sign-up-account-form.tsx:112
-#: src/assets/app/components/forms/input-email-address.tsx:49
-#: src/assets/app/components/forms/input-email-address.tsx:50
-#: src/assets/app/components/forms/input-email-address.tsx:51
+#: src/assets/app/views/authorize/sign-up/sign-up-account-form.tsx:114
 msgid "Email"
 msgstr "Email"
 
 #: src/assets/app/views/authorize/reset-password/reset-password-request-form.tsx:55
 #: src/assets/app/views/authorize/reset-password/reset-password-request-form.tsx:60
+#: src/assets/app/components/forms/input-email-address.tsx:51
 msgid "Email address"
 msgstr "Email address"
 
@@ -171,9 +166,13 @@ msgstr "Enter your password"
 msgid "Enter your username and password"
 msgstr "Enter your username and password"
 
-#: src/assets/app/views/error/error-view.tsx:28
+#: src/assets/app/views/error/error-view.tsx:27
 msgid "Error"
 msgstr "Error"
+
+#: src/assets/app/views/authorize/sign-up/sign-up-account-form.tsx:102
+msgid "example-com-xxxxx-xxxxx"
+msgstr "example-com-xxxxx-xxxxx"
 
 #: src/assets/app/components/utils/password-strength-label.tsx:25
 msgid "Extra"
@@ -183,11 +182,10 @@ msgstr "Extra"
 msgid "Forgot Password"
 msgstr "Forgot Password"
 
-#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:180
+#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:178
 msgid "Forgot?"
 msgstr "Forgot?"
 
-#. placeholder {0}: account.preferred_username || account.email || account.sub
 #: src/assets/app/views/authorize/accept/accept-view.tsx:40
 msgid "Grant access to your <0>{0}</0> account"
 msgstr "Grant access to your <0>{0}</0> account"
@@ -212,13 +210,12 @@ msgstr "Identifier"
 msgid "Interface language selector"
 msgstr "Interface language selector"
 
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:277
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:275
 msgid "Invalid"
 msgstr "Invalid"
 
-#: src/assets/app/views/authorize/sign-up/sign-up-account-form.tsx:95
-#: src/assets/app/views/authorize/sign-up/sign-up-account-form.tsx:99
-#: src/assets/app/views/authorize/sign-up/sign-up-account-form.tsx:100
+#: src/assets/app/views/authorize/sign-up/sign-up-account-form.tsx:96
+#: src/assets/app/views/authorize/sign-up/sign-up-account-form.tsx:101
 msgid "Invite code"
 msgstr "Invite code"
 
@@ -272,9 +269,7 @@ msgstr "Okay"
 msgid "Only letters, numbers, and hyphens"
 msgstr "Only letters, numbers, and hyphens"
 
-#: src/assets/app/views/authorize/sign-up/sign-up-account-form.tsx:126
-#: src/assets/app/components/forms/input-password.tsx:51
-#: src/assets/app/components/forms/input-password.tsx:52
+#: src/assets/app/views/authorize/sign-up/sign-up-account-form.tsx:128
 #: src/assets/app/components/forms/input-password.tsx:53
 msgid "Password"
 msgstr "Password"
@@ -299,7 +294,7 @@ msgstr "Password updated!"
 msgid "Password with at least {MIN_PASSWORD_LENGTH} characters"
 msgstr "Password with at least {MIN_PASSWORD_LENGTH} characters"
 
-#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:194
+#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:192
 msgid "Please verify the domain name of the website before entering your password. Never enter your password on a domain you do not trust."
 msgstr "Please verify the domain name of the website before entering your password. Never enter your password on a domain you do not trust."
 
@@ -309,8 +304,8 @@ msgstr "Please verify the domain name of the website before entering your passwo
 msgid "Privacy Policy"
 msgstr "Privacy Policy"
 
-#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:208
-#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:213
+#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:206
+#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:211
 msgid "Remember this account on this device"
 msgstr "Remember this account on this device"
 
@@ -326,11 +321,11 @@ msgstr "Reset code"
 msgid "Reset Password"
 msgstr "Reset Password"
 
-#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:178
+#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:176
 msgid "Reset your password"
 msgstr "Reset your password"
 
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:198
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:196
 msgid "Select domain"
 msgstr "Select domain"
 
@@ -338,7 +333,7 @@ msgstr "Select domain"
 msgid "Select from an existing account"
 msgstr "Select from an existing account"
 
-#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:204
+#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:202
 msgid "Session"
 msgstr "Session"
 
@@ -348,7 +343,6 @@ msgstr "Session"
 msgid "Sign in"
 msgstr "Sign in"
 
-#. placeholder {0}: account.name
 #: src/assets/app/views/authorize/sign-in/sign-in-picker.tsx:75
 msgid "Sign in as {0}"
 msgstr "Sign in as {0}"
@@ -383,45 +377,55 @@ msgstr "Support"
 msgid "Terms of Service"
 msgstr "Terms of Service"
 
-#: src/assets/app/components/utils/error-message.tsx:42
+#: src/assets/app/components/utils/error-message.tsx:52
 msgid "That handle cannot be used"
 msgstr "That handle cannot be used"
 
-#: src/assets/app/components/utils/error-message.tsx:33
+#: src/assets/app/components/utils/error-message.tsx:69
+msgid "The data you submitted is invalid. Please check the form and try again."
+msgstr "The data you submitted is invalid. Please check the form and try again."
+
+#: src/assets/app/components/utils/error-message.tsx:43
 msgid "The domain name is not allowed"
 msgstr "The domain name is not allowed"
 
-#: src/assets/app/components/utils/error-message.tsx:35
+#: src/assets/app/components/utils/error-message.tsx:45
 msgid "The handle contains inappropriate language"
 msgstr "The handle contains inappropriate language"
 
-#: src/assets/app/components/utils/error-message.tsx:40
+#: src/assets/app/components/utils/error-message.tsx:50
 msgid "The handle is already in use"
 msgstr "The handle is already in use"
 
-#: src/assets/app/components/utils/error-message.tsx:31
+#: src/assets/app/components/utils/error-message.tsx:41
 msgid "The handle is invalid"
 msgstr "The handle is invalid"
 
-#: src/assets/app/components/utils/error-message.tsx:25
+#: src/assets/app/components/utils/error-message.tsx:35
+msgid "The invite code is not valid"
+msgstr "The invite code is not valid"
+
+#: src/assets/app/components/utils/error-message.tsx:77
+msgid "This authorization request has been denied. Please try again."
+msgstr "This authorization request has been denied. Please try again."
+
+#: src/assets/app/components/utils/error-message.tsx:57
 msgid "This email is already used"
 msgstr "This email is already used"
 
-#: src/assets/app/components/utils/error-message.tsx:38
+#: src/assets/app/components/utils/error-message.tsx:48
 msgid "This handle is reserved"
 msgstr "This handle is reserved"
 
-#: src/assets/app/components/utils/error-message.tsx:54
+#: src/assets/app/components/utils/error-message.tsx:64
 msgid "This sign-in session has expired"
 msgstr "This sign-in session has expired"
 
 #: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:166
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:167
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:168
 msgid "Type your desired username"
 msgstr "Type your desired username"
 
-#: src/assets/app/components/utils/error-message.tsx:58
+#: src/assets/app/components/utils/error-message.tsx:84
 msgid "Unexpected server response"
 msgstr "Unexpected server response"
 
@@ -430,23 +434,18 @@ msgid "Uniquely identify you"
 msgstr "Uniquely identify you"
 
 #: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:143
-#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:144
 msgid "Username or email address"
 msgstr "Username or email address"
 
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:272
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:270
 msgid "Valid"
 msgstr "Valid"
-
-#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:154
-msgid "Valid email address or username"
-msgstr "Valid email address or username"
 
 #: src/assets/app/views/authorize/sign-up/sign-up-view.tsx:135
 msgid "Verify you are human"
 msgstr "Verify you are human"
 
-#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:191
+#: src/assets/app/views/authorize/sign-in/sign-in-form.tsx:189
 msgid "Warning"
 msgstr "Warning"
 
@@ -458,7 +457,7 @@ msgstr "We're so excited to have you join us!"
 msgid "Weak"
 msgstr "Weak"
 
-#: src/assets/app/components/utils/error-message.tsx:21
+#: src/assets/app/components/utils/error-message.tsx:31
 msgid "Wrong identifier or password"
 msgstr "Wrong identifier or password"
 
@@ -466,7 +465,7 @@ msgstr "Wrong identifier or password"
 msgid "You are being redirected..."
 msgstr "You are being redirected..."
 
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:237
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:235
 msgid "You can change this username to any domain name you control after your account is set up."
 msgstr "You can change this username to any domain name you control after your account is set up."
 
@@ -482,8 +481,7 @@ msgstr "You will receive an email with a \"reset code\". Enter that code here th
 msgid "Your account"
 msgstr "Your account"
 
-#. placeholder {0}: segment.length ? ( <strong className="text-gray-800 dark:text-gray-200"> {preview} </strong> ) : ( <span aria-hidden className="bg-gray-300 dark:bg-slate-600 rounded-md p-2 w-24" /> )
-#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:219
+#: src/assets/app/views/authorize/sign-up/sign-up-handle-form.tsx:217
 msgid "Your full username will be: {0}"
 msgstr "Your full username will be: {0}"
 

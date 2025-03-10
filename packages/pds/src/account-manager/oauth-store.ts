@@ -13,6 +13,7 @@ import {
   DeviceStore,
   FoundRequestResult,
   HandleUnavailableError,
+  InvalidInviteCodeError,
   InvalidRequestError,
   NewTokenData,
   RefreshToken,
@@ -113,6 +114,16 @@ export class OAuthStore
     }
   }
 
+  private async verifyInviteCode(code: string) {
+    try {
+      await this.accountManager.ensureInviteIsAvailable(code)
+    } catch (err) {
+      const message =
+        err instanceof XrpcInvalidRequestError ? err.message : undefined
+      throw new InvalidInviteCodeError(message, err)
+    }
+  }
+
   // AccountStore
 
   async createAccount({
@@ -128,7 +139,7 @@ export class OAuthStore
     await Promise.all([
       this.verifyEmailAvailability(email),
       this.verifyHandleAvailability(handle),
-      !inviteCode || this.accountManager.ensureInviteIsAvailable(inviteCode),
+      !inviteCode || this.verifyInviteCode(inviteCode),
     ])
 
     // @TODO The code bellow should probably be refactored to be common with the
@@ -149,41 +160,52 @@ export class OAuthStore
 
     const { did, op } = plcCreate
 
-    await this.actorStore.create(did, signingKey)
     try {
-      const commit = await this.actorStore.transact(did, (actorTxn) =>
-        actorTxn.repo.createRepo([]),
-      )
-
-      await this.plcClient.sendOperation(did, op)
-
-      await this.accountManager.createAccount({
-        did,
-        handle,
-        email,
-        password,
-        inviteCode,
-        repoCid: commit.cid,
-        repoRev: commit.rev,
-      })
+      await this.actorStore.create(did, signingKey)
       try {
-        await this.sequencer.sequenceIdentityEvt(did, handle)
-        await this.sequencer.sequenceAccountEvt(did, AccountStatus.Active)
-        await this.sequencer.sequenceCommit(did, commit)
-        await this.sequencer.sequenceSyncEvt(did, syncEvtDataFromCommit(commit))
-        await this.accountManager.updateRepoRoot(did, commit.cid, commit.rev)
-        await this.actorStore.clearReservedKeypair(signingKeyDid, did)
+        const commit = await this.actorStore.transact(did, (actorTxn) =>
+          actorTxn.repo.createRepo([]),
+        )
 
-        const account = await this.accountManager.getAccount(did)
-        if (!account) throw new Error('Account not found')
+        await this.plcClient.sendOperation(did, op)
 
-        return await this.buildAccount(account)
+        await this.accountManager.createAccount({
+          did,
+          handle,
+          email,
+          password,
+          inviteCode,
+          repoCid: commit.cid,
+          repoRev: commit.rev,
+        })
+        try {
+          await this.sequencer.sequenceIdentityEvt(did, handle)
+          await this.sequencer.sequenceAccountEvt(did, AccountStatus.Active)
+          await this.sequencer.sequenceCommit(did, commit)
+          await this.sequencer.sequenceSyncEvt(
+            did,
+            syncEvtDataFromCommit(commit),
+          )
+          await this.accountManager.updateRepoRoot(did, commit.cid, commit.rev)
+          await this.actorStore.clearReservedKeypair(signingKeyDid, did)
+
+          const account = await this.accountManager.getAccount(did)
+          if (!account) throw new Error('Account not found')
+
+          return await this.buildAccount(account)
+        } catch (err) {
+          this.accountManager.deleteAccount(did)
+          throw err
+        }
       } catch (err) {
-        this.accountManager.deleteAccount(did)
+        await this.actorStore.destroy(did)
         throw err
       }
     } catch (err) {
-      await this.actorStore.destroy(did)
+      // XrpcError => OAuthError
+      if (err instanceof XrpcInvalidRequestError) {
+        throw new InvalidRequestError(err.message, err)
+      }
       throw err
     }
   }

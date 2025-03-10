@@ -48,6 +48,7 @@ export const emailSchema = z
     message: 'Disposable email addresses are not allowed',
   })
   .transform((value) => value.toLowerCase())
+export const inviteCodeSchema = z.string().min(1)
 
 export const authenticateAccountDataSchema = z
   .object({
@@ -68,7 +69,7 @@ export const createAccountDataSchema = z
     handle: handleSchema,
     email: emailSchema,
     password: z.intersection(oldPasswordSchema, newPasswordSchema),
-    inviteCode: tokenSchema.optional(),
+    inviteCode: inviteCodeSchema.optional(),
   })
   .strict()
 

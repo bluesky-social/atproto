@@ -25,6 +25,7 @@ export function InputPassword({
   value,
   defaultValue = value,
   ref,
+  title,
   dir = 'auto',
   autoCapitalize = 'none',
   autoCorrect = 'off',
@@ -48,10 +49,8 @@ export function InputPassword({
 
   return (
     <InputText
-      placeholder={t`Password`}
-      aria-label={t`Password`}
-      title={t`Password`}
       {...props}
+      title={title ?? t`Password`}
       ref={mergeRefs([ref, inputRef])}
       dir={dir}
       autoCapitalize={autoCapitalize}

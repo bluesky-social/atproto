@@ -1145,28 +1145,27 @@ export class OAuthProvider extends OAuthVerifier {
      * Wrap an OAuth endpoint in a middleware that will set the appropriate
      * response headers and format the response as JSON.
      */
-    const jsonHandler = <T, TReq extends Req, TRes extends Res, Json>(
-      buildJson: (this: T, req: TReq, res: TRes) => Awaitable<Json>,
-      status?: number,
+    const jsonHandler = <T, TReq extends Req, TRes extends Res, Payload>(
+      buildJson: (
+        this: T,
+        req: TReq,
+        res: TRes,
+      ) => Awaitable<{ payload: Payload; status?: number }>,
     ): Handler<T, TReq, TRes> =>
       async function (req, res) {
+        // https://www.rfc-editor.org/rfc/rfc6749.html#section-5.1
+        res.setHeader('Cache-Control', 'no-store')
+        res.setHeader('Pragma', 'no-cache')
+
+        // Ensure we can agree on a content encoding & type before starting to
+        // build the JSON response.
+        if (!negotiateContent(req, ['application/json'])) {
+          throw createHttpError(406, 'Unsupported media type')
+        }
+
         try {
-          // https://www.rfc-editor.org/rfc/rfc6749.html#section-5.1
-          res.setHeader('Cache-Control', 'no-store')
-          res.setHeader('Pragma', 'no-cache')
-
-          // Ensure we can agree on a content encoding & type before starting to
-          // build the JSON response.
-          if (!negotiateContent(req, ['application/json'])) {
-            throw createHttpError(406, 'Unsupported media type')
-          }
-
-          const result = await buildJson.call(this, req, res)
-          if (result !== undefined) {
-            writeJson(res, result, { status })
-          } else if (!res.headersSent) {
-            res.writeHead(status ?? 204).end()
-          }
+          const { payload, status = 200 } = await buildJson.call(this, req, res)
+          writeJson(res, payload, { status })
         } catch (err) {
           onError?.(req, res, err, 'OAuth request error')
 
@@ -1180,13 +1179,13 @@ export class OAuthProvider extends OAuthVerifier {
         }
       }
 
-    const oauthHandler = <T, TReq extends Req, TRes extends Res, Json>(
-      buildOAuthResponse: (this: T, req: TReq, res: TRes) => Awaitable<Json>,
+    const oauthHandler = <T, TReq extends Req, TRes extends Res, Payload>(
+      buildOAuthResponse: (this: T, req: TReq, res: TRes) => Awaitable<Payload>,
       status?: number,
     ) =>
       combineMiddlewares([
         corsHeaders,
-        jsonHandler<T, TReq, TRes, Json>(async function (req, res) {
+        jsonHandler<T, TReq, TRes, Payload>(async function (req, res) {
           try {
             // https://datatracker.ietf.org/doc/html/rfc9449#section-8.2
             const dpopNonce = server.nextDpopNonce()
@@ -1196,7 +1195,8 @@ export class OAuthProvider extends OAuthVerifier {
               res.appendHeader('Access-Control-Expose-Headers', name)
             }
 
-            return await buildOAuthResponse.call(this, req, res)
+            const payload = await buildOAuthResponse.call(this, req, res)
+            return { payload, status }
           } catch (err) {
             if (!res.headersSent && err instanceof WWWAuthenticateError) {
               const name = 'WWW-Authenticate'
@@ -1206,7 +1206,7 @@ export class OAuthProvider extends OAuthVerifier {
 
             throw err
           }
-        }, status),
+        }),
       ])
 
     const apiHandler = <
@@ -1214,7 +1214,7 @@ export class OAuthProvider extends OAuthVerifier {
       TReq extends Req,
       TRes extends Res,
       S extends z.ZodTypeAny,
-      Json,
+      Payload,
     >(
       inputSchema: S,
       buildJson: (
@@ -1223,10 +1223,10 @@ export class OAuthProvider extends OAuthVerifier {
         res: TRes,
         input: z.infer<S>,
         context: ApiContext,
-      ) => Json | Promise<Json>,
+      ) => Awaitable<Payload>,
       status?: number,
     ) =>
-      jsonHandler<T, TReq, TRes, Json>(async function (req, res) {
+      jsonHandler<T, TReq, TRes, Payload>(async function (req, res) {
         validateFetchMode(req, res, ['same-origin'])
         validateFetchSite(req, res, ['same-origin'])
         validateSameOrigin(req, res, issuerOrigin)
@@ -1252,12 +1252,13 @@ export class OAuthProvider extends OAuthVerifier {
           res,
         )
 
-        const payload = await parseHttpRequest(req, ['json'])
-        const input = await inputSchema.parseAsync(payload, { path: ['body'] })
+        const inputRaw = await parseHttpRequest(req, ['json'])
+        const input = await inputSchema.parseAsync(inputRaw, { path: ['body'] })
 
         const context: ApiContext = { requestUri, deviceId, deviceMetadata }
-        return buildJson.call(this, req, res, input, context)
-      }, status)
+        const payload = await buildJson.call(this, req, res, input, context)
+        return { payload, status }
+      })
 
     const navigationHandler = <T, TReq extends Req, TRes extends Res>(
       handler: (this: T, req: TReq, res: TRes) => Awaitable<void>,
@@ -1478,6 +1479,8 @@ export class OAuthProvider extends OAuthVerifier {
         } catch (err) {
           onError?.(req, res, err, 'Failed to revoke token')
         }
+
+        return {}
       }),
     )
     router.get(
@@ -1577,7 +1580,8 @@ export class OAuthProvider extends OAuthVerifier {
       apiHandler(
         z.object({ handle: handleSchema }).strict(),
         async function (req, res, data) {
-          return server.accountManager.verifyHandleAvailability(data.handle)
+          await server.accountManager.verifyHandleAvailability(data.handle)
+          return { available: true }
         },
       ),
     )
@@ -1602,6 +1606,7 @@ export class OAuthProvider extends OAuthVerifier {
         resetPasswordRequestDataSchema,
         async function (req, res, data) {
           await server.accountManager.resetPasswordRequest(data)
+          return { success: true }
         },
       ),
     )
@@ -1612,6 +1617,7 @@ export class OAuthProvider extends OAuthVerifier {
         resetPasswordConfirmDataSchema,
         async function (req, res, data) {
           await server.accountManager.resetPasswordConfirm(data)
+          return { success: true }
         },
       ),
     )

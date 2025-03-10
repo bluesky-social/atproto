@@ -26,7 +26,10 @@ export function InputText({
   onBlur,
   ref,
   disabled,
+  title,
+  'aria-label': ariaLabel = title,
   'aria-labelledby': ariaLabelledBy,
+  placeholder = ariaLabel,
   ...props
 }: InputTextProps) {
   const ctx = useContext(FieldsetContext)
@@ -59,6 +62,9 @@ export function InputText({
       <input
         {...props}
         disabled={disabled ?? ctx.disabled}
+        title={title}
+        placeholder={placeholder}
+        aria-label={ariaLabel}
         aria-labelledby={ariaLabelledBy ?? ctx.labelId}
         ref={mergeRefs([ref, inputRef])}
         className="w-full bg-transparent bg-clip-padding text-base text-inherit outline-none dark:placeholder-gray-500 text-ellipsis"
