@@ -1043,6 +1043,9 @@ importers:
       '@atproto/oauth-types':
         specifier: workspace:*
         version: link:../oauth-types
+      '@atproto/syntax':
+        specifier: workspace:*
+        version: link:../../syntax
       '@hapi/accept':
         specifier: ^6.0.3
         version: 6.0.3
