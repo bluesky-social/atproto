@@ -1,12 +1,21 @@
 import http from 'node:http'
 import cors from 'cors'
-import express from 'express'
+import express, { Router, json } from 'express'
 import { DidDocument } from '../../src'
 import { DidWebDb } from './db'
 
+declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace Express {
+    interface Locals {
+      db: DidWebDb
+    }
+  }
+}
+
 const DOC_PATH = '/.well-known/did.json'
 
-const routes = express.Router()
+const routes = Router()
 
 // Get DID Doc
 routes.get('/*', async (req, res) => {
@@ -60,7 +69,7 @@ export class DidWebServer {
     const app = express()
 
     app.use(cors())
-    app.use(express.json())
+    app.use(json())
     app.use((_req, res, next) => {
       res.locals.db = db
       next()

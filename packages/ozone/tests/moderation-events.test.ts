@@ -1,5 +1,6 @@
 import assert from 'node:assert'
 import EventEmitter, { once } from 'node:events'
+import type Mail from 'nodemailer/lib/mailer'
 import { ToolsOzoneModerationDefs } from '@atproto/api'
 import {
   ModeratorClient,
@@ -528,13 +529,12 @@ describe('moderation-events', () => {
   })
 
   describe('email event', () => {
-    let sendMailOriginal
+    let sendMailOriginal: Mail['sendMail']
     const mailCatcher = new EventEmitter()
-    const getMailFrom = async (
-      promise,
-    ): Promise<{ to: string; subject: string; from: string }> => {
-      const result = await Promise.all([once(mailCatcher, 'mail'), promise])
-      return result[0][0]
+    const getMailFrom = async (promise: Promise<unknown>) => {
+      const mailResult = await once(mailCatcher, 'mail')
+      await promise
+      return mailResult[0] as Mail.Options
     }
 
     beforeAll(() => {

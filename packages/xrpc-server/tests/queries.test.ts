@@ -71,12 +71,17 @@ describe('Queries', () => {
   let s: http.Server
   const server = xrpcServer.createServer(LEXICONS)
   server.method('io.example.pingOne', (ctx: { params: xrpcServer.Params }) => {
-    return { encoding: 'text/plain', body: ctx.params.message }
+    return {
+      encoding: 'text/plain',
+      body: (ctx.params as { message?: string }).message,
+    }
   })
   server.method('io.example.pingTwo', (ctx: { params: xrpcServer.Params }) => {
     return {
       encoding: 'application/octet-stream',
-      body: new TextEncoder().encode(String(ctx.params.message)),
+      body: new TextEncoder().encode(
+        String((ctx.params as { message?: string }).message),
+      ),
     }
   })
   server.method(
@@ -84,7 +89,7 @@ describe('Queries', () => {
     (ctx: { params: xrpcServer.Params }) => {
       return {
         encoding: 'application/json',
-        body: { message: ctx.params.message },
+        body: { message: (ctx.params as { message?: string }).message },
         headers: { 'x-test-header-name': 'test-value' },
       }
     },

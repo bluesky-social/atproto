@@ -798,7 +798,7 @@ export class Views {
     if (
       isPostView(parent) &&
       isPostRecord(parent.record) &&
-      parent.record.reply
+      parent.record['reply']
     ) {
       grandparentAuthor = this.profileBasic(
         // @ts-expect-error isValidPostRecord(parent.record) should be used but the "parent" is not IPDL decoded

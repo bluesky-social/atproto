@@ -99,7 +99,7 @@ export class Firehose {
     })
   }
 
-  async start() {
+  async start(): Promise<void> {
     try {
       for await (const evt of this.sub) {
         if (this.opts.runner) {
@@ -122,7 +122,8 @@ export class Firehose {
         }
       }
     } catch (err) {
-      if (err && err['name'] === 'AbortError') {
+      // instanceof Error does not work
+      if ((err as any)?.['name'] === 'AbortError') {
         this.destoryDefer.resolve()
         return
       }

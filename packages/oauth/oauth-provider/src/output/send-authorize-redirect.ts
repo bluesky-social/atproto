@@ -68,10 +68,16 @@ export async function sendAuthorizeRedirect(
     entries.push(['state', parameters.state])
   }
 
-  const keys = 'code' in redirect ? SUCCESS_REDIRECT_KEYS : ERROR_REDIRECT_KEYS
-  for (const key of keys) {
-    const value = redirect[key]
-    if (value != null) entries.push([key, value])
+  if ('code' in redirect) {
+    for (const key of SUCCESS_REDIRECT_KEYS) {
+      const value = redirect[key]
+      if (value != null) entries.push([key, value])
+    }
+  } else {
+    for (const key of ERROR_REDIRECT_KEYS) {
+      const value = redirect[key]
+      if (value != null) entries.push([key, value])
+    }
   }
 
   res.setHeader('Cache-Control', 'no-store')

@@ -449,16 +449,19 @@ describe('AtpAgent', () => {
       const agent2 = new AtpAgent({ service: `http://localhost:${port}` })
 
       const res1 = await agent.com.atproto.server.describeServer()
+      // @ts-expect-error unspecced
       expect(res1.data['atproto-accept-labelers']).toEqual(
         `${BSKY_LABELER_DID};redact`,
       )
 
       AtpAgent.configure({ appLabelers: ['did:plc:test1', 'did:plc:test2'] })
       const res2 = await agent.com.atproto.server.describeServer()
+      // @ts-expect-error unspecced
       expect(res2.data['atproto-accept-labelers']).toEqual(
         'did:plc:test1;redact, did:plc:test2;redact',
       )
       const res3 = await agent2.com.atproto.server.describeServer()
+      // @ts-expect-error unspecced
       expect(res3.data['atproto-accept-labelers']).toEqual(
         'did:plc:test1;redact, did:plc:test2;redact',
       )
@@ -476,12 +479,14 @@ describe('AtpAgent', () => {
 
       agent.configureLabelers(['did:plc:test1'])
       const res1 = await agent.com.atproto.server.describeServer()
+      // @ts-expect-error unspecced
       expect(res1.data['atproto-accept-labelers']).toEqual(
         `${BSKY_LABELER_DID};redact, did:plc:test1`,
       )
 
       agent.configureLabelers(['did:plc:test1', 'did:plc:test2'])
       const res2 = await agent.com.atproto.server.describeServer()
+      // @ts-expect-error unspecced
       expect(res2.data['atproto-accept-labelers']).toEqual(
         `${BSKY_LABELER_DID};redact, did:plc:test1, did:plc:test2`,
       )
@@ -497,10 +502,12 @@ describe('AtpAgent', () => {
       const agent = new AtpAgent({ service: `http://localhost:${port}` })
 
       const res1 = await agent.com.atproto.server.describeServer()
+      // @ts-expect-error unspecced
       expect(res1.data['atproto-proxy']).toBeFalsy()
 
       agent.configureProxy('did:plc:test1#atproto_labeler')
       const res2 = await agent.com.atproto.server.describeServer()
+      // @ts-expect-error unspecced
       expect(res2.data['atproto-proxy']).toEqual(
         'did:plc:test1#atproto_labeler',
       )
@@ -508,6 +515,7 @@ describe('AtpAgent', () => {
       const res3 = await agent
         .withProxy('atproto_labeler', 'did:plc:test2')
         .com.atproto.server.describeServer()
+      // @ts-expect-error unspecced
       expect(res3.data['atproto-proxy']).toEqual(
         'did:plc:test2#atproto_labeler',
       )

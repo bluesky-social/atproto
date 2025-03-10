@@ -126,7 +126,7 @@ type UnionToTupleInternal<
  * ```
  */
 export const buildInterfaceChecker =
-  <I extends object>(keys: readonly string[] & UnionToTuple<keyof I>) =>
+  <I extends object>(keys: readonly (keyof I)[] & UnionToTuple<keyof I>) =>
   <V extends Partial<I>>(value: V): value is V & RequiredDefined<I> =>
     keys.every((name) => value[name] !== undefined)
 

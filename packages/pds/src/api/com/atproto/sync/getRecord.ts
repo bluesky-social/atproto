@@ -32,10 +32,10 @@ export default function (server: Server, ctx: AppContext) {
         const carIter = repo.getRecords(storage, commit, [{ collection, rkey }])
         carStream = byteIterableToStream(carIter)
       } catch (err) {
-        actorDb.close()
+        await actorDb.close()
         throw err
       }
-      const closeDb = () => actorDb.close()
+      const closeDb = () => void actorDb.close()
       carStream.on('error', closeDb)
       carStream.on('close', closeDb)
 

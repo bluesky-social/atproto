@@ -1,5 +1,5 @@
 import assert from 'node:assert'
-import { AtUri, AtpAgent } from '@atproto/api'
+import { $Typed, AppBskyFeedDefs, AtUri, AtpAgent } from '@atproto/api'
 import { RecordRef, SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
 import { isView as isRecordEmbedView } from '../../src/lexicon/types/app/bsky/embed/record'
@@ -569,7 +569,10 @@ describe('pds views with blocking', () => {
   })
 
   it('does not serve blocked replies', async () => {
-    const getThreadPostUri = (r) => r?.['post']?.['uri']
+    const getThreadPostUri = (
+      r: $Typed<AppBskyFeedDefs.ThreadViewPost> | { $type: string },
+    ) => (AppBskyFeedDefs.isThreadViewPost(r) ? r.post.uri : undefined)
+
     // reply then block
     const { data: replyThenBlock } =
       await agent.api.app.bsky.feed.getPostThread(

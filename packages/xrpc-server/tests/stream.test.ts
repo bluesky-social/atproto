@@ -13,7 +13,7 @@ import {
 } from '../src'
 
 describe('Stream', () => {
-  const wait = (ms) => new Promise((res) => setTimeout(res, ms))
+  const wait = (ms: number) => new Promise((res) => setTimeout(res, ms))
   it('streams message and info frames.', async () => {
     const httpServer = http.createServer()
     const server = new XrpcStreamServer({

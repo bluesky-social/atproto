@@ -1,3 +1,4 @@
+import assert from 'node:assert'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { CID } from 'multiformats/cid'
@@ -144,13 +145,17 @@ export class SeedClient<
   ) {
     const { data: account } =
       await this.agent.com.atproto.server.createAccount(params)
+
     this.dids[shortName] = account.did
-    this.accounts[account.did] = {
+
+    const data = {
       ...account,
       email: params.email,
       password: params.password,
     }
-    return this.accounts[account.did]
+
+    this.accounts[account.did] = data
+    return data
   }
 
   async updateHandle(by: string, handle: string) {
@@ -175,41 +180,40 @@ export class SeedClient<
   }> {
     AVATAR_IMG ??= await fs.readFile(AVATAR_PATH)
 
-    let avatarBlob
-    {
-      const res = await this.agent.com.atproto.repo.uploadBlob(AVATAR_IMG, {
-        encoding: 'image/jpeg',
-        headers: this.getHeaders(by),
-      } as any)
-      avatarBlob = res.data.blob
-    }
+    const {
+      data: { blob: avatarBlob },
+    } = await this.agent.com.atproto.repo.uploadBlob(AVATAR_IMG, {
+      encoding: 'image/jpeg',
+      headers: this.getHeaders(by),
+    })
 
-    {
-      const res = await this.agent.app.bsky.actor.profile.create(
-        { repo: by },
-        {
-          displayName,
-          description,
-          avatar: avatarBlob,
-          labels: selfLabels
-            ? {
-                $type: 'com.atproto.label.defs#selfLabels',
-                values: selfLabels.map((val) => ({ val })),
-              }
-            : undefined,
-          joinedViaStarterPack: joinedViaStarterPack?.raw,
-          createdAt: new Date().toISOString(),
-        },
-        this.getHeaders(by),
-      )
-      this.profiles[by] = {
+    const res = await this.agent.app.bsky.actor.profile.create(
+      { repo: by },
+      {
         displayName,
         description,
         avatar: avatarBlob,
-        joinedViaStarterPack,
-        ref: new RecordRef(res.uri, res.cid),
-      }
+        labels: selfLabels
+          ? {
+              $type: 'com.atproto.label.defs#selfLabels',
+              values: selfLabels.map((val) => ({ val })),
+            }
+          : undefined,
+        joinedViaStarterPack: joinedViaStarterPack?.raw,
+        createdAt: new Date().toISOString(),
+      },
+      this.getHeaders(by),
+    )
+
+    this.profiles[by] = {
+      displayName,
+      description,
+      // @ts-expect-error BlobRef does not spec "cid"
+      avatar: avatarBlob,
+      joinedViaStarterPack,
+      ref: new RecordRef(res.uri, res.cid),
     }
+
     return this.profiles[by]
   }
 
@@ -556,7 +560,9 @@ export class SeedClient<
   }
 
   getHeaders(did: string) {
-    return SeedClient.getHeaders(this.accounts[did].accessJwt)
+    const account = this.accounts[did]
+    assert(account != null, `Account not found for DID ${did}`)
+    return SeedClient.getHeaders(account.accessJwt)
   }
 
   static getHeaders(jwt: string) {

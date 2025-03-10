@@ -9,7 +9,7 @@ describe('retry', () => {
         fnCalls++
         throw new Error(`Oops ${fnCalls}!`)
       }
-      const getWaitMs = (retries) => {
+      const getWaitMs = (retries: number) => {
         waitMsCalls++
         expect(retries).toEqual(waitMsCalls - 1)
         return 0
@@ -28,7 +28,7 @@ describe('retry', () => {
         fnCalls++
         throw new Error(`Oops ${fnCalls}!`)
       }
-      const getWaitMs = (retries) => {
+      const getWaitMs = (retries: number) => {
         waitMsCalls++
         expect(retries).toEqual(waitMsCalls - 1)
         if (retries === 13) {
@@ -50,12 +50,12 @@ describe('retry', () => {
         fnCalls++
         throw new Error(`Oops ${fnCalls}!`)
       }
-      const getWaitMs = (retries) => {
+      const getWaitMs = (retries: number) => {
         waitMsCalls++
         expect(retries).toEqual(waitMsCalls - 1)
         return 0
       }
-      const retryable = (err: unknown) => err?.['message'] !== 'Oops 14!'
+      const retryable = (err: any) => err?.['message'] !== 'Oops 14!'
       await expect(
         retry(fn, { maxRetries: Infinity, getWaitMs, retryable }),
       ).rejects.toThrow('Oops 14!')

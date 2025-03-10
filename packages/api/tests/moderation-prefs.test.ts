@@ -268,8 +268,8 @@ describe('agent', () => {
       (l) => l.did === 'did:plc:other',
     )
 
-    expect(moderationPrefs.labels.porn).toEqual('hide')
-    expect(labeler?.labels?.porn).toEqual('hide')
+    expect(moderationPrefs.labels['porn']).toEqual('hide')
+    expect(labeler?.labels?.['porn']).toEqual('hide')
   })
 
   it(`double-write for legacy: 'graphic-media' in sync with 'gore'`, async () => {
@@ -284,13 +284,13 @@ describe('agent', () => {
     await agent.setContentLabelPref('graphic-media', 'hide')
     const a = await agent.getPreferences()
 
-    expect(a.moderationPrefs.labels.gore).toEqual('hide')
+    expect(a.moderationPrefs.labels['gore']).toEqual('hide')
     expect(a.moderationPrefs.labels['graphic-media']).toEqual('hide')
 
     await agent.setContentLabelPref('graphic-media', 'warn')
     const b = await agent.getPreferences()
 
-    expect(b.moderationPrefs.labels.gore).toEqual('warn')
+    expect(b.moderationPrefs.labels['gore']).toEqual('warn')
     expect(b.moderationPrefs.labels['graphic-media']).toEqual('warn')
   })
 
@@ -306,14 +306,14 @@ describe('agent', () => {
     await agent.setContentLabelPref('porn', 'hide')
     const a = await agent.getPreferences()
 
-    expect(a.moderationPrefs.labels.nsfw).toEqual('hide')
-    expect(a.moderationPrefs.labels.porn).toEqual('hide')
+    expect(a.moderationPrefs.labels['nsfw']).toEqual('hide')
+    expect(a.moderationPrefs.labels['porn']).toEqual('hide')
 
     await agent.setContentLabelPref('porn', 'warn')
     const b = await agent.getPreferences()
 
-    expect(b.moderationPrefs.labels.nsfw).toEqual('warn')
-    expect(b.moderationPrefs.labels.porn).toEqual('warn')
+    expect(b.moderationPrefs.labels['nsfw']).toEqual('warn')
+    expect(b.moderationPrefs.labels['porn']).toEqual('warn')
   })
 
   it(`double-write for legacy: 'sexual' in sync with 'suggestive'`, async () => {
@@ -328,14 +328,14 @@ describe('agent', () => {
     await agent.setContentLabelPref('sexual', 'hide')
     const a = await agent.getPreferences()
 
-    expect(a.moderationPrefs.labels.sexual).toEqual('hide')
-    expect(a.moderationPrefs.labels.suggestive).toEqual('hide')
+    expect(a.moderationPrefs.labels['sexual']).toEqual('hide')
+    expect(a.moderationPrefs.labels['suggestive']).toEqual('hide')
 
     await agent.setContentLabelPref('sexual', 'warn')
     const b = await agent.getPreferences()
 
-    expect(b.moderationPrefs.labels.sexual).toEqual('warn')
-    expect(b.moderationPrefs.labels.suggestive).toEqual('warn')
+    expect(b.moderationPrefs.labels['sexual']).toEqual('warn')
+    expect(b.moderationPrefs.labels['suggestive']).toEqual('warn')
   })
 
   it(`double-write for legacy: filters out existing old label pref if double-written`, async () => {
@@ -371,7 +371,7 @@ describe('agent', () => {
     await agent.setContentLabelPref('suggestive', 'hide')
     const a = await agent.getPreferences()
 
-    expect(a.moderationPrefs.labels.porn).toEqual('hide')
+    expect(a.moderationPrefs.labels['porn']).toEqual('hide')
     expect(a.moderationPrefs.labels['graphic-media']).toEqual('hide')
     expect(a.moderationPrefs.labels['sexual']).toEqual('hide')
   })

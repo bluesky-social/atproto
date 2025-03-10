@@ -18,12 +18,14 @@ export function params(
   let resultValue = value
   if (typeof def.properties === 'object') {
     for (const key in def.properties) {
+      // @ts-expect-error - we are accessing a json object here
+      const keyValue = value[key]
       const propDef = def.properties[key]
       const validated =
         propDef.type === 'array'
-          ? array(lexicons, key, propDef, value[key])
-          : PrimitiveValidators.validate(lexicons, key, propDef, value[key])
-      const propValue = validated.success ? validated.value : value[key]
+          ? array(lexicons, key, propDef, keyValue)
+          : PrimitiveValidators.validate(lexicons, key, propDef, keyValue)
+      const propValue = validated.success ? validated.value : keyValue
       const propIsUndefined = typeof propValue === 'undefined'
       // Return error for bad validation, giving required rule precedence
       if (propIsUndefined && requiredProps.has(key)) {
@@ -35,11 +37,12 @@ export function params(
         return validated
       }
       // Adjust value based on e.g. applied defaults, cloning shallowly if there was a changed value
-      if (propValue !== value[key]) {
+      if (propValue !== keyValue) {
         if (resultValue === value) {
           // Lazy shallow clone
           resultValue = { ...value }
         }
+        // @ts-expect-error - we are building a json object here
         resultValue[key] = propValue
       }
     }

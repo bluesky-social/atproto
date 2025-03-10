@@ -1,3 +1,4 @@
+import assert from 'node:assert'
 import { EventEmitter, once } from 'node:events'
 import Mail from 'nodemailer/lib/mailer'
 import {
@@ -16,9 +17,13 @@ describe('email confirmation', () => {
 
   let mailer: ServerMailer
   const mailCatcher = new EventEmitter()
-  let _origSendMail
+  let _origSendMail: Mail['sendMail']
 
-  let alice
+  let alice: {
+    did: string
+    email: string
+    password: string
+  }
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
@@ -45,9 +50,10 @@ describe('email confirmation', () => {
     await network.close()
   })
 
-  const getMailFrom = async (promise): Promise<Mail.Options> => {
-    const result = await Promise.all([once(mailCatcher, 'mail'), promise])
-    return result[0][0]
+  const getMailFrom = async (promise: Promise<unknown>) => {
+    const mailResult = await once(mailCatcher, 'mail')
+    await promise
+    return mailResult[0] as Mail.Options
   }
 
   const getTokenFromMail = (mail: Mail.Options) =>
@@ -80,10 +86,11 @@ describe('email confirmation', () => {
     )
     expect(session.data.email).toEqual('new-alice@example.com')
     expect(session.data.emailConfirmed).toEqual(false)
+    assert(session.data.email)
     alice.email = session.data.email
   })
 
-  let confirmToken
+  let confirmToken: string
 
   it('requests email confirmation', async () => {
     const mail = await getMailFrom(
@@ -93,8 +100,9 @@ describe('email confirmation', () => {
     )
     expect(mail.to).toEqual(alice.email)
     expect(mail.html).toContain('Confirm your email')
-    confirmToken = getTokenFromMail(mail)
-    expect(confirmToken).toBeDefined()
+    const token = getTokenFromMail(mail)
+    assert(token !== undefined)
+    confirmToken = token
   })
 
   it('fails email confirmation with a bad token', async () => {
@@ -150,7 +158,7 @@ describe('email confirmation', () => {
     )
   })
 
-  let updateToken
+  let updateToken: string
 
   it('requests email update', async () => {
     const reqUpdate = async () => {
@@ -165,8 +173,9 @@ describe('email confirmation', () => {
     const mail = await getMailFrom(reqUpdate())
     expect(mail.to).toEqual(alice.email)
     expect(mail.html).toContain('Update your email')
-    updateToken = getTokenFromMail(mail)
-    expect(updateToken).toBeDefined()
+    const token = getTokenFromMail(mail)
+    assert(token !== undefined)
+    updateToken = token
   })
 
   it('fails email update with a bad token', async () => {

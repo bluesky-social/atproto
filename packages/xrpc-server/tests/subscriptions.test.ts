@@ -87,7 +87,7 @@ describe('Subscriptions', () => {
   const lex = server.lex
 
   server.streamMethod('io.example.streamOne', async function* ({ params }) {
-    const countdown = Number(params.countdown ?? 0)
+    const countdown = Number((params as { countdown: number }).countdown ?? 0)
     for (let i = countdown; i >= 0; i--) {
       await wait(0)
       yield { count: i }
@@ -95,7 +95,7 @@ describe('Subscriptions', () => {
   })
 
   server.streamMethod('io.example.streamTwo', async function* ({ params }) {
-    const countdown = Number(params.countdown ?? 0)
+    const countdown = Number((params as { countdown: number }).countdown ?? 0)
     for (let i = countdown; i >= 0; i--) {
       await wait(200)
       yield {

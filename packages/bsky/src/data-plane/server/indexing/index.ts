@@ -1,4 +1,4 @@
-import { sql } from 'kysely'
+import { ExpressionBuilder, sql } from 'kysely'
 import { CID } from 'multiformats/cid'
 import { AtpAgent, ComAtprotoSyncGetLatestCommit } from '@atproto/api'
 import { DAY, HOUR } from '@atproto/common'
@@ -16,6 +16,7 @@ import { subLogger } from '../../../logger'
 import { retryXrpc } from '../../../util/retry'
 import { BackgroundQueue } from '../background'
 import { Database } from '../db'
+import { DatabaseSchemaType } from '../db/database-schema'
 import { Actor } from '../db/tables/actor'
 import * as Block from './plugins/block'
 import * as ChatDeclaration from './plugins/chat-declaration'
@@ -246,10 +247,10 @@ export class IndexingService {
   }
 
   findIndexerForCollection(collection: string) {
-    const indexers = Object.values(
-      this.records as Record<string, RecordProcessor<unknown, unknown>>,
-    )
-    return indexers.find((indexer) => indexer.collection === collection)
+    const indexers = Object.values(this.records)
+    return indexers.find((indexer) => indexer.collection === collection) as
+      | RecordProcessor<unknown, unknown>
+      | undefined
   }
 
   async updateActorStatus(did: string, active: boolean, status: string = '') {
@@ -325,7 +326,9 @@ export class IndexingService {
       .where('creator', '=', did)
       .execute()
     // posts
-    const postByUser = (qb) =>
+    const postByUser = (
+      qb: ExpressionBuilder<DatabaseSchemaType, keyof DatabaseSchemaType>,
+    ) =>
       qb
         .selectFrom('post')
         .where('post.creator', '=', did)

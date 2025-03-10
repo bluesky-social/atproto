@@ -3,6 +3,7 @@ import { AtpAgent } from '@atproto/api'
 import { TID, cidForCbor } from '@atproto/common'
 import { Keypair, randomStr } from '@atproto/crypto'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
+import { RepoRecord } from '@atproto/lexicon'
 import * as repo from '@atproto/repo'
 import { MemoryBlockstore } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
@@ -43,9 +44,7 @@ describe('repo sync', () => {
     const ADD_COUNT = 10
     for (let i = 0; i < ADD_COUNT; i++) {
       const { obj, uri } = await makePost(sc, did)
-      if (!repoData[uri.collection]) {
-        repoData[uri.collection] = {}
-      }
+      repoData[uri.collection] ||= {}
       repoData[uri.collection][uri.rkey] = obj
       uris.push(uri)
     }
@@ -73,9 +72,7 @@ describe('repo sync', () => {
     const DEL_COUNT = 4
     for (let i = 0; i < ADD_COUNT; i++) {
       const { obj, uri } = await makePost(sc, did)
-      if (!repoData[uri.collection]) {
-        repoData[uri.collection] = {}
-      }
+      repoData[uri.collection] ||= {}
       repoData[uri.collection][uri.rkey] = obj
       uris.push(uri)
     }
@@ -125,9 +122,7 @@ describe('repo sync', () => {
 
     // add a post
     const { obj, uri } = await makePost(sc, did)
-    if (!repoData[uri.collection]) {
-      repoData[uri.collection] = {}
-    }
+    repoData[uri.collection] ||= {}
     repoData[uri.collection][uri.rkey] = obj
     uris.push(uri)
 
@@ -301,6 +296,6 @@ const makePost = async (sc: SeedClient, did: string) => {
   })
   return {
     uri,
-    obj: record.data.value,
+    obj: record.data.value as RepoRecord,
   }
 }

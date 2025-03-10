@@ -11,7 +11,7 @@ const PRETTIER_OPTS: PrettierOptions = {
   trailingComma: 'all',
 }
 
-export const utilTs = (project) =>
+export const utilTs = (project: Project) =>
   gen(project, '/util.ts', async (file) => {
     file.replaceWithText(`
 import { type ValidationResult } from '@atproto/lexicon'
@@ -132,7 +132,7 @@ export function asPredicate<V extends Validator>(validate: V) {
 `)
   })
 
-export const lexiconsTs = (project, lexicons: LexiconDoc[]) =>
+export const lexiconsTs = (project: Project, lexicons: LexiconDoc[]) =>
   gen(project, '/lexicons.ts', async (file) => {
     const nsidToEnum = (nsid: string): string => {
       return nsid

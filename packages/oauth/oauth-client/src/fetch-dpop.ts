@@ -197,7 +197,12 @@ async function isUseDpopNonceError(
     if (response.status === 400) {
       try {
         const json = await peekJson(response, 10 * 1024)
-        return typeof json === 'object' && json?.['error'] === 'use_dpop_nonce'
+        return (
+          json != null &&
+          typeof json === 'object' &&
+          'error' in json &&
+          json['error'] === 'use_dpop_nonce'
+        )
       } catch {
         // Response too big (to be "use_dpop_nonce" error) or invalid JSON
         return false

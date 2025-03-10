@@ -1,6 +1,6 @@
 import { RecordRef, SeedClient } from '@atproto/dev-env'
 
-export default async (sc: SeedClient, did, threads: Item[]) => {
+export default async (sc: SeedClient, did: string, threads: Item[]) => {
   const refByItemId: Record<string, RecordRef> = {}
   const rootByItemId: Record<string, RecordRef> = {}
   await walk(threads, async (item, _depth, parent) => {

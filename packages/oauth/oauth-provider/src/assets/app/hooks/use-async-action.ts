@@ -111,10 +111,12 @@ export function useAsyncAction(
 }
 
 function isAbortReason(signal: AbortSignal, err: unknown): boolean {
+  if (!signal.aborted) return false
+  if (signal.reason == null) return false
+
   return (
-    signal.aborted &&
-    (signal.reason === err ||
-      signal.reason === err?.['cause'] ||
-      (err instanceof DOMException && err.name === 'AbortError'))
+    signal.reason === err ||
+    signal.reason === (err instanceof Error ? err.cause : undefined) ||
+    (err instanceof DOMException && err.name === 'AbortError')
   )
 }

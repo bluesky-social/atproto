@@ -172,8 +172,6 @@ describe('notification views', () => {
   })
 
   it('paginates', async () => {
-    const results = (results) =>
-      sort(results.flatMap((res) => res.notifications))
     const paginator = async (cursor?: string) => {
       const res = await agent.api.app.bsky.notification.listNotifications(
         { cursor, limit: 6 },
@@ -203,7 +201,9 @@ describe('notification views', () => {
     )
 
     expect(full.data.notifications.length).toEqual(13)
-    expect(results(paginatedAll)).toEqual(results([full.data]))
+    expect(sort(paginatedAll.flatMap((res) => res.notifications))).toEqual(
+      sort(full.data.notifications),
+    )
   })
 
   it('fetches notification count with a last-seen', async () => {
@@ -464,8 +464,6 @@ describe('notification views', () => {
   })
 
   it('paginates filtered notifications', async () => {
-    const results = (results) =>
-      sort(results.flatMap((res) => res.notifications))
     const paginator = async (cursor?: string) => {
       const res = await agent.app.bsky.notification.listNotifications(
         { reasons: ['mention', 'reply'], cursor, limit: 2 },
@@ -495,7 +493,9 @@ describe('notification views', () => {
     )
 
     expect(full.data.notifications.length).toBe(4)
-    expect(results(paginatedAll)).toEqual(results([full.data]))
+    expect(sort(paginatedAll.flatMap((res) => res.notifications))).toEqual(
+      sort(full.data.notifications),
+    )
   })
 
   describe('notifications delay', () => {
@@ -558,8 +558,6 @@ describe('notification views', () => {
       // At this point we won't have any notifications that already crossed the delay threshold.
       jest.setSystemTime(new Date(firstNotification.sortAt))
 
-      const results = (results) =>
-        sort(results.flatMap((res) => res.notifications))
       const paginator = async (cursor?: string) => {
         const res =
           await delayAgent.api.app.bsky.notification.listNotifications(
@@ -590,9 +588,10 @@ describe('notification views', () => {
         )
 
       expect(fullBeforeDelay.data.notifications.length).toEqual(0)
-      expect(results(paginatedAllBeforeDelay)).toEqual(
-        results([fullBeforeDelay.data]),
-      )
+
+      expect(
+        sort(paginatedAllBeforeDelay.flatMap((res) => res.notifications)),
+      ).toEqual(sort(fullBeforeDelay.data.notifications))
 
       const lastNotification = await delayNetwork.bsky.db.db
         .selectFrom('notification')
@@ -626,9 +625,9 @@ describe('notification views', () => {
         )
 
       expect(fullAfterDelay.data.notifications.length).toEqual(13)
-      expect(results(paginatedAllAfterDelay)).toEqual(
-        results([fullAfterDelay.data]),
-      )
+      expect(
+        sort(paginatedAllAfterDelay.flatMap((res) => res.notifications)),
+      ).toEqual(sort(fullAfterDelay.data.notifications))
     })
 
     describe('cursor delay', () => {

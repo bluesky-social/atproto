@@ -53,13 +53,13 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const FILTER_TO_FEED_TYPE = {
-  posts_with_replies: undefined, // default: all posts, replies, and reposts
-  posts_no_replies: FeedType.POSTS_NO_REPLIES,
-  posts_with_media: FeedType.POSTS_WITH_MEDIA,
-  posts_and_author_threads: FeedType.POSTS_AND_AUTHOR_THREADS,
-  posts_with_video: FeedType.POSTS_WITH_VIDEO,
-}
+const FILTER_TO_FEED_TYPE = new Map<string, undefined | FeedType>([
+  ['posts_with_replies', undefined], // default: all posts, replies, and reposts
+  ['posts_no_replies', FeedType.POSTS_NO_REPLIES],
+  ['posts_with_media', FeedType.POSTS_WITH_MEDIA],
+  ['posts_and_author_threads', FeedType.POSTS_AND_AUTHOR_THREADS],
+  ['posts_with_video', FeedType.POSTS_WITH_VIDEO],
+])
 
 export const skeleton = async (inputs: {
   ctx: Context
@@ -94,7 +94,8 @@ export const skeleton = async (inputs: {
     actorDid: did,
     limit: params.limit,
     cursor: params.cursor,
-    feedType: FILTER_TO_FEED_TYPE[params.filter],
+    // @NOTE An invalid "filter" param will result on the same as "posts_with_replies"
+    feedType: FILTER_TO_FEED_TYPE.get(params.filter),
   })
 
   let items: FeedItem[] = res.items.map((item) => ({

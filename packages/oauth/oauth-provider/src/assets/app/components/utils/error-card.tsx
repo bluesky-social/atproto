@@ -2,7 +2,7 @@ import { Trans } from '@lingui/react/macro'
 import { memo, useEffect, useMemo, useState } from 'react'
 import { useRandomString } from '../../hooks/use-random-string.ts'
 import { Api } from '../../lib/api.ts'
-import { JsonErrorResponse } from '../../lib/json-client.ts'
+import { Json, JsonErrorResponse } from '../../lib/json-client.ts'
 import { Override } from '../../lib/util.ts'
 import { Admonition, AdmonitionProps } from './admonition.tsx'
 import { ErrorMessage } from './error-message.tsx'
@@ -10,7 +10,7 @@ import { ErrorMessage } from './error-message.tsx'
 export type ErrorCardProps = Override<
   Omit<AdmonitionProps, 'role'>,
   {
-    error: unknown
+    error: Json | Error
   }
 >
 export const ErrorCard = memo(function ErrorCard({
@@ -33,8 +33,10 @@ export const ErrorCard = memo(function ErrorCard({
       error instanceof JsonErrorResponse
         ? // Already parsed:
           error
-        : // If "error" is a json object, try parsing it as a JsonErrorResponse:
-          Api.parseError(error) ?? error,
+        : error instanceof Error
+          ? error
+          : // If "error" is a json object, try parsing it as a JsonErrorResponse:
+            Api.parseError(error) ?? error,
     [error],
   )
 

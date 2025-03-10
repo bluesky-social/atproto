@@ -1,5 +1,6 @@
 import { Account } from '../backend-types.ts'
 import {
+  Json,
   JsonClient,
   JsonErrorPayload,
   JsonErrorResponse,
@@ -87,9 +88,7 @@ export class Api extends JsonClient<{
     return url
   }
 
-  public static override parseError(
-    json: unknown,
-  ): undefined | JsonErrorResponse {
+  public static override parseError(json: Json): undefined | JsonErrorResponse {
     // @NOTE Most specific errors first !
     if (SecondAuthenticationFactorRequiredError.is(json)) {
       return new SecondAuthenticationFactorRequiredError(json)
@@ -133,7 +132,7 @@ export class AccessDeniedError<
     super(payload, message)
   }
 
-  static is(json: unknown): json is AccessDeniedPayload {
+  static is(json: Json): json is AccessDeniedPayload {
     return super.is(json) && json.error === 'access_denied'
   }
 }
@@ -149,7 +148,7 @@ export class InvalidRequestError<
     super(payload, message)
   }
 
-  static is(json: unknown): json is InvalidRequestPayload {
+  static is(json: Json): json is InvalidRequestPayload {
     return super.is(json) && json.error === 'invalid_request'
   }
 }
@@ -164,7 +163,7 @@ export class InvalidInviteCodeError<
     super(payload)
   }
 
-  static is(json: unknown): json is InvalidInviteCodePayload {
+  static is(json: Json): json is InvalidInviteCodePayload {
     return (
       super.is(json) &&
       json.error_description != null &&
@@ -179,7 +178,7 @@ export type RequestExpiredPayload = AccessDeniedPayload & {
 export class RequestExpiredError<
   P extends RequestExpiredPayload = RequestExpiredPayload,
 > extends AccessDeniedError<P> {
-  static is(json: unknown): json is RequestExpiredPayload {
+  static is(json: Json): json is RequestExpiredPayload {
     return (
       super.is(json) && json.error_description === 'This request has expired'
     )
@@ -192,7 +191,7 @@ export type InvalidCredentialsPayload = InvalidRequestPayload & {
 export class InvalidCredentialsError<
   P extends InvalidCredentialsPayload = InvalidCredentialsPayload,
 > extends InvalidRequestError<P> {
-  static is(json: unknown): json is InvalidCredentialsPayload {
+  static is(json: Json): json is InvalidCredentialsPayload {
     return (
       super.is(json) &&
       json.error_description === 'Invalid identifier or password'
@@ -206,7 +205,7 @@ export type UnknownRequestPayload = InvalidRequestPayload & {
 export class UnknownRequestUriError<
   P extends UnknownRequestPayload = UnknownRequestPayload,
 > extends InvalidRequestError<P> {
-  static is(json: unknown): json is UnknownRequestPayload {
+  static is(json: Json): json is UnknownRequestPayload {
     return super.is(json) && json.error_description === 'Unknown request_uri'
   }
 }
@@ -216,7 +215,7 @@ export type EmailTakenPayload = InvalidRequestPayload & {
 export class EmailTakenError<
   P extends EmailTakenPayload = EmailTakenPayload,
 > extends InvalidRequestError<P> {
-  static is(json: unknown): json is EmailTakenPayload {
+  static is(json: Json): json is EmailTakenPayload {
     return super.is(json) && json.error_description === 'Email already taken'
   }
 }
@@ -239,7 +238,7 @@ export class HandleUnavailableError<
     return this.payload.reason
   }
 
-  static is(json: unknown): json is HandleUnavailablePayload {
+  static is(json: Json): json is HandleUnavailablePayload {
     return (
       super.is(json) &&
       json.error === 'handle_unavailable' &&
@@ -276,7 +275,7 @@ export class SecondAuthenticationFactorRequiredError<
     return this.payload.hint
   }
 
-  static is(json: unknown): json is SecondAuthenticationFactorRequiredPayload {
+  static is(json: Json): json is SecondAuthenticationFactorRequiredPayload {
     return (
       super.is(json) &&
       json.error === 'second_authentication_factor_required' &&

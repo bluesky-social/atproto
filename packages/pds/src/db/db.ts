@@ -31,7 +31,7 @@ export class Database<Schema> {
     const sqliteDb = new SqliteDB(location, {
       timeout: 0, // handled by application
     })
-    const pragmas = {
+    const pragmas: Record<string, string> = {
       ...DEFAULT_PRAGMAS,
       ...(opts?.pragmas ?? {}),
     }
@@ -107,12 +107,14 @@ export class Database<Schema> {
     assert(!this.isTransaction, 'Cannot be in a transaction')
   }
 
-  close(): void {
+  async close() {
     if (this.destroyed) return
-    this.db
+    await this.db
       .destroy()
       .then(() => (this.destroyed = true))
-      .catch((err) => dbLogger.error({ err }, 'error closing db'))
+      .catch((err) => {
+        dbLogger.error({ err }, 'error closing db')
+      })
   }
 }
 
