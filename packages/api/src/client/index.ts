@@ -1,10 +1,14 @@
 /**
  * GENERATED CODE - DO NOT MODIFY
  */
-import { XrpcClient, FetchHandler, FetchHandlerOptions } from '@atproto/xrpc'
+import {
+  XrpcClient,
+  type FetchHandler,
+  type FetchHandlerOptions,
+} from '@atproto/xrpc'
 import { schemas } from './lexicons.js'
 import { CID } from 'multiformats/cid'
-import { OmitKey, Un$Typed } from './util.js'
+import { type OmitKey, type Un$Typed } from './util.js'
 import * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs.js'
 import * as ComAtprotoAdminDeleteAccount from './types/com/atproto/admin/deleteAccount.js'
 import * as ComAtprotoAdminDisableAccountInvites from './types/com/atproto/admin/disableAccountInvites.js'
