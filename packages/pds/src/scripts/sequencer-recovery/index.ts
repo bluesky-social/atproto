@@ -51,4 +51,4 @@ const run = async () => {
   return sequencerRecovery(ctx, [])
 }
 
-run()
+// run()
