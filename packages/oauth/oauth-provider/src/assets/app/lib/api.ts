@@ -163,7 +163,7 @@ export class InvalidInviteCodeError<
     super(payload)
   }
 
-  static is(json: unknown): json is InvalidInviteCodePayload {
+  static is(json: Json): json is InvalidInviteCodePayload {
     return (
       super.is(json) &&
       json.error_description != null &&
