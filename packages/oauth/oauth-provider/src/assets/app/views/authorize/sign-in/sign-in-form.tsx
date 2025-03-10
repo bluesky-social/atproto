@@ -140,8 +140,7 @@ export function SignInForm({
           icon={<AtSymbolIcon className="w-5" />}
           name="username"
           type="text"
-          placeholder={t`Username or email address`}
-          aria-label={t`Username or email address`}
+          title={t`Username or email address`}
           autoCapitalize="none"
           autoCorrect="off"
           autoComplete="username"
@@ -151,7 +150,6 @@ export function SignInForm({
           required
           readOnly={usernameReadonly}
           disabled={usernameReadonly}
-          title={t`Valid email address or username`}
           autoFocus
           value={username}
           onChange={(event) => {
@@ -205,7 +203,7 @@ export function SignInForm({
       >
         <InputCheckbox
           name="remember"
-          aria-label={t`Remember this account on this device`}
+          title={t`Remember this account on this device`}
           enterKeyHint={secondFactor ? 'next' : 'done'}
           checked={remember}
           onChange={(event) => setRemember(event.target.checked)}
@@ -222,7 +220,7 @@ export function SignInForm({
         >
           <div>
             <InputToken
-              aria-label={t`Confirmation code`}
+              title={t`Confirmation code`}
               enterKeyHint="done"
               required
               autoFocus={true}

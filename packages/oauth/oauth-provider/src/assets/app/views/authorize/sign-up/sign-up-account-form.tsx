@@ -8,7 +8,8 @@ import {
 } from '../../../components/forms/form-card-async.tsx'
 import { InputEmailAddress } from '../../../components/forms/input-email-address.tsx'
 import { InputNewPassword } from '../../../components/forms/input-new-password.tsx'
-import { InputToken } from '../../../components/forms/input-token.tsx'
+import { InputText } from '../../../components/forms/input-text.tsx'
+import { TokenIcon } from '../../../components/utils/icons.tsx'
 import { mergeRefs } from '../../../lib/ref.ts'
 import { Override } from '../../../lib/util.ts'
 
@@ -93,15 +94,16 @@ export function SignUpAccountForm({
     >
       {inviteCodeRequired && (
         <Fieldset label={<Trans>Invite code</Trans>}>
-          <InputToken
+          <InputText
+            icon={<TokenIcon className="w-5" />}
             autoFocus
             name="inviteCode"
-            aria-label={t`Invite code`}
             title={t`Invite code`}
+            placeholder={t`example-com-xxxxx-xxxxx`}
             required
-            value={inviteCode}
+            value={inviteCode || ''}
             onChange={(event) => {
-              setInviteCode(event.target.value)
+              setInviteCode(event.target.value || undefined)
               resetForm()
             }}
             enterKeyHint="next"

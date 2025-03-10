@@ -12,6 +12,7 @@ export { InvalidClientMetadataError } from './errors/invalid-client-metadata-err
 export { InvalidDpopKeyBindingError } from './errors/invalid-dpop-key-binding-error.js'
 export { InvalidDpopProofError } from './errors/invalid-dpop-proof-error.js'
 export { InvalidGrantError } from './errors/invalid-grant-error.js'
+export { InvalidInviteCodeError } from './errors/invalid-invite-code-error.js'
 export { InvalidParametersError } from './errors/invalid-parameters-error.js'
 export { InvalidRedirectUriError } from './errors/invalid-redirect-uri-error.js'
 export { InvalidRequestError } from './errors/invalid-request-error.js'

@@ -61,7 +61,7 @@ export function ResetPasswordConfirmForm({
       <Fieldset label={<Trans>Reset code</Trans>}>
         <InputToken
           name="code"
-          aria-label={tokenAriaId}
+          aria-labelledby={tokenAriaId}
           enterKeyHint="next"
           required
           autoFocus={true}

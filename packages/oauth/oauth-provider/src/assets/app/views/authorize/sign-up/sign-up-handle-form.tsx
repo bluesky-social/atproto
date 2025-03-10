@@ -163,8 +163,6 @@ export function SignUpHandleForm({
         icon={<AtSymbolIcon className="w-5" />}
         name="handle"
         type="text"
-        placeholder={t`Type your desired username`}
-        aria-label={t`Type your desired username`}
         title={t`Type your desired username`}
         pattern="[a-z0-9][a-z0-9\-]+[a-z0-9]"
         minLength={minLength}
