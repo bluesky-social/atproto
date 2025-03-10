@@ -26,7 +26,7 @@ export default function (server: Server, ctx: AppContext) {
               input.body,
             )
           } catch (err) {
-            if (err?.['name'] === 'AbortError') {
+            if (err instanceof Error && err['name'] === 'AbortError') {
               throw new UpstreamTimeoutError(
                 'Upload timed out, please try again.',
               )

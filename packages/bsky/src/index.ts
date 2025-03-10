@@ -21,7 +21,7 @@ import {
   BasicHostList,
   EtcdHostList,
   createDataPlaneClient,
-} from './data-plane/client'
+} from './data-plane/client/index'
 import * as error from './error'
 import { FeatureGates } from './feature-gates'
 import { Hydrator } from './hydration/hydrator'

@@ -1,4 +1,5 @@
 import { Generated, GeneratedAlways } from 'kysely'
+import { JsonObject } from '../types'
 import { Member } from './member'
 
 export const settingTableName = 'setting'
@@ -8,7 +9,7 @@ export type SettingScope = 'personal' | 'instance'
 export interface Setting {
   id: GeneratedAlways<number>
   key: string
-  value: Record<string, unknown>
+  value: JsonObject
   managerRole: Member['role'] | null
   description: string | null
   did: string

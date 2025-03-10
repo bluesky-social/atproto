@@ -18,7 +18,7 @@ export const oauthLogger = subsystemLogger('pds:oauth')
 export const loggerMiddleware = pinoHttp({
   logger: httpLogger,
   serializers: {
-    err: (err: unknown) => ({
+    err: (err: any) => ({
       code: err?.['code'],
       message: err?.['message'],
     }),

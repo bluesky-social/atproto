@@ -49,7 +49,7 @@ export const getCarStream = async (
     }
     throw err
   }
-  const closeDb = () => actorDb.close()
+  const closeDb = () => void actorDb.close()
   carStream.on('error', closeDb)
   carStream.on('close', closeDb)
   return carStream

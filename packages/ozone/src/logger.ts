@@ -14,7 +14,7 @@ export const langLogger: ReturnType<typeof subsystemLogger> =
 export const loggerMiddleware = pinoHttp({
   logger: httpLogger,
   serializers: {
-    err: (err: unknown) => ({
+    err: (err: any) => ({
       code: err?.['code'],
       message: err?.['message'],
     }),

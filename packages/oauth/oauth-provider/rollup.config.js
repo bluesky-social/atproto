@@ -15,7 +15,7 @@ const postcss = ((m) => m.default || m)(require('rollup-plugin-postcss'))
 module.exports = defineConfig((commandLineArguments) => {
   const NODE_ENV =
     process.env['NODE_ENV'] ??
-    (commandLineArguments.watch ? 'development' : 'production')
+    (commandLineArguments['watch'] ? 'development' : 'production')
 
   const devMode = NODE_ENV === 'development'
 

@@ -82,19 +82,18 @@ export class ReadThroughCache<T> {
     if (opts?.revalidate) {
       return this.fetchAndCacheMany(keys)
     }
-    let cached: Record<string, string>
-    try {
-      cached = await this.redis.getMulti(keys)
-    } catch (err) {
-      cached = {}
+
+    const cached = await this.redis.getMulti(keys).catch((err) => {
       log.warn({ keys, err }, 'failed to fetch values from cache')
-    }
+      return null
+    })
 
     const stale: string[] = []
     const toFetch: string[] = []
     const results: Record<string, T> = {}
     for (const key of keys) {
-      const val = cached[key] ? (JSON.parse(cached[key]) as CacheItem<T>) : null
+      const cachedVal = cached?.get(key)
+      const val = cachedVal ? (JSON.parse(cachedVal) as CacheItem<T>) : null
       if (!val || this.isExpired(val)) {
         toFetch.push(key)
         continue

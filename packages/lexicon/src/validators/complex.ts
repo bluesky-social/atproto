@@ -100,6 +100,7 @@ export function object(
   let resultValue = value
   if ('properties' in def && def.properties != null) {
     for (const key in def.properties) {
+      // @ts-expect-error - we are accessing a json object here
       const keyValue = value[key]
       if (keyValue === null && def.nullable?.includes(key)) {
         continue
@@ -146,6 +147,7 @@ export function object(
           // Lazy shallow clone
           resultValue = { ...value }
         }
+        // @ts-expect-error - we are building a json object here
         resultValue[key] = propValue
       }
     }

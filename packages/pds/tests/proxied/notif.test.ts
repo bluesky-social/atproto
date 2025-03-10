@@ -14,7 +14,7 @@ describe('notif service proxy', () => {
   let notifDid: string
   let agent: AtpAgent
   let sc: SeedClient
-  const spy: { current: unknown } = { current: null }
+  const spy: { current: any } = { current: null }
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({

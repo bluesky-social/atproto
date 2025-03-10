@@ -188,7 +188,6 @@ describe.skip('pds actor search views', () => {
   })
 
   it('paginates', async () => {
-    const results = (results) => results.flatMap((res) => res.users)
     const paginator = async (cursor?: string) => {
       const res = await agent.api.app.bsky.actor.searchActors(
         { term: 'p', cursor, limit: 3 },
@@ -208,12 +207,14 @@ describe.skip('pds actor search views', () => {
     )
 
     expect(full.data.actors.length).toBeGreaterThan(5)
-    const sortedFull = results([full.data]).sort((a, b) =>
+    // @ts-expect-error unspecced
+    const sortedFull = full.data.users.sort((a, b) =>
       a.handle > b.handle ? 1 : -1,
     )
-    const sortedPaginated = results(paginatedAll).sort((a, b) =>
-      a.handle > b.handle ? 1 : -1,
-    )
+    const sortedPaginated = paginatedAll
+      // @ts-expect-error unspecced
+      .flatMap((res) => res.users)
+      .sort((a, b) => (a.handle > b.handle ? 1 : -1))
     expect(sortedPaginated).toEqual(sortedFull)
   })
 

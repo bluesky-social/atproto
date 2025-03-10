@@ -30,7 +30,10 @@ export function App({
         )}
       >
         {errorData || !authorizeData ? (
-          <ErrorView error={errorData} customizationData={customizationData} />
+          <ErrorView
+            error={errorData ?? { message: 'Backend data missing' }}
+            customizationData={customizationData}
+          />
         ) : (
           <AuthorizeView
             customizationData={customizationData}

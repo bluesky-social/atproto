@@ -58,13 +58,14 @@ describe('timeline views', () => {
   // @TODO(bsky) blocks posts, reposts, replies by record takedown via labels
 
   it("fetches authenticated user's home feed w/ reverse-chronological algorithm", async () => {
-    const expectOriginatorFollowedBy = (did) => (item: FeedViewPost) => {
-      const originator = getOriginator(item)
-      // The user expects to see posts & reposts from themselves and follows
-      if (did !== originator) {
-        expect(sc.follows[did]).toHaveProperty(originator)
+    const expectOriginatorFollowedBy =
+      (did: string) => (item: FeedViewPost) => {
+        const originator = getOriginator(item)
+        // The user expects to see posts & reposts from themselves and follows
+        if (did !== originator) {
+          expect(sc.follows[did]).toHaveProperty(originator)
+        }
       }
-    }
 
     const aliceTL = await agent.api.app.bsky.feed.getTimeline(
       { algorithm: REVERSE_CHRON },
@@ -136,7 +137,6 @@ describe('timeline views', () => {
   })
 
   it('paginates reverse-chronological feed', async () => {
-    const results = (results) => results.flatMap((res) => res.feed)
     const paginator = async (cursor?: string) => {
       const res = await agent.api.app.bsky.feed.getTimeline(
         {
@@ -172,7 +172,7 @@ describe('timeline views', () => {
     )
 
     expect(full.data.feed.length).toEqual(7)
-    expect(results(paginatedAll)).toEqual(results([full.data]))
+    expect(paginatedAll.flatMap((res) => res.feed)).toEqual(full.data.feed)
   })
 
   it('agrees what the first item is for limit=1 and other limits', async () => {

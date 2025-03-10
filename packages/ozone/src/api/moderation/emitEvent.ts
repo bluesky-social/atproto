@@ -187,7 +187,7 @@ const handleModerationEvent = async ({
 
     if (
       (isTakedownEvent || isAcknowledgeEvent) &&
-      result.event.meta?.acknowledgeAccountSubjects
+      result.event.meta?.['acknowledgeAccountSubjects']
     ) {
       await moderationTxn.resolveSubjectsForAccount(
         subject.did,

@@ -114,7 +114,6 @@ describe('pds follow views', () => {
   })
 
   it('paginates followers', async () => {
-    const results = (results) => results.flatMap((res) => res.followers)
     const paginator = async (cursor?: string) => {
       const res = await agent.api.app.bsky.graph.getFollowers(
         {
@@ -148,7 +147,9 @@ describe('pds follow views', () => {
     )
 
     expect(full.data.followers.length).toEqual(4)
-    expect(results(paginatedAll)).toEqual(results([full.data]))
+    expect(paginatedAll.flatMap((res) => res.followers)).toEqual(
+      full.data.followers,
+    )
   })
 
   it('fetches followers unauthed', async () => {
@@ -277,7 +278,6 @@ describe('pds follow views', () => {
   })
 
   it('paginates follows', async () => {
-    const results = (results) => results.flatMap((res) => res.follows)
     const paginator = async (cursor?: string) => {
       const res = await agent.api.app.bsky.graph.getFollows(
         {
@@ -311,7 +311,9 @@ describe('pds follow views', () => {
     )
 
     expect(full.data.follows.length).toEqual(4)
-    expect(results(paginatedAll)).toEqual(results([full.data]))
+    expect(paginatedAll.flatMap((res) => res.follows)).toEqual(
+      full.data.follows,
+    )
   })
 
   it('fetches follows unauthed', async () => {

@@ -71,7 +71,7 @@ export function isCommit(v: unknown): v is Commit {
   return (
     isObj(v) &&
     hasProp(v, '$type') &&
-    v.$type === 'com.atproto.sync.subscribeRepos#commit'
+    v['$type'] === 'com.atproto.sync.subscribeRepos#commit'
   )
 }
 
@@ -94,7 +94,7 @@ export function isSync(v: unknown): v is Sync {
   return (
     isObj(v) &&
     hasProp(v, '$type') &&
-    v.$type === 'com.atproto.sync.subscribeRepos#sync'
+    v['$type'] === 'com.atproto.sync.subscribeRepos#sync'
   )
 }
 
@@ -112,7 +112,7 @@ export function isIdentity(v: unknown): v is Identity {
   return (
     isObj(v) &&
     hasProp(v, '$type') &&
-    v.$type === 'com.atproto.sync.subscribeRepos#identity'
+    v['$type'] === 'com.atproto.sync.subscribeRepos#identity'
   )
 }
 
@@ -132,7 +132,7 @@ export function isAccount(v: unknown): v is Account {
   return (
     isObj(v) &&
     hasProp(v, '$type') &&
-    v.$type === 'com.atproto.sync.subscribeRepos#account'
+    v['$type'] === 'com.atproto.sync.subscribeRepos#account'
   )
 }
 
@@ -146,7 +146,7 @@ export function isInfo(v: unknown): v is Info {
   return (
     isObj(v) &&
     hasProp(v, '$type') &&
-    v.$type === 'com.atproto.sync.subscribeRepos#info'
+    v['$type'] === 'com.atproto.sync.subscribeRepos#info'
   )
 }
 
@@ -163,7 +163,7 @@ export function isRepoOp(v: unknown): v is RepoOp {
   return (
     isObj(v) &&
     hasProp(v, '$type') &&
-    v.$type === 'com.atproto.sync.subscribeRepos#repoOp'
+    v['$type'] === 'com.atproto.sync.subscribeRepos#repoOp'
   )
 }
 

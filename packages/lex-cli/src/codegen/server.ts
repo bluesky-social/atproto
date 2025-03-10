@@ -86,9 +86,9 @@ const indexTs = (
     // generate type imports
     for (const lexiconDoc of lexiconDocs) {
       if (
-        lexiconDoc.defs.main?.type !== 'query' &&
-        lexiconDoc.defs.main?.type !== 'subscription' &&
-        lexiconDoc.defs.main?.type !== 'procedure'
+        lexiconDoc.defs['main']?.type !== 'query' &&
+        lexiconDoc.defs['main']?.type !== 'subscription' &&
+        lexiconDoc.defs['main']?.type !== 'procedure'
       ) {
         continue
       }
@@ -315,12 +315,18 @@ function genNamespaceCls(file: SourceFile, ns: DefTreeNode) {
   }
 }
 
-const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
+const lexiconTs = (
+  project: Project,
+  lexicons: Lexicons,
+  lexiconDoc: LexiconDoc,
+) =>
   gen(
     project,
     `/types/${lexiconDoc.id.split('.').join('/')}.ts`,
     async (file) => {
-      const main = lexiconDoc.defs.main
+      const imports: Set<string> = new Set()
+
+      const main = lexiconDoc.defs['main']
       if (main?.type === 'query' || main?.type === 'procedure') {
         //= import express from 'express'
         file.addImportDeclaration({
@@ -344,7 +350,6 @@ const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
 
       genCommonImports(file, lexiconDoc.id)
 
-      const imports: Set<string> = new Set()
       for (const defId in lexiconDoc.defs) {
         const def = lexiconDoc.defs[defId]
         const lexUri = `${lexiconDoc.id}#${defId}`

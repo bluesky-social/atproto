@@ -25,14 +25,14 @@ export const parseLanguage = (langTag: string): LanguageTag | null => {
   if (!parsed?.groups) return null
   const parts = parsed.groups
   return {
-    grandfathered: parts.grandfathered,
-    language: parts.language,
-    extlang: parts.extlang,
-    script: parts.script,
-    region: parts.region,
-    variant: parts.variant,
-    extension: parts.extension,
-    privateUse: parts.privateUseA || parts.privateUseB,
+    grandfathered: parts['grandfathered'],
+    language: parts['language'],
+    extlang: parts['extlang'],
+    script: parts['script'],
+    region: parts['region'],
+    variant: parts['variant'],
+    extension: parts['extension'],
+    privateUse: parts['privateUseA'] || parts['privateUseB'],
   }
 }
 

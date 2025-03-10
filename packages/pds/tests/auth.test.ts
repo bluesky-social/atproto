@@ -1,5 +1,9 @@
 import * as jose from 'jose'
-import { AtpAgent } from '@atproto/api'
+import {
+  AtpAgent,
+  ComAtprotoServerCreateAccount,
+  ComAtprotoServerCreateSession,
+} from '@atproto/api'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import { createRefreshToken } from '../src/account-manager/helpers/auth'
 
@@ -18,11 +22,13 @@ describe('auth', () => {
     await network.close()
   })
 
-  const createAccount = async (info) => {
+  const createAccount = async (
+    info: ComAtprotoServerCreateAccount.InputSchema,
+  ) => {
     const { data } = await agent.com.atproto.server.createAccount(info)
     return data
   }
-  const getSession = async (jwt) => {
+  const getSession = async (jwt: string) => {
     const { data } = await agent.com.atproto.server.getSession(
       {},
       {
@@ -31,11 +37,13 @@ describe('auth', () => {
     )
     return data
   }
-  const createSession = async (info) => {
+  const createSession = async (
+    info: ComAtprotoServerCreateSession.InputSchema,
+  ) => {
     const { data } = await agent.com.atproto.server.createSession(info)
     return data
   }
-  const deleteSession = async (jwt) => {
+  const deleteSession = async (jwt: string) => {
     await agent.com.atproto.server.deleteSession(undefined, {
       headers: SeedClient.getHeaders(jwt),
     })

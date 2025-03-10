@@ -31,12 +31,12 @@ export class TestNetwork extends TestNetworkNoAppView {
   static async create(
     params: Partial<TestServerParams> = {},
   ): Promise<TestNetwork> {
-    const redisHost = process.env.REDIS_HOST
-    const dbPostgresUrl = params.dbPostgresUrl || process.env.DB_POSTGRES_URL
+    const redisHost = process.env['REDIS_HOST']
+    const dbPostgresUrl = params.dbPostgresUrl || process.env['DB_POSTGRES_URL']
     assert(dbPostgresUrl, 'Missing postgres url for tests')
     assert(redisHost, 'Missing redis host for tests')
     const dbPostgresSchema =
-      params.dbPostgresSchema || process.env.DB_POSTGRES_SCHEMA
+      params.dbPostgresSchema || process.env['DB_POSTGRES_SCHEMA']
 
     const plc = await TestPlc.create(params.plc ?? {})
 

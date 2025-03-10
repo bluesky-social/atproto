@@ -2,6 +2,7 @@
   "extends": "../../tsconfig/tests.json",
   "compilerOptions": {
     "rootDir": ".",
+    "noPropertyAccessFromIndexSignature": false,
     "noUnusedLocals": false
   },
   "include": ["./tests"]

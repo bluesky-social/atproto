@@ -32,6 +32,7 @@ export const createDataPlaneClient = (
         const client = randomElement(remainingClients)
         assert(client, 'no clients available')
         try {
+          // @ts-expect-error - Trust me, I'm an engineer
           return await client[method.localName](...args)
         } catch (err) {
           if (

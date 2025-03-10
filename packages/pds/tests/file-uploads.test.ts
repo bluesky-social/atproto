@@ -35,7 +35,7 @@ describe('file uploads', () => {
   })
 
   afterAll(async () => {
-    aliceDb.close()
+    await aliceDb.close()
     await network.close()
   })
 

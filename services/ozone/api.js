@@ -34,9 +34,9 @@ const main = async () => {
   const secrets = envToSecrets(env)
 
   // configure zero, one, or more image invalidators
-  const imgUriEndpoint = process.env.OZONE_IMG_URI_ENDPOINT
-  const bunnyAccessKey = process.env.OZONE_BUNNY_ACCESS_KEY
-  const cfDistributionId = process.env.OZONE_CF_DISTRIBUTION_ID
+  const imgUriEndpoint = process.env['OZONE_IMG_URI_ENDPOINT']
+  const bunnyAccessKey = process.env['OZONE_BUNNY_ACCESS_KEY']
+  const cfDistributionId = process.env['OZONE_CF_DISTRIBUTION_ID']
 
   const imgInvalidators = []
 
@@ -63,7 +63,7 @@ const main = async () => {
       ? new MultiImageInvalidator(imgInvalidators)
       : imgInvalidators[0]
 
-  const migrate = process.env.OZONE_DB_MIGRATE === '1'
+  const migrate = process.env['OZONE_DB_MIGRATE'] === '1'
   if (migrate) {
     const db = new Database({
       url: cfg.db.postgresUrl,
