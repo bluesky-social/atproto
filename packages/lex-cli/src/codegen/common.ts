@@ -1,7 +1,7 @@
 import { Options as PrettierOptions, format } from 'prettier'
 import { Project, SourceFile, VariableDeclarationKind } from 'ts-morph'
-import { LexiconDoc } from '@atproto/lexicon'
-import { GeneratedFile } from '../types'
+import { type LexiconDoc } from '@atproto/lexicon'
+import { type GeneratedFile } from '../types'
 
 const PRETTIER_OPTS: PrettierOptions = {
   parser: 'typescript',
@@ -14,7 +14,7 @@ const PRETTIER_OPTS: PrettierOptions = {
 export const utilTs = (project) =>
   gen(project, '/util.ts', async (file) => {
     file.replaceWithText(`
-import { ValidationResult } from '@atproto/lexicon'
+import { type ValidationResult } from '@atproto/lexicon'
 
 export type OmitKey<T, K extends keyof T> = {
   [K2 in keyof T as K2 extends K ? never : K2]: T[K2]
@@ -141,25 +141,25 @@ export const lexiconsTs = (project, lexicons: LexiconDoc[]) =>
         .join('')
     }
 
-    //= import {LexiconDoc} from '@atproto/lexicon'
+    //= import { type LexiconDoc, Lexicons } from '@atproto/lexicon'
     file
       .addImportDeclaration({
         moduleSpecifier: '@atproto/lexicon',
       })
       .addNamedImports([
-        { name: 'LexiconDoc' },
+        { name: 'LexiconDoc', isTypeOnly: true },
         { name: 'Lexicons' },
         { name: 'ValidationError' },
-        { name: 'ValidationResult' },
+        { name: 'ValidationResult', isTypeOnly: true },
       ])
 
-    //= import {is$typed, maybe$typed, $Typed} from './util'
+    //= import { is$typed, maybe$typed, type $Typed } from './util'
     file
       .addImportDeclaration({
         moduleSpecifier: './util.js',
       })
       .addNamedImports([
-        { name: '$Typed' },
+        { name: '$Typed', isTypeOnly: true },
         { name: 'is$typed' },
         { name: 'maybe$typed' },
       ])
