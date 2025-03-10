@@ -36,7 +36,7 @@ import { ActorStore } from '../actor-store/actor-store'
 import { BackgroundQueue } from '../background'
 import { ImageUrlBuilder } from '../image/image-url-builder'
 import { ServerMailer } from '../mailer'
-import { Sequencer } from '../sequencer'
+import { Sequencer, syncEvtDataFromCommit } from '../sequencer'
 import { AccountManager } from './account-manager'
 import { AccountStatus, ActorAccount } from './helpers/account'
 import * as authRequest from './helpers/authorization-request'
@@ -170,6 +170,7 @@ export class OAuthStore
         await this.sequencer.sequenceIdentityEvt(did, handle)
         await this.sequencer.sequenceAccountEvt(did, AccountStatus.Active)
         await this.sequencer.sequenceCommit(did, commit)
+        await this.sequencer.sequenceSyncEvt(did, syncEvtDataFromCommit(commit))
         await this.accountManager.updateRepoRoot(did, commit.cid, commit.rev)
         await this.actorStore.clearReservedKeypair(signingKeyDid, did)
 
