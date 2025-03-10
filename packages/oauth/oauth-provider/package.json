@@ -40,6 +40,7 @@
     "@atproto/jwk": "workspace:*",
     "@atproto/jwk-jose": "workspace:*",
     "@atproto/oauth-types": "workspace:*",
+    "@atproto/syntax": "workspace:*",
     "@hapi/accept": "^6.0.3",
     "@hapi/address": "^5.1.1",
     "@hapi/bourne": "^3.0.0",

@@ -1,6 +1,7 @@
 import { isEmailValid } from '@hapi/address'
 import { isDisposableEmail } from 'disposable-email-domains-js'
 import { z } from 'zod'
+import { ensureValidHandle } from '@atproto/syntax'
 import { ClientId } from '../client/client-id.js'
 import { DeviceId } from '../device/device-id.js'
 import { localeSchema } from '../lib/locale.js'
@@ -19,9 +20,18 @@ export const newPasswordSchema = z.string().min(8)
 export const tokenSchema = z.string().regex(/^[A-Z2-7]{5}-[A-Z2-7]{5}$/)
 export const handleSchema = z
   .string()
-  .min(3)
-  .max(30)
-  .regex(/^[a-z0-9][a-z0-9-]+[a-z0-9](?:\.[a-z0-9][a-z0-9-]+[a-z0-9])+$/)
+  // @NOTE: We only check against validity towards ATProto's syntax. Additional
+  // rules may be imposed by the store implementation.
+  .superRefine((value, ctx) => {
+    try {
+      ensureValidHandle(value)
+    } catch (err) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: err instanceof Error ? err.message : 'Invalid handle',
+      })
+    }
+  })
 export const emailSchema = z
   .string()
   .email()
