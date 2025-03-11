@@ -4,6 +4,7 @@ import { DataDiff } from '../data-diff'
 import { MST } from '../mst'
 import { ReadableRepo } from '../readable-repo'
 import { MemoryBlockstore, ReadableBlockstore, SyncStorage } from '../storage'
+import { StreamingBlockstore } from '../storage/streaming-blockstore'
 import {
   RecordCidClaim,
   RecordClaim,
@@ -12,6 +13,23 @@ import {
   def,
 } from '../types'
 import * as util from '../util'
+
+export async function* verifyCarStreaming(
+  carStream: AsyncIterable<Uint8Array>,
+): AsyncIterable<RecordCidClaim> {
+  const storage = await StreamingBlockstore.create(carStream)
+  const root = await storage.getRoot()
+  if (!root) {
+    throw new Error('no root')
+  }
+  const repo = await ReadableRepo.load(storage, root)
+  for await (const node of repo.data.walk()) {
+    if (node.isLeaf()) {
+      const { collection, rkey } = util.parseDataKey(node.key)
+      yield { collection, rkey, cid: node.value }
+    }
+  }
+}
 
 export const verifyRepoCar = async (
   carBytes: Uint8Array,
