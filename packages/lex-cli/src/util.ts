@@ -42,7 +42,7 @@ const parseJSON = (
   throw new Error('unknown file type')
 }
 
-export function readLexicon(path: string): LexiconDoc {
+export function readLexicon(path: string): LexiconDoc | LexiconDoc[] {
   let str: string
   let obj: Record<string, unknown> | Record<string, unknown>[]
   try {
