@@ -5,10 +5,16 @@ import { ZodError, type ZodFormattedError } from 'zod'
 import { type LexiconDoc, parseLexiconDoc } from '@atproto/lexicon'
 import { type FileDiff, type GeneratedAPI } from './types'
 
+const isJsonLike = (path: string) => {
+  return (
+    path.endsWith('.json') || path.endsWith('.jsonc') || path.endsWith('.jsonl')
+  )
+}
+
 export function readAllLexicons(paths: string[]): LexiconDoc[] {
   const docs: LexiconDoc[] = []
   for (const path of paths) {
-    if (!path.endsWith('.json') || !fs.statSync(path).isFile()) {
+    if (!isJsonLike(path) || !fs.statSync(path).isFile()) {
       continue
     }
     try {
@@ -20,9 +26,25 @@ export function readAllLexicons(paths: string[]): LexiconDoc[] {
   return docs
 }
 
+const parseJSON = (
+  path: string,
+  str: string
+): Record<string, unknown> | Record<string, unknown>[] => {
+  if (path.endsWith('.json')) {
+    return JSON.parse(str)
+  }
+  if (path.endsWith('.jsonc')) {
+    return jsonc.parse(str)
+  }
+  if (path.endsWith('.jsonl')) {
+    return jsonl.parse(str)
+  }
+  throw new Error('unknown file type')
+}
+
 export function readLexicon(path: string): LexiconDoc {
   let str: string
-  let obj: unknown
+  let obj: Record<string, unknown> | Record<string, unknown>[]
   try {
     str = fs.readFileSync(path, 'utf8')
   } catch (e) {
@@ -30,7 +52,7 @@ export function readLexicon(path: string): LexiconDoc {
     throw e
   }
   try {
-    obj = JSON.parse(str)
+    obj = parseJSON(path, str)
   } catch (e) {
     console.error(`Failed to parse JSON in file`, path)
     throw e
@@ -41,6 +63,9 @@ export function readLexicon(path: string): LexiconDoc {
     typeof (obj as LexiconDoc).lexicon === 'number'
   ) {
     try {
+      if (Array.isArray(obj)) {
+        return obj.map((o) => parseLexiconDoc(o))
+      }
       return parseLexiconDoc(obj)
     } catch (e) {
       console.error(`Invalid lexicon`, path)
