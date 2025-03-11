@@ -1,1 +1,21 @@
-../../../../interop-test-files/syntax/recordkey_syntax_valid.txt
+# specs
+self
+example.com
+~1.2-3_
+dHJ1ZQ
+_
+literal:self
+pre:fix
+
+# more corner-cases
+:
+-
+_
+~
+...
+self.
+lang:
+:lang
+
+# very long: 'o'.repeat(512)
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo

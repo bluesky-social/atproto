@@ -1,5 +1,4 @@
 node_modules
-interop-test-files
 __snapshots__
 dist
 pnpm-lock.yaml

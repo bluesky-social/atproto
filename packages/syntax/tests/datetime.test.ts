@@ -19,6 +19,7 @@ describe('datetime validation', () => {
   }
 
   it('conforms to interop valid datetimes', () => {
+    // NOTE: these test vector files are maintained in: https://github.com/bluesky-social/atproto-interop-tests
     const lineReader = readline.createInterface({
       input: fs.createReadStream(
         `${__dirname}/interop-files/datetime_syntax_valid.txt`,
@@ -37,6 +38,7 @@ describe('datetime validation', () => {
   })
 
   it('conforms to interop invalid datetimes', () => {
+    // NOTE: these test vector files are maintained in: https://github.com/bluesky-social/atproto-interop-tests
     const lineReader = readline.createInterface({
       input: fs.createReadStream(
         `${__dirname}/interop-files/datetime_syntax_invalid.txt`,
@@ -52,6 +54,7 @@ describe('datetime validation', () => {
   })
 
   it('conforms to interop invalid parse (semantics) datetimes', () => {
+    // NOTE: these test vector files are maintained in: https://github.com/bluesky-social/atproto-interop-tests
     const lineReader = readline.createInterface({
       input: fs.createReadStream(
         `${__dirname}/interop-files/datetime_parse_invalid.txt`,
