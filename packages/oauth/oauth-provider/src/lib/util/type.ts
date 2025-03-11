@@ -10,6 +10,24 @@ export type Override<T, V> = Simplify<{
 export type Awaitable<T> = T | Promise<T>
 
 /**
+ * Converts a tuple to the equivalent type of combining every item into a single
+ * one. If any of the item in the tuple is non nullish, the result will be non
+ * nullish.
+ */
+export type CombinedTuple<T extends readonly unknown[]> = T extends []
+  ? undefined
+  : Exclude<
+      T[number],
+      // If any item in the tuple is never `null` (resp. `undefined`), exclude
+      // `null` (resp. `undefined`) from `T[number]`
+      {
+        [K in keyof T]-?:
+          | (null extends T[K] ? never : null)
+          | (undefined extends T[K] ? never : undefined)
+      }[keyof T]
+    >
+
+/**
  * Similar to {@link Required} but also ensures that all values are defined.
  */
 export type RequiredDefined<T> = { [K in keyof T]-?: Exclude<T[K], undefined> }

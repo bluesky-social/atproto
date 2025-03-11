@@ -4,7 +4,6 @@ import { html } from './tags.js'
 
 export type AssetRef = {
   url: string
-  sha256: string
 }
 
 export type Attrs = Record<string, boolean | string | undefined>
@@ -59,6 +58,7 @@ export type BuildDocumentOptions = {
   base?: URL
   meta?: readonly MetaAttrs[]
   links?: readonly LinkAttrs[]
+  preloads?: readonly AssetRef[]
   head?: HtmlValue
   title?: HtmlValue
   scripts?: readonly (Html | AssetRef)[]
@@ -76,6 +76,7 @@ export const buildDocument = ({
   base,
   meta,
   links,
+  preloads,
   scripts,
   styles,
 }: BuildDocumentOptions) => html`<!doctype html>
@@ -86,8 +87,7 @@ export const buildDocument = ({
     ${base && html`<base href="${base.href}" />`}
     ${meta?.some(isViewportMeta) ? null : defaultViewport}
     ${meta?.map(metaToHtml)}
-    ${styles?.map(linkPreload('style'))}
-    ${scripts?.map(linkPreload('script'))}
+    ${preloads?.map(linkPreload)}
     ${links?.map(linkToHtml)}
     ${head}
     ${styles?.map(styleToHtml)}
@@ -120,11 +120,18 @@ function* attrsToHtml(attrs?: Attrs) {
   }
 }
 
-function linkPreload(as: 'script' | 'style') {
-  return (style: Html | AssetRef) =>
-    style instanceof Html
-      ? undefined
-      : html`<link rel="preload" href="${style.url}" as="${as}" />`
+function linkPreload(asset: AssetRef) {
+  const [path] = asset.url.split('?', 2)
+
+  if (path.endsWith('.js')) {
+    return html`<link rel="modulepreload" href="${asset.url}" />`
+  }
+
+  if (path.endsWith('.css')) {
+    return html`<link rel="preload" href="${asset.url}" as="style" />`
+  }
+
+  return undefined
 }
 
 function scriptToHtml(script: Html | AssetRef) {

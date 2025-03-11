@@ -1,82 +1,53 @@
 import { createHash } from 'node:crypto'
 import type { ServerResponse } from 'node:http'
-import { CspConfig, CspValue, buildCsp, mergeCsp } from '../lib/csp/index.js'
+import { CspConfig, CspValue, mergeCsp } from '../lib/csp/index.js'
 import {
   AssetRef,
   BuildDocumentOptions,
   Html,
   buildDocument,
-  js,
 } from '../lib/html/index.js'
-import { WriteResponseOptions, writeHtml } from '../lib/http/response.js'
+import { WriteHtmlOptions, writeHtml } from '../lib/http/response.js'
 
-export function declareBackendData(name: string, data: unknown) {
-  // The script tag is removed after the data is assigned to the global variable
-  // to prevent other scripts from deducing the value of the variable. The "app"
-  // script will read the global variable and then unset it. See
-  // "readBackendData" in "src/assets/app/backend-types.ts".
-  return js`window[${name}]=${data};document.currentScript.remove();`
+export const DEFAULT_CSP: CspConfig = {
+  'upgrade-insecure-requests': true,
+  'default-src': ["'none'"],
 }
 
-export type SendWebPageOptions = BuildDocumentOptions &
-  WriteResponseOptions & {
-    csp?: CspConfig
-  }
+export type SendWebPageOptions = BuildDocumentOptions & WriteHtmlOptions
 
 export async function sendWebPage(
   res: ServerResponse,
-  options: SendWebPageOptions,
+  { csp: inputCsp, ...options }: SendWebPageOptions,
 ): Promise<void> {
-  const csp = mergeCsp(options.csp, {
-    'default-src': ["'none'"],
+  // @NOTE the csp string might be quite long. In that case it might be tempting
+  // to set it through the http-equiv <meta> in the HTML. However, some
+  // directives cannot be enforced by browsers when set through the meta tag
+  // (e.g. 'frame-ancestors'). Therefore, it's better to set the CSP through the
+  // HTTP header.
+  const csp = mergeCsp(DEFAULT_CSP, inputCsp, {
     'base-uri': options.base?.origin as undefined | `https://${string}`,
-    'script-src': ["'self'", ...assetsToCsp(options.scripts)],
-    'style-src': ["'self'", ...assetsToCsp(options.styles)],
-    'img-src': ["'self'", 'data:', 'https:'],
-    'connect-src': ["'self'"],
-    'upgrade-insecure-requests': true,
-
-    // Prevents the CSP to be embedded in a page <meta>:
-    'frame-ancestors': ["'none'"],
+    'script-src': options.scripts?.map(assetToCsp),
+    'style-src': options.styles?.map(assetToCsp),
   })
 
-  // @NOTE the csp string might become too long. However, since we need to
-  // specify the "frame-ancestors" directive, we can't use a meta tag. For that
-  // reason, we won't try to avoid too long headers and let the proxy throw
-  // in case of a too long header.
-  res.setHeader('Content-Security-Policy', buildCsp(csp))
-
-  // @TODO: make these headers configurable (?)
-  res.setHeader('Permissions-Policy', 'otp-credentials=*, document-domain=()')
-  res.setHeader('Cross-Origin-Embedder-Policy', 'credentialless')
-  res.setHeader('Cross-Origin-Resource-Policy', 'same-origin')
-  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin')
-  res.setHeader('Referrer-Policy', 'same-origin')
-  res.setHeader('X-Frame-Options', 'DENY')
-  res.setHeader('X-Content-Type-Options', 'nosniff')
-  res.setHeader('X-XSS-Protection', '0')
-  res.setHeader('Strict-Transport-Security', 'max-age=63072000')
-
-  const html = buildDocument(options)
-
-  return writeHtml(res, html.toString(), options)
+  const html = buildDocument(options).toString()
+  return writeHtml(res, html, { ...options, csp })
 }
 
-export function* assetsToCsp(
-  assets?: Iterable<Html | AssetRef>,
-): Generator<CspValue> {
-  if (assets) {
-    for (const asset of assets) {
-      yield assetToCsp(asset)
-    }
-  }
-}
-
-export function assetToCsp(asset: Html | AssetRef): CspValue {
+function assetToCsp(asset: Html | AssetRef): CspValue {
   if (asset instanceof Html) {
-    const hash = createHash('sha256').update(asset.toString()).digest('base64')
-    return `'sha256-${hash}'`
+    // Inline assets are "allowed" by their hash
+    const hash = createHash('sha256')
+    for (const fragment of asset) hash.update(fragment)
+    return `'sha256-${hash.digest('base64')}'`
   } else {
-    return `'sha256-${asset.sha256}'`
+    // External assets are referenced by their origin
+    if (asset.url.startsWith('https:') || asset.url.startsWith('http:')) {
+      return new URL(asset.url).origin as `https:${string}` | `http:${string}`
+    }
+
+    // Internal assets are served from the same origin
+    return `'self'`
   }
 }

@@ -1,9 +1,8 @@
 import type { Readable } from 'node:stream'
+import type { ManifestItem } from '@atproto-labs/rollup-plugin-bundle-manifest'
 
 export type Asset = {
   url: string
-  type?: string
-  isEntry: boolean
-  sha256: string
+  item: ManifestItem
   createStream: () => Readable
 }

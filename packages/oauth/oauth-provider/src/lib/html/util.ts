@@ -15,7 +15,3 @@ export function* stringReplacer(
   }
   yield source.slice(previousIndex)
 }
-
-export function isString(value: unknown): value is string {
-  return typeof value === 'string'
-}

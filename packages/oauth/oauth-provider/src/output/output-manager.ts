@@ -10,7 +10,9 @@ import {
   html,
   isLinkRel,
 } from '../lib/html/index.js'
+import { CrossOriginEmbedderPolicy } from '../lib/http/security-headers.js'
 import { AVAILABLE_LOCALES, Locale, isAvailableLocale } from '../lib/locale.js'
+import { declareBackendData } from './backend-data.js'
 import {
   AuthorizationResultAuthorize,
   buildAuthorizeData,
@@ -22,14 +24,26 @@ import {
   buildCustomizationData,
 } from './build-customization-data.js'
 import { buildErrorPayload, buildErrorStatus } from './build-error-payload.js'
-import { assetToCsp, declareBackendData, sendWebPage } from './send-web-page.js'
+import { sendWebPage } from './send-web-page.js'
 
-const HCAPTCHA_CSP = {
+const BASE_CSP: CspConfig = {
+  // API calls are made to the same origin
+  'connect-src': ["'self'"],
+  // Allow loading of PDS logo & User avatars
+  'img-src': ['data:', 'https:'],
+  // Prevent embedding in iframes
+  'frame-ancestors': ["'none'"],
+}
+
+/**
+ * @see {@link https://docs.hcaptcha.com/#content-security-policy-settings}
+ */
+const HCAPTCHA_CSP: CspConfig = {
   'script-src': ['https://hcaptcha.com', 'https://*.hcaptcha.com'],
   'frame-src': ['https://hcaptcha.com', 'https://*.hcaptcha.com'],
   'style-src': ['https://hcaptcha.com', 'https://*.hcaptcha.com'],
   'connect-src': ['https://hcaptcha.com', 'https://*.hcaptcha.com'],
-} as const satisfies CspConfig
+}
 
 export type SendPageOptions = {
   preferredLocales?: readonly string[]
@@ -44,40 +58,43 @@ export class OutputManager {
   readonly scripts: readonly (Asset | Html)[]
   readonly styles: readonly (Asset | Html)[]
   readonly csp: CspConfig
+  readonly coep: CrossOriginEmbedderPolicy
 
   constructor(customization: Customization) {
     this.links = customization.branding?.links
-
-    const scripts = Array.from(enumerateAssets('application/javascript'))
-    const styles = Array.from(enumerateAssets('text/css'))
 
     // Note: building scripts/styles/csp here for two reasons:
     // 1. To avoid re-building it on every request
     // 2. To throw during init if the customization/config is invalid
 
     this.scripts = [
-      declareBackendData('__availableLocales', AVAILABLE_LOCALES),
-      declareBackendData(
-        '__customizationData',
-        buildCustomizationData(customization),
-      ),
+      declareBackendData({
+        __availableLocales: AVAILABLE_LOCALES,
+        __customizationData: buildCustomizationData(customization),
+      }),
       // Last (to be able to read the "backend data" variables)
-      ...scripts.filter((asset) => asset.isEntry),
+      ...Array.from(enumerateAssets('application/javascript')).filter(
+        ({ item }) => item.type === 'chunk' && item.isEntry,
+      ),
     ]
 
     this.styles = [
       // First (to be overridden by customization)
-      ...styles,
+      ...enumerateAssets('text/css'),
       cssCode(buildCustomizationCss(customization)),
     ]
 
-    const customizationCsp = customization?.hcaptcha ? HCAPTCHA_CSP : undefined
-    const assetsCsp: CspConfig = {
-      'script-src': scripts.map(assetToCsp),
-      'style-src': styles.map(assetToCsp),
-    }
-
-    this.csp = mergeCsp(customizationCsp, assetsCsp)
+    this.csp = mergeCsp(
+      BASE_CSP,
+      customization?.hcaptcha ? HCAPTCHA_CSP : undefined,
+    )
+    // Because we are loading avatar images from external sources, that might
+    // not have CORP headers set, we need to use at least "credentialless".
+    this.coep = customization?.hcaptcha
+      ? // https://github.com/hCaptcha/react-hcaptcha/issues/259
+        // @TODO Remove the use of `unsafeNone` once the issue above is resolved
+        CrossOriginEmbedderPolicy.unsafeNone
+      : CrossOriginEmbedderPolicy.credentialless
   }
 
   async sendAuthorizePage(
@@ -91,7 +108,7 @@ export class OutputManager {
 
     return sendWebPage(res, {
       scripts: [
-        declareBackendData('__authorizeData', buildAuthorizeData(data)),
+        declareBackendData({ __authorizeData: buildAuthorizeData(data) }),
         ...this.scripts,
       ],
       styles: this.styles,
@@ -100,6 +117,7 @@ export class OutputManager {
       htmlAttrs: { lang: locale },
       body: html`<div id="root"></div>`,
       csp: this.csp,
+      coep: this.coep,
     })
   }
 
@@ -113,7 +131,7 @@ export class OutputManager {
     return sendWebPage(res, {
       status: buildErrorStatus(err),
       scripts: [
-        declareBackendData('__errorData', buildErrorPayload(err)),
+        declareBackendData({ __errorData: buildErrorPayload(err) }),
         ...this.scripts,
       ],
       styles: this.styles,
@@ -122,6 +140,7 @@ export class OutputManager {
       htmlAttrs: { lang: locale },
       body: html`<div id="root"></div>`,
       csp: this.csp,
+      coep: this.coep,
     })
   }
 

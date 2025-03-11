@@ -64,9 +64,7 @@ function manifestItemToAsset(filename: string, manifest: ManifestItem): Asset {
 
   return {
     url: posix.join(ASSETS_URL_PREFIX, filename),
-    type: manifest.mime,
-    isEntry: manifest.type === 'chunk' && manifest.isEntry,
-    sha256: manifest.sha256,
+    item: manifest,
     createStream: data
       ? () => Readable.from(Buffer.from(data, 'base64'))
       : () =>
