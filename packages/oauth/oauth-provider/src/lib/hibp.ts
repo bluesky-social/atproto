@@ -41,9 +41,9 @@ export class HibpClient {
 
       const lines = response.split('\n')
       for (const line of lines) {
-        const [hashSuffix] = line.split(':')
+        const [hashSuffix, count] = line.split(':')
 
-        if (hashSuffix.trim() === suffix) {
+        if (hashSuffix.trim() === suffix && count > 0) {
           return true
         }
       }
