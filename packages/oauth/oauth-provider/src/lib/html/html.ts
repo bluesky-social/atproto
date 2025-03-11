@@ -1,5 +1,3 @@
-import { isString } from './util'
-
 const symbol = Symbol('Html.dangerouslyCreate')
 
 /**
@@ -7,7 +5,7 @@ const symbol = Symbol('Html.dangerouslyCreate')
  * or used as fragments to build a larger HTML document.
  */
 export class Html implements Iterable<string> {
-  #fragments: Iterable<Html | string>
+  readonly #fragments: readonly (Html | string)[]
 
   private constructor(fragments: Iterable<Html | string>, guard: symbol) {
     if (guard !== symbol) {
@@ -18,23 +16,13 @@ export class Html implements Iterable<string> {
       )
     }
 
-    this.#fragments = fragments
+    // Transform into an array in case iterable can be consumed only once
+    // (e.g. a generator function).
+    this.#fragments = Array.from(fragments)
   }
 
   toString(): string {
-    let result = ''
-    for (const fragment of this) result += fragment
-
-    // Cache result for future calls
-    if (
-      !Array.isArray(this.#fragments) ||
-      this.#fragments.length > 1 ||
-      !this.#fragments.every(isString)
-    ) {
-      this.#fragments = result ? [result] : []
-    }
-
-    return result
+    return this.#fragments.join('')
   }
 
   [Symbol.toPrimitive](hint): string {
@@ -49,7 +37,11 @@ export class Html implements Iterable<string> {
 
   *[Symbol.iterator](): IterableIterator<string> {
     for (const fragment of this.#fragments) {
-      yield String(fragment)
+      if (typeof fragment === 'string') {
+        yield fragment
+      } else {
+        yield* fragment
+      }
     }
   }
 
