@@ -18,7 +18,12 @@ export function readAllLexicons(paths: string[]): LexiconDoc[] {
       continue
     }
     try {
-      docs.push(readLexicon(path))
+      const lexicon = readLexicon(path)
+      if (Array.isArray(lexicon)) {
+        lexicon.forEach((lex) => docs.push(lex))
+      } else {
+        docs.push(lexicon)
+      }
     } catch (e) {
       // skip
     }
