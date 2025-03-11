@@ -38,13 +38,13 @@ export function authorizeAssetsMiddleware(): Middleware {
       return next(err)
     }
 
-    if (req.headers['if-none-match'] === asset.sha256) {
+    if (req.headers['if-none-match'] === asset.item.sha256) {
       return void res.writeHead(304).end()
     }
 
-    res.setHeader('ETag', asset.sha256)
+    res.setHeader('ETag', asset.item.sha256)
     res.setHeader('Cache-Control', 'public, max-age=31536000, immutable')
 
-    writeStream(res, asset.createStream(), { contentType: asset.type })
+    writeStream(res, asset.createStream(), { contentType: asset.item.mime })
   }
 }

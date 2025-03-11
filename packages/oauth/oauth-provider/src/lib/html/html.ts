@@ -49,11 +49,7 @@ export class Html implements Iterable<string> {
 
   *[Symbol.iterator](): IterableIterator<string> {
     for (const fragment of this.#fragments) {
-      if (typeof fragment === 'string') {
-        yield fragment
-      } else {
-        yield* fragment
-      }
+      yield String(fragment)
     }
   }
 
