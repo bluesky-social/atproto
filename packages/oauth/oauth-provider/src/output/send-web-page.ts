@@ -38,12 +38,14 @@ export async function sendWebPage(
 function assetToCsp(asset: Html | AssetRef): CspValue {
   if (asset instanceof Html) {
     // Inline assets are "allowed" by their hash
-    const hash = createHash('sha256').update(asset.toString()).digest('base64')
-    return `'sha256-${hash}'`
+    const hash = createHash('sha256')
+    for (const fragment of asset) hash.update(fragment)
+    return `'sha256-${hash.digest('base64')}'`
   } else {
-    // External assets are referenced by their full url
-    if (asset.url.startsWith('https:')) return asset.url as `https:${string}`
-    if (asset.url.startsWith('http:')) return asset.url as `http:${string}`
+    // External assets are referenced by their origin
+    if (asset.url.startsWith('https:') || asset.url.startsWith('http:')) {
+      return new URL(asset.url).origin as `https:${string}` | `http:${string}`
+    }
 
     // Internal assets are served from the same origin
     return `'self'`
