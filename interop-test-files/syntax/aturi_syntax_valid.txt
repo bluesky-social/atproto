@@ -32,3 +32,4 @@ at://did:abc:123/io.nsid.someFunc/-
 at://did:abc:123/io.nsid.someFunc/_
 at://did:abc:123/io.nsid.someFunc/~
 at://did:abc:123/io.nsid.someFunc/...
+at://did:plc:asdf123/com.atproto.feed.postV2
