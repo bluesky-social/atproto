@@ -3,15 +3,13 @@ com.oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo.foo
 com.example.oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
 com.middle.middle.middle.middle.middle.middle.middle.middle.middle.middle.middle.middle.middle.middle.middle.middle.middle.middle.middle.middle.middle.middle.middle.middle.middle.middle.middle.middle.middle.middle.middle.middle.middle.middle.middle.middle.middle.middle.middle.middle.middle.middle.middle.middle.middle.middle.middle.middle.middle.middle.foo
 
-# invliad examples
+# invalid examples
 com.example.foo.*
 com.example.foo.blah*
 com.example.foo.*blah
-com.example.f00
 com.exa💩ple.thing
 a-0.b-1.c-3
 a-0.b-1.c-o
-a0.b1.c3
 1.0.0.127.record
 0two.example.foo
 example.com
@@ -29,4 +27,4 @@ com.atproto.feed.p*st
 com.atproto.feed.po#t
 com.atproto.feed.p!ot
 com.example-.foo
-
+com.example.fooBar.2
