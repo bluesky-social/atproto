@@ -35,7 +35,7 @@ const ATP_METHODS = {
 }
 
 export async function genClientApi(
-  lexiconDocs: LexiconDoc[],
+  lexiconDocs: LexiconDoc[]
 ): Promise<GeneratedAPI> {
   const project = new Project({
     useInMemoryFileSystem: true,
@@ -58,7 +58,7 @@ const indexTs = (
   project: Project,
   lexiconDocs: LexiconDoc[],
   nsidTree: DefTreeNode[],
-  nsidTokens: Record<string, string[]>,
+  nsidTokens: Record<string, string[]>
 ) =>
   gen(project, '/index.ts', async (file) => {
     //= import { XrpcClient, type FetchHandler, type FetchHandlerOptions } from '@atproto/xrpc'
@@ -70,6 +70,16 @@ const indexTs = (
       { name: 'FetchHandler', isTypeOnly: true },
       { name: 'FetchHandlerOptions', isTypeOnly: true },
     ])
+
+    file
+      .addImportDeclaration({ moduleSpecifier: '@atproto/api' })
+      .addNamedImports([
+        { name: 'ComAtprotoRepoCreateRecord' },
+        { name: 'ComAtprotoRepoDeleteRecord' },
+        { name: 'ComAtprotoRepoGetRecord' },
+        { name: 'ComAtprotoRepoListRecords' },
+      ])
+
     //= import {schemas} from './lexicons.js'
     file
       .addImportDeclaration({ moduleSpecifier: './lexicons.js' })
@@ -115,7 +125,7 @@ const indexTs = (
               '{',
               ...nsidTokens[nsidAuthority].map(
                 (nsidName) =>
-                  `${toTitleCase(nsidName)}: "${nsidAuthority}.${nsidName}",`,
+                  `${toTitleCase(nsidName)}: "${nsidAuthority}.${nsidName}",`
               ),
               '}',
             ].join('\n'),
@@ -150,7 +160,7 @@ const indexTs = (
       statements: [
         'super(options, schemas)',
         ...nsidTree.map(
-          (ns) => `this.${ns.propName} = new ${ns.className}(this)`,
+          (ns) => `this.${ns.propName} = new ${ns.className}(this)`
         ),
       ],
     })
@@ -223,14 +233,14 @@ function genNamespaceCls(file: SourceFile, ns: DefTreeNode) {
     statements: [
       `this._client = client`,
       ...ns.children.map(
-        (ns) => `this.${ns.propName} = new ${ns.className}(client)`,
+        (ns) => `this.${ns.propName} = new ${ns.className}(client)`
       ),
       ...ns.userTypes
         .filter((ut) => ut.def.type === 'record')
         .map((ut) => {
           const name = NSID.parse(ut.nsid).name || ''
           return `this.${toCamelCase(name)} = new ${toTitleCase(
-            name,
+            name
           )}Record(client)`
         }),
     ],
@@ -273,7 +283,7 @@ function genNamespaceCls(file: SourceFile, ns: DefTreeNode) {
           ? // Only add a catch block if there are custom errors
             `  .catch((e) => { throw ${moduleName}.toKnownErr(e) })`
           : '',
-      ].join('\n'),
+      ].join('\n')
     )
   }
 
@@ -320,13 +330,15 @@ function genRecordCls(file: SourceFile, nsid: string, lexRecord: LexRecord) {
     })
     method.addParameter({
       name: 'params',
-      type: `OmitKey<${toTitleCase(ATP_METHODS.list)}.QueryParams, "collection">`,
+      type: `OmitKey<${toTitleCase(
+        ATP_METHODS.list
+      )}.QueryParams, "collection">`,
     })
     method.setBodyText(
       [
         `const res = await this._client.call('${ATP_METHODS.list}', { collection: '${nsid}', ...params })`,
         `return res.data`,
-      ].join('\n'),
+      ].join('\n')
     )
   }
   {
@@ -338,13 +350,15 @@ function genRecordCls(file: SourceFile, nsid: string, lexRecord: LexRecord) {
     })
     method.addParameter({
       name: 'params',
-      type: `OmitKey<${toTitleCase(ATP_METHODS.get)}.QueryParams, "collection">`,
+      type: `OmitKey<${toTitleCase(
+        ATP_METHODS.get
+      )}.QueryParams, "collection">`,
     })
     method.setBodyText(
       [
         `const res = await this._client.call('${ATP_METHODS.get}', { collection: '${nsid}', ...params })`,
         `return res.data`,
-      ].join('\n'),
+      ].join('\n')
     )
   }
   {
@@ -357,7 +371,7 @@ function genRecordCls(file: SourceFile, nsid: string, lexRecord: LexRecord) {
     method.addParameter({
       name: 'params',
       type: `OmitKey<${toTitleCase(
-        ATP_METHODS.create,
+        ATP_METHODS.create
       )}.InputSchema, "collection" | "record">`,
     })
     method.addParameter({
@@ -376,7 +390,7 @@ function genRecordCls(file: SourceFile, nsid: string, lexRecord: LexRecord) {
         `const collection = '${nsid}'`,
         `const res = await this._client.call('${ATP_METHODS.create}', undefined, { collection, ${maybeRkeyPart}...params, record: { ...record, $type: collection} }, {encoding: 'application/json', headers })`,
         `return res.data`,
-      ].join('\n'),
+      ].join('\n')
     )
   }
   // {
@@ -416,7 +430,7 @@ function genRecordCls(file: SourceFile, nsid: string, lexRecord: LexRecord) {
     method.addParameter({
       name: 'params',
       type: `OmitKey<${toTitleCase(
-        ATP_METHODS.delete,
+        ATP_METHODS.delete
       )}.InputSchema, "collection">`,
     })
     method.addParameter({
@@ -427,7 +441,7 @@ function genRecordCls(file: SourceFile, nsid: string, lexRecord: LexRecord) {
     method.setBodyText(
       [
         `await this._client.call('${ATP_METHODS.delete}', undefined, { collection: '${nsid}', ...params }, { headers })`,
-      ].join('\n'),
+      ].join('\n')
     )
   }
 }
@@ -477,13 +491,13 @@ const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
         }
       }
       genImports(file, imports, lexiconDoc.id)
-    },
+    }
   )
 
 function genClientXrpcCommon(
   file: SourceFile,
   lexicons: Lexicons,
-  lexUri: string,
+  lexUri: string
 ) {
   const def = lexicons.getDefOrThrow(lexUri, ['query', 'procedure'])
 
@@ -557,7 +571,7 @@ function genClientXrpcCommon(
       ? [
           'if (e instanceof XRPCError) {',
           ...customErrors.map(
-            (err) => `if (e.error === '${err.name}') return new ${err.cls}(e)`,
+            (err) => `if (e.error === '${err.name}') return new ${err.cls}(e)`
           ),
           '}',
           'return e',
