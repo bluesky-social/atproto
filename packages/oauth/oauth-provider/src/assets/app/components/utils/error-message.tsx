@@ -2,6 +2,7 @@ import { Trans } from '@lingui/react/macro'
 import { ReactNode, memo } from 'react'
 import {
   AccessDeniedError,
+  CompromisedPasswordError,
   EmailTakenError,
   HandleUnavailableError,
   InvalidCredentialsError,
@@ -62,6 +63,17 @@ export const ErrorMessage = memo(function ErrorMessage({
     error instanceof RequestExpiredError
   ) {
     return <Trans>This sign-in session has expired</Trans>
+  }
+
+  if (error instanceof CompromisedPasswordError) {
+    return (
+      <Trans>
+        This password has appeared in one or more data breaches. For your
+        security, please choose a different password that has not been
+        compromised. Consider using a password manager to generate and store
+        strong, unique passwords.
+      </Trans>
+    )
   }
 
   if (error instanceof InvalidRequestError) {

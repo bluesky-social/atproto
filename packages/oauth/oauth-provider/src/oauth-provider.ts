@@ -74,6 +74,7 @@ import { LoginRequiredError } from './errors/login-required-error.js'
 import { UnauthorizedClientError } from './errors/unauthorized-client-error.js'
 import { WWWAuthenticateError } from './errors/www-authenticate-error.js'
 import { HcaptchaConfig } from './lib/hcaptcha.js'
+import { HibpConfig } from './lib/hibp.js'
 import {
   Handler,
   Middleware,
@@ -139,6 +140,7 @@ export {
   type CustomizationInput,
   type Handler,
   type HcaptchaConfig,
+  type HibpConfig,
   Keyset,
   type OAuthAuthorizationServerMetadata,
 }

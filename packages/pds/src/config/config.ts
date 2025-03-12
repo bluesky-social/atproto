@@ -1,8 +1,12 @@
 import assert from 'node:assert'
 import path from 'node:path'
 import { DAY, HOUR, SECOND } from '@atproto/common'
-import { BrandingInput, HcaptchaConfig } from '@atproto/oauth-provider'
-import { ServerEnvironment } from './env'
+import {
+  BrandingInput,
+  HcaptchaConfig,
+  HibpConfig,
+} from '@atproto/oauth-provider'
+import type { ServerEnvironment } from './env'
 
 // off-config but still from env:
 // logging: LOG_LEVEL, LOG_SYSTEMS, LOG_ENABLED, LOG_DESTINATION
@@ -271,6 +275,11 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
                   tokenSalt: env.hcaptchaTokenSalt,
                 }
               : undefined,
+          hibp: env.hibpEnabled
+            ? {
+                enabled: true,
+              }
+            : undefined,
           branding: {
             name: env.serviceName ?? 'Personal PDS',
             logo: env.logoUrl,
@@ -447,6 +456,7 @@ export type OAuthConfig = {
     | false
     | {
         hcaptcha?: HcaptchaConfig
+        hibp?: HibpConfig
         branding: BrandingInput
       }
 }

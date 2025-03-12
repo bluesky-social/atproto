@@ -14,6 +14,7 @@ import { ClientInfo } from './client/client-info.js'
 import { Client } from './client/client.js'
 import { InvalidRequestError } from './errors/invalid-request-error.js'
 import { HcaptchaConfig, HcaptchaVerifyResult } from './lib/hcaptcha.js'
+import { HibpConfig } from './lib/hibp.js'
 import { RequestMetadata } from './lib/http/request.js'
 import { Awaitable } from './lib/util/type.js'
 import { AccessDeniedError, OAuthError } from './oauth-errors.js'
@@ -32,6 +33,7 @@ export {
   type DeviceId,
   type HcaptchaConfig,
   type HcaptchaVerifyResult,
+  type HibpConfig,
   InvalidRequestError,
   type Jwks,
   type OAuthAuthorizationDetails,

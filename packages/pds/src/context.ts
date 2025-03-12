@@ -347,6 +347,7 @@ export class AppContext {
           inviteCodeRequired: cfg.invites.required,
           availableUserDomains: cfg.identity.serviceHandleDomains,
           hcaptcha: cfg.oauth.provider.hcaptcha,
+          hibp: cfg.oauth.provider.hibp,
           branding: cfg.oauth.provider.branding,
           safeFetch,
           metadata: {
