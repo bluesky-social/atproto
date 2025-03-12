@@ -1,5 +1,11 @@
 # @atproto/syntax
 
+## 0.4.0
+
+### Minor Changes
+
+- [#3635](https://github.com/bluesky-social/atproto/pull/3635) [`670b6b5de`](https://github.com/bluesky-social/atproto/commit/670b6b5de2bf91e6944761c98eb1126fb6a681ee) Thanks [@bnewbold](https://github.com/bnewbold)! - update NSID syntax to allow non-leading digits
+
 ## 0.3.4
 
 ### Patch Changes
