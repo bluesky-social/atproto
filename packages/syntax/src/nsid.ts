@@ -88,7 +88,9 @@ export const ensureValidNsid = (nsid: string): void => {
       throw new InvalidNsidError('NSID first part may not start with a digit')
     }
     if (!/^[a-zA-Z][a-zA-Z0-9]*$/.test(l) && i + 1 === labels.length) {
-      throw new InvalidNsidError('NSID name part must be only letters and digits (and no leading digit)')
+      throw new InvalidNsidError(
+        'NSID name part must be only letters and digits (and no leading digit)',
+      )
     }
   }
 }
