@@ -1,0 +1,487 @@
+msgid ""
+msgstr ""
+"POT-Creation-Date: 2025-02-27 14:42+0100\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: @lingui/cli\n"
+"Language: ca\n"
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Plural-Forms: \n"
+
+#: src/views/authorize/accept/accept-form.tsx:76
+msgid "<0/> is asking for permission to access your account (<1/>)."
+msgstr ""
+
+#: src/views/authorize/sign-in/sign-in-form.tsx:219
+msgid "2FA Confirmation"
+msgstr ""
+
+#: src/components/utils/error-message.tsx:27
+msgid "A second authentication factor is required"
+msgstr ""
+
+#: src/views/authorize/accept/accept-form.tsx:144
+msgid "Access your account data (except chat messages)"
+msgstr ""
+
+#: src/views/authorize/accept/accept-form.tsx:146
+msgid "Access your chat messages"
+msgstr ""
+
+#: src/views/authorize/sign-in/sign-in-form.tsx:138
+msgid "Account"
+msgstr ""
+
+#: src/views/authorize/reset-password/reset-password-view.tsx:71
+msgid "Already have a code?"
+msgstr ""
+
+#: src/components/utils/client-name.tsx:35
+msgid "An application on your device"
+msgstr ""
+
+#: src/components/utils/error-message.tsx:87
+msgid "An unknown error occurred"
+msgstr ""
+
+#: src/views/authorize/sign-in/sign-in-picker.tsx:110
+msgid "Another account"
+msgstr ""
+
+#: src/views/authorize/welcome/welcome-view.tsx:28
+msgid "Authenticate"
+msgstr ""
+
+#: src/views/authorize/accept/accept-view.tsx:55
+#: src/views/authorize/accept/accept-form.tsx:56
+msgid "Authorize"
+msgstr ""
+
+#: src/views/authorize/sign-in/sign-in-picker.tsx:47
+#: src/views/authorize/sign-in/sign-in-form.tsx:130
+#: src/views/authorize/reset-password/reset-password-view.tsx:65
+#: src/views/authorize/reset-password/reset-password-view.tsx:95
+#: src/components/forms/wizard-card.tsx:93
+msgid "Back"
+msgstr ""
+
+#: src/views/authorize/sign-up/sign-up-handle-form.tsx:152
+msgid "Between {minLength} and {maxLength} characters"
+msgstr ""
+
+#: src/views/authorize/accept/accept-form.tsx:89
+msgid "By clicking <0>Authorize</0>, you allow this application to perform the following actions in accordance with their <1>terms of service</1> and <2>privacy policy</2>:"
+msgstr ""
+
+#: src/views/authorize/sign-up/sign-up-disclaimer.tsx:30
+msgid "By creating an account you agree to the {0} and the {1} of this service."
+msgstr ""
+
+#: src/views/authorize/welcome/welcome-view.tsx:51
+msgid "Cancel"
+msgstr ""
+
+#: src/views/authorize/sign-in/sign-in-form.tsx:232
+msgid "Check your {0} email for a login code and enter it here."
+msgstr ""
+
+#: src/views/authorize/sign-up/sign-up-view.tsx:94
+msgid "Choose a username"
+msgstr ""
+
+#: src/components/utils/error-card.tsx:76
+msgid "Code"
+msgstr ""
+
+#: src/views/authorize/sign-in/sign-in-form.tsx:135
+msgid "Confirm"
+msgstr ""
+
+#: src/views/authorize/sign-in/sign-in-view.tsx:65
+msgid "Confirm your password to continue"
+msgstr ""
+
+#: src/views/authorize/sign-in/sign-in-form.tsx:223
+msgid "Confirmation code"
+msgstr ""
+
+#: src/views/authorize/welcome/welcome-view.tsx:35
+msgid "Create a new account"
+msgstr ""
+
+#: src/views/authorize/sign-up/sign-up-view.tsx:78
+msgid "Create Account"
+msgstr ""
+
+#: src/views/authorize/accept/accept-form.tsx:60
+msgid "Deny access"
+msgstr ""
+
+#: src/components/utils/error-card.tsx:83
+msgid "Description"
+msgstr ""
+
+#: src/views/authorize/sign-up/sign-up-account-form.tsx:114
+msgid "Email"
+msgstr ""
+
+#: src/views/authorize/reset-password/reset-password-request-form.tsx:55
+#: src/views/authorize/reset-password/reset-password-request-form.tsx:60
+#: src/components/forms/input-email-address.tsx:51
+msgid "Email address"
+msgstr ""
+
+#: src/components/forms/input-new-password.tsx:44
+msgid "Enter a password"
+msgstr ""
+
+#: src/views/authorize/reset-password/reset-password-view.tsx:85
+msgid "Enter the code you received to reset your password."
+msgstr ""
+
+#: src/views/authorize/reset-password/reset-password-request-form.tsx:71
+msgid "Enter the email you used to create your account. We'll send you a \"reset code\" so you can set a new password."
+msgstr ""
+
+#: src/views/authorize/reset-password/reset-password-request-form.tsx:58
+msgid "Enter your email address"
+msgstr ""
+
+#: src/components/forms/input-new-password.tsx:45
+msgid "Enter your new password"
+msgstr ""
+
+#: src/views/authorize/sign-in/sign-in-view.tsx:86
+msgid "Enter your password"
+msgstr ""
+
+#: src/views/authorize/sign-in/sign-in-view.tsx:104
+#: src/views/authorize/sign-in/sign-in-view.tsx:120
+msgid "Enter your username and password"
+msgstr ""
+
+#: src/views/error/error-view.tsx:27
+msgid "Error"
+msgstr ""
+
+#: src/views/authorize/sign-up/sign-up-account-form.tsx:102
+msgid "example-com-xxxxx-xxxxx"
+msgstr ""
+
+#: src/components/utils/password-strength-label.tsx:25
+msgid "Extra"
+msgstr ""
+
+#: src/views/authorize/reset-password/reset-password-view.tsx:53
+msgid "Forgot Password"
+msgstr ""
+
+#: src/views/authorize/sign-in/sign-in-form.tsx:178
+msgid "Forgot?"
+msgstr ""
+
+#: src/views/authorize/accept/accept-view.tsx:40
+msgid "Grant access to your <0>{0}</0> account"
+msgstr ""
+
+#: src/components/utils/help-card.tsx:32
+msgid "Having trouble? <0>Contact support</0>"
+msgstr ""
+
+#: src/components/forms/button-toggle-visibility.tsx:34
+msgid "Hide"
+msgstr ""
+
+#: src/components/utils/link-title.tsx:15
+msgid "Home"
+msgstr ""
+
+#: src/views/authorize/sign-in/sign-in-picker.tsx:86
+msgid "Identifier"
+msgstr ""
+
+#: src/locales/locale-selector.tsx:48
+msgid "Interface language selector"
+msgstr ""
+
+#: src/views/authorize/sign-up/sign-up-handle-form.tsx:275
+msgid "Invalid"
+msgstr ""
+
+#: src/views/authorize/sign-up/sign-up-account-form.tsx:96
+#: src/views/authorize/sign-up/sign-up-account-form.tsx:101
+msgid "Invite code"
+msgstr ""
+
+#: src/views/authorize/reset-password/reset-password-view.tsx:55
+msgid "Let's get your password reset!"
+msgstr ""
+
+#: src/views/authorize/authorize-view.tsx:172
+msgid "Login complete"
+msgstr ""
+
+#: src/views/authorize/sign-in/sign-in-picker.tsx:104
+msgid "Login to account that is not listed"
+msgstr ""
+
+#: src/components/forms/input-token.tsx:59
+msgid "Looks like {example}"
+msgstr ""
+
+#: src/components/forms/button-toggle-visibility.tsx:34
+msgid "Make visible"
+msgstr ""
+
+#: src/components/utils/password-strength-label.tsx:33
+msgid "Missing"
+msgstr ""
+
+#: src/components/utils/password-strength-label.tsx:29
+msgid "Moderate"
+msgstr ""
+
+#: src/views/authorize/sign-in/sign-in-picker.tsx:80
+msgid "Name"
+msgstr ""
+
+#: src/views/authorize/reset-password/reset-password-confirm-form.tsx:76
+msgid "New password"
+msgstr ""
+
+#: src/views/authorize/reset-password/reset-password-view.tsx:60
+#: src/views/authorize/reset-password/reset-password-view.tsx:90
+#: src/components/forms/wizard-card.tsx:96
+msgid "Next"
+msgstr ""
+
+#: src/views/authorize/reset-password/reset-password-view.tsx:119
+msgid "Okay"
+msgstr ""
+
+#: src/views/authorize/sign-up/sign-up-handle-form.tsx:157
+msgid "Only letters, numbers, and hyphens"
+msgstr ""
+
+#: src/views/authorize/sign-up/sign-up-account-form.tsx:128
+#: src/components/forms/input-password.tsx:53
+msgid "Password"
+msgstr ""
+
+#: src/components/utils/password-strength-label.tsx:23
+msgid "Password strength"
+msgstr ""
+
+#: src/components/utils/password-strength-meter.tsx:45
+msgid "Password strength indicator"
+msgstr ""
+
+#: src/views/authorize/reset-password/reset-password-view.tsx:106
+msgid "Password Updated"
+msgstr ""
+
+#: src/views/authorize/reset-password/reset-password-view.tsx:113
+msgid "Password updated!"
+msgstr ""
+
+#: src/components/forms/input-new-password.tsx:46
+msgid "Password with at least {MIN_PASSWORD_LENGTH} characters"
+msgstr ""
+
+#: src/views/authorize/sign-in/sign-in-form.tsx:192
+msgid "Please verify the domain name of the website before entering your password. Never enter your password on a domain you do not trust."
+msgstr ""
+
+#: src/views/authorize/sign-up/sign-up-disclaimer.tsx:42
+#: src/views/authorize/sign-up/sign-up-disclaimer.tsx:45
+#: src/components/utils/link-title.tsx:17
+msgid "Privacy Policy"
+msgstr ""
+
+#: src/views/authorize/sign-in/sign-in-form.tsx:206
+#: src/views/authorize/sign-in/sign-in-form.tsx:211
+msgid "Remember this account on this device"
+msgstr ""
+
+#: src/views/authorize/accept/accept-form.tsx:123
+msgid "Requested permissions"
+msgstr ""
+
+#: src/views/authorize/reset-password/reset-password-confirm-form.tsx:61
+msgid "Reset code"
+msgstr ""
+
+#: src/views/authorize/reset-password/reset-password-view.tsx:82
+msgid "Reset Password"
+msgstr ""
+
+#: src/views/authorize/sign-in/sign-in-form.tsx:176
+msgid "Reset your password"
+msgstr ""
+
+#: src/views/authorize/sign-up/sign-up-handle-form.tsx:196
+msgid "Select domain"
+msgstr ""
+
+#: src/views/authorize/sign-in/sign-in-view.tsx:135
+msgid "Select from an existing account"
+msgstr ""
+
+#: src/views/authorize/sign-in/sign-in-form.tsx:202
+msgid "Session"
+msgstr ""
+
+#: src/views/authorize/welcome/welcome-view.tsx:45
+msgid "Sign in"
+msgstr ""
+
+#: src/views/authorize/sign-in/sign-in-picker.tsx:75
+msgid "Sign in as {0}"
+msgstr ""
+
+#: src/views/authorize/sign-in/sign-in-picker.tsx:53
+msgid "Sign in as..."
+msgstr ""
+
+#: src/views/authorize/sign-up/sign-up-view.tsx:84
+msgid "Sign up"
+msgstr ""
+
+#: src/components/forms/wizard-card.tsx:106
+msgid "Step {currentPosition} of {count}"
+msgstr ""
+
+#: src/components/utils/password-strength-label.tsx:27
+msgid "Strong"
+msgstr ""
+
+#: src/components/forms/form-card-async.tsx:96
+msgid "Submit"
+msgstr ""
+
+#: src/components/utils/link-title.tsx:21
+msgid "Support"
+msgstr ""
+
+#: src/views/authorize/sign-up/sign-up-disclaimer.tsx:34
+#: src/views/authorize/sign-up/sign-up-disclaimer.tsx:37
+#: src/components/utils/link-title.tsx:19
+msgid "Terms of Service"
+msgstr ""
+
+#: src/components/utils/error-message.tsx:52
+msgid "That handle cannot be used"
+msgstr ""
+
+#: src/components/utils/error-message.tsx:69
+msgid "The data you submitted is invalid. Please check the form and try again."
+msgstr ""
+
+#: src/components/utils/error-message.tsx:43
+msgid "The domain name is not allowed"
+msgstr ""
+
+#: src/components/utils/error-message.tsx:45
+msgid "The handle contains inappropriate language"
+msgstr ""
+
+#: src/components/utils/error-message.tsx:50
+msgid "The handle is already in use"
+msgstr ""
+
+#: src/components/utils/error-message.tsx:41
+msgid "The handle is invalid"
+msgstr ""
+
+#: src/components/utils/error-message.tsx:35
+msgid "The invite code is not valid"
+msgstr ""
+
+#: src/components/utils/error-message.tsx:77
+msgid "This authorization request has been denied. Please try again."
+msgstr ""
+
+#: src/components/utils/error-message.tsx:57
+msgid "This email is already used"
+msgstr ""
+
+#: src/components/utils/error-message.tsx:48
+msgid "This handle is reserved"
+msgstr ""
+
+#: src/components/utils/error-message.tsx:64
+msgid "This sign-in session has expired"
+msgstr ""
+
+#: src/views/authorize/sign-up/sign-up-handle-form.tsx:166
+msgid "Type your desired username"
+msgstr ""
+
+#: src/components/utils/error-message.tsx:84
+msgid "Unexpected server response"
+msgstr ""
+
+#: src/views/authorize/accept/accept-form.tsx:142
+msgid "Uniquely identify you"
+msgstr ""
+
+#: src/views/authorize/sign-in/sign-in-form.tsx:143
+msgid "Username or email address"
+msgstr ""
+
+#: src/views/authorize/sign-up/sign-up-handle-form.tsx:270
+msgid "Valid"
+msgstr ""
+
+#: src/views/authorize/sign-up/sign-up-view.tsx:135
+msgid "Verify you are human"
+msgstr ""
+
+#: src/views/authorize/sign-in/sign-in-form.tsx:189
+msgid "Warning"
+msgstr ""
+
+#: src/views/authorize/sign-up/sign-up-view.tsx:80
+msgid "We're so excited to have you join us!"
+msgstr ""
+
+#: src/components/utils/password-strength-label.tsx:31
+msgid "Weak"
+msgstr ""
+
+#: src/components/utils/error-message.tsx:31
+msgid "Wrong identifier or password"
+msgstr ""
+
+#: src/views/authorize/authorize-view.tsx:173
+msgid "You are being redirected..."
+msgstr ""
+
+#: src/views/authorize/sign-up/sign-up-handle-form.tsx:235
+msgid "You can change this username to any domain name you control after your account is set up."
+msgstr ""
+
+#: src/views/authorize/reset-password/reset-password-view.tsx:116
+msgid "You can now sign in with your new password."
+msgstr ""
+
+#: src/views/authorize/reset-password/reset-password-confirm-form.tsx:54
+msgid "You will receive an email with a \"reset code\". Enter that code here then enter your new password."
+msgstr ""
+
+#: src/views/authorize/sign-up/sign-up-view.tsx:116
+msgid "Your account"
+msgstr ""
+
+#: src/views/authorize/sign-up/sign-up-handle-form.tsx:217
+msgid "Your full username will be: {0}"
+msgstr ""
+
+#: src/views/authorize/reset-password/reset-password-view.tsx:108
+msgid "Your password has been updated!"
+msgstr ""

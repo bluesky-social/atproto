@@ -1,8 +1,9 @@
 import type { ServerResponse } from 'node:http'
-import { Asset } from '../assets/asset.js'
-import { enumerateAssets } from '../assets/index.js'
+import { assets } from '@atproto/oauth-provider-ui'
+import { buildAssetUrl } from '../assets/assets-middleware.js'
 import { CspConfig, mergeCsp } from '../lib/csp/index.js'
 import {
+  AssetRef,
   Html,
   LinkAttrs,
   MetaAttrs,
@@ -55,8 +56,8 @@ export class OutputManager {
     { name: 'robots', content: 'noindex' },
     { name: 'description', content: 'ATProto OAuth authorization page' },
   ]
-  readonly scripts: readonly (Asset | Html)[]
-  readonly styles: readonly (Asset | Html)[]
+  readonly scripts: readonly (AssetRef | Html)[]
+  readonly styles: readonly (AssetRef | Html)[]
   readonly csp: CspConfig
   readonly coep: CrossOriginEmbedderPolicy
 
@@ -73,14 +74,21 @@ export class OutputManager {
         __customizationData: buildCustomizationData(customization),
       }),
       // Last (to be able to read the "backend data" variables)
-      ...Array.from(enumerateAssets('application/javascript')).filter(
-        ({ item }) => item.type === 'chunk' && item.isEntry,
-      ),
+      ...Array.from(assets)
+        .filter(
+          ([, item]) =>
+            item.type === 'chunk' &&
+            item.mime === 'application/javascript' &&
+            item.isEntry,
+        )
+        .map(([filename]) => ({ url: buildAssetUrl(filename) })),
     ]
 
     this.styles = [
       // First (to be overridden by customization)
-      ...enumerateAssets('text/css'),
+      ...Array.from(assets)
+        .filter(([, item]) => item.mime === 'text/css')
+        .map(([filename]) => ({ url: buildAssetUrl(filename) })),
       cssCode(buildCustomizationCss(customization)),
     ]
 
