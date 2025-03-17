@@ -18,9 +18,10 @@ import {
   AccountStore,
   ResetPasswordConfirmData,
   ResetPasswordRequestData,
+  SignUpData,
 } from './account-store.js'
 import { SignInData } from './sign-in-data.js'
-import { SignUpData } from './sign-up-data.js'
+import { SignUpInput } from './sign-up-input.js'
 
 const TIMING_ATTACK_MITIGATION_DELAY = 400
 const BRUTE_FORCE_MITIGATION_DELAY = 300
@@ -41,59 +42,84 @@ export class AccountManager {
       : undefined
   }
 
-  protected async verifySignupData(
-    data: SignUpData,
+  protected async verifyHcaptchaToken(
+    input: SignUpInput,
     deviceId: DeviceId,
     deviceMetadata: RequestMetadata,
-  ): Promise<void> {
-    let hcaptchaResult: undefined | HcaptchaVerifyResult
+  ): Promise<HcaptchaVerifyResult | undefined> {
+    if (!this.hcaptchaClient) {
+      return undefined
+    }
 
-    if (this.inviteCodeRequired && !data.inviteCode) {
+    if (!input.hcaptchaToken) {
+      throw new InvalidRequestError('hCaptcha token is required')
+    }
+
+    const { allowed, result } = await this.hcaptchaClient.verify(
+      'signup',
+      input.hcaptchaToken,
+      deviceMetadata.ipAddress,
+      input.handle,
+      deviceMetadata.userAgent,
+    )
+
+    await callAsync(this.hooks.onSignupHcaptchaResult, {
+      allowed,
+      result,
+
+      input,
+      deviceId,
+      deviceMetadata,
+    })
+
+    if (!allowed) {
+      throw new InvalidRequestError('hCaptcha verification failed')
+    }
+
+    return result
+  }
+
+  protected async verifyInviteCode(
+    input: SignUpInput,
+    _deviceId: DeviceId,
+    _deviceMetadata: RequestMetadata,
+  ): Promise<string | undefined> {
+    if (!this.inviteCodeRequired) {
+      return undefined
+    }
+
+    if (!input.inviteCode) {
       throw new InvalidRequestError('Invite code is required')
     }
 
-    if (this.hcaptchaClient) {
-      if (!data.hcaptchaToken) {
-        throw new InvalidRequestError('hCaptcha token is required')
-      }
+    return input.inviteCode
+  }
 
-      const { allowed, result } = await this.hcaptchaClient.verify(
-        'signup',
-        data.hcaptchaToken,
-        deviceMetadata.ipAddress,
-        data.handle,
-        deviceMetadata.userAgent,
-      )
+  protected async verifySignupData(
+    input: SignUpInput,
+    deviceId: DeviceId,
+    deviceMetadata: RequestMetadata,
+  ): Promise<SignUpData> {
+    const [hcaptchaResult, inviteCode] = await Promise.all([
+      this.verifyHcaptchaToken(input, deviceId, deviceMetadata),
+      this.verifyInviteCode(input, deviceId, deviceMetadata),
+    ])
 
-      await callAsync(this.hooks.onSignupHcaptchaResult, {
-        data,
-        allowed,
-        result,
-        deviceId,
-        deviceMetadata,
-      })
-
-      if (!allowed) {
-        throw new InvalidRequestError('hCaptcha verification failed')
-      }
-
-      hcaptchaResult = result
-    }
-
-    await callAsync(this.hooks.onSignupAttempt, {
-      data,
-      deviceId,
-      deviceMetadata,
-      hcaptchaResult,
-    })
+    return { ...input, hcaptchaResult, inviteCode }
   }
 
   public async signUp(
-    data: SignUpData,
+    input: SignUpInput,
     deviceId: DeviceId,
     deviceMetadata: RequestMetadata,
   ): Promise<AccountInfo> {
-    await this.verifySignupData(data, deviceId, deviceMetadata)
+    await callAsync(this.hooks.onSignupAttempt, {
+      input,
+      deviceId,
+      deviceMetadata,
+    })
+
+    const data = await this.verifySignupData(input, deviceId, deviceMetadata)
 
     // Mitigation against brute forcing email of users.
     // @TODO Add rate limit to all the OAuth routes.

@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { ensureValidHandle, normalizeHandle } from '@atproto/syntax'
 import { ClientId } from '../client/client-id.js'
 import { DeviceId } from '../device/device-id.js'
+import { HcaptchaVerifyResult } from '../lib/hcaptcha.js'
 import { localeSchema } from '../lib/locale.js'
 import { Awaitable, buildInterfaceChecker } from '../lib/util/type.js'
 import {
@@ -13,6 +14,7 @@ import {
 } from '../oauth-errors.js'
 import { Sub } from '../oidc/sub.js'
 import { Account } from './account.js'
+import { SignUpInput } from './sign-up-input.js'
 
 // @NOTE Change the length here to force stronger passwords (through a reset)
 export const oldPasswordSchema = z.string().min(1)
@@ -49,6 +51,7 @@ export const emailSchema = z
   })
   .transform((value) => value.toLowerCase())
 export const inviteCodeSchema = z.string().min(1)
+export type InviteCode = z.infer<typeof inviteCodeSchema>
 
 export const authenticateAccountDataSchema = z
   .object({
@@ -116,6 +119,11 @@ export {
 export type AccountInfo = {
   account: Account
   info: DeviceAccountInfo
+}
+
+export type SignUpData = SignUpInput & {
+  hcaptchaResult?: HcaptchaVerifyResult
+  inviteCode?: InviteCode
 }
 
 export interface AccountStore {
