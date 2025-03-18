@@ -22,13 +22,13 @@ module.exports = (commandLineArguments) => {
   const devMode = NODE_ENV === 'development'
 
   return {
-    input: ['src/main.tsx', 'src/main.css'],
+    input: [`src/authorization-page.tsx`, `src/error-page.tsx`],
     output: {
       manualChunks: undefined,
       sourcemap: true,
       dir: 'dist/assets',
       format: 'module',
-      entryFileNames: 'main-[hash].js',
+      entryFileNames: devMode ? '[name]-[hash].js' : '[hash].js',
     },
     plugins: [
       {

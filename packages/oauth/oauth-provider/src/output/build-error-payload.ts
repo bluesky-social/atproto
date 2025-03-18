@@ -50,10 +50,12 @@ export function buildErrorStatus(error: unknown): number {
   return 500
 }
 
-export function buildErrorPayload(error: unknown): {
+export type ErrorPayload = {
   error: string
   error_description: string
-} {
+}
+
+export function buildErrorPayload(error: unknown): ErrorPayload {
   if (error instanceof OAuthError) {
     return error.toJSON()
   }

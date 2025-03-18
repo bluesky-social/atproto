@@ -1,4 +1,3 @@
-import { posix } from 'node:path'
 import { assets } from '@atproto/oauth-provider-ui'
 import {
   Middleware,
@@ -10,7 +9,7 @@ import {
 export const ASSETS_URL_PREFIX = '/@atproto/oauth-provider/~assets/'
 
 export function buildAssetUrl(filename: string): string {
-  return posix.join(ASSETS_URL_PREFIX, filename)
+  return `${ASSETS_URL_PREFIX}${encodeURIComponent(filename)}`
 }
 
 export function authorizeAssetsMiddleware(): Middleware {
@@ -18,13 +17,7 @@ export function authorizeAssetsMiddleware(): Middleware {
     if (req.method !== 'GET' && req.method !== 'HEAD') return next()
     if (!req.url?.startsWith(ASSETS_URL_PREFIX)) return next()
 
-    const [pathname, query] = req.url.split('?', 2) as [
-      string,
-      string | undefined,
-    ]
-    if (query) return next()
-
-    const filename = posix.normalize(pathname.slice(ASSETS_URL_PREFIX.length))
+    const filename = req.url.slice(ASSETS_URL_PREFIX.length)
     if (!filename) return next()
 
     const asset = assets.get(filename)
