@@ -30,7 +30,9 @@
         "topic": { "type": "string" },
         "displayName": { "type": "string" },
         "description": { "type": "string" },
-        "link": { "type": "string" }
+        "link": { "type": "string" },
+        "startTime": { "type": "string", "format": "datetime" },
+        "postCount": { "type": "integer" }
       }
     }
   }
