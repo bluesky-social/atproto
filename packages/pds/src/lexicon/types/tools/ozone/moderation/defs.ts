@@ -157,7 +157,7 @@ export function validateSubjectStatusView<V>(v: V) {
   return validate<SubjectStatusView & V>(v, id, hashSubjectStatusView)
 }
 
-/** Detailed view of a subject */
+/** Detailed view of a subject. For record subjects, the author's repo and profile will be returned. */
 export interface SubjectView {
   $type?: 'tools.ozone.moderation.defs#subjectView'
   type: ComAtprotoModerationDefs.SubjectType

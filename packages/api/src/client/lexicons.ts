@@ -11883,7 +11883,8 @@ export const schemaDict = {
         },
       },
       subjectView: {
-        description: 'Detailed view of a subject',
+        description:
+          "Detailed view of a subject. For record subjects, the author's repo and profile will be returned.",
         type: 'object',
         required: ['type'],
         properties: {
