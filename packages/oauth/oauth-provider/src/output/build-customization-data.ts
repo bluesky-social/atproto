@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { CustomizationData } from '@atproto/oauth-provider-api'
 import { hcaptchaConfigSchema } from '../lib/hcaptcha.js'
 import { isLinkRel } from '../lib/html/build-document.js'
 import { multiLangStringSchema } from '../lib/locale.js'
@@ -59,7 +60,7 @@ export const brandingConfigSchema = z.object({
   name: z.string().optional(),
   logo: z.string().optional(),
   colors: colorsDefinitionSchema.optional(),
-  links: z.array(linkDefinitionSchema).readonly().optional(),
+  links: z.array(linkDefinitionSchema).optional(),
 })
 export type BrandingInput = z.input<typeof brandingConfigSchema>
 export type Branding = z.infer<typeof brandingConfigSchema>
@@ -85,18 +86,6 @@ export const customizationSchema = z.object({
 })
 export type CustomizationInput = z.input<typeof customizationSchema>
 export type Customization = z.infer<typeof customizationSchema>
-
-export type CustomizationData = {
-  // Functional customization
-  hcaptchaSiteKey?: string
-  inviteCodeRequired?: boolean
-  availableUserDomains?: string[]
-
-  // Aesthetic customization
-  name?: string
-  logo?: string
-  links?: readonly LinkDefinition[]
-}
 
 export function buildCustomizationData({
   branding,

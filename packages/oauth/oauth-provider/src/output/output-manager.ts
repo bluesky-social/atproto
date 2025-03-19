@@ -1,8 +1,10 @@
 import type { ServerResponse } from 'node:http'
-import { Asset } from '../assets/asset.js'
-import { enumerateAssets } from '../assets/index.js'
+import { CustomizationData } from '@atproto/oauth-provider-api'
+import { assets } from '@atproto/oauth-provider-ui'
+import { buildAssetUrl } from '../assets/assets-middleware.js'
 import { CspConfig, mergeCsp } from '../lib/csp/index.js'
 import {
+  AssetRef,
   Html,
   LinkAttrs,
   MetaAttrs,
@@ -23,7 +25,8 @@ import {
   buildCustomizationCss,
   buildCustomizationData,
 } from './build-customization-data.js'
-import { buildErrorPayload, buildErrorStatus } from './build-error-payload.js'
+import { buildErrorData } from './build-error-data.js'
+import { buildErrorStatus } from './build-error-payload.js'
 import { sendWebPage } from './send-web-page.js'
 
 const BASE_CSP: CspConfig = {
@@ -55,34 +58,17 @@ export class OutputManager {
     { name: 'robots', content: 'noindex' },
     { name: 'description', content: 'ATProto OAuth authorization page' },
   ]
-  readonly scripts: readonly (Asset | Html)[]
-  readonly styles: readonly (Asset | Html)[]
   readonly csp: CspConfig
   readonly coep: CrossOriginEmbedderPolicy
+  readonly customizationData: CustomizationData
+  readonly customizationCss: Html
 
   constructor(customization: Customization) {
     this.links = customization.branding?.links
 
-    // Note: building scripts/styles/csp here for two reasons:
-    // 1. To avoid re-building it on every request
-    // 2. To throw during init if the customization/config is invalid
-
-    this.scripts = [
-      declareBackendData({
-        __availableLocales: AVAILABLE_LOCALES,
-        __customizationData: buildCustomizationData(customization),
-      }),
-      // Last (to be able to read the "backend data" variables)
-      ...Array.from(enumerateAssets('application/javascript')).filter(
-        ({ item }) => item.type === 'chunk' && item.isEntry,
-      ),
-    ]
-
-    this.styles = [
-      // First (to be overridden by customization)
-      ...enumerateAssets('text/css'),
-      cssCode(buildCustomizationCss(customization)),
-    ]
+    // "cache" these:
+    this.customizationData = buildCustomizationData(customization)
+    this.customizationCss = cssCode(buildCustomizationCss(customization))
 
     this.csp = mergeCsp(
       BASE_CSP,
@@ -97,6 +83,34 @@ export class OutputManager {
       : CrossOriginEmbedderPolicy.credentialless
   }
 
+  buildAssets(
+    name: string,
+    backendData: Record<string, unknown>,
+  ): {
+    scripts: (AssetRef | Html)[]
+    styles: (AssetRef | Html)[]
+  } {
+    return {
+      scripts: [
+        declareBackendData(backendData),
+        // After backend injected data
+        ...Array.from(assets)
+          .filter(
+            ([, item]) =>
+              item.type === 'chunk' && item.isEntry && item.name === name,
+          )
+          .map(([filename]) => ({ url: buildAssetUrl(filename) })),
+      ],
+      styles: [
+        ...Array.from(assets)
+          .filter(([, item]) => item.mime === 'text/css')
+          .map(([filename]) => ({ url: buildAssetUrl(filename) })),
+        // Last (to be able to override the default styles)
+        this.customizationCss,
+      ],
+    }
+  }
+
   async sendAuthorizePage(
     res: ServerResponse,
     data: AuthorizationResultAuthorize,
@@ -106,12 +120,15 @@ export class OutputManager {
       data.parameters.ui_locales?.split(' ') ?? options?.preferredLocales,
     )
 
+    const { scripts, styles } = this.buildAssets('authorization-page', {
+      __availableLocales: AVAILABLE_LOCALES,
+      __customizationData: this.customizationData,
+      __authorizeData: buildAuthorizeData(data),
+    })
+
     return sendWebPage(res, {
-      scripts: [
-        declareBackendData({ __authorizeData: buildAuthorizeData(data) }),
-        ...this.scripts,
-      ],
-      styles: this.styles,
+      scripts,
+      styles,
       meta: this.meta,
       links: this.buildLinks(locale),
       htmlAttrs: { lang: locale },
@@ -128,13 +145,16 @@ export class OutputManager {
   ): Promise<void> {
     const locale = negotiateLocale(options?.preferredLocales)
 
+    const { scripts, styles } = this.buildAssets('error-page', {
+      __availableLocales: AVAILABLE_LOCALES,
+      __customizationData: this.customizationData,
+      __errorData: buildErrorData(err),
+    })
+
     return sendWebPage(res, {
       status: buildErrorStatus(err),
-      scripts: [
-        declareBackendData({ __errorData: buildErrorPayload(err) }),
-        ...this.scripts,
-      ],
-      styles: this.styles,
+      scripts,
+      styles,
       meta: this.meta,
       links: this.buildLinks(locale),
       htmlAttrs: { lang: locale },

@@ -1,0 +1,36 @@
+{
+  "name": "@atproto/oauth-provider-api",
+  "version": "0.0.0",
+  "license": "MIT",
+  "description": "Shared data types for the @atproto/oauth-provider and @atproto/oauth-provider-ui packages",
+  "keywords": [
+    "atproto",
+    "oauth",
+    "provider",
+    "types"
+  ],
+  "homepage": "https://atproto.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto",
+    "directory": "packages/oauth/oauth-provider-api"
+  },
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@atproto/oauth-types": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3"
+  },
+  "scripts": {
+    "build": "tsc --build tsconfig.build.json"
+  }
+}
