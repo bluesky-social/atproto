@@ -42,7 +42,7 @@ export class AccountManager {
       : undefined
   }
 
-  protected async verifyHcaptchaToken(
+  protected async processHcaptchaToken(
     input: SignUpInput,
     deviceId: DeviceId,
     deviceMetadata: RequestMetadata,
@@ -55,22 +55,17 @@ export class AccountManager {
       throw new InvalidRequestError('hCaptcha token is required')
     }
 
-    const { allowed, result } = await this.hcaptchaClient.verify(
-      'signup',
-      input.hcaptchaToken,
-      deviceMetadata.ipAddress,
-      input.handle,
-      deviceMetadata.userAgent,
-    )
-
-    await callAsync(this.hooks.onSignupHcaptchaResult, {
-      allowed,
-      result,
-
-      input,
-      deviceId,
-      deviceMetadata,
-    })
+    const { allowed, result } = await this.hcaptchaClient
+      .verify(
+        'signup',
+        input.hcaptchaToken,
+        deviceMetadata.ipAddress,
+        input.handle,
+        deviceMetadata.userAgent,
+      )
+      .catch((err) => {
+        throw InvalidRequestError.from(err, 'hCaptcha verification failed')
+      })
 
     if (!allowed) {
       throw new InvalidRequestError('hCaptcha verification failed')
@@ -79,7 +74,7 @@ export class AccountManager {
     return result
   }
 
-  protected async verifyInviteCode(
+  protected async enforceInviteCode(
     input: SignUpInput,
     _deviceId: DeviceId,
     _deviceMetadata: RequestMetadata,
@@ -95,14 +90,14 @@ export class AccountManager {
     return input.inviteCode
   }
 
-  protected async verifySignupData(
+  protected async buildSignupData(
     input: SignUpInput,
     deviceId: DeviceId,
     deviceMetadata: RequestMetadata,
   ): Promise<SignUpData> {
     const [hcaptchaResult, inviteCode] = await Promise.all([
-      this.verifyHcaptchaToken(input, deviceId, deviceMetadata),
-      this.verifyInviteCode(input, deviceId, deviceMetadata),
+      this.processHcaptchaToken(input, deviceId, deviceMetadata),
+      this.enforceInviteCode(input, deviceId, deviceMetadata),
     ])
 
     return { ...input, hcaptchaResult, inviteCode }
@@ -119,7 +114,7 @@ export class AccountManager {
       deviceMetadata,
     })
 
-    const data = await this.verifySignupData(input, deviceId, deviceMetadata)
+    const data = await this.buildSignupData(input, deviceId, deviceMetadata)
 
     // Mitigation against brute forcing email of users.
     // @TODO Add rate limit to all the OAuth routes.

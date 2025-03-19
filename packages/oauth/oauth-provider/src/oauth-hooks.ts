@@ -73,28 +73,6 @@ export type OAuthHooks = {
   }) => Awaitable<undefined | OAuthAuthorizationDetails>
 
   /**
-   * This hook is called whenever an hcaptcha challenge is verified
-   * during sign-up (if hcaptcha is enabled).
-   *
-   * @throws {InvalidRequestError} to deny the sign-up
-   */
-  onSignupHcaptchaResult?: (data: {
-    /**
-     * This indicates not only wether the hCaptcha challenge succeeded, but also
-     * if the score was low enough according to the
-     * {@link HcaptchaConfig.scoreThreshold}.
-     *
-     * @see {@link HCaptchaClient.isAllowed}
-     */
-    allowed: boolean
-    result: HcaptchaVerifyResult
-
-    input: SignUpInput
-    deviceId: DeviceId
-    deviceMetadata: RequestMetadata
-  }) => Awaitable<void>
-
-  /**
    * This hook is called when a user attempts to sign up, after every validation
    * has passed (including hcaptcha).
    */

@@ -27,9 +27,11 @@ export const hcaptchaConfigSchema = z.object({
    */
   tokenSalt: z.string().min(1),
   /**
-   * The risk score over which the user is considered a threat and will be
+   * The risk score above which the user is considered a threat and will be
    * denied access. This will be ignored if the enterprise features are not
    * available.
+   *
+   * Note: Score values ranges from 0.0 (no risk) to 1.0 (confirmed threat).
    */
   scoreThreshold: z.number().optional(),
 })
@@ -128,7 +130,7 @@ export class HCaptchaClient {
     this.fetch = bindFetch(fetch)
   }
 
-  async verify(
+  public async verify(
     behaviorType: 'login' | 'signup',
     response: string,
     remoteip: string,
@@ -160,20 +162,21 @@ export class HCaptchaClient {
     }
   }
 
-  isAllowed({ success, hostname, score }: HcaptchaVerifyResult) {
+  protected isAllowed({ success, hostname, score }: HcaptchaVerifyResult) {
     return (
       success &&
       // Fool-proofing: If this is false, the user is trying to use a token
       // generated for the same siteKey, but on another domain.
       hostname === this.hostname &&
       // Ignore if enterprise feature is not enabled
-      score != null &&
-      this.config.scoreThreshold != null &&
-      score < this.config.scoreThreshold
+      (score == null ||
+        // Ignore if disabled through config
+        this.config.scoreThreshold == null ||
+        score < this.config.scoreThreshold)
     )
   }
 
-  hashToken(value: string) {
+  protected hashToken(value: string) {
     const hash = createHash('sha256')
     hash.update(this.config.tokenSalt)
     hash.update(value)
