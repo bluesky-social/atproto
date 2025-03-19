@@ -337,7 +337,15 @@ export class OAuthStore
   }
 
   async resetPasswordConfirm(data: ResetPasswordConfirmData): Promise<void> {
-    await this.accountManager.resetPassword(data)
+    try {
+      await this.accountManager.resetPassword(data)
+    } catch (err) {
+      if (err instanceof XrpcInvalidRequestError) {
+        throw new InvalidRequestError(err.message, err)
+      }
+
+      throw err
+    }
   }
 
   async verifyHandleAvailability(handle: string): Promise<void> {
