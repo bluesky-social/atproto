@@ -30,6 +30,8 @@ COPY ./packages/oauth/jwk ./packages/oauth/jwk
 COPY ./packages/oauth/jwk-jose ./packages/oauth/jwk-jose
 COPY ./packages/oauth/oauth-types ./packages/oauth/oauth-types
 COPY ./packages/oauth/oauth-provider ./packages/oauth/oauth-provider
+COPY ./packages/oauth/oauth-provider-api ./packages/oauth/oauth-provider-api
+COPY ./packages/oauth/oauth-provider-ui ./packages/oauth/oauth-provider-ui
 COPY ./packages/internal/pipe ./packages/internal/pipe
 COPY ./packages/internal/fetch ./packages/internal/fetch
 COPY ./packages/internal/fetch-node ./packages/internal/fetch-node
