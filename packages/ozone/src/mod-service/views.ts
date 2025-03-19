@@ -1,6 +1,6 @@
 import { sql } from 'kysely'
-import { AtpAgent } from '@atproto/api'
-import { dedupeStrs } from '@atproto/common'
+import { AppBskyActorDefs, AtpAgent } from '@atproto/api'
+import { chunkArray, dedupeStrs } from '@atproto/common'
 import { Keypair } from '@atproto/crypto'
 import { BlobRef } from '@atproto/lexicon'
 import { AtUri, INVALID_HANDLE, normalizeDatetimeAlways } from '@atproto/syntax'
@@ -79,7 +79,7 @@ export class ModerationViews {
     const auth = await this.appviewAuth(ids.ComAtprotoAdminGetAccountInfos)
     if (!auth) return new Map()
     try {
-      const res = await this.appviewAgent.api.com.atproto.admin.getAccountInfos(
+      const res = await this.appviewAgent.com.atproto.admin.getAccountInfos(
         {
           dids: dedupeStrs(dids),
         },
@@ -425,7 +425,7 @@ export class ModerationViews {
     try {
       const {
         data: { labels },
-      } = await this.appviewAgent.api.com.atproto.label.queryLabels({
+      } = await this.appviewAgent.com.atproto.label.queryLabels({
         uriPatterns: subjects,
         sources: labelers.dids,
       })
@@ -695,9 +695,27 @@ export class ModerationViews {
     if (!auth) return []
     const {
       data: { feed },
-    } = await this.appviewAgent.api.app.bsky.feed.getAuthorFeed({ actor }, auth)
+    } = await this.appviewAgent.app.bsky.feed.getAuthorFeed({ actor }, auth)
 
     return feed
+  }
+
+  async getProfiles(dids: string[]) {
+    const profiles = new Map<string, AppBskyActorDefs.ProfileViewDetailed>()
+
+    const auth = await this.appviewAuth(ids.AppBskyActorGetProfiles)
+    console.log(auth)
+    if (!auth) return profiles
+
+    for (const actors of chunkArray(dids, 25)) {
+      const { data } = await this.appviewAgent.getProfiles({ actors })
+
+      data.profiles.forEach((profile) => {
+        profiles.set(profile.did, profile)
+      })
+    }
+
+    return profiles
   }
 }
 

@@ -13,6 +13,7 @@ import type * as ComAtprotoAdminDefs from '../../../com/atproto/admin/defs.js'
 import type * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef.js'
 import type * as ChatBskyConvoDefs from '../../../chat/bsky/convo/defs.js'
 import type * as ComAtprotoModerationDefs from '../../../com/atproto/moderation/defs.js'
+import type * as AppBskyActorDefs from '../../../app/bsky/actor/defs.js'
 import type * as ComAtprotoServerDefs from '../../../com/atproto/server/defs.js'
 import type * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs.js'
 
@@ -154,6 +155,26 @@ export function isSubjectStatusView<V>(v: V) {
 
 export function validateSubjectStatusView<V>(v: V) {
   return validate<SubjectStatusView & V>(v, id, hashSubjectStatusView)
+}
+
+/** Detailed view of a subject */
+export interface SubjectView {
+  $type?: 'tools.ozone.moderation.defs#subjectView'
+  type: ComAtprotoModerationDefs.SubjectType
+  status?: SubjectStatusView
+  repo?: RepoViewDetail
+  profile?: AppBskyActorDefs.ProfileViewDetailed
+  record?: RecordViewDetail
+}
+
+const hashSubjectView = 'subjectView'
+
+export function isSubjectView<V>(v: V) {
+  return is$typed(v, id, hashSubjectView)
+}
+
+export function validateSubjectView<V>(v: V) {
+  return validate<SubjectView & V>(v, id, hashSubjectView)
 }
 
 /** Statistics about a particular account subject */

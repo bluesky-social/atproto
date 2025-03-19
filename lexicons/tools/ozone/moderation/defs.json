@@ -203,6 +203,33 @@
         }
       }
     },
+    "subjectView": {
+      "description": "Detailed view of a subject",
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "ref",
+          "ref": "com.atproto.moderation.defs#subjectType"
+        },
+        "status": {
+          "type": "ref",
+          "ref": "#subjectStatusView"
+        },
+        "repo": {
+          "type": "ref",
+          "ref": "#repoViewDetail"
+        },
+        "profile": {
+          "type": "ref",
+          "ref": "app.bsky.actor.defs#profileViewDetailed"
+        },
+        "record": {
+          "type": "ref",
+          "ref": "#recordViewDetail"
+        }
+      }
+    },
     "accountStats": {
       "description": "Statistics about a particular account subject",
       "type": "object",
