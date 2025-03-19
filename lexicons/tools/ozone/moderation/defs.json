@@ -212,6 +212,9 @@
           "type": "ref",
           "ref": "com.atproto.moderation.defs#subjectType"
         },
+        "subject": {
+          "type": "string"
+        },
         "status": {
           "type": "ref",
           "ref": "#subjectStatusView"

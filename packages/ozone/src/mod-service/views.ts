@@ -704,7 +704,6 @@ export class ModerationViews {
     const profiles = new Map<string, AppBskyActorDefs.ProfileViewDetailed>()
 
     const auth = await this.appviewAuth(ids.AppBskyActorGetProfiles)
-    console.log(auth)
     if (!auth) return profiles
 
     for (const actors of chunkArray(dids, 25)) {

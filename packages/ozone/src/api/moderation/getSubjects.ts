@@ -19,9 +19,8 @@ export default function (server: Server, ctx: AppContext) {
           dids.add(subject)
         }
         if (subject.startsWith('at://')) {
-          const did = new AtUri(subject).host
           uris.add(subject)
-          dids.add(did)
+          dids.add(new AtUri(subject).host)
         }
       }
 
@@ -59,7 +58,14 @@ export default function (server: Server, ctx: AppContext) {
             ? record?.moderation.subjectStatus
             : repo?.moderation.subjectStatus
 
-        subjectWithDetails.set(subject, { type, repo, record, profile, status })
+        subjectWithDetails.set(subject, {
+          type,
+          repo,
+          record,
+          profile,
+          status,
+          subject,
+        })
 
         if ((type === 'record' && !record) || (type === 'account' && !repo)) {
           missingSubjects.push(subject)

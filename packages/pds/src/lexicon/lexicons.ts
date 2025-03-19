@@ -11892,6 +11892,9 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:com.atproto.moderation.defs#subjectType',
           },
+          subject: {
+            type: 'string',
+          },
           status: {
             type: 'ref',
             ref: 'lex:tools.ozone.moderation.defs#subjectStatusView',
