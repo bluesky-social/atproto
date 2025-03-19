@@ -1,0 +1,46 @@
+{
+  "name": "oauth-provider-frontend",
+  "version": "0.0.0",
+  "description": "",
+  "type": "module",
+  "main": "dist/lib.js",
+  "types": "dist/lib.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/lib.d.ts",
+      "default": "./dist/lib.js"
+    }
+  },
+  "scripts": {
+    "dev": "pnpm i18n && pnpm vite",
+    "build": "pnpm i18n && pnpm vite build",
+    "postbuild": "tsc lib.ts --outDir dist --sourcemap --declaration",
+    "typecheck": "tsc --noEmit",
+    "i18n": "pnpm i18n:extract && pnpm i18n:compile",
+    "i18n:extract": "lingui extract",
+    "i18n:compile": "lingui compile",
+    "format": "prettier --write ."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@atproto-labs/rollup-plugin-bundle-manifest": "^0.1.2",
+    "@lingui/cli": "^5.2.0",
+    "@lingui/swc-plugin": "^5.4.0",
+    "@lingui/vite-plugin": "^5.2.0",
+    "@tailwindcss/vite": "^4.0.14",
+    "@types/react": "^19.0.10",
+    "@types/react-dom": "^19.0.4",
+    "@vitejs/plugin-react-swc": "^3.8.0",
+    "prettier": "^3.2.5",
+    "tailwindcss": "^4.0.14",
+    "vite": "^6.2.0"
+  },
+  "dependencies": {
+    "@lingui/core": "^5.2.0",
+    "@lingui/react": "^5.2.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  }
+}
