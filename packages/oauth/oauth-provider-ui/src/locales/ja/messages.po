@@ -19,7 +19,7 @@ msgstr "<0/> があなたのアカウント (<1/>) へのアクセス権限を�
 
 #: src/views/authorize/sign-in/sign-in-form.tsx:219
 msgid "2FA Confirmation"
-msgstr "２要素認証"
+msgstr "２要素認証の確認"
 
 #: src/components/utils/error-message.tsx:27
 msgid "A second authentication factor is required"
@@ -80,7 +80,7 @@ msgstr "<0>許可</0>をクリックすると、<1>利用規約</1>と<2>プラ�
 
 #: src/views/authorize/sign-up/sign-up-disclaimer.tsx:30
 msgid "By creating an account you agree to the {0} and the {1} of this service."
-msgstr "アカウントを作成するとこのサービスの {0} および {1} に同意したことになります。"
+msgstr "アカウントを作成することで、このサービスの {0} および {1} に同意したものとみなされます。"
 
 #: src/views/authorize/welcome/welcome-view.tsx:51
 msgid "Cancel"
@@ -232,7 +232,7 @@ msgstr "リストにないアカウントにログイン"
 
 #: src/components/forms/input-token.tsx:59
 msgid "Looks like {example}"
-msgstr "{example} のように"
+msgstr "{example} みたいなもの"
 
 #: src/components/forms/button-toggle-visibility.tsx:34
 msgid "Make visible"
@@ -440,7 +440,7 @@ msgstr "有効"
 
 #: src/views/authorize/sign-up/sign-up-view.tsx:135
 msgid "Verify you are human"
-msgstr "あなたが人間か確認"
+msgstr "あなたが人間であることを確認"
 
 #: src/views/authorize/sign-in/sign-in-form.tsx:189
 msgid "Warning"
@@ -480,7 +480,7 @@ msgstr "あなたのアカウント"
 
 #: src/views/authorize/sign-up/sign-up-handle-form.tsx:217
 msgid "Your full username will be: {0}"
-msgstr "あなたのフルのユーザー名： {0}"
+msgstr "あなたのフルユーザー名： {0}"
 
 #: src/views/authorize/reset-password/reset-password-view.tsx:108
 msgid "Your password has been updated!"
