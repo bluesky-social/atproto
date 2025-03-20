@@ -2,4 +2,4 @@
 "@atproto/oauth-provider": patch
 ---
 
-Improve HCaptocha error reporting
+Improve HCaptcha error reporting
