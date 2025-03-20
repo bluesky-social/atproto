@@ -1,5 +1,13 @@
 # @atproto-labs/xrpc-utils
 
+## 0.0.9
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/xrpc@0.6.11
+  - @atproto/xrpc-server@0.7.13
+
 ## 0.0.8
 
 ### Patch Changes
