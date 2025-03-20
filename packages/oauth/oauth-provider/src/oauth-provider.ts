@@ -45,7 +45,7 @@ import {
 } from './account/account-store.js'
 import { Account } from './account/account.js'
 import { signInDataSchema } from './account/sign-in-data.js'
-import { signUpDataSchema } from './account/sign-up-data.js'
+import { signUpInputSchema } from './account/sign-up-input.js'
 import { authorizeAssetsMiddleware } from './assets/assets-middleware.js'
 import { ClientAuth, authJwkThumbprint } from './client/client-auth.js'
 import {
@@ -1588,7 +1588,7 @@ export class OAuthProvider extends OAuthVerifier {
 
     router.post(
       '/oauth/authorize/sign-up',
-      apiHandler(signUpDataSchema, async function (req, res, data, ctx) {
+      apiHandler(signUpInputSchema, async function (req, res, data, ctx) {
         return server.signUp(ctx, data)
       }),
     )

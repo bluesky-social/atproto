@@ -7,7 +7,7 @@ import {
 } from '@atproto/oauth-types'
 import { Account } from './account/account.js'
 import { SignInData } from './account/sign-in-data.js'
-import { SignUpData } from './account/sign-up-data.js'
+import { SignUpInput } from './account/sign-up-input.js'
 import { ClientAuth } from './client/client-auth.js'
 import { ClientId } from './client/client-id.js'
 import { ClientInfo } from './client/client-info.js'
@@ -17,7 +17,7 @@ import { HcaptchaConfig, HcaptchaVerifyResult } from './lib/hcaptcha.js'
 import { RequestMetadata } from './lib/http/request.js'
 import { Awaitable } from './lib/util/type.js'
 import { AccessDeniedError, OAuthError } from './oauth-errors.js'
-import { DeviceAccountInfo, DeviceId } from './oauth-store.js'
+import { DeviceAccountInfo, DeviceId, SignUpData } from './oauth-store.js'
 
 // Make sure all types needed to implement the OAuthHooks are exported
 export {
@@ -42,6 +42,7 @@ export {
   type RequestMetadata,
   type SignInData,
   type SignUpData,
+  type SignUpInput,
 }
 
 export type OAuthHooks = {
@@ -72,35 +73,13 @@ export type OAuthHooks = {
   }) => Awaitable<undefined | OAuthAuthorizationDetails>
 
   /**
-   * This hook is called whenever an hcaptcha challenge is verified
-   * during sign-up (if hcaptcha is enabled).
-   *
-   * @throws {InvalidRequestError} to deny the sign-up
-   */
-  onSignupHcaptchaResult?: (data: {
-    data: SignUpData
-    /**
-     * This indicates not only wether the hCaptcha challenge succeeded, but also
-     * if the score was low enough according to the
-     * {@link HcaptchaConfig.scoreThreshold}.
-     *
-     * @see {@link HCaptchaClient.isAllowed}
-     */
-    allowed: boolean
-    result: HcaptchaVerifyResult
-    deviceId: DeviceId
-    deviceMetadata: RequestMetadata
-  }) => Awaitable<void>
-
-  /**
    * This hook is called when a user attempts to sign up, after every validation
    * has passed (including hcaptcha).
    */
   onSignupAttempt?: (data: {
-    data: SignUpData
+    input: SignUpInput
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
-    hcaptchaResult?: HcaptchaVerifyResult
   }) => Awaitable<void>
 
   /**
