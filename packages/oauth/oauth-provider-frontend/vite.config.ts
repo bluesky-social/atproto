@@ -5,17 +5,18 @@ import tailwindcss from '@tailwindcss/vite'
 import manifest from '@atproto-labs/rollup-plugin-bundle-manifest'
 import react from '@vitejs/plugin-react-swc'
 import { lingui } from '@lingui/vite-plugin'
+import { TanStackRouterVite } from '@tanstack/router-plugin/vite'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
 export default defineConfig({
-  root: 'src',
   resolve: {
     alias: {
       '#': resolve(__dirname, './src'),
     },
   },
   plugins: [
+    TanStackRouterVite({ target: 'react' }),
     react({
       plugins: [['@lingui/swc-plugin', {}]],
     }),

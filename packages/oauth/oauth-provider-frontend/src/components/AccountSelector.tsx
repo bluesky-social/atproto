@@ -27,7 +27,7 @@ export function AccountSelector() {
     <Popover.Root>
       <Popover.Trigger asChild>
         <button
-          className="w-12 h-12 rounded-full overflow-hidden border-2 border-contrast-200 hover:border-contrast-300"
+          className="w-10 h-10 rounded-full overflow-hidden border-2 border-contrast-200 hover:border-contrast-300"
           aria-label={_(msg`Select an account`)}
         >
           <img src="https://cdn.bsky.app/img/avatar/plain/did:plc:3jpt2mvvsumj2r7eqk4gzzjz/bafkreiaexnb3bkzbaxktm5q3l3txyweflh3smcruigesvroqjrqxec4zv4@jpeg" />

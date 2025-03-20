@@ -13,7 +13,7 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: src/App.tsx:38
+#: src/App.tsx:43
 msgid "Account home"
 msgstr "Account home"
 
@@ -21,7 +21,7 @@ msgstr "Account home"
 #~ msgid "Hello, world!"
 #~ msgstr "Hello, world!"
 
-#: src/App.tsx:62
+#: src/App.tsx:75
 msgid "Revoke"
 msgstr "Revoke"
 
