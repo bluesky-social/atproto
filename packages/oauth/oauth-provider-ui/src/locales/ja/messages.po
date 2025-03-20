@@ -60,7 +60,7 @@ msgstr "認証"
 #: src/views/authorize/accept/accept-view.tsx:55
 #: src/views/authorize/accept/accept-form.tsx:56
 msgid "Authorize"
-msgstr "許可"
+msgstr "承認する"
 
 #: src/views/authorize/sign-in/sign-in-picker.tsx:47
 #: src/views/authorize/sign-in/sign-in-form.tsx:130
@@ -76,7 +76,7 @@ msgstr "{minLength} 文字以上 {maxLength} 文字以下"
 
 #: src/views/authorize/accept/accept-form.tsx:89
 msgid "By clicking <0>Authorize</0>, you allow this application to perform the following actions in accordance with their <1>terms of service</1> and <2>privacy policy</2>:"
-msgstr "<0>許可</0>をクリックすると、<1>利用規約</1>と<2>プライバシーポリシー</2>に従って、このアプリが次のアクションを実行することを許可します："
+msgstr "<0>承認する</0>をクリックすると、<1>利用規約</1>と<2>プライバシーポリシー</2>に従って、このアプリが次のアクションを実行することを許可します："
 
 #: src/views/authorize/sign-up/sign-up-disclaimer.tsx:30
 msgid "By creating an account you agree to the {0} and the {1} of this service."
@@ -120,7 +120,7 @@ msgstr "アカウントを作成"
 
 #: src/views/authorize/accept/accept-form.tsx:60
 msgid "Deny access"
-msgstr "アクセス拒否"
+msgstr "拒否する"
 
 #: src/components/utils/error-card.tsx:83
 msgid "Description"
