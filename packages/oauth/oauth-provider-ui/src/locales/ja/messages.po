@@ -310,7 +310,7 @@ msgstr "このアカウントをこのデバイスに記憶する"
 
 #: src/views/authorize/accept/accept-form.tsx:123
 msgid "Requested permissions"
-msgstr "権限を要求"
+msgstr "要求した権限"
 
 #: src/views/authorize/reset-password/reset-password-confirm-form.tsx:61
 msgid "Reset code"
