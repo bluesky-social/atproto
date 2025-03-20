@@ -266,6 +266,10 @@ export class ModerationViews {
     labelers?: ParsedLabelers,
   ): Promise<Map<string, RepoView>> {
     const results = new Map<string, RepoView>()
+    if (!dids.length) {
+      return results
+    }
+
     const [repos, localLabels, externalLabels] = await Promise.all([
       this.repos(dids),
       this.labels(dids),
@@ -373,6 +377,11 @@ export class ModerationViews {
     subjects: RecordSubject[],
     labelers?: ParsedLabelers,
   ): Promise<Map<string, RecordViewDetail>> {
+    const results = new Map<string, RecordViewDetail>()
+    if (!subjects.length) {
+      return results
+    }
+
     const subjectUris = subjects.map((s) => s.uri)
     const [records, subjectStatusesResult, localLabels, externalLabels] =
       await Promise.all([
@@ -381,8 +390,6 @@ export class ModerationViews {
         this.labels(subjectUris),
         this.getExternalLabels(subjectUris, labelers),
       ])
-
-    const results = new Map<string, RecordViewDetail>()
 
     await Promise.all(
       Array.from(records.entries()).map(async ([uri, record]) => {
