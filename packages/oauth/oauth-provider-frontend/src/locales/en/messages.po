@@ -13,6 +13,10 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: src/App.tsx:6
-msgid "Hello, world!"
-msgstr "Hello, world!"
+#: src/App.tsx:7
+#~ msgid "Hello, world!"
+#~ msgstr "Hello, world!"
+
+#: src/components/AccountSelector.tsx:11
+msgid "Select an account"
+msgstr "Select an account"
