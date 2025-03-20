@@ -295,7 +295,7 @@ msgstr "パスワードは {MIN_PASSWORD_LENGTH} 文字以上"
 
 #: src/views/authorize/sign-in/sign-in-form.tsx:192
 msgid "Please verify the domain name of the website before entering your password. Never enter your password on a domain you do not trust."
-msgstr "パスワードを入力する前に、ウェブサイトのドメインを確認してください。信用できないドメインには絶対パスワードを入力しないでください。"
+msgstr "パスワードを入力する前に、ウェブサイトのドメインを確認してください。信用できないドメインには絶対にパスワードを入力しないでください。"
 
 #: src/views/authorize/sign-up/sign-up-disclaimer.tsx:42
 #: src/views/authorize/sign-up/sign-up-disclaimer.tsx:45
