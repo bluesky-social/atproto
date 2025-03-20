@@ -22,6 +22,7 @@ export const readEnv = (): ServerEnvironment => {
     hcaptchaSiteKey: envStr('PDS_HCAPTCHA_SITE_KEY'),
     hcaptchaSecretKey: envStr('PDS_HCAPTCHA_SECRET_KEY'),
     hcaptchaTokenSalt: envStr('PDS_HCAPTCHA_TOKEN_SALT'),
+    enableHibpCheck: envBool('PDS_ENABLE_HIBP_CHECK'),
 
     // branding
     brandColor: envStr('PDS_PRIMARY_COLOR'),
@@ -160,6 +161,7 @@ export type ServerEnvironment = {
   hcaptchaSiteKey?: string
   hcaptchaSecretKey?: string
   hcaptchaTokenSalt?: string
+  enableHibpCheck?: boolean
 
   // branding
   brandColor?: string

@@ -6,6 +6,7 @@ import { Client } from '../client/client.js'
 import { DeviceId } from '../device/device-id.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { HCaptchaClient, HcaptchaVerifyResult } from '../lib/hcaptcha.js'
+import { HibpClient } from '../lib/hibp.js'
 import { callAsync } from '../lib/util/function.js'
 import { constantTime } from '../lib/util/time.js'
 import { OAuthHooks, RequestMetadata } from '../oauth-hooks.js'
@@ -29,6 +30,7 @@ const BRUTE_FORCE_MITIGATION_DELAY = 300
 export class AccountManager {
   protected readonly inviteCodeRequired: boolean
   protected readonly hcaptchaClient?: HCaptchaClient
+  protected readonly hibpClient?: HibpClient
 
   constructor(
     issuer: OAuthIssuerIdentifier,
@@ -39,6 +41,9 @@ export class AccountManager {
     this.inviteCodeRequired = customization.inviteCodeRequired !== false
     this.hcaptchaClient = customization.hcaptcha
       ? new HCaptchaClient(new URL(issuer).hostname, customization.hcaptcha)
+      : undefined
+    this.hibpClient = customization.enableHibpCheck
+      ? new HibpClient()
       : undefined
   }
 
@@ -90,17 +95,27 @@ export class AccountManager {
     return input.inviteCode
   }
 
+  protected async isPasswordCompromised(input: SignUpInput): Promise<boolean> {
+    if (!this.hibpClient) return false
+
+    const compromised = await this.hibpClient.isPasswordBreached(input.password)
+    if (compromised) throw new InvalidRequestError('Compromised password')
+
+    return false
+  }
+
   protected async buildSignupData(
     input: SignUpInput,
     deviceId: DeviceId,
     deviceMetadata: RequestMetadata,
   ): Promise<SignUpData> {
-    const [hcaptchaResult, inviteCode] = await Promise.all([
+    const [hcaptchaResult, inviteCode, hibpCheck] = await Promise.all([
       this.processHcaptchaToken(input, deviceId, deviceMetadata),
       this.enforceInviteCode(input, deviceId, deviceMetadata),
+      this.isPasswordCompromised(input),
     ])
 
-    return { ...input, hcaptchaResult, inviteCode }
+    return { ...input, hcaptchaResult, inviteCode, hibpCheck }
   }
 
   public async signUp(

@@ -55,6 +55,7 @@ export class TestPds {
       // colors are required from a config perspective.
       warningColor: undefined,
       successColor: '#02c39a',
+      enableHibpCheck: true,
       logoUrl:
         // Using a "data:" instead of a real URL to avoid making CORS requests in dev.
         // License: https://uxwing.com/license/

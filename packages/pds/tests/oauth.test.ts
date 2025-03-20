@@ -320,6 +320,169 @@ describe('oauth', () => {
   })
 })
 
+describe('HIBP password breach detection', () => {
+  let browser: Browser
+  let network: TestNetworkNoAppView
+  let client: Server
+
+  let appUrl: string
+
+  beforeAll(async () => {
+    browser = await launch({
+      browser: 'chrome',
+      args: ['--accept-lang=fr-BE,en-GB,en'],
+    })
+
+    network = await TestNetworkNoAppView.create({
+      dbPostgresSchema: 'oauth_hibp',
+      pds: {
+        enableHibpCheck: true,
+      },
+    })
+
+    client = createServer(clientHandler)
+    client.listen(0)
+    await once(client, 'listening')
+
+    const { port } = client.address() as AddressInfo
+
+    appUrl = `http://127.0.0.1:${port}?${new URLSearchParams({
+      plc_directory_url: network.plc.url,
+      handle_resolver: network.pds.url,
+      sign_up_url: network.pds.url,
+      env: 'test',
+    })}`
+  })
+
+  afterAll(async () => {
+    await client?.close()
+    await network?.close()
+    await browser?.close()
+  })
+
+  it('prevents signup with a compromised password', async () => {
+    const page = await PageHelper.from(browser)
+
+    await page.goto(appUrl)
+    await page.checkTitle('OAuth Client Example')
+
+    await page.navigationAction(async () => {
+      await page.clickOnButton('Sign up')
+    })
+
+    await page.checkTitle('Authentification')
+    await page.clickOnButton('Créer un nouveau compte')
+
+    await page.typeInInput('handle', 'compromised')
+    await page.clickOnButton('Suivant')
+
+    await page.typeInInput('email', 'compromised@test.com')
+    // Use a known compromised password from the HIBP database
+    await page.typeInInput('password', 'password123')
+
+    await page.clickOnButton("S'inscrire")
+
+    // Should show error message about compromised password
+    await page.ensureTextVisibility('Compromised password')
+
+    // TODO: Find out why we can't use "using" here
+    await page[Symbol.asyncDispose]()
+  })
+
+  it('allows signup with a secure password', async () => {
+    const page = await PageHelper.from(browser)
+
+    await page.goto(appUrl)
+    await page.checkTitle('OAuth Client Example')
+
+    await page.navigationAction(async () => {
+      await page.clickOnButton('Sign up')
+    })
+
+    await page.checkTitle('Authentification')
+    await page.clickOnButton('Créer un nouveau compte')
+
+    await page.typeInInput('handle', 'secure')
+    await page.clickOnButton('Suivant')
+
+    await page.typeInInput('email', 'secure@test.com')
+    // Use a strong, unique password that shouldn't be in HIBP database
+    await page.typeInInput('password', 'vK9#mP2$nL5@xQ8')
+
+    await page.navigationAction(async () => {
+      await page.clickOnButton("S'inscrire")
+    })
+
+    // Make sure the new account is propagated to the PLC directory
+    await network.processAll()
+
+    await page.navigationAction(async () => {
+      await page.clickOnButton("Authoriser l'accès")
+    })
+
+    await page.checkTitle('OAuth Client Example')
+    await page.ensureTextVisibility('Logged in!')
+
+    // TODO: Find out why we can't use "using" here
+    await page[Symbol.asyncDispose]()
+  })
+
+  it('skips HIBP check when disabled', async () => {
+    // Create a new network instance with HIBP disabled
+    const networkWithoutHibp = await TestNetworkNoAppView.create({
+      dbPostgresSchema: 'oauth_no_hibp',
+      pds: {
+        enableHibpCheck: false,
+      },
+    })
+
+    const page = await PageHelper.from(browser)
+
+    const noHibpAppUrl = `http://127.0.0.1:${(client.address() as AddressInfo).port}?${new URLSearchParams(
+      {
+        plc_directory_url: networkWithoutHibp.plc.url,
+        handle_resolver: networkWithoutHibp.pds.url,
+        sign_up_url: networkWithoutHibp.pds.url,
+        env: 'test',
+      },
+    )}`
+
+    await page.goto(noHibpAppUrl)
+    await page.checkTitle('OAuth Client Example')
+
+    await page.navigationAction(async () => {
+      await page.clickOnButton('Sign up')
+    })
+
+    await page.checkTitle('Authentification')
+    await page.clickOnButton('Créer un nouveau compte')
+
+    await page.typeInInput('handle', 'nohipb')
+    await page.clickOnButton('Suivant')
+
+    await page.typeInInput('email', 'nohibp@test.com')
+    // Use a known compromised password - should work since HIBP is disabled
+    await page.typeInInput('password', 'password123')
+
+    await page.navigationAction(async () => {
+      await page.clickOnButton("S'inscrire")
+    })
+
+    // Make sure the new account is propagated to the PLC directory
+    await networkWithoutHibp.processAll()
+
+    await page.navigationAction(async () => {
+      await page.clickOnButton("Authoriser l'accès")
+    })
+
+    await page.checkTitle('OAuth Client Example')
+    await page.ensureTextVisibility('Logged in!')
+
+    await page[Symbol.asyncDispose]()
+    await networkWithoutHibp.close()
+  })
+})
+
 async function withMokedMailer(network: TestNetworkNoAppView) {
   // @ts-expect-error
   const sendTemplateOrig = network.pds.ctx.mailer.sendTemplate

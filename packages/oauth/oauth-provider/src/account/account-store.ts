@@ -124,6 +124,7 @@ export type AccountInfo = {
 export type SignUpData = SignUpInput & {
   hcaptchaResult?: HcaptchaVerifyResult
   inviteCode?: InviteCode
+  hibpCheck?: boolean
 }
 
 export interface AccountStore {
