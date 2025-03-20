@@ -14,6 +14,7 @@ msgstr ""
 "Plural-Forms: \n"
 
 #: src/App.tsx:43
+#: src/routes/sessions.tsx:47
 msgid "Account home"
 msgstr ""
 
@@ -22,6 +23,7 @@ msgstr ""
 #~ msgstr ""
 
 #: src/App.tsx:75
+#: src/routes/sessions.tsx:78
 msgid "Revoke"
 msgstr ""
 

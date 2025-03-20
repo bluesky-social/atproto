@@ -12,7 +12,7 @@
     }
   },
   "scripts": {
-    "dev": "pnpm i18n && pnpm vite",
+    "dev": "pnpm vite",
     "build": "pnpm i18n && pnpm vite build",
     "postbuild": "tsc lib.ts --outDir dist --sourcemap --declaration",
     "typecheck": "tsc --noEmit",
