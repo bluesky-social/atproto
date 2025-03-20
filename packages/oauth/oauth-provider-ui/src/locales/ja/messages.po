@@ -464,7 +464,7 @@ msgstr "リダイレクトしています…"
 
 #: src/views/authorize/sign-up/sign-up-handle-form.tsx:235
 msgid "You can change this username to any domain name you control after your account is set up."
-msgstr "アカウントのセットアップ後にユーザー名とドメインを変更することができます。"
+msgstr "アカウントのセットアップ後にユーザー名を自分がコントロールしているドメイン名に変更することができます。"
 
 #: src/views/authorize/reset-password/reset-password-view.tsx:116
 msgid "You can now sign in with your new password."
