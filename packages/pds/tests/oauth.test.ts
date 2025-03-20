@@ -383,7 +383,9 @@ describe('HIBP password breach detection', () => {
     await page.clickOnButton("S'inscrire")
 
     // Should show error message about compromised password
-    await page.ensureTextVisibility('Compromised password')
+    await page.ensureTextVisibility(
+      'This password has appeared in one or more data breaches.',
+    )
 
     // TODO: Find out why we can't use "using" here
     await page[Symbol.asyncDispose]()
