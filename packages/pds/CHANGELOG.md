@@ -1,5 +1,22 @@
 # @atproto/pds
 
+## 0.4.108
+
+### Patch Changes
+
+- [`03fc0aa27`](https://github.com/bluesky-social/atproto/commit/03fc0aa270884523719e67bea701ef19e2dd5696) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve password reset error reporting during OAuth
+
+- Updated dependencies [[`49528e83d`](https://github.com/bluesky-social/atproto/commit/49528e83daee8d91c1956b13cc73e9c2b79b6b10), [`9332c0f31`](https://github.com/bluesky-social/atproto/commit/9332c0f315bb7270bf346f69ecb178481ed07764), [`49528e83d`](https://github.com/bluesky-social/atproto/commit/49528e83daee8d91c1956b13cc73e9c2b79b6b10), [`9332c0f31`](https://github.com/bluesky-social/atproto/commit/9332c0f315bb7270bf346f69ecb178481ed07764), [`9332c0f31`](https://github.com/bluesky-social/atproto/commit/9332c0f315bb7270bf346f69ecb178481ed07764), [`cc4122652`](https://github.com/bluesky-social/atproto/commit/cc4122652ed42ba55826c019d0ec57bf25df1ecd), [`9332c0f31`](https://github.com/bluesky-social/atproto/commit/9332c0f315bb7270bf346f69ecb178481ed07764), [`9332c0f31`](https://github.com/bluesky-social/atproto/commit/9332c0f315bb7270bf346f69ecb178481ed07764), [`49528e83d`](https://github.com/bluesky-social/atproto/commit/49528e83daee8d91c1956b13cc73e9c2b79b6b10), [`49528e83d`](https://github.com/bluesky-social/atproto/commit/49528e83daee8d91c1956b13cc73e9c2b79b6b10), [`670b6b5de`](https://github.com/bluesky-social/atproto/commit/670b6b5de2bf91e6944761c98eb1126fb6a681ee)]:
+  - @atproto/oauth-provider@0.6.0
+  - @atproto/syntax@0.4.0
+  - @atproto/api@0.14.10
+  - @atproto/lexicon@0.4.9
+  - @atproto/repo@0.7.2
+  - @atproto/xrpc@0.6.11
+  - @atproto/xrpc-server@0.7.13
+  - @atproto/aws@0.2.18
+  - @atproto-labs/xrpc-utils@0.0.9
+
 ## 0.4.107
 
 ### Patch Changes

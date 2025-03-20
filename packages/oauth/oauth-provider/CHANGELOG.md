@@ -1,5 +1,36 @@
 # @atproto/oauth-provider
 
+## 0.6.0
+
+### Minor Changes
+
+- [#3645](https://github.com/bluesky-social/atproto/pull/3645) [`49528e83d`](https://github.com/bluesky-social/atproto/commit/49528e83daee8d91c1956b13cc73e9c2b79b6b10) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove onSignupHcaptchaResult hook
+
+- [#3645](https://github.com/bluesky-social/atproto/pull/3645) [`49528e83d`](https://github.com/bluesky-social/atproto/commit/49528e83daee8d91c1956b13cc73e9c2b79b6b10) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow `onSignedUp` hook to access hcaptcha result data.
+
+### Patch Changes
+
+- [#3645](https://github.com/bluesky-social/atproto/pull/3645) [`49528e83d`](https://github.com/bluesky-social/atproto/commit/49528e83daee8d91c1956b13cc73e9c2b79b6b10) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix hcaptcha verification based on score
+
+- [#3627](https://github.com/bluesky-social/atproto/pull/3627) [`9332c0f31`](https://github.com/bluesky-social/atproto/commit/9332c0f315bb7270bf346f69ecb178481ed07764) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix CSP directives for assets loaded through an `src`.
+
+- [#3627](https://github.com/bluesky-social/atproto/pull/3627) [`9332c0f31`](https://github.com/bluesky-social/atproto/commit/9332c0f315bb7270bf346f69ecb178481ed07764) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Make CSP header shorter (by combining <script> tags in the backend, when possible)
+
+- [#3627](https://github.com/bluesky-social/atproto/pull/3627) [`9332c0f31`](https://github.com/bluesky-social/atproto/commit/9332c0f315bb7270bf346f69ecb178481ed07764) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Disable un-necessary pre-loading of assets
+
+- [#3640](https://github.com/bluesky-social/atproto/pull/3640) [`cc4122652`](https://github.com/bluesky-social/atproto/commit/cc4122652ed42ba55826c019d0ec57bf25df1ecd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Split OAuth Provider's ui into its own package
+
+- [#3627](https://github.com/bluesky-social/atproto/pull/3627) [`9332c0f31`](https://github.com/bluesky-social/atproto/commit/9332c0f315bb7270bf346f69ecb178481ed07764) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fixes issue in internal HTML generation class
+
+- [#3627](https://github.com/bluesky-social/atproto/pull/3627) [`9332c0f31`](https://github.com/bluesky-social/atproto/commit/9332c0f315bb7270bf346f69ecb178481ed07764) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Set `Cross-Origin-Embedder-Policy` to `unsafe-none` when HCaptcha is enabled
+
+- [#3645](https://github.com/bluesky-social/atproto/pull/3645) [`49528e83d`](https://github.com/bluesky-social/atproto/commit/49528e83daee8d91c1956b13cc73e9c2b79b6b10) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve HCaptcha error reporting
+
+- Updated dependencies [[`cc4122652`](https://github.com/bluesky-social/atproto/commit/cc4122652ed42ba55826c019d0ec57bf25df1ecd), [`cc4122652`](https://github.com/bluesky-social/atproto/commit/cc4122652ed42ba55826c019d0ec57bf25df1ecd), [`670b6b5de`](https://github.com/bluesky-social/atproto/commit/670b6b5de2bf91e6944761c98eb1126fb6a681ee)]:
+  - @atproto/oauth-provider-ui@0.0.2
+  - @atproto/oauth-provider-api@0.0.1
+  - @atproto/syntax@0.4.0
+
 ## 0.5.2
 
 ### Patch Changes

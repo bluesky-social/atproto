@@ -1,5 +1,13 @@
 # @atproto/lex-cli
 
+## 0.7.1
+
+### Patch Changes
+
+- Updated dependencies [[`670b6b5de`](https://github.com/bluesky-social/atproto/commit/670b6b5de2bf91e6944761c98eb1126fb6a681ee)]:
+  - @atproto/syntax@0.4.0
+  - @atproto/lexicon@0.4.9
+
 ## 0.7.0
 
 ### Minor Changes
