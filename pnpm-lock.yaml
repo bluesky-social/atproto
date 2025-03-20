@@ -1139,6 +1139,9 @@ importers:
       '@atproto-labs/rollup-plugin-bundle-manifest':
         specifier: ^0.1.2
         version: 0.1.2(rollup@4.34.9)
+      '@atproto/oauth-provider-api':
+        specifier: workspace:*
+        version: link:../oauth-provider-api
       '@lingui/cli':
         specifier: ^5.2.0
         version: 5.2.0(typescript@5.6.3)

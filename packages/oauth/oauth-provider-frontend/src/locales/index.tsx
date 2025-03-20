@@ -47,3 +47,7 @@ export function Provider({ children }: { children: React.ReactNode }) {
 
   return <Context.Provider value={ctx}>{children}</Context.Provider>
 }
+
+export function useLocale() {
+  return React.useContext(Context)
+}

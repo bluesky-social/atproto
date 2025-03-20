@@ -26,6 +26,7 @@
   "license": "ISC",
   "devDependencies": {
     "@atproto-labs/rollup-plugin-bundle-manifest": "^0.1.2",
+    "@atproto/oauth-provider-api": "workspace:*",
     "@lingui/cli": "^5.2.0",
     "@lingui/swc-plugin": "^5.4.0",
     "@lingui/vite-plugin": "^5.2.0",

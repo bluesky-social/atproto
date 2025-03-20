@@ -13,10 +13,18 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
+#: src/App.tsx:38
+msgid "Account home"
+msgstr "Gestion du compte"
+
 #: src/App.tsx:7
 #~ msgid "Hello, world!"
 #~ msgstr "Bonjour, monde!"
 
-#: src/components/AccountSelector.tsx:11
+#: src/App.tsx:62
+msgid "Revoke"
+msgstr ""
+
+#: src/components/AccountSelector.tsx:31
 msgid "Select an account"
 msgstr ""

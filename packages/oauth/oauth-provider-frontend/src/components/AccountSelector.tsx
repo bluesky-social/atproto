@@ -27,7 +27,7 @@ export function AccountSelector() {
     <Popover.Root>
       <Popover.Trigger asChild>
         <button
-          className="w-12 h-12 rounded-full overflow-hidden"
+          className="w-12 h-12 rounded-full overflow-hidden border-2 border-contrast-200 hover:border-contrast-300"
           aria-label={_(msg`Select an account`)}
         >
           <img src="https://cdn.bsky.app/img/avatar/plain/did:plc:3jpt2mvvsumj2r7eqk4gzzjz/bafkreiaexnb3bkzbaxktm5q3l3txyweflh3smcruigesvroqjrqxec4zv4@jpeg" />
@@ -35,27 +35,26 @@ export function AccountSelector() {
       </Popover.Trigger>
       <Popover.Portal>
         <Popover.Content
-          className="PopoverContent px-4 md:px-6 w-full"
+          side="top"
+          align="end"
+          className="PopoverContent w-full"
           sideOffset={5}
-          style={{ width: 360 }}
+          style={{ width: 320 }}
         >
-          <div className="relative bg-contrast-25 rounded-lg overflow-hidden">
+          <div className="relative bg-contrast-50 rounded-lg overflow-hidden shadow-xl shadow-contrast-0">
             <div className="flex flex-col">
               {accounts.map((account, i) => (
                 <button
                   key={account.did}
                   className={clsx([
                     'flex items-center space-x-3 p-3 pr-4',
-                    'hover:bg-contrast-50',
-                    i !== 0 && 'border-t border-contrast-50',
+                    'hover:bg-contrast-100',
+                    i !== 0 && 'border-t border-contrast-100',
                   ])}
                 >
-                  <img
-                    src={account.avatar}
-                    className="w-10 h-10 rounded-full"
-                  />
+                  <img src={account.avatar} className="w-9 h-9 rounded-full" />
                   <div className="text-left truncate">
-                    <p className="font-bold text-text-default">
+                    <p className="text-sm font-bold text-text-default">
                       {account.handle}
                     </p>
                     <p className="text-sm text-text-light truncate">
@@ -76,7 +75,7 @@ export function AccountSelector() {
             */}
           </div>
 
-          <Popover.Arrow className="PopoverArrow text-contrast-25" />
+          <Popover.Arrow className="PopoverArrow text-contrast-50" />
         </Popover.Content>
       </Popover.Portal>
     </Popover.Root>

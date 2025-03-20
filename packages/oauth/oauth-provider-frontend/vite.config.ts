@@ -30,7 +30,7 @@ export default defineConfig({
       output: {
         entryFileNames: '[name]-[format]-[hash].js',
         chunkFileNames: '[name]-[format]-[hash].js',
-        assetFileNames: '[name]-[format]-[hash][extname]',
+        assetFileNames: '[name]-[hash][extname]',
       },
       plugins: [
         /*
