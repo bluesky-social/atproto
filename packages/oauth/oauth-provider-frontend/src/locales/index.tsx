@@ -1,12 +1,20 @@
 import React from 'react'
 
+import { LocalizedString } from '#/api'
 import { Locale } from '#/locales/types'
 import { detectLocale } from '#/locales/detectLocale'
 import { activateLocale } from '#/locales/activateLocale'
 
-const Context = React.createContext({
+export * from '#/locales/types'
+
+const Context = React.createContext<{
+  locale: Locale
+  setLocale: (locale: Locale) => void
+  localizeString: (value: LocalizedString) => string
+}>({
   locale: Locale.en,
-  setLocale: (_locale: Locale) => {},
+  setLocale: () => {},
+  localizeString: () => '',
 })
 
 export function Provider({ children }: { children: React.ReactNode }) {
@@ -37,12 +45,21 @@ export function Provider({ children }: { children: React.ReactNode }) {
     [setLocale],
   )
 
+  const localizeString = React.useCallback(
+    (value: LocalizedString) => {
+      if (typeof value === 'string') return value
+      return value[locale] || value[Locale.en]
+    },
+    [locale],
+  )
+
   const ctx = React.useMemo(
     () => ({
       locale,
       setLocale: safeSetLocale,
+      localizeString,
     }),
-    [locale, safeSetLocale],
+    [locale, safeSetLocale, localizeString],
   )
 
   return <Context.Provider value={ctx}>{children}</Context.Provider>
