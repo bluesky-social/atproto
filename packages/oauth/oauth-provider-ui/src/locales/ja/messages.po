@@ -142,7 +142,7 @@ msgstr "パスワードを入力"
 
 #: src/views/authorize/reset-password/reset-password-view.tsx:85
 msgid "Enter the code you received to reset your password."
-msgstr "パスワードを変更するために受け取ったコードを入力してください。"
+msgstr "パスワードをリセットするために受け取ったコードを入力してください。"
 
 #: src/views/authorize/reset-password/reset-password-request-form.tsx:71
 msgid "Enter the email you used to create your account. We'll send you a \"reset code\" so you can set a new password."
