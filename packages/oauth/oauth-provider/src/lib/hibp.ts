@@ -1,5 +1,4 @@
 import { createHash } from 'node:crypto'
-import { z } from 'zod'
 import {
   Fetch,
   FetchBound,
@@ -7,15 +6,6 @@ import {
   fetchOkProcessor,
 } from '@atproto-labs/fetch'
 import { pipe } from '@atproto-labs/pipe'
-
-export const hibpConfigSchema = z.object({
-  /**
-   * Whether to enable HaveIBeenPwned password breach check
-   */
-  enabled: z.boolean().optional(),
-})
-
-export type HibpConfig = z.infer<typeof hibpConfigSchema>
 
 const HIBP_API_URL = 'https://api.pwnedpasswords.com/range'
 
