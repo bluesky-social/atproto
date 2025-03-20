@@ -1,8 +1,11 @@
 import React from 'react'
 
 import { AccountSelector } from '#/components/AccountSelector'
+import { useSession } from '#/state/session'
 
 export function Nav() {
+  const { session } = useSession()
+
   return (
     <>
       <nav className="fixed inset-x-0 top-0 bg-contrast-25 border-b border-contrast-100 px-4 md:px-6 flex items-center justify-between h-15">
@@ -12,7 +15,7 @@ export function Nav() {
           dangerouslySetInnerHTML={{ __html: logo }}
         />
 
-        <AccountSelector />
+        {session && <AccountSelector />}
       </nav>
       <div className="h-15" />
     </>

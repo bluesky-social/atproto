@@ -1,9 +1,10 @@
 import React from 'react'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Navigate } from '@tanstack/react-router'
 import { Trans } from '@lingui/react/macro'
 
 import { Button } from '#/components/Button'
 import { Session } from '#/api'
+import { useSession } from '#/state/session'
 
 const sessions: Session[] = [
   {
@@ -28,7 +29,8 @@ export const Route = createFileRoute('/sessions')({
 })
 
 export function Sessions() {
-  return (
+  const { session, setSession } = useSession()
+  return session ? (
     <>
       <ul className="flex items-center space-x-2">
         <li className="text-text-light">Account</li>
@@ -56,7 +58,7 @@ export function Sessions() {
               </p>
             </div>
           </div>
-          <Button>
+          <Button onClick={() => setSession(null)}>
             <Trans>Revoke</Trans>
           </Button>
         </div>
@@ -66,10 +68,12 @@ export function Sessions() {
         <p className="text-text-light italic text-sm">
           <Trans>Log out of all applications</Trans>
         </p>
-        <Button>
+        <Button onClick={() => setSession(null)}>
           <Trans>Revoke all</Trans>
         </Button>
       </div>
     </>
+  ) : (
+    <Navigate to="/" />
   )
 }

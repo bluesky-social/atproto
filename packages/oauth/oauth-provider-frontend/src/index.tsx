@@ -9,6 +9,7 @@ import { RouterProvider, createRouter } from '@tanstack/react-router'
 
 import { routeTree } from '#/routeTree.gen'
 import { Provider as LocaleProvider } from '#/locales'
+import { Provider as SessionProvider } from '#/state/session'
 
 const router = createRouter({ routeTree })
 
@@ -23,7 +24,9 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <I18nProvider i18n={i18n}>
       <LocaleProvider>
-        <RouterProvider router={router} />
+        <SessionProvider>
+          <RouterProvider router={router} />
+        </SessionProvider>
       </LocaleProvider>
     </I18nProvider>
   </StrictMode>,
