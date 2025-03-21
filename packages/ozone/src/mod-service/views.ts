@@ -1,6 +1,6 @@
 import { sql } from 'kysely'
-import { AtpAgent } from '@atproto/api'
-import { dedupeStrs } from '@atproto/common'
+import { AppBskyActorDefs, AtpAgent } from '@atproto/api'
+import { chunkArray, dedupeStrs } from '@atproto/common'
 import { Keypair } from '@atproto/crypto'
 import { BlobRef } from '@atproto/lexicon'
 import { AtUri, INVALID_HANDLE, normalizeDatetimeAlways } from '@atproto/syntax'
@@ -79,7 +79,7 @@ export class ModerationViews {
     const auth = await this.appviewAuth(ids.ComAtprotoAdminGetAccountInfos)
     if (!auth) return new Map()
     try {
-      const res = await this.appviewAgent.api.com.atproto.admin.getAccountInfos(
+      const res = await this.appviewAgent.com.atproto.admin.getAccountInfos(
         {
           dids: dedupeStrs(dids),
         },
@@ -266,6 +266,10 @@ export class ModerationViews {
     labelers?: ParsedLabelers,
   ): Promise<Map<string, RepoView>> {
     const results = new Map<string, RepoView>()
+    if (!dids.length) {
+      return results
+    }
+
     const [repos, localLabels, externalLabels] = await Promise.all([
       this.repos(dids),
       this.labels(dids),
@@ -373,6 +377,11 @@ export class ModerationViews {
     subjects: RecordSubject[],
     labelers?: ParsedLabelers,
   ): Promise<Map<string, RecordViewDetail>> {
+    const results = new Map<string, RecordViewDetail>()
+    if (!subjects.length) {
+      return results
+    }
+
     const subjectUris = subjects.map((s) => s.uri)
     const [records, subjectStatusesResult, localLabels, externalLabels] =
       await Promise.all([
@@ -381,8 +390,6 @@ export class ModerationViews {
         this.labels(subjectUris),
         this.getExternalLabels(subjectUris, labelers),
       ])
-
-    const results = new Map<string, RecordViewDetail>()
 
     await Promise.all(
       Array.from(records.entries()).map(async ([uri, record]) => {
@@ -425,7 +432,7 @@ export class ModerationViews {
     try {
       const {
         data: { labels },
-      } = await this.appviewAgent.api.com.atproto.label.queryLabels({
+      } = await this.appviewAgent.com.atproto.label.queryLabels({
         uriPatterns: subjects,
         sources: labelers.dids,
       })
@@ -695,9 +702,26 @@ export class ModerationViews {
     if (!auth) return []
     const {
       data: { feed },
-    } = await this.appviewAgent.api.app.bsky.feed.getAuthorFeed({ actor }, auth)
+    } = await this.appviewAgent.app.bsky.feed.getAuthorFeed({ actor }, auth)
 
     return feed
+  }
+
+  async getProfiles(dids: string[]) {
+    const profiles = new Map<string, AppBskyActorDefs.ProfileViewDetailed>()
+
+    const auth = await this.appviewAuth(ids.AppBskyActorGetProfiles)
+    if (!auth) return profiles
+
+    for (const actors of chunkArray(dids, 25)) {
+      const { data } = await this.appviewAgent.getProfiles({ actors })
+
+      data.profiles.forEach((profile) => {
+        profiles.set(profile.did, profile)
+      })
+    }
+
+    return profiles
   }
 }
 

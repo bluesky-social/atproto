@@ -36,7 +36,7 @@ export const getPdsAccountInfos = async (
   const results = new Map<string, AccountView | null>()
 
   const agent = ctx.pdsAgent
-  if (!agent) return results
+  if (!agent || !dids.length) return results
 
   const auth = await ctx.pdsAuth(ids.ComAtprotoAdminGetAccountInfos)
   if (!auth) return results
