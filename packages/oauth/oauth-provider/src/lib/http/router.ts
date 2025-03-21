@@ -6,7 +6,7 @@ import { Params, Path } from './path.js'
 import { RouteMiddleware, createRoute } from './route.js'
 import { Middleware } from './types.js'
 
-export type RouterCtx<T> = SubCtx<T, { url: Readonly<URL> }>
+export type RouterCtx<T = void> = SubCtx<T, { url: Readonly<URL> }>
 export type RouterMiddleware<
   T = void,
   Req = IncomingMessage,
