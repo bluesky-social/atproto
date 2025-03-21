@@ -278,6 +278,7 @@ export const blobsForWrite = (
   }
 
   return refs.map(({ ref, path }) => ({
+    size: ref.size,
     cid: ref.ref,
     mimeType: ref.mimeType,
     constraints:
