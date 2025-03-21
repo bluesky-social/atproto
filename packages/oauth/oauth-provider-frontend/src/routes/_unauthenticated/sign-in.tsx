@@ -15,10 +15,10 @@ import { InlineLink } from '#/components/Link'
 import { format2FACode } from '#/util/format2FACode'
 
 export const Route = createFileRoute('/_unauthenticated/sign-in')({
-  component: Index,
+  component: RouteComponent,
 })
 
-function Index() {
+function RouteComponent() {
   return (
     <div
       className={clsx([
@@ -187,7 +187,7 @@ function LoginForm() {
             />
 
             <InlineLink
-              to="/sessions"
+              to="/reset-password"
               className="text-sm text-center text-text-light"
             >
               <Trans>Forgot password?</Trans>

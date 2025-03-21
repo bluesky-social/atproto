@@ -2,15 +2,19 @@ import React from 'react'
 import { Link as RouterLink, LinkComponentProps } from '@tanstack/react-router'
 import { clsx } from 'clsx'
 
-export function Link({ children, ...rest }: LinkComponentProps) {
-  return <RouterLink {...rest}>{children}</RouterLink>
+export type LinkProps = LinkComponentProps & {
+  label?: string
 }
 
-export function InlineLink({
-  children,
-  className,
-  ...rest
-}: LinkComponentProps) {
+export function Link({ children, label, ...rest }: LinkProps) {
+  return (
+    <RouterLink {...rest} aria-label={label || rest.href || rest.to}>
+      {children}
+    </RouterLink>
+  )
+}
+
+export function InlineLink({ children, className, ...rest }: LinkProps) {
   return (
     <Link
       {...rest}
@@ -25,3 +29,18 @@ export function InlineLink({
     </Link>
   )
 }
+
+export function staticClick(
+  onClick: (e: React.MouseEvent) => void,
+): Partial<LinkComponentProps> {
+  return {
+    to: '.',
+    onClick(e) {
+      e.preventDefault()
+      onClick(e)
+    },
+  }
+}
+
+Link.staticClick = staticClick
+InlineLink.staticClick = staticClick
