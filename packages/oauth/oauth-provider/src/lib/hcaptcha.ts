@@ -52,11 +52,12 @@ export const hcaptchaVerifyResultSchema = z.object({
   /**
    * the hostname of the site where the challenge was passed
    */
-  hostname: z.string(),
+  hostname: z.string().nullable(),
   /**
-   * optional: any error codes
+   * optional: any error codes returned by the hCaptcha API.
+   * @see {@link https://docs.hcaptcha.com/#siteverify-error-codes-table}
    */
-  'error-codes': z.array(z.string()),
+  'error-codes': z.array(z.string()).optional(),
   /**
    * ENTERPRISE feature: a score denoting malicious activity. Value ranges from
    * 0.0 (no risk) to 1.0 (confirmed threat).
