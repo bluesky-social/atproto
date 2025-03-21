@@ -26,7 +26,7 @@ function Root() {
     <>
       <Nav />
 
-      <main className="bg-contrast-25 min-h-screen px-4 md:px-6 pt-16">
+      <main className="bg-contrast-0 dark:bg-contrast-25 min-h-screen px-4 md:px-6 pt-16">
         <div
           className="mx-auto w-full"
           style={{ maxWidth: 600, minHeight: '100vh' }}

@@ -8,7 +8,7 @@ export function Fieldset({
   label: string
 }) {
   return (
-    <fieldset className="space-y-2">
+    <fieldset className="space-y-3">
       <legend className="hidden">{label}</legend>
       {children}
     </fieldset>

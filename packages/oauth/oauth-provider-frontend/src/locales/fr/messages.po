@@ -13,20 +13,68 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
+#: src/routes/index.tsx:116
+msgid "@handle or email"
+msgstr ""
+
 #: src/App.tsx:43
 #: src/routes/sessions.tsx:47
-msgid "Account home"
-msgstr "Gestion du compte"
+#~ msgid "Account home"
+#~ msgstr "Gestion du compte"
+
+#: src/routes/index.tsx:159
+msgid "Code"
+msgstr ""
 
 #: src/App.tsx:7
 #~ msgid "Hello, world!"
 #~ msgstr "Bonjour, monde!"
 
-#: src/App.tsx:75
-#: src/routes/sessions.tsx:78
+#: src/routes/index.tsx:111
+msgid "Identifier"
+msgstr ""
+
+#: src/routes/sessions.tsx:69
+msgid "Log out of all applications"
+msgstr ""
+
+#: src/routes/index.tsx:137
+#: src/routes/index.tsx:143
+msgid "Password"
+msgstr ""
+
+#: src/data/useHydrationData/index.ts:16
+msgid "PDS configuration error"
+msgstr ""
+
+#: src/routes/sessions.tsx:62
 msgid "Revoke"
+msgstr ""
+
+#: src/routes/sessions.tsx:72
+msgid "Revoke all"
 msgstr ""
 
 #: src/components/AccountSelector.tsx:31
 msgid "Select an account"
+msgstr ""
+
+#: src/routes/index.tsx:181
+msgid "Sign in"
+msgstr ""
+
+#: src/data/useHydrationData/index.ts:18
+msgid "The page is missing required customization data"
+msgstr ""
+
+#: src/data/useCustomizationData.ts:11
+msgid "The page is missing required customization data."
+msgstr ""
+
+#: src/components/ErrorScreen.tsx:20
+msgid "Whoops! An error occurred."
+msgstr ""
+
+#: src/routes/index.tsx:164
+msgid "XXXXX-XXXXX"
 msgstr ""

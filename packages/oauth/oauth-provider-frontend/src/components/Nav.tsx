@@ -8,7 +8,7 @@ export function Nav() {
 
   return (
     <>
-      <nav className="fixed inset-x-0 top-0 bg-contrast-25 border-b border-contrast-100 px-4 md:px-6 flex items-center justify-between h-15">
+      <nav className="fixed inset-x-0 top-0 bg-contrast-0 dark:bg-contrast-25 border-b border-contrast-100 px-4 md:px-6 flex items-center justify-between h-15">
         <div
           className=""
           style={{ width: 120 }}
