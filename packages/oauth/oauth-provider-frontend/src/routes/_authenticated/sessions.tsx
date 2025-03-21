@@ -1,5 +1,5 @@
 import React from 'react'
-import { createFileRoute, Navigate } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 import { Trans } from '@lingui/react/macro'
 
 import { Button } from '#/components/Button'
@@ -29,8 +29,8 @@ export const Route = createFileRoute('/_authenticated/sessions')({
 })
 
 export function Sessions() {
-  const { session, setSession } = useSession()
-  return session ? (
+  const { setSession } = useSession()
+  return (
     <>
       <ul className="flex items-center space-x-2">
         <li className="text-text-light">Account</li>
@@ -73,7 +73,5 @@ export function Sessions() {
         </Button>
       </div>
     </>
-  ) : (
-    <Navigate to="/" />
   )
 }

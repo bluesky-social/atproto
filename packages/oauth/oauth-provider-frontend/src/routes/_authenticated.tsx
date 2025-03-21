@@ -1,15 +1,20 @@
 import React from 'react'
-import { createFileRoute, Outlet } from '@tanstack/react-router'
+import { createFileRoute, Outlet, Navigate } from '@tanstack/react-router'
 
 import { Nav } from '#/components/Nav'
 import { Footer } from '#/components/Footer'
+import { useSession } from '#/state/session'
 
 export const Route = createFileRoute('/_authenticated')({
   component: RouteComponent,
 })
 
 function RouteComponent() {
-  return (
+  const { session } = useSession()
+
+  return !session ? (
+    <Navigate to="/sign-in" />
+  ) : (
     <>
       <Nav />
 

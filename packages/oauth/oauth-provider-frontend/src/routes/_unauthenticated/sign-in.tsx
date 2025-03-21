@@ -1,5 +1,5 @@
 import React from 'react'
-import { createFileRoute, Navigate } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 import { useForm } from '@tanstack/react-form'
 import { Trans } from '@lingui/react/macro'
 import { useLingui } from '@lingui/react'
@@ -19,11 +19,7 @@ export const Route = createFileRoute('/_unauthenticated/sign-in')({
 })
 
 function Index() {
-  const { session } = useSession()
-
-  return session ? (
-    <Navigate to="/sessions" />
-  ) : (
+  return (
     <div
       className={clsx([
         'mx-auto rounded-lg border p-5 md:p-7 shadow-xl dark:shadow-2xl',

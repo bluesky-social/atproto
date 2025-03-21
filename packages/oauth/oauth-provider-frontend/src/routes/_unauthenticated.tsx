@@ -1,8 +1,9 @@
 import React from 'react'
-import { createFileRoute, Outlet } from '@tanstack/react-router'
+import { createFileRoute, Outlet, Navigate } from '@tanstack/react-router'
 
 import { Footer } from '#/components/Footer'
 import { useCustomizationData } from '#/data/useCustomizationData'
+import { useSession } from '#/state/session'
 
 export const Route = createFileRoute('/_unauthenticated')({
   component: Layout,
@@ -10,8 +11,11 @@ export const Route = createFileRoute('/_unauthenticated')({
 
 function Layout() {
   const { logo } = useCustomizationData()
+  const { session } = useSession()
 
-  return (
+  return session ? (
+    <Navigate to="/sessions" />
+  ) : (
     <>
       <main className="bg-contrast-0 dark:bg-contrast-25 min-h-screen px-4 md:px-6 pt-16">
         <div
