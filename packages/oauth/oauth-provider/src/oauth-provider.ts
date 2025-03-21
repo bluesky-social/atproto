@@ -1,7 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import createHttpError from 'http-errors'
 import type { Redis, RedisOptions } from 'ioredis'
-import { ZodError, z } from 'zod'
 import { Jwks, Keyset } from '@atproto/jwk'
 import {
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
@@ -23,12 +21,7 @@ import {
   OAuthTokenResponse,
   OAuthTokenType,
   atprotoLoopbackClientMetadata,
-  oauthAuthorizationRequestParSchema,
   oauthAuthorizationRequestParametersSchema,
-  oauthAuthorizationRequestQuerySchema,
-  oauthClientCredentialsSchema,
-  oauthTokenIdentificationSchema,
-  oauthTokenRequestSchema,
 } from '@atproto/oauth-types'
 import { safeFetchWrap } from '@atproto-labs/fetch-node'
 import { SimpleStore } from '@atproto-labs/simple-store'
@@ -39,14 +32,8 @@ import {
   AccountStore,
   DeviceAccountInfo,
   asAccountStore,
-  handleSchema,
-  resetPasswordConfirmDataSchema,
-  resetPasswordRequestDataSchema,
 } from './account/account-store.js'
 import { Account } from './account/account.js'
-import { signInDataSchema } from './account/sign-in-data.js'
-import { signUpInputSchema } from './account/sign-up-input.js'
-import { authorizeAssetsMiddleware } from './assets/assets-middleware.js'
 import { ClientAuth, authJwkThumbprint } from './client/client-auth.js'
 import {
   ClientManager,
@@ -57,7 +44,6 @@ import { Client } from './client/client.js'
 import { AUTHENTICATION_MAX_AGE, TOKEN_MAX_AGE } from './constants.js'
 import { DeviceId } from './device/device-id.js'
 import {
-  DeviceInfo,
   DeviceManager,
   DeviceManagerOptions,
   deviceManagerOptionsSchema,
@@ -66,41 +52,22 @@ import { DeviceStore, asDeviceStore } from './device/device-store.js'
 import { AccessDeniedError } from './errors/access-denied-error.js'
 import { AccountSelectionRequiredError } from './errors/account-selection-required-error.js'
 import { ConsentRequiredError } from './errors/consent-required-error.js'
-import { InvalidClientError } from './errors/invalid-client-error.js'
 import { InvalidGrantError } from './errors/invalid-grant-error.js'
 import { InvalidParametersError } from './errors/invalid-parameters-error.js'
 import { InvalidRequestError } from './errors/invalid-request-error.js'
 import { LoginRequiredError } from './errors/login-required-error.js'
 import { UnauthorizedClientError } from './errors/unauthorized-client-error.js'
-import { WWWAuthenticateError } from './errors/www-authenticate-error.js'
 import { HcaptchaConfig } from './lib/hcaptcha.js'
-import {
-  Handler,
-  Middleware,
-  Router,
-  cacheControlMiddleware,
-  combineMiddlewares,
-  parseHttpRequest,
-  setupCsrfToken,
-  staticJsonMiddleware,
-  validateCsrfToken,
-  validateFetchDest,
-  validateFetchMode,
-  validateFetchSite,
-  validateReferer,
-  validateSameOrigin,
-  writeJson,
-} from './lib/http/index.js'
-import {
-  RequestMetadata,
-  extractLocales,
-  negotiateResponseContent as negotiateContent,
-} from './lib/http/request.js'
+import { Handler, combineMiddlewares } from './lib/http/index.js'
+import { RequestMetadata } from './lib/http/request.js'
 import { dateToEpoch, dateToRelativeSeconds } from './lib/util/date.js'
-import { Awaitable, Override } from './lib/util/type.js'
+import { Override } from './lib/util/type.js'
+import { extractZodErrorMessage } from './lib/util/zod-error.js'
 import { CustomMetadata, buildMetadata } from './metadata/build-metadata.js'
 import { OAuthHooks, SignInData, SignUpData } from './oauth-hooks.js'
+import { buildOAuthRouter } from './oauth-router.js'
 import { OAuthVerifier, OAuthVerifierOptions } from './oauth-verifier.js'
+import { buildAuthorizationPageRouter } from './output/authorization-page-router.js'
 import { AuthorizationResultAuthorize } from './output/build-authorize-data.js'
 import {
   Branding,
@@ -109,15 +76,7 @@ import {
   CustomizationInput,
   customizationSchema,
 } from './output/build-customization-data.js'
-import {
-  buildErrorPayload,
-  buildErrorStatus,
-} from './output/build-error-payload.js'
-import { OutputManager } from './output/output-manager.js'
-import {
-  AuthorizationResultRedirect,
-  sendAuthorizeRedirect,
-} from './output/send-authorize-redirect.js'
+import { AuthorizationResultRedirect } from './output/send-authorize-redirect.js'
 import { ReplayStore, ifReplayStore } from './replay/replay-store.js'
 import { codeSchema } from './request/code.js'
 import { RequestInfo } from './request/request-info.js'
@@ -126,6 +85,7 @@ import { RequestStoreMemory } from './request/request-store-memory.js'
 import { RequestStoreRedis } from './request/request-store-redis.js'
 import { RequestStore, ifRequestStore } from './request/request-store.js'
 import { RequestUri, requestUriSchema } from './request/request-uri.js'
+import { ErrorHandler, RouterOptions } from './router/router-options.js'
 import { isTokenId } from './token/token-id.js'
 import { TokenManager } from './token/token-manager.js'
 import { TokenStore, asTokenStore } from './token/token-store.js'
@@ -137,28 +97,12 @@ export {
   type CustomMetadata,
   type Customization,
   type CustomizationInput,
+  type ErrorHandler,
   type Handler,
   type HcaptchaConfig,
   Keyset,
   type OAuthAuthorizationServerMetadata,
-}
-
-type ApiContext = {
-  requestUri: RequestUri
-  deviceId: DeviceId
-  deviceMetadata: RequestMetadata
-}
-
-export type ErrorHandler<
-  Req extends IncomingMessage = IncomingMessage,
-  Res extends ServerResponse = ServerResponse,
-> = (req: Req, res: Res, err: unknown, message: string) => void
-
-export type RouterOptions<
-  Req extends IncomingMessage = IncomingMessage,
-  Res extends ServerResponse = ServerResponse,
-> = {
-  onError?: ErrorHandler<Req, Res>
+  type RouterOptions,
 }
 
 export type OAuthProviderOptions = Override<
@@ -248,6 +192,7 @@ export type OAuthProviderOptions = Override<
 
 export class OAuthProvider extends OAuthVerifier {
   public readonly metadata: OAuthAuthorizationServerMetadata
+  public readonly customization: Customization
 
   public readonly authenticationMaxAge: number
 
@@ -256,7 +201,6 @@ export class OAuthProvider extends OAuthVerifier {
   public readonly clientManager: ClientManager
   public readonly requestManager: RequestManager
   public readonly tokenManager: TokenManager
-  public readonly outputManager: OutputManager
 
   public constructor({
     metadata,
@@ -294,7 +238,6 @@ export class OAuthProvider extends OAuthVerifier {
     // Customization
     ...rest
   }: OAuthProviderOptions) {
-    const customization: Customization = customizationSchema.parse(rest)
     const deviceManagerOptions: DeviceManagerOptions =
       deviceManagerOptionsSchema.parse(rest)
 
@@ -319,14 +262,14 @@ export class OAuthProvider extends OAuthVerifier {
 
     this.authenticationMaxAge = authenticationMaxAge
     this.metadata = buildMetadata(this.issuer, this.keyset, metadata)
+    this.customization = customizationSchema.parse(rest)
 
     this.deviceManager = new DeviceManager(deviceStore, deviceManagerOptions)
-    this.outputManager = new OutputManager(customization)
     this.accountManager = new AccountManager(
       this.issuer,
       accountStore,
       hooks,
-      customization,
+      this.customization,
     )
     this.clientManager = new ClientManager(
       this.metadata,
@@ -470,7 +413,7 @@ export class OAuthProvider extends OAuthVerifier {
   /**
    * @see {@link https://datatracker.ietf.org/doc/html/rfc9126}
    */
-  protected async pushedAuthorizationRequest(
+  public async pushedAuthorizationRequest(
     credentials: OAuthClientCredentials,
     authorizationRequest: OAuthAuthorizationRequestPar,
     dpopJkt: null | string,
@@ -516,7 +459,12 @@ export class OAuthProvider extends OAuthVerifier {
     if ('request_uri' in query) {
       const requestUri = await requestUriSchema
         .parseAsync(query.request_uri, { path: ['query', 'request_uri'] })
-        .catch(throwInvalidRequest)
+        .catch((err) => {
+          throw new InvalidRequestError(
+            extractZodErrorMessage(err) ?? 'Input validation error',
+            err,
+          )
+        })
 
       return this.requestManager.get(requestUri, deviceId, client.id)
     }
@@ -575,7 +523,7 @@ export class OAuthProvider extends OAuthVerifier {
   /**
    * @see {@link https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-11#section-4.1.1}
    */
-  protected async authorize(
+  public async authorize(
     clientCredentials: OAuthClientCredentialsNone,
     query: OAuthAuthorizationRequestQuery,
     deviceId: DeviceId,
@@ -738,8 +686,10 @@ export class OAuthProvider extends OAuthVerifier {
     }))
   }
 
-  protected async signUp(
-    { requestUri, deviceId, deviceMetadata }: ApiContext,
+  public async signUp(
+    requestUri: RequestUri,
+    deviceId: DeviceId,
+    deviceMetadata: RequestMetadata,
     data: SignUpData,
   ): Promise<{
     account: Account
@@ -761,8 +711,10 @@ export class OAuthProvider extends OAuthVerifier {
     }
   }
 
-  protected async signIn(
-    { requestUri, deviceId, deviceMetadata }: ApiContext,
+  public async signIn(
+    requestUri: RequestUri,
+    deviceId: DeviceId,
+    deviceMetadata: RequestMetadata,
     data: SignInData,
   ): Promise<{
     account: Account
@@ -791,8 +743,10 @@ export class OAuthProvider extends OAuthVerifier {
     }
   }
 
-  protected async acceptRequest(
-    { requestUri, deviceId, deviceMetadata }: ApiContext,
+  public async acceptRequest(
+    requestUri: RequestUri,
+    deviceId: DeviceId,
+    deviceMetadata: RequestMetadata,
     sub: string,
   ): Promise<AuthorizationResultRedirect> {
     const { issuer } = this
@@ -840,10 +794,10 @@ export class OAuthProvider extends OAuthVerifier {
     }
   }
 
-  protected async rejectRequest({
-    requestUri,
-    deviceId,
-  }: ApiContext): Promise<AuthorizationResultRedirect> {
+  public async rejectRequest(
+    requestUri: RequestUri,
+    deviceId: DeviceId,
+  ): Promise<AuthorizationResultRedirect> {
     const { parameters } = await this.requestManager.get(requestUri, deviceId)
 
     await this.deleteRequest(requestUri, parameters)
@@ -858,7 +812,7 @@ export class OAuthProvider extends OAuthVerifier {
     }
   }
 
-  protected async token(
+  public async token(
     clientCredentials: OAuthClientCredentials,
     clientMetadata: RequestMetadata,
     request: OAuthTokenRequest,
@@ -990,7 +944,7 @@ export class OAuthProvider extends OAuthVerifier {
   /**
    * @see {@link https://datatracker.ietf.org/doc/html/rfc7009#section-2.1 rfc7009}
    */
-  protected async revoke({ token }: OAuthTokenIdentification) {
+  public async revoke({ token }: OAuthTokenIdentification) {
     // @TODO this should also remove the account-device association (or, at
     // least, mark it as expired)
     await this.tokenManager.revoke(token)
@@ -999,7 +953,7 @@ export class OAuthProvider extends OAuthVerifier {
   /**
    * @see {@link https://datatracker.ietf.org/doc/html/rfc7662#section-2.1 rfc7662}
    */
-  protected async introspect(
+  public async introspect(
     credentials: OAuthClientCredentials,
     { token }: OAuthTokenIdentification,
   ): Promise<OAuthIntrospectionResponse> {
@@ -1076,607 +1030,20 @@ export class OAuthProvider extends OAuthVerifier {
    * or as a middleware with express / connect.
    */
   public httpHandler<
-    T = void,
     Req extends IncomingMessage = IncomingMessage,
     Res extends ServerResponse = ServerResponse,
-  >(options?: RouterOptions<Req, Res>): Handler<T, Req, Res> {
-    const router = this.buildRouter<T, Req, Res>(options)
-    return router.buildHandler()
-  }
-
-  public buildRouter<
-    T = void,
-    Req extends IncomingMessage = IncomingMessage,
-    Res extends ServerResponse = ServerResponse,
-  >(options?: RouterOptions<Req, Res>): Router<T, Req, Res> {
-    // eslint-disable-next-line @typescript-eslint/no-this-alias
-    const server = this
-    const issuerUrl = new URL(server.issuer)
-    const issuerOrigin = issuerUrl.origin
-    const router = new Router<T, Req, Res>(issuerUrl)
-
-    // Utils
-
-    const csrfCookie = (requestUri: RequestUri) => `csrf-${requestUri}`
-    const onError: null | ErrorHandler<Req, Res> =
-      options?.onError ??
+  >(opts?: RouterOptions<Req, Res>): Handler<void, Req, Res> {
+    const onError: undefined | ErrorHandler<Req, Res> =
+      opts?.onError ??
       (process.env['NODE_ENV'] === 'development'
         ? (req, res, err, msg) => {
             console.error(`OAuthProvider error (${msg}):`, err)
           }
-        : null)
+        : undefined)
 
-    // CORS preflight
-    const corsHeaders: Middleware = function (req, res, next) {
-      res.setHeader('Access-Control-Max-Age', '86400') // 1 day
-
-      // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin
-      //
-      // > For requests without credentials, the literal value "*" can be
-      // > specified as a wildcard; the value tells browsers to allow
-      // > requesting code from any origin to access the resource.
-      // > Attempting to use the wildcard with credentials results in an
-      // > error.
-      //
-      // A "*" is safer to use than reflecting the request origin.
-      res.setHeader('Access-Control-Allow-Origin', '*')
-
-      // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Methods
-      // > The value "*" only counts as a special wildcard value for
-      // > requests without credentials (requests without HTTP cookies or
-      // > HTTP authentication information). In requests with credentials,
-      // > it is treated as the literal method name "*" without special
-      // > semantics.
-      res.setHeader('Access-Control-Allow-Methods', '*')
-
-      res.setHeader('Access-Control-Allow-Headers', 'Content-Type,DPoP')
-
-      next()
-    }
-
-    const corsPreflight: Middleware = combineMiddlewares([
-      corsHeaders,
-      (req, res) => {
-        res.writeHead(200).end()
-      },
+    return combineMiddlewares([
+      buildOAuthRouter(this, { ...opts, onError }).buildHandler(),
+      buildAuthorizationPageRouter(this, { ...opts, onError }).buildHandler(),
     ])
-
-    /**
-     * Wrap an OAuth endpoint in a middleware that will set the appropriate
-     * response headers and format the response as JSON.
-     */
-    const jsonHandler = <T, TReq extends Req, TRes extends Res, Payload>(
-      buildJson: (
-        this: T,
-        req: TReq,
-        res: TRes,
-      ) => Awaitable<{ payload: Payload; status?: number }>,
-    ): Handler<T, TReq, TRes> =>
-      async function (req, res) {
-        // https://www.rfc-editor.org/rfc/rfc6749.html#section-5.1
-        res.setHeader('Cache-Control', 'no-store')
-        res.setHeader('Pragma', 'no-cache')
-
-        // Ensure we can agree on a content encoding & type before starting to
-        // build the JSON response.
-        if (!negotiateContent(req, ['application/json'])) {
-          throw createHttpError(406, 'Unsupported media type')
-        }
-
-        try {
-          const { payload, status = 200 } = await buildJson.call(this, req, res)
-          writeJson(res, payload, { status })
-        } catch (err) {
-          onError?.(req, res, err, 'OAuth request error')
-
-          if (!res.headersSent) {
-            const payload = buildErrorPayload(err)
-            const status = buildErrorStatus(err)
-            writeJson(res, payload, { status })
-          } else {
-            res.destroy()
-          }
-        }
-      }
-
-    const oauthHandler = <T, TReq extends Req, TRes extends Res, Payload>(
-      buildOAuthResponse: (this: T, req: TReq, res: TRes) => Awaitable<Payload>,
-      status?: number,
-    ) =>
-      combineMiddlewares([
-        corsHeaders,
-        jsonHandler<T, TReq, TRes, Payload>(async function (req, res) {
-          try {
-            // https://datatracker.ietf.org/doc/html/rfc9449#section-8.2
-            const dpopNonce = server.nextDpopNonce()
-            if (dpopNonce) {
-              const name = 'DPoP-Nonce'
-              res.setHeader(name, dpopNonce)
-              res.appendHeader('Access-Control-Expose-Headers', name)
-            }
-
-            const payload = await buildOAuthResponse.call(this, req, res)
-            return { payload, status }
-          } catch (err) {
-            if (!res.headersSent && err instanceof WWWAuthenticateError) {
-              const name = 'WWW-Authenticate'
-              res.setHeader(name, err.wwwAuthenticateHeader)
-              res.appendHeader('Access-Control-Expose-Headers', name)
-            }
-
-            throw err
-          }
-        }),
-      ])
-
-    const apiHandler = <
-      T,
-      TReq extends Req,
-      TRes extends Res,
-      S extends z.ZodTypeAny,
-      Payload,
-    >(
-      inputSchema: S,
-      buildJson: (
-        this: T,
-        req: TReq,
-        res: TRes,
-        input: z.infer<S>,
-        context: ApiContext,
-      ) => Awaitable<Payload>,
-      status?: number,
-    ) =>
-      jsonHandler<T, TReq, TRes, Payload>(async function (req, res) {
-        validateFetchMode(req, res, ['same-origin'])
-        validateFetchSite(req, res, ['same-origin'])
-        validateSameOrigin(req, res, issuerOrigin)
-        const referer = validateReferer(req, res, {
-          origin: issuerOrigin,
-          pathname: '/oauth/authorize',
-        })
-
-        const requestUri = await requestUriSchema.parseAsync(
-          referer.searchParams.get('request_uri'),
-          { path: ['query', 'request_uri'] },
-        )
-
-        validateCsrfToken(
-          req,
-          res,
-          req.headers['x-csrf-token'],
-          csrfCookie(requestUri),
-        )
-
-        const { deviceId, deviceMetadata } = await server.deviceManager.load(
-          req,
-          res,
-        )
-
-        const inputRaw = await parseHttpRequest(req, ['json'])
-        const input = await inputSchema.parseAsync(inputRaw, { path: ['body'] })
-
-        const context: ApiContext = { requestUri, deviceId, deviceMetadata }
-        const payload = await buildJson.call(this, req, res, input, context)
-        return { payload, status }
-      })
-
-    const navigationHandler = <T, TReq extends Req, TRes extends Res>(
-      handler: (this: T, req: TReq, res: TRes) => Awaitable<void>,
-    ): Handler<T, TReq, TRes> =>
-      async function (req, res) {
-        try {
-          res.setHeader('Cache-Control', 'no-store')
-          res.setHeader('Pragma', 'no-cache')
-
-          res.setHeader('Referrer-Policy', 'same-origin')
-
-          validateFetchMode(req, res, ['navigate'])
-          validateFetchDest(req, res, ['document'])
-          validateSameOrigin(req, res, issuerOrigin)
-
-          await handler.call(this, req, res)
-        } catch (err) {
-          onError?.(
-            req,
-            res,
-            err,
-            `Failed to handle navigation request to "${req.url}"`,
-          )
-
-          if (!res.headersSent) {
-            await server.outputManager.sendErrorPage(res, err, {
-              preferredLocales: extractLocales(req),
-            })
-          }
-        }
-      }
-
-    // Simple GET requests fall under the category of "no-cors" request, meaning
-    // that the browser will allow any cross-origin request, with credentials,
-    // to be sent to the oauth server. The OAuth Server will, however:
-    // 1) validate the request origin (see navigationHandler),
-    // 2) validate the CSRF token,
-    // 3) validate the referer,
-    // 4) validate the sec-fetch-site header,
-    // 4) validate the sec-fetch-mode header (see navigationHandler),
-    // 5) validate the sec-fetch-dest header (see navigationHandler).
-    // And will error (refuse to serve the request) if any of these checks fail.
-    const sameOriginNavigationHandler = <
-      T extends { url: URL },
-      TReq extends Req,
-      TRes extends Res,
-    >(
-      handler: (
-        this: T,
-        req: TReq,
-        res: TRes,
-        deviceInfo: DeviceInfo,
-      ) => Awaitable<void>,
-    ): Handler<T, TReq, TRes> =>
-      navigationHandler(async function (req, res) {
-        validateFetchSite(req, res, ['same-origin'])
-
-        const deviceInfo = await server.deviceManager.load(req, res)
-
-        return handler.call(this, req, res, deviceInfo)
-      })
-
-    const authorizeRedirectNavigationHandler = <
-      T extends { url: URL },
-      TReq extends Req,
-      TRes extends Res,
-    >(
-      handler: (
-        this: T,
-        req: TReq,
-        res: TRes,
-        context: ApiContext,
-      ) => Awaitable<AuthorizationResultRedirect>,
-    ): Handler<T, TReq, TRes> =>
-      sameOriginNavigationHandler(async function (req, res, deviceInfo) {
-        const referer = validateReferer(req, res, {
-          origin: issuerOrigin,
-          pathname: '/oauth/authorize',
-        })
-
-        const requestUri = await requestUriSchema.parseAsync(
-          referer.searchParams.get('request_uri'),
-        )
-
-        const csrfToken = this.url.searchParams.get('csrf_token')
-        const csrfCookieName = csrfCookie(requestUri)
-
-        // Next line will "clear" the CSRF token cookie, preventing replay of
-        // this request (navigating "back" will result in an error).
-        validateCsrfToken(req, res, csrfToken, csrfCookieName, true)
-
-        const context: ApiContext = { ...deviceInfo, requestUri }
-
-        const redirect = await handler.call(this, req, res, context)
-        return sendAuthorizeRedirect(res, redirect)
-      })
-
-    /**
-     * Provides a better UX when a request is denied by redirecting to the
-     * client with the error details. This will also log any error that caused
-     * the access to be denied (such as system errors).
-     */
-    const accessDeniedToRedirectCatcher = (
-      req: Req,
-      res: Res,
-      err: unknown,
-    ): AuthorizationResultRedirect => {
-      if (err instanceof AccessDeniedError && err.parameters.redirect_uri) {
-        const { cause } = err
-        if (cause) onError?.(req, res, cause, 'Access denied')
-
-        return {
-          issuer: server.issuer,
-          parameters: err.parameters,
-          redirect: err.toJSON(),
-        }
-      }
-
-      throw err
-    }
-
-    //- Public OAuth endpoints
-
-    router.options('/.well-known/oauth-authorization-server', corsPreflight)
-    router.get(
-      '/.well-known/oauth-authorization-server',
-      corsHeaders,
-      cacheControlMiddleware(300),
-      staticJsonMiddleware(server.metadata),
-    )
-
-    router.options('/oauth/jwks', corsPreflight)
-    router.get(
-      '/oauth/jwks',
-      corsHeaders,
-      cacheControlMiddleware(300),
-      staticJsonMiddleware(server.jwks),
-    )
-
-    router.options('/oauth/par', corsPreflight)
-    router.post(
-      '/oauth/par',
-      oauthHandler(async function (req, _res) {
-        const payload = await parseHttpRequest(req, ['json', 'urlencoded'])
-
-        const credentials = await oauthClientCredentialsSchema
-          .parseAsync(payload, { path: ['body'] })
-          .catch(throwInvalidRequest)
-
-        const authorizationRequest = await oauthAuthorizationRequestParSchema
-          .parseAsync(payload, { path: ['body'] })
-          .catch(throwInvalidRequest)
-
-        const dpopJkt = await server.checkDpopProof(
-          req.headers['dpop'],
-          req.method!,
-          this.url,
-        )
-
-        return server.pushedAuthorizationRequest(
-          credentials,
-          authorizationRequest,
-          dpopJkt,
-        )
-      }, 201),
-    )
-    // https://datatracker.ietf.org/doc/html/rfc9126#section-2.3
-    // > If the request did not use the POST method, the authorization server
-    // > responds with an HTTP 405 (Method Not Allowed) status code.
-    router.all('/oauth/par', (req, res) => {
-      res.writeHead(405).end()
-    })
-
-    router.options('/oauth/token', corsPreflight)
-    router.post(
-      '/oauth/token',
-      oauthHandler(async function (req, _res) {
-        const payload = await parseHttpRequest(req, ['json', 'urlencoded'])
-
-        const clientMetadata =
-          await server.deviceManager.getRequestMetadata(req)
-
-        const clientCredentials = await oauthClientCredentialsSchema
-          .parseAsync(payload, { path: ['body'] })
-          .catch(throwInvalidClient)
-
-        const tokenRequest = await oauthTokenRequestSchema
-          .parseAsync(payload, { path: ['body'] })
-          .catch(throwInvalidGrant)
-
-        const dpopJkt = await server.checkDpopProof(
-          req.headers['dpop'],
-          req.method!,
-          this.url,
-        )
-
-        return server.token(
-          clientCredentials,
-          clientMetadata,
-          tokenRequest,
-          dpopJkt,
-        )
-      }),
-    )
-
-    router.options('/oauth/revoke', corsPreflight)
-    router.post(
-      '/oauth/revoke',
-      oauthHandler(async function (req, res) {
-        const payload = await parseHttpRequest(req, ['json', 'urlencoded'])
-
-        const tokenIdentification = await oauthTokenIdentificationSchema
-          .parseAsync(payload, { path: ['body'] })
-          .catch(throwInvalidRequest)
-
-        try {
-          await server.revoke(tokenIdentification)
-        } catch (err) {
-          onError?.(req, res, err, 'Failed to revoke token')
-        }
-
-        return {}
-      }),
-    )
-    router.get(
-      '/oauth/revoke',
-      navigationHandler(async function (req, res) {
-        const query = Object.fromEntries(this.url.searchParams)
-
-        const tokenIdentification = await oauthTokenIdentificationSchema
-          .parseAsync(query, { path: ['query'] })
-          .catch(throwInvalidRequest)
-
-        try {
-          await server.revoke(tokenIdentification)
-        } catch (err) {
-          onError?.(req, res, err, 'Failed to revoke token')
-        }
-
-        // Same as POST + redirect to callback URL
-        // todo: generate JSONP response (if "callback" is provided)
-
-        throw new Error(
-          'You are successfully logged out. Redirect not implemented',
-        )
-      }),
-    )
-
-    router.options('/oauth/introspect', corsPreflight)
-    router.post(
-      '/oauth/introspect',
-      oauthHandler(async function (req, _res) {
-        const payload = await parseHttpRequest(req, ['json', 'urlencoded'])
-
-        const credentials = await oauthClientCredentialsSchema
-          .parseAsync(payload, { path: ['body'] })
-          .catch(throwInvalidRequest)
-
-        const tokenIdentification = await oauthTokenIdentificationSchema
-          .parseAsync(payload, { path: ['body'] })
-          .catch(throwInvalidRequest)
-
-        return server.introspect(credentials, tokenIdentification)
-      }),
-    )
-
-    //- Private authorization endpoints
-
-    router.use(authorizeAssetsMiddleware())
-
-    router.get(
-      '/oauth/authorize',
-      navigationHandler(async function (req, res) {
-        validateFetchSite(req, res, ['cross-site', 'none'])
-
-        const query = Object.fromEntries(this.url.searchParams)
-
-        const clientCredentials = await oauthClientCredentialsSchema
-          .parseAsync(query, { path: ['query'] })
-          .catch(throwInvalidRequest)
-
-        if ('client_secret' in clientCredentials) {
-          throw new InvalidRequestError('Client secret must not be provided')
-        }
-
-        const authorizationRequest = await oauthAuthorizationRequestQuerySchema
-          .parseAsync(query, { path: ['query'] })
-          .catch(throwInvalidRequest)
-
-        const { deviceId, deviceMetadata } = await server.deviceManager.load(
-          req,
-          res,
-        )
-
-        const result:
-          | AuthorizationResultRedirect
-          | AuthorizationResultAuthorize = await server
-          .authorize(
-            clientCredentials,
-            authorizationRequest,
-            deviceId,
-            deviceMetadata,
-          )
-          .catch((err) => accessDeniedToRedirectCatcher(req, res, err))
-
-        if ('redirect' in result) {
-          return sendAuthorizeRedirect(res, result)
-        } else {
-          await setupCsrfToken(req, res, csrfCookie(result.authorize.uri))
-          return server.outputManager.sendAuthorizePage(res, result, {
-            preferredLocales: extractLocales(req),
-          })
-        }
-      }),
-    )
-
-    router.post(
-      '/oauth/authorize/verify-handle-availability',
-      apiHandler(
-        z.object({ handle: handleSchema }).strict(),
-        async function (req, res, data) {
-          await server.accountManager.verifyHandleAvailability(data.handle)
-          return { available: true }
-        },
-      ),
-    )
-
-    router.post(
-      '/oauth/authorize/sign-up',
-      apiHandler(signUpInputSchema, async function (req, res, data, ctx) {
-        return server.signUp(ctx, data)
-      }),
-    )
-
-    router.post(
-      '/oauth/authorize/sign-in',
-      apiHandler(signInDataSchema, async function (req, res, data, ctx) {
-        return server.signIn(ctx, data)
-      }),
-    )
-
-    router.post(
-      '/oauth/authorize/reset-password-request',
-      apiHandler(
-        resetPasswordRequestDataSchema,
-        async function (req, res, data) {
-          await server.accountManager.resetPasswordRequest(data)
-          return { success: true }
-        },
-      ),
-    )
-
-    router.post(
-      '/oauth/authorize/reset-password-confirm',
-      apiHandler(
-        resetPasswordConfirmDataSchema,
-        async function (req, res, data) {
-          await server.accountManager.resetPasswordConfirm(data)
-          return { success: true }
-        },
-      ),
-    )
-
-    router.get(
-      '/oauth/authorize/accept',
-      authorizeRedirectNavigationHandler(async function (req, res, ctx) {
-        const sub = this.url.searchParams.get('account_sub')
-        if (!sub) throw new InvalidRequestError('Account sub not provided')
-
-        return server
-          .acceptRequest(ctx, sub)
-          .catch((err) => accessDeniedToRedirectCatcher(req, res, err))
-      }),
-    )
-
-    router.get(
-      '/oauth/authorize/reject',
-      authorizeRedirectNavigationHandler(async function (req, res, ctx) {
-        return server
-          .rejectRequest(ctx)
-          .catch((err) => accessDeniedToRedirectCatcher(req, res, err))
-      }),
-    )
-
-    return router
   }
-}
-
-function throwInvalidGrant(err: unknown): never {
-  throw new InvalidGrantError(
-    extractZodErrorMessage(err) || 'Invalid grant',
-    err,
-  )
-}
-
-function throwInvalidClient(err: unknown): never {
-  throw new InvalidClientError(
-    extractZodErrorMessage(err) || 'Client authentication failed',
-    err,
-  )
-}
-
-function throwInvalidRequest(err: unknown): never {
-  throw new InvalidRequestError(
-    extractZodErrorMessage(err) || 'Input validation error',
-    err,
-  )
-}
-
-function extractZodErrorMessage(err: unknown): string | undefined {
-  if (err instanceof ZodError) {
-    const issue = err.issues[0]
-    if (issue?.path.length) {
-      // "part" will typically be "body" or "query"
-      const [part, ...path] = issue.path
-      return `Validation of "${path.join('.')}" ${part} parameter failed: ${issue.message}`
-    }
-  }
-
-  return undefined
 }

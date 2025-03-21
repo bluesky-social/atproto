@@ -4,7 +4,7 @@ import { languages, mediaType } from '@hapi/accept'
 import { parse as parseCookie, serialize as serializeCookie } from 'cookie'
 import forwarded from 'forwarded'
 import createHttpError from 'http-errors'
-import { appendHeader } from './response.js'
+import { appendHeader } from './headers.js'
 import { UrlReference, urlMatch } from './url.js'
 
 export function validateHeaderValue(

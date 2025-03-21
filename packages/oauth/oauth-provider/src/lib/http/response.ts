@@ -1,24 +1,18 @@
-import type { ServerResponse } from 'node:http'
+import type { IncomingMessage, ServerResponse } from 'node:http'
 import { type Readable, pipeline } from 'node:stream'
+import { isHttpError } from 'http-errors'
+import { Awaitable } from '../util/type.js'
+import {
+  negotiateResponseContent,
+  validateFetchDest,
+  validateFetchMode,
+  validateSameOrigin,
+} from './request.js'
 import {
   SecurityHeadersOptions,
   setSecurityHeaders,
 } from './security-headers.js'
-import type { Handler, Middleware } from './types.js'
-
-export function appendHeader(
-  res: ServerResponse,
-  header: string,
-  value: string | readonly string[],
-): void {
-  const existing = res.getHeader(header)
-  if (existing == null) {
-    res.setHeader(header, value)
-  } else {
-    const arr = Array.isArray(existing) ? existing : [String(existing)]
-    res.setHeader(header, arr.concat(value))
-  }
-}
+import type { Handler, Middleware, NextFunction } from './types.js'
 
 export function writeRedirect(
   res: ServerResponse,
@@ -110,4 +104,67 @@ export function cacheControlMiddleware(maxAge: number): Middleware<void> {
     res.setHeader('Cache-Control', header)
     next()
   }
+}
+
+export function jsonHandler<
+  T,
+  Req extends IncomingMessage = IncomingMessage,
+  Res extends ServerResponse = ServerResponse,
+>(
+  buildJson: (
+    this: T,
+    req: Req,
+    res: Res,
+  ) => Awaitable<{ payload: unknown; status?: number }>,
+): Handler<T, Req, Res> {
+  return async function (req, res, next) {
+    // Ensure we can agree on a content encoding & type before starting to
+    // build the JSON response.
+    if (!negotiateResponseContent(req, ['application/json'])) {
+      res.writeHead(406).end('Unsupported media type')
+      return
+    }
+
+    try {
+      const { payload, status = 200 } = await buildJson.call(this, req, res)
+      writeJson(res, payload, { status })
+    } catch (err) {
+      errorHandler(err, req, res, next)
+    }
+  }
+}
+
+export function navigationHandler<
+  T = void,
+  Req extends IncomingMessage = IncomingMessage,
+  Res extends ServerResponse = ServerResponse,
+>(
+  origin: string,
+  handler: (this: T, req: Req, res: Res) => Awaitable<void>,
+): Handler<T, Req, Res> {
+  return async function (req, res, next) {
+    try {
+      res.setHeader('Referrer-Policy', 'same-origin')
+
+      validateFetchMode(req, res, ['navigate'])
+      validateFetchDest(req, res, ['document'])
+      validateSameOrigin(req, res, origin)
+
+      await handler.call(this, req, res)
+    } catch (err) {
+      errorHandler(err, req, res, next)
+    }
+  }
+}
+
+export function errorHandler(
+  err: unknown,
+  req: IncomingMessage,
+  res: ServerResponse,
+  next?: NextFunction,
+): void {
+  if (res.headersSent) res.destroy()
+  else if (next) next(err)
+  else if (isHttpError(err)) res.writeHead(err.statusCode).end(err.message)
+  else res.writeHead(500).end('Internal Server Error')
 }
