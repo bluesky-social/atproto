@@ -57,6 +57,9 @@ export class Api extends JsonClient<ApiEndpoints> {
     if (UnknownRequestUriError.is(json)) {
       return new UnknownRequestUriError(json)
     }
+    if (CompromisedPasswordError.is(json)) {
+      return new CompromisedPasswordError(json)
+    }
     if (InvalidRequestError.is(json)) {
       return new InvalidRequestError(json)
     }
@@ -142,6 +145,17 @@ export class InvalidCredentialsError<
       super.is(json) &&
       json.error_description === 'Invalid identifier or password'
     )
+  }
+}
+
+export type CompromisedPasswordPayload = InvalidRequestPayload & {
+  error_description: 'Compromised password'
+}
+export class CompromisedPasswordError<
+  P extends CompromisedPasswordPayload = CompromisedPasswordPayload,
+> extends InvalidRequestError<P> {
+  static is(json: unknown): json is CompromisedPasswordPayload {
+    return super.is(json) && json.error_description === 'Compromised password'
   }
 }
 

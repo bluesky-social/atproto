@@ -271,6 +271,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
                   tokenSalt: env.hcaptchaTokenSalt,
                 }
               : undefined,
+          enableHibpCheck: env.enableHibpCheck ?? false,
           branding: {
             name: env.serviceName ?? 'Personal PDS',
             logo: env.logoUrl,
@@ -447,6 +448,7 @@ export type OAuthConfig = {
     | false
     | {
         hcaptcha?: HcaptchaConfig
+        enableHibpCheck?: boolean
         branding: BrandingInput
       }
 }
