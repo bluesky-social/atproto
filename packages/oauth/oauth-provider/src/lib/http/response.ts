@@ -1,5 +1,7 @@
-import type { ServerResponse } from 'node:http'
+import type { IncomingMessage, ServerResponse } from 'node:http'
 import { type Readable, pipeline } from 'node:stream'
+import { Awaitable } from '../util/type.js'
+import { negotiateResponseContent } from './request.js'
 import {
   SecurityHeadersOptions,
   setSecurityHeaders,
@@ -109,5 +111,38 @@ export function cacheControlMiddleware(maxAge: number): Middleware<void> {
   return function (req, res, next) {
     res.setHeader('Cache-Control', header)
     next()
+  }
+}
+
+export function jsonHandler<
+  T,
+  Req extends IncomingMessage = IncomingMessage,
+  Res extends ServerResponse = ServerResponse,
+>(
+  buildJson: (
+    this: T,
+    req: Req,
+    res: Res,
+  ) => Awaitable<{ payload: unknown; status?: number }>,
+): Handler<T, Req, Res> {
+  return async function (req, res, next) {
+    // Ensure we can agree on a content encoding & type before starting to
+    // build the JSON response.
+    if (!negotiateResponseContent(req, ['application/json'])) {
+      res.writeHead(406).end('Unsupported media type')
+      return
+    }
+
+    try {
+      const { payload, status = 200 } = await buildJson.call(this, req, res)
+      writeJson(res, payload, { status })
+    } catch (err) {
+      if (!res.headersSent) {
+        if (next) next(err)
+        else res.writeHead(500).end('Internal server error')
+      } else {
+        res.destroy()
+      }
+    }
   }
 }
