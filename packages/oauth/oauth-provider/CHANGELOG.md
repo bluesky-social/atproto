@@ -1,5 +1,11 @@
 # @atproto/oauth-provider
 
+## 0.6.1
+
+### Patch Changes
+
+- [#3656](https://github.com/bluesky-social/atproto/pull/3656) [`42807cad5`](https://github.com/bluesky-social/atproto/commit/42807cad56786e402d601ef9ed97379d5641a2c6) Thanks [@Johannes-Andersen](https://github.com/Johannes-Andersen)! - hCaptcha error codes should be optional
+
 ## 0.6.0
 
 ### Minor Changes
