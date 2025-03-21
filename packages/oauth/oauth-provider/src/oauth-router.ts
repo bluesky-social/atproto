@@ -10,6 +10,7 @@ import { InvalidGrantError } from './errors/invalid-grant-error.js'
 import { InvalidRequestError } from './errors/invalid-request-error.js'
 import { WWWAuthenticateError } from './errors/www-authenticate-error.js'
 import {
+  Handler,
   Middleware,
   Router,
   cacheControlMiddleware,
@@ -20,7 +21,6 @@ import {
 } from './lib/http/index.js'
 import { extractZodErrorMessage } from './lib/util/zod-error.js'
 import type { OAuthProvider } from './oauth-provider.js'
-import { Awaitable } from './oauth-store.js'
 import {
   buildErrorPayload,
   buildErrorStatus,
@@ -63,17 +63,15 @@ const corsPreflight: Middleware = combineMiddlewares([
 ])
 
 export function buildOAuthRouter<
-  T = void,
-  Req extends IncomingMessage = IncomingMessage,
-  Res extends ServerResponse = ServerResponse,
+  TReq extends IncomingMessage = IncomingMessage,
+  TRes extends ServerResponse = ServerResponse,
 >(
   server: OAuthProvider,
-  options?: RouterOptions<Req, Res>,
-): Router<T, Req, Res> {
+  options?: RouterOptions<TReq, TRes>,
+): Handler<void, TReq, TRes> {
   const onError = options?.onError
 
-  const issuerUrl = new URL(server.issuer)
-  const router = new Router<T, Req, Res>(issuerUrl)
+  const router = new Router<void, TReq, TRes>(new URL(server.issuer))
 
   //- Public OAuth endpoints
 
@@ -200,15 +198,10 @@ export function buildOAuthRouter<
     }),
   )
 
-  return router
+  return router.buildHandler()
 
-  function oauthHandler<
-    T,
-    Payload,
-    TReq extends Req = Req,
-    TRes extends Res = Res,
-  >(
-    buildOAuthResponse: (this: T, req: TReq, res: TRes) => Awaitable<Payload>,
+  function oauthHandler<T>(
+    buildOAuthResponse: (this: T, req: TReq, res: TRes) => unknown,
     status?: number,
   ) {
     return jsonHandler<T, TReq, TRes>(async function (req, res) {

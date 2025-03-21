@@ -85,7 +85,8 @@ import { RequestStoreMemory } from './request/request-store-memory.js'
 import { RequestStoreRedis } from './request/request-store-redis.js'
 import { RequestStore, ifRequestStore } from './request/request-store.js'
 import { RequestUri, requestUriSchema } from './request/request-uri.js'
-import { ErrorHandler, RouterOptions } from './router/router-options.js'
+import { ErrorHandler } from './router/error-handler.js'
+import { RouterOptions } from './router/router-options.js'
 import { isTokenId } from './token/token-id.js'
 import { TokenManager } from './token/token-manager.js'
 import { TokenStore, asTokenStore } from './token/token-store.js'
@@ -1032,18 +1033,18 @@ export class OAuthProvider extends OAuthVerifier {
   public httpHandler<
     Req extends IncomingMessage = IncomingMessage,
     Res extends ServerResponse = ServerResponse,
-  >(opts?: RouterOptions<Req, Res>): Handler<void, Req, Res> {
-    const onError: undefined | ErrorHandler<Req, Res> =
-      opts?.onError ??
-      (process.env['NODE_ENV'] === 'development'
+  >({ ...options }: RouterOptions<Req, Res> = {}): Handler<void, Req, Res> {
+    // options is a shallow cloned so it's fine to mutate it
+    options.onError ??=
+      process.env['NODE_ENV'] === 'development'
         ? (req, res, err, msg) => {
             console.error(`OAuthProvider error (${msg}):`, err)
           }
-        : undefined)
+        : undefined
 
     return combineMiddlewares([
-      buildOAuthRouter(this, { ...opts, onError }).buildHandler(),
-      buildAuthorizationPageRouter(this, { ...opts, onError }).buildHandler(),
+      buildOAuthRouter(this, options),
+      buildAuthorizationPageRouter(this, options),
     ])
   }
 }

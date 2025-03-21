@@ -5,7 +5,6 @@ import {
   oauthClientCredentialsSchema,
 } from '@atproto/oauth-types'
 import {
-  DeviceId,
   handleSchema,
   resetPasswordConfirmDataSchema,
   resetPasswordRequestDataSchema,
@@ -17,10 +16,11 @@ import { AccessDeniedError } from '../errors/access-denied-error.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import {
   Handler,
-  RequestMetadata,
+  Middleware,
   Router,
   RouterCtx,
   SubCtx,
+  asHandler,
   extractLocales,
   jsonHandler,
   navigationHandler,
@@ -48,12 +48,12 @@ import {
 import { sendErrorPageFactory } from './send-error-page.js'
 
 export function buildAuthorizationPageRouter<
-  Req extends IncomingMessage = IncomingMessage,
-  Res extends ServerResponse = ServerResponse,
+  TReq extends IncomingMessage = IncomingMessage,
+  TRes extends ServerResponse = ServerResponse,
 >(
   server: OAuthProvider,
-  options?: RouterOptions<Req, Res>,
-): Router<void, Req, Res> {
+  options?: RouterOptions<TReq, TRes>,
+): Handler<void, TReq, TRes> {
   const onError = options?.onError
   const csrfCookie = (requestUri: RequestUri) => `csrf-${requestUri}`
   const sendAuthorizePage = sendAuthorizePageFactory(server.customization)
@@ -61,7 +61,7 @@ export function buildAuthorizationPageRouter<
 
   const issuerUrl = new URL(server.issuer)
   const issuerOrigin = issuerUrl.origin
-  const router = new Router<void, Req, Res>(issuerUrl)
+  const router = new Router<void, TReq, TRes>(issuerUrl)
 
   router.use(assetsMiddleware)
 
@@ -192,14 +192,9 @@ export function buildAuthorizationPageRouter<
     ),
   )
 
-  return router
+  return router.buildHandler()
 
-  function apiHandler<
-    T extends RouterCtx,
-    S extends z.ZodTypeAny,
-    TReq extends Req = Req,
-    TRes extends Res = Res,
-  >(
+  function apiHandler<T extends RouterCtx, S extends z.ZodTypeAny>(
     inputSchema: S,
     buildJson: (
       this: SubCtx<T, { requestUri: RequestUri; input: z.infer<S> }>,
@@ -240,8 +235,8 @@ export function buildAuthorizationPageRouter<
           T,
           { requestUri: RequestUri; input: z.infer<S> }
         > = Object.create(this, {
-          input: { value: input },
-          requestUri: { value: requestUri },
+          input: { value: input, enumerable: true },
+          requestUri: { value: requestUri, enumerable: true },
         })
         const payload = await buildJson.call(context, req, res)
         return { payload, status }
@@ -257,18 +252,24 @@ export function buildAuthorizationPageRouter<
     })
   }
 
-  function authorizeNavigationHandler<
-    T extends RouterCtx,
-    TReq extends Req = Req,
-    TRes extends Res = Res,
-  >(handler: Handler<T, TReq, TRes>): Handler<T, TReq, TRes> {
-    const innerHandler = navigationHandler(issuerOrigin, handler)
-    return function (req, res, next) {
+  function authorizeNavigationHandler<T extends RouterCtx>(
+    middleware: Middleware<T, TReq, TRes>,
+  ): Handler<T, TReq, TRes> {
+    const handler = navigationHandler(issuerOrigin, middleware)
+    return asHandler(function (this: T, req: TReq, res: TRes, next) {
       res.setHeader('Cache-Control', 'no-store')
       res.setHeader('Pragma', 'no-cache')
 
-      innerHandler.call(this, req, res, (err) => {
-        // Wrap the 'next' function with one that will send an error
+      handler.call(this, req, res, (err) => {
+        if (!err || typeof err === 'string') {
+          // A middleware wrapped with navigationHandler should always end the
+          // request, either by calling "next" with an error or by sending a
+          // response.
+          return next(new Error('Navigation handler should end the request'))
+        }
+
+        // If the middleware called "next" with an error, let's display it in
+        // an error page.
 
         onError?.(
           req,
@@ -281,38 +282,30 @@ export function buildAuthorizationPageRouter<
 
         sendErrorPage(res, err, {
           preferredLocales: extractLocales(req),
-        }).catch((err) => {
-          if (next) return next(err)
-          else res.writeHead(500).end('Internal Server Error')
-        })
+        }).catch(next)
       })
-    }
+    })
   }
 
-  function withDeviceInfo<
-    T extends RouterCtx,
-    Req extends IncomingMessage = IncomingMessage,
-    Res extends ServerResponse = ServerResponse,
-    Ret = unknown,
-  >(
+  function withDeviceInfo<T extends RouterCtx, Ret = unknown>(
     handler: (
       this: SubCtx<T, DeviceInfo>,
-      req: Req,
-      res: Res,
+      req: TReq,
+      res: TRes,
     ) => Awaitable<Ret>,
   ) {
-    return async function (this: T, req: Req, res: Res): Promise<Ret> {
+    return async function (this: T, req: TReq, res: TRes): Promise<Ret> {
       const deviceInfo = await server.deviceManager.load(req, res)
 
       const context: SubCtx<
         T,
         {
-          deviceId: DeviceId
-          deviceMetadata: RequestMetadata
+          deviceId: DeviceInfo['deviceId']
+          deviceMetadata: DeviceInfo['deviceMetadata']
         }
       > = Object.create(this, {
-        deviceId: { value: deviceInfo.deviceId },
-        deviceMetadata: { value: deviceInfo.deviceMetadata },
+        deviceId: { value: deviceInfo.deviceId, enumerable: true },
+        deviceMetadata: { value: deviceInfo.deviceMetadata, enumerable: true },
       })
 
       return handler.call(context, req, res)
@@ -329,11 +322,7 @@ export function buildAuthorizationPageRouter<
   // 4) validate the sec-fetch-mode header (see navigationHandler),
   // 5) validate the sec-fetch-dest header (see navigationHandler).
   // And will error (refuse to serve the request) if any of these checks fail.
-  function authorizeRedirectHandler<
-    T extends RouterCtx,
-    TReq extends Req = Req,
-    TRes extends Res = Res,
-  >(
+  function authorizeRedirectHandler<T extends RouterCtx>(
     handler: (
       this: SubCtx<T, { requestUri: RequestUri }>,
       req: TReq,
@@ -341,6 +330,7 @@ export function buildAuthorizationPageRouter<
     ) => Awaitable<AuthorizationResultRedirect>,
   ): Handler<T, TReq, TRes> {
     return authorizeNavigationHandler(async function (req, res) {
+      // Ensure that the user comes from a page on the same origin.
       validateFetchSite(req, res, ['same-origin'])
 
       const referer = validateReferer(req, res, {
@@ -361,9 +351,7 @@ export function buildAuthorizationPageRouter<
 
       const context: SubCtx<T, { requestUri: RequestUri }> = Object.create(
         this,
-        {
-          requestUri: { value: requestUri },
-        },
+        { requestUri: { value: requestUri, enumerable: true } },
       )
 
       const redirect = await handler.call(context, req, res)
@@ -377,8 +365,8 @@ export function buildAuthorizationPageRouter<
    * the access to be denied (such as system errors).
    */
   function accessDeniedToRedirectCatcher(
-    req: Req,
-    res: Res,
+    req: TReq,
+    res: TRes,
     err: unknown,
   ): AuthorizationResultRedirect {
     if (err instanceof AccessDeniedError && err.parameters.redirect_uri) {

@@ -2,6 +2,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http'
 import { type Readable, pipeline } from 'node:stream'
 import { isHttpError } from 'http-errors'
 import { Awaitable } from '../util/type.js'
+import { asHandler } from './middleware.js'
 import {
   negotiateResponseContent,
   validateFetchDest,
@@ -12,7 +13,7 @@ import {
   SecurityHeadersOptions,
   setSecurityHeaders,
 } from './security-headers.js'
-import type { Handler, Middleware, NextFunction } from './types.js'
+import type { Handler, Middleware } from './types.js'
 
 export function writeRedirect(
   res: ServerResponse,
@@ -129,7 +130,10 @@ export function jsonHandler<
       const { payload, status = 200 } = await buildJson.call(this, req, res)
       writeJson(res, payload, { status })
     } catch (err) {
-      errorHandler(err, req, res, next)
+      if (res.headersSent) res.destroy()
+      else if (next) next(err)
+      else if (isHttpError(err)) res.writeHead(err.statusCode).end(err.message)
+      else res.writeHead(500).end('Internal Server Error')
     }
   }
 }
@@ -138,33 +142,17 @@ export function navigationHandler<
   T = void,
   Req extends IncomingMessage = IncomingMessage,
   Res extends ServerResponse = ServerResponse,
->(
-  origin: string,
-  handler: (this: T, req: Req, res: Res) => Awaitable<void>,
-): Handler<T, Req, Res> {
-  return async function (req, res, next) {
+>(origin: string, middleware: Middleware<T, Req, Res>): Handler<T, Req, Res> {
+  return asHandler(function (req, res, next) {
+    res.setHeader('Referrer-Policy', 'same-origin')
     try {
-      res.setHeader('Referrer-Policy', 'same-origin')
-
       validateFetchMode(req, res, ['navigate'])
       validateFetchDest(req, res, ['document'])
       validateSameOrigin(req, res, origin)
 
-      await handler.call(this, req, res)
+      middleware.call(this, req, res, next)
     } catch (err) {
-      errorHandler(err, req, res, next)
+      next(err)
     }
-  }
-}
-
-export function errorHandler(
-  err: unknown,
-  req: IncomingMessage,
-  res: ServerResponse,
-  next?: NextFunction,
-): void {
-  if (res.headersSent) res.destroy()
-  else if (next) next(err)
-  else if (isHttpError(err)) res.writeHead(err.statusCode).end(err.message)
-  else res.writeHead(500).end('Internal Server Error')
+  })
 }
