@@ -24,7 +24,7 @@ const sessions: Session[] = [
   },
 ]
 
-export const Route = createFileRoute('/sessions')({
+export const Route = createFileRoute('/_authenticated/sessions')({
   component: Sessions,
 })
 

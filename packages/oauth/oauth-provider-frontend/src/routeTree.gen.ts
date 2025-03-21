@@ -11,14 +11,21 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
-import { Route as SessionsImport } from './routes/sessions'
+import { Route as UnauthenticatedImport } from './routes/_unauthenticated'
+import { Route as AuthenticatedImport } from './routes/_authenticated'
 import { Route as IndexImport } from './routes/index'
+import { Route as UnauthenticatedSignInImport } from './routes/_unauthenticated/sign-in'
+import { Route as AuthenticatedSessionsImport } from './routes/_authenticated/sessions'
 
 // Create/Update Routes
 
-const SessionsRoute = SessionsImport.update({
-  id: '/sessions',
-  path: '/sessions',
+const UnauthenticatedRoute = UnauthenticatedImport.update({
+  id: '/_unauthenticated',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const AuthenticatedRoute = AuthenticatedImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -26,6 +33,18 @@ const IndexRoute = IndexImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRoute,
+} as any)
+
+const UnauthenticatedSignInRoute = UnauthenticatedSignInImport.update({
+  id: '/sign-in',
+  path: '/sign-in',
+  getParentRoute: () => UnauthenticatedRoute,
+} as any)
+
+const AuthenticatedSessionsRoute = AuthenticatedSessionsImport.update({
+  id: '/sessions',
+  path: '/sessions',
+  getParentRoute: () => AuthenticatedRoute,
 } as any)
 
 // Populate the FileRoutesByPath interface
@@ -39,51 +58,111 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexImport
       parentRoute: typeof rootRoute
     }
-    '/sessions': {
-      id: '/sessions'
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof AuthenticatedImport
+      parentRoute: typeof rootRoute
+    }
+    '/_unauthenticated': {
+      id: '/_unauthenticated'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof UnauthenticatedImport
+      parentRoute: typeof rootRoute
+    }
+    '/_authenticated/sessions': {
+      id: '/_authenticated/sessions'
       path: '/sessions'
       fullPath: '/sessions'
-      preLoaderRoute: typeof SessionsImport
-      parentRoute: typeof rootRoute
+      preLoaderRoute: typeof AuthenticatedSessionsImport
+      parentRoute: typeof AuthenticatedImport
+    }
+    '/_unauthenticated/sign-in': {
+      id: '/_unauthenticated/sign-in'
+      path: '/sign-in'
+      fullPath: '/sign-in'
+      preLoaderRoute: typeof UnauthenticatedSignInImport
+      parentRoute: typeof UnauthenticatedImport
     }
   }
 }
 
 // Create and export the route tree
 
+interface AuthenticatedRouteChildren {
+  AuthenticatedSessionsRoute: typeof AuthenticatedSessionsRoute
+}
+
+const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedSessionsRoute: AuthenticatedSessionsRoute,
+}
+
+const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
+  AuthenticatedRouteChildren,
+)
+
+interface UnauthenticatedRouteChildren {
+  UnauthenticatedSignInRoute: typeof UnauthenticatedSignInRoute
+}
+
+const UnauthenticatedRouteChildren: UnauthenticatedRouteChildren = {
+  UnauthenticatedSignInRoute: UnauthenticatedSignInRoute,
+}
+
+const UnauthenticatedRouteWithChildren = UnauthenticatedRoute._addFileChildren(
+  UnauthenticatedRouteChildren,
+)
+
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/sessions': typeof SessionsRoute
+  '': typeof UnauthenticatedRouteWithChildren
+  '/sessions': typeof AuthenticatedSessionsRoute
+  '/sign-in': typeof UnauthenticatedSignInRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/sessions': typeof SessionsRoute
+  '': typeof UnauthenticatedRouteWithChildren
+  '/sessions': typeof AuthenticatedSessionsRoute
+  '/sign-in': typeof UnauthenticatedSignInRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
-  '/sessions': typeof SessionsRoute
+  '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/_unauthenticated': typeof UnauthenticatedRouteWithChildren
+  '/_authenticated/sessions': typeof AuthenticatedSessionsRoute
+  '/_unauthenticated/sign-in': typeof UnauthenticatedSignInRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/sessions'
+  fullPaths: '/' | '' | '/sessions' | '/sign-in'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/sessions'
-  id: '__root__' | '/' | '/sessions'
+  to: '/' | '' | '/sessions' | '/sign-in'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/_unauthenticated'
+    | '/_authenticated/sessions'
+    | '/_unauthenticated/sign-in'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  SessionsRoute: typeof SessionsRoute
+  AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  UnauthenticatedRoute: typeof UnauthenticatedRouteWithChildren
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  SessionsRoute: SessionsRoute,
+  AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  UnauthenticatedRoute: UnauthenticatedRouteWithChildren,
 }
 
 export const routeTree = rootRoute
@@ -97,14 +176,32 @@ export const routeTree = rootRoute
       "filePath": "__root.tsx",
       "children": [
         "/",
-        "/sessions"
+        "/_authenticated",
+        "/_unauthenticated"
       ]
     },
     "/": {
       "filePath": "index.tsx"
     },
-    "/sessions": {
-      "filePath": "sessions.tsx"
+    "/_authenticated": {
+      "filePath": "_authenticated.tsx",
+      "children": [
+        "/_authenticated/sessions"
+      ]
+    },
+    "/_unauthenticated": {
+      "filePath": "_unauthenticated.tsx",
+      "children": [
+        "/_unauthenticated/sign-in"
+      ]
+    },
+    "/_authenticated/sessions": {
+      "filePath": "_authenticated/sessions.tsx",
+      "parent": "/_authenticated"
+    },
+    "/_unauthenticated/sign-in": {
+      "filePath": "_unauthenticated/sign-in.tsx",
+      "parent": "/_unauthenticated"
     }
   }
 }
