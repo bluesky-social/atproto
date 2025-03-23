@@ -61,7 +61,7 @@
           },
           "locations": {
             "type": "array",
-            "description": "The locations where the event takes place.",
+            "description": "The locations where the post takes place or reference.",
             "items": {
               "type": "union",
               "refs": [
