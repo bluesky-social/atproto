@@ -58,6 +58,19 @@
             "type": "string",
             "format": "datetime",
             "description": "Client-declared timestamp when this post was originally created."
+          },
+          "locations": {
+            "type": "array",
+            "description": "The locations where the event takes place.",
+            "items": {
+              "type": "union",
+              "refs": [
+                "community.lexicon.location.address",
+                "community.lexicon.location.fsq",
+                "community.lexicon.location.geo",
+                "community.lexicon.location.hthree"
+              ]
+            }
           }
         }
       }
