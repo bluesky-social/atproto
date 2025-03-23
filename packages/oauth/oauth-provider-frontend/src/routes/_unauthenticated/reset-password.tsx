@@ -11,6 +11,7 @@ import * as Form from '#/components/forms'
 import { Button } from '#/components/Button'
 import { InlineLink } from '#/components/Link'
 import { format2FACode } from '#/util/format2FACode'
+import { Divider } from '#/components/Divider'
 
 export const Route = createFileRoute('/_unauthenticated/reset-password')({
   component: RouteComponent,
@@ -42,7 +43,7 @@ function RouteComponent() {
     <div
       className={clsx([
         'mx-auto rounded-lg border p-5 md:p-7 shadow-xl dark:shadow-2xl',
-        'border-contrast-50 dark:border-contrast-100 shadow-contrast-500/20 dark:shadow-contrast-0/50',
+        'border-contrast-25 dark:border-contrast-50 shadow-contrast-500/20 dark:shadow-contrast-0/50',
       ])}
       style={{
         maxWidth: 400,
@@ -79,6 +80,7 @@ function RouteComponent() {
                       placeholder={_(msg`Enter your email`)}
                       onBlur={field.handleBlur}
                       onChange={(e) => field.handleChange(e.target.value)}
+                      disabled={showCode}
                     />
                     <Form.Errors errors={field.state.meta.errors} />
                   </Form.Item>
@@ -87,27 +89,32 @@ function RouteComponent() {
             />
 
             {showCode && (
-              <form.Field
-                name="code"
-                children={(field) => {
-                  return (
-                    <Form.Item>
-                      <Form.Label name={field.name}>
-                        <Trans>Code</Trans>
-                      </Form.Label>
-                      <Form.Text
-                        name={field.name}
-                        value={field.state.value}
-                        placeholder={_(msg`XXXXX-XXXXX`)}
-                        onBlur={field.handleBlur}
-                        onChange={(e) => {
-                          field.handleChange(format2FACode(e.target.value))
-                        }}
-                      />
-                    </Form.Item>
-                  )
-                }}
-              />
+              <>
+                <div className="pt-4 pb-2">
+                  <Divider />
+                </div>
+                <form.Field
+                  name="code"
+                  children={(field) => {
+                    return (
+                      <Form.Item>
+                        <Form.Label name={field.name}>
+                          <Trans>Code</Trans>
+                        </Form.Label>
+                        <Form.Text
+                          name={field.name}
+                          value={field.state.value}
+                          placeholder={_(msg`XXXXX-XXXXX`)}
+                          onBlur={field.handleBlur}
+                          onChange={(e) => {
+                            field.handleChange(format2FACode(e.target.value))
+                          }}
+                        />
+                      </Form.Item>
+                    )
+                  }}
+                />
+              </>
             )}
 
             <div className="pt-2 space-y-3 flex flex-col align-center">

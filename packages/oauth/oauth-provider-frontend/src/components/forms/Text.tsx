@@ -13,6 +13,7 @@ export function Text({ disabled, invalid, ...rest }: TextProps) {
     <input
       {...rest}
       id={rest.name}
+      disabled={disabled}
       className={clsx([
         'block w-full px-4 py-2.5 border-2 rounded-md focus:shadow-sm focus:outline-none text-md',
         'border-contrast-200 focus:border-primary-500 focus:bg-contrast-25 dark:focus:bg-contrast-50 focus:shadow-primary-600/30',
