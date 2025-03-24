@@ -11,12 +11,20 @@ export function useHydrationData() {
   const { _ } = useLingui()
   let error = errorData
 
-  // TODO what other data is required?
   if (customizationData === undefined) {
     error = {
       error: _(msg`PDS configuration error`),
       error_description: _(
         msg`The page is missing required customization data`,
+      ),
+    }
+  }
+
+  if (authorizationData === undefined) {
+    error = {
+      error: _(msg`PDS configuration error`),
+      error_description: _(
+        msg`The page is missing required authorization data`,
       ),
     }
   }

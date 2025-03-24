@@ -35,7 +35,10 @@ function RouteComponent() {
     },
     validators: {
       onSubmit: zod.object({
-        email: zod.string().email().nonempty(),
+        email: zod
+          .string()
+          .email(_(msg`Invalid email`))
+          .nonempty(_(msg`Email is required`)),
       }),
     },
     onSubmit: async ({ value }) => {
@@ -55,8 +58,11 @@ function RouteComponent() {
     },
     validators: {
       onSubmit: zod.object({
-        code: zod.string().nonempty(),
-        password: zod.string().nonempty().min(8),
+        code: zod.string().nonempty(_(msg`Email code is required`)),
+        password: zod
+          .string()
+          .nonempty(_(msg`A new password is required`))
+          .min(8, _(msg`Password must be at least 8 characters`)),
       }),
     },
     onSubmit: async ({ value }) => {
@@ -72,6 +78,15 @@ function RouteComponent() {
       }
     },
   })
+
+  const resendCode = async () => {
+    try {
+      await resetPassword({ email: form.getFieldValue('email') })
+      // TODO success
+    } catch (e) {
+      // TODO error
+    }
+  }
 
   return (
     <div
@@ -270,8 +285,8 @@ function RouteComponent() {
                           label={_(
                             msg`Click here to send a new code to your email.`,
                           )}
-                          {...InlineLink.staticClick((e) => {
-                            alert('again')
+                          {...InlineLink.staticClick(() => {
+                            resendCode()
                           })}
                         >
                           Try sending again.

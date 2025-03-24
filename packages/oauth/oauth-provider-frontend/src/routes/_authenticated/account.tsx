@@ -7,7 +7,7 @@ import { useSession } from '#/state/session'
 import { useSessionsQuery, ApplicationSession } from '#/data/useSessionsQuery'
 import { useRevokeSessionsMutation } from '#/data/useRevokeSessionsMutation'
 
-export const Route = createFileRoute('/_authenticated/sessions')({
+export const Route = createFileRoute('/_authenticated/account')({
   component: Sessions,
 })
 
@@ -31,11 +31,11 @@ export function Sessions() {
       <ul className="flex items-center space-x-2">
         <li className="text-text-light">Account</li>
         <li>/</li>
-        <li>Sessions</li>
+        <li>Home</li>
       </ul>
 
       <h1 className="text-text-default font-bold text-3xl pt-8 pb-4">
-        Sessions
+        Application sessions
       </h1>
 
       {isLoading ? null : error || !sessions ? null : (

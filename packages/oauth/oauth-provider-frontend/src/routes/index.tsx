@@ -10,5 +10,5 @@ export const Route = createFileRoute('/')({
 function Index() {
   const { session } = useSession()
 
-  return session ? <Navigate to="/sessions" /> : <Navigate to="/sign-in" />
+  return session ? <Navigate to="/account" /> : <Navigate to="/sign-in" />
 }

@@ -77,7 +77,7 @@ function LoginForm() {
             }
           }
         }),
-        password: zod.string().nonempty(),
+        password: zod.string().nonempty(_(msg`Password is required`)),
         code: zod.string(),
         remember: zod.boolean(),
       }),
@@ -178,6 +178,7 @@ function LoginForm() {
                     onBlur={field.handleBlur}
                     onChange={(e) => field.handleChange(e.target.value)}
                   />
+                  <Form.Errors errors={field.state.meta.errors} />
                 </Form.Item>
               )
             }}

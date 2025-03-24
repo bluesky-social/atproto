@@ -14,7 +14,7 @@ function Layout() {
   const { session } = useSession()
 
   return session ? (
-    <Navigate to="/sessions" />
+    <Navigate to="/account" />
   ) : (
     <>
       <main className="bg-contrast-0 dark:bg-contrast-25 min-h-screen px-4 md:px-6 pt-16">
