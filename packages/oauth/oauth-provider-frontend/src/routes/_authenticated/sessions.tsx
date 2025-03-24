@@ -3,33 +3,22 @@ import { createFileRoute } from '@tanstack/react-router'
 import { Trans } from '@lingui/react/macro'
 
 import { Button } from '#/components/Button'
-import { Session } from '#/api'
 import { useSession } from '#/state/session'
-
-const sessions: Session[] = [
-  {
-    account: {
-      sub: '',
-      aud: '',
-      email: 'eric@blueskyweb.xyz',
-      email_verified: true,
-      name: 'Eric',
-      preferred_username: '@esb.lol',
-      picture:
-        'https://cdn.bsky.app/img/avatar/plain/did:plc:3jpt2mvvsumj2r7eqk4gzzjz/bafkreiaexnb3bkzbaxktm5q3l3txyweflh3smcruigesvroqjrqxec4zv4@jpeg',
-    },
-    selected: false, // what
-    loginRequired: false, // what
-    consentRequired: false, // what
-  },
-]
+import { useSessionsQuery } from '#/data/useSessionsQuery'
 
 export const Route = createFileRoute('/_authenticated/sessions')({
   component: Sessions,
 })
 
 export function Sessions() {
-  const { setSession } = useSession()
+  const { session, setSession } = useSession()
+  const {
+    data: sessions,
+    error,
+    isLoading,
+  } = useSessionsQuery({
+    did: session!.account.sub,
+  })
   return (
     <>
       <ul className="flex items-center space-x-2">
@@ -42,29 +31,32 @@ export function Sessions() {
         Sessions
       </h1>
 
-      {sessions.map((session) => (
-        <div className="p-4 border border-contrast-100 rounded-lg flex items-start justify-between space-x-4">
-          <div className="flex items-center space-x-2 truncate">
-            <img
-              src={session.account.picture}
-              className="w-12 h-12 rounded-full"
-            />
-            <div className="truncate">
-              <h3 className="font-bold truncate">{session.account.name}</h3>
-              <p className="text-text-light text-sm truncate">
-                {session.account.preferred_username}
-                {' • '}
-                {session.account.email}
-              </p>
+      {isLoading ? null : error || !sessions ? null : (
+        <div className="space-y-4">
+          {sessions.map((session) => (
+            <div className="p-4 border border-contrast-100 rounded-lg flex items-start justify-between space-x-4">
+              <div className="flex items-center space-x-2 truncate">
+                <img src={session.avatar} className="w-12 h-12 rounded-full" />
+                <div className="truncate">
+                  <h3 className="font-bold truncate">{session.displayName}</h3>
+                  <p className="text-text-light text-sm truncate">
+                    {session.username}
+                    {' • '}
+                    {session.email}
+                    {' • '}
+                    {session.identifier}
+                  </p>
+                </div>
+              </div>
+              <div>
+                <Button onClick={() => setSession(null)}>
+                  <Trans>Revoke</Trans>
+                </Button>
+              </div>
             </div>
-          </div>
-          <div>
-            <Button onClick={() => setSession(null)}>
-              <Trans>Revoke</Trans>
-            </Button>
-          </div>
+          ))}
         </div>
-      ))}
+      )}
 
       <div className="mt-8 border-t border-contrast-100 pt-4 flex justify-end items-center space-x-4">
         <p className="text-text-light italic text-sm">
