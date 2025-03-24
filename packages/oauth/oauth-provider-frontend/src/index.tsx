@@ -6,11 +6,13 @@ import { createRoot } from 'react-dom/client'
 import { i18n } from '@lingui/core'
 import { I18nProvider } from '@lingui/react'
 import { RouterProvider, createRouter } from '@tanstack/react-router'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 import { routeTree } from '#/routeTree.gen'
 import { Provider as LocaleProvider } from '#/locales'
 import { Provider as SessionProvider } from '#/state/session'
 
+const qc = new QueryClient()
 const router = createRouter({ routeTree })
 
 // Register the router instance for type safety
@@ -25,7 +27,9 @@ createRoot(document.getElementById('root')!).render(
     <I18nProvider i18n={i18n}>
       <LocaleProvider>
         <SessionProvider>
-          <RouterProvider router={router} />
+          <QueryClientProvider client={qc}>
+            <RouterProvider router={router} />
+          </QueryClientProvider>
         </SessionProvider>
       </LocaleProvider>
     </I18nProvider>

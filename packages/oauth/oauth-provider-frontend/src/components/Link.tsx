@@ -2,6 +2,8 @@ import React from 'react'
 import { Link as RouterLink, LinkComponentProps } from '@tanstack/react-router'
 import { clsx } from 'clsx'
 
+import { useButtonStyles, ButtonStyleProps } from '#/components/Button'
+
 export type LinkProps = LinkComponentProps & {
   label?: string
 }
@@ -44,3 +46,17 @@ export function staticClick(
 
 Link.staticClick = staticClick
 InlineLink.staticClick = staticClick
+
+export function ButtonLink({
+  children,
+  color = 'primary',
+  disabled,
+  ...rest
+}: LinkProps & ButtonStyleProps) {
+  const cn = useButtonStyles({ color, disabled })
+  return (
+    <Link {...rest} className={cn}>
+      {children}
+    </Link>
+  )
+}
