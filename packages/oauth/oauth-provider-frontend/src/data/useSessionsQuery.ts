@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 
-type Session = {
+export type ApplicationSession = {
+  token: string
   email: string
   identifier: string
   username?: string
@@ -14,11 +15,12 @@ type Session = {
 }
 
 export function useSessionsQuery({ did }: { did: string }) {
-  return useQuery<Session[]>({
+  return useQuery<ApplicationSession[]>({
     queryKey: ['active-sessions', did],
     async queryFn() {
       return [
         {
+          token: 'abc',
           email: 'eric@blueskyweb.xyz',
           identifier: 'did:plc:3jpt2mvvsumj2r7eqk4gzzjz',
           username: '@esb.lol',
@@ -32,6 +34,7 @@ export function useSessionsQuery({ did }: { did: string }) {
           },
         },
         {
+          token: 'abc',
           email: 'eric@blueskyweb.xyz',
           identifier: 'did:plc:3jpt2mvvsumj2r7eqk4gzzjz',
           username: '@eric.flashes.app',
