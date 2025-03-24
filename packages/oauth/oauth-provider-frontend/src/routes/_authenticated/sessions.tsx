@@ -58,9 +58,11 @@ export function Sessions() {
               </p>
             </div>
           </div>
-          <Button onClick={() => setSession(null)}>
-            <Trans>Revoke</Trans>
-          </Button>
+          <div>
+            <Button onClick={() => setSession(null)}>
+              <Trans>Revoke</Trans>
+            </Button>
+          </div>
         </div>
       ))}
 
@@ -68,9 +70,11 @@ export function Sessions() {
         <p className="text-text-light italic text-sm">
           <Trans>Log out of all applications</Trans>
         </p>
-        <Button onClick={() => setSession(null)}>
-          <Trans>Revoke all</Trans>
-        </Button>
+        <div>
+          <Button onClick={() => setSession(null)}>
+            <Trans>Revoke all</Trans>
+          </Button>
+        </div>
       </div>
     </>
   )

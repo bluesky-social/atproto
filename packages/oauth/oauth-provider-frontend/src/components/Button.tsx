@@ -34,7 +34,7 @@ export type ButtonStyleProps = ButtonVariantProps & ButtonStateProps
 export function useButtonStyles({ color, disabled }: ButtonStyleProps) {
   return React.useMemo(() => {
     return clsx([
-      'w-full block text-center px-6 py-3 rounded-md text-md font-medium',
+      'flex-1 block text-center px-6 py-3 rounded-md text-md font-medium',
       color === 'primary' && [
         disabled
           ? ['bg-primary-400 text-primary-100', 'cursor-not-allowed']
