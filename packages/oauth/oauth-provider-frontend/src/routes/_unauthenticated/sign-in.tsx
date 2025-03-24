@@ -7,12 +7,19 @@ import { msg } from '@lingui/core/macro'
 import zod from 'zod'
 import { clsx } from 'clsx'
 
+import {
+  Session,
+  SecondAuthenticationFactorRequiredError,
+  InvalidCredentialsError,
+} from '#/api'
 import { useValidateHandle } from '#/util/useValidateHandle'
 import { useSession } from '#/state/session'
 import * as Form from '#/components/forms'
 import { Button } from '#/components/Button'
 import { InlineLink } from '#/components/Link'
 import { format2FACode } from '#/util/format2FACode'
+import { useSignInMutation } from '#/data/useSignInMutation'
+import { wait } from '#/util/wait'
 
 export const Route = createFileRoute('/_unauthenticated/sign-in')({
   component: RouteComponent,
@@ -39,6 +46,9 @@ function LoginForm() {
   const { setSession } = useSession()
   const validateHandle = useValidateHandle()
   const [showCode, setShowCode] = React.useState(false)
+  const [error, setError] = React.useState('')
+  const { mutateAsync: signIn } = useSignInMutation()
+
   const form = useForm({
     defaultValues: {
       identifier: '',
@@ -71,25 +81,51 @@ function LoginForm() {
       }),
     },
     onSubmit: async ({ value }) => {
-      if (!value.code) {
-        setShowCode(true)
-        throw new Error('Code is required')
+      setError('')
+      try {
+        // throw new SecondAuthenticationFactorRequiredError({
+        //   error: 'second_authentication_factor_required',
+        //   type: 'emailOtp',
+        //   hint: value.identifier,
+        // })
+        // throw new InvalidCredentialsError({
+        //   error: 'invalid_request',
+        //   error_description: 'Invalid identifier or password',
+        // })
+        // TODO remember
+        const res = await wait(
+          500,
+          signIn({
+            username: value.identifier,
+            password: value.password,
+          }),
+        )
+        setSession(res as Session)
+      } catch (e) {
+        if (e instanceof SecondAuthenticationFactorRequiredError) {
+          setShowCode(true)
+        } else if (e instanceof InvalidCredentialsError) {
+          setShowCode(false)
+          setError(_(msg`Invalid identifier or password.`))
+        } else {
+          setError(_(msg`An error occurred, please try again.`))
+        }
       }
-      setSession({
-        account: {
-          sub: '',
-          aud: '',
-          email: 'eric@blueskyweb.xyz',
-          email_verified: true,
-          name: 'Eric',
-          preferred_username: '@esb.lol',
-          picture:
-            'https://cdn.bsky.app/img/avatar/plain/did:plc:3jpt2mvvsumj2r7eqk4gzzjz/bafkreiaexnb3bkzbaxktm5q3l3txyweflh3smcruigesvroqjrqxec4zv4@jpeg',
-        },
-        selected: false, // what
-        loginRequired: false, // what
-        consentRequired: false, // what
-      })
+      // setSession({
+      //   account: {
+      //     sub: '',
+      //     aud: '',
+      //     email: 'eric@blueskyweb.xyz',
+      //     email_verified: true,
+      //     name: 'Eric',
+      //     preferred_username: '@esb.lol',
+      //     picture:
+      //       'https://cdn.bsky.app/img/avatar/plain/did:plc:3jpt2mvvsumj2r7eqk4gzzjz/bafkreiaexnb3bkzbaxktm5q3l3txyweflh3smcruigesvroqjrqxec4zv4@jpeg',
+      //   },
+      //   selected: false, // what
+      //   loginRequired: false, // what
+      //   consentRequired: false, // what
+      // })
     },
   })
 
@@ -107,7 +143,6 @@ function LoginForm() {
           <form.Field
             name="identifier"
             children={(field) => {
-              console.log(field.state.meta)
               return (
                 <Form.Item>
                   <Form.Label name={field.name}>
@@ -120,13 +155,7 @@ function LoginForm() {
                     onBlur={field.handleBlur}
                     onChange={(e) => field.handleChange(e.target.value)}
                   />
-                  {!!field.state.meta.errors.length && (
-                    <Form.Errors>
-                      {field.state.meta.errors.map((e) => (
-                        <Form.Error>{e.message}</Form.Error>
-                      ))}
-                    </Form.Errors>
-                  )}
+                  <Form.Errors errors={field.state.meta.errors} />
                 </Form.Item>
               )
             }}
@@ -176,11 +205,17 @@ function LoginForm() {
             />
           )}
 
+          {error && (
+            <ul>
+              <Form.Error>{error}</Form.Error>
+            </ul>
+          )}
+
           <div className="pt-2 space-y-3 flex flex-col align-center">
             <form.Subscribe
               selector={(state) => [state.canSubmit, state.isSubmitting]}
-              children={([canSubmit]) => (
-                <Button type="submit" disabled={!canSubmit}>
+              children={([canSubmit, isSubmitting]) => (
+                <Button type="submit" disabled={!canSubmit || isSubmitting}>
                   <Trans>Sign in</Trans>
                 </Button>
               )}

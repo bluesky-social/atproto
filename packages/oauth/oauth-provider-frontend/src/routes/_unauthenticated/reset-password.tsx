@@ -152,13 +152,12 @@ function RouteComponent() {
                           state.canSubmit,
                           state.isSubmitting,
                         ]}
-                        children={([canSubmit]) => (
-                          <Button type="submit" disabled={!canSubmit}>
-                            {showConfirmStep ? (
-                              <Trans>Reset password</Trans>
-                            ) : (
-                              <Trans>Get reset code</Trans>
-                            )}
+                        children={([canSubmit, isSubmitting]) => (
+                          <Button
+                            type="submit"
+                            disabled={!canSubmit || isSubmitting}
+                          >
+                            <Trans>Get reset code</Trans>
                           </Button>
                         )}
                       />
@@ -253,8 +252,11 @@ function RouteComponent() {
                         state.canSubmit,
                         state.isSubmitting,
                       ]}
-                      children={([canSubmit]) => (
-                        <Button type="submit" disabled={!canSubmit}>
+                      children={([canSubmit, isSubmitting]) => (
+                        <Button
+                          type="submit"
+                          disabled={!canSubmit || isSubmitting}
+                        >
                           <Trans>Reset password</Trans>
                         </Button>
                       )}
