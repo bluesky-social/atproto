@@ -1,6 +1,6 @@
 import React from 'react'
 
-import { Dropdown } from '#/components/Dropdown'
+import { LocaleSelector } from '#/components/LocaleSelector'
 import { localesDisplay } from '#/locales/localesDisplay'
 import { useLocale, Locale } from '#/locales'
 import { useCustomizationData } from '#/data/useCustomizationData'
@@ -24,7 +24,7 @@ export function Footer() {
         ))}
       </div>
 
-      <Dropdown
+      <LocaleSelector
         items={Object.entries(localesDisplay).map(([code, l]) => ({
           label: l.flag + ' ' + l.name,
           value: code,

@@ -253,3 +253,6 @@ input[type='checkbox'] {
     }
   }
 }
+select {
+  appearance: none;
+}
