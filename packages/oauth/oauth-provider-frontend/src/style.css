@@ -225,3 +225,31 @@ select:is(:-webkit-autofill, :autofill) {
     -webkit-box-shadow: 0 0 0px 1000px var(--color-contrast-25) inset;
   }
 }
+input[type='checkbox'] {
+  appearance: none;
+  position: relative;
+
+  &::after {
+    content: '';
+    display: block;
+    width: 66%;
+    height: 66%;
+    border-radius: var(--radius-xs);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  &:checked {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary-400);
+
+    &::after {
+      background-color: white;
+    }
+
+    &:focus::after {
+    }
+  }
+}

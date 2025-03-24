@@ -54,6 +54,7 @@ function LoginForm() {
       identifier: '',
       password: '',
       code: '',
+      remember: false,
     },
     validators: {
       onSubmit: zod.object({
@@ -78,6 +79,7 @@ function LoginForm() {
         }),
         password: zod.string().nonempty(),
         code: zod.string(),
+        remember: zod.boolean(),
       }),
     },
     onSubmit: async ({ value }) => {
@@ -92,12 +94,12 @@ function LoginForm() {
         //   error: 'invalid_request',
         //   error_description: 'Invalid identifier or password',
         // })
-        // TODO remember
         const res = await wait(
           500,
           signIn({
             username: value.identifier,
             password: value.password,
+            remember: value.remember,
           }),
         )
         setSession(res as Session)
@@ -204,6 +206,25 @@ function LoginForm() {
               }}
             />
           )}
+
+          <form.Field
+            name="remember"
+            children={(field) => {
+              return (
+                <div className="flex items-center space-x-2">
+                  <Form.Checkbox
+                    name={field.name}
+                    value="remember"
+                    checked={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.checked)}
+                  />
+                  <Form.Checkbox.Label name={field.name}>
+                    <Trans>Remember this account on this device</Trans>
+                  </Form.Checkbox.Label>
+                </div>
+              )
+            }}
+          />
 
           {error && (
             <ul>
