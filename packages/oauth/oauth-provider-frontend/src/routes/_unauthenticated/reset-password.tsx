@@ -39,6 +39,7 @@ function RouteComponent() {
       }),
     },
     onSubmit: async ({ value }) => {
+      setError('')
       try {
         await wait(500, resetPassword({ email: value.email }))
         setShowConfirmStep(true)
@@ -59,6 +60,7 @@ function RouteComponent() {
       }),
     },
     onSubmit: async ({ value }) => {
+      setError('')
       try {
         await wait(
           500,
@@ -136,37 +138,39 @@ function RouteComponent() {
                   }}
                 />
 
-                {error && (
-                  <ul>
-                    <Form.Error>{error}</Form.Error>
-                  </ul>
-                )}
-
                 {!showConfirmStep && (
-                  <div className="pt-2 space-y-3 flex flex-col align-center">
-                    <form.Subscribe
-                      selector={(state) => [
-                        state.canSubmit,
-                        state.isSubmitting,
-                      ]}
-                      children={([canSubmit]) => (
-                        <Button type="submit" disabled={!canSubmit}>
-                          {showConfirmStep ? (
-                            <Trans>Reset password</Trans>
-                          ) : (
-                            <Trans>Get reset code</Trans>
-                          )}
-                        </Button>
-                      )}
-                    />
+                  <>
+                    {error && (
+                      <ul>
+                        <Form.Error>{error}</Form.Error>
+                      </ul>
+                    )}
 
-                    <InlineLink
-                      to="/sign-in"
-                      className="text-sm text-text-light text-center"
-                    >
-                      <Trans>Back to sign in</Trans>
-                    </InlineLink>
-                  </div>
+                    <div className="pt-2 space-y-3 flex flex-col align-center">
+                      <form.Subscribe
+                        selector={(state) => [
+                          state.canSubmit,
+                          state.isSubmitting,
+                        ]}
+                        children={([canSubmit]) => (
+                          <Button type="submit" disabled={!canSubmit}>
+                            {showConfirmStep ? (
+                              <Trans>Reset password</Trans>
+                            ) : (
+                              <Trans>Get reset code</Trans>
+                            )}
+                          </Button>
+                        )}
+                      />
+
+                      <InlineLink
+                        to="/sign-in"
+                        className="text-sm text-text-light text-center"
+                      >
+                        <Trans>Back to sign in</Trans>
+                      </InlineLink>
+                    </div>
+                  </>
                 )}
               </Form.Fieldset>
             </form>
@@ -204,6 +208,7 @@ function RouteComponent() {
                                 )
                               }}
                             />
+                            <Form.Errors errors={field.state.meta.errors} />
                           </Form.Item>
                         )
                       }}
@@ -235,6 +240,12 @@ function RouteComponent() {
                       }}
                     />
                   </>
+
+                  {error && (
+                    <ul>
+                      <Form.Error>{error}</Form.Error>
+                    </ul>
+                  )}
 
                   <div className="pt-2 space-y-3 flex flex-col align-center">
                     <confirmForm.Subscribe

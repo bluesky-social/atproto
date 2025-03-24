@@ -12,6 +12,18 @@ export type {
   ErrorData,
 } from '@atproto/oauth-provider-api'
 
+export {
+  SecondAuthenticationFactorRequiredError,
+  InvalidCredentialsError,
+  InvalidInviteCodeError,
+  HandleUnavailableError,
+  EmailTakenError,
+  RequestExpiredError,
+  UnknownRequestUriError,
+  InvalidRequestError,
+  AccessDeniedError,
+} from '#/api/client'
+
 export function useApi() {
   const { requestUri } = useAuthorizationData()
   const csrfToken = cookies.get(`csrf-${requestUri}`)
