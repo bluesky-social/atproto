@@ -32,3 +32,8 @@ export type ScopeDetail = {
   scope: string
   description?: string
 }
+
+export type DeviceMetadata = {
+  userAgent?: string
+  ipAddress: string
+}

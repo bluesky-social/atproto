@@ -8,10 +8,17 @@ export type Options = {
 }
 
 export type EndpointPath = `/${string}`
-export type EndpointDefinition = {
-  input: Json
-  output: Json | void
-}
+export type EndpointDefinition =
+  | {
+      method: 'POST'
+      input: Json
+      output: Json | void
+    }
+  | {
+      method: 'GET'
+      params?: Record<string, string | undefined>
+      output: Json | void
+    }
 
 export class JsonClient<
   Endpoints extends { [Path: EndpointPath]: EndpointDefinition },
@@ -22,18 +29,34 @@ export class JsonClient<
   ) {}
 
   public async fetch<Path extends EndpointPath & keyof Endpoints>(
+    method: Endpoints[Path]['method'],
     path: Path,
-    payload: Endpoints[Path]['input'],
+    input: Endpoints[Path] extends { method: 'GET' }
+      ? Endpoints[Path]['params']
+      : Endpoints[Path] extends { method: 'POST' }
+        ? Endpoints[Path]['input']
+        : undefined,
     options?: Options,
   ): Promise<Endpoints[Path]['output']> {
-    const response = await fetch(`${this.baseUrl}${path}`, {
-      method: 'POST',
+    const url = new URL(`${this.baseUrl}${path}`)
+    if (method === 'GET') {
+      if (input) {
+        for (const [key, value] of Object.entries(input)) {
+          url.searchParams.set(key, value)
+        }
+      }
+    }
+
+    const body = method === 'POST' ? JSON.stringify(input) : undefined
+
+    const response = await fetch(url, {
+      method,
       headers: {
         'Content-Type': 'application/json',
         'X-CSRF-Token': this.csrfToken,
       },
       mode: 'same-origin',
-      body: JSON.stringify(payload),
+      body,
       signal: options?.signal,
     })
 

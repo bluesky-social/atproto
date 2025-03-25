@@ -114,6 +114,7 @@ export function useApi({
   const doSignIn = useSafeCallback(
     async (data: Omit<SignInInput, 'locale'>, signal?: AbortSignal) => {
       const response = await api.fetch(
+        'POST',
         '/sign-in',
         { ...data, locale },
         { signal },
@@ -129,6 +130,7 @@ export function useApi({
       signal?: AbortSignal,
     ) => {
       await api.fetch(
+        'POST',
         '/reset-password-request',
         { ...data, locale },
         { signal },
@@ -139,14 +141,14 @@ export function useApi({
 
   const doConfirmResetPassword = useSafeCallback(
     async (data: ConfirmResetPasswordData, signal?: AbortSignal) => {
-      await api.fetch('/reset-password-confirm', data, { signal })
+      await api.fetch('POST', '/reset-password-confirm', data, { signal })
     },
     [api],
   )
 
   const doValidateNewHandle = useSafeCallback(
     async (data: VerifyHandleAvailabilityData, signal?: AbortSignal) => {
-      await api.fetch('/verify-handle-availability', data, { signal })
+      await api.fetch('POST', '/verify-handle-availability', data, { signal })
     },
     [api],
   )
@@ -154,6 +156,7 @@ export function useApi({
   const doSignUp = useSafeCallback(
     async (data: Omit<SignUpInput, 'locale'>, signal?: AbortSignal) => {
       const response = await api.fetch(
+        'POST',
         '/sign-up',
         { ...data, locale },
         { signal },
