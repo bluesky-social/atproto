@@ -30,7 +30,6 @@ export function validateHeaderValue(
 
 export function validateFetchMode(
   req: IncomingMessage,
-  res: ServerResponse,
   expectedMode: readonly (
     | null
     | 'navigate'
@@ -44,7 +43,6 @@ export function validateFetchMode(
 
 export function validateFetchDest(
   req: IncomingMessage,
-  res: ServerResponse,
   expectedDest: readonly (
     | null
     | 'document'
@@ -68,7 +66,6 @@ export function validateFetchDest(
 
 export function validateFetchSite(
   req: IncomingMessage,
-  res: ServerResponse,
   expectedSite: readonly (
     | null
     | 'same-origin'
@@ -82,19 +79,16 @@ export function validateFetchSite(
 
 export function validateReferer(
   req: IncomingMessage,
-  res: ServerResponse,
   reference: UrlReference,
   allowNull: true,
 ): URL | null
 export function validateReferer(
   req: IncomingMessage,
-  res: ServerResponse,
   reference: UrlReference,
   allowNull?: false,
 ): URL
 export function validateReferer(
   req: IncomingMessage,
-  res: ServerResponse,
   reference: UrlReference,
   allowNull = false,
 ) {
@@ -106,43 +100,40 @@ export function validateReferer(
   return refererUrl
 }
 
-export async function setupCsrfToken(
+export function validateOrigin(
   req: IncomingMessage,
+  expectedOrigin: string,
+  optional = true,
+) {
+  const reqOrigin = req.headers['origin']
+  if (reqOrigin ? reqOrigin !== expectedOrigin : !optional) {
+    throw createHttpError(400, `Invalid origin ${reqOrigin}`)
+  }
+}
+
+const CSRF_COOKIE_NAME = 'csrf_token'
+
+export function setupCsrfToken(
   res: ServerResponse,
-  cookieName = 'csrf_token',
+  cookieName = CSRF_COOKIE_NAME,
 ) {
   const csrfToken = randomBytes(8).toString('hex')
   appendHeader(
     res,
     'Set-Cookie',
     serializeCookie(cookieName, csrfToken, {
+      expires: undefined, // "session" cookie
       secure: true,
       httpOnly: false,
       sameSite: 'lax',
-      path: req.url?.split('?', 1)[0] || '/',
     }),
   )
 }
 
-// CORS ensure not cross origin
-export function validateSameOrigin(
-  req: IncomingMessage,
-  res: ServerResponse,
-  origin: string,
-  allowNull = true,
-) {
-  const reqOrigin = req.headers['origin']
-  if (reqOrigin ? reqOrigin !== origin : !allowNull) {
-    throw createHttpError(400, `Invalid origin ${reqOrigin}`)
-  }
-}
-
 export function validateCsrfToken(
   req: IncomingMessage,
-  res: ServerResponse,
   csrfToken: unknown,
-  cookieName = 'csrf_token',
-  clearCookie = false,
+  cookieName = CSRF_COOKIE_NAME,
 ) {
   const cookies = parseHttpCookies(req)
   if (
@@ -154,19 +145,22 @@ export function validateCsrfToken(
   ) {
     throw createHttpError(400, `Invalid CSRF token`)
   }
+}
 
-  if (clearCookie) {
-    appendHeader(
-      res,
-      'Set-Cookie',
-      serializeCookie(cookieName, '', {
-        secure: true,
-        httpOnly: false,
-        sameSite: 'lax',
-        maxAge: 0,
-      }),
-    )
-  }
+export function clearCsrfCookie(
+  res: ServerResponse,
+  cookieName = CSRF_COOKIE_NAME,
+) {
+  appendHeader(
+    res,
+    'Set-Cookie',
+    serializeCookie(cookieName, '', {
+      secure: true,
+      httpOnly: false,
+      sameSite: 'lax',
+      maxAge: 0,
+    }),
+  )
 }
 
 export function parseHttpCookies(

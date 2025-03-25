@@ -18,17 +18,10 @@ import {
 } from '../../db'
 import { AccountDb, Token } from '../db'
 import { ActorAccount, selectAccountQB } from './account'
-import {
-  SelectableDeviceAccount,
-  toAccount,
-  toDeviceAccountInfo,
-} from './device-account'
-
-type LeftJoined<T> = { [K in keyof T]: null | T[K] }
+import { toAccount } from './device-account'
 
 export type ActorAccountToken = Selectable<ActorAccount> &
-  Selectable<Omit<Token, 'id' | 'did'>> &
-  LeftJoined<SelectableDeviceAccount>
+  Selectable<Omit<Token, 'id' | 'did'>>
 
 export const toTokenInfo = (
   row: ActorAccountToken,
@@ -50,12 +43,6 @@ export const toTokenInfo = (
     code: row.code,
   },
   account: toAccount(row, audience),
-  info:
-    row.authenticatedAt != null &&
-    row.authorizedClients != null &&
-    row.remember != null
-      ? toDeviceAccountInfo(row as SelectableDeviceAccount)
-      : undefined,
   currentRefreshToken: row.currentRefreshToken,
 })
 
@@ -63,13 +50,6 @@ const selectTokenInfoQB = (db: AccountDb) =>
   selectAccountQB(db, { includeDeactivated: true })
     // uses "token_did_idx" index (though unlikely in practice)
     .innerJoin('token', 'token.did', 'actor.did')
-    .leftJoin('device_account', (join) =>
-      join
-        // uses "device_account_pk" index
-        .on('device_account.did', '=', 'token.did')
-        // @ts-expect-error "deviceId" is nullable in token
-        .on('device_account.deviceId', '=', 'token.deviceId'),
-    )
     .select([
       'token.tokenId',
       'token.createdAt',
@@ -83,9 +63,6 @@ const selectTokenInfoQB = (db: AccountDb) =>
       'token.details',
       'token.code',
       'token.currentRefreshToken',
-      'device_account.authenticatedAt',
-      'device_account.authorizedClients',
-      'device_account.remember',
     ])
 
 export const createQB = (

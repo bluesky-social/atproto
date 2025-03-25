@@ -1,5 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
+import createHttpError from 'http-errors'
 import { z } from 'zod'
+import { ApiEndpoints } from '@atproto/oauth-provider-api'
 import {
   oauthAuthorizationRequestQuerySchema,
   oauthClientCredentialsSchema,
@@ -17,21 +19,25 @@ import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import {
   Handler,
   Middleware,
+  NextFunction,
   Router,
   RouterCtx,
   SubCtx,
   asHandler,
+  clearCsrfCookie,
   extractLocales,
   jsonHandler,
   navigationHandler,
   parseHttpRequest,
   setupCsrfToken,
+  subCtx,
   validateCsrfToken,
   validateFetchMode,
   validateFetchSite,
+  validateOrigin,
   validateReferer,
-  validateSameOrigin,
 } from '../lib/http/index.js'
+import { RouteCtx, createRoute } from '../lib/http/route.js'
 import { extractZodErrorMessage } from '../lib/util/zod-error.js'
 import type { OAuthProvider } from '../oauth-provider.js'
 import { Awaitable } from '../oauth-store.js'
@@ -69,7 +75,7 @@ export function buildAuthorizationPageRouter<
     '/oauth/authorize',
     authorizeNavigationHandler(
       withDeviceInfo(async function (req, res) {
-        validateFetchSite(req, res, ['cross-site', 'none'])
+        validateFetchSite(req, ['cross-site', 'none'])
 
         const query = Object.fromEntries(this.url.searchParams)
 
@@ -99,7 +105,7 @@ export function buildAuthorizationPageRouter<
         if ('redirect' in result) {
           return sendAuthorizeRedirect(res, result)
         } else {
-          await setupCsrfToken(req, res, csrfCookie(result.authorize.uri))
+          setupCsrfToken(res, csrfCookie(result.authorize.uri))
           return sendAuthorizePage(res, result, {
             preferredLocales: extractLocales(req),
           })
@@ -108,63 +114,76 @@ export function buildAuthorizationPageRouter<
     ),
   )
 
-  router.post(
-    '/oauth/authorize/verify-handle-availability',
-    apiHandler(z.object({ handle: handleSchema }).strict(), async function () {
-      await server.accountManager.verifyHandleAvailability(this.input.handle)
-      return { available: true }
-    }),
+  router.use(
+    apiMiddleware(
+      '/verify-handle-availability',
+      z.object({ handle: handleSchema }).strict(),
+      async function () {
+        await server.accountManager.verifyHandleAvailability(this.input.handle)
+        return { available: true }
+      },
+    ),
   )
 
-  router.post(
-    '/oauth/authorize/sign-up',
-    apiHandler(
+  router.use(
+    apiMiddleware(
+      '/sign-up',
       signUpInputSchema,
       withDeviceInfo(async function () {
-        return server.signUp(
-          this.requestUri,
+        // De-structuring the result to avoid leaking un-needed information
+        const { account } = await server.signUp(
+          this.input,
           this.deviceId,
           this.deviceMetadata,
-          this.input,
+          this.requestUri,
         )
+        return { account }
       }),
     ),
   )
 
-  router.post(
-    '/oauth/authorize/sign-in',
-    apiHandler(
+  router.use(
+    apiMiddleware(
+      '/sign-in',
       signInDataSchema,
       withDeviceInfo(async function () {
-        return server.signIn(
-          this.requestUri,
+        // De-structuring the result to avoid leaking un-needed information
+        const { account, consentRequired } = await server.signIn(
+          this.input,
           this.deviceId,
           this.deviceMetadata,
-          this.input,
+          this.requestUri,
         )
+        return { account, consentRequired }
       }),
     ),
   )
 
-  router.post(
-    '/oauth/authorize/reset-password-request',
-    apiHandler(resetPasswordRequestDataSchema, async function () {
-      await server.accountManager.resetPasswordRequest(this.input)
-      return { success: true }
-    }),
+  router.use(
+    apiMiddleware(
+      '/reset-password-request',
+      resetPasswordRequestDataSchema,
+      async function () {
+        await server.accountManager.resetPasswordRequest(this.input)
+        return { success: true }
+      },
+    ),
   )
 
-  router.post(
-    '/oauth/authorize/reset-password-confirm',
-    apiHandler(resetPasswordConfirmDataSchema, async function () {
-      await server.accountManager.resetPasswordConfirm(this.input)
-      return { success: true }
-    }),
+  router.use(
+    apiMiddleware(
+      '/reset-password-confirm',
+      resetPasswordConfirmDataSchema,
+      async function () {
+        await server.accountManager.resetPasswordConfirm(this.input)
+        return { success: true }
+      },
+    ),
   )
 
-  router.get(
-    '/oauth/authorize/accept',
-    authorizeRedirectHandler(
+  router.use(
+    authorizationRedirectHandler(
+      '/accept',
       withDeviceInfo(async function (req, res) {
         const sub = this.url.searchParams.get('account_sub')
         if (!sub) throw new InvalidRequestError('Account sub not provided')
@@ -181,12 +200,12 @@ export function buildAuthorizationPageRouter<
     ),
   )
 
-  router.get(
-    '/oauth/authorize/reject',
-    authorizeRedirectHandler(
+  router.use(
+    authorizationRedirectHandler(
+      '/reject',
       withDeviceInfo(async function (req, res) {
         return server
-          .rejectRequest(this.requestUri, this.deviceId)
+          .rejectRequest(this.requestUri, this.deviceId, this.deviceMetadata)
           .catch((err) => accessDeniedToRedirectCatcher(req, res, err))
       }),
     ),
@@ -194,52 +213,80 @@ export function buildAuthorizationPageRouter<
 
   return router.buildHandler()
 
-  function apiHandler<T extends RouterCtx, S extends z.ZodTypeAny>(
+  type ApiContext<T extends RouterCtx, S extends z.ZodTypeAny> = SubCtx<
+    T,
+    {
+      input: z.infer<S>
+      requestUri?: RequestUri
+    }
+  >
+
+  // The main purpose of this function is to ensure that the endpoint
+  // implementation matches its type definition.
+  function apiMiddleware<
+    T extends RouterCtx,
+    E extends keyof ApiEndpoints & `/${string}`,
+    S extends z.ZodType<ApiEndpoints[E]['input']>,
+  >(
+    endpoint: E,
     inputSchema: S,
-    buildJson: (
-      this: SubCtx<T, { requestUri: RequestUri; input: z.infer<S> }>,
+    buildOutput: (
+      this: ApiContext<RouteCtx<T>, S>,
       req: TReq,
       res: TRes,
-    ) => unknown,
-    status?: number,
-  ): Handler<T, TReq, TRes> {
+    ) => Awaitable<ApiEndpoints[E]['output']>,
+  ): Middleware<T, TReq, TRes> {
+    return createRoute(
+      'POST',
+      `/oauth/authorize${endpoint}`,
+      apiHandler(inputSchema, buildOutput),
+    )
+  }
+
+  function apiHandler<T extends RouterCtx, S extends z.ZodTypeAny>(
+    inputSchema: S,
+    buildJson: (this: ApiContext<T, S>, req: TReq, res: TRes) => unknown,
+  ): Middleware<T, TReq, TRes> {
     return jsonHandler<T, TReq, TRes>(async function (req, res) {
       try {
         res.setHeader('Cache-Control', 'no-store')
         res.setHeader('Pragma', 'no-cache')
 
-        validateFetchMode(req, res, ['same-origin'])
-        validateFetchSite(req, res, ['same-origin'])
-        validateSameOrigin(req, res, issuerOrigin)
-        const referer = validateReferer(req, res, {
-          origin: issuerOrigin,
-          pathname: '/oauth/authorize',
-        })
+        validateFetchMode(req, ['same-origin'])
+        validateFetchSite(req, ['same-origin'])
+        validateOrigin(req, issuerOrigin)
+        const referer = validateReferer(req, { origin: issuerOrigin })
 
-        const requestUri = await requestUriSchema.parseAsync(
-          referer.searchParams.get('request_uri'),
-          { path: ['query', 'request_uri'] },
-        )
+        const requestUri =
+          // Allows to determine if we are in an authorization context
+          referer.pathname === '/oauth/authorize'
+            ? await requestUriSchema.parseAsync(
+                referer.searchParams.get('request_uri'),
+              )
+            : undefined
 
-        validateCsrfToken(
-          req,
-          res,
-          req.headers['x-csrf-token'],
-          csrfCookie(requestUri),
-        )
+        if (requestUri) {
+          validateCsrfToken(
+            req,
+            req.headers['x-csrf-token'],
+            csrfCookie(requestUri),
+          )
+        } else if (referer.pathname === '/account') {
+          // @TODO change ^ to match actual account creation page
+          validateCsrfToken(req, req.headers['x-csrf-token'])
+        } else {
+          throw createHttpError(400, `Invalid referer ${referer}`)
+        }
 
         const inputRaw = await parseHttpRequest(req, ['json'])
         const input = await inputSchema.parseAsync(inputRaw, { path: ['body'] })
 
-        const context: SubCtx<
-          T,
-          { requestUri: RequestUri; input: z.infer<S> }
-        > = Object.create(this, {
+        const context: ApiContext<T, S> = Object.create(this, {
           input: { value: input, enumerable: true },
           requestUri: { value: requestUri, enumerable: true },
         })
         const payload = await buildJson.call(context, req, res)
-        return { payload, status }
+        return { payload, status: 200 }
       } catch (err) {
         onError?.(req, res, err, 'Failed to handle API request')
 
@@ -292,9 +339,15 @@ export function buildAuthorizationPageRouter<
       this: SubCtx<T, DeviceInfo>,
       req: TReq,
       res: TRes,
+      next?: NextFunction,
     ) => Awaitable<Ret>,
   ) {
-    return async function (this: T, req: TReq, res: TRes): Promise<Ret> {
+    return async function (
+      this: T,
+      req: TReq,
+      res: TRes,
+      next?: NextFunction,
+    ): Promise<Ret> {
       const deviceInfo = await server.deviceManager.load(req, res)
 
       const context: SubCtx<
@@ -308,9 +361,14 @@ export function buildAuthorizationPageRouter<
         deviceMetadata: { value: deviceInfo.deviceMetadata, enumerable: true },
       })
 
-      return handler.call(context, req, res)
+      return handler.call(context, req, res, next)
     }
   }
+
+  type RedirectContext<T extends RouterCtx> = SubCtx<
+    RouteCtx<T>,
+    { requestUri: RequestUri }
+  >
 
   // Simple GET requests fall under the category of "no-cors" request, meaning
   // that the browser will allow any cross-origin request, with credentials,
@@ -322,41 +380,46 @@ export function buildAuthorizationPageRouter<
   // 4) validate the sec-fetch-mode header (see navigationHandler),
   // 5) validate the sec-fetch-dest header (see navigationHandler).
   // And will error (refuse to serve the request) if any of these checks fail.
-  function authorizeRedirectHandler<T extends RouterCtx>(
+  function authorizationRedirectHandler<T extends RouterCtx>(
+    endpoint: '/accept' | '/reject',
     handler: (
-      this: SubCtx<T, { requestUri: RequestUri }>,
+      this: RedirectContext<T>,
       req: TReq,
       res: TRes,
     ) => Awaitable<AuthorizationResultRedirect>,
-  ): Handler<T, TReq, TRes> {
-    return authorizeNavigationHandler(async function (req, res) {
-      // Ensure that the user comes from a page on the same origin.
-      validateFetchSite(req, res, ['same-origin'])
+  ): Middleware<T, TReq, TRes> {
+    return createRoute(
+      'GET',
+      `/oauth/authorize${endpoint}`,
+      authorizeNavigationHandler(async function (req, res) {
+        // Ensure that the user comes from a page on the same origin.
+        validateFetchSite(req, ['same-origin'])
 
-      const referer = validateReferer(req, res, {
-        origin: issuerOrigin,
-        pathname: '/oauth/authorize',
-      })
+        const referer = validateReferer(req, {
+          origin: issuerOrigin,
+          pathname: '/oauth/authorize',
+        })
 
-      const requestUri = await requestUriSchema.parseAsync(
-        referer.searchParams.get('request_uri'),
-      )
+        const requestUri = await requestUriSchema.parseAsync(
+          referer.searchParams.get('request_uri'),
+        )
 
-      const csrfToken = this.url.searchParams.get('csrf_token')
-      const csrfCookieName = csrfCookie(requestUri)
+        const csrfToken = this.url.searchParams.get('csrf_token')
+        const csrfCookieName = csrfCookie(requestUri)
 
-      // Next line will "clear" the CSRF token cookie, preventing replay of
-      // this request (navigating "back" will result in an error).
-      validateCsrfToken(req, res, csrfToken, csrfCookieName, true)
+        validateCsrfToken(req, csrfToken, csrfCookieName)
 
-      const context: SubCtx<T, { requestUri: RequestUri }> = Object.create(
-        this,
-        { requestUri: { value: requestUri, enumerable: true } },
-      )
+        const context = subCtx(this, 'requestUri', requestUri)
 
-      const redirect = await handler.call(context, req, res)
-      return sendAuthorizeRedirect(res, redirect)
-    })
+        const redirect = await handler.call(context, req, res)
+
+        // Next line will "clear" the CSRF token cookie, preventing replay of
+        // this request (navigating "back" will result in an error).
+        clearCsrfCookie(res)
+
+        await sendAuthorizeRedirect(res, redirect)
+      }),
+    )
   }
 
   /**

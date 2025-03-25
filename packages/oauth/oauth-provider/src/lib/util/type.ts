@@ -8,6 +8,11 @@ export type Override<T, V> = Simplify<{
       : never
 }>
 export type Awaitable<T> = T | Promise<T>
+export type NonNullableKeys<T, K extends keyof T> = Simplify<
+  Omit<T, K> & {
+    [P in K]-?: NonNullable<T[P]>
+  }
+>
 
 /**
  * Converts a tuple to the equivalent type of combining every item into a single

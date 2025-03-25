@@ -1,6 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { Redis, RedisOptions } from 'ioredis'
 import { Jwks, Keyset } from '@atproto/jwk'
+import type { Account } from '@atproto/oauth-provider-api'
 import {
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
   OAuthAccessToken,
@@ -30,10 +31,12 @@ import { AccessTokenType } from './access-token/access-token-type.js'
 import { AccountManager } from './account/account-manager.js'
 import {
   AccountStore,
+  AuthoredClientDetails,
   DeviceAccountInfo,
+  SignUpData,
   asAccountStore,
 } from './account/account-store.js'
-import { Account } from './account/account.js'
+import { SignInData } from './account/sign-in-data.js'
 import { ClientAuth, authJwkThumbprint } from './client/client-auth.js'
 import {
   ClientManager,
@@ -41,7 +44,12 @@ import {
 } from './client/client-manager.js'
 import { ClientStore, ifClientStore } from './client/client-store.js'
 import { Client } from './client/client.js'
-import { AUTHENTICATION_MAX_AGE, TOKEN_MAX_AGE } from './constants.js'
+import {
+  AUTHENTICATION_MAX_AGE,
+  CODE_EXCHANGE_LEEWAY,
+  EPHEMERAL_SESSION_MAX_AGE,
+  TOKEN_MAX_AGE,
+} from './constants.js'
 import { DeviceId } from './device/device-id.js'
 import {
   DeviceManager,
@@ -61,12 +69,12 @@ import { HcaptchaConfig } from './lib/hcaptcha.js'
 import { Handler, combineMiddlewares } from './lib/http/index.js'
 import { RequestMetadata } from './lib/http/request.js'
 import { dateToEpoch, dateToRelativeSeconds } from './lib/util/date.js'
-import { Override } from './lib/util/type.js'
 import { extractZodErrorMessage } from './lib/util/zod-error.js'
 import { CustomMetadata, buildMetadata } from './metadata/build-metadata.js'
-import { OAuthHooks, SignInData, SignUpData } from './oauth-hooks.js'
+import { OAuthHooks } from './oauth-hooks.js'
 import { buildOAuthRouter } from './oauth-router.js'
 import { OAuthVerifier, OAuthVerifierOptions } from './oauth-verifier.js'
+import { Sub } from './oidc/sub.js'
 import { buildAuthorizationPageRouter } from './output/authorization-page-router.js'
 import { AuthorizationResultAuthorize } from './output/build-authorize-data.js'
 import {
@@ -106,96 +114,106 @@ export {
   type RouterOptions,
 }
 
-export type OAuthProviderOptions = Override<
-  OAuthVerifierOptions & OAuthHooks & DeviceManagerOptions & CustomizationInput,
-  {
-    /**
-     * Maximum age a device/account session can be before requiring
-     * re-authentication.
-     */
-    authenticationMaxAge?: number
+type OAuthProviderConfig = {
+  /**
+   * Maximum age a device/account session can be before requiring
+   * re-authentication.
+   */
+  authenticationMaxAge?: number
 
-    /**
-     * Maximum age access & id tokens can be before requiring a refresh.
-     */
-    tokenMaxAge?: number
+  /**
+   * Maximum age an ephemeral session (one where "remember me" was not
+   * checked) can be before requiring re-authentication.
+   */
+  ephemeralSessionMaxAge?: number
 
-    /**
-     * Additional metadata to be included in the discovery document.
-     */
-    metadata?: CustomMetadata
+  /**
+   * Maximum age access & id tokens can be before requiring a refresh.
+   */
+  tokenMaxAge?: number
 
-    /**
-     * A custom fetch function that can be used to fetch the client metadata from
-     * the internet. By default, the fetch function is a safeFetchWrap() function
-     * that protects against SSRF attacks, large responses & known bad domains. If
-     * you want to disable all protections, you can provide `globalThis.fetch` as
-     * fetch function.
-     */
-    safeFetch?: typeof globalThis.fetch
+  /**
+   * Additional metadata to be included in the discovery document.
+   */
+  metadata?: CustomMetadata
 
-    /**
-     * A redis instance to use for replay protection. If not provided, replay
-     * protection will use memory storage.
-     */
-    redis?: Redis | RedisOptions | string
+  /**
+   * A custom fetch function that can be used to fetch the client metadata from
+   * the internet. By default, the fetch function is a safeFetchWrap() function
+   * that protects against SSRF attacks, large responses & known bad domains. If
+   * you want to disable all protections, you can provide `globalThis.fetch` as
+   * fetch function.
+   */
+  safeFetch?: typeof globalThis.fetch
 
-    /**
-     * This will be used as the default store for all the stores. If a store is
-     * not provided, this store will be used instead. If the `store` does not
-     * implement a specific store, a runtime error will be thrown. Make sure that
-     * this store implements all the interfaces not provided in the other
-     * `<name>Store` options.
-     */
-    store?: Partial<
-      AccountStore &
-        ClientStore &
-        DeviceStore &
-        ReplayStore &
-        RequestStore &
-        TokenStore
-    >
+  /**
+   * A redis instance to use for replay protection. If not provided, replay
+   * protection will use memory storage.
+   */
+  redis?: Redis | RedisOptions | string
 
-    accountStore?: AccountStore
-    clientStore?: ClientStore
-    deviceStore?: DeviceStore
-    replayStore?: ReplayStore
-    requestStore?: RequestStore
-    tokenStore?: TokenStore
+  /**
+   * This will be used as the default store for all the stores. If a store is
+   * not provided, this store will be used instead. If the `store` does not
+   * implement a specific store, a runtime error will be thrown. Make sure that
+   * this store implements all the interfaces not provided in the other
+   * `<name>Store` options.
+   */
+  store?: Partial<
+    AccountStore &
+      ClientStore &
+      DeviceStore &
+      ReplayStore &
+      RequestStore &
+      TokenStore
+  >
 
-    /**
-     * In order to speed up the client fetching process, you can provide a cache
-     * to store HTTP responses.
-     *
-     * @note the cached entries should automatically expire after a certain time (typically 10 minutes)
-     */
-    clientJwksCache?: SimpleStore<string, Jwks>
+  accountStore?: AccountStore
+  clientStore?: ClientStore
+  deviceStore?: DeviceStore
+  replayStore?: ReplayStore
+  requestStore?: RequestStore
+  tokenStore?: TokenStore
 
-    /**
-     * In order to speed up the client fetching process, you can provide a cache
-     * to store HTTP responses.
-     *
-     * @note the cached entries should automatically expire after a certain time (typically 10 minutes)
-     */
-    clientMetadataCache?: SimpleStore<string, OAuthClientMetadata>
+  /**
+   * In order to speed up the client fetching process, you can provide a cache
+   * to store HTTP responses.
+   *
+   * @note the cached entries should automatically expire after a certain time (typically 10 minutes)
+   */
+  clientJwksCache?: SimpleStore<string, Jwks>
 
-    /**
-     * In order to enable loopback clients, you can provide a function that
-     * returns the client metadata for a given loopback URL. This is useful for
-     * development and testing purposes. This function is not called for internet
-     * clients.
-     *
-     * @default is as specified by ATPROTO
-     */
-    loopbackMetadata?: null | false | LoopbackMetadataGetter
-  }
->
+  /**
+   * In order to speed up the client fetching process, you can provide a cache
+   * to store HTTP responses.
+   *
+   * @note the cached entries should automatically expire after a certain time (typically 10 minutes)
+   */
+  clientMetadataCache?: SimpleStore<string, OAuthClientMetadata>
+
+  /**
+   * In order to enable loopback clients, you can provide a function that
+   * returns the client metadata for a given loopback URL. This is useful for
+   * development and testing purposes. This function is not called for internet
+   * clients.
+   *
+   * @default is as specified by ATPROTO
+   */
+  loopbackMetadata?: null | false | LoopbackMetadataGetter
+}
+
+export type OAuthProviderOptions = OAuthProviderConfig &
+  OAuthVerifierOptions &
+  OAuthHooks &
+  DeviceManagerOptions &
+  CustomizationInput
 
 export class OAuthProvider extends OAuthVerifier {
   public readonly metadata: OAuthAuthorizationServerMetadata
   public readonly customization: Customization
 
   public readonly authenticationMaxAge: number
+  public readonly ephemeralSessionMaxAge: number
 
   public readonly accountManager: AccountManager
   public readonly deviceManager: DeviceManager
@@ -204,9 +222,12 @@ export class OAuthProvider extends OAuthVerifier {
   public readonly tokenManager: TokenManager
 
   public constructor({
-    metadata,
+    // OAuthProviderConfig
     authenticationMaxAge = AUTHENTICATION_MAX_AGE,
+    ephemeralSessionMaxAge = EPHEMERAL_SESSION_MAX_AGE,
     tokenMaxAge = TOKEN_MAX_AGE,
+
+    metadata,
 
     safeFetch = safeFetchWrap(),
     redis,
@@ -262,6 +283,7 @@ export class OAuthProvider extends OAuthVerifier {
       : new RequestStoreMemory()
 
     this.authenticationMaxAge = authenticationMaxAge
+    this.ephemeralSessionMaxAge = ephemeralSessionMaxAge
     this.metadata = buildMetadata(this.issuer, this.keyset, metadata)
     this.customization = customizationSchema.parse(rest)
 
@@ -301,11 +323,7 @@ export class OAuthProvider extends OAuthVerifier {
     return this.keyset.publicJwks
   }
 
-  protected loginRequired(
-    client: Client,
-    parameters: OAuthAuthorizationRequestParameters,
-    info: DeviceAccountInfo,
-  ) {
+  protected loginRequired(info: DeviceAccountInfo, leeway = 0) {
     /** in seconds */
     const authAge = (Date.now() - info.authenticatedAt.getTime()) / 1e3
 
@@ -314,7 +332,15 @@ export class OAuthProvider extends OAuthVerifier {
       return true
     }
 
-    return authAge >= this.authenticationMaxAge
+    // @NOTE `remembered` should never be `true` if `requestId` is set (see
+    // `signIn` method)
+
+    const maxAge =
+      !info.remembered || info.requestId
+        ? this.ephemeralSessionMaxAge
+        : this.authenticationMaxAge
+
+    return authAge >= maxAge + leeway
   }
 
   protected async authenticateClient(
@@ -556,6 +582,7 @@ export class OAuthProvider extends OAuthVerifier {
         client,
         clientAuth,
         deviceId,
+        uri,
         parameters,
       )
 
@@ -638,11 +665,11 @@ export class OAuthProvider extends OAuthVerifier {
     client: Client,
     clientAuth: ClientAuth,
     deviceId: DeviceId,
+    requestUri: RequestUri,
     parameters: OAuthAuthorizationRequestParameters,
   ): Promise<
     {
       account: Account
-      info: DeviceAccountInfo
 
       selected: boolean
       loginRequired: boolean
@@ -660,99 +687,81 @@ export class OAuthProvider extends OAuthVerifier {
 
     return accounts.map(({ account, info }) => ({
       account,
-      info,
 
-      selected:
-        parameters.prompt !== 'select_account' &&
-        matchesHint(account) &&
-        // If an account uses the sub of another account as preferred_username,
-        // there might be multiple accounts matching the hint. In that case,
-        // selecting the account automatically may have unexpected results (i.e.
-        // not able to login using desired account).
-        accounts.reduce(
-          (acc, a) => acc + (matchesHint(a.account) ? 1 : 0),
-          0,
-        ) === 1,
-      loginRequired:
-        parameters.prompt === 'login' ||
-        this.loginRequired(client, parameters, info),
-      consentRequired:
-        parameters.prompt === 'consent' ||
-        // @TODO the "authorizedClients" should also include the scopes that
-        // were already authorized for the client. Otherwise a client could
-        // use silent authentication to get additional scopes without consent.
-        !info.authorizedClients.includes(client.id),
+      selected: parameters.prompt !== 'select_account' && matchesHint(account),
+      loginRequired: parameters.prompt === 'login' || this.loginRequired(info),
+      consentRequired: computeConsentRequired(
+        parameters,
+        info.authorizedClients.get(client.id),
+      ),
 
       matchesHint: hint == null || matchesHint(account),
     }))
   }
 
   public async signUp(
-    requestUri: RequestUri,
+    data: SignUpData,
     deviceId: DeviceId,
     deviceMetadata: RequestMetadata,
-    data: SignUpData,
+    requestUri?: RequestUri,
   ): Promise<{
     account: Account
-    consentRequired: boolean
   }> {
-    const { clientId } = await this.requestManager.get(requestUri, deviceId)
-
-    const client = await this.clientManager.getClient(clientId)
-
     const { account } = await this.accountManager.signUp(
       data,
       deviceId,
       deviceMetadata,
+      requestUri,
     )
 
-    return {
-      account,
-      consentRequired: !client.info.isFirstParty,
-    }
+    return { account }
   }
 
   public async signIn(
-    requestUri: RequestUri,
+    data: SignInData,
     deviceId: DeviceId,
     deviceMetadata: RequestMetadata,
-    data: SignInData,
+    requestUri?: RequestUri,
   ): Promise<{
     account: Account
-    consentRequired: boolean
+    consentRequired?: boolean
   }> {
-    // Ensure the request is still valid (and update the request expiration)
-    // @TODO use the returned scopes to determine if consent is required
-    const { clientId } = await this.requestManager.get(requestUri, deviceId)
-
-    const client = await this.clientManager.getClient(clientId)
-
     const { account, info } = await this.accountManager.signIn(
       data,
       deviceId,
       deviceMetadata,
+      // If "remember" is true, do not bind the session to the request.
+      data.remember ? undefined : requestUri,
     )
 
-    return {
-      account,
-      consentRequired: client.info.isFirstParty
-        ? false
-        : // @TODO: the "authorizedClients" should also include the scopes that
-          // were already authorized for the client. Otherwise a client could
-          // use silent authentication to get additional scopes without consent.
-          !info.authorizedClients.includes(client.id),
+    if (requestUri) {
+      // Check if a consent is required for the client
+      const { clientId, parameters } = await this.requestManager.get(
+        requestUri,
+        deviceId,
+      )
+
+      return {
+        account,
+        consentRequired: computeConsentRequired(
+          parameters,
+          info.authorizedClients.get(clientId),
+        ),
+      }
     }
+
+    return { account }
   }
 
   public async acceptRequest(
     requestUri: RequestUri,
     deviceId: DeviceId,
     deviceMetadata: RequestMetadata,
-    sub: string,
+    sub: Sub,
   ): Promise<AuthorizationResultRedirect> {
     const { issuer } = this
 
-    const { parameters, clientId, clientAuth } = await this.requestManager.get(
+    const { parameters, clientId } = await this.requestManager.get(
       requestUri,
       deviceId,
     )
@@ -760,12 +769,13 @@ export class OAuthProvider extends OAuthVerifier {
     const client = await this.clientManager.getClient(clientId)
 
     try {
-      // @TODO Currently, a user can "accept" a request for any did that sing-in
-      // on the device, even if "remember" was set to false.
-      const { account, info } = await this.accountManager.get(deviceId, sub)
+      const { account, info } = await this.accountManager.getAccountInfo(
+        deviceId,
+        sub,
+        requestUri,
+      )
 
-      // The user is trying to authorize without a fresh login
-      if (this.loginRequired(client, parameters, info)) {
+      if (this.loginRequired(info)) {
         throw new LoginRequiredError(
           parameters,
           'Account authentication required.',
@@ -781,10 +791,9 @@ export class OAuthProvider extends OAuthVerifier {
       )
 
       await this.accountManager.addAuthorizedClient(
-        deviceId,
         account,
         client,
-        clientAuth,
+        parameters.scope ?? '',
       )
 
       return { issuer, parameters, redirect: { code } }
@@ -798,6 +807,7 @@ export class OAuthProvider extends OAuthVerifier {
   public async rejectRequest(
     requestUri: RequestUri,
     deviceId: DeviceId,
+    _deviceMetadata: RequestMetadata,
   ): Promise<AuthorizationResultRedirect> {
     const { parameters } = await this.requestManager.get(requestUri, deviceId)
 
@@ -869,11 +879,8 @@ export class OAuthProvider extends OAuthVerifier {
     try {
       const code = codeSchema.parse(input.code)
 
-      const { sub, deviceId, parameters } = await this.requestManager.findCode(
-        client,
-        clientAuth,
-        code,
-      )
+      const { requestUri, sub, deviceId, parameters } =
+        await this.requestManager.findCode(client, clientAuth, code)
 
       // the following check prevents re-use of PKCE challenges, enforcing the
       // clients to generate a new challenge for each authorization request. The
@@ -894,21 +901,29 @@ export class OAuthProvider extends OAuthVerifier {
           parameters.code_challenge,
         )
         if (!unique) {
-          throw new InvalidGrantError(
-            'code_challenge',
-            'Code challenge already used',
-          )
+          throw new InvalidGrantError('Code challenge already used')
         }
       }
 
-      const { account, info } = await this.accountManager.get(deviceId, sub)
+      const { account, info } = await this.accountManager.getAccountInfo(
+        deviceId,
+        sub,
+        requestUri,
+      )
+
+      // Allow sessions that are slightly too old since the client needs some
+      // time to exchange the code for a token. The session age will previously
+      // have been checked in the authorize method.
+      if (this.loginRequired(info, CODE_EXCHANGE_LEEWAY)) {
+        throw new InvalidGrantError('User session is too old')
+      }
 
       return await this.tokenManager.create(
         client,
         clientAuth,
         clientMetadata,
         account,
-        { id: deviceId, info },
+        deviceId,
         parameters,
         input,
         dpopJkt,
@@ -1047,4 +1062,23 @@ export class OAuthProvider extends OAuthVerifier {
       buildAuthorizationPageRouter(this, options),
     ])
   }
+}
+
+function computeConsentRequired(
+  parameters: OAuthAuthorizationRequestParameters,
+  details?: AuthoredClientDetails,
+) {
+  // Client was never authorized before
+  if (!details) return true
+
+  // Client explicitly asked for consent
+  if (parameters.prompt === 'consent') return true
+
+  // No scope requested, and client is known by user, no consent required
+  const requestedScopes = parameters.scope?.split(' ')
+  if (requestedScopes == null) return false
+
+  // Ensure that all requested scopes were previously authorized by the user
+  const authorizedScopes = details.scope.split(' ')
+  return !requestedScopes.every((scope) => authorizedScopes.includes(scope))
 }

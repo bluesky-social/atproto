@@ -1,7 +1,5 @@
 import type { AuthorizeData, Session } from '@atproto/oauth-provider-api'
 import { OAuthAuthorizationRequestParameters } from '@atproto/oauth-types'
-import { DeviceAccountInfo } from '../account/account-store.js'
-import { Account } from '../account/account.js'
 import { Client } from '../client/client.js'
 import { RequestUri } from '../request/request-uri.js'
 
@@ -17,14 +15,7 @@ export type AuthorizationResultAuthorize = {
   authorize: {
     uri: RequestUri
     scopeDetails?: ScopeDetail[]
-    sessions: readonly {
-      account: Account
-      info: DeviceAccountInfo
-
-      selected: boolean
-      loginRequired: boolean
-      consentRequired: boolean
-    }[]
+    sessions: readonly Session[]
   }
 }
 
@@ -39,7 +30,6 @@ export function buildAuthorizeData(
     clientTrusted: data.client.info.isTrusted,
     requestUri: data.authorize.uri,
     loginHint: data.parameters.login_hint,
-    newSessionsRequireConsent: data.parameters.prompt === 'consent',
     scopeDetails: data.authorize.scopeDetails,
     sessions: data.authorize.sessions.map(
       (session): Session => ({

@@ -1,5 +1,4 @@
-import { DeviceAccountInfo } from '../account/account-store.js'
-import { Account } from '../account/account.js'
+import type { Account } from '@atproto/oauth-provider-api'
 import { Awaitable, buildInterfaceChecker } from '../lib/util/type.js'
 import { Code } from '../request/code.js'
 import { RefreshToken } from './refresh-token.js'
@@ -16,7 +15,6 @@ export type TokenInfo = {
   id: TokenId
   data: TokenData
   account: Account
-  info?: DeviceAccountInfo
   currentRefreshToken: null | RefreshToken
 }
 

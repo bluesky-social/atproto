@@ -1,11 +1,11 @@
 import { Jwks } from '@atproto/jwk'
+import type { Account } from '@atproto/oauth-provider-api'
 import {
   OAuthAuthorizationDetails,
   OAuthAuthorizationRequestParameters,
   OAuthClientMetadata,
   OAuthTokenResponse,
 } from '@atproto/oauth-types'
-import { Account } from './account/account.js'
 import { SignInData } from './account/sign-in-data.js'
 import { SignUpInput } from './account/sign-up-input.js'
 import { ClientAuth } from './client/client-auth.js'
@@ -17,7 +17,7 @@ import { HcaptchaConfig, HcaptchaVerifyResult } from './lib/hcaptcha.js'
 import { RequestMetadata } from './lib/http/request.js'
 import { Awaitable } from './lib/util/type.js'
 import { AccessDeniedError, OAuthError } from './oauth-errors.js'
-import { DeviceAccountInfo, DeviceId, SignUpData } from './oauth-store.js'
+import { DeviceId, SignUpData } from './oauth-store.js'
 
 // Make sure all types needed to implement the OAuthHooks are exported
 export {
@@ -28,7 +28,6 @@ export {
   type ClientAuth,
   type ClientId,
   type ClientInfo,
-  type DeviceAccountInfo,
   type DeviceId,
   type HcaptchaConfig,
   type HcaptchaVerifyResult,
@@ -59,20 +58,6 @@ export type OAuthHooks = {
   ) => Awaitable<undefined | Partial<ClientInfo>>
 
   /**
-   * Allows enriching the authorization details with additional information
-   * when the tokens are issued.
-   *
-   * @see {@link https://datatracker.ietf.org/doc/html/rfc9396 | RFC 9396}
-   */
-  getAuthorizationDetails?: (data: {
-    client: Client
-    clientAuth: ClientAuth
-    clientMetadata: RequestMetadata
-    parameters: OAuthAuthorizationRequestParameters
-    account: Account
-  }) => Awaitable<undefined | OAuthAuthorizationDetails>
-
-  /**
    * This hook is called when a user attempts to sign up, after every validation
    * has passed (including hcaptcha).
    */
@@ -89,7 +74,6 @@ export type OAuthHooks = {
    */
   onSignedUp?: (data: {
     data: SignUpData
-    info: DeviceAccountInfo
     account: Account
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
@@ -102,7 +86,6 @@ export type OAuthHooks = {
    */
   onSignedIn?: (data: {
     data: SignInData
-    info: DeviceAccountInfo
     account: Account
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
@@ -139,8 +122,6 @@ export type OAuthHooks = {
     clientMetadata: RequestMetadata
     account: Account
     parameters: OAuthAuthorizationRequestParameters
-    /** null when "password grant" used (in which case {@link onAuthorized} won't have been called) */
-    deviceId: null | DeviceId
   }) => Awaitable<void>
 
   /**
@@ -154,7 +135,5 @@ export type OAuthHooks = {
     clientMetadata: RequestMetadata
     account: Account
     parameters: OAuthAuthorizationRequestParameters
-    /** null when "password grant" used (in which case {@link onAuthorized} won't have been called) */
-    deviceId: null | DeviceId
   }) => Awaitable<void>
 }

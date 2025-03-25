@@ -5,7 +5,10 @@ import { combineMiddlewares } from './middleware.js'
 import { Params, Path, createPathMatcher } from './path.js'
 import { Middleware } from './types.js'
 
-export type RouteCtx<T, P extends Params> = SubCtx<T, { params: Readonly<P> }>
+export type RouteCtx<T, P extends Params = Params> = SubCtx<
+  T,
+  { params: Readonly<P> }
+>
 export type RouteMiddleware<
   T,
   P extends Params,
@@ -28,7 +31,7 @@ export type RouteMiddleware<
  * ```
  */
 export function createRoute<
-  P extends Params,
+  P extends Params = Params,
   T = void,
   Req extends IncomingMessage = IncomingMessage,
   Res extends ServerResponse = ServerResponse,

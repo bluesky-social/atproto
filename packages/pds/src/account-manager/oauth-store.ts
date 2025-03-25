@@ -248,12 +248,18 @@ export class OAuthStore
     deviceId: DeviceId,
     sub: string,
     remember: boolean,
-  ): Promise<DeviceAccountInfo> {
+    requestId: null | RequestId,
+  ): Promise<void> {
     const [row] = await this.db.executeWithRetry(
-      deviceAccount.createOrUpdateQB(this.db, deviceId, sub, remember),
+      deviceAccount.createOrUpdateQB(
+        this.db,
+        deviceId,
+        sub,
+        remember,
+        requestId,
+      ),
     )
     if (!row) throw new Error('Failed to create device account')
-    return deviceAccount.toDeviceAccountInfo(row)
   }
 
   async addAuthorizedClient(
@@ -287,9 +293,14 @@ export class OAuthStore
 
     if (!row) return null
 
+    const account = await this.buildAccount(row)
+    const { authorizedClients, ...info } =
+      deviceAccount.toDeviceAccountInfo(row)
+
     return {
-      account: await this.buildAccount(row),
-      info: deviceAccount.toDeviceAccountInfo(row),
+      account,
+      info,
+      authorizedClients: new Map(),
     }
   }
 

@@ -9,18 +9,12 @@ export type ApiEndpoints = {
     output: { available: true }
   }
   '/sign-up': {
-    input: SignUpData
-    output: {
-      account: Account
-      consentRequired: boolean
-    }
+    input: SignUpInput
+    output: { account: Account }
   }
   '/sign-in': {
-    input: SignInData
-    output: {
-      account: Account
-      consentRequired: boolean
-    }
+    input: SignInInput
+    output: { account: Account; consentRequired?: boolean }
   }
   '/reset-password-request': {
     input: InitiatePasswordResetData
@@ -32,7 +26,7 @@ export type ApiEndpoints = {
   }
 }
 
-export type SignInData = {
+export type SignInInput = {
   locale: string
   username: string
   password: string
@@ -40,7 +34,7 @@ export type SignInData = {
   remember?: boolean
 }
 
-export type SignUpData = {
+export type SignUpInput = {
   locale: string
   handle: string
   email: string

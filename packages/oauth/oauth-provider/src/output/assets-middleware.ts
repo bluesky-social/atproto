@@ -25,8 +25,8 @@ export const assetsMiddleware: Middleware = (req, res, next) => {
   try {
     // Allow "null" (ie. no header) to allow loading assets outside of a
     // fetch context (not from a web page).
-    validateFetchSite(req, res, [null, 'none', 'cross-site', 'same-origin'])
-    validateFetchDest(req, res, [null, 'document', 'style', 'script'])
+    validateFetchSite(req, [null, 'none', 'cross-site', 'same-origin'])
+    validateFetchDest(req, [null, 'document', 'style', 'script'])
   } catch (err) {
     return next(err)
   }

@@ -43,9 +43,7 @@ export type OAuthVerifierOptions = Override<
     /**
      * If set to {@link AccessTokenType.jwt}, the provider will use JWTs for
      * access tokens. If set to {@link AccessTokenType.id}, the provider will
-     * use tokenId as access tokens. If set to {@link AccessTokenType.auto},
-     * JWTs will only be used if the audience is different from the issuer.
-     * Defaults to {@link AccessTokenType.jwt}.
+     * use tokenId as access tokens.
      *
      * Here is a comparison of the two types:
      *
@@ -146,10 +144,7 @@ export class OAuthVerifier {
     tokenType: OAuthTokenType,
     accessTokenType: AccessTokenType,
   ) {
-    if (
-      this.accessTokenType !== AccessTokenType.auto &&
-      this.accessTokenType !== accessTokenType
-    ) {
+    if (this.accessTokenType !== accessTokenType) {
       throw new InvalidTokenError(tokenType, `Invalid token type`)
     }
   }

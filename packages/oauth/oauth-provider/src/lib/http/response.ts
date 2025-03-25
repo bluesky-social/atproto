@@ -1,13 +1,12 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { type Readable, pipeline } from 'node:stream'
-import { isHttpError } from 'http-errors'
+import createHttpError from 'http-errors'
 import { Awaitable } from '../util/type.js'
-import { asHandler } from './middleware.js'
 import {
   negotiateResponseContent,
   validateFetchDest,
   validateFetchMode,
-  validateSameOrigin,
+  validateOrigin,
 } from './request.js'
 import {
   SecurityHeadersOptions,
@@ -117,23 +116,23 @@ export function jsonHandler<
     req: Req,
     res: Res,
   ) => Awaitable<{ payload: unknown; status?: number }>,
-): Handler<T, Req, Res> {
-  return async function (req, res, next) {
+): Middleware<T, Req, Res> {
+  return function (req, res, next) {
     // Ensure we can agree on a content encoding & type before starting to
     // build the JSON response.
-    if (!negotiateResponseContent(req, ['application/json'])) {
-      res.writeHead(406).end('Unsupported media type')
-      return
-    }
-
-    try {
-      const { payload, status = 200 } = await buildJson.call(this, req, res)
-      writeJson(res, payload, { status })
-    } catch (err) {
-      if (res.headersSent) res.destroy()
-      else if (next) next(err)
-      else if (isHttpError(err)) res.writeHead(err.statusCode).end(err.message)
-      else res.writeHead(500).end('Internal Server Error')
+    if (negotiateResponseContent(req, ['application/json'])) {
+      // A middleware should not be async, so we wrap the async operation in a
+      // promise and return it.
+      void (async () => {
+        try {
+          const { payload, status = 200 } = await buildJson.call(this, req, res)
+          writeJson(res, payload, { status })
+        } catch (err) {
+          next(err || new Error('Failed to build JSON response'))
+        }
+      })()
+    } else {
+      next(createHttpError(406, 'Unsupported media type'))
     }
   }
 }
@@ -142,17 +141,22 @@ export function navigationHandler<
   T = void,
   Req extends IncomingMessage = IncomingMessage,
   Res extends ServerResponse = ServerResponse,
->(origin: string, middleware: Middleware<T, Req, Res>): Handler<T, Req, Res> {
-  return asHandler(function (req, res, next) {
+>(
+  origin: string,
+  middleware: Middleware<T, Req, Res>,
+): Middleware<T, Req, Res> {
+  return function (req, res, next) {
     res.setHeader('Referrer-Policy', 'same-origin')
-    try {
-      validateFetchMode(req, res, ['navigate'])
-      validateFetchDest(req, res, ['document'])
-      validateSameOrigin(req, res, origin)
 
-      middleware.call(this, req, res, next)
+    try {
+      validateFetchMode(req, ['navigate'])
+      validateFetchDest(req, ['document'])
+      validateOrigin(req, origin)
     } catch (err) {
       next(err)
+      return
     }
-  })
+
+    return middleware.call(this, req, res, next)
+  }
 }

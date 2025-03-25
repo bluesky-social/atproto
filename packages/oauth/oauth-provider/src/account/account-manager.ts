@@ -1,5 +1,6 @@
 import {
   OAuthIssuerIdentifier,
+  OAuthScope,
   isOAuthClientIdLoopback,
 } from '@atproto/oauth-types'
 import { Client } from '../client/client.js'
@@ -11,7 +12,7 @@ import { constantTime } from '../lib/util/time.js'
 import { OAuthHooks, RequestMetadata } from '../oauth-hooks.js'
 import { Customization } from '../oauth-provider.js'
 import { Sub } from '../oidc/sub.js'
-import { ClientAuth } from '../token/token-store.js'
+import { RequestUri, decodeRequestUri } from '../request/request-uri.js'
 import {
   Account,
   AccountInfo,
@@ -107,6 +108,7 @@ export class AccountManager {
     input: SignUpInput,
     deviceId: DeviceId,
     deviceMetadata: RequestMetadata,
+    requestUri?: RequestUri,
   ): Promise<AccountInfo> {
     await callAsync(this.hooks.onSignupAttempt, {
       input,
@@ -118,93 +120,124 @@ export class AccountManager {
 
     // Mitigation against brute forcing email of users.
     // @TODO Add rate limit to all the OAuth routes.
-    return constantTime(BRUTE_FORCE_MITIGATION_DELAY, async () => {
-      let account: Account
-      try {
-        account = await this.store.createAccount(data)
-      } catch (err) {
-        throw InvalidRequestError.from(err, 'Account creation failed')
-      }
-
-      try {
-        const info = await this.store.addDeviceAccount(
-          deviceId,
-          account.sub,
-          false,
-        )
-
-        await callAsync(this.hooks.onSignedUp, {
-          data,
-          info,
-          account,
-          deviceId,
-          deviceMetadata,
-        })
-
-        return { account, info }
-      } catch (err) {
-        throw InvalidRequestError.from(
-          err,
-          'Something went wrong, try singing-in',
-        )
-      }
+    const account = await constantTime(
+      BRUTE_FORCE_MITIGATION_DELAY,
+      async () => {
+        return this.store.createAccount(data)
+      },
+    ).catch((err) => {
+      throw InvalidRequestError.from(err, 'Account creation failed')
     })
+
+    // When singing-up from a request flow, always mark the signup as
+    // "temporary" (no "remember me").
+    const remember = requestUri == null
+    const requestId = requestUri ? decodeRequestUri(requestUri) : null
+
+    const info = await this.store.addDeviceAccount(
+      deviceId,
+      account.sub,
+      remember,
+      requestId,
+    )
+
+    await callAsync(this.hooks.onSignedUp, {
+      data,
+      account,
+      deviceId,
+      deviceMetadata,
+    }).catch((err) => {
+      throw InvalidRequestError.from(
+        err,
+        'Something went wrong, try singing-in',
+      )
+    })
+
+    return { account, info }
   }
 
   public async signIn(
     data: SignInData,
     deviceId: DeviceId,
     deviceMetadata: RequestMetadata,
+    requestUri?: RequestUri,
   ): Promise<AccountInfo> {
-    return constantTime(TIMING_ATTACK_MITIGATION_DELAY, async () => {
-      try {
-        const account = await this.store.authenticateAccount(data)
-        const info = await this.store.addDeviceAccount(
-          deviceId,
-          account.sub,
-          data.remember,
-        )
-
-        await callAsync(this.hooks.onSignedIn, {
-          data,
-          info,
-          account,
-          deviceId,
-          deviceMetadata,
-        })
-
-        return { account, info }
-      } catch (err) {
-        throw InvalidRequestError.from(
-          err,
-          'Unable to sign-in due to an unexpected server error',
-        )
-      }
+    const account = await constantTime(
+      TIMING_ATTACK_MITIGATION_DELAY,
+      async () => {
+        return this.store.authenticateAccount(data)
+      },
+    ).catch((err) => {
+      throw InvalidRequestError.from(
+        err,
+        'Unable to sign-in due to an unexpected server error',
+      )
     })
+
+    try {
+      const requestId = requestUri ? decodeRequestUri(requestUri) : null
+      const info = await this.store.addDeviceAccount(
+        deviceId,
+        account.sub,
+        data.remember,
+        requestId,
+      )
+
+      await callAsync(this.hooks.onSignedIn, {
+        data,
+        account,
+        deviceId,
+        deviceMetadata,
+      })
+
+      return { account, info }
+    } catch (err) {
+      throw InvalidRequestError.from(
+        err,
+        'Something went wrong, try singing-in',
+      )
+    }
   }
 
-  public async get(deviceId: DeviceId, sub: Sub): Promise<AccountInfo> {
-    const result = await this.store.getDeviceAccount(deviceId, sub)
-    if (result) return result
+  public async getAccountInfo(
+    deviceId: DeviceId,
+    sub: Sub,
+    requestUri?: RequestUri,
+  ): Promise<AccountInfo> {
+    const requestId = requestUri ? decodeRequestUri(requestUri) : null
 
-    throw new InvalidRequestError(`Account not found`)
+    const result = await this.store.getDeviceAccount(deviceId, sub, requestId)
+    if (!result) throw new InvalidRequestError(`Account not found`)
+
+    // Fool-proofing
+    if (!requestId && result.info.requestId) {
+      throw new Error('DeviceAccount was bound to a request')
+    }
+    if (
+      requestId &&
+      result.info.requestId &&
+      result.info.requestId !== requestId
+    ) {
+      throw new Error('DeviceAccount was bound to another request')
+    }
+
+    return result
   }
 
   public async addAuthorizedClient(
-    deviceId: DeviceId,
     account: Account,
     client: Client,
-    _clientAuth: ClientAuth,
+    scope: OAuthScope,
   ): Promise<void> {
     // "Loopback" clients are not distinguishable from one another.
     if (isOAuthClientIdLoopback(client.id)) return
 
-    await this.store.addAuthorizedClient(deviceId, account.sub, client.id)
+    await this.store.addAuthorizedClient(account.sub, client.id, scope)
   }
 
   public async list(deviceId: DeviceId): Promise<AccountInfo[]> {
     const results = await this.store.listDeviceAccounts(deviceId)
-    return results.filter((result) => result.info.remembered)
+    return results.filter(({ info }) => info.remembered && !info.requestId)
   }
 
   public async resetPasswordRequest(data: ResetPasswordRequestData) {

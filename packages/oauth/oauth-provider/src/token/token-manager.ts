@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto'
 import { isSignedJwt } from '@atproto/jwk'
+import type { Account } from '@atproto/oauth-provider-api'
 import {
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
   OAuthAccessToken,
@@ -12,8 +13,6 @@ import {
   OAuthTokenType,
 } from '@atproto/oauth-types'
 import { AccessTokenType } from '../access-token/access-token-type.js'
-import { DeviceAccountInfo } from '../account/account-store.js'
-import { Account } from '../account/account.js'
 import { ClientAuth } from '../client/client-auth.js'
 import { Client } from '../client/client.js'
 import {
@@ -33,6 +32,7 @@ import { RequestMetadata } from '../lib/http/request.js'
 import { dateToEpoch, dateToRelativeSeconds } from '../lib/util/date.js'
 import { callAsync } from '../lib/util/function.js'
 import { OAuthHooks } from '../oauth-hooks.js'
+import { Sub } from '../oidc/sub.js'
 import { Code, isCode } from '../request/code.js'
 import { Signer } from '../signer/signer.js'
 import {
@@ -72,20 +72,12 @@ export class TokenManager {
     return new Date(now.getTime() + this.tokenMaxAge)
   }
 
-  protected useJwtAccessToken(account: Account) {
-    if (this.accessTokenType === AccessTokenType.auto) {
-      return this.signer.issuer !== account.aud
-    }
-
-    return this.accessTokenType === AccessTokenType.jwt
-  }
-
   async create(
     client: Client,
     clientAuth: ClientAuth,
     clientMetadata: RequestMetadata,
     account: Account,
-    device: null | { id: DeviceId; info: DeviceAccountInfo },
+    deviceId: null | DeviceId,
     parameters: OAuthAuthorizationRequestParameters,
     input:
       | OAuthAuthorizationCodeGrantTokenRequest
@@ -184,11 +176,6 @@ export class TokenManager {
           )
         }
 
-        if (!device) {
-          // Fool-proofing (authorization_code grant should always have a device)
-          throw new InvalidRequestError('consent was not given for this device')
-        }
-
         break
       }
 
@@ -209,47 +196,38 @@ export class TokenManager {
     const now = new Date()
     const expiresAt = this.createTokenExpiry(now)
 
-    const authorizationDetails = await callAsync(
-      this.hooks.getAuthorizationDetails,
-      {
-        client,
-        clientAuth,
-        clientMetadata,
-        parameters,
-        account,
-      },
-    )
-
     const tokenData: TokenData = {
       createdAt: now,
       updatedAt: now,
       expiresAt,
       clientId: client.id,
       clientAuth,
-      deviceId: device?.id ?? null,
+      deviceId,
       sub: account.sub,
       parameters,
-      details: authorizationDetails ?? null,
+      details: null,
       code,
     }
 
     await this.store.createToken(tokenId, tokenData, refreshToken)
 
     try {
-      const accessToken: OAuthAccessToken = !this.useJwtAccessToken(account)
-        ? tokenId
-        : await this.signer.accessToken(client, parameters, {
-            // We don't specify the alg here. We suppose the Resource server will be
-            // able to verify the token using any alg.
-            aud: account.aud,
-            sub: account.sub,
-            alg: undefined,
-            exp: expiresAt,
-            iat: now,
-            jti: tokenId,
-            cnf: parameters.dpop_jkt ? { jkt: parameters.dpop_jkt } : undefined,
-            authorization_details: authorizationDetails,
-          })
+      const accessToken: OAuthAccessToken =
+        this.accessTokenType === AccessTokenType.jwt
+          ? await this.signer.accessToken(client, parameters, {
+              // We don't specify the alg here. We suppose the Resource server will be
+              // able to verify the token using any alg.
+              aud: account.aud,
+              sub: account.sub,
+              alg: undefined,
+              exp: expiresAt,
+              iat: now,
+              jti: tokenId,
+              cnf: parameters.dpop_jkt
+                ? { jkt: parameters.dpop_jkt }
+                : undefined,
+            })
+          : tokenId
 
       const response = await this.buildTokenResponse(
         client,
@@ -257,8 +235,7 @@ export class TokenManager {
         refreshToken,
         expiresAt,
         parameters,
-        account,
-        authorizationDetails,
+        account.sub,
       )
 
       await callAsync(this.hooks.onTokenCreated, {
@@ -267,7 +244,6 @@ export class TokenManager {
         clientMetadata,
         account,
         parameters,
-        deviceId: device ? device.id : null,
       })
 
       return response
@@ -279,21 +255,22 @@ export class TokenManager {
     }
   }
 
-  protected async buildTokenResponse(
+  protected buildTokenResponse(
     client: Client,
     accessToken: OAuthAccessToken,
     refreshToken: string | undefined,
     expiresAt: Date,
     parameters: OAuthAuthorizationRequestParameters,
-    account: Account,
-    authorizationDetails: null | any,
-  ): Promise<OAuthTokenResponse> {
-    const tokenResponse: OAuthTokenResponse = {
+    sub: Sub,
+  ): OAuthTokenResponse {
+    return {
       access_token: accessToken,
       token_type: parameters.dpop_jkt ? 'DPoP' : 'Bearer',
       refresh_token: refreshToken,
       scope: parameters.scope,
-      authorization_details: authorizationDetails,
+
+      // @NOTE using a getter so that the value gets computed when the JSON
+      // response is generated, allowing to value to be as accurate as possible.
       get expires_in() {
         return dateToRelativeSeconds(expiresAt)
       },
@@ -301,10 +278,8 @@ export class TokenManager {
       // ATPROTO extension: add the sub claim to the token response to allow
       // clients to resolve the PDS url (audience) using the did resolution
       // mechanism.
-      sub: account.sub,
+      sub,
     }
-
-    return tokenResponse
   }
 
   protected async validateAccess(
@@ -314,10 +289,6 @@ export class TokenManager {
   ) {
     if (tokenInfo.data.clientId !== client.id) {
       throw new InvalidGrantError(`Token was not issued to this client`)
-    }
-
-    if (tokenInfo.info?.authorizedClients.includes(client.id) === false) {
-      throw new InvalidGrantError(`Client no longer trusted by user`)
     }
 
     if (tokenInfo.data.clientAuth.method !== clientAuth.method) {
@@ -394,17 +365,6 @@ export class TokenManager {
         throw new InvalidGrantError(`Refresh token expired`)
       }
 
-      const authorizationDetails = await callAsync(
-        this.hooks.getAuthorizationDetails,
-        {
-          client,
-          clientAuth,
-          clientMetadata,
-          parameters,
-          account,
-        },
-      )
-
       const nextTokenId = await generateTokenId()
       const nextRefreshToken = await generateRefreshToken()
 
@@ -434,20 +394,22 @@ export class TokenManager {
         },
       )
 
-      const accessToken: OAuthAccessToken = !this.useJwtAccessToken(account)
-        ? nextTokenId
-        : await this.signer.accessToken(client, parameters, {
-            // We don't specify the alg here. We suppose the Resource server will be
-            // able to verify the token using any alg.
-            aud: account.aud,
-            sub: account.sub,
-            alg: undefined,
-            exp: expiresAt,
-            iat: now,
-            jti: nextTokenId,
-            cnf: parameters.dpop_jkt ? { jkt: parameters.dpop_jkt } : undefined,
-            authorization_details: authorizationDetails,
-          })
+      const accessToken: OAuthAccessToken =
+        this.accessTokenType === AccessTokenType.jwt
+          ? await this.signer.accessToken(client, parameters, {
+              // We don't specify the alg here. We suppose the Resource server will be
+              // able to verify the token using any alg.
+              aud: account.aud,
+              sub: account.sub,
+              alg: undefined,
+              exp: expiresAt,
+              iat: now,
+              jti: nextTokenId,
+              cnf: parameters.dpop_jkt
+                ? { jkt: parameters.dpop_jkt }
+                : undefined,
+            })
+          : nextTokenId
 
       const response = await this.buildTokenResponse(
         client,
@@ -455,8 +417,7 @@ export class TokenManager {
         nextRefreshToken,
         expiresAt,
         parameters,
-        account,
-        authorizationDetails,
+        account.sub,
       )
 
       await callAsync(this.hooks.onTokenRefreshed, {
@@ -465,7 +426,6 @@ export class TokenManager {
         clientMetadata,
         account,
         parameters,
-        deviceId: tokenInfo.data.deviceId,
       })
 
       return response
