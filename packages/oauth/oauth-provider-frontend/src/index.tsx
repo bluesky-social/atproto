@@ -10,7 +10,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 import { routeTree } from '#/routeTree.gen'
 import { Provider as LocaleProvider } from '#/locales'
-import { Provider as AccountProvider } from '#/state/account'
 
 const qc = new QueryClient()
 const router = createRouter({ routeTree })
@@ -26,11 +25,9 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <I18nProvider i18n={i18n}>
       <LocaleProvider>
-        <AccountProvider>
-          <QueryClientProvider client={qc}>
-            <RouterProvider router={router} />
-          </QueryClientProvider>
-        </AccountProvider>
+        <QueryClientProvider client={qc}>
+          <RouterProvider router={router} />
+        </QueryClientProvider>
       </LocaleProvider>
     </I18nProvider>
   </StrictMode>,

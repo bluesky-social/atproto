@@ -1,7 +1,7 @@
 import React from 'react'
 
 import { AccountSelector } from '#/components/AccountSelector'
-import { useCurrentAccount } from '#/state/account'
+import { useCurrentAccount } from '#/data/useCurrentAccount'
 import { useCustomizationData } from '#/data/useCustomizationData'
 
 export function Nav() {

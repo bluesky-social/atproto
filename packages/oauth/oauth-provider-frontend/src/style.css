@@ -176,6 +176,8 @@
   --color-text-light: var(--color-contrast-700);
   --color-border-default: var(--color-contrast-200);
   --color-border-dark: var(--color-contrast-400);
+
+  --space-screen: 100vh;
 }
 
 .debug {

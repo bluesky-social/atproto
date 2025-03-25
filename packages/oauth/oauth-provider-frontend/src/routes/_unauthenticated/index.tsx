@@ -11,13 +11,12 @@ import { useAccountsQuery } from '#/data/useAccountsQuery'
 import { Loader } from '#/components/Loader'
 import * as Admonition from '#/components/Admonition'
 import { ContentCard } from '#/components/ContentCard'
-import { useCustomizationData } from '#/data/useCustomizationData'
-import { Link } from '#/components/Link'
+import { Link, InlineLink } from '#/components/Link'
 import { Avatar } from '#/components/Avatar'
 import { getAccountName } from '#/util/getAccountName'
 import { sanitizeHandle } from '#/util/sanitizeHandle'
 
-export const Route = createFileRoute('/')({
+export const Route = createFileRoute('/_unauthenticated/')({
   component: Index,
 })
 
@@ -50,25 +49,19 @@ function Index() {
 
 export function SelectorScreen({ accounts }: { accounts: Account[] }) {
   const { _ } = useLingui()
-  const { logo } = useCustomizationData()
 
   return (
     <>
-      {logo ? (
-        <div className="flex justify-center">
-          <div
-            className="pb-8"
-            style={{ width: 120 }}
-            dangerouslySetInnerHTML={{ __html: logo }}
-          />
-        </div>
-      ) : null}
-
       <ContentCard>
-        <div className="space-y-2">
-          <h1 className="text-text-light text-md font-semibold leading-snug">
-            <Trans>Select an account</Trans>
-          </h1>
+        <div className="space-y-4">
+          <div className="space-y-1">
+            <h1 className="text-text-default text-xl font-bold">
+              <Trans>Accounts</Trans>
+            </h1>
+            <p className="text-text-light">
+              <Trans>Select the account you would like to manage.</Trans>
+            </p>
+          </div>
 
           <div className="space-y-2">
             {accounts.map((a) => (
@@ -102,6 +95,13 @@ export function SelectorScreen({ accounts }: { accounts: Account[] }) {
                 <ChevronRightIcon width={20} className="text-text-light" />
               </Link>
             ))}
+
+            <InlineLink
+              to="/sign-in"
+              className="text-sm text-center text-text-light inline-block w-full pt-2"
+            >
+              <Trans>Sign in with another account</Trans>
+            </InlineLink>
           </div>
         </div>
       </ContentCard>

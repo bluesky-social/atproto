@@ -1,41 +1,29 @@
 import React from 'react'
-import { createFileRoute, Outlet, Navigate } from '@tanstack/react-router'
+import { createFileRoute, Outlet } from '@tanstack/react-router'
 
-import { Footer } from '#/components/Footer'
 import { useCustomizationData } from '#/data/useCustomizationData'
-import { useCurrentAccount } from '#/state/account'
+import * as Layout from '#/components/Layout'
 
 export const Route = createFileRoute('/_unauthenticated')({
-  component: Layout,
+  component: RouteComponent,
 })
 
-function Layout() {
+function RouteComponent() {
   const { logo } = useCustomizationData()
-  const { currentAccount } = useCurrentAccount()
 
-  return currentAccount ? (
-    <Navigate to="/" />
-  ) : (
+  return (
     <>
-      <main className="bg-contrast-0 dark:bg-contrast-25 min-h-screen px-4 md:px-6 pt-16">
-        <div
-          className="mx-auto w-full"
-          style={{ maxWidth: 600, paddingTop: '10vh' }}
-        >
-          {logo ? (
-            <div className="flex justify-center">
-              <div
-                className="pb-8"
-                style={{ width: 120 }}
-                dangerouslySetInnerHTML={{ __html: logo }}
-              />
-            </div>
-          ) : null}
-          <Outlet />
-        </div>
-      </main>
-
-      <Footer />
+      <Layout.Center className="md:pt-[15vh]">
+        {logo ? (
+          <div className="flex justify-center pb-8">
+            <div
+              style={{ width: 120 }}
+              dangerouslySetInnerHTML={{ __html: logo }}
+            />
+          </div>
+        ) : null}
+        <Outlet />
+      </Layout.Center>
     </>
   )
 }
