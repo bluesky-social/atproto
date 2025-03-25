@@ -5,6 +5,7 @@ import { Trans } from '@lingui/react/macro'
 import { Button } from '#/components/Button'
 import { useSessionsQuery, ApplicationSession } from '#/data/useSessionsQuery'
 import { useRevokeSessionsMutation } from '#/data/useRevokeSessionsMutation'
+import { InlineLink } from '#/components/Link'
 
 export const Route = createFileRoute('/_authenticated/$did')({
   component: Sessions,
@@ -27,9 +28,9 @@ export function Sessions() {
   }
   return (
     <>
-      <ul className="flex items-center space-x-2">
-        <li className="text-text-light">Account</li>
-        <li>/</li>
+      <ul className="flex items-center space-x-2 text-text-light">
+        <li><InlineLink to='/' className='text-text-light underline'>Accounts</InlineLink></li>
+        <li className="text-text-default">/</li>
         <li>Home</li>
       </ul>
 
