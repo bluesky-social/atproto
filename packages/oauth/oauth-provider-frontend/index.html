@@ -116,7 +116,6 @@
         loginHint,
         newSessionsRequireConsent: true,
         sessions: [
-          /*
           {
             account: {
               sub: 'did:plc:3jpt2mvvsumj2r7eqk4gzzjz',
@@ -147,7 +146,6 @@
             loginRequired: false,
             consentRequired: false,
           },
-          */
         ],
         scopeDetails: [
           { scope: 'atproto' },
@@ -170,14 +168,14 @@
                 JSON.stringify({
                   consentRequired: false,
                   account: {
-                    sub: 'did:plc:3jpt2mvvsumj2r7eqk4gzzjz',
+                    sub: 'did:plc:dpajgwmnecpdyjyqzjzm6bnb',
                     aud: '',
                     email: 'eric@blueskyweb.xyz',
                     email_verified: true,
-                    name: 'Eric',
-                    preferred_username: 'esb.lol',
+                    name: 'Tom Sawyer',
+                    preferred_username: 'test.esb.lol',
                     picture:
-                      'https://cdn.bsky.app/img/avatar/plain/did:plc:3jpt2mvvsumj2r7eqk4gzzjz/bafkreiaexnb3bkzbaxktm5q3l3txyweflh3smcruigesvroqjrqxec4zv4@jpeg',
+                      'https://cdn.bsky.app/img/avatar/plain/did:plc:dpajgwmnecpdyjyqzjzm6bnb/bafkreia6dx7fhoi6fxwfpgm7jrxijpqci7ap53wpilkpazojwvqlmgud2m@jpeg',
                   },
                 }),
                 { status: 200 },
@@ -200,6 +198,65 @@
                 }),
                 { status: 200 },
               )
+            case '/accounts/api/oauth-sessions':
+              return new Response(
+                JSON.stringify({
+                  sessions: [
+                    {
+                      tokenId: 'abc',
+                      clientMetadata: {
+                        client_id: 'abc',
+                        client_name: 'Bluesky',
+                        client_uri: 'https://bsky.app',
+                        logo_uri:
+                          'https://web-cdn.bsky.app/static/apple-touch-icon.png',
+                      },
+                      deviceMetadata: {
+                        userAgent: 'Firefox',
+                        ipAddress: '192.0.0.1',
+                      },
+                    },
+                    {
+                      tokenId: 'def',
+                      clientMetadata: {
+                        client_id: 'def',
+                        client_name: 'WhiteWind',
+                        client_uri: 'https://whtwnd.com',
+                        logo_uri: 'https://whtwnd.com/whtwnd.svg',
+                      },
+                      deviceMetadata: {
+                        userAgent: 'Arc',
+                        ipAddress: '192.0.0.1',
+                      },
+                    },
+                  ],
+                }),
+                { status: 200 },
+              )
+            case '/accounts/api/account-sessions':
+              return new Response(
+                JSON.stringify({
+                  sessions: [
+                    {
+                      deviceId: 'abc',
+                      deviceMetadata: {
+                        userAgent: 'Web',
+                        ipAddress: '192.0.0.1',
+                      },
+                    },
+                    {
+                      deviceId: 'def',
+                      deviceMetadata: {
+                        userAgent: 'iOS',
+                        ipAddress: '192.0.0.1',
+                      },
+                    },
+                  ],
+                }),
+                { status: 200 },
+              )
+            case '/accounts/api/sign-out':
+            case '/accounts/api/revoke-account-session':
             case '/accounts/api/verify-handle-availability':
             case '/accounts/api/reset-password-request':
             case '/accounts/api/reset-password-confirm':

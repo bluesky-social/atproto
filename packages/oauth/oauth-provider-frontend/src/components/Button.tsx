@@ -3,6 +3,7 @@ import { clsx } from 'clsx'
 
 type ButtonVariantProps = {
   color?: 'primary' | 'secondary'
+  size?: 'sm' | 'md' | 'lg'
 }
 type ButtonStateProps = {
   disabled?: boolean
@@ -11,13 +12,14 @@ type ButtonStateProps = {
 export function Button({
   children,
   color = 'primary',
+  size = 'md',
   ...rest
 }: React.ButtonHTMLAttributes<HTMLButtonElement> &
   ButtonVariantProps &
   ButtonStateProps & {
     children: React.ReactNode
   }) {
-  const cn = useButtonStyles({ color, disabled: rest.disabled })
+  const cn = useButtonStyles({ color, size, disabled: rest.disabled })
   return (
     <button
       {...rest}
@@ -29,12 +31,21 @@ export function Button({
   )
 }
 
+function Text({ children }: { children: React.ReactNode }) {
+  return <span>{children}</span>
+}
+
+Button.Text = Text
+
 export type ButtonStyleProps = ButtonVariantProps & ButtonStateProps
 
-export function useButtonStyles({ color, disabled }: ButtonStyleProps) {
+export function useButtonStyles({ color, size, disabled }: ButtonStyleProps) {
   return React.useMemo(() => {
     return clsx([
-      'flex-1 block text-center px-6 py-3 rounded-md text-md font-medium',
+      'flex-1 flex items-center justify-center text-center rounded-md font-medium',
+      size === 'sm' && ['px-3 h-7 space-x-1', 'text-sm'],
+      size === 'md' && ['px-5 h-10 space-x-1', 'text-md'],
+      size === 'lg' && ['px-6 h-12 space-x-2', 'text-md'],
       color === 'primary' && [
         disabled
           ? ['bg-primary-400 text-primary-100', 'cursor-not-allowed']
@@ -42,6 +53,15 @@ export function useButtonStyles({ color, disabled }: ButtonStyleProps) {
               'bg-primary-500 text-white',
               'hover:bg-primary-600 focus:bg-primary-600',
               'focus:outline-none focus:shadow-sm focus:shadow-primary-700/30',
+            ],
+      ],
+      color === 'secondary' && [
+        disabled
+          ? ['bg-contrast-300 text-white/50', 'cursor-not-allowed']
+          : [
+              'bg-contrast-300 text-white',
+              'hover:bg-contrast-400 focus:bg-contrast-400',
+              'focus:outline-none focus:shadow-sm focus:shadow-contrast-700/30',
             ],
       ],
     ])
