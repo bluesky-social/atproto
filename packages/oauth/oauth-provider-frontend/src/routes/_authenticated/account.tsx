@@ -3,7 +3,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { Trans } from '@lingui/react/macro'
 
 import { Button } from '#/components/Button'
-import { useSession } from '#/state/session'
+import { useCurrentAccount } from '#/state/account'
 import { useSessionsQuery, ApplicationSession } from '#/data/useSessionsQuery'
 import { useRevokeSessionsMutation } from '#/data/useRevokeSessionsMutation'
 
@@ -12,13 +12,13 @@ export const Route = createFileRoute('/_authenticated/account')({
 })
 
 export function Sessions() {
-  const { session } = useSession()
+  const { currentAccount } = useCurrentAccount()
   const {
     data: sessions,
     error,
     isLoading,
   } = useSessionsQuery({
-    did: session!.account.sub,
+    did: currentAccount!.did,
   })
   const { mutateAsync: revokeSessions } = useRevokeSessionsMutation()
   const revokeAll = async () => {

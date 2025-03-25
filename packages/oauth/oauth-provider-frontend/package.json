@@ -28,6 +28,7 @@
     "@atproto-labs/fetch": "^0.2.2",
     "@atproto-labs/rollup-plugin-bundle-manifest": "^0.1.2",
     "@atproto/oauth-provider-api": "workspace:*",
+    "@atproto/oauth-types": "^0.2.4",
     "@lingui/cli": "^5.2.0",
     "@lingui/swc-plugin": "^5.4.0",
     "@lingui/vite-plugin": "^5.2.0",

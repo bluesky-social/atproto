@@ -3,16 +3,16 @@ import { createFileRoute, Outlet, Navigate } from '@tanstack/react-router'
 
 import { Nav } from '#/components/Nav'
 import { Footer } from '#/components/Footer'
-import { useSession } from '#/state/session'
+import { useCurrentAccount } from '#/state/account'
 
 export const Route = createFileRoute('/_authenticated')({
   component: RouteComponent,
 })
 
 function RouteComponent() {
-  const { session } = useSession()
+  const { currentAccount } = useCurrentAccount()
 
-  return !session ? (
+  return !currentAccount ? (
     <Navigate to="/sign-in" />
   ) : (
     <>

@@ -8,12 +8,10 @@ import zod from 'zod'
 import { clsx } from 'clsx'
 
 import {
-  Session,
   SecondAuthenticationFactorRequiredError,
   InvalidCredentialsError,
 } from '#/api'
 import { useValidateHandle } from '#/util/useValidateHandle'
-import { useSession } from '#/state/session'
 import * as Form from '#/components/forms'
 import { Button } from '#/components/Button'
 import { InlineLink } from '#/components/Link'
@@ -43,7 +41,6 @@ function RouteComponent() {
 
 function LoginForm() {
   const { _ } = useLingui()
-  const { setSession } = useSession()
   const validateHandle = useValidateHandle()
   const [showCode, setShowCode] = React.useState(false)
   const [error, setError] = React.useState('')
@@ -102,7 +99,6 @@ function LoginForm() {
             remember: value.remember,
           }),
         )
-        setSession(res as Session)
       } catch (e) {
         if (e instanceof SecondAuthenticationFactorRequiredError) {
           setShowCode(true)
@@ -113,21 +109,6 @@ function LoginForm() {
           setError(_(msg`An error occurred, please try again.`))
         }
       }
-      // setSession({
-      //   account: {
-      //     sub: '',
-      //     aud: '',
-      //     email: 'eric@blueskyweb.xyz',
-      //     email_verified: true,
-      //     name: 'Eric',
-      //     preferred_username: '@esb.lol',
-      //     picture:
-      //       'https://cdn.bsky.app/img/avatar/plain/did:plc:3jpt2mvvsumj2r7eqk4gzzjz/bafkreiaexnb3bkzbaxktm5q3l3txyweflh3smcruigesvroqjrqxec4zv4@jpeg',
-      //   },
-      //   selected: false, // what
-      //   loginRequired: false, // what
-      //   consentRequired: false, // what
-      // })
     },
   })
 

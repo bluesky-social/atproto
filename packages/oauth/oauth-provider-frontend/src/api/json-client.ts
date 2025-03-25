@@ -9,7 +9,8 @@ export type Options = {
 
 export type EndpointPath = `/${string}`
 export type EndpointDefinition = {
-  input: Json
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE'
+  input?: Json
   output: Json | void
 }
 

@@ -1,11 +1,11 @@
 import React from 'react'
 
 import { AccountSelector } from '#/components/AccountSelector'
-import { useSession } from '#/state/session'
+import { useCurrentAccount } from '#/state/account'
 import { useCustomizationData } from '#/data/useCustomizationData'
 
 export function Nav() {
-  const { session } = useSession()
+  const { currentAccount } = useCurrentAccount()
   const { logo } = useCustomizationData()
 
   return (
@@ -20,7 +20,7 @@ export function Nav() {
           <div />
         )}
 
-        {session && <AccountSelector />}
+        {currentAccount && <AccountSelector />}
       </nav>
       <div className="h-15" />
     </>

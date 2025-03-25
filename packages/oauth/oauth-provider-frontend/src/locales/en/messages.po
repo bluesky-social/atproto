@@ -13,45 +13,162 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: src/routes/index.tsx:116
+#: src/routes/_unauthenticated/sign-in.tsx:137
 msgid "@handle or email"
 msgstr "@handle or email"
+
+#: src/routes/_unauthenticated/reset-password.tsx:64
+msgid "A new password is required"
+msgstr "A new password is required"
 
 #: src/App.tsx:43
 #: src/routes/sessions.tsx:47
 #~ msgid "Account home"
 #~ msgstr "Account home"
 
-#: src/routes/index.tsx:159
+#: src/routes/_unauthenticated/sign-in.tsx:109
+#: src/routes/_unauthenticated/reset-password.tsx:50
+#: src/routes/_unauthenticated/reset-password.tsx:77
+msgid "An error occurred, please try again."
+msgstr "An error occurred, please try again."
+
+#: src/routes/_unauthenticated/reset-password.tsx:113
+#: src/routes/_unauthenticated/reset-password.tsx:184
+msgid "Back to sign in"
+msgstr "Back to sign in"
+
+#: src/routes/_unauthenticated/reset-password.tsx:286
+msgid "Click here to send a new code to your email."
+msgstr "Click here to send a new code to your email."
+
+#: src/routes/_unauthenticated/sign-in.tsx:175
+#: src/routes/_unauthenticated/reset-password.tsx:211
 msgid "Code"
 msgstr "Code"
+
+#: src/routes/_unauthenticated/reset-password.tsx:281
+msgid "Don't see the email? <0>Try sending again.</0>"
+msgstr "Don't see the email? <0>Try sending again.</0>"
+
+#: src/routes/_unauthenticated/reset-password.tsx:140
+msgid "Email"
+msgstr "Email"
+
+#: src/routes/_unauthenticated/reset-password.tsx:61
+msgid "Email code is required"
+msgstr "Email code is required"
+
+#: src/routes/_unauthenticated/reset-password.tsx:41
+msgid "Email is required"
+msgstr "Email is required"
+
+#: src/routes/_unauthenticated/reset-password.tsx:243
+msgid "Enter a new password"
+msgstr "Enter a new password"
+
+#: src/routes/_unauthenticated/reset-password.tsx:145
+msgid "Enter your email"
+msgstr "Enter your email"
+
+#: src/routes/_unauthenticated/reset-password.tsx:123
+msgid "Enter your email to receive a reset code."
+msgstr "Enter your email to receive a reset code."
+
+#: src/routes/_unauthenticated/sign-in.tsx:231
+msgid "Forgot password?"
+msgstr "Forgot password?"
+
+#: src/routes/_unauthenticated/reset-password.tsx:175
+msgid "Get reset code"
+msgstr "Get reset code"
+
+#: src/util/useValidateHandle.ts:36
+msgid "Handle contains disallowed characters"
+msgstr "Handle contains disallowed characters"
+
+#: src/util/useValidateHandle.ts:42
+msgid "Handle domain needs at least two parts"
+msgstr "Handle domain needs at least two parts"
+
+#: src/util/useValidateHandle.ts:54
+msgid "Handle final component must start with a letter"
+msgstr "Handle final component must start with a letter"
+
+#: src/util/useValidateHandle.ts:57
+#: src/util/useValidateHandle.ts:69
+msgid "Handle is invalid"
+msgstr "Handle is invalid"
+
+#: src/util/useValidateHandle.ts:39
+msgid "Handle is too long"
+msgstr "Handle is too long"
+
+#: src/util/useValidateHandle.ts:48
+msgid "Handle part is too long"
+msgstr "Handle part is too long"
+
+#: src/util/useValidateHandle.ts:45
+msgid "Handle parts can not be empty"
+msgstr "Handle parts can not be empty"
+
+#: src/util/useValidateHandle.ts:51
+msgid "Handle parts can not start or end with hyphens"
+msgstr "Handle parts can not start or end with hyphens"
 
 #: src/App.tsx:7
 #~ msgid "Hello, world!"
 #~ msgstr "Hello, world!"
 
-#: src/routes/index.tsx:111
+#: src/routes/_unauthenticated/sign-in.tsx:132
 msgid "Identifier"
 msgstr "Identifier"
 
-#: src/routes/sessions.tsx:69
+#: src/routes/_unauthenticated/sign-in.tsx:64
+#: src/routes/_unauthenticated/reset-password.tsx:40
+msgid "Invalid email"
+msgstr "Invalid email"
+
+#: src/routes/_unauthenticated/sign-in.tsx:107
+msgid "Invalid identifier or password."
+msgstr "Invalid identifier or password."
+
+#: src/routes/_authenticated/account.tsx:51
 msgid "Log out of all applications"
 msgstr "Log out of all applications"
 
-#: src/routes/index.tsx:137
-#: src/routes/index.tsx:143
+#: src/routes/_unauthenticated/sign-in.tsx:152
+#: src/routes/_unauthenticated/sign-in.tsx:158
+#: src/routes/_unauthenticated/reset-password.tsx:236
 msgid "Password"
 msgstr "Password"
 
+#: src/routes/_unauthenticated/sign-in.tsx:77
+msgid "Password is required"
+msgstr "Password is required"
+
+#: src/routes/_unauthenticated/reset-password.tsx:65
+msgid "Password must be at least 8 characters"
+msgstr "Password must be at least 8 characters"
+
 #: src/data/useHydrationData/index.ts:16
+#: src/data/useHydrationData/index.ts:25
 msgid "PDS configuration error"
 msgstr "PDS configuration error"
 
-#: src/routes/sessions.tsx:62
+#: src/routes/_unauthenticated/sign-in.tsx:204
+msgid "Remember this account on this device"
+msgstr "Remember this account on this device"
+
+#: src/routes/_unauthenticated/reset-password.tsx:120
+#: src/routes/_unauthenticated/reset-password.tsx:275
+msgid "Reset password"
+msgstr "Reset password"
+
+#: src/routes/_authenticated/account.tsx:92
 msgid "Revoke"
 msgstr "Revoke"
 
-#: src/routes/sessions.tsx:72
+#: src/routes/_authenticated/account.tsx:55
 msgid "Revoke all"
 msgstr "Revoke all"
 
@@ -59,9 +176,21 @@ msgstr "Revoke all"
 msgid "Select an account"
 msgstr "Select an account"
 
-#: src/routes/index.tsx:181
+#: src/routes/_unauthenticated/sign-in.tsx:222
 msgid "Sign in"
 msgstr "Sign in"
+
+#: src/routes/_unauthenticated/reset-password.tsx:106
+msgid "Success!"
+msgstr "Success!"
+
+#: src/data/useHydrationData/index.ts:27
+msgid "The page is missing required authorization data"
+msgstr "The page is missing required authorization data"
+
+#: src/data/useAuthorizationData.ts:11
+msgid "The page is missing required authorization data."
+msgstr "The page is missing required authorization data."
 
 #: src/data/useHydrationData/index.ts:18
 msgid "The page is missing required customization data"
@@ -75,6 +204,11 @@ msgstr "The page is missing required customization data."
 msgid "Whoops! An error occurred."
 msgstr "Whoops! An error occurred."
 
-#: src/routes/index.tsx:164
+#: src/routes/_unauthenticated/sign-in.tsx:180
+#: src/routes/_unauthenticated/reset-password.tsx:217
 msgid "XXXXX-XXXXX"
 msgstr "XXXXX-XXXXX"
+
+#: src/routes/_unauthenticated/reset-password.tsx:109
+msgid "Your password has been reset."
+msgstr "Your password has been reset."

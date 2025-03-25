@@ -1154,6 +1154,9 @@ importers:
       '@atproto/oauth-provider-api':
         specifier: workspace:*
         version: link:../oauth-provider-api
+      '@atproto/oauth-types':
+        specifier: ^0.2.4
+        version: 0.2.4
       '@lingui/cli':
         specifier: ^5.2.0
         version: 5.2.0(typescript@5.6.3)
@@ -1853,6 +1856,12 @@ packages:
 
   '@atproto/crypto@0.1.0':
     resolution: {integrity: sha512-9xgFEPtsCiJEPt9o3HtJT30IdFTGw5cQRSJVIy5CFhqBA4vDLcdXiRDLCjkzHEVbtNCsHUW6CrlfOgbeLPcmcg==}
+
+  '@atproto/jwk@0.1.4':
+    resolution: {integrity: sha512-dSRuEi0FbxL5ln6hEFHp5ZW01xbQH9yJi5odZaEYpcA6beZHf/bawlU12CQy/CDsbC3FxSqrBw7Q2t7mvdSBqw==}
+
+  '@atproto/oauth-types@0.2.4':
+    resolution: {integrity: sha512-V2LnlXi1CSmBQWTQgDm8l4oN7xYxlftVwM7hrvYNP+Jxo3Ozfe0QLK1Wy/CH6/ZqzrBBhYvcbf4DJYTUwPA+hw==}
 
   '@atproto/pds@0.3.0-entryway.3':
     resolution: {integrity: sha512-hc/KcBgFjSfrnNgrc9vx/QaCov79cXbRRQEWrAt/rdMLhcFEGCydN7ukddjOiLkLdhDqywSHrLOEbqg+MReQXw==}
@@ -10534,6 +10543,16 @@ snapshots:
       multiformats: 9.9.0
       one-webcrypto: 1.0.3
       uint8arrays: 3.0.0
+
+  '@atproto/jwk@0.1.4':
+    dependencies:
+      multiformats: 9.9.0
+      zod: 3.24.2
+
+  '@atproto/oauth-types@0.2.4':
+    dependencies:
+      '@atproto/jwk': 0.1.4
+      zod: 3.24.2
 
   '@atproto/pds@0.3.0-entryway.3':
     dependencies:

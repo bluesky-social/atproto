@@ -1,4 +1,4 @@
-import type { ApiEndpoints } from '@atproto/oauth-provider-api'
+import type { ApiEndpoints } from '#/api/temp-types'
 import {
   JsonClient,
   JsonErrorPayload,
@@ -13,7 +13,7 @@ export type AcceptData = {
 
 export class Api extends JsonClient<ApiEndpoints> {
   constructor(csrfToken: string) {
-    const baseUrl = new URL('/oauth/authorize', window.origin).toString()
+    const baseUrl = new URL('/accounts/api', window.origin).toString()
     super(baseUrl, csrfToken)
   }
 

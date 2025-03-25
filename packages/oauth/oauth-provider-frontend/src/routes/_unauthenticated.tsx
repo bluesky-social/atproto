@@ -3,7 +3,7 @@ import { createFileRoute, Outlet, Navigate } from '@tanstack/react-router'
 
 import { Footer } from '#/components/Footer'
 import { useCustomizationData } from '#/data/useCustomizationData'
-import { useSession } from '#/state/session'
+import { useCurrentAccount } from '#/state/account'
 
 export const Route = createFileRoute('/_unauthenticated')({
   component: Layout,
@@ -11,9 +11,9 @@ export const Route = createFileRoute('/_unauthenticated')({
 
 function Layout() {
   const { logo } = useCustomizationData()
-  const { session } = useSession()
+  const { currentAccount } = useCurrentAccount()
 
-  return session ? (
+  return currentAccount ? (
     <Navigate to="/account" />
   ) : (
     <>

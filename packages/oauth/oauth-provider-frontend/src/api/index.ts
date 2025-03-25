@@ -1,16 +1,26 @@
 import React from 'react'
 import cookies from 'js-cookie'
+import {
+  Session as SessionBase,
+  AuthorizeData as AuthorizeDataBase,
+} from '@atproto/oauth-provider-api'
 
 import { Api } from '#/api/client'
 import { useAuthorizationData } from '#/data/useAuthorizationData'
 
 export type {
-  Session,
   LocalizedString,
-  AuthorizeData,
   CustomizationData,
   ErrorData,
 } from '@atproto/oauth-provider-api'
+
+export type Session = SessionBase & {
+  did: string
+}
+
+export type AuthorizeData = Omit<AuthorizeDataBase, 'sessions'> & {
+  sessions: Session[]
+}
 
 export {
   SecondAuthenticationFactorRequiredError,
