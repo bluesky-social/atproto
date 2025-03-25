@@ -42,6 +42,17 @@ export type ApiEndpoints = {
     method: 'GET'
     output: { accounts: Account[] }
   }
+  /**
+   * @NOTE can be revoked using the oauth revocation endpoint (json or form
+   * encoded)
+   *
+   * ```http
+   * POST /oauth/revoke
+   * Content-Type: application/x-www-form-urlencoded
+   *
+   * token=<tokenId>
+   * ```
+   */
   '/oauth-sessions': {
     method: 'GET'
     params: { account: string }
