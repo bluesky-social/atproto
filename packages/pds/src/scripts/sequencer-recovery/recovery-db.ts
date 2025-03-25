@@ -1,3 +1,4 @@
+import path from 'node:path'
 import { Kysely } from 'kysely'
 import { Database, Migrator } from '../../db'
 
@@ -18,6 +19,13 @@ export type RecoveryDbSchema = {
 }
 
 export type RecoveryDb = Database<RecoveryDbSchema>
+
+export const getRecoveryDbFromSequencerLoc = (
+  sequencerLoc: string,
+): Promise<RecoveryDb> => {
+  const recoveryDbLoc = path.join(path.dirname(sequencerLoc), 'recovery.sqlite')
+  return getAndMigrateRecoveryDb(recoveryDbLoc)
+}
 
 export const getAndMigrateRecoveryDb = async (
   location: string,

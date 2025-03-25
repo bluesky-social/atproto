@@ -26,11 +26,14 @@ import { AccountEvt, CommitEvt, SeqEvt, Sequencer } from '../../sequencer'
 import { RecoveryDb } from './recovery-db'
 import { UserQueues } from './user-queues'
 
-export type RecovererContext = {
-  recoveryDb: RecoveryDb
+export type RecovererContextNoDb = {
   sequencer: Sequencer
   accountManager: AccountManager
   actorStore: ActorStore
+}
+
+export type RecovererContext = RecovererContextNoDb & {
+  recoveryDb: RecoveryDb
 }
 
 const PAGE_SIZE = 5000

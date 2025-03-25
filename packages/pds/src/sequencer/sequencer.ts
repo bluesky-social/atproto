@@ -33,7 +33,7 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
   triesWithNoResults = 0
 
   constructor(
-    dbLocation: string,
+    public dbLocation: string,
     public crawlers: Crawlers,
     public lastSeen = 0,
     disableWalAutoCheckpoint = false,

@@ -1,20 +1,26 @@
 import fs from 'node:fs/promises'
 import { wait } from '@atproto/common'
 import { Sequencer } from '../sequencer'
-import { getAndMigrateRecoveryDb } from './sequencer-recovery/recovery-db'
+import { getRecoveryDbFromSequencerLoc } from './sequencer-recovery/recovery-db'
 import { parseIntArg } from './util'
 
-type Context = {
+export type PublishIdentityContext = {
   sequencer: Sequencer
 }
 
-export const publishIdentity = async (ctx: Context, args: string[]) => {
+export const publishIdentity = async (
+  ctx: PublishIdentityContext,
+  args: string[],
+) => {
   const dids = args
   await publishIdentityEvtForDids(ctx, dids)
   console.log('DONE')
 }
 
-export const publishIdentityMany = async (ctx: Context, args: string[]) => {
+export const publishIdentityMany = async (
+  ctx: PublishIdentityContext,
+  args: string[],
+) => {
   const filepath = args[0]
   if (!filepath) {
     throw new Error('Expected filepath as argument')
@@ -32,7 +38,7 @@ export const publishIdentityMany = async (ctx: Context, args: string[]) => {
 }
 
 export const publishIdentityEvtForDids = async (
-  ctx: Context,
+  ctx: PublishIdentityContext,
   dids: string[],
   timeBetween = 0,
 ) => {
@@ -49,15 +55,16 @@ export const publishIdentityEvtForDids = async (
   }
 }
 
-export const publishIdentityRecovery = async (ctx: Context, args: string[]) => {
-  const filepath = args[0]
-  if (!filepath) {
-    throw new Error('Expected filepath as argument')
-  }
-  const timeBetween = args[1] ? parseIntArg(args[1]) : 5
+export const publishIdentityRecovery = async (
+  ctx: PublishIdentityContext,
+  args: string[],
+) => {
+  const timeBetween = args[0] ? parseIntArg(args[0]) : 5
 
-  const db = await getAndMigrateRecoveryDb(filepath)
-  const rows = await db.db
+  const recoveryDb = await getRecoveryDbFromSequencerLoc(
+    ctx.sequencer.dbLocation,
+  )
+  const rows = await recoveryDb.db
     .selectFrom('new_account')
     .select('did')
     .where('new_account.published', '=', 0)
@@ -68,7 +75,7 @@ export const publishIdentityRecovery = async (ctx: Context, args: string[]) => {
   for (const did of dids) {
     try {
       await ctx.sequencer.sequenceIdentityEvt(did)
-      await db.db
+      await recoveryDb.db
         .updateTable('new_account')
         .set({ published: 1 })
         .where('did', '=', did)

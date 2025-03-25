@@ -1,9 +1,17 @@
 import { parseRepoSeqRows } from '../../sequencer'
 import { rebuildRepo } from '../rebuild-repo'
-import { RecovererContext, processSeqEvt } from './recoverer'
+import {
+  RecovererContext,
+  RecovererContextNoDb,
+  processSeqEvt,
+} from './recoverer'
+import { getRecoveryDbFromSequencerLoc } from './recovery-db'
 
-export const repairRepos = async (ctx: RecovererContext) => {
-  const repairRes = await ctx.recoveryDb.db
+export const repairRepos = async (ctx: RecovererContextNoDb) => {
+  const recoveryDb = await getRecoveryDbFromSequencerLoc(
+    ctx.sequencer.dbLocation,
+  )
+  const repairRes = await recoveryDb.db
     .selectFrom('failed')
     .select('did')
     .where('failed.fixed', '=', 0)
@@ -12,7 +20,7 @@ export const repairRepos = async (ctx: RecovererContext) => {
   let fixed = 0
   for (const did of dids) {
     await rebuildRepo(ctx, did, false)
-    await recoverFromSequencer(ctx, did)
+    await recoverFromSequencer({ ...ctx, recoveryDb }, did)
     fixed++
     console.log(`${fixed}/${dids.length}`)
   }
