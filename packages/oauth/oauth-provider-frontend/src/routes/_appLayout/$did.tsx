@@ -7,7 +7,7 @@ import { useSessionsQuery, ApplicationSession } from '#/data/useSessionsQuery'
 import { useRevokeSessionsMutation } from '#/data/useRevokeSessionsMutation'
 import { InlineLink } from '#/components/Link'
 
-export const Route = createFileRoute('/_authenticated/$did')({
+export const Route = createFileRoute('/_appLayout/$did')({
   component: Sessions,
 })
 

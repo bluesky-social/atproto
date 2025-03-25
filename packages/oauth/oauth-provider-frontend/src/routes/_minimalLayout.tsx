@@ -4,7 +4,7 @@ import { createFileRoute, Outlet } from '@tanstack/react-router'
 import { useCustomizationData } from '#/data/useCustomizationData'
 import * as Layout from '#/components/Layout'
 
-export const Route = createFileRoute('/_unauthenticated')({
+export const Route = createFileRoute('/_minimalLayout')({
   component: RouteComponent,
 })
 

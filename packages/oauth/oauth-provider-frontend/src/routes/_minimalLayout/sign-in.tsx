@@ -18,9 +18,8 @@ import { InlineLink } from '#/components/Link'
 import { format2FACode } from '#/util/format2FACode'
 import { useSignInMutation } from '#/data/useSignInMutation'
 import { wait } from '#/util/wait'
-import { Route as HomeRoute } from '#/routes/_authenticated/$did'
 
-export const Route = createFileRoute('/_unauthenticated/sign-in')({
+export const Route = createFileRoute('/_minimalLayout/sign-in')({
   component: RouteComponent,
 })
 
@@ -102,7 +101,7 @@ function LoginForm() {
           }),
         )
         await navigate({
-          to: HomeRoute.fullPath,
+          to: '/$did',
           params: { did: res.account.sub },
         })
       } catch (e) {

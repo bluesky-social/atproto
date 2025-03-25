@@ -17,7 +17,7 @@ import { usePasswordConfirmMutation } from '#/data/usePasswordConfirmMutation'
 import { wait } from '#/util/wait'
 import { ButtonLink } from '#/components/Link'
 
-export const Route = createFileRoute('/_unauthenticated/reset-password')({
+export const Route = createFileRoute('/_minimalLayout/reset-password')({
   component: RouteComponent,
 })
 

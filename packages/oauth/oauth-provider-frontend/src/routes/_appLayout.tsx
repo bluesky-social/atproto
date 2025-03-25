@@ -5,7 +5,7 @@ import { Nav } from '#/components/Nav'
 import { useHasAccounts } from '#/data/useHasAccounts'
 import * as Layout from '#/components/Layout'
 
-export const Route = createFileRoute('/_authenticated')({
+export const Route = createFileRoute('/_appLayout')({
   component: RouteComponent,
 })
 

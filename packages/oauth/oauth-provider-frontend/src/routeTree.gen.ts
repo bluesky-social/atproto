@@ -11,153 +11,154 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
-import { Route as UnauthenticatedImport } from './routes/_unauthenticated'
-import { Route as AuthenticatedImport } from './routes/_authenticated'
-import { Route as UnauthenticatedIndexImport } from './routes/_unauthenticated/index'
-import { Route as UnauthenticatedSignInImport } from './routes/_unauthenticated/sign-in'
-import { Route as UnauthenticatedResetPasswordImport } from './routes/_unauthenticated/reset-password'
-import { Route as AuthenticatedDidImport } from './routes/_authenticated/$did'
+import { Route as MinimalLayoutImport } from './routes/_minimalLayout'
+import { Route as AppLayoutImport } from './routes/_appLayout'
+import { Route as MinimalLayoutIndexImport } from './routes/_minimalLayout/index'
+import { Route as MinimalLayoutSignInImport } from './routes/_minimalLayout/sign-in'
+import { Route as MinimalLayoutResetPasswordImport } from './routes/_minimalLayout/reset-password'
+import { Route as AppLayoutDidImport } from './routes/_appLayout/$did'
 
 // Create/Update Routes
 
-const UnauthenticatedRoute = UnauthenticatedImport.update({
-  id: '/_unauthenticated',
+const MinimalLayoutRoute = MinimalLayoutImport.update({
+  id: '/_minimalLayout',
   getParentRoute: () => rootRoute,
 } as any)
 
-const AuthenticatedRoute = AuthenticatedImport.update({
-  id: '/_authenticated',
+const AppLayoutRoute = AppLayoutImport.update({
+  id: '/_appLayout',
   getParentRoute: () => rootRoute,
 } as any)
 
-const UnauthenticatedIndexRoute = UnauthenticatedIndexImport.update({
+const MinimalLayoutIndexRoute = MinimalLayoutIndexImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => UnauthenticatedRoute,
+  getParentRoute: () => MinimalLayoutRoute,
 } as any)
 
-const UnauthenticatedSignInRoute = UnauthenticatedSignInImport.update({
+const MinimalLayoutSignInRoute = MinimalLayoutSignInImport.update({
   id: '/sign-in',
   path: '/sign-in',
-  getParentRoute: () => UnauthenticatedRoute,
+  getParentRoute: () => MinimalLayoutRoute,
 } as any)
 
-const UnauthenticatedResetPasswordRoute =
-  UnauthenticatedResetPasswordImport.update({
+const MinimalLayoutResetPasswordRoute = MinimalLayoutResetPasswordImport.update(
+  {
     id: '/reset-password',
     path: '/reset-password',
-    getParentRoute: () => UnauthenticatedRoute,
-  } as any)
+    getParentRoute: () => MinimalLayoutRoute,
+  } as any,
+)
 
-const AuthenticatedDidRoute = AuthenticatedDidImport.update({
+const AppLayoutDidRoute = AppLayoutDidImport.update({
   id: '/$did',
   path: '/$did',
-  getParentRoute: () => AuthenticatedRoute,
+  getParentRoute: () => AppLayoutRoute,
 } as any)
 
 // Populate the FileRoutesByPath interface
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/_authenticated': {
-      id: '/_authenticated'
+    '/_appLayout': {
+      id: '/_appLayout'
       path: ''
       fullPath: ''
-      preLoaderRoute: typeof AuthenticatedImport
+      preLoaderRoute: typeof AppLayoutImport
       parentRoute: typeof rootRoute
     }
-    '/_unauthenticated': {
-      id: '/_unauthenticated'
+    '/_minimalLayout': {
+      id: '/_minimalLayout'
       path: ''
       fullPath: ''
-      preLoaderRoute: typeof UnauthenticatedImport
+      preLoaderRoute: typeof MinimalLayoutImport
       parentRoute: typeof rootRoute
     }
-    '/_authenticated/$did': {
-      id: '/_authenticated/$did'
+    '/_appLayout/$did': {
+      id: '/_appLayout/$did'
       path: '/$did'
       fullPath: '/$did'
-      preLoaderRoute: typeof AuthenticatedDidImport
-      parentRoute: typeof AuthenticatedImport
+      preLoaderRoute: typeof AppLayoutDidImport
+      parentRoute: typeof AppLayoutImport
     }
-    '/_unauthenticated/reset-password': {
-      id: '/_unauthenticated/reset-password'
+    '/_minimalLayout/reset-password': {
+      id: '/_minimalLayout/reset-password'
       path: '/reset-password'
       fullPath: '/reset-password'
-      preLoaderRoute: typeof UnauthenticatedResetPasswordImport
-      parentRoute: typeof UnauthenticatedImport
+      preLoaderRoute: typeof MinimalLayoutResetPasswordImport
+      parentRoute: typeof MinimalLayoutImport
     }
-    '/_unauthenticated/sign-in': {
-      id: '/_unauthenticated/sign-in'
+    '/_minimalLayout/sign-in': {
+      id: '/_minimalLayout/sign-in'
       path: '/sign-in'
       fullPath: '/sign-in'
-      preLoaderRoute: typeof UnauthenticatedSignInImport
-      parentRoute: typeof UnauthenticatedImport
+      preLoaderRoute: typeof MinimalLayoutSignInImport
+      parentRoute: typeof MinimalLayoutImport
     }
-    '/_unauthenticated/': {
-      id: '/_unauthenticated/'
+    '/_minimalLayout/': {
+      id: '/_minimalLayout/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof UnauthenticatedIndexImport
-      parentRoute: typeof UnauthenticatedImport
+      preLoaderRoute: typeof MinimalLayoutIndexImport
+      parentRoute: typeof MinimalLayoutImport
     }
   }
 }
 
 // Create and export the route tree
 
-interface AuthenticatedRouteChildren {
-  AuthenticatedDidRoute: typeof AuthenticatedDidRoute
+interface AppLayoutRouteChildren {
+  AppLayoutDidRoute: typeof AppLayoutDidRoute
 }
 
-const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
-  AuthenticatedDidRoute: AuthenticatedDidRoute,
+const AppLayoutRouteChildren: AppLayoutRouteChildren = {
+  AppLayoutDidRoute: AppLayoutDidRoute,
 }
 
-const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
-  AuthenticatedRouteChildren,
+const AppLayoutRouteWithChildren = AppLayoutRoute._addFileChildren(
+  AppLayoutRouteChildren,
 )
 
-interface UnauthenticatedRouteChildren {
-  UnauthenticatedResetPasswordRoute: typeof UnauthenticatedResetPasswordRoute
-  UnauthenticatedSignInRoute: typeof UnauthenticatedSignInRoute
-  UnauthenticatedIndexRoute: typeof UnauthenticatedIndexRoute
+interface MinimalLayoutRouteChildren {
+  MinimalLayoutResetPasswordRoute: typeof MinimalLayoutResetPasswordRoute
+  MinimalLayoutSignInRoute: typeof MinimalLayoutSignInRoute
+  MinimalLayoutIndexRoute: typeof MinimalLayoutIndexRoute
 }
 
-const UnauthenticatedRouteChildren: UnauthenticatedRouteChildren = {
-  UnauthenticatedResetPasswordRoute: UnauthenticatedResetPasswordRoute,
-  UnauthenticatedSignInRoute: UnauthenticatedSignInRoute,
-  UnauthenticatedIndexRoute: UnauthenticatedIndexRoute,
+const MinimalLayoutRouteChildren: MinimalLayoutRouteChildren = {
+  MinimalLayoutResetPasswordRoute: MinimalLayoutResetPasswordRoute,
+  MinimalLayoutSignInRoute: MinimalLayoutSignInRoute,
+  MinimalLayoutIndexRoute: MinimalLayoutIndexRoute,
 }
 
-const UnauthenticatedRouteWithChildren = UnauthenticatedRoute._addFileChildren(
-  UnauthenticatedRouteChildren,
+const MinimalLayoutRouteWithChildren = MinimalLayoutRoute._addFileChildren(
+  MinimalLayoutRouteChildren,
 )
 
 export interface FileRoutesByFullPath {
-  '': typeof UnauthenticatedRouteWithChildren
-  '/$did': typeof AuthenticatedDidRoute
-  '/reset-password': typeof UnauthenticatedResetPasswordRoute
-  '/sign-in': typeof UnauthenticatedSignInRoute
-  '/': typeof UnauthenticatedIndexRoute
+  '': typeof MinimalLayoutRouteWithChildren
+  '/$did': typeof AppLayoutDidRoute
+  '/reset-password': typeof MinimalLayoutResetPasswordRoute
+  '/sign-in': typeof MinimalLayoutSignInRoute
+  '/': typeof MinimalLayoutIndexRoute
 }
 
 export interface FileRoutesByTo {
-  '': typeof AuthenticatedRouteWithChildren
-  '/$did': typeof AuthenticatedDidRoute
-  '/reset-password': typeof UnauthenticatedResetPasswordRoute
-  '/sign-in': typeof UnauthenticatedSignInRoute
-  '/': typeof UnauthenticatedIndexRoute
+  '': typeof AppLayoutRouteWithChildren
+  '/$did': typeof AppLayoutDidRoute
+  '/reset-password': typeof MinimalLayoutResetPasswordRoute
+  '/sign-in': typeof MinimalLayoutSignInRoute
+  '/': typeof MinimalLayoutIndexRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
-  '/_authenticated': typeof AuthenticatedRouteWithChildren
-  '/_unauthenticated': typeof UnauthenticatedRouteWithChildren
-  '/_authenticated/$did': typeof AuthenticatedDidRoute
-  '/_unauthenticated/reset-password': typeof UnauthenticatedResetPasswordRoute
-  '/_unauthenticated/sign-in': typeof UnauthenticatedSignInRoute
-  '/_unauthenticated/': typeof UnauthenticatedIndexRoute
+  '/_appLayout': typeof AppLayoutRouteWithChildren
+  '/_minimalLayout': typeof MinimalLayoutRouteWithChildren
+  '/_appLayout/$did': typeof AppLayoutDidRoute
+  '/_minimalLayout/reset-password': typeof MinimalLayoutResetPasswordRoute
+  '/_minimalLayout/sign-in': typeof MinimalLayoutSignInRoute
+  '/_minimalLayout/': typeof MinimalLayoutIndexRoute
 }
 
 export interface FileRouteTypes {
@@ -167,23 +168,23 @@ export interface FileRouteTypes {
   to: '' | '/$did' | '/reset-password' | '/sign-in' | '/'
   id:
     | '__root__'
-    | '/_authenticated'
-    | '/_unauthenticated'
-    | '/_authenticated/$did'
-    | '/_unauthenticated/reset-password'
-    | '/_unauthenticated/sign-in'
-    | '/_unauthenticated/'
+    | '/_appLayout'
+    | '/_minimalLayout'
+    | '/_appLayout/$did'
+    | '/_minimalLayout/reset-password'
+    | '/_minimalLayout/sign-in'
+    | '/_minimalLayout/'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
-  AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
-  UnauthenticatedRoute: typeof UnauthenticatedRouteWithChildren
+  AppLayoutRoute: typeof AppLayoutRouteWithChildren
+  MinimalLayoutRoute: typeof MinimalLayoutRouteWithChildren
 }
 
 const rootRouteChildren: RootRouteChildren = {
-  AuthenticatedRoute: AuthenticatedRouteWithChildren,
-  UnauthenticatedRoute: UnauthenticatedRouteWithChildren,
+  AppLayoutRoute: AppLayoutRouteWithChildren,
+  MinimalLayoutRoute: MinimalLayoutRouteWithChildren,
 }
 
 export const routeTree = rootRoute
@@ -196,39 +197,39 @@ export const routeTree = rootRoute
     "__root__": {
       "filePath": "__root.tsx",
       "children": [
-        "/_authenticated",
-        "/_unauthenticated"
+        "/_appLayout",
+        "/_minimalLayout"
       ]
     },
-    "/_authenticated": {
-      "filePath": "_authenticated.tsx",
+    "/_appLayout": {
+      "filePath": "_appLayout.tsx",
       "children": [
-        "/_authenticated/$did"
+        "/_appLayout/$did"
       ]
     },
-    "/_unauthenticated": {
-      "filePath": "_unauthenticated.tsx",
+    "/_minimalLayout": {
+      "filePath": "_minimalLayout.tsx",
       "children": [
-        "/_unauthenticated/reset-password",
-        "/_unauthenticated/sign-in",
-        "/_unauthenticated/"
+        "/_minimalLayout/reset-password",
+        "/_minimalLayout/sign-in",
+        "/_minimalLayout/"
       ]
     },
-    "/_authenticated/$did": {
-      "filePath": "_authenticated/$did.tsx",
-      "parent": "/_authenticated"
+    "/_appLayout/$did": {
+      "filePath": "_appLayout/$did.tsx",
+      "parent": "/_appLayout"
     },
-    "/_unauthenticated/reset-password": {
-      "filePath": "_unauthenticated/reset-password.tsx",
-      "parent": "/_unauthenticated"
+    "/_minimalLayout/reset-password": {
+      "filePath": "_minimalLayout/reset-password.tsx",
+      "parent": "/_minimalLayout"
     },
-    "/_unauthenticated/sign-in": {
-      "filePath": "_unauthenticated/sign-in.tsx",
-      "parent": "/_unauthenticated"
+    "/_minimalLayout/sign-in": {
+      "filePath": "_minimalLayout/sign-in.tsx",
+      "parent": "/_minimalLayout"
     },
-    "/_unauthenticated/": {
-      "filePath": "_unauthenticated/index.tsx",
-      "parent": "/_unauthenticated"
+    "/_minimalLayout/": {
+      "filePath": "_minimalLayout/index.tsx",
+      "parent": "/_minimalLayout"
     }
   }
 }

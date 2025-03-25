@@ -16,7 +16,7 @@ import { Avatar } from '#/components/Avatar'
 import { getAccountName } from '#/util/getAccountName'
 import { sanitizeHandle } from '#/util/sanitizeHandle'
 
-export const Route = createFileRoute('/_unauthenticated/')({
+export const Route = createFileRoute('/_minimalLayout/')({
   component: Index,
 })
 

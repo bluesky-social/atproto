@@ -1,6 +1,6 @@
 import React from 'react'
 
-import { Route as AccountRoute } from '#/routes/_authenticated/$did'
+import { Route as AccountRoute } from '#/routes/_appLayout/$did'
 import { useAccountsQuery } from '#/data/useAccountsQuery'
 
 export function useCurrentAccount() {
