@@ -14,7 +14,7 @@ function Layout() {
   const { currentAccount } = useCurrentAccount()
 
   return currentAccount ? (
-    <Navigate to="/account" />
+    <Navigate to="/" />
   ) : (
     <>
       <main className="bg-contrast-0 dark:bg-contrast-25 min-h-screen px-4 md:px-6 pt-16">

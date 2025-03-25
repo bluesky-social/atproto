@@ -16,7 +16,7 @@ import { Route as AuthenticatedImport } from './routes/_authenticated'
 import { Route as IndexImport } from './routes/index'
 import { Route as UnauthenticatedSignInImport } from './routes/_unauthenticated/sign-in'
 import { Route as UnauthenticatedResetPasswordImport } from './routes/_unauthenticated/reset-password'
-import { Route as AuthenticatedAccountImport } from './routes/_authenticated/account'
+import { Route as AuthenticatedDidImport } from './routes/_authenticated/$did'
 
 // Create/Update Routes
 
@@ -49,9 +49,9 @@ const UnauthenticatedResetPasswordRoute =
     getParentRoute: () => UnauthenticatedRoute,
   } as any)
 
-const AuthenticatedAccountRoute = AuthenticatedAccountImport.update({
-  id: '/account',
-  path: '/account',
+const AuthenticatedDidRoute = AuthenticatedDidImport.update({
+  id: '/$did',
+  path: '/$did',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 
@@ -80,11 +80,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UnauthenticatedImport
       parentRoute: typeof rootRoute
     }
-    '/_authenticated/account': {
-      id: '/_authenticated/account'
-      path: '/account'
-      fullPath: '/account'
-      preLoaderRoute: typeof AuthenticatedAccountImport
+    '/_authenticated/$did': {
+      id: '/_authenticated/$did'
+      path: '/$did'
+      fullPath: '/$did'
+      preLoaderRoute: typeof AuthenticatedDidImport
       parentRoute: typeof AuthenticatedImport
     }
     '/_unauthenticated/reset-password': {
@@ -107,11 +107,11 @@ declare module '@tanstack/react-router' {
 // Create and export the route tree
 
 interface AuthenticatedRouteChildren {
-  AuthenticatedAccountRoute: typeof AuthenticatedAccountRoute
+  AuthenticatedDidRoute: typeof AuthenticatedDidRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
-  AuthenticatedAccountRoute: AuthenticatedAccountRoute,
+  AuthenticatedDidRoute: AuthenticatedDidRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
@@ -135,7 +135,7 @@ const UnauthenticatedRouteWithChildren = UnauthenticatedRoute._addFileChildren(
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '': typeof UnauthenticatedRouteWithChildren
-  '/account': typeof AuthenticatedAccountRoute
+  '/$did': typeof AuthenticatedDidRoute
   '/reset-password': typeof UnauthenticatedResetPasswordRoute
   '/sign-in': typeof UnauthenticatedSignInRoute
 }
@@ -143,7 +143,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '': typeof UnauthenticatedRouteWithChildren
-  '/account': typeof AuthenticatedAccountRoute
+  '/$did': typeof AuthenticatedDidRoute
   '/reset-password': typeof UnauthenticatedResetPasswordRoute
   '/sign-in': typeof UnauthenticatedSignInRoute
 }
@@ -153,22 +153,22 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/_unauthenticated': typeof UnauthenticatedRouteWithChildren
-  '/_authenticated/account': typeof AuthenticatedAccountRoute
+  '/_authenticated/$did': typeof AuthenticatedDidRoute
   '/_unauthenticated/reset-password': typeof UnauthenticatedResetPasswordRoute
   '/_unauthenticated/sign-in': typeof UnauthenticatedSignInRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '' | '/account' | '/reset-password' | '/sign-in'
+  fullPaths: '/' | '' | '/$did' | '/reset-password' | '/sign-in'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '' | '/account' | '/reset-password' | '/sign-in'
+  to: '/' | '' | '/$did' | '/reset-password' | '/sign-in'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/_unauthenticated'
-    | '/_authenticated/account'
+    | '/_authenticated/$did'
     | '/_unauthenticated/reset-password'
     | '/_unauthenticated/sign-in'
   fileRoutesById: FileRoutesById
@@ -207,7 +207,7 @@ export const routeTree = rootRoute
     "/_authenticated": {
       "filePath": "_authenticated.tsx",
       "children": [
-        "/_authenticated/account"
+        "/_authenticated/$did"
       ]
     },
     "/_unauthenticated": {
@@ -217,8 +217,8 @@ export const routeTree = rootRoute
         "/_unauthenticated/sign-in"
       ]
     },
-    "/_authenticated/account": {
-      "filePath": "_authenticated/account.tsx",
+    "/_authenticated/$did": {
+      "filePath": "_authenticated/$did.tsx",
       "parent": "/_authenticated"
     },
     "/_unauthenticated/reset-password": {

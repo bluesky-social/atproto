@@ -256,3 +256,23 @@ input[type='checkbox'] {
 select {
   appearance: none;
 }
+
+@keyframes rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+.loader-animation {
+  animation: rotate 500ms linear infinite;
+}
+
+.layout__center {
+  padding-top: 0;
+
+  @variant md {
+    padding-top: 10vh;
+  }
+}

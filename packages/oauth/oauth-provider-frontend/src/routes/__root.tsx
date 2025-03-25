@@ -4,6 +4,7 @@ import { createRootRoute, Outlet } from '@tanstack/react-router'
 
 import { useHydrationData } from '#/data/useHydrationData'
 import { ErrorScreen, RouterErrorComponent } from '#/components/ErrorScreen'
+import { Footer } from '#/components/Footer'
 
 export const Route = createRootRoute({
   component: Root,
@@ -22,7 +23,15 @@ function Root() {
     </>
   ) : (
     <>
-      <Outlet />
+      <main className="px-4 md:px-6 pt-16">
+        <div
+          className="layout__center mx-auto w-full"
+          style={{ maxWidth: 600 }}
+        >
+          <Outlet />
+        </div>
+      </main>
+      <Footer />
       {/* <TanStackRouterDevtools /> */}
     </>
   )
