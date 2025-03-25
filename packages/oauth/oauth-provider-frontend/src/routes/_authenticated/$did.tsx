@@ -29,7 +29,11 @@ export function Sessions() {
   return (
     <>
       <ul className="flex items-center space-x-2 text-text-light">
-        <li><InlineLink to='/' className='text-text-light underline'>Accounts</InlineLink></li>
+        <li>
+          <InlineLink to="/" className="text-text-light underline">
+            Accounts
+          </InlineLink>
+        </li>
         <li className="text-text-default">/</li>
         <li>Home</li>
       </ul>

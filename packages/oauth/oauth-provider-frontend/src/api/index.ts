@@ -1,9 +1,5 @@
 import React from 'react'
 import cookies from 'js-cookie'
-import {
-  Session as SessionBase,
-  AuthorizeData as AuthorizeDataBase,
-} from '@atproto/oauth-provider-api'
 
 import { Api } from '#/api/client'
 import { useAuthorizationData } from '#/data/useAuthorizationData'
@@ -11,24 +7,10 @@ import { useAuthorizationData } from '#/data/useAuthorizationData'
 export type {
   LocalizedString,
   CustomizationData,
+  AuthorizeData,
   ErrorData,
 } from '@atproto/oauth-provider-api'
-
-/**
- * @deprecated use {@link Account} instead
- */
-export type Session = SessionBase & {
-  /**
-   * @deprecated
-   */
-  did: string
-}
-
-export type Account = SessionBase
-
-export type AuthorizeData = Omit<AuthorizeDataBase, 'sessions'> & {
-  sessions: Session[]
-}
+export type { Account } from '#/api/temp-types'
 
 export {
   SecondAuthenticationFactorRequiredError,

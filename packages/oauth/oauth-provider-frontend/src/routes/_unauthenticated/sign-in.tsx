@@ -1,5 +1,5 @@
 import React from 'react'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useForm } from '@tanstack/react-form'
 import { Trans } from '@lingui/react/macro'
 import { useLingui } from '@lingui/react'
@@ -18,6 +18,7 @@ import { InlineLink } from '#/components/Link'
 import { format2FACode } from '#/util/format2FACode'
 import { useSignInMutation } from '#/data/useSignInMutation'
 import { wait } from '#/util/wait'
+import { Route as HomeRoute } from '#/routes/_authenticated/$did'
 
 export const Route = createFileRoute('/_unauthenticated/sign-in')({
   component: RouteComponent,
@@ -45,6 +46,7 @@ function LoginForm() {
   const [showCode, setShowCode] = React.useState(false)
   const [error, setError] = React.useState('')
   const { mutateAsync: signIn } = useSignInMutation()
+  const navigate = useNavigate({ from: Route.fullPath })
 
   const form = useForm({
     defaultValues: {
@@ -99,6 +101,10 @@ function LoginForm() {
             remember: value.remember,
           }),
         )
+        await navigate({
+          to: HomeRoute.fullPath,
+          params: { did: res.account.sub },
+        })
       } catch (e) {
         if (e instanceof SecondAuthenticationFactorRequiredError) {
           setShowCode(true)

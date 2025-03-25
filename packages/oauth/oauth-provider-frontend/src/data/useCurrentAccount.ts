@@ -9,8 +9,7 @@ export function useCurrentAccount() {
 
   return React.useMemo(() => {
     return {
-      currentAccount:
-        accounts?.find((account) => account.account.sub === did) ?? null,
+      currentAccount: accounts?.find((account) => account.sub === did) ?? null,
     }
   }, [accounts, did])
 }
