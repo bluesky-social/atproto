@@ -114,7 +114,9 @@ function LoginForm() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-text-default text-xl font-bold">Sign in</h1>
+      <h1 className="text-text-default text-xl font-bold">
+        <Trans>Sign in</Trans>
+      </h1>
       <form
         onSubmit={(e) => {
           e.preventDefault()
