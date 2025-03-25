@@ -36,7 +36,7 @@ export function Avatar({
       ) : (
         <UserIcon width={size * (1 / 2)} />
       )}
-      <div className="absolute inset-0 border-2 border-white/20 rounded-full" />
+      <div className="absolute inset-0 border-2 border-contrast-100 rounded-full" />
     </div>
   )
 }

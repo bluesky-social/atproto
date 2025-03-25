@@ -59,8 +59,8 @@ export function useButtonStyles({ color, size, disabled }: ButtonStyleProps) {
         disabled
           ? ['bg-contrast-300 text-white/50', 'cursor-not-allowed']
           : [
-              'bg-contrast-300 text-white',
-              'hover:bg-contrast-400 focus:bg-contrast-400',
+              'bg-contrast-500 dark:bg-contrast-300 text-white',
+              'hover:bg-contrast-600 focus:bg-contrast-600 dark:hover:bg-contrast-400 dark:focus:bg-contrast-400',
               'focus:outline-none focus:shadow-sm focus:shadow-contrast-700/30',
             ],
       ],
