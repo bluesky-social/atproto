@@ -9730,7 +9730,14 @@ export const schemaDict = {
       },
       skeletonTrend: {
         type: 'object',
-        required: ['topic', 'displayName', 'link', 'startedAt', 'postCount'],
+        required: [
+          'topic',
+          'displayName',
+          'link',
+          'startedAt',
+          'postCount',
+          'hot',
+        ],
         properties: {
           topic: {
             type: 'string',
@@ -9748,12 +9755,8 @@ export const schemaDict = {
           postCount: {
             type: 'integer',
           },
-          status: {
-            type: 'string',
-            knownValues: ['hot'],
-          },
-          category: {
-            type: 'string',
+          hot: {
+            type: 'boolean',
           },
           dids: {
             type: 'array',
@@ -9766,7 +9769,14 @@ export const schemaDict = {
       },
       trendView: {
         type: 'object',
-        required: ['topic', 'displayName', 'link', 'startedAt', 'postCount'],
+        required: [
+          'topic',
+          'displayName',
+          'link',
+          'startedAt',
+          'postCount',
+          'hot',
+        ],
         properties: {
           topic: {
             type: 'string',
@@ -9784,12 +9794,8 @@ export const schemaDict = {
           postCount: {
             type: 'integer',
           },
-          status: {
-            type: 'string',
-            knownValues: ['hot'],
-          },
-          category: {
-            type: 'string',
+          hot: {
+            type: 'boolean',
           },
           actors: {
             type: 'array',
