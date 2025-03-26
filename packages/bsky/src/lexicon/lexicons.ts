@@ -9736,7 +9736,7 @@ export const schemaDict = {
           'link',
           'startedAt',
           'postCount',
-          'dids',
+          'hot',
         ],
         properties: {
           topic: {
@@ -9755,12 +9755,8 @@ export const schemaDict = {
           postCount: {
             type: 'integer',
           },
-          status: {
-            type: 'string',
-            knownValues: ['hot'],
-          },
-          category: {
-            type: 'string',
+          hot: {
+            type: 'boolean',
           },
           dids: {
             type: 'array',
@@ -9779,7 +9775,7 @@ export const schemaDict = {
           'link',
           'startedAt',
           'postCount',
-          'actors',
+          'hot',
         ],
         properties: {
           topic: {
@@ -9798,12 +9794,8 @@ export const schemaDict = {
           postCount: {
             type: 'integer',
           },
-          status: {
-            type: 'string',
-            knownValues: ['hot'],
-          },
-          category: {
-            type: 'string',
+          hot: {
+            type: 'boolean',
           },
           actors: {
             type: 'array',
@@ -10140,6 +10132,12 @@ export const schemaDict = {
         parameters: {
           type: 'params',
           properties: {
+            viewer: {
+              type: 'string',
+              format: 'did',
+              description:
+                'DID of the account making the request (not included for public/unauthenticated queries).',
+            },
             limit: {
               type: 'integer',
               minimum: 1,
