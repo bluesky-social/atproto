@@ -9,7 +9,6 @@ import {
   is$typed as _is$typed,
   type OmitKey,
 } from '../../../../util'
-import type * as AppBskyActorDefs from '../actor/defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
@@ -80,24 +79,4 @@ export function isTrendingTopic<V>(v: V) {
 
 export function validateTrendingTopic<V>(v: V) {
   return validate<TrendingTopic & V>(v, id, hashTrendingTopic)
-}
-
-export interface Trend {
-  $type?: 'app.bsky.unspecced.defs#trend'
-  topic: string
-  displayName: string
-  link: string
-  startTime: string
-  postCount: number
-  actors: AppBskyActorDefs.ProfileViewBasic[]
-}
-
-const hashTrend = 'trend'
-
-export function isTrend<V>(v: V) {
-  return is$typed(v, id, hashTrend)
-}
-
-export function validateTrend<V>(v: V) {
-  return validate<Trend & V>(v, id, hashTrend)
 }
