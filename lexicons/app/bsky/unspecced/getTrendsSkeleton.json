@@ -4,6 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
+      "description": "Get the current trends on the network",
       "description": "Get the skeleton of trends on the network. Intended to be called and then hydrated through app.bsky.unspecced.getTrends",
       "parameters": {
         "type": "params",
@@ -11,7 +12,7 @@
           "viewer": {
             "type": "string",
             "format": "did",
-            "description": "DID of the account making the request (not included for public/unauthenticated queries)."
+            "description": "DID of the account making the request (not included for public/unauthenticated queries). Used to boost followed accounts in ranking."
           },
           "limit": {
             "type": "integer",

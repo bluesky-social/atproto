@@ -29,9 +29,6 @@ export default function (server: Server, ctx: AppContext) {
       const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
       const headers = noUndefinedVals({
         'accept-language': req.headers['accept-language'],
-        'x-bsky-topics': Array.isArray(req.headers['x-bsky-topics'])
-          ? req.headers['x-bsky-topics'].join(',')
-          : req.headers['x-bsky-topics'],
       })
       const { ...result } = await getTrends(
         { ...params, hydrateCtx: hydrateCtx.copy({ viewer }), headers },
@@ -122,8 +119,6 @@ const presentation = (
       link: t.link,
       startedAt: t.startedAt,
       postCount: t.postCount,
-      status: t.status,
-      category: t.category,
       actors: mapDefined(t.dids ?? [], (did) =>
         ctx.views.profileBasic(did, hydration),
       ),

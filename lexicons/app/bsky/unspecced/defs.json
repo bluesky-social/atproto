@@ -33,21 +33,32 @@
         "link": { "type": "string" }
       }
     },
-    "trend": {
+    "skeletonTrend": {
       "type": "object",
-      "required": [
-        "topic",
-        "displayName",
-        "link",
-        "startTime",
-        "postCount",
-        "actors"
-      ],
+      "required": ["topic", "displayName", "link", "startedAt", "postCount"],
       "properties": {
         "topic": { "type": "string" },
         "displayName": { "type": "string" },
         "link": { "type": "string" },
-        "startTime": { "type": "string" },
+        "startedAt": { "type": "string", "format": "datetime" },
+        "postCount": { "type": "integer" },
+        "dids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "did"
+          }
+        }
+      }
+    },
+    "trendView": {
+      "type": "object",
+      "required": ["topic", "displayName", "link", "startedAt", "postCount"],
+      "properties": {
+        "topic": { "type": "string" },
+        "displayName": { "type": "string" },
+        "link": { "type": "string" },
+        "startedAt": { "type": "string", "format": "datetime" },
         "postCount": { "type": "integer" },
         "actors": {
           "type": "array",
