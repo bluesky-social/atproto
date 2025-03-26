@@ -49,6 +49,7 @@
         "startedAt": { "type": "string", "format": "datetime" },
         "postCount": { "type": "integer" },
         "status": { "type": "string", "knownValues": ["hot"] },
+        "category": { "type": "string" },
         "dids": {
           "type": "array",
           "items": {
@@ -74,6 +75,7 @@
         "startedAt": { "type": "string", "format": "datetime" },
         "postCount": { "type": "integer" },
         "status": { "type": "string", "knownValues": ["hot"] },
+        "category": { "type": "string" },
         "actors": {
           "type": "array",
           "items": {
