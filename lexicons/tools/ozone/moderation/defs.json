@@ -224,8 +224,8 @@
           "ref": "#repoViewDetail"
         },
         "profile": {
-          "type": "ref",
-          "ref": "app.bsky.actor.defs#profileViewDetailed"
+          "type": "union",
+          "refs": []
         },
         "record": {
           "type": "ref",

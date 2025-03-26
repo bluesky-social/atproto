@@ -3,6 +3,9 @@
 exports[`admin get multiple subjects with all relevant details gets multiple subjects with records 1`] = `
 Array [
   Object {
+    "profile": Object {
+      "$type": "app.bsky.actor.defs#profileViewDetailed",
+    },
     "repo": Object {
       "did": "user(0)",
       "email": "alice@test.com",
@@ -144,6 +147,9 @@ Array [
     "type": "account",
   },
   Object {
+    "profile": Object {
+      "$type": "app.bsky.actor.defs#profileViewDetailed",
+    },
     "record": Object {
       "blobCids": Array [],
       "blobs": Array [],

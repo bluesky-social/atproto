@@ -11904,8 +11904,8 @@ export const schemaDict = {
             ref: 'lex:tools.ozone.moderation.defs#repoViewDetail',
           },
           profile: {
-            type: 'ref',
-            ref: 'lex:app.bsky.actor.defs#profileViewDetailed',
+            type: 'union',
+            refs: [],
           },
           record: {
             type: 'ref',
@@ -13089,6 +13089,7 @@ export const schemaDict = {
             subjects: {
               type: 'array',
               maxLength: 100,
+              minLength: 1,
               items: {
                 type: 'string',
               },

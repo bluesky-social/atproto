@@ -1,3 +1,4 @@
+import { ToolsOzoneModerationDefs } from '@atproto/api'
 import { AtUri } from '@atproto/syntax'
 import { AppContext } from '../../context'
 import { Server } from '../../lexicon'
@@ -62,7 +63,10 @@ export default function (server: Server, ctx: AppContext) {
           type,
           repo,
           record,
-          profile,
+          profile: {
+            $type: 'app.bsky.actor.defs#profileViewDetailed',
+            ...profile,
+          },
           status,
           subject,
         })
@@ -82,13 +86,15 @@ export default function (server: Server, ctx: AppContext) {
           subjectView.status = modViews.formatSubjectStatus(status)
       }
 
+      const allSubjects: ToolsOzoneModerationDefs.SubjectView[] = []
+      for (const subject of subjects) {
+        const subjectView = subjectWithDetails.get(subject)
+        if (subjectView) allSubjects.push(subjectView)
+      }
+
       return {
         encoding: 'application/json',
-        body: {
-          subjects: subjects
-            .map((s) => subjectWithDetails.get(s))
-            .filter(Boolean),
-        },
+        body: { subjects: allSubjects },
       }
     },
   })
