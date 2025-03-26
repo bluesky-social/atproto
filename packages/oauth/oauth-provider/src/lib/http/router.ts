@@ -1,7 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { SubCtx, subCtx } from './context.js'
 import { MethodMatcherInput } from './method.js'
-import { asHandler, combineMiddlewares } from './middleware.js'
+import { combineMiddlewares } from './middleware.js'
 import { Params, Path } from './path.js'
 import { RouteMiddleware, createRoute } from './route.js'
 import { Middleware } from './types.js'
@@ -73,7 +73,7 @@ export class Router<
   /**
    * @returns router middleware which dispatches a route matching the request.
    */
-  buildHandler() {
+  buildMiddleware(): Middleware<T, Req, Res> {
     const routerUrl = this.url
 
     // Calling next('router') from a middleware will skip all the remaining
@@ -82,7 +82,7 @@ export class Router<
       skipKeyword: 'router',
     })
 
-    return asHandler<Middleware<T, Req, Res>>(function (this, req, res, next) {
+    return function (this, req, res, next) {
       // Make sure that the context contains a "url". This will allow the add()
       // method to match routes based on the pathname and will allow routes to
       // access the query params (through this.url.searchParams).
@@ -112,8 +112,8 @@ export class Router<
         }
       }
 
-      const context = subCtx(this, 'url', url)
+      const context = subCtx(this, { url })
       middleware.call(context, req, res, next)
-    })
+    }
   }
 }

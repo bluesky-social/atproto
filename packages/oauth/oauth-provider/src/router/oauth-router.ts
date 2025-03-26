@@ -5,12 +5,12 @@ import {
   oauthTokenIdentificationSchema,
   oauthTokenRequestSchema,
 } from '@atproto/oauth-types'
-import { InvalidClientError } from './errors/invalid-client-error.js'
-import { InvalidGrantError } from './errors/invalid-grant-error.js'
-import { InvalidRequestError } from './errors/invalid-request-error.js'
-import { WWWAuthenticateError } from './errors/www-authenticate-error.js'
+import { buildErrorPayload, buildErrorStatus } from '../errors/error-parser.js'
+import { InvalidClientError } from '../errors/invalid-client-error.js'
+import { InvalidGrantError } from '../errors/invalid-grant-error.js'
+import { InvalidRequestError } from '../errors/invalid-request-error.js'
+import { WWWAuthenticateError } from '../errors/www-authenticate-error.js'
 import {
-  Handler,
   Middleware,
   Router,
   cacheControlMiddleware,
@@ -18,14 +18,10 @@ import {
   jsonHandler,
   parseHttpRequest,
   staticJsonMiddleware,
-} from './lib/http/index.js'
-import { extractZodErrorMessage } from './lib/util/zod-error.js'
-import type { OAuthProvider } from './oauth-provider.js'
-import {
-  buildErrorPayload,
-  buildErrorStatus,
-} from './output/build-error-payload.js'
-import { RouterOptions } from './router/router-options.js'
+} from '../lib/http/index.js'
+import { extractZodErrorMessage } from '../lib/util/zod-error.js'
+import type { OAuthProvider } from '../oauth-provider.js'
+import { RouterOptions } from './router-options.js'
 
 // CORS preflight
 const corsHeaders: Middleware = function (req, res, next) {
@@ -62,13 +58,13 @@ const corsPreflight: Middleware = combineMiddlewares([
   },
 ])
 
-export function buildOAuthRouter<
+export function oauthRouter<
   TReq extends IncomingMessage = IncomingMessage,
   TRes extends ServerResponse = ServerResponse,
 >(
   server: OAuthProvider,
   options?: RouterOptions<TReq, TRes>,
-): Handler<void, TReq, TRes> {
+): Router<void, TReq, TRes> {
   const onError = options?.onError
 
   const router = new Router<void, TReq, TRes>(new URL(server.issuer))
@@ -198,7 +194,7 @@ export function buildOAuthRouter<
     }),
   )
 
-  return router.buildHandler()
+  return router
 
   function oauthHandler<T>(
     buildOAuthResponse: (this: T, req: TReq, res: TRes) => unknown,

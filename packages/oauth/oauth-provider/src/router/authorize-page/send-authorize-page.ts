@@ -1,26 +1,25 @@
-import type { ServerResponse } from 'node:http'
-import { LinkDefinition } from '@atproto/oauth-provider-api'
-import { assets } from '@atproto/oauth-provider-ui'
-import { CspConfig, mergeCsp } from '../lib/csp/index.js'
-import { LinkAttrs, cssCode, html, isLinkRel } from '../lib/html/index.js'
-import { CrossOriginEmbedderPolicy } from '../lib/http/security-headers.js'
-import { AVAILABLE_LOCALES, negotiateLocale } from '../lib/locale.js'
+import type { IncomingMessage, ServerResponse } from 'node:http'
+import type {
+  AuthorizeData,
+  AvailableLocales,
+  CustomizationData,
+  LinkDefinition,
+  Session,
+} from '@atproto/oauth-provider-api'
+import { AVAILABLE_LOCALES, assets } from '@atproto/oauth-provider-ui'
+import { Customization } from '../../customization/customization.js'
+import { CspConfig, mergeCsp } from '../../lib/csp/index.js'
+import { declareBackendData } from '../../lib/html/backend-data.js'
+import { LinkAttrs, cssCode, html, isLinkRel } from '../../lib/html/index.js'
+import { extractLocales, setupCsrfToken } from '../../lib/http/request.js'
+import { CrossOriginEmbedderPolicy } from '../../lib/http/security-headers.js'
+import { sendWebPage } from '../../lib/send-web-page.js'
+import { RequestUri } from '../../request/request-uri.js'
+import { AuthorizationResultAuthorize } from '../../result/authorization-result-authorize.js'
 import { buildAssetUrl } from './assets-middleware.js'
-import { declareBackendData } from './backend-data.js'
-import {
-  AuthorizationResultAuthorize,
-  buildAuthorizeData,
-} from './build-authorize-data.js'
-import {
-  Customization,
-  buildCustomizationCss,
-  buildCustomizationData,
-} from './build-customization-data.js'
-import { sendWebPage } from './send-web-page.js'
-
-export type SendPageOptions = {
-  preferredLocales?: readonly string[]
-}
+import { buildCustomizationCss } from './build-customization-css.js'
+import { buildCustomizationData } from './build-customization-data.js'
+import { negotiateLocale } from './negotiate-locale.js'
 
 const AUTHORIZATION_PAGE_CSP: CspConfig = {
   // API calls are made to the same origin
@@ -39,6 +38,10 @@ const HCAPTCHA_CSP: CspConfig = {
   'frame-src': ['https://hcaptcha.com', 'https://*.hcaptcha.com'],
   'style-src': ['https://hcaptcha.com', 'https://*.hcaptcha.com'],
   'connect-src': ['https://hcaptcha.com', 'https://*.hcaptcha.com'],
+}
+
+export function authorizePageCsrfCookie(requestUri: RequestUri) {
+  return `csrf-${requestUri}`
 }
 
 export function sendAuthorizePageFactory(customization: Customization) {
@@ -73,14 +76,17 @@ export function sendAuthorizePageFactory(customization: Customization) {
     customization?.hcaptcha ? HCAPTCHA_CSP : undefined,
   )
 
-  return async function sendAuthorizePage(
+  return function sendAuthorizePage(
+    req: IncomingMessage,
     res: ServerResponse,
     data: AuthorizationResultAuthorize,
-    options?: SendPageOptions,
-  ): Promise<void> {
+  ): void {
     const locale = negotiateLocale(
-      data.parameters.ui_locales?.split(' ') ?? options?.preferredLocales,
+      data.parameters.ui_locales?.split(' ') ?? extractLocales(req),
     )
+
+    const csrfCookieName = authorizePageCsrfCookie(data.authorize.uri)
+    setupCsrfToken(res, csrfCookieName)
 
     return sendWebPage(res, {
       meta: [
@@ -100,9 +106,16 @@ export function sendAuthorizePageFactory(customization: Customization) {
           CrossOriginEmbedderPolicy.unsafeNone
         : CrossOriginEmbedderPolicy.credentialless,
       scripts: [
-        declareBackendData({
+        declareBackendData<{
+          // Matches the variables in "authorization-page.tsx"
+          __availableLocales: AvailableLocales
+          __customizationData: CustomizationData
+          __csrfCookieName: string
+          __authorizeData: AuthorizeData
+        }>({
           __availableLocales: AVAILABLE_LOCALES,
           __customizationData: customizationData,
+          __csrfCookieName: csrfCookieName,
           __authorizeData: buildAuthorizeData(data),
         }),
         // After data
@@ -114,5 +127,27 @@ export function sendAuthorizePageFactory(customization: Customization) {
         customizationCss,
       ],
     })
+  }
+}
+
+export function buildAuthorizeData(
+  data: AuthorizationResultAuthorize,
+): AuthorizeData {
+  return {
+    clientId: data.client.id,
+    clientMetadata: data.client.metadata,
+    clientTrusted: data.client.info.isTrusted,
+    requestUri: data.authorize.uri,
+    loginHint: data.parameters.login_hint,
+    scopeDetails: data.authorize.scopeDetails,
+    sessions: data.authorize.sessions.map(
+      (session): Session => ({
+        // Map to avoid leaking other data that might be present in the session
+        account: session.account,
+        selected: session.selected,
+        loginRequired: session.loginRequired,
+        consentRequired: session.consentRequired,
+      }),
+    ),
   }
 }

@@ -4,9 +4,6 @@ import type { Account, DeviceMetadata } from './types.js'
 // These are the endpoints implemented by the OAuth provider, for it's UI to
 // call.
 
-export const ACCOUNTS_PAGE_URL = '/accounts'
-export const API_ENDPOINT_PREFIX = '/accounts/api'
-
 export type ApiEndpoints = {
   '/verify-handle-availability': {
     method: 'POST'

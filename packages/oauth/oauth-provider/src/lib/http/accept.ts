@@ -71,7 +71,7 @@ export function acceptMiddleware<
 
       if (view) {
         const data = await controller.call(this, req, res)
-        const ctx = subCtx(this, 'data', data)
+        const ctx = subCtx(this, { data })
         if (type) res.setHeader('Content-Type', type)
 
         await view.call(ctx, req, res, next)

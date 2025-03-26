@@ -2,12 +2,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http'
 import { type Readable, pipeline } from 'node:stream'
 import createHttpError from 'http-errors'
 import { Awaitable } from '../util/type.js'
-import {
-  negotiateResponseContent,
-  validateFetchDest,
-  validateFetchMode,
-  validateOrigin,
-} from './request.js'
+import { negotiateResponseContent } from './request.js'
 import {
   SecurityHeadersOptions,
   setSecurityHeaders,
@@ -134,29 +129,5 @@ export function jsonHandler<
     } else {
       next(createHttpError(406, 'Unsupported media type'))
     }
-  }
-}
-
-export function navigationHandler<
-  T = void,
-  Req extends IncomingMessage = IncomingMessage,
-  Res extends ServerResponse = ServerResponse,
->(
-  origin: string,
-  middleware: Middleware<T, Req, Res>,
-): Middleware<T, Req, Res> {
-  return function (req, res, next) {
-    res.setHeader('Referrer-Policy', 'same-origin')
-
-    try {
-      validateFetchMode(req, ['navigate'])
-      validateFetchDest(req, ['document'])
-      validateOrigin(req, origin)
-    } catch (err) {
-      next(err)
-      return
-    }
-
-    return middleware.call(this, req, res, next)
   }
 }

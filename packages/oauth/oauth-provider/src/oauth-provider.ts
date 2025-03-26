@@ -1,4 +1,3 @@
-import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { Redis, RedisOptions } from 'ioredis'
 import { Jwks, Keyset } from '@atproto/jwk'
 import type { Account } from '@atproto/oauth-provider-api'
@@ -50,6 +49,12 @@ import {
   EPHEMERAL_SESSION_MAX_AGE,
   TOKEN_MAX_AGE,
 } from './constants.js'
+import { Branding, BrandingInput } from './customization/branding.js'
+import {
+  Customization,
+  CustomizationInput,
+  customizationSchema,
+} from './customization/customization.js'
 import { DeviceId } from './device/device-id.js'
 import {
   DeviceManager,
@@ -66,25 +71,14 @@ import { InvalidRequestError } from './errors/invalid-request-error.js'
 import { LoginRequiredError } from './errors/login-required-error.js'
 import { UnauthorizedClientError } from './errors/unauthorized-client-error.js'
 import { HcaptchaConfig } from './lib/hcaptcha.js'
-import { Handler, combineMiddlewares } from './lib/http/index.js'
 import { RequestMetadata } from './lib/http/request.js'
 import { dateToEpoch, dateToRelativeSeconds } from './lib/util/date.js'
+import { LocalizedString, MultiLangString } from './lib/util/locale.js'
 import { extractZodErrorMessage } from './lib/util/zod-error.js'
 import { CustomMetadata, buildMetadata } from './metadata/build-metadata.js'
 import { OAuthHooks } from './oauth-hooks.js'
-import { buildOAuthRouter } from './oauth-router.js'
 import { OAuthVerifier, OAuthVerifierOptions } from './oauth-verifier.js'
 import { Sub } from './oidc/sub.js'
-import { buildAuthorizationPageRouter } from './output/authorization-page-router.js'
-import { AuthorizationResultAuthorize } from './output/build-authorize-data.js'
-import {
-  Branding,
-  BrandingInput,
-  Customization,
-  CustomizationInput,
-  customizationSchema,
-} from './output/build-customization-data.js'
-import { AuthorizationResultRedirect } from './output/send-authorize-redirect.js'
 import { ReplayStore, ifReplayStore } from './replay/replay-store.js'
 import { codeSchema } from './request/code.js'
 import { RequestInfo } from './request/request-info.js'
@@ -93,25 +87,28 @@ import { RequestStoreMemory } from './request/request-store-memory.js'
 import { RequestStoreRedis } from './request/request-store-redis.js'
 import { RequestStore, ifRequestStore } from './request/request-store.js'
 import { RequestUri, requestUriSchema } from './request/request-uri.js'
+import { AuthorizationResultAuthorize } from './result/authorization-result-authorize.js'
+import { AuthorizationResultRedirect } from './result/authorization-result-redirect.js'
 import { ErrorHandler } from './router/error-handler.js'
-import { RouterOptions } from './router/router-options.js'
 import { isTokenId } from './token/token-id.js'
 import { TokenManager } from './token/token-manager.js'
 import { TokenStore, asTokenStore } from './token/token-store.js'
 import { VerifyTokenClaimsOptions } from './token/verify-token-claims.js'
 
-export {
-  type Branding,
-  type BrandingInput,
-  type CustomMetadata,
-  type Customization,
-  type CustomizationInput,
-  type ErrorHandler,
-  type Handler,
-  type HcaptchaConfig,
-  Keyset,
-  type OAuthAuthorizationServerMetadata,
-  type RouterOptions,
+export { Keyset }
+export type {
+  AuthorizationResultAuthorize,
+  AuthorizationResultRedirect,
+  Branding,
+  BrandingInput,
+  CustomMetadata,
+  Customization,
+  CustomizationInput,
+  ErrorHandler,
+  HcaptchaConfig,
+  LocalizedString,
+  MultiLangString,
+  OAuthAuthorizationServerMetadata,
 }
 
 type OAuthProviderConfig = {
@@ -611,7 +608,7 @@ export class OAuthProvider extends OAuthVerifier {
           deviceMetadata,
         )
 
-        return { issuer, client, parameters, redirect: { code } }
+        return { issuer, parameters, redirect: { code } }
       }
 
       // Automatic SSO when a did was provided
@@ -628,7 +625,7 @@ export class OAuthProvider extends OAuthVerifier {
               deviceMetadata,
             )
 
-            return { issuer, client, parameters, redirect: { code } }
+            return { issuer, parameters, redirect: { code } }
           }
         }
       }
@@ -1039,28 +1036,6 @@ export class OAuthProvider extends OAuthVerifier {
     }
 
     return super.authenticateToken(tokenType, token, dpopJkt, verifyOptions)
-  }
-
-  /**
-   * @returns An http request handler that can be used with node's http server
-   * or as a middleware with express / connect.
-   */
-  public httpHandler<
-    Req extends IncomingMessage = IncomingMessage,
-    Res extends ServerResponse = ServerResponse,
-  >({ ...options }: RouterOptions<Req, Res> = {}): Handler<void, Req, Res> {
-    // options is a shallow cloned so it's fine to mutate it
-    options.onError ??=
-      process.env['NODE_ENV'] === 'development'
-        ? (req, res, err, msg) => {
-            console.error(`OAuthProvider error (${msg}):`, err)
-          }
-        : undefined
-
-    return combineMiddlewares([
-      buildOAuthRouter(this, options),
-      buildAuthorizationPageRouter(this, options),
-    ])
   }
 }
 

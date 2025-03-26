@@ -34,6 +34,20 @@ import type { ManifestItem } from '@atproto-labs/rollup-plugin-bundle-manifest'
 // eslint-disable-next-line import/no-unresolved
 import bundleManifest from '../assets/bundle-manifest.json'
 
+export const COLOR_NAMES = [
+  // Matches colors defined in tailwind.config.js
+  'brand',
+  'error',
+  'warning',
+  'success',
+] as const
+
+export const AVAILABLE_LOCALES = [
+  // TODO: Add more in this list as translations are added in the PO files
+  'en',
+  'fr',
+] as const
+
 // @NOTE Not relying on ManifestItem to describe this type to avoid dependency
 // of built code on '@atproto-labs/rollup-plugin-bundle-manifest'.
 export type Asset =

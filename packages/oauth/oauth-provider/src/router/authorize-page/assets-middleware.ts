@@ -4,19 +4,19 @@ import {
   validateFetchDest,
   validateFetchSite,
   writeStream,
-} from '../lib/http/index.js'
+} from '../../lib/http/index.js'
 
-export const ASSETS_URL_PREFIX = '/@atproto/oauth-provider/~assets/'
+const ASSETS_URL_PREFIX = '/@atproto/oauth-provider/~assets/'
 
 export function buildAssetUrl(filename: string): string {
   return `${ASSETS_URL_PREFIX}${encodeURIComponent(filename)}`
 }
 
-export const assetsMiddleware: Middleware = (req, res, next) => {
+export const assetsMiddleware: Middleware = function (req, res, next) {
   if (req.method !== 'GET' && req.method !== 'HEAD') return next()
   if (!req.url?.startsWith(ASSETS_URL_PREFIX)) return next()
 
-  const filename = req.url.slice(ASSETS_URL_PREFIX.length)
+  const filename = decodeURIComponent(req.url.slice(ASSETS_URL_PREFIX.length))
   if (!filename) return next()
 
   const asset = assets.get(filename)

@@ -1,12 +1,13 @@
 import { isEmailValid } from '@hapi/address'
 import { isDisposableEmail } from 'disposable-email-domains-js'
 import { z } from 'zod'
+import { Account } from '@atproto/oauth-provider-api'
 import { OAuthScope } from '@atproto/oauth-types'
 import { ensureValidHandle, normalizeHandle } from '@atproto/syntax'
 import { ClientId } from '../client/client-id.js'
 import { DeviceId } from '../device/device-id.js'
 import { HcaptchaVerifyResult } from '../lib/hcaptcha.js'
-import { localeSchema } from '../lib/locale.js'
+import { localeSchema } from '../lib/util/locale.js'
 import { Awaitable, buildInterfaceChecker } from '../lib/util/type.js'
 import {
   HandleUnavailableError,
@@ -15,7 +16,6 @@ import {
 } from '../oauth-errors.js'
 import { Sub } from '../oidc/sub.js'
 import { RequestId } from '../request/request-id.js'
-import { Account } from './account.js'
 import { SignUpInput } from './sign-up-input.js'
 
 // @NOTE Change the length here to force stronger passwords (through a reset)

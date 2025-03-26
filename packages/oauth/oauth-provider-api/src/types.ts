@@ -30,7 +30,7 @@ export type LinkDefinition = {
 
 export type ScopeDetail = {
   scope: string
-  description?: string
+  description?: LocalizedString
 }
 
 export type DeviceMetadata = {

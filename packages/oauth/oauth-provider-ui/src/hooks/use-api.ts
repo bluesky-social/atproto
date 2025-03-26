@@ -39,17 +39,17 @@ function useSafeCallback<F extends (...a: any) => any>(fn: F, deps: unknown[]) {
 }
 
 export type UseApiOptions = {
-  requestUri: string
+  csrfCookieName: string
   sessions?: readonly Session[]
   onRedirected?: () => void
 }
 
 export function useApi({
-  requestUri,
+  csrfCookieName,
   sessions: sessionsInit = [],
   onRedirected,
 }: UseApiOptions) {
-  const csrfToken = useCsrfToken(`csrf-${requestUri}`)
+  const csrfToken = useCsrfToken(csrfCookieName)
   if (!csrfToken) throw new Error('CSRF token is missing')
 
   const api = useMemo(() => new Api(csrfToken), [csrfToken])

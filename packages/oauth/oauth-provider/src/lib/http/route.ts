@@ -50,7 +50,7 @@ export function createRoute<
       const pathname = req.url?.split('?')[0] ?? '/'
       const params = paramsMatcher(pathname)
       if (params) {
-        const context = subCtx(this, 'params', params)
+        const context = subCtx(this, { params })
         return middleware.call(context, req, res, next)
       }
     }
