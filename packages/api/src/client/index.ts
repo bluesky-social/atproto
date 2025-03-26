@@ -191,6 +191,7 @@ import * as ChatBskyActorDefs from './types/chat/bsky/actor/defs.js'
 import * as ChatBskyActorDeleteAccount from './types/chat/bsky/actor/deleteAccount.js'
 import * as ChatBskyActorExportAccountData from './types/chat/bsky/actor/exportAccountData.js'
 import * as ChatBskyConvoAcceptConvo from './types/chat/bsky/convo/acceptConvo.js'
+import * as ChatBskyConvoAddReaction from './types/chat/bsky/convo/addReaction.js'
 import * as ChatBskyConvoDefs from './types/chat/bsky/convo/defs.js'
 import * as ChatBskyConvoDeleteMessageForSelf from './types/chat/bsky/convo/deleteMessageForSelf.js'
 import * as ChatBskyConvoGetConvo from './types/chat/bsky/convo/getConvo.js'
@@ -201,6 +202,7 @@ import * as ChatBskyConvoGetMessages from './types/chat/bsky/convo/getMessages.j
 import * as ChatBskyConvoLeaveConvo from './types/chat/bsky/convo/leaveConvo.js'
 import * as ChatBskyConvoListConvos from './types/chat/bsky/convo/listConvos.js'
 import * as ChatBskyConvoMuteConvo from './types/chat/bsky/convo/muteConvo.js'
+import * as ChatBskyConvoRemoveReaction from './types/chat/bsky/convo/removeReaction.js'
 import * as ChatBskyConvoSendMessage from './types/chat/bsky/convo/sendMessage.js'
 import * as ChatBskyConvoSendMessageBatch from './types/chat/bsky/convo/sendMessageBatch.js'
 import * as ChatBskyConvoUnmuteConvo from './types/chat/bsky/convo/unmuteConvo.js'
@@ -429,6 +431,7 @@ export * as ChatBskyActorDefs from './types/chat/bsky/actor/defs.js'
 export * as ChatBskyActorDeleteAccount from './types/chat/bsky/actor/deleteAccount.js'
 export * as ChatBskyActorExportAccountData from './types/chat/bsky/actor/exportAccountData.js'
 export * as ChatBskyConvoAcceptConvo from './types/chat/bsky/convo/acceptConvo.js'
+export * as ChatBskyConvoAddReaction from './types/chat/bsky/convo/addReaction.js'
 export * as ChatBskyConvoDefs from './types/chat/bsky/convo/defs.js'
 export * as ChatBskyConvoDeleteMessageForSelf from './types/chat/bsky/convo/deleteMessageForSelf.js'
 export * as ChatBskyConvoGetConvo from './types/chat/bsky/convo/getConvo.js'
@@ -439,6 +442,7 @@ export * as ChatBskyConvoGetMessages from './types/chat/bsky/convo/getMessages.j
 export * as ChatBskyConvoLeaveConvo from './types/chat/bsky/convo/leaveConvo.js'
 export * as ChatBskyConvoListConvos from './types/chat/bsky/convo/listConvos.js'
 export * as ChatBskyConvoMuteConvo from './types/chat/bsky/convo/muteConvo.js'
+export * as ChatBskyConvoRemoveReaction from './types/chat/bsky/convo/removeReaction.js'
 export * as ChatBskyConvoSendMessage from './types/chat/bsky/convo/sendMessage.js'
 export * as ChatBskyConvoSendMessageBatch from './types/chat/bsky/convo/sendMessageBatch.js'
 export * as ChatBskyConvoUnmuteConvo from './types/chat/bsky/convo/unmuteConvo.js'
@@ -3481,6 +3485,17 @@ export class ChatBskyConvoNS {
     )
   }
 
+  addReaction(
+    data?: ChatBskyConvoAddReaction.InputSchema,
+    opts?: ChatBskyConvoAddReaction.CallOptions,
+  ): Promise<ChatBskyConvoAddReaction.Response> {
+    return this._client
+      .call('chat.bsky.convo.addReaction', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ChatBskyConvoAddReaction.toKnownErr(e)
+      })
+  }
+
   deleteMessageForSelf(
     data?: ChatBskyConvoDeleteMessageForSelf.InputSchema,
     opts?: ChatBskyConvoDeleteMessageForSelf.CallOptions,
@@ -3572,6 +3587,17 @@ export class ChatBskyConvoNS {
     opts?: ChatBskyConvoMuteConvo.CallOptions,
   ): Promise<ChatBskyConvoMuteConvo.Response> {
     return this._client.call('chat.bsky.convo.muteConvo', opts?.qp, data, opts)
+  }
+
+  removeReaction(
+    data?: ChatBskyConvoRemoveReaction.InputSchema,
+    opts?: ChatBskyConvoRemoveReaction.CallOptions,
+  ): Promise<ChatBskyConvoRemoveReaction.Response> {
+    return this._client
+      .call('chat.bsky.convo.removeReaction', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ChatBskyConvoRemoveReaction.toKnownErr(e)
+      })
   }
 
   sendMessage(
