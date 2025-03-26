@@ -1,4 +1,3 @@
-import { BlockWriter } from '@ipld/car/writer'
 import { CID } from 'multiformats'
 import { z } from 'zod'
 import { cidForCbor, dataToCborBlock, schema as common } from '@atproto/common'
@@ -762,12 +761,6 @@ export class MST {
 
     for (const leaf of leafData.blocks.entries()) {
       yield leaf
-    }
-  }
-
-  async writeToCarStream(car: BlockWriter): Promise<void> {
-    for await (const block of this.carBlockStream()) {
-      await car.put(block)
     }
   }
 

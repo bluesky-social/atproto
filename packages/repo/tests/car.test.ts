@@ -1,5 +1,5 @@
 import { dataToCborBlock, wait } from '@atproto/common'
-import { readCarNew, writeCar } from '../src'
+import { readCarStream, writeCar } from '../src'
 import { randomStr } from './_util'
 
 describe('car', () => {
@@ -18,6 +18,6 @@ describe('car', () => {
     }
     const car = writeCar(root.cid, blockIterator())
 
-    await readCarNew(car)
+    await readCarStream(car)
   })
 })

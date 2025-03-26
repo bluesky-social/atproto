@@ -1,6 +1,4 @@
 import * as stream from 'node:stream'
-import { setImmediate } from 'node:timers/promises'
-import { CarBlockIterator } from '@ipld/car/iterator'
 import * as cbor from '@ipld/dag-cbor'
 import { CID } from 'multiformats/cid'
 import * as ui8 from 'uint8arrays'
@@ -65,7 +63,6 @@ export async function* writeCar(
   yield varint(header.byteLength)
   yield header
   for await (const block of blocks) {
-    console.log(block.cid.bytes.byteLength)
     yield varint(block.cid.bytes.byteLength + block.bytes.byteLength)
     yield block.cid.bytes
     yield block.bytes
@@ -89,7 +86,22 @@ async function* iterateBlocks(blocks: BlockMap) {
   }
 }
 
-export const readCarNew = async (
+export const readCar = async (
+  bytes: Uint8Array,
+): Promise<{ roots: CID[]; blocks: BlockMap }> => {
+  const { roots, blocks } = await readCarStream(bytesToIterable(bytes))
+  const blockMap = new BlockMap()
+  for await (const block of blocks) {
+    blockMap.set(block.cid, block.bytes)
+  }
+  return { roots, blocks: blockMap }
+}
+
+async function* bytesToIterable(bytes: Uint8Array): AsyncIterable<Uint8Array> {
+  yield bytes
+}
+
+export const readCarStream = async (
   car: AsyncIterable<Uint8Array>,
 ): Promise<{
   roots: CID[]
@@ -97,6 +109,9 @@ export const readCarNew = async (
 }> => {
   const reader = new BufferedReader(car)
   const headerSize = await readVarint(reader)
+  if (headerSize === null) {
+    throw new Error('could not parse car header')
+  }
   const headerBytes = await reader.read(headerSize)
   const header = cbor.decode(headerBytes)
   if (!check.is(header, schema.carHeader)) {
@@ -112,6 +127,9 @@ async function* readCarBlocksIter(
 ): AsyncIterable<{ cid: CID; bytes: Uint8Array }> {
   while (!reader.isDone) {
     const blockSize = await readVarint(reader)
+    if (blockSize === null) {
+      break
+    }
     const blockBytes = await reader.read(blockSize)
     const cid = parseDaslCid(blockBytes.slice(0, 36))
     const bytes = blockBytes.slice(36)
@@ -140,11 +158,18 @@ const parseDaslCid = (cidBytes: Uint8Array): CID => {
   return sha256ToCid(rest, codec)
 }
 
-const readVarint = async (reader: BufferedReader): Promise<number> => {
+const readVarint = async (reader: BufferedReader): Promise<number | null> => {
   let done = false
   const bytes: Uint8Array[] = []
   while (!done) {
     const byte = await reader.read(1)
+    if (byte.byteLength === 0) {
+      if (bytes.length > 0) {
+        throw new Error('could not parse varint')
+      } else {
+        return null
+      }
+    }
     bytes.push(byte)
     if (byte[0] < 128) {
       done = true
@@ -191,34 +216,6 @@ export const blocksToCarFile = (
 ): Promise<Uint8Array> => {
   const carStream = blocksToCarStream(root, blocks)
   return streamToBuffer(carStream)
-}
-
-export const carToBlocks = async (
-  car: CarBlockIterator,
-): Promise<{ roots: CID[]; blocks: BlockMap }> => {
-  const roots = await car.getRoots()
-  const blocks = new BlockMap()
-  for await (const block of verifyIncomingCarBlocks(car)) {
-    blocks.set(block.cid, block.bytes)
-    // break up otherwise "synchronous" work in car parsing
-    await setImmediate()
-  }
-  return {
-    roots,
-    blocks,
-  }
-}
-
-export const readCar = async (
-  bytes: Uint8Array,
-): Promise<{ roots: CID[]; blocks: BlockMap }> => {
-  const car = await CarBlockIterator.fromBytes(bytes)
-  return carToBlocks(car)
-}
-
-export const readCarStream = async (stream: AsyncIterable<Uint8Array>) => {
-  const car = await CarBlockIterator.fromIterable(stream)
-  return carToBlocks(car)
 }
 
 export const readCarWithRoot = async (
