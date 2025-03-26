@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.14.11
+
+### Patch Changes
+
+- [#3670](https://github.com/bluesky-social/atproto/pull/3670) [`d87ffc7bf`](https://github.com/bluesky-social/atproto/commit/d87ffc7bfe3c1e792dc84a320544eb2e053d61ce) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Add DM reactions lexicons
+
 ## 0.14.10
 
 ### Patch Changes
