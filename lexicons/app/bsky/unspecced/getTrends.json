@@ -11,7 +11,7 @@
           "viewer": {
             "type": "string",
             "format": "did",
-            "description": "DID of the account making the request (not included for public/unauthenticated queries). Used to boost followed accounts in ranking."
+            "description": "DID of the account making the request (not included for public/unauthenticated queries)."
           },
           "limit": {
             "type": "integer",
