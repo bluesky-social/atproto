@@ -1,10 +1,10 @@
 {
   "lexicon": 1,
-  "id": "app.bsky.unspecced.getTrendsSkeleton",
+  "id": "app.bsky.unspecced.getSuggestedStarterPacks",
   "defs": {
     "main": {
       "type": "query",
-      "description": "Get the skeleton of trends on the network. Intended to be called and then hydrated through app.bsky.unspecced.getTrends",
+      "description": "Get a list of suggested starter packs for a user",
       "parameters": {
         "type": "params",
         "properties": {
@@ -25,13 +25,13 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["trends"],
+          "required": ["starterPacks"],
           "properties": {
-            "trends": {
+            "starterPacks": {
               "type": "array",
               "items": {
                 "type": "ref",
-                "ref": "app.bsky.unspecced.defs#skeletonTrend"
+                "ref": "app.bsky.graph.defs#starterPackViewBasic"
               }
             }
           }
