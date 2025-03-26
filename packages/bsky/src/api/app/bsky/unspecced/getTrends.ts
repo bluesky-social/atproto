@@ -123,6 +123,7 @@ const presentation = (
       startedAt: t.startedAt,
       postCount: t.postCount,
       status: t.status,
+      category: t.category,
       actors: mapDefined(t.dids ?? [], (did) =>
         ctx.views.profileBasic(did, hydration),
       ),
