@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Get a list of suggested starterpacks",
+      "description": "Get a list of suggested starter packs for a user",
       "parameters": {
         "type": "params",
         "properties": {
