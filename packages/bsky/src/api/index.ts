@@ -109,7 +109,6 @@ export default function (server: Server, ctx: AppContext) {
   getSuggestedFollowsByActor(server, ctx)
   getTrendingTopics(server, ctx)
   getTrends(server, ctx)
-  getSuggestedStarterPacks(server, ctx)
   getLabelerServices(server, ctx)
   searchActors(server, ctx)
   searchActorsTypeahead(server, ctx)

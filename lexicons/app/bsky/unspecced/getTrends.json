@@ -24,10 +24,16 @@
       "output": {
         "encoding": "application/json",
         "schema": {
-          "type": "array",
-          "items": {
-            "type": "ref",
-            "ref": "app.bsky.unspecced.defs#trend"
+          "type": "object",
+          "required": ["trends"],
+          "properties": {
+            "trends": {
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "app.bsky.unspecced.defs#trendView"
+              }
+            }
           }
         }
       }

@@ -29,17 +29,9 @@ export default function (server: Server, ctx: AppContext) {
       const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
       const headers = noUndefinedVals({
         'accept-language': req.headers['accept-language'],
-        'x-bsky-topics': Array.isArray(req.headers['x-bsky-topics'])
-          ? req.headers['x-bsky-topics'].join(',')
-          : req.headers['x-bsky-topics'],
       })
       const { ...result } = await getTrends(
-        {
-          ...params,
-          viewer: viewer ?? undefined,
-          hydrateCtx: hydrateCtx.copy({ viewer }),
-          headers,
-        },
+        { ...params, hydrateCtx: hydrateCtx.copy({ viewer }), headers },
         ctx,
       )
       return {
@@ -62,6 +54,7 @@ const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
         headers: params.headers,
       },
     )
+
     return res.data
   } else {
     throw new InternalServerError('Topics agent not available')
@@ -72,15 +65,22 @@ const hydration = async (
   input: HydrationFnInput<Context, Params, SkeletonState>,
 ) => {
   const { ctx, params, skeleton } = input
+
   let dids: string[] = []
   for (const trend of skeleton.trends) {
-    dids.push(...trend.dids)
+    if (trend.dids) {
+      dids.push(...trend.dids)
+    }
   }
+
   dids = dedupeStrs(dids)
+
   const pairs: Map<string, string[]> = new Map()
+
   if (params.viewer) {
     pairs.set(params.viewer, dids)
   }
+
   const [profileState, bidirectionalBlocks] = await Promise.all([
     ctx.hydrator.hydrateProfilesBasic(dids, params.hydrateCtx),
     ctx.hydrator.hydrateBidirectionalBlocks(pairs),
@@ -100,7 +100,7 @@ const noBlocks = (input: RulesFnInput<Context, Params, SkeletonState>) => {
   const filteredSkeleton: SkeletonState = {
     trends: skeleton.trends.map((t) => ({
       ...t,
-      dids: t.dids.filter((did) => !blocks?.get(did)),
+      dids: t.dids?.filter((did) => !blocks?.get(did)),
     })),
   }
 
@@ -119,9 +119,7 @@ const presentation = (
       link: t.link,
       startedAt: t.startedAt,
       postCount: t.postCount,
-      status: t.status,
-      category: t.category,
-      actors: mapDefined(t.dids, (did) =>
+      actors: mapDefined(t.dids ?? [], (did) =>
         ctx.views.profileBasic(did, hydration),
       ),
     })),
