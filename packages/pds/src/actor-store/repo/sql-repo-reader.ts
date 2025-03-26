@@ -3,6 +3,7 @@ import { CID } from 'multiformats/cid'
 import { chunkArray } from '@atproto/common'
 import {
   BlockMap,
+  CarBlock,
   CidSet,
   ReadableBlockstore,
   writeCarStream,
@@ -85,9 +86,7 @@ export class SqlRepoReader extends ReadableBlockstore {
     return writeCarStream(root, this.iterateCarBlocks(since))
   }
 
-  async *iterateCarBlocks(
-    since?: string,
-  ): AsyncIterable<{ cid: CID; bytes: Uint8Array }> {
+  async *iterateCarBlocks(since?: string): AsyncIterable<CarBlock> {
     let cursor: RevCursor | undefined = undefined
     // allow us to write to car while fetching the next page
     do {

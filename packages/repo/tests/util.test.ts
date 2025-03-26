@@ -1,5 +1,5 @@
 import { dataToCborBlock, wait } from '@atproto/common'
-import { writeCar } from '../src'
+import { writeCarStream } from '../src'
 
 describe('Utils', () => {
   describe('writeCar()', () => {
@@ -11,7 +11,7 @@ describe('Utils', () => {
           yield block
           throw new Error('Oops!')
         }
-        const iter = writeCar(null, blockIterator())
+        const iter = writeCarStream(null, blockIterator())
         for await (const _bytes of iter) {
           // no-op
         }

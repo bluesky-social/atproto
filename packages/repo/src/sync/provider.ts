@@ -1,4 +1,5 @@
 import { CID } from 'multiformats/cid'
+import { writeCarStream } from '../car'
 import { CidSet } from '../cid-set'
 import { MissingBlocksError } from '../error'
 import { MST } from '../mst'
@@ -13,7 +14,7 @@ export const getFullRepo = (
   storage: RepoStorage,
   commitCid: CID,
 ): AsyncIterable<Uint8Array> => {
-  return util.writeCar(commitCid, iterateFullRepo(storage, commitCid))
+  return writeCarStream(commitCid, iterateFullRepo(storage, commitCid))
 }
 
 async function* iterateFullRepo(storage: RepoStorage, commitCid: CID) {
@@ -33,7 +34,7 @@ export const getRecords = (
   commitCid: CID,
   paths: RecordPath[],
 ): AsyncIterable<Uint8Array> => {
-  return util.writeCar(
+  return writeCarStream(
     commitCid,
     iterateRecordBlocks(storage, commitCid, paths),
   )

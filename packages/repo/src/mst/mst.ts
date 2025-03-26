@@ -6,6 +6,7 @@ import { CidSet } from '../cid-set'
 import { MissingBlockError, MissingBlocksError } from '../error'
 import * as parse from '../parse'
 import { ReadableBlockstore } from '../storage'
+import { CarBlock } from '../types'
 import * as util from './util'
 
 /**
@@ -725,7 +726,7 @@ export class MST {
 
   // Sync Protocol
 
-  async *carBlockStream(): AsyncIterable<{ cid: CID; bytes: Uint8Array }> {
+  async *carBlockStream(): AsyncIterable<CarBlock> {
     const leaves = new CidSet()
     let toFetch = new CidSet()
     toFetch.add(await this.getPointer())
