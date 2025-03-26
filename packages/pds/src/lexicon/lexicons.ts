@@ -9752,6 +9752,9 @@ export const schemaDict = {
             type: 'string',
             knownValues: ['hot'],
           },
+          category: {
+            type: 'string',
+          },
           dids: {
             type: 'array',
             items: {
@@ -9784,6 +9787,9 @@ export const schemaDict = {
           status: {
             type: 'string',
             knownValues: ['hot'],
+          },
+          category: {
+            type: 'string',
           },
           actors: {
             type: 'array',
