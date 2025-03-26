@@ -52,16 +52,12 @@ function toInsertable(
   return row
 }
 
-export function toDeviceAccountInfo(row: SelectableDeviceAccount): {
-  info: DeviceAccountInfo
-  authorizedClients: OAuthClientId[]
-} {
+export function toDeviceAccountInfo(
+  row: SelectableDeviceAccount,
+): DeviceAccountInfo {
   return {
-    info: {
-      // requestId: null,
-      remembered: row.remember === 1,
-      authenticatedAt: fromDateISO(row.authenticatedAt),
-    },
+    remembered: row.remember === 1,
+    authenticatedAt: fromDateISO(row.authenticatedAt),
     authorizedClients: fromJsonArray<OAuthClientId>(row.authorizedClients),
   }
 }
