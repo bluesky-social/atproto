@@ -402,6 +402,9 @@ importers:
       pino:
         specifier: ^8.21.0
         version: 8.21.0
+      varint:
+        specifier: ^6.0.0
+        version: 6.0.0
     devDependencies:
       jest:
         specifier: ^28.1.2
@@ -1531,6 +1534,9 @@ importers:
       uint8arrays:
         specifier: 3.0.0
         version: 3.0.0
+      varint:
+        specifier: ^6.0.0
+        version: 6.0.0
       zod:
         specifier: ^3.23.8
         version: 3.23.8
@@ -8217,11 +8223,11 @@ packages:
     peerDependencies:
       postcss: ^8.1.0
     dependencies:
-      browserslist: 4.23.0
+      browserslist: 4.24.4
       caniuse-lite: 1.0.30001700
       fraction.js: 4.3.7
       normalize-range: 0.1.2
-      picocolors: 1.0.1
+      picocolors: 1.1.1
       postcss: 8.4.38
       postcss-value-parser: 4.2.0
     dev: true

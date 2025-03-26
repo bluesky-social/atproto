@@ -726,7 +726,7 @@ export class MST {
 
   // Sync Protocol
 
-  async writeToCarStream(car: BlockWriter): Promise<void> {
+  async *carBlockStream(): AsyncIterable<{ cid: CID; bytes: Uint8Array }> {
     const leaves = new CidSet()
     let toFetch = new CidSet()
     toFetch.add(await this.getPointer())
@@ -742,7 +742,7 @@ export class MST {
           cid,
           nodeDataDef,
         )
-        await car.put({ cid, bytes: found.bytes })
+        yield { cid, bytes: found.bytes }
         const entries = await util.deserializeNodeData(this.storage, found.obj)
 
         for (const entry of entries) {
@@ -761,7 +761,13 @@ export class MST {
     }
 
     for (const leaf of leafData.blocks.entries()) {
-      await car.put(leaf)
+      yield leaf
+    }
+  }
+
+  async writeToCarStream(car: BlockWriter): Promise<void> {
+    for await (const block of this.carBlockStream()) {
+      await car.put(block)
     }
   }
 

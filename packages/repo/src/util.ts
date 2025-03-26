@@ -1,9 +1,9 @@
-import { Readable } from 'node:stream'
+import * as stream from 'node:stream'
 import { setImmediate } from 'node:timers/promises'
 import { CarBlockIterator } from '@ipld/car/iterator'
-import { BlockWriter, CarWriter } from '@ipld/car/writer'
 import * as cbor from '@ipld/dag-cbor'
 import { CID } from 'multiformats/cid'
+import { encode as varintEncode } from 'varint'
 import {
   TID,
   byteIterableToStream,
@@ -41,42 +41,75 @@ export async function* verifyIncomingCarBlocks(
   }
 }
 
-// we have to turn the car writer output into a stream in order to properly handle errors
 export function writeCarStream(
   root: CID | null,
-  fn: (car: BlockWriter) => Promise<void>,
-): Readable {
-  const { writer, out } =
-    root !== null ? CarWriter.create(root) : CarWriter.create()
-
-  const stream = byteIterableToStream(out)
-  fn(writer)
-    .catch((err) => {
-      stream.destroy(err)
-    })
-    .finally(() => writer.close())
-  return stream
+  blocks: AsyncIterable<{ cid: CID; bytes: Uint8Array }>,
+): stream.Readable {
+  const iter = writeCar(root, blocks)
+  return byteIterableToStream(iter)
 }
 
 export async function* writeCar(
   root: CID | null,
-  fn: (car: BlockWriter) => Promise<void>,
+  blocks: AsyncIterable<{ cid: CID; bytes: Uint8Array }>,
 ): AsyncIterable<Uint8Array> {
-  const stream = writeCarStream(root, fn)
-  for await (const chunk of stream) {
-    yield chunk
+  const header = new Uint8Array(
+    cbor.encode({
+      version: 1,
+      roots: root ? [root] : [],
+    }),
+  )
+  yield varint(header.byteLength)
+  yield header
+  for await (const block of blocks) {
+    yield varint(block.cid.bytes.byteLength + block.bytes.byteLength)
+    yield block.cid.bytes
+    yield block.bytes
   }
 }
+
+function varint(n: number) {
+  return new Uint8Array(varintEncode(n))
+}
+
+// we have to turn the car writer output into a stream in order to properly handle errors
+// export function writeCarStream(
+//   root: CID | null,
+//   fn: (car: BlockWriter) => Promise<void>,
+// ): Readable {
+//   const { writer, out } =
+//     root !== null ? CarWriter.create(root) : CarWriter.create()
+
+//   const stream = byteIterableToStream(out)
+//   fn(writer)
+//     .catch((err) => {
+//       stream.destroy(err)
+//     })
+//     .finally(() => writer.close())
+//   return stream
+// }
+
+// export async function* writeCar(
+//   root: CID | null,
+//   fn: (car: BlockWriter) => Promise<void>,
+// ): AsyncIterable<Uint8Array> {
+//   const stream = writeCarStream(root, fn)
+//   for await (const chunk of stream) {
+//     yield chunk
+//   }
+// }
 
 export const blocksToCarStream = (
   root: CID | null,
   blocks: BlockMap,
 ): AsyncIterable<Uint8Array> => {
-  return writeCar(root, async (writer) => {
-    for (const entry of blocks.entries()) {
-      await writer.put(entry)
-    }
-  })
+  return writeCar(root, iterateBlocks(blocks))
+}
+
+async function* iterateBlocks(blocks: BlockMap) {
+  for (const entry of blocks.entries()) {
+    yield { cid: entry.cid, bytes: entry.bytes }
+  }
 }
 
 export const blocksToCarFile = (

@@ -5,12 +5,13 @@ describe('Utils', () => {
   describe('writeCar()', () => {
     it('propagates errors', async () => {
       const iterate = async () => {
-        const iter = writeCar(null, async (car) => {
+        async function* blockIterator() {
           await wait(1)
           const block = await dataToCborBlock({ test: 1 })
-          await car.put(block)
+          yield block
           throw new Error('Oops!')
-        })
+        }
+        const iter = writeCar(null, blockIterator())
         for await (const _bytes of iter) {
           // no-op
         }

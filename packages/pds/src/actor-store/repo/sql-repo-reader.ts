@@ -1,6 +1,6 @@
 import { sql } from 'kysely'
 import { CID } from 'multiformats/cid'
-import { chunkArray, wait } from '@atproto/common'
+import { chunkArray } from '@atproto/common'
 import {
   BlockMap,
   CidSet,
@@ -82,34 +82,32 @@ export class SqlRepoReader extends ReadableBlockstore {
     if (!root) {
       throw new RepoRootNotFoundError()
     }
-    return writeCarStream(root, async (car) => {
-      let cursor: RevCursor | undefined = undefined
-      const writeRows = async (
-        rows: { cid: string; content: Uint8Array }[],
-      ) => {
-        for (const row of rows) {
-          await car.put({
-            cid: CID.parse(row.cid),
-            bytes: row.content,
-          })
+    return writeCarStream(root, this.iterateCarBlocks(since))
+  }
+
+  async *iterateCarBlocks(
+    since?: string,
+  ): AsyncIterable<{ cid: CID; bytes: Uint8Array }> {
+    let cursor: RevCursor | undefined = undefined
+    // allow us to write to car while fetching the next page
+    do {
+      const res = await this.getBlockRange(since, cursor)
+      for (const row of res) {
+        yield {
+          cid: CID.parse(row.cid),
+          bytes: row.content,
         }
       }
-      // allow us to write to car while fetching the next page
-      do {
-        const res = await this.getBlockRange(since, cursor)
-        await writeRows(res)
-        const lastRow = res.at(-1)
-        if (lastRow && lastRow.repoRev) {
-          await wait(100) // @NOTE temporary measure to prevent over-writing to buffer. can remove once we refactor car writer to give back pressure on streams
-          cursor = {
-            cid: CID.parse(lastRow.cid),
-            rev: lastRow.repoRev,
-          }
-        } else {
-          cursor = undefined
+      const lastRow = res.at(-1)
+      if (lastRow && lastRow.repoRev) {
+        cursor = {
+          cid: CID.parse(lastRow.cid),
+          rev: lastRow.repoRev,
         }
-      } while (cursor)
-    })
+      } else {
+        cursor = undefined
+      }
+    } while (cursor)
   }
 
   async getBlockRange(since?: string, cursor?: RevCursor) {
