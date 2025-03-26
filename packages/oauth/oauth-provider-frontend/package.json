@@ -2,7 +2,7 @@
   "name": "oauth-provider-frontend",
   "version": "0.0.0",
   "description": "",
-  "type": "module",
+  "type": "commonjs",
   "main": "dist/lib.js",
   "types": "dist/lib.d.ts",
   "exports": {
