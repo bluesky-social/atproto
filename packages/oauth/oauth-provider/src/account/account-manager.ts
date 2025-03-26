@@ -240,6 +240,10 @@ export class AccountManager {
     return this.store.getAuthorizedClients(sub)
   }
 
+  public async removeDeviceAccount(deviceId: DeviceId, sub: Sub) {
+    return this.store.removeDeviceAccount(deviceId, sub)
+  }
+
   public async list(deviceId: DeviceId): Promise<DeviceAccount[]> {
     const results = await this.store.listDeviceAccounts(deviceId)
     return results.filter(({ info }) => info.remembered && !info.requestId)

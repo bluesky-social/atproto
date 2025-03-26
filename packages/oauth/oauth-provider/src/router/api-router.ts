@@ -121,9 +121,16 @@ export function apiRouter<
   )
 
   router.use(
-    apiRoute('GET', '/accounts', undefined, async function () {
-      // @TODO
-      return { accounts: [] }
+    apiRoute('GET', '/accounts', undefined, async function (req, res) {
+      const deviceInfo = await server.deviceManager.load(req, res)
+
+      const deviceAccounts = await server.accountManager.list(
+        deviceInfo.deviceId,
+      )
+
+      return {
+        accounts: deviceAccounts.map(({ account }) => account),
+      }
     }),
   )
 
@@ -157,7 +164,11 @@ export function apiRouter<
       '/revoke-account-session',
       z.object({ account: z.string(), deviceId: deviceIdSchema }).strict(),
       async function () {
-        // @TODO
+        await server.accountManager.removeDeviceAccount(
+          this.input.deviceId,
+          this.input.account,
+        )
+
         return { success: true }
       },
     ),
