@@ -3,8 +3,8 @@ import {
   oauthAuthorizationRequestQuerySchema,
   oauthClientCredentialsSchema,
 } from '@atproto/oauth-types'
-import { AccessDeniedError } from '../errors/access-denied-error.js'
-import { InvalidRequestError } from '../errors/invalid-request-error.js'
+import { AccessDeniedError } from '../../errors/access-denied-error.js'
+import { InvalidRequestError } from '../../errors/invalid-request-error.js'
 import {
   Middleware,
   Router,
@@ -18,39 +18,40 @@ import {
   validateFetchSite,
   validateOrigin,
   validateReferer,
-} from '../lib/http/index.js'
-import { RouteCtx, createRoute } from '../lib/http/route.js'
-import { Awaitable } from '../lib/util/type.js'
-import { extractZodErrorMessage } from '../lib/util/zod-error.js'
+} from '../../lib/http/index.js'
+import { RouteCtx, createRoute } from '../../lib/http/route.js'
+import type { Awaitable } from '../../lib/util/type.js'
+import { extractZodErrorMessage } from '../../lib/util/zod-error.js'
 import type {
   AuthorizationResultRedirect,
   OAuthProvider,
-} from '../oauth-provider.js'
-import { RequestUri, requestUriSchema } from '../request/request-uri.js'
-import { assetsMiddleware } from './authorize-page/assets-middleware.js'
+} from '../../oauth-provider.js'
+import { RequestUri, requestUriSchema } from '../../request/request-uri.js'
+import type { RouterOptions } from '../router-options.js'
+import { assetsMiddleware } from './assets-middleware.js'
 import {
   authorizePageCsrfCookie,
   sendAuthorizePageFactory,
-} from './authorize-page/send-authorize-page.js'
-import { sendAuthorizeRedirect } from './authorize-page/send-authorize-redirect.js'
-import { sendErrorPageFactory } from './authorize-page/send-error-page.js'
-import { RouterOptions } from './router-options.js'
+} from './send-authorize-page.js'
+import { sendAuthorizeRedirect } from './send-authorize-redirect.js'
+import { sendErrorPageFactory } from './send-error-page.js'
 
 export function authorizeRouter<
+  T extends object | void = void,
   TReq extends IncomingMessage = IncomingMessage,
   TRes extends ServerResponse = ServerResponse,
 >(
   server: OAuthProvider,
-  options?: RouterOptions<TReq, TRes>,
-): Router<void, TReq, TRes> {
-  const onError = options?.onError
+  options: RouterOptions<TReq, TRes>,
+): Router<T, TReq, TRes> {
+  const { onError } = options
   const sendAuthorizePage = sendAuthorizePageFactory(server.customization)
   const sendErrorPage = sendErrorPageFactory(server.customization)
 
   const issuerUrl = new URL(server.issuer)
   const issuerOrigin = issuerUrl.origin
 
-  const router = new Router<void, TReq, TRes>(issuerUrl)
+  const router = new Router<T, TReq, TRes>(issuerUrl)
 
   router.use(assetsMiddleware)
 
@@ -101,9 +102,9 @@ export function authorizeRouter<
 
       return server
         .acceptRequest(
-          this.requestUri,
           deviceInfo.deviceId,
           deviceInfo.deviceMetadata,
+          this.requestUri,
           sub,
         )
         .catch((err) => accessDeniedToRedirectCatcher(req, res, err))
@@ -116,9 +117,9 @@ export function authorizeRouter<
 
       return server
         .rejectRequest(
-          this.requestUri,
           deviceInfo.deviceId,
           deviceInfo.deviceMetadata,
+          this.requestUri,
         )
         .catch((err) => accessDeniedToRedirectCatcher(req, res, err))
     }),
@@ -218,7 +219,7 @@ export function authorizeRouter<
 
         // Next line will "clear" the CSRF token cookie, preventing replay of
         // this request (navigating "back" will result in an error).
-        clearCsrfCookie(res)
+        clearCsrfCookie(res, csrfCookieName)
 
         sendAuthorizeRedirect(req, res, redirect)
       }),

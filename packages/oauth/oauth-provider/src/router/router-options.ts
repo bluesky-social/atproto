@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import { ErrorHandler } from './error-handler.js'
+import type { ErrorHandler } from './error-handler.js'
 
 export type RouterOptions<
   Req extends IncomingMessage = IncomingMessage,

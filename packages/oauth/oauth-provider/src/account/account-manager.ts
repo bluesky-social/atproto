@@ -1,6 +1,5 @@
 import {
   OAuthIssuerIdentifier,
-  OAuthScope,
   isOAuthClientIdLoopback,
 } from '@atproto/oauth-types'
 import { Client } from '../client/client.js'
@@ -15,8 +14,9 @@ import { Sub } from '../oidc/sub.js'
 import { RequestUri, decodeRequestUri } from '../request/request-uri.js'
 import {
   Account,
-  AccountInfo,
   AccountStore,
+  AuthorizedClientData,
+  DeviceAccount,
   ResetPasswordConfirmData,
   ResetPasswordRequestData,
   SignUpData,
@@ -109,7 +109,7 @@ export class AccountManager {
     deviceId: DeviceId,
     deviceMetadata: RequestMetadata,
     requestUri?: RequestUri,
-  ): Promise<AccountInfo> {
+  ): Promise<Account> {
     await callAsync(this.hooks.onSignupAttempt, {
       input,
       deviceId,
@@ -134,7 +134,7 @@ export class AccountManager {
     const remember = requestUri == null
     const requestId = requestUri ? decodeRequestUri(requestUri) : null
 
-    const info = await this.store.addDeviceAccount(
+    await this.store.addDeviceAccount(
       deviceId,
       account.sub,
       remember,
@@ -153,7 +153,7 @@ export class AccountManager {
       )
     })
 
-    return { account, info }
+    return account
   }
 
   public async signIn(
@@ -161,7 +161,7 @@ export class AccountManager {
     deviceId: DeviceId,
     deviceMetadata: RequestMetadata,
     requestUri?: RequestUri,
-  ): Promise<AccountInfo> {
+  ): Promise<Account> {
     const account = await constantTime(
       TIMING_ATTACK_MITIGATION_DELAY,
       async () => {
@@ -176,7 +176,8 @@ export class AccountManager {
 
     try {
       const requestId = requestUri ? decodeRequestUri(requestUri) : null
-      const info = await this.store.addDeviceAccount(
+
+      await this.store.addDeviceAccount(
         deviceId,
         account.sub,
         data.remember,
@@ -190,7 +191,7 @@ export class AccountManager {
         deviceMetadata,
       })
 
-      return { account, info }
+      return account
     } catch (err) {
       throw InvalidRequestError.from(
         err,
@@ -203,7 +204,7 @@ export class AccountManager {
     deviceId: DeviceId,
     sub: Sub,
     requestUri?: RequestUri,
-  ): Promise<AccountInfo> {
+  ): Promise<DeviceAccount> {
     const requestId = requestUri ? decodeRequestUri(requestUri) : null
 
     const result = await this.store.getDeviceAccount(deviceId, sub, requestId)
@@ -224,18 +225,22 @@ export class AccountManager {
     return result
   }
 
-  public async addAuthorizedClient(
+  public async setAuthorizedClient(
     account: Account,
     client: Client,
-    scope: OAuthScope,
+    data: AuthorizedClientData,
   ): Promise<void> {
     // "Loopback" clients are not distinguishable from one another.
     if (isOAuthClientIdLoopback(client.id)) return
 
-    await this.store.addAuthorizedClient(account.sub, client.id, scope)
+    await this.store.setAuthorizedClient(account.sub, client.id, data)
   }
 
-  public async list(deviceId: DeviceId): Promise<AccountInfo[]> {
+  public async getAuthorizedClients(sub: Sub) {
+    return this.store.getAuthorizedClients(sub)
+  }
+
+  public async list(deviceId: DeviceId): Promise<DeviceAccount[]> {
     const results = await this.store.listDeviceAccounts(deviceId)
     return results.filter(({ info }) => info.remembered && !info.requestId)
   }

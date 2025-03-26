@@ -30,7 +30,7 @@ import { AccessTokenType } from './access-token/access-token-type.js'
 import { AccountManager } from './account/account-manager.js'
 import {
   AccountStore,
-  AuthoredClientDetails,
+  AuthorizedClientData,
   DeviceAccountInfo,
   SignUpData,
   asAccountStore,
@@ -682,14 +682,15 @@ export class OAuthProvider extends OAuthVerifier {
       (!!account.sub && account.sub === hint) ||
       (!!account.preferred_username && account.preferred_username === hint)
 
-    return accounts.map(({ account, info }) => ({
+    return accounts.map(({ account, info, authorizedClients }) => ({
       account,
 
       selected: parameters.prompt !== 'select_account' && matchesHint(account),
       loginRequired: parameters.prompt === 'login' || this.loginRequired(info),
-      consentRequired: computeConsentRequired(
+      consentRequired: isConsentRequired(
         parameters,
-        info.authorizedClients.get(client.id),
+        client,
+        authorizedClients.get(client.id),
       ),
 
       matchesHint: hint == null || matchesHint(account),
@@ -697,14 +698,14 @@ export class OAuthProvider extends OAuthVerifier {
   }
 
   public async signUp(
-    data: SignUpData,
     deviceId: DeviceId,
     deviceMetadata: RequestMetadata,
+    data: SignUpData,
     requestUri?: RequestUri,
   ): Promise<{
     account: Account
   }> {
-    const { account } = await this.accountManager.signUp(
+    const account = await this.accountManager.signUp(
       data,
       deviceId,
       deviceMetadata,
@@ -715,15 +716,15 @@ export class OAuthProvider extends OAuthVerifier {
   }
 
   public async signIn(
-    data: SignInData,
     deviceId: DeviceId,
     deviceMetadata: RequestMetadata,
+    data: SignInData,
     requestUri?: RequestUri,
   ): Promise<{
     account: Account
     consentRequired?: boolean
   }> {
-    const { account, info } = await this.accountManager.signIn(
+    const account = await this.accountManager.signIn(
       data,
       deviceId,
       deviceMetadata,
@@ -738,11 +739,18 @@ export class OAuthProvider extends OAuthVerifier {
         deviceId,
       )
 
+      const client = await this.clientManager.getClient(clientId)
+
+      const authorizedClients = await this.accountManager.getAuthorizedClients(
+        account.sub,
+      )
+
       return {
         account,
-        consentRequired: computeConsentRequired(
+        consentRequired: isConsentRequired(
           parameters,
-          info.authorizedClients.get(clientId),
+          client,
+          authorizedClients.get(clientId),
         ),
       }
     }
@@ -751,9 +759,9 @@ export class OAuthProvider extends OAuthVerifier {
   }
 
   public async acceptRequest(
-    requestUri: RequestUri,
     deviceId: DeviceId,
     deviceMetadata: RequestMetadata,
+    requestUri: RequestUri,
     sub: Sub,
   ): Promise<AuthorizationResultRedirect> {
     const { issuer } = this
@@ -766,11 +774,8 @@ export class OAuthProvider extends OAuthVerifier {
     const client = await this.clientManager.getClient(clientId)
 
     try {
-      const { account, info } = await this.accountManager.getAccountInfo(
-        deviceId,
-        sub,
-        requestUri,
-      )
+      const { account, info, authorizedClients } =
+        await this.accountManager.getAccountInfo(deviceId, sub, requestUri)
 
       if (this.loginRequired(info)) {
         throw new LoginRequiredError(
@@ -787,11 +792,18 @@ export class OAuthProvider extends OAuthVerifier {
         deviceMetadata,
       )
 
-      await this.accountManager.addAuthorizedClient(
-        account,
-        client,
-        parameters.scope ?? '',
-      )
+      const clientData = authorizedClients.get(clientId)
+      if (isConsentRequired(parameters, client, clientData)) {
+        const scopes = new Set(clientData?.authorizedScopes)
+
+        // Add the newly accepted scopes to the authorized scopes
+        for (const s of parameters.scope?.split(' ') ?? []) scopes.add(s)
+
+        await this.accountManager.setAuthorizedClient(account, client, {
+          ...clientData,
+          authorizedScopes: [...scopes],
+        })
+      }
 
       return { issuer, parameters, redirect: { code } }
     } catch (err) {
@@ -802,9 +814,9 @@ export class OAuthProvider extends OAuthVerifier {
   }
 
   public async rejectRequest(
-    requestUri: RequestUri,
     deviceId: DeviceId,
-    _deviceMetadata: RequestMetadata,
+    deviceMetadata: RequestMetadata,
+    requestUri: RequestUri,
   ): Promise<AuthorizationResultRedirect> {
     const { parameters } = await this.requestManager.get(requestUri, deviceId)
 
@@ -902,17 +914,19 @@ export class OAuthProvider extends OAuthVerifier {
         }
       }
 
-      const { account, info } = await this.accountManager.getAccountInfo(
-        deviceId,
-        sub,
-        requestUri,
-      )
+      const { account, info, authorizedClients } =
+        await this.accountManager.getAccountInfo(deviceId, sub, requestUri)
 
       // Allow sessions that are slightly too old since the client needs some
       // time to exchange the code for a token. The session age will previously
       // have been checked in the authorize method.
       if (this.loginRequired(info, CODE_EXCHANGE_LEEWAY)) {
         throw new InvalidGrantError('User session is too old')
+      }
+
+      const clientData = authorizedClients.get(client.id)
+      if (isConsentRequired(parameters, client, clientData)) {
+        throw new InvalidGrantError(`Client no longer trusted by user`)
       }
 
       return await this.tokenManager.create(
@@ -1039,12 +1053,13 @@ export class OAuthProvider extends OAuthVerifier {
   }
 }
 
-function computeConsentRequired(
+function isConsentRequired(
   parameters: OAuthAuthorizationRequestParameters,
-  details?: AuthoredClientDetails,
+  client: Client,
+  clientData?: AuthorizedClientData,
 ) {
   // Client was never authorized before
-  if (!details) return true
+  if (!clientData) return true
 
   // Client explicitly asked for consent
   if (parameters.prompt === 'consent') return true
@@ -1054,6 +1069,6 @@ function computeConsentRequired(
   if (requestedScopes == null) return false
 
   // Ensure that all requested scopes were previously authorized by the user
-  const authorizedScopes = details.scope.split(' ')
+  const { authorizedScopes } = clientData
   return !requestedScopes.every((scope) => authorizedScopes.includes(scope))
 }

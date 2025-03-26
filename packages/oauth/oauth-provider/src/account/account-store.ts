@@ -102,19 +102,19 @@ export type ResetPasswordConfirmData = z.TypeOf<
   typeof resetPasswordConfirmDataSchema
 >
 
-export type AuthoredClientDetails = { scope: OAuthScope }
-export type AuthoredClients = Map<ClientId, AuthoredClientDetails>
+export type AuthorizedClientData = { authorizedScopes: readonly string[] }
+export type AuthorizedClients = Map<ClientId, AuthorizedClientData>
 
 export type DeviceAccountInfo = {
   remembered: boolean
   authenticatedAt: Date
-  authorizedClients: AuthoredClients
   requestId: null | RequestId
 }
 
-export type AccountInfo = {
+export type DeviceAccount = {
   account: Account
   info: DeviceAccountInfo
+  authorizedClients: AuthorizedClients
 }
 
 export type SignUpData = SignUpInput & {
@@ -150,11 +150,13 @@ export interface AccountStore {
   /**
    * Add a client & scopes to the list of authorized clients for the given account.
    */
-  addAuthorizedClient(
+  setAuthorizedClient(
     sub: Sub,
     clientId: ClientId,
-    scope: OAuthScope,
+    data: AuthorizedClientData,
   ): Awaitable<void>
+
+  getAuthorizedClients(sub: Sub): Awaitable<AuthorizedClients>
 
   /**
    * @param requestId - If provided, the inserted account must be bound to that
@@ -169,7 +171,7 @@ export interface AccountStore {
     sub: Sub,
     remember: boolean,
     requestId: null | RequestId,
-  ): Awaitable<DeviceAccountInfo>
+  ): Awaitable<void>
 
   /**
    * @param requestId - If provided, the result must either have the same
@@ -182,7 +184,7 @@ export interface AccountStore {
     deviceId: DeviceId,
     sub: Sub,
     requestId: null | RequestId,
-  ): Awaitable<AccountInfo | null>
+  ): Awaitable<DeviceAccount | null>
 
   /**
    * @note No-op if the account is not associated with the device.
@@ -194,7 +196,7 @@ export interface AccountStore {
    * Entries created with a requestId or with remember set to false should not
    * be returned.
    */
-  listDeviceAccounts(deviceId: DeviceId): Awaitable<AccountInfo[]>
+  listDeviceAccounts(deviceId: DeviceId): Awaitable<DeviceAccount[]>
 
   resetPasswordRequest(data: ResetPasswordRequestData): Awaitable<void>
   resetPasswordConfirm(data: ResetPasswordConfirmData): Awaitable<void>
@@ -208,7 +210,8 @@ export interface AccountStore {
 export const isAccountStore = buildInterfaceChecker<AccountStore>([
   'createAccount',
   'authenticateAccount',
-  'addAuthorizedClient',
+  'setAuthorizedClient',
+  'getAuthorizedClients',
   'addDeviceAccount',
   'getDeviceAccount',
   'removeDeviceAccount',

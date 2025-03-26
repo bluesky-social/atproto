@@ -6,15 +6,28 @@ import { Params, Path } from './path.js'
 import { RouteMiddleware, createRoute } from './route.js'
 import { Middleware } from './types.js'
 
-export type RouterCtx<T = void> = SubCtx<T, { url: Readonly<URL> }>
+export type RouterCtx<T extends object | void = void> = SubCtx<
+  T,
+  { url: Readonly<URL> }
+>
+
+function isRouterCtx<T>(ctx: T): ctx is T & object & { url: URL } {
+  return (
+    ctx != null &&
+    typeof ctx === 'object' &&
+    'url' in ctx &&
+    ctx.url instanceof URL
+  )
+}
+
 export type RouterMiddleware<
-  T = void,
+  T extends object | void = void,
   Req = IncomingMessage,
   Res = ServerResponse,
 > = Middleware<RouterCtx<T>, Req, Res>
 
 export class Router<
-  T = void,
+  T extends object | void = void,
   Req extends IncomingMessage = IncomingMessage,
   Res extends ServerResponse = ServerResponse,
 > {
@@ -86,34 +99,26 @@ export class Router<
       // Make sure that the context contains a "url". This will allow the add()
       // method to match routes based on the pathname and will allow routes to
       // access the query params (through this.url.searchParams).
-      let url: URL
 
-      if (
-        !routerUrl &&
-        this != null &&
-        typeof this === 'object' &&
-        'url' in this &&
-        this.url instanceof URL
-      ) {
+      if (!routerUrl && isRouterCtx(this)) {
         // If the context already contains a "url" (router inside router), let's
         // use it.
-        url = this.url
+        middleware.call(this, req, res, next)
       } else {
         // Parse the URL using node's URL parser.
         try {
           const protocol = routerUrl?.protocol || 'https:'
           const host = req.headers.host || routerUrl?.host || 'localhost'
           const pathname = req.url || '/'
-          url = new URL(pathname, `${protocol}//${host}`)
+          const url = new URL(pathname, `${protocol}//${host}`)
+          const context = subCtx(this, { url })
+          middleware.call(context, req, res, next)
         } catch (cause) {
           const error =
             cause instanceof Error ? cause : new Error('Invalid URL', { cause })
           return next(Object.assign(error, { status: 400, statusCode: 400 }))
         }
       }
-
-      const context = subCtx(this, { url })
-      middleware.call(context, req, res, next)
     }
   }
 }

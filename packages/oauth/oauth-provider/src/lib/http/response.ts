@@ -122,8 +122,12 @@ export function jsonHandler<
         try {
           const { payload, status = 200 } = await buildJson.call(this, req, res)
           writeJson(res, payload, { status })
-        } catch (err) {
-          next(err || new Error('Failed to build JSON response'))
+        } catch (cause) {
+          const error =
+            cause instanceof Error
+              ? cause
+              : new Error('Failed to build JSON response', { cause })
+          next(error satisfies Error)
         }
       })()
     } else {

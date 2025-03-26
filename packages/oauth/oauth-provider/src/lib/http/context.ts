@@ -1,7 +1,7 @@
-export type SubCtx<Parent, Child extends object> = Child &
-  (Parent extends object ? Omit<Parent, keyof Child> : unknown)
+export type SubCtx<Parent extends object | void, Child extends object> = Child &
+  Omit<Parent, keyof Child>
 
-export function subCtx<Parent, Child extends object>(
+export function subCtx<Parent extends object | void, Child extends object>(
   parent: Parent,
   child: Child,
 ): SubCtx<Parent, Child> {
@@ -11,19 +11,19 @@ export function subCtx<Parent, Child extends object>(
   // Optimization for small objects
   switch (entries.length) {
     case 0:
-      return proto as SubCtx<Parent, Child>
+      return Object.create(proto)
     case 1: {
-      const entry = entries[0]
+      const e0 = entries[0]
       return Object.create(proto, {
-        [entry[0]]: toPropDesc(entry[1]),
+        [e0[0]]: valueDescriptor(e0[1]),
       })
     }
     case 2: {
-      const entry0 = entries[0]
-      const entry1 = entries[1]
+      const e0 = entries[0]
+      const e1 = entries[1]
       return Object.create(proto, {
-        [entry0[0]]: toPropDesc(entry0[1]),
-        [entry1[0]]: toPropDesc(entry1[1]),
+        [e0[0]]: valueDescriptor(e0[1]),
+        [e1[0]]: valueDescriptor(e1[1]),
       })
     }
   }
@@ -34,9 +34,9 @@ export function subCtx<Parent, Child extends object>(
 function entryToEntryDesc(
   entry: [string, unknown],
 ): [string, PropertyDescriptor] {
-  return [entry[0], toPropDesc(entry[1])]
+  return [entry[0], valueDescriptor(entry[1])]
 }
 
-function toPropDesc(value: unknown): PropertyDescriptor {
+function valueDescriptor(value: unknown): PropertyDescriptor {
   return { value, enumerable: true, writable: false }
 }

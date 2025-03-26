@@ -4,7 +4,7 @@ import { SubCtx, subCtx } from './context.js'
 import { Middleware, NextFunction } from './types.js'
 
 type View<
-  T,
+  T extends object | void,
   D,
   Req extends IncomingMessage = IncomingMessage,
   Res extends ServerResponse = ServerResponse,
@@ -38,7 +38,7 @@ type View<
  */
 export function acceptMiddleware<
   D,
-  T = void,
+  T extends object | void = void,
   Req extends IncomingMessage = IncomingMessage,
   Res extends ServerResponse = ServerResponse,
 >(

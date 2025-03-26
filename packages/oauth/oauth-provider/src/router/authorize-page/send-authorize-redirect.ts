@@ -1,8 +1,8 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { InvalidRequestError } from '../../errors/invalid-request-error.js'
 import { html, js } from '../../lib/html/index.js'
-import { AuthorizationResultRedirect } from '../../result/authorization-result-redirect.js'
 import { sendWebPage } from '../../lib/send-web-page.js'
+import { AuthorizationResultRedirect } from '../../result/authorization-result-redirect.js'
 
 // https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-11#section-7.5.4
 const REDIRECT_STATUS_CODE = 303
