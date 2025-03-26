@@ -89,6 +89,7 @@ export interface SkeletonTrend {
   link: string
   startedAt: string
   postCount: number
+  hot: boolean
   dids?: string[]
 }
 
@@ -109,6 +110,7 @@ export interface TrendView {
   link: string
   startedAt: string
   postCount: number
+  hot: boolean
   actors?: AppBskyActorDefs.ProfileViewBasic[]
 }
 
