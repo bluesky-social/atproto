@@ -3,10 +3,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { Trans } from '@lingui/react/macro'
 import { useLingui } from '@lingui/react'
 import { msg } from '@lingui/core/macro'
-import {
-  ArrowRightStartOnRectangleIcon,
-  XMarkIcon,
-} from '@heroicons/react/24/outline'
+import { ExitIcon, Cross2Icon } from '@radix-ui/react-icons'
 
 import { Avatar } from '#/components/Avatar'
 import { Button } from '#/components/Button'
@@ -22,6 +19,7 @@ import { useRevokeOAuthSessionMutation } from '#/data/useRevokeOAuthSessionMutat
 import { useRevokeAccountSessionMutation } from '#/data/useRevokeAccountSessionMutation'
 import { InlineLink } from '#/components/Link'
 import { Prompt } from '#/components/Prompt'
+import { useToast } from '#/components/Toast'
 
 export const Route = createFileRoute('/_appLayout/$did')({
   component: Sessions,
@@ -93,13 +91,26 @@ function ApplicationSessionCard({
   currentDid: string
 }) {
   const { _ } = useLingui()
+  const { show } = useToast()
   const { mutateAsync: revokeSessions, isPending } =
     useRevokeOAuthSessionMutation()
 
   const revoke = async () => {
     try {
       await revokeSessions({ did: currentDid, token: session.tokenId })
-    } catch (e) {}
+      show({
+        variant: 'success',
+        title: _(msg`Successfully signed out`),
+        duration: 2e3,
+      })
+    } catch (e) {
+      console.error(e)
+      show({
+        variant: 'error',
+        title: _(msg`Failed to sign out`),
+        duration: 2e3,
+      })
+    }
   }
 
   return (
@@ -137,7 +148,7 @@ function ApplicationSessionCard({
             <Button.Text>
               <Trans>Sign out</Trans>
             </Button.Text>
-            <ArrowRightStartOnRectangleIcon width={20} />
+            <ExitIcon width={20} />
           </Button>
         </Prompt>
       </div>
@@ -152,6 +163,7 @@ function AccountSessionCard({
   session: UseAccountSessionsQueryResponse[0]
   currentDid: string
 }) {
+  const { show } = useToast()
   const { _, i18n } = useLingui()
   const { mutateAsync: revokeSessions, isPending } =
     useRevokeAccountSessionMutation()
@@ -159,7 +171,19 @@ function AccountSessionCard({
   const remove = async () => {
     try {
       await revokeSessions({ did: currentDid, deviceId: session.deviceId })
-    } catch (e) {}
+      show({
+        variant: 'success',
+        title: _(msg`Successfully removed device`),
+        duration: 2e3,
+      })
+    } catch (e) {
+      console.error(e)
+      show({
+        variant: 'error',
+        title: _(msg`Failed to remove device`),
+        duration: 2e3,
+      })
+    }
   }
 
   const lastUsed = React.useMemo(() => {
@@ -195,7 +219,7 @@ function AccountSessionCard({
             <Button.Text>
               <Trans>Remove</Trans>
             </Button.Text>
-            <XMarkIcon width={16} />
+            <Cross2Icon width={16} />
           </Button>
         </Prompt>
       </div>

@@ -39,7 +39,7 @@ export function Prompt({
       <Dialog.Trigger asChild>{children}</Dialog.Trigger>
 
       <Dialog.Outer>
-        <Dialog.Inner className="max-w-[400px]!">
+        <Dialog.Inner role="alertdialog" className="max-w-[400px]!">
           <Dialog.Title className="text-xl font-semibold leading-snug">
             {title}
           </Dialog.Title>

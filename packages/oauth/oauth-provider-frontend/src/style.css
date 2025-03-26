@@ -1,6 +1,7 @@
 @import 'tailwindcss';
 @import './styles/radix-popover.css';
 @import './styles/radix-dialog.css';
+@import './styles/radix-toast.css';
 
 :root {
   --color-contrast-0: hsl(var(--hue-primary) 20% 100%);

@@ -19,13 +19,16 @@ export function Outer({ children }: { children: React.ReactNode }) {
 
 export function Inner({
   children,
+  role,
   className,
 }: {
   children: React.ReactNode
+  role?: React.AriaRole
   className?: string
 }) {
   return (
     <Dialog.Content
+      role={role}
       className={clsx([
         'DialogContent',
         'p-5 rounded-xl shadow-xl max-w-[600px]',
