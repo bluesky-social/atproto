@@ -60,7 +60,6 @@ export interface MessageView {
   /** Annotations of text (mentions, URLs, hashtags, etc) */
   facets?: AppBskyRichtextFacet.Main[]
   embed?: $Typed<AppBskyEmbedRecord.View> | { $type: string }
-  /** Reactions to this message, in ascending order of creation time. */
   reactions?: ReactionView[]
   sender: MessageViewSender
   sentAt: string
@@ -165,6 +164,7 @@ export interface ConvoView {
   lastMessage?:
     | $Typed<MessageView>
     | $Typed<DeletedMessageView>
+    | $Typed<MessageAndReactionView>
     | { $type: string }
   lastReaction?: $Typed<MessageAndReactionView> | { $type: string }
   muted: boolean
