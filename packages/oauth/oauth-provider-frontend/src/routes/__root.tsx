@@ -1,6 +1,6 @@
 import React from 'react'
 import { createRootRoute, Outlet } from '@tanstack/react-router'
-import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
+// import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 
 import { useHydrationData } from '#/data/useHydrationData'
 import { ErrorScreen, RouterErrorComponent } from '#/components/ErrorScreen'
@@ -30,7 +30,7 @@ function Root() {
 
       <Footer />
 
-      <TanStackRouterDevtools />
+      {/* <TanStackRouterDevtools /> */}
     </>
   )
 }
