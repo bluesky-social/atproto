@@ -35,13 +35,7 @@
     },
     "skeletonTrend": {
       "type": "object",
-      "required": [
-        "topic",
-        "displayName",
-        "link",
-        "startedAt",
-        "postCount"
-      ],
+      "required": ["topic", "displayName", "link", "startedAt", "postCount"],
       "properties": {
         "topic": { "type": "string" },
         "displayName": { "type": "string" },
@@ -61,13 +55,7 @@
     },
     "trendView": {
       "type": "object",
-      "required": [
-        "topic",
-        "displayName",
-        "link",
-        "startedAt",
-        "postCount"
-      ],
+      "required": ["topic", "displayName", "link", "startedAt", "postCount"],
       "properties": {
         "topic": { "type": "string" },
         "displayName": { "type": "string" },
