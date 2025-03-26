@@ -25,7 +25,7 @@ export const Route = createFileRoute('/_minimalLayout/reset-password')({
 
 function RouteComponent() {
   const { _ } = useLingui()
-  const [showConfirmStep, setShowConfirmStep] = React.useState(true)
+  const [showConfirmStep, setShowConfirmStep] = React.useState(false)
   const [showSuccess, setShowSuccess] = React.useState(false)
   const [error, setError] = React.useState('')
   const { mutateAsync: resetPassword } = usePasswordResetMutation()
