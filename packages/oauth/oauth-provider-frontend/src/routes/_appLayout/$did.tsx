@@ -5,6 +5,8 @@ import { useLingui } from '@lingui/react'
 import { msg } from '@lingui/core/macro'
 import { ExitIcon, Cross2Icon } from '@radix-ui/react-icons'
 
+import { Loader } from '#/components/Loader'
+import * as Admonition from '#/components/Admonition'
 import { Avatar } from '#/components/Avatar'
 import { Button } from '#/components/Button'
 import {
@@ -26,6 +28,7 @@ export const Route = createFileRoute('/_appLayout/$did')({
 })
 
 export function Sessions() {
+  const { _ } = useLingui()
   const { did } = Route.useParams()
   const {
     data: sessions,
@@ -59,25 +62,52 @@ export function Sessions() {
         <Trans>Connected apps</Trans>
       </h2>
 
-      {isLoading ? null : error || !sessions ? null : (
+      {isLoading ? (
+        <Loader size="lg" fill="var(--color-contrast-300)" />
+      ) : error || !sessions ? (
+        <Admonition.Default
+          variant="error"
+          text={_(msg`Failed to load connected apps`)}
+        />
+      ) : sessions.length > 0 ? (
         <div className="space-y-2">
           {sessions.map((session) => (
             <ApplicationSessionCard currentDid={did} session={session} />
           ))}
         </div>
+      ) : (
+        <Admonition.Default
+          variant="info"
+          title={_(msg`No connected apps`)}
+          text={_(
+            msg`Looks like you haven't used this account to sign in to any apps yet.`,
+          )}
+        />
       )}
 
       <h2 className="text-text-default font-bold text-xl pt-8 pb-4">
         <Trans>My devices</Trans>
       </h2>
 
-      {accountSessionsIsLoading ? null : accountSessionsError ||
-        !accountSessions ? null : (
+      {accountSessionsIsLoading ? (
+        <Loader size="lg" fill="var(--color-contrast-300)" />
+      ) : accountSessionsError || !accountSessions ? (
+        <Admonition.Default
+          variant="error"
+          text={_(msg`Failed to load devices`)}
+        />
+      ) : accountSessions.length > 0 ? (
         <div className="space-y-3">
           {accountSessions.map((session) => (
             <AccountSessionCard currentDid={did} session={session} />
           ))}
         </div>
+      ) : (
+        <Admonition.Default
+          variant="info"
+          title={_(msg`No devices`)}
+          text={_(msg`Looks like you aren't logged in on any other devices.`)}
+        />
       )}
     </>
   )
