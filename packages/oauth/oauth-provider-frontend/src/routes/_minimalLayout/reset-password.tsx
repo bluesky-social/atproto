@@ -16,6 +16,7 @@ import { usePasswordResetMutation } from '#/data/usePasswordResetMutation'
 import { usePasswordConfirmMutation } from '#/data/usePasswordConfirmMutation'
 import { wait } from '#/util/wait'
 import { ButtonLink } from '#/components/Link'
+import { useToast } from '#/components/Toast'
 
 export const Route = createFileRoute('/_minimalLayout/reset-password')({
   component: RouteComponent,
@@ -28,6 +29,7 @@ function RouteComponent() {
   const [error, setError] = React.useState('')
   const { mutateAsync: resetPassword } = usePasswordResetMutation()
   const { mutateAsync: confirmPassword } = usePasswordConfirmMutation()
+  const { show } = useToast()
 
   const form = useForm({
     defaultValues: {
@@ -82,9 +84,17 @@ function RouteComponent() {
   const resendCode = async () => {
     try {
       await resetPassword({ email: form.getFieldValue('email') })
-      // TODO success
+      show({
+        variant: 'success',
+        title: _(msg`Code was resent`),
+        duration: 2e3,
+      })
     } catch (e) {
-      // TODO error
+      show({
+        variant: 'error',
+        title: _(msg`Failed to resend code`),
+        duration: 2e3,
+      })
     }
   }
 
