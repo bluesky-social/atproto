@@ -15,32 +15,24 @@ import type * as ChatBskyConvoDefs from './defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
-const id = 'chat.bsky.convo.getLog'
+const id = 'chat.bsky.convo.removeReaction'
 
-export interface QueryParams {
-  cursor?: string
+export interface QueryParams {}
+
+export interface InputSchema {
+  convoId: string
+  messageId: string
+  value: string
 }
-
-export type InputSchema = undefined
 
 export interface OutputSchema {
-  cursor?: string
-  logs: (
-    | $Typed<ChatBskyConvoDefs.LogBeginConvo>
-    | $Typed<ChatBskyConvoDefs.LogAcceptConvo>
-    | $Typed<ChatBskyConvoDefs.LogLeaveConvo>
-    | $Typed<ChatBskyConvoDefs.LogMuteConvo>
-    | $Typed<ChatBskyConvoDefs.LogUnmuteConvo>
-    | $Typed<ChatBskyConvoDefs.LogCreateMessage>
-    | $Typed<ChatBskyConvoDefs.LogDeleteMessage>
-    | $Typed<ChatBskyConvoDefs.LogReadMessage>
-    | $Typed<ChatBskyConvoDefs.LogAddReaction>
-    | $Typed<ChatBskyConvoDefs.LogRemoveReaction>
-    | { $type: string }
-  )[]
+  message: ChatBskyConvoDefs.MessageView
 }
 
-export type HandlerInput = undefined
+export interface HandlerInput {
+  encoding: 'application/json'
+  body: InputSchema
+}
 
 export interface HandlerSuccess {
   encoding: 'application/json'
@@ -51,6 +43,7 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
+  error?: 'ReactionMessageDeleted' | 'ReactionInvalidValue'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess | HandlerPipeThrough

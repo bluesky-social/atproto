@@ -10458,6 +10458,69 @@ export const schemaDict = {
       },
     },
   },
+  ChatBskyConvoAddReaction: {
+    lexicon: 1,
+    id: 'chat.bsky.convo.addReaction',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Adds an emoji reaction to a message. Requires authentication. It is idempotent, so multiple calls from the same user with the same emoji result in a single reaction.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['convoId', 'messageId', 'value'],
+            properties: {
+              convoId: {
+                type: 'string',
+              },
+              messageId: {
+                type: 'string',
+              },
+              value: {
+                type: 'string',
+                minLength: 1,
+                maxLength: 32,
+                minGraphemes: 1,
+                maxGraphemes: 1,
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['message'],
+            properties: {
+              message: {
+                type: 'ref',
+                ref: 'lex:chat.bsky.convo.defs#messageView',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'ReactionMessageDeleted',
+            description:
+              'Indicates that the message has been deleted and reactions can no longer be added/removed.',
+          },
+          {
+            name: 'ReactionLimitReached',
+            description:
+              "Indicates that the message has the maximum number of reactions allowed for a single user, and the requested reaction wasn't yet present. If it was already present, the request will not fail since it is idempotent.",
+          },
+          {
+            name: 'ReactionInvalidValue',
+            description:
+              'Indicates the value for the reaction is not acceptable. In general, this means it is not an emoji.',
+          },
+        ],
+      },
+    },
+  },
   ChatBskyConvoDefs: {
     lexicon: 1,
     id: 'chat.bsky.convo.defs',
@@ -10528,6 +10591,13 @@ export const schemaDict = {
             type: 'union',
             refs: ['lex:app.bsky.embed.record#view'],
           },
+          reactions: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:chat.bsky.convo.defs#reactionView',
+            },
+          },
           sender: {
             type: 'ref',
             ref: 'lex:chat.bsky.convo.defs#messageViewSender',
@@ -10568,6 +10638,47 @@ export const schemaDict = {
           },
         },
       },
+      reactionView: {
+        type: 'object',
+        required: ['value', 'sender', 'createdAt'],
+        properties: {
+          value: {
+            type: 'string',
+          },
+          sender: {
+            type: 'ref',
+            ref: 'lex:chat.bsky.convo.defs#reactionViewSender',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
+      reactionViewSender: {
+        type: 'object',
+        required: ['did'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+        },
+      },
+      messageAndReactionView: {
+        type: 'object',
+        required: ['message', 'reaction'],
+        properties: {
+          message: {
+            type: 'ref',
+            ref: 'lex:chat.bsky.convo.defs#messageView',
+          },
+          reaction: {
+            type: 'ref',
+            ref: 'lex:chat.bsky.convo.defs#reactionView',
+          },
+        },
+      },
       convoView: {
         type: 'object',
         required: ['id', 'rev', 'members', 'muted', 'unreadCount'],
@@ -10590,6 +10701,7 @@ export const schemaDict = {
             refs: [
               'lex:chat.bsky.convo.defs#messageView',
               'lex:chat.bsky.convo.defs#deletedMessageView',
+              'lex:chat.bsky.convo.defs#messageAndReactionView',
             ],
           },
           muted: {
@@ -10718,6 +10830,52 @@ export const schemaDict = {
               'lex:chat.bsky.convo.defs#messageView',
               'lex:chat.bsky.convo.defs#deletedMessageView',
             ],
+          },
+        },
+      },
+      logAddReaction: {
+        type: 'object',
+        required: ['rev', 'convoId', 'message', 'reaction'],
+        properties: {
+          rev: {
+            type: 'string',
+          },
+          convoId: {
+            type: 'string',
+          },
+          message: {
+            type: 'union',
+            refs: [
+              'lex:chat.bsky.convo.defs#messageView',
+              'lex:chat.bsky.convo.defs#deletedMessageView',
+            ],
+          },
+          reaction: {
+            type: 'ref',
+            ref: 'lex:chat.bsky.convo.defs#reactionView',
+          },
+        },
+      },
+      logRemoveReaction: {
+        type: 'object',
+        required: ['rev', 'convoId', 'message', 'reaction'],
+        properties: {
+          rev: {
+            type: 'string',
+          },
+          convoId: {
+            type: 'string',
+          },
+          message: {
+            type: 'union',
+            refs: [
+              'lex:chat.bsky.convo.defs#messageView',
+              'lex:chat.bsky.convo.defs#deletedMessageView',
+            ],
+          },
+          reaction: {
+            type: 'ref',
+            ref: 'lex:chat.bsky.convo.defs#reactionView',
           },
         },
       },
@@ -10896,8 +11054,13 @@ export const schemaDict = {
                     'lex:chat.bsky.convo.defs#logBeginConvo',
                     'lex:chat.bsky.convo.defs#logAcceptConvo',
                     'lex:chat.bsky.convo.defs#logLeaveConvo',
+                    'lex:chat.bsky.convo.defs#logMuteConvo',
+                    'lex:chat.bsky.convo.defs#logUnmuteConvo',
                     'lex:chat.bsky.convo.defs#logCreateMessage',
                     'lex:chat.bsky.convo.defs#logDeleteMessage',
+                    'lex:chat.bsky.convo.defs#logReadMessage',
+                    'lex:chat.bsky.convo.defs#logAddReaction',
+                    'lex:chat.bsky.convo.defs#logRemoveReaction',
                   ],
                 },
               },
@@ -11073,6 +11236,64 @@ export const schemaDict = {
             },
           },
         },
+      },
+    },
+  },
+  ChatBskyConvoRemoveReaction: {
+    lexicon: 1,
+    id: 'chat.bsky.convo.removeReaction',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          "Removes an emoji reaction from a message. Requires authentication. It is idempotent, so multiple calls from the same user with the same emoji result in that reaction not being present, even if it already wasn't.",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['convoId', 'messageId', 'value'],
+            properties: {
+              convoId: {
+                type: 'string',
+              },
+              messageId: {
+                type: 'string',
+              },
+              value: {
+                type: 'string',
+                minLength: 1,
+                maxLength: 32,
+                minGraphemes: 1,
+                maxGraphemes: 1,
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['message'],
+            properties: {
+              message: {
+                type: 'ref',
+                ref: 'lex:chat.bsky.convo.defs#messageView',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'ReactionMessageDeleted',
+            description:
+              'Indicates that the message has been deleted and reactions can no longer be added/removed.',
+          },
+          {
+            name: 'ReactionInvalidValue',
+            description:
+              'Indicates the value for the reaction is not acceptable. In general, this means it is not an emoji.',
+          },
+        ],
       },
     },
   },
@@ -14690,6 +14911,7 @@ export const ids = {
   ChatBskyActorDeleteAccount: 'chat.bsky.actor.deleteAccount',
   ChatBskyActorExportAccountData: 'chat.bsky.actor.exportAccountData',
   ChatBskyConvoAcceptConvo: 'chat.bsky.convo.acceptConvo',
+  ChatBskyConvoAddReaction: 'chat.bsky.convo.addReaction',
   ChatBskyConvoDefs: 'chat.bsky.convo.defs',
   ChatBskyConvoDeleteMessageForSelf: 'chat.bsky.convo.deleteMessageForSelf',
   ChatBskyConvoGetConvo: 'chat.bsky.convo.getConvo',
@@ -14700,6 +14922,7 @@ export const ids = {
   ChatBskyConvoLeaveConvo: 'chat.bsky.convo.leaveConvo',
   ChatBskyConvoListConvos: 'chat.bsky.convo.listConvos',
   ChatBskyConvoMuteConvo: 'chat.bsky.convo.muteConvo',
+  ChatBskyConvoRemoveReaction: 'chat.bsky.convo.removeReaction',
   ChatBskyConvoSendMessage: 'chat.bsky.convo.sendMessage',
   ChatBskyConvoSendMessageBatch: 'chat.bsky.convo.sendMessageBatch',
   ChatBskyConvoUnmuteConvo: 'chat.bsky.convo.unmuteConvo',
