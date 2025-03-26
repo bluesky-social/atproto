@@ -33,37 +33,22 @@
         "link": { "type": "string" }
       }
     },
-    "skeletonTrend": {
+    "trend": {
       "type": "object",
-      "required": ["topic", "displayName", "link", "startedAt", "postCount"],
+      "required": [
+        "topic",
+        "displayName",
+        "link",
+        "startTime",
+        "postCount",
+        "actors"
+      ],
       "properties": {
         "topic": { "type": "string" },
         "displayName": { "type": "string" },
         "link": { "type": "string" },
-        "startedAt": { "type": "string", "format": "datetime" },
+        "startTime": { "type": "string" },
         "postCount": { "type": "integer" },
-        "status": { "type": "string", "knownValues": ["hot"] },
-        "category": { "type": "string" },
-        "dids": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "format": "did"
-          }
-        }
-      }
-    },
-    "trendView": {
-      "type": "object",
-      "required": ["topic", "displayName", "link", "startedAt", "postCount"],
-      "properties": {
-        "topic": { "type": "string" },
-        "displayName": { "type": "string" },
-        "link": { "type": "string" },
-        "startedAt": { "type": "string", "format": "datetime" },
-        "postCount": { "type": "integer" },
-        "status": { "type": "string", "knownValues": ["hot"] },
-        "category": { "type": "string" },
         "actors": {
           "type": "array",
           "items": {
