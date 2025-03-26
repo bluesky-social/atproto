@@ -1,19 +1,19 @@
 import React from 'react'
 import {
+  QuestionMarkCircledIcon,
   ExclamationTriangleIcon,
-  ExclamationCircleIcon,
-  InformationCircleIcon,
-  LightBulbIcon,
-} from '@heroicons/react/24/outline'
+  InfoCircledIcon,
+  CircleBackslashIcon,
+} from '@radix-ui/react-icons'
 import clsx from 'clsx'
 
 type Variant = 'tip' | 'info' | 'warning' | 'error'
 
-const icons: Record<Variant, typeof LightBulbIcon> = {
-  tip: LightBulbIcon,
-  info: InformationCircleIcon,
+const icons: Record<Variant, typeof QuestionMarkCircledIcon> = {
+  tip: QuestionMarkCircledIcon,
+  info: InfoCircledIcon,
   warning: ExclamationTriangleIcon,
-  error: ExclamationCircleIcon,
+  error: CircleBackslashIcon,
 }
 
 const borderColors: Record<Variant, string> = {
@@ -54,7 +54,7 @@ export function Icon({ variant }: { variant?: Variant }) {
   const color = variant ? iconColors[variant] : iconColors.info
   return (
     <div className={clsx(['pt-0.5', color])}>
-      <Icon width={24} />
+      <Icon width={20} height={20} />
     </div>
   )
 }

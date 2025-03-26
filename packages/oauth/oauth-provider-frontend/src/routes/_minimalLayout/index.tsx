@@ -4,7 +4,7 @@ import { useLingui } from '@lingui/react'
 import { Trans } from '@lingui/react/macro'
 import { msg } from '@lingui/core/macro'
 import clsx from 'clsx'
-import { ChevronRightIcon } from '@heroicons/react/24/outline'
+import { ChevronRightIcon } from '@radix-ui/react-icons'
 
 import { Account } from '#/api'
 import { useAccountsQuery } from '#/data/useAccountsQuery'

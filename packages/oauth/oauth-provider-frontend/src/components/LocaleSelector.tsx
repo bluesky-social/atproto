@@ -1,6 +1,6 @@
 import React from 'react'
 import { clsx } from 'clsx'
-import { ChevronDownIcon } from '@heroicons/react/20/solid'
+import { ChevronDownIcon } from '@radix-ui/react-icons'
 
 export function LocaleSelector({
   items,

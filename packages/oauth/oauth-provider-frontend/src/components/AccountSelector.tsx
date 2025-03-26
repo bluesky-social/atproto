@@ -1,9 +1,9 @@
 import React from 'react'
-import { Popover } from 'radix-ui'
+import * as Popover from '@radix-ui/react-popover'
 import { useLingui } from '@lingui/react'
 import { msg } from '@lingui/core/macro'
 import { clsx } from 'clsx'
-import { EllipsisHorizontalIcon } from '@heroicons/react/24/outline'
+import { DotsHorizontalIcon } from '@radix-ui/react-icons'
 
 import { useAccountsQuery } from '#/data/useAccountsQuery'
 import { sanitizeHandle } from '#/util/sanitizeHandle'
@@ -27,7 +27,7 @@ export function AccountSelector() {
             'hover:bg-contrast-25 dark:hover:bg-contrast-50 hover:border-contrast-100 dark:hover:border-contrast-200 rounded-lg space-x-2',
           ])}
           aria-label={_(msg`Select an account`)}
-          style={{ maxWidth: 240 }}
+          style={{ maxWidth: 220 }}
         >
           <div>
             <Avatar
@@ -45,7 +45,7 @@ export function AccountSelector() {
             </p>
           </div>
           <div className="pl-4">
-            <EllipsisHorizontalIcon width={20} />
+            <DotsHorizontalIcon width={20} />
           </div>
         </button>
       </Popover.Trigger>

@@ -1,7 +1,7 @@
 import React from 'react'
 import { useLingui } from '@lingui/react'
 import { msg } from '@lingui/core/macro'
-import { UserIcon } from '@heroicons/react/24/solid'
+import { PersonIcon } from '@radix-ui/react-icons'
 
 export function Avatar({
   src,
@@ -34,7 +34,7 @@ export function Avatar({
           {displayName.replace(/[^A-z0-0]/g, '').slice(0, 1)}
         </p>
       ) : (
-        <UserIcon width={size * (1 / 2)} />
+        <PersonIcon width={size * (1 / 2)} />
       )}
       <div className="absolute inset-0 border-2 border-contrast-100 rounded-full" />
     </div>
