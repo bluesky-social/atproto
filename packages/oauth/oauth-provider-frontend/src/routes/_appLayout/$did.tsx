@@ -2,6 +2,7 @@ import React from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { Trans } from '@lingui/react/macro'
 import { useLingui } from '@lingui/react'
+import { msg } from '@lingui/core/macro'
 import {
   ArrowRightStartOnRectangleIcon,
   XMarkIcon,
@@ -20,6 +21,7 @@ import {
 import { useRevokeOAuthSessionMutation } from '#/data/useRevokeOAuthSessionMutation'
 import { useRevokeAccountSessionMutation } from '#/data/useRevokeAccountSessionMutation'
 import { InlineLink } from '#/components/Link'
+import { Prompt } from '#/components/Prompt'
 
 export const Route = createFileRoute('/_appLayout/$did')({
   component: Sessions,
@@ -46,15 +48,17 @@ export function Sessions() {
       <ul className="flex items-center space-x-2 text-text-light text-sm">
         <li>
           <InlineLink to="/" className="text-text-light underline">
-            Accounts
+            <Trans>Accounts</Trans>
           </InlineLink>
         </li>
         <li className="text-text-default">/</li>
-        <li>Home</li>
+        <li>
+          <Trans>Home</Trans>
+        </li>
       </ul>
 
       <h2 className="text-text-default font-bold text-xl pt-8 pb-4">
-        Application sessions
+        <Trans>Connected apps</Trans>
       </h2>
 
       {isLoading ? null : error || !sessions ? null : (
@@ -66,7 +70,7 @@ export function Sessions() {
       )}
 
       <h2 className="text-text-default font-bold text-xl pt-8 pb-4">
-        Account sessions
+        <Trans>My devices</Trans>
       </h2>
 
       {accountSessionsIsLoading ? null : accountSessionsError ||
@@ -88,6 +92,7 @@ function ApplicationSessionCard({
   session: UseOAuthSessionsQueryResponse[0]
   currentDid: string
 }) {
+  const { _ } = useLingui()
   const { mutateAsync: revokeSessions, isPending } =
     useRevokeOAuthSessionMutation()
 
@@ -116,12 +121,25 @@ function ApplicationSessionCard({
         </div>
       </div>
       <div>
-        <Button onClick={revoke} color="secondary" disabled={isPending}>
-          <Button.Text>
-            <Trans>Sign out</Trans>
-          </Button.Text>
-          <ArrowRightStartOnRectangleIcon width={20} />
-        </Button>
+        <Prompt
+          title={
+            session.clientMetadata.client_name
+              ? _(msg`Sign out of ${session.clientMetadata.client_name}`)
+              : _(msg`Sign out of this application`)
+          }
+          description={_(
+            msg`Are you sure you want to sign out? Next time you visit you will need to sign back in.`,
+          )}
+          confirmCTA={_(msg`Sign out`)}
+          onConfirm={revoke}
+        >
+          <Button color="secondary" disabled={isPending}>
+            <Button.Text>
+              <Trans>Sign out</Trans>
+            </Button.Text>
+            <ArrowRightStartOnRectangleIcon width={20} />
+          </Button>
+        </Prompt>
       </div>
     </div>
   )
@@ -134,11 +152,11 @@ function AccountSessionCard({
   session: UseAccountSessionsQueryResponse[0]
   currentDid: string
 }) {
-  const { i18n } = useLingui()
+  const { _, i18n } = useLingui()
   const { mutateAsync: revokeSessions, isPending } =
     useRevokeAccountSessionMutation()
 
-  const revoke = async () => {
+  const remove = async () => {
     try {
       await revokeSessions({ did: currentDid, deviceId: session.deviceId })
     } catch (e) {}
@@ -167,17 +185,19 @@ function AccountSessionCard({
         </p>
       </div>
       <div>
-        <Button
-          onClick={revoke}
-          color="secondary"
-          size="sm"
-          disabled={isPending}
+        <Prompt
+          title={_(msg`Remove this device`)}
+          description={_(msg`Are you sure you want to remove this device?`)}
+          confirmCTA={_(msg`Remove`)}
+          onConfirm={remove}
         >
-          <Button.Text>
-            <Trans>Revoke</Trans>
-          </Button.Text>
-          <XMarkIcon width={16} />
-        </Button>
+          <Button color="secondary" size="sm" disabled={isPending}>
+            <Button.Text>
+              <Trans>Remove</Trans>
+            </Button.Text>
+            <XMarkIcon width={16} />
+          </Button>
+        </Prompt>
       </div>
     </div>
   )

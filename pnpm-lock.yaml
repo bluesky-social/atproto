@@ -1166,6 +1166,12 @@ importers:
       '@lingui/vite-plugin':
         specifier: ^5.2.0
         version: 5.2.0(typescript@5.6.3)(vite@6.2.0(@types/node@18.19.67)(jiti@2.4.2)(lightningcss@1.29.2)(tsx@4.19.3)(yaml@2.4.2))
+      '@radix-ui/react-dialog':
+        specifier: ^1.1.6
+        version: 1.1.6(@types/react-dom@19.0.4(@types/react@19.0.10))(@types/react@19.0.10)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+      '@radix-ui/react-icons':
+        specifier: ^1.3.2
+        version: 1.3.2(react@19.0.0)
       '@tailwindcss/vite':
         specifier: ^4.0.14
         version: 4.0.14(vite@6.2.0(@types/node@18.19.67)(jiti@2.4.2)(lightningcss@1.29.2)(tsx@4.19.3)(yaml@2.4.2))
@@ -4151,6 +4157,11 @@ packages:
         optional: true
       '@types/react-dom':
         optional: true
+
+  '@radix-ui/react-icons@1.3.2':
+    resolution: {integrity: sha512-fyQIhGDhzfc9pK2kH6Pl9c4BDJGfMkPqkyIgYDthyNYoNg3wVhoJMMh19WS4Up/1KMPFVpNsT2q3WmXn2N1m6g==}
+    peerDependencies:
+      react: ^16.x || ^17.x || ^18.x || ^19.0.0 || ^19.0.0-rc
 
   '@radix-ui/react-id@1.1.0':
     resolution: {integrity: sha512-EJUrI8yYh7WOjNOqpoJaf1jlFIH2LvtgAl+YcFqNCa+4hj64ZXmPkAKOFs/ukjz3byN6bdb/AVUqHkI8/uWWMA==}
@@ -10692,17 +10703,17 @@ snapshots:
   '@aws-sdk/abort-controller@3.193.0':
     dependencies:
       '@aws-sdk/types': 3.193.0
-      tslib: 2.8.0
+      tslib: 2.8.1
 
   '@aws-sdk/abort-controller@3.224.0':
     dependencies:
       '@aws-sdk/types': 3.224.0
-      tslib: 2.8.0
+      tslib: 2.8.1
 
   '@aws-sdk/abort-controller@3.257.0':
     dependencies:
       '@aws-sdk/types': 3.257.0
-      tslib: 2.8.0
+      tslib: 2.8.1
 
   '@aws-sdk/abort-controller@3.374.0':
     dependencies:
@@ -10712,11 +10723,11 @@ snapshots:
   '@aws-sdk/chunked-blob-reader-native@3.208.0':
     dependencies:
       '@aws-sdk/util-base64': 3.208.0
-      tslib: 2.8.0
+      tslib: 2.8.1
 
   '@aws-sdk/chunked-blob-reader@3.188.0':
     dependencies:
-      tslib: 2.8.0
+      tslib: 2.8.1
 
   '@aws-sdk/client-cloudfront@3.261.0':
     dependencies:
@@ -11200,19 +11211,19 @@ snapshots:
     dependencies:
       '@aws-sdk/property-provider': 3.193.0
       '@aws-sdk/types': 3.193.0
-      tslib: 2.8.0
+      tslib: 2.8.1
 
   '@aws-sdk/credential-provider-env@3.224.0':
     dependencies:
       '@aws-sdk/property-provider': 3.224.0
       '@aws-sdk/types': 3.224.0
-      tslib: 2.8.0
+      tslib: 2.8.1
 
   '@aws-sdk/credential-provider-env@3.257.0':
     dependencies:
       '@aws-sdk/property-provider': 3.257.0
       '@aws-sdk/types': 3.257.0
-      tslib: 2.8.0
+      tslib: 2.8.1
 
   '@aws-sdk/credential-provider-imds@3.193.0':
     dependencies:
@@ -11220,7 +11231,7 @@ snapshots:
       '@aws-sdk/property-provider': 3.193.0
       '@aws-sdk/types': 3.193.0
       '@aws-sdk/url-parser': 3.193.0
-      tslib: 2.8.0
+      tslib: 2.8.1
 
   '@aws-sdk/credential-provider-imds@3.224.0':
     dependencies:
@@ -11228,7 +11239,7 @@ snapshots:
       '@aws-sdk/property-provider': 3.224.0
       '@aws-sdk/types': 3.224.0
       '@aws-sdk/url-parser': 3.224.0
-      tslib: 2.8.0
+      tslib: 2.8.1
 
   '@aws-sdk/credential-provider-imds@3.259.0':
     dependencies:
@@ -11236,7 +11247,7 @@ snapshots:
       '@aws-sdk/property-provider': 3.257.0
       '@aws-sdk/types': 3.257.0
       '@aws-sdk/url-parser': 3.257.0
-      tslib: 2.8.0
+      tslib: 2.8.1
 
   '@aws-sdk/credential-provider-ini@3.196.0':
     dependencies:
@@ -11247,7 +11258,7 @@ snapshots:
       '@aws-sdk/property-provider': 3.193.0
       '@aws-sdk/shared-ini-file-loader': 3.193.0
       '@aws-sdk/types': 3.193.0
-      tslib: 2.8.0
+      tslib: 2.8.1
     transitivePeerDependencies:
       - aws-crt
 
@@ -11260,7 +11271,7 @@ snapshots:
       '@aws-sdk/property-provider': 3.224.0
       '@aws-sdk/shared-ini-file-loader': 3.224.0
       '@aws-sdk/types': 3.224.0
-      tslib: 2.8.0
+      tslib: 2.8.1
     transitivePeerDependencies:
       - aws-crt
 
@@ -11274,7 +11285,7 @@ snapshots:
       '@aws-sdk/property-provider': 3.257.0
       '@aws-sdk/shared-ini-file-loader': 3.257.0
       '@aws-sdk/types': 3.257.0
-      tslib: 2.8.0
+      tslib: 2.8.1
     transitivePeerDependencies:
       - aws-crt
 
@@ -11328,21 +11339,21 @@ snapshots:
       '@aws-sdk/property-provider': 3.193.0
       '@aws-sdk/shared-ini-file-loader': 3.193.0
       '@aws-sdk/types': 3.193.0
-      tslib: 2.8.0
+      tslib: 2.8.1
 
   '@aws-sdk/credential-provider-process@3.224.0':
     dependencies:
       '@aws-sdk/property-provider': 3.224.0
       '@aws-sdk/shared-ini-file-loader': 3.224.0
       '@aws-sdk/types': 3.224.0
-      tslib: 2.8.0
+      tslib: 2.8.1
 
   '@aws-sdk/credential-provider-process@3.257.0':
     dependencies:
       '@aws-sdk/property-provider': 3.257.0
       '@aws-sdk/shared-ini-file-loader': 3.257.0
       '@aws-sdk/types': 3.257.0
-      tslib: 2.8.0
+      tslib: 2.8.1
 
   '@aws-sdk/credential-provider-sso@3.196.0':
     dependencies:
@@ -11350,7 +11361,7 @@ snapshots:
       '@aws-sdk/property-provider': 3.193.0
       '@aws-sdk/shared-ini-file-loader': 3.193.0
       '@aws-sdk/types': 3.193.0
-      tslib: 2.8.0
+      tslib: 2.8.1
     transitivePeerDependencies:
       - aws-crt
 
@@ -11361,7 +11372,7 @@ snapshots:
       '@aws-sdk/shared-ini-file-loader': 3.224.0
       '@aws-sdk/token-providers': 3.224.0
       '@aws-sdk/types': 3.224.0
-      tslib: 2.8.0
+      tslib: 2.8.1
     transitivePeerDependencies:
       - aws-crt
 
@@ -11372,7 +11383,7 @@ snapshots:
       '@aws-sdk/shared-ini-file-loader': 3.257.0
       '@aws-sdk/token-providers': 3.261.0
       '@aws-sdk/types': 3.257.0
-      tslib: 2.8.0
+      tslib: 2.8.1
     transitivePeerDependencies:
       - aws-crt
 
@@ -11380,19 +11391,19 @@ snapshots:
     dependencies:
       '@aws-sdk/property-provider': 3.193.0
       '@aws-sdk/types': 3.193.0
-      tslib: 2.8.0
+      tslib: 2.8.1
 
   '@aws-sdk/credential-provider-web-identity@3.224.0':
     dependencies:
       '@aws-sdk/property-provider': 3.224.0
       '@aws-sdk/types': 3.224.0
-      tslib: 2.8.0
+      tslib: 2.8.1
 
   '@aws-sdk/credential-provider-web-identity@3.257.0':
     dependencies:
       '@aws-sdk/property-provider': 3.257.0
       '@aws-sdk/types': 3.257.0
-      tslib: 2.8.0
+      tslib: 2.8.1
 
   '@aws-sdk/eventstream-codec@3.224.0':
     dependencies:
@@ -11422,7 +11433,7 @@ snapshots:
     dependencies:
       '@aws-sdk/eventstream-codec': 3.224.0
       '@aws-sdk/types': 3.224.0
-      tslib: 2.8.0
+      tslib: 2.8.1
 
   '@aws-sdk/fetch-http-handler@3.193.0':
     dependencies:
@@ -11500,7 +11511,7 @@ snapshots:
 
   '@aws-sdk/is-array-buffer@3.201.0':
     dependencies:
-      tslib: 2.8.0
+      tslib: 2.8.1
 
   '@aws-sdk/lib-storage@3.226.0(@aws-sdk/abort-controller@3.374.0)(@aws-sdk/client-s3@3.224.0)':
     dependencies:
@@ -11704,7 +11715,7 @@ snapshots:
       '@aws-sdk/protocol-http': 3.193.0
       '@aws-sdk/signature-v4': 3.193.0
       '@aws-sdk/types': 3.193.0
-      tslib: 2.8.0
+      tslib: 2.8.1
 
   '@aws-sdk/middleware-sdk-sts@3.224.0':
     dependencies:
@@ -11713,7 +11724,7 @@ snapshots:
       '@aws-sdk/protocol-http': 3.224.0
       '@aws-sdk/signature-v4': 3.224.0
       '@aws-sdk/types': 3.224.0
-      tslib: 2.8.0
+      tslib: 2.8.1
 
   '@aws-sdk/middleware-sdk-sts@3.257.0':
     dependencies:
@@ -11722,7 +11733,7 @@ snapshots:
       '@aws-sdk/protocol-http': 3.257.0
       '@aws-sdk/signature-v4': 3.257.0
       '@aws-sdk/types': 3.257.0
-      tslib: 2.8.0
+      tslib: 2.8.1
 
   '@aws-sdk/middleware-serde@3.193.0':
     dependencies:
@@ -11737,7 +11748,7 @@ snapshots:
   '@aws-sdk/middleware-serde@3.226.0':
     dependencies:
       '@aws-sdk/types': 3.226.0
-      tslib: 2.8.0
+      tslib: 2.8.1
 
   '@aws-sdk/middleware-serde@3.257.0':
     dependencies:
@@ -11786,7 +11797,7 @@ snapshots:
 
   '@aws-sdk/middleware-stack@3.226.0':
     dependencies:
-      tslib: 2.8.0
+      tslib: 2.8.1
 
   '@aws-sdk/middleware-stack@3.257.0':
     dependencies:
@@ -11858,17 +11869,17 @@ snapshots:
   '@aws-sdk/property-provider@3.193.0':
     dependencies:
       '@aws-sdk/types': 3.193.0
-      tslib: 2.8.0
+      tslib: 2.8.1
 
   '@aws-sdk/property-provider@3.224.0':
     dependencies:
       '@aws-sdk/types': 3.224.0
-      tslib: 2.8.0
+      tslib: 2.8.1
 
   '@aws-sdk/property-provider@3.257.0':
     dependencies:
       '@aws-sdk/types': 3.257.0
-      tslib: 2.8.0
+      tslib: 2.8.1
 
   '@aws-sdk/protocol-http@3.193.0':
     dependencies:
@@ -11883,7 +11894,7 @@ snapshots:
   '@aws-sdk/protocol-http@3.226.0':
     dependencies:
       '@aws-sdk/types': 3.226.0
-      tslib: 2.8.0
+      tslib: 2.8.1
 
   '@aws-sdk/protocol-http@3.257.0':
     dependencies:
@@ -11894,29 +11905,29 @@ snapshots:
     dependencies:
       '@aws-sdk/types': 3.193.0
       '@aws-sdk/util-uri-escape': 3.188.0
-      tslib: 2.8.0
+      tslib: 2.8.1
 
   '@aws-sdk/querystring-builder@3.224.0':
     dependencies:
       '@aws-sdk/types': 3.224.0
       '@aws-sdk/util-uri-escape': 3.201.0
-      tslib: 2.8.0
+      tslib: 2.8.1
 
   '@aws-sdk/querystring-builder@3.257.0':
     dependencies:
       '@aws-sdk/types': 3.257.0
       '@aws-sdk/util-uri-escape': 3.201.0
-      tslib: 2.8.0
+      tslib: 2.8.1
 
   '@aws-sdk/querystring-parser@3.193.0':
     dependencies:
       '@aws-sdk/types': 3.193.0
-      tslib: 2.8.0
+      tslib: 2.8.1
 
   '@aws-sdk/querystring-parser@3.224.0':
     dependencies:
       '@aws-sdk/types': 3.224.0
-      tslib: 2.8.0
+      tslib: 2.8.1
 
   '@aws-sdk/querystring-parser@3.226.0':
     dependencies:
@@ -11926,7 +11937,7 @@ snapshots:
   '@aws-sdk/querystring-parser@3.257.0':
     dependencies:
       '@aws-sdk/types': 3.257.0
-      tslib: 2.8.0
+      tslib: 2.8.1
 
   '@aws-sdk/service-error-classification@3.193.0': {}
 
@@ -11937,17 +11948,17 @@ snapshots:
   '@aws-sdk/shared-ini-file-loader@3.193.0':
     dependencies:
       '@aws-sdk/types': 3.193.0
-      tslib: 2.8.0
+      tslib: 2.8.1
 
   '@aws-sdk/shared-ini-file-loader@3.224.0':
     dependencies:
       '@aws-sdk/types': 3.224.0
-      tslib: 2.8.0
+      tslib: 2.8.1
 
   '@aws-sdk/shared-ini-file-loader@3.257.0':
     dependencies:
       '@aws-sdk/types': 3.257.0
-      tslib: 2.8.0
+      tslib: 2.8.1
 
   '@aws-sdk/signature-v4-multi-region@3.224.0':
     dependencies:
@@ -11964,7 +11975,7 @@ snapshots:
       '@aws-sdk/util-hex-encoding': 3.188.0
       '@aws-sdk/util-middleware': 3.193.0
       '@aws-sdk/util-uri-escape': 3.188.0
-      tslib: 2.8.0
+      tslib: 2.8.1
 
   '@aws-sdk/signature-v4@3.224.0':
     dependencies:
@@ -11973,7 +11984,7 @@ snapshots:
       '@aws-sdk/util-hex-encoding': 3.201.0
       '@aws-sdk/util-middleware': 3.224.0
       '@aws-sdk/util-uri-escape': 3.201.0
-      tslib: 2.8.0
+      tslib: 2.8.1
 
   '@aws-sdk/signature-v4@3.226.0':
     dependencies:
@@ -11982,7 +11993,7 @@ snapshots:
       '@aws-sdk/util-hex-encoding': 3.201.0
       '@aws-sdk/util-middleware': 3.226.0
       '@aws-sdk/util-uri-escape': 3.201.0
-      tslib: 2.8.0
+      tslib: 2.8.1
 
   '@aws-sdk/signature-v4@3.257.0':
     dependencies:
@@ -11992,7 +12003,7 @@ snapshots:
       '@aws-sdk/util-middleware': 3.257.0
       '@aws-sdk/util-uri-escape': 3.201.0
       '@aws-sdk/util-utf8': 3.254.0
-      tslib: 2.8.0
+      tslib: 2.8.1
 
   '@aws-sdk/smithy-client@3.193.0':
     dependencies:
@@ -12044,7 +12055,7 @@ snapshots:
 
   '@aws-sdk/types@3.226.0':
     dependencies:
-      tslib: 2.8.0
+      tslib: 2.8.1
 
   '@aws-sdk/types@3.257.0':
     dependencies:
@@ -12066,7 +12077,7 @@ snapshots:
     dependencies:
       '@aws-sdk/querystring-parser': 3.226.0
       '@aws-sdk/types': 3.226.0
-      tslib: 2.8.0
+      tslib: 2.8.1
 
   '@aws-sdk/url-parser@3.257.0':
     dependencies:
@@ -12076,7 +12087,7 @@ snapshots:
 
   '@aws-sdk/util-arn-parser@3.208.0':
     dependencies:
-      tslib: 2.8.0
+      tslib: 2.8.1
 
   '@aws-sdk/util-base64-browser@3.188.0':
     dependencies:
@@ -12107,20 +12118,20 @@ snapshots:
   '@aws-sdk/util-buffer-from@3.188.0':
     dependencies:
       '@aws-sdk/is-array-buffer': 3.188.0
-      tslib: 2.8.0
+      tslib: 2.8.1
 
   '@aws-sdk/util-buffer-from@3.208.0':
     dependencies:
       '@aws-sdk/is-array-buffer': 3.201.0
-      tslib: 2.8.0
+      tslib: 2.8.1
 
   '@aws-sdk/util-config-provider@3.188.0':
     dependencies:
-      tslib: 2.8.0
+      tslib: 2.8.1
 
   '@aws-sdk/util-config-provider@3.208.0':
     dependencies:
-      tslib: 2.8.0
+      tslib: 2.8.1
 
   '@aws-sdk/util-defaults-mode-browser@3.193.0':
     dependencies:
@@ -12191,27 +12202,27 @@ snapshots:
 
   '@aws-sdk/util-hex-encoding@3.201.0':
     dependencies:
-      tslib: 2.8.0
+      tslib: 2.8.1
 
   '@aws-sdk/util-locate-window@3.310.0':
     dependencies:
-      tslib: 2.8.0
+      tslib: 2.8.1
 
   '@aws-sdk/util-middleware@3.193.0':
     dependencies:
-      tslib: 2.8.0
+      tslib: 2.8.1
 
   '@aws-sdk/util-middleware@3.224.0':
     dependencies:
-      tslib: 2.8.0
+      tslib: 2.8.1
 
   '@aws-sdk/util-middleware@3.226.0':
     dependencies:
-      tslib: 2.8.0
+      tslib: 2.8.1
 
   '@aws-sdk/util-middleware@3.257.0':
     dependencies:
-      tslib: 2.8.0
+      tslib: 2.8.1
 
   '@aws-sdk/util-retry@3.257.0':
     dependencies:
@@ -12284,7 +12295,7 @@ snapshots:
 
   '@aws-sdk/util-utf8-browser@3.259.0':
     dependencies:
-      tslib: 2.8.0
+      tslib: 2.8.1
 
   '@aws-sdk/util-utf8-node@3.188.0':
     dependencies:
@@ -13964,6 +13975,10 @@ snapshots:
     optionalDependencies:
       '@types/react': 19.0.10
       '@types/react-dom': 19.0.4(@types/react@19.0.10)
+
+  '@radix-ui/react-icons@1.3.2(react@19.0.0)':
+    dependencies:
+      react: 19.0.0
 
   '@radix-ui/react-id@1.1.0(@types/react@19.0.10)(react@19.0.0)':
     dependencies:
