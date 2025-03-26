@@ -17,6 +17,7 @@ import { usePasswordConfirmMutation } from '#/data/usePasswordConfirmMutation'
 import { wait } from '#/util/wait'
 import { ButtonLink } from '#/components/Link'
 import { useToast } from '#/components/Toast'
+import { MIN_PASSWORD_LENGTH, getPasswordStrength } from '#/util/passwords'
 
 export const Route = createFileRoute('/_minimalLayout/reset-password')({
   component: RouteComponent,
@@ -24,7 +25,7 @@ export const Route = createFileRoute('/_minimalLayout/reset-password')({
 
 function RouteComponent() {
   const { _ } = useLingui()
-  const [showConfirmStep, setShowConfirmStep] = React.useState(false)
+  const [showConfirmStep, setShowConfirmStep] = React.useState(true)
   const [showSuccess, setShowSuccess] = React.useState(false)
   const [error, setError] = React.useState('')
   const { mutateAsync: resetPassword } = usePasswordResetMutation()
@@ -64,7 +65,10 @@ function RouteComponent() {
         password: zod
           .string()
           .nonempty(_(msg`A new password is required`))
-          .min(8, _(msg`Password must be at least 8 characters`)),
+          .min(
+            MIN_PASSWORD_LENGTH,
+            _(msg`Password must be at least ${MIN_PASSWORD_LENGTH} characters`),
+          ),
       }),
     },
     onSubmit: async ({ value }) => {
@@ -242,6 +246,16 @@ function RouteComponent() {
                     <confirmForm.Field
                       name="password"
                       children={(field) => {
+                        const isMin =
+                          field.state.value.length >= MIN_PASSWORD_LENGTH
+                        const strength = getPasswordStrength(field.state.value)
+                        const defaultBg = 'bg-contrast-300 dark:bg-contrast-300'
+                        const strengthBg =
+                          strength >= 3
+                            ? 'bg-success-500'
+                            : strength === 2
+                              ? 'bg-warning-500'
+                              : 'bg-error-500'
                         return (
                           <Form.Item>
                             <Form.Label name={field.name}>
@@ -255,11 +269,21 @@ function RouteComponent() {
                               placeholder={_(msg`Enter a new password`)}
                               onBlur={field.handleBlur}
                               onChange={(e) => {
-                                field.handleChange(
-                                  format2FACode(e.target.value),
-                                )
+                                field.handleChange(e.target.value)
                               }}
                             />
+                            <div className="flex space-x-2">
+                              {Array.from({ length: 4 }).map((_, i) => (
+                                <div
+                                  className={clsx([
+                                    'w-full h-1 rounded-full',
+                                    strength > i && isMin
+                                      ? strengthBg
+                                      : defaultBg,
+                                  ])}
+                                />
+                              ))}
+                            </div>
                             <Form.Errors errors={field.state.meta.errors} />
                           </Form.Item>
                         )
