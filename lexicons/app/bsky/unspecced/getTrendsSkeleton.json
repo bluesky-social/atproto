@@ -1,10 +1,11 @@
 {
   "lexicon": 1,
-  "id": "app.bsky.unspecced.getTrends",
+  "id": "app.bsky.unspecced.getTrendsSkeleton",
   "defs": {
     "main": {
       "type": "query",
       "description": "Get the current trends on the network",
+      "description": "Get the skeleton of trends on the network. Intended to be called and then hydrated through app.bsky.unspecced.getTrends",
       "parameters": {
         "type": "params",
         "properties": {
@@ -31,7 +32,7 @@
               "type": "array",
               "items": {
                 "type": "ref",
-                "ref": "app.bsky.unspecced.defs#trendView"
+                "ref": "app.bsky.unspecced.defs#skeletonTrend"
               }
             }
           }

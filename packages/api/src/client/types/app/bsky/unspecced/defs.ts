@@ -82,22 +82,42 @@ export function validateTrendingTopic<V>(v: V) {
   return validate<TrendingTopic & V>(v, id, hashTrendingTopic)
 }
 
-export interface Trend {
-  $type?: 'app.bsky.unspecced.defs#trend'
+export interface SkeletonTrend {
+  $type?: 'app.bsky.unspecced.defs#skeletonTrend'
   topic: string
   displayName: string
   link: string
-  startTime: string
+  startedAt: string
   postCount: number
-  actors: AppBskyActorDefs.ProfileViewBasic[]
+  dids?: string[]
 }
 
-const hashTrend = 'trend'
+const hashSkeletonTrend = 'skeletonTrend'
 
-export function isTrend<V>(v: V) {
-  return is$typed(v, id, hashTrend)
+export function isSkeletonTrend<V>(v: V) {
+  return is$typed(v, id, hashSkeletonTrend)
 }
 
-export function validateTrend<V>(v: V) {
-  return validate<Trend & V>(v, id, hashTrend)
+export function validateSkeletonTrend<V>(v: V) {
+  return validate<SkeletonTrend & V>(v, id, hashSkeletonTrend)
+}
+
+export interface TrendView {
+  $type?: 'app.bsky.unspecced.defs#trendView'
+  topic: string
+  displayName: string
+  link: string
+  startedAt: string
+  postCount: number
+  actors?: AppBskyActorDefs.ProfileViewBasic[]
+}
+
+const hashTrendView = 'trendView'
+
+export function isTrendView<V>(v: V) {
+  return is$typed(v, id, hashTrendView)
+}
+
+export function validateTrendView<V>(v: V) {
+  return validate<TrendView & V>(v, id, hashTrendView)
 }
