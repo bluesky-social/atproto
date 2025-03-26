@@ -32,7 +32,11 @@ function Label({
   children: React.ReactNode
   name: string
 }) {
-  return <label htmlFor={`checkbox-${name}`}>{children}</label>
+  return (
+    <label htmlFor={`checkbox-${name}`} className="text-sm">
+      {children}
+    </label>
+  )
 }
 
 Checkbox.Label = Label

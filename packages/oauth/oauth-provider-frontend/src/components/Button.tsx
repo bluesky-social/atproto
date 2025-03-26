@@ -24,7 +24,7 @@ export function Button({
     <button
       {...rest}
       aria-disabled={rest.disabled ? 'true' : 'false'}
-      className={cn}
+      className={clsx(cn, rest.className)}
     >
       {children}
     </button>

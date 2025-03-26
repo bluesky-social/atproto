@@ -221,11 +221,16 @@ function LoginForm() {
             </ul>
           )}
 
-          <div className="pt-2 space-y-3 flex flex-col align-center">
+          <div className="pt-2 space-y-3 align-center">
             <form.Subscribe
               selector={(state) => [state.canSubmit, state.isSubmitting]}
               children={([canSubmit, isSubmitting]) => (
-                <Button type="submit" disabled={!canSubmit || isSubmitting}>
+                <Button
+                  className="w-full"
+                  size="lg"
+                  type="submit"
+                  disabled={!canSubmit || isSubmitting}
+                >
                   <Trans>Sign in</Trans>
                 </Button>
               )}
@@ -233,7 +238,7 @@ function LoginForm() {
 
             <InlineLink
               to="/reset-password"
-              className="text-sm text-center text-text-light"
+              className="inline-block w-full text-sm text-center text-text-light"
             >
               <Trans>Forgot password?</Trans>
             </InlineLink>

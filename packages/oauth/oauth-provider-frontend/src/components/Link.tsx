@@ -50,10 +50,11 @@ InlineLink.staticClick = staticClick
 export function ButtonLink({
   children,
   color = 'primary',
+  size = 'md',
   disabled,
   ...rest
 }: LinkProps & ButtonStyleProps) {
-  const cn = useButtonStyles({ color, disabled })
+  const cn = useButtonStyles({ color, size, disabled })
   return (
     <Link {...rest} className={cn}>
       {children}

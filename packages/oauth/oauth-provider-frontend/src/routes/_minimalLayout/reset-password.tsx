@@ -109,7 +109,7 @@ function RouteComponent() {
                 <Trans>Your password has been reset.</Trans>
               </p>
             </div>
-            <ButtonLink to="/sign-in">
+            <ButtonLink size="lg" to="/sign-in">
               <Trans>Back to sign in</Trans>
             </ButtonLink>
           </>
@@ -161,7 +161,7 @@ function RouteComponent() {
                       </ul>
                     )}
 
-                    <div className="pt-2 space-y-3 flex flex-col align-center">
+                    <div className="pt-2 space-y-3 align-center">
                       <form.Subscribe
                         selector={(state) => [
                           state.canSubmit,
@@ -169,6 +169,8 @@ function RouteComponent() {
                         ]}
                         children={([canSubmit, isSubmitting]) => (
                           <Button
+                            className="w-full"
+                            size="lg"
                             type="submit"
                             disabled={!canSubmit || isSubmitting}
                           >
@@ -179,7 +181,7 @@ function RouteComponent() {
 
                       <InlineLink
                         to="/sign-in"
-                        className="text-sm text-text-light text-center"
+                        className="text-sm inline-block w-full text-text-light text-center"
                       >
                         <Trans>Back to sign in</Trans>
                       </InlineLink>
@@ -261,7 +263,7 @@ function RouteComponent() {
                     </ul>
                   )}
 
-                  <div className="pt-2 space-y-3 flex flex-col align-center">
+                  <div className="pt-2 space-y-3 align-center">
                     <confirmForm.Subscribe
                       selector={(state) => [
                         state.canSubmit,
@@ -269,6 +271,8 @@ function RouteComponent() {
                       ]}
                       children={([canSubmit, isSubmitting]) => (
                         <Button
+                          className="w-full"
+                          size="lg"
                           type="submit"
                           disabled={!canSubmit || isSubmitting}
                         >
@@ -277,7 +281,7 @@ function RouteComponent() {
                       )}
                     />
 
-                    <p className="text-sm text-center text-text-light">
+                    <p className="text-sm inline-block w-full text-center text-text-light">
                       <Trans>
                         Don't see the email?{' '}
                         <InlineLink

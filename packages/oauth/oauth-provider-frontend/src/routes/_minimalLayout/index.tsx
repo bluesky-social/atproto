@@ -72,18 +72,18 @@ export function SelectorScreen({ accounts }: { accounts: Account[] }) {
                   did: a.sub,
                 }}
                 className={clsx([
-                  'flex items-center space-x-3 px-3 py-3 rounded-lg',
-                  'bg-contrast-25 dark:bg-contrast-50',
+                  'flex items-center space-x-2 px-2 py-2 rounded-lg border',
+                  'bg-contrast-25 dark:bg-contrast-50 border-contrast-50 dark:border-contrast-100',
                   'hover:bg-contrast-50 dark:hover:bg-contrast-100',
                 ])}
                 label={_(msg`View and manage account for ${getAccountName(a)}`)}
               >
                 <Avatar size={40} src={a.picture} displayName={a.name} />
-                <div className="space-y-0 flex-1">
-                  <h2 className="text-text-default font-semibold leading-snug">
+                <div className="space-y-0 flex-1 truncate">
+                  <h2 className="text-text-default font-semibold leading-snug truncate">
                     {a.name}
                   </h2>
-                  <p className="text-sm text-text-light">
+                  <p className="text-sm text-text-light truncate">
                     {sanitizeHandle(a.preferred_username) || a.sub}
                   </p>
                 </div>

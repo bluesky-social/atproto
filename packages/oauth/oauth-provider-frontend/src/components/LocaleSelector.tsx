@@ -18,7 +18,7 @@ export function LocaleSelector({
     <div className="relative">
       <select
         className={clsx([
-          'pl-2 pr-8 py-1.5 rounded-full bg-contrast-25 text-white text-sm font-bold border border-contrast-100 focus:shadow-sm cursor-pointer',
+          'pl-2 pr-8 py-1.5 rounded-full bg-contrast-25 text-text-default text-sm font-semibold border border-contrast-100 focus:shadow-sm cursor-pointer',
           'hover:bg-contrast-0 focus:bg-contrast-0 dark:hover:bg-contrast-0',
           'focus:outline-none focus:bg-contrast-0 dark:focus:bg-contrast-0',
         ])}
