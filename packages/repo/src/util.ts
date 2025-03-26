@@ -72,33 +72,6 @@ function varint(n: number) {
   return new Uint8Array(varintEncode(n))
 }
 
-// we have to turn the car writer output into a stream in order to properly handle errors
-// export function writeCarStream(
-//   root: CID | null,
-//   fn: (car: BlockWriter) => Promise<void>,
-// ): Readable {
-//   const { writer, out } =
-//     root !== null ? CarWriter.create(root) : CarWriter.create()
-
-//   const stream = byteIterableToStream(out)
-//   fn(writer)
-//     .catch((err) => {
-//       stream.destroy(err)
-//     })
-//     .finally(() => writer.close())
-//   return stream
-// }
-
-// export async function* writeCar(
-//   root: CID | null,
-//   fn: (car: BlockWriter) => Promise<void>,
-// ): AsyncIterable<Uint8Array> {
-//   const stream = writeCarStream(root, fn)
-//   for await (const chunk of stream) {
-//     yield chunk
-//   }
-// }
-
 export const blocksToCarStream = (
   root: CID | null,
   blocks: BlockMap,
