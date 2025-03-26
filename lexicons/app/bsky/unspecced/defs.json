@@ -32,7 +32,9 @@
         "description": { "type": "string" },
         "link": { "type": "string" },
         "startTime": { "type": "string", "format": "datetime" },
-        "postCount": { "type": "integer" }
+        "postCount": { "type": "integer" },
+        "category": { "type": "string" },
+        "images": { "type": "array", "items": { "type": "string" } }
       }
     }
   }

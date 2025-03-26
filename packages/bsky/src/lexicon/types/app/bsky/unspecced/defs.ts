@@ -71,6 +71,8 @@ export interface TrendingTopic {
   link: string
   startTime?: string
   postCount?: number
+  category?: string
+  images?: string[]
 }
 
 const hashTrendingTopic = 'trendingTopic'
