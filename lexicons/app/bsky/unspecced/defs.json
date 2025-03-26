@@ -40,8 +40,7 @@
         "displayName",
         "link",
         "startedAt",
-        "postCount",
-        "hot"
+        "postCount"
       ],
       "properties": {
         "topic": { "type": "string" },
@@ -49,7 +48,7 @@
         "link": { "type": "string" },
         "startedAt": { "type": "string", "format": "datetime" },
         "postCount": { "type": "integer" },
-        "hot": { "type": "boolean" },
+        "status": { "type": "string", "knownValues": ["hot"] },
         "dids": {
           "type": "array",
           "items": {
@@ -66,8 +65,7 @@
         "displayName",
         "link",
         "startedAt",
-        "postCount",
-        "hot"
+        "postCount"
       ],
       "properties": {
         "topic": { "type": "string" },
@@ -75,7 +73,7 @@
         "link": { "type": "string" },
         "startedAt": { "type": "string", "format": "datetime" },
         "postCount": { "type": "integer" },
-        "hot": { "type": "boolean" },
+        "status": { "type": "string", "knownValues": ["hot"] },
         "actors": {
           "type": "array",
           "items": {
