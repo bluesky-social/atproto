@@ -1,25 +1,49 @@
-import { dataToCborBlock, wait } from '@atproto/common'
-import { readCarStream, writeCarStream } from '../src'
-import { randomStr } from './_util'
+import { CID } from 'multiformats/cid'
+import * as ui8 from 'uint8arrays'
+import {
+  bytesToIterable,
+  dataToCborBlock,
+  streamToBytes,
+  wait,
+} from '@atproto/common'
+import { CarBlock, readCarStream, writeCarStream } from '../src'
+import fixtures from './car-file-fixtures.json'
 
 describe('car', () => {
-  it('test', async () => {
-    const randomBlock = async () => {
-      const block = await dataToCborBlock({ test: randomStr(50) })
-      return { cid: block.cid, bytes: block.bytes }
-    }
-    const root = await randomBlock()
-    async function* blockIterator() {
-      await wait(1)
-      yield root
-      for (let i = 0; i < 5; i++) {
-        yield await randomBlock()
+  for (const fixture of fixtures) {
+    it('correctly writes car files', async () => {
+      const root = CID.parse(fixture.root)
+      async function* blockIter() {
+        for (const block of fixture.blocks) {
+          const cid = CID.parse(block.cid)
+          const bytes = ui8.fromString(block.bytes, 'base64')
+          yield { cid, bytes }
+        }
       }
-    }
-    const car = writeCarStream(root.cid, blockIterator())
+      const carStream = writeCarStream(root, blockIter())
+      const car = await streamToBytes(carStream)
+      const carB64 = ui8.toString(car, 'base64')
+      expect(carB64).toEqual(fixture.car)
+    })
 
-    await readCarStream(car)
-  })
+    it('correctly reads carfiles', async () => {
+      const carStream = bytesToIterable(ui8.fromString(fixture.car, 'base64'))
+      const { roots, blocks } = await readCarStream(carStream)
+      expect(roots.length).toBe(1)
+      expect(roots[0].toString()).toEqual(fixture.root)
+      const carBlocks: CarBlock[] = []
+      for await (const block of blocks) {
+        carBlocks.push(block)
+      }
+      expect(carBlocks.length).toEqual(fixture.blocks.length)
+      for (let i = 0; i < carBlocks.length; i++) {
+        expect(carBlocks[i].cid.toString()).toEqual(fixture.blocks[i].cid)
+        expect(ui8.toString(carBlocks[i].bytes, 'base64')).toEqual(
+          fixture.blocks[i].bytes,
+        )
+      }
+    })
+  }
 
   it('writeCar propagates errors', async () => {
     const iterate = async () => {
