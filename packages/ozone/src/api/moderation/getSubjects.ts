@@ -84,7 +84,11 @@ export default function (server: Server, ctx: AppContext) {
 
       return {
         encoding: 'application/json',
-        body: { subjects: Array.from(subjectWithDetails.values()) },
+        body: {
+          subjects: subjects
+            .map((s) => subjectWithDetails.get(s))
+            .filter(Boolean),
+        },
       }
     },
   })
