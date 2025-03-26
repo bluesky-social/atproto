@@ -3,7 +3,9 @@ import { setImmediate } from 'node:timers/promises'
 import { CarBlockIterator } from '@ipld/car/iterator'
 import * as cbor from '@ipld/dag-cbor'
 import { CID } from 'multiformats/cid'
-import { encode as varintEncode } from 'varint'
+import * as ui8 from 'uint8arrays'
+import { decode as varintDecode, encode as varintEncode } from 'varint'
+// import * as varintLib from 'varint'
 import {
   TID,
   byteIterableToStream,
@@ -11,6 +13,7 @@ import {
   check,
   cidForCbor,
   schema,
+  sha256ToCid,
   streamToBuffer,
   verifyCidForBytes,
 } from '@atproto/common'
@@ -62,6 +65,7 @@ export async function* writeCar(
   yield varint(header.byteLength)
   yield header
   for await (const block of blocks) {
+    console.log(block.cid.bytes.byteLength)
     yield varint(block.cid.bytes.byteLength + block.bytes.byteLength)
     yield block.cid.bytes
     yield block.bytes
@@ -82,6 +86,102 @@ export const blocksToCarStream = (
 async function* iterateBlocks(blocks: BlockMap) {
   for (const entry of blocks.entries()) {
     yield { cid: entry.cid, bytes: entry.bytes }
+  }
+}
+
+export const readCarNew = async (
+  car: AsyncIterable<Uint8Array>,
+): Promise<{
+  roots: CID[]
+  blocks: AsyncIterable<{ cid: CID; bytes: Uint8Array }>
+}> => {
+  const reader = new BufferedReader(car)
+  const headerSize = await readVarint(reader)
+  const headerBytes = await reader.read(headerSize)
+  const header = cbor.decode(headerBytes)
+  if (!check.is(header, schema.carHeader)) {
+    throw new Error('could not parse car header')
+  }
+  const roots = header.roots
+  const blocks = readCarBlocksIter(reader)
+  return { roots, blocks }
+}
+
+async function* readCarBlocksIter(
+  reader: BufferedReader,
+): AsyncIterable<{ cid: CID; bytes: Uint8Array }> {
+  while (!reader.isDone) {
+    const blockSize = await readVarint(reader)
+    const blockBytes = await reader.read(blockSize)
+    const cid = parseDaslCid(blockBytes.slice(0, 36))
+    const bytes = blockBytes.slice(36)
+    yield { cid, bytes }
+  }
+}
+
+const parseDaslCid = (cidBytes: Uint8Array): CID => {
+  const version = cidBytes[0]
+  if (version !== 0x01) {
+    throw new Error('version')
+  }
+  const codec = cidBytes[1]
+  if (codec !== 0x55 && codec !== 0x71) {
+    throw new Error('codec')
+  }
+  const hashType = cidBytes[2]
+  if (hashType !== 0x12) {
+    throw new Error('hashType')
+  }
+  const hashLength = cidBytes[3]
+  const rest = cidBytes.slice(4)
+  if (rest.byteLength < hashLength) {
+    throw new Error('hash length')
+  }
+  return sha256ToCid(rest, codec)
+}
+
+const readVarint = async (reader: BufferedReader): Promise<number> => {
+  let done = false
+  const bytes: Uint8Array[] = []
+  while (!done) {
+    const byte = await reader.read(1)
+    bytes.push(byte)
+    if (byte[0] < 128) {
+      done = true
+    }
+  }
+  const concatted = ui8.concat(bytes)
+  return varintDecode(concatted)
+}
+
+export class BufferedReader {
+  buffer: Uint8Array = new Uint8Array()
+  iterator: AsyncIterator<Uint8Array>
+  isDone = false
+
+  constructor(stream: AsyncIterable<Uint8Array>) {
+    this.iterator = stream[Symbol.asyncIterator]()
+  }
+
+  async read(bytesToRead: number): Promise<Uint8Array> {
+    await this.readUntilBuffered(bytesToRead)
+    const value = this.buffer.slice(0, bytesToRead)
+    this.buffer = this.buffer.slice(bytesToRead)
+    return value
+  }
+
+  private async readUntilBuffered(bytesToRead: number) {
+    if (this.isDone) {
+      return
+    }
+    while (this.buffer.length < bytesToRead) {
+      const next = await this.iterator.next()
+      if (next.done) {
+        this.isDone = true
+        return
+      }
+      this.buffer = ui8.concat([this.buffer, next.value])
+    }
   }
 }
 
