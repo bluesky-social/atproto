@@ -1,10 +1,10 @@
 {
   "lexicon": 1,
-  "id": "app.bsky.unspecced.getSuggestedStarterPacksSkeleton",
+  "id": "app.bsky.unspecced.getSuggestedStarterPacks",
   "defs": {
     "main": {
       "type": "query",
-      "description": "Get a skeleton of suggested starterpacks. Intended to be called and then hydrated through app.bsky.unspecced.getSuggestedStarterpacks",
+      "description": "Get a list of suggested starterpacks",
       "parameters": {
         "type": "params",
         "properties": {
@@ -30,8 +30,8 @@
             "starterPacks": {
               "type": "array",
               "items": {
-                "type": "string",
-                "format": "at-uri"
+                "type": "ref",
+                "ref": "app.bsky.graph.defs#starterPackViewBasic"
               }
             }
           }

@@ -33,12 +33,7 @@ export default function (server: Server, ctx: AppContext) {
           : req.headers['x-bsky-topics'],
       })
       const { ...result } = await getTrends(
-        {
-          ...params,
-          viewer: viewer ?? undefined,
-          hydrateCtx: hydrateCtx.copy({ viewer }),
-          headers,
-        },
+        { ...params, hydrateCtx: hydrateCtx.copy({ viewer }), headers },
         ctx,
       )
       return {
@@ -73,6 +68,7 @@ const hydration = async (
   input: HydrationFnInput<Context, Params, SkeletonState>,
 ) => {
   const { ctx, params, skeleton } = input
+
   let dids: string[] = []
   for (const uri of skeleton.starterPacks) {
     let aturi: AtUri | undefined
@@ -83,13 +79,20 @@ const hydration = async (
     }
     dids.push(aturi.hostname)
   }
+
   dids = dedupeStrs(dids)
+
   const pairs: Map<string, string[]> = new Map()
+
   if (params.viewer) {
     pairs.set(params.viewer, dids)
   }
+
   const [starterPacksState, bidirectionalBlocks] = await Promise.all([
-    ctx.hydrator.hydrateStarterPacks(skeleton.starterPacks, params.hydrateCtx),
+    ctx.hydrator.hydrateStarterPacksBasic(
+      skeleton.starterPacks,
+      params.hydrateCtx,
+    ),
     ctx.hydrator.hydrateBidirectionalBlocks(pairs),
   ])
 
@@ -112,6 +115,7 @@ const noBlocks = (input: RulesFnInput<Context, Params, SkeletonState>) => {
       } catch {
         return false
       }
+
       return !blocks?.get(aturi.hostname)
     }),
   }
@@ -126,7 +130,7 @@ const presentation = (
 
   return {
     starterPacks: mapDefined(skeleton.starterPacks, (uri) =>
-      ctx.views.starterPack(uri, hydration),
+      ctx.views.starterPackBasic(uri, hydration),
     ),
   }
 }
