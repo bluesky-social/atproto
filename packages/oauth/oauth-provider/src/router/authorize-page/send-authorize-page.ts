@@ -91,7 +91,7 @@ export function sendAuthorizePageFactory(customization: Customization) {
     return sendWebPage(res, {
       meta: [
         { name: 'robots', content: 'noindex' },
-        // @TODO: Localize the description
+        // @TODO Localize the description
         { name: 'description', content: 'ATProto OAuth authorization page' },
       ],
       links: buildLinks(locale),

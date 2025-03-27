@@ -304,7 +304,7 @@ export function apiRouter<
       } catch (err) {
         onError?.(req, res, err, 'Failed to handle API request')
 
-        // @TODO: Rework the API error responses (relying on codes)
+        // @TODO Rework the API error responses (relying on codes)
         const payload = buildErrorPayload(err)
         const status = buildErrorStatus(err)
 

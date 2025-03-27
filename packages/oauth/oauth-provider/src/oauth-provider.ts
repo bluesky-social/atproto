@@ -923,7 +923,7 @@ export class OAuthProvider extends OAuthVerifier {
       // a good enough incentive to follow the best practices, until we have a
       // better implementation.
       //
-      // @TODO: Use tokenManager to ensure uniqueness of code_challenge
+      // @TODO Use tokenManager to ensure uniqueness of code_challenge
       if (parameters.code_challenge) {
         const unique = await this.replayManager.uniqueCodeChallenge(
           parameters.code_challenge,

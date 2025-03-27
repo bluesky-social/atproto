@@ -27,7 +27,7 @@ export function sendAuthorizeRedirect(
   const uri = parameters.redirect_uri
   if (!uri) throw new InvalidRequestError('No redirect_uri')
 
-  const mode = parameters.response_mode || 'query' // @TODO: default should depend on response_type
+  const mode = parameters.response_mode || 'query' // @TODO default should depend on response_type
 
   const entries: [string, string][] = [
     ['iss', issuer], // rfc9207

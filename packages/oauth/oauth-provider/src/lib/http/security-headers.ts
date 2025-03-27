@@ -75,7 +75,7 @@ export function setSecurityHeaders(
     res.setHeader('Strict-Transport-Security', buildHstsValue(hsts))
   }
 
-  // @TODO: make these headers configurable (?)
+  // @TODO make these headers configurable (?)
   res.setHeader('Permissions-Policy', 'otp-credentials=*, document-domain=()')
   res.setHeader('Referrer-Policy', 'same-origin')
   res.setHeader('X-Frame-Options', 'DENY')

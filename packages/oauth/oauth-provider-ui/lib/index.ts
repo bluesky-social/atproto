@@ -43,7 +43,7 @@ export const COLOR_NAMES = [
 ] as const
 
 export const AVAILABLE_LOCALES = [
-  // TODO: Add more in this list as translations are added in the PO files
+  // @TODO: Add more in this list as translations are added in the PO files
   'en',
   'fr',
 ] as const

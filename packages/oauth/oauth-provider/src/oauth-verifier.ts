@@ -74,7 +74,7 @@ export class OAuthVerifier {
     const issuerParsed = oauthIssuerIdentifierSchema.parse(issuer)
     const issuerUrl = new URL(issuerParsed)
 
-    // TODO (?) support issuer with path
+    // @TODO (?) support issuer with path
     if (issuerUrl.pathname !== '/') {
       throw new TypeError(
         `"issuer" must be an URL with no path, search or hash (${issuerUrl})`,
