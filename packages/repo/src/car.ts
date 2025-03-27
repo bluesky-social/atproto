@@ -85,34 +85,46 @@ export const readCarStream = async (
 ): Promise<{
   roots: CID[]
   blocks: AsyncIterable<CarBlock>
+  close: () => Promise<void>
 }> => {
   const reader = new BufferedReader(car)
-  const headerSize = await reader.readVarint()
-  if (headerSize === null) {
-    throw new Error('Could not parse CAR header')
+  try {
+    const headerSize = await reader.readVarint()
+    if (headerSize === null) {
+      throw new Error('Could not parse CAR header')
+    }
+    const headerBytes = await reader.read(headerSize)
+    const header = cbor.decode(headerBytes)
+    if (!check.is(header, schema.carHeader)) {
+      throw new Error('Could not parse CAR header')
+    }
+    return {
+      roots: header.roots,
+      blocks: readCarBlocksIter(reader),
+      close: reader.close,
+    }
+  } catch (err) {
+    await reader.close()
+    throw err
   }
-  const headerBytes = await reader.read(headerSize)
-  const header = cbor.decode(headerBytes)
-  if (!check.is(header, schema.carHeader)) {
-    throw new Error('Could not parse CAR header')
-  }
-  const roots = header.roots
-  const blocks = readCarBlocksIter(reader)
-  return { roots, blocks }
 }
 
 async function* readCarBlocksIter(
   reader: BufferedReader,
 ): AsyncIterable<CarBlock> {
-  while (!reader.isDone) {
-    const blockSize = await reader.readVarint()
-    if (blockSize === null) {
-      break
+  try {
+    while (!reader.isDone) {
+      const blockSize = await reader.readVarint()
+      if (blockSize === null) {
+        break
+      }
+      const blockBytes = await reader.read(blockSize)
+      const cid = parseCidFromBytes(blockBytes.slice(0, 36))
+      const bytes = blockBytes.slice(36)
+      yield { cid, bytes }
     }
-    const blockBytes = await reader.read(blockSize)
-    const cid = parseCidFromBytes(blockBytes.slice(0, 36))
-    const bytes = blockBytes.slice(36)
-    yield { cid, bytes }
+  } finally {
+    await reader.close()
   }
 }
 
@@ -174,5 +186,13 @@ class BufferedReader {
       }
       this.buffer = ui8.concat([this.buffer, next.value])
     }
+  }
+
+  async close(): Promise<void> {
+    if (!this.isDone && this.iterator.return) {
+      await this.iterator.return()
+    }
+    this.isDone = true
+    this.buffer = new Uint8Array()
   }
 }
