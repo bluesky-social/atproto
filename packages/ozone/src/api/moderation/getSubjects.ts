@@ -63,7 +63,7 @@ export default function (server: Server, ctx: AppContext) {
           type,
           repo,
           record,
-          profile: {
+          profile: profile && {
             $type: 'app.bsky.actor.defs#profileViewDetailed',
             ...profile,
           },

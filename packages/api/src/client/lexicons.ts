@@ -13089,7 +13089,6 @@ export const schemaDict = {
             subjects: {
               type: 'array',
               maxLength: 100,
-              minLength: 1,
               items: {
                 type: 'string',
               },
