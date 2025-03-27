@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.14.13
+
+### Patch Changes
+
+- [#3651](https://github.com/bluesky-social/atproto/pull/3651) [`076c2f987`](https://github.com/bluesky-social/atproto/commit/076c2f9872387217806624306e3af08878d1adcd) Thanks [@foysalit](https://github.com/foysalit)! - Add getSubjects endpoint to ozone for fetching detailed view of multiple subjects
+
 ## 0.14.12
 
 ### Patch Changes
