@@ -53,6 +53,7 @@
         },
         "reactions": {
           "type": "array",
+          "description": "Reactions to this message, in ascending order of creation time.",
           "items": { "type": "ref", "ref": "#reactionView" }
         },
         "sender": { "type": "ref", "ref": "#messageViewSender" },
@@ -78,11 +79,10 @@
     },
     "reactionView": {
       "type": "object",
-      "required": ["value", "sender", "createdAt"],
+      "required": ["value", "sender"],
       "properties": {
         "value": { "type": "string" },
-        "sender": { "type": "ref", "ref": "#reactionViewSender" },
-        "createdAt": { "type": "string", "format": "datetime" }
+        "sender": { "type": "ref", "ref": "#reactionViewSender" }
       }
     },
     "reactionViewSender": {
