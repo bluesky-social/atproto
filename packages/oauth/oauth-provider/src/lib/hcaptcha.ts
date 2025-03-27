@@ -168,7 +168,7 @@ export class HCaptchaClient {
       success &&
       // Fool-proofing: If this is false, the user is trying to use a token
       // generated for the same siteKey, but on another domain.
-      hostname === this.hostname &&
+      (hostname == null || hostname === this.hostname) &&
       // Ignore if enterprise feature is not enabled
       (score == null ||
         // Ignore if disabled through config
