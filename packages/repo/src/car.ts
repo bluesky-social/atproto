@@ -138,11 +138,14 @@ export async function* verifyIncomingCarBlocks(
 
 class BufferedReader {
   buffer: Uint8Array = new Uint8Array()
-  iterator: AsyncIterator<Uint8Array>
+  iterator: Iterator<Uint8Array> | AsyncIterator<Uint8Array>
   isDone = false
 
   constructor(stream: Iterable<Uint8Array> | AsyncIterable<Uint8Array>) {
-    this.iterator = stream[Symbol.asyncIterator]()
+    this.iterator =
+      Symbol.asyncIterator in stream
+        ? stream[Symbol.asyncIterator]()
+        : stream[Symbol.iterator]()
   }
 
   async read(bytesToRead: number): Promise<Uint8Array> {
