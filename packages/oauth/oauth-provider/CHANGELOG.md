@@ -1,5 +1,11 @@
 # @atproto/oauth-provider
 
+## 0.6.2
+
+### Patch Changes
+
+- [#3681](https://github.com/bluesky-social/atproto/pull/3681) [`a5a760c1f`](https://github.com/bluesky-social/atproto/commit/a5a760c1f0efd7246c9eebbc0f482d2f505de0a1) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow null hostname in hcaptcha result
+
 ## 0.6.1
 
 ### Patch Changes
