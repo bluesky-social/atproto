@@ -53,6 +53,7 @@ import getSuggestedStarterPacks from './app/bsky/unspecced/getSuggestedStarterPa
 import getTaggedSuggestions from './app/bsky/unspecced/getTaggedSuggestions'
 import getTrendingTopics from './app/bsky/unspecced/getTrendingTopics'
 import getTrends from './app/bsky/unspecced/getTrends'
+import getUnspeccedSuggestedFeeds from './app/bsky/unspecced/getSuggestedFeeds'
 import getAccountInfos from './com/atproto/admin/getAccountInfos'
 import getSubjectStatus from './com/atproto/admin/getSubjectStatus'
 import updateSubjectStatus from './com/atproto/admin/updateSubjectStatus'
@@ -109,6 +110,7 @@ export default function (server: Server, ctx: AppContext) {
   getSuggestedFollowsByActor(server, ctx)
   getTrendingTopics(server, ctx)
   getTrends(server, ctx)
+  getUnspeccedSuggestedFeeds(server, ctx)
   getLabelerServices(server, ctx)
   searchActors(server, ctx)
   searchActorsTypeahead(server, ctx)
