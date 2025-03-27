@@ -9841,6 +9841,93 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyUnspeccedGetSuggestedStarterPacks: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.getSuggestedStarterPacks',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get a list of suggested starterpacks',
+        parameters: {
+          type: 'params',
+          properties: {
+            viewer: {
+              type: 'string',
+              format: 'did',
+              description:
+                'DID of the account making the request (not included for public/unauthenticated queries).',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 25,
+              default: 10,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['starterPacks'],
+            properties: {
+              starterPacks: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.graph.defs#starterPackViewBasic',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyUnspeccedGetSuggestedStarterPacksSkeleton: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.getSuggestedStarterPacksSkeleton',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get a skeleton of suggested starterpacks. Intended to be called and then hydrated through app.bsky.unspecced.getSuggestedStarterpacks',
+        parameters: {
+          type: 'params',
+          properties: {
+            viewer: {
+              type: 'string',
+              format: 'did',
+              description:
+                'DID of the account making the request (not included for public/unauthenticated queries).',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 25,
+              default: 10,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['starterPacks'],
+            properties: {
+              starterPacks: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                  format: 'at-uri',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyUnspeccedGetSuggestionsSkeleton: {
     lexicon: 1,
     id: 'app.bsky.unspecced.getSuggestionsSkeleton',
@@ -15051,6 +15138,10 @@ export const ids = {
   AppBskyUnspeccedGetConfig: 'app.bsky.unspecced.getConfig',
   AppBskyUnspeccedGetPopularFeedGenerators:
     'app.bsky.unspecced.getPopularFeedGenerators',
+  AppBskyUnspeccedGetSuggestedStarterPacks:
+    'app.bsky.unspecced.getSuggestedStarterPacks',
+  AppBskyUnspeccedGetSuggestedStarterPacksSkeleton:
+    'app.bsky.unspecced.getSuggestedStarterPacksSkeleton',
   AppBskyUnspeccedGetSuggestionsSkeleton:
     'app.bsky.unspecced.getSuggestionsSkeleton',
   AppBskyUnspeccedGetTaggedSuggestions:
