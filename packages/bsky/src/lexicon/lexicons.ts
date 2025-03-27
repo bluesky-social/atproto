@@ -10593,6 +10593,8 @@ export const schemaDict = {
           },
           reactions: {
             type: 'array',
+            description:
+              'Reactions to this message, in ascending order of creation time.',
             items: {
               type: 'ref',
               ref: 'lex:chat.bsky.convo.defs#reactionView',
@@ -10648,11 +10650,6 @@ export const schemaDict = {
           sender: {
             type: 'ref',
             ref: 'lex:chat.bsky.convo.defs#reactionViewSender',
-          },
-          rev: {
-            type: 'string',
-            description:
-              'Rev of when the reaction was created. Reactions with lower revs were created before reactions with higher revs.',
           },
         },
       },

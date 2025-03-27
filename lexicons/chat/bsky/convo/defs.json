@@ -53,6 +53,7 @@
         },
         "reactions": {
           "type": "array",
+          "description": "Reactions to this message, in ascending order of creation time.",
           "items": { "type": "ref", "ref": "#reactionView" }
         },
         "sender": { "type": "ref", "ref": "#messageViewSender" },
@@ -81,11 +82,7 @@
       "required": ["value", "sender"],
       "properties": {
         "value": { "type": "string" },
-        "sender": { "type": "ref", "ref": "#reactionViewSender" },
-        "rev": {
-          "type": "string",
-          "description": "Rev of when the reaction was created. Reactions with lower revs were created before reactions with higher revs."
-        }
+        "sender": { "type": "ref", "ref": "#reactionViewSender" }
       }
     },
     "reactionViewSender": {

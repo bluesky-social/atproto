@@ -60,6 +60,7 @@ export interface MessageView {
   /** Annotations of text (mentions, URLs, hashtags, etc) */
   facets?: AppBskyRichtextFacet.Main[]
   embed?: $Typed<AppBskyEmbedRecord.View> | { $type: string }
+  /** Reactions to this message, in ascending order of creation time. */
   reactions?: ReactionView[]
   sender: MessageViewSender
   sentAt: string
@@ -112,8 +113,6 @@ export interface ReactionView {
   $type?: 'chat.bsky.convo.defs#reactionView'
   value: string
   sender: ReactionViewSender
-  /** Rev of when the reaction was created. Reactions with lower revs were created before reactions with higher revs. */
-  rev?: string
 }
 
 const hashReactionView = 'reactionView'
