@@ -1,5 +1,12 @@
 # @atproto/pds
 
+## 0.4.113
+
+### Patch Changes
+
+- Updated dependencies [[`a5a760c1f`](https://github.com/bluesky-social/atproto/commit/a5a760c1f0efd7246c9eebbc0f482d2f505de0a1)]:
+  - @atproto/oauth-provider@0.6.2
+
 ## 0.4.112
 
 ### Patch Changes
