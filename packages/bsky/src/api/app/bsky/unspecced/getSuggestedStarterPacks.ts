@@ -68,7 +68,6 @@ const hydration = async (
   input: HydrationFnInput<Context, Params, SkeletonState>,
 ) => {
   const { ctx, params, skeleton } = input
-
   let dids: string[] = []
   for (const uri of skeleton.starterPacks) {
     let aturi: AtUri | undefined
@@ -79,15 +78,11 @@ const hydration = async (
     }
     dids.push(aturi.hostname)
   }
-
   dids = dedupeStrs(dids)
-
   const pairs: Map<string, string[]> = new Map()
-
   if (params.viewer) {
     pairs.set(params.viewer, dids)
   }
-
   const [starterPacksState, bidirectionalBlocks] = await Promise.all([
     ctx.hydrator.hydrateStarterPacksBasic(
       skeleton.starterPacks,
@@ -115,7 +110,6 @@ const noBlocks = (input: RulesFnInput<Context, Params, SkeletonState>) => {
       } catch {
         return false
       }
-
       return !blocks?.get(aturi.hostname)
     }),
   }
