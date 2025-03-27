@@ -9880,6 +9880,12 @@ export const schemaDict = {
         parameters: {
           type: 'params',
           properties: {
+            viewer: {
+              type: 'string',
+              format: 'did',
+              description:
+                'DID of the account making the request (not included for public/unauthenticated queries).',
+            },
             limit: {
               type: 'integer',
               minimum: 1,
@@ -9898,7 +9904,7 @@ export const schemaDict = {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:app.bsky.graph.defs#starterPackView',
+                  ref: 'lex:app.bsky.graph.defs#starterPackViewBasic',
                 },
               },
             },
@@ -9914,7 +9920,7 @@ export const schemaDict = {
       main: {
         type: 'query',
         description:
-          'Get a skeleton of suggested starterpacks. Intended to be called and hydrated by app.bsky.unspecced.getSuggestedStarterpacks',
+          'Get a skeleton of suggested starterpacks. Intended to be called and then hydrated through app.bsky.unspecced.getSuggestedStarterpacks',
         parameters: {
           type: 'params',
           properties: {
