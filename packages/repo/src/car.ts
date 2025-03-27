@@ -3,7 +3,6 @@ import { CID } from 'multiformats/cid'
 import * as ui8 from 'uint8arrays'
 import * as varint from 'varint'
 import {
-  bytesToIterable,
   check,
   schema,
   streamToBuffer,
@@ -58,7 +57,7 @@ async function* iterateBlocks(blocks: BlockMap) {
 export const readCar = async (
   bytes: Uint8Array,
 ): Promise<{ roots: CID[]; blocks: BlockMap }> => {
-  const { roots, blocks } = await readCarStream(bytesToIterable(bytes))
+  const { roots, blocks } = await readCarStream([bytes])
   const blockMap = new BlockMap()
   for await (const block of blocks) {
     blockMap.set(block.cid, block.bytes)
@@ -81,7 +80,7 @@ export const readCarWithRoot = async (
 }
 
 export const readCarStream = async (
-  car: AsyncIterable<Uint8Array>,
+  car: Iterable<Uint8Array> | AsyncIterable<Uint8Array>,
 ): Promise<{
   roots: CID[]
   blocks: AsyncIterable<CarBlock>
@@ -142,7 +141,7 @@ class BufferedReader {
   iterator: AsyncIterator<Uint8Array>
   isDone = false
 
-  constructor(stream: AsyncIterable<Uint8Array>) {
+  constructor(stream: Iterable<Uint8Array> | AsyncIterable<Uint8Array>) {
     this.iterator = stream[Symbol.asyncIterator]()
   }
 
