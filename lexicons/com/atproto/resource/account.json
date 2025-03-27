@@ -15,21 +15,38 @@
           },
           "updateEmail": {
             "type": "boolean",
+            "description": "Note: may require 2fa",
             "default": false
           },
           "updatePassword": {
             "type": "boolean",
+            "description": "Note: may require 2fa",
             "default": false
           },
           "deleteAccount": {
             "type": "boolean",
+            "description": "Note: may require 2fa",
             "default": false
           },
           "activateAccount": {
             "type": "boolean",
+            "description": "Note: may require 2fa",
             "default": false
           },
           "deactivateAccount": {
+            "type": "boolean",
+            "description": "Note: may require 2fa",
+            "default": false
+          },
+          "createAppPassword": {
+            "type": "boolean",
+            "default": false
+          },
+          "revokeAppPassword": {
+            "type": "boolean",
+            "default": false
+          },
+          "listAppPasswords": {
             "type": "boolean",
             "default": false
           }
