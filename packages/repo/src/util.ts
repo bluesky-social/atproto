@@ -34,7 +34,7 @@ import {
 
 export async function* verifyIncomingCarBlocks(
   car: AsyncIterable<CarBlock>,
-): AsyncIterable<CarBlock> {
+): AsyncGenerator<CarBlock> {
   for await (const block of car) {
     await verifyCidForBytes(block.cid, block.bytes)
     yield block
