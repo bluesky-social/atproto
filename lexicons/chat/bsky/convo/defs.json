@@ -78,11 +78,14 @@
     },
     "reactionView": {
       "type": "object",
-      "required": ["value", "sender", "createdAt"],
+      "required": ["value", "sender"],
       "properties": {
         "value": { "type": "string" },
         "sender": { "type": "ref", "ref": "#reactionViewSender" },
-        "createdAt": { "type": "string", "format": "datetime" }
+        "rev": {
+          "type": "string",
+          "description": "Rev of when the reaction was created. Reactions with lower revs were created before reactions with higher revs."
+        }
       }
     },
     "reactionViewSender": {

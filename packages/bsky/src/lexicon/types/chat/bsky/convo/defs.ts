@@ -112,7 +112,8 @@ export interface ReactionView {
   $type?: 'chat.bsky.convo.defs#reactionView'
   value: string
   sender: ReactionViewSender
-  createdAt: string
+  /** Rev of when the reaction was created. Reactions with lower revs were created before reactions with higher revs. */
+  rev?: string
 }
 
 const hashReactionView = 'reactionView'

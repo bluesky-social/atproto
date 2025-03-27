@@ -10640,7 +10640,7 @@ export const schemaDict = {
       },
       reactionView: {
         type: 'object',
-        required: ['value', 'sender', 'createdAt'],
+        required: ['value', 'sender'],
         properties: {
           value: {
             type: 'string',
@@ -10649,9 +10649,10 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:chat.bsky.convo.defs#reactionViewSender',
           },
-          createdAt: {
+          rev: {
             type: 'string',
-            format: 'datetime',
+            description:
+              'Rev of when the reaction was created. Reactions with lower revs were created before reactions with higher revs.',
           },
         },
       },
