@@ -91,7 +91,7 @@ export interface SkeletonTrend {
   postCount: number
   status?: 'hot' | (string & {})
   category?: string
-  dids?: string[]
+  dids: string[]
 }
 
 const hashSkeletonTrend = 'skeletonTrend'
@@ -113,7 +113,7 @@ export interface TrendView {
   postCount: number
   status?: 'hot' | (string & {})
   category?: string
-  actors?: AppBskyActorDefs.ProfileViewBasic[]
+  actors: AppBskyActorDefs.ProfileViewBasic[]
 }
 
 const hashTrendView = 'trendView'

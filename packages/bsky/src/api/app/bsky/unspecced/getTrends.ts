@@ -57,7 +57,6 @@ const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
         headers: params.headers,
       },
     )
-
     return res.data
   } else {
     throw new InternalServerError('Topics agent not available')
@@ -68,22 +67,15 @@ const hydration = async (
   input: HydrationFnInput<Context, Params, SkeletonState>,
 ) => {
   const { ctx, params, skeleton } = input
-
   let dids: string[] = []
   for (const trend of skeleton.trends) {
-    if (trend.dids) {
-      dids.push(...trend.dids)
-    }
+    dids.push(...trend.dids)
   }
-
   dids = dedupeStrs(dids)
-
   const pairs: Map<string, string[]> = new Map()
-
   if (params.viewer) {
     pairs.set(params.viewer, dids)
   }
-
   const [profileState, bidirectionalBlocks] = await Promise.all([
     ctx.hydrator.hydrateProfilesBasic(dids, params.hydrateCtx),
     ctx.hydrator.hydrateBidirectionalBlocks(pairs),
@@ -103,7 +95,7 @@ const noBlocks = (input: RulesFnInput<Context, Params, SkeletonState>) => {
   const filteredSkeleton: SkeletonState = {
     trends: skeleton.trends.map((t) => ({
       ...t,
-      dids: t.dids?.filter((did) => !blocks?.get(did)),
+      dids: t.dids.filter((did) => !blocks?.get(did)),
     })),
   }
 
@@ -124,7 +116,7 @@ const presentation = (
       postCount: t.postCount,
       status: t.status,
       category: t.category,
-      actors: mapDefined(t.dids ?? [], (did) =>
+      actors: mapDefined(t.dids, (did) =>
         ctx.views.profileBasic(did, hydration),
       ),
     })),

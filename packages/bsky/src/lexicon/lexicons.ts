@@ -9701,7 +9701,14 @@ export const schemaDict = {
       },
       skeletonTrend: {
         type: 'object',
-        required: ['topic', 'displayName', 'link', 'startedAt', 'postCount'],
+        required: [
+          'topic',
+          'displayName',
+          'link',
+          'startedAt',
+          'postCount',
+          'dids',
+        ],
         properties: {
           topic: {
             type: 'string',
@@ -9737,7 +9744,14 @@ export const schemaDict = {
       },
       trendView: {
         type: 'object',
-        required: ['topic', 'displayName', 'link', 'startedAt', 'postCount'],
+        required: [
+          'topic',
+          'displayName',
+          'link',
+          'startedAt',
+          'postCount',
+          'actors',
+        ],
         properties: {
           topic: {
             type: 'string',
