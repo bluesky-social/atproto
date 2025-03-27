@@ -10064,7 +10064,7 @@ export const schemaDict = {
       main: {
         type: 'query',
         description:
-          'Get the skeleton of trends on the network. Intended to be called and then hydrated through app.bsky.unspecced.getTrends',
+          'Get the skeleton of trends on the network. Intended to be called and hydrated by app.bsky.unspecced.getTrends',
         parameters: {
           type: 'params',
           properties: {
