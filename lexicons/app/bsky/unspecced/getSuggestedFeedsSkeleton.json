@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Get a skeleton of suggested feeds. Intended to be called and then hydrated through app.bsky.unspecced.getSuggestedFeeds",
+      "description": "Get a skeleton of suggested feeds. Intended to be called and hydrated by app.bsky.unspecced.getSuggestedFeeds",
       "parameters": {
         "type": "params",
         "properties": {
