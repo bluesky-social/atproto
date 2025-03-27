@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "auth-bundle",
-      "description": "Create moderation reports",
+      "description": "Report content and view status of reports",
       "permissions": [
         "com.atproto.resource.authentication?aud=*&lxm=tools.ozone.moderation.createReport"
       ]

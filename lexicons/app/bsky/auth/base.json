@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "auth-bundle",
-      "description": "Basic data in your Bluesky account including your profile, posts, follows, lists, blocks, and viewing feeds.",
+      "description": "Create and delete data in your Bluesky account including your profile, posts, follows, lists, blocks, and viewing feeds.",
       "permissions": [
         "com.atproto.resource.repo?collection=app.bsky.actor.profile&create=true&delete=true&update=true",
         "com.atproto.resource.repo?collection=app.bsky.feed.post&create=true&delete=true",

@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "auth-bundle",
-      "description": "Ability to update incoming chat (DM) preferences.",
+      "description": "Update incoming chat (DM) preferences.",
       "permissions": [
         "com.atproto.resource.repo?collection=chat.bsky.actor.declaration&create=true&delete=true&update=true"
       ]
