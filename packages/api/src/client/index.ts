@@ -177,6 +177,8 @@ import * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet.js'
 import * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs.js'
 import * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig.js'
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators.js'
+import * as AppBskyUnspeccedGetSuggestedFeeds from './types/app/bsky/unspecced/getSuggestedFeeds.js'
+import * as AppBskyUnspeccedGetSuggestedFeedsSkeleton from './types/app/bsky/unspecced/getSuggestedFeedsSkeleton.js'
 import * as AppBskyUnspeccedGetSuggestedStarterPacks from './types/app/bsky/unspecced/getSuggestedStarterPacks.js'
 import * as AppBskyUnspeccedGetSuggestedStarterPacksSkeleton from './types/app/bsky/unspecced/getSuggestedStarterPacksSkeleton.js'
 import * as AppBskyUnspeccedGetSuggestionsSkeleton from './types/app/bsky/unspecced/getSuggestionsSkeleton.js'
@@ -423,6 +425,8 @@ export * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet.js'
 export * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs.js'
 export * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig.js'
 export * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators.js'
+export * as AppBskyUnspeccedGetSuggestedFeeds from './types/app/bsky/unspecced/getSuggestedFeeds.js'
+export * as AppBskyUnspeccedGetSuggestedFeedsSkeleton from './types/app/bsky/unspecced/getSuggestedFeedsSkeleton.js'
 export * as AppBskyUnspeccedGetSuggestedStarterPacks from './types/app/bsky/unspecced/getSuggestedStarterPacks.js'
 export * as AppBskyUnspeccedGetSuggestedStarterPacksSkeleton from './types/app/bsky/unspecced/getSuggestedStarterPacksSkeleton.js'
 export * as AppBskyUnspeccedGetSuggestionsSkeleton from './types/app/bsky/unspecced/getSuggestionsSkeleton.js'
@@ -3242,6 +3246,30 @@ export class AppBskyUnspeccedNS {
   ): Promise<AppBskyUnspeccedGetPopularFeedGenerators.Response> {
     return this._client.call(
       'app.bsky.unspecced.getPopularFeedGenerators',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getSuggestedFeeds(
+    params?: AppBskyUnspeccedGetSuggestedFeeds.QueryParams,
+    opts?: AppBskyUnspeccedGetSuggestedFeeds.CallOptions,
+  ): Promise<AppBskyUnspeccedGetSuggestedFeeds.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getSuggestedFeeds',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getSuggestedFeedsSkeleton(
+    params?: AppBskyUnspeccedGetSuggestedFeedsSkeleton.QueryParams,
+    opts?: AppBskyUnspeccedGetSuggestedFeedsSkeleton.CallOptions,
+  ): Promise<AppBskyUnspeccedGetSuggestedFeedsSkeleton.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getSuggestedFeedsSkeleton',
       params,
       undefined,
       opts,
