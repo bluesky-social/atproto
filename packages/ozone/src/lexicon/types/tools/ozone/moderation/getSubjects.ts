@@ -11,33 +11,20 @@ import {
   type OmitKey,
 } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
-import type * as ChatBskyConvoDefs from './defs.js'
+import type * as ToolsOzoneModerationDefs from './defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
-const id = 'chat.bsky.convo.getLog'
+const id = 'tools.ozone.moderation.getSubjects'
 
 export interface QueryParams {
-  cursor?: string
+  subjects: string[]
 }
 
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  cursor?: string
-  logs: (
-    | $Typed<ChatBskyConvoDefs.LogBeginConvo>
-    | $Typed<ChatBskyConvoDefs.LogAcceptConvo>
-    | $Typed<ChatBskyConvoDefs.LogLeaveConvo>
-    | $Typed<ChatBskyConvoDefs.LogMuteConvo>
-    | $Typed<ChatBskyConvoDefs.LogUnmuteConvo>
-    | $Typed<ChatBskyConvoDefs.LogCreateMessage>
-    | $Typed<ChatBskyConvoDefs.LogDeleteMessage>
-    | $Typed<ChatBskyConvoDefs.LogReadMessage>
-    | $Typed<ChatBskyConvoDefs.LogAddReaction>
-    | $Typed<ChatBskyConvoDefs.LogRemoveReaction>
-    | { $type: string }
-  )[]
+  subjects: ToolsOzoneModerationDefs.SubjectView[]
 }
 
 export type HandlerInput = undefined

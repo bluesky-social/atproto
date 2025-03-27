@@ -29,8 +29,13 @@ export interface OutputSchema {
     | $Typed<ChatBskyConvoDefs.LogBeginConvo>
     | $Typed<ChatBskyConvoDefs.LogAcceptConvo>
     | $Typed<ChatBskyConvoDefs.LogLeaveConvo>
+    | $Typed<ChatBskyConvoDefs.LogMuteConvo>
+    | $Typed<ChatBskyConvoDefs.LogUnmuteConvo>
     | $Typed<ChatBskyConvoDefs.LogCreateMessage>
     | $Typed<ChatBskyConvoDefs.LogDeleteMessage>
+    | $Typed<ChatBskyConvoDefs.LogReadMessage>
+    | $Typed<ChatBskyConvoDefs.LogAddReaction>
+    | $Typed<ChatBskyConvoDefs.LogRemoveReaction>
     | { $type: string }
   )[]
 }
