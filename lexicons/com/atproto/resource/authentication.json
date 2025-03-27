@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.resource.repo",
+  "id": "com.atproto.resource.authentication",
   "defs": {
     "main": {
       "type": "auth-resource",
