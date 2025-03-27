@@ -1,0 +1,40 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.resource.account",
+  "defs": {
+    "main": {
+      "type": "auth-resource",
+      "description": "Grants access to account level actions.",
+      "parameters": {
+        "type": "params",
+        "required": [],
+        "properties": {
+          "viewEmail": {
+            "type": "boolean",
+            "default": false
+          },
+          "updateEmail": {
+            "type": "boolean",
+            "default": false
+          },
+          "updatePassword": {
+            "type": "boolean",
+            "default": false
+          },
+          "deleteAccount": {
+            "type": "boolean",
+            "default": false
+          },
+          "activateAccount": {
+            "type": "boolean",
+            "default": false
+          },
+          "deactivateAccount": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      }
+    }
+  }
+}
