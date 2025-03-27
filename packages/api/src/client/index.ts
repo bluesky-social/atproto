@@ -224,6 +224,7 @@ import * as ToolsOzoneModerationGetRecords from './types/tools/ozone/moderation/
 import * as ToolsOzoneModerationGetRepo from './types/tools/ozone/moderation/getRepo.js'
 import * as ToolsOzoneModerationGetReporterStats from './types/tools/ozone/moderation/getReporterStats.js'
 import * as ToolsOzoneModerationGetRepos from './types/tools/ozone/moderation/getRepos.js'
+import * as ToolsOzoneModerationGetSubjects from './types/tools/ozone/moderation/getSubjects.js'
 import * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents.js'
 import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses.js'
 import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos.js'
@@ -464,6 +465,7 @@ export * as ToolsOzoneModerationGetRecords from './types/tools/ozone/moderation/
 export * as ToolsOzoneModerationGetRepo from './types/tools/ozone/moderation/getRepo.js'
 export * as ToolsOzoneModerationGetReporterStats from './types/tools/ozone/moderation/getReporterStats.js'
 export * as ToolsOzoneModerationGetRepos from './types/tools/ozone/moderation/getRepos.js'
+export * as ToolsOzoneModerationGetSubjects from './types/tools/ozone/moderation/getSubjects.js'
 export * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents.js'
 export * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses.js'
 export * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos.js'
@@ -3868,6 +3870,18 @@ export class ToolsOzoneModerationNS {
   ): Promise<ToolsOzoneModerationGetRepos.Response> {
     return this._client.call(
       'tools.ozone.moderation.getRepos',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getSubjects(
+    params?: ToolsOzoneModerationGetSubjects.QueryParams,
+    opts?: ToolsOzoneModerationGetSubjects.CallOptions,
+  ): Promise<ToolsOzoneModerationGetSubjects.Response> {
+    return this._client.call(
+      'tools.ozone.moderation.getSubjects',
       params,
       undefined,
       opts,
