@@ -87,8 +87,10 @@ export const ensureValidNsid = (nsid: string): void => {
     if (/^[0-9]/.test(l) && i === 0) {
       throw new InvalidNsidError('NSID first part may not start with a digit')
     }
-    if (!/^[a-zA-Z]+$/.test(l) && i + 1 === labels.length) {
-      throw new InvalidNsidError('NSID name part must be only letters')
+    if (!/^[a-zA-Z][a-zA-Z0-9]*$/.test(l) && i + 1 === labels.length) {
+      throw new InvalidNsidError(
+        'NSID name part must be only letters and digits (and no leading digit)',
+      )
     }
   }
 }
@@ -97,7 +99,7 @@ export const ensureValidNsidRegex = (nsid: string): void => {
   // simple regex to enforce most constraints via just regex and length.
   // hand wrote this regex based on above constraints
   if (
-    !/^[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(\.[a-zA-Z]([a-zA-Z]{0,61}[a-zA-Z])?)$/.test(
+    !/^[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(\.[a-zA-Z]([a-zA-Z0-9]{0,62})?)$/.test(
       nsid,
     )
   ) {

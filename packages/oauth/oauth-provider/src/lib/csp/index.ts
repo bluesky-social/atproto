@@ -1,7 +1,8 @@
-import { Simplify } from '../util/type.js'
+import { CombinedTuple, Simplify } from '../util/type.js'
 
 export type CspValue =
   | `data:`
+  | `http:${string}`
   | `https:${string}`
   | `'none'`
   | `'self'`
@@ -35,7 +36,7 @@ export type CspConfig = Simplify<
   } & {
     [K in (typeof STRING_DIRECTIVES)[number]]?: CspValue
   } & {
-    [K in (typeof ARRAY_DIRECTIVES)[number]]?: readonly CspValue[]
+    [K in (typeof ARRAY_DIRECTIVES)[number]]?: Iterable<CspValue>
   }
 >
 
@@ -53,25 +54,27 @@ export function buildCsp(config: CspConfig): string {
   }
 
   for (const name of ARRAY_DIRECTIVES) {
-    if (config[name]?.length) values.push(`${name} ${config[name].join(' ')}`)
+    // Remove duplicate values by using a Set
+    const val = config[name] ? new Set(config[name]) : undefined
+    if (val?.size) values.push(`${name} ${Array.from(val).join(' ')}`)
   }
 
   return values.join('; ')
 }
 
-export function mergeCsp(a: CspConfig, b?: CspConfig): CspConfig
-export function mergeCsp(a: CspConfig | undefined, b: CspConfig): CspConfig
-export function mergeCsp(a?: CspConfig, b?: CspConfig): CspConfig | undefined
-export function mergeCsp(a?: CspConfig, b?: CspConfig): CspConfig | undefined {
-  if (!a) return b
-  if (!b) return a
+export function mergeCsp<C extends (CspConfig | null | undefined)[]>(
+  ...configs: C
+) {
+  return configs.filter((v) => v != null).reduce(combineCsp) as CombinedTuple<C>
+}
 
+export function combineCsp(a: CspConfig, b: CspConfig): CspConfig {
   const result: CspConfig = {}
 
   for (const name of BOOLEAN_DIRECTIVES) {
-    if (a[name] || b[name]) {
-      result[name] = true
-    }
+    // @NOTE b (if defined) takes precedence
+    const value = b[name] ?? a[name]
+    if (value != null) result[name] = value
   }
 
   for (const name of STRING_DIRECTIVES) {
@@ -90,7 +93,7 @@ export function mergeCsp(a?: CspConfig, b?: CspConfig): CspConfig | undefined {
       if (set.size > 1 && set.has(NONE)) set.delete(NONE)
       result[name] = [...set]
     } else if (a[name] || b[name]) {
-      result[name] = Array.from((a[name] || b[name])!)
+      result[name] = a[name] || b[name]
     }
   }
 

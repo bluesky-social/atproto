@@ -1,10 +1,14 @@
 /**
  * GENERATED CODE - DO NOT MODIFY
  */
-import { ValidationResult, BlobRef } from '@atproto/lexicon'
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { validate as _validate } from '../../../../lexicons'
-import { $Typed, is$typed as _is$typed, OmitKey } from '../../../../util'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util'
 import type * as AppBskyRichtextFacet from '../../../app/bsky/richtext/facet.js'
 import type * as AppBskyEmbedRecord from '../../../app/bsky/embed/record.js'
 import type * as ChatBskyActorDefs from '../actor/defs.js'
@@ -56,6 +60,7 @@ export interface MessageView {
   /** Annotations of text (mentions, URLs, hashtags, etc) */
   facets?: AppBskyRichtextFacet.Main[]
   embed?: $Typed<AppBskyEmbedRecord.View> | { $type: string }
+  reactions?: ReactionView[]
   sender: MessageViewSender
   sentAt: string
 }
@@ -103,6 +108,54 @@ export function validateMessageViewSender<V>(v: V) {
   return validate<MessageViewSender & V>(v, id, hashMessageViewSender)
 }
 
+export interface ReactionView {
+  $type?: 'chat.bsky.convo.defs#reactionView'
+  value: string
+  sender: ReactionViewSender
+  createdAt: string
+}
+
+const hashReactionView = 'reactionView'
+
+export function isReactionView<V>(v: V) {
+  return is$typed(v, id, hashReactionView)
+}
+
+export function validateReactionView<V>(v: V) {
+  return validate<ReactionView & V>(v, id, hashReactionView)
+}
+
+export interface ReactionViewSender {
+  $type?: 'chat.bsky.convo.defs#reactionViewSender'
+  did: string
+}
+
+const hashReactionViewSender = 'reactionViewSender'
+
+export function isReactionViewSender<V>(v: V) {
+  return is$typed(v, id, hashReactionViewSender)
+}
+
+export function validateReactionViewSender<V>(v: V) {
+  return validate<ReactionViewSender & V>(v, id, hashReactionViewSender)
+}
+
+export interface MessageAndReactionView {
+  $type?: 'chat.bsky.convo.defs#messageAndReactionView'
+  message: MessageView
+  reaction: ReactionView
+}
+
+const hashMessageAndReactionView = 'messageAndReactionView'
+
+export function isMessageAndReactionView<V>(v: V) {
+  return is$typed(v, id, hashMessageAndReactionView)
+}
+
+export function validateMessageAndReactionView<V>(v: V) {
+  return validate<MessageAndReactionView & V>(v, id, hashMessageAndReactionView)
+}
+
 export interface ConvoView {
   $type?: 'chat.bsky.convo.defs#convoView'
   id: string
@@ -111,6 +164,7 @@ export interface ConvoView {
   lastMessage?:
     | $Typed<MessageView>
     | $Typed<DeletedMessageView>
+    | $Typed<MessageAndReactionView>
     | { $type: string }
   muted: boolean
   status?: 'request' | 'accepted' | (string & {})
@@ -256,4 +310,40 @@ export function isLogReadMessage<V>(v: V) {
 
 export function validateLogReadMessage<V>(v: V) {
   return validate<LogReadMessage & V>(v, id, hashLogReadMessage)
+}
+
+export interface LogAddReaction {
+  $type?: 'chat.bsky.convo.defs#logAddReaction'
+  rev: string
+  convoId: string
+  message: $Typed<MessageView> | $Typed<DeletedMessageView> | { $type: string }
+  reaction: ReactionView
+}
+
+const hashLogAddReaction = 'logAddReaction'
+
+export function isLogAddReaction<V>(v: V) {
+  return is$typed(v, id, hashLogAddReaction)
+}
+
+export function validateLogAddReaction<V>(v: V) {
+  return validate<LogAddReaction & V>(v, id, hashLogAddReaction)
+}
+
+export interface LogRemoveReaction {
+  $type?: 'chat.bsky.convo.defs#logRemoveReaction'
+  rev: string
+  convoId: string
+  message: $Typed<MessageView> | $Typed<DeletedMessageView> | { $type: string }
+  reaction: ReactionView
+}
+
+const hashLogRemoveReaction = 'logRemoveReaction'
+
+export function isLogRemoveReaction<V>(v: V) {
+  return is$typed(v, id, hashLogRemoveReaction)
+}
+
+export function validateLogRemoveReaction<V>(v: V) {
+  return validate<LogRemoveReaction & V>(v, id, hashLogRemoveReaction)
 }

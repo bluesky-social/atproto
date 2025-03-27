@@ -12,7 +12,7 @@ export default function (server: Server, ctx: AppContext) {
         encoding: 'application/json',
         body: {
           cursor,
-          members: await teamService.view(members, ctx),
+          members: await teamService.view(members),
         },
       }
     },

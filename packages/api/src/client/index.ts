@@ -1,10 +1,14 @@
 /**
  * GENERATED CODE - DO NOT MODIFY
  */
-import { XrpcClient, FetchHandler, FetchHandlerOptions } from '@atproto/xrpc'
+import {
+  XrpcClient,
+  type FetchHandler,
+  type FetchHandlerOptions,
+} from '@atproto/xrpc'
 import { schemas } from './lexicons.js'
 import { CID } from 'multiformats/cid'
-import { OmitKey, Un$Typed } from './util.js'
+import { type OmitKey, type Un$Typed } from './util.js'
 import * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs.js'
 import * as ComAtprotoAdminDeleteAccount from './types/com/atproto/admin/deleteAccount.js'
 import * as ComAtprotoAdminDisableAccountInvites from './types/com/atproto/admin/disableAccountInvites.js'
@@ -188,6 +192,7 @@ import * as ChatBskyActorDefs from './types/chat/bsky/actor/defs.js'
 import * as ChatBskyActorDeleteAccount from './types/chat/bsky/actor/deleteAccount.js'
 import * as ChatBskyActorExportAccountData from './types/chat/bsky/actor/exportAccountData.js'
 import * as ChatBskyConvoAcceptConvo from './types/chat/bsky/convo/acceptConvo.js'
+import * as ChatBskyConvoAddReaction from './types/chat/bsky/convo/addReaction.js'
 import * as ChatBskyConvoDefs from './types/chat/bsky/convo/defs.js'
 import * as ChatBskyConvoDeleteMessageForSelf from './types/chat/bsky/convo/deleteMessageForSelf.js'
 import * as ChatBskyConvoGetConvo from './types/chat/bsky/convo/getConvo.js'
@@ -198,6 +203,7 @@ import * as ChatBskyConvoGetMessages from './types/chat/bsky/convo/getMessages.j
 import * as ChatBskyConvoLeaveConvo from './types/chat/bsky/convo/leaveConvo.js'
 import * as ChatBskyConvoListConvos from './types/chat/bsky/convo/listConvos.js'
 import * as ChatBskyConvoMuteConvo from './types/chat/bsky/convo/muteConvo.js'
+import * as ChatBskyConvoRemoveReaction from './types/chat/bsky/convo/removeReaction.js'
 import * as ChatBskyConvoSendMessage from './types/chat/bsky/convo/sendMessage.js'
 import * as ChatBskyConvoSendMessageBatch from './types/chat/bsky/convo/sendMessageBatch.js'
 import * as ChatBskyConvoUnmuteConvo from './types/chat/bsky/convo/unmuteConvo.js'
@@ -219,6 +225,7 @@ import * as ToolsOzoneModerationGetRecords from './types/tools/ozone/moderation/
 import * as ToolsOzoneModerationGetRepo from './types/tools/ozone/moderation/getRepo.js'
 import * as ToolsOzoneModerationGetReporterStats from './types/tools/ozone/moderation/getReporterStats.js'
 import * as ToolsOzoneModerationGetRepos from './types/tools/ozone/moderation/getRepos.js'
+import * as ToolsOzoneModerationGetSubjects from './types/tools/ozone/moderation/getSubjects.js'
 import * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents.js'
 import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses.js'
 import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos.js'
@@ -427,6 +434,7 @@ export * as ChatBskyActorDefs from './types/chat/bsky/actor/defs.js'
 export * as ChatBskyActorDeleteAccount from './types/chat/bsky/actor/deleteAccount.js'
 export * as ChatBskyActorExportAccountData from './types/chat/bsky/actor/exportAccountData.js'
 export * as ChatBskyConvoAcceptConvo from './types/chat/bsky/convo/acceptConvo.js'
+export * as ChatBskyConvoAddReaction from './types/chat/bsky/convo/addReaction.js'
 export * as ChatBskyConvoDefs from './types/chat/bsky/convo/defs.js'
 export * as ChatBskyConvoDeleteMessageForSelf from './types/chat/bsky/convo/deleteMessageForSelf.js'
 export * as ChatBskyConvoGetConvo from './types/chat/bsky/convo/getConvo.js'
@@ -437,6 +445,7 @@ export * as ChatBskyConvoGetMessages from './types/chat/bsky/convo/getMessages.j
 export * as ChatBskyConvoLeaveConvo from './types/chat/bsky/convo/leaveConvo.js'
 export * as ChatBskyConvoListConvos from './types/chat/bsky/convo/listConvos.js'
 export * as ChatBskyConvoMuteConvo from './types/chat/bsky/convo/muteConvo.js'
+export * as ChatBskyConvoRemoveReaction from './types/chat/bsky/convo/removeReaction.js'
 export * as ChatBskyConvoSendMessage from './types/chat/bsky/convo/sendMessage.js'
 export * as ChatBskyConvoSendMessageBatch from './types/chat/bsky/convo/sendMessageBatch.js'
 export * as ChatBskyConvoUnmuteConvo from './types/chat/bsky/convo/unmuteConvo.js'
@@ -458,6 +467,7 @@ export * as ToolsOzoneModerationGetRecords from './types/tools/ozone/moderation/
 export * as ToolsOzoneModerationGetRepo from './types/tools/ozone/moderation/getRepo.js'
 export * as ToolsOzoneModerationGetReporterStats from './types/tools/ozone/moderation/getReporterStats.js'
 export * as ToolsOzoneModerationGetRepos from './types/tools/ozone/moderation/getRepos.js'
+export * as ToolsOzoneModerationGetSubjects from './types/tools/ozone/moderation/getSubjects.js'
 export * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents.js'
 export * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses.js'
 export * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos.js'
@@ -3491,6 +3501,17 @@ export class ChatBskyConvoNS {
     )
   }
 
+  addReaction(
+    data?: ChatBskyConvoAddReaction.InputSchema,
+    opts?: ChatBskyConvoAddReaction.CallOptions,
+  ): Promise<ChatBskyConvoAddReaction.Response> {
+    return this._client
+      .call('chat.bsky.convo.addReaction', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ChatBskyConvoAddReaction.toKnownErr(e)
+      })
+  }
+
   deleteMessageForSelf(
     data?: ChatBskyConvoDeleteMessageForSelf.InputSchema,
     opts?: ChatBskyConvoDeleteMessageForSelf.CallOptions,
@@ -3582,6 +3603,17 @@ export class ChatBskyConvoNS {
     opts?: ChatBskyConvoMuteConvo.CallOptions,
   ): Promise<ChatBskyConvoMuteConvo.Response> {
     return this._client.call('chat.bsky.convo.muteConvo', opts?.qp, data, opts)
+  }
+
+  removeReaction(
+    data?: ChatBskyConvoRemoveReaction.InputSchema,
+    opts?: ChatBskyConvoRemoveReaction.CallOptions,
+  ): Promise<ChatBskyConvoRemoveReaction.Response> {
+    return this._client
+      .call('chat.bsky.convo.removeReaction', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ChatBskyConvoRemoveReaction.toKnownErr(e)
+      })
   }
 
   sendMessage(
@@ -3852,6 +3884,18 @@ export class ToolsOzoneModerationNS {
   ): Promise<ToolsOzoneModerationGetRepos.Response> {
     return this._client.call(
       'tools.ozone.moderation.getRepos',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getSubjects(
+    params?: ToolsOzoneModerationGetSubjects.QueryParams,
+    opts?: ToolsOzoneModerationGetSubjects.CallOptions,
+  ): Promise<ToolsOzoneModerationGetSubjects.Response> {
+    return this._client.call(
+      'tools.ozone.moderation.getSubjects',
       params,
       undefined,
       opts,

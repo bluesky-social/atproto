@@ -11,6 +11,9 @@ describe('team management', () => {
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'ozone_team_test',
+      ozone: {
+        dbTeamProfileRefreshIntervalMs: 100,
+      },
     })
     adminAgent = network.pds.getClient()
     sc = network.getSeedClient()
@@ -29,6 +32,7 @@ describe('team management', () => {
       identifier: sc.accounts[sc.dids.carol].handle,
       password: sc.accounts[sc.dids.carol].password,
     })
+    await network.processAll()
   })
 
   afterAll(async () => {
@@ -41,6 +45,7 @@ describe('team management', () => {
         adminAgent.tools.ozone.team.listMembers({}),
         triageAgent.tools.ozone.team.listMembers({}),
       ])
+
       expect(forSnapshot(forAdmin.members)).toMatchSnapshot()
       expect(forSnapshot(forTriage.members)).toMatchSnapshot()
       // Validate that the list looks the same to both admin and triage members
@@ -88,6 +93,24 @@ describe('team management', () => {
       expect(
         onlyEnabled.members.find(({ disabled }) => disabled),
       ).toBeUndefined()
+    })
+    it('allows filtering members by handle/display name', async () => {
+      const [{ data: matchingHandle }, { data: matchingName }] =
+        await Promise.all([
+          adminAgent.tools.ozone.team.listMembers({
+            q: 'bob',
+          }),
+          adminAgent.tools.ozone.team.listMembers({
+            q: 'dev',
+          }),
+        ])
+
+      expect(matchingHandle.members.length).toEqual(1)
+      expect(matchingHandle.members[0]?.profile?.handle).toEqual('bob.test')
+      expect(matchingName.members.length).toEqual(1)
+      expect(matchingName.members[0]?.profile?.handle).toEqual(
+        'mod-authority.test',
+      )
     })
   })
 

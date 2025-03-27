@@ -1,5 +1,9 @@
 import type { ServerResponse } from 'node:http'
 import { type Readable, pipeline } from 'node:stream'
+import {
+  SecurityHeadersOptions,
+  setSecurityHeaders,
+} from './security-headers.js'
 import type { Handler, Middleware } from './types.js'
 
 export function appendHeader(
@@ -88,11 +92,15 @@ export function staticJsonMiddleware(
   }
 }
 
+export type WriteHtmlOptions = WriteResponseOptions & SecurityHeadersOptions
+
 export function writeHtml(
   res: ServerResponse,
   html: Buffer | string,
-  { contentType = 'text/html', ...options }: WriteResponseOptions = {},
+  { contentType = 'text/html', ...options }: WriteHtmlOptions = {},
 ): void {
+  // HTML pages should always be served with safety protection headers
+  setSecurityHeaders(res, options)
   writeBuffer(res, html, { ...options, contentType })
 }
 

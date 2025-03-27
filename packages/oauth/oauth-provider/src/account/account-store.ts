@@ -1,8 +1,10 @@
 import { isEmailValid } from '@hapi/address'
 import { isDisposableEmail } from 'disposable-email-domains-js'
 import { z } from 'zod'
+import { ensureValidHandle, normalizeHandle } from '@atproto/syntax'
 import { ClientId } from '../client/client-id.js'
 import { DeviceId } from '../device/device-id.js'
+import { HcaptchaVerifyResult } from '../lib/hcaptcha.js'
 import { localeSchema } from '../lib/locale.js'
 import { Awaitable, buildInterfaceChecker } from '../lib/util/type.js'
 import {
@@ -12,16 +14,29 @@ import {
 } from '../oauth-errors.js'
 import { Sub } from '../oidc/sub.js'
 import { Account } from './account.js'
+import { SignUpInput } from './sign-up-input.js'
 
 // @NOTE Change the length here to force stronger passwords (through a reset)
 export const oldPasswordSchema = z.string().min(1)
 export const newPasswordSchema = z.string().min(8)
-export const tokenSchema = z.string().regex(/^[A-Z2-7]{5}-[A-Z2-7]{5}$/)
+export const tokenSchema = z
+  .string()
+  .regex(/^[A-Z2-7]{5}-[A-Z2-7]{5}$/, 'Invalid token format')
 export const handleSchema = z
   .string()
-  .min(3)
-  .max(30)
-  .regex(/^[a-z0-9][a-z0-9-]+[a-z0-9](?:\.[a-z0-9][a-z0-9-]+[a-z0-9])+$/)
+  // @NOTE: We only check against validity towards ATProto's syntax. Additional
+  // rules may be imposed by the store implementation.
+  .superRefine((value, ctx) => {
+    try {
+      ensureValidHandle(value)
+    } catch (err) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: err instanceof Error ? err.message : 'Invalid handle',
+      })
+    }
+  })
+  .transform(normalizeHandle)
 export const emailSchema = z
   .string()
   .email()
@@ -34,13 +49,16 @@ export const emailSchema = z
   .refine((email) => !isDisposableEmail(email), {
     message: 'Disposable email addresses are not allowed',
   })
+  .transform((value) => value.toLowerCase())
+export const inviteCodeSchema = z.string().min(1)
+export type InviteCode = z.infer<typeof inviteCodeSchema>
 
 export const authenticateAccountDataSchema = z
   .object({
     locale: localeSchema,
     username: z.string(),
     password: oldPasswordSchema,
-    emailOtp: z.string().optional(),
+    emailOtp: tokenSchema.optional(),
   })
   .strict()
 
@@ -54,7 +72,7 @@ export const createAccountDataSchema = z
     handle: handleSchema,
     email: emailSchema,
     password: z.intersection(oldPasswordSchema, newPasswordSchema),
-    inviteCode: tokenSchema.optional(),
+    inviteCode: inviteCodeSchema.optional(),
   })
   .strict()
 
@@ -101,6 +119,11 @@ export {
 export type AccountInfo = {
   account: Account
   info: DeviceAccountInfo
+}
+
+export type SignUpData = SignUpInput & {
+  hcaptchaResult?: HcaptchaVerifyResult
+  inviteCode?: InviteCode
 }
 
 export interface AccountStore {

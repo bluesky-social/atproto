@@ -1,5 +1,23 @@
 # @atproto/sync
 
+## 0.1.18
+
+### Patch Changes
+
+- Updated dependencies [[`670b6b5de`](https://github.com/bluesky-social/atproto/commit/670b6b5de2bf91e6944761c98eb1126fb6a681ee)]:
+  - @atproto/syntax@0.4.0
+  - @atproto/lexicon@0.4.9
+  - @atproto/repo@0.7.2
+  - @atproto/xrpc-server@0.7.13
+
+## 0.1.17
+
+### Patch Changes
+
+- [#3599](https://github.com/bluesky-social/atproto/pull/3599) [`b20907a70`](https://github.com/bluesky-social/atproto/commit/b20907a7056970ab627e6c661882cb16491801e2) Thanks [@mozzius](https://github.com/mozzius)! - Fix types of `FirehoseOptions`
+
+- [`d96b03956`](https://github.com/bluesky-social/atproto/commit/d96b03956d5c26c238f586c6bdf257c080f12746) Thanks [@devinivy](https://github.com/devinivy)! - Support firehose sync event
+
 ## 0.1.16
 
 ### Patch Changes

@@ -51,6 +51,10 @@
           "type": "union",
           "refs": ["app.bsky.embed.record#view"]
         },
+        "reactions": {
+          "type": "array",
+          "items": { "type": "ref", "ref": "#reactionView" }
+        },
         "sender": { "type": "ref", "ref": "#messageViewSender" },
         "sentAt": { "type": "string", "format": "datetime" }
       }
@@ -72,6 +76,30 @@
         "did": { "type": "string", "format": "did" }
       }
     },
+    "reactionView": {
+      "type": "object",
+      "required": ["value", "sender", "createdAt"],
+      "properties": {
+        "value": { "type": "string" },
+        "sender": { "type": "ref", "ref": "#reactionViewSender" },
+        "createdAt": { "type": "string", "format": "datetime" }
+      }
+    },
+    "reactionViewSender": {
+      "type": "object",
+      "required": ["did"],
+      "properties": {
+        "did": { "type": "string", "format": "did" }
+      }
+    },
+    "messageAndReactionView": {
+      "type": "object",
+      "required": ["message", "reaction"],
+      "properties": {
+        "message": { "type": "ref", "ref": "#messageView" },
+        "reaction": { "type": "ref", "ref": "#reactionView" }
+      }
+    },
     "convoView": {
       "type": "object",
       "required": ["id", "rev", "members", "muted", "unreadCount"],
@@ -87,7 +115,11 @@
         },
         "lastMessage": {
           "type": "union",
-          "refs": ["#messageView", "#deletedMessageView"]
+          "refs": [
+            "#messageView",
+            "#deletedMessageView",
+            "#messageAndReactionView"
+          ]
         },
         "muted": { "type": "boolean" },
         "status": {
@@ -171,6 +203,32 @@
           "type": "union",
           "refs": ["#messageView", "#deletedMessageView"]
         }
+      }
+    },
+    "logAddReaction": {
+      "type": "object",
+      "required": ["rev", "convoId", "message", "reaction"],
+      "properties": {
+        "rev": { "type": "string" },
+        "convoId": { "type": "string" },
+        "message": {
+          "type": "union",
+          "refs": ["#messageView", "#deletedMessageView"]
+        },
+        "reaction": { "type": "ref", "ref": "#reactionView" }
+      }
+    },
+    "logRemoveReaction": {
+      "type": "object",
+      "required": ["rev", "convoId", "message", "reaction"],
+      "properties": {
+        "rev": { "type": "string" },
+        "convoId": { "type": "string" },
+        "message": {
+          "type": "union",
+          "refs": ["#messageView", "#deletedMessageView"]
+        },
+        "reaction": { "type": "ref", "ref": "#reactionView" }
       }
     }
   }
