@@ -26,7 +26,7 @@ import {
 import { safeFetchWrap } from '@atproto-labs/fetch-node'
 import { SimpleStore } from '@atproto-labs/simple-store'
 import { SimpleStoreMemory } from '@atproto-labs/simple-store-memory'
-import { AccessTokenType } from './access-token/access-token-type.js'
+import { AccessTokenMode } from './access-token/access-token-mode.js'
 import { AccountManager } from './account/account-manager.js'
 import {
   AccountStore,
@@ -90,7 +90,6 @@ import { RequestUri, requestUriSchema } from './request/request-uri.js'
 import { AuthorizationResultAuthorize } from './result/authorization-result-authorize.js'
 import { AuthorizationResultRedirect } from './result/authorization-result-redirect.js'
 import { ErrorHandler } from './router/error-handler.js'
-import { isTokenId } from './token/token-id.js'
 import { TokenManager } from './token/token-manager.js'
 import { TokenStore, asTokenStore } from './token/token-store.js'
 import { VerifyTokenClaimsOptions } from './token/verify-token-claims.js'
@@ -128,6 +127,22 @@ type OAuthProviderConfig = {
    * Maximum age access & id tokens can be before requiring a refresh.
    */
   tokenMaxAge?: number
+
+  /**
+   * If set to {@link AccessTokenMode.stateless}, the generated access tokens
+   * will contain all the necessary information to validate the token without
+   * needing to query the database. This is useful for cases where the Resource
+   * Server is on a different host/server than the Authorization Server.
+   *
+   * When set to {@link AccessTokenMode.light}, the access tokens will contain
+   * only the necessary information to validate the token, but the token id
+   * will need to be queried from the database to retrieve the full token
+   * information (scope, audience, etc.)
+   *
+   * @see {@link AccessTokenMode}
+   * @default {AccessTokenType.stateless}
+   */
+  accessTokenMode?: AccessTokenMode
 
   /**
    * Additional metadata to be included in the discovery document.
@@ -206,6 +221,8 @@ export type OAuthProviderOptions = OAuthProviderConfig &
   CustomizationInput
 
 export class OAuthProvider extends OAuthVerifier {
+  protected readonly accessTokenMode: AccessTokenMode
+
   public readonly metadata: OAuthAuthorizationServerMetadata
   public readonly customization: Customization
 
@@ -223,6 +240,7 @@ export class OAuthProvider extends OAuthVerifier {
     authenticationMaxAge = AUTHENTICATION_MAX_AGE,
     ephemeralSessionMaxAge = EPHEMERAL_SESSION_MAX_AGE,
     tokenMaxAge = TOKEN_MAX_AGE,
+    accessTokenMode = AccessTokenMode.stateless,
 
     metadata,
 
@@ -279,6 +297,7 @@ export class OAuthProvider extends OAuthVerifier {
       ? new RequestStoreRedis({ redis })
       : new RequestStoreMemory()
 
+    this.accessTokenMode = accessTokenMode
     this.authenticationMaxAge = authenticationMaxAge
     this.ephemeralSessionMaxAge = ephemeralSessionMaxAge
     this.metadata = buildMetadata(this.issuer, this.keyset, metadata)
@@ -311,7 +330,7 @@ export class OAuthProvider extends OAuthVerifier {
       tokenStore,
       this.signer,
       hooks,
-      this.accessTokenType,
+      this.accessTokenMode,
       tokenMaxAge,
     )
   }
@@ -1032,24 +1051,32 @@ export class OAuthProvider extends OAuthVerifier {
     }
   }
 
-  protected override async authenticateToken(
+  protected override async verifyToken(
     tokenType: OAuthTokenType,
     token: OAuthAccessToken,
     dpopJkt: string | null,
     verifyOptions?: VerifyTokenClaimsOptions,
   ) {
-    if (isTokenId(token)) {
-      this.assertTokenTypeAllowed(tokenType, AccessTokenType.id)
+    const result = await super.verifyToken(
+      tokenType,
+      token,
+      dpopJkt,
+      // Do not verify the scope and audience in case of "light" tokens.
+      // these will be checked through the tokenManager hereafter.
+      this.accessTokenMode === AccessTokenMode.light
+        ? undefined
+        : verifyOptions,
+    )
 
-      return this.tokenManager.authenticateTokenId(
-        tokenType,
-        token,
-        dpopJkt,
-        verifyOptions,
-      )
-    }
-
-    return super.authenticateToken(tokenType, token, dpopJkt, verifyOptions)
+    // In addition to verifying the signature (through the verifier), we also
+    // verify the tokenId is still valid using a database to fetch "light" token
+    // data.
+    return this.tokenManager.verifyTokenId(
+      tokenType,
+      result.tokenId,
+      dpopJkt,
+      verifyOptions,
+    )
   }
 }
 

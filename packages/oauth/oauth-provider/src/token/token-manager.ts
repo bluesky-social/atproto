@@ -12,7 +12,7 @@ import {
   OAuthTokenResponse,
   OAuthTokenType,
 } from '@atproto/oauth-types'
-import { AccessTokenType } from '../access-token/access-token-type.js'
+import { AccessTokenMode } from '../access-token/access-token-mode.js'
 import { ClientAuth } from '../client/client-auth.js'
 import { Client } from '../client/client.js'
 import {
@@ -42,12 +42,7 @@ import {
 } from './refresh-token.js'
 import { TokenClaims } from './token-claims.js'
 import { TokenData } from './token-data.js'
-import {
-  TokenId,
-  generateTokenId,
-  isTokenId,
-  tokenIdSchema,
-} from './token-id.js'
+import { TokenId, generateTokenId, isTokenId } from './token-id.js'
 import { TokenInfo, TokenStore } from './token-store.js'
 import {
   VerifyTokenClaimsOptions,
@@ -55,21 +50,46 @@ import {
   verifyTokenClaims,
 } from './verify-token-claims.js'
 
-export type AuthenticateTokenIdResult = VerifyTokenClaimsResult & {
-  tokenInfo: TokenInfo
-}
+export type { VerifyTokenClaimsResult }
 
 export class TokenManager {
   constructor(
     protected readonly store: TokenStore,
     protected readonly signer: Signer,
     protected readonly hooks: OAuthHooks,
-    protected readonly accessTokenType: AccessTokenType,
+    protected readonly accessTokenMode: AccessTokenMode,
     protected readonly tokenMaxAge = TOKEN_MAX_AGE,
   ) {}
 
   protected createTokenExpiry(now = new Date()) {
     return new Date(now.getTime() + this.tokenMaxAge)
+  }
+
+  protected async buildAccessToken(
+    tokenId: TokenId,
+    account: Account,
+    client: Client,
+    parameters: OAuthAuthorizationRequestParameters,
+    options: {
+      now: Date
+      expiresAt: Date
+    },
+  ): Promise<OAuthAccessToken> {
+    return this.signer.createAccessToken({
+      jti: tokenId,
+      aud: account.aud,
+      sub: account.sub,
+      exp: dateToEpoch(options.expiresAt),
+      iat: dateToEpoch(options.now),
+      cnf: parameters.dpop_jkt ? { jkt: parameters.dpop_jkt } : undefined,
+      scope:
+        this.accessTokenMode !== AccessTokenMode.light
+          ? parameters.scope
+          : undefined,
+
+      // https://datatracker.ietf.org/doc/html/rfc8693#section-4.3
+      client_id: client.id,
+    })
   }
 
   async create(
@@ -212,22 +232,13 @@ export class TokenManager {
     await this.store.createToken(tokenId, tokenData, refreshToken)
 
     try {
-      const accessToken: OAuthAccessToken =
-        this.accessTokenType === AccessTokenType.jwt
-          ? await this.signer.accessToken(client, parameters, {
-              // We don't specify the alg here. We suppose the Resource server will be
-              // able to verify the token using any alg.
-              aud: account.aud,
-              sub: account.sub,
-              alg: undefined,
-              exp: expiresAt,
-              iat: now,
-              jti: tokenId,
-              cnf: parameters.dpop_jkt
-                ? { jkt: parameters.dpop_jkt }
-                : undefined,
-            })
-          : tokenId
+      const accessToken = await this.buildAccessToken(
+        tokenId,
+        account,
+        client,
+        parameters,
+        { now, expiresAt },
+      )
 
       const response = await this.buildTokenResponse(
         client,
@@ -394,22 +405,13 @@ export class TokenManager {
         },
       )
 
-      const accessToken: OAuthAccessToken =
-        this.accessTokenType === AccessTokenType.jwt
-          ? await this.signer.accessToken(client, parameters, {
-              // We don't specify the alg here. We suppose the Resource server will be
-              // able to verify the token using any alg.
-              aud: account.aud,
-              sub: account.sub,
-              alg: undefined,
-              exp: expiresAt,
-              iat: now,
-              jti: nextTokenId,
-              cnf: parameters.dpop_jkt
-                ? { jkt: parameters.dpop_jkt }
-                : undefined,
-            })
-          : nextTokenId
+      const accessToken = await this.buildAccessToken(
+        nextTokenId,
+        account,
+        client,
+        parameters,
+        { now, expiresAt },
+      )
 
       const response = await this.buildTokenResponse(
         client,
@@ -448,12 +450,11 @@ export class TokenManager {
       }
 
       case isSignedJwt(token): {
-        const { payload } = await this.signer.verify(token, {
-          clockTolerance: Infinity,
-          requiredClaims: ['jti'],
-        })
-        const tokenId = tokenIdSchema.parse(payload.jti)
-        await this.store.deleteToken(tokenId)
+        const { payload } = await this.signer
+          .verifyAccessToken(token, { clockTolerance: Infinity })
+          // No error should be returned if the token is not valid
+          .catch((_) => ({ payload: null }))
+        if (payload) await this.store.deleteToken(payload.jti)
         return
       }
 
@@ -506,9 +507,6 @@ export class TokenManager {
 
   protected async findTokenInfo(token: string): Promise<TokenInfo | null> {
     switch (true) {
-      case isTokenId(token):
-        return this.store.readToken(token)
-
       case isSignedJwt(token): {
         const { payload } = await this.signer
           .verifyAccessToken(token)
@@ -541,12 +539,14 @@ export class TokenManager {
       }
 
       default:
-        // Should never happen
         return null
     }
   }
 
-  async getTokenInfo(tokenType: OAuthTokenType, tokenId: TokenId) {
+  async getTokenInfo(
+    tokenType: OAuthTokenType,
+    tokenId: TokenId,
+  ): Promise<TokenInfo> {
     const tokenInfo = await this.store.readToken(tokenId)
 
     if (!tokenInfo) {
@@ -560,13 +560,13 @@ export class TokenManager {
     return tokenInfo
   }
 
-  async authenticateTokenId(
+  async verifyTokenId(
     tokenType: OAuthTokenType,
-    token: TokenId,
+    tokenId: TokenId,
     dpopJkt: string | null,
     verifyOptions?: VerifyTokenClaimsOptions,
-  ): Promise<AuthenticateTokenIdResult> {
-    const tokenInfo = await this.getTokenInfo(tokenType, token)
+  ): Promise<VerifyTokenClaimsResult> {
+    const tokenInfo = await this.getTokenInfo(tokenType, tokenId)
     const { parameters } = tokenInfo.data
 
     // Construct a list of claim, as if the token was a JWT.
@@ -580,15 +580,6 @@ export class TokenManager {
       cnf: parameters.dpop_jkt ? { jkt: parameters.dpop_jkt } : undefined,
     }
 
-    const result = verifyTokenClaims(
-      token,
-      token,
-      tokenType,
-      dpopJkt,
-      claims,
-      verifyOptions,
-    )
-
-    return { ...result, tokenInfo }
+    return verifyTokenClaims(tokenId, tokenType, dpopJkt, claims, verifyOptions)
   }
 }
