@@ -32,7 +32,7 @@ export type ApiEndpoints = {
   }
   '/sign-out': {
     method: 'POST'
-    input: { accounts: string[] }
+    input: { sub: string | string[] }
     output: { success: true }
   }
   '/accounts': {
@@ -52,18 +52,19 @@ export type ApiEndpoints = {
    */
   '/oauth-sessions': {
     method: 'GET'
-    params: { account: string }
+    params: { sub: string }
     output: {
       sessions: Array<{
         tokenId: string
-        clientMetadata: OAuthClientMetadata
-        deviceMetadata?: DeviceMetadata
+        clientId: string
+        /** An "undefined" value means that the client metadata could not be fetched */
+        clientMetadata?: OAuthClientMetadata
       }>
     }
   }
   '/account-sessions': {
     method: 'GET'
-    params: { account: string }
+    params: { sub: string }
     output: {
       sessions: Array<{
         deviceId: string
@@ -73,7 +74,7 @@ export type ApiEndpoints = {
   }
   '/revoke-account-session': {
     method: 'POST'
-    input: { account: string; deviceId: string }
+    input: { sub: string; deviceId: string }
     output: { success: true }
   }
 }

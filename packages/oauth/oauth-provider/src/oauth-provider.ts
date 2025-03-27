@@ -31,11 +31,9 @@ import { AccountManager } from './account/account-manager.js'
 import {
   AccountStore,
   AuthorizedClientData,
-  DeviceAccountInfo,
-  SignUpData,
+  DeviceAccount,
   asAccountStore,
 } from './account/account-store.js'
-import { SignInData } from './account/sign-in-data.js'
 import { ClientAuth, authJwkThumbprint } from './client/client-auth.js'
 import {
   ClientManager,
@@ -339,9 +337,29 @@ export class OAuthProvider extends OAuthVerifier {
     return this.keyset.publicJwks
   }
 
-  protected loginRequired(info: DeviceAccountInfo, leeway = 0) {
+  public checkConsentRequired(
+    parameters: OAuthAuthorizationRequestParameters,
+    client: Client,
+    clientData?: AuthorizedClientData,
+  ) {
+    // Client was never authorized before
+    if (!clientData) return true
+
+    // Client explicitly asked for consent
+    if (parameters.prompt === 'consent') return true
+
+    // No scope requested, and client is known by user, no consent required
+    const requestedScopes = parameters.scope?.split(' ')
+    if (requestedScopes == null) return false
+
+    // Ensure that all requested scopes were previously authorized by the user
+    const { authorizedScopes } = clientData
+    return !requestedScopes.every((scope) => authorizedScopes.includes(scope))
+  }
+
+  public checkLoginRequired({ data }: DeviceAccount, leeway = 0) {
     /** in seconds */
-    const authAge = (Date.now() - info.authenticatedAt.getTime()) / 1e3
+    const authAge = (Date.now() - data.authenticatedAt.getTime()) / 1e3
 
     // Fool-proof (invalid date, or suspiciously in the future)
     if (!Number.isFinite(authAge) || authAge < 0) {
@@ -352,7 +370,7 @@ export class OAuthProvider extends OAuthVerifier {
     // `signIn` method)
 
     const maxAge =
-      !info.remembered || info.requestId
+      !data.remembered || data.requestId
         ? this.ephemeralSessionMaxAge
         : this.authenticationMaxAge
 
@@ -701,80 +719,22 @@ export class OAuthProvider extends OAuthVerifier {
       (!!account.sub && account.sub === hint) ||
       (!!account.preferred_username && account.preferred_username === hint)
 
-    return accounts.map(({ account, info, authorizedClients }) => ({
-      account,
+    return accounts.map((deviceAccount) => ({
+      account: deviceAccount.account,
 
-      selected: parameters.prompt !== 'select_account' && matchesHint(account),
-      loginRequired: parameters.prompt === 'login' || this.loginRequired(info),
-      consentRequired: isConsentRequired(
+      selected:
+        parameters.prompt !== 'select_account' &&
+        matchesHint(deviceAccount.account),
+      loginRequired:
+        parameters.prompt === 'login' || this.checkLoginRequired(deviceAccount),
+      consentRequired: this.checkConsentRequired(
         parameters,
         client,
-        authorizedClients.get(client.id),
+        deviceAccount.authorizedClients.get(client.id),
       ),
 
-      matchesHint: hint == null || matchesHint(account),
+      matchesHint: hint == null || matchesHint(deviceAccount.account),
     }))
-  }
-
-  public async signUp(
-    deviceId: DeviceId,
-    deviceMetadata: RequestMetadata,
-    data: SignUpData,
-    requestUri?: RequestUri,
-  ): Promise<{
-    account: Account
-  }> {
-    const account = await this.accountManager.signUp(
-      data,
-      deviceId,
-      deviceMetadata,
-      requestUri,
-    )
-
-    return { account }
-  }
-
-  public async signIn(
-    deviceId: DeviceId,
-    deviceMetadata: RequestMetadata,
-    data: SignInData,
-    requestUri?: RequestUri,
-  ): Promise<{
-    account: Account
-    consentRequired?: boolean
-  }> {
-    const account = await this.accountManager.signIn(
-      data,
-      deviceId,
-      deviceMetadata,
-      // If "remember" is true, do not bind the session to the request.
-      data.remember ? undefined : requestUri,
-    )
-
-    if (requestUri) {
-      // Check if a consent is required for the client
-      const { clientId, parameters } = await this.requestManager.get(
-        requestUri,
-        deviceId,
-      )
-
-      const client = await this.clientManager.getClient(clientId)
-
-      const authorizedClients = await this.accountManager.getAuthorizedClients(
-        account.sub,
-      )
-
-      return {
-        account,
-        consentRequired: isConsentRequired(
-          parameters,
-          client,
-          authorizedClients.get(clientId),
-        ),
-      }
-    }
-
-    return { account }
   }
 
   public async acceptRequest(
@@ -793,15 +753,20 @@ export class OAuthProvider extends OAuthVerifier {
     const client = await this.clientManager.getClient(clientId)
 
     try {
-      const { account, info, authorizedClients } =
-        await this.accountManager.getAccountInfo(deviceId, sub, requestUri)
+      const deviceAccount = await this.accountManager.getDeviceAccount(
+        deviceId,
+        sub,
+        requestUri,
+      )
 
-      if (this.loginRequired(info)) {
+      if (this.checkLoginRequired(deviceAccount)) {
         throw new LoginRequiredError(
           parameters,
           'Account authentication required.',
         )
       }
+
+      const { account, authorizedClients } = deviceAccount
 
       const code = await this.requestManager.setAuthorized(
         requestUri,
@@ -812,7 +777,7 @@ export class OAuthProvider extends OAuthVerifier {
       )
 
       const clientData = authorizedClients.get(clientId)
-      if (isConsentRequired(parameters, client, clientData)) {
+      if (this.checkConsentRequired(parameters, client, clientData)) {
         const scopes = new Set(clientData?.authorizedScopes)
 
         // Add the newly accepted scopes to the authorized scopes
@@ -933,18 +898,23 @@ export class OAuthProvider extends OAuthVerifier {
         }
       }
 
-      const { account, info, authorizedClients } =
-        await this.accountManager.getAccountInfo(deviceId, sub, requestUri)
+      const deviceAccount = await this.accountManager.getDeviceAccount(
+        deviceId,
+        sub,
+        requestUri,
+      )
 
       // Allow sessions that are slightly too old since the client needs some
       // time to exchange the code for a token. The session age will previously
       // have been checked in the authorize method.
-      if (this.loginRequired(info, CODE_EXCHANGE_LEEWAY)) {
+      if (this.checkLoginRequired(deviceAccount, CODE_EXCHANGE_LEEWAY)) {
         throw new InvalidGrantError('User session is too old')
       }
 
+      const { account, authorizedClients } = deviceAccount
+
       const clientData = authorizedClients.get(client.id)
-      if (isConsentRequired(parameters, client, clientData)) {
+      if (this.checkConsentRequired(parameters, client, clientData)) {
         throw new InvalidGrantError(`Client no longer trusted by user`)
       }
 
@@ -1078,24 +1048,4 @@ export class OAuthProvider extends OAuthVerifier {
       verifyOptions,
     )
   }
-}
-
-function isConsentRequired(
-  parameters: OAuthAuthorizationRequestParameters,
-  client: Client,
-  clientData?: AuthorizedClientData,
-) {
-  // Client was never authorized before
-  if (!clientData) return true
-
-  // Client explicitly asked for consent
-  if (parameters.prompt === 'consent') return true
-
-  // No scope requested, and client is known by user, no consent required
-  const requestedScopes = parameters.scope?.split(' ')
-  if (requestedScopes == null) return false
-
-  // Ensure that all requested scopes were previously authorized by the user
-  const { authorizedScopes } = clientData
-  return !requestedScopes.every((scope) => authorizedScopes.includes(scope))
 }

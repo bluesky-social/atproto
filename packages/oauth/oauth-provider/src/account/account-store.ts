@@ -6,6 +6,7 @@ import { OAuthScope } from '@atproto/oauth-types'
 import { ensureValidHandle, normalizeHandle } from '@atproto/syntax'
 import { ClientId } from '../client/client-id.js'
 import { DeviceId } from '../device/device-id.js'
+import { DeviceData } from '../device/device-store.js'
 import { HcaptchaVerifyResult } from '../lib/hcaptcha.js'
 import { localeSchema } from '../lib/util/locale.js'
 import { Awaitable, buildInterfaceChecker } from '../lib/util/type.js'
@@ -105,16 +106,21 @@ export type ResetPasswordConfirmData = z.TypeOf<
 export type AuthorizedClientData = { authorizedScopes: readonly string[] }
 export type AuthorizedClients = Map<ClientId, AuthorizedClientData>
 
-export type DeviceAccountInfo = {
+export type DeviceAccountData = {
   remembered: boolean
   authenticatedAt: Date
   requestId: null | RequestId
 }
 
 export type DeviceAccount = {
+  deviceId: DeviceId
+  deviceData: DeviceData
+
   account: Account
-  info: DeviceAccountInfo
+
   authorizedClients: AuthorizedClients
+
+  data: DeviceAccountData
 }
 
 export type SignUpData = SignUpInput & {
@@ -169,8 +175,7 @@ export interface AccountStore {
   addDeviceAccount(
     deviceId: DeviceId,
     sub: Sub,
-    remember: boolean,
-    requestId: null | RequestId,
+    data: DeviceAccountData,
   ): Awaitable<void>
 
   /**
@@ -192,11 +197,18 @@ export interface AccountStore {
   removeDeviceAccount(deviceId: DeviceId, sub: Sub): Awaitable<void>
 
   /**
-   * @returns all the device accounts associated with the given deviceId.
-   * Entries created with a requestId or with remember set to false should not
-   * be returned.
+   * @returns all the device accounts associated with the given device. Entries
+   * created with a requestId or with remember set to false should not be
+   * returned.
    */
   listDeviceAccounts(deviceId: DeviceId): Awaitable<DeviceAccount[]>
+
+  /**
+   * @returns all the device accounts associated with the given account. Entries
+   * created with a requestId or with remember set to false should not be
+   * returned.
+   */
+  listAccountDevices(sub: Sub): Awaitable<DeviceAccount[]>
 
   resetPasswordRequest(data: ResetPasswordRequestData): Awaitable<void>
   resetPasswordConfirm(data: ResetPasswordConfirmData): Awaitable<void>
@@ -216,6 +228,7 @@ export const isAccountStore = buildInterfaceChecker<AccountStore>([
   'getDeviceAccount',
   'removeDeviceAccount',
   'listDeviceAccounts',
+  'listAccountDevices',
   'resetPasswordRequest',
   'resetPasswordConfirm',
   'verifyHandleAvailability',

@@ -5,7 +5,9 @@ import {
   ACCOUNTS_PAGE_URL,
   API_ENDPOINT_PREFIX,
   ApiEndpoints,
+  ISODateString,
 } from '@atproto/oauth-provider-api'
+import { OAuthClientId, OAuthClientMetadata } from '@atproto/oauth-types'
 import {
   handleSchema,
   resetPasswordConfirmDataSchema,
@@ -32,6 +34,7 @@ import {
 import { RouteCtx, createRoute } from '../lib/http/route.js'
 import type { Awaitable } from '../lib/util/type.js'
 import type { OAuthProvider } from '../oauth-provider.js'
+import { subSchema } from '../oidc/sub.js'
 import { RequestUri, requestUriSchema } from '../request/request-uri.js'
 import { authorizePageCsrfCookie } from './authorize-page/send-authorize-page.js'
 import type { RouterOptions } from './router-options.js'
@@ -68,8 +71,7 @@ export function apiRouter<
     apiRoute('POST', '/sign-up', signUpInputSchema, async function (req, res) {
       const deviceInfo = await server.deviceManager.load(req, res)
 
-      // De-structuring the result to avoid leaking un-needed information
-      const { account } = await server.signUp(
+      const account = await server.accountManager.createAccount(
         deviceInfo.deviceId,
         deviceInfo.deviceMetadata,
         this.input,
@@ -84,16 +86,71 @@ export function apiRouter<
     apiRoute('POST', '/sign-in', signInDataSchema, async function (req, res) {
       const deviceInfo = await server.deviceManager.load(req, res)
 
-      // De-structuring the result to avoid leaking un-needed information
-      const { account, consentRequired } = await server.signIn(
+      const account = await server.accountManager.authenticateAccount(
         deviceInfo.deviceId,
         deviceInfo.deviceMetadata,
         this.input,
-        this.requestUri,
+        // If "remember" is true, do not bind the session to the request.
+        this.input.remember ? undefined : this.requestUri,
       )
 
-      return { account, consentRequired }
+      if (this.requestUri) {
+        // Check if a consent is required for the client
+        const { clientId, parameters } = await server.requestManager.get(
+          this.requestUri,
+          deviceInfo.deviceId,
+        )
+
+        const client = await server.clientManager.getClient(clientId)
+
+        const authorizedClients =
+          await server.accountManager.getAuthorizedClients(account.sub)
+
+        return {
+          account,
+          consentRequired: server.checkConsentRequired(
+            parameters,
+            client,
+            authorizedClients.get(clientId),
+          ),
+        }
+      }
+
+      return { account }
     }),
+  )
+
+  router.use(
+    apiRoute(
+      'POST',
+      '/sign-out',
+      z.object({ sub: z.union([subSchema, z.array(subSchema)]) }).strict(),
+      async function (req, res) {
+        const deviceInfo = await server.deviceManager.load(req, res)
+
+        if (Array.isArray(this.input.sub)) {
+          const deviceAccounts = await server.accountManager.list(
+            deviceInfo.deviceId,
+          )
+
+          for (const { account } of deviceAccounts) {
+            if (this.input.sub.includes(account.sub)) {
+              await server.accountManager.removeDeviceAccount(
+                deviceInfo.deviceId,
+                account.sub,
+              )
+            }
+          }
+        } else {
+          await server.accountManager.removeDeviceAccount(
+            deviceInfo.deviceId,
+            this.input.sub,
+          )
+        }
+
+        return { success: true }
+      },
+    ),
   )
 
   router.use(
@@ -138,10 +195,46 @@ export function apiRouter<
     apiRoute(
       'GET',
       '/oauth-sessions',
-      z.object({ account: z.string() }).strict(),
-      async function () {
-        // @TODO
-        return { sessions: [] }
+      z.object({ sub: subSchema }).strict(),
+      async function (req, res) {
+        const deviceInfo = await server.deviceManager.load(req, res)
+
+        // Ensures the requested "sub" is linked to the device
+        const { account } = await server.accountManager.getDeviceAccount(
+          deviceInfo.deviceId,
+          this.input.sub,
+          this.requestUri,
+        )
+
+        const tokenInfos = await server.tokenManager.listAccountTokens(
+          account.sub,
+        )
+
+        const uniqueClientIds = new Set(
+          tokenInfos.map((tokenInfo) => tokenInfo.data.clientId),
+        )
+
+        const clientMetadataMap = new Map<
+          OAuthClientId,
+          OAuthClientMetadata | undefined
+        >(
+          await Promise.all(
+            Array.from(uniqueClientIds, async (clientId) => {
+              const client = await server.clientManager
+                .getClient(clientId)
+                .catch(() => undefined)
+              return [clientId, client?.metadata] as const
+            }),
+          ),
+        )
+
+        return {
+          sessions: tokenInfos.map(({ id, data }) => ({
+            tokenId: id,
+            clientId: data.clientId,
+            clientMetadata: clientMetadataMap.get(data.clientId),
+          })),
+        }
       },
     ),
   )
@@ -150,10 +243,31 @@ export function apiRouter<
     apiRoute(
       'GET',
       '/account-sessions',
-      z.object({ account: z.string() }).strict(),
-      async function () {
-        // @TODO
-        return { sessions: [] }
+      z.object({ sub: subSchema }).strict(),
+      async function (req, res) {
+        const deviceInfo = await server.deviceManager.load(req, res)
+
+        // Ensures the requested "sub" is linked to the device
+        const { account } = await server.accountManager.getDeviceAccount(
+          deviceInfo.deviceId,
+          this.input.sub,
+          this.requestUri,
+        )
+
+        const deviceAccounts = await server.accountManager.listAccountDevices(
+          account.sub,
+        )
+
+        return {
+          sessions: deviceAccounts.map(({ deviceId, deviceData }) => ({
+            deviceId,
+            deviceMetadata: {
+              ipAddress: deviceData.ipAddress,
+              userAgent: deviceData.userAgent,
+              lastSeenAt: deviceData.lastSeenAt.toISOString() as ISODateString,
+            },
+          })),
+        }
       },
     ),
   )
@@ -162,11 +276,15 @@ export function apiRouter<
     apiRoute(
       'POST',
       '/revoke-account-session',
-      z.object({ account: z.string(), deviceId: deviceIdSchema }).strict(),
+      z.object({ sub: subSchema, deviceId: deviceIdSchema }).strict(),
       async function () {
+        // @NOTE This route is not authenticated. If a user is able to steal
+        // another user's session cookie, we allow them to revoke the device
+        // session.
+
         await server.accountManager.removeDeviceAccount(
           this.input.deviceId,
-          this.input.account,
+          this.input.sub,
         )
 
         return { success: true }

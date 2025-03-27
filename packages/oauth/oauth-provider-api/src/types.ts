@@ -34,6 +34,9 @@ export type ScopeDetail = {
 }
 
 export type DeviceMetadata = {
-  userAgent?: string
+  userAgent: string | null
   ipAddress: string
+  lastSeenAt: ISODateString
 }
+
+export type ISODateString = `${string}T${string}Z`

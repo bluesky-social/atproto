@@ -553,7 +553,7 @@ export class TokenManager {
       throw new InvalidTokenError(tokenType, `Invalid token`)
     }
 
-    if (!(tokenInfo.data.expiresAt.getTime() > Date.now())) {
+    if (isTokenInfoExpired(tokenInfo)) {
       throw new InvalidTokenError(tokenType, `Token expired`)
     }
 
@@ -566,20 +566,31 @@ export class TokenManager {
     dpopJkt: string | null,
     verifyOptions?: VerifyTokenClaimsOptions,
   ): Promise<VerifyTokenClaimsResult> {
-    const tokenInfo = await this.getTokenInfo(tokenType, tokenId)
-    const { parameters } = tokenInfo.data
+    const { data, account } = await this.getTokenInfo(tokenType, tokenId)
+    const { parameters } = data
 
     // Construct a list of claim, as if the token was a JWT.
     const claims: TokenClaims = {
-      aud: tokenInfo.account.aud,
-      sub: tokenInfo.account.sub,
-      exp: dateToEpoch(tokenInfo.data.expiresAt),
-      iat: dateToEpoch(tokenInfo.data.updatedAt),
-      scope: tokenInfo.data.parameters.scope,
-      client_id: tokenInfo.data.clientId,
+      aud: account.aud,
+      sub: account.sub,
+      client_id: data.clientId,
+      exp: dateToEpoch(data.expiresAt),
+      iat: dateToEpoch(data.updatedAt),
+      scope: parameters.scope,
       cnf: parameters.dpop_jkt ? { jkt: parameters.dpop_jkt } : undefined,
     }
 
     return verifyTokenClaims(tokenId, tokenType, dpopJkt, claims, verifyOptions)
   }
+
+  async listAccountTokens(sub: Sub): Promise<TokenInfo[]> {
+    const results = await this.store.listAccountTokens(sub)
+    return results
+      .filter((tokenInfo) => tokenInfo.account.sub === sub) // Fool proof
+      .filter((tokenInfo) => !isTokenInfoExpired(tokenInfo))
+  }
+}
+
+function isTokenInfoExpired(tokenInfo: TokenInfo): boolean {
+  return tokenInfo.data.expiresAt.getTime() < Date.now()
 }

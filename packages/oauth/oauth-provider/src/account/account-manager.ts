@@ -104,10 +104,10 @@ export class AccountManager {
     return { ...input, hcaptchaResult, inviteCode }
   }
 
-  public async signUp(
-    input: SignUpInput,
+  public async createAccount(
     deviceId: DeviceId,
     deviceMetadata: RequestMetadata,
+    input: SignUpInput,
     requestUri?: RequestUri,
   ): Promise<Account> {
     await callAsync(this.hooks.onSignupAttempt, {
@@ -134,12 +134,11 @@ export class AccountManager {
     const remember = requestUri == null
     const requestId = requestUri ? decodeRequestUri(requestUri) : null
 
-    await this.store.addDeviceAccount(
-      deviceId,
-      account.sub,
-      remember,
+    await this.store.addDeviceAccount(deviceId, account.sub, {
+      authenticatedAt: new Date(),
+      remembered: remember,
       requestId,
-    )
+    })
 
     await callAsync(this.hooks.onSignedUp, {
       data,
@@ -156,10 +155,10 @@ export class AccountManager {
     return account
   }
 
-  public async signIn(
-    data: SignInData,
+  public async authenticateAccount(
     deviceId: DeviceId,
     deviceMetadata: RequestMetadata,
+    data: SignInData,
     requestUri?: RequestUri,
   ): Promise<Account> {
     const account = await constantTime(
@@ -177,12 +176,11 @@ export class AccountManager {
     try {
       const requestId = requestUri ? decodeRequestUri(requestUri) : null
 
-      await this.store.addDeviceAccount(
-        deviceId,
-        account.sub,
-        data.remember,
+      await this.store.addDeviceAccount(deviceId, account.sub, {
+        authenticatedAt: new Date(),
+        remembered: data.remember,
         requestId,
-      )
+      })
 
       await callAsync(this.hooks.onSignedIn, {
         data,
@@ -200,29 +198,33 @@ export class AccountManager {
     }
   }
 
-  public async getAccountInfo(
+  public async getDeviceAccount(
     deviceId: DeviceId,
     sub: Sub,
     requestUri?: RequestUri,
   ): Promise<DeviceAccount> {
     const requestId = requestUri ? decodeRequestUri(requestUri) : null
 
-    const result = await this.store.getDeviceAccount(deviceId, sub, requestId)
-    if (!result) throw new InvalidRequestError(`Account not found`)
+    const deviceAccount = await this.store.getDeviceAccount(
+      deviceId,
+      sub,
+      requestId,
+    )
+    if (!deviceAccount) throw new InvalidRequestError(`Account not found`)
 
     // Fool-proofing
-    if (!requestId && result.info.requestId) {
+    if (!requestId && deviceAccount.data.requestId) {
       throw new Error('DeviceAccount was bound to a request')
     }
     if (
       requestId &&
-      result.info.requestId &&
-      result.info.requestId !== requestId
+      deviceAccount.data.requestId &&
+      deviceAccount.data.requestId !== requestId
     ) {
       throw new Error('DeviceAccount was bound to another request')
     }
 
-    return result
+    return deviceAccount
   }
 
   public async setAuthorizedClient(
@@ -246,7 +248,16 @@ export class AccountManager {
 
   public async list(deviceId: DeviceId): Promise<DeviceAccount[]> {
     const results = await this.store.listDeviceAccounts(deviceId)
-    return results.filter(({ info }) => info.remembered && !info.requestId)
+    return results
+      .filter((result) => result.deviceId === deviceId) // Fool proof
+      .filter(({ data }) => data.remembered && !data.requestId)
+  }
+
+  public async listAccountDevices(sub: Sub): Promise<DeviceAccount[]> {
+    const result = await this.store.listAccountDevices(sub)
+    return result
+      .filter((result) => result.account.sub === sub) // Fool proof
+      .filter(({ data }) => data.remembered && !data.requestId)
   }
 
   public async resetPasswordRequest(data: ResetPasswordRequestData) {
