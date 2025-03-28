@@ -16,7 +16,7 @@ export const publishIdentity = async (
   console.log('DONE')
 }
 
-export const publishIdentityMany = async (
+export const publishIdentityFromFile = async (
   ctx: PublishIdentityContext,
   args: string[],
 ) => {
@@ -30,7 +30,6 @@ export const publishIdentityMany = async (
     .toString()
     .split('\n')
     .map((did) => did.trim())
-    .filter((did) => did.startsWith('did:plc'))
 
   await publishIdentityEvtForDids(ctx, dids, timeBetween)
   console.log('DONE')

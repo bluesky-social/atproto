@@ -1,6 +1,10 @@
-import { publishIdentity, publishIdentityMany } from './publish-identity'
+import { publishIdentity, publishIdentityFromFile } from './publish-identity'
 import { rebuildRepo } from './rebuild-repo'
-import { rotateKeys, rotateKeysMany, rotateKeysRecovery } from './rotate-keys'
+import {
+  rotateKeys,
+  rotateKeysFromFile,
+  rotateKeysRecovery,
+} from './rotate-keys'
 import { sequencerRecovery } from './sequencer-recovery'
 import { repairRepos } from './sequencer-recovery/repair-repos'
 
@@ -9,8 +13,8 @@ export const scripts = {
   'sequencer-recovery': sequencerRecovery,
   'recovery-repair-repos': repairRepos,
   'rotate-keys': rotateKeys,
-  'rotate-keys-many': rotateKeysMany,
+  'rotate-keys-file': rotateKeysFromFile,
   'rotate-keys-recovery': rotateKeysRecovery,
   'publish-identity': publishIdentity,
-  'publish-identity-many': publishIdentityMany,
+  'publish-identity-file': publishIdentityFromFile,
 }

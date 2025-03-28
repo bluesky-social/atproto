@@ -24,7 +24,7 @@ export const rotateKeys = async (ctx: RotateKeysContext, args: string[]) => {
   await rotateKeysForRepos(ctx, dids, 10)
 }
 
-export const rotateKeysMany = async (
+export const rotateKeysFromFile = async (
   ctx: RotateKeysContext,
   args: string[],
 ) => {
