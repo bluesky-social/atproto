@@ -87,6 +87,10 @@ export type OAuthHooks = {
     deviceMetadata: RequestMetadata
   }) => Awaitable<void>
 
+  /**
+   * This hook is called when a user attempts to sign up, after the hcaptcha
+   * `/siteverify` request has been made (and before the result is validated).
+   */
   onHcaptchaResult?: (data: {
     input: SignUpInput
     deviceId: DeviceId

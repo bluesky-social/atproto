@@ -163,7 +163,7 @@ export class HCaptchaClient {
     result: HcaptchaVerifyResult,
     tokens: HcaptchaClientTokens,
   ): void {
-    const { success, hostname, score } = result
+    const { success, score } = result
 
     if (success !== true) {
       throw new HCaptchaVerifyError(
@@ -173,19 +173,14 @@ export class HCaptchaClient {
       )
     }
 
-    if (
-      // Ignore if enterprise feature is not enabled
-      hostname != null &&
-      // Fool-proofing: If this is false, the user is trying to use a token
-      // generated for the same siteKey, but on another domain.
-      hostname !== this.hostname
-    ) {
-      throw new HCaptchaVerifyError(
-        result,
-        tokens,
-        `Hostname ${hostname} does not match ${this.hostname}`,
-      )
-    }
+    // https://docs.hcaptcha.com/#verify-the-user-response-server-side
+
+    // Please [...] note that the hostname field is derived from the user's
+    // browser, and should not be used for authentication of any kind; it is
+    // primarily useful as a statistical metric. Additionally, in the event that
+    // your site experiences unusually high challenge traffic, the hostname
+    // field may be returned as "not-provided" rather than the usual value; all
+    // other fields will return their normal values.
 
     if (
       // Ignore if enterprise feature is not enabled
