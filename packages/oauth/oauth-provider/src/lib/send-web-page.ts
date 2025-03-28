@@ -1,13 +1,13 @@
 import { createHash } from 'node:crypto'
 import type { ServerResponse } from 'node:http'
-import { CspConfig, CspValue, mergeCsp } from '../lib/csp/index.js'
+import { CspConfig, CspValue, mergeCsp } from './csp/index.js'
 import {
   AssetRef,
   BuildDocumentOptions,
   Html,
   buildDocument,
-} from '../lib/html/index.js'
-import { WriteHtmlOptions, writeHtml } from '../lib/http/response.js'
+} from './html/index.js'
+import { WriteHtmlOptions, writeHtml } from './http/response.js'
 
 export const DEFAULT_CSP: CspConfig = {
   'upgrade-insecure-requests': true,
@@ -16,10 +16,10 @@ export const DEFAULT_CSP: CspConfig = {
 
 export type SendWebPageOptions = BuildDocumentOptions & WriteHtmlOptions
 
-export async function sendWebPage(
+export function sendWebPage(
   res: ServerResponse,
   { csp: inputCsp, ...options }: SendWebPageOptions,
-): Promise<void> {
+): void {
   // @NOTE the csp string might be quite long. In that case it might be tempting
   // to set it through the http-equiv <meta> in the HTML. However, some
   // directives cannot be enforced by browsers when set through the meta tag
@@ -27,15 +27,16 @@ export async function sendWebPage(
   // HTTP header.
   const csp = mergeCsp(DEFAULT_CSP, inputCsp, {
     'base-uri': options.base?.origin as undefined | `https://${string}`,
-    'script-src': options.scripts?.map(assetToCsp),
-    'style-src': options.styles?.map(assetToCsp),
+    'script-src': options.scripts?.map(assetToCsp).filter((v) => v != null),
+    'style-src': options.styles?.map(assetToCsp).filter((v) => v != null),
   })
 
   const html = buildDocument(options).toString()
-  return writeHtml(res, html, { ...options, csp })
+  writeHtml(res, html, { ...options, csp })
 }
 
-function assetToCsp(asset: Html | AssetRef): CspValue {
+function assetToCsp(asset?: Html | AssetRef): undefined | CspValue {
+  if (asset == null) return undefined
   if (asset instanceof Html) {
     // Inline assets are "allowed" by their hash
     const hash = createHash('sha256')

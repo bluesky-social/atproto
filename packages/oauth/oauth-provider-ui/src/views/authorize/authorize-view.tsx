@@ -21,6 +21,7 @@ export type AuthorizeViewProps = Override<
   LayoutTitlePageProps,
   {
     customizationData?: CustomizationData
+    csrfCookieName: string
     authorizeData: AuthorizeData
   }
 >
@@ -36,6 +37,7 @@ enum View {
 
 export function AuthorizeView({
   authorizeData,
+  csrfCookieName,
   customizationData,
 
   // LayoutTitlePage
@@ -69,7 +71,11 @@ export function AuthorizeView({
     doConfirmResetPassword,
     doAccept,
     doReject,
-  } = useApi({ ...authorizeData, onRedirected: showDone })
+  } = useApi({
+    csrfCookieName,
+    sessions: authorizeData.sessions,
+    onRedirected: showDone,
+  })
 
   // Navigate when the user signs-in (selects a new session)
   const session = sessions.find((s) => s.selected && !s.loginRequired)

@@ -19,6 +19,7 @@ export const customizationData = readBackendData<CustomizationData>(
   '__customizationData',
 )
 export const authorizeData = readBackendData<AuthorizeData>('__authorizeData')
+export const csrfCookieName = readBackendData<string>('__csrfCookieName')
 
 if (authorizeData) {
   // When the user is logging in, make sure the page URL contains the
@@ -47,6 +48,7 @@ createRoot(container).render(
       >
         <AuthorizeView
           customizationData={customizationData}
+          csrfCookieName={csrfCookieName}
           authorizeData={authorizeData}
         />
       </ErrorBoundary>

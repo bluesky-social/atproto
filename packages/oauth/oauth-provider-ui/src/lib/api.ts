@@ -1,4 +1,7 @@
-import type { ApiEndpoints } from '@atproto/oauth-provider-api'
+import {
+  API_ENDPOINT_PREFIX,
+  type ApiEndpoints,
+} from '@atproto/oauth-provider-api'
 import {
   JsonClient,
   JsonErrorPayload,
@@ -13,19 +16,19 @@ export type AcceptData = {
 
 export class Api extends JsonClient<ApiEndpoints> {
   constructor(csrfToken: string) {
-    const baseUrl = new URL('/oauth/authorize', window.origin).toString()
+    const baseUrl = new URL(API_ENDPOINT_PREFIX, window.origin).toString()
     super(baseUrl, csrfToken)
   }
 
   public buildAcceptUrl({ sub }: AcceptData): URL {
-    const url = new URL(`${this.baseUrl}/accept`)
+    const url = new URL(`/oauth/authorize/accept`, window.origin)
     url.searchParams.set('account_sub', sub)
     url.searchParams.set('csrf_token', this.csrfToken)
     return url
   }
 
   public buildRejectUrl(): URL {
-    const url = new URL(`${this.baseUrl}/reject`)
+    const url = new URL(`/oauth/authorize/reject`, window.origin)
     url.searchParams.set('csrf_token', this.csrfToken)
     return url
   }

@@ -24,7 +24,7 @@ export function CredentialSignInForm({
   const [password, setPassword] = useState('')
   const [service, setService] = useState('http://localhost:2583')
 
-  // TODO: add auth factor support ?
+  // @TODO: add auth factor support ?
 
   const onSubmit = useCallback(
     async (e: FormEvent<HTMLFormElement>) => {

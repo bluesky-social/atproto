@@ -30,5 +30,13 @@ export type LinkDefinition = {
 
 export type ScopeDetail = {
   scope: string
-  description?: string
+  description?: LocalizedString
 }
+
+export type DeviceMetadata = {
+  userAgent: string | null
+  ipAddress: string
+  lastSeenAt: ISODateString
+}
+
+export type ISODateString = `${string}T${string}Z`

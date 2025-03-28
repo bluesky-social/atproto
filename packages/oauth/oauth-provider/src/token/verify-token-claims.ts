@@ -1,4 +1,4 @@
-import { OAuthAccessToken, OAuthTokenType } from '@atproto/oauth-types'
+import { OAuthTokenType } from '@atproto/oauth-types'
 import { InvalidDpopKeyBindingError } from '../errors/invalid-dpop-key-binding-error.js'
 import { InvalidDpopProofError } from '../errors/invalid-dpop-proof-error.js'
 import { asArray } from '../lib/util/cast.js'
@@ -14,14 +14,12 @@ export type VerifyTokenClaimsOptions = {
 }
 
 export type VerifyTokenClaimsResult = {
-  token: OAuthAccessToken
   tokenId: TokenId
   tokenType: OAuthTokenType
   claims: TokenClaims
 }
 
 export function verifyTokenClaims(
-  token: OAuthAccessToken,
   tokenId: TokenId,
   tokenType: OAuthTokenType,
   dpopJkt: string | null,
@@ -56,9 +54,9 @@ export function verifyTokenClaims(
     }
   }
 
-  if (claims.exp && claims.exp * 1000 <= dateReference) {
+  if (claims.exp != null && claims.exp * 1000 <= dateReference) {
     throw new InvalidTokenError(tokenType, `Token expired`)
   }
 
-  return { token, tokenId, tokenType, claims }
+  return { tokenId, tokenType, claims }
 }

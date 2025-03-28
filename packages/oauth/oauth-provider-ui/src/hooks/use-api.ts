@@ -6,8 +6,8 @@ import type {
   ConfirmResetPasswordData,
   InitiatePasswordResetData,
   Session,
-  SignInData,
-  SignUpData,
+  SignInInput,
+  SignUpInput,
   VerifyHandleAvailabilityData,
 } from '@atproto/oauth-provider-api'
 import { AcceptData, Api, UnknownRequestUriError } from '../lib/api.ts'
@@ -39,19 +39,17 @@ function useSafeCallback<F extends (...a: any) => any>(fn: F, deps: unknown[]) {
 }
 
 export type UseApiOptions = {
-  requestUri: string
+  csrfCookieName: string
   sessions?: readonly Session[]
-  newSessionsRequireConsent?: boolean
   onRedirected?: () => void
 }
 
 export function useApi({
-  requestUri,
+  csrfCookieName,
   sessions: sessionsInit = [],
-  newSessionsRequireConsent = true,
   onRedirected,
 }: UseApiOptions) {
-  const csrfToken = useCsrfToken(`csrf-${requestUri}`)
+  const csrfToken = useCsrfToken(csrfCookieName)
   if (!csrfToken) throw new Error('CSRF token is missing')
 
   const api = useMemo(() => new Api(csrfToken), [csrfToken])
@@ -74,26 +72,35 @@ export function useApi({
   const upsertSession = useCallback(
     ({
       account,
-      consentRequired,
-    }: {
-      account: Account
-      consentRequired: boolean
-    }) => {
+      // The server will tell us if the user needs to consent to the
+      // authorization. Defaults to true in case of sign-ups
+      consentRequired = true,
+      // When a new session is inserted, assume that the user intends to use
+      // it, and therefore, it is selected by default.
+      selected = true,
+      // When a new session is inserted, it is assumed that the user just
+      // created the session, and therefore, login is not required.
+      loginRequired = false,
+    }: { account: Account } & Partial<Session>) => {
       const session: Session = {
         account,
-        selected: true,
-        loginRequired: false,
-        consentRequired: newSessionsRequireConsent || consentRequired,
+        selected,
+        loginRequired,
+        consentRequired,
       }
 
       setSessions((sessions) =>
         upsert(sessions, session, (s) => s.account.sub === account.sub).map(
-          // Make sure to de-select any other selected session
-          (s) => (s === session || !s.selected ? s : { ...s, selected: false }),
+          // Make sure to de-select any other selected session (if selected is
+          // true)
+          (s) =>
+            !selected || s === session || !s.selected
+              ? s
+              : { ...s, selected: false },
         ),
       )
     },
-    [setSessions, newSessionsRequireConsent],
+    [setSessions],
   )
 
   const performRedirect = useCallback(
@@ -105,8 +112,9 @@ export function useApi({
   )
 
   const doSignIn = useSafeCallback(
-    async (data: Omit<SignInData, 'locale'>, signal?: AbortSignal) => {
+    async (data: Omit<SignInInput, 'locale'>, signal?: AbortSignal) => {
       const response = await api.fetch(
+        'POST',
         '/sign-in',
         { ...data, locale },
         { signal },
@@ -122,6 +130,7 @@ export function useApi({
       signal?: AbortSignal,
     ) => {
       await api.fetch(
+        'POST',
         '/reset-password-request',
         { ...data, locale },
         { signal },
@@ -132,21 +141,22 @@ export function useApi({
 
   const doConfirmResetPassword = useSafeCallback(
     async (data: ConfirmResetPasswordData, signal?: AbortSignal) => {
-      await api.fetch('/reset-password-confirm', data, { signal })
+      await api.fetch('POST', '/reset-password-confirm', data, { signal })
     },
     [api],
   )
 
   const doValidateNewHandle = useSafeCallback(
     async (data: VerifyHandleAvailabilityData, signal?: AbortSignal) => {
-      await api.fetch('/verify-handle-availability', data, { signal })
+      await api.fetch('POST', '/verify-handle-availability', data, { signal })
     },
     [api],
   )
 
   const doSignUp = useSafeCallback(
-    async (data: Omit<SignUpData, 'locale'>, signal?: AbortSignal) => {
+    async (data: Omit<SignUpInput, 'locale'>, signal?: AbortSignal) => {
       const response = await api.fetch(
+        'POST',
         '/sign-up',
         { ...data, locale },
         { signal },

@@ -30,6 +30,5 @@ export type AuthorizeData = {
   requestUri: string
   loginHint?: string
   scopeDetails?: ScopeDetail[]
-  newSessionsRequireConsent: boolean
   sessions: Session[]
 }

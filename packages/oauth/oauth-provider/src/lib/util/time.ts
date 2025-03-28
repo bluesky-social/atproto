@@ -15,10 +15,9 @@ export function onOvertimeDefault(options: {
 /**
  * Utility function to protect against timing attacks.
  */
-export async function constantTime<R, T = unknown>(
-  this: T,
+export async function constantTime<R>(
   time: number,
-  fn: (this: T) => Awaitable<R>,
+  fn: () => Awaitable<R>,
   onOvertime = onOvertimeDefault,
 ): Promise<R> {
   if (!Number.isFinite(time) || time <= 0) {
@@ -27,7 +26,7 @@ export async function constantTime<R, T = unknown>(
 
   const start = Date.now()
   try {
-    return await fn.call(this)
+    return await fn()
   } finally {
     const end = Date.now()
     const elapsed = end - start

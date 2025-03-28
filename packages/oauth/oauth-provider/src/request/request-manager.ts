@@ -1,9 +1,9 @@
+import type { Account } from '@atproto/oauth-provider-api'
 import {
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
   OAuthAuthorizationRequestParameters,
   OAuthAuthorizationServerMetadata,
 } from '@atproto/oauth-types'
-import { Account } from '../account/account.js'
 import { ClientAuth } from '../client/client-auth.js'
 import { ClientId } from '../client/client-id.js'
 import { Client } from '../client/client.js'
@@ -439,13 +439,12 @@ export class RequestManager {
     client: Client,
     clientAuth: ClientAuth,
     code: Code,
-  ): Promise<RequestDataAuthorized> {
+  ): Promise<RequestDataAuthorized & { requestUri: RequestUri }> {
     const result = await this.store.findRequestByCode(code)
     if (!result) throw new InvalidGrantError('Invalid code')
 
+    const { id, data } = result
     try {
-      const { data } = result
-
       if (!isRequestDataAuthorized(data)) {
         // Should never happen: maybe the store implementation is faulty ?
         throw new Error('Unexpected request state')
@@ -478,10 +477,10 @@ export class RequestManager {
         }
       }
 
-      return data
+      return { ...data, requestUri: encodeRequestUri(id) }
     } finally {
       // A "code" can only be used once
-      await this.store.deleteRequest(result.id)
+      await this.store.deleteRequest(id)
     }
   }
 

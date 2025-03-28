@@ -59,6 +59,7 @@
   "devDependencies": {
     "@types/cookie": "^0.6.0",
     "@types/forwarded": "0.1.3",
+    "@types/http-errors": "^2.0.4",
     "@types/psl": "1.1.3",
     "@types/send": "^0.17.4"
   },

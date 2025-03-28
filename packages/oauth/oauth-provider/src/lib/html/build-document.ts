@@ -61,8 +61,8 @@ export type BuildDocumentOptions = {
   preloads?: readonly AssetRef[]
   head?: HtmlValue
   title?: HtmlValue
-  scripts?: readonly (Html | AssetRef)[]
-  styles?: readonly (Html | AssetRef)[]
+  scripts?: readonly (Html | AssetRef | undefined)[]
+  styles?: readonly (Html | AssetRef | undefined)[]
   body?: HtmlValue
   bodyAttrs?: Attrs
 }
@@ -134,14 +134,16 @@ function linkPreload(asset: AssetRef) {
   return undefined
 }
 
-function scriptToHtml(script: Html | AssetRef) {
+function scriptToHtml(script?: Html | AssetRef): Html | undefined {
+  if (script == null) return undefined
   return script instanceof Html
     ? // prettier-ignore
       html`<script>${script}</script>` // hash validity requires no space around the content
     : html`<script type="module" src="${script.url}"></script>`
 }
 
-function styleToHtml(style: Html | AssetRef) {
+function styleToHtml(style?: Html | AssetRef): Html | undefined {
+  if (style == null) return undefined
   return style instanceof Html
     ? // prettier-ignore
       html`<style>${style}</style>` // hash validity requires no space around the content

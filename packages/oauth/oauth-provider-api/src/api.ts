@@ -1,38 +1,85 @@
-import type { Account } from './types.js'
+import type { OAuthClientMetadata } from '@atproto/oauth-types'
+import type { Account, DeviceMetadata } from './types.js'
 
 // These are the endpoints implemented by the OAuth provider, for it's UI to
 // call.
 
 export type ApiEndpoints = {
   '/verify-handle-availability': {
+    method: 'POST'
     input: VerifyHandleAvailabilityData
     output: { available: true }
   }
   '/sign-up': {
-    input: SignUpData
-    output: {
-      account: Account
-      consentRequired: boolean
-    }
+    method: 'POST'
+    input: SignUpInput
+    output: { account: Account }
   }
   '/sign-in': {
-    input: SignInData
-    output: {
-      account: Account
-      consentRequired: boolean
-    }
+    method: 'POST'
+    input: SignInInput
+    output: { account: Account; consentRequired?: boolean }
   }
   '/reset-password-request': {
+    method: 'POST'
     input: InitiatePasswordResetData
     output: { success: true }
   }
   '/reset-password-confirm': {
+    method: 'POST'
     input: ConfirmResetPasswordData
+    output: { success: true }
+  }
+  '/sign-out': {
+    method: 'POST'
+    input: { sub: string | string[] }
+    output: { success: true }
+  }
+  '/accounts': {
+    method: 'GET'
+    output: { accounts: Account[] }
+  }
+  /**
+   * @NOTE can be revoked using the oauth revocation endpoint (json or form
+   * encoded)
+   *
+   * ```http
+   * POST /oauth/revoke
+   * Content-Type: application/x-www-form-urlencoded
+   *
+   * token=<tokenId>
+   * ```
+   */
+  '/oauth-sessions': {
+    method: 'GET'
+    params: { sub: string }
+    output: {
+      sessions: Array<{
+        tokenId: string
+        clientId: string
+        /** An "undefined" value means that the client metadata could not be fetched */
+        clientMetadata?: OAuthClientMetadata
+      }>
+    }
+  }
+  '/account-sessions': {
+    method: 'GET'
+    params: { sub: string }
+    output: {
+      sessions: Array<{
+        deviceId: string
+        deviceMetadata: DeviceMetadata
+      }>
+    }
+  }
+  '/revoke-account-session': {
+    method: 'POST'
+    input: { sub: string; deviceId: string }
     output: { success: true }
   }
 }
 
-export type SignInData = {
+export type SignInInput = {
   locale: string
   username: string
   password: string
@@ -40,7 +87,7 @@ export type SignInData = {
   remember?: boolean
 }
 
-export type SignUpData = {
+export type SignUpInput = {
   locale: string
   handle: string
   email: string

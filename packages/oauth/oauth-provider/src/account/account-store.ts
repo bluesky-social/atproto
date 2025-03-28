@@ -1,11 +1,14 @@
 import { isEmailValid } from '@hapi/address'
 import { isDisposableEmail } from 'disposable-email-domains-js'
 import { z } from 'zod'
+import { Account } from '@atproto/oauth-provider-api'
+import { OAuthScope } from '@atproto/oauth-types'
 import { ensureValidHandle, normalizeHandle } from '@atproto/syntax'
 import { ClientId } from '../client/client-id.js'
 import { DeviceId } from '../device/device-id.js'
+import { DeviceData } from '../device/device-store.js'
 import { HcaptchaVerifyResult } from '../lib/hcaptcha.js'
-import { localeSchema } from '../lib/locale.js'
+import { localeSchema } from '../lib/util/locale.js'
 import { Awaitable, buildInterfaceChecker } from '../lib/util/type.js'
 import {
   HandleUnavailableError,
@@ -13,7 +16,7 @@ import {
   SecondAuthenticationFactorRequiredError,
 } from '../oauth-errors.js'
 import { Sub } from '../oidc/sub.js'
-import { Account } from './account.js'
+import { RequestId } from '../request/request-id.js'
 import { SignUpInput } from './sign-up-input.js'
 
 // @NOTE Change the length here to force stronger passwords (through a reset)
@@ -100,10 +103,29 @@ export type ResetPasswordConfirmData = z.TypeOf<
   typeof resetPasswordConfirmDataSchema
 >
 
-export type DeviceAccountInfo = {
+export type AuthorizedClientData = { authorizedScopes: readonly string[] }
+export type AuthorizedClients = Map<ClientId, AuthorizedClientData>
+
+export type DeviceAccountData = {
   remembered: boolean
   authenticatedAt: Date
-  authorizedClients: readonly ClientId[]
+  requestId: null | RequestId
+}
+
+export type DeviceAccount = {
+  deviceId: DeviceId
+  deviceData: DeviceData
+
+  account: Account
+
+  authorizedClients: AuthorizedClients
+
+  data: DeviceAccountData
+}
+
+export type SignUpData = SignUpInput & {
+  hcaptchaResult?: HcaptchaVerifyResult
+  inviteCode?: InviteCode
 }
 
 // Export all types needed to implement the AccountStore interface
@@ -112,18 +134,10 @@ export {
   type DeviceId,
   HandleUnavailableError,
   InvalidRequestError,
+  type OAuthScope,
+  type RequestId,
   SecondAuthenticationFactorRequiredError,
   type Sub,
-}
-
-export type AccountInfo = {
-  account: Account
-  info: DeviceAccountInfo
-}
-
-export type SignUpData = SignUpInput & {
-  hcaptchaResult?: HcaptchaVerifyResult
-  inviteCode?: InviteCode
 }
 
 export interface AccountStore {
@@ -139,33 +153,62 @@ export interface AccountStore {
    */
   authenticateAccount(data: AuthenticateAccountData): Awaitable<Account>
 
-  addAuthorizedClient(
-    deviceId: DeviceId,
+  /**
+   * Add a client & scopes to the list of authorized clients for the given account.
+   */
+  setAuthorizedClient(
     sub: Sub,
     clientId: ClientId,
+    data: AuthorizedClientData,
   ): Awaitable<void>
 
+  getAuthorizedClients(sub: Sub): Awaitable<AuthorizedClients>
+
   /**
-   * @param remember If false, the account must not be returned from
-   * {@link AccountStore.listDeviceAccounts}.
+   * @param requestId - If provided, the inserted account must be bound to that
+   * particular requestId. If an unbound account already exists, it should be
+   * replaced.
+   * @note When a particular request is deleted (through
+   * {@link RequestStore.deleteRequest}), all accounts bound to that request
+   * should be deleted as well.
    */
   addDeviceAccount(
     deviceId: DeviceId,
     sub: Sub,
-    remember: boolean,
-  ): Awaitable<DeviceAccountInfo>
+    data: DeviceAccountData,
+  ): Awaitable<void>
 
   /**
-   * @returns The account info, whether the account, even if remember was false.
+   * @param requestId - If provided, the result must either have the same
+   * requestId, or not be bound to a particular requestId. If `null`, the
+   * result must not be bound to a particular requestId.
+   * @throws {InvalidRequestError} - Instead of returning `null` in order to
+   * provide a custom error message
    */
-  getDeviceAccount(deviceId: DeviceId, sub: Sub): Awaitable<AccountInfo | null>
+  getDeviceAccount(
+    deviceId: DeviceId,
+    sub: Sub,
+    requestId: null | RequestId,
+  ): Awaitable<DeviceAccount | null>
+
+  /**
+   * @note No-op if the account is not associated with the device.
+   */
   removeDeviceAccount(deviceId: DeviceId, sub: Sub): Awaitable<void>
 
   /**
-   * @note Only the accounts that where logged in with `remember: true` need to
-   * be returned. The others will be ignored.
+   * @returns all the device accounts associated with the given device. Entries
+   * created with a requestId or with remember set to false should not be
+   * returned.
    */
-  listDeviceAccounts(deviceId: DeviceId): Awaitable<AccountInfo[]>
+  listDeviceAccounts(deviceId: DeviceId): Awaitable<DeviceAccount[]>
+
+  /**
+   * @returns all the device accounts associated with the given account. Entries
+   * created with a requestId or with remember set to false should not be
+   * returned.
+   */
+  listAccountDevices(sub: Sub): Awaitable<DeviceAccount[]>
 
   resetPasswordRequest(data: ResetPasswordRequestData): Awaitable<void>
   resetPasswordConfirm(data: ResetPasswordConfirmData): Awaitable<void>
@@ -179,11 +222,13 @@ export interface AccountStore {
 export const isAccountStore = buildInterfaceChecker<AccountStore>([
   'createAccount',
   'authenticateAccount',
-  'addAuthorizedClient',
+  'setAuthorizedClient',
+  'getAuthorizedClients',
   'addDeviceAccount',
   'getDeviceAccount',
   'removeDeviceAccount',
   'listDeviceAccounts',
+  'listAccountDevices',
   'resetPasswordRequest',
   'resetPasswordConfirm',
   'verifyHandleAvailability',

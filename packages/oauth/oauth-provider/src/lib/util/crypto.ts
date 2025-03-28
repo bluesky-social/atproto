@@ -10,7 +10,7 @@ export async function randomHexId(bytesLength = 16) {
 }
 
 // Basically all algorithms supported by "jose"'s jwtVerify().
-// @TODO: Is there a way to get this list from the runtime instead of hardcoding it?
+// @TODO Is there a way to get this list from the runtime instead of hardcoding it?
 export const VERIFY_ALGOS = [
   'RS256',
   'RS384',

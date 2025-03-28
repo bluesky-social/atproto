@@ -1,5 +1,5 @@
 import { OAuthAuthorizationRequestParameters } from '@atproto/oauth-types'
-import { buildErrorPayload } from '../output/build-error-payload.js'
+import { buildErrorPayload } from './error-parser.js'
 import { OAuthError } from './oauth-error.js'
 
 export class AccessDeniedError extends OAuthError {

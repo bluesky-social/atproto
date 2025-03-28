@@ -54,6 +54,7 @@
     "undici": "^6.14.1"
   },
   "devDependencies": {
+    "@atproto/dev-env": "workspace:^",
     "@atproto/lex-cli": "workspace:^",
     "@atproto/pds": "workspace:^",
     "@did-plc/server": "^0.0.1",

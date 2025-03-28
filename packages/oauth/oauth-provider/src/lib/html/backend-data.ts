@@ -1,6 +1,8 @@
-import { Html, js } from '../lib/html/index.js'
+import { Html, js } from './index.js'
 
-export function declareBackendData(values: Record<string, unknown>): Html {
+export function declareBackendData<T extends Record<string, unknown>>(
+  values: T,
+): Html {
   return Html.dangerouslyCreate(backendDataGenerator(values))
 }
 

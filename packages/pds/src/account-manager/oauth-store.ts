@@ -1,13 +1,15 @@
+import assert from 'node:assert'
 import { Client, createOp as createPlcOp } from '@did-plc/lib'
 import { Selectable } from 'kysely'
 import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import {
   Account,
-  AccountInfo,
   AccountStore,
   AuthenticateAccountData,
+  AuthorizedClientData,
+  AuthorizedClients,
   Code,
-  DeviceAccountInfo,
+  DeviceAccount,
   DeviceData,
   DeviceId,
   DeviceStore,
@@ -23,6 +25,7 @@ import {
   ResetPasswordConfirmData,
   ResetPasswordRequestData,
   SignUpData,
+  Sub,
   TokenData,
   TokenId,
   TokenInfo,
@@ -248,23 +251,26 @@ export class OAuthStore
     deviceId: DeviceId,
     sub: string,
     remember: boolean,
-  ): Promise<DeviceAccountInfo> {
+    _requestId: RequestId | null,
+  ): Promise<void> {
     const [row] = await this.db.executeWithRetry(
       deviceAccount.createOrUpdateQB(this.db, deviceId, sub, remember),
     )
-    if (!row) throw new Error('Failed to create device account')
-    return deviceAccount.toDeviceAccountInfo(row)
+    assert(row, 'Failed to create device account')
+    throw new Error('TODO')
   }
 
-  async addAuthorizedClient(
+  async setAuthorizedClient(
     deviceId: DeviceId,
     sub: string,
-    clientId: string,
+    _data: AuthorizedClientData,
   ): Promise<void> {
     await this.db.transaction(async (dbTxn) => {
       const row = await deviceAccount
         .readQB(dbTxn, deviceId, sub)
         .executeTakeFirstOrThrow()
+
+      if (row) throw new Error('TODO')
 
       const { authorizedClients } = deviceAccount.toDeviceAccountInfo(row)
       if (!authorizedClients.includes(clientId)) {
@@ -277,23 +283,29 @@ export class OAuthStore
     })
   }
 
+  async getAuthorizedClients(_sub: Sub): Promise<AuthorizedClients> {
+    throw new Error('TODO')
+  }
+
   async getDeviceAccount(
     deviceId: DeviceId,
     sub: string,
-  ): Promise<AccountInfo | null> {
+  ): Promise<DeviceAccount | null> {
     const row = await deviceAccount
       .getAccountInfoQB(this.db, deviceId, sub)
       .executeTakeFirst()
 
     if (!row) return null
+    if (row) throw new Error('TODO')
 
     return {
       account: await this.buildAccount(row),
       info: deviceAccount.toDeviceAccountInfo(row),
+      authorizedClients: new Map(),
     }
   }
 
-  async listDeviceAccounts(deviceId: DeviceId): Promise<AccountInfo[]> {
+  async listDeviceAccounts(deviceId: DeviceId): Promise<DeviceAccount[]> {
     const rows = await deviceAccount
       .listRememberedQB(this.db, deviceId)
       .execute()

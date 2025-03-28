@@ -8,6 +8,7 @@ import {
 } from '../../../components/forms/form-card.tsx'
 import { AccountIdentifier } from '../../../components/utils/account-identifier.tsx'
 import { ClientName } from '../../../components/utils/client-name.tsx'
+import { MultiLangString } from '../../../components/utils/multi-lang-string.tsx'
 import { Override } from '../../../lib/util.ts'
 
 export type AcceptFormProps = Override<
@@ -124,7 +125,11 @@ export function AcceptForm({
         >
           {scopeDetails.map(({ scope, description }) => (
             <li key={scope}>
-              {description || <ScopeDescription scope={scope} />}
+              {description ? (
+                <MultiLangString value={description} />
+              ) : (
+                <ScopeDescription scope={scope} />
+              )}
             </li>
           ))}
         </ul>
