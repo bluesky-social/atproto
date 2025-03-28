@@ -1,5 +1,5 @@
 import { Trans } from '@lingui/react/macro'
-import { JSX } from 'react'
+import { JSX, useMemo } from 'react'
 import type { OAuthClientMetadata } from '@atproto/oauth-types'
 import { Override } from '../../lib/util.ts'
 import { UrlViewer } from './url-viewer.tsx'
@@ -21,6 +21,14 @@ export function ClientName({
   // span
   ...attrs
 }: ClientNameProps) {
+  const url = useMemo(() => {
+    try {
+      return new URL(clientId)
+    } catch {
+      return null
+    }
+  }, [clientId])
+
   if (clientTrusted && clientMetadata.client_name) {
     return <span {...attrs}>{clientMetadata.client_name}</span>
   }
@@ -29,7 +37,7 @@ export function ClientName({
   // @atproto/oauth-types here because 1) we don't need to validate here and 2)
   // we prefer not to import un-necessary code to improve bundle size.
 
-  if (clientId.startsWith('http://')) {
+  if (url?.protocol === 'http:') {
     return (
       <span {...attrs}>
         <Trans>An application on your device</Trans>
@@ -37,8 +45,25 @@ export function ClientName({
     )
   }
 
-  if (clientId.startsWith('https://')) {
-    return <UrlViewer {...attrs} url={clientId} path />
+  if (url?.protocol === 'https:') {
+    // Only display the url details if the client id does not follow our
+    // convention.
+    const simplifiedView =
+      url.protocol === 'https:' &&
+      url.pathname === '/oauth-client-metadata.json' &&
+      !url.search
+
+    return (
+      <UrlViewer
+        {...attrs}
+        url={url}
+        proto={!simplifiedView}
+        host={true}
+        path={!simplifiedView}
+        query={!simplifiedView}
+        hash={false}
+      />
+    )
   }
 
   return <span {...attrs}>{clientId}</span>
