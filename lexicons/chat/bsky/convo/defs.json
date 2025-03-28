@@ -79,10 +79,11 @@
     },
     "reactionView": {
       "type": "object",
-      "required": ["value", "sender"],
+      "required": ["value", "sender", "createdAt"],
       "properties": {
         "value": { "type": "string" },
-        "sender": { "type": "ref", "ref": "#reactionViewSender" }
+        "sender": { "type": "ref", "ref": "#reactionViewSender" },
+        "createdAt": { "type": "string", "format": "datetime" }
       }
     },
     "reactionViewSender": {
@@ -115,11 +116,11 @@
         },
         "lastMessage": {
           "type": "union",
-          "refs": [
-            "#messageView",
-            "#deletedMessageView",
-            "#messageAndReactionView"
-          ]
+          "refs": ["#messageView", "#deletedMessageView"]
+        },
+        "lastReaction": {
+          "type": "union",
+          "refs": ["#messageAndReactionView"]
         },
         "muted": { "type": "boolean" },
         "status": {
