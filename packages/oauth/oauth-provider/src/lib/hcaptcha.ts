@@ -115,6 +115,12 @@ export const hcaptchaVerifyResultSchema = z.object({
 
 export type HcaptchaVerifyResult = z.infer<typeof hcaptchaVerifyResultSchema>
 
+export type HcaptchaClientTokens = {
+  hashedIp: string
+  hashedHandle: string
+  hashedUserAgent?: string
+}
+
 const fetchSuccessHandler = pipe(
   fetchOkProcessor(),
   fetchJsonProcessor(),
@@ -135,8 +141,7 @@ export class HCaptchaClient {
     behaviorType: 'login' | 'signup',
     response: string,
     remoteip: string,
-    handle: string,
-    userAgent?: string,
+    clientTokens: HcaptchaClientTokens,
   ) {
     return this.fetch('https://api.hcaptcha.com/siteverify', {
       method: 'POST',
@@ -149,34 +154,33 @@ export class HCaptchaClient {
         behavior_type: behaviorType,
         response,
         remoteip,
-        client_tokens: JSON.stringify({
-          hashedIp: this.hashToken(remoteip),
-          hashedHandle: this.hashToken(handle),
-          hashedUserAgent: userAgent ? this.hashToken(userAgent) : undefined,
-        }),
+        client_tokens: JSON.stringify(clientTokens),
       }).toString(),
     }).then(fetchSuccessHandler)
   }
 
-  public checkVerifyResult(result: HcaptchaVerifyResult): void {
-    const { success, hostname, score } = result
+  public checkVerifyResult(
+    result: HcaptchaVerifyResult,
+    tokens: HcaptchaClientTokens,
+  ): void {
+    const { success, score } = result
 
     if (success !== true) {
-      throw new HCaptchaVerificationError(result, 'Expected success to be true')
-    }
-
-    if (
-      // Ignore if enterprise feature is not enabled
-      hostname != null &&
-      // Fool-proofing: If this is false, the user is trying to use a token
-      // generated for the same siteKey, but on another domain.
-      hostname !== this.hostname
-    ) {
-      throw new HCaptchaVerificationError(
+      throw new HCaptchaVerifyError(
         result,
-        `Hostname ${hostname} does not match ${this.hostname}`,
+        tokens,
+        'Expected success to be true',
       )
     }
+
+    // https://docs.hcaptcha.com/#verify-the-user-response-server-side
+
+    // Please [...] note that the hostname field is derived from the user's
+    // browser, and should not be used for authentication of any kind; it is
+    // primarily useful as a statistical metric. Additionally, in the event that
+    // your site experiences unusually high challenge traffic, the hostname
+    // field may be returned as "not-provided" rather than the usual value; all
+    // other fields will return their normal values.
 
     if (
       // Ignore if enterprise feature is not enabled
@@ -185,10 +189,23 @@ export class HCaptchaClient {
       this.config.scoreThreshold != null &&
       score >= this.config.scoreThreshold
     ) {
-      throw new HCaptchaVerificationError(
+      throw new HCaptchaVerifyError(
         result,
+        tokens,
         `Score ${score} is above the threshold ${this.config.scoreThreshold}`,
       )
+    }
+  }
+
+  public buildClientTokens(
+    remoteip: string,
+    handle: string,
+    userAgent?: string,
+  ): HcaptchaClientTokens {
+    return {
+      hashedIp: this.hashToken(remoteip),
+      hashedHandle: this.hashToken(handle),
+      hashedUserAgent: userAgent ? this.hashToken(userAgent) : undefined,
     }
   }
 
@@ -200,9 +217,10 @@ export class HCaptchaClient {
   }
 }
 
-export class HCaptchaVerificationError extends Error {
+export class HCaptchaVerifyError extends Error {
   constructor(
     readonly result: HcaptchaVerifyResult,
+    readonly tokens: HcaptchaClientTokens,
     message?: string,
   ) {
     super(message)

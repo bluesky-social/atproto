@@ -55,14 +55,14 @@ export class AccountManager {
       throw new InvalidRequestError('hCaptcha token is required')
     }
 
+    const tokens = this.hcaptchaClient.buildClientTokens(
+      deviceMetadata.ipAddress,
+      input.handle,
+      deviceMetadata.userAgent,
+    )
+
     const result = await this.hcaptchaClient
-      .verify(
-        'signup',
-        input.hcaptchaToken,
-        deviceMetadata.ipAddress,
-        input.handle,
-        deviceMetadata.userAgent,
-      )
+      .verify('signup', input.hcaptchaToken, deviceMetadata.ipAddress, tokens)
       .catch((err) => {
         throw InvalidRequestError.from(err, 'hCaptcha verification failed')
       })
@@ -71,11 +71,12 @@ export class AccountManager {
       input,
       deviceId,
       deviceMetadata,
+      tokens,
       result,
     })
 
     try {
-      this.hcaptchaClient.checkVerifyResult(result)
+      this.hcaptchaClient.checkVerifyResult(result, tokens)
     } catch (err) {
       throw InvalidRequestError.from(err, 'hCaptcha verification failed')
     }
