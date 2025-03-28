@@ -49,7 +49,7 @@ export function AcceptForm({
         event.preventDefault()
         onAccept()
       }}
-      cancel={onBack && <Button onClick={onBack}>Back</Button>}
+      cancel={onBack && <Button onClick={onBack}><Trans>Back</Trans></Button>}
       actions={
         <>
           <Button type="submit" color="brand">
