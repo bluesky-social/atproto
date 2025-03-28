@@ -82,6 +82,13 @@ export type OAuthHooks = {
     deviceMetadata: RequestMetadata
   }) => Awaitable<void>
 
+  onHcaptchaResult?: (data: {
+    input: SignUpInput
+    deviceId: DeviceId
+    deviceMetadata: RequestMetadata
+    result: HcaptchaVerifyResult
+  }) => Awaitable<void>
+
   /**
    * This hook is called when a user successfully signs up.
    *
