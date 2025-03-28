@@ -113,6 +113,7 @@ export interface ReactionView {
   $type?: 'chat.bsky.convo.defs#reactionView'
   value: string
   sender: ReactionViewSender
+  createdAt: string
 }
 
 const hashReactionView = 'reactionView'
@@ -164,8 +165,8 @@ export interface ConvoView {
   lastMessage?:
     | $Typed<MessageView>
     | $Typed<DeletedMessageView>
-    | $Typed<MessageAndReactionView>
     | { $type: string }
+  lastReaction?: $Typed<MessageAndReactionView> | { $type: string }
   muted: boolean
   status?: 'request' | 'accepted' | (string & {})
   unreadCount: number

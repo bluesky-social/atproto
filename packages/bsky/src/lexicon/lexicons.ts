@@ -10642,7 +10642,7 @@ export const schemaDict = {
       },
       reactionView: {
         type: 'object',
-        required: ['value', 'sender'],
+        required: ['value', 'sender', 'createdAt'],
         properties: {
           value: {
             type: 'string',
@@ -10650,6 +10650,10 @@ export const schemaDict = {
           sender: {
             type: 'ref',
             ref: 'lex:chat.bsky.convo.defs#reactionViewSender',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
           },
         },
       },
@@ -10699,8 +10703,11 @@ export const schemaDict = {
             refs: [
               'lex:chat.bsky.convo.defs#messageView',
               'lex:chat.bsky.convo.defs#deletedMessageView',
-              'lex:chat.bsky.convo.defs#messageAndReactionView',
             ],
+          },
+          lastReaction: {
+            type: 'union',
+            refs: ['lex:chat.bsky.convo.defs#messageAndReactionView'],
           },
           muted: {
             type: 'boolean',
