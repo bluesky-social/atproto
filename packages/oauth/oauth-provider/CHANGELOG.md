@@ -1,5 +1,13 @@
 # @atproto/oauth-provider
 
+## 0.6.3
+
+### Patch Changes
+
+- [#3688](https://github.com/bluesky-social/atproto/pull/3688) [`98d8a677c`](https://github.com/bluesky-social/atproto/commit/98d8a677ca4671137727d14567c8354c48c9e850) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add debugging info to HCaptcha validation errors
+
+- [#3688](https://github.com/bluesky-social/atproto/pull/3688) [`98d8a677c`](https://github.com/bluesky-social/atproto/commit/98d8a677ca4671137727d14567c8354c48c9e850) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add hook with hcaptcha result
+
 ## 0.6.2
 
 ### Patch Changes
