@@ -124,8 +124,8 @@ const fetchSuccessHandler = pipe(
 export class HCaptchaClient {
   protected readonly fetch: FetchBound
   constructor(
-    private readonly hostname: string,
-    private readonly config: HcaptchaConfig,
+    readonly hostname: string,
+    readonly config: HcaptchaConfig,
     fetch: Fetch = globalThis.fetch,
   ) {
     this.fetch = bindFetch(fetch)
@@ -138,7 +138,7 @@ export class HCaptchaClient {
     handle: string,
     userAgent?: string,
   ) {
-    const result = await this.fetch('https://api.hcaptcha.com/siteverify', {
+    return this.fetch('https://api.hcaptcha.com/siteverify', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -156,25 +156,40 @@ export class HCaptchaClient {
         }),
       }).toString(),
     }).then(fetchSuccessHandler)
-
-    return {
-      allowed: this.isAllowed(result),
-      result,
-    }
   }
 
-  protected isAllowed({ success, hostname, score }: HcaptchaVerifyResult) {
-    return (
-      success &&
+  public checkVerifyResult(result: HcaptchaVerifyResult): void {
+    const { success, hostname, score } = result
+
+    if (success !== true) {
+      throw new HCaptchaVerificationError(result, 'Expected success to be true')
+    }
+
+    if (
+      // Ignore if enterprise feature is not enabled
+      hostname != null &&
       // Fool-proofing: If this is false, the user is trying to use a token
       // generated for the same siteKey, but on another domain.
-      (hostname == null || hostname === this.hostname) &&
+      hostname !== this.hostname
+    ) {
+      throw new HCaptchaVerificationError(
+        result,
+        `Hostname ${hostname} does not match ${this.hostname}`,
+      )
+    }
+
+    if (
       // Ignore if enterprise feature is not enabled
-      (score == null ||
-        // Ignore if disabled through config
-        this.config.scoreThreshold == null ||
-        score < this.config.scoreThreshold)
-    )
+      score != null &&
+      // Ignore if disabled through config
+      this.config.scoreThreshold != null &&
+      score >= this.config.scoreThreshold
+    ) {
+      throw new HCaptchaVerificationError(
+        result,
+        `Score ${score} is above the threshold ${this.config.scoreThreshold}`,
+      )
+    }
   }
 
   protected hashToken(value: string) {
@@ -182,5 +197,14 @@ export class HCaptchaClient {
     hash.update(this.config.tokenSalt)
     hash.update(value)
     return hash.digest().toString('base64')
+  }
+}
+
+export class HCaptchaVerificationError extends Error {
+  constructor(
+    readonly result: HcaptchaVerifyResult,
+    message?: string,
+  ) {
+    super(message)
   }
 }
