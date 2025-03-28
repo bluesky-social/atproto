@@ -115,6 +115,12 @@ export const hcaptchaVerifyResultSchema = z.object({
 
 export type HcaptchaVerifyResult = z.infer<typeof hcaptchaVerifyResultSchema>
 
+export type HcaptchaClientTokens = {
+  hashedIp: string
+  hashedHandle: string
+  hashedUserAgent?: string
+}
+
 const fetchSuccessHandler = pipe(
   fetchOkProcessor(),
   fetchJsonProcessor(),
@@ -135,8 +141,7 @@ export class HCaptchaClient {
     behaviorType: 'login' | 'signup',
     response: string,
     remoteip: string,
-    handle: string,
-    userAgent?: string,
+    clientTokens: HcaptchaClientTokens,
   ) {
     return this.fetch('https://api.hcaptcha.com/siteverify', {
       method: 'POST',
@@ -149,20 +154,23 @@ export class HCaptchaClient {
         behavior_type: behaviorType,
         response,
         remoteip,
-        client_tokens: JSON.stringify({
-          hashedIp: this.hashToken(remoteip),
-          hashedHandle: this.hashToken(handle),
-          hashedUserAgent: userAgent ? this.hashToken(userAgent) : undefined,
-        }),
+        client_tokens: JSON.stringify(clientTokens),
       }).toString(),
     }).then(fetchSuccessHandler)
   }
 
-  public checkVerifyResult(result: HcaptchaVerifyResult): void {
+  public checkVerifyResult(
+    result: HcaptchaVerifyResult,
+    tokens: HcaptchaClientTokens,
+  ): void {
     const { success, hostname, score } = result
 
     if (success !== true) {
-      throw new HCaptchaVerificationError(result, 'Expected success to be true')
+      throw new HCaptchaVerifyError(
+        result,
+        tokens,
+        'Expected success to be true',
+      )
     }
 
     if (
@@ -172,8 +180,9 @@ export class HCaptchaClient {
       // generated for the same siteKey, but on another domain.
       hostname !== this.hostname
     ) {
-      throw new HCaptchaVerificationError(
+      throw new HCaptchaVerifyError(
         result,
+        tokens,
         `Hostname ${hostname} does not match ${this.hostname}`,
       )
     }
@@ -185,10 +194,23 @@ export class HCaptchaClient {
       this.config.scoreThreshold != null &&
       score >= this.config.scoreThreshold
     ) {
-      throw new HCaptchaVerificationError(
+      throw new HCaptchaVerifyError(
         result,
+        tokens,
         `Score ${score} is above the threshold ${this.config.scoreThreshold}`,
       )
+    }
+  }
+
+  public buildClientTokens(
+    remoteip: string,
+    handle: string,
+    userAgent?: string,
+  ): HcaptchaClientTokens {
+    return {
+      hashedIp: this.hashToken(remoteip),
+      hashedHandle: this.hashToken(handle),
+      hashedUserAgent: userAgent ? this.hashToken(userAgent) : undefined,
     }
   }
 
@@ -200,9 +222,10 @@ export class HCaptchaClient {
   }
 }
 
-export class HCaptchaVerificationError extends Error {
+export class HCaptchaVerifyError extends Error {
   constructor(
     readonly result: HcaptchaVerifyResult,
+    readonly tokens: HcaptchaClientTokens,
     message?: string,
   ) {
     super(message)

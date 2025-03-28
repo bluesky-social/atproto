@@ -13,7 +13,11 @@ import { ClientId } from './client/client-id.js'
 import { ClientInfo } from './client/client-info.js'
 import { Client } from './client/client.js'
 import { InvalidRequestError } from './errors/invalid-request-error.js'
-import { HcaptchaConfig, HcaptchaVerifyResult } from './lib/hcaptcha.js'
+import {
+  HcaptchaClientTokens,
+  HcaptchaConfig,
+  HcaptchaVerifyResult,
+} from './lib/hcaptcha.js'
 import { RequestMetadata } from './lib/http/request.js'
 import { Awaitable } from './lib/util/type.js'
 import { AccessDeniedError, OAuthError } from './oauth-errors.js'
@@ -30,6 +34,7 @@ export {
   type ClientInfo,
   type DeviceAccountInfo,
   type DeviceId,
+  type HcaptchaClientTokens,
   type HcaptchaConfig,
   type HcaptchaVerifyResult,
   InvalidRequestError,
@@ -86,6 +91,7 @@ export type OAuthHooks = {
     input: SignUpInput
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
+    tokens: HcaptchaClientTokens
     result: HcaptchaVerifyResult
   }) => Awaitable<void>
 
