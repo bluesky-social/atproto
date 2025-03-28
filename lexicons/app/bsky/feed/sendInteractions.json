@@ -9,7 +9,7 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["interactions"],
+          "required": ["interactions", "feed"],
           "properties": {
             "interactions": {
               "type": "array",
@@ -17,6 +17,11 @@
                 "type": "ref",
                 "ref": "app.bsky.feed.defs#interaction"
               }
+            },
+            "feed": {
+              "type": "string",
+              "format": "at-uri",
+              "description": "The feed for which the interactions are being sent"
             }
           }
         }
