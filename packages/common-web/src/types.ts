@@ -9,8 +9,15 @@ const cidSchema = z
   })
   .transform((obj: unknown) => CID.asCID(obj) as CID)
 
+const carHeader = z.object({
+  version: z.literal(1),
+  roots: z.array(cidSchema),
+})
+export type CarHeader = z.infer<typeof carHeader>
+
 export const schema = {
   cid: cidSchema,
+  carHeader,
   bytes: z.instanceof(Uint8Array),
   string: z.string(),
   array: z.array(z.unknown()),
@@ -23,6 +30,10 @@ export const def = {
     name: 'cid',
     schema: schema.cid,
   } as Def<CID>,
+  carHeader: {
+    name: 'CAR header',
+    schema: schema.carHeader,
+  } as Def<CarHeader>,
   bytes: {
     name: 'bytes',
     schema: schema.bytes,

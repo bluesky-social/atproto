@@ -3,6 +3,7 @@ import PQueue from 'p-queue'
 import { TID } from '@atproto/common'
 import { BlobRef, LexValue, RepoRecord } from '@atproto/lexicon'
 import {
+  BlockMap,
   WriteOpAction,
   getAndParseRecord,
   readCarStream,
@@ -43,10 +44,14 @@ const importRepo = async (
   if (roots.length !== 1) {
     throw new InvalidRequestError('expected one root')
   }
+  const blockMap = new BlockMap()
+  for await (const block of blocks) {
+    blockMap.set(block.cid, block.bytes)
+  }
   const currRepo = await actorStore.repo.maybeLoadRepo()
   const diff = await verifyDiff(
     currRepo,
-    blocks,
+    blockMap,
     roots[0],
     undefined,
     undefined,
@@ -66,7 +71,7 @@ const importRepo = async (
           } else {
             let parsedRecord: RepoRecord
             try {
-              const parsed = await getAndParseRecord(blocks, write.cid)
+              const parsed = await getAndParseRecord(blockMap, write.cid)
               parsedRecord = parsed.record
             } catch {
               throw new InvalidRequestError(

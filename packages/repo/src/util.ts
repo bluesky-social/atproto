@@ -1,26 +1,10 @@
-import { Readable } from 'node:stream'
-import { setImmediate } from 'node:timers/promises'
-import { CarBlockIterator } from '@ipld/car/iterator'
-import { BlockWriter, CarWriter } from '@ipld/car/writer'
 import * as cbor from '@ipld/dag-cbor'
-import { CID } from 'multiformats/cid'
-import {
-  TID,
-  byteIterableToStream,
-  cborDecode,
-  check,
-  cidForCbor,
-  schema,
-  streamToBuffer,
-  verifyCidForBytes,
-} from '@atproto/common'
+import { TID, cborDecode, check, cidForCbor, schema } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
 import { Keypair } from '@atproto/crypto'
 import { LexValue, RepoRecord, ipldToLex, lexToIpld } from '@atproto/lexicon'
-import { BlockMap } from './block-map'
 import { DataDiff } from './data-diff'
 import {
-  CarBlock,
   Commit,
   LegacyV2Commit,
   RecordCreateDescript,
@@ -31,103 +15,6 @@ import {
   UnsignedCommit,
   WriteOpAction,
 } from './types'
-
-export async function* verifyIncomingCarBlocks(
-  car: AsyncIterable<CarBlock>,
-): AsyncIterable<CarBlock> {
-  for await (const block of car) {
-    await verifyCidForBytes(block.cid, block.bytes)
-    yield block
-  }
-}
-
-// we have to turn the car writer output into a stream in order to properly handle errors
-export function writeCarStream(
-  root: CID | null,
-  fn: (car: BlockWriter) => Promise<void>,
-): Readable {
-  const { writer, out } =
-    root !== null ? CarWriter.create(root) : CarWriter.create()
-
-  const stream = byteIterableToStream(out)
-  fn(writer)
-    .catch((err) => {
-      stream.destroy(err)
-    })
-    .finally(() => writer.close())
-  return stream
-}
-
-export async function* writeCar(
-  root: CID | null,
-  fn: (car: BlockWriter) => Promise<void>,
-): AsyncIterable<Uint8Array> {
-  const stream = writeCarStream(root, fn)
-  for await (const chunk of stream) {
-    yield chunk
-  }
-}
-
-export const blocksToCarStream = (
-  root: CID | null,
-  blocks: BlockMap,
-): AsyncIterable<Uint8Array> => {
-  return writeCar(root, async (writer) => {
-    for (const entry of blocks.entries()) {
-      await writer.put(entry)
-    }
-  })
-}
-
-export const blocksToCarFile = (
-  root: CID | null,
-  blocks: BlockMap,
-): Promise<Uint8Array> => {
-  const carStream = blocksToCarStream(root, blocks)
-  return streamToBuffer(carStream)
-}
-
-export const carToBlocks = async (
-  car: CarBlockIterator,
-): Promise<{ roots: CID[]; blocks: BlockMap }> => {
-  const roots = await car.getRoots()
-  const blocks = new BlockMap()
-  for await (const block of verifyIncomingCarBlocks(car)) {
-    blocks.set(block.cid, block.bytes)
-    // break up otherwise "synchronous" work in car parsing
-    await setImmediate()
-  }
-  return {
-    roots,
-    blocks,
-  }
-}
-
-export const readCar = async (
-  bytes: Uint8Array,
-): Promise<{ roots: CID[]; blocks: BlockMap }> => {
-  const car = await CarBlockIterator.fromBytes(bytes)
-  return carToBlocks(car)
-}
-
-export const readCarStream = async (stream: AsyncIterable<Uint8Array>) => {
-  const car = await CarBlockIterator.fromIterable(stream)
-  return carToBlocks(car)
-}
-
-export const readCarWithRoot = async (
-  bytes: Uint8Array,
-): Promise<{ root: CID; blocks: BlockMap }> => {
-  const { roots, blocks } = await readCar(bytes)
-  if (roots.length !== 1) {
-    throw new Error(`Expected one root, got ${roots.length}`)
-  }
-  const root = roots[0]
-  return {
-    root,
-    blocks,
-  }
-}
 
 export const diffToWriteDescripts = (
   diff: DataDiff,

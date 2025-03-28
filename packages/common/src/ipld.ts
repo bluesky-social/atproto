@@ -62,6 +62,29 @@ export const sha256RawToCid = (hash: Uint8Array): CID => {
   return sha256ToCid(hash, rawCodec.code)
 }
 
+// @NOTE: Only supports DASL CIDs
+// https://dasl.ing/cid.html
+export const parseCidFromBytes = (cidBytes: Uint8Array): CID => {
+  const version = cidBytes[0]
+  if (version !== 0x01) {
+    throw new Error(`Unsupported CID version: ${version}`)
+  }
+  const codec = cidBytes[1]
+  if (codec !== 0x55 && codec !== 0x71) {
+    throw new Error(`Unsupported CID codec: ${codec}`)
+  }
+  const hashType = cidBytes[2]
+  if (hashType !== 0x12) {
+    throw new Error(`Unsupported CID hash function: ${hashType}`)
+  }
+  const hashLength = cidBytes[3]
+  if (hashLength !== 32) {
+    throw new Error(`Unexpected CID hash length: ${hashLength}`)
+  }
+  const rest = cidBytes.slice(4)
+  return sha256ToCid(rest, codec)
+}
+
 export class VerifyCidTransform extends Transform {
   constructor(public cid: CID) {
     const hasher = createHash('sha256')

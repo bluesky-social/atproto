@@ -1,4 +1,3 @@
-import { BlockWriter } from '@ipld/car/writer'
 import { CID } from 'multiformats'
 import { z } from 'zod'
 import { cidForCbor, dataToCborBlock, schema as common } from '@atproto/common'
@@ -7,6 +6,7 @@ import { CidSet } from '../cid-set'
 import { MissingBlockError, MissingBlocksError } from '../error'
 import * as parse from '../parse'
 import { ReadableBlockstore } from '../storage'
+import { CarBlock } from '../types'
 import * as util from './util'
 
 /**
@@ -726,7 +726,7 @@ export class MST {
 
   // Sync Protocol
 
-  async writeToCarStream(car: BlockWriter): Promise<void> {
+  async *carBlockStream(): AsyncIterable<CarBlock> {
     const leaves = new CidSet()
     let toFetch = new CidSet()
     toFetch.add(await this.getPointer())
@@ -742,7 +742,7 @@ export class MST {
           cid,
           nodeDataDef,
         )
-        await car.put({ cid, bytes: found.bytes })
+        yield { cid, bytes: found.bytes }
         const entries = await util.deserializeNodeData(this.storage, found.obj)
 
         for (const entry of entries) {
@@ -761,7 +761,7 @@ export class MST {
     }
 
     for (const leaf of leafData.blocks.entries()) {
-      await car.put(leaf)
+      yield leaf
     }
   }
 
