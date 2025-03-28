@@ -23,6 +23,7 @@ import * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail.j
 import * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail.js'
 import * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle.js'
 import * as ComAtprotoAdminUpdateAccountPassword from './types/com/atproto/admin/updateAccountPassword.js'
+import * as ComAtprotoAdminUpdateAccountSigningKey from './types/com/atproto/admin/updateAccountSigningKey.js'
 import * as ComAtprotoAdminUpdateSubjectStatus from './types/com/atproto/admin/updateSubjectStatus.js'
 import * as ComAtprotoIdentityDefs from './types/com/atproto/identity/defs.js'
 import * as ComAtprotoIdentityGetRecommendedDidCredentials from './types/com/atproto/identity/getRecommendedDidCredentials.js'
@@ -264,6 +265,7 @@ export * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail.j
 export * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail.js'
 export * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle.js'
 export * as ComAtprotoAdminUpdateAccountPassword from './types/com/atproto/admin/updateAccountPassword.js'
+export * as ComAtprotoAdminUpdateAccountSigningKey from './types/com/atproto/admin/updateAccountSigningKey.js'
 export * as ComAtprotoAdminUpdateSubjectStatus from './types/com/atproto/admin/updateSubjectStatus.js'
 export * as ComAtprotoIdentityDefs from './types/com/atproto/identity/defs.js'
 export * as ComAtprotoIdentityGetRecommendedDidCredentials from './types/com/atproto/identity/getRecommendedDidCredentials.js'
@@ -746,6 +748,18 @@ export class ComAtprotoAdminNS {
   ): Promise<ComAtprotoAdminUpdateAccountPassword.Response> {
     return this._client.call(
       'com.atproto.admin.updateAccountPassword',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
+  updateAccountSigningKey(
+    data?: ComAtprotoAdminUpdateAccountSigningKey.InputSchema,
+    opts?: ComAtprotoAdminUpdateAccountSigningKey.CallOptions,
+  ): Promise<ComAtprotoAdminUpdateAccountSigningKey.Response> {
+    return this._client.call(
+      'com.atproto.admin.updateAccountSigningKey',
       opts?.qp,
       data,
       opts,

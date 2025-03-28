@@ -46,6 +46,7 @@ export default function (server: Server, ctx: AppContext) {
               await actorTxn.repo.blob.verifyBlobAndMakePermanent({
                 cid: blobRef.ref,
                 mimeType: blobRef.mimeType,
+                size: blobRef.size,
                 constraints: {},
               })
             }
