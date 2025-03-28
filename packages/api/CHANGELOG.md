@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.14.15
+
+### Patch Changes
+
+- [#3692](https://github.com/bluesky-social/atproto/pull/3692) [`b4ab5011b`](https://github.com/bluesky-social/atproto/commit/b4ab5011bcc64f9f05122a8773806af8e0c13146) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Support more ways to instantiate an `Agent`
+
 ## 0.14.14
 
 ### Patch Changes

@@ -1,5 +1,13 @@
 # @atproto/oauth-provider
 
+## 0.6.4
+
+### Patch Changes
+
+- [#3690](https://github.com/bluesky-social/atproto/pull/3690) [`9b28184cb`](https://github.com/bluesky-social/atproto/commit/9b28184cb9c417173f46cfb5824dc197dec3e069) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Expose hcaptcha tokens in hook and errors
+
+- [#3690](https://github.com/bluesky-social/atproto/pull/3690) [`9b28184cb`](https://github.com/bluesky-social/atproto/commit/9b28184cb9c417173f46cfb5824dc197dec3e069) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove hcaptcha hostname check
+
 ## 0.6.3
 
 ### Patch Changes
