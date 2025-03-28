@@ -51,6 +51,7 @@ import getConfig from './app/bsky/unspecced/getConfig'
 import getPopularFeedGenerators from './app/bsky/unspecced/getPopularFeedGenerators'
 import getTaggedSuggestions from './app/bsky/unspecced/getTaggedSuggestions'
 import getTrendingTopics from './app/bsky/unspecced/getTrendingTopics'
+import getTrends from './app/bsky/unspecced/getTrends'
 import getAccountInfos from './com/atproto/admin/getAccountInfos'
 import getSubjectStatus from './com/atproto/admin/getSubjectStatus'
 import updateSubjectStatus from './com/atproto/admin/updateSubjectStatus'
@@ -106,6 +107,7 @@ export default function (server: Server, ctx: AppContext) {
   unmuteThread(server, ctx)
   getSuggestedFollowsByActor(server, ctx)
   getTrendingTopics(server, ctx)
+  getTrends(server, ctx)
   getLabelerServices(server, ctx)
   searchActors(server, ctx)
   searchActorsTypeahead(server, ctx)

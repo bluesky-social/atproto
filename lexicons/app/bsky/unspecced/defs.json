@@ -32,6 +32,60 @@
         "description": { "type": "string" },
         "link": { "type": "string" }
       }
+    },
+    "skeletonTrend": {
+      "type": "object",
+      "required": [
+        "topic",
+        "displayName",
+        "link",
+        "startedAt",
+        "postCount",
+        "dids"
+      ],
+      "properties": {
+        "topic": { "type": "string" },
+        "displayName": { "type": "string" },
+        "link": { "type": "string" },
+        "startedAt": { "type": "string", "format": "datetime" },
+        "postCount": { "type": "integer" },
+        "status": { "type": "string", "knownValues": ["hot"] },
+        "category": { "type": "string" },
+        "dids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "did"
+          }
+        }
+      }
+    },
+    "trendView": {
+      "type": "object",
+      "required": [
+        "topic",
+        "displayName",
+        "link",
+        "startedAt",
+        "postCount",
+        "actors"
+      ],
+      "properties": {
+        "topic": { "type": "string" },
+        "displayName": { "type": "string" },
+        "link": { "type": "string" },
+        "startedAt": { "type": "string", "format": "datetime" },
+        "postCount": { "type": "integer" },
+        "status": { "type": "string", "knownValues": ["hot"] },
+        "category": { "type": "string" },
+        "actors": {
+          "type": "array",
+          "items": {
+            "type": "ref",
+            "ref": "app.bsky.actor.defs#profileViewBasic"
+          }
+        }
+      }
     }
   }
 }

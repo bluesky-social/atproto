@@ -9,6 +9,7 @@ import {
   is$typed as _is$typed,
   type OmitKey,
 } from '../../../../util'
+import type * as AppBskyActorDefs from '../actor/defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
@@ -79,4 +80,48 @@ export function isTrendingTopic<V>(v: V) {
 
 export function validateTrendingTopic<V>(v: V) {
   return validate<TrendingTopic & V>(v, id, hashTrendingTopic)
+}
+
+export interface SkeletonTrend {
+  $type?: 'app.bsky.unspecced.defs#skeletonTrend'
+  topic: string
+  displayName: string
+  link: string
+  startedAt: string
+  postCount: number
+  status?: 'hot' | (string & {})
+  category?: string
+  dids: string[]
+}
+
+const hashSkeletonTrend = 'skeletonTrend'
+
+export function isSkeletonTrend<V>(v: V) {
+  return is$typed(v, id, hashSkeletonTrend)
+}
+
+export function validateSkeletonTrend<V>(v: V) {
+  return validate<SkeletonTrend & V>(v, id, hashSkeletonTrend)
+}
+
+export interface TrendView {
+  $type?: 'app.bsky.unspecced.defs#trendView'
+  topic: string
+  displayName: string
+  link: string
+  startedAt: string
+  postCount: number
+  status?: 'hot' | (string & {})
+  category?: string
+  actors: AppBskyActorDefs.ProfileViewBasic[]
+}
+
+const hashTrendView = 'trendView'
+
+export function isTrendView<V>(v: V) {
+  return is$typed(v, id, hashTrendView)
+}
+
+export function validateTrendView<V>(v: V) {
+  return validate<TrendView & V>(v, id, hashTrendView)
 }
