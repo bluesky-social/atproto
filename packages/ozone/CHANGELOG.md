@@ -1,5 +1,14 @@
 # @atproto/ozone
 
+## 0.1.95
+
+### Patch Changes
+
+- [#3695](https://github.com/bluesky-social/atproto/pull/3695) [`652894308`](https://github.com/bluesky-social/atproto/commit/65289430806976ec13177ed9c9f0e883e8f9330c) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Fix last reaction lexicon
+
+- Updated dependencies [[`652894308`](https://github.com/bluesky-social/atproto/commit/65289430806976ec13177ed9c9f0e883e8f9330c)]:
+  - @atproto/api@0.14.16
+
 ## 0.1.94
 
 ### Patch Changes
