@@ -45,6 +45,46 @@
             "type": "ref",
             "ref": "com.atproto.repo.strongRef"
           },
+          "pronouns": {
+            "type": "string",
+            "description": "Preferred pronouns (e.g., she/her, they/them)",
+            "maxLength": 32
+          },
+          "location": {
+            "type": "string",
+            "description": "User's location",
+            "maxLength": 100
+          },
+          "birthday": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Birthday"
+          },
+          "customLinks": {
+            "type": "array",
+            "description": "Up to 4 custom links",
+            "maxItems": 4,
+            "items": {
+              "type": "object",
+              "properties": {
+                "label": {
+                  "type": "string",
+                  "description": "Link label",
+                  "maxLength": 64
+                },
+                "url": {
+                  "type": "string",
+                  "description": "URL",
+                  "format": "uri"
+                }
+              }
+            }
+          },
+          "tipLink": {
+            "type": "string",
+            "description": "Link for tips or subscriptions",
+            "format": "uri"
+          },
           "createdAt": { "type": "string", "format": "datetime" }
         }
       }
