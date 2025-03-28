@@ -209,7 +209,6 @@ const trackFailure = async (
   did: string,
   err: unknown,
 ) => {
-  // this.failed.add(did) @TODO move elsewhere
   await recoveryDb.db
     .insertInto('failed')
     .values({
