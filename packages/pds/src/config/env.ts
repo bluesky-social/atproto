@@ -115,6 +115,7 @@ export const readEnv = (): ServerEnvironment => {
     dpopSecret: envStr('PDS_DPOP_SECRET'),
     jwtSecret: envStr('PDS_JWT_SECRET'),
     adminPassword: envStr('PDS_ADMIN_PASSWORD'),
+    entrywayAdminToken: envStr('PDS_ENTRYWAY_ADMIN_TOKEN'),
 
     // kms
     plcRotationKeyKmsKeyId: envStr('PDS_PLC_ROTATION_KEY_KMS_KEY_ID'),
@@ -251,6 +252,7 @@ export type ServerEnvironment = {
   dpopSecret?: string
   jwtSecret?: string
   adminPassword?: string
+  entrywayAdminToken?: string
 
   // keys
   plcRotationKeyKmsKeyId?: string
