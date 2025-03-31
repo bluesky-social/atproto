@@ -377,9 +377,9 @@ export class RequestManager {
     deviceId: DeviceId,
     deviceMetadata: RequestMetadata,
   ): Promise<Code> {
-    const id = decodeRequestUri(uri)
+    const requestId = decodeRequestUri(uri)
 
-    const data = await this.store.readRequest(id)
+    const data = await this.store.readRequest(requestId)
     if (!data) throw new InvalidRequestError('Unknown request_uri')
 
     try {
@@ -409,7 +409,7 @@ export class RequestManager {
       const code = await generateCode()
 
       // Bind the request to the account, preventing it from being used again.
-      await this.store.updateRequest(id, {
+      await this.store.updateRequest(requestId, {
         sub: account.sub,
         code,
         // Allow the client to exchange the code for a token within the next 60 seconds.
@@ -422,11 +422,12 @@ export class RequestManager {
         parameters: data.parameters,
         deviceId,
         deviceMetadata,
+        requestId,
       })
 
       return code
     } catch (err) {
-      await this.store.deleteRequest(id)
+      await this.store.deleteRequest(requestId)
       throw err
     }
   }

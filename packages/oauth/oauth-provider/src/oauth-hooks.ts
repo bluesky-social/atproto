@@ -18,6 +18,7 @@ import { RequestMetadata } from './lib/http/request.js'
 import { Awaitable } from './lib/util/type.js'
 import { AccessDeniedError, OAuthError } from './oauth-errors.js'
 import { DeviceId, SignUpData } from './oauth-store.js'
+import { RequestId } from './request/request-id.js'
 
 // Make sure all types needed to implement the OAuthHooks are exported
 export {
@@ -65,6 +66,7 @@ export type OAuthHooks = {
     input: SignUpInput
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
+    requestId: RequestId | null
   }) => Awaitable<void>
 
   /**
@@ -77,6 +79,7 @@ export type OAuthHooks = {
     account: Account
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
+    requestId: RequestId | null
   }) => Awaitable<void>
 
   /**
@@ -89,6 +92,7 @@ export type OAuthHooks = {
     account: Account
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
+    requestId: RequestId | null
   }) => Awaitable<void>
 
   /**
@@ -108,6 +112,7 @@ export type OAuthHooks = {
     parameters: OAuthAuthorizationRequestParameters
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
+    requestId: RequestId
   }) => Awaitable<void>
 
   /**

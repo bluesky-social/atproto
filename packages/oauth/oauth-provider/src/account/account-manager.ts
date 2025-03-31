@@ -111,10 +111,13 @@ export class AccountManager {
     input: SignUpInput,
     requestUri?: RequestUri,
   ): Promise<{ account: Account; ephemeralCookie: string | null }> {
+    const requestId = requestUri ? decodeRequestUri(requestUri) : null
+
     await callAsync(this.hooks.onSignupAttempt, {
       input,
       deviceId,
       deviceMetadata,
+      requestId,
     })
 
     const data = await this.buildSignupData(input, deviceId, deviceMetadata)
@@ -132,9 +135,8 @@ export class AccountManager {
 
     // When singing-up from a request flow, always mark the signup as
     // "temporary" (no "remember me").
-    const remember = requestUri == null
+    const remember = requestId == null
 
-    const requestId = requestUri ? decodeRequestUri(requestUri) : null
     const ephemeralCookie = remember ? null : await randomHexId(32)
 
     await this.store.addDeviceAccount(deviceId, account.sub, {
@@ -148,6 +150,7 @@ export class AccountManager {
       account,
       deviceId,
       deviceMetadata,
+      requestId,
     }).catch((err) => {
       throw InvalidRequestError.from(
         err,
@@ -181,8 +184,7 @@ export class AccountManager {
 
     try {
       // If "remember" is true, do not bind the session to the request.
-      const requestId =
-        data.remember && requestUri ? decodeRequestUri(requestUri) : null
+      const requestId = requestUri ? decodeRequestUri(requestUri) : null
 
       const ephemeralCookie = data.remember ? null : await randomHexId(32)
 
@@ -197,6 +199,7 @@ export class AccountManager {
         account,
         deviceId,
         deviceMetadata,
+        requestId,
       })
 
       return { account, ephemeralCookie }
