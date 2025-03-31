@@ -753,6 +753,7 @@ export class OAuthProvider extends OAuthVerifier {
       data,
       deviceId,
       deviceMetadata,
+      client,
     )
 
     return {
@@ -778,6 +779,7 @@ export class OAuthProvider extends OAuthVerifier {
       data,
       deviceId,
       deviceMetadata,
+      client,
     )
 
     return {

@@ -117,11 +117,13 @@ export class AccountManager {
     input: SignUpInput,
     deviceId: DeviceId,
     deviceMetadata: RequestMetadata,
+    client: Client,
   ): Promise<AccountInfo> {
     await callAsync(this.hooks.onSignupAttempt, {
       input,
       deviceId,
       deviceMetadata,
+      client,
     })
 
     const data = await this.buildSignupData(input, deviceId, deviceMetadata)
@@ -149,6 +151,7 @@ export class AccountManager {
           account,
           deviceId,
           deviceMetadata,
+          client,
         })
 
         return { account, info }
@@ -165,6 +168,7 @@ export class AccountManager {
     data: SignInData,
     deviceId: DeviceId,
     deviceMetadata: RequestMetadata,
+    client: Client,
   ): Promise<AccountInfo> {
     return constantTime(TIMING_ATTACK_MITIGATION_DELAY, async () => {
       try {
@@ -181,6 +185,7 @@ export class AccountManager {
           account,
           deviceId,
           deviceMetadata,
+          client,
         })
 
         return { account, info }
