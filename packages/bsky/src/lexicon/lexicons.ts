@@ -10622,6 +10622,8 @@ export const schemaDict = {
           },
           reactions: {
             type: 'array',
+            description:
+              'Reactions to this message, in ascending order of creation time.',
             items: {
               type: 'ref',
               ref: 'lex:chat.bsky.convo.defs#reactionView',
@@ -10730,8 +10732,11 @@ export const schemaDict = {
             refs: [
               'lex:chat.bsky.convo.defs#messageView',
               'lex:chat.bsky.convo.defs#deletedMessageView',
-              'lex:chat.bsky.convo.defs#messageAndReactionView',
             ],
+          },
+          lastReaction: {
+            type: 'union',
+            refs: ['lex:chat.bsky.convo.defs#messageAndReactionView'],
           },
           muted: {
             type: 'boolean',
