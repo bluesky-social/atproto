@@ -115,8 +115,6 @@ export function apiRouter<
           deviceInfo.deviceId,
         )
 
-        const client = await server.clientManager.getClient(clientId)
-
         const authorizedClients =
           await server.accountManager.getAuthorizedClients(account.sub)
 
@@ -124,7 +122,6 @@ export function apiRouter<
           account,
           consentRequired: server.checkConsentRequired(
             parameters,
-            client,
             authorizedClients.get(clientId),
           ),
         }

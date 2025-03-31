@@ -35,6 +35,7 @@ import {
   asAccountStore,
 } from './account/account-store.js'
 import { ClientAuth, authJwkThumbprint } from './client/client-auth.js'
+import { ClientId } from './client/client-id.js'
 import {
   ClientManager,
   LoopbackMetadataGetter,
@@ -338,7 +339,6 @@ export class OAuthProvider extends OAuthVerifier {
 
   public checkConsentRequired(
     parameters: OAuthAuthorizationRequestParameters,
-    client: Client,
     clientData?: AuthorizedClientData,
   ) {
     // Client was never authorized before
@@ -603,19 +603,14 @@ export class OAuthProvider extends OAuthVerifier {
       .getClient(clientCredentials.client_id)
       .catch(accessDeniedCatcher)
 
-    const { clientAuth, parameters, uri } =
-      await this.processAuthorizationRequest(client, deviceId, query).catch(
-        accessDeniedCatcher,
-      )
+    const { parameters, uri } = await this.processAuthorizationRequest(
+      client,
+      deviceId,
+      query,
+    ).catch(accessDeniedCatcher)
 
     try {
-      const sessions = await this.getSessions(
-        client,
-        clientAuth,
-        deviceId,
-        uri,
-        parameters,
-      )
+      const sessions = await this.getSessions(client.id, deviceId, parameters)
 
       if (parameters.prompt === 'none') {
         const ssoSessions = sessions.filter((s) => s.matchesHint)
@@ -693,10 +688,8 @@ export class OAuthProvider extends OAuthVerifier {
   }
 
   protected async getSessions(
-    client: Client,
-    clientAuth: ClientAuth,
+    clientId: ClientId,
     deviceId: DeviceId,
-    requestUri: RequestUri,
     parameters: OAuthAuthorizationRequestParameters,
   ): Promise<
     {
@@ -726,8 +719,7 @@ export class OAuthProvider extends OAuthVerifier {
         parameters.prompt === 'login' || this.checkLoginRequired(deviceAccount),
       consentRequired: this.checkConsentRequired(
         parameters,
-        client,
-        deviceAccount.authorizedClients.get(client.id),
+        deviceAccount.authorizedClients.get(clientId),
       ),
 
       matchesHint: hint == null || matchesHint(deviceAccount.account),
@@ -774,7 +766,7 @@ export class OAuthProvider extends OAuthVerifier {
       )
 
       const clientData = authorizedClients.get(clientId)
-      if (this.checkConsentRequired(parameters, client, clientData)) {
+      if (this.checkConsentRequired(parameters, clientData)) {
         const scopes = new Set(clientData?.authorizedScopes)
 
         // Add the newly accepted scopes to the authorized scopes
@@ -904,7 +896,7 @@ export class OAuthProvider extends OAuthVerifier {
       const { account, authorizedClients } = deviceAccount
 
       const clientData = authorizedClients.get(client.id)
-      if (this.checkConsentRequired(parameters, client, clientData)) {
+      if (this.checkConsentRequired(parameters, clientData)) {
         throw new InvalidGrantError(`Client no longer trusted by user`)
       }
 
