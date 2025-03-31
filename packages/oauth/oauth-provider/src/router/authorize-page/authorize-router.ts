@@ -10,9 +10,7 @@ import {
   Router,
   RouterCtx,
   SubCtx,
-  clearCsrfCookie,
   subCtx,
-  validateCsrfToken,
   validateFetchDest,
   validateFetchMode,
   validateFetchSite,
@@ -27,12 +25,11 @@ import type {
   OAuthProvider,
 } from '../../oauth-provider.js'
 import { RequestUri, requestUriSchema } from '../../request/request-uri.js'
+import { clearSessionCookies } from '../api-router.js'
+import { validateCsrfToken } from '../csrf.js'
 import type { RouterOptions } from '../router-options.js'
 import { assetsMiddleware } from './assets-middleware.js'
-import {
-  authorizePageCsrfCookie,
-  sendAuthorizePageFactory,
-} from './send-authorize-page.js'
+import { sendAuthorizePageFactory } from './send-authorize-page.js'
 import { sendAuthorizeRedirect } from './send-authorize-redirect.js'
 import { sendErrorPageFactory } from './send-error-page.js'
 
@@ -209,17 +206,15 @@ export function authorizeRouter<
         )
 
         const csrfToken = this.url.searchParams.get('csrf_token')
-        const csrfCookieName = authorizePageCsrfCookie(requestUri)
 
-        validateCsrfToken(req, csrfToken, csrfCookieName)
+        validateCsrfToken(req, csrfToken, requestUri)
 
         const context = subCtx(this, { requestUri })
 
         const redirect = await buildRedirect.call(context, req, res)
 
-        // Next line will "clear" the CSRF token cookie, preventing replay of
-        // this request (navigating "back" will result in an error).
-        clearCsrfCookie(res, csrfCookieName)
+        // Clear any cookies that are linked to this request
+        clearSessionCookies(req, res, requestUri)
 
         sendAuthorizeRedirect(req, res, redirect)
       }),

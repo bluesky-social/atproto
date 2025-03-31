@@ -11,11 +11,11 @@ import { Customization } from '../../customization/customization.js'
 import { CspConfig, mergeCsp } from '../../lib/csp/index.js'
 import { declareBackendData } from '../../lib/html/backend-data.js'
 import { LinkAttrs, cssCode, html, isLinkRel } from '../../lib/html/index.js'
-import { extractLocales, setupCsrfToken } from '../../lib/http/request.js'
+import { extractLocales } from '../../lib/http/request.js'
 import { CrossOriginEmbedderPolicy } from '../../lib/http/security-headers.js'
 import { sendWebPage } from '../../lib/send-web-page.js'
-import { RequestUri } from '../../request/request-uri.js'
 import { AuthorizationResultAuthorize } from '../../result/authorization-result-authorize.js'
+import { csrfCookieName, setupCsrfToken } from '../csrf.js'
 import { buildAssetUrl } from './assets-middleware.js'
 import { buildCustomizationCss } from './build-customization-css.js'
 import { buildCustomizationData } from './build-customization-data.js'
@@ -38,10 +38,6 @@ const HCAPTCHA_CSP: CspConfig = {
   'frame-src': ['https://hcaptcha.com', 'https://*.hcaptcha.com'],
   'style-src': ['https://hcaptcha.com', 'https://*.hcaptcha.com'],
   'connect-src': ['https://hcaptcha.com', 'https://*.hcaptcha.com'],
-}
-
-export function authorizePageCsrfCookie(requestUri: RequestUri) {
-  return `csrf-${requestUri}`
 }
 
 export function sendAuthorizePageFactory(customization: Customization) {
@@ -85,8 +81,7 @@ export function sendAuthorizePageFactory(customization: Customization) {
       data.parameters.ui_locales?.split(' ') ?? extractLocales(req),
     )
 
-    const csrfCookieName = authorizePageCsrfCookie(data.authorize.uri)
-    setupCsrfToken(res, csrfCookieName)
+    setupCsrfToken(res, data.authorize.uri)
 
     return sendWebPage(res, {
       meta: [
@@ -115,7 +110,7 @@ export function sendAuthorizePageFactory(customization: Customization) {
         }>({
           __availableLocales: AVAILABLE_LOCALES,
           __customizationData: customizationData,
-          __csrfCookieName: csrfCookieName,
+          __csrfCookieName: csrfCookieName(data.authorize.uri),
           __authorizeData: buildAuthorizeData(data),
         }),
         // After data

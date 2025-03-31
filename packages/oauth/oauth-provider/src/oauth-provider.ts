@@ -43,7 +43,6 @@ import { ClientStore, ifClientStore } from './client/client-store.js'
 import { Client } from './client/client.js'
 import {
   AUTHENTICATION_MAX_AGE,
-  CODE_EXCHANGE_LEEWAY,
   EPHEMERAL_SESSION_MAX_AGE,
   TOKEN_MAX_AGE,
 } from './constants.js'
@@ -366,11 +365,9 @@ export class OAuthProvider extends OAuthVerifier {
       return true
     }
 
-    // @NOTE `remembered` should never be `true` if `requestId` is set (see
-    // `signIn` method)
-
     const maxAge =
-      !data.remembered || data.requestId
+      // If the session is a temporary session, we need to use the ephemeral
+      data.ephemeralCookie != null
         ? this.ephemeralSessionMaxAge
         : this.authenticationMaxAge
 
@@ -903,13 +900,6 @@ export class OAuthProvider extends OAuthVerifier {
         sub,
         requestUri,
       )
-
-      // Allow sessions that are slightly too old since the client needs some
-      // time to exchange the code for a token. The session age will previously
-      // have been checked in the authorize method.
-      if (this.checkLoginRequired(deviceAccount, CODE_EXCHANGE_LEEWAY)) {
-        throw new InvalidGrantError('User session is too old')
-      }
 
       const { account, authorizedClients } = deviceAccount
 

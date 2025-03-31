@@ -1,7 +1,10 @@
-import { randomBytes } from 'node:crypto'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { languages, mediaType } from '@hapi/accept'
-import { parse as parseCookie, serialize as serializeCookie } from 'cookie'
+import {
+  CookieSerializeOptions,
+  parse as parseCookie,
+  serialize as serializeCookie,
+} from 'cookie'
 import forwarded from 'forwarded'
 import createHttpError from 'http-errors'
 import { appendHeader } from './headers.js'
@@ -111,66 +114,33 @@ export function validateOrigin(
   }
 }
 
-const CSRF_COOKIE_NAME = 'csrf_token'
+export type { CookieSerializeOptions }
 
-export function setupCsrfToken(
+export function setCookie(
   res: ServerResponse,
-  cookieName = CSRF_COOKIE_NAME,
+  cookieName: string,
+  value: string,
+  options?: CookieSerializeOptions,
 ) {
-  const csrfToken = randomBytes(8).toString('hex')
-  appendHeader(
-    res,
-    'Set-Cookie',
-    serializeCookie(cookieName, csrfToken, {
-      expires: undefined, // "session" cookie
-      secure: true,
-      httpOnly: false,
-      sameSite: 'lax',
-    }),
-  )
+  appendHeader(res, 'Set-Cookie', serializeCookie(cookieName, value, options))
 }
 
-export function validateCsrfToken(
-  req: IncomingMessage,
-  csrfToken: unknown,
-  cookieName = CSRF_COOKIE_NAME,
-) {
-  const cookies = parseHttpCookies(req)
-  if (
-    typeof csrfToken !== 'string' ||
-    !csrfToken ||
-    !cookies ||
-    !cookieName ||
-    cookies[cookieName] !== csrfToken
-  ) {
-    throw createHttpError(400, `Invalid CSRF token`)
-  }
-}
-
-export function clearCsrfCookie(
+export function clearCookie(
   res: ServerResponse,
-  cookieName = CSRF_COOKIE_NAME,
+  cookieName: string,
+  options?: Omit<CookieSerializeOptions, 'maxAge' | 'expires'>,
 ) {
-  appendHeader(
-    res,
-    'Set-Cookie',
-    serializeCookie(cookieName, '', {
-      secure: true,
-      httpOnly: false,
-      sameSite: 'lax',
-      maxAge: 0,
-    }),
-  )
+  setCookie(res, cookieName, '', { ...options, maxAge: 0 })
 }
 
 export function parseHttpCookies(
   req: IncomingMessage,
-): null | Record<string, undefined | string> {
+): Record<string, undefined | string> {
   return 'cookies' in req && req.cookies // Already parsed by another middleware
     ? (req.cookies as any)
     : req.headers['cookie']
-      ? ((req as any).cookies = parseCookie(req.headers['cookie']))
-      : null
+      ? ((req as any).cookies ||= parseCookie(req.headers['cookie']))
+      : Object.create(null)
 }
 
 export type ExtractRequestMetadataOptions = {

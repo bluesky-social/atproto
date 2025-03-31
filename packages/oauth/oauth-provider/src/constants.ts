@@ -32,9 +32,6 @@ export const AUTHENTICATION_MAX_AGE = 7 * DAY
 /** 15 minutes */
 export const EPHEMERAL_SESSION_MAX_AGE = 15 * MINUTE
 
-/** 1 minute */
-export const CODE_EXCHANGE_LEEWAY = 1 * MINUTE
-
 /** 60 minutes */
 export const TOKEN_MAX_AGE = 60 * MINUTE
 

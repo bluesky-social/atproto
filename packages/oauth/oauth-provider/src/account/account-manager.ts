@@ -6,6 +6,7 @@ import { Client } from '../client/client.js'
 import { DeviceId } from '../device/device-id.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { HCaptchaClient, HcaptchaVerifyResult } from '../lib/hcaptcha.js'
+import { randomHexId } from '../lib/util/crypto.js'
 import { callAsync } from '../lib/util/function.js'
 import { constantTime } from '../lib/util/time.js'
 import { OAuthHooks, RequestMetadata } from '../oauth-hooks.js'
@@ -109,7 +110,7 @@ export class AccountManager {
     deviceMetadata: RequestMetadata,
     input: SignUpInput,
     requestUri?: RequestUri,
-  ): Promise<Account> {
+  ): Promise<{ account: Account; ephemeralCookie: string | null }> {
     await callAsync(this.hooks.onSignupAttempt, {
       input,
       deviceId,
@@ -132,11 +133,13 @@ export class AccountManager {
     // When singing-up from a request flow, always mark the signup as
     // "temporary" (no "remember me").
     const remember = requestUri == null
+
     const requestId = requestUri ? decodeRequestUri(requestUri) : null
+    const ephemeralCookie = remember ? null : await randomHexId(32)
 
     await this.store.addDeviceAccount(deviceId, account.sub, {
       authenticatedAt: new Date(),
-      remembered: remember,
+      ephemeralCookie,
       requestId,
     })
 
@@ -152,7 +155,7 @@ export class AccountManager {
       )
     })
 
-    return account
+    return { account, ephemeralCookie }
   }
 
   public async authenticateAccount(
@@ -160,7 +163,10 @@ export class AccountManager {
     deviceMetadata: RequestMetadata,
     data: SignInData,
     requestUri?: RequestUri,
-  ): Promise<Account> {
+  ): Promise<{
+    account: Account
+    ephemeralCookie: string | null
+  }> {
     const account = await constantTime(
       TIMING_ATTACK_MITIGATION_DELAY,
       async () => {
@@ -174,11 +180,15 @@ export class AccountManager {
     })
 
     try {
-      const requestId = requestUri ? decodeRequestUri(requestUri) : null
+      // If "remember" is true, do not bind the session to the request.
+      const requestId =
+        data.remember && requestUri ? decodeRequestUri(requestUri) : null
+
+      const ephemeralCookie = data.remember ? null : await randomHexId(32)
 
       await this.store.addDeviceAccount(deviceId, account.sub, {
         authenticatedAt: new Date(),
-        remembered: data.remember,
+        ephemeralCookie,
         requestId,
       })
 
@@ -189,7 +199,7 @@ export class AccountManager {
         deviceMetadata,
       })
 
-      return account
+      return { account, ephemeralCookie }
     } catch (err) {
       throw InvalidRequestError.from(
         err,
@@ -250,14 +260,14 @@ export class AccountManager {
     const results = await this.store.listDeviceAccounts(deviceId)
     return results
       .filter((result) => result.deviceId === deviceId) // Fool proof
-      .filter(({ data }) => data.remembered && !data.requestId)
+      .filter(({ data }) => !data.ephemeralCookie && !data.requestId)
   }
 
   public async listAccountDevices(sub: Sub): Promise<DeviceAccount[]> {
     const result = await this.store.listAccountDevices(sub)
     return result
       .filter((result) => result.account.sub === sub) // Fool proof
-      .filter(({ data }) => data.remembered && !data.requestId)
+      .filter(({ data }) => !data.ephemeralCookie && !data.requestId)
   }
 
   public async resetPasswordRequest(data: ResetPasswordRequestData) {

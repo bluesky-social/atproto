@@ -107,8 +107,14 @@ export type AuthorizedClientData = { authorizedScopes: readonly string[] }
 export type AuthorizedClients = Map<ClientId, AuthorizedClientData>
 
 export type DeviceAccountData = {
-  remembered: boolean
   authenticatedAt: Date
+  /**
+   * If the session is "temporary" (i.e. not "remembered"), a cookie secret will
+   * be generated and stored in the device account (as a session cookie). This
+   * cookie secret will be required to authenticate the device account in the
+   * future.
+   */
+  ephemeralCookie: null | string
   requestId: null | RequestId
 }
 

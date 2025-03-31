@@ -214,7 +214,6 @@ export class DeviceManager {
     req: IncomingMessage,
   ): Promise<{ value: CookieValue; mustRotate: boolean } | null> {
     const cookies = parseHttpCookies(req)
-    if (!cookies) return null
 
     const device = this.parseCookie(
       cookies,

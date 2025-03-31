@@ -18,14 +18,17 @@ import { signUpInputSchema } from '../account/sign-up-input.js'
 import { deviceIdSchema } from '../device/device-id.js'
 import { buildErrorPayload, buildErrorStatus } from '../errors/error-parser.js'
 import {
+  CookieSerializeOptions,
   Middleware,
   Router,
   RouterCtx,
   SubCtx,
+  clearCookie,
   jsonHandler,
+  parseHttpCookies,
   parseHttpRequest,
+  setCookie,
   subCtx,
-  validateCsrfToken,
   validateFetchMode,
   validateFetchSite,
   validateOrigin,
@@ -36,7 +39,7 @@ import type { Awaitable } from '../lib/util/type.js'
 import type { OAuthProvider } from '../oauth-provider.js'
 import { subSchema } from '../oidc/sub.js'
 import { RequestUri, requestUriSchema } from '../request/request-uri.js'
-import { authorizePageCsrfCookie } from './authorize-page/send-authorize-page.js'
+import { clearCsrfToken, validateCsrfToken } from './csrf.js'
 import type { RouterOptions } from './router-options.js'
 
 const verifyHandleSchema = z.object({ handle: handleSchema }).strict()
@@ -71,12 +74,17 @@ export function apiRouter<
     apiRoute('POST', '/sign-up', signUpInputSchema, async function (req, res) {
       const deviceInfo = await server.deviceManager.load(req, res)
 
-      const account = await server.accountManager.createAccount(
-        deviceInfo.deviceId,
-        deviceInfo.deviceMetadata,
-        this.input,
-        this.requestUri,
-      )
+      const { account, ephemeralCookie } =
+        await server.accountManager.createAccount(
+          deviceInfo.deviceId,
+          deviceInfo.deviceMetadata,
+          this.input,
+          this.requestUri,
+        )
+
+      if (ephemeralCookie) {
+        setEphemeralCookie(res, ephemeralCookie, this.requestUri)
+      }
 
       return { account }
     }),
@@ -86,16 +94,22 @@ export function apiRouter<
     apiRoute('POST', '/sign-in', signInDataSchema, async function (req, res) {
       const deviceInfo = await server.deviceManager.load(req, res)
 
-      const account = await server.accountManager.authenticateAccount(
-        deviceInfo.deviceId,
-        deviceInfo.deviceMetadata,
-        this.input,
-        // If "remember" is true, do not bind the session to the request.
-        this.input.remember ? undefined : this.requestUri,
-      )
+      const { account, ephemeralCookie } =
+        await server.accountManager.authenticateAccount(
+          deviceInfo.deviceId,
+          deviceInfo.deviceMetadata,
+          this.input,
+          this.requestUri,
+        )
+
+      if (ephemeralCookie) {
+        setEphemeralCookie(res, ephemeralCookie, this.requestUri)
+      }
 
       if (this.requestUri) {
-        // Check if a consent is required for the client
+        // Check if a consent is required for the client, but only if this
+        // call is made within the context of an oauth request.
+
         const { clientId, parameters } = await server.requestManager.get(
           this.requestUri,
           deviceInfo.deviceId,
@@ -197,11 +211,9 @@ export function apiRouter<
       '/oauth-sessions',
       z.object({ sub: subSchema }).strict(),
       async function (req, res) {
-        const deviceInfo = await server.deviceManager.load(req, res)
-
-        // Ensures the requested "sub" is linked to the device
-        const { account } = await server.accountManager.getDeviceAccount(
-          deviceInfo.deviceId,
+        const { account } = await authenticate(
+          req,
+          res,
           this.input.sub,
           this.requestUri,
         )
@@ -245,11 +257,9 @@ export function apiRouter<
       '/account-sessions',
       z.object({ sub: subSchema }).strict(),
       async function (req, res) {
-        const deviceInfo = await server.deviceManager.load(req, res)
-
-        // Ensures the requested "sub" is linked to the device
-        const { account } = await server.accountManager.getDeviceAccount(
-          deviceInfo.deviceId,
+        const { account } = await authenticate(
+          req,
+          res,
           this.input.sub,
           this.requestUri,
         )
@@ -293,6 +303,31 @@ export function apiRouter<
   )
 
   return router
+
+  async function authenticate(
+    req: TReq,
+    res: TRes,
+    sub: string,
+    requestUri: RequestUri | undefined,
+  ) {
+    const deviceInfo = await server.deviceManager.load(req, res)
+
+    // Ensures the requested "sub" is linked to the device
+    const { account, data } = await server.accountManager.getDeviceAccount(
+      deviceInfo.deviceId,
+      sub,
+      requestUri,
+    )
+
+    // If the session is temporary, check the cookie secret
+    if (!checkEphemeralCookie(req, data.ephemeralCookie, requestUri)) {
+      await server.accountManager.removeDeviceAccount(deviceInfo.deviceId, sub)
+
+      throw createHttpError(401, 'This session has expired')
+    }
+
+    return { account, deviceInfo }
+  }
 
   type ApiContext<T extends RouterCtx, I = void> = SubCtx<
     T,
@@ -400,8 +435,7 @@ export function apiRouter<
 
         // Validate CSRF token
         if (requestUri) {
-          const cookieName = authorizePageCsrfCookie(requestUri)
-          validateCsrfToken(req, req.headers['x-csrf-token'], cookieName)
+          validateCsrfToken(req, req.headers['x-csrf-token'], requestUri)
         } else if (
           referer.pathname === ACCOUNTS_PAGE_URL ||
           referer.pathname.startsWith(`${ACCOUNTS_PAGE_URL}/`)
@@ -429,5 +463,71 @@ export function apiRouter<
         return { payload, status }
       }
     })
+  }
+}
+
+const EPHEMERAL_COOKIE_OPTIONS: Readonly<CookieSerializeOptions> =
+  Object.freeze({
+    expires: undefined, // session
+    sameSite: 'strict',
+    secure: true,
+    httpOnly: true,
+  })
+
+function ephemeralCookieValue(requestUri?: RequestUri) {
+  return requestUri ? `sec-${requestUri}` : 'sec-no-request'
+}
+
+/**
+ * When session are created without "remember me", a session cookie is created
+ * and stored in the account store & sent to the client. This cookie is used to
+ * ensure that the authentication can no-longer be used once the device ends the
+ * "session" (typically is closed), or once the session is accepted/rejected
+ * (see {@link clearSessionCookies}). A safer alternative would be to store that
+ * value in the browser's JS. This solution was not adopted for practical
+ * reasons (avoid having to distinguish between remembered/non-remembered in the
+ * front-end).
+ */
+function setEphemeralCookie(
+  res: ServerResponse,
+  ephemeralCookie: string,
+  requestUri: RequestUri | undefined,
+) {
+  const cookieValue = ephemeralCookieValue(requestUri)
+  setCookie(res, ephemeralCookie, cookieValue, EPHEMERAL_COOKIE_OPTIONS)
+}
+
+function checkEphemeralCookie(
+  req: IncomingMessage,
+  ephemeralCookie: string | null,
+  requestUri: RequestUri | undefined,
+) {
+  if (!ephemeralCookie) return true
+  const cookies = parseHttpCookies(req)
+  const cookieValue = cookies[ephemeralCookie]
+  const expectedValue = ephemeralCookieValue(requestUri)
+  return expectedValue === cookieValue
+}
+
+/**
+ * Clears all the temporary session cookies that were created in the context of
+ * a particular request.
+ */
+export function clearSessionCookies(
+  req: IncomingMessage,
+  res: ServerResponse,
+  requestUri: RequestUri,
+) {
+  // Clear the CSRF token cookie, preventing replay of this request (navigating
+  // "back" will result in an error).
+  clearCsrfToken(res, requestUri)
+
+  // Clear every cookie secret that were created for this request.
+  const cookies = parseHttpCookies(req)
+  const expectedValue = ephemeralCookieValue(requestUri)
+  for (const [cookieName, cookieValue] of Object.entries(cookies)) {
+    if (cookieValue === expectedValue) {
+      clearCookie(res, cookieName, EPHEMERAL_COOKIE_OPTIONS)
+    }
   }
 }
