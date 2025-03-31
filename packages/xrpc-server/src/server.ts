@@ -21,7 +21,7 @@ import {
   Lexicons,
   lexToJson,
 } from '@atproto/lexicon'
-import log from './logger'
+import log, { LOGGER_NAME } from './logger'
 import { consumeMany, resetMany } from './rate-limiter'
 import { ErrorFrame, Frame, MessageFrame, XrpcStreamServer } from './stream'
 import {
@@ -542,24 +542,41 @@ function createErrorMiddleware({
   return (err, req, res, next) => {
     const locals: RequestLocals | undefined = req[kRequestLocals]
     const methodSuffix = locals ? ` method ${locals.nsid}` : ''
+
     const xrpcError = errorParser(err)
-    if (xrpcError instanceof InternalServerError) {
-      // log trace for unhandled exceptions
-      log.error(err, `unhandled exception in xrpc${methodSuffix}`)
-    } else {
-      // do not log trace for known xrpc errors
-      log.error(
-        {
-          status: xrpcError.type,
-          message: xrpcError.message,
-          name: xrpcError.customErrorName,
-        },
-        `error in xrpc${methodSuffix}`,
-      )
+
+    const obj = {
+      // Log the original error's message & stack trace
+      err,
+      // Log XRPC specific properties
+      nsid: locals?.nsid,
+      status: xrpcError.type,
+      payload: xrpcError.payload,
     }
+    const msg =
+      xrpcError instanceof InternalServerError
+        ? `unhandled exception in xrpc${methodSuffix}`
+        : `error in xrpc${methodSuffix}`
+
+    // Use the request's logger (if available) to benefit from request context
+    // (id) and logging configuration (serialization, etc.). The logger's name
+    // will be overridden to LOGGER_NAME to ensure consistency across all logs.
+    if (isPinoHttpRequest(req)) {
+      req.log.error({ ...obj, name: LOGGER_NAME }, msg)
+    } else {
+      log.error(obj, msg)
+    }
+
     if (res.headersSent) {
       return next(err)
     }
+
     return res.status(xrpcError.statusCode).json(xrpcError.payload)
   }
+}
+
+function isPinoHttpRequest(req: Request): req is Request & {
+  log: { error: (obj: unknown, msg: string) => void }
+} {
+  return typeof (req as { log?: any }).log?.error === 'function'
 }
