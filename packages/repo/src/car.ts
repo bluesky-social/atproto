@@ -78,13 +78,15 @@ export const readCarWithRoot = async (
     blocks,
   }
 }
+export type CarBlockIterable = AsyncGenerator<CarBlock, void, unknown> & {
+  dump: () => Promise<void>
+}
 
 export const readCarStream = async (
   car: Iterable<Uint8Array> | AsyncIterable<Uint8Array>,
 ): Promise<{
   roots: CID[]
-  blocks: AsyncIterable<CarBlock>
-  close: () => Promise<void>
+  blocks: CarBlockIterable
 }> => {
   const reader = new BufferedReader(car)
   try {
@@ -100,7 +102,6 @@ export const readCarStream = async (
     return {
       roots: header.roots,
       blocks: readCarBlocksIter(reader),
-      close: reader.close,
     }
   } catch (err) {
     await reader.close()
@@ -108,7 +109,25 @@ export const readCarStream = async (
   }
 }
 
-async function* readCarBlocksIter(
+const readCarBlocksIter = (reader: BufferedReader) => {
+  const iter = readCarBlocksIterGenerator(reader) as CarBlockIterable
+
+  iter.dump = async () => {
+    // try/finally to ensure that reader.close is called even if blocks.return throws.
+    try {
+      // Prevent the iterator from being started after this method is called.
+      await iter.return()
+    } finally {
+      // @NOTE the "finally" block of the async generator won't be called
+      // if the iteration was never started so we need to manually close here.
+      await reader.close()
+    }
+  }
+
+  return iter
+}
+
+async function* readCarBlocksIterGenerator(
   reader: BufferedReader,
 ): AsyncIterable<CarBlock> {
   try {
