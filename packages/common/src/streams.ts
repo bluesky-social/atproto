@@ -68,12 +68,6 @@ export const bytesToStream = (bytes: Uint8Array): Readable => {
   return stream
 }
 
-export async function* bytesToIterable(
-  bytes: Uint8Array,
-): AsyncIterable<Uint8Array> {
-  yield bytes
-}
-
 export class MaxSizeChecker extends Transform {
   totalSize = 0
   constructor(

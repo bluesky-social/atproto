@@ -3,7 +3,6 @@ import { CID } from 'multiformats/cid'
 import * as ui8 from 'uint8arrays'
 import * as varint from 'varint'
 import {
-  bytesToIterable,
   check,
   schema,
   streamToBuffer,
@@ -58,7 +57,7 @@ async function* iterateBlocks(blocks: BlockMap) {
 export const readCar = async (
   bytes: Uint8Array,
 ): Promise<{ roots: CID[]; blocks: BlockMap }> => {
-  const { roots, blocks } = await readCarStream(bytesToIterable(bytes))
+  const { roots, blocks } = await readCarStream([bytes])
   const blockMap = new BlockMap()
   for await (const block of blocks) {
     blockMap.set(block.cid, block.bytes)
@@ -79,40 +78,71 @@ export const readCarWithRoot = async (
     blocks,
   }
 }
-
-export const readCarStream = async (
-  car: AsyncIterable<Uint8Array>,
-): Promise<{
-  roots: CID[]
-  blocks: AsyncIterable<CarBlock>
-}> => {
-  const reader = new BufferedReader(car)
-  const headerSize = await reader.readVarint()
-  if (headerSize === null) {
-    throw new Error('Could not parse CAR header')
-  }
-  const headerBytes = await reader.read(headerSize)
-  const header = cbor.decode(headerBytes)
-  if (!check.is(header, schema.carHeader)) {
-    throw new Error('Could not parse CAR header')
-  }
-  const roots = header.roots
-  const blocks = readCarBlocksIter(reader)
-  return { roots, blocks }
+export type CarBlockIterable = AsyncGenerator<CarBlock, void, unknown> & {
+  dump: () => Promise<void>
 }
 
-async function* readCarBlocksIter(
+export const readCarStream = async (
+  car: Iterable<Uint8Array> | AsyncIterable<Uint8Array>,
+): Promise<{
+  roots: CID[]
+  blocks: CarBlockIterable
+}> => {
+  const reader = new BufferedReader(car)
+  try {
+    const headerSize = await reader.readVarint()
+    if (headerSize === null) {
+      throw new Error('Could not parse CAR header')
+    }
+    const headerBytes = await reader.read(headerSize)
+    const header = cbor.decode(headerBytes)
+    if (!check.is(header, schema.carHeader)) {
+      throw new Error('Could not parse CAR header')
+    }
+    return {
+      roots: header.roots,
+      blocks: readCarBlocksIter(reader),
+    }
+  } catch (err) {
+    await reader.close()
+    throw err
+  }
+}
+
+const readCarBlocksIter = (reader: BufferedReader) => {
+  const iter = readCarBlocksIterGenerator(reader) as CarBlockIterable
+
+  iter.dump = async () => {
+    // try/finally to ensure that reader.close is called even if blocks.return throws.
+    try {
+      // Prevent the iterator from being started after this method is called.
+      await iter.return()
+    } finally {
+      // @NOTE the "finally" block of the async generator won't be called
+      // if the iteration was never started so we need to manually close here.
+      await reader.close()
+    }
+  }
+
+  return iter
+}
+
+async function* readCarBlocksIterGenerator(
   reader: BufferedReader,
 ): AsyncIterable<CarBlock> {
-  while (!reader.isDone) {
-    const blockSize = await reader.readVarint()
-    if (blockSize === null) {
-      break
+  try {
+    while (!reader.isDone) {
+      const blockSize = await reader.readVarint()
+      if (blockSize === null) {
+        break
+      }
+      const blockBytes = await reader.read(blockSize)
+      const cid = parseCidFromBytes(blockBytes.slice(0, 36))
+      const bytes = blockBytes.slice(36)
+      yield { cid, bytes }
     }
-    const blockBytes = await reader.read(blockSize)
-    const cid = parseCidFromBytes(blockBytes.slice(0, 36))
-    const bytes = blockBytes.slice(36)
-    yield { cid, bytes }
+  } finally {
+    await reader.close()
   }
 }
 
@@ -127,11 +157,14 @@ export async function* verifyIncomingCarBlocks(
 
 class BufferedReader {
   buffer: Uint8Array = new Uint8Array()
-  iterator: AsyncIterator<Uint8Array>
+  iterator: Iterator<Uint8Array> | AsyncIterator<Uint8Array>
   isDone = false
 
-  constructor(stream: AsyncIterable<Uint8Array>) {
-    this.iterator = stream[Symbol.asyncIterator]()
+  constructor(stream: Iterable<Uint8Array> | AsyncIterable<Uint8Array>) {
+    this.iterator =
+      Symbol.asyncIterator in stream
+        ? stream[Symbol.asyncIterator]()
+        : stream[Symbol.iterator]()
   }
 
   async read(bytesToRead: number): Promise<Uint8Array> {
@@ -174,5 +207,13 @@ class BufferedReader {
       }
       this.buffer = ui8.concat([this.buffer, next.value])
     }
+  }
+
+  async close(): Promise<void> {
+    if (!this.isDone && this.iterator.return) {
+      await this.iterator.return()
+    }
+    this.isDone = true
+    this.buffer = new Uint8Array()
   }
 }

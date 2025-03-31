@@ -1,11 +1,6 @@
 import { CID } from 'multiformats/cid'
 import * as ui8 from 'uint8arrays'
-import {
-  bytesToIterable,
-  dataToCborBlock,
-  streamToBytes,
-  wait,
-} from '@atproto/common'
+import { dataToCborBlock, streamToBytes, wait } from '@atproto/common'
 import { CarBlock, readCarStream, writeCarStream } from '../src'
 import fixtures from './car-file-fixtures.json'
 
@@ -27,7 +22,7 @@ describe('car', () => {
     })
 
     it('correctly reads carfiles', async () => {
-      const carStream = bytesToIterable(ui8.fromString(fixture.car, 'base64'))
+      const carStream = [ui8.fromString(fixture.car, 'base64')]
       const { roots, blocks } = await readCarStream(carStream)
       expect(roots.length).toBe(1)
       expect(roots[0].toString()).toEqual(fixture.root)
