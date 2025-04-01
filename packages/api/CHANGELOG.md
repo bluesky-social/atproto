@@ -1,5 +1,23 @@
 # @atproto/api
 
+## 0.14.16
+
+### Patch Changes
+
+- [#3695](https://github.com/bluesky-social/atproto/pull/3695) [`652894308`](https://github.com/bluesky-social/atproto/commit/65289430806976ec13177ed9c9f0e883e8f9330c) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Fix last reaction lexicon
+
+## 0.14.15
+
+### Patch Changes
+
+- [#3692](https://github.com/bluesky-social/atproto/pull/3692) [`b4ab5011b`](https://github.com/bluesky-social/atproto/commit/b4ab5011bcc64f9f05122a8773806af8e0c13146) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Support more ways to instantiate an `Agent`
+
+## 0.14.14
+
+### Patch Changes
+
+- [#3685](https://github.com/bluesky-social/atproto/pull/3685) [`9a05892f6`](https://github.com/bluesky-social/atproto/commit/9a05892f6fd405bf6bb96c9c8d2a9a89d5e94bc5) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Update chat reaction lexicon
+
 ## 0.14.13
 
 ### Patch Changes

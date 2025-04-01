@@ -22,6 +22,7 @@ import * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail.j
 import * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail.js'
 import * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle.js'
 import * as ComAtprotoAdminUpdateAccountPassword from './types/com/atproto/admin/updateAccountPassword.js'
+import * as ComAtprotoAdminUpdateAccountSigningKey from './types/com/atproto/admin/updateAccountSigningKey.js'
 import * as ComAtprotoAdminUpdateSubjectStatus from './types/com/atproto/admin/updateSubjectStatus.js'
 import * as ComAtprotoIdentityGetRecommendedDidCredentials from './types/com/atproto/identity/getRecommendedDidCredentials.js'
 import * as ComAtprotoIdentityRefreshIdentity from './types/com/atproto/identity/refreshIdentity.js'
@@ -406,6 +407,17 @@ export class ComAtprotoAdminNS {
     >,
   ) {
     const nsid = 'com.atproto.admin.updateAccountPassword' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  updateAccountSigningKey<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoAdminUpdateAccountSigningKey.Handler<ExtractAuth<AV>>,
+      ComAtprotoAdminUpdateAccountSigningKey.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.updateAccountSigningKey' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
