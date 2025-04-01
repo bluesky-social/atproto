@@ -36,7 +36,7 @@ const users = {
 export type Users = typeof users
 export type StarterPacks = SeedClient['starterpacks']
 
-export async function trendsSeed(
+export async function starterPacksSeed(
   sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
 ) {
   const u = structuredClone(users)

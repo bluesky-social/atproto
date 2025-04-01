@@ -24,7 +24,7 @@ export interface QueryParams {
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  starterPacks: AppBskyGraphDefs.StarterPackViewBasic[]
+  starterPacks: AppBskyGraphDefs.StarterPackView[]
 }
 
 export type HandlerInput = undefined

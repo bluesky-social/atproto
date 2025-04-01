@@ -89,10 +89,7 @@ const hydration = async (
     pairs.set(params.viewer, dids)
   }
   const [starterPacksState, bidirectionalBlocks] = await Promise.all([
-    ctx.hydrator.hydrateStarterPacksBasic(
-      skeleton.starterPacks,
-      params.hydrateCtx,
-    ),
+    ctx.hydrator.hydrateStarterPacks(skeleton.starterPacks, params.hydrateCtx),
     ctx.hydrator.hydrateBidirectionalBlocks(pairs),
   ])
 
@@ -129,7 +126,7 @@ const presentation = (
 
   return {
     starterPacks: mapDefined(skeleton.starterPacks, (uri) =>
-      ctx.views.starterPackBasic(uri, hydration),
+      ctx.views.starterPack(uri, hydration),
     ),
   }
 }
