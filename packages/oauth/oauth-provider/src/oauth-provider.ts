@@ -1024,25 +1024,34 @@ export class OAuthProvider extends OAuthVerifier {
     dpopJkt: string | null,
     verifyOptions?: VerifyTokenClaimsOptions,
   ) {
-    const result = await super.verifyToken(
-      tokenType,
-      token,
-      dpopJkt,
-      // Do not verify the scope and audience in case of "light" tokens.
-      // these will be checked through the tokenManager hereafter.
-      this.accessTokenMode === AccessTokenMode.light
-        ? undefined
-        : verifyOptions,
-    )
+    if (this.accessTokenMode === AccessTokenMode.stateless) {
+      return super.verifyToken(tokenType, token, dpopJkt, verifyOptions)
+    }
 
-    // In addition to verifying the signature (through the verifier), we also
-    // verify the tokenId is still valid using a database to fetch "light" token
-    // data.
-    return this.tokenManager.verifyTokenId(
-      tokenType,
-      result.tokenId,
-      dpopJkt,
-      verifyOptions,
-    )
+    if (this.accessTokenMode === AccessTokenMode.light) {
+      const { claims } = await super.verifyToken(
+        tokenType,
+        token,
+        dpopJkt,
+        // Do not verify the scope and audience in case of "light" tokens.
+        // these will be checked through the tokenManager hereafter.
+        undefined,
+      )
+
+      const tokenId = claims.jti
+
+      // In addition to verifying the signature (through the verifier above), we
+      // also verify the tokenId is still valid using a database to fetch
+      // missing data from "light" token.
+      return this.tokenManager.verifyTokenId(
+        tokenType,
+        tokenId,
+        dpopJkt,
+        verifyOptions,
+      )
+    }
+
+    // Fool-proof
+    throw new Error('Invalid access token mode')
   }
 }

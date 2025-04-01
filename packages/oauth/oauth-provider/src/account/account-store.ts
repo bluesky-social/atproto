@@ -194,9 +194,7 @@ export interface AccountStore {
    * that particular requestId.
    *
    * @note Whenever a particular [`deviceId`, `sub`] pair is created, all
-   * existing device accounts for that pair that are not bound to a particular
-   * request should have their `authenticatedAt` updated using the
-   * `data.authenticatedAt` value.
+   * existing device accounts for that pair should be deleted.
    *
    * @note When a particular request is deleted (through
    * {@link RequestStore.deleteRequest}), all accounts bound to that request

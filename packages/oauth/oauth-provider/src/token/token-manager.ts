@@ -34,13 +34,13 @@ import { callAsync } from '../lib/util/function.js'
 import { OAuthHooks } from '../oauth-hooks.js'
 import { Sub } from '../oidc/sub.js'
 import { Code, isCode } from '../request/code.js'
+import { SignedTokenPayload } from '../signer/signed-token-payload.js'
 import { Signer } from '../signer/signer.js'
 import {
   generateRefreshToken,
   isRefreshToken,
   refreshTokenSchema,
 } from './refresh-token.js'
-import { TokenClaims } from './token-claims.js'
 import { TokenData } from './token-data.js'
 import { TokenId, generateTokenId, isTokenId } from './token-id.js'
 import { TokenInfo, TokenStore } from './token-store.js'
@@ -76,19 +76,18 @@ export class TokenManager {
     },
   ): Promise<OAuthAccessToken> {
     return this.signer.createAccessToken({
-      jti: tokenId,
-      aud: account.aud,
+      sid: tokenId,
       sub: account.sub,
       exp: dateToEpoch(options.expiresAt),
       iat: dateToEpoch(options.now),
       cnf: parameters.dpop_jkt ? { jkt: parameters.dpop_jkt } : undefined,
-      scope:
-        this.accessTokenMode !== AccessTokenMode.light
-          ? parameters.scope
-          : undefined,
 
-      // https://datatracker.ietf.org/doc/html/rfc8693#section-4.3
-      client_id: client.id,
+      ...(this.accessTokenMode !== AccessTokenMode.stateless && {
+        aud: account.aud,
+        scope: parameters.scope,
+        // https://datatracker.ietf.org/doc/html/rfc8693#section-4.3
+        client_id: client.id,
+      }),
     })
   }
 
@@ -583,14 +582,19 @@ export class TokenManager {
     const { parameters } = data
 
     // Construct a list of claim, as if the token was a JWT.
-    const claims: TokenClaims = {
-      aud: account.aud,
+    const claims: SignedTokenPayload = {
+      iss: this.signer.issuer,
+      jti: tokenId,
       sub: account.sub,
-      client_id: data.clientId,
       exp: dateToEpoch(data.expiresAt),
       iat: dateToEpoch(data.updatedAt),
-      scope: parameters.scope,
       cnf: parameters.dpop_jkt ? { jkt: parameters.dpop_jkt } : undefined,
+
+      // These are not stored in the JWT access token in "light" access token
+      // mode. See `buildAccessToken`.
+      aud: account.aud,
+      scope: parameters.scope,
+      client_id: data.clientId,
     }
 
     return verifyTokenClaims(tokenId, tokenType, dpopJkt, claims, verifyOptions)
