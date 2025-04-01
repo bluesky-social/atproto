@@ -1,5 +1,14 @@
 # @atproto/bsky
 
+## 0.0.135
+
+### Patch Changes
+
+- [#3706](https://github.com/bluesky-social/atproto/pull/3706) [`04b6230cd`](https://github.com/bluesky-social/atproto/commit/04b6230cd2fbfe4a06cb00ab8ccb8e6c87c6c546) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Return `StarterPackView` instead of `StarterPackViewBasic` from `getSuggestedStarterPacks`
+
+- Updated dependencies [[`04b6230cd`](https://github.com/bluesky-social/atproto/commit/04b6230cd2fbfe4a06cb00ab8ccb8e6c87c6c546)]:
+  - @atproto/api@0.14.18
+
 ## 0.0.134
 
 ### Patch Changes

@@ -1,5 +1,12 @@
 # @atproto/pds
 
+## 0.4.119
+
+### Patch Changes
+
+- Updated dependencies [[`04b6230cd`](https://github.com/bluesky-social/atproto/commit/04b6230cd2fbfe4a06cb00ab8ccb8e6c87c6c546)]:
+  - @atproto/api@0.14.18
+
 ## 0.4.118
 
 ### Patch Changes
