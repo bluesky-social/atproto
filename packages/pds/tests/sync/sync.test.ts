@@ -106,6 +106,32 @@ describe('repo sync', () => {
     currRev = loaded.commit.rev
   })
 
+  it('serves CAR files in deterministic preorder travesal', async () => {
+    const carRes = await agent.api.com.atproto.sync.getRepo({ did })
+    const { roots, blocks } = await repo.readCarStream([carRes.data])
+    const root = roots[0]
+    const storage = new MemoryBlockstore()
+    const carBlockOrder: CID[] = []
+    for await (const block of blocks) {
+      carBlockOrder.push(block.cid)
+      await storage.putBlock(block.cid, block.bytes)
+    }
+
+    const repoBlockOrder: CID[] = []
+    repoBlockOrder.push(root)
+    const r = await repo.ReadableRepo.load(storage, root)
+    for await (const node of r.data.walk()) {
+      if (node.isTree()) {
+        repoBlockOrder.push(await node.getPointer())
+      } else {
+        repoBlockOrder.push(node.value)
+      }
+    }
+    expect(carBlockOrder.map((c) => c.toString())).toEqual(
+      repoBlockOrder.map((c) => c.toString()),
+    )
+  })
+
   it('syncs repo status', async () => {
     const status = await agent.api.com.atproto.sync.getRepoStatus({ did })
     expect(status.data).toEqual({
