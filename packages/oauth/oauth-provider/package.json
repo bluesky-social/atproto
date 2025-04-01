@@ -64,7 +64,7 @@
     "@types/send": "^0.17.4"
   },
   "scripts": {
-    "build": "tsc --build tsconfig.backend.json"
+    "build": "tsc --build tsconfig.build.json"
   },
   "postcss": {
     "plugins": {
