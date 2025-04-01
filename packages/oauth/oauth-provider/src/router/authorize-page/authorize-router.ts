@@ -95,9 +95,14 @@ export function authorizeRouter<
       const sub = this.url.searchParams.get('account_sub')
       if (!sub) throw new InvalidRequestError('Account sub not provided')
 
-      const deviceInfo = await server.deviceManager.load(req, res, true)
-      const { deviceId, deviceMetadata } = deviceInfo
       const { requestUri } = this
+
+      // @TODO move this into server method and re-use in authorize() from api-router
+      const { deviceId, deviceMetadata } = await server.deviceManager.load(
+        req,
+        res,
+        true,
+      )
 
       const { id, parameters, clientId } = await server.requestManager.get(
         requestUri,
@@ -114,7 +119,7 @@ export function authorizeRouter<
         )
 
         if (!hasEphemeralCookie(req, deviceAccount, requestUri)) {
-          throw new AccessDeniedError(parameters, 'Invalid session cookie')
+          throw new LoginRequiredError(parameters, 'Invalid session cookie')
         }
 
         // @NOTE We add some leeway here because the `loginRequired` that was
