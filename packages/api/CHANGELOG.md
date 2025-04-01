@@ -1,5 +1,17 @@
 # @atproto/api
 
+## 0.14.17
+
+### Patch Changes
+
+- [#2519](https://github.com/bluesky-social/atproto/pull/2519) [`bdbd3c3e3`](https://github.com/bluesky-social/atproto/commit/bdbd3c3e3f8fe8476a3fecac73810554846c938f) Thanks [@dholms](https://github.com/dholms)! - Add com.atproto.admin.updateAccountSigningKey
+
+- [#3673](https://github.com/bluesky-social/atproto/pull/3673) [`2b7efb6cb`](https://github.com/bluesky-social/atproto/commit/2b7efb6cb1c93a108570efdafe9d9ec3f1018dfa) Thanks [@haileyok](https://github.com/haileyok)! - Add `getTrends`, `getTrendsSkeleton`, and associated types
+
+- [#3705](https://github.com/bluesky-social/atproto/pull/3705) [`b0a0f1484`](https://github.com/bluesky-social/atproto/commit/b0a0f1484378adeb5e2aa20b9b6ff2c2eca0f740) Thanks [@dholms](https://github.com/dholms)! - Fix codegent for com.atproto.admin.updateAccountSigningKey
+
+- [#3677](https://github.com/bluesky-social/atproto/pull/3677) [`0eea698be`](https://github.com/bluesky-social/atproto/commit/0eea698bef76520ae4cc0e1f2efbb588a0459556) Thanks [@haileyok](https://github.com/haileyok)! - Add `getSuggestedStarterPacks`, `getSuggestedStarterPacksSkeleton`, and associated types
+
 ## 0.14.16
 
 ### Patch Changes
