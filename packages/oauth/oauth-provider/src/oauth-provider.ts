@@ -43,7 +43,6 @@ import {
 import { ClientStore, ifClientStore } from './client/client-store.js'
 import { Client } from './client/client.js'
 import {
-  AUTHENTICATION_LEEWAY,
   AUTHENTICATION_MAX_AGE,
   EPHEMERAL_SESSION_MAX_AGE,
   TOKEN_MAX_AGE,
@@ -77,7 +76,6 @@ import { extractZodErrorMessage } from './lib/util/zod-error.js'
 import { CustomMetadata, buildMetadata } from './metadata/build-metadata.js'
 import { OAuthHooks } from './oauth-hooks.js'
 import { OAuthVerifier, OAuthVerifierOptions } from './oauth-verifier.js'
-import { Sub } from './oidc/sub.js'
 import { ReplayStore, ifReplayStore } from './replay/replay-store.js'
 import { codeSchema } from './request/code.js'
 import { RequestInfo } from './request/request-info.js'
@@ -85,7 +83,7 @@ import { RequestManager } from './request/request-manager.js'
 import { RequestStoreMemory } from './request/request-store-memory.js'
 import { RequestStoreRedis } from './request/request-store-redis.js'
 import { RequestStore, ifRequestStore } from './request/request-store.js'
-import { RequestUri, requestUriSchema } from './request/request-uri.js'
+import { requestUriSchema } from './request/request-uri.js'
 import { AuthorizationResultAuthorize } from './result/authorization-result-authorize.js'
 import { AuthorizationResultRedirect } from './result/authorization-result-redirect.js'
 import { ErrorHandler } from './router/error-handler.js'
@@ -566,17 +564,6 @@ export class OAuthProvider extends OAuthVerifier {
     )
   }
 
-  private async deleteRequest(
-    requestUri: RequestUri,
-    parameters: OAuthAuthorizationRequestParameters,
-  ) {
-    try {
-      await this.requestManager.delete(requestUri)
-    } catch (err) {
-      throw AccessDeniedError.from(parameters, err)
-    }
-  }
-
   /**
    * @see {@link https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-11#section-4.1.1}
    */
@@ -678,7 +665,14 @@ export class OAuthProvider extends OAuthVerifier {
         },
       }
     } catch (err) {
-      await this.deleteRequest(uri, parameters)
+      try {
+        await this.requestManager.delete(uri)
+      } catch {
+        // There are two error here. Better keep the outer one.
+        //
+        // @TODO Maybe move this entire code to the /authorize endpoint
+        // (allowing to log this error)
+      }
 
       // Not using accessDeniedCatcher here because "parameters" will most
       // likely contain the redirect_uri (using the client default).
@@ -729,98 +723,6 @@ export class OAuthProvider extends OAuthVerifier {
 
         matchesHint: hint == null || matchesHint(deviceAccount.account),
       }))
-  }
-
-  public async acceptRequest(
-    deviceId: DeviceId,
-    deviceMetadata: RequestMetadata,
-    requestUri: RequestUri,
-    sub: Sub,
-  ): Promise<AuthorizationResultRedirect> {
-    const { issuer } = this
-
-    const { id, parameters, clientId } = await this.requestManager.get(
-      requestUri,
-      deviceId,
-    )
-
-    try {
-      const client = await this.clientManager.getClient(clientId)
-
-      const deviceAccount = await this.accountManager.getDeviceAccount(
-        deviceId,
-        sub,
-        requestUri,
-      )
-
-      // @NOTE We add some leeway here because the `loginRequired` that was
-      // returned to the client might be a bit outdated.
-      if (this.checkLoginRequired(deviceAccount, AUTHENTICATION_LEEWAY)) {
-        // @TODO: This should be caught and handled by the authorization server
-        // instead of being sent to the client.
-        throw new LoginRequiredError(
-          parameters,
-          'Account authentication required.',
-        )
-      }
-
-      const { account, authorizedClients } = deviceAccount
-
-      const code = await this.requestManager.setAuthorized(
-        requestUri,
-        client,
-        account,
-        deviceId,
-        deviceMetadata,
-      )
-
-      const clientData = authorizedClients.get(clientId)
-      if (this.checkConsentRequired(parameters, clientData)) {
-        const scopes = new Set(clientData?.authorizedScopes)
-
-        // Add the newly accepted scopes to the authorized scopes
-        for (const s of parameters.scope?.split(' ') ?? []) scopes.add(s)
-
-        await this.accountManager.setAuthorizedClient(account, client, {
-          ...clientData,
-          authorizedScopes: [...scopes],
-        })
-      }
-
-      return { issuer, parameters, redirect: { code } }
-    } catch (err) {
-      await this.deleteRequest(requestUri, parameters)
-
-      throw AccessDeniedError.from(parameters, err)
-    } finally {
-      await this.accountManager.removeRequestAccounts(id)
-    }
-  }
-
-  public async rejectRequest(
-    deviceId: DeviceId,
-    deviceMetadata: RequestMetadata,
-    requestUri: RequestUri,
-  ): Promise<AuthorizationResultRedirect> {
-    const { id, parameters } = await this.requestManager.get(
-      requestUri,
-      deviceId,
-    )
-
-    try {
-      await this.deleteRequest(requestUri, parameters)
-
-      return {
-        issuer: this.issuer,
-        parameters: parameters,
-        redirect: {
-          error: 'access_denied',
-          error_description: 'Access denied',
-        },
-      }
-    } finally {
-      await this.accountManager.removeRequestAccounts(id)
-    }
   }
 
   public async token(

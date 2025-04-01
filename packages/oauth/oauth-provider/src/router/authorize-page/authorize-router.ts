@@ -3,8 +3,10 @@ import {
   oauthAuthorizationRequestQuerySchema,
   oauthClientCredentialsSchema,
 } from '@atproto/oauth-types'
+import { AUTHENTICATION_LEEWAY } from '../../constants.js'
 import { AccessDeniedError } from '../../errors/access-denied-error.js'
 import { InvalidRequestError } from '../../errors/invalid-request-error.js'
+import { LoginRequiredError } from '../../errors/login-required-error.js'
 import {
   Middleware,
   Router,
@@ -25,7 +27,7 @@ import type {
   OAuthProvider,
 } from '../../oauth-provider.js'
 import { RequestUri, requestUriSchema } from '../../request/request-uri.js'
-import { clearSessionCookies } from '../api-router.js'
+import { clearSessionCookies, hasEphemeralCookie } from '../api-router.js'
 import { validateCsrfToken } from '../csrf.js'
 import type { RouterOptions } from '../router-options.js'
 import { assetsMiddleware } from './assets-middleware.js'
@@ -73,14 +75,12 @@ export function authorizeRouter<
 
       const deviceInfo = await server.deviceManager.load(req, res)
 
-      const result = await server
-        .authorize(
-          clientCredentials,
-          authorizationRequest,
-          deviceInfo.deviceId,
-          deviceInfo.deviceMetadata,
-        )
-        .catch((err) => accessDeniedToRedirectCatcher(req, res, err))
+      const result = await server.authorize(
+        clientCredentials,
+        authorizationRequest,
+        deviceInfo.deviceId,
+        deviceInfo.deviceMetadata,
+      )
 
       if ('redirect' in result) {
         sendAuthorizeRedirect(req, res, result)
@@ -95,39 +95,120 @@ export function authorizeRouter<
       const sub = this.url.searchParams.get('account_sub')
       if (!sub) throw new InvalidRequestError('Account sub not provided')
 
-      const deviceInfo = await server.deviceManager.load(req, res)
+      const deviceInfo = await server.deviceManager.load(req, res, true)
+      const { deviceId, deviceMetadata } = deviceInfo
+      const { requestUri } = this
 
-      return server
-        .acceptRequest(
-          deviceInfo.deviceId,
-          deviceInfo.deviceMetadata,
-          this.requestUri,
+      const { id, parameters, clientId } = await server.requestManager.get(
+        requestUri,
+        deviceId,
+      )
+
+      try {
+        const client = await server.clientManager.getClient(clientId)
+
+        const deviceAccount = await server.accountManager.getDeviceAccount(
+          deviceId,
           sub,
+          requestUri,
         )
-        .catch((err) => accessDeniedToRedirectCatcher(req, res, err))
+
+        if (!hasEphemeralCookie(req, deviceAccount, requestUri)) {
+          throw new AccessDeniedError(parameters, 'Invalid session cookie')
+        }
+
+        // @NOTE We add some leeway here because the `loginRequired` that was
+        // returned to the client might be a bit outdated.
+        if (server.checkLoginRequired(deviceAccount, AUTHENTICATION_LEEWAY)) {
+          // @TODO: This should be caught and handled by the authorization server
+          // instead of being sent to the client.
+          throw new LoginRequiredError(
+            parameters,
+            'Account authentication required.',
+          )
+        }
+
+        const { account, authorizedClients } = deviceAccount
+
+        const code = await server.requestManager.setAuthorized(
+          requestUri,
+          client,
+          account,
+          deviceId,
+          deviceMetadata,
+        )
+
+        const clientData = authorizedClients.get(clientId)
+        if (server.checkConsentRequired(parameters, clientData)) {
+          const scopes = new Set(clientData?.authorizedScopes)
+
+          // Add the newly accepted scopes to the authorized scopes
+          for (const s of parameters.scope?.split(' ') ?? []) scopes.add(s)
+
+          await server.accountManager.setAuthorizedClient(account, client, {
+            ...clientData,
+            authorizedScopes: [...scopes],
+          })
+        }
+
+        const { issuer } = server
+        return { issuer, parameters, redirect: { code } }
+      } catch (err) {
+        try {
+          await server.requestManager.delete(requestUri)
+        } catch (err) {
+          onError?.(req, res, err, 'Failed to delete request')
+        }
+
+        // Wrap into an AccessDeniedError to allow redirecting the user
+        throw AccessDeniedError.from(parameters, err)
+      } finally {
+        await server.accountManager.removeRequestAccounts(id)
+      }
     }),
   )
 
   router.use(
     buildRedirectMiddleware('/reject', async function (req, res) {
-      const deviceInfo = await server.deviceManager.load(req, res)
+      const deviceInfo = await server.deviceManager.load(req, res, true)
 
-      return server
-        .rejectRequest(
-          deviceInfo.deviceId,
-          deviceInfo.deviceMetadata,
-          this.requestUri,
-        )
-        .catch((err) => accessDeniedToRedirectCatcher(req, res, err))
+      const { deviceId } = deviceInfo
+      const { requestUri } = this
+
+      const { id, parameters } = await server.requestManager.get(
+        requestUri,
+        deviceId,
+      )
+
+      try {
+        try {
+          await server.requestManager.delete(requestUri)
+        } catch (err) {
+          onError?.(req, res, err, 'Failed to delete request')
+        }
+
+        return {
+          issuer: server.issuer,
+          parameters: parameters,
+          redirect: {
+            error: 'access_denied',
+            error_description: 'Access denied',
+          },
+        }
+      } catch (err) {
+        throw AccessDeniedError.from(parameters, err)
+      } finally {
+        await server.accountManager.removeRequestAccounts(id)
+      }
     }),
   )
 
   return router
 
   function buildNavigationMiddleware<T extends RouterCtx>(
-    middleware: Middleware<T, TReq, TRes>,
+    handler: (this: T, req: TReq, res: TRes) => Awaitable<void>,
   ): Middleware<T, TReq, TRes> {
-    return function (req, res, next) {
+    return async function (req, res, next) {
       res.setHeader('Referrer-Policy', 'same-origin')
 
       res.setHeader('Cache-Control', 'no-store')
@@ -137,22 +218,26 @@ export function authorizeRouter<
         validateFetchMode(req, ['navigate'])
         validateFetchDest(req, ['document'])
         validateOrigin(req, issuerOrigin)
-      } catch (err) {
-        next(err)
-        return
-      }
 
-      middleware.call(this, req, res, (err) => {
+        await handler.call(this, req, res)
+      } catch (err) {
         try {
-          if (!err || typeof err === 'string') {
-            // A middleware wrapped with navigationHandler should always end the
-            // request, either by calling "next" with an error or by sending a
-            // response.
-            throw new Error('Navigation handler should end the request')
+          if (typeof err === 'string') {
+            return next(err)
           }
 
-          // If the middleware called "next" with an error, let's display it in
-          // an error page.
+          // If we have the "redirect_uri" parameter, we can redirect the user
+          // to the client with an error.
+          if (err instanceof AccessDeniedError && err.parameters.redirect_uri) {
+            // Prefer logging the cause
+            onError?.(req, res, err.cause ?? err, 'Authorization failed')
+
+            return sendAuthorizeRedirect(req, res, {
+              issuer: server.issuer,
+              parameters: err.parameters,
+              redirect: err.toJSON(),
+            })
+          }
 
           onError?.(
             req,
@@ -161,13 +246,16 @@ export function authorizeRouter<
             `Failed to handle navigation request to "${req.url}"`,
           )
 
-          if (res.headersSent) return res.destroy()
+          if (res.headersSent) {
+            return next(err)
+          }
 
+          // Display the error to the user
           sendErrorPage(req, res, err)
         } catch (err) {
           next(err)
         }
-      })
+      }
     }
   }
 
@@ -205,44 +293,24 @@ export function authorizeRouter<
           referer.searchParams.get('request_uri'),
         )
 
-        const csrfToken = this.url.searchParams.get('csrf_token')
+        try {
+          const csrfToken = this.url.searchParams.get('csrf_token')
+          validateCsrfToken(req, csrfToken, requestUri)
 
-        validateCsrfToken(req, csrfToken, requestUri)
+          const context = subCtx(this, { requestUri })
 
-        const context = subCtx(this, { requestUri })
+          const redirect = await buildRedirect.call(context, req, res)
 
-        const redirect = await buildRedirect.call(context, req, res)
+          clearSessionCookies(req, res, requestUri)
 
-        // Clear any cookies that are linked to this request
-        clearSessionCookies(req, res, requestUri)
+          sendAuthorizeRedirect(req, res, redirect)
+        } catch (err) {
+          clearSessionCookies(req, res, requestUri)
 
-        sendAuthorizeRedirect(req, res, redirect)
+          throw err
+        }
       }),
     )
-  }
-
-  /**
-   * Provides a better UX when a request is denied by redirecting to the
-   * client with the error details. This will also log any error that caused
-   * the access to be denied (such as system errors).
-   */
-  function accessDeniedToRedirectCatcher(
-    req: TReq,
-    res: TRes,
-    err: unknown,
-  ): AuthorizationResultRedirect {
-    if (err instanceof AccessDeniedError && err.parameters.redirect_uri) {
-      const { cause } = err
-      if (cause) onError?.(req, res, cause, 'Access denied')
-
-      return {
-        issuer: server.issuer,
-        parameters: err.parameters,
-        redirect: err.toJSON(),
-      }
-    }
-
-    throw err
   }
 }
 

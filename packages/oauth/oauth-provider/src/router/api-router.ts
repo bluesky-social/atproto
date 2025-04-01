@@ -524,7 +524,7 @@ function setEphemeralCookie(
   setCookie(res, ephemeralCookie, cookieValue, EPHEMERAL_COOKIE_OPTIONS)
 }
 
-function hasEphemeralCookie(
+export function hasEphemeralCookie(
   req: IncomingMessage,
   deviceAccount: DeviceAccount,
   requestUri: RequestUri | undefined,
