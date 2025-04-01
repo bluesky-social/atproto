@@ -3,7 +3,7 @@ on:
   push:
     branches:
       - main
-      - sequencer-recovery
+      - car-file-lib
 env:
   REGISTRY: ghcr.io
   USERNAME: ${{ github.actor }}
