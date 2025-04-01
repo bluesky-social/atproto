@@ -3,12 +3,12 @@ import { useCallback, useMemo, useState } from 'react'
 import { useErrorBoundary } from 'react-error-boundary'
 import type {
   Account,
-  ConfirmResetPasswordData,
-  InitiatePasswordResetData,
+  ConfirmResetPasswordInput,
+  InitiatePasswordResetInput,
   Session,
   SignInInput,
   SignUpInput,
-  VerifyHandleAvailabilityData,
+  VerifyHandleAvailabilityInput,
 } from '@atproto/oauth-provider-api'
 import { AcceptData, Api, UnknownRequestUriError } from '../lib/api.ts'
 import { upsert } from '../lib/util.ts'
@@ -126,7 +126,7 @@ export function useApi({
 
   const doInitiatePasswordReset = useSafeCallback(
     async (
-      data: Omit<InitiatePasswordResetData, 'locale'>,
+      data: Omit<InitiatePasswordResetInput, 'locale'>,
       signal?: AbortSignal,
     ) => {
       await api.fetch(
@@ -140,14 +140,14 @@ export function useApi({
   )
 
   const doConfirmResetPassword = useSafeCallback(
-    async (data: ConfirmResetPasswordData, signal?: AbortSignal) => {
+    async (data: ConfirmResetPasswordInput, signal?: AbortSignal) => {
       await api.fetch('POST', '/reset-password-confirm', data, { signal })
     },
     [api],
   )
 
   const doValidateNewHandle = useSafeCallback(
-    async (data: VerifyHandleAvailabilityData, signal?: AbortSignal) => {
+    async (data: VerifyHandleAvailabilityInput, signal?: AbortSignal) => {
       await api.fetch('POST', '/verify-handle-availability', data, { signal })
     },
     [api],

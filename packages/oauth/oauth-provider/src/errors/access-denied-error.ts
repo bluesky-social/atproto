@@ -16,7 +16,7 @@ export class AccessDeniedError extends OAuthError {
     parameters: OAuthAuthorizationRequestParameters,
     cause?: unknown,
     fallbackError?: string,
-  ) {
+  ): AccessDeniedError {
     if (cause && cause instanceof AccessDeniedError) {
       return cause
     }

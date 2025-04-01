@@ -12,6 +12,7 @@ import { constantTime } from '../lib/util/time.js'
 import { OAuthHooks, RequestMetadata } from '../oauth-hooks.js'
 import { Customization } from '../oauth-provider.js'
 import { Sub } from '../oidc/sub.js'
+import { RequestId } from '../request/request-id.js'
 import { RequestUri, decodeRequestUri } from '../request/request-uri.js'
 import {
   Account,
@@ -113,7 +114,7 @@ export class AccountManager {
   ): Promise<{ account: Account; ephemeralCookie: string | null }> {
     const requestId = requestUri ? decodeRequestUri(requestUri) : null
 
-    await callAsync(this.hooks.onSignupAttempt, {
+    await callAsync(this.hooks.onSignUpAttempt, {
       input,
       deviceId,
       deviceMetadata,
@@ -133,32 +134,38 @@ export class AccountManager {
       throw InvalidRequestError.from(err, 'Account creation failed')
     })
 
-    // When singing-up from a request flow, always mark the signup as
-    // "temporary" (no "remember me").
-    const remember = requestId == null
+    // Only "remember" the newly created account if it was not created during an
+    // OAuth flow.
+    const remembered = requestId == null
 
-    const ephemeralCookie = remember ? null : await randomHexId(32)
+    const ephemeralCookie = remembered ? null : await randomHexId(32)
 
-    await this.store.addDeviceAccount(deviceId, account.sub, {
-      authenticatedAt: new Date(),
-      ephemeralCookie,
-      requestId,
-    })
-
-    await callAsync(this.hooks.onSignedUp, {
-      data,
-      account,
+    await this.addDeviceAccount(
       deviceId,
-      deviceMetadata,
+      account,
+      remembered,
       requestId,
-    }).catch((err) => {
+      ephemeralCookie,
+    )
+
+    try {
+      await callAsync(this.hooks.onSignedUp, {
+        data,
+        account,
+        deviceId,
+        deviceMetadata,
+        requestId,
+      })
+
+      return { account, ephemeralCookie }
+    } catch (err) {
+      await this.removeDeviceAccounts(deviceId, account.sub)
+
       throw InvalidRequestError.from(
         err,
-        'Something went wrong, try singing-in',
+        'The account was successfully created but something went wrong, try singing-in.',
       )
-    })
-
-    return { account, ephemeralCookie }
+    }
   }
 
   public async authenticateAccount(
@@ -170,6 +177,15 @@ export class AccountManager {
     account: Account
     ephemeralCookie: string | null
   }> {
+    const requestId = requestUri ? decodeRequestUri(requestUri) : null
+
+    await callAsync(this.hooks.onSignInAttempt, {
+      data,
+      deviceId,
+      deviceMetadata,
+      requestId,
+    })
+
     const account = await constantTime(
       TIMING_ATTACK_MITIGATION_DELAY,
       async () => {
@@ -182,18 +198,19 @@ export class AccountManager {
       )
     })
 
+    const remembered = data.remember === true
+
+    const ephemeralCookie = remembered ? null : await randomHexId(32)
+
+    await this.addDeviceAccount(
+      deviceId,
+      account,
+      remembered,
+      requestId,
+      ephemeralCookie,
+    )
+
     try {
-      // If "remember" is true, do not bind the session to the request.
-      const requestId = requestUri ? decodeRequestUri(requestUri) : null
-
-      const ephemeralCookie = data.remember ? null : await randomHexId(32)
-
-      await this.store.addDeviceAccount(deviceId, account.sub, {
-        authenticatedAt: new Date(),
-        ephemeralCookie,
-        requestId,
-      })
-
       await callAsync(this.hooks.onSignedIn, {
         data,
         account,
@@ -204,11 +221,26 @@ export class AccountManager {
 
       return { account, ephemeralCookie }
     } catch (err) {
-      throw InvalidRequestError.from(
-        err,
-        'Something went wrong, try singing-in',
-      )
+      await this.removeDeviceAccounts(deviceId, account.sub)
+
+      throw err
     }
+  }
+
+  protected async addDeviceAccount(
+    deviceId: DeviceId,
+    account: Account,
+    remembered: boolean,
+    requestId: RequestId | null,
+    ephemeralCookie: string | null,
+  ): Promise<void> {
+    await this.store.addDeviceAccount(deviceId, account.sub, {
+      authenticatedAt: new Date(),
+      remembered,
+      // If "remember" is true, do not bind the session to the request.
+      requestId: remembered ? null : requestId,
+      ephemeralCookie,
+    })
   }
 
   public async getDeviceAccount(
@@ -251,26 +283,50 @@ export class AccountManager {
     await this.store.setAuthorizedClient(account.sub, client.id, data)
   }
 
-  public async getAuthorizedClients(sub: Sub) {
-    return this.store.getAuthorizedClients(sub)
+  public async getAccount(sub: Sub) {
+    return this.store.getAccount(sub)
   }
 
-  public async removeDeviceAccount(deviceId: DeviceId, sub: Sub) {
-    return this.store.removeDeviceAccount(deviceId, sub)
+  public async removeRequestAccounts(requestId: RequestId) {
+    return this.store.removeRequestAccounts(requestId)
   }
 
-  public async list(deviceId: DeviceId): Promise<DeviceAccount[]> {
-    const results = await this.store.listDeviceAccounts(deviceId)
-    return results
-      .filter((result) => result.deviceId === deviceId) // Fool proof
-      .filter(({ data }) => !data.ephemeralCookie && !data.requestId)
+  public async removeDeviceAccounts(deviceId: DeviceId, sub: Sub) {
+    return this.store.removeDeviceAccounts(deviceId, sub)
   }
 
-  public async listAccountDevices(sub: Sub): Promise<DeviceAccount[]> {
-    const result = await this.store.listAccountDevices(sub)
-    return result
-      .filter((result) => result.account.sub === sub) // Fool proof
-      .filter(({ data }) => !data.ephemeralCookie && !data.requestId)
+  public async listDeviceAccounts(
+    deviceId: DeviceId,
+    requestUri: RequestUri | null = null,
+    ephemeralCookies: string[] = [],
+  ): Promise<DeviceAccount[]> {
+    const requestId = requestUri ? decodeRequestUri(requestUri) : null
+    const deviceAccounts = await this.store.listDeviceAccounts(deviceId)
+    return deviceAccounts
+      .filter((deviceAccount) => deviceAccount.deviceId === deviceId) // Fool proof
+      .filter(
+        ({ data }) =>
+          (data.requestId === null || data.requestId === requestId) &&
+          (data.ephemeralCookie == null ||
+            ephemeralCookies.includes(data.ephemeralCookie)),
+      )
+  }
+
+  public async listAccountDevices(
+    sub: Sub,
+    requestUri: RequestUri | null = null,
+    ephemeralCookies: string[] = [],
+  ): Promise<DeviceAccount[]> {
+    const requestId = requestUri ? decodeRequestUri(requestUri) : null
+    const deviceAccounts = await this.store.listAccountDevices(sub)
+    return deviceAccounts
+      .filter((deviceAccount) => deviceAccount.account.sub === sub) // Fool proof
+      .filter(
+        ({ data }) =>
+          (data.requestId === null || data.requestId === requestId) &&
+          (data.ephemeralCookie == null ||
+            ephemeralCookies.includes(data.ephemeralCookie)),
+      )
   }
 
   public async resetPasswordRequest(data: ResetPasswordRequestData) {

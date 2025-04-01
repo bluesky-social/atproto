@@ -359,21 +359,12 @@ export class TokenManager {
         }
       }
 
-      const lastActivity = data.updatedAt
-      const inactivityTimeout =
-        clientAuth.method === 'none' && !client.info.isFirstParty
-          ? UNAUTHENTICATED_REFRESH_INACTIVITY_TIMEOUT
-          : AUTHENTICATED_REFRESH_INACTIVITY_TIMEOUT
-      if (lastActivity.getTime() + inactivityTimeout < Date.now()) {
-        throw new InvalidGrantError(`Refresh token exceeded inactivity timeout`)
+      if (this.isTokenExpired(client, tokenInfo)) {
+        throw new InvalidGrantError(`Refresh token expired`)
       }
 
-      const lifetime =
-        clientAuth.method === 'none' && !client.info.isFirstParty
-          ? UNAUTHENTICATED_REFRESH_LIFETIME
-          : AUTHENTICATED_REFRESH_LIFETIME
-      if (data.createdAt.getTime() + lifetime < Date.now()) {
-        throw new InvalidGrantError(`Refresh token expired`)
+      if (this.isTokenInactive(client, tokenInfo)) {
+        throw new InvalidGrantError(`Refresh token exceeded inactivity timeout`)
       }
 
       const nextTokenId = await generateTokenId()
@@ -437,6 +428,28 @@ export class TokenManager {
 
       throw err
     }
+  }
+
+  public isTokenExpired(client: Client, { data }: TokenInfo): boolean {
+    // @TODO This value should be computable even if we don't have the "client"
+    // (because fetching client info could be flaky). Instead, all the info
+    // needed should be stored in the token info.
+    const lifetime =
+      data.clientAuth.method === 'none' && !client.info.isFirstParty
+        ? UNAUTHENTICATED_REFRESH_LIFETIME
+        : AUTHENTICATED_REFRESH_LIFETIME
+    return data.createdAt.getTime() + lifetime < Date.now()
+  }
+
+  public isTokenInactive(client: Client, { data }: TokenInfo): boolean {
+    // @TODO This value should be computable even if we don't have the "client"
+    // (because fetching client info could be flaky). Instead, all the info
+    // needed should be stored in the token info.
+    const inactivityTimeout =
+      data.clientAuth.method === 'none' && !client.info.isFirstParty
+        ? UNAUTHENTICATED_REFRESH_INACTIVITY_TIMEOUT
+        : AUTHENTICATED_REFRESH_INACTIVITY_TIMEOUT
+    return data.updatedAt.getTime() + inactivityTimeout < Date.now()
   }
 
   /**
@@ -553,7 +566,7 @@ export class TokenManager {
       throw new InvalidTokenError(tokenType, `Invalid token`)
     }
 
-    if (isTokenInfoExpired(tokenInfo)) {
+    if (tokenInfo.data.expiresAt.getTime() < Date.now()) {
       throw new InvalidTokenError(tokenType, `Token expired`)
     }
 

@@ -107,15 +107,31 @@ export type AuthorizedClientData = { authorizedScopes: readonly string[] }
 export type AuthorizedClients = Map<ClientId, AuthorizedClientData>
 
 export type DeviceAccountData = {
-  authenticatedAt: Date
   /**
-   * If the session is "temporary" (i.e. not "remembered"), a cookie secret will
-   * be generated and stored in the device account (as a session cookie). This
-   * cookie secret will be required to authenticate the device account in the
-   * future.
+   * The date at which the device account was created. This value is used to
+   * determine the expiration date of the device account.
+   */
+  authenticatedAt: Date
+
+  remembered: boolean
+
+  /**
+   * The requestId in the context of which the device account is being created.
+   *
+   * @note This value will typically be `null` if `remembered` is `true`.
+   */
+  requestId: null | RequestId
+
+  /**
+   * If the session is "ephemeral" (i.e. not "remembered"), a cookie secret will
+   * be stored in the device account (as a session cookie). This cookie secret
+   * will be required to authenticate the device account in the future. This
+   * mechanism is used to ensure that the ephemeral session cannot be used after
+   * the device decided to forget the cookie.
+   *
+   * @note This value will typically be `null` if `remembered` is `true`.
    */
   ephemeralCookie: null | string
-  requestId: null | RequestId
 }
 
 export type DeviceAccount = {
@@ -168,12 +184,20 @@ export interface AccountStore {
     data: AuthorizedClientData,
   ): Awaitable<void>
 
-  getAuthorizedClients(sub: Sub): Awaitable<AuthorizedClients>
+  getAccount(sub: Sub): Awaitable<{
+    account: Account
+    authorizedClients: AuthorizedClients
+  }>
 
   /**
-   * @param requestId - If provided, the inserted account must be bound to that
-   * particular requestId. If an unbound account already exists, it should be
-   * replaced.
+   * @param data.requestId - If provided, the inserted account must be bound to
+   * that particular requestId.
+   *
+   * @note Whenever a particular [`deviceId`, `sub`] pair is created, all
+   * existing device accounts for that pair that are not bound to a particular
+   * request should have their `authenticatedAt` updated using the
+   * `data.authenticatedAt` value.
+   *
    * @note When a particular request is deleted (through
    * {@link RequestStore.deleteRequest}), all accounts bound to that request
    * should be deleted as well.
@@ -197,22 +221,23 @@ export interface AccountStore {
     requestId: null | RequestId,
   ): Awaitable<DeviceAccount | null>
 
-  /**
-   * @note No-op if the account is not associated with the device.
-   */
-  removeDeviceAccount(deviceId: DeviceId, sub: Sub): Awaitable<void>
+  removeRequestAccounts(requestId: RequestId): Awaitable<void>
 
   /**
-   * @returns all the device accounts associated with the given device. Entries
-   * created with a requestId or with remember set to false should not be
-   * returned.
+   * Removes *all* the device-accounts (request bound or not) associated with
+   * the given device & account.
+   *
+   * @note Noop if the device-account is not found.
+   */
+  removeDeviceAccounts(deviceId: DeviceId, sub: Sub): Awaitable<void>
+
+  /**
+   * @returns **all** the device accounts associated with the given device.
    */
   listDeviceAccounts(deviceId: DeviceId): Awaitable<DeviceAccount[]>
 
   /**
-   * @returns all the device accounts associated with the given account. Entries
-   * created with a requestId or with remember set to false should not be
-   * returned.
+   * @returns **all** the device accounts associated with the given account.
    */
   listAccountDevices(sub: Sub): Awaitable<DeviceAccount[]>
 
@@ -229,10 +254,11 @@ export const isAccountStore = buildInterfaceChecker<AccountStore>([
   'createAccount',
   'authenticateAccount',
   'setAuthorizedClient',
-  'getAuthorizedClients',
+  'getAccount',
   'addDeviceAccount',
   'getDeviceAccount',
-  'removeDeviceAccount',
+  'removeRequestAccounts',
+  'removeDeviceAccounts',
   'listDeviceAccounts',
   'listAccountDevices',
   'resetPasswordRequest',

@@ -1,5 +1,5 @@
 import type { OAuthClientMetadata } from '@atproto/oauth-types'
-import type { Account, DeviceMetadata } from './types.js'
+import type { Account, DeviceMetadata, ISODateString } from './types.js'
 
 // These are the endpoints implemented by the OAuth provider, for it's UI to
 // call.
@@ -7,7 +7,7 @@ import type { Account, DeviceMetadata } from './types.js'
 export type ApiEndpoints = {
   '/verify-handle-availability': {
     method: 'POST'
-    input: VerifyHandleAvailabilityData
+    input: VerifyHandleAvailabilityInput
     output: { available: true }
   }
   '/sign-up': {
@@ -22,12 +22,12 @@ export type ApiEndpoints = {
   }
   '/reset-password-request': {
     method: 'POST'
-    input: InitiatePasswordResetData
+    input: InitiatePasswordResetInput
     output: { success: true }
   }
   '/reset-password-confirm': {
     method: 'POST'
-    input: ConfirmResetPasswordData
+    input: ConfirmResetPasswordInput
     output: { success: true }
   }
   '/sign-out': {
@@ -37,7 +37,7 @@ export type ApiEndpoints = {
   }
   '/accounts': {
     method: 'GET'
-    output: { accounts: Account[] }
+    output: { results: ActiveDeviceAccount[] }
   }
   /**
    * @NOTE can be revoked using the oauth revocation endpoint (json or form
@@ -53,28 +53,16 @@ export type ApiEndpoints = {
   '/oauth-sessions': {
     method: 'GET'
     params: { sub: string }
-    output: {
-      sessions: Array<{
-        tokenId: string
-        clientId: string
-        /** An "undefined" value means that the client metadata could not be fetched */
-        clientMetadata?: OAuthClientMetadata
-      }>
-    }
+    output: { results: ActiveOAuthSession[] }
   }
   '/account-sessions': {
     method: 'GET'
     params: { sub: string }
-    output: {
-      sessions: Array<{
-        deviceId: string
-        deviceMetadata: DeviceMetadata
-      }>
-    }
+    output: { results: ActiveAccountSession[] }
   }
   '/revoke-account-session': {
     method: 'POST'
-    input: { sub: string; deviceId: string }
+    input: RevokeAccountSessionInput
     output: { success: true }
   }
 }
@@ -96,16 +84,58 @@ export type SignUpInput = {
   hcaptchaToken?: string
 }
 
-export type InitiatePasswordResetData = {
+export type InitiatePasswordResetInput = {
   locale: string
   email: string
 }
 
-export type ConfirmResetPasswordData = {
+export type ConfirmResetPasswordInput = {
   token: string
   password: string
 }
 
-export type VerifyHandleAvailabilityData = {
+export type VerifyHandleAvailabilityInput = {
   handle: string
+}
+
+export type RevokeAccountSessionInput = {
+  sub: string
+  deviceId: string
+}
+
+/**
+ * Represents an account that is currently signed-in to the Authorization
+ * Server. If the session was created too long ago, the user may be required to
+ * re-authenticate ({@link ActiveDeviceAccount.loginRequired}).
+ */
+export type ActiveDeviceAccount = {
+  account: Account
+  remembered: boolean
+  loginRequired: boolean
+}
+
+/**
+ * Represents another device on which an account is currently signed-in.
+ */
+export type ActiveAccountSession = {
+  deviceId: string
+  deviceMetadata: DeviceMetadata
+
+  remembered: boolean
+}
+
+/**
+ * Represents an active OAuth session (access token).
+ */
+export type ActiveOAuthSession = {
+  tokenId: string
+
+  createdAt: ISODateString
+  updatedAt: ISODateString
+
+  clientId: string
+  /** An "undefined" value means that the client metadata could not be fetched */
+  clientMetadata?: OAuthClientMetadata
+
+  scope?: string
 }

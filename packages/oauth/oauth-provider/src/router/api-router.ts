@@ -4,17 +4,22 @@ import { z } from 'zod'
 import {
   ACCOUNTS_PAGE_URL,
   API_ENDPOINT_PREFIX,
+  ActiveAccountSession,
+  ActiveDeviceAccount,
+  ActiveOAuthSession,
   ApiEndpoints,
   ISODateString,
 } from '@atproto/oauth-provider-api'
-import { OAuthClientId, OAuthClientMetadata } from '@atproto/oauth-types'
+import { OAuthClientId } from '@atproto/oauth-types'
 import {
+  DeviceAccount,
   handleSchema,
   resetPasswordConfirmDataSchema,
   resetPasswordRequestDataSchema,
 } from '../account/account-store.js'
 import { signInDataSchema } from '../account/sign-in-data.js'
 import { signUpInputSchema } from '../account/sign-up-input.js'
+import { Client } from '../client/client.js'
 import { deviceIdSchema } from '../device/device-id.js'
 import { buildErrorPayload, buildErrorStatus } from '../errors/error-parser.js'
 import {
@@ -35,6 +40,7 @@ import {
   validateReferer,
 } from '../lib/http/index.js'
 import { RouteCtx, createRoute } from '../lib/http/route.js'
+import { asArray } from '../lib/util/cast.js'
 import type { Awaitable } from '../lib/util/type.js'
 import type { OAuthProvider } from '../oauth-provider.js'
 import { subSchema } from '../oidc/sub.js'
@@ -72,7 +78,7 @@ export function apiRouter<
 
   router.use(
     apiRoute('POST', '/sign-up', signUpInputSchema, async function (req, res) {
-      const deviceInfo = await server.deviceManager.load(req, res)
+      const deviceInfo = await server.deviceManager.load(req, res, true)
 
       const { account, ephemeralCookie } =
         await server.accountManager.createAccount(
@@ -92,7 +98,7 @@ export function apiRouter<
 
   router.use(
     apiRoute('POST', '/sign-in', signInDataSchema, async function (req, res) {
-      const deviceInfo = await server.deviceManager.load(req, res)
+      const deviceInfo = await server.deviceManager.load(req, res, true)
 
       const { account, ephemeralCookie } =
         await server.accountManager.authenticateAccount(
@@ -115,8 +121,9 @@ export function apiRouter<
           deviceInfo.deviceId,
         )
 
-        const authorizedClients =
-          await server.accountManager.getAuthorizedClients(account.sub)
+        const { authorizedClients } = await server.accountManager.getAccount(
+          account.sub,
+        )
 
         return {
           account,
@@ -137,29 +144,15 @@ export function apiRouter<
       '/sign-out',
       z.object({ sub: z.union([subSchema, z.array(subSchema)]) }).strict(),
       async function (req, res) {
-        const deviceInfo = await server.deviceManager.load(req, res)
+        const { deviceId } = await server.deviceManager.load(req, res, true)
 
-        if (Array.isArray(this.input.sub)) {
-          const deviceAccounts = await server.accountManager.list(
-            deviceInfo.deviceId,
-          )
+        const uniqueSubs = new Set(asArray(this.input.sub))
 
-          for (const { account } of deviceAccounts) {
-            if (this.input.sub.includes(account.sub)) {
-              await server.accountManager.removeDeviceAccount(
-                deviceInfo.deviceId,
-                account.sub,
-              )
-            }
-          }
-        } else {
-          await server.accountManager.removeDeviceAccount(
-            deviceInfo.deviceId,
-            this.input.sub,
-          )
+        for (const sub of uniqueSubs) {
+          await server.accountManager.removeDeviceAccounts(deviceId, sub)
         }
 
-        return { success: true }
+        return { success: true as const }
       },
     ),
   )
@@ -190,14 +183,22 @@ export function apiRouter<
 
   router.use(
     apiRoute('GET', '/accounts', undefined, async function (req, res) {
-      const deviceInfo = await server.deviceManager.load(req, res)
+      const { deviceId } = await server.deviceManager.load(req, res)
 
-      const deviceAccounts = await server.accountManager.list(
-        deviceInfo.deviceId,
+      const deviceAccounts = await server.accountManager.listDeviceAccounts(
+        deviceId,
+        this.requestUri,
+        extractEphemeralCookies(req, this.requestUri),
       )
 
       return {
-        accounts: deviceAccounts.map(({ account }) => account),
+        results: deviceAccounts.map(
+          (deviceAccount): ActiveDeviceAccount => ({
+            account: deviceAccount.account,
+            remembered: deviceAccount.data.remembered,
+            loginRequired: server.checkLoginRequired(deviceAccount),
+          }),
+        ),
       }
     }),
   )
@@ -223,26 +224,37 @@ export function apiRouter<
           tokenInfos.map((tokenInfo) => tokenInfo.data.clientId),
         )
 
-        const clientMetadataMap = new Map<
-          OAuthClientId,
-          OAuthClientMetadata | undefined
-        >(
-          await Promise.all(
-            Array.from(uniqueClientIds, async (clientId) => {
-              const client = await server.clientManager
-                .getClient(clientId)
-                .catch(() => undefined)
-              return [clientId, client?.metadata] as const
-            }),
-          ),
+        const clients = new Map<OAuthClientId, Client>(
+          (
+            await Promise.all(
+              Array.from(uniqueClientIds, async (clientId) =>
+                server.clientManager.getClient(clientId).catch(() => null),
+              ),
+            )
+          )
+            .filter((client) => client != null)
+            .map((client) => [client.id, client]),
         )
 
         return {
-          sessions: tokenInfos.map(({ id, data }) => ({
-            tokenId: id,
-            clientId: data.clientId,
-            clientMetadata: clientMetadataMap.get(data.clientId),
-          })),
+          // @TODO: We should ideally filter sessions that are expired (or even
+          // expose the expiration date). This requires a change to the way
+          // TokenInfo are stored (see TokenManager#isTokenExpired and
+          // TokenManager#isTokenInactive).
+          results: tokenInfos.map(({ id, data }): ActiveOAuthSession => {
+            const client = clients.get(data.clientId)
+            return {
+              tokenId: id,
+
+              createdAt: data.createdAt.toISOString() as ISODateString,
+              updatedAt: data.updatedAt.toISOString() as ISODateString,
+
+              clientId: data.clientId,
+              clientMetadata: client?.metadata,
+
+              scope: data.parameters.scope,
+            }
+          }),
         }
       },
     ),
@@ -263,17 +275,24 @@ export function apiRouter<
 
         const deviceAccounts = await server.accountManager.listAccountDevices(
           account.sub,
+          this.requestUri,
+          extractEphemeralCookies(req, this.requestUri),
         )
 
         return {
-          sessions: deviceAccounts.map(({ deviceId, deviceData }) => ({
-            deviceId,
-            deviceMetadata: {
-              ipAddress: deviceData.ipAddress,
-              userAgent: deviceData.userAgent,
-              lastSeenAt: deviceData.lastSeenAt.toISOString() as ISODateString,
-            },
-          })),
+          results: deviceAccounts.map(
+            ({ deviceId, deviceData, data }): ActiveAccountSession => ({
+              deviceId,
+              deviceMetadata: {
+                ipAddress: deviceData.ipAddress,
+                userAgent: deviceData.userAgent,
+                lastSeenAt:
+                  deviceData.lastSeenAt.toISOString() as ISODateString,
+              },
+
+              remembered: data.remembered,
+            }),
+          ),
         }
       },
     ),
@@ -289,7 +308,7 @@ export function apiRouter<
         // another user's session cookie, we allow them to revoke the device
         // session.
 
-        await server.accountManager.removeDeviceAccount(
+        await server.accountManager.removeDeviceAccounts(
           this.input.deviceId,
           this.input.sub,
         )
@@ -307,23 +326,34 @@ export function apiRouter<
     sub: string,
     requestUri: RequestUri | undefined,
   ) {
-    const deviceInfo = await server.deviceManager.load(req, res)
+    // @TODO: Throw errors that the frontend will understand
+
+    const { deviceId } = await server.deviceManager
+      .load(req, res)
+      .catch((cause) => {
+        throw createHttpError(401, 'Invalid device', { cause })
+      })
 
     // Ensures the requested "sub" is linked to the device
-    const { account, data } = await server.accountManager.getDeviceAccount(
-      deviceInfo.deviceId,
-      sub,
-      requestUri,
-    )
+    const deviceAccount = await server.accountManager
+      .getDeviceAccount(deviceId, sub, requestUri)
+      .catch((cause) => {
+        throw createHttpError(401, 'Invalid account', { cause })
+      })
 
     // If the session is temporary, check the cookie secret
-    if (!checkEphemeralCookie(req, data.ephemeralCookie, requestUri)) {
-      await server.accountManager.removeDeviceAccount(deviceInfo.deviceId, sub)
+    if (!hasEphemeralCookie(req, deviceAccount, requestUri)) {
+      await server.accountManager.removeDeviceAccounts(deviceId, sub)
 
       throw createHttpError(401, 'This session has expired')
     }
 
-    return { account, deviceInfo }
+    // The session exists but was created too long ago
+    if (server.checkLoginRequired(deviceAccount)) {
+      throw createHttpError(401, 'Login required')
+    }
+
+    return deviceAccount
   }
 
   type ApiContext<T extends RouterCtx, I = void> = SubCtx<
@@ -494,11 +524,12 @@ function setEphemeralCookie(
   setCookie(res, ephemeralCookie, cookieValue, EPHEMERAL_COOKIE_OPTIONS)
 }
 
-function checkEphemeralCookie(
+function hasEphemeralCookie(
   req: IncomingMessage,
-  ephemeralCookie: string | null,
+  deviceAccount: DeviceAccount,
   requestUri: RequestUri | undefined,
 ) {
+  const { ephemeralCookie } = deviceAccount.data
   if (!ephemeralCookie) return true
   const cookies = parseHttpCookies(req)
   const cookieValue = cookies[ephemeralCookie]
@@ -520,11 +551,18 @@ export function clearSessionCookies(
   clearCsrfToken(res, requestUri)
 
   // Clear every cookie secret that were created for this request.
+  for (const cookieName of extractEphemeralCookies(req, requestUri)) {
+    clearCookie(res, cookieName, EPHEMERAL_COOKIE_OPTIONS)
+  }
+}
+
+function extractEphemeralCookies(
+  req: IncomingMessage,
+  requestUri: RequestUri | undefined,
+) {
   const cookies = parseHttpCookies(req)
   const expectedValue = ephemeralCookieValue(requestUri)
-  for (const [cookieName, cookieValue] of Object.entries(cookies)) {
-    if (cookieValue === expectedValue) {
-      clearCookie(res, cookieName, EPHEMERAL_COOKIE_OPTIONS)
-    }
-  }
+  return Object.entries(cookies)
+    .filter(([, cookieValue]) => cookieValue === expectedValue)
+    .map(([cookieName]) => cookieName)
 }

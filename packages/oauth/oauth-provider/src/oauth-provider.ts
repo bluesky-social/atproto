@@ -43,6 +43,7 @@ import {
 import { ClientStore, ifClientStore } from './client/client-store.js'
 import { Client } from './client/client.js'
 import {
+  AUTHENTICATION_LEEWAY,
   AUTHENTICATION_MAX_AGE,
   EPHEMERAL_SESSION_MAX_AGE,
   TOKEN_MAX_AGE,
@@ -365,11 +366,9 @@ export class OAuthProvider extends OAuthVerifier {
       return true
     }
 
-    const maxAge =
-      // If the session is a temporary session, we need to use the ephemeral
-      data.ephemeralCookie != null
-        ? this.ephemeralSessionMaxAge
-        : this.authenticationMaxAge
+    const maxAge = data.remembered
+      ? this.authenticationMaxAge
+      : this.ephemeralSessionMaxAge
 
     return authAge >= maxAge + leeway
   }
@@ -702,28 +701,34 @@ export class OAuthProvider extends OAuthVerifier {
       matchesHint: boolean
     }[]
   > {
-    const accounts = await this.accountManager.list(deviceId)
+    const deviceAccounts =
+      await this.accountManager.listDeviceAccounts(deviceId)
 
     const hint = parameters.login_hint
     const matchesHint = (account: Account): boolean =>
       (!!account.sub && account.sub === hint) ||
       (!!account.preferred_username && account.preferred_username === hint)
 
-    return accounts.map((deviceAccount) => ({
-      account: deviceAccount.account,
+    return deviceAccounts
+      .filter(({ data }) => data.remembered)
+      .map((deviceAccount) => ({
+        account: deviceAccount.account,
 
-      selected:
-        parameters.prompt !== 'select_account' &&
-        matchesHint(deviceAccount.account),
-      loginRequired:
-        parameters.prompt === 'login' || this.checkLoginRequired(deviceAccount),
-      consentRequired: this.checkConsentRequired(
-        parameters,
-        deviceAccount.authorizedClients.get(clientId),
-      ),
+        selected:
+          parameters.prompt !== 'select_account' &&
+          matchesHint(deviceAccount.account),
+        // @TODO Return the session expiration date instead of a boolean to
+        // avoid having to rely on a leeway when "accepting" the request.
+        loginRequired:
+          parameters.prompt === 'login' ||
+          this.checkLoginRequired(deviceAccount),
+        consentRequired: this.checkConsentRequired(
+          parameters,
+          deviceAccount.authorizedClients.get(clientId),
+        ),
 
-      matchesHint: hint == null || matchesHint(deviceAccount.account),
-    }))
+        matchesHint: hint == null || matchesHint(deviceAccount.account),
+      }))
   }
 
   public async acceptRequest(
@@ -734,21 +739,25 @@ export class OAuthProvider extends OAuthVerifier {
   ): Promise<AuthorizationResultRedirect> {
     const { issuer } = this
 
-    const { parameters, clientId } = await this.requestManager.get(
+    const { id, parameters, clientId } = await this.requestManager.get(
       requestUri,
       deviceId,
     )
 
-    const client = await this.clientManager.getClient(clientId)
-
     try {
+      const client = await this.clientManager.getClient(clientId)
+
       const deviceAccount = await this.accountManager.getDeviceAccount(
         deviceId,
         sub,
         requestUri,
       )
 
-      if (this.checkLoginRequired(deviceAccount)) {
+      // @NOTE We add some leeway here because the `loginRequired` that was
+      // returned to the client might be a bit outdated.
+      if (this.checkLoginRequired(deviceAccount, AUTHENTICATION_LEEWAY)) {
+        // @TODO: This should be caught and handled by the authorization server
+        // instead of being sent to the client.
         throw new LoginRequiredError(
           parameters,
           'Account authentication required.',
@@ -783,6 +792,8 @@ export class OAuthProvider extends OAuthVerifier {
       await this.deleteRequest(requestUri, parameters)
 
       throw AccessDeniedError.from(parameters, err)
+    } finally {
+      await this.accountManager.removeRequestAccounts(id)
     }
   }
 
@@ -791,17 +802,24 @@ export class OAuthProvider extends OAuthVerifier {
     deviceMetadata: RequestMetadata,
     requestUri: RequestUri,
   ): Promise<AuthorizationResultRedirect> {
-    const { parameters } = await this.requestManager.get(requestUri, deviceId)
+    const { id, parameters } = await this.requestManager.get(
+      requestUri,
+      deviceId,
+    )
 
-    await this.deleteRequest(requestUri, parameters)
+    try {
+      await this.deleteRequest(requestUri, parameters)
 
-    return {
-      issuer: this.issuer,
-      parameters: parameters,
-      redirect: {
-        error: 'access_denied',
-        error_description: 'Access denied',
-      },
+      return {
+        issuer: this.issuer,
+        parameters: parameters,
+        redirect: {
+          error: 'access_denied',
+          error_description: 'Access denied',
+        },
+      }
+    } finally {
+      await this.accountManager.removeRequestAccounts(id)
     }
   }
 
@@ -861,8 +879,11 @@ export class OAuthProvider extends OAuthVerifier {
     try {
       const code = codeSchema.parse(input.code)
 
-      const { requestUri, sub, deviceId, parameters } =
-        await this.requestManager.findCode(client, clientAuth, code)
+      const { sub, deviceId, parameters } = await this.requestManager.findCode(
+        client,
+        clientAuth,
+        code,
+      )
 
       // the following check prevents re-use of PKCE challenges, enforcing the
       // clients to generate a new challenge for each authorization request. The
@@ -887,13 +908,8 @@ export class OAuthProvider extends OAuthVerifier {
         }
       }
 
-      const deviceAccount = await this.accountManager.getDeviceAccount(
-        deviceId,
-        sub,
-        requestUri,
-      )
-
-      const { account, authorizedClients } = deviceAccount
+      const { account, authorizedClients } =
+        await this.accountManager.getAccount(sub)
 
       const clientData = authorizedClients.get(client.id)
       if (this.checkConsentRequired(parameters, clientData)) {
@@ -984,7 +1000,6 @@ export class OAuthProvider extends OAuthVerifier {
         client_id: tokenInfo.data.clientId,
         username: tokenInfo.account.preferred_username,
         token_type: tokenInfo.data.parameters.dpop_jkt ? 'DPoP' : 'Bearer',
-        authorization_details: tokenInfo.data.details ?? undefined,
 
         aud: tokenInfo.account.aud,
         exp: dateToEpoch(tokenInfo.data.expiresAt),

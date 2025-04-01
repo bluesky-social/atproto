@@ -62,7 +62,7 @@ export type OAuthHooks = {
    * This hook is called when a user attempts to sign up, after every validation
    * has passed (including hcaptcha).
    */
-  onSignupAttempt?: (data: {
+  onSignUpAttempt?: (data: {
     input: SignUpInput
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
@@ -77,6 +77,13 @@ export type OAuthHooks = {
   onSignedUp?: (data: {
     data: SignUpData
     account: Account
+    deviceId: DeviceId
+    deviceMetadata: RequestMetadata
+    requestId: RequestId | null
+  }) => Awaitable<void>
+
+  onSignInAttempt?: (data: {
+    data: SignInData
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
     requestId: RequestId | null

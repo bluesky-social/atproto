@@ -27,6 +27,6 @@ export type TokenData = {
   deviceId: DeviceId | null
   sub: Sub
   parameters: OAuthAuthorizationRequestParameters
-  details: OAuthAuthorizationDetails | null
+  details: null
   code: Code | null
 }
