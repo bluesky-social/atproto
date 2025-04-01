@@ -580,6 +580,35 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoAdminUpdateAccountSigningKey: {
+    lexicon: 1,
+    id: 'com.atproto.admin.updateAccountSigningKey',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          "Administrative action to update an account's signing key in their Did document.",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['did', 'signingKey'],
+            properties: {
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+              signingKey: {
+                type: 'string',
+                format: 'did',
+                description: 'Did-key formatted public key',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ComAtprotoAdminUpdateSubjectStatus: {
     lexicon: 1,
     id: 'com.atproto.admin.updateSubjectStatus',
@@ -10593,6 +10622,8 @@ export const schemaDict = {
           },
           reactions: {
             type: 'array',
+            description:
+              'Reactions to this message, in ascending order of creation time.',
             items: {
               type: 'ref',
               ref: 'lex:chat.bsky.convo.defs#reactionView',
@@ -10701,8 +10732,11 @@ export const schemaDict = {
             refs: [
               'lex:chat.bsky.convo.defs#messageView',
               'lex:chat.bsky.convo.defs#deletedMessageView',
-              'lex:chat.bsky.convo.defs#messageAndReactionView',
             ],
+          },
+          lastReaction: {
+            type: 'union',
+            refs: ['lex:chat.bsky.convo.defs#messageAndReactionView'],
           },
           muted: {
             type: 'boolean',
@@ -14799,6 +14833,8 @@ export const ids = {
   ComAtprotoAdminUpdateAccountHandle: 'com.atproto.admin.updateAccountHandle',
   ComAtprotoAdminUpdateAccountPassword:
     'com.atproto.admin.updateAccountPassword',
+  ComAtprotoAdminUpdateAccountSigningKey:
+    'com.atproto.admin.updateAccountSigningKey',
   ComAtprotoAdminUpdateSubjectStatus: 'com.atproto.admin.updateSubjectStatus',
   ComAtprotoIdentityDefs: 'com.atproto.identity.defs',
   ComAtprotoIdentityGetRecommendedDidCredentials:

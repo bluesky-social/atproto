@@ -3,6 +3,45 @@
 exports[`admin get multiple subjects with all relevant details gets multiple subjects with records 1`] = `
 Array [
   Object {
+    "profile": Object {
+      "$type": "app.bsky.actor.defs#profileViewDetailed",
+      "associated": Object {
+        "feedgens": 0,
+        "labeler": false,
+        "lists": 0,
+        "starterPacks": 0,
+      },
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "description": "its me!",
+      "did": "user(0)",
+      "displayName": "ali",
+      "followersCount": 2,
+      "followsCount": 3,
+      "handle": "alice.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [
+        Object {
+          "cid": "cids(1)",
+          "cts": "1970-01-01T00:00:00.000Z",
+          "src": "user(0)",
+          "uri": "record(0)",
+          "val": "self-label-a",
+        },
+        Object {
+          "cid": "cids(1)",
+          "cts": "1970-01-01T00:00:00.000Z",
+          "src": "user(0)",
+          "uri": "record(0)",
+          "val": "self-label-b",
+        },
+      ],
+      "postsCount": 4,
+      "viewer": Object {
+        "blockedBy": false,
+        "muted": false,
+      },
+    },
     "repo": Object {
       "did": "user(0)",
       "email": "alice@test.com",
@@ -144,10 +183,22 @@ Array [
     "type": "account",
   },
   Object {
-    "record": Object {
-      "blobCids": Array [],
-      "blobs": Array [],
-      "cid": "cids(1)",
+    "profile": Object {
+      "$type": "app.bsky.actor.defs#profileViewDetailed",
+      "associated": Object {
+        "feedgens": 0,
+        "labeler": false,
+        "lists": 0,
+        "starterPacks": 0,
+      },
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "description": "its me!",
+      "did": "user(0)",
+      "displayName": "ali",
+      "followersCount": 2,
+      "followsCount": 3,
+      "handle": "alice.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [
         Object {
@@ -155,6 +206,33 @@ Array [
           "cts": "1970-01-01T00:00:00.000Z",
           "src": "user(0)",
           "uri": "record(0)",
+          "val": "self-label-a",
+        },
+        Object {
+          "cid": "cids(1)",
+          "cts": "1970-01-01T00:00:00.000Z",
+          "src": "user(0)",
+          "uri": "record(0)",
+          "val": "self-label-b",
+        },
+      ],
+      "postsCount": 4,
+      "viewer": Object {
+        "blockedBy": false,
+        "muted": false,
+      },
+    },
+    "record": Object {
+      "blobCids": Array [],
+      "blobs": Array [],
+      "cid": "cids(2)",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [
+        Object {
+          "cid": "cids(2)",
+          "cts": "1970-01-01T00:00:00.000Z",
+          "src": "user(0)",
+          "uri": "record(1)",
           "val": "self-label",
         },
       ],
@@ -190,8 +268,8 @@ Array [
           "reviewState": "tools.ozone.moderation.defs#reviewOpen",
           "subject": Object {
             "$type": "com.atproto.repo.strongRef",
-            "cid": "cids(1)",
-            "uri": "record(0)",
+            "cid": "cids(2)",
+            "uri": "record(1)",
           },
           "subjectBlobCids": Array [],
           "subjectRepoHandle": "alice.test",
@@ -281,7 +359,7 @@ Array [
           },
         ],
       },
-      "uri": "record(0)",
+      "uri": "record(1)",
       "value": Object {
         "$type": "app.bsky.feed.post",
         "createdAt": "1970-01-01T00:00:00.000Z",
@@ -420,8 +498,8 @@ Array [
       "reviewState": "tools.ozone.moderation.defs#reviewOpen",
       "subject": Object {
         "$type": "com.atproto.repo.strongRef",
-        "cid": "cids(1)",
-        "uri": "record(0)",
+        "cid": "cids(2)",
+        "uri": "record(1)",
       },
       "subjectBlobCids": Array [],
       "subjectRepoHandle": "alice.test",
@@ -432,7 +510,7 @@ Array [
       "takendown": false,
       "updatedAt": "1970-01-01T00:00:00.000Z",
     },
-    "subject": "record(0)",
+    "subject": "record(1)",
     "type": "record",
   },
 ]

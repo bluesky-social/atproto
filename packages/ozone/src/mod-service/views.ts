@@ -714,7 +714,7 @@ export class ModerationViews {
     if (!auth) return profiles
 
     for (const actors of chunkArray(dids, 25)) {
-      const { data } = await this.appviewAgent.getProfiles({ actors })
+      const { data } = await this.appviewAgent.getProfiles({ actors }, auth)
 
       data.profiles.forEach((profile) => {
         profiles.set(profile.did, profile)
