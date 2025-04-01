@@ -9912,7 +9912,7 @@ export const schemaDict = {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:app.bsky.graph.defs#starterPackViewBasic',
+                  ref: 'lex:app.bsky.graph.defs#starterPackView',
                 },
               },
             },

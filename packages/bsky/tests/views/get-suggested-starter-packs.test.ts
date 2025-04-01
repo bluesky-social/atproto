@@ -9,7 +9,7 @@ import { OutputSchema } from '../../src/lexicon/types/app/bsky/unspecced/getSugg
 import {
   StarterPacks,
   Users,
-  trendsSeed,
+  starterPacksSeed,
 } from '../seed/get-suggested-starter-packs'
 
 describe('getSuggestedStarterPacks', () => {
@@ -34,7 +34,7 @@ describe('getSuggestedStarterPacks', () => {
     agent = network.bsky.getClient()
     sc = network.getSeedClient()
 
-    const result = await trendsSeed(sc)
+    const result = await starterPacksSeed(sc)
     users = result.users
     starterpacks = result.starterpacks
 
