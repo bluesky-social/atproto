@@ -1,14 +1,13 @@
+import assert from 'node:assert'
+import { once } from 'node:events'
+import { Server, createServer } from 'node:http'
+import { AddressInfo } from 'node:net'
+import express, { Application } from 'express'
 import AtpAgent from '@atproto/api'
 import { SeedClient, TestNetwork } from '@atproto/dev-env'
-import express, { Application } from 'express'
-import { createServer, Server } from 'node:http'
-import { once } from 'node:events'
-import { AddressInfo } from 'node:net'
-import assert from 'node:assert'
-
 import { ids } from '../../src/lexicon/lexicons'
-import { Users, trendsSeed } from '../seed/get-trends'
 import { OutputSchema } from '../../src/lexicon/types/app/bsky/unspecced/getTrendsSkeleton'
+import { Users, trendsSeed } from '../seed/get-trends'
 
 describe('getTrends', () => {
   let network: TestNetwork
