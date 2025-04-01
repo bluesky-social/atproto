@@ -203,6 +203,36 @@
         }
       }
     },
+    "subjectView": {
+      "description": "Detailed view of a subject. For record subjects, the author's repo and profile will be returned.",
+      "type": "object",
+      "required": ["type", "subject"],
+      "properties": {
+        "type": {
+          "type": "ref",
+          "ref": "com.atproto.moderation.defs#subjectType"
+        },
+        "subject": {
+          "type": "string"
+        },
+        "status": {
+          "type": "ref",
+          "ref": "#subjectStatusView"
+        },
+        "repo": {
+          "type": "ref",
+          "ref": "#repoViewDetail"
+        },
+        "profile": {
+          "type": "union",
+          "refs": []
+        },
+        "record": {
+          "type": "ref",
+          "ref": "#recordViewDetail"
+        }
+      }
+    },
     "accountStats": {
       "description": "Statistics about a particular account subject",
       "type": "object",

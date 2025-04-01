@@ -115,6 +115,12 @@ export const hcaptchaVerifyResultSchema = z.object({
 
 export type HcaptchaVerifyResult = z.infer<typeof hcaptchaVerifyResultSchema>
 
+export type HcaptchaClientTokens = {
+  hashedIp: string
+  hashedHandle: string
+  hashedUserAgent?: string
+}
+
 const fetchSuccessHandler = pipe(
   fetchOkProcessor(),
   fetchJsonProcessor(),
@@ -124,8 +130,8 @@ const fetchSuccessHandler = pipe(
 export class HCaptchaClient {
   protected readonly fetch: FetchBound
   constructor(
-    private readonly hostname: string,
-    private readonly config: HcaptchaConfig,
+    readonly hostname: string,
+    readonly config: HcaptchaConfig,
     fetch: Fetch = globalThis.fetch,
   ) {
     this.fetch = bindFetch(fetch)
@@ -135,10 +141,9 @@ export class HCaptchaClient {
     behaviorType: 'login' | 'signup',
     response: string,
     remoteip: string,
-    handle: string,
-    userAgent?: string,
+    clientTokens: HcaptchaClientTokens,
   ) {
-    const result = await this.fetch('https://api.hcaptcha.com/siteverify', {
+    return this.fetch('https://api.hcaptcha.com/siteverify', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -149,32 +154,59 @@ export class HCaptchaClient {
         behavior_type: behaviorType,
         response,
         remoteip,
-        client_tokens: JSON.stringify({
-          hashedIp: this.hashToken(remoteip),
-          hashedHandle: this.hashToken(handle),
-          hashedUserAgent: userAgent ? this.hashToken(userAgent) : undefined,
-        }),
+        client_tokens: JSON.stringify(clientTokens),
       }).toString(),
     }).then(fetchSuccessHandler)
+  }
 
-    return {
-      allowed: this.isAllowed(result),
-      result,
+  public checkVerifyResult(
+    result: HcaptchaVerifyResult,
+    tokens: HcaptchaClientTokens,
+  ): void {
+    const { success, score } = result
+
+    if (success !== true) {
+      throw new HCaptchaVerifyError(
+        result,
+        tokens,
+        'Expected success to be true',
+      )
+    }
+
+    // https://docs.hcaptcha.com/#verify-the-user-response-server-side
+
+    // Please [...] note that the hostname field is derived from the user's
+    // browser, and should not be used for authentication of any kind; it is
+    // primarily useful as a statistical metric. Additionally, in the event that
+    // your site experiences unusually high challenge traffic, the hostname
+    // field may be returned as "not-provided" rather than the usual value; all
+    // other fields will return their normal values.
+
+    if (
+      // Ignore if enterprise feature is not enabled
+      score != null &&
+      // Ignore if disabled through config
+      this.config.scoreThreshold != null &&
+      score >= this.config.scoreThreshold
+    ) {
+      throw new HCaptchaVerifyError(
+        result,
+        tokens,
+        `Score ${score} is above the threshold ${this.config.scoreThreshold}`,
+      )
     }
   }
 
-  protected isAllowed({ success, hostname, score }: HcaptchaVerifyResult) {
-    return (
-      success &&
-      // Fool-proofing: If this is false, the user is trying to use a token
-      // generated for the same siteKey, but on another domain.
-      hostname === this.hostname &&
-      // Ignore if enterprise feature is not enabled
-      (score == null ||
-        // Ignore if disabled through config
-        this.config.scoreThreshold == null ||
-        score < this.config.scoreThreshold)
-    )
+  public buildClientTokens(
+    remoteip: string,
+    handle: string,
+    userAgent?: string,
+  ): HcaptchaClientTokens {
+    return {
+      hashedIp: this.hashToken(remoteip),
+      hashedHandle: this.hashToken(handle),
+      hashedUserAgent: userAgent ? this.hashToken(userAgent) : undefined,
+    }
   }
 
   protected hashToken(value: string) {
@@ -182,5 +214,15 @@ export class HCaptchaClient {
     hash.update(this.config.tokenSalt)
     hash.update(value)
     return hash.digest().toString('base64')
+  }
+}
+
+export class HCaptchaVerifyError extends Error {
+  constructor(
+    readonly result: HcaptchaVerifyResult,
+    readonly tokens: HcaptchaClientTokens,
+    message?: string,
+  ) {
+    super(message)
   }
 }

@@ -1,5 +1,54 @@
 # @atproto/pds
 
+## 0.4.117
+
+### Patch Changes
+
+- [#3695](https://github.com/bluesky-social/atproto/pull/3695) [`652894308`](https://github.com/bluesky-social/atproto/commit/65289430806976ec13177ed9c9f0e883e8f9330c) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Fix last reaction lexicon
+
+- Updated dependencies [[`652894308`](https://github.com/bluesky-social/atproto/commit/65289430806976ec13177ed9c9f0e883e8f9330c)]:
+  - @atproto/api@0.14.16
+
+## 0.4.116
+
+### Patch Changes
+
+- Updated dependencies [[`9b28184cb`](https://github.com/bluesky-social/atproto/commit/9b28184cb9c417173f46cfb5824dc197dec3e069), [`b4ab5011b`](https://github.com/bluesky-social/atproto/commit/b4ab5011bcc64f9f05122a8773806af8e0c13146), [`9b28184cb`](https://github.com/bluesky-social/atproto/commit/9b28184cb9c417173f46cfb5824dc197dec3e069)]:
+  - @atproto/oauth-provider@0.6.4
+  - @atproto/api@0.14.15
+
+## 0.4.115
+
+### Patch Changes
+
+- Updated dependencies [[`98d8a677c`](https://github.com/bluesky-social/atproto/commit/98d8a677ca4671137727d14567c8354c48c9e850), [`98d8a677c`](https://github.com/bluesky-social/atproto/commit/98d8a677ca4671137727d14567c8354c48c9e850)]:
+  - @atproto/oauth-provider@0.6.3
+
+## 0.4.114
+
+### Patch Changes
+
+- [#3685](https://github.com/bluesky-social/atproto/pull/3685) [`9a05892f6`](https://github.com/bluesky-social/atproto/commit/9a05892f6fd405bf6bb96c9c8d2a9a89d5e94bc5) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Update chat reaction lexicon
+
+- Updated dependencies [[`9a05892f6`](https://github.com/bluesky-social/atproto/commit/9a05892f6fd405bf6bb96c9c8d2a9a89d5e94bc5)]:
+  - @atproto/api@0.14.14
+
+## 0.4.113
+
+### Patch Changes
+
+- Updated dependencies [[`a5a760c1f`](https://github.com/bluesky-social/atproto/commit/a5a760c1f0efd7246c9eebbc0f482d2f505de0a1)]:
+  - @atproto/oauth-provider@0.6.2
+
+## 0.4.112
+
+### Patch Changes
+
+- [#3651](https://github.com/bluesky-social/atproto/pull/3651) [`076c2f987`](https://github.com/bluesky-social/atproto/commit/076c2f9872387217806624306e3af08878d1adcd) Thanks [@foysalit](https://github.com/foysalit)! - Add getSubjects endpoint to ozone for fetching detailed view of multiple subjects
+
+- Updated dependencies [[`076c2f987`](https://github.com/bluesky-social/atproto/commit/076c2f9872387217806624306e3af08878d1adcd)]:
+  - @atproto/api@0.14.13
+
 ## 0.4.111
 
 ### Patch Changes

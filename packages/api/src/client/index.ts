@@ -23,6 +23,7 @@ import * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail.j
 import * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail.js'
 import * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle.js'
 import * as ComAtprotoAdminUpdateAccountPassword from './types/com/atproto/admin/updateAccountPassword.js'
+import * as ComAtprotoAdminUpdateAccountSigningKey from './types/com/atproto/admin/updateAccountSigningKey.js'
 import * as ComAtprotoAdminUpdateSubjectStatus from './types/com/atproto/admin/updateSubjectStatus.js'
 import * as ComAtprotoIdentityDefs from './types/com/atproto/identity/defs.js'
 import * as ComAtprotoIdentityGetRecommendedDidCredentials from './types/com/atproto/identity/getRecommendedDidCredentials.js'
@@ -228,6 +229,7 @@ import * as ToolsOzoneModerationGetRecords from './types/tools/ozone/moderation/
 import * as ToolsOzoneModerationGetRepo from './types/tools/ozone/moderation/getRepo.js'
 import * as ToolsOzoneModerationGetReporterStats from './types/tools/ozone/moderation/getReporterStats.js'
 import * as ToolsOzoneModerationGetRepos from './types/tools/ozone/moderation/getRepos.js'
+import * as ToolsOzoneModerationGetSubjects from './types/tools/ozone/moderation/getSubjects.js'
 import * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents.js'
 import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses.js'
 import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos.js'
@@ -267,6 +269,7 @@ export * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail.j
 export * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail.js'
 export * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle.js'
 export * as ComAtprotoAdminUpdateAccountPassword from './types/com/atproto/admin/updateAccountPassword.js'
+export * as ComAtprotoAdminUpdateAccountSigningKey from './types/com/atproto/admin/updateAccountSigningKey.js'
 export * as ComAtprotoAdminUpdateSubjectStatus from './types/com/atproto/admin/updateSubjectStatus.js'
 export * as ComAtprotoIdentityDefs from './types/com/atproto/identity/defs.js'
 export * as ComAtprotoIdentityGetRecommendedDidCredentials from './types/com/atproto/identity/getRecommendedDidCredentials.js'
@@ -472,6 +475,7 @@ export * as ToolsOzoneModerationGetRecords from './types/tools/ozone/moderation/
 export * as ToolsOzoneModerationGetRepo from './types/tools/ozone/moderation/getRepo.js'
 export * as ToolsOzoneModerationGetReporterStats from './types/tools/ozone/moderation/getReporterStats.js'
 export * as ToolsOzoneModerationGetRepos from './types/tools/ozone/moderation/getRepos.js'
+export * as ToolsOzoneModerationGetSubjects from './types/tools/ozone/moderation/getSubjects.js'
 export * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents.js'
 export * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses.js'
 export * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos.js'
@@ -752,6 +756,18 @@ export class ComAtprotoAdminNS {
   ): Promise<ComAtprotoAdminUpdateAccountPassword.Response> {
     return this._client.call(
       'com.atproto.admin.updateAccountPassword',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
+  updateAccountSigningKey(
+    data?: ComAtprotoAdminUpdateAccountSigningKey.InputSchema,
+    opts?: ComAtprotoAdminUpdateAccountSigningKey.CallOptions,
+  ): Promise<ComAtprotoAdminUpdateAccountSigningKey.Response> {
+    return this._client.call(
+      'com.atproto.admin.updateAccountSigningKey',
       opts?.qp,
       data,
       opts,
@@ -3924,6 +3940,18 @@ export class ToolsOzoneModerationNS {
   ): Promise<ToolsOzoneModerationGetRepos.Response> {
     return this._client.call(
       'tools.ozone.moderation.getRepos',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getSubjects(
+    params?: ToolsOzoneModerationGetSubjects.QueryParams,
+    opts?: ToolsOzoneModerationGetSubjects.CallOptions,
+  ): Promise<ToolsOzoneModerationGetSubjects.Response> {
+    return this._client.call(
+      'tools.ozone.moderation.getSubjects',
       params,
       undefined,
       opts,
