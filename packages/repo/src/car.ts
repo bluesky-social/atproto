@@ -4,11 +4,11 @@ import * as ui8 from 'uint8arrays'
 import * as varint from 'varint'
 import {
   check,
+  parseCidFromBytes,
   schema,
   streamToBuffer,
   verifyCidForBytes,
 } from '@atproto/common'
-import { parseCidFromBytes } from '@atproto/common/src'
 import { BlockMap } from './block-map'
 import { CarBlock } from './types'
 
