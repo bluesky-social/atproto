@@ -71,6 +71,13 @@ export function sendAuthorizePageFactory(customization: Customization) {
     AUTHORIZATION_PAGE_CSP,
     customization?.hcaptcha ? HCAPTCHA_CSP : undefined,
   )
+  // Because we are loading avatar images from external sources, that might
+  // not have CORP headers set, we need to use at least "credentialless".
+  const coep = customization?.hcaptcha
+    ? // https://github.com/hCaptcha/react-hcaptcha/issues/259
+      // @TODO Remove the use of `unsafeNone` once the issue above is resolved
+      CrossOriginEmbedderPolicy.unsafeNone
+    : CrossOriginEmbedderPolicy.credentialless
 
   return function sendAuthorizePage(
     req: IncomingMessage,
@@ -83,44 +90,28 @@ export function sendAuthorizePageFactory(customization: Customization) {
 
     setupCsrfToken(res, data.authorize.uri)
 
+    // Matches the variables in "authorization-page.tsx"
+    const hydrationData: {
+      __availableLocales: AvailableLocales
+      __customizationData: CustomizationData
+      __csrfCookieName: string
+      __authorizeData: AuthorizeData
+    } = {
+      __availableLocales: AVAILABLE_LOCALES,
+      __customizationData: customizationData,
+      __csrfCookieName: csrfCookieName(data.authorize.uri),
+      __authorizeData: buildAuthorizeData(data),
+    }
+
     return sendWebPage(res, {
-      meta: [
-        { name: 'robots', content: 'noindex' },
-        // @TODO Localize the description
-        { name: 'description', content: 'ATProto OAuth authorization page' },
-      ],
+      meta: [{ name: 'robots', content: 'noindex' }],
       links: buildLinks(locale),
       htmlAttrs: { lang: locale },
       body: html`<div id="root"></div>`,
       csp,
-      // Because we are loading avatar images from external sources, that might
-      // not have CORP headers set, we need to use at least "credentialless".
-      coep: customization?.hcaptcha
-        ? // https://github.com/hCaptcha/react-hcaptcha/issues/259
-          // @TODO Remove the use of `unsafeNone` once the issue above is resolved
-          CrossOriginEmbedderPolicy.unsafeNone
-        : CrossOriginEmbedderPolicy.credentialless,
-      scripts: [
-        declareBackendData<{
-          // Matches the variables in "authorization-page.tsx"
-          __availableLocales: AvailableLocales
-          __customizationData: CustomizationData
-          __csrfCookieName: string
-          __authorizeData: AuthorizeData
-        }>({
-          __availableLocales: AVAILABLE_LOCALES,
-          __customizationData: customizationData,
-          __csrfCookieName: csrfCookieName(data.authorize.uri),
-          __authorizeData: buildAuthorizeData(data),
-        }),
-        // After data
-        ...scripts,
-      ],
-      styles: [
-        ...styles,
-        // Last (to be able to override the default styles)
-        customizationCss,
-      ],
+      coep,
+      scripts: [declareBackendData(hydrationData), ...scripts],
+      styles: [...styles, customizationCss],
     })
   }
 }
