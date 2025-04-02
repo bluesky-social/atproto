@@ -9105,6 +9105,50 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyGraphVouch: {
+    lexicon: 1,
+    id: 'app.bsky.graph.vouch',
+    defs: {
+      main: {
+        type: 'record',
+        description:
+          "Record declaring a 'vouch' relationship of another account. Duplicate follows will be ignored by the AppView.",
+        key: 'tid',
+        record: {
+          type: 'object',
+          required: ['subject', 'handle', 'displayName', 'createdAt'],
+          properties: {
+            subject: {
+              description: 'DID of the subject the vouch applies to.',
+              type: 'string',
+              format: 'did',
+            },
+            handle: {
+              description:
+                'Handle of the subject the vouch applies to at the moment of vouching, which might not be the same at the time of viewing. The decision on how to handle this is delegated to the application.',
+              type: 'string',
+              format: 'handle',
+            },
+            displayName: {
+              description:
+                'Display name of the subject the vouch applies to at the moment of vouching, which might not be the same at the time of viewing. The decision on how to handle this is delegated to the application.',
+              type: 'string',
+            },
+            createdAt: {
+              description: 'Date of when the vouch was created.',
+              type: 'string',
+              format: 'datetime',
+            },
+            expiresAt: {
+              description: 'Optional date of when the vouch should expire.',
+              type: 'string',
+              format: 'datetime',
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyLabelerDefs: {
     lexicon: 1,
     id: 'app.bsky.labeler.defs',
@@ -12113,6 +12157,7 @@ export const ids = {
   AppBskyGraphUnmuteActor: 'app.bsky.graph.unmuteActor',
   AppBskyGraphUnmuteActorList: 'app.bsky.graph.unmuteActorList',
   AppBskyGraphUnmuteThread: 'app.bsky.graph.unmuteThread',
+  AppBskyGraphVouch: 'app.bsky.graph.vouch',
   AppBskyLabelerDefs: 'app.bsky.labeler.defs',
   AppBskyLabelerGetServices: 'app.bsky.labeler.getServices',
   AppBskyLabelerService: 'app.bsky.labeler.service',
