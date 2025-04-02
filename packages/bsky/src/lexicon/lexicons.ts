@@ -9884,6 +9884,87 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyUnspeccedGetSuggestedFeeds: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.getSuggestedFeeds',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get a list of suggested feeds',
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 25,
+              default: 10,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['feeds'],
+            properties: {
+              feeds: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.feed.defs#generatorView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyUnspeccedGetSuggestedFeedsSkeleton: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.getSuggestedFeedsSkeleton',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get a skeleton of suggested feeds. Intended to be called and hydrated by app.bsky.unspecced.getSuggestedFeeds',
+        parameters: {
+          type: 'params',
+          properties: {
+            viewer: {
+              type: 'string',
+              format: 'did',
+              description:
+                'DID of the account making the request (not included for public/unauthenticated queries).',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 25,
+              default: 10,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['feeds'],
+            properties: {
+              feeds: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                  format: 'at-uri',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyUnspeccedGetSuggestedStarterPacks: {
     lexicon: 1,
     id: 'app.bsky.unspecced.getSuggestedStarterPacks',
@@ -12127,6 +12208,9 @@ export const ids = {
   AppBskyUnspeccedGetConfig: 'app.bsky.unspecced.getConfig',
   AppBskyUnspeccedGetPopularFeedGenerators:
     'app.bsky.unspecced.getPopularFeedGenerators',
+  AppBskyUnspeccedGetSuggestedFeeds: 'app.bsky.unspecced.getSuggestedFeeds',
+  AppBskyUnspeccedGetSuggestedFeedsSkeleton:
+    'app.bsky.unspecced.getSuggestedFeedsSkeleton',
   AppBskyUnspeccedGetSuggestedStarterPacks:
     'app.bsky.unspecced.getSuggestedStarterPacks',
   AppBskyUnspeccedGetSuggestedStarterPacksSkeleton:
