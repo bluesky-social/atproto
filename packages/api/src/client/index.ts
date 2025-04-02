@@ -177,9 +177,13 @@ import * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet.js'
 import * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs.js'
 import * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig.js'
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators.js'
+import * as AppBskyUnspeccedGetSuggestedStarterPacks from './types/app/bsky/unspecced/getSuggestedStarterPacks.js'
+import * as AppBskyUnspeccedGetSuggestedStarterPacksSkeleton from './types/app/bsky/unspecced/getSuggestedStarterPacksSkeleton.js'
 import * as AppBskyUnspeccedGetSuggestionsSkeleton from './types/app/bsky/unspecced/getSuggestionsSkeleton.js'
 import * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions.js'
 import * as AppBskyUnspeccedGetTrendingTopics from './types/app/bsky/unspecced/getTrendingTopics.js'
+import * as AppBskyUnspeccedGetTrends from './types/app/bsky/unspecced/getTrends.js'
+import * as AppBskyUnspeccedGetTrendsSkeleton from './types/app/bsky/unspecced/getTrendsSkeleton.js'
 import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton.js'
 import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton.js'
 import * as AppBskyUnspeccedSearchStarterPacksSkeleton from './types/app/bsky/unspecced/searchStarterPacksSkeleton.js'
@@ -419,9 +423,13 @@ export * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet.js'
 export * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs.js'
 export * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig.js'
 export * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators.js'
+export * as AppBskyUnspeccedGetSuggestedStarterPacks from './types/app/bsky/unspecced/getSuggestedStarterPacks.js'
+export * as AppBskyUnspeccedGetSuggestedStarterPacksSkeleton from './types/app/bsky/unspecced/getSuggestedStarterPacksSkeleton.js'
 export * as AppBskyUnspeccedGetSuggestionsSkeleton from './types/app/bsky/unspecced/getSuggestionsSkeleton.js'
 export * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions.js'
 export * as AppBskyUnspeccedGetTrendingTopics from './types/app/bsky/unspecced/getTrendingTopics.js'
+export * as AppBskyUnspeccedGetTrends from './types/app/bsky/unspecced/getTrends.js'
+export * as AppBskyUnspeccedGetTrendsSkeleton from './types/app/bsky/unspecced/getTrendsSkeleton.js'
 export * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton.js'
 export * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton.js'
 export * as AppBskyUnspeccedSearchStarterPacksSkeleton from './types/app/bsky/unspecced/searchStarterPacksSkeleton.js'
@@ -3240,6 +3248,30 @@ export class AppBskyUnspeccedNS {
     )
   }
 
+  getSuggestedStarterPacks(
+    params?: AppBskyUnspeccedGetSuggestedStarterPacks.QueryParams,
+    opts?: AppBskyUnspeccedGetSuggestedStarterPacks.CallOptions,
+  ): Promise<AppBskyUnspeccedGetSuggestedStarterPacks.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getSuggestedStarterPacks',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getSuggestedStarterPacksSkeleton(
+    params?: AppBskyUnspeccedGetSuggestedStarterPacksSkeleton.QueryParams,
+    opts?: AppBskyUnspeccedGetSuggestedStarterPacksSkeleton.CallOptions,
+  ): Promise<AppBskyUnspeccedGetSuggestedStarterPacksSkeleton.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getSuggestedStarterPacksSkeleton',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
   getSuggestionsSkeleton(
     params?: AppBskyUnspeccedGetSuggestionsSkeleton.QueryParams,
     opts?: AppBskyUnspeccedGetSuggestionsSkeleton.CallOptions,
@@ -3270,6 +3302,30 @@ export class AppBskyUnspeccedNS {
   ): Promise<AppBskyUnspeccedGetTrendingTopics.Response> {
     return this._client.call(
       'app.bsky.unspecced.getTrendingTopics',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getTrends(
+    params?: AppBskyUnspeccedGetTrends.QueryParams,
+    opts?: AppBskyUnspeccedGetTrends.CallOptions,
+  ): Promise<AppBskyUnspeccedGetTrends.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getTrends',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getTrendsSkeleton(
+    params?: AppBskyUnspeccedGetTrendsSkeleton.QueryParams,
+    opts?: AppBskyUnspeccedGetTrendsSkeleton.CallOptions,
+  ): Promise<AppBskyUnspeccedGetTrendsSkeleton.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getTrendsSkeleton',
       params,
       undefined,
       opts,
