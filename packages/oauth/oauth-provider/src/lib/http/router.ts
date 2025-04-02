@@ -26,6 +26,13 @@ export type RouterMiddleware<
   Res = ServerResponse,
 > = Middleware<RouterCtx<T>, Req, Res>
 
+export type RouterConfig = {
+  /** Used to build the origin of the {@link RouterCtx['url']} context property */
+  protocol?: string
+  /** Used to build the origin of the {@link RouterCtx['url']} context property */
+  host?: string
+}
+
 export class Router<
   T extends object | void = void,
   Req extends IncomingMessage = IncomingMessage,
@@ -33,14 +40,7 @@ export class Router<
 > {
   private readonly middlewares: RouterMiddleware<T, Req, Res>[] = []
 
-  constructor(
-    private readonly url?: {
-      /** Used to build the origin of the {@link RouterCtx['url']} context property */
-      protocol?: string
-      /** Used to build the origin of the {@link RouterCtx['url']} context property */
-      host?: string
-    },
-  ) {}
+  constructor(private readonly config?: RouterConfig) {}
 
   use(...middlewares: RouterMiddleware<T, Req, Res>[]) {
     this.middlewares.push(...middlewares)
@@ -87,7 +87,7 @@ export class Router<
    * @returns router middleware which dispatches a route matching the request.
    */
   buildMiddleware(): Middleware<T, Req, Res> {
-    const routerUrl = this.url
+    const { config } = this
 
     // Calling next('router') from a middleware will skip all the remaining
     // middlewares in the stack.
@@ -100,25 +100,33 @@ export class Router<
       // method to match routes based on the pathname and will allow routes to
       // access the query params (through this.url.searchParams).
 
-      if (!routerUrl && isRouterCtx(this)) {
+      if (!config && isRouterCtx(this)) {
         // If the context already contains a "url" (router inside router), let's
         // use it.
         middleware.call(this, req, res, next)
       } else {
         // Parse the URL using node's URL parser.
-        try {
-          const protocol = routerUrl?.protocol || 'https:'
-          const host = req.headers.host || routerUrl?.host || 'localhost'
-          const pathname = req.url || '/'
-          const url = new URL(pathname, `${protocol}//${host}`)
-          const context = subCtx(this, { url })
-          middleware.call(context, req, res, next)
-        } catch (cause) {
-          const error =
-            cause instanceof Error ? cause : new Error('Invalid URL', { cause })
-          return next(Object.assign(error, { status: 400, statusCode: 400 }))
-        }
+        const url = extractUrl(req, config)
+        if (url instanceof Error) return next(url)
+
+        // Any error thrown here will be uncaught/unhandled (a middleware should
+        // never throw)
+        const context = subCtx(this, { url })
+        middleware.call(context, req, res, next)
       }
     }
+  }
+}
+
+function extractUrl(req: IncomingMessage, config?: RouterConfig): URL | Error {
+  try {
+    const protocol = config?.protocol || 'https:'
+    const host = config?.host || req.headers.host || 'localhost'
+    const pathname = req.url || '/'
+    return new URL(pathname, `${protocol}//${host}`)
+  } catch (cause) {
+    const error =
+      cause instanceof Error ? cause : new Error('Invalid URL', { cause })
+    return Object.assign(error, { status: 400, statusCode: 400 })
   }
 }
