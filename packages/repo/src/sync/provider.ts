@@ -13,12 +13,13 @@ import * as util from '../util'
 export const getFullRepo = (
   storage: RepoStorage,
   commitCid: CID,
+  opts?: { includeLeaves?: boolean },
 ): AsyncIterable<Uint8Array> => {
   return util.writeCar(commitCid, async (car: BlockWriter) => {
     const commit = await storage.readObjAndBytes(commitCid, def.commit)
     await car.put({ cid: commitCid, bytes: commit.bytes })
     const mst = MST.load(storage, commit.obj.data)
-    await mst.writeToCarStream(car)
+    await mst.writeToCarStream(car, opts)
   })
 }
 
