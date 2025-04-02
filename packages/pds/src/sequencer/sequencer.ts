@@ -33,7 +33,7 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
   triesWithNoResults = 0
 
   constructor(
-    dbLocation: string,
+    public dbLocation: string,
     public crawlers: Crawlers,
     public lastSeen = 0,
     disableWalAutoCheckpoint = false,
@@ -126,45 +126,7 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
       return []
     }
 
-    const seqEvts: SeqEvt[] = []
-    for (const row of rows) {
-      // should never hit this because of WHERE clause
-      if (row.seq === null) {
-        continue
-      }
-      const evt = cborDecode(row.event)
-      if (row.eventType === 'append') {
-        seqEvts.push({
-          type: 'commit',
-          seq: row.seq,
-          time: row.sequencedAt,
-          evt: evt as CommitEvt,
-        })
-      } else if (row.eventType === 'sync') {
-        seqEvts.push({
-          type: 'sync',
-          seq: row.seq,
-          time: row.sequencedAt,
-          evt: evt as SyncEvt,
-        })
-      } else if (row.eventType === 'identity') {
-        seqEvts.push({
-          type: 'identity',
-          seq: row.seq,
-          time: row.sequencedAt,
-          evt: evt as IdentityEvt,
-        })
-      } else if (row.eventType === 'account') {
-        seqEvts.push({
-          type: 'account',
-          seq: row.seq,
-          time: row.sequencedAt,
-          evt: evt as AccountEvt,
-        })
-      }
-    }
-
-    return seqEvts
+    return parseRepoSeqRows(rows)
   }
 
   private async pollDb(): Promise<void> {
@@ -241,6 +203,47 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
         ),
     )
   }
+}
+
+export const parseRepoSeqRows = (rows: RepoSeqEntry[]): SeqEvt[] => {
+  const seqEvts: SeqEvt[] = []
+  for (const row of rows) {
+    // should never hit this because of WHERE clause
+    if (row.seq === null) {
+      continue
+    }
+    const evt = cborDecode(row.event)
+    if (row.eventType === 'append') {
+      seqEvts.push({
+        type: 'commit',
+        seq: row.seq,
+        time: row.sequencedAt,
+        evt: evt as CommitEvt,
+      })
+    } else if (row.eventType === 'sync') {
+      seqEvts.push({
+        type: 'sync',
+        seq: row.seq,
+        time: row.sequencedAt,
+        evt: evt as SyncEvt,
+      })
+    } else if (row.eventType === 'identity') {
+      seqEvts.push({
+        type: 'identity',
+        seq: row.seq,
+        time: row.sequencedAt,
+        evt: evt as IdentityEvt,
+      })
+    } else if (row.eventType === 'account') {
+      seqEvts.push({
+        type: 'account',
+        seq: row.seq,
+        time: row.sequencedAt,
+        evt: evt as AccountEvt,
+      })
+    }
+  }
+  return seqEvts
 }
 
 type SeqRow = RepoSeqEntry

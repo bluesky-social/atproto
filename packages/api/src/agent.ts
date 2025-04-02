@@ -1,7 +1,12 @@
 import AwaitLock from 'await-lock'
 import { TID, retry } from '@atproto/common-web'
 import { AtUri, ensureValidDid } from '@atproto/syntax'
-import { FetchHandler, XrpcClient, buildFetchHandler } from '@atproto/xrpc'
+import {
+  FetchHandler,
+  FetchHandlerOptions,
+  XrpcClient,
+  buildFetchHandler,
+} from '@atproto/xrpc'
 import {
   AppBskyActorDefs,
   AppBskyActorProfile,
@@ -100,14 +105,14 @@ export class Agent extends XrpcClient {
 
   readonly sessionManager: SessionManager
 
-  constructor(options: string | URL | SessionManager) {
+  constructor(options: SessionManager | FetchHandler | FetchHandlerOptions) {
     const sessionManager: SessionManager =
-      typeof options === 'string' || options instanceof URL
-        ? {
+      typeof options === 'object' && 'fetchHandler' in options
+        ? options
+        : {
             did: undefined,
             fetchHandler: buildFetchHandler(options),
           }
-        : options
 
     super((url, init) => {
       const headers = new Headers(init?.headers)

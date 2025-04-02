@@ -33,7 +33,12 @@ export default function (server: Server, ctx: AppContext) {
           : req.headers['x-bsky-topics'],
       })
       const { ...result } = await getTrends(
-        { ...params, hydrateCtx: hydrateCtx.copy({ viewer }), headers },
+        {
+          ...params,
+          viewer: viewer ?? undefined,
+          hydrateCtx: hydrateCtx.copy({ viewer }),
+          headers,
+        },
         ctx,
       )
       return {
@@ -84,10 +89,7 @@ const hydration = async (
     pairs.set(params.viewer, dids)
   }
   const [starterPacksState, bidirectionalBlocks] = await Promise.all([
-    ctx.hydrator.hydrateStarterPacksBasic(
-      skeleton.starterPacks,
-      params.hydrateCtx,
-    ),
+    ctx.hydrator.hydrateStarterPacks(skeleton.starterPacks, params.hydrateCtx),
     ctx.hydrator.hydrateBidirectionalBlocks(pairs),
   ])
 
@@ -124,7 +126,7 @@ const presentation = (
 
   return {
     starterPacks: mapDefined(skeleton.starterPacks, (uri) =>
-      ctx.views.starterPackBasic(uri, hydration),
+      ctx.views.starterPack(uri, hydration),
     ),
   }
 }

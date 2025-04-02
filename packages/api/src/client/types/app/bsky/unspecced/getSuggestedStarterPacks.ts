@@ -17,15 +17,13 @@ const is$typed = _is$typed,
 const id = 'app.bsky.unspecced.getSuggestedStarterPacks'
 
 export interface QueryParams {
-  /** DID of the account making the request (not included for public/unauthenticated queries). */
-  viewer?: string
   limit?: number
 }
 
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  starterPacks: AppBskyGraphDefs.StarterPackViewBasic[]
+  starterPacks: AppBskyGraphDefs.StarterPackView[]
 }
 
 export interface CallOptions {

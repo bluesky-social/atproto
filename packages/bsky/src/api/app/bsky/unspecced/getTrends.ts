@@ -34,7 +34,12 @@ export default function (server: Server, ctx: AppContext) {
           : req.headers['x-bsky-topics'],
       })
       const { ...result } = await getTrends(
-        { ...params, hydrateCtx: hydrateCtx.copy({ viewer }), headers },
+        {
+          ...params,
+          viewer: viewer ?? undefined,
+          hydrateCtx: hydrateCtx.copy({ viewer }),
+          headers,
+        },
         ctx,
       )
       return {

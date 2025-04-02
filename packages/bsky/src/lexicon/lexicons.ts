@@ -580,6 +580,35 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoAdminUpdateAccountSigningKey: {
+    lexicon: 1,
+    id: 'com.atproto.admin.updateAccountSigningKey',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          "Administrative action to update an account's signing key in their Did document.",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['did', 'signingKey'],
+            properties: {
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+              signingKey: {
+                type: 'string',
+                format: 'did',
+                description: 'Did-key formatted public key',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ComAtprotoAdminUpdateSubjectStatus: {
     lexicon: 1,
     id: 'com.atproto.admin.updateSubjectStatus',
@@ -9865,12 +9894,6 @@ export const schemaDict = {
         parameters: {
           type: 'params',
           properties: {
-            viewer: {
-              type: 'string',
-              format: 'did',
-              description:
-                'DID of the account making the request (not included for public/unauthenticated queries).',
-            },
             limit: {
               type: 'integer',
               minimum: 1,
@@ -9905,7 +9928,7 @@ export const schemaDict = {
       main: {
         type: 'query',
         description:
-          'Get a skeleton of suggested feeds. Intended to be called and then hydrated through app.bsky.unspecced.getSuggestedStarterpacks',
+          'Get a skeleton of suggested feeds. Intended to be called and hydrated by app.bsky.unspecced.getSuggestedFeeds',
         parameters: {
           type: 'params',
           properties: {
@@ -9952,12 +9975,6 @@ export const schemaDict = {
         parameters: {
           type: 'params',
           properties: {
-            viewer: {
-              type: 'string',
-              format: 'did',
-              description:
-                'DID of the account making the request (not included for public/unauthenticated queries).',
-            },
             limit: {
               type: 'integer',
               minimum: 1,
@@ -9976,7 +9993,7 @@ export const schemaDict = {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:app.bsky.graph.defs#starterPackViewBasic',
+                  ref: 'lex:app.bsky.graph.defs#starterPackView',
                 },
               },
             },
@@ -9992,7 +10009,7 @@ export const schemaDict = {
       main: {
         type: 'query',
         description:
-          'Get a skeleton of suggested starterpacks. Intended to be called and then hydrated through app.bsky.unspecced.getSuggestedStarterpacks',
+          'Get a skeleton of suggested starterpacks. Intended to be called and hydrated by app.bsky.unspecced.getSuggestedStarterpacks',
         parameters: {
           type: 'params',
           properties: {
@@ -10204,12 +10221,6 @@ export const schemaDict = {
         parameters: {
           type: 'params',
           properties: {
-            viewer: {
-              type: 'string',
-              format: 'did',
-              description:
-                'DID of the account making the request (not included for public/unauthenticated queries).',
-            },
             limit: {
               type: 'integer',
               minimum: 1,
@@ -10940,6 +10951,8 @@ export const schemaDict = {
           },
           reactions: {
             type: 'array',
+            description:
+              'Reactions to this message, in ascending order of creation time.',
             items: {
               type: 'ref',
               ref: 'lex:chat.bsky.convo.defs#reactionView',
@@ -11048,8 +11061,11 @@ export const schemaDict = {
             refs: [
               'lex:chat.bsky.convo.defs#messageView',
               'lex:chat.bsky.convo.defs#deletedMessageView',
-              'lex:chat.bsky.convo.defs#messageAndReactionView',
             ],
+          },
+          lastReaction: {
+            type: 'union',
+            refs: ['lex:chat.bsky.convo.defs#messageAndReactionView'],
           },
           muted: {
             type: 'boolean',
@@ -12026,6 +12042,8 @@ export const ids = {
   ComAtprotoAdminUpdateAccountHandle: 'com.atproto.admin.updateAccountHandle',
   ComAtprotoAdminUpdateAccountPassword:
     'com.atproto.admin.updateAccountPassword',
+  ComAtprotoAdminUpdateAccountSigningKey:
+    'com.atproto.admin.updateAccountSigningKey',
   ComAtprotoAdminUpdateSubjectStatus: 'com.atproto.admin.updateSubjectStatus',
   ComAtprotoIdentityDefs: 'com.atproto.identity.defs',
   ComAtprotoIdentityGetRecommendedDidCredentials:

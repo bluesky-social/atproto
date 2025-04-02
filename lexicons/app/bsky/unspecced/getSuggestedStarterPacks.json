@@ -8,11 +8,6 @@
       "parameters": {
         "type": "params",
         "properties": {
-          "viewer": {
-            "type": "string",
-            "format": "did",
-            "description": "DID of the account making the request (not included for public/unauthenticated queries)."
-          },
           "limit": {
             "type": "integer",
             "minimum": 1,
@@ -31,7 +26,7 @@
               "type": "array",
               "items": {
                 "type": "ref",
-                "ref": "app.bsky.graph.defs#starterPackViewBasic"
+                "ref": "app.bsky.graph.defs#starterPackView"
               }
             }
           }

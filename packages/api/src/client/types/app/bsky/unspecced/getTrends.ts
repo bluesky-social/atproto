@@ -17,8 +17,6 @@ const is$typed = _is$typed,
 const id = 'app.bsky.unspecced.getTrends'
 
 export interface QueryParams {
-  /** DID of the account making the request (not included for public/unauthenticated queries). */
-  viewer?: string
   limit?: number
 }
 
