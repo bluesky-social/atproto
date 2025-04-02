@@ -1,4 +1,4 @@
-import type { IncomingMessage, ServerResponse } from 'node:http'
+import type { ServerResponse } from 'node:http'
 import {
   OAuthAuthorizationRequestParameters,
   OAuthResponseMode,
@@ -7,7 +7,6 @@ import { AccessDeniedError } from '../../errors/access-denied-error.js'
 import { html, js } from '../../lib/html/index.js'
 import { sendWebPage } from '../../lib/send-web-page.js'
 import { AuthorizationRedirectParameters } from '../../result/authorization-redirect-parameters.js'
-import { AuthorizationResultRedirect } from '../../result/authorization-result-redirect.js'
 
 // https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-11#section-7.5.4
 const REDIRECT_STATUS_CODE = 303
@@ -32,25 +31,6 @@ export type OAuthRedirectQueryParameter =
   | (typeof SUCCESS_REDIRECT_KEYS)[number]
   | (typeof ERROR_REDIRECT_KEYS)[number]
 
-export function sendAuthorizeRedirect(
-  req: IncomingMessage,
-  res: ServerResponse,
-  result: AuthorizationResultRedirect,
-): void {
-  return sendRedirect(res, buildRedirectOptions(result))
-}
-
-export function buildRedirectOptions({
-  issuer,
-  parameters,
-  redirect,
-}: AuthorizationResultRedirect): OAuthRedirectOptions {
-  const redirectUri = buildRedirectUri(parameters)
-  const mode = buildRedirectMode(parameters)
-  const params = buildRedirectEntries(issuer, parameters, redirect)
-  return { mode, redirectUri, params }
-}
-
 export function buildRedirectUri(
   parameters: OAuthAuthorizationRequestParameters,
 ): string {
@@ -67,7 +47,7 @@ export function buildRedirectMode(
   return mode
 }
 
-export function buildRedirectEntries(
+export function buildRedirectParams(
   issuer: string,
   parameters: OAuthAuthorizationRequestParameters,
   redirect: AuthorizationRedirectParameters,

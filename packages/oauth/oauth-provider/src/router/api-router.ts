@@ -63,9 +63,9 @@ import {
   OAuthRedirectOptions,
   OAuthRedirectQueryParameter,
   SUCCESS_REDIRECT_KEYS,
-  buildRedirectEntries,
+  buildRedirectParams,
   buildRedirectUri,
-} from './authorize-page/send-authorize-redirect.js'
+} from './authorize-page/send-redirect.js'
 import { validateCsrfToken } from './csrf.js'
 import type { RouterOptions } from './router-options.js'
 
@@ -800,7 +800,7 @@ function buildRedirectUrl(
   url.searchParams.set('redirect_mode', buildRedirectUri(parameters))
   url.searchParams.set('redirect_uri', buildRedirectUri(parameters))
 
-  for (const [key, value] of buildRedirectEntries(iss, parameters, redirect)) {
+  for (const [key, value] of buildRedirectParams(iss, parameters, redirect)) {
     url.searchParams.set(key, value)
   }
 

@@ -19,16 +19,19 @@ import type { Awaitable } from '../../lib/util/type.js'
 import { extractZodErrorMessage } from '../../lib/util/zod-error.js'
 import type { OAuthProvider } from '../../oauth-provider.js'
 import { requestUriSchema } from '../../request/request-uri.js'
+import { AuthorizationResultRedirect } from '../../result/authorization-result-redirect.js'
 import { parseRedirectUrl } from '../api-router.js'
 import { clearCsrfToken } from '../csrf.js'
 import type { RouterOptions } from '../router-options.js'
 import { assetsMiddleware } from './assets-middleware.js'
 import { sendAuthorizePageFactory } from './send-authorize-page.js'
-import {
-  sendAuthorizeRedirect,
-  sendRedirect,
-} from './send-authorize-redirect.js'
 import { sendErrorPageFactory } from './send-error-page.js'
+import {
+  buildRedirectMode,
+  buildRedirectParams,
+  buildRedirectUri,
+  sendRedirect,
+} from './send-redirect.js'
 
 export function authorizeRouter<
   T extends object | void = void,
@@ -79,7 +82,7 @@ export function authorizeRouter<
         )
 
         if ('redirect' in result) {
-          sendAuthorizeRedirect(req, res, result)
+          sendAuthorizeRedirect(res, result)
         } else {
           sendAuthorizePage(req, res, result)
         }
@@ -90,7 +93,7 @@ export function authorizeRouter<
           // Prefer logging the cause
           onError?.(req, res, err.cause ?? err, 'Authorization failed')
 
-          return sendAuthorizeRedirect(req, res, {
+          return sendAuthorizeRedirect(res, {
             issuer: server.issuer,
             parameters: err.parameters,
             redirect: err.toJSON(),
@@ -169,4 +172,14 @@ function throwInvalidRequest(err: unknown): never {
     extractZodErrorMessage(err) ?? 'Input validation error',
     err,
   )
+}
+
+function sendAuthorizeRedirect(
+  res: ServerResponse,
+  { issuer, parameters, redirect }: AuthorizationResultRedirect,
+) {
+  const redirectUri = buildRedirectUri(parameters)
+  const mode = buildRedirectMode(parameters)
+  const params = buildRedirectParams(issuer, parameters, redirect)
+  return sendRedirect(res, { mode, redirectUri, params })
 }
