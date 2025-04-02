@@ -4,7 +4,6 @@ import { cidForCbor, dataToCborBlock, schema as common } from '@atproto/common'
 import { BlockMap } from '../block-map'
 import { CidSet } from '../cid-set'
 import { MissingBlockError, MissingBlocksError } from '../error'
-import * as parse from '../parse'
 import { ReadableBlockstore } from '../storage'
 import { CarBlock } from '../types'
 import * as util from './util'
@@ -726,42 +725,27 @@ export class MST {
 
   // Sync Protocol
 
-  async *carBlockStream(): AsyncIterable<CarBlock> {
-    const leaves = new CidSet()
-    let toFetch = new CidSet()
-    toFetch.add(await this.getPointer())
-    while (toFetch.size() > 0) {
-      const nextLayer = new CidSet()
-      const fetched = await this.storage.getBlocks(toFetch.toList())
-      if (fetched.missing.length > 0) {
-        throw new MissingBlocksError('mst node', fetched.missing)
-      }
-      for (const cid of toFetch.toList()) {
-        const found = await parse.getAndParseByDef(
-          fetched.blocks,
-          cid,
-          nodeDataDef,
-        )
-        yield { cid, bytes: found.bytes }
-        const entries = await util.deserializeNodeData(this.storage, found.obj)
-
-        for (const entry of entries) {
-          if (entry.isLeaf()) {
-            leaves.add(entry.value)
-          } else {
-            nextLayer.add(await entry.getPointer())
+  async *carBlockStream(opts?: {
+    prefix?: string
+    includeLeaves?: boolean
+  }): AsyncIterable<CarBlock> {
+    const { prefix, includeLeaves = true } = opts ?? {}
+    const walker = prefix ? this.walkFrom(prefix) : this.walk()
+    for await (const node of walker) {
+      if (node.isTree()) {
+        const serialized = await node.serialize()
+        yield { cid: serialized.cid, bytes: serialized.bytes }
+      } else {
+        if (prefix && !node.key.startsWith(prefix)) {
+          break
+        } else if (includeLeaves) {
+          const got = await this.storage.getBytes(node.value)
+          if (!got) {
+            throw new MissingBlocksError('mst leaf', [node.value])
           }
+          yield { cid: node.value, bytes: got }
         }
       }
-      toFetch = nextLayer
-    }
-    const leafData = await this.storage.getBlocks(leaves.toList())
-    if (leafData.missing.length > 0) {
-      throw new MissingBlocksError('mst leaf', leafData.missing)
-    }
-
-    for (const leaf of leafData.blocks.entries()) {
-      yield leaf
     }
   }
 
