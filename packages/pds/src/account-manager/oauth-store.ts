@@ -331,29 +331,26 @@ export class OAuthStore
     requestId: RequestId | null,
     filter: { sub: Sub } | { deviceId: DeviceId },
   ): Promise<DeviceAccount[]> {
-    const [requestBoundRows, globalRows] = await Promise.all([
+    const [globalRows, requestBoundRows] = await Promise.all([
+      accountDeviceHelper.selectQB(this.db, filter).execute(),
       requestId !== null
         ? accountDeviceRequestHelper
             .selectQB(this.db, requestId, filter)
             .execute()
         : undefined,
-      accountDeviceHelper.selectQB(this.db, filter).execute(),
     ])
 
-    const combinedRows = [...(requestBoundRows ?? []), ...globalRows]
+    const rows = [...(requestBoundRows ?? []), ...globalRows]
 
-    const uniqueDids = [...new Set(combinedRows.map((row) => row.did))]
+    const uniqueDids = [...new Set(rows.map((row) => row.did))]
 
-    // Enrich all accounts (but only once each)
+    // Enrich all distinct account with their profile data
     const accounts = new Map(
       await Promise.all(
-        Array.from(
-          uniqueDids,
-          async (did): Promise<[Sub, Account]> => [
-            did,
-            await this.buildAccount(combinedRows.find((r) => r.did === did)!),
-          ],
-        ),
+        Array.from(uniqueDids, async (did): Promise<[Sub, Account]> => {
+          const row = rows.find((r) => r.did === did)!
+          return [did, await this.buildAccount(row)]
+        }),
       ),
     )
 
@@ -363,7 +360,7 @@ export class OAuthStore
         uniqueDids,
       )
 
-    return combinedRows.map((row) => ({
+    return rows.map((row) => ({
       deviceId: row.deviceId,
       deviceData: deviceHelper.rowToDeviceData(row),
       account: accounts.get(row.did)!,

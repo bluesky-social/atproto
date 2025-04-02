@@ -126,7 +126,18 @@ export type RejectInput = Record<string, never>
  */
 export type ActiveDeviceAccount = {
   account: Account
+
+  /**
+   * The user checked the "remember me" checkbox when signing in. This means
+   * that the session's expiration time is extended. When this is `false`, the
+   * session will expire after a short time (15 minutes), and will not be
+   * available anymore if the user closes the browser.
+   */
   remembered: boolean
+
+  /**
+   * The session is too old and the user must re-authenticate.
+   */
   loginRequired: boolean
 }
 

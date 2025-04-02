@@ -52,11 +52,11 @@ export async function getAuthorizedClients(
 
 export async function getAuthorizedClientsMulti(
   db: AccountDb,
-  inputDids: Iterable<string>,
+  dids: Iterable<string>,
 ): Promise<Map<Sub, AuthorizedClients>> {
   // Using a Map will ensure unicity of dids (through unicity of keys)
   const map = new Map<Sub, AuthorizedClients>(
-    Array.from(inputDids, (did) => [did, new Map()]),
+    Array.from(dids, (did) => [did, new Map()]),
   )
 
   if (map.size) {
