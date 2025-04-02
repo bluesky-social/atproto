@@ -1,6 +1,7 @@
 import { DataPlaneClient } from '../data-plane/client'
 import { Record as ProfileRecord } from '../lexicon/types/app/bsky/actor/profile'
 import { Record as ChatDeclarationRecord } from '../lexicon/types/chat/bsky/actor/declaration'
+import { VerificationData } from '../proto/bsky_pb'
 import {
   HydrationMap,
   RecordInfo,
@@ -23,6 +24,8 @@ export type Actor = {
   upstreamStatus?: string
   createdAt?: Date
   priorityNotifications: boolean
+  trustedVoucher?: boolean
+  verifiedBy?: { [key: string]: VerificationData }
 }
 
 export type Actors = HydrationMap<Actor>
@@ -141,6 +144,8 @@ export class ActorHydrator {
         upstreamStatus: actor.upstreamStatus || undefined,
         createdAt: actor.createdAt?.toDate(),
         priorityNotifications: actor.priorityNotifications,
+        trustedVoucher: actor.trustedVoucher,
+        verifiedBy: actor.verifiedBy,
       })
     }, new HydrationMap<Actor>())
   }

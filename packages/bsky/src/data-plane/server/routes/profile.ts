@@ -58,6 +58,8 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
         upstreamStatus: row?.upstreamStatus ?? '',
         createdAt: profiles.records[i].createdAt, // @NOTE profile creation date not trusted in production
         priorityNotifications: row?.priorityNotifs ?? false,
+        trustedVoucher: row?.trustedVoucher ?? false,
+        // @TODO add verifiedBy
       }
     })
     return { actors }

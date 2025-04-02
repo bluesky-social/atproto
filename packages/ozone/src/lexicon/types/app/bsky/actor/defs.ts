@@ -83,6 +83,7 @@ export interface ProfileViewDetailed {
   viewer?: ViewerState
   labels?: ComAtprotoLabelDefs.Label[]
   pinnedPost?: ComAtprotoRepoStrongRef.Main
+  verification?: VerificationState
 }
 
 const hashProfileViewDetailed = 'profileViewDetailed'
@@ -167,6 +168,22 @@ export function isKnownFollowers<V>(v: V) {
 
 export function validateKnownFollowers<V>(v: V) {
   return validate<KnownFollowers & V>(v, id, hashKnownFollowers)
+}
+
+/** Represents the verification state for the actor this state is attached to. This does not consider social (graph-based) vouches. */
+export interface VerificationState {
+  $type?: 'app.bsky.actor.defs#verificationState'
+  level?: 'verified' | 'verifier' | (string & {})
+}
+
+const hashVerificationState = 'verificationState'
+
+export function isVerificationState<V>(v: V) {
+  return is$typed(v, id, hashVerificationState)
+}
+
+export function validateVerificationState<V>(v: V) {
+  return validate<VerificationState & V>(v, id, hashVerificationState)
 }
 
 export type Preferences = (

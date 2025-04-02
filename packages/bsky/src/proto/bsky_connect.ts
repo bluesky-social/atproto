@@ -88,6 +88,8 @@ import {
   GetIdentityByHandleResponse,
   GetInteractionCountsRequest,
   GetInteractionCountsResponse,
+  GetKnownVouchesReceivedRequest,
+  GetKnownVouchesReceivedResponse,
   GetLabelerRecordsRequest,
   GetLabelerRecordsResponse,
   GetLabelsRequest,
@@ -168,6 +170,10 @@ import {
   GetTimelineResponse,
   GetUnreadNotificationCountRequest,
   GetUnreadNotificationCountResponse,
+  GetVouchesIssuedRequest,
+  GetVouchesIssuedResponse,
+  GetVouchesReceivedRequest,
+  GetVouchesReceivedResponse,
   PingRequest,
   PingResponse,
   SearchActorsRequest,
@@ -961,6 +967,33 @@ export const Service = {
       name: 'GetFollowsFollowing',
       I: GetFollowsFollowingRequest,
       O: GetFollowsFollowingResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsky.Service.GetVouchesIssued
+     */
+    getVouchesIssued: {
+      name: 'GetVouchesIssued',
+      I: GetVouchesIssuedRequest,
+      O: GetVouchesIssuedResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsky.Service.GetVouchesReceived
+     */
+    getVouchesReceived: {
+      name: 'GetVouchesReceived',
+      I: GetVouchesReceivedRequest,
+      O: GetVouchesReceivedResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsky.Service.GetKnownVouchesReceived
+     */
+    getKnownVouchesReceived: {
+      name: 'GetKnownVouchesReceived',
+      I: GetKnownVouchesReceivedRequest,
+      O: GetKnownVouchesReceivedResponse,
       kind: MethodKind.Unary,
     },
     /**
