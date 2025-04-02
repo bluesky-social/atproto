@@ -1,5 +1,6 @@
 import { CID } from 'multiformats/cid'
 import { BlockMap } from '../block-map'
+import { readCarWithRoot } from '../car'
 import { DataDiff } from '../data-diff'
 import { MST } from '../mst'
 import { ReadableRepo } from '../readable-repo'
@@ -18,7 +19,7 @@ export const verifyRepoCar = async (
   did?: string,
   signingKey?: string,
 ): Promise<VerifiedRepo> => {
-  const car = await util.readCarWithRoot(carBytes)
+  const car = await readCarWithRoot(carBytes)
   return verifyRepo(car.blocks, car.root, did, signingKey)
 }
 
@@ -44,7 +45,7 @@ export const verifyDiffCar = async (
   signingKey?: string,
   opts?: { ensureLeaves?: boolean },
 ): Promise<VerifiedDiff> => {
-  const car = await util.readCarWithRoot(carBytes)
+  const car = await readCarWithRoot(carBytes)
   return verifyDiff(repo, car.blocks, car.root, did, signingKey, opts)
 }
 
@@ -127,7 +128,7 @@ export const verifyProofs = async (
   did: string,
   didKey: string,
 ): Promise<{ verified: RecordCidClaim[]; unverified: RecordCidClaim[] }> => {
-  const car = await util.readCarWithRoot(proofs)
+  const car = await readCarWithRoot(proofs)
   const blockstore = new MemoryBlockstore(car.blocks)
   const commit = await blockstore.readObj(car.root, def.commit)
   if (commit.did !== did) {
@@ -169,7 +170,7 @@ export const verifyRecords = async (
   did: string,
   signingKey: string,
 ): Promise<RecordClaim[]> => {
-  const car = await util.readCarWithRoot(proofs)
+  const car = await readCarWithRoot(proofs)
   const blockstore = new MemoryBlockstore(car.blocks)
   const commit = await blockstore.readObj(car.root, def.commit)
   if (commit.did !== did) {
