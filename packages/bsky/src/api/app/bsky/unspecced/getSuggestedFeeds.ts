@@ -8,14 +8,14 @@ import { QueryParams } from '../../../../lexicon/types/app/bsky/unspecced/getTre
 import {
   HydrationFnInput,
   PresentationFnInput,
-  RulesFnInput,
   SkeletonFnInput,
   createPipeline,
+  noRules,
 } from '../../../../pipeline'
 import { Views } from '../../../../views'
 
 export default function (server: Server, ctx: AppContext) {
-  const getTrends = createPipeline(skeleton, hydration, noBlocks, presentation)
+  const getFeeds = createPipeline(skeleton, hydration, noRules, presentation)
   server.app.bsky.unspecced.getSuggestedFeeds({
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ auth, params, req }) => {
@@ -28,7 +28,7 @@ export default function (server: Server, ctx: AppContext) {
           ? req.headers['x-bsky-topics'].join(',')
           : req.headers['x-bsky-topics'],
       })
-      const { ...result } = await getTrends(
+      const { ...result } = await getFeeds(
         {
           ...params,
           viewer: viewer ?? undefined,
@@ -70,11 +70,6 @@ const hydration = async (
 ) => {
   const { ctx, params, skeleton } = input
   return await ctx.hydrator.hydrateFeedGens(skeleton.feeds, params.hydrateCtx)
-}
-
-const noBlocks = (input: RulesFnInput<Context, Params, SkeletonState>) => {
-  const { skeleton } = input
-  return skeleton
 }
 
 const presentation = (
