@@ -132,7 +132,7 @@ export class RequestManager {
       throw new AccessDeniedError(
         parameters,
         `Unsupported grant_type "authorization_code"`,
-        'unsupported_grant_type',
+        'invalid_request',
       )
     }
 

@@ -676,7 +676,7 @@ export class OAuthProvider extends OAuthVerifier {
 
       // Not using accessDeniedCatcher here because "parameters" will most
       // likely contain the redirect_uri (using the client default).
-      throw AccessDeniedError.from(parameters, err)
+      throw AccessDeniedError.from(parameters, err, 'server_error')
     }
   }
 
