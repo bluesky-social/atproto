@@ -1,5 +1,11 @@
 # @atproto/common
 
+## 0.4.9
+
+### Patch Changes
+
+- [#2519](https://github.com/bluesky-social/atproto/pull/2519) [`bdbd3c3e3`](https://github.com/bluesky-social/atproto/commit/bdbd3c3e3f8fe8476a3fecac73810554846c938f) Thanks [@dholms](https://github.com/dholms)! - Add renameIfExists function
+
 ## 0.4.8
 
 ### Patch Changes
