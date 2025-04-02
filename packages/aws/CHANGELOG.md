@@ -1,5 +1,14 @@
 # @atproto/aws
 
+## 0.2.20
+
+### Patch Changes
+
+- Updated dependencies [[`4db923ca1`](https://github.com/bluesky-social/atproto/commit/4db923ca1c4fadd31d41c851933659e5186ee144), [`4db923ca1`](https://github.com/bluesky-social/atproto/commit/4db923ca1c4fadd31d41c851933659e5186ee144)]:
+  - @atproto/repo@0.8.0
+  - @atproto/common@0.4.10
+  - @atproto/crypto@0.4.4
+
 ## 0.2.19
 
 ### Patch Changes

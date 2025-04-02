@@ -1,5 +1,19 @@
 # @atproto/repo
 
+## 0.8.0
+
+### Minor Changes
+
+- [#3672](https://github.com/bluesky-social/atproto/pull/3672) [`4db923ca1`](https://github.com/bluesky-social/atproto/commit/4db923ca1c4fadd31d41c851933659e5186ee144) Thanks [@dholms](https://github.com/dholms)! - Rewrite CAR implementation
+
+### Patch Changes
+
+- Updated dependencies [[`4db923ca1`](https://github.com/bluesky-social/atproto/commit/4db923ca1c4fadd31d41c851933659e5186ee144), [`4db923ca1`](https://github.com/bluesky-social/atproto/commit/4db923ca1c4fadd31d41c851933659e5186ee144)]:
+  - @atproto/common-web@0.4.1
+  - @atproto/common@0.4.10
+  - @atproto/lexicon@0.4.10
+  - @atproto/crypto@0.4.4
+
 ## 0.7.3
 
 ### Patch Changes
