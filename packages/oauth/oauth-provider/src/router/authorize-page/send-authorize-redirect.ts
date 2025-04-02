@@ -1,13 +1,20 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
+import {
+  OAuthAuthorizationRequestParameters,
+  OAuthResponseMode,
+} from '@atproto/oauth-types'
 import { html, js } from '../../lib/html/index.js'
 import { sendWebPage } from '../../lib/send-web-page.js'
 import { AccessDeniedError } from '../../oauth-errors.js'
-import { AuthorizationResultRedirect } from '../../result/authorization-result-redirect.js'
+import {
+  AuthorizationRedirectParameters,
+  AuthorizationResultRedirect,
+} from '../../result/authorization-result-redirect.js'
 
 // https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-11#section-7.5.4
 const REDIRECT_STATUS_CODE = 303
 
-const SUCCESS_REDIRECT_KEYS = [
+export const SUCCESS_REDIRECT_KEYS = [
   'code',
   'id_token',
   'access_token',
@@ -15,21 +22,51 @@ const SUCCESS_REDIRECT_KEYS = [
   'token_type',
 ] as const
 
-const ERROR_REDIRECT_KEYS = ['error', 'error_description', 'error_uri'] as const
+export const ERROR_REDIRECT_KEYS = [
+  'error',
+  'error_description',
+  'error_uri',
+] as const
+
+export type OAuthRedirectQueryParameter =
+  | 'iss'
+  | 'state'
+  | (typeof SUCCESS_REDIRECT_KEYS)[number]
+  | (typeof ERROR_REDIRECT_KEYS)[number]
 
 export function sendAuthorizeRedirect(
   req: IncomingMessage,
   res: ServerResponse,
-  result: AuthorizationResultRedirect,
+  { issuer, parameters, redirect }: AuthorizationResultRedirect,
 ): void {
-  const { issuer, parameters, redirect } = result
+  const url = buildRedirectUri(parameters)
+  const mode = buildRedirectMode(parameters)
+  const entries = buildRedirectEntries(issuer, parameters, redirect)
+  return sendRedirect(res, mode, url, entries)
+}
 
+export function buildRedirectUri(
+  parameters: OAuthAuthorizationRequestParameters,
+): string {
   const uri = parameters.redirect_uri
-  if (!uri) throw new AccessDeniedError(parameters, 'No redirect_uri')
+  if (uri) return uri
 
+  throw new AccessDeniedError(parameters, 'No redirect_uri', 'invalid_request')
+}
+
+export function buildRedirectMode(
+  parameters: OAuthAuthorizationRequestParameters,
+): OAuthResponseMode {
   const mode = parameters.response_mode || 'query' // @TODO default should depend on response_type
+  return mode
+}
 
-  const entries: [string, string][] = [
+export function buildRedirectEntries(
+  issuer: string,
+  parameters: OAuthAuthorizationRequestParameters,
+  redirect: AuthorizationRedirectParameters,
+): [OAuthRedirectQueryParameter, string][] {
+  const entries: [OAuthRedirectQueryParameter, string][] = [
     ['iss', issuer], // rfc9207
   ]
 
@@ -43,6 +80,15 @@ export function sendAuthorizeRedirect(
     if (value != null) entries.push([key, value])
   }
 
+  return entries
+}
+
+export function sendRedirect(
+  res: ServerResponse,
+  mode: OAuthResponseMode,
+  uri: string,
+  entries: Iterable<[string, string]>,
+): void {
   res.setHeader('Cache-Control', 'no-store')
 
   switch (mode) {
@@ -61,7 +107,7 @@ export function sendAuthorizeRedirect(
 function writeQuery(
   res: ServerResponse,
   uri: string,
-  entries: readonly [string, string][],
+  entries: Iterable<[string, string]>,
 ): void {
   const url = new URL(uri)
   for (const [key, value] of entries) url.searchParams.set(key, value)
@@ -71,7 +117,7 @@ function writeQuery(
 function writeFragment(
   res: ServerResponse,
   uri: string,
-  entries: readonly [string, string][],
+  entries: Iterable<[string, string]>,
 ): void {
   const url = new URL(uri)
   const searchParams = new URLSearchParams()
@@ -83,7 +129,7 @@ function writeFragment(
 function writeFormPost(
   res: ServerResponse,
   uri: string,
-  entries: readonly [string, string][],
+  entries: Iterable<[string, string]>,
 ): void {
   // Prevent the Chrome from caching this page
   // see: https://latesthackingnews.com/2023/12/12/google-updates-chrome-bfcache-for-faster-page-viewing/
@@ -95,7 +141,7 @@ function writeFormPost(
     htmlAttrs: { lang: 'en' },
     body: html`
       <form method="post" action="${uri}">
-        ${entries.map(([key, value]) => [
+        ${Array.from(entries, ([key, value]) => [
           html`<input type="hidden" name="${key}" value="${value}" />`,
         ])}
         <input type="submit" value="Continue" />
