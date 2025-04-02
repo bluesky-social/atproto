@@ -95,6 +95,10 @@
         "pinnedPost": {
           "type": "ref",
           "ref": "com.atproto.repo.strongRef"
+        },
+        "verification": {
+          "type": "ref",
+          "ref": "app.bsky.actor.defs#verificationState"
         }
       }
     },
@@ -155,6 +159,16 @@
             "type": "ref",
             "ref": "#profileViewBasic"
           }
+        }
+      }
+    },
+    "verificationState": {
+      "type": "object",
+      "description": "Represents the verification state for the actor this state is attached to. This does not consider social (graph-based) vouches.",
+      "properties": {
+        "level": {
+          "type": "string",
+          "knownValues": ["verified", "verifier"]
         }
       }
     },

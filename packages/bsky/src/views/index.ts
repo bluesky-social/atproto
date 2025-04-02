@@ -13,6 +13,7 @@ import {
   ProfileView,
   ProfileViewBasic,
   ProfileViewDetailed,
+  VerificationState,
   ViewerState as ProfileViewer,
 } from '../lexicon/types/app/bsky/actor/defs'
 import {
@@ -215,6 +216,10 @@ export class Views {
     if (!baseView) return
     const knownFollowers = this.knownFollowers(did, state)
     const profileAggs = state.profileAggs?.get(did)
+    const verification = this.verification(did, state)
+
+    console.log('### verification', verification)
+
     return {
       ...baseView,
       viewer: baseView.viewer
@@ -247,9 +252,9 @@ export class Views {
         ? this.starterPackBasic(actor.profile.joinedViaStarterPack.uri, state)
         : undefined,
       pinnedPost: safePinnedPost(actor.profile?.pinnedPost),
+      verification,
     }
   }
-
   profile(
     did: string,
     state: HydrationState,
@@ -383,6 +388,31 @@ export class Views {
       return this.profileBasic(followerDid, state)
     })
     return { count: knownFollowers.count, followers }
+  }
+
+  verification(
+    did: string,
+    state: HydrationState,
+  ): VerificationState | undefined {
+    const actor = state.actors?.get(did)
+    console.log('### did', did)
+    console.log('### actor', actor)
+
+    if (!actor) return
+
+    if (actor.trustedVoucher) {
+      return {
+        level: 'verifier',
+      }
+    }
+
+    if (actor.verifiedBy && Object.values(actor.verifiedBy).length) {
+      return {
+        level: 'verified',
+      }
+    }
+
+    return
   }
 
   blockedProfileViewer(

@@ -4687,6 +4687,10 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:com.atproto.repo.strongRef',
           },
+          verification: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#verificationState',
+          },
         },
       },
       profileAssociated: {
@@ -4773,6 +4777,17 @@ export const schemaDict = {
               type: 'ref',
               ref: 'lex:app.bsky.actor.defs#profileViewBasic',
             },
+          },
+        },
+      },
+      verificationState: {
+        type: 'object',
+        description:
+          'Represents the verification state for the actor this state is attached to. This does not consider social (graph-based) vouches.',
+        properties: {
+          level: {
+            type: 'string',
+            knownValues: ['verified', 'verifier'],
           },
         },
       },
@@ -8451,6 +8466,47 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyGraphGetKnownVouchesReceived: {
+    lexicon: 1,
+    id: 'app.bsky.graph.getKnownVouchesReceived',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Enumerates accounts which vouched for the specified receiver and were vouched for by the requester. Requires authentication.',
+        parameters: {
+          type: 'params',
+          required: ['receiver'],
+          properties: {
+            receiver: {
+              type: 'string',
+              format: 'at-identifier',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['receiver', 'vouchers'],
+            properties: {
+              receiver: {
+                type: 'ref',
+                ref: 'lex:app.bsky.actor.defs#profileView',
+              },
+              vouchers: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.actor.defs#profileView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyGraphGetList: {
     lexicon: 1,
     id: 'app.bsky.graph.getList',
@@ -8871,6 +8927,112 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyGraphGetVouchesIssued: {
+    lexicon: 1,
+    id: 'app.bsky.graph.getVouchesIssued',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Enumerates accounts for which the specified issuer has vouched.',
+        parameters: {
+          type: 'params',
+          required: ['issuer'],
+          properties: {
+            issuer: {
+              type: 'string',
+              format: 'at-identifier',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['issuer', 'vouches'],
+            properties: {
+              issuer: {
+                type: 'ref',
+                ref: 'lex:app.bsky.actor.defs#profileView',
+              },
+              cursor: {
+                type: 'string',
+              },
+              vouches: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.actor.defs#profileView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyGraphGetVouchesReceived: {
+    lexicon: 1,
+    id: 'app.bsky.graph.getVouchesReceived',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Enumerates accounts which vouched for the specified receiver.',
+        parameters: {
+          type: 'params',
+          required: ['receiver'],
+          properties: {
+            receiver: {
+              type: 'string',
+              format: 'at-identifier',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['receiver', 'vouchers'],
+            properties: {
+              receiver: {
+                type: 'ref',
+                ref: 'lex:app.bsky.actor.defs#profileView',
+              },
+              cursor: {
+                type: 'string',
+              },
+              vouchers: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.actor.defs#profileView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyGraphList: {
     lexicon: 1,
     id: 'app.bsky.graph.list',
@@ -9235,6 +9397,45 @@ export const schemaDict = {
                 type: 'string',
                 format: 'at-uri',
               },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyGraphVouch: {
+    lexicon: 1,
+    id: 'app.bsky.graph.vouch',
+    defs: {
+      main: {
+        type: 'record',
+        description:
+          "Record declaring a 'vouch' relationship of another account.",
+        key: 'tid',
+        record: {
+          type: 'object',
+          required: ['subject', 'handle', 'displayName', 'createdAt'],
+          properties: {
+            subject: {
+              description: 'DID of the subject the vouch applies to.',
+              type: 'string',
+              format: 'did',
+            },
+            handle: {
+              description:
+                'Handle of the subject the vouch applies to at the moment of vouching, which might not be the same at the time of viewing. The decision on how to handle this is delegated to the application.',
+              type: 'string',
+              format: 'handle',
+            },
+            displayName: {
+              description:
+                'Display name of the subject the vouch applies to at the moment of vouching, which might not be the same at the time of viewing. The decision on how to handle this is delegated to the application.',
+              type: 'string',
+            },
+            createdAt: {
+              description: 'Date of when the vouch was created.',
+              type: 'string',
+              format: 'datetime',
             },
           },
         },
@@ -12401,6 +12602,7 @@ export const ids = {
   AppBskyGraphGetFollowers: 'app.bsky.graph.getFollowers',
   AppBskyGraphGetFollows: 'app.bsky.graph.getFollows',
   AppBskyGraphGetKnownFollowers: 'app.bsky.graph.getKnownFollowers',
+  AppBskyGraphGetKnownVouchesReceived: 'app.bsky.graph.getKnownVouchesReceived',
   AppBskyGraphGetList: 'app.bsky.graph.getList',
   AppBskyGraphGetListBlocks: 'app.bsky.graph.getListBlocks',
   AppBskyGraphGetListMutes: 'app.bsky.graph.getListMutes',
@@ -12411,6 +12613,8 @@ export const ids = {
   AppBskyGraphGetStarterPacks: 'app.bsky.graph.getStarterPacks',
   AppBskyGraphGetSuggestedFollowsByActor:
     'app.bsky.graph.getSuggestedFollowsByActor',
+  AppBskyGraphGetVouchesIssued: 'app.bsky.graph.getVouchesIssued',
+  AppBskyGraphGetVouchesReceived: 'app.bsky.graph.getVouchesReceived',
   AppBskyGraphList: 'app.bsky.graph.list',
   AppBskyGraphListblock: 'app.bsky.graph.listblock',
   AppBskyGraphListitem: 'app.bsky.graph.listitem',
@@ -12422,6 +12626,7 @@ export const ids = {
   AppBskyGraphUnmuteActor: 'app.bsky.graph.unmuteActor',
   AppBskyGraphUnmuteActorList: 'app.bsky.graph.unmuteActorList',
   AppBskyGraphUnmuteThread: 'app.bsky.graph.unmuteThread',
+  AppBskyGraphVouch: 'app.bsky.graph.vouch',
   AppBskyLabelerDefs: 'app.bsky.labeler.defs',
   AppBskyLabelerGetServices: 'app.bsky.labeler.getServices',
   AppBskyLabelerService: 'app.bsky.labeler.service',

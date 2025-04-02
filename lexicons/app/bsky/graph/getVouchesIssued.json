@@ -1,0 +1,45 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.graph.getVouchesIssued",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Enumerates accounts for which the specified issuer has vouched.",
+      "parameters": {
+        "type": "params",
+        "required": ["issuer"],
+        "properties": {
+          "issuer": { "type": "string", "format": "at-identifier" },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 50
+          },
+          "cursor": { "type": "string" }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["issuer", "vouches"],
+          "properties": {
+            "issuer": {
+              "type": "ref",
+              "ref": "app.bsky.actor.defs#profileView"
+            },
+            "cursor": { "type": "string" },
+            "vouches": {
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "app.bsky.actor.defs#profileView"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

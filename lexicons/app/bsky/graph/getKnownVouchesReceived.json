@@ -1,0 +1,37 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.graph.getKnownVouchesReceived",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Enumerates accounts which vouched for the specified receiver and were vouched for by the requester. Requires authentication.",
+      "parameters": {
+        "type": "params",
+        "required": ["receiver"],
+        "properties": {
+          "receiver": { "type": "string", "format": "at-identifier" }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["receiver", "vouchers"],
+          "properties": {
+            "receiver": {
+              "type": "ref",
+              "ref": "app.bsky.actor.defs#profileView"
+            },
+            "vouchers": {
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "app.bsky.actor.defs#profileView"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

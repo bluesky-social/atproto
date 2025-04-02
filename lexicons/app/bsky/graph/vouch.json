@@ -1,0 +1,36 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.graph.vouch",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "Record declaring a 'vouch' relationship of another account.",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": ["subject", "handle", "displayName", "createdAt"],
+        "properties": {
+          "subject": {
+            "description": "DID of the subject the vouch applies to.",
+            "type": "string",
+            "format": "did"
+          },
+          "handle": {
+            "description": "Handle of the subject the vouch applies to at the moment of vouching, which might not be the same at the time of viewing. The decision on how to handle this is delegated to the application.",
+            "type": "string",
+            "format": "handle"
+          },
+          "displayName": {
+            "description": "Display name of the subject the vouch applies to at the moment of vouching, which might not be the same at the time of viewing. The decision on how to handle this is delegated to the application.",
+            "type": "string"
+          },
+          "createdAt": {
+            "description": "Date of when the vouch was created.",
+            "type": "string",
+            "format": "datetime"
+          }
+        }
+      }
+    }
+  }
+}

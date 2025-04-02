@@ -7,6 +7,7 @@ import {
   AppBskyGraphBlock,
   AppBskyGraphFollow,
   AppBskyGraphList,
+  AppBskyGraphVouch,
   AppBskyRichtextFacet,
   AtpAgent,
   ComAtprotoModerationCreateReport,
@@ -113,6 +114,9 @@ export class SeedClient<
       }
     >
   >
+
+  vouches: Record<string, Record<string, AtUri>>
+
   dids: Record<string, string>
 
   constructor(
@@ -130,6 +134,7 @@ export class SeedClient<
     this.lists = {}
     this.feedgens = {}
     this.starterpacks = {}
+    this.vouches = {}
     this.dids = {}
   }
 
@@ -553,6 +558,29 @@ export class SeedClient<
       },
     )
     return result.data
+  }
+
+  async vouch(
+    by: string,
+    subject: string,
+    handle: string,
+    displayName: string,
+    overrides?: Partial<AppBskyGraphVouch.Record>,
+  ) {
+    const res = await this.agent.app.bsky.graph.vouch.create(
+      { repo: by },
+      {
+        subject,
+        createdAt: new Date().toISOString(),
+        handle,
+        displayName,
+        ...overrides,
+      },
+      this.getHeaders(by),
+    )
+    this.vouches[by] ??= {}
+    this.vouches[by][subject] = new AtUri(res.uri)
+    return this.vouches[by][subject]
   }
 
   getHeaders(did: string) {
