@@ -2,15 +2,17 @@ import { useLingui } from '@lingui/react/macro'
 import { useCallback, useMemo, useState } from 'react'
 import { useErrorBoundary } from 'react-error-boundary'
 import type {
+  AcceptInput,
   Account,
   ConfirmResetPasswordInput,
   InitiatePasswordResetInput,
+  RejectInput,
   Session,
   SignInInput,
   SignUpInput,
   VerifyHandleAvailabilityInput,
 } from '@atproto/oauth-provider-api'
-import { AcceptData, Api, UnknownRequestUriError } from '../lib/api.ts'
+import { Api, UnknownRequestUriError } from '../lib/api.ts'
 import { upsert } from '../lib/util.ts'
 import { useCsrfToken } from './use-csrf-token.ts'
 
@@ -104,7 +106,13 @@ export function useApi({
   )
 
   const performRedirect = useCallback(
-    (url: URL) => {
+    (url: string | URL) => {
+      // @TODO At this point, the request cannot be accepted/rejected anymore.
+      // We should probably change the app's state to something that indicates
+      // that in order to improve UX in case the user comes back to the app.
+      // This is currently ensured by the backend (through back-forward cache
+      // busting) but handling it here would provide a better UX.
+
       window.location.href = String(url)
       if (onRedirected) setTimeout(onRedirected)
     },
@@ -167,15 +175,20 @@ export function useApi({
   )
 
   const doAccept = useSafeCallback(
-    async (data: AcceptData) => {
-      performRedirect(api.buildAcceptUrl(data))
+    async (data: AcceptInput) => {
+      const { url } = await api.fetch('POST', '/accept', data)
+      performRedirect(url)
     },
     [api, performRedirect],
   )
 
-  const doReject = useSafeCallback(async () => {
-    performRedirect(api.buildRejectUrl())
-  }, [api, performRedirect])
+  const doReject = useSafeCallback(
+    async (data: RejectInput = {}) => {
+      const { url } = await api.fetch('POST', '/reject', data)
+      performRedirect(url)
+    },
+    [api, performRedirect],
+  )
 
   return {
     sessions,

@@ -141,7 +141,7 @@ export function AuthorizeView({
         sessions={sessions}
         selectSub={selectSub}
         onSignIn={doSignIn}
-        onBack={forceSignIn ? doReject : showWelcome}
+        onBack={forceSignIn ? () => doReject() : showWelcome}
         onForgotPassword={(email) => {
           showResetPassword()
           setResetPasswordHint(email)
@@ -163,7 +163,7 @@ export function AuthorizeView({
         account={session.account}
         scopeDetails={authorizeData.scopeDetails}
         onAccept={() => doAccept(session.account)}
-        onReject={doReject}
+        onReject={() => doReject()}
         onBack={
           forceSignIn
             ? undefined

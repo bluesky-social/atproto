@@ -65,6 +65,16 @@ export type ApiEndpoints = {
     input: RevokeAccountSessionInput
     output: { success: true }
   }
+  '/accept': {
+    method: 'POST'
+    input: AcceptInput
+    output: { url: string }
+  }
+  '/reject': {
+    method: 'POST'
+    input: RejectInput
+    output: { url: string }
+  }
 }
 
 export type SignInInput = {
@@ -102,6 +112,12 @@ export type RevokeAccountSessionInput = {
   sub: string
   deviceId: string
 }
+
+export type AcceptInput = {
+  sub: string
+}
+
+export type RejectInput = Record<string, never>
 
 /**
  * Represents an account that is currently signed-in to the Authorization

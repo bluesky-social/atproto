@@ -3,13 +3,11 @@ import {
   OAuthAuthorizationRequestParameters,
   OAuthResponseMode,
 } from '@atproto/oauth-types'
+import { AccessDeniedError } from '../../errors/access-denied-error.js'
 import { html, js } from '../../lib/html/index.js'
 import { sendWebPage } from '../../lib/send-web-page.js'
-import { AccessDeniedError } from '../../oauth-errors.js'
-import {
-  AuthorizationRedirectParameters,
-  AuthorizationResultRedirect,
-} from '../../result/authorization-result-redirect.js'
+import { AuthorizationRedirectParameters } from '../../result/authorization-redirect-parameters.js'
+import { AuthorizationResultRedirect } from '../../result/authorization-result-redirect.js'
 
 // https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-11#section-7.5.4
 const REDIRECT_STATUS_CODE = 303
@@ -37,12 +35,20 @@ export type OAuthRedirectQueryParameter =
 export function sendAuthorizeRedirect(
   req: IncomingMessage,
   res: ServerResponse,
-  { issuer, parameters, redirect }: AuthorizationResultRedirect,
+  result: AuthorizationResultRedirect,
 ): void {
-  const url = buildRedirectUri(parameters)
+  return sendRedirect(res, buildRedirectOptions(result))
+}
+
+export function buildRedirectOptions({
+  issuer,
+  parameters,
+  redirect,
+}: AuthorizationResultRedirect): OAuthRedirectOptions {
+  const redirectUri = buildRedirectUri(parameters)
   const mode = buildRedirectMode(parameters)
-  const entries = buildRedirectEntries(issuer, parameters, redirect)
-  return sendRedirect(res, mode, url, entries)
+  const params = buildRedirectEntries(issuer, parameters, redirect)
+  return { mode, redirectUri, params }
 }
 
 export function buildRedirectUri(
@@ -66,38 +72,42 @@ export function buildRedirectEntries(
   parameters: OAuthAuthorizationRequestParameters,
   redirect: AuthorizationRedirectParameters,
 ): [OAuthRedirectQueryParameter, string][] {
-  const entries: [OAuthRedirectQueryParameter, string][] = [
+  const params: [OAuthRedirectQueryParameter, string][] = [
     ['iss', issuer], // rfc9207
   ]
 
   if (parameters.state != null) {
-    entries.push(['state', parameters.state])
+    params.push(['state', parameters.state])
   }
 
   const keys = 'code' in redirect ? SUCCESS_REDIRECT_KEYS : ERROR_REDIRECT_KEYS
   for (const key of keys) {
     const value = redirect[key]
-    if (value != null) entries.push([key, value])
+    if (value != null) params.push([key, value])
   }
 
-  return entries
+  return params
+}
+
+export type OAuthRedirectOptions = {
+  mode: OAuthResponseMode
+  redirectUri: string
+  params: Iterable<[string, string]>
 }
 
 export function sendRedirect(
   res: ServerResponse,
-  mode: OAuthResponseMode,
-  uri: string,
-  entries: Iterable<[string, string]>,
+  { mode, redirectUri: uri, params }: OAuthRedirectOptions,
 ): void {
   res.setHeader('Cache-Control', 'no-store')
 
   switch (mode) {
     case 'query':
-      return writeQuery(res, uri, entries)
+      return writeQuery(res, uri, params)
     case 'fragment':
-      return writeFragment(res, uri, entries)
+      return writeFragment(res, uri, params)
     case 'form_post':
-      return writeFormPost(res, uri, entries)
+      return writeFormPost(res, uri, params)
   }
 
   // @ts-expect-error fool proof
@@ -107,21 +117,21 @@ export function sendRedirect(
 function writeQuery(
   res: ServerResponse,
   uri: string,
-  entries: Iterable<[string, string]>,
+  params: Iterable<[string, string]>,
 ): void {
   const url = new URL(uri)
-  for (const [key, value] of entries) url.searchParams.set(key, value)
+  for (const [key, value] of params) url.searchParams.set(key, value)
   res.writeHead(REDIRECT_STATUS_CODE, { Location: url.href }).end()
 }
 
 function writeFragment(
   res: ServerResponse,
   uri: string,
-  entries: Iterable<[string, string]>,
+  params: Iterable<[string, string]>,
 ): void {
   const url = new URL(uri)
   const searchParams = new URLSearchParams()
-  for (const [key, value] of entries) searchParams.set(key, value)
+  for (const [key, value] of params) searchParams.set(key, value)
   url.hash = searchParams.toString()
   res.writeHead(REDIRECT_STATUS_CODE, { Location: url.href }).end()
 }
@@ -129,7 +139,7 @@ function writeFragment(
 function writeFormPost(
   res: ServerResponse,
   uri: string,
-  entries: Iterable<[string, string]>,
+  params: Iterable<[string, string]>,
 ): void {
   // Prevent the Chrome from caching this page
   // see: https://latesthackingnews.com/2023/12/12/google-updates-chrome-bfcache-for-faster-page-viewing/
@@ -141,7 +151,7 @@ function writeFormPost(
     htmlAttrs: { lang: 'en' },
     body: html`
       <form method="post" action="${uri}">
-        ${Array.from(entries, ([key, value]) => [
+        ${Array.from(params, ([key, value]) => [
           html`<input type="hidden" name="${key}" value="${value}" />`,
         ])}
         <input type="submit" value="Continue" />

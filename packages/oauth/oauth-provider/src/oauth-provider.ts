@@ -84,6 +84,7 @@ import { RequestStoreMemory } from './request/request-store-memory.js'
 import { RequestStoreRedis } from './request/request-store-redis.js'
 import { RequestStore, ifRequestStore } from './request/request-store.js'
 import { requestUriSchema } from './request/request-uri.js'
+import { AuthorizationRedirectParameters } from './result/authorization-redirect-parameters.js'
 import { AuthorizationResultAuthorize } from './result/authorization-result-authorize.js'
 import { AuthorizationResultRedirect } from './result/authorization-result-redirect.js'
 import { ErrorHandler } from './router/error-handler.js'
@@ -93,6 +94,7 @@ import { VerifyTokenClaimsOptions } from './token/verify-token-claims.js'
 
 export { Keyset }
 export type {
+  AuthorizationRedirectParameters,
   AuthorizationResultAuthorize,
   AuthorizationResultRedirect,
   Branding,

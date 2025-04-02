@@ -287,7 +287,8 @@ export class AccountManager {
     return this.store.getAccount(sub)
   }
 
-  public async removeRequestAccounts(requestId: RequestId) {
+  public async removeRequestAccounts(requestUri: RequestUri) {
+    const requestId = decodeRequestUri(requestUri)
     return this.store.removeRequestAccounts(requestId)
   }
 

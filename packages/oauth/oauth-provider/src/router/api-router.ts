@@ -10,7 +10,14 @@ import {
   ApiEndpoints,
   ISODateString,
 } from '@atproto/oauth-provider-api'
-import { OAuthClientId } from '@atproto/oauth-types'
+import {
+  OAuthAuthorizationRequestParameters,
+  OAuthClientId,
+  OAuthRedirectUri,
+  OAuthResponseMode,
+  oauthRedirectUriSchema,
+  oauthResponseModeSchema,
+} from '@atproto/oauth-types'
 import {
   DeviceAccount,
   handleSchema,
@@ -20,11 +27,15 @@ import {
 import { signInDataSchema } from '../account/sign-in-data.js'
 import { signUpInputSchema } from '../account/sign-up-input.js'
 import { Client } from '../client/client.js'
-import { deviceIdSchema } from '../device/device-id.js'
+import { DeviceId, deviceIdSchema } from '../device/device-id.js'
+import { AccessDeniedError } from '../errors/access-denied-error.js'
 import { buildErrorPayload, buildErrorStatus } from '../errors/error-parser.js'
+import { InvalidRequestError } from '../errors/invalid-request-error.js'
+import { LoginRequiredError } from '../errors/login-required-error.js'
 import {
   CookieSerializeOptions,
   Middleware,
+  RequestMetadata,
   Router,
   RouterCtx,
   SubCtx,
@@ -44,8 +55,18 @@ import { asArray } from '../lib/util/cast.js'
 import type { Awaitable } from '../lib/util/type.js'
 import type { OAuthProvider } from '../oauth-provider.js'
 import { subSchema } from '../oidc/sub.js'
+import { RequestInfo } from '../request/request-info.js'
 import { RequestUri, requestUriSchema } from '../request/request-uri.js'
-import { clearCsrfToken, validateCsrfToken } from './csrf.js'
+import { AuthorizationRedirectParameters } from '../result/authorization-redirect-parameters.js'
+import {
+  ERROR_REDIRECT_KEYS,
+  OAuthRedirectOptions,
+  OAuthRedirectQueryParameter,
+  SUCCESS_REDIRECT_KEYS,
+  buildRedirectEntries,
+  buildRedirectUri,
+} from './authorize-page/send-authorize-redirect.js'
+import { validateCsrfToken } from './csrf.js'
 import type { RouterOptions } from './router-options.js'
 
 const verifyHandleSchema = z.object({ handle: handleSchema }).strict()
@@ -209,7 +230,7 @@ export function apiRouter<
       '/oauth-sessions',
       z.object({ sub: subSchema }).strict(),
       async function (req, res) {
-        const { account } = await authenticate(
+        const { deviceAccount } = await authenticate(
           req,
           res,
           this.input.sub,
@@ -217,7 +238,7 @@ export function apiRouter<
         )
 
         const tokenInfos = await server.tokenManager.listAccountTokens(
-          account.sub,
+          deviceAccount.account.sub,
         )
 
         const uniqueClientIds = new Set(
@@ -266,7 +287,7 @@ export function apiRouter<
       '/account-sessions',
       z.object({ sub: subSchema }).strict(),
       async function (req, res) {
-        const { account } = await authenticate(
+        const { deviceAccount } = await authenticate(
           req,
           res,
           this.input.sub,
@@ -274,7 +295,7 @@ export function apiRouter<
         )
 
         const deviceAccounts = await server.accountManager.listAccountDevices(
-          account.sub,
+          deviceAccount.account.sub,
           this.requestUri,
           extractEphemeralCookies(req, this.requestUri),
         )
@@ -318,42 +339,243 @@ export function apiRouter<
     ),
   )
 
+  router.use(
+    apiRoute(
+      'POST',
+      '/accept',
+      z.object({ sub: subSchema }).strict(),
+      async function (req, res) {
+        const { requestUri } = this
+        if (!requestUri) {
+          throw new InvalidRequestError(
+            'This endpoint can only be used in the context of an OAuth request',
+          )
+        }
+
+        // Any AccessDeniedError caught in this block will result in a redirect
+        // to the client's redirect_uri with an error.
+        try {
+          const { deviceId, deviceMetadata, deviceAccount, requestInfo } =
+            await authenticate(req, res, this.input.sub, requestUri, true)
+
+          const { clientId, parameters } = requestInfo
+          // Any error thrown in this block will be transformed into an
+          // AccessDeniedError in order to allow redirecting the user to the
+          // client.
+          try {
+            const client = await server.clientManager.getClient(clientId)
+
+            const { account, authorizedClients } = deviceAccount
+
+            const code = await server.requestManager.setAuthorized(
+              requestUri,
+              client,
+              account,
+              deviceId,
+              deviceMetadata,
+            )
+
+            const clientData = authorizedClients.get(clientId)
+            if (server.checkConsentRequired(parameters, clientData)) {
+              const scopes = new Set(clientData?.authorizedScopes)
+
+              // Add the newly accepted scopes to the authorized scopes
+              for (const s of parameters.scope?.split(' ') ?? []) scopes.add(s)
+
+              await server.accountManager.setAuthorizedClient(account, client, {
+                ...clientData,
+                authorizedScopes: [...scopes],
+              })
+            }
+
+            const url = buildRedirectUrl(server.issuer, parameters, { code })
+
+            return { url }
+          } catch (err) {
+            try {
+              await server.requestManager.delete(requestUri)
+            } catch (err) {
+              onError?.(req, res, err, 'Failed to delete request')
+            }
+
+            throw AccessDeniedError.from(parameters, err, 'server_error')
+          }
+        } catch (err) {
+          if (err instanceof AccessDeniedError && err.parameters.redirect_uri) {
+            // Prefer logging the cause
+            onError?.(req, res, err.cause ?? err, 'Authorization failed')
+
+            const url = buildRedirectUrl(
+              server.issuer,
+              err.parameters,
+              err.toJSON(),
+            )
+
+            return { url }
+          }
+
+          throw err
+        } finally {
+          clearSessionCookies(req, res, requestUri)
+
+          await server.accountManager
+            .removeRequestAccounts(requestUri)
+            .catch((err) => {
+              onError?.(req, res, err, 'Failed to remove request accounts')
+            })
+        }
+      },
+    ),
+  )
+
+  router.use(
+    apiRoute(
+      'POST',
+      '/reject',
+      z.object({}).strict(),
+      async function (req, res) {
+        const { requestUri } = this
+        if (!requestUri) {
+          throw new InvalidRequestError(
+            'This endpoint can only be used in the context of an OAuth request',
+          )
+        }
+
+        // Once this endpoint is called, the request will definitely be
+        // rejected.
+        try {
+          // No need to authenticate the user here as they are not authorizing a
+          // particular account (CSRF protection is enough).
+
+          // @NOTE that the client could *technically* trigger this endpoint while
+          // the user is on the authorize page by forging the request (because the
+          // client knows the RequestURI from PAR and has all the info needed to
+          // forge the request, including CSRF). This cannot be used as DoS attack
+          // as the request ID is not guessable and would only result in a bad UX
+          // for misbehaving clients, only for the users of those clients.
+
+          const { deviceId } = await server.deviceManager.load(req, res, true)
+
+          const { parameters } = await server.requestManager.get(
+            requestUri,
+            deviceId,
+          )
+
+          const url = buildRedirectUrl(server.issuer, parameters, {
+            error: 'access_denied',
+            error_description: 'The user rejected the request',
+          })
+
+          return { url }
+        } catch (err) {
+          if (err instanceof AccessDeniedError && err.parameters.redirect_uri) {
+            // Prefer logging the cause
+            onError?.(req, res, err.cause ?? err, 'Authorization failed')
+
+            const url = buildRedirectUrl(
+              server.issuer,
+              err.parameters,
+              err.toJSON(),
+            )
+
+            return { url }
+          }
+
+          throw err
+        } finally {
+          clearSessionCookies(req, res, requestUri)
+
+          await server.accountManager
+            .removeRequestAccounts(requestUri)
+            .catch((err) => {
+              onError?.(req, res, err, 'Failed to remove request accounts')
+            })
+
+          await server.requestManager.delete(requestUri).catch((err) => {
+            onError?.(req, res, err, 'Failed to delete request')
+          })
+        }
+      },
+    ),
+  )
+
   return router
 
   async function authenticate(
     req: TReq,
     res: TRes,
     sub: string,
+    requestUri: RequestUri,
+    rotateDeviceCookie?: boolean,
+  ): Promise<{
+    deviceId: DeviceId
+    deviceMetadata: RequestMetadata
+    deviceAccount: DeviceAccount
+    requestInfo: RequestInfo
+  }>
+  async function authenticate(
+    req: TReq,
+    res: TRes,
+    sub: string,
     requestUri: RequestUri | undefined,
-  ) {
-    // @TODO: Throw errors that the frontend will understand
+    rotateDeviceCookie?: boolean,
+  ): Promise<{
+    deviceId: DeviceId
+    deviceMetadata: RequestMetadata
+    deviceAccount: DeviceAccount
+    requestInfo?: RequestInfo
+  }>
+  async function authenticate(
+    req: TReq,
+    res: TRes,
+    sub: string,
+    requestUri: RequestUri | undefined,
+    rotateDeviceCookie: boolean = false,
+  ): Promise<{
+    deviceId: DeviceId
+    deviceMetadata: RequestMetadata
+    deviceAccount: DeviceAccount
+    requestInfo?: RequestInfo
+  }> {
+    const { deviceId, deviceMetadata } = await server.deviceManager.load(
+      req,
+      res,
+      rotateDeviceCookie,
+    )
 
-    const { deviceId } = await server.deviceManager
-      .load(req, res)
-      .catch((cause) => {
-        throw createHttpError(401, 'Invalid device', { cause })
-      })
+    const requestInfo = requestUri
+      ? await server.requestManager.get(requestUri, deviceId)
+      : undefined
+
+    const parameters = requestInfo?.parameters
 
     // Ensures the requested "sub" is linked to the device
     const deviceAccount = await server.accountManager
       .getDeviceAccount(deviceId, sub, requestUri)
-      .catch((cause) => {
-        throw createHttpError(401, 'Invalid account', { cause })
+      .catch((err) => {
+        throw parameters //
+          ? LoginRequiredError.from(parameters, err)
+          : err
       })
 
     // If the session is temporary, check the cookie secret
     if (!hasEphemeralCookie(req, deviceAccount, requestUri)) {
       await server.accountManager.removeDeviceAccounts(deviceId, sub)
-
-      throw createHttpError(401, 'This session has expired')
+      const message = 'Invalid session cookie'
+      throw parameters
+        ? new LoginRequiredError(parameters, message)
+        : new InvalidRequestError(message)
     }
 
     // The session exists but was created too long ago
     if (server.checkLoginRequired(deviceAccount)) {
-      throw createHttpError(401, 'Login required')
+      const message = 'Login required'
+      throw parameters
+        ? new LoginRequiredError(parameters, message)
+        : new InvalidRequestError(message)
     }
 
-    return deviceAccount
+    return { deviceId, deviceMetadata, deviceAccount, requestInfo }
   }
 
   type ApiContext<T extends RouterCtx, I = void> = SubCtx<
@@ -435,7 +657,12 @@ export function apiRouter<
               return schema.parseAsync(body, { path: ['body'] })
             }
           : async function (req) {
-              req.resume() // Flush body
+              // @NOTE This should not be necessary with GET requests
+              req.resume().once('error', (_err) => {
+                // Ignore errors when flushing the request body
+                // (e.g. client closed connection)
+              })
+
               const query = Object.fromEntries(this.url.searchParams)
               return schema.parseAsync(query, { path: ['query'] })
             }
@@ -541,15 +768,11 @@ export function hasEphemeralCookie(
  * Clears all the temporary session cookies that were created in the context of
  * a particular request.
  */
-export function clearSessionCookies(
+function clearSessionCookies(
   req: IncomingMessage,
   res: ServerResponse,
   requestUri: RequestUri,
 ) {
-  // Clear the CSRF token cookie, preventing replay of this request (navigating
-  // "back" will result in an error).
-  clearCsrfToken(res, requestUri)
-
   // Clear every cookie secret that were created for this request.
   for (const cookieName of extractEphemeralCookies(req, requestUri)) {
     clearCookie(res, cookieName, EPHEMERAL_COOKIE_OPTIONS)
@@ -565,4 +788,61 @@ function extractEphemeralCookies(
   return Object.entries(cookies)
     .filter(([, cookieValue]) => cookieValue === expectedValue)
     .map(([cookieName]) => cookieName)
+}
+
+function buildRedirectUrl(
+  iss: string,
+  parameters: OAuthAuthorizationRequestParameters,
+  redirect: AuthorizationRedirectParameters,
+): string {
+  const url = new URL('/oauth/authorize/redirect', iss)
+
+  url.searchParams.set('redirect_mode', buildRedirectUri(parameters))
+  url.searchParams.set('redirect_uri', buildRedirectUri(parameters))
+
+  for (const [key, value] of buildRedirectEntries(iss, parameters, redirect)) {
+    url.searchParams.set(key, value)
+  }
+
+  return url.href
+}
+
+export function parseRedirectUrl(url: URL): OAuthRedirectOptions {
+  if (url.pathname !== '/oauth/authorize/redirect') {
+    throw new InvalidRequestError(
+      `Invalid redirect URL: ${url.pathname} is not a valid path`,
+    )
+  }
+
+  const params: [OAuthRedirectQueryParameter, string][] = []
+
+  if (url.searchParams.has('code')) {
+    for (const key of SUCCESS_REDIRECT_KEYS) {
+      const value = url.searchParams.get(key)
+      if (value != null) params.push([key, value])
+    }
+  } else if (url.searchParams.has('error')) {
+    for (const key of ERROR_REDIRECT_KEYS) {
+      const value = url.searchParams.get(key)
+      if (value != null) params.push([key, value])
+    }
+  } else {
+    throw new InvalidRequestError(
+      'Invalid redirect URL: neither code nor error found',
+    )
+  }
+
+  try {
+    const mode: OAuthResponseMode = oauthResponseModeSchema.parse(
+      url.searchParams.get('redirect_mode'),
+    )
+
+    const redirectUri: OAuthRedirectUri = oauthRedirectUriSchema.parse(
+      url.searchParams.get('redirect_uri'),
+    )
+
+    return { mode, redirectUri, params }
+  } catch (err) {
+    throw InvalidRequestError.from(err, 'Invalid redirect URL')
+  }
 }
