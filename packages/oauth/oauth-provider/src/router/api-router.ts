@@ -170,7 +170,7 @@ export function apiRouter<
         const uniqueSubs = new Set(asArray(this.input.sub))
 
         for (const sub of uniqueSubs) {
-          await server.accountManager.removeDeviceAccounts(deviceId, sub)
+          await server.accountManager.removeDeviceAccount(deviceId, sub)
         }
 
         return { success: true as const }
@@ -329,7 +329,7 @@ export function apiRouter<
         // another user's session cookie, we allow them to revoke the device
         // session.
 
-        await server.accountManager.removeDeviceAccounts(
+        await server.accountManager.removeDeviceAccount(
           this.input.deviceId,
           this.input.sub,
         )
@@ -419,7 +419,7 @@ export function apiRouter<
           clearSessionCookies(req, res, requestUri)
 
           await server.accountManager
-            .removeRequestAccounts(requestUri)
+            .removeRequestDeviceAccounts(requestUri)
             .catch((err) => {
               onError?.(req, res, err, 'Failed to remove request accounts')
             })
@@ -486,7 +486,7 @@ export function apiRouter<
           clearSessionCookies(req, res, requestUri)
 
           await server.accountManager
-            .removeRequestAccounts(requestUri)
+            .removeRequestDeviceAccounts(requestUri)
             .catch((err) => {
               onError?.(req, res, err, 'Failed to remove request accounts')
             })
@@ -551,7 +551,7 @@ export function apiRouter<
 
     // Ensures the requested "sub" is linked to the device
     const deviceAccount = await server.accountManager
-      .getDeviceAccount(deviceId, sub, requestUri)
+      .getDeviceAccount(deviceId, sub, requestUri ?? null)
       .catch((err) => {
         throw parameters //
           ? LoginRequiredError.from(parameters, err)
@@ -560,7 +560,7 @@ export function apiRouter<
 
     // If the session is temporary, check the cookie secret
     if (!hasEphemeralCookie(req, deviceAccount, requestUri)) {
-      await server.accountManager.removeDeviceAccounts(deviceId, sub)
+      await server.accountManager.removeDeviceAccount(deviceId, sub)
       const message = 'Invalid session cookie'
       throw parameters
         ? new LoginRequiredError(parameters, message)

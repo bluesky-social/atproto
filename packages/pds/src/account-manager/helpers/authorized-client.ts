@@ -1,0 +1,78 @@
+import {
+  AuthorizedClientData,
+  AuthorizedClients,
+  ClientId,
+  Sub,
+} from '@atproto/oauth-provider'
+import { fromJson, toDateISO, toJson } from '../../db'
+import { AccountDb } from '../db'
+
+export async function upsert(
+  db: AccountDb,
+  did: string,
+  clientId: ClientId,
+  data: AuthorizedClientData,
+) {
+  const now = new Date()
+
+  return db.db
+    .insertInto('authorized_client')
+    .values({
+      did,
+      clientId,
+      createdAt: toDateISO(now),
+      updatedAt: toDateISO(now),
+      data: toJson(data),
+    })
+    .onConflict((oc) =>
+      // uses "authorized_client_pk" idx
+      oc.columns(['did', 'clientId']).doUpdateSet({
+        updatedAt: toDateISO(now),
+        data: toJson(data),
+      }),
+    )
+    .executeTakeFirst()
+}
+
+export async function getAuthorizedClients(
+  db: AccountDb,
+  did: string,
+): Promise<AuthorizedClients> {
+  const found = await db.db
+    .selectFrom('authorized_client')
+    .select('clientId')
+    .select('data')
+    .where('did', '=', did) // uses "authorized_client_did_idx"
+    .execute()
+
+  return new Map(
+    found.map((row) => [row.clientId, fromJson(row.data)] as const),
+  )
+}
+
+export async function getAuthorizedClientsMulti(
+  db: AccountDb,
+  inputDids: Iterable<string>,
+): Promise<Map<Sub, AuthorizedClients>> {
+  // Using a Map will ensure unicity of dids (through unicity of keys)
+  const map = new Map<Sub, AuthorizedClients>(
+    Array.from(inputDids, (did) => [did, new Map()]),
+  )
+
+  if (map.size) {
+    const found = await db.db
+      .selectFrom('authorized_client')
+      .select('did')
+      .select('clientId')
+      .select('data')
+      // uses "authorized_client_did_idx"
+      .where('did', 'in', [...map.keys()])
+      .execute()
+
+    for (const { did, clientId, data } of found) {
+      map.get(did)!.set(clientId, fromJson(data))
+    }
+  }
+
+  return map
+}

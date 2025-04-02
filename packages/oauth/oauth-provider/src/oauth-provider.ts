@@ -357,20 +357,14 @@ export class OAuthProvider extends OAuthVerifier {
     return !requestedScopes.every((scope) => authorizedScopes.includes(scope))
   }
 
-  public checkLoginRequired({ data }: DeviceAccount, leeway = 0) {
-    /** in seconds */
-    const authAge = (Date.now() - data.authenticatedAt.getTime()) / 1e3
-
-    // Fool-proof (invalid date, or suspiciously in the future)
-    if (!Number.isFinite(authAge) || authAge < 0) {
-      return true
+  public checkLoginRequired(deviceAccount: DeviceAccount) {
+    if (deviceAccount.data.remembered) {
+      const authAge = Date.now() - deviceAccount.updatedAt.getTime()
+      return authAge > this.authenticationMaxAge
+    } else {
+      const authAge = Date.now() - deviceAccount.createdAt.getTime()
+      return authAge > this.ephemeralSessionMaxAge
     }
-
-    const maxAge = data.remembered
-      ? this.authenticationMaxAge
-      : this.ephemeralSessionMaxAge
-
-    return authAge >= maxAge + leeway
   }
 
   protected async authenticateClient(

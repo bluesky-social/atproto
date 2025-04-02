@@ -107,20 +107,7 @@ export type AuthorizedClientData = { authorizedScopes: readonly string[] }
 export type AuthorizedClients = Map<ClientId, AuthorizedClientData>
 
 export type DeviceAccountData = {
-  /**
-   * The date at which the device account was created. This value is used to
-   * determine the expiration date of the device account.
-   */
-  authenticatedAt: Date
-
   remembered: boolean
-
-  /**
-   * The requestId in the context of which the device account is being created.
-   *
-   * @note This value will typically be `null` if `remembered` is `true`.
-   */
-  requestId: null | RequestId
 
   /**
    * If the session is "ephemeral" (i.e. not "remembered"), a cookie secret will
@@ -136,12 +123,48 @@ export type DeviceAccountData = {
 
 export type DeviceAccount = {
   deviceId: DeviceId
+
+  /**
+   * The data associated with the device, created through the
+   * {@link DeviceStore}. This data is used to identify devices on which a user
+   * has logged in.
+   */
   deviceData: DeviceData
 
+  /**
+   * The account associated with the device account.
+   */
   account: Account
 
+  /**
+   * The list of clients that are authorized by the account, as created through
+   * the {@link AccountStore.setAuthorizedClient} method.
+   */
   authorizedClients: AuthorizedClients
 
+  /**
+   * The requestId in the context of which the device account is being created.
+   *
+   * @note This value will typically be `null` if `remembered` is `true`.
+   */
+  requestId: null | RequestId
+
+  /**
+   * The date at which the device account was created. This value is used to
+   * determine the expiration date of the device account.
+   */
+  createdAt: Date
+
+  /**
+   * The date at which the device account was last updated. This value is used
+   * to determine the date at which the user last authenticated on a device
+   */
+  updatedAt: Date
+
+  /**
+   * The date at which the device account was last authenticated. This value
+   * is used to determine the validity of the device account.
+   */
   data: DeviceAccountData
 }
 
@@ -193,16 +216,17 @@ export interface AccountStore {
    * @param data.requestId - If provided, the inserted account must be bound to
    * that particular requestId.
    *
-   * @note Whenever a particular [`deviceId`, `sub`] pair is created, all
-   * existing device accounts for that pair should be deleted.
+   * @note Whenever a particular device account is created, all **unbound**
+   * device accounts for the same `deviceId` & `sub` should be deleted.
    *
    * @note When a particular request is deleted (through
    * {@link RequestStore.deleteRequest}), all accounts bound to that request
    * should be deleted as well.
    */
-  addDeviceAccount(
+  upsertDeviceAccount(
     deviceId: DeviceId,
     sub: Sub,
+    requestId: RequestId | null,
     data: DeviceAccountData,
   ): Awaitable<void>
 
@@ -219,25 +243,37 @@ export interface AccountStore {
     requestId: null | RequestId,
   ): Awaitable<DeviceAccount | null>
 
-  removeRequestAccounts(requestId: RequestId): Awaitable<void>
-
   /**
-   * Removes *all* the device-accounts (request bound or not) associated with
-   * the given device & account.
+   * Remove the device-accounts associated with the given requestId.
    *
    * @note Noop if the device-account is not found.
    */
-  removeDeviceAccounts(deviceId: DeviceId, sub: Sub): Awaitable<void>
+  removeRequestDeviceAccounts(requestId: RequestId): Awaitable<void>
 
   /**
-   * @returns **all** the device accounts associated with the given device.
+   * Removes *all* the unbound device-accounts associated with the given device
+   * & account.
+   *
+   * @note Noop if the device-account is not found.
    */
-  listDeviceAccounts(deviceId: DeviceId): Awaitable<DeviceAccount[]>
+  removeDeviceAccount(deviceId: DeviceId, sub: Sub): Awaitable<void>
 
   /**
-   * @returns **all** the device accounts associated with the given account.
+   * @returns **all** the device accounts that match the {@link requestId}
+   * criteria and given {@link filter}.
    */
-  listAccountDevices(sub: Sub): Awaitable<DeviceAccount[]>
+  listDeviceAccounts(
+    /**
+     * If provided, the results must either have the same `requestId`, or not be
+     * bound to a particular `requestId` (`requestId == null`). If `null`, the
+     * results must not be bound to a particular `requestId`:
+     *
+     * - input: `null` => output: `requestId == null`
+     * - input: `"id"` => output: `requestId == null || requestId == "id"`
+     */
+    requestId: RequestId | null,
+    filter: { sub: Sub } | { deviceId: DeviceId },
+  ): Awaitable<DeviceAccount[]>
 
   resetPasswordRequest(data: ResetPasswordRequestData): Awaitable<void>
   resetPasswordConfirm(data: ResetPasswordConfirmData): Awaitable<void>
@@ -253,12 +289,11 @@ export const isAccountStore = buildInterfaceChecker<AccountStore>([
   'authenticateAccount',
   'setAuthorizedClient',
   'getAccount',
-  'addDeviceAccount',
+  'upsertDeviceAccount',
   'getDeviceAccount',
-  'removeRequestAccounts',
-  'removeDeviceAccounts',
+  'removeRequestDeviceAccounts',
+  'removeDeviceAccount',
   'listDeviceAccounts',
-  'listAccountDevices',
   'resetPasswordRequest',
   'resetPasswordConfirm',
   'verifyHandleAvailability',

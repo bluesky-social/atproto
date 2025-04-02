@@ -140,7 +140,7 @@ export class AccountManager {
 
     const ephemeralCookie = remembered ? null : await randomHexId(32)
 
-    await this.addDeviceAccount(
+    await this.upsertDeviceAccount(
       deviceId,
       account,
       remembered,
@@ -159,7 +159,7 @@ export class AccountManager {
 
       return { account, ephemeralCookie }
     } catch (err) {
-      await this.removeDeviceAccounts(deviceId, account.sub)
+      await this.removeDeviceAccount(deviceId, account.sub)
 
       throw InvalidRequestError.from(
         err,
@@ -202,7 +202,7 @@ export class AccountManager {
 
     const ephemeralCookie = remembered ? null : await randomHexId(32)
 
-    await this.addDeviceAccount(
+    await this.upsertDeviceAccount(
       deviceId,
       account,
       remembered,
@@ -221,32 +221,35 @@ export class AccountManager {
 
       return { account, ephemeralCookie }
     } catch (err) {
-      await this.removeDeviceAccounts(deviceId, account.sub)
+      await this.removeDeviceAccount(deviceId, account.sub)
 
       throw err
     }
   }
 
-  protected async addDeviceAccount(
+  protected async upsertDeviceAccount(
     deviceId: DeviceId,
     account: Account,
     remembered: boolean,
     requestId: RequestId | null,
     ephemeralCookie: string | null,
   ): Promise<void> {
-    await this.store.addDeviceAccount(deviceId, account.sub, {
-      authenticatedAt: new Date(),
-      remembered,
+    await this.store.upsertDeviceAccount(
+      deviceId,
+      account.sub,
       // If "remember" is true, do not bind the session to the request.
-      requestId: remembered ? null : requestId,
-      ephemeralCookie,
-    })
+      remembered ? null : requestId,
+      {
+        remembered,
+        ephemeralCookie,
+      },
+    )
   }
 
   public async getDeviceAccount(
     deviceId: DeviceId,
     sub: Sub,
-    requestUri?: RequestUri,
+    requestUri: RequestUri | null,
   ): Promise<DeviceAccount> {
     const requestId = requestUri ? decodeRequestUri(requestUri) : null
 
@@ -258,13 +261,13 @@ export class AccountManager {
     if (!deviceAccount) throw new InvalidRequestError(`Account not found`)
 
     // Fool-proofing
-    if (!requestId && deviceAccount.data.requestId) {
+    if (!requestId && deviceAccount.requestId) {
       throw new Error('DeviceAccount was bound to a request')
     }
     if (
       requestId &&
-      deviceAccount.data.requestId &&
-      deviceAccount.data.requestId !== requestId
+      deviceAccount.requestId &&
+      deviceAccount.requestId !== requestId
     ) {
       throw new Error('DeviceAccount was bound to another request')
     }
@@ -287,13 +290,13 @@ export class AccountManager {
     return this.store.getAccount(sub)
   }
 
-  public async removeRequestAccounts(requestUri: RequestUri) {
+  public async removeRequestDeviceAccounts(requestUri: RequestUri) {
     const requestId = decodeRequestUri(requestUri)
-    return this.store.removeRequestAccounts(requestId)
+    return this.store.removeRequestDeviceAccounts(requestId)
   }
 
-  public async removeDeviceAccounts(deviceId: DeviceId, sub: Sub) {
-    return this.store.removeDeviceAccounts(deviceId, sub)
+  public async removeDeviceAccount(deviceId: DeviceId, sub: Sub) {
+    return this.store.removeDeviceAccount(deviceId, sub)
   }
 
   public async listDeviceAccounts(
@@ -302,14 +305,17 @@ export class AccountManager {
     ephemeralCookies: string[] = [],
   ): Promise<DeviceAccount[]> {
     const requestId = requestUri ? decodeRequestUri(requestUri) : null
-    const deviceAccounts = await this.store.listDeviceAccounts(deviceId)
+
+    const deviceAccounts = await this.store.listDeviceAccounts(requestId, {
+      deviceId,
+    })
+
     return deviceAccounts
       .filter((deviceAccount) => deviceAccount.deviceId === deviceId) // Fool proof
       .filter(
         ({ data }) =>
-          (data.requestId === null || data.requestId === requestId) &&
-          (data.ephemeralCookie == null ||
-            ephemeralCookies.includes(data.ephemeralCookie)),
+          data.ephemeralCookie == null ||
+          ephemeralCookies.includes(data.ephemeralCookie),
       )
   }
 
@@ -319,14 +325,16 @@ export class AccountManager {
     ephemeralCookies: string[] = [],
   ): Promise<DeviceAccount[]> {
     const requestId = requestUri ? decodeRequestUri(requestUri) : null
-    const deviceAccounts = await this.store.listAccountDevices(sub)
+    const deviceAccounts = await this.store.listDeviceAccounts(requestId, {
+      sub,
+    })
+
     return deviceAccounts
       .filter((deviceAccount) => deviceAccount.account.sub === sub) // Fool proof
       .filter(
         ({ data }) =>
-          (data.requestId === null || data.requestId === requestId) &&
-          (data.ephemeralCookie == null ||
-            ephemeralCookies.includes(data.ephemeralCookie)),
+          data.ephemeralCookie == null ||
+          ephemeralCookies.includes(data.ephemeralCookie),
       )
   }
 
