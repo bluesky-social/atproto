@@ -1,6 +1,6 @@
 {
   "name": "@atproto/bsync",
-  "version": "0.0.17",
+  "version": "0.0.18",
   "license": "MIT",
   "description": "Sychronizing service for app.bsky App View (Bluesky API)",
   "keywords": [

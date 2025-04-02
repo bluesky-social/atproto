@@ -1,5 +1,12 @@
 # @atproto/lex-cli
 
+## 0.7.2
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lexicon@0.4.10
+
 ## 0.7.1
 
 ### Patch Changes

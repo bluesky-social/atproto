@@ -1,6 +1,6 @@
 {
   "name": "@atproto/identity",
-  "version": "0.4.6",
+  "version": "0.4.7",
   "license": "MIT",
   "description": "Library for decentralized identities in atproto using DIDs and handles",
   "keywords": [

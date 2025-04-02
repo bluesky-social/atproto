@@ -1,5 +1,14 @@
 # @atproto/common
 
+## 0.4.10
+
+### Patch Changes
+
+- [#3672](https://github.com/bluesky-social/atproto/pull/3672) [`4db923ca1`](https://github.com/bluesky-social/atproto/commit/4db923ca1c4fadd31d41c851933659e5186ee144) Thanks [@dholms](https://github.com/dholms)! - Add DASL CID parser
+
+- Updated dependencies [[`4db923ca1`](https://github.com/bluesky-social/atproto/commit/4db923ca1c4fadd31d41c851933659e5186ee144)]:
+  - @atproto/common-web@0.4.1
+
 ## 0.4.9
 
 ### Patch Changes
