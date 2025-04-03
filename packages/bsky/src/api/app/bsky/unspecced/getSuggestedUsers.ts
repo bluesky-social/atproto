@@ -84,12 +84,12 @@ const hydration = async (
   if (params.viewer) {
     pairs.set(params.viewer, dids)
   }
-  const [starterPacksState, bidirectionalBlocks] = await Promise.all([
+  const [profileBasicState, bidirectionalBlocks] = await Promise.all([
     ctx.hydrator.hydrateProfilesBasic(dids, params.hydrateCtx),
     ctx.hydrator.hydrateBidirectionalBlocks(pairs),
   ])
 
-  return mergeManyStates(starterPacksState, { bidirectionalBlocks })
+  return mergeManyStates(profileBasicState, { bidirectionalBlocks })
 }
 
 const noBlocksOrFollows = (
@@ -103,8 +103,8 @@ const noBlocksOrFollows = (
   return {
     ...skeleton,
     dids: skeleton.dids.filter((did) => {
-      const profileView = ctx.views.profileBasic(did, hydration)
-      return !blocks?.get(did) && !profileView?.viewer?.following
+      const viewer = ctx.views.profileViewer(did, hydration)
+      return !blocks?.get(did) && !viewer?.following
     }),
   }
 }
