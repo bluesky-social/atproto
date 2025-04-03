@@ -36,9 +36,7 @@ async function* iterateRepo(
   const commit = await storage.readObjAndBytes(commitCid, def.commit)
   yield { cid: commitCid, bytes: commit.bytes }
   const mst = MST.load(storage, commit.obj.data)
-  for await (const block of mst.carBlockStream({ prefix })) {
-    yield block
-  }
+  yield* mst.carBlockStream({ prefix })
 }
 
 // Narrow slices
