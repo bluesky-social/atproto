@@ -827,6 +827,12 @@ export function parseRedirectUrl(url: URL): OAuthRedirectOptions {
 
   const params: [OAuthRedirectQueryParameter, string][] = []
 
+  const state = url.searchParams.get('state')
+  if (state) params.push(['state', state])
+
+  const iss = url.searchParams.get('iss')
+  if (iss) params.push(['iss', iss])
+
   if (url.searchParams.has('code')) {
     for (const key of SUCCESS_REDIRECT_KEYS) {
       const value = url.searchParams.get(key)

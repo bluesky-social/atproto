@@ -341,6 +341,9 @@ export class OAuthProvider extends OAuthVerifier {
     return this.keyset.publicJwks
   }
 
+  /**
+   * @returns true is the user's consent is required for the requested scopes
+   */
   public checkConsentRequired(
     parameters: OAuthAuthorizationRequestParameters,
     clientData?: AuthorizedClientData,
@@ -809,13 +812,7 @@ export class OAuthProvider extends OAuthVerifier {
         }
       }
 
-      const { account, authorizedClients } =
-        await this.accountManager.getAccount(sub)
-
-      const clientData = authorizedClients.get(client.id)
-      if (this.checkConsentRequired(parameters, clientData)) {
-        throw new InvalidGrantError(`Client no longer trusted by user`)
-      }
+      const { account } = await this.accountManager.getAccount(sub)
 
       return await this.tokenManager.create(
         client,

@@ -46,7 +46,7 @@ export async function getAuthorizedClients(
     .execute()
 
   return new Map(
-    found.map((row) => [row.clientId, fromJson(row.data)] as const),
+    Array.from(found, (row) => [row.clientId, fromJson(row.data)] as const),
   )
 }
 
