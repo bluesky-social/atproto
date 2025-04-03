@@ -184,12 +184,6 @@ export async function up(
   // We don't migrate the "device_account" authorized clients. Users will need
   // to reauthorize the client during the next oauth flow (minor inconvenience
   // for authenticated clients users).
-
-  await db.schema
-    .createIndex('token_did_idx')
-    .on('token')
-    .column('did')
-    .execute()
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {
