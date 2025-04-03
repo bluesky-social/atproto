@@ -1,6 +1,5 @@
 import stream from 'node:stream'
 import { byteIterableToStream } from '@atproto/common'
-import { NSID } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import {
   RepoRootNotFoundError,
@@ -18,7 +17,7 @@ export default function (server: Server, ctx: AppContext) {
     }),
     handler: async ({ params, auth }) => {
       const { did, since, prefix } = params
-      if (prefix && !NSID.isValid(prefix)) {
+      if (prefix && !isValidNSIDPrefix(prefix)) {
         throw new InvalidRequestError('prefix must be a valid NSID segment')
       }
       await assertRepoAvailability(
@@ -35,6 +34,10 @@ export default function (server: Server, ctx: AppContext) {
       }
     },
   })
+}
+
+const isValidNSIDPrefix = (str: string): boolean => {
+  return /^[a-z0-9.-]+$/.test(str)
 }
 
 export const getCarStream = async (

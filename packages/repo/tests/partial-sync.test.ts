@@ -20,7 +20,7 @@ describe('Partial Sync', () => {
     'com.example.two.b',
     'com.example.a',
     'com.example.b',
-    'com.examplelong',
+    'com.example.onelong',
     'com.alt.a',
     'com.alt.b',
   ]
@@ -94,6 +94,7 @@ describe('Partial Sync', () => {
         'com.example.two.b',
         'com.example.a',
         'com.example.b',
+        'com.example.onelong',
       ]),
     )
   })
