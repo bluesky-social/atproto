@@ -7,7 +7,6 @@
       "description": "Get a skeleton of suggested users. Intended to be called and hydrated by app.bsky.unspecced.getSuggestedUsers",
       "parameters": {
         "type": "params",
-        "required": ["category"],
         "properties": {
           "viewer": {
             "type": "string",

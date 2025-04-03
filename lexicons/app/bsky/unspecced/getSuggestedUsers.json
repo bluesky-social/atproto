@@ -7,7 +7,6 @@
       "description": "Get a list of suggested users",
       "parameters": {
         "type": "params",
-        "required": ["category"],
         "properties": {
           "category": {
             "type": "string",
