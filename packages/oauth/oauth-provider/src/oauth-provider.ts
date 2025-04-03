@@ -828,7 +828,7 @@ export class OAuthProvider extends OAuthVerifier {
       // If a token is replayed, requestManager.findCode will throw. In that
       // case, we need to revoke any token that was issued for this code.
 
-      await this.tokenManager.revoke(input.code)
+      await this.revoke(input.code, { signDeviceOut: true })
 
       // @TODO (?) in order to protect the user, we should maybe also mark the
       // account-device association as expired ?
@@ -856,10 +856,17 @@ export class OAuthProvider extends OAuthVerifier {
   /**
    * @see {@link https://datatracker.ietf.org/doc/html/rfc7009#section-2.1 rfc7009}
    */
-  public async revoke({ token }: OAuthTokenIdentification) {
-    // @TODO this should also remove the account-device association (or, at
-    // least, mark it as expired)
-    await this.tokenManager.revoke(token)
+  public async revoke(token: string, options?: { signDeviceOut?: boolean }) {
+    const tokenInfo = await this.tokenManager.revoke(token)
+
+    // If the session was created from a particular device, also remove the
+    // device account. (A better UX might be to mark the device-account as
+    // "expired", so that the account is still listed on that device, but
+    // authentication is required).
+    if (options?.signDeviceOut && tokenInfo?.data.deviceId) {
+      const { deviceId, sub } = tokenInfo.data
+      await this.accountManager.removeDeviceAccount(deviceId, sub)
+    }
   }
 
   /**

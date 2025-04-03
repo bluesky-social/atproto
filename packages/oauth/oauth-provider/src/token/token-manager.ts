@@ -455,37 +455,40 @@ export class TokenManager {
   /**
    * @see {@link https://datatracker.ietf.org/doc/html/rfc7009#section-2.2 | RFC7009 Section 2.2}
    */
-  async revoke(token: string): Promise<void> {
+  async revoke(token: string): Promise<undefined | TokenInfo> {
     switch (true) {
       case isTokenId(token): {
-        await this.store.deleteToken(token)
-        return
+        try {
+          return await this.getTokenInfo(token)
+        } finally {
+          await this.store.deleteToken(token)
+        }
       }
 
       case isSignedJwt(token): {
-        const { payload } = await this.signer
-          .verifyAccessToken(token, { clockTolerance: Infinity })
-          // No error should be returned if the token is not valid
-          .catch((_) => ({ payload: null }))
-        if (payload) await this.store.deleteToken(payload.jti)
-        return
+        const { payload } = await this.signer.verifyAccessToken(token, {
+          clockTolerance: Infinity,
+        })
+        try {
+          return await this.getTokenInfo(payload.jti)
+        } finally {
+          await this.store.deleteToken(payload.jti)
+        }
       }
 
       case isRefreshToken(token): {
         const tokenInfo = await this.store.findTokenByRefreshToken(token)
-        if (tokenInfo) await this.store.deleteToken(tokenInfo.id)
-        return
+        if (!tokenInfo) return
+        await this.store.deleteToken(tokenInfo.id)
+        return tokenInfo
       }
 
       case isCode(token): {
         const tokenInfo = await this.store.findTokenByCode(token)
-        if (tokenInfo) await this.store.deleteToken(tokenInfo.id)
-        return
+        if (!tokenInfo) return
+        await this.store.deleteToken(tokenInfo.id)
+        return tokenInfo
       }
-
-      default:
-        // No error should be returned if the token is not valid
-        return
     }
   }
 
@@ -556,18 +559,11 @@ export class TokenManager {
     }
   }
 
-  async getTokenInfo(
-    tokenType: OAuthTokenType,
-    tokenId: TokenId,
-  ): Promise<TokenInfo> {
+  async getTokenInfo(tokenId: TokenId): Promise<TokenInfo> {
     const tokenInfo = await this.store.readToken(tokenId)
 
     if (!tokenInfo) {
-      throw new InvalidTokenError(tokenType, `Invalid token`)
-    }
-
-    if (tokenInfo.data.expiresAt.getTime() < Date.now()) {
-      throw new InvalidTokenError(tokenType, `Token expired`)
+      throw new InvalidRequestError(`Invalid token`)
     }
 
     return tokenInfo
@@ -580,7 +576,15 @@ export class TokenManager {
     dpopJkt: string | null,
     verifyOptions?: VerifyTokenClaimsOptions,
   ): Promise<VerifyTokenClaimsResult> {
-    const { data, account } = await this.getTokenInfo(tokenType, tokenId)
+    const { data, account } = await this.getTokenInfo(tokenId).catch((err) => {
+      throw InvalidTokenError.from(err, tokenType)
+    })
+
+    if (data.expiresAt.getTime() < Date.now()) {
+      await this.store.deleteToken(tokenId)
+      throw new InvalidTokenError(tokenType, `Token expired`)
+    }
+
     const { parameters } = data
 
     // Construct a list of claim, as if the token was a JWT.

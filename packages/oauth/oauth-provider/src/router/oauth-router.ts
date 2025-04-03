@@ -161,13 +161,14 @@ export function oauthRouter<
     oauthHandler(async function (req, res) {
       const payload = await parseHttpRequest(req, ['json', 'urlencoded'])
 
-      const tokenIdentification = await oauthTokenIdentificationSchema
+      const { token } = await oauthTokenIdentificationSchema
         .parseAsync(payload, { path: ['body'] })
         .catch(throwInvalidRequest)
 
       try {
-        await server.revoke(tokenIdentification)
+        await server.revoke(token, { signDeviceOut: true })
       } catch (err) {
+        // No error should be returned if the token is not valid (per spec)
         onError?.(req, res, err, 'Failed to revoke token')
       }
 
