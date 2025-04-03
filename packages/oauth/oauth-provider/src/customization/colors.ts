@@ -9,7 +9,7 @@ export const colorsSchema = z.record(
     .transform((value, ctx): RgbColor => {
       try {
         const parsed = parseColor(value)
-        if ('a' in parsed) {
+        if ('a' in parsed && parsed.a !== undefined) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
             message: 'Alpha values are not supported',

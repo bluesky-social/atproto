@@ -31,7 +31,7 @@ export function parseHexColor(v: string): RgbColor | RgbaColor {
     const g = parseUi8Hex(v[2].repeat(2))
     const b = parseUi8Hex(v[3].repeat(2))
     const a = v.length > 4 ? parseUi8Hex(v[4].repeat(2)) : undefined
-    return { r, g, b, a }
+    return a == null ? { r, g, b } : { r, g, b, a }
   }
 
   if (v.length === 7 || v.length === 9) {
@@ -39,7 +39,7 @@ export function parseHexColor(v: string): RgbColor | RgbaColor {
     const g = parseUi8Hex(v.slice(3, 5))
     const b = parseUi8Hex(v.slice(5, 7))
     const a = v.length > 8 ? parseUi8Hex(v.slice(7, 9)) : undefined
-    return { r, g, b, a }
+    return a == null ? { r, g, b } : { r, g, b, a }
   }
 
   throw new TypeError(`Invalid hex color value: ${v}`)
