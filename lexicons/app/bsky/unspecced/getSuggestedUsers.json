@@ -11,7 +11,7 @@
         "properties": {
           "category": {
             "type": "string",
-            "descritpion": "Category of users to get suggestions for."
+            "description": "Category of users to get suggestions for."
           },
           "limit": {
             "type": "integer",
