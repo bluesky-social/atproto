@@ -12,7 +12,7 @@
           "category": {
             "type": "string",
             "descritpion": "Category of users to get suggestions for."
-          }
+          },
           "limit": {
             "type": "integer",
             "minimum": 1,
