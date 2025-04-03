@@ -3655,7 +3655,7 @@ export const schemaDict = {
             prefix: {
               type: 'string',
               description:
-                "For downloading a partial 'slice' of a repository. The prefix of the data key (collection + rkey) to be included in the slice. Currently cannot be used in conjunction with 'since' and if passed together then 'since' will be ignored.",
+                "The collection prefix of records to be included in a partial 'slice' of a repository. Prefixes are intended to be structured and full NSID parts and are not intended for arbitrary string matching. Currently cannot be used in conjunction with 'since' and if passed together then 'since' will be ignored.",
             },
           },
         },

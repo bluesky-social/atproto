@@ -1,5 +1,6 @@
 import stream from 'node:stream'
 import { byteIterableToStream } from '@atproto/common'
+import { NSID } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import {
   RepoRootNotFoundError,
@@ -17,6 +18,9 @@ export default function (server: Server, ctx: AppContext) {
     }),
     handler: async ({ params, auth }) => {
       const { did, since, prefix } = params
+      if (prefix && !NSID.isValid(prefix)) {
+        throw new InvalidRequestError('prefix must be a valid NSID segment')
+      }
       await assertRepoAvailability(
         ctx,
         did,
