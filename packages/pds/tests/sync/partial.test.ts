@@ -31,6 +31,9 @@ describe('sync listing', () => {
       'com.example.one.b',
       'com.example.two.a',
       'com.example.two.b',
+      'com.example.a',
+      'com.example.b',
+      'com.examplelong',
       'com.alt.a',
       'com.alt.b',
     ]

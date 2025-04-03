@@ -736,7 +736,7 @@ export class MST {
         const serialized = await node.serialize()
         yield { cid: serialized.cid, bytes: serialized.bytes }
       } else {
-        if (prefix && !node.key.startsWith(prefix)) {
+        if (prefix && !util.isMstPrefix(prefix, node.key)) {
           break
         } else if (includeLeaves) {
           const got = await this.storage.getBytes(node.value)

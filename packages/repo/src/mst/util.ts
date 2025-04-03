@@ -126,6 +126,13 @@ export const isValidMstKey = (str: string): boolean => {
   )
 }
 
+// For checking MST prefixes, we do not do arbitrary string matching and do not extend into record keys
+// Rather we expect the prefix to contain full NSID parts
+// Ex: com.example is a prefix to com.example.test but not to com.exampletest
+export const isMstPrefix = (prefix: string, key: string): boolean => {
+  return key.startsWith(prefix + '/') || key.startsWith(prefix + '.')
+}
+
 export const validCharsRegex = /^[a-zA-Z0-9_\-:.]*$/
 
 export const isValidChars = (str: string): boolean => {
