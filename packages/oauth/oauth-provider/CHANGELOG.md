@@ -1,5 +1,41 @@
 # @atproto/oauth-provider
 
+## 0.6.6
+
+### Patch Changes
+
+- Updated dependencies [[`4db923ca1`](https://github.com/bluesky-social/atproto/commit/4db923ca1c4fadd31d41c851933659e5186ee144)]:
+  - @atproto/common@0.4.10
+
+## 0.6.5
+
+### Patch Changes
+
+- Updated dependencies [[`bdbd3c3e3`](https://github.com/bluesky-social/atproto/commit/bdbd3c3e3f8fe8476a3fecac73810554846c938f)]:
+  - @atproto/common@0.4.9
+
+## 0.6.4
+
+### Patch Changes
+
+- [#3690](https://github.com/bluesky-social/atproto/pull/3690) [`9b28184cb`](https://github.com/bluesky-social/atproto/commit/9b28184cb9c417173f46cfb5824dc197dec3e069) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Expose hcaptcha tokens in hook and errors
+
+- [#3690](https://github.com/bluesky-social/atproto/pull/3690) [`9b28184cb`](https://github.com/bluesky-social/atproto/commit/9b28184cb9c417173f46cfb5824dc197dec3e069) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove hcaptcha hostname check
+
+## 0.6.3
+
+### Patch Changes
+
+- [#3688](https://github.com/bluesky-social/atproto/pull/3688) [`98d8a677c`](https://github.com/bluesky-social/atproto/commit/98d8a677ca4671137727d14567c8354c48c9e850) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add debugging info to HCaptcha validation errors
+
+- [#3688](https://github.com/bluesky-social/atproto/pull/3688) [`98d8a677c`](https://github.com/bluesky-social/atproto/commit/98d8a677ca4671137727d14567c8354c48c9e850) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add hook with hcaptcha result
+
+## 0.6.2
+
+### Patch Changes
+
+- [#3681](https://github.com/bluesky-social/atproto/pull/3681) [`a5a760c1f`](https://github.com/bluesky-social/atproto/commit/a5a760c1f0efd7246c9eebbc0f482d2f505de0a1) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow null hostname in hcaptcha result
+
 ## 0.6.1
 
 ### Patch Changes

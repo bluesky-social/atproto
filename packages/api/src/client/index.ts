@@ -23,6 +23,7 @@ import * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail.j
 import * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail.js'
 import * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle.js'
 import * as ComAtprotoAdminUpdateAccountPassword from './types/com/atproto/admin/updateAccountPassword.js'
+import * as ComAtprotoAdminUpdateAccountSigningKey from './types/com/atproto/admin/updateAccountSigningKey.js'
 import * as ComAtprotoAdminUpdateSubjectStatus from './types/com/atproto/admin/updateSubjectStatus.js'
 import * as ComAtprotoIdentityDefs from './types/com/atproto/identity/defs.js'
 import * as ComAtprotoIdentityGetRecommendedDidCredentials from './types/com/atproto/identity/getRecommendedDidCredentials.js'
@@ -176,9 +177,15 @@ import * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet.js'
 import * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs.js'
 import * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig.js'
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators.js'
+import * as AppBskyUnspeccedGetSuggestedFeeds from './types/app/bsky/unspecced/getSuggestedFeeds.js'
+import * as AppBskyUnspeccedGetSuggestedFeedsSkeleton from './types/app/bsky/unspecced/getSuggestedFeedsSkeleton.js'
+import * as AppBskyUnspeccedGetSuggestedStarterPacks from './types/app/bsky/unspecced/getSuggestedStarterPacks.js'
+import * as AppBskyUnspeccedGetSuggestedStarterPacksSkeleton from './types/app/bsky/unspecced/getSuggestedStarterPacksSkeleton.js'
 import * as AppBskyUnspeccedGetSuggestionsSkeleton from './types/app/bsky/unspecced/getSuggestionsSkeleton.js'
 import * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions.js'
 import * as AppBskyUnspeccedGetTrendingTopics from './types/app/bsky/unspecced/getTrendingTopics.js'
+import * as AppBskyUnspeccedGetTrends from './types/app/bsky/unspecced/getTrends.js'
+import * as AppBskyUnspeccedGetTrendsSkeleton from './types/app/bsky/unspecced/getTrendsSkeleton.js'
 import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton.js'
 import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton.js'
 import * as AppBskyUnspeccedSearchStarterPacksSkeleton from './types/app/bsky/unspecced/searchStarterPacksSkeleton.js'
@@ -191,6 +198,7 @@ import * as ChatBskyActorDefs from './types/chat/bsky/actor/defs.js'
 import * as ChatBskyActorDeleteAccount from './types/chat/bsky/actor/deleteAccount.js'
 import * as ChatBskyActorExportAccountData from './types/chat/bsky/actor/exportAccountData.js'
 import * as ChatBskyConvoAcceptConvo from './types/chat/bsky/convo/acceptConvo.js'
+import * as ChatBskyConvoAddReaction from './types/chat/bsky/convo/addReaction.js'
 import * as ChatBskyConvoDefs from './types/chat/bsky/convo/defs.js'
 import * as ChatBskyConvoDeleteMessageForSelf from './types/chat/bsky/convo/deleteMessageForSelf.js'
 import * as ChatBskyConvoGetConvo from './types/chat/bsky/convo/getConvo.js'
@@ -201,6 +209,7 @@ import * as ChatBskyConvoGetMessages from './types/chat/bsky/convo/getMessages.j
 import * as ChatBskyConvoLeaveConvo from './types/chat/bsky/convo/leaveConvo.js'
 import * as ChatBskyConvoListConvos from './types/chat/bsky/convo/listConvos.js'
 import * as ChatBskyConvoMuteConvo from './types/chat/bsky/convo/muteConvo.js'
+import * as ChatBskyConvoRemoveReaction from './types/chat/bsky/convo/removeReaction.js'
 import * as ChatBskyConvoSendMessage from './types/chat/bsky/convo/sendMessage.js'
 import * as ChatBskyConvoSendMessageBatch from './types/chat/bsky/convo/sendMessageBatch.js'
 import * as ChatBskyConvoUnmuteConvo from './types/chat/bsky/convo/unmuteConvo.js'
@@ -222,6 +231,7 @@ import * as ToolsOzoneModerationGetRecords from './types/tools/ozone/moderation/
 import * as ToolsOzoneModerationGetRepo from './types/tools/ozone/moderation/getRepo.js'
 import * as ToolsOzoneModerationGetReporterStats from './types/tools/ozone/moderation/getReporterStats.js'
 import * as ToolsOzoneModerationGetRepos from './types/tools/ozone/moderation/getRepos.js'
+import * as ToolsOzoneModerationGetSubjects from './types/tools/ozone/moderation/getSubjects.js'
 import * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents.js'
 import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses.js'
 import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos.js'
@@ -261,6 +271,7 @@ export * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail.j
 export * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail.js'
 export * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle.js'
 export * as ComAtprotoAdminUpdateAccountPassword from './types/com/atproto/admin/updateAccountPassword.js'
+export * as ComAtprotoAdminUpdateAccountSigningKey from './types/com/atproto/admin/updateAccountSigningKey.js'
 export * as ComAtprotoAdminUpdateSubjectStatus from './types/com/atproto/admin/updateSubjectStatus.js'
 export * as ComAtprotoIdentityDefs from './types/com/atproto/identity/defs.js'
 export * as ComAtprotoIdentityGetRecommendedDidCredentials from './types/com/atproto/identity/getRecommendedDidCredentials.js'
@@ -414,9 +425,15 @@ export * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet.js'
 export * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs.js'
 export * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig.js'
 export * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators.js'
+export * as AppBskyUnspeccedGetSuggestedFeeds from './types/app/bsky/unspecced/getSuggestedFeeds.js'
+export * as AppBskyUnspeccedGetSuggestedFeedsSkeleton from './types/app/bsky/unspecced/getSuggestedFeedsSkeleton.js'
+export * as AppBskyUnspeccedGetSuggestedStarterPacks from './types/app/bsky/unspecced/getSuggestedStarterPacks.js'
+export * as AppBskyUnspeccedGetSuggestedStarterPacksSkeleton from './types/app/bsky/unspecced/getSuggestedStarterPacksSkeleton.js'
 export * as AppBskyUnspeccedGetSuggestionsSkeleton from './types/app/bsky/unspecced/getSuggestionsSkeleton.js'
 export * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions.js'
 export * as AppBskyUnspeccedGetTrendingTopics from './types/app/bsky/unspecced/getTrendingTopics.js'
+export * as AppBskyUnspeccedGetTrends from './types/app/bsky/unspecced/getTrends.js'
+export * as AppBskyUnspeccedGetTrendsSkeleton from './types/app/bsky/unspecced/getTrendsSkeleton.js'
 export * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton.js'
 export * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton.js'
 export * as AppBskyUnspeccedSearchStarterPacksSkeleton from './types/app/bsky/unspecced/searchStarterPacksSkeleton.js'
@@ -429,6 +446,7 @@ export * as ChatBskyActorDefs from './types/chat/bsky/actor/defs.js'
 export * as ChatBskyActorDeleteAccount from './types/chat/bsky/actor/deleteAccount.js'
 export * as ChatBskyActorExportAccountData from './types/chat/bsky/actor/exportAccountData.js'
 export * as ChatBskyConvoAcceptConvo from './types/chat/bsky/convo/acceptConvo.js'
+export * as ChatBskyConvoAddReaction from './types/chat/bsky/convo/addReaction.js'
 export * as ChatBskyConvoDefs from './types/chat/bsky/convo/defs.js'
 export * as ChatBskyConvoDeleteMessageForSelf from './types/chat/bsky/convo/deleteMessageForSelf.js'
 export * as ChatBskyConvoGetConvo from './types/chat/bsky/convo/getConvo.js'
@@ -439,6 +457,7 @@ export * as ChatBskyConvoGetMessages from './types/chat/bsky/convo/getMessages.j
 export * as ChatBskyConvoLeaveConvo from './types/chat/bsky/convo/leaveConvo.js'
 export * as ChatBskyConvoListConvos from './types/chat/bsky/convo/listConvos.js'
 export * as ChatBskyConvoMuteConvo from './types/chat/bsky/convo/muteConvo.js'
+export * as ChatBskyConvoRemoveReaction from './types/chat/bsky/convo/removeReaction.js'
 export * as ChatBskyConvoSendMessage from './types/chat/bsky/convo/sendMessage.js'
 export * as ChatBskyConvoSendMessageBatch from './types/chat/bsky/convo/sendMessageBatch.js'
 export * as ChatBskyConvoUnmuteConvo from './types/chat/bsky/convo/unmuteConvo.js'
@@ -460,6 +479,7 @@ export * as ToolsOzoneModerationGetRecords from './types/tools/ozone/moderation/
 export * as ToolsOzoneModerationGetRepo from './types/tools/ozone/moderation/getRepo.js'
 export * as ToolsOzoneModerationGetReporterStats from './types/tools/ozone/moderation/getReporterStats.js'
 export * as ToolsOzoneModerationGetRepos from './types/tools/ozone/moderation/getRepos.js'
+export * as ToolsOzoneModerationGetSubjects from './types/tools/ozone/moderation/getSubjects.js'
 export * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents.js'
 export * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses.js'
 export * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos.js'
@@ -740,6 +760,18 @@ export class ComAtprotoAdminNS {
   ): Promise<ComAtprotoAdminUpdateAccountPassword.Response> {
     return this._client.call(
       'com.atproto.admin.updateAccountPassword',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
+  updateAccountSigningKey(
+    data?: ComAtprotoAdminUpdateAccountSigningKey.InputSchema,
+    opts?: ComAtprotoAdminUpdateAccountSigningKey.CallOptions,
+  ): Promise<ComAtprotoAdminUpdateAccountSigningKey.Response> {
+    return this._client.call(
+      'com.atproto.admin.updateAccountSigningKey',
       opts?.qp,
       data,
       opts,
@@ -3220,6 +3252,54 @@ export class AppBskyUnspeccedNS {
     )
   }
 
+  getSuggestedFeeds(
+    params?: AppBskyUnspeccedGetSuggestedFeeds.QueryParams,
+    opts?: AppBskyUnspeccedGetSuggestedFeeds.CallOptions,
+  ): Promise<AppBskyUnspeccedGetSuggestedFeeds.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getSuggestedFeeds',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getSuggestedFeedsSkeleton(
+    params?: AppBskyUnspeccedGetSuggestedFeedsSkeleton.QueryParams,
+    opts?: AppBskyUnspeccedGetSuggestedFeedsSkeleton.CallOptions,
+  ): Promise<AppBskyUnspeccedGetSuggestedFeedsSkeleton.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getSuggestedFeedsSkeleton',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getSuggestedStarterPacks(
+    params?: AppBskyUnspeccedGetSuggestedStarterPacks.QueryParams,
+    opts?: AppBskyUnspeccedGetSuggestedStarterPacks.CallOptions,
+  ): Promise<AppBskyUnspeccedGetSuggestedStarterPacks.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getSuggestedStarterPacks',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getSuggestedStarterPacksSkeleton(
+    params?: AppBskyUnspeccedGetSuggestedStarterPacksSkeleton.QueryParams,
+    opts?: AppBskyUnspeccedGetSuggestedStarterPacksSkeleton.CallOptions,
+  ): Promise<AppBskyUnspeccedGetSuggestedStarterPacksSkeleton.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getSuggestedStarterPacksSkeleton',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
   getSuggestionsSkeleton(
     params?: AppBskyUnspeccedGetSuggestionsSkeleton.QueryParams,
     opts?: AppBskyUnspeccedGetSuggestionsSkeleton.CallOptions,
@@ -3250,6 +3330,30 @@ export class AppBskyUnspeccedNS {
   ): Promise<AppBskyUnspeccedGetTrendingTopics.Response> {
     return this._client.call(
       'app.bsky.unspecced.getTrendingTopics',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getTrends(
+    params?: AppBskyUnspeccedGetTrends.QueryParams,
+    opts?: AppBskyUnspeccedGetTrends.CallOptions,
+  ): Promise<AppBskyUnspeccedGetTrends.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getTrends',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getTrendsSkeleton(
+    params?: AppBskyUnspeccedGetTrendsSkeleton.QueryParams,
+    opts?: AppBskyUnspeccedGetTrendsSkeleton.CallOptions,
+  ): Promise<AppBskyUnspeccedGetTrendsSkeleton.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getTrendsSkeleton',
       params,
       undefined,
       opts,
@@ -3481,6 +3585,17 @@ export class ChatBskyConvoNS {
     )
   }
 
+  addReaction(
+    data?: ChatBskyConvoAddReaction.InputSchema,
+    opts?: ChatBskyConvoAddReaction.CallOptions,
+  ): Promise<ChatBskyConvoAddReaction.Response> {
+    return this._client
+      .call('chat.bsky.convo.addReaction', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ChatBskyConvoAddReaction.toKnownErr(e)
+      })
+  }
+
   deleteMessageForSelf(
     data?: ChatBskyConvoDeleteMessageForSelf.InputSchema,
     opts?: ChatBskyConvoDeleteMessageForSelf.CallOptions,
@@ -3572,6 +3687,17 @@ export class ChatBskyConvoNS {
     opts?: ChatBskyConvoMuteConvo.CallOptions,
   ): Promise<ChatBskyConvoMuteConvo.Response> {
     return this._client.call('chat.bsky.convo.muteConvo', opts?.qp, data, opts)
+  }
+
+  removeReaction(
+    data?: ChatBskyConvoRemoveReaction.InputSchema,
+    opts?: ChatBskyConvoRemoveReaction.CallOptions,
+  ): Promise<ChatBskyConvoRemoveReaction.Response> {
+    return this._client
+      .call('chat.bsky.convo.removeReaction', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ChatBskyConvoRemoveReaction.toKnownErr(e)
+      })
   }
 
   sendMessage(
@@ -3842,6 +3968,18 @@ export class ToolsOzoneModerationNS {
   ): Promise<ToolsOzoneModerationGetRepos.Response> {
     return this._client.call(
       'tools.ozone.moderation.getRepos',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getSubjects(
+    params?: ToolsOzoneModerationGetSubjects.QueryParams,
+    opts?: ToolsOzoneModerationGetSubjects.CallOptions,
+  ): Promise<ToolsOzoneModerationGetSubjects.Response> {
+    return this._client.call(
+      'tools.ozone.moderation.getSubjects',
       params,
       undefined,
       opts,

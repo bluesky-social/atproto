@@ -1,5 +1,70 @@
 # @atproto/api
 
+## 0.14.19
+
+### Patch Changes
+
+- [#3680](https://github.com/bluesky-social/atproto/pull/3680) [`efb302db1`](https://github.com/bluesky-social/atproto/commit/efb302db1a615b68795c725a22489dbd0400e011) Thanks [@haileyok](https://github.com/haileyok)! - Add unspecced `getSuggestedFeeds` and associated types
+
+- Updated dependencies [[`4db923ca1`](https://github.com/bluesky-social/atproto/commit/4db923ca1c4fadd31d41c851933659e5186ee144)]:
+  - @atproto/common-web@0.4.1
+  - @atproto/lexicon@0.4.10
+  - @atproto/xrpc@0.6.12
+
+## 0.14.18
+
+### Patch Changes
+
+- [#3706](https://github.com/bluesky-social/atproto/pull/3706) [`04b6230cd`](https://github.com/bluesky-social/atproto/commit/04b6230cd2fbfe4a06cb00ab8ccb8e6c87c6c546) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Return `StarterPackView` instead of `StarterPackViewBasic` from `getSuggestedStarterPacks`
+
+## 0.14.17
+
+### Patch Changes
+
+- [#2519](https://github.com/bluesky-social/atproto/pull/2519) [`bdbd3c3e3`](https://github.com/bluesky-social/atproto/commit/bdbd3c3e3f8fe8476a3fecac73810554846c938f) Thanks [@dholms](https://github.com/dholms)! - Add com.atproto.admin.updateAccountSigningKey
+
+- [#3673](https://github.com/bluesky-social/atproto/pull/3673) [`2b7efb6cb`](https://github.com/bluesky-social/atproto/commit/2b7efb6cb1c93a108570efdafe9d9ec3f1018dfa) Thanks [@haileyok](https://github.com/haileyok)! - Add `getTrends`, `getTrendsSkeleton`, and associated types
+
+- [#3705](https://github.com/bluesky-social/atproto/pull/3705) [`b0a0f1484`](https://github.com/bluesky-social/atproto/commit/b0a0f1484378adeb5e2aa20b9b6ff2c2eca0f740) Thanks [@dholms](https://github.com/dholms)! - Fix codegent for com.atproto.admin.updateAccountSigningKey
+
+- [#3677](https://github.com/bluesky-social/atproto/pull/3677) [`0eea698be`](https://github.com/bluesky-social/atproto/commit/0eea698bef76520ae4cc0e1f2efbb588a0459556) Thanks [@haileyok](https://github.com/haileyok)! - Add `getSuggestedStarterPacks`, `getSuggestedStarterPacksSkeleton`, and associated types
+
+## 0.14.16
+
+### Patch Changes
+
+- [#3695](https://github.com/bluesky-social/atproto/pull/3695) [`652894308`](https://github.com/bluesky-social/atproto/commit/65289430806976ec13177ed9c9f0e883e8f9330c) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Fix last reaction lexicon
+
+## 0.14.15
+
+### Patch Changes
+
+- [#3692](https://github.com/bluesky-social/atproto/pull/3692) [`b4ab5011b`](https://github.com/bluesky-social/atproto/commit/b4ab5011bcc64f9f05122a8773806af8e0c13146) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Support more ways to instantiate an `Agent`
+
+## 0.14.14
+
+### Patch Changes
+
+- [#3685](https://github.com/bluesky-social/atproto/pull/3685) [`9a05892f6`](https://github.com/bluesky-social/atproto/commit/9a05892f6fd405bf6bb96c9c8d2a9a89d5e94bc5) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Update chat reaction lexicon
+
+## 0.14.13
+
+### Patch Changes
+
+- [#3651](https://github.com/bluesky-social/atproto/pull/3651) [`076c2f987`](https://github.com/bluesky-social/atproto/commit/076c2f9872387217806624306e3af08878d1adcd) Thanks [@foysalit](https://github.com/foysalit)! - Add getSubjects endpoint to ozone for fetching detailed view of multiple subjects
+
+## 0.14.12
+
+### Patch Changes
+
+- [#3674](https://github.com/bluesky-social/atproto/pull/3674) [`44f5c3639`](https://github.com/bluesky-social/atproto/commit/44f5c3639fcaf73865d21ec4b0c64baa641006c0) Thanks [@mozzius](https://github.com/mozzius)! - run codegen for changes in chat lexicon
+
+## 0.14.11
+
+### Patch Changes
+
+- [#3670](https://github.com/bluesky-social/atproto/pull/3670) [`d87ffc7bf`](https://github.com/bluesky-social/atproto/commit/d87ffc7bfe3c1e792dc84a320544eb2e053d61ce) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Add DM reactions lexicons
+
 ## 0.14.10
 
 ### Patch Changes

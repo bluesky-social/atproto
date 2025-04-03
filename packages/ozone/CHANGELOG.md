@@ -1,5 +1,85 @@
 # @atproto/ozone
 
+## 0.1.98
+
+### Patch Changes
+
+- Updated dependencies [[`efb302db1`](https://github.com/bluesky-social/atproto/commit/efb302db1a615b68795c725a22489dbd0400e011), [`4db923ca1`](https://github.com/bluesky-social/atproto/commit/4db923ca1c4fadd31d41c851933659e5186ee144)]:
+  - @atproto/api@0.14.19
+  - @atproto/common@0.4.10
+  - @atproto/identity@0.4.7
+  - @atproto/lexicon@0.4.10
+  - @atproto/crypto@0.4.4
+  - @atproto/xrpc-server@0.7.15
+  - @atproto/xrpc@0.6.12
+
+## 0.1.97
+
+### Patch Changes
+
+- Updated dependencies [[`04b6230cd`](https://github.com/bluesky-social/atproto/commit/04b6230cd2fbfe4a06cb00ab8ccb8e6c87c6c546)]:
+  - @atproto/api@0.14.18
+
+## 0.1.96
+
+### Patch Changes
+
+- Updated dependencies [[`bdbd3c3e3`](https://github.com/bluesky-social/atproto/commit/bdbd3c3e3f8fe8476a3fecac73810554846c938f), [`2b7efb6cb`](https://github.com/bluesky-social/atproto/commit/2b7efb6cb1c93a108570efdafe9d9ec3f1018dfa), [`b0a0f1484`](https://github.com/bluesky-social/atproto/commit/b0a0f1484378adeb5e2aa20b9b6ff2c2eca0f740), [`0eea698be`](https://github.com/bluesky-social/atproto/commit/0eea698bef76520ae4cc0e1f2efbb588a0459556), [`bdbd3c3e3`](https://github.com/bluesky-social/atproto/commit/bdbd3c3e3f8fe8476a3fecac73810554846c938f)]:
+  - @atproto/api@0.14.17
+  - @atproto/common@0.4.9
+  - @atproto/crypto@0.4.4
+  - @atproto/xrpc-server@0.7.14
+
+## 0.1.95
+
+### Patch Changes
+
+- [#3695](https://github.com/bluesky-social/atproto/pull/3695) [`652894308`](https://github.com/bluesky-social/atproto/commit/65289430806976ec13177ed9c9f0e883e8f9330c) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Fix last reaction lexicon
+
+- Updated dependencies [[`652894308`](https://github.com/bluesky-social/atproto/commit/65289430806976ec13177ed9c9f0e883e8f9330c)]:
+  - @atproto/api@0.14.16
+
+## 0.1.94
+
+### Patch Changes
+
+- Updated dependencies [[`b4ab5011b`](https://github.com/bluesky-social/atproto/commit/b4ab5011bcc64f9f05122a8773806af8e0c13146)]:
+  - @atproto/api@0.14.15
+
+## 0.1.93
+
+### Patch Changes
+
+- [#3685](https://github.com/bluesky-social/atproto/pull/3685) [`9a05892f6`](https://github.com/bluesky-social/atproto/commit/9a05892f6fd405bf6bb96c9c8d2a9a89d5e94bc5) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Update chat reaction lexicon
+
+- Updated dependencies [[`9a05892f6`](https://github.com/bluesky-social/atproto/commit/9a05892f6fd405bf6bb96c9c8d2a9a89d5e94bc5)]:
+  - @atproto/api@0.14.14
+
+## 0.1.92
+
+### Patch Changes
+
+- [#3651](https://github.com/bluesky-social/atproto/pull/3651) [`076c2f987`](https://github.com/bluesky-social/atproto/commit/076c2f9872387217806624306e3af08878d1adcd) Thanks [@foysalit](https://github.com/foysalit)! - Add getSubjects endpoint to ozone for fetching detailed view of multiple subjects
+
+- Updated dependencies [[`076c2f987`](https://github.com/bluesky-social/atproto/commit/076c2f9872387217806624306e3af08878d1adcd)]:
+  - @atproto/api@0.14.13
+
+## 0.1.91
+
+### Patch Changes
+
+- [#3674](https://github.com/bluesky-social/atproto/pull/3674) [`44f5c3639`](https://github.com/bluesky-social/atproto/commit/44f5c3639fcaf73865d21ec4b0c64baa641006c0) Thanks [@mozzius](https://github.com/mozzius)! - run codegen for changes in chat lexicon
+
+- Updated dependencies [[`44f5c3639`](https://github.com/bluesky-social/atproto/commit/44f5c3639fcaf73865d21ec4b0c64baa641006c0)]:
+  - @atproto/api@0.14.12
+
+## 0.1.90
+
+### Patch Changes
+
+- Updated dependencies [[`d87ffc7bf`](https://github.com/bluesky-social/atproto/commit/d87ffc7bfe3c1e792dc84a320544eb2e053d61ce)]:
+  - @atproto/api@0.14.11
+
 ## 0.1.89
 
 ### Patch Changes

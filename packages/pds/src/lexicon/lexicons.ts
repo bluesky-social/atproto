@@ -580,6 +580,35 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoAdminUpdateAccountSigningKey: {
+    lexicon: 1,
+    id: 'com.atproto.admin.updateAccountSigningKey',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          "Administrative action to update an account's signing key in their Did document.",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['did', 'signingKey'],
+            properties: {
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+              signingKey: {
+                type: 'string',
+                format: 'did',
+                description: 'Did-key formatted public key',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ComAtprotoAdminUpdateSubjectStatus: {
     lexicon: 1,
     id: 'com.atproto.admin.updateSubjectStatus',
@@ -9699,6 +9728,92 @@ export const schemaDict = {
           },
         },
       },
+      skeletonTrend: {
+        type: 'object',
+        required: [
+          'topic',
+          'displayName',
+          'link',
+          'startedAt',
+          'postCount',
+          'dids',
+        ],
+        properties: {
+          topic: {
+            type: 'string',
+          },
+          displayName: {
+            type: 'string',
+          },
+          link: {
+            type: 'string',
+          },
+          startedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          postCount: {
+            type: 'integer',
+          },
+          status: {
+            type: 'string',
+            knownValues: ['hot'],
+          },
+          category: {
+            type: 'string',
+          },
+          dids: {
+            type: 'array',
+            items: {
+              type: 'string',
+              format: 'did',
+            },
+          },
+        },
+      },
+      trendView: {
+        type: 'object',
+        required: [
+          'topic',
+          'displayName',
+          'link',
+          'startedAt',
+          'postCount',
+          'actors',
+        ],
+        properties: {
+          topic: {
+            type: 'string',
+          },
+          displayName: {
+            type: 'string',
+          },
+          link: {
+            type: 'string',
+          },
+          startedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          postCount: {
+            type: 'integer',
+          },
+          status: {
+            type: 'string',
+            knownValues: ['hot'],
+          },
+          category: {
+            type: 'string',
+          },
+          actors: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.actor.defs#profileViewBasic',
+            },
+          },
+        },
+      },
     },
   },
   AppBskyUnspeccedGetConfig: {
@@ -9761,6 +9876,168 @@ export const schemaDict = {
                 items: {
                   type: 'ref',
                   ref: 'lex:app.bsky.feed.defs#generatorView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyUnspeccedGetSuggestedFeeds: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.getSuggestedFeeds',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get a list of suggested feeds',
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 25,
+              default: 10,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['feeds'],
+            properties: {
+              feeds: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.feed.defs#generatorView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyUnspeccedGetSuggestedFeedsSkeleton: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.getSuggestedFeedsSkeleton',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get a skeleton of suggested feeds. Intended to be called and hydrated by app.bsky.unspecced.getSuggestedFeeds',
+        parameters: {
+          type: 'params',
+          properties: {
+            viewer: {
+              type: 'string',
+              format: 'did',
+              description:
+                'DID of the account making the request (not included for public/unauthenticated queries).',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 25,
+              default: 10,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['feeds'],
+            properties: {
+              feeds: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                  format: 'at-uri',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyUnspeccedGetSuggestedStarterPacks: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.getSuggestedStarterPacks',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get a list of suggested starterpacks',
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 25,
+              default: 10,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['starterPacks'],
+            properties: {
+              starterPacks: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.graph.defs#starterPackView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyUnspeccedGetSuggestedStarterPacksSkeleton: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.getSuggestedStarterPacksSkeleton',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get a skeleton of suggested starterpacks. Intended to be called and hydrated by app.bsky.unspecced.getSuggestedStarterpacks',
+        parameters: {
+          type: 'params',
+          properties: {
+            viewer: {
+              type: 'string',
+              format: 'did',
+              description:
+                'DID of the account making the request (not included for public/unauthenticated queries).',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 25,
+              default: 10,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['starterPacks'],
+            properties: {
+              starterPacks: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                  format: 'at-uri',
                 },
               },
             },
@@ -9926,6 +10203,87 @@ export const schemaDict = {
                 items: {
                   type: 'ref',
                   ref: 'lex:app.bsky.unspecced.defs#trendingTopic',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyUnspeccedGetTrends: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.getTrends',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get the current trends on the network',
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 25,
+              default: 10,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['trends'],
+            properties: {
+              trends: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.unspecced.defs#trendView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyUnspeccedGetTrendsSkeleton: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.getTrendsSkeleton',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get the skeleton of trends on the network. Intended to be called and then hydrated through app.bsky.unspecced.getTrends',
+        parameters: {
+          type: 'params',
+          properties: {
+            viewer: {
+              type: 'string',
+              format: 'did',
+              description:
+                'DID of the account making the request (not included for public/unauthenticated queries).',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 25,
+              default: 10,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['trends'],
+            properties: {
+              trends: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.unspecced.defs#skeletonTrend',
                 },
               },
             },
@@ -10458,6 +10816,69 @@ export const schemaDict = {
       },
     },
   },
+  ChatBskyConvoAddReaction: {
+    lexicon: 1,
+    id: 'chat.bsky.convo.addReaction',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Adds an emoji reaction to a message. Requires authentication. It is idempotent, so multiple calls from the same user with the same emoji result in a single reaction.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['convoId', 'messageId', 'value'],
+            properties: {
+              convoId: {
+                type: 'string',
+              },
+              messageId: {
+                type: 'string',
+              },
+              value: {
+                type: 'string',
+                minLength: 1,
+                maxLength: 32,
+                minGraphemes: 1,
+                maxGraphemes: 1,
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['message'],
+            properties: {
+              message: {
+                type: 'ref',
+                ref: 'lex:chat.bsky.convo.defs#messageView',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'ReactionMessageDeleted',
+            description:
+              'Indicates that the message has been deleted and reactions can no longer be added/removed.',
+          },
+          {
+            name: 'ReactionLimitReached',
+            description:
+              "Indicates that the message has the maximum number of reactions allowed for a single user, and the requested reaction wasn't yet present. If it was already present, the request will not fail since it is idempotent.",
+          },
+          {
+            name: 'ReactionInvalidValue',
+            description:
+              'Indicates the value for the reaction is not acceptable. In general, this means it is not an emoji.',
+          },
+        ],
+      },
+    },
+  },
   ChatBskyConvoDefs: {
     lexicon: 1,
     id: 'chat.bsky.convo.defs',
@@ -10528,6 +10949,15 @@ export const schemaDict = {
             type: 'union',
             refs: ['lex:app.bsky.embed.record#view'],
           },
+          reactions: {
+            type: 'array',
+            description:
+              'Reactions to this message, in ascending order of creation time.',
+            items: {
+              type: 'ref',
+              ref: 'lex:chat.bsky.convo.defs#reactionView',
+            },
+          },
           sender: {
             type: 'ref',
             ref: 'lex:chat.bsky.convo.defs#messageViewSender',
@@ -10568,6 +10998,47 @@ export const schemaDict = {
           },
         },
       },
+      reactionView: {
+        type: 'object',
+        required: ['value', 'sender', 'createdAt'],
+        properties: {
+          value: {
+            type: 'string',
+          },
+          sender: {
+            type: 'ref',
+            ref: 'lex:chat.bsky.convo.defs#reactionViewSender',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
+      reactionViewSender: {
+        type: 'object',
+        required: ['did'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+        },
+      },
+      messageAndReactionView: {
+        type: 'object',
+        required: ['message', 'reaction'],
+        properties: {
+          message: {
+            type: 'ref',
+            ref: 'lex:chat.bsky.convo.defs#messageView',
+          },
+          reaction: {
+            type: 'ref',
+            ref: 'lex:chat.bsky.convo.defs#reactionView',
+          },
+        },
+      },
       convoView: {
         type: 'object',
         required: ['id', 'rev', 'members', 'muted', 'unreadCount'],
@@ -10591,6 +11062,10 @@ export const schemaDict = {
               'lex:chat.bsky.convo.defs#messageView',
               'lex:chat.bsky.convo.defs#deletedMessageView',
             ],
+          },
+          lastReaction: {
+            type: 'union',
+            refs: ['lex:chat.bsky.convo.defs#messageAndReactionView'],
           },
           muted: {
             type: 'boolean',
@@ -10718,6 +11193,52 @@ export const schemaDict = {
               'lex:chat.bsky.convo.defs#messageView',
               'lex:chat.bsky.convo.defs#deletedMessageView',
             ],
+          },
+        },
+      },
+      logAddReaction: {
+        type: 'object',
+        required: ['rev', 'convoId', 'message', 'reaction'],
+        properties: {
+          rev: {
+            type: 'string',
+          },
+          convoId: {
+            type: 'string',
+          },
+          message: {
+            type: 'union',
+            refs: [
+              'lex:chat.bsky.convo.defs#messageView',
+              'lex:chat.bsky.convo.defs#deletedMessageView',
+            ],
+          },
+          reaction: {
+            type: 'ref',
+            ref: 'lex:chat.bsky.convo.defs#reactionView',
+          },
+        },
+      },
+      logRemoveReaction: {
+        type: 'object',
+        required: ['rev', 'convoId', 'message', 'reaction'],
+        properties: {
+          rev: {
+            type: 'string',
+          },
+          convoId: {
+            type: 'string',
+          },
+          message: {
+            type: 'union',
+            refs: [
+              'lex:chat.bsky.convo.defs#messageView',
+              'lex:chat.bsky.convo.defs#deletedMessageView',
+            ],
+          },
+          reaction: {
+            type: 'ref',
+            ref: 'lex:chat.bsky.convo.defs#reactionView',
           },
         },
       },
@@ -10896,8 +11417,13 @@ export const schemaDict = {
                     'lex:chat.bsky.convo.defs#logBeginConvo',
                     'lex:chat.bsky.convo.defs#logAcceptConvo',
                     'lex:chat.bsky.convo.defs#logLeaveConvo',
+                    'lex:chat.bsky.convo.defs#logMuteConvo',
+                    'lex:chat.bsky.convo.defs#logUnmuteConvo',
                     'lex:chat.bsky.convo.defs#logCreateMessage',
                     'lex:chat.bsky.convo.defs#logDeleteMessage',
+                    'lex:chat.bsky.convo.defs#logReadMessage',
+                    'lex:chat.bsky.convo.defs#logAddReaction',
+                    'lex:chat.bsky.convo.defs#logRemoveReaction',
                   ],
                 },
               },
@@ -11073,6 +11599,64 @@ export const schemaDict = {
             },
           },
         },
+      },
+    },
+  },
+  ChatBskyConvoRemoveReaction: {
+    lexicon: 1,
+    id: 'chat.bsky.convo.removeReaction',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          "Removes an emoji reaction from a message. Requires authentication. It is idempotent, so multiple calls from the same user with the same emoji result in that reaction not being present, even if it already wasn't.",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['convoId', 'messageId', 'value'],
+            properties: {
+              convoId: {
+                type: 'string',
+              },
+              messageId: {
+                type: 'string',
+              },
+              value: {
+                type: 'string',
+                minLength: 1,
+                maxLength: 32,
+                minGraphemes: 1,
+                maxGraphemes: 1,
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['message'],
+            properties: {
+              message: {
+                type: 'ref',
+                ref: 'lex:chat.bsky.convo.defs#messageView',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'ReactionMessageDeleted',
+            description:
+              'Indicates that the message has been deleted and reactions can no longer be added/removed.',
+          },
+          {
+            name: 'ReactionInvalidValue',
+            description:
+              'Indicates the value for the reaction is not acceptable. In general, this means it is not an emoji.',
+          },
+        ],
       },
     },
   },
@@ -11879,6 +12463,37 @@ export const schemaDict = {
               "Statistics related to the record subjects authored by the subject's account",
             type: 'ref',
             ref: 'lex:tools.ozone.moderation.defs#recordsStats',
+          },
+        },
+      },
+      subjectView: {
+        description:
+          "Detailed view of a subject. For record subjects, the author's repo and profile will be returned.",
+        type: 'object',
+        required: ['type', 'subject'],
+        properties: {
+          type: {
+            type: 'ref',
+            ref: 'lex:com.atproto.moderation.defs#subjectType',
+          },
+          subject: {
+            type: 'string',
+          },
+          status: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.moderation.defs#subjectStatusView',
+          },
+          repo: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.moderation.defs#repoViewDetail',
+          },
+          profile: {
+            type: 'union',
+            refs: [],
+          },
+          record: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.moderation.defs#recordViewDetail',
           },
         },
       },
@@ -13036,6 +13651,46 @@ export const schemaDict = {
                     'lex:tools.ozone.moderation.defs#repoViewDetail',
                     'lex:tools.ozone.moderation.defs#repoViewNotFound',
                   ],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneModerationGetSubjects: {
+    lexicon: 1,
+    id: 'tools.ozone.moderation.getSubjects',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get details about subjects.',
+        parameters: {
+          type: 'params',
+          required: ['subjects'],
+          properties: {
+            subjects: {
+              type: 'array',
+              maxLength: 100,
+              minLength: 1,
+              items: {
+                type: 'string',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['subjects'],
+            properties: {
+              subjects: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.moderation.defs#subjectView',
                 },
               },
             },
@@ -14507,6 +15162,8 @@ export const ids = {
   ComAtprotoAdminUpdateAccountHandle: 'com.atproto.admin.updateAccountHandle',
   ComAtprotoAdminUpdateAccountPassword:
     'com.atproto.admin.updateAccountPassword',
+  ComAtprotoAdminUpdateAccountSigningKey:
+    'com.atproto.admin.updateAccountSigningKey',
   ComAtprotoAdminUpdateSubjectStatus: 'com.atproto.admin.updateSubjectStatus',
   ComAtprotoIdentityDefs: 'com.atproto.identity.defs',
   ComAtprotoIdentityGetRecommendedDidCredentials:
@@ -14671,11 +15328,20 @@ export const ids = {
   AppBskyUnspeccedGetConfig: 'app.bsky.unspecced.getConfig',
   AppBskyUnspeccedGetPopularFeedGenerators:
     'app.bsky.unspecced.getPopularFeedGenerators',
+  AppBskyUnspeccedGetSuggestedFeeds: 'app.bsky.unspecced.getSuggestedFeeds',
+  AppBskyUnspeccedGetSuggestedFeedsSkeleton:
+    'app.bsky.unspecced.getSuggestedFeedsSkeleton',
+  AppBskyUnspeccedGetSuggestedStarterPacks:
+    'app.bsky.unspecced.getSuggestedStarterPacks',
+  AppBskyUnspeccedGetSuggestedStarterPacksSkeleton:
+    'app.bsky.unspecced.getSuggestedStarterPacksSkeleton',
   AppBskyUnspeccedGetSuggestionsSkeleton:
     'app.bsky.unspecced.getSuggestionsSkeleton',
   AppBskyUnspeccedGetTaggedSuggestions:
     'app.bsky.unspecced.getTaggedSuggestions',
   AppBskyUnspeccedGetTrendingTopics: 'app.bsky.unspecced.getTrendingTopics',
+  AppBskyUnspeccedGetTrends: 'app.bsky.unspecced.getTrends',
+  AppBskyUnspeccedGetTrendsSkeleton: 'app.bsky.unspecced.getTrendsSkeleton',
   AppBskyUnspeccedSearchActorsSkeleton:
     'app.bsky.unspecced.searchActorsSkeleton',
   AppBskyUnspeccedSearchPostsSkeleton: 'app.bsky.unspecced.searchPostsSkeleton',
@@ -14690,6 +15356,7 @@ export const ids = {
   ChatBskyActorDeleteAccount: 'chat.bsky.actor.deleteAccount',
   ChatBskyActorExportAccountData: 'chat.bsky.actor.exportAccountData',
   ChatBskyConvoAcceptConvo: 'chat.bsky.convo.acceptConvo',
+  ChatBskyConvoAddReaction: 'chat.bsky.convo.addReaction',
   ChatBskyConvoDefs: 'chat.bsky.convo.defs',
   ChatBskyConvoDeleteMessageForSelf: 'chat.bsky.convo.deleteMessageForSelf',
   ChatBskyConvoGetConvo: 'chat.bsky.convo.getConvo',
@@ -14700,6 +15367,7 @@ export const ids = {
   ChatBskyConvoLeaveConvo: 'chat.bsky.convo.leaveConvo',
   ChatBskyConvoListConvos: 'chat.bsky.convo.listConvos',
   ChatBskyConvoMuteConvo: 'chat.bsky.convo.muteConvo',
+  ChatBskyConvoRemoveReaction: 'chat.bsky.convo.removeReaction',
   ChatBskyConvoSendMessage: 'chat.bsky.convo.sendMessage',
   ChatBskyConvoSendMessageBatch: 'chat.bsky.convo.sendMessageBatch',
   ChatBskyConvoUnmuteConvo: 'chat.bsky.convo.unmuteConvo',
@@ -14726,6 +15394,7 @@ export const ids = {
   ToolsOzoneModerationGetReporterStats:
     'tools.ozone.moderation.getReporterStats',
   ToolsOzoneModerationGetRepos: 'tools.ozone.moderation.getRepos',
+  ToolsOzoneModerationGetSubjects: 'tools.ozone.moderation.getSubjects',
   ToolsOzoneModerationQueryEvents: 'tools.ozone.moderation.queryEvents',
   ToolsOzoneModerationQueryStatuses: 'tools.ozone.moderation.queryStatuses',
   ToolsOzoneModerationSearchRepos: 'tools.ozone.moderation.searchRepos',

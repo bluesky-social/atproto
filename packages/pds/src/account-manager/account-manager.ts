@@ -5,7 +5,6 @@ import { IdResolver } from '@atproto/identity'
 import { isValidTld } from '@atproto/syntax'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { AuthScope } from '../auth-verifier'
-import { DatabaseConfig } from '../config'
 import { softDeleted } from '../db'
 import { hasExplicitSlur } from '../handle/explicit-slurs'
 import {
@@ -27,6 +26,11 @@ import * as token from './helpers/token'
 
 export { AccountStatus, formatAccountStatus } from './helpers/account'
 
+export type AccountManagerDbConfig = {
+  accountDbLoc: string
+  disableWalAutoCheckpoint: boolean
+}
+
 export class AccountManager {
   readonly db: AccountDb
 
@@ -35,7 +39,7 @@ export class AccountManager {
     readonly jwtKey: KeyObject,
     readonly serviceDid: string,
     readonly serviceHandleDomains: string[],
-    db: DatabaseConfig,
+    db: AccountManagerDbConfig,
   ) {
     this.db = getDb(db.accountDbLoc, db.disableWalAutoCheckpoint)
   }
