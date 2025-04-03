@@ -18,12 +18,7 @@ import {
   oauthRedirectUriSchema,
   oauthResponseModeSchema,
 } from '@atproto/oauth-types'
-import {
-  DeviceAccount,
-  handleSchema,
-  resetPasswordConfirmDataSchema,
-  resetPasswordRequestDataSchema,
-} from '../account/account-store.js'
+import { DeviceAccount } from '../account/account-store.js'
 import { signInDataSchema } from '../account/sign-in-data.js'
 import { signUpInputSchema } from '../account/sign-up-input.js'
 import { Client } from '../client/client.js'
@@ -52,12 +47,17 @@ import {
 } from '../lib/http/index.js'
 import { RouteCtx, createRoute } from '../lib/http/route.js'
 import { asArray } from '../lib/util/cast.js'
+import { localeSchema } from '../lib/util/locale.js'
 import type { Awaitable } from '../lib/util/type.js'
 import type { OAuthProvider } from '../oauth-provider.js'
 import { subSchema } from '../oidc/sub.js'
 import { RequestInfo } from '../request/request-info.js'
 import { RequestUri, requestUriSchema } from '../request/request-uri.js'
 import { AuthorizationRedirectParameters } from '../result/authorization-redirect-parameters.js'
+import { emailOtpSchema } from '../types/email-otp.js'
+import { emailSchema } from '../types/email.js'
+import { handleSchema } from '../types/handle.js'
+import { newPasswordSchema } from '../types/password.js'
 import {
   ERROR_REDIRECT_KEYS,
   OAuthRedirectOptions,
@@ -182,7 +182,12 @@ export function apiRouter<
     apiRoute(
       'POST',
       '/reset-password-request',
-      resetPasswordRequestDataSchema,
+      z
+        .object({
+          locale: localeSchema,
+          email: emailSchema,
+        })
+        .strict(),
       async function () {
         await server.accountManager.resetPasswordRequest(this.input)
         return { success: true }
@@ -194,7 +199,12 @@ export function apiRouter<
     apiRoute(
       'POST',
       '/reset-password-confirm',
-      resetPasswordConfirmDataSchema,
+      z
+        .object({
+          token: emailOtpSchema,
+          password: newPasswordSchema,
+        })
+        .strict(),
       async function () {
         await server.accountManager.resetPasswordConfirm(this.input)
         return { success: true }

@@ -10,7 +10,7 @@ import { TokenId } from './token-id.js'
 export * from './refresh-token.js'
 export * from './token-data.js'
 export * from './token-id.js'
-export type { Awaitable, Sub }
+export type { Account, Awaitable, Sub }
 
 export type TokenInfo = {
   id: TokenId

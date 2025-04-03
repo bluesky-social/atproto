@@ -49,7 +49,8 @@ export type OAuthVerifierOptions = Override<
   }
 >
 
-export { DpopNonce, Keyset, type ReplayStore, type VerifyTokenClaimsOptions }
+export { DpopNonce, Key, Keyset }
+export type { RedisOptions, ReplayStore, VerifyTokenClaimsOptions }
 
 export class OAuthVerifier {
   public readonly issuer: OAuthIssuerIdentifier
@@ -131,6 +132,7 @@ export class OAuthVerifier {
       })
 
     return verifyTokenClaims(
+      token,
       payload.jti,
       tokenType,
       dpopJkt,

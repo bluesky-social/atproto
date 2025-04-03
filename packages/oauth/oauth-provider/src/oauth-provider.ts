@@ -90,9 +90,12 @@ import { AuthorizationResultRedirect } from './result/authorization-result-redir
 import { ErrorHandler } from './router/error-handler.js'
 import { TokenManager } from './token/token-manager.js'
 import { TokenStore, asTokenStore } from './token/token-store.js'
-import { VerifyTokenClaimsOptions } from './token/verify-token-claims.js'
+import {
+  VerifyTokenClaimsOptions,
+  VerifyTokenClaimsResult,
+} from './token/verify-token-claims.js'
 
-export { Keyset }
+export { AccessTokenMode, Keyset }
 export type {
   AuthorizationRedirectParameters,
   AuthorizationResultAuthorize,
@@ -139,7 +142,7 @@ type OAuthProviderConfig = {
    * information (scope, audience, etc.)
    *
    * @see {@link AccessTokenMode}
-   * @default {AccessTokenType.stateless}
+   * @default {AccessTokenMode.stateless}
    */
   accessTokenMode?: AccessTokenMode
 
@@ -921,7 +924,7 @@ export class OAuthProvider extends OAuthVerifier {
     token: OAuthAccessToken,
     dpopJkt: string | null,
     verifyOptions?: VerifyTokenClaimsOptions,
-  ) {
+  ): Promise<VerifyTokenClaimsResult> {
     if (this.accessTokenMode === AccessTokenMode.stateless) {
       return super.verifyToken(tokenType, token, dpopJkt, verifyOptions)
     }
@@ -942,6 +945,7 @@ export class OAuthProvider extends OAuthVerifier {
       // also verify the tokenId is still valid using a database to fetch
       // missing data from "light" token.
       return this.tokenManager.verifyTokenId(
+        token,
         tokenType,
         tokenId,
         dpopJkt,

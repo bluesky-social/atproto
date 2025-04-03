@@ -50,7 +50,8 @@ import {
   verifyTokenClaims,
 } from './verify-token-claims.js'
 
-export type { VerifyTokenClaimsResult }
+export { AccessTokenMode, Signer }
+export type { OAuthHooks, TokenStore, VerifyTokenClaimsResult }
 
 export class TokenManager {
   constructor(
@@ -573,6 +574,7 @@ export class TokenManager {
   }
 
   async verifyTokenId(
+    token: OAuthAccessToken,
     tokenType: OAuthTokenType,
     tokenId: TokenId,
     dpopJkt: string | null,
@@ -597,7 +599,14 @@ export class TokenManager {
       client_id: data.clientId,
     }
 
-    return verifyTokenClaims(tokenId, tokenType, dpopJkt, claims, verifyOptions)
+    return verifyTokenClaims(
+      token,
+      tokenId,
+      tokenType,
+      dpopJkt,
+      claims,
+      verifyOptions,
+    )
   }
 
   async listAccountTokens(sub: Sub): Promise<TokenInfo[]> {

@@ -1,14 +1,13 @@
-import { isEmailValid } from '@hapi/address'
-import { isDisposableEmail } from 'disposable-email-domains-js'
-import { z } from 'zod'
-import { Account } from '@atproto/oauth-provider-api'
+import {
+  Account,
+  ConfirmResetPasswordInput,
+  InitiatePasswordResetInput,
+} from '@atproto/oauth-provider-api'
 import { OAuthScope } from '@atproto/oauth-types'
-import { ensureValidHandle, normalizeHandle } from '@atproto/syntax'
 import { ClientId } from '../client/client-id.js'
 import { DeviceId } from '../device/device-id.js'
 import { DeviceData } from '../device/device-store.js'
 import { HcaptchaVerifyResult } from '../lib/hcaptcha.js'
-import { localeSchema } from '../lib/util/locale.js'
 import { Awaitable, buildInterfaceChecker } from '../lib/util/type.js'
 import {
   HandleUnavailableError,
@@ -17,91 +16,47 @@ import {
 } from '../oauth-errors.js'
 import { Sub } from '../oidc/sub.js'
 import { RequestId } from '../request/request-id.js'
+import { InviteCode } from '../types/invite-code.js'
 import { SignUpInput } from './sign-up-input.js'
 
-// @NOTE Change the length here to force stronger passwords (through a reset)
-export const oldPasswordSchema = z.string().min(1)
-export const newPasswordSchema = z.string().min(8)
-export const tokenSchema = z
-  .string()
-  .regex(/^[A-Z2-7]{5}-[A-Z2-7]{5}$/, 'Invalid token format')
-export const handleSchema = z
-  .string()
-  // @NOTE: We only check against validity towards ATProto's syntax. Additional
-  // rules may be imposed by the store implementation.
-  .superRefine((value, ctx) => {
-    try {
-      ensureValidHandle(value)
-    } catch (err) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: err instanceof Error ? err.message : 'Invalid handle',
-      })
-    }
-  })
-  .transform(normalizeHandle)
-export const emailSchema = z
-  .string()
-  .email()
-  // @NOTE using @hapi/address here, in addition to the email() check to ensure
-  // compatibility with the current email validation in the PDS's account
-  // manager
-  .refine(isEmailValid, {
-    message: 'Invalid email address',
-  })
-  .refine((email) => !isDisposableEmail(email), {
-    message: 'Disposable email addresses are not allowed',
-  })
-  .transform((value) => value.toLowerCase())
-export const inviteCodeSchema = z.string().min(1)
-export type InviteCode = z.infer<typeof inviteCodeSchema>
+// Export all types needed to implement the AccountStore interface
 
-export const authenticateAccountDataSchema = z
-  .object({
-    locale: localeSchema,
-    username: z.string(),
-    password: oldPasswordSchema,
-    emailOtp: tokenSchema.optional(),
-  })
-  .strict()
+export * from '../client/client-id.js'
+export * from '../device/device-data.js'
+export * from '../device/device-id.js'
+export * from '../oidc/sub.js'
+export * from '../request/request-id.js'
 
-export type AuthenticateAccountData = z.TypeOf<
-  typeof authenticateAccountDataSchema
->
+export type {
+  Account,
+  HcaptchaVerifyResult,
+  InviteCode,
+  OAuthScope,
+  SignUpInput,
+}
 
-export const createAccountDataSchema = z
-  .object({
-    locale: localeSchema,
-    handle: handleSchema,
-    email: emailSchema,
-    password: z.intersection(oldPasswordSchema, newPasswordSchema),
-    inviteCode: inviteCodeSchema.optional(),
-  })
-  .strict()
+export {
+  HandleUnavailableError,
+  InvalidRequestError,
+  SecondAuthenticationFactorRequiredError,
+}
 
-export type CreateAccountData = z.TypeOf<typeof createAccountDataSchema>
+export type ResetPasswordRequestData = InitiatePasswordResetInput
+export type ResetPasswordConfirmData = ConfirmResetPasswordInput
+export type CreateAccountData = {
+  locale: string
+  email: string
+  password: string
+  handle: string
+  inviteCode?: string | undefined
+}
 
-export const resetPasswordRequestDataSchema = z
-  .object({
-    locale: localeSchema,
-    email: emailSchema,
-  })
-  .strict()
-
-export type ResetPasswordRequestData = z.TypeOf<
-  typeof resetPasswordRequestDataSchema
->
-
-export const resetPasswordConfirmDataSchema = z
-  .object({
-    token: tokenSchema,
-    password: z.intersection(oldPasswordSchema, newPasswordSchema),
-  })
-  .strict()
-
-export type ResetPasswordConfirmData = z.TypeOf<
-  typeof resetPasswordConfirmDataSchema
->
+export type AuthenticateAccountData = {
+  locale: string
+  password: string
+  username: string
+  emailOtp?: string | undefined
+}
 
 export type AuthorizedClientData = { authorizedScopes: readonly string[] }
 export type AuthorizedClients = Map<ClientId, AuthorizedClientData>
@@ -171,18 +126,6 @@ export type DeviceAccount = {
 export type SignUpData = SignUpInput & {
   hcaptchaResult?: HcaptchaVerifyResult
   inviteCode?: InviteCode
-}
-
-// Export all types needed to implement the AccountStore interface
-export {
-  type Account,
-  type DeviceId,
-  HandleUnavailableError,
-  InvalidRequestError,
-  type OAuthScope,
-  type RequestId,
-  SecondAuthenticationFactorRequiredError,
-  type Sub,
 }
 
 export interface AccountStore {
