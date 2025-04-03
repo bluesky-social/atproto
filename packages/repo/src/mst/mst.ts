@@ -736,6 +736,10 @@ export class MST {
         const serialized = await node.serialize()
         yield { cid: serialized.cid, bytes: serialized.bytes }
       } else {
+        // For checking MST prefixes, we do not do arbitrary string matching and do not extend into record keys
+        // Rather we expect the prefix to contain full NSID parts
+        // Ex: com.example is a prefix to com.example.test but not to com.exampletest
+        // This works because we walk from the left and both '/' and '.' sort lower than all alphanumeric chars
         if (prefix && !util.isMstPrefix(prefix, node.key)) {
           break
         } else if (includeLeaves) {
