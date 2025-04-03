@@ -63,6 +63,7 @@ import {
   OAuthRedirectOptions,
   OAuthRedirectQueryParameter,
   SUCCESS_REDIRECT_KEYS,
+  buildRedirectMode,
   buildRedirectParams,
   buildRedirectUri,
 } from './authorize-page/send-redirect.js'
@@ -689,6 +690,15 @@ export function apiRouter<
         validateOrigin(req, issuerOrigin)
         const referer = validateReferer(req, { origin: issuerOrigin })
 
+        // Ensure we are one the right page
+        if (
+          referer.pathname !== '/oauth/authorize' &&
+          referer.pathname !== ACCOUNTS_PAGE_URL &&
+          !referer.pathname.startsWith(`${ACCOUNTS_PAGE_URL}/`)
+        ) {
+          throw createHttpError(400, `Invalid referer ${referer}`)
+        }
+
         // Check if the request originated from the authorize page
         const requestUri =
           referer.pathname === '/oauth/authorize'
@@ -698,16 +708,7 @@ export function apiRouter<
             : undefined
 
         // Validate CSRF token
-        if (requestUri) {
-          validateCsrfToken(req, res, requestUri)
-        } else if (
-          referer.pathname === ACCOUNTS_PAGE_URL ||
-          referer.pathname.startsWith(`${ACCOUNTS_PAGE_URL}/`)
-        ) {
-          validateCsrfToken(req, res)
-        } else {
-          throw createHttpError(400, `Invalid referer ${referer}`)
-        }
+        await validateCsrfToken(req, res)
 
         // Parse and validate the input data
         const input = await parseInput.call(this, req)
@@ -807,7 +808,7 @@ function buildRedirectUrl(
 ): string {
   const url = new URL('/oauth/authorize/redirect', iss)
 
-  url.searchParams.set('redirect_mode', buildRedirectUri(parameters))
+  url.searchParams.set('redirect_mode', buildRedirectMode(parameters))
   url.searchParams.set('redirect_uri', buildRedirectUri(parameters))
 
   for (const [key, value] of buildRedirectParams(iss, parameters, redirect)) {

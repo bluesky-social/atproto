@@ -21,7 +21,6 @@ export type AuthorizeViewProps = Override<
   LayoutTitlePageProps,
   {
     customizationData?: CustomizationData
-    csrfCookieName: string
     authorizeData: AuthorizeData
   }
 >
@@ -37,7 +36,6 @@ enum View {
 
 export function AuthorizeView({
   authorizeData,
-  csrfCookieName,
   customizationData,
 
   // LayoutTitlePage
@@ -72,7 +70,6 @@ export function AuthorizeView({
     doAccept,
     doReject,
   } = useApi({
-    csrfCookieName,
     sessions: authorizeData.sessions,
     onRedirected: showDone,
   })
@@ -82,7 +79,7 @@ export function AuthorizeView({
   useEffect(() => {
     if (session) {
       if (session.consentRequired) showAccept()
-      else doAccept(session.account)
+      else doAccept({ sub: session.account.sub })
     }
   }, [session, doAccept, showAccept])
 
@@ -162,7 +159,7 @@ export function AuthorizeView({
         clientTrusted={authorizeData.clientTrusted}
         account={session.account}
         scopeDetails={authorizeData.scopeDetails}
-        onAccept={() => doAccept(session.account)}
+        onAccept={() => doAccept({ sub: session.account.sub })}
         onReject={() => doReject()}
         onBack={
           forceSignIn

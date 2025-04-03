@@ -15,7 +15,7 @@ import { extractLocales } from '../../lib/http/request.js'
 import { CrossOriginEmbedderPolicy } from '../../lib/http/security-headers.js'
 import { sendWebPage } from '../../lib/send-web-page.js'
 import { AuthorizationResultAuthorize } from '../../result/authorization-result-authorize.js'
-import { csrfCookieName, setupCsrfToken } from '../csrf.js'
+import { setupCsrfToken } from '../csrf.js'
 import { buildAssetUrl } from './assets-middleware.js'
 import { buildCustomizationCss } from './build-customization-css.js'
 import { buildCustomizationData } from './build-customization-data.js'
@@ -79,27 +79,25 @@ export function sendAuthorizePageFactory(customization: Customization) {
       CrossOriginEmbedderPolicy.unsafeNone
     : CrossOriginEmbedderPolicy.credentialless
 
-  return function sendAuthorizePage(
+  return async function sendAuthorizePage(
     req: IncomingMessage,
     res: ServerResponse,
     data: AuthorizationResultAuthorize,
-  ): void {
+  ): Promise<void> {
     const locale = negotiateLocale(
       data.parameters.ui_locales?.split(' ') ?? extractLocales(req),
     )
 
-    setupCsrfToken(req, res, data.authorize.uri)
+    await setupCsrfToken(req, res)
 
     // Matches the variables in "authorization-page.tsx"
     const hydrationData: {
       __availableLocales: AvailableLocales
       __customizationData: CustomizationData
-      __csrfCookieName: string
       __authorizeData: AuthorizeData
     } = {
       __availableLocales: AVAILABLE_LOCALES,
       __customizationData: customizationData,
-      __csrfCookieName: csrfCookieName(data.authorize.uri),
       __authorizeData: buildAuthorizeData(data),
     }
 

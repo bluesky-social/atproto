@@ -21,7 +21,6 @@ import type { OAuthProvider } from '../../oauth-provider.js'
 import { requestUriSchema } from '../../request/request-uri.js'
 import { AuthorizationResultRedirect } from '../../result/authorization-result-redirect.js'
 import { parseRedirectUrl } from '../api-router.js'
-import { clearCsrfToken } from '../csrf.js'
 import type { RouterOptions } from '../router-options.js'
 import { assetsMiddleware } from './assets-middleware.js'
 import { sendAuthorizePageFactory } from './send-authorize-page.js'
@@ -82,9 +81,9 @@ export function authorizeRouter<
         )
 
         if ('redirect' in result) {
-          sendAuthorizeRedirect(res, result)
+          await sendAuthorizeRedirect(res, result)
         } else {
-          sendAuthorizePage(req, res, result)
+          await sendAuthorizePage(req, res, result)
         }
       } catch (err) {
         // If we have the "redirect_uri" parameter, we can redirect the user
@@ -119,13 +118,10 @@ export function authorizeRouter<
         pathname: '/oauth/authorize',
       })
 
-      const requestUri = requestUriSchema.parse(
-        referer.searchParams.get('request_uri'),
-      )
+      // Ensure we are coming from the authorization page
+      requestUriSchema.parse(referer.searchParams.get('request_uri'))
 
-      clearCsrfToken(res, requestUri)
-
-      sendRedirect(res, parseRedirectUrl(this.url))
+      await sendRedirect(res, parseRedirectUrl(this.url))
     }),
   )
 
@@ -158,7 +154,7 @@ export function authorizeRouter<
           )
 
           // Display the error to the user
-          sendErrorPage(req, res, err)
+          await sendErrorPage(req, res, err)
         } catch (err) {
           next(err)
         }

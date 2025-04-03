@@ -54,12 +54,6 @@ export const deviceManagerOptionsSchema = z.object({
        */
       session: z.string().default('session-id'),
       /**
-       * Url path for the cookie
-       *
-       * @default '/oauth/authorize'
-       */
-      path: z.string().default('/oauth/authorize'),
-      /**
        * Amount of time (in ms) after which the session cookie will expire.
        * If set to `null`, the cookie will be a session cookie (deleted when the
        * browser is closed).
@@ -276,7 +270,7 @@ export class DeviceManager {
           : this.options.cookie.age / 1000
         : 0,
       httpOnly: true,
-      path: this.options.cookie.path,
+      path: '/',
       secure: this.options.cookie.secure !== false,
       sameSite: this.options.cookie.sameSite === 'lax' ? 'lax' : 'strict',
     } as const

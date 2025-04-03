@@ -1,7 +1,10 @@
 import {
   API_ENDPOINT_PREFIX,
-  type ApiEndpoints,
+  ApiEndpoints,
+  CSRF_COOKIE_NAME,
+  CSRF_HEADER_NAME,
 } from '@atproto/oauth-provider-api'
+import { readCookie } from '../cookies.ts'
 import {
   JsonClient,
   JsonErrorPayload,
@@ -11,9 +14,11 @@ import {
 export type { Options } from './json-client.ts'
 
 export class Api extends JsonClient<ApiEndpoints> {
-  constructor(csrfToken: string) {
+  constructor() {
     const baseUrl = new URL(API_ENDPOINT_PREFIX, window.origin).toString()
-    super(baseUrl, csrfToken)
+    super(baseUrl, () => ({
+      [CSRF_HEADER_NAME]: readCookie(CSRF_COOKIE_NAME),
+    }))
   }
 
   // Override the parent's parseError method to handle expected error responses

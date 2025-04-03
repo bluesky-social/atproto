@@ -1,59 +1,65 @@
-import { randomBytes } from 'node:crypto'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import createHttpError from 'http-errors'
+import { CSRF_COOKIE_NAME, CSRF_HEADER_NAME } from '@atproto/oauth-provider-api'
 import {
   CookieSerializeOptions,
   parseHttpCookies,
   setCookie,
 } from '../lib/http/index.js'
-import { RequestUri } from '../request/request-uri.js'
+import { randomBuffer } from '../lib/util/crypto.js'
+
+const TOKEN_BYTE_LENGTH = 12
+const TOKEN_LENGTH = TOKEN_BYTE_LENGTH * 2 // 2 hex chars per byte
 
 // @NOTE Cookie based CSRF protection is redundant with session cookies using
 // `SameSite` and could probably be removed in the future.
-const CSRF_COOKIE_OPTIONS: Readonly<CookieSerializeOptions> = Object.freeze({
+const CSRF_COOKIE_OPTIONS: Readonly<CookieSerializeOptions> = {
   expires: undefined, // "session" cookie
   secure: true,
   httpOnly: false, // Need to be accessible from JavaScript
   sameSite: 'lax',
-})
-
-export function csrfCookieName(requestUri?: RequestUri) {
-  return requestUri ? `csrf-${requestUri}` : 'csrf-token'
+  path: `/`,
 }
 
-export function clearCsrfToken(res: ServerResponse, requestUri?: RequestUri) {
-  const cookieName = csrfCookieName(requestUri)
-  setCookie(res, cookieName, '<invalid>', CSRF_COOKIE_OPTIONS)
-}
-
-export function setupCsrfToken(
+export async function setupCsrfToken(
   req: IncomingMessage,
   res: ServerResponse,
-  requestUri?: RequestUri,
-) {
-  const cookies = parseHttpCookies(req)
-  const cookieName = csrfCookieName(requestUri)
-  const csrfToken = cookies[cookieName] || randomBytes(8).toString('hex')
-  setCookie(res, cookieName, csrfToken, CSRF_COOKIE_OPTIONS)
-}
+): Promise<string> {
+  const token =
+    getCookieCsrf(req) ||
+    (await randomBuffer(TOKEN_BYTE_LENGTH)).toString('hex')
 
-export function validateCsrfToken(
-  req: IncomingMessage,
-  res: ServerResponse,
-  requestUri?: RequestUri,
-  csrfToken: unknown = req.headers['x-csrf-token'],
-) {
-  const cookieName = csrfCookieName(requestUri)
-  const cookies = parseHttpCookies(req)
-  if (
-    typeof csrfToken !== 'string' ||
-    !csrfToken ||
-    !cookies ||
-    !cookieName ||
-    cookies[cookieName] !== csrfToken
-  ) {
-    throw createHttpError(400, `Invalid CSRF token`)
-  }
   // Refresh cookie (See Chrome's "Lax+POST" behavior)
-  setCookie(res, cookieName, csrfToken, CSRF_COOKIE_OPTIONS)
+  setCookie(res, CSRF_COOKIE_NAME, token, CSRF_COOKIE_OPTIONS)
+
+  return token
+}
+
+export async function validateCsrfToken(
+  req: IncomingMessage,
+  res: ServerResponse,
+) {
+  const cookieValue = await setupCsrfToken(req, res)
+  const headerValue = getHeadersCsrf(req)
+
+  if (cookieValue !== headerValue) {
+    throw createHttpError(400, `CSRF mismatch`)
+  }
+}
+
+function getCookieCsrf(req: IncomingMessage) {
+  const cookies = parseHttpCookies(req)
+  const cookieValue = cookies[CSRF_COOKIE_NAME]
+  if (cookieValue?.length === TOKEN_LENGTH) {
+    return cookieValue
+  }
+  return undefined
+}
+
+function getHeadersCsrf(req: IncomingMessage) {
+  const headerValue = req.headers[CSRF_HEADER_NAME]
+  if (typeof headerValue === 'string' && headerValue.length === TOKEN_LENGTH) {
+    return headerValue
+  }
+  return undefined
 }

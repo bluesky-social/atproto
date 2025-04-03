@@ -2,6 +2,7 @@
 import type { Json } from '@atproto-labs/fetch'
 
 export { type Json }
+type Awaitable<T> = T | PromiseLike<T>
 
 export type Options = {
   signal?: AbortSignal
@@ -25,7 +26,9 @@ export class JsonClient<
 > {
   constructor(
     protected readonly baseUrl: string,
-    protected readonly csrfToken: string,
+    protected readonly getHeaders: () => Awaitable<
+      Record<string, string | undefined>
+    >,
   ) {}
 
   public async fetch<Path extends EndpointPath & keyof Endpoints>(
@@ -49,11 +52,13 @@ export class JsonClient<
 
     const body = method === 'POST' ? JSON.stringify(input) : undefined
 
+    const headers = await this.getHeaders.call(null)
+
     const response = await fetch(url, {
       method,
       headers: {
+        ...headers,
         'Content-Type': 'application/json',
-        'X-CSRF-Token': this.csrfToken,
       },
       mode: 'same-origin',
       body,

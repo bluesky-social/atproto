@@ -1,5 +1,5 @@
 import { useLingui } from '@lingui/react/macro'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useErrorBoundary } from 'react-error-boundary'
 import type {
   AcceptInput,
@@ -14,7 +14,6 @@ import type {
 } from '@atproto/oauth-provider-api'
 import { Api, UnknownRequestUriError } from '../lib/api.ts'
 import { upsert } from '../lib/util.ts'
-import { useCsrfToken } from './use-csrf-token.ts'
 
 /**
  * Any function wrapped with this helper will automatically show the error
@@ -41,20 +40,15 @@ function useSafeCallback<F extends (...a: any) => any>(fn: F, deps: unknown[]) {
 }
 
 export type UseApiOptions = {
-  csrfCookieName: string
   sessions?: readonly Session[]
   onRedirected?: () => void
 }
 
 export function useApi({
-  csrfCookieName,
   sessions: sessionsInit = [],
   onRedirected,
 }: UseApiOptions) {
-  const csrfToken = useCsrfToken(csrfCookieName)
-  if (!csrfToken) throw new Error('CSRF token is missing')
-
-  const api = useMemo(() => new Api(csrfToken), [csrfToken])
+  const [api] = useState(() => new Api())
   const [sessions, setSessions] = useState(sessionsInit)
 
   const { i18n } = useLingui()
