@@ -8,10 +8,12 @@ import {
 } from '../lib/http/index.js'
 import { RequestUri } from '../request/request-uri.js'
 
+// @NOTE Cookie based CSRF protection is redundant with session cookies using
+// `SameSite` and could probably be removed in the future.
 const CSRF_COOKIE_OPTIONS: Readonly<CookieSerializeOptions> = Object.freeze({
   expires: undefined, // "session" cookie
   secure: true,
-  httpOnly: false,
+  httpOnly: false, // Need to be accessible from JavaScript
   sameSite: 'lax',
 })
 

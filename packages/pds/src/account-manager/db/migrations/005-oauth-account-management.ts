@@ -1,8 +1,12 @@
 import { Kysely, sql } from 'kysely'
 import { HOUR } from '@atproto/common'
-import { ClientId, DeviceAccountData, DeviceId } from '@atproto/oauth-provider'
-import { JsonEncoded, toDateISO } from '../../../db'
-import { AccountDevice, AccountDeviceRequest } from '../schema'
+import {
+  ClientId,
+  DeviceAccountData,
+  DeviceId,
+  RequestId,
+} from '@atproto/oauth-provider'
+import { DateISO, JsonEncoded, toDateISO } from '../../../db'
 
 export async function up(
   db: Kysely<{
@@ -14,8 +18,25 @@ export async function up(
       authenticatedAt: string
       authorizedClients: JsonEncoded<ClientId[]>
     }
-    account_device: AccountDevice
-    account_device_request: AccountDeviceRequest
+    account_device: {
+      did: string
+      deviceId: DeviceId
+
+      createdAt: DateISO
+      updatedAt: DateISO
+
+      data: JsonEncoded<DeviceAccountData>
+    }
+    account_device_request: {
+      did: string
+      deviceId: DeviceId
+      requestId: RequestId
+
+      createdAt: DateISO
+      updatedAt: DateISO
+
+      data: JsonEncoded<DeviceAccountData>
+    }
   }>,
 ): Promise<void> {
   // Security: Delete any leftover device accounts that are not remembered

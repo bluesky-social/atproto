@@ -163,7 +163,7 @@ export class AccountManager {
 
       throw InvalidRequestError.from(
         err,
-        'The account was successfully created but something went wrong, try singing-in.',
+        'The account was successfully created but something went wrong, try signing-in.',
       )
     }
   }

@@ -23,7 +23,7 @@ export function upsertQB(
     })
     .onConflict((oc) =>
       // uses pk
-      oc.columns(['did', 'deviceId']).doUpdateSet({
+      oc.columns(['deviceId', 'did']).doUpdateSet({
         updatedAt: toDateISO(now),
         data: toJson(data),
       }),

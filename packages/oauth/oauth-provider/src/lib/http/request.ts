@@ -134,13 +134,12 @@ export function clearCookie(
 }
 
 export function parseHttpCookies(
-  req: IncomingMessage,
+  req: IncomingMessage & { cookies?: any },
 ): Record<string, undefined | string> {
-  return 'cookies' in req && req.cookies // Already parsed by another middleware
-    ? (req.cookies as any)
-    : req.headers['cookie']
-      ? ((req as any).cookies ||= parseCookie(req.headers['cookie']))
-      : Object.create(null)
+  req.cookies ??= req.headers['cookie']
+    ? parseCookie(req.headers['cookie'])
+    : Object.create(null)
+  return req.cookies
 }
 
 export type ExtractRequestMetadataOptions = {

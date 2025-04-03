@@ -1,7 +1,7 @@
 import type { OAuthClientMetadata } from '@atproto/oauth-types'
 import type { Account, DeviceMetadata, ISODateString } from './types.js'
 
-// These are the endpoints implemented by the OAuth provider, for it's UI to
+// These are the endpoints implemented by the OAuth provider, for its UI to
 // call.
 
 export type ApiEndpoints = {

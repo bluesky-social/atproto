@@ -2,4 +2,4 @@
 "@atproto/oauth-provider-api": minor
 ---
 
-Adapt sing-up & sign-in endpoint definitions
+Adapt sign-up & sign-in endpoint definitions
