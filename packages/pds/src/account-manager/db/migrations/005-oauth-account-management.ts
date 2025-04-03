@@ -95,6 +95,7 @@ export async function up(
         )
         .where('remember', '=', 1),
     )
+    .execute()
 
   // @NOTE No need to create an index on "deviceId" for "account_device" because
   // it is the first column in the primary key constraint
