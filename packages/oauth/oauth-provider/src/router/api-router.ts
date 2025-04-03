@@ -699,12 +699,12 @@ export function apiRouter<
 
         // Validate CSRF token
         if (requestUri) {
-          validateCsrfToken(req, req.headers['x-csrf-token'], requestUri)
+          validateCsrfToken(req, res, requestUri)
         } else if (
           referer.pathname === ACCOUNTS_PAGE_URL ||
           referer.pathname.startsWith(`${ACCOUNTS_PAGE_URL}/`)
         ) {
-          validateCsrfToken(req, req.headers['x-csrf-token'])
+          validateCsrfToken(req, res)
         } else {
           throw createHttpError(400, `Invalid referer ${referer}`)
         }

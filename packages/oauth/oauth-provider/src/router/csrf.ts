@@ -26,16 +26,22 @@ export function clearCsrfToken(res: ServerResponse, requestUri?: RequestUri) {
   setCookie(res, cookieName, '<invalid>', CSRF_COOKIE_OPTIONS)
 }
 
-export function setupCsrfToken(res: ServerResponse, requestUri?: RequestUri) {
+export function setupCsrfToken(
+  req: IncomingMessage,
+  res: ServerResponse,
+  requestUri?: RequestUri,
+) {
+  const cookies = parseHttpCookies(req)
   const cookieName = csrfCookieName(requestUri)
-  const csrfToken = randomBytes(8).toString('hex')
+  const csrfToken = cookies[cookieName] || randomBytes(8).toString('hex')
   setCookie(res, cookieName, csrfToken, CSRF_COOKIE_OPTIONS)
 }
 
 export function validateCsrfToken(
   req: IncomingMessage,
-  csrfToken: unknown,
+  res: ServerResponse,
   requestUri?: RequestUri,
+  csrfToken: unknown = req.headers['x-csrf-token'],
 ) {
   const cookieName = csrfCookieName(requestUri)
   const cookies = parseHttpCookies(req)
@@ -48,4 +54,6 @@ export function validateCsrfToken(
   ) {
     throw createHttpError(400, `Invalid CSRF token`)
   }
+  // Refresh cookie (See Chrome's "Lax+POST" behavior)
+  setCookie(res, cookieName, csrfToken, CSRF_COOKIE_OPTIONS)
 }

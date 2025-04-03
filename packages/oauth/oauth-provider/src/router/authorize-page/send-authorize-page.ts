@@ -88,7 +88,7 @@ export function sendAuthorizePageFactory(customization: Customization) {
       data.parameters.ui_locales?.split(' ') ?? extractLocales(req),
     )
 
-    setupCsrfToken(res, data.authorize.uri)
+    setupCsrfToken(req, res, data.authorize.uri)
 
     // Matches the variables in "authorization-page.tsx"
     const hydrationData: {
