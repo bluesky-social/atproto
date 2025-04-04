@@ -11,7 +11,10 @@ export const createRouter = (ctx: AppContext): Router => {
       return res.sendStatus(404)
     }
     res.json({
-      '@context': ['https://www.w3.org/ns/did/v1'],
+      '@context': [
+        'https://www.w3.org/ns/did/v1',
+        'https://w3id.org/security/multikey/v1',
+      ],
       id: ctx.cfg.service.did,
       verificationMethod: [
         {
