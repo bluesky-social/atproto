@@ -128,6 +128,8 @@ import * as AppBskyGraphGetRelationships from './types/app/bsky/graph/getRelatio
 import * as AppBskyGraphGetStarterPack from './types/app/bsky/graph/getStarterPack.js'
 import * as AppBskyGraphGetStarterPacks from './types/app/bsky/graph/getStarterPacks.js'
 import * as AppBskyGraphGetSuggestedFollowsByActor from './types/app/bsky/graph/getSuggestedFollowsByActor.js'
+import * as AppBskyGraphGetVouchers from './types/app/bsky/graph/getVouchers.js'
+import * as AppBskyGraphGetVouches from './types/app/bsky/graph/getVouches.js'
 import * as AppBskyGraphMuteActor from './types/app/bsky/graph/muteActor.js'
 import * as AppBskyGraphMuteActorList from './types/app/bsky/graph/muteActorList.js'
 import * as AppBskyGraphMuteThread from './types/app/bsky/graph/muteThread.js'
@@ -1713,6 +1715,28 @@ export class AppBskyGraphNS {
     >,
   ) {
     const nsid = 'app.bsky.graph.getSuggestedFollowsByActor' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getVouchers<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyGraphGetVouchers.Handler<ExtractAuth<AV>>,
+      AppBskyGraphGetVouchers.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.graph.getVouchers' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getVouches<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyGraphGetVouches.Handler<ExtractAuth<AV>>,
+      AppBskyGraphGetVouches.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.graph.getVouches' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

@@ -99,6 +99,8 @@ export default function (server: Server, ctx: AppContext) {
   getRelationships(server, ctx)
   getStarterPack(server, ctx)
   getStarterPacks(server, ctx)
+  getVouchers(server, ctx)
+  getVouches(server, ctx)
   searchStarterPacks(server, ctx)
   muteActor(server, ctx)
   unmuteActor(server, ctx)

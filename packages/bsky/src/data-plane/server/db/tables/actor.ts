@@ -4,6 +4,7 @@ export interface Actor {
   indexedAt: string
   takedownRef: string | null
   upstreamStatus: string | null
+  trustedVoucher: boolean | null
 }
 
 export const tableName = 'actor'
