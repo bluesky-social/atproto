@@ -26,7 +26,7 @@
               "type": "integer",
               "description": "Recent repo stream event sequence number. May be delayed from actual stream processing (eg, persisted cursor not in-memory cursor)."
             },
-            "accountCount": { "type": "integer" },
+            "accountCount": { "type": "integer", "description": "Number of accounts on the server which are associated with the upstream host. Note that the upstream may actually have more accounts." },
             "status": {
               "type": "string",
               "knownValues": [
