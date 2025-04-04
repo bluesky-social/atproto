@@ -185,7 +185,7 @@ export function SignInForm({
       />
 
       <Admonition role="status">
-        <p className="font-bold text-md text-brand pb-1">
+        <p className="text-md text-brand pb-1 font-bold">
           <Trans>Warning</Trans>
         </p>
         <p className="text-sm">
@@ -228,7 +228,7 @@ export function SignInForm({
               onToken={setOtp}
             />
 
-            <p className="text-slate-600 dark:text-slate-400 text-sm">
+            <p className="text-sm text-slate-600 dark:text-slate-400">
               <Trans>
                 Check your {secondFactor.hint} email for a login code and enter
                 it here.

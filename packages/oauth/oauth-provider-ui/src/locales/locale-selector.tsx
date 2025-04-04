@@ -26,7 +26,7 @@ export function LocaleSelector({
         'dark:bg-slate-800 dark:focus:bg-slate-700 dark:has-[:focus]:bg-slate-700',
         // Border
         'outline-none',
-        'border-solid border-2 border-transparent',
+        'border-2 border-solid border-transparent',
         'focus:border-brand has-[:focus]:border-brand',
         'hover:border-gray-400 hover:focus:border-gray-400',
         'dark:hover:border-gray-500 dark:hover:focus:border-gray-500',
@@ -35,7 +35,7 @@ export function LocaleSelector({
         // Font
         'text-slate-600 dark:text-slate-300',
         // Layout
-        'py-1 px-2',
+        'px-2 py-1',
         className,
       )}
       value={locale}

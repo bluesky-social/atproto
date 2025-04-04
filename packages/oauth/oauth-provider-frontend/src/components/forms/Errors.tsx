@@ -18,7 +18,7 @@ export function Errors({
 
 export function Error({ children }: { children: ReactNode }) {
   return (
-    <li className="space-y-1 text-sm text-error-900 dark:text-error-25 px-2 py-1 bg-error-100 dark:bg-error-800 rounded-md">
+    <li className="text-error-900 dark:text-error-25 bg-error-100 dark:bg-error-800 space-y-1 rounded-md px-2 py-1 text-sm">
       {children}
     </li>
   )

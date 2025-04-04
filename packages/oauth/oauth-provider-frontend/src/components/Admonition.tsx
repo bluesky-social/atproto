@@ -40,7 +40,7 @@ export function Card({
   return (
     <div
       className={clsx([
-        'border rounded-md pl-3 py-3 pr-4 space-x-3 flex items-start border-contrast-25 dark:border-contrast-50 shadow-lg shadow-contrast-500/20 dark:shadow-contrast-0/50',
+        'border-contrast-25 dark:border-contrast-50 shadow-contrast-500/20 dark:shadow-contrast-0/50 flex items-start space-x-3 rounded-md border py-3 pl-3 pr-4 shadow-lg',
         borderColor,
       ])}
     >

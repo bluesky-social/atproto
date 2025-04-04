@@ -74,7 +74,7 @@ export function SelectorScreen({
                   did: account.sub,
                 }}
                 className={clsx([
-                  'flex items-center space-x-2 px-2 py-2 rounded-lg border',
+                  'flex items-center space-x-2 rounded-lg border px-2 py-2',
                   'bg-contrast-25 dark:bg-contrast-50 border-contrast-50 dark:border-contrast-100',
                   'hover:bg-contrast-50 dark:hover:bg-contrast-100',
                 ])}
@@ -87,11 +87,11 @@ export function SelectorScreen({
                   src={account.picture}
                   displayName={account.name}
                 />
-                <div className="space-y-0 flex-1 truncate">
-                  <h2 className="text-text-default font-semibold leading-snug truncate">
+                <div className="flex-1 space-y-0 truncate">
+                  <h2 className="text-text-default truncate font-semibold leading-snug">
                     {account.name}
                   </h2>
-                  <p className="text-sm text-text-light truncate">
+                  <p className="text-text-light truncate text-sm">
                     {sanitizeHandle(account.preferred_username) || account.sub}
                   </p>
                 </div>
@@ -101,7 +101,7 @@ export function SelectorScreen({
 
             <InlineLink
               to="/sign-in"
-              className="text-sm text-center text-text-light inline-block w-full pt-2"
+              className="text-text-light inline-block w-full pt-2 text-center text-sm"
             >
               <Trans>Sign in with another account</Trans>
             </InlineLink>

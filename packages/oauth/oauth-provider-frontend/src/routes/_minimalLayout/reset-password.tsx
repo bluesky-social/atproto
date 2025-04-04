@@ -102,14 +102,14 @@ function RouteComponent() {
   return (
     <div
       className={clsx([
-        'mx-auto rounded-lg border p-5 md:p-7 shadow-xl dark:shadow-2xl',
+        'mx-auto rounded-lg border p-5 shadow-xl md:p-7 dark:shadow-2xl',
         'border-contrast-25 dark:border-contrast-50 shadow-contrast-500/20 dark:shadow-contrast-0/50',
       ])}
       style={{
         maxWidth: 400,
       }}
     >
-      <div className="space-y-4 w-full">
+      <div className="w-full space-y-4">
         {showSuccess ? (
           <>
             <div className="space-y-1">
@@ -172,7 +172,7 @@ function RouteComponent() {
                       </ul>
                     )}
 
-                    <div className="pt-2 space-y-3 align-center">
+                    <div className="align-center space-y-3 pt-2">
                       <form.Subscribe
                         selector={(state) => [
                           state.canSubmit,
@@ -192,7 +192,7 @@ function RouteComponent() {
 
                       <InlineLink
                         to="/sign-in"
-                        className="text-sm inline-block w-full text-text-light text-center"
+                        className="text-text-light inline-block w-full text-center text-sm"
                       >
                         <Trans>Back to sign in</Trans>
                       </InlineLink>
@@ -212,7 +212,7 @@ function RouteComponent() {
               >
                 <Form.Fieldset label="Test">
                   <>
-                    <div className="pt-4 pb-2">
+                    <div className="pb-2 pt-4">
                       <Divider />
                     </div>
                     <confirmForm.Field
@@ -273,7 +273,7 @@ function RouteComponent() {
                               {Array.from({ length: 4 }).map((_, i) => (
                                 <div
                                   className={clsx([
-                                    'w-full h-1 rounded-full',
+                                    'h-1 w-full rounded-full',
                                     strength > i && isMin
                                       ? strengthBg
                                       : defaultBg,
@@ -294,7 +294,7 @@ function RouteComponent() {
                     </ul>
                   )}
 
-                  <div className="pt-2 space-y-3 align-center">
+                  <div className="align-center space-y-3 pt-2">
                     <confirmForm.Subscribe
                       selector={(state) => [
                         state.canSubmit,
@@ -312,7 +312,7 @@ function RouteComponent() {
                       )}
                     />
 
-                    <p className="text-sm inline-block w-full text-center text-text-light">
+                    <p className="text-text-light inline-block w-full text-center text-sm">
                       <Trans>
                         Don't see the email?{' '}
                         <InlineLink

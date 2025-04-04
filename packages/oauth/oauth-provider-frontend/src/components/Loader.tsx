@@ -17,7 +17,7 @@ export function Loader({
 
   return (
     <div
-      className="relative justify-center align-center"
+      className="align-center relative justify-center"
       style={{ width: size, height: size }}
     >
       <div className="loader-animation">

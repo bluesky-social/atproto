@@ -108,7 +108,7 @@ export function WizardCard<TDone extends DoneFn>({
         </Trans>
       </p>
 
-      {stepTitle && <h2 className="font-medium text-xl mb-4">{stepTitle}</h2>}
+      {stepTitle && <h2 className="mb-4 text-xl font-medium">{stepTitle}</h2>}
 
       {stepContent}
     </div>

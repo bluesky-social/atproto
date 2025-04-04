@@ -34,13 +34,13 @@ export const Admonition = memo(function Admonition({
       {role === 'info' ? (
         <EyeIcon
           aria-hidden
-          className={clsx('fill-current h-6 w-6', 'text-brand')}
+          className={clsx('h-6 w-6 fill-current', 'text-brand')}
         />
       ) : (
         <AlertIcon
           aria-hidden
           className={clsx(
-            'fill-current h-6 w-6',
+            'h-6 w-6 fill-current',
             role === 'alert' ? 'text-inherit' : 'text-brand',
           )}
         />

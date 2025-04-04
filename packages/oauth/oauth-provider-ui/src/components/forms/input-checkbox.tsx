@@ -68,7 +68,7 @@ export function InputCheckbox({
         <label
           ref={labelRef}
           htmlFor={inputId}
-          className="block w-full leading-[1.6] select-none cursor-pointer"
+          className="block w-full cursor-pointer select-none leading-[1.6]"
         >
           {children}
         </label>

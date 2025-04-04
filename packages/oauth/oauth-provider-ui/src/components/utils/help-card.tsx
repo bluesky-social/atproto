@@ -25,7 +25,7 @@ export function HelpCard({
     <p
       {...props}
       className={clsx(
-        'text-sm rounded-md bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-400 p-3',
+        'rounded-md bg-slate-100 p-3 text-sm text-slate-800 dark:bg-slate-800 dark:text-slate-400',
         className,
       )}
     >

@@ -21,7 +21,7 @@ export function InlineLink({ children, className, ...rest }: LinkProps) {
       className={clsx([
         'text-primary-500',
         'hover:underline',
-        'focus:outline-none focus:underline',
+        'focus:underline focus:outline-none',
         className,
       ])}
     >

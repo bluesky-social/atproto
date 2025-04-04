@@ -12,7 +12,7 @@ export function ContentCard({
   return (
     <div
       className={clsx([
-        'mx-auto rounded-lg border p-5 md:p-7 shadow-xl dark:shadow-2xl',
+        'mx-auto rounded-lg border p-5 shadow-xl md:p-7 dark:shadow-2xl',
         'border-contrast-25 dark:border-contrast-50 shadow-contrast-500/20 dark:shadow-contrast-0/50',
       ])}
       style={{

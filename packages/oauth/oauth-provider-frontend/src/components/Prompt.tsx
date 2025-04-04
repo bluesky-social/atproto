@@ -43,11 +43,11 @@ export function Prompt({
             {title}
           </Dialog.Title>
           {description && (
-            <Dialog.Description className="text-text-light leading-snug pt-1">
+            <Dialog.Description className="text-text-light pt-1 leading-snug">
               {description}
             </Dialog.Description>
           )}
-          <div className="flex items-center flex-wrap-reverse gap-2 pt-4">
+          <div className="flex flex-wrap-reverse items-center gap-2 pt-4">
             <Button
               className="w-full min-w-[150px]"
               color="secondary"

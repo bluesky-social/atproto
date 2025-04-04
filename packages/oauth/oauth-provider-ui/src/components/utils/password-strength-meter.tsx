@@ -40,7 +40,7 @@ export function PasswordStrengthMeter({
   return (
     <div
       {...props}
-      className={clsx('w-full h-1 flex space-x-2', className)}
+      className={clsx('flex h-1 w-full space-x-2', className)}
       role="meter"
       aria-label={t`Password strength indicator`}
       aria-valuemin={0}
@@ -50,7 +50,7 @@ export function PasswordStrengthMeter({
       {Array.from({ length: 4 }, (_, i) => (
         <div
           key={i}
-          className={`rounded h-1 w-1/4 ${strength > i ? color : colorBg}`}
+          className={`h-1 w-1/4 rounded ${strength > i ? color : colorBg}`}
         />
       ))}
     </div>

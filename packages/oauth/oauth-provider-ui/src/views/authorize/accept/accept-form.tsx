@@ -69,7 +69,7 @@ export function AcceptForm({
             crossOrigin="anonymous"
             src={clientMetadata.logo_uri}
             alt={clientMetadata.client_name}
-            className="w-16 h-16 rounded-full"
+            className="h-16 w-16 rounded-full"
           />
         </div>
       )}
@@ -119,7 +119,7 @@ export function AcceptForm({
 
       {scopeDetails?.length ? (
         <ul
-          className="list-disc list-inside"
+          className="list-inside list-disc"
           key="scopes"
           aria-label={t`Requested permissions`}
         >

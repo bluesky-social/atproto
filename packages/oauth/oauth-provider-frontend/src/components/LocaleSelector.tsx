@@ -17,9 +17,9 @@ export function LocaleSelector({
     <div className="relative">
       <select
         className={clsx([
-          'pl-2 pr-8 py-1.5 rounded-full bg-contrast-25 text-text-default text-sm font-semibold border border-contrast-100 focus:shadow-sm cursor-pointer',
+          'bg-contrast-25 text-text-default border-contrast-100 cursor-pointer rounded-full border py-1.5 pl-2 pr-8 text-sm font-semibold focus:shadow-sm',
           'hover:bg-contrast-0 focus:bg-contrast-0 dark:hover:bg-contrast-0',
-          'focus:outline-none focus:bg-contrast-0 dark:focus:bg-contrast-0',
+          'focus:bg-contrast-0 dark:focus:bg-contrast-0 focus:outline-none',
         ])}
         onChange={(e) => onSelect(e.target.value)}
       >
@@ -34,7 +34,7 @@ export function LocaleSelector({
         ))}
       </select>
 
-      <ChevronDownIcon className="absolute right-2 top-0 bottom-0 w-5 h-5 my-auto pointer-events-none" />
+      <ChevronDownIcon className="pointer-events-none absolute bottom-0 right-2 top-0 my-auto h-5 w-5" />
     </div>
   )
 }

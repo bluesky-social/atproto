@@ -92,8 +92,8 @@ export function Provider({ children }: { children: ReactNode }) {
           >
             <div
               className={clsx([
-                'relative pl-6 pr-8 py-3 rounded-full shadow-lg border',
-                'shadow-contrast-900/15 dark:shadow-contrast-0/60 ',
+                'relative rounded-full border py-3 pl-6 pr-8 shadow-lg',
+                'shadow-contrast-900/15 dark:shadow-contrast-0/60',
                 borderColors[toast.variant],
                 bgColors[toast.variant],
               ])}
@@ -109,7 +109,7 @@ export function Provider({ children }: { children: ReactNode }) {
               {toast.dissmissable && (
                 <ToastBase.Close
                   className={clsx([
-                    'absolute top-0 bottom-0 my-auto right-2 w-6 h-6 rounded-full border flex items-center justify-center focus:outline-0 transition-colors',
+                    'absolute bottom-0 right-2 top-0 my-auto flex h-6 w-6 items-center justify-center rounded-full border transition-colors focus:outline-0',
                     'border-contrast-975/30',
                     'hover:bg-contrast-975/30 hover:border-contrast-975/60',
                   ])}
@@ -122,7 +122,7 @@ export function Provider({ children }: { children: ReactNode }) {
         ))}
       </Context.Provider>
 
-      <ToastBase.Viewport className="fixed top-0 pt-8 left-6 right-6 max-w-[400px] mx-auto" />
+      <ToastBase.Viewport className="fixed left-6 right-6 top-0 mx-auto max-w-[400px] pt-8" />
     </ToastBase.Provider>
   )
 }

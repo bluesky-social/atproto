@@ -33,7 +33,7 @@ export function Sessions() {
 
   return (
     <>
-      <ul className="flex items-center space-x-2 text-text-light text-sm">
+      <ul className="text-text-light flex items-center space-x-2 text-sm">
         <li>
           <InlineLink to="/" className="text-text-light underline">
             <Trans>Accounts</Trans>
@@ -45,7 +45,7 @@ export function Sessions() {
         </li>
       </ul>
 
-      <h2 className="text-text-default font-bold text-xl pt-8 pb-4">
+      <h2 className="text-text-default pb-4 pt-8 text-xl font-bold">
         <Trans>Connected apps</Trans>
       </h2>
 
@@ -72,7 +72,7 @@ export function Sessions() {
         />
       )}
 
-      <h2 className="text-text-default font-bold text-xl pt-8 pb-4">
+      <h2 className="text-text-default pb-4 pt-8 text-xl font-bold">
         <Trans>My devices</Trans>
       </h2>
 
@@ -131,7 +131,7 @@ function ApplicationSessionCard({
   }
 
   return (
-    <div className="p-4 border bg-contrast-25 dark:bg-contrast-50 border-contrast-50 dark:border-contrast-100 rounded-lg flex items-start justify-between space-x-4">
+    <div className="bg-contrast-25 dark:bg-contrast-50 border-contrast-50 dark:border-contrast-100 flex items-start justify-between space-x-4 rounded-lg border p-4">
       <div className="flex items-center space-x-2 truncate">
         <Avatar
           size={40}
@@ -139,10 +139,10 @@ function ApplicationSessionCard({
           displayName={clientMetadata?.client_name}
         />
         <div className="truncate">
-          <h3 className="font-bold leading-snug truncate">
+          <h3 className="truncate font-bold leading-snug">
             {clientMetadata?.client_name || clientMetadata?.client_uri}
           </h3>
-          <p className="text-text-light leading-snug text-sm truncate">
+          <p className="text-text-light truncate text-sm leading-snug">
             {clientId}
           </p>
         </div>
@@ -211,7 +211,7 @@ function AccountSessionCard({
   }, [session])
 
   return (
-    <div className="pt-3 px-2 border-t border-contrast-50 dark:border-contrast-100 flex items-start justify-between space-x-4">
+    <div className="border-contrast-50 dark:border-contrast-100 flex items-start justify-between space-x-4 border-t px-2 pt-3">
       <div className="flex flex-col space-x-2 truncate">
         <p className="font-semibold">{session.deviceMetadata.userAgent}</p>
         <p className="text-sm">
@@ -219,7 +219,7 @@ function AccountSessionCard({
             {lastUsed}
             {' • '}
           </span>
-          <span className="font-mono text-warning-600">
+          <span className="text-warning-600 font-mono">
             {session.deviceMetadata.ipAddress}
           </span>
         </p>

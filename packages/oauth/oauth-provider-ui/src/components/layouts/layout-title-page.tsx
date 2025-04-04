@@ -27,8 +27,8 @@ export function LayoutTitlePage({
       className={clsx(
         className,
         'flex flex-col items-center',
-        'md:flex md:flex-row md:justify-stretch md:items-center',
-        'min-h-screen min-w-screen',
+        'md:flex md:flex-row md:items-center md:justify-stretch',
+        'min-w-screen min-h-screen',
         'bg-white text-slate-900',
         'dark:bg-slate-900 dark:text-slate-100',
       )}
@@ -42,17 +42,17 @@ export function LayoutTitlePage({
           'md:max-w-lg',
           'flex flex-row md:flex-col',
           'md:self-stretch',
-          'md:w-1/2 md:max-w-fix md:p-4',
+          'md:max-w-fix md:w-1/2 md:p-4',
           'md:text-right',
           'md:dark:border-r md:dark:border-slate-700',
           'md:bg-slate-100 md:dark:bg-slate-800',
         )}
       >
-        <div className="flex-grow grid content-center md:justify-items-end">
+        <div className="grid flex-grow content-center md:justify-items-end">
           {title && (
             <h1
               key="title"
-              className="text-xl md:text-2xl lg:text-5xl md:my-4 font-semibold text-brand"
+              className="text-brand text-xl font-semibold md:my-4 md:text-2xl lg:text-5xl"
             >
               {title}
             </h1>
@@ -61,7 +61,7 @@ export function LayoutTitlePage({
           {subtitle && (
             <p
               key="subtitle"
-              className="hidden md:block max-w-xs text-slate-600 dark:text-slate-400"
+              className="hidden max-w-xs text-slate-600 md:block dark:text-slate-400"
             >
               {subtitle}
             </p>

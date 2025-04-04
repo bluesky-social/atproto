@@ -2,92 +2,92 @@ export function Palette() {
   return (
     <>
       <div className="flex items-center justify-center">
-        <div className="p-10 bg-contrast-0" />
-        <div className="p-10 bg-contrast-25" />
-        <div className="p-10 bg-contrast-50" />
-        <div className="p-10 bg-contrast-100" />
-        <div className="p-10 bg-contrast-200" />
-        <div className="p-10 bg-contrast-300" />
-        <div className="p-10 bg-contrast-400" />
-        <div className="p-10 bg-contrast-500" />
-        <div className="p-10 bg-contrast-600" />
-        <div className="p-10 bg-contrast-700" />
-        <div className="p-10 bg-contrast-800" />
-        <div className="p-10 bg-contrast-900" />
-        <div className="p-10 bg-contrast-950" />
-        <div className="p-10 bg-contrast-975" />
-        <div className="p-10 bg-contrast-1000" />
+        <div className="bg-contrast-0 p-10" />
+        <div className="bg-contrast-25 p-10" />
+        <div className="bg-contrast-50 p-10" />
+        <div className="bg-contrast-100 p-10" />
+        <div className="bg-contrast-200 p-10" />
+        <div className="bg-contrast-300 p-10" />
+        <div className="bg-contrast-400 p-10" />
+        <div className="bg-contrast-500 p-10" />
+        <div className="bg-contrast-600 p-10" />
+        <div className="bg-contrast-700 p-10" />
+        <div className="bg-contrast-800 p-10" />
+        <div className="bg-contrast-900 p-10" />
+        <div className="bg-contrast-950 p-10" />
+        <div className="bg-contrast-975 p-10" />
+        <div className="bg-contrast-1000 p-10" />
       </div>
 
       <div className="flex items-center justify-center">
-        <div className="p-10 bg-primary-25" />
-        <div className="p-10 bg-primary-50" />
-        <div className="p-10 bg-primary-100" />
-        <div className="p-10 bg-primary-200" />
-        <div className="p-10 bg-primary-300" />
-        <div className="p-10 bg-primary-400" />
-        <div className="p-10 bg-primary-500" />
-        <div className="p-10 bg-primary-600" />
-        <div className="p-10 bg-primary-700" />
-        <div className="p-10 bg-primary-800" />
-        <div className="p-10 bg-primary-900" />
-        <div className="p-10 bg-primary-950" />
-        <div className="p-10 bg-primary-975" />
+        <div className="bg-primary-25 p-10" />
+        <div className="bg-primary-50 p-10" />
+        <div className="bg-primary-100 p-10" />
+        <div className="bg-primary-200 p-10" />
+        <div className="bg-primary-300 p-10" />
+        <div className="bg-primary-400 p-10" />
+        <div className="bg-primary-500 p-10" />
+        <div className="bg-primary-600 p-10" />
+        <div className="bg-primary-700 p-10" />
+        <div className="bg-primary-800 p-10" />
+        <div className="bg-primary-900 p-10" />
+        <div className="bg-primary-950 p-10" />
+        <div className="bg-primary-975 p-10" />
       </div>
 
       <div className="flex items-center justify-center">
-        <div className="p-10 bg-error-25" />
-        <div className="p-10 bg-error-50" />
-        <div className="p-10 bg-error-100" />
-        <div className="p-10 bg-error-200" />
-        <div className="p-10 bg-error-300" />
-        <div className="p-10 bg-error-400" />
-        <div className="p-10 bg-error-500" />
-        <div className="p-10 bg-error-600" />
-        <div className="p-10 bg-error-700" />
-        <div className="p-10 bg-error-800" />
-        <div className="p-10 bg-error-900" />
-        <div className="p-10 bg-error-950" />
-        <div className="p-10 bg-error-975" />
+        <div className="bg-error-25 p-10" />
+        <div className="bg-error-50 p-10" />
+        <div className="bg-error-100 p-10" />
+        <div className="bg-error-200 p-10" />
+        <div className="bg-error-300 p-10" />
+        <div className="bg-error-400 p-10" />
+        <div className="bg-error-500 p-10" />
+        <div className="bg-error-600 p-10" />
+        <div className="bg-error-700 p-10" />
+        <div className="bg-error-800 p-10" />
+        <div className="bg-error-900 p-10" />
+        <div className="bg-error-950 p-10" />
+        <div className="bg-error-975 p-10" />
       </div>
 
       <div className="flex items-center justify-center">
-        <div className="p-10 bg-warning-25" />
-        <div className="p-10 bg-warning-50" />
-        <div className="p-10 bg-warning-100" />
-        <div className="p-10 bg-warning-200" />
-        <div className="p-10 bg-warning-300" />
-        <div className="p-10 bg-warning-400" />
-        <div className="p-10 bg-warning-500" />
-        <div className="p-10 bg-warning-600" />
-        <div className="p-10 bg-warning-700" />
-        <div className="p-10 bg-warning-800" />
-        <div className="p-10 bg-warning-900" />
-        <div className="p-10 bg-warning-950" />
-        <div className="p-10 bg-warning-975" />
+        <div className="bg-warning-25 p-10" />
+        <div className="bg-warning-50 p-10" />
+        <div className="bg-warning-100 p-10" />
+        <div className="bg-warning-200 p-10" />
+        <div className="bg-warning-300 p-10" />
+        <div className="bg-warning-400 p-10" />
+        <div className="bg-warning-500 p-10" />
+        <div className="bg-warning-600 p-10" />
+        <div className="bg-warning-700 p-10" />
+        <div className="bg-warning-800 p-10" />
+        <div className="bg-warning-900 p-10" />
+        <div className="bg-warning-950 p-10" />
+        <div className="bg-warning-975 p-10" />
       </div>
 
       <div className="flex items-center justify-center">
-        <div className="p-10 bg-success-25" />
-        <div className="p-10 bg-success-50" />
-        <div className="p-10 bg-success-100" />
-        <div className="p-10 bg-success-200" />
-        <div className="p-10 bg-success-300" />
-        <div className="p-10 bg-success-400" />
-        <div className="p-10 bg-success-500" />
-        <div className="p-10 bg-success-600" />
-        <div className="p-10 bg-success-700" />
-        <div className="p-10 bg-success-800" />
-        <div className="p-10 bg-success-900" />
-        <div className="p-10 bg-success-950" />
-        <div className="p-10 bg-success-975" />
+        <div className="bg-success-25 p-10" />
+        <div className="bg-success-50 p-10" />
+        <div className="bg-success-100 p-10" />
+        <div className="bg-success-200 p-10" />
+        <div className="bg-success-300 p-10" />
+        <div className="bg-success-400 p-10" />
+        <div className="bg-success-500 p-10" />
+        <div className="bg-success-600 p-10" />
+        <div className="bg-success-700 p-10" />
+        <div className="bg-success-800 p-10" />
+        <div className="bg-success-900 p-10" />
+        <div className="bg-success-950 p-10" />
+        <div className="bg-success-975 p-10" />
       </div>
 
       <div className="flex items-center justify-center">
-        <div className="p-10 bg-primary" />
-        <div className="p-10 bg-error" />
-        <div className="p-10 bg-warning" />
-        <div className="p-10 bg-success" />
+        <div className="bg-primary p-10" />
+        <div className="bg-error p-10" />
+        <div className="bg-warning p-10" />
+        <div className="bg-success p-10" />
       </div>
     </>
   )

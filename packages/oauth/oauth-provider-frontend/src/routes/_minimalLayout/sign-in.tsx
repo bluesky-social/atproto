@@ -26,7 +26,7 @@ function RouteComponent() {
   return (
     <div
       className={clsx([
-        'mx-auto rounded-lg border p-5 md:p-7 shadow-xl dark:shadow-2xl',
+        'mx-auto rounded-lg border p-5 shadow-xl md:p-7 dark:shadow-2xl',
         'border-contrast-25 dark:border-contrast-50 shadow-contrast-500/20 dark:shadow-contrast-0/50',
       ])}
       style={{
@@ -221,7 +221,7 @@ function LoginForm() {
             </ul>
           )}
 
-          <div className="pt-2 space-y-3 align-center">
+          <div className="align-center space-y-3 pt-2">
             <form.Subscribe
               selector={(state) => [state.canSubmit, state.isSubmitting]}
               children={([canSubmit, isSubmitting]) => (
@@ -238,7 +238,7 @@ function LoginForm() {
 
             <InlineLink
               to="/reset-password"
-              className="inline-block w-full text-sm text-center text-text-light"
+              className="text-text-light inline-block w-full text-center text-sm"
             >
               <Trans>Forgot password?</Trans>
             </InlineLink>

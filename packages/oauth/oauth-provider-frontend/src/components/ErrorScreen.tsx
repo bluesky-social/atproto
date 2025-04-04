@@ -9,7 +9,7 @@ export function ErrorScreen({
   description: string
 }) {
   return (
-    <main className="bg-contrast-25 min-h-screen px-4 md:px-6 pt-16">
+    <main className="bg-contrast-25 min-h-screen px-4 pt-16 md:px-6">
       <div
         className="mx-auto w-full"
         style={{ maxWidth: 600, minHeight: '100vh' }}

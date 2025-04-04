@@ -9,12 +9,12 @@ export function Footer() {
   const { links } = useCustomizationData()
 
   return (
-    <footer className="fixed inset-x-0 bottom-0 px-4 md:px-6 h-15 bg-contrast-25 dark:bg-contrast-50 flex items-center justify-between">
+    <footer className="h-15 bg-contrast-25 dark:bg-contrast-50 fixed inset-x-0 bottom-0 flex items-center justify-between px-4 md:px-6">
       <div className="flex flex-wrap">
         {links?.map((link) => (
           <InlineLink
             href={link.href}
-            className="text-sm text-text-light mr-4"
+            className="text-text-light mr-4 text-sm"
             key={link.href}
           >
             {localizeString(link.title)}

@@ -50,13 +50,13 @@ export function InputContainer({
         className={clsx(
           // Layout
           'px-1',
-          'w-full min-h-12',
+          'min-h-12 w-full',
           'flex items-center justify-stretch',
           // Border
           'rounded-lg',
-          bellow ? 'rounded-br-none rounded-bl-none' : undefined,
+          bellow ? 'rounded-bl-none rounded-br-none' : undefined,
           'outline-none',
-          'border-solid border-2 border-transparent',
+          'border-2 border-solid border-transparent',
           'focus:border-brand has-[:focus]:border-brand',
           'hover:border-gray-400 hover:focus:border-gray-400',
           'dark:hover:border-gray-500 dark:hover:focus:border-gray-500',
@@ -82,13 +82,13 @@ export function InputContainer({
 
         {children}
 
-        <div className="ml-1 grow-0 shrink-0 flex items-center">{append}</div>
+        <div className="ml-1 flex shrink-0 grow-0 items-center">{append}</div>
       </div>
       {bellow && (
         <div
           className={clsx(
             // Layout
-            'px-3 py-2 space-x-2',
+            'space-x-2 px-3 py-2',
             'flex flex-row items-center gap-1',
             // Border
             'rounded-br-2 rounded-bl-2',

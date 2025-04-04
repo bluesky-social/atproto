@@ -14,7 +14,7 @@ export function Label({
     <label
       htmlFor={`field-${name}`}
       className={clsx([
-        'block text-sm font-medium text-text-light',
+        'text-text-light block text-sm font-medium',
         hidden && 'sr-only',
       ])}
     >
