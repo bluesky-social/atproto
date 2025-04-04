@@ -115,7 +115,8 @@
           "type": "union",
           "refs": [
             "com.atproto.admin.defs#repoRef",
-            "com.atproto.repo.strongRef"
+            "com.atproto.repo.strongRef",
+            "chat.bsky.convo.defs#messageRef"
           ]
         },
         "hosting": {
