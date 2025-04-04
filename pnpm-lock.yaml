@@ -1273,6 +1273,9 @@ importers:
       autoprefixer:
         specifier: ^10.4.17
         version: 10.4.19(postcss@8.5.3)
+      clsx:
+        specifier: ^2.1.1
+        version: 2.1.1
       postcss:
         specifier: ^8.4.38
         version: 8.5.3

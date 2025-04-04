@@ -1,6 +1,6 @@
 import { useLingui } from '@lingui/react/macro'
+import { clsx } from 'clsx'
 import { JSX } from 'react'
-import { clsx } from '../../lib/clsx.ts'
 import { PasswordStrength, getPasswordStrength } from '../../lib/password.ts'
 import { Override } from '../../lib/util.ts'
 

@@ -1,5 +1,5 @@
+import { clsx } from 'clsx'
 import { JSX } from 'react'
-import { clsx } from '../../lib/clsx.ts'
 import { Override } from '../../lib/util.ts'
 
 export type ButtonProps = Override<

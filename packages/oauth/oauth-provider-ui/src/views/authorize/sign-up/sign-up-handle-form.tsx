@@ -1,4 +1,5 @@
 import { Trans, useLingui } from '@lingui/react/macro'
+import { clsx } from 'clsx'
 import { JSX, ReactNode, useCallback, useEffect, useRef, useState } from 'react'
 import {
   AsyncActionController,
@@ -12,7 +13,6 @@ import {
   CheckMarkIcon,
   XMarkIcon,
 } from '../../../components/utils/icons.tsx'
-import { clsx } from '../../../lib/clsx.ts'
 import { mergeRefs } from '../../../lib/ref.ts'
 import { Override } from '../../../lib/util.ts'
 

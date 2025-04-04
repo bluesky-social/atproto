@@ -1,6 +1,6 @@
 import { useLingui } from '@lingui/react/macro'
+import { clsx } from 'clsx'
 import { JSX } from 'react'
-import { clsx } from '../lib/clsx.ts'
 import { useLocaleContext } from './locale-context.ts'
 
 export type LocaleSelectorProps = Omit<

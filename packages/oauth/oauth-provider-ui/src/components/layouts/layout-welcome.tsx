@@ -1,6 +1,6 @@
+import { clsx } from 'clsx'
 import { JSX } from 'react'
 import type { CustomizationData } from '@atproto/oauth-provider-api'
-import { clsx } from '../../lib/clsx.ts'
 import { Override } from '../../lib/util.ts'
 import { LocaleSelector } from '../../locales/locale-selector.tsx'
 import { LinkAnchor } from '../utils/link-anchor.tsx'

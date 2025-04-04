@@ -1,5 +1,5 @@
+import { clsx } from 'clsx'
 import { JSX, ReactNode } from 'react'
-import { clsx } from '../../lib/clsx.ts'
 import { Override } from '../../lib/util.ts'
 import { LocaleSelector } from '../../locales/locale-selector.tsx'
 

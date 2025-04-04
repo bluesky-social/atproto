@@ -43,6 +43,7 @@
     "@vitejs/plugin-react-swc": "^3.8.0",
     "@web/rollup-plugin-import-meta-assets": "^2.2.1",
     "autoprefixer": "^10.4.17",
+    "clsx": "^2.1.1",
     "postcss": "^8.4.38",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

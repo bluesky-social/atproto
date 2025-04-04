@@ -1,6 +1,6 @@
+import { clsx } from 'clsx'
 import { JSX, ReactNode, useContext, useRef } from 'react'
 import { useRandomString } from '../../hooks/use-random-string.ts'
-import { clsx } from '../../lib/clsx.ts'
 import { mergeRefs } from '../../lib/ref.ts'
 import { Override } from '../../lib/util.ts'
 import { FieldsetContext } from './fieldset.tsx'

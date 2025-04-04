@@ -1,7 +1,7 @@
 import { Trans } from '@lingui/react/macro'
+import { clsx } from 'clsx'
 import { JSX } from 'react'
 import type { LinkDefinition } from '@atproto/oauth-provider-api'
-import { clsx } from '../../lib/clsx.ts'
 import { Override } from '../../lib/util.ts'
 
 export type HelpCardProps = Override<

@@ -1,5 +1,5 @@
+import { clsx } from 'clsx'
 import { JSX, memo } from 'react'
-import { clsx } from '../../lib/clsx.ts'
 import { Override } from '../../lib/util.ts'
 import { AlertIcon, EyeIcon } from './icons.tsx'
 
