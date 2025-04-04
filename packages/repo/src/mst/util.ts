@@ -126,6 +126,10 @@ export const isValidMstKey = (str: string): boolean => {
   )
 }
 
+export const isMstPrefix = (prefix: string, key: string): boolean => {
+  return key.startsWith(prefix + '/') || key.startsWith(prefix + '.')
+}
+
 export const validCharsRegex = /^[a-zA-Z0-9_\-:.]*$/
 
 export const isValidChars = (str: string): boolean => {

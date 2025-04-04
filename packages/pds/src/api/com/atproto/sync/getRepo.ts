@@ -16,14 +16,17 @@ export default function (server: Server, ctx: AppContext) {
       additional: [AuthScope.Takendown],
     }),
     handler: async ({ params, auth }) => {
-      const { did, since } = params
+      const { did, since, prefix } = params
+      if (prefix && !isValidNSIDPrefix(prefix)) {
+        throw new InvalidRequestError('prefix must be a valid NSID segment')
+      }
       await assertRepoAvailability(
         ctx,
         did,
         ctx.authVerifier.isUserOrAdmin(auth, did),
       )
 
-      const carStream = await getCarStream(ctx, did, since)
+      const carStream = await getCarStream(ctx, did, { since, prefix })
 
       return {
         encoding: 'application/vnd.ipld.car',
@@ -33,16 +36,25 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
+const isValidNSIDPrefix = (str: string): boolean => {
+  return /^[a-z0-9.-]+$/.test(str)
+}
+
 export const getCarStream = async (
   ctx: AppContext,
   did: string,
-  since?: string,
+  opts: {
+    since?: string
+    prefix?: string
+  },
 ): Promise<stream.Readable> => {
   const actorDb = await ctx.actorStore.openDb(did)
   let carStream: stream.Readable
   try {
     const storage = new SqlRepoReader(actorDb)
-    const carIter = await storage.getCarStream(since)
+    const carIter = opts.prefix
+      ? await storage.getCarStreamByPrefix(opts.prefix)
+      : await storage.getCarStream(opts.since)
     carStream = byteIterableToStream(carIter)
   } catch (err) {
     await actorDb.close()
