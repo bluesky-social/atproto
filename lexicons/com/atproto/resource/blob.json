@@ -1,0 +1,24 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.resource.blob",
+  "defs": {
+    "main": {
+      "type": "auth-resource",
+      "description": "Grants access to blobs in the public repo",
+      "parameters": {
+        "type": "params",
+        "required": [],
+        "properties": {
+          "maxSize": {
+            "type": "integer",
+            "description": "The max size of the blog in bytes."
+          },
+          "create": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      }
+    }
+  }
+}
