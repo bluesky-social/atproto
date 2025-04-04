@@ -1,6 +1,6 @@
-import { DeviceAccountInfo } from '../account/account-store.js'
-import { Account } from '../account/account.js'
+import type { Account } from '@atproto/oauth-provider-api'
 import { Awaitable, buildInterfaceChecker } from '../lib/util/type.js'
+import { Sub } from '../oidc/sub.js'
 import { Code } from '../request/code.js'
 import { RefreshToken } from './refresh-token.js'
 import { TokenData } from './token-data.js'
@@ -10,13 +10,12 @@ import { TokenId } from './token-id.js'
 export * from './refresh-token.js'
 export * from './token-data.js'
 export * from './token-id.js'
-export type { Awaitable }
+export type { Account, Awaitable, Sub }
 
 export type TokenInfo = {
   id: TokenId
   data: TokenData
   account: Account
-  info?: DeviceAccountInfo
   currentRefreshToken: null | RefreshToken
 }
 
@@ -53,6 +52,8 @@ export interface TokenStore {
   ): Awaitable<null | TokenInfo>
 
   findTokenByCode(code: Code): Awaitable<null | TokenInfo>
+
+  listAccountTokens(sub: Sub): Awaitable<TokenInfo[]>
 }
 
 export const isTokenStore = buildInterfaceChecker<TokenStore>([
@@ -62,6 +63,7 @@ export const isTokenStore = buildInterfaceChecker<TokenStore>([
   'rotateToken',
   'findTokenByRefreshToken',
   'findTokenByCode',
+  'listAccountTokens',
 ])
 
 export function asTokenStore<V extends Partial<TokenStore>>(

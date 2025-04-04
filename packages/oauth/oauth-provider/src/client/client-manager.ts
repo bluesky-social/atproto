@@ -257,7 +257,7 @@ export class ClientManager {
             `Grant type "${grantType}" is not allowed`,
           )
 
-        // @TODO: Add support (e.g. for first party client)
+        // @TODO Add support (e.g. for first party client)
         // case 'client_credentials':
         // case 'password':
         case 'authorization_code':

@@ -8,17 +8,17 @@ import type {
   AvailableLocales,
   CustomizationData,
 } from '@atproto/oauth-provider-api'
-import { readBackendData } from './lib/backend-data.ts'
+import { readHydrationData } from './lib/read-hydration-data.ts'
 import { LocaleProvider } from './locales/locale-provider.tsx'
 import { AuthorizeView } from './views/authorize/authorize-view.tsx'
 import { ErrorView } from './views/error/error-view.tsx'
 
 export const availableLocales =
-  readBackendData<AvailableLocales>('__availableLocales')
-export const customizationData = readBackendData<CustomizationData>(
+  readHydrationData<AvailableLocales>('__availableLocales')
+export const customizationData = readHydrationData<CustomizationData>(
   '__customizationData',
 )
-export const authorizeData = readBackendData<AuthorizeData>('__authorizeData')
+export const authorizeData = readHydrationData<AuthorizeData>('__authorizeData')
 
 if (authorizeData) {
   // When the user is logging in, make sure the page URL contains the

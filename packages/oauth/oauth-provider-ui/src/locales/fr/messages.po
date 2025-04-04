@@ -13,7 +13,7 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: src/views/authorize/accept/accept-form.tsx:76
+#: src/views/authorize/accept/accept-form.tsx:77
 msgid "<0/> is asking for permission to access your account (<1/>)."
 msgstr "<0/> demande la permission d'accéder à votre compte (<1/>)."
 
@@ -25,11 +25,11 @@ msgstr "Confirmation 2FA"
 msgid "A second authentication factor is required"
 msgstr "Un second facteur d'authentification est requis"
 
-#: src/views/authorize/accept/accept-form.tsx:144
+#: src/views/authorize/accept/accept-form.tsx:149
 msgid "Access your account data (except chat messages)"
 msgstr "Accéder aux données de votre compte (sauf les messages de chat)"
 
-#: src/views/authorize/accept/accept-form.tsx:146
+#: src/views/authorize/accept/accept-form.tsx:151
 msgid "Access your chat messages"
 msgstr "Accéder à vos messages de chat"
 
@@ -58,7 +58,7 @@ msgid "Authenticate"
 msgstr "Authentification"
 
 #: src/views/authorize/accept/accept-view.tsx:55
-#: src/views/authorize/accept/accept-form.tsx:56
+#: src/views/authorize/accept/accept-form.tsx:57
 msgid "Authorize"
 msgstr "Authoriser l'accès"
 
@@ -74,18 +74,22 @@ msgstr "Retour"
 msgid "Between {minLength} and {maxLength} characters"
 msgstr "Entre {minLength} et {maxLength} caractères"
 
-#: src/views/authorize/accept/accept-form.tsx:89
+#: src/views/authorize/accept/accept-form.tsx:90
 msgid "By clicking <0>Authorize</0>, you allow this application to perform the following actions in accordance with their <1>terms of service</1> and <2>privacy policy</2>:"
 msgstr "En cliquant sur <0>Authoriser l'accès</0>, vous autorisez cette application à effectuer les actions suivantes conformément à leurs <1>conditions d'utilisation</1> et leur <2>politique de confidentialité</2> :"
 
+#. placeholder {0}: tosLink ? ( <LinkAnchor className="text-brand underline" link={tosLink}> <Trans>Terms of Service</Trans> </LinkAnchor> ) : ( <Trans>Terms of Service</Trans> )
+#. placeholder {1}: ppLink ? ( <LinkAnchor className="text-brand underline" link={ppLink}> <Trans>Privacy Policy</Trans> </LinkAnchor> ) : ( <Trans>Privacy Policy</Trans> )
 #: src/views/authorize/sign-up/sign-up-disclaimer.tsx:30
 msgid "By creating an account you agree to the {0} and the {1} of this service."
 msgstr "En créant un compte, vous acceptez les {0} et la {1} de ce service."
 
 #: src/views/authorize/welcome/welcome-view.tsx:51
+#: src/components/forms/form-card-async.tsx:85
 msgid "Cancel"
 msgstr "Annuler"
 
+#. placeholder {0}: secondFactor.hint
 #: src/views/authorize/sign-in/sign-in-form.tsx:232
 msgid "Check your {0} email for a login code and enter it here."
 msgstr "Vérifiez vos emails {0} pour un code de connexion et saisissez-le ici."
@@ -118,7 +122,7 @@ msgstr "Créer un nouveau compte"
 msgid "Create Account"
 msgstr "Créer un compte"
 
-#: src/views/authorize/accept/accept-form.tsx:60
+#: src/views/authorize/accept/accept-form.tsx:61
 msgid "Deny access"
 msgstr "Refuser l'accès"
 
@@ -185,6 +189,7 @@ msgstr "Mot de passe oublié"
 msgid "Forgot?"
 msgstr "Oublié ?"
 
+#. placeholder {0}: account.preferred_username || account.email || account.sub
 #: src/views/authorize/accept/accept-view.tsx:40
 msgid "Grant access to your <0>{0}</0> account"
 msgstr "Accorder l'accès à votre compte <0>{0}</0>"
@@ -222,7 +227,7 @@ msgstr "Code d'invitation"
 msgid "Let's get your password reset!"
 msgstr "Réinitialisons votre mot de passe !"
 
-#: src/views/authorize/authorize-view.tsx:172
+#: src/views/authorize/authorize-view.tsx:178
 msgid "Login complete"
 msgstr "Connexion terminée"
 
@@ -308,7 +313,7 @@ msgstr "Politique de Confidentialité"
 msgid "Remember this account on this device"
 msgstr "Se souvenir de ce compte sur cet appareil"
 
-#: src/views/authorize/accept/accept-form.tsx:123
+#: src/views/authorize/accept/accept-form.tsx:124
 msgid "Requested permissions"
 msgstr "Permissions demandées"
 
@@ -337,9 +342,12 @@ msgid "Session"
 msgstr "Session"
 
 #: src/views/authorize/welcome/welcome-view.tsx:45
+#: src/views/authorize/sign-in/sign-in-view.tsx:48
+#: src/views/authorize/sign-in/sign-in-form.tsx:135
 msgid "Sign in"
 msgstr "Se connecter"
 
+#. placeholder {0}: account.name
 #: src/views/authorize/sign-in/sign-in-picker.tsx:75
 msgid "Sign in as {0}"
 msgstr "Se connecter en tant que {0}"
@@ -426,7 +434,7 @@ msgstr "Saisissez le nom d'utilisateur souhaité"
 msgid "Unexpected server response"
 msgstr "Réponse inattendue du serveur"
 
-#: src/views/authorize/accept/accept-form.tsx:142
+#: src/views/authorize/accept/accept-form.tsx:147
 msgid "Uniquely identify you"
 msgstr "Vous identifier de façon unique"
 
@@ -458,7 +466,7 @@ msgstr "Faible"
 msgid "Wrong identifier or password"
 msgstr "Identifiant ou mot de passe incorrect"
 
-#: src/views/authorize/authorize-view.tsx:173
+#: src/views/authorize/authorize-view.tsx:179
 msgid "You are being redirected..."
 msgstr "Vous êtes redirigé..."
 
@@ -478,6 +486,7 @@ msgstr "Vous aver reçu un email avec un \"code de réinitialisation\". Saisisse
 msgid "Your account"
 msgstr "Votre compte"
 
+#. placeholder {0}: segment.length ? ( <strong className="text-gray-800 dark:text-gray-200"> {preview} </strong> ) : ( <span aria-hidden className="bg-gray-300 dark:bg-slate-600 rounded-md p-2 w-24" /> )
 #: src/views/authorize/sign-up/sign-up-handle-form.tsx:217
 msgid "Your full username will be: {0}"
 msgstr "Votre nom d'utilisateur complet sera : {0}"

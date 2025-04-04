@@ -109,7 +109,7 @@ export function ResetPasswordView({
         }
       >
         <center>
-          <h2 className="text-xl font-bold pb-2">
+          <h2 className="pb-2 text-xl font-bold">
             <Trans>Password updated!</Trans>
           </h2>
           <p className="pb-4">

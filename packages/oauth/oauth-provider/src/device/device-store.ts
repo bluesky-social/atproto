@@ -7,6 +7,8 @@ export * from './device-data.js'
 export * from './device-id.js'
 export * from './session-id.js'
 
+export type { Awaitable }
+
 export interface DeviceStore {
   createDevice(deviceId: DeviceId, data: DeviceData): Awaitable<void>
   readDevice(deviceId: DeviceId): Awaitable<DeviceData | null>

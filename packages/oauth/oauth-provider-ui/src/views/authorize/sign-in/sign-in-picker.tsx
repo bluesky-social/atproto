@@ -49,7 +49,7 @@ export function SignInPicker({
         )
       }
     >
-      <p className="text-slate-600 dark:text-slate-400 text-sm font-medium">
+      <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
         <Trans>Sign in as...</Trans>
       </p>
 
@@ -77,12 +77,12 @@ export function SignInPicker({
             append={<CaretRightIcon aria-hidden className="h-4" />}
           >
             <span className="flex flex-wrap items-center">
-              <span className="font-medium truncate mr-2" arial-label={t`Name`}>
+              <span className="mr-2 truncate font-medium" arial-label={t`Name`}>
                 {name}
               </span>
               {identifier && (
                 <span
-                  className="text-sm text-neutral-500 dark:text-neutral-400 truncate"
+                  className="truncate text-sm text-neutral-500 dark:text-neutral-400"
                   arial-label={t`Identifier`}
                 >
                   {identifier}

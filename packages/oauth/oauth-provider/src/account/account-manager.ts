@@ -6,16 +6,19 @@ import { Client } from '../client/client.js'
 import { DeviceId } from '../device/device-id.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { HCaptchaClient, HcaptchaVerifyResult } from '../lib/hcaptcha.js'
+import { randomHexId } from '../lib/util/crypto.js'
 import { callAsync } from '../lib/util/function.js'
 import { constantTime } from '../lib/util/time.js'
 import { OAuthHooks, RequestMetadata } from '../oauth-hooks.js'
 import { Customization } from '../oauth-provider.js'
 import { Sub } from '../oidc/sub.js'
-import { ClientAuth } from '../token/token-store.js'
+import { RequestId } from '../request/request-id.js'
+import { RequestUri, decodeRequestUri } from '../request/request-uri.js'
 import {
   Account,
-  AccountInfo,
   AccountStore,
+  AuthorizedClientData,
+  DeviceAccount,
   ResetPasswordConfirmData,
   ResetPasswordRequestData,
   SignUpData,
@@ -113,108 +116,236 @@ export class AccountManager {
     return { ...input, hcaptchaResult, inviteCode }
   }
 
-  public async signUp(
-    input: SignUpInput,
+  public async createAccount(
     deviceId: DeviceId,
     deviceMetadata: RequestMetadata,
-  ): Promise<AccountInfo> {
-    await callAsync(this.hooks.onSignupAttempt, {
+    input: SignUpInput,
+    requestUri?: RequestUri,
+  ): Promise<{ account: Account; ephemeralCookie: string | null }> {
+    const requestId = requestUri ? decodeRequestUri(requestUri) : null
+
+    await callAsync(this.hooks.onSignUpAttempt, {
       input,
       deviceId,
       deviceMetadata,
+      requestId,
     })
 
     const data = await this.buildSignupData(input, deviceId, deviceMetadata)
 
     // Mitigation against brute forcing email of users.
     // @TODO Add rate limit to all the OAuth routes.
-    return constantTime(BRUTE_FORCE_MITIGATION_DELAY, async () => {
-      let account: Account
-      try {
-        account = await this.store.createAccount(data)
-      } catch (err) {
-        throw InvalidRequestError.from(err, 'Account creation failed')
-      }
-
-      try {
-        const info = await this.store.addDeviceAccount(
-          deviceId,
-          account.sub,
-          false,
-        )
-
-        await callAsync(this.hooks.onSignedUp, {
-          data,
-          info,
-          account,
-          deviceId,
-          deviceMetadata,
-        })
-
-        return { account, info }
-      } catch (err) {
-        throw InvalidRequestError.from(
-          err,
-          'Something went wrong, try singing-in',
-        )
-      }
+    const account = await constantTime(
+      BRUTE_FORCE_MITIGATION_DELAY,
+      async () => {
+        return this.store.createAccount(data)
+      },
+    ).catch((err) => {
+      throw InvalidRequestError.from(err, 'Account creation failed')
     })
+
+    // Only "remember" the newly created account if it was not created during an
+    // OAuth flow.
+    const remembered = requestId == null
+
+    const ephemeralCookie = remembered ? null : await randomHexId(32)
+
+    await this.upsertDeviceAccount(
+      deviceId,
+      account,
+      remembered,
+      requestId,
+      ephemeralCookie,
+    )
+
+    try {
+      await callAsync(this.hooks.onSignedUp, {
+        data,
+        account,
+        deviceId,
+        deviceMetadata,
+        requestId,
+      })
+
+      return { account, ephemeralCookie }
+    } catch (err) {
+      await this.removeDeviceAccount(deviceId, account.sub)
+
+      throw InvalidRequestError.from(
+        err,
+        'The account was successfully created but something went wrong, try signing-in.',
+      )
+    }
   }
 
-  public async signIn(
-    data: SignInData,
+  public async authenticateAccount(
     deviceId: DeviceId,
     deviceMetadata: RequestMetadata,
-  ): Promise<AccountInfo> {
-    return constantTime(TIMING_ATTACK_MITIGATION_DELAY, async () => {
-      try {
-        const account = await this.store.authenticateAccount(data)
-        const info = await this.store.addDeviceAccount(
-          deviceId,
-          account.sub,
-          data.remember,
-        )
+    data: SignInData,
+    requestUri?: RequestUri,
+  ): Promise<{
+    account: Account
+    ephemeralCookie: string | null
+  }> {
+    const requestId = requestUri ? decodeRequestUri(requestUri) : null
 
-        await callAsync(this.hooks.onSignedIn, {
-          data,
-          info,
-          account,
-          deviceId,
-          deviceMetadata,
-        })
-
-        return { account, info }
-      } catch (err) {
-        throw InvalidRequestError.from(
-          err,
-          'Unable to sign-in due to an unexpected server error',
-        )
-      }
+    await callAsync(this.hooks.onSignInAttempt, {
+      data,
+      deviceId,
+      deviceMetadata,
+      requestId,
     })
+
+    const account = await constantTime(
+      TIMING_ATTACK_MITIGATION_DELAY,
+      async () => {
+        return this.store.authenticateAccount(data)
+      },
+    ).catch((err) => {
+      throw InvalidRequestError.from(
+        err,
+        'Unable to sign-in due to an unexpected server error',
+      )
+    })
+
+    const remembered = data.remember === true
+
+    const ephemeralCookie = remembered ? null : await randomHexId(32)
+
+    await this.upsertDeviceAccount(
+      deviceId,
+      account,
+      remembered,
+      requestId,
+      ephemeralCookie,
+    )
+
+    try {
+      await callAsync(this.hooks.onSignedIn, {
+        data,
+        account,
+        deviceId,
+        deviceMetadata,
+        requestId,
+      })
+
+      return { account, ephemeralCookie }
+    } catch (err) {
+      await this.removeDeviceAccount(deviceId, account.sub)
+
+      throw err
+    }
   }
 
-  public async get(deviceId: DeviceId, sub: Sub): Promise<AccountInfo> {
-    const result = await this.store.getDeviceAccount(deviceId, sub)
-    if (result) return result
-
-    throw new InvalidRequestError(`Account not found`)
-  }
-
-  public async addAuthorizedClient(
+  protected async upsertDeviceAccount(
     deviceId: DeviceId,
     account: Account,
+    remembered: boolean,
+    requestId: RequestId | null,
+    ephemeralCookie: string | null,
+  ): Promise<void> {
+    await this.store.upsertDeviceAccount(
+      deviceId,
+      account.sub,
+      // If "remember" is true, do not bind the session to the request.
+      remembered ? null : requestId,
+      {
+        remembered,
+        ephemeralCookie,
+      },
+    )
+  }
+
+  public async getDeviceAccount(
+    deviceId: DeviceId,
+    sub: Sub,
+    requestUri: RequestUri | null,
+  ): Promise<DeviceAccount> {
+    const requestId = requestUri ? decodeRequestUri(requestUri) : null
+
+    const deviceAccount = await this.store.getDeviceAccount(
+      deviceId,
+      sub,
+      requestId,
+    )
+    if (!deviceAccount) throw new InvalidRequestError(`Account not found`)
+
+    // Fool-proofing
+    if (!requestId && deviceAccount.requestId) {
+      throw new Error('DeviceAccount was bound to a request')
+    }
+    if (
+      requestId &&
+      deviceAccount.requestId &&
+      deviceAccount.requestId !== requestId
+    ) {
+      throw new Error('DeviceAccount was bound to another request')
+    }
+
+    return deviceAccount
+  }
+
+  public async setAuthorizedClient(
+    account: Account,
     client: Client,
-    _clientAuth: ClientAuth,
+    data: AuthorizedClientData,
   ): Promise<void> {
     // "Loopback" clients are not distinguishable from one another.
     if (isOAuthClientIdLoopback(client.id)) return
 
-    await this.store.addAuthorizedClient(deviceId, account.sub, client.id)
+    await this.store.setAuthorizedClient(account.sub, client.id, data)
   }
 
-  public async list(deviceId: DeviceId): Promise<AccountInfo[]> {
-    const results = await this.store.listDeviceAccounts(deviceId)
-    return results.filter((result) => result.info.remembered)
+  public async getAccount(sub: Sub) {
+    return this.store.getAccount(sub)
+  }
+
+  public async removeRequestDeviceAccounts(requestUri: RequestUri) {
+    const requestId = decodeRequestUri(requestUri)
+    return this.store.removeRequestDeviceAccounts(requestId)
+  }
+
+  public async removeDeviceAccount(deviceId: DeviceId, sub: Sub) {
+    return this.store.removeDeviceAccount(deviceId, sub)
+  }
+
+  public async listDeviceAccounts(
+    deviceId: DeviceId,
+    requestUri: RequestUri | null = null,
+    ephemeralCookies: string[] = [],
+  ): Promise<DeviceAccount[]> {
+    const requestId = requestUri ? decodeRequestUri(requestUri) : null
+
+    const deviceAccounts = await this.store.listDeviceAccounts(requestId, {
+      deviceId,
+    })
+
+    return deviceAccounts
+      .filter((deviceAccount) => deviceAccount.deviceId === deviceId) // Fool proof
+      .filter(
+        ({ data }) =>
+          data.ephemeralCookie == null ||
+          ephemeralCookies.includes(data.ephemeralCookie),
+      )
+  }
+
+  public async listAccountDevices(
+    sub: Sub,
+    requestUri: RequestUri | null = null,
+    ephemeralCookies: string[] = [],
+  ): Promise<DeviceAccount[]> {
+    const requestId = requestUri ? decodeRequestUri(requestUri) : null
+    const deviceAccounts = await this.store.listDeviceAccounts(requestId, {
+      sub,
+    })
+
+    return deviceAccounts
+      .filter((deviceAccount) => deviceAccount.account.sub === sub) // Fool proof
+      .filter(
+        ({ data }) =>
+          data.ephemeralCookie == null ||
+          ephemeralCookies.includes(data.ephemeralCookie),
+      )
   }
 
   public async resetPasswordRequest(data: ResetPasswordRequestData) {

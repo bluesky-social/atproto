@@ -5,30 +5,23 @@ import { Simplify } from '../lib/util/type.js'
 import { subSchema } from '../oidc/sub.js'
 import { tokenIdSchema } from '../token/token-id.js'
 
-export const signedTokenPayloadSchema = z.intersection(
-  jwtPayloadSchema
-    .pick({
-      exp: true,
-      iat: true,
-      iss: true,
-      aud: true,
-    })
-    .required(),
-  jwtPayloadSchema
-    .omit({
-      exp: true,
-      iat: true,
-      iss: true,
-      aud: true,
-    })
-    .partial()
-    .extend({
-      jti: tokenIdSchema,
-      sub: subSchema,
-      client_id: clientIdSchema,
-    })
-    .passthrough(),
-)
+export const signedTokenPayloadSchema = jwtPayloadSchema
+  .partial()
+  .extend({
+    // Following are required
+    jti: tokenIdSchema,
+    sub: subSchema,
+    exp: z.number().int(),
+    iat: z.number().int(),
+    iss: z.string().min(1),
+
+    // @NOTE "aud", "scope", "client_id" are not required, as are stored in the
+    // DB in 'light' access token mode.
+
+    // Restrict type of following
+    client_id: clientIdSchema.optional(),
+  })
+  .passthrough()
 
 export type SignedTokenPayload = Simplify<
   z.infer<typeof signedTokenPayloadSchema>

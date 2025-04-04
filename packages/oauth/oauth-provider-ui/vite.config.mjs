@@ -13,4 +13,8 @@ export default {
     }),
     lingui(),
   ],
+  optimizeDeps: {
+    // Needed because this is a monorepo and it exposes CommonJS
+    include: ['@atproto/oauth-provider-api'],
+  },
 }

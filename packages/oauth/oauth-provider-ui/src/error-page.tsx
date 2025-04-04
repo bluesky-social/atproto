@@ -7,16 +7,16 @@ import type {
   CustomizationData,
   ErrorData,
 } from '@atproto/oauth-provider-api'
-import { readBackendData } from './lib/backend-data.ts'
+import { readHydrationData } from './lib/read-hydration-data.ts'
 import { LocaleProvider } from './locales/locale-provider.tsx'
 import { ErrorView } from './views/error/error-view.tsx'
 
 export const availableLocales =
-  readBackendData<AvailableLocales>('__availableLocales')
-export const customizationData = readBackendData<CustomizationData>(
+  readHydrationData<AvailableLocales>('__availableLocales')
+export const customizationData = readHydrationData<CustomizationData>(
   '__customizationData',
 )
-export const errorData = readBackendData<ErrorData>('__errorData')
+export const errorData = readHydrationData<ErrorData>('__errorData')
 
 const container = document.getElementById('root')!
 

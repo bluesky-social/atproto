@@ -1,0 +1,51 @@
+.ToastRoot {
+}
+.ToastRoot[data-state='open'] {
+  animation: slideIn 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.ToastRoot[data-state='closed'] {
+  animation: hide 100ms ease-in;
+}
+.ToastRoot[data-state='closed'] ~ .ToastRoot[data-state='open'] {
+  transition: transform 100ms ease-out;
+  transform: translateY(-100%);
+}
+.ToastRoot[data-swipe='move'] {
+  transform: translateY(var(--radix-toast-swipe-move-y));
+}
+.ToastRoot[data-swipe='cancel'] {
+  transform: translateY(0);
+  transition: transform 200ms ease-out;
+}
+.ToastRoot[data-swipe='end'] {
+  animation: swipeOut 100ms ease-out;
+}
+
+@keyframes hide {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(calc(-100% - 40px));
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(calc(-100% - 40px));
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes swipeOut {
+  from {
+    transform: translateY(var(--radix-toast-swipe-end-y));
+  }
+  to {
+    transform: translateY(calc(-100% - 40px));
+  }
+}

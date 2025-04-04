@@ -1,5 +1,5 @@
+import { clsx } from 'clsx'
 import { JSX } from 'react'
-import { clsx } from '../../lib/clsx.ts'
 import { Override } from '../../lib/util.ts'
 
 export type ButtonProps = Override<
@@ -33,13 +33,13 @@ export function Button({
       disabled={disabled || loading === true}
       {...props}
       className={clsx(
-        'rounded-lg truncate cursor-pointer touch-manipulation tracking-wide overflow-hidden',
-        square ? 'p-2' : 'py-2 px-6',
+        'cursor-pointer touch-manipulation overflow-hidden truncate rounded-lg tracking-wide',
+        square ? 'p-2' : 'px-6 py-2',
         color === 'brand'
           ? clsx(
               'accent-slate-100',
               transparent
-                ? 'bg-transparent text-brand'
+                ? 'text-brand bg-transparent'
                 : 'bg-brand text-brand-c',
             )
           : color === 'grey'
