@@ -1,6 +1,6 @@
+import { AccountStatus } from '../../../../account-manager/account-manager'
+import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
-import { AccountStatus } from '../../../../account-manager'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.deleteAccount({
@@ -9,12 +9,11 @@ export default function (server: Server, ctx: AppContext) {
       const { did } = input.body
       await ctx.actorStore.destroy(did)
       await ctx.accountManager.deleteAccount(did)
-      const tombstoneSeq = await ctx.sequencer.sequenceTombstone(did)
       const accountSeq = await ctx.sequencer.sequenceAccountEvt(
         did,
         AccountStatus.Deleted,
       )
-      await ctx.sequencer.deleteAllForUser(did, [accountSeq, tombstoneSeq])
+      await ctx.sequencer.deleteAllForUser(did, [accountSeq])
     },
   })
 }

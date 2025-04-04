@@ -1,6 +1,6 @@
 import assert from 'node:assert'
-import { OzoneEnvironment } from './env'
 import { DAY, HOUR } from '@atproto/common'
+import { OzoneEnvironment } from './env'
 
 // off-config but still from env:
 // logging: LOG_LEVEL, LOG_SYSTEMS, LOG_ENABLED, LOG_DESTINATION
@@ -24,6 +24,8 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     poolSize: env.dbPoolSize,
     poolMaxUses: env.dbPoolMaxUses,
     poolIdleTimeoutMs: env.dbPoolIdleTimeoutMs,
+    materializedViewRefreshIntervalMs: env.dbMaterializedViewRefreshIntervalMs,
+    teamProfileRefreshIntervalMs: env.dbTeamProfileRefreshIntervalMs,
   }
 
   assert(env.appviewUrl, 'appviewUrl is required')
@@ -122,6 +124,8 @@ export type DatabaseConfig = {
   poolSize?: number
   poolMaxUses?: number
   poolIdleTimeoutMs?: number
+  materializedViewRefreshIntervalMs?: number
+  teamProfileRefreshIntervalMs?: number
 }
 
 export type AppviewConfig = {

@@ -1,10 +1,7 @@
-import assert from 'node:assert'
-
+import * as plc from '@did-plc/lib'
 import { check } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import * as plc from '@did-plc/lib'
-
-import AppContext from '../../../../context'
+import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
 import { resultPassthru } from '../../../proxy'
@@ -12,15 +9,14 @@ import { resultPassthru } from '../../../proxy'
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.identity.signPlcOperation({
     auth: ctx.authVerifier.accessFull(),
-    handler: async ({ auth, input }) => {
+    handler: async ({ auth, input, req }) => {
       if (ctx.entrywayAgent) {
-        assert(ctx.cfg.entryway)
         return resultPassthru(
           await ctx.entrywayAgent.com.atproto.identity.signPlcOperation(
             input.body,
-            await ctx.serviceAuthHeaders(
+            await ctx.entrywayAuthHeaders(
+              req,
               auth.credentials.did,
-              ctx.cfg.entryway.did,
               ids.ComAtprotoIdentitySignPlcOperation,
             ),
           ),
@@ -52,8 +48,16 @@ export default function (server: Server, ctx: AppContext) {
           rotationKeys: input.body.rotationKeys ?? lastOp.rotationKeys,
           alsoKnownAs: input.body.alsoKnownAs ?? lastOp.alsoKnownAs,
           verificationMethods:
-            input.body.verificationMethods ?? lastOp.verificationMethods,
-          services: input.body.services ?? lastOp.services,
+            // @TODO: actually validate instead of type casting
+            (input.body.verificationMethods as
+              | undefined
+              | Record<string, string>) ?? lastOp.verificationMethods,
+          services:
+            // @TODO: actually validate instead of type casting
+            (input.body.services as
+              | undefined
+              | Record<string, { type: string; endpoint: string }>) ??
+            lastOp.services,
         }),
       )
       return {

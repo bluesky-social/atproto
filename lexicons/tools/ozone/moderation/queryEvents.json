@@ -106,6 +106,13 @@
               "type": "string"
             }
           },
+          "policies": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "If specified, only events where the action policies match any of the given policies are returned"
+            }
+          },
           "cursor": {
             "type": "string"
           }

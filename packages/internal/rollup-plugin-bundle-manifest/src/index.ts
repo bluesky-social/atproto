@@ -1,6 +1,5 @@
 import { createHash } from 'node:crypto'
 import { extname } from 'node:path'
-
 import mime from 'mime'
 import { Plugin } from 'rollup'
 
@@ -33,7 +32,7 @@ export default function bundleManifest({
 }: {
   name?: string
   data?: boolean
-} = {}): Plugin {
+} = {}): Plugin<never> {
   return {
     name: 'bundle-manifest',
     generateBundle(outputOptions, bundle) {

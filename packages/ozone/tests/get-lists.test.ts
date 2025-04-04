@@ -1,14 +1,14 @@
+import { AtpAgent, BSKY_LABELER_DID } from '@atproto/api'
 import {
+  ModeratorClient,
+  RecordRef,
   SeedClient,
   TestNetwork,
   TestOzone,
   basicSeed,
-  ModeratorClient,
-  RecordRef,
 } from '@atproto/dev-env'
-import { AtpAgent, BSKY_LABELER_DID } from '@atproto/api'
-import { TAKEDOWN_LABEL } from '../src/mod-service'
 import { ids } from '../src/lexicon/lexicons'
+import { TAKEDOWN_LABEL } from '../src/mod-service'
 
 describe('admin get lists', () => {
   let network: TestNetwork

@@ -1,14 +1,14 @@
+import { AtpAgent } from '@atproto/api'
 import {
+  RecordRef,
   SeedClient,
   TestNetwork,
-  basicSeed,
   TestOzone,
-  RecordRef,
+  basicSeed,
 } from '@atproto/dev-env'
-import { AtpAgent } from '@atproto/api'
-import { forSnapshot } from './_util'
-import { TAKEDOWN_LABEL } from '../src/mod-service'
 import { ids } from '../src/lexicon/lexicons'
+import { TAKEDOWN_LABEL } from '../src/mod-service'
+import { forSnapshot } from './_util'
 
 describe('admin get starter pack view', () => {
   let network: TestNetwork

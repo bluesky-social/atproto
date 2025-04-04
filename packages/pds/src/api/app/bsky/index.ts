@@ -1,5 +1,5 @@
+import { AppContext } from '../../../context'
 import { Server } from '../../../lexicon'
-import AppContext from '../../../context'
 import actor from './actor'
 import feed from './feed'
 import notification from './notification'

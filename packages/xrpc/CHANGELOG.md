@@ -1,5 +1,62 @@
 # @atproto/xrpc
 
+## 0.6.12
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lexicon@0.4.10
+
+## 0.6.11
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lexicon@0.4.9
+
+## 0.6.10
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lexicon@0.4.8
+
+## 0.6.9
+
+### Patch Changes
+
+- Updated dependencies [[`c53d943c8`](https://github.com/bluesky-social/atproto/commit/c53d943c8be5b8886254e020970a68c0f745b14c), [`c53d943c8`](https://github.com/bluesky-social/atproto/commit/c53d943c8be5b8886254e020970a68c0f745b14c)]:
+  - @atproto/lexicon@0.4.7
+
+## 0.6.8
+
+### Patch Changes
+
+- [#3220](https://github.com/bluesky-social/atproto/pull/3220) [`61dc0d60e`](https://github.com/bluesky-social/atproto/commit/61dc0d60e19b88c6427a54c6d95a391b5f4da7bd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Apply new linting rules regarding import order
+
+- Updated dependencies [[`61dc0d60e`](https://github.com/bluesky-social/atproto/commit/61dc0d60e19b88c6427a54c6d95a391b5f4da7bd)]:
+  - @atproto/lexicon@0.4.6
+
+## 0.6.7
+
+### Patch Changes
+
+- [#3456](https://github.com/bluesky-social/atproto/pull/3456) [`fb64d50ee`](https://github.com/bluesky-social/atproto/commit/fb64d50ee220316b9f1183e5c3259629489734c9) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Explicitly allow "undefined" values in `headers`
+
+## 0.6.6
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lexicon@0.4.5
+
+## 0.6.5
+
+### Patch Changes
+
+- Updated dependencies [[`9fd65ba0f`](https://github.com/bluesky-social/atproto/commit/9fd65ba0fa4caca59fd0e6156145e4c2618e3a95)]:
+  - @atproto/lexicon@0.4.4
+
 ## 0.6.4
 
 ### Patch Changes

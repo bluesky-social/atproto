@@ -1,26 +1,31 @@
 'use client'
 
+import { ReactNode, createContext, useContext, useMemo } from 'react'
 import { Agent } from '@atproto/api'
-import { createContext, ReactNode, useContext, useMemo } from 'react'
+import { AuthForm } from './auth-form.tsx'
+import { useCredentialAuth } from './credential/use-credential-auth.ts'
+import { UseOAuthOptions, useOAuth } from './oauth/use-oauth.ts'
 
-import { useCredentialAuth } from './credential/use-credential-auth'
-import { AuthForm } from './auth-form'
-import { useOAuth, UseOAuthOptions } from './oauth/use-oauth'
-
-export type AuthContext = {
+export type AuthContextValue = {
   pdsAgent: Agent
   signOut: () => void
   refresh: () => void
 }
 
-const AuthContext = createContext<AuthContext | null>(null)
+const AuthContext = createContext<AuthContextValue | null>(null)
+
+export type AuthProviderProps = UseOAuthOptions & {
+  children: ReactNode
+  signUpUrl?: string
+}
 
 export const AuthProvider = ({
   children,
+  signUpUrl,
+
+  // UseOAuthOptions
   ...options
-}: {
-  children: ReactNode
-} & UseOAuthOptions) => {
+}: AuthProviderProps) => {
   const {
     isLoginPopup,
     isInitializing,
@@ -38,7 +43,7 @@ export const AuthProvider = ({
     refresh: credentialRefresh,
   } = useCredentialAuth()
 
-  const value = useMemo<AuthContext | null>(() => {
+  const value = useMemo<AuthContextValue | null>(() => {
     if (oauthAgent) {
       return {
         pdsAgent: oauthAgent,
@@ -77,6 +82,7 @@ export const AuthProvider = ({
     return (
       <AuthForm
         atpSignIn={credentialSignIn}
+        signUpUrl={signUpUrl}
         oauthSignIn={oauthClient ? oauthSignIn : undefined}
       />
     )
@@ -85,7 +91,7 @@ export const AuthProvider = ({
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
-export function useAuthContext(): AuthContext {
+export function useAuthContext(): AuthContextValue {
   const context = useContext(AuthContext)
   if (context) return context
 

@@ -1,5 +1,9 @@
 import { AtpAgent, RichText, RichTextSegment } from '../src'
-import { isTag } from '../src/client/types/app/bsky/richtext/facet'
+import {
+  isLink,
+  isMention,
+  isTag,
+} from '../src/client/types/app/bsky/richtext/facet'
 
 describe('detectFacets', () => {
   const agent = new AtpAgent({ service: 'http://localhost' })
@@ -374,12 +378,8 @@ function segmentToOutput(segment: RichTextSegment): string[] {
     return [
       segment.text,
       segment.facet?.features.map((f) => {
-        if (f.did) {
-          return String(f.did)
-        }
-        if (f.uri) {
-          return String(f.uri)
-        }
+        if (isMention(f)) return f.did
+        if (isLink(f)) return f.uri
         return undefined
       })?.[0] || '',
     ]

@@ -1,8 +1,8 @@
-import { DidWebResolver } from './web-resolver'
-import { DidPlcResolver } from './plc-resolver'
-import { DidResolverOpts } from '../types'
-import BaseResolver from './base-resolver'
 import { PoorlyFormattedDidError, UnsupportedDidMethodError } from '../errors'
+import { DidResolverOpts } from '../types'
+import { BaseResolver } from './base-resolver'
+import { DidPlcResolver } from './plc-resolver'
+import { DidWebResolver } from './web-resolver'
 
 export class DidResolver extends BaseResolver {
   methods: Record<string, BaseResolver>
@@ -29,5 +29,3 @@ export class DidResolver extends BaseResolver {
     return method.resolveNoCheck(did)
   }
 }
-
-export default DidResolver

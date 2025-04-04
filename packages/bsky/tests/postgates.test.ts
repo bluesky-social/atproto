@@ -1,8 +1,7 @@
-import { TestNetwork, SeedClient, RecordRef } from '@atproto/dev-env'
 import AtpAgent, { AppBskyEmbedRecord } from '@atproto/api'
-
+import { SeedClient, TestNetwork } from '@atproto/dev-env'
 import { ids } from '../src/lexicon/lexicons'
-import { postgatesSeed, Users } from './seed/postgates'
+import { Users, postgatesSeed } from './seed/postgates'
 
 describe('postgates', () => {
   let network: TestNetwork

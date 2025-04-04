@@ -1,26 +1,35 @@
 import { Insertable, Selectable, sql } from 'kysely'
 import { CID } from 'multiformats/cid'
-import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import { jsonStringToLex } from '@atproto/lexicon'
+import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
+import * as lex from '../../../../lexicon/lexicons'
+import { isMain as isEmbedExternal } from '../../../../lexicon/types/app/bsky/embed/external'
+import { isMain as isEmbedImage } from '../../../../lexicon/types/app/bsky/embed/images'
+import { isMain as isEmbedRecord } from '../../../../lexicon/types/app/bsky/embed/record'
+import { isMain as isEmbedRecordWithMedia } from '../../../../lexicon/types/app/bsky/embed/recordWithMedia'
+import { isMain as isEmbedVideo } from '../../../../lexicon/types/app/bsky/embed/video'
 import {
   Record as PostRecord,
   ReplyRef,
 } from '../../../../lexicon/types/app/bsky/feed/post'
-import { Record as GateRecord } from '../../../../lexicon/types/app/bsky/feed/threadgate'
 import { Record as PostgateRecord } from '../../../../lexicon/types/app/bsky/feed/postgate'
-import { isMain as isEmbedImage } from '../../../../lexicon/types/app/bsky/embed/images'
-import { isMain as isEmbedExternal } from '../../../../lexicon/types/app/bsky/embed/external'
-import { isMain as isEmbedRecord } from '../../../../lexicon/types/app/bsky/embed/record'
-import { isMain as isEmbedRecordWithMedia } from '../../../../lexicon/types/app/bsky/embed/recordWithMedia'
+import { Record as GateRecord } from '../../../../lexicon/types/app/bsky/feed/threadgate'
 import {
-  isMention,
   isLink,
+  isMention,
 } from '../../../../lexicon/types/app/bsky/richtext/facet'
-import * as lex from '../../../../lexicon/lexicons'
-import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
-import RecordProcessor from '../processor'
-import { Notification } from '../../db/tables/notification'
+import { $Typed } from '../../../../lexicon/util'
+import {
+  postUriToPostgateUri,
+  postUriToThreadgateUri,
+  uriToDid,
+} from '../../../../util/uris'
+import { RecordWithMedia } from '../../../../views/types'
+import { parsePostgate } from '../../../../views/util'
+import { BackgroundQueue } from '../../background'
 import { Database } from '../../db'
+import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
+import { Notification } from '../../db/tables/notification'
 import { countAll, excluded } from '../../db/util'
 import {
   getAncestorsAndSelfQb,
@@ -28,19 +37,14 @@ import {
   invalidReplyRoot as checkInvalidReplyRoot,
   violatesThreadGate as checkViolatesThreadGate,
 } from '../../util'
-import { BackgroundQueue } from '../../background'
-import { parsePostgate } from '../../../../views/util'
-import {
-  postUriToThreadgateUri,
-  postUriToPostgateUri,
-  uriToDid,
-} from '../../../../util/uris'
+import { RecordProcessor } from '../processor'
 
 type Notif = Insertable<Notification>
 type Post = Selectable<DatabaseSchemaType['post']>
 type PostEmbedImage = DatabaseSchemaType['post_embed_image']
 type PostEmbedExternal = DatabaseSchemaType['post_embed_external']
 type PostEmbedRecord = DatabaseSchemaType['post_embed_record']
+type PostEmbedVideo = DatabaseSchemaType['post_embed_video']
 type PostAncestor = {
   uri: string
   height: number
@@ -55,7 +59,12 @@ type PostDescendent = {
 type IndexedPost = {
   post: Post
   facets?: { type: 'mention' | 'link'; value: string }[]
-  embeds?: (PostEmbedImage[] | PostEmbedExternal | PostEmbedRecord)[]
+  embeds?: (
+    | PostEmbedImage[]
+    | PostEmbedExternal
+    | PostEmbedRecord
+    | PostEmbedVideo
+  )[]
   ancestors?: PostAncestor[]
   descendents?: PostDescendent[]
   threadgate?: GateRecord
@@ -149,7 +158,12 @@ const insertFn = async (
       return []
     })
   // Embed indices
-  const embeds: (PostEmbedImage[] | PostEmbedExternal | PostEmbedRecord)[] = []
+  const embeds: (
+    | PostEmbedImage[]
+    | PostEmbedExternal
+    | PostEmbedRecord
+    | PostEmbedVideo
+  )[] = []
   const postEmbeds = separateEmbeds(obj.embed)
   for (const postEmbed of postEmbeds) {
     if (isEmbedImage(postEmbed)) {
@@ -232,6 +246,17 @@ const insertFn = async (
             .executeTakeFirst()
         }
       }
+    } else if (isEmbedVideo(postEmbed)) {
+      const { video } = postEmbed
+      const videoEmbed = {
+        postUri: uri.toString(),
+        videoCid: video.ref.toString(),
+        // @NOTE: alt is required for image but not for video on the lexicon.
+        alt: postEmbed.alt ?? null,
+      }
+      embeds.push(videoEmbed)
+
+      await db.insertInto('post_embed_video').values(videoEmbed).execute()
     }
   }
 
@@ -498,7 +523,13 @@ export const makePlugin = (
 
 export default makePlugin
 
-function separateEmbeds(embed: PostRecord['embed']) {
+function separateEmbeds(
+  embed: PostRecord['embed'],
+): Array<
+  | RecordWithMedia['media']
+  | $Typed<RecordWithMedia['record']>
+  | NonNullable<PostRecord['embed']>
+> {
   if (!embed) {
     return []
   }

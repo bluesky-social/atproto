@@ -1,14 +1,14 @@
 import {
-  TestNetwork,
-  SeedClient,
-  basicSeed,
   ModeratorClient,
+  SeedClient,
+  TestNetwork,
+  basicSeed,
 } from '@atproto/dev-env'
-import { ProtectedTagSettingKey } from '../src/setting/constants'
 import {
   ROLEADMIN,
   ROLEMODERATOR,
 } from '../dist/lexicon/types/tools/ozone/team/defs'
+import { ProtectedTagSettingKey } from '../src/setting/constants'
 
 describe('protected-tags', () => {
   let network: TestNetwork
@@ -50,6 +50,7 @@ describe('protected-tags', () => {
         modClient.upsertSettingOption({
           ...basicSetting,
           managerRole: ROLEADMIN,
+          // @ts-expect-error testing invalid value here
           value: ['test'],
         }),
       ).rejects.toThrow('Invalid configuration')
@@ -145,6 +146,22 @@ describe('protected-tags', () => {
           },
         }),
       ).rejects.toThrow(/Can not manage tag vip/gi)
+
+      // Verify that since admins are configured to manage this tag, admin actions go through
+      const removeTag = await modClient.emitEvent(
+        {
+          subject: {
+            $type: 'com.atproto.admin.defs#repoRef',
+            did: sc.dids.bob,
+          },
+          event: {
+            $type: 'tools.ozone.moderation.defs#modEventTakedown',
+          },
+        },
+        'admin',
+      )
+
+      expect(removeTag.id).toBeTruthy()
     })
     it('only allows configured moderators to add/remove protected tags', async () => {
       await modClient.upsertSettingOption({

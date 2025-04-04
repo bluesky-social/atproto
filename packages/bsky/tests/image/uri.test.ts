@@ -1,6 +1,6 @@
-import { cidForCbor } from '@atproto/common'
 import { CID } from 'multiformats/cid'
-import { ImageUriBuilder, BadPathError } from '../../src/image/uri'
+import { cidForCbor } from '@atproto/common'
+import { BadPathError, ImageUriBuilder } from '../../src/image/uri'
 
 describe('image uri builder', () => {
   let uriBuilder: ImageUriBuilder

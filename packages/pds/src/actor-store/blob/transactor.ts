@@ -1,24 +1,24 @@
-import stream from 'stream'
-import crypto from 'crypto'
-import { CID } from 'multiformats/cid'
+import crypto from 'node:crypto'
+import stream from 'node:stream'
 import bytes from 'bytes'
 import { fromStream as fileTypeFromStream } from 'file-type'
+import { CID } from 'multiformats/cid'
+import { cloneStream, sha256RawToCid, streamSize } from '@atproto/common'
+import { BlobRef } from '@atproto/lexicon'
 import { BlobNotFoundError, BlobStore, WriteOpAction } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
-import { cloneStream, sha256RawToCid, streamSize } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { BlobRef } from '@atproto/lexicon'
-import { ActorDb, Blob as BlobTable } from '../db'
+import { BackgroundQueue } from '../../background'
+import * as img from '../../image'
+import { StatusAttr } from '../../lexicon/types/com/atproto/admin/defs'
 import {
   PreparedBlobRef,
-  PreparedWrite,
   PreparedDelete,
   PreparedUpdate,
+  PreparedWrite,
 } from '../../repo/types'
-import * as img from '../../image'
-import { BackgroundQueue } from '../../background'
+import { ActorDb, Blob as BlobTable } from '../db'
 import { BlobReader } from './reader'
-import { StatusAttr } from '../../lexicon/types/com/atproto/admin/defs'
 
 export type BlobMetadata = {
   tempKey: string
@@ -36,6 +36,21 @@ export class BlobTransactor extends BlobReader {
     public backgroundQueue: BackgroundQueue,
   ) {
     super(db, blobstore)
+  }
+
+  async insertBlobs(recordUri: string, blobs: Iterable<BlobRef>) {
+    const values = Array.from(blobs, (cid) => ({
+      recordUri,
+      blobCid: cid.ref.toString(),
+    }))
+
+    if (values.length) {
+      await this.db.db
+        .insertInto('record_blob')
+        .values(values)
+        .onConflict((oc) => oc.doNothing())
+        .execute()
+    }
   }
 
   async uploadBlobAndGetMetadata(
@@ -135,7 +150,10 @@ export class BlobTransactor extends BlobReader {
     }
   }
 
-  async deleteDereferencedBlobs(writes: PreparedWrite[]) {
+  async deleteDereferencedBlobs(
+    writes: PreparedWrite[],
+    skipBlobStore?: boolean,
+  ) {
     const deletes = writes.filter(
       (w) => w.action === WriteOpAction.Delete,
     ) as PreparedDelete[]
@@ -180,13 +198,15 @@ export class BlobTransactor extends BlobReader {
       .deleteFrom('blob')
       .where('cid', 'in', cidsToDelete)
       .execute()
-    this.db.onCommit(() => {
-      this.backgroundQueue.add(async () => {
-        await Promise.allSettled(
-          cidsToDelete.map((cid) => this.blobstore.delete(CID.parse(cid))),
-        )
+    if (!skipBlobStore) {
+      this.db.onCommit(() => {
+        this.backgroundQueue.add(async () => {
+          await Promise.allSettled(
+            cidsToDelete.map((cid) => this.blobstore.delete(CID.parse(cid))),
+          )
+        })
       })
-    })
+    }
   }
 
   async verifyBlobAndMakePermanent(blob: PreparedBlobRef): Promise<void> {
@@ -211,6 +231,19 @@ export class BlobTransactor extends BlobReader {
         .where('tempKey', '=', found.tempKey)
         .execute()
     }
+  }
+
+  async insertBlobMetadata(blob: PreparedBlobRef): Promise<void> {
+    await this.db.db
+      .insertInto('blob')
+      .values({
+        cid: blob.cid.toString(),
+        mimeType: blob.mimeType,
+        size: blob.size,
+        createdAt: new Date().toISOString(),
+      })
+      .onConflict((oc) => oc.doNothing())
+      .execute()
   }
 
   async associateBlob(blob: PreparedBlobRef, recordUri: AtUri): Promise<void> {

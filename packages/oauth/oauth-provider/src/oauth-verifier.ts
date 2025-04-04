@@ -1,3 +1,4 @@
+import type { Redis, RedisOptions } from 'ioredis'
 import { Key, Keyset, isSignedJwt } from '@atproto/jwk'
 import {
   OAuthAccessToken,
@@ -5,8 +6,6 @@ import {
   OAuthTokenType,
   oauthIssuerIdentifierSchema,
 } from '@atproto/oauth-types'
-import type { Redis, RedisOptions } from 'ioredis'
-
 import { AccessTokenType } from './access-token/access-token-type.js'
 import { DpopManager, DpopManagerOptions } from './dpop/dpop-manager.js'
 import { DpopNonce } from './dpop/dpop-nonce.js'
@@ -95,8 +94,10 @@ export class OAuthVerifier {
       : new ReplayStoreMemory(),
     accessTokenType = AccessTokenType.jwt,
 
-    ...dpopMgrOptions
+    ...rest
   }: OAuthVerifierOptions) {
+    const dpopMgrOptions: DpopManagerOptions = rest
+
     const issuerParsed = oauthIssuerIdentifierSchema.parse(issuer)
     const issuerUrl = new URL(issuerParsed)
 

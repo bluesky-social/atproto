@@ -1,8 +1,8 @@
-import stream from 'stream'
+import stream from 'node:stream'
 import { CID } from 'multiformats/cid'
-import { RepoRecord } from '@atproto/lexicon'
 import { check } from '@atproto/common'
-import BlockMap from '../block-map'
+import { RepoRecord } from '@atproto/lexicon'
+import { BlockMap } from '../block-map'
 import { CommitData } from '../types'
 
 export interface RepoStorage {

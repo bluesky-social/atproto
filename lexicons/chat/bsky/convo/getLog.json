@@ -24,9 +24,15 @@
                 "type": "union",
                 "refs": [
                   "chat.bsky.convo.defs#logBeginConvo",
+                  "chat.bsky.convo.defs#logAcceptConvo",
                   "chat.bsky.convo.defs#logLeaveConvo",
+                  "chat.bsky.convo.defs#logMuteConvo",
+                  "chat.bsky.convo.defs#logUnmuteConvo",
                   "chat.bsky.convo.defs#logCreateMessage",
-                  "chat.bsky.convo.defs#logDeleteMessage"
+                  "chat.bsky.convo.defs#logDeleteMessage",
+                  "chat.bsky.convo.defs#logReadMessage",
+                  "chat.bsky.convo.defs#logAddReaction",
+                  "chat.bsky.convo.defs#logRemoveReaction"
                 ]
               }
             }

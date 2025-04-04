@@ -1,17 +1,17 @@
-import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
-import { createPipeline } from '../../../../pipeline'
-import { clearlyBadCursor, resHeaders } from '../../../util'
+import { mapDefined } from '@atproto/common'
+import { AppContext } from '../../../../context'
 import {
   HydrateCtx,
   HydrationState,
   Hydrator,
 } from '../../../../hydration/hydrator'
-import { Views } from '../../../../views'
-import { mapDefined } from '@atproto/common'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getQuotes'
 import { parseString } from '../../../../hydration/util'
+import { Server } from '../../../../lexicon'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getQuotes'
+import { createPipeline } from '../../../../pipeline'
 import { uriToDid } from '../../../../util/uris'
+import { Views } from '../../../../views'
+import { clearlyBadCursor, resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   const getQuotes = createPipeline(
@@ -82,7 +82,7 @@ const noBlocksOrNeedsReview = (inputs: {
     return (
       !ctx.views.viewerBlockExists(authorDid, hydration) &&
       !hydration.postBlocks?.get(uri)?.embed &&
-      ctx.views.viewerSeesNeedsReview(authorDid, hydration)
+      ctx.views.viewerSeesNeedsReview({ did: authorDid, uri }, hydration)
     )
   })
   return skeleton

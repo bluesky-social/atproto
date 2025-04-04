@@ -2,14 +2,28 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import express from 'express'
-import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
-import * as ToolsOzoneModerationDefs from './defs'
+import type * as ToolsOzoneModerationDefs from './defs.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'tools.ozone.moderation.queryStatuses'
 
 export interface QueryParams {
+  /** Number of queues being used by moderators. Subjects will be split among all queues. */
+  queueCount?: number
+  /** Index of the queue to fetch subjects from. Works only when queueCount value is specified. */
+  queueIndex?: number
+  /** A seeder to shuffle/balance the queue items. */
+  queueSeed?: string
   /** All subjects, or subjects from given 'collections' param, belonging to the account specified in the 'subject' param will be returned. */
   includeAllUserRecords?: boolean
   /** The subject to get the status for. */
@@ -43,7 +57,12 @@ export interface QueryParams {
   ignoreSubjects?: string[]
   /** Get all subject statuses that were reviewed by a specific moderator */
   lastReviewedBy?: string
-  sortField: 'lastReviewedAt' | 'lastReportedAt'
+  sortField:
+    | 'lastReviewedAt'
+    | 'lastReportedAt'
+    | 'reportedRecordsCount'
+    | 'takendownRecordsCount'
+    | 'priorityScore'
   sortDirection: 'asc' | 'desc'
   /** Get subjects that were taken down */
   takendown?: boolean
@@ -57,6 +76,14 @@ export interface QueryParams {
   collections?: string[]
   /** If specified, subjects of the given type (account or record) will be returned. When this is set to 'account' the 'collections' parameter will be ignored. When includeAllUserRecords or subject is set, this will be ignored. */
   subjectType?: 'account' | 'record' | (string & {})
+  /** If specified, only subjects that belong to an account that has at least this many suspensions will be returned. */
+  minAccountSuspendCount?: number
+  /** If specified, only subjects that belong to an account that has at least this many reported records will be returned. */
+  minReportedRecordsCount?: number
+  /** If specified, only subjects that belong to an account that has at least this many taken down records will be returned. */
+  minTakendownRecordsCount?: number
+  /** If specified, only subjects that have priority score value above the given value will be returned. */
+  minPriorityScore?: number
 }
 
 export type InputSchema = undefined
@@ -64,7 +91,6 @@ export type InputSchema = undefined
 export interface OutputSchema {
   cursor?: string
   subjectStatuses: ToolsOzoneModerationDefs.SubjectStatusView[]
-  [k: string]: unknown
 }
 
 export type HandlerInput = undefined
@@ -87,6 +113,7 @@ export type HandlerReqCtx<HA extends HandlerAuth = never> = {
   input: HandlerInput
   req: express.Request
   res: express.Response
+  resetRouteRateLimits: () => Promise<void>
 }
 export type Handler<HA extends HandlerAuth = never> = (
   ctx: HandlerReqCtx<HA>,

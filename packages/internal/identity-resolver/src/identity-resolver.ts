@@ -1,3 +1,4 @@
+import { normalizeAndEnsureValidHandle } from '@atproto/syntax'
 import {
   Did,
   DidDocument,
@@ -8,11 +9,10 @@ import {
 import {
   AtprotoIdentityDidMethods,
   HandleResolver,
-  isResolvedHandle,
-  ResolvedHandle,
   ResolveHandleOptions,
+  ResolvedHandle,
+  isResolvedHandle,
 } from '@atproto-labs/handle-resolver'
-import { normalizeAndEnsureValidHandle } from '@atproto/syntax'
 
 export type ResolvedIdentity = {
   did: NonNullable<ResolvedHandle>

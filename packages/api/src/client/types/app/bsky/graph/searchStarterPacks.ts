@@ -2,11 +2,19 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
-import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import * as AppBskyGraphDefs from './defs'
+import { validate as _validate } from '../../../../lexicons'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util'
+import type * as AppBskyGraphDefs from './defs.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'app.bsky.graph.searchStarterPacks'
 
 export interface QueryParams {
   /** Search query string. Syntax, phrase, boolean, and faceting is unspecified, but Lucene query syntax is recommended. */
@@ -20,7 +28,6 @@ export type InputSchema = undefined
 export interface OutputSchema {
   cursor?: string
   starterPacks: AppBskyGraphDefs.StarterPackViewBasic[]
-  [k: string]: unknown
 }
 
 export interface CallOptions {

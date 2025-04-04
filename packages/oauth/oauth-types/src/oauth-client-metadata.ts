@@ -1,6 +1,5 @@
-import { jwksPubSchema } from '@atproto/jwk'
 import { z } from 'zod'
-
+import { jwksPubSchema } from '@atproto/jwk'
 import { oauthClientIdSchema } from './oauth-client-id.js'
 import { oauthEndpointAuthMethod } from './oauth-endpoint-auth-method.js'
 import { oauthGrantTypeSchema } from './oauth-grant-type.js'

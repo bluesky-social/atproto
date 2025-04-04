@@ -1,11 +1,11 @@
+import * as fs from 'node:fs'
+import * as readline from 'node:readline'
 import {
-  ensureValidNsid,
-  ensureValidNsidRegex,
   InvalidNsidError,
   NSID,
+  ensureValidNsid,
+  ensureValidNsidRegex,
 } from '../src'
-import * as readline from 'readline'
-import * as fs from 'fs'
 
 describe('NSID parsing & creation', () => {
   it('parses valid NSIDs', () => {
@@ -83,15 +83,15 @@ describe('NSID validation', () => {
     expectValid('a01.thing.record')
     expectValid('a.0.c')
     expectValid('xn--fiqs8s.xn--fiqa61au8b7zsevnm8ak20mc4a87e.record.two')
+    expectValid('a0.b1.c3')
+    expectValid('com.example.f00')
 
     expectInvalid('com.example.foo.*')
     expectInvalid('com.example.foo.blah*')
     expectInvalid('com.example.foo.*blah')
-    expectInvalid('com.example.f00')
     expectInvalid('com.exa💩ple.thing')
     expectInvalid('a-0.b-1.c-3')
     expectInvalid('a-0.b-1.c-o')
-    expectInvalid('a0.b1.c3')
     expectInvalid('1.0.0.127.record')
     expectInvalid('0two.example.foo')
     expectInvalid('example.com')

@@ -1,23 +1,26 @@
 import { CID } from 'multiformats/cid'
-import { InvalidRequestError, AuthRequiredError } from '@atproto/xrpc-server'
 import { WriteOpAction } from '@atproto/repo'
-import { prepareCreate, prepareDelete, prepareUpdate } from '../../../../repo'
+import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import {
-  HandlerInput,
-  isCreate,
-  isUpdate,
-  isDelete,
   CreateResult,
-  UpdateResult,
   DeleteResult,
+  HandlerInput,
+  UpdateResult,
+  isCreate,
+  isDelete,
+  isUpdate,
 } from '../../../../lexicon/types/com/atproto/repo/applyWrites'
+import { dbLogger } from '../../../../logger'
 import {
   BadCommitSwapError,
   InvalidRecordError,
   PreparedWrite,
+  prepareCreate,
+  prepareDelete,
+  prepareUpdate,
 } from '../../../../repo'
-import AppContext from '../../../../context'
 
 const ratelimitPoints = ({ input }: { input: HandlerInput }) => {
   let points = 0
@@ -117,19 +120,28 @@ export default function (server: Server, ctx: AppContext) {
       const swapCommitCid = swapCommit ? CID.parse(swapCommit) : undefined
 
       const commit = await ctx.actorStore.transact(did, async (actorTxn) => {
-        try {
-          return await actorTxn.repo.processWrites(writes, swapCommitCid)
-        } catch (err) {
-          if (err instanceof BadCommitSwapError) {
-            throw new InvalidRequestError(err.message, 'InvalidSwap')
-          } else {
-            throw err
-          }
-        }
+        const commit = await actorTxn.repo
+          .processWrites(writes, swapCommitCid)
+          .catch((err) => {
+            if (err instanceof BadCommitSwapError) {
+              throw new InvalidRequestError(err.message, 'InvalidSwap')
+            } else {
+              throw err
+            }
+          })
+
+        await ctx.sequencer.sequenceCommit(did, commit)
+        return commit
       })
 
-      await ctx.sequencer.sequenceCommit(did, commit, writes)
-      await ctx.accountManager.updateRepoRoot(did, commit.cid, commit.rev)
+      await ctx.accountManager
+        .updateRepoRoot(did, commit.cid, commit.rev)
+        .catch((err) => {
+          dbLogger.error(
+            { err, did, cid: commit.cid, rev: commit.rev },
+            'failed to update account root',
+          )
+        })
 
       return {
         encoding: 'application/json',

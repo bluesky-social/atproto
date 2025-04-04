@@ -2,10 +2,10 @@
 
 'use strict'
 const {
+  AppContext,
   envToCfg,
   envToSecrets,
   readEnv,
-  AppContext,
   scripts,
 } = require('@atproto/pds')
 

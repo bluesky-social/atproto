@@ -1,4 +1,4 @@
-import { envInt, envStr, envBool, envList } from '@atproto/common'
+import { envBool, envInt, envList, envStr } from '@atproto/common'
 
 export const readEnv = (): ServerEnvironment => {
   return {
@@ -18,10 +18,16 @@ export const readEnv = (): ServerEnvironment => {
     blobUploadLimit: envInt('PDS_BLOB_UPLOAD_LIMIT'),
     devMode: envBool('PDS_DEV_MODE'),
 
+    // OAuth
+    hcaptchaSiteKey: envStr('PDS_HCAPTCHA_SITE_KEY'),
+    hcaptchaSecretKey: envStr('PDS_HCAPTCHA_SECRET_KEY'),
+    hcaptchaTokenSalt: envStr('PDS_HCAPTCHA_TOKEN_SALT'),
+
     // branding
     brandColor: envStr('PDS_PRIMARY_COLOR'),
     errorColor: envStr('PDS_ERROR_COLOR'),
     warningColor: envStr('PDS_WARNING_COLOR'),
+    successColor: envStr('PDS_SUCCESS_COLOR'),
 
     // database
     dataDirectory: envStr('PDS_DATA_DIRECTORY'),
@@ -109,6 +115,7 @@ export const readEnv = (): ServerEnvironment => {
     dpopSecret: envStr('PDS_DPOP_SECRET'),
     jwtSecret: envStr('PDS_JWT_SECRET'),
     adminPassword: envStr('PDS_ADMIN_PASSWORD'),
+    entrywayAdminToken: envStr('PDS_ENTRYWAY_ADMIN_TOKEN'),
 
     // kms
     plcRotationKeyKmsKeyId: envStr('PDS_PLC_ROTATION_KEY_KMS_KEY_ID'),
@@ -150,10 +157,16 @@ export type ServerEnvironment = {
   blobUploadLimit?: number
   devMode?: boolean
 
+  // OAuth
+  hcaptchaSiteKey?: string
+  hcaptchaSecretKey?: string
+  hcaptchaTokenSalt?: string
+
   // branding
   brandColor?: string
   errorColor?: string
   warningColor?: string
+  successColor?: string
 
   // database
   dataDirectory?: string
@@ -239,6 +252,7 @@ export type ServerEnvironment = {
   dpopSecret?: string
   jwtSecret?: string
   adminPassword?: string
+  entrywayAdminToken?: string
 
   // keys
   plcRotationKeyKmsKeyId?: string

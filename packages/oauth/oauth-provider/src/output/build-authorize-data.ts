@@ -1,8 +1,5 @@
-import {
-  OAuthAuthorizationRequestParameters,
-  OAuthClientMetadata,
-} from '@atproto/oauth-types'
-
+import type { AuthorizeData, Session } from '@atproto/oauth-provider-api'
+import { OAuthAuthorizationRequestParameters } from '@atproto/oauth-types'
 import { DeviceAccountInfo } from '../account/account-store.js'
 import { Account } from '../account/account.js'
 import { Client } from '../client/client.js'
@@ -31,29 +28,7 @@ export type AuthorizationResultAuthorize = {
   }
 }
 
-// TODO: find a way to share this type with the frontend code
-// (app/backend-data.ts)
-
-type Session = {
-  account: Account
-  info?: never // Prevent accidental leaks to frontend
-
-  selected: boolean
-  loginRequired: boolean
-  consentRequired: boolean
-}
-
-export type AuthorizeData = {
-  clientId: string
-  clientMetadata: OAuthClientMetadata
-  clientTrusted: boolean
-  requestUri: string
-  csrfCookie: string
-  loginHint?: string
-  scopeDetails?: ScopeDetail[]
-  newSessionsRequireConsent: boolean
-  sessions: Session[]
-}
+export type { AuthorizeData, Session }
 
 export function buildAuthorizeData(
   data: AuthorizationResultAuthorize,
@@ -63,7 +38,6 @@ export function buildAuthorizeData(
     clientMetadata: data.client.metadata,
     clientTrusted: data.client.info.isTrusted,
     requestUri: data.authorize.uri,
-    csrfCookie: `csrf-${data.authorize.uri}`,
     loginHint: data.parameters.login_hint,
     newSessionsRequireConsent: data.parameters.prompt === 'consent',
     scopeDetails: data.authorize.scopeDetails,

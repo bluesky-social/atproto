@@ -1,6 +1,5 @@
-import { signedJwtSchema } from '@atproto/jwk'
 import { z } from 'zod'
-
+import { signedJwtSchema } from '@atproto/jwk'
 import { oauthAuthorizationDetailsSchema } from './oauth-authorization-details.js'
 import { oauthClientIdSchema } from './oauth-client-id.js'
 import { oauthCodeChallengeMethodSchema } from './oauth-code-challenge-method.js'
@@ -67,7 +66,7 @@ export const oauthAuthorizationRequestParametersSchema = z.object({
 
   ui_locales: z
     .string()
-    .regex(/^[a-z]{2}(-[A-Z]{2})?( [a-z]{2}(-[A-Z]{2})?)*$/) // fr-CA fr en
+    .regex(/^[a-z]{2,3}(-[A-Z]{2})?( [a-z]{2,3}(-[A-Z]{2})?)*$/) // fr-CA fr en
     .optional(),
 
   // Previous ID Token, should be provided when prompt=none is used

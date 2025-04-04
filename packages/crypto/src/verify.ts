@@ -1,6 +1,6 @@
 import * as uint8arrays from 'uint8arrays'
 import { parseDidKey } from './did'
-import plugins from './plugins'
+import { plugins } from './plugins'
 import { VerifyOptions } from './types'
 
 export const verifySignature = (

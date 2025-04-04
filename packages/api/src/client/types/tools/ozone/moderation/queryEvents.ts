@@ -2,11 +2,19 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
-import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import * as ToolsOzoneModerationDefs from './defs'
+import { validate as _validate } from '../../../../lexicons'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util'
+import type * as ToolsOzoneModerationDefs from './defs.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'tools.ozone.moderation.queryEvents'
 
 export interface QueryParams {
   /** The types of events (fully qualified string in the format of tools.ozone.moderation.defs#modEvent<name>) to filter by. If not specified, all events are returned. */
@@ -39,6 +47,7 @@ export interface QueryParams {
   /** If specified, only events where all of these tags were removed are returned */
   removedTags?: string[]
   reportTypes?: string[]
+  policies?: string[]
   cursor?: string
 }
 
@@ -47,7 +56,6 @@ export type InputSchema = undefined
 export interface OutputSchema {
   cursor?: string
   events: ToolsOzoneModerationDefs.ModEventView[]
-  [k: string]: unknown
 }
 
 export interface CallOptions {

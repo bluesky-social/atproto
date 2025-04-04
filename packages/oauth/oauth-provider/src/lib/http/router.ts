@@ -1,9 +1,10 @@
+import type { IncomingMessage, ServerResponse } from 'node:http'
 import { SubCtx, subCtx } from './context.js'
 import { MethodMatcherInput } from './method.js'
 import { asHandler, combineMiddlewares } from './middleware.js'
 import { Params, Path } from './path.js'
 import { RouteMiddleware, createRoute } from './route.js'
-import { IncomingMessage, Middleware, ServerResponse } from './types.js'
+import { Middleware } from './types.js'
 
 export type RouterCtx<T> = SubCtx<T, { url: Readonly<URL> }>
 export type RouterMiddleware<
@@ -104,10 +105,10 @@ export class Router<
           const host = req.headers.host || routerUrl?.host || 'localhost'
           const pathname = req.url || '/'
           url = new URL(pathname, `${protocol}//${host}`)
-        } catch (err) {
-          return next(
-            Object.assign(err as Error, { status: 400, statusCode: 400 }),
-          )
+        } catch (cause) {
+          const error =
+            cause instanceof Error ? cause : new Error('Invalid URL', { cause })
+          return next(Object.assign(error, { status: 400, statusCode: 400 }))
         }
       }
 

@@ -1,3 +1,4 @@
+import { assets } from '@atproto/oauth-provider-ui'
 import {
   Middleware,
   validateFetchDest,
@@ -5,28 +6,28 @@ import {
   writeStream,
 } from '../lib/http/index.js'
 
-import { ASSETS_URL_PREFIX, getAsset } from './index.js'
+export const ASSETS_URL_PREFIX = '/@atproto/oauth-provider/~assets/'
+
+export function buildAssetUrl(filename: string): string {
+  return `${ASSETS_URL_PREFIX}${encodeURIComponent(filename)}`
+}
 
 export function authorizeAssetsMiddleware(): Middleware {
   return async function assetsMiddleware(req, res, next): Promise<void> {
     if (req.method !== 'GET' && req.method !== 'HEAD') return next()
     if (!req.url?.startsWith(ASSETS_URL_PREFIX)) return next()
 
-    const [pathname, query] = req.url.split('?', 2) as [
-      string,
-      string | undefined,
-    ]
-    const filename = pathname.slice(ASSETS_URL_PREFIX.length)
+    const filename = req.url.slice(ASSETS_URL_PREFIX.length)
     if (!filename) return next()
 
-    const asset = await getAsset(filename).catch(() => null)
+    const asset = assets.get(filename)
     if (!asset) return next()
 
     try {
       // Allow "null" (ie. no header) to allow loading assets outside of a
       // fetch context (not from a web page).
-      validateFetchSite(req, res, [null, 'same-origin'])
-      validateFetchDest(req, res, [null, 'style', 'script'])
+      validateFetchSite(req, res, [null, 'none', 'cross-site', 'same-origin'])
+      validateFetchDest(req, res, [null, 'document', 'style', 'script'])
     } catch (err) {
       return next(err)
     }
@@ -36,11 +37,8 @@ export function authorizeAssetsMiddleware(): Middleware {
     }
 
     res.setHeader('ETag', asset.sha256)
+    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable')
 
-    if (query === asset.sha256) {
-      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable')
-    }
-
-    writeStream(res, asset.createStream(), { contentType: asset.type })
+    writeStream(res, asset.stream(), { contentType: asset.mime })
   }
 }

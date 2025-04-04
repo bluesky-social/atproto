@@ -1,7 +1,7 @@
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
-import { Server } from '../../lexicon'
-import AppContext from '../../context'
 import { isDuplicateTemplateNameError } from '../../communication-service/util'
+import { AppContext } from '../../context'
+import { Server } from '../../lexicon'
 
 export default function (server: Server, ctx: AppContext) {
   server.tools.ozone.communication.createTemplate({

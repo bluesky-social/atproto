@@ -22,6 +22,14 @@ Object {
   ],
   "moderation": Object {
     "subjectStatus": Object {
+      "accountStats": Object {
+        "$type": "tools.ozone.moderation.defs#accountStats",
+        "appealCount": 0,
+        "escalateCount": 0,
+        "reportCount": 2,
+        "suspendCount": 0,
+        "takedownCount": 1,
+      },
       "createdAt": "1970-01-01T00:00:00.000Z",
       "hosting": Object {
         "$type": "tools.ozone.moderation.defs#accountHosting",
@@ -31,6 +39,10 @@ Object {
       "lastReportedAt": "1970-01-01T00:00:00.000Z",
       "lastReviewedAt": "1970-01-01T00:00:00.000Z",
       "lastReviewedBy": "user(1)",
+      "priorityScore": 0,
+      "recordsStats": Object {
+        "$type": "tools.ozone.moderation.defs#recordsStats",
+      },
       "reviewState": "tools.ozone.moderation.defs#reviewClosed",
       "subject": Object {
         "$type": "com.atproto.admin.defs#repoRef",
@@ -40,6 +52,8 @@ Object {
       "subjectRepoHandle": "alice.test",
       "tags": Array [
         "lang:und",
+        "report:spam",
+        "report:other",
       ],
       "takendown": true,
       "updatedAt": "1970-01-01T00:00:00.000Z",

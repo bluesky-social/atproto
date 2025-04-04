@@ -34,7 +34,8 @@
             "#modEventTag",
             "#accountEvent",
             "#identityEvent",
-            "#recordEvent"
+            "#recordEvent",
+            "#modEventPriorityScore"
           ]
         },
         "subject": {
@@ -84,7 +85,8 @@
             "#modEventTag",
             "#accountEvent",
             "#identityEvent",
-            "#recordEvent"
+            "#recordEvent",
+            "#modEventPriorityScore"
           ]
         },
         "subject": {
@@ -143,6 +145,12 @@
           "type": "string",
           "description": "Sticky comment on the subject."
         },
+        "priorityScore": {
+          "type": "integer",
+          "description": "Numeric value representing the level of priority. Higher score means higher priority.",
+          "minimum": 0,
+          "maximum": 100
+        },
         "muteUntil": {
           "type": "string",
           "format": "datetime"
@@ -182,6 +190,110 @@
         "tags": {
           "type": "array",
           "items": { "type": "string" }
+        },
+        "accountStats": {
+          "description": "Statistics related to the account subject",
+          "type": "ref",
+          "ref": "#accountStats"
+        },
+        "recordsStats": {
+          "description": "Statistics related to the record subjects authored by the subject's account",
+          "type": "ref",
+          "ref": "#recordsStats"
+        }
+      }
+    },
+    "subjectView": {
+      "description": "Detailed view of a subject. For record subjects, the author's repo and profile will be returned.",
+      "type": "object",
+      "required": ["type", "subject"],
+      "properties": {
+        "type": {
+          "type": "ref",
+          "ref": "com.atproto.moderation.defs#subjectType"
+        },
+        "subject": {
+          "type": "string"
+        },
+        "status": {
+          "type": "ref",
+          "ref": "#subjectStatusView"
+        },
+        "repo": {
+          "type": "ref",
+          "ref": "#repoViewDetail"
+        },
+        "profile": {
+          "type": "union",
+          "refs": []
+        },
+        "record": {
+          "type": "ref",
+          "ref": "#recordViewDetail"
+        }
+      }
+    },
+    "accountStats": {
+      "description": "Statistics about a particular account subject",
+      "type": "object",
+      "properties": {
+        "reportCount": {
+          "description": "Total number of reports on the account",
+          "type": "integer"
+        },
+        "appealCount": {
+          "description": "Total number of appeals against a moderation action on the account",
+          "type": "integer"
+        },
+        "suspendCount": {
+          "description": "Number of times the account was suspended",
+          "type": "integer"
+        },
+        "escalateCount": {
+          "description": "Number of times the account was escalated",
+          "type": "integer"
+        },
+        "takedownCount": {
+          "description": "Number of times the account was taken down",
+          "type": "integer"
+        }
+      }
+    },
+    "recordsStats": {
+      "description": "Statistics about a set of record subject items",
+      "type": "object",
+      "properties": {
+        "totalReports": {
+          "description": "Cumulative sum of the number of reports on the items in the set",
+          "type": "integer"
+        },
+        "reportedCount": {
+          "description": "Number of items that were reported at least once",
+          "type": "integer"
+        },
+        "escalatedCount": {
+          "description": "Number of items that were escalated at least once",
+          "type": "integer"
+        },
+        "appealedCount": {
+          "description": "Number of items that were appealed at least once",
+          "type": "integer"
+        },
+        "subjectCount": {
+          "description": "Total number of item in the set",
+          "type": "integer"
+        },
+        "pendingCount": {
+          "description": "Number of item currently in \"reviewOpen\" or \"reviewEscalated\" state",
+          "type": "integer"
+        },
+        "processedCount": {
+          "description": "Number of item currently in \"reviewNone\" or \"reviewClosed\" state",
+          "type": "integer"
+        },
+        "takendownCount": {
+          "description": "Number of item currently taken down",
+          "type": "integer"
         }
       }
     },
@@ -224,6 +336,12 @@
         "acknowledgeAccountSubjects": {
           "type": "boolean",
           "description": "If true, all other reports on content authored by this account will be resolved (acknowledged)."
+        },
+        "policies": {
+          "type": "array",
+          "maxLength": 5,
+          "items": { "type": "string" },
+          "description": "Names/Keywords of the policies that drove the decision."
         }
       }
     },
@@ -249,8 +367,7 @@
     },
     "modEventComment": {
       "type": "object",
-      "description": "Add a comment to a subject",
-      "required": ["comment"],
+      "description": "Add a comment to a subject. An empty comment will clear any previously set sticky comment.",
       "properties": {
         "comment": {
           "type": "string"
@@ -294,6 +411,25 @@
         "negateLabelVals": {
           "type": "array",
           "items": { "type": "string" }
+        },
+        "durationInHours": {
+          "type": "integer",
+          "description": "Indicates how long the label will remain on the subject. Only applies on labels that are being added."
+        }
+      }
+    },
+    "modEventPriorityScore": {
+      "type": "object",
+      "description": "Set priority score of the subject. Higher score means higher priority.",
+      "required": ["score"],
+      "properties": {
+        "comment": {
+          "type": "string"
+        },
+        "score": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
         }
       }
     },
@@ -703,6 +839,58 @@
         "deletedAt": {
           "type": "string",
           "format": "datetime"
+        }
+      }
+    },
+    "reporterStats": {
+      "type": "object",
+      "required": [
+        "did",
+        "accountReportCount",
+        "recordReportCount",
+        "reportedAccountCount",
+        "reportedRecordCount",
+        "takendownAccountCount",
+        "takendownRecordCount",
+        "labeledAccountCount",
+        "labeledRecordCount"
+      ],
+      "properties": {
+        "did": {
+          "type": "string",
+          "format": "did"
+        },
+        "accountReportCount": {
+          "type": "integer",
+          "description": "The total number of reports made by the user on accounts."
+        },
+        "recordReportCount": {
+          "type": "integer",
+          "description": "The total number of reports made by the user on records."
+        },
+        "reportedAccountCount": {
+          "type": "integer",
+          "description": "The total number of accounts reported by the user."
+        },
+        "reportedRecordCount": {
+          "type": "integer",
+          "description": "The total number of records reported by the user."
+        },
+        "takendownAccountCount": {
+          "type": "integer",
+          "description": "The total number of accounts taken down as a result of the user's reports."
+        },
+        "takendownRecordCount": {
+          "type": "integer",
+          "description": "The total number of records taken down as a result of the user's reports."
+        },
+        "labeledAccountCount": {
+          "type": "integer",
+          "description": "The total number of accounts labeled as a result of the user's reports."
+        },
+        "labeledRecordCount": {
+          "type": "integer",
+          "description": "The total number of records labeled as a result of the user's reports."
         }
       }
     }

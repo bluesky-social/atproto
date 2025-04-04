@@ -1,9 +1,4 @@
 import { CID } from 'multiformats/cid'
-import {
-  AtUri,
-  ensureValidRecordKey,
-  ensureValidDatetime,
-} from '@atproto/syntax'
 import { TID, check, dataToCborBlock } from '@atproto/common'
 import {
   BlobRef,
@@ -15,30 +10,42 @@ import {
   untypedJsonBlobRef,
 } from '@atproto/lexicon'
 import {
-  cborToLex,
-  RecordDeleteOp,
   RecordCreateOp,
+  RecordDeleteOp,
   RecordUpdateOp,
   RecordWriteOp,
   WriteOpAction,
+  cborToLex,
 } from '@atproto/repo'
 import {
-  PreparedCreate,
-  PreparedUpdate,
-  PreparedDelete,
+  AtUri,
+  ensureValidDatetime,
+  ensureValidRecordKey,
+} from '@atproto/syntax'
+import { hasExplicitSlur } from '../handle/explicit-slurs'
+import * as lex from '../lexicon/lexicons'
+import * as AppBskyActorProfile from '../lexicon/types/app/bsky/actor/profile'
+import * as AppBskyFeedGenerator from '../lexicon/types/app/bsky/feed/generator'
+import * as AppBskyFeedPost from '../lexicon/types/app/bsky/feed/post'
+import * as AppBskyGraphList from '../lexicon/types/app/bsky/graph/list'
+import * as AppBskyGraphStarterpack from '../lexicon/types/app/bsky/graph/starterpack'
+import { isTag } from '../lexicon/types/app/bsky/richtext/facet'
+import { asPredicate } from '../lexicon/util'
+import {
   InvalidRecordError,
-  PreparedWrite,
   PreparedBlobRef,
+  PreparedCreate,
+  PreparedDelete,
+  PreparedUpdate,
+  PreparedWrite,
   ValidationStatus,
 } from './types'
-import * as lex from '../lexicon/lexicons'
-import { isRecord as isFeedGenerator } from '../lexicon/types/app/bsky/feed/generator'
-import { isRecord as isStarterPack } from '../lexicon/types/app/bsky/graph/starterpack'
-import { isRecord as isPost } from '../lexicon/types/app/bsky/feed/post'
-import { isTag } from '../lexicon/types/app/bsky/richtext/facet'
-import { isRecord as isList } from '../lexicon/types/app/bsky/graph/list'
-import { isRecord as isProfile } from '../lexicon/types/app/bsky/actor/profile'
-import { hasExplicitSlur } from '../handle/explicit-slurs'
+
+const isValidFeedGenerator = asPredicate(AppBskyFeedGenerator.validateRecord)
+const isValidStarterPack = asPredicate(AppBskyGraphStarterpack.validateRecord)
+const isValidPost = asPredicate(AppBskyFeedPost.validateRecord)
+const isValidList = asPredicate(AppBskyGraphList.validateRecord)
+const isValidProfile = asPredicate(AppBskyActorProfile.validateRecord)
 
 export const assertValidRecordWithStatus = (
   record: Record<string, unknown>,
@@ -222,30 +229,31 @@ async function cidForSafeRecord(record: RepoRecord) {
 }
 
 function assertNoExplicitSlurs(rkey: string, record: RepoRecord) {
-  let toCheck = ''
-  if (isProfile(record)) {
-    toCheck += ' ' + record.displayName
-  } else if (isList(record)) {
-    toCheck += ' ' + record.name
-  } else if (isStarterPack(record)) {
-    toCheck += ' ' + record.name
-  } else if (isFeedGenerator(record)) {
-    toCheck += ' ' + rkey
-    toCheck += ' ' + record.displayName
-  } else if (isPost(record)) {
+  const toCheck: string[] = []
+
+  if (isValidProfile(record)) {
+    if (record.displayName) toCheck.push(record.displayName)
+  } else if (isValidList(record)) {
+    toCheck.push(record.name)
+  } else if (isValidStarterPack(record)) {
+    toCheck.push(record.name)
+  } else if (isValidFeedGenerator(record)) {
+    toCheck.push(rkey)
+    toCheck.push(record.displayName)
+  } else if (isValidPost(record)) {
     if (record.tags) {
-      toCheck += record.tags.join(' ')
+      toCheck.push(...record.tags)
     }
 
     for (const facet of record.facets || []) {
       for (const feat of facet.features) {
         if (isTag(feat)) {
-          toCheck += ' ' + feat.tag
+          toCheck.push(feat.tag)
         }
       }
     }
   }
-  if (hasExplicitSlur(toCheck)) {
+  if (hasExplicitSlur(toCheck.join(' '))) {
     throw new InvalidRecordError('Unacceptable slur in record')
   }
 }
@@ -270,6 +278,7 @@ export const blobsForWrite = (
   }
 
   return refs.map(({ ref, path }) => ({
+    size: ref.size,
     cid: ref.ref,
     mimeType: ref.mimeType,
     constraints:

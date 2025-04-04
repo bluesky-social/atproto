@@ -1,19 +1,19 @@
 import {
-  bindFetch,
-  cancelBody,
+  OAuthAuthorizationServerMetadata,
+  oauthAuthorizationServerMetadataValidator,
+  oauthIssuerIdentifierSchema,
+} from '@atproto/oauth-types'
+import {
   Fetch,
   FetchResponseError,
+  bindFetch,
+  cancelBody,
 } from '@atproto-labs/fetch'
 import {
   CachedGetter,
   GetCachedOptions,
   SimpleStore,
 } from '@atproto-labs/simple-store'
-import {
-  OAuthAuthorizationServerMetadata,
-  oauthAuthorizationServerMetadataValidator,
-  oauthIssuerIdentifierSchema,
-} from '@atproto/oauth-types'
 import { contentMime } from './util.js'
 
 export type { GetCachedOptions, OAuthAuthorizationServerMetadata }

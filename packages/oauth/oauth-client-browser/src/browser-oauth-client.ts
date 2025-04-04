@@ -9,20 +9,19 @@ import {
   SessionEventMap,
 } from '@atproto/oauth-client'
 import {
+  OAuthClientMetadataInput,
+  OAuthResponseMode,
   assertOAuthDiscoverableClientId,
   atprotoLoopbackClientMetadata,
   isOAuthClientIdLoopback,
-  OAuthClientMetadataInput,
-  OAuthResponseMode,
 } from '@atproto/oauth-types'
-
 import { BrowserOAuthDatabase } from './browser-oauth-database.js'
 import { BrowserRuntimeImplementation } from './browser-runtime-implementation.js'
 import { LoginContinuedInParentWindowError } from './errors.js'
 import {
-  buildLoopbackClientId,
   Simplify,
   TypedBroadcastChannel,
+  buildLoopbackClientId,
 } from './util.js'
 
 export type BrowserOAuthClientOptions = Simplify<

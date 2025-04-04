@@ -1,5 +1,4 @@
 import { OAuthAuthorizationRequestParameters } from '@atproto/oauth-types'
-
 import { ClientAuth } from '../client/client-auth.js'
 import { ClientId } from '../client/client-id.js'
 import { DeviceId } from '../device/device-id.js'

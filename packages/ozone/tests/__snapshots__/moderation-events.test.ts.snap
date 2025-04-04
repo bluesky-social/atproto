@@ -12,12 +12,20 @@ Object {
   },
   "id": 1,
   "subject": Object {
-    "$type": "com.atproto.admin.defs#repoView",
+    "$type": "tools.ozone.moderation.defs#repoView",
     "did": "user(0)",
     "handle": "alice.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "moderation": Object {
       "subjectStatus": Object {
+        "accountStats": Object {
+          "$type": "tools.ozone.moderation.defs#accountStats",
+          "appealCount": 0,
+          "escalateCount": 1,
+          "reportCount": 4,
+          "suspendCount": 0,
+          "takedownCount": 0,
+        },
         "createdAt": "1970-01-01T00:00:00.000Z",
         "hosting": Object {
           "$type": "tools.ozone.moderation.defs#accountHosting",
@@ -27,6 +35,18 @@ Object {
         "lastReportedAt": "1970-01-01T00:00:00.000Z",
         "lastReviewedAt": "1970-01-01T00:00:00.000Z",
         "lastReviewedBy": "user(1)",
+        "priorityScore": 0,
+        "recordsStats": Object {
+          "$type": "tools.ozone.moderation.defs#recordsStats",
+          "appealedCount": 0,
+          "escalatedCount": 0,
+          "pendingCount": 2,
+          "processedCount": 0,
+          "reportedCount": 2,
+          "subjectCount": 2,
+          "takendownCount": 0,
+          "totalReports": 3,
+        },
         "reviewState": "tools.ozone.moderation.defs#reviewEscalated",
         "subject": Object {
           "$type": "com.atproto.admin.defs#repoRef",
@@ -35,7 +55,9 @@ Object {
         "subjectBlobCids": Array [],
         "subjectRepoHandle": "alice.test",
         "tags": Array [
+          "report:misleading",
           "lang:und",
+          "report:spam",
         ],
         "takendown": false,
         "updatedAt": "1970-01-01T00:00:00.000Z",
@@ -101,6 +123,7 @@ Array [
     "event": Object {
       "$type": "tools.ozone.moderation.defs#modEventTag",
       "add": Array [
+        "report:spam",
         "lang:en",
         "lang:i",
       ],
@@ -163,6 +186,7 @@ Array [
     "event": Object {
       "$type": "tools.ozone.moderation.defs#modEventTag",
       "add": Array [
+        "report:spam",
         "lang:en",
       ],
       "remove": Array [],
@@ -210,7 +234,7 @@ Array [
       "isReporterMuted": false,
       "reportType": "com.atproto.moderation.defs#reasonSpam",
     },
-    "id": 16,
+    "id": 17,
     "subject": Object {
       "$type": "com.atproto.admin.defs#repoRef",
       "did": "user(0)",
@@ -251,7 +275,7 @@ Array [
       "isReporterMuted": false,
       "reportType": "com.atproto.moderation.defs#reasonSpam",
     },
-    "id": 16,
+    "id": 17,
     "subject": Object {
       "$type": "com.atproto.admin.defs#repoRef",
       "did": "user(0)",
@@ -292,7 +316,7 @@ Array [
       "isReporterMuted": false,
       "reportType": "com.atproto.moderation.defs#reasonSpam",
     },
-    "id": 16,
+    "id": 17,
     "subject": Object {
       "$type": "com.atproto.admin.defs#repoRef",
       "did": "user(0)",

@@ -1,7 +1,7 @@
 import { MINUTE } from '@atproto/common'
+import { Database } from '../db'
 import { dbLogger } from '../logger'
 import { ModerationServiceCreator, ReversalSubject } from '../mod-service'
-import Database from '../db'
 
 export class EventReverser {
   destroyed = false

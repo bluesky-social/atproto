@@ -1,5 +1,5 @@
-import { keyBy } from '@atproto/common'
 import { ServiceImpl } from '@connectrpc/connect'
+import { keyBy } from '@atproto/common'
 import { Service } from '../../../proto/bsky_connect'
 import { Database } from '../db'
 import { TimeCidKeyset, paginate } from '../db/pagination'
@@ -45,8 +45,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .selectAll()
       .execute()
     const bySubject = keyBy(res, 'subject')
-    // @TODO handling undefineds properly, or do we need to turn them into empty strings?
-    const uris = refs.map(({ uri }) => bySubject[uri]?.uri)
+    const uris = refs.map(({ uri }) => bySubject.get(uri)?.uri ?? '')
     return { uris }
   },
 

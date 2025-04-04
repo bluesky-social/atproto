@@ -1,9 +1,9 @@
-import { EXAMPLE_LABELER, TestNetwork } from '@atproto/dev-env'
 import { readFromGenerator, wait } from '@atproto/common'
-import { LabelsEvt, Sequencer } from '../src/sequencer'
-import Outbox from '../src/sequencer/outbox'
 import { randomStr } from '@atproto/crypto'
+import { EXAMPLE_LABELER, TestNetwork } from '@atproto/dev-env'
 import { Label } from '../src/lexicon/types/com/atproto/label/defs'
+import { LabelsEvt, Sequencer } from '../src/sequencer'
+import { Outbox } from '../src/sequencer/outbox'
 
 describe('sequencer', () => {
   let network: TestNetwork

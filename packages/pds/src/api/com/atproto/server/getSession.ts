@@ -1,12 +1,11 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
 import { INVALID_HANDLE } from '@atproto/syntax'
-
-import { formatAccountStatus } from '../../../../account-manager'
-import AppContext from '../../../../context'
-import { Server } from '../../../../lexicon'
-import { authPassthru, resultPassthru } from '../../../proxy'
-import { didDocForSession } from './util'
+import { InvalidRequestError } from '@atproto/xrpc-server'
+import { formatAccountStatus } from '../../../../account-manager/account-manager'
 import { AuthScope } from '../../../../auth-verifier'
+import { AppContext } from '../../../../context'
+import { Server } from '../../../../lexicon'
+import { resultPassthru } from '../../../proxy'
+import { didDocForSession } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.getSession({
@@ -18,7 +17,7 @@ export default function (server: Server, ctx: AppContext) {
         return resultPassthru(
           await ctx.entrywayAgent.com.atproto.server.getSession(
             undefined,
-            authPassthru(req),
+            ctx.entrywayPassthruHeaders(req),
           ),
         )
       }

@@ -1,22 +1,23 @@
 import { CID } from 'multiformats/cid'
-import { TID } from '@atproto/common'
+import { TID, dataToCborBlock } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
+import { lexToIpld } from '@atproto/lexicon'
+import { BlockMap } from './block-map'
+import { CidSet } from './cid-set'
+import { DataDiff } from './data-diff'
+import log from './logger'
+import { MST } from './mst'
+import { ReadableRepo } from './readable-repo'
+import { RepoStorage } from './storage'
 import {
   Commit,
   CommitData,
-  def,
   RecordCreateOp,
   RecordWriteOp,
   WriteOpAction,
+  def,
 } from './types'
-import { RepoStorage } from './storage'
-import { MST } from './mst'
-import DataDiff from './data-diff'
-import log from './logger'
-import BlockMap from './block-map'
-import { ReadableRepo } from './readable-repo'
 import * as util from './util'
-import CidSet from './cid-set'
 
 type Params = {
   storage: RepoStorage
@@ -38,6 +39,7 @@ export class Repo extends ReadableRepo {
     did: string,
     keypair: crypto.Keypair,
     initialWrites: RecordCreateOp[] = [],
+    revOverride?: string,
   ): Promise<CommitData> {
     const newBlocks = new BlockMap()
 
@@ -51,7 +53,7 @@ export class Repo extends ReadableRepo {
     const diff = await DataDiff.of(data, null)
     newBlocks.addMap(diff.newMstBlocks)
 
-    const rev = TID.nextStr()
+    const rev = revOverride ?? TID.nextStr()
     const commit = await util.signCommit(
       {
         did,
@@ -69,6 +71,7 @@ export class Repo extends ReadableRepo {
       since: null,
       prev: null,
       newBlocks,
+      relevantBlocks: newBlocks,
       removedCids: diff.removedCids,
     }
   }
@@ -140,11 +143,21 @@ export class Repo extends ReadableRepo {
     const newBlocks = diff.newMstBlocks
     const removedCids = diff.removedCids
 
+    const proofs = await Promise.all(
+      writes.map((op) =>
+        data.getCoveringProof(util.formatDataKey(op.collection, op.rkey)),
+      ),
+    )
+    const relevantBlocks = proofs.reduce((acc, cur) => {
+      return acc.addMap(cur)
+    }, new BlockMap())
+
     const addedLeaves = leaves.getMany(diff.newLeafCids.toList())
     if (addedLeaves.missing.length > 0) {
       throw new Error(`Missing leaf blocks: ${addedLeaves.missing}`)
     }
     newBlocks.addMap(addedLeaves.blocks)
+    relevantBlocks.addMap(addedLeaves.blocks)
 
     const rev = TID.nextStr(this.commit.rev)
     const commit = await util.signCommit(
@@ -157,21 +170,20 @@ export class Repo extends ReadableRepo {
       },
       keypair,
     )
-    const commitCid = await newBlocks.add(commit)
-
-    // ensure the commit cid actually changed
-    if (commitCid.equals(this.cid)) {
-      newBlocks.delete(commitCid)
-    } else {
+    const commitBlock = await dataToCborBlock(lexToIpld(commit))
+    if (!commitBlock.cid.equals(this.cid)) {
+      newBlocks.set(commitBlock.cid, commitBlock.bytes)
+      relevantBlocks.set(commitBlock.cid, commitBlock.bytes)
       removedCids.add(this.cid)
     }
 
     return {
-      cid: commitCid,
+      cid: commitBlock.cid,
       rev,
       since: this.commit.rev,
       prev: this.cid,
       newBlocks,
+      relevantBlocks,
       removedCids,
     }
   }
@@ -208,6 +220,7 @@ export class Repo extends ReadableRepo {
       since: null,
       prev: null,
       newBlocks,
+      relevantBlocks: newBlocks,
       removedCids: new CidSet([this.cid]),
     }
   }

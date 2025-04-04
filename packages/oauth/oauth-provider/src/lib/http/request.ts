@@ -1,10 +1,11 @@
+import { randomBytes } from 'node:crypto'
+import type { IncomingMessage, ServerResponse } from 'node:http'
+import { languages, mediaType } from '@hapi/accept'
 import { parse as parseCookie, serialize as serializeCookie } from 'cookie'
-import { randomBytes } from 'crypto'
+import forwarded from 'forwarded'
 import createHttpError from 'http-errors'
-
 import { appendHeader } from './response.js'
-import { IncomingMessage, ServerResponse } from './types.js'
-import { urlMatch, UrlReference } from './url.js'
+import { UrlReference, urlMatch } from './url.js'
 
 export function validateHeaderValue(
   req: IncomingMessage,
@@ -83,6 +84,18 @@ export function validateReferer(
   req: IncomingMessage,
   res: ServerResponse,
   reference: UrlReference,
+  allowNull: true,
+): URL | null
+export function validateReferer(
+  req: IncomingMessage,
+  res: ServerResponse,
+  reference: UrlReference,
+  allowNull?: false,
+): URL
+export function validateReferer(
+  req: IncomingMessage,
+  res: ServerResponse,
+  reference: UrlReference,
   allowNull = false,
 ) {
   const referer = req.headers['referer']
@@ -90,6 +103,7 @@ export function validateReferer(
   if (refererUrl ? !urlMatch(refererUrl, reference) : !allowNull) {
     throw createHttpError(400, `Invalid referer ${referer}`)
   }
+  return refererUrl
 }
 
 export async function setupCsrfToken(
@@ -126,12 +140,13 @@ export function validateSameOrigin(
 export function validateCsrfToken(
   req: IncomingMessage,
   res: ServerResponse,
-  csrfToken: string,
+  csrfToken: unknown,
   cookieName = 'csrf_token',
   clearCookie = false,
 ) {
   const cookies = parseHttpCookies(req)
   if (
+    typeof csrfToken !== 'string' ||
     !csrfToken ||
     !cookies ||
     !cookieName ||
@@ -162,4 +177,104 @@ export function parseHttpCookies(
     : req.headers['cookie']
       ? ((req as any).cookies = parseCookie(req.headers['cookie']))
       : null
+}
+
+export type ExtractRequestMetadataOptions = {
+  /**
+   * A function that determines whether a given IP address is trusted. The
+   * function is called with the IP addresses and its index in the list of
+   * forwarded addresses (starting from 0, 0 corresponding to the ip of the
+   * incoming HTTP connection, and the last item being the first proxied IP
+   * address in the proxy chain, deduced from the `X-Forwarded-For` header). The
+   * function should return `true` if the IP address is trusted, and `false`
+   * otherwise.
+   *
+   * @see {@link https://www.npmjs.com/package/proxy-addr} for a utility that
+   * allows you to create a trust function.
+   */
+  trustProxy?: (addr: string, i: number) => boolean
+}
+
+export type RequestMetadata = {
+  userAgent?: string
+  ipAddress: string
+  port: number
+}
+
+export function extractRequestMetadata(
+  req: IncomingMessage,
+  options?: ExtractRequestMetadataOptions,
+): RequestMetadata {
+  const ip = extractIp(req, options)
+  return {
+    userAgent: req.headers['user-agent'],
+    ipAddress: ip,
+    port: extractPort(req, ip),
+  }
+}
+
+function extractIp(
+  req: IncomingMessage,
+  options?: ExtractRequestMetadataOptions,
+): string {
+  const trust = options?.trustProxy
+  if (trust) {
+    const ips = forwarded(req)
+    for (let i = 0; i < ips.length; i++) {
+      const isTrusted = trust(ips[i], i)
+      if (!isTrusted) return ips[i]
+    }
+    // Let's return the last ("furthest") IP address in the chain if all of them
+    // are trusted. Note that this may indicate an issue with either the trust
+    // function (too permissive), or the proxy configuration (one of them not
+    // setting the X-Forwarded-For header).
+    const ip = ips[ips.length - 1]
+    if (ip) return ip
+  }
+
+  // Express app compatibility (see "trust proxy" setting)
+  if ('ip' in req) {
+    const ip = req.ip
+    if (typeof ip === 'string') return ip
+  }
+
+  const ip = req.socket.remoteAddress
+  if (ip) return ip
+
+  throw new Error('Could not determine IP address')
+}
+
+function extractPort(req: IncomingMessage, ip: string): number {
+  if (ip !== req.socket.remoteAddress) {
+    // Trust the X-Forwarded-Port header only if the IP address was a trusted
+    // proxied IP.
+    const forwardedPort = req.headers['x-forwarded-port']
+    if (typeof forwardedPort === 'string') {
+      const port = Number(forwardedPort.trim())
+      if (!Number.isInteger(port) || port < 0 || port > 65535) {
+        throw new Error('Invalid forwarded port')
+      }
+      return port
+    }
+  }
+
+  const port = req.socket.remotePort
+  if (port != null) return port
+
+  throw new Error('Could not determine port')
+}
+
+export function extractLocales(req: IncomingMessage) {
+  const acceptLanguage = req.headers['accept-language']
+  return acceptLanguage ? languages(acceptLanguage) : []
+}
+
+export function negotiateResponseContent<T extends string>(
+  req: IncomingMessage,
+  types: readonly T[],
+): T | undefined {
+  const type = mediaType(req.headers['accept'], types)
+  if (type) return type as T
+
+  return undefined
 }

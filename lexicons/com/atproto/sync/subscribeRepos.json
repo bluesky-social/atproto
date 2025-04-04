@@ -17,15 +17,7 @@
       "message": {
         "schema": {
           "type": "union",
-          "refs": [
-            "#commit",
-            "#identity",
-            "#account",
-            "#handle",
-            "#migrate",
-            "#tombstone",
-            "#info"
-          ]
+          "refs": ["#commit", "#sync", "#identity", "#account", "#info"]
         }
       },
       "errors": [
@@ -52,7 +44,7 @@
         "blobs",
         "time"
       ],
-      "nullable": ["prev", "since"],
+      "nullable": ["since"],
       "properties": {
         "seq": {
           "type": "integer",
@@ -61,33 +53,31 @@
         "rebase": { "type": "boolean", "description": "DEPRECATED -- unused" },
         "tooBig": {
           "type": "boolean",
-          "description": "Indicates that this commit contained too many ops, or data size was too large. Consumers will need to make a separate request to get missing data."
+          "description": "DEPRECATED -- replaced by #sync event and data limits. Indicates that this commit contained too many ops, or data size was too large. Consumers will need to make a separate request to get missing data."
         },
         "repo": {
           "type": "string",
           "format": "did",
-          "description": "The repo this event comes from."
+          "description": "The repo this event comes from. Note that all other message types name this field 'did'."
         },
         "commit": {
           "type": "cid-link",
           "description": "Repo commit object CID."
         },
-        "prev": {
-          "type": "cid-link",
-          "description": "DEPRECATED -- unused. WARNING -- nullable and optional; stick with optional to ensure golang interoperability."
-        },
         "rev": {
           "type": "string",
+          "format": "tid",
           "description": "The rev of the emitted commit. Note that this information is also in the commit object included in blocks, unless this is a tooBig event."
         },
         "since": {
           "type": "string",
+          "format": "tid",
           "description": "The rev of the last emitted commit from this repo (if any)."
         },
         "blocks": {
           "type": "bytes",
-          "description": "CAR file containing relevant blocks, as a diff since the previous repo state.",
-          "maxLength": 1000000
+          "description": "CAR file containing relevant blocks, as a diff since the previous repo state. The commit must be included as a block, and the commit block CID must be the first entry in the CAR header 'roots' list.",
+          "maxLength": 2000000
         },
         "ops": {
           "type": "array",
@@ -102,8 +92,42 @@
           "type": "array",
           "items": {
             "type": "cid-link",
-            "description": "List of new blobs (by CID) referenced by records in this commit."
+            "description": "DEPRECATED -- will soon always be empty. List of new blobs (by CID) referenced by records in this commit."
           }
+        },
+        "prevData": {
+          "type": "cid-link",
+          "description": "The root CID of the MST tree for the previous commit from this repo (indicated by the 'since' revision field in this message). Corresponds to the 'data' field in the repo commit object. NOTE: this field is effectively required for the 'inductive' version of firehose."
+        },
+        "time": {
+          "type": "string",
+          "format": "datetime",
+          "description": "Timestamp of when this message was originally broadcast."
+        }
+      }
+    },
+    "sync": {
+      "type": "object",
+      "description": "Updates the repo to a new state, without necessarily including that state on the firehose. Used to recover from broken commit streams, data loss incidents, or in situations where upstream host does not know recent state of the repository.",
+      "required": ["seq", "did", "blocks", "rev", "time"],
+      "properties": {
+        "seq": {
+          "type": "integer",
+          "description": "The stream sequence number of this message."
+        },
+        "did": {
+          "type": "string",
+          "format": "did",
+          "description": "The account this repo event corresponds to. Must match that in the commit object."
+        },
+        "blocks": {
+          "type": "bytes",
+          "description": "CAR file containing the commit, as a block. The CAR header must include the commit block CID as the first 'root'.",
+          "maxLength": 10000
+        },
+        "rev": {
+          "type": "string",
+          "description": "The rev of the commit. This value must match that in the commit object."
         },
         "time": {
           "type": "string",
@@ -142,41 +166,15 @@
         "status": {
           "type": "string",
           "description": "If active=false, this optional field indicates a reason for why the account is not active.",
-          "knownValues": ["takendown", "suspended", "deleted", "deactivated"]
+          "knownValues": [
+            "takendown",
+            "suspended",
+            "deleted",
+            "deactivated",
+            "desynchronized",
+            "throttled"
+          ]
         }
-      }
-    },
-    "handle": {
-      "type": "object",
-      "description": "DEPRECATED -- Use #identity event instead",
-      "required": ["seq", "did", "handle", "time"],
-      "properties": {
-        "seq": { "type": "integer" },
-        "did": { "type": "string", "format": "did" },
-        "handle": { "type": "string", "format": "handle" },
-        "time": { "type": "string", "format": "datetime" }
-      }
-    },
-    "migrate": {
-      "type": "object",
-      "description": "DEPRECATED -- Use #account event instead",
-      "required": ["seq", "did", "migrateTo", "time"],
-      "nullable": ["migrateTo"],
-      "properties": {
-        "seq": { "type": "integer" },
-        "did": { "type": "string", "format": "did" },
-        "migrateTo": { "type": "string" },
-        "time": { "type": "string", "format": "datetime" }
-      }
-    },
-    "tombstone": {
-      "type": "object",
-      "description": "DEPRECATED -- Use #account event instead",
-      "required": ["seq", "did", "time"],
-      "properties": {
-        "seq": { "type": "integer" },
-        "did": { "type": "string", "format": "did" },
-        "time": { "type": "string", "format": "datetime" }
       }
     },
     "info": {
@@ -206,6 +204,10 @@
         "cid": {
           "type": "cid-link",
           "description": "For creates and updates, the new record CID. For deletions, null."
+        },
+        "prev": {
+          "type": "cid-link",
+          "description": "For updates and deletes, the previous record CID (required for inductive firehose). For creations, field should not be defined."
         }
       }
     }

@@ -1,16 +1,16 @@
-import { utf8Len, graphemeLen } from '@atproto/common-web'
 import { CID } from 'multiformats/cid'
+import { graphemeLen, utf8Len } from '@atproto/common-web'
 import { Lexicons } from '../lexicons'
-import * as formats from './formats'
 import {
-  LexUserType,
   LexBoolean,
+  LexBytes,
   LexInteger,
   LexString,
-  ValidationResult,
+  LexUserType,
   ValidationError,
-  LexBytes,
+  ValidationResult,
 } from '../types'
+import * as formats from './formats'
 
 export function validate(
   lexicons: Lexicons,
@@ -39,7 +39,7 @@ export function validate(
   }
 }
 
-export function boolean(
+function boolean(
   lexicons: Lexicons,
   path: string,
   def: LexUserType,
@@ -77,7 +77,7 @@ export function boolean(
   return { success: true, value }
 }
 
-export function integer(
+function integer(
   lexicons: Lexicons,
   path: string,
   def: LexUserType,
@@ -151,7 +151,7 @@ export function integer(
   return { success: true, value }
 }
 
-export function string(
+function string(
   lexicons: Lexicons,
   path: string,
   def: LexUserType,
@@ -198,27 +198,52 @@ export function string(
   }
 
   // maxLength and minLength
-  if (typeof def.maxLength === 'number' || typeof def.minLength === 'number') {
-    const len = utf8Len(value)
-
-    if (typeof def.maxLength === 'number') {
-      if (len > def.maxLength) {
-        return {
-          success: false,
-          error: new ValidationError(
-            `${path} must not be longer than ${def.maxLength} characters`,
-          ),
-        }
+  if (typeof def.minLength === 'number' || typeof def.maxLength === 'number') {
+    // If the JavaScript string length * 3 is below the maximum limit,
+    // its UTF8 length (which <= .length * 3) will also be below.
+    if (typeof def.minLength === 'number' && value.length * 3 < def.minLength) {
+      return {
+        success: false,
+        error: new ValidationError(
+          `${path} must not be shorter than ${def.minLength} characters`,
+        ),
       }
     }
 
-    if (typeof def.minLength === 'number') {
-      if (len < def.minLength) {
-        return {
-          success: false,
-          error: new ValidationError(
-            `${path} must not be shorter than ${def.minLength} characters`,
-          ),
+    // If the JavaScript string length * 3 is within the maximum limit,
+    // its UTF8 length (which <= .length * 3) will also be within.
+    // When there's no minimal length, this lets us skip the UTF8 length check.
+    let canSkipUtf8LenChecks = false
+    if (
+      typeof def.minLength === 'undefined' &&
+      typeof def.maxLength === 'number' &&
+      value.length * 3 <= def.maxLength
+    ) {
+      canSkipUtf8LenChecks = true
+    }
+
+    if (!canSkipUtf8LenChecks) {
+      const len = utf8Len(value)
+
+      if (typeof def.maxLength === 'number') {
+        if (len > def.maxLength) {
+          return {
+            success: false,
+            error: new ValidationError(
+              `${path} must not be longer than ${def.maxLength} characters`,
+            ),
+          }
+        }
+      }
+
+      if (typeof def.minLength === 'number') {
+        if (len < def.minLength) {
+          return {
+            success: false,
+            error: new ValidationError(
+              `${path} must not be shorter than ${def.minLength} characters`,
+            ),
+          }
         }
       }
     }
@@ -315,7 +340,7 @@ export function string(
   return { success: true, value }
 }
 
-export function bytes(
+function bytes(
   lexicons: Lexicons,
   path: string,
   def: LexUserType,
@@ -357,7 +382,7 @@ export function bytes(
   return { success: true, value }
 }
 
-export function cidLink(
+function cidLink(
   lexicons: Lexicons,
   path: string,
   def: LexUserType,
@@ -373,7 +398,7 @@ export function cidLink(
   return { success: true, value }
 }
 
-export function unknown(
+function unknown(
   lexicons: Lexicons,
   path: string,
   def: LexUserType,

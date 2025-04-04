@@ -1,6 +1,6 @@
 {
   "name": "@atproto/bsync",
-  "version": "0.0.9",
+  "version": "0.0.18",
   "license": "MIT",
   "description": "Sychronizing service for app.bsky App View (Bluesky API)",
   "keywords": [
@@ -23,6 +23,9 @@
     "test:updateSnapshot": "jest --updateSnapshot",
     "migration:create": "ts-node ./bin/migration-create.ts",
     "buf:gen": "buf generate proto"
+  },
+  "engines": {
+    "node": ">=18.7.0"
   },
   "dependencies": {
     "@atproto/common": "workspace:^",

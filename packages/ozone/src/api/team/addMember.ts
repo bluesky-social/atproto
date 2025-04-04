@@ -1,6 +1,6 @@
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import { AppContext } from '../../context'
 import { Server } from '../../lexicon'
-import AppContext from '../../context'
 import { getMemberRole } from '../util'
 
 export default function (server: Server, ctx: AppContext) {
@@ -26,14 +26,19 @@ export default function (server: Server, ctx: AppContext) {
           )
         }
 
+        const profiles = await teamService.getProfiles([did])
+        const profile = profiles.get(did)
+
         const member = await teamService.create({
           did,
+          handle: profile?.handle || null,
+          displayName: profile?.displayName || null,
           disabled: false,
           role: getMemberRole(role),
           lastUpdatedBy:
             access.type === 'admin_token' ? 'admin_token' : access.iss,
         })
-        const memberView = await teamService.view([member], ctx)
+        const memberView = await teamService.view([member])
         return memberView[0]
       })
 

@@ -1,6 +1,6 @@
 import * as jose from 'jose'
 import { AtpAgent } from '@atproto/api'
-import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
+import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import { createRefreshToken } from '../src/account-manager/helpers/auth'
 
 describe('auth', () => {
@@ -19,11 +19,11 @@ describe('auth', () => {
   })
 
   const createAccount = async (info) => {
-    const { data } = await agent.api.com.atproto.server.createAccount(info)
+    const { data } = await agent.com.atproto.server.createAccount(info)
     return data
   }
   const getSession = async (jwt) => {
-    const { data } = await agent.api.com.atproto.server.getSession(
+    const { data } = await agent.com.atproto.server.getSession(
       {},
       {
         headers: SeedClient.getHeaders(jwt),
@@ -32,19 +32,18 @@ describe('auth', () => {
     return data
   }
   const createSession = async (info) => {
-    const { data } = await agent.api.com.atproto.server.createSession(info)
+    const { data } = await agent.com.atproto.server.createSession(info)
     return data
   }
   const deleteSession = async (jwt) => {
-    await agent.api.com.atproto.server.deleteSession(undefined, {
+    await agent.com.atproto.server.deleteSession(undefined, {
       headers: SeedClient.getHeaders(jwt),
     })
   }
   const refreshSession = async (jwt: string) => {
-    const { data } = await agent.api.com.atproto.server.refreshSession(
-      undefined,
-      { headers: SeedClient.getHeaders(jwt) },
-    )
+    const { data } = await agent.com.atproto.server.refreshSession(undefined, {
+      headers: SeedClient.getHeaders(jwt),
+    })
     return data
   }
 
@@ -269,7 +268,7 @@ describe('auth', () => {
       email: 'iris@test.com',
       password: 'password',
     })
-    await agent.api.com.atproto.admin.updateSubjectStatus(
+    await agent.com.atproto.admin.updateSubjectStatus(
       {
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',
@@ -295,7 +294,7 @@ describe('auth', () => {
       email: 'jared@test.com',
       password: 'password',
     })
-    await agent.api.com.atproto.admin.updateSubjectStatus(
+    await agent.com.atproto.admin.updateSubjectStatus(
       {
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',

@@ -1,69 +1,53 @@
 import { createHash } from 'node:crypto'
-import { ServerResponse } from 'node:http'
-
+import type { ServerResponse } from 'node:http'
+import { CspConfig, CspValue, mergeCsp } from '../lib/csp/index.js'
 import {
   AssetRef,
-  buildDocument,
   BuildDocumentOptions,
   Html,
-  js,
+  buildDocument,
 } from '../lib/html/index.js'
-import { writeHtml, WriteResponseOptions } from '../lib/http/response.js'
+import { WriteHtmlOptions, writeHtml } from '../lib/http/response.js'
 
-export function declareBackendData(name: string, data: unknown) {
-  // The script tag is removed after the data is assigned to the global variable
-  // to prevent other scripts from deducing the value of the variable. The "app"
-  // script will read the global variable and then unset it. See
-  // "readBackendData" in "src/assets/app/backend-data.ts".
-  return js`window[${name}]=${data};document.currentScript.remove();`
+export const DEFAULT_CSP: CspConfig = {
+  'upgrade-insecure-requests': true,
+  'default-src': ["'none'"],
 }
 
-export type SendWebPageOptions = BuildDocumentOptions & WriteResponseOptions
+export type SendWebPageOptions = BuildDocumentOptions & WriteHtmlOptions
 
 export async function sendWebPage(
   res: ServerResponse,
-  options: SendWebPageOptions,
+  { csp: inputCsp, ...options }: SendWebPageOptions,
 ): Promise<void> {
-  // @TODO: make these headers configurable (?)
-  res.setHeader('Permissions-Policy', 'otp-credentials=*, document-domain=()')
-  res.setHeader('Cross-Origin-Embedder-Policy', 'credentialless')
-  res.setHeader('Cross-Origin-Resource-Policy', 'same-origin')
-  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin')
-  res.setHeader('Referrer-Policy', 'same-origin')
-  res.setHeader('X-Frame-Options', 'DENY')
-  res.setHeader('X-Content-Type-Options', 'nosniff')
-  res.setHeader('X-XSS-Protection', '0')
-  res.setHeader('Strict-Transport-Security', 'max-age=63072000')
-  res.setHeader(
-    'Content-Security-Policy',
-    [
-      `default-src 'none'`,
-      `frame-ancestors 'none'`,
-      `form-action 'none'`,
-      `base-uri ${options.base?.origin || `'none'`}`,
-      `script-src 'self' ${
-        options.scripts?.map(assetToHash).map(hashToCspRule).join(' ') ?? ''
-      }`,
-      `style-src 'self' ${
-        options.styles?.map(assetToHash).map(hashToCspRule).join(' ') ?? ''
-      }`,
-      `img-src 'self' data: https:`,
-      `connect-src 'self'`,
-      `upgrade-insecure-requests`,
-    ].join('; '),
-  )
+  // @NOTE the csp string might be quite long. In that case it might be tempting
+  // to set it through the http-equiv <meta> in the HTML. However, some
+  // directives cannot be enforced by browsers when set through the meta tag
+  // (e.g. 'frame-ancestors'). Therefore, it's better to set the CSP through the
+  // HTTP header.
+  const csp = mergeCsp(DEFAULT_CSP, inputCsp, {
+    'base-uri': options.base?.origin as undefined | `https://${string}`,
+    'script-src': options.scripts?.map(assetToCsp),
+    'style-src': options.styles?.map(assetToCsp),
+  })
 
-  const html = buildDocument(options)
-
-  return writeHtml(res, html.toString(), options)
+  const html = buildDocument(options).toString()
+  return writeHtml(res, html, { ...options, csp })
 }
 
-function assetToHash(asset: Html | AssetRef): string {
-  return asset instanceof Html
-    ? createHash('sha256').update(asset.toString()).digest('base64')
-    : asset.sha256
-}
+function assetToCsp(asset: Html | AssetRef): CspValue {
+  if (asset instanceof Html) {
+    // Inline assets are "allowed" by their hash
+    const hash = createHash('sha256')
+    for (const fragment of asset) hash.update(fragment)
+    return `'sha256-${hash.digest('base64')}'`
+  } else {
+    // External assets are referenced by their origin
+    if (asset.url.startsWith('https:') || asset.url.startsWith('http:')) {
+      return new URL(asset.url).origin as `https:${string}` | `http:${string}`
+    }
 
-function hashToCspRule(hash: string): string {
-  return `'sha256-${hash}'`
+    // Internal assets are served from the same origin
+    return `'self'`
+  }
 }

@@ -8,6 +8,18 @@
       "parameters": {
         "type": "params",
         "properties": {
+          "queueCount": {
+            "type": "integer",
+            "description": "Number of queues being used by moderators. Subjects will be split among all queues."
+          },
+          "queueIndex": {
+            "type": "integer",
+            "description": "Index of the queue to fetch subjects from. Works only when queueCount value is specified."
+          },
+          "queueSeed": {
+            "type": "string",
+            "description": "A seeder to shuffle/balance the queue items."
+          },
           "includeAllUserRecords": {
             "type": "boolean",
             "description": "All subjects, or subjects from given 'collections' param, belonging to the account specified in the 'subject' param will be returned."
@@ -95,7 +107,13 @@
           "sortField": {
             "type": "string",
             "default": "lastReportedAt",
-            "enum": ["lastReviewedAt", "lastReportedAt"]
+            "enum": [
+              "lastReviewedAt",
+              "lastReportedAt",
+              "reportedRecordsCount",
+              "takendownRecordsCount",
+              "priorityScore"
+            ]
           },
           "sortDirection": {
             "type": "string",
@@ -118,8 +136,10 @@
           },
           "tags": {
             "type": "array",
+            "maxLength": 25,
             "items": {
-              "type": "string"
+              "type": "string",
+              "description": "Items in this array are applied with OR filters. To apply AND filter, put all tags in the same string and separate using && characters"
             }
           },
           "excludeTags": {
@@ -144,6 +164,24 @@
             "type": "string",
             "description": "If specified, subjects of the given type (account or record) will be returned. When this is set to 'account' the 'collections' parameter will be ignored. When includeAllUserRecords or subject is set, this will be ignored.",
             "knownValues": ["account", "record"]
+          },
+          "minAccountSuspendCount": {
+            "type": "integer",
+            "description": "If specified, only subjects that belong to an account that has at least this many suspensions will be returned."
+          },
+          "minReportedRecordsCount": {
+            "type": "integer",
+            "description": "If specified, only subjects that belong to an account that has at least this many reported records will be returned."
+          },
+          "minTakendownRecordsCount": {
+            "type": "integer",
+            "description": "If specified, only subjects that belong to an account that has at least this many taken down records will be returned."
+          },
+          "minPriorityScore": {
+            "minimum": 0,
+            "maximum": 100,
+            "type": "integer",
+            "description": "If specified, only subjects that have priority score value above the given value will be returned."
           }
         }
       },
