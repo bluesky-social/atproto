@@ -1,18 +1,16 @@
-import React from 'react'
-import { createFileRoute, Navigate } from '@tanstack/react-router'
+import { msg } from '@lingui/core/macro'
 import { useLingui } from '@lingui/react'
 import { Trans } from '@lingui/react/macro'
-import { msg } from '@lingui/core/macro'
-import clsx from 'clsx'
 import { ChevronRightIcon } from '@radix-ui/react-icons'
-
-import { Account } from '#/api'
-import { useAccountsQuery } from '#/data/useAccountsQuery'
-import { Loader } from '#/components/Loader'
+import { Navigate, createFileRoute } from '@tanstack/react-router'
+import { clsx } from 'clsx'
+import { ActiveDeviceSession } from '#/api'
 import * as Admonition from '#/components/Admonition'
-import { ContentCard } from '#/components/ContentCard'
-import { Link, InlineLink } from '#/components/Link'
 import { Avatar } from '#/components/Avatar'
+import { ContentCard } from '#/components/ContentCard'
+import { InlineLink, Link } from '#/components/Link'
+import { Loader } from '#/components/Loader'
+import { useDeviceSessionsQuery } from '#/data/useDeviceSessionsQuery'
 import { getAccountName } from '#/util/getAccountName'
 import { sanitizeHandle } from '#/util/sanitizeHandle'
 
@@ -22,13 +20,13 @@ export const Route = createFileRoute('/_minimalLayout/')({
 
 function Index() {
   const { _ } = useLingui()
-  const { data: accounts, isLoading, error } = useAccountsQuery()
+  const { data: sessions, isLoading, error } = useDeviceSessionsQuery()
 
   return isLoading ? (
     <div className="flex items-center justify-center">
       <Loader size="lg" />
     </div>
-  ) : error || !accounts ? (
+  ) : error ? (
     <Admonition.Default
       variant="error"
       title={_(msg`Something went wrong`)}
@@ -38,8 +36,8 @@ function Index() {
     />
   ) : (
     <>
-      {accounts.length ? (
-        <SelectorScreen accounts={accounts} />
+      {sessions.length ? (
+        <SelectorScreen sessions={sessions} />
       ) : (
         <Navigate to="/sign-in" />
       )}
@@ -47,7 +45,11 @@ function Index() {
   )
 }
 
-export function SelectorScreen({ accounts }: { accounts: Account[] }) {
+export function SelectorScreen({
+  sessions,
+}: {
+  sessions: ActiveDeviceSession[]
+}) {
   const { _ } = useLingui()
 
   return (
@@ -64,27 +66,33 @@ export function SelectorScreen({ accounts }: { accounts: Account[] }) {
           </div>
 
           <div className="space-y-2">
-            {accounts.map((a) => (
+            {sessions.map(({ account }) => (
               <Link
-                key={a.sub}
+                key={account.sub}
                 to="/$did"
                 params={{
-                  did: a.sub,
+                  did: account.sub,
                 }}
                 className={clsx([
                   'flex items-center space-x-2 px-2 py-2 rounded-lg border',
                   'bg-contrast-25 dark:bg-contrast-50 border-contrast-50 dark:border-contrast-100',
                   'hover:bg-contrast-50 dark:hover:bg-contrast-100',
                 ])}
-                label={_(msg`View and manage account for ${getAccountName(a)}`)}
+                label={_(
+                  msg`View and manage account for ${getAccountName(account)}`,
+                )}
               >
-                <Avatar size={40} src={a.picture} displayName={a.name} />
+                <Avatar
+                  size={40}
+                  src={account.picture}
+                  displayName={account.name}
+                />
                 <div className="space-y-0 flex-1 truncate">
                   <h2 className="text-text-default font-semibold leading-snug truncate">
-                    {a.name}
+                    {account.name}
                   </h2>
                   <p className="text-sm text-text-light truncate">
-                    {sanitizeHandle(a.preferred_username) || a.sub}
+                    {sanitizeHandle(account.preferred_username) || account.sub}
                   </p>
                 </div>
                 <ChevronRightIcon width={20} className="text-text-light" />

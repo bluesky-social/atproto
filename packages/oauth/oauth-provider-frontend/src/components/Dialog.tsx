@@ -1,14 +1,14 @@
-import React from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
 import { Cross2Icon } from '@radix-ui/react-icons'
-import clsx from 'clsx'
+import { clsx } from 'clsx'
+import { AriaRole, ReactNode } from 'react'
 
 export const Root = Dialog.Root
 export const Trigger = Dialog.Trigger
 export const Title = Dialog.Title
 export const Description = Dialog.Description
 
-export function Outer({ children }: { children: React.ReactNode }) {
+export function Outer({ children }: { children: ReactNode }) {
   return (
     <Dialog.Portal>
       <Dialog.Overlay className="DialogOverlay fixed inset-0 bg-contrast-900/30 dark:bg-contrast-0/60" />
@@ -22,8 +22,8 @@ export function Inner({
   role,
   className,
 }: {
-  children: React.ReactNode
-  role?: React.AriaRole
+  children: ReactNode
+  role?: AriaRole
   className?: string
 }) {
   return (

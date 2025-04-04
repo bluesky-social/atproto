@@ -1,10 +1,8 @@
-import React from 'react'
-
-import { LocaleSelector } from '#/components/LocaleSelector'
-import { localesDisplay } from '#/locales/localesDisplay'
-import { useLocale, Locale } from '#/locales'
-import { useCustomizationData } from '#/data/useCustomizationData'
 import { InlineLink } from '#/components/Link'
+import { LocaleSelector } from '#/components/LocaleSelector'
+import { useCustomizationData } from '#/data/useCustomizationData'
+import { Locale, useLocale } from '#/locales'
+import { localesDisplay } from '#/locales/localesDisplay'
 
 export function Footer() {
   const { locale, setLocale, localizeString } = useLocale()

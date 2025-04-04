@@ -1,15 +1,7 @@
 {
-  "compilerOptions": {
-    "jsx": "react",
-    "target": "ES2022",
-    "esModuleInterop": true,
-    "module": "ES2020",
-    "moduleResolution": "bundler",
-    "skipLibCheck": true,
-    "strict": true,
-    "paths": {
-      "#/*": ["./src/*"]
-    }
-  },
-  "include": ["src/**/*", "*.config.ts"]
+  "include": [],
+  "references": [
+    { "path": "./tsconfig.src.json" },
+    { "path": "./tsconfig.tools.json" }
+  ]
 }

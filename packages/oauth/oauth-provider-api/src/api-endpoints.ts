@@ -35,9 +35,9 @@ export type ApiEndpoints = {
     input: { sub: string | string[] }
     output: { success: true }
   }
-  '/accounts': {
+  '/device-sessions': {
     method: 'GET'
-    output: { results: ActiveDeviceAccount[] }
+    output: { results: ActiveDeviceSession[] }
   }
   /**
    * @NOTE can be revoked using the oauth revocation endpoint (json or form
@@ -122,9 +122,9 @@ export type RejectInput = Record<string, never>
 /**
  * Represents an account that is currently signed-in to the Authorization
  * Server. If the session was created too long ago, the user may be required to
- * re-authenticate ({@link ActiveDeviceAccount.loginRequired}).
+ * re-authenticate ({@link ActiveDeviceSession.loginRequired}).
  */
-export type ActiveDeviceAccount = {
+export type ActiveDeviceSession = {
   account: Account
 
   /**

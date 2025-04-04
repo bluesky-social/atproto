@@ -1,11 +1,11 @@
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { defineConfig } from 'vite'
-import tailwindcss from '@tailwindcss/vite'
-import manifest from '@atproto-labs/rollup-plugin-bundle-manifest'
-import react from '@vitejs/plugin-react-swc'
 import { lingui } from '@lingui/vite-plugin'
+import tailwindcss from '@tailwindcss/vite'
 import { TanStackRouterVite } from '@tanstack/router-plugin/vite'
+import react from '@vitejs/plugin-react-swc'
+import { defineConfig } from 'vite'
+import manifest from '@atproto-labs/rollup-plugin-bundle-manifest'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -45,6 +45,9 @@ export default defineConfig({
         // @ts-ignore TODO figure out import
         manifest.default({ data: false }),
       ],
+    },
+    commonjsOptions: {
+      include: [/node_modules/, /dist/],
     },
   },
 })

@@ -1,5 +1,4 @@
 import { Account } from '#/api'
-
 import { sanitizeHandle } from '#/util/sanitizeHandle'
 
 export function getAccountName(account: Account): string {

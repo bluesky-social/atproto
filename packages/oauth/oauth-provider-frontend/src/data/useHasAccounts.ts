@@ -1,6 +1,6 @@
-import { useAccountsQuery } from '#/data/useAccountsQuery'
+import { useDeviceSessionsQuery } from '#/data/useDeviceSessionsQuery'
 
 export function useHasAccounts() {
-  const { data: accounts } = useAccountsQuery()
+  const { data: accounts } = useDeviceSessionsQuery()
   return accounts?.length > 0
 }

@@ -1,11 +1,11 @@
-import React from 'react'
 import {
-  QuestionMarkCircledIcon,
+  CircleBackslashIcon,
   ExclamationTriangleIcon,
   InfoCircledIcon,
-  CircleBackslashIcon,
+  QuestionMarkCircledIcon,
 } from '@radix-ui/react-icons'
-import clsx from 'clsx'
+import { clsx } from 'clsx'
+import { ReactNode } from 'react'
 
 type Variant = 'tip' | 'info' | 'warning' | 'error'
 
@@ -33,7 +33,7 @@ export function Card({
   children,
   variant,
 }: {
-  children: React.ReactNode
+  children: ReactNode
   variant?: Variant
 }) {
   const borderColor = variant ? borderColors[variant] : ''
@@ -59,15 +59,15 @@ export function Icon({ variant }: { variant?: Variant }) {
   )
 }
 
-export function Content({ children }: { children: React.ReactNode }) {
+export function Content({ children }: { children: ReactNode }) {
   return <div className="flex-grow space-y-1">{children}</div>
 }
 
-export function Title({ children }: { children: React.ReactNode }) {
+export function Title({ children }: { children: ReactNode }) {
   return <h3 className="text-lg font-semibold leading-snug">{children}</h3>
 }
 
-export function Text({ children }: { children: React.ReactNode }) {
+export function Text({ children }: { children: ReactNode }) {
   return <p className="text-md text-text-light">{children}</p>
 }
 

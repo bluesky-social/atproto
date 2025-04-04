@@ -1,27 +1,21 @@
-import React from 'react'
-import { createFileRoute } from '@tanstack/react-router'
-import { Trans } from '@lingui/react/macro'
-import { useLingui } from '@lingui/react'
 import { msg } from '@lingui/core/macro'
-import { ExitIcon, Cross2Icon } from '@radix-ui/react-icons'
-
-import { Loader } from '#/components/Loader'
+import { useLingui } from '@lingui/react'
+import { Trans } from '@lingui/react/macro'
+import { Cross2Icon, ExitIcon } from '@radix-ui/react-icons'
+import { createFileRoute } from '@tanstack/react-router'
+import { useMemo } from 'react'
+import { ActiveAccountSession, ActiveOAuthSession } from '#/api'
 import * as Admonition from '#/components/Admonition'
 import { Avatar } from '#/components/Avatar'
 import { Button } from '#/components/Button'
-import {
-  useOAuthSessionsQuery,
-  UseOAuthSessionsQueryResponse,
-} from '#/data/useOAuthSessionsQuery'
-import {
-  useAccountSessionsQuery,
-  UseAccountSessionsQueryResponse,
-} from '#/data/useAccountSessionsQuery'
-import { useRevokeOAuthSessionMutation } from '#/data/useRevokeOAuthSessionMutation'
-import { useRevokeAccountSessionMutation } from '#/data/useRevokeAccountSessionMutation'
 import { InlineLink } from '#/components/Link'
+import { Loader } from '#/components/Loader'
 import { Prompt } from '#/components/Prompt'
 import { useToast } from '#/components/Toast'
+import { useAccountSessionsQuery } from '#/data/useAccountSessionsQuery'
+import { useOAuthSessionsQuery } from '#/data/useOAuthSessionsQuery'
+import { useRevokeAccountSessionMutation } from '#/data/useRevokeAccountSessionMutation'
+import { useRevokeOAuthSessionMutation } from '#/data/useRevokeOAuthSessionMutation'
 
 export const Route = createFileRoute('/_appLayout/$did')({
   component: Sessions,
@@ -29,21 +23,14 @@ export const Route = createFileRoute('/_appLayout/$did')({
 
 export function Sessions() {
   const { _ } = useLingui()
-  const { did } = Route.useParams()
-  const {
-    data: sessions,
-    error,
-    isLoading,
-  } = useOAuthSessionsQuery({
-    did,
-  })
+  const { did: sub } = Route.useParams()
+  const { data: sessions, error, isLoading } = useOAuthSessionsQuery({ sub })
   const {
     data: accountSessions,
     error: accountSessionsError,
     isLoading: accountSessionsIsLoading,
-  } = useAccountSessionsQuery({
-    did,
-  })
+  } = useAccountSessionsQuery({ sub })
+
   return (
     <>
       <ul className="flex items-center space-x-2 text-text-light text-sm">
@@ -72,7 +59,7 @@ export function Sessions() {
       ) : sessions.length > 0 ? (
         <div className="space-y-2">
           {sessions.map((session) => (
-            <ApplicationSessionCard currentDid={did} session={session} />
+            <ApplicationSessionCard sub={sub} session={session} />
           ))}
         </div>
       ) : (
@@ -99,7 +86,7 @@ export function Sessions() {
       ) : accountSessions.length > 0 ? (
         <div className="space-y-3">
           {accountSessions.map((session) => (
-            <AccountSessionCard currentDid={did} session={session} />
+            <AccountSessionCard sub={sub} session={session} />
           ))}
         </div>
       ) : (
@@ -114,11 +101,11 @@ export function Sessions() {
 }
 
 function ApplicationSessionCard({
-  session,
-  currentDid,
+  session: { clientId, clientMetadata, tokenId },
+  sub,
 }: {
-  session: UseOAuthSessionsQueryResponse[0]
-  currentDid: string
+  session: ActiveOAuthSession
+  sub: string
 }) {
   const { _ } = useLingui()
   const { show } = useToast()
@@ -127,7 +114,7 @@ function ApplicationSessionCard({
 
   const revoke = async () => {
     try {
-      await revokeSessions({ did: currentDid, token: session.tokenId })
+      await revokeSessions({ sub, tokenId })
       show({
         variant: 'success',
         title: _(msg`Successfully signed out`),
@@ -148,24 +135,23 @@ function ApplicationSessionCard({
       <div className="flex items-center space-x-2 truncate">
         <Avatar
           size={40}
-          src={session.clientMetadata.logo_uri}
-          displayName={session.clientMetadata.client_name}
+          src={clientMetadata?.logo_uri}
+          displayName={clientMetadata?.client_name}
         />
         <div className="truncate">
           <h3 className="font-bold leading-snug truncate">
-            {session.clientMetadata.client_name ||
-              session.clientMetadata.client_uri}
+            {clientMetadata?.client_name || clientMetadata?.client_uri}
           </h3>
           <p className="text-text-light leading-snug text-sm truncate">
-            {session.clientMetadata.client_uri}
+            {clientId}
           </p>
         </div>
       </div>
       <div>
         <Prompt
           title={
-            session.clientMetadata.client_name
-              ? _(msg`Sign out of ${session.clientMetadata.client_name}`)
+            clientMetadata?.client_name
+              ? _(msg`Sign out of ${clientMetadata.client_name}`)
               : _(msg`Sign out of this application`)
           }
           description={_(
@@ -188,10 +174,10 @@ function ApplicationSessionCard({
 
 function AccountSessionCard({
   session,
-  currentDid,
+  sub,
 }: {
-  session: UseAccountSessionsQueryResponse[0]
-  currentDid: string
+  session: ActiveAccountSession
+  sub: string
 }) {
   const { show } = useToast()
   const { _, i18n } = useLingui()
@@ -200,7 +186,7 @@ function AccountSessionCard({
 
   const remove = async () => {
     try {
-      await revokeSessions({ did: currentDid, deviceId: session.deviceId })
+      await revokeSessions({ sub, deviceId: session.deviceId })
       show({
         variant: 'success',
         title: _(msg`Successfully removed device`),
@@ -216,7 +202,7 @@ function AccountSessionCard({
     }
   }
 
-  const lastUsed = React.useMemo(() => {
+  const lastUsed = useMemo(() => {
     return i18n.date(new Date(), {
       year: 'numeric',
       month: 'numeric',

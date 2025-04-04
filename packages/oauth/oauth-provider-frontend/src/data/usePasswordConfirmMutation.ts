@@ -1,13 +1,14 @@
 import { useMutation } from '@tanstack/react-query'
+import { ConfirmResetPasswordInput, useApi } from '#/api'
 
-import { useApi } from '#/api'
+export type PasswordConfirmMutationInput = ConfirmResetPasswordInput
 
 export function usePasswordConfirmMutation() {
   const api = useApi()
 
   return useMutation({
-    async mutationFn({ code, password }: { code: string; password: string }) {
-      await api.fetch('/reset-password-confirm', { token: code, password })
+    async mutationFn(input: ConfirmResetPasswordInput) {
+      await api.fetch('POST', '/reset-password-confirm', input)
     },
   })
 }

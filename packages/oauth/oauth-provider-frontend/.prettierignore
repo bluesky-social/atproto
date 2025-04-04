@@ -1,4 +1,0 @@
-src/locales/*/*.ts
-.swc
-dist
-src/routeTree.gen.ts

@@ -1,11 +1,11 @@
-import React from 'react'
-import clsx from 'clsx'
+import { clsx } from 'clsx'
+import { ReactNode } from 'react'
 
 export function ContentCard({
   children,
   size = 'narrow',
 }: {
-  children: React.ReactNode
+  children: ReactNode
   size?: 'full' | 'narrow'
 }) {
   const maxWidth = size === 'full' ? 600 : 400

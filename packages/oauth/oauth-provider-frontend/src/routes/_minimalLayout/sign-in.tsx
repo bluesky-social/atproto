@@ -1,22 +1,21 @@
-import React from 'react'
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useForm } from '@tanstack/react-form'
-import { Trans } from '@lingui/react/macro'
-import { useLingui } from '@lingui/react'
 import { msg } from '@lingui/core/macro'
-import zod from 'zod'
+import { useLingui } from '@lingui/react'
+import { Trans } from '@lingui/react/macro'
+import { useForm } from '@tanstack/react-form'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { clsx } from 'clsx'
-
+import { useState } from 'react'
+import { z } from 'zod'
 import {
-  SecondAuthenticationFactorRequiredError,
   InvalidCredentialsError,
+  SecondAuthenticationFactorRequiredError,
 } from '#/api'
-import { useValidateHandle } from '#/util/useValidateHandle'
-import * as Form from '#/components/forms'
 import { Button } from '#/components/Button'
 import { InlineLink } from '#/components/Link'
-import { format2FACode } from '#/util/format2FACode'
+import * as Form from '#/components/forms'
 import { useSignInMutation } from '#/data/useSignInMutation'
+import { format2FACode } from '#/util/format2FACode'
+import { useValidateHandle } from '#/util/useValidateHandle'
 import { wait } from '#/util/wait'
 
 export const Route = createFileRoute('/_minimalLayout/sign-in')({
@@ -42,8 +41,8 @@ function RouteComponent() {
 function LoginForm() {
   const { _ } = useLingui()
   const validateHandle = useValidateHandle()
-  const [showCode, setShowCode] = React.useState(false)
-  const [error, setError] = React.useState('')
+  const [showCode, setShowCode] = useState(false)
+  const [error, setError] = useState('')
   const { mutateAsync: signIn } = useSignInMutation()
   const navigate = useNavigate({ from: Route.fullPath })
 
@@ -55,13 +54,14 @@ function LoginForm() {
       remember: false,
     },
     validators: {
-      onSubmit: zod.object({
-        identifier: zod.string().superRefine((v, ctx) => {
+      // @ts-expect-error
+      onSubmit: z.object({
+        identifier: z.string().superRefine((v, ctx) => {
           if (/.+@/.test(v)) {
-            const { success } = zod.string().email().safeParse(v)
+            const { success } = z.string().email().safeParse(v)
             if (!success) {
               ctx.addIssue({
-                code: zod.ZodIssueCode.custom,
+                code: z.ZodIssueCode.custom,
                 message: _(msg`Invalid email`),
               })
             }
@@ -69,15 +69,15 @@ function LoginForm() {
             const { success, message } = validateHandle(v)
             if (!success) {
               ctx.addIssue({
-                code: zod.ZodIssueCode.custom,
+                code: z.ZodIssueCode.custom,
                 message,
               })
             }
           }
         }),
-        password: zod.string().nonempty(_(msg`Password is required`)),
-        code: zod.string(),
-        remember: zod.boolean(),
+        password: z.string().nonempty(_(msg`Password is required`)),
+        code: z.string(),
+        remember: z.boolean(),
       }),
     },
     onSubmit: async ({ value }) => {

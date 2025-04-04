@@ -1,23 +1,21 @@
-import React from 'react'
-import { createFileRoute } from '@tanstack/react-router'
-import clsx from 'clsx'
-import { useForm } from '@tanstack/react-form'
-import { Trans } from '@lingui/react/macro'
-import { useLingui } from '@lingui/react'
 import { msg } from '@lingui/core/macro'
-import zod from 'zod'
-
-import * as Form from '#/components/forms'
+import { useLingui } from '@lingui/react'
+import { Trans } from '@lingui/react/macro'
+import { useForm } from '@tanstack/react-form'
+import { createFileRoute } from '@tanstack/react-router'
+import { clsx } from 'clsx'
+import { useState } from 'react'
+import { z } from 'zod'
 import { Button } from '#/components/Button'
-import { InlineLink } from '#/components/Link'
-import { format2FACode } from '#/util/format2FACode'
 import { Divider } from '#/components/Divider'
-import { usePasswordResetMutation } from '#/data/usePasswordResetMutation'
-import { usePasswordConfirmMutation } from '#/data/usePasswordConfirmMutation'
-import { wait } from '#/util/wait'
-import { ButtonLink } from '#/components/Link'
+import { ButtonLink, InlineLink } from '#/components/Link'
 import { useToast } from '#/components/Toast'
+import * as Form from '#/components/forms'
+import { usePasswordConfirmMutation } from '#/data/usePasswordConfirmMutation'
+import { usePasswordResetMutation } from '#/data/usePasswordResetMutation'
+import { format2FACode } from '#/util/format2FACode'
 import { MIN_PASSWORD_LENGTH, getPasswordStrength } from '#/util/passwords'
+import { wait } from '#/util/wait'
 
 export const Route = createFileRoute('/_minimalLayout/reset-password')({
   component: RouteComponent,
@@ -25,9 +23,9 @@ export const Route = createFileRoute('/_minimalLayout/reset-password')({
 
 function RouteComponent() {
   const { _ } = useLingui()
-  const [showConfirmStep, setShowConfirmStep] = React.useState(false)
-  const [showSuccess, setShowSuccess] = React.useState(false)
-  const [error, setError] = React.useState('')
+  const [showConfirmStep, setShowConfirmStep] = useState(false)
+  const [showSuccess, setShowSuccess] = useState(false)
+  const [error, setError] = useState('')
   const { mutateAsync: resetPassword } = usePasswordResetMutation()
   const { mutateAsync: confirmPassword } = usePasswordConfirmMutation()
   const { show } = useToast()
@@ -37,8 +35,9 @@ function RouteComponent() {
       email: '',
     },
     validators: {
-      onSubmit: zod.object({
-        email: zod
+      // @ts-expect-error
+      onSubmit: z.object({
+        email: z
           .string()
           .email(_(msg`Invalid email`))
           .nonempty(_(msg`Email is required`)),
@@ -56,13 +55,14 @@ function RouteComponent() {
   })
   const confirmForm = useForm({
     defaultValues: {
-      code: '',
+      token: '',
       password: '',
     },
     validators: {
-      onSubmit: zod.object({
-        code: zod.string().nonempty(_(msg`Email code is required`)),
-        password: zod
+      // @ts-expect-error
+      onSubmit: z.object({
+        token: z.string().nonempty(_(msg`Email code is required`)),
+        password: z
           .string()
           .nonempty(_(msg`A new password is required`))
           .min(
@@ -74,10 +74,7 @@ function RouteComponent() {
     onSubmit: async ({ value }) => {
       setError('')
       try {
-        await wait(
-          500,
-          confirmPassword({ code: value.code, password: value.password }),
-        )
+        await wait(500, confirmPassword(value))
         setShowSuccess(true)
       } catch (e) {
         setError(_(msg`An error occurred, please try again.`))
@@ -219,7 +216,7 @@ function RouteComponent() {
                       <Divider />
                     </div>
                     <confirmForm.Field
-                      name="code"
+                      name="token"
                       children={(field) => {
                         return (
                           <Form.Item>

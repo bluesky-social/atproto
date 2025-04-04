@@ -1,6 +1,5 @@
-import React from 'react'
-import { useLingui } from '@lingui/react'
 import { msg } from '@lingui/core/macro'
+import { useLingui } from '@lingui/react'
 import { PersonIcon } from '@radix-ui/react-icons'
 
 export function Avatar({

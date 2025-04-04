@@ -1,20 +1,22 @@
 import { useQuery } from '@tanstack/react-query'
+import { ActiveOAuthSession, useApi } from '#/api'
 
-import { useApi } from '#/api'
-import { ApiEndpoints } from '#/api/temp-types'
+export type OAuthSessionsQueryInput = {
+  sub: string
+}
 
-export const accountSessionsQueryKey = (did: string) =>
-  ['oauth-sessions', did] as const
-export type UseOAuthSessionsQueryResponse =
-  ApiEndpoints['/oauth-sessions']['output']['sessions']
+export const accountSessionsQueryKey = ({ sub }: OAuthSessionsQueryInput) =>
+  ['oauth-sessions', sub] as const
 
-export function useOAuthSessionsQuery({ did }: { did: string }) {
+export function useOAuthSessionsQuery(input: OAuthSessionsQueryInput) {
   const api = useApi()
-  return useQuery<ApiEndpoints['/oauth-sessions']['output']['sessions']>({
-    queryKey: accountSessionsQueryKey(did),
-    async queryFn() {
-      const { sessions } = await api.fetch('/oauth-sessions', { account: did })
-      return sessions
+  return useQuery<ActiveOAuthSession[]>({
+    queryKey: accountSessionsQueryKey(input),
+    async queryFn({ signal }) {
+      const { results } = await api.fetch('GET', '/oauth-sessions', input, {
+        signal,
+      })
+      return results
     },
   })
 }

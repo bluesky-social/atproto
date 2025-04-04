@@ -1,9 +1,8 @@
-import React from 'react'
-import { useLingui } from '@lingui/react'
 import { msg } from '@lingui/core/macro'
-
-import * as Dialog from '#/components/Dialog'
+import { useLingui } from '@lingui/react'
+import { useState } from 'react'
 import { Button } from '#/components/Button'
+import * as Dialog from '#/components/Dialog'
 
 export function Prompt({
   children,
@@ -23,7 +22,7 @@ export function Prompt({
   onCancel?: () => void
 }) {
   const { _ } = useLingui()
-  const [open, setOpen] = React.useState(false)
+  const [open, setOpen] = useState(false)
 
   const handleOnConfirm = () => {
     setOpen(false)

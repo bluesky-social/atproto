@@ -1,8 +1,6 @@
-import React from 'react'
-import { createFileRoute, Outlet } from '@tanstack/react-router'
-
-import { useCustomizationData } from '#/data/useCustomizationData'
+import { Outlet, createFileRoute } from '@tanstack/react-router'
 import * as Layout from '#/components/Layout'
+import { useCustomizationData } from '#/data/useCustomizationData'
 
 export const Route = createFileRoute('/_minimalLayout')({
   component: RouteComponent,

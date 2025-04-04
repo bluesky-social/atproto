@@ -1,5 +1,4 @@
 import { i18n } from '@lingui/core'
-
 import * as en from '#/locales/en/messages'
 import { Locale } from '#/locales/types'
 

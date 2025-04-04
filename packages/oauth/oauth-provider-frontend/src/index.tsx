@@ -1,16 +1,14 @@
 import '#/locales/setup'
-import '#/data/useHydrationData/initialize'
 
-import React, { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
 import { i18n } from '@lingui/core'
 import { I18nProvider } from '@lingui/react'
-import { RouterProvider, createRouter } from '@tanstack/react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-
-import { routeTree } from '#/routeTree.gen'
-import { Provider as LocaleProvider } from '#/locales'
+import { RouterProvider, createRouter } from '@tanstack/react-router'
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
 import { Provider as ToastProvider } from '#/components/Toast'
+import { Provider as LocaleProvider } from '#/locales'
+import { routeTree } from '#/routeTree.gen'
 
 const qc = new QueryClient()
 const router = createRouter({ routeTree })

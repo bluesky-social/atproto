@@ -1,8 +1,8 @@
 {
   "include": [],
   "references": [
-    { "path": "./tsconfig.backend.json" },
-    { "path": "./tsconfig.frontend.json" },
+    { "path": "./tsconfig.lib.json" },
+    { "path": "./tsconfig.src.json" },
     { "path": "./tsconfig.tools.json" }
   ]
 }

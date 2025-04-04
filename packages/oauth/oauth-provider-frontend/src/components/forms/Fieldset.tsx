@@ -1,10 +1,10 @@
-import React from 'react'
+import { ReactNode } from 'react'
 
 export function Fieldset({
   children,
   label,
 }: {
-  children: React.ReactNode
+  children: ReactNode
   label: string
 }) {
   return (

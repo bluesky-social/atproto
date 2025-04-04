@@ -5,7 +5,7 @@ import {
   ACCOUNTS_PAGE_URL,
   API_ENDPOINT_PREFIX,
   ActiveAccountSession,
-  ActiveDeviceAccount,
+  ActiveDeviceSession,
   ActiveOAuthSession,
   ApiEndpoints,
   ISODateString,
@@ -214,7 +214,7 @@ export function apiRouter<
   )
 
   router.use(
-    apiRoute('GET', '/accounts', undefined, async function (req, res) {
+    apiRoute('GET', '/device-sessions', undefined, async function (req, res) {
       const { deviceId } = await server.deviceManager.load(req, res)
 
       const deviceAccounts = await server.accountManager.listDeviceAccounts(
@@ -225,7 +225,7 @@ export function apiRouter<
 
       return {
         results: deviceAccounts.map(
-          (deviceAccount): ActiveDeviceAccount => ({
+          (deviceAccount): ActiveDeviceSession => ({
             account: deviceAccount.account,
             remembered: deviceAccount.data.remembered,
             loginRequired: server.checkLoginRequired(deviceAccount),

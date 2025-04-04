@@ -1,6 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-
-import { useApi } from '#/api'
+import { RevokeAccountSessionInput, useApi } from '#/api'
 import { accountSessionsQueryKey } from '#/data/useAccountSessionsQuery'
 
 export function useRevokeAccountSessionMutation() {
@@ -8,14 +7,11 @@ export function useRevokeAccountSessionMutation() {
   const qc = useQueryClient()
 
   return useMutation({
-    async mutationFn({ did, deviceId }: { did: string; deviceId: string }) {
-      return api.fetch('/revoke-account-session', {
-        account: did,
-        deviceId,
-      })
+    async mutationFn(input: RevokeAccountSessionInput) {
+      return api.fetch('POST', '/revoke-account-session', input)
     },
-    onSuccess(_, { did }) {
-      qc.invalidateQueries({ queryKey: accountSessionsQueryKey(did) })
+    onSuccess(_, input) {
+      qc.invalidateQueries({ queryKey: accountSessionsQueryKey(input) })
     },
   })
 }

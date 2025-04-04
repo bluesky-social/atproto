@@ -1,6 +1,5 @@
-import React from 'react'
-import { ErrorComponentProps } from '@tanstack/react-router'
 import { Trans } from '@lingui/react/macro'
+import { ErrorComponentProps } from '@tanstack/react-router'
 
 export function ErrorScreen({
   title,

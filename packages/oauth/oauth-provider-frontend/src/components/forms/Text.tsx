@@ -1,7 +1,7 @@
-import React from 'react'
 import { clsx } from 'clsx'
+import { InputHTMLAttributes } from 'react'
 
-export type TextProps = React.InputHTMLAttributes<HTMLInputElement> & {
+export type TextProps = InputHTMLAttributes<HTMLInputElement> & {
   name: string
   value: string
   invalid?: boolean

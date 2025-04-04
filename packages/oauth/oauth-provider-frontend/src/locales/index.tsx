@@ -1,13 +1,21 @@
-import React from 'react'
-
+import {
+  ReactNode,
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { LocalizedString } from '#/api'
-import { Locale } from '#/locales/types'
-import { detectLocale } from '#/locales/detectLocale'
 import { activateLocale } from '#/locales/activateLocale'
+import { detectLocale } from '#/locales/detectLocale'
+import { Locale } from '#/locales/types'
 
 export * from '#/locales/types'
 
-const Context = React.createContext<{
+const Context = createContext<{
   locale: Locale
   setLocale: (locale: Locale) => void
   localizeString: (value: LocalizedString) => string
@@ -17,11 +25,11 @@ const Context = React.createContext<{
   localizeString: () => '',
 })
 
-export function Provider({ children }: { children: React.ReactNode }) {
-  const prevLocale = React.useRef<Locale>(Locale.en)
-  const [locale, setLocale] = React.useState<Locale>(detectLocale)
+export function Provider({ children }: { children: ReactNode }) {
+  const prevLocale = useRef<Locale>(Locale.en)
+  const [locale, setLocale] = useState<Locale>(detectLocale)
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (prevLocale.current !== locale) {
       activateLocale(locale)
         .then(() => {
@@ -34,7 +42,7 @@ export function Provider({ children }: { children: React.ReactNode }) {
     }
   }, [locale, setLocale])
 
-  const safeSetLocale = React.useCallback(
+  const safeSetLocale = useCallback(
     (locale: Locale) => {
       if (locale in Locale) {
         setLocale(locale)
@@ -45,7 +53,7 @@ export function Provider({ children }: { children: React.ReactNode }) {
     [setLocale],
   )
 
-  const localizeString = React.useCallback(
+  const localizeString = useCallback(
     (value: LocalizedString) => {
       if (typeof value === 'string') return value
       return value[locale] || value[Locale.en]
@@ -53,7 +61,7 @@ export function Provider({ children }: { children: React.ReactNode }) {
     [locale],
   )
 
-  const ctx = React.useMemo(
+  const ctx = useMemo(
     () => ({
       locale,
       setLocale: safeSetLocale,
@@ -66,5 +74,5 @@ export function Provider({ children }: { children: React.ReactNode }) {
 }
 
 export function useLocale() {
-  return React.useContext(Context)
+  return useContext(Context)
 }

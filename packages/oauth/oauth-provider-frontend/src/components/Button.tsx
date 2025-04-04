@@ -1,5 +1,5 @@
-import React from 'react'
 import { clsx } from 'clsx'
+import { useMemo } from 'react'
 
 type ButtonVariantProps = {
   color?: 'primary' | 'secondary'
@@ -40,7 +40,7 @@ Button.Text = Text
 export type ButtonStyleProps = ButtonVariantProps & ButtonStateProps
 
 export function useButtonStyles({ color, size, disabled }: ButtonStyleProps) {
-  return React.useMemo(() => {
+  return useMemo(() => {
     return clsx([
       'flex-1 flex items-center justify-center text-center rounded-md font-medium',
       size === 'sm' && ['px-3 h-7 space-x-1', 'text-sm'],

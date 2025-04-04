@@ -1,12 +1,8 @@
-import React from 'react'
-
 import { AccountSelector } from '#/components/AccountSelector'
-import { useCurrentAccount } from '#/data/useCurrentAccount'
-import { useCustomizationData } from '#/data/useCustomizationData'
 import { Link } from '#/components/Link'
+import { useCustomizationData } from '#/data/useCustomizationData'
 
 export function Nav() {
-  const { currentAccount } = useCurrentAccount()
   const { logo } = useCustomizationData()
 
   return (
@@ -23,7 +19,7 @@ export function Nav() {
           <div />
         )}
 
-        {currentAccount && <AccountSelector />}
+        <AccountSelector />
       </nav>
       {/* Spacer */}
       <div className="h-15" />

@@ -1,5 +1,3 @@
-import React from 'react'
-
 const sizes = {
   sm: 20,
   md: 28,

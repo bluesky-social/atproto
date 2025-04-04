@@ -1,8 +1,6 @@
-import React from 'react'
 import { Link as RouterLink, LinkComponentProps } from '@tanstack/react-router'
 import { clsx } from 'clsx'
-
-import { useButtonStyles, ButtonStyleProps } from '#/components/Button'
+import { ButtonStyleProps, useButtonStyles } from '#/components/Button'
 
 export type LinkProps = LinkComponentProps & {
   label?: string

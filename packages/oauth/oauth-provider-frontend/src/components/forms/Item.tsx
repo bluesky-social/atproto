@@ -1,11 +1,11 @@
-import React from 'react'
-import clsx from 'clsx'
+import { clsx } from 'clsx'
+import { ReactNode } from 'react'
 
 export function Item({
   children,
   className,
 }: {
-  children: React.ReactNode
+  children: ReactNode
   className?: string
 }) {
   return <div className={clsx('space-y-2', className)}>{children}</div>

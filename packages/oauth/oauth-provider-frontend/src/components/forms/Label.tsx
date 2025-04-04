@@ -1,12 +1,12 @@
-import React from 'react'
-import clsx from 'clsx'
+import { clsx } from 'clsx'
+import { ReactNode } from 'react'
 
 export function Label({
   children,
   name,
   hidden,
 }: {
-  children: React.ReactNode
+  children: ReactNode
   name: string
   hidden?: boolean
 }) {

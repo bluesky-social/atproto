@@ -1,42 +1,26 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-
-import { useApi } from '#/api'
+import { useMutation } from '@tanstack/react-query'
+import { SignInInput, useApi } from '#/api'
+import { useUpsertDeviceAccount } from '#/data/useDeviceSessionsQuery'
 import { useLocale } from '#/locales'
-import {
-  useAccountsQueryKey,
-  UseAccountsQueryResponse,
-} from '#/data/useAccountsQuery'
+
+export type SignInMutationInput = Omit<SignInInput, 'locale'>
 
 export function useSignInMutation() {
   const api = useApi()
   const { locale } = useLocale()
-  const qc = useQueryClient()
+
+  const upsertDeviceAccount = useUpsertDeviceAccount()
 
   return useMutation({
-    async mutationFn({
-      username,
-      password,
-      code,
-      remember,
-    }: {
-      username: string
-      password: string
-      code?: string
-      remember?: boolean
-    }) {
-      const res = await api.fetch('/sign-in', {
-        username,
-        password,
-        emailOtp: code,
-        remember,
-        locale,
+    async mutationFn(input: SignInMutationInput) {
+      const res = await api.fetch('POST', '/sign-in', { ...input, locale })
+
+      upsertDeviceAccount({
+        account: res.account,
+        remembered: input.remember ?? false,
+        loginRequired: false,
       })
-      qc.setQueryData<UseAccountsQueryResponse>(useAccountsQueryKey, (data) => {
-        return [
-          res.account,
-          ...(data ?? []).filter((a) => a.sub !== res.account.sub),
-        ]
-      })
+
       return res
     },
   })

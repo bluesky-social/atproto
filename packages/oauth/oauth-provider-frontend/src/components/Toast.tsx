@@ -1,8 +1,14 @@
-import React from 'react'
-import * as ToastBase from '@radix-ui/react-toast'
 import { Cross2Icon } from '@radix-ui/react-icons'
-import { nanoid } from 'nanoid'
-import clsx from 'clsx'
+import * as ToastBase from '@radix-ui/react-toast'
+import { clsx } from 'clsx'
+import {
+  ReactNode,
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+} from 'react'
 
 type Variant = 'success' | 'warning' | 'error'
 
@@ -18,7 +24,7 @@ type Context = {
   show(toast: Omit<Toast, 'id'>): void
 }
 
-const Context = React.createContext<Context>({
+const Context = createContext<Context>({
   show: () => {},
 })
 
@@ -38,23 +44,28 @@ const titleColors: Record<Variant, string> = {
   error: 'text-error-800 dark:text-error-50',
 }
 
-export function Provider({ children }: { children: React.ReactNode }) {
-  const [toasts, setToasts] = React.useState<Toast[]>([])
+const getRandomId = () => {
+  const randomId = Math.random().toString(36).substring(2, 8)
+  return randomId
+}
 
-  const show = React.useCallback<Context['show']>(
+export function Provider({ children }: { children: ReactNode }) {
+  const [toasts, setToasts] = useState<Toast[]>([])
+
+  const show = useCallback<Context['show']>(
     (toast) => {
       setToasts((prev) => [
         ...prev,
         {
           ...toast,
-          id: nanoid(6),
+          id: getRandomId(),
         },
       ])
     },
     [setToasts],
   )
 
-  const ctx = React.useMemo(
+  const ctx = useMemo(
     () => ({
       show,
     }),
@@ -117,5 +128,5 @@ export function Provider({ children }: { children: React.ReactNode }) {
 }
 
 export function useToast() {
-  return React.useContext(Context)
+  return useContext(Context)
 }

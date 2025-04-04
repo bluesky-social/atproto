@@ -1,21 +1,19 @@
-import React from 'react'
-import * as Popover from '@radix-ui/react-popover'
-import { useLingui } from '@lingui/react'
 import { msg } from '@lingui/core/macro'
-import { clsx } from 'clsx'
+import { useLingui } from '@lingui/react'
 import { DotsHorizontalIcon } from '@radix-ui/react-icons'
-
-import { useAccountsQuery } from '#/data/useAccountsQuery'
-import { sanitizeHandle } from '#/util/sanitizeHandle'
-import { getAccountName } from '#/util/getAccountName'
-import { useCurrentAccount } from '#/data/useCurrentAccount'
+import * as Popover from '@radix-ui/react-popover'
+import { clsx } from 'clsx'
 import { Avatar } from '#/components/Avatar'
 import { Link } from '#/components/Link'
+import { useCurrentSession } from '#/data/useCurrentSession'
+import { useDeviceSessionsQuery } from '#/data/useDeviceSessionsQuery'
+import { getAccountName } from '#/util/getAccountName'
+import { sanitizeHandle } from '#/util/sanitizeHandle'
 
 export function AccountSelector() {
   const { _ } = useLingui()
-  const { data: accounts } = useAccountsQuery()
-  const { currentAccount } = useCurrentAccount()
+  const { data } = useDeviceSessionsQuery()
+  const { account: currentAccount } = useCurrentSession()
 
   return (
     <Popover.Root>
@@ -59,7 +57,7 @@ export function AccountSelector() {
         >
           <div className="relative bg-contrast-0 dark:bg-contrast-25 border border-contrast-25 dark:border-contrast-50 rounded-lg shadow-xl shadow-contrast-900/15 dark:shadow-contrast-0/60">
             <div className="flex flex-col rounded-lg overflow-hidden">
-              {accounts.map((account, i) => (
+              {data.map(({ account }, i) => (
                 <Link
                   key={account.sub}
                   to="/$did"

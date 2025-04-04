@@ -1,33 +1,24 @@
-import type { ApiEndpoints } from '#/api/temp-types'
+import {
+  API_ENDPOINT_PREFIX,
+  ApiEndpoints,
+  CSRF_COOKIE_NAME,
+  CSRF_HEADER_NAME,
+} from '@atproto/oauth-provider-api'
+import { readCookie } from '../util/cookies.ts'
 import {
   JsonClient,
   JsonErrorPayload,
   JsonErrorResponse,
-} from '#/api/json-client'
+} from './json-client.ts'
 
-export type { Options } from '#/api/json-client.ts'
-
-export type AcceptData = {
-  sub: string
-}
+export type { Options } from './json-client.ts'
 
 export class Api extends JsonClient<ApiEndpoints> {
-  constructor(csrfToken: string) {
-    const baseUrl = new URL('/accounts/api', window.origin).toString()
-    super(baseUrl, csrfToken)
-  }
-
-  public buildAcceptUrl({ sub }: AcceptData): URL {
-    const url = new URL(`${this.baseUrl}/accept`)
-    url.searchParams.set('account_sub', sub)
-    url.searchParams.set('csrf_token', this.csrfToken)
-    return url
-  }
-
-  public buildRejectUrl(): URL {
-    const url = new URL(`${this.baseUrl}/reject`)
-    url.searchParams.set('csrf_token', this.csrfToken)
-    return url
+  constructor() {
+    const baseUrl = new URL(API_ENDPOINT_PREFIX, window.origin).toString()
+    super(baseUrl, () => ({
+      [CSRF_HEADER_NAME]: readCookie(CSRF_COOKIE_NAME),
+    }))
   }
 
   // Override the parent's parseError method to handle expected error responses

@@ -1,10 +1,10 @@
-import React from 'react'
-import {
-  normalizeAndEnsureValidHandle,
-  InvalidHandleError,
-} from '@atproto/syntax/dist/handle'
-import { useLingui } from '@lingui/react'
 import { msg } from '@lingui/core/macro'
+import { useLingui } from '@lingui/react'
+import { useCallback } from 'react'
+import {
+  InvalidHandleError,
+  normalizeAndEnsureValidHandle,
+} from '@atproto/syntax'
 
 type ValidateHandleResult =
   | {
@@ -19,7 +19,7 @@ type ValidateHandleResult =
 export function useValidateHandle(): (v: string) => ValidateHandleResult {
   const { _ } = useLingui()
 
-  return React.useCallback(
+  return useCallback(
     (v: string) => {
       try {
         normalizeAndEnsureValidHandle(stripLeadingAt(v))
