@@ -1,4 +1,4 @@
-import AtpAgent, { AtUri } from '@atproto/api'
+import AtpAgent from '@atproto/api'
 import { dedupeStrs, mapDefined, noUndefinedVals } from '@atproto/common'
 import { InternalServerError } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
@@ -19,13 +19,13 @@ import {
 import { Views } from '../../../../views'
 
 export default function (server: Server, ctx: AppContext) {
-  const getSuggestedStarterPacks = createPipeline(
+  const getSuggestedUsers = createPipeline(
     skeleton,
     hydration,
-    noBlocks,
+    noBlocksOrFollows,
     presentation,
   )
-  server.app.bsky.unspecced.getSuggestedStarterPacks({
+  server.app.bsky.unspecced.getSuggestedUsers({
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ auth, params, req }) => {
       const viewer = auth.credentials.iss
@@ -37,7 +37,7 @@ export default function (server: Server, ctx: AppContext) {
           ? req.headers['x-bsky-topics'].join(',')
           : req.headers['x-bsky-topics'],
       })
-      const { ...result } = await getSuggestedStarterPacks(
+      const { ...result } = await getSuggestedUsers(
         {
           ...params,
           viewer: viewer ?? undefined,
@@ -58,10 +58,11 @@ const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
   const { params, ctx } = input
   if (ctx.topicsAgent) {
     const res =
-      await ctx.topicsAgent.app.bsky.unspecced.getSuggestedStarterPacksSkeleton(
+      await ctx.topicsAgent.app.bsky.unspecced.getSuggestedUsersSkeleton(
         {
           limit: params.limit,
           viewer: params.viewer,
+          category: params.category,
         },
         {
           headers: params.headers,
@@ -78,60 +79,43 @@ const hydration = async (
   input: HydrationFnInput<Context, Params, SkeletonState>,
 ) => {
   const { ctx, params, skeleton } = input
-  let dids: string[] = []
-  for (const uri of skeleton.starterPacks) {
-    let aturi: AtUri | undefined
-    try {
-      aturi = new AtUri(uri)
-    } catch {
-      continue
-    }
-    dids.push(aturi.hostname)
-  }
-  dids = dedupeStrs(dids)
+  const dids = dedupeStrs(skeleton.dids)
   const pairs: Map<string, string[]> = new Map()
   if (params.viewer) {
     pairs.set(params.viewer, dids)
   }
-  const [starterPacksState, bidirectionalBlocks] = await Promise.all([
-    ctx.hydrator.hydrateStarterPacks(skeleton.starterPacks, params.hydrateCtx),
+  const [profileBasicState, bidirectionalBlocks] = await Promise.all([
+    ctx.hydrator.hydrateProfilesBasic(dids, params.hydrateCtx),
     ctx.hydrator.hydrateBidirectionalBlocks(pairs),
   ])
 
-  return mergeManyStates(starterPacksState, { bidirectionalBlocks })
+  return mergeManyStates(profileBasicState, { bidirectionalBlocks })
 }
 
-const noBlocks = (input: RulesFnInput<Context, Params, SkeletonState>) => {
-  const { skeleton, params, hydration } = input
-
+const noBlocksOrFollows = (
+  input: RulesFnInput<Context, Params, SkeletonState>,
+) => {
+  const { ctx, skeleton, params, hydration } = input
   if (!params.viewer) {
     return skeleton
   }
-
   const blocks = hydration.bidirectionalBlocks?.get(params.viewer)
-  const filteredSkeleton: SkeletonState = {
-    starterPacks: skeleton.starterPacks.filter((uri) => {
-      let aturi: AtUri | undefined
-      try {
-        aturi = new AtUri(uri)
-      } catch {
-        return false
-      }
-      return !blocks?.get(aturi.hostname)
+  return {
+    ...skeleton,
+    dids: skeleton.dids.filter((did) => {
+      const viewer = ctx.views.profileViewer(did, hydration)
+      return !blocks?.get(did) && !viewer?.following
     }),
   }
-
-  return filteredSkeleton
 }
 
 const presentation = (
   input: PresentationFnInput<Context, Params, SkeletonState>,
 ) => {
   const { ctx, skeleton, hydration } = input
-
   return {
-    starterPacks: mapDefined(skeleton.starterPacks, (uri) =>
-      ctx.views.starterPack(uri, hydration),
+    actors: mapDefined(skeleton.dids, (did) =>
+      ctx.views.profileBasic(did, hydration),
     ),
   }
 }
@@ -145,8 +129,9 @@ type Context = {
 type Params = QueryParams & {
   hydrateCtx: HydrateCtx & { viewer: string | null }
   headers: Record<string, string>
+  category?: string
 }
 
 type SkeletonState = {
-  starterPacks: string[]
+  dids: string[]
 }
