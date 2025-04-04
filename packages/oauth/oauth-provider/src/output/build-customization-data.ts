@@ -83,6 +83,10 @@ export const customizationSchema = z.object({
    * Enables hCaptcha during sign-up.
    */
   hcaptcha: hcaptchaConfigSchema.optional(),
+  /**
+   * Enables Hibp check during sign-up.
+   */
+  enableHibpCheck: z.boolean().optional(),
 })
 export type CustomizationInput = z.input<typeof customizationSchema>
 export type Customization = z.infer<typeof customizationSchema>
