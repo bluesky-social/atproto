@@ -252,18 +252,23 @@ describe('Bodies', () => {
     )
 
     // 500 responses don't include details, so we nab details from the logger.
-    let error: string | undefined
-    const origError = logger.error
-    logger.error = (obj, ...args) => {
-      error = obj.message
-      logger.error = origError
-      return logger.error(obj, ...args)
-    }
+    const spy = jest.spyOn(logger, 'error')
+    try {
+      await expect(client.call('io.example.validationTestTwo')).rejects.toThrow(
+        'Internal Server Error',
+      )
 
-    await expect(client.call('io.example.validationTestTwo')).rejects.toThrow(
-      'Internal Server Error',
-    )
-    expect(error).toEqual(`Output must have the property "foo"`)
+      expect(spy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          err: expect.objectContaining({
+            message: 'Output must have the property "foo"',
+          }),
+        }),
+        'unhandled exception in xrpc method io.example.validationTestTwo',
+      )
+    } finally {
+      spy.mockRestore()
+    }
   })
 
   it('supports ArrayBuffers', async () => {
