@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+      - deterministic-car
 env:
   REGISTRY: ghcr.io
   USERNAME: ${{ github.actor }}
