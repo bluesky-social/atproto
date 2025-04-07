@@ -1,3 +1,5 @@
+import './style.css'
+
 import '#/locales/setup'
 
 import { i18n } from '@lingui/core'

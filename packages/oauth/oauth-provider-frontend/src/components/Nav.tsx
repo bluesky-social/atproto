@@ -9,7 +9,7 @@ export function Nav() {
     <>
       <nav className="bg-contrast-0 dark:bg-contrast-25 border-contrast-100 h-15 fixed inset-x-0 top-0 flex items-center justify-between border-b px-4 md:px-6">
         {logo ? (
-          <Link to="/">
+          <Link to="/account">
             <div
               style={{ width: 120 }}
               dangerouslySetInnerHTML={{ __html: logo }}

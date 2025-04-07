@@ -50,6 +50,8 @@
       }
     </style>
     <script type="module">
+      import { API_ENDPOINT_PREFIX } from '@atproto/oauth-provider-api'
+
       /*
        * PDS branding configuration
        */
@@ -106,8 +108,6 @@
 
       document.cookie = `csrf-${requestUri}=xyz; path=/`
 
-      window.__availableLocales = ['en', 'fr']
-
       window.__customizationData = {
         availableUserDomains,
         inviteCodeRequired: false,
@@ -142,11 +142,17 @@
       async function mockFetch(...args) {
         const [input, init] = args
 
-        if (typeof input === 'string' && init.method === 'POST') {
-          const url = new URL(input, window.location)
-          switch (url.pathname) {
-            case '/oauth/authorize/sign-up':
-            case '/oauth/authorize/sign-in':
+        const method = init?.method ?? 'GET'
+        const url =
+          typeof input === 'string'
+            ? new URL(input, window.location)
+            : input instanceof URL
+              ? input
+              : undefined
+        if (url) {
+          switch (`${method} ${url.pathname}`) {
+            case `POST ${API_ENDPOINT_PREFIX}/sign-up`:
+            case `POST ${API_ENDPOINT_PREFIX}/sign-in`:
               return new Response(
                 JSON.stringify({
                   consentRequired: false,
@@ -159,11 +165,14 @@
                     picture: 'https://cat.com/cat.jpg',
                   },
                 }),
-                { status: 200 },
+                {
+                  status: 200,
+                  headers: { 'Content-Type': 'application/json' },
+                },
               )
-            case '/oauth/authorize/verify-handle-availability':
-            case '/oauth/authorize/reset-password-request':
-            case '/oauth/authorize/reset-password-confirm':
+            case `POST ${API_ENDPOINT_PREFIX}/verify-handle-availability`:
+            case `POST ${API_ENDPOINT_PREFIX}/reset-password-request`:
+            case `POST ${API_ENDPOINT_PREFIX}/reset-password-confirm`:
               return new Response(null, { status: 204 })
           }
         }

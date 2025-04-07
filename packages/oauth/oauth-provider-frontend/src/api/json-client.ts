@@ -52,14 +52,16 @@ export class JsonClient<
 
     const body = method === 'POST' ? JSON.stringify(input) : undefined
 
-    const headers = await this.getHeaders.call(null)
+    const headers = Object.entries(await this.getHeaders.call(null))
+      .filter((entry): entry is [string, string] => entry[1] != null)
+      .map(([k, v]) => [k.toLowerCase(), v] as [string, string])
 
     const response = await fetch(url, {
       method,
-      headers: {
-        ...headers,
-        'Content-Type': 'application/json',
-      },
+      headers:
+        body && !headers.some(([k]) => k === 'content-type')
+          ? headers.concat([['content-type', 'application/json']])
+          : headers,
       mode: 'same-origin',
       body,
       signal: options?.signal,
@@ -69,10 +71,18 @@ export class JsonClient<
       return undefined
     }
 
-    return response.json().then((json: Json) => {
-      if (response.ok) return json as Endpoints[Path]['output']
-      else throw this.parseError(response, json)
-    })
+    const responseType = response.headers.get('content-type')
+    if (responseType !== 'application/json') {
+      await response.body?.cancel()
+      throw new Error(`Invalid content type "${responseType}"`, {
+        cause: response,
+      })
+    }
+
+    const json = await response.json()
+
+    if (response.ok) return json as Endpoints[Path]['output']
+    else throw this.parseError(response, json)
   }
 
   protected parseError(response: Response, json: Json): Error {

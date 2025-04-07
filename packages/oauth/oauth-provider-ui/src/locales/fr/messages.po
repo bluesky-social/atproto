@@ -235,6 +235,10 @@ msgstr "Connexion terminée"
 msgid "Login to account that is not listed"
 msgstr "Se connecter à un compte qui n'est pas listé"
 
+#: src/components/layouts/layout-welcome.tsx:45
+msgid "Logo"
+msgstr ""
+
 #: src/components/forms/input-token.tsx:59
 msgid "Looks like {example}"
 msgstr "Ressemble à {example}"
@@ -486,7 +490,7 @@ msgstr "Vous aver reçu un email avec un \"code de réinitialisation\". Saisisse
 msgid "Your account"
 msgstr "Votre compte"
 
-#. placeholder {0}: segment.length ? ( <strong className="text-gray-800 dark:text-gray-200"> {preview} </strong> ) : ( <span aria-hidden className="bg-gray-300 dark:bg-slate-600 rounded-md p-2 w-24" /> )
+#. placeholder {0}: segment.length ? ( <strong className="text-gray-800 dark:text-gray-200"> {preview} </strong> ) : ( <span aria-hidden className="w-24 rounded-md bg-gray-300 p-2 dark:bg-slate-600" /> )
 #: src/views/authorize/sign-up/sign-up-handle-form.tsx:217
 msgid "Your full username will be: {0}"
 msgstr "Votre nom d'utilisateur complet sera : {0}"

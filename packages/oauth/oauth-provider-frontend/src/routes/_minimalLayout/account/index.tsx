@@ -14,7 +14,7 @@ import { useDeviceSessionsQuery } from '#/data/useDeviceSessionsQuery'
 import { getAccountName } from '#/util/getAccountName'
 import { sanitizeHandle } from '#/util/sanitizeHandle'
 
-export const Route = createFileRoute('/_minimalLayout/')({
+export const Route = createFileRoute('/_minimalLayout/account/')({
   component: Index,
 })
 
@@ -26,7 +26,7 @@ function Index() {
     <div className="flex items-center justify-center">
       <Loader size="lg" />
     </div>
-  ) : error ? (
+  ) : error || !sessions ? (
     <Admonition.Default
       variant="error"
       title={_(msg`Something went wrong`)}
@@ -34,14 +34,10 @@ function Index() {
         msg`We weren't able to load your accounts. Please refresh the page to try again.`,
       )}
     />
+  ) : sessions.length ? (
+    <SelectorScreen sessions={sessions} />
   ) : (
-    <>
-      {sessions.length ? (
-        <SelectorScreen sessions={sessions} />
-      ) : (
-        <Navigate to="/sign-in" />
-      )}
-    </>
+    <Navigate to="/account/sign-in" />
   )
 }
 
@@ -57,7 +53,7 @@ export function SelectorScreen({
       <ContentCard>
         <div className="space-y-4">
           <div className="space-y-1">
-            <h1 className="text-text-default text-xl font-bold">
+            <h1 className="text-custom-brand text-xl font-bold">
               <Trans>Accounts</Trans>
             </h1>
             <p className="text-text-light">
@@ -69,10 +65,8 @@ export function SelectorScreen({
             {sessions.map(({ account }) => (
               <Link
                 key={account.sub}
-                to="/$did"
-                params={{
-                  did: account.sub,
-                }}
+                to="/account/$sub"
+                params={account}
                 className={clsx([
                   'flex items-center space-x-2 rounded-lg border px-2 py-2',
                   'bg-contrast-25 dark:bg-contrast-50 border-contrast-50 dark:border-contrast-100',
@@ -88,7 +82,7 @@ export function SelectorScreen({
                   displayName={account.name}
                 />
                 <div className="flex-1 space-y-0 truncate">
-                  <h2 className="text-text-default truncate font-semibold leading-snug">
+                  <h2 className="text-brand truncate font-semibold leading-snug">
                     {account.name}
                   </h2>
                   <p className="text-text-light truncate text-sm">
@@ -100,7 +94,7 @@ export function SelectorScreen({
             ))}
 
             <InlineLink
-              to="/sign-in"
+              to="/account/sign-in"
               className="text-text-light inline-block w-full pt-2 text-center text-sm"
             >
               <Trans>Sign in with another account</Trans>

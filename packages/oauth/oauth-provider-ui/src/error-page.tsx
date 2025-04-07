@@ -1,28 +1,22 @@
-import './styles.css'
+import './style.css'
 
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import type {
-  AvailableLocales,
-  CustomizationData,
-  ErrorData,
-} from '@atproto/oauth-provider-api'
-import { readHydrationData } from './lib/read-hydration-data.ts'
+import type { HydrationData } from './hydration-data.d.ts'
 import { LocaleProvider } from './locales/locale-provider.tsx'
 import { ErrorView } from './views/error/error-view.tsx'
 
-export const availableLocales =
-  readHydrationData<AvailableLocales>('__availableLocales')
-export const customizationData = readHydrationData<CustomizationData>(
-  '__customizationData',
-)
-export const errorData = readHydrationData<ErrorData>('__errorData')
+const {
+  //
+  __errorData: errorData,
+  __customizationData: customizationData,
+} = window as typeof window & HydrationData['error-page']
 
 const container = document.getElementById('root')!
 
 createRoot(container).render(
   <StrictMode>
-    <LocaleProvider availableLocales={availableLocales}>
+    <LocaleProvider>
       <ErrorView error={errorData} customizationData={customizationData} />
     </LocaleProvider>
   </StrictMode>,

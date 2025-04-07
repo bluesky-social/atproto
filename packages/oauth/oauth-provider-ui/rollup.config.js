@@ -26,7 +26,7 @@ module.exports = (commandLineArguments) => {
     output: {
       manualChunks: undefined,
       sourcemap: true,
-      dir: 'dist/assets',
+      dir: 'dist',
       format: 'module',
       entryFileNames: devMode ? '[name]-[hash].js' : '[hash].js',
     },

@@ -24,10 +24,11 @@ export default defineConfig({
     tailwindcss(),
   ],
   build: {
-    emptyOutDir: true,
+    emptyOutDir: false,
     outDir: resolve(__dirname, './dist'),
     sourcemap: true,
     rollupOptions: {
+      input: ['./src/account-page.tsx'],
       output: {
         manualChunks: undefined,
         format: 'module',
@@ -47,7 +48,10 @@ export default defineConfig({
       ],
     },
     commonjsOptions: {
-      include: [/node_modules/, /dist/],
+      include: [/node_modules/, /oauth-provider-api/, /syntax/],
     },
+  },
+  optimizeDeps: {
+    include: ['@atproto/oauth-provider-api', '@atproto/syntax'],
   },
 })

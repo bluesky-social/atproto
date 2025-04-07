@@ -17,13 +17,15 @@ import { useOAuthSessionsQuery } from '#/data/useOAuthSessionsQuery'
 import { useRevokeAccountSessionMutation } from '#/data/useRevokeAccountSessionMutation'
 import { useRevokeOAuthSessionMutation } from '#/data/useRevokeOAuthSessionMutation'
 
-export const Route = createFileRoute('/_appLayout/$did')({
-  component: Sessions,
-})
+export const Route = createFileRoute('/_minimalLayout/account/_appLayout/$sub')(
+  {
+    component: Sessions,
+  },
+)
 
 export function Sessions() {
   const { _ } = useLingui()
-  const { did: sub } = Route.useParams()
+  const { sub } = Route.useParams()
   const { data: sessions, error, isLoading } = useOAuthSessionsQuery({ sub })
   const {
     data: accountSessions,
@@ -35,17 +37,17 @@ export function Sessions() {
     <>
       <ul className="text-text-light flex items-center space-x-2 text-sm">
         <li>
-          <InlineLink to="/" className="text-text-light underline">
+          <InlineLink to="/account" className="text-text-light underline">
             <Trans>Accounts</Trans>
           </InlineLink>
         </li>
-        <li className="text-text-default">/</li>
+        <li className="text-custom-brand">/</li>
         <li>
           <Trans>Home</Trans>
         </li>
       </ul>
 
-      <h2 className="text-text-default pb-4 pt-8 text-xl font-bold">
+      <h2 className="text-custom-brand text-brand pb-4 pt-8 text-xl font-bold">
         <Trans>Connected apps</Trans>
       </h2>
 
@@ -72,7 +74,7 @@ export function Sessions() {
         />
       )}
 
-      <h2 className="text-text-default pb-4 pt-8 text-xl font-bold">
+      <h2 className="text-custom-brand pb-4 pt-8 text-xl font-bold">
         <Trans>My devices</Trans>
       </h2>
 

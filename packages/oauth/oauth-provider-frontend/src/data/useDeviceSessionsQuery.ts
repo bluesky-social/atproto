@@ -9,10 +9,11 @@ export type UseAccountsQueryResponse = ActiveDeviceSession[]
 
 export function useDeviceSessionsQuery() {
   const api = useApi()
-  const { sessions } = useHydrationData()
+
+  const initialData = useHydrationData('__deviceSessions')
 
   return useQuery<ActiveDeviceSession[]>({
-    initialData: sessions,
+    initialData: [...initialData],
     queryKey: accountsQueryKey,
     async queryFn({ signal }) {
       const { results } = await api.fetch(

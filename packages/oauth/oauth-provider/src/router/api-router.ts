@@ -2,7 +2,6 @@ import type { IncomingMessage, ServerResponse } from 'node:http'
 import createHttpError from 'http-errors'
 import { z } from 'zod'
 import {
-  ACCOUNTS_PAGE_URL,
   API_ENDPOINT_PREFIX,
   ActiveAccountSession,
   ActiveDeviceSession,
@@ -58,6 +57,8 @@ import { emailOtpSchema } from '../types/email-otp.js'
 import { emailSchema } from '../types/email.js'
 import { handleSchema } from '../types/handle.js'
 import { newPasswordSchema } from '../types/password.js'
+import { validateCsrfToken } from './csrf.js'
+import type { RouterOptions } from './router-options.js'
 import {
   ERROR_REDIRECT_KEYS,
   OAuthRedirectOptions,
@@ -66,9 +67,7 @@ import {
   buildRedirectMode,
   buildRedirectParams,
   buildRedirectUri,
-} from './authorize-page/send-redirect.js'
-import { validateCsrfToken } from './csrf.js'
-import type { RouterOptions } from './router-options.js'
+} from './send-redirect.js'
 
 const verifyHandleSchema = z.object({ handle: handleSchema }).strict()
 
@@ -693,8 +692,8 @@ export function apiRouter<
         // Ensure we are one the right page
         if (
           referer.pathname !== '/oauth/authorize' &&
-          referer.pathname !== ACCOUNTS_PAGE_URL &&
-          !referer.pathname.startsWith(`${ACCOUNTS_PAGE_URL}/`)
+          referer.pathname !== '/account' &&
+          !referer.pathname.startsWith(`/account/`)
         ) {
           throw createHttpError(400, `Invalid referer ${referer}`)
         }
@@ -737,6 +736,7 @@ const EPHEMERAL_COOKIE_OPTIONS: Readonly<CookieSerializeOptions> =
     sameSite: 'strict',
     secure: true,
     httpOnly: true,
+    path: '/',
   })
 
 function ephemeralCookieValue(requestUri?: RequestUri) {
@@ -790,7 +790,7 @@ function clearSessionCookies(
   }
 }
 
-function extractEphemeralCookies(
+export function extractEphemeralCookies(
   req: IncomingMessage,
   requestUri: RequestUri | undefined,
 ) {

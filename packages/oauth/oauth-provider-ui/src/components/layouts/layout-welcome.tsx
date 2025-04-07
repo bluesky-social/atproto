@@ -1,3 +1,4 @@
+import { useLingui } from '@lingui/react/macro'
 import { clsx } from 'clsx'
 import { JSX } from 'react'
 import type { CustomizationData } from '@atproto/oauth-provider-api'
@@ -22,6 +23,8 @@ export function LayoutWelcome({
   children,
   ...props
 }: LayoutWelcomeProps) {
+  const { t } = useLingui()
+
   return (
     <div
       {...props}
@@ -39,7 +42,7 @@ export function LayoutWelcome({
         {logo && (
           <img
             src={logo}
-            alt={name || `Logo`}
+            alt={name || t`Logo`}
             aria-hidden
             className="mb-4 h-16 w-16 md:mb-8 md:h-24 md:w-24"
           />

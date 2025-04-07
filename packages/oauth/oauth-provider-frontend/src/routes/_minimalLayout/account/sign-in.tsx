@@ -15,10 +15,10 @@ import { InlineLink } from '#/components/Link'
 import * as Form from '#/components/forms'
 import { useSignInMutation } from '#/data/useSignInMutation'
 import { format2FACode } from '#/util/format2FACode'
-import { useValidateHandle } from '#/util/useValidateHandle'
 import { wait } from '#/util/wait'
+import { normalizeAndEnsureValidHandle } from '@atproto/syntax'
 
-export const Route = createFileRoute('/_minimalLayout/sign-in')({
+export const Route = createFileRoute('/_minimalLayout/account/sign-in')({
   component: RouteComponent,
 })
 
@@ -40,7 +40,6 @@ function RouteComponent() {
 
 function LoginForm() {
   const { _ } = useLingui()
-  const validateHandle = useValidateHandle()
   const [showCode, setShowCode] = useState(false)
   const [error, setError] = useState('')
   const { mutateAsync: signIn } = useSignInMutation()
@@ -54,27 +53,23 @@ function LoginForm() {
       remember: false,
     },
     validators: {
-      // @ts-expect-error
       onSubmit: z.object({
-        identifier: z.string().superRefine((v, ctx) => {
-          if (/.+@/.test(v)) {
-            const { success } = z.string().email().safeParse(v)
-            if (!success) {
-              ctx.addIssue({
-                code: z.ZodIssueCode.custom,
-                message: _(msg`Invalid email`),
-              })
-            }
-          } else {
-            const { success, message } = validateHandle(v)
-            if (!success) {
-              ctx.addIssue({
-                code: z.ZodIssueCode.custom,
-                message,
-              })
-            }
-          }
-        }),
+        identifier: z.union([
+          z.string().email(),
+          z
+            .string()
+            .transform((v) => (v.startsWith('@') ? v.slice(1) : v))
+            .superRefine((v, ctx) => {
+              try {
+                return normalizeAndEnsureValidHandle(v)
+              } catch (err) {
+                ctx.addIssue({
+                  code: z.ZodIssueCode.custom,
+                  message: _(msg`Invalid handle`),
+                })
+              }
+            }),
+        ]),
         password: z.string().nonempty(_(msg`Password is required`)),
         code: z.string(),
         remember: z.boolean(),
@@ -101,8 +96,8 @@ function LoginForm() {
           }),
         )
         await navigate({
-          to: '/$did',
-          params: { did: res.account.sub },
+          to: '/account/$sub',
+          params: res.account,
         })
       } catch (e) {
         if (e instanceof SecondAuthenticationFactorRequiredError) {
@@ -119,7 +114,7 @@ function LoginForm() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-text-default text-xl font-bold">
+      <h1 className="text-custom-brand text-xl font-bold">
         <Trans>Sign in</Trans>
       </h1>
       <form
@@ -237,7 +232,7 @@ function LoginForm() {
             />
 
             <InlineLink
-              to="/reset-password"
+              to="/account/reset-password"
               className="text-text-light inline-block w-full text-center text-sm"
             >
               <Trans>Forgot password?</Trans>

@@ -1,6 +1,7 @@
 import { z } from 'zod'
-import { COLOR_NAMES } from '@atproto/oauth-provider-ui'
 import { RgbColor, parseColor } from '../lib/util/color.js'
+
+export const COLOR_NAMES = ['brand', 'error', 'warning', 'success'] as const
 
 export const colorsSchema = z.record(
   z.enum(COLOR_NAMES),
@@ -21,8 +22,7 @@ export const colorsSchema = z.record(
           code: z.ZodIssueCode.custom,
           message: e instanceof Error ? e.message : 'Invalid color value',
         })
-        // Won't actually be used (since an issue was added):
-        return { r: 0, g: 0, b: 0 }
+        return z.NEVER
       }
     })
     .optional(),

@@ -60,8 +60,8 @@ export function AccountSelector() {
               {data.map(({ account }, i) => (
                 <Link
                   key={account.sub}
-                  to="/$did"
-                  params={{ did: account.sub }}
+                  to="/account/$sub"
+                  params={account}
                   className={clsx([
                     'flex items-center space-x-3 p-3 pr-4',
                     'hover:bg-contrast-25 dark:hover:bg-contrast-50',

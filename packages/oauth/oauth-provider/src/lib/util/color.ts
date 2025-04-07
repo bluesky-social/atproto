@@ -1,7 +1,9 @@
 import { parseUi8Dec, parseUi8Hex } from './ui8.js'
 
 export type RgbColor = { r: number; g: number; b: number }
+export type HslColor = { h: number; s: number; l: number }
 export type RgbaColor = { r: number; g: number; b: number; a: number }
+export type HslaColor = { h: number; s: number; l: number; a: number }
 
 export function parseColor(color: string): RgbColor | RgbaColor {
   if (color.startsWith('#')) {
@@ -70,4 +72,40 @@ export function parseRgbaColor(v: string): RgbaColor {
 
 export function computeLuma({ r, g, b }: RgbColor) {
   return 0.299 * r + 0.587 * g + 0.114 * b
+}
+
+export function isLightColor(color: RgbColor) {
+  return computeLuma(color) > 128
+}
+
+export function extractHue(input: RgbColor): number {
+  const r = input.r / 255
+  const g = input.g / 255
+  const b = input.b / 255
+
+  const max = Math.max(r, g, b)
+  const min = Math.min(r, g, b)
+
+  const chroma = max - min
+
+  switch (max) {
+    case min:
+      return 0 // Achromatic
+    case r: {
+      const segment = (g - b) / chroma
+      const shift = segment < 0 ? 360 / 60 : 0 / 60
+      return 60 * (segment + shift)
+    }
+    case g: {
+      const segment = (b - r) / chroma
+      const shift = 120 / 60
+      return 60 * (segment + shift)
+    }
+    // "default" needed for type safety. In practice, should be same as "case b:"
+    default: {
+      const segment = (r - g) / chroma
+      const shift = 240 / 60
+      return 60 * (segment + shift)
+    }
+  }
 }

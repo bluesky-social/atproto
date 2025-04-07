@@ -22,13 +22,10 @@ export function LocaleSelector({
           'focus:bg-contrast-0 dark:focus:bg-contrast-0 focus:outline-none',
         ])}
         onChange={(e) => onSelect(e.target.value)}
+        value={value}
       >
         {items.map((item) => (
-          <option
-            key={item.value}
-            value={item.value}
-            selected={item.value === value}
-          >
+          <option key={item.value} value={item.value}>
             {item.label}
           </option>
         ))}

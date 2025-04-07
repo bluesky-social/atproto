@@ -4,6 +4,13 @@
 @import './styles/radix-toast.css';
 
 :root {
+  --hue-primary: var(--hue-brand);
+
+  --color-primary-exact: rgb(var(--color-brand));
+  --color-error-exact: rgb(var(--color-error));
+  --color-warning-exact: rgb(var(--color-warning));
+  --color-success-exact: rgb(var(--color-success));
+
   --color-contrast-0: hsl(var(--hue-primary) 20% 100%);
   --color-contrast-25: hsl(var(--hue-primary) 20% 95.3%);
   --color-contrast-50: hsl(var(--hue-primary) 20% 90.6%);
@@ -170,10 +177,10 @@
   --color-success-950: var(--color-success-950);
   --color-success-975: var(--color-success-975);
 
-  --color-primary: var(--color-primary-500);
-  --color-error: var(--color-error-500);
-  --color-warning: var(--color-warning-500);
-  --color-success: var(--color-success-500);
+  --color-primary: var(--color-primary-exact);
+  --color-error: var(--color-error-exact);
+  --color-warning: var(--color-warning-exact);
+  --color-success: var(--color-success-exact);
   --color-text-default: var(--color-contrast-900);
   --color-text-light: var(--color-contrast-700);
   --color-border-default: var(--color-contrast-200);

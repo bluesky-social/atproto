@@ -3,10 +3,10 @@ import { asHandler, combineMiddlewares } from './lib/http/middleware.js'
 import { Handler } from './lib/http/types.js'
 import { OAuthProvider } from './oauth-provider.js'
 import { apiRouter } from './router/api-router.js'
-import { authorizeRouter } from './router/authorize-page/authorize-router.js'
 import { ErrorHandler } from './router/error-handler.js'
 import { oauthRouter } from './router/oauth-router.js'
 import { RouterOptions } from './router/router-options.js'
+import { authorizeRouter } from './router/ui-router.js'
 
 // Export all the types exposed
 export type {
@@ -39,8 +39,8 @@ export function oauthMiddleware<
   return asHandler(
     combineMiddlewares([
       oauthRouter(server, options).buildMiddleware(),
-      authorizeRouter(server, options).buildMiddleware(),
       apiRouter(server, options).buildMiddleware(),
+      authorizeRouter(server, options).buildMiddleware(),
     ]),
   )
 }

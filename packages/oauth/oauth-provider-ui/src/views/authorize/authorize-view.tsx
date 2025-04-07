@@ -1,15 +1,13 @@
 import { Trans, useLingui } from '@lingui/react/macro'
 import { useEffect, useState } from 'react'
-import type {
-  AuthorizeData,
-  CustomizationData,
-} from '@atproto/oauth-provider-api'
+import type { CustomizationData, Session } from '@atproto/oauth-provider-api'
 import {
   LayoutTitlePage,
   LayoutTitlePageProps,
 } from '../../components/layouts/layout-title-page.tsx'
 import { useApi } from '../../hooks/use-api.ts'
 import { useBoundDispatch } from '../../hooks/use-bound-dispatch.ts'
+import type { AuthorizeData } from '../../hydration-data'
 import { Override } from '../../lib/util.ts'
 import { AcceptView } from './accept/accept-view.tsx'
 import { ResetPasswordView } from './reset-password/reset-password-view.tsx'
@@ -22,6 +20,7 @@ export type AuthorizeViewProps = Override<
   {
     customizationData?: CustomizationData
     authorizeData: AuthorizeData
+    sessions: readonly Session[]
   }
 >
 
@@ -36,6 +35,7 @@ enum View {
 
 export function AuthorizeView({
   authorizeData,
+  sessions: initialSessions,
   customizationData,
 
   // LayoutTitlePage
@@ -70,7 +70,7 @@ export function AuthorizeView({
     doAccept,
     doReject,
   } = useApi({
-    sessions: authorizeData.sessions,
+    sessions: initialSessions,
     onRedirected: showDone,
   })
 
@@ -101,7 +101,7 @@ export function AuthorizeView({
         customizationData={customizationData}
         onSignIn={showSignIn}
         onSignUp={canSignUp ? showSignUp : undefined}
-        onCancel={doReject}
+        onCancel={() => doReject()}
       />
     )
   }

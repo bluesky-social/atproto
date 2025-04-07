@@ -11,7 +11,7 @@ function RouteComponent() {
   const hasAccounts = useHasAccounts()
 
   return !hasAccounts ? (
-    <Navigate to="/sign-in" />
+    <Navigate to="/account/sign-in" />
   ) : (
     <>
       <Nav />

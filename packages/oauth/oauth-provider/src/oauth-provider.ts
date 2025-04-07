@@ -85,7 +85,7 @@ import { RequestStoreRedis } from './request/request-store-redis.js'
 import { RequestStore, ifRequestStore } from './request/request-store.js'
 import { requestUriSchema } from './request/request-uri.js'
 import { AuthorizationRedirectParameters } from './result/authorization-redirect-parameters.js'
-import { AuthorizationResultAuthorize } from './result/authorization-result-authorize.js'
+import { AuthorizationResultAuthorizePage } from './result/authorization-result-authorize-page.js'
 import { AuthorizationResultRedirect } from './result/authorization-result-redirect.js'
 import { ErrorHandler } from './router/error-handler.js'
 import { TokenManager } from './token/token-manager.js'
@@ -98,7 +98,7 @@ import {
 export { AccessTokenMode, Keyset }
 export type {
   AuthorizationRedirectParameters,
-  AuthorizationResultAuthorize,
+  AuthorizationResultAuthorizePage as AuthorizationResultAuthorize,
   AuthorizationResultRedirect,
   Branding,
   BrandingInput,
@@ -574,7 +574,7 @@ export class OAuthProvider extends OAuthVerifier {
     query: OAuthAuthorizationRequestQuery,
     deviceId: DeviceId,
     deviceMetadata: RequestMetadata,
-  ): Promise<AuthorizationResultRedirect | AuthorizationResultAuthorize> {
+  ): Promise<AuthorizationResultRedirect | AuthorizationResultAuthorizePage> {
     const { issuer } = this
 
     // If there is a chance to redirect the user to the client, let's do
@@ -651,20 +651,24 @@ export class OAuthProvider extends OAuthVerifier {
         issuer,
         client,
         parameters,
-        authorize: {
-          uri,
-          sessions,
-          scopeDetails: parameters.scope
-            ?.split(/\s+/)
-            .filter(Boolean)
-            .sort((a, b) => a.localeCompare(b))
-            .map((scope) => ({
-              scope,
-              // @TODO Allow to customize the scope descriptions (e.g.
-              // using a hook)
-              description: undefined,
-            })),
-        },
+        uri,
+        sessions: sessions.map((session) => ({
+          // Map to avoid leaking other data that might be present in the session
+          account: session.account,
+          selected: session.selected,
+          loginRequired: session.loginRequired,
+          consentRequired: session.consentRequired,
+        })),
+        scopeDetails: parameters.scope
+          ?.split(/\s+/)
+          .filter(Boolean)
+          .sort((a, b) => a.localeCompare(b))
+          .map((scope) => ({
+            scope,
+            // @TODO Allow to customize the scope descriptions (e.g.
+            // using a hook)
+            description: undefined,
+          })),
       }
     } catch (err) {
       try {

@@ -3,10 +3,10 @@ import {
   OAuthAuthorizationRequestParameters,
   OAuthResponseMode,
 } from '@atproto/oauth-types'
-import { AccessDeniedError } from '../../errors/access-denied-error.js'
-import { html, js } from '../../lib/html/index.js'
-import { sendWebPage } from '../../lib/send-web-page.js'
-import { AuthorizationRedirectParameters } from '../../result/authorization-redirect-parameters.js'
+import { AccessDeniedError } from '../errors/access-denied-error.js'
+import { html, js } from '../lib/html/index.js'
+import { sendWebPage } from '../lib/send-web-page.js'
+import { AuthorizationRedirectParameters } from '../result/authorization-redirect-parameters.js'
 
 // https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-11#section-7.5.4
 const REDIRECT_STATUS_CODE = 303

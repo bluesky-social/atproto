@@ -9,17 +9,22 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/oauth/oauth-provider-ui"
   },
-  "type": "commonjs",
-  "main": "dist/lib/index.js",
-  "types": "dist/lib/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/lib/index.d.ts",
-      "default": "./dist/lib/index.js"
-    }
-  },
   "engines": {
     "node": ">=18.7.0"
+  },
+  "type": "commonjs",
+  "exports": {
+    "./bundle-manifest.json": {
+      "default": "./dist/bundle-manifest.json"
+    },
+    "./hydration-data": {
+      "types": "./src/hydration-data.d.ts"
+    }
+  },
+  "optionalDependencies": {
+    "@atproto-labs/rollup-plugin-bundle-manifest": "workspace:*",
+    "@atproto/oauth-provider-api": "workspace:*",
+    "@atproto/oauth-types": "workspace:*"
   },
   "devDependencies": {
     "@atproto-labs/fetch": "workspace:*",
@@ -58,9 +63,8 @@
     "i18n:extract": "lingui extract --clean",
     "i18n:compile": "lingui compile --typescript",
     "i18n": "pnpm i18n:extract && pnpm i18n:compile",
-    "prebuild:src": "pnpm run i18n",
-    "build:src": "rollup --config rollup.config.js",
-    "build:lib": "tsc --build tsconfig.lib.json",
+    "prebuild": "pnpm run i18n",
+    "build": "rollup --config rollup.config.js",
     "dev:ui": "vite --port 5174",
     "dev:src": "rollup --config rollup.config.js --watch",
     "dev:catalogs": "pnpm run i18n:extract --debounce 250 --watch > /dev/null",

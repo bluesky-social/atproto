@@ -1,7 +1,7 @@
-import { COLOR_NAMES } from '@atproto/oauth-provider-ui'
 import { Branding } from '../../customization/branding.js'
+import { COLOR_NAMES } from '../../customization/colors.js'
 import { Customization } from '../../customization/customization.js'
-import { computeLuma } from '../../lib/util/color.js'
+import { extractHue, isLightColor } from '../../lib/util/color.js'
 
 export function buildCustomizationCss({
   branding,
@@ -16,12 +16,9 @@ function* buildCustomizationVars(branding?: Branding): Generator<string> {
       const value = branding.colors[name]
       if (!value) continue // Skip missing colors
 
-      const { r, g, b } = value
-
-      const contrast = computeLuma({ r, g, b }) > 128 ? '0 0 0' : '255 255 255'
-
-      yield `--color-${name}: ${r} ${g} ${b};`
-      yield `--color-${name}-c: ${contrast};`
+      yield `--color-${name}: ${value.r} ${value.g} ${value.b};`
+      yield `--color-${name}-c: ${isLightColor(value) ? '0 0 0' : '255 255 255'};`
+      yield `--hue-${name}: ${extractHue(value)};`
     }
   }
 }

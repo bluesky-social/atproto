@@ -145,24 +145,3 @@ export const knownLocales = Object.keys(locales) as readonly KnownLocale[]
 export type KnownLocale = keyof typeof locales
 export const isKnownLocale = (v: unknown): v is KnownLocale =>
   (knownLocales as readonly unknown[]).includes(v)
-
-export function resolveLocale<L extends string>(
-  locale: string,
-  availableLocales: readonly L[],
-): L | undefined {
-  if ((availableLocales as readonly string[]).includes(locale)) {
-    return locale as L
-  }
-
-  const lang = locale.split('-')[0]
-  if ((availableLocales as readonly string[]).includes(lang)) {
-    return lang as L
-  }
-
-  const similar = availableLocales.find((l) => l.startsWith(`${lang}-`))
-  if (similar) {
-    return similar as L
-  }
-
-  return undefined
-}

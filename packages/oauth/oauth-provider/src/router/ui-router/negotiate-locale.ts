@@ -1,4 +1,9 @@
-import { AVAILABLE_LOCALES } from '@atproto/oauth-provider-ui'
+export const AVAILABLE_LOCALES = [
+  //
+  'en',
+  'en-GB',
+  'fr',
+] as const
 
 export type AvailableLocale = (typeof AVAILABLE_LOCALES)[number]
 export const isAvailableLocale = (v: unknown): v is AvailableLocale =>

@@ -44,15 +44,15 @@ export const deviceManagerOptionsSchema = z.object({
       /**
        * Name of the cookie used to identify the device
        *
-       * @default 'session-id'
+       * @default 'dev'
        */
-      device: z.string().default('device-id'),
+      device: z.string().default('dev'),
       /**
        * Name of the cookie used to identify the session
        *
-       * @default 'session-id'
+       * @default 'ses'
        */
-      session: z.string().default('session-id'),
+      session: z.string().default('ses'),
       /**
        * Amount of time (in ms) after which the session cookie will expire.
        * If set to `null`, the cookie will be a session cookie (deleted when the

@@ -1,10 +1,11 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
+import { ActiveDeviceSession } from '@atproto/oauth-provider-api'
 import {
   oauthAuthorizationRequestQuerySchema,
   oauthClientCredentialsSchema,
 } from '@atproto/oauth-types'
-import { AccessDeniedError } from '../../errors/access-denied-error.js'
-import { InvalidRequestError } from '../../errors/invalid-request-error.js'
+import { AccessDeniedError } from '../errors/access-denied-error.js'
+import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import {
   Middleware,
   Router,
@@ -14,23 +15,24 @@ import {
   validateFetchSite,
   validateOrigin,
   validateReferer,
-} from '../../lib/http/index.js'
-import type { Awaitable } from '../../lib/util/type.js'
-import { extractZodErrorMessage } from '../../lib/util/zod-error.js'
-import type { OAuthProvider } from '../../oauth-provider.js'
-import { requestUriSchema } from '../../request/request-uri.js'
-import { AuthorizationResultRedirect } from '../../result/authorization-result-redirect.js'
-import { parseRedirectUrl } from '../api-router.js'
-import type { RouterOptions } from '../router-options.js'
-import { assetsMiddleware } from './assets-middleware.js'
-import { sendAuthorizePageFactory } from './send-authorize-page.js'
-import { sendErrorPageFactory } from './send-error-page.js'
+} from '../lib/http/index.js'
+import type { Awaitable } from '../lib/util/type.js'
+import { extractZodErrorMessage } from '../lib/util/zod-error.js'
+import type { OAuthProvider } from '../oauth-provider.js'
+import { requestUriSchema } from '../request/request-uri.js'
+import { AuthorizationResultRedirect } from '../result/authorization-result-redirect.js'
+import { extractEphemeralCookies, parseRedirectUrl } from './api-router.js'
+import type { RouterOptions } from './router-options.js'
 import {
   buildRedirectMode,
   buildRedirectParams,
   buildRedirectUri,
   sendRedirect,
 } from './send-redirect.js'
+import { assetsMiddleware } from './ui-router/assets.js'
+import { sendAccountPageFactory } from './ui-router/send-account-page.js'
+import { sendAuthorizePageFactory } from './ui-router/send-authorize-page.js'
+import { sendErrorPageFactory } from './ui-router/send-error-page.js'
 
 export function authorizeRouter<
   T extends object | void = void,
@@ -43,6 +45,7 @@ export function authorizeRouter<
   const { onError } = options
   const sendAuthorizePage = sendAuthorizePageFactory(server.customization)
   const sendErrorPage = sendErrorPageFactory(server.customization)
+  const sendAccountPage = sendAccountPageFactory(server.customization)
 
   const issuerUrl = new URL(server.issuer)
   const issuerOrigin = issuerUrl.origin
@@ -50,6 +53,30 @@ export function authorizeRouter<
   const router = new Router<T, TReq, TRes>(issuerUrl)
 
   router.use(assetsMiddleware)
+
+  router.get<never>(
+    // @NOTE conflicts with the /account/api endpoint so this middleware needs
+    // to come after the api middleware.
+    /^\/account(?:\/.*)?$/,
+    buildNavigationMiddleware(async function (req, res) {
+      const { deviceId } = await server.deviceManager.load(req, res)
+      const deviceAccounts = await server.accountManager.listDeviceAccounts(
+        deviceId,
+        undefined,
+        extractEphemeralCookies(req, undefined),
+      )
+
+      return sendAccountPage(req, res, {
+        deviceSessions: deviceAccounts.map(
+          (deviceAccount): ActiveDeviceSession => ({
+            account: deviceAccount.account,
+            remembered: deviceAccount.data.remembered,
+            loginRequired: server.checkLoginRequired(deviceAccount),
+          }),
+        ),
+      })
+    }),
+  )
 
   router.get(
     '/oauth/authorize',

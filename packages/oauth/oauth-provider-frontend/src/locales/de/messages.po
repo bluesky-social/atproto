@@ -13,35 +13,35 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: src/routes/_minimalLayout/sign-in.tsx:144
+#: src/routes/_minimalLayout/account/sign-in.tsx:139
 msgid "@handle or email"
 msgstr ""
 
-#: src/routes/_minimalLayout/reset-password.tsx:67
+#: src/routes/_minimalLayout/account/reset-password.tsx:65
 msgid "A new password is required"
 msgstr ""
 
-#: src/routes/_minimalLayout/index.tsx:61
-#: src/routes/_appLayout/$did.tsx:39
+#: src/routes/_minimalLayout/account/index.tsx:57
+#: src/routes/_minimalLayout/account/_appLayout/$sub.tsx:41
 msgid "Accounts"
 msgstr ""
 
-#: src/routes/_minimalLayout/sign-in.tsx:114
-#: src/routes/_minimalLayout/reset-password.tsx:52
-#: src/routes/_minimalLayout/reset-password.tsx:80
+#: src/routes/_minimalLayout/account/sign-in.tsx:109
+#: src/routes/_minimalLayout/account/reset-password.tsx:51
+#: src/routes/_minimalLayout/account/reset-password.tsx:78
 msgid "An error occurred, please try again."
 msgstr ""
 
-#: src/routes/_appLayout/$did.tsx:230
+#: src/routes/_minimalLayout/account/_appLayout/$sub.tsx:232
 msgid "Are you sure you want to remove this device?"
 msgstr ""
 
-#: src/routes/_appLayout/$did.tsx:158
+#: src/routes/_minimalLayout/account/_appLayout/$sub.tsx:160
 msgid "Are you sure you want to sign out? Next time you visit you will need to sign back in."
 msgstr ""
 
-#: src/routes/_minimalLayout/reset-password.tsx:124
-#: src/routes/_minimalLayout/reset-password.tsx:197
+#: src/routes/_minimalLayout/account/reset-password.tsx:122
+#: src/routes/_minimalLayout/account/reset-password.tsx:195
 msgid "Back to sign in"
 msgstr ""
 
@@ -49,150 +49,152 @@ msgstr ""
 msgid "Cancel"
 msgstr ""
 
-#: src/routes/_minimalLayout/reset-password.tsx:321
+#: src/routes/_minimalLayout/account/reset-password.tsx:319
 msgid "Click here to send a new code to your email."
 msgstr ""
 
-#: src/routes/_minimalLayout/sign-in.tsx:182
-#: src/routes/_minimalLayout/reset-password.tsx:224
+#: src/routes/_minimalLayout/account/sign-in.tsx:177
+#: src/routes/_minimalLayout/account/reset-password.tsx:222
 msgid "Code"
 msgstr ""
 
-#: src/routes/_minimalLayout/reset-password.tsx:90
+#: src/routes/_minimalLayout/account/reset-password.tsx:88
 msgid "Code was resent"
 msgstr ""
 
-#: src/routes/_appLayout/$did.tsx:49
+#: src/routes/_minimalLayout/account/_appLayout/$sub.tsx:51
 msgid "Connected apps"
 msgstr ""
 
-#: src/routes/_minimalLayout/reset-password.tsx:316
+#: src/routes/_minimalLayout/account/reset-password.tsx:314
 msgid "Don't see the email? <0>Try sending again.</0>"
 msgstr ""
 
-#: src/routes/_minimalLayout/reset-password.tsx:151
+#: src/routes/_minimalLayout/account/reset-password.tsx:149
 msgid "Email"
 msgstr ""
 
-#: src/routes/_minimalLayout/reset-password.tsx:64
+#: src/routes/_minimalLayout/account/reset-password.tsx:62
 msgid "Email code is required"
 msgstr ""
 
-#: src/routes/_minimalLayout/reset-password.tsx:43
+#: src/routes/_minimalLayout/account/reset-password.tsx:42
 msgid "Email is required"
 msgstr ""
 
-#: src/routes/_minimalLayout/reset-password.tsx:266
+#: src/routes/_minimalLayout/account/reset-password.tsx:264
 msgid "Enter a new password"
 msgstr ""
 
-#: src/routes/_minimalLayout/reset-password.tsx:156
+#: src/routes/_minimalLayout/account/reset-password.tsx:154
 msgid "Enter your email"
 msgstr ""
 
-#: src/routes/_minimalLayout/reset-password.tsx:134
+#: src/routes/_minimalLayout/account/reset-password.tsx:132
 msgid "Enter your email to receive a reset code."
 msgstr ""
 
-#: src/routes/_appLayout/$did.tsx:57
+#: src/routes/_minimalLayout/account/_appLayout/$sub.tsx:59
 msgid "Failed to load connected apps"
 msgstr ""
 
-#: src/routes/_appLayout/$did.tsx:84
+#: src/routes/_minimalLayout/account/_appLayout/$sub.tsx:86
 msgid "Failed to load devices"
 msgstr ""
 
-#: src/routes/_appLayout/$did.tsx:199
+#: src/routes/_minimalLayout/account/_appLayout/$sub.tsx:201
 msgid "Failed to remove device"
 msgstr ""
 
-#: src/routes/_minimalLayout/reset-password.tsx:96
+#: src/routes/_minimalLayout/account/reset-password.tsx:94
 msgid "Failed to resend code"
 msgstr ""
 
-#: src/routes/_appLayout/$did.tsx:127
+#: src/routes/_minimalLayout/account/_appLayout/$sub.tsx:129
 msgid "Failed to sign out"
 msgstr ""
 
-#: src/routes/_minimalLayout/sign-in.tsx:243
+#: src/routes/_minimalLayout/account/sign-in.tsx:238
 msgid "Forgot password?"
 msgstr ""
 
-#: src/routes/_minimalLayout/reset-password.tsx:188
+#: src/routes/_minimalLayout/account/reset-password.tsx:186
 msgid "Get reset code"
 msgstr ""
 
-#: src/routes/_appLayout/$did.tsx:44
+#: src/routes/_minimalLayout/account/_appLayout/$sub.tsx:46
 msgid "Home"
 msgstr ""
 
-#: src/routes/_minimalLayout/sign-in.tsx:139
+#: src/routes/_minimalLayout/account/sign-in.tsx:134
 msgid "Identifier"
 msgstr ""
 
-#: src/routes/_minimalLayout/sign-in.tsx:65
-#: src/routes/_minimalLayout/reset-password.tsx:42
+#: src/routes/_minimalLayout/account/reset-password.tsx:41
 msgid "Invalid email"
 msgstr ""
 
-#: src/util/useValidateHandle.ts:57
-#: src/util/useValidateHandle.ts:69
+#: src/routes/_minimalLayout/account/sign-in.tsx:68
 msgid "Invalid handle"
 msgstr ""
 
-#: src/routes/_minimalLayout/sign-in.tsx:112
+#: src/routes/_minimalLayout/account/sign-in.tsx:107
 msgid "Invalid identifier or password."
 msgstr ""
 
-#: src/routes/_appLayout/$did.tsx:96
+#: src/routes/_minimalLayout.tsx:18
+msgid "Logo"
+msgstr ""
+
+#: src/routes/_minimalLayout/account/_appLayout/$sub.tsx:98
 msgid "Looks like you aren't logged in on any other devices."
 msgstr ""
 
-#: src/routes/_appLayout/$did.tsx:70
+#: src/routes/_minimalLayout/account/_appLayout/$sub.tsx:72
 msgid "Looks like you haven't used this account to sign in to any apps yet."
 msgstr ""
 
-#: src/routes/_appLayout/$did.tsx:76
+#: src/routes/_minimalLayout/account/_appLayout/$sub.tsx:78
 msgid "My devices"
 msgstr ""
 
-#: src/routes/_appLayout/$did.tsx:68
+#: src/routes/_minimalLayout/account/_appLayout/$sub.tsx:70
 msgid "No connected apps"
 msgstr ""
 
-#: src/routes/_appLayout/$did.tsx:95
+#: src/routes/_minimalLayout/account/_appLayout/$sub.tsx:97
 msgid "No devices"
 msgstr ""
 
-#: src/routes/_minimalLayout/sign-in.tsx:159
-#: src/routes/_minimalLayout/sign-in.tsx:165
-#: src/routes/_minimalLayout/reset-password.tsx:259
+#: src/routes/_minimalLayout/account/sign-in.tsx:154
+#: src/routes/_minimalLayout/account/sign-in.tsx:160
+#: src/routes/_minimalLayout/account/reset-password.tsx:257
 msgid "Password"
 msgstr ""
 
-#: src/routes/_minimalLayout/sign-in.tsx:78
+#: src/routes/_minimalLayout/account/sign-in.tsx:73
 msgid "Password is required"
 msgstr ""
 
-#: src/routes/_minimalLayout/reset-password.tsx:70
+#: src/routes/_minimalLayout/account/reset-password.tsx:68
 msgid "Password must be at least {MIN_PASSWORD_LENGTH} characters"
 msgstr ""
 
-#: src/routes/_minimalLayout/sign-in.tsx:211
+#: src/routes/_minimalLayout/account/sign-in.tsx:206
 msgid "Remember this account on this device"
 msgstr ""
 
-#: src/routes/_appLayout/$did.tsx:231
-#: src/routes/_appLayout/$did.tsx:236
+#: src/routes/_minimalLayout/account/_appLayout/$sub.tsx:233
+#: src/routes/_minimalLayout/account/_appLayout/$sub.tsx:238
 msgid "Remove"
 msgstr ""
 
-#: src/routes/_appLayout/$did.tsx:229
+#: src/routes/_minimalLayout/account/_appLayout/$sub.tsx:231
 msgid "Remove this device"
 msgstr ""
 
-#: src/routes/_minimalLayout/reset-password.tsx:131
-#: src/routes/_minimalLayout/reset-password.tsx:310
+#: src/routes/_minimalLayout/account/reset-password.tsx:129
+#: src/routes/_minimalLayout/account/reset-password.tsx:308
 msgid "Reset password"
 msgstr ""
 
@@ -200,46 +202,46 @@ msgstr ""
 msgid "Select an account"
 msgstr ""
 
-#: src/routes/_minimalLayout/index.tsx:64
+#: src/routes/_minimalLayout/account/index.tsx:60
 msgid "Select the account you would like to manage."
 msgstr ""
 
-#: src/routes/_minimalLayout/sign-in.tsx:123
-#: src/routes/_minimalLayout/sign-in.tsx:234
+#: src/routes/_minimalLayout/account/sign-in.tsx:118
+#: src/routes/_minimalLayout/account/sign-in.tsx:229
 msgid "Sign in"
 msgstr ""
 
-#: src/routes/_minimalLayout/index.tsx:106
+#: src/routes/_minimalLayout/account/index.tsx:100
 msgid "Sign in with another account"
 msgstr ""
 
-#: src/routes/_appLayout/$did.tsx:160
-#: src/routes/_appLayout/$did.tsx:165
+#: src/routes/_minimalLayout/account/_appLayout/$sub.tsx:162
+#: src/routes/_minimalLayout/account/_appLayout/$sub.tsx:167
 msgid "Sign out"
 msgstr ""
 
 #. placeholder {0}: clientMetadata.client_name
-#: src/routes/_appLayout/$did.tsx:154
+#: src/routes/_minimalLayout/account/_appLayout/$sub.tsx:156
 msgid "Sign out of {0}"
 msgstr ""
 
-#: src/routes/_appLayout/$did.tsx:155
+#: src/routes/_minimalLayout/account/_appLayout/$sub.tsx:157
 msgid "Sign out of this application"
 msgstr ""
 
-#: src/routes/_minimalLayout/index.tsx:32
+#: src/routes/_minimalLayout/account/index.tsx:32
 msgid "Something went wrong"
 msgstr ""
 
-#: src/routes/_minimalLayout/reset-password.tsx:117
+#: src/routes/_minimalLayout/account/reset-password.tsx:115
 msgid "Success!"
 msgstr ""
 
-#: src/routes/_appLayout/$did.tsx:192
+#: src/routes/_minimalLayout/account/_appLayout/$sub.tsx:194
 msgid "Successfully removed device"
 msgstr ""
 
-#: src/routes/_appLayout/$did.tsx:120
+#: src/routes/_minimalLayout/account/_appLayout/$sub.tsx:122
 msgid "Successfully signed out"
 msgstr ""
 
@@ -248,11 +250,11 @@ msgid "User avatar"
 msgstr ""
 
 #. placeholder {0}: getAccountName(account)
-#: src/routes/_minimalLayout/index.tsx:82
+#: src/routes/_minimalLayout/account/index.tsx:76
 msgid "View and manage account for {0}"
 msgstr ""
 
-#: src/routes/_minimalLayout/index.tsx:34
+#: src/routes/_minimalLayout/account/index.tsx:34
 msgid "We weren't able to load your accounts. Please refresh the page to try again."
 msgstr ""
 
@@ -260,11 +262,11 @@ msgstr ""
 msgid "Whoops! An error occurred."
 msgstr ""
 
-#: src/routes/_minimalLayout/sign-in.tsx:187
-#: src/routes/_minimalLayout/reset-password.tsx:230
+#: src/routes/_minimalLayout/account/sign-in.tsx:182
+#: src/routes/_minimalLayout/account/reset-password.tsx:228
 msgid "XXXXX-XXXXX"
 msgstr ""
 
-#: src/routes/_minimalLayout/reset-password.tsx:120
+#: src/routes/_minimalLayout/account/reset-password.tsx:118
 msgid "Your password has been reset."
 msgstr ""

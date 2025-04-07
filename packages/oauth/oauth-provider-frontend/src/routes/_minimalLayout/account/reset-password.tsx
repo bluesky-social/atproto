@@ -17,7 +17,7 @@ import { format2FACode } from '#/util/format2FACode'
 import { MIN_PASSWORD_LENGTH, getPasswordStrength } from '#/util/passwords'
 import { wait } from '#/util/wait'
 
-export const Route = createFileRoute('/_minimalLayout/reset-password')({
+export const Route = createFileRoute('/_minimalLayout/account/reset-password')({
   component: RouteComponent,
 })
 
@@ -35,7 +35,6 @@ function RouteComponent() {
       email: '',
     },
     validators: {
-      // @ts-expect-error
       onSubmit: z.object({
         email: z
           .string()
@@ -59,7 +58,6 @@ function RouteComponent() {
       password: '',
     },
     validators: {
-      // @ts-expect-error
       onSubmit: z.object({
         token: z.string().nonempty(_(msg`Email code is required`)),
         password: z
@@ -113,21 +111,21 @@ function RouteComponent() {
         {showSuccess ? (
           <>
             <div className="space-y-1">
-              <h1 className="text-text-default text-xl font-bold">
+              <h1 className="text-custom-brand text-xl font-bold">
                 <Trans>Success!</Trans>
               </h1>
               <p className="text-text-light">
                 <Trans>Your password has been reset.</Trans>
               </p>
             </div>
-            <ButtonLink size="lg" to="/sign-in">
+            <ButtonLink size="lg" to="/account/sign-in">
               <Trans>Back to sign in</Trans>
             </ButtonLink>
           </>
         ) : (
           <>
             <div className="space-y-1">
-              <h1 className="text-text-default text-xl font-bold">
+              <h1 className="text-custom-brand text-xl font-bold">
                 <Trans>Reset password</Trans>
               </h1>
               <p className="text-text-light">
@@ -191,7 +189,7 @@ function RouteComponent() {
                       />
 
                       <InlineLink
-                        to="/sign-in"
+                        to="/account/sign-in"
                         className="text-text-light inline-block w-full text-center text-sm"
                       >
                         <Trans>Back to sign in</Trans>
