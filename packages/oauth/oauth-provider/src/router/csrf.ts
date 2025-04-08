@@ -6,7 +6,7 @@ import {
   parseHttpCookies,
   setCookie,
 } from '../lib/http/index.js'
-import { randomBuffer } from '../lib/util/crypto.js'
+import { randomHexId } from '../lib/util/crypto.js'
 
 const TOKEN_BYTE_LENGTH = 12
 const TOKEN_LENGTH = TOKEN_BYTE_LENGTH * 2 // 2 hex chars per byte
@@ -25,9 +25,7 @@ export async function setupCsrfToken(
   req: IncomingMessage,
   res: ServerResponse,
 ): Promise<string> {
-  const token =
-    getCookieCsrf(req) ||
-    (await randomBuffer(TOKEN_BYTE_LENGTH)).toString('hex')
+  const token = getCookieCsrf(req) || (await randomHexId(TOKEN_BYTE_LENGTH))
 
   // Refresh cookie (See Chrome's "Lax+POST" behavior)
   setCookie(res, CSRF_COOKIE_NAME, token, CSRF_COOKIE_OPTIONS)

@@ -4,7 +4,7 @@ import { combineMiddlewares } from '../../lib/http/middleware.js'
 import { Simplify } from '../../lib/util/type.js'
 import { parseAssetsManifest } from './assets-manifest.js'
 
-// If the "ui" and "frontent" packages are ever unified, this can be replaced
+// If the "ui" and "frontend" packages are ever unified, this can be replaced
 // with a single expression:
 //
 // const { getAssets, assetsMiddleware } = parseAssetsManifest(
