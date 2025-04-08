@@ -161,28 +161,6 @@ export function oauthRouter<
     oauthHandler(async function (req, res) {
       const payload = await parseHttpRequest(req, ['json', 'urlencoded'])
 
-      const { token } = await oauthTokenIdentificationSchema
-        .parseAsync(payload, { path: ['body'] })
-        .catch(throwInvalidRequest)
-
-      try {
-        await server.revoke(token)
-      } catch (err) {
-        // No error should be returned if the token is not valid (per spec)
-        onError?.(req, res, err, 'Failed to revoke token')
-      }
-
-      return {}
-    }),
-  )
-
-  router.options('/oauth/introspect', corsPreflight)
-  router.post(
-    '/oauth/introspect',
-    corsHeaders,
-    oauthHandler(async function (req) {
-      const payload = await parseHttpRequest(req, ['json', 'urlencoded'])
-
       const credentials = await oauthClientCredentialsSchema
         .parseAsync(payload, { path: ['body'] })
         .catch(throwInvalidRequest)
@@ -191,7 +169,20 @@ export function oauthRouter<
         .parseAsync(payload, { path: ['body'] })
         .catch(throwInvalidRequest)
 
-      return server.introspect(credentials, tokenIdentification)
+      try {
+        await server.revoke(credentials, tokenIdentification)
+      } catch (err) {
+        // > Note: invalid tokens do not cause an error response since the
+        // > client cannot handle such an error in a reasonable way.  Moreover,
+        // > the purpose of the revocation request, invalidating the particular
+        // > token, is already achieved.
+        //
+        // https://datatracker.ietf.org/doc/html/rfc7009#section-2.2
+
+        onError?.(req, res, err, 'Failed to revoke token')
+      }
+
+      return {}
     }),
   )
 

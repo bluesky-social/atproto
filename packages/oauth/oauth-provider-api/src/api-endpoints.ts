@@ -55,6 +55,11 @@ export type ApiEndpoints = {
     params: { sub: string }
     output: { results: ActiveOAuthSession[] }
   }
+  '/revoke-oauth-session': {
+    method: 'POST'
+    input: RevokeOAuthSessionInput
+    output: { success: true }
+  }
   '/account-sessions': {
     method: 'GET'
     params: { sub: string }
@@ -111,6 +116,11 @@ export type VerifyHandleAvailabilityInput = {
 export type RevokeAccountSessionInput = {
   sub: string
   deviceId: string
+}
+
+export type RevokeOAuthSessionInput = {
+  sub: string
+  tokenId: string
 }
 
 export type AcceptInput = {

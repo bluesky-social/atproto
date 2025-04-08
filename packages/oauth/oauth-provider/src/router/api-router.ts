@@ -53,6 +53,7 @@ import { subSchema } from '../oidc/sub.js'
 import { RequestInfo } from '../request/request-info.js'
 import { RequestUri, requestUriSchema } from '../request/request-uri.js'
 import { AuthorizationRedirectParameters } from '../result/authorization-redirect-parameters.js'
+import { tokenIdSchema } from '../token/token-id.js'
 import { emailOtpSchema } from '../types/email-otp.js'
 import { emailSchema } from '../types/email.js'
 import { handleSchema } from '../types/handle.js'
@@ -345,6 +346,37 @@ export function apiRouter<
           this.input.deviceId,
           this.input.sub,
         )
+
+        return { success: true }
+      },
+    ),
+  )
+
+  router.use(
+    apiRoute(
+      'POST',
+      '/revoke-oauth-session',
+      z.object({ sub: subSchema, tokenId: tokenIdSchema }).strict(),
+      async function (req, res) {
+        const { deviceAccount } = await authenticate(
+          req,
+          res,
+          this.input.sub,
+          this.requestUri,
+          true,
+        )
+
+        const tokenInfo = await server.tokenManager.getTokenInfo(
+          this.input.tokenId,
+        )
+
+        if (tokenInfo?.data.sub !== deviceAccount.account.sub) {
+          throw new InvalidRequestError(
+            `Token ${this.input.tokenId} does not belong to the user ${this.input.sub}`,
+          )
+        }
+
+        await server.tokenManager.deleteToken(tokenInfo.id)
 
         return { success: true }
       },

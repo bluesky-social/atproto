@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto'
-import { isSignedJwt } from '@atproto/jwk'
+import { SignedJwt, isSignedJwt } from '@atproto/jwk'
 import type { Account } from '@atproto/oauth-provider-api'
 import {
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
@@ -37,6 +37,7 @@ import { Code, isCode } from '../request/code.js'
 import { SignedTokenPayload } from '../signer/signed-token-payload.js'
 import { Signer } from '../signer/signer.js'
 import {
+  RefreshToken,
   generateRefreshToken,
   isRefreshToken,
   refreshTokenSchema,
@@ -293,7 +294,7 @@ export class TokenManager {
     }
   }
 
-  protected async validateAccess(
+  public async validateAccess(
     client: Client,
     clientAuth: ClientAuth,
     tokenInfo: TokenInfo,
@@ -308,6 +309,14 @@ export class TokenManager {
 
     if (!(await client.validateClientAuth(tokenInfo.data.clientAuth))) {
       throw new InvalidGrantError(`Client authentication mismatch`)
+    }
+
+    if (this.isTokenExpired(client, tokenInfo)) {
+      throw new InvalidRequestError(`Refresh token expired`)
+    }
+
+    if (this.isTokenInactive(client, tokenInfo)) {
+      throw new InvalidRequestError(`Refresh token exceeded inactivity timeout`)
     }
   }
 
@@ -324,25 +333,13 @@ export class TokenManager {
     }
     const refreshToken = refreshTokenParsed.data
 
-    const tokenInfo = await this.store.findTokenByRefreshToken(refreshToken)
-    if (!tokenInfo?.currentRefreshToken) {
-      throw new InvalidGrantError(`Invalid refresh token`)
-    }
+    const tokenInfo = await this.findByRefreshToken(refreshToken)
 
     const { account, data } = tokenInfo
     const { parameters } = data
 
     try {
-      if (tokenInfo.currentRefreshToken !== refreshToken) {
-        throw new InvalidGrantError(`refresh token replayed`)
-      }
-
       await this.validateAccess(client, clientAuth, tokenInfo)
-
-      if (input.grant_type !== 'refresh_token') {
-        // Fool-proofing (should never happen)
-        throw new InvalidGrantError(`Invalid grant type`)
-      }
 
       if (!client.metadata.grant_types.includes(input.grant_type)) {
         // In case the client metadata was updated after the token was issued
@@ -357,14 +354,6 @@ export class TokenManager {
         } else if (parameters.dpop_jkt !== dpopJkt) {
           throw new InvalidDpopKeyBindingError()
         }
-      }
-
-      if (this.isTokenExpired(client, tokenInfo)) {
-        throw new InvalidGrantError(`Refresh token expired`)
-      }
-
-      if (this.isTokenInactive(client, tokenInfo)) {
-        throw new InvalidGrantError(`Refresh token exceeded inactivity timeout`)
       }
 
       const nextTokenId = await generateTokenId()
@@ -453,110 +442,69 @@ export class TokenManager {
   }
 
   /**
-   * @see {@link https://datatracker.ietf.org/doc/html/rfc7009#section-2.2 | RFC7009 Section 2.2}
+   * @note The token validity if not guaranteed. The caller must ensure that the
+   * token is valid before using it.
    */
-  async revoke(token: string): Promise<undefined | TokenInfo> {
-    switch (true) {
-      case isTokenId(token): {
-        try {
-          return await this.getTokenInfo(token)
-        } finally {
-          await this.store.deleteToken(token)
-        }
-      }
-
-      case isSignedJwt(token): {
-        const { payload } = await this.signer.verifyAccessToken(token, {
-          clockTolerance: Infinity,
-        })
-        try {
-          return await this.getTokenInfo(payload.jti)
-        } finally {
-          await this.store.deleteToken(payload.jti)
-        }
-      }
-
-      case isRefreshToken(token): {
-        const tokenInfo = await this.store.findTokenByRefreshToken(token)
-        if (!tokenInfo) return
-        await this.store.deleteToken(tokenInfo.id)
-        return tokenInfo
-      }
-
-      case isCode(token): {
-        const tokenInfo = await this.store.findTokenByCode(token)
-        if (!tokenInfo) return
-        await this.store.deleteToken(tokenInfo.id)
-        return tokenInfo
-      }
+  public async findToken(token: string): Promise<TokenInfo> {
+    if (isTokenId(token)) {
+      return this.getTokenInfo(token)
+    } else if (isCode(token)) {
+      return this.findByCode(token)
+    } else if (isRefreshToken(token)) {
+      return this.findByRefreshToken(token)
+    } else if (isSignedJwt(token)) {
+      return this.findBySignedJwt(token)
+    } else {
+      throw new InvalidRequestError(`Invalid token`)
     }
   }
 
-  /**
-   * Allows an (authenticated) client to obtain information about a token.
-   *
-   * @see {@link https://datatracker.ietf.org/doc/html/rfc7662 RFC7662}
-   */
-  async clientTokenInfo(
-    client: Client,
-    clientAuth: ClientAuth,
-    token: string,
-  ): Promise<TokenInfo> {
-    const tokenInfo = await this.findTokenInfo(token)
-    if (!tokenInfo) {
-      throw new InvalidGrantError(`Invalid token`)
-    }
+  public async findBySignedJwt(token: SignedJwt): Promise<TokenInfo> {
+    const { payload } = await this.signer.verifyAccessToken(token, {
+      clockTolerance: Infinity,
+    })
 
-    try {
-      await this.validateAccess(client, clientAuth, tokenInfo)
-    } catch (err) {
+    const tokenInfo = await this.getTokenInfo(payload.jti)
+
+    // Fool-proof: Invalid store implementation ?
+    if (payload.sub !== tokenInfo.account.sub) {
       await this.store.deleteToken(tokenInfo.id)
-      throw err
-    }
-
-    if (tokenInfo.data.expiresAt.getTime() < Date.now()) {
-      throw new InvalidGrantError(`Token expired`)
+      throw new Error(
+        `Account sub (${tokenInfo.account.sub}) does not match token sub (${payload.sub})`,
+      )
     }
 
     return tokenInfo
   }
 
-  protected async findTokenInfo(token: string): Promise<TokenInfo | null> {
-    switch (true) {
-      case isSignedJwt(token): {
-        const { payload } = await this.signer
-          .verifyAccessToken(token)
-          .catch((_) => ({ payload: null }))
-        if (!payload) return null
+  public async findByRefreshToken(token: RefreshToken): Promise<TokenInfo> {
+    const tokenInfo = await this.store.findTokenByRefreshToken(token)
 
-        const tokenInfo = await this.store.readToken(payload.jti)
-        if (!tokenInfo) return null
-
-        // Audience changed (e.g. user was moved to another resource server)
-        if (payload.aud !== tokenInfo.account.aud) {
-          return null
-        }
-
-        // Invalid store implementation ?
-        if (payload.sub !== tokenInfo.account.sub) {
-          throw new Error(
-            `Account sub (${tokenInfo.account.sub}) does not match token sub (${payload.sub})`,
-          )
-        }
-
-        return tokenInfo
-      }
-
-      case isRefreshToken(token): {
-        const tokenInfo = await this.store.findTokenByRefreshToken(token)
-        if (!tokenInfo?.currentRefreshToken) return null
-        if (tokenInfo.currentRefreshToken !== token) return null
-        return tokenInfo
-      }
-
-      default:
-        return null
+    if (!tokenInfo) {
+      throw new InvalidRequestError(`Invalid refresh token`)
     }
+
+    if (tokenInfo.currentRefreshToken !== token) {
+      await this.store.deleteToken(tokenInfo.id)
+
+      throw new InvalidRequestError(`Refresh token replayed`)
+    }
+
+    return tokenInfo
+  }
+
+  public async findByCode(code: Code): Promise<TokenInfo> {
+    const tokenInfo = await this.store.findTokenByCode(code)
+
+    if (!tokenInfo) {
+      throw new InvalidRequestError(`Invalid code`)
+    }
+
+    return tokenInfo
+  }
+
+  public async deleteToken(tokenId: TokenId): Promise<void> {
+    return this.store.deleteToken(tokenId)
   }
 
   async getTokenInfo(tokenId: TokenId): Promise<TokenInfo> {
@@ -569,22 +517,23 @@ export class TokenManager {
     return tokenInfo
   }
 
-  async verifyTokenId(
+  async verifyToken(
     token: OAuthAccessToken,
     tokenType: OAuthTokenType,
     tokenId: TokenId,
     dpopJkt: string | null,
     verifyOptions?: VerifyTokenClaimsOptions,
   ): Promise<VerifyTokenClaimsResult> {
-    const { data, account } = await this.getTokenInfo(tokenId).catch((err) => {
+    const tokenInfo = await this.getTokenInfo(tokenId).catch((err) => {
       throw InvalidTokenError.from(err, tokenType)
     })
 
-    if (data.expiresAt.getTime() < Date.now()) {
+    if (isTokenInfoExpired(tokenInfo)) {
       await this.store.deleteToken(tokenId)
       throw new InvalidTokenError(tokenType, `Token expired`)
     }
 
+    const { account, data } = tokenInfo
     const { parameters } = data
 
     // Construct a list of claim, as if the token was a JWT.

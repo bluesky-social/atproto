@@ -1,7 +1,6 @@
 import { z } from 'zod'
 import { jwtPayloadSchema } from '@atproto/jwk'
 import { clientIdSchema } from '../client/client-id.js'
-import { Simplify } from '../lib/util/type.js'
 import { subSchema } from '../oidc/sub.js'
 import { tokenIdSchema } from '../token/token-id.js'
 
@@ -23,6 +22,4 @@ export const signedTokenPayloadSchema = jwtPayloadSchema
   })
   .passthrough()
 
-export type SignedTokenPayload = Simplify<
-  z.infer<typeof signedTokenPayloadSchema>
->
+export type SignedTokenPayload = z.infer<typeof signedTokenPayloadSchema>

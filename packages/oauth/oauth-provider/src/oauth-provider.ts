@@ -13,7 +13,6 @@ import {
   OAuthClientCredentials,
   OAuthClientCredentialsNone,
   OAuthClientMetadata,
-  OAuthIntrospectionResponse,
   OAuthParResponse,
   OAuthRefreshTokenGrantTokenRequest,
   OAuthTokenIdentification,
@@ -67,10 +66,9 @@ import { InvalidGrantError } from './errors/invalid-grant-error.js'
 import { InvalidParametersError } from './errors/invalid-parameters-error.js'
 import { InvalidRequestError } from './errors/invalid-request-error.js'
 import { LoginRequiredError } from './errors/login-required-error.js'
-import { UnauthorizedClientError } from './errors/unauthorized-client-error.js'
 import { HcaptchaConfig } from './lib/hcaptcha.js'
 import { RequestMetadata } from './lib/http/request.js'
-import { dateToEpoch, dateToRelativeSeconds } from './lib/util/date.js'
+import { dateToRelativeSeconds } from './lib/util/date.js'
 import { LocalizedString, MultiLangString } from './lib/util/locale.js'
 import { extractZodErrorMessage } from './lib/util/zod-error.js'
 import { CustomMetadata, buildMetadata } from './metadata/build-metadata.js'
@@ -784,9 +782,8 @@ export class OAuthProvider extends OAuthVerifier {
     input: OAuthAuthorizationCodeGrantTokenRequest,
     dpopJkt: null | string,
   ): Promise<OAuthTokenResponse> {
+    const code = codeSchema.parse(input.code)
     try {
-      const code = codeSchema.parse(input.code)
-
       const { sub, deviceId, parameters } = await this.requestManager.findCode(
         client,
         clientAuth,
@@ -830,15 +827,20 @@ export class OAuthProvider extends OAuthVerifier {
       )
     } catch (err) {
       // If a token is replayed, requestManager.findCode will throw. In that
-      // case, we need to revoke any token that was issued for this code. As an
-      // additional security measure, we also sign the device out, so that the
-      // device cannot be used to access the account anymore without a new
-      // authentication.
+      // case, we need to revoke any token that was issued for this code.
 
-      await this.revoke(input.code, { signDeviceOut: true })
+      const tokenInfo = await this.tokenManager.findByCode(code)
+      if (tokenInfo) {
+        await this.tokenManager.deleteToken(tokenInfo.id)
 
-      // @TODO (?) in order to protect the user, we should maybe also mark the
-      // account-device association as expired ?
+        //  As an additional security measure, we also sign the device out, so
+        // that the device cannot be used to access the account anymore without
+        // a new authentication.
+        const { deviceId, sub } = tokenInfo.data
+        if (deviceId) {
+          await this.accountManager.removeDeviceAccount(deviceId, sub)
+        }
+      }
 
       throw err
     }
@@ -863,71 +865,26 @@ export class OAuthProvider extends OAuthVerifier {
   /**
    * @see {@link https://datatracker.ietf.org/doc/html/rfc7009#section-2.1 rfc7009}
    */
-  public async revoke(token: string, options?: { signDeviceOut?: boolean }) {
-    const tokenInfo = await this.tokenManager.revoke(token)
-
-    // If the session was created from a particular device, also remove the
-    // device account. (A better UX might be to mark the device-account as
-    // "expired", so that the account is still listed on that device, but
-    // authentication is required).
-    if (options?.signDeviceOut && tokenInfo?.data.deviceId) {
-      const { deviceId, sub } = tokenInfo.data
-      await this.accountManager.removeDeviceAccount(deviceId, sub)
-    }
-  }
-
-  /**
-   * @see {@link https://datatracker.ietf.org/doc/html/rfc7662#section-2.1 rfc7662}
-   */
-  public async introspect(
+  public async revoke(
     credentials: OAuthClientCredentials,
     { token }: OAuthTokenIdentification,
-  ): Promise<OAuthIntrospectionResponse> {
+  ) {
+    // > The authorization server first validates the client credentials (in
+    // > case of a confidential client)
     const [client, clientAuth] = await this.authenticateClient(credentials)
 
-    // RFC7662 states the following:
-    //
-    // > To prevent token scanning attacks, the endpoint MUST also require some
-    // > form of authorization to access this endpoint, such as client
-    // > authentication as described in OAuth 2.0 [RFC6749] or a separate OAuth
-    // > 2.0 access token such as the bearer token described in OAuth 2.0 Bearer
-    // > Token Usage [RFC6750]. The methods of managing and validating these
-    // > authentication credentials are out of scope of this specification.
-    if (clientAuth.method === 'none') {
-      throw new UnauthorizedClientError('Client authentication required')
-    }
+    const tokenInfo = await this.tokenManager.findToken(token)
 
-    const start = Date.now()
-    try {
-      const tokenInfo = await this.tokenManager.clientTokenInfo(
-        client,
-        clientAuth,
-        token,
-      )
+    // > [...] and then verifies whether the token was issued to the client
+    // > making the revocation request. If this validation fails, the request is
+    // > refused and the client is informed of the error by the authorization
+    // > server as described below.
+    await this.tokenManager.validateAccess(client, clientAuth, tokenInfo)
 
-      return {
-        active: true,
-
-        scope: tokenInfo.data.parameters.scope,
-        client_id: tokenInfo.data.clientId,
-        username: tokenInfo.account.preferred_username,
-        token_type: tokenInfo.data.parameters.dpop_jkt ? 'DPoP' : 'Bearer',
-
-        aud: tokenInfo.account.aud,
-        exp: dateToEpoch(tokenInfo.data.expiresAt),
-        iat: dateToEpoch(tokenInfo.data.updatedAt),
-        iss: this.signer.issuer,
-        jti: tokenInfo.id,
-        sub: tokenInfo.account.sub,
-      }
-    } catch (err) {
-      // Prevent brute force & timing attack (only for inactive tokens)
-      await new Promise((r) => setTimeout(r, 750 - (Date.now() - start)))
-
-      return {
-        active: false,
-      }
-    }
+    // > In the next step, the authorization server invalidates the token. The
+    // > invalidation takes place immediately, and the token cannot be used
+    // > again after the revocation.
+    await this.tokenManager.deleteToken(tokenInfo.id)
   }
 
   protected override async verifyToken(
@@ -955,7 +912,7 @@ export class OAuthProvider extends OAuthVerifier {
       // In addition to verifying the signature (through the verifier above), we
       // also verify the tokenId is still valid using a database to fetch
       // missing data from "light" token.
-      return this.tokenManager.verifyTokenId(
+      return this.tokenManager.verifyToken(
         token,
         tokenType,
         tokenId,
