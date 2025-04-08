@@ -95,6 +95,7 @@ export async function up(
         )
         .where('remember', '=', 1),
     )
+    .onConflict((oc) => oc.doNothing())
     .execute()
 
   // @NOTE No need to create an index on "deviceId" for "account_device" because
