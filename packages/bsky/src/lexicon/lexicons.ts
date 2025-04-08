@@ -10078,7 +10078,7 @@ export const schemaDict = {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:app.bsky.actor.defs#profileViewBasic',
+                  ref: 'lex:app.bsky.actor.defs#profileView',
                 },
               },
             },

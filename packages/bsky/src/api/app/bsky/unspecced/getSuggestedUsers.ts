@@ -84,12 +84,12 @@ const hydration = async (
   if (params.viewer) {
     pairs.set(params.viewer, dids)
   }
-  const [profileBasicState, bidirectionalBlocks] = await Promise.all([
-    ctx.hydrator.hydrateProfilesBasic(dids, params.hydrateCtx),
+  const [profilesState, bidirectionalBlocks] = await Promise.all([
+    ctx.hydrator.hydrateProfiles(dids, params.hydrateCtx),
     ctx.hydrator.hydrateBidirectionalBlocks(pairs),
   ])
 
-  return mergeManyStates(profileBasicState, { bidirectionalBlocks })
+  return mergeManyStates(profilesState, { bidirectionalBlocks })
 }
 
 const noBlocksOrFollows = (
@@ -115,7 +115,7 @@ const presentation = (
   const { ctx, skeleton, hydration } = input
   return {
     actors: mapDefined(skeleton.dids, (did) =>
-      ctx.views.profileBasic(did, hydration),
+      ctx.views.profile(did, hydration),
     ),
   }
 }
