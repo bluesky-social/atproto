@@ -342,7 +342,7 @@ export class OAuthProvider extends OAuthVerifier {
   }
 
   /**
-   * @returns true is the user's consent is required for the requested scopes
+   * @returns true if the user's consent is required for the requested scopes
    */
   public checkConsentRequired(
     parameters: OAuthAuthorizationRequestParameters,
@@ -830,7 +830,10 @@ export class OAuthProvider extends OAuthVerifier {
       )
     } catch (err) {
       // If a token is replayed, requestManager.findCode will throw. In that
-      // case, we need to revoke any token that was issued for this code.
+      // case, we need to revoke any token that was issued for this code. As an
+      // additional security measure, we also sign the device out, so that the
+      // device cannot be used to access the account anymore without a new
+      // authentication.
 
       await this.revoke(input.code, { signDeviceOut: true })
 

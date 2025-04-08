@@ -7,6 +7,7 @@ import {
   SignedJwt,
   VerifyOptions,
 } from '@atproto/jwk'
+import { OmitKey } from '../lib/util/type.js'
 import {
   SignedTokenPayload,
   signedTokenPayloadSchema,
@@ -46,7 +47,7 @@ export class Signer {
   }
 
   async createAccessToken(
-    payload: Omit<SignedTokenPayload, 'iss'>,
+    payload: OmitKey<SignedTokenPayload, 'iss'>,
   ): Promise<SignedJwt> {
     return this.sign(
       {

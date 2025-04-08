@@ -77,13 +77,13 @@ export class TokenManager {
     },
   ): Promise<OAuthAccessToken> {
     return this.signer.createAccessToken({
-      sid: tokenId,
+      jti: tokenId,
       sub: account.sub,
       exp: dateToEpoch(options.expiresAt),
       iat: dateToEpoch(options.now),
       cnf: parameters.dpop_jkt ? { jkt: parameters.dpop_jkt } : undefined,
 
-      ...(this.accessTokenMode !== AccessTokenMode.stateless && {
+      ...(this.accessTokenMode === AccessTokenMode.stateless && {
         aud: account.aud,
         scope: parameters.scope,
         // https://datatracker.ietf.org/doc/html/rfc8693#section-4.3

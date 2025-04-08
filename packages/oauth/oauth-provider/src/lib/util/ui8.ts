@@ -7,7 +7,7 @@ export function parseUi8Dec(v: string) {
 }
 
 export function asUi8(v: number) {
-  if (v >= 0 && v <= 255 && v === (v | 0)) return v
+  if (v >= 0 && v <= 255 && Number.isInteger(v)) return v
   throw new TypeError(
     `Invalid value "${v}" (expected an integer between 0 and 255)`,
   )
