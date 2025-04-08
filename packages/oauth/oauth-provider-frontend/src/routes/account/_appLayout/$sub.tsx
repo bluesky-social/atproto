@@ -61,7 +61,7 @@ export function Sessions() {
       ) : sessions.length > 0 ? (
         <div className="space-y-2">
           {sessions.map((session) => (
-            <ApplicationSessionCard sub={sub} session={session} />
+            <ApplicationSessionCard key={session.tokenId} sub={sub} session={session} />
           ))}
         </div>
       ) : (
@@ -87,8 +87,8 @@ export function Sessions() {
         />
       ) : accountSessions.length > 0 ? (
         <div className="space-y-3">
-          {accountSessions.map((session) => (
-            <AccountSessionCard sub={sub} session={session} />
+          {accountSessions.map((session, i) => (
+            <AccountSessionCard key={i} sub={sub} session={session} />
           ))}
         </div>
       ) : (
@@ -214,19 +214,25 @@ function AccountSessionCard({
 
   return (
     <div className="border-contrast-50 dark:border-contrast-100 flex items-start justify-between space-x-4 border-t px-2 pt-3">
-      <div className="flex flex-col space-x-2 truncate">
-        <p className="font-semibold">{session.deviceMetadata.userAgent}</p>
+      <div className="flex flex-col flex-1 space-x-2 truncate">
+        <p className="font-semibold truncate">{session.deviceMetadata.userAgent}</p>
         <p className="text-sm">
           <span className="text-text-light">
             {lastUsed}
             {' • '}
           </span>
-          <span className="text-warning-600 font-mono">
+          <span className="text-warning-600 font-mono truncate">
             {session.deviceMetadata.ipAddress}
           </span>
         </p>
       </div>
-      {session.isCurrentDevice ? <Trans>This device</Trans> : null}
+      {session.isCurrentDevice && (
+        <div className='flex-shrink'>
+          <div className='px-2 py-1 rounded-full bg-contrast-25 dark:bg-contrast-50 text-xs text-text-light'>
+            <Trans>This device</Trans>
+          </div>
+        </div>
+      )}
       <div>
         <Prompt
           title={_(msg`Remove this device`)}
