@@ -14,7 +14,7 @@ import { useDeviceSessionsQuery } from '#/data/useDeviceSessionsQuery'
 import { getAccountName } from '#/util/getAccountName'
 import { sanitizeHandle } from '#/util/sanitizeHandle'
 
-export const Route = createFileRoute('/_minimalLayout/account/')({
+export const Route = createFileRoute('/account/_minimalLayout/')({
   component: Index,
 })
 

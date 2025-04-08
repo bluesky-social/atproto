@@ -17,7 +17,7 @@ import { useOAuthSessionsQuery } from '#/data/useOAuthSessionsQuery'
 import { useRevokeAccountSessionMutation } from '#/data/useRevokeAccountSessionMutation'
 import { useRevokeOAuthSessionMutation } from '#/data/useRevokeOAuthSessionMutation'
 
-export const Route = createFileRoute('/_minimalLayout/account/_appLayout/$sub')(
+export const Route = createFileRoute('/account/_appLayout/$sub')(
   {
     component: Sessions,
   },
