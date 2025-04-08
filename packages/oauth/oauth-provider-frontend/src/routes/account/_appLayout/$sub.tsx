@@ -134,13 +134,13 @@ function ApplicationSessionCard({
 
   return (
     <div className="bg-contrast-25 dark:bg-contrast-50 border-contrast-50 dark:border-contrast-100 flex items-start justify-between space-x-4 rounded-lg border p-4">
-      <div className="flex items-center space-x-2 truncate">
+      <div className="flex flex-1 items-center space-x-2 truncate">
         <Avatar
           size={40}
           src={clientMetadata?.logo_uri}
           displayName={clientMetadata?.client_name}
         />
-        <div className="truncate">
+        <div className="flex-1 truncate">
           <h3 className="truncate font-bold leading-snug">
             {clientMetadata?.client_name || clientMetadata?.client_uri}
           </h3>
