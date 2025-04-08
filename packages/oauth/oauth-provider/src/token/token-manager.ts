@@ -145,9 +145,11 @@ export class TokenManager {
           throw new InvalidGrantError('Invalid code')
         }
 
+        // @NOTE not using `this.findByCode` because we want to delete the token
+        // if it still exists (rather than throwing if the code is invalid).
         const tokenInfo = await this.store.findTokenByCode(input.code)
         if (tokenInfo) {
-          await this.store.deleteToken(tokenInfo.id)
+          await this.deleteToken(tokenInfo.id)
           throw new InvalidGrantError(`Code replayed`)
         }
 
@@ -261,7 +263,7 @@ export class TokenManager {
       return response
     } catch (err) {
       // Just in case the token could not be issued, we delete it from the store
-      await this.store.deleteToken(tokenId)
+      await this.deleteToken(tokenId)
 
       throw err
     }
@@ -310,13 +312,33 @@ export class TokenManager {
     if (!(await client.validateClientAuth(tokenInfo.data.clientAuth))) {
       throw new InvalidGrantError(`Client authentication mismatch`)
     }
+  }
 
-    if (this.isTokenExpired(client, tokenInfo)) {
-      throw new InvalidRequestError(`Refresh token expired`)
+  public async validateRefresh(
+    client: Client,
+    clientAuth: ClientAuth,
+    { data }: TokenInfo,
+  ): Promise<void> {
+    // @TODO This value should be computable even if we don't have the "client"
+    // (because fetching client info could be flaky). Instead, all the info
+    // needed should be stored in the token info.
+    const allowLongerLifespan =
+      client.info.isFirstParty || data.clientAuth.method !== 'none'
+
+    const lifetime = allowLongerLifespan
+      ? AUTHENTICATED_REFRESH_LIFETIME
+      : UNAUTHENTICATED_REFRESH_LIFETIME
+
+    if (data.createdAt.getTime() + lifetime < Date.now()) {
+      throw new InvalidGrantError(`Refresh token expired`)
     }
 
-    if (this.isTokenInactive(client, tokenInfo)) {
-      throw new InvalidRequestError(`Refresh token exceeded inactivity timeout`)
+    const inactivityTimeout = allowLongerLifespan
+      ? AUTHENTICATED_REFRESH_INACTIVITY_TIMEOUT
+      : UNAUTHENTICATED_REFRESH_INACTIVITY_TIMEOUT
+
+    if (data.updatedAt.getTime() + inactivityTimeout < Date.now()) {
+      throw new InvalidGrantError(`Refresh token exceeded inactivity timeout`)
     }
   }
 
@@ -340,6 +362,7 @@ export class TokenManager {
 
     try {
       await this.validateAccess(client, clientAuth, tokenInfo)
+      await this.validateRefresh(client, clientAuth, tokenInfo)
 
       if (!client.metadata.grant_types.includes(input.grant_type)) {
         // In case the client metadata was updated after the token was issued
@@ -413,36 +436,14 @@ export class TokenManager {
       return response
     } catch (err) {
       // Just in case the token could not be refreshed, we delete it from the store
-      await this.store.deleteToken(tokenInfo.id)
+      await this.deleteToken(tokenInfo.id)
 
       throw err
     }
   }
 
-  public isTokenExpired(client: Client, { data }: TokenInfo): boolean {
-    // @TODO This value should be computable even if we don't have the "client"
-    // (because fetching client info could be flaky). Instead, all the info
-    // needed should be stored in the token info.
-    const lifetime =
-      data.clientAuth.method === 'none' && !client.info.isFirstParty
-        ? UNAUTHENTICATED_REFRESH_LIFETIME
-        : AUTHENTICATED_REFRESH_LIFETIME
-    return data.createdAt.getTime() + lifetime < Date.now()
-  }
-
-  public isTokenInactive(client: Client, { data }: TokenInfo): boolean {
-    // @TODO This value should be computable even if we don't have the "client"
-    // (because fetching client info could be flaky). Instead, all the info
-    // needed should be stored in the token info.
-    const inactivityTimeout =
-      data.clientAuth.method === 'none' && !client.info.isFirstParty
-        ? UNAUTHENTICATED_REFRESH_INACTIVITY_TIMEOUT
-        : AUTHENTICATED_REFRESH_INACTIVITY_TIMEOUT
-    return data.updatedAt.getTime() + inactivityTimeout < Date.now()
-  }
-
   /**
-   * @note The token validity if not guaranteed. The caller must ensure that the
+   * @note The token validity is not guaranteed. The caller must ensure that the
    * token is valid before using it.
    */
   public async findToken(token: string): Promise<TokenInfo> {
@@ -468,7 +469,7 @@ export class TokenManager {
 
     // Fool-proof: Invalid store implementation ?
     if (payload.sub !== tokenInfo.account.sub) {
-      await this.store.deleteToken(tokenInfo.id)
+      await this.deleteToken(tokenInfo.id)
       throw new Error(
         `Account sub (${tokenInfo.account.sub}) does not match token sub (${payload.sub})`,
       )
@@ -485,7 +486,7 @@ export class TokenManager {
     }
 
     if (tokenInfo.currentRefreshToken !== token) {
-      await this.store.deleteToken(tokenInfo.id)
+      await this.deleteToken(tokenInfo.id)
 
       throw new InvalidRequestError(`Refresh token replayed`)
     }
@@ -528,8 +529,8 @@ export class TokenManager {
       throw InvalidTokenError.from(err, tokenType)
     })
 
-    if (isTokenInfoExpired(tokenInfo)) {
-      await this.store.deleteToken(tokenId)
+    if (isCurrentTokenExpired(tokenInfo)) {
+      await this.deleteToken(tokenId)
       throw new InvalidTokenError(tokenType, `Token expired`)
     }
 
@@ -566,10 +567,10 @@ export class TokenManager {
     const results = await this.store.listAccountTokens(sub)
     return results
       .filter((tokenInfo) => tokenInfo.account.sub === sub) // Fool proof
-      .filter((tokenInfo) => !isTokenInfoExpired(tokenInfo))
+      .filter((tokenInfo) => !isCurrentTokenExpired(tokenInfo))
   }
 }
 
-function isTokenInfoExpired(tokenInfo: TokenInfo): boolean {
+function isCurrentTokenExpired(tokenInfo: TokenInfo): boolean {
   return tokenInfo.data.expiresAt.getTime() < Date.now()
 }
