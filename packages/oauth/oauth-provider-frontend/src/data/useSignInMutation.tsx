@@ -17,7 +17,6 @@ export function useSignInMutation() {
 
       upsertDeviceAccount({
         account: res.account,
-        remembered: input.remember ?? false,
         loginRequired: false,
       })
 

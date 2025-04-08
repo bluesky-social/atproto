@@ -1,5 +1,5 @@
-import { DeviceAccountData, DeviceId } from '@atproto/oauth-provider'
-import { DateISO, JsonEncoded } from '../../../db'
+import { DeviceId } from '@atproto/oauth-provider'
+import { DateISO } from '../../../db'
 
 export interface AccountDevice {
   did: string
@@ -7,8 +7,6 @@ export interface AccountDevice {
 
   createdAt: DateISO
   updatedAt: DateISO
-
-  data: JsonEncoded<DeviceAccountData>
 }
 
 export const tableName = 'account_device'

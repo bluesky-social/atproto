@@ -3,6 +3,7 @@ import createHttpError from 'http-errors'
 import { z } from 'zod'
 import {
   API_ENDPOINT_PREFIX,
+  Account,
   ActiveAccountSession,
   ActiveDeviceSession,
   ActiveOAuthSession,
@@ -16,7 +17,7 @@ import {
   oauthRedirectUriSchema,
   oauthResponseModeSchema,
 } from '@atproto/oauth-types'
-import { DeviceAccount } from '../account/account-store.js'
+import { AuthorizedClients } from '../account/account-store.js'
 import { signInDataSchema } from '../account/sign-in-data.js'
 import { signUpInputSchema } from '../account/sign-up-input.js'
 import { DeviceId, deviceIdSchema } from '../device/device-id.js'
@@ -25,17 +26,13 @@ import { buildErrorPayload, buildErrorStatus } from '../errors/error-parser.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { LoginRequiredError } from '../errors/login-required-error.js'
 import {
-  CookieSerializeOptions,
   Middleware,
   RequestMetadata,
   Router,
   RouterCtx,
   SubCtx,
-  clearCookie,
   jsonHandler,
-  parseHttpCookies,
   parseHttpRequest,
-  setCookie,
   subCtx,
   validateFetchMode,
   validateFetchSite,
@@ -44,6 +41,7 @@ import {
 } from '../lib/http/index.js'
 import { RouteCtx, createRoute } from '../lib/http/route.js'
 import { asArray } from '../lib/util/cast.js'
+import { dateToEpoch } from '../lib/util/date.js'
 import { localeSchema } from '../lib/util/locale.js'
 import type { Awaitable } from '../lib/util/type.js'
 import type { OAuthProvider } from '../oauth-provider.js'
@@ -98,39 +96,69 @@ export function apiRouter<
 
   router.use(
     apiRoute('POST', '/sign-up', signUpInputSchema, async function (req, res) {
-      const deviceInfo = await server.deviceManager.load(req, res, true)
+      const { deviceId, deviceMetadata } = await server.deviceManager.load(
+        req,
+        res,
+        true,
+      )
 
-      const { account, ephemeralCookie } =
-        await server.accountManager.createAccount(
-          deviceInfo.deviceId,
-          deviceInfo.deviceMetadata,
-          this.input,
-          this.requestUri,
-        )
+      const remember = !this.requestUri
 
-      if (ephemeralCookie) {
-        setEphemeralCookie(res, ephemeralCookie, this.requestUri)
+      const account = await server.accountManager.createAccount(
+        deviceId,
+        deviceMetadata,
+        this.input,
+      )
+
+      // Only "remember" the newly created account if it was not created during an
+      // OAuth flow.
+      if (remember) {
+        await server.accountManager.addDeviceAccount(deviceId, account.sub)
       }
 
-      return { account }
+      const token = remember
+        ? undefined
+        : await server.signer.createApiToken({
+            sub: account.sub,
+            aud: `${server.issuer}${API_ENDPOINT_PREFIX}`,
+            exp: dateToEpoch(new Date(Date.now() + 5 * 60 * 1000)),
+            requestUri: this.requestUri,
+          })
+
+      return { account, token }
     }),
   )
 
   router.use(
     apiRoute('POST', '/sign-in', signInDataSchema, async function (req, res) {
-      const deviceInfo = await server.deviceManager.load(req, res, true)
+      const { deviceId, deviceMetadata } = await server.deviceManager.load(
+        req,
+        res,
+        true,
+      )
 
-      const { account, ephemeralCookie } =
-        await server.accountManager.authenticateAccount(
-          deviceInfo.deviceId,
-          deviceInfo.deviceMetadata,
-          this.input,
-          this.requestUri,
-        )
+      const account = await server.accountManager.authenticateAccount(
+        deviceId,
+        deviceMetadata,
+        this.input,
+      )
 
-      if (ephemeralCookie) {
-        setEphemeralCookie(res, ephemeralCookie, this.requestUri)
+      if (this.input.remember) {
+        await server.accountManager.addDeviceAccount(deviceId, account.sub)
+      } else {
+        // If the user was already signed in, and signed in again, this time
+        // without "remember me", let's log them out from the device.
+        await server.accountManager.removeDeviceAccount(deviceId, account.sub)
       }
+
+      const token = this.input.remember
+        ? undefined
+        : await server.signer.createApiToken({
+            sub: account.sub,
+            aud: `${server.issuer}${API_ENDPOINT_PREFIX}`,
+            exp: dateToEpoch(new Date(Date.now() + 5 * 60 * 1000)),
+            requestUri: this.requestUri,
+          })
 
       if (this.requestUri) {
         // Check if a consent is required for the client, but only if this
@@ -138,7 +166,7 @@ export function apiRouter<
 
         const { clientId, parameters } = await server.requestManager.get(
           this.requestUri,
-          deviceInfo.deviceId,
+          deviceId,
         )
 
         const { authorizedClients } = await server.accountManager.getAccount(
@@ -147,6 +175,7 @@ export function apiRouter<
 
         return {
           account,
+          token,
           consentRequired: server.checkConsentRequired(
             parameters,
             authorizedClients.get(clientId),
@@ -154,7 +183,7 @@ export function apiRouter<
         }
       }
 
-      return { account }
+      return { account, token }
     }),
   )
 
@@ -215,17 +244,13 @@ export function apiRouter<
     apiRoute('GET', '/device-sessions', undefined, async function (req, res) {
       const { deviceId } = await server.deviceManager.load(req, res)
 
-      const deviceAccounts = await server.accountManager.listDeviceAccounts(
-        deviceId,
-        this.requestUri,
-        extractEphemeralCookies(req, this.requestUri),
-      )
+      const deviceAccounts =
+        await server.accountManager.listDeviceAccounts(deviceId)
 
       return {
         results: deviceAccounts.map(
           (deviceAccount): ActiveDeviceSession => ({
             account: deviceAccount.account,
-            remembered: deviceAccount.data.remembered,
             loginRequired: server.checkLoginRequired(deviceAccount),
           }),
         ),
@@ -239,7 +264,7 @@ export function apiRouter<
       '/oauth-sessions',
       z.object({ sub: subSchema }).strict(),
       async function (req, res) {
-        const { deviceAccount } = await authenticate(
+        const { account } = await authenticate(
           req,
           res,
           this.input.sub,
@@ -247,7 +272,7 @@ export function apiRouter<
         )
 
         const tokenInfos = await server.tokenManager.listAccountTokens(
-          deviceAccount.account.sub,
+          account.sub,
         )
 
         const clientIds = tokenInfos.map((tokenInfo) => tokenInfo.data.clientId)
@@ -288,7 +313,7 @@ export function apiRouter<
       '/account-sessions',
       z.object({ sub: subSchema }).strict(),
       async function (req, res) {
-        const { deviceId, deviceAccount } = await authenticate(
+        const { deviceId, account } = await authenticate(
           req,
           res,
           this.input.sub,
@@ -296,9 +321,7 @@ export function apiRouter<
         )
 
         const deviceAccounts = await server.accountManager.listAccountDevices(
-          deviceAccount.account.sub,
-          this.requestUri,
-          extractEphemeralCookies(req, this.requestUri),
+          account.sub,
         )
 
         return {
@@ -311,8 +334,6 @@ export function apiRouter<
                 lastSeenAt:
                   accountSession.deviceData.lastSeenAt.toISOString() as ISODateString,
               },
-
-              remembered: accountSession.data.remembered,
 
               isCurrentDevice: accountSession.deviceId === deviceId,
             }),
@@ -348,7 +369,7 @@ export function apiRouter<
       '/revoke-oauth-session',
       z.object({ sub: subSchema, tokenId: tokenIdSchema }).strict(),
       async function (req, res) {
-        const { deviceAccount } = await authenticate(
+        const { account } = await authenticate(
           req,
           res,
           this.input.sub,
@@ -360,7 +381,7 @@ export function apiRouter<
           this.input.tokenId,
         )
 
-        if (tokenInfo.account.sub !== deviceAccount.account.sub) {
+        if (tokenInfo.account.sub !== account.sub) {
           // report this as though the token was not found
           throw new InvalidRequestError(`Invalid token`)
         }
@@ -388,20 +409,24 @@ export function apiRouter<
         // Any AccessDeniedError caught in this block will result in a redirect
         // to the client's redirect_uri with an error.
         try {
-          const { deviceId, deviceMetadata, deviceAccount, requestInfo } =
-            await authenticate(req, res, this.input.sub, requestUri, true)
+          const {
+            deviceId,
+            deviceMetadata,
+            account,
+            authorizedClients,
+            requestInfo,
+          } = await authenticate(req, res, this.input.sub, requestUri, true)
 
           const { clientId, parameters } = requestInfo
+
           // Any error thrown in this block will be transformed into an
           // AccessDeniedError in order to allow redirecting the user to the
           // client.
           try {
             const client = await server.clientManager.getClient(clientId)
 
-            const { account, authorizedClients } = deviceAccount
-
             const code = await server.requestManager.setAuthorized(
-              requestUri,
+              requestInfo.uri,
               client,
               account,
               deviceId,
@@ -428,15 +453,17 @@ export function apiRouter<
 
             return { url }
           } catch (err) {
-            try {
-              await server.requestManager.delete(requestUri)
-            } catch (err) {
-              onError?.(req, res, err, 'Failed to delete request')
-            }
-
             throw AccessDeniedError.from(parameters, err, 'server_error')
           }
         } catch (err) {
+          // If any error happened (unauthenticated, invalid request, etc.),
+          // lets make sure the request can no longer be used.
+          try {
+            await server.requestManager.delete(requestUri)
+          } catch (err) {
+            onError?.(req, res, err, 'Failed to delete request')
+          }
+
           if (err instanceof AccessDeniedError && err.parameters.redirect_uri) {
             // Prefer logging the cause
             onError?.(req, res, err.cause ?? err, 'Authorization failed')
@@ -451,14 +478,6 @@ export function apiRouter<
           }
 
           throw err
-        } finally {
-          clearSessionCookies(req, res, requestUri)
-
-          await server.accountManager
-            .removeRequestDeviceAccounts(requestUri)
-            .catch((err) => {
-              onError?.(req, res, err, 'Failed to remove request accounts')
-            })
         }
       },
     ),
@@ -519,14 +538,6 @@ export function apiRouter<
 
           throw err
         } finally {
-          clearSessionCookies(req, res, requestUri)
-
-          await server.accountManager
-            .removeRequestDeviceAccounts(requestUri)
-            .catch((err) => {
-              onError?.(req, res, err, 'Failed to remove request accounts')
-            })
-
           await server.requestManager.delete(requestUri).catch((err) => {
             onError?.(req, res, err, 'Failed to delete request')
           })
@@ -546,7 +557,8 @@ export function apiRouter<
   ): Promise<{
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
-    deviceAccount: DeviceAccount
+    account: Account
+    authorizedClients: AuthorizedClients
     requestInfo: RequestInfo
   }>
   async function authenticate(
@@ -558,7 +570,8 @@ export function apiRouter<
   ): Promise<{
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
-    deviceAccount: DeviceAccount
+    account: Account
+    authorizedClients: AuthorizedClients
     requestInfo?: RequestInfo
   }>
   async function authenticate(
@@ -570,7 +583,8 @@ export function apiRouter<
   ): Promise<{
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
-    deviceAccount: DeviceAccount
+    account: Account
+    authorizedClients: AuthorizedClients
     requestInfo?: RequestInfo
   }> {
     const { deviceId, deviceMetadata } = await server.deviceManager.load(
@@ -583,35 +597,31 @@ export function apiRouter<
       ? await server.requestManager.get(requestUri, deviceId)
       : undefined
 
-    const parameters = requestInfo?.parameters
+    // TODO: CHeck if request has signedApiToken here !!!
 
     // Ensures the requested "sub" is linked to the device
-    const deviceAccount = await server.accountManager
-      .getDeviceAccount(deviceId, sub, requestUri ?? null)
-      .catch((err) => {
-        throw parameters //
-          ? LoginRequiredError.from(parameters, err)
-          : err
-      })
+    const { account, authorizedClients } = await server.accountManager
+      .getDeviceAccount(deviceId, sub)
+      .then(
+        (deviceAccount) => {
+          // The session exists but was created too long ago
+          if (server.checkLoginRequired(deviceAccount)) {
+            const message = 'Login required'
+            throw requestInfo
+              ? new LoginRequiredError(requestInfo.parameters, message)
+              : new InvalidRequestError(message)
+          }
 
-    // If the session is temporary, check the cookie secret
-    if (!hasEphemeralCookie(req, deviceAccount, requestUri)) {
-      await server.accountManager.removeDeviceAccount(deviceId, sub)
-      const message = 'Invalid session cookie'
-      throw parameters
-        ? new LoginRequiredError(parameters, message)
-        : new InvalidRequestError(message)
-    }
+          return deviceAccount
+        },
+        (err) => {
+          throw requestInfo //
+            ? LoginRequiredError.from(requestInfo.parameters, err)
+            : err
+        },
+      )
 
-    // The session exists but was created too long ago
-    if (server.checkLoginRequired(deviceAccount)) {
-      const message = 'Login required'
-      throw parameters
-        ? new LoginRequiredError(parameters, message)
-        : new InvalidRequestError(message)
-    }
-
-    return { deviceId, deviceMetadata, deviceAccount, requestInfo }
+    return { deviceId, deviceMetadata, account, authorizedClients, requestInfo }
   }
 
   type ApiContext<T extends RouterCtx, I = void> = SubCtx<
@@ -755,80 +765,6 @@ export function apiRouter<
       }
     })
   }
-}
-
-const EPHEMERAL_COOKIE_PREFIX = 'ephemeral-'
-const EPHEMERAL_COOKIE_OPTIONS: Readonly<CookieSerializeOptions> =
-  Object.freeze({
-    expires: undefined, // session
-    sameSite: 'strict',
-    secure: true,
-    httpOnly: true,
-    path: '/',
-  })
-
-function ephemeralCookieValue(requestUri?: RequestUri) {
-  return requestUri
-    ? `${EPHEMERAL_COOKIE_PREFIX}${requestUri}`
-    : `${EPHEMERAL_COOKIE_PREFIX}no-request`
-}
-
-/**
- * When session are created without "remember me", a session cookie is created
- * and stored in the account store & sent to the client. This cookie is used to
- * ensure that the authentication can no-longer be used once the device ends the
- * "session" (typically is closed), or once the session is accepted/rejected
- * (see {@link clearSessionCookies}). A safer alternative would be to store that
- * value in the browser's JS. This solution was not adopted for practical
- * reasons (avoid having to distinguish between remembered/non-remembered in the
- * front-end).
- */
-function setEphemeralCookie(
-  res: ServerResponse,
-  ephemeralCookie: string,
-  requestUri: RequestUri | undefined,
-) {
-  const cookieValue = ephemeralCookieValue(requestUri)
-  setCookie(res, ephemeralCookie, cookieValue, EPHEMERAL_COOKIE_OPTIONS)
-}
-
-export function hasEphemeralCookie(
-  req: IncomingMessage,
-  deviceAccount: DeviceAccount,
-  requestUri: RequestUri | undefined,
-) {
-  const { ephemeralCookie } = deviceAccount.data
-  if (!ephemeralCookie) return true
-  const cookies = parseHttpCookies(req)
-  const cookieValue = cookies[ephemeralCookie]
-  const expectedValue = ephemeralCookieValue(requestUri)
-  return expectedValue === cookieValue
-}
-
-/**
- * Clears all the temporary session cookies that were created in the context of
- * a particular request.
- */
-function clearSessionCookies(
-  req: IncomingMessage,
-  res: ServerResponse,
-  requestUri: RequestUri,
-) {
-  // Clear every cookie secret that were created for this request.
-  for (const cookieName of extractEphemeralCookies(req, requestUri)) {
-    clearCookie(res, cookieName, EPHEMERAL_COOKIE_OPTIONS)
-  }
-}
-
-export function extractEphemeralCookies(
-  req: IncomingMessage,
-  requestUri: RequestUri | undefined,
-) {
-  const cookies = parseHttpCookies(req)
-  const expectedValue = ephemeralCookieValue(requestUri)
-  return Object.entries(cookies)
-    .filter(([, cookieValue]) => cookieValue === expectedValue)
-    .map(([cookieName]) => cookieName)
 }
 
 function buildRedirectUrl(

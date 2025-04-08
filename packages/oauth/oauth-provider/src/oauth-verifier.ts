@@ -56,9 +56,9 @@ export class OAuthVerifier {
   public readonly issuer: OAuthIssuerIdentifier
   public readonly keyset: Keyset
 
-  protected readonly dpopManager: DpopManager
-  protected readonly replayManager: ReplayManager
-  protected readonly signer: Signer
+  public readonly dpopManager: DpopManager
+  public readonly replayManager: ReplayManager
+  public readonly signer: Signer
 
   constructor({
     redis,

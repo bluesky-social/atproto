@@ -11,7 +11,6 @@ import {
   ClientId,
   Code,
   DeviceAccount,
-  DeviceAccountData,
   DeviceData,
   DeviceId,
   DeviceStore,
@@ -40,16 +39,16 @@ import {
 } from '@atproto/xrpc-server'
 import { ActorStore } from '../actor-store/actor-store'
 import { BackgroundQueue } from '../background'
-import { fromDateISO, fromJson } from '../db'
+import { fromDateISO } from '../db'
 import { ImageUrlBuilder } from '../image/image-url-builder'
+import { dbLogger } from '../logger'
 import { ServerMailer } from '../mailer'
 import { Sequencer, syncEvtDataFromCommit } from '../sequencer'
 import { AccountManager } from './account-manager'
 import * as schemas from './db/schema'
-import { AccountStatus } from './helpers/account'
 import * as accountHelper from './helpers/account'
+import { AccountStatus } from './helpers/account'
 import * as accountDeviceHelper from './helpers/account-device'
-import * as accountDeviceRequestHelper from './helpers/account-device-request'
 import * as authRequestHelper from './helpers/authorization-request'
 import * as authorizedClientHelper from './helpers/authorized-client'
 import * as deviceHelper from './helpers/device'
@@ -258,45 +257,19 @@ export class OAuthStore
     return { account, authorizedClients }
   }
 
-  async upsertDeviceAccount(
-    deviceId: DeviceId,
-    sub: string,
-    requestId: RequestId | null,
-    data: DeviceAccountData,
-  ): Promise<void> {
-    if (requestId) {
-      await this.db.executeWithRetry(
-        accountDeviceRequestHelper.upsertQB(
-          this.db,
-          deviceId,
-          sub,
-          requestId,
-          data,
-        ),
-      )
-    } else {
-      await this.db.executeWithRetry(
-        accountDeviceHelper.upsertQB(this.db, deviceId, sub, data),
-      )
-    }
+  async addDeviceAccount(deviceId: DeviceId, sub: string): Promise<void> {
+    await this.db.executeWithRetry(
+      accountDeviceHelper.upsertQB(this.db, deviceId, sub),
+    )
   }
 
   async getDeviceAccount(
     deviceId: DeviceId,
     sub: string,
-    requestId: null | RequestId,
   ): Promise<DeviceAccount | null> {
-    const row =
-      // Type finding the request bound session first
-      (requestId !== null
-        ? await accountDeviceRequestHelper
-            .selectQB(this.db, requestId, { deviceId, sub })
-            .executeTakeFirst()
-        : undefined) ??
-      // If not found, try the global session
-      (await accountDeviceHelper
-        .selectQB(this.db, { deviceId, sub })
-        .executeTakeFirst())
+    const row = await accountDeviceHelper
+      .selectQB(this.db, { deviceId, sub })
+      .executeTakeFirst()
 
     if (!row) return null
 
@@ -304,21 +277,13 @@ export class OAuthStore
       deviceId,
       deviceData: deviceHelper.rowToDeviceData(row),
       account: await this.buildAccount(row),
-      data: fromJson(row.data),
       authorizedClients: await authorizedClientHelper.getAuthorizedClients(
         this.db,
         sub,
       ),
-      requestId: row.requestId,
       createdAt: fromDateISO(row.adCreatedAt),
       updatedAt: fromDateISO(row.adUpdatedAt),
     }
-  }
-
-  async removeRequestDeviceAccounts(requestId: RequestId): Promise<void> {
-    await this.db.executeWithRetry(
-      accountDeviceRequestHelper.deleteByRequestIdQB(this.db, requestId),
-    )
   }
 
   async removeDeviceAccount(deviceId: DeviceId, sub: Sub): Promise<void> {
@@ -328,19 +293,9 @@ export class OAuthStore
   }
 
   async listDeviceAccounts(
-    requestId: RequestId | null,
     filter: { sub: Sub } | { deviceId: DeviceId },
   ): Promise<DeviceAccount[]> {
-    const [globalRows, requestBoundRows] = await Promise.all([
-      accountDeviceHelper.selectQB(this.db, filter).execute(),
-      requestId !== null
-        ? accountDeviceRequestHelper
-            .selectQB(this.db, requestId, filter)
-            .execute()
-        : undefined,
-    ])
-
-    const rows = [...(requestBoundRows ?? []), ...globalRows]
+    const rows = await accountDeviceHelper.selectQB(this.db, filter).execute()
 
     const uniqueDids = [...new Set(rows.map((row) => row.did))]
 
@@ -364,9 +319,7 @@ export class OAuthStore
       deviceId: row.deviceId,
       deviceData: deviceHelper.rowToDeviceData(row),
       account: accounts.get(row.did)!,
-      data: fromJson(row.data),
       authorizedClients: authorizedClientsMap.get(row.did)!,
-      requestId: row.requestId,
       createdAt: fromDateISO(row.adCreatedAt),
       updatedAt: fromDateISO(row.adUpdatedAt),
     }))
@@ -627,9 +580,14 @@ export class OAuthStore
     if (!account.name || !account.picture) {
       const did = account.sub
 
-      const profile = await this.actorStore.read(did, async (store) => {
-        return store.record.getProfileRecord()
-      })
+      const profile = await this.actorStore
+        .read(did, async (store) => {
+          return store.record.getProfileRecord()
+        })
+        .catch((err) => {
+          dbLogger.error({ err }, 'Failed to get profile record')
+          return null // No need to propagate
+        })
 
       if (profile) {
         const { avatar, displayName } = profile

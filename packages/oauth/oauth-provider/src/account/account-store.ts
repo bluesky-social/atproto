@@ -15,7 +15,6 @@ import {
   SecondAuthenticationFactorRequiredError,
 } from '../oauth-errors.js'
 import { Sub } from '../oidc/sub.js'
-import { RequestId } from '../request/request-id.js'
 import { InviteCode } from '../types/invite-code.js'
 import { SignUpInput } from './sign-up-input.js'
 
@@ -61,21 +60,6 @@ export type AuthenticateAccountData = {
 export type AuthorizedClientData = { authorizedScopes: readonly string[] }
 export type AuthorizedClients = Map<ClientId, AuthorizedClientData>
 
-export type DeviceAccountData = {
-  remembered: boolean
-
-  /**
-   * If the session is "ephemeral" (i.e. not "remembered"), a cookie secret will
-   * be stored in the device account (as a session cookie). This cookie secret
-   * will be required to authenticate the device account in the future. This
-   * mechanism is used to ensure that the ephemeral session cannot be used after
-   * the device decided to forget the cookie.
-   *
-   * @note This value will typically be `null` if `remembered` is `true`.
-   */
-  ephemeralCookie: null | string
-}
-
 export type DeviceAccount = {
   deviceId: DeviceId
 
@@ -98,13 +82,6 @@ export type DeviceAccount = {
   authorizedClients: AuthorizedClients
 
   /**
-   * The requestId in the context of which the device account is being created.
-   *
-   * @note This value will typically be `null` if `remembered` is `true`.
-   */
-  requestId: null | RequestId
-
-  /**
    * The date at which the device account was created. This value is used to
    * determine the expiration date of the device account.
    */
@@ -115,12 +92,6 @@ export type DeviceAccount = {
    * to determine the date at which the user last authenticated on a device
    */
   updatedAt: Date
-
-  /**
-   * The date at which the device account was last authenticated. This value
-   * is used to determine the validity of the device account.
-   */
-  data: DeviceAccountData
 }
 
 export type SignUpData = SignUpInput & {
@@ -166,12 +137,7 @@ export interface AccountStore {
    * {@link RequestStore.deleteRequest}), all accounts bound to that request
    * should be deleted as well.
    */
-  upsertDeviceAccount(
-    deviceId: DeviceId,
-    sub: Sub,
-    requestId: RequestId | null,
-    data: DeviceAccountData,
-  ): Awaitable<void>
+  addDeviceAccount(deviceId: DeviceId, sub: Sub): Awaitable<void>
 
   /**
    * @param requestId - If provided, the result must either have the same
@@ -183,15 +149,7 @@ export interface AccountStore {
   getDeviceAccount(
     deviceId: DeviceId,
     sub: Sub,
-    requestId: null | RequestId,
   ): Awaitable<DeviceAccount | null>
-
-  /**
-   * Remove the device-accounts associated with the given requestId.
-   *
-   * @note Noop if the device-account is not found.
-   */
-  removeRequestDeviceAccounts(requestId: RequestId): Awaitable<void>
 
   /**
    * Removes *all* the unbound device-accounts associated with the given device
@@ -206,15 +164,6 @@ export interface AccountStore {
    * criteria and given {@link filter}.
    */
   listDeviceAccounts(
-    /**
-     * If provided, the results must either have the same `requestId`, or not be
-     * bound to a particular `requestId` (`requestId == null`). If `null`, the
-     * results must not be bound to a particular `requestId`:
-     *
-     * - input: `null` => output: `requestId == null`
-     * - input: `"id"` => output: `requestId == null || requestId == "id"`
-     */
-    requestId: RequestId | null,
     filter: { sub: Sub } | { deviceId: DeviceId },
   ): Awaitable<DeviceAccount[]>
 
@@ -232,9 +181,8 @@ export const isAccountStore = buildInterfaceChecker<AccountStore>([
   'authenticateAccount',
   'setAuthorizedClient',
   'getAccount',
-  'upsertDeviceAccount',
+  'addDeviceAccount',
   'getDeviceAccount',
-  'removeRequestDeviceAccounts',
   'removeDeviceAccount',
   'listDeviceAccounts',
   'resetPasswordRequest',

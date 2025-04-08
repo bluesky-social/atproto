@@ -8,7 +8,7 @@ export function fromDateISO(dateStr: DateISO) {
 
 /**
  * Allows to ensure that {@link JsonEncoded} is not used with non-JSON
- * serializable values (e.g. {@link Date} or `function`s).
+ * serializable values (e.g. {@link Date} or {@link Function}s).
  */
 export type Encodable =
   | string
@@ -33,7 +33,7 @@ export type JsonString<T extends Encodable> = T extends readonly unknown[]
             : never
 
 declare const jsonEncodedType: unique symbol
-export type JsonEncoded<T extends Encodable> = JsonString<T> & {
+export type JsonEncoded<T extends Encodable = Encodable> = JsonString<T> & {
   [jsonEncodedType]: T
 }
 

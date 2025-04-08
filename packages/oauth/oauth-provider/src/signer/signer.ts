@@ -7,7 +7,9 @@ import {
   SignedJwt,
   VerifyOptions,
 } from '@atproto/jwk'
+import { dateToEpoch } from '../lib/util/date.js'
 import { OmitKey } from '../lib/util/type.js'
+import { ApiTokenPayload } from './api-token-payload.js'
 import {
   SignedTokenPayload,
   signedTokenPayloadSchema,
@@ -68,6 +70,30 @@ export class Signer {
       protectedHeader: result.protectedHeader,
       payload: signedTokenPayloadSchema.parse(result.payload) as RequiredKey<
         SignedTokenPayload,
+        C
+      >,
+    }
+  }
+
+  async createApiToken(payload: OmitKey<ApiTokenPayload, 'iss' | 'iat'>) {
+    return this.sign(
+      {
+        alg: undefined,
+        typ: 'at+jwt',
+      },
+      { ...payload, iat: dateToEpoch() },
+    )
+  }
+
+  async verifyApiToken<C extends string = never>(
+    token: SignedJwt,
+    options?: Omit<VerifyOptions<C>, 'issuer' | 'typ'>,
+  ) {
+    const result = await this.verify<C>(token, { ...options, typ: 'at+jwt' })
+    return {
+      protectedHeader: result.protectedHeader,
+      payload: signedTokenPayloadSchema.parse(result.payload) as RequiredKey<
+        ApiTokenPayload,
         C
       >,
     }

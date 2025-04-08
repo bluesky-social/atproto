@@ -1,15 +1,9 @@
-import { sql } from 'kysely'
-import { DeviceAccountData, DeviceId } from '@atproto/oauth-provider'
-import { toDateISO, toJson } from '../../db'
+import { DeviceId } from '@atproto/oauth-provider'
+import { toDateISO } from '../../db'
 import { AccountDb } from '../db'
 import { selectAccountQB } from './account'
 
-export function upsertQB(
-  db: AccountDb,
-  deviceId: DeviceId,
-  did: string,
-  data: DeviceAccountData,
-) {
+export function upsertQB(db: AccountDb, deviceId: DeviceId, did: string) {
   const now = new Date()
 
   return db.db
@@ -19,13 +13,11 @@ export function upsertQB(
       deviceId,
       createdAt: toDateISO(now),
       updatedAt: toDateISO(now),
-      data: toJson(data),
     })
     .onConflict((oc) =>
       // uses pk
       oc.columns(['deviceId', 'did']).doUpdateSet({
         updatedAt: toDateISO(now),
-        data: toJson(data),
       }),
     )
 }
@@ -48,10 +40,8 @@ export function selectQB(
       .innerJoin('account_device', 'account_device.did', 'actor.did')
       .select([
         'account_device.deviceId',
-        sql<null>`NULL`.as('requestId'),
         'account_device.createdAt as adCreatedAt',
         'account_device.updatedAt as adUpdatedAt',
-        'account_device.data',
       ])
       .innerJoin('device', 'device.id', 'account_device.deviceId')
       .select([
