@@ -32,7 +32,7 @@ msgstr ""
 msgid "An error occurred, please try again."
 msgstr ""
 
-#: src/routes/_minimalLayout/account/_appLayout/$sub.tsx:232
+#: src/routes/_minimalLayout/account/_appLayout/$sub.tsx:233
 msgid "Are you sure you want to remove this device?"
 msgstr ""
 
@@ -184,12 +184,12 @@ msgstr ""
 msgid "Remember this account on this device"
 msgstr ""
 
-#: src/routes/_minimalLayout/account/_appLayout/$sub.tsx:233
-#: src/routes/_minimalLayout/account/_appLayout/$sub.tsx:238
+#: src/routes/_minimalLayout/account/_appLayout/$sub.tsx:234
+#: src/routes/_minimalLayout/account/_appLayout/$sub.tsx:239
 msgid "Remove"
 msgstr ""
 
-#: src/routes/_minimalLayout/account/_appLayout/$sub.tsx:231
+#: src/routes/_minimalLayout/account/_appLayout/$sub.tsx:232
 msgid "Remove this device"
 msgstr ""
 
@@ -243,6 +243,10 @@ msgstr ""
 
 #: src/routes/_minimalLayout/account/_appLayout/$sub.tsx:122
 msgid "Successfully signed out"
+msgstr ""
+
+#: src/routes/_minimalLayout/account/_appLayout/$sub.tsx:229
+msgid "This device"
 msgstr ""
 
 #: src/components/Avatar.tsx:24

@@ -297,7 +297,7 @@ export function apiRouter<
       '/account-sessions',
       z.object({ sub: subSchema }).strict(),
       async function (req, res) {
-        const { deviceAccount } = await authenticate(
+        const { deviceId, deviceAccount } = await authenticate(
           req,
           res,
           this.input.sub,
@@ -312,16 +312,18 @@ export function apiRouter<
 
         return {
           results: deviceAccounts.map(
-            ({ deviceId, deviceData, data }): ActiveAccountSession => ({
-              deviceId,
+            (accountSession): ActiveAccountSession => ({
+              deviceId: accountSession.deviceId,
               deviceMetadata: {
-                ipAddress: deviceData.ipAddress,
-                userAgent: deviceData.userAgent,
+                ipAddress: accountSession.deviceData.ipAddress,
+                userAgent: accountSession.deviceData.userAgent,
                 lastSeenAt:
-                  deviceData.lastSeenAt.toISOString() as ISODateString,
+                  accountSession.deviceData.lastSeenAt.toISOString() as ISODateString,
               },
 
-              remembered: data.remembered,
+              remembered: accountSession.data.remembered,
+
+              isCurrentDevice: accountSession.deviceId === deviceId,
             }),
           ),
         }

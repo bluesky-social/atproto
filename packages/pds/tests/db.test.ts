@@ -1,12 +1,5 @@
 import { TestNetworkNoAppView } from '@atproto/dev-env'
-
-// @NOTE Not using an import from "../src" because this results in types from
-// "src" and "dst" being mixed (because of the circular dependency between
-// dev-end and pds). That mixing of types is usually not a problem (as they are
-// considered as two different implementation of the same interfaces by TS),
-// except when `unique symbol` are used, which is the case for
-// `jsonEncodedType` used by DB definitions.
-type AccountDb = TestNetworkNoAppView['pds']['ctx']['accountManager']['db']
+import { AccountDb } from '../dist/account-manager/db'
 
 describe('db', () => {
   let network: TestNetworkNoAppView

@@ -226,6 +226,7 @@ function AccountSessionCard({
           </span>
         </p>
       </div>
+      {session.isCurrentDevice ? <Trans>This device</Trans> : null}
       <div>
         <Prompt
           title={_(msg`Remove this device`)}

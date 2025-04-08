@@ -149,6 +149,8 @@ export type ActiveAccountSession = {
   deviceMetadata: DeviceMetadata
 
   remembered: boolean
+
+  isCurrentDevice: boolean
 }
 
 /**

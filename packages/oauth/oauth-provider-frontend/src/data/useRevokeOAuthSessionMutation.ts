@@ -5,9 +5,13 @@ export function useRevokeOAuthSessionMutation() {
   const qc = useQueryClient()
 
   return useMutation({
-    async mutationFn(_input: { sub: string; tokenId: string }) {
-      // @TODO
-      throw new Error('NOT IMPLEMENTED')
+    async mutationFn({ tokenId }: { sub: string; tokenId: string }) {
+      await fetch(`/oauth/revoke`, {
+        method: 'POST',
+        credentials: 'include',
+        body: new URLSearchParams({ token: tokenId }).toString(),
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      })
     },
     onSuccess(_, input) {
       qc.invalidateQueries({ queryKey: accountSessionsQueryKey(input) })

@@ -166,7 +166,7 @@ export function oauthRouter<
         .catch(throwInvalidRequest)
 
       try {
-        await server.revoke(token, { signDeviceOut: true })
+        await server.revoke(token)
       } catch (err) {
         // No error should be returned if the token is not valid (per spec)
         onError?.(req, res, err, 'Failed to revoke token')
