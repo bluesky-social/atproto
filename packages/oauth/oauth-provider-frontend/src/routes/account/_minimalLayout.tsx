@@ -15,7 +15,13 @@ function RouteComponent() {
     <Layout.Center className="md:pt-[15vh]">
       {logo ? (
         <div className="flex justify-center pb-8" aria-hidden>
-          <img src={logo} alt={name || t`Logo`} style={{ width: 120 }} />
+          <div style={{ width: 200, height: 50 }}>
+            <img
+              src={logo}
+              alt={name || t`Logo`}
+              className="h-full w-full object-contain"
+            />
+          </div>
         </div>
       ) : null}
       <Outlet />
