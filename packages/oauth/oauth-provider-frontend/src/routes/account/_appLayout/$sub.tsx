@@ -4,6 +4,7 @@ import { Trans } from '@lingui/react/macro'
 import { Cross2Icon, ExitIcon } from '@radix-ui/react-icons'
 import { createFileRoute } from '@tanstack/react-router'
 import { useMemo } from 'react'
+import { UAParser } from 'ua-parser-js'
 import { ActiveAccountSession, ActiveOAuthSession } from '#/api'
 import * as Admonition from '#/components/Admonition'
 import { Avatar } from '#/components/Avatar'
@@ -17,11 +18,9 @@ import { useOAuthSessionsQuery } from '#/data/useOAuthSessionsQuery'
 import { useRevokeAccountSessionMutation } from '#/data/useRevokeAccountSessionMutation'
 import { useRevokeOAuthSessionMutation } from '#/data/useRevokeOAuthSessionMutation'
 
-export const Route = createFileRoute('/account/_appLayout/$sub')(
-  {
-    component: Sessions,
-  },
-)
+export const Route = createFileRoute('/account/_appLayout/$sub')({
+  component: Sessions,
+})
 
 export function Sessions() {
   const { _ } = useLingui()
@@ -61,7 +60,11 @@ export function Sessions() {
       ) : sessions.length > 0 ? (
         <div className="space-y-2">
           {sessions.map((session) => (
-            <ApplicationSessionCard key={session.tokenId} sub={sub} session={session} />
+            <ApplicationSessionCard
+              key={session.tokenId}
+              sub={sub}
+              session={session}
+            />
           ))}
         </div>
       ) : (
@@ -185,6 +188,12 @@ function AccountSessionCard({
   const { _, i18n } = useLingui()
   const { mutateAsync: revokeSessions, isPending } =
     useRevokeAccountSessionMutation()
+  const ua = useMemo(() => {
+    if (!session.deviceMetadata.userAgent) {
+      return null
+    }
+    return UAParser(session.deviceMetadata.userAgent)
+  }, [session.deviceMetadata.userAgent])
 
   const remove = async () => {
     try {
@@ -214,21 +223,31 @@ function AccountSessionCard({
 
   return (
     <div className="border-contrast-50 dark:border-contrast-100 flex items-start justify-between space-x-4 border-t px-2 pt-3">
-      <div className="flex flex-col flex-1 space-x-2 truncate">
-        <p className="font-semibold truncate">{session.deviceMetadata.userAgent}</p>
+      <div className="flex flex-1 flex-col space-x-2 truncate">
+        <p className="truncate font-semibold">
+          {ua ? (
+            ua.device.is('mobile') ? (
+              [ua.os.name].filter(Boolean).join(' • ')
+            ) : (
+              [ua.os.name, ua.browser.name].filter(Boolean).join(' • ')
+            )
+          ) : (
+            <Trans>Unknown user agent</Trans>
+          )}
+        </p>
         <p className="text-sm">
           <span className="text-text-light">
             {lastUsed}
             {' • '}
           </span>
-          <span className="text-warning-600 font-mono truncate">
+          <span className="text-warning-600 truncate font-mono">
             {session.deviceMetadata.ipAddress}
           </span>
         </p>
       </div>
       {session.isCurrentDevice && (
-        <div className='flex-shrink'>
-          <div className='px-2 py-1 rounded-full bg-contrast-25 dark:bg-contrast-50 text-xs text-text-light'>
+        <div className="flex-shrink">
+          <div className="bg-contrast-25 dark:bg-contrast-50 text-text-light rounded-full px-2 py-1 text-xs">
             <Trans>This device</Trans>
           </div>
         </div>
