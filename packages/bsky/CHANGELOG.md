@@ -1,5 +1,23 @@
 # @atproto/bsky
 
+## 0.0.138
+
+### Patch Changes
+
+- [#3724](https://github.com/bluesky-social/atproto/pull/3724) [`8b7bf7e8f`](https://github.com/bluesky-social/atproto/commit/8b7bf7e8f0e5447c68633a87a2a3cff99f9e7e1c) Thanks [@haileyok](https://github.com/haileyok)! - Return `ProfileView` from `getSuggestedUsers` unspecced endpoint
+
+- Updated dependencies [[`8b7bf7e8f`](https://github.com/bluesky-social/atproto/commit/8b7bf7e8f0e5447c68633a87a2a3cff99f9e7e1c)]:
+  - @atproto/api@0.14.21
+
+## 0.0.137
+
+### Patch Changes
+
+- [#3713](https://github.com/bluesky-social/atproto/pull/3713) [`0e681d303`](https://github.com/bluesky-social/atproto/commit/0e681d3036fd0b35c6d2198638392051b2ce4c81) Thanks [@haileyok](https://github.com/haileyok)! - add `getSuggestedUsers` and `getSuggestedUsersSkeleton`
+
+- Updated dependencies [[`0e681d303`](https://github.com/bluesky-social/atproto/commit/0e681d3036fd0b35c6d2198638392051b2ce4c81)]:
+  - @atproto/api@0.14.20
+
 ## 0.0.136
 
 ### Patch Changes
