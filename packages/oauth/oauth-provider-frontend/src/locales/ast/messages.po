@@ -221,6 +221,7 @@ msgstr ""
 msgid "Sign out"
 msgstr ""
 
+#. placeholder {0}: clientMetadata.client_name
 #: src/routes/account/_appLayout/$sub.tsx:159
 msgid "Sign out of {0}"
 msgstr ""
@@ -257,6 +258,7 @@ msgstr ""
 msgid "User avatar"
 msgstr ""
 
+#. placeholder {0}: getAccountName(account)
 #: src/routes/account/_minimalLayout/index.tsx:76
 msgid "View and manage account for {0}"
 msgstr ""
