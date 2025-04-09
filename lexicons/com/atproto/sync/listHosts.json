@@ -47,8 +47,8 @@
         },
         "accountCount": { "type": "integer" },
         "status": {
-          "type": "string",
-          "knownValues": ["active", "idle", "offline", "throttled", "banned"]
+          "type": "ref",
+          "ref": "com.atproto.sync.defs#hostStatus"
         }
       }
     }
