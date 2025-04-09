@@ -18,6 +18,9 @@ export const REQUEST_ID_BYTES_LENGTH = 16 // 128 bits
 export const CODE_PREFIX = 'cod-'
 export const CODE_BYTES_LENGTH = 32
 
+export const DEVICE_ID_COOKIE_NAME = 'device-id'
+export const SESSION_ID_COOKIE_NAME = 'session-id'
+
 const SECOND = 1e3
 const MINUTE = 60 * SECOND
 const HOUR = 60 * MINUTE

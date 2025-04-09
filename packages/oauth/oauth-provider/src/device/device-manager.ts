@@ -1,7 +1,11 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { serialize as serializeCookie } from 'cookie'
 import { z } from 'zod'
-import { SESSION_FIXATION_MAX_AGE } from '../constants.js'
+import {
+  DEVICE_ID_COOKIE_NAME,
+  SESSION_FIXATION_MAX_AGE,
+  SESSION_ID_COOKIE_NAME,
+} from '../constants.js'
 import { appendHeader, parseHttpCookies } from '../lib/http/index.js'
 import { RequestMetadata, extractRequestMetadata } from '../lib/http/request.js'
 import { DeviceData } from './device-data.js'
@@ -41,18 +45,6 @@ export const deviceManagerOptionsSchema = z.object({
   cookie: z
     .object({
       keys: keygripSchema.optional(),
-      /**
-       * Name of the cookie used to identify the device
-       *
-       * @default 'dev'
-       */
-      device: z.string().default('dev'),
-      /**
-       * Name of the cookie used to identify the session
-       *
-       * @default 'ses'
-       */
-      session: z.string().default('ses'),
       /**
        * Amount of time (in ms) after which the session cookie will expire.
        * If set to `null`, the cookie will be a session cookie (deleted when the
@@ -211,12 +203,12 @@ export class DeviceManager {
 
     const device = this.parseCookie(
       cookies,
-      this.options.cookie.device,
+      DEVICE_ID_COOKIE_NAME,
       deviceIdSchema,
     )
     const session = this.parseCookie(
       cookies,
-      this.options.cookie.session,
+      SESSION_ID_COOKIE_NAME,
       sessionIdSchema,
     )
 
@@ -258,8 +250,8 @@ export class DeviceManager {
   }
 
   private setCookie(res: ServerResponse, cookieValue: null | CookieValue) {
-    this.writeCookie(res, this.options.cookie.device, cookieValue?.[0])
-    this.writeCookie(res, this.options.cookie.session, cookieValue?.[1])
+    this.writeCookie(res, DEVICE_ID_COOKIE_NAME, cookieValue?.[0])
+    this.writeCookie(res, SESSION_ID_COOKIE_NAME, cookieValue?.[1])
   }
 
   private writeCookie(res: ServerResponse, name: string, value?: string) {
@@ -272,7 +264,7 @@ export class DeviceManager {
       httpOnly: true,
       path: '/',
       secure: this.options.cookie.secure !== false,
-      sameSite: this.options.cookie.sameSite === 'lax' ? 'lax' : 'strict',
+      sameSite: this.options.cookie.sameSite,
     } as const
 
     appendHeader(

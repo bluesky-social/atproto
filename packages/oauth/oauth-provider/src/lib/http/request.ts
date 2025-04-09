@@ -95,12 +95,14 @@ export function validateReferrer(
   reference: UrlReference,
   allowNull = false,
 ) {
-  const referrer = req.headers['referrer']
-  const refererUrl = referrer ? new URL(referrer) : null
-  if (refererUrl ? !urlMatch(refererUrl, reference) : !allowNull) {
+  // @NOTE The header name "referer" is actually a misspelling of the word
+  // "referrer". https://en.wikipedia.org/wiki/HTTP_referer
+  const referrer = req.headers['referer']
+  const referrerUrl = referrer ? new URL(referrer) : null
+  if (referrerUrl ? !urlMatch(referrerUrl, reference) : !allowNull) {
     throw createHttpError(400, `Invalid referrer ${referrer}`)
   }
-  return refererUrl
+  return referrerUrl
 }
 
 export function validateOrigin(
