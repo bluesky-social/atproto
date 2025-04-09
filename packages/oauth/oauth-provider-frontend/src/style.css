@@ -4,12 +4,20 @@
 @import './styles/radix-toast.css';
 
 :root {
-  --hue-primary: var(--hue-brand);
+  --hue-primary: var(--branding-color-primary-hue);
+  --hue-error: var(--branding-color-error-hue);
+  --hue-warning: var(--branding-color-warning-hue);
+  --hue-success: var(--branding-color-success-hue);
 
-  --color-primary-exact: rgb(var(--color-brand));
-  --color-error-exact: rgb(var(--color-error));
-  --color-warning-exact: rgb(var(--color-warning));
-  --color-success-exact: rgb(var(--color-success));
+  --color-primary: rgb(var(--branding-color-primary));
+  --color-error: rgb(var(--branding-color-error));
+  --color-warning: rgb(var(--branding-color-warning));
+  --color-success: rgb(var(--branding-color-success));
+
+  --color-primary-contrast: rgb(var(--branding-color-primary-contrast));
+  --color-error-contrast: rgb(var(--branding-color-error-contrast));
+  --color-warning-contrast: rgb(var(--branding-color-warning-contrast));
+  --color-success-contrast: rgb(var(--branding-color-success-contrast));
 
   --color-contrast-0: hsl(var(--hue-primary) 20% 100%);
   --color-contrast-25: hsl(var(--hue-primary) 20% 95.3%);
@@ -177,10 +185,16 @@
   --color-success-950: var(--color-success-950);
   --color-success-975: var(--color-success-975);
 
-  --color-primary: var(--color-primary-exact);
-  --color-error: var(--color-error-exact);
-  --color-warning: var(--color-warning-exact);
-  --color-success: var(--color-success-exact);
+  --color-primary: var(--color-primary);
+  --color-error: var(--color-error);
+  --color-warning: var(--color-warning);
+  --color-success: var(--color-success);
+
+  --color-primary-contrast: var(--color-primary-contrast);
+  --color-error-contrast: var(--color-error-contrast);
+  --color-warning-contrast: var(--color-warning-contrast);
+  --color-success-contrast: var(--color-success-contrast);
+
   --color-text-default: var(--color-contrast-900);
   --color-text-light: var(--color-contrast-700);
   --color-border-default: var(--color-contrast-200);

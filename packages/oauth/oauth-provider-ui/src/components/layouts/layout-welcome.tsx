@@ -38,7 +38,7 @@ export function LayoutWelcome({
     >
       {title && <title>{title}</title>}
 
-      <main className="flex w-full flex-grow flex-col items-center justify-center overflow-hidden p-6">
+      <main className="flex w-full grow flex-col items-center justify-center overflow-hidden p-6">
         {logo && (
           <img
             src={logo}
@@ -62,7 +62,7 @@ export function LayoutWelcome({
           <LinkAnchor
             key={i}
             link={link}
-            className="text-brand m-2 text-xs hover:underline md:m-4 md:text-sm"
+            className="text-primary m-2 text-xs hover:underline md:m-4 md:text-sm"
           />
         ))}
 

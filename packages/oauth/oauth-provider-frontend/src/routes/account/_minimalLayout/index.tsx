@@ -53,7 +53,7 @@ export function SelectorScreen({
       <ContentCard>
         <div className="space-y-4">
           <div className="space-y-1">
-            <h1 className="text-custom-brand text-xl font-bold">
+            <h1 className="text-custom-primary text-xl font-bold">
               <Trans>Accounts</Trans>
             </h1>
             <p className="text-text-light">
@@ -82,7 +82,7 @@ export function SelectorScreen({
                   displayName={account.name}
                 />
                 <div className="flex-1 space-y-0 truncate">
-                  <h2 className="text-brand truncate font-semibold leading-snug">
+                  <h2 className="text-primary truncate font-semibold leading-snug">
                     {account.name}
                   </h2>
                   <p className="text-text-light truncate text-sm">

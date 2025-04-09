@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { RgbColor, parseColor } from '../lib/util/color.js'
 
-export const COLOR_NAMES = ['brand', 'error', 'warning', 'success'] as const
+export const COLOR_NAMES = ['primary', 'error', 'warning', 'success'] as const
 
 export const colorsSchema = z.record(
   z.enum(COLOR_NAMES),

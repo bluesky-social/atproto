@@ -29,7 +29,7 @@ export function WelcomeView({
       {onSignUp && (
         <Button
           className={'m-1 w-60 min-w-min max-w-full'}
-          color={onSignIn ? 'brand' : undefined}
+          color={onSignIn ? 'primary' : undefined}
           onClick={onSignUp}
         >
           <Trans>Create a new account</Trans>
@@ -39,7 +39,7 @@ export function WelcomeView({
       {onSignIn && (
         <Button
           className={'m-1 w-60 min-w-min max-w-full'}
-          color={onSignUp ? undefined : 'brand'}
+          color={onSignUp ? undefined : 'primary'}
           onClick={onSignIn}
         >
           <Trans>Sign in</Trans>

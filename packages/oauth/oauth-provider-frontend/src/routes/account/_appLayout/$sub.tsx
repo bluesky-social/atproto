@@ -40,13 +40,13 @@ export function Sessions() {
             <Trans>Accounts</Trans>
           </InlineLink>
         </li>
-        <li className="text-custom-brand">/</li>
+        <li className="text-custom-primary">/</li>
         <li>
           <Trans>Home</Trans>
         </li>
       </ul>
 
-      <h2 className="text-custom-brand text-brand pb-4 pt-8 text-xl font-bold">
+      <h2 className="text-custom-primary text-primary pb-4 pt-8 text-xl font-bold">
         <Trans>Connected apps</Trans>
       </h2>
 
@@ -77,7 +77,7 @@ export function Sessions() {
         />
       )}
 
-      <h2 className="text-custom-brand pb-4 pt-8 text-xl font-bold">
+      <h2 className="text-custom-primary pb-4 pt-8 text-xl font-bold">
         <Trans>My devices</Trans>
       </h2>
 

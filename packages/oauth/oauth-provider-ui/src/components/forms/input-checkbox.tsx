@@ -51,7 +51,7 @@ export function InputCheckbox({
           }
           ref={mergeRefs([ref, inputRef])}
           id={inputId}
-          className="accent-brand outline-none"
+          className="accent-primary outline-hidden"
           type="checkbox"
         />
       }

@@ -36,7 +36,7 @@ export function HelpCard({
           href={helpLink.href}
           rel={helpLink.rel}
           target="_blank"
-          className="text-brand"
+          className="text-primary"
         >
           <Trans>Contact support</Trans>
         </a>

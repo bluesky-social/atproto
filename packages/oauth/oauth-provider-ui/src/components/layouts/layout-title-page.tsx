@@ -48,11 +48,11 @@ export function LayoutTitlePage({
           'md:bg-slate-100 md:dark:bg-slate-800',
         )}
       >
-        <div className="grid flex-grow content-center md:justify-items-end">
+        <div className="grid grow content-center md:justify-items-end">
           {title && (
             <h1
               key="title"
-              className="text-brand text-xl font-semibold md:my-4 md:text-2xl lg:text-5xl"
+              className="text-primary text-xl font-semibold md:my-4 md:text-2xl lg:text-5xl"
             >
               {title}
             </h1>

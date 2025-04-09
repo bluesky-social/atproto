@@ -53,7 +53,7 @@ export function AcceptForm({
       cancel={onBack && <Button onClick={onBack}>Back</Button>}
       actions={
         <>
-          <Button type="submit" color="brand">
+          <Button type="submit" color="primary">
             <Trans>Authorize</Trans>
           </Button>
 
@@ -99,7 +99,7 @@ export function AcceptForm({
             href={clientMetadata.tos_uri}
             rel="nofollow noopener"
             target="_blank"
-            className="text-brand underline"
+            className="text-primary underline"
           >
             <Trans>terms of service</Trans>
           </a>
@@ -109,7 +109,7 @@ export function AcceptForm({
             href={clientMetadata.policy_uri}
             rel="nofollow noopener"
             target="_blank"
-            className="text-brand underline"
+            className="text-primary underline"
           >
             <Trans>privacy policy</Trans>
           </a>

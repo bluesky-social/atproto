@@ -114,7 +114,7 @@ function LoginForm() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-custom-brand text-xl font-bold">
+      <h1 className="text-custom-primary text-xl font-bold">
         <Trans>Sign in</Trans>
       </h1>
       <form

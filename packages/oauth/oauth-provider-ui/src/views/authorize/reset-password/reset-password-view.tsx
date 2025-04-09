@@ -115,7 +115,7 @@ export function ResetPasswordView({
           <p className="pb-4">
             <Trans>You can now sign in with your new password.</Trans>
           </p>
-          <Button color="brand" onClick={onBack}>
+          <Button color="primary" onClick={onBack}>
             <Trans>Okay</Trans>
           </Button>
         </center>

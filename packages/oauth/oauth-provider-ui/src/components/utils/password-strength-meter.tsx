@@ -50,7 +50,7 @@ export function PasswordStrengthMeter({
       {Array.from({ length: 4 }, (_, i) => (
         <div
           key={i}
-          className={`h-1 w-1/4 rounded ${strength > i ? color : colorBg}`}
+          className={`h-1 w-1/4 rounded-sm ${strength > i ? color : colorBg}`}
         />
       ))}
     </div>

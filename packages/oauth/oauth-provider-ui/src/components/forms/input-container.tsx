@@ -55,17 +55,17 @@ export function InputContainer({
           // Border
           'rounded-lg',
           bellow ? 'rounded-bl-none rounded-br-none' : undefined,
-          'outline-none',
+          'outline-hidden',
           'border-2 border-solid border-transparent',
-          'focus:border-brand has-[:focus]:border-brand',
+          'focus:border-primary has-focus:border-primary',
           'hover:border-gray-400 hover:focus:border-gray-400',
           'dark:hover:border-gray-500 dark:hover:focus:border-gray-500',
           // Background
-          'bg-gray-100 focus:bg-slate-200 has-[:focus]:bg-slate-200',
-          'dark:bg-slate-800 dark:focus:bg-slate-700 dark:has-[:focus]:bg-slate-700',
+          'has-focus:bg-slate-200 bg-gray-100 focus:bg-slate-200',
+          'dark:has-focus:bg-slate-700 dark:bg-slate-800 dark:focus:bg-slate-700',
           // Font
           'text-slate-600 dark:text-slate-300',
-          'accent-brand',
+          'accent-primary',
         )}
       >
         {icon && (
@@ -73,7 +73,7 @@ export function InputContainer({
             className={clsx(
               'shrink-0 grow-0',
               'mx-1',
-              hasFocus ? 'text-brand' : 'text-slate-500',
+              hasFocus ? 'text-primary' : 'text-slate-500',
             )}
           >
             {icon}

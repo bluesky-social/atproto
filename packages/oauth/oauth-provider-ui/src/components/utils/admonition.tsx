@@ -27,21 +27,21 @@ export const Admonition = memo(function Admonition({
         'rounded-lg',
         'border',
         'border-gray-300 dark:border-gray-700',
-        role === 'alert' && 'bg-error text-error-c',
+        role === 'alert' && 'bg-error text-error-contrast',
         className,
       )}
     >
       {role === 'info' ? (
         <EyeIcon
           aria-hidden
-          className={clsx('h-6 w-6 fill-current', 'text-brand')}
+          className={clsx('h-6 w-6 fill-current', 'text-primary')}
         />
       ) : (
         <AlertIcon
           aria-hidden
           className={clsx(
             'h-6 w-6 fill-current',
-            role === 'alert' ? 'text-inherit' : 'text-brand',
+            role === 'alert' ? 'text-inherit' : 'text-primary',
           )}
         />
       )}

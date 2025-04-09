@@ -185,7 +185,7 @@ export function SignInForm({
       />
 
       <Admonition role="status">
-        <p className="text-md text-brand pb-1 font-bold">
+        <p className="text-md text-primary pb-1 font-bold">
           <Trans>Warning</Trans>
         </p>
         <p className="text-sm">

@@ -49,7 +49,7 @@ export class TestPds {
       inviteRequired: false,
       disableSsrfProtection: true,
       serviceName: 'Development PDS',
-      brandColor: '#8338ec',
+      primaryColor: '#8338ec',
       errorColor: '#ff006e',
       // Purposefully not setting warningColor to ensure that not all branding
       // colors are required from a config perspective.

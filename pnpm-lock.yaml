@@ -1269,6 +1269,9 @@ importers:
       '@swc/helpers':
         specifier: ^0.5.15
         version: 0.5.15
+      '@tailwindcss/postcss':
+        specifier: ^4.1.3
+        version: 4.1.3
       '@types/react':
         specifier: ^19.0.10
         version: 19.0.10
@@ -1281,9 +1284,6 @@ importers:
       '@web/rollup-plugin-import-meta-assets':
         specifier: ^2.2.1
         version: 2.2.1(rollup@4.34.9)
-      autoprefixer:
-        specifier: ^10.4.17
-        version: 10.4.19(postcss@8.5.3)
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
@@ -1306,8 +1306,8 @@ importers:
         specifier: ^4.0.2
         version: 4.0.2(postcss@8.5.3)
       tailwindcss:
-        specifier: ^3.4.3
-        version: 3.4.3
+        specifier: ^4.1.3
+        version: 4.1.3
       typescript:
         specifier: ^5.6.3
         version: 5.8.2
@@ -7974,6 +7974,16 @@ packages:
       '@tailwindcss/oxide-win32-x64-msvc': 4.1.3
     dev: true
 
+  /@tailwindcss/postcss@4.1.3:
+    resolution: {integrity: sha512-6s5nJODm98F++QT49qn8xJKHQRamhYHfMi3X7/ltxiSQ9dyRsaFSfFkfaMsanWzf+TMYQtbk8mt5f6cCVXJwfg==}
+    dependencies:
+      '@alloc/quick-lru': 5.2.0
+      '@tailwindcss/node': 4.1.3
+      '@tailwindcss/oxide': 4.1.3
+      postcss: 8.5.3
+      tailwindcss: 4.1.3
+    dev: true
+
   /@tailwindcss/vite@4.1.3(vite@6.2.0):
     resolution: {integrity: sha512-lUI/QaDxLtlV52Lho6pu07CG9pSnRYLOPmKGIQjyHdTBagemc6HmgZxyjGAQ/5HMPrNeWBfTVIpQl0/jLXvWHQ==}
     peerDependencies:
@@ -9072,22 +9082,6 @@ packages:
       normalize-range: 0.1.2
       picocolors: 1.1.1
       postcss: 8.4.38
-      postcss-value-parser: 4.2.0
-    dev: true
-
-  /autoprefixer@10.4.19(postcss@8.5.3):
-    resolution: {integrity: sha512-BaENR2+zBZ8xXhM4pUaKUxlVdxZ0EZhjvbopwnXmxRUfqDmwSpC2lAi/QXvx7NRdPCo1WKEcEF6mV64si1z4Ew==}
-    engines: {node: ^10 || ^12 || >=14}
-    hasBin: true
-    peerDependencies:
-      postcss: ^8.1.0
-    dependencies:
-      browserslist: 4.24.4
-      caniuse-lite: 1.0.30001700
-      fraction.js: 4.3.7
-      normalize-range: 0.1.2
-      picocolors: 1.1.1
-      postcss: 8.5.3
       postcss-value-parser: 4.2.0
     dev: true
 

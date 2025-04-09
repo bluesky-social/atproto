@@ -111,7 +111,7 @@ function RouteComponent() {
         {showSuccess ? (
           <>
             <div className="space-y-1">
-              <h1 className="text-custom-brand text-xl font-bold">
+              <h1 className="text-custom-primary text-xl font-bold">
                 <Trans>Success!</Trans>
               </h1>
               <p className="text-text-light">
@@ -125,7 +125,7 @@ function RouteComponent() {
         ) : (
           <>
             <div className="space-y-1">
-              <h1 className="text-custom-brand text-xl font-bold">
+              <h1 className="text-custom-primary text-xl font-bold">
                 <Trans>Reset password</Trans>
               </h1>
               <p className="text-text-light">

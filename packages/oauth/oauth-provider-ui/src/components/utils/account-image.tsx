@@ -25,7 +25,7 @@ export function AccountImage({ src, alt }: AccountIconProps) {
   ) : (
     <div
       aria-hidden
-      className="bg-brand border-brand h-6 w-6 overflow-hidden rounded-full border-2 border-solid text-white"
+      className="bg-primary border-primary h-6 w-6 overflow-hidden rounded-full border-2 border-solid text-white"
     >
       <AccountIcon className="-mx-1 -mb-1" />
     </div>

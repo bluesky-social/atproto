@@ -16,9 +16,9 @@ function* buildCustomizationVars(branding?: Branding): Generator<string> {
       const value = branding.colors[name]
       if (!value) continue // Skip missing colors
 
-      yield `--color-${name}: ${value.r} ${value.g} ${value.b};`
-      yield `--color-${name}-c: ${isLightColor(value) ? '0 0 0' : '255 255 255'};`
-      yield `--hue-${name}: ${extractHue(value)};`
+      yield `--branding-color-${name}: ${value.r} ${value.g} ${value.b};`
+      yield `--branding-color-${name}-contrast: ${isLightColor(value) ? '0 0 0' : '255 255 255'};`
+      yield `--branding-color-${name}-hue: ${extractHue(value)};`
     }
   }
 }

@@ -20,14 +20,14 @@ export function LocaleSelector({
     <select
       {...props}
       className={clsx(
-        'accent-brand',
+        'accent-primary',
         // Background
-        'bg-gray-100 focus:bg-slate-200 has-[:focus]:bg-slate-200',
-        'dark:bg-slate-800 dark:focus:bg-slate-700 dark:has-[:focus]:bg-slate-700',
+        'has-focus:bg-slate-200 bg-gray-100 focus:bg-slate-200',
+        'dark:has-focus:bg-slate-700 dark:bg-slate-800 dark:focus:bg-slate-700',
         // Border
-        'outline-none',
+        'outline-hidden',
         'border-2 border-solid border-transparent',
-        'focus:border-brand has-[:focus]:border-brand',
+        'focus:border-primary has-focus:border-primary',
         'hover:border-gray-400 hover:focus:border-gray-400',
         'dark:hover:border-gray-500 dark:hover:focus:border-gray-500',
         // Border

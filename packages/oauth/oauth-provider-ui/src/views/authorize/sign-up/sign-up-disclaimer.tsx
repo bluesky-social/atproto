@@ -30,7 +30,7 @@ export function SignUpDisclaimer({
       <Trans>
         By creating an account you agree to the{' '}
         {tosLink ? (
-          <LinkAnchor className="text-brand underline" link={tosLink}>
+          <LinkAnchor className="text-primary underline" link={tosLink}>
             <Trans>Terms of Service</Trans>
           </LinkAnchor>
         ) : (
@@ -38,7 +38,7 @@ export function SignUpDisclaimer({
         )}
         {' and the '}
         {ppLink ? (
-          <LinkAnchor className="text-brand underline" link={ppLink}>
+          <LinkAnchor className="text-primary underline" link={ppLink}>
             <Trans>Privacy Policy</Trans>
           </LinkAnchor>
         ) : (
