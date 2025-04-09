@@ -57,14 +57,16 @@
         [
           'device1',
           {
-            userAgent: 'Web',
+            userAgent:
+              'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36',
             ipAddress: '192.0.0.1',
           },
         ],
         [
           'device2',
           {
-            userAgent: 'iOS',
+            userAgent:
+              'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36',
             ipAddress: '192.0.0.1',
           },
         ],
@@ -258,6 +260,7 @@
                         deviceId,
                         deviceMetadata: devices.get(deviceId),
                         remember: s.remember,
+                        isCurrentDevice: true,
                       })),
                 ).flat(),
               })

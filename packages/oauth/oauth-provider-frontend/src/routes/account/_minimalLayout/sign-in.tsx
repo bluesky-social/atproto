@@ -18,7 +18,7 @@ import { format2FACode } from '#/util/format2FACode'
 import { wait } from '#/util/wait'
 import { normalizeAndEnsureValidHandle } from '@atproto/syntax'
 
-export const Route = createFileRoute('/_minimalLayout/account/sign-in')({
+export const Route = createFileRoute('/account/_minimalLayout/sign-in')({
   component: RouteComponent,
 })
 

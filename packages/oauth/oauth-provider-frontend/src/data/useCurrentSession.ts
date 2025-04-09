@@ -1,5 +1,5 @@
 import { useDeviceSessionsQuery } from '#/data/useDeviceSessionsQuery'
-import { Route as AccountRoute } from '#/routes/_minimalLayout/account/_appLayout/$sub'
+import { Route as AccountRoute } from '#/routes/account/_appLayout/$sub'
 
 export function useCurrentSession() {
   const { data: accounts } = useDeviceSessionsQuery()

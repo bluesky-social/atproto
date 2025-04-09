@@ -8,186 +8,223 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
+import { createFileRoute } from '@tanstack/react-router'
+
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
-import { Route as MinimalLayoutImport } from './routes/_minimalLayout'
-import { Route as AppLayoutImport } from './routes/_appLayout'
-import { Route as MinimalLayoutAccountIndexImport } from './routes/_minimalLayout/account/index'
-import { Route as MinimalLayoutAccountSignInImport } from './routes/_minimalLayout/account/sign-in'
-import { Route as MinimalLayoutAccountResetPasswordImport } from './routes/_minimalLayout/account/reset-password'
-import { Route as MinimalLayoutAccountAppLayoutSubImport } from './routes/_minimalLayout/account/_appLayout/$sub'
+import { Route as AccountMinimalLayoutImport } from './routes/account/_minimalLayout'
+import { Route as AccountAppLayoutImport } from './routes/account/_appLayout'
+import { Route as AccountMinimalLayoutIndexImport } from './routes/account/_minimalLayout/index'
+import { Route as AccountMinimalLayoutSignInImport } from './routes/account/_minimalLayout/sign-in'
+import { Route as AccountMinimalLayoutResetPasswordImport } from './routes/account/_minimalLayout/reset-password'
+import { Route as AccountAppLayoutSubImport } from './routes/account/_appLayout/$sub'
+
+// Create Virtual Routes
+
+const AccountImport = createFileRoute('/account')()
 
 // Create/Update Routes
 
-const MinimalLayoutRoute = MinimalLayoutImport.update({
+const AccountRoute = AccountImport.update({
+  id: '/account',
+  path: '/account',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const AccountMinimalLayoutRoute = AccountMinimalLayoutImport.update({
   id: '/_minimalLayout',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => AccountRoute,
 } as any)
 
-const AppLayoutRoute = AppLayoutImport.update({
+const AccountAppLayoutRoute = AccountAppLayoutImport.update({
   id: '/_appLayout',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => AccountRoute,
 } as any)
 
-const MinimalLayoutAccountIndexRoute = MinimalLayoutAccountIndexImport.update({
-  id: '/account/',
-  path: '/account/',
-  getParentRoute: () => MinimalLayoutRoute,
+const AccountMinimalLayoutIndexRoute = AccountMinimalLayoutIndexImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AccountMinimalLayoutRoute,
 } as any)
 
-const MinimalLayoutAccountSignInRoute = MinimalLayoutAccountSignInImport.update(
+const AccountMinimalLayoutSignInRoute = AccountMinimalLayoutSignInImport.update(
   {
-    id: '/account/sign-in',
-    path: '/account/sign-in',
-    getParentRoute: () => MinimalLayoutRoute,
+    id: '/sign-in',
+    path: '/sign-in',
+    getParentRoute: () => AccountMinimalLayoutRoute,
   } as any,
 )
 
-const MinimalLayoutAccountResetPasswordRoute =
-  MinimalLayoutAccountResetPasswordImport.update({
-    id: '/account/reset-password',
-    path: '/account/reset-password',
-    getParentRoute: () => MinimalLayoutRoute,
+const AccountMinimalLayoutResetPasswordRoute =
+  AccountMinimalLayoutResetPasswordImport.update({
+    id: '/reset-password',
+    path: '/reset-password',
+    getParentRoute: () => AccountMinimalLayoutRoute,
   } as any)
 
-const MinimalLayoutAccountAppLayoutSubRoute =
-  MinimalLayoutAccountAppLayoutSubImport.update({
-    id: '/account/_appLayout/$sub',
-    path: '/account/$sub',
-    getParentRoute: () => MinimalLayoutRoute,
-  } as any)
+const AccountAppLayoutSubRoute = AccountAppLayoutSubImport.update({
+  id: '/$sub',
+  path: '/$sub',
+  getParentRoute: () => AccountAppLayoutRoute,
+} as any)
 
 // Populate the FileRoutesByPath interface
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/_appLayout': {
-      id: '/_appLayout'
-      path: ''
-      fullPath: ''
-      preLoaderRoute: typeof AppLayoutImport
-      parentRoute: typeof rootRoute
-    }
-    '/_minimalLayout': {
-      id: '/_minimalLayout'
-      path: ''
-      fullPath: ''
-      preLoaderRoute: typeof MinimalLayoutImport
-      parentRoute: typeof rootRoute
-    }
-    '/_minimalLayout/account/reset-password': {
-      id: '/_minimalLayout/account/reset-password'
-      path: '/account/reset-password'
-      fullPath: '/account/reset-password'
-      preLoaderRoute: typeof MinimalLayoutAccountResetPasswordImport
-      parentRoute: typeof MinimalLayoutImport
-    }
-    '/_minimalLayout/account/sign-in': {
-      id: '/_minimalLayout/account/sign-in'
-      path: '/account/sign-in'
-      fullPath: '/account/sign-in'
-      preLoaderRoute: typeof MinimalLayoutAccountSignInImport
-      parentRoute: typeof MinimalLayoutImport
-    }
-    '/_minimalLayout/account/': {
-      id: '/_minimalLayout/account/'
+    '/account': {
+      id: '/account'
       path: '/account'
       fullPath: '/account'
-      preLoaderRoute: typeof MinimalLayoutAccountIndexImport
-      parentRoute: typeof MinimalLayoutImport
+      preLoaderRoute: typeof AccountImport
+      parentRoute: typeof rootRoute
     }
-    '/_minimalLayout/account/_appLayout/$sub': {
-      id: '/_minimalLayout/account/_appLayout/$sub'
-      path: '/account/$sub'
+    '/account/_appLayout': {
+      id: '/account/_appLayout'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof AccountAppLayoutImport
+      parentRoute: typeof AccountRoute
+    }
+    '/account/_minimalLayout': {
+      id: '/account/_minimalLayout'
+      path: ''
+      fullPath: '/account'
+      preLoaderRoute: typeof AccountMinimalLayoutImport
+      parentRoute: typeof AccountImport
+    }
+    '/account/_appLayout/$sub': {
+      id: '/account/_appLayout/$sub'
+      path: '/$sub'
       fullPath: '/account/$sub'
-      preLoaderRoute: typeof MinimalLayoutAccountAppLayoutSubImport
-      parentRoute: typeof MinimalLayoutImport
+      preLoaderRoute: typeof AccountAppLayoutSubImport
+      parentRoute: typeof AccountAppLayoutImport
+    }
+    '/account/_minimalLayout/reset-password': {
+      id: '/account/_minimalLayout/reset-password'
+      path: '/reset-password'
+      fullPath: '/account/reset-password'
+      preLoaderRoute: typeof AccountMinimalLayoutResetPasswordImport
+      parentRoute: typeof AccountMinimalLayoutImport
+    }
+    '/account/_minimalLayout/sign-in': {
+      id: '/account/_minimalLayout/sign-in'
+      path: '/sign-in'
+      fullPath: '/account/sign-in'
+      preLoaderRoute: typeof AccountMinimalLayoutSignInImport
+      parentRoute: typeof AccountMinimalLayoutImport
+    }
+    '/account/_minimalLayout/': {
+      id: '/account/_minimalLayout/'
+      path: '/'
+      fullPath: '/account/'
+      preLoaderRoute: typeof AccountMinimalLayoutIndexImport
+      parentRoute: typeof AccountMinimalLayoutImport
     }
   }
 }
 
 // Create and export the route tree
 
-interface MinimalLayoutRouteChildren {
-  MinimalLayoutAccountResetPasswordRoute: typeof MinimalLayoutAccountResetPasswordRoute
-  MinimalLayoutAccountSignInRoute: typeof MinimalLayoutAccountSignInRoute
-  MinimalLayoutAccountIndexRoute: typeof MinimalLayoutAccountIndexRoute
-  MinimalLayoutAccountAppLayoutSubRoute: typeof MinimalLayoutAccountAppLayoutSubRoute
+interface AccountAppLayoutRouteChildren {
+  AccountAppLayoutSubRoute: typeof AccountAppLayoutSubRoute
 }
 
-const MinimalLayoutRouteChildren: MinimalLayoutRouteChildren = {
-  MinimalLayoutAccountResetPasswordRoute:
-    MinimalLayoutAccountResetPasswordRoute,
-  MinimalLayoutAccountSignInRoute: MinimalLayoutAccountSignInRoute,
-  MinimalLayoutAccountIndexRoute: MinimalLayoutAccountIndexRoute,
-  MinimalLayoutAccountAppLayoutSubRoute: MinimalLayoutAccountAppLayoutSubRoute,
+const AccountAppLayoutRouteChildren: AccountAppLayoutRouteChildren = {
+  AccountAppLayoutSubRoute: AccountAppLayoutSubRoute,
 }
 
-const MinimalLayoutRouteWithChildren = MinimalLayoutRoute._addFileChildren(
-  MinimalLayoutRouteChildren,
-)
+const AccountAppLayoutRouteWithChildren =
+  AccountAppLayoutRoute._addFileChildren(AccountAppLayoutRouteChildren)
+
+interface AccountMinimalLayoutRouteChildren {
+  AccountMinimalLayoutResetPasswordRoute: typeof AccountMinimalLayoutResetPasswordRoute
+  AccountMinimalLayoutSignInRoute: typeof AccountMinimalLayoutSignInRoute
+  AccountMinimalLayoutIndexRoute: typeof AccountMinimalLayoutIndexRoute
+}
+
+const AccountMinimalLayoutRouteChildren: AccountMinimalLayoutRouteChildren = {
+  AccountMinimalLayoutResetPasswordRoute:
+    AccountMinimalLayoutResetPasswordRoute,
+  AccountMinimalLayoutSignInRoute: AccountMinimalLayoutSignInRoute,
+  AccountMinimalLayoutIndexRoute: AccountMinimalLayoutIndexRoute,
+}
+
+const AccountMinimalLayoutRouteWithChildren =
+  AccountMinimalLayoutRoute._addFileChildren(AccountMinimalLayoutRouteChildren)
+
+interface AccountRouteChildren {
+  AccountAppLayoutRoute: typeof AccountAppLayoutRouteWithChildren
+  AccountMinimalLayoutRoute: typeof AccountMinimalLayoutRouteWithChildren
+}
+
+const AccountRouteChildren: AccountRouteChildren = {
+  AccountAppLayoutRoute: AccountAppLayoutRouteWithChildren,
+  AccountMinimalLayoutRoute: AccountMinimalLayoutRouteWithChildren,
+}
+
+const AccountRouteWithChildren =
+  AccountRoute._addFileChildren(AccountRouteChildren)
 
 export interface FileRoutesByFullPath {
-  '': typeof MinimalLayoutRouteWithChildren
-  '/account/reset-password': typeof MinimalLayoutAccountResetPasswordRoute
-  '/account/sign-in': typeof MinimalLayoutAccountSignInRoute
-  '/account': typeof MinimalLayoutAccountIndexRoute
-  '/account/$sub': typeof MinimalLayoutAccountAppLayoutSubRoute
+  '/account': typeof AccountMinimalLayoutRouteWithChildren
+  '/account/$sub': typeof AccountAppLayoutSubRoute
+  '/account/reset-password': typeof AccountMinimalLayoutResetPasswordRoute
+  '/account/sign-in': typeof AccountMinimalLayoutSignInRoute
+  '/account/': typeof AccountMinimalLayoutIndexRoute
 }
 
 export interface FileRoutesByTo {
-  '': typeof MinimalLayoutRouteWithChildren
-  '/account/reset-password': typeof MinimalLayoutAccountResetPasswordRoute
-  '/account/sign-in': typeof MinimalLayoutAccountSignInRoute
-  '/account': typeof MinimalLayoutAccountIndexRoute
-  '/account/$sub': typeof MinimalLayoutAccountAppLayoutSubRoute
+  '/account': typeof AccountMinimalLayoutIndexRoute
+  '/account/$sub': typeof AccountAppLayoutSubRoute
+  '/account/reset-password': typeof AccountMinimalLayoutResetPasswordRoute
+  '/account/sign-in': typeof AccountMinimalLayoutSignInRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
-  '/_appLayout': typeof AppLayoutRoute
-  '/_minimalLayout': typeof MinimalLayoutRouteWithChildren
-  '/_minimalLayout/account/reset-password': typeof MinimalLayoutAccountResetPasswordRoute
-  '/_minimalLayout/account/sign-in': typeof MinimalLayoutAccountSignInRoute
-  '/_minimalLayout/account/': typeof MinimalLayoutAccountIndexRoute
-  '/_minimalLayout/account/_appLayout/$sub': typeof MinimalLayoutAccountAppLayoutSubRoute
+  '/account': typeof AccountRouteWithChildren
+  '/account/_appLayout': typeof AccountAppLayoutRouteWithChildren
+  '/account/_minimalLayout': typeof AccountMinimalLayoutRouteWithChildren
+  '/account/_appLayout/$sub': typeof AccountAppLayoutSubRoute
+  '/account/_minimalLayout/reset-password': typeof AccountMinimalLayoutResetPasswordRoute
+  '/account/_minimalLayout/sign-in': typeof AccountMinimalLayoutSignInRoute
+  '/account/_minimalLayout/': typeof AccountMinimalLayoutIndexRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | ''
-    | '/account/reset-password'
-    | '/account/sign-in'
     | '/account'
     | '/account/$sub'
+    | '/account/reset-password'
+    | '/account/sign-in'
+    | '/account/'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | ''
-    | '/account/reset-password'
-    | '/account/sign-in'
     | '/account'
     | '/account/$sub'
+    | '/account/reset-password'
+    | '/account/sign-in'
   id:
     | '__root__'
-    | '/_appLayout'
-    | '/_minimalLayout'
-    | '/_minimalLayout/account/reset-password'
-    | '/_minimalLayout/account/sign-in'
-    | '/_minimalLayout/account/'
-    | '/_minimalLayout/account/_appLayout/$sub'
+    | '/account'
+    | '/account/_appLayout'
+    | '/account/_minimalLayout'
+    | '/account/_appLayout/$sub'
+    | '/account/_minimalLayout/reset-password'
+    | '/account/_minimalLayout/sign-in'
+    | '/account/_minimalLayout/'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
-  AppLayoutRoute: typeof AppLayoutRoute
-  MinimalLayoutRoute: typeof MinimalLayoutRouteWithChildren
+  AccountRoute: typeof AccountRouteWithChildren
 }
 
 const rootRouteChildren: RootRouteChildren = {
-  AppLayoutRoute: AppLayoutRoute,
-  MinimalLayoutRoute: MinimalLayoutRouteWithChildren,
+  AccountRoute: AccountRouteWithChildren,
 }
 
 export const routeTree = rootRoute
@@ -200,37 +237,47 @@ export const routeTree = rootRoute
     "__root__": {
       "filePath": "__root.tsx",
       "children": [
-        "/_appLayout",
-        "/_minimalLayout"
+        "/account"
       ]
     },
-    "/_appLayout": {
-      "filePath": "_appLayout.tsx"
-    },
-    "/_minimalLayout": {
-      "filePath": "_minimalLayout.tsx",
+    "/account": {
+      "filePath": "account",
       "children": [
-        "/_minimalLayout/account/reset-password",
-        "/_minimalLayout/account/sign-in",
-        "/_minimalLayout/account/",
-        "/_minimalLayout/account/_appLayout/$sub"
+        "/account/_appLayout",
+        "/account/_minimalLayout"
       ]
     },
-    "/_minimalLayout/account/reset-password": {
-      "filePath": "_minimalLayout/account/reset-password.tsx",
-      "parent": "/_minimalLayout"
+    "/account/_appLayout": {
+      "filePath": "account/_appLayout.tsx",
+      "parent": "/account",
+      "children": [
+        "/account/_appLayout/$sub"
+      ]
     },
-    "/_minimalLayout/account/sign-in": {
-      "filePath": "_minimalLayout/account/sign-in.tsx",
-      "parent": "/_minimalLayout"
+    "/account/_minimalLayout": {
+      "filePath": "account/_minimalLayout.tsx",
+      "parent": "/account",
+      "children": [
+        "/account/_minimalLayout/reset-password",
+        "/account/_minimalLayout/sign-in",
+        "/account/_minimalLayout/"
+      ]
     },
-    "/_minimalLayout/account/": {
-      "filePath": "_minimalLayout/account/index.tsx",
-      "parent": "/_minimalLayout"
+    "/account/_appLayout/$sub": {
+      "filePath": "account/_appLayout/$sub.tsx",
+      "parent": "/account/_appLayout"
     },
-    "/_minimalLayout/account/_appLayout/$sub": {
-      "filePath": "_minimalLayout/account/_appLayout/$sub.tsx",
-      "parent": "/_minimalLayout"
+    "/account/_minimalLayout/reset-password": {
+      "filePath": "account/_minimalLayout/reset-password.tsx",
+      "parent": "/account/_minimalLayout"
+    },
+    "/account/_minimalLayout/sign-in": {
+      "filePath": "account/_minimalLayout/sign-in.tsx",
+      "parent": "/account/_minimalLayout"
+    },
+    "/account/_minimalLayout/": {
+      "filePath": "account/_minimalLayout/index.tsx",
+      "parent": "/account/_minimalLayout"
     }
   }
 }

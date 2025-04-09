@@ -26,11 +26,11 @@
     "@atproto/oauth-types": "workspace:*"
   },
   "devDependencies": {
-    "@atproto/syntax": "workspace:*",
     "@atproto-labs/fetch": "workspace:*",
     "@atproto-labs/rollup-plugin-bundle-manifest": "workspace:*",
     "@atproto/oauth-provider-api": "workspace:*",
     "@atproto/oauth-types": "workspace:*",
+    "@atproto/syntax": "workspace:*",
     "@lingui/cli": "^5.2.0",
     "@lingui/core": "^5.2.0",
     "@lingui/react": "^5.2.0",
@@ -53,6 +53,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "tailwindcss": "^4.0.14",
+    "ua-parser-js": "^2.0.3",
     "vite": "^6.2.0",
     "zod": "^3.24.2"
   },

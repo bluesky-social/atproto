@@ -17,7 +17,7 @@ import { format2FACode } from '#/util/format2FACode'
 import { MIN_PASSWORD_LENGTH, getPasswordStrength } from '#/util/passwords'
 import { wait } from '#/util/wait'
 
-export const Route = createFileRoute('/_minimalLayout/account/reset-password')({
+export const Route = createFileRoute('/account/_minimalLayout/reset-password')({
   component: RouteComponent,
 })
 

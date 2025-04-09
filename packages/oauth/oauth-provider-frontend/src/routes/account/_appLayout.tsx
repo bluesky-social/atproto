@@ -3,7 +3,7 @@ import * as Layout from '#/components/Layout'
 import { Nav } from '#/components/Nav'
 import { useHasAccounts } from '#/data/useHasAccounts'
 
-export const Route = createFileRoute('/_appLayout')({
+export const Route = createFileRoute('/account/_appLayout')({
   component: RouteComponent,
 })
 
