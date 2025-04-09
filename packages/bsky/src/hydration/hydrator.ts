@@ -191,7 +191,7 @@ export class Hydrator {
   ): Promise<HydrationState> {
     const includeTakedowns = ctx.includeTakedowns || ctx.includeActorTakedowns
     const [actors, labels, profileViewersState] = await Promise.all([
-      this.actor.getActors(dids, includeTakedowns),
+      this.actor.getActors(dids, { includeTakedowns, skipCache: ctx.viewer }),
       this.label.getLabelsForSubjects(labelSubjectsForDid(dids), ctx.labelers),
       this.hydrateProfileViewers(dids, ctx),
     ])
@@ -304,7 +304,10 @@ export class Hydrator {
         [...uris, ...includeAuthorDids],
         ctx.labelers,
       ),
-      this.actor.getActors(includeAuthorDids, ctx.includeTakedowns),
+      this.actor.getActors(includeAuthorDids, {
+        includeTakedowns: ctx.includeTakedowns,
+        skipCache: ctx.viewer,
+      }),
     ])
 
     if (!ctx.includeTakedowns) {
@@ -949,10 +952,7 @@ export class Hydrator {
       }
     }
 
-    const activeListAuthors = await this.actor.getActors(
-      [...listAuthorDids],
-      false,
-    )
+    const activeListAuthors = await this.actor.getActors([...listAuthorDids])
 
     for (const [source, targets] of didMap) {
       const didBlocks = new HydrationMap<boolean>()
@@ -1075,9 +1075,9 @@ export class Hydrator {
       )
     } else if (collection === ids.AppBskyActorProfile) {
       const did = parsed.hostname
-      const actor = (await this.actor.getActors([did], includeTakedowns)).get(
-        did,
-      )
+      const actor = (
+        await this.actor.getActors([did], { includeTakedowns })
+      ).get(did)
       if (!actor?.profile || !actor?.profileCid) return undefined
       const recordInfo: RecordInfo<ProfileRecord> = {
         record: actor.profile,
@@ -1097,10 +1097,9 @@ export class Hydrator {
     const nonServiceLabelers = labelers.filter(
       (did) => !this.serviceLabelers.has(did),
     )
-    const labelerActors = await this.actor.getActors(
-      nonServiceLabelers,
-      vals.includeTakedowns,
-    )
+    const labelerActors = await this.actor.getActors(nonServiceLabelers, {
+      includeTakedowns: vals.includeTakedowns,
+    })
     const availableDids = labelers.filter(
       (did) => this.serviceLabelers.has(did) || !!labelerActors.get(did),
     )
