@@ -221,7 +221,6 @@ msgstr "Sign in with another account"
 msgid "Sign out"
 msgstr "Sign out"
 
-#. placeholder {0}: clientMetadata.client_name
 #: src/routes/account/_appLayout/$sub.tsx:159
 msgid "Sign out of {0}"
 msgstr "Sign out of {0}"
@@ -258,7 +257,6 @@ msgstr "Unknown user agent"
 msgid "User avatar"
 msgstr "User avatar"
 
-#. placeholder {0}: getAccountName(account)
 #: src/routes/account/_minimalLayout/index.tsx:76
 msgid "View and manage account for {0}"
 msgstr "View and manage account for {0}"
