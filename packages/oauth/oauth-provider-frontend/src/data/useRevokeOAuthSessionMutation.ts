@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { RevokeOAuthSessionInput, useApi } from '#/api'
-import { accountSessionsQueryKey } from '#/data/useAccountSessionsQuery'
+import { oauthSessionsQueryKey } from './useOAuthSessionsQuery'
 
 export function useRevokeOAuthSessionMutation() {
   const api = useApi()
@@ -11,7 +11,7 @@ export function useRevokeOAuthSessionMutation() {
       await api.fetch('POST', '/revoke-oauth-session', input)
     },
     onSuccess(_, input) {
-      qc.invalidateQueries({ queryKey: accountSessionsQueryKey(input) })
+      qc.invalidateQueries({ queryKey: oauthSessionsQueryKey(input) })
     },
   })
 }

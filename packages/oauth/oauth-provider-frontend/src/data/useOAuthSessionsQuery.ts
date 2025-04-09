@@ -5,13 +5,13 @@ export type OAuthSessionsQueryInput = {
   sub: string
 }
 
-export const accountSessionsQueryKey = ({ sub }: OAuthSessionsQueryInput) =>
+export const oauthSessionsQueryKey = ({ sub }: OAuthSessionsQueryInput) =>
   ['oauth-sessions', sub] as const
 
 export function useOAuthSessionsQuery(input: OAuthSessionsQueryInput) {
   const api = useApi()
   return useQuery<ActiveOAuthSession[]>({
-    queryKey: accountSessionsQueryKey(input),
+    queryKey: oauthSessionsQueryKey(input),
     async queryFn({ signal }) {
       const { results } = await api.fetch('GET', '/oauth-sessions', input, {
         signal,

@@ -355,7 +355,16 @@ export class TokenManager {
     }
     const refreshToken = refreshTokenParsed.data
 
-    const tokenInfo = await this.findByRefreshToken(refreshToken)
+    const tokenInfo = await this.findByRefreshToken(refreshToken).catch(
+      (err) => {
+        throw InvalidGrantError.from(
+          err,
+          err instanceof InvalidRequestError
+            ? err.error_description
+            : 'Invalid refresh token',
+        )
+      },
+    )
 
     const { account, data } = tokenInfo
     const { parameters } = data

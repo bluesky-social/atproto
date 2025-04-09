@@ -360,7 +360,7 @@ export function apiRouter<
           this.input.tokenId,
         )
 
-        if (tokenInfo?.data.sub !== deviceAccount.account.sub) {
+        if (tokenInfo.account.sub !== deviceAccount.account.sub) {
           // report this as though the token was not found
           throw new InvalidRequestError(`Invalid token`)
         }
