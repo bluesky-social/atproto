@@ -1,5 +1,6 @@
-export async function wait<T>(delay: number, fn: T): Promise<Awaited<T>> {
-  return await Promise.all([fn, new Promise((y) => setTimeout(y, delay))]).then(
-    (arr) => arr[0],
-  )
+import { sleep } from './sleep'
+
+export async function wait<T>(delay: number, promise: T) {
+  const [result] = await Promise.all([promise, sleep(delay)])
+  return result
 }
