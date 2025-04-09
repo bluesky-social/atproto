@@ -80,25 +80,25 @@ export function validateFetchSite(
   validateHeaderValue(req, 'sec-fetch-site', expectedSite)
 }
 
-export function validateReferer(
+export function validateReferrer(
   req: IncomingMessage,
   reference: UrlReference,
   allowNull: true,
 ): URL | null
-export function validateReferer(
+export function validateReferrer(
   req: IncomingMessage,
   reference: UrlReference,
   allowNull?: false,
 ): URL
-export function validateReferer(
+export function validateReferrer(
   req: IncomingMessage,
   reference: UrlReference,
   allowNull = false,
 ) {
-  const referer = req.headers['referer']
-  const refererUrl = referer ? new URL(referer) : null
+  const referrer = req.headers['referrer']
+  const refererUrl = referrer ? new URL(referrer) : null
   if (refererUrl ? !urlMatch(refererUrl, reference) : !allowNull) {
-    throw createHttpError(400, `Invalid referer ${referer}`)
+    throw createHttpError(400, `Invalid referrer ${referrer}`)
   }
   return refererUrl
 }

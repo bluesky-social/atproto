@@ -187,53 +187,55 @@ export class AccountManager {
     account: Account
     ephemeralCookie: string | null
   }> {
-    const requestId = requestUri ? decodeRequestUri(requestUri) : null
-
-    await callAsync(this.hooks.onSignInAttempt, {
-      data,
-      deviceId,
-      deviceMetadata,
-      requestId,
-    })
-
-    const account = await constantTime(
-      TIMING_ATTACK_MITIGATION_DELAY,
-      async () => {
-        return this.store.authenticateAccount(data)
-      },
-    ).catch((err) => {
-      throw InvalidRequestError.from(
-        err,
-        'Unable to sign-in due to an unexpected server error',
-      )
-    })
-
-    const remembered = data.remember === true
-
-    const ephemeralCookie = remembered ? null : await randomHexId(32)
-
-    await this.upsertDeviceAccount(
-      deviceId,
-      account,
-      remembered,
-      requestId,
-      ephemeralCookie,
-    )
-
     try {
-      await callAsync(this.hooks.onSignedIn, {
+      const requestId = requestUri ? decodeRequestUri(requestUri) : null
+
+      await callAsync(this.hooks.onSignInAttempt, {
         data,
-        account,
         deviceId,
         deviceMetadata,
         requestId,
       })
 
-      return { account, ephemeralCookie }
-    } catch (err) {
-      await this.removeDeviceAccount(deviceId, account.sub)
+      const account = await constantTime(
+        TIMING_ATTACK_MITIGATION_DELAY,
+        async () => {
+          return this.store.authenticateAccount(data)
+        },
+      )
 
-      throw err
+      const remembered = data.remember === true
+
+      const ephemeralCookie = remembered ? null : await randomHexId(32)
+
+      await this.upsertDeviceAccount(
+        deviceId,
+        account,
+        remembered,
+        requestId,
+        ephemeralCookie,
+      )
+
+      try {
+        await callAsync(this.hooks.onSignedIn, {
+          data,
+          account,
+          deviceId,
+          deviceMetadata,
+          requestId,
+        })
+
+        return { account, ephemeralCookie }
+      } catch (err) {
+        // The hook throw `InvalidRequestError` errors to deny the sign-in.
+        await this.removeDeviceAccount(deviceId, account.sub)
+        throw err
+      }
+    } catch (err) {
+      throw InvalidRequestError.from(
+        err,
+        'Unable to sign-in due to an unexpected server error',
+      )
     }
   }
 

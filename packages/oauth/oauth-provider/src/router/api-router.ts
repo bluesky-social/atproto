@@ -11,7 +11,6 @@ import {
 } from '@atproto/oauth-provider-api'
 import {
   OAuthAuthorizationRequestParameters,
-  OAuthClientId,
   OAuthRedirectUri,
   OAuthResponseMode,
   oauthRedirectUriSchema,
@@ -20,7 +19,6 @@ import {
 import { DeviceAccount } from '../account/account-store.js'
 import { signInDataSchema } from '../account/sign-in-data.js'
 import { signUpInputSchema } from '../account/sign-up-input.js'
-import { Client } from '../client/client.js'
 import { DeviceId, deviceIdSchema } from '../device/device-id.js'
 import { AccessDeniedError } from '../errors/access-denied-error.js'
 import { buildErrorPayload, buildErrorStatus } from '../errors/error-parser.js'
@@ -42,7 +40,7 @@ import {
   validateFetchMode,
   validateFetchSite,
   validateOrigin,
-  validateReferer,
+  validateReferrer,
 } from '../lib/http/index.js'
 import { RouteCtx, createRoute } from '../lib/http/route.js'
 import { asArray } from '../lib/util/cast.js'
@@ -252,21 +250,14 @@ export function apiRouter<
           deviceAccount.account.sub,
         )
 
-        const uniqueClientIds = new Set(
-          tokenInfos.map((tokenInfo) => tokenInfo.data.clientId),
-        )
+        const clientIds = tokenInfos.map((tokenInfo) => tokenInfo.data.clientId)
 
-        const clients = new Map<OAuthClientId, Client>(
-          (
-            await Promise.all(
-              Array.from(uniqueClientIds, async (clientId) =>
-                server.clientManager.getClient(clientId).catch(() => null),
-              ),
-            )
-          )
-            .filter((client) => client != null)
-            .map((client) => [client.id, client]),
-        )
+        const clients = await server.clientManager.loadClients(clientIds, {
+          onError: (err, clientId) => {
+            onError?.(req, res, err, `Failed to load client ${clientId}`)
+            return undefined // metadata won't be available in the UI
+          },
+        })
 
         return {
           // @TODO: We should ideally filter sessions that are expired (or even
@@ -274,7 +265,6 @@ export function apiRouter<
           // TokenInfo are stored (see TokenManager#isTokenExpired and
           // TokenManager#isTokenInactive).
           results: tokenInfos.map(({ id, data }): ActiveOAuthSession => {
-            const client = clients.get(data.clientId)
             return {
               tokenId: id,
 
@@ -282,7 +272,7 @@ export function apiRouter<
               updatedAt: data.updatedAt.toISOString() as ISODateString,
 
               clientId: data.clientId,
-              clientMetadata: client?.metadata,
+              clientMetadata: clients.get(data.clientId)?.metadata,
 
               scope: data.parameters.scope,
             }
@@ -371,9 +361,8 @@ export function apiRouter<
         )
 
         if (tokenInfo?.data.sub !== deviceAccount.account.sub) {
-          throw new InvalidRequestError(
-            `Token ${this.input.tokenId} does not belong to the user ${this.input.sub}`,
-          )
+          // report this as though the token was not found
+          throw new InvalidRequestError(`Invalid token`)
         }
 
         await server.tokenManager.deleteToken(tokenInfo.id)
@@ -424,6 +413,9 @@ export function apiRouter<
               const scopes = new Set(clientData?.authorizedScopes)
 
               // Add the newly accepted scopes to the authorized scopes
+
+              // @NOTE `oauthScopeSchema` ensures that `scope` contains no
+              // leading/trailing/duplicate spaces.
               for (const s of parameters.scope?.split(' ') ?? []) scopes.add(s)
 
               await server.accountManager.setAuthorizedClient(account, client, {
@@ -721,22 +713,23 @@ export function apiRouter<
         validateFetchMode(req, ['same-origin'])
         validateFetchSite(req, ['same-origin'])
         validateOrigin(req, issuerOrigin)
-        const referer = validateReferer(req, { origin: issuerOrigin })
+        const referrer = validateReferrer(req, { origin: issuerOrigin })
 
         // Ensure we are one the right page
         if (
-          referer.pathname !== '/oauth/authorize' &&
-          referer.pathname !== '/account' &&
-          !referer.pathname.startsWith(`/account/`)
+          // trailing slashes are not allowed
+          referrer.pathname !== '/oauth/authorize' &&
+          referrer.pathname !== '/account' &&
+          !referrer.pathname.startsWith(`/account/`)
         ) {
-          throw createHttpError(400, `Invalid referer ${referer}`)
+          throw createHttpError(400, `Invalid referrer ${referrer}`)
         }
 
         // Check if the request originated from the authorize page
         const requestUri =
-          referer.pathname === '/oauth/authorize'
+          referrer.pathname === '/oauth/authorize'
             ? await requestUriSchema.parseAsync(
-                referer.searchParams.get('request_uri'),
+                referrer.searchParams.get('request_uri'),
               )
             : undefined
 
@@ -764,6 +757,7 @@ export function apiRouter<
   }
 }
 
+const EPHEMERAL_COOKIE_PREFIX = 'ephemeral-'
 const EPHEMERAL_COOKIE_OPTIONS: Readonly<CookieSerializeOptions> =
   Object.freeze({
     expires: undefined, // session
@@ -774,7 +768,9 @@ const EPHEMERAL_COOKIE_OPTIONS: Readonly<CookieSerializeOptions> =
   })
 
 function ephemeralCookieValue(requestUri?: RequestUri) {
-  return requestUri ? `sec-${requestUri}` : 'sec-no-request'
+  return requestUri
+    ? `${EPHEMERAL_COOKIE_PREFIX}${requestUri}`
+    : `${EPHEMERAL_COOKIE_PREFIX}no-request`
 }
 
 /**

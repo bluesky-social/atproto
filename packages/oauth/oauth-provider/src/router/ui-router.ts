@@ -14,7 +14,7 @@ import {
   validateFetchMode,
   validateFetchSite,
   validateOrigin,
-  validateReferer,
+  validateReferrer,
 } from '../lib/http/index.js'
 import type { Awaitable } from '../lib/util/type.js'
 import { extractZodErrorMessage } from '../lib/util/zod-error.js'
@@ -140,13 +140,13 @@ export function authorizeRouter<
     buildNavigationMiddleware(async function (req, res) {
       // Ensure we come from the authorization page
       validateFetchSite(req, ['same-origin'])
-      const referer = validateReferer(req, {
+      const referrer = validateReferrer(req, {
         origin: issuerOrigin,
         pathname: '/oauth/authorize',
       })
 
       // Ensure we are coming from the authorization page
-      requestUriSchema.parse(referer.searchParams.get('request_uri'))
+      requestUriSchema.parse(referrer.searchParams.get('request_uri'))
 
       await sendRedirect(res, parseRedirectUrl(this.url))
     }),

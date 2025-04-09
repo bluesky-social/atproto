@@ -61,8 +61,9 @@ export async function up(
     .addForeignKeyConstraint(
       'account_device_did_fk',
       ['did'],
-      'actor',
+      'account',
       ['did'],
+      // cascade on delete, future-proofing on update (fk can't be altered)
       (qb) => qb.onDelete('cascade').onUpdate('cascade'),
     )
     .addForeignKeyConstraint(
@@ -70,6 +71,7 @@ export async function up(
       ['deviceId'],
       'device',
       ['id'],
+      // cascade on delete, future-proofing on update (fk can't be altered)
       (qb) => qb.onDelete('cascade').onUpdate('cascade'),
     )
     .execute()
@@ -126,8 +128,9 @@ export async function up(
     .addForeignKeyConstraint(
       'account_device_request_did_fk',
       ['did'],
-      'actor',
+      'account',
       ['did'],
+      // cascade on delete, future-proofing on update (fk can't be altered)
       (qb) => qb.onDelete('cascade').onUpdate('cascade'),
     )
     .addForeignKeyConstraint(
@@ -135,6 +138,7 @@ export async function up(
       ['deviceId'],
       'device',
       ['id'],
+      // cascade on delete, future-proofing on update (fk can't be altered)
       (qb) => qb.onDelete('cascade').onUpdate('cascade'),
     )
     .addForeignKeyConstraint(
@@ -142,6 +146,7 @@ export async function up(
       ['requestId'],
       'authorization_request',
       ['id'],
+      // cascade on delete, future-proofing on update (fk can't be altered)
       (qb) => qb.onDelete('cascade').onUpdate('cascade'),
     )
     .execute()
@@ -170,8 +175,9 @@ export async function up(
     .addForeignKeyConstraint(
       'authorized_client_did_fk',
       ['did'],
-      'actor',
+      'account',
       ['did'],
+      // cascade on delete, future-proofing on update (fk can't be altered)
       (qb) => qb.onDelete('cascade').onUpdate('cascade'),
     )
     .execute()

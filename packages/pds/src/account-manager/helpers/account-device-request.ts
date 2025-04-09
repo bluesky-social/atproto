@@ -46,7 +46,7 @@ export function selectQB(
 
   return (
     selectAccountQB(db, { includeDeactivated: true })
-      // note: query planner should use "account_device_request_pk" index
+      // uses "account_device_request_pk", "account_device_request_request_id_idx" indexes
       .innerJoin(
         'account_device_request',
         'account_device_request.did',

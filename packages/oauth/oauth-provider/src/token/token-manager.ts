@@ -444,7 +444,7 @@ export class TokenManager {
 
   /**
    * @note The token validity is not guaranteed. The caller must ensure that the
-   * token is valid before using it.
+   * token is valid before using the returned token info.
    */
   public async findToken(token: string): Promise<TokenInfo> {
     if (isTokenId(token)) {
