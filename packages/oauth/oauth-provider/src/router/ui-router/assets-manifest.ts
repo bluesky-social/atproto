@@ -1,7 +1,10 @@
-import { createReadStream, readFileSync } from 'node:fs'
+import { createReadStream } from 'node:fs'
 import { join } from 'node:path'
 import { Readable } from 'node:stream'
-import type { ManifestItem } from '@atproto-labs/rollup-plugin-bundle-manifest'
+import type {
+  Manifest,
+  ManifestItem,
+} from '@atproto-labs/rollup-plugin-bundle-manifest'
 import { AssetRef } from '../../lib/html/build-document.js'
 import {
   Middleware,
@@ -22,12 +25,14 @@ type Asset = {
 const ASSETS_URL_PREFIX = '/@atproto/oauth-provider/~assets/'
 
 export function parseAssetsManifest(manifestPath: string) {
-  const manifestData = JSON.parse(readFileSync(manifestPath, 'utf-8')) as {
-    [filename: string]: ManifestItem
-  }
+  // Using `require` instead of `JSON.parse(readFileSync())` so that node's
+  // watch mode can pick up changes to the manifest file.
+
+  // eslint-disable-next-line
+  const manifest = require(manifestPath) as Manifest
 
   const assets = new Map<string, Asset>(
-    Object.entries(manifestData).map(([filename, { data, ...item }]) => {
+    Object.entries(manifest).map(([filename, { data, ...item }]) => {
       const buffer = data ? Buffer.from(data, 'base64') : null
       const filepath = join(manifestPath, '..', filename)
       const stream = buffer
