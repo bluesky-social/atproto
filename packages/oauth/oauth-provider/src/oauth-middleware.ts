@@ -28,13 +28,16 @@ export function oauthMiddleware<
   server: OAuthProvider,
   { ...options }: RouterOptions<Req, Res> = {},
 ): Handler<void, Req, Res> {
+  const { onError } = options
+
   // options is shallow cloned so it's fine to mutate it
-  options.onError ??=
+  options.onError =
     process.env['NODE_ENV'] === 'development'
       ? (req, res, err, msg) => {
           console.error(`OAuthProvider error (${msg}):`, err)
+          return onError?.(req, res, err, msg)
         }
-      : undefined
+      : onError
 
   return asHandler(
     combineMiddlewares([
