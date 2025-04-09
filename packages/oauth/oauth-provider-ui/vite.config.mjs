@@ -1,20 +1,57 @@
+import { dirname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { lingui } from '@lingui/vite-plugin'
+import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react-swc'
+import { defineConfig } from 'vite'
+import manifest from '@atproto-labs/rollup-plugin-bundle-manifest'
 
-/**
- * @see {@link https://vitejs.dev/config/}
- * @type {import('vite').UserConfig}
- */
-export default {
+const __dirname = dirname(fileURLToPath(import.meta.url))
+
+export default defineConfig({
   root: './src',
+  resolve: {
+    alias: {
+      '#': resolve(__dirname, './src'),
+    },
+  },
   plugins: [
     react({
       plugins: [['@lingui/swc-plugin', {}]],
     }),
     lingui(),
+    tailwindcss(),
   ],
+  build: {
+    emptyOutDir: false,
+    outDir: './dist',
+    sourcemap: true,
+    rollupOptions: {
+      input: ['./src/authorization-page.tsx', './src/error-page.tsx'],
+      output: {
+        manualChunks: undefined,
+        format: 'module',
+        entryFileNames: '[name]-[hash].js',
+        chunkFileNames: '[name]-[hash].js',
+        assetFileNames: '[name]-[hash][extname]',
+      },
+      plugins: [
+        /*Ò
+         * Change `data` to `true` to include assets data in the manifest,
+         * allowing for easier bundling of the backend code (eg. using esbuild)
+         * as bundlers know how to bundle JSON files but not how to bundle
+         * assets referenced at runtime.
+         */
+        // @ts-ignore TODO figure out import
+        manifest.default({ data: false }),
+      ],
+    },
+    commonjsOptions: {
+      include: [/node_modules/, /oauth-provider-api/],
+    },
+  },
   optimizeDeps: {
     // Needed because this is a monorepo and it exposes CommonJS
     include: ['@atproto/oauth-provider-api'],
   },
-}
+})

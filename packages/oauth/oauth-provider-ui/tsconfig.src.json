@@ -4,7 +4,10 @@
     "../../../tsconfig/bundler.json"
   ],
   "compilerOptions": {
-    "rootDir": "src"
+    "rootDir": "src",
+    "paths": {
+      "#/*": ["./src/*"]
+    }
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "hydration-data.d.ts"]
+  "include": ["src/**/*.ts", "src/**/*.tsx"]
 }

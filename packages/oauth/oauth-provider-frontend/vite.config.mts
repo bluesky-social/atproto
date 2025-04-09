@@ -10,13 +10,17 @@ import manifest from '@atproto-labs/rollup-plugin-bundle-manifest'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
 export default defineConfig({
+  root: './src',
   resolve: {
     alias: {
       '#': resolve(__dirname, './src'),
     },
   },
   plugins: [
-    TanStackRouterVite({ target: 'react' }),
+    TanStackRouterVite({
+      target: 'react',
+      routesDirectory: './src/routes',
+    }),
     react({
       plugins: [['@lingui/swc-plugin', {}]],
     }),
@@ -25,7 +29,7 @@ export default defineConfig({
   ],
   build: {
     emptyOutDir: false,
-    outDir: resolve(__dirname, './dist'),
+    outDir: './dist',
     sourcemap: true,
     rollupOptions: {
       input: ['./src/account-page.tsx'],
