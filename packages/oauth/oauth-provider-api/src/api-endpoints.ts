@@ -35,11 +35,17 @@ export type ApiEndpoints = {
     input: { sub: string | string[] }
     output: { success: true }
   }
+  /**
+   * Lists all the accounts that are currently active, on the current device.
+   */
   '/device-sessions': {
     method: 'GET'
     output: { results: ActiveDeviceSession[] }
   }
   /**
+   * Lists all the active OAuth sessions (access/refresh tokens) that where
+   * issued to OAuth clients (apps).
+   *
    * @NOTE can be revoked using the oauth revocation endpoint (json or form
    * encoded)
    *
@@ -60,6 +66,10 @@ export type ApiEndpoints = {
     input: RevokeOAuthSessionInput
     output: { success: true }
   }
+  /**
+   * Lists all the sessions that are currently active for a particular user, on
+   * other devices.
+   */
   '/account-sessions': {
     method: 'GET'
     params: { sub: string }
