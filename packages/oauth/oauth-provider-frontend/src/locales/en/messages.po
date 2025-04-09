@@ -27,6 +27,8 @@ msgid "Accounts"
 msgstr "Accounts"
 
 #: src/routes/account/_minimalLayout/sign-in.tsx:109
+#: src/routes/account/_minimalLayout/reset-password.tsx:51
+#: src/routes/account/_minimalLayout/reset-password.tsx:78
 msgid "An error occurred, please try again."
 msgstr "An error occurred, please try again."
 
@@ -52,6 +54,7 @@ msgid "Click here to send a new code to your email."
 msgstr "Click here to send a new code to your email."
 
 #: src/routes/account/_minimalLayout/sign-in.tsx:177
+#: src/routes/account/_minimalLayout/reset-password.tsx:222
 msgid "Code"
 msgstr "Code"
 
@@ -166,6 +169,7 @@ msgstr "No devices"
 
 #: src/routes/account/_minimalLayout/sign-in.tsx:154
 #: src/routes/account/_minimalLayout/sign-in.tsx:160
+#: src/routes/account/_minimalLayout/reset-password.tsx:257
 msgid "Password"
 msgstr "Password"
 
@@ -217,6 +221,7 @@ msgstr "Sign in with another account"
 msgid "Sign out"
 msgstr "Sign out"
 
+#. placeholder {0}: clientMetadata.client_name
 #: src/routes/account/_appLayout/$sub.tsx:159
 msgid "Sign out of {0}"
 msgstr "Sign out of {0}"
@@ -253,6 +258,7 @@ msgstr "Unknown user agent"
 msgid "User avatar"
 msgstr "User avatar"
 
+#. placeholder {0}: getAccountName(account)
 #: src/routes/account/_minimalLayout/index.tsx:76
 msgid "View and manage account for {0}"
 msgstr "View and manage account for {0}"
@@ -266,6 +272,7 @@ msgid "Whoops! An error occurred."
 msgstr "Whoops! An error occurred."
 
 #: src/routes/account/_minimalLayout/sign-in.tsx:182
+#: src/routes/account/_minimalLayout/reset-password.tsx:228
 msgid "XXXXX-XXXXX"
 msgstr "XXXXX-XXXXX"
 

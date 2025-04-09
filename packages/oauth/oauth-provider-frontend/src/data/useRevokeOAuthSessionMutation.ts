@@ -10,6 +10,9 @@ export function useRevokeOAuthSessionMutation() {
     async mutationFn(input: RevokeOAuthSessionInput) {
       await api.fetch('POST', '/revoke-oauth-session', input)
     },
+    onError(error, input) {
+      qc.invalidateQueries({ queryKey: oauthSessionsQueryKey(input) })
+    },
     onSuccess(_, input) {
       qc.invalidateQueries({ queryKey: oauthSessionsQueryKey(input) })
     },

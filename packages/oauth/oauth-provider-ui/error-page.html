@@ -45,8 +45,6 @@
       }
     </style>
     <script type="module">
-      import { API_ENDPOINT_PREFIX } from '@atproto/oauth-provider-api'
-
       /*
        * PDS branding configuration
        */
@@ -54,7 +52,7 @@
       const name = 'Bluesky'
       const links = [
         {
-          title: { en: 'Home' },
+          title: { en: 'Home', fr: 'Accueil' },
           href: 'https://bsky.social/',
           rel: 'canonical', // prevents the login page from being indexed by search engines
         },
@@ -101,8 +99,6 @@
 
       const requestUri = 'foo-bar'
 
-      document.cookie = `csrf-${requestUri}=xyz; path=/`
-
       window.__customizationData = {
         availableUserDomains,
         inviteCodeRequired: false,
@@ -112,75 +108,11 @@
         logo,
       }
 
-      window.__authorizeData = {
-        clientId: clientId,
-        clientMetadata: {
-          client_id: clientId,
-          client_name: clientName,
-          policy_uri: clientPolicyUri,
-          tos_uri: clientTosUri,
-          logo_uri: clientLogoUri,
-        },
-        clientTrusted: false,
-        requestUri,
-        loginHint,
-        sessions: [],
-        scopeDetails: [
-          { scope: 'atproto' },
-          { scope: 'transition:generic' },
-          { scope: 'transition:chat.bsky' },
-        ],
+      window.__errorData = {
+        error: 'foo',
+        error_description: 'bar',
       }
-
-      const origFetch = window.fetch
-
-      async function mockFetch(...args) {
-        const [input, init] = args
-
-        const method = init?.method ?? 'GET'
-        const url =
-          typeof input === 'string'
-            ? new URL(input, window.location)
-            : input instanceof URL
-              ? input
-              : undefined
-        if (url) {
-          switch (`${method} ${url.pathname}`) {
-            case `POST ${API_ENDPOINT_PREFIX}/sign-up`:
-            case `POST ${API_ENDPOINT_PREFIX}/sign-in`:
-              return new Response(
-                JSON.stringify({
-                  consentRequired: false,
-                  account: {
-                    sub: 'did:plc:123',
-                    name: 'Alice',
-                    email: 'alice@test.com',
-                    email_verified: false,
-                    preferred_username: 'alice.test',
-                    picture: 'https://cat.com/cat.jpg',
-                  },
-                }),
-                {
-                  status: 200,
-                  headers: { 'Content-Type': 'application/json' },
-                },
-              )
-            case `POST ${API_ENDPOINT_PREFIX}/verify-handle-availability`:
-            case `POST ${API_ENDPOINT_PREFIX}/reset-password-request`:
-            case `POST ${API_ENDPOINT_PREFIX}/reset-password-confirm`:
-              return new Response(null, { status: 204 })
-          }
-        }
-
-        return origFetch.call(this, ...args)
-      }
-
-      Object.defineProperty(window, 'fetch', {
-        value: mockFetch,
-        writable: true,
-        configurable: true,
-      })
     </script>
-    <script src="./authorization-page.tsx" type="module"></script>
+    <script src="./src/error-page.tsx" type="module"></script>
   </body>
 </html>
