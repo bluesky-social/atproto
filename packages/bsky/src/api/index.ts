@@ -25,7 +25,6 @@ import getBlocks from './app/bsky/graph/getBlocks'
 import getFollowers from './app/bsky/graph/getFollowers'
 import getFollows from './app/bsky/graph/getFollows'
 import getKnownFollowers from './app/bsky/graph/getKnownFollowers'
-import getKnownVouchesReceived from './app/bsky/graph/getKnownVouchesReceived'
 import getList from './app/bsky/graph/getList'
 import getListBlocks from './app/bsky/graph/getListBlocks'
 import getListMutes from './app/bsky/graph/getListMutes'
@@ -35,8 +34,6 @@ import getRelationships from './app/bsky/graph/getRelationships'
 import getStarterPack from './app/bsky/graph/getStarterPack'
 import getStarterPacks from './app/bsky/graph/getStarterPacks'
 import getSuggestedFollowsByActor from './app/bsky/graph/getSuggestedFollowsByActor'
-import getVouchesIssued from './app/bsky/graph/getVouchesIssued'
-import getVouchesReceived from './app/bsky/graph/getVouchesReceived'
 import muteActor from './app/bsky/graph/muteActor'
 import muteActorList from './app/bsky/graph/muteActorList'
 import muteThread from './app/bsky/graph/muteThread'
@@ -96,7 +93,6 @@ export default function (server: Server, ctx: AppContext) {
   getListBlocks(server, ctx)
   getFollowers(server, ctx)
   getKnownFollowers(server, ctx)
-  getKnownVouchesReceived(server, ctx)
   getFollows(server, ctx)
   getList(server, ctx)
   getLists(server, ctx)
@@ -105,8 +101,6 @@ export default function (server: Server, ctx: AppContext) {
   getRelationships(server, ctx)
   getStarterPack(server, ctx)
   getStarterPacks(server, ctx)
-  getVouchesReceived(server, ctx)
-  getVouchesIssued(server, ctx)
   searchStarterPacks(server, ctx)
   muteActor(server, ctx)
   unmuteActor(server, ctx)

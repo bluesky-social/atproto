@@ -8466,47 +8466,6 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyGraphGetKnownVouchesReceived: {
-    lexicon: 1,
-    id: 'app.bsky.graph.getKnownVouchesReceived',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          'Enumerates accounts which vouched for the specified receiver and were vouched for by the requester. Requires authentication.',
-        parameters: {
-          type: 'params',
-          required: ['receiver'],
-          properties: {
-            receiver: {
-              type: 'string',
-              format: 'at-identifier',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['receiver', 'vouchers'],
-            properties: {
-              receiver: {
-                type: 'ref',
-                ref: 'lex:app.bsky.actor.defs#profileView',
-              },
-              vouchers: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:app.bsky.actor.defs#profileView',
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  },
   AppBskyGraphGetList: {
     lexicon: 1,
     id: 'app.bsky.graph.getList',
@@ -8920,112 +8879,6 @@ export const schemaDict = {
                 type: 'integer',
                 description:
                   'Snowflake for this recommendation, use when submitting recommendation events.',
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  AppBskyGraphGetVouchesIssued: {
-    lexicon: 1,
-    id: 'app.bsky.graph.getVouchesIssued',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          'Enumerates accounts for which the specified issuer has vouched.',
-        parameters: {
-          type: 'params',
-          required: ['issuer'],
-          properties: {
-            issuer: {
-              type: 'string',
-              format: 'at-identifier',
-            },
-            limit: {
-              type: 'integer',
-              minimum: 1,
-              maximum: 100,
-              default: 50,
-            },
-            cursor: {
-              type: 'string',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['issuer', 'vouches'],
-            properties: {
-              issuer: {
-                type: 'ref',
-                ref: 'lex:app.bsky.actor.defs#profileView',
-              },
-              cursor: {
-                type: 'string',
-              },
-              vouches: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:app.bsky.actor.defs#profileView',
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  AppBskyGraphGetVouchesReceived: {
-    lexicon: 1,
-    id: 'app.bsky.graph.getVouchesReceived',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          'Enumerates accounts which vouched for the specified receiver.',
-        parameters: {
-          type: 'params',
-          required: ['receiver'],
-          properties: {
-            receiver: {
-              type: 'string',
-              format: 'at-identifier',
-            },
-            limit: {
-              type: 'integer',
-              minimum: 1,
-              maximum: 100,
-              default: 50,
-            },
-            cursor: {
-              type: 'string',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['receiver', 'vouchers'],
-            properties: {
-              receiver: {
-                type: 'ref',
-                ref: 'lex:app.bsky.actor.defs#profileView',
-              },
-              cursor: {
-                type: 'string',
-              },
-              vouchers: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:app.bsky.actor.defs#profileView',
-                },
               },
             },
           },
@@ -12602,7 +12455,6 @@ export const ids = {
   AppBskyGraphGetFollowers: 'app.bsky.graph.getFollowers',
   AppBskyGraphGetFollows: 'app.bsky.graph.getFollows',
   AppBskyGraphGetKnownFollowers: 'app.bsky.graph.getKnownFollowers',
-  AppBskyGraphGetKnownVouchesReceived: 'app.bsky.graph.getKnownVouchesReceived',
   AppBskyGraphGetList: 'app.bsky.graph.getList',
   AppBskyGraphGetListBlocks: 'app.bsky.graph.getListBlocks',
   AppBskyGraphGetListMutes: 'app.bsky.graph.getListMutes',
@@ -12613,8 +12465,6 @@ export const ids = {
   AppBskyGraphGetStarterPacks: 'app.bsky.graph.getStarterPacks',
   AppBskyGraphGetSuggestedFollowsByActor:
     'app.bsky.graph.getSuggestedFollowsByActor',
-  AppBskyGraphGetVouchesIssued: 'app.bsky.graph.getVouchesIssued',
-  AppBskyGraphGetVouchesReceived: 'app.bsky.graph.getVouchesReceived',
   AppBskyGraphList: 'app.bsky.graph.list',
   AppBskyGraphListblock: 'app.bsky.graph.listblock',
   AppBskyGraphListitem: 'app.bsky.graph.listitem',

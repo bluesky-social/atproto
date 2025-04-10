@@ -384,11 +384,6 @@ message GetActorsRequest {
   repeated string skip_cache_for_dids = 2;
 }
 
-message VerificationData {
-  string handle = 1;
-  string displayName = 2;
-}
-
 message ActorInfo {
   bool exists = 1;
   string handle = 2;
@@ -401,9 +396,6 @@ message ActorInfo {
   string upstream_status = 9;
   google.protobuf.Timestamp created_at = 10;
   bool priority_notifications = 11;
-  double pagerank = 12;
-  bool trusted_voucher = 13;
-  map<string, VerificationData> verified_by = 14;
 }
 
 message GetActorsResponse {
@@ -1103,44 +1095,6 @@ message GetFollowsFollowingResponse {
   repeated FollowsFollowing results = 1;
 }
 
-message VouchInfo {
-  string uri = 1;
-  string issuer_did = 2;
-  string receiver_did = 3;
-}
-
-message GetVouchesIssuedRequest {
-  string issuer_did = 1;
-  int32 limit = 2;
-  string cursor = 3;
-}
-
-message GetVouchesIssuedResponse {
-  repeated VouchInfo vouches = 1;
-  string cursor = 2;
-}
-
-message GetVouchesReceivedRequest {
-  string receiver_did = 1;
-  int32 limit = 2;
-  string cursor = 3;
-}
-
-message GetVouchesReceivedResponse {
-  repeated VouchInfo vouchers = 1;
-  string cursor = 2;
-}
-
-message GetKnownVouchesReceivedRequest {
-  string viewer_did = 1;
-  string receiver_did = 2;
-}
-
-message GetKnownVouchesReceivedResponse {
-  repeated VouchInfo vouchers = 1;
-  string cursor = 2;
-}
-
 // Ping
 message PingRequest {}
 message PingResponse {}
@@ -1284,10 +1238,6 @@ service Service {
 
   // Graph
   rpc GetFollowsFollowing(GetFollowsFollowingRequest) returns (GetFollowsFollowingResponse);
-
-  rpc GetVouchesIssued(GetVouchesIssuedRequest) returns (GetVouchesIssuedResponse);
-  rpc GetVouchesReceived(GetVouchesReceivedRequest) returns (GetVouchesReceivedResponse);
-  rpc GetKnownVouchesReceived(GetKnownVouchesReceivedRequest) returns (GetKnownVouchesReceivedResponse);
 
   // Ping
   rpc Ping(PingRequest) returns (PingResponse);

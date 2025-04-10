@@ -4,7 +4,7 @@ import { Record as FollowRecord } from '../lexicon/types/app/bsky/graph/follow'
 import { Record as ListRecord } from '../lexicon/types/app/bsky/graph/list'
 import { Record as ListItemRecord } from '../lexicon/types/app/bsky/graph/listitem'
 import { Record as StarterPackRecord } from '../lexicon/types/app/bsky/graph/starterpack'
-import { FollowInfo, VouchInfo } from '../proto/bsky_pb'
+import { FollowInfo } from '../proto/bsky_pb'
 import { HydrationMap, ItemRef, RecordInfo, parseRecord } from './util'
 
 export type List = RecordInfo<ListRecord>
@@ -250,45 +250,5 @@ export class GraphHydrator {
         listItems: counts.listItems[i] ?? 0,
       })
     }, new HydrationMap<ListAgg>())
-  }
-
-  async getActorVouchesIssued(input: {
-    issuerDid: string
-    cursor?: string
-    limit?: number
-  }): Promise<{ vouches: VouchInfo[]; cursor: string }> {
-    const { issuerDid, cursor, limit } = input
-    const res = await this.dataplane.getVouchesIssued({
-      issuerDid,
-      cursor,
-      limit,
-    })
-    return { vouches: res.vouches, cursor: res.cursor }
-  }
-
-  async getActorVouchesReceived(input: {
-    receiverDid: string
-    cursor?: string
-    limit?: number
-  }): Promise<{ vouchers: VouchInfo[]; cursor: string }> {
-    const { receiverDid, cursor, limit } = input
-    const res = await this.dataplane.getVouchesReceived({
-      receiverDid,
-      cursor,
-      limit,
-    })
-    return { vouchers: res.vouchers, cursor: res.cursor }
-  }
-
-  async getActorKnownVouchesReceived(input: {
-    viewerDid?: string
-    receiverDid: string
-  }): Promise<{ vouchers: VouchInfo[]; cursor: string }> {
-    const { viewerDid, receiverDid } = input
-    const res = await this.dataplane.getKnownVouchesReceived({
-      viewerDid,
-      receiverDid,
-    })
-    return { vouchers: res.vouchers, cursor: res.cursor }
   }
 }
