@@ -134,8 +134,9 @@ export function apiRouter<
       schema: signInDataSchema.extend({ remember: z.boolean().optional() }),
       rotateDeviceCookies: true,
       async handler() {
-        // Remember when not in the context of a request by default
         const { deviceId, deviceMetadata, requestUri } = this
+
+        // Remember when not in the context of a request by default
         const { remember = requestUri == null, ...input } = this.input
 
         const account = await server.accountManager.authenticateAccount(
@@ -147,8 +148,8 @@ export function apiRouter<
         if (remember) {
           await server.accountManager.upsertDeviceAccount(deviceId, account.sub)
         } else {
-          // If the user was already signed in, and signed in again, this time
-          // without "remember me", let's log them out from the device.
+          // In case the user was already signed in, and signed in again, this
+          // time without "remember me", let's sign them off of the device.
           await server.accountManager.removeDeviceAccount(deviceId, account.sub)
         }
 
@@ -400,16 +401,13 @@ export function apiRouter<
         // Any AccessDeniedError caught in this block will result in a redirect
         // to the client's redirect_uri with an error.
         try {
-          const requestInfo = await server.requestManager.get(
+          const { clientId, parameters } = await server.requestManager.get(
             this.requestUri,
             this.deviceId,
           )
 
-          const { clientId, parameters } = requestInfo
-
           // Any error thrown in this block will be transformed into an
-          // AccessDeniedError in order to allow redirecting the user to the
-          // client.
+          // AccessDeniedError.
           try {
             const { account, authorizedClients } = await authenticate.call(
               this,
@@ -419,7 +417,7 @@ export function apiRouter<
             const client = await server.clientManager.getClient(clientId)
 
             const code = await server.requestManager.setAuthorized(
-              requestInfo.uri,
+              this.requestUri,
               client,
               account,
               this.deviceId,
@@ -446,6 +444,8 @@ export function apiRouter<
 
             return { url }
           } catch (err) {
+            // Since we have access to the parameters, we can re-throw an
+            // AccessDeniedError with the redirect_uri parameter.
             throw AccessDeniedError.from(parameters, err, 'server_error')
           }
         } catch (err) {

@@ -1,4 +1,3 @@
-import assert from 'node:assert'
 import {
   OAuthIssuerIdentifier,
   isOAuthClientIdLoopback,
@@ -235,15 +234,8 @@ export class AccountManager {
       deviceId,
     })
 
-    // Fool-proofing
-    for (const da of deviceAccounts) {
-      assert(
-        da.deviceId === deviceId,
-        'DeviceAccount was bound to another device',
-      )
-    }
-
-    return deviceAccounts
+    return deviceAccounts // Fool proof
+      .filter((deviceAccount) => deviceAccount.deviceId === deviceId)
   }
 
   public async listAccountDevices(sub: Sub): Promise<DeviceAccount[]> {
@@ -251,12 +243,8 @@ export class AccountManager {
       sub,
     })
 
-    // Fool-proofing
-    for (const { account } of deviceAccounts) {
-      assert(account.sub === sub, 'DeviceAccount was bound to another account')
-    }
-
-    return deviceAccounts
+    return deviceAccounts // Fool proof
+      .filter((deviceAccount) => deviceAccount.account.sub === sub)
   }
 
   public async resetPasswordRequest(data: ResetPasswordRequestData) {

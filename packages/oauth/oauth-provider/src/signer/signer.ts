@@ -77,7 +77,7 @@ export class Signer {
   }
 
   async createApiToken(
-    payload: OmitKey<ApiTokenPayload, 'iss' | 'aud' | 'exp'>,
+    payload: OmitKey<ApiTokenPayload, 'iss' | 'aud' | 'iat'>,
   ) {
     return this.sign(
       {
@@ -87,7 +87,7 @@ export class Signer {
       {
         ...payload,
         aud: `oauth-provider-api@${this.issuer}`,
-        exp: dateToEpoch(new Date(Date.now() + EPHEMERAL_SESSION_MAX_AGE)),
+        iat: dateToEpoch(),
       },
     )
   }
@@ -98,6 +98,7 @@ export class Signer {
   ) {
     const result = await this.verify<C>(token, {
       ...options,
+      maxTokenAge: options?.maxTokenAge ?? EPHEMERAL_SESSION_MAX_AGE / 1e3,
       audience: `oauth-provider-api@${this.issuer}`,
       typ: 'at+jwt',
     })
