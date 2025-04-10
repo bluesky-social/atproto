@@ -32,11 +32,11 @@ msgstr "Accounts"
 msgid "An error occurred, please try again."
 msgstr "An error occurred, please try again."
 
-#: src/routes/account/_appLayout/$sub.tsx:258
+#: src/routes/account/_appLayout/$sub.tsx:260
 msgid "Are you sure you want to remove this device?"
 msgstr "Are you sure you want to remove this device?"
 
-#: src/routes/account/_appLayout/$sub.tsx:163
+#: src/routes/account/_appLayout/$sub.tsx:166
 msgid "Are you sure you want to sign out? Next time you visit you will need to sign back in."
 msgstr "Are you sure you want to sign out? Next time you visit you will need to sign back in."
 
@@ -106,7 +106,7 @@ msgstr "Failed to load connected apps"
 msgid "Failed to load devices"
 msgstr "Failed to load devices"
 
-#: src/routes/account/_appLayout/$sub.tsx:210
+#: src/routes/account/_appLayout/$sub.tsx:212
 msgid "Failed to remove device"
 msgstr "Failed to remove device"
 
@@ -114,7 +114,7 @@ msgstr "Failed to remove device"
 msgid "Failed to resend code"
 msgstr "Failed to resend code"
 
-#: src/routes/account/_appLayout/$sub.tsx:132
+#: src/routes/account/_appLayout/$sub.tsx:135
 msgid "Failed to sign out"
 msgstr "Failed to sign out"
 
@@ -151,7 +151,7 @@ msgstr "Invalid identifier or password."
 msgid "Logo"
 msgstr "Logo"
 
-#: src/routes/account/_appLayout/$sub.tsx:101
+#: src/routes/account/_appLayout/$sub.tsx:105
 msgid "Looks like you aren't logged in on any other devices."
 msgstr "Looks like you aren't logged in on any other devices."
 
@@ -167,7 +167,7 @@ msgstr "My devices"
 msgid "No connected apps"
 msgstr "No connected apps"
 
-#: src/routes/account/_appLayout/$sub.tsx:100
+#: src/routes/account/_appLayout/$sub.tsx:104
 msgid "No devices"
 msgstr "No devices"
 
@@ -185,12 +185,12 @@ msgstr "Password is required"
 msgid "Password must be at least {MIN_PASSWORD_LENGTH} characters"
 msgstr "Password must be at least {MIN_PASSWORD_LENGTH} characters"
 
-#: src/routes/account/_appLayout/$sub.tsx:259
-#: src/routes/account/_appLayout/$sub.tsx:264
+#: src/routes/account/_appLayout/$sub.tsx:261
+#: src/routes/account/_appLayout/$sub.tsx:266
 msgid "Remove"
 msgstr "Remove"
 
-#: src/routes/account/_appLayout/$sub.tsx:257
+#: src/routes/account/_appLayout/$sub.tsx:259
 msgid "Remove this device"
 msgstr "Remove this device"
 
@@ -216,17 +216,17 @@ msgstr "Sign in"
 msgid "Sign in with another account"
 msgstr "Sign in with another account"
 
-#: src/routes/account/_appLayout/$sub.tsx:165
-#: src/routes/account/_appLayout/$sub.tsx:170
+#: src/routes/account/_appLayout/$sub.tsx:168
+#: src/routes/account/_appLayout/$sub.tsx:173
 msgid "Sign out"
 msgstr "Sign out"
 
 #. placeholder {0}: clientMetadata.client_name
-#: src/routes/account/_appLayout/$sub.tsx:159
+#: src/routes/account/_appLayout/$sub.tsx:162
 msgid "Sign out of {0}"
 msgstr "Sign out of {0}"
 
-#: src/routes/account/_appLayout/$sub.tsx:160
+#: src/routes/account/_appLayout/$sub.tsx:163
 msgid "Sign out of this application"
 msgstr "Sign out of this application"
 
@@ -238,19 +238,19 @@ msgstr "Something went wrong"
 msgid "Success!"
 msgstr "Success!"
 
-#: src/routes/account/_appLayout/$sub.tsx:203
+#: src/routes/account/_appLayout/$sub.tsx:206
 msgid "Successfully removed device"
 msgstr "Successfully removed device"
 
-#: src/routes/account/_appLayout/$sub.tsx:125
+#: src/routes/account/_appLayout/$sub.tsx:129
 msgid "Successfully signed out"
 msgstr "Successfully signed out"
 
-#: src/routes/account/_appLayout/$sub.tsx:251
+#: src/routes/account/_appLayout/$sub.tsx:253
 msgid "This device"
 msgstr "This device"
 
-#: src/routes/account/_appLayout/$sub.tsx:235
+#: src/routes/account/_appLayout/$sub.tsx:237
 msgid "Unknown user agent"
 msgstr "Unknown user agent"
 
