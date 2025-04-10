@@ -192,8 +192,11 @@ export class AccountManager {
     }
   }
 
-  public async addDeviceAccount(deviceId: DeviceId, sub: Sub): Promise<void> {
-    await this.store.addDeviceAccount(deviceId, sub)
+  public async upsertDeviceAccount(
+    deviceId: DeviceId,
+    sub: Sub,
+  ): Promise<void> {
+    await this.store.upsertDeviceAccount(deviceId, sub)
   }
 
   public async getDeviceAccount(

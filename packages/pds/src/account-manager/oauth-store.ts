@@ -257,7 +257,7 @@ export class OAuthStore
     return { account, authorizedClients }
   }
 
-  async addDeviceAccount(deviceId: DeviceId, sub: string): Promise<void> {
+  async upsertDeviceAccount(deviceId: DeviceId, sub: string): Promise<void> {
     await this.db.executeWithRetry(
       accountDeviceHelper.upsertQB(this.db, deviceId, sub),
     )

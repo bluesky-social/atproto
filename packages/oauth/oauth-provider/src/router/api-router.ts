@@ -111,7 +111,7 @@ export function apiRouter<
         // Only "remember" the newly created account if it was not created during an
         // OAuth flow.
         if (remember) {
-          await server.accountManager.addDeviceAccount(deviceId, account.sub)
+          await server.accountManager.upsertDeviceAccount(deviceId, account.sub)
         }
 
         const token = remember
@@ -145,7 +145,7 @@ export function apiRouter<
         )
 
         if (remember) {
-          await server.accountManager.addDeviceAccount(deviceId, account.sub)
+          await server.accountManager.upsertDeviceAccount(deviceId, account.sub)
         } else {
           // If the user was already signed in, and signed in again, this time
           // without "remember me", let's log them out from the device.

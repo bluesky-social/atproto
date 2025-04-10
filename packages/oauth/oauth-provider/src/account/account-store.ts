@@ -137,7 +137,7 @@ export interface AccountStore {
    * {@link RequestStore.deleteRequest}), all accounts bound to that request
    * should be deleted as well.
    */
-  addDeviceAccount(deviceId: DeviceId, sub: Sub): Awaitable<void>
+  upsertDeviceAccount(deviceId: DeviceId, sub: Sub): Awaitable<void>
 
   /**
    * @param requestId - If provided, the result must either have the same
@@ -181,7 +181,7 @@ export const isAccountStore = buildInterfaceChecker<AccountStore>([
   'authenticateAccount',
   'setAuthorizedClient',
   'getAccount',
-  'addDeviceAccount',
+  'upsertDeviceAccount',
   'getDeviceAccount',
   'removeDeviceAccount',
   'listDeviceAccounts',
