@@ -13,7 +13,7 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: src/routes/account/_minimalLayout/sign-in.tsx:137
+#: src/routes/account/_minimalLayout/sign-in.tsx:139
 msgid "@handle or email"
 msgstr "@handle or email"
 
@@ -26,7 +26,7 @@ msgstr "A new password is required"
 msgid "Accounts"
 msgstr "Accounts"
 
-#: src/routes/account/_minimalLayout/sign-in.tsx:107
+#: src/routes/account/_minimalLayout/sign-in.tsx:109
 #: src/routes/account/_minimalLayout/reset-password.tsx:51
 #: src/routes/account/_minimalLayout/reset-password.tsx:78
 msgid "An error occurred, please try again."
@@ -53,7 +53,7 @@ msgstr "Cancel"
 msgid "Click here to send a new code to your email."
 msgstr "Click here to send a new code to your email."
 
-#: src/routes/account/_minimalLayout/sign-in.tsx:175
+#: src/routes/account/_minimalLayout/sign-in.tsx:177
 #: src/routes/account/_minimalLayout/reset-password.tsx:222
 msgid "Code"
 msgstr "Code"
@@ -66,7 +66,7 @@ msgstr "Code was resent"
 msgid "Connected apps"
 msgstr "Connected apps"
 
-#: src/routes/account/_minimalLayout/sign-in.tsx:125
+#: src/routes/account/_minimalLayout/sign-in.tsx:127
 msgid "Credentials"
 msgstr "Credentials"
 
@@ -118,7 +118,7 @@ msgstr "Failed to resend code"
 msgid "Failed to sign out"
 msgstr "Failed to sign out"
 
-#: src/routes/account/_minimalLayout/sign-in.tsx:217
+#: src/routes/account/_minimalLayout/sign-in.tsx:219
 msgid "Forgot password?"
 msgstr "Forgot password?"
 
@@ -130,7 +130,7 @@ msgstr "Get reset code"
 msgid "Home"
 msgstr "Home"
 
-#: src/routes/account/_minimalLayout/sign-in.tsx:132
+#: src/routes/account/_minimalLayout/sign-in.tsx:134
 msgid "Identifier"
 msgstr "Identifier"
 
@@ -142,7 +142,7 @@ msgstr "Invalid email"
 msgid "Invalid handle"
 msgstr "Invalid handle"
 
-#: src/routes/account/_minimalLayout/sign-in.tsx:105
+#: src/routes/account/_minimalLayout/sign-in.tsx:107
 msgid "Invalid identifier or password."
 msgstr "Invalid identifier or password."
 
@@ -171,8 +171,8 @@ msgstr "No connected apps"
 msgid "No devices"
 msgstr "No devices"
 
-#: src/routes/account/_minimalLayout/sign-in.tsx:152
-#: src/routes/account/_minimalLayout/sign-in.tsx:158
+#: src/routes/account/_minimalLayout/sign-in.tsx:154
+#: src/routes/account/_minimalLayout/sign-in.tsx:160
 #: src/routes/account/_minimalLayout/reset-password.tsx:257
 msgid "Password"
 msgstr "Password"
@@ -207,8 +207,8 @@ msgstr "Select an account"
 msgid "Select the account you would like to manage."
 msgstr "Select the account you would like to manage."
 
-#: src/routes/account/_minimalLayout/sign-in.tsx:116
-#: src/routes/account/_minimalLayout/sign-in.tsx:208
+#: src/routes/account/_minimalLayout/sign-in.tsx:118
+#: src/routes/account/_minimalLayout/sign-in.tsx:210
 msgid "Sign in"
 msgstr "Sign in"
 
@@ -221,6 +221,7 @@ msgstr "Sign in with another account"
 msgid "Sign out"
 msgstr "Sign out"
 
+#. placeholder {0}: clientMetadata.client_name
 #: src/routes/account/_appLayout/$sub.tsx:159
 msgid "Sign out of {0}"
 msgstr "Sign out of {0}"
@@ -257,6 +258,7 @@ msgstr "Unknown user agent"
 msgid "User avatar"
 msgstr "User avatar"
 
+#. placeholder {0}: getAccountName(account)
 #: src/routes/account/_minimalLayout/index.tsx:76
 msgid "View and manage account for {0}"
 msgstr "View and manage account for {0}"
@@ -269,7 +271,7 @@ msgstr "We weren't able to load your accounts. Please refresh the page to try ag
 msgid "Whoops! An error occurred."
 msgstr "Whoops! An error occurred."
 
-#: src/routes/account/_minimalLayout/sign-in.tsx:180
+#: src/routes/account/_minimalLayout/sign-in.tsx:182
 #: src/routes/account/_minimalLayout/reset-password.tsx:228
 msgid "XXXXX-XXXXX"
 msgstr "XXXXX-XXXXX"

@@ -4,7 +4,7 @@ import { Trans } from '@lingui/react/macro'
 import { useForm } from '@tanstack/react-form'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { clsx } from 'clsx'
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { z } from 'zod'
 import {
   InvalidCredentialsError,
@@ -88,7 +88,9 @@ function LoginForm() {
         const res = await wait(
           500,
           signIn({
-            username: value.identifier,
+            // @NOTE For some reason, the validator function output is not taken
+            // into account here so we have to strip the @ again.
+            username: value.identifier.replace(/^@/, ''),
             password: value.password,
             emailOtp: showCode ? value.code : undefined,
           }),
