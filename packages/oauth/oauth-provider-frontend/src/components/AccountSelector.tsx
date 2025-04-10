@@ -1,5 +1,6 @@
 import { msg } from '@lingui/core/macro'
 import { useLingui } from '@lingui/react'
+import { Trans } from '@lingui/react/macro'
 import { DotsHorizontalIcon } from '@radix-ui/react-icons'
 import * as Popover from '@radix-ui/react-popover'
 import { clsx } from 'clsx'
@@ -9,6 +10,7 @@ import { useCurrentSession } from '#/data/useCurrentSession'
 import { useDeviceSessionsQuery } from '#/data/useDeviceSessionsQuery'
 import { getAccountName } from '#/util/getAccountName'
 import { sanitizeHandle } from '#/util/sanitizeHandle'
+import { Button } from '#/components/Button'
 
 export function AccountSelector() {
   const { _ } = useLingui()
@@ -64,7 +66,7 @@ export function AccountSelector() {
                   params={account}
                   className={clsx([
                     'flex items-center space-x-2 py-2 pl-2 pr-4',
-                    'hover:bg-contrast-25 dark:hover:bg-contrast-50',
+                    'hover:bg-contrast-25 dark:hover:bg-contrast-50 focus:bg-contrast-25 dark:focus:bg-contrast-50',
                     i !== 0 &&
                       'border-contrast-25 dark:border-contrast-50 border-t',
                   ])}
@@ -74,7 +76,7 @@ export function AccountSelector() {
                     src={account.picture}
                     displayName={account.name}
                   />
-                  <div className="truncate text-left">
+                  <div className="flex-1 truncate text-left">
                     <div className="flex items-center space-x-1">
                       <p className="text-text-default text-sm font-bold leading-snug">
                         {getAccountName(account)}
@@ -83,6 +85,22 @@ export function AccountSelector() {
                     <p className="text-text-light truncate text-sm leading-snug">
                       {sanitizeHandle(account.preferred_username)}
                     </p>
+                  </div>
+                  <div className="flex-shrink">
+                    <Button
+                      size="sm"
+                      color="secondary"
+                      onClick={(e) => {
+                        // technically invalid markup to have a button inside a link :/
+                        // prevent click from bubbling up to the Link
+                        e.stopPropagation()
+                        e.preventDefault()
+                      }}
+                    >
+                      <Button.Text>
+                        <Trans>Sign out</Trans>
+                      </Button.Text>
+                    </Button>
                   </div>
                 </Link>
               ))}
