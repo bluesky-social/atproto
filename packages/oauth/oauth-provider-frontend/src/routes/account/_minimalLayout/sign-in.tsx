@@ -4,7 +4,7 @@ import { Trans } from '@lingui/react/macro'
 import { useForm } from '@tanstack/react-form'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { clsx } from 'clsx'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { z } from 'zod'
 import {
   InvalidCredentialsError,
@@ -90,6 +90,7 @@ function LoginForm() {
           signIn({
             username: value.identifier,
             password: value.password,
+            emailOtp: showCode ? value.code : undefined,
           }),
         )
         await navigate({
