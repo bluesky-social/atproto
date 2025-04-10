@@ -4,9 +4,12 @@ import { ActiveDeviceSession, useApi } from '#/api'
 import { upsert } from '#/util/upsert'
 import { useHydrationData } from './useHydrationData'
 
-export const accountsQueryKey = ['device-sessions'] as const
+export const useDeviceSessionsQueryKey = ['device-sessions'] as const
 export type UseAccountsQueryResponse = ActiveDeviceSession[]
 
+/**
+ * All accounts logged in on _this device_.
+ */
 export function useDeviceSessionsQuery() {
   const api = useApi()
 
@@ -14,7 +17,7 @@ export function useDeviceSessionsQuery() {
 
   return useQuery<ActiveDeviceSession[]>({
     initialData: [...initialData],
-    queryKey: accountsQueryKey,
+    queryKey: useDeviceSessionsQueryKey,
     refetchOnWindowFocus: 'always',
     async queryFn({ signal }) {
       const { results } = await api.fetch(
@@ -33,7 +36,7 @@ export function useUpsertDeviceAccount() {
 
   return useCallback(
     (newSession: ActiveDeviceSession) => {
-      return qc.setQueryData<ActiveDeviceSession[]>(accountsQueryKey, (data) =>
+      return qc.setQueryData<ActiveDeviceSession[]>(useDeviceSessionsQueryKey, (data) =>
         upsert(
           data,
           newSession,
@@ -41,6 +44,6 @@ export function useUpsertDeviceAccount() {
         ),
       )
     },
-    [qc, ...accountsQueryKey],
+    [qc, ...useDeviceSessionsQueryKey],
   )
 }
