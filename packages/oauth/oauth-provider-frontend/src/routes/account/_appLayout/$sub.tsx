@@ -91,7 +91,11 @@ export function AccountHome() {
       ) : accountSessions.length > 0 ? (
         <div className="space-y-3">
           {accountSessions.map((session, i) => (
-            <AccountSessionCard key={i} sub={sub} session={session} />
+            <AccountSessionCard
+              key={session.deviceId + session.deviceMetadata.lastSeenAt}
+              sub={sub}
+              session={session}
+            />
           ))}
         </div>
       ) : (
@@ -126,7 +130,6 @@ function ApplicationSessionCard({
         duration: 2e3,
       })
     } catch (e) {
-      console.error(e)
       show({
         variant: 'error',
         title: _(msg`Failed to sign out`),
@@ -204,7 +207,6 @@ function AccountSessionCard({
         duration: 2e3,
       })
     } catch (e) {
-      console.error(e)
       show({
         variant: 'error',
         title: _(msg`Failed to remove device`),
