@@ -9,7 +9,6 @@ export const signInDataSchema = z
     username: z.string(),
     password: z.union([oldPasswordSchema, newPasswordSchema]),
     emailOtp: emailOtpSchema.optional(),
-    remember: z.boolean().optional(),
   })
   .strict()
 

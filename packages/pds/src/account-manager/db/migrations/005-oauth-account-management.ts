@@ -36,7 +36,6 @@ export async function up(
     .addColumn('deviceId', 'varchar', (col) => col.notNull())
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
     .addColumn('updatedAt', 'varchar', (col) => col.notNull())
-    .addColumn('data', 'varchar', (col) => col.notNull())
     .addPrimaryKeyConstraint('account_device_pk', [
       'deviceId', // first because this table will be joined from the "device" table
       'did',

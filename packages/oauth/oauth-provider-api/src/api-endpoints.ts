@@ -13,12 +13,12 @@ export type ApiEndpoints = {
   '/sign-up': {
     method: 'POST'
     input: SignUpInput
-    output: { account: Account }
+    output: { account: Account; token?: string }
   }
   '/sign-in': {
     method: 'POST'
     input: SignInInput
-    output: { account: Account; consentRequired?: boolean }
+    output: { account: Account; token?: string; consentRequired?: boolean }
   }
   '/reset-password-request': {
     method: 'POST'

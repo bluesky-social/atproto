@@ -79,7 +79,7 @@ export function AuthorizeView({
   useEffect(() => {
     if (session) {
       if (session.consentRequired) showAccept()
-      else doAccept({ sub: session.account.sub })
+      else doAccept(session.account.sub)
     }
   }, [session, doAccept, showAccept])
 
@@ -159,7 +159,7 @@ export function AuthorizeView({
         clientTrusted={authorizeData.clientTrusted}
         account={session.account}
         scopeDetails={authorizeData.scopeDetails}
-        onAccept={() => doAccept({ sub: session.account.sub })}
+        onAccept={() => doAccept(session.account.sub)}
         onReject={() => doReject()}
         onBack={
           forceSignIn

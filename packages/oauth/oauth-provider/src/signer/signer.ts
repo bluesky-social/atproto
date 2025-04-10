@@ -7,9 +7,10 @@ import {
   SignedJwt,
   VerifyOptions,
 } from '@atproto/jwk'
+import { EPHEMERAL_SESSION_MAX_AGE } from '../constants.js'
 import { dateToEpoch } from '../lib/util/date.js'
 import { OmitKey } from '../lib/util/type.js'
-import { ApiTokenPayload } from './api-token-payload.js'
+import { ApiTokenPayload, apiTokenPayloadSchema } from './api-token-payload.js'
 import {
   SignedTokenPayload,
   signedTokenPayloadSchema,
@@ -75,24 +76,34 @@ export class Signer {
     }
   }
 
-  async createApiToken(payload: OmitKey<ApiTokenPayload, 'iss' | 'iat'>) {
+  async createApiToken(
+    payload: OmitKey<ApiTokenPayload, 'iss' | 'aud' | 'exp'>,
+  ) {
     return this.sign(
       {
         alg: undefined,
         typ: 'at+jwt',
       },
-      { ...payload, iat: dateToEpoch() },
+      {
+        ...payload,
+        aud: `oauth-provider-api@${this.issuer}`,
+        exp: dateToEpoch(new Date(Date.now() + EPHEMERAL_SESSION_MAX_AGE)),
+      },
     )
   }
 
   async verifyApiToken<C extends string = never>(
     token: SignedJwt,
-    options?: Omit<VerifyOptions<C>, 'issuer' | 'typ'>,
+    options?: Omit<VerifyOptions<C>, 'issuer' | 'audience' | 'typ'>,
   ) {
-    const result = await this.verify<C>(token, { ...options, typ: 'at+jwt' })
+    const result = await this.verify<C>(token, {
+      ...options,
+      audience: `oauth-provider-api@${this.issuer}`,
+      typ: 'at+jwt',
+    })
     return {
       protectedHeader: result.protectedHeader,
-      payload: signedTokenPayloadSchema.parse(result.payload) as RequiredKey<
+      payload: apiTokenPayloadSchema.parse(result.payload) as RequiredKey<
         ApiTokenPayload,
         C
       >,

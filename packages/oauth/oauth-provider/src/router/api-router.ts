@@ -1,9 +1,9 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import createHttpError from 'http-errors'
 import { z } from 'zod'
+import { signedJwtSchema } from '@atproto/jwk'
 import {
   API_ENDPOINT_PREFIX,
-  Account,
   ActiveAccountSession,
   ActiveDeviceSession,
   ActiveOAuthSession,
@@ -17,14 +17,12 @@ import {
   oauthRedirectUriSchema,
   oauthResponseModeSchema,
 } from '@atproto/oauth-types'
-import { AuthorizedClients } from '../account/account-store.js'
 import { signInDataSchema } from '../account/sign-in-data.js'
 import { signUpInputSchema } from '../account/sign-up-input.js'
 import { DeviceId, deviceIdSchema } from '../device/device-id.js'
 import { AccessDeniedError } from '../errors/access-denied-error.js'
 import { buildErrorPayload, buildErrorStatus } from '../errors/error-parser.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
-import { LoginRequiredError } from '../errors/login-required-error.js'
 import {
   Middleware,
   RequestMetadata,
@@ -41,12 +39,10 @@ import {
 } from '../lib/http/index.js'
 import { RouteCtx, createRoute } from '../lib/http/route.js'
 import { asArray } from '../lib/util/cast.js'
-import { dateToEpoch } from '../lib/util/date.js'
 import { localeSchema } from '../lib/util/locale.js'
 import type { Awaitable } from '../lib/util/type.js'
 import type { OAuthProvider } from '../oauth-provider.js'
-import { subSchema } from '../oidc/sub.js'
-import { RequestInfo } from '../request/request-info.js'
+import { Sub, subSchema } from '../oidc/sub.js'
 import { RequestUri, requestUriSchema } from '../request/request-uri.js'
 import { AuthorizationRedirectParameters } from '../result/authorization-redirect-parameters.js'
 import { tokenIdSchema } from '../token/token-id.js'
@@ -83,193 +79,200 @@ export function apiRouter<
   const router = new Router<T, TReq, TRes>(issuerUrl)
 
   router.use(
-    apiRoute(
-      'POST',
-      '/verify-handle-availability',
-      verifyHandleSchema,
-      async function () {
+    apiRoute({
+      method: 'POST',
+      endpoint: '/verify-handle-availability',
+      schema: verifyHandleSchema,
+      async handler() {
         await server.accountManager.verifyHandleAvailability(this.input.handle)
         return { available: true }
       },
-    ),
-  )
-
-  router.use(
-    apiRoute('POST', '/sign-up', signUpInputSchema, async function (req, res) {
-      const { deviceId, deviceMetadata } = await server.deviceManager.load(
-        req,
-        res,
-        true,
-      )
-
-      const remember = !this.requestUri
-
-      const account = await server.accountManager.createAccount(
-        deviceId,
-        deviceMetadata,
-        this.input,
-      )
-
-      // Only "remember" the newly created account if it was not created during an
-      // OAuth flow.
-      if (remember) {
-        await server.accountManager.addDeviceAccount(deviceId, account.sub)
-      }
-
-      const token = remember
-        ? undefined
-        : await server.signer.createApiToken({
-            sub: account.sub,
-            aud: `${server.issuer}${API_ENDPOINT_PREFIX}`,
-            exp: dateToEpoch(new Date(Date.now() + 5 * 60 * 1000)),
-            requestUri: this.requestUri,
-          })
-
-      return { account, token }
     }),
   )
 
   router.use(
-    apiRoute('POST', '/sign-in', signInDataSchema, async function (req, res) {
-      const { deviceId, deviceMetadata } = await server.deviceManager.load(
-        req,
-        res,
-        true,
-      )
+    apiRoute({
+      method: 'POST',
+      endpoint: '/sign-up',
+      schema: signUpInputSchema,
+      rotateDeviceCookies: true,
+      async handler() {
+        const { deviceId, deviceMetadata, input, requestUri } = this
 
-      const account = await server.accountManager.authenticateAccount(
-        deviceId,
-        deviceMetadata,
-        this.input,
-      )
-
-      if (this.input.remember) {
-        await server.accountManager.addDeviceAccount(deviceId, account.sub)
-      } else {
-        // If the user was already signed in, and signed in again, this time
-        // without "remember me", let's log them out from the device.
-        await server.accountManager.removeDeviceAccount(deviceId, account.sub)
-      }
-
-      const token = this.input.remember
-        ? undefined
-        : await server.signer.createApiToken({
-            sub: account.sub,
-            aud: `${server.issuer}${API_ENDPOINT_PREFIX}`,
-            exp: dateToEpoch(new Date(Date.now() + 5 * 60 * 1000)),
-            requestUri: this.requestUri,
-          })
-
-      if (this.requestUri) {
-        // Check if a consent is required for the client, but only if this
-        // call is made within the context of an oauth request.
-
-        const { clientId, parameters } = await server.requestManager.get(
-          this.requestUri,
+        const account = await server.accountManager.createAccount(
           deviceId,
+          deviceMetadata,
+          input,
         )
 
-        const { authorizedClients } = await server.accountManager.getAccount(
-          account.sub,
-        )
+        // Remember when not in the context of a request by default
+        const remember = requestUri == null
 
-        return {
-          account,
-          token,
-          consentRequired: server.checkConsentRequired(
-            parameters,
-            authorizedClients.get(clientId),
-          ),
+        // Only "remember" the newly created account if it was not created during an
+        // OAuth flow.
+        if (remember) {
+          await server.accountManager.addDeviceAccount(deviceId, account.sub)
         }
-      }
 
-      return { account, token }
+        const token = remember
+          ? undefined
+          : await server.signer.createApiToken({
+              sub: account.sub,
+              deviceId,
+              requestUri: this.requestUri,
+            })
+
+        return { account, token }
+      },
     }),
   )
 
   router.use(
-    apiRoute(
-      'POST',
-      '/sign-out',
-      z.object({ sub: z.union([subSchema, z.array(subSchema)]) }).strict(),
-      async function (req, res) {
-        const { deviceId } = await server.deviceManager.load(req, res, true)
+    apiRoute({
+      method: 'POST',
+      endpoint: '/sign-in',
+      schema: signInDataSchema.extend({ remember: z.boolean().optional() }),
+      rotateDeviceCookies: true,
+      async handler() {
+        // Remember when not in the context of a request by default
+        const { deviceId, deviceMetadata, requestUri } = this
+        const { remember = requestUri == null, ...input } = this.input
 
+        const account = await server.accountManager.authenticateAccount(
+          deviceId,
+          deviceMetadata,
+          input,
+        )
+
+        if (remember) {
+          await server.accountManager.addDeviceAccount(deviceId, account.sub)
+        } else {
+          // If the user was already signed in, and signed in again, this time
+          // without "remember me", let's log them out from the device.
+          await server.accountManager.removeDeviceAccount(deviceId, account.sub)
+        }
+
+        const token = remember
+          ? undefined
+          : await server.signer.createApiToken({
+              sub: account.sub,
+              deviceId,
+              requestUri,
+            })
+
+        if (requestUri) {
+          // Check if a consent is required for the client, but only if this
+          // call is made within the context of an oauth request.
+
+          const { clientId, parameters } = await server.requestManager.get(
+            requestUri,
+            deviceId,
+          )
+
+          const { authorizedClients } = await server.accountManager.getAccount(
+            account.sub,
+          )
+
+          return {
+            account,
+            token,
+            consentRequired: server.checkConsentRequired(
+              parameters,
+              authorizedClients.get(clientId),
+            ),
+          }
+        }
+
+        return { account, token }
+      },
+    }),
+  )
+
+  router.use(
+    apiRoute({
+      method: 'POST',
+      endpoint: '/sign-out',
+      schema: z
+        .object({
+          sub: z.union([subSchema, z.array(subSchema)]),
+        })
+        .strict(),
+      rotateDeviceCookies: true,
+      async handler() {
         const uniqueSubs = new Set(asArray(this.input.sub))
 
         for (const sub of uniqueSubs) {
-          await server.accountManager.removeDeviceAccount(deviceId, sub)
+          await server.accountManager.removeDeviceAccount(this.deviceId, sub)
         }
 
         return { success: true as const }
       },
-    ),
+    }),
   )
 
   router.use(
-    apiRoute(
-      'POST',
-      '/reset-password-request',
-      z
+    apiRoute({
+      method: 'POST',
+      endpoint: '/reset-password-request',
+      schema: z
         .object({
           locale: localeSchema,
           email: emailSchema,
         })
         .strict(),
-      async function () {
+      async handler() {
         await server.accountManager.resetPasswordRequest(this.input)
         return { success: true }
       },
-    ),
+    }),
   )
 
   router.use(
-    apiRoute(
-      'POST',
-      '/reset-password-confirm',
-      z
+    apiRoute({
+      method: 'POST',
+      endpoint: '/reset-password-confirm',
+      schema: z
         .object({
           token: emailOtpSchema,
           password: newPasswordSchema,
         })
         .strict(),
-      async function () {
+      async handler() {
         await server.accountManager.resetPasswordConfirm(this.input)
         return { success: true }
       },
-    ),
-  )
-
-  router.use(
-    apiRoute('GET', '/device-sessions', undefined, async function (req, res) {
-      const { deviceId } = await server.deviceManager.load(req, res)
-
-      const deviceAccounts =
-        await server.accountManager.listDeviceAccounts(deviceId)
-
-      return {
-        results: deviceAccounts.map(
-          (deviceAccount): ActiveDeviceSession => ({
-            account: deviceAccount.account,
-            loginRequired: server.checkLoginRequired(deviceAccount),
-          }),
-        ),
-      }
     }),
   )
 
   router.use(
-    apiRoute(
-      'GET',
-      '/oauth-sessions',
-      z.object({ sub: subSchema }).strict(),
-      async function (req, res) {
-        const { account } = await authenticate(
-          req,
-          res,
-          this.input.sub,
-          this.requestUri,
+    apiRoute({
+      method: 'GET',
+      endpoint: '/device-sessions',
+      schema: undefined,
+      async handler() {
+        const deviceAccounts = await server.accountManager.listDeviceAccounts(
+          this.deviceId,
         )
+
+        return {
+          results: deviceAccounts.map(
+            (deviceAccount): ActiveDeviceSession => ({
+              account: deviceAccount.account,
+              loginRequired: server.checkLoginRequired(deviceAccount),
+            }),
+          ),
+        }
+      },
+    }),
+  )
+
+  router.use(
+    apiRoute({
+      method: 'GET',
+      endpoint: '/oauth-sessions',
+      schema: z.object({ sub: subSchema }).strict(),
+      async handler(req, res) {
+        const { account } = await authenticate.call(this, req)
 
         const tokenInfos = await server.tokenManager.listAccountTokens(
           account.sub,
@@ -304,21 +307,16 @@ export function apiRouter<
           }),
         }
       },
-    ),
+    }),
   )
 
   router.use(
-    apiRoute(
-      'GET',
-      '/account-sessions',
-      z.object({ sub: subSchema }).strict(),
-      async function (req, res) {
-        const { deviceId, account } = await authenticate(
-          req,
-          res,
-          this.input.sub,
-          this.requestUri,
-        )
+    apiRoute({
+      method: 'GET',
+      endpoint: '/account-sessions',
+      schema: z.object({ sub: subSchema }).strict(),
+      async handler(req) {
+        const { account } = await authenticate.call(this, req)
 
         const deviceAccounts = await server.accountManager.listAccountDevices(
           account.sub,
@@ -335,20 +333,20 @@ export function apiRouter<
                   accountSession.deviceData.lastSeenAt.toISOString() as ISODateString,
               },
 
-              isCurrentDevice: accountSession.deviceId === deviceId,
+              isCurrentDevice: accountSession.deviceId === this.deviceId,
             }),
           ),
         }
       },
-    ),
+    }),
   )
 
   router.use(
-    apiRoute(
-      'POST',
-      '/revoke-account-session',
-      z.object({ sub: subSchema, deviceId: deviceIdSchema }).strict(),
-      async function () {
+    apiRoute({
+      method: 'POST',
+      endpoint: '/revoke-account-session',
+      schema: z.object({ sub: subSchema, deviceId: deviceIdSchema }).strict(),
+      async handler() {
         // @NOTE This route is not authenticated. If a user is able to steal
         // another user's session cookie, we allow them to revoke the device
         // session.
@@ -360,22 +358,16 @@ export function apiRouter<
 
         return { success: true }
       },
-    ),
+    }),
   )
 
   router.use(
-    apiRoute(
-      'POST',
-      '/revoke-oauth-session',
-      z.object({ sub: subSchema, tokenId: tokenIdSchema }).strict(),
-      async function (req, res) {
-        const { account } = await authenticate(
-          req,
-          res,
-          this.input.sub,
-          this.requestUri,
-          true,
-        )
+    apiRoute({
+      method: 'POST',
+      endpoint: '/revoke-oauth-session',
+      schema: z.object({ sub: subSchema, tokenId: tokenIdSchema }).strict(),
+      async handler(req) {
+        const { account } = await authenticate.call(this, req)
 
         const tokenInfo = await server.tokenManager.getTokenInfo(
           this.input.tokenId,
@@ -390,17 +382,16 @@ export function apiRouter<
 
         return { success: true }
       },
-    ),
+    }),
   )
 
   router.use(
-    apiRoute(
-      'POST',
-      '/accept',
-      z.object({ sub: subSchema }).strict(),
-      async function (req, res) {
-        const { requestUri } = this
-        if (!requestUri) {
+    apiRoute({
+      method: 'POST',
+      endpoint: '/accept',
+      schema: z.object({ sub: z.union([subSchema, signedJwtSchema]) }).strict(),
+      async handler(req, res) {
+        if (!this.requestUri) {
           throw new InvalidRequestError(
             'This endpoint can only be used in the context of an OAuth request',
           )
@@ -409,13 +400,10 @@ export function apiRouter<
         // Any AccessDeniedError caught in this block will result in a redirect
         // to the client's redirect_uri with an error.
         try {
-          const {
-            deviceId,
-            deviceMetadata,
-            account,
-            authorizedClients,
-            requestInfo,
-          } = await authenticate(req, res, this.input.sub, requestUri, true)
+          const requestInfo = await server.requestManager.get(
+            this.requestUri,
+            this.deviceId,
+          )
 
           const { clientId, parameters } = requestInfo
 
@@ -423,14 +411,19 @@ export function apiRouter<
           // AccessDeniedError in order to allow redirecting the user to the
           // client.
           try {
+            const { account, authorizedClients } = await authenticate.call(
+              this,
+              req,
+            )
+
             const client = await server.clientManager.getClient(clientId)
 
             const code = await server.requestManager.setAuthorized(
               requestInfo.uri,
               client,
               account,
-              deviceId,
-              deviceMetadata,
+              this.deviceId,
+              this.deviceMetadata,
             )
 
             const clientData = authorizedClients.get(clientId)
@@ -459,7 +452,7 @@ export function apiRouter<
           // If any error happened (unauthenticated, invalid request, etc.),
           // lets make sure the request can no longer be used.
           try {
-            await server.requestManager.delete(requestUri)
+            await server.requestManager.delete(this.requestUri)
           } catch (err) {
             onError?.(req, res, err, 'Failed to delete request')
           }
@@ -480,15 +473,16 @@ export function apiRouter<
           throw err
         }
       },
-    ),
+    }),
   )
 
   router.use(
-    apiRoute(
-      'POST',
-      '/reject',
-      z.object({}).strict(),
-      async function (req, res) {
+    apiRoute({
+      method: 'POST',
+      endpoint: '/reject',
+      schema: z.object({}).strict(),
+      rotateDeviceCookies: true,
+      async handler(req, res) {
         const { requestUri } = this
         if (!requestUri) {
           throw new InvalidRequestError(
@@ -509,11 +503,9 @@ export function apiRouter<
           // as the request ID is not guessable and would only result in a bad UX
           // for misbehaving clients, only for the users of those clients.
 
-          const { deviceId } = await server.deviceManager.load(req, res, true)
-
           const { parameters } = await server.requestManager.get(
             requestUri,
-            deviceId,
+            this.deviceId,
           )
 
           const url = buildRedirectUrl(server.issuer, parameters, {
@@ -543,90 +535,50 @@ export function apiRouter<
           })
         }
       },
-    ),
+    }),
   )
 
   return router
 
-  async function authenticate(
-    req: TReq,
-    res: TRes,
-    sub: string,
-    requestUri: RequestUri,
-    rotateDeviceCookie?: boolean,
-  ): Promise<{
-    deviceId: DeviceId
-    deviceMetadata: RequestMetadata
-    account: Account
-    authorizedClients: AuthorizedClients
-    requestInfo: RequestInfo
-  }>
-  async function authenticate(
-    req: TReq,
-    res: TRes,
-    sub: string,
-    requestUri: RequestUri | undefined,
-    rotateDeviceCookie?: boolean,
-  ): Promise<{
-    deviceId: DeviceId
-    deviceMetadata: RequestMetadata
-    account: Account
-    authorizedClients: AuthorizedClients
-    requestInfo?: RequestInfo
-  }>
-  async function authenticate(
-    req: TReq,
-    res: TRes,
-    sub: string,
-    requestUri: RequestUri | undefined,
-    rotateDeviceCookie: boolean = false,
-  ): Promise<{
-    deviceId: DeviceId
-    deviceMetadata: RequestMetadata
-    account: Account
-    authorizedClients: AuthorizedClients
-    requestInfo?: RequestInfo
-  }> {
-    const { deviceId, deviceMetadata } = await server.deviceManager.load(
-      req,
-      res,
-      rotateDeviceCookie,
-    )
+  async function authenticate(this: ApiContext<void, { sub: Sub }>, req: TReq) {
+    const authorization = req.headers.authorization?.split(' ')
+    if (authorization?.[0].toLowerCase() === 'bearer') {
+      // If there is an authorization header, verify that the token it contains
+      // is a jwt bound to the right [sub, device, request].
+      const token = signedJwtSchema.parse(authorization[1])
+      const { payload } = await server.signer.verifyApiToken(token)
 
-    const requestInfo = requestUri
-      ? await server.requestManager.get(requestUri, deviceId)
-      : undefined
+      if (
+        payload.sub !== this.input.sub ||
+        payload.deviceId !== this.deviceId ||
+        payload.requestUri !== this.requestUri
+      ) {
+        throw new InvalidRequestError('Invalid token')
+      }
 
-    // TODO: CHeck if request has signedApiToken here !!!
-
-    // Ensures the requested "sub" is linked to the device
-    const { account, authorizedClients } = await server.accountManager
-      .getDeviceAccount(deviceId, sub)
-      .then(
-        (deviceAccount) => {
-          // The session exists but was created too long ago
-          if (server.checkLoginRequired(deviceAccount)) {
-            const message = 'Login required'
-            throw requestInfo
-              ? new LoginRequiredError(requestInfo.parameters, message)
-              : new InvalidRequestError(message)
-          }
-
-          return deviceAccount
-        },
-        (err) => {
-          throw requestInfo //
-            ? LoginRequiredError.from(requestInfo.parameters, err)
-            : err
-        },
+      return server.accountManager.getAccount(payload.sub)
+    } else {
+      // Ensures the "sub" has an active session on the device
+      const deviceAccount = await server.accountManager.getDeviceAccount(
+        this.deviceId,
+        this.input.sub,
       )
 
-    return { deviceId, deviceMetadata, account, authorizedClients, requestInfo }
+      // The session exists but was created too long ago
+      if (server.checkLoginRequired(deviceAccount)) {
+        throw new InvalidRequestError('Login required')
+      }
+
+      return deviceAccount
+    }
   }
 
-  type ApiContext<T extends RouterCtx, I = void> = SubCtx<
+  type ApiContext<T extends object | void, I = void> = SubCtx<
     T,
     {
+      deviceId: DeviceId
+      deviceMetadata: RequestMetadata
+
       /**
        * The parsed input data (json payload if "POST", query params if "GET").
        */
@@ -665,32 +617,39 @@ export function apiRouter<
         : ApiEndpoints[E] extends { method: 'GET'; params: infer P }
           ? z.ZodType<P>
           : void,
-  >(
-    method: M,
-    endpoint: E,
-    schema: S,
-    buildJson: (
+  >(options: {
+    method: M
+    endpoint: E
+    schema: S
+    rotateDeviceCookies?: boolean
+    handler: (
       this: ApiContext<RouteCtx<C>, InferValidation<S>>,
       req: TReq,
       res: TRes,
-    ) => Awaitable<ApiEndpoints[E]['output']>,
-  ): Middleware<C, TReq, TRes> {
+    ) => Awaitable<ApiEndpoints[E]['output']>
+  }): Middleware<C, TReq, TRes> {
     return createRoute(
-      method,
-      `${API_ENDPOINT_PREFIX}${endpoint}`,
-      apiMiddleware(method, schema, buildJson),
+      options.method,
+      `${API_ENDPOINT_PREFIX}${options.endpoint}`,
+      apiMiddleware(options),
     )
   }
 
-  function apiMiddleware<C extends RouterCtx, S extends void | z.ZodTypeAny>(
-    method: 'GET' | 'POST',
-    schema: S,
-    buildJson: (
+  function apiMiddleware<C extends RouterCtx, S extends void | z.ZodTypeAny>({
+    method,
+    schema,
+    rotateDeviceCookies,
+    handler,
+  }: {
+    method: 'GET' | 'POST'
+    schema: S
+    rotateDeviceCookies?: boolean
+    handler: (
       this: ApiContext<C, InferValidation<S>>,
       req: TReq,
       res: TRes,
-    ) => unknown,
-  ): Middleware<C, TReq, TRes> {
+    ) => unknown
+  }): Middleware<C, TReq, TRes> {
     const parseInput: (this: C, req: TReq) => Promise<InferValidation<S>> =
       schema == null // No schema means endpoint doesn't accept any input
         ? async function (req) {
@@ -749,9 +708,22 @@ export function apiRouter<
         // Parse and validate the input data
         const input = await parseInput.call(this, req)
 
+        // Load session data, rotating the session cookie if needed
+        const { deviceId, deviceMetadata } = await server.deviceManager.load(
+          req,
+          res,
+          rotateDeviceCookies,
+        )
+
+        const context = subCtx(this, {
+          input,
+          requestUri,
+          deviceId,
+          deviceMetadata,
+        })
+
         // Generate the API response
-        const context = subCtx(this, { input, requestUri })
-        const payload = await buildJson.call(context, req, res)
+        const payload = await handler.call(context, req, res)
 
         return { payload, status: 200 }
       } catch (err) {

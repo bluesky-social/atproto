@@ -6,6 +6,7 @@ type Awaitable<T> = T | PromiseLike<T>
 
 export type Options = {
   signal?: AbortSignal
+  bearer?: string
 }
 
 export type EndpointPath = `/${string}`
@@ -55,6 +56,10 @@ export class JsonClient<
     const headers = Object.entries(await this.getHeaders.call(null))
       .filter((entry): entry is [string, string] => entry[1] != null)
       .map(([k, v]) => [k.toLowerCase(), v] as [string, string])
+
+    if (options?.bearer) {
+      headers.push(['authorization', `Bearer ${options.bearer}`])
+    }
 
     const response = await fetch(url, {
       method,
@@ -111,8 +116,9 @@ export class JsonErrorResponse<
   constructor(
     public readonly payload: P,
     message = payload.error_description,
+    options?: ErrorOptions,
   ) {
-    super(message || `Error "${payload.error}"`)
+    super(message || `Error "${payload.error}"`, options)
   }
 
   get error(): string {

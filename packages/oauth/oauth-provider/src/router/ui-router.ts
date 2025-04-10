@@ -21,7 +21,7 @@ import { extractZodErrorMessage } from '../lib/util/zod-error.js'
 import type { OAuthProvider } from '../oauth-provider.js'
 import { requestUriSchema } from '../request/request-uri.js'
 import { AuthorizationResultRedirect } from '../result/authorization-result-redirect.js'
-import { extractEphemeralCookies, parseRedirectUrl } from './api-router.js'
+import { parseRedirectUrl } from './api-router.js'
 import type { RouterOptions } from './router-options.js'
 import {
   buildRedirectMode,
@@ -60,17 +60,13 @@ export function authorizeRouter<
     /^\/account(?:\/.*)?$/,
     buildNavigationMiddleware(async function (req, res) {
       const { deviceId } = await server.deviceManager.load(req, res)
-      const deviceAccounts = await server.accountManager.listDeviceAccounts(
-        deviceId,
-        undefined,
-        extractEphemeralCookies(req, undefined),
-      )
+      const deviceAccounts =
+        await server.accountManager.listDeviceAccounts(deviceId)
 
       return sendAccountPage(req, res, {
         deviceSessions: deviceAccounts.map(
           (deviceAccount): ActiveDeviceSession => ({
             account: deviceAccount.account,
-            remembered: deviceAccount.data.remembered,
             loginRequired: server.checkLoginRequired(deviceAccount),
           }),
         ),
