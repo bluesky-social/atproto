@@ -17,24 +17,40 @@ import { useSignInMutation } from '#/data/useSignInMutation'
 import { format2FACode } from '#/util/format2FACode'
 import { wait } from '#/util/wait'
 import { normalizeAndEnsureValidHandle } from '@atproto/syntax'
+import { useDeviceSessionsQuery } from '#/data/useDeviceSessionsQuery'
 
 export const Route = createFileRoute('/account/_minimalLayout/sign-in')({
   component: RouteComponent,
 })
 
 function RouteComponent() {
+  const { data: sessions } = useDeviceSessionsQuery()
+
   return (
-    <div
-      className={clsx([
-        'mx-auto rounded-lg border p-5 shadow-xl md:p-7 dark:shadow-2xl',
-        'border-contrast-25 dark:border-contrast-50 shadow-contrast-500/20 dark:shadow-contrast-0/50',
-      ])}
-      style={{
-        maxWidth: 400,
-      }}
-    >
-      <LoginForm />
-    </div>
+    <>
+      <div
+        className={clsx([
+          'mx-auto rounded-lg border p-5 shadow-xl md:p-7 dark:shadow-2xl',
+          'border-contrast-25 dark:border-contrast-50 shadow-contrast-500/20 dark:shadow-contrast-0/50',
+        ])}
+        style={{
+          maxWidth: 400,
+        }}
+      >
+        <LoginForm />
+      </div>
+
+      {sessions.length > 0 && (
+        <div className="flex flex-row justify-center pt-4">
+          <InlineLink
+            to="/account"
+            className="text-text-light inline-block w-full text-center text-sm"
+          >
+            <Trans>&larr; Back to accounts</Trans>
+          </InlineLink>
+        </div>
+      )}
+    </>
   )
 }
 
