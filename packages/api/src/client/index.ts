@@ -148,7 +148,6 @@ import * as AppBskyGraphGetBlocks from './types/app/bsky/graph/getBlocks.js'
 import * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers.js'
 import * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows.js'
 import * as AppBskyGraphGetKnownFollowers from './types/app/bsky/graph/getKnownFollowers.js'
-import * as AppBskyGraphGetKnownVouchesReceived from './types/app/bsky/graph/getKnownVouchesReceived.js'
 import * as AppBskyGraphGetList from './types/app/bsky/graph/getList.js'
 import * as AppBskyGraphGetListBlocks from './types/app/bsky/graph/getListBlocks.js'
 import * as AppBskyGraphGetListMutes from './types/app/bsky/graph/getListMutes.js'
@@ -158,8 +157,6 @@ import * as AppBskyGraphGetRelationships from './types/app/bsky/graph/getRelatio
 import * as AppBskyGraphGetStarterPack from './types/app/bsky/graph/getStarterPack.js'
 import * as AppBskyGraphGetStarterPacks from './types/app/bsky/graph/getStarterPacks.js'
 import * as AppBskyGraphGetSuggestedFollowsByActor from './types/app/bsky/graph/getSuggestedFollowsByActor.js'
-import * as AppBskyGraphGetVouchesIssued from './types/app/bsky/graph/getVouchesIssued.js'
-import * as AppBskyGraphGetVouchesReceived from './types/app/bsky/graph/getVouchesReceived.js'
 import * as AppBskyGraphList from './types/app/bsky/graph/list.js'
 import * as AppBskyGraphListblock from './types/app/bsky/graph/listblock.js'
 import * as AppBskyGraphListitem from './types/app/bsky/graph/listitem.js'
@@ -405,7 +402,6 @@ export * as AppBskyGraphGetBlocks from './types/app/bsky/graph/getBlocks.js'
 export * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers.js'
 export * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows.js'
 export * as AppBskyGraphGetKnownFollowers from './types/app/bsky/graph/getKnownFollowers.js'
-export * as AppBskyGraphGetKnownVouchesReceived from './types/app/bsky/graph/getKnownVouchesReceived.js'
 export * as AppBskyGraphGetList from './types/app/bsky/graph/getList.js'
 export * as AppBskyGraphGetListBlocks from './types/app/bsky/graph/getListBlocks.js'
 export * as AppBskyGraphGetListMutes from './types/app/bsky/graph/getListMutes.js'
@@ -415,8 +411,6 @@ export * as AppBskyGraphGetRelationships from './types/app/bsky/graph/getRelatio
 export * as AppBskyGraphGetStarterPack from './types/app/bsky/graph/getStarterPack.js'
 export * as AppBskyGraphGetStarterPacks from './types/app/bsky/graph/getStarterPacks.js'
 export * as AppBskyGraphGetSuggestedFollowsByActor from './types/app/bsky/graph/getSuggestedFollowsByActor.js'
-export * as AppBskyGraphGetVouchesIssued from './types/app/bsky/graph/getVouchesIssued.js'
-export * as AppBskyGraphGetVouchesReceived from './types/app/bsky/graph/getVouchesReceived.js'
 export * as AppBskyGraphList from './types/app/bsky/graph/list.js'
 export * as AppBskyGraphListblock from './types/app/bsky/graph/listblock.js'
 export * as AppBskyGraphListitem from './types/app/bsky/graph/listitem.js'
@@ -2559,18 +2553,6 @@ export class AppBskyGraphNS {
     )
   }
 
-  getKnownVouchesReceived(
-    params?: AppBskyGraphGetKnownVouchesReceived.QueryParams,
-    opts?: AppBskyGraphGetKnownVouchesReceived.CallOptions,
-  ): Promise<AppBskyGraphGetKnownVouchesReceived.Response> {
-    return this._client.call(
-      'app.bsky.graph.getKnownVouchesReceived',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
   getList(
     params?: AppBskyGraphGetList.QueryParams,
     opts?: AppBskyGraphGetList.CallOptions,
@@ -2657,30 +2639,6 @@ export class AppBskyGraphNS {
   ): Promise<AppBskyGraphGetSuggestedFollowsByActor.Response> {
     return this._client.call(
       'app.bsky.graph.getSuggestedFollowsByActor',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  getVouchesIssued(
-    params?: AppBskyGraphGetVouchesIssued.QueryParams,
-    opts?: AppBskyGraphGetVouchesIssued.CallOptions,
-  ): Promise<AppBskyGraphGetVouchesIssued.Response> {
-    return this._client.call(
-      'app.bsky.graph.getVouchesIssued',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  getVouchesReceived(
-    params?: AppBskyGraphGetVouchesReceived.QueryParams,
-    opts?: AppBskyGraphGetVouchesReceived.CallOptions,
-  ): Promise<AppBskyGraphGetVouchesReceived.Response> {
-    return this._client.call(
-      'app.bsky.graph.getVouchesReceived',
       params,
       undefined,
       opts,

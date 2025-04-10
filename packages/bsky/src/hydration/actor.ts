@@ -1,7 +1,6 @@
 import { DataPlaneClient } from '../data-plane/client'
 import { Record as ProfileRecord } from '../lexicon/types/app/bsky/actor/profile'
 import { Record as ChatDeclarationRecord } from '../lexicon/types/chat/bsky/actor/declaration'
-import { VerificationData } from '../proto/bsky_pb'
 import {
   HydrationMap,
   RecordInfo,
@@ -25,7 +24,8 @@ export type Actor = {
   createdAt?: Date
   priorityNotifications: boolean
   trustedVoucher?: boolean
-  verifiedBy?: { [key: string]: VerificationData }
+  // TODO use type from pb
+  verifiedBy?: { [key: string]: object }
 }
 
 export type Actors = HydrationMap<Actor>
