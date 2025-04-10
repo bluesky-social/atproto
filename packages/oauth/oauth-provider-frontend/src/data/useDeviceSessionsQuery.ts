@@ -15,6 +15,7 @@ export function useDeviceSessionsQuery() {
   return useQuery<ActiveDeviceSession[]>({
     initialData: [...initialData],
     queryKey: accountsQueryKey,
+    refetchOnWindowFocus: 'always',
     async queryFn({ signal }) {
       const { results } = await api.fetch(
         'GET',

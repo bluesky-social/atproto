@@ -9,12 +9,7 @@ export const signInDataSchema = z
     username: z.string(),
     password: z.union([oldPasswordSchema, newPasswordSchema]),
     emailOtp: emailOtpSchema.optional(),
-    /**
-     * If false, the account must not be returned from
-     * {@link AccountStore.listDeviceAccounts}. Note that this only makes sense when
-     * used with a device ID.
-     */
-    remember: z.boolean().optional().default(false),
+    remember: z.boolean().optional(),
   })
   .strict()
 

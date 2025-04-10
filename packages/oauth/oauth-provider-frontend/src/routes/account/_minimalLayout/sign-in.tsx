@@ -50,7 +50,6 @@ function LoginForm() {
       identifier: '',
       password: '',
       code: '',
-      remember: false,
     },
     validators: {
       onSubmit: z.object({
@@ -72,7 +71,6 @@ function LoginForm() {
         ]),
         password: z.string().nonempty(_(msg`Password is required`)),
         code: z.string(),
-        remember: z.boolean(),
       }),
     },
     onSubmit: async ({ value }) => {
@@ -92,7 +90,6 @@ function LoginForm() {
           signIn({
             username: value.identifier,
             password: value.password,
-            remember: value.remember,
           }),
         )
         await navigate({
@@ -124,7 +121,7 @@ function LoginForm() {
           form.handleSubmit()
         }}
       >
-        <Form.Fieldset label="Test">
+        <Form.Fieldset label={_(msg`Credentials`)}>
           <form.Field
             name="identifier"
             children={(field) => {
@@ -190,25 +187,6 @@ function LoginForm() {
               }}
             />
           )}
-
-          <form.Field
-            name="remember"
-            children={(field) => {
-              return (
-                <div className="flex items-center space-x-2">
-                  <Form.Checkbox
-                    name={field.name}
-                    value="remember"
-                    checked={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.checked)}
-                  />
-                  <Form.Checkbox.Label name={field.name}>
-                    <Trans>Remember this account on this device</Trans>
-                  </Form.Checkbox.Label>
-                </div>
-              )
-            }}
-          />
 
           {error && (
             <ul>

@@ -204,7 +204,8 @@ export class AccountManager {
         },
       )
 
-      const remembered = data.remember === true
+      // By default, remember when not in an OAuth flow.
+      const remembered = data.remember ?? requestUri == null
 
       const ephemeralCookie = remembered ? null : await randomHexId(32)
 
