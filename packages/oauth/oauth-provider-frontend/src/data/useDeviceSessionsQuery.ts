@@ -37,12 +37,14 @@ export function useUpsertDeviceAccount() {
 
   return useCallback(
     (newSession: ActiveDeviceSession) => {
-      return qc.setQueryData<ActiveDeviceSession[]>(useDeviceSessionsQueryKey, (data) =>
-        upsert(
-          data,
-          newSession,
-          (a) => a.account.sub === newSession.account.sub,
-        ),
+      return qc.setQueryData<ActiveDeviceSession[]>(
+        useDeviceSessionsQueryKey,
+        (data) =>
+          upsert(
+            data,
+            newSession,
+            (a) => a.account.sub === newSession.account.sub,
+          ),
       )
     },
     [qc, ...useDeviceSessionsQueryKey],
