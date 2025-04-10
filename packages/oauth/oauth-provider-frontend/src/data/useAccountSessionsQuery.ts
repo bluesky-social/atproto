@@ -13,6 +13,8 @@ export function useAccountSessionsQuery(input: UseAccountSessionsQueryInput) {
   const api = useApi()
 
   return useQuery<ActiveAccountSession[]>({
+    refetchOnWindowFocus: 'always',
+    staleTime: 15e3, // 15s
     queryKey: accountSessionsQueryKey(input),
     async queryFn({ signal }) {
       const { results } = await api.fetch('GET', '/account-sessions', input, {
