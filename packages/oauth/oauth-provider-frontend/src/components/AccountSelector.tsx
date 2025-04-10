@@ -20,9 +20,9 @@ export function AccountSelector() {
       <Popover.Trigger asChild>
         <button
           className={clsx([
-            'flex items-center truncate border py-1 pl-1 pr-3',
+            'flex items-center space-x-2 truncate rounded-lg border py-1 pl-1 pr-3',
             'bg-contrast-0 dark:bg-contrast-25 border-contrast-50 dark:border-contrast-100',
-            'hover:bg-contrast-25 dark:hover:bg-contrast-50 hover:border-contrast-100 dark:hover:border-contrast-200 space-x-2 rounded-lg',
+            'hover:bg-contrast-25 dark:hover:bg-contrast-50 hover:border-contrast-100 dark:hover:border-contrast-200',
           ])}
           aria-label={_(msg`Select an account`)}
           style={{ maxWidth: 220 }}
@@ -63,24 +63,25 @@ export function AccountSelector() {
                   to="/account/$sub"
                   params={account}
                   className={clsx([
-                    'flex items-center space-x-3 p-3 pr-4',
+                    'flex items-center space-x-2 py-2 pl-2 pr-4',
                     'hover:bg-contrast-25 dark:hover:bg-contrast-50',
                     i !== 0 &&
                       'border-contrast-25 dark:border-contrast-50 border-t',
                   ])}
                 >
-                  <img src={account.picture} className="h-9 w-9 rounded-full" />
+                  <Avatar
+                    size={36}
+                    src={account.picture}
+                    displayName={account.name}
+                  />
                   <div className="truncate text-left">
                     <div className="flex items-center space-x-1">
                       <p className="text-text-default text-sm font-bold leading-snug">
                         {getAccountName(account)}
                       </p>
-                      <p className="text-text-light truncate text-sm leading-snug">
-                        {sanitizeHandle(account.preferred_username)}
-                      </p>
                     </div>
                     <p className="text-text-light truncate text-sm leading-snug">
-                      {account.sub}
+                      {sanitizeHandle(account.preferred_username)}
                     </p>
                   </div>
                 </Link>
