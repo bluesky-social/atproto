@@ -2,9 +2,9 @@ import { useDeviceSessionsQuery } from '#/data/useDeviceSessionsQuery'
 import { Route as AccountRoute } from '#/routes/account/_appLayout/$sub'
 
 export function useCurrentSession() {
-  const { data: accounts } = useDeviceSessionsQuery()
+  const { data: sessions } = useDeviceSessionsQuery()
   const { sub } = AccountRoute.useParams()
-  const current = accounts?.find(({ account }) => account.sub === sub)
+  const current = sessions?.find(({ account }) => account.sub === sub)
 
   if (!current) {
     throw new Error(

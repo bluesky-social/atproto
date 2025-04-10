@@ -19,10 +19,10 @@ import { useRevokeAccountSessionMutation } from '#/data/useRevokeAccountSessionM
 import { useRevokeOAuthSessionMutation } from '#/data/useRevokeOAuthSessionMutation'
 
 export const Route = createFileRoute('/account/_appLayout/$sub')({
-  component: Sessions,
+  component: AccountHome,
 })
 
-export function Sessions() {
+export function AccountHome() {
   const { _ } = useLingui()
   const { sub } = Route.useParams()
   const { data: sessions, error, isLoading } = useOAuthSessionsQuery({ sub })
