@@ -72,7 +72,7 @@ export const skeleton = async (inputs: {
   }
   const actors = await ctx.hydrator.actor.getActors([did], {
     includeTakedowns: params.hydrateCtx.includeTakedowns,
-    skipCache: params.hydrateCtx.viewer,
+    skipCacheForDids: params.hydrateCtx.skipCacheForViewer,
   })
   const actor = actors.get(did)
   if (!actor) {

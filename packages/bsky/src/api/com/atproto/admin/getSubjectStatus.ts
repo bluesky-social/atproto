@@ -50,7 +50,7 @@ export default function (server: Server, ctx: AppContext) {
         const res = (
           await ctx.hydrator.actor.getActors([did], {
             includeTakedowns: true,
-            skipCache: did,
+            skipCacheForDids: [did],
           })
         ).get(did)
         if (res) {

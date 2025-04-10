@@ -104,19 +104,12 @@ export class ActorHydrator {
     dids: string[],
     opts: {
       includeTakedowns?: boolean
-      skipCache?: string | string[] | null
+      skipCacheForDids?: string[]
     } = {},
   ): Promise<Actors> {
-    const { includeTakedowns = false, skipCache } = opts
+    const { includeTakedowns = false, skipCacheForDids } = opts
     if (!dids.length) return new HydrationMap<Actor>()
-    const res = await this.dataplane.getActors({
-      dids,
-      skipCacheForDids: skipCache
-        ? typeof skipCache === 'string'
-          ? [skipCache]
-          : skipCache
-        : undefined,
-    })
+    const res = await this.dataplane.getActors({ dids, skipCacheForDids })
     return dids.reduce((acc, did, i) => {
       const actor = res.actors[i]
       const isNoHosted =

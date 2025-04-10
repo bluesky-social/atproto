@@ -12,7 +12,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const actors = await ctx.hydrator.actor.getActors(dids, {
         includeTakedowns: true,
-        skipCache: dids,
+        skipCacheForDids: dids,
       })
 
       const infos = mapDefined(dids, (did) => {

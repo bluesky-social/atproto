@@ -71,6 +71,11 @@ export class HydrateCtx {
   includeActorTakedowns = this.vals.includeActorTakedowns
   include3pBlocks = this.vals.include3pBlocks
   constructor(private vals: HydrateCtxVals) {}
+  // Convenience with use with dataplane.getActors cache control
+  get skipCacheForViewer() {
+    if (!this.viewer) return
+    return [this.viewer]
+  }
   copy<V extends Partial<HydrateCtxVals>>(vals?: V): HydrateCtx & V {
     return new HydrateCtx({ ...this.vals, ...vals }) as HydrateCtx & V
   }
@@ -191,7 +196,10 @@ export class Hydrator {
   ): Promise<HydrationState> {
     const includeTakedowns = ctx.includeTakedowns || ctx.includeActorTakedowns
     const [actors, labels, profileViewersState] = await Promise.all([
-      this.actor.getActors(dids, { includeTakedowns, skipCache: ctx.viewer }),
+      this.actor.getActors(dids, {
+        includeTakedowns,
+        skipCacheForDids: ctx.skipCacheForViewer,
+      }),
       this.label.getLabelsForSubjects(labelSubjectsForDid(dids), ctx.labelers),
       this.hydrateProfileViewers(dids, ctx),
     ])
@@ -306,7 +314,7 @@ export class Hydrator {
       ),
       this.actor.getActors(includeAuthorDids, {
         includeTakedowns: ctx.includeTakedowns,
-        skipCache: ctx.viewer,
+        skipCacheForDids: ctx.skipCacheForViewer,
       }),
     ])
 
