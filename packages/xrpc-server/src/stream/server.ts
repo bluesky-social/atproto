@@ -36,7 +36,7 @@ export class XrpcStreamServer {
         if (err instanceof DisconnectError) {
           return socket.close(err.wsCode, err.xrpcCode)
         } else {
-          logger.error(err, 'websocket server error')
+          logger.error({ err }, 'websocket server error')
           return socket.terminate()
         }
       }

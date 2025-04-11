@@ -727,7 +727,7 @@ export class ModerationService {
               this.eventPusher
                 .attemptBlobEvent(evt.id)
                 .catch((err) =>
-                  log.error({ err, ...evt }, 'failed to push blob event'),
+                  log.error({ ...evt, err }, 'failed to push blob event'),
                 ),
             ),
           )

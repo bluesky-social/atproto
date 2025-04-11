@@ -102,7 +102,7 @@ export function createMiddleware(
         // Cache in the background
         cache
           .put(cacheKey, cloneStream(processor))
-          .catch((err) => log.error(err, 'failed to cache image'))
+          .catch((err) => log.error({ err }, 'failed to cache image'))
 
         res.statusCode = 200
         res.setHeader('cache-control', `public, max-age=31536000`) // 1 year

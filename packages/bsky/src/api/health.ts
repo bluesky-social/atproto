@@ -37,7 +37,7 @@ Most API routes are under /xrpc/
     try {
       await ctx.dataplane.ping({})
     } catch (err) {
-      req.log.error(err, 'failed health check')
+      req.log.error({ err }, 'failed health check')
       return res.status(503).send({ version, error: 'Service Unavailable' })
     }
     res.send({ version })
