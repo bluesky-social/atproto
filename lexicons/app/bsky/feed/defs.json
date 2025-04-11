@@ -243,13 +243,18 @@
             "app.bsky.feed.defs#interactionRepost",
             "app.bsky.feed.defs#interactionReply",
             "app.bsky.feed.defs#interactionQuote",
-            "app.bsky.feed.defs#interactionShare"
+            "app.bsky.feed.defs#interactionShare",
+            "app.bsky.feed.defs#interactionVideoWatch"
           ]
         },
         "feedContext": {
           "type": "string",
           "description": "Context on a feed item that was originally supplied by the feed generator on getFeedSkeleton.",
           "maxLength": 2000
+        },
+        "videoWatchMs": {
+          "type": "integer",
+          "description": "Time (in milliseconds) that has been spent watching a video, including time spent watching loops of the video. Should only be included when sending a video watch interaction."
         }
       }
     },
@@ -308,6 +313,10 @@
     "interactionShare": {
       "type": "token",
       "description": "User shared the feed item"
+    },
+    "interactionVideoWatch": {
+      "type": "token",
+      "description": "User watched the video in the feed item"
     }
   }
 }
