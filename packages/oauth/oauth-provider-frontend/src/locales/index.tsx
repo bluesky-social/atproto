@@ -11,22 +11,20 @@ import {
 import { LocalizedString } from '#/api'
 import { activateLocale } from '#/locales/activateLocale'
 import { detectLocale } from '#/locales/detectLocale'
-import { Locale } from '#/locales/types'
-
-export * from '#/locales/types'
+import { Locale, locales } from './locales'
 
 const Context = createContext<{
   locale: Locale
   setLocale: (locale: Locale) => void
   localizeString: (value: LocalizedString) => string
 }>({
-  locale: Locale.en,
+  locale: 'en',
   setLocale: () => {},
   localizeString: () => '',
 })
 
 export function Provider({ children }: { children: ReactNode }) {
-  const prevLocale = useRef<Locale>(Locale.en)
+  const prevLocale = useRef<Locale>('en')
   const [locale, setLocale] = useState<Locale>(detectLocale)
 
   useEffect(() => {
@@ -44,7 +42,7 @@ export function Provider({ children }: { children: ReactNode }) {
 
   const safeSetLocale = useCallback(
     (locale: Locale) => {
-      if (locale in Locale) {
+      if (locale in locales) {
         setLocale(locale)
       } else {
         throw new Error(`Unsupported locale: ${locale}`)
@@ -56,7 +54,7 @@ export function Provider({ children }: { children: ReactNode }) {
   const localizeString = useCallback(
     (value: LocalizedString) => {
       if (typeof value === 'string') return value
-      return value[locale] || value[Locale.en]
+      return value[locale] || value['en']
     },
     [locale],
   )

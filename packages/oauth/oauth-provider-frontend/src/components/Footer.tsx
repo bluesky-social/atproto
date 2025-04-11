@@ -1,8 +1,8 @@
 import { InlineLink } from '#/components/Link'
 import { LocaleSelector } from '#/components/LocaleSelector'
 import { useCustomizationData } from '#/data/useCustomizationData'
-import { Locale, useLocale } from '#/locales'
-import { localesDisplay } from '#/locales/localesDisplay'
+import { useLocale } from '#/locales'
+import { Locale, locales } from '#/locales/locales'
 
 export function Footer() {
   const { locale, setLocale, localizeString } = useLocale()
@@ -23,7 +23,7 @@ export function Footer() {
       </div>
 
       <LocaleSelector
-        items={Object.entries(localesDisplay).map(([code, l]) => ({
+        items={Object.entries(locales).map(([code, l]) => ({
           label: l.flag + ' ' + l.name,
           value: code,
         }))}

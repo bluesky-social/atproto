@@ -1,12 +1,12 @@
-import { Locale } from '#/locales/types'
+import { Locale, isLocale } from './locales'
 
 export function detectLocale(): Locale {
   const lang = document.documentElement.getAttribute('lang')
-  if (lang && lang in Locale) return lang as Locale
+  if (isLocale(lang)) return lang as Locale
 
   for (const locale of navigator.languages) {
-    if (locale in Locale) return locale as Locale
+    if (isLocale(locale)) return locale as Locale
   }
 
-  return Locale.en
+  return 'en'
 }

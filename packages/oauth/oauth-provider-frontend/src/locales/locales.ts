@@ -1,12 +1,5 @@
-import { Locale } from '#/locales/types'
-
-export const localesDisplay: Record<
-  Locale,
-  {
-    name: string
-    flag?: string
-  }
-> = {
+// @TODO Enable locales once they get translated
+export const locales = {
   // an: {
   //   name: 'Aragonés',
   // },
@@ -29,14 +22,14 @@ export const localesDisplay: Record<
   //   name: 'Ελληνικά',
   //   flag: '🇬🇷',
   // },
-  [Locale.en]: {
+  en: {
     name: 'English',
     flag: '🇺🇸',
   },
-  [Locale['en-GB']]: {
-    name: 'English (UK)',
-    flag: '🇬🇧',
-  },
+  // 'en-GB': {
+  //   name: 'English (UK)',
+  //   flag: '🇬🇧',
+  // },
   // es: {
   //   name: 'Español',
   //   flag: '🇪🇸',
@@ -48,7 +41,7 @@ export const localesDisplay: Record<
   //   name: 'Suomi',
   //   flag: '🇫🇮',
   // },
-  [Locale.fr]: {
+  fr: {
     name: 'Français',
     flag: '🇫🇷',
   },
@@ -146,4 +139,8 @@ export const localesDisplay: Record<
   //   name: '中文(繁體)',
   //   flag: '🇹🇼',
   // },
-}
+} as const satisfies Record<string, { name: string; flag?: string }>
+
+export type Locale = keyof typeof locales
+export const isLocale = (v: unknown): v is Locale =>
+  typeof v === 'string' && Object.hasOwn(locales, v)
