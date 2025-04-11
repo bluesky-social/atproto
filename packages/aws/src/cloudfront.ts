@@ -4,7 +4,7 @@ import { ImageInvalidator } from './types'
 export type CloudfrontConfig = {
   distributionId: string
   pathPrefix?: string
-} & Omit<aws.CloudFrontClientConfig, 'apiVersion'>
+} & aws.CloudFrontClientConfig
 
 export class CloudfrontInvalidator implements ImageInvalidator {
   distributionId: string
@@ -14,10 +14,7 @@ export class CloudfrontInvalidator implements ImageInvalidator {
     const { distributionId, pathPrefix, ...rest } = cfg
     this.distributionId = distributionId
     this.pathPrefix = pathPrefix ?? ''
-    this.client = new aws.CloudFront({
-      ...rest,
-      apiVersion: '2020-05-31',
-    })
+    this.client = new aws.CloudFront(rest)
   }
   async invalidate(subject: string, paths: string[]) {
     await this.client.createInvalidation({
