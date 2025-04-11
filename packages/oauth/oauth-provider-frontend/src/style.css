@@ -4,6 +4,24 @@
 @import './styles/radix-toast.css';
 
 :root {
+  --branding-color-primary: 131 56 236;
+  --branding-color-primary-contrast: 255 255 255;
+  --branding-color-primary-hue: 265;
+
+  --branding-color-error: 255 0 110;
+  --branding-color-error-contrast: 0 0 0;
+  --branding-color-error-hue: 334.11764705882354;
+
+  --branding-color-warning: 255 171 15;
+  --branding-color-warning-contrast: 0 0 0;
+  --branding-color-warning-hue: 38.99999999999999;
+
+  --branding-color-success: 23 204 136;
+  --branding-color-success-contrast: 0 0 0;
+  --branding-color-success-hue: 157.4585635359116;
+}
+
+:root {
   --hue-primary: var(--branding-color-primary-hue);
   --hue-error: var(--branding-color-error-hue);
   --hue-warning: var(--branding-color-warning-hue);

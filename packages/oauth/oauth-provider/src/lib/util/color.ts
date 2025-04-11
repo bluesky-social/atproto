@@ -70,12 +70,33 @@ export function parseRgbaColor(v: string): RgbaColor {
   return { r, g, b, a }
 }
 
-export function computeLuma({ r, g, b }: RgbColor) {
-  return 0.299 * r + 0.587 * g + 0.114 * b
+/**
+ * Return the color that has the best contrast with the reference color.
+ */
+export function pickContrastColor(ref: RgbColor, a: RgbColor, b: RgbColor) {
+  return computeContrastRatio(ref, a) > computeContrastRatio(ref, b) ? a : b
 }
 
-export function isLightColor(color: RgbColor) {
-  return computeLuma(color) > 128
+/**
+ * @see {@link https://www.w3.org/TR/2008/REC-WCAG20-20081211/#relativeluminancedef}
+ */
+function relativeLuminance({ r, g, b }: RgbColor) {
+  return rgbLum(r) * 0.2126 + rgbLum(g) * 0.7152 + rgbLum(b) * 0.0722
+}
+
+function rgbLum(value) {
+  const rgb = value / 255
+  return rgb < 0.03928 ? rgb / 12.92 : Math.pow((rgb + 0.055) / 1.055, 2.4)
+}
+
+/**
+ * @see {@link https://www.w3.org/TR/2008/REC-WCAG20-20081211/#contrast-ratiodef}
+ */
+function computeContrastRatio(a: RgbColor, b: RgbColor) {
+  const aLum = relativeLuminance(a)
+  const bLum = relativeLuminance(b)
+  const [lighter, darker] = aLum > bLum ? [aLum, bLum] : [bLum, aLum]
+  return (lighter + 0.05) / (darker + 0.05)
 }
 
 export function extractHue(input: RgbColor): number {

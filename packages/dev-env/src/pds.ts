@@ -49,12 +49,7 @@ export class TestPds {
       inviteRequired: false,
       disableSsrfProtection: true,
       serviceName: 'Development PDS',
-      primaryColor: '#8338ec',
-      errorColor: '#ff006e',
-      // Purposefully not setting warningColor to ensure that not all branding
-      // colors are required from a config perspective.
-      warningColor: undefined,
-      successColor: '#02c39a',
+      primaryColor: '#ffcb1e',
       logoUrl:
         // Using a "data:" instead of a real URL to avoid making CORS requests in dev.
         // License: https://uxwing.com/license/

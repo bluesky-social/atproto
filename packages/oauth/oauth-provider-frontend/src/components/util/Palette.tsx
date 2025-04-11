@@ -84,10 +84,10 @@ export function Palette() {
       </div>
 
       <div className="flex items-center justify-center">
-        <div className="bg-primary p-10" />
-        <div className="bg-error p-10" />
-        <div className="bg-warning p-10" />
-        <div className="bg-success p-10" />
+        <div className="bg-primary text-primary-contrast p-10">Az</div>
+        <div className="bg-error text-error-contrast p-10">Az</div>
+        <div className="bg-warning text-warning-contrast p-10">Az</div>
+        <div className="bg-success text-success-contrast p-10">Az</div>
       </div>
     </>
   )

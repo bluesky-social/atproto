@@ -1,21 +1,21 @@
 @import 'tailwindcss';
 
 :root {
-  --branding-color-primary: 255 115 179;
-  --branding-color-primary-contrast: 0 0 0;
-  --branding-color-primary-hue: 332.57142857142856;
+  --branding-color-primary: 131 56 236;
+  --branding-color-primary-contrast: 255 255 255;
+  --branding-color-primary-hue: 265;
 
-  --branding-color-error: 218 44 67;
-  --branding-color-error-contrast: 255 255 255;
-  --branding-color-error-hue: 352.06896551724134;
+  --branding-color-error: 255 0 110;
+  --branding-color-error-contrast: 0 0 0;
+  --branding-color-error-hue: 334.11764705882354;
 
-  --branding-color-warning: 255 201 73;
+  --branding-color-warning: 255 171 15;
   --branding-color-warning-contrast: 0 0 0;
-  --branding-color-warning-hue: 42.1978021978022;
+  --branding-color-warning-hue: 38.99999999999999;
 
-  --branding-color-success: 0 191 165;
-  --branding-color-success-contrast: 255 255 255;
-  --branding-color-success-hue: 171.8324607329843;
+  --branding-color-success: 23 204 136;
+  --branding-color-success-contrast: 0 0 0;
+  --branding-color-success-hue: 157.4585635359116;
 }
 
 :root {
