@@ -57,7 +57,7 @@ export function LayoutWelcome({
         {children}
       </main>
 
-      <footer className="h-15 bg-contrast-25 dark:bg-contrast-50 flex w-full flex-wrap items-center justify-between overflow-hidden px-4 md:px-6">
+      <footer className="bg-contrast-25 dark:bg-contrast-50 flex w-full flex-wrap items-center justify-between overflow-hidden px-4 md:px-6">
         <nav className="flex flex-wrap items-center justify-start">
           {links?.map((link, i) => (
             <LinkAnchor

@@ -1,3 +1,4 @@
+import assert from 'node:assert'
 import { DeviceId } from '@atproto/oauth-provider'
 import { toDateISO } from '../../db'
 import { AccountDb } from '../db'
@@ -29,10 +30,10 @@ export function selectQB(
     deviceId?: DeviceId
   },
 ) {
-  // Fool-proofing
-  if (filter.sub == null && filter.deviceId == null) {
-    throw new TypeError('Either did or deviceId must be provided')
-  }
+  assert(
+    filter.sub != null || filter.deviceId != null,
+    'Either sub or deviceId must be provided',
+  )
 
   return (
     selectAccountQB(db, { includeDeactivated: true })
