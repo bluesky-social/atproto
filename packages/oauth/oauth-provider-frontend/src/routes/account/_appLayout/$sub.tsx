@@ -14,6 +14,8 @@ import { Loader } from '#/components/Loader'
 import { Prompt } from '#/components/Prompt'
 import { useToast } from '#/components/Toast'
 import { useAccountSessionsQuery } from '#/data/useAccountSessionsQuery'
+import { useClientName } from '#/data/useClientName'
+import { useFriendlyClientId } from '#/data/useFriendlyClientId'
 import { useOAuthSessionsQuery } from '#/data/useOAuthSessionsQuery'
 import { useRevokeAccountSessionMutation } from '#/data/useRevokeAccountSessionMutation'
 import { useRevokeOAuthSessionMutation } from '#/data/useRevokeOAuthSessionMutation'
@@ -37,12 +39,12 @@ export function AccountHome() {
       <ul className="text-text-light flex items-center space-x-2 text-sm">
         <li>
           <InlineLink to="/account" className="text-text-light underline">
-            <Trans>Accounts</Trans>
+            <Trans>Home</Trans>
           </InlineLink>
         </li>
         <li className="text-custom-primary">/</li>
         <li>
-          <Trans>Home</Trans>
+          <Trans>Your account</Trans>
         </li>
       </ul>
 
@@ -72,7 +74,7 @@ export function AccountHome() {
           variant="info"
           title={_(msg`No connected apps`)}
           text={_(
-            msg`Looks like you haven't used this account to sign in to any apps yet.`,
+            msg`It appears that you haven’t used this account to sign in to any apps yet.`,
           )}
         />
       )}
@@ -121,6 +123,16 @@ function ApplicationSessionCard({
   const { mutateAsync: revokeSessions, isPending } =
     useRevokeOAuthSessionMutation()
 
+  const friendlyClientId = useFriendlyClientId({
+    clientId,
+    clientTrusted: false,
+  })
+  const clientName = useClientName({
+    clientId,
+    clientMetadata,
+    clientTrusted: false,
+  })
+
   const revoke = async () => {
     try {
       await revokeSessions({ sub, tokenId })
@@ -144,22 +156,20 @@ function ApplicationSessionCard({
         <Avatar
           size={40}
           src={clientMetadata?.logo_uri}
-          displayName={clientMetadata?.client_name}
+          displayName={clientName}
         />
         <div className="flex-1 truncate">
-          <h3 className="truncate font-bold leading-snug">
-            {clientMetadata?.client_name || clientMetadata?.client_uri}
-          </h3>
+          <h3 className="truncate font-bold leading-snug">{clientName}</h3>
           <p className="text-text-light truncate text-sm leading-snug">
-            {clientId}
+            {friendlyClientId}
           </p>
         </div>
       </div>
       <div>
         <Prompt
           title={
-            clientMetadata?.client_name
-              ? _(msg`Revoke access to ${clientMetadata.client_name}`)
+            clientName !== clientId
+              ? _(msg`Revoke access to ${clientName}`)
               : _(msg`Revoke access to this application`)
           }
           description={_(
