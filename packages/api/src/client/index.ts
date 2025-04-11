@@ -935,15 +935,15 @@ export class ComAtprotoLabelNS {
 
 export class ComAtprotoLexiconNS {
   _client: XrpcClient
-  schema: SchemaRecord
+  schema: ComAtprotoLexiconSchemaRecord
 
   constructor(client: XrpcClient) {
     this._client = client
-    this.schema = new SchemaRecord(client)
+    this.schema = new ComAtprotoLexiconSchemaRecord(client)
   }
 }
 
-export class SchemaRecord {
+export class ComAtprotoLexiconSchemaRecord {
   _client: XrpcClient
 
   constructor(client: XrpcClient) {
@@ -1720,11 +1720,11 @@ export class AppBskyNS {
 
 export class AppBskyActorNS {
   _client: XrpcClient
-  profile: ProfileRecord
+  profile: AppBskyActorProfileRecord
 
   constructor(client: XrpcClient) {
     this._client = client
-    this.profile = new ProfileRecord(client)
+    this.profile = new AppBskyActorProfileRecord(client)
   }
 
   getPreferences(
@@ -1812,7 +1812,7 @@ export class AppBskyActorNS {
   }
 }
 
-export class ProfileRecord {
+export class AppBskyActorProfileRecord {
   _client: XrpcClient
 
   constructor(client: XrpcClient) {
@@ -1888,21 +1888,21 @@ export class AppBskyEmbedNS {
 
 export class AppBskyFeedNS {
   _client: XrpcClient
-  generator: GeneratorRecord
-  like: LikeRecord
-  post: PostRecord
-  postgate: PostgateRecord
-  repost: RepostRecord
-  threadgate: ThreadgateRecord
+  generator: AppBskyFeedGeneratorRecord
+  like: AppBskyFeedLikeRecord
+  post: AppBskyFeedPostRecord
+  postgate: AppBskyFeedPostgateRecord
+  repost: AppBskyFeedRepostRecord
+  threadgate: AppBskyFeedThreadgateRecord
 
   constructor(client: XrpcClient) {
     this._client = client
-    this.generator = new GeneratorRecord(client)
-    this.like = new LikeRecord(client)
-    this.post = new PostRecord(client)
-    this.postgate = new PostgateRecord(client)
-    this.repost = new RepostRecord(client)
-    this.threadgate = new ThreadgateRecord(client)
+    this.generator = new AppBskyFeedGeneratorRecord(client)
+    this.like = new AppBskyFeedLikeRecord(client)
+    this.post = new AppBskyFeedPostRecord(client)
+    this.postgate = new AppBskyFeedPostgateRecord(client)
+    this.repost = new AppBskyFeedRepostRecord(client)
+    this.threadgate = new AppBskyFeedThreadgateRecord(client)
   }
 
   describeFeedGenerator(
@@ -2100,7 +2100,7 @@ export class AppBskyFeedNS {
   }
 }
 
-export class GeneratorRecord {
+export class AppBskyFeedGeneratorRecord {
   _client: XrpcClient
 
   constructor(client: XrpcClient) {
@@ -2161,7 +2161,7 @@ export class GeneratorRecord {
   }
 }
 
-export class LikeRecord {
+export class AppBskyFeedLikeRecord {
   _client: XrpcClient
 
   constructor(client: XrpcClient) {
@@ -2222,7 +2222,7 @@ export class LikeRecord {
   }
 }
 
-export class PostRecord {
+export class AppBskyFeedPostRecord {
   _client: XrpcClient
 
   constructor(client: XrpcClient) {
@@ -2283,7 +2283,7 @@ export class PostRecord {
   }
 }
 
-export class PostgateRecord {
+export class AppBskyFeedPostgateRecord {
   _client: XrpcClient
 
   constructor(client: XrpcClient) {
@@ -2344,7 +2344,7 @@ export class PostgateRecord {
   }
 }
 
-export class RepostRecord {
+export class AppBskyFeedRepostRecord {
   _client: XrpcClient
 
   constructor(client: XrpcClient) {
@@ -2405,7 +2405,7 @@ export class RepostRecord {
   }
 }
 
-export class ThreadgateRecord {
+export class AppBskyFeedThreadgateRecord {
   _client: XrpcClient
 
   constructor(client: XrpcClient) {
@@ -2472,21 +2472,21 @@ export class ThreadgateRecord {
 
 export class AppBskyGraphNS {
   _client: XrpcClient
-  block: BlockRecord
-  follow: FollowRecord
-  list: ListRecord
-  listblock: ListblockRecord
-  listitem: ListitemRecord
-  starterpack: StarterpackRecord
+  block: AppBskyGraphBlockRecord
+  follow: AppBskyGraphFollowRecord
+  list: AppBskyGraphListRecord
+  listblock: AppBskyGraphListblockRecord
+  listitem: AppBskyGraphListitemRecord
+  starterpack: AppBskyGraphStarterpackRecord
 
   constructor(client: XrpcClient) {
     this._client = client
-    this.block = new BlockRecord(client)
-    this.follow = new FollowRecord(client)
-    this.list = new ListRecord(client)
-    this.listblock = new ListblockRecord(client)
-    this.listitem = new ListitemRecord(client)
-    this.starterpack = new StarterpackRecord(client)
+    this.block = new AppBskyGraphBlockRecord(client)
+    this.follow = new AppBskyGraphFollowRecord(client)
+    this.list = new AppBskyGraphListRecord(client)
+    this.listblock = new AppBskyGraphListblockRecord(client)
+    this.listitem = new AppBskyGraphListitemRecord(client)
+    this.starterpack = new AppBskyGraphStarterpackRecord(client)
   }
 
   getActorStarterPacks(
@@ -2711,7 +2711,7 @@ export class AppBskyGraphNS {
   }
 }
 
-export class BlockRecord {
+export class AppBskyGraphBlockRecord {
   _client: XrpcClient
 
   constructor(client: XrpcClient) {
@@ -2772,7 +2772,7 @@ export class BlockRecord {
   }
 }
 
-export class FollowRecord {
+export class AppBskyGraphFollowRecord {
   _client: XrpcClient
 
   constructor(client: XrpcClient) {
@@ -2833,7 +2833,7 @@ export class FollowRecord {
   }
 }
 
-export class ListRecord {
+export class AppBskyGraphListRecord {
   _client: XrpcClient
 
   constructor(client: XrpcClient) {
@@ -2894,7 +2894,7 @@ export class ListRecord {
   }
 }
 
-export class ListblockRecord {
+export class AppBskyGraphListblockRecord {
   _client: XrpcClient
 
   constructor(client: XrpcClient) {
@@ -2959,7 +2959,7 @@ export class ListblockRecord {
   }
 }
 
-export class ListitemRecord {
+export class AppBskyGraphListitemRecord {
   _client: XrpcClient
 
   constructor(client: XrpcClient) {
@@ -3020,7 +3020,7 @@ export class ListitemRecord {
   }
 }
 
-export class StarterpackRecord {
+export class AppBskyGraphStarterpackRecord {
   _client: XrpcClient
 
   constructor(client: XrpcClient) {
@@ -3087,11 +3087,11 @@ export class StarterpackRecord {
 
 export class AppBskyLabelerNS {
   _client: XrpcClient
-  service: ServiceRecord
+  service: AppBskyLabelerServiceRecord
 
   constructor(client: XrpcClient) {
     this._client = client
-    this.service = new ServiceRecord(client)
+    this.service = new AppBskyLabelerServiceRecord(client)
   }
 
   getServices(
@@ -3107,7 +3107,7 @@ export class AppBskyLabelerNS {
   }
 }
 
-export class ServiceRecord {
+export class AppBskyLabelerServiceRecord {
   _client: XrpcClient
 
   constructor(client: XrpcClient) {
@@ -3520,11 +3520,11 @@ export class ChatBskyNS {
 
 export class ChatBskyActorNS {
   _client: XrpcClient
-  declaration: DeclarationRecord
+  declaration: ChatBskyActorDeclarationRecord
 
   constructor(client: XrpcClient) {
     this._client = client
-    this.declaration = new DeclarationRecord(client)
+    this.declaration = new ChatBskyActorDeclarationRecord(client)
   }
 
   deleteAccount(
@@ -3552,7 +3552,7 @@ export class ChatBskyActorNS {
   }
 }
 
-export class DeclarationRecord {
+export class ChatBskyActorDeclarationRecord {
   _client: XrpcClient
 
   constructor(client: XrpcClient) {

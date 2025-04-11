@@ -193,7 +193,7 @@ function genNamespaceCls(file: SourceFile, ns: DefTreeNode) {
     const name = NSID.parse(userType.nsid).name || ''
     cls.addProperty({
       name: toCamelCase(name),
-      type: `${toTitleCase(name)}Record`,
+      type: `${toTitleCase(userType.nsid)}Record`,
     })
   }
 
@@ -230,7 +230,7 @@ function genNamespaceCls(file: SourceFile, ns: DefTreeNode) {
         .map((ut) => {
           const name = NSID.parse(ut.nsid).name || ''
           return `this.${toCamelCase(name)} = new ${toTitleCase(
-            name,
+            ut.nsid,
           )}Record(client)`
         }),
     ],
@@ -288,9 +288,8 @@ function genNamespaceCls(file: SourceFile, ns: DefTreeNode) {
 
 function genRecordCls(file: SourceFile, nsid: string, lexRecord: LexRecord) {
   //= export class {type}Record {...}
-  const name = NSID.parse(nsid).name || ''
   const cls = file.addClass({
-    name: `${toTitleCase(name)}Record`,
+    name: `${toTitleCase(nsid)}Record`,
     isExported: true,
   })
   //= _client: XrpcClient
