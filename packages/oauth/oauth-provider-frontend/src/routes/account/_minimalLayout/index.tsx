@@ -22,6 +22,13 @@ function Index() {
   const { _ } = useLingui()
   const { data: sessions, isLoading, error } = useDeviceSessionsQuery()
 
+  // This is the account dashboard home page.
+  //
+  // @TODO When the user is signed in, redirect to their account page.
+  //
+  // @TODO When the user is not signed in, show a nice (anonymous) view that
+  // explains them they can create an account on this PDS.
+
   return isLoading ? (
     <div className="flex items-center justify-center">
       <Loader size="lg" />

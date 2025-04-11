@@ -25,8 +25,7 @@ msgstr "← Back to accounts"
 msgid "A new password is required"
 msgstr "A new password is required"
 
-#: src/routes/account/_minimalLayout/index.tsx:57
-#: src/routes/account/_appLayout/$sub.tsx:40
+#: src/routes/account/_minimalLayout/index.tsx:64
 msgid "Accounts"
 msgstr "Accounts"
 
@@ -41,8 +40,8 @@ msgid "Are you sure you want to remove this device?"
 msgstr "Are you sure you want to remove this device?"
 
 #: src/routes/account/_appLayout/$sub.tsx:166
-msgid "Are you sure you want to sign out? Next time you visit you will need to sign back in."
-msgstr "Are you sure you want to sign out? Next time you visit you will need to sign back in."
+msgid "Are you sure you want to revoke access? This application won't be able to access your account anymore."
+msgstr "Are you sure you want to revoke access? This application won't be able to access your account anymore."
 
 #: src/routes/account/_minimalLayout/reset-password.tsx:122
 #: src/routes/account/_minimalLayout/reset-password.tsx:195
@@ -203,11 +202,19 @@ msgstr "Remove this device"
 msgid "Reset password"
 msgstr "Reset password"
 
+#: src/routes/account/_appLayout/$sub.tsx:162
+msgid "Revoke access to {0}"
+msgstr "Revoke access to {0}"
+
+#: src/routes/account/_appLayout/$sub.tsx:163
+msgid "Revoke access to this application"
+msgstr "Revoke access to this application"
+
 #: src/components/AccountSelector.tsx:32
 msgid "Select an account"
 msgstr "Select an account"
 
-#: src/routes/account/_minimalLayout/index.tsx:60
+#: src/routes/account/_minimalLayout/index.tsx:67
 msgid "Select the account you would like to manage."
 msgstr "Select the account you would like to manage."
 
@@ -216,7 +223,7 @@ msgstr "Select the account you would like to manage."
 msgid "Sign in"
 msgstr "Sign in"
 
-#: src/routes/account/_minimalLayout/index.tsx:100
+#: src/routes/account/_minimalLayout/index.tsx:107
 msgid "Sign in with another account"
 msgstr "Sign in with another account"
 
@@ -226,16 +233,7 @@ msgstr "Sign in with another account"
 msgid "Sign out"
 msgstr "Sign out"
 
-#. placeholder {0}: clientMetadata.client_name
-#: src/routes/account/_appLayout/$sub.tsx:162
-msgid "Sign out of {0}"
-msgstr "Sign out of {0}"
-
-#: src/routes/account/_appLayout/$sub.tsx:163
-msgid "Sign out of this application"
-msgstr "Sign out of this application"
-
-#: src/routes/account/_minimalLayout/index.tsx:32
+#: src/routes/account/_minimalLayout/index.tsx:39
 msgid "Something went wrong"
 msgstr "Something went wrong"
 
@@ -263,12 +261,11 @@ msgstr "Unknown user agent"
 msgid "User avatar"
 msgstr "User avatar"
 
-#. placeholder {0}: getAccountName(account)
-#: src/routes/account/_minimalLayout/index.tsx:76
+#: src/routes/account/_minimalLayout/index.tsx:83
 msgid "View and manage account for {0}"
 msgstr "View and manage account for {0}"
 
-#: src/routes/account/_minimalLayout/index.tsx:34
+#: src/routes/account/_minimalLayout/index.tsx:41
 msgid "We weren't able to load your accounts. Please refresh the page to try again."
 msgstr "We weren't able to load your accounts. Please refresh the page to try again."
 

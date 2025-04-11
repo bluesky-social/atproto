@@ -159,11 +159,11 @@ function ApplicationSessionCard({
         <Prompt
           title={
             clientMetadata?.client_name
-              ? _(msg`Sign out of ${clientMetadata.client_name}`)
-              : _(msg`Sign out of this application`)
+              ? _(msg`Revoke access to ${clientMetadata.client_name}`)
+              : _(msg`Revoke access to this application`)
           }
           description={_(
-            msg`Are you sure you want to sign out? Next time you visit you will need to sign back in.`,
+            msg`Are you sure you want to revoke access? This application won't be able to access your account anymore.`,
           )}
           confirmCTA={_(msg`Sign out`)}
           onConfirm={revoke}
