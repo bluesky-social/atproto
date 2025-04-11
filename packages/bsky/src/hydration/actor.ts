@@ -100,9 +100,16 @@ export class ActorHydrator {
     return res.filter((did) => did !== undefined)
   }
 
-  async getActors(dids: string[], includeTakedowns = false): Promise<Actors> {
+  async getActors(
+    dids: string[],
+    opts: {
+      includeTakedowns?: boolean
+      skipCacheForDids?: string[]
+    } = {},
+  ): Promise<Actors> {
+    const { includeTakedowns = false, skipCacheForDids } = opts
     if (!dids.length) return new HydrationMap<Actor>()
-    const res = await this.dataplane.getActors({ dids })
+    const res = await this.dataplane.getActors({ dids, skipCacheForDids })
     return dids.reduce((acc, did, i) => {
       const actor = res.actors[i]
       const isNoHosted =

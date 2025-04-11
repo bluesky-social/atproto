@@ -76,6 +76,8 @@ type SkeletonState = {
 }
 
 const getPriority = async (ctx: Context, did: string) => {
-  const actors = await ctx.hydrator.actor.getActors([did])
+  const actors = await ctx.hydrator.actor.getActors([did], {
+    skipCacheForDids: [did],
+  })
   return !!actors.get(did)?.priorityNotifications
 }
