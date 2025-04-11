@@ -57,20 +57,22 @@ export function LayoutWelcome({
         {children}
       </main>
 
-      <nav className="flex w-full flex-wrap content-center justify-center overflow-hidden border-t border-t-slate-200 dark:border-t-slate-700">
-        {links?.map((link, i) => (
-          <LinkAnchor
-            key={i}
-            link={link}
-            className="text-primary m-2 text-xs hover:underline md:m-4 md:text-sm"
-          />
-        ))}
+      <footer className="h-15 bg-contrast-25 dark:bg-contrast-50 flex w-full flex-wrap items-center justify-between overflow-hidden px-4 md:px-6">
+        <nav className="flex flex-wrap items-center justify-start">
+          {links?.map((link, i) => (
+            <LinkAnchor
+              key={i}
+              link={link}
+              className="text-text-light m-2 text-xs hover:underline md:m-4 md:text-sm"
+            />
+          ))}
+        </nav>
 
         <LocaleSelector
           className="m-1 text-xs md:m-2 md:text-sm"
           key="localeSelector"
         />
-      </nav>
+      </footer>
     </div>
   )
 }

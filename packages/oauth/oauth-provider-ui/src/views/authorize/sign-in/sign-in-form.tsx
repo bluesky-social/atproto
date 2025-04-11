@@ -135,7 +135,7 @@ export function SignInForm({
       submitLabel={secondFactor ? t`Confirm` : t`Sign in`}
       onSubmit={doSubmit}
     >
-      <Fieldset disabled={loading} label={<Trans>Account</Trans>}>
+      <Fieldset disabled={loading} label={<Trans>Identifier</Trans>}>
         <InputText
           icon={<AtSymbolIcon className="w-5" />}
           name="username"
@@ -159,30 +159,34 @@ export function SignInForm({
         />
       </Fieldset>
 
-      <InputPassword
-        name="password"
-        onChange={(event) => {
-          resetState()
-          setPassword(event.target.value)
-        }}
-        append={
-          onForgotPassword && (
-            <Button
-              className="text-sm"
-              type="button"
-              onClick={() => {
-                onForgotPassword(username?.includes('@') ? username : undefined)
-              }}
-              aria-label={t`Reset your password`}
-            >
-              <Trans>Forgot?</Trans>
-            </Button>
-          )
-        }
-        enterKeyHint={secondFactor ? 'next' : 'done'}
-        disabled={loading}
-        required
-      />
+      <Fieldset disabled={loading} label={<Trans>Password</Trans>}>
+        <InputPassword
+          name="password"
+          onChange={(event) => {
+            resetState()
+            setPassword(event.target.value)
+          }}
+          append={
+            onForgotPassword && (
+              <Button
+                className="text-sm"
+                type="button"
+                onClick={() => {
+                  onForgotPassword(
+                    username?.includes('@') ? username : undefined,
+                  )
+                }}
+                aria-label={t`Reset your password`}
+              >
+                <Trans>Forgot?</Trans>
+              </Button>
+            )
+          }
+          enterKeyHint={secondFactor ? 'next' : 'done'}
+          disabled={loading}
+          required
+        />
+      </Fieldset>
 
       <Admonition role="status">
         <p className="text-md text-primary pb-1 font-bold">
@@ -196,21 +200,15 @@ export function SignInForm({
         </p>
       </Admonition>
 
-      <Fieldset
-        key="remember"
-        disabled={loading}
-        label={<Trans>Session</Trans>}
+      <InputCheckbox
+        name="remember"
+        title={t`Remember this account on this device`}
+        enterKeyHint={secondFactor ? 'next' : 'done'}
+        checked={remember}
+        onChange={(event) => setRemember(event.target.checked)}
       >
-        <InputCheckbox
-          name="remember"
-          title={t`Remember this account on this device`}
-          enterKeyHint={secondFactor ? 'next' : 'done'}
-          checked={remember}
-          onChange={(event) => setRemember(event.target.checked)}
-        >
-          <Trans>Remember this account on this device</Trans>
-        </InputCheckbox>
-      </Fieldset>
+        <Trans>Remember this account on this device</Trans>
+      </InputCheckbox>
 
       {secondFactor && (
         <Fieldset

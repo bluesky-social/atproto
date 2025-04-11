@@ -22,20 +22,20 @@ export function LocaleSelector({
       className={clsx(
         'accent-primary',
         // Background
-        'has-focus:bg-slate-200 bg-gray-100 focus:bg-slate-200',
-        'dark:has-focus:bg-slate-700 dark:bg-slate-800 dark:focus:bg-slate-700',
+        'bg-contrast-25',
+        'hover:bg-contrast-0 focus:bg-contrast-0 dark:hover:bg-contrast-0',
+        'focus:bg-contrast-0 dark:focus:bg-contrast-0',
         // Border
         'outline-hidden',
-        'border-2 border-solid border-transparent',
-        'focus:border-primary has-focus:border-primary',
-        'hover:border-gray-400 hover:focus:border-gray-400',
-        'dark:hover:border-gray-500 dark:hover:focus:border-gray-500',
+        'border-contrast-100 border',
         // Border
-        'rounded-lg',
+        'rounded-full',
         // Font
         'text-slate-600 dark:text-slate-300',
         // Layout
         'px-2 py-1',
+        // Misc
+        'cursor-pointer',
         className,
       )}
       value={locale}
@@ -49,8 +49,7 @@ export function LocaleSelector({
     >
       {Object.entries(locales).map(([key, { name, flag }]) => (
         <option key={key} value={key}>
-          {name}
-          {flag ? ` ${flag}` : ''}
+          {flag ? `${flag} ${name}` : name}
         </option>
       ))}
     </select>

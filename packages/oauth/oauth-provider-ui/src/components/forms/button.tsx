@@ -33,7 +33,7 @@ export function Button({
       disabled={disabled || loading === true}
       {...props}
       className={clsx(
-        'cursor-pointer touch-manipulation overflow-hidden truncate rounded-lg tracking-wide',
+        'cursor-pointer touch-manipulation overflow-hidden truncate rounded-md tracking-wide',
         square ? 'p-2' : 'px-6 py-2',
         color === 'primary'
           ? clsx(
