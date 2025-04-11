@@ -33,7 +33,7 @@ const container = document.getElementById('root')!
 createRoot(container).render(
   <StrictMode>
     <LocaleProvider
-      allowedLocales={['en', 'en-GB', 'fr']}
+      allowedLocales={['en', 'fr']}
       userLocales={authorizeData.uiLocales?.split(' ')}
     >
       <ErrorBoundary
