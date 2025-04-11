@@ -1,3 +1,4 @@
+import type { SignedJwt } from '@atproto/jwk'
 import type { OAuthClientMetadata } from '@atproto/oauth-types'
 import type { Account, DeviceMetadata, ISODateString } from './types.js'
 
@@ -13,12 +14,12 @@ export type ApiEndpoints = {
   '/sign-up': {
     method: 'POST'
     input: SignUpInput
-    output: { account: Account; token?: string }
+    output: SignUpOutput
   }
   '/sign-in': {
     method: 'POST'
     input: SignInInput
-    output: { account: Account; token?: string; consentRequired?: boolean }
+    output: SignInOutput
   }
   '/reset-password-request': {
     method: 'POST'
@@ -92,12 +93,29 @@ export type ApiEndpoints = {
   }
 }
 
+/**
+ * When a user signs in without the "remember me" option, the server returns an
+ * ephemeral token. When used as `Bearer` authorization header, the token will
+ * be used in order to authenticate the users in place of using the user's
+ * cookie based session (which are only created when "remember me" is checked).
+ *
+ * Only include this token in the `Authorization` header when making requests to
+ * the OAuth provider API, **FOR THE ACCOUNT IT WAS GENERATED FOR**.
+ */
+export type EphemeralToken = SignedJwt
+
 export type SignInInput = {
   locale: string
   username: string
   password: string
   emailOtp?: string
   remember?: boolean
+}
+
+export type SignInOutput = {
+  account: Account
+  ephemeralToken?: EphemeralToken
+  consentRequired?: boolean
 }
 
 export type SignUpInput = {
@@ -107,6 +125,11 @@ export type SignUpInput = {
   password: string
   inviteCode?: string
   hcaptchaToken?: string
+}
+
+export type SignUpOutput = {
+  account: Account
+  ephemeralToken?: EphemeralToken
 }
 
 export type InitiatePasswordResetInput = {

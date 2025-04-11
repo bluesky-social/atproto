@@ -1116,6 +1116,9 @@ importers:
 
   packages/oauth/oauth-provider-api:
     dependencies:
+      '@atproto/jwk':
+        specifier: workspace:*
+        version: link:../jwk
       '@atproto/oauth-types':
         specifier: workspace:*
         version: link:../oauth-types

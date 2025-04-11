@@ -23,6 +23,7 @@ import { DeviceId, deviceIdSchema } from '../device/device-id.js'
 import { AccessDeniedError } from '../errors/access-denied-error.js'
 import { buildErrorPayload, buildErrorStatus } from '../errors/error-parser.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
+import { WWWAuthenticateError } from '../errors/www-authenticate-error.js'
 import {
   Middleware,
   RequestMetadata,
@@ -114,15 +115,15 @@ export function apiRouter<
           await server.accountManager.upsertDeviceAccount(deviceId, account.sub)
         }
 
-        const token = remember
+        const ephemeralToken = remember
           ? undefined
-          : await server.signer.createApiToken({
+          : await server.signer.createEphemeralToken({
               sub: account.sub,
               deviceId,
               requestUri: this.requestUri,
             })
 
-        return { account, token }
+        return { account, ephemeralToken }
       },
     }),
   )
@@ -153,9 +154,9 @@ export function apiRouter<
           await server.accountManager.removeDeviceAccount(deviceId, account.sub)
         }
 
-        const token = remember
+        const ephemeralToken = remember
           ? undefined
-          : await server.signer.createApiToken({
+          : await server.signer.createEphemeralToken({
               sub: account.sub,
               deviceId,
               requestUri,
@@ -176,7 +177,7 @@ export function apiRouter<
 
           return {
             account,
-            token,
+            ephemeralToken,
             consentRequired: server.checkConsentRequired(
               parameters,
               authorizedClients.get(clientId),
@@ -184,7 +185,7 @@ export function apiRouter<
           }
         }
 
-        return { account, token }
+        return { account, ephemeralToken }
       },
     }),
   )
@@ -273,7 +274,7 @@ export function apiRouter<
       endpoint: '/oauth-sessions',
       schema: z.object({ sub: subSchema }).strict(),
       async handler(req, res) {
-        const { account } = await authenticate.call(this, req)
+        const { account } = await authenticate.call(this, req, res)
 
         const tokenInfos = await server.tokenManager.listAccountTokens(
           account.sub,
@@ -316,8 +317,8 @@ export function apiRouter<
       method: 'GET',
       endpoint: '/account-sessions',
       schema: z.object({ sub: subSchema }).strict(),
-      async handler(req) {
-        const { account } = await authenticate.call(this, req)
+      async handler(req, res) {
+        const { account } = await authenticate.call(this, req, res)
 
         const deviceAccounts = await server.accountManager.listAccountDevices(
           account.sub,
@@ -367,8 +368,8 @@ export function apiRouter<
       method: 'POST',
       endpoint: '/revoke-oauth-session',
       schema: z.object({ sub: subSchema, tokenId: tokenIdSchema }).strict(),
-      async handler(req) {
-        const { account } = await authenticate.call(this, req)
+      async handler(req, res) {
+        const { account } = await authenticate.call(this, req, res)
 
         const tokenInfo = await server.tokenManager.getTokenInfo(
           this.input.tokenId,
@@ -412,6 +413,7 @@ export function apiRouter<
             const { account, authorizedClients } = await authenticate.call(
               this,
               req,
+              res,
             )
 
             const client = await server.clientManager.getClient(clientId)
@@ -540,24 +542,34 @@ export function apiRouter<
 
   return router
 
-  async function authenticate(this: ApiContext<void, { sub: Sub }>, req: TReq) {
+  async function authenticate(
+    this: ApiContext<void, { sub: Sub }>,
+    req: TReq,
+    res: TRes,
+  ) {
     const authorization = req.headers.authorization?.split(' ')
     if (authorization?.[0].toLowerCase() === 'bearer') {
-      // If there is an authorization header, verify that the token it contains
-      // is a jwt bound to the right [sub, device, request].
-      const token = signedJwtSchema.parse(authorization[1])
-      const { payload } = await server.signer.verifyApiToken(token)
+      try {
+        // If there is an authorization header, verify that the ephemeral token it
+        // contains is a jwt bound to the right [sub, device, request].
+        const ephemeralToken = signedJwtSchema.parse(authorization[1])
+        const { payload } =
+          await server.signer.verifyEphemeralToken(ephemeralToken)
 
-      if (
-        payload.sub !== this.input.sub ||
-        payload.deviceId !== this.deviceId ||
-        payload.requestUri !== this.requestUri
-      ) {
-        throw new InvalidRequestError('Invalid token')
+        if (
+          payload.sub === this.input.sub &&
+          payload.deviceId === this.deviceId &&
+          payload.requestUri === this.requestUri
+        ) {
+          return await server.accountManager.getAccount(payload.sub)
+        }
+      } catch (err) {
+        onError?.(req, res, err, 'Failed to authenticate ephemeral token')
+        // Fall back to session based authentication
       }
+    }
 
-      return server.accountManager.getAccount(payload.sub)
-    } else {
+    try {
       // Ensures the "sub" has an active session on the device
       const deviceAccount = await server.accountManager.getDeviceAccount(
         this.deviceId,
@@ -570,6 +582,13 @@ export function apiRouter<
       }
 
       return deviceAccount
+    } catch (err) {
+      throw new WWWAuthenticateError(
+        'unauthorized',
+        `User ${this.input.sub} not authenticated on this device`,
+        { Bearer: {} },
+        err,
+      )
     }
   }
 

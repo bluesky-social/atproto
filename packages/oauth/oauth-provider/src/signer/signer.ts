@@ -76,7 +76,7 @@ export class Signer {
     }
   }
 
-  async createApiToken(
+  async createEphemeralToken(
     payload: OmitKey<ApiTokenPayload, 'iss' | 'aud' | 'iat'>,
   ) {
     return this.sign(
@@ -92,7 +92,7 @@ export class Signer {
     )
   }
 
-  async verifyApiToken<C extends string = never>(
+  async verifyEphemeralToken<C extends string = never>(
     token: SignedJwt,
     options?: Omit<VerifyOptions<C>, 'issuer' | 'audience' | 'typ'>,
   ) {

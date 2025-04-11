@@ -114,6 +114,5 @@ export async function up(
 
 export async function down(db: Kysely<unknown>): Promise<void> {
   await db.schema.dropTable('authorized_client').execute()
-  await db.schema.dropTable('account_device_request').execute()
   await db.schema.dropTable('account_device').execute()
 }

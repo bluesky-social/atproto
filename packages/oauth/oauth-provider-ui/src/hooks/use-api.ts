@@ -38,7 +38,7 @@ function useSafeCallback<F extends (...a: any) => any>(fn: F, deps: unknown[]) {
 }
 
 export type SessionWithToken = Session & {
-  token?: string
+  ephemeralToken?: string
 }
 
 export function useApi({
@@ -69,7 +69,7 @@ export function useApi({
   const upsertSession = useCallback(
     ({
       account,
-      token,
+      ephemeralToken,
       // The server will tell us if the user needs to consent to the
       // authorization. Defaults to true in case of sign-ups
       consentRequired = true,
@@ -82,7 +82,7 @@ export function useApi({
     }: { account: Account } & Partial<SessionWithToken>) => {
       const session: SessionWithToken = {
         account,
-        token,
+        ephemeralToken,
         selected,
         loginRequired,
         consentRequired,
@@ -173,9 +173,9 @@ export function useApi({
 
   const doAccept = useSafeCallback(
     async (sub: string) => {
-      // If "remember me" was unchecked, we need to use the token to
+      // If "remember me" was unchecked, we need to use the ephemeral token to
       // authenticate the request.
-      const bearer = sessions.find((s) => s.account.sub === sub)?.token
+      const bearer = sessions.find((s) => s.account.sub === sub)?.ephemeralToken
       const { url } = await api.fetch('POST', '/accept', { sub }, { bearer })
       performRedirect(url)
     },
