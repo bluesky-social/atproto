@@ -70,10 +70,10 @@ export const skeleton = async (inputs: {
   if (!did) {
     throw new InvalidRequestError('Profile not found')
   }
-  const actors = await ctx.hydrator.actor.getActors(
-    [did],
-    params.hydrateCtx.includeTakedowns,
-  )
+  const actors = await ctx.hydrator.actor.getActors([did], {
+    includeTakedowns: params.hydrateCtx.includeTakedowns,
+    skipCacheForDids: params.hydrateCtx.skipCacheForViewer,
+  })
   const actor = actors.get(did)
   if (!actor) {
     throw new InvalidRequestError('Profile not found')

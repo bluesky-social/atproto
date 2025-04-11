@@ -47,7 +47,12 @@ export default function (server: Server, ctx: AppContext) {
           }
         }
       } else if (did) {
-        const res = (await ctx.hydrator.actor.getActors([did], true)).get(did)
+        const res = (
+          await ctx.hydrator.actor.getActors([did], {
+            includeTakedowns: true,
+            skipCacheForDids: [did],
+          })
+        ).get(did)
         if (res) {
           body = {
             subject: {
