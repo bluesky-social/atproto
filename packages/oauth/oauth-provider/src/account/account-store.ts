@@ -121,6 +121,9 @@ export interface AccountStore {
     data: AuthorizedClientData,
   ): Awaitable<void>
 
+  /**
+   * @throws {InvalidRequestError} - When the credentials are not valid
+   */
   getAccount(sub: Sub): Awaitable<{
     account: Account
     authorizedClients: AuthorizedClients

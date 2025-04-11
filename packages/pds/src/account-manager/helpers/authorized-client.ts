@@ -38,16 +38,7 @@ export async function getAuthorizedClients(
   db: AccountDb,
   did: string,
 ): Promise<AuthorizedClients> {
-  const found = await db.db
-    .selectFrom('authorized_client')
-    .select('clientId')
-    .select('data')
-    .where('did', '=', did) // uses "authorized_client_did_idx"
-    .execute()
-
-  return new Map(
-    Array.from(found, (row) => [row.clientId, fromJson(row.data)] as const),
-  )
+  return (await getAuthorizedClientsMulti(db, [did])).get(did)!
 }
 
 export async function getAuthorizedClientsMulti(
