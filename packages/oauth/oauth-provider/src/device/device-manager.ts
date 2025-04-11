@@ -226,16 +226,8 @@ export class DeviceManager {
       this.parseCookie(cookies, `ses-id`, sessionIdSchema) ||
       this.parseCookie(cookies, 'session-id', sessionIdSchema)
 
-    // Silently ignore invalid cookies
-    if (!device || !session) {
-      // If the device cookie is valid, let's cleanup the DB
-      if (device) await this.store.deleteDevice(device.value)
-
-      return null
-    }
-
-    const deviceId = device.value
-    const sessionId = session.value
+    const deviceId = device?.value
+    const sessionId = session?.value
 
     // Clear the legacy cookies, if they are set.
     if (isDeviceId(cookies['device-id']) && cookies['device-id'] !== deviceId) {
@@ -245,6 +237,14 @@ export class DeviceManager {
       const options = { path: '/oauth/authorize', maxAge: 0 } as const
       setCookie(res, 'device-id', '', options)
       setCookie(res, 'session-id', '', options)
+    }
+
+    // Silently ignore invalid cookies
+    if (!deviceId || !sessionId) {
+      // If the device cookie is valid, let's cleanup the DB
+      if (deviceId) await this.store.deleteDevice(deviceId)
+
+      return null
     }
 
     return {
