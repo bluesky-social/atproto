@@ -90,9 +90,9 @@ export function AccountHome() {
         />
       ) : accountSessions.length > 0 ? (
         <div className="space-y-3">
-          {accountSessions.map((session, i) => (
+          {accountSessions.map((session) => (
             <AccountSessionCard
-              key={session.deviceId + session.deviceMetadata.lastSeenAt}
+              key={`${sub}@${session.deviceId}`}
               sub={sub}
               session={session}
             />
