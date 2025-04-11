@@ -1,5 +1,5 @@
 ---
-"@atproto-labs/rollup-plugin-bundle-manifest": patch
+"@atproto-labs/rollup-plugin-bundle-manifest": minor
 ---
 
-Add named export
+Export plugin as named export

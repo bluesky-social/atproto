@@ -73,4 +73,3 @@ export function bundleManifest({
     },
   }
 }
-export default bundleManifest
