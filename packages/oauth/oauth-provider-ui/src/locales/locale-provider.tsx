@@ -11,12 +11,12 @@ import {
 // @NOTE run "pnpm run po:compile" to compile the messages from the PO files
 import { messages as en } from './en/messages.ts'
 import { loadMessages } from './load.ts'
-import { KnownLocale, knownLocales, locales } from './locales.ts'
+import { Locale, asLocale, isLocale, locales } from './locales.ts'
 
 export type LocaleContextValue = {
   locale: string
-  locales: Partial<Record<KnownLocale, { name: string; flag?: string }>>
-  setLocale: (locale: KnownLocale) => void
+  locales: Partial<Record<Locale, { name: string; flag?: string }>>
+  setLocale: (locale: Locale) => void
 }
 
 const LocaleContext = createContext<LocaleContextValue | null>(null)
@@ -30,30 +30,18 @@ export function useLocaleContext(): LocaleContextValue {
 }
 
 export function LocaleProvider({
-  allowedLocales,
   userLocales = [],
   children,
 }: {
-  allowedLocales?: readonly KnownLocale[]
   userLocales?: readonly string[]
   children?: ReactNode
 }) {
   // Bundle "en" messages with the app
   const i18n = useMemo(() => new I18n({ locale: 'en', messages: { en } }), [])
 
-  // `availableLocales` is the list of known locales that are available to the user
-  const availableLocales = useMemo((): readonly KnownLocale[] => {
-    if (!allowedLocales) return knownLocales
-
-    const filtered = knownLocales.filter((l) => allowedLocales.includes(l))
-    if (filtered.length) return filtered
-
-    return ['en']
-  }, allowedLocales ?? [])
-
   const [currentLocale, setCurrentLocale] = useState<string>(() => i18n.locale)
-  const [desiredLocale, setDesiredLocale] = useState<KnownLocale>(() => {
-    return detectLocale(userLocales, availableLocales)
+  const [desiredLocale, setDesiredLocale] = useState<Locale>(() => {
+    return detectLocale(userLocales)
   })
 
   // A boolean that is used to avoid flickering of "en" content during initial
@@ -64,10 +52,10 @@ export function LocaleProvider({
 
   // Protect against illegal change of the locale directly through the i18n object
   useEffect(() => {
-    if (!(availableLocales as readonly string[]).includes(currentLocale)) {
-      setDesiredLocale(availableLocales[0]!)
+    if (!isLocale(currentLocale)) {
+      setDesiredLocale('en')
     }
-  }, [currentLocale, availableLocales])
+  }, [locales, currentLocale])
 
   // Keep currentLocale in sync with i18n's locale prop
   useEffect(() => {
@@ -103,13 +91,13 @@ export function LocaleProvider({
   const value = useMemo<LocaleContextValue>(
     () => ({
       locale: currentLocale,
-      locales: Object.fromEntries(availableLocales.map((l) => [l, locales[l]])),
+      locales,
       setLocale: (locale) => {
-        if (availableLocales.includes(locale)) setDesiredLocale(locale)
+        if (isLocale(locale)) setDesiredLocale(locale)
         else throw new TypeError(`"${locale}" is not an available locale`)
       },
     }),
-    [currentLocale, availableLocales],
+    [locales, currentLocale],
   )
 
   return (
@@ -119,49 +107,18 @@ export function LocaleProvider({
   )
 }
 
-function detectLocale<L extends string>(
-  userLocales: readonly string[],
-  availableLocales: readonly L[],
-  fallbackLocale: L | 'en' = 'en',
-): L {
+function detectLocale(userLocales: readonly string[]): Locale {
   for (const locale of userLocales) {
-    const resolved = resolveLocale(locale, availableLocales)
+    const resolved = asLocale(locale)
     if (resolved) return resolved
   }
 
   if (typeof navigator === 'object' && navigator.languages) {
     for (const locale of navigator.languages) {
-      const resolved = resolveLocale(locale, availableLocales)
+      const resolved = asLocale(locale)
       if (resolved) return resolved
     }
   }
 
-  const fallback = resolveLocale(fallbackLocale, availableLocales)
-  if (fallback) return fallback
-
-  // Type-safety
-  throw new TypeError(
-    `Available locales should always contain "${fallbackLocale}"`,
-  )
-}
-
-export function resolveLocale<L extends string>(
-  locale: string,
-  availableLocales: readonly L[],
-): L | undefined {
-  if ((availableLocales as readonly string[]).includes(locale)) {
-    return locale as L
-  }
-
-  const lang = locale.split('-')[0]
-  if ((availableLocales as readonly string[]).includes(lang)) {
-    return lang as L
-  }
-
-  const similar = availableLocales.find((l) => l.startsWith(`${lang}-`))
-  if (similar) {
-    return similar as L
-  }
-
-  return undefined
+  return 'en'
 }

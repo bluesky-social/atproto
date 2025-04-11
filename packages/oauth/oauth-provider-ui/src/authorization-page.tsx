@@ -32,10 +32,7 @@ const container = document.getElementById('root')!
 
 createRoot(container).render(
   <StrictMode>
-    <LocaleProvider
-      allowedLocales={['en', 'fr']}
-      userLocales={authorizeData.uiLocales?.split(' ')}
-    >
+    <LocaleProvider userLocales={authorizeData.uiLocales?.split(' ')}>
       <ErrorBoundary
         fallbackRender={({ error }) => (
           <ErrorView error={error} customizationData={customizationData} />
