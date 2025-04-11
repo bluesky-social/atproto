@@ -167,3 +167,17 @@ export function asLocale(locale: string): Locale | undefined {
 
   return undefined
 }
+
+export function detectLocale(userLocales: readonly string[] = []): Locale {
+  for (const locale of userLocales) {
+    const resolved = asLocale(locale)
+    if (resolved) return resolved
+  }
+
+  for (const locale of navigator.languages) {
+    const resolved = asLocale(locale)
+    if (resolved) return resolved
+  }
+
+  return 'en'
+}

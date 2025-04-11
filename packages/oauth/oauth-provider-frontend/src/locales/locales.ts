@@ -142,5 +142,42 @@ export const locales = {
 } as const satisfies Record<string, { name: string; flag?: string }>
 
 export type Locale = keyof typeof locales
-export const isLocale = (v: unknown): v is Locale =>
-  typeof v === 'string' && Object.hasOwn(locales, v)
+
+export function isLocale(v: unknown): v is Locale {
+  return typeof v === 'string' && Object.hasOwn(locales, v)
+}
+
+export function asLocale(locale: string): Locale | undefined {
+  if (isLocale(locale)) {
+    return locale
+  }
+
+  // Resolve similar locales (e.g. "fr-BE" -> "fr")
+  const lang = locale.split('-')[0]
+  if (isLocale(lang)) {
+    return lang
+  }
+
+  // Resolve similar locals (e.g. "pt-PT" -> "pt-BR")
+  for (const locale in locales) {
+    if (locale.startsWith(`${lang}-`)) {
+      return locale as keyof typeof locales
+    }
+  }
+
+  return undefined
+}
+
+export function detectLocale(userLocales: readonly string[] = []): Locale {
+  for (const locale of userLocales) {
+    const resolved = asLocale(locale)
+    if (resolved) return resolved
+  }
+
+  for (const locale of navigator.languages) {
+    const resolved = asLocale(locale)
+    if (resolved) return resolved
+  }
+
+  return 'en'
+}

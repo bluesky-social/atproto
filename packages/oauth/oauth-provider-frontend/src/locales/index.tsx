@@ -10,8 +10,7 @@ import {
 } from 'react'
 import { LocalizedString } from '#/api'
 import { activateLocale } from '#/locales/activateLocale'
-import { detectLocale } from '#/locales/detectLocale'
-import { Locale, locales } from './locales'
+import { Locale, detectLocale, locales } from './locales'
 
 const Context = createContext<{
   locale: Locale

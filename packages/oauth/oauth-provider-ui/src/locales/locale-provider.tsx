@@ -11,7 +11,7 @@ import {
 // @NOTE run "pnpm run po:compile" to compile the messages from the PO files
 import { messages as en } from './en/messages.ts'
 import { loadMessages } from './load.ts'
-import { Locale, asLocale, isLocale, locales } from './locales.ts'
+import { Locale, detectLocale, isLocale, locales } from './locales.ts'
 
 export type LocaleContextValue = {
   locale: string
@@ -105,20 +105,4 @@ export function LocaleProvider({
       <I18nProvider i18n={i18n}>{initialized && children}</I18nProvider>
     </LocaleContext>
   )
-}
-
-function detectLocale(userLocales: readonly string[]): Locale {
-  for (const locale of userLocales) {
-    const resolved = asLocale(locale)
-    if (resolved) return resolved
-  }
-
-  if (typeof navigator === 'object' && navigator.languages) {
-    for (const locale of navigator.languages) {
-      const resolved = asLocale(locale)
-      if (resolved) return resolved
-    }
-  }
-
-  return 'en'
 }
