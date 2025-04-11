@@ -31,5 +31,13 @@ export const createRouter = (ctx: AppContext): Router => {
     })
   })
 
+  router.get('/.well-known/ozone-metadata.json', (_req, res) => {
+    return res.json({
+      did: ctx.cfg.service.did,
+      url: ctx.cfg.service.publicUrl,
+      publicKey: ctx.signingKey.did(),
+    })
+  })
+
   return router
 }
