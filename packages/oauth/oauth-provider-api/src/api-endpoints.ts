@@ -41,7 +41,7 @@ export type ApiEndpoints = {
    */
   '/device-sessions': {
     method: 'GET'
-    output: { results: ActiveDeviceSession[] }
+    output: ActiveDeviceSession[]
   }
   /**
    * Lists all the active OAuth sessions (access/refresh tokens) that where
@@ -60,7 +60,7 @@ export type ApiEndpoints = {
   '/oauth-sessions': {
     method: 'GET'
     params: { sub: string }
-    output: { results: ActiveOAuthSession[] }
+    output: ActiveOAuthSession[]
   }
   '/revoke-oauth-session': {
     method: 'POST'
@@ -74,7 +74,7 @@ export type ApiEndpoints = {
   '/account-sessions': {
     method: 'GET'
     params: { sub: string }
-    output: { results: ActiveAccountSession[] }
+    output: ActiveAccountSession[]
   }
   '/revoke-account-session': {
     method: 'POST'

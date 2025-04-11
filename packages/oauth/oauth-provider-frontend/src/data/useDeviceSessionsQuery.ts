@@ -20,14 +20,8 @@ export function useDeviceSessionsQuery() {
     refetchOnWindowFocus: 'always',
     staleTime: 15e3, // 15s
     queryKey: useDeviceSessionsQueryKey,
-    async queryFn({ signal }) {
-      const { results } = await api.fetch(
-        'GET',
-        '/device-sessions',
-        undefined,
-        { signal },
-      )
-      return results
+    queryFn: async (options) => {
+      return api.fetch('GET', '/device-sessions', undefined, options)
     },
   })
 }

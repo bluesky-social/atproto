@@ -256,14 +256,12 @@ export function apiRouter<
           this.deviceId,
         )
 
-        return {
-          results: deviceAccounts.map(
-            (deviceAccount): ActiveDeviceSession => ({
-              account: deviceAccount.account,
-              loginRequired: server.checkLoginRequired(deviceAccount),
-            }),
-          ),
-        }
+        return deviceAccounts.map(
+          (deviceAccount): ActiveDeviceSession => ({
+            account: deviceAccount.account,
+            loginRequired: server.checkLoginRequired(deviceAccount),
+          }),
+        )
       },
     }),
   )
@@ -289,25 +287,23 @@ export function apiRouter<
           },
         })
 
-        return {
-          // @TODO: We should ideally filter sessions that are expired (or even
-          // expose the expiration date). This requires a change to the way
-          // TokenInfo are stored (see TokenManager#isTokenExpired and
-          // TokenManager#isTokenInactive).
-          results: tokenInfos.map(({ id, data }): ActiveOAuthSession => {
-            return {
-              tokenId: id,
+        // @TODO: We should ideally filter sessions that are expired (or even
+        // expose the expiration date). This requires a change to the way
+        // TokenInfo are stored (see TokenManager#isTokenExpired and
+        // TokenManager#isTokenInactive).
+        return tokenInfos.map(({ id, data }): ActiveOAuthSession => {
+          return {
+            tokenId: id,
 
-              createdAt: data.createdAt.toISOString() as ISODateString,
-              updatedAt: data.updatedAt.toISOString() as ISODateString,
+            createdAt: data.createdAt.toISOString() as ISODateString,
+            updatedAt: data.updatedAt.toISOString() as ISODateString,
 
-              clientId: data.clientId,
-              clientMetadata: clients.get(data.clientId)?.metadata,
+            clientId: data.clientId,
+            clientMetadata: clients.get(data.clientId)?.metadata,
 
-              scope: data.parameters.scope,
-            }
-          }),
-        }
+            scope: data.parameters.scope,
+          }
+        })
       },
     }),
   )
@@ -324,21 +320,19 @@ export function apiRouter<
           account.sub,
         )
 
-        return {
-          results: deviceAccounts.map(
-            (accountSession): ActiveAccountSession => ({
-              deviceId: accountSession.deviceId,
-              deviceMetadata: {
-                ipAddress: accountSession.deviceData.ipAddress,
-                userAgent: accountSession.deviceData.userAgent,
-                lastSeenAt:
-                  accountSession.deviceData.lastSeenAt.toISOString() as ISODateString,
-              },
+        return deviceAccounts.map(
+          (accountSession): ActiveAccountSession => ({
+            deviceId: accountSession.deviceId,
+            deviceMetadata: {
+              ipAddress: accountSession.deviceData.ipAddress,
+              userAgent: accountSession.deviceData.userAgent,
+              lastSeenAt:
+                accountSession.deviceData.lastSeenAt.toISOString() as ISODateString,
+            },
 
-              isCurrentDevice: accountSession.deviceId === this.deviceId,
-            }),
-          ),
-        }
+            isCurrentDevice: accountSession.deviceId === this.deviceId,
+          }),
+        )
       },
     }),
   )

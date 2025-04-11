@@ -230,28 +230,26 @@
               return jsonResponse({ error: 'Invalid credentials' }, 400)
             }
             case `GET ${API_ENDPOINT_PREFIX}/device-sessions`:
-              return jsonResponse({
-                results:
-                  accountDeviceSessions.get(currentDeviceId)?.map((s) => ({
-                    remembered: s.remember,
-                    loginRequired: s.loginRequired,
-                    account: accounts.get(s.sub),
-                  })) ?? [],
-              })
+              return jsonResponse(
+                accountDeviceSessions.get(currentDeviceId)?.map((s) => ({
+                  remembered: s.remember,
+                  loginRequired: s.loginRequired,
+                  account: accounts.get(s.sub),
+                })) ?? [],
+              )
             case `GET ${API_ENDPOINT_PREFIX}/oauth-sessions`: {
               const sub = url.searchParams.get('sub')
-              return jsonResponse({
-                results:
-                  accountOAuthSessions.get(sub)?.map((oauthSession) => ({
-                    ...oauthSession,
-                    clientMetadata: clients.get(oauthSession.clientId),
-                  })) ?? [],
-              })
+              return jsonResponse(
+                accountOAuthSessions.get(sub)?.map((oauthSession) => ({
+                  ...oauthSession,
+                  clientMetadata: clients.get(oauthSession.clientId),
+                })) ?? [],
+              )
             }
             case `GET ${API_ENDPOINT_PREFIX}/account-sessions`: {
               const sub = url.searchParams.get('sub')
-              return jsonResponse({
-                results: Array.from(
+              return jsonResponse(
+                Array.from(
                   accountDeviceSessions.entries(),
                   ([deviceId, deviceSession]) =>
                     deviceSession
@@ -263,7 +261,7 @@
                         isCurrentDevice: true,
                       })),
                 ).flat(),
-              })
+              )
             }
             case `POST ${API_ENDPOINT_PREFIX}/sign-out`: {
               const { sub } = JSON.parse(init.body)

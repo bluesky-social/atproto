@@ -14,11 +14,8 @@ export function useOAuthSessionsQuery(input: OAuthSessionsQueryInput) {
     refetchOnWindowFocus: 'always',
     staleTime: 15e3, // 15s
     queryKey: oauthSessionsQueryKey(input),
-    async queryFn({ signal }) {
-      const { results } = await api.fetch('GET', '/oauth-sessions', input, {
-        signal,
-      })
-      return results
+    queryFn: async (options) => {
+      return await api.fetch('GET', '/oauth-sessions', input, options)
     },
   })
 }
