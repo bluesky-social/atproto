@@ -41,11 +41,7 @@ import {
 } from './client/client-manager.js'
 import { ClientStore, ifClientStore } from './client/client-store.js'
 import { Client } from './client/client.js'
-import {
-  AUTHENTICATION_MAX_AGE,
-  EPHEMERAL_SESSION_MAX_AGE,
-  TOKEN_MAX_AGE,
-} from './constants.js'
+import { AUTHENTICATION_MAX_AGE, TOKEN_MAX_AGE } from './constants.js'
 import { Branding, BrandingInput } from './customization/branding.js'
 import {
   Customization,
@@ -121,7 +117,6 @@ type OAuthProviderConfig = {
    * Maximum age an ephemeral session (one where "remember me" was not
    * checked) can be before requiring re-authentication.
    */
-  ephemeralSessionMaxAge?: number
 
   /**
    * Maximum age access & id tokens can be before requiring a refresh.
@@ -227,7 +222,6 @@ export class OAuthProvider extends OAuthVerifier {
   public readonly customization: Customization
 
   public readonly authenticationMaxAge: number
-  public readonly ephemeralSessionMaxAge: number
 
   public readonly accountManager: AccountManager
   public readonly deviceManager: DeviceManager
@@ -238,7 +232,6 @@ export class OAuthProvider extends OAuthVerifier {
   public constructor({
     // OAuthProviderConfig
     authenticationMaxAge = AUTHENTICATION_MAX_AGE,
-    ephemeralSessionMaxAge = EPHEMERAL_SESSION_MAX_AGE,
     tokenMaxAge = TOKEN_MAX_AGE,
     accessTokenMode = AccessTokenMode.stateless,
 
@@ -299,7 +292,6 @@ export class OAuthProvider extends OAuthVerifier {
 
     this.accessTokenMode = accessTokenMode
     this.authenticationMaxAge = authenticationMaxAge
-    this.ephemeralSessionMaxAge = ephemeralSessionMaxAge
     this.metadata = buildMetadata(this.issuer, this.keyset, metadata)
     this.customization = customizationSchema.parse(rest)
 
@@ -362,13 +354,8 @@ export class OAuthProvider extends OAuthVerifier {
   }
 
   public checkLoginRequired(deviceAccount: DeviceAccount) {
-    if (deviceAccount.data.remembered) {
-      const authAge = Date.now() - deviceAccount.updatedAt.getTime()
-      return authAge > this.authenticationMaxAge
-    } else {
-      const authAge = Date.now() - deviceAccount.createdAt.getTime()
-      return authAge > this.ephemeralSessionMaxAge
-    }
+    const authAge = Date.now() - deviceAccount.updatedAt.getTime()
+    return authAge > this.authenticationMaxAge
   }
 
   protected async authenticateClient(
@@ -707,26 +694,23 @@ export class OAuthProvider extends OAuthVerifier {
       (!!account.sub && account.sub === hint) ||
       (!!account.preferred_username && account.preferred_username === hint)
 
-    return deviceAccounts
-      .filter(({ data }) => data.remembered)
-      .map((deviceAccount) => ({
-        account: deviceAccount.account,
+    return deviceAccounts.map((deviceAccount) => ({
+      account: deviceAccount.account,
 
-        selected:
-          parameters.prompt !== 'select_account' &&
-          matchesHint(deviceAccount.account),
-        // @TODO Return the session expiration date instead of a boolean to
-        // avoid having to rely on a leeway when "accepting" the request.
-        loginRequired:
-          parameters.prompt === 'login' ||
-          this.checkLoginRequired(deviceAccount),
-        consentRequired: this.checkConsentRequired(
-          parameters,
-          deviceAccount.authorizedClients.get(clientId),
-        ),
+      selected:
+        parameters.prompt !== 'select_account' &&
+        matchesHint(deviceAccount.account),
+      // @TODO Return the session expiration date instead of a boolean to
+      // avoid having to rely on a leeway when "accepting" the request.
+      loginRequired:
+        parameters.prompt === 'login' || this.checkLoginRequired(deviceAccount),
+      consentRequired: this.checkConsentRequired(
+        parameters,
+        deviceAccount.authorizedClients.get(clientId),
+      ),
 
-        matchesHint: hint == null || matchesHint(deviceAccount.account),
-      }))
+      matchesHint: hint == null || matchesHint(deviceAccount.account),
+    }))
   }
 
   public async token(

@@ -71,7 +71,6 @@ export type OAuthHooks = {
     input: SignUpInput
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
-    requestId: RequestId | null
   }) => Awaitable<void>
 
   /**
@@ -96,14 +95,12 @@ export type OAuthHooks = {
     account: Account
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
-    requestId: RequestId | null
   }) => Awaitable<void>
 
   onSignInAttempt?: (data: {
     data: SignInData
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
-    requestId: RequestId | null
   }) => Awaitable<void>
 
   /**
@@ -116,7 +113,6 @@ export type OAuthHooks = {
     account: Account
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
-    requestId: RequestId | null
   }) => Awaitable<void>
 
   /**

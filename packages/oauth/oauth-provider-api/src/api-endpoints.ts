@@ -13,12 +13,12 @@ export type ApiEndpoints = {
   '/sign-up': {
     method: 'POST'
     input: SignUpInput
-    output: { account: Account }
+    output: { account: Account; token?: string }
   }
   '/sign-in': {
     method: 'POST'
     input: SignInInput
-    output: { account: Account; consentRequired?: boolean }
+    output: { account: Account; token?: string; consentRequired?: boolean }
   }
   '/reset-password-request': {
     method: 'POST'
@@ -148,14 +148,6 @@ export type ActiveDeviceSession = {
   account: Account
 
   /**
-   * The user checked the "remember me" checkbox when signing in. This means
-   * that the session's expiration time is extended. When this is `false`, the
-   * session will expire after a short time (15 minutes), and will not be
-   * available anymore if the user closes the browser.
-   */
-  remembered: boolean
-
-  /**
    * The session is too old and the user must re-authenticate.
    */
   loginRequired: boolean
@@ -167,8 +159,6 @@ export type ActiveDeviceSession = {
 export type ActiveAccountSession = {
   deviceId: string
   deviceMetadata: DeviceMetadata
-
-  remembered: boolean
 
   isCurrentDevice: boolean
 }

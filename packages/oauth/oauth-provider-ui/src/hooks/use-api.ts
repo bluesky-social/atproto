@@ -2,11 +2,9 @@ import { useLingui } from '@lingui/react/macro'
 import { useCallback, useState } from 'react'
 import { useErrorBoundary } from 'react-error-boundary'
 import type {
-  AcceptInput,
   Account,
   ConfirmResetPasswordInput,
   InitiatePasswordResetInput,
-  RejectInput,
   Session,
   SignInInput,
   SignUpInput,
@@ -39,17 +37,20 @@ function useSafeCallback<F extends (...a: any) => any>(fn: F, deps: unknown[]) {
   )
 }
 
-export type UseApiOptions = {
-  sessions?: readonly Session[]
-  onRedirected?: () => void
+export type SessionWithToken = Session & {
+  token?: string
 }
 
 export function useApi({
   sessions: sessionsInit = [],
   onRedirected,
-}: UseApiOptions) {
+}: {
+  sessions?: readonly Session[]
+  onRedirected?: () => void
+}) {
   const [api] = useState(() => new Api())
-  const [sessions, setSessions] = useState(sessionsInit)
+  const [sessions, setSessions] =
+    useState<readonly SessionWithToken[]>(sessionsInit)
 
   const { i18n } = useLingui()
   const { locale } = i18n
@@ -68,6 +69,7 @@ export function useApi({
   const upsertSession = useCallback(
     ({
       account,
+      token,
       // The server will tell us if the user needs to consent to the
       // authorization. Defaults to true in case of sign-ups
       consentRequired = true,
@@ -77,9 +79,10 @@ export function useApi({
       // When a new session is inserted, it is assumed that the user just
       // created the session, and therefore, login is not required.
       loginRequired = false,
-    }: { account: Account } & Partial<Session>) => {
-      const session: Session = {
+    }: { account: Account } & Partial<SessionWithToken>) => {
+      const session: SessionWithToken = {
         account,
+        token,
         selected,
         loginRequired,
         consentRequired,
@@ -169,20 +172,20 @@ export function useApi({
   )
 
   const doAccept = useSafeCallback(
-    async (data: AcceptInput) => {
-      const { url } = await api.fetch('POST', '/accept', data)
+    async (sub: string) => {
+      // If "remember me" was unchecked, we need to use the token to
+      // authenticate the request.
+      const bearer = sessions.find((s) => s.account.sub === sub)?.token
+      const { url } = await api.fetch('POST', '/accept', { sub }, { bearer })
       performRedirect(url)
     },
-    [api, performRedirect],
+    [api, sessions, performRedirect],
   )
 
-  const doReject = useSafeCallback(
-    async (data: RejectInput = {}) => {
-      const { url } = await api.fetch('POST', '/reject', data)
-      performRedirect(url)
-    },
-    [api, performRedirect],
-  )
+  const doReject = useSafeCallback(async () => {
+    const { url } = await api.fetch('POST', '/reject', {})
+    performRedirect(url)
+  }, [api, performRedirect])
 
   return {
     sessions,

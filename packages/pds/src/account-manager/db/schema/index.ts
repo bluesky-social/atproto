@@ -1,6 +1,5 @@
 import * as account from './account'
 import * as accountDevice from './account-device'
-import * as accountDeviceRequest from './account-device-request'
 import * as actor from './actor'
 import * as appPassword from './app-password'
 import * as oauthRequest from './authorization-request'
@@ -16,7 +15,6 @@ import * as usedRefreshToken from './used-refresh-token'
 export type DatabaseSchema = actor.PartialDB &
   account.PartialDB &
   accountDevice.PartialDB &
-  accountDeviceRequest.PartialDB &
   authorizedClient.PartialDB &
   device.PartialDB &
   oauthRequest.PartialDB &
@@ -31,7 +29,6 @@ export type DatabaseSchema = actor.PartialDB &
 export type { Actor, ActorEntry } from './actor'
 export type { Account, AccountEntry } from './account'
 export type { AccountDevice } from './account-device'
-export type { AccountDeviceRequest } from './account-device-request'
 export type { Device } from './device'
 export type { AuthorizationRequest } from './authorization-request'
 export type { Token } from './token'
