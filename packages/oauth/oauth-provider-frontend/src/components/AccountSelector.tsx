@@ -5,17 +5,20 @@ import { DotsHorizontalIcon } from '@radix-ui/react-icons'
 import * as Popover from '@radix-ui/react-popover'
 import { clsx } from 'clsx'
 import { Avatar } from '#/components/Avatar'
+import { Button } from '#/components/Button'
 import { Link } from '#/components/Link'
 import { useCurrentSession } from '#/data/useCurrentSession'
 import { useDeviceSessionsQuery } from '#/data/useDeviceSessionsQuery'
+import { useSignOutMutation } from '#/data/useSignOutMutation'
 import { getAccountName } from '#/util/getAccountName'
 import { sanitizeHandle } from '#/util/sanitizeHandle'
-import { Button } from '#/components/Button'
 
 export function AccountSelector() {
   const { _ } = useLingui()
   const { data } = useDeviceSessionsQuery()
   const { account: currentAccount } = useCurrentSession()
+
+  const { mutate: signOut } = useSignOutMutation()
 
   return (
     <Popover.Root>
@@ -76,12 +79,10 @@ export function AccountSelector() {
                     src={account.picture}
                     displayName={account.name}
                   />
-                  <div className="flex-1 truncate text-left">
-                    <div className="flex items-center space-x-1">
-                      <p className="text-text-default text-sm font-bold leading-snug">
-                        {getAccountName(account)}
-                      </p>
-                    </div>
+                  <div className="flex-1 space-x-1 truncate text-left">
+                    <p className="text-text-default truncate text-sm font-bold leading-snug">
+                      {getAccountName(account)}
+                    </p>
                     <p className="text-text-light truncate text-sm leading-snug">
                       {sanitizeHandle(account.preferred_username)}
                     </p>
@@ -95,6 +96,7 @@ export function AccountSelector() {
                         // prevent click from bubbling up to the Link
                         e.stopPropagation()
                         e.preventDefault()
+                        signOut({ sub: account.sub })
                       }}
                     >
                       <Button.Text>

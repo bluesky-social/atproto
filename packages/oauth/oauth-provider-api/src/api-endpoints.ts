@@ -33,7 +33,7 @@ export type ApiEndpoints = {
   }
   '/sign-out': {
     method: 'POST'
-    input: { sub: string | string[] }
+    input: SignOutInput
     output: { success: true }
   }
   /**
@@ -130,6 +130,10 @@ export type SignUpInput = {
 export type SignUpOutput = {
   account: Account
   ephemeralToken?: EphemeralToken
+}
+
+export type SignOutInput = {
+  sub: string | string[]
 }
 
 export type InitiatePasswordResetInput = {

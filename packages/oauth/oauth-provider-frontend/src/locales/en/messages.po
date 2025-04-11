@@ -203,7 +203,7 @@ msgstr "Remove this device"
 msgid "Reset password"
 msgstr "Reset password"
 
-#: src/components/AccountSelector.tsx:29
+#: src/components/AccountSelector.tsx:32
 msgid "Select an account"
 msgstr "Select an account"
 
@@ -222,7 +222,7 @@ msgstr "Sign in with another account"
 
 #: src/routes/account/_appLayout/$sub.tsx:168
 #: src/routes/account/_appLayout/$sub.tsx:173
-#: src/components/AccountSelector.tsx:101
+#: src/components/AccountSelector.tsx:103
 msgid "Sign out"
 msgstr "Sign out"
 
