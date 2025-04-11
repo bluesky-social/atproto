@@ -19,13 +19,13 @@ export function AccountImage({ src, alt }: AccountIconProps) {
       crossOrigin="anonymous"
       src={src}
       alt={alt}
-      className="-ml-1 w-6 h-6 rounded-full"
+      className="-ml-1 h-6 w-6 rounded-full"
       onError={() => setErrored(true)}
     />
   ) : (
     <div
       aria-hidden
-      className="h-6 w-6 text-white bg-brand rounded-full border-solid border-2 border-brand overflow-hidden"
+      className="bg-primary border-primary h-6 w-6 overflow-hidden rounded-full border-2 border-solid text-white"
     >
       <AccountIcon className="-mx-1 -mb-1" />
     </div>

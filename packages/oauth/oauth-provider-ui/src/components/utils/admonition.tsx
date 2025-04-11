@@ -1,5 +1,5 @@
+import { clsx } from 'clsx'
 import { JSX, memo } from 'react'
-import { clsx } from '../../lib/clsx.ts'
 import { Override } from '../../lib/util.ts'
 import { AlertIcon, EyeIcon } from './icons.tsx'
 
@@ -27,21 +27,21 @@ export const Admonition = memo(function Admonition({
         'rounded-lg',
         'border',
         'border-gray-300 dark:border-gray-700',
-        role === 'alert' && 'bg-error text-error-c',
+        role === 'alert' && 'bg-error text-error-contrast',
         className,
       )}
     >
       {role === 'info' ? (
         <EyeIcon
           aria-hidden
-          className={clsx('fill-current h-6 w-6', 'text-brand')}
+          className={clsx('h-6 w-6 fill-current', 'text-primary')}
         />
       ) : (
         <AlertIcon
           aria-hidden
           className={clsx(
-            'fill-current h-6 w-6',
-            role === 'alert' ? 'text-inherit' : 'text-brand',
+            'h-6 w-6 fill-current',
+            role === 'alert' ? 'text-inherit' : 'text-primary',
           )}
         />
       )}

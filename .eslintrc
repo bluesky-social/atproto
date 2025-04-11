@@ -87,6 +87,7 @@
         "project": [
           "tsconfig.json",
           "packages/oauth/*/tsconfig.json",
+          "packages/oauth/*/tsconfig.src.json",
           "packages/internal/*/tsconfig.json",
           "packages/*/tsconfig.json"
         ]

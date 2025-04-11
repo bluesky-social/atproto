@@ -1,10 +1,13 @@
-import { randomBytes } from 'node:crypto'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { languages, mediaType } from '@hapi/accept'
-import { parse as parseCookie, serialize as serializeCookie } from 'cookie'
+import {
+  CookieSerializeOptions,
+  parse as parseCookie,
+  serialize as serializeCookie,
+} from 'cookie'
 import forwarded from 'forwarded'
 import createHttpError from 'http-errors'
-import { appendHeader } from './response.js'
+import { appendHeader } from './headers.js'
 import { UrlReference, urlMatch } from './url.js'
 
 export function validateHeaderValue(
@@ -30,7 +33,6 @@ export function validateHeaderValue(
 
 export function validateFetchMode(
   req: IncomingMessage,
-  res: ServerResponse,
   expectedMode: readonly (
     | null
     | 'navigate'
@@ -44,7 +46,6 @@ export function validateFetchMode(
 
 export function validateFetchDest(
   req: IncomingMessage,
-  res: ServerResponse,
   expectedDest: readonly (
     | null
     | 'document'
@@ -68,7 +69,6 @@ export function validateFetchDest(
 
 export function validateFetchSite(
   req: IncomingMessage,
-  res: ServerResponse,
   expectedSite: readonly (
     | null
     | 'same-origin'
@@ -80,103 +80,68 @@ export function validateFetchSite(
   validateHeaderValue(req, 'sec-fetch-site', expectedSite)
 }
 
-export function validateReferer(
+export function validateReferrer(
   req: IncomingMessage,
-  res: ServerResponse,
   reference: UrlReference,
   allowNull: true,
 ): URL | null
-export function validateReferer(
+export function validateReferrer(
   req: IncomingMessage,
-  res: ServerResponse,
   reference: UrlReference,
   allowNull?: false,
 ): URL
-export function validateReferer(
+export function validateReferrer(
   req: IncomingMessage,
-  res: ServerResponse,
   reference: UrlReference,
   allowNull = false,
 ) {
-  const referer = req.headers['referer']
-  const refererUrl = referer ? new URL(referer) : null
-  if (refererUrl ? !urlMatch(refererUrl, reference) : !allowNull) {
-    throw createHttpError(400, `Invalid referer ${referer}`)
+  // @NOTE The header name "referer" is actually a misspelling of the word
+  // "referrer". https://en.wikipedia.org/wiki/HTTP_referer
+  const referrer = req.headers['referer']
+  const referrerUrl = referrer ? new URL(referrer) : null
+  if (referrerUrl ? !urlMatch(referrerUrl, reference) : !allowNull) {
+    throw createHttpError(400, `Invalid referrer ${referrer}`)
   }
-  return refererUrl
+  return referrerUrl
 }
 
-export async function setupCsrfToken(
+export function validateOrigin(
   req: IncomingMessage,
-  res: ServerResponse,
-  cookieName = 'csrf_token',
-) {
-  const csrfToken = randomBytes(8).toString('hex')
-  appendHeader(
-    res,
-    'Set-Cookie',
-    serializeCookie(cookieName, csrfToken, {
-      secure: true,
-      httpOnly: false,
-      sameSite: 'lax',
-      path: req.url?.split('?', 1)[0] || '/',
-    }),
-  )
-}
-
-// CORS ensure not cross origin
-export function validateSameOrigin(
-  req: IncomingMessage,
-  res: ServerResponse,
-  origin: string,
-  allowNull = true,
+  expectedOrigin: string,
+  optional = true,
 ) {
   const reqOrigin = req.headers['origin']
-  if (reqOrigin ? reqOrigin !== origin : !allowNull) {
+  if (reqOrigin ? reqOrigin !== expectedOrigin : !optional) {
     throw createHttpError(400, `Invalid origin ${reqOrigin}`)
   }
 }
 
-export function validateCsrfToken(
-  req: IncomingMessage,
-  res: ServerResponse,
-  csrfToken: unknown,
-  cookieName = 'csrf_token',
-  clearCookie = false,
-) {
-  const cookies = parseHttpCookies(req)
-  if (
-    typeof csrfToken !== 'string' ||
-    !csrfToken ||
-    !cookies ||
-    !cookieName ||
-    cookies[cookieName] !== csrfToken
-  ) {
-    throw createHttpError(400, `Invalid CSRF token`)
-  }
+export type { CookieSerializeOptions }
 
-  if (clearCookie) {
-    appendHeader(
-      res,
-      'Set-Cookie',
-      serializeCookie(cookieName, '', {
-        secure: true,
-        httpOnly: false,
-        sameSite: 'lax',
-        maxAge: 0,
-      }),
-    )
-  }
+export function setCookie(
+  res: ServerResponse,
+  cookieName: string,
+  value: string,
+  options?: CookieSerializeOptions,
+) {
+  appendHeader(res, 'Set-Cookie', serializeCookie(cookieName, value, options))
+}
+
+export function clearCookie(
+  res: ServerResponse,
+  cookieName: string,
+  options?: Omit<CookieSerializeOptions, 'maxAge' | 'expires'>,
+) {
+  setCookie(res, cookieName, '', { ...options, maxAge: 0 })
 }
 
 export function parseHttpCookies(
-  req: IncomingMessage,
-): null | Record<string, undefined | string> {
-  return 'cookies' in req && req.cookies // Already parsed by another middleware
-    ? (req.cookies as any)
-    : req.headers['cookie']
-      ? ((req as any).cookies = parseCookie(req.headers['cookie']))
-      : null
+  req: IncomingMessage & { cookies?: any },
+): Record<string, undefined | string> {
+  req.cookies ??= req.headers['cookie']
+    ? parseCookie(req.headers['cookie'])
+    : Object.create(null)
+  return req.cookies
 }
 
 export type ExtractRequestMetadataOptions = {

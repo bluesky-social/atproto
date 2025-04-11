@@ -18,9 +18,12 @@ export type Session = {
   consentRequired: boolean
 }
 
-export type LocalizedString =
-  | string
-  | ({ en: string } & Record<string, string | undefined>)
+export type MultiLangString = { en: string } & Record<
+  string,
+  string | undefined
+>
+
+export type LocalizedString = string | MultiLangString
 
 export type LinkDefinition = {
   title: LocalizedString
@@ -30,5 +33,13 @@ export type LinkDefinition = {
 
 export type ScopeDetail = {
   scope: string
-  description?: string
+  description?: LocalizedString
 }
+
+export type DeviceMetadata = {
+  userAgent: string | null
+  ipAddress: string
+  lastSeenAt: ISODateString
+}
+
+export type ISODateString = `${string}T${string}Z`

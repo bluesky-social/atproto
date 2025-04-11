@@ -1,18 +1,17 @@
 import { useLingui } from '@lingui/react/macro'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useErrorBoundary } from 'react-error-boundary'
 import type {
   Account,
-  ConfirmResetPasswordData,
-  InitiatePasswordResetData,
+  ConfirmResetPasswordInput,
+  InitiatePasswordResetInput,
   Session,
-  SignInData,
-  SignUpData,
-  VerifyHandleAvailabilityData,
+  SignInInput,
+  SignUpInput,
+  VerifyHandleAvailabilityInput,
 } from '@atproto/oauth-provider-api'
-import { AcceptData, Api, UnknownRequestUriError } from '../lib/api.ts'
+import { Api, UnknownRequestUriError } from '../lib/api.ts'
 import { upsert } from '../lib/util.ts'
-import { useCsrfToken } from './use-csrf-token.ts'
 
 /**
  * Any function wrapped with this helper will automatically show the error
@@ -38,24 +37,20 @@ function useSafeCallback<F extends (...a: any) => any>(fn: F, deps: unknown[]) {
   )
 }
 
-export type UseApiOptions = {
-  requestUri: string
-  sessions?: readonly Session[]
-  newSessionsRequireConsent?: boolean
-  onRedirected?: () => void
+export type SessionWithToken = Session & {
+  ephemeralToken?: string
 }
 
 export function useApi({
-  requestUri,
   sessions: sessionsInit = [],
-  newSessionsRequireConsent = true,
   onRedirected,
-}: UseApiOptions) {
-  const csrfToken = useCsrfToken(`csrf-${requestUri}`)
-  if (!csrfToken) throw new Error('CSRF token is missing')
-
-  const api = useMemo(() => new Api(csrfToken), [csrfToken])
-  const [sessions, setSessions] = useState(sessionsInit)
+}: {
+  sessions?: readonly Session[]
+  onRedirected?: () => void
+}) {
+  const [api] = useState(() => new Api())
+  const [sessions, setSessions] =
+    useState<readonly SessionWithToken[]>(sessionsInit)
 
   const { i18n } = useLingui()
   const { locale } = i18n
@@ -74,30 +69,47 @@ export function useApi({
   const upsertSession = useCallback(
     ({
       account,
-      consentRequired,
-    }: {
-      account: Account
-      consentRequired: boolean
-    }) => {
-      const session: Session = {
+      ephemeralToken,
+      // The server will tell us if the user needs to consent to the
+      // authorization. Defaults to true in case of sign-ups
+      consentRequired = true,
+      // When a new session is inserted, assume that the user intends to use
+      // it, and therefore, it is selected by default.
+      selected = true,
+      // When a new session is inserted, it is assumed that the user just
+      // created the session, and therefore, login is not required.
+      loginRequired = false,
+    }: { account: Account } & Partial<SessionWithToken>) => {
+      const session: SessionWithToken = {
         account,
-        selected: true,
-        loginRequired: false,
-        consentRequired: newSessionsRequireConsent || consentRequired,
+        ephemeralToken,
+        selected,
+        loginRequired,
+        consentRequired,
       }
 
       setSessions((sessions) =>
         upsert(sessions, session, (s) => s.account.sub === account.sub).map(
-          // Make sure to de-select any other selected session
-          (s) => (s === session || !s.selected ? s : { ...s, selected: false }),
+          // Make sure to de-select any other selected session (if selected is
+          // true)
+          (s) =>
+            !selected || s === session || !s.selected
+              ? s
+              : { ...s, selected: false },
         ),
       )
     },
-    [setSessions, newSessionsRequireConsent],
+    [setSessions],
   )
 
   const performRedirect = useCallback(
-    (url: URL) => {
+    (url: string | URL) => {
+      // @TODO At this point, the request cannot be accepted/rejected anymore.
+      // We should probably change the app's state to something that indicates
+      // that in order to improve UX in case the user comes back to the app.
+      // This is currently ensured by the backend (through back-forward cache
+      // busting) but handling it here would provide a better UX.
+
       window.location.href = String(url)
       if (onRedirected) setTimeout(onRedirected)
     },
@@ -105,8 +117,9 @@ export function useApi({
   )
 
   const doSignIn = useSafeCallback(
-    async (data: Omit<SignInData, 'locale'>, signal?: AbortSignal) => {
+    async (data: Omit<SignInInput, 'locale'>, signal?: AbortSignal) => {
       const response = await api.fetch(
+        'POST',
         '/sign-in',
         { ...data, locale },
         { signal },
@@ -118,10 +131,11 @@ export function useApi({
 
   const doInitiatePasswordReset = useSafeCallback(
     async (
-      data: Omit<InitiatePasswordResetData, 'locale'>,
+      data: Omit<InitiatePasswordResetInput, 'locale'>,
       signal?: AbortSignal,
     ) => {
       await api.fetch(
+        'POST',
         '/reset-password-request',
         { ...data, locale },
         { signal },
@@ -131,22 +145,23 @@ export function useApi({
   )
 
   const doConfirmResetPassword = useSafeCallback(
-    async (data: ConfirmResetPasswordData, signal?: AbortSignal) => {
-      await api.fetch('/reset-password-confirm', data, { signal })
+    async (data: ConfirmResetPasswordInput, signal?: AbortSignal) => {
+      await api.fetch('POST', '/reset-password-confirm', data, { signal })
     },
     [api],
   )
 
   const doValidateNewHandle = useSafeCallback(
-    async (data: VerifyHandleAvailabilityData, signal?: AbortSignal) => {
-      await api.fetch('/verify-handle-availability', data, { signal })
+    async (data: VerifyHandleAvailabilityInput, signal?: AbortSignal) => {
+      await api.fetch('POST', '/verify-handle-availability', data, { signal })
     },
     [api],
   )
 
   const doSignUp = useSafeCallback(
-    async (data: Omit<SignUpData, 'locale'>, signal?: AbortSignal) => {
+    async (data: Omit<SignUpInput, 'locale'>, signal?: AbortSignal) => {
       const response = await api.fetch(
+        'POST',
         '/sign-up',
         { ...data, locale },
         { signal },
@@ -157,14 +172,19 @@ export function useApi({
   )
 
   const doAccept = useSafeCallback(
-    async (data: AcceptData) => {
-      performRedirect(api.buildAcceptUrl(data))
+    async (sub: string) => {
+      // If "remember me" was unchecked, we need to use the ephemeral token to
+      // authenticate the request.
+      const bearer = sessions.find((s) => s.account.sub === sub)?.ephemeralToken
+      const { url } = await api.fetch('POST', '/accept', { sub }, { bearer })
+      performRedirect(url)
     },
-    [api, performRedirect],
+    [api, sessions, performRedirect],
   )
 
   const doReject = useSafeCallback(async () => {
-    performRedirect(api.buildRejectUrl())
+    const { url } = await api.fetch('POST', '/reject', {})
+    performRedirect(url)
   }, [api, performRedirect])
 
   return {

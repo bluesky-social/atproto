@@ -35,7 +35,7 @@ jobs:
           path: |
             packages/*/dist
             packages/*/*/dist
-            packages/oauth/oauth-provider-ui/src/locales/*/messages.ts
+            packages/oauth/*/src/locales/*/messages.ts
           retention-days: 1
   test:
     name: Test

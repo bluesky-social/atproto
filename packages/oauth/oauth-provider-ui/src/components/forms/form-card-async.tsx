@@ -88,7 +88,7 @@ export function FormCardAsync({
       }
       actions={
         <Button
-          color="brand"
+          color="primary"
           type="submit"
           loading={loading}
           disabled={disabled}

@@ -1,3 +1,4 @@
+import { InvalidGrantError } from '../errors/invalid-grant-error.js'
 import { Awaitable, buildInterfaceChecker } from '../lib/util/type.js'
 import { Code } from './code.js'
 import { RequestData } from './request-data.js'
@@ -19,6 +20,8 @@ export type FoundRequestResult = {
   data: RequestData
 }
 
+export { InvalidGrantError }
+
 export interface RequestStore {
   createRequest(id: RequestId, data: RequestData): Awaitable<void>
   /**
@@ -28,6 +31,10 @@ export interface RequestStore {
   readRequest(id: RequestId): Awaitable<RequestData | null>
   updateRequest(id: RequestId, data: UpdateRequestData): Awaitable<void>
   deleteRequest(id: RequestId): void | Awaitable<void>
+  /**
+   * @throws {InvalidGrantError} - When the request is not found or has expired
+   * (allows to provide an error message instead of returning `null`).
+   */
   findRequestByCode(code: Code): Awaitable<FoundRequestResult | null>
 }
 

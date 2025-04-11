@@ -7,7 +7,7 @@ const { default: nodeResolve } = require('@rollup/plugin-node-resolve')
 const { default: swc } = require('@rollup/plugin-swc')
 const { defineConfig } = require('rollup')
 const {
-  default: manifest,
+  bundleManifest,
 } = require('@atproto-labs/rollup-plugin-bundle-manifest')
 const postcss = ((m) => m.default || m)(require('rollup-plugin-postcss'))
 const serve = ((m) => m.default || m)(require('rollup-plugin-serve'))
@@ -106,7 +106,7 @@ module.exports = defineConfig((commandLineArguments) => {
           </html>
         `,
       }),
-      manifest({ name: 'files.json', data: true }),
+      bundleManifest({ name: 'files.json', data: true }),
 
       commandLineArguments.watch &&
         serve({

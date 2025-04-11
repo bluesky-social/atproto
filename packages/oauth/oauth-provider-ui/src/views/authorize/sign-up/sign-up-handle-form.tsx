@@ -1,4 +1,5 @@
 import { Trans, useLingui } from '@lingui/react/macro'
+import { clsx } from 'clsx'
 import { JSX, ReactNode, useCallback, useEffect, useRef, useState } from 'react'
 import {
   AsyncActionController,
@@ -12,7 +13,6 @@ import {
   CheckMarkIcon,
   XMarkIcon,
 } from '../../../components/utils/icons.tsx'
-import { clsx } from '../../../lib/clsx.ts'
 import { mergeRefs } from '../../../lib/ref.ts'
 import { Override } from '../../../lib/util.ts'
 
@@ -223,7 +223,7 @@ export function SignUpHandleForm({
             ) : (
               <span
                 aria-hidden
-                className="bg-gray-300 dark:bg-slate-600 rounded-md p-2 w-24"
+                className="w-24 rounded-md bg-gray-300 p-2 dark:bg-slate-600"
               />
             )}
           </Trans>
@@ -266,19 +266,19 @@ function ValidationMessage({
         <>
           {valid ? (
             <CheckMarkIcon
-              className="inline-block w-4 h-4 text-success"
+              className="text-success inline-block h-4 w-4"
               title={t`Valid`}
             />
           ) : (
             <XMarkIcon
-              className="inline-block w-4 h-4 text-error"
+              className="text-error inline-block h-4 w-4"
               title={t`Invalid`}
             />
           )}
         </>
       ) : (
-        <div aria-hidden className="w-4 h-4 flex items-center justify-center">
-          <div className="bg-gray-300 dark:bg-slate-600 rounded-full w-2 h-2" />
+        <div aria-hidden className="flex h-4 w-4 items-center justify-center">
+          <div className="h-2 w-2 rounded-full bg-gray-300 dark:bg-slate-600" />
         </div>
       )}
       <div className="text-sm">{children}</div>

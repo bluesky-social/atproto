@@ -54,5 +54,5 @@ export const jsonCode = (value: unknown) =>
 /**
  * Escapes a value to be uses as CSS styles inside a `<style>` tag.
  */
-export const cssCode = (code: string) =>
-  Html.dangerouslyCreate(cssEscaper(code))
+export const cssCode = (code?: string) =>
+  code ? Html.dangerouslyCreate(cssEscaper(code)) : undefined

@@ -1,9 +1,10 @@
 import * as account from './account'
+import * as accountDevice from './account-device'
 import * as actor from './actor'
 import * as appPassword from './app-password'
 import * as oauthRequest from './authorization-request'
+import * as authorizedClient from './authorized-client'
 import * as device from './device'
-import * as deviceAccount from './device-account'
 import * as emailToken from './email-token'
 import * as inviteCode from './invite-code'
 import * as refreshToken from './refresh-token'
@@ -13,8 +14,9 @@ import * as usedRefreshToken from './used-refresh-token'
 
 export type DatabaseSchema = actor.PartialDB &
   account.PartialDB &
+  accountDevice.PartialDB &
+  authorizedClient.PartialDB &
   device.PartialDB &
-  deviceAccount.PartialDB &
   oauthRequest.PartialDB &
   token.PartialDB &
   usedRefreshToken.PartialDB &
@@ -26,8 +28,8 @@ export type DatabaseSchema = actor.PartialDB &
 
 export type { Actor, ActorEntry } from './actor'
 export type { Account, AccountEntry } from './account'
+export type { AccountDevice } from './account-device'
 export type { Device } from './device'
-export type { DeviceAccount } from './device-account'
 export type { AuthorizationRequest } from './authorization-request'
 export type { Token } from './token'
 export type { UsedRefreshToken } from './used-refresh-token'

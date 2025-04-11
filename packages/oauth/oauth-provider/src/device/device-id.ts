@@ -17,6 +17,11 @@ export const deviceIdSchema = z
   )
 
 export type DeviceId = z.infer<typeof deviceIdSchema>
+
+export function isDeviceId(value: unknown): value is DeviceId {
+  return deviceIdSchema.safeParse(value).success
+}
+
 export const generateDeviceId = async (): Promise<DeviceId> => {
   return `${DEVICE_ID_PREFIX}${await randomHexId(DEVICE_ID_BYTES_LENGTH)}`
 }

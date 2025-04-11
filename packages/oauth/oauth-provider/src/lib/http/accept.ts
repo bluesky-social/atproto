@@ -4,7 +4,7 @@ import { SubCtx, subCtx } from './context.js'
 import { Middleware, NextFunction } from './types.js'
 
 type View<
-  T,
+  T extends object | void,
   D,
   Req extends IncomingMessage = IncomingMessage,
   Res extends ServerResponse = ServerResponse,
@@ -38,7 +38,7 @@ type View<
  */
 export function acceptMiddleware<
   D,
-  T = void,
+  T extends object | void = void,
   Req extends IncomingMessage = IncomingMessage,
   Res extends ServerResponse = ServerResponse,
 >(
@@ -71,7 +71,7 @@ export function acceptMiddleware<
 
       if (view) {
         const data = await controller.call(this, req, res)
-        const ctx = subCtx(this, 'data', data)
+        const ctx = subCtx(this, { data })
         if (type) res.setHeader('Content-Type', type)
 
         await view.call(ctx, req, res, next)

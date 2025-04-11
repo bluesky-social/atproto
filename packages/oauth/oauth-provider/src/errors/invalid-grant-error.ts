@@ -13,4 +13,9 @@ export class InvalidGrantError extends OAuthError {
   constructor(error_description: string, cause?: unknown) {
     super('invalid_grant', error_description, 400, cause)
   }
+
+  static from(err: unknown, error_description: string): InvalidGrantError {
+    if (err instanceof InvalidGrantError) return err
+    return new InvalidGrantError(error_description, err)
+  }
 }

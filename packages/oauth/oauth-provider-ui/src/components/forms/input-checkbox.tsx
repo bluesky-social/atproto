@@ -1,6 +1,6 @@
+import { clsx } from 'clsx'
 import { JSX, ReactNode, useContext, useRef } from 'react'
 import { useRandomString } from '../../hooks/use-random-string.ts'
-import { clsx } from '../../lib/clsx.ts'
 import { mergeRefs } from '../../lib/ref.ts'
 import { Override } from '../../lib/util.ts'
 import { FieldsetContext } from './fieldset.tsx'
@@ -51,7 +51,7 @@ export function InputCheckbox({
           }
           ref={mergeRefs([ref, inputRef])}
           id={inputId}
-          className="accent-brand outline-none"
+          className="accent-primary outline-hidden"
           type="checkbox"
         />
       }
@@ -68,7 +68,7 @@ export function InputCheckbox({
         <label
           ref={labelRef}
           htmlFor={inputId}
-          className="block w-full leading-[1.6] select-none cursor-pointer"
+          className="block w-full cursor-pointer select-none leading-[1.6]"
         >
           {children}
         </label>

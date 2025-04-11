@@ -143,7 +143,7 @@ export class OAuthSession {
     // credentials from the authorization server (e.g. because some migration
     // occurred). Any ways, there is no point in keeping the session.
     if (isInvalidTokenResponse(finalResponse)) {
-      // TODO: Is there a "softer" way to handle this, e.g. by marking the
+      // @TODO Is there a "softer" way to handle this, e.g. by marking the
       // session as "expired" in the session store, allowing the user to trigger
       // a new login (using login_hint)?
       await this.sessionGetter.delStored(

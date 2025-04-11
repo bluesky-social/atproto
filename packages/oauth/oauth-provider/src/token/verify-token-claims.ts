@@ -3,7 +3,7 @@ import { InvalidDpopKeyBindingError } from '../errors/invalid-dpop-key-binding-e
 import { InvalidDpopProofError } from '../errors/invalid-dpop-proof-error.js'
 import { asArray } from '../lib/util/cast.js'
 import { InvalidTokenError } from '../oauth-errors.js'
-import { TokenClaims } from './token-claims.js'
+import { SignedTokenPayload } from '../signer/signed-token-payload.js'
 import { TokenId } from './token-id.js'
 
 export type VerifyTokenClaimsOptions = {
@@ -17,7 +17,7 @@ export type VerifyTokenClaimsResult = {
   token: OAuthAccessToken
   tokenId: TokenId
   tokenType: OAuthTokenType
-  claims: TokenClaims
+  claims: SignedTokenPayload
 }
 
 export function verifyTokenClaims(
@@ -25,7 +25,7 @@ export function verifyTokenClaims(
   tokenId: TokenId,
   tokenType: OAuthTokenType,
   dpopJkt: string | null,
-  claims: TokenClaims,
+  claims: SignedTokenPayload,
   options?: VerifyTokenClaimsOptions,
 ): VerifyTokenClaimsResult {
   const dateReference = Date.now()
@@ -56,7 +56,7 @@ export function verifyTokenClaims(
     }
   }
 
-  if (claims.exp && claims.exp * 1000 <= dateReference) {
+  if (claims.exp != null && claims.exp * 1000 <= dateReference) {
     throw new InvalidTokenError(tokenType, `Token expired`)
   }
 

@@ -13,11 +13,11 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: src/views/authorize/accept/accept-form.tsx:76
+#: src/views/authorize/accept/accept-form.tsx:77
 msgid "<0/> is asking for permission to access your account (<1/>)."
 msgstr ""
 
-#: src/views/authorize/sign-in/sign-in-form.tsx:219
+#: src/views/authorize/sign-in/sign-in-form.tsx:217
 msgid "2FA Confirmation"
 msgstr ""
 
@@ -25,16 +25,12 @@ msgstr ""
 msgid "A second authentication factor is required"
 msgstr ""
 
-#: src/views/authorize/accept/accept-form.tsx:144
+#: src/views/authorize/accept/accept-form.tsx:149
 msgid "Access your account data (except chat messages)"
 msgstr ""
 
-#: src/views/authorize/accept/accept-form.tsx:146
+#: src/views/authorize/accept/accept-form.tsx:151
 msgid "Access your chat messages"
-msgstr ""
-
-#: src/views/authorize/sign-in/sign-in-form.tsx:138
-msgid "Account"
 msgstr ""
 
 #: src/views/authorize/reset-password/reset-password-view.tsx:71
@@ -58,7 +54,7 @@ msgid "Authenticate"
 msgstr ""
 
 #: src/views/authorize/accept/accept-view.tsx:55
-#: src/views/authorize/accept/accept-form.tsx:56
+#: src/views/authorize/accept/accept-form.tsx:57
 msgid "Authorize"
 msgstr ""
 
@@ -74,7 +70,7 @@ msgstr ""
 msgid "Between {minLength} and {maxLength} characters"
 msgstr ""
 
-#: src/views/authorize/accept/accept-form.tsx:89
+#: src/views/authorize/accept/accept-form.tsx:90
 msgid "By clicking <0>Authorize</0>, you allow this application to perform the following actions in accordance with their <1>terms of service</1> and <2>privacy policy</2>:"
 msgstr ""
 
@@ -83,10 +79,11 @@ msgid "By creating an account you agree to the {0} and the {1} of this service."
 msgstr ""
 
 #: src/views/authorize/welcome/welcome-view.tsx:51
+#: src/components/forms/form-card-async.tsx:85
 msgid "Cancel"
 msgstr ""
 
-#: src/views/authorize/sign-in/sign-in-form.tsx:232
+#: src/views/authorize/sign-in/sign-in-form.tsx:230
 msgid "Check your {0} email for a login code and enter it here."
 msgstr ""
 
@@ -106,7 +103,7 @@ msgstr ""
 msgid "Confirm your password to continue"
 msgstr ""
 
-#: src/views/authorize/sign-in/sign-in-form.tsx:223
+#: src/views/authorize/sign-in/sign-in-form.tsx:221
 msgid "Confirmation code"
 msgstr ""
 
@@ -118,7 +115,7 @@ msgstr ""
 msgid "Create Account"
 msgstr ""
 
-#: src/views/authorize/accept/accept-form.tsx:60
+#: src/views/authorize/accept/accept-form.tsx:61
 msgid "Deny access"
 msgstr ""
 
@@ -181,7 +178,7 @@ msgstr ""
 msgid "Forgot Password"
 msgstr ""
 
-#: src/views/authorize/sign-in/sign-in-form.tsx:178
+#: src/views/authorize/sign-in/sign-in-form.tsx:181
 msgid "Forgot?"
 msgstr ""
 
@@ -202,6 +199,7 @@ msgid "Home"
 msgstr ""
 
 #: src/views/authorize/sign-in/sign-in-picker.tsx:86
+#: src/views/authorize/sign-in/sign-in-form.tsx:138
 msgid "Identifier"
 msgstr ""
 
@@ -222,12 +220,16 @@ msgstr ""
 msgid "Let's get your password reset!"
 msgstr ""
 
-#: src/views/authorize/authorize-view.tsx:172
+#: src/views/authorize/authorize-view.tsx:178
 msgid "Login complete"
 msgstr ""
 
 #: src/views/authorize/sign-in/sign-in-picker.tsx:104
 msgid "Login to account that is not listed"
+msgstr ""
+
+#: src/components/layouts/layout-welcome.tsx:45
+msgid "Logo"
 msgstr ""
 
 #: src/components/forms/input-token.tsx:59
@@ -269,6 +271,7 @@ msgid "Only letters, numbers, and hyphens"
 msgstr ""
 
 #: src/views/authorize/sign-up/sign-up-account-form.tsx:128
+#: src/views/authorize/sign-in/sign-in-form.tsx:162
 #: src/components/forms/input-password.tsx:53
 msgid "Password"
 msgstr ""
@@ -293,7 +296,7 @@ msgstr ""
 msgid "Password with at least {MIN_PASSWORD_LENGTH} characters"
 msgstr ""
 
-#: src/views/authorize/sign-in/sign-in-form.tsx:192
+#: src/views/authorize/sign-in/sign-in-form.tsx:196
 msgid "Please verify the domain name of the website before entering your password. Never enter your password on a domain you do not trust."
 msgstr ""
 
@@ -303,12 +306,12 @@ msgstr ""
 msgid "Privacy Policy"
 msgstr ""
 
-#: src/views/authorize/sign-in/sign-in-form.tsx:206
-#: src/views/authorize/sign-in/sign-in-form.tsx:211
+#: src/views/authorize/sign-in/sign-in-form.tsx:205
+#: src/views/authorize/sign-in/sign-in-form.tsx:210
 msgid "Remember this account on this device"
 msgstr ""
 
-#: src/views/authorize/accept/accept-form.tsx:123
+#: src/views/authorize/accept/accept-form.tsx:124
 msgid "Requested permissions"
 msgstr ""
 
@@ -320,7 +323,7 @@ msgstr ""
 msgid "Reset Password"
 msgstr ""
 
-#: src/views/authorize/sign-in/sign-in-form.tsx:176
+#: src/views/authorize/sign-in/sign-in-form.tsx:179
 msgid "Reset your password"
 msgstr ""
 
@@ -332,11 +335,9 @@ msgstr ""
 msgid "Select from an existing account"
 msgstr ""
 
-#: src/views/authorize/sign-in/sign-in-form.tsx:202
-msgid "Session"
-msgstr ""
-
 #: src/views/authorize/welcome/welcome-view.tsx:45
+#: src/views/authorize/sign-in/sign-in-view.tsx:48
+#: src/views/authorize/sign-in/sign-in-form.tsx:135
 msgid "Sign in"
 msgstr ""
 
@@ -426,7 +427,7 @@ msgstr ""
 msgid "Unexpected server response"
 msgstr ""
 
-#: src/views/authorize/accept/accept-form.tsx:142
+#: src/views/authorize/accept/accept-form.tsx:147
 msgid "Uniquely identify you"
 msgstr ""
 
@@ -442,7 +443,7 @@ msgstr ""
 msgid "Verify you are human"
 msgstr ""
 
-#: src/views/authorize/sign-in/sign-in-form.tsx:189
+#: src/views/authorize/sign-in/sign-in-form.tsx:193
 msgid "Warning"
 msgstr ""
 
@@ -458,7 +459,7 @@ msgstr ""
 msgid "Wrong identifier or password"
 msgstr ""
 
-#: src/views/authorize/authorize-view.tsx:173
+#: src/views/authorize/authorize-view.tsx:179
 msgid "You are being redirected..."
 msgstr ""
 

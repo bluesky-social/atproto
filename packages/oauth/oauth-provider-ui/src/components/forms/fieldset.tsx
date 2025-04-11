@@ -41,7 +41,7 @@ export function Fieldset({
         <legend
           id={labelId}
           key="title"
-          className="mb-1 text-slate-600 dark:text-slate-400 text-sm font-medium"
+          className="mb-1 text-sm font-medium text-slate-600 dark:text-slate-400"
         >
           {label}
         </legend>

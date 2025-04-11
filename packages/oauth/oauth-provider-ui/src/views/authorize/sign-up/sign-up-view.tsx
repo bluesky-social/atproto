@@ -94,7 +94,7 @@ export function SignUpView({
             titleRender: () => <Trans>Choose a username</Trans>,
             contentRender: ({ prev, prevLabel, next, nextLabel, invalid }) => (
               <SignUpHandleForm
-                className="flex-grow"
+                className="grow"
                 invalid={invalid}
                 domains={availableUserDomains}
                 handle={handle}
@@ -116,7 +116,7 @@ export function SignUpView({
             titleRender: () => <Trans>Your account</Trans>,
             contentRender: ({ prev, prevLabel, next, nextLabel, invalid }) => (
               <SignUpAccountForm
-                className="flex-grow"
+                className="grow"
                 invalid={invalid}
                 prevLabel={prevLabel}
                 onPrev={prev}
@@ -135,7 +135,7 @@ export function SignUpView({
             titleRender: () => <Trans>Verify you are human</Trans>,
             contentRender: ({ prev, prevLabel, next, nextLabel, invalid }) => (
               <SignUpHcaptchaForm
-                className="flex-grow"
+                className="grow"
                 invalid={invalid}
                 siteKey={hcaptchaSiteKey}
                 token={hcaptcha}

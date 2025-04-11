@@ -46,7 +46,7 @@ export function assertOAuthLoopbackClientId(
   void parseOAuthLoopbackClientId(clientId)
 }
 
-// @TODO: should we turn this into a zod schema? (more coherent error with other
+// @TODO should we turn this into a zod schema? (more coherent error with other
 // validation functions)
 export function parseOAuthLoopbackClientId(clientId: string): {
   scope?: OAuthScope

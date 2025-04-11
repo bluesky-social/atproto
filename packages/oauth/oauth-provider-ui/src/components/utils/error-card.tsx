@@ -71,7 +71,7 @@ export const ErrorCard = memo(function ErrorCard({
 
       <div hidden={!showDetails} id={detailsDivId} aria-hidden={!showDetails}>
         {parsedError instanceof JsonErrorResponse ? (
-          <dl className="mt-2 grid grid-cols-[auto,1fr] gap-x-2 text-sm">
+          <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-2 text-sm">
             <dt className="font-semibold">
               <Trans>Code</Trans>
             </dt>
