@@ -11,30 +11,43 @@ import {
   type OmitKey,
 } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
+import type * as ComAtprotoSyncDefs from './defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
-const id = 'com.atproto.sync.requestCrawl'
+const id = 'com.atproto.sync.getHostStatus'
 
-export interface QueryParams {}
-
-export interface InputSchema {
-  /** Hostname of the current service (eg, PDS) that is requesting to be crawled. */
+export interface QueryParams {
+  /** Hostname of the host (eg, PDS or relay) being queried. */
   hostname: string
 }
 
-export interface HandlerInput {
+export type InputSchema = undefined
+
+export interface OutputSchema {
+  hostname: string
+  /** Recent repo stream event sequence number. May be delayed from actual stream processing (eg, persisted cursor not in-memory cursor). */
+  seq?: number
+  /** Number of accounts on the server which are associated with the upstream host. Note that the upstream may actually have more accounts. */
+  accountCount?: number
+  status?: ComAtprotoSyncDefs.HostStatus
+}
+
+export type HandlerInput = undefined
+
+export interface HandlerSuccess {
   encoding: 'application/json'
-  body: InputSchema
+  body: OutputSchema
+  headers?: { [key: string]: string }
 }
 
 export interface HandlerError {
   status: number
   message?: string
-  error?: 'HostBanned'
+  error?: 'HostNotFound'
 }
 
-export type HandlerOutput = HandlerError | void
+export type HandlerOutput = HandlerError | HandlerSuccess | HandlerPipeThrough
 export type HandlerReqCtx<HA extends HandlerAuth = never> = {
   auth: HA
   params: QueryParams

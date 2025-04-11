@@ -79,15 +79,18 @@ import * as ComAtprotoServerReserveSigningKey from './types/com/atproto/server/r
 import * as ComAtprotoServerResetPassword from './types/com/atproto/server/resetPassword.js'
 import * as ComAtprotoServerRevokeAppPassword from './types/com/atproto/server/revokeAppPassword.js'
 import * as ComAtprotoServerUpdateEmail from './types/com/atproto/server/updateEmail.js'
+import * as ComAtprotoSyncDefs from './types/com/atproto/sync/defs.js'
 import * as ComAtprotoSyncGetBlob from './types/com/atproto/sync/getBlob.js'
 import * as ComAtprotoSyncGetBlocks from './types/com/atproto/sync/getBlocks.js'
 import * as ComAtprotoSyncGetCheckout from './types/com/atproto/sync/getCheckout.js'
 import * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead.js'
+import * as ComAtprotoSyncGetHostStatus from './types/com/atproto/sync/getHostStatus.js'
 import * as ComAtprotoSyncGetLatestCommit from './types/com/atproto/sync/getLatestCommit.js'
 import * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord.js'
 import * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo.js'
 import * as ComAtprotoSyncGetRepoStatus from './types/com/atproto/sync/getRepoStatus.js'
 import * as ComAtprotoSyncListBlobs from './types/com/atproto/sync/listBlobs.js'
+import * as ComAtprotoSyncListHosts from './types/com/atproto/sync/listHosts.js'
 import * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos.js'
 import * as ComAtprotoSyncListReposByCollection from './types/com/atproto/sync/listReposByCollection.js'
 import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate.js'
@@ -329,15 +332,18 @@ export * as ComAtprotoServerReserveSigningKey from './types/com/atproto/server/r
 export * as ComAtprotoServerResetPassword from './types/com/atproto/server/resetPassword.js'
 export * as ComAtprotoServerRevokeAppPassword from './types/com/atproto/server/revokeAppPassword.js'
 export * as ComAtprotoServerUpdateEmail from './types/com/atproto/server/updateEmail.js'
+export * as ComAtprotoSyncDefs from './types/com/atproto/sync/defs.js'
 export * as ComAtprotoSyncGetBlob from './types/com/atproto/sync/getBlob.js'
 export * as ComAtprotoSyncGetBlocks from './types/com/atproto/sync/getBlocks.js'
 export * as ComAtprotoSyncGetCheckout from './types/com/atproto/sync/getCheckout.js'
 export * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead.js'
+export * as ComAtprotoSyncGetHostStatus from './types/com/atproto/sync/getHostStatus.js'
 export * as ComAtprotoSyncGetLatestCommit from './types/com/atproto/sync/getLatestCommit.js'
 export * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord.js'
 export * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo.js'
 export * as ComAtprotoSyncGetRepoStatus from './types/com/atproto/sync/getRepoStatus.js'
 export * as ComAtprotoSyncListBlobs from './types/com/atproto/sync/listBlobs.js'
+export * as ComAtprotoSyncListHosts from './types/com/atproto/sync/listHosts.js'
 export * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos.js'
 export * as ComAtprotoSyncListReposByCollection from './types/com/atproto/sync/listReposByCollection.js'
 export * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate.js'
@@ -1494,6 +1500,17 @@ export class ComAtprotoSyncNS {
       })
   }
 
+  getHostStatus(
+    params?: ComAtprotoSyncGetHostStatus.QueryParams,
+    opts?: ComAtprotoSyncGetHostStatus.CallOptions,
+  ): Promise<ComAtprotoSyncGetHostStatus.Response> {
+    return this._client
+      .call('com.atproto.sync.getHostStatus', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoSyncGetHostStatus.toKnownErr(e)
+      })
+  }
+
   getLatestCommit(
     params?: ComAtprotoSyncGetLatestCommit.QueryParams,
     opts?: ComAtprotoSyncGetLatestCommit.CallOptions,
@@ -1549,6 +1566,18 @@ export class ComAtprotoSyncNS {
       })
   }
 
+  listHosts(
+    params?: ComAtprotoSyncListHosts.QueryParams,
+    opts?: ComAtprotoSyncListHosts.CallOptions,
+  ): Promise<ComAtprotoSyncListHosts.Response> {
+    return this._client.call(
+      'com.atproto.sync.listHosts',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
   listRepos(
     params?: ComAtprotoSyncListRepos.QueryParams,
     opts?: ComAtprotoSyncListRepos.CallOptions,
@@ -1589,12 +1618,11 @@ export class ComAtprotoSyncNS {
     data?: ComAtprotoSyncRequestCrawl.InputSchema,
     opts?: ComAtprotoSyncRequestCrawl.CallOptions,
   ): Promise<ComAtprotoSyncRequestCrawl.Response> {
-    return this._client.call(
-      'com.atproto.sync.requestCrawl',
-      opts?.qp,
-      data,
-      opts,
-    )
+    return this._client
+      .call('com.atproto.sync.requestCrawl', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoSyncRequestCrawl.toKnownErr(e)
+      })
   }
 }
 

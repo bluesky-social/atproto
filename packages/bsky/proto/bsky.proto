@@ -381,6 +381,7 @@ message GetActorRepostsResponse {
 //     - should this include handles?  apply repo takedown?
 message GetActorsRequest {
   repeated string dids = 1;
+  repeated string skip_cache_for_dids = 2;
 }
 
 message ActorInfo {

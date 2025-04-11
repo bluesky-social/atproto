@@ -3365,6 +3365,16 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoSyncDefs: {
+    lexicon: 1,
+    id: 'com.atproto.sync.defs',
+    defs: {
+      hostStatus: {
+        type: 'string',
+        knownValues: ['active', 'idle', 'offline', 'throttled', 'banned'],
+      },
+    },
+  },
   ComAtprotoSyncGetBlob: {
     lexicon: 1,
     id: 'com.atproto.sync.getBlob',
@@ -3520,6 +3530,59 @@ export const schemaDict = {
         errors: [
           {
             name: 'HeadNotFound',
+          },
+        ],
+      },
+    },
+  },
+  ComAtprotoSyncGetHostStatus: {
+    lexicon: 1,
+    id: 'com.atproto.sync.getHostStatus',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Returns information about a specified upstream host, as consumed by the server. Implemented by relays.',
+        parameters: {
+          type: 'params',
+          required: ['hostname'],
+          properties: {
+            hostname: {
+              type: 'string',
+              description:
+                'Hostname of the host (eg, PDS or relay) being queried.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['hostname'],
+            properties: {
+              hostname: {
+                type: 'string',
+              },
+              seq: {
+                type: 'integer',
+                description:
+                  'Recent repo stream event sequence number. May be delayed from actual stream processing (eg, persisted cursor not in-memory cursor).',
+              },
+              accountCount: {
+                type: 'integer',
+                description:
+                  'Number of accounts on the server which are associated with the upstream host. Note that the upstream may actually have more accounts.',
+              },
+              status: {
+                type: 'ref',
+                ref: 'lex:com.atproto.sync.defs#hostStatus',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'HostNotFound',
           },
         ],
       },
@@ -3805,6 +3868,74 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoSyncListHosts: {
+    lexicon: 1,
+    id: 'com.atproto.sync.listHosts',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Enumerates upstream hosts (eg, PDS or relay instances) that this service consumes from. Implemented by relays.',
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 1000,
+              default: 200,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['hosts'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              hosts: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.sync.listHosts#host',
+                },
+                description:
+                  'Sort order is not formally specified. Recommended order is by time host was first seen by the server, with oldest first.',
+              },
+            },
+          },
+        },
+      },
+      host: {
+        type: 'object',
+        required: ['hostname'],
+        properties: {
+          hostname: {
+            type: 'string',
+            description: 'hostname of server; not a URL (no scheme)',
+          },
+          seq: {
+            type: 'integer',
+            description:
+              'Recent repo stream event sequence number. May be delayed from actual stream processing (eg, persisted cursor not in-memory cursor).',
+          },
+          accountCount: {
+            type: 'integer',
+          },
+          status: {
+            type: 'ref',
+            ref: 'lex:com.atproto.sync.defs#hostStatus',
+          },
+        },
+      },
+    },
+  },
   ComAtprotoSyncListRepos: {
     lexicon: 1,
     id: 'com.atproto.sync.listRepos',
@@ -3992,6 +4123,11 @@ export const schemaDict = {
             },
           },
         },
+        errors: [
+          {
+            name: 'HostBanned',
+          },
+        ],
       },
     },
   },
@@ -12195,15 +12331,18 @@ export const ids = {
   ComAtprotoServerResetPassword: 'com.atproto.server.resetPassword',
   ComAtprotoServerRevokeAppPassword: 'com.atproto.server.revokeAppPassword',
   ComAtprotoServerUpdateEmail: 'com.atproto.server.updateEmail',
+  ComAtprotoSyncDefs: 'com.atproto.sync.defs',
   ComAtprotoSyncGetBlob: 'com.atproto.sync.getBlob',
   ComAtprotoSyncGetBlocks: 'com.atproto.sync.getBlocks',
   ComAtprotoSyncGetCheckout: 'com.atproto.sync.getCheckout',
   ComAtprotoSyncGetHead: 'com.atproto.sync.getHead',
+  ComAtprotoSyncGetHostStatus: 'com.atproto.sync.getHostStatus',
   ComAtprotoSyncGetLatestCommit: 'com.atproto.sync.getLatestCommit',
   ComAtprotoSyncGetRecord: 'com.atproto.sync.getRecord',
   ComAtprotoSyncGetRepo: 'com.atproto.sync.getRepo',
   ComAtprotoSyncGetRepoStatus: 'com.atproto.sync.getRepoStatus',
   ComAtprotoSyncListBlobs: 'com.atproto.sync.listBlobs',
+  ComAtprotoSyncListHosts: 'com.atproto.sync.listHosts',
   ComAtprotoSyncListRepos: 'com.atproto.sync.listRepos',
   ComAtprotoSyncListReposByCollection: 'com.atproto.sync.listReposByCollection',
   ComAtprotoSyncNotifyOfUpdate: 'com.atproto.sync.notifyOfUpdate',
