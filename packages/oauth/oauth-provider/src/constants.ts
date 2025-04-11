@@ -18,9 +18,6 @@ export const REQUEST_ID_BYTES_LENGTH = 16 // 128 bits
 export const CODE_PREFIX = 'cod-'
 export const CODE_BYTES_LENGTH = 32
 
-export const DEVICE_ID_COOKIE_NAME = 'device-id'
-export const SESSION_ID_COOKIE_NAME = 'session-id'
-
 const SECOND = 1e3
 const MINUTE = 60 * SECOND
 const HOUR = 60 * MINUTE
@@ -59,7 +56,9 @@ export const PAR_EXPIRES_IN = 5 * MINUTE
 /**
  * 59 seconds (should be less than a minute)
  *
- * @see {@link https://datatracker.ietf.org/doc/html/rfc9101#section-10.2}
+ * > "A general guidance for the validity time would be less than a minute."
+ *
+ * @see {@link https://datatracker.ietf.org/doc/html/rfc9101#section-10.2 | JWT-Secured Authorization Request (JAR) - Section 10.2 (d)}
  */
 export const JAR_MAX_AGE = 59 * SECOND
 

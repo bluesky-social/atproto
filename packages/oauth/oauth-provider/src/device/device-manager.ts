@@ -1,15 +1,19 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import { serialize as serializeCookie } from 'cookie'
 import { z } from 'zod'
+import { SESSION_FIXATION_MAX_AGE } from '../constants.js'
+import { parseHttpCookies } from '../lib/http/index.js'
 import {
-  DEVICE_ID_COOKIE_NAME,
-  SESSION_FIXATION_MAX_AGE,
-  SESSION_ID_COOKIE_NAME,
-} from '../constants.js'
-import { appendHeader, parseHttpCookies } from '../lib/http/index.js'
-import { RequestMetadata, extractRequestMetadata } from '../lib/http/request.js'
+  RequestMetadata,
+  extractRequestMetadata,
+  setCookie,
+} from '../lib/http/request.js'
 import { DeviceData } from './device-data.js'
-import { DeviceId, deviceIdSchema, generateDeviceId } from './device-id.js'
+import {
+  DeviceId,
+  deviceIdSchema,
+  generateDeviceId,
+  isDeviceId,
+} from './device-id.js'
 import { DeviceStore } from './device-store.js'
 import { generateSessionId, sessionIdSchema } from './session-id.js'
 
@@ -74,8 +78,10 @@ export const deviceManagerOptionsSchema = z.object({
 
 export type DeviceManagerOptions = z.input<typeof deviceManagerOptionsSchema>
 
-const cookieValueSchema = z.tuple([deviceIdSchema, sessionIdSchema])
-type CookieValue = z.infer<typeof cookieValueSchema>
+type CookieValue = {
+  deviceId: DeviceId
+  sessionId: string
+}
 
 export type DeviceInfo = {
   deviceId: DeviceId
@@ -102,7 +108,7 @@ export class DeviceManager {
     res: ServerResponse,
     forceRotate = false,
   ): Promise<DeviceInfo> {
-    const cookie = await this.getCookie(req)
+    const cookie = await this.getCookies(req, res)
     if (cookie) {
       return this.refresh(
         req,
@@ -133,7 +139,7 @@ export class DeviceManager {
       ipAddress: deviceMetadata.ipAddress,
     })
 
-    this.setCookie(res, [deviceId, sessionId])
+    await this.setCookies(req, res, { deviceId, sessionId })
 
     return { deviceId, deviceMetadata }
   }
@@ -141,7 +147,7 @@ export class DeviceManager {
   private async refresh(
     req: IncomingMessage,
     res: ServerResponse,
-    [deviceId, sessionId]: CookieValue,
+    { deviceId, sessionId }: CookieValue,
     forceRotate = false,
   ): Promise<DeviceInfo> {
     const data = await this.store.readDevice(deviceId)
@@ -193,24 +199,32 @@ export class DeviceManager {
       lastSeenAt: new Date(),
     })
 
-    this.setCookie(res, [deviceId, sessionId])
+    await this.setCookies(req, res, { deviceId, sessionId })
   }
 
-  private async getCookie(
+  private async getCookies(
     req: IncomingMessage,
+    res: ServerResponse,
   ): Promise<{ value: CookieValue; mustRotate: boolean } | null> {
     const cookies = parseHttpCookies(req)
 
-    const device = this.parseCookie(
-      cookies,
-      DEVICE_ID_COOKIE_NAME,
-      deviceIdSchema,
-    )
-    const session = this.parseCookie(
-      cookies,
-      SESSION_ID_COOKIE_NAME,
-      sessionIdSchema,
-    )
+    // Old cookies were set for the "/oauth/authorize" path while new cookies
+    // need to be set for the "/" path (in order to be valid on the api,
+    // authorization page and account page). This means that if a user has both
+    // cookies set, the browser would use the old cookie for the
+    // "/oauth/authorize" path and the new cookie for all other paths. Because
+    // of this, different "phantom" sessions would be created for the same
+    // device. To avoid this, we needed to change the cookie name. We can still
+    // attempt to read the old cookie in order to carry over the session from
+    // the "/oauth/authorize" path to the "/" path. This will only work if the
+    // user visits the "/oauth/authorize" path first.
+
+    const device =
+      this.parseCookie(cookies, `dev-id`, deviceIdSchema) ||
+      this.parseCookie(cookies, 'device-id', deviceIdSchema)
+    const session =
+      this.parseCookie(cookies, `ses-id`, sessionIdSchema) ||
+      this.parseCookie(cookies, 'session-id', sessionIdSchema)
 
     // Silently ignore invalid cookies
     if (!device || !session) {
@@ -220,8 +234,21 @@ export class DeviceManager {
       return null
     }
 
+    const deviceId = device.value
+    const sessionId = session.value
+
+    // Clear the legacy cookies, if they are set.
+    if (isDeviceId(cookies['device-id']) && cookies['device-id'] !== deviceId) {
+      await this.store.deleteDevice(cookies['device-id'])
+    }
+    if (cookies['device-id'] || cookies['session-id']) {
+      const options = { path: '/oauth/authorize', maxAge: 0 } as const
+      setCookie(res, 'device-id', '', options)
+      setCookie(res, 'session-id', '', options)
+    }
+
     return {
-      value: [device.value, session.value],
+      value: { deviceId, sessionId },
       mustRotate: device.mustRotate || session.mustRotate,
     }
   }
@@ -231,16 +258,21 @@ export class DeviceManager {
     name: string,
     schema: z.ZodType<T> | z.ZodEffects<z.ZodTypeAny, T, string>,
   ): null | { value: T; mustRotate: boolean } {
-    const result = schema.safeParse(cookies[name], { path: ['cookie', name] })
+    const rawValue = Object.hasOwn(cookies, name) ? cookies[name] : null
+    if (!rawValue) return null
+
+    const result = schema.safeParse(rawValue, { path: ['cookie', name] })
     if (!result.success) return null
 
     const value = result.data
 
     if (this.options.cookie.keys) {
-      const hash = cookies[`${name}:hash`]
+      const hashName = `${name}:hash`
+
+      const hash = Object.hasOwn(cookies, hashName) ? cookies[hashName] : null
       if (!hash) return null
 
-      const idx = this.options.cookie.keys.index(value, hash)
+      const idx = this.options.cookie.keys.index(rawValue, hash)
       if (idx < 0) return null
 
       return { value, mustRotate: idx !== 0 }
@@ -249,9 +281,13 @@ export class DeviceManager {
     return { value, mustRotate: false }
   }
 
-  private setCookie(res: ServerResponse, cookieValue: null | CookieValue) {
-    this.writeCookie(res, DEVICE_ID_COOKIE_NAME, cookieValue?.[0])
-    this.writeCookie(res, SESSION_ID_COOKIE_NAME, cookieValue?.[1])
+  private async setCookies(
+    req: IncomingMessage,
+    res: ServerResponse,
+    { deviceId, sessionId }: CookieValue,
+  ) {
+    this.writeCookie(res, `dev-id`, deviceId)
+    this.writeCookie(res, `ses-id`, sessionId)
   }
 
   private writeCookie(res: ServerResponse, name: string, value?: string) {
@@ -267,22 +303,11 @@ export class DeviceManager {
       sameSite: this.options.cookie.sameSite,
     } as const
 
-    appendHeader(
-      res,
-      'Set-Cookie',
-      serializeCookie(name, value || '', cookieOptions),
-    )
+    setCookie(res, name, value || '', cookieOptions)
 
     if (this.options.cookie.keys) {
-      appendHeader(
-        res,
-        'Set-Cookie',
-        serializeCookie(
-          `${name}:hash`,
-          value ? this.options.cookie.keys.sign(value) : '',
-          cookieOptions,
-        ),
-      )
+      const hash = value ? this.options.cookie.keys.sign(value) : ''
+      setCookie(res, `${name}:hash`, hash, cookieOptions)
     }
   }
 
