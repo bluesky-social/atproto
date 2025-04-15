@@ -51,8 +51,8 @@ import { emailOtpSchema } from '../types/email-otp.js'
 import { emailSchema } from '../types/email.js'
 import { handleSchema } from '../types/handle.js'
 import { newPasswordSchema } from '../types/password.js'
-import { validateCsrfToken } from './csrf.js'
-import type { RouterOptions } from './router-options.js'
+import { validateCsrfToken } from './assets/csrf.js'
+import type { MiddlewareOptions } from './middleware-options.js'
 import {
   ERROR_REDIRECT_KEYS,
   OAuthRedirectOptions,
@@ -65,16 +65,14 @@ import {
 
 const verifyHandleSchema = z.object({ handle: handleSchema }).strict()
 
-export function apiRouter<
+export function createApiMiddleware<
   T extends object | void = void,
   TReq extends IncomingMessage = IncomingMessage,
   TRes extends ServerResponse = ServerResponse,
 >(
   server: OAuthProvider,
-  options: RouterOptions<TReq, TRes>,
-): Router<T, TReq, TRes> {
-  const { onError } = options
-
+  { onError }: MiddlewareOptions<TReq, TRes>,
+): Middleware<T, TReq, TRes> {
   const issuerUrl = new URL(server.issuer)
   const issuerOrigin = issuerUrl.origin
   const router = new Router<T, TReq, TRes>(issuerUrl)
@@ -534,7 +532,7 @@ export function apiRouter<
     }),
   )
 
-  return router
+  return router.buildMiddleware()
 
   async function authenticate(
     this: ApiContext<void, { sub: Sub }>,

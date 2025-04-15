@@ -5,8 +5,8 @@ import {
   CookieSerializeOptions,
   parseHttpCookies,
   setCookie,
-} from '../lib/http/index.js'
-import { randomHexId } from '../lib/util/crypto.js'
+} from '../../lib/http/index.js'
+import { randomHexId } from '../../lib/util/crypto.js'
 
 const TOKEN_BYTE_LENGTH = 12
 const TOKEN_LENGTH = TOKEN_BYTE_LENGTH * 2 // 2 hex chars per byte

@@ -21,7 +21,7 @@ import {
 } from '../lib/http/index.js'
 import { extractZodErrorMessage } from '../lib/util/zod-error.js'
 import type { OAuthProvider } from '../oauth-provider.js'
-import type { RouterOptions } from './router-options.js'
+import type { MiddlewareOptions } from './middleware-options.js'
 
 // CORS preflight
 const corsHeaders: Middleware = function (req, res, next) {
@@ -58,15 +58,13 @@ const corsPreflight: Middleware = combineMiddlewares([
   },
 ])
 
-export function oauthRouter<
+export function createOAuthMiddleware<
   TReq extends IncomingMessage = IncomingMessage,
   TRes extends ServerResponse = ServerResponse,
 >(
   server: OAuthProvider,
-  options: RouterOptions<TReq, TRes>,
-): Router<void, TReq, TRes> {
-  const { onError } = options
-
+  { onError }: MiddlewareOptions<TReq, TRes>,
+): Middleware<void, TReq, TRes> {
   const router = new Router<void, TReq, TRes>(new URL(server.issuer))
 
   //- Public OAuth endpoints
@@ -186,7 +184,7 @@ export function oauthRouter<
     }),
   )
 
-  return router
+  return router.buildMiddleware()
 
   function oauthHandler<T>(
     buildOAuthResponse: (this: T, req: TReq, res: TRes) => unknown,

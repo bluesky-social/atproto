@@ -1,7 +1,7 @@
-import { Branding } from '../../customization/branding.js'
-import { COLOR_NAMES } from '../../customization/colors.js'
-import { Customization } from '../../customization/customization.js'
-import { extractHue, pickContrastColor } from '../../lib/util/color.js'
+import { extractHue, pickContrastColor } from '../lib/util/color.js'
+import { Branding } from './branding.js'
+import { COLOR_NAMES } from './colors.js'
+import { Customization } from './customization.js'
 
 export function buildCustomizationCss({
   branding,

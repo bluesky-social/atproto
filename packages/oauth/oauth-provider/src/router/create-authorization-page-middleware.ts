@@ -20,26 +20,25 @@ import { extractZodErrorMessage } from '../lib/util/zod-error.js'
 import type { OAuthProvider } from '../oauth-provider.js'
 import { requestUriSchema } from '../request/request-uri.js'
 import { AuthorizationResultRedirect } from '../result/authorization-result-redirect.js'
-import { parseRedirectUrl } from './api-router.js'
-import type { RouterOptions } from './router-options.js'
+import { sendAuthorizePageFactory } from './assets/send-authorization-page.js'
+import { sendErrorPageFactory } from './assets/send-error-page.js'
+import { parseRedirectUrl } from './create-api-middleware.js'
+import type { MiddlewareOptions } from './middleware-options.js'
 import {
   buildRedirectMode,
   buildRedirectParams,
   buildRedirectUri,
   sendRedirect,
 } from './send-redirect.js'
-import { sendAuthorizePageFactory } from './ui-router/send-authorize-page.js'
-import { sendErrorPageFactory } from './ui-router/send-error-page.js'
 
-export function authorizeRouter<
+export function createAuthorizationPageMiddleware<
   T extends object | void = void,
   TReq extends IncomingMessage = IncomingMessage,
   TRes extends ServerResponse = ServerResponse,
 >(
   server: OAuthProvider,
-  options: RouterOptions<TReq, TRes>,
-): Router<T, TReq, TRes> {
-  const { onError } = options
+  { onError }: MiddlewareOptions<TReq, TRes>,
+): Middleware<T, TReq, TRes> {
   const sendAuthorizePage = sendAuthorizePageFactory(server.customization)
   const sendErrorPage = sendErrorPageFactory(server.customization)
 
@@ -84,9 +83,9 @@ export function authorizeRouter<
         )
 
         if ('redirect' in result) {
-          await sendAuthorizeRedirect(res, result)
+          return sendAuthorizeRedirect(res, result)
         } else {
-          await sendAuthorizePage(req, res, result)
+          return sendAuthorizePage(req, res, result)
         }
       } catch (err) {
         // If we have the "redirect_uri" parameter, we can redirect the user
@@ -128,11 +127,11 @@ export function authorizeRouter<
       // Ensure we are coming from the authorization page
       requestUriSchema.parse(referrer.searchParams.get('request_uri'))
 
-      await sendRedirect(res, parseRedirectUrl(this.url))
+      return sendRedirect(res, parseRedirectUrl(this.url))
     }),
   )
 
-  return router
+  return router.buildMiddleware()
 
   function withErrorHandler<T extends RouterCtx>(
     handler: (this: T, req: TReq, res: TRes) => Awaitable<void>,

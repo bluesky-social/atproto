@@ -2,20 +2,20 @@ import type { IncomingMessage, ServerResponse } from 'node:http'
 import { asHandler, combineMiddlewares } from './lib/http/middleware.js'
 import { Handler } from './lib/http/types.js'
 import { OAuthProvider } from './oauth-provider.js'
-import { accountRouter } from './router/account-router.js'
-import { apiRouter } from './router/api-router.js'
-import { assetsMiddleware } from './router/assets.js'
-import { authorizeRouter } from './router/authorize-router.js'
+import { assetsMiddleware } from './router/assets/assets.js'
+import { createAccountPageMiddleware } from './router/create-account-page-middleware.js'
+import { createApiMiddleware } from './router/create-api-middleware.js'
+import { createAuthorizationPageMiddleware } from './router/create-authorization-page-middleware.js'
+import { createOAuthMiddleware } from './router/create-oauth-middleware.js'
 import { ErrorHandler } from './router/error-handler.js'
-import { oauthRouter } from './router/oauth-router.js'
-import { RouterOptions } from './router/router-options.js'
+import { MiddlewareOptions } from './router/middleware-options.js'
 
 // Export all the types exposed
 export type {
   ErrorHandler,
   Handler,
   IncomingMessage,
-  RouterOptions,
+  MiddlewareOptions,
   ServerResponse,
 }
 
@@ -28,7 +28,7 @@ export function oauthMiddleware<
   Res extends ServerResponse = ServerResponse,
 >(
   server: OAuthProvider,
-  { ...options }: RouterOptions<Req, Res> = {},
+  { ...options }: MiddlewareOptions<Req, Res> = {},
 ): Handler<void, Req, Res> {
   const { onError } = options
 
@@ -44,10 +44,10 @@ export function oauthMiddleware<
   return asHandler(
     combineMiddlewares([
       assetsMiddleware,
-      oauthRouter(server, options).buildMiddleware(),
-      apiRouter(server, options).buildMiddleware(),
-      authorizeRouter(server, options).buildMiddleware(),
-      accountRouter(server, options).buildMiddleware(),
+      createOAuthMiddleware(server, options),
+      createApiMiddleware(server, options),
+      createAuthorizationPageMiddleware(server, options),
+      createAccountPageMiddleware(server, options),
     ]),
   )
 }

@@ -1,5 +1,5 @@
 import { CustomizationData } from '@atproto/oauth-provider-api'
-import { Customization } from '../../customization/customization.js'
+import { Customization } from './customization.js'
 
 export function buildCustomizationData({
   branding,

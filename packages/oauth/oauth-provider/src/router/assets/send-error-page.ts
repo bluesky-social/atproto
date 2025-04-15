@@ -1,26 +1,17 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import { CustomizationData } from '@atproto/oauth-provider-api'
-import { HydrationData } from '@atproto/oauth-provider-ui/hydration-data'
+import { buildCustomizationCss } from '../../customization/build-customization-css.js'
+import { buildCustomizationData } from '../../customization/build-customization-data.js'
 import { Customization } from '../../customization/customization.js'
 import {
   buildErrorPayload,
   buildErrorStatus,
 } from '../../errors/error-parser.js'
-import { CspConfig } from '../../lib/csp/index.js'
 import { declareHydrationData } from '../../lib/html/hydration-data.js'
-import { cssCode, html } from '../../lib/html/index.js'
+import { cssCode } from '../../lib/html/index.js'
+import { html } from '../../lib/html/tags.js'
 import { CrossOriginEmbedderPolicy } from '../../lib/http/security-headers.js'
 import { sendWebPage } from '../../lib/send-web-page.js'
-import { getAssets } from '../assets.js'
-import { buildCustomizationCss } from './build-customization-css.js'
-import { buildCustomizationData } from './build-customization-data.js'
-
-const ERROR_PAGE_CSP: CspConfig = {
-  // Allow loading of PDS logo
-  'img-src': ['data:', 'https:'],
-  // Prevent embedding in iframes
-  'frame-ancestors': ["'none'"],
-}
+import { HydrationData, SPA_CSP, getAssets } from './assets.js'
 
 export function sendErrorPageFactory(customization: Customization) {
   // Pre-computed options:
@@ -33,24 +24,19 @@ export function sendErrorPageFactory(customization: Customization) {
     res: ServerResponse,
     err: unknown,
   ): void {
+    const script = declareHydrationData<HydrationData['error-page']>({
+      __customizationData: customizationData,
+      __errorData: buildErrorPayload(err),
+    })
+
     return sendWebPage(res, {
       status: buildErrorStatus(err),
       meta: [{ name: 'robots', content: 'noindex' }],
       body: html`<div id="root"></div>`,
-      csp: ERROR_PAGE_CSP,
-      coep: CrossOriginEmbedderPolicy.unsafeNone,
-      scripts: [buildHydrationData(customizationData, err), ...scripts],
+      csp: SPA_CSP,
+      coep: CrossOriginEmbedderPolicy.credentialless,
+      scripts: [script, ...scripts],
       styles: [...styles, customizationCss],
     })
   }
-}
-
-export function buildHydrationData(
-  customizationData: CustomizationData,
-  err: unknown,
-) {
-  return declareHydrationData<HydrationData['error-page']>({
-    __customizationData: customizationData,
-    __errorData: buildErrorPayload(err),
-  })
 }

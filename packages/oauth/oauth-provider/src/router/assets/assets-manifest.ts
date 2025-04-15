@@ -5,14 +5,14 @@ import type {
   Manifest,
   ManifestItem,
 } from '@atproto-labs/rollup-plugin-bundle-manifest'
-import { AssetRef } from '../lib/html/build-document.js'
+import { AssetRef } from '../../lib/html/build-document.js'
 import {
   Middleware,
   validateFetchDest,
   validateFetchSite,
   writeStream,
-} from '../lib/http/index.js'
-import { Simplify } from '../lib/util/type.js'
+} from '../../lib/http/index.js'
+import { Simplify } from '../../lib/util/type.js'
 
 type Asset = {
   [T in ManifestItem['type']]: Simplify<
