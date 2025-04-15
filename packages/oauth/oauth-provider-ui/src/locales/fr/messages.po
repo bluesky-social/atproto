@@ -37,7 +37,7 @@ msgstr "Accéder à vos messages de chat"
 msgid "Already have a code?"
 msgstr "Vous avez déjà un code ?"
 
-#: src/components/utils/client-name.tsx:35
+#: src/components/utils/client-name.tsx:43
 msgid "An application on your device"
 msgstr "Une application sur votre appareil"
 
