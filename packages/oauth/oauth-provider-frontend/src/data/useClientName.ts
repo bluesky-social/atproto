@@ -27,7 +27,12 @@ export function useClientName({
   if (clientId.startsWith('https://')) {
     try {
       const url = new URL(clientId)
-      if (url.pathname === '/oauth-client-metadata.json' && !url.port) {
+      if (
+        url.protocol === 'https:' &&
+        url.pathname === '/oauth-client-metadata.json' &&
+        !url.port &&
+        !url.search
+      ) {
         return url.hostname
       }
     } catch {

@@ -51,6 +51,7 @@ export function ClientName({
     const simplifiedView =
       url.protocol === 'https:' &&
       url.pathname === '/oauth-client-metadata.json' &&
+      !url.port &&
       !url.search
 
     return (
