@@ -56,7 +56,7 @@ export async function getAuthorizedClientsMulti(
       .select('did')
       .select('clientId')
       .select('data')
-      // uses "authorized_client_did_idx"
+      // uses "authorized_client_pk"
       .where('did', 'in', [...map.keys()])
       .execute()
 

@@ -82,8 +82,8 @@ export type DeviceAccount = {
   authorizedClients: AuthorizedClients
 
   /**
-   * The date at which the device account was created. This value is used to
-   * determine the expiration date of the device account.
+   * The date at which the device account was created. This value is currently
+   * not used.
    */
   createdAt: Date
 

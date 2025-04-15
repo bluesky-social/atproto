@@ -101,12 +101,6 @@ export async function up(
     )
     .execute()
 
-  await db.schema
-    .createIndex('authorized_client_did_idx')
-    .on('authorized_client')
-    .column('did')
-    .execute()
-
   // We don't migrate the "device_account" authorized clients. Users will need
   // to reauthorize the client during the next oauth flow (minor inconvenience
   // for authenticated clients users).
