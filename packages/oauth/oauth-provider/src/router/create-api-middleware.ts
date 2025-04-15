@@ -66,16 +66,16 @@ import {
 const verifyHandleSchema = z.object({ handle: handleSchema }).strict()
 
 export function createApiMiddleware<
-  T extends object | void = void,
-  TReq extends IncomingMessage = IncomingMessage,
-  TRes extends ServerResponse = ServerResponse,
+  Ctx extends object | void = void,
+  Req extends IncomingMessage = IncomingMessage,
+  Res extends ServerResponse = ServerResponse,
 >(
   server: OAuthProvider,
-  { onError }: MiddlewareOptions<TReq, TRes>,
-): Middleware<T, TReq, TRes> {
+  { onError }: MiddlewareOptions<Req, Res>,
+): Middleware<Ctx, Req, Res> {
   const issuerUrl = new URL(server.issuer)
   const issuerOrigin = issuerUrl.origin
-  const router = new Router<T, TReq, TRes>(issuerUrl)
+  const router = new Router<Ctx, Req, Res>(issuerUrl)
 
   router.use(
     apiRoute({
@@ -536,8 +536,8 @@ export function createApiMiddleware<
 
   async function authenticate(
     this: ApiContext<void, { sub: Sub }>,
-    req: TReq,
-    res: TRes,
+    req: Req,
+    res: Res,
   ) {
     const authorization = req.headers.authorization?.split(' ')
     if (authorization?.[0].toLowerCase() === 'bearer') {
@@ -612,7 +612,7 @@ export function createApiMiddleware<
    * @private
    */
   function apiRoute<
-    C extends RouterCtx<T>,
+    C extends RouterCtx<Ctx>,
     M extends 'GET' | 'POST',
     E extends `/${string}` &
       // Extract all the endpoint path that match the method (allows for
@@ -635,10 +635,10 @@ export function createApiMiddleware<
     rotateDeviceCookies?: boolean
     handler: (
       this: ApiContext<RouteCtx<C>, InferValidation<S>>,
-      req: TReq,
-      res: TRes,
+      req: Req,
+      res: Res,
     ) => Awaitable<ApiEndpoints[E]['output']>
-  }): Middleware<C, TReq, TRes> {
+  }): Middleware<C, Req, Res> {
     return createRoute(
       options.method,
       `${API_ENDPOINT_PREFIX}${options.endpoint}`,
@@ -657,11 +657,11 @@ export function createApiMiddleware<
     rotateDeviceCookies?: boolean
     handler: (
       this: ApiContext<C, InferValidation<S>>,
-      req: TReq,
-      res: TRes,
+      req: Req,
+      res: Res,
     ) => unknown
-  }): Middleware<C, TReq, TRes> {
-    const parseInput: (this: C, req: TReq) => Promise<InferValidation<S>> =
+  }): Middleware<C, Req, Res> {
+    const parseInput: (this: C, req: Req) => Promise<InferValidation<S>> =
       schema == null // No schema means endpoint doesn't accept any input
         ? async function (req) {
             req.resume() // Flush body
@@ -683,7 +683,7 @@ export function createApiMiddleware<
               return schema.parseAsync(query, { path: ['query'] })
             }
 
-    return jsonHandler<C, TReq, TRes>(async function (req, res) {
+    return jsonHandler<C, Req, Res>(async function (req, res) {
       try {
         // Prevent caching of API routes
         res.setHeader('Cache-Control', 'no-store')

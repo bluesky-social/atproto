@@ -32,20 +32,20 @@ import {
 } from './send-redirect.js'
 
 export function createAuthorizationPageMiddleware<
-  T extends object | void = void,
-  TReq extends IncomingMessage = IncomingMessage,
-  TRes extends ServerResponse = ServerResponse,
+  Ctx extends object | void = void,
+  Req extends IncomingMessage = IncomingMessage,
+  Res extends ServerResponse = ServerResponse,
 >(
   server: OAuthProvider,
-  { onError }: MiddlewareOptions<TReq, TRes>,
-): Middleware<T, TReq, TRes> {
+  { onError }: MiddlewareOptions<Req, Res>,
+): Middleware<Ctx, Req, Res> {
   const sendAuthorizePage = sendAuthorizePageFactory(server.customization)
   const sendErrorPage = sendErrorPageFactory(server.customization)
 
   const issuerUrl = new URL(server.issuer)
   const issuerOrigin = issuerUrl.origin
 
-  const router = new Router<T, TReq, TRes>(issuerUrl)
+  const router = new Router<Ctx, Req, Res>(issuerUrl)
 
   router.get(
     '/oauth/authorize',
@@ -134,8 +134,8 @@ export function createAuthorizationPageMiddleware<
   return router.buildMiddleware()
 
   function withErrorHandler<T extends RouterCtx>(
-    handler: (this: T, req: TReq, res: TRes) => Awaitable<void>,
-  ): Middleware<T, TReq, TRes> {
+    handler: (this: T, req: Req, res: Res) => Awaitable<void>,
+  ): Middleware<T, Req, Res> {
     return async function (req, res) {
       try {
         await handler.call(this, req, res)

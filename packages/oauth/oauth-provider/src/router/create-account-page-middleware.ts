@@ -13,20 +13,20 @@ import { sendErrorPageFactory } from './assets/send-error-page.js'
 import type { MiddlewareOptions } from './middleware-options.js'
 
 export function createAccountPageMiddleware<
-  T extends object | void = void,
-  TReq extends IncomingMessage = IncomingMessage,
-  TRes extends ServerResponse = ServerResponse,
+  Ctx extends object | void = void,
+  Req extends IncomingMessage = IncomingMessage,
+  Res extends ServerResponse = ServerResponse,
 >(
   server: OAuthProvider,
-  { onError }: MiddlewareOptions<TReq, TRes>,
-): Middleware<T, TReq, TRes> {
+  { onError }: MiddlewareOptions<Req, Res>,
+): Middleware<Ctx, Req, Res> {
   const sendAccountPage = sendAccountPageFactory(server.customization)
   const sendErrorPage = sendErrorPageFactory(server.customization)
 
   const issuerUrl = new URL(server.issuer)
   const issuerOrigin = issuerUrl.origin
 
-  const router = new Router<T, TReq, TRes>(issuerUrl)
+  const router = new Router<Ctx, Req, Res>(issuerUrl)
 
   router.get<never>(/^\/account(?:\/.*)?$/, async function (req, res) {
     try {

@@ -35,12 +35,7 @@ export function combineMiddlewares(
       } else {
         const currentMiddleware = middlewaresArray[i++]!
         const currentNext = invokeOnce(nextMiddleware)
-        try {
-          const result = currentMiddleware.call(this, req, res, currentNext)
-          Promise.resolve(result).catch(currentNext)
-        } catch (err) {
-          currentNext(err)
-        }
+        currentMiddleware.call(this, req, res, currentNext)
       }
     }
     nextMiddleware()

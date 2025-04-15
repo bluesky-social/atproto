@@ -59,13 +59,14 @@ const corsPreflight: Middleware = combineMiddlewares([
 ])
 
 export function createOAuthMiddleware<
-  TReq extends IncomingMessage = IncomingMessage,
-  TRes extends ServerResponse = ServerResponse,
+  Ctx extends object | void = void,
+  Req extends IncomingMessage = IncomingMessage,
+  Res extends ServerResponse = ServerResponse,
 >(
   server: OAuthProvider,
-  { onError }: MiddlewareOptions<TReq, TRes>,
-): Middleware<void, TReq, TRes> {
-  const router = new Router<void, TReq, TRes>(new URL(server.issuer))
+  { onError }: MiddlewareOptions<Req, Res>,
+): Middleware<Ctx, Req, Res> {
+  const router = new Router<Ctx, Req, Res>(new URL(server.issuer))
 
   //- Public OAuth endpoints
 
@@ -187,10 +188,10 @@ export function createOAuthMiddleware<
   return router.buildMiddleware()
 
   function oauthHandler<T>(
-    buildOAuthResponse: (this: T, req: TReq, res: TRes) => unknown,
+    buildOAuthResponse: (this: T, req: Req, res: Res) => unknown,
     status?: number,
-  ) {
-    return jsonHandler<T, TReq, TRes>(async function (req, res) {
+  ): Middleware<T, Req, Res> {
+    return jsonHandler<T, Req, Res>(async function (req, res) {
       try {
         // https://www.rfc-editor.org/rfc/rfc6749.html#section-5.1
         res.setHeader('Cache-Control', 'no-store')

@@ -11,15 +11,6 @@ export type RouterCtx<T extends object | void = void> = SubCtx<
   { url: Readonly<URL> }
 >
 
-function isRouterCtx<T>(ctx: T): ctx is T & object & { url: URL } {
-  return (
-    ctx != null &&
-    typeof ctx === 'object' &&
-    'url' in ctx &&
-    ctx.url instanceof URL
-  )
-}
-
 export type RouterMiddleware<
   T extends object | void = void,
   Req = IncomingMessage,
@@ -96,24 +87,14 @@ export class Router<
     })
 
     return function (this, req, res, next) {
-      // Make sure that the context contains a "url". This will allow the add()
-      // method to match routes based on the pathname and will allow routes to
-      // access the query params (through this.url.searchParams).
+      // Parse the URL using node's URL parser.
+      const url = extractUrl(req, config)
+      if (url instanceof Error) return next(url)
 
-      if (!config && isRouterCtx(this)) {
-        // If the context already contains a "url" (router inside router), let's
-        // use it.
-        middleware.call(this, req, res, next)
-      } else {
-        // Parse the URL using node's URL parser.
-        const url = extractUrl(req, config)
-        if (url instanceof Error) return next(url)
-
-        // Any error thrown here will be uncaught/unhandled (a middleware should
-        // never throw)
-        const context = subCtx(this, { url })
-        middleware.call(context, req, res, next)
-      }
+      // Any error thrown here will be uncaught/unhandled (a middleware should
+      // never throw)
+      const context = subCtx(this, { url })
+      middleware.call(context, req, res, next)
     }
   }
 }

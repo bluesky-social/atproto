@@ -26,19 +26,17 @@ export function sendAccountPageFactory(customization: Customization) {
   ): Promise<void> {
     await setupCsrfToken(req, res)
 
-    const hydrationScript = declareHydrationData<HydrationData['account-page']>(
-      {
-        __customizationData: customizationData,
-        __deviceSessions: data.deviceSessions,
-      },
-    )
+    const script = declareHydrationData<HydrationData['account-page']>({
+      __customizationData: customizationData,
+      __deviceSessions: data.deviceSessions,
+    })
 
     return sendWebPage(res, {
       meta: [{ name: 'robots', content: 'noindex' }],
       body: html`<div id="root"></div>`,
       csp: SPA_CSP,
       coep: CrossOriginEmbedderPolicy.credentialless,
-      scripts: [hydrationScript, ...scripts],
+      scripts: [script, ...scripts],
       styles: [...styles, customizationCss],
     })
   }
