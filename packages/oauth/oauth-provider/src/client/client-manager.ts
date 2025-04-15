@@ -151,7 +151,11 @@ export class ClientManager {
     )
 
     // Return a map for easy lookups
-    return new Map(clients.filter((c) => c != null).map((c) => [c.id, c]))
+    return new Map(
+      clients
+        .filter((c) => c != null && c instanceof Client)
+        .map((c) => [c.id, c]),
+    )
   }
 
   protected async getClientMetadata(
