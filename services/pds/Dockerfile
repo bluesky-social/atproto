@@ -1,6 +1,6 @@
 # @NOTE just a temp fix: alpine3.19 breaks sharp install, see nodejs/docker-node#2009
 # see additional reference to this image further down.
-FROM node:20.11-alpine3.18 AS build
+FROM node:20-alpine AS build
 
 RUN corepack enable
 
@@ -54,7 +54,7 @@ RUN pnpm install --prod --shamefully-hoist --frozen-lockfile --prefer-offline > 
 WORKDIR services/pds
 
 # Uses assets from build stage to reduce build size
-FROM node:20.11-alpine3.18
+FROM node:20-alpine
 
 RUN apk add --update dumb-init
 
