@@ -29,6 +29,10 @@ export interface ProfileViewBasic {
   viewer?: ViewerState
   labels?: ComAtprotoLabelDefs.Label[]
   createdAt?: string
+  verification?:
+    | $Typed<VerificationStateDefault>
+    | $Typed<VerificationStateVerifier>
+    | { $type: string }
 }
 
 const hashProfileViewBasic = 'profileViewBasic'
@@ -53,6 +57,10 @@ export interface ProfileView {
   createdAt?: string
   viewer?: ViewerState
   labels?: ComAtprotoLabelDefs.Label[]
+  verification?:
+    | $Typed<VerificationStateDefault>
+    | $Typed<VerificationStateVerifier>
+    | { $type: string }
 }
 
 const hashProfileView = 'profileView'
@@ -83,6 +91,10 @@ export interface ProfileViewDetailed {
   viewer?: ViewerState
   labels?: ComAtprotoLabelDefs.Label[]
   pinnedPost?: ComAtprotoRepoStrongRef.Main
+  verification?:
+    | $Typed<VerificationStateDefault>
+    | $Typed<VerificationStateVerifier>
+    | { $type: string }
 }
 
 const hashProfileViewDetailed = 'profileViewDetailed'
@@ -167,6 +179,77 @@ export function isKnownFollowers<V>(v: V) {
 
 export function validateKnownFollowers<V>(v: V) {
   return validate<KnownFollowers & V>(v, id, hashKnownFollowers)
+}
+
+/** Verification state for the case when a user is not a verifier. */
+export interface VerificationStateDefault {
+  $type?: 'app.bsky.actor.defs#verificationStateDefault'
+  /** The verification role for this subject. */
+  role: 'default'
+  /** This user has at least 1 valid verification and is not labeled as impersonation. */
+  isValid: boolean
+  /** All the verifications associated with this subject. It returns existing valid and invalid (e.g., pointing to the wrong handle/displayName) verifications but it won't return verifications from non-verifiers. It returns the verifications for users labeled as impersonation. */
+  verifications: VerificationView[]
+}
+
+const hashVerificationStateDefault = 'verificationStateDefault'
+
+export function isVerificationStateDefault<V>(v: V) {
+  return is$typed(v, id, hashVerificationStateDefault)
+}
+
+export function validateVerificationStateDefault<V>(v: V) {
+  return validate<VerificationStateDefault & V>(
+    v,
+    id,
+    hashVerificationStateDefault,
+  )
+}
+
+/** Verification data for the associated subject. */
+export interface VerificationView {
+  $type?: 'app.bsky.actor.defs#verificationView'
+  /** The user who issued this verification. */
+  issuer: string
+  /** The AT-URI of the verification record. */
+  uri: string
+  /** Whether the verification is valid or not. This means the verification record contains the current handle/displayName of the subject. */
+  isValid: boolean
+  /** Date of when the verification was created. */
+  createdAt: string
+}
+
+const hashVerificationView = 'verificationView'
+
+export function isVerificationView<V>(v: V) {
+  return is$typed(v, id, hashVerificationView)
+}
+
+export function validateVerificationView<V>(v: V) {
+  return validate<VerificationView & V>(v, id, hashVerificationView)
+}
+
+/** Verification state for the case when a user is a verifier. */
+export interface VerificationStateVerifier {
+  $type?: 'app.bsky.actor.defs#verificationStateVerifier'
+  /** The verification role for this subject. */
+  role: 'verifier'
+  /** This user is not labeled as impersonation. */
+  isValid: boolean
+}
+
+const hashVerificationStateVerifier = 'verificationStateVerifier'
+
+export function isVerificationStateVerifier<V>(v: V) {
+  return is$typed(v, id, hashVerificationStateVerifier)
+}
+
+export function validateVerificationStateVerifier<V>(v: V) {
+  return validate<VerificationStateVerifier & V>(
+    v,
+    id,
+    hashVerificationStateVerifier,
+  )
 }
 
 export type Preferences = (

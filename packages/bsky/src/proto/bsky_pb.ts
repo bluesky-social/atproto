@@ -2564,6 +2564,653 @@ export class GetFollowsResponse extends Message<GetFollowsResponse> {
 }
 
 /**
+ * @generated from message bsky.VerificationMeta
+ */
+export class VerificationMeta extends Message<VerificationMeta> {
+  /**
+   * @generated from field: string rkey = 1;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: string handle = 2;
+   */
+  handle = ''
+
+  /**
+   * @generated from field: string display_name = 3;
+   */
+  displayName = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp sorted_at = 4;
+   */
+  sortedAt?: Timestamp
+
+  constructor(data?: PartialMessage<VerificationMeta>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.VerificationMeta'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'handle', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    {
+      no: 3,
+      name: 'display_name',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+    },
+    { no: 4, name: 'sorted_at', kind: 'message', T: Timestamp },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): VerificationMeta {
+    return new VerificationMeta().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): VerificationMeta {
+    return new VerificationMeta().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): VerificationMeta {
+    return new VerificationMeta().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a: VerificationMeta | PlainMessage<VerificationMeta> | undefined,
+    b: VerificationMeta | PlainMessage<VerificationMeta> | undefined,
+  ): boolean {
+    return proto3.util.equals(VerificationMeta, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.GetVerificationRecordsRequest
+ */
+export class GetVerificationRecordsRequest extends Message<GetVerificationRecordsRequest> {
+  /**
+   * @generated from field: repeated string uris = 1;
+   */
+  uris: string[] = []
+
+  constructor(data?: PartialMessage<GetVerificationRecordsRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetVerificationRecordsRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    {
+      no: 1,
+      name: 'uris',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+      repeated: true,
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetVerificationRecordsRequest {
+    return new GetVerificationRecordsRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetVerificationRecordsRequest {
+    return new GetVerificationRecordsRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetVerificationRecordsRequest {
+    return new GetVerificationRecordsRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | GetVerificationRecordsRequest
+      | PlainMessage<GetVerificationRecordsRequest>
+      | undefined,
+    b:
+      | GetVerificationRecordsRequest
+      | PlainMessage<GetVerificationRecordsRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetVerificationRecordsRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.GetVerificationRecordsResponse
+ */
+export class GetVerificationRecordsResponse extends Message<GetVerificationRecordsResponse> {
+  /**
+   * @generated from field: repeated bsky.Record records = 1;
+   */
+  records: Record[] = []
+
+  constructor(data?: PartialMessage<GetVerificationRecordsResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetVerificationRecordsResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'records', kind: 'message', T: Record, repeated: true },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetVerificationRecordsResponse {
+    return new GetVerificationRecordsResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetVerificationRecordsResponse {
+    return new GetVerificationRecordsResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetVerificationRecordsResponse {
+    return new GetVerificationRecordsResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | GetVerificationRecordsResponse
+      | PlainMessage<GetVerificationRecordsResponse>
+      | undefined,
+    b:
+      | GetVerificationRecordsResponse
+      | PlainMessage<GetVerificationRecordsResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetVerificationRecordsResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.VerificationIssued
+ */
+export class VerificationIssued extends Message<VerificationIssued> {
+  /**
+   * @generated from field: string actor_did = 1;
+   */
+  actorDid = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: string subject_did = 3;
+   */
+  subjectDid = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp created_at = 7;
+   */
+  createdAt?: Timestamp
+
+  /**
+   * @generated from field: google.protobuf.Timestamp indexed_at = 8;
+   */
+  indexedAt?: Timestamp
+
+  /**
+   * @generated from field: google.protobuf.Timestamp sorted_at = 9;
+   */
+  sortedAt?: Timestamp
+
+  constructor(data?: PartialMessage<VerificationIssued>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.VerificationIssued'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'actor_did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    {
+      no: 3,
+      name: 'subject_did',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+    },
+    { no: 7, name: 'created_at', kind: 'message', T: Timestamp },
+    { no: 8, name: 'indexed_at', kind: 'message', T: Timestamp },
+    { no: 9, name: 'sorted_at', kind: 'message', T: Timestamp },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): VerificationIssued {
+    return new VerificationIssued().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): VerificationIssued {
+    return new VerificationIssued().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): VerificationIssued {
+    return new VerificationIssued().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a: VerificationIssued | PlainMessage<VerificationIssued> | undefined,
+    b: VerificationIssued | PlainMessage<VerificationIssued> | undefined,
+  ): boolean {
+    return proto3.util.equals(VerificationIssued, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.GetVerificationsIssuedRequest
+ */
+export class GetVerificationsIssuedRequest extends Message<GetVerificationsIssuedRequest> {
+  /**
+   * @generated from field: string actor_did = 1;
+   */
+  actorDid = ''
+
+  /**
+   * @generated from field: int32 limit = 2;
+   */
+  limit = 0
+
+  /**
+   * @generated from field: string cursor = 3;
+   */
+  cursor = ''
+
+  constructor(data?: PartialMessage<GetVerificationsIssuedRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetVerificationsIssuedRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'actor_did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'limit', kind: 'scalar', T: 5 /* ScalarType.INT32 */ },
+    { no: 3, name: 'cursor', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetVerificationsIssuedRequest {
+    return new GetVerificationsIssuedRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetVerificationsIssuedRequest {
+    return new GetVerificationsIssuedRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetVerificationsIssuedRequest {
+    return new GetVerificationsIssuedRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | GetVerificationsIssuedRequest
+      | PlainMessage<GetVerificationsIssuedRequest>
+      | undefined,
+    b:
+      | GetVerificationsIssuedRequest
+      | PlainMessage<GetVerificationsIssuedRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetVerificationsIssuedRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.GetVerificationsIssuedResponse
+ */
+export class GetVerificationsIssuedResponse extends Message<GetVerificationsIssuedResponse> {
+  /**
+   * @generated from field: repeated bsky.VerificationIssued verifications = 1;
+   */
+  verifications: VerificationIssued[] = []
+
+  /**
+   * @generated from field: string cursor = 2;
+   */
+  cursor = ''
+
+  constructor(data?: PartialMessage<GetVerificationsIssuedResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetVerificationsIssuedResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    {
+      no: 1,
+      name: 'verifications',
+      kind: 'message',
+      T: VerificationIssued,
+      repeated: true,
+    },
+    { no: 2, name: 'cursor', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetVerificationsIssuedResponse {
+    return new GetVerificationsIssuedResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetVerificationsIssuedResponse {
+    return new GetVerificationsIssuedResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetVerificationsIssuedResponse {
+    return new GetVerificationsIssuedResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | GetVerificationsIssuedResponse
+      | PlainMessage<GetVerificationsIssuedResponse>
+      | undefined,
+    b:
+      | GetVerificationsIssuedResponse
+      | PlainMessage<GetVerificationsIssuedResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetVerificationsIssuedResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.VerificationReceived
+ */
+export class VerificationReceived extends Message<VerificationReceived> {
+  /**
+   * @generated from field: string actor_did = 1;
+   */
+  actorDid = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: string subject_did = 3;
+   */
+  subjectDid = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp created_at = 7;
+   */
+  createdAt?: Timestamp
+
+  /**
+   * @generated from field: google.protobuf.Timestamp indexed_at = 8;
+   */
+  indexedAt?: Timestamp
+
+  /**
+   * @generated from field: google.protobuf.Timestamp sorted_at = 9;
+   */
+  sortedAt?: Timestamp
+
+  constructor(data?: PartialMessage<VerificationReceived>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.VerificationReceived'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'actor_did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    {
+      no: 3,
+      name: 'subject_did',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+    },
+    { no: 7, name: 'created_at', kind: 'message', T: Timestamp },
+    { no: 8, name: 'indexed_at', kind: 'message', T: Timestamp },
+    { no: 9, name: 'sorted_at', kind: 'message', T: Timestamp },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): VerificationReceived {
+    return new VerificationReceived().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): VerificationReceived {
+    return new VerificationReceived().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): VerificationReceived {
+    return new VerificationReceived().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a: VerificationReceived | PlainMessage<VerificationReceived> | undefined,
+    b: VerificationReceived | PlainMessage<VerificationReceived> | undefined,
+  ): boolean {
+    return proto3.util.equals(VerificationReceived, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.GetVerificationsReceivedRequest
+ */
+export class GetVerificationsReceivedRequest extends Message<GetVerificationsReceivedRequest> {
+  /**
+   * @generated from field: string subject_did = 1;
+   */
+  subjectDid = ''
+
+  /**
+   * @generated from field: int32 limit = 2;
+   */
+  limit = 0
+
+  /**
+   * @generated from field: string cursor = 3;
+   */
+  cursor = ''
+
+  constructor(data?: PartialMessage<GetVerificationsReceivedRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetVerificationsReceivedRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    {
+      no: 1,
+      name: 'subject_did',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+    },
+    { no: 2, name: 'limit', kind: 'scalar', T: 5 /* ScalarType.INT32 */ },
+    { no: 3, name: 'cursor', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetVerificationsReceivedRequest {
+    return new GetVerificationsReceivedRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetVerificationsReceivedRequest {
+    return new GetVerificationsReceivedRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetVerificationsReceivedRequest {
+    return new GetVerificationsReceivedRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | GetVerificationsReceivedRequest
+      | PlainMessage<GetVerificationsReceivedRequest>
+      | undefined,
+    b:
+      | GetVerificationsReceivedRequest
+      | PlainMessage<GetVerificationsReceivedRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetVerificationsReceivedRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.GetVerificationsReceivedResponse
+ */
+export class GetVerificationsReceivedResponse extends Message<GetVerificationsReceivedResponse> {
+  /**
+   * @generated from field: repeated bsky.VerificationReceived verifications = 1;
+   */
+  verifications: VerificationReceived[] = []
+
+  /**
+   * @generated from field: string cursor = 2;
+   */
+  cursor = ''
+
+  constructor(data?: PartialMessage<GetVerificationsReceivedResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetVerificationsReceivedResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    {
+      no: 1,
+      name: 'verifications',
+      kind: 'message',
+      T: VerificationReceived,
+      repeated: true,
+    },
+    { no: 2, name: 'cursor', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetVerificationsReceivedResponse {
+    return new GetVerificationsReceivedResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetVerificationsReceivedResponse {
+    return new GetVerificationsReceivedResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetVerificationsReceivedResponse {
+    return new GetVerificationsReceivedResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | GetVerificationsReceivedResponse
+      | PlainMessage<GetVerificationsReceivedResponse>
+      | undefined,
+    b:
+      | GetVerificationsReceivedResponse
+      | PlainMessage<GetVerificationsReceivedResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetVerificationsReceivedResponse, a, b)
+  }
+}
+
+/**
  * - return like uris where subject uri is subject A
  *     - `getLikes` list for a post
  *
@@ -4591,6 +5238,21 @@ export class ActorInfo extends Message<ActorInfo> {
    */
   priorityNotifications = false
 
+  /**
+   * @generated from field: double pagerank = 12;
+   */
+  pagerank = 0
+
+  /**
+   * @generated from field: bool trusted_verifier = 13;
+   */
+  trustedVerifier = false
+
+  /**
+   * @generated from field: map<string, bsky.VerificationMeta> verified_by = 14;
+   */
+  verifiedBy: { [key: string]: VerificationMeta } = {}
+
   constructor(data?: PartialMessage<ActorInfo>) {
     super()
     proto3.util.initPartial(data, this)
@@ -4629,6 +5291,20 @@ export class ActorInfo extends Message<ActorInfo> {
       name: 'priority_notifications',
       kind: 'scalar',
       T: 8 /* ScalarType.BOOL */,
+    },
+    { no: 12, name: 'pagerank', kind: 'scalar', T: 1 /* ScalarType.DOUBLE */ },
+    {
+      no: 13,
+      name: 'trusted_verifier',
+      kind: 'scalar',
+      T: 8 /* ScalarType.BOOL */,
+    },
+    {
+      no: 14,
+      name: 'verified_by',
+      kind: 'map',
+      K: 9 /* ScalarType.STRING */,
+      V: { kind: 'message', T: VerificationMeta },
     },
   ])
 

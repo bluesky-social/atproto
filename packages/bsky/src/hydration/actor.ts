@@ -1,6 +1,7 @@
 import { DataPlaneClient } from '../data-plane/client'
 import { Record as ProfileRecord } from '../lexicon/types/app/bsky/actor/profile'
 import { Record as ChatDeclarationRecord } from '../lexicon/types/chat/bsky/actor/declaration'
+import { VerificationMeta } from '../proto/bsky_pb'
 import {
   HydrationMap,
   RecordInfo,
@@ -23,7 +24,19 @@ export type Actor = {
   upstreamStatus?: string
   createdAt?: Date
   priorityNotifications: boolean
+  trustedVerifier?: boolean
+  verifications: VerificationHydrationStateState[]
 }
+
+export type VerificationHydrationStateState = {
+  issuer: string
+  uri: string
+  handle: string
+  displayName: string
+  createdAt: string
+}
+
+export type VerificationMetaRequired = Required<VerificationMeta>
 
 export type Actors = HydrationMap<Actor>
 
@@ -127,6 +140,22 @@ export class ActorHydrator {
         ? parseRecord<ProfileRecord>(actor.profile, includeTakedowns)
         : undefined
 
+      // Filter out the verification meta that doesn't contain all info.
+      const verificationsMetaRequired: {
+        [key: string]: VerificationMetaRequired
+      } = Object.entries(actor.verifiedBy).reduce((acc, cur) => {
+        const [actorDid, verificationMeta] = cur
+        if (
+          verificationMeta.displayName &&
+          verificationMeta.handle &&
+          verificationMeta.rkey &&
+          verificationMeta.sortedAt
+        ) {
+          acc[actorDid] = verificationMeta
+        }
+        return acc
+      }, {})
+
       return acc.set(did, {
         did,
         handle: parseString(actor.handle),
@@ -141,6 +170,16 @@ export class ActorHydrator {
         upstreamStatus: actor.upstreamStatus || undefined,
         createdAt: actor.createdAt?.toDate(),
         priorityNotifications: actor.priorityNotifications,
+        trustedVerifier: actor.trustedVerifier,
+        verifications: Object.entries(verificationsMetaRequired).map(
+          ([actorDid, verificationMeta]): VerificationHydrationStateState => ({
+            issuer: actorDid,
+            uri: `at://${actorDid}/app.bsky.graph.verification/${verificationMeta.rkey}`,
+            handle: verificationMeta.handle,
+            displayName: verificationMeta.displayName,
+            createdAt: verificationMeta.sortedAt.toDate().toISOString(),
+          }),
+        ),
       })
     }, new HydrationMap<Actor>())
   }

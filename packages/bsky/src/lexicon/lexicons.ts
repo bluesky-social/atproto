@@ -4564,6 +4564,13 @@ export const schemaDict = {
             type: 'string',
             format: 'datetime',
           },
+          verification: {
+            type: 'union',
+            refs: [
+              'lex:app.bsky.actor.defs#verificationStateDefault',
+              'lex:app.bsky.actor.defs#verificationStateVerifier',
+            ],
+          },
         },
       },
       profileView: {
@@ -4614,6 +4621,13 @@ export const schemaDict = {
               type: 'ref',
               ref: 'lex:com.atproto.label.defs#label',
             },
+          },
+          verification: {
+            type: 'union',
+            refs: [
+              'lex:app.bsky.actor.defs#verificationStateDefault',
+              'lex:app.bsky.actor.defs#verificationStateVerifier',
+            ],
           },
         },
       },
@@ -4686,6 +4700,13 @@ export const schemaDict = {
           pinnedPost: {
             type: 'ref',
             ref: 'lex:com.atproto.repo.strongRef',
+          },
+          verification: {
+            type: 'union',
+            refs: [
+              'lex:app.bsky.actor.defs#verificationStateDefault',
+              'lex:app.bsky.actor.defs#verificationStateVerifier',
+            ],
           },
         },
       },
@@ -4773,6 +4794,77 @@ export const schemaDict = {
               type: 'ref',
               ref: 'lex:app.bsky.actor.defs#profileViewBasic',
             },
+          },
+        },
+      },
+      verificationStateDefault: {
+        type: 'object',
+        description:
+          'Verification state for the case when a user is not a verifier.',
+        required: ['role', 'isValid', 'verifications'],
+        properties: {
+          role: {
+            type: 'string',
+            description: 'The verification role for this subject.',
+            const: 'default',
+          },
+          isValid: {
+            type: 'boolean',
+            description:
+              'This user has at least 1 valid verification and is not labeled as impersonation.',
+          },
+          verifications: {
+            type: 'array',
+            description:
+              "All the verifications associated with this subject. It returns existing valid and invalid (e.g., pointing to the wrong handle/displayName) verifications but it won't return verifications from non-verifiers. It returns the verifications for users labeled as impersonation.",
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.actor.defs#verificationView',
+            },
+          },
+        },
+      },
+      verificationView: {
+        type: 'object',
+        description: 'Verification data for the associated subject.',
+        required: ['issuer', 'uri', 'isValid', 'createdAt'],
+        properties: {
+          issuer: {
+            type: 'string',
+            description: 'The user who issued this verification.',
+            format: 'did',
+          },
+          uri: {
+            type: 'string',
+            description: 'The AT-URI of the verification record.',
+            format: 'at-uri',
+          },
+          isValid: {
+            type: 'boolean',
+            description:
+              'Whether the verification is valid or not. This means the verification record contains the current handle/displayName of the subject.',
+          },
+          createdAt: {
+            type: 'string',
+            description: 'Date of when the verification was created.',
+            format: 'datetime',
+          },
+        },
+      },
+      verificationStateVerifier: {
+        type: 'object',
+        description:
+          'Verification state for the case when a user is a verifier.',
+        required: ['role', 'isValid'],
+        properties: {
+          role: {
+            type: 'string',
+            description: 'The verification role for this subject.',
+            const: 'verifier',
+          },
+          isValid: {
+            type: 'boolean',
+            description: 'This user is not labeled as impersonation.',
           },
         },
       },

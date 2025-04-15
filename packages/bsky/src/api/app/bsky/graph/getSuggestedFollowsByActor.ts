@@ -94,7 +94,7 @@ const hydration = async (
 ) => {
   const { ctx, params, skeleton } = input
   const { suggestedDids } = skeleton
-  return ctx.hydrator.hydrateProfilesDetailed(suggestedDids, params.hydrateCtx)
+  return ctx.hydrator.hydrateProfiles(suggestedDids, params.hydrateCtx)
 }
 
 const noBlocksOrMutes = (
@@ -115,7 +115,7 @@ const presentation = (
   const { ctx, hydration, skeleton } = input
   const { suggestedDids, headers } = skeleton
   const suggestions = mapDefined(suggestedDids, (did) =>
-    ctx.views.profileDetailed(did, hydration),
+    ctx.views.profile(did, hydration),
   )
   return {
     isFallback: skeleton.isFallback,
