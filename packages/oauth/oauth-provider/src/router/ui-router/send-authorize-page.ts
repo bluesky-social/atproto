@@ -9,7 +9,7 @@ import { CrossOriginEmbedderPolicy } from '../../lib/http/security-headers.js'
 import { sendWebPage } from '../../lib/send-web-page.js'
 import { AuthorizationResultAuthorizePage } from '../../result/authorization-result-authorize-page.js'
 import { setupCsrfToken } from '../csrf.js'
-import { getAssets } from './assets.js'
+import { getAssets } from '../assets.js'
 import { buildCustomizationCss } from './build-customization-css.js'
 import { buildCustomizationData } from './build-customization-data.js'
 

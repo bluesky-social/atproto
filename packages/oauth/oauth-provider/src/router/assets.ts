@@ -1,7 +1,7 @@
 import type { HydrationData as FeHydrationData } from '@atproto/oauth-provider-frontend/hydration-data'
 import type { HydrationData as UiHydrationData } from '@atproto/oauth-provider-ui/hydration-data'
-import { combineMiddlewares } from '../../lib/http/middleware.js'
-import { Simplify } from '../../lib/util/type.js'
+import { combineMiddlewares } from '../lib/http/middleware.js'
+import { Simplify } from '../lib/util/type.js'
 import { parseAssetsManifest } from './assets-manifest.js'
 
 // If the "ui" and "frontend" packages are ever unified, this can be replaced

@@ -1,5 +1,4 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import { ActiveDeviceSession } from '@atproto/oauth-provider-api'
 import {
   oauthAuthorizationRequestQuerySchema,
   oauthClientCredentialsSchema,
@@ -29,8 +28,6 @@ import {
   buildRedirectUri,
   sendRedirect,
 } from './send-redirect.js'
-import { assetsMiddleware } from './ui-router/assets.js'
-import { sendAccountPageFactory } from './ui-router/send-account-page.js'
 import { sendAuthorizePageFactory } from './ui-router/send-authorize-page.js'
 import { sendErrorPageFactory } from './ui-router/send-error-page.js'
 
@@ -45,39 +42,22 @@ export function authorizeRouter<
   const { onError } = options
   const sendAuthorizePage = sendAuthorizePageFactory(server.customization)
   const sendErrorPage = sendErrorPageFactory(server.customization)
-  const sendAccountPage = sendAccountPageFactory(server.customization)
 
   const issuerUrl = new URL(server.issuer)
   const issuerOrigin = issuerUrl.origin
 
   const router = new Router<T, TReq, TRes>(issuerUrl)
 
-  router.use(assetsMiddleware)
-
-  router.get<never>(
-    // @NOTE conflicts with the /account/api endpoint so this middleware needs
-    // to come after the api middleware.
-    /^\/account(?:\/.*)?$/,
-    buildNavigationMiddleware(async function (req, res) {
-      const { deviceId } = await server.deviceManager.load(req, res)
-      const deviceAccounts =
-        await server.accountManager.listDeviceAccounts(deviceId)
-
-      return sendAccountPage(req, res, {
-        deviceSessions: deviceAccounts.map(
-          (deviceAccount): ActiveDeviceSession => ({
-            account: deviceAccount.account,
-            loginRequired: server.checkLoginRequired(deviceAccount),
-          }),
-        ),
-      })
-    }),
-  )
-
   router.get(
     '/oauth/authorize',
-    buildNavigationMiddleware(async function (req, res) {
+    withErrorHandler(async function (req, res) {
+      res.setHeader('Cache-Control', 'no-store')
+      res.setHeader('Pragma', 'no-cache')
+
       validateFetchSite(req, ['cross-site', 'none'])
+      validateFetchMode(req, ['navigate'])
+      validateFetchDest(req, ['document'])
+      validateOrigin(req, issuerOrigin)
 
       const query = Object.fromEntries(this.url.searchParams)
 
@@ -133,9 +113,13 @@ export function authorizeRouter<
   // implement it here to avoid duplicating the logic.
   router.get(
     '/oauth/authorize/redirect',
-    buildNavigationMiddleware(async function (req, res) {
+    withErrorHandler(async function (req, res) {
       // Ensure we come from the authorization page
       validateFetchSite(req, ['same-origin'])
+      validateFetchMode(req, ['navigate'])
+      validateFetchDest(req, ['document'])
+      validateOrigin(req, issuerOrigin)
+
       const referrer = validateReferrer(req, {
         origin: issuerOrigin,
         pathname: '/oauth/authorize',
@@ -150,36 +134,22 @@ export function authorizeRouter<
 
   return router
 
-  function buildNavigationMiddleware<T extends RouterCtx>(
+  function withErrorHandler<T extends RouterCtx>(
     handler: (this: T, req: TReq, res: TRes) => Awaitable<void>,
   ): Middleware<T, TReq, TRes> {
-    return async function (req, res, next) {
-      res.setHeader('Referrer-Policy', 'same-origin')
-
-      res.setHeader('Cache-Control', 'no-store')
-      res.setHeader('Pragma', 'no-cache')
-
+    return async function (req, res) {
       try {
-        validateFetchMode(req, ['navigate'])
-        validateFetchDest(req, ['document'])
-        validateOrigin(req, issuerOrigin)
-
         await handler.call(this, req, res)
       } catch (err) {
-        try {
-          if (res.headersSent) throw err
+        onError?.(
+          req,
+          res,
+          err,
+          `Failed to handle navigation request to "${req.url}"`,
+        )
 
-          onError?.(
-            req,
-            res,
-            err,
-            `Failed to handle navigation request to "${req.url}"`,
-          )
-
-          // Display the error to the user
-          await sendErrorPage(req, res, err)
-        } catch (err) {
-          next(err)
+        if (!res.headersSent) {
+          sendErrorPage(req, res, err)
         }
       }
     }

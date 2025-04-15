@@ -2,11 +2,13 @@ import type { IncomingMessage, ServerResponse } from 'node:http'
 import { asHandler, combineMiddlewares } from './lib/http/middleware.js'
 import { Handler } from './lib/http/types.js'
 import { OAuthProvider } from './oauth-provider.js'
+import { accountRouter } from './router/account-router.js'
 import { apiRouter } from './router/api-router.js'
+import { assetsMiddleware } from './router/assets.js'
+import { authorizeRouter } from './router/authorize-router.js'
 import { ErrorHandler } from './router/error-handler.js'
 import { oauthRouter } from './router/oauth-router.js'
 import { RouterOptions } from './router/router-options.js'
-import { authorizeRouter } from './router/ui-router.js'
 
 // Export all the types exposed
 export type {
@@ -41,9 +43,11 @@ export function oauthMiddleware<
 
   return asHandler(
     combineMiddlewares([
+      assetsMiddleware,
       oauthRouter(server, options).buildMiddleware(),
       apiRouter(server, options).buildMiddleware(),
       authorizeRouter(server, options).buildMiddleware(),
+      accountRouter(server, options).buildMiddleware(),
     ]),
   )
 }

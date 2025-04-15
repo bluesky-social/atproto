@@ -11,7 +11,7 @@ import { declareHydrationData } from '../../lib/html/hydration-data.js'
 import { cssCode, html } from '../../lib/html/index.js'
 import { CrossOriginEmbedderPolicy } from '../../lib/http/security-headers.js'
 import { sendWebPage } from '../../lib/send-web-page.js'
-import { getAssets } from './assets.js'
+import { getAssets } from '../assets.js'
 import { buildCustomizationCss } from './build-customization-css.js'
 import { buildCustomizationData } from './build-customization-data.js'
 
