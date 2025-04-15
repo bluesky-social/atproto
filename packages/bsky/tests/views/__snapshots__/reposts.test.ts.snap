@@ -6,6 +6,12 @@ Array [
     "did": "user(0)",
     "handle": "eve.test",
     "labels": Array [],
+    "verification": Object {
+      "$type": "app.bsky.actor.defs#verificationStateDefault",
+      "isValid": false,
+      "role": "default",
+      "verifications": Array [],
+    },
     "viewer": Object {
       "blockedBy": false,
       "muted": false,
@@ -20,6 +26,12 @@ Array [
     "did": "user(1)",
     "handle": "dan.test",
     "labels": Array [],
+    "verification": Object {
+      "$type": "app.bsky.actor.defs#verificationStateDefault",
+      "isValid": false,
+      "role": "default",
+      "verifications": Array [],
+    },
     "viewer": Object {
       "blockedBy": false,
       "following": "record(0)",
@@ -30,6 +42,12 @@ Array [
     "did": "user(2)",
     "handle": "carol.test",
     "labels": Array [],
+    "verification": Object {
+      "$type": "app.bsky.actor.defs#verificationStateDefault",
+      "isValid": false,
+      "role": "default",
+      "verifications": Array [],
+    },
     "viewer": Object {
       "blockedBy": false,
       "followedBy": "record(2)",
@@ -46,6 +64,12 @@ Array [
     "handle": "bob.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
+    "verification": Object {
+      "$type": "app.bsky.actor.defs#verificationStateDefault",
+      "isValid": false,
+      "role": "default",
+      "verifications": Array [],
+    },
     "viewer": Object {
       "blockedBy": false,
       "followedBy": "record(4)",
@@ -62,6 +86,12 @@ Array [
     "did": "user(0)",
     "handle": "eve.test",
     "labels": Array [],
+    "verification": Object {
+      "$type": "app.bsky.actor.defs#verificationStateDefault",
+      "isValid": false,
+      "role": "default",
+      "verifications": Array [],
+    },
     "viewer": Object {
       "blockedBy": false,
       "muted": false,
@@ -76,6 +106,12 @@ Array [
     "did": "user(1)",
     "handle": "dan.test",
     "labels": Array [],
+    "verification": Object {
+      "$type": "app.bsky.actor.defs#verificationStateDefault",
+      "isValid": false,
+      "role": "default",
+      "verifications": Array [],
+    },
     "viewer": Object {
       "blockedBy": false,
       "following": "record(0)",

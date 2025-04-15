@@ -35,6 +35,12 @@ Array [
       },
     ],
     "postsCount": 4,
+    "verification": Object {
+      "$type": "app.bsky.actor.defs#verificationStateDefault",
+      "isValid": false,
+      "role": "default",
+      "verifications": Array [],
+    },
     "viewer": Object {
       "blockedBy": false,
       "followedBy": "record(1)",
@@ -46,6 +52,12 @@ Array [
             "did": "user(2)",
             "handle": "carol.test",
             "labels": Array [],
+            "verification": Object {
+              "$type": "app.bsky.actor.defs#verificationStateDefault",
+              "isValid": false,
+              "role": "default",
+              "verifications": Array [],
+            },
             "viewer": Object {
               "blockedBy": false,
               "following": "record(2)",
@@ -75,6 +87,12 @@ Array [
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
     "postsCount": 3,
+    "verification": Object {
+      "$type": "app.bsky.actor.defs#verificationStateDefault",
+      "isValid": false,
+      "role": "default",
+      "verifications": Array [],
+    },
     "viewer": Object {
       "blockedBy": false,
       "knownFollowers": Object {
@@ -102,6 +120,12 @@ Array [
                 "val": "self-label-b",
               },
             ],
+            "verification": Object {
+              "$type": "app.bsky.actor.defs#verificationStateDefault",
+              "isValid": false,
+              "role": "default",
+              "verifications": Array [],
+            },
             "viewer": Object {
               "blockedBy": false,
               "followedBy": "record(1)",
@@ -127,6 +151,12 @@ Array [
     "handle": "carol.test",
     "labels": Array [],
     "postsCount": 2,
+    "verification": Object {
+      "$type": "app.bsky.actor.defs#verificationStateDefault",
+      "isValid": false,
+      "role": "default",
+      "verifications": Array [],
+    },
     "viewer": Object {
       "blockedBy": false,
       "following": "record(2)",
@@ -155,6 +185,12 @@ Array [
                 "val": "self-label-b",
               },
             ],
+            "verification": Object {
+              "$type": "app.bsky.actor.defs#verificationStateDefault",
+              "isValid": false,
+              "role": "default",
+              "verifications": Array [],
+            },
             "viewer": Object {
               "blockedBy": false,
               "followedBy": "record(1)",
@@ -183,6 +219,12 @@ Array [
     "handle": "dan.test",
     "labels": Array [],
     "postsCount": 2,
+    "verification": Object {
+      "$type": "app.bsky.actor.defs#verificationStateDefault",
+      "isValid": false,
+      "role": "default",
+      "verifications": Array [],
+    },
     "viewer": Object {
       "blockedBy": false,
       "followedBy": "record(4)",
@@ -211,6 +253,12 @@ Array [
                 "val": "self-label-b",
               },
             ],
+            "verification": Object {
+              "$type": "app.bsky.actor.defs#verificationStateDefault",
+              "isValid": false,
+              "role": "default",
+              "verifications": Array [],
+            },
             "viewer": Object {
               "blockedBy": false,
               "followedBy": "record(1)",
@@ -260,6 +308,12 @@ Object {
     },
   ],
   "postsCount": 4,
+  "verification": Object {
+    "$type": "app.bsky.actor.defs#verificationStateDefault",
+    "isValid": false,
+    "role": "default",
+    "verifications": Array [],
+  },
   "viewer": Object {
     "blockedBy": false,
     "followedBy": "record(1)",
@@ -271,6 +325,12 @@ Object {
           "did": "user(2)",
           "handle": "carol.test",
           "labels": Array [],
+          "verification": Object {
+            "$type": "app.bsky.actor.defs#verificationStateDefault",
+            "isValid": false,
+            "role": "default",
+            "verifications": Array [],
+          },
           "viewer": Object {
             "blockedBy": false,
             "following": "record(2)",
@@ -301,6 +361,12 @@ Object {
   "handle": "dan.test",
   "labels": Array [],
   "postsCount": 2,
+  "verification": Object {
+    "$type": "app.bsky.actor.defs#verificationStateDefault",
+    "isValid": false,
+    "role": "default",
+    "verifications": Array [],
+  },
   "viewer": Object {
     "blockedBy": false,
     "followedBy": "record(0)",
@@ -329,6 +395,12 @@ Object {
               "val": "self-label-b",
             },
           ],
+          "verification": Object {
+            "$type": "app.bsky.actor.defs#verificationStateDefault",
+            "isValid": false,
+            "role": "default",
+            "verifications": Array [],
+          },
           "viewer": Object {
             "blockedBy": false,
             "followedBy": "record(2)",
@@ -377,6 +449,12 @@ Object {
     },
   ],
   "postsCount": 4,
+  "verification": Object {
+    "$type": "app.bsky.actor.defs#verificationStateDefault",
+    "isValid": false,
+    "role": "default",
+    "verifications": Array [],
+  },
   "viewer": Object {
     "blockedBy": false,
     "knownFollowers": Object {
@@ -389,6 +467,12 @@ Object {
           "displayName": "bobby",
           "handle": "bob.test",
           "labels": Array [],
+          "verification": Object {
+            "$type": "app.bsky.actor.defs#verificationStateDefault",
+            "isValid": false,
+            "role": "default",
+            "verifications": Array [],
+          },
           "viewer": Object {
             "blockedBy": false,
             "followedBy": "record(1)",
@@ -400,6 +484,12 @@ Object {
           "did": "user(4)",
           "handle": "carol.test",
           "labels": Array [],
+          "verification": Object {
+            "$type": "app.bsky.actor.defs#verificationStateDefault",
+            "isValid": false,
+            "role": "default",
+            "verifications": Array [],
+          },
           "viewer": Object {
             "blockedBy": false,
             "followedBy": "record(3)",
@@ -433,6 +523,12 @@ Object {
   "indexedAt": "1970-01-01T00:00:00.000Z",
   "labels": Array [],
   "postsCount": 4,
+  "verification": Object {
+    "$type": "app.bsky.actor.defs#verificationStateDefault",
+    "isValid": false,
+    "role": "default",
+    "verifications": Array [],
+  },
   "viewer": Object {
     "blockedBy": false,
     "knownFollowers": Object {
@@ -445,6 +541,12 @@ Object {
           "displayName": "bobby",
           "handle": "bob.test",
           "labels": Array [],
+          "verification": Object {
+            "$type": "app.bsky.actor.defs#verificationStateDefault",
+            "isValid": false,
+            "role": "default",
+            "verifications": Array [],
+          },
           "viewer": Object {
             "blockedBy": false,
             "followedBy": "record(1)",
@@ -456,6 +558,12 @@ Object {
           "did": "user(4)",
           "handle": "carol.test",
           "labels": Array [],
+          "verification": Object {
+            "$type": "app.bsky.actor.defs#verificationStateDefault",
+            "isValid": false,
+            "role": "default",
+            "verifications": Array [],
+          },
           "viewer": Object {
             "blockedBy": false,
             "followedBy": "record(3)",
