@@ -2,17 +2,18 @@ import { Kysely, sql } from 'kysely'
 
 export async function up(db: Kysely<unknown>): Promise<void> {
   await db.schema
-    .createTable('vouch')
+    .createTable('verification')
     .addColumn('uri', 'varchar', (col) => col.notNull())
     .addColumn('cid', 'varchar', (col) => col.notNull())
-    .addColumn('creator', 'varchar', (col) => col.notNull())
+    .addColumn('rkey', 'varchar', (col) => col.notNull())
+    .addColumn('actor', 'varchar', (col) => col.notNull())
     .addColumn('subject', 'varchar', (col) => col.notNull())
-    .addPrimaryKeyConstraint('pk_vouch', ['uri', 'subject'])
+    .addPrimaryKeyConstraint('pk_verification', ['uri', 'subject'])
     .addColumn('handle', 'varchar', (col) => col.notNull())
     .addColumn('displayName', 'varchar', (col) => col.notNull())
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
     .addColumn('indexedAt', 'varchar', (col) => col.notNull())
-    .addColumn('sortAt', 'varchar', (col) =>
+    .addColumn('sortedAt', 'varchar', (col) =>
       col
         .generatedAlwaysAs(sql`least("createdAt", "indexedAt")`)
         .stored()
@@ -20,24 +21,29 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     )
     .execute()
   await db.schema
-    .createIndex('vouch_uri_cursor_idx')
-    .on('vouch')
-    .columns(['uri', 'sortAt'])
+    .createIndex('verification_uri_cursor_idx')
+    .on('verification')
+    .columns(['uri', 'sortedAt'])
     .execute()
   await db.schema
-    .createIndex('vouch_subject_cursor_idx')
-    .on('vouch')
-    .columns(['subject', 'sortAt'])
+    .createIndex('verification_actor_cursor_idx')
+    .on('verification')
+    .columns(['actor', 'sortedAt'])
+    .execute()
+  await db.schema
+    .createIndex('verification_subject_cursor_idx')
+    .on('verification')
+    .columns(['subject', 'sortedAt'])
     .execute()
 
   await db.schema
     .alterTable('actor')
-    .addColumn('trustedVoucher', 'boolean', (col) =>
+    .addColumn('trustedVerifier', 'boolean', (col) =>
       col.notNull().defaultTo(false),
     )
     .execute()
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {
-  await db.schema.dropTable('vouch').execute()
+  await db.schema.dropTable('verification').execute()
 }

@@ -1,4 +1,5 @@
 import { DataPlaneClient } from '../data-plane/client'
+import { VerificationView } from '../lexicon/types/app/bsky/actor/defs'
 import { Record as ProfileRecord } from '../lexicon/types/app/bsky/actor/profile'
 import { Record as ChatDeclarationRecord } from '../lexicon/types/chat/bsky/actor/declaration'
 import {
@@ -23,9 +24,8 @@ export type Actor = {
   upstreamStatus?: string
   createdAt?: Date
   priorityNotifications: boolean
-  trustedVoucher?: boolean
-  // TODO use type from pb
-  verifiedBy?: { [key: string]: object }
+  trustedVerifier?: boolean
+  verifications?: VerificationView[]
 }
 
 export type Actors = HydrationMap<Actor>
@@ -144,8 +144,16 @@ export class ActorHydrator {
         upstreamStatus: actor.upstreamStatus || undefined,
         createdAt: actor.createdAt?.toDate(),
         priorityNotifications: actor.priorityNotifications,
-        trustedVoucher: actor.trustedVoucher,
-        verifiedBy: actor.verifiedBy,
+        trustedVerifier: actor.trustedVerifier,
+        verifications: Object.entries(actor.verifiedBy).map(
+          ([actorDid, verifiedBy]): VerificationView => ({
+            issuer: actorDid,
+            uri: `at://${actorDid}/app.bsky.graph.verification/${verifiedBy.rkey}`,
+            displayName: verifiedBy.displayName,
+            handle: verifiedBy.handle,
+            createdAt: verifiedBy.sortedAt?.toDate().toISOString(),
+          }),
+        ),
       })
     }, new HydrationMap<Actor>())
   }

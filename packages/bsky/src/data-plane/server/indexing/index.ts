@@ -32,7 +32,7 @@ import * as Profile from './plugins/profile'
 import * as Repost from './plugins/repost'
 import * as StarterPack from './plugins/starter-pack'
 import * as Threadgate from './plugins/thread-gate'
-import * as Vouch from './plugins/vouch'
+import * as Verification from './plugins/verification'
 import { RecordProcessor } from './processor'
 
 export class IndexingService {
@@ -52,7 +52,7 @@ export class IndexingService {
     starterPack: StarterPack.PluginType
     labeler: Labeler.PluginType
     chatDeclaration: ChatDeclaration.PluginType
-    vouch: Vouch.PluginType
+    verification: Verification.PluginType
   }
 
   constructor(
@@ -76,7 +76,7 @@ export class IndexingService {
       starterPack: StarterPack.makePlugin(this.db, this.background),
       labeler: Labeler.makePlugin(this.db, this.background),
       chatDeclaration: ChatDeclaration.makePlugin(this.db, this.background),
-      vouch: Vouch.makePlugin(this.db, this.background),
+      verification: Verification.makePlugin(this.db, this.background),
     }
   }
 

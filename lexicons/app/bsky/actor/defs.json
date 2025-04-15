@@ -23,7 +23,11 @@
           "type": "array",
           "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
         },
-        "createdAt": { "type": "string", "format": "datetime" }
+        "createdAt": { "type": "string", "format": "datetime" },
+        "verification": {
+          "type": "ref",
+          "ref": "app.bsky.actor.defs#verificationStateBasic"
+        }
       }
     },
     "profileView": {
@@ -53,6 +57,10 @@
         "labels": {
           "type": "array",
           "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
+        },
+        "verification": {
+          "type": "ref",
+          "ref": "app.bsky.actor.defs#verificationStateBasic"
         }
       }
     },
@@ -162,13 +170,61 @@
         }
       }
     },
-    "verificationState": {
+    "verificationStateBasic": {
       "type": "object",
-      "description": "Represents the verification state for the actor this state is attached to. This does not consider social (graph-based) vouches.",
+      "description": "Represents the verification state for the actor this state is attached to.",
       "properties": {
         "level": {
           "type": "string",
-          "knownValues": ["verified", "verifier"]
+          "description": "The verification level for this subject.",
+          "knownValues": ["unverified", "verified", "verifier"]
+        }
+      }
+    },
+    "verificationState": {
+      "type": "object",
+      "description": "Represents the verification state for the actor this state is attached to.",
+      "properties": {
+        "level": {
+          "type": "string",
+          "description": "The verification level for this subject.",
+          "knownValues": ["unverified", "verified", "verifier"]
+        },
+        "verifications": {
+          "type": "array",
+          "description": "All the verifications associated with this subject. It might return broken verifications (e.g., pointing to invalid handles) but it won't return verifications from non-verifiers.",
+          "items": { "type": "ref", "ref": "#verificationView" }
+        }
+      }
+    },
+    "verificationView": {
+      "type": "object",
+      "description": "Verification data for the associated subject.",
+      "required": ["issuer", "uri"],
+      "properties": {
+        "issuer": {
+          "type": "string",
+          "description": "The user who issued this verification.",
+          "format": "did"
+        },
+        "uri": {
+          "type": "string",
+          "description": "The AT-URI of the verification record.",
+          "format": "at-uri"
+        },
+        "handle": {
+          "type": "string",
+          "description": "Handle of the subject the verification applies to at the moment of verifying, which might not be the same at the time of viewing. The verification is only valid if the current handle matches the one at the time of verifying.",
+          "format": "handle"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Display name of the subject the verification applies to at the moment of verifying, which might not be the same at the time of viewing. The verification is only valid if the current displayName matches the one at the time of verifying."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Date of when the verification was created.",
+          "format": "datetime"
         }
       }
     },

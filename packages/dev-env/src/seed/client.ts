@@ -7,7 +7,7 @@ import {
   AppBskyGraphBlock,
   AppBskyGraphFollow,
   AppBskyGraphList,
-  AppBskyGraphVouch,
+  AppBskyGraphVerification,
   AppBskyRichtextFacet,
   AtpAgent,
   ComAtprotoModerationCreateReport,
@@ -115,7 +115,7 @@ export class SeedClient<
     >
   >
 
-  vouches: Record<string, Record<string, AtUri>>
+  verifications: Record<string, Record<string, AtUri>>
 
   dids: Record<string, string>
 
@@ -134,7 +134,7 @@ export class SeedClient<
     this.lists = {}
     this.feedgens = {}
     this.starterpacks = {}
-    this.vouches = {}
+    this.verifications = {}
     this.dids = {}
   }
 
@@ -560,14 +560,14 @@ export class SeedClient<
     return result.data
   }
 
-  async vouch(
+  async verify(
     by: string,
     subject: string,
     handle: string,
     displayName: string,
-    overrides?: Partial<AppBskyGraphVouch.Record>,
+    overrides?: Partial<AppBskyGraphVerification.Record>,
   ) {
-    const res = await this.agent.app.bsky.graph.vouch.create(
+    const res = await this.agent.app.bsky.graph.verification.create(
       { repo: by },
       {
         subject,
@@ -578,9 +578,9 @@ export class SeedClient<
       },
       this.getHeaders(by),
     )
-    this.vouches[by] ??= {}
-    this.vouches[by][subject] = new AtUri(res.uri)
-    return this.vouches[by][subject]
+    this.verifications[by] ??= {}
+    this.verifications[by][subject] = new AtUri(res.uri)
+    return this.verifications[by][subject]
   }
 
   getHeaders(did: string) {

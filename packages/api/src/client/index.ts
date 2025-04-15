@@ -168,7 +168,7 @@ import * as AppBskyGraphStarterpack from './types/app/bsky/graph/starterpack.js'
 import * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor.js'
 import * as AppBskyGraphUnmuteActorList from './types/app/bsky/graph/unmuteActorList.js'
 import * as AppBskyGraphUnmuteThread from './types/app/bsky/graph/unmuteThread.js'
-import * as AppBskyGraphVouch from './types/app/bsky/graph/vouch.js'
+import * as AppBskyGraphVerification from './types/app/bsky/graph/verification.js'
 import * as AppBskyLabelerDefs from './types/app/bsky/labeler/defs.js'
 import * as AppBskyLabelerGetServices from './types/app/bsky/labeler/getServices.js'
 import * as AppBskyLabelerService from './types/app/bsky/labeler/service.js'
@@ -422,7 +422,7 @@ export * as AppBskyGraphStarterpack from './types/app/bsky/graph/starterpack.js'
 export * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor.js'
 export * as AppBskyGraphUnmuteActorList from './types/app/bsky/graph/unmuteActorList.js'
 export * as AppBskyGraphUnmuteThread from './types/app/bsky/graph/unmuteThread.js'
-export * as AppBskyGraphVouch from './types/app/bsky/graph/vouch.js'
+export * as AppBskyGraphVerification from './types/app/bsky/graph/verification.js'
 export * as AppBskyLabelerDefs from './types/app/bsky/labeler/defs.js'
 export * as AppBskyLabelerGetServices from './types/app/bsky/labeler/getServices.js'
 export * as AppBskyLabelerService from './types/app/bsky/labeler/service.js'
@@ -2480,7 +2480,7 @@ export class AppBskyGraphNS {
   listblock: ListblockRecord
   listitem: ListitemRecord
   starterpack: StarterpackRecord
-  vouch: VouchRecord
+  verification: VerificationRecord
 
   constructor(client: XrpcClient) {
     this._client = client
@@ -2490,7 +2490,7 @@ export class AppBskyGraphNS {
     this.listblock = new ListblockRecord(client)
     this.listitem = new ListitemRecord(client)
     this.starterpack = new StarterpackRecord(client)
-    this.vouch = new VouchRecord(client)
+    this.verification = new VerificationRecord(client)
   }
 
   getActorStarterPacks(
@@ -3089,7 +3089,7 @@ export class StarterpackRecord {
   }
 }
 
-export class VouchRecord {
+export class VerificationRecord {
   _client: XrpcClient
 
   constructor(client: XrpcClient) {
@@ -3100,10 +3100,10 @@ export class VouchRecord {
     params: OmitKey<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
   ): Promise<{
     cursor?: string
-    records: { uri: string; value: AppBskyGraphVouch.Record }[]
+    records: { uri: string; value: AppBskyGraphVerification.Record }[]
   }> {
     const res = await this._client.call('com.atproto.repo.listRecords', {
-      collection: 'app.bsky.graph.vouch',
+      collection: 'app.bsky.graph.verification',
       ...params,
     })
     return res.data
@@ -3111,9 +3111,13 @@ export class VouchRecord {
 
   async get(
     params: OmitKey<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
-  ): Promise<{ uri: string; cid: string; value: AppBskyGraphVouch.Record }> {
+  ): Promise<{
+    uri: string
+    cid: string
+    value: AppBskyGraphVerification.Record
+  }> {
     const res = await this._client.call('com.atproto.repo.getRecord', {
-      collection: 'app.bsky.graph.vouch',
+      collection: 'app.bsky.graph.verification',
       ...params,
     })
     return res.data
@@ -3124,10 +3128,10 @@ export class VouchRecord {
       ComAtprotoRepoCreateRecord.InputSchema,
       'collection' | 'record'
     >,
-    record: Un$Typed<AppBskyGraphVouch.Record>,
+    record: Un$Typed<AppBskyGraphVerification.Record>,
     headers?: Record<string, string>,
   ): Promise<{ uri: string; cid: string }> {
-    const collection = 'app.bsky.graph.vouch'
+    const collection = 'app.bsky.graph.verification'
     const res = await this._client.call(
       'com.atproto.repo.createRecord',
       undefined,
@@ -3144,7 +3148,7 @@ export class VouchRecord {
     await this._client.call(
       'com.atproto.repo.deleteRecord',
       undefined,
-      { collection: 'app.bsky.graph.vouch', ...params },
+      { collection: 'app.bsky.graph.verification', ...params },
       { headers },
     )
   }

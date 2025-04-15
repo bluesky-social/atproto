@@ -166,8 +166,16 @@ import {
   GetThreadResponse,
   GetTimelineRequest,
   GetTimelineResponse,
+  GetTrustedVerifiersRequest,
+  GetTrustedVerifiersResponse,
   GetUnreadNotificationCountRequest,
   GetUnreadNotificationCountResponse,
+  GetVerificationRecordsRequest,
+  GetVerificationRecordsResponse,
+  GetVerificationsIssuedRequest,
+  GetVerificationsIssuedResponse,
+  GetVerificationsReceivedRequest,
+  GetVerificationsReceivedResponse,
   PingRequest,
   PingResponse,
   SearchActorsRequest,
@@ -371,6 +379,44 @@ export const Service = {
       name: 'GetFollows',
       I: GetFollowsRequest,
       O: GetFollowsResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * Verifications
+     *
+     * @generated from rpc bsky.Service.GetTrustedVerifiers
+     */
+    getTrustedVerifiers: {
+      name: 'GetTrustedVerifiers',
+      I: GetTrustedVerifiersRequest,
+      O: GetTrustedVerifiersResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsky.Service.GetVerificationRecords
+     */
+    getVerificationRecords: {
+      name: 'GetVerificationRecords',
+      I: GetVerificationRecordsRequest,
+      O: GetVerificationRecordsResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsky.Service.GetVerificationsIssued
+     */
+    getVerificationsIssued: {
+      name: 'GetVerificationsIssued',
+      I: GetVerificationsIssuedRequest,
+      O: GetVerificationsIssuedResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsky.Service.GetVerificationsReceived
+     */
+    getVerificationsReceived: {
+      name: 'GetVerificationsReceived',
+      I: GetVerificationsReceivedRequest,
+      O: GetVerificationsReceivedResponse,
       kind: MethodKind.Unary,
     },
     /**

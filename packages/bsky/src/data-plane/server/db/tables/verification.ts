@@ -1,19 +1,20 @@
 import { GeneratedAlways } from 'kysely'
 
-export const tableName = 'vouch'
+export const tableName = 'verification'
 
-export interface Vouch {
+export interface Verification {
   uri: string
   cid: string
-  creator: string
+  rkey: string
+  actor: string
   subject: string
   handle: string
   displayName: string
   createdAt: string
   indexedAt: string
-  sortAt: GeneratedAlways<string>
+  sortedAt: GeneratedAlways<string>
 }
 
 export type PartialDB = {
-  [tableName]: Vouch
+  [tableName]: Verification
 }

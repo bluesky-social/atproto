@@ -4564,6 +4564,10 @@ export const schemaDict = {
             type: 'string',
             format: 'datetime',
           },
+          verification: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#verificationStateBasic',
+          },
         },
       },
       profileView: {
@@ -4614,6 +4618,10 @@ export const schemaDict = {
               type: 'ref',
               ref: 'lex:com.atproto.label.defs#label',
             },
+          },
+          verification: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#verificationStateBasic',
           },
         },
       },
@@ -4780,14 +4788,69 @@ export const schemaDict = {
           },
         },
       },
-      verificationState: {
+      verificationStateBasic: {
         type: 'object',
         description:
-          'Represents the verification state for the actor this state is attached to. This does not consider social (graph-based) vouches.',
+          'Represents the verification state for the actor this state is attached to.',
         properties: {
           level: {
             type: 'string',
-            knownValues: ['verified', 'verifier'],
+            description: 'The verification level for this subject.',
+            knownValues: ['unverified', 'verified', 'verifier'],
+          },
+        },
+      },
+      verificationState: {
+        type: 'object',
+        description:
+          'Represents the verification state for the actor this state is attached to.',
+        properties: {
+          level: {
+            type: 'string',
+            description: 'The verification level for this subject.',
+            knownValues: ['unverified', 'verified', 'verifier'],
+          },
+          verifications: {
+            type: 'array',
+            description:
+              "All the verifications associated with this subject. It might return broken verifications (e.g., pointing to invalid handles) but it won't return verifications from non-verifiers.",
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.actor.defs#verificationView',
+            },
+          },
+        },
+      },
+      verificationView: {
+        type: 'object',
+        description: 'Verification data for the associated subject.',
+        required: ['issuer', 'uri'],
+        properties: {
+          issuer: {
+            type: 'string',
+            description: 'The user who issued this verification.',
+            format: 'did',
+          },
+          uri: {
+            type: 'string',
+            description: 'The AT-URI of the verification record.',
+            format: 'at-uri',
+          },
+          handle: {
+            type: 'string',
+            description:
+              'Handle of the subject the verification applies to at the moment of verifying, which might not be the same at the time of viewing. The verification is only valid if the current handle matches the one at the time of verifying.',
+            format: 'handle',
+          },
+          displayName: {
+            type: 'string',
+            description:
+              'Display name of the subject the verification applies to at the moment of verifying, which might not be the same at the time of viewing. The verification is only valid if the current displayName matches the one at the time of verifying.',
+          },
+          createdAt: {
+            type: 'string',
+            description: 'Date of when the verification was created.',
+            format: 'datetime',
           },
         },
       },
@@ -9256,37 +9319,37 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyGraphVouch: {
+  AppBskyGraphVerification: {
     lexicon: 1,
-    id: 'app.bsky.graph.vouch',
+    id: 'app.bsky.graph.verification',
     defs: {
       main: {
         type: 'record',
         description:
-          "Record declaring a 'vouch' relationship of another account.",
+          'Record declaring a verification relationship between two accounts. Verifications are only considered valid by an app if issued by an account the app considers trusted.',
         key: 'tid',
         record: {
           type: 'object',
           required: ['subject', 'handle', 'displayName', 'createdAt'],
           properties: {
             subject: {
-              description: 'DID of the subject the vouch applies to.',
+              description: 'DID of the subject the verification applies to.',
               type: 'string',
               format: 'did',
             },
             handle: {
               description:
-                'Handle of the subject the vouch applies to at the moment of vouching, which might not be the same at the time of viewing. The decision on how to handle this is delegated to the application.',
+                'Handle of the subject the verification applies to at the moment of verifying, which might not be the same at the time of viewing. The verification is only valid if the current handle matches the one at the time of verifying.',
               type: 'string',
               format: 'handle',
             },
             displayName: {
               description:
-                'Display name of the subject the vouch applies to at the moment of vouching, which might not be the same at the time of viewing. The decision on how to handle this is delegated to the application.',
+                'Display name of the subject the verification applies to at the moment of verifying, which might not be the same at the time of viewing. The verification is only valid if the current displayName matches the one at the time of verifying.',
               type: 'string',
             },
             createdAt: {
-              description: 'Date of when the vouch was created.',
+              description: 'Date of when the verification was created.',
               type: 'string',
               format: 'datetime',
             },
@@ -15596,7 +15659,7 @@ export const ids = {
   AppBskyGraphUnmuteActor: 'app.bsky.graph.unmuteActor',
   AppBskyGraphUnmuteActorList: 'app.bsky.graph.unmuteActorList',
   AppBskyGraphUnmuteThread: 'app.bsky.graph.unmuteThread',
-  AppBskyGraphVouch: 'app.bsky.graph.vouch',
+  AppBskyGraphVerification: 'app.bsky.graph.verification',
   AppBskyLabelerDefs: 'app.bsky.labeler.defs',
   AppBskyLabelerGetServices: 'app.bsky.labeler.getServices',
   AppBskyLabelerService: 'app.bsky.labeler.service',

@@ -14,6 +14,7 @@ import {
   ProfileViewBasic,
   ProfileViewDetailed,
   VerificationState,
+  VerificationStateBasic,
   ViewerState as ProfileViewer,
 } from '../lexicon/types/app/bsky/actor/defs'
 import {
@@ -218,8 +219,6 @@ export class Views {
     const profileAggs = state.profileAggs?.get(did)
     const verification = this.verification(did, state)
 
-    console.log('### verification', verification)
-
     return {
       ...baseView,
       viewer: baseView.viewer
@@ -296,6 +295,7 @@ export class Views {
         record: actor.profile,
       }),
     ]
+    const verification = this.verificationBasic(did, state)
     return {
       did,
       handle: actor.handle ?? INVALID_HANDLE,
@@ -322,6 +322,7 @@ export class Views {
       viewer: this.profileViewer(did, state),
       labels,
       createdAt: actor.createdAt?.toISOString(),
+      verification,
     }
   }
 
@@ -395,24 +396,60 @@ export class Views {
     state: HydrationState,
   ): VerificationState | undefined {
     const actor = state.actors?.get(did)
-    console.log('### did', did)
-    console.log('### actor', actor)
-
     if (!actor) return
 
-    if (actor.trustedVoucher) {
+    const isImpersonation = state.labels
+      ?.getBySubject(did)
+      .some(({ val }) => val === 'impersonation')
+
+    if (isImpersonation) {
+      return {
+        level: 'unverified',
+        verifications: [],
+      }
+    }
+
+    const verifications = actor.verifications
+    if (actor.trustedVerifier) {
       return {
         level: 'verifier',
+        verifications,
       }
     }
 
-    if (actor.verifiedBy && Object.values(actor.verifiedBy).length) {
+    const isVerified =
+      verifications &&
+      Object.values(verifications).some(
+        ({ displayName, handle }) =>
+          displayName &&
+          displayName === actor.profile?.displayName &&
+          handle &&
+          handle === actor.handle,
+      ) &&
+      !state.labels
+        ?.getBySubject(did)
+        .some(({ val }) => val === 'impersonation')
+
+    if (isVerified) {
       return {
         level: 'verified',
+        verifications,
       }
     }
+    return {
+      level: 'unverified',
+      verifications,
+    }
+  }
 
-    return
+  verificationBasic(
+    did: string,
+    state: HydrationState,
+  ): VerificationStateBasic | undefined {
+    const verification = this.verification(did, state)
+    return {
+      level: verification?.level,
+    }
   }
 
   blockedProfileViewer(

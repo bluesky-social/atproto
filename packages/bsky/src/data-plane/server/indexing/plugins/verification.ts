@@ -2,28 +2,29 @@ import { Selectable } from 'kysely'
 import { CID } from 'multiformats/cid'
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import * as lex from '../../../../lexicon/lexicons'
-import * as Vouch from '../../../../lexicon/types/app/bsky/graph/vouch'
+import * as Verification from '../../../../lexicon/types/app/bsky/graph/verification'
 import { BackgroundQueue } from '../../background'
 import { Database } from '../../db'
 import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
 import { RecordProcessor } from '../processor'
 
-const lexId = lex.ids.AppBskyGraphVouch
-type IndexedVouch = Selectable<DatabaseSchemaType['vouch']>
+const lexId = lex.ids.AppBskyGraphVerification
+type IndexedVerification = Selectable<DatabaseSchemaType['verification']>
 
 const insertFn = async (
   db: DatabaseSchema,
   uri: AtUri,
   cid: CID,
-  obj: Vouch.Record,
+  obj: Verification.Record,
   timestamp: string,
-): Promise<IndexedVouch | null> => {
+): Promise<IndexedVerification | null> => {
   const inserted = await db
-    .insertInto('vouch')
+    .insertInto('verification')
     .values({
       uri: uri.toString(),
       cid: cid.toString(),
-      creator: uri.host,
+      rkey: uri.rkey,
+      actor: uri.host,
       subject: obj.subject,
       handle: obj.handle,
       displayName: obj.displayName,
@@ -39,11 +40,11 @@ const insertFn = async (
 const findDuplicate = async (
   db: DatabaseSchema,
   uri: AtUri,
-  obj: Vouch.Record,
+  obj: Verification.Record,
 ): Promise<AtUri | null> => {
   const found = await db
-    .selectFrom('vouch')
-    .where('creator', '=', uri.host)
+    .selectFrom('verification')
+    .where('actor', '=', uri.host)
     .where('subject', '=', obj.subject)
     .selectAll()
     .executeTakeFirst()
@@ -51,16 +52,16 @@ const findDuplicate = async (
 }
 
 // @TODO: revisit.
-const notifsForInsert = (_obj: IndexedVouch) => {
+const notifsForInsert = (_obj: IndexedVerification) => {
   return []
 }
 
 const deleteFn = async (
   db: DatabaseSchema,
   uri: AtUri,
-): Promise<IndexedVouch | null> => {
+): Promise<IndexedVerification | null> => {
   const deleted = await db
-    .deleteFrom('vouch')
+    .deleteFrom('verification')
     .where('uri', '=', uri.toString())
     .returningAll()
     .executeTakeFirst()
@@ -69,13 +70,16 @@ const deleteFn = async (
 
 // @TODO: revisit.
 const notifsForDelete = (
-  _deleted: IndexedVouch,
-  _replacedBy: IndexedVouch | null,
+  _deleted: IndexedVerification,
+  _replacedBy: IndexedVerification | null,
 ) => {
   return { notifs: [], toDelete: [] }
 }
 
-export type PluginType = RecordProcessor<Vouch.Record, IndexedVouch>
+export type PluginType = RecordProcessor<
+  Verification.Record,
+  IndexedVerification
+>
 
 export const makePlugin = (
   db: Database,
