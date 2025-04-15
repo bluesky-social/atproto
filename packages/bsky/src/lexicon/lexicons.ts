@@ -9241,6 +9241,45 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyGraphVerification: {
+    lexicon: 1,
+    id: 'app.bsky.graph.verification',
+    defs: {
+      main: {
+        type: 'record',
+        description:
+          'Record declaring a verification relationship between two accounts. Verifications are only considered valid by an app if issued by an account the app considers trusted.',
+        key: 'tid',
+        record: {
+          type: 'object',
+          required: ['subject', 'handle', 'displayName', 'createdAt'],
+          properties: {
+            subject: {
+              description: 'DID of the subject the verification applies to.',
+              type: 'string',
+              format: 'did',
+            },
+            handle: {
+              description:
+                'Handle of the subject the verification applies to at the moment of verifying, which might not be the same at the time of viewing. The verification is only valid if the current handle matches the one at the time of verifying.',
+              type: 'string',
+              format: 'handle',
+            },
+            displayName: {
+              description:
+                'Display name of the subject the verification applies to at the moment of verifying, which might not be the same at the time of viewing. The verification is only valid if the current displayName matches the one at the time of verifying.',
+              type: 'string',
+            },
+            createdAt: {
+              description: 'Date of when the verification was created.',
+              type: 'string',
+              format: 'datetime',
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyLabelerDefs: {
     lexicon: 1,
     id: 'app.bsky.labeler.defs',
@@ -12422,6 +12461,7 @@ export const ids = {
   AppBskyGraphUnmuteActor: 'app.bsky.graph.unmuteActor',
   AppBskyGraphUnmuteActorList: 'app.bsky.graph.unmuteActorList',
   AppBskyGraphUnmuteThread: 'app.bsky.graph.unmuteThread',
+  AppBskyGraphVerification: 'app.bsky.graph.verification',
   AppBskyLabelerDefs: 'app.bsky.labeler.defs',
   AppBskyLabelerGetServices: 'app.bsky.labeler.getServices',
   AppBskyLabelerService: 'app.bsky.labeler.service',
