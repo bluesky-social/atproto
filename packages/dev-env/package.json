@@ -17,8 +17,8 @@
   "bin": "dist/bin.js",
   "scripts": {
     "build": "tsc --build tsconfig.build.json",
-    "start": "../dev-infra/with-test-redis-and-db.sh node dist/bin.js",
-    "dev": "../dev-infra/with-test-redis-and-db.sh node --watch dist/bin.js"
+    "start": "../dev-infra/with-test-redis-and-db.sh node --enable-source-maps dist/bin.js",
+    "dev": "../dev-infra/with-test-redis-and-db.sh node --enable-source-maps --watch dist/bin.js"
   },
   "engines": {
     "node": ">=18.7.0"

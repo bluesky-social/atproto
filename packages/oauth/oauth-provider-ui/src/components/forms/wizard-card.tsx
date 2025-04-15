@@ -1,7 +1,7 @@
 import { Trans } from '@lingui/react/macro'
+import { clsx } from 'clsx'
 import { JSX, ReactNode, useCallback } from 'react'
 import { DisabledStep, Step, useStepper } from '../../hooks/use-stepper.ts'
-import { clsx } from '../../lib/clsx.ts'
 import { Override } from '../../lib/util.ts'
 
 export type DoneFn = (...a: any) => unknown
@@ -108,7 +108,7 @@ export function WizardCard<TDone extends DoneFn>({
         </Trans>
       </p>
 
-      {stepTitle && <h2 className="font-medium text-xl mb-4">{stepTitle}</h2>}
+      {stepTitle && <h2 className="mb-4 text-xl font-medium">{stepTitle}</h2>}
 
       {stepContent}
     </div>

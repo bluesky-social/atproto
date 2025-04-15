@@ -35,9 +35,9 @@ export function AuthForm({ atpSignIn, oauthSignIn, signUpUrl }: AuthFormProps) {
   // Tailwind css tabs
   return (
     <div className="p-4">
-      <div className="flex my-4">
+      <div className="my-4 flex">
         <button
-          className={`bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-4 rounded ${
+          className={`rounded bg-blue-500 px-4 py-1 font-bold text-white hover:bg-blue-700 ${
             method === 'oauth' ? 'bg-blue-700' : ''
           }`}
           onClick={() => oauthSignIn && setMethod('oauth')}
@@ -47,7 +47,7 @@ export function AuthForm({ atpSignIn, oauthSignIn, signUpUrl }: AuthFormProps) {
         </button>
 
         <button
-          className={`bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-4 rounded ${
+          className={`rounded bg-blue-500 px-4 py-1 font-bold text-white hover:bg-blue-700 ${
             method === 'credential' ? 'bg-blue-700' : ''
           }`}
           onClick={() => atpSignIn && setMethod('credential')}

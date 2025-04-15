@@ -25,6 +25,7 @@
     }
   },
   "dependencies": {
+    "@atproto/jwk": "workspace:*",
     "@atproto/oauth-types": "workspace:*"
   },
   "devDependencies": {
