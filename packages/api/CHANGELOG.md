@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.15.0
+
+### Minor Changes
+
+- [#3715](https://github.com/bluesky-social/atproto/pull/3715) [`23462184d`](https://github.com/bluesky-social/atproto/commit/23462184dc941ba2fc3b4d054985a53715585020) Thanks [@knotbin](https://github.com/knotbin)! - run codegen for changes in lex-cli
+
 ## 0.14.22
 
 ### Patch Changes
