@@ -69,36 +69,41 @@ export function SelectorScreen({
           </div>
 
           <div className="space-y-2">
-            {sessions.map(({ account }) => (
-              <Link
-                key={account.sub}
-                to="/account/$sub"
-                params={account}
-                className={clsx([
-                  'flex items-center space-x-2 rounded-lg border px-2 py-2',
-                  'bg-contrast-25 dark:bg-contrast-50 border-contrast-50 dark:border-contrast-100',
-                  'hover:bg-contrast-50 dark:hover:bg-contrast-100',
-                ])}
-                label={_(
-                  msg`View and manage account for ${getAccountName(account)}`,
-                )}
-              >
-                <Avatar
-                  size={40}
-                  src={account.picture}
-                  displayName={account.name}
-                />
-                <div className="flex-1 space-y-0 truncate">
-                  <h2 className="text-primary truncate font-semibold leading-snug">
-                    {account.name}
-                  </h2>
-                  <p className="text-text-light truncate text-sm">
-                    {sanitizeHandle(account.preferred_username) || account.sub}
-                  </p>
-                </div>
-                <ChevronRightIcon width={20} className="text-text-light" />
-              </Link>
-            ))}
+            {sessions
+              // @TODO redirect to sign in with the identifier pre-filled when a
+              // login is required (session is too old).
+              .filter((s) => !s.loginRequired)
+              .map(({ account }) => (
+                <Link
+                  key={account.sub}
+                  to="/account/$sub"
+                  params={account}
+                  className={clsx([
+                    'flex items-center space-x-2 rounded-lg border px-2 py-2',
+                    'bg-contrast-25 dark:bg-contrast-50 border-contrast-50 dark:border-contrast-100',
+                    'hover:bg-contrast-50 dark:hover:bg-contrast-100',
+                  ])}
+                  label={_(
+                    msg`View and manage account for ${getAccountName(account)}`,
+                  )}
+                >
+                  <Avatar
+                    size={40}
+                    src={account.picture}
+                    displayName={account.name}
+                  />
+                  <div className="flex-1 space-y-0 truncate">
+                    <h2 className="text-primary truncate font-semibold leading-snug">
+                      {account.name}
+                    </h2>
+                    <p className="text-text-light truncate text-sm">
+                      {sanitizeHandle(account.preferred_username) ||
+                        account.sub}
+                    </p>
+                  </div>
+                  <ChevronRightIcon width={20} className="text-text-light" />
+                </Link>
+              ))}
 
             <InlineLink
               to="/account/sign-in"
