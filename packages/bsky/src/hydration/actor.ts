@@ -1,3 +1,4 @@
+import { mapDefined } from '@atproto/common'
 import { DataPlaneClient } from '../data-plane/client'
 import { Record as ProfileRecord } from '../lexicon/types/app/bsky/actor/profile'
 import { Record as ChatDeclarationRecord } from '../lexicon/types/chat/bsky/actor/declaration'
@@ -25,10 +26,10 @@ export type Actor = {
   createdAt?: Date
   priorityNotifications: boolean
   trustedVerifier?: boolean
-  verifications: VerificationHydrationStateState[]
+  verifications: VerificationHydrationState[]
 }
 
-export type VerificationHydrationStateState = {
+export type VerificationHydrationState = {
   issuer: string
   uri: string
   handle: string
@@ -140,21 +141,27 @@ export class ActorHydrator {
         ? parseRecord<ProfileRecord>(actor.profile, includeTakedowns)
         : undefined
 
-      // Filter out the verification meta that doesn't contain all info.
-      const verificationsMetaRequired: {
-        [key: string]: VerificationMetaRequired
-      } = Object.entries(actor.verifiedBy).reduce((acc, cur) => {
-        const [actorDid, verificationMeta] = cur
-        if (
-          verificationMeta.displayName &&
-          verificationMeta.handle &&
-          verificationMeta.rkey &&
-          verificationMeta.sortedAt
-        ) {
-          acc[actorDid] = verificationMeta
-        }
-        return acc
-      }, {})
+      const verifications = mapDefined(
+        Object.entries(actor.verifiedBy),
+        ([actorDid, verificationMeta]) => {
+          if (
+            verificationMeta.displayName &&
+            verificationMeta.handle &&
+            verificationMeta.rkey &&
+            verificationMeta.sortedAt
+          ) {
+            return {
+              issuer: actorDid,
+              uri: `at://${actorDid}/app.bsky.graph.verification/${verificationMeta.rkey}`,
+              handle: verificationMeta.handle,
+              displayName: verificationMeta.displayName,
+              createdAt: verificationMeta.sortedAt.toDate().toISOString(),
+            }
+          }
+          // Filter out the verification meta that doesn't contain all info.
+          return undefined
+        },
+      )
 
       return acc.set(did, {
         did,
@@ -171,15 +178,7 @@ export class ActorHydrator {
         createdAt: actor.createdAt?.toDate(),
         priorityNotifications: actor.priorityNotifications,
         trustedVerifier: actor.trustedVerifier,
-        verifications: Object.entries(verificationsMetaRequired).map(
-          ([actorDid, verificationMeta]): VerificationHydrationStateState => ({
-            issuer: actorDid,
-            uri: `at://${actorDid}/app.bsky.graph.verification/${verificationMeta.rkey}`,
-            handle: verificationMeta.handle,
-            displayName: verificationMeta.displayName,
-            createdAt: verificationMeta.sortedAt.toDate().toISOString(),
-          }),
-        ),
+        verifications,
       })
     }, new HydrationMap<Actor>())
   }

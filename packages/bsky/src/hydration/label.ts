@@ -93,14 +93,6 @@ export class LabelHydrator {
         acc.set(label.uri, entry)
       }
 
-      if (
-        label.val === IMPERSONATION_LABEL &&
-        !label.neg &&
-        labelers.redact.has(label.src)
-      ) {
-        entry.isImpersonation = true
-      }
-
       const isActionableNeedsReview =
         label.val === NEEDS_REVIEW_LABEL &&
         !label.neg &&
@@ -121,6 +113,14 @@ export class LabelHydrator {
       if (isActionableNeedsReview) {
         entry.needsReview = true
       }
+      if (
+        label.val === IMPERSONATION_LABEL &&
+        !label.neg &&
+        labelers.redact.has(label.src)
+      ) {
+        entry.isImpersonation = true
+      }
+
       return acc
     }, new Labels())
   }

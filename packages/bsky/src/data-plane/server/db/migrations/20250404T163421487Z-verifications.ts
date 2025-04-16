@@ -3,12 +3,15 @@ import { Kysely, sql } from 'kysely'
 export async function up(db: Kysely<unknown>): Promise<void> {
   await db.schema
     .createTable('verification')
-    .addColumn('uri', 'varchar', (col) => col.notNull())
+    .addColumn('uri', 'varchar', (col) => col.notNull().primaryKey())
     .addColumn('cid', 'varchar', (col) => col.notNull())
     .addColumn('rkey', 'varchar', (col) => col.notNull())
-    .addColumn('actor', 'varchar', (col) => col.notNull())
+    .addColumn('creator', 'varchar', (col) => col.notNull())
     .addColumn('subject', 'varchar', (col) => col.notNull())
-    .addPrimaryKeyConstraint('verification_pkey', ['subject', 'actor'])
+    .addUniqueConstraint('verification_unique_subject_creator', [
+      'subject',
+      'creator',
+    ])
     .addColumn('handle', 'varchar', (col) => col.notNull())
     .addColumn('displayName', 'varchar', (col) => col.notNull())
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
