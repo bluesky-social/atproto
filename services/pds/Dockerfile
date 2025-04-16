@@ -1,5 +1,3 @@
-# @NOTE just a temp fix: alpine3.19 breaks sharp install, see nodejs/docker-node#2009
-# see additional reference to this image further down.
 FROM node:20-alpine AS build
 
 RUN corepack enable
