@@ -14,7 +14,7 @@ export function Avatar({
   const { _ } = useLingui()
   return (
     <div
-      className="align-center relative flex items-center justify-center overflow-hidden rounded-full"
+      className="relative flex items-center justify-center overflow-hidden rounded-full"
       style={{
         width: size,
         height: size,
