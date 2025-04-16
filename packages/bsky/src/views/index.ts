@@ -418,12 +418,11 @@ export class Views {
     )
     const hasValidVerification = verifications.some((v) => v.isValid)
 
-    const verifiedStatus = hasValidVerification
-      ? isImpersonation
-        ? 'invalid'
-        : 'valid'
+    const verifiedStatus = verifications.length
+      ? hasValidVerification && !isImpersonation
+        ? 'valid'
+        : 'invalid'
       : 'none'
-
     const trustedVerifierStatus = actor.trustedVerifier
       ? isImpersonation
         ? 'invalid'

@@ -208,7 +208,7 @@ describe('verification views', () => {
               uri: expect.any(String),
             },
           ],
-          verifiedStatus: 'none',
+          verifiedStatus: 'invalid',
           trustedVerifierStatus: 'none',
         }),
         getExpectedUrisPrefixes: () => [
