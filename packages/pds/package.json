@@ -15,7 +15,6 @@
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "bin": "dist/bin.js",
   "engines": {
     "node": ">=18.7.0"
   },

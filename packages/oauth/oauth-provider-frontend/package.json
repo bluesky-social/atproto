@@ -17,13 +17,15 @@
       "default": "./dist/bundle-manifest.json"
     },
     "./hydration-data": {
-      "types": "./src/hydration-data.d.ts"
+      "types": "./hydration-data.d.ts"
     }
   },
+  "files": [
+    "dist",
+    "hydration-data.d.ts"
+  ],
   "optionalDependencies": {
-    "@atproto-labs/rollup-plugin-bundle-manifest": "workspace:*",
-    "@atproto/oauth-provider-api": "workspace:*",
-    "@atproto/oauth-types": "workspace:*"
+    "@atproto/oauth-provider-api": "workspace:*"
   },
   "devDependencies": {
     "@atproto-labs/fetch": "workspace:*",
