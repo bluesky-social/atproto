@@ -231,7 +231,7 @@ msgstr ""
 msgid "Sign in"
 msgstr ""
 
-#: src/routes/account/_minimalLayout/index.tsx:107
+#: src/routes/account/_minimalLayout/index.tsx:112
 msgid "Sign in with another account"
 msgstr ""
 
@@ -269,8 +269,7 @@ msgstr ""
 msgid "User avatar"
 msgstr ""
 
-#. placeholder {0}: getAccountName(account)
-#: src/routes/account/_minimalLayout/index.tsx:83
+#: src/routes/account/_minimalLayout/index.tsx:87
 msgid "View and manage account for {0}"
 msgstr ""
 
