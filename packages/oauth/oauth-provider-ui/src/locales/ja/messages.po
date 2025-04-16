@@ -234,7 +234,7 @@ msgstr "リストにないアカウントにログイン"
 
 #: src/components/layouts/layout-welcome.tsx:45
 msgid "Logo"
-msgstr ""
+msgstr "ロゴ"
 
 #: src/components/forms/input-token.tsx:59
 msgid "Looks like {example}"
