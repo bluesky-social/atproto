@@ -1,5 +1,11 @@
 # @atproto/bsky
 
+## 0.0.140
+
+### Patch Changes
+
+- [#3754](https://github.com/bluesky-social/atproto/pull/3754) [`1e461eab0`](https://github.com/bluesky-social/atproto/commit/1e461eab033f728f537db554b3072b7eda7e5e8f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove reference to missing "bin" executable
+
 ## 0.0.139
 
 ### Patch Changes
