@@ -1,5 +1,11 @@
 # @atproto/lex-cli
 
+## 0.8.0
+
+### Minor Changes
+
+- [#3715](https://github.com/bluesky-social/atproto/pull/3715) [`23462184d`](https://github.com/bluesky-social/atproto/commit/23462184dc941ba2fc3b4d054985a53715585020) Thanks [@knotbin](https://github.com/knotbin)! - Fix conflicts between lexicon in gen-api, record types in index file now named ComExampleNameRecord instead of NameRecord
+
 ## 0.7.2
 
 ### Patch Changes
