@@ -1,4 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
+import { invokeOnce } from '../util/function.js'
 import { writeJson } from './response.js'
 import { Handler, Middleware, NextFunction } from './types.js'
 
@@ -33,13 +34,8 @@ export function combineMiddlewares(
         next()
       } else {
         const currentMiddleware = middlewaresArray[i++]!
-        const currentNext = once(nextMiddleware)
-        try {
-          const result = currentMiddleware.call(this, req, res, currentNext)
-          Promise.resolve(result).catch(currentNext)
-        } catch (err) {
-          currentNext(err)
-        }
+        const currentNext = invokeOnce(nextMiddleware)
+        currentMiddleware.call(this, req, res, currentNext)
       }
     }
     nextMiddleware()
@@ -63,11 +59,13 @@ export function asHandler<M extends Middleware<any, any, any>>(
     this,
     req,
     res,
-    next = once(createFinalHandler(req, res, options)),
+    next = invokeOnce(createFinalHandler(req, res, options)),
   ) {
     return middleware.call(this, req, res, next)
   } as AsHandler<M>
 }
+
+export const DEV_MODE = process.env['NODE_ENV'] === 'development'
 
 export type FinalHandlerOptions = {
   debug?: boolean
@@ -79,7 +77,7 @@ export function createFinalHandler(
   options?: FinalHandlerOptions,
 ): NextFunction {
   return (err) => {
-    if (err && (options?.debug ?? process.env['NODE_ENV'] === 'development')) {
+    if (err != null && (options?.debug ?? DEV_MODE)) {
       console.error(err)
     }
 
@@ -129,10 +127,7 @@ function buildFallbackPayload(
             'Unknown error'
           : 'System error'
         : `Cannot ${req.method} ${req.url}`,
-    stack:
-      err instanceof Error && process.env['NODE_ENV'] === 'development'
-        ? err.stack
-        : undefined,
+    stack: DEV_MODE && err instanceof Error ? err.stack : undefined,
   }
 }
 
@@ -140,16 +135,6 @@ function getErrorStatusCode(err: NonNullable<unknown>): number {
   const status =
     getProp(err, 'status', 'number') ?? getProp(err, 'statusCode', 'number')
   return status != null && status >= 400 && status < 600 ? status : 500
-}
-
-export function once<T extends NextFunction>(next: T): T {
-  let nextNullable: T | null = next
-  return function (err) {
-    if (!nextNullable) throw new Error('next() called multiple times')
-    const next = nextNullable
-    nextNullable = null
-    return next(err)
-  } as T
 }
 
 // eslint-disable-next-line

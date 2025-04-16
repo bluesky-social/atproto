@@ -75,11 +75,13 @@ import * as ComAtprotoSyncGetBlob from './types/com/atproto/sync/getBlob.js'
 import * as ComAtprotoSyncGetBlocks from './types/com/atproto/sync/getBlocks.js'
 import * as ComAtprotoSyncGetCheckout from './types/com/atproto/sync/getCheckout.js'
 import * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead.js'
+import * as ComAtprotoSyncGetHostStatus from './types/com/atproto/sync/getHostStatus.js'
 import * as ComAtprotoSyncGetLatestCommit from './types/com/atproto/sync/getLatestCommit.js'
 import * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord.js'
 import * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo.js'
 import * as ComAtprotoSyncGetRepoStatus from './types/com/atproto/sync/getRepoStatus.js'
 import * as ComAtprotoSyncListBlobs from './types/com/atproto/sync/listBlobs.js'
+import * as ComAtprotoSyncListHosts from './types/com/atproto/sync/listHosts.js'
 import * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos.js'
 import * as ComAtprotoSyncListReposByCollection from './types/com/atproto/sync/listReposByCollection.js'
 import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate.js'
@@ -147,6 +149,8 @@ import * as AppBskyUnspeccedGetSuggestedFeeds from './types/app/bsky/unspecced/g
 import * as AppBskyUnspeccedGetSuggestedFeedsSkeleton from './types/app/bsky/unspecced/getSuggestedFeedsSkeleton.js'
 import * as AppBskyUnspeccedGetSuggestedStarterPacks from './types/app/bsky/unspecced/getSuggestedStarterPacks.js'
 import * as AppBskyUnspeccedGetSuggestedStarterPacksSkeleton from './types/app/bsky/unspecced/getSuggestedStarterPacksSkeleton.js'
+import * as AppBskyUnspeccedGetSuggestedUsers from './types/app/bsky/unspecced/getSuggestedUsers.js'
+import * as AppBskyUnspeccedGetSuggestedUsersSkeleton from './types/app/bsky/unspecced/getSuggestedUsersSkeleton.js'
 import * as AppBskyUnspeccedGetSuggestionsSkeleton from './types/app/bsky/unspecced/getSuggestionsSkeleton.js'
 import * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions.js'
 import * as AppBskyUnspeccedGetTrendingTopics from './types/app/bsky/unspecced/getTrendingTopics.js'
@@ -1104,6 +1108,17 @@ export class ComAtprotoSyncNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  getHostStatus<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoSyncGetHostStatus.Handler<ExtractAuth<AV>>,
+      ComAtprotoSyncGetHostStatus.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.sync.getHostStatus' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   getLatestCommit<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -1156,6 +1171,17 @@ export class ComAtprotoSyncNS {
     >,
   ) {
     const nsid = 'com.atproto.sync.listBlobs' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  listHosts<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoSyncListHosts.Handler<ExtractAuth<AV>>,
+      ComAtprotoSyncListHosts.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.sync.listHosts' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -2003,6 +2029,28 @@ export class AppBskyUnspeccedNS {
     >,
   ) {
     const nsid = 'app.bsky.unspecced.getSuggestedStarterPacksSkeleton' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getSuggestedUsers<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyUnspeccedGetSuggestedUsers.Handler<ExtractAuth<AV>>,
+      AppBskyUnspeccedGetSuggestedUsers.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.unspecced.getSuggestedUsers' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getSuggestedUsersSkeleton<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyUnspeccedGetSuggestedUsersSkeleton.Handler<ExtractAuth<AV>>,
+      AppBskyUnspeccedGetSuggestedUsersSkeleton.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.unspecced.getSuggestedUsersSkeleton' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

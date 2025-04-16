@@ -3365,6 +3365,16 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoSyncDefs: {
+    lexicon: 1,
+    id: 'com.atproto.sync.defs',
+    defs: {
+      hostStatus: {
+        type: 'string',
+        knownValues: ['active', 'idle', 'offline', 'throttled', 'banned'],
+      },
+    },
+  },
   ComAtprotoSyncGetBlob: {
     lexicon: 1,
     id: 'com.atproto.sync.getBlob',
@@ -3520,6 +3530,59 @@ export const schemaDict = {
         errors: [
           {
             name: 'HeadNotFound',
+          },
+        ],
+      },
+    },
+  },
+  ComAtprotoSyncGetHostStatus: {
+    lexicon: 1,
+    id: 'com.atproto.sync.getHostStatus',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Returns information about a specified upstream host, as consumed by the server. Implemented by relays.',
+        parameters: {
+          type: 'params',
+          required: ['hostname'],
+          properties: {
+            hostname: {
+              type: 'string',
+              description:
+                'Hostname of the host (eg, PDS or relay) being queried.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['hostname'],
+            properties: {
+              hostname: {
+                type: 'string',
+              },
+              seq: {
+                type: 'integer',
+                description:
+                  'Recent repo stream event sequence number. May be delayed from actual stream processing (eg, persisted cursor not in-memory cursor).',
+              },
+              accountCount: {
+                type: 'integer',
+                description:
+                  'Number of accounts on the server which are associated with the upstream host. Note that the upstream may actually have more accounts.',
+              },
+              status: {
+                type: 'ref',
+                ref: 'lex:com.atproto.sync.defs#hostStatus',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'HostNotFound',
           },
         ],
       },
@@ -3805,6 +3868,74 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoSyncListHosts: {
+    lexicon: 1,
+    id: 'com.atproto.sync.listHosts',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Enumerates upstream hosts (eg, PDS or relay instances) that this service consumes from. Implemented by relays.',
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 1000,
+              default: 200,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['hosts'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              hosts: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.sync.listHosts#host',
+                },
+                description:
+                  'Sort order is not formally specified. Recommended order is by time host was first seen by the server, with oldest first.',
+              },
+            },
+          },
+        },
+      },
+      host: {
+        type: 'object',
+        required: ['hostname'],
+        properties: {
+          hostname: {
+            type: 'string',
+            description: 'hostname of server; not a URL (no scheme)',
+          },
+          seq: {
+            type: 'integer',
+            description:
+              'Recent repo stream event sequence number. May be delayed from actual stream processing (eg, persisted cursor not in-memory cursor).',
+          },
+          accountCount: {
+            type: 'integer',
+          },
+          status: {
+            type: 'ref',
+            ref: 'lex:com.atproto.sync.defs#hostStatus',
+          },
+        },
+      },
+    },
+  },
   ComAtprotoSyncListRepos: {
     lexicon: 1,
     id: 'com.atproto.sync.listRepos',
@@ -3992,6 +4123,11 @@ export const schemaDict = {
             },
           },
         },
+        errors: [
+          {
+            name: 'HostBanned',
+          },
+        ],
       },
     },
   },
@@ -9105,6 +9241,45 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyGraphVerification: {
+    lexicon: 1,
+    id: 'app.bsky.graph.verification',
+    defs: {
+      main: {
+        type: 'record',
+        description:
+          'Record declaring a verification relationship between two accounts. Verifications are only considered valid by an app if issued by an account the app considers trusted.',
+        key: 'tid',
+        record: {
+          type: 'object',
+          required: ['subject', 'handle', 'displayName', 'createdAt'],
+          properties: {
+            subject: {
+              description: 'DID of the subject the verification applies to.',
+              type: 'string',
+              format: 'did',
+            },
+            handle: {
+              description:
+                'Handle of the subject the verification applies to at the moment of verifying, which might not be the same at the time of viewing. The verification is only valid if the current handle matches the one at the time of verifying.',
+              type: 'string',
+              format: 'handle',
+            },
+            displayName: {
+              description:
+                'Display name of the subject the verification applies to at the moment of verifying, which might not be the same at the time of viewing. The verification is only valid if the current displayName matches the one at the time of verifying.',
+              type: 'string',
+            },
+            createdAt: {
+              description: 'Date of when the verification was created.',
+              type: 'string',
+              format: 'datetime',
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyLabelerDefs: {
     lexicon: 1,
     id: 'app.bsky.labeler.defs',
@@ -10046,6 +10221,95 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyUnspeccedGetSuggestedUsers: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.getSuggestedUsers',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get a list of suggested users',
+        parameters: {
+          type: 'params',
+          properties: {
+            category: {
+              type: 'string',
+              description: 'Category of users to get suggestions for.',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 50,
+              default: 25,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['actors'],
+            properties: {
+              actors: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.actor.defs#profileView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyUnspeccedGetSuggestedUsersSkeleton: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.getSuggestedUsersSkeleton',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get a skeleton of suggested users. Intended to be called and hydrated by app.bsky.unspecced.getSuggestedUsers',
+        parameters: {
+          type: 'params',
+          properties: {
+            viewer: {
+              type: 'string',
+              format: 'did',
+              description:
+                'DID of the account making the request (not included for public/unauthenticated queries).',
+            },
+            category: {
+              type: 'string',
+              description: 'Category of users to get suggestions for.',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 50,
+              default: 25,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['dids'],
+            properties: {
+              dids: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                  format: 'did',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyUnspeccedGetSuggestionsSkeleton: {
     lexicon: 1,
     id: 'app.bsky.unspecced.getSuggestionsSkeleton',
@@ -10839,7 +11103,7 @@ export const schemaDict = {
               value: {
                 type: 'string',
                 minLength: 1,
-                maxLength: 32,
+                maxLength: 64,
                 minGraphemes: 1,
                 maxGraphemes: 1,
               },
@@ -11625,7 +11889,7 @@ export const schemaDict = {
               value: {
                 type: 'string',
                 minLength: 1,
-                maxLength: 32,
+                maxLength: 64,
                 minGraphemes: 1,
                 maxGraphemes: 1,
               },
@@ -15226,15 +15490,18 @@ export const ids = {
   ComAtprotoServerResetPassword: 'com.atproto.server.resetPassword',
   ComAtprotoServerRevokeAppPassword: 'com.atproto.server.revokeAppPassword',
   ComAtprotoServerUpdateEmail: 'com.atproto.server.updateEmail',
+  ComAtprotoSyncDefs: 'com.atproto.sync.defs',
   ComAtprotoSyncGetBlob: 'com.atproto.sync.getBlob',
   ComAtprotoSyncGetBlocks: 'com.atproto.sync.getBlocks',
   ComAtprotoSyncGetCheckout: 'com.atproto.sync.getCheckout',
   ComAtprotoSyncGetHead: 'com.atproto.sync.getHead',
+  ComAtprotoSyncGetHostStatus: 'com.atproto.sync.getHostStatus',
   ComAtprotoSyncGetLatestCommit: 'com.atproto.sync.getLatestCommit',
   ComAtprotoSyncGetRecord: 'com.atproto.sync.getRecord',
   ComAtprotoSyncGetRepo: 'com.atproto.sync.getRepo',
   ComAtprotoSyncGetRepoStatus: 'com.atproto.sync.getRepoStatus',
   ComAtprotoSyncListBlobs: 'com.atproto.sync.listBlobs',
+  ComAtprotoSyncListHosts: 'com.atproto.sync.listHosts',
   ComAtprotoSyncListRepos: 'com.atproto.sync.listRepos',
   ComAtprotoSyncListReposByCollection: 'com.atproto.sync.listReposByCollection',
   ComAtprotoSyncNotifyOfUpdate: 'com.atproto.sync.notifyOfUpdate',
@@ -15314,6 +15581,7 @@ export const ids = {
   AppBskyGraphUnmuteActor: 'app.bsky.graph.unmuteActor',
   AppBskyGraphUnmuteActorList: 'app.bsky.graph.unmuteActorList',
   AppBskyGraphUnmuteThread: 'app.bsky.graph.unmuteThread',
+  AppBskyGraphVerification: 'app.bsky.graph.verification',
   AppBskyLabelerDefs: 'app.bsky.labeler.defs',
   AppBskyLabelerGetServices: 'app.bsky.labeler.getServices',
   AppBskyLabelerService: 'app.bsky.labeler.service',
@@ -15335,6 +15603,9 @@ export const ids = {
     'app.bsky.unspecced.getSuggestedStarterPacks',
   AppBskyUnspeccedGetSuggestedStarterPacksSkeleton:
     'app.bsky.unspecced.getSuggestedStarterPacksSkeleton',
+  AppBskyUnspeccedGetSuggestedUsers: 'app.bsky.unspecced.getSuggestedUsers',
+  AppBskyUnspeccedGetSuggestedUsersSkeleton:
+    'app.bsky.unspecced.getSuggestedUsersSkeleton',
   AppBskyUnspeccedGetSuggestionsSkeleton:
     'app.bsky.unspecced.getSuggestionsSkeleton',
   AppBskyUnspeccedGetTaggedSuggestions:

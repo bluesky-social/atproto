@@ -28,7 +28,7 @@ export function UrlViewer<As extends keyof JSX.IntrinsicElements = 'span'>({
   // Element
   ...props
 }: Override<JSX.IntrinsicElements[As], UrlRendererProps>) {
-  const urlObj = useMemo(() => new URL(url), [url])
+  const urlObj = useMemo(() => (url instanceof URL ? url : new URL(url)), [url])
 
   return (
     <As {...props}>

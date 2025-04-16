@@ -1,5 +1,5 @@
+import { clsx } from 'clsx'
 import { JSX, ReactNode, useState } from 'react'
-import { clsx } from '../../lib/clsx.ts'
 import { Override } from '../../lib/util.ts'
 
 export type InputContainerProps = Override<
@@ -50,22 +50,22 @@ export function InputContainer({
         className={clsx(
           // Layout
           'px-1',
-          'w-full min-h-12',
+          'min-h-12 w-full',
           'flex items-center justify-stretch',
           // Border
           'rounded-lg',
-          bellow ? 'rounded-br-none rounded-bl-none' : undefined,
-          'outline-none',
-          'border-solid border-2 border-transparent',
-          'focus:border-brand has-[:focus]:border-brand',
+          bellow ? 'rounded-bl-none rounded-br-none' : undefined,
+          'outline-hidden',
+          'border-2 border-solid border-transparent',
+          'focus:border-primary has-focus:border-primary',
           'hover:border-gray-400 hover:focus:border-gray-400',
           'dark:hover:border-gray-500 dark:hover:focus:border-gray-500',
           // Background
-          'bg-gray-100 focus:bg-slate-200 has-[:focus]:bg-slate-200',
-          'dark:bg-slate-800 dark:focus:bg-slate-700 dark:has-[:focus]:bg-slate-700',
+          'has-focus:bg-slate-200 bg-gray-100 focus:bg-slate-200',
+          'dark:has-focus:bg-slate-700 dark:bg-slate-800 dark:focus:bg-slate-700',
           // Font
           'text-slate-600 dark:text-slate-300',
-          'accent-brand',
+          'accent-primary',
         )}
       >
         {icon && (
@@ -73,7 +73,7 @@ export function InputContainer({
             className={clsx(
               'shrink-0 grow-0',
               'mx-1',
-              hasFocus ? 'text-brand' : 'text-slate-500',
+              hasFocus ? 'text-primary' : 'text-slate-500',
             )}
           >
             {icon}
@@ -82,13 +82,13 @@ export function InputContainer({
 
         {children}
 
-        <div className="ml-1 grow-0 shrink-0 flex items-center">{append}</div>
+        <div className="ml-1 flex shrink-0 grow-0 items-center">{append}</div>
       </div>
       {bellow && (
         <div
           className={clsx(
             // Layout
-            'px-3 py-2 space-x-2',
+            'space-x-2 px-3 py-2',
             'flex flex-row items-center gap-1',
             // Border
             'rounded-br-2 rounded-bl-2',

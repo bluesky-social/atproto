@@ -1,0 +1,296 @@
+msgid ""
+msgstr ""
+"POT-Creation-Date: 2025-03-19 13:49-0500\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: @lingui/cli\n"
+"Language: ga\n"
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Plural-Forms: \n"
+
+#: src/routes/account/_minimalLayout/sign-in.tsx:155
+msgid "@handle or email"
+msgstr ""
+
+#: src/routes/account/_minimalLayout/sign-in.tsx:49
+msgid "← Back to accounts"
+msgstr ""
+
+#: src/data/useClientName.ts:24
+msgid "A local app"
+msgstr ""
+
+#: src/routes/account/_minimalLayout/reset-password.tsx:65
+msgid "A new password is required"
+msgstr ""
+
+#: src/routes/account/_minimalLayout/index.tsx:64
+msgid "Accounts"
+msgstr ""
+
+#: src/routes/account/_minimalLayout/sign-in.tsx:125
+#: src/routes/account/_minimalLayout/reset-password.tsx:51
+#: src/routes/account/_minimalLayout/reset-password.tsx:78
+msgid "An error occurred, please try again."
+msgstr ""
+
+#: src/routes/account/_appLayout/$sub.tsx:270
+msgid "Are you sure you want to remove this device?"
+msgstr ""
+
+#: src/routes/account/_appLayout/$sub.tsx:176
+msgid "Are you sure you want to revoke access? This application won't be able to access your account anymore."
+msgstr ""
+
+#: src/routes/account/_minimalLayout/reset-password.tsx:122
+#: src/routes/account/_minimalLayout/reset-password.tsx:195
+msgid "Back to sign in"
+msgstr ""
+
+#: src/components/Prompt.tsx:56
+msgid "Cancel"
+msgstr ""
+
+#: src/routes/account/_minimalLayout/reset-password.tsx:319
+msgid "Click here to send a new code to your email."
+msgstr ""
+
+#: src/routes/account/_minimalLayout/sign-in.tsx:193
+#: src/routes/account/_minimalLayout/reset-password.tsx:222
+msgid "Code"
+msgstr ""
+
+#: src/routes/account/_minimalLayout/reset-password.tsx:88
+msgid "Code was resent"
+msgstr ""
+
+#: src/routes/account/_appLayout/$sub.tsx:52
+msgid "Connected apps"
+msgstr ""
+
+#: src/routes/account/_minimalLayout/sign-in.tsx:143
+msgid "Credentials"
+msgstr ""
+
+#: src/routes/account/_minimalLayout/reset-password.tsx:314
+msgid "Don't see the email? <0>Try sending again.</0>"
+msgstr ""
+
+#: src/routes/account/_minimalLayout/reset-password.tsx:149
+msgid "Email"
+msgstr ""
+
+#: src/routes/account/_minimalLayout/reset-password.tsx:62
+msgid "Email code is required"
+msgstr ""
+
+#: src/routes/account/_minimalLayout/reset-password.tsx:42
+msgid "Email is required"
+msgstr ""
+
+#: src/routes/account/_minimalLayout/reset-password.tsx:264
+msgid "Enter a new password"
+msgstr ""
+
+#: src/routes/account/_minimalLayout/reset-password.tsx:154
+msgid "Enter your email"
+msgstr ""
+
+#: src/routes/account/_minimalLayout/reset-password.tsx:132
+msgid "Enter your email to receive a reset code."
+msgstr ""
+
+#: src/routes/account/_appLayout/$sub.tsx:60
+msgid "Failed to load connected apps"
+msgstr ""
+
+#: src/routes/account/_appLayout/$sub.tsx:91
+msgid "Failed to load devices"
+msgstr ""
+
+#: src/routes/account/_appLayout/$sub.tsx:222
+msgid "Failed to remove device"
+msgstr ""
+
+#: src/routes/account/_minimalLayout/reset-password.tsx:94
+msgid "Failed to resend code"
+msgstr ""
+
+#: src/routes/account/_appLayout/$sub.tsx:147
+msgid "Failed to sign out"
+msgstr ""
+
+#: src/routes/account/_minimalLayout/sign-in.tsx:235
+msgid "Forgot password?"
+msgstr ""
+
+#: src/routes/account/_minimalLayout/reset-password.tsx:186
+msgid "Get reset code"
+msgstr ""
+
+#: src/routes/account/_appLayout/$sub.tsx:42
+msgid "Home"
+msgstr ""
+
+#: src/routes/account/_minimalLayout/sign-in.tsx:150
+msgid "Identifier"
+msgstr ""
+
+#: src/routes/account/_minimalLayout/reset-password.tsx:41
+msgid "Invalid email"
+msgstr ""
+
+#: src/routes/account/_minimalLayout/sign-in.tsx:83
+msgid "Invalid handle"
+msgstr ""
+
+#: src/routes/account/_minimalLayout/sign-in.tsx:123
+msgid "Invalid identifier or password."
+msgstr ""
+
+#: src/routes/account/_appLayout/$sub.tsx:77
+msgid "It appears that you haven’t used this account to sign in to any apps yet."
+msgstr ""
+
+#: src/routes/account/_minimalLayout.tsx:21
+#: src/components/Nav.tsx:18
+msgid "Logo"
+msgstr ""
+
+#: src/routes/account/_appLayout/$sub.tsx:107
+msgid "Looks like you aren't logged in on any other devices."
+msgstr ""
+
+#: src/data/useFriendlyClientId.ts:13
+msgid "loopback"
+msgstr ""
+
+#: src/routes/account/_appLayout/$sub.tsx:83
+msgid "My devices"
+msgstr ""
+
+#: src/routes/account/_appLayout/$sub.tsx:75
+msgid "No connected apps"
+msgstr ""
+
+#: src/routes/account/_appLayout/$sub.tsx:106
+msgid "No devices"
+msgstr ""
+
+#: src/routes/account/_minimalLayout/sign-in.tsx:170
+#: src/routes/account/_minimalLayout/sign-in.tsx:176
+#: src/routes/account/_minimalLayout/reset-password.tsx:257
+msgid "Password"
+msgstr ""
+
+#: src/routes/account/_minimalLayout/sign-in.tsx:88
+msgid "Password is required"
+msgstr ""
+
+#: src/routes/account/_minimalLayout/reset-password.tsx:68
+msgid "Password must be at least {MIN_PASSWORD_LENGTH} characters"
+msgstr ""
+
+#: src/routes/account/_appLayout/$sub.tsx:271
+#: src/routes/account/_appLayout/$sub.tsx:276
+msgid "Remove"
+msgstr ""
+
+#: src/routes/account/_appLayout/$sub.tsx:269
+msgid "Remove this device"
+msgstr ""
+
+#: src/routes/account/_minimalLayout/reset-password.tsx:129
+#: src/routes/account/_minimalLayout/reset-password.tsx:308
+msgid "Reset password"
+msgstr ""
+
+#: src/routes/account/_appLayout/$sub.tsx:172
+msgid "Revoke access to {clientName}"
+msgstr ""
+
+#: src/routes/account/_appLayout/$sub.tsx:173
+msgid "Revoke access to this application"
+msgstr ""
+
+#: src/components/AccountSelector.tsx:32
+msgid "Select an account"
+msgstr ""
+
+#: src/routes/account/_minimalLayout/index.tsx:67
+msgid "Select the account you would like to manage."
+msgstr ""
+
+#: src/routes/account/_minimalLayout/sign-in.tsx:134
+#: src/routes/account/_minimalLayout/sign-in.tsx:226
+msgid "Sign in"
+msgstr ""
+
+#: src/routes/account/_minimalLayout/index.tsx:107
+msgid "Sign in with another account"
+msgstr ""
+
+#: src/routes/account/_appLayout/$sub.tsx:178
+#: src/routes/account/_appLayout/$sub.tsx:183
+#: src/components/AccountSelector.tsx:103
+msgid "Sign out"
+msgstr ""
+
+#: src/routes/account/_minimalLayout/index.tsx:39
+msgid "Something went wrong"
+msgstr ""
+
+#: src/routes/account/_minimalLayout/reset-password.tsx:115
+msgid "Success!"
+msgstr ""
+
+#: src/routes/account/_appLayout/$sub.tsx:216
+msgid "Successfully removed device"
+msgstr ""
+
+#: src/routes/account/_appLayout/$sub.tsx:141
+msgid "Successfully signed out"
+msgstr ""
+
+#: src/routes/account/_appLayout/$sub.tsx:263
+msgid "This device"
+msgstr ""
+
+#: src/routes/account/_appLayout/$sub.tsx:247
+msgid "Unknown user agent"
+msgstr ""
+
+#: src/components/Avatar.tsx:24
+msgid "User avatar"
+msgstr ""
+
+#. placeholder {0}: getAccountName(account)
+#: src/routes/account/_minimalLayout/index.tsx:83
+msgid "View and manage account for {0}"
+msgstr ""
+
+#: src/routes/account/_minimalLayout/index.tsx:41
+msgid "We weren't able to load your accounts. Please refresh the page to try again."
+msgstr ""
+
+#: src/components/ErrorScreen.tsx:19
+msgid "Whoops! An error occurred."
+msgstr ""
+
+#: src/routes/account/_minimalLayout/sign-in.tsx:198
+#: src/routes/account/_minimalLayout/reset-password.tsx:228
+msgid "XXXXX-XXXXX"
+msgstr ""
+
+#: src/routes/account/_appLayout/$sub.tsx:47
+msgid "Your account"
+msgstr ""
+
+#: src/routes/account/_minimalLayout/reset-password.tsx:118
+msgid "Your password has been reset."
+msgstr ""

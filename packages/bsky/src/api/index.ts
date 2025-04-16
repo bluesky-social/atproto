@@ -51,6 +51,7 @@ import getConfig from './app/bsky/unspecced/getConfig'
 import getPopularFeedGenerators from './app/bsky/unspecced/getPopularFeedGenerators'
 import getUnspeccedSuggestedFeeds from './app/bsky/unspecced/getSuggestedFeeds'
 import getSuggestedStarterPacks from './app/bsky/unspecced/getSuggestedStarterPacks'
+import getSuggestedUsers from './app/bsky/unspecced/getSuggestedUsers'
 import getTaggedSuggestions from './app/bsky/unspecced/getTaggedSuggestions'
 import getTrendingTopics from './app/bsky/unspecced/getTrendingTopics'
 import getTrends from './app/bsky/unspecced/getTrends'
@@ -111,9 +112,8 @@ export default function (server: Server, ctx: AppContext) {
   getTrendingTopics(server, ctx)
   getTrends(server, ctx)
   getSuggestedStarterPacks(server, ctx)
+  getSuggestedUsers(server, ctx)
   getUnspeccedSuggestedFeeds(server, ctx)
-  getTrends(server, ctx)
-  getSuggestedStarterPacks(server, ctx)
   getLabelerServices(server, ctx)
   searchActors(server, ctx)
   searchActorsTypeahead(server, ctx)

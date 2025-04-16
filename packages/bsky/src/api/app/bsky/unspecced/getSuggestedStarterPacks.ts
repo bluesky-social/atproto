@@ -19,7 +19,12 @@ import {
 import { Views } from '../../../../views'
 
 export default function (server: Server, ctx: AppContext) {
-  const getTrends = createPipeline(skeleton, hydration, noBlocks, presentation)
+  const getSuggestedStarterPacks = createPipeline(
+    skeleton,
+    hydration,
+    noBlocks,
+    presentation,
+  )
   server.app.bsky.unspecced.getSuggestedStarterPacks({
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ auth, params, req }) => {
@@ -32,7 +37,7 @@ export default function (server: Server, ctx: AppContext) {
           ? req.headers['x-bsky-topics'].join(',')
           : req.headers['x-bsky-topics'],
       })
-      const { ...result } = await getTrends(
+      const { ...result } = await getSuggestedStarterPacks(
         {
           ...params,
           viewer: viewer ?? undefined,

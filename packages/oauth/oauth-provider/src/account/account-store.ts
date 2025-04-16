@@ -1,11 +1,13 @@
-import { isEmailValid } from '@hapi/address'
-import { isDisposableEmail } from 'disposable-email-domains-js'
-import { z } from 'zod'
-import { ensureValidHandle, normalizeHandle } from '@atproto/syntax'
+import {
+  Account,
+  ConfirmResetPasswordInput,
+  InitiatePasswordResetInput,
+} from '@atproto/oauth-provider-api'
+import { OAuthScope } from '@atproto/oauth-types'
 import { ClientId } from '../client/client-id.js'
 import { DeviceId } from '../device/device-id.js'
+import { DeviceData } from '../device/device-store.js'
 import { HcaptchaVerifyResult } from '../lib/hcaptcha.js'
-import { localeSchema } from '../lib/locale.js'
 import { Awaitable, buildInterfaceChecker } from '../lib/util/type.js'
 import {
   HandleUnavailableError,
@@ -13,112 +15,83 @@ import {
   SecondAuthenticationFactorRequiredError,
 } from '../oauth-errors.js'
 import { Sub } from '../oidc/sub.js'
-import { Account } from './account.js'
+import { InviteCode } from '../types/invite-code.js'
 import { SignUpInput } from './sign-up-input.js'
 
-// @NOTE Change the length here to force stronger passwords (through a reset)
-export const oldPasswordSchema = z.string().min(1)
-export const newPasswordSchema = z.string().min(8)
-export const tokenSchema = z
-  .string()
-  .regex(/^[A-Z2-7]{5}-[A-Z2-7]{5}$/, 'Invalid token format')
-export const handleSchema = z
-  .string()
-  // @NOTE: We only check against validity towards ATProto's syntax. Additional
-  // rules may be imposed by the store implementation.
-  .superRefine((value, ctx) => {
-    try {
-      ensureValidHandle(value)
-    } catch (err) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: err instanceof Error ? err.message : 'Invalid handle',
-      })
-    }
-  })
-  .transform(normalizeHandle)
-export const emailSchema = z
-  .string()
-  .email()
-  // @NOTE using @hapi/address here, in addition to the email() check to ensure
-  // compatibility with the current email validation in the PDS's account
-  // manager
-  .refine(isEmailValid, {
-    message: 'Invalid email address',
-  })
-  .refine((email) => !isDisposableEmail(email), {
-    message: 'Disposable email addresses are not allowed',
-  })
-  .transform((value) => value.toLowerCase())
-export const inviteCodeSchema = z.string().min(1)
-export type InviteCode = z.infer<typeof inviteCodeSchema>
+// Export all types needed to implement the AccountStore interface
 
-export const authenticateAccountDataSchema = z
-  .object({
-    locale: localeSchema,
-    username: z.string(),
-    password: oldPasswordSchema,
-    emailOtp: tokenSchema.optional(),
-  })
-  .strict()
+export * from '../client/client-id.js'
+export * from '../device/device-data.js'
+export * from '../device/device-id.js'
+export * from '../oidc/sub.js'
+export * from '../request/request-id.js'
 
-export type AuthenticateAccountData = z.TypeOf<
-  typeof authenticateAccountDataSchema
->
-
-export const createAccountDataSchema = z
-  .object({
-    locale: localeSchema,
-    handle: handleSchema,
-    email: emailSchema,
-    password: z.intersection(oldPasswordSchema, newPasswordSchema),
-    inviteCode: inviteCodeSchema.optional(),
-  })
-  .strict()
-
-export type CreateAccountData = z.TypeOf<typeof createAccountDataSchema>
-
-export const resetPasswordRequestDataSchema = z
-  .object({
-    locale: localeSchema,
-    email: emailSchema,
-  })
-  .strict()
-
-export type ResetPasswordRequestData = z.TypeOf<
-  typeof resetPasswordRequestDataSchema
->
-
-export const resetPasswordConfirmDataSchema = z
-  .object({
-    token: tokenSchema,
-    password: z.intersection(oldPasswordSchema, newPasswordSchema),
-  })
-  .strict()
-
-export type ResetPasswordConfirmData = z.TypeOf<
-  typeof resetPasswordConfirmDataSchema
->
-
-export type DeviceAccountInfo = {
-  remembered: boolean
-  authenticatedAt: Date
-  authorizedClients: readonly ClientId[]
+export type {
+  Account,
+  HcaptchaVerifyResult,
+  InviteCode,
+  OAuthScope,
+  SignUpInput,
 }
 
-// Export all types needed to implement the AccountStore interface
 export {
-  type Account,
-  type DeviceId,
   HandleUnavailableError,
   InvalidRequestError,
   SecondAuthenticationFactorRequiredError,
-  type Sub,
 }
 
-export type AccountInfo = {
+export type ResetPasswordRequestData = InitiatePasswordResetInput
+export type ResetPasswordConfirmData = ConfirmResetPasswordInput
+export type CreateAccountData = {
+  locale: string
+  email: string
+  password: string
+  handle: string
+  inviteCode?: string | undefined
+}
+
+export type AuthenticateAccountData = {
+  locale: string
+  password: string
+  username: string
+  emailOtp?: string | undefined
+}
+
+export type AuthorizedClientData = { authorizedScopes: readonly string[] }
+export type AuthorizedClients = Map<ClientId, AuthorizedClientData>
+
+export type DeviceAccount = {
+  deviceId: DeviceId
+
+  /**
+   * The data associated with the device, created through the
+   * {@link DeviceStore}. This data is used to identify devices on which a user
+   * has logged in.
+   */
+  deviceData: DeviceData
+
+  /**
+   * The account associated with the device account.
+   */
   account: Account
-  info: DeviceAccountInfo
+
+  /**
+   * The list of clients that are authorized by the account, as created through
+   * the {@link AccountStore.setAuthorizedClient} method.
+   */
+  authorizedClients: AuthorizedClients
+
+  /**
+   * The date at which the device account was created. This value is currently
+   * not used.
+   */
+  createdAt: Date
+
+  /**
+   * The date at which the device account was last updated. This value is used
+   * to determine the date at which the user last authenticated on a device
+   */
+  updatedAt: Date
 }
 
 export type SignUpData = SignUpInput & {
@@ -139,33 +112,63 @@ export interface AccountStore {
    */
   authenticateAccount(data: AuthenticateAccountData): Awaitable<Account>
 
-  addAuthorizedClient(
-    deviceId: DeviceId,
+  /**
+   * Add a client & scopes to the list of authorized clients for the given account.
+   */
+  setAuthorizedClient(
     sub: Sub,
     clientId: ClientId,
+    data: AuthorizedClientData,
   ): Awaitable<void>
 
   /**
-   * @param remember If false, the account must not be returned from
-   * {@link AccountStore.listDeviceAccounts}.
+   * @throws {InvalidRequestError} - When the credentials are not valid
    */
-  addDeviceAccount(
-    deviceId: DeviceId,
-    sub: Sub,
-    remember: boolean,
-  ): Awaitable<DeviceAccountInfo>
+  getAccount(sub: Sub): Awaitable<{
+    account: Account
+    authorizedClients: AuthorizedClients
+  }>
 
   /**
-   * @returns The account info, whether the account, even if remember was false.
+   * @param data.requestId - If provided, the inserted account must be bound to
+   * that particular requestId.
+   *
+   * @note Whenever a particular device account is created, all **unbound**
+   * device accounts for the same `deviceId` & `sub` should be deleted.
+   *
+   * @note When a particular request is deleted (through
+   * {@link RequestStore.deleteRequest}), all accounts bound to that request
+   * should be deleted as well.
    */
-  getDeviceAccount(deviceId: DeviceId, sub: Sub): Awaitable<AccountInfo | null>
+  upsertDeviceAccount(deviceId: DeviceId, sub: Sub): Awaitable<void>
+
+  /**
+   * @param requestId - If provided, the result must either have the same
+   * requestId, or not be bound to a particular requestId. If `null`, the
+   * result must not be bound to a particular requestId.
+   * @throws {InvalidRequestError} - Instead of returning `null` in order to
+   * provide a custom error message
+   */
+  getDeviceAccount(
+    deviceId: DeviceId,
+    sub: Sub,
+  ): Awaitable<DeviceAccount | null>
+
+  /**
+   * Removes *all* the unbound device-accounts associated with the given device
+   * & account.
+   *
+   * @note Noop if the device-account is not found.
+   */
   removeDeviceAccount(deviceId: DeviceId, sub: Sub): Awaitable<void>
 
   /**
-   * @note Only the accounts that where logged in with `remember: true` need to
-   * be returned. The others will be ignored.
+   * @returns **all** the device accounts that match the {@link requestId}
+   * criteria and given {@link filter}.
    */
-  listDeviceAccounts(deviceId: DeviceId): Awaitable<AccountInfo[]>
+  listDeviceAccounts(
+    filter: { sub: Sub } | { deviceId: DeviceId },
+  ): Awaitable<DeviceAccount[]>
 
   resetPasswordRequest(data: ResetPasswordRequestData): Awaitable<void>
   resetPasswordConfirm(data: ResetPasswordConfirmData): Awaitable<void>
@@ -179,8 +182,9 @@ export interface AccountStore {
 export const isAccountStore = buildInterfaceChecker<AccountStore>([
   'createAccount',
   'authenticateAccount',
-  'addAuthorizedClient',
-  'addDeviceAccount',
+  'setAuthorizedClient',
+  'getAccount',
+  'upsertDeviceAccount',
   'getDeviceAccount',
   'removeDeviceAccount',
   'listDeviceAccounts',

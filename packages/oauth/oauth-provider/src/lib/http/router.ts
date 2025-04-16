@@ -1,33 +1,37 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { SubCtx, subCtx } from './context.js'
 import { MethodMatcherInput } from './method.js'
-import { asHandler, combineMiddlewares } from './middleware.js'
+import { combineMiddlewares } from './middleware.js'
 import { Params, Path } from './path.js'
 import { RouteMiddleware, createRoute } from './route.js'
 import { Middleware } from './types.js'
 
-export type RouterCtx<T> = SubCtx<T, { url: Readonly<URL> }>
+export type RouterCtx<T extends object | void = void> = SubCtx<
+  T,
+  { url: Readonly<URL> }
+>
+
 export type RouterMiddleware<
-  T = void,
+  T extends object | void = void,
   Req = IncomingMessage,
   Res = ServerResponse,
 > = Middleware<RouterCtx<T>, Req, Res>
 
+export type RouterConfig = {
+  /** Used to build the origin of the {@link RouterCtx['url']} context property */
+  protocol?: string
+  /** Used to build the origin of the {@link RouterCtx['url']} context property */
+  host?: string
+}
+
 export class Router<
-  T = void,
+  T extends object | void = void,
   Req extends IncomingMessage = IncomingMessage,
   Res extends ServerResponse = ServerResponse,
 > {
   private readonly middlewares: RouterMiddleware<T, Req, Res>[] = []
 
-  constructor(
-    private readonly url?: {
-      /** Used to build the origin of the {@link RouterCtx['url']} context property */
-      protocol?: string
-      /** Used to build the origin of the {@link RouterCtx['url']} context property */
-      host?: string
-    },
-  ) {}
+  constructor(private readonly config?: RouterConfig) {}
 
   use(...middlewares: RouterMiddleware<T, Req, Res>[]) {
     this.middlewares.push(...middlewares)
@@ -73,8 +77,8 @@ export class Router<
   /**
    * @returns router middleware which dispatches a route matching the request.
    */
-  buildHandler() {
-    const routerUrl = this.url
+  buildMiddleware(): Middleware<T, Req, Res> {
+    const { config } = this
 
     // Calling next('router') from a middleware will skip all the remaining
     // middlewares in the stack.
@@ -82,38 +86,28 @@ export class Router<
       skipKeyword: 'router',
     })
 
-    return asHandler<Middleware<T, Req, Res>>(function (this, req, res, next) {
-      // Make sure that the context contains a "url". This will allow the add()
-      // method to match routes based on the pathname and will allow routes to
-      // access the query params (through this.url.searchParams).
-      let url: URL
+    return function (this, req, res, next) {
+      // Parse the URL using node's URL parser.
+      const url = extractUrl(req, config)
+      if (url instanceof Error) return next(url)
 
-      if (
-        !routerUrl &&
-        this != null &&
-        typeof this === 'object' &&
-        'url' in this &&
-        this.url instanceof URL
-      ) {
-        // If the context already contains a "url" (router inside router), let's
-        // use it.
-        url = this.url
-      } else {
-        // Parse the URL using node's URL parser.
-        try {
-          const protocol = routerUrl?.protocol || 'https:'
-          const host = req.headers.host || routerUrl?.host || 'localhost'
-          const pathname = req.url || '/'
-          url = new URL(pathname, `${protocol}//${host}`)
-        } catch (cause) {
-          const error =
-            cause instanceof Error ? cause : new Error('Invalid URL', { cause })
-          return next(Object.assign(error, { status: 400, statusCode: 400 }))
-        }
-      }
-
-      const context = subCtx(this, 'url', url)
+      // Any error thrown here will be uncaught/unhandled (a middleware should
+      // never throw)
+      const context = subCtx(this, { url })
       middleware.call(context, req, res, next)
-    })
+    }
+  }
+}
+
+function extractUrl(req: IncomingMessage, config?: RouterConfig): URL | Error {
+  try {
+    const protocol = config?.protocol || 'https:'
+    const host = config?.host || req.headers.host || 'localhost'
+    const pathname = req.url || '/'
+    return new URL(pathname, `${protocol}//${host}`)
+  } catch (cause) {
+    const error =
+      cause instanceof Error ? cause : new Error('Invalid URL', { cause })
+    return Object.assign(error, { status: 400, statusCode: 400 })
   }
 }
