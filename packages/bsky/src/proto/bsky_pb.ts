@@ -4474,6 +4474,11 @@ export class GetActorsRequest extends Message<GetActorsRequest> {
    */
   dids: string[] = []
 
+  /**
+   * @generated from field: repeated string skip_cache_for_dids = 2;
+   */
+  skipCacheForDids: string[] = []
+
   constructor(data?: PartialMessage<GetActorsRequest>) {
     super()
     proto3.util.initPartial(data, this)
@@ -4485,6 +4490,13 @@ export class GetActorsRequest extends Message<GetActorsRequest> {
     {
       no: 1,
       name: 'dids',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+      repeated: true,
+    },
+    {
+      no: 2,
+      name: 'skip_cache_for_dids',
       kind: 'scalar',
       T: 9 /* ScalarType.STRING */,
       repeated: true,

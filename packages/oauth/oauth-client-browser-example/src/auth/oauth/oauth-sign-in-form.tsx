@@ -61,15 +61,15 @@ export function OAuthSignInForm({
   return (
     <form
       {...props}
-      className={`${className || ''} max-w-lg w-full`}
+      className={`${className || ''} w-full max-w-lg`}
       onSubmit={onSubmit}
     >
-      <fieldset className="rounded-md border border-solid border-slate-200 dark:border-slate-700 text-neutral-700 dark:text-neutral-100">
-        <div className="relative p-1 flex flex-wrap items-center justify-stretch">
+      <fieldset className="rounded-md border border-solid border-slate-200 text-neutral-700 dark:border-slate-700 dark:text-neutral-100">
+        <div className="relative flex flex-wrap items-center justify-stretch p-1">
           <input
             name="value"
             type="text"
-            className="relative m-0 block w-[1px] min-w-0 flex-auto px-3 py-[0.25rem] leading-[1.6] bg-transparent bg-clip-padding text-base text-inherit outline-none dark:placeholder:text-neutral-100"
+            className="relative m-0 block w-[1px] min-w-0 flex-auto bg-transparent bg-clip-padding px-3 py-[0.25rem] text-base leading-[1.6] text-inherit outline-none dark:placeholder:text-neutral-100"
             placeholder="@handle, DID or PDS url"
             aria-label="@handle, DID or PDS url"
             required
@@ -80,7 +80,7 @@ export function OAuthSignInForm({
           <button
             type="submit"
             disabled={loading}
-            className="bg-transparent text-blue-600 rounded-md py-1 px-3 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:ring-inset"
+            className="rounded-md bg-transparent px-3 py-1 text-blue-600 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:ring-offset-2"
           >
             Login
           </button>
@@ -93,7 +93,7 @@ export function OAuthSignInForm({
           type="button"
           onClick={() => signIn(signUpUrl)}
           disabled={loading}
-          className="mt-2 bg-blue-600 text-white rounded-md py-1 px-3 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:ring-inset"
+          className="mt-2 rounded-md bg-blue-600 px-3 py-1 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:ring-offset-2"
         >
           Sign up
         </button>

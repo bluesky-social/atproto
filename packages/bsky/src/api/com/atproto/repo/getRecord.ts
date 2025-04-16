@@ -14,7 +14,9 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError(`Could not find repo: ${repo}`)
       }
 
-      const actors = await ctx.hydrator.actor.getActors([did], includeTakedowns)
+      const actors = await ctx.hydrator.actor.getActors([did], {
+        includeTakedowns,
+      })
       if (!actors.get(did)) {
         throw new InvalidRequestError(`Could not find repo: ${repo}`)
       }

@@ -8,6 +8,7 @@ import {
 } from '../../../components/forms/form-card.tsx'
 import { AccountIdentifier } from '../../../components/utils/account-identifier.tsx'
 import { ClientName } from '../../../components/utils/client-name.tsx'
+import { MultiLangString } from '../../../components/utils/multi-lang-string.tsx'
 import { Override } from '../../../lib/util.ts'
 
 export type AcceptFormProps = Override<
@@ -52,7 +53,7 @@ export function AcceptForm({
       cancel={onBack && <Button onClick={onBack}>Back</Button>}
       actions={
         <>
-          <Button type="submit" color="brand">
+          <Button type="submit" color="primary">
             <Trans>Authorize</Trans>
           </Button>
 
@@ -68,7 +69,7 @@ export function AcceptForm({
             crossOrigin="anonymous"
             src={clientMetadata.logo_uri}
             alt={clientMetadata.client_name}
-            className="w-16 h-16 rounded-full"
+            className="h-16 w-16 rounded-full"
           />
         </div>
       )}
@@ -98,7 +99,7 @@ export function AcceptForm({
             href={clientMetadata.tos_uri}
             rel="nofollow noopener"
             target="_blank"
-            className="text-brand underline"
+            className="text-primary underline"
           >
             <Trans>terms of service</Trans>
           </a>
@@ -108,7 +109,7 @@ export function AcceptForm({
             href={clientMetadata.policy_uri}
             rel="nofollow noopener"
             target="_blank"
-            className="text-brand underline"
+            className="text-primary underline"
           >
             <Trans>privacy policy</Trans>
           </a>
@@ -118,13 +119,17 @@ export function AcceptForm({
 
       {scopeDetails?.length ? (
         <ul
-          className="list-disc list-inside"
+          className="list-inside list-disc"
           key="scopes"
           aria-label={t`Requested permissions`}
         >
           {scopeDetails.map(({ scope, description }) => (
             <li key={scope}>
-              {description || <ScopeDescription scope={scope} />}
+              {description ? (
+                <MultiLangString value={description} />
+              ) : (
+                <ScopeDescription scope={scope} />
+              )}
             </li>
           ))}
         </ul>

@@ -24,7 +24,7 @@ export const readEnv = (): ServerEnvironment => {
     hcaptchaTokenSalt: envStr('PDS_HCAPTCHA_TOKEN_SALT'),
 
     // branding
-    brandColor: envStr('PDS_PRIMARY_COLOR'),
+    primaryColor: envStr('PDS_PRIMARY_COLOR'),
     errorColor: envStr('PDS_ERROR_COLOR'),
     warningColor: envStr('PDS_WARNING_COLOR'),
     successColor: envStr('PDS_SUCCESS_COLOR'),
@@ -115,6 +115,7 @@ export const readEnv = (): ServerEnvironment => {
     dpopSecret: envStr('PDS_DPOP_SECRET'),
     jwtSecret: envStr('PDS_JWT_SECRET'),
     adminPassword: envStr('PDS_ADMIN_PASSWORD'),
+    entrywayAdminToken: envStr('PDS_ENTRYWAY_ADMIN_TOKEN'),
 
     // kms
     plcRotationKeyKmsKeyId: envStr('PDS_PLC_ROTATION_KEY_KMS_KEY_ID'),
@@ -162,7 +163,7 @@ export type ServerEnvironment = {
   hcaptchaTokenSalt?: string
 
   // branding
-  brandColor?: string
+  primaryColor?: string
   errorColor?: string
   warningColor?: string
   successColor?: string
@@ -251,6 +252,7 @@ export type ServerEnvironment = {
   dpopSecret?: string
   jwtSecret?: string
   adminPassword?: string
+  entrywayAdminToken?: string
 
   // keys
   plcRotationKeyKmsKeyId?: string

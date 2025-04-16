@@ -6,12 +6,7 @@ export type Middleware<
   T = void,
   Req = IncomingMessage,
   Res = ServerResponse,
-> = (
-  this: T,
-  req: Req,
-  res: Res,
-  next: NextFunction,
-) => void | PromiseLike<void>
+> = (this: T, req: Req, res: Res, next: NextFunction) => void
 
 export type Handler<T = void, Req = IncomingMessage, Res = ServerResponse> = (
   this: T,

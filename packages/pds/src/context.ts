@@ -3,13 +3,14 @@ import * as plc from '@did-plc/lib'
 import express from 'express'
 import { Redis } from 'ioredis'
 import * as nodemailer from 'nodemailer'
+import * as ui8 from 'uint8arrays'
 import * as undici from 'undici'
 import { AtpAgent } from '@atproto/api'
 import { KmsKeypair, S3BlobStore } from '@atproto/aws'
 import * as crypto from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
 import {
-  AccessTokenType,
+  AccessTokenMode,
   JoseKey,
   OAuthProvider,
   OAuthVerifier,
@@ -71,6 +72,7 @@ export type AppContextOptions = {
   moderationAgent?: AtpAgent
   reportingAgent?: AtpAgent
   entrywayAgent?: AtpAgent
+  entrywayAdminAgent?: AtpAgent
   proxyAgent: undici.Dispatcher
   safeFetch: Fetch
   oauthProvider?: OAuthProvider
@@ -98,6 +100,7 @@ export class AppContext {
   public moderationAgent: AtpAgent | undefined
   public reportingAgent: AtpAgent | undefined
   public entrywayAgent: AtpAgent | undefined
+  public entrywayAdminAgent: AtpAgent | undefined
   public proxyAgent: undici.Dispatcher
   public safeFetch: Fetch
   public authVerifier: AuthVerifier
@@ -124,6 +127,7 @@ export class AppContext {
     this.moderationAgent = opts.moderationAgent
     this.reportingAgent = opts.reportingAgent
     this.entrywayAgent = opts.entrywayAgent
+    this.entrywayAdminAgent = opts.entrywayAdminAgent
     this.proxyAgent = opts.proxyAgent
     this.safeFetch = opts.safeFetch
     this.authVerifier = opts.authVerifier
@@ -235,6 +239,14 @@ export class AppContext {
     const entrywayAgent = cfg.entryway
       ? new AtpAgent({ service: cfg.entryway.url })
       : undefined
+    let entrywayAdminAgent: AtpAgent | undefined
+    if (cfg.entryway && secrets.entrywayAdminToken) {
+      entrywayAdminAgent = new AtpAgent({ service: cfg.entryway.url })
+      entrywayAdminAgent.api.setHeader(
+        'authorization',
+        basicAuthHeader('admin', secrets.entrywayAdminToken),
+      )
+    }
 
     const jwtSecretKey = createSecretKeyObject(secrets.jwtSecret)
     const jwtPublicKey = cfg.entryway
@@ -357,7 +369,7 @@ export class AppContext {
           // entryway), there is no need to use JWTs as access tokens. Instead,
           // the PDS can use tokenId as access tokens. This allows the PDS to
           // always use up-to-date token data from the token store.
-          accessTokenType: AccessTokenType.id,
+          accessTokenMode: AccessTokenMode.light,
         })
       : undefined
 
@@ -405,6 +417,7 @@ export class AppContext {
       moderationAgent,
       reportingAgent,
       entrywayAgent,
+      entrywayAdminAgent,
       proxyAgent,
       safeFetch,
       authVerifier,
@@ -454,3 +467,13 @@ export class AppContext {
     })
   }
 }
+
+const basicAuthHeader = (username: string, password: string) => {
+  const encoded = ui8.toString(
+    ui8.fromString(`${username}:${password}`, 'utf8'),
+    'base64pad',
+  )
+  return `Basic ${encoded}`
+}
+
+export default AppContext

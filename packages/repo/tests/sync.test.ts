@@ -1,4 +1,3 @@
-import { CarReader } from '@ipld/car/reader'
 import { streamToBuffer } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
 import {
@@ -7,6 +6,7 @@ import {
   RepoContents,
   RepoVerificationError,
   getAndParseRecord,
+  readCar,
   readCarWithRoot,
 } from '../src'
 import { MemoryBlockstore } from '../src/storage'
@@ -55,14 +55,14 @@ describe('Repo Sync', () => {
 
   it('does not sync duplicate blocks', async () => {
     const carBytes = await streamToBuffer(sync.getFullRepo(storage, repo.cid))
-    const car = await CarReader.fromBytes(carBytes)
+    const car = await readCar(carBytes)
     const cids = new CidSet()
-    for await (const block of car.blocks()) {
-      if (cids.has(block.cid)) {
-        throw new Error(`duplicate block: :${block.cid.toString()}`)
+    car.blocks.forEach((_, cid) => {
+      if (cids.has(cid)) {
+        throw new Error(`duplicate block: :${cid.toString()}`)
       }
-      cids.add(block.cid)
-    }
+      cids.add(cid)
+    })
   })
 
   it('syncs a repo that is behind', async () => {

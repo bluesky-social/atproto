@@ -186,7 +186,7 @@ export class Keyset<K extends Key = Key> implements Iterable<K> {
     }
 
     throw new JwkError(
-      `No singing key found for ${kid || alg || use || '<unknown>'}`,
+      `No signing key found for ${kid || alg || use || '<unknown>'}`,
       ERR_JWK_NOT_FOUND,
     )
   }
