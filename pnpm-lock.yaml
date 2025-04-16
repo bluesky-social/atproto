@@ -1028,9 +1028,6 @@ importers:
       '@atproto-labs/pipe':
         specifier: workspace:*
         version: link:../../internal/pipe
-      '@atproto-labs/rollup-plugin-bundle-manifest':
-        specifier: workspace:*
-        version: link:../../internal/rollup-plugin-bundle-manifest
       '@atproto-labs/simple-store':
         specifier: workspace:*
         version: link:../../internal/simple-store
@@ -1098,6 +1095,9 @@ importers:
         specifier: ^3.23.8
         version: 3.24.2
     devDependencies:
+      '@atproto-labs/rollup-plugin-bundle-manifest':
+        specifier: workspace:*
+        version: link:../../internal/rollup-plugin-bundle-manifest
       '@types/cookie':
         specifier: ^0.6.0
         version: 0.6.0
@@ -1129,19 +1129,19 @@ importers:
 
   packages/oauth/oauth-provider-frontend:
     optionalDependencies:
-      '@atproto-labs/rollup-plugin-bundle-manifest':
-        specifier: workspace:*
-        version: link:../../internal/rollup-plugin-bundle-manifest
       '@atproto/oauth-provider-api':
         specifier: workspace:*
         version: link:../oauth-provider-api
-      '@atproto/oauth-types':
-        specifier: workspace:*
-        version: link:../oauth-types
     devDependencies:
       '@atproto-labs/fetch':
         specifier: workspace:*
         version: link:../../internal/fetch
+      '@atproto-labs/rollup-plugin-bundle-manifest':
+        specifier: workspace:*
+        version: link:../../internal/rollup-plugin-bundle-manifest
+      '@atproto/oauth-types':
+        specifier: workspace:*
+        version: link:../oauth-types
       '@atproto/syntax':
         specifier: workspace:*
         version: link:../../syntax
@@ -1223,19 +1223,19 @@ importers:
 
   packages/oauth/oauth-provider-ui:
     optionalDependencies:
-      '@atproto-labs/rollup-plugin-bundle-manifest':
-        specifier: workspace:*
-        version: link:../../internal/rollup-plugin-bundle-manifest
       '@atproto/oauth-provider-api':
         specifier: workspace:*
         version: link:../oauth-provider-api
-      '@atproto/oauth-types':
-        specifier: workspace:*
-        version: link:../oauth-types
     devDependencies:
       '@atproto-labs/fetch':
         specifier: workspace:*
         version: link:../../internal/fetch
+      '@atproto-labs/rollup-plugin-bundle-manifest':
+        specifier: workspace:*
+        version: link:../../internal/rollup-plugin-bundle-manifest
+      '@atproto/oauth-types':
+        specifier: workspace:*
+        version: link:../oauth-types
       '@hcaptcha/react-hcaptcha':
         specifier: ^1.11.2
         version: 1.11.2(react-dom@19.0.0)(react@19.0.0)
