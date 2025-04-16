@@ -23,6 +23,7 @@ import * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail.j
 import * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail.js'
 import * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle.js'
 import * as ComAtprotoAdminUpdateAccountPassword from './types/com/atproto/admin/updateAccountPassword.js'
+import * as ComAtprotoAdminUpdateAccountSigningKey from './types/com/atproto/admin/updateAccountSigningKey.js'
 import * as ComAtprotoAdminUpdateSubjectStatus from './types/com/atproto/admin/updateSubjectStatus.js'
 import * as ComAtprotoIdentityDefs from './types/com/atproto/identity/defs.js'
 import * as ComAtprotoIdentityGetRecommendedDidCredentials from './types/com/atproto/identity/getRecommendedDidCredentials.js'
@@ -78,15 +79,18 @@ import * as ComAtprotoServerReserveSigningKey from './types/com/atproto/server/r
 import * as ComAtprotoServerResetPassword from './types/com/atproto/server/resetPassword.js'
 import * as ComAtprotoServerRevokeAppPassword from './types/com/atproto/server/revokeAppPassword.js'
 import * as ComAtprotoServerUpdateEmail from './types/com/atproto/server/updateEmail.js'
+import * as ComAtprotoSyncDefs from './types/com/atproto/sync/defs.js'
 import * as ComAtprotoSyncGetBlob from './types/com/atproto/sync/getBlob.js'
 import * as ComAtprotoSyncGetBlocks from './types/com/atproto/sync/getBlocks.js'
 import * as ComAtprotoSyncGetCheckout from './types/com/atproto/sync/getCheckout.js'
 import * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead.js'
+import * as ComAtprotoSyncGetHostStatus from './types/com/atproto/sync/getHostStatus.js'
 import * as ComAtprotoSyncGetLatestCommit from './types/com/atproto/sync/getLatestCommit.js'
 import * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord.js'
 import * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo.js'
 import * as ComAtprotoSyncGetRepoStatus from './types/com/atproto/sync/getRepoStatus.js'
 import * as ComAtprotoSyncListBlobs from './types/com/atproto/sync/listBlobs.js'
+import * as ComAtprotoSyncListHosts from './types/com/atproto/sync/listHosts.js'
 import * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos.js'
 import * as ComAtprotoSyncListReposByCollection from './types/com/atproto/sync/listReposByCollection.js'
 import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate.js'
@@ -164,6 +168,7 @@ import * as AppBskyGraphStarterpack from './types/app/bsky/graph/starterpack.js'
 import * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor.js'
 import * as AppBskyGraphUnmuteActorList from './types/app/bsky/graph/unmuteActorList.js'
 import * as AppBskyGraphUnmuteThread from './types/app/bsky/graph/unmuteThread.js'
+import * as AppBskyGraphVerification from './types/app/bsky/graph/verification.js'
 import * as AppBskyLabelerDefs from './types/app/bsky/labeler/defs.js'
 import * as AppBskyLabelerGetServices from './types/app/bsky/labeler/getServices.js'
 import * as AppBskyLabelerService from './types/app/bsky/labeler/service.js'
@@ -176,9 +181,17 @@ import * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet.js'
 import * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs.js'
 import * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig.js'
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators.js'
+import * as AppBskyUnspeccedGetSuggestedFeeds from './types/app/bsky/unspecced/getSuggestedFeeds.js'
+import * as AppBskyUnspeccedGetSuggestedFeedsSkeleton from './types/app/bsky/unspecced/getSuggestedFeedsSkeleton.js'
+import * as AppBskyUnspeccedGetSuggestedStarterPacks from './types/app/bsky/unspecced/getSuggestedStarterPacks.js'
+import * as AppBskyUnspeccedGetSuggestedStarterPacksSkeleton from './types/app/bsky/unspecced/getSuggestedStarterPacksSkeleton.js'
+import * as AppBskyUnspeccedGetSuggestedUsers from './types/app/bsky/unspecced/getSuggestedUsers.js'
+import * as AppBskyUnspeccedGetSuggestedUsersSkeleton from './types/app/bsky/unspecced/getSuggestedUsersSkeleton.js'
 import * as AppBskyUnspeccedGetSuggestionsSkeleton from './types/app/bsky/unspecced/getSuggestionsSkeleton.js'
 import * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions.js'
 import * as AppBskyUnspeccedGetTrendingTopics from './types/app/bsky/unspecced/getTrendingTopics.js'
+import * as AppBskyUnspeccedGetTrends from './types/app/bsky/unspecced/getTrends.js'
+import * as AppBskyUnspeccedGetTrendsSkeleton from './types/app/bsky/unspecced/getTrendsSkeleton.js'
 import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton.js'
 import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton.js'
 import * as AppBskyUnspeccedSearchStarterPacksSkeleton from './types/app/bsky/unspecced/searchStarterPacksSkeleton.js'
@@ -191,6 +204,7 @@ import * as ChatBskyActorDefs from './types/chat/bsky/actor/defs.js'
 import * as ChatBskyActorDeleteAccount from './types/chat/bsky/actor/deleteAccount.js'
 import * as ChatBskyActorExportAccountData from './types/chat/bsky/actor/exportAccountData.js'
 import * as ChatBskyConvoAcceptConvo from './types/chat/bsky/convo/acceptConvo.js'
+import * as ChatBskyConvoAddReaction from './types/chat/bsky/convo/addReaction.js'
 import * as ChatBskyConvoDefs from './types/chat/bsky/convo/defs.js'
 import * as ChatBskyConvoDeleteMessageForSelf from './types/chat/bsky/convo/deleteMessageForSelf.js'
 import * as ChatBskyConvoGetConvo from './types/chat/bsky/convo/getConvo.js'
@@ -201,6 +215,7 @@ import * as ChatBskyConvoGetMessages from './types/chat/bsky/convo/getMessages.j
 import * as ChatBskyConvoLeaveConvo from './types/chat/bsky/convo/leaveConvo.js'
 import * as ChatBskyConvoListConvos from './types/chat/bsky/convo/listConvos.js'
 import * as ChatBskyConvoMuteConvo from './types/chat/bsky/convo/muteConvo.js'
+import * as ChatBskyConvoRemoveReaction from './types/chat/bsky/convo/removeReaction.js'
 import * as ChatBskyConvoSendMessage from './types/chat/bsky/convo/sendMessage.js'
 import * as ChatBskyConvoSendMessageBatch from './types/chat/bsky/convo/sendMessageBatch.js'
 import * as ChatBskyConvoUnmuteConvo from './types/chat/bsky/convo/unmuteConvo.js'
@@ -222,6 +237,7 @@ import * as ToolsOzoneModerationGetRecords from './types/tools/ozone/moderation/
 import * as ToolsOzoneModerationGetRepo from './types/tools/ozone/moderation/getRepo.js'
 import * as ToolsOzoneModerationGetReporterStats from './types/tools/ozone/moderation/getReporterStats.js'
 import * as ToolsOzoneModerationGetRepos from './types/tools/ozone/moderation/getRepos.js'
+import * as ToolsOzoneModerationGetSubjects from './types/tools/ozone/moderation/getSubjects.js'
 import * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents.js'
 import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses.js'
 import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos.js'
@@ -261,6 +277,7 @@ export * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail.j
 export * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail.js'
 export * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle.js'
 export * as ComAtprotoAdminUpdateAccountPassword from './types/com/atproto/admin/updateAccountPassword.js'
+export * as ComAtprotoAdminUpdateAccountSigningKey from './types/com/atproto/admin/updateAccountSigningKey.js'
 export * as ComAtprotoAdminUpdateSubjectStatus from './types/com/atproto/admin/updateSubjectStatus.js'
 export * as ComAtprotoIdentityDefs from './types/com/atproto/identity/defs.js'
 export * as ComAtprotoIdentityGetRecommendedDidCredentials from './types/com/atproto/identity/getRecommendedDidCredentials.js'
@@ -316,15 +333,18 @@ export * as ComAtprotoServerReserveSigningKey from './types/com/atproto/server/r
 export * as ComAtprotoServerResetPassword from './types/com/atproto/server/resetPassword.js'
 export * as ComAtprotoServerRevokeAppPassword from './types/com/atproto/server/revokeAppPassword.js'
 export * as ComAtprotoServerUpdateEmail from './types/com/atproto/server/updateEmail.js'
+export * as ComAtprotoSyncDefs from './types/com/atproto/sync/defs.js'
 export * as ComAtprotoSyncGetBlob from './types/com/atproto/sync/getBlob.js'
 export * as ComAtprotoSyncGetBlocks from './types/com/atproto/sync/getBlocks.js'
 export * as ComAtprotoSyncGetCheckout from './types/com/atproto/sync/getCheckout.js'
 export * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead.js'
+export * as ComAtprotoSyncGetHostStatus from './types/com/atproto/sync/getHostStatus.js'
 export * as ComAtprotoSyncGetLatestCommit from './types/com/atproto/sync/getLatestCommit.js'
 export * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord.js'
 export * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo.js'
 export * as ComAtprotoSyncGetRepoStatus from './types/com/atproto/sync/getRepoStatus.js'
 export * as ComAtprotoSyncListBlobs from './types/com/atproto/sync/listBlobs.js'
+export * as ComAtprotoSyncListHosts from './types/com/atproto/sync/listHosts.js'
 export * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos.js'
 export * as ComAtprotoSyncListReposByCollection from './types/com/atproto/sync/listReposByCollection.js'
 export * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate.js'
@@ -402,6 +422,7 @@ export * as AppBskyGraphStarterpack from './types/app/bsky/graph/starterpack.js'
 export * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor.js'
 export * as AppBskyGraphUnmuteActorList from './types/app/bsky/graph/unmuteActorList.js'
 export * as AppBskyGraphUnmuteThread from './types/app/bsky/graph/unmuteThread.js'
+export * as AppBskyGraphVerification from './types/app/bsky/graph/verification.js'
 export * as AppBskyLabelerDefs from './types/app/bsky/labeler/defs.js'
 export * as AppBskyLabelerGetServices from './types/app/bsky/labeler/getServices.js'
 export * as AppBskyLabelerService from './types/app/bsky/labeler/service.js'
@@ -414,9 +435,17 @@ export * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet.js'
 export * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs.js'
 export * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig.js'
 export * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators.js'
+export * as AppBskyUnspeccedGetSuggestedFeeds from './types/app/bsky/unspecced/getSuggestedFeeds.js'
+export * as AppBskyUnspeccedGetSuggestedFeedsSkeleton from './types/app/bsky/unspecced/getSuggestedFeedsSkeleton.js'
+export * as AppBskyUnspeccedGetSuggestedStarterPacks from './types/app/bsky/unspecced/getSuggestedStarterPacks.js'
+export * as AppBskyUnspeccedGetSuggestedStarterPacksSkeleton from './types/app/bsky/unspecced/getSuggestedStarterPacksSkeleton.js'
+export * as AppBskyUnspeccedGetSuggestedUsers from './types/app/bsky/unspecced/getSuggestedUsers.js'
+export * as AppBskyUnspeccedGetSuggestedUsersSkeleton from './types/app/bsky/unspecced/getSuggestedUsersSkeleton.js'
 export * as AppBskyUnspeccedGetSuggestionsSkeleton from './types/app/bsky/unspecced/getSuggestionsSkeleton.js'
 export * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions.js'
 export * as AppBskyUnspeccedGetTrendingTopics from './types/app/bsky/unspecced/getTrendingTopics.js'
+export * as AppBskyUnspeccedGetTrends from './types/app/bsky/unspecced/getTrends.js'
+export * as AppBskyUnspeccedGetTrendsSkeleton from './types/app/bsky/unspecced/getTrendsSkeleton.js'
 export * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton.js'
 export * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton.js'
 export * as AppBskyUnspeccedSearchStarterPacksSkeleton from './types/app/bsky/unspecced/searchStarterPacksSkeleton.js'
@@ -429,6 +458,7 @@ export * as ChatBskyActorDefs from './types/chat/bsky/actor/defs.js'
 export * as ChatBskyActorDeleteAccount from './types/chat/bsky/actor/deleteAccount.js'
 export * as ChatBskyActorExportAccountData from './types/chat/bsky/actor/exportAccountData.js'
 export * as ChatBskyConvoAcceptConvo from './types/chat/bsky/convo/acceptConvo.js'
+export * as ChatBskyConvoAddReaction from './types/chat/bsky/convo/addReaction.js'
 export * as ChatBskyConvoDefs from './types/chat/bsky/convo/defs.js'
 export * as ChatBskyConvoDeleteMessageForSelf from './types/chat/bsky/convo/deleteMessageForSelf.js'
 export * as ChatBskyConvoGetConvo from './types/chat/bsky/convo/getConvo.js'
@@ -439,6 +469,7 @@ export * as ChatBskyConvoGetMessages from './types/chat/bsky/convo/getMessages.j
 export * as ChatBskyConvoLeaveConvo from './types/chat/bsky/convo/leaveConvo.js'
 export * as ChatBskyConvoListConvos from './types/chat/bsky/convo/listConvos.js'
 export * as ChatBskyConvoMuteConvo from './types/chat/bsky/convo/muteConvo.js'
+export * as ChatBskyConvoRemoveReaction from './types/chat/bsky/convo/removeReaction.js'
 export * as ChatBskyConvoSendMessage from './types/chat/bsky/convo/sendMessage.js'
 export * as ChatBskyConvoSendMessageBatch from './types/chat/bsky/convo/sendMessageBatch.js'
 export * as ChatBskyConvoUnmuteConvo from './types/chat/bsky/convo/unmuteConvo.js'
@@ -460,6 +491,7 @@ export * as ToolsOzoneModerationGetRecords from './types/tools/ozone/moderation/
 export * as ToolsOzoneModerationGetRepo from './types/tools/ozone/moderation/getRepo.js'
 export * as ToolsOzoneModerationGetReporterStats from './types/tools/ozone/moderation/getReporterStats.js'
 export * as ToolsOzoneModerationGetRepos from './types/tools/ozone/moderation/getRepos.js'
+export * as ToolsOzoneModerationGetSubjects from './types/tools/ozone/moderation/getSubjects.js'
 export * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents.js'
 export * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses.js'
 export * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos.js'
@@ -746,6 +778,18 @@ export class ComAtprotoAdminNS {
     )
   }
 
+  updateAccountSigningKey(
+    data?: ComAtprotoAdminUpdateAccountSigningKey.InputSchema,
+    opts?: ComAtprotoAdminUpdateAccountSigningKey.CallOptions,
+  ): Promise<ComAtprotoAdminUpdateAccountSigningKey.Response> {
+    return this._client.call(
+      'com.atproto.admin.updateAccountSigningKey',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
   updateSubjectStatus(
     data?: ComAtprotoAdminUpdateSubjectStatus.InputSchema,
     opts?: ComAtprotoAdminUpdateSubjectStatus.CallOptions,
@@ -893,15 +937,15 @@ export class ComAtprotoLabelNS {
 
 export class ComAtprotoLexiconNS {
   _client: XrpcClient
-  schema: SchemaRecord
+  schema: ComAtprotoLexiconSchemaRecord
 
   constructor(client: XrpcClient) {
     this._client = client
-    this.schema = new SchemaRecord(client)
+    this.schema = new ComAtprotoLexiconSchemaRecord(client)
   }
 }
 
-export class SchemaRecord {
+export class ComAtprotoLexiconSchemaRecord {
   _client: XrpcClient
 
   constructor(client: XrpcClient) {
@@ -1458,6 +1502,17 @@ export class ComAtprotoSyncNS {
       })
   }
 
+  getHostStatus(
+    params?: ComAtprotoSyncGetHostStatus.QueryParams,
+    opts?: ComAtprotoSyncGetHostStatus.CallOptions,
+  ): Promise<ComAtprotoSyncGetHostStatus.Response> {
+    return this._client
+      .call('com.atproto.sync.getHostStatus', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoSyncGetHostStatus.toKnownErr(e)
+      })
+  }
+
   getLatestCommit(
     params?: ComAtprotoSyncGetLatestCommit.QueryParams,
     opts?: ComAtprotoSyncGetLatestCommit.CallOptions,
@@ -1513,6 +1568,18 @@ export class ComAtprotoSyncNS {
       })
   }
 
+  listHosts(
+    params?: ComAtprotoSyncListHosts.QueryParams,
+    opts?: ComAtprotoSyncListHosts.CallOptions,
+  ): Promise<ComAtprotoSyncListHosts.Response> {
+    return this._client.call(
+      'com.atproto.sync.listHosts',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
   listRepos(
     params?: ComAtprotoSyncListRepos.QueryParams,
     opts?: ComAtprotoSyncListRepos.CallOptions,
@@ -1553,12 +1620,11 @@ export class ComAtprotoSyncNS {
     data?: ComAtprotoSyncRequestCrawl.InputSchema,
     opts?: ComAtprotoSyncRequestCrawl.CallOptions,
   ): Promise<ComAtprotoSyncRequestCrawl.Response> {
-    return this._client.call(
-      'com.atproto.sync.requestCrawl',
-      opts?.qp,
-      data,
-      opts,
-    )
+    return this._client
+      .call('com.atproto.sync.requestCrawl', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoSyncRequestCrawl.toKnownErr(e)
+      })
   }
 }
 
@@ -1656,11 +1722,11 @@ export class AppBskyNS {
 
 export class AppBskyActorNS {
   _client: XrpcClient
-  profile: ProfileRecord
+  profile: AppBskyActorProfileRecord
 
   constructor(client: XrpcClient) {
     this._client = client
-    this.profile = new ProfileRecord(client)
+    this.profile = new AppBskyActorProfileRecord(client)
   }
 
   getPreferences(
@@ -1748,7 +1814,7 @@ export class AppBskyActorNS {
   }
 }
 
-export class ProfileRecord {
+export class AppBskyActorProfileRecord {
   _client: XrpcClient
 
   constructor(client: XrpcClient) {
@@ -1824,21 +1890,21 @@ export class AppBskyEmbedNS {
 
 export class AppBskyFeedNS {
   _client: XrpcClient
-  generator: GeneratorRecord
-  like: LikeRecord
-  post: PostRecord
-  postgate: PostgateRecord
-  repost: RepostRecord
-  threadgate: ThreadgateRecord
+  generator: AppBskyFeedGeneratorRecord
+  like: AppBskyFeedLikeRecord
+  post: AppBskyFeedPostRecord
+  postgate: AppBskyFeedPostgateRecord
+  repost: AppBskyFeedRepostRecord
+  threadgate: AppBskyFeedThreadgateRecord
 
   constructor(client: XrpcClient) {
     this._client = client
-    this.generator = new GeneratorRecord(client)
-    this.like = new LikeRecord(client)
-    this.post = new PostRecord(client)
-    this.postgate = new PostgateRecord(client)
-    this.repost = new RepostRecord(client)
-    this.threadgate = new ThreadgateRecord(client)
+    this.generator = new AppBskyFeedGeneratorRecord(client)
+    this.like = new AppBskyFeedLikeRecord(client)
+    this.post = new AppBskyFeedPostRecord(client)
+    this.postgate = new AppBskyFeedPostgateRecord(client)
+    this.repost = new AppBskyFeedRepostRecord(client)
+    this.threadgate = new AppBskyFeedThreadgateRecord(client)
   }
 
   describeFeedGenerator(
@@ -2036,7 +2102,7 @@ export class AppBskyFeedNS {
   }
 }
 
-export class GeneratorRecord {
+export class AppBskyFeedGeneratorRecord {
   _client: XrpcClient
 
   constructor(client: XrpcClient) {
@@ -2097,7 +2163,7 @@ export class GeneratorRecord {
   }
 }
 
-export class LikeRecord {
+export class AppBskyFeedLikeRecord {
   _client: XrpcClient
 
   constructor(client: XrpcClient) {
@@ -2158,7 +2224,7 @@ export class LikeRecord {
   }
 }
 
-export class PostRecord {
+export class AppBskyFeedPostRecord {
   _client: XrpcClient
 
   constructor(client: XrpcClient) {
@@ -2219,7 +2285,7 @@ export class PostRecord {
   }
 }
 
-export class PostgateRecord {
+export class AppBskyFeedPostgateRecord {
   _client: XrpcClient
 
   constructor(client: XrpcClient) {
@@ -2280,7 +2346,7 @@ export class PostgateRecord {
   }
 }
 
-export class RepostRecord {
+export class AppBskyFeedRepostRecord {
   _client: XrpcClient
 
   constructor(client: XrpcClient) {
@@ -2341,7 +2407,7 @@ export class RepostRecord {
   }
 }
 
-export class ThreadgateRecord {
+export class AppBskyFeedThreadgateRecord {
   _client: XrpcClient
 
   constructor(client: XrpcClient) {
@@ -2408,21 +2474,23 @@ export class ThreadgateRecord {
 
 export class AppBskyGraphNS {
   _client: XrpcClient
-  block: BlockRecord
-  follow: FollowRecord
-  list: ListRecord
-  listblock: ListblockRecord
-  listitem: ListitemRecord
-  starterpack: StarterpackRecord
+  block: AppBskyGraphBlockRecord
+  follow: AppBskyGraphFollowRecord
+  list: AppBskyGraphListRecord
+  listblock: AppBskyGraphListblockRecord
+  listitem: AppBskyGraphListitemRecord
+  starterpack: AppBskyGraphStarterpackRecord
+  verification: AppBskyGraphVerificationRecord
 
   constructor(client: XrpcClient) {
     this._client = client
-    this.block = new BlockRecord(client)
-    this.follow = new FollowRecord(client)
-    this.list = new ListRecord(client)
-    this.listblock = new ListblockRecord(client)
-    this.listitem = new ListitemRecord(client)
-    this.starterpack = new StarterpackRecord(client)
+    this.block = new AppBskyGraphBlockRecord(client)
+    this.follow = new AppBskyGraphFollowRecord(client)
+    this.list = new AppBskyGraphListRecord(client)
+    this.listblock = new AppBskyGraphListblockRecord(client)
+    this.listitem = new AppBskyGraphListitemRecord(client)
+    this.starterpack = new AppBskyGraphStarterpackRecord(client)
+    this.verification = new AppBskyGraphVerificationRecord(client)
   }
 
   getActorStarterPacks(
@@ -2647,7 +2715,7 @@ export class AppBskyGraphNS {
   }
 }
 
-export class BlockRecord {
+export class AppBskyGraphBlockRecord {
   _client: XrpcClient
 
   constructor(client: XrpcClient) {
@@ -2708,7 +2776,7 @@ export class BlockRecord {
   }
 }
 
-export class FollowRecord {
+export class AppBskyGraphFollowRecord {
   _client: XrpcClient
 
   constructor(client: XrpcClient) {
@@ -2769,7 +2837,7 @@ export class FollowRecord {
   }
 }
 
-export class ListRecord {
+export class AppBskyGraphListRecord {
   _client: XrpcClient
 
   constructor(client: XrpcClient) {
@@ -2830,7 +2898,7 @@ export class ListRecord {
   }
 }
 
-export class ListblockRecord {
+export class AppBskyGraphListblockRecord {
   _client: XrpcClient
 
   constructor(client: XrpcClient) {
@@ -2895,7 +2963,7 @@ export class ListblockRecord {
   }
 }
 
-export class ListitemRecord {
+export class AppBskyGraphListitemRecord {
   _client: XrpcClient
 
   constructor(client: XrpcClient) {
@@ -2956,7 +3024,7 @@ export class ListitemRecord {
   }
 }
 
-export class StarterpackRecord {
+export class AppBskyGraphStarterpackRecord {
   _client: XrpcClient
 
   constructor(client: XrpcClient) {
@@ -3021,13 +3089,78 @@ export class StarterpackRecord {
   }
 }
 
-export class AppBskyLabelerNS {
+export class AppBskyGraphVerificationRecord {
   _client: XrpcClient
-  service: ServiceRecord
 
   constructor(client: XrpcClient) {
     this._client = client
-    this.service = new ServiceRecord(client)
+  }
+
+  async list(
+    params: OmitKey<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
+  ): Promise<{
+    cursor?: string
+    records: { uri: string; value: AppBskyGraphVerification.Record }[]
+  }> {
+    const res = await this._client.call('com.atproto.repo.listRecords', {
+      collection: 'app.bsky.graph.verification',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: OmitKey<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{
+    uri: string
+    cid: string
+    value: AppBskyGraphVerification.Record
+  }> {
+    const res = await this._client.call('com.atproto.repo.getRecord', {
+      collection: 'app.bsky.graph.verification',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: OmitKey<
+      ComAtprotoRepoCreateRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppBskyGraphVerification.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.bsky.graph.verification'
+    const res = await this._client.call(
+      'com.atproto.repo.createRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async delete(
+    params: OmitKey<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
+    headers?: Record<string, string>,
+  ): Promise<void> {
+    await this._client.call(
+      'com.atproto.repo.deleteRecord',
+      undefined,
+      { collection: 'app.bsky.graph.verification', ...params },
+      { headers },
+    )
+  }
+}
+
+export class AppBskyLabelerNS {
+  _client: XrpcClient
+  service: AppBskyLabelerServiceRecord
+
+  constructor(client: XrpcClient) {
+    this._client = client
+    this.service = new AppBskyLabelerServiceRecord(client)
   }
 
   getServices(
@@ -3043,7 +3176,7 @@ export class AppBskyLabelerNS {
   }
 }
 
-export class ServiceRecord {
+export class AppBskyLabelerServiceRecord {
   _client: XrpcClient
 
   constructor(client: XrpcClient) {
@@ -3220,6 +3353,78 @@ export class AppBskyUnspeccedNS {
     )
   }
 
+  getSuggestedFeeds(
+    params?: AppBskyUnspeccedGetSuggestedFeeds.QueryParams,
+    opts?: AppBskyUnspeccedGetSuggestedFeeds.CallOptions,
+  ): Promise<AppBskyUnspeccedGetSuggestedFeeds.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getSuggestedFeeds',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getSuggestedFeedsSkeleton(
+    params?: AppBskyUnspeccedGetSuggestedFeedsSkeleton.QueryParams,
+    opts?: AppBskyUnspeccedGetSuggestedFeedsSkeleton.CallOptions,
+  ): Promise<AppBskyUnspeccedGetSuggestedFeedsSkeleton.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getSuggestedFeedsSkeleton',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getSuggestedStarterPacks(
+    params?: AppBskyUnspeccedGetSuggestedStarterPacks.QueryParams,
+    opts?: AppBskyUnspeccedGetSuggestedStarterPacks.CallOptions,
+  ): Promise<AppBskyUnspeccedGetSuggestedStarterPacks.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getSuggestedStarterPacks',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getSuggestedStarterPacksSkeleton(
+    params?: AppBskyUnspeccedGetSuggestedStarterPacksSkeleton.QueryParams,
+    opts?: AppBskyUnspeccedGetSuggestedStarterPacksSkeleton.CallOptions,
+  ): Promise<AppBskyUnspeccedGetSuggestedStarterPacksSkeleton.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getSuggestedStarterPacksSkeleton',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getSuggestedUsers(
+    params?: AppBskyUnspeccedGetSuggestedUsers.QueryParams,
+    opts?: AppBskyUnspeccedGetSuggestedUsers.CallOptions,
+  ): Promise<AppBskyUnspeccedGetSuggestedUsers.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getSuggestedUsers',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getSuggestedUsersSkeleton(
+    params?: AppBskyUnspeccedGetSuggestedUsersSkeleton.QueryParams,
+    opts?: AppBskyUnspeccedGetSuggestedUsersSkeleton.CallOptions,
+  ): Promise<AppBskyUnspeccedGetSuggestedUsersSkeleton.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getSuggestedUsersSkeleton',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
   getSuggestionsSkeleton(
     params?: AppBskyUnspeccedGetSuggestionsSkeleton.QueryParams,
     opts?: AppBskyUnspeccedGetSuggestionsSkeleton.CallOptions,
@@ -3250,6 +3455,30 @@ export class AppBskyUnspeccedNS {
   ): Promise<AppBskyUnspeccedGetTrendingTopics.Response> {
     return this._client.call(
       'app.bsky.unspecced.getTrendingTopics',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getTrends(
+    params?: AppBskyUnspeccedGetTrends.QueryParams,
+    opts?: AppBskyUnspeccedGetTrends.CallOptions,
+  ): Promise<AppBskyUnspeccedGetTrends.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getTrends',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getTrendsSkeleton(
+    params?: AppBskyUnspeccedGetTrendsSkeleton.QueryParams,
+    opts?: AppBskyUnspeccedGetTrendsSkeleton.CallOptions,
+  ): Promise<AppBskyUnspeccedGetTrendsSkeleton.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getTrendsSkeleton',
       params,
       undefined,
       opts,
@@ -3360,11 +3589,11 @@ export class ChatBskyNS {
 
 export class ChatBskyActorNS {
   _client: XrpcClient
-  declaration: DeclarationRecord
+  declaration: ChatBskyActorDeclarationRecord
 
   constructor(client: XrpcClient) {
     this._client = client
-    this.declaration = new DeclarationRecord(client)
+    this.declaration = new ChatBskyActorDeclarationRecord(client)
   }
 
   deleteAccount(
@@ -3392,7 +3621,7 @@ export class ChatBskyActorNS {
   }
 }
 
-export class DeclarationRecord {
+export class ChatBskyActorDeclarationRecord {
   _client: XrpcClient
 
   constructor(client: XrpcClient) {
@@ -3479,6 +3708,17 @@ export class ChatBskyConvoNS {
       data,
       opts,
     )
+  }
+
+  addReaction(
+    data?: ChatBskyConvoAddReaction.InputSchema,
+    opts?: ChatBskyConvoAddReaction.CallOptions,
+  ): Promise<ChatBskyConvoAddReaction.Response> {
+    return this._client
+      .call('chat.bsky.convo.addReaction', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ChatBskyConvoAddReaction.toKnownErr(e)
+      })
   }
 
   deleteMessageForSelf(
@@ -3572,6 +3812,17 @@ export class ChatBskyConvoNS {
     opts?: ChatBskyConvoMuteConvo.CallOptions,
   ): Promise<ChatBskyConvoMuteConvo.Response> {
     return this._client.call('chat.bsky.convo.muteConvo', opts?.qp, data, opts)
+  }
+
+  removeReaction(
+    data?: ChatBskyConvoRemoveReaction.InputSchema,
+    opts?: ChatBskyConvoRemoveReaction.CallOptions,
+  ): Promise<ChatBskyConvoRemoveReaction.Response> {
+    return this._client
+      .call('chat.bsky.convo.removeReaction', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ChatBskyConvoRemoveReaction.toKnownErr(e)
+      })
   }
 
   sendMessage(
@@ -3842,6 +4093,18 @@ export class ToolsOzoneModerationNS {
   ): Promise<ToolsOzoneModerationGetRepos.Response> {
     return this._client.call(
       'tools.ozone.moderation.getRepos',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getSubjects(
+    params?: ToolsOzoneModerationGetSubjects.QueryParams,
+    opts?: ToolsOzoneModerationGetSubjects.CallOptions,
+  ): Promise<ToolsOzoneModerationGetSubjects.Response> {
+    return this._client.call(
+      'tools.ozone.moderation.getSubjects',
       params,
       undefined,
       opts,

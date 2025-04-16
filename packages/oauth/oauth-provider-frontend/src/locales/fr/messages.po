@@ -1,0 +1,296 @@
+msgid ""
+msgstr ""
+"POT-Creation-Date: 2025-03-19 13:49-0500\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: @lingui/cli\n"
+"Language: fr\n"
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Plural-Forms: \n"
+
+#: src/routes/account/_minimalLayout/sign-in.tsx:155
+msgid "@handle or email"
+msgstr "@identifiant ou adresse email"
+
+#: src/routes/account/_minimalLayout/sign-in.tsx:49
+msgid "← Back to accounts"
+msgstr "← Retour à la liste des comptes"
+
+#: src/data/useClientName.ts:24
+msgid "A local app"
+msgstr "Une application anonyme"
+
+#: src/routes/account/_minimalLayout/reset-password.tsx:65
+msgid "A new password is required"
+msgstr "Un nouveau mot de passe est requis"
+
+#: src/routes/account/_minimalLayout/index.tsx:64
+msgid "Accounts"
+msgstr "Utilisateurs"
+
+#: src/routes/account/_minimalLayout/sign-in.tsx:125
+#: src/routes/account/_minimalLayout/reset-password.tsx:51
+#: src/routes/account/_minimalLayout/reset-password.tsx:78
+msgid "An error occurred, please try again."
+msgstr "Une erreur s'est produite, veuillez réessayer."
+
+#: src/routes/account/_appLayout/$sub.tsx:270
+msgid "Are you sure you want to remove this device?"
+msgstr "Êtes-vous sûr de vouloir déconnecter cet appareil ?"
+
+#: src/routes/account/_appLayout/$sub.tsx:176
+msgid "Are you sure you want to revoke access? This application won't be able to access your account anymore."
+msgstr "Êtes-vous sûr de vouloir supprimer l'accès? Cette application ne sera plus en mesure d'accéder à vos informations."
+
+#: src/routes/account/_minimalLayout/reset-password.tsx:122
+#: src/routes/account/_minimalLayout/reset-password.tsx:195
+msgid "Back to sign in"
+msgstr "Retour vers la page de connexion"
+
+#: src/components/Prompt.tsx:56
+msgid "Cancel"
+msgstr "Annuler"
+
+#: src/routes/account/_minimalLayout/reset-password.tsx:319
+msgid "Click here to send a new code to your email."
+msgstr "Cliquez ici pour envoyer un nouveau code dans votre boîte mail."
+
+#: src/routes/account/_minimalLayout/sign-in.tsx:193
+#: src/routes/account/_minimalLayout/reset-password.tsx:222
+msgid "Code"
+msgstr "Code"
+
+#: src/routes/account/_minimalLayout/reset-password.tsx:88
+msgid "Code was resent"
+msgstr "Un nouveau code a été envoyé"
+
+#: src/routes/account/_appLayout/$sub.tsx:52
+msgid "Connected apps"
+msgstr "Applications connectées"
+
+#: src/routes/account/_minimalLayout/sign-in.tsx:143
+msgid "Credentials"
+msgstr "Identifiants"
+
+#: src/routes/account/_minimalLayout/reset-password.tsx:314
+msgid "Don't see the email? <0>Try sending again.</0>"
+msgstr "Vous ne voyez pas l'email ? <0>Essayez d'envoyer à nouveau.</0>"
+
+#: src/routes/account/_minimalLayout/reset-password.tsx:149
+msgid "Email"
+msgstr "Email"
+
+#: src/routes/account/_minimalLayout/reset-password.tsx:62
+msgid "Email code is required"
+msgstr "Veuillez entrer le code de vérification envoyé par email"
+
+#: src/routes/account/_minimalLayout/reset-password.tsx:42
+msgid "Email is required"
+msgstr "L'adresse email est requise"
+
+#: src/routes/account/_minimalLayout/reset-password.tsx:264
+msgid "Enter a new password"
+msgstr "Entrez un nouveau mot de passe"
+
+#: src/routes/account/_minimalLayout/reset-password.tsx:154
+msgid "Enter your email"
+msgstr "Entrez votre adresse email"
+
+#: src/routes/account/_minimalLayout/reset-password.tsx:132
+msgid "Enter your email to receive a reset code."
+msgstr "Entrez votre adresse email pour recevoir un code de réinitialisation."
+
+#: src/routes/account/_appLayout/$sub.tsx:60
+msgid "Failed to load connected apps"
+msgstr "Échec du chargement des applications connectées"
+
+#: src/routes/account/_appLayout/$sub.tsx:91
+msgid "Failed to load devices"
+msgstr "Échec du chargement des appareils"
+
+#: src/routes/account/_appLayout/$sub.tsx:222
+msgid "Failed to remove device"
+msgstr "Échec de la suppression de l'appareil"
+
+#: src/routes/account/_minimalLayout/reset-password.tsx:94
+msgid "Failed to resend code"
+msgstr "Échec de l'envoi du code par email"
+
+#: src/routes/account/_appLayout/$sub.tsx:147
+msgid "Failed to sign out"
+msgstr "Échec de la déconnexion"
+
+#: src/routes/account/_minimalLayout/sign-in.tsx:235
+msgid "Forgot password?"
+msgstr "Mot de passe oublié ?"
+
+#: src/routes/account/_minimalLayout/reset-password.tsx:186
+msgid "Get reset code"
+msgstr "Obtenir le code de réinitialisation"
+
+#: src/routes/account/_appLayout/$sub.tsx:42
+msgid "Home"
+msgstr "Accueil"
+
+#: src/routes/account/_minimalLayout/sign-in.tsx:150
+msgid "Identifier"
+msgstr "Identifiant"
+
+#: src/routes/account/_minimalLayout/reset-password.tsx:41
+msgid "Invalid email"
+msgstr "Adresse email invalide"
+
+#: src/routes/account/_minimalLayout/sign-in.tsx:83
+msgid "Invalid handle"
+msgstr "Identifiant invalide"
+
+#: src/routes/account/_minimalLayout/sign-in.tsx:123
+msgid "Invalid identifier or password."
+msgstr "Identifiant ou mot de passe invalide."
+
+#: src/routes/account/_appLayout/$sub.tsx:77
+msgid "It appears that you haven’t used this account to sign in to any apps yet."
+msgstr "Il semble que vous n'ayez pas encore utilisé ce compte pour vous connecter à une application."
+
+#: src/routes/account/_minimalLayout.tsx:21
+#: src/components/Nav.tsx:18
+msgid "Logo"
+msgstr "Logo"
+
+#: src/routes/account/_appLayout/$sub.tsx:107
+msgid "Looks like you aren't logged in on any other devices."
+msgstr "Votre compte n'est utilisé sur aucun autre appareil."
+
+#: src/data/useFriendlyClientId.ts:13
+msgid "loopback"
+msgstr ""
+
+#: src/routes/account/_appLayout/$sub.tsx:83
+msgid "My devices"
+msgstr "Mes appareils"
+
+#: src/routes/account/_appLayout/$sub.tsx:75
+msgid "No connected apps"
+msgstr "Aucune application connectée"
+
+#: src/routes/account/_appLayout/$sub.tsx:106
+msgid "No devices"
+msgstr "Aucun appareil"
+
+#: src/routes/account/_minimalLayout/sign-in.tsx:170
+#: src/routes/account/_minimalLayout/sign-in.tsx:176
+#: src/routes/account/_minimalLayout/reset-password.tsx:257
+msgid "Password"
+msgstr "Mot de passe"
+
+#: src/routes/account/_minimalLayout/sign-in.tsx:88
+msgid "Password is required"
+msgstr "Le mot de passe est requis"
+
+#: src/routes/account/_minimalLayout/reset-password.tsx:68
+msgid "Password must be at least {MIN_PASSWORD_LENGTH} characters"
+msgstr "Le mot de passe doit contenir au moins {MIN_PASSWORD_LENGTH} caractères"
+
+#: src/routes/account/_appLayout/$sub.tsx:271
+#: src/routes/account/_appLayout/$sub.tsx:276
+msgid "Remove"
+msgstr "Déconnecter"
+
+#: src/routes/account/_appLayout/$sub.tsx:269
+msgid "Remove this device"
+msgstr "Déconnecter cet appareil"
+
+#: src/routes/account/_minimalLayout/reset-password.tsx:129
+#: src/routes/account/_minimalLayout/reset-password.tsx:308
+msgid "Reset password"
+msgstr "Réinitialiser le mot de passe"
+
+#: src/routes/account/_appLayout/$sub.tsx:172
+msgid "Revoke access to {clientName}"
+msgstr ""
+
+#: src/routes/account/_appLayout/$sub.tsx:173
+msgid "Revoke access to this application"
+msgstr "Révoquer l'accès à cette application"
+
+#: src/components/AccountSelector.tsx:32
+msgid "Select an account"
+msgstr "Sélectionner un compte"
+
+#: src/routes/account/_minimalLayout/index.tsx:67
+msgid "Select the account you would like to manage."
+msgstr "Sélectionnez le compte que vous souhaitez gérer."
+
+#: src/routes/account/_minimalLayout/sign-in.tsx:134
+#: src/routes/account/_minimalLayout/sign-in.tsx:226
+msgid "Sign in"
+msgstr "Se connecter"
+
+#: src/routes/account/_minimalLayout/index.tsx:107
+msgid "Sign in with another account"
+msgstr "Se connecter avec un autre compte"
+
+#: src/routes/account/_appLayout/$sub.tsx:178
+#: src/routes/account/_appLayout/$sub.tsx:183
+#: src/components/AccountSelector.tsx:103
+msgid "Sign out"
+msgstr "Déconnecter"
+
+#: src/routes/account/_minimalLayout/index.tsx:39
+msgid "Something went wrong"
+msgstr "Une erreur s'est produite"
+
+#: src/routes/account/_minimalLayout/reset-password.tsx:115
+msgid "Success!"
+msgstr "Succès !"
+
+#: src/routes/account/_appLayout/$sub.tsx:216
+msgid "Successfully removed device"
+msgstr "Déconnexion de l'appareil réussie"
+
+#: src/routes/account/_appLayout/$sub.tsx:141
+msgid "Successfully signed out"
+msgstr "Déconnexion réussie"
+
+#: src/routes/account/_appLayout/$sub.tsx:263
+msgid "This device"
+msgstr "Cet appareil"
+
+#: src/routes/account/_appLayout/$sub.tsx:247
+msgid "Unknown user agent"
+msgstr "Appareil inconnu"
+
+#: src/components/Avatar.tsx:24
+msgid "User avatar"
+msgstr "Avatar de l'utilisateur"
+
+#. placeholder {0}: getAccountName(account)
+#: src/routes/account/_minimalLayout/index.tsx:83
+msgid "View and manage account for {0}"
+msgstr "Afficher et gérer le compte de {0}"
+
+#: src/routes/account/_minimalLayout/index.tsx:41
+msgid "We weren't able to load your accounts. Please refresh the page to try again."
+msgstr "Nous n'avons pas pu charger vos comptes. Veuillez réactualiser la page pour réessayer."
+
+#: src/components/ErrorScreen.tsx:19
+msgid "Whoops! An error occurred."
+msgstr "Oups ! Une erreur s'est produite."
+
+#: src/routes/account/_minimalLayout/sign-in.tsx:198
+#: src/routes/account/_minimalLayout/reset-password.tsx:228
+msgid "XXXXX-XXXXX"
+msgstr "XXXXX-XXXXX"
+
+#: src/routes/account/_appLayout/$sub.tsx:47
+msgid "Your account"
+msgstr "Votre compte"
+
+#: src/routes/account/_minimalLayout/reset-password.tsx:118
+msgid "Your password has been reset."
+msgstr "Votre mot de passe a été réinitialisé."

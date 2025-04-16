@@ -4,6 +4,7 @@ import { oauthAuthorizationDetailsSchema } from './oauth-authorization-details.j
 import { oauthClientIdSchema } from './oauth-client-id.js'
 import { oauthCodeChallengeMethodSchema } from './oauth-code-challenge-method.js'
 import { oauthRedirectUriSchema } from './oauth-redirect-uri.js'
+import { oauthResponseModeSchema } from './oauth-response-mode.js'
 import { oauthResponseTypeSchema } from './oauth-response-type.js'
 import { oauthScopeSchema } from './oauth-scope.js'
 import { oidcClaimsParameterSchema } from './oidc-claims-parameter.js'
@@ -35,7 +36,7 @@ export const oauthAuthorizationRequestParametersSchema = z.object({
   // OIDC
 
   // Default depend on response_type
-  response_mode: z.enum(['query', 'fragment', 'form_post']).optional(),
+  response_mode: oauthResponseModeSchema.optional(),
 
   nonce: z.string().optional(),
 

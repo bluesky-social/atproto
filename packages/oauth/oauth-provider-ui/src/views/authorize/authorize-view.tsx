@@ -1,15 +1,13 @@
 import { Trans, useLingui } from '@lingui/react/macro'
 import { useEffect, useState } from 'react'
-import type {
-  AuthorizeData,
-  CustomizationData,
-} from '@atproto/oauth-provider-api'
+import type { CustomizationData, Session } from '@atproto/oauth-provider-api'
 import {
   LayoutTitlePage,
   LayoutTitlePageProps,
 } from '../../components/layouts/layout-title-page.tsx'
 import { useApi } from '../../hooks/use-api.ts'
 import { useBoundDispatch } from '../../hooks/use-bound-dispatch.ts'
+import type { AuthorizeData } from '../../hydration-data'
 import { Override } from '../../lib/util.ts'
 import { AcceptView } from './accept/accept-view.tsx'
 import { ResetPasswordView } from './reset-password/reset-password-view.tsx'
@@ -22,6 +20,7 @@ export type AuthorizeViewProps = Override<
   {
     customizationData?: CustomizationData
     authorizeData: AuthorizeData
+    sessions: readonly Session[]
   }
 >
 
@@ -36,6 +35,7 @@ enum View {
 
 export function AuthorizeView({
   authorizeData,
+  sessions: initialSessions,
   customizationData,
 
   // LayoutTitlePage
@@ -69,14 +69,17 @@ export function AuthorizeView({
     doConfirmResetPassword,
     doAccept,
     doReject,
-  } = useApi({ ...authorizeData, onRedirected: showDone })
+  } = useApi({
+    sessions: initialSessions,
+    onRedirected: showDone,
+  })
 
   // Navigate when the user signs-in (selects a new session)
   const session = sessions.find((s) => s.selected && !s.loginRequired)
   useEffect(() => {
     if (session) {
       if (session.consentRequired) showAccept()
-      else doAccept(session.account)
+      else doAccept(session.account.sub)
     }
   }, [session, doAccept, showAccept])
 
@@ -98,7 +101,7 @@ export function AuthorizeView({
         customizationData={customizationData}
         onSignIn={showSignIn}
         onSignUp={canSignUp ? showSignUp : undefined}
-        onCancel={doReject}
+        onCancel={() => doReject()}
       />
     )
   }
@@ -135,7 +138,7 @@ export function AuthorizeView({
         sessions={sessions}
         selectSub={selectSub}
         onSignIn={doSignIn}
-        onBack={forceSignIn ? doReject : showWelcome}
+        onBack={forceSignIn ? () => doReject() : showWelcome}
         onForgotPassword={(email) => {
           showResetPassword()
           setResetPasswordHint(email)
@@ -156,8 +159,8 @@ export function AuthorizeView({
         clientTrusted={authorizeData.clientTrusted}
         account={session.account}
         scopeDetails={authorizeData.scopeDetails}
-        onAccept={() => doAccept(session.account)}
-        onReject={doReject}
+        onAccept={() => doAccept(session.account.sub)}
+        onReject={() => doReject()}
         onBack={
           forceSignIn
             ? undefined

@@ -53,7 +53,7 @@ export const oauthClientMetadataSchema = z.object({
   client_uri: webUriSchema.optional(),
   policy_uri: webUriSchema.optional(),
   tos_uri: webUriSchema.optional(),
-  logo_uri: webUriSchema.optional(), // TODO: allow data: uri ?
+  logo_uri: webUriSchema.optional(), // @TODO: allow data: uri ?
 
   /**
    * Default Maximum Authentication Age. Specifies that the End-User MUST be

@@ -28,8 +28,8 @@ export function WelcomeView({
     <LayoutWelcome {...props} title={props.title ?? t`Authenticate`}>
       {onSignUp && (
         <Button
-          className={'m-1 w-60 max-w-full min-w-min'}
-          color={onSignIn ? 'brand' : undefined}
+          className={'m-1 w-60 min-w-min max-w-full'}
+          color={onSignIn ? 'primary' : undefined}
           onClick={onSignUp}
         >
           <Trans>Create a new account</Trans>
@@ -38,8 +38,8 @@ export function WelcomeView({
 
       {onSignIn && (
         <Button
-          className={'m-1 w-60 max-w-full min-w-min'}
-          color={onSignUp ? undefined : 'brand'}
+          className={'m-1 w-60 min-w-min max-w-full'}
+          color={onSignUp ? undefined : 'primary'}
           onClick={onSignIn}
         >
           <Trans>Sign in</Trans>
@@ -47,7 +47,7 @@ export function WelcomeView({
       )}
 
       {onCancel && (
-        <Button className="m-1 w-60 max-w-full min-w-min" onClick={onCancel}>
+        <Button className="m-1 w-60 min-w-min max-w-full" onClick={onCancel}>
           <Trans>Cancel</Trans>
         </Button>
       )}

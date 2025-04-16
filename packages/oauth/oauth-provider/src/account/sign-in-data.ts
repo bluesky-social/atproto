@@ -1,15 +1,15 @@
 import { z } from 'zod'
-import { authenticateAccountDataSchema } from './account-store.js'
+import { localeSchema } from '../lib/util/locale.js'
+import { emailOtpSchema } from '../types/email-otp.js'
+import { newPasswordSchema, oldPasswordSchema } from '../types/password.js'
 
-export const signInDataSchema = authenticateAccountDataSchema
-  .extend({
-    /**
-     * If false, the account must not be returned from
-     * {@link AccountStore.listDeviceAccounts}. Note that this only makes sense when
-     * used with a device ID.
-     */
-    remember: z.boolean().optional().default(false),
+export const signInDataSchema = z
+  .object({
+    locale: localeSchema,
+    username: z.string(),
+    password: z.union([oldPasswordSchema, newPasswordSchema]),
+    emailOtp: emailOtpSchema.optional(),
   })
   .strict()
 
-export type SignInData = z.TypeOf<typeof signInDataSchema>
+export type SignInData = z.output<typeof signInDataSchema>

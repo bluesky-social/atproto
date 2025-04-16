@@ -1,23 +1,28 @@
 import { Jwks } from '@atproto/jwk'
+import type { Account } from '@atproto/oauth-provider-api'
 import {
   OAuthAuthorizationDetails,
   OAuthAuthorizationRequestParameters,
   OAuthClientMetadata,
   OAuthTokenResponse,
 } from '@atproto/oauth-types'
-import { Account } from './account/account.js'
 import { SignInData } from './account/sign-in-data.js'
-import { SignUpData } from './account/sign-up-data.js'
+import { SignUpInput } from './account/sign-up-input.js'
 import { ClientAuth } from './client/client-auth.js'
 import { ClientId } from './client/client-id.js'
 import { ClientInfo } from './client/client-info.js'
 import { Client } from './client/client.js'
 import { InvalidRequestError } from './errors/invalid-request-error.js'
-import { HcaptchaConfig, HcaptchaVerifyResult } from './lib/hcaptcha.js'
+import {
+  HcaptchaClientTokens,
+  HcaptchaConfig,
+  HcaptchaVerifyResult,
+} from './lib/hcaptcha.js'
 import { RequestMetadata } from './lib/http/request.js'
 import { Awaitable } from './lib/util/type.js'
 import { AccessDeniedError, OAuthError } from './oauth-errors.js'
-import { DeviceAccountInfo, DeviceId } from './oauth-store.js'
+import { DeviceId, SignUpData } from './oauth-store.js'
+import { RequestId } from './request/request-id.js'
 
 // Make sure all types needed to implement the OAuthHooks are exported
 export {
@@ -28,8 +33,8 @@ export {
   type ClientAuth,
   type ClientId,
   type ClientInfo,
-  type DeviceAccountInfo,
   type DeviceId,
+  type HcaptchaClientTokens,
   type HcaptchaConfig,
   type HcaptchaVerifyResult,
   InvalidRequestError,
@@ -42,6 +47,7 @@ export {
   type RequestMetadata,
   type SignInData,
   type SignUpData,
+  type SignUpInput,
 }
 
 export type OAuthHooks = {
@@ -58,49 +64,25 @@ export type OAuthHooks = {
   ) => Awaitable<undefined | Partial<ClientInfo>>
 
   /**
-   * Allows enriching the authorization details with additional information
-   * when the tokens are issued.
-   *
-   * @see {@link https://datatracker.ietf.org/doc/html/rfc9396 | RFC 9396}
+   * This hook is called when a user attempts to sign up, after every validation
+   * has passed (including hcaptcha).
    */
-  getAuthorizationDetails?: (data: {
-    client: Client
-    clientAuth: ClientAuth
-    clientMetadata: RequestMetadata
-    parameters: OAuthAuthorizationRequestParameters
-    account: Account
-  }) => Awaitable<undefined | OAuthAuthorizationDetails>
-
-  /**
-   * This hook is called whenever an hcaptcha challenge is verified
-   * during sign-up (if hcaptcha is enabled).
-   *
-   * @throws {InvalidRequestError} to deny the sign-up
-   */
-  onSignupHcaptchaResult?: (data: {
-    data: SignUpData
-    /**
-     * This indicates not only wether the hCaptcha challenge succeeded, but also
-     * if the score was low enough according to the
-     * {@link HcaptchaConfig.scoreThreshold}.
-     *
-     * @see {@link HCaptchaClient.isAllowed}
-     */
-    allowed: boolean
-    result: HcaptchaVerifyResult
+  onSignUpAttempt?: (data: {
+    input: SignUpInput
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
   }) => Awaitable<void>
 
   /**
-   * This hook is called when a user attempts to sign up, after every validation
-   * has passed (including hcaptcha).
+   * This hook is called when a user attempts to sign up, after the hcaptcha
+   * `/siteverify` request has been made (and before the result is validated).
    */
-  onSignupAttempt?: (data: {
-    data: SignUpData
+  onHcaptchaResult?: (data: {
+    input: SignUpInput
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
-    hcaptchaResult?: HcaptchaVerifyResult
+    tokens: HcaptchaClientTokens
+    result: HcaptchaVerifyResult
   }) => Awaitable<void>
 
   /**
@@ -110,8 +92,13 @@ export type OAuthHooks = {
    */
   onSignedUp?: (data: {
     data: SignUpData
-    info: DeviceAccountInfo
     account: Account
+    deviceId: DeviceId
+    deviceMetadata: RequestMetadata
+  }) => Awaitable<void>
+
+  onSignInAttempt?: (data: {
+    data: SignInData
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
   }) => Awaitable<void>
@@ -123,7 +110,6 @@ export type OAuthHooks = {
    */
   onSignedIn?: (data: {
     data: SignInData
-    info: DeviceAccountInfo
     account: Account
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
@@ -146,6 +132,7 @@ export type OAuthHooks = {
     parameters: OAuthAuthorizationRequestParameters
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
+    requestId: RequestId
   }) => Awaitable<void>
 
   /**
@@ -160,8 +147,6 @@ export type OAuthHooks = {
     clientMetadata: RequestMetadata
     account: Account
     parameters: OAuthAuthorizationRequestParameters
-    /** null when "password grant" used (in which case {@link onAuthorized} won't have been called) */
-    deviceId: null | DeviceId
   }) => Awaitable<void>
 
   /**
@@ -175,7 +160,5 @@ export type OAuthHooks = {
     clientMetadata: RequestMetadata
     account: Account
     parameters: OAuthAuthorizationRequestParameters
-    /** null when "password grant" used (in which case {@link onAuthorized} won't have been called) */
-    deviceId: null | DeviceId
   }) => Awaitable<void>
 }

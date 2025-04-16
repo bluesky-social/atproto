@@ -1,13 +1,16 @@
+import assert from 'node:assert'
 import { Client, createOp as createPlcOp } from '@did-plc/lib'
 import { Selectable } from 'kysely'
 import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import {
   Account,
-  AccountInfo,
   AccountStore,
   AuthenticateAccountData,
+  AuthorizedClientData,
+  AuthorizedClients,
+  ClientId,
   Code,
-  DeviceAccountInfo,
+  DeviceAccount,
   DeviceData,
   DeviceId,
   DeviceStore,
@@ -23,6 +26,7 @@ import {
   ResetPasswordConfirmData,
   ResetPasswordRequestData,
   SignUpData,
+  Sub,
   TokenData,
   TokenId,
   TokenInfo,
@@ -35,16 +39,21 @@ import {
 } from '@atproto/xrpc-server'
 import { ActorStore } from '../actor-store/actor-store'
 import { BackgroundQueue } from '../background'
+import { fromDateISO } from '../db'
 import { ImageUrlBuilder } from '../image/image-url-builder'
+import { dbLogger } from '../logger'
 import { ServerMailer } from '../mailer'
 import { Sequencer, syncEvtDataFromCommit } from '../sequencer'
 import { AccountManager } from './account-manager'
-import { AccountStatus, ActorAccount } from './helpers/account'
-import * as authRequest from './helpers/authorization-request'
-import * as device from './helpers/device'
-import * as deviceAccount from './helpers/device-account'
-import * as token from './helpers/token'
-import * as usedRefreshToken from './helpers/used-refresh-token'
+import * as schemas from './db/schema'
+import * as accountHelper from './helpers/account'
+import { AccountStatus } from './helpers/account'
+import * as accountDeviceHelper from './helpers/account-device'
+import * as authRequestHelper from './helpers/authorization-request'
+import * as authorizedClientHelper from './helpers/authorized-client'
+import * as deviceHelper from './helpers/device'
+import * as tokenHelper from './helpers/token'
+import * as usedRefreshTokenHelper from './helpers/used-refresh-token'
 
 /**
  * This class' purpose is to implement the interface needed by the OAuthProvider
@@ -76,29 +85,6 @@ export class OAuthStore
 
   private get serviceDid() {
     return this.accountManager.serviceDid
-  }
-
-  private async buildAccount(row: Selectable<ActorAccount>): Promise<Account> {
-    const account = deviceAccount.toAccount(row, this.serviceDid)
-
-    if (!account.name || !account.picture) {
-      const did = account.sub
-
-      const profile = await this.actorStore.read(did, async (store) => {
-        return store.record.getProfileRecord()
-      })
-
-      if (profile) {
-        const { avatar, displayName } = profile
-
-        account.name ||= displayName
-        account.picture ||= avatar
-          ? this.imageUrlBuilder.build('avatar', did, avatar.ref.toString())
-          : undefined
-      }
-    }
-
-    return account
   }
 
   private async verifyEmailAvailability(email: string): Promise<void> {
@@ -244,72 +230,99 @@ export class OAuthStore
     }
   }
 
-  async addDeviceAccount(
-    deviceId: DeviceId,
-    sub: string,
-    remember: boolean,
-  ): Promise<DeviceAccountInfo> {
-    const [row] = await this.db.executeWithRetry(
-      deviceAccount.createOrUpdateQB(this.db, deviceId, sub, remember),
-    )
-    if (!row) throw new Error('Failed to create device account')
-    return deviceAccount.toDeviceAccountInfo(row)
+  async setAuthorizedClient(
+    sub: Sub,
+    clientId: ClientId,
+    data: AuthorizedClientData,
+  ): Promise<void> {
+    await authorizedClientHelper.upsert(this.db, sub, clientId, data)
   }
 
-  async addAuthorizedClient(
-    deviceId: DeviceId,
-    sub: string,
-    clientId: string,
-  ): Promise<void> {
-    await this.db.transaction(async (dbTxn) => {
-      const row = await deviceAccount
-        .readQB(dbTxn, deviceId, sub)
-        .executeTakeFirstOrThrow()
-
-      const { authorizedClients } = deviceAccount.toDeviceAccountInfo(row)
-      if (!authorizedClients.includes(clientId)) {
-        await deviceAccount
-          .updateQB(dbTxn, deviceId, sub, {
-            authorizedClients: [...authorizedClients, clientId],
-          })
-          .execute()
-      }
+  async getAccount(sub: Sub): Promise<{
+    account: Account
+    authorizedClients: AuthorizedClients
+  }> {
+    const accountRow = await accountHelper.getAccount(this.db, sub, {
+      includeDeactivated: true,
     })
+
+    assert(accountRow, 'Account not found')
+
+    const account = await this.buildAccount(accountRow)
+    const authorizedClients = await authorizedClientHelper.getAuthorizedClients(
+      this.db,
+      sub,
+    )
+
+    return { account, authorizedClients }
+  }
+
+  async upsertDeviceAccount(deviceId: DeviceId, sub: string): Promise<void> {
+    await this.db.executeWithRetry(
+      accountDeviceHelper.upsertQB(this.db, deviceId, sub),
+    )
   }
 
   async getDeviceAccount(
     deviceId: DeviceId,
     sub: string,
-  ): Promise<AccountInfo | null> {
-    const row = await deviceAccount
-      .getAccountInfoQB(this.db, deviceId, sub)
+  ): Promise<DeviceAccount | null> {
+    const row = await accountDeviceHelper
+      .selectQB(this.db, { deviceId, sub })
       .executeTakeFirst()
 
     if (!row) return null
 
     return {
+      deviceId,
+      deviceData: deviceHelper.rowToDeviceData(row),
       account: await this.buildAccount(row),
-      info: deviceAccount.toDeviceAccountInfo(row),
+      authorizedClients: await authorizedClientHelper.getAuthorizedClients(
+        this.db,
+        sub,
+      ),
+      createdAt: fromDateISO(row.adCreatedAt),
+      updatedAt: fromDateISO(row.adUpdatedAt),
     }
   }
 
-  async listDeviceAccounts(deviceId: DeviceId): Promise<AccountInfo[]> {
-    const rows = await deviceAccount
-      .listRememberedQB(this.db, deviceId)
-      .execute()
-
-    return Promise.all(
-      rows.map(async (row) => ({
-        account: await this.buildAccount(row),
-        info: deviceAccount.toDeviceAccountInfo(row),
-      })),
+  async removeDeviceAccount(deviceId: DeviceId, sub: Sub): Promise<void> {
+    await this.db.executeWithRetry(
+      accountDeviceHelper.removeQB(this.db, deviceId, sub),
     )
   }
 
-  async removeDeviceAccount(deviceId: DeviceId, sub: string): Promise<void> {
-    await this.db.executeWithRetry(
-      deviceAccount.removeQB(this.db, deviceId, sub),
+  async listDeviceAccounts(
+    filter: { sub: Sub } | { deviceId: DeviceId },
+  ): Promise<DeviceAccount[]> {
+    const rows = await accountDeviceHelper.selectQB(this.db, filter).execute()
+
+    const uniqueDids = [...new Set(rows.map((row) => row.did))]
+
+    // Enrich all distinct account with their profile data
+    const accounts = new Map(
+      await Promise.all(
+        Array.from(uniqueDids, async (did): Promise<[Sub, Account]> => {
+          const row = rows.find((r) => r.did === did)!
+          return [did, await this.buildAccount(row)]
+        }),
+      ),
     )
+
+    const authorizedClientsMap =
+      await authorizedClientHelper.getAuthorizedClientsMulti(
+        this.db,
+        uniqueDids,
+      )
+
+    return rows.map((row) => ({
+      deviceId: row.deviceId,
+      deviceData: deviceHelper.rowToDeviceData(row),
+      account: accounts.get(row.did)!,
+      authorizedClients: authorizedClientsMap.get(row.did)!,
+      createdAt: fromDateISO(row.adCreatedAt),
+      updatedAt: fromDateISO(row.adUpdatedAt),
+    }))
   }
 
   async resetPasswordRequest({
@@ -383,58 +396,70 @@ export class OAuthStore
   // RequestStore
 
   async createRequest(id: RequestId, data: RequestData): Promise<void> {
-    await this.db.executeWithRetry(authRequest.createQB(this.db, id, data))
+    await this.db.executeWithRetry(
+      authRequestHelper.createQB(this.db, id, data),
+    )
   }
 
   async readRequest(id: RequestId): Promise<RequestData | null> {
     try {
-      const row = await authRequest.readQB(this.db, id).executeTakeFirst()
+      const row = await authRequestHelper.readQB(this.db, id).executeTakeFirst()
       if (!row) return null
-      return authRequest.rowToRequestData(row)
+      return authRequestHelper.rowToRequestData(row)
     } finally {
       // Take the opportunity to clean up expired requests. Do this after we got
       // the current (potentially expired) request data to allow the provider to
       // handle expired requests.
       this.backgroundQueue.add(async () => {
-        await this.db.executeWithRetry(authRequest.removeOldExpiredQB(this.db))
+        await this.db.executeWithRetry(
+          authRequestHelper.removeOldExpiredQB(this.db),
+        )
       })
     }
   }
 
   async updateRequest(id: RequestId, data: UpdateRequestData): Promise<void> {
-    await this.db.executeWithRetry(authRequest.updateQB(this.db, id, data))
+    await this.db.executeWithRetry(
+      authRequestHelper.updateQB(this.db, id, data),
+    )
   }
 
   async deleteRequest(id: RequestId): Promise<void> {
-    await this.db.executeWithRetry(authRequest.removeByIdQB(this.db, id))
+    await this.db.executeWithRetry(authRequestHelper.removeByIdQB(this.db, id))
   }
 
   async findRequestByCode(code: Code): Promise<FoundRequestResult | null> {
-    const row = await authRequest.findByCodeQB(this.db, code).executeTakeFirst()
-    return row ? authRequest.rowToFoundRequestResult(row) : null
+    const row = await authRequestHelper
+      .findByCodeQB(this.db, code)
+      .executeTakeFirst()
+    return row ? authRequestHelper.rowToFoundRequestResult(row) : null
   }
 
   // DeviceStore
 
   async createDevice(deviceId: DeviceId, data: DeviceData): Promise<void> {
-    await this.db.executeWithRetry(device.createQB(this.db, deviceId, data))
+    await this.db.executeWithRetry(
+      deviceHelper.createQB(this.db, deviceId, data),
+    )
   }
 
   async readDevice(deviceId: DeviceId): Promise<null | DeviceData> {
-    const row = await device.readQB(this.db, deviceId).executeTakeFirst()
-    return row ? device.rowToDeviceData(row) : null
+    const row = await deviceHelper.readQB(this.db, deviceId).executeTakeFirst()
+    return row ? deviceHelper.rowToDeviceData(row) : null
   }
 
   async updateDevice(
     deviceId: DeviceId,
     data: Partial<DeviceData>,
   ): Promise<void> {
-    await this.db.executeWithRetry(device.updateQB(this.db, deviceId, data))
+    await this.db.executeWithRetry(
+      deviceHelper.updateQB(this.db, deviceId, data),
+    )
   }
 
   async deleteDevice(deviceId: DeviceId): Promise<void> {
     // Will cascade to device_account (device_account_device_id_fk)
-    await this.db.executeWithRetry(device.removeQB(this.db, deviceId))
+    await this.db.executeWithRetry(deviceHelper.removeQB(this.db, deviceId))
   }
 
   // TokenStore
@@ -446,7 +471,7 @@ export class OAuthStore
   ): Promise<void> {
     await this.db.transaction(async (dbTxn) => {
       if (refreshToken) {
-        const { count } = await usedRefreshToken
+        const { count } = await usedRefreshTokenHelper
           .countQB(dbTxn, refreshToken)
           .executeTakeFirstOrThrow()
 
@@ -455,18 +480,25 @@ export class OAuthStore
         }
       }
 
-      return token.createQB(dbTxn, id, data, refreshToken).execute()
+      return tokenHelper.createQB(dbTxn, id, data, refreshToken).execute()
     })
   }
 
+  async listAccountTokens(sub: Sub): Promise<TokenInfo[]> {
+    const rows = await tokenHelper.findByQB(this.db, { did: sub }).execute()
+    return Promise.all(rows.map((row) => this.toTokenInfo(row)))
+  }
+
   async readToken(tokenId: TokenId): Promise<TokenInfo | null> {
-    const row = await token.findByQB(this.db, { tokenId }).executeTakeFirst()
-    return row ? token.toTokenInfo(row, this.serviceDid) : null
+    const row = await tokenHelper
+      .findByQB(this.db, { tokenId })
+      .executeTakeFirst()
+    return row ? this.toTokenInfo(row) : null
   }
 
   async deleteToken(tokenId: TokenId): Promise<void> {
     // Will cascade to used_refresh_token (used_refresh_token_fk)
-    await this.db.executeWithRetry(token.removeQB(this.db, tokenId))
+    await this.db.executeWithRetry(tokenHelper.removeQB(this.db, tokenId))
   }
 
   async rotateToken(
@@ -476,17 +508,17 @@ export class OAuthStore
     newData: NewTokenData,
   ): Promise<void> {
     const err = await this.db.transaction(async (dbTxn) => {
-      const { id, currentRefreshToken } = await token
+      const { id, currentRefreshToken } = await tokenHelper
         .forRotateQB(dbTxn, tokenId)
         .executeTakeFirstOrThrow()
 
       if (currentRefreshToken) {
-        await usedRefreshToken
+        await usedRefreshTokenHelper
           .insertQB(dbTxn, id, currentRefreshToken)
           .execute()
       }
 
-      const { count } = await usedRefreshToken
+      const { count } = await usedRefreshTokenHelper
         .countQB(dbTxn, newRefreshToken)
         .executeTakeFirstOrThrow()
 
@@ -495,7 +527,7 @@ export class OAuthStore
         return new Error('New refresh token already in use')
       }
 
-      await token
+      await tokenHelper
         .rotateQB(dbTxn, id, newTokenId, newRefreshToken, newData)
         .execute()
     })
@@ -506,7 +538,7 @@ export class OAuthStore
   async findTokenByRefreshToken(
     refreshToken: RefreshToken,
   ): Promise<TokenInfo | null> {
-    const used = await usedRefreshToken
+    const used = await usedRefreshTokenHelper
       .findByTokenQB(this.db, refreshToken)
       .executeTakeFirst()
 
@@ -514,12 +546,59 @@ export class OAuthStore
       ? { id: used.tokenId }
       : { currentRefreshToken: refreshToken }
 
-    const row = await token.findByQB(this.db, search).executeTakeFirst()
-    return row ? token.toTokenInfo(row, this.serviceDid) : null
+    const row = await tokenHelper.findByQB(this.db, search).executeTakeFirst()
+    return row ? this.toTokenInfo(row) : null
   }
 
   async findTokenByCode(code: Code): Promise<TokenInfo | null> {
-    const row = await token.findByQB(this.db, { code }).executeTakeFirst()
-    return row ? token.toTokenInfo(row, this.serviceDid) : null
+    const row = await tokenHelper.findByQB(this.db, { code }).executeTakeFirst()
+    return row ? this.toTokenInfo(row) : null
+  }
+
+  private async toTokenInfo(
+    row: accountHelper.ActorAccount & Selectable<schemas.Token>,
+  ): Promise<TokenInfo> {
+    return {
+      id: row.tokenId,
+      data: tokenHelper.toTokenData(row),
+      account: await this.buildAccount(row),
+      currentRefreshToken: row.currentRefreshToken,
+    }
+  }
+
+  private async buildAccount(
+    row: accountHelper.ActorAccount,
+  ): Promise<Account> {
+    const account: Account = {
+      sub: row.did,
+      aud: this.serviceDid,
+      email: row.email || undefined,
+      email_verified: row.email ? row.emailConfirmedAt != null : undefined,
+      preferred_username: row.handle || undefined,
+    }
+
+    if (!account.name || !account.picture) {
+      const did = account.sub
+
+      const profile = await this.actorStore
+        .read(did, async (store) => {
+          return store.record.getProfileRecord()
+        })
+        .catch((err) => {
+          dbLogger.error({ err }, 'Failed to get profile record')
+          return null // No need to propagate
+        })
+
+      if (profile) {
+        const { avatar, displayName } = profile
+
+        account.name ||= displayName
+        account.picture ||= avatar
+          ? this.imageUrlBuilder.build('avatar', did, avatar.ref.toString())
+          : undefined
+      }
+    }
+
+    return account
   }
 }

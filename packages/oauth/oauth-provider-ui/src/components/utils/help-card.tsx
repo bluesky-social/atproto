@@ -1,7 +1,7 @@
 import { Trans } from '@lingui/react/macro'
+import { clsx } from 'clsx'
 import { JSX } from 'react'
 import type { LinkDefinition } from '@atproto/oauth-provider-api'
-import { clsx } from '../../lib/clsx.ts'
 import { Override } from '../../lib/util.ts'
 
 export type HelpCardProps = Override<
@@ -25,7 +25,7 @@ export function HelpCard({
     <p
       {...props}
       className={clsx(
-        'text-sm rounded-md bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-400 p-3',
+        'rounded-md bg-slate-100 p-3 text-sm text-slate-800 dark:bg-slate-800 dark:text-slate-400',
         className,
       )}
     >
@@ -36,7 +36,7 @@ export function HelpCard({
           href={helpLink.href}
           rel={helpLink.rel}
           target="_blank"
-          className="text-brand"
+          className="text-primary"
         >
           <Trans>Contact support</Trans>
         </a>

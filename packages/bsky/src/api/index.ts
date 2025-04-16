@@ -49,8 +49,12 @@ import registerPush from './app/bsky/notification/registerPush'
 import updateSeen from './app/bsky/notification/updateSeen'
 import getConfig from './app/bsky/unspecced/getConfig'
 import getPopularFeedGenerators from './app/bsky/unspecced/getPopularFeedGenerators'
+import getUnspeccedSuggestedFeeds from './app/bsky/unspecced/getSuggestedFeeds'
+import getSuggestedStarterPacks from './app/bsky/unspecced/getSuggestedStarterPacks'
+import getSuggestedUsers from './app/bsky/unspecced/getSuggestedUsers'
 import getTaggedSuggestions from './app/bsky/unspecced/getTaggedSuggestions'
 import getTrendingTopics from './app/bsky/unspecced/getTrendingTopics'
+import getTrends from './app/bsky/unspecced/getTrends'
 import getAccountInfos from './com/atproto/admin/getAccountInfos'
 import getSubjectStatus from './com/atproto/admin/getSubjectStatus'
 import updateSubjectStatus from './com/atproto/admin/updateSubjectStatus'
@@ -106,6 +110,10 @@ export default function (server: Server, ctx: AppContext) {
   unmuteThread(server, ctx)
   getSuggestedFollowsByActor(server, ctx)
   getTrendingTopics(server, ctx)
+  getTrends(server, ctx)
+  getSuggestedStarterPacks(server, ctx)
+  getSuggestedUsers(server, ctx)
+  getUnspeccedSuggestedFeeds(server, ctx)
   getLabelerServices(server, ctx)
   searchActors(server, ctx)
   searchActorsTypeahead(server, ctx)

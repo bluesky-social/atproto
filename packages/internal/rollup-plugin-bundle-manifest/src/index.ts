@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto'
 import { extname } from 'node:path'
 import mime from 'mime'
-import { Plugin } from 'rollup'
+import type { Plugin } from 'rollup'
 
 type AssetItem = {
   type: 'asset'
@@ -26,7 +26,7 @@ export type ManifestItem = AssetItem | ChunkItem
 
 export type Manifest = Record<string, ManifestItem>
 
-export default function bundleManifest({
+export function bundleManifest({
   name = 'bundle-manifest.json',
   data = false,
 }: {

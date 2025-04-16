@@ -1,9 +1,9 @@
+import type { Account } from '@atproto/oauth-provider-api'
 import {
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
   OAuthAuthorizationRequestParameters,
   OAuthAuthorizationServerMetadata,
 } from '@atproto/oauth-types'
-import { Account } from '../account/account.js'
 import { ClientAuth } from '../client/client-auth.js'
 import { ClientId } from '../client/client-id.js'
 import { Client } from '../client/client.js'
@@ -132,7 +132,7 @@ export class RequestManager {
       throw new AccessDeniedError(
         parameters,
         `Unsupported grant_type "authorization_code"`,
-        'unsupported_grant_type',
+        'invalid_request',
       )
     }
 
@@ -377,9 +377,9 @@ export class RequestManager {
     deviceId: DeviceId,
     deviceMetadata: RequestMetadata,
   ): Promise<Code> {
-    const id = decodeRequestUri(uri)
+    const requestId = decodeRequestUri(uri)
 
-    const data = await this.store.readRequest(id)
+    const data = await this.store.readRequest(requestId)
     if (!data) throw new InvalidRequestError('Unknown request_uri')
 
     try {
@@ -409,7 +409,7 @@ export class RequestManager {
       const code = await generateCode()
 
       // Bind the request to the account, preventing it from being used again.
-      await this.store.updateRequest(id, {
+      await this.store.updateRequest(requestId, {
         sub: account.sub,
         code,
         // Allow the client to exchange the code for a token within the next 60 seconds.
@@ -422,11 +422,12 @@ export class RequestManager {
         parameters: data.parameters,
         deviceId,
         deviceMetadata,
+        requestId,
       })
 
       return code
     } catch (err) {
-      await this.store.deleteRequest(id)
+      await this.store.deleteRequest(requestId)
       throw err
     }
   }
@@ -439,13 +440,12 @@ export class RequestManager {
     client: Client,
     clientAuth: ClientAuth,
     code: Code,
-  ): Promise<RequestDataAuthorized> {
+  ): Promise<RequestDataAuthorized & { requestUri: RequestUri }> {
     const result = await this.store.findRequestByCode(code)
     if (!result) throw new InvalidGrantError('Invalid code')
 
+    const { id, data } = result
     try {
-      const { data } = result
-
       if (!isRequestDataAuthorized(data)) {
         // Should never happen: maybe the store implementation is faulty ?
         throw new Error('Unexpected request state')
@@ -478,10 +478,10 @@ export class RequestManager {
         }
       }
 
-      return data
+      return { ...data, requestUri: encodeRequestUri(id) }
     } finally {
       // A "code" can only be used once
-      await this.store.deleteRequest(result.id)
+      await this.store.deleteRequest(id)
     }
   }
 

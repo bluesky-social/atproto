@@ -20,8 +20,8 @@
     "verify:types": "tsc --build tsconfig.json",
     "format": "pnpm lint:fix && pnpm style:fix",
     "precodegen": "pnpm run --recursive --stream --filter '@atproto/lex-cli...' build --force",
-    "codegen": "pnpm run --recursive --stream --parallel codegen",
-    "build": "pnpm run --recursive --stream '/^(build|build:.+)$/'",
+    "codegen": "pnpm run --sort --recursive --stream --parallel codegen",
+    "build": "pnpm run --sort --recursive --stream '/^(build|build:.+)$/'",
     "dev": "NODE_ENV=development pnpm run --recursive --parallel --stream '/^(dev|dev:.+)$/'",
     "dev:tsc": "tsc --build tsconfig.json --preserveWatchOutput --watch",
     "test": "LOG_ENABLED=false ./packages/dev-infra/with-test-redis-and-db.sh pnpm test --stream --recursive",
@@ -52,7 +52,8 @@
     "pino-pretty": "^9.1.0",
     "prettier": "^3.2.5",
     "prettier-config-standard": "^7.0.0",
-    "typescript": "^5.6.3"
+    "prettier-plugin-tailwindcss": "^0.6.11",
+    "typescript": "^5.8.2"
   },
   "workspaces": {
     "packages": [
