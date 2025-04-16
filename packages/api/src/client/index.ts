@@ -262,6 +262,10 @@ import * as ToolsOzoneTeamDefs from './types/tools/ozone/team/defs.js'
 import * as ToolsOzoneTeamDeleteMember from './types/tools/ozone/team/deleteMember.js'
 import * as ToolsOzoneTeamListMembers from './types/tools/ozone/team/listMembers.js'
 import * as ToolsOzoneTeamUpdateMember from './types/tools/ozone/team/updateMember.js'
+import * as ToolsOzoneVerificationDefs from './types/tools/ozone/verification/defs.js'
+import * as ToolsOzoneVerificationGrant from './types/tools/ozone/verification/grant.js'
+import * as ToolsOzoneVerificationList from './types/tools/ozone/verification/list.js'
+import * as ToolsOzoneVerificationRevoke from './types/tools/ozone/verification/revoke.js'
 
 export * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs.js'
 export * as ComAtprotoAdminDeleteAccount from './types/com/atproto/admin/deleteAccount.js'
@@ -516,6 +520,10 @@ export * as ToolsOzoneTeamDefs from './types/tools/ozone/team/defs.js'
 export * as ToolsOzoneTeamDeleteMember from './types/tools/ozone/team/deleteMember.js'
 export * as ToolsOzoneTeamListMembers from './types/tools/ozone/team/listMembers.js'
 export * as ToolsOzoneTeamUpdateMember from './types/tools/ozone/team/updateMember.js'
+export * as ToolsOzoneVerificationDefs from './types/tools/ozone/verification/defs.js'
+export * as ToolsOzoneVerificationGrant from './types/tools/ozone/verification/grant.js'
+export * as ToolsOzoneVerificationList from './types/tools/ozone/verification/list.js'
+export * as ToolsOzoneVerificationRevoke from './types/tools/ozone/verification/revoke.js'
 
 export const COM_ATPROTO_MODERATION = {
   DefsReasonSpam: 'com.atproto.moderation.defs#reasonSpam',
@@ -3944,6 +3952,7 @@ export class ToolsOzoneNS {
   setting: ToolsOzoneSettingNS
   signature: ToolsOzoneSignatureNS
   team: ToolsOzoneTeamNS
+  verification: ToolsOzoneVerificationNS
 
   constructor(client: XrpcClient) {
     this._client = client
@@ -3954,6 +3963,7 @@ export class ToolsOzoneNS {
     this.setting = new ToolsOzoneSettingNS(client)
     this.signature = new ToolsOzoneSignatureNS(client)
     this.team = new ToolsOzoneTeamNS(client)
+    this.verification = new ToolsOzoneVerificationNS(client)
   }
 }
 
@@ -4373,5 +4383,49 @@ export class ToolsOzoneTeamNS {
       .catch((e) => {
         throw ToolsOzoneTeamUpdateMember.toKnownErr(e)
       })
+  }
+}
+
+export class ToolsOzoneVerificationNS {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  grant(
+    data?: ToolsOzoneVerificationGrant.InputSchema,
+    opts?: ToolsOzoneVerificationGrant.CallOptions,
+  ): Promise<ToolsOzoneVerificationGrant.Response> {
+    return this._client.call(
+      'tools.ozone.verification.grant',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
+  list(
+    params?: ToolsOzoneVerificationList.QueryParams,
+    opts?: ToolsOzoneVerificationList.CallOptions,
+  ): Promise<ToolsOzoneVerificationList.Response> {
+    return this._client.call(
+      'tools.ozone.verification.list',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  revoke(
+    data?: ToolsOzoneVerificationRevoke.InputSchema,
+    opts?: ToolsOzoneVerificationRevoke.CallOptions,
+  ): Promise<ToolsOzoneVerificationRevoke.Response> {
+    return this._client.call(
+      'tools.ozone.verification.revoke',
+      opts?.qp,
+      data,
+      opts,
+    )
   }
 }

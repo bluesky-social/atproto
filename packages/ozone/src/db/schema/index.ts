@@ -14,6 +14,7 @@ import * as recordPushEvent from './record_push_event'
 import * as repoPushEvent from './repo_push_event'
 import * as setting from './setting'
 import * as signingKey from './signing_key'
+import * as verification from './verification'
 
 export type DatabaseSchemaType = modEvent.PartialDB &
   modSubjectStatus.PartialDB &
@@ -29,7 +30,8 @@ export type DatabaseSchemaType = modEvent.PartialDB &
   accountEventsStats.PartialDB &
   recordEventsStats.PartialDB &
   accountRecordEventsStats.PartialDB &
-  accountRecordStatusStats.PartialDB
+  accountRecordStatusStats.PartialDB &
+  verification.PartialDB
 
 export type DatabaseSchema = Kysely<DatabaseSchemaType>
 

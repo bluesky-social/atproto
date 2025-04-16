@@ -37,6 +37,10 @@ export const readEnv = (): OzoneEnvironment => {
     signingKeyHex: envStr('OZONE_SIGNING_KEY_HEX'),
     blobDivertUrl: envStr('OZONE_BLOB_DIVERT_URL'),
     blobDivertAdminPassword: envStr('OZONE_BLOB_DIVERT_ADMIN_PASSWORD'),
+    verifierUrl: envStr('OZONE_VERIFIER_URL'),
+    verifierDid: envStr('OZONE_VERIFIER_DID'),
+    verifierPassword: envStr('OZONE_VERIFIER_PASSWORD'),
+    jetstreamUrl: envStr('OZONE_VERIFIER_JETSTREAM_URL'),
   }
 }
 
@@ -72,4 +76,8 @@ export type OzoneEnvironment = {
   signingKeyHex?: string
   blobDivertUrl?: string
   blobDivertAdminPassword?: string
+  verifierUrl?: string
+  verifierDid?: string
+  verifierPassword?: string
+  jetstreamUrl?: string
 }

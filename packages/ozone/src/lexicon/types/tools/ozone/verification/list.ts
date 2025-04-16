@@ -11,23 +11,36 @@ import {
   type OmitKey,
 } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
+import type * as ToolsOzoneVerificationDefs from './defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
-const id = 'tools.ozone.server.getConfig'
+const id = 'tools.ozone.verification.list'
 
-export interface QueryParams {}
+export interface QueryParams {
+  /** Pagination cursor */
+  cursor?: string
+  /** Maximum number of results to return */
+  limit: number
+  /** Filter to verifications created after this timestamp */
+  createdAfter?: string
+  /** Filter to verifications created before this timestamp */
+  createdBefore?: string
+  /** Filter to verifications from specific issuers */
+  issuers?: string[]
+  /** Filter to specific verified DIDs */
+  subjects?: string[]
+  /** Sort direction for creation date */
+  sortDirection: 'asc' | 'desc'
+  /** Filter to verifications that are revoked or not. By default, includes both. */
+  isRevoked?: boolean
+}
 
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  appview?: ServiceConfig
-  pds?: ServiceConfig
-  blobDivert?: ServiceConfig
-  chat?: ServiceConfig
-  viewer?: ViewerConfig
-  /** The did of the verifier used for verification. */
-  verifierDid?: string
+  cursor?: string
+  verifications: ToolsOzoneVerificationDefs.VerificationView[]
 }
 
 export type HandlerInput = undefined
@@ -55,37 +68,3 @@ export type HandlerReqCtx<HA extends HandlerAuth = never> = {
 export type Handler<HA extends HandlerAuth = never> = (
   ctx: HandlerReqCtx<HA>,
 ) => Promise<HandlerOutput> | HandlerOutput
-
-export interface ServiceConfig {
-  $type?: 'tools.ozone.server.getConfig#serviceConfig'
-  url?: string
-}
-
-const hashServiceConfig = 'serviceConfig'
-
-export function isServiceConfig<V>(v: V) {
-  return is$typed(v, id, hashServiceConfig)
-}
-
-export function validateServiceConfig<V>(v: V) {
-  return validate<ServiceConfig & V>(v, id, hashServiceConfig)
-}
-
-export interface ViewerConfig {
-  $type?: 'tools.ozone.server.getConfig#viewerConfig'
-  role?:
-    | 'tools.ozone.team.defs#roleAdmin'
-    | 'tools.ozone.team.defs#roleModerator'
-    | 'tools.ozone.team.defs#roleTriage'
-    | (string & {})
-}
-
-const hashViewerConfig = 'viewerConfig'
-
-export function isViewerConfig<V>(v: V) {
-  return is$typed(v, id, hashViewerConfig)
-}
-
-export function validateViewerConfig<V>(v: V) {
-  return validate<ViewerConfig & V>(v, id, hashViewerConfig)
-}

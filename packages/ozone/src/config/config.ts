@@ -79,6 +79,18 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     moderators: env.moderatorDids,
     triage: env.triageDids,
   }
+  const verifierCfg: OzoneConfig['verifier'] =
+    env.verifierUrl &&
+    env.verifierDid &&
+    env.verifierPassword &&
+    env.jetstreamUrl
+      ? {
+          url: env.verifierUrl,
+          did: env.verifierDid,
+          password: env.verifierPassword,
+          jetstreamUrl: env.jetstreamUrl,
+        }
+      : null
 
   return {
     service: serviceCfg,
@@ -90,6 +102,7 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     identity: identityCfg,
     blobDivert: blobDivertServiceCfg,
     access: accessCfg,
+    verifier: verifierCfg,
   }
 }
 
@@ -103,6 +116,7 @@ export type OzoneConfig = {
   identity: IdentityConfig
   blobDivert: BlobDivertConfig | null
   access: AccessConfig
+  verifier: VerifierConfig | null
 }
 
 export type ServiceConfig = {
@@ -158,4 +172,11 @@ export type AccessConfig = {
   admins: string[]
   moderators: string[]
   triage: string[]
+}
+
+export type VerifierConfig = {
+  url: string
+  did: string
+  password: string
+  jetstreamUrl: string
 }

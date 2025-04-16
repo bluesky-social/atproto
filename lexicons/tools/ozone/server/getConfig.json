@@ -29,6 +29,11 @@
             "viewer": {
               "type": "ref",
               "ref": "#viewerConfig"
+            },
+            "verifierDid": {
+              "type": "string",
+              "format": "did",
+              "description": "The did of the verifier used for verification."
             }
           }
         }

@@ -1,0 +1,156 @@
+import { Selectable } from 'kysely'
+import {
+  $Typed,
+  AtUri,
+  ToolsOzoneModerationDefs,
+  ToolsOzoneVerificationDefs,
+} from '@atproto/api'
+import Database from '../db'
+import { CreatedAtUriKeyset, paginate } from '../db/pagination'
+import { Verification } from '../db/schema/verification'
+
+export type VerificationServiceCreator = (db: Database) => VerificationService
+
+export class VerificationService {
+  constructor(public db: Database) {}
+
+  static creator() {
+    return (db: Database) => new VerificationService(db)
+  }
+
+  async create(
+    verifications: Pick<
+      Verification,
+      'uri' | 'issuer' | 'subject' | 'handle' | 'displayName' | 'createdAt'
+    >[],
+  ) {
+    // @TODO: We should probably handle errors here?
+    return this.db.transaction(async (tx) => {
+      await Promise.allSettled(
+        verifications.map((verification) =>
+          tx.db
+            .insertInto('verification')
+            .values(verification)
+            .onConflict((oc) => oc.doNothing())
+            .executeTakeFirst(),
+        ),
+      )
+    })
+  }
+
+  async markRevoked({
+    uris,
+    revokedBy,
+    revokedAt,
+    revokeReason,
+  }: {
+    uris: string[]
+    revokedBy?: string
+    revokedAt?: string
+    revokeReason?: string
+  }) {
+    const now = new Date().toISOString()
+    await Promise.allSettled(
+      uris.map(async (uri) => {
+        const atUri = new AtUri(uri)
+        await this.db.db
+          .updateTable('verification')
+          .set({
+            revokeReason,
+            revokedAt: revokedAt || now,
+            // Allow setting revokedBy to a moderator/verifier DID and if it isn't set, default to the author of the verification record
+            revokedBy: revokedBy || atUri.host,
+          })
+          .where('uri', '=', uri)
+          .execute()
+      }),
+    )
+  }
+
+  async list({
+    sortDirection,
+    cursor,
+    createdAfter,
+    createdBefore,
+    issuers = [],
+    subjects = [],
+    isRevoked,
+    limit = 100,
+  }: {
+    sortDirection?: 'asc' | 'desc'
+    cursor?: string
+    createdAfter?: string
+    createdBefore?: string
+    issuers?: string[]
+    subjects?: string[]
+    isRevoked?: boolean
+    limit?: number
+  }) {
+    const { ref } = this.db.db.dynamic
+
+    let qb = this.db.db.selectFrom('verification').selectAll()
+
+    if (issuers.length) {
+      qb = qb.where('issuer', 'in', issuers)
+    }
+
+    if (isRevoked !== undefined) {
+      qb = qb.where('revokedAt', isRevoked ? 'is' : 'is not', null)
+    }
+
+    if (subjects.length) {
+      qb = qb.where('subject', 'in', subjects)
+    }
+
+    if (createdAfter) {
+      qb = qb.where('createdAt', '>', createdAfter)
+    }
+
+    if (createdBefore) {
+      qb = qb.where('createdAt', '>', createdBefore)
+    }
+
+    const keyset = new CreatedAtUriKeyset(ref(`createdAt`), ref('uri'))
+    const paginatedBuilder = paginate(qb, {
+      limit,
+      cursor,
+      keyset,
+      tryIndex: true,
+      direction: sortDirection === 'desc' ? 'desc' : 'asc',
+    })
+
+    const result = await paginatedBuilder.execute()
+    return { verifications: result, cursor: keyset.packFromResult(result) }
+  }
+
+  view(
+    verifications: Selectable<Verification>[],
+    repos: Map<
+      string,
+      | $Typed<ToolsOzoneModerationDefs.RepoViewDetail>
+      | $Typed<ToolsOzoneModerationDefs.RepoViewNotFound>
+    >,
+  ): $Typed<ToolsOzoneVerificationDefs.VerificationView>[] {
+    return verifications.map((verification) => {
+      const issuerRepo = repos.get(verification.issuer)
+      const subjectRepo = repos.get(verification.subject)
+      return {
+        $type: 'tools.ozone.verification.defs#verificationView',
+        uri: verification.uri,
+        issuer: verification.issuer,
+        subject: verification.subject,
+        createdAt: verification.createdAt.toString(),
+        updatedAt: verification.updatedAt
+          ? verification.updatedAt.toString()
+          : undefined,
+        displayName: verification.displayName,
+        handle: verification.handle,
+        revokedAt: verification.revokedAt || undefined,
+        revokedBy: verification.revokedBy || undefined,
+        revokeReason: verification.revokeReason || undefined,
+        issuerRepo,
+        subjectRepo,
+      }
+    })
+  }
+}

@@ -13,6 +13,8 @@ import { EventPusher } from './event-pusher'
 import { EventReverser } from './event-reverser'
 import { MaterializedViewRefresher } from './materialized-view-refresher'
 import { TeamProfileSynchronizer } from './team-profile-synchronizer'
+import { VerificationListener } from './verification-listener'
+import { VerificationService } from '../verification/service'
 
 export type DaemonContextOptions = {
   db: Database
@@ -23,6 +25,7 @@ export type DaemonContextOptions = {
   eventReverser: EventReverser
   materializedViewRefresher: MaterializedViewRefresher
   teamProfileSynchronizer: TeamProfileSynchronizer
+  verificationListener?: VerificationListener
 }
 
 export class DaemonContext {
@@ -88,6 +91,14 @@ export class DaemonContext {
       cfg.db.materializedViewRefreshIntervalMs,
     )
 
+    const verificationService = VerificationService.creator()
+    const verificationListener = cfg.verifier?.jetstreamUrl
+      ? new VerificationListener(
+          verificationService(db),
+          cfg.verifier?.jetstreamUrl,
+        )
+      : undefined
+
     return new DaemonContext({
       db,
       cfg,
@@ -97,6 +108,7 @@ export class DaemonContext {
       eventReverser,
       materializedViewRefresher,
       teamProfileSynchronizer,
+      verificationListener,
       ...(overrides ?? {}),
     })
   }
@@ -129,11 +141,16 @@ export class DaemonContext {
     return this.opts.teamProfileSynchronizer
   }
 
+  get verificationListener(): VerificationListener | undefined {
+    return this.opts.verificationListener
+  }
+
   async start() {
     this.eventPusher.start()
     this.eventReverser.start()
     this.materializedViewRefresher.start()
     this.teamProfileSynchronizer.start()
+    this.verificationListener?.start()
   }
 
   async processAll() {
@@ -150,6 +167,7 @@ export class DaemonContext {
         this.eventPusher.destroy(),
         this.materializedViewRefresher.destroy(),
         this.teamProfileSynchronizer.destroy(),
+        this.verificationListener?.stop(),
       ])
     } finally {
       await this.backgroundQueue.destroy()

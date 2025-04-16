@@ -25,6 +25,8 @@ export interface OutputSchema {
   blobDivert?: ServiceConfig
   chat?: ServiceConfig
   viewer?: ViewerConfig
+  /** The did of the verifier used for verification. */
+  verifierDid?: string
 }
 
 export interface CallOptions {
