@@ -9,12 +9,6 @@ Object {
     "displayName": "bobby",
     "handle": "bob.test",
     "labels": Array [],
-    "verification": Object {
-      "$type": "app.bsky.actor.defs#verificationStateDefault",
-      "isValid": false,
-      "role": "default",
-      "verifications": Array [],
-    },
     "viewer": Object {
       "blockedBy": false,
       "muted": false,
@@ -64,12 +58,6 @@ Object {
     "displayName": "bobby",
     "handle": "bob.test",
     "labels": Array [],
-    "verification": Object {
-      "$type": "app.bsky.actor.defs#verificationStateDefault",
-      "isValid": false,
-      "role": "default",
-      "verifications": Array [],
-    },
     "viewer": Object {
       "blockedBy": false,
       "muted": false,
@@ -119,12 +107,6 @@ Object {
     "displayName": "bobby",
     "handle": "bob.test",
     "labels": Array [],
-    "verification": Object {
-      "$type": "app.bsky.actor.defs#verificationStateDefault",
-      "isValid": false,
-      "role": "default",
-      "verifications": Array [],
-    },
     "viewer": Object {
       "blockedBy": false,
       "muted": false,
@@ -160,12 +142,6 @@ Object {
             "val": "self-label-b",
           },
         ],
-        "verification": Object {
-          "$type": "app.bsky.actor.defs#verificationStateDefault",
-          "isValid": false,
-          "role": "default",
-          "verifications": Array [],
-        },
         "viewer": Object {
           "blockedBy": false,
           "followedBy": "record(3)",
@@ -220,12 +196,6 @@ Object {
     "displayName": "bobby",
     "handle": "bob.test",
     "labels": Array [],
-    "verification": Object {
-      "$type": "app.bsky.actor.defs#verificationStateDefault",
-      "isValid": false,
-      "role": "default",
-      "verifications": Array [],
-    },
     "viewer": Object {
       "blockedBy": false,
       "muted": false,
@@ -259,12 +229,6 @@ Object {
             "val": "self-label-b",
           },
         ],
-        "verification": Object {
-          "$type": "app.bsky.actor.defs#verificationStateDefault",
-          "isValid": false,
-          "role": "default",
-          "verifications": Array [],
-        },
         "viewer": Object {
           "blockedBy": false,
           "followedBy": "record(4)",
@@ -342,12 +306,6 @@ Array [
           "val": "self-label-b",
         },
       ],
-      "verification": Object {
-        "$type": "app.bsky.actor.defs#verificationStateDefault",
-        "isValid": false,
-        "role": "default",
-        "verifications": Array [],
-      },
       "viewer": Object {
         "blockedBy": false,
         "followedBy": "record(2)",
@@ -391,12 +349,6 @@ Array [
           "val": "self-label-b",
         },
       ],
-      "verification": Object {
-        "$type": "app.bsky.actor.defs#verificationStateDefault",
-        "isValid": false,
-        "role": "default",
-        "verifications": Array [],
-      },
       "viewer": Object {
         "blockedBy": false,
         "followedBy": "record(2)",
@@ -439,12 +391,6 @@ Array [
           "val": "self-label-b",
         },
       ],
-      "verification": Object {
-        "$type": "app.bsky.actor.defs#verificationStateDefault",
-        "isValid": false,
-        "role": "default",
-        "verifications": Array [],
-      },
       "viewer": Object {
         "blockedBy": false,
         "followedBy": "record(2)",
@@ -487,12 +433,6 @@ Array [
           "val": "self-label-b",
         },
       ],
-      "verification": Object {
-        "$type": "app.bsky.actor.defs#verificationStateDefault",
-        "isValid": false,
-        "role": "default",
-        "verifications": Array [],
-      },
       "viewer": Object {
         "blockedBy": false,
         "followedBy": "record(2)",
@@ -535,12 +475,6 @@ Array [
           "val": "self-label-b",
         },
       ],
-      "verification": Object {
-        "$type": "app.bsky.actor.defs#verificationStateDefault",
-        "isValid": false,
-        "role": "default",
-        "verifications": Array [],
-      },
       "viewer": Object {
         "blockedBy": false,
         "followedBy": "record(2)",
@@ -583,12 +517,6 @@ Array [
           "val": "self-label-b",
         },
       ],
-      "verification": Object {
-        "$type": "app.bsky.actor.defs#verificationStateDefault",
-        "isValid": false,
-        "role": "default",
-        "verifications": Array [],
-      },
       "viewer": Object {
         "blockedBy": false,
         "followedBy": "record(2)",
@@ -631,12 +559,6 @@ Array [
           "val": "self-label-b",
         },
       ],
-      "verification": Object {
-        "$type": "app.bsky.actor.defs#verificationStateDefault",
-        "isValid": false,
-        "role": "default",
-        "verifications": Array [],
-      },
       "viewer": Object {
         "blockedBy": false,
         "followedBy": "record(2)",
@@ -685,12 +607,6 @@ Array [
             "val": "self-label-b",
           },
         ],
-        "verification": Object {
-          "$type": "app.bsky.actor.defs#verificationStateDefault",
-          "isValid": false,
-          "role": "default",
-          "verifications": Array [],
-        },
         "viewer": Object {
           "blockedBy": false,
           "muted": false,
@@ -741,12 +657,6 @@ Array [
         "displayName": "bobby",
         "handle": "bob.test",
         "labels": Array [],
-        "verification": Object {
-          "$type": "app.bsky.actor.defs#verificationStateDefault",
-          "isValid": false,
-          "role": "default",
-          "verifications": Array [],
-        },
         "viewer": Object {
           "blockedBy": false,
           "followedBy": "record(4)",
@@ -784,12 +694,6 @@ Array [
         "did": "user(4)",
         "handle": "carol.test",
         "labels": Array [],
-        "verification": Object {
-          "$type": "app.bsky.actor.defs#verificationStateDefault",
-          "isValid": false,
-          "role": "default",
-          "verifications": Array [],
-        },
         "viewer": Object {
           "blockedBy": false,
           "followedBy": "record(7)",
@@ -825,12 +729,6 @@ Array [
               "displayName": "bobby",
               "handle": "bob.test",
               "labels": Array [],
-              "verification": Object {
-                "$type": "app.bsky.actor.defs#verificationStateDefault",
-                "isValid": false,
-                "role": "default",
-                "verifications": Array [],
-              },
               "viewer": Object {
                 "blockedBy": false,
                 "followedBy": "record(4)",
@@ -921,12 +819,6 @@ Array [
         "did": "user(4)",
         "handle": "carol.test",
         "labels": Array [],
-        "verification": Object {
-          "$type": "app.bsky.actor.defs#verificationStateDefault",
-          "isValid": false,
-          "role": "default",
-          "verifications": Array [],
-        },
         "viewer": Object {
           "blockedBy": false,
           "followedBy": "record(7)",
@@ -987,12 +879,6 @@ Array [
               "val": "self-label-b",
             },
           ],
-          "verification": Object {
-            "$type": "app.bsky.actor.defs#verificationStateDefault",
-            "isValid": false,
-            "role": "default",
-            "verifications": Array [],
-          },
           "viewer": Object {
             "blockedBy": false,
             "muted": false,
@@ -1040,12 +926,6 @@ Array [
               "val": "self-label-b",
             },
           ],
-          "verification": Object {
-            "$type": "app.bsky.actor.defs#verificationStateDefault",
-            "isValid": false,
-            "role": "default",
-            "verifications": Array [],
-          },
           "viewer": Object {
             "blockedBy": false,
             "muted": false,
@@ -1083,12 +963,6 @@ Array [
         "did": "user(6)",
         "handle": "dan.test",
         "labels": Array [],
-        "verification": Object {
-          "$type": "app.bsky.actor.defs#verificationStateDefault",
-          "isValid": false,
-          "role": "default",
-          "verifications": Array [],
-        },
         "viewer": Object {
           "blockedBy": false,
           "following": "record(12)",
@@ -1104,12 +978,6 @@ Array [
             "did": "user(4)",
             "handle": "carol.test",
             "labels": Array [],
-            "verification": Object {
-              "$type": "app.bsky.actor.defs#verificationStateDefault",
-              "isValid": false,
-              "role": "default",
-              "verifications": Array [],
-            },
             "viewer": Object {
               "blockedBy": false,
               "followedBy": "record(7)",
@@ -1146,12 +1014,6 @@ Array [
                     "displayName": "bobby",
                     "handle": "bob.test",
                     "labels": Array [],
-                    "verification": Object {
-                      "$type": "app.bsky.actor.defs#verificationStateDefault",
-                      "isValid": false,
-                      "role": "default",
-                      "verifications": Array [],
-                    },
                     "viewer": Object {
                       "blockedBy": false,
                       "followedBy": "record(4)",
@@ -1274,12 +1136,6 @@ Array [
         "did": "user(4)",
         "handle": "carol.test",
         "labels": Array [],
-        "verification": Object {
-          "$type": "app.bsky.actor.defs#verificationStateDefault",
-          "isValid": false,
-          "role": "default",
-          "verifications": Array [],
-        },
         "viewer": Object {
           "blockedBy": false,
           "followedBy": "record(7)",
@@ -1320,12 +1176,6 @@ Array [
             "val": "self-label-b",
           },
         ],
-        "verification": Object {
-          "$type": "app.bsky.actor.defs#verificationStateDefault",
-          "isValid": false,
-          "role": "default",
-          "verifications": Array [],
-        },
       },
       "cid": "cids(0)",
       "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -1365,12 +1215,6 @@ Array [
         "did": "user(2)",
         "handle": "carol.test",
         "labels": Array [],
-        "verification": Object {
-          "$type": "app.bsky.actor.defs#verificationStateDefault",
-          "isValid": false,
-          "role": "default",
-          "verifications": Array [],
-        },
       },
       "cid": "cids(3)",
       "embed": Object {
@@ -1400,12 +1244,6 @@ Array [
               "displayName": "bobby",
               "handle": "bob.test",
               "labels": Array [],
-              "verification": Object {
-                "$type": "app.bsky.actor.defs#verificationStateDefault",
-                "isValid": false,
-                "role": "default",
-                "verifications": Array [],
-              },
             },
             "cid": "cids(6)",
             "embeds": Array [],
@@ -1485,12 +1323,6 @@ Array [
         "did": "user(2)",
         "handle": "carol.test",
         "labels": Array [],
-        "verification": Object {
-          "$type": "app.bsky.actor.defs#verificationStateDefault",
-          "isValid": false,
-          "role": "default",
-          "verifications": Array [],
-        },
       },
       "cid": "cids(7)",
       "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -1541,12 +1373,6 @@ Array [
               "val": "self-label-b",
             },
           ],
-          "verification": Object {
-            "$type": "app.bsky.actor.defs#verificationStateDefault",
-            "isValid": false,
-            "role": "default",
-            "verifications": Array [],
-          },
         },
         "cid": "cids(8)",
         "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -1586,12 +1412,6 @@ Array [
               "val": "self-label-b",
             },
           ],
-          "verification": Object {
-            "$type": "app.bsky.actor.defs#verificationStateDefault",
-            "isValid": false,
-            "role": "default",
-            "verifications": Array [],
-          },
         },
         "cid": "cids(8)",
         "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -1639,12 +1459,6 @@ Array [
             "val": "self-label-b",
           },
         ],
-        "verification": Object {
-          "$type": "app.bsky.actor.defs#verificationStateDefault",
-          "isValid": false,
-          "role": "default",
-          "verifications": Array [],
-        },
         "viewer": Object {
           "blockedBy": false,
           "muted": false,
@@ -1692,12 +1506,6 @@ Array [
         "did": "user(2)",
         "handle": "carol.test",
         "labels": Array [],
-        "verification": Object {
-          "$type": "app.bsky.actor.defs#verificationStateDefault",
-          "isValid": false,
-          "role": "default",
-          "verifications": Array [],
-        },
         "viewer": Object {
           "blockedBy": false,
           "followedBy": "record(4)",
@@ -1733,12 +1541,6 @@ Array [
               "displayName": "bobby",
               "handle": "bob.test",
               "labels": Array [],
-              "verification": Object {
-                "$type": "app.bsky.actor.defs#verificationStateDefault",
-                "isValid": false,
-                "role": "default",
-                "verifications": Array [],
-              },
               "viewer": Object {
                 "blockedBy": false,
                 "followedBy": "record(7)",
@@ -1829,12 +1631,6 @@ Array [
         "did": "user(2)",
         "handle": "carol.test",
         "labels": Array [],
-        "verification": Object {
-          "$type": "app.bsky.actor.defs#verificationStateDefault",
-          "isValid": false,
-          "role": "default",
-          "verifications": Array [],
-        },
         "viewer": Object {
           "blockedBy": false,
           "followedBy": "record(4)",
@@ -1895,12 +1691,6 @@ Array [
               "val": "self-label-b",
             },
           ],
-          "verification": Object {
-            "$type": "app.bsky.actor.defs#verificationStateDefault",
-            "isValid": false,
-            "role": "default",
-            "verifications": Array [],
-          },
           "viewer": Object {
             "blockedBy": false,
             "muted": false,
@@ -1948,12 +1738,6 @@ Array [
               "val": "self-label-b",
             },
           ],
-          "verification": Object {
-            "$type": "app.bsky.actor.defs#verificationStateDefault",
-            "isValid": false,
-            "role": "default",
-            "verifications": Array [],
-          },
           "viewer": Object {
             "blockedBy": false,
             "muted": false,
@@ -2013,12 +1797,6 @@ Object {
           "val": "self-label-b",
         },
       ],
-      "verification": Object {
-        "$type": "app.bsky.actor.defs#verificationStateDefault",
-        "isValid": false,
-        "role": "default",
-        "verifications": Array [],
-      },
       "viewer": Object {
         "blockedBy": false,
         "followedBy": "record(2)",
@@ -2068,12 +1846,6 @@ Object {
           "val": "self-label-b",
         },
       ],
-      "verification": Object {
-        "$type": "app.bsky.actor.defs#verificationStateDefault",
-        "isValid": false,
-        "role": "default",
-        "verifications": Array [],
-      },
       "viewer": Object {
         "blockedBy": false,
         "followedBy": "record(2)",
@@ -2124,12 +1896,6 @@ Object {
             "val": "self-label-b",
           },
         ],
-        "verification": Object {
-          "$type": "app.bsky.actor.defs#verificationStateDefault",
-          "isValid": false,
-          "role": "default",
-          "verifications": Array [],
-        },
         "viewer": Object {
           "blockedBy": false,
           "followedBy": "record(2)",
@@ -2172,12 +1938,6 @@ Object {
             "val": "self-label-b",
           },
         ],
-        "verification": Object {
-          "$type": "app.bsky.actor.defs#verificationStateDefault",
-          "isValid": false,
-          "role": "default",
-          "verifications": Array [],
-        },
         "viewer": Object {
           "blockedBy": false,
           "followedBy": "record(2)",
@@ -2230,12 +1990,6 @@ Object {
             "val": "self-label-b",
           },
         ],
-        "verification": Object {
-          "$type": "app.bsky.actor.defs#verificationStateDefault",
-          "isValid": false,
-          "role": "default",
-          "verifications": Array [],
-        },
         "viewer": Object {
           "blockedBy": false,
           "followedBy": "record(2)",
@@ -2280,12 +2034,6 @@ Object {
             "val": "self-label-b",
           },
         ],
-        "verification": Object {
-          "$type": "app.bsky.actor.defs#verificationStateDefault",
-          "isValid": false,
-          "role": "default",
-          "verifications": Array [],
-        },
         "viewer": Object {
           "blockedBy": false,
           "followedBy": "record(2)",
@@ -2328,12 +2076,6 @@ Object {
             "val": "self-label-b",
           },
         ],
-        "verification": Object {
-          "$type": "app.bsky.actor.defs#verificationStateDefault",
-          "isValid": false,
-          "role": "default",
-          "verifications": Array [],
-        },
         "viewer": Object {
           "blockedBy": false,
           "followedBy": "record(2)",

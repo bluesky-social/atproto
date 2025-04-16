@@ -7,12 +7,6 @@ Array [
       "did": "user(0)",
       "handle": "frankie.test",
       "labels": Array [],
-      "verification": Object {
-        "$type": "app.bsky.actor.defs#verificationStateDefault",
-        "isValid": false,
-        "role": "default",
-        "verifications": Array [],
-      },
       "viewer": Object {
         "blockedBy": true,
         "muted": false,
@@ -30,12 +24,6 @@ Array [
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [],
-      "verification": Object {
-        "$type": "app.bsky.actor.defs#verificationStateDefault",
-        "isValid": false,
-        "role": "default",
-        "verifications": Array [],
-      },
       "viewer": Object {
         "blockedBy": false,
         "muted": false,
@@ -48,12 +36,6 @@ Array [
       "did": "user(3)",
       "handle": "eve.test",
       "labels": Array [],
-      "verification": Object {
-        "$type": "app.bsky.actor.defs#verificationStateDefault",
-        "isValid": false,
-        "role": "default",
-        "verifications": Array [],
-      },
       "viewer": Object {
         "blockedBy": false,
         "muted": false,
@@ -71,12 +53,6 @@ Array [
       "did": "user(0)",
       "handle": "frankie.test",
       "labels": Array [],
-      "verification": Object {
-        "$type": "app.bsky.actor.defs#verificationStateDefault",
-        "isValid": false,
-        "role": "default",
-        "verifications": Array [],
-      },
       "viewer": Object {
         "blockedBy": true,
         "muted": false,
@@ -94,12 +70,6 @@ Array [
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [],
-      "verification": Object {
-        "$type": "app.bsky.actor.defs#verificationStateDefault",
-        "isValid": false,
-        "role": "default",
-        "verifications": Array [],
-      },
       "viewer": Object {
         "blockedBy": false,
         "muted": false,
@@ -112,12 +82,6 @@ Array [
       "did": "user(3)",
       "handle": "eve.test",
       "labels": Array [],
-      "verification": Object {
-        "$type": "app.bsky.actor.defs#verificationStateDefault",
-        "isValid": false,
-        "role": "default",
-        "verifications": Array [],
-      },
       "viewer": Object {
         "blockedBy": false,
         "muted": false,
@@ -136,12 +100,6 @@ Array [
       "did": "user(0)",
       "handle": "eve.test",
       "labels": Array [],
-      "verification": Object {
-        "$type": "app.bsky.actor.defs#verificationStateDefault",
-        "isValid": false,
-        "role": "default",
-        "verifications": Array [],
-      },
     },
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
@@ -156,12 +114,6 @@ Array [
       "did": "user(0)",
       "handle": "eve.test",
       "labels": Array [],
-      "verification": Object {
-        "$type": "app.bsky.actor.defs#verificationStateDefault",
-        "isValid": false,
-        "role": "default",
-        "verifications": Array [],
-      },
     },
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
@@ -185,12 +137,6 @@ Array [
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [],
-      "verification": Object {
-        "$type": "app.bsky.actor.defs#verificationStateDefault",
-        "isValid": false,
-        "role": "default",
-        "verifications": Array [],
-      },
     },
     "uri": "record(0)",
   },
@@ -199,12 +145,6 @@ Array [
       "did": "user(2)",
       "handle": "eve.test",
       "labels": Array [],
-      "verification": Object {
-        "$type": "app.bsky.actor.defs#verificationStateDefault",
-        "isValid": false,
-        "role": "default",
-        "verifications": Array [],
-      },
     },
     "uri": "record(1)",
   },
@@ -223,12 +163,6 @@ Array [
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [],
-      "verification": Object {
-        "$type": "app.bsky.actor.defs#verificationStateDefault",
-        "isValid": false,
-        "role": "default",
-        "verifications": Array [],
-      },
     },
     "uri": "record(0)",
   },
@@ -237,12 +171,6 @@ Array [
       "did": "user(2)",
       "handle": "eve.test",
       "labels": Array [],
-      "verification": Object {
-        "$type": "app.bsky.actor.defs#verificationStateDefault",
-        "isValid": false,
-        "role": "default",
-        "verifications": Array [],
-      },
     },
     "uri": "record(1)",
   },
@@ -261,12 +189,6 @@ Array [
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [],
-      "verification": Object {
-        "$type": "app.bsky.actor.defs#verificationStateDefault",
-        "isValid": false,
-        "role": "default",
-        "verifications": Array [],
-      },
       "viewer": Object {
         "blockedBy": false,
         "muted": false,
@@ -279,12 +201,6 @@ Array [
       "did": "user(2)",
       "handle": "eve.test",
       "labels": Array [],
-      "verification": Object {
-        "$type": "app.bsky.actor.defs#verificationStateDefault",
-        "isValid": false,
-        "role": "default",
-        "verifications": Array [],
-      },
       "viewer": Object {
         "blockedBy": false,
         "blocking": "record(2)",
@@ -308,12 +224,6 @@ Array [
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [],
-      "verification": Object {
-        "$type": "app.bsky.actor.defs#verificationStateDefault",
-        "isValid": false,
-        "role": "default",
-        "verifications": Array [],
-      },
       "viewer": Object {
         "blockedBy": false,
         "muted": false,
@@ -326,12 +236,6 @@ Array [
       "did": "user(2)",
       "handle": "eve.test",
       "labels": Array [],
-      "verification": Object {
-        "$type": "app.bsky.actor.defs#verificationStateDefault",
-        "isValid": false,
-        "role": "default",
-        "verifications": Array [],
-      },
       "viewer": Object {
         "blockedBy": false,
         "blocking": "record(2)",
@@ -355,12 +259,6 @@ Array [
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [],
-      "verification": Object {
-        "$type": "app.bsky.actor.defs#verificationStateDefault",
-        "isValid": false,
-        "role": "default",
-        "verifications": Array [],
-      },
       "viewer": Object {
         "blockedBy": false,
         "muted": false,
@@ -373,12 +271,6 @@ Array [
       "did": "user(2)",
       "handle": "eve.test",
       "labels": Array [],
-      "verification": Object {
-        "$type": "app.bsky.actor.defs#verificationStateDefault",
-        "isValid": false,
-        "role": "default",
-        "verifications": Array [],
-      },
       "viewer": Object {
         "blockedBy": false,
         "muted": false,
@@ -401,12 +293,6 @@ Array [
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [],
-      "verification": Object {
-        "$type": "app.bsky.actor.defs#verificationStateDefault",
-        "isValid": false,
-        "role": "default",
-        "verifications": Array [],
-      },
       "viewer": Object {
         "blockedBy": false,
         "muted": false,
@@ -419,12 +305,6 @@ Array [
       "did": "user(2)",
       "handle": "eve.test",
       "labels": Array [],
-      "verification": Object {
-        "$type": "app.bsky.actor.defs#verificationStateDefault",
-        "isValid": false,
-        "role": "default",
-        "verifications": Array [],
-      },
       "viewer": Object {
         "blockedBy": false,
         "muted": false,
@@ -442,12 +322,6 @@ Array [
       "did": "user(0)",
       "handle": "greta.test",
       "labels": Array [],
-      "verification": Object {
-        "$type": "app.bsky.actor.defs#verificationStateDefault",
-        "isValid": false,
-        "role": "default",
-        "verifications": Array [],
-      },
       "viewer": Object {
         "blockedBy": false,
         "muted": false,
@@ -460,12 +334,6 @@ Array [
       "did": "user(1)",
       "handle": "frankie.test",
       "labels": Array [],
-      "verification": Object {
-        "$type": "app.bsky.actor.defs#verificationStateDefault",
-        "isValid": false,
-        "role": "default",
-        "verifications": Array [],
-      },
       "viewer": Object {
         "blockedBy": false,
         "muted": false,
@@ -484,12 +352,6 @@ Array [
       "did": "user(0)",
       "handle": "eve.test",
       "labels": Array [],
-      "verification": Object {
-        "$type": "app.bsky.actor.defs#verificationStateDefault",
-        "isValid": false,
-        "role": "default",
-        "verifications": Array [],
-      },
     },
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
@@ -504,12 +366,6 @@ Array [
       "did": "user(0)",
       "handle": "eve.test",
       "labels": Array [],
-      "verification": Object {
-        "$type": "app.bsky.actor.defs#verificationStateDefault",
-        "isValid": false,
-        "role": "default",
-        "verifications": Array [],
-      },
     },
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],

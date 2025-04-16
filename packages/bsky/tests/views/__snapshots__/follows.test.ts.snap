@@ -13,12 +13,6 @@ Object {
       "handle": "eve.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [],
-      "verification": Object {
-        "$type": "app.bsky.actor.defs#verificationStateDefault",
-        "isValid": false,
-        "role": "default",
-        "verifications": Array [],
-      },
       "viewer": Object {
         "blockedBy": false,
         "followedBy": "record(1)",
@@ -35,12 +29,6 @@ Object {
       "handle": "dan.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [],
-      "verification": Object {
-        "$type": "app.bsky.actor.defs#verificationStateDefault",
-        "isValid": false,
-        "role": "default",
-        "verifications": Array [],
-      },
       "viewer": Object {
         "blockedBy": false,
         "followedBy": "record(3)",
@@ -57,12 +45,6 @@ Object {
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [],
-      "verification": Object {
-        "$type": "app.bsky.actor.defs#verificationStateDefault",
-        "isValid": false,
-        "role": "default",
-        "verifications": Array [],
-      },
       "viewer": Object {
         "blockedBy": false,
         "followedBy": "record(5)",
@@ -79,12 +61,6 @@ Object {
       "handle": "carol.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [],
-      "verification": Object {
-        "$type": "app.bsky.actor.defs#verificationStateDefault",
-        "isValid": false,
-        "role": "default",
-        "verifications": Array [],
-      },
       "viewer": Object {
         "blockedBy": false,
         "followedBy": "record(7)",
@@ -102,12 +78,6 @@ Object {
     "handle": "alice.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
-    "verification": Object {
-      "$type": "app.bsky.actor.defs#verificationStateDefault",
-      "isValid": false,
-      "role": "default",
-      "verifications": Array [],
-    },
     "viewer": Object {
       "blockedBy": false,
       "muted": false,
@@ -129,12 +99,6 @@ Object {
       "handle": "dan.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [],
-      "verification": Object {
-        "$type": "app.bsky.actor.defs#verificationStateDefault",
-        "isValid": false,
-        "role": "default",
-        "verifications": Array [],
-      },
       "viewer": Object {
         "blockedBy": false,
         "followedBy": "record(1)",
@@ -151,12 +115,6 @@ Object {
       "handle": "alice.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [],
-      "verification": Object {
-        "$type": "app.bsky.actor.defs#verificationStateDefault",
-        "isValid": false,
-        "role": "default",
-        "verifications": Array [],
-      },
       "viewer": Object {
         "blockedBy": false,
         "muted": false,
@@ -172,12 +130,6 @@ Object {
     "handle": "bob.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
-    "verification": Object {
-      "$type": "app.bsky.actor.defs#verificationStateDefault",
-      "isValid": false,
-      "role": "default",
-      "verifications": Array [],
-    },
     "viewer": Object {
       "blockedBy": false,
       "followedBy": "record(3)",
@@ -201,12 +153,6 @@ Object {
       "handle": "eve.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [],
-      "verification": Object {
-        "$type": "app.bsky.actor.defs#verificationStateDefault",
-        "isValid": false,
-        "role": "default",
-        "verifications": Array [],
-      },
       "viewer": Object {
         "blockedBy": false,
         "followedBy": "record(1)",
@@ -223,12 +169,6 @@ Object {
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [],
-      "verification": Object {
-        "$type": "app.bsky.actor.defs#verificationStateDefault",
-        "isValid": false,
-        "role": "default",
-        "verifications": Array [],
-      },
       "viewer": Object {
         "blockedBy": false,
         "followedBy": "record(3)",
@@ -245,12 +185,6 @@ Object {
       "handle": "alice.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [],
-      "verification": Object {
-        "$type": "app.bsky.actor.defs#verificationStateDefault",
-        "isValid": false,
-        "role": "default",
-        "verifications": Array [],
-      },
       "viewer": Object {
         "blockedBy": false,
         "muted": false,
@@ -266,12 +200,6 @@ Object {
     "handle": "carol.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
-    "verification": Object {
-      "$type": "app.bsky.actor.defs#verificationStateDefault",
-      "isValid": false,
-      "role": "default",
-      "verifications": Array [],
-    },
     "viewer": Object {
       "blockedBy": false,
       "followedBy": "record(5)",
@@ -295,12 +223,6 @@ Object {
       "handle": "alice.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [],
-      "verification": Object {
-        "$type": "app.bsky.actor.defs#verificationStateDefault",
-        "isValid": false,
-        "role": "default",
-        "verifications": Array [],
-      },
       "viewer": Object {
         "blockedBy": false,
         "muted": false,
@@ -316,12 +238,6 @@ Object {
     "handle": "dan.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
-    "verification": Object {
-      "$type": "app.bsky.actor.defs#verificationStateDefault",
-      "isValid": false,
-      "role": "default",
-      "verifications": Array [],
-    },
     "viewer": Object {
       "blockedBy": false,
       "followedBy": "record(1)",
@@ -345,12 +261,6 @@ Object {
       "handle": "dan.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [],
-      "verification": Object {
-        "$type": "app.bsky.actor.defs#verificationStateDefault",
-        "isValid": false,
-        "role": "default",
-        "verifications": Array [],
-      },
       "viewer": Object {
         "blockedBy": false,
         "followedBy": "record(1)",
@@ -367,12 +277,6 @@ Object {
       "handle": "alice.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [],
-      "verification": Object {
-        "$type": "app.bsky.actor.defs#verificationStateDefault",
-        "isValid": false,
-        "role": "default",
-        "verifications": Array [],
-      },
       "viewer": Object {
         "blockedBy": false,
         "muted": false,
@@ -388,12 +292,6 @@ Object {
     "handle": "eve.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
-    "verification": Object {
-      "$type": "app.bsky.actor.defs#verificationStateDefault",
-      "isValid": false,
-      "role": "default",
-      "verifications": Array [],
-    },
     "viewer": Object {
       "blockedBy": false,
       "followedBy": "record(3)",
@@ -417,12 +315,6 @@ Object {
       "handle": "eve.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [],
-      "verification": Object {
-        "$type": "app.bsky.actor.defs#verificationStateDefault",
-        "isValid": false,
-        "role": "default",
-        "verifications": Array [],
-      },
       "viewer": Object {
         "blockedBy": false,
         "followedBy": "record(1)",
@@ -439,12 +331,6 @@ Object {
       "handle": "dan.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [],
-      "verification": Object {
-        "$type": "app.bsky.actor.defs#verificationStateDefault",
-        "isValid": false,
-        "role": "default",
-        "verifications": Array [],
-      },
       "viewer": Object {
         "blockedBy": false,
         "followedBy": "record(3)",
@@ -461,12 +347,6 @@ Object {
       "handle": "carol.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [],
-      "verification": Object {
-        "$type": "app.bsky.actor.defs#verificationStateDefault",
-        "isValid": false,
-        "role": "default",
-        "verifications": Array [],
-      },
       "viewer": Object {
         "blockedBy": false,
         "followedBy": "record(5)",
@@ -483,12 +363,6 @@ Object {
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [],
-      "verification": Object {
-        "$type": "app.bsky.actor.defs#verificationStateDefault",
-        "isValid": false,
-        "role": "default",
-        "verifications": Array [],
-      },
       "viewer": Object {
         "blockedBy": false,
         "followedBy": "record(7)",
@@ -506,12 +380,6 @@ Object {
     "handle": "alice.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
-    "verification": Object {
-      "$type": "app.bsky.actor.defs#verificationStateDefault",
-      "isValid": false,
-      "role": "default",
-      "verifications": Array [],
-    },
     "viewer": Object {
       "blockedBy": false,
       "muted": false,
@@ -533,12 +401,6 @@ Object {
       "handle": "carol.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [],
-      "verification": Object {
-        "$type": "app.bsky.actor.defs#verificationStateDefault",
-        "isValid": false,
-        "role": "default",
-        "verifications": Array [],
-      },
       "viewer": Object {
         "blockedBy": false,
         "followedBy": "record(1)",
@@ -555,12 +417,6 @@ Object {
       "handle": "alice.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [],
-      "verification": Object {
-        "$type": "app.bsky.actor.defs#verificationStateDefault",
-        "isValid": false,
-        "role": "default",
-        "verifications": Array [],
-      },
       "viewer": Object {
         "blockedBy": false,
         "muted": false,
@@ -576,12 +432,6 @@ Object {
     "handle": "bob.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
-    "verification": Object {
-      "$type": "app.bsky.actor.defs#verificationStateDefault",
-      "isValid": false,
-      "role": "default",
-      "verifications": Array [],
-    },
     "viewer": Object {
       "blockedBy": false,
       "followedBy": "record(3)",
@@ -605,12 +455,6 @@ Object {
       "handle": "alice.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [],
-      "verification": Object {
-        "$type": "app.bsky.actor.defs#verificationStateDefault",
-        "isValid": false,
-        "role": "default",
-        "verifications": Array [],
-      },
       "viewer": Object {
         "blockedBy": false,
         "muted": false,
@@ -626,12 +470,6 @@ Object {
     "handle": "carol.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
-    "verification": Object {
-      "$type": "app.bsky.actor.defs#verificationStateDefault",
-      "isValid": false,
-      "role": "default",
-      "verifications": Array [],
-    },
     "viewer": Object {
       "blockedBy": false,
       "followedBy": "record(1)",
@@ -655,12 +493,6 @@ Object {
       "handle": "eve.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [],
-      "verification": Object {
-        "$type": "app.bsky.actor.defs#verificationStateDefault",
-        "isValid": false,
-        "role": "default",
-        "verifications": Array [],
-      },
       "viewer": Object {
         "blockedBy": false,
         "followedBy": "record(1)",
@@ -677,12 +509,6 @@ Object {
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [],
-      "verification": Object {
-        "$type": "app.bsky.actor.defs#verificationStateDefault",
-        "isValid": false,
-        "role": "default",
-        "verifications": Array [],
-      },
       "viewer": Object {
         "blockedBy": false,
         "followedBy": "record(3)",
@@ -699,12 +525,6 @@ Object {
       "handle": "alice.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [],
-      "verification": Object {
-        "$type": "app.bsky.actor.defs#verificationStateDefault",
-        "isValid": false,
-        "role": "default",
-        "verifications": Array [],
-      },
       "viewer": Object {
         "blockedBy": false,
         "muted": false,
@@ -720,12 +540,6 @@ Object {
     "handle": "dan.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
-    "verification": Object {
-      "$type": "app.bsky.actor.defs#verificationStateDefault",
-      "isValid": false,
-      "role": "default",
-      "verifications": Array [],
-    },
     "viewer": Object {
       "blockedBy": false,
       "followedBy": "record(5)",
@@ -749,12 +563,6 @@ Object {
       "handle": "carol.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [],
-      "verification": Object {
-        "$type": "app.bsky.actor.defs#verificationStateDefault",
-        "isValid": false,
-        "role": "default",
-        "verifications": Array [],
-      },
       "viewer": Object {
         "blockedBy": false,
         "followedBy": "record(1)",
@@ -771,12 +579,6 @@ Object {
       "handle": "alice.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [],
-      "verification": Object {
-        "$type": "app.bsky.actor.defs#verificationStateDefault",
-        "isValid": false,
-        "role": "default",
-        "verifications": Array [],
-      },
       "viewer": Object {
         "blockedBy": false,
         "muted": false,
@@ -792,12 +594,6 @@ Object {
     "handle": "eve.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
-    "verification": Object {
-      "$type": "app.bsky.actor.defs#verificationStateDefault",
-      "isValid": false,
-      "role": "default",
-      "verifications": Array [],
-    },
     "viewer": Object {
       "blockedBy": false,
       "followedBy": "record(3)",

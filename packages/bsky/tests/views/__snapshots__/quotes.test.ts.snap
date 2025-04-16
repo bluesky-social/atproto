@@ -11,12 +11,6 @@ Object {
         "displayName": "bobby",
         "handle": "bob.test",
         "labels": Array [],
-        "verification": Object {
-          "$type": "app.bsky.actor.defs#verificationStateDefault",
-          "isValid": false,
-          "role": "default",
-          "verifications": Array [],
-        },
         "viewer": Object {
           "blockedBy": false,
           "muted": false,
@@ -104,12 +98,6 @@ Object {
         "did": "user(0)",
         "handle": "eve.test",
         "labels": Array [],
-        "verification": Object {
-          "$type": "app.bsky.actor.defs#verificationStateDefault",
-          "isValid": false,
-          "role": "default",
-          "verifications": Array [],
-        },
         "viewer": Object {
           "blockedBy": false,
           "muted": false,
@@ -142,12 +130,6 @@ Object {
                 "val": "self-label-b",
               },
             ],
-            "verification": Object {
-              "$type": "app.bsky.actor.defs#verificationStateDefault",
-              "isValid": false,
-              "role": "default",
-              "verifications": Array [],
-            },
             "viewer": Object {
               "blockedBy": false,
               "muted": false,
@@ -223,12 +205,6 @@ Object {
         "did": "user(0)",
         "handle": "eve.test",
         "labels": Array [],
-        "verification": Object {
-          "$type": "app.bsky.actor.defs#verificationStateDefault",
-          "isValid": false,
-          "role": "default",
-          "verifications": Array [],
-        },
         "viewer": Object {
           "blockedBy": false,
           "muted": false,
@@ -261,12 +237,6 @@ Object {
                 "val": "self-label-b",
               },
             ],
-            "verification": Object {
-              "$type": "app.bsky.actor.defs#verificationStateDefault",
-              "isValid": false,
-              "role": "default",
-              "verifications": Array [],
-            },
             "viewer": Object {
               "blockedBy": false,
               "muted": false,
@@ -333,12 +303,6 @@ Object {
         "did": "user(0)",
         "handle": "eve.test",
         "labels": Array [],
-        "verification": Object {
-          "$type": "app.bsky.actor.defs#verificationStateDefault",
-          "isValid": false,
-          "role": "default",
-          "verifications": Array [],
-        },
         "viewer": Object {
           "blockedBy": false,
           "muted": false,
@@ -371,12 +335,6 @@ Object {
                 "val": "self-label-b",
               },
             ],
-            "verification": Object {
-              "$type": "app.bsky.actor.defs#verificationStateDefault",
-              "isValid": false,
-              "role": "default",
-              "verifications": Array [],
-            },
             "viewer": Object {
               "blockedBy": false,
               "muted": false,

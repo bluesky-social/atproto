@@ -10,12 +10,6 @@ Array [
     "handle": "elta48.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
-    "verification": Object {
-      "$type": "app.bsky.actor.defs#verificationStateDefault",
-      "isValid": false,
-      "role": "default",
-      "verifications": Array [],
-    },
     "viewer": Object {
       "blockedBy": false,
       "muted": true,
@@ -29,12 +23,6 @@ Array [
     "handle": "magnus53.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
-    "verification": Object {
-      "$type": "app.bsky.actor.defs#verificationStateDefault",
-      "isValid": false,
-      "role": "default",
-      "verifications": Array [],
-    },
     "viewer": Object {
       "blockedBy": false,
       "muted": true,
@@ -44,12 +32,6 @@ Array [
     "did": "user(4)",
     "handle": "nicolas-krajcik10.test",
     "labels": Array [],
-    "verification": Object {
-      "$type": "app.bsky.actor.defs#verificationStateDefault",
-      "isValid": false,
-      "role": "default",
-      "verifications": Array [],
-    },
     "viewer": Object {
       "blockedBy": false,
       "muted": true,
@@ -63,12 +45,6 @@ Array [
     "handle": "jeffrey-sawayn87.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
-    "verification": Object {
-      "$type": "app.bsky.actor.defs#verificationStateDefault",
-      "isValid": false,
-      "role": "default",
-      "verifications": Array [],
-    },
     "viewer": Object {
       "blockedBy": false,
       "muted": true,
@@ -82,12 +58,6 @@ Array [
     "handle": "adrienne49.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
-    "verification": Object {
-      "$type": "app.bsky.actor.defs#verificationStateDefault",
-      "isValid": false,
-      "role": "default",
-      "verifications": Array [],
-    },
     "viewer": Object {
       "blockedBy": false,
       "muted": true,
@@ -101,12 +71,6 @@ Array [
     "handle": "aliya-hodkiewicz.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
-    "verification": Object {
-      "$type": "app.bsky.actor.defs#verificationStateDefault",
-      "isValid": false,
-      "role": "default",
-      "verifications": Array [],
-    },
     "viewer": Object {
       "blockedBy": false,
       "muted": true,
@@ -116,12 +80,6 @@ Array [
     "did": "user(11)",
     "handle": "carol.test",
     "labels": Array [],
-    "verification": Object {
-      "$type": "app.bsky.actor.defs#verificationStateDefault",
-      "isValid": false,
-      "role": "default",
-      "verifications": Array [],
-    },
     "viewer": Object {
       "blockedBy": false,
       "followedBy": "record(0)",
@@ -137,12 +95,6 @@ Array [
     "handle": "bob.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
-    "verification": Object {
-      "$type": "app.bsky.actor.defs#verificationStateDefault",
-      "isValid": false,
-      "role": "default",
-      "verifications": Array [],
-    },
     "viewer": Object {
       "blockedBy": false,
       "followedBy": "record(1)",
@@ -178,12 +130,6 @@ Object {
           "val": "self-label-b",
         },
       ],
-      "verification": Object {
-        "$type": "app.bsky.actor.defs#verificationStateDefault",
-        "isValid": false,
-        "role": "default",
-        "verifications": Array [],
-      },
       "viewer": Object {
         "blockedBy": false,
         "muted": false,
@@ -215,12 +161,6 @@ Object {
           "did": "user(2)",
           "handle": "carol.test",
           "labels": Array [],
-          "verification": Object {
-            "$type": "app.bsky.actor.defs#verificationStateDefault",
-            "isValid": false,
-            "role": "default",
-            "verifications": Array [],
-          },
           "viewer": Object {
             "blockedBy": false,
             "followedBy": "record(4)",
@@ -268,12 +208,6 @@ Object {
           "displayName": "bobby",
           "handle": "bob.test",
           "labels": Array [],
-          "verification": Object {
-            "$type": "app.bsky.actor.defs#verificationStateDefault",
-            "isValid": false,
-            "role": "default",
-            "verifications": Array [],
-          },
           "viewer": Object {
             "blockedBy": false,
             "followedBy": "record(7)",
