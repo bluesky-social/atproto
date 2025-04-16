@@ -22,9 +22,7 @@
     }
   },
   "optionalDependencies": {
-    "@atproto-labs/rollup-plugin-bundle-manifest": "workspace:*",
-    "@atproto/oauth-provider-api": "workspace:*",
-    "@atproto/oauth-types": "workspace:*"
+    "@atproto/oauth-provider-api": "workspace:*"
   },
   "devDependencies": {
     "@atproto-labs/fetch": "workspace:*",
