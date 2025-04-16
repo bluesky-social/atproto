@@ -25,8 +25,8 @@
         },
         "createdAt": { "type": "string", "format": "datetime" },
         "verification": {
-          "type": "union",
-          "refs": ["#verificationStateDefault", "#verificationStateVerifier"]
+          "type": "ref",
+          "ref": "#verificationState"
         }
       }
     },
@@ -59,8 +59,8 @@
           "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
         },
         "verification": {
-          "type": "union",
-          "refs": ["#verificationStateDefault", "#verificationStateVerifier"]
+          "type": "ref",
+          "ref": "#verificationState"
         }
       }
     },
@@ -105,8 +105,8 @@
           "ref": "com.atproto.repo.strongRef"
         },
         "verification": {
-          "type": "union",
-          "refs": ["#verificationStateDefault", "#verificationStateVerifier"]
+          "type": "ref",
+          "ref": "#verificationState"
         }
       }
     },
@@ -170,24 +170,25 @@
         }
       }
     },
-    "verificationStateDefault": {
+    "verificationState": {
       "type": "object",
-      "description": "Verification state for normal users.",
-      "required": ["role", "isValid", "verifications"],
+      "description": "Represents the verification information about the user this object is attached to.",
+      "required": ["verifications", "verifiedStatus", "trustedVerifierStatus"],
       "properties": {
-        "role": {
-          "type": "string",
-          "description": "The user's role.",
-          "const": "default"
-        },
-        "isValid": {
-          "type": "boolean",
-          "description": "True if the user has at least one valid verification record, otherwise false."
-        },
         "verifications": {
           "type": "array",
-          "description": "All valid and invalid verifications issued by trusted verifiers on behalf of this user. Verifications by untrusted verifiers are not included.",
+          "description": "All verifications issued by trusted verifiers on behalf of this user. Verifications by untrusted verifiers are not included.",
           "items": { "type": "ref", "ref": "#verificationView" }
+        },
+        "verifiedStatus": {
+          "type": "string",
+          "description": "The user's status as a verified account.",
+          "knownValues": ["valid", "invalid", "none"]
+        },
+        "trustedVerifierStatus": {
+          "type": "string",
+          "description": "The user's status as a trusted verifier.",
+          "knownValues": ["valid", "invalid", "none"]
         }
       }
     },
@@ -214,22 +215,6 @@
           "type": "string",
           "description": "Timestamp when the verification was created.",
           "format": "datetime"
-        }
-      }
-    },
-    "verificationStateVerifier": {
-      "type": "object",
-      "description": "Verification state for users who are trusted verifiers.",
-      "required": ["role", "isValid"],
-      "properties": {
-        "role": {
-          "type": "string",
-          "description": "The user's role",
-          "const": "verifier"
-        },
-        "isValid": {
-          "type": "boolean",
-          "description": "True if the user is a valid and active trusted verifier, otherwise false."
         }
       }
     },

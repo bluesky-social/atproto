@@ -1,6 +1,17 @@
+import assert from 'node:assert'
 import { AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetwork, verificationsSeed } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
+import { VerificationState } from '../../src/lexicon/types/app/bsky/actor/defs'
+
+interface ProfileViewTestCase {
+  description: string
+  // The DIDs are only set during test setup, so data that depends on those DIDs
+  // needs to be lazily evaluated by using a function.
+  getDid: () => string
+  getExpected: () => VerificationState | undefined
+  getExpectedUrisPrefixes?: () => string[]
+}
 
 describe('verification views', () => {
   let network: TestNetwork
@@ -69,62 +80,48 @@ describe('verification views', () => {
   })
 
   describe('profile views', () => {
-    const getProfile = async (actor: string) => {
-      const res = await agent.app.bsky.actor.getProfile(
-        { actor },
-        {
-          headers: {
-            ...(await network.serviceHeaders(
-              alice,
-              ids.AppBskyActorGetProfile,
-            )),
-            'atproto-accept-labelers': `${labelerDid};redact`,
-          },
-        },
-      )
-      return res.data
-    }
-
-    describe('verifier role', () => {
-      it('returns verifier that has verifications', async () => {
-        const profile = await getProfile(verifier1)
-
-        expect(profile.verification).toStrictEqual({
-          $type: 'app.bsky.actor.defs#verificationStateVerifier',
-          role: 'verifier',
-          isValid: true,
-        })
-      })
-
-      it('returns verifier that has no verifications', async () => {
-        const profile = await getProfile(verifier2)
-
-        expect(profile.verification).toStrictEqual({
-          $type: 'app.bsky.actor.defs#verificationStateVerifier',
-          role: 'verifier',
-          isValid: true,
-        })
-      })
-
-      it('returns isValid=false for an impersonation', async () => {
-        const profile = await getProfile(verifier3)
-
-        expect(profile.verification).toStrictEqual({
-          $type: 'app.bsky.actor.defs#verificationStateVerifier',
-          role: 'verifier',
-          isValid: false,
-        })
-      })
-    })
-
-    describe('default role', () => {
-      it('returns isValid=true with multiple verifications', async () => {
-        const profile = await getProfile(bob)
-
-        expect(profile.verification).toStrictEqual({
-          $type: 'app.bsky.actor.defs#verificationStateDefault',
-          role: 'default',
-          isValid: true,
+    const testCases: ProfileViewTestCase[] = [
+      {
+        description: 'returns trusted verifier that has verifications',
+        getDid: () => verifier1,
+        getExpected: () => ({
+          verifications: [
+            {
+              createdAt: expect.any(String),
+              isValid: true,
+              issuer: verifier2,
+              uri: expect.any(String),
+            },
+          ],
+          verifiedStatus: 'valid',
+          trustedVerifierStatus: 'valid',
+        }),
+        getExpectedUrisPrefixes: () => [
+          `at://${verifier2}/app.bsky.graph.verification/`,
+        ],
+      },
+      {
+        description: 'returns trusted verifier that has no verifications',
+        getDid: () => verifier2,
+        getExpected: () => ({
+          verifications: [],
+          verifiedStatus: 'none',
+          trustedVerifierStatus: 'valid',
+        }),
+      },
+      {
+        description: 'returns trusted verifier with impersonation',
+        getDid: () => verifier3,
+        getExpected: () => ({
+          verifications: [],
+          verifiedStatus: 'none',
+          trustedVerifierStatus: 'invalid',
+        }),
+      },
+      {
+        description: 'returns verified with multiple verifications',
+        getDid: () => bob,
+        getExpected: () => ({
           verifications: [
             {
               createdAt: expect.any(String),
@@ -139,16 +136,18 @@ describe('verification views', () => {
               uri: expect.any(String),
             },
           ],
-        })
-      })
-
-      it('returns isValid=true with mixed valid and invalid verifications', async () => {
-        const profile = await getProfile(carol)
-
-        expect(profile.verification).toStrictEqual({
-          $type: 'app.bsky.actor.defs#verificationStateDefault',
-          role: 'default',
-          isValid: true,
+          verifiedStatus: 'valid',
+          trustedVerifierStatus: 'none',
+        }),
+        getExpectedUrisPrefixes: () => [
+          `at://${verifier1}/app.bsky.graph.verification/`,
+          `at://${verifier2}/app.bsky.graph.verification/`,
+        ],
+      },
+      {
+        description: 'returns verified with mixed valid/invalid verifications',
+        getDid: () => carol,
+        getExpected: () => ({
           verifications: [
             {
               createdAt: expect.any(String),
@@ -163,16 +162,18 @@ describe('verification views', () => {
               uri: expect.any(String),
             },
           ],
-        })
-      })
-
-      it('returns isValid=true and excludes verifications by non-verifiers', async () => {
-        const profile = await getProfile(dan)
-
-        expect(profile.verification).toStrictEqual({
-          $type: 'app.bsky.actor.defs#verificationStateDefault',
-          role: 'default',
-          isValid: true,
+          verifiedStatus: 'valid',
+          trustedVerifierStatus: 'none',
+        }),
+        getExpectedUrisPrefixes: () => [
+          `at://${verifier1}/app.bsky.graph.verification/`,
+          `at://${verifier2}/app.bsky.graph.verification/`,
+        ],
+      },
+      {
+        description: 'returns verified excluding non-verifier verifications',
+        getDid: () => dan,
+        getExpected: () => ({
           verifications: [
             {
               createdAt: expect.any(String),
@@ -182,45 +183,23 @@ describe('verification views', () => {
             },
             // It has a verification by a non-verifier, which is not included.
           ],
-        })
-      })
-
-      it('returns isValid=false for an impersonator, but includes the verification', async () => {
-        const profile = await getProfile(impersonator)
-
-        expect(profile.verification).toStrictEqual({
-          $type: 'app.bsky.actor.defs#verificationStateDefault',
-          role: 'default',
-          isValid: false,
-          verifications: [
-            {
-              createdAt: expect.any(String),
-              isValid: true,
-              issuer: verifier1,
-              uri: expect.any(String),
-            },
-          ],
-        })
-      })
-
-      it('returns isValid=false when has no verifications', async () => {
-        const profile = await getProfile(eve)
-
-        expect(profile.verification).toStrictEqual({
-          $type: 'app.bsky.actor.defs#verificationStateDefault',
-          role: 'default',
-          isValid: false,
-          verifications: [],
-        })
-      })
-
-      it('returns isValid=false when has only invalid verifications from verifiers', async () => {
-        const profile = await getProfile(frank)
-
-        expect(profile.verification).toStrictEqual({
-          $type: 'app.bsky.actor.defs#verificationStateDefault',
-          role: 'default',
-          isValid: false,
+          verifiedStatus: 'valid',
+          trustedVerifierStatus: 'none',
+        }),
+        getExpectedUrisPrefixes: () => [
+          `at://${verifier1}/app.bsky.graph.verification/`,
+        ],
+      },
+      {
+        description: 'returns undefined for user with no verifications at all',
+        getDid: () => eve,
+        getExpected: () => undefined,
+      },
+      {
+        description:
+          'returns unverified with only invalid verifications from verifiers',
+        getDid: () => frank,
+        getExpected: () => ({
           verifications: [
             {
               createdAt: expect.any(String),
@@ -229,22 +208,75 @@ describe('verification views', () => {
               uri: expect.any(String),
             },
           ],
-        })
-      })
+          verifiedStatus: 'none',
+          trustedVerifierStatus: 'none',
+        }),
+        getExpectedUrisPrefixes: () => [
+          `at://${verifier2}/app.bsky.graph.verification/`,
+        ],
+      },
+      {
+        description:
+          'returns unverified for user with only verifications by non-verifiers',
+        getDid: () => gus,
+        getExpected: () => undefined,
+      },
+      {
+        description:
+          'returns invalid verified for impersonator, but includes verifications',
+        getDid: () => impersonator,
+        getExpected: () => ({
+          verifications: [
+            {
+              createdAt: expect.any(String),
+              isValid: true,
+              issuer: verifier1,
+              uri: expect.any(String),
+            },
+          ],
+          verifiedStatus: 'invalid',
+          trustedVerifierStatus: 'none',
+        }),
+        getExpectedUrisPrefixes: () => [
+          `at://${verifier1}/app.bsky.graph.verification/`,
+        ],
+      },
+    ]
 
-      it('returns isValid=false when has only verifications from non-verifiers', async () => {
-        const profile = await getProfile(gus)
+    it.each(testCases)(
+      '$description',
+      async ({ getDid, getExpected, getExpectedUrisPrefixes = () => [] }) => {
+        const profile = await getProfile(getDid())
 
-        expect(profile.verification).toStrictEqual({
-          $type: 'app.bsky.actor.defs#verificationStateDefault',
-          role: 'default',
-          isValid: false,
-          // This user has a verification but it is from a non-verifier, so it is omitted.
-          verifications: [],
+        expect(profile.verification).toStrictEqual(getExpected())
+
+        const urlPrefixes = getExpectedUrisPrefixes()
+        profile.verification &&
+          expect(urlPrefixes.length).toBe(
+            profile.verification.verifications.length,
+          )
+        urlPrefixes.forEach((prefix, i) => {
+          assert(profile.verification)
+          expect(
+            profile.verification.verifications[i].uri.startsWith(prefix),
+          ).toBe(true)
         })
-      })
-    })
+      },
+    )
   })
+
+  const getProfile = async (actor: string) => {
+    const res = await agent.app.bsky.actor.getProfile(
+      { actor },
+      {
+        headers: {
+          ...(await network.serviceHeaders(alice, ids.AppBskyActorGetProfile)),
+          'atproto-accept-labelers': `${labelerDid};redact`,
+        },
+      },
+    )
+    return res.data
+  }
 
   const createLabel = async (opts: {
     src?: string

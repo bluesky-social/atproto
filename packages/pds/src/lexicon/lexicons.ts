@@ -4565,11 +4565,8 @@ export const schemaDict = {
             format: 'datetime',
           },
           verification: {
-            type: 'union',
-            refs: [
-              'lex:app.bsky.actor.defs#verificationStateDefault',
-              'lex:app.bsky.actor.defs#verificationStateVerifier',
-            ],
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#verificationState',
           },
         },
       },
@@ -4623,11 +4620,8 @@ export const schemaDict = {
             },
           },
           verification: {
-            type: 'union',
-            refs: [
-              'lex:app.bsky.actor.defs#verificationStateDefault',
-              'lex:app.bsky.actor.defs#verificationStateVerifier',
-            ],
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#verificationState',
           },
         },
       },
@@ -4702,11 +4696,8 @@ export const schemaDict = {
             ref: 'lex:com.atproto.repo.strongRef',
           },
           verification: {
-            type: 'union',
-            refs: [
-              'lex:app.bsky.actor.defs#verificationStateDefault',
-              'lex:app.bsky.actor.defs#verificationStateVerifier',
-            ],
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#verificationState',
           },
         },
       },
@@ -4797,36 +4788,36 @@ export const schemaDict = {
           },
         },
       },
-      verificationStateDefault: {
+      verificationState: {
         type: 'object',
         description:
-          'Verification state for the case when a user is not a verifier.',
-        required: ['role', 'isValid', 'verifications'],
+          'Represents the verification information about the user this object is attached to.',
+        required: ['verifications', 'verifiedStatus', 'trustedVerifierStatus'],
         properties: {
-          role: {
-            type: 'string',
-            description: 'The verification role for this subject.',
-            const: 'default',
-          },
-          isValid: {
-            type: 'boolean',
-            description:
-              'This user has at least 1 valid verification and is not labeled as impersonation.',
-          },
           verifications: {
             type: 'array',
             description:
-              "All the verifications associated with this subject. It returns existing valid and invalid (e.g., pointing to the wrong handle/displayName) verifications but it won't return verifications from non-verifiers. It returns the verifications for users labeled as impersonation.",
+              'All verifications issued by trusted verifiers on behalf of this user. Verifications by untrusted verifiers are not included.',
             items: {
               type: 'ref',
               ref: 'lex:app.bsky.actor.defs#verificationView',
             },
           },
+          verifiedStatus: {
+            type: 'string',
+            description: "The user's status as a verified account.",
+            knownValues: ['valid', 'invalid', 'none'],
+          },
+          trustedVerifierStatus: {
+            type: 'string',
+            description: "The user's status as a trusted verifier.",
+            knownValues: ['valid', 'invalid', 'none'],
+          },
         },
       },
       verificationView: {
         type: 'object',
-        description: 'Verification data for the associated subject.',
+        description: 'An individual verification for an associated subject.',
         required: ['issuer', 'uri', 'isValid', 'createdAt'],
         properties: {
           issuer: {
@@ -4842,29 +4833,12 @@ export const schemaDict = {
           isValid: {
             type: 'boolean',
             description:
-              'Whether the verification is valid or not. This means the verification record contains the current handle/displayName of the subject.',
+              'True if the verification passes validation, otherwise false.',
           },
           createdAt: {
             type: 'string',
-            description: 'Date of when the verification was created.',
+            description: 'Timestamp when the verification was created.',
             format: 'datetime',
-          },
-        },
-      },
-      verificationStateVerifier: {
-        type: 'object',
-        description:
-          'Verification state for the case when a user is a verifier.',
-        required: ['role', 'isValid'],
-        properties: {
-          role: {
-            type: 'string',
-            description: 'The verification role for this subject.',
-            const: 'verifier',
-          },
-          isValid: {
-            type: 'boolean',
-            description: 'This user is not labeled as impersonation.',
           },
         },
       },

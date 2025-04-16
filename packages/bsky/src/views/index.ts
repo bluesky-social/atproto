@@ -13,8 +13,7 @@ import {
   ProfileView,
   ProfileViewBasic,
   ProfileViewDetailed,
-  VerificationStateDefault,
-  VerificationStateVerifier,
+  VerificationState,
   VerificationView,
   ViewerState as ProfileViewer,
 } from '../lexicon/types/app/bsky/actor/defs'
@@ -218,7 +217,6 @@ export class Views {
     if (!baseView) return
     const knownFollowers = this.knownFollowers(did, state)
     const profileAggs = state.profileAggs?.get(did)
-    const verification = this.verification(did, state)
 
     return {
       ...baseView,
@@ -252,7 +250,6 @@ export class Views {
         ? this.starterPackBasic(actor.profile.joinedViaStarterPack.uri, state)
         : undefined,
       pinnedPost: safePinnedPost(actor.profile?.pinnedPost),
-      verification,
     }
   }
   profile(
@@ -296,7 +293,6 @@ export class Views {
         record: actor.profile,
       }),
     ]
-    const verification = this.verification(did, state)
 
     return {
       did,
@@ -324,7 +320,7 @@ export class Views {
       viewer: this.profileViewer(did, state),
       labels,
       createdAt: actor.createdAt?.toISOString(),
-      verification,
+      verification: this.verification(did, state),
     }
   }
 
@@ -396,24 +392,13 @@ export class Views {
   verification(
     did: string,
     state: HydrationState,
-  ):
-    | $Typed<VerificationStateDefault>
-    | $Typed<VerificationStateVerifier>
-    | undefined {
+  ): VerificationState | undefined {
     const actor = state.actors?.get(did)
     if (!actor) return
 
     const isImpersonation = state.labels?.get(did)?.isImpersonation
 
-    if (actor.trustedVerifier) {
-      return {
-        $type: 'app.bsky.actor.defs#verificationStateVerifier',
-        role: 'verifier',
-        isValid: !isImpersonation,
-      }
-    }
-
-    const verificationViews: VerificationView[] = actor.verifications.map(
+    const verifications: VerificationView[] = actor.verifications.map(
       ({ issuer, uri, displayName, handle, createdAt }) => {
         // @NOTE: We don't factor-in impersonation when evaluating the validity of each verification,
         // only in the overall profile verification validity.
@@ -431,12 +416,32 @@ export class Views {
         }
       },
     )
-    const hasValidVerification = verificationViews.some((v) => v.isValid)
+    const hasValidVerification = verifications.some((v) => v.isValid)
+
+    const verifiedStatus = hasValidVerification
+      ? isImpersonation
+        ? 'invalid'
+        : 'valid'
+      : 'none'
+
+    const trustedVerifierStatus = actor.trustedVerifier
+      ? isImpersonation
+        ? 'invalid'
+        : 'valid'
+      : 'none'
+
+    if (
+      verifications.length === 0 &&
+      verifiedStatus === 'none' &&
+      trustedVerifierStatus === 'none'
+    ) {
+      return undefined
+    }
+
     return {
-      $type: 'app.bsky.actor.defs#verificationStateDefault',
-      role: 'default',
-      isValid: !isImpersonation && hasValidVerification,
-      verifications: verificationViews,
+      verifications,
+      verifiedStatus,
+      trustedVerifierStatus,
     }
   }
 
