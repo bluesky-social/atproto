@@ -498,6 +498,8 @@ export async function generateMockSetup(env: TestNetwork) {
       },
     )
   }
+
+  await setVerifier(env.bsky.db, alice.accountDid)
 }
 
 function ucfirst(str: string): string {
@@ -518,5 +520,13 @@ const createLabel = async (
       neg: false,
       src: opts.src ?? EXAMPLE_LABELER,
     })
+    .execute()
+}
+
+const setVerifier = async (db: Database, did: string) => {
+  await db.db
+    .updateTable('actor')
+    .set({ trustedVerifier: true })
+    .where('did', '=', did)
     .execute()
 }

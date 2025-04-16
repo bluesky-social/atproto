@@ -29,6 +29,7 @@ export interface ProfileViewBasic {
   viewer?: ViewerState
   labels?: ComAtprotoLabelDefs.Label[]
   createdAt?: string
+  verification?: VerificationState
 }
 
 const hashProfileViewBasic = 'profileViewBasic'
@@ -53,6 +54,7 @@ export interface ProfileView {
   createdAt?: string
   viewer?: ViewerState
   labels?: ComAtprotoLabelDefs.Label[]
+  verification?: VerificationState
 }
 
 const hashProfileView = 'profileView'
@@ -83,6 +85,7 @@ export interface ProfileViewDetailed {
   viewer?: ViewerState
   labels?: ComAtprotoLabelDefs.Label[]
   pinnedPost?: ComAtprotoRepoStrongRef.Main
+  verification?: VerificationState
 }
 
 const hashProfileViewDetailed = 'profileViewDetailed'
@@ -167,6 +170,50 @@ export function isKnownFollowers<V>(v: V) {
 
 export function validateKnownFollowers<V>(v: V) {
   return validate<KnownFollowers & V>(v, id, hashKnownFollowers)
+}
+
+/** Represents the verification information about the user this object is attached to. */
+export interface VerificationState {
+  $type?: 'app.bsky.actor.defs#verificationState'
+  /** All verifications issued by trusted verifiers on behalf of this user. Verifications by untrusted verifiers are not included. */
+  verifications: VerificationView[]
+  /** The user's status as a verified account. */
+  verifiedStatus: 'valid' | 'invalid' | 'none' | (string & {})
+  /** The user's status as a trusted verifier. */
+  trustedVerifierStatus: 'valid' | 'invalid' | 'none' | (string & {})
+}
+
+const hashVerificationState = 'verificationState'
+
+export function isVerificationState<V>(v: V) {
+  return is$typed(v, id, hashVerificationState)
+}
+
+export function validateVerificationState<V>(v: V) {
+  return validate<VerificationState & V>(v, id, hashVerificationState)
+}
+
+/** An individual verification for an associated subject. */
+export interface VerificationView {
+  $type?: 'app.bsky.actor.defs#verificationView'
+  /** The user who issued this verification. */
+  issuer: string
+  /** The AT-URI of the verification record. */
+  uri: string
+  /** True if the verification passes validation, otherwise false. */
+  isValid: boolean
+  /** Timestamp when the verification was created. */
+  createdAt: string
+}
+
+const hashVerificationView = 'verificationView'
+
+export function isVerificationView<V>(v: V) {
+  return is$typed(v, id, hashVerificationView)
+}
+
+export function validateVerificationView<V>(v: V) {
+  return validate<VerificationView & V>(v, id, hashVerificationView)
 }
 
 export type Preferences = (

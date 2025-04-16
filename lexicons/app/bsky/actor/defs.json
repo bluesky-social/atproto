@@ -23,7 +23,11 @@
           "type": "array",
           "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
         },
-        "createdAt": { "type": "string", "format": "datetime" }
+        "createdAt": { "type": "string", "format": "datetime" },
+        "verification": {
+          "type": "ref",
+          "ref": "#verificationState"
+        }
       }
     },
     "profileView": {
@@ -53,6 +57,10 @@
         "labels": {
           "type": "array",
           "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
+        },
+        "verification": {
+          "type": "ref",
+          "ref": "#verificationState"
         }
       }
     },
@@ -95,6 +103,10 @@
         "pinnedPost": {
           "type": "ref",
           "ref": "com.atproto.repo.strongRef"
+        },
+        "verification": {
+          "type": "ref",
+          "ref": "#verificationState"
         }
       }
     },
@@ -155,6 +167,54 @@
             "type": "ref",
             "ref": "#profileViewBasic"
           }
+        }
+      }
+    },
+    "verificationState": {
+      "type": "object",
+      "description": "Represents the verification information about the user this object is attached to.",
+      "required": ["verifications", "verifiedStatus", "trustedVerifierStatus"],
+      "properties": {
+        "verifications": {
+          "type": "array",
+          "description": "All verifications issued by trusted verifiers on behalf of this user. Verifications by untrusted verifiers are not included.",
+          "items": { "type": "ref", "ref": "#verificationView" }
+        },
+        "verifiedStatus": {
+          "type": "string",
+          "description": "The user's status as a verified account.",
+          "knownValues": ["valid", "invalid", "none"]
+        },
+        "trustedVerifierStatus": {
+          "type": "string",
+          "description": "The user's status as a trusted verifier.",
+          "knownValues": ["valid", "invalid", "none"]
+        }
+      }
+    },
+    "verificationView": {
+      "type": "object",
+      "description": "An individual verification for an associated subject.",
+      "required": ["issuer", "uri", "isValid", "createdAt"],
+      "properties": {
+        "issuer": {
+          "type": "string",
+          "description": "The user who issued this verification.",
+          "format": "did"
+        },
+        "uri": {
+          "type": "string",
+          "description": "The AT-URI of the verification record.",
+          "format": "at-uri"
+        },
+        "isValid": {
+          "type": "boolean",
+          "description": "True if the verification passes validation, otherwise false."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the verification was created.",
+          "format": "datetime"
         }
       }
     },

@@ -4564,6 +4564,10 @@ export const schemaDict = {
             type: 'string',
             format: 'datetime',
           },
+          verification: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#verificationState',
+          },
         },
       },
       profileView: {
@@ -4614,6 +4618,10 @@ export const schemaDict = {
               type: 'ref',
               ref: 'lex:com.atproto.label.defs#label',
             },
+          },
+          verification: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#verificationState',
           },
         },
       },
@@ -4686,6 +4694,10 @@ export const schemaDict = {
           pinnedPost: {
             type: 'ref',
             ref: 'lex:com.atproto.repo.strongRef',
+          },
+          verification: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#verificationState',
           },
         },
       },
@@ -4773,6 +4785,60 @@ export const schemaDict = {
               type: 'ref',
               ref: 'lex:app.bsky.actor.defs#profileViewBasic',
             },
+          },
+        },
+      },
+      verificationState: {
+        type: 'object',
+        description:
+          'Represents the verification information about the user this object is attached to.',
+        required: ['verifications', 'verifiedStatus', 'trustedVerifierStatus'],
+        properties: {
+          verifications: {
+            type: 'array',
+            description:
+              'All verifications issued by trusted verifiers on behalf of this user. Verifications by untrusted verifiers are not included.',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.actor.defs#verificationView',
+            },
+          },
+          verifiedStatus: {
+            type: 'string',
+            description: "The user's status as a verified account.",
+            knownValues: ['valid', 'invalid', 'none'],
+          },
+          trustedVerifierStatus: {
+            type: 'string',
+            description: "The user's status as a trusted verifier.",
+            knownValues: ['valid', 'invalid', 'none'],
+          },
+        },
+      },
+      verificationView: {
+        type: 'object',
+        description: 'An individual verification for an associated subject.',
+        required: ['issuer', 'uri', 'isValid', 'createdAt'],
+        properties: {
+          issuer: {
+            type: 'string',
+            description: 'The user who issued this verification.',
+            format: 'did',
+          },
+          uri: {
+            type: 'string',
+            description: 'The AT-URI of the verification record.',
+            format: 'at-uri',
+          },
+          isValid: {
+            type: 'boolean',
+            description:
+              'True if the verification passes validation, otherwise false.',
+          },
+          createdAt: {
+            type: 'string',
+            description: 'Timestamp when the verification was created.',
+            format: 'datetime',
           },
         },
       },

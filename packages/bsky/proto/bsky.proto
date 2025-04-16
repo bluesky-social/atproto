@@ -205,6 +205,65 @@ message GetFollowsResponse {
 }
 
 //
+// Verification
+//
+
+message VerificationMeta {
+  string rkey = 1;
+  string handle = 2;
+  string display_name = 3;
+  google.protobuf.Timestamp sorted_at = 4;
+}
+
+message GetVerificationRecordsRequest {
+  repeated string uris = 1;
+}
+
+message GetVerificationRecordsResponse {
+  repeated Record records = 1;
+}
+
+message VerificationIssued {
+  string actor_did = 1;
+  string rkey = 2;
+  string subject_did = 3;
+  google.protobuf.Timestamp created_at = 7;
+  google.protobuf.Timestamp indexed_at = 8;
+  google.protobuf.Timestamp sorted_at = 9;
+}
+
+message GetVerificationsIssuedRequest {
+  string actor_did = 1;
+  int32 limit = 2;
+  string cursor = 3;
+}
+
+message GetVerificationsIssuedResponse {
+  repeated VerificationIssued verifications = 1;
+  string cursor = 2;
+}
+
+message VerificationReceived {
+  string actor_did = 1;
+  string rkey = 2;
+  string subject_did = 3;
+  google.protobuf.Timestamp created_at = 7;
+  google.protobuf.Timestamp indexed_at = 8;
+  google.protobuf.Timestamp sorted_at = 9;
+}
+
+message GetVerificationsReceivedRequest {
+  string subject_did = 1;
+  int32 limit = 2;
+  string cursor = 3;
+}
+
+message GetVerificationsReceivedResponse {
+  repeated VerificationReceived verifications = 1;
+  string cursor = 2;
+}
+
+//
 // Likes
 //
 
@@ -396,6 +455,9 @@ message ActorInfo {
   string upstream_status = 9;
   google.protobuf.Timestamp created_at = 10;
   bool priority_notifications = 11;
+  double pagerank = 12;
+  bool trusted_verifier = 13;
+  map<string, VerificationMeta> verified_by = 14;
 }
 
 message GetActorsResponse {
@@ -1128,6 +1190,11 @@ service Service {
   rpc GetActorFollowsActors(GetActorFollowsActorsRequest) returns (GetActorFollowsActorsResponse);
   rpc GetFollowers(GetFollowersRequest) returns (GetFollowersResponse);
   rpc GetFollows(GetFollowsRequest) returns (GetFollowsResponse);
+
+  // Verifications
+  rpc GetVerificationRecords(GetVerificationRecordsRequest) returns (GetVerificationRecordsResponse);
+  rpc GetVerificationsIssued(GetVerificationsIssuedRequest) returns (GetVerificationsIssuedResponse);
+  rpc GetVerificationsReceived(GetVerificationsReceivedRequest) returns (GetVerificationsReceivedResponse);
 
   // Likes
   rpc GetLikesBySubject(GetLikesBySubjectRequest) returns (GetLikesBySubjectResponse);

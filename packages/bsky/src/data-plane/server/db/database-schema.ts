@@ -36,6 +36,7 @@ import * as suggestedFollow from './tables/suggested-follow'
 import * as taggedSuggestion from './tables/tagged-suggestion'
 import * as threadgate from './tables/thread-gate'
 import * as threadMute from './tables/thread-mute'
+import * as verification from './tables/verification'
 import * as viewParam from './tables/view-param'
 
 export type DatabaseSchemaType = duplicateRecord.PartialDB &
@@ -75,6 +76,7 @@ export type DatabaseSchemaType = duplicateRecord.PartialDB &
   labeler.PartialDB &
   starterPack.PartialDB &
   taggedSuggestion.PartialDB &
-  quote.PartialDB
+  quote.PartialDB &
+  verification.PartialDB
 
 export type DatabaseSchema = Kysely<DatabaseSchemaType>
