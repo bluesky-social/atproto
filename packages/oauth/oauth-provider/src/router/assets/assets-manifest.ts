@@ -1,10 +1,7 @@
 import { createReadStream } from 'node:fs'
 import { join } from 'node:path'
 import { Readable } from 'node:stream'
-import type {
-  Manifest,
-  ManifestItem,
-} from '@atproto-labs/rollup-plugin-bundle-manifest'
+import type { Manifest } from '@atproto-labs/rollup-plugin-bundle-manifest'
 import { AssetRef } from '../../lib/html/build-document.js'
 import {
   Middleware,
@@ -12,15 +9,25 @@ import {
   validateFetchSite,
   writeStream,
 } from '../../lib/http/index.js'
-import { Simplify } from '../../lib/util/type.js'
 
-type Asset = {
-  [T in ManifestItem['type']]: Simplify<
-    Omit<Extract<ManifestItem, { type: T }>, 'data'> & {
+type Asset =
+  | {
+      type: 'asset'
+      mime?: string
+      sha256: string
       stream: () => Readable
     }
-  >
-}[ManifestItem['type']]
+  | {
+      type: 'chunk'
+      mime: string
+      sha256: string
+      dynamicImports: string[]
+      isDynamicEntry: boolean
+      isEntry: boolean
+      isImplicitEntry: boolean
+      name: string
+      stream: () => Readable
+    }
 
 const ASSETS_URL_PREFIX = '/@atproto/oauth-provider/~assets/'
 
