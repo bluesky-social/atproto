@@ -8,289 +8,289 @@ msgstr ""
 "Language: ja\n"
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: \n"
-"Last-Translator: \n"
-"Language-Team: \n"
+"PO-Revision-Date: 2025-04-16 23:30+0900\n"
+"Last-Translator: dolciss\n"
+"Language-Team: Japanese\n"
 "Plural-Forms: \n"
 
 #: src/routes/account/_minimalLayout/sign-in.tsx:155
 msgid "@handle or email"
-msgstr ""
+msgstr "@ハンドルまたはメールアドレス"
 
 #: src/routes/account/_minimalLayout/sign-in.tsx:49
 msgid "← Back to accounts"
-msgstr ""
+msgstr "← アカウントに戻る"
 
 #: src/data/useClientName.ts:24
 msgid "A local app"
-msgstr ""
+msgstr "ローカルアプリ"
 
 #: src/routes/account/_minimalLayout/reset-password.tsx:65
 msgid "A new password is required"
-msgstr ""
+msgstr "新しいパスワードが必要です"
 
 #: src/routes/account/_minimalLayout/index.tsx:64
 msgid "Accounts"
-msgstr ""
+msgstr "アカウント"
 
 #: src/routes/account/_minimalLayout/sign-in.tsx:125
 #: src/routes/account/_minimalLayout/reset-password.tsx:51
 #: src/routes/account/_minimalLayout/reset-password.tsx:78
 msgid "An error occurred, please try again."
-msgstr ""
+msgstr "エラーが発生しました、もう一度お試しください。"
 
 #: src/routes/account/_appLayout/$sub.tsx:270
 msgid "Are you sure you want to remove this device?"
-msgstr ""
+msgstr "本当にこのデバイスを削除しますか？"
 
 #: src/routes/account/_appLayout/$sub.tsx:176
 msgid "Are you sure you want to revoke access? This application won't be able to access your account anymore."
-msgstr ""
+msgstr "本当にこのデバイスを削除しますか？このアプリケーションは、もうあなたのアカウントにアクセスできなくなります。"
 
 #: src/routes/account/_minimalLayout/reset-password.tsx:122
 #: src/routes/account/_minimalLayout/reset-password.tsx:195
 msgid "Back to sign in"
-msgstr ""
+msgstr "サインインに戻る"
 
 #: src/components/Prompt.tsx:56
 msgid "Cancel"
-msgstr ""
+msgstr "キャンセル"
 
 #: src/routes/account/_minimalLayout/reset-password.tsx:319
 msgid "Click here to send a new code to your email."
-msgstr ""
+msgstr "ここをクリックして、新しいコードをメールで送信します。"
 
 #: src/routes/account/_minimalLayout/sign-in.tsx:193
 #: src/routes/account/_minimalLayout/reset-password.tsx:222
 msgid "Code"
-msgstr ""
+msgstr "コード"
 
 #: src/routes/account/_minimalLayout/reset-password.tsx:88
 msgid "Code was resent"
-msgstr ""
+msgstr "コード再送済"
 
 #: src/routes/account/_appLayout/$sub.tsx:52
 msgid "Connected apps"
-msgstr ""
+msgstr "接続済アプリ"
 
 #: src/routes/account/_minimalLayout/sign-in.tsx:143
 msgid "Credentials"
-msgstr ""
+msgstr "認証情報"
 
 #: src/routes/account/_minimalLayout/reset-password.tsx:314
 msgid "Don't see the email? <0>Try sending again.</0>"
-msgstr ""
+msgstr "メールが見つかりませんか？<0>再送信を試みてください。</0>"
 
 #: src/routes/account/_minimalLayout/reset-password.tsx:149
 msgid "Email"
-msgstr ""
+msgstr "メールアドレス"
 
 #: src/routes/account/_minimalLayout/reset-password.tsx:62
 msgid "Email code is required"
-msgstr ""
+msgstr "メールの確認コードが必要"
 
 #: src/routes/account/_minimalLayout/reset-password.tsx:42
 msgid "Email is required"
-msgstr ""
+msgstr "メールアドレスが必要"
 
 #: src/routes/account/_minimalLayout/reset-password.tsx:264
 msgid "Enter a new password"
-msgstr ""
+msgstr "新しいパスワードを入力"
 
 #: src/routes/account/_minimalLayout/reset-password.tsx:154
 msgid "Enter your email"
-msgstr ""
+msgstr "メールアドレスを入力"
 
 #: src/routes/account/_minimalLayout/reset-password.tsx:132
 msgid "Enter your email to receive a reset code."
-msgstr ""
+msgstr "リセットコードを受信するには、メールアドレスを入力してください。"
 
 #: src/routes/account/_appLayout/$sub.tsx:60
 msgid "Failed to load connected apps"
-msgstr ""
+msgstr "接続済アプリの読み込みに失敗しました"
 
 #: src/routes/account/_appLayout/$sub.tsx:91
 msgid "Failed to load devices"
-msgstr ""
+msgstr "デバイスの読み込みに失敗しました"
 
 #: src/routes/account/_appLayout/$sub.tsx:222
 msgid "Failed to remove device"
-msgstr ""
+msgstr "デバイスの削除に失敗しました"
 
 #: src/routes/account/_minimalLayout/reset-password.tsx:94
 msgid "Failed to resend code"
-msgstr ""
+msgstr "確認コードの再送に失敗しました"
 
 #: src/routes/account/_appLayout/$sub.tsx:147
 msgid "Failed to sign out"
-msgstr ""
+msgstr "サインアウトに失敗しました"
 
 #: src/routes/account/_minimalLayout/sign-in.tsx:235
 msgid "Forgot password?"
-msgstr ""
+msgstr "パスワードを忘れた？"
 
 #: src/routes/account/_minimalLayout/reset-password.tsx:186
 msgid "Get reset code"
-msgstr ""
+msgstr "リセットコードを取得"
 
 #: src/routes/account/_appLayout/$sub.tsx:42
 msgid "Home"
-msgstr ""
+msgstr "ホーム"
 
 #: src/routes/account/_minimalLayout/sign-in.tsx:150
 msgid "Identifier"
-msgstr ""
+msgstr "識別子"
 
 #: src/routes/account/_minimalLayout/reset-password.tsx:41
 msgid "Invalid email"
-msgstr ""
+msgstr "無効なメールアドレス"
 
 #: src/routes/account/_minimalLayout/sign-in.tsx:83
 msgid "Invalid handle"
-msgstr ""
+msgstr "無効なハンドル"
 
 #: src/routes/account/_minimalLayout/sign-in.tsx:123
 msgid "Invalid identifier or password."
-msgstr ""
+msgstr "無効な識別子またはパスワード"
 
 #: src/routes/account/_appLayout/$sub.tsx:77
 msgid "It appears that you haven’t used this account to sign in to any apps yet."
-msgstr ""
+msgstr "このアカウントを使用して、まだアプリにサインインしていないようです。"
 
 #: src/routes/account/_minimalLayout.tsx:21
 #: src/components/Nav.tsx:18
 msgid "Logo"
-msgstr ""
+msgstr "ロゴ"
 
 #: src/routes/account/_appLayout/$sub.tsx:107
 msgid "Looks like you aren't logged in on any other devices."
-msgstr ""
+msgstr "あなたは他のデバイスにログインしていないようです。"
 
 #: src/data/useFriendlyClientId.ts:13
 msgid "loopback"
-msgstr ""
+msgstr "ループバック"
 
 #: src/routes/account/_appLayout/$sub.tsx:83
 msgid "My devices"
-msgstr ""
+msgstr "デバイス"
 
 #: src/routes/account/_appLayout/$sub.tsx:75
 msgid "No connected apps"
-msgstr ""
+msgstr "接続済アプリなし"
 
 #: src/routes/account/_appLayout/$sub.tsx:106
 msgid "No devices"
-msgstr ""
+msgstr "デバイスなし"
 
 #: src/routes/account/_minimalLayout/sign-in.tsx:170
 #: src/routes/account/_minimalLayout/sign-in.tsx:176
 #: src/routes/account/_minimalLayout/reset-password.tsx:257
 msgid "Password"
-msgstr ""
+msgstr "パスワード"
 
 #: src/routes/account/_minimalLayout/sign-in.tsx:88
 msgid "Password is required"
-msgstr ""
+msgstr "パスワードが必要"
 
 #: src/routes/account/_minimalLayout/reset-password.tsx:68
 msgid "Password must be at least {MIN_PASSWORD_LENGTH} characters"
-msgstr ""
+msgstr "パスワードは {MIN_PASSWORD_LENGTH} 文字以上でなければなりません"
 
 #: src/routes/account/_appLayout/$sub.tsx:271
 #: src/routes/account/_appLayout/$sub.tsx:276
 msgid "Remove"
-msgstr ""
+msgstr "削除"
 
 #: src/routes/account/_appLayout/$sub.tsx:269
 msgid "Remove this device"
-msgstr ""
+msgstr "このデバイスを削除"
 
 #: src/routes/account/_minimalLayout/reset-password.tsx:129
 #: src/routes/account/_minimalLayout/reset-password.tsx:308
 msgid "Reset password"
-msgstr ""
+msgstr "パスワードをリセット"
 
 #: src/routes/account/_appLayout/$sub.tsx:172
 msgid "Revoke access to {clientName}"
-msgstr ""
+msgstr "{clientName} へのアクセスを取り消す"
 
 #: src/routes/account/_appLayout/$sub.tsx:173
 msgid "Revoke access to this application"
-msgstr ""
+msgstr "このアプリへのアクセスを取り消す"
 
 #: src/components/AccountSelector.tsx:32
 msgid "Select an account"
-msgstr ""
+msgstr "アカウントを選択"
 
 #: src/routes/account/_minimalLayout/index.tsx:67
 msgid "Select the account you would like to manage."
-msgstr ""
+msgstr "管理したいアカウントを選択してください。"
 
 #: src/routes/account/_minimalLayout/sign-in.tsx:134
 #: src/routes/account/_minimalLayout/sign-in.tsx:226
 msgid "Sign in"
-msgstr ""
+msgstr "サインイン"
 
 #: src/routes/account/_minimalLayout/index.tsx:107
 msgid "Sign in with another account"
-msgstr ""
+msgstr "他のアカウントでサインイン"
 
 #: src/routes/account/_appLayout/$sub.tsx:178
 #: src/routes/account/_appLayout/$sub.tsx:183
 #: src/components/AccountSelector.tsx:103
 msgid "Sign out"
-msgstr ""
+msgstr "サインアウト"
 
 #: src/routes/account/_minimalLayout/index.tsx:39
 msgid "Something went wrong"
-msgstr ""
+msgstr "何らかの問題が発生したようです"
 
 #: src/routes/account/_minimalLayout/reset-password.tsx:115
 msgid "Success!"
-msgstr ""
+msgstr "成功！"
 
 #: src/routes/account/_appLayout/$sub.tsx:216
 msgid "Successfully removed device"
-msgstr ""
+msgstr "デバイスの削除に成功しました"
 
 #: src/routes/account/_appLayout/$sub.tsx:141
 msgid "Successfully signed out"
-msgstr ""
+msgstr "サインアウトに成功しました"
 
 #: src/routes/account/_appLayout/$sub.tsx:263
 msgid "This device"
-msgstr ""
+msgstr "このデバイス"
 
 #: src/routes/account/_appLayout/$sub.tsx:247
 msgid "Unknown user agent"
-msgstr ""
+msgstr "不明なユーザーエージェント"
 
 #: src/components/Avatar.tsx:24
 msgid "User avatar"
-msgstr ""
+msgstr "ユーザーのアバター"
 
 #. placeholder {0}: getAccountName(account)
 #: src/routes/account/_minimalLayout/index.tsx:83
 msgid "View and manage account for {0}"
-msgstr ""
+msgstr "{0} のアカウントを表示および管理"
 
 #: src/routes/account/_minimalLayout/index.tsx:41
 msgid "We weren't able to load your accounts. Please refresh the page to try again."
-msgstr ""
+msgstr "アカウントを読み込めませんでした。ページを更新してもう一度お試しください。"
 
 #: src/components/ErrorScreen.tsx:19
 msgid "Whoops! An error occurred."
-msgstr ""
+msgstr "おっと！エラーが発生しました。"
 
 #: src/routes/account/_minimalLayout/sign-in.tsx:198
 #: src/routes/account/_minimalLayout/reset-password.tsx:228
 msgid "XXXXX-XXXXX"
-msgstr ""
+msgstr "XXXXX-XXXXX"
 
 #: src/routes/account/_appLayout/$sub.tsx:47
 msgid "Your account"
-msgstr ""
+msgstr "あなたのアカウント"
 
 #: src/routes/account/_minimalLayout/reset-password.tsx:118
 msgid "Your password has been reset."
-msgstr ""
+msgstr "あなたのパスワードはリセットされました。"
