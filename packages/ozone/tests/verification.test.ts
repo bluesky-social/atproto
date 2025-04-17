@@ -35,7 +35,6 @@ describe('verification', () => {
       name: 'verifier',
     })
     network.ozone.ctx.cfg.verifier = {
-      jetstreamUrl: 'ws://any',
       url: network.pds.url,
       did: sc.dids.alice,
       password,

@@ -98,7 +98,6 @@ export class TestNetwork extends TestNetworkNoAppView {
       verifierDid: ozoneDid,
       verifierUrl: pds.url,
       verifierPassword: ozoneVerifierPassword,
-      jetstreamUrl: 'ws://localhost:4222',
       ...params.ozone,
     })
 

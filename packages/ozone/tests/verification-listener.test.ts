@@ -1,3 +1,4 @@
+import { Sender, WebSocketServer } from 'ws'
 import { AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { forSnapshot } from './_util'
@@ -6,15 +7,24 @@ describe('verification-listener', () => {
   let network: TestNetwork
   let sc: SeedClient
   let adminAgent: AtpAgent
+  let jetstream: WebSocketServer
+  let relay: Sender
 
   beforeAll(async () => {
+    const jetstreamPort = 2511
+    jetstream = new WebSocketServer({
+      port: jetstreamPort,
+    })
+    jetstream.on('connection', (ws) => {
+      relay = ws
+    })
     network = await TestNetwork.create({
       dbPostgresSchema: 'ozone_verification_test',
       ozone: {
         verifierUrl: 'http://localhost:2583',
         verifierDid: 'did:example:verifier',
         verifierPassword: 'test',
-        jetstreamUrl: 'ws://any',
+        jetstreamUrl: `ws://localhost:${jetstreamPort}`,
       },
     })
     sc = network.getSeedClient()
@@ -31,15 +41,19 @@ describe('verification-listener', () => {
   })
 
   afterAll(async () => {
+    await jetstream.close()
     await network.close()
   })
 
   it('indexes new and revoked verifications', async () => {
     const { verificationListener } = network.ozone.daemon.ctx
-    verificationListener?.handleNewVerification({
+    const createEvent = {
+      kind: 'commit',
       did: sc.dids.bob,
       time_us: 123456789,
       commit: {
+        rev: 'xyz',
+        operation: 'create',
         collection: 'app.bsky.graph.verification',
         rkey: 'abcdefg',
         record: {
@@ -49,15 +63,20 @@ describe('verification-listener', () => {
           createdAt: new Date().toISOString(),
         },
       },
-    })
-    verificationListener?.handleDeletedVerification({
+    }
+    const deleteEvent = {
+      kind: 'commit',
       did: sc.dids.bob,
       time_us: 123456799,
       commit: {
+        rev: 'yza',
+        operation: 'delete',
         collection: 'app.bsky.graph.verification',
         rkey: 'abcdefg',
       },
-    })
+    }
+    relay.send(JSON.stringify(createEvent))
+    relay.send(JSON.stringify(deleteEvent))
     // Give the processor enough time to handle the events
     await new Promise((resolve) => setTimeout(() => resolve(true), 500))
     const {

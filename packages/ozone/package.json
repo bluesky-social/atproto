@@ -45,6 +45,7 @@
     "lande": "^1.0.10",
     "multiformats": "^9.9.0",
     "p-queue": "^6.6.2",
+    "partysocket": "^1.1.3",
     "pg": "^8.10.0",
     "pino-http": "^8.2.1",
     "structured-headers": "^1.0.1",
