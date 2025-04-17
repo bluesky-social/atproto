@@ -212,12 +212,15 @@ function AccountSessionCard({
   const { _, i18n } = useLingui()
   const { mutateAsync: revokeSessions, isPending } =
     useRevokeAccountSessionMutation()
+
+  const { userAgent, lastSeenAt, ipAddress } = session.deviceMetadata
+
   const ua = useMemo(() => {
-    if (!session.deviceMetadata.userAgent) {
+    if (!userAgent) {
       return null
     }
-    return UAParser(session.deviceMetadata.userAgent)
-  }, [session.deviceMetadata.userAgent])
+    return UAParser(userAgent)
+  }, [userAgent])
 
   const remove = async () => {
     try {
@@ -237,7 +240,15 @@ function AccountSessionCard({
   }
 
   const lastUsed = useMemo(() => {
-    return i18n.date(new Date(), {
+    // Fool-proofing
+    if (!lastSeenAt) return undefined
+
+    const date = new Date(lastSeenAt)
+
+    // Fool-proofing
+    if (isNaN(date.getTime())) return lastSeenAt
+
+    return i18n.date(date, {
       year: 'numeric',
       month: 'numeric',
       day: 'numeric',
@@ -264,7 +275,7 @@ function AccountSessionCard({
             {' • '}
           </span>
           <span className="text-warning-600 truncate font-mono">
-            {session.deviceMetadata.ipAddress}
+            {ipAddress}
           </span>
         </p>
       </div>
