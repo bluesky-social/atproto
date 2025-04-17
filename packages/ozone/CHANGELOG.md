@@ -1,5 +1,27 @@
 # @atproto/ozone
 
+## 0.1.103
+
+### Patch Changes
+
+- Updated dependencies [[`23462184d`](https://github.com/bluesky-social/atproto/commit/23462184dc941ba2fc3b4d054985a53715585020)]:
+  - @atproto/api@0.15.0
+
+## 0.1.102
+
+### Patch Changes
+
+- [#3754](https://github.com/bluesky-social/atproto/pull/3754) [`1e461eab0`](https://github.com/bluesky-social/atproto/commit/1e461eab033f728f537db554b3072b7eda7e5e8f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove reference to missing "bin" executable
+
+- [#3735](https://github.com/bluesky-social/atproto/pull/3735) [`0759f0fee`](https://github.com/bluesky-social/atproto/commit/0759f0feeded73cfc15d4eb4231bd74354076ea4) Thanks [@devinivy](https://github.com/devinivy)! - Added well-known metadata endpoint to ozone.
+
+## 0.1.101
+
+### Patch Changes
+
+- Updated dependencies [[`fc61662d7`](https://github.com/bluesky-social/atproto/commit/fc61662d7b88597f78383e37ee54264a8bb4b670), [`ca07871c4`](https://github.com/bluesky-social/atproto/commit/ca07871c487abc99fe7b7f8671aa8d98eb5dc4bb)]:
+  - @atproto/api@0.14.22
+
 ## 0.1.100
 
 ### Patch Changes

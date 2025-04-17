@@ -4566,7 +4566,7 @@ export const schemaDict = {
           },
           verification: {
             type: 'ref',
-            ref: 'lex:app.bsky.actor.defs#verificationStateBasic',
+            ref: 'lex:app.bsky.actor.defs#verificationState',
           },
         },
       },
@@ -4621,7 +4621,7 @@ export const schemaDict = {
           },
           verification: {
             type: 'ref',
-            ref: 'lex:app.bsky.actor.defs#verificationStateBasic',
+            ref: 'lex:app.bsky.actor.defs#verificationState',
           },
         },
       },
@@ -4788,43 +4788,37 @@ export const schemaDict = {
           },
         },
       },
-      verificationStateBasic: {
-        type: 'object',
-        description:
-          'Represents the verification state for the actor this state is attached to.',
-        properties: {
-          level: {
-            type: 'string',
-            description: 'The verification level for this subject.',
-            knownValues: ['unverified', 'verified', 'verifier'],
-          },
-        },
-      },
       verificationState: {
         type: 'object',
         description:
-          'Represents the verification state for the actor this state is attached to.',
+          'Represents the verification information about the user this object is attached to.',
+        required: ['verifications', 'verifiedStatus', 'trustedVerifierStatus'],
         properties: {
-          level: {
-            type: 'string',
-            description: 'The verification level for this subject.',
-            knownValues: ['unverified', 'verified', 'verifier'],
-          },
           verifications: {
             type: 'array',
             description:
-              "All the verifications associated with this subject. It might return broken verifications (e.g., pointing to invalid handles) but it won't return verifications from non-verifiers.",
+              'All verifications issued by trusted verifiers on behalf of this user. Verifications by untrusted verifiers are not included.',
             items: {
               type: 'ref',
               ref: 'lex:app.bsky.actor.defs#verificationView',
             },
           },
+          verifiedStatus: {
+            type: 'string',
+            description: "The user's status as a verified account.",
+            knownValues: ['valid', 'invalid', 'none'],
+          },
+          trustedVerifierStatus: {
+            type: 'string',
+            description: "The user's status as a trusted verifier.",
+            knownValues: ['valid', 'invalid', 'none'],
+          },
         },
       },
       verificationView: {
         type: 'object',
-        description: 'Verification data for the associated subject.',
-        required: ['issuer', 'uri'],
+        description: 'An individual verification for an associated subject.',
+        required: ['issuer', 'uri', 'isValid', 'createdAt'],
         properties: {
           issuer: {
             type: 'string',
@@ -4836,20 +4830,14 @@ export const schemaDict = {
             description: 'The AT-URI of the verification record.',
             format: 'at-uri',
           },
-          handle: {
-            type: 'string',
+          isValid: {
+            type: 'boolean',
             description:
-              'Handle of the subject the verification applies to at the moment of verifying, which might not be the same at the time of viewing. The verification is only valid if the current handle matches the one at the time of verifying.',
-            format: 'handle',
-          },
-          displayName: {
-            type: 'string',
-            description:
-              'Display name of the subject the verification applies to at the moment of verifying, which might not be the same at the time of viewing. The verification is only valid if the current displayName matches the one at the time of verifying.',
+              'True if the verification passes validation, otherwise false.',
           },
           createdAt: {
             type: 'string',
-            description: 'Date of when the verification was created.',
+            description: 'Timestamp when the verification was created.',
             format: 'datetime',
           },
         },
@@ -11181,7 +11169,7 @@ export const schemaDict = {
               value: {
                 type: 'string',
                 minLength: 1,
-                maxLength: 32,
+                maxLength: 64,
                 minGraphemes: 1,
                 maxGraphemes: 1,
               },
@@ -11967,7 +11955,7 @@ export const schemaDict = {
               value: {
                 type: 'string',
                 minLength: 1,
-                maxLength: 32,
+                maxLength: 64,
                 minGraphemes: 1,
                 maxGraphemes: 1,
               },

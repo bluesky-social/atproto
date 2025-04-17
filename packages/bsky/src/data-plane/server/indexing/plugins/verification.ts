@@ -24,7 +24,7 @@ const insertFn = async (
       uri: uri.toString(),
       cid: cid.toString(),
       rkey: uri.rkey,
-      actor: uri.host,
+      creator: uri.host,
       subject: obj.subject,
       handle: obj.handle,
       displayName: obj.displayName,
@@ -44,14 +44,13 @@ const findDuplicate = async (
 ): Promise<AtUri | null> => {
   const found = await db
     .selectFrom('verification')
-    .where('actor', '=', uri.host)
     .where('subject', '=', obj.subject)
+    .where('creator', '=', uri.host)
     .selectAll()
     .executeTakeFirst()
   return found ? new AtUri(found.uri) : null
 }
 
-// @TODO: revisit.
 const notifsForInsert = (_obj: IndexedVerification) => {
   return []
 }
@@ -68,7 +67,6 @@ const deleteFn = async (
   return deleted || null
 }
 
-// @TODO: revisit.
 const notifsForDelete = (
   _deleted: IndexedVerification,
   _replacedBy: IndexedVerification | null,

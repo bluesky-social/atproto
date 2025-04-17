@@ -1,7 +1,9 @@
+import { mapDefined } from '@atproto/common'
 import { DataPlaneClient } from '../data-plane/client'
 import { VerificationView } from '../lexicon/types/app/bsky/actor/defs'
 import { Record as ProfileRecord } from '../lexicon/types/app/bsky/actor/profile'
 import { Record as ChatDeclarationRecord } from '../lexicon/types/chat/bsky/actor/declaration'
+import { VerificationMeta } from '../proto/bsky_pb'
 import {
   HydrationMap,
   RecordInfo,
@@ -25,8 +27,18 @@ export type Actor = {
   createdAt?: Date
   priorityNotifications: boolean
   trustedVerifier?: boolean
-  verifications?: VerificationView[]
+  verifications: VerificationHydrationState[]
 }
+
+export type VerificationHydrationState = {
+  issuer: string
+  uri: string
+  handle: string
+  displayName: string
+  createdAt: string
+}
+
+export type VerificationMetaRequired = Required<VerificationMeta>
 
 export type Actors = HydrationMap<Actor>
 
@@ -130,6 +142,28 @@ export class ActorHydrator {
         ? parseRecord<ProfileRecord>(actor.profile, includeTakedowns)
         : undefined
 
+      const verifications = mapDefined(
+        Object.entries(actor.verifiedBy),
+        ([actorDid, verificationMeta]) => {
+          if (
+            verificationMeta.displayName &&
+            verificationMeta.handle &&
+            verificationMeta.rkey &&
+            verificationMeta.sortedAt
+          ) {
+            return {
+              issuer: actorDid,
+              uri: `at://${actorDid}/app.bsky.graph.verification/${verificationMeta.rkey}`,
+              handle: verificationMeta.handle,
+              displayName: verificationMeta.displayName,
+              createdAt: verificationMeta.sortedAt.toDate().toISOString(),
+            }
+          }
+          // Filter out the verification meta that doesn't contain all info.
+          return undefined
+        },
+      )
+
       return acc.set(did, {
         did,
         handle: parseString(actor.handle),
@@ -145,15 +179,7 @@ export class ActorHydrator {
         createdAt: actor.createdAt?.toDate(),
         priorityNotifications: actor.priorityNotifications,
         trustedVerifier: actor.trustedVerifier,
-        verifications: Object.entries(actor.verifiedBy).map(
-          ([actorDid, verifiedBy]): VerificationView => ({
-            issuer: actorDid,
-            uri: `at://${actorDid}/app.bsky.graph.verification/${verifiedBy.rkey}`,
-            displayName: verifiedBy.displayName,
-            handle: verifiedBy.handle,
-            createdAt: verifiedBy.sortedAt?.toDate().toISOString(),
-          }),
-        ),
+        verifications,
       })
     }, new HydrationMap<Actor>())
   }

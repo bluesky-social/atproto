@@ -1,6 +1,6 @@
 {
   "name": "@atproto/ozone",
-  "version": "0.1.100",
+  "version": "0.1.103",
   "license": "MIT",
   "description": "Backend service for moderating the Bluesky network.",
   "keywords": [
@@ -15,7 +15,6 @@
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "bin": "dist/bin.js",
   "scripts": {
     "codegen": "lex gen-server --yes ./src/lexicon ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/* ../../lexicons/chat/bsky/*/* ../../lexicons/tools/ozone/*/*",
     "build": "tsc --build tsconfig.build.json",

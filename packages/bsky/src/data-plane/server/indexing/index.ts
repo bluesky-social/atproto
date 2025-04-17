@@ -1,4 +1,4 @@
-import { sql } from 'kysely'
+import { Selectable, sql } from 'kysely'
 import { CID } from 'multiformats/cid'
 import { AtpAgent, ComAtprotoSyncGetLatestCommit } from '@atproto/api'
 import { DAY, HOUR } from '@atproto/common'
@@ -425,7 +425,10 @@ const formatCheckout = (
   return records
 }
 
-const needsHandleReindex = (actor: Actor | undefined, timestamp: string) => {
+const needsHandleReindex = (
+  actor: Selectable<Actor> | undefined,
+  timestamp: string,
+) => {
   if (!actor) return true
   const timeDiff =
     new Date(timestamp).getTime() - new Date(actor.indexedAt).getTime()

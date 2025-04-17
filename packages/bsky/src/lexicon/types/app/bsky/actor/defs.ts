@@ -29,7 +29,7 @@ export interface ProfileViewBasic {
   viewer?: ViewerState
   labels?: ComAtprotoLabelDefs.Label[]
   createdAt?: string
-  verification?: VerificationStateBasic
+  verification?: VerificationState
 }
 
 const hashProfileViewBasic = 'profileViewBasic'
@@ -54,7 +54,7 @@ export interface ProfileView {
   createdAt?: string
   viewer?: ViewerState
   labels?: ComAtprotoLabelDefs.Label[]
-  verification?: VerificationStateBasic
+  verification?: VerificationState
 }
 
 const hashProfileView = 'profileView'
@@ -172,30 +172,15 @@ export function validateKnownFollowers<V>(v: V) {
   return validate<KnownFollowers & V>(v, id, hashKnownFollowers)
 }
 
-/** Represents the verification state for the actor this state is attached to. */
-export interface VerificationStateBasic {
-  $type?: 'app.bsky.actor.defs#verificationStateBasic'
-  /** The verification level for this subject. */
-  level?: 'unverified' | 'verified' | 'verifier' | (string & {})
-}
-
-const hashVerificationStateBasic = 'verificationStateBasic'
-
-export function isVerificationStateBasic<V>(v: V) {
-  return is$typed(v, id, hashVerificationStateBasic)
-}
-
-export function validateVerificationStateBasic<V>(v: V) {
-  return validate<VerificationStateBasic & V>(v, id, hashVerificationStateBasic)
-}
-
-/** Represents the verification state for the actor this state is attached to. */
+/** Represents the verification information about the user this object is attached to. */
 export interface VerificationState {
   $type?: 'app.bsky.actor.defs#verificationState'
-  /** The verification level for this subject. */
-  level?: 'unverified' | 'verified' | 'verifier' | (string & {})
-  /** All the verifications associated with this subject. It might return broken verifications (e.g., pointing to invalid handles) but it won't return verifications from non-verifiers. */
-  verifications?: VerificationView[]
+  /** All verifications issued by trusted verifiers on behalf of this user. Verifications by untrusted verifiers are not included. */
+  verifications: VerificationView[]
+  /** The user's status as a verified account. */
+  verifiedStatus: 'valid' | 'invalid' | 'none' | (string & {})
+  /** The user's status as a trusted verifier. */
+  trustedVerifierStatus: 'valid' | 'invalid' | 'none' | (string & {})
 }
 
 const hashVerificationState = 'verificationState'
@@ -208,19 +193,17 @@ export function validateVerificationState<V>(v: V) {
   return validate<VerificationState & V>(v, id, hashVerificationState)
 }
 
-/** Verification data for the associated subject. */
+/** An individual verification for an associated subject. */
 export interface VerificationView {
   $type?: 'app.bsky.actor.defs#verificationView'
   /** The user who issued this verification. */
   issuer: string
   /** The AT-URI of the verification record. */
   uri: string
-  /** Handle of the subject the verification applies to at the moment of verifying, which might not be the same at the time of viewing. The verification is only valid if the current handle matches the one at the time of verifying. */
-  handle?: string
-  /** Display name of the subject the verification applies to at the moment of verifying, which might not be the same at the time of viewing. The verification is only valid if the current displayName matches the one at the time of verifying. */
-  displayName?: string
-  /** Date of when the verification was created. */
-  createdAt?: string
+  /** True if the verification passes validation, otherwise false. */
+  isValid: boolean
+  /** Timestamp when the verification was created. */
+  createdAt: string
 }
 
 const hashVerificationView = 'verificationView'

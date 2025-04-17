@@ -93,7 +93,7 @@ export class ClientManager {
    *
    * @see {@link https://openid.net/specs/openid-connect-registration-1_0.html#rfc.section.2 OIDC Client Registration}
    */
-  public async getClient(clientId: string) {
+  public async getClient(clientId: ClientId) {
     const metadata = await this.getClientMetadata(clientId).catch((err) => {
       throw InvalidClientMetadataError.from(
         err,
@@ -124,6 +124,38 @@ export class ClientManager {
     const isTrusted = partialInfo?.isTrusted ?? isFirstParty
 
     return new Client(clientId, metadata, jwks, { isFirstParty, isTrusted })
+  }
+
+  public async loadClients(
+    clientIds: Iterable<ClientId>,
+    {
+      onError = (err) => {
+        throw err
+      },
+    }: {
+      onError?: (
+        err: unknown,
+        clientId: ClientId,
+      ) => Awaitable<Client | null | undefined>
+    } = {},
+  ): Promise<Map<ClientId, Client>> {
+    // Make sure we don't load the same client multiple times
+    const uniqueClientIds =
+      clientIds instanceof Set ? clientIds : new Set(clientIds)
+
+    // Load all (unique) clients in parallel
+    const clients = await Promise.all(
+      Array.from(uniqueClientIds, async (clientId) =>
+        this.getClient(clientId).catch((err) => onError(err, clientId)),
+      ),
+    )
+
+    // Return a map for easy lookups
+    return new Map(
+      clients
+        .filter((c) => c != null && c instanceof Client)
+        .map((c) => [c.id, c]),
+    )
   }
 
   protected async getClientMetadata(
@@ -257,7 +289,7 @@ export class ClientManager {
             `Grant type "${grantType}" is not allowed`,
           )
 
-        // @TODO: Add support (e.g. for first party client)
+        // @TODO Add support (e.g. for first party client)
         // case 'client_credentials':
         // case 'password':
         case 'authorization_code':

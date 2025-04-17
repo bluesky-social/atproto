@@ -8,6 +8,30 @@ export type Override<T, V> = Simplify<{
       : never
 }>
 export type Awaitable<T> = T | Promise<T>
+export type NonNullableKeys<T, K extends keyof T> = Simplify<
+  OmitKey<T, K> & {
+    [P in K]-?: NonNullable<T[P]>
+  }
+>
+/**
+ * When a type has an `[x: string]: unknown` index signature, in addition to
+ * some known properties, using {@link Omit} will result in a type that only has
+ * the index signature, and no known properties.
+ *
+ * ```ts
+ * Omit<{ a: 3; b: 4; [x: string]: unknown }, 'a'> // { [x: string]: unknown }
+ * ```
+ *
+ * In order to properly omit specific known properties from a type with an index
+ * signature, we need to use another utility type that will behave correctly.
+ *
+ * ```ts
+ * OmitKey<{ a: 3; b: 4; [x: string]: unknown }, 'a'> // { b: 4; [x: string]: unknown }
+ * ```
+ */
+export type OmitKey<T, K extends keyof T> = {
+  [K2 in keyof T as K2 extends K ? never : K2]: T[K2]
+}
 
 /**
  * Converts a tuple to the equivalent type of combining every item into a single

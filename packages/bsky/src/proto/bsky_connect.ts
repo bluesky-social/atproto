@@ -384,15 +384,6 @@ export const Service = {
     /**
      * Verifications
      *
-     * @generated from rpc bsky.Service.GetTrustedVerifiers
-     */
-    getTrustedVerifiers: {
-      name: 'GetTrustedVerifiers',
-      I: GetTrustedVerifiersRequest,
-      O: GetTrustedVerifiersResponse,
-      kind: MethodKind.Unary,
-    },
-    /**
      * @generated from rpc bsky.Service.GetVerificationRecords
      */
     getVerificationRecords: {

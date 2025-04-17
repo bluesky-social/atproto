@@ -6,7 +6,7 @@ export interface Verification {
   uri: string
   cid: string
   rkey: string
-  actor: string
+  creator: string
   subject: string
   handle: string
   displayName: string

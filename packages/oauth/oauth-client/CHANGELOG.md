@@ -1,5 +1,13 @@
 # @atproto/oauth-client
 
+## 0.3.14
+
+### Patch Changes
+
+- Updated dependencies [[`371e04aad`](https://github.com/bluesky-social/atproto/commit/371e04aad2a3e8ae3fe185ce15fc8eb051cab78e), [`26a077716`](https://github.com/bluesky-social/atproto/commit/26a07771673bf1090a61efb7c970235f0b2509fc)]:
+  - @atproto/oauth-types@0.2.5
+  - @atproto/jwk@0.1.5
+
 ## 0.3.13
 
 ### Patch Changes

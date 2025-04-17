@@ -48,7 +48,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
         db.db
           .selectFrom('verification')
           .selectAll('verification')
-          .innerJoin('actor', 'actor.did', 'verification.actor')
+          .innerJoin('actor', 'actor.did', 'verification.creator')
           .where('verification.subject', 'in', dids)
           .where('actor.trustedVerifier', '=', true)
           .orderBy('sortedAt', 'asc')
@@ -76,7 +76,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
 
       const verifications = verificationsBySubjectDid.get(did) ?? []
       const verifiedBy: VerifiedBy = verifications.reduce((acc, cur) => {
-        acc[cur.actor] = {
+        acc[cur.creator] = {
           rkey: cur.rkey,
           handle: cur.handle,
           displayName: cur.displayName,

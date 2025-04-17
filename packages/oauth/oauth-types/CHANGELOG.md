@@ -1,5 +1,14 @@
 # @atproto/oauth-types
 
+## 0.2.5
+
+### Patch Changes
+
+- [#3659](https://github.com/bluesky-social/atproto/pull/3659) [`371e04aad`](https://github.com/bluesky-social/atproto/commit/371e04aad2a3e8ae3fe185ce15fc8eb051cab78e) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `OAuthAuthenticationErrorResponse`
+
+- Updated dependencies [[`26a077716`](https://github.com/bluesky-social/atproto/commit/26a07771673bf1090a61efb7c970235f0b2509fc)]:
+  - @atproto/jwk@0.1.5
+
 ## 0.2.4
 
 ### Patch Changes

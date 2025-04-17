@@ -14,7 +14,7 @@ import {
   ProfileViewBasic,
   ProfileViewDetailed,
   VerificationState,
-  VerificationStateBasic,
+  VerificationView,
   ViewerState as ProfileViewer,
 } from '../lexicon/types/app/bsky/actor/defs'
 import {
@@ -217,7 +217,6 @@ export class Views {
     if (!baseView) return
     const knownFollowers = this.knownFollowers(did, state)
     const profileAggs = state.profileAggs?.get(did)
-    const verification = this.verification(did, state)
 
     return {
       ...baseView,
@@ -295,7 +294,6 @@ export class Views {
         record: actor.profile,
       }),
     ]
-    const verification = this.verificationBasic(did, state)
     return {
       did,
       handle: actor.handle ?? INVALID_HANDLE,
@@ -322,7 +320,7 @@ export class Views {
       viewer: this.profileViewer(did, state),
       labels,
       createdAt: actor.createdAt?.toISOString(),
-      verification,
+      verification: this.verification(did, state),
     }
   }
 
@@ -398,57 +396,51 @@ export class Views {
     const actor = state.actors?.get(did)
     if (!actor) return
 
-    const isImpersonation = state.labels
-      ?.getBySubject(did)
-      .some(({ val }) => val === 'impersonation')
+    const isImpersonation = state.labels?.get(did)?.isImpersonation
 
-    if (isImpersonation) {
-      return {
-        level: 'unverified',
-        verifications: [],
-      }
-    }
-
-    const verifications = actor.verifications
-    if (actor.trustedVerifier) {
-      return {
-        level: 'verifier',
-        verifications,
-      }
-    }
-
-    const isVerified =
-      verifications &&
-      Object.values(verifications).some(
-        ({ displayName, handle }) =>
-          displayName &&
+    const verifications: VerificationView[] = actor.verifications.map(
+      ({ issuer, uri, displayName, handle, createdAt }) => {
+        // @NOTE: We don't factor-in impersonation when evaluating the validity of each verification,
+        // only in the overall profile verification validity.
+        const isValid =
+          !!displayName &&
           displayName === actor.profile?.displayName &&
-          handle &&
-          handle === actor.handle,
-      ) &&
-      !state.labels
-        ?.getBySubject(did)
-        .some(({ val }) => val === 'impersonation')
+          !!handle &&
+          handle === actor.handle
 
-    if (isVerified) {
-      return {
-        level: 'verified',
-        verifications,
-      }
+        return {
+          issuer,
+          uri,
+          isValid,
+          createdAt,
+        }
+      },
+    )
+    const hasValidVerification = verifications.some((v) => v.isValid)
+
+    const verifiedStatus = verifications.length
+      ? hasValidVerification && !isImpersonation
+        ? 'valid'
+        : 'invalid'
+      : 'none'
+    const trustedVerifierStatus = actor.trustedVerifier
+      ? isImpersonation
+        ? 'invalid'
+        : 'valid'
+      : 'none'
+
+    if (
+      verifications.length === 0 &&
+      verifiedStatus === 'none' &&
+      trustedVerifierStatus === 'none'
+    ) {
+      return undefined
     }
+
     return {
-      level: 'unverified',
       verifications,
-    }
-  }
-
-  verificationBasic(
-    did: string,
-    state: HydrationState,
-  ): VerificationStateBasic | undefined {
-    const verification = this.verification(did, state)
-    return {
-      level: verification?.level,
+      verifiedStatus,
+      trustedVerifierStatus,
     }
   }
 

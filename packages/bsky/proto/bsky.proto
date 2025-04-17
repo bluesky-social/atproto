@@ -215,24 +215,6 @@ message VerificationMeta {
   google.protobuf.Timestamp sorted_at = 4;
 }
 
-message TrustedVerifier {
-  string did = 1;
-  string handle = 2;
-  string display_name = 3;
-  google.protobuf.Timestamp created_at = 4;
-  optional google.protobuf.Timestamp tombstoned_at = 5;
-}
-
-message GetTrustedVerifiersRequest {
-  int32 limit = 1;
-  string cursor = 2;
-}
-
-message GetTrustedVerifiersResponse {
-  repeated TrustedVerifier trusted_verifiers = 1;
-  string cursor = 2;
-}
-
 message GetVerificationRecordsRequest {
   repeated string uris = 1;
 }
@@ -1210,7 +1192,6 @@ service Service {
   rpc GetFollows(GetFollowsRequest) returns (GetFollowsResponse);
 
   // Verifications
-  rpc GetTrustedVerifiers(GetTrustedVerifiersRequest) returns (GetTrustedVerifiersResponse);
   rpc GetVerificationRecords(GetVerificationRecordsRequest) returns (GetVerificationRecordsResponse);
   rpc GetVerificationsIssued(GetVerificationsIssuedRequest) returns (GetVerificationsIssuedResponse);
   rpc GetVerificationsReceived(GetVerificationsReceivedRequest) returns (GetVerificationsReceivedResponse);
