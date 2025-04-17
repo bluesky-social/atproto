@@ -1,6 +1,6 @@
 import { extractHue, pickContrastColor } from '../lib/util/color.js'
 import { Branding } from './branding.js'
-import { COLOR_NAMES, contrastColorName, hueColorName } from './colors.js'
+import { COLOR_NAMES } from './colors.js'
 import { Customization } from './customization.js'
 
 export function buildCustomizationCss({
@@ -20,10 +20,10 @@ function* buildCustomizationVars(branding?: Branding): Generator<string> {
       if (!value) continue // Skip missing colors
 
       const contrast =
-        branding.colors[contrastColorName(name)] ??
+        branding.colors[`${name}Contrast`] ??
         pickContrastColor(value, contrastLight, contrastDark)
 
-      const hue = branding.colors[hueColorName(name)] ?? extractHue(value)
+      const hue = branding.colors[`${name}Hue`] ?? extractHue(value)
 
       yield `--branding-color-${name}: ${value.r} ${value.g} ${value.b};`
       yield `--branding-color-${name}-contrast: ${contrast.r} ${contrast.g} ${contrast.b};`
