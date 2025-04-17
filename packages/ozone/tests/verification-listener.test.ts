@@ -63,7 +63,9 @@ describe('verification-listener', () => {
     const {
       data: { verifications },
     } = await adminAgent.tools.ozone.verification.list({})
+    const cursor = await verificationListener?.getCursor()
 
     expect(forSnapshot(verifications)).toMatchSnapshot()
+    expect(cursor).toEqual(123456799)
   })
 })

@@ -65,11 +65,12 @@ export class VerificationListener {
     if (cursor) {
       this.cursor = Number(cursor)
     }
+    return this.cursor
   }
 
   async updateCursor(cursor: number) {
     // Assuming cursors are always incremental, if we have processed an event with higher value cursor, let's not update to a lower value
-    if (this.cursor && this.cursor <= cursor) {
+    if (this.cursor && this.cursor >= cursor) {
       return
     }
 
