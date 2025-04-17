@@ -4860,6 +4860,7 @@ export const schemaDict = {
             'lex:app.bsky.actor.defs#bskyAppStatePref',
             'lex:app.bsky.actor.defs#labelersPref',
             'lex:app.bsky.actor.defs#postInteractionSettingsPref',
+            'lex:app.bsky.actor.defs#verificationPrefs',
           ],
         },
       },
@@ -5190,6 +5191,19 @@ export const schemaDict = {
             format: 'datetime',
             description:
               'The date and time at which the NUX will expire and should be considered completed.',
+          },
+        },
+      },
+      verificationPrefs: {
+        type: 'object',
+        description: 'Preferences for how verified accounts appear in the app.',
+        required: [],
+        properties: {
+          hideBadges: {
+            description:
+              'Hide the blue check badges for verified accounts and trusted verifiers.',
+            type: 'boolean',
+            default: false,
           },
         },
       },
