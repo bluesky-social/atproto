@@ -11080,6 +11080,10 @@ export const schemaDict = {
             description:
               'Set to true when the actor cannot actively participate in converations',
           },
+          verification: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#verificationState',
+          },
         },
       },
     },
