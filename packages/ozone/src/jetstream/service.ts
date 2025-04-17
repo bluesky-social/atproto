@@ -2,7 +2,7 @@
 // The lib itself was difficult to integrate due to ESM module import issues so we had to resort to bringing over the implementation manually
 
 import { EventEmitter } from 'node:events'
-import { WebSocket } from 'partysocket'
+import { WebSocket } from 'ws'
 
 /** Record mappings. */
 export type Records = Record<string, any>
