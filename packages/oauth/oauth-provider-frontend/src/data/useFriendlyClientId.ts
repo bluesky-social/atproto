@@ -1,4 +1,8 @@
 import { useLingui } from '@lingui/react/macro'
+import {
+  isConventionalOAuthClientId,
+  isOAuthClientIdLoopback,
+} from '#/util/oauth-client'
 
 export function useFriendlyClientId({
   clientId,
@@ -7,20 +11,14 @@ export function useFriendlyClientId({
 }): string {
   const { t } = useLingui()
 
-  if (clientId.startsWith('http://')) {
+  if (isOAuthClientIdLoopback(clientId)) {
     return t`loopback`
   }
 
-  if (clientId.startsWith('https://')) {
-    try {
-      const url = new URL(clientId)
-      if (url.pathname === '/oauth-client-metadata.json' && !url.port) {
-        return url.hostname
-      }
-    } catch {
-      // ignore
-    }
+  if (isConventionalOAuthClientId(clientId)) {
+    return new URL(clientId).hostname
   }
 
+  // Should never happen
   return clientId
 }

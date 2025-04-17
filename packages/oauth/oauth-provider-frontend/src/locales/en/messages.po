@@ -21,7 +21,7 @@ msgstr "@handle or email"
 msgid "← Back to accounts"
 msgstr "← Back to accounts"
 
-#: src/data/useClientName.ts:22
+#: src/data/useClientName.ts:18
 msgid "A local app"
 msgstr "A local app"
 
@@ -167,7 +167,7 @@ msgstr "Logo"
 msgid "Looks like you aren't logged in on any other devices."
 msgstr "Looks like you aren't logged in on any other devices."
 
-#: src/data/useFriendlyClientId.ts:11
+#: src/data/useFriendlyClientId.ts:15
 msgid "loopback"
 msgstr "loopback"
 
@@ -280,7 +280,6 @@ msgstr "Unknown user agent"
 msgid "User avatar"
 msgstr "User avatar"
 
-#. placeholder {0}: getAccountName(account)
 #: src/routes/account/_minimalLayout/index.tsx:98
 msgid "View and manage account for {0}"
 msgstr "View and manage account for {0}"

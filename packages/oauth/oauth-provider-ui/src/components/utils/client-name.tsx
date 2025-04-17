@@ -1,6 +1,9 @@
 import { Trans } from '@lingui/react/macro'
 import { JSX, useMemo } from 'react'
-import type { OAuthClientMetadata } from '@atproto/oauth-types'
+import {
+  OAuthClientMetadata,
+  isConventionalOAuthClientId,
+} from '#/lib/oauth-client.ts'
 import { Override } from '../../lib/util.ts'
 import { UrlViewer } from './url-viewer.tsx'
 
@@ -48,11 +51,7 @@ export function ClientName({
   if (url?.protocol === 'https:') {
     // Only display the url details if the client id does not follow our
     // convention.
-    const simplifiedView =
-      url.protocol === 'https:' &&
-      url.pathname === '/oauth-client-metadata.json' &&
-      !url.port &&
-      !url.search
+    const simplifiedView = isConventionalOAuthClientId(clientId)
 
     return (
       <UrlViewer
