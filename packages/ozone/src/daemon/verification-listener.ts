@@ -1,7 +1,8 @@
-import { VerificationService } from '../verification/service'
 import { WebSocket } from 'ws'
-import { verificationLogger } from '../logger'
 import { BackgroundQueue } from '../background'
+import { Jetstream } from '../jetstream/service'
+import { verificationLogger } from '../logger'
+import { VerificationService } from '../verification/service'
 
 type VerificationRecord = {
   subject: string
@@ -13,7 +14,7 @@ type VerificationRecord = {
 export class VerificationListener {
   destroyed = false
   private cursor?: number
-  private jetstream: any = null
+  private jetstream: Jetstream | null = null
   private collection = 'app.bsky.graph.verification'
 
   constructor(
@@ -79,7 +80,6 @@ export class VerificationListener {
   }
 
   async start() {
-    const { Jetstream } = await import('@skyware/jetstream')
     await this.getCursor()
 
     this.jetstream = new Jetstream({
@@ -94,6 +94,10 @@ export class VerificationListener {
     this.jetstream.onDelete(this.collection, (e) =>
       this.handleDeletedVerification(e),
     )
+    this.jetstream.on('error', (err) => {
+      verificationLogger.error(err, 'Error in jetstream')
+      this.stop()
+    })
     this.jetstream.start()
   }
 

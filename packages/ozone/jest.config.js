@@ -6,9 +6,6 @@ module.exports = {
     `/node_modules/.pnpm/(?!(get-port|lande|toygrad)@)`,
   ],
   testTimeout: 60000,
-  moduleNameMapper: {
-    '@skyware/jetstream': '<rootDir>/__mocks__/@skyware/jetstream',
-  },
   setupFiles: ['<rootDir>/../../jest.setup.ts'],
   moduleNameMapper: { '^(\\.\\.?\\/.+)\\.js$': ['$1.ts', '$1.js'] },
 }

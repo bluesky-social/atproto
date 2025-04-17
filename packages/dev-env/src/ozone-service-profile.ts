@@ -25,6 +25,14 @@ export class OzoneServiceProfile {
     return { did: this.did, key: this.key }
   }
 
+  async createAppPasswordForVerification() {
+    const { data } =
+      await this.thirdPartyPdsClient.com.atproto.server.createAppPassword({
+        name: 'ozone-verifier',
+      })
+    return data.password
+  }
+
   async createServiceDetails(
     pds: TestPds,
     ozoneUrl: string,

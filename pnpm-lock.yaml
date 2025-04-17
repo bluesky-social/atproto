@@ -1333,9 +1333,6 @@ importers:
       '@did-plc/lib':
         specifier: ^0.0.1
         version: 0.0.1
-      '@skyware/jetstream':
-        specifier: ^0.2.2
-        version: 0.2.2(@atcute/client@2.0.9)
       compression:
         specifier: ^1.7.4
         version: 1.7.4
@@ -1360,6 +1357,9 @@ importers:
       p-queue:
         specifier: ^6.6.2
         version: 6.6.2
+      partysocket:
+        specifier: ^1.1.3
+        version: 1.1.3
       pg:
         specifier: ^8.10.0
         version: 8.10.0
@@ -1836,18 +1836,6 @@ packages:
       '@jridgewell/gen-mapping': 0.3.3
       '@jridgewell/trace-mapping': 0.3.25
     dev: true
-
-  /@atcute/bluesky@1.0.15(@atcute/client@2.0.9):
-    resolution: {integrity: sha512-+EFiybmKQ97aBAgtaD+cKRJER5AMn3cZMkEwEg/pDdWyzxYJ9m1UgemmLdTgI8VrxPufKqdXS2nl7uO7TY6BPA==}
-    peerDependencies:
-      '@atcute/client': ^1.0.0 || ^2.0.0
-    dependencies:
-      '@atcute/client': 2.0.9
-    dev: false
-
-  /@atcute/client@2.0.9:
-    resolution: {integrity: sha512-QNDm9gMP6x9LY77ArwY+urQOBtQW74/onEAz42c40JxRm6Rl9K9cU4ROvNKJ+5cpVmEm1sthEWVRmDr5CSZENA==}
-    dev: false
 
   /@atproto/common@0.1.0:
     resolution: {integrity: sha512-OB5tWE2R19jwiMIs2IjQieH5KTUuMb98XGCn9h3xuu6NanwjlmbCYMv08fMYwIp3UQ6jcq//84cDT3Bu6fJD+A==}
@@ -7631,15 +7619,6 @@ packages:
     dependencies:
       '@sinonjs/commons': 1.8.6
     dev: true
-
-  /@skyware/jetstream@0.2.2(@atcute/client@2.0.9):
-    resolution: {integrity: sha512-d1MtWPTIFEciSzV8OClXZCJoz0DJ7aupt4EZSwpGAASYG0ZIPmZTt7RVJkoFzQyqRPHAMD7CvEwu0ut3MHX1og==}
-    dependencies:
-      '@atcute/bluesky': 1.0.15(@atcute/client@2.0.9)
-      partysocket: 1.1.3
-    transitivePeerDependencies:
-      - '@atcute/client'
-    dev: false
 
   /@smithy/abort-controller@1.1.0:
     resolution: {integrity: sha512-5imgGUlZL4dW4YWdMYAKLmal9ny/tlenM81QZY7xYyb76z9Z/QOg7oM5Ak9HQl8QfFTlGVWwcMXl+54jroRgEQ==}

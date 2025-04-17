@@ -80,6 +80,8 @@ export class TestNetwork extends TestNetworkNoAppView {
     }
 
     const pds = await TestPds.create(pdsProps)
+    const ozoneVerifierPassword =
+      await ozoneServiceProfile.createAppPasswordForVerification()
 
     const ozone = await TestOzone.create({
       port: ozonePort,
@@ -93,6 +95,10 @@ export class TestNetwork extends TestNetworkNoAppView {
       appviewPushEvents: true,
       pdsUrl: pds.url,
       pdsDid: pds.ctx.cfg.service.did,
+      verifierDid: ozoneDid,
+      verifierUrl: pds.url,
+      verifierPassword: ozoneVerifierPassword,
+      jetstreamUrl: 'ws://localhost:4222',
       ...params.ozone,
     })
 
