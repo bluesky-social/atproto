@@ -57,6 +57,7 @@ export class VerificationService {
           .updateTable('verification')
           .set({
             revokeReason,
+            updatedAt: now,
             revokedAt: revokedAt || now,
             // Allow setting revokedBy to a moderator/verifier DID and if it isn't set, default to the author of the verification record
             revokedBy: revokedBy || atUri.host,
@@ -142,12 +143,10 @@ export class VerificationService {
         uri: verification.uri,
         issuer: verification.issuer,
         subject: verification.subject,
-        createdAt: verification.createdAt.toString(),
-        updatedAt: verification.updatedAt
-          ? verification.updatedAt.toString()
-          : undefined,
+        createdAt: verification.createdAt,
         displayName: verification.displayName,
         handle: verification.handle,
+        updatedAt: verification.updatedAt || undefined,
         revokedAt: verification.revokedAt || undefined,
         revokedBy: verification.revokedBy || undefined,
         revokeReason: verification.revokeReason || undefined,
