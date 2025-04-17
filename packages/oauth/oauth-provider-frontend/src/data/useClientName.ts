@@ -4,15 +4,13 @@ import type { OAuthClientMetadata } from '@atproto/oauth-types'
 export function useClientName({
   clientId,
   clientMetadata,
-  clientTrusted = false,
 }: {
   clientId: string
   clientMetadata?: OAuthClientMetadata
-  clientTrusted?: boolean
 }): string {
   const { t } = useLingui()
 
-  if (clientTrusted && clientMetadata?.client_name) {
+  if (clientMetadata?.client_name) {
     return clientMetadata.client_name
   }
 

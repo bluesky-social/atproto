@@ -63,6 +63,13 @@ export function AccountHome() {
         <Trans>Connected apps</Trans>
       </h2>
 
+      <p className="text-text-light mb-2">
+        <Trans>
+          This is a list of all the applications you have authorized to access
+          your account.
+        </Trans>
+      </p>
+
       {isLoading ? (
         <Loader size="lg" fill="var(--color-contrast-300)" />
       ) : error || !sessions ? (
@@ -93,6 +100,15 @@ export function AccountHome() {
       <h2 className="text-custom-primary pb-4 pt-8 text-xl font-bold">
         <Trans>My devices</Trans>
       </h2>
+
+      <p className="text-text-light mb-2">
+        <Trans>
+          This is a list of all the devices you have used to sign in to your
+          account. New apps can be authorized from any of these devices. If you
+          believe that your account has been compromised, we recommend that you
+          revoke access to all devices.
+        </Trans>
+      </p>
 
       {accountSessionsIsLoading ? (
         <Loader size="lg" fill="var(--color-contrast-300)" />
@@ -136,12 +152,10 @@ function ApplicationSessionCard({
 
   const friendlyClientId = useFriendlyClientId({
     clientId,
-    clientTrusted: false,
   })
   const clientName = useClientName({
     clientId,
     clientMetadata,
-    clientTrusted: false,
   })
 
   const revoke = async () => {

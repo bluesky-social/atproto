@@ -21,7 +21,7 @@ msgstr ""
 msgid "← Back to accounts"
 msgstr ""
 
-#: src/data/useClientName.ts:24
+#: src/data/useClientName.ts:22
 msgid "A local app"
 msgstr ""
 
@@ -40,11 +40,11 @@ msgstr ""
 msgid "An error occurred, please try again."
 msgstr ""
 
-#: src/routes/account/_appLayout/$sub.tsx:278
+#: src/routes/account/_appLayout/$sub.tsx:303
 msgid "Are you sure you want to remove this device?"
 msgstr ""
 
-#: src/routes/account/_appLayout/$sub.tsx:187
+#: src/routes/account/_appLayout/$sub.tsx:201
 msgid "Are you sure you want to revoke access? This application won't be able to access your account anymore."
 msgstr ""
 
@@ -106,15 +106,15 @@ msgstr ""
 msgid "Enter your email to receive a reset code."
 msgstr ""
 
-#: src/routes/account/_appLayout/$sub.tsx:71
+#: src/routes/account/_appLayout/$sub.tsx:78
 msgid "Failed to load connected apps"
 msgstr ""
 
-#: src/routes/account/_appLayout/$sub.tsx:102
+#: src/routes/account/_appLayout/$sub.tsx:118
 msgid "Failed to load devices"
 msgstr ""
 
-#: src/routes/account/_appLayout/$sub.tsx:233
+#: src/routes/account/_appLayout/$sub.tsx:250
 msgid "Failed to remove device"
 msgstr ""
 
@@ -122,7 +122,7 @@ msgstr ""
 msgid "Failed to resend code"
 msgstr ""
 
-#: src/routes/account/_appLayout/$sub.tsx:158
+#: src/routes/account/_appLayout/$sub.tsx:172
 msgid "Failed to sign out"
 msgstr ""
 
@@ -154,7 +154,7 @@ msgstr ""
 msgid "Invalid identifier or password."
 msgstr ""
 
-#: src/routes/account/_appLayout/$sub.tsx:88
+#: src/routes/account/_appLayout/$sub.tsx:95
 msgid "It appears that you haven’t used this account to sign in to any apps yet."
 msgstr ""
 
@@ -163,23 +163,23 @@ msgstr ""
 msgid "Logo"
 msgstr ""
 
-#: src/routes/account/_appLayout/$sub.tsx:118
+#: src/routes/account/_appLayout/$sub.tsx:134
 msgid "Looks like you aren't logged in on any other devices."
 msgstr ""
 
-#: src/data/useFriendlyClientId.ts:13
+#: src/data/useFriendlyClientId.ts:11
 msgid "loopback"
 msgstr ""
 
-#: src/routes/account/_appLayout/$sub.tsx:94
+#: src/routes/account/_appLayout/$sub.tsx:101
 msgid "My devices"
 msgstr ""
 
-#: src/routes/account/_appLayout/$sub.tsx:86
+#: src/routes/account/_appLayout/$sub.tsx:93
 msgid "No connected apps"
 msgstr ""
 
-#: src/routes/account/_appLayout/$sub.tsx:117
+#: src/routes/account/_appLayout/$sub.tsx:133
 msgid "No devices"
 msgstr ""
 
@@ -197,7 +197,7 @@ msgstr ""
 msgid "Password must be at least {MIN_PASSWORD_LENGTH} characters"
 msgstr ""
 
-#: src/routes/account/_appLayout/$sub.tsx:277
+#: src/routes/account/_appLayout/$sub.tsx:302
 msgid "Remove this device"
 msgstr ""
 
@@ -207,16 +207,16 @@ msgstr ""
 msgid "Reset password"
 msgstr ""
 
-#: src/routes/account/_appLayout/$sub.tsx:189
-#: src/routes/account/_appLayout/$sub.tsx:194
+#: src/routes/account/_appLayout/$sub.tsx:203
+#: src/routes/account/_appLayout/$sub.tsx:208
 msgid "Revoke access"
 msgstr ""
 
-#: src/routes/account/_appLayout/$sub.tsx:183
+#: src/routes/account/_appLayout/$sub.tsx:197
 msgid "Revoke access to {clientName}"
 msgstr ""
 
-#: src/routes/account/_appLayout/$sub.tsx:184
+#: src/routes/account/_appLayout/$sub.tsx:198
 msgid "Revoke access to this application"
 msgstr ""
 
@@ -238,8 +238,8 @@ msgstr ""
 msgid "Sign in with another account"
 msgstr ""
 
-#: src/routes/account/_appLayout/$sub.tsx:279
-#: src/routes/account/_appLayout/$sub.tsx:289
+#: src/routes/account/_appLayout/$sub.tsx:304
+#: src/routes/account/_appLayout/$sub.tsx:314
 #: src/components/AccountSelector.tsx:103
 msgid "Sign out"
 msgstr ""
@@ -252,19 +252,27 @@ msgstr ""
 msgid "Success!"
 msgstr ""
 
-#: src/routes/account/_appLayout/$sub.tsx:227
+#: src/routes/account/_appLayout/$sub.tsx:244
 msgid "Successfully removed device"
 msgstr ""
 
-#: src/routes/account/_appLayout/$sub.tsx:152
+#: src/routes/account/_appLayout/$sub.tsx:166
 msgid "Successfully signed out"
 msgstr ""
 
-#: src/routes/account/_appLayout/$sub.tsx:273
+#: src/routes/account/_appLayout/$sub.tsx:298
 msgid "This device"
 msgstr ""
 
-#: src/routes/account/_appLayout/$sub.tsx:258
+#: src/routes/account/_appLayout/$sub.tsx:67
+msgid "This is a list of all the applications you have authorized to access your account."
+msgstr ""
+
+#: src/routes/account/_appLayout/$sub.tsx:105
+msgid "This is a list of all the devices you have used to sign in to your account. New apps can be authorized from any of these devices. If you believe that your account has been compromised, we recommend that you revoke access to all devices."
+msgstr ""
+
+#: src/routes/account/_appLayout/$sub.tsx:283
 msgid "Unknown user agent"
 msgstr ""
 
