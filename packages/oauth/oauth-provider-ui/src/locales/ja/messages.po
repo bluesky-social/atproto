@@ -394,7 +394,7 @@ msgstr "そのドメイン名は許可されていません"
 
 #: src/components/utils/error-message.tsx:45
 msgid "The handle contains inappropriate language"
-msgstr "ハンドルが不適切な言語を含んでいます"
+msgstr "ハンドルが不適切な言葉を含んでいます"
 
 #: src/components/utils/error-message.tsx:50
 msgid "The handle is already in use"
