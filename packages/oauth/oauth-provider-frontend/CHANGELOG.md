@@ -1,5 +1,11 @@
 # @atproto/oauth-provider-frontend
 
+## 0.1.2
+
+### Patch Changes
+
+- [#3758](https://github.com/bluesky-social/atproto/pull/3758) [`0f3899dd5`](https://github.com/bluesky-social/atproto/commit/0f3899dd52d0094c29222c65e2636217f9a8ece4) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Minor UI/UX tweaks
+
 ## 0.1.1
 
 ### Patch Changes

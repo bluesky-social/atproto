@@ -1,5 +1,14 @@
 # @atproto/oauth-provider
 
+## 0.7.2
+
+### Patch Changes
+
+- [#3755](https://github.com/bluesky-social/atproto/pull/3755) [`96de2acb3`](https://github.com/bluesky-social/atproto/commit/96de2acb301683effe4313cb93d7747f87a73b5e) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use more secure COEP header when hCaptcha is enabled
+
+- Updated dependencies [[`0f3899dd5`](https://github.com/bluesky-social/atproto/commit/0f3899dd52d0094c29222c65e2636217f9a8ece4)]:
+  - @atproto/oauth-provider-frontend@0.1.2
+
 ## 0.7.1
 
 ### Patch Changes

@@ -16,6 +16,7 @@ import {
 export type { Label } from '../lexicon/types/com/atproto/label/defs'
 
 export type SubjectLabels = {
+  isImpersonation: boolean
   isTakendown: boolean
   needsReview: boolean
   labels: HydrationMap<Label> // src + val -> label
@@ -84,12 +85,14 @@ export class LabelHydrator {
       let entry = acc.get(label.uri)
       if (!entry) {
         entry = {
+          isImpersonation: false,
           isTakendown: false,
           needsReview: false,
           labels: new HydrationMap(),
         }
         acc.set(label.uri, entry)
       }
+
       const isActionableNeedsReview =
         label.val === NEEDS_REVIEW_LABEL &&
         !label.neg &&
@@ -110,6 +113,14 @@ export class LabelHydrator {
       if (isActionableNeedsReview) {
         entry.needsReview = true
       }
+      if (
+        label.val === IMPERSONATION_LABEL &&
+        !label.neg &&
+        labelers.redact.has(label.src)
+      ) {
+        entry.isImpersonation = true
+      }
+
       return acc
     }, new Labels())
   }
@@ -160,5 +171,6 @@ const labelerDidToUri = (did: string): string => {
   return AtUri.make(did, ids.AppBskyLabelerService, 'self').toString()
 }
 
+const IMPERSONATION_LABEL = 'impersonation'
 const TAKEDOWN_LABELS = ['!takedown', '!suspend']
 const NEEDS_REVIEW_LABEL = 'needs-review'
