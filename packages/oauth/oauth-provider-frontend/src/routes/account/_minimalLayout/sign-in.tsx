@@ -25,9 +25,11 @@ export const Route = createFileRoute('/account/_minimalLayout/sign-in')({
 
 function RouteComponent() {
   const { data: sessions } = useDeviceSessionsQuery()
+  const { _ } = useLingui()
 
   return (
     <>
+      <title>{_(msg`Sign in`)}</title>
       <div
         className={clsx([
           'mx-auto rounded-lg border p-5 shadow-xl md:p-7 dark:shadow-2xl',

@@ -23,6 +23,17 @@ export const Route = createFileRoute('/account/_minimalLayout/reset-password')({
 
 function RouteComponent() {
   const { _ } = useLingui()
+
+  return (
+    <>
+      <title>{_(msg`Reset password`)}</title>
+      <ResetPassword />
+    </>
+  )
+}
+
+function ResetPassword() {
+  const { _ } = useLingui()
   const [showConfirmStep, setShowConfirmStep] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
   const [error, setError] = useState('')

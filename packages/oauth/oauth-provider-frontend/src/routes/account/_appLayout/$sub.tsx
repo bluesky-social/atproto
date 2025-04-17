@@ -21,8 +21,19 @@ import { useRevokeAccountSessionMutation } from '#/data/useRevokeAccountSessionM
 import { useRevokeOAuthSessionMutation } from '#/data/useRevokeOAuthSessionMutation'
 
 export const Route = createFileRoute('/account/_appLayout/$sub')({
-  component: AccountHome,
+  component: RouteComponent,
 })
+
+function RouteComponent() {
+  const { _ } = useLingui()
+
+  return (
+    <>
+      <title>{_(msg`Your account`)}</title>
+      <AccountHome />
+    </>
+  )
+}
 
 export function AccountHome() {
   const { _ } = useLingui()
