@@ -390,7 +390,7 @@ msgstr "送信データが正しくありません。フォームをチェック
 
 #: src/components/utils/error-message.tsx:43
 msgid "The domain name is not allowed"
-msgstr "ドメイン名が正しくありません"
+msgstr "そのドメイン名は許可されていません"
 
 #: src/components/utils/error-message.tsx:45
 msgid "The handle contains inappropriate language"
