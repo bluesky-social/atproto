@@ -95,6 +95,7 @@ export class DaemonContext {
     const verificationListener = cfg.verifier?.jetstreamUrl
       ? new VerificationListener(
           verificationService(db),
+          new BackgroundQueue(db, { concurrency: 1 }),
           cfg.verifier?.jetstreamUrl,
         )
       : undefined

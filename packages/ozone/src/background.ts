@@ -10,7 +10,7 @@ type Task = (db: Database, signal: AbortSignal) => Promise<void>
  */
 export class BackgroundQueue {
   private abortController = new AbortController()
-  private queue = new PQueue({ concurrency: 20 })
+  private queue: PQueue
 
   public get signal() {
     return this.abortController.signal
@@ -20,7 +20,12 @@ export class BackgroundQueue {
     return this.signal.aborted
   }
 
-  constructor(protected db: Database) {}
+  constructor(
+    protected db: Database,
+    queueOpts?: { concurrency?: number },
+  ) {
+    this.queue = new PQueue(queueOpts ?? { concurrency: 20 })
+  }
 
   getStats() {
     return {

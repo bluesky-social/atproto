@@ -25,15 +25,15 @@ export class VerificationService {
     >[],
   ) {
     // @TODO: We should probably handle errors here?
-    return this.db.transaction(async (tx) => {
-      await Promise.allSettled(
-        verifications.map((verification) =>
-          tx.db
+    await this.db.transaction(async (tx) => {
+      return Promise.allSettled(
+        verifications.map((verification) => {
+          return tx.db
             .insertInto('verification')
             .values(verification)
             .onConflict((oc) => oc.doNothing())
-            .executeTakeFirst(),
-        ),
+            .execute()
+        }),
       )
     })
   }
@@ -50,10 +50,10 @@ export class VerificationService {
     revokeReason?: string
   }) {
     const now = new Date().toISOString()
-    await Promise.allSettled(
+    return Promise.allSettled(
       uris.map(async (uri) => {
         const atUri = new AtUri(uri)
-        await this.db.db
+        const res = await this.db.db
           .updateTable('verification')
           .set({
             revokeReason,
@@ -62,7 +62,10 @@ export class VerificationService {
             revokedBy: revokedBy || atUri.host,
           })
           .where('uri', '=', uri)
+          .where('revokedAt', 'is', null)
           .execute()
+
+        return res
       }),
     )
   }
@@ -152,5 +155,23 @@ export class VerificationService {
         subjectRepo,
       }
     })
+  }
+
+  async getFirehoseCursor() {
+    const entry = await this.db.db
+      .selectFrom('firehose_cursor')
+      .select('cursor')
+      .where('service', '=', 'verification')
+      .executeTakeFirst()
+
+    return entry?.cursor || null
+  }
+
+  async updateFirehoseCursor(cursor: string) {
+    await this.db.db
+      .updateTable('firehose_cursor')
+      .set({ cursor })
+      .where('service', '=', 'verification')
+      .executeTakeFirst()
   }
 }

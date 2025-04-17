@@ -15,6 +15,7 @@ import * as repoPushEvent from './repo_push_event'
 import * as setting from './setting'
 import * as signingKey from './signing_key'
 import * as verification from './verification'
+import * as firehoseCursor from './firehose_cursor'
 
 export type DatabaseSchemaType = modEvent.PartialDB &
   modSubjectStatus.PartialDB &
@@ -31,7 +32,8 @@ export type DatabaseSchemaType = modEvent.PartialDB &
   recordEventsStats.PartialDB &
   accountRecordEventsStats.PartialDB &
   accountRecordStatusStats.PartialDB &
-  verification.PartialDB
+  verification.PartialDB &
+  firehoseCursor.PartialDB
 
 export type DatabaseSchema = Kysely<DatabaseSchemaType>
 
