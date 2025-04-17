@@ -175,14 +175,14 @@ function ApplicationSessionCard({
           description={_(
             msg`Are you sure you want to revoke access? This application won't be able to access your account anymore.`,
           )}
-          confirmCTA={_(msg`Sign out`)}
+          confirmCTA={_(msg`Revoke access`)}
           onConfirm={revoke}
         >
           <Button color="secondary" disabled={isPending}>
             <Button.Text>
-              <Trans>Sign out</Trans>
+              <Trans>Revoke access</Trans>
             </Button.Text>
-            <ExitIcon width={20} />
+            <Cross2Icon width={16} />
           </Button>
         </Prompt>
       </div>
@@ -234,8 +234,8 @@ function AccountSessionCard({
   }, [session])
 
   return (
-    <div className="border-contrast-50 dark:border-contrast-100 flex items-start justify-between space-x-4 border-t px-2 pt-3">
-      <div className="flex flex-1 flex-col space-x-2 truncate">
+    <div className="border-contrast-50 dark:border-contrast-100 flex flex-wrap items-center justify-between space-x-4 border-t px-2 pt-3">
+      <div className="flex min-w-36 flex-1 flex-col space-x-2 truncate">
         <p className="truncate font-semibold">
           {ua ? (
             ua.device.is('mobile') ? (
@@ -247,7 +247,7 @@ function AccountSessionCard({
             <Trans>Unknown user agent</Trans>
           )}
         </p>
-        <p className="text-sm">
+        <p className="truncate text-sm">
           <span className="text-text-light">
             {lastUsed}
             {' • '}
@@ -258,27 +258,28 @@ function AccountSessionCard({
         </p>
       </div>
       {session.isCurrentDevice && (
-        <div className="flex-shrink">
-          <div className="bg-contrast-25 dark:bg-contrast-50 text-text-light rounded-full px-2 py-1 text-xs">
-            <Trans>This device</Trans>
-          </div>
+        <div className="bg-contrast-25 dark:bg-contrast-50 text-text-light min-w-max shrink-0 grow-0 rounded-full px-2 py-1 text-xs">
+          <Trans>This device</Trans>
         </div>
       )}
-      <div>
-        <Prompt
-          title={_(msg`Remove this device`)}
-          description={_(msg`Are you sure you want to remove this device?`)}
-          confirmCTA={_(msg`Remove`)}
-          onConfirm={remove}
+      <Prompt
+        title={_(msg`Remove this device`)}
+        description={_(msg`Are you sure you want to remove this device?`)}
+        confirmCTA={_(msg`Sign out`)}
+        onConfirm={remove}
+      >
+        <Button
+          color="secondary"
+          size="sm"
+          className="min-w-max shrink-0 grow-0"
+          disabled={isPending}
         >
-          <Button color="secondary" size="sm" disabled={isPending}>
-            <Button.Text>
-              <Trans>Remove</Trans>
-            </Button.Text>
-            <Cross2Icon width={16} />
-          </Button>
-        </Prompt>
-      </div>
+          <Button.Text>
+            <Trans>Sign out</Trans>
+          </Button.Text>
+          <ExitIcon width={20} />
+        </Button>
+      </Prompt>
     </div>
   )
 }

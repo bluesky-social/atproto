@@ -39,7 +39,7 @@ msgstr "Accounts"
 msgid "An error occurred, please try again."
 msgstr "An error occurred, please try again."
 
-#: src/routes/account/_appLayout/$sub.tsx:270
+#: src/routes/account/_appLayout/$sub.tsx:267
 msgid "Are you sure you want to remove this device?"
 msgstr "Are you sure you want to remove this device?"
 
@@ -196,12 +196,7 @@ msgstr "Password is required"
 msgid "Password must be at least {MIN_PASSWORD_LENGTH} characters"
 msgstr "Password must be at least {MIN_PASSWORD_LENGTH} characters"
 
-#: src/routes/account/_appLayout/$sub.tsx:271
-#: src/routes/account/_appLayout/$sub.tsx:276
-msgid "Remove"
-msgstr "Remove"
-
-#: src/routes/account/_appLayout/$sub.tsx:269
+#: src/routes/account/_appLayout/$sub.tsx:266
 msgid "Remove this device"
 msgstr "Remove this device"
 
@@ -209,6 +204,11 @@ msgstr "Remove this device"
 #: src/routes/account/_minimalLayout/reset-password.tsx:308
 msgid "Reset password"
 msgstr "Reset password"
+
+#: src/routes/account/_appLayout/$sub.tsx:178
+#: src/routes/account/_appLayout/$sub.tsx:183
+msgid "Revoke access"
+msgstr "Revoke access"
 
 #: src/routes/account/_appLayout/$sub.tsx:172
 msgid "Revoke access to {clientName}"
@@ -235,8 +235,8 @@ msgstr "Sign in"
 msgid "Sign in with another account"
 msgstr "Sign in with another account"
 
-#: src/routes/account/_appLayout/$sub.tsx:178
-#: src/routes/account/_appLayout/$sub.tsx:183
+#: src/routes/account/_appLayout/$sub.tsx:268
+#: src/routes/account/_appLayout/$sub.tsx:278
 #: src/components/AccountSelector.tsx:103
 msgid "Sign out"
 msgstr "Sign out"
@@ -257,7 +257,7 @@ msgstr "Successfully removed device"
 msgid "Successfully signed out"
 msgstr "Successfully signed out"
 
-#: src/routes/account/_appLayout/$sub.tsx:263
+#: src/routes/account/_appLayout/$sub.tsx:262
 msgid "This device"
 msgstr "This device"
 

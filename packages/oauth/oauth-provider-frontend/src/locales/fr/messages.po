@@ -39,7 +39,7 @@ msgstr "Utilisateurs"
 msgid "An error occurred, please try again."
 msgstr "Une erreur s'est produite, veuillez réessayer."
 
-#: src/routes/account/_appLayout/$sub.tsx:270
+#: src/routes/account/_appLayout/$sub.tsx:267
 msgid "Are you sure you want to remove this device?"
 msgstr "Êtes-vous sûr de vouloir déconnecter cet appareil ?"
 
@@ -196,12 +196,7 @@ msgstr "Le mot de passe est requis"
 msgid "Password must be at least {MIN_PASSWORD_LENGTH} characters"
 msgstr "Le mot de passe doit contenir au moins {MIN_PASSWORD_LENGTH} caractères"
 
-#: src/routes/account/_appLayout/$sub.tsx:271
-#: src/routes/account/_appLayout/$sub.tsx:276
-msgid "Remove"
-msgstr "Déconnecter"
-
-#: src/routes/account/_appLayout/$sub.tsx:269
+#: src/routes/account/_appLayout/$sub.tsx:266
 msgid "Remove this device"
 msgstr "Déconnecter cet appareil"
 
@@ -209,6 +204,11 @@ msgstr "Déconnecter cet appareil"
 #: src/routes/account/_minimalLayout/reset-password.tsx:308
 msgid "Reset password"
 msgstr "Réinitialiser le mot de passe"
+
+#: src/routes/account/_appLayout/$sub.tsx:178
+#: src/routes/account/_appLayout/$sub.tsx:183
+msgid "Revoke access"
+msgstr ""
 
 #: src/routes/account/_appLayout/$sub.tsx:172
 msgid "Revoke access to {clientName}"
@@ -235,8 +235,8 @@ msgstr "Se connecter"
 msgid "Sign in with another account"
 msgstr "Se connecter avec un autre compte"
 
-#: src/routes/account/_appLayout/$sub.tsx:178
-#: src/routes/account/_appLayout/$sub.tsx:183
+#: src/routes/account/_appLayout/$sub.tsx:268
+#: src/routes/account/_appLayout/$sub.tsx:278
 #: src/components/AccountSelector.tsx:103
 msgid "Sign out"
 msgstr "Déconnecter"
@@ -257,7 +257,7 @@ msgstr "Déconnexion de l'appareil réussie"
 msgid "Successfully signed out"
 msgstr "Déconnexion réussie"
 
-#: src/routes/account/_appLayout/$sub.tsx:263
+#: src/routes/account/_appLayout/$sub.tsx:262
 msgid "This device"
 msgstr "Cet appareil"
 
