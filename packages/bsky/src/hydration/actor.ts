@@ -1,6 +1,5 @@
 import { mapDefined } from '@atproto/common'
 import { DataPlaneClient } from '../data-plane/client'
-import { VerificationView } from '../lexicon/types/app/bsky/actor/defs'
 import { Record as ProfileRecord } from '../lexicon/types/app/bsky/actor/profile'
 import { Record as ChatDeclarationRecord } from '../lexicon/types/chat/bsky/actor/declaration'
 import { VerificationMeta } from '../proto/bsky_pb'

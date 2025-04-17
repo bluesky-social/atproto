@@ -73,7 +73,6 @@ const presentation = (input: {
   hydration: HydrationState
 }) => {
   const { ctx, params, skeleton, hydration } = input
-  // @TODO apply rules to verifications (nohosted, taken down)
   const profile = ctx.views.profileDetailed(skeleton.did, hydration)
   if (!profile) {
     throw new InvalidRequestError('Profile not found')

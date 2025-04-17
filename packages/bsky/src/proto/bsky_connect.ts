@@ -166,8 +166,6 @@ import {
   GetThreadResponse,
   GetTimelineRequest,
   GetTimelineResponse,
-  GetTrustedVerifiersRequest,
-  GetTrustedVerifiersResponse,
   GetUnreadNotificationCountRequest,
   GetUnreadNotificationCountResponse,
   GetVerificationRecordsRequest,
