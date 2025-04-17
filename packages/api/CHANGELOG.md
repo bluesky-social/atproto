@@ -1,5 +1,13 @@
 # @atproto/api
 
+## 0.15.1
+
+### Patch Changes
+
+- [#3761](https://github.com/bluesky-social/atproto/pull/3761) [`688268b6a`](https://github.com/bluesky-social/atproto/commit/688268b6a5ee30f0922ee152ffbd26583d164ae4) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Add verification state to profile view lexicons
+
+- [#3766](https://github.com/bluesky-social/atproto/pull/3766) [`8d99915ce`](https://github.com/bluesky-social/atproto/commit/8d99915ce02c73b9b37bf121ccd2703fa14a906a) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Update chat verification lexicon
+
 ## 0.15.0
 
 ### Minor Changes
