@@ -9,12 +9,12 @@ import { Database } from '../db'
 import { ModerationService } from '../mod-service'
 import { TeamService } from '../team'
 import { getSigningKeyId } from '../util'
+import { VerificationService } from '../verification/service'
 import { EventPusher } from './event-pusher'
 import { EventReverser } from './event-reverser'
 import { MaterializedViewRefresher } from './materialized-view-refresher'
 import { TeamProfileSynchronizer } from './team-profile-synchronizer'
 import { VerificationListener } from './verification-listener'
-import { VerificationService } from '../verification/service'
 
 export type DaemonContextOptions = {
   db: Database

@@ -4,6 +4,7 @@ import * as accountRecordEventsStats from './account_record_events_stats'
 import * as accountRecordStatusStats from './account_record_status_stats'
 import * as blobPushEvent from './blob_push_event'
 import * as communicationTemplate from './communication_template'
+import * as firehoseCursor from './firehose_cursor'
 import * as label from './label'
 import * as member from './member'
 import * as modEvent from './moderation_event'
@@ -15,7 +16,6 @@ import * as repoPushEvent from './repo_push_event'
 import * as setting from './setting'
 import * as signingKey from './signing_key'
 import * as verification from './verification'
-import * as firehoseCursor from './firehose_cursor'
 
 export type DatabaseSchemaType = modEvent.PartialDB &
   modSubjectStatus.PartialDB &
