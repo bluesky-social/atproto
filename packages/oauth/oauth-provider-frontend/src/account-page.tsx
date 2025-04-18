@@ -13,7 +13,10 @@ import { Provider as LocaleProvider } from '#/locales'
 import { routeTree } from '#/routeTree.gen'
 
 const qc = new QueryClient()
-const router = createRouter({ routeTree })
+const router = createRouter({
+  routeTree,
+  pathParamsAllowedCharacters: [':'],
+})
 
 // Register the router instance for type safety
 declare module '@tanstack/react-router' {
