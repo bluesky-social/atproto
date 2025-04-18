@@ -2,7 +2,7 @@ import { mapDefined } from '@atproto/common'
 import { AtUri, INVALID_HANDLE, normalizeDatetimeAlways } from '@atproto/syntax'
 import { ProfileViewerState } from '../hydration/actor'
 import { FeedItem, Like, Post, Repost } from '../hydration/feed'
-import { Follow } from '../hydration/graph'
+import { Follow, Verification } from '../hydration/graph'
 import { HydrationState } from '../hydration/hydrator'
 import { Label } from '../hydration/label'
 import { RecordInfo } from '../hydration/util'
@@ -48,6 +48,7 @@ import {
   StarterPackViewBasic,
 } from '../lexicon/types/app/bsky/graph/defs'
 import { Record as FollowRecord } from '../lexicon/types/app/bsky/graph/follow'
+import { Record as VerificationRecord } from '../lexicon/types/app/bsky/graph/verification'
 import {
   LabelerView,
   LabelerViewDetailed,
@@ -99,6 +100,14 @@ import {
   parsePostgate,
   parseThreadGate,
 } from './util'
+
+const notificationDeletedRecord = {
+  $type: 'app.bsky.notification.defs#recordDeleted' as const,
+}
+
+// Pre-computed CID for the `notificationDeletedRecord`.
+const notificationDeletedRecordCid =
+  'bafyreidad6nyekfa4a67yfb573ptxiv6s7kyxyg2ra6qbbemcruadvtuim'
 
 export class Views {
   public imgUriBuilder: ImageUriBuilder = this.opts.imgUriBuilder
@@ -584,6 +593,7 @@ export class Views {
       | ProfileRecord
       | LabelerRecord
       | NotificationRecordDeleted
+      | VerificationRecord
   }): Label[] {
     if (!uri || !cid || !record) return []
 
@@ -1417,6 +1427,7 @@ export class Views {
       | Repost
       | Follow
       | RecordInfo<ProfileRecord>
+      | Verification
       | Pick<RecordInfo<Required<NotificationRecordDeleted>>, 'cid' | 'record'>
       | undefined
       | null
@@ -1430,12 +1441,9 @@ export class Views {
     } else if (uri.collection === ids.AppBskyGraphFollow) {
       recordInfo = state.follows?.get(notif.uri)
     } else if (uri.collection === ids.AppBskyGraphVerification) {
-      recordInfo = {
-        record: {
-          $type: 'app.bsky.notification.defs#recordDeleted',
-        },
-        // Pre-computed CID for the dummy record above.
-        cid: 'bafyreidad6nyekfa4a67yfb573ptxiv6s7kyxyg2ra6qbbemcruadvtuim',
+      recordInfo = state.verifications?.get(notif.uri) ?? {
+        record: notificationDeletedRecord,
+        cid: notificationDeletedRecordCid,
       }
     } else if (uri.collection === ids.AppBskyActorProfile) {
       const actor = state.actors?.get(authorDid)

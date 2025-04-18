@@ -584,7 +584,7 @@ export class SeedClient<
   }
 
   async unverify(by: string, subject: string) {
-    const verification = this.verifications[by][subject]
+    const verification = this.verifications[by]?.[subject]
     if (!verification) {
       throw new Error('verification does not exist')
     }

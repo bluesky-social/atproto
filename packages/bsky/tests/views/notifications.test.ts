@@ -25,13 +25,6 @@ describe('notification views', () => {
       .set({ trustedVerifier: true })
       .where('did', '=', alice)
       .execute()
-    await sc.verify(
-      sc.dids.alice,
-      sc.dids.bob,
-      sc.accounts[sc.dids.bob].handle,
-      sc.profiles[sc.dids.bob].displayName,
-    )
-    await sc.unverify(sc.dids.alice, sc.dids.bob)
     await network.processAll()
     alice = sc.dids.alice
   })
@@ -165,8 +158,16 @@ describe('notification views', () => {
 
   describe('verification notifications', () => {
     it('generates notifications for verification created', async () => {
+      await sc.verify(
+        sc.dids.alice,
+        sc.dids.bob,
+        sc.accounts[sc.dids.bob].handle,
+        sc.profiles[sc.dids.bob].displayName,
+      )
+      await network.processAll()
+
       const notifsBob = await agent.app.bsky.notification.listNotifications(
-        { reasons: ['verified'] },
+        { reasons: ['verified', 'unverified'] },
         {
           headers: await network.serviceHeaders(
             sc.dids.bob,
@@ -179,8 +180,11 @@ describe('notification views', () => {
     })
 
     it('generates notifications for verification removed', async () => {
+      await sc.unverify(sc.dids.alice, sc.dids.bob)
+      await network.processAll()
+
       const notifsBob = await agent.app.bsky.notification.listNotifications(
-        { reasons: ['unverified'] },
+        { reasons: ['verified', 'unverified'] },
         {
           headers: await network.serviceHeaders(
             sc.dids.bob,
