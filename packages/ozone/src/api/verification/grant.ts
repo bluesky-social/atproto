@@ -17,6 +17,7 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
+      const modViews = ctx.modService(ctx.db).views
       const verificationIssuer = ctx.verificationIssuer(ctx.cfg.verifier)
       const verificationService = ctx.verificationService(ctx.db)
       const { grantedVerifications, failedVerifications } =
@@ -40,16 +41,20 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const didsArr = Array.from(dids)
-      const repos = await getReposForVerifications(
-        ctx,
-        ctx.reqLabelers(req),
-        ctx.modService(ctx.db),
-        didsArr,
-        auth.credentials.isModerator,
-      )
+      const [repos, profiles] = await Promise.all([
+        getReposForVerifications(
+          ctx,
+          ctx.reqLabelers(req),
+          ctx.modService(ctx.db),
+          didsArr,
+          auth.credentials.isModerator,
+        ),
+        modViews.getProfiles(didsArr),
+      ])
       const verifications = verificationService.view(
         grantedVerifications,
         repos,
+        profiles,
       )
       return {
         encoding: 'application/json',

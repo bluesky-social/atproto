@@ -1,6 +1,7 @@
 import { Selectable } from 'kysely'
 import {
   $Typed,
+  AppBskyActorDefs,
   AtUri,
   ToolsOzoneModerationDefs,
   ToolsOzoneVerificationDefs,
@@ -134,10 +135,13 @@ export class VerificationService {
       | $Typed<ToolsOzoneModerationDefs.RepoViewDetail>
       | $Typed<ToolsOzoneModerationDefs.RepoViewNotFound>
     >,
+    profiles: Map<string, AppBskyActorDefs.ProfileViewDetailed>,
   ): $Typed<ToolsOzoneVerificationDefs.VerificationView>[] {
     return verifications.map((verification) => {
       const issuerRepo = repos.get(verification.issuer)
       const subjectRepo = repos.get(verification.subject)
+      const subjectProfile = profiles.get(verification.subject)
+      const issuerProfile = profiles.get(verification.issuer)
       return {
         $type: 'tools.ozone.verification.defs#verificationView',
         uri: verification.uri,
@@ -152,6 +156,8 @@ export class VerificationService {
         revokeReason: verification.revokeReason || undefined,
         issuerRepo,
         subjectRepo,
+        subjectProfile,
+        issuerProfile,
       }
     })
   }

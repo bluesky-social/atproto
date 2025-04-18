@@ -80,8 +80,6 @@ export class TestNetwork extends TestNetworkNoAppView {
     }
 
     const pds = await TestPds.create(pdsProps)
-    const ozoneVerifierPassword =
-      await ozoneServiceProfile.createAppPasswordForVerification()
 
     const ozone = await TestOzone.create({
       port: ozonePort,
@@ -97,7 +95,7 @@ export class TestNetwork extends TestNetworkNoAppView {
       pdsDid: pds.ctx.cfg.service.did,
       verifierDid: ozoneDid,
       verifierUrl: pds.url,
-      verifierPassword: ozoneVerifierPassword,
+      verifierPassword: 'temp',
       ...params.ozone,
     })
 
@@ -105,7 +103,7 @@ export class TestNetwork extends TestNetworkNoAppView {
     if (pdsProps.inviteRequired) {
       const { data: invite } = await pds
         .getClient()
-        .api.com.atproto.server.createInviteCode(
+        .com.atproto.server.createInviteCode(
           { useCount: 1 },
           {
             encoding: 'application/json',
@@ -117,6 +115,12 @@ export class TestNetwork extends TestNetworkNoAppView {
     await ozoneServiceProfile.createServiceDetails(pds, modServiceUrl, {
       inviteCode,
     })
+
+    const ozoneVerifierPassword =
+      await ozoneServiceProfile.createAppPasswordForVerification(pds)
+    if (ozone.daemon.ctx.cfg.verifier) {
+      ozone.daemon.ctx.cfg.verifier.password = ozoneVerifierPassword
+    }
 
     await ozone.addAdminDid(ozoneDid)
 

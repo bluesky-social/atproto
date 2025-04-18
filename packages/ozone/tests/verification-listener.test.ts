@@ -19,7 +19,7 @@ describe('verification-listener', () => {
       relay = ws
     })
     network = await TestNetwork.create({
-      dbPostgresSchema: 'ozone_verification_test',
+      dbPostgresSchema: 'ozone_verification_listener_test',
       ozone: {
         verifierUrl: 'http://localhost:2583',
         verifierDid: 'did:example:verifier',
