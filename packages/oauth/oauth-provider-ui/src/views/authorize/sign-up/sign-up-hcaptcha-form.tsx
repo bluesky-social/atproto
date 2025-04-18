@@ -1,12 +1,5 @@
-import type HCaptcha from '@hcaptcha/react-hcaptcha'
-import {
-  ForwardedRef,
-  ReactNode,
-  lazy,
-  useCallback,
-  useRef,
-  useState,
-} from 'react'
+import HCaptcha from '@hcaptcha/react-hcaptcha'
+import { ForwardedRef, ReactNode, useCallback, useRef, useState } from 'react'
 import {
   FormCardAsync,
   FormCardAsyncProps,
@@ -35,8 +28,6 @@ export type SignUpHcaptchaFormProps = Override<
     ref?: ForwardedRef<HCaptcha>
   }
 >
-
-const HCaptchaLazy = lazy(() => import('@hcaptcha/react-hcaptcha'))
 
 export function SignUpHcaptchaForm({
   siteKey,
@@ -96,7 +87,7 @@ export function SignUpHcaptchaForm({
       append={children}
       invalid={invalid || !token}
     >
-      <HCaptchaLazy
+      <HCaptcha
         theme={theme}
         sitekey={siteKey}
         onLoad={onLoad}
