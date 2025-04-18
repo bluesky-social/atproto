@@ -1,5 +1,13 @@
 # @atproto-labs/identity-resolver
 
+## 0.1.16
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto-labs/did-resolver@0.1.12
+  - @atproto-labs/handle-resolver@0.1.8
+
 ## 0.1.15
 
 ### Patch Changes

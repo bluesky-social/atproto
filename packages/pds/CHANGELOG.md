@@ -1,5 +1,16 @@
 # @atproto/pds
 
+## 0.4.129
+
+### Patch Changes
+
+- [#3764](https://github.com/bluesky-social/atproto/pull/3764) [`30f9b6690`](https://github.com/bluesky-social/atproto/commit/30f9b6690e0e2c5810772e94e631322b9d89c65a) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow customizing contrast and hue colors
+
+- [#3775](https://github.com/bluesky-social/atproto/pull/3775) [`6db9faa4a`](https://github.com/bluesky-social/atproto/commit/6db9faa4a121b573fa73e29e41dd1c183543f7f8) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove unused `image-url.ts` file
+
+- Updated dependencies [[`30f9b6690`](https://github.com/bluesky-social/atproto/commit/30f9b6690e0e2c5810772e94e631322b9d89c65a)]:
+  - @atproto/oauth-provider@0.7.3
+
 ## 0.4.128
 
 ### Patch Changes
