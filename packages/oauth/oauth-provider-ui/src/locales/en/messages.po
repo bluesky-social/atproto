@@ -45,7 +45,7 @@ msgstr "An application on your device"
 msgid "An unknown error occurred"
 msgstr "An unknown error occurred"
 
-#: src/views/authorize/sign-in/sign-in-picker.tsx:110
+#: src/views/authorize/sign-in/sign-in-picker.tsx:112
 msgid "Another account"
 msgstr "Another account"
 
@@ -59,10 +59,6 @@ msgid "Authorize"
 msgstr "Authorize"
 
 #: src/views/authorize/sign-in/sign-in-picker.tsx:47
-#: src/views/authorize/sign-in/sign-in-form.tsx:130
-#: src/views/authorize/reset-password/reset-password-view.tsx:65
-#: src/views/authorize/reset-password/reset-password-view.tsx:95
-#: src/components/forms/wizard-card.tsx:93
 msgid "Back"
 msgstr "Back"
 
@@ -198,8 +194,7 @@ msgstr "Hide"
 msgid "Home"
 msgstr "Home"
 
-#: src/views/authorize/sign-in/sign-in-picker.tsx:86
-#: src/views/authorize/sign-in/sign-in-form.tsx:138
+#: src/views/authorize/sign-in/sign-in-picker.tsx:87
 msgid "Identifier"
 msgstr "Identifier"
 
@@ -224,7 +219,7 @@ msgstr "Let's get your password reset!"
 msgid "Login complete"
 msgstr "Login complete"
 
-#: src/views/authorize/sign-in/sign-in-picker.tsx:104
+#: src/views/authorize/sign-in/sign-in-picker.tsx:105
 msgid "Login to account that is not listed"
 msgstr "Login to account that is not listed"
 
@@ -248,7 +243,7 @@ msgstr "Missing"
 msgid "Moderate"
 msgstr "Moderate"
 
-#: src/views/authorize/sign-in/sign-in-picker.tsx:80
+#: src/views/authorize/sign-in/sign-in-picker.tsx:81
 msgid "Name"
 msgstr "Name"
 
