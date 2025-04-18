@@ -284,6 +284,7 @@ msgstr "Unknown user agent"
 msgid "User avatar"
 msgstr "User avatar"
 
+#. placeholder {0}: getAccountName(account)
 #: src/routes/account/_minimalLayout/index.tsx:98
 msgid "View and manage account for {0}"
 msgstr "View and manage account for {0}"
@@ -301,7 +302,6 @@ msgstr "Whoops! An error occurred."
 msgid "XXXXX-XXXXX"
 msgstr "XXXXX-XXXXX"
 
-#: src/routes/account/_minimalLayout/branding.tsx:14
 #: src/routes/account/_appLayout/$sub.tsx:32
 #: src/routes/account/_appLayout/$sub.tsx:58
 msgid "Your account"

@@ -59,6 +59,10 @@ msgid "Authorize"
 msgstr "Authorize"
 
 #: src/views/authorize/sign-in/sign-in-picker.tsx:47
+#: src/views/authorize/sign-in/sign-in-form.tsx:130
+#: src/views/authorize/reset-password/reset-password-view.tsx:65
+#: src/views/authorize/reset-password/reset-password-view.tsx:95
+#: src/components/forms/wizard-card.tsx:93
 msgid "Back"
 msgstr "Back"
 
@@ -70,6 +74,8 @@ msgstr "Between {minLength} and {maxLength} characters"
 msgid "By clicking <0>Authorize</0>, you allow this application to perform the following actions in accordance with their <1>terms of service</1> and <2>privacy policy</2>:"
 msgstr "By clicking <0>Authorize</0>, you allow this application to perform the following actions in accordance with their <1>terms of service</1> and <2>privacy policy</2>:"
 
+#. placeholder {0}: tosLink ? ( <LinkAnchor className="text-primary underline" link={tosLink}> <Trans>Terms of Service</Trans> </LinkAnchor> ) : ( <Trans>Terms of Service</Trans> )
+#. placeholder {1}: ppLink ? ( <LinkAnchor className="text-primary underline" link={ppLink}> <Trans>Privacy Policy</Trans> </LinkAnchor> ) : ( <Trans>Privacy Policy</Trans> )
 #: src/views/authorize/sign-up/sign-up-disclaimer.tsx:30
 msgid "By creating an account you agree to the {0} and the {1} of this service."
 msgstr "By creating an account you agree to the {0} and the {1} of this service."
@@ -79,6 +85,7 @@ msgstr "By creating an account you agree to the {0} and the {1} of this service.
 msgid "Cancel"
 msgstr "Cancel"
 
+#. placeholder {0}: secondFactor.hint
 #: src/views/authorize/sign-in/sign-in-form.tsx:230
 msgid "Check your {0} email for a login code and enter it here."
 msgstr "Check your {0} email for a login code and enter it here."
@@ -178,6 +185,7 @@ msgstr "Forgot Password"
 msgid "Forgot?"
 msgstr "Forgot?"
 
+#. placeholder {0}: account.preferred_username || account.email || account.sub
 #: src/views/authorize/accept/accept-view.tsx:40
 msgid "Grant access to your <0>{0}</0> account"
 msgstr "Grant access to your <0>{0}</0> account"
@@ -195,6 +203,7 @@ msgid "Home"
 msgstr "Home"
 
 #: src/views/authorize/sign-in/sign-in-picker.tsx:87
+#: src/views/authorize/sign-in/sign-in-form.tsx:138
 msgid "Identifier"
 msgstr "Identifier"
 
@@ -336,6 +345,7 @@ msgstr "Select from an existing account"
 msgid "Sign in"
 msgstr "Sign in"
 
+#. placeholder {0}: account.name
 #: src/views/authorize/sign-in/sign-in-picker.tsx:75
 msgid "Sign in as {0}"
 msgstr "Sign in as {0}"
@@ -474,6 +484,7 @@ msgstr "You will receive an email with a \"reset code\". Enter that code here th
 msgid "Your account"
 msgstr "Your account"
 
+#. placeholder {0}: segment.length ? ( <strong className="text-gray-800 dark:text-gray-200"> {preview} </strong> ) : ( <span aria-hidden className="w-24 rounded-md bg-gray-300 p-2 dark:bg-slate-600" /> )
 #: src/views/authorize/sign-up/sign-up-handle-form.tsx:217
 msgid "Your full username will be: {0}"
 msgstr "Your full username will be: {0}"
