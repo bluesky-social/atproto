@@ -1,5 +1,11 @@
 # @atproto/oauth-provider
 
+## 0.7.5
+
+### Patch Changes
+
+- [#3783](https://github.com/bluesky-social/atproto/pull/3783) [`d794b0676`](https://github.com/bluesky-social/atproto/commit/d794b06763050b4b32484e90116461deae45cbe3) Thanks [@devinivy](https://github.com/devinivy)! - Revert "Use more secure COEP header when hCaptcha is enabled"
+
 ## 0.7.4
 
 ### Patch Changes
