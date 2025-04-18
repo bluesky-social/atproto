@@ -11,7 +11,7 @@ function RouteComponent() {
 
   return (
     <>
-      <title>{t`Your account`}</title>
+      <title>{t`Branding`}</title>
       <Palette />
     </>
   )

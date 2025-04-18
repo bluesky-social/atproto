@@ -53,6 +53,10 @@ msgstr "Are you sure you want to revoke access? This application won't be able t
 msgid "Back to sign in"
 msgstr "Back to sign in"
 
+#: src/routes/account/_minimalLayout/branding.tsx:14
+msgid "Branding"
+msgstr "Branding"
+
 #: src/components/Prompt.tsx:56
 msgid "Cancel"
 msgstr "Cancel"

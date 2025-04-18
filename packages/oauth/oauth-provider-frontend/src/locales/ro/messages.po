@@ -53,6 +53,10 @@ msgstr ""
 msgid "Back to sign in"
 msgstr ""
 
+#: src/routes/account/_minimalLayout/branding.tsx:14
+msgid "Branding"
+msgstr ""
+
 #: src/components/Prompt.tsx:56
 msgid "Cancel"
 msgstr ""

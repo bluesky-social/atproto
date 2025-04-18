@@ -53,6 +53,10 @@ msgstr "Êtes-vous sûr de vouloir supprimer l'accès? Cette application ne sera
 msgid "Back to sign in"
 msgstr "Retour vers la page de connexion"
 
+#: src/routes/account/_minimalLayout/branding.tsx:14
+msgid "Branding"
+msgstr "Personnalisation"
+
 #: src/components/Prompt.tsx:56
 msgid "Cancel"
 msgstr "Annuler"
