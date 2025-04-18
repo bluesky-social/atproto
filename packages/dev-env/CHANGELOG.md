@@ -1,5 +1,16 @@
 # @atproto/dev-env
 
+## 0.3.122
+
+### Patch Changes
+
+- [#3764](https://github.com/bluesky-social/atproto/pull/3764) [`30f9b6690`](https://github.com/bluesky-social/atproto/commit/30f9b6690e0e2c5810772e94e631322b9d89c65a) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use white as primary contrast color
+
+- Updated dependencies [[`30f9b6690`](https://github.com/bluesky-social/atproto/commit/30f9b6690e0e2c5810772e94e631322b9d89c65a), [`6db9faa4a`](https://github.com/bluesky-social/atproto/commit/6db9faa4a121b573fa73e29e41dd1c183543f7f8)]:
+  - @atproto/pds@0.4.129
+  - @atproto/bsky@0.0.143
+  - @atproto/ozone@0.1.105
+
 ## 0.3.121
 
 ### Patch Changes
