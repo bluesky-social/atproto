@@ -56,6 +56,7 @@ import {
   Record as LabelerRecord,
   isRecord as isLabelerRecord,
 } from '../lexicon/types/app/bsky/labeler/service'
+import { RecordDeleted as NotificationRecordDeleted } from '../lexicon/types/app/bsky/notification/defs'
 import { isSelfLabels } from '../lexicon/types/com/atproto/label/defs'
 import { $Typed, Un$Typed } from '../lexicon/util'
 import { Notification } from '../proto/bsky_pb'
@@ -582,6 +583,7 @@ export class Views {
       | FollowRecord
       | ProfileRecord
       | LabelerRecord
+      | NotificationRecordDeleted
   }): Label[] {
     if (!uri || !cid || !record) return []
 
@@ -1415,6 +1417,7 @@ export class Views {
       | Repost
       | Follow
       | RecordInfo<ProfileRecord>
+      | Pick<RecordInfo<Required<NotificationRecordDeleted>>, 'cid' | 'record'>
       | undefined
       | null
 
@@ -1426,6 +1429,14 @@ export class Views {
       recordInfo = state.reposts?.get(notif.uri)
     } else if (uri.collection === ids.AppBskyGraphFollow) {
       recordInfo = state.follows?.get(notif.uri)
+    } else if (uri.collection === ids.AppBskyGraphVerification) {
+      recordInfo = {
+        record: {
+          $type: 'app.bsky.notification.defs#recordDeleted',
+        },
+        // Pre-computed CID for the dummy record above.
+        cid: 'bafyreidad6nyekfa4a67yfb573ptxiv6s7kyxyg2ra6qbbemcruadvtuim',
+      }
     } else if (uri.collection === ids.AppBskyActorProfile) {
       const actor = state.actors?.get(authorDid)
       recordInfo =

@@ -61,7 +61,7 @@
         "author": { "type": "ref", "ref": "app.bsky.actor.defs#profileView" },
         "reason": {
           "type": "string",
-          "description": "Expected values are 'like', 'repost', 'follow', 'mention', 'reply', 'quote', and 'starterpack-joined'.",
+          "description": "Expected values are 'like', 'repost', 'follow', 'mention', 'reply', 'quote', 'starterpack-joined', 'verified', and 'unverified'.",
           "knownValues": [
             "like",
             "repost",
@@ -69,7 +69,9 @@
             "mention",
             "reply",
             "quote",
-            "starterpack-joined"
+            "starterpack-joined",
+            "verified",
+            "unverified"
           ]
         },
         "reasonSubject": { "type": "string", "format": "at-uri" },

@@ -20,6 +20,18 @@ describe('notification views', () => {
     agent = network.bsky.getClient()
     sc = network.getSeedClient()
     await basicSeed(sc)
+    await network.bsky.db.db
+      .updateTable('actor')
+      .set({ trustedVerifier: true })
+      .where('did', '=', alice)
+      .execute()
+    await sc.verify(
+      sc.dids.alice,
+      sc.dids.bob,
+      sc.accounts[sc.dids.bob].handle,
+      sc.profiles[sc.dids.bob].displayName,
+    )
+    await sc.unverify(sc.dids.alice, sc.dids.bob)
     await network.processAll()
     alice = sc.dids.alice
   })
@@ -149,6 +161,36 @@ describe('notification views', () => {
       },
     )
     expect(forSnapshot(sort(notifsDan.data.notifications))).toMatchSnapshot()
+  })
+
+  describe('verification notifications', () => {
+    it('generates notifications for verification created', async () => {
+      const notifsBob = await agent.app.bsky.notification.listNotifications(
+        { reasons: ['verified'] },
+        {
+          headers: await network.serviceHeaders(
+            sc.dids.bob,
+            ids.AppBskyNotificationListNotifications,
+          ),
+        },
+      )
+
+      expect(forSnapshot(sort(notifsBob.data.notifications))).toMatchSnapshot()
+    })
+
+    it('generates notifications for verification removed', async () => {
+      const notifsBob = await agent.app.bsky.notification.listNotifications(
+        { reasons: ['unverified'] },
+        {
+          headers: await network.serviceHeaders(
+            sc.dids.bob,
+            ids.AppBskyNotificationListNotifications,
+          ),
+        },
+      )
+
+      expect(forSnapshot(sort(notifsBob.data.notifications))).toMatchSnapshot()
+    })
   })
 
   it('fetches notifications without a last-seen', async () => {
