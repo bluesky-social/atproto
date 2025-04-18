@@ -284,6 +284,7 @@ msgstr ""
 msgid "User avatar"
 msgstr ""
 
+#. placeholder {0}: getAccountName(account)
 #: src/routes/account/_minimalLayout/index.tsx:98
 msgid "View and manage account for {0}"
 msgstr ""
@@ -301,7 +302,6 @@ msgstr ""
 msgid "XXXXX-XXXXX"
 msgstr ""
 
-#: src/routes/account/_minimalLayout/branding.tsx:14
 #: src/routes/account/_appLayout/$sub.tsx:32
 #: src/routes/account/_appLayout/$sub.tsx:58
 msgid "Your account"
