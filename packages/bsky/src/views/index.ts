@@ -1126,6 +1126,14 @@ export class Views {
     }
   }
 
+  codeEmbed(embed: CodeEmbed): CodeEmbedView {
+    return {
+      $type: 'app.bsky.embed.code#view',
+      code: embed.code,
+      lang: embed.lang,
+    }
+  }
+
   externalEmbed(did: string, embed: ExternalEmbed): ExternalEmbedView {
     const { uri, title, description, thumb } = embed.external
     return {
