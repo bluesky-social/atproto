@@ -75,6 +75,7 @@ export function SignInPicker({
             aria-label={t`Sign in as ${account.name}`}
             icon={<AccountImage src={account.picture} alt={name} />}
             append={<CaretRightIcon aria-hidden className="h-4" />}
+            className="cursor-pointer"
           >
             <span className="flex flex-wrap items-center">
               <span className="mr-2 truncate font-medium" arial-label={t`Name`}>
@@ -105,6 +106,7 @@ export function SignInPicker({
           role="button"
           append={<CaretRightIcon aria-hidden className="h-4" />}
           icon={<AtSymbolIcon aria-hidden className="h-4" />}
+          className="cursor-pointer"
         >
           <span className="truncate text-slate-700 dark:text-slate-400">
             <Trans>Another account</Trans>
