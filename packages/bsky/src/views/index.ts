@@ -592,8 +592,8 @@ export class Views {
       | FollowRecord
       | ProfileRecord
       | LabelerRecord
-      | NotificationRecordDeleted
       | VerificationRecord
+      | NotificationRecordDeleted
   }): Label[] {
     if (!uri || !cid || !record) return []
 
@@ -1441,6 +1441,8 @@ export class Views {
     } else if (uri.collection === ids.AppBskyGraphFollow) {
       recordInfo = state.follows?.get(notif.uri)
     } else if (uri.collection === ids.AppBskyGraphVerification) {
+      // When a verification record is removed, the record won't be found,
+      // both for the `verified` and `unverified` notifications.
       recordInfo = state.verifications?.get(notif.uri) ?? {
         record: notificationDeletedRecord,
         cid: notificationDeletedRecordCid,

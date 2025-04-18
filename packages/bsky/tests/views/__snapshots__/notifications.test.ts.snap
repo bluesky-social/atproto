@@ -1653,7 +1653,7 @@ Array [
 ]
 `;
 
-exports[`notification views verification notifications generates notifications for verification created 1`] = `
+exports[`notification views generates notifications for verification created and removed 1`] = `
 Array [
   Object {
     "author": Object {
@@ -1704,7 +1704,7 @@ Array [
 ]
 `;
 
-exports[`notification views verification notifications generates notifications for verification removed 1`] = `
+exports[`notification views generates notifications for verification created and removed 2`] = `
 Array [
   Object {
     "author": Object {
@@ -1782,7 +1782,7 @@ Array [
     },
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
-    "isRead": false,
+    "isRead": true,
     "labels": Array [],
     "reason": "verified",
     "record": Object {

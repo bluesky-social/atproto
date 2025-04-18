@@ -156,45 +156,37 @@ describe('notification views', () => {
     expect(forSnapshot(sort(notifsDan.data.notifications))).toMatchSnapshot()
   })
 
-  describe('verification notifications', () => {
-    it('generates notifications for verification created', async () => {
-      await sc.verify(
-        sc.dids.alice,
-        sc.dids.bob,
-        sc.accounts[sc.dids.bob].handle,
-        sc.profiles[sc.dids.bob].displayName,
-      )
-      await network.processAll()
+  it('generates notifications for verification created and removed', async () => {
+    await sc.verify(
+      sc.dids.alice,
+      sc.dids.bob,
+      sc.accounts[sc.dids.bob].handle,
+      sc.profiles[sc.dids.bob].displayName,
+    )
+    await network.processAll()
+    const notifsBob1 = await agent.app.bsky.notification.listNotifications(
+      { reasons: ['verified', 'unverified'] },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.bob,
+          ids.AppBskyNotificationListNotifications,
+        ),
+      },
+    )
+    expect(forSnapshot(sort(notifsBob1.data.notifications))).toMatchSnapshot()
 
-      const notifsBob = await agent.app.bsky.notification.listNotifications(
-        { reasons: ['verified', 'unverified'] },
-        {
-          headers: await network.serviceHeaders(
-            sc.dids.bob,
-            ids.AppBskyNotificationListNotifications,
-          ),
-        },
-      )
-
-      expect(forSnapshot(sort(notifsBob.data.notifications))).toMatchSnapshot()
-    })
-
-    it('generates notifications for verification removed', async () => {
-      await sc.unverify(sc.dids.alice, sc.dids.bob)
-      await network.processAll()
-
-      const notifsBob = await agent.app.bsky.notification.listNotifications(
-        { reasons: ['verified', 'unverified'] },
-        {
-          headers: await network.serviceHeaders(
-            sc.dids.bob,
-            ids.AppBskyNotificationListNotifications,
-          ),
-        },
-      )
-
-      expect(forSnapshot(sort(notifsBob.data.notifications))).toMatchSnapshot()
-    })
+    await sc.unverify(sc.dids.alice, sc.dids.bob)
+    await network.processAll()
+    const notifsBob2 = await agent.app.bsky.notification.listNotifications(
+      { reasons: ['verified', 'unverified'] },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.bob,
+          ids.AppBskyNotificationListNotifications,
+        ),
+      },
+    )
+    expect(forSnapshot(sort(notifsBob2.data.notifications))).toMatchSnapshot()
   })
 
   it('fetches notifications without a last-seen', async () => {

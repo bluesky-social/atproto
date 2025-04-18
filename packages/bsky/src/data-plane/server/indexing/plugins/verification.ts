@@ -90,7 +90,7 @@ const notifsForDelete = (
         recordCid: deleted.cid,
         reason: 'unverified' as const,
         reasonSubject: null,
-        sortAt: deleted.sortedAt,
+        sortAt: new Date().toISOString(),
       },
     ],
     toDelete: [],
