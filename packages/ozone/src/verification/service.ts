@@ -156,8 +156,18 @@ export class VerificationService {
         revokeReason: verification.revokeReason || undefined,
         issuerRepo,
         subjectRepo,
-        subjectProfile,
-        issuerProfile,
+        subjectProfile: subjectProfile
+          ? {
+              $type: 'app.bsky.actor.defs#profileViewDetailed',
+              ...subjectProfile,
+            }
+          : undefined,
+        issuerProfile: issuerProfile
+          ? {
+              $type: 'app.bsky.actor.defs#profileViewDetailed',
+              ...issuerProfile,
+            }
+          : undefined,
       }
     })
   }

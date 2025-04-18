@@ -9,6 +9,7 @@ Array [
     "handle": "carol.test",
     "issuer": "user(0)",
     "issuerProfile": Object {
+      "$type": "app.bsky.actor.defs#profileViewDetailed",
       "associated": Object {
         "feedgens": 0,
         "labeler": false,
@@ -86,6 +87,7 @@ Array [
     },
     "subject": "user(1)",
     "subjectProfile": Object {
+      "$type": "app.bsky.actor.defs#profileViewDetailed",
       "associated": Object {
         "feedgens": 0,
         "labeler": false,
@@ -125,6 +127,7 @@ Array [
     "handle": "bob.test",
     "issuer": "user(0)",
     "issuerProfile": Object {
+      "$type": "app.bsky.actor.defs#profileViewDetailed",
       "associated": Object {
         "feedgens": 0,
         "labeler": false,
@@ -205,6 +208,7 @@ Array [
     "revokedBy": "user(0)",
     "subject": "user(3)",
     "subjectProfile": Object {
+      "$type": "app.bsky.actor.defs#profileViewDetailed",
       "associated": Object {
         "feedgens": 0,
         "labeler": false,

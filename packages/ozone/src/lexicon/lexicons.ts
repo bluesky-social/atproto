@@ -15503,6 +15503,14 @@ export const schemaDict = {
             description: 'The user who revoked this verification.',
             format: 'did',
           },
+          subjectProfile: {
+            type: 'union',
+            refs: [],
+          },
+          issuerProfile: {
+            type: 'union',
+            refs: [],
+          },
           subjectRepo: {
             type: 'union',
             refs: [

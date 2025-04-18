@@ -36,6 +36,8 @@ export interface VerificationView {
   revokedAt?: string
   /** The user who revoked this verification. */
   revokedBy?: string
+  subjectProfile?: { $type: string }
+  issuerProfile?: { $type: string }
   subjectRepo?:
     | $Typed<ToolsOzoneModerationDefs.RepoViewDetail>
     | $Typed<ToolsOzoneModerationDefs.RepoViewNotFound>
