@@ -46,6 +46,7 @@ import {
   RelationshipPair,
   StarterPackAggs,
   StarterPacks,
+  Verifications,
 } from './graph'
 import {
   LabelHydrator,
@@ -121,6 +122,7 @@ export type HydrationState = {
   labelerAggs?: LabelerAggs
   knownFollowers?: KnownFollowers
   bidirectionalBlocks?: BidirectionalBlocks
+  verifications?: Verifications
 }
 
 export type PostBlock = { embed: boolean; parent: boolean; root: boolean }
@@ -876,15 +878,24 @@ export class Hydrator {
     const likeUris = collections.get(ids.AppBskyFeedLike) ?? []
     const repostUris = collections.get(ids.AppBskyFeedRepost) ?? []
     const followUris = collections.get(ids.AppBskyGraphFollow) ?? []
-    const [posts, likes, reposts, follows, labels, profileState] =
-      await Promise.all([
-        this.feed.getPosts(postUris), // reason: mention, reply, quote
-        this.feed.getLikes(likeUris), // reason: like
-        this.feed.getReposts(repostUris), // reason: repost
-        this.graph.getFollows(followUris), // reason: follow
-        this.label.getLabelsForSubjects(uris, ctx.labelers),
-        this.hydrateProfiles(uris.map(didFromUri), ctx),
-      ])
+    const verificationUris = collections.get(ids.AppBskyGraphVerification) ?? []
+    const [
+      posts,
+      likes,
+      reposts,
+      follows,
+      verifications,
+      labels,
+      profileState,
+    ] = await Promise.all([
+      this.feed.getPosts(postUris), // reason: mention, reply, quote
+      this.feed.getLikes(likeUris), // reason: like
+      this.feed.getReposts(repostUris), // reason: repost
+      this.graph.getFollows(followUris), // reason: follow
+      this.graph.getVerifications(verificationUris), // reason: verified
+      this.label.getLabelsForSubjects(uris, ctx.labelers),
+      this.hydrateProfiles(uris.map(didFromUri), ctx),
+    ])
     const viewerRootPostUris = new Set<string>()
     for (const notif of notifs) {
       if (notif.reason === 'reply') {
@@ -906,6 +917,7 @@ export class Hydrator {
       likes,
       reposts,
       follows,
+      verifications,
       labels,
       threadgates,
       ctx,
@@ -1297,6 +1309,7 @@ export const mergeStates = (
       stateA.bidirectionalBlocks,
       stateB.bidirectionalBlocks,
     ),
+    verifications: mergeMaps(stateA.verifications, stateB.verifications),
   }
 }
 
