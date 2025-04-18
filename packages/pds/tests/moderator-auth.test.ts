@@ -1,10 +1,12 @@
+import assert from 'node:assert'
 import * as plc from '@did-plc/lib'
 import { AtpAgent } from '@atproto/api'
 import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import { ids } from '../src/lexicon/lexicons'
-import { RepoRef } from '../src/lexicon/types/com/atproto/admin/defs'
+import { RepoRef, isRepoRef } from '../src/lexicon/types/com/atproto/admin/defs'
+import { $Typed } from '../src/lexicon/util'
 import usersSeed from './seeds/users'
 
 describe('moderator auth', () => {
@@ -12,7 +14,7 @@ describe('moderator auth', () => {
   let agent: AtpAgent
   let sc: SeedClient
 
-  let repoSubject: RepoRef
+  let repoSubject: $Typed<RepoRef>
 
   let modServiceDid: string
   let altModDid: string
@@ -103,6 +105,7 @@ describe('moderator auth', () => {
       },
       getHeaders,
     )
+    assert(isRepoRef(res.data.subject))
     expect(res.data.subject.did).toBe(repoSubject.did)
     expect(res.data.takedown?.applied).toBe(true)
   })

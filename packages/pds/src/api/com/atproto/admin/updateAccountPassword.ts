@@ -1,6 +1,5 @@
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import { authPassthru } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.updateAccountPassword({
@@ -9,7 +8,7 @@ export default function (server: Server, ctx: AppContext) {
       if (ctx.entrywayAgent) {
         await ctx.entrywayAgent.com.atproto.admin.updateAccountPassword(
           input.body,
-          authPassthru(req, true),
+          ctx.entrywayPassthruHeaders(req),
         )
         return
       }

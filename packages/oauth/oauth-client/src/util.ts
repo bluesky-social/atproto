@@ -4,6 +4,8 @@ export type Simplify<T> = { [K in keyof T]: T[K] } & NonNullable<unknown>
 // @ts-expect-error
 Symbol.dispose ??= Symbol('@@dispose')
 
+export const ifString = <V>(v: V) => (typeof v === 'string' ? v : undefined)
+
 /**
  * @todo (?) move to common package
  */

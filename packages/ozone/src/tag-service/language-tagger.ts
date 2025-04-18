@@ -8,6 +8,11 @@ import { langLogger as log } from '../logger'
 import { ContentTagger } from './content-tagger'
 import { code3ToCode2 } from './language-data'
 
+const ifString = (value: unknown): string | undefined =>
+  typeof value === 'string' ? value : undefined
+const isStringProp = (obj: object, prop: string): string | undefined =>
+  prop in obj ? ifString(obj[prop]) : undefined
+
 export class LanguageTagger extends ContentTagger {
   tagPrefix = 'lang:'
 
@@ -27,18 +32,22 @@ export class LanguageTagger extends ContentTagger {
     }
   }
 
-  getTextFromRecord(recordValue?: Record<string, unknown>): string | undefined {
+  getTextFromRecord(recordValue: Record<string, unknown>): string | undefined {
     let text: string | undefined
 
     if (AppBskyGraphList.isRecord(recordValue)) {
-      text = recordValue.description || recordValue.name
+      text =
+        isStringProp(recordValue, 'description') ||
+        isStringProp(recordValue, 'name')
     } else if (
       AppBskyFeedGenerator.isRecord(recordValue) ||
       AppBskyActorProfile.isRecord(recordValue)
     ) {
-      text = recordValue.description || recordValue.displayName
+      text =
+        isStringProp(recordValue, 'description') ||
+        isStringProp(recordValue, 'displayName')
     } else if (AppBskyFeedPost.isRecord(recordValue)) {
-      text = recordValue.text
+      text = isStringProp(recordValue, 'text')
     }
 
     return text?.trim()
@@ -70,7 +79,9 @@ export class LanguageTagger extends ContentTagger {
       ])
       const record = recordByUri.get(this.subject.uri)
       const recordLang = record?.value.langs as string[] | null
-      const recordText = this.getTextFromRecord(record?.value)
+      const recordText = record
+        ? this.getTextFromRecord(record.value)
+        : undefined
       if (recordLang?.length) {
         recordLang
           .map((lang) => lang.split('-')[0])

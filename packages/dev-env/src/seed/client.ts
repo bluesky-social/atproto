@@ -4,8 +4,10 @@ import { CID } from 'multiformats/cid'
 import {
   AppBskyFeedLike,
   AppBskyFeedPost,
+  AppBskyGraphBlock,
   AppBskyGraphFollow,
   AppBskyGraphList,
+  AppBskyGraphVerification,
   AppBskyRichtextFacet,
   AtpAgent,
   ComAtprotoModerationCreateReport,
@@ -112,6 +114,9 @@ export class SeedClient<
       }
     >
   >
+
+  verifications: Record<string, Record<string, AtUri>>
+
   dids: Record<string, string>
 
   constructor(
@@ -129,6 +134,7 @@ export class SeedClient<
     this.lists = {}
     this.feedgens = {}
     this.starterpacks = {}
+    this.verifications = {}
     this.dids = {}
   }
 
@@ -264,7 +270,7 @@ export class SeedClient<
   async block(
     from: string,
     to: string,
-    overrides?: Partial<AppBskyGraphFollow.Record>,
+    overrides?: Partial<AppBskyGraphBlock.Record>,
   ) {
     const res = await this.agent.app.bsky.graph.block.create(
       { repo: from },
@@ -552,6 +558,29 @@ export class SeedClient<
       },
     )
     return result.data
+  }
+
+  async verify(
+    by: string,
+    subject: string,
+    handle: string,
+    displayName: string,
+    overrides?: Partial<AppBskyGraphVerification.Record>,
+  ) {
+    const res = await this.agent.app.bsky.graph.verification.create(
+      { repo: by },
+      {
+        subject,
+        createdAt: new Date().toISOString(),
+        handle,
+        displayName,
+        ...overrides,
+      },
+      this.getHeaders(by),
+    )
+    this.verifications[by] ??= {}
+    this.verifications[by][subject] = new AtUri(res.uri)
+    return this.verifications[by][subject]
   }
 
   getHeaders(did: string) {

@@ -6,7 +6,6 @@ import {
   LexiconDoc,
   ValidationError,
   ValidationResult,
-  hasProp,
   isObj,
 } from './types'
 import { toLexUri } from './util'
@@ -17,7 +16,7 @@ import {
   assertValidXrpcOutput,
   assertValidXrpcParams,
 } from './validation'
-import * as ComplexValidators from './validators/complex'
+import { object as validateObject } from './validators/complex'
 
 /**
  * A collection of compiled lexicons.
@@ -127,15 +126,17 @@ export class Lexicons implements Iterable<LexiconDoc> {
    * Validate a record or object.
    */
   validate(lexUri: string, value: unknown): ValidationResult {
-    lexUri = toLexUri(lexUri)
-    const def = this.getDefOrThrow(lexUri, ['record', 'object'])
     if (!isObj(value)) {
       throw new ValidationError(`Value must be an object`)
     }
+
+    const lexUriNormalized = toLexUri(lexUri)
+    const def = this.getDefOrThrow(lexUriNormalized, ['record', 'object'])
+
     if (def.type === 'record') {
-      return ComplexValidators.object(this, 'Record', def.record, value)
+      return validateObject(this, 'Record', def.record, value)
     } else if (def.type === 'object') {
-      return ComplexValidators.object(this, 'Object', def, value)
+      return validateObject(this, 'Object', def, value)
     } else {
       // shouldn't happen
       throw new InvalidLexiconError('Definition must be a record or object')
@@ -146,20 +147,25 @@ export class Lexicons implements Iterable<LexiconDoc> {
    * Validate a record and throw on any error.
    */
   assertValidRecord(lexUri: string, value: unknown) {
-    lexUri = toLexUri(lexUri)
-    const def = this.getDefOrThrow(lexUri, ['record'])
     if (!isObj(value)) {
       throw new ValidationError(`Record must be an object`)
     }
-    if (!hasProp(value, '$type') || typeof value.$type !== 'string') {
+    if (!('$type' in value)) {
       throw new ValidationError(`Record/$type must be a string`)
     }
-    const $type = (value as Record<string, string>).$type || ''
-    if (toLexUri($type) !== lexUri) {
+    const { $type } = value
+    if (typeof $type !== 'string') {
+      throw new ValidationError(`Record/$type must be a string`)
+    }
+
+    const lexUriNormalized = toLexUri(lexUri)
+    if (toLexUri($type) !== lexUriNormalized) {
       throw new ValidationError(
-        `Invalid $type: must be ${lexUri}, got ${$type}`,
+        `Invalid $type: must be ${lexUriNormalized}, got ${$type}`,
       )
     }
+
+    const def = this.getDefOrThrow(lexUriNormalized, ['record'])
     return assertValidRecord(this, def as LexRecord, value)
   }
 

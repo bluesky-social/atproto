@@ -1,20 +1,11 @@
-import * as ident from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
+import { baseNormalizeAndValidate } from '../../../../handle'
 import { Server } from '../../../../lexicon'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.identity.resolveHandle(async ({ params }) => {
-    let handle: string
-    try {
-      handle = ident.normalizeAndEnsureValidHandle(params.handle)
-    } catch (err) {
-      if (err instanceof ident.InvalidHandleError) {
-        throw new InvalidRequestError(err.message, 'InvalidHandle')
-      } else {
-        throw err
-      }
-    }
+    const handle = baseNormalizeAndValidate(params.handle)
 
     let did: string | undefined
     const user = await ctx.accountManager.getAccount(handle)

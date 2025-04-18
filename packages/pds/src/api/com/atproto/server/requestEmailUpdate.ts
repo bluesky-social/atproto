@@ -1,4 +1,3 @@
-import assert from 'node:assert'
 import { DAY, HOUR } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
@@ -21,7 +20,7 @@ export default function (server: Server, ctx: AppContext) {
       },
     ],
     auth: ctx.authVerifier.accessStandard({ checkTakedown: true }),
-    handler: async ({ auth }) => {
+    handler: async ({ auth, req }) => {
       const did = auth.credentials.did
       const account = await ctx.accountManager.getAccount(did, {
         includeDeactivated: true,
@@ -32,13 +31,12 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       if (ctx.entrywayAgent) {
-        assert(ctx.cfg.entryway)
         return resultPassthru(
           await ctx.entrywayAgent.com.atproto.server.requestEmailUpdate(
             undefined,
-            await ctx.serviceAuthHeaders(
+            await ctx.entrywayAuthHeaders(
+              req,
               auth.credentials.did,
-              ctx.cfg.entryway.did,
               ids.ComAtprotoServerRequestEmailUpdate,
             ),
           ),

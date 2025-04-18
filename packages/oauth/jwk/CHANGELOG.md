@@ -1,5 +1,17 @@
 # @atproto/jwk
 
+## 0.1.5
+
+### Patch Changes
+
+- [#3747](https://github.com/bluesky-social/atproto/pull/3747) [`26a077716`](https://github.com/bluesky-social/atproto/commit/26a07771673bf1090a61efb7c970235f0b2509fc) Thanks [@devinivy](https://github.com/devinivy)! - Fix typo in Keyset.findKey error message
+
+## 0.1.4
+
+### Patch Changes
+
+- [#2945](https://github.com/bluesky-social/atproto/pull/2945) [`850e39843`](https://github.com/bluesky-social/atproto/commit/850e39843cb0ec9ea716675f7568c0c601f45e29) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Properly support locales with 3 chars (Asturian)
+
 ## 0.1.3
 
 ### Patch Changes

@@ -37,7 +37,7 @@ export { createSecretKeyObject } from './auth-verifier'
 export { type Handler as SkeletonHandler } from './lexicon/types/app/bsky/feed/getFeedSkeleton'
 export { createServer as createLexiconServer } from './lexicon'
 export * as sequencer from './sequencer'
-export { type PreparedWrite } from './repo'
+export { type CommitDataWithOps, type PreparedWrite } from './repo'
 export * as repoPrepare from './repo/prepare'
 export { scripts } from './scripts'
 
@@ -122,7 +122,7 @@ export class PDS {
     server = API(server, ctx)
 
     const app = express()
-    app.set('trust proxy', true)
+    app.set('trust proxy', ['loopback', 'linklocal', 'uniquelocal'])
     app.use(loggerMiddleware)
     app.use(compression())
     app.use(authRoutes.createRouter(ctx)) // Before CORS

@@ -177,6 +177,7 @@ describe('Moderation', () => {
     const res1 = moderatePost(
       mock.postView({
         record: {
+          $type: 'app.bsky.feed.post',
           text: 'Hello',
           createdAt: new Date().toISOString(),
         },
@@ -214,6 +215,7 @@ describe('Moderation', () => {
     const res1 = moderatePost(
       mock.postView({
         record: {
+          $type: 'app.bsky.feed.post',
           text: 'Hello',
           createdAt: new Date().toISOString(),
         },
@@ -293,6 +295,7 @@ describe('Moderation', () => {
     const res = moderatePost(
       mock.postView({
         record: {
+          $type: 'app.bsky.feed.post',
           text: 'Hello',
           createdAt: new Date().toISOString(),
         },
@@ -354,6 +357,7 @@ describe('Moderation', () => {
     const res = moderatePost(
       mock.postView({
         record: {
+          $type: 'app.bsky.feed.post',
           text: 'Hello',
           createdAt: new Date().toISOString(),
         },
@@ -430,6 +434,7 @@ describe('Moderation', () => {
     const res = moderatePost(
       mock.postView({
         record: {
+          $type: 'app.bsky.feed.post',
           text: 'Hello',
           createdAt: new Date().toISOString(),
         },
@@ -518,6 +523,7 @@ describe('Moderation', () => {
     const res1 = moderatePost(
       mock.postView({
         record: {
+          $type: 'app.bsky.feed.post',
           text: 'Hello',
           createdAt: new Date().toISOString(),
         },
@@ -549,6 +555,7 @@ describe('Moderation', () => {
     const res2 = moderatePost(
       mock.postView({
         record: {
+          $type: 'app.bsky.feed.post',
           text: 'Hello',
           createdAt: new Date().toISOString(),
         },
@@ -580,6 +587,7 @@ describe('Moderation', () => {
     const res3 = moderatePost(
       mock.postView({
         record: {
+          $type: 'app.bsky.feed.post',
           text: 'Hello',
           createdAt: new Date().toISOString(),
         },
@@ -645,6 +653,7 @@ describe('Moderation', () => {
     const res = moderatePost(
       mock.postView({
         record: {
+          $type: 'app.bsky.feed.post',
           text: 'Hello',
           createdAt: new Date().toISOString(),
         },
@@ -698,6 +707,7 @@ describe('Moderation', () => {
     const res = moderatePost(
       mock.postView({
         record: {
+          $type: 'app.bsky.feed.post',
           text: 'Hello',
           createdAt: new Date().toISOString(),
         },

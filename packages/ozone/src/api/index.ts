@@ -13,7 +13,9 @@ import getEvent from './moderation/getEvent'
 import adminGetRecord from './moderation/getRecord'
 import adminGetRecords from './moderation/getRecords'
 import getRepo from './moderation/getRepo'
+import getReporterStats from './moderation/getReporterStats'
 import getRepos from './moderation/getRepos'
+import getSubjects from './moderation/getSubjects'
 import queryEvents from './moderation/queryEvents'
 import queryStatuses from './moderation/queryStatuses'
 import searchRepos from './moderation/searchRepos'
@@ -72,5 +74,7 @@ export default function (server: Server, ctx: AppContext) {
   upsertOption(server, ctx)
   listOptions(server, ctx)
   removeOptions(server, ctx)
+  getReporterStats(server, ctx)
+  getSubjects(server, ctx)
   return server
 }

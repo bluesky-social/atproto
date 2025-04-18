@@ -2,10 +2,18 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
-import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.atproto.server.createAppPassword'
 
 export interface QueryParams {}
 
@@ -14,7 +22,6 @@ export interface InputSchema {
   name: string
   /** If an app password has 'privileged' access to possibly sensitive account state. Meant for use with trusted clients. */
   privileged?: boolean
-  [k: string]: unknown
 }
 
 export type OutputSchema = AppPassword
@@ -47,24 +54,19 @@ export function toKnownErr(e: any) {
 }
 
 export interface AppPassword {
+  $type?: 'com.atproto.server.createAppPassword#appPassword'
   name: string
   password: string
   createdAt: string
   privileged?: boolean
-  [k: string]: unknown
 }
 
-export function isAppPassword(v: unknown): v is AppPassword {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'com.atproto.server.createAppPassword#appPassword'
-  )
+const hashAppPassword = 'appPassword'
+
+export function isAppPassword<V>(v: V) {
+  return is$typed(v, id, hashAppPassword)
 }
 
-export function validateAppPassword(v: unknown): ValidationResult {
-  return lexicons.validate(
-    'com.atproto.server.createAppPassword#appPassword',
-    v,
-  )
+export function validateAppPassword<V>(v: V) {
+  return validate<AppPassword & V>(v, id, hashAppPassword)
 }

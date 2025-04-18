@@ -1,4 +1,3 @@
-import assert from 'node:assert'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
@@ -9,16 +8,14 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.accessFull({
       checkTakedown: true,
     }),
-    handler: async ({ auth, input }) => {
+    handler: async ({ auth, input, req }) => {
       if (ctx.entrywayAgent) {
-        assert(ctx.cfg.entryway)
-
         return resultPassthru(
           await ctx.entrywayAgent.com.atproto.server.createAppPassword(
             input.body,
-            await ctx.serviceAuthHeaders(
+            await ctx.entrywayAuthHeaders(
+              req,
               auth.credentials.did,
-              ctx.cfg.entryway.did,
               ids.ComAtprotoServerCreateAppPassword,
             ),
           ),

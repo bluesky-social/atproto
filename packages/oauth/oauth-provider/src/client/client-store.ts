@@ -1,25 +1,23 @@
 import { OAuthClientMetadata } from '@atproto/oauth-types'
-import { Awaitable } from '../lib/util/type.js'
+import { Awaitable, buildInterfaceChecker } from '../lib/util/type.js'
 import { ClientId } from './client-id.js'
 
 // Export all types needed to implement the ClientStore interface
 export * from './client-data.js'
 export * from './client-id.js'
-export type { Awaitable }
+export type { Awaitable, OAuthClientMetadata }
 
 export interface ClientStore {
   findClient(clientId: ClientId): Awaitable<OAuthClientMetadata>
 }
 
-export function isClientStore(
-  implementation: Record<string, unknown> & Partial<ClientStore>,
-): implementation is Record<string, unknown> & ClientStore {
-  return typeof implementation.findClient === 'function'
-}
+export const isClientStore = buildInterfaceChecker<ClientStore>([
+  'findClient', //
+])
 
-export function ifClientStore(
-  implementation?: Record<string, unknown> & Partial<ClientStore>,
-): ClientStore | undefined {
+export function ifClientStore<V extends Partial<ClientStore>>(
+  implementation?: V,
+): (V & ClientStore) | undefined {
   if (implementation && isClientStore(implementation)) {
     return implementation
   }
@@ -27,9 +25,9 @@ export function ifClientStore(
   return undefined
 }
 
-export function asClientStore(
-  implementation?: Record<string, unknown> & Partial<ClientStore>,
-): ClientStore {
+export function asClientStore<V extends Partial<ClientStore>>(
+  implementation?: V,
+): V & ClientStore {
   const store = ifClientStore(implementation)
   if (store) return store
 

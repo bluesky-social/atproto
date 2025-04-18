@@ -1,5 +1,6 @@
 import { AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import { delayCursor } from '../../src/api/app/bsky/notification/listNotifications'
 import { ids } from '../../src/lexicon/lexicons'
 import { Notification } from '../../src/lexicon/types/app/bsky/notification/listNotifications'
 import { forSnapshot, paginateAll } from '../_util'
@@ -497,17 +498,196 @@ describe('notification views', () => {
     expect(results(paginatedAll)).toEqual(results([full.data]))
   })
 
-  it('fails open on clearly bad cursor.', async () => {
-    const { data: notifs } =
-      await agent.api.app.bsky.notification.listNotifications(
-        { cursor: '90210::bafycid' },
-        {
-          headers: await network.serviceHeaders(
-            alice,
-            ids.AppBskyNotificationListNotifications,
-          ),
+  describe('notifications delay', () => {
+    const notificationsDelayMs = 5_000
+
+    let delayNetwork: TestNetwork
+    let delayAgent: AtpAgent
+    let delaySc: SeedClient
+    let delayAlice: string
+
+    beforeAll(async () => {
+      delayNetwork = await TestNetwork.create({
+        bsky: {
+          notificationsDelayMs,
         },
+        dbPostgresSchema: 'bsky_views_notifications_delay',
+      })
+      delayAgent = delayNetwork.bsky.getClient()
+      delaySc = delayNetwork.getSeedClient()
+      await basicSeed(delaySc)
+      await delayNetwork.processAll()
+      delayAlice = delaySc.dids.alice
+
+      // Add to reply chain, post ancestors: alice -> bob -> alice -> carol.
+      // Should have added one notification for each of alice and bob.
+      await delaySc.reply(
+        delaySc.dids.carol,
+        delaySc.posts[delayAlice][1].ref,
+        delaySc.replies[delayAlice][0].ref,
+        'indeed',
       )
-    expect(notifs).toMatchObject({ notifications: [] })
+      await delayNetwork.processAll()
+
+      // @NOTE: Use fake timers after inserting seed data,
+      // to avoid inserting all notifications with the same timestamp.
+      jest.useFakeTimers({
+        doNotFake: [
+          'nextTick',
+          'performance',
+          'setImmediate',
+          'setInterval',
+          'setTimeout',
+        ],
+      })
+    })
+
+    afterAll(async () => {
+      jest.useRealTimers()
+      await delayNetwork.close()
+    })
+
+    it('paginates', async () => {
+      const firstNotification = await delayNetwork.bsky.db.db
+        .selectFrom('notification')
+        .selectAll()
+        .limit(1)
+        .orderBy('sortAt', 'asc')
+        .executeTakeFirstOrThrow()
+      // Sets the system time to when the first notification happened.
+      // At this point we won't have any notifications that already crossed the delay threshold.
+      jest.setSystemTime(new Date(firstNotification.sortAt))
+
+      const results = (results) =>
+        sort(results.flatMap((res) => res.notifications))
+      const paginator = async (cursor?: string) => {
+        const res =
+          await delayAgent.api.app.bsky.notification.listNotifications(
+            { cursor, limit: 6 },
+            {
+              headers: await delayNetwork.serviceHeaders(
+                delayAlice,
+                ids.AppBskyNotificationListNotifications,
+              ),
+            },
+          )
+        return res.data
+      }
+
+      const paginatedAllBeforeDelay = await paginateAll(paginator)
+      paginatedAllBeforeDelay.forEach((res) =>
+        expect(res.notifications.length).toBe(0),
+      )
+      const fullBeforeDelay =
+        await delayAgent.api.app.bsky.notification.listNotifications(
+          {},
+          {
+            headers: await delayNetwork.serviceHeaders(
+              delayAlice,
+              ids.AppBskyNotificationListNotifications,
+            ),
+          },
+        )
+
+      expect(fullBeforeDelay.data.notifications.length).toEqual(0)
+      expect(results(paginatedAllBeforeDelay)).toEqual(
+        results([fullBeforeDelay.data]),
+      )
+
+      const lastNotification = await delayNetwork.bsky.db.db
+        .selectFrom('notification')
+        .selectAll()
+        .limit(1)
+        .orderBy('sortAt', 'desc')
+        .executeTakeFirstOrThrow()
+      // Sets the system time to when the last notification happened and the delay has elapsed.
+      // At this point we all notifications already crossed the delay threshold.
+      jest.setSystemTime(
+        new Date(
+          new Date(lastNotification.sortAt).getTime() +
+            notificationsDelayMs +
+            1,
+        ),
+      )
+
+      const paginatedAllAfterDelay = await paginateAll(paginator)
+      paginatedAllAfterDelay.forEach((res) =>
+        expect(res.notifications.length).toBeLessThanOrEqual(6),
+      )
+      const fullAfterDelay =
+        await delayAgent.api.app.bsky.notification.listNotifications(
+          {},
+          {
+            headers: await delayNetwork.serviceHeaders(
+              delayAlice,
+              ids.AppBskyNotificationListNotifications,
+            ),
+          },
+        )
+
+      expect(fullAfterDelay.data.notifications.length).toEqual(13)
+      expect(results(paginatedAllAfterDelay)).toEqual(
+        results([fullAfterDelay.data]),
+      )
+    })
+
+    describe('cursor delay', () => {
+      const delay0s = 0
+      const delay5s = 5_000
+
+      const now = '2021-01-01T01:00:00.000Z'
+      const nowMinus2s = '2021-01-01T00:59:58.000Z'
+      const nowMinus5s = '2021-01-01T00:59:55.000Z'
+      const nowMinus8s = '2021-01-01T00:59:52.000Z'
+
+      beforeAll(async () => {
+        jest.useFakeTimers({ doNotFake: ['performance'] })
+        jest.setSystemTime(new Date(now))
+      })
+
+      afterAll(async () => {
+        jest.useRealTimers()
+      })
+
+      describe('for undefined cursor', () => {
+        it('returns now minus delay', async () => {
+          const delayedCursor = delayCursor(undefined, delay5s)
+          expect(delayedCursor).toBe(nowMinus5s)
+        })
+
+        it('returns now if delay is 0', async () => {
+          const delayedCursor = delayCursor(undefined, delay0s)
+          expect(delayedCursor).toBe(now)
+        })
+      })
+
+      describe('for defined cursor', () => {
+        it('returns original cursor if delay is 0', async () => {
+          const originalCursor = nowMinus2s
+          const delayedCursor = delayCursor(originalCursor, delay0s)
+          expect(delayedCursor).toBe(originalCursor)
+        })
+
+        it('returns "now minus delay" for cursor that is after that', async () => {
+          // Cursor is "now - 2s", should become "now - 5s"
+          const originalCursor = nowMinus2s
+          const cursor = delayCursor(originalCursor, delay5s)
+          expect(cursor).toBe(nowMinus5s)
+        })
+
+        it('returns original cursor for cursor that is before "now minus delay"', async () => {
+          // Cursor is "now - 8s", should stay like that.
+          const originalCursor = nowMinus8s
+          const cursor = delayCursor(originalCursor, delay5s)
+          expect(cursor).toBe(originalCursor)
+        })
+
+        it('passes through a non-date cursor', async () => {
+          const originalCursor = '123_abc'
+          const cursor = delayCursor(originalCursor, delay5s)
+          expect(cursor).toBe(originalCursor)
+        })
+      })
+    })
   })
 })

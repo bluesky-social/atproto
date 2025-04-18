@@ -7,6 +7,7 @@ import {
   ComAtprotoRepoPutRecord,
   DEFAULT_LABEL_SETTINGS,
 } from '../src'
+import { asPredicate } from '../src/client/util'
 import {
   getSavedFeedType,
   savedFeedsToUriArrays,
@@ -282,6 +283,9 @@ describe('agent', () => {
           threadgateAllowRules: undefined,
           postgateEmbeddingRules: undefined,
         },
+        verificationPrefs: {
+          hideBadges: false,
+        },
       })
 
       await agent.setAdultContentEnabled(true)
@@ -327,6 +331,9 @@ describe('agent', () => {
         postInteractionSettings: {
           threadgateAllowRules: undefined,
           postgateEmbeddingRules: undefined,
+        },
+        verificationPrefs: {
+          hideBadges: false,
         },
       })
 
@@ -374,6 +381,9 @@ describe('agent', () => {
           threadgateAllowRules: undefined,
           postgateEmbeddingRules: undefined,
         },
+        verificationPrefs: {
+          hideBadges: false,
+        },
       })
 
       await agent.setContentLabelPref('misinfo', 'hide')
@@ -419,6 +429,9 @@ describe('agent', () => {
         postInteractionSettings: {
           threadgateAllowRules: undefined,
           postgateEmbeddingRules: undefined,
+        },
+        verificationPrefs: {
+          hideBadges: false,
         },
       })
 
@@ -469,6 +482,9 @@ describe('agent', () => {
         postInteractionSettings: {
           threadgateAllowRules: undefined,
           postgateEmbeddingRules: undefined,
+        },
+        verificationPrefs: {
+          hideBadges: false,
         },
       })
 
@@ -523,6 +539,9 @@ describe('agent', () => {
           threadgateAllowRules: undefined,
           postgateEmbeddingRules: undefined,
         },
+        verificationPrefs: {
+          hideBadges: false,
+        },
       })
 
       await agent.addPinnedFeed('at://bob.com/app.bsky.feed.generator/fake')
@@ -575,6 +594,9 @@ describe('agent', () => {
         postInteractionSettings: {
           threadgateAllowRules: undefined,
           postgateEmbeddingRules: undefined,
+        },
+        verificationPrefs: {
+          hideBadges: false,
         },
       })
 
@@ -629,6 +651,9 @@ describe('agent', () => {
           threadgateAllowRules: undefined,
           postgateEmbeddingRules: undefined,
         },
+        verificationPrefs: {
+          hideBadges: false,
+        },
       })
 
       await agent.removeSavedFeed('at://bob.com/app.bsky.feed.generator/fake')
@@ -682,6 +707,9 @@ describe('agent', () => {
           threadgateAllowRules: undefined,
           postgateEmbeddingRules: undefined,
         },
+        verificationPrefs: {
+          hideBadges: false,
+        },
       })
 
       await agent.addPinnedFeed('at://bob.com/app.bsky.feed.generator/fake')
@@ -734,6 +762,9 @@ describe('agent', () => {
         postInteractionSettings: {
           threadgateAllowRules: undefined,
           postgateEmbeddingRules: undefined,
+        },
+        verificationPrefs: {
+          hideBadges: false,
         },
       })
 
@@ -794,6 +825,9 @@ describe('agent', () => {
           threadgateAllowRules: undefined,
           postgateEmbeddingRules: undefined,
         },
+        verificationPrefs: {
+          hideBadges: false,
+        },
       })
 
       await agent.removeSavedFeed('at://bob.com/app.bsky.feed.generator/fake')
@@ -846,6 +880,9 @@ describe('agent', () => {
         postInteractionSettings: {
           threadgateAllowRules: undefined,
           postgateEmbeddingRules: undefined,
+        },
+        verificationPrefs: {
+          hideBadges: false,
         },
       })
 
@@ -900,6 +937,9 @@ describe('agent', () => {
           threadgateAllowRules: undefined,
           postgateEmbeddingRules: undefined,
         },
+        verificationPrefs: {
+          hideBadges: false,
+        },
       })
 
       await agent.setFeedViewPrefs('home', { hideReplies: true })
@@ -953,6 +993,9 @@ describe('agent', () => {
           threadgateAllowRules: undefined,
           postgateEmbeddingRules: undefined,
         },
+        verificationPrefs: {
+          hideBadges: false,
+        },
       })
 
       await agent.setFeedViewPrefs('home', { hideReplies: false })
@@ -1005,6 +1048,9 @@ describe('agent', () => {
         postInteractionSettings: {
           threadgateAllowRules: undefined,
           postgateEmbeddingRules: undefined,
+        },
+        verificationPrefs: {
+          hideBadges: false,
         },
       })
 
@@ -1066,6 +1112,9 @@ describe('agent', () => {
           threadgateAllowRules: undefined,
           postgateEmbeddingRules: undefined,
         },
+        verificationPrefs: {
+          hideBadges: false,
+        },
       })
 
       await agent.setThreadViewPrefs({ sort: 'random' })
@@ -1125,6 +1174,9 @@ describe('agent', () => {
         postInteractionSettings: {
           threadgateAllowRules: undefined,
           postgateEmbeddingRules: undefined,
+        },
+        verificationPrefs: {
+          hideBadges: false,
         },
       })
 
@@ -1186,6 +1238,9 @@ describe('agent', () => {
           threadgateAllowRules: undefined,
           postgateEmbeddingRules: undefined,
         },
+        verificationPrefs: {
+          hideBadges: false,
+        },
       })
 
       await agent.setInterestsPref({ tags: ['foo', 'bar'] })
@@ -1245,6 +1300,9 @@ describe('agent', () => {
         postInteractionSettings: {
           threadgateAllowRules: undefined,
           postgateEmbeddingRules: undefined,
+        },
+        verificationPrefs: {
+          hideBadges: false,
         },
       })
     })
@@ -1433,6 +1491,9 @@ describe('agent', () => {
           threadgateAllowRules: undefined,
           postgateEmbeddingRules: undefined,
         },
+        verificationPrefs: {
+          hideBadges: false,
+        },
       })
 
       await agent.setAdultContentEnabled(false)
@@ -1494,6 +1555,9 @@ describe('agent', () => {
         postInteractionSettings: {
           threadgateAllowRules: undefined,
           postgateEmbeddingRules: undefined,
+        },
+        verificationPrefs: {
+          hideBadges: false,
         },
       })
 
@@ -1558,6 +1622,9 @@ describe('agent', () => {
           threadgateAllowRules: undefined,
           postgateEmbeddingRules: undefined,
         },
+        verificationPrefs: {
+          hideBadges: false,
+        },
       })
 
       await agent.removeLabeler('did:plc:other')
@@ -1616,6 +1683,9 @@ describe('agent', () => {
         postInteractionSettings: {
           threadgateAllowRules: undefined,
           postgateEmbeddingRules: undefined,
+        },
+        verificationPrefs: {
+          hideBadges: false,
         },
       })
 
@@ -1676,6 +1746,9 @@ describe('agent', () => {
           threadgateAllowRules: undefined,
           postgateEmbeddingRules: undefined,
         },
+        verificationPrefs: {
+          hideBadges: false,
+        },
       })
 
       await agent.setPersonalDetails({ birthDate: '2023-09-11T18:05:42.556Z' })
@@ -1734,6 +1807,9 @@ describe('agent', () => {
         postInteractionSettings: {
           threadgateAllowRules: undefined,
           postgateEmbeddingRules: undefined,
+        },
+        verificationPrefs: {
+          hideBadges: false,
         },
       })
 
@@ -1805,6 +1881,9 @@ describe('agent', () => {
         postInteractionSettings: {
           threadgateAllowRules: undefined,
           postgateEmbeddingRules: undefined,
+        },
+        verificationPrefs: {
+          hideBadges: false,
         },
       })
 
@@ -2320,38 +2399,22 @@ describe('agent', () => {
 
       async function addLegacyMutedWord(mutedWord: AppBskyActorDefs.MutedWord) {
         await updatePreferences(agent, (prefs) => {
-          let mutedWordsPref = prefs.findLast(
-            (pref) =>
-              AppBskyActorDefs.isMutedWordsPref(pref) &&
-              AppBskyActorDefs.validateMutedWordsPref(pref).success,
-          )
+          const mutedWordsPref = prefs.findLast(
+            asPredicate(AppBskyActorDefs.validateMutedWordsPref),
+          ) || {
+            $type: 'app.bsky.actor.defs#mutedWordsPref',
+            items: [],
+          }
 
-          const newMutedWord: AppBskyActorDefs.MutedWord = {
+          mutedWordsPref.items.push({
             value: mutedWord.value,
             targets: mutedWord.targets,
             actorTarget: 'all',
-          }
-
-          if (
-            mutedWordsPref &&
-            AppBskyActorDefs.isMutedWordsPref(mutedWordsPref)
-          ) {
-            mutedWordsPref.items.push(newMutedWord)
-          } else {
-            // if the pref doesn't exist, create it
-            mutedWordsPref = {
-              items: [newMutedWord],
-            }
-          }
+          })
 
           return prefs
             .filter((p) => !AppBskyActorDefs.isMutedWordsPref(p))
-            .concat([
-              {
-                ...mutedWordsPref,
-                $type: 'app.bsky.actor.defs#mutedWordsPref',
-              },
-            ])
+            .concat([mutedWordsPref])
         })
       }
 
@@ -3350,6 +3413,7 @@ describe('agent', () => {
 
         await agent.bskyAppSetActiveProgressGuide({
           guide: 'test-guide',
+          // @ts-expect-error unspecced field
           numThings: 0,
         })
         await expect(agent.getPreferences()).resolves.toHaveProperty(
@@ -3358,6 +3422,7 @@ describe('agent', () => {
         )
         await agent.bskyAppSetActiveProgressGuide({
           guide: 'test-guide',
+          // @ts-expect-error unspecced field
           numThings: 1,
         })
         await expect(agent.getPreferences()).resolves.toHaveProperty(
@@ -3436,6 +3501,7 @@ describe('agent', () => {
         // @ts-expect-error
         expect(() => agent.bskyAppUpsertNux({ name: 'a' })).rejects.toThrow()
         expect(() =>
+          // @ts-expect-error
           agent.bskyAppUpsertNux({ id: 'a', completed: false, foo: 'bar' }),
         ).rejects.toThrow()
       })
@@ -3508,10 +3574,42 @@ describe('agent', () => {
       it('validates inputs', async () => {
         expect(() =>
           agent.setPostInteractionSettings({
+            // @ts-expect-error we are testing invalid inputs
             threadgateAllowRules: [{ key: 'string' }],
             postgateEmbeddingRules: [],
           }),
         ).rejects.toThrow()
+      })
+    })
+
+    describe('setVerificationPrefs', () => {
+      let agent: AtpAgent
+
+      beforeAll(async () => {
+        agent = new AtpAgent({ service: network.pds.url })
+
+        await agent.createAccount({
+          handle: 'verification-prefs.test',
+          email: 'verification-prefs@test.com',
+          password: 'password',
+        })
+      })
+
+      it('default state', async () => {
+        const next: AppBskyActorDefs.VerificationPrefs = {
+          hideBadges: false,
+        }
+        const prefs = await agent.getPreferences()
+        expect(prefs.verificationPrefs).toEqual(next)
+      })
+
+      it('updates', async () => {
+        const next: AppBskyActorDefs.VerificationPrefs = {
+          hideBadges: true,
+        }
+        await agent.setVerificationPrefs(next)
+        const prefs = await agent.getPreferences()
+        expect(prefs.verificationPrefs).toEqual(next)
       })
     })
 

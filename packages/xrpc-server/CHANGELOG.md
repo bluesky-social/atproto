@@ -1,5 +1,47 @@
 # @atproto/xrpc-server
 
+## 0.7.15
+
+### Patch Changes
+
+- Updated dependencies [[`4db923ca1`](https://github.com/bluesky-social/atproto/commit/4db923ca1c4fadd31d41c851933659e5186ee144)]:
+  - @atproto/common@0.4.10
+  - @atproto/lexicon@0.4.10
+  - @atproto/crypto@0.4.4
+  - @atproto/xrpc@0.6.12
+
+## 0.7.14
+
+### Patch Changes
+
+- Updated dependencies [[`bdbd3c3e3`](https://github.com/bluesky-social/atproto/commit/bdbd3c3e3f8fe8476a3fecac73810554846c938f)]:
+  - @atproto/common@0.4.9
+  - @atproto/crypto@0.4.4
+
+## 0.7.13
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lexicon@0.4.9
+  - @atproto/xrpc@0.6.11
+
+## 0.7.12
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lexicon@0.4.8
+  - @atproto/xrpc@0.6.10
+
+## 0.7.11
+
+### Patch Changes
+
+- Updated dependencies [[`c53d943c8`](https://github.com/bluesky-social/atproto/commit/c53d943c8be5b8886254e020970a68c0f745b14c), [`c53d943c8`](https://github.com/bluesky-social/atproto/commit/c53d943c8be5b8886254e020970a68c0f745b14c)]:
+  - @atproto/lexicon@0.4.7
+  - @atproto/xrpc@0.6.9
+
 ## 0.7.10
 
 ### Patch Changes

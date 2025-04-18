@@ -38,6 +38,10 @@ lint: ## Run style checks and verify syntax
 fmt: ## Run syntax re-formatting
 	pnpm format
 
+.PHONY: fmt-lexicons
+fmt-lexicons: ## Run syntax re-formatting, just on .json files
+	pnpm exec eslint ./lexicons/ --ext .json --fix
+
 .PHONY: deps
 deps: ## Installs dependent libs using 'pnpm install'
 	pnpm install --frozen-lockfile

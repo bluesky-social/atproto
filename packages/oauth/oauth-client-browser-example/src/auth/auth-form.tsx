@@ -1,18 +1,17 @@
 import { useEffect, useState } from 'react'
-
 import {
   AtpSignIn,
   CredentialSignInForm,
-} from './credential/credential-sign-in-form'
-import { OAuthSignIn, OAuthSignInForm } from './oauth/oauth-sign-in-form'
+} from './credential/credential-sign-in-form.tsx'
+import { OAuthSignIn, OAuthSignInForm } from './oauth/oauth-sign-in-form.tsx'
 
-export function AuthForm({
-  atpSignIn,
-  oauthSignIn,
-}: {
+export type AuthFormProps = {
   atpSignIn?: AtpSignIn
   oauthSignIn?: OAuthSignIn
-}) {
+  signUpUrl?: string
+}
+
+export function AuthForm({ atpSignIn, oauthSignIn, signUpUrl }: AuthFormProps) {
   const defaultMethod = oauthSignIn
     ? 'oauth'
     : atpSignIn
@@ -36,9 +35,9 @@ export function AuthForm({
   // Tailwind css tabs
   return (
     <div className="p-4">
-      <div className="flex my-4">
+      <div className="my-4 flex">
         <button
-          className={`bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-4 rounded ${
+          className={`rounded bg-blue-500 px-4 py-1 font-bold text-white hover:bg-blue-700 ${
             method === 'oauth' ? 'bg-blue-700' : ''
           }`}
           onClick={() => oauthSignIn && setMethod('oauth')}
@@ -48,7 +47,7 @@ export function AuthForm({
         </button>
 
         <button
-          className={`bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-4 rounded ${
+          className={`rounded bg-blue-500 px-4 py-1 font-bold text-white hover:bg-blue-700 ${
             method === 'credential' ? 'bg-blue-700' : ''
           }`}
           onClick={() => atpSignIn && setMethod('credential')}
@@ -58,7 +57,9 @@ export function AuthForm({
         </button>
       </div>
 
-      {method === 'oauth' && <OAuthSignInForm signIn={oauthSignIn!} />}
+      {method === 'oauth' && (
+        <OAuthSignInForm signIn={oauthSignIn!} signUpUrl={signUpUrl} />
+      )}
       {method === 'credential' && <CredentialSignInForm signIn={atpSignIn!} />}
       {method == null && <div>No auth method available</div>}
     </div>

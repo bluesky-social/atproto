@@ -1,6 +1,6 @@
 import { CID } from 'multiformats/cid'
 import { RepoRecord } from '@atproto/lexicon'
-import { WriteOpAction } from '@atproto/repo'
+import { BlockMap, CommitData, WriteOpAction } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
 
 export type ValidationStatus = 'valid' | 'unknown' | undefined
@@ -11,6 +11,7 @@ export type BlobConstraint = {
 }
 
 export type PreparedBlobRef = {
+  size: number
   cid: CID
   mimeType: string
   constraints: BlobConstraint
@@ -42,7 +43,25 @@ export type PreparedDelete = {
   swapCid?: CID | null
 }
 
+export type CommitOp = {
+  action: 'create' | 'update' | 'delete'
+  path: string
+  cid: CID | null
+  prev?: CID
+}
+
+export type CommitDataWithOps = CommitData & {
+  ops: CommitOp[]
+  prevData: CID | null
+}
+
 export type PreparedWrite = PreparedCreate | PreparedUpdate | PreparedDelete
+
+export type SyncEvtData = {
+  cid: CID
+  rev: string
+  blocks: BlockMap
+}
 
 export class InvalidRecordError extends Error {}
 

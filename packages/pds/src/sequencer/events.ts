@@ -1,91 +1,73 @@
-import { CID } from 'multiformats/cid'
+import assert from 'node:assert'
 import { z } from 'zod'
-import { cborEncode, schema } from '@atproto/common'
-import {
-  BlockMap,
-  CidSet,
-  CommitData,
-  WriteOpAction,
-  blocksToCarFile,
-} from '@atproto/repo'
-import { AccountStatus } from '../account-manager'
-import { PreparedWrite } from '../repo'
+import { cborEncode, noUndefinedVals, schema } from '@atproto/common'
+import { BlockMap, blocksToCarFile } from '@atproto/repo'
+import { AccountStatus } from '../account-manager/account-manager'
+import { CommitDataWithOps, SyncEvtData } from '../repo'
 import { RepoSeqInsert } from './db'
 
 export const formatSeqCommit = async (
   did: string,
-  commitData: CommitData,
-  writes: PreparedWrite[],
+  commitData: CommitDataWithOps,
 ): Promise<RepoSeqInsert> => {
-  let tooBig: boolean
-  const ops: CommitEvtOp[] = []
-  const blobs = new CidSet()
-  let carSlice: Uint8Array
-
   const blocksToSend = new BlockMap()
   blocksToSend.addMap(commitData.newBlocks)
   blocksToSend.addMap(commitData.relevantBlocks)
 
-  // max 200 ops or 1MB of data
-  if (writes.length > 200 || blocksToSend.byteSize > 1000000) {
-    tooBig = true
-    const justRoot = new BlockMap()
-    const rootBlock = blocksToSend.get(commitData.cid)
-    if (rootBlock) {
-      justRoot.set(commitData.cid, rootBlock)
-    }
-    carSlice = await blocksToCarFile(commitData.cid, justRoot)
-  } else {
-    tooBig = false
-    for (const w of writes) {
-      const path = w.uri.collection + '/' + w.uri.rkey
-      let cid: CID | null
-      if (w.action === WriteOpAction.Delete) {
-        cid = null
-      } else {
-        cid = w.cid
-        w.blobs.forEach((blob) => {
-          blobs.add(blob.cid)
-        })
-      }
-      ops.push({ action: w.action, path, cid })
-    }
-    carSlice = await blocksToCarFile(commitData.cid, blocksToSend)
-  }
-
-  const evt: CommitEvt = {
-    rebase: false,
-    tooBig,
+  const evt = {
     repo: did,
     commit: commitData.cid,
-    prev: commitData.prev,
     rev: commitData.rev,
     since: commitData.since,
-    ops,
-    blocks: carSlice,
-    blobs: blobs.toList(),
+    blocks: await blocksToCarFile(commitData.cid, blocksToSend),
+    ops: commitData.ops,
+    prevData: commitData.prevData ?? undefined,
+    // deprecated (but still required) fields
+    rebase: false,
+    tooBig: false,
+    blobs: [],
   }
+
   return {
     did,
     eventType: 'append' as const,
+    event: cborEncode(noUndefinedVals(evt)),
+    sequencedAt: new Date().toISOString(),
+  }
+}
+
+export const formatSeqSyncEvt = async (
+  did: string,
+  data: SyncEvtData,
+): Promise<RepoSeqInsert> => {
+  const blocks = await blocksToCarFile(data.cid, data.blocks)
+  const evt: SyncEvt = {
+    did,
+    rev: data.rev,
+    blocks,
+  }
+  return {
+    did,
+    eventType: 'sync',
     event: cborEncode(evt),
     sequencedAt: new Date().toISOString(),
   }
 }
 
-export const formatSeqHandleUpdate = async (
-  did: string,
-  handle: string,
-): Promise<RepoSeqInsert> => {
-  const evt: HandleEvt = {
-    did,
-    handle,
-  }
+export const syncEvtDataFromCommit = (
+  commitData: CommitDataWithOps,
+): SyncEvtData => {
+  const { blocks, missing } = commitData.relevantBlocks.getMany([
+    commitData.cid,
+  ])
+  assert(
+    !missing.length,
+    'commit block was not found, could not build sync event',
+  )
   return {
-    did,
-    eventType: 'handle',
-    event: cborEncode(evt),
-    sequencedAt: new Date().toISOString(),
+    rev: commitData.rev,
+    cid: commitData.cid,
+    blocks,
   }
 }
 
@@ -127,20 +109,6 @@ export const formatSeqAccountEvt = async (
   }
 }
 
-export const formatSeqTombstone = async (
-  did: string,
-): Promise<RepoSeqInsert> => {
-  const evt: TombstoneEvt = {
-    did,
-  }
-  return {
-    did,
-    eventType: 'tombstone',
-    event: cborEncode(evt),
-    sequencedAt: new Date().toISOString(),
-  }
-}
-
 export const commitEvtOp = z.object({
   action: z.union([
     z.literal('create'),
@@ -149,6 +117,7 @@ export const commitEvtOp = z.object({
   ]),
   path: z.string(),
   cid: schema.cid.nullable(),
+  prev: schema.cid.optional(),
 })
 export type CommitEvtOp = z.infer<typeof commitEvtOp>
 
@@ -157,20 +126,21 @@ export const commitEvt = z.object({
   tooBig: z.boolean(),
   repo: z.string(),
   commit: schema.cid,
-  prev: schema.cid.nullable(),
   rev: z.string(),
   since: z.string().nullable(),
   blocks: schema.bytes,
   ops: z.array(commitEvtOp),
   blobs: z.array(schema.cid),
+  prevData: schema.cid.optional(),
 })
 export type CommitEvt = z.infer<typeof commitEvt>
 
-export const handleEvt = z.object({
+export const syncEvt = z.object({
   did: z.string(),
-  handle: z.string(),
+  blocks: schema.bytes,
+  rev: z.string(),
 })
-export type HandleEvt = z.infer<typeof handleEvt>
+export type SyncEvt = z.infer<typeof syncEvt>
 
 export const identityEvt = z.object({
   did: z.string(),
@@ -192,22 +162,17 @@ export const accountEvt = z.object({
 })
 export type AccountEvt = z.infer<typeof accountEvt>
 
-export const tombstoneEvt = z.object({
-  did: z.string(),
-})
-export type TombstoneEvt = z.infer<typeof tombstoneEvt>
-
 type TypedCommitEvt = {
   type: 'commit'
   seq: number
   time: string
   evt: CommitEvt
 }
-type TypedHandleEvt = {
-  type: 'handle'
+type TypedSyncEvt = {
+  type: 'sync'
   seq: number
   time: string
-  evt: HandleEvt
+  evt: SyncEvt
 }
 type TypedIdentityEvt = {
   type: 'identity'
@@ -221,15 +186,8 @@ type TypedAccountEvt = {
   time: string
   evt: AccountEvt
 }
-type TypedTombstoneEvt = {
-  type: 'tombstone'
-  seq: number
-  time: string
-  evt: TombstoneEvt
-}
 export type SeqEvt =
   | TypedCommitEvt
-  | TypedHandleEvt
+  | TypedSyncEvt
   | TypedIdentityEvt
   | TypedAccountEvt
-  | TypedTombstoneEvt

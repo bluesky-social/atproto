@@ -40,3 +40,17 @@ export const rmIfExists = async (
     throw err
   }
 }
+
+export const renameIfExists = async (
+  oldPath: string,
+  newPath: string,
+): Promise<void> => {
+  try {
+    await fs.rename(oldPath, newPath)
+  } catch (err) {
+    if (isErrnoException(err) && err.code === 'ENOENT') {
+      return
+    }
+    throw err
+  }
+}

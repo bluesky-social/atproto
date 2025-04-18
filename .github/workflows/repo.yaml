@@ -35,6 +35,7 @@ jobs:
           path: |
             packages/*/dist
             packages/*/*/dist
+            packages/oauth/*/src/locales/*/messages.ts
           retention-days: 1
   test:
     name: Test

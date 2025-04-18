@@ -45,6 +45,19 @@ export class ModeratorClient {
     return result.data
   }
 
+  async getReporterStats(dids: string[]) {
+    const result = await this.agent.tools.ozone.moderation.getReporterStats(
+      { dids },
+      {
+        headers: await this.ozone.modHeaders(
+          'tools.ozone.moderation.getReporterStats',
+          'admin',
+        ),
+      },
+    )
+    return result.data
+  }
+
   async queryEvents(input: QueryEventsParams, role?: ModLevel) {
     const result = await this.agent.tools.ozone.moderation.queryEvents(input, {
       headers: await this.ozone.modHeaders(
@@ -62,7 +75,7 @@ export class ModeratorClient {
       subjectBlobCids?: TakeActionInput['subjectBlobCids']
       reason?: string
       createdBy?: string
-      meta?: TakeActionInput['meta']
+      meta?: unknown
     },
     role?: ModLevel,
   ) {
@@ -74,7 +87,14 @@ export class ModeratorClient {
       createdBy = 'did:example:admin',
     } = opts
     const result = await this.agent.tools.ozone.moderation.emitEvent(
-      { event, subject, subjectBlobCids, createdBy, reason },
+      {
+        event,
+        subject,
+        subjectBlobCids,
+        createdBy,
+        // @ts-expect-error this a valid input property
+        reason,
+      },
       {
         encoding: 'application/json',
         headers: await this.ozone.modHeaders(

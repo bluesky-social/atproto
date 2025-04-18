@@ -129,7 +129,7 @@ export const jwtPayloadSchema = z
       .optional(),
     locale: z
       .string()
-      .regex(/^[a-z]{2}(-[A-Z]{2})?$/)
+      .regex(/^[a-z]{2,3}(-[A-Z]{2})?$/)
       .optional(),
     updated_at: z.number().int().optional(),
 

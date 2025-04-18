@@ -1,9 +1,11 @@
 import assert from 'node:assert'
-import { AtpAgent } from '@atproto/api'
+import { AtpAgent, asPredicate } from '@atproto/api'
 import { RecordRef, SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
-import { isRecord as isProfile } from '../../src/lexicon/types/app/bsky/actor/profile'
+import { validateRecord as validateProfileRecord } from '../../src/lexicon/types/app/bsky/actor/profile'
 import { forSnapshot } from '../_util'
+
+const isValidProfile = asPredicate(validateProfileRecord)
 
 describe('starter packs', () => {
   let network: TestNetwork
@@ -147,7 +149,7 @@ describe('starter packs', () => {
       expect(notif.reason).toBe('starterpack-joined')
       expect(notif.reasonSubject).toBe(sp1.uriStr)
       expect(notif.uri).toMatch(/\/app\.bsky\.actor\.profile\/self$/)
-      assert(isProfile(notif.record), 'record is not profile')
+      assert(isValidProfile(notif.record), 'record is not profile')
       expect(notif.record.joinedViaStarterPack?.uri).toBe(sp1.uriStr)
     })
     expect(forSnapshot(notifications)).toMatchSnapshot()

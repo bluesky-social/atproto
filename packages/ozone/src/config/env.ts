@@ -23,6 +23,9 @@ export const readEnv = (): OzoneEnvironment => {
     dbMaterializedViewRefreshIntervalMs: envInt(
       'OZONE_DB_MATERIALIZED_VIEW_REFRESH_INTERVAL_MS',
     ),
+    dbTeamProfileRefreshIntervalMs: envInt(
+      'OZONE_DB_TEAM_PROFILE_REFRESH_INTERVAL_MS',
+    ),
     didPlcUrl: envStr('OZONE_DID_PLC_URL'),
     didCacheStaleTTL: envInt('OZONE_DID_CACHE_STALE_TTL'),
     didCacheMaxTTL: envInt('OZONE_DID_CACHE_MAX_TTL'),
@@ -57,6 +60,7 @@ export type OzoneEnvironment = {
   dbPoolMaxUses?: number
   dbPoolIdleTimeoutMs?: number
   dbMaterializedViewRefreshIntervalMs?: number
+  dbTeamProfileRefreshIntervalMs?: number
   didPlcUrl?: string
   didCacheStaleTTL?: number
   didCacheMaxTTL?: number

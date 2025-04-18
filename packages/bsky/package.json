@@ -1,6 +1,6 @@
 {
   "name": "@atproto/bsky",
-  "version": "0.0.114",
+  "version": "0.0.143",
   "license": "MIT",
   "description": "Reference implementation of app.bsky App View (Bluesky API)",
   "keywords": [
@@ -15,7 +15,6 @@
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "bin": "dist/bin.js",
   "scripts": {
     "codegen": "lex gen-server --yes ./src/lexicon ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/* ../../lexicons/chat/bsky/*/*",
     "build": "tsc --build tsconfig.build.json",
@@ -50,6 +49,7 @@
     "@types/http-errors": "^2.0.1",
     "compression": "^1.7.4",
     "cors": "^2.8.5",
+    "etcd3": "^1.1.2",
     "express": "^4.17.2",
     "http-errors": "^2.0.0",
     "http-terminator": "^3.2.0",

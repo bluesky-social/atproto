@@ -1,14 +1,13 @@
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import { authPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   const { entrywayAgent } = ctx
   if (entrywayAgent) {
-    server.com.atproto.server.deleteSession(async (reqCtx) => {
+    server.com.atproto.server.deleteSession(async ({ req }) => {
       await entrywayAgent.com.atproto.server.deleteSession(
         undefined,
-        authPassthru(reqCtx.req),
+        ctx.entrywayPassthruHeaders(req),
       )
     })
   } else {

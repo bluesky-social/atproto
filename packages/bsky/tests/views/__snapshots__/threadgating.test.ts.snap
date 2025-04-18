@@ -16,6 +16,24 @@ Object {
 }
 `;
 
+exports[`views with thread gating applies gate for follower rule. 1`] = `
+Object {
+  "cid": "cids(0)",
+  "lists": Array [],
+  "record": Object {
+    "$type": "app.bsky.feed.threadgate",
+    "allow": Array [
+      Object {
+        "$type": "app.bsky.feed.threadgate#followerRule",
+      },
+    ],
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "post": "record(1)",
+  },
+  "uri": "record(0)",
+}
+`;
+
 exports[`views with thread gating applies gate for following rule. 1`] = `
 Object {
   "cid": "cids(0)",
@@ -122,6 +140,9 @@ Object {
     "allow": Array [
       Object {
         "$type": "app.bsky.feed.threadgate#mentionRule",
+      },
+      Object {
+        "$type": "app.bsky.feed.threadgate#followerRule",
       },
       Object {
         "$type": "app.bsky.feed.threadgate#followingRule",

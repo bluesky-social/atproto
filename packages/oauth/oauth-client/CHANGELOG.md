@@ -1,5 +1,62 @@
 # @atproto/oauth-client
 
+## 0.3.15
+
+### Patch Changes
+
+- Updated dependencies [[`0d77d1b55`](https://github.com/bluesky-social/atproto/commit/0d77d1b550a58117aee8f7f1e2be24d255ade9e4), [`30f9b6690`](https://github.com/bluesky-social/atproto/commit/30f9b6690e0e2c5810772e94e631322b9d89c65a), [`30f9b6690`](https://github.com/bluesky-social/atproto/commit/30f9b6690e0e2c5810772e94e631322b9d89c65a), [`0d77d1b55`](https://github.com/bluesky-social/atproto/commit/0d77d1b550a58117aee8f7f1e2be24d255ade9e4)]:
+  - @atproto-labs/simple-store@0.2.0
+  - @atproto/oauth-types@0.2.6
+  - @atproto-labs/did-resolver@0.1.12
+  - @atproto-labs/handle-resolver@0.1.8
+  - @atproto-labs/simple-store-memory@0.1.3
+  - @atproto-labs/identity-resolver@0.1.16
+
+## 0.3.14
+
+### Patch Changes
+
+- Updated dependencies [[`371e04aad`](https://github.com/bluesky-social/atproto/commit/371e04aad2a3e8ae3fe185ce15fc8eb051cab78e), [`26a077716`](https://github.com/bluesky-social/atproto/commit/26a07771673bf1090a61efb7c970235f0b2509fc)]:
+  - @atproto/oauth-types@0.2.5
+  - @atproto/jwk@0.1.5
+
+## 0.3.13
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/xrpc@0.6.12
+
+## 0.3.12
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto-labs/identity-resolver@0.1.15
+  - @atproto/xrpc@0.6.11
+
+## 0.3.11
+
+### Patch Changes
+
+- [#2945](https://github.com/bluesky-social/atproto/pull/2945) [`850e39843`](https://github.com/bluesky-social/atproto/commit/850e39843cb0ec9ea716675f7568c0c601f45e29) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Minor code optimizations
+
+- Updated dependencies [[`850e39843`](https://github.com/bluesky-social/atproto/commit/850e39843cb0ec9ea716675f7568c0c601f45e29), [`850e39843`](https://github.com/bluesky-social/atproto/commit/850e39843cb0ec9ea716675f7568c0c601f45e29), [`850e39843`](https://github.com/bluesky-social/atproto/commit/850e39843cb0ec9ea716675f7568c0c601f45e29)]:
+  - @atproto-labs/fetch@0.2.2
+  - @atproto/oauth-types@0.2.4
+  - @atproto/jwk@0.1.4
+  - @atproto-labs/did-resolver@0.1.11
+  - @atproto-labs/identity-resolver@0.1.14
+  - @atproto/xrpc@0.6.10
+
+## 0.3.10
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto-labs/identity-resolver@0.1.13
+  - @atproto/xrpc@0.6.9
+
 ## 0.3.9
 
 ### Patch Changes

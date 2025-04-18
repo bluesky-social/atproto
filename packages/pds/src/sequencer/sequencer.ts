@@ -1,11 +1,10 @@
 import EventEmitter from 'node:events'
 import TypedEmitter from 'typed-emitter'
 import { SECOND, cborDecode, wait } from '@atproto/common'
-import { CommitData } from '@atproto/repo'
 import { AccountStatus } from '../account-manager/helpers/account'
 import { Crawlers } from '../crawlers'
 import { seqLogger as log } from '../logger'
-import { PreparedWrite } from '../repo'
+import { CommitDataWithOps, SyncEvtData } from '../repo'
 import {
   RepoSeqEntry,
   RepoSeqInsert,
@@ -16,15 +15,13 @@ import {
 import {
   AccountEvt,
   CommitEvt,
-  HandleEvt,
   IdentityEvt,
   SeqEvt,
-  TombstoneEvt,
+  SyncEvt,
   formatSeqAccountEvt,
   formatSeqCommit,
-  formatSeqHandleUpdate,
   formatSeqIdentityEvt,
-  formatSeqTombstone,
+  formatSeqSyncEvt,
 } from './events'
 
 export * from './events'
@@ -36,7 +33,7 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
   triesWithNoResults = 0
 
   constructor(
-    dbLocation: string,
+    public dbLocation: string,
     public crawlers: Crawlers,
     public lastSeen = 0,
     disableWalAutoCheckpoint = false,
@@ -129,52 +126,7 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
       return []
     }
 
-    const seqEvts: SeqEvt[] = []
-    for (const row of rows) {
-      // should never hit this because of WHERE clause
-      if (row.seq === null) {
-        continue
-      }
-      const evt = cborDecode(row.event)
-      if (row.eventType === 'append' || row.eventType === 'rebase') {
-        seqEvts.push({
-          type: 'commit',
-          seq: row.seq,
-          time: row.sequencedAt,
-          evt: evt as CommitEvt,
-        })
-      } else if (row.eventType === 'handle') {
-        seqEvts.push({
-          type: 'handle',
-          seq: row.seq,
-          time: row.sequencedAt,
-          evt: evt as HandleEvt,
-        })
-      } else if (row.eventType === 'identity') {
-        seqEvts.push({
-          type: 'identity',
-          seq: row.seq,
-          time: row.sequencedAt,
-          evt: evt as IdentityEvt,
-        })
-      } else if (row.eventType === 'account') {
-        seqEvts.push({
-          type: 'account',
-          seq: row.seq,
-          time: row.sequencedAt,
-          evt: evt as AccountEvt,
-        })
-      } else if (row.eventType === 'tombstone') {
-        seqEvts.push({
-          type: 'tombstone',
-          seq: row.seq,
-          time: row.sequencedAt,
-          evt: evt as TombstoneEvt,
-        })
-      }
-    }
-
-    return seqEvts
+    return parseRepoSeqRows(rows)
   }
 
   private async pollDb(): Promise<void> {
@@ -217,15 +169,14 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
 
   async sequenceCommit(
     did: string,
-    commitData: CommitData,
-    writes: PreparedWrite[],
+    commitData: CommitDataWithOps,
   ): Promise<number> {
-    const evt = await formatSeqCommit(did, commitData, writes)
+    const evt = await formatSeqCommit(did, commitData)
     return await this.sequenceEvt(evt)
   }
 
-  async sequenceHandleUpdate(did: string, handle: string): Promise<number> {
-    const evt = await formatSeqHandleUpdate(did, handle)
+  async sequenceSyncEvt(did: string, data: SyncEvtData) {
+    const evt = await formatSeqSyncEvt(did, data)
     return await this.sequenceEvt(evt)
   }
 
@@ -242,11 +193,6 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
     return await this.sequenceEvt(evt)
   }
 
-  async sequenceTombstone(did: string): Promise<number> {
-    const evt = await formatSeqTombstone(did)
-    return await this.sequenceEvt(evt)
-  }
-
   async deleteAllForUser(did: string, excludingSeqs: number[] = []) {
     await this.db.executeWithRetry(
       this.db.db
@@ -257,6 +203,47 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
         ),
     )
   }
+}
+
+export const parseRepoSeqRows = (rows: RepoSeqEntry[]): SeqEvt[] => {
+  const seqEvts: SeqEvt[] = []
+  for (const row of rows) {
+    // should never hit this because of WHERE clause
+    if (row.seq === null) {
+      continue
+    }
+    const evt = cborDecode(row.event)
+    if (row.eventType === 'append') {
+      seqEvts.push({
+        type: 'commit',
+        seq: row.seq,
+        time: row.sequencedAt,
+        evt: evt as CommitEvt,
+      })
+    } else if (row.eventType === 'sync') {
+      seqEvts.push({
+        type: 'sync',
+        seq: row.seq,
+        time: row.sequencedAt,
+        evt: evt as SyncEvt,
+      })
+    } else if (row.eventType === 'identity') {
+      seqEvts.push({
+        type: 'identity',
+        seq: row.seq,
+        time: row.sequencedAt,
+        evt: evt as IdentityEvt,
+      })
+    } else if (row.eventType === 'account') {
+      seqEvts.push({
+        type: 'account',
+        seq: row.seq,
+        time: row.sequencedAt,
+        evt: evt as AccountEvt,
+      })
+    }
+  }
+  return seqEvts
 }
 
 type SeqRow = RepoSeqEntry

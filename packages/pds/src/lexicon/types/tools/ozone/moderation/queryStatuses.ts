@@ -2,12 +2,20 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import express from 'express'
-import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
-import * as ToolsOzoneModerationDefs from './defs'
+import type * as ToolsOzoneModerationDefs from './defs.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'tools.ozone.moderation.queryStatuses'
 
 export interface QueryParams {
   /** Number of queues being used by moderators. Subjects will be split among all queues. */
@@ -54,6 +62,7 @@ export interface QueryParams {
     | 'lastReportedAt'
     | 'reportedRecordsCount'
     | 'takendownRecordsCount'
+    | 'priorityScore'
   sortDirection: 'asc' | 'desc'
   /** Get subjects that were taken down */
   takendown?: boolean
@@ -73,6 +82,8 @@ export interface QueryParams {
   minReportedRecordsCount?: number
   /** If specified, only subjects that belong to an account that has at least this many taken down records will be returned. */
   minTakendownRecordsCount?: number
+  /** If specified, only subjects that have priority score value above the given value will be returned. */
+  minPriorityScore?: number
 }
 
 export type InputSchema = undefined
@@ -80,7 +91,6 @@ export type InputSchema = undefined
 export interface OutputSchema {
   cursor?: string
   subjectStatuses: ToolsOzoneModerationDefs.SubjectStatusView[]
-  [k: string]: unknown
 }
 
 export type HandlerInput = undefined

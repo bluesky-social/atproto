@@ -19,7 +19,7 @@ import {
   parseReqNsid,
   verifyJwt as verifyServiceJwt,
 } from '@atproto/xrpc-server'
-import { AccountManager } from './account-manager'
+import { AccountManager } from './account-manager/account-manager'
 import { softDeleted } from './db'
 
 type ReqCtx = AuthVerifierContext | StreamAuthVerifierContext
@@ -139,7 +139,7 @@ export class AuthVerifier {
 
   accessStandard =
     (opts: Partial<AccessOpts> = {}) =>
-    (ctx: ReqCtx): Promise<AccessOutput> => {
+    async (ctx: ReqCtx): Promise<AccessOutput> => {
       return this.validateAccessToken(
         ctx,
         [
@@ -528,18 +528,13 @@ export class AuthVerifier {
         )
       }
 
-      const isPrivileged = [
-        AuthScope.Access,
-        AuthScope.AppPassPrivileged,
-      ].includes(scopeEquivalent)
-
       return {
         credentials: {
           type: 'access',
           did: result.claims.sub,
           scope: scopeEquivalent,
           audience: this.dids.pds,
-          isPrivileged,
+          isPrivileged: scopeEquivalent === AuthScope.AppPassPrivileged,
         },
         artifacts: result.token,
       }

@@ -1,5 +1,13 @@
 # @atproto-labs/fetch
 
+## 0.2.2
+
+### Patch Changes
+
+- [#2945](https://github.com/bluesky-social/atproto/pull/2945) [`850e39843`](https://github.com/bluesky-social/atproto/commit/850e39843cb0ec9ea716675f7568c0c601f45e29) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improved error response parsing
+
+- [#2945](https://github.com/bluesky-social/atproto/pull/2945) [`850e39843`](https://github.com/bluesky-social/atproto/commit/850e39843cb0ec9ea716675f7568c0c601f45e29) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove explicit dependency on "zod". Improved typing of `fetchJsonZodProcessor` function.
+
 ## 0.2.1
 
 ### Patch Changes

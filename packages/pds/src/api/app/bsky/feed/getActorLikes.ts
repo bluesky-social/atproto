@@ -1,6 +1,6 @@
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import { OutputSchema } from '../../../../lexicon/types/app/bsky/feed/getAuthorFeed'
+import { OutputSchema } from '../../../../lexicon/types/app/bsky/feed/getActorLikes'
 import {
   LocalRecords,
   LocalViewer,

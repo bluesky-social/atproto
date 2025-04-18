@@ -3,6 +3,7 @@ import { mapDefined } from '@atproto/common'
 import { AtUri } from '@atproto/syntax'
 import { DataPlaneClient } from '../data-plane/client'
 import { ids } from '../lexicon/lexicons'
+import { Record as ProfileRecord } from '../lexicon/types/app/bsky/actor/profile'
 import { isMain as isEmbedRecord } from '../lexicon/types/app/bsky/embed/record'
 import { isMain as isEmbedRecordWithMedia } from '../lexicon/types/app/bsky/embed/recordWithMedia'
 import { isListRule as isThreadgateListRule } from '../lexicon/types/app/bsky/feed/threadgate'
@@ -70,6 +71,11 @@ export class HydrateCtx {
   includeActorTakedowns = this.vals.includeActorTakedowns
   include3pBlocks = this.vals.include3pBlocks
   constructor(private vals: HydrateCtxVals) {}
+  // Convenience with use with dataplane.getActors cache control
+  get skipCacheForViewer() {
+    if (!this.viewer) return
+    return [this.viewer]
+  }
   copy<V extends Partial<HydrateCtxVals>>(vals?: V): HydrateCtx & V {
     return new HydrateCtx({ ...this.vals, ...vals }) as HydrateCtx & V
   }
@@ -190,7 +196,10 @@ export class Hydrator {
   ): Promise<HydrationState> {
     const includeTakedowns = ctx.includeTakedowns || ctx.includeActorTakedowns
     const [actors, labels, profileViewersState] = await Promise.all([
-      this.actor.getActors(dids, includeTakedowns),
+      this.actor.getActors(dids, {
+        includeTakedowns,
+        skipCacheForDids: ctx.skipCacheForViewer,
+      }),
       this.label.getLabelsForSubjects(labelSubjectsForDid(dids), ctx.labelers),
       this.hydrateProfileViewers(dids, ctx),
     ])
@@ -303,7 +312,10 @@ export class Hydrator {
         [...uris, ...includeAuthorDids],
         ctx.labelers,
       ),
-      this.actor.getActors(includeAuthorDids, ctx.includeTakedowns),
+      this.actor.getActors(includeAuthorDids, {
+        includeTakedowns: ctx.includeTakedowns,
+        skipCacheForDids: ctx.skipCacheForViewer,
+      }),
     ])
 
     if (!ctx.includeTakedowns) {
@@ -948,10 +960,7 @@ export class Hydrator {
       }
     }
 
-    const activeListAuthors = await this.actor.getActors(
-      [...listAuthorDids],
-      false,
-    )
+    const activeListAuthors = await this.actor.getActors([...listAuthorDids])
 
     for (const [source, targets] of didMap) {
       const didBlocks = new HydrationMap<boolean>()
@@ -998,10 +1007,7 @@ export class Hydrator {
 
   // ad-hoc record hydration
   // in com.atproto.repo.getRecord
-  async getRecord(
-    uri: string,
-    includeTakedowns = false,
-  ): Promise<RecordInfo<Record<string, unknown>> | undefined> {
+  async getRecord(uri: string, includeTakedowns = false) {
     const parsed = new AtUri(uri)
     const collection = parsed.collection
     if (collection === ids.AppBskyFeedPost) {
@@ -1077,17 +1083,19 @@ export class Hydrator {
       )
     } else if (collection === ids.AppBskyActorProfile) {
       const did = parsed.hostname
-      const actor = (await this.actor.getActors([did], includeTakedowns)).get(
-        did,
-      )
+      const actor = (
+        await this.actor.getActors([did], { includeTakedowns })
+      ).get(did)
       if (!actor?.profile || !actor?.profileCid) return undefined
-      return {
+      const recordInfo: RecordInfo<ProfileRecord> = {
         record: actor.profile,
         cid: actor.profileCid,
         sortedAt: actor.sortedAt ?? new Date(0), // @NOTE will be present since profile record is present
         indexedAt: actor.indexedAt ?? new Date(0), // @NOTE will be present since profile record is present
         takedownRef: actor.profileTakedownRef,
       }
+
+      return recordInfo
     }
   }
 
@@ -1097,10 +1105,9 @@ export class Hydrator {
     const nonServiceLabelers = labelers.filter(
       (did) => !this.serviceLabelers.has(did),
     )
-    const labelerActors = await this.actor.getActors(
-      nonServiceLabelers,
-      vals.includeTakedowns,
-    )
+    const labelerActors = await this.actor.getActors(nonServiceLabelers, {
+      includeTakedowns: vals.includeTakedowns,
+    })
     const availableDids = labelers.filter(
       (did) => this.serviceLabelers.has(did) || !!labelerActors.get(did),
     )

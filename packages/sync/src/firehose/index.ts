@@ -12,6 +12,7 @@ import {
   formatDataKey,
   parseDataKey,
   readCar,
+  readCarWithRoot,
   verifyProofs,
 } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
@@ -23,6 +24,7 @@ import {
   CommitMeta,
   Event,
   IdentityEvt,
+  SyncEvt,
 } from '../events'
 import { EventRunner } from '../runner'
 import { didAndSeqForEvt } from '../util'
@@ -32,9 +34,11 @@ import {
   type Identity,
   type RepoEvent,
   RepoOp,
+  type Sync,
   isAccount,
   isCommit,
   isIdentity,
+  isSync,
   isValidRepoEvent,
 } from './lexicons'
 
@@ -57,6 +61,7 @@ export type FirehoseOptions = ClientOptions & {
   excludeIdentity?: boolean
   excludeAccount?: boolean
   excludeCommit?: boolean
+  excludeSync?: boolean
 }
 
 export class Firehose {
@@ -146,6 +151,9 @@ export class Firehose {
           evt,
           this.opts.unauthenticatedHandles,
         )
+        return parsed ? [parsed] : []
+      } else if (isSync(evt) && !this.opts.excludeSync) {
+        const parsed = await parseSync(evt)
         return parsed ? [parsed] : []
       } else {
         return []
@@ -277,6 +285,20 @@ const formatCommitOps = async (evt: Commit, ops: RepoOp[]) => {
   }
 
   return evts
+}
+
+export const parseSync = async (evt: Sync): Promise<SyncEvt | null> => {
+  const car = await readCarWithRoot(evt.blocks)
+
+  return {
+    event: 'sync',
+    seq: evt.seq,
+    time: evt.time,
+    did: evt.did,
+    cid: car.root,
+    rev: evt.rev,
+    blocks: car.blocks,
+  }
 }
 
 export const parseIdentity = async (
