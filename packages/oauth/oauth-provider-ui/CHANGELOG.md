@@ -1,5 +1,13 @@
 # @atproto/oauth-provider-ui
 
+## 0.1.3
+
+### Patch Changes
+
+- [#3778](https://github.com/bluesky-social/atproto/pull/3778) [`81524fcb0`](https://github.com/bluesky-social/atproto/commit/81524fcb007f12161fd6928badbf176b1568b4b3) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Minor UI fixes
+
+- [#3781](https://github.com/bluesky-social/atproto/pull/3781) [`a70dad5ae`](https://github.com/bluesky-social/atproto/commit/a70dad5aea32ce26d2cca170a06d184935b4865d) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Remove lazy loading of hcaptcha library to resolve chunk loading errors.
+
 ## 0.1.2
 
 ## 0.1.1
