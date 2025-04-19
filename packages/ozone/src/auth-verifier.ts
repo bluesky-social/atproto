@@ -18,6 +18,7 @@ export type AdminTokenOutput = {
     isAdmin: true
     isModerator: true
     isTriage: true
+    isVerifier: true
   }
 }
 
@@ -28,7 +29,8 @@ export type ModeratorOutput = {
     iss: string
     isAdmin: boolean
     isModerator: boolean
-    isTriage: true
+    isTriage: boolean
+    isVerifier: boolean
   }
 }
 
@@ -40,6 +42,7 @@ type StandardOutput = {
     isAdmin: boolean
     isModerator: boolean
     isTriage: boolean
+    isVerifier: boolean
   }
 }
 
@@ -125,7 +128,7 @@ export class AuthVerifier {
       throw new AuthRequiredError('member is disabled', 'MemberDisabled')
     }
 
-    const { isAdmin, isModerator, isTriage } =
+    const { isAdmin, isModerator, isTriage, isVerifier } =
       this.teamService.getMemberRole(member)
 
     return {
@@ -136,6 +139,7 @@ export class AuthVerifier {
         isAdmin,
         isModerator,
         isTriage,
+        isVerifier,
       },
     }
   }
@@ -173,6 +177,7 @@ export class AuthVerifier {
         isAdmin: true,
         isModerator: true,
         isTriage: true,
+        isVerifier: true,
       },
     }
   }

@@ -10,9 +10,9 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError('Verifier not configured')
       }
 
-      if (!auth.credentials.isAdmin) {
+      if (!auth.credentials.isAdmin && !auth.credentials.isVerifier) {
         throw new AuthRequiredError(
-          'Must be a full admin to revoke verifications',
+          'Must be an admin or verifier to revoke verifications',
         )
       }
 
