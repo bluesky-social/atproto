@@ -85,14 +85,13 @@ export class AuthVerifier {
 
   moderator = async (reqCtx: ReqCtx): Promise<ModeratorOutput> => {
     const creds = await this.standard(reqCtx)
-    if (!creds.credentials.isTriage) {
+    if (!creds.credentials.isTriage && !creds.credentials.isVerifier) {
       throw new AuthRequiredError('not a moderator account')
     }
     return {
       credentials: {
         ...creds.credentials,
         type: 'moderator',
-        isTriage: true,
       },
     }
   }
