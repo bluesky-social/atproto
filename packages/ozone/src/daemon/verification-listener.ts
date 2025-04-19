@@ -1,6 +1,5 @@
-import { WebSocket } from 'ws'
 import { BackgroundQueue } from '../background'
-import { Jetstream } from '../jetstream/service'
+import { CommitCreateEvent, Jetstream } from '../jetstream/service'
 import { verificationLogger } from '../logger'
 import { VerificationService } from '../verification/service'
 
@@ -40,19 +39,20 @@ export class VerificationListener {
     return true
   }
 
-  handleNewVerification(e: any) {
+  handleNewVerification(
+    issuer: string,
+    uri: string,
+    record: VerificationRecord,
+    cursor: number,
+  ) {
     this.backgroundQueue.add(async () => {
       try {
-        const issuer = e.did
-        const { record, rkey, collection } = e.commit
-        // @TODO: Get better typing here
         const { subject, handle, displayName, createdAt } =
           record as unknown as VerificationRecord
-        const uri = `at://${issuer}/${collection}/${rkey}`
         await this.verificationService.create([
           { uri, issuer, subject, handle, displayName, createdAt },
         ])
-        await this.updateCursor(e.time_us)
+        await this.updateCursor(cursor)
       } catch (err) {
         verificationLogger.error(
           err,
@@ -62,13 +62,13 @@ export class VerificationListener {
     })
   }
 
-  handleDeletedVerification(e: any) {
+  handleDeletedVerification(uri: string, cursor: number) {
     this.backgroundQueue.add(async () => {
       try {
         await this.verificationService.markRevoked({
-          uris: [`at://${e.did}/${e.commit.collection}/${e.commit.rkey}`],
+          uris: [uri],
         })
-        await this.updateCursor(e.time_us)
+        await this.updateCursor(cursor)
       } catch (err) {
         verificationLogger.error(
           err,
@@ -100,7 +100,6 @@ export class VerificationListener {
     await this.getCursor()
 
     this.jetstream = new Jetstream({
-      ws: WebSocket,
       endpoint: this.jetstreamUrl,
       cursor: this.cursor || undefined,
       wantedCollections: [this.collection],
@@ -108,23 +107,31 @@ export class VerificationListener {
         ? this.verifierIssuersToIndex
         : undefined,
     })
-    this.jetstream.onCreate(this.collection, async (e) => {
-      const hasCapacity = await this.ensureCoolDown()
-      if (hasCapacity) {
-        this.handleNewVerification(e)
-      }
+
+    await this.jetstream.start({
+      onCreate: {
+        [this.collection]: async (e: CommitCreateEvent<VerificationRecord>) => {
+          const hasCapacity = await this.ensureCoolDown()
+          if (hasCapacity) {
+            const issuer = e.did
+            const { record, rkey, collection } = e.commit
+            const uri = `at://${issuer}/${collection}/${rkey}`
+            this.handleNewVerification(issuer, uri, record, e.time_us)
+          }
+        },
+      },
+      onDelete: {
+        [this.collection]: async (e) => {
+          const hasCapacity = await this.ensureCoolDown()
+          if (hasCapacity) {
+            this.handleDeletedVerification(
+              `at://${e.did}/${e.commit.collection}/${e.commit.rkey}`,
+              e.time_us,
+            )
+          }
+        },
+      },
     })
-    this.jetstream.onDelete(this.collection, async (e) => {
-      const hasCapacity = await this.ensureCoolDown()
-      if (hasCapacity) {
-        this.handleDeletedVerification(e)
-      }
-    })
-    this.jetstream.on('error', (err) => {
-      verificationLogger.error(err, 'Error in jetstream')
-      this.stop()
-    })
-    this.jetstream.start()
   }
 
   stop() {
