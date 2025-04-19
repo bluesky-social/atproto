@@ -21,7 +21,24 @@ export class VerificationListener {
     private verificationService: VerificationService,
     public backgroundQueue: BackgroundQueue,
     private jetstreamUrl: string,
+    private verifierIssuersToIndex?: string[],
   ) {}
+
+  // When the queue has capacity, this method returns true which means we can continue to handle events
+  // otherwise, it will close jetstream connection and wait for all previously queued events to be processed first
+  // and then start jetstream listener again before returning false. At that point, the previous listeners should
+  // have updates the cursor in db to the last processed event and the new listener will start from that cursor
+  async ensureCoolDown() {
+    const { waitingCount, runningCount } = this.backgroundQueue.getStats()
+    if (waitingCount > 50 || runningCount > 50) {
+      verificationLogger.warn(`Background queue is full, pausing listener`)
+      this.jetstream?.close()
+      await this.backgroundQueue.processAll()
+      await this.start()
+      return false
+    }
+    return true
+  }
 
   handleNewVerification(e: any) {
     this.backgroundQueue.add(async () => {
@@ -87,13 +104,22 @@ export class VerificationListener {
       endpoint: this.jetstreamUrl,
       cursor: this.cursor || undefined,
       wantedCollections: [this.collection],
+      wantedDids: this.verifierIssuersToIndex?.length
+        ? this.verifierIssuersToIndex
+        : undefined,
     })
-    this.jetstream.onCreate(this.collection, (e) => {
-      this.handleNewVerification(e)
+    this.jetstream.onCreate(this.collection, async (e) => {
+      const hasCapacity = await this.ensureCoolDown()
+      if (hasCapacity) {
+        this.handleNewVerification(e)
+      }
     })
-    this.jetstream.onDelete(this.collection, (e) =>
-      this.handleDeletedVerification(e),
-    )
+    this.jetstream.onDelete(this.collection, async (e) => {
+      const hasCapacity = await this.ensureCoolDown()
+      if (hasCapacity) {
+        this.handleDeletedVerification(e)
+      }
+    })
     this.jetstream.on('error', (err) => {
       verificationLogger.error(err, 'Error in jetstream')
       this.stop()

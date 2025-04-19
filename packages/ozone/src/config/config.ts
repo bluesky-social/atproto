@@ -86,6 +86,7 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
           did: env.verifierDid,
           password: env.verifierPassword,
           jetstreamUrl: env.jetstreamUrl,
+          issuersToIndex: env.verifierIssuersToIndex,
         }
       : null
 
@@ -176,4 +177,5 @@ export type VerifierConfig = {
   did: string
   password: string
   jetstreamUrl?: string
+  issuersToIndex?: string[]
 }

@@ -97,6 +97,7 @@ export class DaemonContext {
           verificationService(db),
           new BackgroundQueue(db, { concurrency: 1 }),
           cfg.verifier?.jetstreamUrl,
+          cfg.verifier?.issuersToIndex,
         )
       : undefined
 
