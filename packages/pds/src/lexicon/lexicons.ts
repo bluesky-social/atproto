@@ -14518,6 +14518,7 @@ export const schemaDict = {
               'tools.ozone.team.defs#roleAdmin',
               'tools.ozone.team.defs#roleModerator',
               'tools.ozone.team.defs#roleTriage',
+              'tools.ozone.team.defs#roleVerifier',
             ],
           },
         },
@@ -14863,6 +14864,7 @@ export const schemaDict = {
               'tools.ozone.team.defs#roleModerator',
               'tools.ozone.team.defs#roleTriage',
               'tools.ozone.team.defs#roleAdmin',
+              'tools.ozone.team.defs#roleVerifier',
             ],
           },
           scope: {
@@ -15015,6 +15017,7 @@ export const schemaDict = {
                 knownValues: [
                   'tools.ozone.team.defs#roleModerator',
                   'tools.ozone.team.defs#roleTriage',
+                  'tools.ozone.team.defs#roleVerifier',
                   'tools.ozone.team.defs#roleAdmin',
                 ],
               },
@@ -15234,6 +15237,7 @@ export const schemaDict = {
                 knownValues: [
                   'tools.ozone.team.defs#roleAdmin',
                   'tools.ozone.team.defs#roleModerator',
+                  'tools.ozone.team.defs#roleVerifier',
                   'tools.ozone.team.defs#roleTriage',
                 ],
               },
@@ -15292,6 +15296,7 @@ export const schemaDict = {
               'lex:tools.ozone.team.defs#roleAdmin',
               'lex:tools.ozone.team.defs#roleModerator',
               'lex:tools.ozone.team.defs#roleTriage',
+              'lex:tools.ozone.team.defs#roleVerifier',
             ],
           },
         },
@@ -15309,6 +15314,10 @@ export const schemaDict = {
         type: 'token',
         description:
           'Triage role. Mostly intended for monitoring and escalating issues.',
+      },
+      roleVerifier: {
+        type: 'token',
+        description: 'Verifier role. Only allowed to issue verifications.',
       },
     },
   },
@@ -15426,6 +15435,7 @@ export const schemaDict = {
                 knownValues: [
                   'tools.ozone.team.defs#roleAdmin',
                   'tools.ozone.team.defs#roleModerator',
+                  'tools.ozone.team.defs#roleVerifier',
                   'tools.ozone.team.defs#roleTriage',
                 ],
               },

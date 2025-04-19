@@ -27,6 +27,7 @@ export interface Member {
     | 'lex:tools.ozone.team.defs#roleAdmin'
     | 'lex:tools.ozone.team.defs#roleModerator'
     | 'lex:tools.ozone.team.defs#roleTriage'
+    | 'lex:tools.ozone.team.defs#roleVerifier'
     | (string & {})
 }
 
@@ -46,3 +47,5 @@ export const ROLEADMIN = `${id}#roleAdmin`
 export const ROLEMODERATOR = `${id}#roleModerator`
 /** Triage role. Mostly intended for monitoring and escalating issues. */
 export const ROLETRIAGE = `${id}#roleTriage`
+/** Verifier role. Only allowed to issue verifications. */
+export const ROLEVERIFIER = `${id}#roleVerifier`

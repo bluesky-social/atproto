@@ -565,6 +565,7 @@ export const TOOLS_OZONE_TEAM = {
   DefsRoleAdmin: 'tools.ozone.team.defs#roleAdmin',
   DefsRoleModerator: 'tools.ozone.team.defs#roleModerator',
   DefsRoleTriage: 'tools.ozone.team.defs#roleTriage',
+  DefsRoleVerifier: 'tools.ozone.team.defs#roleVerifier',
 }
 
 export class AtpBaseClient extends XrpcClient {
