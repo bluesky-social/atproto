@@ -17,7 +17,12 @@
         "lastUpdatedBy": { "type": "string" },
         "role": {
           "type": "string",
-          "knownValues": ["#roleAdmin", "#roleModerator", "#roleTriage", "#roleVerifier"]
+          "knownValues": [
+            "#roleAdmin",
+            "#roleModerator",
+            "#roleTriage",
+            "#roleVerifier"
+          ]
         }
       }
     },
