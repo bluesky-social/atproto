@@ -96,7 +96,7 @@ describe('verification', () => {
         ],
       })
       await expect(attempt).rejects.toThrow(
-        'Must be a full admin to grant verifications',
+        'Must be an admin or verifier to grant verifications',
       )
     })
   })
