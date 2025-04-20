@@ -1,5 +1,14 @@
 # @atproto/bsky
 
+## 0.0.144
+
+### Patch Changes
+
+- [#3773](https://github.com/bluesky-social/atproto/pull/3773) [`0087dc1c0`](https://github.com/bluesky-social/atproto/commit/0087dc1c0bafad1d0a0a1a16683d250dea031bf9) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Add verification notifications
+
+- Updated dependencies [[`0087dc1c0`](https://github.com/bluesky-social/atproto/commit/0087dc1c0bafad1d0a0a1a16683d250dea031bf9)]:
+  - @atproto/api@0.15.3
+
 ## 0.0.143
 
 ### Patch Changes

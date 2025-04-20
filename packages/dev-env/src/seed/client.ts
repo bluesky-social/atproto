@@ -583,6 +583,19 @@ export class SeedClient<
     return this.verifications[by][subject]
   }
 
+  async unverify(by: string, subject: string) {
+    const verification = this.verifications[by]?.[subject]
+    if (!verification) {
+      throw new Error('verification does not exist')
+    }
+
+    await this.agent.app.bsky.graph.verification.delete(
+      { repo: by, rkey: verification.rkey },
+      this.getHeaders(by),
+    )
+    delete this.verifications[by][subject]
+  }
+
   getHeaders(did: string) {
     return SeedClient.getHeaders(this.accounts[did].accessJwt)
   }

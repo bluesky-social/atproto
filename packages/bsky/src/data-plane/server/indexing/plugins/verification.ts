@@ -51,8 +51,18 @@ const findDuplicate = async (
   return found ? new AtUri(found.uri) : null
 }
 
-const notifsForInsert = (_obj: IndexedVerification) => {
-  return []
+const notifsForInsert = (obj: IndexedVerification) => {
+  return [
+    {
+      did: obj.subject,
+      author: obj.creator,
+      recordUri: obj.uri,
+      recordCid: obj.cid,
+      reason: 'verified' as const,
+      reasonSubject: null,
+      sortAt: obj.sortedAt,
+    },
+  ]
 }
 
 const deleteFn = async (
@@ -68,10 +78,23 @@ const deleteFn = async (
 }
 
 const notifsForDelete = (
-  _deleted: IndexedVerification,
+  deleted: IndexedVerification,
   _replacedBy: IndexedVerification | null,
 ) => {
-  return { notifs: [], toDelete: [] }
+  return {
+    notifs: [
+      {
+        did: deleted.subject,
+        author: deleted.creator,
+        recordUri: deleted.uri,
+        recordCid: deleted.cid,
+        reason: 'unverified' as const,
+        reasonSubject: null,
+        sortAt: new Date().toISOString(),
+      },
+    ],
+    toDelete: [],
+  }
 }
 
 export type PluginType = RecordProcessor<

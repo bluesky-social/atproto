@@ -275,10 +275,20 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
             name: env.serviceName ?? 'Personal PDS',
             logo: env.logoUrl,
             colors: {
+              light: env.lightColor,
+              dark: env.darkColor,
               primary: env.primaryColor,
+              primaryContrast: env.primaryColorContrast,
+              primaryHue: env.primaryColorHue,
               error: env.errorColor,
+              errorContrast: env.errorColorContrast,
+              errorHue: env.errorColorHue,
               success: env.successColor,
+              successContrast: env.successColorContrast,
+              successHue: env.successColorHue,
               warning: env.warningColor,
+              warningContrast: env.warningColorContrast,
+              warningHue: env.warningColorHue,
             },
             links: [
               {

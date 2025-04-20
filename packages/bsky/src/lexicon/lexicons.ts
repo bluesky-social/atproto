@@ -9606,6 +9606,16 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyNotificationDefs: {
+    lexicon: 1,
+    id: 'app.bsky.notification.defs',
+    defs: {
+      recordDeleted: {
+        type: 'object',
+        properties: {},
+      },
+    },
+  },
   AppBskyNotificationGetUnreadCount: {
     lexicon: 1,
     id: 'app.bsky.notification.getUnreadCount',
@@ -9733,7 +9743,7 @@ export const schemaDict = {
           reason: {
             type: 'string',
             description:
-              "Expected values are 'like', 'repost', 'follow', 'mention', 'reply', 'quote', and 'starterpack-joined'.",
+              "Expected values are 'like', 'repost', 'follow', 'mention', 'reply', 'quote', 'starterpack-joined', 'verified', and 'unverified'.",
             knownValues: [
               'like',
               'repost',
@@ -9742,6 +9752,8 @@ export const schemaDict = {
               'reply',
               'quote',
               'starterpack-joined',
+              'verified',
+              'unverified',
             ],
           },
           reasonSubject: {
@@ -12549,6 +12561,7 @@ export const ids = {
   AppBskyLabelerDefs: 'app.bsky.labeler.defs',
   AppBskyLabelerGetServices: 'app.bsky.labeler.getServices',
   AppBskyLabelerService: 'app.bsky.labeler.service',
+  AppBskyNotificationDefs: 'app.bsky.notification.defs',
   AppBskyNotificationGetUnreadCount: 'app.bsky.notification.getUnreadCount',
   AppBskyNotificationListNotifications:
     'app.bsky.notification.listNotifications',
