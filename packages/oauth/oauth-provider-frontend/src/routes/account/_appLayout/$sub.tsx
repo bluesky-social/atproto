@@ -21,8 +21,19 @@ import { useRevokeAccountSessionMutation } from '#/data/useRevokeAccountSessionM
 import { useRevokeOAuthSessionMutation } from '#/data/useRevokeOAuthSessionMutation'
 
 export const Route = createFileRoute('/account/_appLayout/$sub')({
-  component: AccountHome,
+  component: RouteComponent,
 })
+
+function RouteComponent() {
+  const { _ } = useLingui()
+
+  return (
+    <>
+      <title>{_(msg`Your account`)}</title>
+      <AccountHome />
+    </>
+  )
+}
 
 export function AccountHome() {
   const { _ } = useLingui()
@@ -51,6 +62,13 @@ export function AccountHome() {
       <h2 className="text-custom-primary text-primary pb-4 pt-8 text-xl font-bold">
         <Trans>Connected apps</Trans>
       </h2>
+
+      <p className="text-text-light mb-2">
+        <Trans>
+          This is a list of all the applications you have authorized to access
+          your account.
+        </Trans>
+      </p>
 
       {isLoading ? (
         <Loader size="lg" fill="var(--color-contrast-300)" />
@@ -82,6 +100,15 @@ export function AccountHome() {
       <h2 className="text-custom-primary pb-4 pt-8 text-xl font-bold">
         <Trans>My devices</Trans>
       </h2>
+
+      <p className="text-text-light mb-2">
+        <Trans>
+          This is a list of all the devices you have used to sign in to your
+          account. New apps can be authorized from any of these devices. If you
+          believe that your account has been compromised, we recommend that you
+          revoke access to all devices.
+        </Trans>
+      </p>
 
       {accountSessionsIsLoading ? (
         <Loader size="lg" fill="var(--color-contrast-300)" />
@@ -125,12 +152,10 @@ function ApplicationSessionCard({
 
   const friendlyClientId = useFriendlyClientId({
     clientId,
-    clientTrusted: false,
   })
   const clientName = useClientName({
     clientId,
     clientMetadata,
-    clientTrusted: false,
   })
 
   const revoke = async () => {
@@ -175,14 +200,14 @@ function ApplicationSessionCard({
           description={_(
             msg`Are you sure you want to revoke access? This application won't be able to access your account anymore.`,
           )}
-          confirmCTA={_(msg`Sign out`)}
+          confirmCTA={_(msg`Revoke access`)}
           onConfirm={revoke}
         >
           <Button color="secondary" disabled={isPending}>
             <Button.Text>
-              <Trans>Sign out</Trans>
+              <Trans>Revoke access</Trans>
             </Button.Text>
-            <ExitIcon width={20} />
+            <Cross2Icon width={16} />
           </Button>
         </Prompt>
       </div>
@@ -201,12 +226,15 @@ function AccountSessionCard({
   const { _, i18n } = useLingui()
   const { mutateAsync: revokeSessions, isPending } =
     useRevokeAccountSessionMutation()
+
+  const { userAgent, lastSeenAt, ipAddress } = session.deviceMetadata
+
   const ua = useMemo(() => {
-    if (!session.deviceMetadata.userAgent) {
+    if (!userAgent) {
       return null
     }
-    return UAParser(session.deviceMetadata.userAgent)
-  }, [session.deviceMetadata.userAgent])
+    return UAParser(userAgent)
+  }, [userAgent])
 
   const remove = async () => {
     try {
@@ -226,7 +254,15 @@ function AccountSessionCard({
   }
 
   const lastUsed = useMemo(() => {
-    return i18n.date(new Date(), {
+    // Fool-proofing
+    if (!lastSeenAt) return undefined
+
+    const date = new Date(lastSeenAt)
+
+    // Fool-proofing
+    if (isNaN(date.getTime())) return lastSeenAt
+
+    return i18n.date(date, {
       year: 'numeric',
       month: 'numeric',
       day: 'numeric',
@@ -234,8 +270,8 @@ function AccountSessionCard({
   }, [session])
 
   return (
-    <div className="border-contrast-50 dark:border-contrast-100 flex items-start justify-between space-x-4 border-t px-2 pt-3">
-      <div className="flex flex-1 flex-col space-x-2 truncate">
+    <div className="border-contrast-50 dark:border-contrast-100 flex flex-wrap items-center justify-between space-x-4 border-t px-2 pt-3">
+      <div className="flex min-w-36 flex-1 flex-col space-x-2 truncate">
         <p className="truncate font-semibold">
           {ua ? (
             ua.device.is('mobile') ? (
@@ -247,38 +283,39 @@ function AccountSessionCard({
             <Trans>Unknown user agent</Trans>
           )}
         </p>
-        <p className="text-sm">
+        <p className="truncate text-sm">
           <span className="text-text-light">
             {lastUsed}
             {' • '}
           </span>
           <span className="text-warning-600 truncate font-mono">
-            {session.deviceMetadata.ipAddress}
+            {ipAddress}
           </span>
         </p>
       </div>
       {session.isCurrentDevice && (
-        <div className="flex-shrink">
-          <div className="bg-contrast-25 dark:bg-contrast-50 text-text-light rounded-full px-2 py-1 text-xs">
-            <Trans>This device</Trans>
-          </div>
+        <div className="bg-contrast-25 dark:bg-contrast-50 text-text-light min-w-max shrink-0 grow-0 rounded-full px-2 py-1 text-xs">
+          <Trans>This device</Trans>
         </div>
       )}
-      <div>
-        <Prompt
-          title={_(msg`Remove this device`)}
-          description={_(msg`Are you sure you want to remove this device?`)}
-          confirmCTA={_(msg`Remove`)}
-          onConfirm={remove}
+      <Prompt
+        title={_(msg`Remove this device`)}
+        description={_(msg`Are you sure you want to remove this device?`)}
+        confirmCTA={_(msg`Sign out`)}
+        onConfirm={remove}
+      >
+        <Button
+          color="secondary"
+          size="sm"
+          className="min-w-max shrink-0 grow-0"
+          disabled={isPending}
         >
-          <Button color="secondary" size="sm" disabled={isPending}>
-            <Button.Text>
-              <Trans>Remove</Trans>
-            </Button.Text>
-            <Cross2Icon width={16} />
-          </Button>
-        </Prompt>
-      </div>
+          <Button.Text>
+            <Trans>Sign out</Trans>
+          </Button.Text>
+          <ExitIcon width={20} />
+        </Button>
+      </Prompt>
     </div>
   )
 }

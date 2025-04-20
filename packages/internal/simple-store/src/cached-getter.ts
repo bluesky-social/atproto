@@ -1,6 +1,13 @@
-import { Awaitable, Key, SimpleStore, Value } from './simple-store.js'
+import {
+  Awaitable,
+  GetOptions as GetStoredOptions,
+  Key,
+  SimpleStore,
+  Value,
+} from './simple-store.js'
 
-export type GetCachedOptions = {
+export type { GetStoredOptions }
+export type GetCachedOptions<C = void> = {
   signal?: AbortSignal
 
   /**
@@ -21,15 +28,15 @@ export type GetCachedOptions = {
    * @default false // If no isStale option was provided to the CachedGetter
    */
   allowStale?: boolean
-}
+} & (C extends void ? { context?: C } : { context: C })
 
-export type Getter<K, V> = (
+export type Getter<K extends Key, V extends Value, C = void> = (
   key: K,
-  options: undefined | GetCachedOptions,
+  options: GetCachedOptions<C>,
   storedValue: undefined | V,
 ) => Awaitable<V>
 
-export type CachedGetterOptions<K, V> = {
+export type CachedGetterOptions<K extends Key, V extends Value> = {
   isStale?: (key: K, value: V) => boolean | PromiseLike<boolean>
   onStoreError?: (err: unknown, key: K, value: V) => void | PromiseLike<void>
   deleteOnError?: (
@@ -48,23 +55,35 @@ const returnFalse = () => false
  * Wrapper utility that uses a store to speed up the retrieval of values from an
  * (expensive) getter function.
  */
-export class CachedGetter<K extends Key = string, V extends Value = Value> {
+export class CachedGetter<
+  K extends Key = string,
+  V extends Value = Value,
+  C = void,
+> {
   private pending = new Map<K, PendingItem<V>>()
 
   constructor(
-    readonly getter: Getter<K, V>,
+    readonly getter: Getter<K, V, C>,
     readonly store: SimpleStore<K, V>,
-    readonly options?: Readonly<CachedGetterOptions<K, V>>,
+    readonly options?: CachedGetterOptions<K, V>,
   ) {}
 
-  async get(key: K, options?: GetCachedOptions): Promise<V> {
-    options?.signal?.throwIfAborted()
+  async get(
+    key: C extends void ? K : never,
+    options?: GetCachedOptions<C>,
+  ): Promise<V>
+  async get(
+    key: C extends void ? never : K,
+    options: GetCachedOptions<C>,
+  ): Promise<V>
+  async get(key: K, options = {} as GetCachedOptions<C>): Promise<V> {
+    options.signal?.throwIfAborted()
 
     const isStale = this.options?.isStale
 
-    const allowStored: (value: V) => Awaitable<boolean> = options?.noCache
+    const allowStored: (value: V) => Awaitable<boolean> = options.noCache
       ? returnFalse // Never allow stored values to be returned
-      : options?.allowStale || isStale == null
+      : options.allowStale || isStale == null
         ? returnTrue // Always allow stored values to be returned
         : async (value: V) => !(await isStale(key, value))
 
@@ -86,7 +105,7 @@ export class CachedGetter<K extends Key = string, V extends Value = Value> {
         // propagated by that flow).
       }
 
-      options?.signal?.throwIfAborted()
+      options.signal?.throwIfAborted()
     }
 
     const currentExecutionFlow: PendingItem<V> = Promise.resolve()
@@ -142,11 +161,7 @@ export class CachedGetter<K extends Key = string, V extends Value = Value> {
     return value
   }
 
-  bind(key: K): (options?: GetCachedOptions) => Promise<V> {
-    return async (options) => this.get(key, options)
-  }
-
-  async getStored(key: K, options?: GetCachedOptions): Promise<V | undefined> {
+  async getStored(key: K, options?: GetStoredOptions): Promise<V | undefined> {
     try {
       return await this.store.get(key, options)
     } catch (err) {

@@ -12,19 +12,22 @@ export function buildCustomizationCss({
 
 function* buildCustomizationVars(branding?: Branding): Generator<string> {
   if (branding?.colors) {
-    // @NOTE these could come from branding (in the future)
-    const contrastLight = { r: 255, g: 255, b: 255 }
-    const contrastDark = { r: 0, g: 0, b: 0 }
+    const contrastLight = branding.colors.light ?? { r: 255, g: 255, b: 255 }
+    const contrastDark = branding.colors.dark ?? { r: 0, g: 0, b: 0 }
 
     for (const name of COLOR_NAMES) {
       const value = branding.colors[name]
       if (!value) continue // Skip missing colors
 
-      const contrast = pickContrastColor(value, contrastLight, contrastDark)
+      const contrast =
+        branding.colors[`${name}Contrast`] ??
+        pickContrastColor(value, contrastLight, contrastDark)
+
+      const hue = branding.colors[`${name}Hue`] ?? extractHue(value)
 
       yield `--branding-color-${name}: ${value.r} ${value.g} ${value.b};`
       yield `--branding-color-${name}-contrast: ${contrast.r} ${contrast.g} ${contrast.b};`
-      yield `--branding-color-${name}-hue: ${extractHue(value)};`
+      yield `--branding-color-${name}-hue: ${hue};`
     }
   }
 }

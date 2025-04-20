@@ -4,6 +4,7 @@ import { Record as FollowRecord } from '../lexicon/types/app/bsky/graph/follow'
 import { Record as ListRecord } from '../lexicon/types/app/bsky/graph/list'
 import { Record as ListItemRecord } from '../lexicon/types/app/bsky/graph/listitem'
 import { Record as StarterPackRecord } from '../lexicon/types/app/bsky/graph/starterpack'
+import { Record as VerificationRecord } from '../lexicon/types/app/bsky/graph/verification'
 import { FollowInfo } from '../proto/bsky_pb'
 import { HydrationMap, ItemRef, RecordInfo, parseRecord } from './util'
 
@@ -28,6 +29,9 @@ export type Block = RecordInfo<BlockRecord>
 
 export type StarterPack = RecordInfo<StarterPackRecord>
 export type StarterPacks = HydrationMap<StarterPack>
+
+export type Verification = RecordInfo<VerificationRecord>
+export type Verifications = HydrationMap<Verification>
 
 export type StarterPackAgg = {
   joinedWeek: number
@@ -174,6 +178,21 @@ export class GraphHydrator {
       const record = parseRecord<FollowRecord>(res.records[i], includeTakedowns)
       return acc.set(uri, record ?? null)
     }, new HydrationMap<Follow>())
+  }
+
+  async getVerifications(
+    uris: string[],
+    includeTakedowns = false,
+  ): Promise<Verifications> {
+    if (!uris.length) return new HydrationMap<Verification>()
+    const res = await this.dataplane.getVerificationRecords({ uris })
+    return uris.reduce((acc, uri, i) => {
+      const record = parseRecord<VerificationRecord>(
+        res.records[i],
+        includeTakedowns,
+      )
+      return acc.set(uri, record ?? null)
+    }, new HydrationMap<Verification>())
   }
 
   async getBlocks(

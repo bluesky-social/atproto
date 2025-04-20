@@ -4860,6 +4860,7 @@ export const schemaDict = {
             'lex:app.bsky.actor.defs#bskyAppStatePref',
             'lex:app.bsky.actor.defs#labelersPref',
             'lex:app.bsky.actor.defs#postInteractionSettingsPref',
+            'lex:app.bsky.actor.defs#verificationPrefs',
           ],
         },
       },
@@ -5190,6 +5191,19 @@ export const schemaDict = {
             format: 'datetime',
             description:
               'The date and time at which the NUX will expire and should be considered completed.',
+          },
+        },
+      },
+      verificationPrefs: {
+        type: 'object',
+        description: 'Preferences for how verified accounts appear in the app.',
+        required: [],
+        properties: {
+          hideBadges: {
+            description:
+              'Hide the blue check badges for verified accounts and trusted verifiers.',
+            type: 'boolean',
+            default: false,
           },
         },
       },
@@ -9592,6 +9606,16 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyNotificationDefs: {
+    lexicon: 1,
+    id: 'app.bsky.notification.defs',
+    defs: {
+      recordDeleted: {
+        type: 'object',
+        properties: {},
+      },
+    },
+  },
   AppBskyNotificationGetUnreadCount: {
     lexicon: 1,
     id: 'app.bsky.notification.getUnreadCount',
@@ -9719,7 +9743,7 @@ export const schemaDict = {
           reason: {
             type: 'string',
             description:
-              "Expected values are 'like', 'repost', 'follow', 'mention', 'reply', 'quote', and 'starterpack-joined'.",
+              "Expected values are 'like', 'repost', 'follow', 'mention', 'reply', 'quote', 'starterpack-joined', 'verified', and 'unverified'.",
             knownValues: [
               'like',
               'repost',
@@ -9728,6 +9752,8 @@ export const schemaDict = {
               'reply',
               'quote',
               'starterpack-joined',
+              'verified',
+              'unverified',
             ],
           },
           reasonSubject: {
@@ -11079,6 +11105,10 @@ export const schemaDict = {
             type: 'boolean',
             description:
               'Set to true when the actor cannot actively participate in converations',
+          },
+          verification: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#verificationState',
           },
         },
       },
@@ -15987,6 +16017,7 @@ export const ids = {
   AppBskyLabelerDefs: 'app.bsky.labeler.defs',
   AppBskyLabelerGetServices: 'app.bsky.labeler.getServices',
   AppBskyLabelerService: 'app.bsky.labeler.service',
+  AppBskyNotificationDefs: 'app.bsky.notification.defs',
   AppBskyNotificationGetUnreadCount: 'app.bsky.notification.getUnreadCount',
   AppBskyNotificationListNotifications:
     'app.bsky.notification.listNotifications',

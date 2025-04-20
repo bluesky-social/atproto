@@ -230,6 +230,7 @@ export type Preferences = (
   | $Typed<BskyAppStatePref>
   | $Typed<LabelersPref>
   | $Typed<PostInteractionSettingsPref>
+  | $Typed<VerificationPrefs>
   | { $type: string }
 )[]
 
@@ -541,6 +542,23 @@ export function isNux<V>(v: V) {
 
 export function validateNux<V>(v: V) {
   return validate<Nux & V>(v, id, hashNux)
+}
+
+/** Preferences for how verified accounts appear in the app. */
+export interface VerificationPrefs {
+  $type?: 'app.bsky.actor.defs#verificationPrefs'
+  /** Hide the blue check badges for verified accounts and trusted verifiers. */
+  hideBadges: boolean
+}
+
+const hashVerificationPrefs = 'verificationPrefs'
+
+export function isVerificationPrefs<V>(v: V) {
+  return is$typed(v, id, hashVerificationPrefs)
+}
+
+export function validateVerificationPrefs<V>(v: V) {
+  return validate<VerificationPrefs & V>(v, id, hashVerificationPrefs)
 }
 
 /** Default post interaction settings for the account. These values should be applied as default values when creating new posts. These refs should mirror the threadgate and postgate records exactly. */

@@ -15,8 +15,19 @@ import { getAccountName } from '#/util/getAccountName'
 import { sanitizeHandle } from '#/util/sanitizeHandle'
 
 export const Route = createFileRoute('/account/_minimalLayout/')({
-  component: Index,
+  component: RouteComponent,
 })
+
+function RouteComponent() {
+  const { _ } = useLingui()
+
+  return (
+    <>
+      <title>{_(msg`Accounts`)}</title>
+      <Index />
+    </>
+  )
+}
 
 function Index() {
   const { _ } = useLingui()

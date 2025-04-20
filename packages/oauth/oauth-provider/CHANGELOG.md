@@ -1,5 +1,41 @@
 # @atproto/oauth-provider
 
+## 0.7.5
+
+### Patch Changes
+
+- [#3783](https://github.com/bluesky-social/atproto/pull/3783) [`d794b0676`](https://github.com/bluesky-social/atproto/commit/d794b06763050b4b32484e90116461deae45cbe3) Thanks [@devinivy](https://github.com/devinivy)! - Revert "Use more secure COEP header when hCaptcha is enabled"
+
+## 0.7.4
+
+### Patch Changes
+
+- Updated dependencies [[`81524fcb0`](https://github.com/bluesky-social/atproto/commit/81524fcb007f12161fd6928badbf176b1568b4b3), [`a70dad5ae`](https://github.com/bluesky-social/atproto/commit/a70dad5aea32ce26d2cca170a06d184935b4865d)]:
+  - @atproto/oauth-provider-ui@0.1.3
+
+## 0.7.3
+
+### Patch Changes
+
+- [#3764](https://github.com/bluesky-social/atproto/pull/3764) [`30f9b6690`](https://github.com/bluesky-social/atproto/commit/30f9b6690e0e2c5810772e94e631322b9d89c65a) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow customizing contrast and hue colors
+
+- Updated dependencies [[`30f9b6690`](https://github.com/bluesky-social/atproto/commit/30f9b6690e0e2c5810772e94e631322b9d89c65a), [`30f9b6690`](https://github.com/bluesky-social/atproto/commit/30f9b6690e0e2c5810772e94e631322b9d89c65a), [`0d77d1b55`](https://github.com/bluesky-social/atproto/commit/0d77d1b550a58117aee8f7f1e2be24d255ade9e4), [`30f9b6690`](https://github.com/bluesky-social/atproto/commit/30f9b6690e0e2c5810772e94e631322b9d89c65a), [`30f9b6690`](https://github.com/bluesky-social/atproto/commit/30f9b6690e0e2c5810772e94e631322b9d89c65a), [`30f9b6690`](https://github.com/bluesky-social/atproto/commit/30f9b6690e0e2c5810772e94e631322b9d89c65a), [`0d77d1b55`](https://github.com/bluesky-social/atproto/commit/0d77d1b550a58117aee8f7f1e2be24d255ade9e4), [`30f9b6690`](https://github.com/bluesky-social/atproto/commit/30f9b6690e0e2c5810772e94e631322b9d89c65a), [`30f9b6690`](https://github.com/bluesky-social/atproto/commit/30f9b6690e0e2c5810772e94e631322b9d89c65a)]:
+  - @atproto/oauth-provider-frontend@0.1.3
+  - @atproto-labs/simple-store@0.2.0
+  - @atproto/oauth-types@0.2.6
+  - @atproto-labs/simple-store-memory@0.1.3
+  - @atproto/oauth-provider-api@0.1.1
+  - @atproto/oauth-provider-ui@0.1.2
+
+## 0.7.2
+
+### Patch Changes
+
+- [#3755](https://github.com/bluesky-social/atproto/pull/3755) [`96de2acb3`](https://github.com/bluesky-social/atproto/commit/96de2acb301683effe4313cb93d7747f87a73b5e) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use more secure COEP header when hCaptcha is enabled
+
+- Updated dependencies [[`0f3899dd5`](https://github.com/bluesky-social/atproto/commit/0f3899dd52d0094c29222c65e2636217f9a8ece4)]:
+  - @atproto/oauth-provider-frontend@0.1.2
+
 ## 0.7.1
 
 ### Patch Changes

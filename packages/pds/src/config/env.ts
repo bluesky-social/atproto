@@ -24,10 +24,20 @@ export const readEnv = (): ServerEnvironment => {
     hcaptchaTokenSalt: envStr('PDS_HCAPTCHA_TOKEN_SALT'),
 
     // branding
+    lightColor: envStr('PDS_LIGHT_COLOR'),
+    darkColor: envStr('PDS_DARK_COLOR'),
     primaryColor: envStr('PDS_PRIMARY_COLOR'),
+    primaryColorContrast: envStr('PDS_PRIMARY_COLOR_CONTRAST'),
+    primaryColorHue: envInt('PDS_PRIMARY_COLOR_HUE'),
     errorColor: envStr('PDS_ERROR_COLOR'),
+    errorColorContrast: envStr('PDS_ERROR_COLOR_CONTRAST'),
+    errorColorHue: envInt('PDS_ERROR_COLOR_HUE'),
     warningColor: envStr('PDS_WARNING_COLOR'),
+    warningColorContrast: envStr('PDS_WARNING_COLOR_CONTRAST'),
+    warningColorHue: envInt('PDS_WARNING_COLOR_HUE'),
     successColor: envStr('PDS_SUCCESS_COLOR'),
+    successColorContrast: envStr('PDS_SUCCESS_COLOR_CONTRAST'),
+    successColorHue: envInt('PDS_SUCCESS_COLOR_HUE'),
 
     // database
     dataDirectory: envStr('PDS_DATA_DIRECTORY'),
@@ -163,10 +173,20 @@ export type ServerEnvironment = {
   hcaptchaTokenSalt?: string
 
   // branding
+  lightColor?: string
+  darkColor?: string
   primaryColor?: string
+  primaryColorContrast?: string
+  primaryColorHue?: number
   errorColor?: string
+  errorColorContrast?: string
+  errorColorHue?: number
   warningColor?: string
+  warningColorContrast?: string
+  warningColorHue?: number
   successColor?: string
+  successColorContrast?: string
+  successColorHue?: number
 
   // database
   dataDirectory?: string

@@ -41,3 +41,6 @@ export const isValidSavedFeedsPrefV2 = asPredicate(
 export const isValidThreadViewPref = asPredicate(
   AppBskyActorDefs.validateThreadViewPref,
 )
+export const isValidVerificationPrefs = asPredicate(
+  AppBskyActorDefs.validateVerificationPrefs,
+)

@@ -582,6 +582,9 @@ export class Agent extends XrpcClient {
         threadgateAllowRules: undefined,
         postgateEmbeddingRules: undefined,
       },
+      verificationPrefs: {
+        hideBadges: false,
+      },
     }
     const res = await this.app.bsky.actor.getPreferences({})
     const labelPrefs: AppBskyActorDefs.ContentLabelPref[] = []
@@ -646,6 +649,10 @@ export class Agent extends XrpcClient {
           pref.threadgateAllowRules
         prefs.postInteractionSettings.postgateEmbeddingRules =
           pref.postgateEmbeddingRules
+      } else if (predicate.isValidVerificationPrefs(pref)) {
+        prefs.verificationPrefs = {
+          hideBadges: pref.hideBadges,
+        }
       }
     }
 
@@ -1330,6 +1337,25 @@ export class Agent extends XrpcClient {
 
       return prefs
         .filter((p) => !AppBskyActorDefs.isPostInteractionSettingsPref(p))
+        .concat(pref)
+    })
+  }
+
+  async setVerificationPrefs(settings: AppBskyActorDefs.VerificationPrefs) {
+    const result = AppBskyActorDefs.validateVerificationPrefs(settings)
+    // Fool-proofing (should not be needed because of type safety)
+    if (!result.success) throw result.error
+
+    await this.updatePreferences((prefs) => {
+      const pref = prefs.findLast(predicate.isValidVerificationPrefs) || {
+        $type: 'app.bsky.actor.defs#verificationPrefs',
+        hideBadges: false,
+      }
+
+      pref.hideBadges = settings.hideBadges
+
+      return prefs
+        .filter((p) => !AppBskyActorDefs.isVerificationPrefs(p))
         .concat(pref)
     })
   }

@@ -24,6 +24,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   getLabelerRecords: getRecords(db, ids.AppBskyLabelerService),
   getActorChatDeclarationRecords: getRecords(db, ids.ChatBskyActorDeclaration),
   getStarterPackRecords: getRecords(db, ids.AppBskyGraphStarterpack),
+  getVerificationRecords: getRecords(db, ids.AppBskyGraphVerification),
 })
 
 export const getRecords =
