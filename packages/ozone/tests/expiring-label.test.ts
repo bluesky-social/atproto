@@ -1,14 +1,11 @@
-import assert from 'node:assert'
-import AtpAgent, { ToolsOzoneModerationDefs } from '@atproto/api'
+import AtpAgent from '@atproto/api'
 import {
   ModeratorClient,
   SeedClient,
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import { ResponseType, XRPCError } from '@atproto/xrpc'
 import { ids } from '../src/lexicon/lexicons'
-import { forSnapshot, identity } from './_util'
 
 describe('expiring label', () => {
   let network: TestNetwork
