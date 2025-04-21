@@ -116,18 +116,19 @@ export class TestNetwork extends TestNetworkNoAppView {
       inviteCode,
     })
 
-    const ozoneVerifierPassword =
-      await ozoneServiceProfile.createAppPasswordForVerification(pds)
-    if (ozone.daemon.ctx.cfg.verifier) {
-      ozone.daemon.ctx.cfg.verifier.password = ozoneVerifierPassword
-    }
-
     await ozone.addAdminDid(ozoneDid)
 
     mockNetworkUtilities(pds, bsky)
     await pds.processAll()
     await bsky.sub.processAll()
     await thirdPartyPds.close()
+
+    // Weird but if we do this before pds.processAll() somehow appview loses this user and tests in different parts fail because appview doesn't return this user in various contexts anymore
+    const ozoneVerifierPassword =
+      await ozoneServiceProfile.createAppPasswordForVerification(pds)
+    if (ozone.daemon.ctx.cfg.verifier) {
+      ozone.daemon.ctx.cfg.verifier.password = ozoneVerifierPassword
+    }
 
     let introspect: IntrospectServer | undefined = undefined
     if (params.introspect?.port) {
