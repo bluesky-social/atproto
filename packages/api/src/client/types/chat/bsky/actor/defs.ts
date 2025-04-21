@@ -25,7 +25,7 @@ export interface ProfileViewBasic {
   associated?: AppBskyActorDefs.ProfileAssociated
   viewer?: AppBskyActorDefs.ViewerState
   labels?: ComAtprotoLabelDefs.Label[]
-  /** Set to true when the actor cannot actively participate in converations */
+  /** Set to true when the actor cannot actively participate in conversations */
   chatDisabled?: boolean
   verification?: AppBskyActorDefs.VerificationState
 }

@@ -11104,7 +11104,7 @@ export const schemaDict = {
           chatDisabled: {
             type: 'boolean',
             description:
-              'Set to true when the actor cannot actively participate in converations',
+              'Set to true when the actor cannot actively participate in conversations',
           },
           verification: {
             type: 'ref',
