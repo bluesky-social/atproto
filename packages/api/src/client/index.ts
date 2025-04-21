@@ -109,6 +109,7 @@ import * as AppBskyActorProfile from './types/app/bsky/actor/profile.js'
 import * as AppBskyActorPutPreferences from './types/app/bsky/actor/putPreferences.js'
 import * as AppBskyActorSearchActors from './types/app/bsky/actor/searchActors.js'
 import * as AppBskyActorSearchActorsTypeahead from './types/app/bsky/actor/searchActorsTypeahead.js'
+import * as AppBskyActorTestLinguist from './types/app/bsky/actor/testLinguist.js'
 import * as AppBskyEmbedDefs from './types/app/bsky/embed/defs.js'
 import * as AppBskyEmbedExternal from './types/app/bsky/embed/external.js'
 import * as AppBskyEmbedImages from './types/app/bsky/embed/images.js'
@@ -364,6 +365,7 @@ export * as AppBskyActorProfile from './types/app/bsky/actor/profile.js'
 export * as AppBskyActorPutPreferences from './types/app/bsky/actor/putPreferences.js'
 export * as AppBskyActorSearchActors from './types/app/bsky/actor/searchActors.js'
 export * as AppBskyActorSearchActorsTypeahead from './types/app/bsky/actor/searchActorsTypeahead.js'
+export * as AppBskyActorTestLinguist from './types/app/bsky/actor/testLinguist.js'
 export * as AppBskyEmbedDefs from './types/app/bsky/embed/defs.js'
 export * as AppBskyEmbedExternal from './types/app/bsky/embed/external.js'
 export * as AppBskyEmbedImages from './types/app/bsky/embed/images.js'
@@ -1809,6 +1811,18 @@ export class AppBskyActorNS {
   ): Promise<AppBskyActorSearchActorsTypeahead.Response> {
     return this._client.call(
       'app.bsky.actor.searchActorsTypeahead',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  testLinguist(
+    params?: AppBskyActorTestLinguist.QueryParams,
+    opts?: AppBskyActorTestLinguist.CallOptions,
+  ): Promise<AppBskyActorTestLinguist.Response> {
+    return this._client.call(
+      'app.bsky.actor.testLinguist',
       params,
       undefined,
       opts,
