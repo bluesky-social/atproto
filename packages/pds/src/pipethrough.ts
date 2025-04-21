@@ -8,13 +8,14 @@ import {
   omit,
   streamToNodeBuffer,
 } from '@atproto/common'
-import { ResponseType, XRPCError as XRPCClientError } from '@atproto/xrpc'
+import { XRPCError as XRPCClientError } from '@atproto/xrpc'
 import {
   CatchallHandler,
   HandlerPipeThroughBuffer,
   HandlerPipeThroughStream,
   InternalServerError,
   InvalidRequestError,
+  ResponseType,
   XRPCError as XRPCServerError,
   parseReqNsid,
 } from '@atproto/xrpc-server'
