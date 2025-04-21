@@ -5569,28 +5569,6 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyActorTestLinguist: {
-    lexicon: 1,
-    id: 'app.bsky.actor.testLinguist',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          'Used to add generated code to test the linguist config. Will be removed in this PR.',
-        parameters: {
-          type: 'params',
-          properties: {},
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            properties: {},
-          },
-        },
-      },
-    },
-  },
   AppBskyEmbedDefs: {
     lexicon: 1,
     id: 'app.bsky.embed.defs',
@@ -11126,7 +11104,7 @@ export const schemaDict = {
           chatDisabled: {
             type: 'boolean',
             description:
-              'Set to true when the actor cannot actively participate in conversations',
+              'Set to true when the actor cannot actively participate in converations',
           },
           verification: {
             type: 'ref',
@@ -15639,7 +15617,6 @@ export const ids = {
   AppBskyActorPutPreferences: 'app.bsky.actor.putPreferences',
   AppBskyActorSearchActors: 'app.bsky.actor.searchActors',
   AppBskyActorSearchActorsTypeahead: 'app.bsky.actor.searchActorsTypeahead',
-  AppBskyActorTestLinguist: 'app.bsky.actor.testLinguist',
   AppBskyEmbedDefs: 'app.bsky.embed.defs',
   AppBskyEmbedExternal: 'app.bsky.embed.external',
   AppBskyEmbedImages: 'app.bsky.embed.images',
