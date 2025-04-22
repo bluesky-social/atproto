@@ -5,35 +5,250 @@
     "reasonType": {
       "type": "string",
       "knownValues": [
+        "com.atproto.moderation.defs#violenceAnimalWelfare",
+        "com.atproto.moderation.defs#violenceThreats",
+        "com.atproto.moderation.defs#violenceGraphicContent",
+        "com.atproto.moderation.defs#violenceSelfHarm",
+        "com.atproto.moderation.defs#violenceGlorification",
+        "com.atproto.moderation.defs#violenceExtremistContent",
+        "com.atproto.moderation.defs#violenceTrafficking",
+        "com.atproto.moderation.defs#violenceOther",
+
+        "com.atproto.moderation.defs#sexualAbuseTFGBVContent",
+        "com.atproto.moderation.defs#sexualAbuseNCII",
+        "com.atproto.moderation.defs#sexualAbuseSextortion",
+        "com.atproto.moderation.defs#sexualAbuseDeepfake",
+        "com.atproto.moderation.defs#sexualAbuseAnimal",
+        "com.atproto.moderation.defs#sexualAbuseUnlabeled",
+        "com.atproto.moderation.defs#sexualAbuseOther",
+
+        "com.atproto.moderation.defs#childSafetyCSAM",
+        "com.atproto.moderation.defs#childSafetyGroom",
+        "com.atproto.moderation.defs#childSafetyMinorPrivacy",
+        "com.atproto.moderation.defs#childSafetyEndangerment",
+        "com.atproto.moderation.defs#childSafetyHarassment",
+        "com.atproto.moderation.defs#childSafetyPromotion",
+        "com.atproto.moderation.defs#childSafetyOther",
+
+        "com.atproto.moderation.defs#harassmentTroll",
+        "com.atproto.moderation.defs#harassmentTargeted",
+        "com.atproto.moderation.defs#harassmentHateSpeech",
+        "com.atproto.moderation.defs#harassmentDoxxing",
+        "com.atproto.moderation.defs#harassmentOther",
+
+        "com.atproto.moderation.defs#misleadingBot",
+        "com.atproto.moderation.defs#misleadingImpersonation",
+        "com.atproto.moderation.defs#misleadingSpam",
+        "com.atproto.moderation.defs#misleadingScam",
+        "com.atproto.moderation.defs#misleadingSyntheticContent",
+        "com.atproto.moderation.defs#misleadingMisinformation",
+        "com.atproto.moderation.defs#misleadingOther",
+
+        "com.atproto.moderation.defs#bnnSiteSecurity",
+        "com.atproto.moderation.defs#bnnStolenContent",
+        "com.atproto.moderation.defs#bnnProhibitedSales",
+        "com.atproto.moderation.defs#bnnBanEvasion",
+        "com.atproto.moderation.defs#bnnOther",
+
+        "com.atproto.moderation.defs#civicElectoralProcess",
+        "com.atproto.moderation.defs#civicDisclosure",
+        "com.atproto.moderation.defs#civicInterference",
+        "com.atproto.moderation.defs#civicMisinformation",
+        "com.atproto.moderation.defs#civicImpersonation",
+
+        "com.atproto.moderation.defs#reasonOther",
+        "com.atproto.moderation.defs#reasonAppeal",
+
         "com.atproto.moderation.defs#reasonSpam",
         "com.atproto.moderation.defs#reasonViolation",
         "com.atproto.moderation.defs#reasonMisleading",
         "com.atproto.moderation.defs#reasonSexual",
-        "com.atproto.moderation.defs#reasonRude",
-        "com.atproto.moderation.defs#reasonOther",
-        "com.atproto.moderation.defs#reasonAppeal"
+        "com.atproto.moderation.defs#reasonRude"
       ]
     },
-    "reasonSpam": {
+    "violenceAnimalWelfare": {
       "type": "token",
-      "description": "Spam: frequent unwanted promotion, replies, mentions"
+      "description": "Animal welfare violations"
     },
-    "reasonViolation": {
+    "violenceThreats": {
       "type": "token",
-      "description": "Direct violation of server rules, laws, terms of service"
+      "description": "Threats or incitement"
     },
-    "reasonMisleading": {
+    "violenceGraphicContent": {
       "type": "token",
-      "description": "Misleading identity, affiliation, or content"
+      "description": "Graphic violent content"
     },
-    "reasonSexual": {
+    "violenceSelfHarm": {
       "type": "token",
-      "description": "Unwanted or mislabeled sexual content"
+      "description": "Self harm"
     },
-    "reasonRude": {
+    "violenceGlorification": {
       "type": "token",
-      "description": "Rude, harassing, explicit, or otherwise unwelcoming behavior"
+      "description": "Glorification of violence"
     },
+    "violenceExtremistContent": {
+      "type": "token",
+      "description": "Extremist content"
+    },
+    "violenceTrafficking": {
+      "type": "token",
+      "description": "Human trafficking"
+    },
+    "violenceOther": {
+      "type": "token",
+      "description": "Other violent content"
+    },
+
+    "sexualAbuseTFGBVContent": {
+      "type": "token",
+      "description": "Adult sexual abuse content"
+    },
+    "sexualAbuseNCII": {
+      "type": "token",
+      "description": "Non-consensual intimate imagery"
+    },
+    "sexualAbuseSextortion": {
+      "type": "token",
+      "description": "Sextortion"
+    },
+    "sexualAbuseDeepfake": {
+      "type": "token",
+      "description": "Deepfake adult content"
+    },
+    "sexualAbuseAnimal": {
+      "type": "token",
+      "description": "Animal sexual abuse"
+    },
+    "sexualAbuseUnlabeled": {
+      "type": "token",
+      "description": "Unlabelled adult content"
+    },
+    "sexualAbuseOther": {
+      "type": "token",
+      "description": "Other sexual violence content"
+    },
+
+    "childSafetyCSAM": {
+      "type": "token",
+      "description": "Child sexual abuse material (CSAM)"
+    },
+    "childSafetyGroom": {
+      "type": "token",
+      "description": "Grooming or predatory behavior"
+    },
+    "childSafetyMinorPrivacy": {
+      "type": "token",
+      "description": "Privacy violation involving a minor"
+    },
+    "childSafetyEndangerment": {
+      "type": "token",
+      "description": "Child endangerment"
+    },
+    "childSafetyHarassment": {
+      "type": "token",
+      "description": "Harassment or bullying of minors"
+    },
+    "childSafetyPromotion": {
+      "type": "token",
+      "description": "Promotion of child exploitation"
+    },
+    "childSafetyOther": {
+      "type": "token",
+      "description": "Other child safety"
+    },
+
+    "harassmentTroll": {
+      "type": "token",
+      "description": "Trolling"
+    },
+    "harassmentTargeted": {
+      "type": "token",
+      "description": "Targeted harassment"
+    },
+    "harassmentHateSpeech": {
+      "type": "token",
+      "description": "Hate speech"
+    },
+    "harassmentDoxxing": {
+      "type": "token",
+      "description": "Doxxing"
+    },
+    "harassmentOther": {
+      "type": "token",
+      "description": "Other harassing or hateful content"
+    },
+
+    "misleadingBot": {
+      "type": "token",
+      "description": "Fake account or bot"
+    },
+    "misleadingImpersonation": {
+      "type": "token",
+      "description": "Impersonation"
+    },
+    "misleadingSpam": {
+      "type": "token",
+      "description": "Spam"
+    },
+    "misleadingScam": {
+      "type": "token",
+      "description": "Scam"
+    },
+    "misleadingSyntheticContent": {
+      "type": "token",
+      "description": "Unlabelled gen-AI or synthetic content"
+    },
+    "misleadingMisinformation": {
+      "type": "token",
+      "description": "Harmful false claims"
+    },
+    "misleadingOther": {
+      "type": "token",
+      "description": "Other misleading content"
+    },
+
+    "bnnSiteSecurity": {
+      "type": "token",
+      "description": "Hacking or system attacks"
+    },
+    "bnnStolenContent": {
+      "type": "token",
+      "description": "Stolen content"
+    },
+    "bnnProhibitedSales": {
+      "type": "token",
+      "description": "Promoting or selling prohibited items or services"
+    },
+    "bnnBanEvasion": {
+      "type": "token",
+      "description": "Banned user returning"
+    },
+    "bnnOther": {
+      "type": "token",
+      "description": "Other"
+    },
+
+    "civicElectoralProcess": {
+      "type": "token",
+      "description": "Electoral process violations"
+    },
+    "civicDisclosure": {
+      "type": "token",
+      "description": "Disclosure & transparency violations"
+    },
+    "civicInterference": {
+      "type": "token",
+      "description": "Voter intimidation or interference"
+    },
+    "civicMisinformation": {
+      "type": "token",
+      "description": "Election misinformation"
+    },
+    "civicImpersonation": {
+      "type": "token",
+      "description": "Impersonation of electoral officials/entities"
+    },
+
     "reasonOther": {
       "type": "token",
       "description": "Other: reports not falling under another report category"
@@ -41,6 +256,27 @@
     "reasonAppeal": {
       "type": "token",
       "description": "Appeal: appeal a previously taken moderation action"
+    },
+
+    "reasonSpam": {
+      "type": "token",
+      "description": "(DEPRECATED) Frequent unwanted promotion, replies, mentions"
+    },
+    "reasonViolation": {
+      "type": "token",
+      "description": "(DEPRECATED) Direct violation of server rules, laws, terms of service"
+    },
+    "reasonMisleading": {
+      "type": "token",
+      "description": "(DEPRECATED) Misleading identity, affiliation, or content"
+    },
+    "reasonSexual": {
+      "type": "token",
+      "description": "(DEPRECATED) Unwanted or mislabeled sexual content"
+    },
+    "reasonRude": {
+      "type": "token",
+      "description": "(DEPRECATED) Rude, harassing, explicit, or otherwise unwelcoming behavior"
     },
     "subjectType": {
       "type": "string",
