@@ -50,8 +50,8 @@ describe('verification', () => {
     // @TODO: This tests encapsulates the entire grant->revoke->list flow. we should have more detailed test for each path
     it('returns paginated list of verifications', async () => {
       const {
-        data: { verifications },
-      } = await adminAgent.tools.ozone.verification.grant({
+        data: { verifications, failedVerifications },
+      } = await adminAgent.tools.ozone.verification.grantVerifications({
         verifications: [
           {
             subject: sc.dids.bob,
@@ -66,16 +66,16 @@ describe('verification', () => {
         ],
       })
 
-      const grantedVerificationUri =
-        'uri' in verifications[0] ? verifications[0].uri : undefined
+      const grantedVerificationUri = verifications[0]?.uri
       if (grantedVerificationUri) {
-        await adminAgent.tools.ozone.verification.revoke({
+        await adminAgent.tools.ozone.verification.revokeVerifications({
           uris: [grantedVerificationUri],
           revokeReason: 'Testing',
         })
       }
 
-      const { data } = await adminAgent.tools.ozone.verification.list({})
+      const { data } =
+        await adminAgent.tools.ozone.verification.listVerifications({})
 
       expect(forSnapshot(data.verifications)).toMatchSnapshot()
       expect(data.verifications.find((v) => v.revokedAt)?.uri).toEqual(
@@ -85,17 +85,18 @@ describe('verification', () => {
   })
 
   describe('grant', () => {
-    it('Fails for non-admins', async () => {
-      const attempt = triageAgent.tools.ozone.verification.grant({
-        verifications: [
-          {
-            subject: sc.dids.bob,
-            handle: sc.accounts[sc.dids.bob].handle,
-            displayName: 'Bob',
-          },
-        ],
-      })
-      await expect(attempt).rejects.toThrow(
+    it('Fails for non-admins and non-verifiers', async () => {
+      const attemptAsAdmin =
+        triageAgent.tools.ozone.verification.grantVerifications({
+          verifications: [
+            {
+              subject: sc.dids.bob,
+              handle: sc.accounts[sc.dids.bob].handle,
+              displayName: 'Bob',
+            },
+          ],
+        })
+      await expect(attemptAsAdmin).rejects.toThrow(
         'Must be an admin or verifier to grant verifications',
       )
     })

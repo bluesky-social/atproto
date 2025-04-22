@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "tools.ozone.verification.grant",
+  "id": "tools.ozone.verification.grantVerifications",
   "defs": {
     "main": {
       "type": "procedure",
@@ -27,16 +27,20 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["verifications"],
+          "required": ["verifications", "failedVerifications"],
           "properties": {
             "verifications": {
               "type": "array",
               "items": {
-                "type": "union",
-                "refs": [
-                  "tools.ozone.verification.defs#verificationView",
-                  "#grantError"
-                ]
+                "type": "ref",
+                "ref": "tools.ozone.verification.defs#verificationView"
+              }
+            },
+            "failedVerifications": {
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "#grantError"
               }
             }
           }

@@ -11104,7 +11104,7 @@ export const schemaDict = {
           chatDisabled: {
             type: 'boolean',
             description:
-              'Set to true when the actor cannot actively participate in converations',
+              'Set to true when the actor cannot actively participate in conversations',
           },
           verification: {
             type: 'ref',
@@ -15495,7 +15495,14 @@ export const schemaDict = {
       verificationView: {
         type: 'object',
         description: 'Verification data for the associated subject.',
-        required: ['issuer', 'uri', 'subject', 'handle', 'displayName'],
+        required: [
+          'issuer',
+          'uri',
+          'subject',
+          'handle',
+          'displayName',
+          'createdAt',
+        ],
         properties: {
           issuer: {
             type: 'string',
@@ -15569,9 +15576,9 @@ export const schemaDict = {
       },
     },
   },
-  ToolsOzoneVerificationGrant: {
+  ToolsOzoneVerificationGrantVerifications: {
     lexicon: 1,
-    id: 'tools.ozone.verification.grant',
+    id: 'tools.ozone.verification.grantVerifications',
     defs: {
       main: {
         type: 'procedure',
@@ -15589,7 +15596,7 @@ export const schemaDict = {
                 maxLength: 100,
                 items: {
                   type: 'ref',
-                  ref: 'lex:tools.ozone.verification.grant#verificationInput',
+                  ref: 'lex:tools.ozone.verification.grantVerifications#verificationInput',
                 },
               },
             },
@@ -15599,16 +15606,20 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['verifications'],
+            required: ['verifications', 'failedVerifications'],
             properties: {
               verifications: {
                 type: 'array',
                 items: {
-                  type: 'union',
-                  refs: [
-                    'lex:tools.ozone.verification.defs#verificationView',
-                    'lex:tools.ozone.verification.grant#grantError',
-                  ],
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.verification.defs#verificationView',
+                },
+              },
+              failedVerifications: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.verification.grantVerifications#grantError',
                 },
               },
             },
@@ -15660,9 +15671,9 @@ export const schemaDict = {
       },
     },
   },
-  ToolsOzoneVerificationList: {
+  ToolsOzoneVerificationListVerifications: {
     lexicon: 1,
-    id: 'tools.ozone.verification.list',
+    id: 'tools.ozone.verification.listVerifications',
     defs: {
       main: {
         type: 'query',
@@ -15746,9 +15757,9 @@ export const schemaDict = {
       },
     },
   },
-  ToolsOzoneVerificationRevoke: {
+  ToolsOzoneVerificationRevokeVerifications: {
     lexicon: 1,
-    id: 'tools.ozone.verification.revoke',
+    id: 'tools.ozone.verification.revokeVerifications',
     defs: {
       main: {
         type: 'procedure',
@@ -16125,7 +16136,10 @@ export const ids = {
   ToolsOzoneTeamListMembers: 'tools.ozone.team.listMembers',
   ToolsOzoneTeamUpdateMember: 'tools.ozone.team.updateMember',
   ToolsOzoneVerificationDefs: 'tools.ozone.verification.defs',
-  ToolsOzoneVerificationGrant: 'tools.ozone.verification.grant',
-  ToolsOzoneVerificationList: 'tools.ozone.verification.list',
-  ToolsOzoneVerificationRevoke: 'tools.ozone.verification.revoke',
+  ToolsOzoneVerificationGrantVerifications:
+    'tools.ozone.verification.grantVerifications',
+  ToolsOzoneVerificationListVerifications:
+    'tools.ozone.verification.listVerifications',
+  ToolsOzoneVerificationRevokeVerifications:
+    'tools.ozone.verification.revokeVerifications',
 } as const

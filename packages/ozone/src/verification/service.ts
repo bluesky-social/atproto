@@ -22,20 +22,22 @@ export class VerificationService {
   async create(
     verifications: Pick<
       Verification,
-      'uri' | 'issuer' | 'subject' | 'handle' | 'displayName' | 'createdAt'
+      | 'uri'
+      | 'issuer'
+      | 'subject'
+      | 'handle'
+      | 'displayName'
+      | 'createdAt'
+      | 'cid'
     >[],
   ) {
-    // @TODO: We should probably handle errors here?
-    await this.db.transaction(async (tx) => {
-      return Promise.allSettled(
-        verifications.map((verification) => {
-          return tx.db
-            .insertInto('verification')
-            .values(verification)
-            .onConflict((oc) => oc.doNothing())
-            .execute()
-        }),
-      )
+    return this.db.transaction(async (tx) => {
+      return tx.db
+        .insertInto('verification')
+        .values(verifications)
+        .onConflict((oc) => oc.doNothing())
+        .returningAll()
+        .execute()
     })
   }
 
@@ -108,11 +110,11 @@ export class VerificationService {
     }
 
     if (createdAfter) {
-      qb = qb.where('createdAt', '>', createdAfter)
+      qb = qb.where('createdAt', '>=', createdAfter)
     }
 
     if (createdBefore) {
-      qb = qb.where('createdAt', '>', createdBefore)
+      qb = qb.where('createdAt', '<=', createdBefore)
     }
 
     const keyset = new CreatedAtUriKeyset(ref(`createdAt`), ref('uri'))

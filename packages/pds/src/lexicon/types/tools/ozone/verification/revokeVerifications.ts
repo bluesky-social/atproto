@@ -14,7 +14,7 @@ import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 
 const is$typed = _is$typed,
   validate = _validate
-const id = 'tools.ozone.verification.revoke'
+const id = 'tools.ozone.verification.revokeVerifications'
 
 export interface QueryParams {}
 

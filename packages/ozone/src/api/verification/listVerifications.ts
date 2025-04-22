@@ -3,7 +3,7 @@ import { Server } from '../../lexicon'
 import { getReposForVerifications } from '../../verification/util'
 
 export default function (server: Server, ctx: AppContext) {
-  server.tools.ozone.verification.list({
+  server.tools.ozone.verification.listVerifications({
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ req, params, auth }) => {
       const modViews = ctx.modService(ctx.db).views

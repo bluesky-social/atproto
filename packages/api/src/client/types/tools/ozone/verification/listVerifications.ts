@@ -14,7 +14,7 @@ import type * as ToolsOzoneVerificationDefs from './defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
-const id = 'tools.ozone.verification.list'
+const id = 'tools.ozone.verification.listVerifications'
 
 export interface QueryParams {
   /** Pagination cursor */

@@ -41,7 +41,7 @@ export const readEnv = (): OzoneEnvironment => {
     verifierDid: envStr('OZONE_VERIFIER_DID'),
     verifierPassword: envStr('OZONE_VERIFIER_PASSWORD'),
     verifierIssuersToIndex: envList('OZONE_VERIFIER_ISSUERS_TO_INDEX'),
-    jetstreamUrl: envStr('OZONE_VERIFIER_JETSTREAM_URL'),
+    jetstreamUrl: envStr('OZONE_JETSTREAM_URL'),
   }
 }
 

@@ -35,9 +35,9 @@ import addMember from './team/addMember'
 import deleteMember from './team/deleteMember'
 import listMembers from './team/listMembers'
 import updateMember from './team/updateMember'
-import grantVerifications from './verification/grant'
-import listVerifications from './verification/list'
-import revokeVerifications from './verification/revoke'
+import grantVerifications from './verification/grantVerifications'
+import listVerifications from './verification/listVerifications'
+import revokeVerifications from './verification/revokeVerifications'
 
 export * as health from './health'
 

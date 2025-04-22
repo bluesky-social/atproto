@@ -1,5 +1,5 @@
 import { Sender, WebSocketServer } from 'ws'
-import { AtpAgent } from '@atproto/api'
+import { AppBskyGraphVerification, AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { forSnapshot } from './_util'
 
@@ -57,11 +57,12 @@ describe('verification-listener', () => {
         collection: 'app.bsky.graph.verification',
         rkey: 'abcdefg',
         record: {
+          $type: 'app.bsky.graph.verification',
           subject: sc.dids.alice,
           handle: sc.accounts[sc.dids.alice].handle,
           displayName: 'Alice',
           createdAt: new Date().toISOString(),
-        },
+        } satisfies AppBskyGraphVerification.Record,
       },
     }
     const deleteEvent = {
@@ -81,7 +82,7 @@ describe('verification-listener', () => {
     await new Promise((resolve) => setTimeout(() => resolve(true), 500))
     const {
       data: { verifications },
-    } = await adminAgent.tools.ozone.verification.list({})
+    } = await adminAgent.tools.ozone.verification.listVerifications({})
     const cursor = await verificationListener?.getCursor()
 
     expect(forSnapshot(verifications)).toMatchSnapshot()

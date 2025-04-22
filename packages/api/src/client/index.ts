@@ -264,9 +264,9 @@ import * as ToolsOzoneTeamDeleteMember from './types/tools/ozone/team/deleteMemb
 import * as ToolsOzoneTeamListMembers from './types/tools/ozone/team/listMembers.js'
 import * as ToolsOzoneTeamUpdateMember from './types/tools/ozone/team/updateMember.js'
 import * as ToolsOzoneVerificationDefs from './types/tools/ozone/verification/defs.js'
-import * as ToolsOzoneVerificationGrant from './types/tools/ozone/verification/grant.js'
-import * as ToolsOzoneVerificationList from './types/tools/ozone/verification/list.js'
-import * as ToolsOzoneVerificationRevoke from './types/tools/ozone/verification/revoke.js'
+import * as ToolsOzoneVerificationGrantVerifications from './types/tools/ozone/verification/grantVerifications.js'
+import * as ToolsOzoneVerificationListVerifications from './types/tools/ozone/verification/listVerifications.js'
+import * as ToolsOzoneVerificationRevokeVerifications from './types/tools/ozone/verification/revokeVerifications.js'
 
 export * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs.js'
 export * as ComAtprotoAdminDeleteAccount from './types/com/atproto/admin/deleteAccount.js'
@@ -523,9 +523,9 @@ export * as ToolsOzoneTeamDeleteMember from './types/tools/ozone/team/deleteMemb
 export * as ToolsOzoneTeamListMembers from './types/tools/ozone/team/listMembers.js'
 export * as ToolsOzoneTeamUpdateMember from './types/tools/ozone/team/updateMember.js'
 export * as ToolsOzoneVerificationDefs from './types/tools/ozone/verification/defs.js'
-export * as ToolsOzoneVerificationGrant from './types/tools/ozone/verification/grant.js'
-export * as ToolsOzoneVerificationList from './types/tools/ozone/verification/list.js'
-export * as ToolsOzoneVerificationRevoke from './types/tools/ozone/verification/revoke.js'
+export * as ToolsOzoneVerificationGrantVerifications from './types/tools/ozone/verification/grantVerifications.js'
+export * as ToolsOzoneVerificationListVerifications from './types/tools/ozone/verification/listVerifications.js'
+export * as ToolsOzoneVerificationRevokeVerifications from './types/tools/ozone/verification/revokeVerifications.js'
 
 export const COM_ATPROTO_MODERATION = {
   DefsReasonSpam: 'com.atproto.moderation.defs#reasonSpam',
@@ -4396,36 +4396,36 @@ export class ToolsOzoneVerificationNS {
     this._client = client
   }
 
-  grant(
-    data?: ToolsOzoneVerificationGrant.InputSchema,
-    opts?: ToolsOzoneVerificationGrant.CallOptions,
-  ): Promise<ToolsOzoneVerificationGrant.Response> {
+  grantVerifications(
+    data?: ToolsOzoneVerificationGrantVerifications.InputSchema,
+    opts?: ToolsOzoneVerificationGrantVerifications.CallOptions,
+  ): Promise<ToolsOzoneVerificationGrantVerifications.Response> {
     return this._client.call(
-      'tools.ozone.verification.grant',
+      'tools.ozone.verification.grantVerifications',
       opts?.qp,
       data,
       opts,
     )
   }
 
-  list(
-    params?: ToolsOzoneVerificationList.QueryParams,
-    opts?: ToolsOzoneVerificationList.CallOptions,
-  ): Promise<ToolsOzoneVerificationList.Response> {
+  listVerifications(
+    params?: ToolsOzoneVerificationListVerifications.QueryParams,
+    opts?: ToolsOzoneVerificationListVerifications.CallOptions,
+  ): Promise<ToolsOzoneVerificationListVerifications.Response> {
     return this._client.call(
-      'tools.ozone.verification.list',
+      'tools.ozone.verification.listVerifications',
       params,
       undefined,
       opts,
     )
   }
 
-  revoke(
-    data?: ToolsOzoneVerificationRevoke.InputSchema,
-    opts?: ToolsOzoneVerificationRevoke.CallOptions,
-  ): Promise<ToolsOzoneVerificationRevoke.Response> {
+  revokeVerifications(
+    data?: ToolsOzoneVerificationRevokeVerifications.InputSchema,
+    opts?: ToolsOzoneVerificationRevokeVerifications.CallOptions,
+  ): Promise<ToolsOzoneVerificationRevokeVerifications.Response> {
     return this._client.call(
-      'tools.ozone.verification.revoke',
+      'tools.ozone.verification.revokeVerifications',
       opts?.qp,
       data,
       opts,

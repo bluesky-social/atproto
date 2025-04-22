@@ -3,10 +3,6 @@
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "./dist",
-    "module": "CommonJS",
-    "moduleResolution": "Node",
-    "esModuleInterop": true,
-    "target": "ES2020",
     "noUnusedLocals": false
   },
   "include": ["./src"]

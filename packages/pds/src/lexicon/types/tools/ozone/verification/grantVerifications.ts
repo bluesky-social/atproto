@@ -15,7 +15,7 @@ import type * as ToolsOzoneVerificationDefs from './defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
-const id = 'tools.ozone.verification.grant'
+const id = 'tools.ozone.verification.grantVerifications'
 
 export interface QueryParams {}
 
@@ -25,11 +25,8 @@ export interface InputSchema {
 }
 
 export interface OutputSchema {
-  verifications: (
-    | $Typed<ToolsOzoneVerificationDefs.VerificationView>
-    | $Typed<GrantError>
-    | { $type: string }
-  )[]
+  verifications: ToolsOzoneVerificationDefs.VerificationView[]
+  failedVerifications: GrantError[]
 }
 
 export interface HandlerInput {
@@ -62,7 +59,7 @@ export type Handler<HA extends HandlerAuth = never> = (
 ) => Promise<HandlerOutput> | HandlerOutput
 
 export interface VerificationInput {
-  $type?: 'tools.ozone.verification.grant#verificationInput'
+  $type?: 'tools.ozone.verification.grantVerifications#verificationInput'
   /** The did of the subject being verified */
   subject: string
   /** Handle of the subject the verification applies to at the moment of verifying. */
@@ -85,7 +82,7 @@ export function validateVerificationInput<V>(v: V) {
 
 /** Error object for failed verifications. */
 export interface GrantError {
-  $type?: 'tools.ozone.verification.grant#grantError'
+  $type?: 'tools.ozone.verification.grantVerifications#grantError'
   /** Error message describing the reason for failure. */
   error: string
   /** The did of the subject being verified */

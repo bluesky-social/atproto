@@ -29,7 +29,7 @@ export interface VerificationView {
   /** Display name of the subject the verification applies to at the moment of verifying, which might not be the same at the time of viewing. The verification is only valid if the current displayName matches the one at the time of verifying. */
   displayName: string
   /** Timestamp when the verification was created. */
-  createdAt?: string
+  createdAt: string
   /** Describes the reason for revocation, also indicating that the verification is no longer valid. */
   revokeReason?: string
   /** Timestamp when the verification was revoked. */

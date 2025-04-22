@@ -198,7 +198,8 @@ export class TeamService {
       isAdmin || member?.role === 'tools.ozone.team.defs#roleModerator'
     const isTriage =
       isModerator || member?.role === 'tools.ozone.team.defs#roleTriage'
-    const isVerifier = member?.role === 'tools.ozone.team.defs#roleVerifier'
+    const isVerifier =
+      isAdmin || member?.role === 'tools.ozone.team.defs#roleVerifier'
 
     return {
       isModerator,

@@ -15,6 +15,7 @@ export type VerificationIssuerCreator = (
 ) => VerificationIssuer
 
 export class VerificationIssuer {
+  private agent: AtpAgent | null = null
   constructor(private verifierConfig: VerifierConfig) {}
 
   static creator() {
@@ -24,19 +25,21 @@ export class VerificationIssuer {
 
   // @TODO: Probably shouldn't login for every req?
   async getAgent() {
-    const agent = new AtpAgent({ service: this.verifierConfig.url })
-    await agent.login({
-      identifier: this.verifierConfig.did,
-      password: this.verifierConfig.password,
-    })
+    if (!this.agent) {
+      this.agent = new AtpAgent({ service: this.verifierConfig.url })
+      await this.agent.login({
+        identifier: this.verifierConfig.did,
+        password: this.verifierConfig.password,
+      })
+    }
 
-    return agent
+    return this.agent
   }
 
   async verify(verifications: VerificationInput[]) {
     const grantedVerifications: Selectable<Verification>[] = []
     const failedVerifications: {
-      $type: 'tools.ozone.verification.grant#grantError'
+      $type: 'tools.ozone.verification.grantVerifications#grantError'
       subject: string
       error: string
     }[] = []
@@ -53,7 +56,7 @@ export class VerificationIssuer {
             subject,
           }
           const {
-            data: { uri },
+            data: { uri, cid },
           } = await agent.com.atproto.repo.createRecord({
             repo: this.verifierConfig.did,
             record: verificationRecord,
@@ -62,6 +65,7 @@ export class VerificationIssuer {
           grantedVerifications.push({
             ...verificationRecord,
             uri,
+            cid,
             revokedAt: null,
             updatedAt: now,
             revokedBy: null,
@@ -69,7 +73,7 @@ export class VerificationIssuer {
           })
         } catch (err) {
           failedVerifications.push({
-            $type: 'tools.ozone.verification.grant#grantError',
+            $type: 'tools.ozone.verification.grantVerifications#grantError',
             error: (err as Error).message,
             subject,
           })
@@ -84,6 +88,8 @@ export class VerificationIssuer {
   async revoke({ uris }: { uris: string[] }) {
     const revokedVerifications: string[] = []
     const failedRevocations: string[] = []
+
+    const agent = await this.getAgent()
 
     await Promise.allSettled(
       uris.map(async (uri) => {
@@ -100,7 +106,6 @@ export class VerificationIssuer {
             )
           }
 
-          const agent = await this.getAgent()
           await agent.com.atproto.repo.deleteRecord({
             collection: atUri.collection,
             repo: this.verifierConfig.did,

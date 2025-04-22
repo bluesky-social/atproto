@@ -1,17 +1,19 @@
+import { Selectable } from 'kysely'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { AppContext } from '../../context'
+import { Verification } from '../../db/schema/verification'
 import { Server } from '../../lexicon'
 import { getReposForVerifications } from '../../verification/util'
 
 export default function (server: Server, ctx: AppContext) {
-  server.tools.ozone.verification.grant({
+  server.tools.ozone.verification.grantVerifications({
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ input, auth, req }) => {
       if (!ctx.cfg.verifier) {
         throw new InvalidRequestError('Verifier not configured')
       }
 
-      if (!auth.credentials.isAdmin && !auth.credentials.isVerifier) {
+      if (!auth.credentials.isVerifier) {
         throw new AuthRequiredError(
           'Must be an admin or verifier to grant verifications',
         )
@@ -27,16 +29,20 @@ export default function (server: Server, ctx: AppContext) {
         return {
           encoding: 'application/json',
           body: {
-            verifications: [...failedVerifications],
+            verifications: [],
+            failedVerifications,
           },
         }
       }
 
-      await verificationService.create(grantedVerifications)
+      const createdVerifications: Selectable<Verification>[] = []
+      const verificationEntries =
+        await verificationService.create(grantedVerifications)
 
       const dids = new Set<string>([ctx.cfg.verifier.did])
 
-      for (const verification of grantedVerifications) {
+      for (const verification of verificationEntries) {
+        createdVerifications.push(verification)
         dids.add(verification.subject)
       }
 
@@ -52,14 +58,15 @@ export default function (server: Server, ctx: AppContext) {
         modViews.getProfiles(didsArr),
       ])
       const verifications = verificationService.view(
-        grantedVerifications,
+        createdVerifications,
         repos,
         profiles,
       )
       return {
         encoding: 'application/json',
         body: {
-          verifications: [...verifications, ...failedVerifications],
+          verifications,
+          failedVerifications,
         },
       }
     },

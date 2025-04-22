@@ -3,14 +3,14 @@ import { AppContext } from '../../context'
 import { Server } from '../../lexicon'
 
 export default function (server: Server, ctx: AppContext) {
-  server.tools.ozone.verification.revoke({
+  server.tools.ozone.verification.revokeVerifications({
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ input, auth }) => {
       if (!ctx.cfg.verifier) {
         throw new InvalidRequestError('Verifier not configured')
       }
 
-      if (!auth.credentials.isAdmin && !auth.credentials.isVerifier) {
+      if (!auth.credentials.isVerifier) {
         throw new AuthRequiredError(
           'Must be an admin or verifier to revoke verifications',
         )

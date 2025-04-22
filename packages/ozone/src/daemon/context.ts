@@ -9,7 +9,6 @@ import { Database } from '../db'
 import { ModerationService } from '../mod-service'
 import { TeamService } from '../team'
 import { getSigningKeyId } from '../util'
-import { VerificationService } from '../verification/service'
 import { EventPusher } from './event-pusher'
 import { EventReverser } from './event-reverser'
 import { MaterializedViewRefresher } from './materialized-view-refresher'
@@ -91,11 +90,9 @@ export class DaemonContext {
       cfg.db.materializedViewRefreshIntervalMs,
     )
 
-    const verificationService = VerificationService.creator()
     const verificationListener = cfg.verifier?.jetstreamUrl
       ? new VerificationListener(
-          verificationService(db),
-          new BackgroundQueue(db, { concurrency: 1 }),
+          db,
           cfg.verifier?.jetstreamUrl,
           cfg.verifier?.issuersToIndex,
         )

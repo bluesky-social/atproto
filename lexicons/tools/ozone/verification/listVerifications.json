@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "tools.ozone.verification.list",
+  "id": "tools.ozone.verification.listVerifications",
   "defs": {
     "main": {
       "type": "query",

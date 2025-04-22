@@ -216,9 +216,9 @@ import * as ToolsOzoneTeamAddMember from './types/tools/ozone/team/addMember.js'
 import * as ToolsOzoneTeamDeleteMember from './types/tools/ozone/team/deleteMember.js'
 import * as ToolsOzoneTeamListMembers from './types/tools/ozone/team/listMembers.js'
 import * as ToolsOzoneTeamUpdateMember from './types/tools/ozone/team/updateMember.js'
-import * as ToolsOzoneVerificationGrant from './types/tools/ozone/verification/grant.js'
-import * as ToolsOzoneVerificationList from './types/tools/ozone/verification/list.js'
-import * as ToolsOzoneVerificationRevoke from './types/tools/ozone/verification/revoke.js'
+import * as ToolsOzoneVerificationGrantVerifications from './types/tools/ozone/verification/grantVerifications.js'
+import * as ToolsOzoneVerificationListVerifications from './types/tools/ozone/verification/listVerifications.js'
+import * as ToolsOzoneVerificationRevokeVerifications from './types/tools/ozone/verification/revokeVerifications.js'
 
 export const COM_ATPROTO_MODERATION = {
   DefsReasonSpam: 'com.atproto.moderation.defs#reasonSpam',
@@ -2927,36 +2927,36 @@ export class ToolsOzoneVerificationNS {
     this._server = server
   }
 
-  grant<AV extends AuthVerifier>(
+  grantVerifications<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
-      ToolsOzoneVerificationGrant.Handler<ExtractAuth<AV>>,
-      ToolsOzoneVerificationGrant.HandlerReqCtx<ExtractAuth<AV>>
+      ToolsOzoneVerificationGrantVerifications.Handler<ExtractAuth<AV>>,
+      ToolsOzoneVerificationGrantVerifications.HandlerReqCtx<ExtractAuth<AV>>
     >,
   ) {
-    const nsid = 'tools.ozone.verification.grant' // @ts-ignore
+    const nsid = 'tools.ozone.verification.grantVerifications' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
-  list<AV extends AuthVerifier>(
+  listVerifications<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
-      ToolsOzoneVerificationList.Handler<ExtractAuth<AV>>,
-      ToolsOzoneVerificationList.HandlerReqCtx<ExtractAuth<AV>>
+      ToolsOzoneVerificationListVerifications.Handler<ExtractAuth<AV>>,
+      ToolsOzoneVerificationListVerifications.HandlerReqCtx<ExtractAuth<AV>>
     >,
   ) {
-    const nsid = 'tools.ozone.verification.list' // @ts-ignore
+    const nsid = 'tools.ozone.verification.listVerifications' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
-  revoke<AV extends AuthVerifier>(
+  revokeVerifications<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
-      ToolsOzoneVerificationRevoke.Handler<ExtractAuth<AV>>,
-      ToolsOzoneVerificationRevoke.HandlerReqCtx<ExtractAuth<AV>>
+      ToolsOzoneVerificationRevokeVerifications.Handler<ExtractAuth<AV>>,
+      ToolsOzoneVerificationRevokeVerifications.HandlerReqCtx<ExtractAuth<AV>>
     >,
   ) {
-    const nsid = 'tools.ozone.verification.revoke' // @ts-ignore
+    const nsid = 'tools.ozone.verification.revokeVerifications' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }

@@ -1,4 +1,5 @@
 import { BackgroundQueue } from '../background'
+import Database from '../db'
 import { CommitCreateEvent, Jetstream } from '../jetstream/service'
 import { verificationLogger } from '../logger'
 import { VerificationService } from '../verification/service'
@@ -15,10 +16,11 @@ export class VerificationListener {
   private cursor?: number
   private jetstream: Jetstream | null = null
   private collection = 'app.bsky.graph.verification'
+  public backgroundQueue = new BackgroundQueue(this.db, { concurrency: 1 })
+  private verificationService = VerificationService.creator()(this.db)
 
   constructor(
-    private verificationService: VerificationService,
-    public backgroundQueue: BackgroundQueue,
+    private db: Database,
     private jetstreamUrl: string,
     private verifierIssuersToIndex?: string[],
   ) {}
@@ -42,15 +44,15 @@ export class VerificationListener {
   handleNewVerification(
     issuer: string,
     uri: string,
+    cid: string,
     record: VerificationRecord,
     cursor: number,
   ) {
     this.backgroundQueue.add(async () => {
       try {
-        const { subject, handle, displayName, createdAt } =
-          record as unknown as VerificationRecord
+        const { subject, handle, displayName, createdAt } = record
         await this.verificationService.create([
-          { uri, issuer, subject, handle, displayName, createdAt },
+          { uri, cid, issuer, subject, handle, displayName, createdAt },
         ])
         await this.updateCursor(cursor)
       } catch (err) {
@@ -114,9 +116,9 @@ export class VerificationListener {
           const hasCapacity = await this.ensureCoolDown()
           if (hasCapacity) {
             const issuer = e.did
-            const { record, rkey, collection } = e.commit
+            const { record, rkey, collection, cid } = e.commit
             const uri = `at://${issuer}/${collection}/${rkey}`
-            this.handleNewVerification(issuer, uri, record, e.time_us)
+            this.handleNewVerification(issuer, uri, cid, record, e.time_us)
           }
         },
       },

@@ -1,7 +1,10 @@
+import { Generated } from 'kysely'
+
 export const verificationTableName = 'verification'
 
 export interface Verification {
   uri: string
+  cid: string
   issuer: string
   subject: string
   handle: string
@@ -10,7 +13,7 @@ export interface Verification {
   revokedBy: string | null
   revokedAt: string | null
   createdAt: string
-  updatedAt?: string
+  updatedAt: Generated<string>
 }
 
 export type PartialDB = {
