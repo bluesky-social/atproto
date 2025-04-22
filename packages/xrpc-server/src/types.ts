@@ -230,22 +230,10 @@ function responseTypeFromClient(type: ResponseType): ResponseType {
       // Upstream server returned an XRPC response that is not compatible with our internal lexicon definitions for that XRPC method.
       // @NOTE This could be reflected as both a 500 ("we" are at fault) and 502 ("they" are at fault). Let's be gents about it.
       return ResponseType.InternalServerError
-    case ResponseType.InternalServerError:
-      // Upstream encountered an internal error. We choose to proxy the 500 here, instead of returning a 503, as per semantics of the XRPC protocol.
-      // @NOTE this is less ideal as logs, for example, will wrongly reflect the amount of internal vs. upstream errors.
-      return ResponseType.InternalServerError
     case ResponseType.Unknown:
       // Typically a network error / unknown host
-      return ResponseType.UpstreamFailure
+      return ResponseType.InternalServerError
     default:
-      // Because of a clunky behavior in TS, it is possible to call
-      // `new XRPCError(123 as number, '')` and get no error. This code
-      // acts as fool-proofing against such cases, ensuring that an actual
-      // ResponseType is always returned.
-      if (!Object.hasOwn(ResponseType, type)) {
-        return ResponseType.UpstreamFailure
-      }
-
       return type
   }
 }
@@ -262,14 +250,6 @@ export class XRPCError extends Error {
 
   get statusCode(): number {
     const { type } = this
-
-    // Special handling for `ResponseType` that are not valid HTTP response statuses
-    if (
-      type === ResponseType.Unknown ||
-      type === ResponseType.InvalidResponse
-    ) {
-      return 500
-    }
 
     // Fool-proofing. `new XRPCError(123.5 as number, '')` does not generate a TypeScript error.
     // Because of this, we can end-up with any numeric value instead of an actual `ResponseType`.
