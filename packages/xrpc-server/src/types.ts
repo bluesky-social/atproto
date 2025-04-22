@@ -4,7 +4,7 @@ import express from 'express'
 import { isHttpError } from 'http-errors'
 import { z } from 'zod'
 import {
-  ResponseType as ClientResponseType,
+  ResponseType,
   ResponseTypeNames,
   ResponseTypeStrings,
   XRPCError as XRPCClientError,
@@ -219,62 +219,7 @@ export type XRPCStreamHandlerConfig = {
   handler: XRPCStreamHandler
 }
 
-// Not all response types returned by the xrpc client are suitable to be used as HTTP status codes,
-// so we need to translate them to the server types (that are valid HTTP codes).
-const responseTypeFromClient = (status: ClientResponseType): ResponseType => {
-  switch (status) {
-    case ClientResponseType.Success:
-      return ResponseType.Success
-    case ClientResponseType.InvalidRequest:
-      return ResponseType.InvalidRequest
-    case ClientResponseType.AuthRequired:
-      return ResponseType.AuthRequired
-    case ClientResponseType.Forbidden:
-      return ResponseType.Forbidden
-    case ClientResponseType.XRPCNotSupported:
-      return ResponseType.XRPCNotSupported
-    case ClientResponseType.NotAcceptable:
-      return ResponseType.NotAcceptable
-    case ClientResponseType.PayloadTooLarge:
-      return ResponseType.PayloadTooLarge
-    case ClientResponseType.UnsupportedMediaType:
-      return ResponseType.UnsupportedMediaType
-    case ClientResponseType.RateLimitExceeded:
-      return ResponseType.RateLimitExceeded
-    case ClientResponseType.InvalidResponse:
-    case ClientResponseType.InternalServerError:
-      return ResponseType.InternalServerError
-    case ClientResponseType.MethodNotImplemented:
-      return ResponseType.MethodNotImplemented
-    case ClientResponseType.Unknown:
-    case ClientResponseType.UpstreamFailure:
-      return ResponseType.UpstreamFailure
-    case ClientResponseType.NotEnoughResources:
-      return ResponseType.NotEnoughResources
-    case ClientResponseType.UpstreamTimeout:
-      return ResponseType.UpstreamTimeout
-    default:
-      return ResponseType.InternalServerError
-  }
-}
-
-// These codes need to be valid HTTP codes, since they are used in HTTP responses.
-export enum ResponseType {
-  Success = 200,
-  InvalidRequest = 400,
-  AuthRequired = 401,
-  Forbidden = 403,
-  XRPCNotSupported = 404,
-  NotAcceptable = 406,
-  PayloadTooLarge = 413,
-  UnsupportedMediaType = 415,
-  RateLimitExceeded = 429,
-  InternalServerError = 500,
-  MethodNotImplemented = 501,
-  UpstreamFailure = 502,
-  NotEnoughResources = 503,
-  UpstreamTimeout = 504,
-}
+export { ResponseType }
 
 export class XRPCError extends Error {
   constructor(
@@ -290,7 +235,7 @@ export class XRPCError extends Error {
     return {
       error: this.customErrorName ?? this.typeName,
       message:
-        this.type === ClientResponseType.InternalServerError
+        this.type === ResponseType.InternalServerError
           ? this.typeStr // Do not respond with error details for 500s
           : this.errorMessage || this.typeStr,
     }
@@ -310,8 +255,7 @@ export class XRPCError extends Error {
     }
 
     if (cause instanceof XRPCClientError) {
-      const responseType = responseTypeFromClient(cause.status)
-      return new XRPCError(responseType, cause.message, cause.error, { cause })
+      return new XRPCError(cause.status, cause.message, cause.error, { cause })
     }
 
     if (isHttpError(cause)) {

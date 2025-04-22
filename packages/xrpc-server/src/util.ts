@@ -11,13 +11,13 @@ import {
   Lexicons,
   jsonToLex,
 } from '@atproto/lexicon'
+import { ResponseType } from '@atproto/xrpc'
 import {
   HandlerInput,
   HandlerSuccess,
   InternalServerError,
   InvalidRequestError,
   Params,
-  ResponseType,
   RouteOpts,
   UndecodedParams,
   XRPCError,

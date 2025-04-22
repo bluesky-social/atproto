@@ -24,9 +24,7 @@ export const errorResponseBody = z.object({
 export type ErrorResponseBody = z.infer<typeof errorResponseBody>
 
 export enum ResponseType {
-  // Network issue, unable to get response from the server.
   Unknown = 1,
-  // Response failed lexicon validation.
   InvalidResponse = 2,
   Success = 200,
   InvalidRequest = 400,

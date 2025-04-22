@@ -1,6 +1,6 @@
+import { ResponseType } from '@atproto/xrpc'
 import {
   InvalidRequestError,
-  ResponseType,
   XRPCError as XRPCServerError,
 } from '@atproto/xrpc-server'
 
