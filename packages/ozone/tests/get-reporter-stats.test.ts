@@ -39,7 +39,12 @@ describe('reporter-stats', () => {
   }
 
   it('updates reporter stats based on actions', async () => {
-    const bobsPostSubject = {
+    const bobsPostSubject1 = {
+      $type: 'com.atproto.repo.strongRef',
+      uri: sc.posts[sc.dids.bob][0].ref.uriStr,
+      cid: sc.posts[sc.dids.bob][0].ref.cidStr,
+    }
+    const bobsPostSubject2 = {
       $type: 'com.atproto.repo.strongRef',
       uri: sc.posts[sc.dids.bob][1].ref.uriStr,
       cid: sc.posts[sc.dids.bob][1].ref.cidStr,
@@ -54,13 +59,19 @@ describe('reporter-stats', () => {
         reportedBy: sc.dids.alice,
         reasonType: ComAtprotoModerationDefs.REASONMISLEADING,
         reason: 'misleading',
-        subject: bobsPostSubject,
+        subject: bobsPostSubject1,
       }),
       sc.createReport({
         reportedBy: sc.dids.alice,
         reasonType: ComAtprotoModerationDefs.REASONOTHER,
         reason: 'test',
-        subject: bobsPostSubject,
+        subject: bobsPostSubject1,
+      }),
+      sc.createReport({
+        reportedBy: sc.dids.alice,
+        reasonType: ComAtprotoModerationDefs.REASONOTHER,
+        reason: 'test',
+        subject: bobsPostSubject2,
       }),
       sc.createReport({
         reportedBy: sc.dids.alice,
@@ -75,9 +86,9 @@ describe('reporter-stats', () => {
     expect(statsAfterReport).toMatchObject({
       did: sc.dids.alice,
       accountReportCount: 1,
-      recordReportCount: 2,
+      recordReportCount: 3,
       reportedAccountCount: 1,
-      reportedRecordCount: 1,
+      reportedRecordCount: 2,
       takendownAccountCount: 0,
       takendownRecordCount: 0,
       labeledAccountCount: 0,
@@ -86,7 +97,11 @@ describe('reporter-stats', () => {
 
     await Promise.all([
       modClient.performTakedown({
-        subject: bobsPostSubject,
+        subject: bobsPostSubject1,
+        policies: ['trolling'],
+      }),
+      modClient.performTakedown({
+        subject: bobsPostSubject2,
         policies: ['trolling'],
       }),
       modClient.emitEvent({
@@ -105,11 +120,11 @@ describe('reporter-stats', () => {
     expect(statsAfterAction).toMatchObject({
       did: sc.dids.alice,
       accountReportCount: 1,
-      recordReportCount: 2,
+      recordReportCount: 3,
       reportedAccountCount: 1,
-      reportedRecordCount: 1,
+      reportedRecordCount: 2,
       takendownAccountCount: 0,
-      takendownRecordCount: 1,
+      takendownRecordCount: 2,
       labeledAccountCount: 1,
       labeledRecordCount: 0,
     })
