@@ -560,6 +560,6 @@ function createErrorMiddleware({
     if (res.headersSent) {
       return next(err)
     }
-    return res.status(xrpcError.type).json(xrpcError.payload)
+    return res.status(xrpcError.statusCode).json(xrpcError.payload)
   }
 }
