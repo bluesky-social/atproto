@@ -260,23 +260,23 @@
 
     "reasonSpam": {
       "type": "token",
-      "description": "(DEPRECATED) Frequent unwanted promotion, replies, mentions"
+      "description": "(DEPRECATED) Please use `com.atproto.moderation.defs#reasonMisleadingSpam` instead."
     },
     "reasonViolation": {
       "type": "token",
-      "description": "(DEPRECATED) Direct violation of server rules, laws, terms of service"
+      "description": "(DEPRECATED) Please use `com.atproto.moderation.defs#reasonBNROther` instead."
     },
     "reasonMisleading": {
       "type": "token",
-      "description": "(DEPRECATED) Misleading identity, affiliation, or content"
+      "description": "(DEPRECATED) Please use `com.atproto.moderation.defs#reasonMisleadingOther` instead."
     },
     "reasonSexual": {
       "type": "token",
-      "description": "(DEPRECATED) Unwanted or mislabeled sexual content"
+      "description": "(DEPRECATED) Please use `com.atproto.moderation.defs#reasonSexualAbuseOther` instead."
     },
     "reasonRude": {
       "type": "token",
-      "description": "(DEPRECATED) Rude, harassing, explicit, or otherwise unwelcoming behavior"
+      "description": "(DEPRECATED) Please use `com.atproto.moderation.defs#reasonHarassmentOther` instead."
     },
     "subjectType": {
       "type": "string",
