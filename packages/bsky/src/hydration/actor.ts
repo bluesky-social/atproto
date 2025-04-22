@@ -145,7 +145,6 @@ export class ActorHydrator {
         Object.entries(actor.verifiedBy),
         ([actorDid, verificationMeta]) => {
           if (
-            verificationMeta.displayName &&
             verificationMeta.handle &&
             verificationMeta.rkey &&
             verificationMeta.sortedAt
