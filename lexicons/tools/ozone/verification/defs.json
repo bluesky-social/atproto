@@ -5,7 +5,14 @@
     "verificationView": {
       "type": "object",
       "description": "Verification data for the associated subject.",
-      "required": ["issuer", "uri", "subject", "handle", "displayName", "createdAt"],
+      "required": [
+        "issuer",
+        "uri",
+        "subject",
+        "handle",
+        "displayName",
+        "createdAt"
+      ],
       "properties": {
         "issuer": {
           "type": "string",
