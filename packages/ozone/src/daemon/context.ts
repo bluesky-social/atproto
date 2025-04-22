@@ -90,13 +90,15 @@ export class DaemonContext {
       cfg.db.materializedViewRefreshIntervalMs,
     )
 
-    const verificationListener = cfg.verifier?.jetstreamUrl
-      ? new VerificationListener(
-          db,
-          cfg.verifier?.jetstreamUrl,
-          cfg.verifier?.issuersToIndex,
-        )
-      : undefined
+    // Only spawn the listener if verifier config exists and a jetstream URL is provided
+    const verificationListener =
+      cfg.verifier && cfg.jetstreamUrl
+        ? new VerificationListener(
+            db,
+            cfg.jetstreamUrl,
+            cfg.verifier?.issuersToIndex,
+          )
+        : undefined
 
     return new DaemonContext({
       db,

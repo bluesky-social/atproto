@@ -94,8 +94,13 @@ export class VerificationListener {
       return
     }
 
-    await this.verificationService.updateFirehoseCursor(`${cursor}`)
-    this.cursor = cursor
+    // This will only update if the cursor is higher than the current one in db
+    const updatedCursor =
+      await this.verificationService.updateFirehoseCursor(cursor)
+
+    if (updatedCursor) {
+      this.cursor = updatedCursor
+    }
   }
 
   async start() {

@@ -184,11 +184,15 @@ export class VerificationService {
     return entry?.cursor || null
   }
 
-  async updateFirehoseCursor(cursor: string) {
-    await this.db.db
+  async updateFirehoseCursor(cursor: number) {
+    const updated = await this.db.db
       .updateTable('firehose_cursor')
       .set({ cursor })
       .where('service', '=', 'verification')
+      .where('cursor', '<', cursor)
+      .returningAll()
       .executeTakeFirst()
+
+    return updated?.cursor
   }
 }

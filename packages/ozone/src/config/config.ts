@@ -85,7 +85,6 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
           url: env.verifierUrl,
           did: env.verifierDid,
           password: env.verifierPassword,
-          jetstreamUrl: env.jetstreamUrl,
           issuersToIndex: env.verifierIssuersToIndex,
         }
       : null
@@ -101,6 +100,7 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     blobDivert: blobDivertServiceCfg,
     access: accessCfg,
     verifier: verifierCfg,
+    jetstreamUrl: env.jetstreamUrl,
   }
 }
 
@@ -114,6 +114,7 @@ export type OzoneConfig = {
   identity: IdentityConfig
   blobDivert: BlobDivertConfig | null
   access: AccessConfig
+  jetstreamUrl?: string
   verifier: VerifierConfig | null
 }
 

@@ -2,7 +2,7 @@ export const firehoseCursorTableName = 'firehose_cursor'
 
 export interface FirehoseCursor {
   service: string
-  cursor: string | null
+  cursor: number | null
   updatedAt: string
 }
 
