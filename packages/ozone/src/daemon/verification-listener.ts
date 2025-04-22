@@ -1,5 +1,5 @@
 import { BackgroundQueue } from '../background'
-import Database from '../db'
+import { Database } from '../db'
 import { CommitCreateEvent, Jetstream } from '../jetstream/service'
 import { verificationLogger } from '../logger'
 import { VerificationService } from '../verification/service'

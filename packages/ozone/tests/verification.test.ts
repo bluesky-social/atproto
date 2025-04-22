@@ -50,7 +50,7 @@ describe('verification', () => {
     // @TODO: This tests encapsulates the entire grant->revoke->list flow. we should have more detailed test for each path
     it('returns paginated list of verifications', async () => {
       const {
-        data: { verifications, failedVerifications },
+        data: { verifications },
       } = await adminAgent.tools.ozone.verification.grantVerifications({
         verifications: [
           {
