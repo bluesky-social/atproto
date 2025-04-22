@@ -4,7 +4,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
   await db.schema
     .createTable('firehose_cursor')
     .addColumn('service', 'text', (col) => col.primaryKey())
-    .addColumn('cursor', 'text')
+    .addColumn('cursor', 'bigint')
     .addColumn('updatedAt', 'text', (col) =>
       col.defaultTo(sql`now()`).notNull(),
     )

@@ -184,12 +184,25 @@ export class VerificationService {
     return entry?.cursor || null
   }
 
+  createFirehoseCursor() {
+    return this.db.db
+      .insertInto('firehose_cursor')
+      .values({
+        service: 'verification',
+        cursor: null,
+      })
+      .onConflict((oc) => oc.doNothing())
+      .execute()
+  }
+
   async updateFirehoseCursor(cursor: number) {
     const updated = await this.db.db
       .updateTable('firehose_cursor')
       .set({ cursor })
       .where('service', '=', 'verification')
-      .where('cursor', '<', cursor)
+      .where((qb) =>
+        qb.where('cursor', '<', cursor).orWhere('cursor', 'is', null),
+      )
       .returningAll()
       .executeTakeFirst()
 

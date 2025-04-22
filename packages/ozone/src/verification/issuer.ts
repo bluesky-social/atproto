@@ -1,5 +1,5 @@
 import { Selectable } from 'kysely'
-import AtpAgent, { AtUri } from '@atproto/api'
+import { Agent, AtUri, CredentialSession } from '@atproto/api'
 import { VerifierConfig } from '../config'
 import { Verification } from '../db/schema/verification'
 
@@ -15,7 +15,8 @@ export type VerificationIssuerCreator = (
 ) => VerificationIssuer
 
 export class VerificationIssuer {
-  private agent: AtpAgent | null = null
+  private session = new CredentialSession(new URL(this.verifierConfig.url))
+  private agent = new Agent(this.session)
   constructor(private verifierConfig: VerifierConfig) {}
 
   static creator() {
@@ -23,16 +24,13 @@ export class VerificationIssuer {
       new VerificationIssuer(verifierConfig)
   }
 
-  // @TODO: Probably shouldn't login for every req?
   async getAgent() {
-    if (!this.agent) {
-      this.agent = new AtpAgent({ service: this.verifierConfig.url })
-      await this.agent.login({
+    if (!this.session.hasSession) {
+      await this.session.login({
         identifier: this.verifierConfig.did,
         password: this.verifierConfig.password,
       })
     }
-
     return this.agent
   }
 

@@ -81,9 +81,10 @@ export class VerificationListener {
   }
 
   async getCursor() {
+    await this.verificationService.createFirehoseCursor()
     const cursor = await this.verificationService.getFirehoseCursor()
     if (cursor) {
-      this.cursor = Number(cursor)
+      this.cursor = cursor
     }
     return this.cursor
   }

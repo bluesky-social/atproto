@@ -56,6 +56,7 @@ describe('verification-listener', () => {
         operation: 'create',
         collection: 'app.bsky.graph.verification',
         rkey: 'abcdefg',
+        cid: 'xyz',
         record: {
           $type: 'app.bsky.graph.verification',
           subject: sc.dids.alice,
