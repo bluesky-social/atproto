@@ -1,6 +1,8 @@
-import { AtpAgent } from '@atproto/api'
+import { AppBskyActorDefs, AtpAgent, asPredicate } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { forSnapshot } from './_util'
+
+const isValidProfile = asPredicate(AppBskyActorDefs.validateProfileViewDetailed)
 
 describe('verification', () => {
   let network: TestNetwork
@@ -39,7 +41,13 @@ describe('verification', () => {
       did: sc.dids.alice,
       password,
     }
+
     await network.processAll()
+    await network.bsky.db.db
+      .updateTable('actor')
+      .set({ trustedVerifier: true })
+      .where('did', 'in', [sc.dids.alice])
+      .execute()
   })
 
   afterAll(async () => {
@@ -56,23 +64,30 @@ describe('verification', () => {
           {
             subject: sc.dids.bob,
             handle: sc.accounts[sc.dids.bob].handle,
-            displayName: 'Bob',
+            displayName: 'bobby',
           },
           {
             subject: sc.dids.carol,
             handle: sc.accounts[sc.dids.carol].handle,
-            displayName: 'Carol',
+            displayName: '',
           },
         ],
       })
 
-      const grantedVerificationUri = verifications[0]?.uri
+      const grantedVerificationUri = verifications.find(
+        (v) => v.subject === sc.dids.carol,
+      )?.uri
+
+      expect(grantedVerificationUri).toBeDefined()
+
       if (grantedVerificationUri) {
         await adminAgent.tools.ozone.verification.revokeVerifications({
           uris: [grantedVerificationUri],
           revokeReason: 'Testing',
         })
       }
+
+      await network.processAll()
 
       const { data } =
         await adminAgent.tools.ozone.verification.listVerifications({})
@@ -81,6 +96,21 @@ describe('verification', () => {
       expect(data.verifications.find((v) => v.revokedAt)?.uri).toEqual(
         grantedVerificationUri,
       )
+      const bob = data.verifications.find((v) => v.subject === sc.dids.bob)
+      const carol = data.verifications.find((v) => v.subject === sc.dids.carol)
+
+      if (
+        !isValidProfile(bob?.subjectProfile) ||
+        !isValidProfile(carol?.subjectProfile)
+      ) {
+        throw Error('Invalid profiles')
+      }
+
+      // Assert that profile record carries valid verification status for bob but not for carol
+      expect(carol.revokedAt).toBeDefined()
+      expect(carol.revokeReason).toEqual('Testing')
+      expect(carol.subjectProfile.verification).toBeUndefined()
+      expect(bob.subjectProfile?.verification?.verifiedStatus).toEqual('valid')
     })
   })
 

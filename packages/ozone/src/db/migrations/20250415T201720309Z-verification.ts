@@ -4,7 +4,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
   await db.schema
     .createTable('verification')
     .addColumn('uri', 'text', (col) => col.notNull().primaryKey())
-    .addColumn('cid', 'text', (col) => col.primaryKey())
+    .addColumn('cid', 'text', (col) => col.notNull())
     .addColumn('issuer', 'text', (col) => col.notNull())
     .addColumn('subject', 'text', (col) => col.notNull())
     .addColumn('handle', 'text', (col) => col.notNull())
@@ -24,7 +24,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .execute()
   await db.schema
     .createIndex('verification_createdat_uri_idx')
-    .on('post')
+    .on('verification')
     .columns(['createdAt', 'uri'])
     .execute()
 }

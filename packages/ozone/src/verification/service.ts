@@ -53,25 +53,25 @@ export class VerificationService {
     revokeReason?: string
   }) {
     const now = new Date().toISOString()
-    return Promise.allSettled(
-      uris.map(async (uri) => {
-        const atUri = new AtUri(uri)
-        const res = await this.db.db
-          .updateTable('verification')
-          .set({
-            revokeReason,
-            updatedAt: now,
-            revokedAt: revokedAt || now,
-            // Allow setting revokedBy to a moderator/verifier DID and if it isn't set, default to the author of the verification record
-            revokedBy: revokedBy || atUri.host,
-          })
-          .where('uri', '=', uri)
-          .where('revokedAt', 'is', null)
-          .execute()
-
-        return res
-      }),
-    )
+    return this.db.transaction(async (tx) => {
+      return Promise.all(
+        uris.map(async (uri) => {
+          const atUri = new AtUri(uri)
+          return tx.db
+            .updateTable('verification')
+            .set({
+              revokeReason,
+              updatedAt: now,
+              revokedAt: revokedAt || now,
+              // Allow setting revokedBy to a moderator/verifier DID and if it isn't set, default to the author of the verification record
+              revokedBy: revokedBy || atUri.host,
+            })
+            .where('uri', '=', uri)
+            .where('revokedAt', 'is', null)
+            .execute()
+        }),
+      )
+    })
   }
 
   async list({
