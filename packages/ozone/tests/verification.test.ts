@@ -92,7 +92,6 @@ describe('verification', () => {
       const { data } =
         await adminAgent.tools.ozone.verification.listVerifications({})
 
-      expect(forSnapshot(data.verifications)).toMatchSnapshot()
       expect(data.verifications.find((v) => v.revokedAt)?.uri).toEqual(
         grantedVerificationUri,
       )
@@ -105,6 +104,9 @@ describe('verification', () => {
       ) {
         throw Error('Invalid profiles')
       }
+
+      expect(forSnapshot(bob)).toMatchSnapshot()
+      expect(forSnapshot(carol)).toMatchSnapshot()
 
       // Assert that profile record carries valid verification status for bob but not for carol
       expect(carol.revokedAt).toBeDefined()
