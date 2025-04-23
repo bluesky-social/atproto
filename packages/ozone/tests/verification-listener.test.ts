@@ -79,8 +79,18 @@ describe('verification-listener', () => {
     }
     relay.send(JSON.stringify(createEvent))
     relay.send(JSON.stringify(deleteEvent))
+    const verificationService = network.ozone.ctx.verificationService(
+      network.ozone.ctx.db,
+    )
+    // Wait for the listener to process the events
+    let hasCursorUpdated = false
+    let attempt = 0
+    do {
+      const cursor = await verificationService.getFirehoseCursor()
+      hasCursorUpdated = cursor === 123456799
+      attempt++
+    } while (!hasCursorUpdated && attempt < 20)
     // Give the processor enough time to handle the events
-    await new Promise((resolve) => setTimeout(() => resolve(true), 500))
     const {
       data: { verifications },
     } = await adminAgent.tools.ozone.verification.listVerifications({})

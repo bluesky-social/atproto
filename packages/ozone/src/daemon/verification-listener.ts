@@ -1,3 +1,4 @@
+import { lexicons } from '@atproto/api'
 import { BackgroundQueue } from '../background'
 import { Database } from '../db'
 import { CommitCreateEvent, Jetstream } from '../jetstream/service'
@@ -119,6 +120,19 @@ export class VerificationListener {
     await this.jetstream.start({
       onCreate: {
         [this.collection]: async (e: CommitCreateEvent<VerificationRecord>) => {
+          const recordValidity = lexicons.validate(
+            this.collection,
+            e.commit.record,
+          )
+
+          if (!recordValidity.success) {
+            verificationLogger.error(
+              recordValidity.error,
+              'Invalid verification record in the fireshose',
+            )
+            return
+          }
+
           const hasCapacity = await this.ensureCoolDown()
           if (hasCapacity) {
             const issuer = e.did
