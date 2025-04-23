@@ -187,7 +187,9 @@ export class XRPCInvalidResponseError extends XRPCError {
   ) {
     super(
       ResponseType.InvalidResponse,
-      ResponseTypeNames[ResponseType.InvalidResponse],
+      // @NOTE: This is probably wrong and should use ResponseTypeNames instead.
+      // But it would mean a breaking change.
+      ResponseTypeStrings[ResponseType.InvalidResponse],
       `The server gave an invalid response and may be out of date.`,
       undefined,
       { cause: validationError },

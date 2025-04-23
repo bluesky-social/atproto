@@ -243,7 +243,7 @@ describe('Errors', () => {
       expect(e).toBeInstanceOf(XRPCError)
       expect(e).toBeInstanceOf(XRPCInvalidResponseError)
       expect(e.success).toBeFalsy()
-      expect(e.error).toBe('InvalidResponse')
+      expect(e.error).toBe('Invalid Response')
       expect(e.message).toBe(
         'The server gave an invalid response and may be out of date.',
       )
