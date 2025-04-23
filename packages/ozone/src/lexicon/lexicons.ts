@@ -15810,11 +15810,29 @@ export const schemaDict = {
                 description:
                   "List of verification uris that couldn't be revoked, including failure reasons",
                 items: {
-                  type: 'string',
-                  format: 'at-uri',
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.verification.revokeVerifications#revokeError',
                 },
               },
             },
+          },
+        },
+      },
+      revokeError: {
+        type: 'object',
+        description: 'Error object for failed revocations',
+        required: ['uri', 'error'],
+        properties: {
+          uri: {
+            type: 'string',
+            description:
+              'The AT-URI of the verification record that failed to revoke.',
+            format: 'at-uri',
+          },
+          error: {
+            type: 'string',
+            description:
+              'Description of the error that occurred during revocation.',
           },
         },
       },

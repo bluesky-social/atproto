@@ -85,7 +85,7 @@ export class VerificationIssuer {
 
   async revoke({ uris }: { uris: string[] }) {
     const revokedVerifications: string[] = []
-    const failedRevocations: string[] = []
+    const failedRevocations: Array<{ uri: string; error: string }> = []
 
     const agent = await this.getAgent()
 
@@ -111,7 +111,7 @@ export class VerificationIssuer {
           })
           revokedVerifications.push(uri)
         } catch (err) {
-          failedRevocations.push(uri)
+          failedRevocations.push({ uri, error: (err as Error).message })
           return
         }
       }),

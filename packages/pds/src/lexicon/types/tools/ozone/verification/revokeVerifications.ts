@@ -29,7 +29,7 @@ export interface OutputSchema {
   /** List of verification uris successfully revoked */
   revokedVerifications: string[]
   /** List of verification uris that couldn't be revoked, including failure reasons */
-  failedRevocations: string[]
+  failedRevocations: RevokeError[]
 }
 
 export interface HandlerInput {
@@ -60,3 +60,22 @@ export type HandlerReqCtx<HA extends HandlerAuth = never> = {
 export type Handler<HA extends HandlerAuth = never> = (
   ctx: HandlerReqCtx<HA>,
 ) => Promise<HandlerOutput> | HandlerOutput
+
+/** Error object for failed revocations */
+export interface RevokeError {
+  $type?: 'tools.ozone.verification.revokeVerifications#revokeError'
+  /** The AT-URI of the verification record that failed to revoke. */
+  uri: string
+  /** Description of the error that occurred during revocation. */
+  error: string
+}
+
+const hashRevokeError = 'revokeError'
+
+export function isRevokeError<V>(v: V) {
+  return is$typed(v, id, hashRevokeError)
+}
+
+export function validateRevokeError<V>(v: V) {
+  return validate<RevokeError & V>(v, id, hashRevokeError)
+}
