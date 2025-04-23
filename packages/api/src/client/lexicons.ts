@@ -12561,7 +12561,7 @@ export const schemaDict = {
               type: 'string',
               format: 'did',
             },
-            event: {
+            events: {
               type: 'array',
               items: {
                 type: 'string',

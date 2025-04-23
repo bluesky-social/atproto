@@ -18,7 +18,7 @@ const id = 'tools.ozone.hosting.getAccountHistory'
 
 export interface QueryParams {
   did: string
-  event?:
+  events?:
     | 'accountCreated'
     | 'emailUpdated'
     | 'emailConfirmed'
