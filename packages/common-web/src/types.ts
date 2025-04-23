@@ -2,7 +2,7 @@ import { CID } from 'multiformats/cid'
 import { z } from 'zod'
 import { Def } from './check'
 
-const cidSchema = z.unknown().transform((obj, ctx) => {
+const cidSchema = z.unknown().transform((obj, ctx): CID => {
   const cid = CID.asCID(obj)
 
   if (cid == null) {
