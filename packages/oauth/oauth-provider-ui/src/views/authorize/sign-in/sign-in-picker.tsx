@@ -53,46 +53,38 @@ export function SignInPicker({
         <Trans>Sign in as...</Trans>
       </p>
 
-      {accounts.map((account) => {
-        const [name, identifier] = [
-          account.name,
-          account.preferred_username,
-          account.email,
-          account.sub,
-        ].filter(Boolean) as [string, string?]
-
-        return (
-          <InputContainer
-            tabIndex={0}
-            key={account.sub}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter' || event.key === ' ') {
-                onAccount(account)
-              }
-            }}
-            onClick={() => onAccount(account)}
-            role="button"
-            aria-label={t`Sign in as ${account.name}`}
-            icon={<AccountImage src={account.picture} alt={name} />}
-            append={<CaretRightIcon aria-hidden className="h-4" />}
-            className="cursor-pointer"
-          >
-            <span className="flex flex-wrap items-center">
+      {accounts.map((account) => (
+        <InputContainer
+          tabIndex={0}
+          key={account.sub}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              onAccount(account)
+            }
+          }}
+          onClick={() => onAccount(account)}
+          role="button"
+          aria-label={t`Sign in as ${account.name}`}
+          icon={<AccountImage src={account.picture} alt={t`Avatar`} />}
+          append={<CaretRightIcon aria-hidden className="h-4" />}
+          className="cursor-pointer"
+        >
+          <span className="flex flex-wrap items-center">
+            {account.name && (
               <span className="mr-2 truncate font-medium" arial-label={t`Name`}>
-                {name}
+                {account.name}
               </span>
-              {identifier && (
-                <span
-                  className="truncate text-sm text-neutral-500 dark:text-neutral-400"
-                  arial-label={t`Identifier`}
-                >
-                  {identifier}
-                </span>
-              )}
+            )}
+
+            <span
+              className="truncate text-sm text-neutral-500 dark:text-neutral-400"
+              arial-label={t`Identifier`}
+            >
+              {account.preferred_username || account.email || account.sub}
             </span>
-          </InputContainer>
-        )
-      })}
+          </span>
+        </InputContainer>
+      ))}
 
       {onOther && (
         <InputContainer
