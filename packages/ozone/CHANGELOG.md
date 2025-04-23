@@ -1,5 +1,15 @@
 # @atproto/ozone
 
+## 0.1.107
+
+### Patch Changes
+
+- [#3768](https://github.com/bluesky-social/atproto/pull/3768) [`7af77f3ed`](https://github.com/bluesky-social/atproto/commit/7af77f3edfe52f77729f61de4188e8375f03b4ef) Thanks [@devinivy](https://github.com/devinivy)! - Support tools.ozone.hosting.getAccountHistory
+
+- Updated dependencies [[`da168588d`](https://github.com/bluesky-social/atproto/commit/da168588de59e5048d255866205bd16c5ab5f95c), [`7af77f3ed`](https://github.com/bluesky-social/atproto/commit/7af77f3edfe52f77729f61de4188e8375f03b4ef)]:
+  - @atproto/xrpc-server@0.7.16
+  - @atproto/api@0.15.4
+
 ## 0.1.106
 
 ### Patch Changes

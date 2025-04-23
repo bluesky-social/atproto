@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.15.4
+
+### Patch Changes
+
+- [#3768](https://github.com/bluesky-social/atproto/pull/3768) [`7af77f3ed`](https://github.com/bluesky-social/atproto/commit/7af77f3edfe52f77729f61de4188e8375f03b4ef) Thanks [@devinivy](https://github.com/devinivy)! - Support tools.ozone.hosting.getAccountHistory
+
 ## 0.15.3
 
 ### Patch Changes
