@@ -12575,6 +12575,137 @@ export const schemaDict = {
       },
     },
   },
+  ToolsOzoneHostingGetAccountHistory: {
+    lexicon: 1,
+    id: 'tools.ozone.hosting.getAccountHistory',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get account history, e.g. log of updated email addresses or other identity information.',
+        parameters: {
+          type: 'params',
+          required: ['did'],
+          properties: {
+            did: {
+              type: 'string',
+              format: 'did',
+            },
+            events: {
+              type: 'array',
+              items: {
+                type: 'string',
+                knownValues: [
+                  'accountCreated',
+                  'emailUpdated',
+                  'emailConfirmed',
+                  'passwordUpdated',
+                  'handleUpdated',
+                ],
+              },
+            },
+            cursor: {
+              type: 'string',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['events'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              events: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.hosting.getAccountHistory#event',
+                },
+              },
+            },
+          },
+        },
+      },
+      event: {
+        type: 'object',
+        required: ['details', 'createdBy', 'createdAt'],
+        properties: {
+          details: {
+            type: 'union',
+            refs: [
+              'lex:tools.ozone.hosting.getAccountHistory#accountCreated',
+              'lex:tools.ozone.hosting.getAccountHistory#emailUpdated',
+              'lex:tools.ozone.hosting.getAccountHistory#emailConfirmed',
+              'lex:tools.ozone.hosting.getAccountHistory#passwordUpdated',
+              'lex:tools.ozone.hosting.getAccountHistory#handleUpdated',
+            ],
+          },
+          createdBy: {
+            type: 'string',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
+      accountCreated: {
+        type: 'object',
+        required: [],
+        properties: {
+          email: {
+            type: 'string',
+          },
+          handle: {
+            type: 'string',
+            format: 'handle',
+          },
+        },
+      },
+      emailUpdated: {
+        type: 'object',
+        required: ['email'],
+        properties: {
+          email: {
+            type: 'string',
+          },
+        },
+      },
+      emailConfirmed: {
+        type: 'object',
+        required: ['email'],
+        properties: {
+          email: {
+            type: 'string',
+          },
+        },
+      },
+      passwordUpdated: {
+        type: 'object',
+        required: [],
+        properties: {},
+      },
+      handleUpdated: {
+        type: 'object',
+        required: ['handle'],
+        properties: {
+          handle: {
+            type: 'string',
+            format: 'handle',
+          },
+        },
+      },
+    },
+  },
   ToolsOzoneModerationDefs: {
     lexicon: 1,
     id: 'tools.ozone.moderation.defs',
@@ -15753,6 +15884,7 @@ export const ids = {
     'tools.ozone.communication.listTemplates',
   ToolsOzoneCommunicationUpdateTemplate:
     'tools.ozone.communication.updateTemplate',
+  ToolsOzoneHostingGetAccountHistory: 'tools.ozone.hosting.getAccountHistory',
   ToolsOzoneModerationDefs: 'tools.ozone.moderation.defs',
   ToolsOzoneModerationEmitEvent: 'tools.ozone.moderation.emitEvent',
   ToolsOzoneModerationGetEvent: 'tools.ozone.moderation.getEvent',

@@ -230,6 +230,7 @@ import * as ToolsOzoneCommunicationDefs from './types/tools/ozone/communication/
 import * as ToolsOzoneCommunicationDeleteTemplate from './types/tools/ozone/communication/deleteTemplate.js'
 import * as ToolsOzoneCommunicationListTemplates from './types/tools/ozone/communication/listTemplates.js'
 import * as ToolsOzoneCommunicationUpdateTemplate from './types/tools/ozone/communication/updateTemplate.js'
+import * as ToolsOzoneHostingGetAccountHistory from './types/tools/ozone/hosting/getAccountHistory.js'
 import * as ToolsOzoneModerationDefs from './types/tools/ozone/moderation/defs.js'
 import * as ToolsOzoneModerationEmitEvent from './types/tools/ozone/moderation/emitEvent.js'
 import * as ToolsOzoneModerationGetEvent from './types/tools/ozone/moderation/getEvent.js'
@@ -485,6 +486,7 @@ export * as ToolsOzoneCommunicationDefs from './types/tools/ozone/communication/
 export * as ToolsOzoneCommunicationDeleteTemplate from './types/tools/ozone/communication/deleteTemplate.js'
 export * as ToolsOzoneCommunicationListTemplates from './types/tools/ozone/communication/listTemplates.js'
 export * as ToolsOzoneCommunicationUpdateTemplate from './types/tools/ozone/communication/updateTemplate.js'
+export * as ToolsOzoneHostingGetAccountHistory from './types/tools/ozone/hosting/getAccountHistory.js'
 export * as ToolsOzoneModerationDefs from './types/tools/ozone/moderation/defs.js'
 export * as ToolsOzoneModerationEmitEvent from './types/tools/ozone/moderation/emitEvent.js'
 export * as ToolsOzoneModerationGetEvent from './types/tools/ozone/moderation/getEvent.js'
@@ -3940,6 +3942,7 @@ export class ToolsNS {
 export class ToolsOzoneNS {
   _client: XrpcClient
   communication: ToolsOzoneCommunicationNS
+  hosting: ToolsOzoneHostingNS
   moderation: ToolsOzoneModerationNS
   server: ToolsOzoneServerNS
   set: ToolsOzoneSetNS
@@ -3950,6 +3953,7 @@ export class ToolsOzoneNS {
   constructor(client: XrpcClient) {
     this._client = client
     this.communication = new ToolsOzoneCommunicationNS(client)
+    this.hosting = new ToolsOzoneHostingNS(client)
     this.moderation = new ToolsOzoneModerationNS(client)
     this.server = new ToolsOzoneServerNS(client)
     this.set = new ToolsOzoneSetNS(client)
@@ -4010,6 +4014,26 @@ export class ToolsOzoneCommunicationNS {
       .catch((e) => {
         throw ToolsOzoneCommunicationUpdateTemplate.toKnownErr(e)
       })
+  }
+}
+
+export class ToolsOzoneHostingNS {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  getAccountHistory(
+    params?: ToolsOzoneHostingGetAccountHistory.QueryParams,
+    opts?: ToolsOzoneHostingGetAccountHistory.CallOptions,
+  ): Promise<ToolsOzoneHostingGetAccountHistory.Response> {
+    return this._client.call(
+      'tools.ozone.hosting.getAccountHistory',
+      params,
+      undefined,
+      opts,
+    )
   }
 }
 

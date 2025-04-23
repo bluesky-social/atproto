@@ -188,6 +188,7 @@ import * as ToolsOzoneCommunicationCreateTemplate from './types/tools/ozone/comm
 import * as ToolsOzoneCommunicationDeleteTemplate from './types/tools/ozone/communication/deleteTemplate.js'
 import * as ToolsOzoneCommunicationListTemplates from './types/tools/ozone/communication/listTemplates.js'
 import * as ToolsOzoneCommunicationUpdateTemplate from './types/tools/ozone/communication/updateTemplate.js'
+import * as ToolsOzoneHostingGetAccountHistory from './types/tools/ozone/hosting/getAccountHistory.js'
 import * as ToolsOzoneModerationEmitEvent from './types/tools/ozone/moderation/emitEvent.js'
 import * as ToolsOzoneModerationGetEvent from './types/tools/ozone/moderation/getEvent.js'
 import * as ToolsOzoneModerationGetRecord from './types/tools/ozone/moderation/getRecord.js'
@@ -2487,6 +2488,7 @@ export class ToolsNS {
 export class ToolsOzoneNS {
   _server: Server
   communication: ToolsOzoneCommunicationNS
+  hosting: ToolsOzoneHostingNS
   moderation: ToolsOzoneModerationNS
   server: ToolsOzoneServerNS
   set: ToolsOzoneSetNS
@@ -2497,6 +2499,7 @@ export class ToolsOzoneNS {
   constructor(server: Server) {
     this._server = server
     this.communication = new ToolsOzoneCommunicationNS(server)
+    this.hosting = new ToolsOzoneHostingNS(server)
     this.moderation = new ToolsOzoneModerationNS(server)
     this.server = new ToolsOzoneServerNS(server)
     this.set = new ToolsOzoneSetNS(server)
@@ -2554,6 +2557,25 @@ export class ToolsOzoneCommunicationNS {
     >,
   ) {
     const nsid = 'tools.ozone.communication.updateTemplate' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class ToolsOzoneHostingNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  getAccountHistory<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneHostingGetAccountHistory.Handler<ExtractAuth<AV>>,
+      ToolsOzoneHostingGetAccountHistory.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.hosting.getAccountHistory' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }
