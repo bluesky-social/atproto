@@ -128,7 +128,7 @@ export class VerificationListener {
           if (!recordValidity.success) {
             verificationLogger.error(
               recordValidity.error,
-              'Invalid verification record in the fireshose',
+              'Invalid verification record in the firehose',
             )
             return
           }
