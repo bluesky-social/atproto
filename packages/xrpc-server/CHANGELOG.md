@@ -1,5 +1,11 @@
 # @atproto/xrpc-server
 
+## 0.7.16
+
+### Patch Changes
+
+- [#3789](https://github.com/bluesky-social/atproto/pull/3789) [`da168588d`](https://github.com/bluesky-social/atproto/commit/da168588de59e5048d255866205bd16c5ab5f95c) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Ensure safe HTTP code in error middleware
+
 ## 0.7.15
 
 ### Patch Changes
