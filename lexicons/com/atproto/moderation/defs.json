@@ -14,7 +14,7 @@
         "com.atproto.moderation.defs#reasonViolenceTrafficking",
         "com.atproto.moderation.defs#reasonViolenceOther",
 
-        "com.atproto.moderation.defs#reasonSexualTFGBVContent",
+        "com.atproto.moderation.defs#reasonSexualAbuseContent",
         "com.atproto.moderation.defs#reasonSexualNCII",
         "com.atproto.moderation.defs#reasonSexualSextortion",
         "com.atproto.moderation.defs#reasonSexualDeepfake",
@@ -99,7 +99,7 @@
       "description": "Other violent content"
     },
 
-    "reasonSexualTFGBVContent": {
+    "reasonSexualAbuseContent": {
       "type": "token",
       "description": "Adult sexual abuse content"
     },
