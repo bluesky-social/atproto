@@ -6,11 +6,7 @@ type OnCreateCallback<T extends JetstreamRecord> = (
 ) => Promise<void>
 
 export type JetstreamOptions = {
-  /**
-   * The full subscription endpoint to connect to.
-   * @default "wss://jetstream1.us-east.bsky.network/subscribe"
-   */
-  endpoint?: string
+  endpoint: string
   /**
    * The record collections that you want to receive updates for.
    * Leave this empty to receive updates for all record collections.
@@ -61,9 +57,7 @@ export class Jetstream {
   public cursor?: number
 
   constructor(opts: JetstreamOptions) {
-    this.url = new URL(
-      opts.endpoint ?? 'wss://jetstream1.us-east.bsky.network/subscribe',
-    )
+    this.url = new URL(opts.endpoint)
     opts.wantedCollections?.forEach((collection) => {
       this.url.searchParams.append('wantedCollections', collection)
     })
