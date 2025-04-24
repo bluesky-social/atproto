@@ -14,13 +14,13 @@
         "com.atproto.moderation.defs#reasonViolenceTrafficking",
         "com.atproto.moderation.defs#reasonViolenceOther",
 
-        "com.atproto.moderation.defs#reasonSexualAbuseTFGBVContent",
-        "com.atproto.moderation.defs#reasonSexualAbuseNCII",
-        "com.atproto.moderation.defs#reasonSexualAbuseSextortion",
-        "com.atproto.moderation.defs#reasonSexualAbuseDeepfake",
-        "com.atproto.moderation.defs#reasonSexualAbuseAnimal",
-        "com.atproto.moderation.defs#reasonSexualAbuseUnlabeled",
-        "com.atproto.moderation.defs#reasonSexualAbuseOther",
+        "com.atproto.moderation.defs#reasonSexualTFGBVContent",
+        "com.atproto.moderation.defs#reasonSexualNCII",
+        "com.atproto.moderation.defs#reasonSexualSextortion",
+        "com.atproto.moderation.defs#reasonSexualDeepfake",
+        "com.atproto.moderation.defs#reasonSexualAnimal",
+        "com.atproto.moderation.defs#reasonSexualUnlabeled",
+        "com.atproto.moderation.defs#reasonSexualOther",
 
         "com.atproto.moderation.defs#reasonChildSafetyCSAM",
         "com.atproto.moderation.defs#reasonChildSafetyGroom",
@@ -88,7 +88,7 @@
     },
     "reasonViolenceExtremistContent": {
       "type": "token",
-      "description": "Extremist content"
+      "description": "Extremist content. These reports will be sent to Bluesky only."
     },
     "reasonViolenceTrafficking": {
       "type": "token",
@@ -99,42 +99,42 @@
       "description": "Other violent content"
     },
 
-    "reasonSexualAbuseTFGBVContent": {
+    "reasonSexualTFGBVContent": {
       "type": "token",
       "description": "Adult sexual abuse content"
     },
-    "reasonSexualAbuseNCII": {
+    "reasonSexualNCII": {
       "type": "token",
       "description": "Non-consensual intimate imagery"
     },
-    "reasonSexualAbuseSextortion": {
+    "reasonSexualSextortion": {
       "type": "token",
       "description": "Sextortion"
     },
-    "reasonSexualAbuseDeepfake": {
+    "reasonSexualDeepfake": {
       "type": "token",
       "description": "Deepfake adult content"
     },
-    "reasonSexualAbuseAnimal": {
+    "reasonSexualAnimal": {
       "type": "token",
       "description": "Animal sexual abuse"
     },
-    "reasonSexualAbuseUnlabeled": {
+    "reasonSexualUnlabeled": {
       "type": "token",
       "description": "Unlabelled adult content"
     },
-    "reasonSexualAbuseOther": {
+    "reasonSexualOther": {
       "type": "token",
       "description": "Other sexual violence content"
     },
 
     "reasonChildSafetyCSAM": {
       "type": "token",
-      "description": "Child sexual abuse material (CSAM)"
+      "description": "Child sexual abuse material (CSAM). These reports will be sent to Bluesky only."
     },
     "reasonChildSafetyGroom": {
       "type": "token",
-      "description": "Grooming or predatory behavior"
+      "description": "Grooming or predatory behavior. These reports will be sent to Bluesky only."
     },
     "reasonChildSafetyMinorPrivacy": {
       "type": "token",
@@ -142,7 +142,7 @@
     },
     "reasonChildSafetyEndangerment": {
       "type": "token",
-      "description": "Child endangerment"
+      "description": "Child endangerment. These reports will be sent to Bluesky only."
     },
     "reasonChildSafetyHarassment": {
       "type": "token",
@@ -150,11 +150,11 @@
     },
     "reasonChildSafetyPromotion": {
       "type": "token",
-      "description": "Promotion of child exploitation"
+      "description": "Promotion of child exploitation. These reports will be sent to Bluesky only."
     },
     "reasonChildSafetyOther": {
       "type": "token",
-      "description": "Other child safety"
+      "description": "Other child safety. These reports will be sent to Bluesky only."
     },
 
     "reasonHarassmentTroll": {
@@ -272,7 +272,7 @@
     },
     "reasonSexual": {
       "type": "token",
-      "description": "(DEPRECATED) Please use `com.atproto.moderation.defs#reasonSexualAbuseOther` instead."
+      "description": "(DEPRECATED) Please use `com.atproto.moderation.defs#reasonSexualUnlabeled` instead."
     },
     "reasonRude": {
       "type": "token",
