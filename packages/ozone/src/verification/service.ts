@@ -99,7 +99,7 @@ export class VerificationService {
     }
 
     if (isRevoked !== undefined) {
-      qb = qb.where('revokedAt', isRevoked ? 'is' : 'is not', null)
+      qb = qb.where('revokedAt', isRevoked ? 'is not' : 'is', null)
     }
 
     if (subjects.length) {

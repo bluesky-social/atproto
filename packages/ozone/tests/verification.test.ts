@@ -117,7 +117,7 @@ describe('verification', () => {
   })
 
   describe('grant', () => {
-    it('Fails for non-admins and non-verifiers', async () => {
+    it('fails for non-admins and non-verifiers', async () => {
       const attemptAsAdmin =
         triageAgent.tools.ozone.verification.grantVerifications({
           verifications: [

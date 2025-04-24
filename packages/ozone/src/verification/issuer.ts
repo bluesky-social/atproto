@@ -31,6 +31,19 @@ export class VerificationIssuer {
         password: this.verifierConfig.password,
       })
     }
+
+    // Trigger a test request to check if the session is still valid, if not, we will login again
+    try {
+      await this.agent.com.atproto.server.getSession()
+    } catch (err) {
+      if ((err as any).status === 401) {
+        await this.session.login({
+          identifier: this.verifierConfig.did,
+          password: this.verifierConfig.password,
+        })
+      }
+    }
+
     return this.agent
   }
 
