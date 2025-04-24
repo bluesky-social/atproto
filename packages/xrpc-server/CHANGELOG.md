@@ -1,5 +1,11 @@
 # @atproto/xrpc-server
 
+## 0.7.17
+
+### Patch Changes
+
+- [#3765](https://github.com/bluesky-social/atproto/pull/3765) [`45354c84f`](https://github.com/bluesky-social/atproto/commit/45354c84f898d79f58c14b5c0da3661beb7353f9) Thanks [@foysalit](https://github.com/foysalit)! - Expose WebSocketKeepAlive from xrpc-server package
+
 ## 0.7.16
 
 ### Patch Changes
