@@ -93,6 +93,9 @@ export class TestNetwork extends TestNetworkNoAppView {
       appviewPushEvents: true,
       pdsUrl: pds.url,
       pdsDid: pds.ctx.cfg.service.did,
+      verifierDid: ozoneDid,
+      verifierUrl: pds.url,
+      verifierPassword: 'temp',
       ...params.ozone,
     })
 
@@ -100,7 +103,7 @@ export class TestNetwork extends TestNetworkNoAppView {
     if (pdsProps.inviteRequired) {
       const { data: invite } = await pds
         .getClient()
-        .api.com.atproto.server.createInviteCode(
+        .com.atproto.server.createInviteCode(
           { useCount: 1 },
           {
             encoding: 'application/json',
@@ -119,6 +122,13 @@ export class TestNetwork extends TestNetworkNoAppView {
     await pds.processAll()
     await bsky.sub.processAll()
     await thirdPartyPds.close()
+
+    // Weird but if we do this before pds.processAll() somehow appview loses this user and tests in different parts fail because appview doesn't return this user in various contexts anymore
+    const ozoneVerifierPassword =
+      await ozoneServiceProfile.createAppPasswordForVerification(pds)
+    if (ozone.daemon.ctx.cfg.verifier) {
+      ozone.daemon.ctx.cfg.verifier.password = ozoneVerifierPassword
+    }
 
     let introspect: IntrospectServer | undefined = undefined
     if (params.introspect?.port) {

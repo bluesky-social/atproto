@@ -264,6 +264,10 @@ import * as ToolsOzoneTeamDefs from './types/tools/ozone/team/defs.js'
 import * as ToolsOzoneTeamDeleteMember from './types/tools/ozone/team/deleteMember.js'
 import * as ToolsOzoneTeamListMembers from './types/tools/ozone/team/listMembers.js'
 import * as ToolsOzoneTeamUpdateMember from './types/tools/ozone/team/updateMember.js'
+import * as ToolsOzoneVerificationDefs from './types/tools/ozone/verification/defs.js'
+import * as ToolsOzoneVerificationGrantVerifications from './types/tools/ozone/verification/grantVerifications.js'
+import * as ToolsOzoneVerificationListVerifications from './types/tools/ozone/verification/listVerifications.js'
+import * as ToolsOzoneVerificationRevokeVerifications from './types/tools/ozone/verification/revokeVerifications.js'
 
 export * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs.js'
 export * as ComAtprotoAdminDeleteAccount from './types/com/atproto/admin/deleteAccount.js'
@@ -520,6 +524,10 @@ export * as ToolsOzoneTeamDefs from './types/tools/ozone/team/defs.js'
 export * as ToolsOzoneTeamDeleteMember from './types/tools/ozone/team/deleteMember.js'
 export * as ToolsOzoneTeamListMembers from './types/tools/ozone/team/listMembers.js'
 export * as ToolsOzoneTeamUpdateMember from './types/tools/ozone/team/updateMember.js'
+export * as ToolsOzoneVerificationDefs from './types/tools/ozone/verification/defs.js'
+export * as ToolsOzoneVerificationGrantVerifications from './types/tools/ozone/verification/grantVerifications.js'
+export * as ToolsOzoneVerificationListVerifications from './types/tools/ozone/verification/listVerifications.js'
+export * as ToolsOzoneVerificationRevokeVerifications from './types/tools/ozone/verification/revokeVerifications.js'
 
 export const COM_ATPROTO_MODERATION = {
   DefsReasonSpam: 'com.atproto.moderation.defs#reasonSpam',
@@ -561,6 +569,7 @@ export const TOOLS_OZONE_TEAM = {
   DefsRoleAdmin: 'tools.ozone.team.defs#roleAdmin',
   DefsRoleModerator: 'tools.ozone.team.defs#roleModerator',
   DefsRoleTriage: 'tools.ozone.team.defs#roleTriage',
+  DefsRoleVerifier: 'tools.ozone.team.defs#roleVerifier',
 }
 
 export class AtpBaseClient extends XrpcClient {
@@ -3949,6 +3958,7 @@ export class ToolsOzoneNS {
   setting: ToolsOzoneSettingNS
   signature: ToolsOzoneSignatureNS
   team: ToolsOzoneTeamNS
+  verification: ToolsOzoneVerificationNS
 
   constructor(client: XrpcClient) {
     this._client = client
@@ -3960,6 +3970,7 @@ export class ToolsOzoneNS {
     this.setting = new ToolsOzoneSettingNS(client)
     this.signature = new ToolsOzoneSignatureNS(client)
     this.team = new ToolsOzoneTeamNS(client)
+    this.verification = new ToolsOzoneVerificationNS(client)
   }
 }
 
@@ -4399,5 +4410,49 @@ export class ToolsOzoneTeamNS {
       .catch((e) => {
         throw ToolsOzoneTeamUpdateMember.toKnownErr(e)
       })
+  }
+}
+
+export class ToolsOzoneVerificationNS {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  grantVerifications(
+    data?: ToolsOzoneVerificationGrantVerifications.InputSchema,
+    opts?: ToolsOzoneVerificationGrantVerifications.CallOptions,
+  ): Promise<ToolsOzoneVerificationGrantVerifications.Response> {
+    return this._client.call(
+      'tools.ozone.verification.grantVerifications',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
+  listVerifications(
+    params?: ToolsOzoneVerificationListVerifications.QueryParams,
+    opts?: ToolsOzoneVerificationListVerifications.CallOptions,
+  ): Promise<ToolsOzoneVerificationListVerifications.Response> {
+    return this._client.call(
+      'tools.ozone.verification.listVerifications',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  revokeVerifications(
+    data?: ToolsOzoneVerificationRevokeVerifications.InputSchema,
+    opts?: ToolsOzoneVerificationRevokeVerifications.CallOptions,
+  ): Promise<ToolsOzoneVerificationRevokeVerifications.Response> {
+    return this._client.call(
+      'tools.ozone.verification.revokeVerifications',
+      opts?.qp,
+      data,
+      opts,
+    )
   }
 }

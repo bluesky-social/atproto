@@ -50,7 +50,8 @@
     "structured-headers": "^1.0.1",
     "typed-emitter": "^2.1.0",
     "uint8arrays": "3.0.0",
-    "undici": "^6.14.1"
+    "undici": "^6.14.1",
+    "ws": "^8.12.0"
   },
   "devDependencies": {
     "@atproto/lex-cli": "workspace:^",

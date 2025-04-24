@@ -27,6 +27,7 @@ export default function (server: Server, ctx: AppContext) {
                 ? TOOLS_OZONE_TEAM.DefsRoleModerator
                 : TOOLS_OZONE_TEAM.DefsRoleTriage,
           },
+          verifierDid: ctx.cfg.verifier?.did || undefined,
         },
       }
     },

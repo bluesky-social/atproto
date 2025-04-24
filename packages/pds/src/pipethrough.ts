@@ -531,6 +531,9 @@ const defaultService = (
     case ids.ToolsOzoneModerationQueryEvents:
     case ids.ToolsOzoneModerationQueryStatuses:
     case ids.ToolsOzoneModerationSearchRepos:
+    case ids.ToolsOzoneVerificationListVerifications:
+    case ids.ToolsOzoneVerificationGrantVerifications:
+    case ids.ToolsOzoneVerificationRevokeVerifications:
       return ctx.cfg.modService
     case ids.ComAtprotoModerationCreateReport:
       return ctx.cfg.reportService

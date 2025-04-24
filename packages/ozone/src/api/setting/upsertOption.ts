@@ -118,6 +118,7 @@ const getRolesForInstanceOption = (
     ToolsOzoneTeamDefs.ROLEADMIN,
     ToolsOzoneTeamDefs.ROLEMODERATOR,
     ToolsOzoneTeamDefs.ROLETRIAGE,
+    ToolsOzoneTeamDefs.ROLEVERIFIER,
   ]
   if (access.type === 'admin_token') {
     return fullPermission
@@ -129,6 +130,10 @@ const getRolesForInstanceOption = (
 
   if (access.isModerator) {
     return [ToolsOzoneTeamDefs.ROLEMODERATOR, ToolsOzoneTeamDefs.ROLETRIAGE]
+  }
+
+  if (access.isVerifier) {
+    return [ToolsOzoneTeamDefs.ROLEVERIFIER]
   }
 
   return [ToolsOzoneTeamDefs.ROLETRIAGE]
@@ -143,6 +148,8 @@ const getManagerRole = (role?: string) => {
     managerRole = ToolsOzoneTeamDefs.ROLEMODERATOR
   } else if (role === ToolsOzoneTeamDefs.ROLETRIAGE) {
     managerRole = ToolsOzoneTeamDefs.ROLETRIAGE
+  } else if (role === ToolsOzoneTeamDefs.ROLEVERIFIER) {
+    managerRole = ToolsOzoneTeamDefs.ROLEVERIFIER
   }
 
   return managerRole

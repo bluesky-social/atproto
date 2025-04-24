@@ -27,6 +27,7 @@ export interface InputSchema {
   managerRole?:
     | 'tools.ozone.team.defs#roleModerator'
     | 'tools.ozone.team.defs#roleTriage'
+    | 'tools.ozone.team.defs#roleVerifier'
     | 'tools.ozone.team.defs#roleAdmin'
     | (string & {})
 }

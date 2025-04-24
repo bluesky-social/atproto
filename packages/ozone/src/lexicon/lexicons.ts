@@ -14652,6 +14652,11 @@ export const schemaDict = {
                 type: 'ref',
                 ref: 'lex:tools.ozone.server.getConfig#viewerConfig',
               },
+              verifierDid: {
+                type: 'string',
+                format: 'did',
+                description: 'The did of the verifier used for verification.',
+              },
             },
           },
         },
@@ -14674,6 +14679,7 @@ export const schemaDict = {
               'tools.ozone.team.defs#roleAdmin',
               'tools.ozone.team.defs#roleModerator',
               'tools.ozone.team.defs#roleTriage',
+              'tools.ozone.team.defs#roleVerifier',
             ],
           },
         },
@@ -15019,6 +15025,7 @@ export const schemaDict = {
               'tools.ozone.team.defs#roleModerator',
               'tools.ozone.team.defs#roleTriage',
               'tools.ozone.team.defs#roleAdmin',
+              'tools.ozone.team.defs#roleVerifier',
             ],
           },
           scope: {
@@ -15171,6 +15178,7 @@ export const schemaDict = {
                 knownValues: [
                   'tools.ozone.team.defs#roleModerator',
                   'tools.ozone.team.defs#roleTriage',
+                  'tools.ozone.team.defs#roleVerifier',
                   'tools.ozone.team.defs#roleAdmin',
                 ],
               },
@@ -15390,6 +15398,7 @@ export const schemaDict = {
                 knownValues: [
                   'tools.ozone.team.defs#roleAdmin',
                   'tools.ozone.team.defs#roleModerator',
+                  'tools.ozone.team.defs#roleVerifier',
                   'tools.ozone.team.defs#roleTriage',
                 ],
               },
@@ -15448,6 +15457,7 @@ export const schemaDict = {
               'lex:tools.ozone.team.defs#roleAdmin',
               'lex:tools.ozone.team.defs#roleModerator',
               'lex:tools.ozone.team.defs#roleTriage',
+              'lex:tools.ozone.team.defs#roleVerifier',
             ],
           },
         },
@@ -15465,6 +15475,10 @@ export const schemaDict = {
         type: 'token',
         description:
           'Triage role. Mostly intended for monitoring and escalating issues.',
+      },
+      roleVerifier: {
+        type: 'token',
+        description: 'Verifier role. Only allowed to issue verifications.',
       },
     },
   },
@@ -15582,6 +15596,7 @@ export const schemaDict = {
                 knownValues: [
                   'tools.ozone.team.defs#roleAdmin',
                   'tools.ozone.team.defs#roleModerator',
+                  'tools.ozone.team.defs#roleVerifier',
                   'tools.ozone.team.defs#roleTriage',
                 ],
               },
@@ -15601,6 +15616,356 @@ export const schemaDict = {
             description: 'The member being updated does not exist in the team',
           },
         ],
+      },
+    },
+  },
+  ToolsOzoneVerificationDefs: {
+    lexicon: 1,
+    id: 'tools.ozone.verification.defs',
+    defs: {
+      verificationView: {
+        type: 'object',
+        description: 'Verification data for the associated subject.',
+        required: [
+          'issuer',
+          'uri',
+          'subject',
+          'handle',
+          'displayName',
+          'createdAt',
+        ],
+        properties: {
+          issuer: {
+            type: 'string',
+            description: 'The user who issued this verification.',
+            format: 'did',
+          },
+          uri: {
+            type: 'string',
+            description: 'The AT-URI of the verification record.',
+            format: 'at-uri',
+          },
+          subject: {
+            type: 'string',
+            format: 'did',
+            description: 'The subject of the verification.',
+          },
+          handle: {
+            type: 'string',
+            description:
+              'Handle of the subject the verification applies to at the moment of verifying, which might not be the same at the time of viewing. The verification is only valid if the current handle matches the one at the time of verifying.',
+            format: 'handle',
+          },
+          displayName: {
+            type: 'string',
+            description:
+              'Display name of the subject the verification applies to at the moment of verifying, which might not be the same at the time of viewing. The verification is only valid if the current displayName matches the one at the time of verifying.',
+          },
+          createdAt: {
+            type: 'string',
+            description: 'Timestamp when the verification was created.',
+            format: 'datetime',
+          },
+          revokeReason: {
+            type: 'string',
+            description:
+              'Describes the reason for revocation, also indicating that the verification is no longer valid.',
+          },
+          revokedAt: {
+            type: 'string',
+            description: 'Timestamp when the verification was revoked.',
+            format: 'datetime',
+          },
+          revokedBy: {
+            type: 'string',
+            description: 'The user who revoked this verification.',
+            format: 'did',
+          },
+          subjectProfile: {
+            type: 'union',
+            refs: [],
+          },
+          issuerProfile: {
+            type: 'union',
+            refs: [],
+          },
+          subjectRepo: {
+            type: 'union',
+            refs: [
+              'lex:tools.ozone.moderation.defs#repoViewDetail',
+              'lex:tools.ozone.moderation.defs#repoViewNotFound',
+            ],
+          },
+          issuerRepo: {
+            type: 'union',
+            refs: [
+              'lex:tools.ozone.moderation.defs#repoViewDetail',
+              'lex:tools.ozone.moderation.defs#repoViewNotFound',
+            ],
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneVerificationGrantVerifications: {
+    lexicon: 1,
+    id: 'tools.ozone.verification.grantVerifications',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Grant verifications to multiple subjects. Allows batch processing of up to 100 verifications at once.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['verifications'],
+            properties: {
+              verifications: {
+                type: 'array',
+                description: 'Array of verification requests to process',
+                maxLength: 100,
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.verification.grantVerifications#verificationInput',
+                },
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['verifications', 'failedVerifications'],
+            properties: {
+              verifications: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.verification.defs#verificationView',
+                },
+              },
+              failedVerifications: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.verification.grantVerifications#grantError',
+                },
+              },
+            },
+          },
+        },
+      },
+      verificationInput: {
+        type: 'object',
+        required: ['subject', 'handle', 'displayName'],
+        properties: {
+          subject: {
+            type: 'string',
+            description: 'The did of the subject being verified',
+            format: 'did',
+          },
+          handle: {
+            type: 'string',
+            description:
+              'Handle of the subject the verification applies to at the moment of verifying.',
+            format: 'handle',
+          },
+          displayName: {
+            type: 'string',
+            description:
+              'Display name of the subject the verification applies to at the moment of verifying.',
+          },
+          createdAt: {
+            type: 'string',
+            description:
+              'Timestamp for verification record. Defaults to current time when not specified.',
+          },
+        },
+      },
+      grantError: {
+        type: 'object',
+        description: 'Error object for failed verifications.',
+        required: ['error', 'subject'],
+        properties: {
+          error: {
+            type: 'string',
+            description: 'Error message describing the reason for failure.',
+          },
+          subject: {
+            type: 'string',
+            description: 'The did of the subject being verified',
+            format: 'did',
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneVerificationListVerifications: {
+    lexicon: 1,
+    id: 'tools.ozone.verification.listVerifications',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'List verifications',
+        parameters: {
+          type: 'params',
+          properties: {
+            cursor: {
+              type: 'string',
+              description: 'Pagination cursor',
+            },
+            limit: {
+              type: 'integer',
+              description: 'Maximum number of results to return',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            createdAfter: {
+              type: 'string',
+              format: 'datetime',
+              description:
+                'Filter to verifications created after this timestamp',
+            },
+            createdBefore: {
+              type: 'string',
+              format: 'datetime',
+              description:
+                'Filter to verifications created before this timestamp',
+            },
+            issuers: {
+              type: 'array',
+              maxLength: 100,
+              description: 'Filter to verifications from specific issuers',
+              items: {
+                type: 'string',
+                format: 'did',
+              },
+            },
+            subjects: {
+              type: 'array',
+              description: 'Filter to specific verified DIDs',
+              maxLength: 100,
+              items: {
+                type: 'string',
+                format: 'did',
+              },
+            },
+            sortDirection: {
+              type: 'string',
+              description: 'Sort direction for creation date',
+              enum: ['asc', 'desc'],
+              default: 'desc',
+            },
+            isRevoked: {
+              type: 'boolean',
+              description:
+                'Filter to verifications that are revoked or not. By default, includes both.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['verifications'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              verifications: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.verification.defs#verificationView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneVerificationRevokeVerifications: {
+    lexicon: 1,
+    id: 'tools.ozone.verification.revokeVerifications',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Revoke previously granted verifications in batches of up to 100.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['uris'],
+            properties: {
+              uris: {
+                type: 'array',
+                description: 'Array of verification record uris to revoke',
+                maxLength: 100,
+                items: {
+                  type: 'string',
+                  description:
+                    'The AT-URI of the verification record to revoke.',
+                  format: 'at-uri',
+                },
+              },
+              revokeReason: {
+                type: 'string',
+                description:
+                  'Reason for revoking the verification. This is optional and can be omitted if not needed.',
+                maxLength: 1000,
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['revokedVerifications', 'failedRevocations'],
+            properties: {
+              revokedVerifications: {
+                type: 'array',
+                description: 'List of verification uris successfully revoked',
+                items: {
+                  type: 'string',
+                  format: 'at-uri',
+                },
+              },
+              failedRevocations: {
+                type: 'array',
+                description:
+                  "List of verification uris that couldn't be revoked, including failure reasons",
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.verification.revokeVerifications#revokeError',
+                },
+              },
+            },
+          },
+        },
+      },
+      revokeError: {
+        type: 'object',
+        description: 'Error object for failed revocations',
+        required: ['uri', 'error'],
+        properties: {
+          uri: {
+            type: 'string',
+            description:
+              'The AT-URI of the verification record that failed to revoke.',
+            format: 'at-uri',
+          },
+          error: {
+            type: 'string',
+            description:
+              'Description of the error that occurred during revocation.',
+          },
+        },
       },
     },
   },
@@ -15920,4 +16285,11 @@ export const ids = {
   ToolsOzoneTeamDeleteMember: 'tools.ozone.team.deleteMember',
   ToolsOzoneTeamListMembers: 'tools.ozone.team.listMembers',
   ToolsOzoneTeamUpdateMember: 'tools.ozone.team.updateMember',
+  ToolsOzoneVerificationDefs: 'tools.ozone.verification.defs',
+  ToolsOzoneVerificationGrantVerifications:
+    'tools.ozone.verification.grantVerifications',
+  ToolsOzoneVerificationListVerifications:
+    'tools.ozone.verification.listVerifications',
+  ToolsOzoneVerificationRevokeVerifications:
+    'tools.ozone.verification.revokeVerifications',
 } as const

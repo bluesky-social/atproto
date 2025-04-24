@@ -217,6 +217,9 @@ import * as ToolsOzoneTeamAddMember from './types/tools/ozone/team/addMember.js'
 import * as ToolsOzoneTeamDeleteMember from './types/tools/ozone/team/deleteMember.js'
 import * as ToolsOzoneTeamListMembers from './types/tools/ozone/team/listMembers.js'
 import * as ToolsOzoneTeamUpdateMember from './types/tools/ozone/team/updateMember.js'
+import * as ToolsOzoneVerificationGrantVerifications from './types/tools/ozone/verification/grantVerifications.js'
+import * as ToolsOzoneVerificationListVerifications from './types/tools/ozone/verification/listVerifications.js'
+import * as ToolsOzoneVerificationRevokeVerifications from './types/tools/ozone/verification/revokeVerifications.js'
 
 export const COM_ATPROTO_MODERATION = {
   DefsReasonSpam: 'com.atproto.moderation.defs#reasonSpam',
@@ -258,6 +261,7 @@ export const TOOLS_OZONE_TEAM = {
   DefsRoleAdmin: 'tools.ozone.team.defs#roleAdmin',
   DefsRoleModerator: 'tools.ozone.team.defs#roleModerator',
   DefsRoleTriage: 'tools.ozone.team.defs#roleTriage',
+  DefsRoleVerifier: 'tools.ozone.team.defs#roleVerifier',
 }
 
 export function createServer(options?: XrpcOptions): Server {
@@ -2495,6 +2499,7 @@ export class ToolsOzoneNS {
   setting: ToolsOzoneSettingNS
   signature: ToolsOzoneSignatureNS
   team: ToolsOzoneTeamNS
+  verification: ToolsOzoneVerificationNS
 
   constructor(server: Server) {
     this._server = server
@@ -2506,6 +2511,7 @@ export class ToolsOzoneNS {
     this.setting = new ToolsOzoneSettingNS(server)
     this.signature = new ToolsOzoneSignatureNS(server)
     this.team = new ToolsOzoneTeamNS(server)
+    this.verification = new ToolsOzoneVerificationNS(server)
   }
 }
 
@@ -2932,6 +2938,47 @@ export class ToolsOzoneTeamNS {
     >,
   ) {
     const nsid = 'tools.ozone.team.updateMember' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class ToolsOzoneVerificationNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  grantVerifications<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneVerificationGrantVerifications.Handler<ExtractAuth<AV>>,
+      ToolsOzoneVerificationGrantVerifications.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.verification.grantVerifications' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  listVerifications<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneVerificationListVerifications.Handler<ExtractAuth<AV>>,
+      ToolsOzoneVerificationListVerifications.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.verification.listVerifications' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  revokeVerifications<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneVerificationRevokeVerifications.Handler<ExtractAuth<AV>>,
+      ToolsOzoneVerificationRevokeVerifications.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.verification.revokeVerifications' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }

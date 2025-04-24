@@ -32,6 +32,7 @@ export default function (server: Server, ctx: AppContext) {
           'tools.ozone.team.defs#roleModerator',
           'tools.ozone.team.defs#roleTriage',
           'tools.ozone.team.defs#roleAdmin',
+          'tools.ozone.team.defs#roleVerifier',
         ]
 
         if (access.type !== 'admin_token' && !access.isAdmin) {
