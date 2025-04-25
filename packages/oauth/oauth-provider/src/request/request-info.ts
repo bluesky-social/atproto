@@ -5,8 +5,8 @@ import { RequestId } from './request-id.js'
 import { RequestUri } from './request-uri.js'
 
 export type RequestInfo = {
-  id: RequestId
-  uri: RequestUri
+  requestId: RequestId
+  requestUri: RequestUri
   parameters: Readonly<OAuthAuthorizationRequestParameters>
   expiresAt: Date
   clientId: ClientId

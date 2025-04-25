@@ -468,7 +468,7 @@ export class OAuthProvider extends OAuthVerifier {
           ? await this.decodeJAR(client, authorizationRequest)
           : { payload: authorizationRequest }
 
-      const { uri, expiresAt } =
+      const { requestUri, expiresAt } =
         await this.requestManager.createAuthorizationRequest(
           client,
           clientAuth,
@@ -478,7 +478,7 @@ export class OAuthProvider extends OAuthVerifier {
         )
 
       return {
-        request_uri: uri,
+        request_uri: requestUri,
         expires_in: dateToRelativeSeconds(expiresAt),
       }
     } catch (err) {
@@ -576,7 +576,7 @@ export class OAuthProvider extends OAuthVerifier {
       .getClient(clientCredentials.client_id)
       .catch(accessDeniedCatcher)
 
-    const { parameters, uri } = await this.processAuthorizationRequest(
+    const { parameters, requestUri } = await this.processAuthorizationRequest(
       client,
       deviceId,
       query,
@@ -603,7 +603,7 @@ export class OAuthProvider extends OAuthVerifier {
         }
 
         const code = await this.requestManager.setAuthorized(
-          uri,
+          requestUri,
           client,
           ssoSession.account,
           deviceId,
@@ -620,7 +620,7 @@ export class OAuthProvider extends OAuthVerifier {
           const ssoSession = ssoSessions[0]!
           if (!ssoSession.loginRequired && !ssoSession.consentRequired) {
             const code = await this.requestManager.setAuthorized(
-              uri,
+              requestUri,
               client,
               ssoSession.account,
               deviceId,
@@ -636,7 +636,7 @@ export class OAuthProvider extends OAuthVerifier {
         issuer,
         client,
         parameters,
-        uri,
+        requestUri,
         sessions: sessions.map((session) => ({
           // Map to avoid leaking other data that might be present in the session
           account: session.account,
@@ -657,7 +657,7 @@ export class OAuthProvider extends OAuthVerifier {
       }
     } catch (err) {
       try {
-        await this.requestManager.delete(uri)
+        await this.requestManager.delete(requestUri)
       } catch {
         // There are two error here. Better keep the outer one.
         //
