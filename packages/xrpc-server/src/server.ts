@@ -562,7 +562,8 @@ function createErrorMiddleware({
 
         // XRPC specific properties, for easier browsing of logs
         nsid: locals?.nsid,
-        status: xrpcError.type,
+        type: xrpcError.type,
+        status: xrpcError.statusCode,
         payload: xrpcError.payload,
 
         // Ensure that the logged item's name is set to LOGGER_NAME, instead of
@@ -593,7 +594,7 @@ function toSimplifiedErrorLike(err: unknown): unknown {
     // Transform into an "ErrorLike" for pino's std "err" serializer
     return {
       ...err,
-      // Cary over non-enumerable properties
+      // Carry over non-enumerable properties
       message: err.message,
       name:
         !Object.hasOwn(err, 'name') &&
