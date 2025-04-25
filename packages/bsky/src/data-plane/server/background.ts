@@ -16,7 +16,7 @@ export class BackgroundQueue {
     this.queue
       .add(() => task(this.db))
       .catch((err) => {
-        dbLogger.error(err, 'background queue task failed')
+        dbLogger.error({ err }, 'background queue task failed')
       })
   }
 
