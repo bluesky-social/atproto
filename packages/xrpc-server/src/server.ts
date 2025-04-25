@@ -545,27 +545,34 @@ function createErrorMiddleware({
 
     const xrpcError = errorParser(err)
 
-    const obj = {
-      // Log the original error's message & stack trace
-      err,
-      // Log XRPC specific properties
-      nsid: locals?.nsid,
-      status: xrpcError.type,
-      payload: xrpcError.payload,
-    }
-    const msg =
-      xrpcError instanceof InternalServerError
-        ? `unhandled exception in xrpc${methodSuffix}`
-        : `error in xrpc${methodSuffix}`
-
     // Use the request's logger (if available) to benefit from request context
-    // (id) and logging configuration (serialization, etc.). The logger's name
-    // will be overridden to LOGGER_NAME to ensure consistency across all logs.
-    if (isPinoHttpRequest(req)) {
-      req.log.error({ ...obj, name: LOGGER_NAME }, msg)
-    } else {
-      log.error(obj, msg)
-    }
+    // (id, timing) and logging configuration (serialization, etc.).
+    const logger = isPinoHttpRequest(req) ? req.log : log
+
+    const isInternalError = xrpcError instanceof InternalServerError
+
+    logger.error(
+      {
+        // @NOTE Computation of error stack is an expensive operation, so
+        // we strip it for expected errors.
+        err:
+          isInternalError || process.env.NODE_ENV === 'development'
+            ? err
+            : toSimplifiedErrorLike(err),
+
+        // XRPC specific properties, for easier browsing of logs
+        nsid: locals?.nsid,
+        status: xrpcError.type,
+        payload: xrpcError.payload,
+
+        // Ensure that the logged item's name is set to LOGGER_NAME, instead of
+        // the name of the pino-http logger, to ensure consistency across logs.
+        name: LOGGER_NAME,
+      },
+      isInternalError
+        ? `unhandled exception in xrpc${methodSuffix}`
+        : `error in xrpc${methodSuffix}`,
+    )
 
     if (res.headersSent) {
       return next(err)
@@ -579,4 +586,24 @@ function isPinoHttpRequest(req: Request): req is Request & {
   log: { error: (obj: unknown, msg: string) => void }
 } {
   return typeof (req as { log?: any }).log?.error === 'function'
+}
+
+function toSimplifiedErrorLike(err: unknown): unknown {
+  if (err instanceof Error) {
+    // Transform into an "ErrorLike" for pino's std "err" serializer
+    return {
+      ...err,
+      // Cary over non-enumerable properties
+      message: err.message,
+      name:
+        !Object.hasOwn(err, 'name') &&
+        Object.prototype.toString.call(err.constructor) === '[object Function]'
+          ? err.constructor.name // extract the class name for sub-classes of Error
+          : err.name,
+      // @NOTE Error.stack, Error.cause and AggregateError.error are non
+      // enumerable properties so they won't be spread to the ErrorLike
+    }
+  }
+
+  return err
 }
