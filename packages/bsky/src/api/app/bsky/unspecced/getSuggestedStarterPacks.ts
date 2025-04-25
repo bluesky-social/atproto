@@ -5,6 +5,7 @@ import { AppContext } from '../../../../context'
 import {
   HydrateCtx,
   Hydrator,
+  isBlockEntryBlocked,
   mergeManyStates,
 } from '../../../../hydration/hydrator'
 import { Server } from '../../../../lexicon'
@@ -117,7 +118,7 @@ const noBlocks = (input: RulesFnInput<Context, Params, SkeletonState>) => {
       } catch {
         return false
       }
-      return !blocks?.get(aturi.hostname)
+      return !isBlockEntryBlocked(blocks?.get(aturi.hostname))
     }),
   }
 

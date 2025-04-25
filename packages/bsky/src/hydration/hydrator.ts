@@ -37,6 +37,7 @@ import {
   Threadgates,
 } from './feed'
 import {
+  BlockEntry,
   Follows,
   GraphHydrator,
   ListAggs,
@@ -125,7 +126,11 @@ export type HydrationState = {
   verifications?: Verifications
 }
 
-export type PostBlock = { embed: boolean; parent: boolean; root: boolean }
+export type PostBlock = {
+  embed: BlockEntry | null
+  parent: BlockEntry | null
+  root: BlockEntry | null
+}
 export type PostBlocks = HydrationMap<PostBlock>
 type PostBlockPairs = {
   embed?: RelationshipPair
@@ -139,7 +144,7 @@ export type LikeBlocks = HydrationMap<LikeBlock>
 export type FollowBlock = boolean
 export type FollowBlocks = HydrationMap<FollowBlock>
 
-export type BidirectionalBlocks = HydrationMap<HydrationMap<boolean>>
+export type BidirectionalBlocks = HydrationMap<HydrationMap<BlockEntry>>
 
 export class Hydrator {
   actor: ActorHydrator
@@ -560,9 +565,11 @@ export class Hydrator {
     )
     for (const [uri, { embed, parent, root }] of postBlocksPairs) {
       postBlocks.set(uri, {
-        embed: !!embed && !!isBlocked(blocks, embed),
-        parent: !!parent && !!isBlocked(blocks, parent),
-        root: !!root && !!isBlocked(blocks, root),
+        embed: embed ? getBlockEntryForRelationshipPair(blocks, embed) : null,
+        parent: parent
+          ? getBlockEntryForRelationshipPair(blocks, parent)
+          : null,
+        root: root ? getBlockEntryForRelationshipPair(blocks, root) : null,
       })
     }
     return postBlocks
@@ -797,7 +804,8 @@ export class Hydrator {
       agg.listItemSampleUris = [
         ...members.listitems.filter(
           (li) =>
-            ctx.viewer === creator || !isBlocked(blocks, [creator, li.did]),
+            ctx.viewer === creator ||
+            !isRelationshipPairBlocked(blocks, [creator, li.did]),
         ),
       ]
         .sort((li1, li2) => {
@@ -843,7 +851,10 @@ export class Hydrator {
     const likeBlocks = new HydrationMap<LikeBlock>()
     for (const [uri, like] of likes) {
       if (like) {
-        likeBlocks.set(uri, isBlocked(blocks, [authorDid, didFromUri(uri)]))
+        likeBlocks.set(
+          uri,
+          isRelationshipPairBlocked(blocks, [authorDid, didFromUri(uri)]),
+        )
       } else {
         likeBlocks.set(uri, null)
       }
@@ -939,7 +950,10 @@ export class Hydrator {
       if (follow) {
         followBlocks.set(
           uri,
-          isBlocked(blocks, [didFromUri(uri), follow.record.subject]),
+          isRelationshipPairBlocked(blocks, [
+            didFromUri(uri),
+            follow.record.subject,
+          ]),
         )
       } else {
         followBlocks.set(uri, null)
@@ -958,7 +972,9 @@ export class Hydrator {
       }
     }
 
-    const result = new HydrationMap<HydrationMap<boolean>>()
+    const result: BidirectionalBlocks = new HydrationMap<
+      HydrationMap<BlockEntry>
+    >()
     const blocks = await this.graph.getBidirectionalBlocks(pairs)
 
     // lookup list authors to apply takedown status to blocklists
@@ -975,15 +991,20 @@ export class Hydrator {
     const activeListAuthors = await this.actor.getActors([...listAuthorDids])
 
     for (const [source, targets] of didMap) {
-      const didBlocks = new HydrationMap<boolean>()
+      const didBlocks = new HydrationMap<BlockEntry>()
       for (const target of targets) {
         const block = blocks.get(source, target)
-        const isBlocked = !!(
-          block?.blockUri ||
-          (block?.blockListUri &&
-            activeListAuthors.get(uriToDid(block.blockListUri)))
-        )
-        didBlocks.set(target, isBlocked)
+        const blockEntry: BlockEntry = {
+          blockUri: block?.blockUri,
+          blockListUri:
+            block?.blockListUri &&
+            activeListAuthors.get(uriToDid(block.blockListUri))
+              ? block.blockListUri
+              : undefined,
+        }
+        if (isBlockEntryBlocked(blockEntry)) {
+          didBlocks.set(target, blockEntry)
+        }
       }
       result.set(source, didBlocks)
     }
@@ -1250,8 +1271,25 @@ const getListUrisFromThreadgates = (gates: Threadgates) => {
   return uris
 }
 
-const isBlocked = (blocks: BidirectionalBlocks, [a, b]: RelationshipPair) => {
+const getBlockEntryForRelationshipPair = (
+  blocks: BidirectionalBlocks,
+  pair: RelationshipPair,
+): BlockEntry | null => {
+  if (!pair) return null
+  const [a, b] = pair
   return blocks.get(a)?.get(b) ?? null
+}
+
+export const isBlockEntryBlocked = (
+  blockEntry: BlockEntry | null | undefined,
+): boolean => !!blockEntry?.blockUri || !!blockEntry?.blockListUri
+
+const isRelationshipPairBlocked = (
+  blocks: BidirectionalBlocks,
+  pair: RelationshipPair,
+): boolean => {
+  const blockEntry = getBlockEntryForRelationshipPair(blocks, pair)
+  return isBlockEntryBlocked(blockEntry)
 }
 
 const pairsToMap = (pairs: RelationshipPair[]): Map<string, string[]> => {

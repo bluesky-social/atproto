@@ -5,6 +5,7 @@ import { AppContext } from '../../../../context'
 import {
   HydrateCtx,
   Hydrator,
+  isBlockEntryBlocked,
   mergeManyStates,
 } from '../../../../hydration/hydrator'
 import { Server } from '../../../../lexicon'
@@ -104,7 +105,7 @@ const noBlocksOrFollows = (
     ...skeleton,
     dids: skeleton.dids.filter((did) => {
       const viewer = ctx.views.profileViewer(did, hydration)
-      return !blocks?.get(did) && !viewer?.following
+      return !isBlockEntryBlocked(blocks?.get(did)) && !viewer?.following
     }),
   }
 }

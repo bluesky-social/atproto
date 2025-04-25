@@ -3,7 +3,7 @@ import { AtUri, INVALID_HANDLE, normalizeDatetimeAlways } from '@atproto/syntax'
 import { ProfileViewerState } from '../hydration/actor'
 import { FeedItem, Like, Post, Repost } from '../hydration/feed'
 import { Follow, Verification } from '../hydration/graph'
-import { HydrationState } from '../hydration/hydrator'
+import { HydrationState, isBlockEntryBlocked } from '../hydration/hydrator'
 import { Label } from '../hydration/label'
 import { RecordInfo } from '../hydration/util'
 import { ImageUriBuilder } from '../image/uri'
@@ -386,7 +386,7 @@ export class Views {
       if (this.viewerBlockExists(followerDid, state)) {
         return undefined
       }
-      if (blocks?.get(followerDid) === true) {
+      if (isBlockEntryBlocked(blocks?.get(followerDid))) {
         return undefined
       }
       if (this.actorIsNoHosted(followerDid, state)) {
@@ -856,11 +856,15 @@ export class Views {
       const childBlocks = state.postBlocks?.get(uri)
       const parentBlocks = state.postBlocks?.get(parent.uri)
       // if child blocks parent, block parent
-      if (isPostView(parent) && childBlocks?.parent) {
+      if (isPostView(parent) && isBlockEntryBlocked(childBlocks?.parent)) {
         parent = this.blockedPost(parent.uri, parent.author.did, state)
       }
       // if child or parent blocks root, block root
-      if (isPostView(root) && (childBlocks?.root || parentBlocks?.root)) {
+      if (
+        isPostView(root) &&
+        (isBlockEntryBlocked(childBlocks?.root) ||
+          isBlockEntryBlocked(parentBlocks?.root))
+      ) {
         root = this.blockedPost(root.uri, root.author.did, state)
       }
     }
@@ -1006,7 +1010,7 @@ export class Views {
     if (!parentUri) return undefined
     if (
       !state.ctx?.include3pBlocks &&
-      state.postBlocks?.get(childUri)?.parent
+      isBlockEntryBlocked(state.postBlocks?.get(childUri)?.parent)
     ) {
       return this.blockedPost(parentUri, creatorFromUri(parentUri), state)
     }
@@ -1041,7 +1045,10 @@ export class Views {
       if (postInfo?.violatesThreadGate) {
         return undefined
       }
-      if (!state.ctx?.include3pBlocks && state.postBlocks?.get(uri)?.parent) {
+      if (
+        !state.ctx?.include3pBlocks &&
+        isBlockEntryBlocked(state.postBlocks?.get(uri)?.parent)
+      ) {
         return undefined
       }
       const post = this.post(uri, state)
@@ -1249,7 +1256,8 @@ export class Views {
     const parsedUri = new AtUri(uri)
     if (
       this.viewerBlockExists(parsedUri.hostname, state) ||
-      (!state.ctx?.include3pBlocks && state.postBlocks?.get(postUri)?.embed)
+      (!state.ctx?.include3pBlocks &&
+        isBlockEntryBlocked(state.postBlocks?.get(postUri)?.embed))
     ) {
       return this.embedBlocked(uri, state)
     }
