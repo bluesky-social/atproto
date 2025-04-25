@@ -35,6 +35,9 @@ import addMember from './team/addMember'
 import deleteMember from './team/deleteMember'
 import listMembers from './team/listMembers'
 import updateMember from './team/updateMember'
+import grantVerifications from './verification/grantVerifications'
+import listVerifications from './verification/listVerifications'
+import revokeVerifications from './verification/revokeVerifications'
 
 export * as health from './health'
 
@@ -76,5 +79,8 @@ export default function (server: Server, ctx: AppContext) {
   removeOptions(server, ctx)
   getReporterStats(server, ctx)
   getSubjects(server, ctx)
+  grantVerifications(server, ctx)
+  revokeVerifications(server, ctx)
+  listVerifications(server, ctx)
   return server
 }

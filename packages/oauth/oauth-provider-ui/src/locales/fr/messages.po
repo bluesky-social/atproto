@@ -45,7 +45,7 @@ msgstr "Une application sur votre appareil"
 msgid "An unknown error occurred"
 msgstr "Une erreur inconnue s'est produite"
 
-#: src/views/authorize/sign-in/sign-in-picker.tsx:112
+#: src/views/authorize/sign-in/sign-in-picker.tsx:104
 msgid "Another account"
 msgstr "Un autre compte"
 
@@ -57,6 +57,10 @@ msgstr "Authentification"
 #: src/views/authorize/accept/accept-form.tsx:57
 msgid "Authorize"
 msgstr "Authoriser l'accès"
+
+#: src/views/authorize/sign-in/sign-in-picker.tsx:68
+msgid "Avatar"
+msgstr ""
 
 #: src/views/authorize/sign-in/sign-in-picker.tsx:47
 #: src/views/authorize/sign-in/sign-in-form.tsx:130
@@ -202,7 +206,7 @@ msgstr "Cacher"
 msgid "Home"
 msgstr "Accueil"
 
-#: src/views/authorize/sign-in/sign-in-picker.tsx:87
+#: src/views/authorize/sign-in/sign-in-picker.tsx:81
 #: src/views/authorize/sign-in/sign-in-form.tsx:138
 msgid "Identifier"
 msgstr "Identifiant"
@@ -228,7 +232,7 @@ msgstr "Réinitialisons votre mot de passe !"
 msgid "Login complete"
 msgstr "Connexion terminée"
 
-#: src/views/authorize/sign-in/sign-in-picker.tsx:105
+#: src/views/authorize/sign-in/sign-in-picker.tsx:97
 msgid "Login to account that is not listed"
 msgstr "Se connecter à un compte qui n'est pas listé"
 
@@ -252,7 +256,7 @@ msgstr "Manquant"
 msgid "Moderate"
 msgstr "Modéré"
 
-#: src/views/authorize/sign-in/sign-in-picker.tsx:81
+#: src/views/authorize/sign-in/sign-in-picker.tsx:74
 msgid "Name"
 msgstr "Nom"
 
@@ -346,7 +350,7 @@ msgid "Sign in"
 msgstr "Se connecter"
 
 #. placeholder {0}: account.name
-#: src/views/authorize/sign-in/sign-in-picker.tsx:75
+#: src/views/authorize/sign-in/sign-in-picker.tsx:67
 msgid "Sign in as {0}"
 msgstr "Se connecter en tant que {0}"
 

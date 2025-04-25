@@ -1,5 +1,39 @@
 # @atproto/dev-env
 
+## 0.3.128
+
+### Patch Changes
+
+- [#3765](https://github.com/bluesky-social/atproto/pull/3765) [`45354c84f`](https://github.com/bluesky-social/atproto/commit/45354c84f898d79f58c14b5c0da3661beb7353f9) Thanks [@foysalit](https://github.com/foysalit)! - Add verification lexicons to ozone
+
+- Updated dependencies [[`45354c84f`](https://github.com/bluesky-social/atproto/commit/45354c84f898d79f58c14b5c0da3661beb7353f9), [`45354c84f`](https://github.com/bluesky-social/atproto/commit/45354c84f898d79f58c14b5c0da3661beb7353f9)]:
+  - @atproto/ozone@0.1.108
+  - @atproto/api@0.15.5
+  - @atproto/pds@0.4.134
+  - @atproto/xrpc-server@0.7.17
+  - @atproto/bsky@0.0.147
+  - @atproto/sync@0.1.22
+
+## 0.3.127
+
+### Patch Changes
+
+- Updated dependencies [[`da168588d`](https://github.com/bluesky-social/atproto/commit/da168588de59e5048d255866205bd16c5ab5f95c), [`7af77f3ed`](https://github.com/bluesky-social/atproto/commit/7af77f3edfe52f77729f61de4188e8375f03b4ef)]:
+  - @atproto/xrpc-server@0.7.16
+  - @atproto/ozone@0.1.107
+  - @atproto/api@0.15.4
+  - @atproto/bsky@0.0.146
+  - @atproto/pds@0.4.133
+  - @atproto/sync@0.1.21
+
+## 0.3.126
+
+### Patch Changes
+
+- Updated dependencies [[`9ef52d829`](https://github.com/bluesky-social/atproto/commit/9ef52d82923c9c82a73f39690182bd7f75bbc67a)]:
+  - @atproto/bsky@0.0.145
+  - @atproto/pds@0.4.132
+
 ## 0.3.125
 
 ### Patch Changes

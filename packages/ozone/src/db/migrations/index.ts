@@ -23,3 +23,5 @@ export * as _20250211T003647759Z from './20250211T003647759Z-add-reporter-stats-
 export * as _20250211T132135150Z from './20250211T132135150Z-moderation-event-message-partial-idx'
 export * as _20250221T132135150Z from './20250221T132135150Z-member-details'
 export * as _20250404T201720309Z from './20250404T201720309Z-subject-status-sort-idxs'
+export * as _20250415T201720309Z from './20250415T201720309Z-verification'
+export * as _20250417T201720309Z from './20250417T201720309Z-firehose-cursor'

@@ -6,7 +6,7 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.getProfile({
     auth: ctx.authVerifier.moderator,
     handler: async (request) => {
-      const res = await ctx.appviewAgent.api.app.bsky.actor.getProfile(
+      const res = await ctx.appviewAgent.app.bsky.actor.getProfile(
         request.params,
         await ctx.appviewAuth(ids.AppBskyActorGetProfile),
       )
@@ -20,7 +20,7 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.getProfiles({
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async (request) => {
-      const res = await ctx.appviewAgent.api.app.bsky.actor.getProfiles(
+      const res = await ctx.appviewAgent.app.bsky.actor.getProfiles(
         request.params,
         await ctx.appviewAuth(ids.AppBskyActorGetProfiles),
       )
@@ -34,7 +34,7 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getAuthorFeed({
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async (request) => {
-      const res = await ctx.appviewAgent.api.app.bsky.feed.getAuthorFeed(
+      const res = await ctx.appviewAgent.app.bsky.feed.getAuthorFeed(
         request.params,
         await ctx.appviewAuth(ids.AppBskyFeedGetAuthorFeed),
       )
@@ -48,7 +48,7 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.searchPosts({
     auth: ctx.authVerifier.moderator,
     handler: async (request) => {
-      const res = await ctx.appviewAgent.api.app.bsky.feed.searchPosts(
+      const res = await ctx.appviewAgent.app.bsky.feed.searchPosts(
         request.params,
         await ctx.appviewAuth(ids.AppBskyFeedSearchPosts),
       )
@@ -62,7 +62,7 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getPostThread({
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async (request) => {
-      const res = await ctx.appviewAgent.api.app.bsky.feed.getPostThread(
+      const res = await ctx.appviewAgent.app.bsky.feed.getPostThread(
         request.params,
         await ctx.appviewAuth(ids.AppBskyFeedGetPostThread),
       )
@@ -76,7 +76,7 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getFeedGenerator({
     auth: ctx.authVerifier.moderator,
     handler: async (request) => {
-      const res = await ctx.appviewAgent.api.app.bsky.feed.getFeedGenerator(
+      const res = await ctx.appviewAgent.app.bsky.feed.getFeedGenerator(
         request.params,
         await ctx.appviewAuth(ids.AppBskyFeedGetFeedGenerator),
       )
@@ -90,7 +90,7 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.getFollows({
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async (request) => {
-      const res = await ctx.appviewAgent.api.app.bsky.graph.getFollows(
+      const res = await ctx.appviewAgent.app.bsky.graph.getFollows(
         request.params,
         await ctx.appviewAuth(ids.AppBskyGraphGetFollows),
       )
@@ -104,7 +104,7 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.getFollowers({
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async (request) => {
-      const res = await ctx.appviewAgent.api.app.bsky.graph.getFollowers(
+      const res = await ctx.appviewAgent.app.bsky.graph.getFollowers(
         request.params,
         await ctx.appviewAuth(ids.AppBskyGraphGetFollowers),
       )
@@ -118,7 +118,7 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.getList({
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async (request) => {
-      const res = await ctx.appviewAgent.api.app.bsky.graph.getList(
+      const res = await ctx.appviewAgent.app.bsky.graph.getList(
         request.params,
         await ctx.appviewAuth(ids.AppBskyGraphGetList),
       )
@@ -132,7 +132,7 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.getLists({
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async (request) => {
-      const res = await ctx.appviewAgent.api.app.bsky.graph.getLists(
+      const res = await ctx.appviewAgent.app.bsky.graph.getLists(
         request.params,
         await ctx.appviewAuth(ids.AppBskyGraphGetLists),
       )
@@ -149,9 +149,26 @@ export default function (server: Server, ctx: AppContext) {
       if (!ctx.pdsAgent) {
         throw new Error('PDS not configured')
       }
-      const res = await ctx.pdsAgent.api.com.atproto.admin.searchAccounts(
+      const res = await ctx.pdsAgent.com.atproto.admin.searchAccounts(
         request.params,
         await ctx.pdsAuth(ids.ComAtprotoAdminSearchAccounts),
+      )
+      return {
+        encoding: 'application/json',
+        body: res.data,
+      }
+    },
+  })
+
+  server.tools.ozone.hosting.getAccountHistory({
+    auth: ctx.authVerifier.moderator,
+    handler: async (request) => {
+      if (!ctx.pdsAgent) {
+        throw new Error('PDS not configured')
+      }
+      const res = await ctx.pdsAgent.tools.ozone.hosting.getAccountHistory(
+        request.params,
+        await ctx.pdsAuth(ids.ToolsOzoneHostingGetAccountHistory),
       )
       return {
         encoding: 'application/json',
@@ -228,7 +245,7 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.getStarterPacks({
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async (request) => {
-      const res = await ctx.appviewAgent.api.app.bsky.graph.getStarterPacks(
+      const res = await ctx.appviewAgent.app.bsky.graph.getStarterPacks(
         request.params,
         await ctx.appviewAuth(ids.AppBskyGraphGetStarterPacks),
       )
@@ -242,11 +259,10 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.getActorStarterPacks({
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async (request) => {
-      const res =
-        await ctx.appviewAgent.api.app.bsky.graph.getActorStarterPacks(
-          request.params,
-          await ctx.appviewAuth(ids.AppBskyGraphGetActorStarterPacks),
-        )
+      const res = await ctx.appviewAgent.app.bsky.graph.getActorStarterPacks(
+        request.params,
+        await ctx.appviewAuth(ids.AppBskyGraphGetActorStarterPacks),
+      )
       return {
         encoding: 'application/json',
         body: res.data,
@@ -257,7 +273,7 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getLikes({
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async (request) => {
-      const res = await ctx.appviewAgent.api.app.bsky.feed.getLikes(
+      const res = await ctx.appviewAgent.app.bsky.feed.getLikes(
         request.params,
         await ctx.appviewAuth(ids.AppBskyFeedGetLikes),
       )
@@ -271,7 +287,7 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getRepostedBy({
     auth: ctx.authVerifier.moderator,
     handler: async (request) => {
-      const res = await ctx.appviewAgent.api.app.bsky.feed.getRepostedBy(
+      const res = await ctx.appviewAgent.app.bsky.feed.getRepostedBy(
         request.params,
         await ctx.appviewAuth(ids.AppBskyFeedGetRepostedBy),
       )
@@ -285,11 +301,10 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.searchActorsTypeahead({
     auth: ctx.authVerifier.moderator,
     handler: async (request) => {
-      const res =
-        await ctx.appviewAgent.api.app.bsky.actor.searchActorsTypeahead(
-          request.params,
-          await ctx.appviewAuth(ids.AppBskyActorSearchActorsTypeahead),
-        )
+      const res = await ctx.appviewAgent.app.bsky.actor.searchActorsTypeahead(
+        request.params,
+        await ctx.appviewAuth(ids.AppBskyActorSearchActorsTypeahead),
+      )
       return {
         encoding: 'application/json',
         body: res.data,

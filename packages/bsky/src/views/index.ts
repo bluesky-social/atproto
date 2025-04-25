@@ -303,7 +303,6 @@ export class Views {
         record: actor.profile,
       }),
     ]
-
     return {
       did,
       handle: actor.handle ?? INVALID_HANDLE,

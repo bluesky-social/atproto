@@ -1,4 +1,5 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import { Agent } from '@atproto/api'
 import { OAuthSession } from '@atproto/oauth-client'
 import { useAuthContext } from './auth/auth-provider.tsx'
 
@@ -34,6 +35,16 @@ function App() {
     })
     console.log(profile)
     setProfile(profile.data)
+  }, [pdsAgent])
+
+  const global = window as { pdsAgent?: Agent }
+  useEffect(() => {
+    global.pdsAgent = pdsAgent
+    return () => {
+      if (global.pdsAgent === pdsAgent) {
+        delete global.pdsAgent
+      }
+    }
   }, [pdsAgent])
 
   return (

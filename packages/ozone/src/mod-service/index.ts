@@ -1,5 +1,5 @@
 import net from 'node:net'
-import { Insertable, sql } from 'kysely'
+import { Insertable, RawBuilder, sql } from 'kysely'
 import { CID } from 'multiformats/cid'
 import { AtpAgent } from '@atproto/api'
 import { addHoursToDate, chunkArray } from '@atproto/common'
@@ -1275,16 +1275,34 @@ export class ModerationService {
     }
   }
 
-  buildModerationQuery(
+  async buildModerationQuery(
     subjectType: 'account' | 'record',
     createdByDids: string[],
     isActionQuery: boolean,
   ): Promise<(Partial<ReporterStatsResult> & { did: string })[]> {
-    const isAccount = subjectType === 'account'
+    if (!createdByDids.length) return []
+
     const actionTypes = [
       'tools.ozone.moderation.defs#modEventTakedown',
       'tools.ozone.moderation.defs#modEventLabel',
     ] as const
+
+    const countAll = () => {
+      return sql<number>`COUNT(*)`
+    }
+    const countAllDistinctBy = (ref: RawBuilder) => {
+      return sql<number>`COUNT(DISTINCT ${ref})`
+    }
+    const countTakedownsDistinctBy = (ref: RawBuilder) => {
+      return sql<number>`COUNT(DISTINCT ${ref}) FILTER (
+        WHERE actions."action" = 'tools.ozone.moderation.defs#modEventTakedown'
+      )`
+    }
+    const countLabelsDistinctBy = (ref: RawBuilder) => {
+      return sql<number>`COUNT(DISTINCT ${ref}) FILTER (
+        WHERE actions."action" = 'tools.ozone.moderation.defs#modEventLabel'
+      )`
+    }
 
     const query = this.db.db
       .selectFrom('moderation_event as reports')
@@ -1293,48 +1311,83 @@ export class ModerationService {
         '=',
         'tools.ozone.moderation.defs#modEventReport',
       )
-      .where('reports.subjectUri', isAccount ? 'is' : 'is not', null)
+      .where(
+        'reports.subjectUri',
+        subjectType === 'account' ? 'is' : 'is not',
+        null,
+      )
       .where('reports.createdBy', 'in', createdByDids)
       .select(['reports.createdBy as did'])
 
-    if (isActionQuery) {
+    if (!isActionQuery) {
+      if (subjectType === 'account') {
+        return query
+          .select([
+            () => countAll().as('accountReportCount'),
+            (eb) =>
+              countAllDistinctBy(eb.ref('reports.subjectDid')).as(
+                'reportedAccountCount',
+              ),
+          ])
+          .groupBy('reports.createdBy')
+          .execute()
+      } else {
+        return query
+          .select([
+            () => countAll().as('recordReportCount'),
+            (eb) =>
+              countAllDistinctBy(eb.ref('reports.subjectUri')).as(
+                'reportedRecordCount',
+              ),
+          ])
+          .groupBy('reports.createdBy')
+          .execute()
+      }
+    }
+
+    if (subjectType === 'account') {
       return query
         .leftJoin('moderation_event as actions', (join) =>
           join
             .onRef('actions.subjectDid', '=', 'reports.subjectDid')
-            .on('actions.subjectUri', isAccount ? 'is' : 'is not', null)
+            .on('actions.subjectUri', 'is', null)
             .onRef('actions.createdAt', '>', 'reports.createdAt')
             .on('actions.action', 'in', actionTypes),
         )
         .select([
-          () =>
-            sql<number>`COUNT(DISTINCT actions."subjectDid") FILTER (
-              WHERE actions."action" = 'tools.ozone.moderation.defs#modEventTakedown'
-            )`.as(`takendown${isAccount ? 'Account' : 'Record'}Count`),
-
-          () =>
-            sql<number>`COUNT(DISTINCT actions."subjectDid") FILTER (
-              WHERE actions."action" = 'tools.ozone.moderation.defs#modEventLabel'
-            )`.as(`labeled${isAccount ? 'Account' : 'Record'}Count`),
+          (eb) =>
+            countTakedownsDistinctBy(eb.ref('actions.subjectDid')).as(
+              'takendownAccountCount',
+            ),
+          (eb) =>
+            countLabelsDistinctBy(eb.ref('actions.subjectDid')).as(
+              'labeledAccountCount',
+            ),
+        ])
+        .groupBy('reports.createdBy')
+        .execute()
+    } else {
+      return query
+        .leftJoin('moderation_event as actions', (join) =>
+          join
+            .onRef('actions.subjectDid', '=', 'reports.subjectDid')
+            .onRef('actions.subjectUri', '=', 'reports.subjectUri')
+            .onRef('actions.createdAt', '>', 'reports.createdAt')
+            .on('actions.action', 'in', actionTypes),
+        )
+        .select([
+          (eb) =>
+            countTakedownsDistinctBy(eb.ref('actions.subjectUri')).as(
+              'takendownRecordCount',
+            ),
+          (eb) =>
+            countLabelsDistinctBy(eb.ref('actions.subjectUri')).as(
+              'labeledRecordCount',
+            ),
         ])
         .groupBy('reports.createdBy')
         .execute()
     }
-
-    return query
-      .select([
-        (eb) =>
-          eb.fn.count<number>('reports.id').as(`${subjectType}ReportCount`),
-        (eb) =>
-          eb.fn
-            .count<number>(
-              isAccount ? 'reports.subjectDid' : 'reports.subjectUri',
-            )
-            .distinct()
-            .as(`reported${isAccount ? 'Account' : 'Record'}Count`),
-      ])
-      .groupBy('reports.createdBy')
-      .execute()
   }
 
   async getReporterStats(dids: string[]) {

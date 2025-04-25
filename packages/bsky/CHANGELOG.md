@@ -1,5 +1,31 @@
 # @atproto/bsky
 
+## 0.0.147
+
+### Patch Changes
+
+- Updated dependencies [[`45354c84f`](https://github.com/bluesky-social/atproto/commit/45354c84f898d79f58c14b5c0da3661beb7353f9), [`45354c84f`](https://github.com/bluesky-social/atproto/commit/45354c84f898d79f58c14b5c0da3661beb7353f9)]:
+  - @atproto/api@0.15.5
+  - @atproto/xrpc-server@0.7.17
+  - @atproto-labs/xrpc-utils@0.0.13
+  - @atproto/sync@0.1.22
+
+## 0.0.146
+
+### Patch Changes
+
+- Updated dependencies [[`da168588d`](https://github.com/bluesky-social/atproto/commit/da168588de59e5048d255866205bd16c5ab5f95c), [`7af77f3ed`](https://github.com/bluesky-social/atproto/commit/7af77f3edfe52f77729f61de4188e8375f03b4ef)]:
+  - @atproto/xrpc-server@0.7.16
+  - @atproto/api@0.15.4
+  - @atproto-labs/xrpc-utils@0.0.12
+  - @atproto/sync@0.1.21
+
+## 0.0.145
+
+### Patch Changes
+
+- [#3772](https://github.com/bluesky-social/atproto/pull/3772) [`9ef52d829`](https://github.com/bluesky-social/atproto/commit/9ef52d82923c9c82a73f39690182bd7f75bbc67a) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Hydrate verification views with an empty displayName
+
 ## 0.0.144
 
 ### Patch Changes

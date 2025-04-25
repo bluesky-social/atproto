@@ -25,6 +25,8 @@ export interface OutputSchema {
   blobDivert?: ServiceConfig
   chat?: ServiceConfig
   viewer?: ViewerConfig
+  /** The did of the verifier used for verification. */
+  verifierDid?: string
 }
 
 export interface CallOptions {
@@ -63,6 +65,7 @@ export interface ViewerConfig {
     | 'tools.ozone.team.defs#roleAdmin'
     | 'tools.ozone.team.defs#roleModerator'
     | 'tools.ozone.team.defs#roleTriage'
+    | 'tools.ozone.team.defs#roleVerifier'
     | (string & {})
 }
 

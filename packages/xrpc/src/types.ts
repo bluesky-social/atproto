@@ -24,7 +24,13 @@ export const errorResponseBody = z.object({
 export type ErrorResponseBody = z.infer<typeof errorResponseBody>
 
 export enum ResponseType {
+  /**
+   * Network issue, unable to get response from the server.
+   */
   Unknown = 1,
+  /**
+   * Response failed lexicon validation.
+   */
   InvalidResponse = 2,
   Success = 200,
   InvalidRequest = 400,
@@ -181,6 +187,8 @@ export class XRPCInvalidResponseError extends XRPCError {
   ) {
     super(
       ResponseType.InvalidResponse,
+      // @NOTE: This is probably wrong and should use ResponseTypeNames instead.
+      // But it would mean a breaking change.
       ResponseTypeStrings[ResponseType.InvalidResponse],
       `The server gave an invalid response and may be out of date.`,
       undefined,

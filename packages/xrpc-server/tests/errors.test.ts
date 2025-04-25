@@ -5,6 +5,28 @@ import { XRPCError, XRPCInvalidResponseError, XrpcClient } from '@atproto/xrpc'
 import * as xrpcServer from '../src'
 import { closeServer, createServer } from './_util'
 
+const UPSTREAM_LEXICONS: LexiconDoc[] = [
+  {
+    lexicon: 1,
+    id: 'io.example.upstreamInvalidResponse',
+    defs: {
+      main: {
+        type: 'query',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['expectedValue'],
+            properties: {
+              expectedValue: { type: 'string' },
+            },
+          },
+        },
+      },
+    },
+  },
+]
+
 const LEXICONS: LexiconDoc[] = [
   {
     lexicon: 1,
@@ -68,6 +90,15 @@ const LEXICONS: LexiconDoc[] = [
       },
     },
   },
+  {
+    lexicon: 1,
+    id: 'io.example.invalidUpstreamResponse',
+    defs: {
+      main: {
+        type: 'query',
+      },
+    },
+  },
 ]
 
 const MISMATCHED_LEXICONS: LexiconDoc[] = [
@@ -101,6 +132,16 @@ const MISMATCHED_LEXICONS: LexiconDoc[] = [
 ]
 
 describe('Errors', () => {
+  let upstreamS: http.Server
+  const upstreamServer = xrpcServer.createServer(UPSTREAM_LEXICONS, {
+    validateResponse: false,
+  }) // disable validateResponse to test client validation
+  upstreamServer.method('io.example.upstreamInvalidResponse', () => {
+    return { encoding: 'json', body: { something: 'else' } }
+  })
+
+  let upstreamClient: XrpcClient
+
   let s: http.Server
   const server = xrpcServer.createServer(LEXICONS, { validateResponse: false }) // disable validateResponse to test client validation
   server.method('io.example.error', (ctx: { params: xrpcServer.Params }) => {
@@ -122,6 +163,12 @@ describe('Errors', () => {
   server.method('io.example.invalidResponse', () => {
     return { encoding: 'json', body: { something: 'else' } }
   })
+  server.method('io.example.invalidUpstreamResponse', async () => {
+    await upstreamClient.call('io.example.upstreamInvalidResponse')
+    return {
+      encoding: 'json',
+    }
+  })
   server.method('io.example.procedure', () => {
     return undefined
   })
@@ -129,6 +176,13 @@ describe('Errors', () => {
   let client: XrpcClient
   let badClient: XrpcClient
   beforeAll(async () => {
+    upstreamS = await createServer(upstreamServer)
+    const { port: upstreamPort } = upstreamS.address() as AddressInfo
+    upstreamClient = new XrpcClient(
+      `http://localhost:${upstreamPort}`,
+      UPSTREAM_LEXICONS,
+    )
+
     s = await createServer(server)
     const { port } = s.address() as AddressInfo
     client = new XrpcClient(`http://localhost:${port}`, LEXICONS)
@@ -136,6 +190,7 @@ describe('Errors', () => {
   })
   afterAll(async () => {
     await closeServer(s)
+    await closeServer(upstreamS)
   })
 
   it('serves requests', async () => {
@@ -165,7 +220,7 @@ describe('Errors', () => {
       await client.call('io.example.throwFalsyValue')
       throw new Error('Didnt throw')
     } catch (e) {
-      expect(e instanceof XRPCError).toBeTruthy()
+      expect(e).toBeInstanceOf(XRPCError)
       expect((e as XRPCError).success).toBeFalsy()
       expect((e as XRPCError).error).toBe('InternalServerError')
       expect((e as XRPCError).message).toBe('Internal Server Error')
@@ -197,6 +252,16 @@ describe('Errors', () => {
         'Output must have the property "expectedValue"',
       )
       expect(err.responseBody).toStrictEqual({ something: 'else' })
+    }
+    try {
+      await client.call('io.example.invalidUpstreamResponse')
+      throw new Error('Didnt throw')
+    } catch (e: any) {
+      expect(e).toBeInstanceOf(XRPCError)
+      expect((e as XRPCError).status).toBe(500)
+      expect((e as XRPCError).success).toBeFalsy()
+      expect((e as XRPCError).error).toBe('InternalServerError')
+      expect((e as XRPCError).message).toBe('Internal Server Error')
     }
   })
 

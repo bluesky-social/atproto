@@ -45,7 +45,7 @@ msgstr "デバイス上のアプリ"
 msgid "An unknown error occurred"
 msgstr "何らかのエラーが発生しました"
 
-#: src/views/authorize/sign-in/sign-in-picker.tsx:112
+#: src/views/authorize/sign-in/sign-in-picker.tsx:104
 msgid "Another account"
 msgstr "他のアカウント"
 
@@ -57,6 +57,10 @@ msgstr "認証"
 #: src/views/authorize/accept/accept-form.tsx:57
 msgid "Authorize"
 msgstr "承認する"
+
+#: src/views/authorize/sign-in/sign-in-picker.tsx:68
+msgid "Avatar"
+msgstr ""
 
 #: src/views/authorize/sign-in/sign-in-picker.tsx:47
 #: src/views/authorize/sign-in/sign-in-form.tsx:130
@@ -202,7 +206,7 @@ msgstr "隠す"
 msgid "Home"
 msgstr "ホーム"
 
-#: src/views/authorize/sign-in/sign-in-picker.tsx:87
+#: src/views/authorize/sign-in/sign-in-picker.tsx:81
 #: src/views/authorize/sign-in/sign-in-form.tsx:138
 msgid "Identifier"
 msgstr "識別子"
@@ -228,7 +232,7 @@ msgstr "パスワードをリセットしましょう！"
 msgid "Login complete"
 msgstr "ログイン完了"
 
-#: src/views/authorize/sign-in/sign-in-picker.tsx:105
+#: src/views/authorize/sign-in/sign-in-picker.tsx:97
 msgid "Login to account that is not listed"
 msgstr "リストにないアカウントにログイン"
 
@@ -252,7 +256,7 @@ msgstr "無し"
 msgid "Moderate"
 msgstr "中程度"
 
-#: src/views/authorize/sign-in/sign-in-picker.tsx:81
+#: src/views/authorize/sign-in/sign-in-picker.tsx:74
 msgid "Name"
 msgstr "名前"
 
@@ -346,7 +350,7 @@ msgid "Sign in"
 msgstr "サインイン"
 
 #. placeholder {0}: account.name
-#: src/views/authorize/sign-in/sign-in-picker.tsx:75
+#: src/views/authorize/sign-in/sign-in-picker.tsx:67
 msgid "Sign in as {0}"
 msgstr "{0} でサインイン"
 

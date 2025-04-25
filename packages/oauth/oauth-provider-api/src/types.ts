@@ -1,3 +1,4 @@
+// @TODO replace with OidcUserinfo
 export type Account = {
   sub: string
   aud: string | [string, ...string[]]
