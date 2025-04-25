@@ -60,7 +60,7 @@ msgstr "承認する"
 
 #: src/views/authorize/sign-in/sign-in-picker.tsx:68
 msgid "Avatar"
-msgstr ""
+msgstr "アバター"
 
 #: src/views/authorize/sign-in/sign-in-picker.tsx:47
 #: src/views/authorize/sign-in/sign-in-form.tsx:130
