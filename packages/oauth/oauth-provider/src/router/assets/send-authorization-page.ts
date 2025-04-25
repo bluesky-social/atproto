@@ -36,7 +36,7 @@ export function sendAuthorizePageFactory(customization: Customization) {
     const script = declareHydrationData<HydrationData['authorization-page']>({
       __customizationData: customizationData,
       __authorizeData: {
-        requestUri: data.uri,
+        requestUri: data.requestUri,
 
         clientId: data.client.id,
         clientMetadata: data.client.metadata,

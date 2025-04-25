@@ -24,7 +24,7 @@ export const rowToRequestData = (
 export const rowToFoundRequestResult = (
   row: Selectable<AuthorizationRequest>,
 ): FoundRequestResult => ({
-  id: row.id,
+  requestId: row.id,
   data: rowToRequestData(row),
 })
 
