@@ -131,7 +131,7 @@ async function* readCarBlocksIterGenerator(
   reader: BufferedReader,
 ): AsyncIterable<CarBlock> {
   try {
-    let blocksSinceBreak = 0;
+    let blocksSinceBreak = 0
     while (!reader.isDone) {
       const blockSize = await reader.readVarint()
       if (blockSize === null) {
