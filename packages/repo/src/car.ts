@@ -137,7 +137,7 @@ async function* readCarBlocksIterGenerator(
       if (blockSize === null) {
         break
       }
-      blocksSinceBreak = (blocksSinceBreak + 1) % 100;
+      blocksSinceBreak = (blocksSinceBreak + 1) % 100
       if (blocksSinceBreak === 0) {
         // Every 100 records let the event loop run again so we don't block the main thread
         // This is needed because just an await without there being any IO keeps processing
