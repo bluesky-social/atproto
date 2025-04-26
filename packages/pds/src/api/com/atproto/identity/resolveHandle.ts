@@ -14,7 +14,7 @@ export default function (server: Server, ctx: AppContext) {
       did = user.did
     } else {
       const supportedHandle = ctx.cfg.identity.serviceHandleDomains.some(
-        (host) => handle.endsWith(host) || handle === host.slice(1),
+        (host) => handle.endsWith(host),
       )
       // this should be in our DB & we couldn't find it, so fail
       if (supportedHandle) {
