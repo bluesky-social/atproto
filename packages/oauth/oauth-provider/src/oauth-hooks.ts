@@ -1,5 +1,5 @@
 import { Jwks } from '@atproto/jwk'
-import type { Account } from '@atproto/oauth-provider-api'
+import type { Account, ScopeDetail } from '@atproto/oauth-provider-api'
 import {
   OAuthAuthorizationDetails,
   OAuthAuthorizationRequestParameters,
@@ -13,6 +13,7 @@ import { ClientId } from './client/client-id.js'
 import { ClientInfo } from './client/client-info.js'
 import { Client } from './client/client.js'
 import { AccessDeniedError } from './errors/access-denied-error.js'
+import { AuthorizationError } from './errors/authorization-error.js'
 import { InvalidRequestError } from './errors/invalid-request-error.js'
 import { OAuthError } from './errors/oauth-error.js'
 import {
@@ -29,6 +30,7 @@ import { RequestId } from './request/request-id.js'
 export {
   AccessDeniedError,
   type Account,
+  AuthorizationError,
   type Awaitable,
   Client,
   type ClientAuth,
@@ -115,6 +117,30 @@ export type OAuthHooks = {
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
   }) => Awaitable<void>
+
+  /**
+   * Allows validating the authorization request (typically the requested
+   * scopes) before it is created. Note that the validity against the client
+   * metadata is already enforced by the OAuth provider. If a value is returned
+   * from this hook, it will be used as the final parameters for the
+   * authorization request.
+   *
+   * @throws {AuthorizationError}
+   */
+  onAuthorizationRequest?: (data: {
+    client: Client
+    clientAuth: null | ClientAuth
+    parameters: Readonly<OAuthAuthorizationRequestParameters>
+  }) => Awaitable<void>
+
+  /**
+   * Allows building a user friendly description of the scopes requested, for
+   * display to the user.
+   */
+  onScopeDetails?: (data: {
+    client: Client
+    parameters: Readonly<OAuthAuthorizationRequestParameters>
+  }) => Awaitable<ScopeDetail[]>
 
   /**
    * This hook is called when a client is authorized.

@@ -259,14 +259,6 @@ export class ClientManager {
       throw new InvalidClientMetadataError(`Duplicate scope "${dupScope}"`)
     }
 
-    for (const scope of scopes) {
-      // Note, once we have dynamic scopes, this check will need to be
-      // updated to check against the server's supported scopes.
-      if (!this.serverMetadata.scopes_supported?.includes(scope)) {
-        throw new InvalidClientMetadataError(`Unsupported scope "${scope}"`)
-      }
-    }
-
     const dupGrantType = metadata.grant_types.find(isDuplicate)
     if (dupGrantType) {
       throw new InvalidClientMetadataError(

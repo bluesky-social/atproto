@@ -60,6 +60,12 @@ export class RequestManager {
   ) {
     const parameters = await this.validate(client, clientAuth, input)
 
+    await callAsync(this.hooks.onAuthorizationRequest, {
+      client,
+      clientAuth,
+      parameters,
+    })
+
     const expiresAt = new Date(Date.now() + PAR_EXPIRES_IN)
     const requestId = await generateRequestId()
 
@@ -124,11 +130,10 @@ export class RequestManager {
       )
     }
 
+    // Every scope requested by the client must be defined in the client
+    // metadata.
     if (parameters.scope) {
       for (const scope of parameters.scope.split(' ')) {
-        // Currently, the implementation requires all the scopes to be statically
-        // defined in the server metadata. In the future, we might add support
-        // for dynamic scopes.
         if (!this.metadata.scopes_supported?.includes(scope)) {
           throw new AuthorizationError(
             parameters,
