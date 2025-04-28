@@ -5,7 +5,7 @@
 import { Buffer } from 'node:buffer'
 import fs from 'node:fs'
 import path from 'node:path'
-import { Database } from '@atproto/ozone'
+import { Database, envToCfg, readEnv } from '@atproto/ozone'
 
 const CHUNK_SIZE = 100
 
@@ -127,11 +127,13 @@ async function main() {
       process.exit(1)
     }
 
+    const env = readEnv()
+    const cfg = envToCfg(env)
     const db = new Database({
       // @NOTE: locally used: postgresql://pg:password@127.0.0.1:5433/postgres
-      url: process.env.DB_URL,
+      url: cfg.db.postgresUrl,
       // @NOTE: locally used: ozone_db
-      schema: process.env.DB_SCHEMA,
+      schema: cfg.db.postgresSchema,
     })
 
     console.log(
