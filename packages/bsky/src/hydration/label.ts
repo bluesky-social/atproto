@@ -156,9 +156,15 @@ export class LabelHydrator {
     }, new HydrationMap<LabelerViewerState>())
   }
 
-  async getLabelerAggregates(dids: string[]): Promise<LabelerAggs> {
+  async getLabelerAggregates(
+    dids: string[],
+    viewer: string | null,
+  ): Promise<LabelerAggs> {
     const refs = dids.map((did) => ({ uri: labelerDidToUri(did) }))
-    const counts = await this.dataplane.getInteractionCounts({ refs })
+    const counts = await this.dataplane.getInteractionCounts({
+      refs,
+      skipCacheForDids: viewer ? [viewer] : undefined,
+    })
     return dids.reduce((acc, did, i) => {
       return acc.set(did, {
         likes: counts.likes[i] ?? 0,

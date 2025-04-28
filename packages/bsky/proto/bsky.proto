@@ -336,6 +336,7 @@ message GetActorLikesResponse {
 //
 message GetInteractionCountsRequest {
   repeated RecordRef refs = 1;
+  repeated string skip_cache_for_dids = 2;
 }
 
 message GetInteractionCountsResponse {
@@ -1021,20 +1022,6 @@ message GetSuggestedEntitiesResponse {
 }
 
 //
-// Posts
-//
-
-// - Return post reply count with uris A, B, C…
-//     - All feed hydration
-message GetPostReplyCountsRequest {
-  repeated RecordRef refs = 1;
-}
-
-message GetPostReplyCountsResponse {
-  repeated int32 counts = 1;
-}
-
-//
 // Labels
 //
 
@@ -1280,9 +1267,6 @@ service Service {
   // Suggestions
   rpc GetFollowSuggestions(GetFollowSuggestionsRequest) returns (GetFollowSuggestionsResponse);
   rpc GetSuggestedEntities(GetSuggestedEntitiesRequest) returns (GetSuggestedEntitiesResponse);
-
-  // Posts
-  rpc GetPostReplyCounts(GetPostReplyCountsRequest) returns (GetPostReplyCountsResponse);
 
   // Labels
   rpc GetLabels(GetLabelsRequest) returns (GetLabelsResponse);

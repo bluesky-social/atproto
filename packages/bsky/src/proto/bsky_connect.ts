@@ -134,8 +134,6 @@ import {
   GetPostgateRecordsResponse,
   GetPostRecordsRequest,
   GetPostRecordsResponse,
-  GetPostReplyCountsRequest,
-  GetPostReplyCountsResponse,
   GetProfileRecordsRequest,
   GetProfileRecordsResponse,
   GetQuotesBySubjectSortedRequest,
@@ -883,17 +881,6 @@ export const Service = {
       name: 'GetSuggestedEntities',
       I: GetSuggestedEntitiesRequest,
       O: GetSuggestedEntitiesResponse,
-      kind: MethodKind.Unary,
-    },
-    /**
-     * Posts
-     *
-     * @generated from rpc bsky.Service.GetPostReplyCounts
-     */
-    getPostReplyCounts: {
-      name: 'GetPostReplyCounts',
-      I: GetPostReplyCountsRequest,
-      O: GetPostReplyCountsResponse,
       kind: MethodKind.Unary,
     },
     /**
