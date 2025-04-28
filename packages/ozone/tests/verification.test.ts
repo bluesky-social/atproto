@@ -133,4 +133,34 @@ describe('verification', () => {
       )
     })
   })
+
+  it('does not publish record if a valid one already exists', async () => {
+    const { data: beforePublish } =
+      await adminAgent.tools.ozone.verification.listVerifications({
+        subjects: [sc.dids.bob],
+      })
+    const {
+      data: { verifications },
+    } = await adminAgent.tools.ozone.verification.grantVerifications({
+      verifications: [
+        {
+          subject: sc.dids.bob,
+          handle: sc.accounts[sc.dids.bob].handle,
+          displayName: 'bobby',
+        },
+      ],
+    })
+
+    const { data: afterPublish } =
+      await adminAgent.tools.ozone.verification.listVerifications({
+        subjects: [sc.dids.bob],
+      })
+
+    // assert that the response does not contain any new verification
+    expect(verifications.length).toEqual(0)
+    // assert that the list of verifications in db hasn't changed
+    expect(afterPublish.verifications.length).toEqual(
+      beforePublish.verifications.length,
+    )
+  })
 })
