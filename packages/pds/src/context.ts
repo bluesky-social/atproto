@@ -11,6 +11,7 @@ import * as crypto from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
 import {
   AccessTokenMode,
+  InvalidClientMetadataError,
   JoseKey,
   OAuthProvider,
   OAuthVerifier,
@@ -46,6 +47,7 @@ import { ImageUrlBuilder } from './image/image-url-builder'
 import { fetchLogger } from './logger'
 import { ServerMailer } from './mailer'
 import { ModerationMailer } from './mailer/moderation'
+import { validateScope } from './oauth/oauth-scopes'
 import { LocalViewer, LocalViewerCreator } from './read-after-write/viewer'
 import { getRedisClient } from './redis'
 import { Sequencer } from './sequencer'
@@ -344,6 +346,15 @@ export class AppContext {
           // the PDS can use tokenId as access tokens. This allows the PDS to
           // always use up-to-date token data from the token store.
           accessTokenMode: AccessTokenMode.light,
+
+          getClientInfo(clientId, { metadata }) {
+            if (!validateScope(metadata.scope)) {
+              throw new InvalidClientMetadataError(`Unsupported scope`)
+            }
+
+            // @TODO make trusted clients list configurable ?
+            return { isTrusted: false }
+          },
         })
       : undefined
 
