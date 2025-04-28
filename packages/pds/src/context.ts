@@ -352,8 +352,9 @@ export class AppContext {
               throw new InvalidClientMetadataError(`Unsupported scope`)
             }
 
-            // @TODO make trusted clients list configurable ?
-            return { isTrusted: false }
+            return {
+              isTrusted: cfg.oauth.provider?.trustedClients?.includes(clientId),
+            }
           },
         })
       : undefined
