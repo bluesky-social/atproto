@@ -13,7 +13,7 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: src/views/authorize/accept/accept-form.tsx:77
+#: src/views/authorize/accept/accept-form.tsx:76
 msgid "<0/> is asking for permission to access your account (<1/>)."
 msgstr "<0/> demande la permission d'accéder à votre compte (<1/>)."
 
@@ -25,11 +25,11 @@ msgstr "Confirmation 2FA"
 msgid "A second authentication factor is required"
 msgstr "Un second facteur d'authentification est requis"
 
-#: src/views/authorize/accept/accept-form.tsx:149
+#: src/views/authorize/accept/accept-form.tsx:148
 msgid "Access your account data (except chat messages)"
 msgstr "Accéder aux données de votre compte (sauf les messages de chat)"
 
-#: src/views/authorize/accept/accept-form.tsx:151
+#: src/views/authorize/accept/accept-form.tsx:150
 msgid "Access your chat messages"
 msgstr "Accéder à vos messages de chat"
 
@@ -74,7 +74,7 @@ msgstr "Retour"
 msgid "Between {minLength} and {maxLength} characters"
 msgstr "Entre {minLength} et {maxLength} caractères"
 
-#: src/views/authorize/accept/accept-form.tsx:90
+#: src/views/authorize/accept/accept-form.tsx:89
 msgid "By clicking <0>Authorize</0>, you allow this application to perform the following actions in accordance with their <1>terms of service</1> and <2>privacy policy</2>:"
 msgstr "En cliquant sur <0>Authoriser l'accès</0>, vous autorisez cette application à effectuer les actions suivantes conformément à leurs <1>conditions d'utilisation</1> et leur <2>politique de confidentialité</2> :"
 
@@ -319,7 +319,7 @@ msgstr "Politique de Confidentialité"
 msgid "Remember this account on this device"
 msgstr "Se souvenir de ce compte sur cet appareil"
 
-#: src/views/authorize/accept/accept-form.tsx:124
+#: src/views/authorize/accept/accept-form.tsx:123
 msgid "Requested permissions"
 msgstr "Permissions demandées"
 
@@ -436,7 +436,7 @@ msgstr "Saisissez le nom d'utilisateur souhaité"
 msgid "Unexpected server response"
 msgstr "Réponse inattendue du serveur"
 
-#: src/views/authorize/accept/accept-form.tsx:147
+#: src/views/authorize/accept/accept-form.tsx:146
 msgid "Uniquely identify you"
 msgstr "Vous identifier de façon unique"
 

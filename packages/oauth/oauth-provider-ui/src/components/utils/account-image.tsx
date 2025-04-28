@@ -16,7 +16,6 @@ export function AccountImage({ src, alt }: AccountIconProps) {
   return src && !errored ? (
     <img
       aria-hidden
-      crossOrigin="anonymous"
       src={src}
       alt={alt}
       className="-ml-1 h-6 w-6 rounded-full"
