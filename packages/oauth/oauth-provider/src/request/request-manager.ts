@@ -54,11 +54,19 @@ export class RequestManager {
   async createAuthorizationRequest(
     client: Client,
     clientAuth: ClientAuth,
-    input: Readonly<OAuthAuthorizationRequestParameters>,
+    parameters: OAuthAuthorizationRequestParameters,
     deviceId: null | DeviceId,
     dpopJkt: null | string,
   ): Promise<RequestInfo> {
-    const parameters = await this.validate(client, clientAuth, input, dpopJkt)
+    parameters = await this.validate(client, clientAuth, parameters, dpopJkt)
+
+    parameters =
+      (await callAsync(this.hooks.onAuthorizationRequest, {
+        client,
+        clientAuth,
+        parameters,
+      })) ?? parameters
+
     return this.create(client, clientAuth, parameters, deviceId)
   }
 
@@ -140,20 +148,6 @@ export class RequestManager {
         `Unsupported grant_type "authorization_code"`,
         'invalid_request',
       )
-    }
-
-    if (parameters.scope) {
-      for (const scope of parameters.scope.split(' ')) {
-        // Currently, the implementation requires all the scopes to be statically
-        // defined in the server metadata. In the future, we might add support
-        // for dynamic scopes.
-        if (!this.metadata.scopes_supported?.includes(scope)) {
-          throw new InvalidParametersError(
-            parameters,
-            `Scope "${scope}" is not supported by this server`,
-          )
-        }
-      }
     }
 
     if (parameters.authorization_details) {

@@ -1,6 +1,6 @@
 import type { Redis, RedisOptions } from 'ioredis'
 import { Jwks, Keyset } from '@atproto/jwk'
-import type { Account } from '@atproto/oauth-provider-api'
+import type { Account, ScopeDetail } from '@atproto/oauth-provider-api'
 import {
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
   OAuthAccessToken,
@@ -65,6 +65,7 @@ import { LoginRequiredError } from './errors/login-required-error.js'
 import { HcaptchaConfig } from './lib/hcaptcha.js'
 import { RequestMetadata } from './lib/http/request.js'
 import { dateToRelativeSeconds } from './lib/util/date.js'
+import { callAsync } from './lib/util/function.js'
 import { LocalizedString, MultiLangString } from './lib/util/locale.js'
 import { extractZodErrorMessage } from './lib/util/zod-error.js'
 import { CustomMetadata, buildMetadata } from './metadata/build-metadata.js'
@@ -217,6 +218,7 @@ export type OAuthProviderOptions = OAuthProviderConfig &
 
 export class OAuthProvider extends OAuthVerifier {
   protected readonly accessTokenMode: AccessTokenMode
+  protected readonly hooks: OAuthHooks
 
   public readonly metadata: OAuthAuthorizationServerMetadata
   public readonly customization: Customization
@@ -271,20 +273,18 @@ export class OAuthProvider extends OAuthVerifier {
     const deviceManagerOptions: DeviceManagerOptions =
       deviceManagerOptionsSchema.parse(rest)
 
-    // @NOTE: hooks don't really need a type parser, as all zod can actually
-    // check at runtime is the fact that the values are functions. The only way
-    // we would benefit from zod here would be to wrap the functions with a
-    // validator for the provided function's return types, which we do not add
-    // because it would impact runtime performance and we trust the users of
-    // this lib (basically ourselves) to rely on the typing system to ensure the
-    // correct types are returned.
-    const hooks: OAuthHooks = rest
-
     // @NOTE: validation of super params (if we wanted to implement it) should
     // be the responsibility of the super class.
     const superOptions: OAuthVerifierOptions = rest
 
     super({ replayStore, redis, ...superOptions })
+
+    // @NOTE: hooks don't really need a type parser, as all zod can actually
+    // check at runtime is the fact that the values are functions. The only way
+    // we would benefit from zod here would be to wrap the functions with a
+    // validator for the provided function's return types, which we don't
+    // really need if types are respected.
+    this.hooks = rest
 
     requestStore ??= redis
       ? new RequestStoreRedis({ redis })
@@ -299,13 +299,13 @@ export class OAuthProvider extends OAuthVerifier {
     this.accountManager = new AccountManager(
       this.issuer,
       accountStore,
-      hooks,
+      this.hooks,
       this.customization,
     )
     this.clientManager = new ClientManager(
       this.metadata,
       this.keyset,
-      hooks,
+      this.hooks,
       clientStore || null,
       loopbackMetadata || null,
       safeFetch,
@@ -316,12 +316,12 @@ export class OAuthProvider extends OAuthVerifier {
       requestStore,
       this.signer,
       this.metadata,
-      hooks,
+      this.hooks,
     )
     this.tokenManager = new TokenManager(
       tokenStore,
       this.signer,
-      hooks,
+      this.hooks,
       this.accessTokenMode,
       tokenMaxAge,
     )
@@ -632,6 +632,15 @@ export class OAuthProvider extends OAuthVerifier {
         }
       }
 
+      const scopeDetails: ScopeDetail[] = this.hooks.onScopeDetails
+        ? await callAsync(this.hooks.onScopeDetails, {
+            client,
+            parameters,
+          })
+        : parameters.scope
+            ?.split(' ')
+            .map((scope): ScopeDetail => ({ scope })) ?? []
+
       return {
         issuer,
         client,
@@ -644,16 +653,9 @@ export class OAuthProvider extends OAuthVerifier {
           loginRequired: session.loginRequired,
           consentRequired: session.consentRequired,
         })),
-        scopeDetails: parameters.scope
-          ?.split(/\s+/)
-          .filter(Boolean)
-          .sort((a, b) => a.localeCompare(b))
-          .map((scope) => ({
-            scope,
-            // @TODO Allow to customize the scope descriptions (e.g.
-            // using a hook)
-            description: undefined,
-          })),
+        scopeDetails: scopeDetails.sort((a, b) =>
+          a.scope.localeCompare(b.scope),
+        ),
       }
     } catch (err) {
       try {
