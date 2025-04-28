@@ -5,7 +5,6 @@ import { isHttpError } from 'http-errors'
 import { z } from 'zod'
 import {
   ResponseType,
-  ResponseTypeNames,
   ResponseTypeStrings,
   XRPCError as XRPCClientError,
   httpResponseCodeToName,
@@ -290,7 +289,7 @@ export class XRPCError extends Error {
   }
 
   get typeName(): string | undefined {
-    return ResponseTypeNames[this.type]
+    return ResponseType[this.type]
   }
 
   get typeStr(): string | undefined {
@@ -378,13 +377,18 @@ export class AuthRequiredError extends XRPCError {
     customErrorName?: string,
     options?: ErrorOptions,
   ) {
-    super(ResponseType.AuthRequired, errorMessage, customErrorName, options)
+    super(
+      ResponseType.AuthenticationRequired,
+      errorMessage,
+      customErrorName,
+      options,
+    )
   }
 
   [Symbol.hasInstance](instance: unknown): boolean {
     return (
       instance instanceof XRPCError &&
-      instance.type === ResponseType.AuthRequired
+      instance.type === ResponseType.AuthenticationRequired
     )
   }
 }
