@@ -13,7 +13,7 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: src/views/authorize/accept/accept-form.tsx:77
+#: src/views/authorize/accept/accept-form.tsx:76
 msgid "<0/> is asking for permission to access your account (<1/>)."
 msgstr ""
 
@@ -25,11 +25,11 @@ msgstr ""
 msgid "A second authentication factor is required"
 msgstr ""
 
-#: src/views/authorize/accept/accept-form.tsx:149
+#: src/views/authorize/accept/accept-form.tsx:148
 msgid "Access your account data (except chat messages)"
 msgstr ""
 
-#: src/views/authorize/accept/accept-form.tsx:151
+#: src/views/authorize/accept/accept-form.tsx:150
 msgid "Access your chat messages"
 msgstr ""
 
@@ -74,7 +74,7 @@ msgstr ""
 msgid "Between {minLength} and {maxLength} characters"
 msgstr ""
 
-#: src/views/authorize/accept/accept-form.tsx:90
+#: src/views/authorize/accept/accept-form.tsx:89
 msgid "By clicking <0>Authorize</0>, you allow this application to perform the following actions in accordance with their <1>terms of service</1> and <2>privacy policy</2>:"
 msgstr ""
 
@@ -319,7 +319,7 @@ msgstr ""
 msgid "Remember this account on this device"
 msgstr ""
 
-#: src/views/authorize/accept/accept-form.tsx:124
+#: src/views/authorize/accept/accept-form.tsx:123
 msgid "Requested permissions"
 msgstr ""
 
@@ -436,7 +436,7 @@ msgstr ""
 msgid "Unexpected server response"
 msgstr ""
 
-#: src/views/authorize/accept/accept-form.tsx:147
+#: src/views/authorize/accept/accept-form.tsx:146
 msgid "Uniquely identify you"
 msgstr ""
 
