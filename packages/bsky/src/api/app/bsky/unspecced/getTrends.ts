@@ -5,7 +5,6 @@ import { AppContext } from '../../../../context'
 import {
   HydrateCtx,
   Hydrator,
-  isBlockEntryBlocked,
   mergeManyStates,
 } from '../../../../hydration/hydrator'
 import { Server } from '../../../../lexicon'
@@ -101,7 +100,7 @@ const noBlocks = (input: RulesFnInput<Context, Params, SkeletonState>) => {
   const filteredSkeleton: SkeletonState = {
     trends: skeleton.trends.map((t) => ({
       ...t,
-      dids: t.dids.filter((did) => !isBlockEntryBlocked(blocks?.get(did))),
+      dids: t.dids.filter((did) => !blocks?.get(did)),
     })),
   }
 

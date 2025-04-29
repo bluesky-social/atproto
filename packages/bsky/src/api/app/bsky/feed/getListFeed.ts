@@ -6,7 +6,6 @@ import {
   HydrateCtx,
   HydrationState,
   Hydrator,
-  isBlockEntryBlocked,
   mergeStates,
 } from '../../../../hydration/hydrator'
 import { parseString } from '../../../../hydration/util'
@@ -101,7 +100,7 @@ const noBlocksOrMutes = (inputs: {
       !bam.originatorBlocked &&
       !bam.originatorMuted &&
       !bam.ancestorAuthorBlocked &&
-      !isBlockEntryBlocked(creatorBlocks?.get(uriToDid(item.post.uri)))
+      !creatorBlocks?.get(uriToDid(item.post.uri))
     )
   })
   return skeleton

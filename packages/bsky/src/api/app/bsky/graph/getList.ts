@@ -5,7 +5,6 @@ import {
   HydrateCtx,
   HydrationState,
   Hydrator,
-  isBlockEntryBlocked,
   mergeManyStates,
 } from '../../../../hydration/hydrator'
 import { Server } from '../../../../lexicon'
@@ -90,7 +89,7 @@ const noBlocks = (input: RulesFnInput<Context, Params, SkeletonState>) => {
   const creator = didFromUri(skeleton.listUri)
   const blocks = hydration.bidirectionalBlocks?.get(creator)
   skeleton.listitems = skeleton.listitems.filter(({ did }) => {
-    return !isBlockEntryBlocked(blocks?.get(did))
+    return !blocks?.get(did)
   })
   return skeleton
 }

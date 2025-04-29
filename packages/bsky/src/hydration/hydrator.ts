@@ -126,11 +126,7 @@ export type HydrationState = {
   verifications?: Verifications
 }
 
-export type PostBlock = {
-  embed: BlockEntry | null
-  parent: BlockEntry | null
-  root: BlockEntry | null
-}
+export type PostBlock = { embed: boolean; parent: boolean; root: boolean }
 export type PostBlocks = HydrationMap<PostBlock>
 type PostBlockPairs = {
   embed?: RelationshipPair
@@ -144,7 +140,7 @@ export type LikeBlocks = HydrationMap<LikeBlock>
 export type FollowBlock = boolean
 export type FollowBlocks = HydrationMap<FollowBlock>
 
-export type BidirectionalBlocks = HydrationMap<HydrationMap<BlockEntry>>
+export type BidirectionalBlocks = HydrationMap<HydrationMap<boolean>>
 
 export class Hydrator {
   actor: ActorHydrator
@@ -569,11 +565,9 @@ export class Hydrator {
     )
     for (const [uri, { embed, parent, root }] of postBlocksPairs) {
       postBlocks.set(uri, {
-        embed: embed ? getBlockEntryForRelationshipPair(blocks, embed) : null,
-        parent: parent
-          ? getBlockEntryForRelationshipPair(blocks, parent)
-          : null,
-        root: root ? getBlockEntryForRelationshipPair(blocks, root) : null,
+        embed: embed ? isRelationshipPairBlocked(blocks, embed) : false,
+        parent: parent ? isRelationshipPairBlocked(blocks, parent) : false,
+        root: root ? isRelationshipPairBlocked(blocks, root) : false,
       })
     }
     return postBlocks
@@ -1010,10 +1004,10 @@ export class Hydrator {
     const activeListAuthors = await this.actor.getActors(listAuthorDids)
 
     const result: BidirectionalBlocks = new HydrationMap<
-      HydrationMap<BlockEntry>
+      HydrationMap<boolean>
     >()
     for (const [source, targets] of didMap) {
-      const didBlocks = new HydrationMap<BlockEntry>()
+      const didBlocks = new HydrationMap<boolean>()
       for (const target of targets) {
         const block = blocks.get(source, target)
         const blockEntry: BlockEntry = {
@@ -1024,9 +1018,11 @@ export class Hydrator {
               ? block.blockListUri
               : undefined,
         }
-        if (isBlockEntryBlocked(blockEntry)) {
-          didBlocks.set(target, blockEntry)
-        }
+
+        didBlocks.set(
+          target,
+          !!blockEntry.blockUri || !!blockEntry.blockListUri,
+        )
       }
       result.set(source, didBlocks)
     }
@@ -1293,24 +1289,12 @@ const getListUrisFromThreadgates = (gates: Threadgates) => {
   return uris
 }
 
-const getBlockEntryForRelationshipPair = (
-  blocks: BidirectionalBlocks,
-  pair: RelationshipPair,
-): BlockEntry | null => {
-  const [a, b] = pair
-  return blocks.get(a)?.get(b) ?? null
-}
-
-export const isBlockEntryBlocked = (
-  blockEntry: BlockEntry | null | undefined,
-): boolean => !!blockEntry?.blockUri || !!blockEntry?.blockListUri
-
 const isRelationshipPairBlocked = (
   blocks: BidirectionalBlocks,
   pair: RelationshipPair,
 ): boolean => {
-  const blockEntry = getBlockEntryForRelationshipPair(blocks, pair)
-  return isBlockEntryBlocked(blockEntry)
+  const [a, b] = pair
+  return blocks.get(a)?.get(b) ?? false
 }
 
 const pairsToMap = (pairs: RelationshipPair[]): Map<string, string[]> => {
