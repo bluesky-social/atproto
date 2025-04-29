@@ -14,10 +14,20 @@ export default function (server: Server, ctx: AppContext) {
     }),
     handler: async ({ auth, req }) => {
       if (ctx.entrywayAgent) {
+        // Allow proxying of dpop bound requests by using service auth instead
+        const headers =
+          req.headers.authorization?.split(' ')[0].toLowerCase() === 'dpop'
+            ? await ctx.entrywayAuthHeaders(
+                req,
+                auth.credentials.did,
+                'com.atproto.server.getSession',
+              )
+            : ctx.entrywayPassthruHeaders(req)
+
         return resultPassthru(
           await ctx.entrywayAgent.com.atproto.server.getSession(
             undefined,
-            ctx.entrywayPassthruHeaders(req),
+            headers,
           ),
         )
       }
