@@ -115,25 +115,20 @@ export function unicastFetchWrap<C = FetchContext>({
             },
           })
 
-          const headers = new Headers(init?.headers)
-          headers.set('connection', 'close') // Proactively close the connection
-
           try {
-            return await fetch.call(this, input, {
+            const headers = new Headers(init?.headers)
+            headers.set('connection', 'close') // Proactively close the connection
+
+            const response = await fetch.call(this, input, {
               ...init,
               headers,
               // @ts-expect-error non-standard option
               dispatcher,
             })
-          } finally {
-            // Free resources (we cannot await here since the response was not
-            // consumed yet).
-            void dispatcher.close().catch((err) => {
-              // No biggie, but let's still log it
-              console.warn('Failed to close dispatcher', err)
-            })
 
             if (!didLookup) {
+              await response.body?.cancel()
+
               // If you encounter this error, either upgrade to Node.js >=21 or
               // make sure that the dispatcher passed through the requestInit
               // object ends up being used to make the request.
@@ -145,6 +140,15 @@ export function unicastFetchWrap<C = FetchContext>({
                 'Unable to enforce SSRF protection',
               )
             }
+
+            return response
+          } finally {
+            // Free resources (we cannot await here since the response was not
+            // consumed yet).
+            void dispatcher.close().catch((err) => {
+              // No biggie, but let's still log it
+              console.warn('Failed to close dispatcher', err)
+            })
           }
         }
       }
