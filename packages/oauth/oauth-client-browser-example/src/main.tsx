@@ -1,5 +1,6 @@
 import './index.css'
 
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './app.tsx'
@@ -24,16 +25,20 @@ const clientId = `http://localhost?${new URLSearchParams({
   }).href,
 })}`
 
+const queryClient = new QueryClient()
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <AuthProvider
-      clientId={clientId}
-      plcDirectoryUrl={PLC_DIRECTORY_URL}
-      signUpUrl={SIGN_UP_URL}
-      handleResolver={HANDLE_RESOLVER_URL}
-      allowHttp={ENV === 'development' || ENV === 'test'}
-    >
-      <App />
-    </AuthProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider
+        clientId={clientId}
+        plcDirectoryUrl={PLC_DIRECTORY_URL}
+        signUpUrl={SIGN_UP_URL}
+        handleResolver={HANDLE_RESOLVER_URL}
+        allowHttp={ENV === 'development' || ENV === 'test'}
+      >
+        <App />
+      </AuthProvider>
+    </QueryClientProvider>
   </StrictMode>,
 )
